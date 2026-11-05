@@ -29,7 +29,7 @@ type RedProgram = { orbitals : [RedOrbital] }
 type RedHost = { name : string!, listens : [RedListen]!, transitions : [RedTransition]! }
 
 type LintCodeDecl = { code : string!, category : string!, description : string! }
-type LintListenRedundantEmbedRouteCodes = { listenRedundantEmbedRoute : LintCodeDecl }
+type LintListenRedundantEmbedRouteCodes = { listenRedundantEmbedRoute : LintCodeDecl , lintIndexMissing : LintCodeDecl }
 
 type WalkSlot = { kind : string!, args : [number] }
 orbital OrbLintListenRedundantEmbedRouteOrbital {
@@ -47,6 +47,7 @@ orbital OrbLintListenRedundantEmbedRouteOrbital {
     chains : [EmbedMap] = []
     haveFired : boolean = false
     haveChains : boolean = false
+    chainsMissing : boolean = false
   }
 
   trait OrbLintListenRedundantEmbedRoute -> OrbLintListenRedundantEmbedRouteRun [optimistic] {
@@ -70,12 +71,14 @@ orbital OrbLintListenRedundantEmbedRouteOrbital {
       CHAINS_HEARD -> ready when @entity.haveFired
         (set @entity.chains @payload.chains)
         (set @entity.haveChains true)
+        (set @entity.chainsMissing @payload.missing)
         (emit LINT_COMPUTE { })
       CHAINS_HEARD -> ready when (not @entity.haveFired)
         (set @entity.chains @payload.chains)
         (set @entity.haveChains true)
+        (set @entity.chainsMissing @payload.missing)
       LINT_COMPUTE -> ready
-        (set @entity.findings (let ((orbitals (object/get @entity.program "orbitals" [])) (bc @entity.byControl) (be @entity.byEffect) (allchains @entity.chains))
+        (set @entity.findings (if @entity.chainsMissing [{ code: @config.codes.lintIndexMissing.code, path: "", message: "the lint input arrived without LINT_EMBEDS, so this rule cannot check the program", suggestion: "std-orb-lint-input sends LINT_EMBEDS before LINT_INPUT; std-orb-embed-chain did not hear it for this pass", severity: "error" }] (let ((orbitals (object/get @entity.program "orbitals" [])) (bc @entity.byControl) (be @entity.byEffect) (allchains @entity.chains))
           (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
             (let ((o (array/nth @orbitals @oi)))
             (let ((inl (array/flatten (array/map (object/get @o "traits" []) (fn t (let ((sm (object/get @t "stateMachine"))) (if (= @sm null) [] [{ name: (object/get @t "name" ""), listens: (object/get @t "listens" []), transitions: (object/get @sm "transitions" []) }]))))))) 
@@ -92,7 +95,7 @@ orbital OrbLintListenRedundantEmbedRouteOrbital {
                                  (not (array/includes (object/get @be @src []) @ev))
                                  (array/some @inl (fn td (let ((tn (object/get @td "name" ""))) (and (array/includes (object/get @bc @tn []) @ev) (or (= @tn @src) (array/includes (object/get (default @chains {}) @tn []) @src))))))))))
                           (fn l (let ((src (object/get (object/get @l "source" {}) "trait" "")) (ev (object/get @l "event" "")))
-                            { code: @config.codes.listenRedundantEmbedRoute.code, path: (str/concat "orbitals." (object/get @o "name" "") ".traits." @hn ".listens"), message: (str/concat "listens route " @src "." @ev " -> " @ev " on '" @hn "' is redundant: '" @hn "' embeds '" @src "', so the control's " @ev " already reaches '" @hn "' as its own transition, and the route delivers the same event a second time"), suggestion: (str/concat "delete the `" @src "." @ev " -> " @ev "` listen from '" @hn "'"), severity: "error" })))))))))))))))
+                            { code: @config.codes.listenRedundantEmbedRoute.code, path: (str/concat "orbitals." (object/get @o "name" "") ".traits." @hn ".listens"), message: (str/concat "listens route " @src "." @ev " -> " @ev " on '" @hn "' is redundant: '" @hn "' embeds '" @src "', so the control's " @ev " already reaches '" @hn "' as its own transition, and the route delivers the same event a second time"), suggestion: (str/concat "delete the `" @src "." @ev " -> " @ev "` listen from '" @hn "'"), severity: "error" }))))))))))))))))
         (set @entity.haveFired false)
         (set @entity.haveChains false)
         (emit LINT_FINISH { })
@@ -117,14 +120,14 @@ orbital OrbLintListenRedundantEmbedRouteOrbital {
         @description "The lint input: the file read, its language decided and the program lowered."
       FIRED_HEARD { scope : string!  byControl : Map string [string]!  byEffect : Map string [string]! }
         @description "std-orb-fired-events' FIRED_EVENTS: the events each trait fires by a control or by an effect."
-      CHAINS_HEARD { scope : string!  chains : [EmbedMap]! }
+      CHAINS_HEARD { scope : string!  chains : [EmbedMap]!  missing : boolean! }
         @description "std-orb-embed-chain's EMBED_CHAINS: per orbital, each trait's host names."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
       OrbFiredEvents.FIRED_EVENTS -> FIRED_HEARD
       OrbEmbedChain.EMBED_CHAINS -> CHAINS_HEARD
     }
     config {
-      codes : LintListenRedundantEmbedRouteCodes = { listenRedundantEmbedRoute: { code: "ORB_LISTEN_REDUNDANT_EMBED_ROUTE", category: "listen", description: "A listens route is redundant because the embedded trait already receives that event" } }
+      codes : LintListenRedundantEmbedRouteCodes = { listenRedundantEmbedRoute: { code: "ORB_LISTEN_REDUNDANT_EMBED_ROUTE", category: "listen", description: "A listens route is redundant because the embedded trait already receives that event" } , lintIndexMissing: { code: "ORB_LINT_INDEX_MISSING", category: "lint", description: "The lint input arrived without a shared program fact the rule reads (the structural index, sites, units, embeds or entities), so the rule cannot check the program" } }
         @label "Emitted codes"
         @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
     }
@@ -205,9 +208,9 @@ orbital OrbLintListenRedundantEmbedRouteOrbital {
       EMBED_INPUT_HEARD { file : string!  raw : string!  latin : boolean!  program : FiredProgram!  scope : string! }
         @description "std-orb-lint-input's LINT_INPUT: the lowered program."
       OrbLintInput.LINT_INPUT -> EMBED_INPUT_HEARD
-      EMBED_INDEX_HEARD { scope : string!  heads : Map string [string]!  roots : Map string [string]! }
-        @description "std-orb-lint-input's LINT_INDEX: the operator heads and binding roots each inline trait uses."
-      OrbLintInput.LINT_INDEX -> EMBED_INDEX_HEARD
+      EMBED_EMBEDS_HEARD { scope : string!  config : Map string [string]!  guards : Map string [string]!  effects : Map string [string]! }
+        @description "std-orb-lint-input's LINT_EMBEDS: the child trait names each trait embeds through config defaults, guards and effects."
+      OrbLintInput.LINT_EMBEDS -> EMBED_EMBEDS_HEARD
     }
   }
   trait Versions = Input.traits.Versions {

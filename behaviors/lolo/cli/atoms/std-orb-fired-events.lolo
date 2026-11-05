@@ -52,16 +52,16 @@ orbital OrbFiredEventsOrbital {
       FIRED_PROPS_HEARD -> ready
         (set @entity.names @payload.names)
         (set @entity.maps @payload.maps)
-        (set @entity.ctl (default (object/fromEntries (array/map @payload.controls (fn c [(str/replaceAll (str/replaceAll (str/concat (object/get @c "pattern") "." (object/get @c "prop")) "~" "~t") "." "~d"), (if (= (object/get @c "kind") "event-list") (if (object/get @c "notification") "ln" "ly") (if (object/get @c "notification") "n" "y"))]))) {}))
+        (set @entity.ctl (default (object/fromEntries (array/map @payload.controls (fn c [(str/concat (object/get @c "pattern") "|" (object/get @c "prop")), (if (= (object/get @c "kind") "event-list") (if (object/get @c "notification") "ln" "ly") (if (object/get @c "notification") "n" "y"))]))) {}))
       FIRED_WALK_HEARD -> ready
         (set @entity.walk @payload.slots)
       FIRED_SEMANTICS_HEARD -> ready
         (set @entity.functions @payload.functions)
         (set @entity.busExcluded @payload.busExcluded)
         (set @entity.targetOptions @payload.targetOptions)
-        (set @entity.busSet (default (object/fromEntries (array/map @payload.busExcluded (fn x [(str/replaceAll (str/replaceAll @x "~" "~t") "." "~d"), true]))) {}))
-        (set @entity.tgtSet (default (object/fromEntries (array/map @payload.targetOptions (fn x [(str/replaceAll (str/replaceAll @x "~" "~t") "." "~d"), true]))) {}))
-        (set @entity.fnSet (default (object/fromEntries (array/map @payload.functions (fn x [(str/replaceAll (str/replaceAll @x "~" "~t") "." "~d"), true]))) {}))
+        (set @entity.busSet (default (object/fromEntries (array/map @payload.busExcluded (fn x [@x, true]))) {}))
+        (set @entity.tgtSet (default (object/fromEntries (array/map @payload.targetOptions (fn x [@x, true]))) {}))
+        (set @entity.fnSet (default (object/fromEntries (array/map @payload.functions (fn x [@x, true]))) {}))
       FIRED_INPUT_HEARD -> ready
         (let ((sem @entity.walk) (noslot : WalkSlot { kind: "", args: [] }) (names @entity.names) (maps @entity.maps) (ctl @entity.ctl) (nr : FiredR { h: "", ok: false, it: [] }) (ns : FiredS { s: [], ls: [] }) (nb : FiredB { f: false, t: false, lit: false, v: "" }) (busSet @entity.busSet) (tgtSet @entity.tgtSet) (fnSet @entity.fnSet))
           (let ((recs (array/flatten (array/map (object/get (default @payload.program { orbitals: [] }) "orbitals" []) (fn o
@@ -112,7 +112,7 @@ orbital OrbFiredEventsOrbital {
                                        (if (object/get @r1 "ok")
                                          (if (validate/object @opt)
                                            (let ((keys (object/keys @opt)) (ad (object/get @r1 "h")))
-                                             (if (and (!= @ad "") (not (str/includes @ad ".")) (not (str/startsWith @ad (quote "@"))) (not (array/some @keys (fn kq (object/has @tgtSet (str/replaceAll (str/replaceAll @kq "~" "~t") "." "~d"))))) (array/some @keys (fn kq (!= @kq "schema"))))
+                                             (if (and (!= @ad "") (not (str/includes @ad ".")) (not (str/startsWith @ad (quote "@"))) (not (array/some @keys (fn kq (object/has @tgtSet @kq)))) (array/some @keys (fn kq (!= @kq "schema"))))
                                                [{ k: "e", h: @ad, site: "", kind: "", src: "" }]
                                                []))
                                            [])
@@ -129,13 +129,13 @@ orbital OrbFiredEventsOrbital {
               (evk (array/filter @kv (fn key (or (array/includes @names @key) (array/includes @maps @key)))))
               (hasEm (object/has @k "emit")))
           (if (and (= (array/len @kids0) 0) (= (array/len @evk) 0) (not @hasEm)) @nr
-            (let ((kids (array/flatten (array/map (array/filter @kv (fn key (not (str/includes @key ".")))) (fn key (let ((r (object/get @k @key null)) (lk (object/get @ctl (str/replaceAll (str/replaceAll (str/concat @ty "." @key) "~" "~t") "." "~d") ""))) (let ((its (object/get (if (= @r null) @nr @r) "it"))) (if (or (= @lk "ly") (= @lk "ln")) (array/map @its (fn x (if (= (object/get @x "k") "c") { k: "c", h: (object/get @x "h"), site: (str/concat @ty "." @key), kind: (if (= @lk "ly") "y" "n"), src: "" } @x))) @its)))))))
+            (let ((kids (array/flatten (array/map (array/filter @kv (fn key (not (str/includes @key ".")))) (fn key (let ((r (object/get @k @key null)) (lk (object/get @ctl (str/concat @ty "|" @key) ""))) (let ((its (object/get (if (= @r null) @nr @r) "it"))) (if (or (= @lk "ly") (= @lk "ln")) (array/map @its (fn x (if (= (object/get @x "k") "c") { k: "c", h: (object/get @x "h"), site: (str/concat @ty "." @key), kind: (if (= @lk "ly") "y" "n"), src: "" } @x))) @its)))))))
                   (pn (array/filter @evk (fn key (and (array/includes @names @key) (not (str/includes @key "."))))))
                   (pm (array/filter @evk (fn key (and (array/includes @maps @key) (not (str/includes @key ".")))))))
               (let ((own (array/concat
                            (if (= (array/len @pn) 0) []
                              (array/flatten (array/map @pn
-                               (fn key (let ((v (object/get @n @key null)) (site (str/concat @ty "." @key))) (array/map (array/filter (if (validate/string @v) [@v] (if (validate/array @v) (object/get (tree/fold @v (fn (n k)
+                               (fn key (let ((v (object/get @n @key null)) (site (str/concat @ty "." @key)) (ck (str/concat @ty "|" @key))) (array/map (array/filter (if (validate/string @v) [@v] (if (validate/array @v) (object/get (tree/fold @v (fn (n k)
   (if (validate/array @n)
     (let ((len (array/len @n)))
       (if (= @len 0) @ns
@@ -173,7 +173,7 @@ orbital OrbFiredEventsOrbital {
                                (if (= @sm "last")
                                  (if (>= @argc 1) (let ((lc (array/nth @kk @argc))) (object/get (default @lc @ns) "s" [])) [])
                                  (if (= @sm "lambdaResult")
-                                   (let ((li (array/filter (array/range 0 @argc) (fn i (let ((a (array/nth @n (+ @i 1)))) (and (validate/array @a) (>= (array/len @a) 3) (let ((a0 (array/nth @a 0))) (and (validate/string @a0) (object/has @fnSet (str/replaceAll (str/replaceAll @a0 "~" "~t") "." "~d")))))))))) 
+                                   (let ((li (array/filter (array/range 0 @argc) (fn i (let ((a (array/nth @n (+ @i 1)))) (and (validate/array @a) (>= (array/len @a) 3) (let ((a0 (array/nth @a 0))) (and (validate/string @a0) (object/has @fnSet @a0))))))))) 
                                      (if (> (array/len @li) 0) (let ((lc (array/nth @kk (+ (array/last @li) 1)))) (object/get (default @lc @ns) "ls" [])) []))
                                    (if (= @sm "listed")
                                      (let ((picked (object/get @sl "args" [])))
@@ -182,10 +182,10 @@ orbital OrbFiredEventsOrbital {
                                          []))
                                      [])))))))
                     { s: @s, ls: (let ((lc (array/nth @kk @argc))) (object/get (default @lc @ns) "s" [])) }))))))))
-    (if (validate/string @n) { s: [@n], ls: [] } @ns))) "FiredNode") "s" []) [])) (fn x (and (not (str/startsWith @x (quote "@"))) (not (object/has @busSet (str/replaceAll (str/replaceAll @x "~" "~t") "." "~d")))))) (fn x { k: "c", h: @x, site: @site, kind: (object/get @ctl (str/replaceAll (str/replaceAll @site "~" "~t") "." "~d") ""), src: "" })))))))
+    (if (validate/string @n) { s: [@n], ls: [] } @ns))) "FiredNode") "s" []) [])) (fn x (and (not (str/startsWith @x (quote "@"))) (not (object/has @busSet @x))))) (fn x { k: "c", h: @x, site: @site, kind: (object/get @ctl @ck ""), src: "" })))))))
                            (if (= (array/len @pm) 0) []
                              (array/flatten (array/map @pm
-                               (fn key (let ((co (object/get @n @key null)) (site (str/concat @ty "." @key))) (if (validate/object @co) (array/map (array/filter (array/flatten (array/map (array/filter (object/keys @co) (fn gk (not (str/includes @gk ".")))) (fn gk (let ((gv (object/get @co @gk null))) (if (validate/string @gv) [@gv] (if (validate/array @gv) (object/get (tree/fold @gv (fn (n k)
+                               (fn key (let ((co (object/get @n @key null)) (site (str/concat @ty "." @key)) (ck (str/concat @ty "|" @key))) (if (validate/object @co) (array/map (array/filter (array/flatten (array/map (array/filter (object/keys @co) (fn gk (not (str/includes @gk ".")))) (fn gk (let ((gv (object/get @co @gk null))) (if (validate/string @gv) [@gv] (if (validate/array @gv) (object/get (tree/fold @gv (fn (n k)
   (if (validate/array @n)
     (let ((len (array/len @n)))
       (if (= @len 0) @ns
@@ -223,7 +223,7 @@ orbital OrbFiredEventsOrbital {
                                (if (= @sm "last")
                                  (if (>= @argc 1) (let ((lc (array/nth @kk @argc))) (object/get (default @lc @ns) "s" [])) [])
                                  (if (= @sm "lambdaResult")
-                                   (let ((li (array/filter (array/range 0 @argc) (fn i (let ((a (array/nth @n (+ @i 1)))) (and (validate/array @a) (>= (array/len @a) 3) (let ((a0 (array/nth @a 0))) (and (validate/string @a0) (object/has @fnSet (str/replaceAll (str/replaceAll @a0 "~" "~t") "." "~d")))))))))) 
+                                   (let ((li (array/filter (array/range 0 @argc) (fn i (let ((a (array/nth @n (+ @i 1)))) (and (validate/array @a) (>= (array/len @a) 3) (let ((a0 (array/nth @a 0))) (and (validate/string @a0) (object/has @fnSet @a0))))))))) 
                                      (if (> (array/len @li) 0) (let ((lc (array/nth @kk (+ (array/last @li) 1)))) (object/get (default @lc @ns) "ls" [])) []))
                                    (if (= @sm "listed")
                                      (let ((picked (object/get @sl "args" [])))
@@ -232,7 +232,7 @@ orbital OrbFiredEventsOrbital {
                                          []))
                                      [])))))))
                     { s: @s, ls: (let ((lc (array/nth @kk @argc))) (object/get (default @lc @ns) "s" [])) }))))))))
-    (if (validate/string @n) { s: [@n], ls: [] } @ns))) "FiredNode") "s" []) [])))))) (fn x (and (not (str/startsWith @x (quote "@"))) (not (object/has @busSet (str/replaceAll (str/replaceAll @x "~" "~t") "." "~d")))))) (fn x { k: "c", h: @x, site: @site, kind: (object/get @ctl (str/replaceAll (str/replaceAll @site "~" "~t") "." "~d") ""), src: "" })) []))))))))
+    (if (validate/string @n) { s: [@n], ls: [] } @ns))) "FiredNode") "s" []) [])))))) (fn x (and (not (str/startsWith @x (quote "@"))) (not (object/has @busSet @x))))) (fn x { k: "c", h: @x, site: @site, kind: (object/get @ctl @ck ""), src: "" })) []))))))))
                     (eo (if @hasEm (let ((em (object/get @n "emit" null))) (if (validate/object @em) (array/flatten (array/map (object/values @em) (fn v (if (validate/string @v) [{ k: "o", h: @v, site: "", kind: "", src: "" }] [])))) [])) [])))
                 (let ((all (array/concat (if (= (array/len @kids) 0) [] (array/filter @kids (fn x (!= (object/get @x "k") "o")))) (array/concat @own @eo))))
                   (if (= (array/len @all) 0) @nr { h: "", ok: false, it: (if (object/has @n "~ti") (array/map @all (fn x (if (= (object/get @x "k") "c") { k: "c", h: (object/get @x "h"), site: (object/get @x "site"), kind: (object/get @x "kind"), src: (object/get @n "~ti") } @x))) @all) })))))))
@@ -244,13 +244,13 @@ orbital OrbFiredEventsOrbital {
                                 (let ((liveIdx (array/map (array/filter @tp (fn p (and (object/get @p "a") (or (= @init null) (let ((fr (let ((f (object/get (object/get @p "x") "from" ""))) (if (validate/string @f) (array/append [] @f) @f)))) (or (array/includes @fr "*") (array/some @fr (fn q (array/includes @reach @q))))))))) (fn p (str/concat "t" (array/indexOf @trs (object/get @p "x")))))))
                                   { trait: (object/get @t "name" ""), ev: (array/filter @evAll (fn e (not (str/startsWith @e "~T")))), ctl: (array/map (array/filter @items (fn x (= (object/get @x "k") "c"))) (fn x (object/get @x "h"))), lv: (array/map (array/filter @items (fn x (and (= (object/get @x "k") "c") (= (object/get @x "kind") "y") (or (= (object/get @x "src") "tick") (array/includes @liveIdx (object/get @x "src")))))) (fn x { ev: (object/get @x "h"), site: (object/get @x "site") })) })))))))))))))))
             (let ((tnames (array/unique (array/map @recs (fn r (object/get @r "trait" "")))))
-                  (g (array/groupBy @recs (fn r (str/replaceAll (str/replaceAll (object/get @r "trait" "") "~" "~t") "." "~d"))))
-                  (kernelSet (default (object/fromEntries (array/map (array/flatten (array/map (object/get (default @payload.program { orbitals: [] }) "orbitals" []) (fn o (array/flatten (array/map (object/get @o "traits" []) (fn t (array/map (array/filter (object/get @t "listens" []) (fn l (and (object/has @l "key") (!= (object/get @l "source.trait" "") "")))) (fn l (object/get @l "source.trait" ""))))))))) (fn x [(str/replaceAll (str/replaceAll @x "~" "~t") "." "~d"), true]))) {})))
+                  (g (array/groupBy @recs (fn r (object/get @r "trait" ""))))
+                  (kernelSet (default (object/fromEntries (array/map (array/flatten (array/map (object/get (default @payload.program { orbitals: [] }) "orbitals" []) (fn o (array/flatten (array/map (object/get @o "traits" []) (fn t (array/map (array/filter (object/get @t "listens" []) (fn l (and (object/has @l "key") (!= (object/get @l "source.trait" "") "")))) (fn l (object/get @l "source.trait" ""))))))))) (fn x [@x, true]))) {})))
               (emit FIRED_EVENTS {
                 scope: @payload.scope,
-                byControl: (default (object/fromEntries (array/map @tnames (fn nm [@nm, (array/sort (array/unique (array/flatten (array/map (object/get @g (str/replaceAll (str/replaceAll @nm "~" "~t") "." "~d") []) (fn r (object/get @r "ctl" []))))))]))) {}),
-                byEffect: (default (object/fromEntries (array/map @tnames (fn nm [@nm, (array/sort (array/unique (array/concat (array/flatten (array/map (object/get @g (str/replaceAll (str/replaceAll @nm "~" "~t") "." "~d") []) (fn r (object/get @r "ev" [])))) (if (object/has @kernelSet (str/replaceAll (str/replaceAll @nm "~" "~t") "." "~d")) ["DELIVERY_REJECTED"] []))))]))) {}),
-                controls: (default (object/fromEntries (array/map @tnames (fn nm [@nm, (let ((pairs (array/flatten (array/map (object/get @g (str/replaceAll (str/replaceAll @nm "~" "~t") "." "~d") []) (fn r (object/get @r "lv" [])))))) (array/map (array/sort (array/unique (array/map @pairs (fn p (object/get @p "ev"))))) (fn ev { event: @ev, sites: (array/sort (array/unique (array/map (array/filter @pairs (fn p (= (object/get @p "ev") @ev))) (fn p (object/get @p "site"))))) })))]))) {}) }))))
+                byControl: (default (object/fromEntries (array/map @tnames (fn nm [@nm, (array/sort (array/unique (array/flatten (array/map (object/get @g @nm []) (fn r (object/get @r "ctl" []))))))]))) {}),
+                byEffect: (default (object/fromEntries (array/map @tnames (fn nm [@nm, (array/sort (array/unique (array/concat (array/flatten (array/map (object/get @g @nm []) (fn r (object/get @r "ev" [])))) (if (object/has @kernelSet @nm) ["DELIVERY_REJECTED"] []))))]))) {}),
+                controls: (default (object/fromEntries (array/map @tnames (fn nm [@nm, (let ((pairs (array/flatten (array/map (object/get @g @nm []) (fn r (object/get @r "lv" [])))))) (array/map (array/sort (array/unique (array/map @pairs (fn p (object/get @p "ev"))))) (fn ev { event: @ev, sites: (array/sort (array/unique (array/map (array/filter @pairs (fn p (= (object/get @p "ev") @ev))) (fn p (object/get @p "site"))))) })))]))) {}) }))))
     }
 
     emits {

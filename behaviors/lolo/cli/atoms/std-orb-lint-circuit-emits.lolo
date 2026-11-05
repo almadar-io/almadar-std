@@ -51,8 +51,8 @@ orbital OrbLintCircuitEmitsOrbital {
                 (notr : [CeTransition] [])
                 (nohit : [CeHit] [])
                 (nr : CeR { s: [], c: 0, m: false, p: false, en: false, h: [] })
-                (busSet (default (object/fromEntries (array/map @entity.busExcluded (fn x [(str/replaceAll (str/replaceAll @x "~" "~t") "." "~d"), true]))) {}))
-                (nameSet (default (object/fromEntries (array/map @entity.names (fn x [(str/replaceAll (str/replaceAll @x "~" "~t") "." "~d"), true]))) {})))
+                (busSet (default (object/fromEntries (array/map @entity.busExcluded (fn x [@x, true]))) {}))
+                (nameSet (default (object/fromEntries (array/map @entity.names (fn x [@x, true]))) {})))
             (array/flatten (array/map (object/get @entity.program "orbitals" []) (fn (o oi)
               (array/flatten (array/map (object/get @o "traits" []) (fn (t ti)
                 (if (not (object/has @t "stateMachine")) @nof
@@ -60,7 +60,7 @@ orbital OrbLintCircuitEmitsOrbital {
                     (let ((tp (str/concat "orbitals[" @oi " (" @on ")].traits[" @ti " (" @tn ")]"))
                           (trs : [CeTransition] (object/get @t "stateMachine.transitions" @notr)))
                       (let ((tl : [CeTr] (array/map @trs (fn x (let ((fr (object/get @x "from" ""))) { e: (object/get @x "event" ""), f: (if (validate/string @fr) (array/append @nos @fr) @fr), fs: (if (validate/string @fr) @fr (str/concat "[" (str/join @fr ", ") "]")), to: (object/get @x "to" "") }))))
-                            (hs (object/fromEntries (array/map @tl (fn t2 [(str/replaceAll (str/replaceAll (object/get @t2 "e") "~" "~t") "." "~d"), true])))))
+                            (hs (object/fromEntries (array/map @tl (fn t2 [(object/get @t2 "e"), true])))))
                         (array/flatten (array/map (array/range 0 (array/len @trs)) (fn tj
                           (let ((x (default (array/nth @tl @tj) {})) (effs (object/get (default (array/nth @trs @tj) {}) "effects" []))) (let ((emIx : [CeIndex] (array/map @effs (fn e (default (as (tree/index (if (validate/array @e) @e []) ["emit"]) CeIndex) {}))))) 
                             (let ((ep (str/concat @tp ".stateMachine.transitions[" @tj "].effects[")))
@@ -69,14 +69,14 @@ orbital OrbLintCircuitEmitsOrbital {
                                    (let ((n (object/get @c "node")))
                                      (if (and (validate/array @n) (>= (array/len @n) 2))
                                        (let ((ev (array/nth @n 1)))
-                                         (if (and (validate/string @ev) (object/has @hs (str/replaceAll (str/replaceAll @ev "~" "~t") "." "~d")) (not (array/some @tl (fn t3 (and (= (object/get @t3 "e") @ev) (array/includes (object/get @t3 "f") (object/get @x "to")))))))
+                                         (if (and (validate/string @ev) (object/has @hs @ev) (not (array/some @tl (fn t3 (and (= (object/get @t3 "e") @ev) (array/includes (object/get @t3 "f") (object/get @x "to")))))))
                                            [{ code: @config.codes.circuitOwnEmitUnreachable.code, path: (str/concat @ep @ek "]"), message: (str/concat "'" @on "." @tn "': transition " (object/get @x "fs") "--[" (object/get @x "e") "]-->" (object/get @x "to") " emits own event '" @ev "' that this trait handles only from other states, so the same-trait cascade (EXEC-QUEUE-2) never delivers it from " (object/get @x "to")), suggestion: "this trait has an arm for the emitted event, but none declares the transition's target state in its from-states, so the emit is dropped. Add the target state to that arm's from-states, or emit an event the target state handles.", severity: "error" }]
                                            @nof))
                                        @nof))))))))))
                               (array/concat @own (array/concat
                                 (array/concat
                                   (array/flatten (array/map (array/range 0 (array/len @effs)) (fn ej
-                                    (let ((evs (array/flatten (array/map (array/filter (object/get (default (array/nth @emIx @ej) {}) "emit" []) (fn c (not (str/includes (object/get @c "path" "") ".")))) (fn c (let ((n (object/get @c "node"))) (if (and (validate/array @n) (>= (array/len @n) 2)) (let ((ev (array/nth @n 1))) (if (validate/string @ev) (if (object/has @busSet (str/replaceAll (str/replaceAll @ev "~" "~t") "." "~d")) [@ev] @nos) @nos)) @nos)))))))
+                                    (let ((evs (array/flatten (array/map (array/filter (object/get (default (array/nth @emIx @ej) {}) "emit" []) (fn c (not (str/includes (object/get @c "path" "") ".")))) (fn c (let ((n (object/get @c "node"))) (if (and (validate/array @n) (>= (array/len @n) 2)) (let ((ev (array/nth @n 1))) (if (validate/string @ev) (if (object/has @busSet @ev) [@ev] @nos) @nos)) @nos)))))))
  (array/map @evs (fn ev
                                         { code: @config.codes.circuitLifecycleEmitUndelivered.code, path: (str/concat @ep @ej "]"), message: (str/concat "'" @on "." @tn "': transition " (object/get @x "fs") "--[" (object/get @x "e") "]-->" (object/get @x "to") " emits lifecycle event '" @ev "' — the bus never delivers it"), suggestion: "route a named event whose arm re-enters via `EVENT -> ...`, or inline the target state's own effects directly into this arm; lifecycle events are never delivered through (emit ...)", severity: "error" }))))))
                                   (array/flatten (array/map (array/range 0 (array/len @effs)) (fn ej
@@ -93,8 +93,8 @@ orbital OrbLintCircuitEmitsOrbital {
                                                               (kids (array/flatten (array/map (object/values @k) (fn q (object/get (if (= @q null) @nr @q) "h"))))))
                                                           { s: @nos, c: 0, m: false, p: false, en: false,
                                                             h: (array/concat
-                                                                 (array/flatten (array/map (array/filter (object/keys @n) (fn key (and (not (str/includes @key ".")) (object/has @nameSet (str/replaceAll (str/replaceAll @key "~" "~t") "." "~d")))))
-                                                                   (fn key (let ((v (object/get @n @key null))) (if (validate/string @v) (if (object/has @busSet (str/replaceAll (str/replaceAll @v "~" "~t") "." "~d")) [{ key: @key, ev: @v, ty: @ty }] @nohit) @nohit)))))
+                                                                 (array/flatten (array/map (array/filter (object/keys @n) (fn key (and (not (str/includes @key ".")) (object/has @nameSet @key))))
+                                                                   (fn key (let ((v (object/get @n @key null))) (if (validate/string @v) (if (object/has @busSet @v) [{ key: @key, ev: @v, ty: @ty }] @nohit) @nohit)))))
                                                                  (array/map @kids (fn hh { key: (object/get @hh "key"), ev: (object/get @hh "ev"), ty: (if (= (object/get @hh "ty") "") @ty (object/get @hh "ty")) }))) })
                                                         @nr))) "CeNode")))
                                               (array/map (object/get (if (= @hr null) @nr @hr) "h") (fn hh

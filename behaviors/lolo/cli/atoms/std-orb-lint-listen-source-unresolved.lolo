@@ -66,8 +66,8 @@ orbital OrbLintListenSourceUnresolvedOrbital {
                     (let ((eon (object/get @eo "name" "")))
                       (array/map (array/filter (object/get @eo "traits" @notd) (fn et (object/has @et "stateMachine"))) (fn et2
                         (let ((etn (object/get @et2 "name" "")))
-                          { o: @eon, t: @etn, k: (str/concat (str/replaceAll (str/replaceAll (str/replaceAll @eon "~" "~t") "." "~d") "|" "~p") "|" (str/replaceAll (str/replaceAll (str/replaceAll @etn "~" "~t") "." "~d") "|" "~p")), evs: (array/concat (array/map (object/get @et2 "emits" @noem) (fn ee (object/get @ee "event" ""))) (array/concat (object/get @bc @etn @nos) (object/get @be @etn @nos))) }))))))))
-                  (onames (array/map @orbitals (fn on0 { k: (str/replaceAll (str/replaceAll (str/replaceAll (object/get @on0 "name" "") "~" "~t") "." "~d") "|" "~p") }))))
+                          { o: @eon, t: @etn, k: (str/concat (str/replaceAll (str/replaceAll @eon "~" "~t") "|" "~p") "|" (str/replaceAll (str/replaceAll @etn "~" "~t") "|" "~p")), evs: (array/concat (array/map (object/get @et2 "emits" @noem) (fn ee (object/get @ee "event" ""))) (array/concat (object/get @bc @etn @nos) (object/get @be @etn @nos))) }))))))))
+                  (onames (array/map @orbitals (fn on0 { k: (str/replaceAll (str/replaceAll (object/get @on0 "name" "") "~" "~t") "|" "~p") }))))
               (let ((byKey : LsuEntryMap (array/groupBy @entries "k"))
                     (byName : LsuNameMap (array/groupBy @onames "k")))
                 (array/flatten (array/map @orbitals (fn o
@@ -80,9 +80,9 @@ orbital OrbLintListenSourceUnresolvedOrbital {
                             (let ((sk (object/get @src "kind" ""))
                                   (strait (object/get @src "trait" "")))
                               (let ((sorb (if (= @sk "trait") @on (object/get @src "orbital" ""))))
-                                (let ((esorb (str/replaceAll (str/replaceAll (str/replaceAll @sorb "~" "~t") "." "~d") "|" "~p")))
+                                (let ((esorb (str/replaceAll (str/replaceAll @sorb "~" "~t") "|" "~p")))
                                   (if (not (object/has @byName @esorb)) @nofind
-                                    (if (array/some (object/get @byKey (str/concat @esorb "|" (str/replaceAll (str/replaceAll (str/replaceAll @strait "~" "~t") "." "~d") "|" "~p")) @noent) (fn he (array/includes (object/get @he "evs" @nos) @ev))) @nofind
+                                    (if (array/some (object/get @byKey (str/concat @esorb "|" (str/replaceAll (str/replaceAll @strait "~" "~t") "|" "~p")) @noent) (fn he (array/includes (object/get @he "evs" @nos) @ev))) @nofind
                                       (let ((sib (array/first (array/map (array/filter @entries (fn se (and (!= (object/get @se "o") @sorb) (= (object/get @se "t") @strait) (array/includes (object/get @se "evs" @nos) @ev)))) (fn se2 (object/get @se2 "o"))))))
                                         [{ code: @config.codes.xListenSourceUnresolved.code, path: (str/concat "orbitals." @on ".traits." @tdn ".listens"), message: (str/concat "Listen entry in '" @on "." @tdn "' references source '" @sorb "." @strait "' event '" @ev "' which is not declared on the source trait."), suggestion: (if (and (= @sk "trait") (!= @sib null)) (str/concat "Trait '" @strait "' declares event '" @ev "' in sibling orbital '" @sib "' — a bare `Trait.EVENT` listen only resolves within this orbital; write the qualified form `" @sib "." @strait "." @ev "`.") "Either declare the event in the source trait's `emits` block, or remove the listens entry. Cross-orbital channels require the source trait to declare the emit explicitly."), severity: "error" }]))))))))))))))))))))))
         (emit LINT_FINISH { })

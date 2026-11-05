@@ -51,9 +51,10 @@ orbital OrbLintPagePathUniquenessOrbital {
                                                    (str/concat @k "=" (if (validate/number @v) (if (= (math/floor @v) @v) (str/concat @v ".0") (json/stringify @v)) (json/stringify @v)))))))) ",")
                                              (json/stringify @addr)))))))
                             (if (= @key null) []
-                              [{ loc: (str/concat "orbitals[" @oi "].pages[" @pj "]"), path: @pth, key: @key }])))))))))))))
+                              (let ((eqk : string (if (and (!= @proto null) (not (validate/object @addr))) (str/concat @proto " " (value/key @addr)) @key)))
+                                [{ loc: (str/concat "orbitals[" @oi "].pages[" @pj "]"), path: @pth, key: @key, eqk: @eqk }]))))))))))))))
             (array/flatten (array/map @entries (fn en
-              (let ((same (array/filter @entries (fn e (= (object/get @e "key") (object/get @en "key"))))))
+              (let ((same (array/filter @entries (fn e (= (object/get @e "eqk") (object/get @en "eqk"))))))
                 (if (< (array/len @same) 2)
                   []
                   (let ((lead (array/first @same)))

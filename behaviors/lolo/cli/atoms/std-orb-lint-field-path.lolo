@@ -17,6 +17,7 @@ type RuMachine = { transitions : [RuTransition] }
 type RuTrait = { name : string, stateMachine : RuMachine }
 type RuField = { name : string, type : string, relation : RuRelation }
 type RuRelation = { entity : string }
+type RuEntRow = { name : string!, fields : [RuField] }
 type RuEntity = { name : string, fields : [RuField] }
 type RuOrbital = { name : string, entity : RuEntity, auxiliaryEntities : [RuEntity], traits : [RuTrait] }
 type RuProgram = { orbitals : [RuOrbital] }
@@ -31,6 +32,9 @@ orbital OrbLintFieldPathOrbital {
     uKeys : Map string [string] = {}
     unitsHeard : boolean = false
     unitsScope : string = ""
+    entIdx : Map string RuEntRow = {}
+    entsHeard : boolean = false
+    entsScope : string = ""
     id : string!
     scope : string = ""
     findings : [OrbFinding] = []
@@ -45,16 +49,15 @@ orbital OrbLintFieldPathOrbital {
         (set @entity.uKeys @payload.keys)
         (set @entity.unitsHeard true)
         (set @entity.unitsScope @payload.scope)
+      ENTITIES_HEARD -> ready
+        (set @entity.entIdx @payload.byName)
+        (set @entity.entsHeard true)
+        (set @entity.entsScope @payload.scope)
       LINT_INPUT -> ready
         (set @entity.scope @payload.scope)
-        (set @entity.findings (if (and @entity.unitsHeard (= @entity.unitsScope @payload.scope))
+        (set @entity.findings (if (and @entity.unitsHeard (= @entity.unitsScope @payload.scope) @entity.entsHeard (= @entity.entsScope @payload.scope))
 (let ((orbitals (object/get @payload.program "orbitals" [])) (noh : [RuHit] []) (noh2 : [string] []) (noe : [RuEntity] [])
- (allEnts (array/flatten (array/map @orbitals (fn o (array/concat
-      (let ((en (object/get @o "entity" null))) (if (and (validate/object @en) (validate/string (object/get @en "name" null))) [@en] @noe))
-      (array/filter (object/get @o "auxiliaryEntities" @noe) (fn x (and (validate/object @x) (validate/string (object/get @x "name" null))))))))))
- (pnames (array/flatten (array/map @orbitals (fn o (let ((en (object/get @o "entity" null))) (if (and (validate/object @en) (validate/string (object/get @en "name" null))) [(object/get @en "name")] (array/take [""] 0)))))))
- (dups (array/filter @pnames (fn nm (> (array/len (array/filter @pnames (fn x (= @x @nm)))) 1))))
- (ents (array/reverse (array/filter @allEnts (fn e (not (array/includes @dups (object/get @e "name"))))))))
+ (entIdx @entity.entIdx))
           (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
             (let ((orb (array/nth @orbitals @oi)))
               (let ((trs (object/get @orb "traits" [])))
@@ -81,7 +84,7 @@ orbital OrbLintFieldPathOrbital {
           { nd: (if (validate/string @t)
                   (array/concat (let ((fields (object/get @n "fields" null)) (ename (object/get @n "entity" null)))
  (if (and (validate/array @fields) (validate/string @ename))
-  (let ((base (array/find @ents (fn e (= (object/get @e "name") @ename)))))
+  (let ((base (object/get @entIdx @ename null)))
    (if (= @base null) @noh
     (array/flatten (array/map @fields (fn f (if (and (validate/string @f) (str/includes @f "."))
      (let ((fp @f)) (let ((segs (str/split @fp ".")))
@@ -94,7 +97,7 @@ orbital OrbLintFieldPathOrbital {
          (let ((rl (object/get @rel "relation" null)))
           (if (not (validate/object @rl)) @noh
            (let ((tname (object/get @rl "entity" null))) (if (not (validate/string @tname)) @noh
-            (let ((target (array/find @ents (fn e (= (object/get @e "name") @tname)))))
+            (let ((target (object/get @entIdx @tname null)))
              (if (= @target null) @noh
               (array/concat
                (if (array/some (object/get @target "fields" []) (fn f (= (object/get @f "name" null) @second))) @noh
@@ -114,8 +117,9 @@ orbital OrbLintFieldPathOrbital {
                                   (if (= @fr null) []
                                     (array/map (object/get @fr "nd") (fn h { code: @config.codes.ruiInvalidFieldPath.code, path: (str/concat "orbitals[" @oi " (" (object/get @orb "name" "") ")].traits[" @tj " (" (object/get @td "name" "") ")].stateMachine.transitions[" @ti "].effects[" @ej "][2]" (object/get @h "p")), message: (object/get @h "m"), suggestion: (object/get @h "s"), severity: "error" }))))
                                 []))))))))))))))))))))
-[{ code: @config.codes.lintIndexMissing.code, path: "", message: "the lint input arrived without LINT_UNITS, so this rule cannot check the program", suggestion: "std-orb-lint-input sends LINT_UNITS before LINT_INPUT; this rule did not hear it", severity: "error" }]))
+[{ code: @config.codes.lintIndexMissing.code, path: "", message: "the lint input arrived without LINT_UNITS or LINT_ENTITIES, so this rule cannot check the program", suggestion: "std-orb-lint-input sends LINT_UNITS and LINT_ENTITIES before LINT_INPUT; this rule did not hear both", severity: "error" }]))
         (set @entity.unitsHeard false)
+        (set @entity.entsHeard false)
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "field-path", scope: @entity.scope, findings: @entity.findings })
@@ -137,9 +141,12 @@ orbital OrbLintFieldPathOrbital {
       UNITS_HEARD { scope : string!  keys : Map string [string]!  guardKeys : Map string [string]!  emitStr : [string]!  guardEmitStr : [string]!  itemRoots : Map string [string]!  guardItemRoots : Map string [string]! }
         @description "std-orb-lint-input's LINT_UNITS: the object keys, string emits and @item/@index roots of every transition, tick and config unit."
       OrbLintInput.LINT_UNITS -> UNITS_HEARD
+      ENTITIES_HEARD { scope : string!  byName : Map string RuEntRow! }
+        @description "std-orb-lint-input's LINT_ENTITIES: every entity in program order, and the entity by name (the last declaration wins; names more than one primary entity declares are absent)."
+      OrbLintInput.LINT_ENTITIES -> ENTITIES_HEARD
     }
     config {
-      codes : LintFieldPathCodes = { lintIndexMissing: { code: "ORB_LINT_INDEX_MISSING", category: "lint", description: "The lint input arrived without the structural index the rule gates on, so the rule cannot check the program" }, ruiInvalidFieldPath: { code: "ORB_RUI_INVALID_FIELD_PATH", category: "render_ui", description: "A nested field path references an invalid relation or field" } }
+      codes : LintFieldPathCodes = { lintIndexMissing: { code: "ORB_LINT_INDEX_MISSING", category: "lint", description: "The lint input arrived without a shared program fact the rule reads (the structural index, sites, units, embeds or entities), so the rule cannot check the program" }, ruiInvalidFieldPath: { code: "ORB_RUI_INVALID_FIELD_PATH", category: "render_ui", description: "A nested field path references an invalid relation or field" } }
         @label "Emitted codes"
         @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
     }

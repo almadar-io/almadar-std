@@ -42,7 +42,7 @@ orbital OrbProducedEventsOrbital {
       PRODUCED_SLOTS_HEARD -> ready
         (set @entity.slots @payload.emitSlots)
       PRODUCED_INPUT_HEARD -> ready
-        (let ((slots @entity.slots) (sem @entity.walk) (noslot : WalkSlot { kind: "", args: [] }) (nr : [FiredItem] []) (nl : FiredLf { lf: [], ll: [] }) (fnSet (default (object/fromEntries (array/map @entity.functions (fn x [(str/replaceAll (str/replaceAll @x "~" "~t") "." "~d"), true]))) {})) (rowsBy (default (array/groupBy @entity.rows (fn row (str/replaceAll (str/replaceAll (object/get @row "pattern") "~" "~t") "." "~d"))) {})))
+        (let ((slots @entity.slots) (sem @entity.walk) (noslot : WalkSlot { kind: "", args: [] }) (nr : [FiredItem] []) (nl : FiredLf { lf: [], ll: [] }) (fnSet (default (object/fromEntries (array/map @entity.functions (fn x [@x, true]))) {})) (rowsBy (default (array/groupBy @entity.rows (fn row (object/get @row "pattern"))) {})))
           (let ((recs (array/flatten (array/map (object/get @payload.program "orbitals" []) (fn o
                   (array/map (array/filter (object/get @o "traits" []) (fn t (object/has @t "stateMachine"))) (fn t
                     (let ((effs (array/concat
@@ -66,7 +66,7 @@ orbital OrbProducedEventsOrbital {
                                 (array/map (array/flatten (array/map @slots (fn sl (let ((v (object/get @em @sl null))) (if (validate/string @v) [@v] []))))) (fn x ["e", @x]))
                                 (if (validate/string @em) [["e", @em]] [])))
                             []))
-                  (rows (if (validate/string @ty) (object/get @rowsBy (str/replaceAll (str/replaceAll @ty "~" "~t") "." "~d") []) [])))
+                  (rows (if (validate/string @ty) (object/get @rowsBy @ty []) [])))
               (let ((ctlItems (if (= (array/len @rows) 0) [] (array/flatten (array/map @rows (fn row
   (let ((prop (object/get @row "prop")) (field (object/get @row "field")))
     (if (object/has @n @prop)
@@ -78,7 +78,7 @@ orbital OrbProducedEventsOrbital {
           (let ((picked (if (= @sm "listed") (object/get @sl "args" []) []))
                 (bvals (let ((bs (default (as (array/nth @n 1) FiredNodes) [])) (body (array/nth @n 2))) (if (and (= @len 3) (validate/string @body) (= (array/nth @n 0) "let")) (array/flatten (array/map @bs (fn p (let ((pr (default (as @p FiredNodes) []))) (if (= (str/concat (quote "@") (default (as (array/nth @pr 0) string) "")) @body) [(array/nth @pr 1)] []))))) []))))
             (let ((tail (array/drop @kk 1)) (lastc (array/last @kk)))
-             (let ((pairs (array/zip (array/range 0 (if (> @argc 0) @argc 0)) @tail)) (lamKids (array/filter (array/zip (array/drop @n 1) @tail) (fn p (let ((a (array/nth @p 0))) (and (validate/array @a) (>= (array/len @a) 3) (let ((a0 (array/nth @a 0))) (and (validate/string @a0) (object/has @fnSet (str/replaceAll (str/replaceAll @a0 "~" "~t") "." "~d"))))))))))
+             (let ((pairs (array/zip (array/range 0 (if (> @argc 0) @argc 0)) @tail)) (lamKids (array/filter (array/zip (array/drop @n 1) @tail) (fn p (let ((a (array/nth @p 0))) (and (validate/array @a) (>= (array/len @a) 3) (let ((a0 (array/nth @a 0))) (and (validate/string @a0) (object/has @fnSet @a0)))))))))
               (let ((sel (if (> (array/len @bvals) 0) [(array/nth @bvals 0)] (if (= @sm "branches") (if (< @argc 2) null (array/flatten (array/map (array/drop @kk 2) (fn c (object/get @c "lf")))))
                          (if (= @sm "args") (if (< @argc 1) null (array/flatten (array/map @tail (fn c (object/get @c "lf")))))
                            (if (= @sm "last") (if (and (>= @argc 1) (!= @lastc null)) (object/get @lastc "lf") null)
@@ -96,11 +96,11 @@ orbital OrbProducedEventsOrbital {
                         (let ((items (array/filter (default @fr []) (fn x (validate/array @x)))))
                           { trait: (object/get @t "name" ""), ev: (array/flatten (array/map @items (fn x (let ((nm (array/nth @x 1))) (if (and (= (array/nth @x 0) "e") (validate/string @nm)) [@nm] []))))), ctl: (array/flatten (array/map @items (fn x (let ((nm (array/nth @x 1))) (if (and (= (array/nth @x 0) "c") (validate/string @nm)) [@nm] []))))) }))))))))))
             (let ((tnames (array/unique (array/map @recs (fn r (object/get @r "trait" "")))))
-                  (g (array/groupBy @recs (fn r (str/replaceAll (str/replaceAll (object/get @r "trait" "") "~" "~t") "." "~d")))))
+                  (g (array/groupBy @recs (fn r (object/get @r "trait" "")))))
               (emit PRODUCED_EVENTS {
                 scope: @payload.scope,
-                byControl: (default (object/fromEntries (array/map @tnames (fn nm [@nm, (array/sort (array/unique (array/filter (array/flatten (array/map (object/get @g (str/replaceAll (str/replaceAll @nm "~" "~t") "." "~d") []) (fn r (object/get @r "ctl" [])))) (fn x (and (!= @x "") (not (str/startsWith @x (quote "@"))))))))]))) {}),
-                byEffect: (default (object/fromEntries (array/map @tnames (fn nm [@nm, (array/sort (array/unique (array/filter (array/flatten (array/map (object/get @g (str/replaceAll (str/replaceAll @nm "~" "~t") "." "~d") []) (fn r (object/get @r "ev" [])))) (fn x (and (!= @x "") (not (str/startsWith @x (quote "@"))))))))]))) {}) }))))
+                byControl: (default (object/fromEntries (array/map @tnames (fn nm [@nm, (array/sort (array/unique (array/filter (array/flatten (array/map (object/get @g @nm []) (fn r (object/get @r "ctl" [])))) (fn x (and (!= @x "") (not (str/startsWith @x (quote "@"))))))))]))) {}),
+                byEffect: (default (object/fromEntries (array/map @tnames (fn nm [@nm, (array/sort (array/unique (array/filter (array/flatten (array/map (object/get @g @nm []) (fn r (object/get @r "ev" [])))) (fn x (and (!= @x "") (not (str/startsWith @x (quote "@"))))))))]))) {}) }))))
     }
 
     emits {

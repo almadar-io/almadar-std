@@ -1,6 +1,6 @@
 app std-orb-embed-chain [
   version: "1.0.0",
-  description: "std-orb-embed-chain — the one place a lint run decides which traits embed which, the port of the compiler's EmbedGraph host chain (phases/program/embed_graph.rs, embed_host_name_chain). For every orbital of the lowered program it finds each inline trait's direct host (the first trait, in program order, whose config defaults, transition guards and effects, or tick guards and effects reference it as `@trait.<Name>`; a trait never hosts itself) and answers EMBED_CHAINS { scope, chains } with one map per orbital, in the program's orbital order, from each inline trait name to its host names innermost first (cycle-guarded). A rule that asks whether a trait is embedded under another composes this trait and reads EMBED_CHAINS; it never walks references itself."
+  description: "std-orb-embed-chain — the one place a lint run decides which traits embed which, the port of the compiler's EmbedGraph host chain (phases/program/embed_graph.rs, embed_host_name_chain). For every orbital of the lowered program it finds each inline trait's direct host (the first trait, in program order, whose config defaults, transition guards and effects, or tick guards and effects reference it as `@trait.<Name>`, read from std-orb-lint-input's LINT_EMBEDS; a trait never hosts itself) and answers EMBED_CHAINS { scope, chains } with one map per orbital, in the program's orbital order, from each inline trait name to its host names innermost first (cycle-guarded). A rule that asks whether a trait is embedded under another composes this trait and reads EMBED_CHAINS; it never walks references itself."
 ]
 uses Spec from "almadar-std/embed-chain"
 type FiredNode = string | number | boolean | [FiredNode?] | Map string FiredNode?
@@ -19,7 +19,11 @@ type EmbedMap = Map string [string]
 orbital OrbEmbedChainOrbital {
   entity OrbEmbedChainRun [runtime] {
     id : string!
-    roots : Map string [string] = {}
+    embConfig : Map string [string] = {}
+    embGuards : Map string [string] = {}
+    embEffects : Map string [string] = {}
+    embedsScope : string = ""
+    embedded : boolean = false
   }
 
   trait OrbEmbedChain -> OrbEmbedChainRun [optimistic] {
@@ -27,42 +31,36 @@ orbital OrbEmbedChainOrbital {
 
     state ready {
       INIT -> ready
-      EMBED_INDEX_HEARD -> ready
-        (set @entity.roots @payload.roots)
+      EMBED_EMBEDS_HEARD -> ready
+        (set @entity.embConfig @payload.config)
+        (set @entity.embGuards @payload.guards)
+        (set @entity.embEffects @payload.effects)
+        (set @entity.embedsScope @payload.scope)
+        (set @entity.embedded true)
       EMBED_INPUT_HEARD -> ready
-        (let ((nr : [string] []))
+        (let ((nr : [string] []) (noM : Map string [string] {}))
+          (let ((okE (and @entity.embedded (= @entity.embedsScope @payload.scope))))
+          (let ((cfgM (if @okE @entity.embConfig @noM)) (grdM (if @okE @entity.embGuards @noM)) (effM (if @okE @entity.embEffects @noM)))
           (let ((res (let ((orbs (object/get @payload.program "orbitals" []))) (array/map (array/range 0 (array/len @orbs)) (fn oi (let ((o (array/nth @orbs @oi)))
           (let ((trs0 (object/get @o "traits" []))) (let ((acc0 : EmbedAcc { i: 0, inl: [] })) (let ((inl (object/get (array/reduce @trs0 @acc0 (fn (acc t) { i: (+ (object/get @acc "i") 1), inl: (if (object/has @t "stateMachine") (array/append (object/get @acc "inl") { k: (object/get @acc "i"), t: @t }) (object/get @acc "inl")) })) "inl")))
             (let ((names (array/map @inl (fn e (object/get (object/get @e "t") "name" ""))))
-                  (pairs (array/flatten (array/map @inl (fn e
-                    (let ((t (object/get @e "t"))) (let ((tn (object/get @t "name" "")))
-                      (let ((gt (array/includes (object/get @entity.roots (str/concat @oi "-" (object/get @e "k")) []) (quote "@trait")))) (let ((roots (if @gt (array/concat (array/concat
-                                      (array/map (object/values (object/get @t "config" {})) (fn f { x: (object/get (default @f {}) "default" null) }))
-                                      (array/flatten (array/map (object/get @t "stateMachine.transitions" []) (fn x [{ x: (object/get @x "guard" null) }, { x: (array/filter (object/get @x "effects" []) (fn r (not (validate/object @r)))) }]))))
-                                      (array/flatten (array/map (object/get @t "ticks" []) (fn x [{ x: (object/get @x "guard" null) }, { x: (array/filter (object/get @x "effects" []) (fn r (not (validate/object @r)))) }])))) [])))
-                        (if @gt
-                          (let ((fr (tree/fold @roots (fn (n k)
-  (if (validate/array @n) (array/flatten (array/map @k (fn r (if (= @r null) @nr @r))))
-    (if (validate/object @n) (array/flatten (array/map (object/values @k) (fn r (if (= @r null) @nr @r))))
-      (if (and (validate/string @n) (str/startsWith @n (quote "@trait."))) (let ((h1 (array/first (str/split (str/slice @n 7 (str/len @n)) ".")))) (if (= @h1 null) @nr (let ((h2 (array/first (str/split @h1 "[")))) (if (= @h2 null) @nr [@h2])))) @nr)))) "FiredNode")))
-                            (array/map (array/filter (array/unique (default @fr [])) (fn c (and (!= @c "") (!= @c @tn)))) (fn c [@c, @tn])))
-                          []))))))))))
+                  (pairs (array/flatten (array/map @inl (fn e (let ((t (object/get @e "t"))) (let ((tn (object/get @t "name" "")) (ek (str/concat @oi "-" (object/get @e "k")))) (array/map (array/filter (array/unique (array/concat (object/get @cfgM @ek @nr) (object/get @grdM @ek @nr) (object/get @effM @ek @nr))) (fn c (and (!= @c "") (!= @c @tn)))) (fn c [@c, @tn])))))))))
               (let ((hosts (default (object/fromEntries (array/reverse @pairs)) {})))
                 (let ((chains (object/fromEntries (array/map @names (fn nm [@nm, (object/get (array/reduce (array/range 0 (+ (array/len @names) 1)) { cur: @nm, ch: (array/drop @names (array/len @names)), stop: false } (fn (acc i) (if (object/get @acc "stop") @acc (let ((h (object/get @hosts (object/get @acc "cur") ""))) (if (or (= @h "") (= @h @nm) (array/includes (object/get @acc "ch") @h)) { cur: (object/get @acc "cur"), ch: (object/get @acc "ch"), stop: true } { cur: @h, ch: (array/append (object/get @acc "ch") @h), stop: false}))))) "ch")])))))
-                  (let ((emb (object/fromEntries (array/map @names (fn nm [@nm, (array/filter (object/get (array/reduce (array/range 0 (+ (array/len @names) 1)) { seen: [@nm] } (fn (acc i) { seen: (array/unique (array/concat (object/get @acc "seen") (array/flatten (array/map (object/get @acc "seen") (fn s (array/map (array/filter @pairs (fn p (= (array/first @p) @s))) (fn p (array/nth @p 1)))))))) }) ) "seen") (fn x (!= @x @nm)))]))))) { c: (default @chains {}), e: (default @emb {}) }))))))))))) )) (emit EMBED_CHAINS { scope: @payload.scope, chains: (array/map @res (fn r (object/get @r "c"))), embedders: (array/map @res (fn r (object/get @r "e"))) })))
+                  (let ((emb (object/fromEntries (array/map @names (fn nm [@nm, (array/filter (object/get (array/reduce (array/range 0 (+ (array/len @names) 1)) { seen: [@nm] } (fn (acc i) { seen: (array/unique (array/concat (object/get @acc "seen") (array/flatten (array/map (object/get @acc "seen") (fn s (array/map (array/filter @pairs (fn p (= (array/first @p) @s))) (fn p (array/nth @p 1)))))))) }) ) "seen") (fn x (!= @x @nm)))]))))) { c: (default @chains {}), e: (default @emb {}) }))))))))))) )) (do (set @entity.embedded false) (emit EMBED_CHAINS { scope: @payload.scope, chains: (array/map @res (fn r (object/get @r "c"))), embedders: (array/map @res (fn r (object/get @r "e"))), missing: (not @okE) }))))))
     }
 
     emits {
-      EMBED_CHAINS -> external { scope : string!  chains : [EmbedMap]!  embedders : [EmbedMap]! }
-        @description "Per orbital, in program order: each inline trait's host names, innermost first."
+      EMBED_CHAINS -> external { scope : string!  chains : [EmbedMap]!  embedders : [EmbedMap]!  missing : boolean! }
+        @description "Per orbital, in program order: each inline trait's host names, innermost first. `missing` is true when LINT_EMBEDS never arrived for this pass (none heard, or one of another scope): the maps are then empty and a reader reports the missing fact instead of reading them."
         @tier "internal"
     }
 
     listens {
       EMBED_INPUT_HEARD { file : string!  raw : string!  latin : boolean!  program : FiredProgram!  scope : string! }
         @description "std-orb-lint-input's LINT_INPUT: the lowered program."
-      EMBED_INDEX_HEARD { scope : string!  heads : Map string [string]!  roots : Map string [string]! }
-        @description "std-orb-lint-input's LINT_INDEX: the operator heads and binding roots each inline trait uses; a trait is searched for @trait references only when its roots hold @trait."
+      EMBED_EMBEDS_HEARD { scope : string!  config : Map string [string]!  guards : Map string [string]!  effects : Map string [string]! }
+        @description "std-orb-lint-input's LINT_EMBEDS: the child trait names each trait embeds through config defaults, guards and effects."
     }
   }
 

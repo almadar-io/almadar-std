@@ -39,6 +39,123 @@
      }
     },
     {
+     "event": "ENTITIES_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byName": {
+       "MfE": {
+        "persistence": "persistent",
+        "name": "MfE",
+        "oi": 0,
+        "orbital": "MfO",
+        "auxiliary": false,
+        "fields": [
+         {
+          "name": "id",
+          "type": "string",
+          "required": true
+         },
+         {
+          "name": "c",
+          "type": "string"
+         },
+         {
+          "name": "a",
+          "type": "string",
+          "mergedFrom": "std/behaviors/x"
+         },
+         {
+          "name": "b",
+          "type": "string",
+          "mergedFrom": "std/behaviors/x"
+         },
+         {
+          "name": "d",
+          "type": "string",
+          "mergedFrom": "std/behaviors/x"
+         },
+         {
+          "name": "e",
+          "type": "string",
+          "mergedFrom": "std/behaviors/x"
+         },
+         {
+          "name": "g",
+          "type": "string",
+          "mergedFrom": "std/behaviors/x"
+         },
+         {
+          "name": "h",
+          "type": "string",
+          "mergedFrom": "std/behaviors/x"
+         },
+         {
+          "name": "i",
+          "type": "string",
+          "mergedFrom": "std/behaviors/x"
+         },
+         {
+          "name": "title",
+          "type": "string",
+          "mergedFrom": "std/behaviors/x"
+         },
+         {
+          "name": "startTime",
+          "type": "string",
+          "mergedFrom": "std/behaviors/x"
+         },
+         {
+          "name": "ownerId",
+          "type": "relation",
+          "relation": {
+           "cardinality": "one",
+           "entity": "MfOther"
+          },
+          "mergedFrom": "std/behaviors/x"
+         },
+         {
+          "name": "j",
+          "type": "string",
+          "mergedFrom": "std/behaviors/x"
+         },
+         {
+          "name": "k",
+          "type": "string",
+          "mergedFrom": "std/behaviors/x"
+         },
+         {
+          "name": "deleted",
+          "type": "string",
+          "mergedFrom": "std/behaviors/x"
+         }
+        ]
+       },
+       "MfOther": {
+        "persistence": "persistent",
+        "name": "MfOther",
+        "oi": 1,
+        "orbital": "MfO2",
+        "auxiliary": false,
+        "fields": [
+         {
+          "name": "id",
+          "type": "string",
+          "required": true
+         },
+         {
+          "name": "label",
+          "type": "string"
+         }
+        ]
+       }
+      }
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
      "event": "LINT_INPUT",
      "from": "ready",
      "payload": {
@@ -520,6 +637,97 @@
      }
     },
     {
+     "event": "ENTITIES_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byName": {
+       "MfE2": {
+        "persistence": "persistent",
+        "name": "MfE2",
+        "oi": 0,
+        "orbital": "MfP",
+        "auxiliary": false,
+        "fields": [
+         {
+          "name": "id",
+          "type": "string",
+          "required": true
+         },
+         {
+          "name": "m1",
+          "type": "string",
+          "mergedFrom": "std/behaviors/x"
+         },
+         {
+          "name": "m2",
+          "type": "string",
+          "mergedFrom": "std/behaviors/x"
+         }
+        ]
+       },
+       "MfOther2": {
+        "persistence": "persistent",
+        "name": "MfOther2",
+        "oi": 1,
+        "orbital": "MfP2",
+        "auxiliary": false,
+        "fields": [
+         {
+          "name": "id",
+          "type": "string",
+          "required": true
+         },
+         {
+          "name": "label",
+          "type": "string"
+         }
+        ]
+       },
+       "MfE3": {
+        "persistence": "persistent",
+        "name": "MfE3",
+        "oi": 2,
+        "orbital": "MfP3",
+        "auxiliary": false,
+        "fields": [
+         {
+          "name": "id",
+          "type": "string",
+          "required": true
+         },
+         {
+          "name": "n1",
+          "type": "string",
+          "mergedFrom": "std/behaviors/x"
+         }
+        ]
+       },
+       "MfOther3": {
+        "persistence": "persistent",
+        "name": "MfOther3",
+        "oi": 3,
+        "orbital": "MfP4",
+        "auxiliary": false,
+        "fields": [
+         {
+          "name": "id",
+          "type": "string",
+          "required": true
+         },
+         {
+          "name": "label",
+          "type": "string"
+         }
+        ]
+       }
+      }
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
      "event": "LINT_INPUT",
      "from": "ready",
      "payload": {
@@ -893,6 +1101,67 @@
          "rule": "merged-fields",
          "scope": "",
          "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a lint input that arrives without LINT_ENTITIES is one error finding",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "fields": []
+         },
+         "traits": []
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "event": "LINT_FINISH",
+     "from": "ready",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "merged-fields",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_LINT_INDEX_MISSING",
+           "path": "",
+           "message": "the lint input arrived without LINT_ENTITIES, so this rule cannot check the program",
+           "suggestion": "std-orb-lint-input sends LINT_ENTITIES before LINT_INPUT; this rule did not hear it",
+           "severity": "error"
+          }
+         ]
         }
        }
       ]

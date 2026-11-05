@@ -118,7 +118,8 @@
         "Browse": [],
         "EditModal": []
        }
-      ]
+      ],
+      "missing": false
      },
      "expect": {
       "fired": true
@@ -311,7 +312,8 @@
         "Browse": [],
         "EditModal": []
        }
-      ]
+      ],
+      "missing": false
      },
      "expect": {
       "fired": true
@@ -482,7 +484,8 @@
         "Publisher": [],
         "Subscriber": []
        }
-      ]
+      ],
+      "missing": false
      },
      "expect": {
       "fired": true
@@ -697,7 +700,8 @@
         ],
         "Watcher": []
        }
-      ]
+      ],
+      "missing": false
      },
      "expect": {
       "fired": true
@@ -900,7 +904,8 @@
         "Child": [],
         "Watcher": []
        }
-      ]
+      ],
+      "missing": false
      },
      "expect": {
       "fired": true
@@ -1149,7 +1154,8 @@
         ],
         "Watcher": []
        }
-      ]
+      ],
+      "missing": false
      },
      "expect": {
       "fired": true
@@ -1328,7 +1334,8 @@
         "Publisher": [],
         "Subscriber": []
        }
-      ]
+      ],
+      "missing": false
      },
      "expect": {
       "fired": true
@@ -1524,7 +1531,8 @@
         "Other": [],
         "Subscriber": []
        }
-      ]
+      ],
+      "missing": false
      },
      "expect": {
       "fired": true
@@ -1698,7 +1706,8 @@
         "Publisher": [],
         "Subscriber": []
        }
-      ]
+      ],
+      "missing": false
      },
      "expect": {
       "fired": true
@@ -1839,7 +1848,8 @@
        {
         "Subscriber": []
        }
-      ]
+      ],
+      "missing": false
      },
      "expect": {
       "fired": true
@@ -1979,7 +1989,8 @@
        {
         "Subscriber": []
        }
-      ]
+      ],
+      "missing": false
      },
      "expect": {
       "fired": true
@@ -2163,7 +2174,8 @@
        {
         "Subscriber": []
        }
-      ]
+      ],
+      "missing": false
      },
      "expect": {
       "fired": true
@@ -2341,7 +2353,8 @@
         "Publisher": [],
         "Subscriber": []
        }
-      ]
+      ],
+      "missing": false
      },
      "expect": {
       "fired": true
@@ -2518,7 +2531,8 @@
         "Sender": [],
         "Receiver": []
        }
-      ]
+      ],
+      "missing": false
      },
      "expect": {
       "fired": true
@@ -2697,7 +2711,8 @@
         "Sender": [],
         "Receiver": []
        }
-      ]
+      ],
+      "missing": false
      },
      "expect": {
       "fired": true
@@ -2758,6 +2773,154 @@
            "path": "orbitals.O.traits.Receiver.listens",
            "message": "listens route Sender.DELIVERY_REJECTED -> REFUSED: Sender's emits contract declares DELIVERY_REJECTED, but no live effect, rendered affordance, or config item action at this call site produces it — a config override (e.g. itemActions/browseItemActions narrowed) likely removed the only producer",
            "suggestion": "restore DELIVERY_REJECTED to Sender's active affordance config, or drop the Receiver route if the removal is intentional",
+           "severity": "error"
+          }
+         ],
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-embeds-never-heard-is-one-index-missing-error",
+   "steps": [
+    {
+     "trait": "OrbLintListenSourceNeverProduces",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "OE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Subscriber",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "REFRESH",
+              "effects": []
+             }
+            ]
+           },
+           "listens": [
+            {
+             "event": "ROW_CHANGED",
+             "triggers": "REFRESH",
+             "source": {
+              "kind": "trait",
+              "trait": "Missing"
+             }
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintListenSourceNeverProduces",
+     "event": "CHAINS_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "chains": [
+       {
+        "Subscriber": []
+       }
+      ],
+      "missing": true
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintListenSourceNeverProduces",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "Subscriber": []
+      },
+      "byEffect": {
+       "Subscriber": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_COMPUTE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintListenSourceNeverProduces",
+     "event": "LINT_COMPUTE",
+     "from": "ready",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintListenSourceNeverProduces",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "listen-source-never-produces",
+         "findings": [
+          {
+           "code": "ORB_LINT_INDEX_MISSING",
+           "path": "",
+           "message": "the lint input arrived without LINT_EMBEDS, so this rule cannot check the program",
+           "suggestion": "std-orb-lint-input sends LINT_EMBEDS before LINT_INPUT; std-orb-embed-chain did not hear it for this pass",
            "severity": "error"
           }
          ],

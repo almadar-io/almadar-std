@@ -1,44 +1,44 @@
-app std-orb-lint-map-path-key [
+app std-orb-lint-computed-key-dot-path [
   version: "1.0.0",
-  inbound: ["cli-lint-map-path-key"],
+  inbound: ["cli-lint-computed-key-dot-path"],
   env: ["PATH"],
   exec: ["orb"],
   fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
-  description: "std-orb-lint-map-path-key — the `orb lint map-path-key <file>` command. object/set, object/get and object/has read their key as a DOT PATH, so a key built with str/concat from a string literal containing \".\" and aimed at an entity field declared `Map string X` writes or reads a nested record instead of one map entry. Each such call in a guard, an effect or a tick effect of a trait bound to that entity is a warning ORB_MAP_KEY_DOT_PATH at the transition or tick. Literal path keys, record targets and keys joined with another separator are clean. Clean answers `lint map-path-key: clean` (status 200, exit 0); warnings fail the run like errors (status 500, exit 1). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+  description: "std-orb-lint-computed-key-dot-path - the `orb lint computed-key-dot-path <file>` command. A COMPUTED key of object/get, object/has or object/set is read as ONE whole key; only a literal string key is a dotted path. A key built with str/concat from a string literal containing \".\" was written as a path and now names a single key, so the read misses or the write adds a flat entry. Each such call in a guard, an effect or a tick effect of a trait is an error ORB_COMPUTED_KEY_DOT_PATH at the transition or tick. Literal path keys and keys joined with another separator are clean. Clean answers `lint computed-key-dot-path: clean` (status 200, exit 0); findings fail the run (status 500, exit 1). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
 ]
-uses Spec from "almadar-std/lint-map-path-key"
+uses Spec from "almadar-std/lint-computed-key-dot-path"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
-type MkVal = string | number | boolean | [MkVal?] | Map string MkVal?
-type MkNodes = [MkVal?]
-type MkStr = string
-type MkCall = { path : string!, node : MkVal!, at : number! }
-type MkIdx = Map string [MkCall]
-type MkHit = { op : string!, f : string! }
-type MkHits = [MkHit]
-type MkField = { name : string, type : string, items : MkVal, properties : MkVal }
-type MkEntity = { name : string, fields : [MkField] }
-type MkTick = { effects : [MkVal] }
-type MkArm = { guard : MkVal, effects : [MkVal] }
-type MkMachine = { transitions : [MkArm] }
-type MkTrait = { name : string, linkedEntity : string, stateMachine : MkMachine, ticks : [MkTick] }
-type MkOrbital = { name : string, entity : MkEntity, auxiliaryEntities : [MkEntity], traits : [MkTrait] }
-type MkProgram = { orbitals : [MkOrbital]! }
-type MkRoot = { w : string, e : [MkVal] }
+type CkVal = string | number | boolean | [CkVal?] | Map string CkVal?
+type CkNodes = [CkVal?]
+type CkStr = string
+type CkCall = { path : string!, node : CkVal!, at : number! }
+type CkIdx = Map string [CkCall]
+type CkHit = { op : string! }
+type CkHits = [CkHit]
+type CkField = { name : string, type : string, items : CkVal, properties : CkVal }
+type CkEntity = { name : string, fields : [CkField] }
+type CkTick = { effects : [CkVal] }
+type CkArm = { guard : CkVal, effects : [CkVal] }
+type CkMachine = { transitions : [CkArm] }
+type CkTrait = { name : string, linkedEntity : string, stateMachine : CkMachine, ticks : [CkTick] }
+type CkOrbital = { name : string, entity : CkEntity, auxiliaryEntities : [CkEntity], traits : [CkTrait] }
+type CkProgram = { orbitals : [CkOrbital]! }
+type CkRoot = { w : string, e : [CkVal] }
 
 type LintCodeDecl = { code : string!, category : string!, description : string! }
-type LintMapPathKeyCodes = { mapKeyDotPath : LintCodeDecl }
+type LintComputedKeyDotPathCodes = { computedKeyDotPath : LintCodeDecl }
 
-orbital OrbLintMapPathKeyOrbital {
+orbital OrbLintComputedKeyDotPathOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
 
-  entity OrbLintMapPathKeyRun [runtime] {
+  entity OrbLintComputedKeyDotPathRun [runtime] {
     id : string!
     scope : string = ""
     findings : [OrbFinding] = []
   }
 
-  trait OrbLintMapPathKey -> OrbLintMapPathKeyRun [optimistic] {
+  trait OrbLintComputedKeyDotPath -> OrbLintComputedKeyDotPathRun [optimistic] {
     initial: ready
 
     state ready {
@@ -48,12 +48,10 @@ orbital OrbLintMapPathKeyOrbital {
         (set @entity.findings (let ((orbs (object/get @payload.program "orbitals" [])))
  (array/flatten (array/map (array/range 0 (array/len @orbs)) (fn oi
   (let ((o (default (array/nth @orbs @oi) {})))
-   (let ((trs (object/get @o "traits" [])) (ents (array/concat [(object/get @o "entity" {})] (object/get @o "auxiliaryEntities" []))))
+   (let ((trs (object/get @o "traits" [])))
     (array/flatten (array/map (array/range 0 (array/len @trs)) (fn ti
      (let ((t (default (array/nth @trs @ti) {})))
-      (let ((lname (object/get @t "linkedEntity" ""))
-            (maps (array/flatten (array/map (array/filter @ents (fn e (= (object/get @e "name" "") @lname))) (fn e (array/map (array/filter (object/get @e "fields" []) (fn f (and (= (object/get @f "type" "") "object") (object/has @f "items") (not (object/has @f "properties"))))) (fn f (object/get @f "name" "")))))))
-            (trans (object/get (object/get @t "stateMachine" {}) "transitions" []))
+      (let ((trans (object/get (object/get @t "stateMachine" {}) "transitions" []))
             (ticks (object/get @t "ticks" []))
             (base (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @t "name" "") ")]")))
        (let ((roots (array/concat
@@ -61,17 +59,16 @@ orbital OrbLintMapPathKeyOrbital {
                        (let ((tr (default (array/nth @trans @ni) {})))
                          { w: (str/concat @base ".stateMachine.transitions[" @ni "]"), e: (array/concat (if (object/has @tr "guard") [(object/get @tr "guard")] []) (object/get @tr "effects" [])) })))
                      (array/map (array/range 0 (array/len @ticks)) (fn ki { w: (str/concat @base ".ticks[" @ki "]"), e: (object/get (default (array/nth @ticks @ki) {}) "effects" []) })))))
-        (if (= (array/len @maps) 0) []
+        (if (= (array/len @roots) 0) []
          (array/flatten (array/map @roots (fn x
-          (let ((hits (default (as (array/flatten (array/map (array/sort (array/flatten (object/values (default (as (tree/index (object/get @x "e") ["object/set" "object/get" "object/has"]) MkIdx) {}))) "at") (fn c
-                  (let ((l (default (as (object/get @c "node" []) MkNodes) [])))
-                   (let ((h (if (> (array/len @l) 0) (default (as (array/nth @l 0) MkStr) "") ""))
-                         (a1 (if (> (array/len @l) 1) (default (as (array/nth @l 1) MkStr) "") ""))
+          (let ((hits (default (as (array/flatten (array/map (array/sort (array/flatten (object/values (default (as (tree/index (object/get @x "e") ["object/set" "object/get" "object/has"]) CkIdx) {}))) "at") (fn c
+                  (let ((l (default (as (object/get @c "node" []) CkNodes) [])))
+                   (let ((h (if (> (array/len @l) 0) (default (as (array/nth @l 0) CkStr) "") ""))
                          (a2 (if (> (array/len @l) 2) (array/nth @l 2) null)))
-                    (if (and (str/startsWith @a1 (quote "@entity.")) (array/includes @maps (str/slice @a1 8)) (validate/array @a2)
+                    (if (and (validate/array @a2)
                           (= (tree/fold @a2 (fn (n2 k2)
                                (if (validate/array @n2)
-                                (let ((hd (if (> (array/len @n2) 0) (default (as (array/nth @n2 0) MkStr) "") "")))
+                                (let ((hd (if (> (array/len @n2) 0) (default (as (array/nth @n2 0) CkStr) "") "")))
                                  (if (= @hd "str/concat")
                                   (array/some (array/slice @n2 1 (array/len @n2)) (fn s (and (validate/string @s) (not (str/startsWith @s (quote "@"))) (str/includes @s "."))))
                                   (if (= @hd "let")
@@ -79,13 +76,13 @@ orbital OrbLintMapPathKeyOrbital {
                                    (if (and (= @hd "if") (= (array/len @n2) 4))
                                     (or (= (array/nth @k2 2) true) (= (array/nth @k2 3) true))
                                     false))))
-                                false)) MkVal) true))
-                      [{ op: @h, f: (str/slice @a1 8) }]
-                      [])))))) MkHits) [])))
-           (array/map @hits (fn h { code: @config.codes.mapKeyDotPath.code, path: (object/get @x "w"), message: (str/concat (object/get @h "op") " reads its key as a dot path, so the key built with str/concat from a literal containing \".\" nests under '" (object/get @h "f") "' instead of naming one map entry"), suggestion: "Join the key parts with a separator other than \".\", such as \"|\".", severity: "warning" }))))))))))))))))))))
+                                false)) CkVal) true))
+                      [{ op: @h }]
+                      [])))))) CkHits) [])))
+           (array/map @hits (fn h { code: @config.codes.computedKeyDotPath.code, path: (object/get @x "w"), message: (str/concat (object/get @h "op") " reads a computed key as one whole key, so the key built with str/concat from a literal containing \".\" names a single key and never a path"), suggestion: "Pass the path as a string literal (only a literal key is a dotted path), or join the key parts with a separator other than \".\", such as \"|\".", severity: "error" }))))))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
-        (emit LINT_FOUND { rule: "map-path-key", scope: @entity.scope, findings: @entity.findings })
+        (emit LINT_FOUND { rule: "computed-key-dot-path", scope: @entity.scope, findings: @entity.findings })
     }
 
     emits {
@@ -98,39 +95,39 @@ orbital OrbLintMapPathKeyOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : MkProgram!  scope : string! }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : CkProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
     config {
-      codes : LintMapPathKeyCodes = { mapKeyDotPath: { code: "ORB_MAP_KEY_DOT_PATH", category: "lint", description: "object/set, object/get or object/has on a Map field with a str/concat key containing a literal dot: the key is read as a dot path, so the value nests instead of being one map entry" } }
+      codes : LintComputedKeyDotPathCodes = { computedKeyDotPath: { code: "ORB_COMPUTED_KEY_DOT_PATH", category: "lint", description: "object/set, object/get or object/has on a Map field with a str/concat key containing a literal dot: the key is read as a dot path, so the value nests instead of being one map entry" } }
         @label "Emitted codes"
         @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
     }
 
   }
 
-  trait OrbLintMapPathKeyCli -> OrbLintMapPathKeyRun [client] {
+  trait OrbLintComputedKeyDotPathCli -> OrbLintComputedKeyDotPathRun [client] {
     initial: ready
 
     state ready {
       INIT -> ready
       LINT_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
-        (emit LINT_ANSWERED { status: 500, body: "Error: orb lint map-path-key: the command arguments could not be read" })
+        (emit LINT_ANSWERED { status: 500, body: "Error: orb lint computed-key-dot-path: the command arguments could not be read" })
       LINT_CALLED -> ready when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
-        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint map-path-key <file>" })
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint computed-key-dot-path <file>" })
       LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
-        (let ((argFile (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")))) (if (= @argFile null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint map-path-key <file>" }) (emit LINT_REQUEST { file: @argFile })))
+        (let ((argFile (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")))) (if (= @argFile null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint computed-key-dot-path <file>" }) (emit LINT_REQUEST { file: @argFile })))
     }
 
     state waiting {
       INIT -> waiting
-      LINT_FOUND -> ready when (and (= @payload.rule "map-path-key") (= (array/len @payload.findings) 0))
-        (emit LINT_ANSWERED { status: 200, body: "lint map-path-key: clean" })
-      LINT_FOUND -> ready when (and (= @payload.rule "map-path-key") (> (array/len @payload.findings) 0))
+      LINT_FOUND -> ready when (and (= @payload.rule "computed-key-dot-path") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint computed-key-dot-path: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "computed-key-dot-path") (> (array/len @payload.findings) 0))
         (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
       LINT_INPUT_UNREAD -> ready
-        (emit LINT_ANSWERED { status: 500, body: "lint map-path-key: the file could not be read or lowered" })
+        (emit LINT_ANSWERED { status: 500, body: "lint computed-key-dot-path: the file could not be read or lowered" })
     }
 
     emits {
@@ -152,13 +149,13 @@ orbital OrbLintMapPathKeyOrbital {
     }
 
     listens {
-      LINT_CALLED -> inbound "cli-lint-map-path-key" answers LINT_ANSWERED {
+      LINT_CALLED -> inbound "cli-lint-computed-key-dot-path" answers LINT_ANSWERED {
         headers : Map string string
         rawBody : string!
       }
-        @description "Run `orb lint map-path-key` with its arguments and working directory."
-        @synonyms "orb lint map-path-key, dot path key, map key"
-      OrbLintMapPathKey.LINT_FOUND -> LINT_FOUND
+        @description "Run `orb lint computed-key-dot-path` with its arguments and working directory."
+        @synonyms "orb lint computed-key-dot-path, dot path key, map key"
+      OrbLintComputedKeyDotPath.LINT_FOUND -> LINT_FOUND
       LINT_INPUT_UNREAD { file : string! }
         @description "The lint input could not read or lower the file."
       OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
@@ -171,7 +168,7 @@ orbital OrbLintMapPathKeyOrbital {
   }
   trait OrbLintInput = Input.traits.OrbLintInput {
     listens {
-      OrbLintMapPathKeyCli.LINT_REQUEST -> LINT_REQUEST
+      OrbLintComputedKeyDotPathCli.LINT_REQUEST -> LINT_REQUEST
       LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
         @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
       LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
@@ -184,5 +181,5 @@ orbital OrbLintMapPathKeyOrbital {
     }
   }
 
-  page boot as OrbLintMapPathKeyOrbitalStart -> OrbLintMapPathKey, OrbLintMapPathKeyCli, OrbLintInput, Packs, Versions
+  page boot as OrbLintComputedKeyDotPathOrbitalStart -> OrbLintComputedKeyDotPath, OrbLintComputedKeyDotPathCli, OrbLintInput, Packs, Versions
 }

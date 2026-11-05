@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "Canonical operator registry for Almadar. Generated from @almadar/std/modules. Consumed by orbital-compiler via include_str!.",
-  "generated": "2026-11-04T17:33:55.772Z",
+  "generated": "2026-11-05T13:49:23.136Z",
   "categories": {
     "arithmetic": {
       "description": "Numeric operations",
@@ -14969,7 +14969,7 @@
         "kind": "fieldOf",
         "of": "R"
       },
-      "description": "Get nested value by path; a path segment of a list or tuple is an index (return type derived from the input type and key)",
+      "description": "Get nested value by path; a path segment of a list or tuple is an index (return type derived from the input type and key). A literal path is dotted (`\\.` is a literal dot); a computed key (a binding or a call) is read as one whole key, so a Map key that contains a dot is read as written",
       "module": "object",
       "visual": {
         "form": "block"
@@ -15033,7 +15033,7 @@
       "minArity": 2,
       "maxArity": 2,
       "returnType": "boolean",
-      "description": "Check if path exists",
+      "description": "Check if path exists. A literal path is dotted (`\\.` is a literal dot); a computed key (a binding or a call) is read as one whole key, so a Map key that contains a dot is read as written",
       "module": "object",
       "visual": {
         "form": "block"
@@ -15355,7 +15355,7 @@
           }
         ]
       },
-      "description": "Set nested value by path (returns new object).",
+      "description": "Set nested value by path (returns new object). A literal path is dotted (`\\.` is a literal dot); a computed key (a binding or a call) is read as one whole key, so a Map key that contains a dot is read as written",
       "module": "object",
       "visual": {
         "form": "block"
@@ -31321,7 +31321,7 @@
           }
         }
       },
-      "description": "Every call form in a value, grouped by its head, in one walk: a call form is a list whose first item is a string listed in `heads`. The walk is pre-order over lists (items in order) and objects (values in key order), like json/nodes, and continues inside a call form. Each hit carries its node, its path from the value (`[i]` for a list item, `.key` for an object field and `key` for a field of the value itself, e.g. `orbitals[0].traits[1]`, `[2][1].then`) and `at`, its 0-based position in the walk (the count of nodes visited before it), so hits of several heads merge back into walk order by `at`. The result has one entry per listed head, an empty list when the head never occurs. With `options.prefixes`, every string leaf starting with a listed prefix is also collected, under the first listed prefix that matches, as a hit whose node is the string; a string that is the first item of a list (a call head) is not a leaf, and every listed prefix is a key, an empty list when nothing matches. `options` must be a record and `prefixes` a list of strings. For indexing a program once so readers look up the calls and references they inspect instead of walking it",
+      "description": "Every call form in a value, grouped by its head, in one walk: a call form is a list whose first item is a string listed in `heads`. The walk is pre-order over lists (items in order) and objects (values in key order), like json/nodes, and continues inside a call form. Each hit carries its node, its path from the value (`[i]` for a list item, `.key` for an object field and `key` for a field of the value itself, e.g. `orbitals[0].traits[1]`, `[2][1].then`) and `at`, its 0-based position in the walk (the count of nodes visited before it), so hits of several heads merge back into walk order by `at`. The result has one entry per listed head, an empty list when the head never occurs. With `options.prefixes`, every string leaf starting with a listed prefix is also collected, under the first listed prefix that matches, as a hit whose node is the string; a string that is the first item of a list (a call head) is not a leaf, and every listed prefix is a key, an empty list when nothing matches. With `options.objects`, every object that carries one of the listed keys is also collected, under that key, as a hit whose node is the object (an object carrying several listed keys is a hit under each; a key that is also a head or prefix shares its list); every listed key is a result key, an empty list when nothing carries it. `options` must be a record, `prefixes` and `objects` lists of strings. For indexing a program once so readers look up the calls and references they inspect instead of walking it",
       "module": "json",
       "visual": {
         "form": "block"
@@ -31348,16 +31348,21 @@
           "type": {
             "kind": "object",
             "fields": {
+              "objects": {
+                "kind": "array",
+                "of": "string"
+              },
               "prefixes": {
                 "kind": "array",
                 "of": "string"
               }
             },
             "optional": [
+              "objects",
               "prefixes"
             ]
           },
-          "description": "Optional `prefixes`: string prefixes whose leaves are collected too",
+          "description": "Optional `prefixes`: string prefixes whose leaves are collected too; `objects`: keys whose carrier objects are collected too",
           "optional": true
         }
       ],
@@ -32088,6 +32093,56 @@
         "(validate/uuid \"550e8400-e29b-41d4-a716-446655440000\")"
       ],
       "docsSource": "reference-docs"
+    },
+    "value/depth": {
+      "category": "std-json",
+      "minArity": 1,
+      "maxArity": 1,
+      "returnType": "int",
+      "description": "The deepest nesting of a value, in one walk (O(size)): a scalar is 0, a list or a record is 1 + the greatest depth among its items, so an empty one is 1",
+      "module": "json",
+      "visual": {
+        "form": "block"
+      },
+      "params": [
+        {
+          "name": "v",
+          "type": {
+            "kind": "var",
+            "name": "T"
+          },
+          "description": "The value to measure"
+        }
+      ],
+      "examples": [
+        "[\"value/depth\", {\"a\": [1, [2]]}] // => 3"
+      ],
+      "docsSource": "generated"
+    },
+    "value/key": {
+      "category": "std-json",
+      "minArity": 1,
+      "maxArity": 1,
+      "returnType": "string",
+      "description": "A deterministic string key of any value, in one walk of the value (O(size)): equal values give equal keys and unequal values give different keys, so it replaces a stringify-based dedupe or lookup key. Record field order never changes the key; a list and a record never share one; an int and the equal float share one. A lambda has no key (an error)",
+      "module": "json",
+      "visual": {
+        "form": "block"
+      },
+      "params": [
+        {
+          "name": "v",
+          "type": {
+            "kind": "var",
+            "name": "T"
+          },
+          "description": "The value to key"
+        }
+      ],
+      "examples": [
+        "[\"value/key\", {\"a\": [1, \"x\"]}] // => \"{1:a[i1;s1:x]}\""
+      ],
+      "docsSource": "generated"
     },
     "vec/add": {
       "category": "std-vec",

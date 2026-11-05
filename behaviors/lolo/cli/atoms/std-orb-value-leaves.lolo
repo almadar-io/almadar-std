@@ -24,7 +24,7 @@ orbital OrbValueLeavesOrbital {
       VALUE_WALK_HEARD -> ready
         (set @entity.slots @payload.slots)
       VALUE_LEAVES_ASK -> ready
-        (let ((sem @entity.slots) (noslot : WalkSlot { kind: "", args: [] }) (nl : FiredLf { lf: [], ll: [] }) (fnSet (default (object/fromEntries (array/map @entity.functions (fn x [(str/replaceAll (str/replaceAll @x "~" "~t") "." "~d"), true]))) {})))
+        (let ((sem @entity.slots) (noslot : WalkSlot { kind: "", args: [] }) (nl : FiredLf { lf: [], ll: [] }) (fnSet (default (object/fromEntries (array/map @entity.functions (fn x [@x, true]))) {})))
           (emit VALUE_LEAVES { requestId: @payload.requestId, leaves: (array/map @payload.values (fn v
             (if (validate/array @v)
               (let ((sr (tree/fold @v (fn (n k)
@@ -34,7 +34,7 @@ orbital OrbValueLeavesOrbital {
         (let ((sl (let ((h (array/nth @n 0))) (if (and (> @len 0) (validate/string @h)) (default (object/get @sem @h) @noslot) @noslot))) (sm (object/get @sl "kind" "")))
           (let ((picked (if (= @sm "listed") (object/get @sl "args" []) [])))
             (let ((tail (array/drop @kk 1)) (lastc (array/last @kk)))
-             (let ((pairs (array/zip (array/range 0 (if (> @argc 0) @argc 0)) @tail)) (lamKids (array/filter (array/zip (array/drop @n 1) @tail) (fn p (let ((a (array/nth @p 0))) (and (validate/array @a) (>= (array/len @a) 3) (let ((a0 (array/nth @a 0))) (and (validate/string @a0) (object/has @fnSet (str/replaceAll (str/replaceAll @a0 "~" "~t") "." "~d"))))))))))
+             (let ((pairs (array/zip (array/range 0 (if (> @argc 0) @argc 0)) @tail)) (lamKids (array/filter (array/zip (array/drop @n 1) @tail) (fn p (let ((a (array/nth @p 0))) (and (validate/array @a) (>= (array/len @a) 3) (let ((a0 (array/nth @a 0))) (and (validate/string @a0) (object/has @fnSet @a0)))))))))
               (let ((sel (if (= @sm "branches") (if (< @argc 2) null (array/flatten (array/map (array/drop @kk 2) (fn c (object/get @c "lf")))))
                          (if (= @sm "args") (if (< @argc 1) null (array/flatten (array/map @tail (fn c (object/get @c "lf")))))
                            (if (= @sm "last") (if (and (>= @argc 1) (!= @lastc null)) (object/get @lastc "lf") null)

@@ -30,6 +30,7 @@ type IdRefsTick = { effects : [IdRefsExpr?] }
 type IdRefsTrait = { id : string, name : string, ref : string, refId : string, linkedEntityId : string, linkedEntity : string, entityRefIds : Map string string, traitEmbedIds : Map string string, emits : [IdRefsEmit], listens : [IdRefsListen], dataEntities : [IdRefsEntity], stateMachine : IdRefsMachine, ticks : [IdRefsTick], config : Map string IdRefsConfig }
 type IdRefsPage = { id : string, name : string, ref : string, refId : string, linkedEntityId : string, linkedEntity : string, traitRefIds : [string], traits : [IdRefsTrait] }
 type IdRefsOrbital = { id : string, name : string, entity : IdRefsEntity, auxiliaryEntities : [IdRefsEntity], pages : [IdRefsPage], traits : [IdRefsTrait] }
+type IdRefsEmbeds = Map string [string]
 type IdRefsAt = { path : string!, node : string! }
 type IdRefsAtIdx = Map string [IdRefsAt]
 type IdRefsLedgerEntry = { id : string, kind : string, curName : string, parent : string }
@@ -37,7 +38,7 @@ type IdRefsLedger = { entries : Map string IdRefsLedgerEntry }
 type IdRefsProgram = { orbitals : [IdRefsOrbital]!, ledger : IdRefsLedger }
 
 type LintCodeDecl = { code : string!, category : string!, description : string! }
-type LintIdRefsCodes = { idKindMismatch : LintCodeDecl , idUnknownRef : LintCodeDecl , idNameMismatch : LintCodeDecl , idLedgerOrphan : LintCodeDecl , lintNodeUnchecked : LintCodeDecl }
+type LintIdRefsCodes = { lintIndexMissing : LintCodeDecl , idKindMismatch : LintCodeDecl , idUnknownRef : LintCodeDecl , idNameMismatch : LintCodeDecl , idLedgerOrphan : LintCodeDecl , lintNodeUnchecked : LintCodeDecl }
 
 orbital OrbLintIdRefsOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
@@ -45,6 +46,12 @@ orbital OrbLintIdRefsOrbital {
   entity OrbLintIdRefsRun [runtime] {
     id : string!
     scope : string = ""
+    embConfig : IdRefsEmbeds = {}
+    embEffects : IdRefsEmbeds = {}
+    embPageConfig : IdRefsEmbeds = {}
+    embPageEffects : IdRefsEmbeds = {}
+    embedsScope : string = ""
+    embedded : boolean = false
     findings : [OrbFinding] = []
   }
 
@@ -53,19 +60,26 @@ orbital OrbLintIdRefsOrbital {
 
     state ready {
       INIT -> ready
+      EMBEDS_HEARD -> ready
+        (set @entity.embConfig @payload.config)
+        (set @entity.embEffects @payload.effects)
+        (set @entity.embPageConfig @payload.pageConfig)
+        (set @entity.embPageEffects @payload.pageEffects)
+        (set @entity.embedsScope @payload.scope)
+        (set @entity.embedded true)
       LINT_INPUT -> ready
         (set @entity.scope @payload.scope)
-        (set @entity.findings (let ((emptyHits : IdRefsHits []) (orbitals (object/get @payload.program "orbitals" [])) (ledgerEntries (object/get (object/get @payload.program "ledger" {}) "entries" {})))
+        (set @entity.findings (if (and @entity.embedded (= @entity.embedsScope @payload.scope)) (let ((embC @entity.embConfig) (embE @entity.embEffects) (embPC @entity.embPageConfig) (embPE @entity.embPageEffects) (emptyHits : IdRefsHits []) (orbitals (object/get @payload.program "orbitals" [])) (ledgerEntries (object/get (object/get @payload.program "ledger" {}) "entries" {})))
           (let ((slots (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
                   (let ((orb (array/nth @orbitals @oi)))
                     (let ((op (str/concat "orbitals[" @oi " (" (object/get @orb "name" "") ")]")) (trs (object/get @orb "traits" [])) (pgs (object/get @orb "pages" [])))
                       (array/concat
-                        (array/map (array/filter (array/range 0 (array/len @trs)) (fn ti (validate/object (array/nth @trs @ti)))) (fn ti { t: (array/nth @trs @ti), tp: (str/concat @op ".traits[" @ti "]"), own: true }))
+                        (array/map (array/filter (array/range 0 (array/len @trs)) (fn ti (validate/object (array/nth @trs @ti)))) (fn ti { t: (array/nth @trs @ti), tp: (str/concat @op ".traits[" @ti "]"), own: true, key: (str/concat @oi "-" @ti) }))
                         (array/flatten (array/map (array/filter (array/range 0 (array/len @pgs)) (fn pix (validate/object (array/nth @pgs @pix)))) (fn pix
                           (let ((pg (array/nth @pgs @pix)))
                             (let ((pts (object/get @pg "traits" [])) (isObj (object/has @pg "ref")))
                               (array/map (array/filter (array/range 0 (array/len @pts)) (fn ti (validate/object (array/nth @pts @ti))))
-                                (fn ti { t: (array/nth @pts @ti), tp: (if @isObj (str/concat @op ".pages[" @pix "].traits[" @ti "]") (str/concat @op ".pages[" @pix " (" (object/get @pg "name" "") ")].traits[" @ti "]")), own: (not @isObj) })))))))))))))))
+                                (fn ti { t: (array/nth @pts @ti), tp: (if @isObj (str/concat @op ".pages[" @pix "].traits[" @ti "]") (str/concat @op ".pages[" @pix " (" (object/get @pg "name" "") ")].traits[" @ti "]")), own: (not @isObj), key: (str/concat @oi "-p" @pix "-" @ti) })))))))))))))))
             (let ((ownInline (array/filter @slots (fn s (and (object/get @s "own") (object/has (object/get @s "t") "stateMachine")))))
                   (inlineSlots (array/filter @slots (fn s (object/has (object/get @s "t") "stateMachine"))))
                   (refSlots (array/filter @slots (fn s (not (object/has (object/get @s "t") "stateMachine"))))))
@@ -140,10 +154,7 @@ orbital OrbLintIdRefsOrbital {
                       (embedSeen (array/flatten (array/map @slots (fn s
                         (let ((tr (object/get @s "t")))
                           (let ((isInline (object/has @tr "stateMachine")) (cfg (let ((c (object/get @tr "config" null))) (if (validate/object @c) (object/values @c) []))))
-                            (let ((names (array/flatten (array/concat
-                                    (if @isInline (array/map (object/get (object/get @tr "stateMachine" {}) "transitions" []) (fn a (array/flatten (array/map (array/filter (array/map (array/flatten (object/values (default (as (tree/index (array/filter (object/get @a "effects" []) (fn r (not (validate/object @r)))) [] { prefixes: [(quote "@trait.")] }) IdRefsAtIdx) {}))) (fn h (object/get @h "node" ""))) (fn n (> (str/len @n) 7))) (fn n (if (validate/string @n) (array/flatten (array/map (array/take (str/split (str/slice @n 7 (str/len @n)) ".") 1) (fn hd (array/take (str/split @hd "[") 1)))) [])))))) [])
-                                    (if @isInline (array/map (object/get @tr "ticks" []) (fn tk (array/flatten (array/map (array/filter (array/map (array/flatten (object/values (default (as (tree/index (array/filter (object/get @tk "effects" []) (fn r (not (validate/object @r)))) [] { prefixes: [(quote "@trait.")] }) IdRefsAtIdx) {}))) (fn h (object/get @h "node" ""))) (fn n (> (str/len @n) 7))) (fn n (if (validate/string @n) (array/flatten (array/map (array/take (str/split (str/slice @n 7 (str/len @n)) ".") 1) (fn hd (array/take (str/split @hd "[") 1)))) [])))))) [])
-                                    (array/map (array/filter @cfg (fn c (object/has @c "default"))) (fn c (array/flatten (array/map (array/filter (array/map (array/flatten (object/values (default (as (tree/index (object/get @c "default") [] { prefixes: [(quote "@trait.")] }) IdRefsAtIdx) {}))) (fn h (object/get @h "node" ""))) (fn n (> (str/len @n) 7))) (fn n (if (validate/string @n) (array/flatten (array/map (array/take (str/split (str/slice @n 7 (str/len @n)) ".") 1) (fn hd (array/take (str/split @hd "[") 1)))) [])))))))))
+                            (let ((names (let ((ky (object/get @s "key"))) (array/concat (object/get @embC @ky []) (object/get @embPC @ky []) (if @isInline (array/concat (object/get @embE @ky []) (object/get @embPE @ky [])) []))))
                                   (embedIdList (if @isInline (object/values (object/get @tr "traitEmbedIds" {})) []))
                                   (embedKeys (if @isInline (object/keys (object/get @tr "traitEmbedIds" {})) [])))
                                 (array/concat @embedIdList
@@ -167,7 +178,8 @@ orbital OrbLintIdRefsOrbital {
                             (if (or (array/includes @seen @eid) (and (= @ekind "event") (!= @eparent "") (array/includes @declTraitIds @eparent)))
                               []
                               [{ code: @config.codes.idLedgerOrphan.code, path: (str/concat "ledger.entries[" @eid "]"), message: (str/concat "ledger row `" @eid "` (kind `" (object/get { orbital: "orb", entity: "ent", trait: "trt", event: "evt", page: "pag", service: "svc", theme: "thm", palette: "pal" } @ekind "") "`, curName `" (object/get @e "curName" "") "`) is carried by no node in the schema — stale."), suggestion: "", severity: "error" }])))))
-                      (array/flatten (array/map @fieldFolds (fn r (let ((res (object/get @r "res"))) (if (= @res null) [{ code: @config.codes.lintNodeUnchecked.code, path: (str/concat (object/get (object/get @r "eb") "base") ".fields[" (object/get @r "fi") "]"), message: (str/concat @payload.file ": schema node at " (str/concat (object/get (object/get @r "eb") "base") ".fields[" (object/get @r "fi") "]") " is not a IdRefsField; this rule could not check it"), suggestion: "", severity: "error" }] [])))))))))))))
+                      (array/flatten (array/map @fieldFolds (fn r (let ((res (object/get @r "res"))) (if (= @res null) [{ code: @config.codes.lintNodeUnchecked.code, path: (str/concat (object/get (object/get @r "eb") "base") ".fields[" (object/get @r "fi") "]"), message: (str/concat @payload.file ": schema node at " (str/concat (object/get (object/get @r "eb") "base") ".fields[" (object/get @r "fi") "]") " is not a IdRefsField; this rule could not check it"), suggestion: "", severity: "error" }] [])))))))))))) [{ code: @config.codes.lintIndexMissing.code, path: "", message: "the lint input arrived without the trait embeds (LINT_EMBEDS), so this rule cannot check the program", suggestion: "std-orb-lint-input sends LINT_EMBEDS before LINT_INPUT; this rule did not hear it", severity: "error" }]))
+        (set @entity.embedded false)
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "id-refs", scope: @entity.scope, findings: @entity.findings })
@@ -186,9 +198,12 @@ orbital OrbLintIdRefsOrbital {
       LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : IdRefsProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
+      EMBEDS_HEARD { scope : string!  config : IdRefsEmbeds!  effects : IdRefsEmbeds!  pageConfig : IdRefsEmbeds!  pageEffects : IdRefsEmbeds! }
+        @description "std-orb-lint-input's LINT_EMBEDS: the child trait names each orbital trait (`<orbital>-<trait>`) and each page trait (`<orbital>-p<page>-<trait>`) embeds through config defaults and effects."
+      OrbLintInput.LINT_EMBEDS -> EMBEDS_HEARD
     }
     config {
-      codes : LintIdRefsCodes = { idKindMismatch: { code: "ORB_ID_KIND_MISMATCH", category: "id", description: "An id of one kind is used in a position that requires an id of a different kind" }, idUnknownRef: { code: "ORB_ID_UNKNOWN_REF", category: "id", description: "An id reference matches no arena node or ledger entry" }, idNameMismatch: { code: "ORB_ID_NAME_MISMATCH", category: "id", description: "A name in the source disagrees with the current name the ledger records for the same id" }, idLedgerOrphan: { code: "ORB_ID_LEDGER_ORPHAN", category: "id", description: "An id ledger row is carried by no node in the schema and is stale" }, lintNodeUnchecked: { code: "LINT_NODE_UNCHECKED", category: "lint", description: "A lint rule met a schema node of an unexpected shape and could not check it" } }
+      codes : LintIdRefsCodes = { lintIndexMissing: { code: "ORB_LINT_INDEX_MISSING", category: "lint", description: "The lint input arrived without a shared program fact the rule reads (the structural index, sites, units, embeds or entities), so the rule cannot check the program" }, idKindMismatch: { code: "ORB_ID_KIND_MISMATCH", category: "id", description: "An id of one kind is used in a position that requires an id of a different kind" }, idUnknownRef: { code: "ORB_ID_UNKNOWN_REF", category: "id", description: "An id reference matches no arena node or ledger entry" }, idNameMismatch: { code: "ORB_ID_NAME_MISMATCH", category: "id", description: "A name in the source disagrees with the current name the ledger records for the same id" }, idLedgerOrphan: { code: "ORB_ID_LEDGER_ORPHAN", category: "id", description: "An id ledger row is carried by no node in the schema and is stale" }, lintNodeUnchecked: { code: "LINT_NODE_UNCHECKED", category: "lint", description: "A lint rule met a schema node of an unexpected shape and could not check it" } }
         @label "Emitted codes"
         @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
     }

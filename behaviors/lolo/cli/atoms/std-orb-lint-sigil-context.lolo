@@ -20,7 +20,14 @@ type SgOrbital = { name : string, traits : [SgTrait], entity : SgEntity?, auxili
 type SgProgram = { orbitals : [SgOrbital]! }
 type SgOpShape = { category : string, minArity : number }
 type SgProgType = { type : string }
-type SgHit = { rel : string, r : string }
+type SgHit = { ip : string, rel : string, r : string }
+type SgAtHit = { ip : string!, path : string!, r : string!, at : number! }
+type SgAtNode = { path : string!, node : string!, at : number! }
+type SgAtIdx = Map string [SgAtNode]
+type SgCall = { path : string!, node : SgShape! }
+type SgIdx = Map string [SgCall]
+type SgPair = { pfx : string!, before : [string]! }
+type SgScope = { ip : string!, q : string!, qb : string!, ql : number!, kind : string!, names : [string]!, pairs : [SgPair]! }
 type SgRoot = { x : SgShape?, w : string!, c : string! }
 
 type GtCallHit = { path : string, node : GtVal?, at : number }
@@ -86,7 +93,7 @@ orbital OrbLintSigilContextOrbital {
       LINT_INPUT -> ready
         (set @entity.scope @payload.scope)
         (set @entity.findings (if (and @entity.indexHeard (= @entity.indexScope @payload.scope) @entity.sitesGuardHeard (= @entity.sitesGuardScope @payload.scope) @entity.unitsHeard (= @entity.unitsScope @payload.scope))
-(let ((nohits : [SgHit] []) (noroots : [SgRoot] []) (nostr : [string] [])  (nof : [OrbFinding] []) (collSet : Map string boolean (default (object/fromEntries (array/map @entity.collOps (fn c [@c true]))) {})) (orbitals : [SgOrbital] (object/get @payload.program "orbitals" [])) (eAt : [string] (array/map @entity.effectAllowed (fn a (str/concat (quote "@") @a)))) (gAt : [string] (array/map @entity.guardAllowed (fn a (str/concat (quote "@") @a)))))
+(let ((nohits : [SgHit] []) (noroots : [SgRoot] []) (nostr : [string] []) (nohits0 : [SgAtHit] [])  (nof : [OrbFinding] []) (collSet : Map string boolean (default (object/fromEntries (array/map @entity.collOps (fn c [@c true]))) {})) (orbitals : [SgOrbital] (object/get @payload.program "orbitals" [])) (eAt : [string] (array/map @entity.effectAllowed (fn a (str/concat (quote "@") @a)))) (gAt : [string] (array/map @entity.guardAllowed (fn a (str/concat (quote "@") @a)))))
   (if (or @entity.shapesUnread @entity.factsUnread)
     (array/concat
       (if @entity.shapesUnread [{ code: @config.codes.lintOperatorShapesUnread.code, path: "operators", message: "the installed @almadar/std operator table does not match the operator shape type, so the collection callback operators are unknown", suggestion: "Reinstall @almadar/std so its operator table declares the params of every operator", severity: "error" }] @nof)
@@ -140,63 +147,56 @@ orbital OrbLintSigilContextOrbital {
                   (fn a
                     (let ((ai @index) (invs : [SgShape] (object/get @a "invariants" [])))
                       (let ((r : [SgRoot] (array/map @invs (fn iv { x: @iv, w: (str/concat "orbitals[" @oi "].auxiliaryEntities[" @ai "].invariants[" @index "]"), c: "invariant" })))) @r)))))))))))))))
-      (let ((nroot : SgRoot { x: null, w: "", c: "" })) 
-            (array/flatten
-              (array/map (array/range 0 (array/len @roots))
-                (fn xi
-                  (let ((x (default (array/nth @roots @xi) @nroot)) (hs (default (tree/fold (object/get @x "x" null) (fn (n k) (if (validate/string @n)
-  (if (and (str/startsWith @n (quote "@")) (>= (str/len @n) 2))
-    (let ((root (str/replace-pattern (str/replaceAll (str/slice @n 1) "[" ".") "\\..*$" "")))
-      (if (or (= @root "") (validate/pattern @root "^[A-Z]"))
-        @nohits
-        [{ rel: "", r: @root }]))
-    @nohits)
-  (if (validate/array @n)
-    (let ((len (array/len @n)) (op (let ((o0 (if (> (array/len @n) 0) (array/nth @n 0) ""))) (if (validate/string @o0) @o0 ""))))
-      (if (and (= @len 3) (= @op "fn"))
-        (let ((p1 (array/nth @n 1)))
-          (let ((params : [string] (if (validate/array @p1) (array/flatten (array/map @p1 (fn x (if (validate/string @x) [@x] @nostr)))) (if (validate/string @p1) [@p1] @nostr))))
-            (array/map (array/filter (let ((r : [SgHit]? (array/nth @k 2))) (if (validate/array @r) @r @nohits)) (fn h (not (array/includes @params (object/get @h "r" ""))))) (fn h (object/merge @h { rel: (str/concat "[2]" (object/get @h "rel" "")) })))))
-        (if (and (= @len 3) (= @op "let"))
-          (let ((p1 (array/nth @n 1)))
-            (if (validate/array @p1)
-              (let ((k1 : [SgHit] (let ((r : [SgHit]? (array/nth @k 1))) (if (validate/array @r) @r @nohits))) (allNames (array/flatten (array/map @p1 (fn pr (if (and (validate/array @pr) (> (array/len @pr) 0)) (let ((nm0 (array/nth @pr 0))) (if (validate/string @nm0) [@nm0] @nostr)) @nostr))))))
-                (array/concat
-                  (array/flatten
-                    (array/map (array/range 0 (array/len @p1))
-                      (fn bi
-                        (let ((before (array/flatten (array/map (array/range 0 @bi) (fn bj (let ((pj (array/nth @p1 @bj))) (if (and (validate/array @pj) (> (array/len @pj) 0)) (let ((nm1 (array/nth @pj 0))) (if (validate/string @nm1) [@nm1] @nostr)) @nostr)))))) (pfx (str/concat "[" @bi "][1]")))
-                          (array/map (array/filter (array/filter @k1 (fn h (str/startsWith (object/get @h "rel" "") @pfx))) (fn h (not (array/includes @before (object/get @h "r" ""))))) (fn h (object/merge @h { rel: (str/concat "[1]" (object/get @h "rel" "")) })))))))
-                  (array/map (array/filter (let ((r : [SgHit]? (array/nth @k 2))) (if (validate/array @r) @r @nohits)) (fn h (not (array/includes @allNames (object/get @h "r" ""))))) (fn h (object/merge @h { rel: (str/concat "[2]" (object/get @h "rel" "")) })))))
-              (if (validate/object @p1)
-                (let ((names : [string] (object/keys @p1)) (k1 : [SgHit] (let ((r : [SgHit]? (array/nth @k 1))) (if (validate/array @r) @r @nohits))))
-                  (array/concat
-                    (array/map (array/filter @k1 (fn h (not (array/includes @names (object/get @h "r" ""))))) (fn h (object/merge @h { rel: (str/concat "[1]" (object/get @h "rel" "")) })))
-                    (array/map (array/filter (let ((r : [SgHit]? (array/nth @k 2))) (if (validate/array @r) @r @nohits)) (fn h (not (array/includes @names (object/get @h "r" ""))))) (fn h (object/merge @h { rel: (str/concat "[2]" (object/get @h "rel" "")) })))))
-                (array/map (let ((r : [SgHit]? (array/nth @k 2))) (if (validate/array @r) @r @nohits)) (fn h (object/merge @h { rel: (str/concat "[2]" (object/get @h "rel" "")) }))))))
-          (if (and (>= @len 3) (object/has @collSet @op))
-            (array/concat
-              (array/map (let ((r : [SgHit]? (array/nth @k 1))) (if (validate/array @r) @r @nohits)) (fn h (object/merge @h { rel: (str/concat "[1]" (object/get @h "rel" "")) })))
-              (array/flatten
-                (array/map (array/range 2 @len)
-                  (fn i
-                    (array/map (array/filter (let ((r : [SgHit]? (array/nth @k @i))) (if (validate/array @r) @r @nohits)) (fn h (not (array/includes ["item", "index"] (object/get @h "r" ""))))) (fn h (object/merge @h { rel: (str/concat "[" @i "]" (object/get @h "rel" "")) })))))))
-            (array/flatten
-              (array/map (array/range 0 @len)
-                (fn i
-                  (array/map (let ((r : [SgHit]? (array/nth @k @i))) (if (validate/array @r) @r @nohits)) (fn h (object/merge @h { rel: (str/concat "[" @i "]" (object/get @h "rel" "")) }))))))))))
-    (if (validate/object @n)
-      (array/flatten
-        (array/map (object/keys @k)
-          (fn key
-            (array/map (let ((r : [SgHit]? (object/get @k @key))) (if (validate/array @r) @r @nohits)) (fn h (object/merge @h { rel: (str/concat "." @key (object/get @h "rel" "")) }))))))
-      @nohits)))) SgShape) @nohits)))
-              (let ((c (object/get @x "c" "")))
-              (let ((allowed : [string] (if (= @c "effect") @entity.effectAllowed (if (= @c "tick") @entity.tickAllowed (if (= @c "ensures") (array/concat @entity.guardAllowed @config.ensuresSigils) @entity.guardAllowed)))))
-  (array/map (array/filter @hs (fn h (or (= (object/get @h "r" "") "item") (= (object/get @h "r" "") "index") (not (array/includes @allowed (object/get @h "r" ""))))))
-    (fn h
-      (let ((root (object/get @h "r" "")))
-        { code: (if (and (= @c "tick") (= @root "payload")) @config.codes.bindingPayloadInTick.code @config.codes.bindingUnknownRoot.code), path: (str/concat (object/get @x "w" "") (object/get @h "rel" "")), message: (if (or (= @root "item") (= @root "index")) (str/concat "Binding @" @root " is not in scope here — @item / @index are bound only inside a collection callback (array/map, array/filter, …).") (str/concat "Binding @" @root " is not allowed in " @c " context. Allowed sigils: " (str/join @allowed ", "))), suggestion: (if (or (= @root "item") (= @root "index")) "Under `children:` the collection callback must use the EXPLICIT lambda form — `(array/map <collection> (fn (item) <node>))`. The implicit shorthand `(array/map <collection> { … })` is not recognised there, so its body is not treated as a lambda and @item never comes into scope. Both a raw `type:` object and a JSX element are valid as <node>." (str/concat "Use one of: " (str/join (array/map @allowed (fn a (str/concat (quote "@") @a))) ", "))), severity: "error" })))))))))))))
+      (let ((collHeads : [string] (array/concat ["fn" "let"] @entity.collOps)) (aMap : Map string [string] { guard: @entity.guardAllowed, effect: @entity.effectAllowed, tick: @entity.tickAllowed, ensures: (array/concat @entity.guardAllowed @config.ensuresSigils), holds: @entity.guardAllowed, invariant: @entity.guardAllowed }) (cs : [string] (array/map @roots (fn r (object/get @r "c" "")))) (ws : [string] (array/map @roots (fn r (object/get @r "w" "")))))
+  (let ((raw (tree/index @roots @collHeads { prefixes: [(quote "@")] })))
+    (let ((byNode : Map string [SgAtNode] (array/groupBy (array/flatten (object/values (default (as (object/omit @raw @collHeads) SgAtIdx) {}))) "node")))
+    (let ((ats : [SgAtHit] (array/sort (array/flatten (array/map (object/entries @byNode) (fn en
+            (let ((nd : string (array/nth @en 0)) (rt (str/replace-pattern (str/replaceAll (str/slice @nd 1) "[" ".") "\..*$" "")) (hits : [SgAtNode] (array/nth @en 1)))
+              (if (or (< (str/len @nd) 2) (= @rt "") (validate/pattern @rt "^[A-Z]"))
+                @nohits0
+                (array/map (if (or (= @rt "item") (= @rt "index")) @hits (array/filter @hits (fn a (not (array/includes (object/get @aMap (default (array/nth @cs (default (str/to-int (str/slice (default (array/first (str/split (object/get @a "path" "") "]")) "") 1)) 0)) "") @nostr) @rt)))))
+                  (fn a { ip: (str/slice (default (array/first (str/split (object/get @a "path" "") "]")) "") 1), path: (object/get @a "path" ""), r: @rt, at: (object/get @a "at" 0) }))))))) "at")))
+      (if (= (array/len @ats) 0)
+        @nof
+        (let ((cset : Map string boolean (default (object/fromEntries (array/map @ats (fn h [(object/get @h "ip" ""), true]))) {})) (ix (default (as (object/omit @raw [(quote "@")]) SgIdx) {})))
+          (let ((ssBy : Map string [SgScope] (array/groupBy (array/flatten (array/map (array/filter (array/flatten (object/values @ix)) (fn c (object/has @cset (str/slice (default (array/first (str/split (object/get @c "path" "") "]")) "") 1)))) (fn c
+                  (let ((cn (object/get @c "node" null)) (q (object/get @c "path" "")))
+                    (if (not (and (validate/array @cn) (>= (array/len @cn) 3)))
+                      []
+                      (let ((p1 (array/nth @cn 1)) (op (array/nth @cn 0)) (ip (str/slice (default (array/first (str/split @q "]")) "") 1)))
+                        (if (and (= (array/len @cn) 3) (= @op "fn"))
+                          [{ ip: @ip, q: @q, qb: (str/concat @q "["), ql: (str/len @q), kind: "fn", names: (if (validate/array @p1) (array/flatten (array/map @p1 (fn x (if (validate/string @x) [@x] @nostr)))) (if (validate/string @p1) [@p1] @nostr)), pairs: [] }]
+                          (if (and (= (array/len @cn) 3) (= @op "let"))
+                            (if (validate/array @p1)
+                              (let ((nms (array/map @p1 (fn pr (if (and (validate/array @pr) (> (array/len @pr) 0)) (let ((nm0 (array/nth @pr 0))) (if (validate/string @nm0) [@nm0] @nostr)) @nostr)))))
+                                [{ ip: @ip, q: @q, qb: (str/concat @q "["), ql: (str/len @q), kind: "la", names: (array/flatten @nms), pairs: (array/map (array/range 0 (array/len @p1)) (fn bi { pfx: (str/concat "[1][" @bi "][1]"), before: (array/flatten (array/slice @nms 0 @bi)) })) }])
+                              (if (validate/object @p1)
+                                [{ ip: @ip, q: @q, qb: (str/concat @q "["), ql: (str/len @q), kind: "lo", names: (object/keys @p1), pairs: [] }]
+                                [{ ip: @ip, q: @q, qb: (str/concat @q "["), ql: (str/len @q), kind: "l0", names: @nostr, pairs: [] }]))
+                            (if (and (validate/string @op) (object/has @collSet @op))
+                              [{ ip: @ip, q: @q, qb: (str/concat @q "["), ql: (str/len @q), kind: "co", names: ["item" "index"], pairs: [] }]
+                              []))))))))) "ip")))
+            (let ((hs : [SgAtHit] (array/filter @ats (fn hit
+                    (let ((hp (object/get @hit "path" "")) (rt (object/get @hit "r" "")))
+                      (not (array/some (object/get @ssBy (object/get @hit "ip" "") [])
+                        (fn s
+                          (and (str/startsWith @hp (object/get @s "qb"))
+                            (let ((sfx (str/slice @hp (object/get @s "ql"))) (kind (object/get @s "kind")) (names : [string] (object/get @s "names")))
+                              (if (= @kind "co")
+                                (or (str/startsWith @sfx "[0]") (and (not (str/startsWith @sfx "[1]")) (array/includes @names @rt)))
+                                (if (str/startsWith @sfx "[2]")
+                                  (array/includes @names @rt)
+                                  (if (= @kind "lo")
+                                    (or (not (str/startsWith @sfx "[1]")) (array/includes @names @rt))
+                                    (if (= @kind "la")
+                                      (let ((pf (array/find (object/get @s "pairs") (fn pq (str/startsWith @sfx (object/get @pq "pfx"))))))
+                                        (or (= @pf null) (array/includes (object/get @pf "before") @rt)))
+                                      true))))))))))))))
+              (array/map @hs
+                (fn h
+                  (let ((root (object/get @h "r" "")) (rel (str/slice (object/get @h "path" "") (+ (str/len (object/get @h "ip" "")) 4))) (c (default (array/nth @cs (default (str/to-int (object/get @h "ip" "")) 0)) "")))
+                    (let ((allowed : [string] (object/get @aMap @c @nostr)) (w (default (array/nth @ws (default (str/to-int (object/get @h "ip" "")) 0)) "")))
+                      { code: (if (and (= @c "tick") (= @root "payload")) @config.codes.bindingPayloadInTick.code @config.codes.bindingUnknownRoot.code), path: (str/concat @w @rel), message: (if (or (= @root "item") (= @root "index")) (str/concat "Binding @" @root " is not in scope here — @item / @index are bound only inside a collection callback (array/map, array/filter, …).") (str/concat "Binding @" @root " is not allowed in " @c " context. Allowed sigils: " (str/join @allowed ", "))), suggestion: (if (or (= @root "item") (= @root "index")) "Under `children:` the collection callback must use the EXPLICIT lambda form — `(array/map <collection> (fn (item) <node>))`. The implicit shorthand `(array/map <collection> { … })` is not recognised there, so its body is not treated as a lambda and @item never comes into scope. Both a raw `type:` object and a JSX element are valid as <node>." (str/concat "Use one of: " (str/join (array/map @allowed (fn a (str/concat (quote "@") @a))) ", "))), severity: "error" })))))))))))))))
 [{ code: @config.codes.lintIndexMissing.code, path: "", message: "the lint input arrived without LINT_INDEX and LINT_SITES and LINT_UNITS, so this rule cannot check the program", suggestion: "std-orb-lint-input sends LINT_INDEX and LINT_SITES and LINT_UNITS before LINT_INPUT; this rule did not hear them", severity: "error" }]))
         (set @entity.indexHeard false)
         (set @entity.sitesGuardHeard false)
@@ -246,7 +246,7 @@ orbital OrbLintSigilContextOrbital {
       ensuresSigils : [string] = ["fromEntity"]
         @label "Ensures-only sigils"
         @description "The sigils an @ensures reads beyond the guard rule's: the entity row before the transition's effects."
-      codes : LintSigilContextCodes = { lintIndexMissing: { code: "ORB_LINT_INDEX_MISSING", category: "lint", description: "The lint input arrived without the structural index the rule gates on, so the rule cannot check the program" }, bindingPayloadInTick: { code: "ORB_BINDING_PAYLOAD_IN_TICK", category: "binding", description: "A binding reads @payload inside a tick, where a firing has no delivery" }, bindingUnknownRoot: { code: "ORB_BINDING_UNKNOWN_ROOT", category: "binding", description: "A binding names a root the context does not provide" }, lintOperatorShapesUnread: { code: "ORB_LINT_OPERATOR_SHAPES_UNREAD", category: "lint", description: "The installed operator table could not be read or does not match the operator shape type, so a lint cannot run" }, lintLanguageFactsUnread: { code: "ORB_LINT_LANGUAGE_FACTS_UNREAD", category: "lint", description: "The installed language facts could not be read, so the lint rule could not check what it needs" } }
+      codes : LintSigilContextCodes = { lintIndexMissing: { code: "ORB_LINT_INDEX_MISSING", category: "lint", description: "The lint input arrived without a shared program fact the rule reads (the structural index, sites, units, embeds or entities), so the rule cannot check the program" }, bindingPayloadInTick: { code: "ORB_BINDING_PAYLOAD_IN_TICK", category: "binding", description: "A binding reads @payload inside a tick, where a firing has no delivery" }, bindingUnknownRoot: { code: "ORB_BINDING_UNKNOWN_ROOT", category: "binding", description: "A binding names a root the context does not provide" }, lintOperatorShapesUnread: { code: "ORB_LINT_OPERATOR_SHAPES_UNREAD", category: "lint", description: "The installed operator table could not be read or does not match the operator shape type, so a lint cannot run" }, lintLanguageFactsUnread: { code: "ORB_LINT_LANGUAGE_FACTS_UNREAD", category: "lint", description: "The installed language facts could not be read, so the lint rule could not check what it needs" } }
         @label "Emitted codes"
         @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
     }

@@ -6,7 +6,7 @@ app std-orb-lint-shared-types [
 ]
 uses Spec from "almadar-std/orb-lint-shared-types"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
-type LintTypeCopy = { name : string!, file : string!, definition : string!, fields : [string]! }
+type LintTypeCopy = { name : string!, file : string!, definition : string!, dkey : string!, fields : [string]! }
 type LintTypeDrift = { name : string!, variants : number!, files : [string]! }
 type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 type LintEntry = { name : string!, kind : string! }
@@ -47,7 +47,7 @@ orbital OrbLintSharedTypesOrbital {
         (emit LINT_ANSWERED { status: 200, body: "shared-types: consistent" })
       LINT_FINISH -> ready when (or (> (array/len @entity.drift) 0) (> (array/len @entity.unread) 0))
         (emit LINT_ANSWERED { status: 500, body: (str/join (array/map (let ((msgs (array/map @entity.drift (fn n (let ((copies (array/filter @entity.copies (fn c (= (object/get @c "name") @n)))))
-            (let ((variants (array/sort (array/map (array/unique (array/map @copies (fn c (object/get @c "definition")))) (fn d { definition: @d, files: (array/map (array/filter @copies (fn c (= (object/get @c "definition") @d))) (fn c (object/get @c "file"))), fields: (array/flatten (array/map (array/take (array/filter @copies (fn c (= (object/get @c "definition") @d))) 1) (fn c (object/get @c "fields")))), count: (array/len (array/filter @copies (fn c (= (object/get @c "definition") @d)))) })) "count" "desc")))
+            (let ((variants (array/sort (array/map (array/unique (array/map @copies (fn c (object/get @c "dkey")))) (fn d { dkey: @d, files: (array/map (array/filter @copies (fn c (= (object/get @c "dkey") @d))) (fn c (object/get @c "file"))), fields: (array/flatten (array/map (array/take (array/filter @copies (fn c (= (object/get @c "dkey") @d))) 1) (fn c (object/get @c "fields")))), count: (array/len (array/filter @copies (fn c (= (object/get @c "dkey") @d)))) })) "count" "desc")))
               { code: @config.codes.sharedTypeDrift.code, path: @n, message: (str/join (array/concat
                 [(str/concat (array/len @variants) " definitions differ")]
                 (array/map (array/range 0 (array/len @variants)) (fn i (str/concat "  variant " (+ @i 1) " (" (object/get (array/nth @variants @i) "count") " file(s)): " (str/join (object/get (array/nth @variants @i) "files") ", "))))
@@ -86,7 +86,7 @@ orbital OrbLintSharedTypesOrbital {
       LINT_READ -> reading when (let ((pf (array/nth @entity.paths @entity.cursor))) (and (!= @pf null) (= (object/get @pf "root") 1)))
         (let ((pf (array/nth @entity.paths @entity.cursor))) (if (= @pf null) (emit LINT_ANSWERED { status: 500, body: "shared-types: the file index is out of range" }) (os/open (str/concat "./packages/almadar-behaviors/behaviors/lolo/" (object/get @pf "rel")) "r" { key: "open" emit: { success: LINT_OPENED, failure: LINT_FILE_UNREAD } })))
       LINT_READ -> ready when (>= @entity.cursor (array/len @entity.paths))
-        (set @entity.drift (array/filter (array/unique (array/map @entity.copies (fn c (object/get @c "name")))) (fn n (> (array/len (array/unique (array/map (array/filter @entity.copies (fn c (= (object/get @c "name") @n))) (fn c (object/get @c "definition"))))) 1))))
+        (set @entity.drift (array/filter (array/unique (array/map @entity.copies (fn c (object/get @c "name")))) (fn n (> (array/len (array/unique (array/map (array/filter @entity.copies (fn c (= (object/get @c "name") @n))) (fn c (object/get @c "dkey"))))) 1))))
         (emit LINT_FINISH { })
       LINT_OPENED -> reading
         (os/read @payload.fd 4194304 { key: "chunk" emit: { success: LINT_FILE_READ, failure: LINT_FILE_UNREAD } })
@@ -98,7 +98,7 @@ orbital OrbLintSharedTypesOrbital {
         (set @entity.cursor (+ @entity.cursor 1))
         (emit LINT_READ { })
       LINT_PROGRAM_READ -> reading
-        (let ((pf (array/nth @entity.paths @entity.cursor))) (if (= @pf null) (emit LINT_ANSWERED { status: 500, body: "shared-types: the file index is out of range" }) (set @entity.copies (array/concat @entity.copies (array/flatten (array/map (object/get @payload.result "orbitals" []) (fn o (let ((ty (object/get @o "types"))) (array/map (object/keys @ty) (fn n { name: @n, file: (object/get @pf "rel"), definition: (json/stringify (object/get @ty @n)), fields: (array/map (object/get @ty @n) (fn f (json/stringify @f))) }))))))))))
+        (let ((pf (array/nth @entity.paths @entity.cursor))) (if (= @pf null) (emit LINT_ANSWERED { status: 500, body: "shared-types: the file index is out of range" }) (set @entity.copies (array/concat @entity.copies (array/flatten (array/map (object/get @payload.result "orbitals" []) (fn o (let ((ty (object/get @o "types"))) (array/map (object/keys @ty) (fn n { name: @n, file: (object/get @pf "rel"), definition: (json/stringify (object/get @ty @n)), dkey: (value/key (object/get @ty @n)), fields: (array/map (object/get @ty @n) (fn f (json/stringify @f))) }))))))))))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit LINT_READ { })
       LINT_FILE_UNREAD -> reading

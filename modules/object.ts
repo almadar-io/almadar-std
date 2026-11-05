@@ -64,7 +64,7 @@ export const OBJECT_OPERATORS: Record<string, StdOperatorMeta> = {
     category: 'std-object',
     minArity: 2,
     maxArity: 3,
-    description: 'Get nested value by path; a path segment of a list or tuple is an index (return type derived from the input type and key)',
+    description: 'Get nested value by path; a path segment of a list or tuple is an index (return type derived from the input type and key). A literal path is dotted (`\\.` is a literal dot); a computed key (a binding or a call) is read as one whole key, so a Map key that contains a dot is read as written',
     hasSideEffects: false,
     returnType: fieldOf('R'),
     params: [
@@ -79,7 +79,7 @@ export const OBJECT_OPERATORS: Record<string, StdOperatorMeta> = {
     category: 'std-object',
     minArity: 3,
     maxArity: 3,
-    description: 'Set nested value by path (returns new object).',
+    description: 'Set nested value by path (returns new object). A literal path is dotted (`\\.` is a literal dot); a computed key (a binding or a call) is read as one whole key, so a Map key that contains a dot is read as written',
     hasSideEffects: false,
     failable: { unlessObject: [0] },
     returnType: nullable(tv('R')),
@@ -95,7 +95,7 @@ export const OBJECT_OPERATORS: Record<string, StdOperatorMeta> = {
     category: 'std-object',
     minArity: 2,
     maxArity: 2,
-    description: 'Check if path exists',
+    description: 'Check if path exists. A literal path is dotted (`\\.` is a literal dot); a computed key (a binding or a call) is read as one whole key, so a Map key that contains a dot is read as written',
     hasSideEffects: false,
     returnType: 'boolean',
     params: [

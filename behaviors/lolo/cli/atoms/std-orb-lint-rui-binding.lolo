@@ -63,7 +63,7 @@ orbital OrbLintRuiBindingOrbital {
       (array/filter (object/get @o "auxiliaryEntities" @noe) (fn x (and (validate/object @x) (validate/string (object/get @x "name" null))))))))))
  (pnames (array/flatten (array/map @orbitals (fn o (let ((en (object/get @o "entity" null))) (if (and (validate/object @en) (validate/string (object/get @en "name" null))) [(object/get @en "name")] (array/take [""] 0)))))))
  (dups (array/filter @pnames (fn nm (> (array/len (array/filter @pnames (fn x (= @x @nm)))) 1))))
- (entMap (default (object/fromEntries (array/map (array/filter @allEnts (fn e (not (array/includes @dups (object/get @e "name"))))) (fn e [(str/replaceAll (str/replaceAll (object/get @e "name" "") "~" "~t") "." "~d"), @e]))) {})))
+ (entMap (default (object/fromEntries (array/map (array/filter @allEnts (fn e (not (array/includes @dups (object/get @e "name"))))) (fn e [(object/get @e "name" ""), @e]))) {})))
   (array/flatten (array/map @orbitals (fn (orb_e oi) (let ((orb @orb_e))
       (let ((trs (object/get @orb "traits" [])))
         (array/flatten (array/map @trs (fn (td_e tj) (let ((td @td_e))
@@ -77,7 +77,7 @@ orbital OrbLintRuiBindingOrbital {
                             (array/map (object/get @sm "events" []) (fn x (object/get @x "key" "")))
                             (array/map (object/get @sm "transitions" []) (fn x (object/get @x "event" "")))) (fn s (!= @s "")))))
                       (linked (object/get @td "linkedEntity" "")))
-                  (let ((ent (object/get @entMap (str/replaceAll (str/replaceAll @linked "~" "~t") "." "~d") null)))
+                  (let ((ent (object/get @entMap @linked null)))
                     (let ((fields (if (= @ent null) [] (object/get @ent "fields" []))))
                       (array/flatten (array/map (array/range 0 (array/len @trans)) (fn ti
                         (let ((effs (object/get (array/nth @trans @ti) "effects" [])))
@@ -175,7 +175,7 @@ orbital OrbLintRuiBindingOrbital {
     }
 
     config {
-      codes : LintRuiBindingCodes = { lintIndexMissing: { code: "ORB_LINT_INDEX_MISSING", category: "lint", description: "The lint input arrived without the structural index the rule gates on, so the rule cannot check the program" }, xRenderUiEventLiteralStale: { code: "ORB_X_RENDER_UI_EVENT_LITERAL_STALE", category: "cross", description: "A render-ui prop references an event literal that no longer matches a declared event" }, ruiRenderableInGenericField: { code: "ORB_RUI_RENDERABLE_IN_GENERIC_FIELD", category: "render_ui", description: "A render-ui pattern literal is passed to a field not typed node, hiding renderable content from render-ui checks" } }
+      codes : LintRuiBindingCodes = { lintIndexMissing: { code: "ORB_LINT_INDEX_MISSING", category: "lint", description: "The lint input arrived without a shared program fact the rule reads (the structural index, sites, units, embeds or entities), so the rule cannot check the program" }, xRenderUiEventLiteralStale: { code: "ORB_X_RENDER_UI_EVENT_LITERAL_STALE", category: "cross", description: "A render-ui prop references an event literal that no longer matches a declared event" }, ruiRenderableInGenericField: { code: "ORB_RUI_RENDERABLE_IN_GENERIC_FIELD", category: "render_ui", description: "A render-ui pattern literal is passed to a field not typed node, hiding renderable content from render-ui checks" } }
         @label "Emitted codes"
         @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
       eventKinds : [string] = ["event", "event-ref", "event-listen", "callback"]

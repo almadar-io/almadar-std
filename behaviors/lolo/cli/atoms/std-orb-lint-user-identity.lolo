@@ -11,6 +11,7 @@ type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type UidShape = string | number | boolean | [UidShape?] | Map string UidShape?
 type UidItems = { values : [string] }
 type UidField = { name : string, type : string, required : boolean, values : [string], items : UidItems }
+type UidEntRow = { name : string!, identity : boolean, auxiliary : boolean!, fields : [UidField] }
 type UidEntity = { name : string, identity : boolean, fields : [UidField] }
 type UidEntityRef = UidEntity | string
 type UidExpect = { kind : string, name : string, shape : [UidField] }
@@ -37,6 +38,9 @@ orbital OrbLintUserIdentityOrbital {
     scope : string = ""
     findings : [OrbFinding] = []
     roots : Map string [string] = {}
+    declList : [UidEntRow] = []
+    entsHeard : boolean = false
+    entsScope : string = ""
   }
 
   trait OrbLintUserIdentity -> OrbLintUserIdentityRun [optimistic] {
@@ -48,15 +52,17 @@ orbital OrbLintUserIdentityOrbital {
         (set @entity.roots @payload.roots)
         (set @entity.indexHeard true)
         (set @entity.indexScope @payload.scope)
+      ENTITIES_HEARD -> ready
+        (set @entity.declList (let ((p (array/filter @payload.list (fn r (and (not (object/get @r "auxiliary")) (object/get @r "identity" false)))))) (if (> (array/len @p) 0) (array/take @p 1) (array/take (array/filter @payload.list (fn r (and (object/get @r "auxiliary") (object/get @r "identity" false)))) 1))))
+        (set @entity.entsHeard true)
+        (set @entity.entsScope @payload.scope)
       LINT_INPUT -> ready
         (set @entity.scope @payload.scope)
-        (set @entity.findings (if (and @entity.indexHeard (= @entity.indexScope @payload.scope))
+        (set @entity.findings (if (and @entity.indexHeard (= @entity.indexScope @payload.scope) @entity.entsHeard (= @entity.entsScope @payload.scope))
 (let ((nov : [string] []) (nof : [OrbFinding] []) (orbs (object/get @payload.program "orbitals" [])))
- (let ((ents (array/flatten (array/map @orbs (fn o (array/flatten (array/map (array/concat [(object/get @o "entity" {})] (object/get @o "auxiliaryEntities" [])) (fn xe (if (validate/object @xe) [@xe] []))))))))
-       (primIds (array/flatten (array/map @orbs (fn o (let ((e0 (object/get @o "entity" {}))) (if (and (validate/object @e0) (object/get @e0 "identity" false)) [@e0] []))))))
-       (auxIds (array/flatten (array/map @orbs (fn o (array/filter (array/flatten (array/map (object/get @o "auxiliaryEntities" []) (fn xe (if (validate/object @xe) [@xe] [])))) (fn e (object/get @e "identity" false))))))))
-  (let ((hasDecl (or (> (array/len @primIds) 0) (> (array/len @auxIds) 0))))
-   (let ((declList (if (> (array/len @primIds) 0) (array/take @primIds 1) (array/take @auxIds 1))))
+ 
+  
+   (let ((declList @entity.declList))
     (array/concat (array/flatten (array/map (array/range 0 (array/len @orbs)) (fn oi
  (let ((orb (array/nth @orbs @oi)))
   (let ((exps (array/filter (object/get @orb "expects" []) (fn e (= (let ((s24 (object/get @e "kind" ""))) (if (validate/string @s24) @s24 "")) "identity"))))
@@ -120,9 +126,10 @@ orbital OrbLintUserIdentityOrbital {
          (if (validate/object @pg)
           (array/flatten (array/map (array/filter (object/get @pg "roles" []) (fn role (not (array/some @rf (fn r (array/includes (object/get @r "vocab") @role)))))) (fn role
            [{ code: @config.codes.sRoleLiteralNotMember.code, path: (str/concat "orbitals[" @oi "].pages[" @k "].roles"), message: (str/concat "Page \"" (object/get @pg "path" "") "\" lists role \"" @role "\" for its nav entry, but no role field of the [identity] entity `" @idnm "` declares it, so no viewer ever sees the entry."), suggestion: (str/concat "Use one of: " (str/join (object/get @first0 "vocab") ", ") ", or add \"" @role "\" to `" @idnm "." (object/get @first0 "name" "") "`."), severity: "error", validValues: (object/get @first0 "vocab") }])))
-          @nof)))))))))))))))))) )))))
-[{ code: @config.codes.lintIndexMissing.code, path: "", message: "the lint input arrived without LINT_INDEX, so this rule cannot check the program", suggestion: "std-orb-lint-input sends LINT_INDEX before LINT_INPUT; this rule did not hear it", severity: "error" }]))
+          @nof)))))))))))))))))) )))
+[{ code: @config.codes.lintIndexMissing.code, path: "", message: "the lint input arrived without LINT_INDEX or LINT_ENTITIES, so this rule cannot check the program", suggestion: "std-orb-lint-input sends LINT_INDEX and LINT_ENTITIES before LINT_INPUT; this rule did not hear both", severity: "error" }]))
         (set @entity.indexHeard false)
+        (set @entity.entsHeard false)
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "user-identity", scope: @entity.scope, findings: @entity.findings })
@@ -144,9 +151,12 @@ orbital OrbLintUserIdentityOrbital {
         @description "std-orb-lint-input's LINT_INDEX: the operator heads and binding roots each inline trait and transition effect list uses; a trait gates on its roots holding @user."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
       OrbLintInput.LINT_INDEX -> INDEX_HEARD
+      ENTITIES_HEARD { scope : string!  list : [UidEntRow]!  primaryDuplicates : [string]! }
+        @description "std-orb-lint-input's LINT_ENTITIES: every entity in program order, with its identity flag and fields."
+      OrbLintInput.LINT_ENTITIES -> ENTITIES_HEARD
     }
     config {
-      codes : LintUserIdentityCodes = { lintIndexMissing: { code: "ORB_LINT_INDEX_MISSING", category: "lint", description: "The lint input arrived without the structural index the rule gates on, so the rule cannot check the program" }, sRoleLiteralNotMember: { code: "ORB_S_ROLE_LITERAL_NOT_MEMBER", category: "schema", description: "A literal compared against an @user field with a closed vocabulary is not a member of that vocabulary, so the branch can never be taken" } }
+      codes : LintUserIdentityCodes = { lintIndexMissing: { code: "ORB_LINT_INDEX_MISSING", category: "lint", description: "The lint input arrived without a shared program fact the rule reads (the structural index, sites, units, embeds or entities), so the rule cannot check the program" }, sRoleLiteralNotMember: { code: "ORB_S_ROLE_LITERAL_NOT_MEMBER", category: "schema", description: "A literal compared against an @user field with a closed vocabulary is not a member of that vocabulary, so the branch can never be taken" } }
         @label "Emitted codes"
         @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
     }

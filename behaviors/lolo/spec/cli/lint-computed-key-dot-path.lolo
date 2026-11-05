@@ -1,0 +1,21 @@
+app lint-computed-key-dot-path-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb lint computed-key-dot-path <file>`: a computed key of object/set, object/get or object/has is read as one whole key (only a literal string key is a dotted path), so a key built with str/concat from a literal containing \".\" was meant as a path and is an error ORB_COMPUTED_KEY_DOT_PATH. Findings answer status 500 (exit 1); a clean program answers `lint computed-key-dot-path: clean` (status 200, exit 0). Anything but exactly one file argument is the usage (status 400, exit 2)."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+
+orbital LintComputedKeyDotPathSpec {
+  expects trait OrbLintComputedKeyDotPath {
+    state ready
+    emits {
+      LINT_FOUND { rule : string!  findings : [OrbFinding]! }
+    }
+  }
+  expects trait OrbLintComputedKeyDotPathCli {
+    state ready
+    emits {
+      LINT_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbLintComputedKeyDotPath, OrbLintComputedKeyDotPathCli
+}

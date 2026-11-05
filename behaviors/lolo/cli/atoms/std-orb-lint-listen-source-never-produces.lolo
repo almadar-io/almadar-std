@@ -29,7 +29,7 @@ type NvpO = { k : string, i : number, ts : [NvpTs] }
 type NvpOMap = Map string [NvpO]
 
 type LintCodeDecl = { code : string!, category : string!, description : string! }
-type LintListenSourceNeverProducesCodes = { xListenSourceNeverProduces : LintCodeDecl }
+type LintListenSourceNeverProducesCodes = { xListenSourceNeverProduces : LintCodeDecl , lintIndexMissing : LintCodeDecl }
 
 type WalkSlot = { kind : string!, args : [number] }
 orbital OrbLintListenSourceNeverProducesOrbital {
@@ -46,6 +46,7 @@ orbital OrbLintListenSourceNeverProducesOrbital {
     chains : [EmbedMap] = []
     haveFired : boolean = false
     haveChains : boolean = false
+    chainsMissing : boolean = false
     findings : [OrbFinding] = []
   }
 
@@ -70,12 +71,14 @@ orbital OrbLintListenSourceNeverProducesOrbital {
       CHAINS_HEARD -> ready when @entity.haveFired
         (set @entity.chains @payload.chains)
         (set @entity.haveChains true)
+        (set @entity.chainsMissing @payload.missing)
         (emit LINT_COMPUTE { })
       CHAINS_HEARD -> ready when (not @entity.haveFired)
         (set @entity.chains @payload.chains)
         (set @entity.haveChains true)
+        (set @entity.chainsMissing @payload.missing)
       LINT_COMPUTE -> ready
-        (set @entity.findings (let ((nos : [string] [])
+        (set @entity.findings (if @entity.chainsMissing [{ code: @config.codes.lintIndexMissing.code, path: "", message: "the lint input arrived without LINT_EMBEDS, so this rule cannot check the program", suggestion: "std-orb-lint-input sends LINT_EMBEDS before LINT_INPUT; std-orb-embed-chain did not hear it for this pass", severity: "error" }] (let ((nos : [string] [])
                 (notd : [NvpTrait] [])
                 (noem : [NvpEmit] [])
                 (nofind : [OrbFinding] [])
@@ -88,7 +91,7 @@ orbital OrbLintListenSourceNeverProducesOrbital {
                 (chains @entity.chains))
             (let ((oinfo (array/map @orbitals (fn (eo ei)
                     (let ((eon (object/get @eo "name" "")))
-                      { k: (str/replaceAll (str/replaceAll @eon "~" "~t") "." "~d"), i: @ei, ts: (array/map (array/filter (object/get @eo "traits" @notd) (fn et (object/has @et "stateMachine"))) (fn et2
+                      { k: @eon, i: @ei, ts: (array/map (array/filter (object/get @eo "traits" @notd) (fn et (object/has @et "stateMachine"))) (fn et2
                           (let ((etn (object/get @et2 "name" "")))
                             { n: @etn, emits: (array/map (object/get @et2 "emits" @noem) (fn ee (object/get @ee "event" ""))), prod: (array/concat (object/get @bc @etn @nos) (object/get @be @etn @nos)) }))) })))))
               (let ((byOrb : NvpOMap (array/groupBy @oinfo "k")))
@@ -102,14 +105,14 @@ orbital OrbLintListenSourceNeverProducesOrbital {
                                 (trig (object/get @l "triggers" "")))
                             (let ((strait (object/get @src "trait" ""))
                                   (sorb (if (= (object/get @src "kind" "") "trait") @on (object/get @src "orbital" ""))))
-                              (let ((so (array/last (object/get @byOrb (str/replaceAll (str/replaceAll @sorb "~" "~t") "." "~d") @noinfo))))
+                              (let ((so (array/last (object/get @byOrb @sorb @noinfo))))
                                 (if (= @so null) @nofind
                                   (let ((std (array/first (array/filter (object/get @so "ts" @nots) (fn sy (= (object/get @sy "n" "") @strait))))))
                                     (if (= @std null) @nofind
                                       (if (not (array/includes (object/get @std "emits" @nos) @ev)) @nofind
                                         (if (array/includes (object/get @std "prod" @nos) @ev) @nofind
                                           (if (array/some (object/get @so "ts" @nots) (fn t2 (and (!= (object/get @t2 "n" "") @strait) (array/includes (object/get (array/nth @chains (object/get @so "i" 0)) (object/get @t2 "n" "") @nos) @strait) (array/includes (object/get @t2 "prod" @nos) @ev)))) @nofind
-                                            [{ code: @config.codes.xListenSourceNeverProduces.code, path: (str/concat "orbitals." @on ".traits." @tdn ".listens"), message: (str/concat "listens route " @strait "." @ev " -> " @trig ": " @strait "'s emits contract declares " @ev ", but no live effect, rendered affordance, or config item action at this call site produces it — a config override (e.g. itemActions/browseItemActions narrowed) likely removed the only producer"), suggestion: (str/concat "restore " @ev " to " @strait "'s active affordance config, or drop the " @tdn " route if the removal is intentional"), severity: "error" }]))))))))))))))))))))))))
+                                            [{ code: @config.codes.xListenSourceNeverProduces.code, path: (str/concat "orbitals." @on ".traits." @tdn ".listens"), message: (str/concat "listens route " @strait "." @ev " -> " @trig ": " @strait "'s emits contract declares " @ev ", but no live effect, rendered affordance, or config item action at this call site produces it — a config override (e.g. itemActions/browseItemActions narrowed) likely removed the only producer"), suggestion: (str/concat "restore " @ev " to " @strait "'s active affordance config, or drop the " @tdn " route if the removal is intentional"), severity: "error" }])))))))))))))))))))))))))
         (set @entity.haveFired false)
         (set @entity.haveChains false)
         (emit LINT_FINISH { })
@@ -134,14 +137,14 @@ orbital OrbLintListenSourceNeverProducesOrbital {
         @description "The lint input: the file read, its language decided and the program lowered."
       FIRED_HEARD { scope : string!  byControl : Map string [string]!  byEffect : Map string [string]! }
         @description "std-orb-fired-events' FIRED_EVENTS: the events each trait fires by a control or by an effect."
-      CHAINS_HEARD { scope : string!  chains : [EmbedMap]! }
+      CHAINS_HEARD { scope : string!  chains : [EmbedMap]!  missing : boolean! }
         @description "std-orb-embed-chain's EMBED_CHAINS: per orbital, each trait's host names."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
       OrbFiredEvents.FIRED_EVENTS -> FIRED_HEARD
       OrbEmbedChain.EMBED_CHAINS -> CHAINS_HEARD
     }
     config {
-      codes : LintListenSourceNeverProducesCodes = { xListenSourceNeverProduces: { code: "ORB_X_LISTEN_SOURCE_NEVER_PRODUCES", category: "cross", description: "A listens route names a source whose emits contract never produces the listened event" } }
+      codes : LintListenSourceNeverProducesCodes = { xListenSourceNeverProduces: { code: "ORB_X_LISTEN_SOURCE_NEVER_PRODUCES", category: "cross", description: "A listens route names a source whose emits contract never produces the listened event" } , lintIndexMissing: { code: "ORB_LINT_INDEX_MISSING", category: "lint", description: "The lint input arrived without a shared program fact the rule reads (the structural index, sites, units, embeds or entities), so the rule cannot check the program" } }
         @label "Emitted codes"
         @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
     }
@@ -222,9 +225,9 @@ orbital OrbLintListenSourceNeverProducesOrbital {
       EMBED_INPUT_HEARD { file : string!  raw : string!  latin : boolean!  program : FiredProgram  scope : string! }
         @description "std-orb-lint-input's LINT_INPUT: the lowered program."
       OrbLintInput.LINT_INPUT -> EMBED_INPUT_HEARD
-      EMBED_INDEX_HEARD { scope : string!  heads : Map string [string]!  roots : Map string [string]! }
-        @description "std-orb-lint-input's LINT_INDEX: the operator heads and binding roots each inline trait uses."
-      OrbLintInput.LINT_INDEX -> EMBED_INDEX_HEARD
+      EMBED_EMBEDS_HEARD { scope : string!  config : Map string [string]!  guards : Map string [string]!  effects : Map string [string]! }
+        @description "std-orb-lint-input's LINT_EMBEDS: the child trait names each trait embeds through config defaults, guards and effects."
+      OrbLintInput.LINT_EMBEDS -> EMBED_EMBEDS_HEARD
     }
   }
   trait Versions = Input.traits.Versions {

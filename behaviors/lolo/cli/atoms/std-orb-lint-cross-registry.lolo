@@ -65,14 +65,14 @@ orbital OrbLintCrossRegistryOrbital {
         (set @entity.scope @payload.scope)
         (set @entity.missing (not (and @entity.indexed (= @entity.indexScope @payload.scope))))
         (set @entity.items (if (not (and @entity.indexed (= @entity.indexScope @payload.scope))) [] (let ((noi : [XrItem] []) (nof2 : [XrFound] []) (nr : XrIdx {}) (orbitals (object/get @payload.program "orbitals" [])) (heads @entity.heads)
-            (opSet (default (object/fromEntries (array/map @entity.ops (fn x [(str/replaceAll (str/replaceAll @x "~" "~t") "." "~d"), true]))) {}))
-            (patSet (default (object/fromEntries (array/map @entity.patterns (fn x [(str/replaceAll (str/replaceAll @x "~" "~t") "." "~d"), true]))) {})))
+            (opSet (default (object/fromEntries (array/map @entity.ops (fn x [@x, true]))) {}))
+            (patSet (default (object/fromEntries (array/map @entity.patterns (fn x [@x, true]))) {})))
           (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
             (let ((o (default (array/nth @orbitals @oi) {})) (trs (object/get (default (array/nth @orbitals @oi) {}) "traits" [])))
               (array/flatten (array/map (array/range 0 (array/len @trs)) (fn ti
                 (let ((td (default (array/nth @trs @ti) {})))
                   (if (not (object/has @td "stateMachine")) @nof2
-                    (let ((interesting (array/filter (object/get @heads (str/concat @oi "-" @ti) []) (fn h (or (= @h "concat") (= @h "render-ui") (str/startsWith @h "behavior/") (and (str/includes @h "/") (not (str/startsWith @h "agent/")) (not (object/has @opSet (str/replaceAll (str/replaceAll @h "~" "~t") "." "~d")))))))))
+                    (let ((interesting (array/filter (object/get @heads (str/concat @oi "-" @ti) []) (fn h (or (= @h "concat") (= @h "render-ui") (str/startsWith @h "behavior/") (and (str/includes @h "/") (not (str/startsWith @h "agent/")) (not (object/has @opSet @h))))))))
                       (if (= (array/len @interesting) 0) @nof2
                         (let ((base (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @td "name" "") ")]"))
                               (trs2 (object/get (object/get @td "stateMachine" {}) "transitions" []))
@@ -90,16 +90,16 @@ orbital OrbLintCrossRegistryOrbital {
                                   (let ((n (object/get @c "node")) (cp (object/get @c "path")) (pp (object/get @u "p")))
                                     (let ((head (default (as (array/nth @n 0) XrS) "")))
                                       (if (= @head "concat") [{ kind: "amb", name: @head, path: (str/concat @pp @cp) }]
-                                        (if (and (str/includes @head "/") (not (object/has @opSet (str/replaceAll (str/replaceAll @head "~" "~t") "." "~d"))) (not (str/startsWith @head "agent/")) (not (str/startsWith @head "behavior/"))) [{ kind: "op", name: @head, path: (str/concat @pp @cp) }]
+                                        (if (and (str/includes @head "/") (not (object/has @opSet @head)) (not (str/startsWith @head "agent/")) (not (str/startsWith @head "behavior/"))) [{ kind: "op", name: @head, path: (str/concat @pp @cp) }]
                                           (if (= @head "render-ui")
                                             (let ((idxs (array/filter (array/range 1 (array/len @n)) (fn i (validate/object (array/nth @n @i))))))
                                               (if (> (array/len @idxs) 0)
-                                                (let ((pi (array/first @idxs))) (let ((po (array/nth @n @pi))) (if (validate/object @po) (let ((ty (object/get @po "type" null))) (if (and (validate/string @ty) (not (object/has @patSet (str/replaceAll (str/replaceAll @ty "~" "~t") "." "~d")))) [{ kind: "pat", name: @ty, path: (str/concat @pp @cp "[" @pi "].type") }] @nof2)) @nof2)))
+                                                (let ((pi (array/first @idxs))) (let ((po (array/nth @n @pi))) (if (validate/object @po) (let ((ty (object/get @po "type" null))) (if (and (validate/string @ty) (not (object/has @patSet @ty))) [{ kind: "pat", name: @ty, path: (str/concat @pp @cp "[" @pi "].type") }] @nof2)) @nof2)))
                                                 @nof2))
                                             (if (str/startsWith @head "behavior/")
                                               (let ((suffix (str/slice @head 9 (str/len @head))) (composer (array/includes ["compose", "wire", "detect-layout", "pipe"] (str/slice @head 9 (str/len @head)))))
                                                 (let ((a1 (if (> (array/len @n) 1) (array/nth @n 1) null)))
-                                                  (let ((bn (if (and (not @composer) (object/has @opSet (str/replaceAll (str/replaceAll @head "~" "~t") "." "~d"))) { ok: false, nm: "" } (if @composer (if (and (validate/string @a1) (not (str/startsWith @a1 (quote "@")))) { ok: true, nm: @a1 } { ok: false, nm: "" }) { ok: true, nm: @suffix }))))
+                                                  (let ((bn (if (and (not @composer) (object/has @opSet @head)) { ok: false, nm: "" } (if @composer (if (and (validate/string @a1) (not (str/startsWith @a1 (quote "@")))) { ok: true, nm: @a1 } { ok: false, nm: "" }) { ok: true, nm: @suffix }))))
                                                     (if (object/get @bn "ok" false) [{ kind: "beh", name: (object/get @bn "nm" ""), path: (str/concat @pp @cp) }] @nof2))))
                                               @nof2)))))))))))))))))))))))))))))
         (set @entity.indexed false)
@@ -179,7 +179,7 @@ orbital OrbLintCrossRegistryOrbital {
       OrbLintInput.LINT_OPERATOR_NAMES -> LINT_OPERATOR_NAMES_HEARD
     }
     config {
-      codes : LintCrossRegistryCodes = { lintIndexMissing: { code: "ORB_LINT_INDEX_MISSING", category: "lint", description: "The lint input arrived without the structural index the rule gates on, so the rule cannot check the program" }, sexprInvalidOperator: { code: "SEXPR_INVALID_OPERATOR", category: "sexpr", description: "An S-expression uses an operator that is not in the operator registry" }, ruiInvalidPattern: { code: "ORB_RUI_INVALID_PATTERN", category: "render_ui", description: "A render-ui pattern type is not in the pattern registry" } }
+      codes : LintCrossRegistryCodes = { lintIndexMissing: { code: "ORB_LINT_INDEX_MISSING", category: "lint", description: "The lint input arrived without a shared program fact the rule reads (the structural index, sites, units, embeds or entities), so the rule cannot check the program" }, sexprInvalidOperator: { code: "SEXPR_INVALID_OPERATOR", category: "sexpr", description: "An S-expression uses an operator that is not in the operator registry" }, ruiInvalidPattern: { code: "ORB_RUI_INVALID_PATTERN", category: "render_ui", description: "A render-ui pattern type is not in the pattern registry" } }
         @label "Emitted codes"
         @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
     }
