@@ -15,7 +15,7 @@ orbital BehaviorLoaderOrbital {
   entity BehaviorLoad [runtime] {
     id : string!
     behavior : string = ""
-    program : LoaderProgram? @description "The resolved program, as behavior/resolve answered it." = null
+    program : LoaderProgram? @description "The resolved program, as behavior/resolve answered it, held only until BEHAVIOR_LOADED hands it on: the entity rides every request a stateless host's client posts." = null
     knobs : [LoaderKnob] = []
     traits : [string] @description "The names of the behavior's traits, every orbital's in order, from behavior/describe." = []
     waiting : number @description "How many of the two answers (resolve, describe) are still to come." = 0
@@ -58,6 +58,7 @@ orbital BehaviorLoaderOrbital {
       LOAD_STEP -> idle when (<= @entity.waiting 1)
         (set @entity.waiting 0)
         (let ((resolved @entity.program)) (if (= @resolved null) (emit BEHAVIOR_FAILED { behavior: @entity.behavior, error: "The resolved program did not arrive." }) (emit BEHAVIOR_LOADED { behavior: @entity.behavior, program: @resolved, knobs: @entity.knobs, traits: @entity.traits })))
+        (set @entity.program null)
       LOAD_FAILED -> idle
         (emit BEHAVIOR_FAILED { behavior: @entity.behavior, error: ?error })
     }

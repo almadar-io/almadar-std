@@ -26,7 +26,7 @@ orbital GuestSessionOrbital {
     guestRoute : string @description "The route the guest shows, as program/open or program/navigate resolved it; empty when no page matched." = ""
     guestPage : [string] @description "The traits of the page the guest shows: its page-root paints are the ones drawn." = []
     guestError : string = ""
-    guestProgram : GuestProgram?
+    guestProgram : GuestProgram? @description "The program value being opened, held only until program/compose or program/open takes it: the entity rides every request a stateless host's client posts."
     guestSeed : behavior?
   }
 
@@ -83,8 +83,10 @@ orbital GuestSessionOrbital {
         (emit GUEST_PREPARE {})
       GUEST_PREPARE -> opening when (and (!= @entity.guestSeed null) (let ((marked (as @entity.guestProgram GuestMarkProgram))) (and (!= @marked null) (array/some (object/get @marked "orbitals" []) (fn o (array/some (object/get @o "auxiliaryEntities" []) (fn e (= (object/get @e "collection" "") "mock_seed_marks"))))))))
         (program/open @entity.guestProgram { grants: { env: @config.guestEnv } } { emit: { success: GUEST_OPENED, failure: GUEST_FAILED } })
+        (set @entity.guestProgram null)
       GUEST_PREPARE -> opening when (and (!= @entity.guestSeed null) (not (let ((marked (as @entity.guestProgram GuestMarkProgram))) (and (!= @marked null) (array/some (object/get @marked "orbitals" []) (fn o (array/some (object/get @o "auxiliaryEntities" []) (fn e (= (object/get @e "collection" "") "mock_seed_marks")))))))))
         (program/compose [@entity.guestProgram, @entity.guestSeed] { appName: (object/get (default @entity.guestProgram { name: "guest", orbitals: [] }) "name" "guest") } { emit: { success: GUEST_COMPOSED, failure: GUEST_FAILED } })
+        (set @entity.guestProgram null)
       GUEST_COMPOSED -> opening
         (program/open ?result { grants: { env: @config.guestEnv } } { emit: { success: GUEST_OPENED, failure: GUEST_FAILED } })
       GUEST_FAIL -> idle
