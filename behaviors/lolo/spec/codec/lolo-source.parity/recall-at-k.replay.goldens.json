@@ -1,0 +1,57 @@
+{
+ "atom": "codec/lolo-source.parity/recall-at-k.lolo",
+ "trait": "RecallAtK",
+ "cases": [
+  {
+   "id": "recall-at-k",
+   "steps": [
+    {
+     "event": "SCORE",
+     "payload": {
+      "relevant": [
+       "a",
+       "b"
+      ],
+      "retrieved": [
+       "b",
+       "c",
+       "a"
+      ],
+      "k": 2
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SCORED",
+        "payload": {
+         "recall": 0.5
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "SCORE",
+     "payload": {
+      "relevant": [],
+      "retrieved": [
+       "x"
+      ],
+      "k": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "NOT_SCORED",
+        "payload": {
+         "reason": "no relevant documents for this question"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ],
+ "note": "kernel answers for the course example; lolo-source-parity.sh compares each shell run to these emits"
+}

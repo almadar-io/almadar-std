@@ -1,0 +1,62 @@
+app agent-step-example [
+  version: "1.0.0",
+  net: { "127.0.0.1:4999": [listen] }
+]
+uses Server from "std/behaviors/std-http-server"
+
+orbital HttpServerOrbital = Server.orbitals.HttpServerOrbital {
+  config {
+    host: "127.0.0.1"
+    port: 4999
+    portFromEnv: false
+  }
+}
+orbital Agent {
+  entity Run [runtime] {
+    id : string!
+    steps : number = 0
+    observations : [string] = []
+    answer : string = ""
+  }
+  trait Loop -> Run [client] {
+    initial: planning
+    state planning {
+      INIT -> planning
+      TOOL_CHOSEN -> acting when (< @entity.steps 5)
+        (set @entity.steps (+ @entity.steps 1))
+        (emit CALL_TOOL { name: ?name, input: ?input })
+      TOOL_CHOSEN -> done when (>= @entity.steps 5)
+        (set @entity.answer "step budget reached")
+        (emit ANSWERED { answer: @entity.answer })
+      FINAL -> done
+        (set @entity.answer ?text)
+        (emit ANSWERED { answer: @entity.answer })
+    }
+    state acting {
+      INIT -> acting
+      TOOL_RESULT -> planning
+        (set @entity.observations (array/append @entity.observations ?output))
+        (emit OBSERVED { output: ?output })
+    }
+    state done {
+      INIT -> done
+    }
+    emits {
+      CALL_TOOL -> external { name : string!  input : string! }
+        @description "Run the chosen tool with its input."
+      OBSERVED -> external { output : string! }
+        @description "The tool's result, kept as an observation for the next plan."
+      ANSWERED -> external { answer : string! }
+        @description "The final answer, or the reason the loop stopped."
+    }
+    listens {
+      TOOL_CHOSEN { name : string!  input : string! }
+        @description "The model picked a tool and its input."
+      TOOL_RESULT { output : string! }
+        @description "The tool finished."
+      FINAL { text : string! }
+        @description "The model answered without another tool call."
+    }
+  }
+  page boot as AgentStart -> Loop
+}

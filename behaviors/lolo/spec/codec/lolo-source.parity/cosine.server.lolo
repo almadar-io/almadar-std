@@ -1,0 +1,39 @@
+app cosine-example [
+  version: "1.0.0",
+  net: { "127.0.0.1:4999": [listen] }
+]
+uses Server from "std/behaviors/std-http-server"
+
+orbital HttpServerOrbital = Server.orbitals.HttpServerOrbital {
+  config {
+    host: "127.0.0.1"
+    port: 4999
+    portFromEnv: false
+  }
+}
+orbital Similarity {
+  entity Pair [runtime] {
+    id : string!
+    score : number = 0
+  }
+  trait Score -> Pair [client] {
+    initial: idle
+    state idle {
+      INIT -> idle
+      SCORE -> idle
+        (let ((dot (array/sum (array/map (array/range (array/len ?a)) (fn i (* (default (array/nth ?a @i) 0) (default (array/nth ?b @i) 0))))))
+              (norms (* (default (math/sqrt (array/sum (array/map ?a (fn x (* @x @x))))) 0) (default (math/sqrt (array/sum (array/map ?b (fn x (* @x @x))))) 0))))
+          (set @entity.score (if (> @norms 0) (default (/ @dot @norms) 0) 0)))
+        (emit SCORED { score: @entity.score })
+    }
+    emits {
+      SCORED -> external { score : number! }
+        @description "The cosine similarity of the two vectors."
+    }
+    listens {
+      SCORE { a : [number]!  b : [number]! }
+        @description "Two embedding vectors of equal length."
+    }
+  }
+  page boot as SimilarityStart -> Score
+}

@@ -1,0 +1,41 @@
+app recall-example [
+  version: "1.0.0",
+  net: { "127.0.0.1:4999": [listen] }
+]
+uses Server from "std/behaviors/std-http-server"
+
+orbital HttpServerOrbital = Server.orbitals.HttpServerOrbital {
+  config {
+    host: "127.0.0.1"
+    port: 4999
+    portFromEnv: false
+  }
+}
+orbital Retrieval {
+  entity Eval [runtime] {
+    id : string!
+    recall : number = 0
+  }
+  trait RecallAtK -> Eval [client] {
+    initial: idle
+    state idle {
+      INIT -> idle
+      SCORE -> idle when (> (array/len ?relevant) 0)
+        (set @entity.recall (default (/ (array/len (array/filter ?relevant (fn d (array/includes (array/slice ?retrieved 0 ?k) @d)))) (array/len ?relevant)) 0))
+        (emit SCORED { recall: @entity.recall })
+      SCORE -> idle when (== (array/len ?relevant) 0)
+        (emit NOT_SCORED { reason: "no relevant documents for this question" })
+    }
+    emits {
+      SCORED -> external { recall : number! }
+        @description "Share of the relevant documents found in the first k retrieved."
+      NOT_SCORED -> external { reason : string! }
+        @description "The question has no relevant documents, so recall is undefined."
+    }
+    listens {
+      SCORE { relevant : [string]!  retrieved : [string]!  k : number! }
+        @description "The relevant document ids, the retrieved ids in rank order, and k."
+    }
+  }
+  page boot as RetrievalStart -> RecallAtK
+}

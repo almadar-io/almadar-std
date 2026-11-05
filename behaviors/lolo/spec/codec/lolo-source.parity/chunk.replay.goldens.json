@@ -1,0 +1,48 @@
+{
+ "atom": "codec/lolo-source.parity/chunk.lolo",
+ "trait": "Chunk",
+ "cases": [
+  {
+   "id": "chunk",
+   "steps": [
+    {
+     "event": "CHUNK",
+     "payload": {
+      "text": "abcdefghij",
+      "size": 4,
+      "overlap": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CHUNKED",
+        "payload": {
+         "count": 4
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "CHUNK",
+     "payload": {
+      "text": "abc",
+      "size": 2,
+      "overlap": 3
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CHUNK_REFUSED",
+        "payload": {
+         "reason": "overlap must be smaller than a positive chunk size"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ],
+ "note": "kernel answers for the course example; lolo-source-parity.sh compares each shell run to these emits"
+}

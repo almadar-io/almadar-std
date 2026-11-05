@@ -1,0 +1,33 @@
+app chunk-example [
+  version: "1.0.0"
+]
+orbital Chunking {
+  entity Doc [runtime] {
+    id : string!
+    chunks : [string] = []
+  }
+  trait Chunk -> Doc [client] {
+    initial: idle
+    state idle {
+      INIT -> idle
+      CHUNK -> idle when (and (> ?size 0) (< ?overlap ?size))
+        (let ((stride (- ?size ?overlap))
+              (count (math/ceil (default (/ (str/len ?text) (- ?size ?overlap)) 0))))
+          (set @entity.chunks (array/map (array/range 0 @count) (fn i (str/slice ?text (* @i @stride) (+ (* @i @stride) ?size))))))
+        (emit CHUNKED { count: (array/len @entity.chunks) })
+      CHUNK -> idle when (or (<= ?size 0) (>= ?overlap ?size))
+        (emit CHUNK_REFUSED { reason: "overlap must be smaller than a positive chunk size" })
+    }
+    emits {
+      CHUNKED -> external { count : number! }
+        @description "How many overlapping windows the text became."
+      CHUNK_REFUSED -> external { reason : string! }
+        @description "The window settings cannot make progress through the text."
+    }
+    listens {
+      CHUNK { text : string!  size : number!  overlap : number! }
+        @description "The document text, the window size in characters and the overlap."
+    }
+  }
+  page boot as ChunkingStart -> Chunk
+}
