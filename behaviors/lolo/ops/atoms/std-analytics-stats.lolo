@@ -1,0 +1,150 @@
+app std-analytics-stats [
+  version: "1.0.0",
+  description: "std-analytics-stats — the stats of stored first-party analytics events: ANALYTICS_STATS { domain?, from?, to?, limit? } reads the AnalyticsEvent rows of a site (empty or absent: every site) between from and to (epoch milliseconds, inclusive) and answers ANALYTICS_STATS_RESULT with the pageviews, unique visitors (distinct visitorId over every event) and the top pages (path and site) and referrer hosts by count, and draws them with a Refresh button. An ask without from reads the last windowDays days (0: every event). A window holding more than maxRows events is refused through ANALYTICS_STATS_FAILED rather than counted partially. It only reads: whoever stores the events (std-analytics-collector, or another program sharing the store) writes them."
+]
+uses Spec from "almadar-std/analytics-stats"
+type AnalyticsProps = Map string (string | number | boolean)
+type AnalyticsCount = { key : string!, count : number! }
+orbital AnalyticsStatsOrbital {
+  entity AnalyticsStatsRun [runtime] {
+    id : string!
+    statsLimit : number @description "The row limit of the stats query in flight." = 100
+  }
+
+  entity AnalyticsEvent [persistent: analyticsEvents] {
+    id : string!
+    ts : number! @description "When the beacon arrived, in epoch milliseconds."
+    name : string! @description "The event name; pageview for a page visit."
+    domain : string! @description "The site the beacon was reported under."
+    path : string! @description "The page path."
+    referrer : string? @description "The page's referrer as the browser reported it."
+    screenWidth : number? @description "The screen width in CSS pixels."
+    visitorId : string! @description "SHA-256 of the day's salt, the client IP, the user agent and the site."
+    props : AnalyticsProps? @description "The event's properties."
+  }
+
+  trait AnalyticsStats -> @rebindable AnalyticsStatsRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready when (not @config.loadOnInit)
+        (render-ui main { type: typography, variant: caption, role: status, content: "No stats asked for yet." })
+      INIT -> ready when @config.loadOnInit
+        (render-ui main { type: typography, variant: caption, role: status, content: "Reading the stats…" })
+        (emit ANALYTICS_STATS { })
+      ANALYTICS_STATS -> ready when (and (== @payload.from null) (> @config.windowDays 0))
+        (emit ANALYTICS_STATS { domain: @payload.domain, from: (time/diff (time/subtract @now @config.windowDays "d") @config.epoch "ms"), to: @payload.to, limit: @payload.limit })
+      ANALYTICS_STATS -> ready when (not (and (== @payload.from null) (> @config.windowDays 0)))
+        (set @entity.statsLimit (if (== @payload.limit null) 100 @payload.limit))
+        (fetch AnalyticsEvent { filter: (and (or (== @payload.domain null) (= @payload.domain "") (= (object/get @entity domain) @payload.domain)) (or (== @payload.from null) (>= (object/get @entity ts) @payload.from)) (or (== @payload.to null) (<= (object/get @entity ts) @payload.to))), limit: @config.maxRows, emit: { success: STATS_LOADED, failure: STATS_UNREADABLE } })
+      STATS_LOADED -> ready when (> @payload.totalCount (array/len @payload.data))
+        (emit STATS_UNREADABLE { error: (str/concat "AnalyticsEvent has " @payload.totalCount " events in this window, over the maxRows cap of " @config.maxRows ": narrow the window with from and to"), code: "STATS_OVER_CAP" })
+      STATS_LOADED -> ready
+        (let ((views (array/filter @payload.data (fn e (= @e.name "pageview"))))
+              (pageKeys (array/map (array/filter @payload.data (fn e (= @e.name "pageview"))) (fn e (str/concat @e.path " (" @e.domain ")"))))
+              (refKeys (array/map (array/filter (array/filter @payload.data (fn e (= @e.name "pageview"))) (fn e (and (!= @e.referrer null) (!= @e.referrer "")))) (fn e (let ((ref (default @e.referrer "")) (rest (str/replace-pattern (default @e.referrer "") "^[A-Za-z][A-Za-z0-9+.\\-]*://([^/?#@]*@)?" "")))
+                (if (validate/pattern @ref "^[A-Za-z][A-Za-z0-9+.\\-]*://")
+                  (let ((h (str/lower (if (str/startsWith @rest "[") (str/concat (str/replace-pattern @rest "\\].*$" "") "]") (str/replace-pattern @rest "[:/?#].*$" "")))))
+                    (if (= @h "") @ref @h))
+                  @ref))))))
+          (let ((pagesTop (array/take (array/sort (array/map (array/unique @pageKeys) (fn k { key: @k, count: (array/count @pageKeys (fn x (= @x @k))) })) "count" "desc") @entity.statsLimit))
+                (refsTop (array/take (array/sort (array/map (array/unique @refKeys) (fn k { key: @k, count: (array/count @refKeys (fn x (= @x @k))) })) "count" "desc") @entity.statsLimit)))
+            (let ((pageRows (array/map @pagesTop (fn r { id: @r.key, page: @r.key, views: @r.count })))
+                  (refRows (array/map @refsTop (fn r { id: @r.key, referrer: @r.key, views: @r.count }))))
+            (do
+              (emit ANALYTICS_STATS_RESULT {
+                pageviews: (array/len @views),
+                visitors: (array/len (array/unique (array/map @payload.data (fn e @e.visitorId)))),
+                pages: @pagesTop,
+                countries: (array/take [{ key: "", count: 0 }] 0),
+                referrers: @refsTop
+              })
+              (render-ui main { type: stack, direction: vertical, gap: md, children: [
+                { type: stack, direction: horizontal, justify: between, align: center, children: [{ type: typography, variant: h3, content: @config.title }, { type: button, label: "Refresh", variant: secondary, action: ANALYTICS_STATS }] },
+                { type: stack, direction: horizontal, gap: md, children: [
+                  { type: stat-display, label: "Pageviews", value: (array/len @views) },
+                  { type: stat-display, label: "Unique visitors", value: (array/len (array/unique (array/map @payload.data (fn e @e.visitorId)))) }
+                ] },
+                { type: data-grid, cols: 1, gap: sm, entity: @pageRows, fields: [{ label: Page, name: page, variant: body }, { label: Views, name: "views", variant: caption }] },
+                { type: data-grid, cols: 1, gap: sm, entity: @refRows, fields: [{ label: Referrer, name: referrer, variant: body }, { label: Views, name: "views", variant: caption }] }
+              ] })))))
+      STATS_UNREADABLE -> ready
+        (emit ANALYTICS_STATS_FAILED { error: @payload.error })
+        (render-ui main { type: stack, direction: vertical, gap: md, children: [{ type: typography, variant: caption, role: status, content: (str/concat "Stats unavailable: " @payload.error) }, { type: button, label: "Try again", variant: secondary, action: ANALYTICS_STATS }] })
+    }
+
+    emits {
+      ANALYTICS_STATS_RESULT -> external {
+        pageviews : number!
+        visitors : number!
+        pages : [AnalyticsCount]!
+        countries : [AnalyticsCount]!
+        referrers : [AnalyticsCount]!
+      }
+        @description "The stats of the asked window: pageviews, unique visitors over every event, and the top pages (path and site), countries and referrer hosts by count. Countries is always empty: the collector keeps no geography."
+        @synonyms "analytics stats, traffic, visitors, pageviews"
+        @tier "primary"
+      ANALYTICS_STATS_FAILED -> external {
+        error : string!
+      }
+        @description "The stored events could not be read."
+        @tier "primary"
+      ANALYTICS_STATS -> internal {
+        domain : string?
+        from : number?
+        to : number?
+        limit : number?
+      }
+        @description "Internal: the stats a page opening with loadOnInit asks for, and an ask without from re-sent over the last windowDays days."
+        @tier "internal"
+      STATS_LOADED {
+        data : [AnalyticsEvent]!
+        totalCount : number!
+      }
+        @description "Internal: the stored events of the window."
+      STATS_UNREADABLE {
+        error : string!
+        code : string
+      }
+        @description "Internal: the stored events could not be read."
+    }
+
+    listens {
+      ANALYTICS_STATS -> input {
+        domain : string?
+        from : number?
+        to : number?
+        limit : number?
+      }
+        @description "Ask for the stats of a site (empty or absent: every site) between from and to (epoch milliseconds, inclusive; an absent from reads the last windowDays days, or every event when windowDays is 0; an absent to is unbounded), with at most limit rows per breakdown (default 100)."
+        @synonyms "analytics stats, traffic report, visitor count"
+    }
+
+    config {
+      title : string = "Analytics"
+        @label "Title"
+        @description "The stats board's heading."
+        @tier "presentation"
+      maxRows : number = 10000
+        @label "Events per stats read"
+        @description "Most stored events one stats read may aggregate. The pageview, visitor and top-page counts are computed over every event of the window, so a partial read would report wrong totals; a window holding more events is refused through ANALYTICS_STATS_FAILED, so narrow it with from and to."
+        @synonyms "stats read limit, event cap, aggregation cap"
+        @tier "policy"
+      loadOnInit : boolean = false
+        @label "Load when opened"
+        @description "Read every site's stats as soon as the page opens."
+        @tier "presentation"
+      windowDays : number = 0
+        @label "Days of history"
+        @description "A stats ask without from reads the last this many days (Refresh and Try again included); 0 reads every stored event."
+        @synonyms "time window, last days, period"
+        @tier "presentation"
+      epoch : instant = "1970-01-01T00:00:00.000Z"
+        @label "Epoch"
+        @description "The instant an event's ts counts milliseconds from."
+        @tier "infra"
+    }
+  }
+
+  page "/analytics-stats" -> AnalyticsStats
+}

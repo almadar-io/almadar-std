@@ -1,0 +1,117 @@
+app std-analytics-board [
+  version: "1.0.0",
+  description: "std-analytics-board — the Almadar sites' traffic as one board: pageviews, unique visitors, top pages and top referrers of the last windowDays days, read from the production collector's events. The stats are std-analytics-stats' AnalyticsStats, composed over an AnalyticsEvent bound to a Firestore driver (std-firestore, token auth) on the collector's database (project kflow-b3a39, database analytics, collection analyticsEvents, ts in epoch milliseconds). BOARD_OPEN first makes sure the host credential store holds a Google access token (std-gcloud-token, gcloud's Application Default Credentials), then asks for the stats; a missing token is said on the board. Refresh and Try again read the same window again.",
+  egress: ["https://oauth2.googleapis.com"],
+  net: { "firestore.googleapis.com:443": [tcp] }
+]
+uses Stats from "std/behaviors/std-analytics-stats"
+uses Firestore from "std/behaviors/std-firestore"
+uses Token from "std/behaviors/std-gcloud-token"
+
+type AnalyticsProps = Map string (string | number | boolean)
+
+orbital AnalyticsBoardOrbital {
+  entity AnalyticsCollector [runtime] {
+    id : string!
+    statsLimit : number @description "The row limit of the stats query in flight." = 100
+    tokenError : string @description "Why the Google access token could not be made; blank = none." = ""
+  }
+
+  entity AnalyticsEvent [persistent: analyticsEvents, store: AnalyticsRows] {
+    id : string!
+    ts : number! @description "When the beacon arrived, in epoch milliseconds."
+    name : string! @description "The event name; pageview for a page visit."
+    domain : string! @description "The site the beacon was reported under."
+    path : string! @description "The page path."
+    referrer : string? @description "The page's referrer as the browser reported it."
+    screenWidth : number? @description "The screen width in CSS pixels."
+    visitorId : string! @description "SHA-256 of the day's salt, the client IP, the user agent and the site."
+    country : string? @description "The visitor's country, kept on events the retired collector stored."
+    props : AnalyticsProps? @description "The event's properties."
+  }
+
+  trait AnalyticsBoard -> AnalyticsCollector [optimistic] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main { type: stack, direction: vertical, gap: md, children: [@trait.AnalyticsBoardStats] })
+      BOARD_OPEN -> idle
+        (emit AB_TOKEN_ENSURE { })
+      AB_TOKEN_READY -> idle
+        (set @entity.tokenError "")
+        (render-ui main { type: stack, direction: vertical, gap: md, children: [@trait.AnalyticsBoardStats] })
+        (emit AB_STATS { })
+      AB_TOKEN_MISSING -> idle
+        (set @entity.tokenError @payload.message)
+        (render-ui main { type: stack, direction: vertical, gap: md, children: [
+          { type: alert, variant: error, title: "Google access is not set up", message: @payload.message },
+          @trait.AnalyticsBoardStats
+        ] })
+    }
+
+    emits {
+      AB_TOKEN_ENSURE -> external { }
+        @description "Make sure the Google access token is held before the stats read."
+      AB_STATS -> external { }
+        @description "Read the stats of the last windowDays days."
+    }
+
+    listens {
+      BOARD_OPEN { }
+        @description "The board was brought to the front: make sure of the token, then read the stats."
+        @synonyms "open the analytics, show traffic"
+      AnalyticsBoardToken.AB_TOKEN_READY -> AB_TOKEN_READY
+      AnalyticsBoardToken.AB_TOKEN_MISSING -> AB_TOKEN_MISSING
+      AB_TOKEN_READY { }
+      AB_TOKEN_MISSING {
+        message : string!
+      }
+    }
+  }
+
+  trait AnalyticsBoardStats = Stats.traits.AnalyticsStats -> AnalyticsCollector {
+    config {
+      title: "Site analytics"
+      windowDays: 30
+    }
+    listens {
+      AnalyticsBoard.AB_STATS -> ANALYTICS_STATS
+      ANALYTICS_STATS -> input {
+        domain : string?
+        from : number?
+        to : number?
+        limit : number?
+      }
+    }
+  }
+
+  trait AnalyticsBoardToken = Token.traits.GcloudToken {
+    events {
+      GCLOUD_TOKEN_READY: AB_TOKEN_READY
+      GCLOUD_TOKEN_MISSING: AB_TOKEN_MISSING
+    }
+    listens {
+      AnalyticsBoard.AB_TOKEN_ENSURE -> GCLOUD_TOKEN_ENSURE
+    }
+  }
+
+  page "/analytics-board" -> AnalyticsBoard, AnalyticsBoardStats, AnalyticsBoardToken
+}
+
+orbital AnalyticsRows = Firestore.orbitals.FirestoreOrbital {
+  traits {
+    RowStoreDriver {
+      config {
+        projectId: "kflow-b3a39"
+        databaseId: "analytics"
+        auth: token
+      }
+    }
+    FirestoreTokenHttp {
+      config {
+        credential: "GCLOUD_ACCESS_TOKEN"
+      }
+    }
+  }
+}
