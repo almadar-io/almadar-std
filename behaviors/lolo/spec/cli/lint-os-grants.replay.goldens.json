@@ -120,7 +120,7 @@
                       "code": "ORB_OS_GRANT_MISSING",
                       "path": "orbitals[0 (Orders)].traits[0 (OrdersRunner)].stateMachine.transitions[0].effects[0]",
                       "message": "`os/read-file` needs fs \"/etc/passwd\" read but orbital Orders does not grant it",
-                      "suggestion": "Add `fs: { \"/etc/passwd\": [read] }` to the orbital's bracket (`orbital Name [ … ]`) or the app's",
+                      "suggestion": "Add `fs: { \"/etc/passwd\": [read] }` to the orbital's bracket (`orbital Name [ \u2026 ]`) or the app's",
                       "severity": "error"
                     }
                   ]
@@ -257,7 +257,7 @@
                       "code": "ORB_OS_GRANT_MISSING",
                       "path": "orbitals[0 (Orders)].traits[0 (OrdersRunner)].stateMachine.transitions[0].effects[0]",
                       "message": "`os/write-file` needs fs \"/data/a\" write but orbital Orders does not grant it",
-                      "suggestion": "Add `fs: { \"/data/a\": [write] }` to the orbital's bracket (`orbital Name [ … ]`) or the app's",
+                      "suggestion": "Add `fs: { \"/data/a\": [write] }` to the orbital's bracket (`orbital Name [ \u2026 ]`) or the app's",
                       "severity": "error"
                     }
                   ]
@@ -668,7 +668,7 @@
                       "code": "ORB_OS_GRANT_MISSING",
                       "path": "orbitals[0 (Orders)].traits[0 (OrdersRunner)].stateMachine.transitions[0].effects[0]",
                       "message": "`os/read-file` needs fs \"/etc/**\" read but orbital Orders does not grant it",
-                      "suggestion": "Add `fs: { \"/etc/**\": [read] }` to the orbital's bracket (`orbital Name [ … ]`) or the app's",
+                      "suggestion": "Add `fs: { \"/etc/**\": [read] }` to the orbital's bracket (`orbital Name [ \u2026 ]`) or the app's",
                       "severity": "error"
                     }
                   ]
@@ -1103,6 +1103,278 @@
       ]
     },
     {
+      "id": "a literal WGSL source naga refuses is a shader-invalid error at the call's site",
+      "steps": [
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_CALL_SITES",
+          "from": "ready",
+          "payload": {
+            "file": "shop.orb",
+            "program": {
+              "name": "App",
+              "orbitals": []
+            },
+            "kept": [],
+            "references": []
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "os/realpath"
+              }
+            ],
+            "state": "reading"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_CWD",
+          "from": "reading",
+          "payload": {
+            "path": "/w"
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "program/os-grants"
+              }
+            ],
+            "state": "checking"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_CHECKED",
+          "from": "checking",
+          "payload": {
+            "result": {
+              "findings": [
+                {
+                  "code": "shader-invalid",
+                  "site": "orbitals[0 (Orders)].traits[0 (OrdersRunner)].stateMachine.transitions[0].effects[0]",
+                  "entry": "error: no definition in scope for identifier: `nope`",
+                  "orbital": "Orders",
+                  "call": "gpu/shader-create",
+                  "argument": 2
+                }
+              ]
+            }
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "program/os-grants"
+              }
+            ],
+            "state": "checking"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_CHECKED",
+          "from": "checking",
+          "payload": {
+            "result": {
+              "findings": []
+            }
+          },
+          "expect": {
+            "state": "mapping"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_MAP",
+          "from": "mapping",
+          "payload": {},
+          "expect": {
+            "state": "mapping"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_SPLIT",
+          "from": "mapping",
+          "payload": {},
+          "expect": {
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "os-grants",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_GPU_SHADER_INVALID",
+                      "path": "orbitals[0 (Orders)].traits[0 (OrdersRunner)].stateMachine.transitions[0].effects[0]",
+                      "message": "error: no definition in scope for identifier: `nope`",
+                      "suggestion": "",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              },
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "os-grants-final",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ],
+            "state": "ready"
+          }
+        }
+      ]
+    },
+    {
+      "id": "a bind group that does not fit its traced pipeline is a binding-mismatch error of the finished program",
+      "steps": [
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_CALL_SITES",
+          "from": "ready",
+          "payload": {
+            "file": "shop.orb",
+            "program": {
+              "name": "App",
+              "orbitals": []
+            },
+            "kept": [],
+            "references": []
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "os/realpath"
+              }
+            ],
+            "state": "reading"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_CWD",
+          "from": "reading",
+          "payload": {
+            "path": "/w"
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "program/os-grants"
+              }
+            ],
+            "state": "checking"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_CHECKED",
+          "from": "checking",
+          "payload": {
+            "result": {
+              "findings": []
+            }
+          },
+          "expect": {
+            "effects": [
+              {
+                "type": "program/os-grants"
+              }
+            ],
+            "state": "checking"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_CHECKED",
+          "from": "checking",
+          "payload": {
+            "result": {
+              "findings": [
+                {
+                  "code": "binding-mismatch",
+                  "site": "orbitals[0 (Gpu)].traits[0 (GpuRunner)].stateMachine.transitions[2].effects[1]",
+                  "entry": "group 0 of entry point main uses binding 1 (buffer), which the entries leave out",
+                  "orbital": "Gpu",
+                  "call": "gpu/bind-group-create",
+                  "argument": 3
+                }
+              ]
+            }
+          },
+          "expect": {
+            "state": "mapping"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_MAP",
+          "from": "mapping",
+          "payload": {},
+          "expect": {
+            "state": "mapping"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_SPLIT",
+          "from": "mapping",
+          "payload": {},
+          "expect": {
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintOsGrants",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "os-grants",
+                  "scope": "",
+                  "findings": []
+                }
+              },
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "os-grants-final",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_GPU_BINDING_MISMATCH",
+                      "path": "orbitals[0 (Gpu)].traits[0 (GpuRunner)].stateMachine.transitions[2].effects[1]",
+                      "message": "`gpu/bind-group-create` entries do not fit the pipeline they are made for: group 0 of entry point main uses binding 1 (buffer), which the entries leave out",
+                      "suggestion": "Give one entry per binding the pipeline's entry points use in that group, each the resource the WGSL declares (buffer, texture or sampler)",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ],
+            "state": "ready"
+          }
+        }
+      ]
+    },
+    {
       "id": "an invalid app-level entry",
       "steps": [
         {
@@ -1349,8 +1621,8 @@
                     {
                       "code": "ORB_OS_TARGET_NOT_STATIC",
                       "path": "orbitals[0 (Orders)].traits[0 (OrdersRunner)].stateMachine.transitions[0].effects[0]",
-                      "message": "`os/read-file` argument 1 is computed — an `os/` target must be a literal so the grant can be checked at build time",
-                      "suggestion": "Write the path, command, host, port or name as a literal; a file path may instead be a `str/concat` that starts with a literal or `@config.<knob>` directory ending in `/`, covered by an fs grant ending in `/**`, or an anchored path `{ anchor: \"cwd\" path: … }` (anchors `exe-dir`, `cwd`, `{ env: \"NAME\" }`) covered by an anchored grant such as `fs: { cwd: \"docs/**\": [read] }`; a host or port may be `{ anchor: { env: \"PORT\" } }` covered by `net: { env HOST, env PORT: [listen] }`",
+                      "message": "`os/read-file` argument 1 is computed \u2014 an `os/` target must be a literal so the grant can be checked at build time",
+                      "suggestion": "Write the path, command, host, port or name as a literal; a file path may instead be a `str/concat` that starts with a literal or `@config.<knob>` directory ending in `/`, covered by an fs grant ending in `/**`, or an anchored path `{ anchor: \"cwd\" path: \u2026 }` (anchors `exe-dir`, `cwd`, `{ env: \"NAME\" }`) covered by an anchored grant such as `fs: { cwd: \"docs/**\": [read] }`; a host or port may be `{ anchor: { env: \"PORT\" } }` covered by `net: { env HOST, env PORT: [listen] }`",
                       "severity": "error"
                     }
                   ]
@@ -1491,15 +1763,15 @@
                     {
                       "code": "ORB_OS_TARGET_NOT_STATIC",
                       "path": "orbitals[0 (Orders)].traits[0 (OrdersRunner)].stateMachine.transitions[0].effects[0]",
-                      "message": "`os/spawn` argument 1 is computed — an `os/` target must be a literal so the grant can be checked at build time",
-                      "suggestion": "Write the path, command, host, port or name as a literal; a file path may instead be a `str/concat` that starts with a literal or `@config.<knob>` directory ending in `/`, covered by an fs grant ending in `/**`, or an anchored path `{ anchor: \"cwd\" path: … }` (anchors `exe-dir`, `cwd`, `{ env: \"NAME\" }`) covered by an anchored grant such as `fs: { cwd: \"docs/**\": [read] }`; a host or port may be `{ anchor: { env: \"PORT\" } }` covered by `net: { env HOST, env PORT: [listen] }`",
+                      "message": "`os/spawn` argument 1 is computed \u2014 an `os/` target must be a literal so the grant can be checked at build time",
+                      "suggestion": "Write the path, command, host, port or name as a literal; a file path may instead be a `str/concat` that starts with a literal or `@config.<knob>` directory ending in `/`, covered by an fs grant ending in `/**`, or an anchored path `{ anchor: \"cwd\" path: \u2026 }` (anchors `exe-dir`, `cwd`, `{ env: \"NAME\" }`) covered by an anchored grant such as `fs: { cwd: \"docs/**\": [read] }`; a host or port may be `{ anchor: { env: \"PORT\" } }` covered by `net: { env HOST, env PORT: [listen] }`",
                       "severity": "error"
                     },
                     {
                       "code": "ORB_OS_TARGET_NOT_STATIC",
                       "path": "orbitals[0 (Orders)].traits[0 (OrdersRunner)].stateMachine.transitions[0].effects[0]",
-                      "message": "`os/tcp-connect` argument 2 is computed — an `os/` target must be a literal so the grant can be checked at build time",
-                      "suggestion": "Write the path, command, host, port or name as a literal; a file path may instead be a `str/concat` that starts with a literal or `@config.<knob>` directory ending in `/`, covered by an fs grant ending in `/**`, or an anchored path `{ anchor: \"cwd\" path: … }` (anchors `exe-dir`, `cwd`, `{ env: \"NAME\" }`) covered by an anchored grant such as `fs: { cwd: \"docs/**\": [read] }`; a host or port may be `{ anchor: { env: \"PORT\" } }` covered by `net: { env HOST, env PORT: [listen] }`",
+                      "message": "`os/tcp-connect` argument 2 is computed \u2014 an `os/` target must be a literal so the grant can be checked at build time",
+                      "suggestion": "Write the path, command, host, port or name as a literal; a file path may instead be a `str/concat` that starts with a literal or `@config.<knob>` directory ending in `/`, covered by an fs grant ending in `/**`, or an anchored path `{ anchor: \"cwd\" path: \u2026 }` (anchors `exe-dir`, `cwd`, `{ env: \"NAME\" }`) covered by an anchored grant such as `fs: { cwd: \"docs/**\": [read] }`; a host or port may be `{ anchor: { env: \"PORT\" } }` covered by `net: { env HOST, env PORT: [listen] }`",
                       "severity": "error"
                     }
                   ]
@@ -2213,7 +2485,7 @@
                 "code": "ORB_OS_GRANT_MISSING",
                 "path": "orbitals[0 (Orders)].traits[0 (OrdersRunner)].stateMachine.transitions[0].effects[0]",
                 "message": "`os/read-file` needs fs \"/etc/passwd\" read but orbital Orders does not grant it",
-                "suggestion": "Add `fs: { \"/etc/passwd\": [read] }` to the orbital's bracket (`orbital Name [ … ]`) or the app's",
+                "suggestion": "Add `fs: { \"/etc/passwd\": [read] }` to the orbital's bracket (`orbital Name [ \u2026 ]`) or the app's",
                 "severity": "error"
               }
             ]
@@ -2237,7 +2509,7 @@
                 "event": "LINT_ANSWERED",
                 "payload": {
                   "status": 500,
-                  "body": "[ORB_OS_GRANT_MISSING] orbitals[0 (Orders)].traits[0 (OrdersRunner)].stateMachine.transitions[0].effects[0]: `os/read-file` needs fs \"/etc/passwd\" read but orbital Orders does not grant it\n  suggestion: Add `fs: { \"/etc/passwd\": [read] }` to the orbital's bracket (`orbital Name [ … ]`) or the app's"
+                  "body": "[ORB_OS_GRANT_MISSING] orbitals[0 (Orders)].traits[0 (OrdersRunner)].stateMachine.transitions[0].effects[0]: `os/read-file` needs fs \"/etc/passwd\" read but orbital Orders does not grant it\n  suggestion: Add `fs: { \"/etc/passwd\": [read] }` to the orbital's bracket (`orbital Name [ \u2026 ]`) or the app's"
                 }
               }
             ],

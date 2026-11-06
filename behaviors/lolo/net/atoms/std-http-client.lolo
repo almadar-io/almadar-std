@@ -510,7 +510,7 @@ orbital HttpClientOrbital {
         (set @entity.sock @payload.sock)
         (os/send @payload.sock [{ bytes: @entity.head, credential: @config.credential, scope: "user", encode: "form" }, { bytes: @entity.request, credential: "" }] { key: "send" emit: { success: HC_SENT, failure: HC_IO_FAILED } })
       HC_IO_FAILED -> ready
-        (emit HTTP_FAILED { key: @entity.key, error: @payload.error, kind: (if (array/includes ["denied", "timeout", "tls"] @payload.kind) @payload.kind "io") })
+        (emit HTTP_FAILED { key: @entity.key, error: @payload.error, kind: (if (array/includes ["denied", "unsupported", "timeout", "tls"] @payload.kind) @payload.kind "io") })
     }
 
     state sending {
@@ -586,7 +586,7 @@ orbital HttpClientOrbital {
       HC_IO_FAILED -> ready when (not @entity.reused)
         (os/close @entity.sock { key: "close" emit: { success: HC_CLOSED, failure: HC_CLOSED } })
         (set @entity.sock -1)
-        (emit HTTP_FAILED { key: @entity.key, error: @payload.error, kind: (if (array/includes ["denied", "timeout", "tls"] @payload.kind) @payload.kind "io") })
+        (emit HTTP_FAILED { key: @entity.key, error: @payload.error, kind: (if (array/includes ["denied", "unsupported", "timeout", "tls"] @payload.kind) @payload.kind "io") })
     }
 
     state reading {
@@ -626,7 +626,7 @@ orbital HttpClientOrbital {
       HC_IO_FAILED -> ready when (not (and @entity.reused (= @entity.stage "head") (= (bytes/length @entity.buf) 0)))
         (os/close @entity.sock { key: "close" emit: { success: HC_CLOSED, failure: HC_CLOSED } })
         (set @entity.sock -1)
-        (emit HTTP_FAILED { key: @entity.key, error: @payload.error, kind: (if (array/includes ["denied", "timeout", "tls"] @payload.kind) @payload.kind "io") })
+        (emit HTTP_FAILED { key: @entity.key, error: @payload.error, kind: (if (array/includes ["denied", "unsupported", "timeout", "tls"] @payload.kind) @payload.kind "io") })
 
       HC_READ -> reading
         (set @entity.buf (bytes/concat [@entity.buf, @payload.data]))
@@ -826,7 +826,7 @@ orbital HttpClientOrbital {
         error : string!
         kind : string!
       }
-        @description "The call produced no response: kind refused (nothing opened), denied, timeout, tls or io."
+        @description "The call produced no response: kind refused (nothing opened), denied, unsupported (the host cannot open sockets), timeout, tls or io."
         @tier "primary"
       HC_BUILT -> internal {
         head : bytes!

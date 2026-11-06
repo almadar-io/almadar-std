@@ -204,48 +204,48 @@ orbital YoutubeOrbital {
                     (if (>= @payload.status 400) @payload.body (str/concat "Request failed with status code " @payload.status))))
               })))) 
 
-      YOUTUBE_UNREACHED -> idle when (and (!= @payload.kind "refused") (!= @payload.kind "denied") (array/some @entity.pending (fn p (and (= @p.key @payload.key) (= @p.job.kind "search") (< @p.job.attempt 2)))))
+      YOUTUBE_UNREACHED -> idle when (and (!= @payload.kind "refused") (!= @payload.kind "denied") (!= @payload.kind "unsupported") (array/some @entity.pending (fn p (and (= @p.key @payload.key) (= @p.job.kind "search") (< @p.job.attempt 2)))))
         (let ((e (array/find @entity.pending (fn p (= @p.key @payload.key)))))
           (do
             (set @entity.pending (array/filter @entity.pending (fn p (!= @p.key @payload.key))))
             (if (= @e null)
               (emit YOUTUBE_SEARCH_FAILED { message: "YouTube replied for a request that is no longer pending" })
               (emit YOUTUBE_REQUEST { kind: @e.job.kind, attempt: (+ @e.job.attempt 1), query: @e.job.query, maxResults: @e.job.maxResults, type: @e.job.type, id: @e.job.id }))))
-      YOUTUBE_UNREACHED -> idle when (and (!= @payload.kind "denied") (or (= @payload.kind "refused") (array/some @entity.pending (fn p (and (= @p.key @payload.key) (>= @p.job.attempt 2))))) (array/some @entity.pending (fn p (and (= @p.key @payload.key) (= @p.job.kind "search")))))
+      YOUTUBE_UNREACHED -> idle when (and (!= @payload.kind "denied") (!= @payload.kind "unsupported") (or (= @payload.kind "refused") (array/some @entity.pending (fn p (and (= @p.key @payload.key) (>= @p.job.attempt 2))))) (array/some @entity.pending (fn p (and (= @p.key @payload.key) (= @p.job.kind "search")))))
         (do
           (set @entity.pending (array/filter @entity.pending (fn p (!= @p.key @payload.key))))
           (emit YOUTUBE_REJECTED { kind: "search", message: @payload.error }))
-      YOUTUBE_UNREACHED -> idle when (and (= @payload.kind "denied") (array/some @entity.pending (fn p (and (= @p.key @payload.key) (= @p.job.kind "search")))))
+      YOUTUBE_UNREACHED -> idle when (and (array/includes ["denied", "unsupported"] @payload.kind) (array/some @entity.pending (fn p (and (= @p.key @payload.key) (= @p.job.kind "search")))))
         (do
           (set @entity.pending (array/filter @entity.pending (fn p (!= @p.key @payload.key))))
           (emit YOUTUBE_REJECTED { kind: "search", message: @payload.error }))
-      YOUTUBE_UNREACHED -> idle when (and (!= @payload.kind "refused") (!= @payload.kind "denied") (array/some @entity.pending (fn p (and (= @p.key @payload.key) (= @p.job.kind "video") (< @p.job.attempt 2)))))
+      YOUTUBE_UNREACHED -> idle when (and (!= @payload.kind "refused") (!= @payload.kind "denied") (!= @payload.kind "unsupported") (array/some @entity.pending (fn p (and (= @p.key @payload.key) (= @p.job.kind "video") (< @p.job.attempt 2)))))
         (let ((e (array/find @entity.pending (fn p (= @p.key @payload.key)))))
           (do
             (set @entity.pending (array/filter @entity.pending (fn p (!= @p.key @payload.key))))
             (if (= @e null)
               (emit YOUTUBE_VIDEO_FAILED { message: "YouTube replied for a request that is no longer pending" })
               (emit YOUTUBE_REQUEST { kind: @e.job.kind, attempt: (+ @e.job.attempt 1), query: @e.job.query, maxResults: @e.job.maxResults, type: @e.job.type, id: @e.job.id }))))
-      YOUTUBE_UNREACHED -> idle when (and (!= @payload.kind "denied") (or (= @payload.kind "refused") (array/some @entity.pending (fn p (and (= @p.key @payload.key) (>= @p.job.attempt 2))))) (array/some @entity.pending (fn p (and (= @p.key @payload.key) (= @p.job.kind "video")))))
+      YOUTUBE_UNREACHED -> idle when (and (!= @payload.kind "denied") (!= @payload.kind "unsupported") (or (= @payload.kind "refused") (array/some @entity.pending (fn p (and (= @p.key @payload.key) (>= @p.job.attempt 2))))) (array/some @entity.pending (fn p (and (= @p.key @payload.key) (= @p.job.kind "video")))))
         (do
           (set @entity.pending (array/filter @entity.pending (fn p (!= @p.key @payload.key))))
           (emit YOUTUBE_REJECTED { kind: "video", message: @payload.error }))
-      YOUTUBE_UNREACHED -> idle when (and (= @payload.kind "denied") (array/some @entity.pending (fn p (and (= @p.key @payload.key) (= @p.job.kind "video")))))
+      YOUTUBE_UNREACHED -> idle when (and (array/includes ["denied", "unsupported"] @payload.kind) (array/some @entity.pending (fn p (and (= @p.key @payload.key) (= @p.job.kind "video")))))
         (do
           (set @entity.pending (array/filter @entity.pending (fn p (!= @p.key @payload.key))))
           (emit YOUTUBE_REJECTED { kind: "video", message: @payload.error }))
-      YOUTUBE_UNREACHED -> idle when (and (!= @payload.kind "refused") (!= @payload.kind "denied") (array/some @entity.pending (fn p (and (= @p.key @payload.key) (= @p.job.kind "channel") (< @p.job.attempt 2)))))
+      YOUTUBE_UNREACHED -> idle when (and (!= @payload.kind "refused") (!= @payload.kind "denied") (!= @payload.kind "unsupported") (array/some @entity.pending (fn p (and (= @p.key @payload.key) (= @p.job.kind "channel") (< @p.job.attempt 2)))))
         (let ((e (array/find @entity.pending (fn p (= @p.key @payload.key)))))
           (do
             (set @entity.pending (array/filter @entity.pending (fn p (!= @p.key @payload.key))))
             (if (= @e null)
               (emit YOUTUBE_CHANNEL_FAILED { message: "YouTube replied for a request that is no longer pending" })
               (emit YOUTUBE_REQUEST { kind: @e.job.kind, attempt: (+ @e.job.attempt 1), query: @e.job.query, maxResults: @e.job.maxResults, type: @e.job.type, id: @e.job.id }))))
-      YOUTUBE_UNREACHED -> idle when (and (!= @payload.kind "denied") (or (= @payload.kind "refused") (array/some @entity.pending (fn p (and (= @p.key @payload.key) (>= @p.job.attempt 2))))) (array/some @entity.pending (fn p (and (= @p.key @payload.key) (= @p.job.kind "channel")))))
+      YOUTUBE_UNREACHED -> idle when (and (!= @payload.kind "denied") (!= @payload.kind "unsupported") (or (= @payload.kind "refused") (array/some @entity.pending (fn p (and (= @p.key @payload.key) (>= @p.job.attempt 2))))) (array/some @entity.pending (fn p (and (= @p.key @payload.key) (= @p.job.kind "channel")))))
         (do
           (set @entity.pending (array/filter @entity.pending (fn p (!= @p.key @payload.key))))
           (emit YOUTUBE_REJECTED { kind: "channel", message: @payload.error }))
-      YOUTUBE_UNREACHED -> idle when (and (= @payload.kind "denied") (array/some @entity.pending (fn p (and (= @p.key @payload.key) (= @p.job.kind "channel")))))
+      YOUTUBE_UNREACHED -> idle when (and (array/includes ["denied", "unsupported"] @payload.kind) (array/some @entity.pending (fn p (and (= @p.key @payload.key) (= @p.job.kind "channel")))))
         (do
           (set @entity.pending (array/filter @entity.pending (fn p (!= @p.key @payload.key))))
           (emit YOUTUBE_REJECTED { kind: "channel", message: @payload.error }))

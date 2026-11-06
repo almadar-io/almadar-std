@@ -77,11 +77,11 @@ orbital MetaAdsOrbital {
                   (if (or (= @sp null) (= @im null) (= @cl null))
                     (emit META_ADS_FAILED { code: "MALFORMED_REPLY", message: "Meta Graph API replied with an insights row whose counts are not numbers" })
                     (emit META_ADS_SPEND_RESULT { spend: @sp, currency: (object/get @row account_currency ""), impressions: @im, clicks: @cl })))))))
-      META_ADS_SPEND_FAILED -> idle when (= @payload.kind "denied")
+      META_ADS_SPEND_FAILED -> idle when (array/includes ["denied", "unsupported"] @payload.kind)
         (emit META_ADS_FAILED { message: @payload.error })
       META_ADS_SPEND_FAILED -> idle when (= @payload.kind "timeout")
         (emit META_ADS_FAILED { message: "The operation was aborted due to timeout" })
-      META_ADS_SPEND_FAILED -> idle when (and (!= @payload.kind "denied") (!= @payload.kind "timeout"))
+      META_ADS_SPEND_FAILED -> idle when (and (!= @payload.kind "denied") (!= @payload.kind "unsupported") (!= @payload.kind "timeout"))
         (emit META_ADS_FAILED { message: "fetch failed" })
 
       META_ADS_LIST_CAMPAIGNS -> idle when (= (if (!= (default @payload.accountId "") "") (default @payload.accountId "") @config.defaultAccountId) "")
@@ -111,11 +111,11 @@ orbital MetaAdsOrbital {
           (if (array/some @rows (fn r (= @r.dailyBudget null)))
             (emit META_ADS_FAILED { code: "MALFORMED_REPLY", message: "Meta Graph API replied with a campaign whose daily budget is not a number" })
             (emit META_ADS_CAMPAIGNS_RESULT { campaigns: @rows })))
-      META_ADS_CAMPAIGNS_FAILED -> idle when (= @payload.kind "denied")
+      META_ADS_CAMPAIGNS_FAILED -> idle when (array/includes ["denied", "unsupported"] @payload.kind)
         (emit META_ADS_FAILED { message: @payload.error })
       META_ADS_CAMPAIGNS_FAILED -> idle when (= @payload.kind "timeout")
         (emit META_ADS_FAILED { message: "The operation was aborted due to timeout" })
-      META_ADS_CAMPAIGNS_FAILED -> idle when (and (!= @payload.kind "denied") (!= @payload.kind "timeout"))
+      META_ADS_CAMPAIGNS_FAILED -> idle when (and (!= @payload.kind "denied") (!= @payload.kind "unsupported") (!= @payload.kind "timeout"))
         (emit META_ADS_FAILED { message: "fetch failed" })
     }
 

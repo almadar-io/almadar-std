@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "Canonical operator registry for Almadar. Generated from @almadar/std/modules. Consumed by orbital-compiler via include_str!.",
-  "generated": "2026-11-06T01:42:48.629Z",
+  "generated": "2026-11-06T11:08:09.798Z",
   "categories": {
     "arithmetic": {
       "description": "Numeric operations",
@@ -147,6 +147,12 @@
     },
     "std-ffi": {
       "description": "Granted native foreign-function calls (EXEC-METAL-2)",
+      "target": [
+        "ts"
+      ]
+    },
+    "std-gpu": {
+      "description": "Granted GPU device, resource, submit and readback asks (host-answered)",
       "target": [
         "ts"
       ]
@@ -9558,6 +9564,1366 @@
       ],
       "examples": [
         "(geo/segment-intersect {\"x1\":0,\"y1\":0,\"x2\":4,\"y2\":4} {\"x1\":0,\"y1\":4,\"x2\":4,\"y2\":0})"
+      ],
+      "docsSource": "generated"
+    },
+    "gpu/bind-group-create": {
+      "category": "std-gpu",
+      "minArity": 3,
+      "maxArity": 4,
+      "returnType": "void",
+      "description": "Bind resources to bind group number group of a pipeline. Each entry is { binding, buffer?, texture?, sampler?, offset?, size? } with exactly one of buffer, texture or sampler; offset and size select a range of a buffer. Needs no grant beyond holding the handle (the grant was checked at gpu/device-open). Success payload: { bindGroup } (a sealed GpuBindGroup handle). Failure kind: closed (the device or a handle is not live), invalid (a malformed descriptor, an unknown usage or format, a size beyond the granted maxBytes), unsupported (a host without a GPU), io (the device failed).",
+      "module": "gpu",
+      "visual": {
+        "form": "actuator"
+      },
+      "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "bindGroup": "GpuBindGroup",
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
+      "grant": [],
+      "runsOn": "any",
+      "host": "os",
+      "params": [
+        {
+          "name": "pipeline",
+          "type": "GpuPipeline",
+          "description": "The pipeline whose layout the group follows"
+        },
+        {
+          "name": "group",
+          "type": "int",
+          "description": "The bind group index in the pipeline layout"
+        },
+        {
+          "name": "entries",
+          "type": {
+            "kind": "array",
+            "of": {
+              "kind": "object",
+              "fields": {
+                "binding": "int",
+                "buffer": "GpuBuffer",
+                "texture": "GpuTexture",
+                "sampler": "GpuSampler",
+                "offset": "int",
+                "size": "int"
+              },
+              "optional": [
+                "buffer",
+                "texture",
+                "sampler",
+                "offset",
+                "size"
+              ]
+            }
+          },
+          "description": "The bindings: { binding, buffer?, texture?, sampler?, offset?, size? }"
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "key": "string",
+              "emit": {
+                "kind": "object",
+                "fields": {
+                  "success": {
+                    "kind": "eventKey"
+                  },
+                  "failure": {
+                    "kind": "eventKey"
+                  },
+                  "cancelled": {
+                    "kind": "eventKey"
+                  }
+                },
+                "open": true
+              }
+            },
+            "open": true
+          },
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(gpu/bind-group-create @entity.pipeline 0 [{\"binding\":0,\"buffer\":\"@entity.buffer\"}] {\"emit\":{\"success\":\"BINDGROUP_READY\",\"failure\":\"GPU_FAILED\"}})"
+      ],
+      "docsSource": "generated"
+    },
+    "gpu/buffer-create": {
+      "category": "std-gpu",
+      "minArity": 2,
+      "maxArity": 3,
+      "returnType": "void",
+      "description": "Create a buffer of size bytes; usage lists the buffer usages (\"map-read\", \"map-write\", \"copy-src\", \"copy-dst\", \"index\", \"vertex\", \"uniform\", \"storage\", \"indirect\", \"query-resolve\"). The size counts against the maxBytes of the device grant. Needs no grant beyond holding the handle (the grant was checked at gpu/device-open). Success payload: { buffer } (a sealed GpuBuffer handle). Failure kind: closed (the device or a handle is not live), invalid (a malformed descriptor, an unknown usage or format, a size beyond the granted maxBytes), unsupported (a host without a GPU), io (the device failed).",
+      "module": "gpu",
+      "visual": {
+        "form": "actuator"
+      },
+      "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "buffer": "GpuBuffer",
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
+      "grant": [],
+      "runsOn": "any",
+      "host": "os",
+      "params": [
+        {
+          "name": "device",
+          "type": "GpuDevice",
+          "description": "The open GPU device the object belongs to"
+        },
+        {
+          "name": "desc",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "size": "int",
+              "usage": {
+                "kind": "array",
+                "of": {
+                  "kind": "union",
+                  "of": [
+                    {
+                      "kind": "literal",
+                      "value": "map-read"
+                    },
+                    {
+                      "kind": "literal",
+                      "value": "map-write"
+                    },
+                    {
+                      "kind": "literal",
+                      "value": "copy-src"
+                    },
+                    {
+                      "kind": "literal",
+                      "value": "copy-dst"
+                    },
+                    {
+                      "kind": "literal",
+                      "value": "index"
+                    },
+                    {
+                      "kind": "literal",
+                      "value": "vertex"
+                    },
+                    {
+                      "kind": "literal",
+                      "value": "uniform"
+                    },
+                    {
+                      "kind": "literal",
+                      "value": "storage"
+                    },
+                    {
+                      "kind": "literal",
+                      "value": "indirect"
+                    },
+                    {
+                      "kind": "literal",
+                      "value": "query-resolve"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "description": "Buffer descriptor: { size, usage }"
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "key": "string",
+              "emit": {
+                "kind": "object",
+                "fields": {
+                  "success": {
+                    "kind": "eventKey"
+                  },
+                  "failure": {
+                    "kind": "eventKey"
+                  },
+                  "cancelled": {
+                    "kind": "eventKey"
+                  }
+                },
+                "open": true
+              }
+            },
+            "open": true
+          },
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(gpu/buffer-create @entity.device {\"size\":4096,\"usage\":[\"storage\",\"copy-src\",\"copy-dst\"]} {\"emit\":{\"success\":\"BUFFER_READY\",\"failure\":\"GPU_FAILED\"}})"
+      ],
+      "docsSource": "generated"
+    },
+    "gpu/device-close": {
+      "category": "std-gpu",
+      "minArity": 1,
+      "maxArity": 2,
+      "returnType": "void",
+      "description": "Close a GPU device and drop every object created on it; handles of the device are no longer live. Needs no grant beyond holding the handle (the grant was checked at gpu/device-open). Success payload: {}. Failure kind: closed (the device is not live).",
+      "module": "gpu",
+      "visual": {
+        "form": "actuator"
+      },
+      "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
+      "grant": [],
+      "runsOn": "any",
+      "host": "os",
+      "params": [
+        {
+          "name": "device",
+          "type": "GpuDevice",
+          "description": "The open GPU device the object belongs to"
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "key": "string",
+              "emit": {
+                "kind": "object",
+                "fields": {
+                  "success": {
+                    "kind": "eventKey"
+                  },
+                  "failure": {
+                    "kind": "eventKey"
+                  },
+                  "cancelled": {
+                    "kind": "eventKey"
+                  }
+                },
+                "open": true
+              }
+            },
+            "open": true
+          },
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(gpu/device-close @entity.device {\"emit\":{\"failure\":\"GPU_FAILED\"}})"
+      ],
+      "docsSource": "generated"
+    },
+    "gpu/device-open": {
+      "category": "std-gpu",
+      "minArity": 1,
+      "maxArity": 2,
+      "returnType": "void",
+      "description": "Open a GPU device (grant gpu: { \"device:<maxBytes>\": [open] }). powerPreference is \"low-power\" or \"high-performance\"; features lists the optional device features to require. Completion is deferred: the host answers when the adapter is ready. Success payload: { device, features, limits } (a sealed GpuDevice handle, the features granted, and the device limits as a map of limit name to integer). Failure kind: denied (no open grant), invalid (an unknown power preference or feature), unsupported (a host without a GPU: no adapter, wasm without WebGPU), io (the adapter or device request failed).",
+      "module": "gpu",
+      "visual": {
+        "form": "actuator"
+      },
+      "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "device": "GpuDevice",
+            "features": {
+              "kind": "array",
+              "of": {
+                "kind": "union",
+                "of": [
+                  {
+                    "kind": "literal",
+                    "value": "timestamp-query"
+                  },
+                  {
+                    "kind": "literal",
+                    "value": "shader-f16"
+                  },
+                  {
+                    "kind": "literal",
+                    "value": "float32-filterable"
+                  }
+                ]
+              }
+            },
+            "limits": {
+              "kind": "map",
+              "key": "string",
+              "value": "int"
+            },
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
+      "grant": [
+        {
+          "kind": "gpu",
+          "access": "open"
+        }
+      ],
+      "runsOn": "any",
+      "host": "os",
+      "params": [
+        {
+          "name": "desc",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "powerPreference": {
+                "kind": "union",
+                "of": [
+                  {
+                    "kind": "literal",
+                    "value": "low-power"
+                  },
+                  {
+                    "kind": "literal",
+                    "value": "high-performance"
+                  }
+                ]
+              },
+              "features": {
+                "kind": "array",
+                "of": {
+                  "kind": "union",
+                  "of": [
+                    {
+                      "kind": "literal",
+                      "value": "timestamp-query"
+                    },
+                    {
+                      "kind": "literal",
+                      "value": "shader-f16"
+                    },
+                    {
+                      "kind": "literal",
+                      "value": "float32-filterable"
+                    }
+                  ]
+                }
+              }
+            },
+            "optional": [
+              "powerPreference",
+              "features"
+            ]
+          },
+          "description": "Device request: { powerPreference?, features? }"
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "key": "string",
+              "emit": {
+                "kind": "object",
+                "fields": {
+                  "success": {
+                    "kind": "eventKey"
+                  },
+                  "failure": {
+                    "kind": "eventKey"
+                  },
+                  "cancelled": {
+                    "kind": "eventKey"
+                  }
+                },
+                "open": true
+              }
+            },
+            "open": true
+          },
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(gpu/device-open {\"powerPreference\":\"high-performance\"} {\"emit\":{\"success\":\"GPU_READY\",\"failure\":\"GPU_FAILED\"}})"
+      ],
+      "docsSource": "generated"
+    },
+    "gpu/pipeline-create": {
+      "category": "std-gpu",
+      "minArity": 2,
+      "maxArity": 3,
+      "returnType": "void",
+      "description": "Create a pipeline from a shader module. kind is \"compute\" or \"render\"; entry names the entry point (the vertex entry for a render pipeline); fragment names the fragment entry and targets lists the color target formats of a render pipeline. Needs no grant beyond holding the handle (the grant was checked at gpu/device-open). Success payload: { pipeline } (a sealed GpuPipeline handle whose kind field is the pipeline kind). Failure kind: closed (the device or a handle is not live), invalid (a malformed descriptor, an unknown usage or format, a size beyond the granted maxBytes), unsupported (a host without a GPU), io (the device failed).",
+      "module": "gpu",
+      "visual": {
+        "form": "actuator"
+      },
+      "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "pipeline": "GpuPipeline",
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
+      "grant": [],
+      "runsOn": "any",
+      "host": "os",
+      "params": [
+        {
+          "name": "device",
+          "type": "GpuDevice",
+          "description": "The open GPU device the object belongs to"
+        },
+        {
+          "name": "desc",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "kind": {
+                "kind": "union",
+                "of": [
+                  {
+                    "kind": "literal",
+                    "value": "compute"
+                  },
+                  {
+                    "kind": "literal",
+                    "value": "render"
+                  }
+                ]
+              },
+              "shader": "GpuShader",
+              "entry": "string",
+              "fragment": "string",
+              "targets": {
+                "kind": "array",
+                "of": {
+                  "kind": "union",
+                  "of": [
+                    {
+                      "kind": "literal",
+                      "value": "r8unorm"
+                    },
+                    {
+                      "kind": "literal",
+                      "value": "rg8unorm"
+                    },
+                    {
+                      "kind": "literal",
+                      "value": "rgba8unorm"
+                    },
+                    {
+                      "kind": "literal",
+                      "value": "rgba8unorm-srgb"
+                    },
+                    {
+                      "kind": "literal",
+                      "value": "bgra8unorm"
+                    },
+                    {
+                      "kind": "literal",
+                      "value": "bgra8unorm-srgb"
+                    },
+                    {
+                      "kind": "literal",
+                      "value": "r16float"
+                    },
+                    {
+                      "kind": "literal",
+                      "value": "rg16float"
+                    },
+                    {
+                      "kind": "literal",
+                      "value": "rgba16float"
+                    },
+                    {
+                      "kind": "literal",
+                      "value": "r32float"
+                    },
+                    {
+                      "kind": "literal",
+                      "value": "rg32float"
+                    },
+                    {
+                      "kind": "literal",
+                      "value": "rgba32float"
+                    },
+                    {
+                      "kind": "literal",
+                      "value": "r32uint"
+                    },
+                    {
+                      "kind": "literal",
+                      "value": "r32sint"
+                    },
+                    {
+                      "kind": "literal",
+                      "value": "rgba8uint"
+                    },
+                    {
+                      "kind": "literal",
+                      "value": "rgba8sint"
+                    },
+                    {
+                      "kind": "literal",
+                      "value": "rgba32uint"
+                    },
+                    {
+                      "kind": "literal",
+                      "value": "rgba32sint"
+                    },
+                    {
+                      "kind": "literal",
+                      "value": "depth32float"
+                    }
+                  ]
+                }
+              }
+            },
+            "optional": [
+              "fragment",
+              "targets"
+            ]
+          },
+          "description": "Pipeline descriptor: { kind, shader, entry, fragment?, targets? }"
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "key": "string",
+              "emit": {
+                "kind": "object",
+                "fields": {
+                  "success": {
+                    "kind": "eventKey"
+                  },
+                  "failure": {
+                    "kind": "eventKey"
+                  },
+                  "cancelled": {
+                    "kind": "eventKey"
+                  }
+                },
+                "open": true
+              }
+            },
+            "open": true
+          },
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(gpu/pipeline-create @entity.device {\"kind\":\"compute\",\"shader\":\"@entity.shader\",\"entry\":\"main\"} {\"emit\":{\"success\":\"PIPELINE_READY\",\"failure\":\"GPU_FAILED\"}})"
+      ],
+      "docsSource": "generated"
+    },
+    "gpu/query-create": {
+      "category": "std-gpu",
+      "minArity": 2,
+      "maxArity": 3,
+      "returnType": "void",
+      "description": "Create a timestamp query set of count slots; a gpu/submit timestamp command writes one slot. Needs no grant beyond holding the handle (the grant was checked at gpu/device-open). Success payload: { querySet } (a sealed GpuQuerySet handle). Failure kind: closed (the device or a handle is not live), invalid (a malformed descriptor, an unknown usage or format, a size beyond the granted maxBytes), unsupported (a host without a GPU), io (the device failed).",
+      "module": "gpu",
+      "visual": {
+        "form": "actuator"
+      },
+      "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "querySet": "GpuQuerySet",
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
+      "grant": [],
+      "runsOn": "any",
+      "host": "os",
+      "params": [
+        {
+          "name": "device",
+          "type": "GpuDevice",
+          "description": "The open GPU device the object belongs to"
+        },
+        {
+          "name": "desc",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "count": "int"
+            }
+          },
+          "description": "Query set descriptor: { count }"
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "key": "string",
+              "emit": {
+                "kind": "object",
+                "fields": {
+                  "success": {
+                    "kind": "eventKey"
+                  },
+                  "failure": {
+                    "kind": "eventKey"
+                  },
+                  "cancelled": {
+                    "kind": "eventKey"
+                  }
+                },
+                "open": true
+              }
+            },
+            "open": true
+          },
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(gpu/query-create @entity.device {\"count\":2} {\"emit\":{\"success\":\"QUERY_READY\",\"failure\":\"GPU_FAILED\"}})"
+      ],
+      "docsSource": "generated"
+    },
+    "gpu/release": {
+      "category": "std-gpu",
+      "minArity": 1,
+      "maxArity": 2,
+      "returnType": "void",
+      "description": "Release a GPU object (buffer, texture, sampler, shader, pipeline, bind group or query set) so the device frees it; a device is closed with gpu/device-close. Needs no grant beyond holding the handle (the grant was checked at gpu/device-open). Success payload: {}. Failure kind: closed (the handle is not live or already released).",
+      "module": "gpu",
+      "visual": {
+        "form": "actuator"
+      },
+      "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
+      "grant": [],
+      "runsOn": "any",
+      "host": "os",
+      "params": [
+        {
+          "name": "handle",
+          "type": {
+            "kind": "union",
+            "of": [
+              "GpuBuffer",
+              "GpuTexture",
+              "GpuSampler",
+              "GpuShader",
+              "GpuPipeline",
+              "GpuBindGroup",
+              "GpuQuerySet"
+            ]
+          },
+          "description": "Any GPU handle except a device"
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "key": "string",
+              "emit": {
+                "kind": "object",
+                "fields": {
+                  "success": {
+                    "kind": "eventKey"
+                  },
+                  "failure": {
+                    "kind": "eventKey"
+                  },
+                  "cancelled": {
+                    "kind": "eventKey"
+                  }
+                },
+                "open": true
+              }
+            },
+            "open": true
+          },
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(gpu/release @entity.buffer {\"emit\":{\"failure\":\"GPU_FAILED\"}})"
+      ],
+      "docsSource": "generated"
+    },
+    "gpu/sampler-create": {
+      "category": "std-gpu",
+      "minArity": 2,
+      "maxArity": 3,
+      "returnType": "void",
+      "description": "Create a sampler; filter is \"nearest\" or \"linear\", address is \"clamp\", \"repeat\" or \"mirror\". Needs no grant beyond holding the handle (the grant was checked at gpu/device-open). Success payload: { sampler } (a sealed GpuSampler handle). Failure kind: closed (the device or a handle is not live), invalid (a malformed descriptor, an unknown usage or format, a size beyond the granted maxBytes), unsupported (a host without a GPU), io (the device failed).",
+      "module": "gpu",
+      "visual": {
+        "form": "actuator"
+      },
+      "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "sampler": "GpuSampler",
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
+      "grant": [],
+      "runsOn": "any",
+      "host": "os",
+      "params": [
+        {
+          "name": "device",
+          "type": "GpuDevice",
+          "description": "The open GPU device the object belongs to"
+        },
+        {
+          "name": "desc",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "filter": {
+                "kind": "union",
+                "of": [
+                  {
+                    "kind": "literal",
+                    "value": "nearest"
+                  },
+                  {
+                    "kind": "literal",
+                    "value": "linear"
+                  }
+                ]
+              },
+              "address": {
+                "kind": "union",
+                "of": [
+                  {
+                    "kind": "literal",
+                    "value": "clamp"
+                  },
+                  {
+                    "kind": "literal",
+                    "value": "repeat"
+                  },
+                  {
+                    "kind": "literal",
+                    "value": "mirror"
+                  }
+                ]
+              }
+            },
+            "optional": [
+              "filter",
+              "address"
+            ]
+          },
+          "description": "Sampler descriptor: { filter?, address? }"
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "key": "string",
+              "emit": {
+                "kind": "object",
+                "fields": {
+                  "success": {
+                    "kind": "eventKey"
+                  },
+                  "failure": {
+                    "kind": "eventKey"
+                  },
+                  "cancelled": {
+                    "kind": "eventKey"
+                  }
+                },
+                "open": true
+              }
+            },
+            "open": true
+          },
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(gpu/sampler-create @entity.device {\"filter\":\"linear\",\"address\":\"repeat\"} {\"emit\":{\"success\":\"SAMPLER_READY\",\"failure\":\"GPU_FAILED\"}})"
+      ],
+      "docsSource": "generated"
+    },
+    "gpu/shader-create": {
+      "category": "std-gpu",
+      "minArity": 2,
+      "maxArity": 3,
+      "returnType": "void",
+      "description": "Compile a WGSL shader module from source text. Needs no grant beyond holding the handle (the grant was checked at gpu/device-open). Success payload: { shader } (a sealed GpuShader handle). Failure kind: closed (the device is not live), invalid (the WGSL does not compile; the error carries the compiler message), unsupported (a host without a GPU), io (the device failed).",
+      "module": "gpu",
+      "visual": {
+        "form": "actuator"
+      },
+      "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "shader": "GpuShader",
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
+      "grant": [],
+      "runsOn": "any",
+      "host": "os",
+      "params": [
+        {
+          "name": "device",
+          "type": "GpuDevice",
+          "description": "The open GPU device the object belongs to"
+        },
+        {
+          "name": "wgsl",
+          "type": "string",
+          "description": "WGSL source text of the module"
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "key": "string",
+              "emit": {
+                "kind": "object",
+                "fields": {
+                  "success": {
+                    "kind": "eventKey"
+                  },
+                  "failure": {
+                    "kind": "eventKey"
+                  },
+                  "cancelled": {
+                    "kind": "eventKey"
+                  }
+                },
+                "open": true
+              }
+            },
+            "open": true
+          },
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(gpu/shader-create @entity.device @entity.wgsl {\"emit\":{\"success\":\"SHADER_READY\",\"failure\":\"GPU_FAILED\"}})"
+      ],
+      "docsSource": "generated"
+    },
+    "gpu/submit": {
+      "category": "std-gpu",
+      "minArity": 2,
+      "maxArity": 3,
+      "returnType": "void",
+      "description": "Run a command list on the device queue, in list order, as one job (grant gpu: { \"device:<maxBytes>\": [compute, render, readback] }). commands is a list of GpuCommand records, each with exactly one key: write { buffer, offset?, data } or write { texture, data } uploads bytes or a Borrow (the kernel reads the borrowed block) into a copy-dst buffer at offset (default 0) or into a whole copy-dst texture; compute { pipeline, bindGroups, dispatch } (dispatch is [x, y, z] workgroup counts); render { pipeline, bindGroups, target, vertices, instances?, clear? } (target is a GpuTexture, clear is an rgba list); copy { from, to, fromOffset?, toOffset?, size? } between buffers or textures; clear { buffer, offset?, size? }; timestamp { querySet, index }; read { buffer, offset?, length? } reads length bytes (default the rest of the buffer) at offset (default 0) of a copy-src buffer as they stand at that point of the list, or of a map-read buffer as it stands after the list when no later command writes it. Buffer offsets and lengths of write and read are multiples of 4. The grant is derived from a literal list: each compute entry needs compute, each render entry needs render, each read entry needs readback, other entries need nothing; a list that is not literal is checked at run time. Completion is deferred: the success event fires when the queue work is done. Success payload: { reads } (the bytes of each read entry, in list order; empty without one). Failure kind: denied (a command needs a kind the grant does not list), closed (the device, a handle or a Borrow is not live), invalid (a command with zero or several keys, a handle of another device, a bad dispatch, a write or read past its buffer or off a multiple of 4, a texture write that is not the whole texture, a buffer without the usage its command needs), io (the device failed).",
+      "module": "gpu",
+      "visual": {
+        "form": "actuator"
+      },
+      "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "reads": {
+              "kind": "array",
+              "of": "bytes"
+            },
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
+      "grant": [
+        {
+          "kind": "gpu",
+          "access": "compute",
+          "commands": 1
+        }
+      ],
+      "runsOn": "any",
+      "host": "os",
+      "params": [
+        {
+          "name": "device",
+          "type": "GpuDevice",
+          "description": "The open GPU device the object belongs to"
+        },
+        {
+          "name": "commands",
+          "type": {
+            "kind": "array",
+            "of": {
+              "kind": "union",
+              "of": [
+                {
+                  "kind": "object",
+                  "fields": {
+                    "compute": {
+                      "kind": "object",
+                      "fields": {
+                        "pipeline": "GpuPipeline",
+                        "bindGroups": {
+                          "kind": "array",
+                          "of": "GpuBindGroup"
+                        },
+                        "dispatch": {
+                          "kind": "array",
+                          "of": "int"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "object",
+                  "fields": {
+                    "render": {
+                      "kind": "object",
+                      "fields": {
+                        "pipeline": "GpuPipeline",
+                        "bindGroups": {
+                          "kind": "array",
+                          "of": "GpuBindGroup"
+                        },
+                        "target": "GpuTexture",
+                        "vertices": "int",
+                        "instances": "int",
+                        "clear": {
+                          "kind": "array",
+                          "of": "number"
+                        }
+                      },
+                      "optional": [
+                        "instances",
+                        "clear"
+                      ]
+                    }
+                  }
+                },
+                {
+                  "kind": "object",
+                  "fields": {
+                    "copy": {
+                      "kind": "object",
+                      "fields": {
+                        "from": {
+                          "kind": "union",
+                          "of": [
+                            "GpuBuffer",
+                            "GpuTexture"
+                          ]
+                        },
+                        "to": {
+                          "kind": "union",
+                          "of": [
+                            "GpuBuffer",
+                            "GpuTexture"
+                          ]
+                        },
+                        "fromOffset": "int",
+                        "toOffset": "int",
+                        "size": "int"
+                      },
+                      "optional": [
+                        "fromOffset",
+                        "toOffset",
+                        "size"
+                      ]
+                    }
+                  }
+                },
+                {
+                  "kind": "object",
+                  "fields": {
+                    "clear": {
+                      "kind": "object",
+                      "fields": {
+                        "buffer": "GpuBuffer",
+                        "offset": "int",
+                        "size": "int"
+                      },
+                      "optional": [
+                        "offset",
+                        "size"
+                      ]
+                    }
+                  }
+                },
+                {
+                  "kind": "object",
+                  "fields": {
+                    "write": {
+                      "kind": "object",
+                      "fields": {
+                        "buffer": "GpuBuffer",
+                        "texture": "GpuTexture",
+                        "offset": "int",
+                        "data": {
+                          "kind": "union",
+                          "of": [
+                            "bytes",
+                            "Borrow"
+                          ]
+                        }
+                      },
+                      "optional": [
+                        "buffer",
+                        "texture",
+                        "offset"
+                      ]
+                    }
+                  }
+                },
+                {
+                  "kind": "object",
+                  "fields": {
+                    "read": {
+                      "kind": "object",
+                      "fields": {
+                        "buffer": "GpuBuffer",
+                        "offset": "int",
+                        "length": "int"
+                      },
+                      "optional": [
+                        "offset",
+                        "length"
+                      ]
+                    }
+                  }
+                },
+                {
+                  "kind": "object",
+                  "fields": {
+                    "timestamp": {
+                      "kind": "object",
+                      "fields": {
+                        "querySet": "GpuQuerySet",
+                        "index": "int"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "description": "The commands, each a record with exactly one of write, compute, render, copy, clear, timestamp, read"
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "key": "string",
+              "emit": {
+                "kind": "object",
+                "fields": {
+                  "success": {
+                    "kind": "eventKey"
+                  },
+                  "failure": {
+                    "kind": "eventKey"
+                  },
+                  "cancelled": {
+                    "kind": "eventKey"
+                  }
+                },
+                "open": true
+              }
+            },
+            "open": true
+          },
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(gpu/submit @entity.device [{\"compute\":{\"pipeline\":\"@entity.pipeline\",\"bindGroups\":[\"@entity.bindGroup\"],\"dispatch\":[64,1,1]}}] {\"emit\":{\"success\":\"SUBMITTED\",\"failure\":\"GPU_FAILED\"}})"
+      ],
+      "docsSource": "generated"
+    },
+    "gpu/texture-create": {
+      "category": "std-gpu",
+      "minArity": 2,
+      "maxArity": 3,
+      "returnType": "void",
+      "description": "Create a texture of width by height texels (depth defaults to 1, mips to 1) in the given format (for example \"rgba8unorm\"); usage lists the texture usages (\"copy-src\", \"copy-dst\", \"texture-binding\", \"storage-binding\", \"render-attachment\"). Needs no grant beyond holding the handle (the grant was checked at gpu/device-open). Success payload: { texture } (a sealed GpuTexture handle). Failure kind: closed (the device or a handle is not live), invalid (a malformed descriptor, an unknown usage or format, a size beyond the granted maxBytes), unsupported (a host without a GPU), io (the device failed).",
+      "module": "gpu",
+      "visual": {
+        "form": "actuator"
+      },
+      "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "texture": "GpuTexture",
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
+      "grant": [],
+      "runsOn": "any",
+      "host": "os",
+      "params": [
+        {
+          "name": "device",
+          "type": "GpuDevice",
+          "description": "The open GPU device the object belongs to"
+        },
+        {
+          "name": "desc",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "width": "int",
+              "height": "int",
+              "depth": "int",
+              "format": {
+                "kind": "union",
+                "of": [
+                  {
+                    "kind": "literal",
+                    "value": "r8unorm"
+                  },
+                  {
+                    "kind": "literal",
+                    "value": "rg8unorm"
+                  },
+                  {
+                    "kind": "literal",
+                    "value": "rgba8unorm"
+                  },
+                  {
+                    "kind": "literal",
+                    "value": "rgba8unorm-srgb"
+                  },
+                  {
+                    "kind": "literal",
+                    "value": "bgra8unorm"
+                  },
+                  {
+                    "kind": "literal",
+                    "value": "bgra8unorm-srgb"
+                  },
+                  {
+                    "kind": "literal",
+                    "value": "r16float"
+                  },
+                  {
+                    "kind": "literal",
+                    "value": "rg16float"
+                  },
+                  {
+                    "kind": "literal",
+                    "value": "rgba16float"
+                  },
+                  {
+                    "kind": "literal",
+                    "value": "r32float"
+                  },
+                  {
+                    "kind": "literal",
+                    "value": "rg32float"
+                  },
+                  {
+                    "kind": "literal",
+                    "value": "rgba32float"
+                  },
+                  {
+                    "kind": "literal",
+                    "value": "r32uint"
+                  },
+                  {
+                    "kind": "literal",
+                    "value": "r32sint"
+                  },
+                  {
+                    "kind": "literal",
+                    "value": "rgba8uint"
+                  },
+                  {
+                    "kind": "literal",
+                    "value": "rgba8sint"
+                  },
+                  {
+                    "kind": "literal",
+                    "value": "rgba32uint"
+                  },
+                  {
+                    "kind": "literal",
+                    "value": "rgba32sint"
+                  },
+                  {
+                    "kind": "literal",
+                    "value": "depth32float"
+                  }
+                ]
+              },
+              "usage": {
+                "kind": "array",
+                "of": {
+                  "kind": "union",
+                  "of": [
+                    {
+                      "kind": "literal",
+                      "value": "copy-src"
+                    },
+                    {
+                      "kind": "literal",
+                      "value": "copy-dst"
+                    },
+                    {
+                      "kind": "literal",
+                      "value": "texture-binding"
+                    },
+                    {
+                      "kind": "literal",
+                      "value": "storage-binding"
+                    },
+                    {
+                      "kind": "literal",
+                      "value": "render-attachment"
+                    }
+                  ]
+                }
+              },
+              "mips": "int"
+            },
+            "optional": [
+              "depth",
+              "mips"
+            ]
+          },
+          "description": "Texture descriptor: { width, height, depth?, format, usage, mips? }"
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "key": "string",
+              "emit": {
+                "kind": "object",
+                "fields": {
+                  "success": {
+                    "kind": "eventKey"
+                  },
+                  "failure": {
+                    "kind": "eventKey"
+                  },
+                  "cancelled": {
+                    "kind": "eventKey"
+                  }
+                },
+                "open": true
+              }
+            },
+            "open": true
+          },
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(gpu/texture-create @entity.device {\"width\":256,\"height\":256,\"format\":\"rgba8unorm\",\"usage\":[\"render-target\",\"copy-src\"]} {\"emit\":{\"success\":\"TEXTURE_READY\",\"failure\":\"GPU_FAILED\"}})"
       ],
       "docsSource": "generated"
     },
@@ -27471,7 +28837,7 @@
               "open": true
             }
           },
-          "description": "The transitions to play: `{ orbital, trait, from, event, payload, entity?, config?, identity?, now?, settleMs? }` each"
+          "description": "The transitions to play: `{ orbital, trait, from, event, payload, entity?, config?, identity?, now?, settleMs?, credentials?, answers? }` each. `answers` (replay only) is a list of `{ operator, ok }` or `{ operator, error: { kind, message } }`, the host's plain answers to the os asks the request's cascade makes: an ask takes the first unused answer naming its operator and the kernel unwraps, mints and routes it as it does live (a deferring op's answer arrives as its completion once the dispatch ends); an answer no ask takes refuses the request"
         },
         {
           "name": "options",

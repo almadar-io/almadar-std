@@ -39,6 +39,7 @@ export const OPERATOR_CATEGORIES = [
   'std-kernel',
   'std-kernel-read',
   'std-ffi',
+  'std-gpu',
   'std-browser',
   'std-composition',
   'std-vec',
@@ -171,7 +172,9 @@ export type OsGrantNeed =
   /** A kernel grant: `call` needs the operator name argument (at `operator`) covered by an `apply:<pattern>` target; `reorder` the `queue` target; `read` the `introspect` target; `spawn` the `guest` target. */
   | { kind: 'kernel'; access: 'call' | 'reorder' | 'read' | 'spawn'; operator?: number }
   /** An ffi grant: the library (argument index) and symbol (argument index) must be a granted `ffi` pair. */
-  | { kind: 'ffi'; library: number; symbol: number };
+  | { kind: 'ffi'; library: number; symbol: number }
+  /** A gpu grant: the access kind the call needs on a granted `gpu` device; `commands` is the argument index of a command list whose literal entries derive the requirement. */
+  | { kind: 'gpu'; access: 'open' | 'compute' | 'render' | 'readback'; commands?: number };
 
 /** A family of effects only one kind of host holds: `on-device` = the browser's on-device model, `tab` = the browser's tabs. */
 export type EffectFamily = 'on-device' | 'tab';
@@ -258,6 +261,7 @@ export const STD_MODULES = [
   'mem',
   'kernel',
   'ffi',
+  'gpu',
   'browser',
   'composition',
   'vec',
@@ -319,6 +323,7 @@ export const STD_OPERATOR_CATEGORIES = [
   'std-kernel',
   'std-kernel-read',
   'std-ffi',
+  'std-gpu',
   'std-browser',
   'std-composition',
   'std-vec',

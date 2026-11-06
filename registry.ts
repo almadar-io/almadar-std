@@ -32,6 +32,7 @@ import { KV_OPERATORS } from './modules/kv.js';
 import { MEM_OPERATORS } from './modules/mem.js';
 import { KERNEL_OPERATORS } from './modules/kernel.js';
 import { FFI_OPERATORS } from './modules/ffi.js';
+import { GPU_OPERATORS } from './modules/gpu.js';
 import { BROWSER_OPERATORS } from './modules/browser.js';
 import { COMPOSITION_OPERATORS } from './modules/composition.js';
 import { VEC_OPERATORS } from './modules/vector.js';
@@ -80,6 +81,7 @@ export const STD_OPERATORS: Record<string, StdOperatorMeta> = {
   ...MEM_OPERATORS,
   ...KERNEL_OPERATORS,
   ...FFI_OPERATORS,
+  ...GPU_OPERATORS,
   ...BROWSER_OPERATORS,
   ...COMPOSITION_OPERATORS,
   ...VEC_OPERATORS,
@@ -142,6 +144,7 @@ export const STD_OPERATORS_BY_MODULE: Record<string, Record<string, StdOperatorM
   mem: MEM_OPERATORS,
   kernel: KERNEL_OPERATORS,
   ffi: FFI_OPERATORS,
+  gpu: GPU_OPERATORS,
   browser: BROWSER_OPERATORS,
   composition: COMPOSITION_OPERATORS,
   vec: VEC_OPERATORS,

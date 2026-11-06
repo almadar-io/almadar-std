@@ -188,7 +188,7 @@ export const PROGRAM_OPERATORS: Record<string, StdOperatorMeta> = {
     resultByOption: { option: 'report', results: { raw: RAW_STEP_REPORT } },
     params: [
       { name: 'program', type: { kind: 'sexpr' }, description: 'A quoted program' },
-      { name: 'requests', type: { kind: 'array', of: { kind: 'object', fields: { orbital: 'string', trait: 'string', from: 'string', event: 'string' }, open: true } }, description: 'The transitions to play: `{ orbital, trait, from, event, payload, entity?, config?, identity?, now?, settleMs? }` each' },
+      { name: 'requests', type: { kind: 'array', of: { kind: 'object', fields: { orbital: 'string', trait: 'string', from: 'string', event: 'string' }, open: true } }, description: 'The transitions to play: `{ orbital, trait, from, event, payload, entity?, config?, identity?, now?, settleMs?, credentials?, answers? }` each. `answers` (replay only) is a list of `{ operator, ok }` or `{ operator, error: { kind, message } }`, the host\'s plain answers to the os asks the request\'s cascade makes: an ask takes the first unused answer naming its operator and the kernel unwraps, mints and routes it as it does live (a deferring op\'s answer arrives as its completion once the dispatch ends); an answer no ask takes refuses the request' },
       {
         name: 'options',
         type: openShape({ key: STRING, render: BOOLEAN, renderProps: BOOLEAN, live: BOOLEAN, report: lit('raw'), emit: openShape({ success: EVENT_KEY, failure: EVENT_KEY, cancelled: EVENT_KEY }) }),
