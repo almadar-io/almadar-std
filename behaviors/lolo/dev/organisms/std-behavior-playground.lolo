@@ -20,6 +20,7 @@ type PlaygroundProgram = { name : string, orbitals : [orbital] }
 type PlaygroundTopic = { package : string!, topic : string!, count : number! }
 type PlaygroundPackageLabel = { package : string!, label : string! }
 type PlaygroundLeaf = { package : string!, topic : string!, behavior : string!, kind : string!, value : behavior! }
+type PlaygroundMove = { trait : string!, event : string!, from : string!, to : string!, fired : boolean! }
 type PlaygroundPaint = { slot : string!, trait : string!, embedded : boolean!, content : node! }
 type PlaygroundLeafIcon = { kind : string!, icon : string! }
 type PlaygroundKnob = { name : string!, type : string!, label : string, description : string }
@@ -129,9 +130,12 @@ orbital BehaviorPlayground {
   trait CatEmbedHttp = Catalog.traits.CatEmbedHttp {}
 
   trait PlaygroundOrbit = Live.traits.LiveMachineOrbit {
+    config {
+      expandDepth: 4
+    }
     listens {
       PlaygroundMachine.GUEST_ORBIT -> GUEST_ORBIT
-      GuestSession.GUEST_MOVED -> MOVES
+      PlaygroundMachine.GUEST_MOVES -> MOVES
       PlaygroundSource.GUEST_TREE -> GUEST_TREE
       PlaygroundSource.TREE_FAILED -> TREE_FAILED
       PlaygroundSource.SOURCE -> SOURCE
@@ -147,12 +151,6 @@ orbital BehaviorPlayground {
   }
 
   trait PlaygroundMachine -> PlaygroundView [client] {
-    config {
-      slot : string = "main"
-        @label "Guest slot"
-        @description "The slot whose page-root paint shows the guest page is on screen."
-    }
-
     initial: idle
 
     state idle {
@@ -162,11 +160,14 @@ orbital BehaviorPlayground {
         (set @entity.machineBehavior ?behavior)
         (set @entity.machineGuest "")
         (set @entity.machinePage "")
-      GUEST_PAINTS -> idle when (and (!= @entity.machineBehavior "") (array/some ?paints (fn p (and (= @p.slot @config.slot) (= @p.embedded false) (array/includes ?page @p.trait)))) (or (!= ?guest @entity.machineGuest) (!= (str/join ?page " ") @entity.machinePage)))
+      GUEST_PAINTS -> idle when (and (!= @entity.machineBehavior "") (or (!= ?guest @entity.machineGuest) (!= (str/join ?page " ") @entity.machinePage)))
         (set @entity.machineGuest ?guest)
         (set @entity.machinePage (str/join ?page " "))
         (emit GUEST_ORBIT { behavior: @entity.machineBehavior, guest: ?guest })
-      GUEST_PAINTS -> idle when (not (and (!= @entity.machineBehavior "") (array/some ?paints (fn p (and (= @p.slot @config.slot) (= @p.embedded false) (array/includes ?page @p.trait)))) (or (!= ?guest @entity.machineGuest) (!= (str/join ?page " ") @entity.machinePage))))
+      GUEST_MOVED -> idle when (and (!= @entity.machineGuest "") (= ?guest @entity.machineGuest))
+        (emit GUEST_MOVES { moves: ?moves })
+      GUEST_MOVED -> idle when (not (and (!= @entity.machineGuest "") (= ?guest @entity.machineGuest)))
+      GUEST_PAINTS -> idle when (not (and (!= @entity.machineBehavior "") (or (!= ?guest @entity.machineGuest) (!= (str/join ?page " ") @entity.machinePage))))
     }
 
     emits {
@@ -175,11 +176,16 @@ orbital BehaviorPlayground {
         guest : string!
       }
         @description "The guest session whose whole running page the dock draws, read again when the guest shows another page."
+      GUEST_MOVES -> external {
+        moves : [PlaygroundMove]!
+      }
+        @description "The transitions of the guest the dock draws; a closed or replaced guest's moves never reach it."
     }
 
     listens {
       PlaygroundLoader.BEHAVIOR_LOADED -> BEHAVIOR_LOADED
       GuestSession.GUEST_PAINTS -> GUEST_PAINTS
+      GuestSession.GUEST_MOVED -> GUEST_MOVED
       BEHAVIOR_LOADED {
         behavior : string!
       }
@@ -189,7 +195,12 @@ orbital BehaviorPlayground {
         page : [string]!
         paints : [PlaygroundPaint]!
       }
-        @description "The guest's paints and the traits of the page it shows; once a page-root paint of the configured slot is on screen the dock draws that guest's whole page, and a new guest or page (the guest navigated) redraws it."
+        @description "The guest's paints and the traits of the page it shows; once a behavior is loaded a new guest or page (the guest navigated) draws that guest's whole page, whether or not it painted anything."
+      GUEST_MOVED {
+        guest : string!
+        moves : [PlaygroundMove]!
+      }
+        @description "The transitions a guest took; only the drawn guest's reach the dock."
     }
   }
   trait PlaygroundTopics -> PlaygroundView [client] {
