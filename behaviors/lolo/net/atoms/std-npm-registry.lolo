@@ -206,10 +206,10 @@ orbital NpmRegistryOrbital {
         (emit NPM_FAILED { name: @entity.name, code: "auth", status: @payload.status, error: (str/concat "the registry refused the token (" @payload.status ") for the tarball of " @entity.name (quote "@") @entity.version) })
       NPM_WAIT_TARBALL_REPLIED -> waiting when (not (or (= @payload.status 200) (= @payload.status 206) (= @payload.status 401) (= @payload.status 403)))
         (emit NPM_WAIT_RETRY_FAILED { key: (as (str/concat "npm-wait:" (+ @entity.seq 1)) CallKey), error: (str/concat "version listed but its tarball is not downloadable yet (" @payload.status ")") })
-      NPM_WAIT_UNREACHABLE -> idle when (= @payload.kind "denied")
+      NPM_WAIT_UNREACHABLE -> idle when (array/includes ["denied", "unsupported"] @payload.kind)
         (emit NPM_WAIT_RETRY_CANCEL { })
         (emit NPM_FAILED { name: @entity.name, code: "unconfigured", status: 0, error: @payload.error })
-      NPM_WAIT_UNREACHABLE -> waiting when (!= @payload.kind "denied")
+      NPM_WAIT_UNREACHABLE -> waiting when (not (array/includes ["denied", "unsupported"] @payload.kind))
         (emit NPM_WAIT_RETRY_FAILED { key: (as (str/concat "npm-wait:" (+ @entity.seq 1)) CallKey), error: @payload.error })
 
       NPM_WAIT_DONE -> idle

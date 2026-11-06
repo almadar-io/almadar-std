@@ -96,7 +96,7 @@ orbital HttpFetchOrbital {
       HF_REPLIED -> ready
         (emit HTTP_REPLIED { key: @payload.key, status: @payload.status, headers: (default (object/fromEntries (array/map @payload.headers (fn h [(str/lower @h.name), (str/join (array/map (array/filter @payload.headers (fn g (= (str/lower @g.name) (str/lower @h.name)))) (fn g @g.value)) ", ")]))) {}), body: @payload.body })
       HF_FAILED -> ready
-        (emit HTTP_FAILED { key: @payload.key, error: @payload.error, kind: (if (or (= @payload.kind "denied") (= @payload.kind "timeout")) @payload.kind "io") })
+        (emit HTTP_FAILED { key: @payload.key, error: @payload.error, kind: (if (array/includes ["denied", "unsupported", "timeout"] @payload.kind) @payload.kind "io") })
       HF_CLOSED -> ready
     }
 
@@ -107,7 +107,7 @@ orbital HttpFetchOrbital {
       HF_REPLIED -> opening
         (emit HTTP_REPLIED { key: @payload.key, status: @payload.status, headers: (default (object/fromEntries (array/map @payload.headers (fn h [(str/lower @h.name), (str/join (array/map (array/filter @payload.headers (fn g (= (str/lower @g.name) (str/lower @h.name)))) (fn g @g.value)) ", ")]))) {}), body: @payload.body })
       HF_FAILED -> opening
-        (emit HTTP_FAILED { key: @payload.key, error: @payload.error, kind: (if (or (= @payload.kind "denied") (= @payload.kind "timeout")) @payload.kind "io") })
+        (emit HTTP_FAILED { key: @payload.key, error: @payload.error, kind: (if (array/includes ["denied", "unsupported", "timeout"] @payload.kind) @payload.kind "io") })
       HF_CLOSED -> opening
       HF_HEAD -> ready when (== @payload.handle null)
         (emit HTTP_FAILED { key: @entity.key, error: "the host answered a streamed fetch with no handle", kind: "io" })
@@ -117,7 +117,7 @@ orbital HttpFetchOrbital {
         (set @entity.headers (array/map @payload.headers (fn h { name: (str/lower @h.name), value: @h.value })))
         (os/recv @payload.handle @config.recvBytes { key: "read" emit: { success: HF_READ, failure: HF_IO_FAILED } })
       HF_HEAD_FAILED -> ready
-        (emit HTTP_FAILED { key: @entity.key, error: @payload.error, kind: (if (or (= @payload.kind "denied") (= @payload.kind "timeout")) @payload.kind "io") })
+        (emit HTTP_FAILED { key: @entity.key, error: @payload.error, kind: (if (array/includes ["denied", "unsupported", "timeout"] @payload.kind) @payload.kind "io") })
     }
 
     state streaming {
@@ -127,12 +127,12 @@ orbital HttpFetchOrbital {
       HF_REPLIED -> streaming
         (emit HTTP_REPLIED { key: @payload.key, status: @payload.status, headers: (default (object/fromEntries (array/map @payload.headers (fn h [(str/lower @h.name), (str/join (array/map (array/filter @payload.headers (fn g (= (str/lower @g.name) (str/lower @h.name)))) (fn g @g.value)) ", ")]))) {}), body: @payload.body })
       HF_FAILED -> streaming
-        (emit HTTP_FAILED { key: @payload.key, error: @payload.error, kind: (if (or (= @payload.kind "denied") (= @payload.kind "timeout")) @payload.kind "io") })
+        (emit HTTP_FAILED { key: @payload.key, error: @payload.error, kind: (if (array/includes ["denied", "unsupported", "timeout"] @payload.kind) @payload.kind "io") })
       HF_CLOSED -> streaming
       HF_IO_FAILED -> ready
         (os/close @entity.handle { key: "close" emit: { success: HF_CLOSED, failure: HF_CLOSED } })
         (set @entity.handle -1)
-        (emit HTTP_FAILED { key: @entity.key, error: @payload.error, kind: (if (or (= @payload.kind "denied") (= @payload.kind "timeout")) @payload.kind "io") })
+        (emit HTTP_FAILED { key: @entity.key, error: @payload.error, kind: (if (array/includes ["denied", "unsupported", "timeout"] @payload.kind) @payload.kind "io") })
 
       HF_READ -> streaming
         (set @entity.dec (bytes/concat [@entity.dec, @payload.data]))
@@ -190,7 +190,7 @@ orbital HttpFetchOrbital {
         error : string!
         kind : string!
       }
-        @description "The call produced no response: kind refused (nothing sent), denied, timeout, encoding (a stream frame is not UTF-8) or io."
+        @description "The call produced no response: kind refused (nothing sent), denied, unsupported (the host cannot fetch), timeout, encoding (a stream frame is not UTF-8) or io."
         @tier "primary"
       HF_HEAD {
         key : string
