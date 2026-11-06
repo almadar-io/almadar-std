@@ -1,0 +1,70 @@
+{
+  "atom": "../spec/ui/core/fixtures/modal-required-id.lolo",
+  "trait": "BudgetCreate",
+  "cases": [
+    {
+      "id": "create-open-without-an-id-opens-the-form",
+      "note": "an 'Add' button fires CREATE with no id; on a host entity whose id is required the modal writes no missing id (the write once failed and stopped the form), and goes on to paint the form",
+      "steps": [
+        {
+          "trait": "BudgetCreate",
+          "from": "closed",
+          "event": "CREATE",
+          "entity": {
+            "id": "e"
+          },
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "open",
+            "entity": {
+              "id": "e"
+            },
+            "effects": [
+              {
+                "type": "when",
+                "status": "skipped"
+              },
+              {
+                "type": "render-ui"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-open-with-an-id-sets-it",
+      "note": "control: an OPEN that names a record id still sets it",
+      "steps": [
+        {
+          "trait": "BudgetCreate",
+          "from": "closed",
+          "event": "CREATE",
+          "entity": {
+            "id": "e"
+          },
+          "payload": {
+            "id": "r1"
+          },
+          "expect": {
+            "fired": true,
+            "state": "open",
+            "entity": {
+              "id": "r1"
+            },
+            "effects": [
+              {
+                "type": "when",
+                "status": "executed"
+              },
+              {
+                "type": "render-ui"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
