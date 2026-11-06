@@ -43,6 +43,7 @@ const CATEGORY_META: Record<string, { description: string; target: string[] }> =
     'std-mem-read': { description: 'Pure reads of borrowed kernel memory (EXEC-METAL-3)', target: ['rust'] },
     'std-kernel': { description: 'Kernel-owned queue reordering (EXEC-METAL-5)', target: ['ts'] },
     'std-ffi': { description: 'Granted native foreign-function calls (EXEC-METAL-2)', target: ['ts'] },
+    'std-gpu': { description: 'Granted GPU device, resource, submit and readback asks (host-answered)', target: ['ts'] },
     'std-kernel-read': { description: 'Pure kernel introspection and granted operator application (EXEC-METAL)', target: ['rust'] },
     'std-kv': { description: 'Key-value row stores; the host picks the medium', target: ['ts'] },
     'std-browser': { description: 'Browser device APIs (file picker, clipboard, geolocation) — client host effects', target: ['ts'] },

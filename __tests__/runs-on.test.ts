@@ -23,6 +23,7 @@ const MEM_EFFECTS = ['mem/alloc', 'mem/arena-drop', 'mem/arena-new', 'mem/atomic
 const KERNEL_EFFECTS = ['kernel/queue-back', 'kernel/queue-front'];
 const KERNEL_PURE = ['kernel/apply', 'kernel/frame', 'kernel/stamp', 'kernel/worklist'];
 const FFI_EFFECTS = ['ffi/call'];
+const GPU_EFFECTS = ['gpu/bind-group-create', 'gpu/buffer-create', 'gpu/device-close', 'gpu/device-open', 'gpu/pipeline-create', 'gpu/query-create', 'gpu/read', 'gpu/release', 'gpu/sampler-create', 'gpu/shader-create', 'gpu/submit', 'gpu/texture-create', 'gpu/write'];
 const MEM_PURE = ['mem/length', 'mem/read', 'mem/read-int', 'mem/read-uint'];
 
 const effects = Object.entries(STD_OPERATORS).filter(([, m]) => m.hasSideEffects);
@@ -39,7 +40,7 @@ describe('runsOn', () => {
     expect(getOperatorsRunningOn('server')).toEqual([
       'access-check', 'behavior/catalog', 'behavior/dependencies', 'behavior/describe', 'behavior/packages', 'behavior/resolve', 'behavior/source', 'call-service', 'cancel-call', 'credential-connect', 'credential-forget', 'credential-list', 'credential-mode', 'credential-remove', 'credential-rotate', 'credential-set', 'credential-status', 'credential-test', 'fetch', 'fetch-stream', 'ffi/call', 'identity/sign-in', 'identity/sign-out',
       'oauth-authorize', 'oauth-connection-forget', 'oauth-connection-status', ...OS_EFFECTS,
-      'persist', 'persist/read-named', 'program/close', 'program/compose', 'program/dispatch', 'program/eval', 'program/inputs', 'program/live', 'program/open', 'program/os-grants', 'program/print', 'program/prove', 'program/read', 'program/resolve-rows', 'program/self', 'program/step', 'program/tick', 'program/validate', 'random-bytes',
+      'persist', 'persist/read-named', 'program/close', 'program/compose', 'program/dispatch', 'program/eval', 'program/inputs', 'program/live', 'program/navigate', 'program/open', 'program/os-grants', 'program/print', 'program/prove', 'program/read', 'program/resolve-rows', 'program/self', 'program/step', 'program/tick', 'program/validate', 'random-bytes',
     ].sort());
   });
 
@@ -144,6 +145,24 @@ describe('runsOn', () => {
       expect(STD_OPERATORS[name].module, name).toBe('ffi');
       expect(STD_OPERATORS[name].category, name).toBe('std-ffi');
       expect(STD_OPERATORS[name].grant, name).toEqual([{ kind: 'ffi', library: 0, symbol: 1 }]);
+    }
+  });
+
+  it('the gpu family is a host-answered os effect that runs on any side, with the gpu grant on open, read and submit', () => {
+    const declared = Object.keys(STD_OPERATORS).filter((k) => k.startsWith('gpu/')).sort();
+    expect(declared).toEqual(GPU_EFFECTS);
+    for (const name of GPU_EFFECTS) {
+      expect(STD_OPERATORS[name].hasSideEffects, name).toBe(true);
+      expect(STD_OPERATORS[name].runsOn, name).toBe('any');
+      expect(STD_OPERATORS[name].host, name).toBe('os');
+      expect(STD_OPERATORS[name].module, name).toBe('gpu');
+      expect(STD_OPERATORS[name].category, name).toBe('std-gpu');
+    }
+    expect(STD_OPERATORS['gpu/device-open'].grant).toEqual([{ kind: 'gpu', access: 'open' }]);
+    expect(STD_OPERATORS['gpu/read'].grant).toEqual([{ kind: 'gpu', access: 'readback' }]);
+    expect(STD_OPERATORS['gpu/submit'].grant).toEqual([{ kind: 'gpu', access: 'compute', commands: 1 }]);
+    for (const name of GPU_EFFECTS.filter((n) => !['gpu/device-open', 'gpu/read', 'gpu/submit'].includes(n))) {
+      expect(STD_OPERATORS[name].grant, name).toEqual([]);
     }
   });
 

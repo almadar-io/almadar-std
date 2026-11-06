@@ -1,0 +1,495 @@
+{
+  "atom": "gpu/atoms/std-gpu-compute.lolo",
+  "trait": "GpuCompute",
+  "cases": [
+    {
+      "id": "open asks the host for a device",
+      "steps": [
+        {
+          "from": "idle",
+          "event": "GPU_OPEN",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "opening",
+            "effects": [
+              {
+                "type": "gpu/device-open"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a denied open lands in failed with the kind",
+      "steps": [
+        {
+          "from": "opening",
+          "event": "GPU_FAILED",
+          "payload": {
+            "error": "no open grant",
+            "kind": "denied"
+          },
+          "expect": {
+            "fired": true,
+            "state": "failed",
+            "emits": [
+              {
+                "event": "GPU_ERROR",
+                "payload": {
+                  "error": "no open grant",
+                  "kind": "denied"
+                }
+              }
+            ]
+          },
+          "entity": {
+            "id": "g"
+          }
+        }
+      ]
+    },
+    {
+      "id": "run before open reports closed",
+      "steps": [
+        {
+          "from": "idle",
+          "event": "GPU_RUN",
+          "payload": {
+            "a": "AAAAAAAAgD8=",
+            "b": "AAAAAAAAgD8="
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "GPU_ERROR",
+                "payload": {
+                  "error": "the device is not open",
+                  "kind": "closed"
+                }
+              }
+            ]
+          },
+          "entity": {
+            "id": "g"
+          }
+        }
+      ]
+    },
+    {
+      "id": "run creates the first input buffer",
+      "steps": [
+        {
+          "from": "ready",
+          "event": "GPU_RUN",
+          "payload": {
+            "a": "AAAAAAAAgD8=",
+            "b": "AAAAAAAAgD8="
+          },
+          "expect": {
+            "fired": true,
+            "state": "creatingA",
+            "effects": [
+              {
+                "type": "gpu/buffer-create"
+              }
+            ]
+          },
+          "entity": {
+            "id": "g",
+            "device": {
+              "id": 1,
+              "maxBytes": 16777216
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "a full job runs on handles the kernel mints from the host's plain answers",
+      "steps": [
+        {
+          "from": "idle",
+          "event": "GPU_OPEN",
+          "payload": {},
+          "answers": [
+            {
+              "operator": "gpu/device-open",
+              "ok": {
+                "device": 1,
+                "features": [],
+                "limits": {}
+              }
+            }
+          ],
+          "expect": {
+            "fired": true,
+            "state": "opening",
+            "emits": [
+              {
+                "event": "GPU_OPENED",
+                "payload": {}
+              }
+            ],
+            "neverEmits": [
+              "GPU_ERROR"
+            ]
+          }
+        },
+        {
+          "event": "GPU_RUN",
+          "payload": {
+            "a": "AACAPwAAAEA=",
+            "b": "AABAQAAAgEA="
+          },
+          "answers": [
+            {
+              "operator": "gpu/buffer-create",
+              "ok": {
+                "buffer": 2
+              }
+            },
+            {
+              "operator": "gpu/buffer-create",
+              "ok": {
+                "buffer": 3
+              }
+            },
+            {
+              "operator": "gpu/buffer-create",
+              "ok": {
+                "buffer": 4
+              }
+            },
+            {
+              "operator": "gpu/write",
+              "ok": {}
+            },
+            {
+              "operator": "gpu/write",
+              "ok": {}
+            },
+            {
+              "operator": "gpu/shader-create",
+              "ok": {
+                "shader": 5
+              }
+            },
+            {
+              "operator": "gpu/pipeline-create",
+              "ok": {
+                "pipeline": 6
+              }
+            },
+            {
+              "operator": "gpu/bind-group-create",
+              "ok": {
+                "bindGroup": 7
+              }
+            },
+            {
+              "operator": "gpu/submit",
+              "ok": {}
+            },
+            {
+              "operator": "gpu/read",
+              "ok": {
+                "data": "AACAQAAAwEA="
+              }
+            }
+          ],
+          "expect": {
+            "fired": true,
+            "state": "creatingA",
+            "emits": [
+              {
+                "event": "GPU_RESULT",
+                "payload": {
+                  "data": "AACAQAAAwEA="
+                }
+              }
+            ],
+            "neverEmits": [
+              "GPU_ERROR"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "the second write builds the shader",
+      "steps": [
+        {
+          "from": "writingB",
+          "event": "GPU_WRITTEN",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "shading",
+            "effects": [
+              {
+                "type": "gpu/shader-create"
+              }
+            ]
+          },
+          "entity": {
+            "id": "g",
+            "device": {
+              "id": 1,
+              "maxBytes": 16777216
+            },
+            "bufA": {
+              "id": 1,
+              "device": 1,
+              "size": 16
+            },
+            "bufB": {
+              "id": 2,
+              "device": 1,
+              "size": 16
+            },
+            "bufOut": {
+              "id": 3,
+              "device": 1,
+              "size": 16
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "an invalid shader lands in failed",
+      "steps": [
+        {
+          "from": "shading",
+          "event": "GPU_FAILED",
+          "payload": {
+            "error": "wgsl: unexpected token",
+            "kind": "invalid"
+          },
+          "expect": {
+            "fired": true,
+            "state": "failed",
+            "emits": [
+              {
+                "event": "GPU_ERROR",
+                "payload": {
+                  "error": "wgsl: unexpected token",
+                  "kind": "invalid"
+                }
+              }
+            ]
+          },
+          "entity": {
+            "id": "g",
+            "device": {
+              "id": 1,
+              "maxBytes": 16777216
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "the submit answer reads the output back",
+      "steps": [
+        {
+          "from": "submitting",
+          "event": "GPU_SUBMITTED",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "reading",
+            "effects": [
+              {
+                "type": "gpu/read"
+              }
+            ]
+          },
+          "entity": {
+            "id": "g",
+            "device": {
+              "id": 1,
+              "maxBytes": 16777216
+            },
+            "bufOut": {
+              "id": 3,
+              "device": 1,
+              "size": 16
+            },
+            "size": 8
+          }
+        }
+      ]
+    },
+    {
+      "id": "the read answer emits the result",
+      "steps": [
+        {
+          "from": "reading",
+          "event": "GPU_READ",
+          "payload": {
+            "data": "AAAAAAAAgD8="
+          },
+          "expect": {
+            "fired": true,
+            "state": "done",
+            "emits": [
+              {
+                "event": "GPU_RESULT",
+                "payload": {
+                  "data": "AAAAAAAAgD8="
+                }
+              }
+            ]
+          },
+          "entity": {
+            "id": "g",
+            "device": {
+              "id": 1,
+              "maxBytes": 16777216
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "close starts releasing",
+      "steps": [
+        {
+          "from": "ready",
+          "event": "GPU_CLOSE",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "releasing"
+          },
+          "entity": {
+            "id": "g",
+            "device": {
+              "id": 1,
+              "maxBytes": 16777216
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "releasing frees the bind group first",
+      "steps": [
+        {
+          "from": "releasing",
+          "event": "GPU_RELEASE_NEXT",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "releasing",
+            "effects": [
+              {
+                "type": "gpu/release"
+              }
+            ]
+          },
+          "entity": {
+            "id": "g",
+            "device": {
+              "id": 1,
+              "maxBytes": 16777216
+            },
+            "bufA": {
+              "id": 1,
+              "device": 1,
+              "size": 16
+            },
+            "bindGroup": {
+              "id": 6,
+              "device": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "with every object released the device closes",
+      "steps": [
+        {
+          "from": "releasing",
+          "event": "GPU_RELEASE_NEXT",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "closing",
+            "effects": [
+              {
+                "type": "gpu/device-close"
+              }
+            ]
+          },
+          "entity": {
+            "id": "g",
+            "device": {
+              "id": 1,
+              "maxBytes": 16777216
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "the device close answer returns to idle",
+      "steps": [
+        {
+          "from": "closing",
+          "event": "GPU_DEVICE_CLOSED",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "GPU_CLOSED",
+                "payload": {}
+              }
+            ]
+          },
+          "entity": {
+            "id": "g",
+            "device": {
+              "id": 1,
+              "maxBytes": 16777216
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "a failed job can be closed",
+      "steps": [
+        {
+          "from": "failed",
+          "event": "GPU_CLOSE",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "releasing"
+          },
+          "entity": {
+            "id": "g",
+            "device": {
+              "id": 1,
+              "maxBytes": 16777216
+            },
+            "bufA": {
+              "id": 1,
+              "device": 1,
+              "size": 16
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -24,6 +24,102 @@
       ]
     },
     {
+      "id": "a whole buffer lifecycle runs on handles the kernel mints",
+      "steps": [
+        {
+          "from": "idle",
+          "event": "BUFFER_OPEN",
+          "payload": {
+            "capacity": 8
+          },
+          "expect": {
+            "fired": true,
+            "state": "opening",
+            "emits": [
+              {
+                "event": "BUFFER_ARENA"
+              },
+              {
+                "event": "BUFFER_BLOCK"
+              },
+              {
+                "event": "BUFFER_OPENED"
+              }
+            ],
+            "neverEmits": [
+              "BUFFER_ERROR"
+            ]
+          }
+        },
+        {
+          "event": "BUFFER_WRITE",
+          "payload": {
+            "offset": 0,
+            "data": "aGk="
+          },
+          "expect": {
+            "fired": true,
+            "state": "writeBorrowing",
+            "emits": [
+              {
+                "event": "BUFFER_WRITTEN"
+              },
+              {
+                "event": "BUFFER_RELEASED"
+              }
+            ],
+            "neverEmits": [
+              "BUFFER_ERROR"
+            ]
+          }
+        },
+        {
+          "event": "BUFFER_READ",
+          "payload": {
+            "offset": 0,
+            "length": 2
+          },
+          "expect": {
+            "fired": true,
+            "state": "readBorrowing",
+            "emits": [
+              {
+                "event": "BUFFER_DATA",
+                "payload": {
+                  "data": "aGk="
+                }
+              }
+            ],
+            "neverEmits": [
+              "BUFFER_ERROR"
+            ]
+          }
+        },
+        {
+          "event": "BUFFER_CLOSE",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "freeing",
+            "emits": [
+              {
+                "event": "BUFFER_FREED"
+              },
+              {
+                "event": "BUFFER_DROPPED"
+              },
+              {
+                "event": "BUFFER_CLOSED"
+              }
+            ],
+            "neverEmits": [
+              "BUFFER_ERROR"
+            ]
+          }
+        }
+      ]
+    },
+    {
       "id": "a write borrows the block exclusively",
       "steps": [
         {
