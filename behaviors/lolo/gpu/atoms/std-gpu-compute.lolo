@@ -1,7 +1,7 @@
 app std-gpu-compute [
   version: "1.0.0",
   gpu: { "device:16777216": [open, compute, readback] },
-  description: "One compute job on a GPU device, owning the whole device lifecycle. GPU_OPEN opens the device; GPU_RUN creates three storage buffers sized to input a, builds the shader, pipeline and bind group from config, then submits one job that writes a and b, runs the compute dispatch and reads the output buffer back, and emits GPU_RESULT with the bytes; GPU_CLOSE releases every handle and closes the device. Every failure lands in failed carrying the kernel's error and kind and emits GPU_ERROR; GPU_CLOSE from failed releases what exists. The WGSL, entry point, workgroup counts and buffer usages are config; the default program adds two f32 vectors. The grant caps the device at 16 MiB; a call site that needs more grants its own cap."
+  description: "One compute job on a GPU device, owning the whole device lifecycle. GPU_OPEN opens the device; GPU_RUN creates three storage buffers sized to input a, builds the shader, pipeline and bind group from config, then submits one job that writes a and b, runs the compute dispatch and reads the output buffer back, and emits GPU_RESULT with the bytes. After that job GPU_STEP runs again on the buffers in place: one job that, for each params blob in order, writes it at the start of input b and runs the dispatch, then reads the output buffer back and emits GPU_RESULT, so a simulation keeps its state on the device between steps and a multi-pass step selects its pass from b; GPU_CLOSE releases every handle and closes the device. Every failure lands in failed carrying the kernel's error and kind and emits GPU_ERROR; GPU_CLOSE from failed releases what exists. The WGSL, entry point, workgroup counts and buffer usages are config; the default program adds two f32 vectors. Every gpu call is keyed, so a host that answers it later (a browser client) can bring its outcome back. The grant caps the device at 16 MiB; a call site that needs more grants its own cap."
 ]
 
 orbital GpuComputeOrbital {
@@ -27,8 +27,10 @@ orbital GpuComputeOrbital {
 
     state idle {
       GPU_OPEN -> opening
-        (gpu/device-open { powerPreference: @config.powerPreference } { emit: { success: GPU_DEVICE, failure: GPU_FAILED } })
+        (gpu/device-open { powerPreference: @config.powerPreference } { key: "gpu-open", emit: { success: GPU_DEVICE, failure: GPU_FAILED } })
       GPU_RUN -> idle
+        (emit GPU_ERROR { error: "the device is not open", kind: "closed" })
+      GPU_STEP -> idle
         (emit GPU_ERROR { error: "the device is not open", kind: "closed" })
       GPU_CLOSE -> idle
     }
@@ -47,11 +49,13 @@ orbital GpuComputeOrbital {
     state ready {
       GPU_OPEN -> ready
         (emit GPU_ERROR { error: "the device is already open", kind: "invalid" })
+      GPU_STEP -> ready
+        (emit GPU_ERROR { error: "run the job before stepping it", kind: "invalid" })
       GPU_RUN -> creatingA when (not (= @entity.device null))
         (set @entity.inputA @payload.a)
         (set @entity.inputB @payload.b)
         (set @entity.size (bytes/length @payload.a))
-        (gpu/buffer-create @entity.device { size: (bytes/length @payload.a), usage: @config.inputUsage } { emit: { success: GPU_BUFFER, failure: GPU_FAILED } })
+        (gpu/buffer-create @entity.device { size: (bytes/length @payload.a), usage: @config.inputUsage } { key: "gpu-buffer", emit: { success: GPU_BUFFER, failure: GPU_FAILED } })
       GPU_RUN -> failed when (= @entity.device null)
         (emit GPU_ERROR { error: "the device holds no handle", kind: "closed" })
       GPU_CLOSE -> releasing
@@ -62,7 +66,7 @@ orbital GpuComputeOrbital {
       INIT -> creatingA
       GPU_BUFFER -> creatingB when (not (= @entity.device null))
         (set @entity.bufA @payload.buffer)
-        (gpu/buffer-create @entity.device { size: @entity.size, usage: @config.inputUsage } { emit: { success: GPU_BUFFER, failure: GPU_FAILED } })
+        (gpu/buffer-create @entity.device { size: @entity.size, usage: @config.inputUsage } { key: "gpu-buffer", emit: { success: GPU_BUFFER, failure: GPU_FAILED } })
       GPU_BUFFER -> failed when (not (not (= @entity.device null)))
         (set @entity.errorText "the job holds no device")
         (set @entity.errorKind "closed")
@@ -77,7 +81,7 @@ orbital GpuComputeOrbital {
       INIT -> creatingB
       GPU_BUFFER -> creatingOut when (not (= @entity.device null))
         (set @entity.bufB @payload.buffer)
-        (gpu/buffer-create @entity.device { size: @entity.size, usage: @config.outputUsage } { emit: { success: GPU_BUFFER, failure: GPU_FAILED } })
+        (gpu/buffer-create @entity.device { size: @entity.size, usage: @config.outputUsage } { key: "gpu-buffer", emit: { success: GPU_BUFFER, failure: GPU_FAILED } })
       GPU_BUFFER -> failed when (not (not (= @entity.device null)))
         (set @entity.errorText "the job holds no device")
         (set @entity.errorKind "closed")
@@ -92,7 +96,7 @@ orbital GpuComputeOrbital {
       INIT -> creatingOut
       GPU_BUFFER -> shading when (not (= @entity.device null))
         (set @entity.bufOut @payload.buffer)
-        (gpu/shader-create @entity.device @config.wgsl { emit: { success: GPU_SHADER, failure: GPU_FAILED } })
+        (gpu/shader-create @entity.device @config.wgsl { key: "gpu-shader", emit: { success: GPU_SHADER, failure: GPU_FAILED } })
       GPU_BUFFER -> failed when (not (not (= @entity.device null)))
         (set @entity.errorText "the job holds no device")
         (set @entity.errorKind "closed")
@@ -107,7 +111,7 @@ orbital GpuComputeOrbital {
       INIT -> shading
       GPU_SHADER -> pipelining when (not (= @entity.device null))
         (set @entity.shader @payload.shader)
-        (gpu/pipeline-create @entity.device { kind: "compute", shader: @payload.shader, entry: @config.entry } { emit: { success: GPU_PIPELINE, failure: GPU_FAILED } })
+        (gpu/pipeline-create @entity.device { kind: "compute", shader: @payload.shader, entry: @config.entry } { key: "gpu-pipeline", emit: { success: GPU_PIPELINE, failure: GPU_FAILED } })
       GPU_SHADER -> failed when (not (not (= @entity.device null)))
         (set @entity.errorText "the job holds no device")
         (set @entity.errorKind "closed")
@@ -122,7 +126,7 @@ orbital GpuComputeOrbital {
       INIT -> pipelining
       GPU_PIPELINE -> binding when (and (not (= @entity.bufA null)) (not (= @entity.bufB null)) (not (= @entity.bufOut null)))
         (set @entity.pipeline @payload.pipeline)
-        (gpu/bind-group-create @payload.pipeline 0 [{ binding: 0, buffer: @entity.bufA }, { binding: 1, buffer: @entity.bufB }, { binding: 2, buffer: @entity.bufOut }] { emit: { success: GPU_BINDGROUP, failure: GPU_FAILED } })
+        (gpu/bind-group-create @payload.pipeline 0 [{ binding: 0, buffer: @entity.bufA }, { binding: 1, buffer: @entity.bufB }, { binding: 2, buffer: @entity.bufOut }] { key: "gpu-bind", emit: { success: GPU_BINDGROUP, failure: GPU_FAILED } })
       GPU_PIPELINE -> failed when (not (and (not (= @entity.bufA null)) (not (= @entity.bufB null)) (not (= @entity.bufOut null))))
         (set @entity.errorText "the job holds no buffers")
         (set @entity.errorKind "closed")
@@ -137,7 +141,7 @@ orbital GpuComputeOrbital {
       INIT -> binding
       GPU_BINDGROUP -> submitting when (and (not (= @entity.device null)) (not (= @entity.pipeline null)) (not (= @entity.bufA null)) (not (= @entity.bufB null)) (not (= @entity.bufOut null)))
         (set @entity.bindGroup @payload.bindGroup)
-        (gpu/submit @entity.device [{ write: { buffer: @entity.bufA, data: @entity.inputA } }, { write: { buffer: @entity.bufB, data: @entity.inputB } }, { compute: { pipeline: @entity.pipeline, bindGroups: [@payload.bindGroup], dispatch: @config.workgroups } }, { read: { buffer: @entity.bufOut } }] { emit: { success: GPU_SUBMITTED, failure: GPU_FAILED } })
+        (gpu/submit @entity.device [{ write: { buffer: @entity.bufA, data: @entity.inputA } }, { write: { buffer: @entity.bufB, data: @entity.inputB } }, { compute: { pipeline: @entity.pipeline, bindGroups: [@payload.bindGroup], dispatch: @config.workgroups } }, { read: { buffer: @entity.bufOut } }] { key: "gpu-submit", emit: { success: GPU_SUBMITTED, failure: GPU_FAILED } })
       GPU_BINDGROUP -> failed when (not (and (not (= @entity.device null)) (not (= @entity.pipeline null)) (not (= @entity.bufA null)) (not (= @entity.bufB null)) (not (= @entity.bufOut null))))
         (set @entity.errorText "the job holds no device, pipeline or buffers")
         (set @entity.errorKind "closed")
@@ -161,12 +165,32 @@ orbital GpuComputeOrbital {
     state done {
       GPU_RUN -> done
         (emit GPU_ERROR { error: "close the job before running another", kind: "invalid" })
+      GPU_STEP -> stepping when (and (not (= @entity.device null)) (not (= @entity.pipeline null)) (not (= @entity.bindGroup null)) (not (= @entity.bufB null)) (not (= @entity.bufOut null)))
+        (gpu/submit @entity.device (array/concat (array/flatten (array/map @payload.params (fn p [{ write: { buffer: @entity.bufB, data: @p } }, { compute: { pipeline: @entity.pipeline, bindGroups: [@entity.bindGroup], dispatch: @config.workgroups } }]))) [{ read: { buffer: @entity.bufOut } }]) { key: "gpu-submit", emit: { success: GPU_SUBMITTED, failure: GPU_FAILED } })
+      GPU_STEP -> failed when (not (and (not (= @entity.device null)) (not (= @entity.pipeline null)) (not (= @entity.bindGroup null)) (not (= @entity.bufB null)) (not (= @entity.bufOut null))))
+        (set @entity.errorText "the job holds no device, pipeline, bind group or buffers")
+        (set @entity.errorKind "closed")
+        (emit GPU_ERROR { error: "the job holds no device, pipeline, bind group or buffers", kind: "closed" })
       GPU_CLOSE -> releasing
         (emit GPU_RELEASE_NEXT {})
     }
 
+    state stepping {
+      INIT -> stepping
+      GPU_STEP -> stepping
+        (emit GPU_ERROR { error: "a step is already running", kind: "invalid" })
+      GPU_SUBMITTED -> done
+        (let ((out (array/first @payload.reads))) (if (= @out null) (do (set @entity.errorText "the step's read answered no bytes") (set @entity.errorKind "io") (emit GPU_ERROR { error: "the step's read answered no bytes", kind: "io" })) (do (set @entity.resultBytes (bytes/length @out)) (emit GPU_RESULT { data: @out }))))
+      GPU_FAILED -> failed
+        (set @entity.errorText @payload.error)
+        (set @entity.errorKind @payload.kind)
+        (emit GPU_ERROR { error: @payload.error, kind: @payload.kind })
+    }
+
     state failed {
       GPU_RUN -> failed
+        (emit GPU_ERROR { error: "the job failed; close it", kind: "invalid" })
+      GPU_STEP -> failed
         (emit GPU_ERROR { error: "the job failed; close it", kind: "invalid" })
       GPU_CLOSE -> releasing
         (emit GPU_RELEASE_NEXT {})
@@ -175,25 +199,25 @@ orbital GpuComputeOrbital {
     state releasing {
       INIT -> releasing
       GPU_RELEASE_NEXT -> releasing when (not (= @entity.bindGroup null))
-        (gpu/release @entity.bindGroup { emit: { success: GPU_RELEASED, failure: GPU_FAILED } })
+        (gpu/release @entity.bindGroup { key: "gpu-release", emit: { success: GPU_RELEASED, failure: GPU_FAILED } })
         (set @entity.bindGroup null)
       GPU_RELEASE_NEXT -> releasing when (and (= @entity.bindGroup null) (not (= @entity.pipeline null)))
-        (gpu/release @entity.pipeline { emit: { success: GPU_RELEASED, failure: GPU_FAILED } })
+        (gpu/release @entity.pipeline { key: "gpu-release", emit: { success: GPU_RELEASED, failure: GPU_FAILED } })
         (set @entity.pipeline null)
       GPU_RELEASE_NEXT -> releasing when (and (= @entity.bindGroup null) (= @entity.pipeline null) (not (= @entity.shader null)))
-        (gpu/release @entity.shader { emit: { success: GPU_RELEASED, failure: GPU_FAILED } })
+        (gpu/release @entity.shader { key: "gpu-release", emit: { success: GPU_RELEASED, failure: GPU_FAILED } })
         (set @entity.shader null)
       GPU_RELEASE_NEXT -> releasing when (and (= @entity.bindGroup null) (= @entity.pipeline null) (= @entity.shader null) (not (= @entity.bufOut null)))
-        (gpu/release @entity.bufOut { emit: { success: GPU_RELEASED, failure: GPU_FAILED } })
+        (gpu/release @entity.bufOut { key: "gpu-release", emit: { success: GPU_RELEASED, failure: GPU_FAILED } })
         (set @entity.bufOut null)
       GPU_RELEASE_NEXT -> releasing when (and (= @entity.bindGroup null) (= @entity.pipeline null) (= @entity.shader null) (= @entity.bufOut null) (not (= @entity.bufB null)))
-        (gpu/release @entity.bufB { emit: { success: GPU_RELEASED, failure: GPU_FAILED } })
+        (gpu/release @entity.bufB { key: "gpu-release", emit: { success: GPU_RELEASED, failure: GPU_FAILED } })
         (set @entity.bufB null)
       GPU_RELEASE_NEXT -> releasing when (and (= @entity.bindGroup null) (= @entity.pipeline null) (= @entity.shader null) (= @entity.bufOut null) (= @entity.bufB null) (not (= @entity.bufA null)))
-        (gpu/release @entity.bufA { emit: { success: GPU_RELEASED, failure: GPU_FAILED } })
+        (gpu/release @entity.bufA { key: "gpu-release", emit: { success: GPU_RELEASED, failure: GPU_FAILED } })
         (set @entity.bufA null)
       GPU_RELEASE_NEXT -> closing when (and (= @entity.bindGroup null) (= @entity.pipeline null) (= @entity.shader null) (= @entity.bufOut null) (= @entity.bufB null) (= @entity.bufA null) (not (= @entity.device null)))
-        (gpu/device-close @entity.device { emit: { success: GPU_DEVICE_CLOSED, failure: GPU_FAILED } })
+        (gpu/device-close @entity.device { key: "gpu-close", emit: { success: GPU_DEVICE_CLOSED, failure: GPU_FAILED } })
       GPU_RELEASE_NEXT -> idle when (and (= @entity.bindGroup null) (= @entity.pipeline null) (= @entity.shader null) (= @entity.bufOut null) (= @entity.bufB null) (= @entity.bufA null) (= @entity.device null))
         (emit GPU_CLOSED {})
       GPU_RELEASED -> releasing
@@ -219,7 +243,7 @@ orbital GpuComputeOrbital {
       GPU_OPENED -> external {}
         @description "The device is open; the job accepts GPU_RUN."
       GPU_RESULT -> external { data : bytes! }
-        @description "The output buffer's bytes after the dispatch, read back in the same job."
+        @description "The output buffer's bytes after the dispatch (GPU_RUN) or after a step's dispatches (GPU_STEP), read back in the same job."
       GPU_CLOSED -> external {}
         @description "Every handle was released and the device closed."
       GPU_ERROR -> external { error : string! kind : string! }
@@ -261,6 +285,8 @@ orbital GpuComputeOrbital {
         @description "Open the device."
       GPU_RUN { a : bytes! b : bytes! }
         @description "Add a and b on the device; both must be the same length."
+      GPU_STEP { params : [bytes]! }
+        @description "After GPU_RUN: one job that, for each params blob in order, writes it at offset 0 of input b and runs the dispatch, then reads the output back; the buffers keep their contents between steps."
       GPU_CLOSE {}
         @description "Release every handle and close the device."
       GPU_DEVICE { device : GpuDevice! }

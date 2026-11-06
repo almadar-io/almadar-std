@@ -459,6 +459,326 @@
           }
         }
       ]
+    },
+    {
+      "id": "after a job, each step reruns the dispatch on the same buffers and emits the read",
+      "steps": [
+        {
+          "from": "idle",
+          "event": "GPU_OPEN",
+          "payload": {},
+          "answers": [
+            {
+              "operator": "gpu/device-open",
+              "ok": {
+                "device": 1,
+                "features": [],
+                "limits": {}
+              }
+            }
+          ],
+          "expect": {
+            "fired": true,
+            "state": "opening",
+            "emits": [
+              {
+                "event": "GPU_OPENED",
+                "payload": {}
+              }
+            ],
+            "neverEmits": [
+              "GPU_ERROR"
+            ]
+          }
+        },
+        {
+          "event": "GPU_RUN",
+          "payload": {
+            "a": "AACAPwAAAEA=",
+            "b": "AABAQAAAgEA="
+          },
+          "answers": [
+            {
+              "operator": "gpu/buffer-create",
+              "ok": {
+                "buffer": 2
+              }
+            },
+            {
+              "operator": "gpu/buffer-create",
+              "ok": {
+                "buffer": 3
+              }
+            },
+            {
+              "operator": "gpu/buffer-create",
+              "ok": {
+                "buffer": 4
+              }
+            },
+            {
+              "operator": "gpu/shader-create",
+              "ok": {
+                "shader": 5
+              }
+            },
+            {
+              "operator": "gpu/pipeline-create",
+              "ok": {
+                "pipeline": 6
+              }
+            },
+            {
+              "operator": "gpu/bind-group-create",
+              "ok": {
+                "bindGroup": 7
+              }
+            },
+            {
+              "operator": "gpu/submit",
+              "ok": {
+                "reads": [
+                  "AACAQAAAwEA="
+                ]
+              }
+            }
+          ],
+          "expect": {
+            "fired": true,
+            "state": "creatingA",
+            "emits": [
+              {
+                "event": "GPU_RESULT",
+                "payload": {
+                  "data": "AACAQAAAwEA="
+                }
+              }
+            ],
+            "neverEmits": [
+              "GPU_ERROR"
+            ]
+          }
+        },
+        {
+          "event": "GPU_STEP",
+          "payload": {
+            "params": [
+              "AQAAAA==",
+              "AgAAAA=="
+            ]
+          },
+          "answers": [
+            {
+              "operator": "gpu/submit",
+              "ok": {
+                "reads": [
+                  "AABAQQAAoEE="
+                ]
+              }
+            }
+          ],
+          "expect": {
+            "fired": true,
+            "state": "stepping",
+            "emits": [
+              {
+                "event": "GPU_RESULT",
+                "payload": {
+                  "data": "AABAQQAAoEE="
+                }
+              }
+            ],
+            "neverEmits": [
+              "GPU_ERROR"
+            ]
+          }
+        },
+        {
+          "event": "GPU_STEP",
+          "payload": {
+            "params": [
+              "AQAAAA==",
+              "AgAAAA=="
+            ]
+          },
+          "answers": [
+            {
+              "operator": "gpu/submit",
+              "ok": {
+                "reads": [
+                  "AACAQQAAAEI="
+                ]
+              }
+            }
+          ],
+          "expect": {
+            "fired": true,
+            "state": "stepping",
+            "emits": [
+              {
+                "event": "GPU_RESULT",
+                "payload": {
+                  "data": "AACAQQAAAEI="
+                }
+              }
+            ],
+            "neverEmits": [
+              "GPU_ERROR"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a step before open reports closed",
+      "steps": [
+        {
+          "from": "idle",
+          "event": "GPU_STEP",
+          "payload": {
+            "params": [
+              "AQAAAA=="
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "GPU_ERROR",
+                "payload": {
+                  "error": "the device is not open",
+                  "kind": "closed"
+                }
+              }
+            ]
+          },
+          "entity": {
+            "id": "g"
+          }
+        }
+      ]
+    },
+    {
+      "id": "a step before the first job is refused",
+      "steps": [
+        {
+          "from": "ready",
+          "event": "GPU_STEP",
+          "payload": {
+            "params": [
+              "AQAAAA=="
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "GPU_ERROR",
+                "payload": {
+                  "error": "run the job before stepping it",
+                  "kind": "invalid"
+                }
+              }
+            ]
+          },
+          "entity": {
+            "id": "g"
+          }
+        }
+      ]
+    },
+    {
+      "id": "a step while one is running is refused",
+      "steps": [
+        {
+          "from": "stepping",
+          "event": "GPU_STEP",
+          "payload": {
+            "params": [
+              "AQAAAA=="
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "stepping",
+            "emits": [
+              {
+                "event": "GPU_ERROR",
+                "payload": {
+                  "error": "a step is already running",
+                  "kind": "invalid"
+                }
+              }
+            ]
+          },
+          "entity": {
+            "id": "g"
+          }
+        }
+      ]
+    },
+    {
+      "id": "a step answer without the read reports io",
+      "steps": [
+        {
+          "from": "stepping",
+          "event": "GPU_SUBMITTED",
+          "payload": {
+            "reads": []
+          },
+          "expect": {
+            "fired": true,
+            "state": "done",
+            "emits": [
+              {
+                "event": "GPU_ERROR",
+                "payload": {
+                  "error": "the step's read answered no bytes",
+                  "kind": "io"
+                }
+              }
+            ],
+            "neverEmits": [
+              "GPU_RESULT"
+            ]
+          },
+          "entity": {
+            "id": "g"
+          }
+        }
+      ]
+    },
+    {
+      "id": "a done job with no handles cannot step",
+      "steps": [
+        {
+          "from": "done",
+          "event": "GPU_STEP",
+          "payload": {
+            "params": [
+              "AQAAAA=="
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "failed",
+            "emits": [
+              {
+                "event": "GPU_ERROR",
+                "payload": {
+                  "error": "the job holds no device, pipeline, bind group or buffers",
+                  "kind": "closed"
+                }
+              }
+            ]
+          },
+          "entity": {
+            "id": "g"
+          }
+        }
+      ]
     }
   ]
 }
