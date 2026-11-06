@@ -38,6 +38,8 @@ const GPU_COMMAND: OperatorTypeRef = union(
   shape({ render: shape({ pipeline: PIPELINE, bindGroups: list(BIND_GROUP), target: TEXTURE, vertices: INT, instances: INT, clear: list(NUMBER) }, ['instances', 'clear']) }),
   shape({ copy: shape({ from: GPU_RESOURCE, to: GPU_RESOURCE, fromOffset: INT, toOffset: INT, size: INT }, ['fromOffset', 'toOffset', 'size']) }),
   shape({ clear: shape({ buffer: BUFFER, offset: INT, size: INT }, ['offset', 'size']) }),
+  shape({ write: shape({ buffer: BUFFER, texture: TEXTURE, offset: INT, data: union(BYTES, BORROW) }, ['buffer', 'texture', 'offset']) }),
+  shape({ read: shape({ buffer: BUFFER, offset: INT, length: INT }, ['offset', 'length']) }),
   shape({ timestamp: shape({ querySet: QUERY_SET, index: INT }) }),
 );
 
@@ -119,31 +121,13 @@ export const GPU_OPERATORS: Record<string, StdOperatorMeta> = {
     ],
     example: '["gpu/bind-group-create", "@entity.pipeline", 0, [{ "binding": 0, "buffer": "@entity.buffer" }], { "emit": { "success": "BINDGROUP_READY", "failure": "GPU_FAILED" } }]',
   }),
-  'gpu/write': gpuEffect({
-    answer: shape({}),
-    description: `Write data into a buffer or texture at offset; the buffer needs copy-dst usage. data is bytes or a Borrow (the kernel reads the borrowed block and sends its bytes). ${NO_GRANT} Success payload: {}. Failure kind: closed (the target or borrow is not live), invalid (offset below zero, the write runs past the target, the target lacks copy-dst usage), io (the device failed).`,
-    params: [
-      arg('target', GPU_RESOURCE, 'The buffer or texture to write'),
-      arg('offset', INT, 'Byte offset inside the target'),
-      arg('data', union(BYTES, BORROW), 'Bytes to write, or a live Borrow whose bytes are written'),
-    ],
-    example: '["gpu/write", "@entity.buffer", 0, "@payload.data", { "emit": { "failure": "GPU_FAILED" } }]',
-  }),
   'gpu/submit': gpuEffect({
-    answer: shape({}),
+    answer: shape({ reads: list(BYTES) }),
     grant: [{ kind: 'gpu', access: 'compute', commands: 1 }],
     description:
-      'Submit a command list to the device queue (grant gpu: { "device:<maxBytes>": [compute, render] }). commands is a list of GpuCommand records, each with exactly one key: compute { pipeline, bindGroups, dispatch } (dispatch is [x, y, z] workgroup counts), render { pipeline, bindGroups, target, vertices, instances?, clear? } (target is a GpuTexture, clear is an rgba list), copy { from, to, fromOffset?, toOffset?, size? } between buffers or textures, clear { buffer, offset?, size? }, timestamp { querySet, index }. The grant is derived from a literal list: each compute entry needs compute and each render entry needs render, other entries need nothing; a list that is not literal is checked at run time. Completion is deferred: the success event fires when the queue work is done, and a gpu/read of results is only valid after that event. Success payload: {}. Failure kind: denied (a command needs a kind the grant does not list), closed (the device or a handle is not live), invalid (a command with zero or several keys, a handle of another device, a bad dispatch), io (the device failed).',
-    params: [DEVICE_ARG, arg('commands', list(GPU_COMMAND), 'The commands, each a record with exactly one of compute, render, copy, clear, timestamp')],
-    example: '["gpu/submit", "@entity.device", [{ "compute": { "pipeline": "@entity.pipeline", "bindGroups": ["@entity.bindGroup"], "dispatch": [64, 1, 1] } }], { "emit": { "success": "SUBMITTED", "failure": "GPU_FAILED" } }]',
-  }),
-  'gpu/read': gpuEffect({
-    answer: shape({ data: BYTES }),
-    grant: [{ kind: 'gpu', access: 'readback' }],
-    description:
-      'Read length bytes at offset from a buffer back to the host (grant gpu: { "device:<maxBytes>": [readback] }); the buffer needs copy-src or map-read usage. Ordering: read only after the success event of the gpu/submit that produced the data, since a read issued earlier sees the buffer before the work ran. Completion is deferred. Success payload: { data } (bytes). Failure kind: denied (no readback grant), closed (the buffer or its device is not live), invalid (offset below zero, length non-positive or past the buffer, the buffer lacks readback usage), io (the device failed).',
-    params: [arg('buffer', BUFFER, 'The buffer to read'), arg('offset', INT, 'Byte offset inside the buffer'), arg('length', INT, 'Number of bytes to read; positive')],
-    example: '["gpu/read", "@entity.buffer", 0, 1024, { "emit": { "success": "RESULT_READY", "failure": "GPU_FAILED" } }]',
+      'Run a command list on the device queue, in list order, as one job (grant gpu: { "device:<maxBytes>": [compute, render, readback] }). commands is a list of GpuCommand records, each with exactly one key: write { buffer, offset?, data } or write { texture, data } uploads bytes or a Borrow (the kernel reads the borrowed block) into a copy-dst buffer at offset (default 0) or into a whole copy-dst texture; compute { pipeline, bindGroups, dispatch } (dispatch is [x, y, z] workgroup counts); render { pipeline, bindGroups, target, vertices, instances?, clear? } (target is a GpuTexture, clear is an rgba list); copy { from, to, fromOffset?, toOffset?, size? } between buffers or textures; clear { buffer, offset?, size? }; timestamp { querySet, index }; read { buffer, offset?, length? } reads length bytes (default the rest of the buffer) at offset (default 0) of a copy-src buffer as they stand at that point of the list, or of a map-read buffer as it stands after the list when no later command writes it. Buffer offsets and lengths of write and read are multiples of 4. The grant is derived from a literal list: each compute entry needs compute, each render entry needs render, each read entry needs readback, other entries need nothing; a list that is not literal is checked at run time. Completion is deferred: the success event fires when the queue work is done. Success payload: { reads } (the bytes of each read entry, in list order; empty without one). Failure kind: denied (a command needs a kind the grant does not list), closed (the device, a handle or a Borrow is not live), invalid (a command with zero or several keys, a handle of another device, a bad dispatch, a write or read past its buffer or off a multiple of 4, a texture write that is not the whole texture, a buffer without the usage its command needs), io (the device failed).',
+    params: [DEVICE_ARG, arg('commands', list(GPU_COMMAND), 'The commands, each a record with exactly one of write, compute, render, copy, clear, timestamp, read')],
+    example: '["gpu/submit", "@entity.device", [{ "write": { "buffer": "@entity.input", "data": "@payload.data" } }, { "compute": { "pipeline": "@entity.pipeline", "bindGroups": ["@entity.bindGroup"], "dispatch": [64, 1, 1] } }, { "read": { "buffer": "@entity.output" } }], { "emit": { "success": "SUBMITTED", "failure": "GPU_FAILED" } }]',
   }),
   'gpu/release': gpuEffect({
     answer: shape({}),

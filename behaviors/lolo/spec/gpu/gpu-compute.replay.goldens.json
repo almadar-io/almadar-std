@@ -165,14 +165,6 @@
               }
             },
             {
-              "operator": "gpu/write",
-              "ok": {}
-            },
-            {
-              "operator": "gpu/write",
-              "ok": {}
-            },
-            {
               "operator": "gpu/shader-create",
               "ok": {
                 "shader": 5
@@ -192,12 +184,10 @@
             },
             {
               "operator": "gpu/submit",
-              "ok": {}
-            },
-            {
-              "operator": "gpu/read",
               "ok": {
-                "data": "AACAQAAAwEA="
+                "reads": [
+                  "AACAQAAAwEA="
+                ]
               }
             }
           ],
@@ -215,47 +205,6 @@
             "neverEmits": [
               "GPU_ERROR"
             ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "the second write builds the shader",
-      "steps": [
-        {
-          "from": "writingB",
-          "event": "GPU_WRITTEN",
-          "payload": {},
-          "expect": {
-            "fired": true,
-            "state": "shading",
-            "effects": [
-              {
-                "type": "gpu/shader-create"
-              }
-            ]
-          },
-          "entity": {
-            "id": "g",
-            "device": {
-              "id": 1,
-              "maxBytes": 16777216
-            },
-            "bufA": {
-              "id": 1,
-              "device": 1,
-              "size": 16
-            },
-            "bufB": {
-              "id": 2,
-              "device": 1,
-              "size": 16
-            },
-            "bufOut": {
-              "id": 3,
-              "device": 1,
-              "size": 16
-            }
           }
         }
       ]
@@ -294,19 +243,29 @@
       ]
     },
     {
-      "id": "the submit answer reads the output back",
+      "id": "the submit answer emits the bytes its read brought back",
       "steps": [
         {
           "from": "submitting",
           "event": "GPU_SUBMITTED",
-          "payload": {},
+          "payload": {
+            "reads": [
+              "AAAAAAAAgD8="
+            ]
+          },
           "expect": {
             "fired": true,
-            "state": "reading",
-            "effects": [
+            "state": "done",
+            "emits": [
               {
-                "type": "gpu/read"
+                "event": "GPU_RESULT",
+                "payload": {
+                  "data": "AAAAAAAAgD8="
+                }
               }
+            ],
+            "neverEmits": [
+              "GPU_ERROR"
             ]
           },
           "entity": {
@@ -326,24 +285,28 @@
       ]
     },
     {
-      "id": "the read answer emits the result",
+      "id": "a submit answer without the read reports io",
       "steps": [
         {
-          "from": "reading",
-          "event": "GPU_READ",
+          "from": "submitting",
+          "event": "GPU_SUBMITTED",
           "payload": {
-            "data": "AAAAAAAAgD8="
+            "reads": []
           },
           "expect": {
             "fired": true,
             "state": "done",
             "emits": [
               {
-                "event": "GPU_RESULT",
+                "event": "GPU_ERROR",
                 "payload": {
-                  "data": "AAAAAAAAgD8="
+                  "error": "the job's read answered no bytes",
+                  "kind": "io"
                 }
               }
+            ],
+            "neverEmits": [
+              "GPU_RESULT"
             ]
           },
           "entity": {
@@ -351,7 +314,13 @@
             "device": {
               "id": 1,
               "maxBytes": 16777216
-            }
+            },
+            "bufOut": {
+              "id": 3,
+              "device": 1,
+              "size": 16
+            },
+            "size": 8
           }
         }
       ]

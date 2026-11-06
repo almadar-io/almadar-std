@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "Canonical operator registry for Almadar. Generated from @almadar/std/modules. Consumed by orbital-compiler via include_str!.",
-  "generated": "2026-11-06T07:36:45.363Z",
+  "generated": "2026-11-06T11:08:09.798Z",
   "categories": {
     "arithmetic": {
       "description": "Numeric operations",
@@ -10244,87 +10244,6 @@
       ],
       "docsSource": "generated"
     },
-    "gpu/read": {
-      "category": "std-gpu",
-      "minArity": 3,
-      "maxArity": 4,
-      "returnType": "void",
-      "description": "Read length bytes at offset from a buffer back to the host (grant gpu: { \"device:<maxBytes>\": [readback] }); the buffer needs copy-src or map-read usage. Ordering: read only after the success event of the gpu/submit that produced the data, since a read issued earlier sees the buffer before the work ran. Completion is deferred. Success payload: { data } (bytes). Failure kind: denied (no readback grant), closed (the buffer or its device is not live), invalid (offset below zero, length non-positive or past the buffer, the buffer lacks readback usage), io (the device failed).",
-      "module": "gpu",
-      "visual": {
-        "form": "actuator"
-      },
-      "hasSideEffects": true,
-      "effect": {
-        "kind": "custom",
-        "produces": {
-          "kind": "object",
-          "fields": {
-            "data": "bytes",
-            "key": "string"
-          },
-          "optional": [
-            "key"
-          ]
-        }
-      },
-      "grant": [
-        {
-          "kind": "gpu",
-          "access": "readback"
-        }
-      ],
-      "runsOn": "any",
-      "host": "os",
-      "params": [
-        {
-          "name": "buffer",
-          "type": "GpuBuffer",
-          "description": "The buffer to read"
-        },
-        {
-          "name": "offset",
-          "type": "int",
-          "description": "Byte offset inside the buffer"
-        },
-        {
-          "name": "length",
-          "type": "int",
-          "description": "Number of bytes to read; positive"
-        },
-        {
-          "name": "options",
-          "type": {
-            "kind": "object",
-            "fields": {
-              "key": "string",
-              "emit": {
-                "kind": "object",
-                "fields": {
-                  "success": {
-                    "kind": "eventKey"
-                  },
-                  "failure": {
-                    "kind": "eventKey"
-                  },
-                  "cancelled": {
-                    "kind": "eventKey"
-                  }
-                },
-                "open": true
-              }
-            },
-            "open": true
-          },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
-          "optional": true
-        }
-      ],
-      "examples": [
-        "(gpu/read @entity.buffer 0 1024 {\"emit\":{\"success\":\"RESULT_READY\",\"failure\":\"GPU_FAILED\"}})"
-      ],
-      "docsSource": "generated"
-    },
     "gpu/release": {
       "category": "std-gpu",
       "minArity": 1,
@@ -10586,7 +10505,7 @@
       "minArity": 2,
       "maxArity": 3,
       "returnType": "void",
-      "description": "Submit a command list to the device queue (grant gpu: { \"device:<maxBytes>\": [compute, render] }). commands is a list of GpuCommand records, each with exactly one key: compute { pipeline, bindGroups, dispatch } (dispatch is [x, y, z] workgroup counts), render { pipeline, bindGroups, target, vertices, instances?, clear? } (target is a GpuTexture, clear is an rgba list), copy { from, to, fromOffset?, toOffset?, size? } between buffers or textures, clear { buffer, offset?, size? }, timestamp { querySet, index }. The grant is derived from a literal list: each compute entry needs compute and each render entry needs render, other entries need nothing; a list that is not literal is checked at run time. Completion is deferred: the success event fires when the queue work is done, and a gpu/read of results is only valid after that event. Success payload: {}. Failure kind: denied (a command needs a kind the grant does not list), closed (the device or a handle is not live), invalid (a command with zero or several keys, a handle of another device, a bad dispatch), io (the device failed).",
+      "description": "Run a command list on the device queue, in list order, as one job (grant gpu: { \"device:<maxBytes>\": [compute, render, readback] }). commands is a list of GpuCommand records, each with exactly one key: write { buffer, offset?, data } or write { texture, data } uploads bytes or a Borrow (the kernel reads the borrowed block) into a copy-dst buffer at offset (default 0) or into a whole copy-dst texture; compute { pipeline, bindGroups, dispatch } (dispatch is [x, y, z] workgroup counts); render { pipeline, bindGroups, target, vertices, instances?, clear? } (target is a GpuTexture, clear is an rgba list); copy { from, to, fromOffset?, toOffset?, size? } between buffers or textures; clear { buffer, offset?, size? }; timestamp { querySet, index }; read { buffer, offset?, length? } reads length bytes (default the rest of the buffer) at offset (default 0) of a copy-src buffer as they stand at that point of the list, or of a map-read buffer as it stands after the list when no later command writes it. Buffer offsets and lengths of write and read are multiples of 4. The grant is derived from a literal list: each compute entry needs compute, each render entry needs render, each read entry needs readback, other entries need nothing; a list that is not literal is checked at run time. Completion is deferred: the success event fires when the queue work is done. Success payload: { reads } (the bytes of each read entry, in list order; empty without one). Failure kind: denied (a command needs a kind the grant does not list), closed (the device, a handle or a Borrow is not live), invalid (a command with zero or several keys, a handle of another device, a bad dispatch, a write or read past its buffer or off a multiple of 4, a texture write that is not the whole texture, a buffer without the usage its command needs), io (the device failed).",
       "module": "gpu",
       "visual": {
         "form": "actuator"
@@ -10597,6 +10516,10 @@
         "produces": {
           "kind": "object",
           "fields": {
+            "reads": {
+              "kind": "array",
+              "of": "bytes"
+            },
             "key": "string"
           },
           "optional": [
@@ -10723,6 +10646,48 @@
                 {
                   "kind": "object",
                   "fields": {
+                    "write": {
+                      "kind": "object",
+                      "fields": {
+                        "buffer": "GpuBuffer",
+                        "texture": "GpuTexture",
+                        "offset": "int",
+                        "data": {
+                          "kind": "union",
+                          "of": [
+                            "bytes",
+                            "Borrow"
+                          ]
+                        }
+                      },
+                      "optional": [
+                        "buffer",
+                        "texture",
+                        "offset"
+                      ]
+                    }
+                  }
+                },
+                {
+                  "kind": "object",
+                  "fields": {
+                    "read": {
+                      "kind": "object",
+                      "fields": {
+                        "buffer": "GpuBuffer",
+                        "offset": "int",
+                        "length": "int"
+                      },
+                      "optional": [
+                        "offset",
+                        "length"
+                      ]
+                    }
+                  }
+                },
+                {
+                  "kind": "object",
+                  "fields": {
                     "timestamp": {
                       "kind": "object",
                       "fields": {
@@ -10735,7 +10700,7 @@
               ]
             }
           },
-          "description": "The commands, each a record with exactly one of compute, render, copy, clear, timestamp"
+          "description": "The commands, each a record with exactly one of write, compute, render, copy, clear, timestamp, read"
         },
         {
           "name": "options",
@@ -10959,93 +10924,6 @@
       ],
       "examples": [
         "(gpu/texture-create @entity.device {\"width\":256,\"height\":256,\"format\":\"rgba8unorm\",\"usage\":[\"render-target\",\"copy-src\"]} {\"emit\":{\"success\":\"TEXTURE_READY\",\"failure\":\"GPU_FAILED\"}})"
-      ],
-      "docsSource": "generated"
-    },
-    "gpu/write": {
-      "category": "std-gpu",
-      "minArity": 3,
-      "maxArity": 4,
-      "returnType": "void",
-      "description": "Write data into a buffer or texture at offset; the buffer needs copy-dst usage. data is bytes or a Borrow (the kernel reads the borrowed block and sends its bytes). Needs no grant beyond holding the handle (the grant was checked at gpu/device-open). Success payload: {}. Failure kind: closed (the target or borrow is not live), invalid (offset below zero, the write runs past the target, the target lacks copy-dst usage), io (the device failed).",
-      "module": "gpu",
-      "visual": {
-        "form": "actuator"
-      },
-      "hasSideEffects": true,
-      "effect": {
-        "kind": "custom",
-        "produces": {
-          "kind": "object",
-          "fields": {
-            "key": "string"
-          },
-          "optional": [
-            "key"
-          ]
-        }
-      },
-      "grant": [],
-      "runsOn": "any",
-      "host": "os",
-      "params": [
-        {
-          "name": "target",
-          "type": {
-            "kind": "union",
-            "of": [
-              "GpuBuffer",
-              "GpuTexture"
-            ]
-          },
-          "description": "The buffer or texture to write"
-        },
-        {
-          "name": "offset",
-          "type": "int",
-          "description": "Byte offset inside the target"
-        },
-        {
-          "name": "data",
-          "type": {
-            "kind": "union",
-            "of": [
-              "bytes",
-              "Borrow"
-            ]
-          },
-          "description": "Bytes to write, or a live Borrow whose bytes are written"
-        },
-        {
-          "name": "options",
-          "type": {
-            "kind": "object",
-            "fields": {
-              "key": "string",
-              "emit": {
-                "kind": "object",
-                "fields": {
-                  "success": {
-                    "kind": "eventKey"
-                  },
-                  "failure": {
-                    "kind": "eventKey"
-                  },
-                  "cancelled": {
-                    "kind": "eventKey"
-                  }
-                },
-                "open": true
-              }
-            },
-            "open": true
-          },
-          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
-          "optional": true
-        }
-      ],
-      "examples": [
-        "(gpu/write @entity.buffer 0 @payload.data {\"emit\":{\"failure\":\"GPU_FAILED\"}})"
       ],
       "docsSource": "generated"
     },

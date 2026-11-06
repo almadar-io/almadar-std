@@ -23,7 +23,7 @@ const MEM_EFFECTS = ['mem/alloc', 'mem/arena-drop', 'mem/arena-new', 'mem/atomic
 const KERNEL_EFFECTS = ['kernel/queue-back', 'kernel/queue-front'];
 const KERNEL_PURE = ['kernel/apply', 'kernel/frame', 'kernel/stamp', 'kernel/worklist'];
 const FFI_EFFECTS = ['ffi/call'];
-const GPU_EFFECTS = ['gpu/bind-group-create', 'gpu/buffer-create', 'gpu/device-close', 'gpu/device-open', 'gpu/pipeline-create', 'gpu/query-create', 'gpu/read', 'gpu/release', 'gpu/sampler-create', 'gpu/shader-create', 'gpu/submit', 'gpu/texture-create', 'gpu/write'];
+const GPU_EFFECTS = ['gpu/bind-group-create', 'gpu/buffer-create', 'gpu/device-close', 'gpu/device-open', 'gpu/pipeline-create', 'gpu/query-create', 'gpu/release', 'gpu/sampler-create', 'gpu/shader-create', 'gpu/submit', 'gpu/texture-create'];
 const MEM_PURE = ['mem/length', 'mem/read', 'mem/read-int', 'mem/read-uint'];
 
 const effects = Object.entries(STD_OPERATORS).filter(([, m]) => m.hasSideEffects);
@@ -148,7 +148,7 @@ describe('runsOn', () => {
     }
   });
 
-  it('the gpu family is a host-answered os effect that runs on any side, with the gpu grant on open, read and submit', () => {
+  it('the gpu family is a host-answered os effect that runs on any side, with the gpu grant on open and submit', () => {
     const declared = Object.keys(STD_OPERATORS).filter((k) => k.startsWith('gpu/')).sort();
     expect(declared).toEqual(GPU_EFFECTS);
     for (const name of GPU_EFFECTS) {
@@ -159,9 +159,8 @@ describe('runsOn', () => {
       expect(STD_OPERATORS[name].category, name).toBe('std-gpu');
     }
     expect(STD_OPERATORS['gpu/device-open'].grant).toEqual([{ kind: 'gpu', access: 'open' }]);
-    expect(STD_OPERATORS['gpu/read'].grant).toEqual([{ kind: 'gpu', access: 'readback' }]);
     expect(STD_OPERATORS['gpu/submit'].grant).toEqual([{ kind: 'gpu', access: 'compute', commands: 1 }]);
-    for (const name of GPU_EFFECTS.filter((n) => !['gpu/device-open', 'gpu/read', 'gpu/submit'].includes(n))) {
+    for (const name of GPU_EFFECTS.filter((n) => !['gpu/device-open', 'gpu/submit'].includes(n))) {
       expect(STD_OPERATORS[name].grant, name).toEqual([]);
     }
   });
