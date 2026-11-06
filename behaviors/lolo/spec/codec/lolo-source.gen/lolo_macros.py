@@ -29,7 +29,7 @@ def FE(t, entries):
     return '(let ((%s : SrcVars (object/fromEntries %s))) %s)' % (n, entries, fill(t, "@" + n))
 
 def case(T, style):
-    b, w, x, y, k = u("cb"), u("cw"), u("cx"), u("cy"), u("ck")
+    b, w, x, y, k, lp = u("cb"), u("cw"), u("cx"), u("cy"), u("ck"), u("cl")
     return ('(let ((%(b)s (str/replace-pattern (str/replaceAll %(T)s "-" "_") "[.]" "_"))) '
             '(let ((%(w)s (array/filter (str/split (str/lower @%(b)s) "_") (fn %(x)s (!= @%(x)s ""))))) '
             '(if (= %(st)s "lower") (str/lower @%(b)s) (if (= %(st)s "upper") (str/upper @%(b)s) '
@@ -37,8 +37,9 @@ def case(T, style):
             '(if (= %(st)s "pascal") (str/join (array/map @%(w)s (fn %(y)s (str/capitalize @%(y)s))) "") '
             '(let ((%(k)s (str/split @%(b)s "_"))) '
             '(if (= %(st)s "split-camel") (str/concat (default (array/first @%(k)s) "") (str/join (array/map (array/drop @%(k)s 1) (fn %(y)s %(up)s)) "")) '
-            '(if (= %(st)s "split-pascal") (str/join (array/map @%(k)s (fn %(y)s %(up)s)) "") @%(b)s)))))))))'
-            % dict(b=b, w=w, x=x, y=y, k=k, T=T, st=style,
+            '(if (= %(st)s "split-pascal") (str/join (array/map @%(k)s (fn %(y)s %(up)s)) "") '
+            '(if (= %(st)s "lower-camel") (let ((%(lp)s (str/join (array/map @%(k)s (fn %(y)s %(up)s)) ""))) (str/concat (str/lower (str/slice @%(lp)s 0 1)) (str/slice @%(lp)s 1 (str/len @%(lp)s)))) @%(b)s))))))))))'
+            % dict(b=b, w=w, x=x, y=y, k=k, lp=lp, T=T, st=style,
                    up='(str/concat (str/upper (str/slice @%s 0 1)) (str/slice @%s 1 (str/len @%s)))' % (y, y, y)))
 
 def lines_indent(lines, unit="@config.indent"):
