@@ -4,7 +4,9 @@
 # Usage: lolo-source-parity.sh [lang...]    (default: all five)
 # Kernel answers: spec/codec/lolo-source.parity/<example>.replay.goldens.json (pinned by `orb goldens`): the emits and,
 # where a step pins expect.entity, the row after the step. A course example renders from its pinned language-goldens
-# text; a std atom example (source_of) is rendered live from the atom by the language atom itself.
+# text; a std atom example (source_of) is rendered live from the atom by the language atom itself. An optional
+# payload key the kernel leaves out and a native model carries as null compare equal (a native optional field cannot
+# tell absent from null).
 # Runs locally at the checkpoint only (owner ruling 2026-11-05: not wired into CI).
 set -u
 HERE=$(cd "$(dirname "$0")" && pwd)
@@ -13,7 +15,7 @@ ROOT=$(cd "$STD/../.." && pwd)
 LOLO=$STD/behaviors/lolo
 PAR=$LOLO/spec/codec/lolo-source.parity
 PY=$HERE/lolo-source-parity.py
-EXAMPLES="cosine recall-at-k agent-step chunk game-score"
+EXAMPLES="cosine recall-at-k agent-step chunk game-score ml-ladder"
 LANGS="${*:-python typescript rust swift kotlin}"
 KOTLIN_PLUGIN=/opt/homebrew/opt/kotlin/libexec/lib/kotlinx-serialization-compiler-plugin.jar
 KLIBS=$HOME/.almadar/kotlin-libs
@@ -46,7 +48,23 @@ finish() { # lang ex actualfile logfile ranOk
   if python3 -I "$PY" compare "$PAR/$ex.replay.goldens.json" "$actual" >>"$log" 2>&1; then report "$lang" "$ex" ok; else report "$lang" "$ex" bad "$log"; fi
 }
 
-source_of() { case $1 in game-score) echo packages/almadar-std/behaviors/lolo/ui/game/atoms/std-score.lolo;; esac; }
+source_of() {
+  case $1 in
+    game-score) echo packages/almadar-std/behaviors/lolo/ui/game/atoms/std-score.lolo;;
+    ml-ladder) echo packages/almadar-std/behaviors/lolo/ml/atoms/std-ml-ladder.lolo;;
+  esac
+}
+# A language an example does not cover yet prints PENDING with the gap that tracks it; it is never a pass.
+pending_of() { case $1:$2 in ml-ladder:rust|ml-ladder:swift|ml-ladder:kotlin) echo G-CROSS-463;; esac; }
+covers() { local gap; gap=$(pending_of "$2" "$1"); [ -z "$gap" ] || { echo "PENDING $1 $2 ($gap)"; return 1; }; }
+# The models a leg compiles against: a std atom example's own file in client mode (so the rendered names are the
+# atom's), a course example's program (the server program for the server shells).
+models() { # lang ex out shell [server]
+  local src; src=$(source_of "$2")
+  if [ -n "$src" ]; then orb compile "$ROOT/$src" -s "$4" --mode client -o "$3"
+  elif [ "${5:-}" = server ]; then orb compile "$PAR/$2.server.lolo" -s "$4" -o "$3"
+  else orb compile "$PAR/$2.lolo" -s "$4" $([ "$4" = typescript ] && echo -m client) -o "$3"; fi
+}
 
 render_text() { # lang ex out
   local src; src=$(source_of "$2")
@@ -75,8 +93,9 @@ run_python() {
   need python python3 orb || { FAILS=$((FAILS + 1)); return; }
   goldens_leg python || return
   for ex in $EXAMPLES; do
+    covers python "$ex" || continue
     local d=$T/py-$ex log=$T/py-$ex.log
-    if ! orb compile "$PAR/$ex.server.lolo" -s python -o "$d" >"$log" 2>&1; then report python "$ex" bad "$log"; continue; fi
+    if ! models python "$ex" "$d" python server >"$log" 2>&1; then report python "$ex" bad "$log"; continue; fi
     render_text python "$ex" "$d/src/rendered.py" || { report python "$ex" bad "$log"; continue; }
     python3 -I "$PAR/drivers/python/$ex.py" "$d/src" "$PAR/$ex.events.json" >"$d/actual" 2>"$log"
     finish python "$ex" "$d/actual" "$log"
@@ -87,8 +106,9 @@ run_typescript() {
   need typescript node orb "$TSC" || { FAILS=$((FAILS + 1)); return; }
   goldens_leg typescript || return
   for ex in $EXAMPLES; do
+    covers typescript "$ex" || continue
     local d=$T/ts-$ex log=$T/ts-$ex.log
-    if ! orb compile "$PAR/$ex.lolo" -s typescript -m client -o "$d" >"$log" 2>&1; then report typescript "$ex" bad "$log"; continue; fi
+    if ! models typescript "$ex" "$d" typescript >"$log" 2>&1; then report typescript "$ex" bad "$log"; continue; fi
     render_text typescript "$ex" "$d/packages/shared/src/traits/rendered.ts" || { report typescript "$ex" bad "$log"; continue; }
     cp "$PAR/drivers/typescript/$ex.mts" "$d/main.mts"
     cat >"$d/tsconfig.parity.json" <<J
@@ -108,9 +128,10 @@ run_rust() {
   printf '[package]\nname = "lolo-source-parity"\nversion = "0.1.0"\nedition = "2021"\n\n[workspace]\n\n[dependencies]\nserde = { version = "1", features = ["derive"] }\nserde_json = "1"\n' >"$c/Cargo.toml"
   local ex ready=""
   for ex in $EXAMPLES; do
+    covers rust "$ex" || continue
     local d=$c/cases/$ex log=$T/rs-$ex.log
     mkdir -p "$d/generated"
-    if ! orb compile "$PAR/$ex.server.lolo" -s rust -o "$T/rs-$ex" >"$log" 2>&1; then report rust "$ex" bad "$log"; continue; fi
+    if ! models rust "$ex" "$T/rs-$ex" rust server >"$log" 2>&1; then report rust "$ex" bad "$log"; continue; fi
     render_text rust "$ex" "$d/lolo.rs" || { report rust "$ex" bad "$log"; continue; }
     cp "$T/rs-$ex/src/generated/"*.rs "$d/generated/"
     cp "$PAR/drivers/rust/$ex.rs" "$d/main.rs"
@@ -132,8 +153,9 @@ run_swift() {
   need swift swiftc orb || { FAILS=$((FAILS + 1)); return; }
   goldens_leg swift || return
   for ex in $EXAMPLES; do
+    covers swift "$ex" || continue
     local d=$T/sw-$ex log=$T/sw-$ex.log
-    if ! orb compile "$PAR/$ex.lolo" -s ios -o "$d" >"$log" 2>&1; then report swift "$ex" bad "$log"; continue; fi
+    if ! models swift "$ex" "$d" ios >"$log" 2>&1; then report swift "$ex" bad "$log"; continue; fi
     local b=$d/build; mkdir -p "$b"
     cp "$d/Sources/OrbitalApp/Generated/Entities.swift" "$d/Sources/OrbitalApp/Generated/Events.swift" "$b/"
     render_text swift "$ex" "$b/Emitted.swift" || { report swift "$ex" bad "$log"; continue; }
@@ -149,8 +171,9 @@ run_kotlin() {
   need_file kotlin "$KOTLIN_PLUGIN" && need_file kotlin "$KLIBS/kotlinx-serialization-core-jvm-1.9.0.jar" && need_file kotlin "$KLIBS/kotlinx-serialization-json-jvm-1.9.0.jar" || { FAILS=$((FAILS + 1)); return; }
   goldens_leg kotlin || return
   for ex in $EXAMPLES; do
+    covers kotlin "$ex" || continue
     local d=$T/kt-$ex log=$T/kt-$ex.log
-    if ! orb compile "$PAR/$ex.lolo" -s android -o "$d" >"$log" 2>&1; then report kotlin "$ex" bad "$log"; continue; fi
+    if ! models kotlin "$ex" "$d" android >"$log" 2>&1; then report kotlin "$ex" bad "$log"; continue; fi
     local b=$d/build; mkdir -p "$b"
     cp "$d/app/src/main/kotlin/generated/Entities.kt" "$d/app/src/main/kotlin/generated/Events.kt" "$b/"
     render_text kotlin "$ex" "$b/Emitted.kt" || { report kotlin "$ex" bad "$log"; continue; }

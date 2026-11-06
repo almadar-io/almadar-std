@@ -16,7 +16,7 @@ def norm(v):
     if isinstance(v, list):
         return [norm(x) for x in v]
     if isinstance(v, dict):
-        return {k: norm(x) for k, x in v.items()}
+        return {k: norm(x) for k, x in v.items() if x is not None}
     return v
 
 

@@ -98,7 +98,7 @@
                     (let ((fieldsText (str/join (array/map (if (= @config.payloadFieldOrder "sorted") (array/map (array/sort @pks) (fn pk (array/indexOf @pks @pk))) (array/range 0 (array/len @pks))) (fn i FILL{@config.payloadField ## name => CASE{(default (array/nth (object/get @prs "keys") @i) "") ## @config.fieldCase} ## value => (default (array/nth (object/get @prs "items") @i) "")})) @config.payloadSep)))
                       (let ((pld (if (and (!= @ptype "") @isObj) FILL{@config.payloadCtor ## type => @ptype ## fields => @fieldsText}
                                        (if (!= @ptype "") (if (= (array/len @n) 2) FILL{@config.payloadCtor ## type => @ptype ## fields => ""} (default (array/nth @ex 2) @config.nullLit))
-                                         (if (or (= (array/len @n) 2) (and @void @isObj (= (array/len @pks) 0))) @config.nullLit (default (array/nth @ex 2) @config.nullLit)))))
+                                         (if (or (= (array/len @n) 2) (and @void @isObj (= (array/len @pks) 0))) (if (and @void (!= @config.voidPayload "")) @config.voidPayload @config.nullLit) (default (array/nth @ex 2) @config.nullLit)))))
                             (warn (if (and @void (> (array/len @n) 2) (not (and @isObj (= (array/len @pks) 0)))) [(str/concat "emit " @ev " carries keys its declared empty payload does not have")]
                                   (if (and (= @ptype "") (not @void) (> (array/len @n) 2)) [(str/concat "emit " @ev " carries a payload the trait does not declare")]
                                     (if (and (!= @ptype "") (> (array/len @n) 2) (not @isObj)) [(str/concat "emit " @ev " passes a payload that is not an object literal, so it is not built as " @ptype)] [])))))

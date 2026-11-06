@@ -31,6 +31,7 @@ KNOBS = [
  ("typeNames", "Map string string", {}, "domain", "Type names", "Target text per checker type text, for {{type}} placeholders; a type missing here is written as the checker gives it"),
  ("typeUnknown", "string", "", "domain", "Unknown type", "Written for a {{type}} placeholder whose path the checker has no type for"),
  ("nullLit", "string", "null", "domain", "null", "The null literal"),
+ ("voidPayload", "string", "", "domain", "Void payload", "The payload an emit of a declared-empty payload passes (empty: the null literal)"),
  ("trueLit", "string", "true", "domain", "true", "The true literal"),
  ("falseLit", "string", "false", "domain", "false", "The false literal"),
  ("stringForm", "string", "{{json}}", "domain", "String form", "A string literal, {{json}} its quoted and escaped text"),
