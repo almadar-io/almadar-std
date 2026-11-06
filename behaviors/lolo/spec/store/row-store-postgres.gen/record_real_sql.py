@@ -5,7 +5,7 @@ import base64, json, os, re, socket, struct, subprocess, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 LOLO = os.path.normpath(os.path.join(HERE, "..", "..", ".."))
-ORB = os.environ.get("ORB_BIN", os.path.expanduser("~/bin/orb"))
+ORB = os.environ.get("ORB_BIN", os.path.expanduser("~/bin/orb-dev"))
 ENV = dict(os.environ)
 b64 = lambda b: base64.b64encode(b).decode()
 d64 = base64.b64decode

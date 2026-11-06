@@ -3,7 +3,7 @@
 // package is read live from its .lolo sources in the workspace; the published
 // tarball carries the lowered programs. Writes them into behaviors/registry and
 // declares `orb.registry` in package.json. Needs an `orb` with `orb lower`
-// (ORB_BIN, ~/bin/orb, or the devDependency on PATH via `pnpm exec`).
+// (ORB_BIN, ~/bin/orb-dev, or the devDependency on PATH via `pnpm exec`).
 import { existsSync, mkdirSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { materializeRegistry, readBehaviorPackage } from '@almadar/core/behavior-package';
