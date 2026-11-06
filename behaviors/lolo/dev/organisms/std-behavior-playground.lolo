@@ -78,8 +78,7 @@ orbital BehaviorPlayground {
       showBottomPanel: false
       showStatusBar: true
       statusBarTrait: @trait.PlaygroundStatus
-      showTopBar: true
-      topBarTrait: @trait.PlaygroundTopBar
+      showTopBar: false
     }
     listens {
       PlaygroundTopics.LEAF_PICKED -> SIDEBAR_DOCK
@@ -222,13 +221,17 @@ orbital BehaviorPlayground {
         @label "Behavior icons"
         @description "The icon of a behavior in the tree by its kind; a kind not listed shows a file."
         @tier "presentation"
+      heading : string = @config.title
+        @label "Title"
+        @description "The playground's name, at the top of the sidebar above the topics."
+        @tier "presentation"
     }
     initial: idle
 
     state idle {
       INIT -> idle
         (set @entity.routePending (validate/required ?name))
-        (render-ui main { type: stack, direction: vertical, gap: sm, className: "p-3", children: [{ type: skeleton, variant: list, rows: 8 }] })
+        (render-ui main { type: stack, direction: vertical, gap: sm, className: "p-3", children: [{ type: stack, direction: horizontal, align: center, gap: sm, className: "px-2 pb-1", children: [{ type: icon, name: blocks, size: md }, { type: typography, content: @config.heading, variant: h4, weight: semibold }] }, { type: skeleton, variant: list, rows: 8 }] })
       TOPICS_LOADED -> idle when @entity.routePending
         (set @entity.topics ?topics)
         (emit TOPICS_SHOWN {})
@@ -240,6 +243,7 @@ orbital BehaviorPlayground {
         (emit TOPICS_SHOWN {})
       TOPICS_SHOWN -> idle
         (render-ui main { type: stack, direction: vertical, gap: xs, className: "h-full overflow-y-auto p-2", children: [
+          { type: stack, direction: horizontal, align: center, gap: sm, className: "px-2 pb-1", children: [{ type: icon, name: blocks, size: md }, { type: typography, content: @config.heading, variant: h4, weight: semibold }] },
           { type: typography, content: "Topics", variant: overline, color: muted, className: "px-2 pt-1" },
           { type: file-tree, selectedId: (if (= @entity.leafSelected "") (str/concat @entity.topicPackage " " @entity.topic) @entity.leafSelected), expandedPaths: (array/concat (array/concat (array/unique (array/map @entity.topics (fn t @t.package))) (array/unique (array/flatten (array/map @entity.expanded (fn e (let ((pkg (default (array/first (str/split @e " ")) "")) (segs (str/split (default (array/last (str/split @e " ")) "") "/"))) (array/map (array/range (array/len @segs)) (fn i (str/concat @pkg " " (str/join (array/slice @segs 0 (+ @i 1)) "/")))))))))) (array/unique (array/map (array/filter @entity.leaves (fn l (array/includes @entity.expanded (str/concat @l.package " " @l.topic)))) (fn l (str/concat @l.package " " @l.topic "/" @l.kind "s"))))), onNodeSelect: NODE_SELECTED, items: (array/concat (array/concat (array/concat
             (array/concat
@@ -601,25 +605,8 @@ orbital BehaviorPlayground {
     }
   }
 
-  trait PlaygroundTopBar -> PlaygroundView [client] {
-    config {
-      heading : string = @config.title
-        @label "Title"
-        @tier "presentation"
-    }
-    initial: idle
-
-    state idle {
-      INIT -> idle
-        (render-ui main { type: stack, direction: horizontal, align: center, gap: sm, className: "px-4 py-2", children: [
-          { type: icon, name: blocks, size: md },
-          { type: typography, content: @config.heading, variant: h4, weight: semibold }
-        ] })
-    }
-  }
-
-  page "/" as PlaygroundPage -> PlaygroundFrame, PlaygroundTopBar, PlaygroundTopics, PlaygroundStage, PlaygroundLoader, PlaygroundOpen, GuestSession, BehaviorCatalogData, BehaviorCatalogLlm, CatEmbedWait, CatEmbedRequest, CatEmbedHttp, PlaygroundMachine, PlaygroundOrbit, PlaygroundSource, PlaygroundStatus
-  page "/:package/:name" as PlaygroundBehaviorPage -> PlaygroundFrame, PlaygroundTopBar, PlaygroundTopics, PlaygroundStage, PlaygroundLoader, PlaygroundOpen, GuestSession, BehaviorCatalogData, BehaviorCatalogLlm, CatEmbedWait, CatEmbedRequest, CatEmbedHttp, PlaygroundMachine, PlaygroundOrbit, PlaygroundSource, PlaygroundStatus, PlaygroundRoute
+  page "/" as PlaygroundPage -> PlaygroundFrame, PlaygroundTopics, PlaygroundStage, PlaygroundLoader, PlaygroundOpen, GuestSession, BehaviorCatalogData, BehaviorCatalogLlm, CatEmbedWait, CatEmbedRequest, CatEmbedHttp, PlaygroundMachine, PlaygroundOrbit, PlaygroundSource, PlaygroundStatus
+  page "/:package/:name" as PlaygroundBehaviorPage -> PlaygroundFrame, PlaygroundTopics, PlaygroundStage, PlaygroundLoader, PlaygroundOpen, GuestSession, BehaviorCatalogData, BehaviorCatalogLlm, CatEmbedWait, CatEmbedRequest, CatEmbedHttp, PlaygroundMachine, PlaygroundOrbit, PlaygroundSource, PlaygroundStatus, PlaygroundRoute
 }
 
 orbital NotFound = NotFound.orbitals.NotFoundOrbital {
