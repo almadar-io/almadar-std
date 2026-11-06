@@ -27,8 +27,10 @@ def canon(v):
 def kernel_lines(goldens):
     out = []
     for i, step in enumerate(load(goldens)["cases"][0]["steps"]):
-        for e in step["expect"]["emits"]:
+        for e in step["expect"].get("emits", []):
             out.append(canon({"step": i, "event": e["event"], "payload": e["payload"]}))
+        if "entity" in step["expect"]:
+            out.append(canon({"step": i, "entity": step["expect"]["entity"]}))
     return out
 
 
@@ -61,7 +63,12 @@ def cmd_compare(goldens, actual):
             line = line.strip()
             if line:
                 try:
-                    got.append(canon(json.loads(line)))
+                    row = json.loads(line)
+                    if isinstance(row, dict) and isinstance(row.get("entity"), dict) and len(got) < len(want):
+                        pinned = json.loads(want[len(got)]).get("entity")
+                        if isinstance(pinned, dict):
+                            row["entity"] = {k: row["entity"][k] for k in pinned if k in row["entity"]}
+                    got.append(canon(row))
                 except ValueError:
                     print("  not JSON: " + line)
                     return 1
@@ -76,6 +83,82 @@ def cmd_compare(goldens, actual):
     return 1
 
 
+LIVE_ATOMS = {
+    "python": ("std-lolo-python", "LoloPython", "PYTHON"),
+    "typescript": ("std-lolo-typescript", "LoloTypescript", "TYPESCRIPT"),
+    "rust": ("std-lolo-rust", "LoloRust", "RUST"),
+    "swift": ("std-lolo-swift", "LoloSwift", "SWIFT"),
+    "kotlin": ("std-lolo-kotlin", "LoloKotlin", "KOTLIN"),
+}
+
+DRIVE = """app drive-%(lang)s [
+  version: "1.0.0",
+  stdio: [out]
+]
+orbital DriveOrbital [fs: { cwd: "**": [read] }] {
+  uses R from "std/behaviors/%(atom)s"
+  entity DriveRun [runtime] {
+    id : string!
+  }
+  trait DriveR = R.traits.%(trait)s {
+    listens {
+      Drive.LOLO_TO_%(up)s -> LOLO_TO_%(up)s
+    }
+  }
+  trait Drive -> DriveRun [optimistic] {
+    initial: s
+    state s {
+      INIT -> s
+        (os/read-file { anchor: "cwd" path: %(rel)s } { key: "src" emit: { success: SRC_READ, failure: R_FAILED } })
+      SRC_READ -> s
+        (emit LOLO_TO_%(up)s { path: %(abs)s, source: (bytes/to-string @payload.data) })
+      R_DONE -> s
+        (os/stdout-write (bytes/from-string (str/concat (json/stringify { text: @payload.text, warnings: @payload.warnings }) "\\n")))
+      R_FAILED -> s
+        (os/stdout-write (bytes/from-string (str/concat (json/stringify { error: (default @payload.error "") }) "\\n")))
+    }
+    emits {
+      LOLO_TO_%(up)s -> external { source : string!  path : string? }
+    }
+    listens {
+      SRC_READ { data : bytes! }
+      R_DONE { text : string!  warnings : [string]! }
+      DriveR.%(up)s_RENDERED -> R_DONE
+      R_FAILED { error : string }
+      DriveR.%(up)s_RENDER_FAILED -> R_FAILED
+    }
+  }
+  page boot as DriveStart -> Drive, DriveR
+}
+"""
+
+
+def cmd_drive(lang, root, rel, out):
+    atom, trait, up = LIVE_ATOMS[lang]
+    with open(out, "w") as f:
+        f.write(DRIVE % {"lang": lang, "atom": atom, "trait": trait, "up": up,
+                         "rel": json.dumps(rel), "abs": json.dumps(os.path.join(root, rel))})
+    return 0
+
+
+def cmd_live(answer, out):
+    lines = [l for l in open(answer).read().splitlines() if l.startswith("{")]
+    if not lines:
+        print("  the renderer answered nothing")
+        return 1
+    got = json.loads(lines[-1])
+    if "error" in got:
+        print("  render failed: " + got["error"])
+        return 1
+    if got["warnings"]:
+        print("  render warnings: " + json.dumps(got["warnings"]))
+        return 1
+    os.makedirs(os.path.dirname(out), exist_ok=True)
+    with open(out, "w") as f:
+        f.write(got["text"])
+    return 0
+
+
 if __name__ == "__main__":
     cmd, args = sys.argv[1], sys.argv[2:]
-    sys.exit({"text": cmd_text, "events": cmd_events, "compare": cmd_compare}[cmd](*args))
+    sys.exit({"text": cmd_text, "events": cmd_events, "compare": cmd_compare, "drive": cmd_drive, "live": cmd_live}[cmd](*args))

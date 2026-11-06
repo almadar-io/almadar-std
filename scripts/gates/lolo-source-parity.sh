@@ -2,7 +2,9 @@
 # Proves the native renderers of std-lolo-source (python typescript rust swift kotlin) emit code that
 # compiles against each shell's real `orb compile` models and gives the kernel's answers.
 # Usage: lolo-source-parity.sh [lang...]    (default: all five)
-# Kernel answers: spec/codec/lolo-source.parity/<example>.replay.goldens.json (pinned by `orb goldens`).
+# Kernel answers: spec/codec/lolo-source.parity/<example>.replay.goldens.json (pinned by `orb goldens`): the emits and,
+# where a step pins expect.entity, the row after the step. A course example renders from its pinned language-goldens
+# text; a std atom example (source_of) is rendered live from the atom by the language atom itself.
 # Runs locally at the checkpoint only (owner ruling 2026-11-05: not wired into CI).
 set -u
 HERE=$(cd "$(dirname "$0")" && pwd)
@@ -11,7 +13,7 @@ ROOT=$(cd "$STD/../.." && pwd)
 LOLO=$STD/behaviors/lolo
 PAR=$LOLO/spec/codec/lolo-source.parity
 PY=$HERE/lolo-source-parity.py
-EXAMPLES="cosine recall-at-k agent-step chunk"
+EXAMPLES="cosine recall-at-k agent-step chunk game-score"
 LANGS="${*:-python typescript rust swift kotlin}"
 KOTLIN_PLUGIN=/opt/homebrew/opt/kotlin/libexec/lib/kotlinx-serialization-compiler-plugin.jar
 KLIBS=$HOME/.almadar/kotlin-libs
@@ -44,8 +46,14 @@ finish() { # lang ex actualfile logfile ranOk
   if python3 -I "$PY" compare "$PAR/$ex.replay.goldens.json" "$actual" >>"$log" 2>&1; then report "$lang" "$ex" ok; else report "$lang" "$ex" bad "$log"; fi
 }
 
+source_of() { case $1 in game-score) echo packages/almadar-std/behaviors/lolo/ui/game/atoms/std-score.lolo;; esac; }
+
 render_text() { # lang ex out
-  python3 -I "$PY" text "$LOLO/spec/codec/lolo-$1.replay.goldens.json" "course-$2" "$3"
+  local src; src=$(source_of "$2")
+  if [ -z "$src" ]; then python3 -I "$PY" text "$LOLO/spec/codec/lolo-$1.replay.goldens.json" "course-$2" "$3"; return; fi
+  python3 -I "$PY" drive "$1" "$ROOT" "$src" "$T/drive-$1-$2.lolo" || return 1
+  (cd "$ROOT" && orb run "$T/drive-$1-$2.lolo") >"$T/drive-$1-$2.answer" 2>&1
+  python3 -I "$PY" live "$T/drive-$1-$2.answer" "$3"
 }
 
 goldens_leg() { # lang
