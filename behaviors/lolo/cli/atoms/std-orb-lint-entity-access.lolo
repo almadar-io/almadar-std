@@ -2,7 +2,7 @@ app std-orb-lint-entity-access [
   version: "1.0.0",
   inbound: ["cli-lint-entity-access"],
   env: ["PATH"],
-  exec: ["orb"],
+  exec: [exe],
   fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
   description: "std-orb-lint-entity-access — the `orb lint entity-access <file>` command, the port of entity_access.rs (validate_entity_access and validate_owner_columns_scoped). It lowers the file with program/read and reports an entity that declares owner columns pointing at the [identity] entity but no @read (ORB_ENTITY_OWNER_COLUMN_UNSCOPED, silenced by an @read none reason), and in each @read/@create/@update/@delete directive an `@entity.<field>` or `(object/get @entity <field>)` that names no field of the owning entity (ORB_S_ACCESS_POLICY_UNKNOWN_ENTITY_FIELD) or an @intrinsic one (ORB_GUARD_ON_FRAME_FIELD_AUTHORIZES), a binding root other than @entity and @user (ORB_S_ACCESS_POLICY_INVALID_BINDING), a column compared to `@user.id` that is not a relation to an [identity] entity (ORB_S_OWNER_FIELD_NOT_IDENTITY_TYPED), a literal compared against a closed-vocabulary `@user.<field>` that is not a declared member (ORB_S_ROLE_LITERAL_NOT_MEMBER) and an `@user` read in a program declaring no [identity] entity (ORB_S_ACCESS_POLICY_REQUIRES_IDENTITY), with the Rust path, message and suggestion (status 500, exit 1). The `@user.<field>` existence checks (ORB_S_UNKNOWN_IDENTITY_FIELD, ORB_S_EXPECTATION_FIELD_UNDECLARED) are not ported: they need the installed language's Viewer members, which no lint input carries. Clean answers `lint entity-access: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
 ]

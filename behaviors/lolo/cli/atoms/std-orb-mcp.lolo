@@ -2,7 +2,7 @@ app std-orb-mcp [
   version: "1.0.0",
   env: ["ALMADAR_PERSONA_OWNS", "PATH"],
   inbound: ["cli-mcp"],
-  exec: ["orb"],
+  exec: [exe],
   stdio: [in, out],
   fs: { cwd: "**": [read, write], "/**": [read, write], "~/.orb/**": [read] },
   description: "std-orb-mcp — the `orb mcp [--program <file>]` command: the MCP server as a std program (spec/cli/mcp-server.lolo). The hook cli-mcp takes argv; `--program <file>` names the program whose inbound hooks are served as tools beside the language's. The server version is what `orb --version` answers (`orb X.Y.Z`), run from PATH (os/spawn takes a literal command, so the running binary's own path cannot be spawned). Stdin line framing is owned by std-stdio-lines; each line is acknowledged only after its tool answers, preserving serial requests, fragmented UTF-8 and the final unterminated line. Replies are compact JSON lines on stdout; EOF ends the command after every request is answered. Protocol: initialize, ping, tools/list, tools/call, prompts/list, prompts/get; a parse error is code -32700 with the text `parse error: invalid JSON` (the Rust server's serde wording is not reproduced), an unknown method -32601, an unknown prompt -32602, an unknown tool a tool result with isError. Tools served: validate, format (the text read from the file formatted by program/print { source }, comments kept; with `write: true` the file is rewritten with that text and the answer is still { source }), behaviors (with `scopes`: those registry folders cataloged; without: every installed package from behavior/packages cataloged one package at a time, vectors omitted, answering { behaviors, skipped: [{ package, error }] } where a package whose behaviors do not lower is reported and skipped; the host indexes a package whole, so the unit skipped is the package, not one behavior), describe_behavior, read_behavior ({ path, source } through behavior/source file: true), play, operators, patterns, evaluate (the expression in a one-transition program built with quasiquote, played through program/step with the request entity and payload). complete, reference and test run std-orb-complete, std-orb-reference and std-orb-test. Hook tools from --program are listed from program/inputs and called by program/dispatch with inbound; the guest-binding gap is recorded in the std ledger."
@@ -176,7 +176,7 @@ orbital OrbMcpOrbital {
     state versioning {
       INIT -> versioning
       MCP_PATH_READ -> versioning
-        (os/spawn "orb" ["--version"] { cwd: null env: { PATH: (default @payload.value "") } stdin: "null" stdout: "pipe" stderr: "null" detached: false } { key: "spawn" emit: { success: MCP_SPAWNED, failure: MCP_START_FAILED } })
+        (os/spawn { anchor: "exe" } ["--version"] { cwd: null env: { PATH: (default @payload.value "") } stdin: "null" stdout: "pipe" stderr: "null" detached: false } { key: "spawn" emit: { success: MCP_SPAWNED, failure: MCP_START_FAILED } })
       MCP_START_FAILED -> starting
         (emit MCP_ANSWERED { status: 500, body: (str/concat "orb mcp: " (default @payload.error "")) })
       MCP_SPAWNED -> versioning

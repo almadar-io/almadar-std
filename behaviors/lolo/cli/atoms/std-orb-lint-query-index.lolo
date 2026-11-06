@@ -2,7 +2,7 @@ app std-orb-lint-query-index [
   version: "1.0.0",
   inbound: ["cli-lint-query-index"],
   env: ["PATH"],
-  exec: ["orb"],
+  exec: [exe],
   fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
   description: "std-orb-lint-query-index — the `orb lint query-index <file>` command, the check of declared `@index` access paths against the fetches that use them. It lowers the file with program/read. A path naming a field the entity does not declare (id, createdAt and updatedAt always are) or a non-scalar field (array, object, file) is [ORB_INDEX_PATH_INVALID]; a path repeating an earlier one (field and field:asc are one order) is [ORB_INDEX_PATH_DUPLICATE]. A conjunctive fetch of a persistent entity whose store driver creates no index at runtime (a driver config with an orderableFields knob) and that needs a composite index (two or more equality fields, or an equality with a range or an order on another field) is [ORB_FETCH_NEEDS_COMPOSITE_INDEX] unless a path covers it. A fetch with an equality or a range that a bound driver declines (no compare leaf, or an order outside a listed orderableFields) and that no path covers is the warning [ORB_FETCH_UNINDEXED]. A path covers a fetch when its leading fields are the fetch's equality fields in any order, a range is on the next field, and its orderBy is the fetch's orderBy. Clean answers `lint query-index: clean` (status 200, exit 0); findings answer status 500 (exit 1). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
 ]

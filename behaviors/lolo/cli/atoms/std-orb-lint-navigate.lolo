@@ -2,7 +2,7 @@ app std-orb-lint-navigate [
   version: "1.0.0",
   inbound: ["cli-lint-navigate"],
   env: ["PATH"],
-  exec: ["orb"],
+  exec: [exe],
   fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
   description: "std-orb-lint-navigate — the `orb lint navigate <file>` command, the port of validate_navigate and validate_send_server (effect/navigate.rs). It lowers the file with program/read, builds the declared page set (every inline page with the required payload fields of its traits' INIT events, every `expects page` route and every `uses lazy` page, a declaration keeping its own payload) and walks the effects of every inline trait transition and tick, descending through do, if, when and let. A `navigate` with no path is ORB_EFF_UNKNOWN_TYPE; a literal target that is neither an http(s) URL nor starts with / or @ is ORB_P_INVALID_PATH; a target that resolves to no declared page (the host sign-in route /login and external URLs aside, and a target that is wholly a binding) is ORB_EFF_NAVIGATE_TARGET_UNREACHABLE; a target page whose INIT requires payload fields the navigate does not pass is ORB_EFF_NAVIGATE_MISSING_PAYLOAD per field. A `send-server` with no event name is ORB_EFF_UNKNOWN_TYPE. Each finding carries the Rust path, message and suggestion (status 500, exit 1). The rule asks std-orb-effect-leaves for the navigate and send-server effects (heads: navigate, send-server) and reads the path, its str/concat prefix and the payload object's keys from their flat typed nodes. Clean answers `lint navigate: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
 ]

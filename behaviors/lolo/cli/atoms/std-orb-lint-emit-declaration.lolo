@@ -2,7 +2,7 @@ app std-orb-lint-emit-declaration [
   version: "1.0.0",
   inbound: ["cli-lint-emit-declaration"],
   env: ["PATH"],
-  exec: ["orb"],
+  exec: [exe],
   fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
   description: "std-orb-lint-emit-declaration — the `orb lint emit-declaration <file>` command, the port of validate_emit_against_declaration (effect/emit_declaration.rs). It lowers the file with program/read and checks each `emit` effect of every inline trait transition and tick, however nested in do, if, when and let (std-orb-effect-leaves flattens them): an event the trait's `emits` array does not declare is ORB_T_EVT_UNDECLARED, and an emit of a declared external event that carries a payload object missing a required payload field (or carries a non-object payload while the event has required fields) is ORB_X_PAYLOAD_MISMATCH, each with the Rust path, message and suggestion (status 500, exit 1). ORB_EFF_MISSING_REQUIRED_EMIT (validate_required_emit_success) is not here: no operator in the table sets requiresEmitSuccess, so the Rust pass is inert. The rule asks std-orb-effect-leaves for the emit effects (heads: emit) and reads the event name and the payload object's keys from their flat typed nodes. Clean answers `lint emit-declaration: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
 ]

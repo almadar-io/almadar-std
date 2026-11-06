@@ -2,7 +2,7 @@ app std-orb-lint-llm-wire-unrouted [
   version: "1.0.0",
   inbound: ["cli-lint-llm-wire-unrouted"],
   env: ["PATH"],
-  exec: ["orb"],
+  exec: [exe],
   fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
   description: "std-orb-lint-llm-wire-unrouted — the `orb lint llm-wire-unrouted <file>` command (ORB_X_LLM_WIRE_UNROUTED). std-llm hands its HTTP calls to the composer: LLM_CHAT_WIRE and LLM_EMBED_WIRE carry the request, LLM_CHAT_WIRE_CANCEL and LLM_EMBED_WIRE_CANCEL abort it, and the composer routes each to std-http-request. A composed trait that declares one of these in its `emits`, reaches it from an event a route delivers to it (std-orb-effect-leaves flattens the emit effects of its transitions; the events that lead to the wire event are the transitions' emit chain, followed backwards to a fixed point), and has no trait in the program listening to its wire event, sends a request that never leaves the program: the call waits for an answer nothing sends. A trait no route reaches the wire from (an embed-only composer's chat wire) is not reported, and a cancel wire is reported only when its request wire is routed (nothing is in flight to abort otherwise). A route sourced at the trait (the listener's own orbital) or at the trait's orbital counts. Reports once per trait and wire event at orbitals.<Orbital>.traits.<Trait> (status 500, exit 1). The rule asks std-orb-effect-leaves for the emit effects (heads: emit) and reads each emitted event name from their flat typed nodes. Clean answers `lint llm-wire-unrouted: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
 ]
