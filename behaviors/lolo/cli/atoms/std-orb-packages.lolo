@@ -2,7 +2,7 @@ app std-orb-packages [
   version: "1.0.0",
   inbound: ["cli-packages"],
   env: ["PATH"],
-  exec: ["orb"],
+  exec: [exe],
   sys: [identity],
   fs: { cwd: "**": [read, write, create, remove], "/**": [read], "~/.orb/**": [read, write, create, remove], "~/.orb": [create] },
   net: { "registry.npmjs.org:443": [tcp] },
@@ -526,7 +526,7 @@ orbital OrbPackagesOrbital {
       PKG_RUNNING_FAILED -> ready
         (emit PACKAGES_ANSWERED { status: 500, body: "", stderr: (str/concat "orb update: the running orb's language could not be read: " (default @payload.error "")) })
       PKG_PATH_READ -> resolving
-        (os/spawn "orb" ["--version"] { cwd: null env: { PATH: (default @payload.value "") } stdin: "null" stdout: "pipe" stderr: "null" detached: false } { key: "spawn" emit: { success: PKG_SPAWNED, failure: PKG_RUNNING_FAILED } })
+        (os/spawn { anchor: "exe" } ["--version"] { cwd: null env: { PATH: (default @payload.value "") } stdin: "null" stdout: "pipe" stderr: "null" detached: false } { key: "spawn" emit: { success: PKG_SPAWNED, failure: PKG_RUNNING_FAILED } })
       PKG_SPAWNED -> resolving
         (set @entity.pid @payload.pid)
         (os/read @payload.stdout 4096 { key: "version" emit: { success: PKG_VERSION_TEXT, failure: PKG_RUNNING_FAILED } })
