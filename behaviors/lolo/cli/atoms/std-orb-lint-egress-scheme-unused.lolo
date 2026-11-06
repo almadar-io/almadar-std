@@ -2,7 +2,7 @@ app std-orb-lint-egress-scheme-unused [
   version: "1.0.0",
   inbound: ["cli-lint-egress-scheme-unused"],
   env: ["PATH"],
-  exec: ["orb"],
+  exec: [exe],
   fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
   description: "std-orb-lint-egress-scheme-unused — the `orb lint egress-scheme-unused <file>` command, the os-grants-family check of the app `egress` list. The TCP protocol-target grants were retired (G-ORB-586): an entry with the scheme redis, rediss, postgres or postgresql grants nothing, because no operator or fetch uses it (the Redis and Postgres wires are std-resp-client and std-row-store-postgres over os/tcp-connect, and a socket is granted by a net entry). It lowers the file with program/read and reports each such entry, naming the net-grant replacement (net: { \"host:port\": [tcp] }, the entry's own host and port). Clean answers `lint egress-scheme-unused: clean` (status 200, exit 0); findings are status 500, exit 1. Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
 ]

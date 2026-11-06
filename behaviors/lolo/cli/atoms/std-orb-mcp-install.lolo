@@ -1,7 +1,7 @@
 app std-orb-mcp-install [
   version: "1.0.0",
   inbound: ["cli-mcp-install"],
-  exec: ["orb"],
+  exec: [exe, "orb"],
   env: ["PATH", "HOME"],
   fs: { cwd: "**": [read, write, create] },
   description: "std-orb-mcp-install — the `orb mcp install --client claude|cursor|vscode` command. It registers the `orb` MCP server in the directory the command runs in (claude: .mcp.json, cursor: .cursor/mcp.json, vscode: .vscode/mcp.json): the entry runs `npx -y @almadar/orb mcp` (the vscode entry also carries type stdio) under `mcpServers` (claude, cursor) or `servers` (vscode). Every other entry and key of an existing config is kept; a config that is not a JSON object, or a servers key that is not an object, is left unchanged and answered with its path (status 500, exit 1); the parent directory is created when missing. A missing or unknown --client, or any further word, answers the usage (status 400, exit 2). On success the answer is `Registered `orb mcp` in <path>`; the installed language is then checked through std-cli (`orb list --global`) and a failure adds a warning line naming `npx -y @almadar/orb update --global`. The file is written as compact JSON followed by a newline."

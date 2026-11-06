@@ -2,7 +2,7 @@ app std-orb-lint-circular-dependencies [
   version: "1.0.0",
   inbound: ["cli-lint-circular-dependencies"],
   env: ["PATH"],
-  exec: ["orb"],
+  exec: [exe],
   fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
   description: "std-orb-lint-circular-dependencies — the `orb lint circular-dependencies <file>` command, the port of validate_circular_dependencies (circuit/cross_orbital/cycles.rs, ORB_X_CIRCULAR_DEPENDENCY). It builds an event-level graph whose node is (trait, event its arm receives): an arm's emits (an `(emit X)` effect at any array depth, an object carrying `emit: X`, and the `emit` map values of a fetch or persist effect) reach the arms a `listens` route triggers. A route is an edge only when it can propagate (some transition on its trigger has an emit effect or an emit-carrying effect option), is not a lifecycle trigger (INIT, LOAD, RESET), the emitter is another trait, the route's source matches the emitter, neither the emitting arm nor the listen carries a guard (a guard names the loop's exit), and an edge across orbitals needs the emitter's `scope: external` emit, an externally scoped listen or an orbital-sourced listen. The first cycle found by a depth-first walk in sorted node order is reported once at `traits` with its node path (the Rust walk follows hash order, so the path it prints is not stable; this lint's path is). Reports ORB_X_CIRCULAR_DEPENDENCY (status 500, exit 1). Clean answers `lint circular-dependencies: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
 ]

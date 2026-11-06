@@ -2,7 +2,7 @@ app std-orb-lint-tick-requires-runtime [
   version: "1.0.0",
   inbound: ["cli-lint-tick-requires-runtime"],
   env: ["PATH"],
-  exec: ["orb"],
+  exec: [exe],
   fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
   description: "std-orb-lint-tick-requires-runtime — the `orb lint tick-requires-runtime <file>` command, the port of ORB_TICK_REQUIRES_RUNTIME (entity_mutation.rs validate_trait_tick_guards). It lowers the file with program/read and, for every inline trait that declares at least one non-cron tick (a numeric interval, or a string that is not a valid 5-field cron expression, as `orbital_core_base::cron::is_valid_cron_expression` decides) and is linked to a persistent entity (no persistence mode, or `persistent`; the last entity of that name in the program wins, auxiliary entities included), reports the trait once at `...ticks` with the Rust message and suggestion (status 500, exit 1). It also reports ORB_TICK_ASYNC_EFFECT for each effect of a non-cron tick whose tree calls an operator of the registry's std-llm category (llm/call-tools, llm/compact, llm/embed, llm/generate, llm/switch, llm/token-count), found with tree/fold, at `...ticks[i].effects[j]`. Clean answers `lint tick-requires-runtime: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
 ]

@@ -2,7 +2,7 @@ app std-orb-lint-unsigned-guard [
   version: "1.0.0",
   inbound: ["cli-lint-unsigned-guard"],
   env: ["PATH"],
-  exec: ["orb"],
+  exec: [exe],
   fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
   description: "std-orb-lint-unsigned-guard — the `orb lint unsigned-guard <file>` command: a literal `allowUnsigned: true` on a `jws/verify` call accepts an alg:none token, so the transition holding it must be env-guarded or it is an error (ORB_EFF_UNSIGNED_NOT_ENV_GUARDED). It lowers the file with program/read and reads every inline trait's transitions. A transition is env-guarded when its event is the success answer of an `os/getenv` effect of the trait and its guard compares the answered value (`=` over a `@payload.value` read, alone or as an argument of `and`), or when its event has no listens source, at least one transition of the trait names it as a literal in its effects (an `emit`, or the answer name of a fetch, persist or os/getenv) and none of those transitions is unguarded: guard is propagated from the env-guarded answer arms along those naming edges, a transition reached by no guarded arm (a cycle with no guarded entry) is not guarded, and any transition that is not guarded and has a listens-sourced event or no naming transition taints everything it names. Only inline traits are read; an event named only by a computed expression is not tracked. Clean answers `lint unsigned-guard: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500.",
 ]

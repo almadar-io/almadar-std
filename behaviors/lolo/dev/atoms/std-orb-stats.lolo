@@ -1,6 +1,6 @@
 app std-orb-stats [
   version: "1.0.0",
-  exec: ["orb", "ps"],
+  exec: [exe, "orb", "ps"],
   env: ["PATH", "HOME"],
   description: "std-orb-stats — what the orb running this program reports about itself. ORB_STATS_ASK reads the kernel's counters with program/inputs { stats: true } (registeredSchemas, registeredTraits, activeInstances, cachedEntities) and answers ORB_KERNEL_READ { registeredSchemas, registeredTraits, activeInstances, cachedEntities }; every ask also reads the uptime of the orb process: os/pid gives the host process id and `ps -o etime= -p <pid>` runs through std-cli (the ps on PATH), its [[dd-]hh:]mm:ss answer is parsed to milliseconds and answered as ORB_UPTIME_READ { uptimeMs }, so the figure is the process's, not the session's or the first ask's; the first ask also runs `orb --version` through std-cli (the orb on PATH) and answers ORB_VERSION_READ { version } with the output trimmed; the version is read once per mount, and every later ask answers ORB_VERSION_READ again with it, so a client that joined later still gets it. A kernel read that the host refuses, a version run that exits non-zero or cannot start, a pid the host cannot give, a ps run that exits non-zero or cannot start, or an elapsed time that is not that format, answers ORB_STATS_FAILED { stat, code, error } (stat kernel, version or process-uptime) and the other stats are still answered. Subject-agnostic: it knows nothing of who asks.",
   egress: []

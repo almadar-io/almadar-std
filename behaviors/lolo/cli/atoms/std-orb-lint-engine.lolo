@@ -1,7 +1,7 @@
 app std-orb-lint-engine [
   version: "1.0.0",
   env: ["PATH"],
-  exec: ["orb"],
+  exec: [exe],
   fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
   description: "std-orb-lint-engine — the rule engine of the lint umbrella. For a LINT_RUN { file } it composes every file-taking std-orb-lint-* rule trait (shared-types is left out: it walks the std and io behavior trees and takes no file), asks the lint input to read and lower the file once (LINT_REQUEST), collects LINT_FOUND { rule, findings } from each rule, then asks the input for each lazy child the resolved program split off (LINT_LAZY names them; LINT_CHILD_REQUEST { index } replays every rule on that child, each rule echoing the pass's scope (empty for the program, the child's orbital) so every pass's answers are distinct deliveries (EXEC-QUEUE-4), and a child's findings' paths prefixed `lazy[<scope>].` as the compiler's validate_lazy_children prefixed them) and answers LINT_COLLECTED { findings, found } once every rule answered for the program and every child, or LINT_INPUT_UNREAD when the file cannot be read or lowered. It declares no cli hook: std-orb-lint-all (the `orb lint all` hook) and std-orb-validate and std-orb-compile (the policy lints) compose its orbital."
 ]
