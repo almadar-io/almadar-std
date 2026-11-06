@@ -1,0 +1,25 @@
+app analytics-stats-spec [
+  version: "1.0.0",
+  description: "Design contract for the stats side of cookieless first-party analytics: the stored events of a site and time window become pageviews, unique visitors and the top pages and referrers. It reads events whoever stores them; writing them is the collector's contract (analytics-collector)."
+]
+
+orbital AnalyticsStatsSpec {
+  expects entity AnalyticsEvent {
+    ts : number!
+    name : string!
+    domain : string!
+    path : string!
+    visitorId : string!
+    referrer : string
+  }
+  expects trait AnalyticsStats {
+    state ready {
+      ANALYTICS_STATS -> ready
+    }
+    emits {
+      ANALYTICS_STATS_RESULT { pageviews : number!  visitors : number! }
+      ANALYTICS_STATS_FAILED { error : string! }
+    }
+  }
+  expects page "/analytics-stats" -> AnalyticsStats
+}

@@ -1,0 +1,353 @@
+{
+  "atom": "../ml/atoms/std-ml-ladder.lolo",
+  "trait": "LadderEntry",
+  "orbital": "MlLadderOrbital",
+  "note": "kernel answers for std-ml-ladder rendered live from its atom: each step's emits and its trait's row after the step",
+  "cases": [
+    {
+      "id": "ml-ladder",
+      "steps": [
+        {
+          "trait": "LadderEntry",
+          "event": "INIT",
+          "payload": {},
+          "expect": {
+            "emits": [],
+            "entity": {
+              "status": "idle"
+            }
+          }
+        },
+        {
+          "trait": "LadderEntry",
+          "event": "DECIDE",
+          "payload": {
+            "candidate": "Apple",
+            "key": "apple",
+            "candidateNumber": 3,
+            "accepted": [
+              "apple",
+              "pear"
+            ],
+            "categories": [
+              "fruit"
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "RUN_EXACT",
+                "payload": {
+                  "candidate": "Apple",
+                  "key": "apple",
+                  "candidateNumber": 3,
+                  "request": {
+                    "candidate": "Apple",
+                    "key": "apple",
+                    "candidateNumber": 3,
+                    "accepted": [
+                      "apple",
+                      "pear"
+                    ],
+                    "categories": [
+                      "fruit"
+                    ]
+                  }
+                }
+              }
+            ],
+            "entity": {
+              "status": "dispatched"
+            }
+          }
+        },
+        {
+          "trait": "LadderEntry",
+          "event": "DECIDE",
+          "payload": {
+            "candidate": "Apple",
+            "key": "apple",
+            "candidateNumber": 3,
+            "accepted": [
+              "apple",
+              "pear"
+            ],
+            "categories": [
+              "fruit"
+            ]
+          },
+          "expect": {
+            "fired": false,
+            "emits": [],
+            "entity": {
+              "status": "dispatched"
+            }
+          }
+        },
+        {
+          "trait": "LadderEntry",
+          "event": "RESET",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "RUNGS_RESET",
+                "payload": {}
+              }
+            ],
+            "entity": {
+              "status": "idle"
+            }
+          }
+        },
+        {
+          "trait": "LadderVerdictSink",
+          "event": "INIT",
+          "payload": {},
+          "expect": {
+            "emits": [],
+            "entity": {
+              "rung": "",
+              "confidence": 0,
+              "reasoning": "",
+              "failReason": "",
+              "status": "idle"
+            }
+          }
+        },
+        {
+          "trait": "LadderVerdictSink",
+          "event": "FROM_SIMILARITY",
+          "payload": {
+            "index": 2,
+            "score": 0.75
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "DECIDED",
+                "payload": {
+                  "rung": "R3",
+                  "confidence": 0.75,
+                  "matched": {
+                    "type": "index",
+                    "index": 2
+                  },
+                  "reasoning": ""
+                }
+              }
+            ],
+            "entity": {
+              "rung": "R3",
+              "confidence": 0.75,
+              "reasoning": "",
+              "failReason": "",
+              "status": "decided"
+            }
+          }
+        },
+        {
+          "trait": "LadderVerdictSink",
+          "event": "FROM_EXACT",
+          "payload": {
+            "key": "k"
+          },
+          "expect": {
+            "fired": false,
+            "emits": [],
+            "entity": {
+              "rung": "R3",
+              "confidence": 0.75,
+              "reasoning": "",
+              "failReason": "",
+              "status": "decided"
+            }
+          }
+        },
+        {
+          "trait": "LadderVerdictSink",
+          "event": "RESET",
+          "payload": {},
+          "expect": {
+            "emits": [],
+            "entity": {
+              "rung": "",
+              "confidence": 0,
+              "reasoning": "",
+              "failReason": "",
+              "status": "idle"
+            }
+          }
+        },
+        {
+          "trait": "LadderVerdictSink",
+          "event": "FROM_INFER",
+          "payload": {
+            "output": [
+              0.5,
+              1.5
+            ],
+            "confidence": 0.9
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "DECIDED",
+                "payload": {
+                  "rung": "R4",
+                  "confidence": 0.9,
+                  "matched": {
+                    "type": "tensor",
+                    "output": [
+                      0.5,
+                      1.5
+                    ]
+                  },
+                  "reasoning": ""
+                }
+              }
+            ],
+            "entity": {
+              "rung": "R4",
+              "confidence": 0.9,
+              "reasoning": "",
+              "failReason": "",
+              "status": "decided"
+            }
+          }
+        },
+        {
+          "trait": "LadderVerdictSink",
+          "event": "RESET",
+          "payload": {},
+          "expect": {
+            "emits": [],
+            "entity": {
+              "rung": "",
+              "confidence": 0,
+              "reasoning": "",
+              "failReason": "",
+              "status": "idle"
+            }
+          }
+        },
+        {
+          "trait": "LadderVerdictSink",
+          "event": "FROM_CLASSIFY_FAILURE",
+          "payload": {
+            "error": "classifier down"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "DECISION_FAILED",
+                "payload": {
+                  "reason": "classifier down"
+                }
+              }
+            ],
+            "entity": {
+              "rung": "",
+              "confidence": 0,
+              "reasoning": "",
+              "failReason": "classifier down",
+              "status": "failed"
+            }
+          }
+        },
+        {
+          "trait": "LadderVerdictSink",
+          "event": "RESET",
+          "payload": {},
+          "expect": {
+            "emits": [],
+            "entity": {
+              "rung": "",
+              "confidence": 0,
+              "reasoning": "",
+              "failReason": "",
+              "status": "idle"
+            }
+          }
+        },
+        {
+          "trait": "LadderVerdictSink",
+          "event": "FROM_CLASSIFY",
+          "payload": {
+            "category": "fruit",
+            "confidence": 0.6,
+            "reasoning": "round"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "DECIDED",
+                "payload": {
+                  "rung": "R5",
+                  "confidence": 0.6,
+                  "matched": {
+                    "type": "text",
+                    "text": "fruit"
+                  },
+                  "reasoning": "round"
+                }
+              }
+            ],
+            "entity": {
+              "rung": "R5",
+              "confidence": 0.6,
+              "reasoning": "round",
+              "failReason": "",
+              "status": "decided"
+            }
+          }
+        },
+        {
+          "trait": "LadderVerdictSink",
+          "event": "RESET",
+          "payload": {},
+          "expect": {
+            "emits": [],
+            "entity": {
+              "rung": "",
+              "confidence": 0,
+              "reasoning": "",
+              "failReason": "",
+              "status": "idle"
+            }
+          }
+        },
+        {
+          "trait": "LadderVerdictSink",
+          "event": "FROM_LOOKUP",
+          "payload": {
+            "entry": "pear"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "DECIDED",
+                "payload": {
+                  "rung": "R1",
+                  "confidence": 1,
+                  "matched": {
+                    "type": "text",
+                    "text": "pear"
+                  },
+                  "reasoning": ""
+                }
+              }
+            ],
+            "entity": {
+              "rung": "R1",
+              "confidence": 1,
+              "reasoning": "",
+              "failReason": "",
+              "status": "decided"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

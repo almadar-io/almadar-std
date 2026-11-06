@@ -13,7 +13,7 @@ type DescribedMachine = { stateMachine : DescribedStateMachine! }
 type TransitionLines = { index : number!, start : number!, end : number! }
 type DescribedSource = { text : string!, transitions : [TransitionLines]! }
 type TraitRef = { behavior : string, trait : string! }
-type MachineMove = { trait : string!, event : string!, from : string!, to : string!, fired : boolean! }
+type MachineMove = { trait : string!, event : string?, from : string!, to : string!, fired : boolean! }
 type SubjectExpr = SExpr
 type DescribedSubject = { machine : DescribedMachine!, source : DescribedSource! }
 type CodeHighlight = { start : number!, end : number! }
@@ -289,6 +289,7 @@ orbital LiveMachineOrbital {
       TREE_FAILED -> waiting
         (render-ui main { type: error-state, title: (i18n/t "diagram.orbitFailed"), message: ?error, retryEvent: ORBIT_RETRY })
       SELECT_TRAIT -> waiting
+      PICK_TRAIT -> waiting
       MOVES -> waiting
       SOURCE -> waiting
       SOURCE_FAILED -> waiting
@@ -346,6 +347,17 @@ orbital LiveMachineOrbital {
         (set @entity.pinned false)
         (render-ui main @config.view)
       SELECT_TRAIT -> showing when (or (not @entity.pinned) (!= ?trait @entity.title))
+        (set @entity.pinned true)
+        (set @entity.title ?trait)
+        (set @entity.sourceText "")
+        (set @entity.sourceLines [])
+        (set @entity.highlight null)
+        (emit SOURCE_WANTED { behavior: @entity.behavior, trait: ?trait })
+        (render-ui main @config.view)
+      PICK_TRAIT -> showing when (== ?trait @entity.title)
+        (set @entity.pinned true)
+        (render-ui main @config.view)
+      PICK_TRAIT -> showing when (!= ?trait @entity.title)
         (set @entity.pinned true)
         (set @entity.title ?trait)
         (set @entity.sourceText "")
@@ -451,6 +463,11 @@ orbital LiveMachineOrbital {
       }
         @description "Show this trait's source and keep it while other traits move; choosing it again lets the source follow the trait that moves."
         @synonyms "pin a trait's code, show this trait's source"
+      PICK_TRAIT {
+        trait : string!
+      }
+        @description "The trait picked from its output on the page with the inspect toggle: show its source and keep it, even when it is already the one shown."
+        @synonyms "inspect an element, find the trait that drew this"
       SOURCE {
         trait : string!
         text : string!
@@ -483,6 +500,7 @@ orbital LiveMachineOrbital {
         expandDepth: @config.expandDepth
         selectedTrait: @entity.title
         selectEvent: SELECT_TRAIT
+        pickEvent: PICK_TRAIT
         ;; side by side both columns fill the panel; stacked they share it (the code under its 2.875rem title bar)
         className: "[--live-machine-diagram:45dvh] @md:[--live-machine-diagram:calc(100dvh_-_7rem)]"
         maxHeight: "var(--live-machine-diagram)"

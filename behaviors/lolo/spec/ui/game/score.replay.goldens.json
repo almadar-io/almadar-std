@@ -1,0 +1,59 @@
+{
+  "atom": "../ui/game/atoms/std-score.lolo",
+  "trait": "ScoreKeeper",
+  "orbital": "ScoreOrbital",
+  "cases": [
+    {
+      "id": "init-sets-the-start-score-and-the-kill-baseline",
+      "config": { "startScore": 5, "initialEnemies": 3 },
+      "steps": [
+        { "from": "active", "event": "INIT", "expect": { "fired": true, "state": "active", "entity": { "score": 5, "scoreBaseline": 3 } } }
+      ]
+    },
+    {
+      "id": "an-enemy-drop-awards-points-per-kill",
+      "config": { "pointsPerKill": 7 },
+      "entity": { "id": "s", "score": 1, "scoreBaseline": 4 },
+      "steps": [
+        { "from": "active", "event": "UNITS_CHANGED", "payload": { "enemiesAlive": 2 }, "expect": { "fired": true, "entity": { "score": 15, "scoreBaseline": 2 } } }
+      ]
+    },
+    {
+      "id": "control-an-unchanged-enemy-count-awards-nothing",
+      "entity": { "id": "s", "score": 1, "scoreBaseline": 4 },
+      "steps": [
+        { "from": "active", "event": "UNITS_CHANGED", "payload": { "enemiesAlive": 4 }, "expect": { "fired": true, "entity": { "score": 1, "scoreBaseline": 4 } } }
+      ]
+    },
+    {
+      "id": "an-enemy-rise-awards-nothing-and-moves-the-baseline",
+      "entity": { "id": "s", "score": 1, "scoreBaseline": 2 },
+      "steps": [
+        { "from": "active", "event": "UNITS_CHANGED", "payload": { "enemiesAlive": 5 }, "expect": { "fired": true, "entity": { "score": 1, "scoreBaseline": 5 } } }
+      ]
+    },
+    {
+      "id": "a-signal-without-an-enemy-count-keeps-the-row",
+      "entity": { "id": "s", "score": 3, "scoreBaseline": 4 },
+      "steps": [
+        { "from": "active", "event": "UNITS_CHANGED", "payload": { "playersAlive": 1 }, "expect": { "fired": true, "entity": { "score": 3, "scoreBaseline": 4 } } }
+      ]
+    },
+    {
+      "id": "scoring-is-frozen-when-not-running",
+      "config": { "running": false },
+      "entity": { "id": "s", "score": 1, "scoreBaseline": 4 },
+      "steps": [
+        { "from": "active", "event": "UNITS_CHANGED", "payload": { "enemiesAlive": 0 }, "expect": { "fired": false, "entity": { "score": 1, "scoreBaseline": 4 } } }
+      ]
+    },
+    {
+      "id": "two-drops-accumulate",
+      "entity": { "id": "s", "score": 0, "scoreBaseline": 5 },
+      "steps": [
+        { "from": "active", "event": "UNITS_CHANGED", "payload": { "enemiesAlive": 4 }, "expect": { "entity": { "score": 10 } } },
+        { "from": "active", "event": "UNITS_CHANGED", "payload": { "enemiesAlive": 1 }, "expect": { "entity": { "score": 40, "scoreBaseline": 1 } } }
+      ]
+    }
+  ]
+}

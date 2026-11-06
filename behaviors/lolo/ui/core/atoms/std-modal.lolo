@@ -50,7 +50,7 @@ orbital ModalRecordOrbital {
       ;; substituted at molecule inline time — atoms validate this with
       ;; @config allowed-but-unresolved.
       OPEN -> open when (or (= @config.mode create) (validate/required ?row) (if (= @entity.seedRow null) false (!= (default (object/get @entity.seedRow id) "") "")))
-        (set @entity.id ?id)
+        (when (validate/required ?id) (set @entity.id ?id))
         (render-ui @config.detailSlot {
           children: [{
             children: [{ name: @config.icon, size: lg, type: icon }, {

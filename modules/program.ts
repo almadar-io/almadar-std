@@ -229,9 +229,9 @@ export const PROGRAM_OPERATORS: Record<string, StdOperatorMeta> = {
     returnType: openShape({
       guest: STRING,
       states: mapOf(STRING, STRING),
-      rendered: list(shape({ slot: STRING, trait: STRING, embedded: BOOLEAN, content: SEXPR })),
+      rendered: list(shape({ slot: STRING, trait: STRING, orbital: nullable(STRING), embedded: BOOLEAN, content: SEXPR })),
       emitted: list(openShape({ event: STRING })),
-      outcomes: list(shape({ trait: STRING, event: STRING, from: STRING, to: STRING, fired: BOOLEAN }, ['event'])),
+      outcomes: list(shape({ trait: STRING, event: nullable(STRING), from: STRING, to: STRING, fired: BOOLEAN })),
       rejections: list(openShape({ code: STRING })),
     }),
     params: [
@@ -251,9 +251,9 @@ export const PROGRAM_OPERATORS: Record<string, StdOperatorMeta> = {
     returnType: openShape({
       guest: STRING,
       states: mapOf(STRING, STRING),
-      rendered: list(shape({ slot: STRING, trait: STRING, embedded: BOOLEAN, content: SEXPR })),
+      rendered: list(shape({ slot: STRING, trait: STRING, orbital: nullable(STRING), embedded: BOOLEAN, content: SEXPR })),
       emitted: list(openShape({ event: STRING })),
-      outcomes: list(shape({ trait: STRING, event: STRING, from: STRING, to: STRING, fired: BOOLEAN }, ['event'])),
+      outcomes: list(shape({ trait: STRING, event: nullable(STRING), from: STRING, to: STRING, fired: BOOLEAN })),
       rejections: list(openShape({ code: STRING })),
     }),
     params: [
@@ -294,7 +294,7 @@ export const PROGRAM_OPERATORS: Record<string, StdOperatorMeta> = {
     hasSideEffects: true,
     runsOn: 'server',
     host: 'program',
-    returnType: openShape({ ok: BOOLEAN, error: STRING, rendered: list(shape({ slot: STRING, trait: STRING, embedded: BOOLEAN, content: SEXPR })), emitted: list(openShape({ event: STRING })) }),
+    returnType: openShape({ ok: BOOLEAN, error: STRING, rendered: list(shape({ slot: STRING, trait: STRING, orbital: nullable(STRING), embedded: BOOLEAN, content: SEXPR })), emitted: list(openShape({ event: STRING })) }),
     params: [
       { name: 'address', type: union(STRING, openShape({ inbound: STRING, body: nullable(STRING), headers: nullable(mapOf(STRING, STRING)) })), description: 'The input to dispatch: `EVENT`, `Trait.EVENT` or `Orbital.Trait.EVENT`; or an inbound delivery `{ inbound, body?, headers? }`' },
       { name: 'arguments', type: STRING, description: 'The payload as JSON text, as a model sends it (a payload object is accepted too); absent or empty is no payload', optional: true },

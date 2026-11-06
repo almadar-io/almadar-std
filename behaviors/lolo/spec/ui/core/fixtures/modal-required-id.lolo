@@ -1,0 +1,70 @@
+app modal-required-id [
+  version: "1.0.0",
+  description: "std-modal composed on a host entity whose id is required, as an app's create form is (std-finance-tracker's BudgetCreate): the page's 'Add' button fires CREATE with no id, the modal opens the create form, and its SAVE reaches the page."
+]
+
+uses Modal from "std/behaviors/std-modal"
+
+orbital Ledger {
+  entity Budget [runtime] {
+    id : string!
+    category : string
+  }
+
+  trait BudgetPage -> Budget {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main { type: button, label: "Add budget", action: CREATE })
+      SAVED -> idle
+        (notify success "Budget saved")
+    }
+
+    emits {
+      CREATE
+        @description "The viewer asked to add a budget."
+    }
+
+    listens {
+      BudgetCreate.SAVE -> SAVED
+      SAVED {
+        data : Budget!
+      }
+        @description "The create form was saved."
+    }
+  }
+
+  trait BudgetCreate = Modal.traits.ModalRecordModal -> Budget {
+    events {
+      OPEN: CREATE
+    }
+
+    config {
+      title: "New budget"
+      mode: create
+      fields: (category)
+    }
+
+    listens {
+      BudgetPage.CREATE -> CREATE
+      CREATE {
+        id : string
+        row : Budget
+      }
+        @description "Open the create form."
+      SAVE {
+        data : @entity!
+      }
+        @description "The form was saved."
+      ModalRecordLoadFailed {
+        error : string
+        code : string
+      }
+        @description "The record could not be loaded."
+        @tier "internal"
+    }
+  }
+
+  page "/" -> BudgetPage, BudgetCreate
+}

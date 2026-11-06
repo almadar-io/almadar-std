@@ -168,7 +168,7 @@ orbital LifecycleOrbital {
       LifecycleStepped -> scanning
         (fetch @config.targetEntity {
           emit: { failure: ScanFailed, success: ScanRecordsLoaded }
-          filter: (and (validate/required (object/get @entity @config.dateField)) (time/isBefore (object/get @entity @config.dateField) (time/subtract @now @config.ageDays "d")))
+          filter: (and (validate/required (object/get @entity @config.dateField)) (if (= @config.dateEncoding "epochMs") (< (object/get @entity @config.dateField) (time/diff (time/subtract @now @config.ageDays "d") @config.epoch "ms")) (time/isBefore (object/get @entity @config.dateField) (time/subtract @now @config.ageDays "d"))))
           limit: 1
         })
       ScanRecordsLoaded -> scanning when (> (array/len ?data) 0)
@@ -217,7 +217,7 @@ orbital LifecycleOrbital {
       scanCycle every "0 * * * *" [background]
         (fetch @config.targetEntity {
           emit: { failure: ScanFailed, success: ScanRecordsLoaded }
-          filter: (and (validate/required (object/get @entity @config.dateField)) (time/isBefore (object/get @entity @config.dateField) (time/subtract @now @config.ageDays "d")))
+          filter: (and (validate/required (object/get @entity @config.dateField)) (if (= @config.dateEncoding "epochMs") (< (object/get @entity @config.dateField) (time/diff (time/subtract @now @config.ageDays "d") @config.epoch "ms")) (time/isBefore (object/get @entity @config.dateField) (time/subtract @now @config.ageDays "d"))))
           limit: 1
         })
     }
@@ -236,6 +236,15 @@ orbital LifecycleOrbital {
         @label "Which date field measures the record's age?"
         @description "Instant entity field compared against the age threshold (e.g. 'createdAt'). A record with no value here is never aged."
         @tier "internal"
+      dateEncoding : "instant" | "epochMs" = instant
+        @label "How is the date field stored?"
+        @description "instant: an ISO-8601 instant; epochMs: a number of milliseconds since 1970-01-01T00:00:00Z."
+        @synonyms "timestamp format, epoch milliseconds, date encoding"
+        @tier "internal"
+      epoch : instant = "1970-01-01T00:00:00.000Z"
+        @label "Epoch"
+        @description "The instant an epochMs date field counts milliseconds from."
+        @tier "infra"
       ageDays : number = 30
         @label "How old (in days) before a record is deleted?"
         @description "Records older than this many days are deleted. 0 turns the sweep off rather than deleting everything."

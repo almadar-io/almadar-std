@@ -9,6 +9,14 @@ orbital MlLadderOrbital {
   type MatchedIndex = { type : "index", index : int! }
   type MatchedTensor = { type : "tensor", output : [float]! }
   type Matched = MatchedText | MatchedIndex | MatchedTensor
+  type LadderDecideRequest = {
+    candidate  : string!
+    key        : string!
+    candidateNumber : number?
+    keyNumber  : number?
+    accepted   : [string]!
+    categories : [string]!
+  }
 
   entity LadderRequest [runtime] {
     status : "idle" | "dispatched" = idle
@@ -22,7 +30,7 @@ orbital MlLadderOrbital {
     status     : "idle" | "decided" | "failed" = idle
   }
 
-  trait LadderEntry (r : Entity) -> LadderRequest [client] {
+  trait LadderEntry (r : Entity = LadderDecideRequest) -> LadderRequest [client] {
     initial: idle
 
     state idle {

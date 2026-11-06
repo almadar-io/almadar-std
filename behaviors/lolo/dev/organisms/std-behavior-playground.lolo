@@ -20,6 +20,7 @@ type PlaygroundProgram = { name : string, orbitals : [orbital] }
 type PlaygroundTopic = { package : string!, topic : string!, count : number! }
 type PlaygroundPackageLabel = { package : string!, label : string! }
 type PlaygroundLeaf = { package : string!, topic : string!, behavior : string!, kind : string!, value : behavior! }
+type PlaygroundMove = { trait : string!, event : string?, from : string!, to : string!, fired : boolean! }
 type PlaygroundPaint = { slot : string!, trait : string!, embedded : boolean!, content : node! }
 type PlaygroundLeafIcon = { kind : string!, icon : string! }
 type PlaygroundKnob = { name : string!, type : string!, label : string, description : string }
@@ -77,8 +78,7 @@ orbital BehaviorPlayground {
       showBottomPanel: false
       showStatusBar: true
       statusBarTrait: @trait.PlaygroundStatus
-      showTopBar: true
-      topBarTrait: @trait.PlaygroundTopBar
+      showTopBar: false
     }
     listens {
       PlaygroundTopics.LEAF_PICKED -> SIDEBAR_DOCK
@@ -129,9 +129,12 @@ orbital BehaviorPlayground {
   trait CatEmbedHttp = Catalog.traits.CatEmbedHttp {}
 
   trait PlaygroundOrbit = Live.traits.LiveMachineOrbit {
+    config {
+      expandDepth: 4
+    }
     listens {
       PlaygroundMachine.GUEST_ORBIT -> GUEST_ORBIT
-      GuestSession.GUEST_MOVED -> MOVES
+      PlaygroundMachine.GUEST_MOVES -> MOVES
       PlaygroundSource.GUEST_TREE -> GUEST_TREE
       PlaygroundSource.TREE_FAILED -> TREE_FAILED
       PlaygroundSource.SOURCE -> SOURCE
@@ -147,12 +150,6 @@ orbital BehaviorPlayground {
   }
 
   trait PlaygroundMachine -> PlaygroundView [client] {
-    config {
-      slot : string = "main"
-        @label "Guest slot"
-        @description "The slot whose page-root paint shows the guest page is on screen."
-    }
-
     initial: idle
 
     state idle {
@@ -162,11 +159,14 @@ orbital BehaviorPlayground {
         (set @entity.machineBehavior ?behavior)
         (set @entity.machineGuest "")
         (set @entity.machinePage "")
-      GUEST_PAINTS -> idle when (and (!= @entity.machineBehavior "") (array/some ?paints (fn p (and (= @p.slot @config.slot) (= @p.embedded false) (array/includes ?page @p.trait)))) (or (!= ?guest @entity.machineGuest) (!= (str/join ?page " ") @entity.machinePage)))
+      GUEST_PAINTS -> idle when (and (!= @entity.machineBehavior "") (or (!= ?guest @entity.machineGuest) (!= (str/join ?page " ") @entity.machinePage)))
         (set @entity.machineGuest ?guest)
         (set @entity.machinePage (str/join ?page " "))
         (emit GUEST_ORBIT { behavior: @entity.machineBehavior, guest: ?guest })
-      GUEST_PAINTS -> idle when (not (and (!= @entity.machineBehavior "") (array/some ?paints (fn p (and (= @p.slot @config.slot) (= @p.embedded false) (array/includes ?page @p.trait)))) (or (!= ?guest @entity.machineGuest) (!= (str/join ?page " ") @entity.machinePage))))
+      GUEST_MOVED -> idle when (and (!= @entity.machineGuest "") (= ?guest @entity.machineGuest))
+        (emit GUEST_MOVES { moves: ?moves })
+      GUEST_MOVED -> idle when (not (and (!= @entity.machineGuest "") (= ?guest @entity.machineGuest)))
+      GUEST_PAINTS -> idle when (not (and (!= @entity.machineBehavior "") (or (!= ?guest @entity.machineGuest) (!= (str/join ?page " ") @entity.machinePage))))
     }
 
     emits {
@@ -175,11 +175,16 @@ orbital BehaviorPlayground {
         guest : string!
       }
         @description "The guest session whose whole running page the dock draws, read again when the guest shows another page."
+      GUEST_MOVES -> external {
+        moves : [PlaygroundMove]!
+      }
+        @description "The transitions of the guest the dock draws; a closed or replaced guest's moves never reach it."
     }
 
     listens {
       PlaygroundLoader.BEHAVIOR_LOADED -> BEHAVIOR_LOADED
       GuestSession.GUEST_PAINTS -> GUEST_PAINTS
+      GuestSession.GUEST_MOVED -> GUEST_MOVED
       BEHAVIOR_LOADED {
         behavior : string!
       }
@@ -189,7 +194,12 @@ orbital BehaviorPlayground {
         page : [string]!
         paints : [PlaygroundPaint]!
       }
-        @description "The guest's paints and the traits of the page it shows; once a page-root paint of the configured slot is on screen the dock draws that guest's whole page, and a new guest or page (the guest navigated) redraws it."
+        @description "The guest's paints and the traits of the page it shows; once a behavior is loaded a new guest or page (the guest navigated) draws that guest's whole page, whether or not it painted anything."
+      GUEST_MOVED {
+        guest : string!
+        moves : [PlaygroundMove]!
+      }
+        @description "The transitions a guest took; only the drawn guest's reach the dock."
     }
   }
   trait PlaygroundTopics -> PlaygroundView [client] {
@@ -211,13 +221,17 @@ orbital BehaviorPlayground {
         @label "Behavior icons"
         @description "The icon of a behavior in the tree by its kind; a kind not listed shows a file."
         @tier "presentation"
+      heading : string = @config.title
+        @label "Title"
+        @description "The playground's name, at the top of the sidebar above the topics."
+        @tier "presentation"
     }
     initial: idle
 
     state idle {
       INIT -> idle
         (set @entity.routePending (validate/required ?name))
-        (render-ui main { type: stack, direction: vertical, gap: sm, className: "p-3", children: [{ type: skeleton, variant: list, rows: 8 }] })
+        (render-ui main { type: stack, direction: vertical, gap: sm, className: "p-3", children: [{ type: stack, direction: horizontal, align: center, gap: sm, className: "px-2 pb-1", children: [{ type: icon, name: blocks, size: md }, { type: typography, content: @config.heading, variant: h4, weight: semibold }] }, { type: skeleton, variant: list, rows: 8 }] })
       TOPICS_LOADED -> idle when @entity.routePending
         (set @entity.topics ?topics)
         (emit TOPICS_SHOWN {})
@@ -229,6 +243,7 @@ orbital BehaviorPlayground {
         (emit TOPICS_SHOWN {})
       TOPICS_SHOWN -> idle
         (render-ui main { type: stack, direction: vertical, gap: xs, className: "h-full overflow-y-auto p-2", children: [
+          { type: stack, direction: horizontal, align: center, gap: sm, className: "px-2 pb-1", children: [{ type: icon, name: blocks, size: md }, { type: typography, content: @config.heading, variant: h4, weight: semibold }] },
           { type: typography, content: "Topics", variant: overline, color: muted, className: "px-2 pt-1" },
           { type: file-tree, selectedId: (if (= @entity.leafSelected "") (str/concat @entity.topicPackage " " @entity.topic) @entity.leafSelected), expandedPaths: (array/concat (array/concat (array/unique (array/map @entity.topics (fn t @t.package))) (array/unique (array/flatten (array/map @entity.expanded (fn e (let ((pkg (default (array/first (str/split @e " ")) "")) (segs (str/split (default (array/last (str/split @e " ")) "") "/"))) (array/map (array/range (array/len @segs)) (fn i (str/concat @pkg " " (str/join (array/slice @segs 0 (+ @i 1)) "/")))))))))) (array/unique (array/map (array/filter @entity.leaves (fn l (array/includes @entity.expanded (str/concat @l.package " " @l.topic)))) (fn l (str/concat @l.package " " @l.topic "/" @l.kind "s"))))), onNodeSelect: NODE_SELECTED, items: (array/concat (array/concat (array/concat
             (array/concat
@@ -590,25 +605,8 @@ orbital BehaviorPlayground {
     }
   }
 
-  trait PlaygroundTopBar -> PlaygroundView [client] {
-    config {
-      heading : string = @config.title
-        @label "Title"
-        @tier "presentation"
-    }
-    initial: idle
-
-    state idle {
-      INIT -> idle
-        (render-ui main { type: stack, direction: horizontal, align: center, gap: sm, className: "px-4 py-2", children: [
-          { type: icon, name: blocks, size: md },
-          { type: typography, content: @config.heading, variant: h4, weight: semibold }
-        ] })
-    }
-  }
-
-  page "/" as PlaygroundPage -> PlaygroundFrame, PlaygroundTopBar, PlaygroundTopics, PlaygroundStage, PlaygroundLoader, PlaygroundOpen, GuestSession, BehaviorCatalogData, BehaviorCatalogLlm, CatEmbedWait, CatEmbedRequest, CatEmbedHttp, PlaygroundMachine, PlaygroundOrbit, PlaygroundSource, PlaygroundStatus
-  page "/:package/:name" as PlaygroundBehaviorPage -> PlaygroundFrame, PlaygroundTopBar, PlaygroundTopics, PlaygroundStage, PlaygroundLoader, PlaygroundOpen, GuestSession, BehaviorCatalogData, BehaviorCatalogLlm, CatEmbedWait, CatEmbedRequest, CatEmbedHttp, PlaygroundMachine, PlaygroundOrbit, PlaygroundSource, PlaygroundStatus, PlaygroundRoute
+  page "/" as PlaygroundPage -> PlaygroundFrame, PlaygroundTopics, PlaygroundStage, PlaygroundLoader, PlaygroundOpen, GuestSession, BehaviorCatalogData, BehaviorCatalogLlm, CatEmbedWait, CatEmbedRequest, CatEmbedHttp, PlaygroundMachine, PlaygroundOrbit, PlaygroundSource, PlaygroundStatus
+  page "/:package/:name" as PlaygroundBehaviorPage -> PlaygroundFrame, PlaygroundTopics, PlaygroundStage, PlaygroundLoader, PlaygroundOpen, GuestSession, BehaviorCatalogData, BehaviorCatalogLlm, CatEmbedWait, CatEmbedRequest, CatEmbedHttp, PlaygroundMachine, PlaygroundOrbit, PlaygroundSource, PlaygroundStatus, PlaygroundRoute
 }
 
 orbital NotFound = NotFound.orbitals.NotFoundOrbital {

@@ -24,7 +24,8 @@
                       transitions: (object/get @machine "transitions"),
                       events: (array/unique (array/map (object/get @machine "transitions") (fn tr (object/get @tr "event")))),
                       listenTypes: (object/fromEntries (array/map (array/filter @evs (fn ev (> (array/len (default (object/get @ev "payloadSchema") [])) 0))) (fn ev [(object/get @ev "key") FILL{@config.payloadType ## trait => @tn ## event => CASE{(object/get @ev "key") ## "keep"}}]))),
-                      emitTypes: (object/fromEntries (array/map (array/filter @ems (fn ev (> (array/len (default (object/get @ev "payloadSchema") [])) 0))) (fn ev [(object/get @ev "event") FILL{@config.payloadType ## trait => @tn ## event => CASE{(object/get @ev "event") ## "keep"}}]))) }))))))))))
+                      emitTypes: (object/fromEntries (array/map (array/filter @ems (fn ev (> (array/len (default (object/get @ev "payloadSchema") [])) 0))) (fn ev [(object/get @ev "event") FILL{@config.payloadType ## trait => @tn ## event => CASE{(object/get @ev "event") ## "keep"}}])))
+                      emitVoid: (array/map (array/filter @ems (fn ev (= (array/len (default (object/get @ev "payloadSchema") [])) 0))) (fn ev (object/get @ev "event"))) }))))))))))
         (set @entity.groups (array/concat
           (if @config.renderModels (array/map @entity.containers (fn c (array/map (object/get @c "fields") (fn f [0, (object/get @f "default" null)])))) [])
           (array/map @entity.traits (fn t
@@ -32,9 +33,10 @@
               [(array/concat [0] (array/map (object/get @t "knobs") (fn kb (object/get @kb "default" null))))]
               (array/map (object/get @t "transitions") (fn tr (array/concat [0, (if (!= (object/get @tr "guard" null) null) (object/get @tr "guard") true)] (default (object/get @tr "effects" []) [])))))))))
         (set @entity.groupCtx (array/concat
-          (if @config.renderModels (array/map @entity.containers (fn c { emitTypes: {}, defaults: {} })) [])
+          (if @config.renderModels (array/map @entity.containers (fn c { emitTypes: {}, emitVoid: [], defaults: {} })) [])
           (array/map @entity.traits (fn t
             { emitTypes: (object/get @t "emitTypes"),
+              emitVoid: (object/get @t "emitVoid"),
               defaults: (let ((en (default (array/find @entity.containers (fn c (and (= (object/get @c "name") (object/get @t "entity")) (not (object/get @c "alias"))))) { name: "", alias: true, fields: [] })))
                 (object/fromEntries (array/filter (array/map (object/get @en "fields") (fn f [(default (object/get @f "name") "")
                   (let ((d (object/get @f "default" null)))
