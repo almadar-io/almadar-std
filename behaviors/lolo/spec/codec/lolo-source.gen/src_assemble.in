@@ -95,7 +95,8 @@
               @entity.blocks
               (array/concat @entity.blocks [(array/concat
                 (array/map @config.programOpen (fn l FILL{@l ## i => @ind ## entities => (str/join (array/map @entity.traits (fn t FILL{@config.programEntity ## key => STR{(str/concat (object/get @t "orbital") "." (object/get @t "name"))} ## entity => ENT{(object/get @t "entity")}})) @config.programEntitySep)}))
-                (array/map @entity.traits (fn t FILL{@config.programTrait ## i => @ind ## key => STR{(str/concat (object/get @t "orbital") "." (object/get @t "name"))} ## class => CASE{(object/get @t "name") ## @config.classCase} ## entity => ENT{(object/get @t "entity")}}))
+                (array/map (array/range 0 (array/len @entity.traits)) (fn pti (let ((t (default (array/nth @entity.traits @pti) { name: "", path: "", entity: "", initial: "", hasMachine: false, knobs: [], transitions: [], events: [], listenTypes: {}, emitTypes: {}, emitVoid: [], configType: "", orbital: "", listenRows: [] })))
+                  FILL{@config.programTrait ## i => @ind ## n => (str/concat "" @pti) ## key => STR{(str/concat (object/get @t "orbital") "." (object/get @t "name"))} ## class => CASE{(object/get @t "name") ## @config.classCase} ## entity => ENT{(object/get @t "entity")}})))
                 (array/map @entity.traits (fn t
                   (let ((trs : [SrcTransition] (object/get @t "transitions")))
                     (let ((sts (array/unique (array/map @trs (fn tr (object/get @tr "from"))))))
@@ -107,8 +108,8 @@
                       (let ((lr (default (array/nth (object/get @t "listenRows") (object/get @r "li")) { source: "", event: "", trigger: "" })))
                         FILL{@config.programRow ## i => @ind ## source => STR{(str/concat (object/get @t "orbital") "." (object/get @lr "source"))} ## event => STR{(object/get @lr "event")}
                           ## target => STR{(str/concat (object/get @t "orbital") "." (object/get @t "name"))} ## trigger => STR{(object/get @lr "trigger")}
-                          ## guard => (if (= (object/get @lr "guard" null) null) @config.nullLit FILL{@config.guardName ## n => (str/concat "" @ri)})
-                          ## map => (if (= (object/get @lr "map" null) null) @config.nullLit FILL{@config.mapName ## n => (str/concat "" @ri)})})))))
+                          ## guard => (if (= (object/get @lr "guard" null) null) @config.nullLit FILL{@config.guardRef ## name => FILL{@config.guardName ## n => (str/concat "" @ri)}})
+                          ## map => (if (= (object/get @lr "map" null) null) @config.nullLit FILL{@config.mapRef ## name => FILL{@config.mapName ## n => (str/concat "" @ri)}})})))))
                 (array/map @config.deliverOpen (fn l FILL{@l ## i => @ind}))
                 (array/flatten (array/map @entity.traits (fn t
                   (array/map (object/get @t "events") (fn ev
