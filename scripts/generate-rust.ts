@@ -10,7 +10,7 @@ import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { STD_OPERATORS, STD_OPERATORS_BY_MODULE, operatorVisualForm } from '../registry.js';
-import type { OperatorVisualForm, ClosedCallMeta, EffectHost, FailableMeta, EffectFamily, OsGrantNeed, ResultByOptionMeta, ResultSign, OperatorEffectMeta, OperatorTypeRef, RunsOn, StdOperatorMeta, StdModule } from '../types.js';
+import type { OperatorVisualForm, ClosedCallMeta, EffectHost, FailableMeta, RejectsMeta, EffectFamily, OsGrantNeed, ResultByOptionMeta, ResultSign, OperatorEffectMeta, OperatorTypeRef, RunsOn, StdOperatorMeta, StdModule } from '../types.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const STD_ROOT = resolve(__dirname, '..');
@@ -54,7 +54,6 @@ const CATEGORY_META: Record<string, { description: string; target: string[] }> =
     'std-auth': { description: 'Host session asks (sign-in, sign-out) — client host effects', target: ['ts'] },
     'std-session': { description: 'Session state substrate (runtime)', target: ['ts'] },
     'std-memory': { description: 'Agent memory substrate (runtime)', target: ['ts'] },
-    'std-trace': { description: 'Execution tracing substrate (runtime)', target: ['ts'] },
     'std-codec': { description: 'Byte codecs and digests (base64, sha256, md5, hmac-sha256)', target: ['ts', 'rust'] },
     'std-behavior': { description: 'Behavior reflection effects (catalog, describe, source)', target: ['ts'] },
     'std-behavior-value': { description: 'Behaviors as first-class values (pure)', target: ['ts', 'rust'] },
@@ -108,6 +107,7 @@ interface CanonicalOperatorEntry {
     /** The AVL circuit form every reader draws this operator with (`operatorVisualForm`). */
     visual: { form: OperatorVisualForm; infix?: boolean };
     failable?: FailableMeta;
+    rejects?: RejectsMeta;
     sign?: ResultSign;
     busExcluded?: string[];
     targetOptions?: string[];
@@ -187,6 +187,7 @@ function toCanonicalEntry(
     if (meta.effect) entry.effect = meta.effect;
     if (meta.returnSemantics) entry.returnSemantics = meta.returnSemantics;
     if (meta.failable) entry.failable = meta.failable;
+    if (meta.rejects) entry.rejects = meta.rejects;
     if (meta.sign) entry.sign = meta.sign;
     if (meta.busExcluded) entry.busExcluded = meta.busExcluded;
     if (meta.targetOptions) entry.targetOptions = meta.targetOptions;

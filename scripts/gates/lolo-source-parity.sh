@@ -15,7 +15,7 @@ ROOT=$(cd "$STD/../.." && pwd)
 LOLO=$STD/behaviors/lolo
 PAR=$LOLO/spec/codec/lolo-source.parity
 PY=$HERE/lolo-source-parity.py
-EXAMPLES="cosine recall-at-k agent-step chunk game-score ml-ladder router-trio"
+EXAMPLES="cosine recall-at-k agent-step chunk game-score ml-ladder router-trio store-pair"
 LANGS="${*:-python typescript rust swift kotlin}"
 KOTLIN_PLUGIN=/opt/homebrew/opt/kotlin/libexec/lib/kotlinx-serialization-compiler-plugin.jar
 KLIBS=$HOME/.almadar/kotlin-libs
@@ -54,10 +54,11 @@ source_of() {
     game-score) echo packages/almadar-std/behaviors/lolo/ui/game/atoms/std-score.lolo;;
     ml-ladder) echo packages/almadar-std/behaviors/lolo/ml/atoms/std-ml-ladder.lolo;;
     router-trio) echo packages/almadar-std/behaviors/lolo/spec/codec/lolo-source.fixtures/router-trio.lolo;;
+    store-pair) echo packages/almadar-std/behaviors/lolo/spec/codec/lolo-source.fixtures/store-pair.lolo;;
   esac
 }
 # A language an example does not cover yet prints PENDING with the gap that tracks it; it is never a pass.
-pending_of() { :; }
+pending_of() { case $1/$2 in store-pair/typescript|store-pair/rust|store-pair/swift|store-pair/kotlin) echo "typed ports not yet rendered in $2";; esac; }
 covers() { local gap; gap=$(pending_of "$2" "$1"); [ -z "$gap" ] || { echo "PENDING $1 $2 ($gap)"; return 1; }; }
 # The models a leg compiles against: a std atom example's own file in client mode (so the rendered names are the
 # atom's), a course example's program (the server program for the server shells).

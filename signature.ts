@@ -94,8 +94,8 @@ export function openShape(fields: Record<string, OperatorTypeRef>): Tagged<'obje
   return { kind: 'object', fields, open: true };
 }
 
-export function keyOf(record: string): Tagged<'keyOf'> {
-  return { kind: 'keyOf', of: record };
+export function keyOf(record: string, value?: OperatorTypeRef): Tagged<'keyOf'> {
+  return value === undefined ? { kind: 'keyOf', of: record } : { kind: 'keyOf', of: record, value };
 }
 
 export function fieldOf(record: string): Tagged<'fieldOf'> {

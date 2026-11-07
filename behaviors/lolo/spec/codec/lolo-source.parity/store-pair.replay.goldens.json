@@ -1,0 +1,238 @@
+{
+  "atom": "codec/lolo-source.fixtures/store-pair.lolo",
+  "trait": "Notes",
+  "orbital": "StoreOrbital",
+  "note": "kernel answers for the typed-ports fixture: persist create and update and fetch through their success and failure routes, with the store's rows carried across steps",
+  "cases": [
+    {
+      "id": "store-pair",
+      "steps": [
+        {
+          "trait": "Notes",
+          "event": "ADD",
+          "payload": {
+            "text": "a",
+            "kind": "todo"
+          },
+          "expect": {
+            "exactEmits": [
+              {
+                "event": "ADDED",
+                "payload": {
+                  "text": "a",
+                  "kind": "todo",
+                  "id": "Note-1"
+                }
+              },
+              {
+                "event": "LOADED",
+                "payload": {
+                  "data": [
+                    {
+                      "text": "a",
+                      "kind": "todo",
+                      "id": "Note-1"
+                    }
+                  ],
+                  "totalCount": 1
+                }
+              }
+            ],
+            "entity": {
+              "last": "a",
+              "seen": 1
+            }
+          }
+        },
+        {
+          "trait": "Notes",
+          "event": "ADD",
+          "payload": {
+            "text": "b",
+            "kind": "other"
+          },
+          "expect": {
+            "exactEmits": [
+              {
+                "event": "ADDED",
+                "payload": {
+                  "text": "b",
+                  "kind": "other",
+                  "id": "Note-2"
+                }
+              },
+              {
+                "event": "LOADED",
+                "payload": {
+                  "data": [
+                    {
+                      "text": "a",
+                      "kind": "todo",
+                      "id": "Note-1"
+                    }
+                  ],
+                  "totalCount": 1
+                }
+              }
+            ],
+            "entity": {
+              "last": "b",
+              "seen": 1
+            }
+          }
+        },
+        {
+          "trait": "Notes",
+          "event": "ADD",
+          "payload": {
+            "text": "c",
+            "kind": "todo"
+          },
+          "expect": {
+            "exactEmits": [
+              {
+                "event": "ADDED",
+                "payload": {
+                  "text": "c",
+                  "kind": "todo",
+                  "id": "Note-3"
+                }
+              },
+              {
+                "event": "LOADED",
+                "payload": {
+                  "data": [
+                    {
+                      "text": "a",
+                      "kind": "todo",
+                      "id": "Note-1"
+                    },
+                    {
+                      "text": "c",
+                      "kind": "todo",
+                      "id": "Note-3"
+                    }
+                  ],
+                  "totalCount": 2
+                }
+              }
+            ],
+            "entity": {
+              "last": "c",
+              "seen": 2
+            }
+          }
+        },
+        {
+          "trait": "Notes",
+          "event": "EDIT",
+          "payload": {
+            "id": "Note-2",
+            "text": "b2"
+          },
+          "expect": {
+            "exactEmits": [
+              {
+                "event": "EDITED",
+                "payload": {
+                  "text": "b2",
+                  "kind": "other",
+                  "id": "Note-2"
+                }
+              }
+            ],
+            "entity": {
+              "last": "edited b2",
+              "seen": 2
+            }
+          }
+        },
+        {
+          "trait": "Notes",
+          "event": "EDIT",
+          "payload": {
+            "id": "Note-9",
+            "text": "z"
+          },
+          "expect": {
+            "exactEmits": [
+              {
+                "event": "EDIT_FAILED",
+                "payload": {
+                  "error": "Note Note-9 not found",
+                  "code": "not-found"
+                }
+              }
+            ],
+            "entity": {
+              "last": "edit failed Note Note-9 not found",
+              "seen": 2
+            }
+          }
+        },
+        {
+          "trait": "Notes",
+          "event": "DROP",
+          "payload": {
+            "id": "Note-1"
+          },
+          "expect": {
+            "exactEmits": [
+              {
+                "event": "DROPPED",
+                "payload": {
+                  "id": "Note-1",
+                  "deleted": true
+                }
+              },
+              {
+                "event": "LOADED",
+                "payload": {
+                  "data": [
+                    {
+                      "text": "b2",
+                      "kind": "other",
+                      "id": "Note-2"
+                    },
+                    {
+                      "text": "c",
+                      "kind": "todo",
+                      "id": "Note-3"
+                    }
+                  ],
+                  "totalCount": 2
+                }
+              }
+            ],
+            "entity": {
+              "last": "dropped Note-1",
+              "seen": 2
+            }
+          }
+        },
+        {
+          "trait": "Notes",
+          "event": "DROP",
+          "payload": {
+            "id": "Note-1"
+          },
+          "expect": {
+            "exactEmits": [
+              {
+                "event": "DROP_FAILED",
+                "payload": {
+                  "error": "Note Note-1 not found",
+                  "code": "not-found"
+                }
+              }
+            ],
+            "entity": {
+              "last": "drop failed Note Note-1 not found",
+              "seen": 2
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

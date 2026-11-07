@@ -53,7 +53,6 @@ export const OPERATOR_CATEGORIES = [
   'std-llm',
   'std-workspace',
   'std-session',
-  'std-trace',
   'std-audio',
   'std-auth',
   'std-behavior',
@@ -108,6 +107,11 @@ export type ReturnSemantics =
 
 /** Where an effect executes: a client host delegates `server` effects, a server ships `client` effects back, `any` runs wherever it is dispatched. */
 export type RunsOn = 'client' | 'server' | 'any';
+
+/** What an operator raises on rather than answering null (see {@link OperatorMeta.rejects}). */
+export interface RejectsMeta {
+  unlessNonNegative?: number[];
+}
 
 /** How a failable operator fails (see {@link OperatorMeta.failable}). */
 export interface FailableMeta {
@@ -210,6 +214,8 @@ export interface OperatorMeta {
    * positions whose bad value is the only way to fail: with a literal at every one the result is not optional.
    */
   failable?: FailableMeta;
+  /** Argument positions the kernel raises on unless the value is shown to be a whole number from 0 (`array/nth`'s index): a call is refused otherwise. */
+  rejects?: RejectsMeta;
   /** The sign of the result, which the checker uses to prove a divisor nonzero or a root's argument non-negative. */
   sign?: ResultSign;
   /** The event names the bus never delivers, so a control or emit naming one fires nothing (on `emit`). */
@@ -275,7 +281,6 @@ export const STD_MODULES = [
   'llm',
   'workspace',
   'session',
-  'trace',
   'audio',
   'auth',
   'behavior',
@@ -337,7 +342,6 @@ export const STD_OPERATOR_CATEGORIES = [
   'std-llm',
   'std-workspace',
   'std-session',
-  'std-trace',
   'std-audio',
   'std-auth',
   'std-behavior',
@@ -395,7 +399,8 @@ export type OperatorTypeRef =
   /** A function type: a lambda parameter `(T) -> U`, or the value of `fn`. */
   | { kind: 'fn'; params: OperatorTypeRef[]; returns: OperatorTypeRef }
   /** An argument naming a field of record variable `of` (a dot path through nested records). */
-  | { kind: 'keyOf'; of: string }
+  /** `value`: the type every field the key names must have (`array/groupBy`'s key is text). */
+  | { kind: 'keyOf'; of: string; value?: OperatorTypeRef }
   /** The type of the field of record variable `of` that the call's `keyOf` argument names. */
   | { kind: 'fieldOf'; of: string }
   /** The record `of` restricted to the fields named by the call's `[keyOf]` argument. */

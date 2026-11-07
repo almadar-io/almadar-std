@@ -28,6 +28,19 @@ orbital StoreOrbital {
         (set @entity.last "failed")
       LOAD_FAILED -> idle
         (set @entity.last "load failed")
+      EDIT -> idle
+        (persist update Note { id: ?id, text: ?text } { emit: { success: EDITED, failure: EDIT_FAILED } })
+      EDITED -> idle
+        (set @entity.last (str/concat "edited " ?text))
+      EDIT_FAILED -> idle
+        (set @entity.last (str/concat "edit failed " ?error))
+      DROP -> idle
+        (persist delete Note ?id { emit: { success: DROPPED, failure: DROP_FAILED } })
+      DROPPED -> idle
+        (set @entity.last (str/concat "dropped " ?id))
+        (fetch Note { emit: { success: LOADED, failure: LOAD_FAILED } })
+      DROP_FAILED -> idle
+        (set @entity.last (str/concat "drop failed " ?error))
     }
 
     listens {
@@ -36,6 +49,12 @@ orbital StoreOrbital {
       LOADED { data : [Note]!, totalCount : number! }
       ADD_FAILED { error : string! }
       LOAD_FAILED { error : string! }
+      EDIT { id : string!, text : string! }
+      EDITED { id : string!, text : string!, kind : string! }
+      EDIT_FAILED { error : string!, code : string }
+      DROP { id : string! }
+      DROPPED { id : string!, deleted : boolean! }
+      DROP_FAILED { error : string!, code : string }
     }
   }
 
