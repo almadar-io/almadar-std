@@ -15,7 +15,7 @@ ROOT=$(cd "$STD/../.." && pwd)
 LOLO=$STD/behaviors/lolo
 PAR=$LOLO/spec/codec/lolo-source.parity
 PY=$HERE/lolo-source-parity.py
-EXAMPLES="cosine recall-at-k agent-step chunk game-score ml-ladder router-trio store-pair"
+EXAMPLES="cosine recall-at-k agent-step chunk game-score ml-ladder router-trio store-pair compose-pair"
 LANGS="${*:-python typescript rust swift kotlin}"
 KOTLIN_PLUGIN=/opt/homebrew/opt/kotlin/libexec/lib/kotlinx-serialization-compiler-plugin.jar
 KLIBS=$HOME/.almadar/kotlin-libs
@@ -55,6 +55,7 @@ source_of() {
     ml-ladder) echo packages/almadar-std/behaviors/lolo/ml/atoms/std-ml-ladder.lolo;;
     router-trio) echo packages/almadar-std/behaviors/lolo/spec/codec/lolo-source.fixtures/router-trio.lolo;;
     store-pair) echo packages/almadar-std/behaviors/lolo/spec/codec/lolo-source.fixtures/store-pair.lolo;;
+    compose-pair) echo packages/almadar-std/behaviors/lolo/spec/codec/lolo-source.fixtures/compose-pair.lolo;;
   esac
 }
 # A language an example does not cover yet prints PENDING with the gap that tracks it; it is never a pass.
