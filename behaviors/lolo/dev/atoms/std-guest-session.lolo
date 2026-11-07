@@ -18,7 +18,7 @@ type GuestStepped = { rendered : [GuestPaint]!, outcomes : [GuestMove]! }
 type GuestClosed = { closed : boolean! }
 type GuestPersonaOption = { id : string!, name : string }
 type GuestPersonasReply = { success : boolean, personas : [GuestPersonaOption] }
-type GuestAnswer = { status : number!, body : string! }
+type GuestAnswer = { status : number, body : string }
 type GuestEmitted = { event : string!, payload : GuestAnswer? }
 type GuestAnswered = { emitted : [GuestEmitted]? }
 
@@ -77,7 +77,7 @@ orbital GuestSessionOrbital {
       GUEST_PREPARE -> idle
       GUEST_SEED_RESOLVED -> idle
       GUEST_SEED_MARKED -> idle
-      GUEST_PERSONAS_READ -> idle
+      GUEST_PERSONAS_RESOLVED -> idle
       GUEST_COMPOSED -> idle
       GUEST_PERSONAS_ASK -> idle
     }
@@ -112,12 +112,12 @@ orbital GuestSessionOrbital {
       GUEST_SEED_MARKED -> opening when @payload.marked
         (program/open @entity.guestProgram (object/merge { grants: { env: @config.guestEnv }, declared: true } (if (!= @entity.guestResume "") { route: @entity.guestResume } {})) { emit: { success: GUEST_OPENED, failure: GUEST_FAILED } })
         (set @entity.guestProgram null)
-      GUEST_SEED_MARKED -> opening when (and (not @payload.marked) (!= @payload.personas ""))
-        (program/read (str/concat "app guest-personas [version: \"1.0.0\"]\n" @payload.personas) { emit: { success: GUEST_PERSONAS_READ, failure: GUEST_FAILED } })
-      GUEST_PERSONAS_READ -> opening
+      GUEST_SEED_MARKED -> opening when (and (not @payload.marked) (!= @payload.personasCollection ""))
+        (behavior/resolve (behavior/apply { behavior: "std/behaviors/std-dev-personas", orbital: "DevPersonasOrbital" } { entity: "DevPersona", persistence: "persistent", collection: @payload.personasCollection, traits: { DevPersonas: { config: { autoSignIn: @payload.personasSignIn } } } }) {} { emit: { success: GUEST_PERSONAS_RESOLVED, failure: GUEST_FAILED } })
+      GUEST_PERSONAS_RESOLVED -> opening
         (program/compose [@entity.guestProgram, @entity.guestSeed, ?result] { appName: (object/get (default @entity.guestProgram { name: "guest", orbitals: [] }) "name" "guest") } { emit: { success: GUEST_COMPOSED, failure: GUEST_FAILED } })
         (set @entity.guestProgram null)
-      GUEST_SEED_MARKED -> opening when (and (not @payload.marked) (= @payload.personas ""))
+      GUEST_SEED_MARKED -> opening when (and (not @payload.marked) (= @payload.personasCollection ""))
         (program/compose [@entity.guestProgram, @entity.guestSeed] { appName: (object/get (default @entity.guestProgram { name: "guest", orbitals: [] }) "name" "guest") } { emit: { success: GUEST_COMPOSED, failure: GUEST_FAILED } })
         (set @entity.guestProgram null)
       GUEST_COMPOSED -> opening
@@ -160,7 +160,7 @@ orbital GuestSessionOrbital {
       GUEST_PREPARE -> live
       GUEST_SEED_RESOLVED -> live
       GUEST_SEED_MARKED -> live
-      GUEST_PERSONAS_READ -> live
+      GUEST_PERSONAS_RESOLVED -> live
       GUEST_COMPOSED -> live
       GUEST_PERSONAS_ASK -> live
         (program/dispatch "PERSONAS_REQUESTED" {} { guest: @entity.guestHandle, emit: { success: GUEST_PERSONAS_STEPPED, failure: GUEST_PERSONAS_FAILED } })
@@ -282,7 +282,7 @@ orbital GuestSessionOrbital {
       GUEST_PERSONAS_FAILED {
         error : string!
       }
-      GUEST_PERSONAS_READ {
+      GUEST_PERSONAS_RESOLVED {
         result : behavior!
       }
       GUEST_SEED_RESOLVED {
@@ -298,6 +298,8 @@ orbital GuestSessionOrbital {
       GUEST_SEED_MARKED {
         marked : boolean!
         personas : string!
+        personasCollection : string!
+        personasSignIn : string!
       }
       GuestStage.GUEST_PERSONA_PICK -> GUEST_PERSONA_PICK
       GUEST_PERSONA_PICK {

@@ -29,20 +29,26 @@ orbital MockSeedMarksOrbital {
           (let ((orbitals (object/get (default @p { orbitals: [] }) "orbitals" [])))
             (let ((identity (array/find (array/map @orbitals (fn o (object/get @o "entity" null))) (fn e (and (!= @e null) (= (object/get @e "identity" false) true))))))
               (let ((handled (array/some @orbitals (fn o (array/some (object/get @o "traits" []) (fn t (array/some (object/get (object/get @t "stateMachine" {}) "transitions" []) (fn x (= (object/get @x "event" "") "PERSONA_ACT_AS"))))))))
-                    (collection (object/get (default @identity {}) "collection" ""))
+                    (found (object/get (default @identity {}) "collection" ""))
                     (roles (object/get (default (array/find (object/get (default @identity {}) "fields" []) (fn f (= (object/get @f "name" "") "role"))) {}) "values" [])))
-                (emit MARKS_CHECKED {
-                  marked: (and (!= @p null) (array/some @orbitals (fn o (array/some (object/get @o "auxiliaryEntities" []) (fn e (= (object/get @e "collection" "") "mock_seed_marks")))))),
-                  personas: (if (or (= @identity null) (= @collection "") @handled) "" (str/concat "uses Personas from \"std/behaviors/std-dev-personas\"\norbital DevLogin = Personas.orbitals.DevPersonasOrbital {\n  entity DevPersona [persistent: " @collection "]\n  traits { DevPersonas { config { autoSignIn: " (json/stringify (if (!= (default @payload.persona "") "") @payload.persona (default (array/first @roles) ""))) " } } }\n}\n"))
-                })))))
+                (let ((collection (if (or (= @identity null) @handled) "" @found))
+                      (spec (if (!= (default @payload.persona "") "") @payload.persona (default (array/first @roles) ""))))
+                  (emit MARKS_CHECKED {
+                    marked: (and (!= @p null) (array/some @orbitals (fn o (array/some (object/get @o "auxiliaryEntities" []) (fn e (= (object/get @e "collection" "") "mock_seed_marks")))))),
+                    personasCollection: @collection,
+                    personasSignIn: (if (= @collection "") "" @spec),
+                    personas: (if (= @collection "") "" (str/concat "uses Personas from \"std/behaviors/std-dev-personas\"\norbital DevLogin = Personas.orbitals.DevPersonasOrbital {\n  entity DevPersona [persistent: " @collection "]\n  traits { DevPersonas { config { autoSignIn: " (json/stringify @spec) " } } }\n}\n"))
+                  }))))))
     }
 
     emits {
       MARKS_CHECKED -> external {
         marked : boolean!
         personas : string!
+        personasCollection : string!
+        personasSignIn : string!
       }
-        @description "Whether the asked program already declares the mock-seed marks store, and the .lolo text that composes std-dev-personas onto the program's [identity] entity (its `uses` and `orbital DevLogin`, no app header): linked to a DevPersona entity over the identity entity's collection, signing the session in as the persona the ask named, else the first declared value of the identity entity's role field. Empty when the program declares no identity entity or a trait of it already handles PERSONA_ACT_AS."
+        @description "Whether the asked program already declares the mock-seed marks store, and the .lolo text that composes std-dev-personas onto the program's [identity] entity (its `uses` and `orbital DevLogin`, no app header): linked to a DevPersona entity over the identity entity's collection, signing the session in as the persona the ask named, else the first declared value of the identity entity's role field. Empty when the program declares no identity entity or a trait of it already handles PERSONA_ACT_AS. personasCollection and personasSignIn are the two facts the text is built from (the identity entity's collection and the autoSignIn spec), empty with it, for a host that composes the resolved std-dev-personas itself instead of reading text (a guest opens resolved programs only)."
         @synonyms "program already seeds, marks store present"
         @tier "primary"
     }
