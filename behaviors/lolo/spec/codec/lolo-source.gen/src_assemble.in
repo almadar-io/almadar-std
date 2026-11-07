@@ -94,7 +94,7 @@
             (if (or (= (array/len @config.programOpen) 0) (= (array/len @rows) 0))
               @entity.blocks
               (array/concat @entity.blocks [(array/concat
-                (array/map @config.programOpen (fn l FILL{@l ## i => @ind}))
+                (array/map @config.programOpen (fn l FILL{@l ## i => @ind ## entities => (str/join (array/map @entity.traits (fn t FILL{@config.programEntity ## key => STR{(str/concat (object/get @t "orbital") "." (object/get @t "name"))} ## entity => ENT{(object/get @t "entity")}})) @config.programEntitySep)}))
                 (array/map @entity.traits (fn t FILL{@config.programTrait ## i => @ind ## key => STR{(str/concat (object/get @t "orbital") "." (object/get @t "name"))} ## class => CASE{(object/get @t "name") ## @config.classCase} ## entity => ENT{(object/get @t "entity")}}))
                 (array/map @entity.traits (fn t
                   (let ((trs : [SrcTransition] (object/get @t "transitions")))
@@ -116,8 +116,8 @@
                           (mn FILL{@config.methodName ## event => CASE{@ev ## @config.methodCase}})
                           (tk STR{(str/concat (object/get @t "orbital") "." (object/get @t "name"))}))
                       (if (= @pt "")
-                        FILL{@config.deliverCasePlain ## i => @ind ## target => @tk ## event => STR{@ev} ## method => @mn}
-                        FILL{@config.deliverCase ## i => @ind ## target => @tk ## event => STR{@ev} ## method => @mn ## arg => FILL{@config.payloadDecode ## type => @pt ## value => "payload"}})))))))
+                        FILL{@config.deliverCasePlain ## i => @ind ## target => @tk ## event => STR{@ev} ## method => @mn ## class => CASE{(object/get @t "name") ## @config.classCase}}
+                        FILL{@config.deliverCase ## i => @ind ## target => @tk ## event => STR{@ev} ## method => @mn ## class => CASE{(object/get @t "name") ## @config.classCase} ## arg => FILL{@config.payloadDecode ## type => @pt ## value => "payload"}})))))))
                 (array/map @config.deliverClose (fn l FILL{@l ## i => @ind}))
                 (array/map @config.programClose (fn l FILL{@l ## i => @ind}))
                 (array/flatten (array/map (array/range 0 (array/len @rows)) (fn ri
