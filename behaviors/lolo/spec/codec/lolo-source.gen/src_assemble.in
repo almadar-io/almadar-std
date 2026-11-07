@@ -46,7 +46,7 @@
                         (if (!= @config.modelClassClose "") [@config.modelClassClose] [])))))))
               [])
             (array/map (array/range 0 (array/len @entity.traits)) (fn ti
-              (let ((t (default (array/nth @entity.traits @ti) { name: "", path: "", entity: "", initial: "", hasMachine: false, knobs: [], transitions: [], events: [], listenTypes: {}, emitTypes: {}, emitVoid: [], configType: "" }))
+              (let ((t (default (array/nth @entity.traits @ti) { name: "", path: "", entity: "", initial: "", hasMachine: false, knobs: [], transitions: [], events: [], listenTypes: {}, emitTypes: {}, emitVoid: [], configType: "", orbital: "", listenRows: [] }))
                     (rs (default (array/nth @entity.renders (+ @nC @ti)) []))
                     (cn : string CASE{(default (object/get (default (array/nth @entity.traits @ti) { name: "" }) "name") "") ## @config.classCase}))
                 (if (not (object/get @t "hasMachine"))
@@ -86,9 +86,58 @@
                             (if (!= @config.branchClose "") [FILL{@config.branchClose ## i => @ind}] [])
                             (if (!= @config.methodClose "") [FILL{@config.methodClose ## i => @ind}] []))))))
                       (if (!= @config.classClose "") [FILL{@config.classClose ## i => @ind}] []))))))))))
+        (set @entity.blocks (let ((nC (if @config.renderModels (array/len @entity.containers) 0))
+                                  (ind : string @config.indent)
+                                  (nullR : SrcRender RECL{ expr => @config.nullLit ## stmt => [@config.nullLit] ## body => @config.nullLit }))
+          (let ((rows (array/flatten (array/map (array/range 0 (array/len @entity.traits)) (fn ti
+                  (array/map (array/range 0 (array/len (object/get (default (array/nth @entity.traits @ti) { name: "", path: "", entity: "", initial: "", hasMachine: false, knobs: [], transitions: [], events: [], listenTypes: {}, emitTypes: {}, emitVoid: [], configType: "", orbital: "", listenRows: [] }) "listenRows"))) (fn li { ti: @ti, li: @li })))))))
+            (if (or (= (array/len @config.programOpen) 0) (= (array/len @rows) 0))
+              @entity.blocks
+              (array/concat @entity.blocks [(array/concat
+                (array/map @config.programOpen (fn l FILL{@l ## i => @ind}))
+                (array/map @entity.traits (fn t FILL{@config.programTrait ## i => @ind ## key => STR{(str/concat (object/get @t "orbital") "." (object/get @t "name"))} ## class => CASE{(object/get @t "name") ## @config.classCase} ## entity => ENT{(object/get @t "entity")}}))
+                (array/map @entity.traits (fn t
+                  (let ((trs : [SrcTransition] (object/get @t "transitions")))
+                    (let ((sts (array/unique (array/map @trs (fn tr (object/get @tr "from"))))))
+                      FILL{@config.programHandles ## i => @ind ## key => STR{(str/concat (object/get @t "orbital") "." (object/get @t "name"))}
+                        ## table => (str/concat @config.mapOpen (str/join (array/map @sts (fn st FILL{@config.mapPair ## key => STR{@st} ## value => FILL{@config.listForm ## "*" => (str/join (array/map (array/unique (array/map (array/filter @trs (fn tr (= (object/get @tr "from") @st))) (fn tr (object/get @tr "event")))) (fn ev STR{@ev})) ", ")}})) @config.mapSep) @config.mapClose)}))))
+                (array/map (array/range 0 (array/len @rows)) (fn ri
+                  (let ((r (default (array/nth @rows @ri) { ti: 0, li: 0 })))
+                    (let ((t (default (array/nth @entity.traits (object/get @r "ti")) { name: "", path: "", entity: "", initial: "", hasMachine: false, knobs: [], transitions: [], events: [], listenTypes: {}, emitTypes: {}, emitVoid: [], configType: "", orbital: "", listenRows: [] })))
+                      (let ((lr (default (array/nth (object/get @t "listenRows") (object/get @r "li")) { source: "", event: "", trigger: "" })))
+                        FILL{@config.programRow ## i => @ind ## source => STR{(str/concat (object/get @t "orbital") "." (object/get @lr "source"))} ## event => STR{(object/get @lr "event")}
+                          ## target => STR{(str/concat (object/get @t "orbital") "." (object/get @t "name"))} ## trigger => STR{(object/get @lr "trigger")}
+                          ## guard => (if (= (object/get @lr "guard" null) null) @config.nullLit FILL{@config.guardName ## n => (str/concat "" @ri)})
+                          ## map => (if (= (object/get @lr "map" null) null) @config.nullLit FILL{@config.mapName ## n => (str/concat "" @ri)})})))))
+                (array/map @config.deliverOpen (fn l FILL{@l ## i => @ind}))
+                (array/flatten (array/map @entity.traits (fn t
+                  (array/map (object/get @t "events") (fn ev
+                    (let ((pt LOOKUP{(object/get @t "listenTypes") ## @ev})
+                          (mn FILL{@config.methodName ## event => CASE{@ev ## @config.methodCase}})
+                          (tk STR{(str/concat (object/get @t "orbital") "." (object/get @t "name"))}))
+                      (if (= @pt "")
+                        FILL{@config.deliverCasePlain ## i => @ind ## target => @tk ## event => STR{@ev} ## method => @mn}
+                        FILL{@config.deliverCase ## i => @ind ## target => @tk ## event => STR{@ev} ## method => @mn ## arg => FILL{@config.payloadDecode ## type => @pt ## value => "payload"}})))))))
+                (array/map @config.deliverClose (fn l FILL{@l ## i => @ind}))
+                (array/map @config.programClose (fn l FILL{@l ## i => @ind}))
+                (array/flatten (array/map (array/range 0 (array/len @rows)) (fn ri
+                  (let ((r (default (array/nth @rows @ri) { ti: 0, li: 0 })))
+                    (let ((t (default (array/nth @entity.traits (object/get @r "ti")) { name: "", path: "", entity: "", initial: "", hasMachine: false, knobs: [], transitions: [], events: [], listenTypes: {}, emitTypes: {}, emitVoid: [], configType: "", orbital: "", listenRows: [] }))
+                          (job (default (array/nth (default (array/nth @entity.renders (+ @nC (object/get @r "ti"))) []) (+ (+ 1 (array/len (object/get (default (array/nth @entity.traits (object/get @r "ti")) { name: "", path: "", entity: "", initial: "", hasMachine: false, knobs: [], transitions: [], events: [], listenTypes: {}, emitTypes: {}, emitVoid: [], configType: "", orbital: "", listenRows: [] }) "transitions"))) (object/get @r "li"))) @nullR)))
+                      (let ((lr (default (array/nth (object/get @t "listenRows") (object/get @r "li")) { source: "", event: "", trigger: "" }))
+                            (base (str/concat (object/get @t "path") ".listens[" (object/get @r "li") "]")))
+                        (let ((st LOOKUP{(object/get (default (array/find @entity.traits (fn s (and (= (object/get @s "name") (object/get @lr "source")) (= (object/get @s "orbital") (object/get @t "orbital"))))) { name: "", path: "", entity: "", initial: "", hasMachine: false, knobs: [], transitions: [], events: [], listenTypes: {}, emitTypes: {}, emitVoid: [], configType: "", orbital: "", listenRows: [] }) "emitTypes") ## (object/get @lr "event")}))
+                          (let ((dec (if (= @st "") @config.nullLit FILL{@config.payloadDecode ## type => @st ## value => "payload_json"})))
+                            (array/concat
+                              (if (= (object/get @lr "guard" null) null) []
+                                (array/map @config.guardForm (fn l FILL{@l ## i => @ind ## name => FILL{@config.guardName ## n => (str/concat "" @ri)} ## decode => @dec ## expr => RESOLVE{(default (array/nth (object/get @job "items") 1) @config.trueLit) ## @base}})))
+                              (if (= (object/get @lr "map" null) null) []
+                                (array/map @config.mapForm (fn l FILL{@l ## i => @ind ## name => FILL{@config.mapName ## n => (str/concat "" @ri)} ## decode => @dec ## expr => RESOLVE{(default (array/nth (object/get @job "items") 2) @config.nullLit) ## @base}}))))))))))))
+              )])))))
         (set @entity.tokens (array/concat
           (array/flatten (array/flatten (array/map @entity.renders (fn g (array/map @g (fn r (object/get @r "uses")))))))
           (array/flatten (array/flatten (array/map @entity.typeRenders (fn g (array/map @g (fn r (object/get @r "uses")))))))
           (if (and @config.renderModels (array/some @entity.containers (fn c (not (object/get @c "alias"))))) ["dataclass"] [])
           (if (and @config.renderModels (array/some @entity.containers (fn c (array/some (object/get @c "fields") (fn f (and (!= (object/get @f "default" null) null) (or (validate/array (object/get @f "default" null)) (validate/object (object/get @f "default" null))))))))) ["field"] [])))
+        (set @entity.tokens (array/concat @entity.tokens (if (and (> (array/len @config.programOpen) 0) (array/some @entity.traits (fn t (> (array/len (object/get @t "listenRows")) 0)))) ["router"] [])))
         (set @entity.helperTexts (array/sort (array/unique (array/flatten (array/map (array/unique @entity.tokens) (fn tk (object/get @config.helpers @tk [])))))))

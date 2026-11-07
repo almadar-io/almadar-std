@@ -1,0 +1,88 @@
+app router-trio [
+  version: "1.0.0",
+  description: "Fixture for the native renderers' generated router: three traits whose emits exercise the dispatch queue rules (own emits first, listeners after in registration order, a listen guard on the raw payload, and a with mapping)."
+]
+
+orbital TrioOrbital {
+  entity Tally [runtime] {
+    id : string!
+    hits : number = 0
+    log : [string] = []
+  }
+
+  trait Lead -> Tally [client] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      GO -> busy
+        (set @entity.hits (+ @entity.hits 1))
+        (emit PING { n: ?n })
+        (emit NOTE { text: "go" })
+    }
+
+    state busy {
+      INIT -> idle
+      PING -> idle
+        (set @entity.hits (+ @entity.hits 10))
+        (emit PONG { n: ?n })
+      GO -> busy
+    }
+
+    emits {
+      PING -> internal { n : number! }
+      NOTE -> external { text : string! }
+      PONG -> external { n : number! }
+    }
+
+    listens {
+      GO { n : number! }
+      PING { n : number! }
+    }
+  }
+
+  trait Echo -> Tally [client] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      HEARD -> idle
+        (set @entity.log (array/append @entity.log (str/concat "echo " ?label)))
+        (emit ECHOED { label: ?label })
+    }
+
+    emits {
+      ECHOED -> external { label : string! }
+    }
+
+    listens {
+      Lead.PING -> HEARD with { label: (str/concat "n=" ?n) } when (> ?n 0)
+      HEARD { label : string! }
+    }
+  }
+
+  trait Tail -> Tally [client] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      NOTED -> idle
+        (set @entity.log (array/append @entity.log (str/concat "note " ?text)))
+      PONGED -> idle
+        (set @entity.log (array/append @entity.log "pong"))
+      SEEN -> idle
+        (set @entity.log (array/append @entity.log (str/concat "seen " ?label)))
+    }
+
+    listens {
+      Lead.NOTE -> NOTED
+      Lead.PONG -> PONGED
+      Echo.ECHOED -> SEEN
+      NOTED { text : string! }
+      PONGED { n : number! }
+      SEEN { label : string! }
+    }
+  }
+
+  page boot as TrioStart -> Lead, Echo, Tail
+}

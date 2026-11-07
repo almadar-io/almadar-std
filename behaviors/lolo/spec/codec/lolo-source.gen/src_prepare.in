@@ -25,13 +25,17 @@
                       events: (array/unique (array/map (object/get @machine "transitions") (fn tr (object/get @tr "event")))),
                       listenTypes: (object/fromEntries (array/map (array/filter @evs (fn ev (> (array/len (default (object/get @ev "payloadSchema") [])) 0))) (fn ev [(object/get @ev "key") FILL{@config.payloadType ## trait => @tn ## event => CASE{(object/get @ev "key") ## "keep"}}]))),
                       emitTypes: (object/fromEntries (array/map (array/filter @ems (fn ev (> (array/len (default (object/get @ev "payloadSchema") [])) 0))) (fn ev [(object/get @ev "event") FILL{@config.payloadType ## trait => @tn ## event => CASE{(object/get @ev "event") ## "keep"}}])))
-                      emitVoid: (array/map (array/filter @ems (fn ev (= (array/len (default (object/get @ev "payloadSchema") [])) 0))) (fn ev (object/get @ev "event"))) }))))))))))
+                      emitVoid: (array/map (array/filter @ems (fn ev (= (array/len (default (object/get @ev "payloadSchema") [])) 0))) (fn ev (object/get @ev "event")))
+                      orbital: (object/get @o "name")
+                      listenRows: (array/map (array/filter (default (object/get @t "listens") []) (fn l (= (object/get (default (object/get @l "source") { kind: "" }) "kind") "trait")))
+                        (fn l { source: (default (object/get (default (object/get @l "source") { kind: "" }) "trait") ""), event: (object/get @l "event"), trigger: (default (object/get @l "triggers") (object/get @l "event")), guard: (object/get @l "guard" null), map: (object/get @l "payloadMapping" null) })) }))))))))))
         (set @entity.groups (array/concat
           (if @config.renderModels (array/map @entity.containers (fn c (array/map (object/get @c "fields") (fn f [0, (object/get @f "default" null)])))) [])
           (array/map @entity.traits (fn t
             (array/concat
               [(array/concat [0] (array/map (object/get @t "knobs") (fn kb (object/get @kb "default" null))))]
-              (array/map (object/get @t "transitions") (fn tr (array/concat [0, (if (!= (object/get @tr "guard" null) null) (object/get @tr "guard") true)] (default (object/get @tr "effects" []) [])))))))))
+              (array/map (object/get @t "transitions") (fn tr (array/concat [0, (if (!= (object/get @tr "guard" null) null) (object/get @tr "guard") true)] (default (object/get @tr "effects" []) []))))
+              (array/map (object/get @t "listenRows") (fn lr [0, (if (!= (object/get @lr "guard" null) null) (object/get @lr "guard") true), (default (object/get @lr "map" null) {})])))))))
         (set @entity.groupCtx (array/concat
           (if @config.renderModels (array/map @entity.containers (fn c { emitTypes: {}, emitVoid: [], defaults: {} })) [])
           (array/map @entity.traits (fn t

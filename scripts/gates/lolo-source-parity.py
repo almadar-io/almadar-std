@@ -27,7 +27,7 @@ def canon(v):
 def kernel_lines(goldens):
     out = []
     for i, step in enumerate(load(goldens)["cases"][0]["steps"]):
-        for e in step["expect"].get("emits", []):
+        for e in step["expect"].get("exactEmits", step["expect"].get("emits", [])):
             out.append(canon({"step": i, "event": e["event"], "payload": e["payload"]}))
         if "entity" in step["expect"]:
             out.append(canon({"step": i, "entity": step["expect"]["entity"]}))
