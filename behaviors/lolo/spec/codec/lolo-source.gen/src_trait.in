@@ -15,6 +15,7 @@
       LOLO_TO_SOURCE -> std when (or (not @config.requiresTypes) (!= (default @payload.path "") ""))
         (set @entity.source @payload.source)
         (set @entity.path (default @payload.path ""))
+        (set @entity.only (default @payload.orbitals []))
         (set @entity.typed (!= (default @payload.path "") ""))
         (set @entity.types {})
         (set @entity.expected {})
@@ -79,7 +80,10 @@
       LOLO_TO_SOURCE -> rendering
         (emit SOURCE_RENDER_FAILED { error: "a render is already in progress" })
 
-      SRC_PREPARE -> rendering
+      SRC_PREPARE -> ready when (array/some @entity.only (fn on (not (array/some (object/get (default @entity.program { orbitals: [] }) "orbitals") (fn po (= (object/get @po "name") @on))))))
+        (emit SOURCE_RENDER_FAILED { error: (str/concat "the program has no orbital named " (str/join (array/filter @entity.only (fn on (not (array/some (object/get (default @entity.program { orbitals: [] }) "orbitals") (fn po (= (object/get @po "name") @on)))))) ", ")) })
+      SRC_PREPARE -> rendering when (not (array/some @entity.only (fn on (not (array/some (object/get (default @entity.program { orbitals: [] }) "orbitals") (fn po (= (object/get @po "name") @on)))))))
+        (set @entity.program (let ((pg : SrcProgram (default @entity.program { orbitals: [] }))) (if (= (array/len @entity.only) 0) @pg (object/set @pg "orbitals" (array/filter (object/get @pg "orbitals") (fn po (array/includes @entity.only (object/get @po "name"))))))))
 @@PREPARE@@
         (emit SRC_RENDER { })
 
@@ -116,8 +120,8 @@
     }
 
     listens {
-      LOLO_TO_SOURCE -> input { source : string!  path : string? }
-        @description "Render this .lolo program text as native code. With the absolute path of the file the reader also answers the checker's type of every node, which typed targets need."
+      LOLO_TO_SOURCE -> input { source : string!  path : string?  orbitals : [string]? }
+        @description "Render this .lolo program text as native code. With the absolute path of the file the reader also answers the checker's type of every node, which typed targets need. orbitals names the orbitals of the program to render (all when absent); a name the program does not have fails the render."
         @synonyms "lolo to source, show as code"
       SRC_STD { data : bytes! }
         @description "Internal: the installed @almadar/std manifest."

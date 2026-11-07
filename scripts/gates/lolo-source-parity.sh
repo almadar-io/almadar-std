@@ -1,10 +1,12 @@
 #!/bin/bash
 # Proves the native renderers of std-lolo-source (python typescript rust swift kotlin) emit code that
 # compiles against each shell's real `orb compile` models and gives the kernel's answers.
-# Usage: lolo-source-parity.sh [lang...]    (default: all five). Runs the dev build (orb-dev; ORB_DEV overrides).
+# Usage: lolo-source-parity.sh [--par DIR] [lang...]    (default: all five). Runs the dev build (orb-dev; ORB_DEV overrides).
+# The examples are DIR/examples.json (default: this package's spec/codec/lolo-source.parity); a package downstream of std
+# keeps its own examples, kernel goldens and drivers in its own spec/codec/lolo-source.parity and runs this script on it.
 # Kernel answers: spec/codec/lolo-source.parity/<example>.replay.goldens.json (pinned by `orb goldens`): the emits and,
 # where a step pins expect.entity, the row after the step. A course example renders from its pinned language-goldens
-# text; a std atom example (source_of) is rendered live from the atom by the language atom itself. An optional
+# text; an example with a source is rendered live from that .lolo by the language atom itself. An optional
 # payload key the kernel leaves out and a native model carries as null compare equal (a native optional field cannot
 # tell absent from null).
 # Runs locally at the checkpoint only (owner ruling 2026-11-05: not wired into CI).
@@ -14,9 +16,11 @@ STD=$(cd "$HERE/../.." && pwd)
 ROOT=$(cd "$STD/../.." && pwd)
 LOLO=$STD/behaviors/lolo
 PAR=$LOLO/spec/codec/lolo-source.parity
+if [ "${1:-}" = --par ]; then PAR=$(cd "$2" && pwd); shift 2; fi
+PROOT=$(cd "$PAR/../../.." && pwd)
 PY=$HERE/lolo-source-parity.py
-EXAMPLES="cosine recall-at-k agent-step chunk game-score ml-ladder router-trio store-pair compose-pair"
 LANGS="${*:-python typescript rust swift kotlin}"
+EXAMPLES=$(python3 -I "$PY" examples "$PAR/examples.json") || { echo "FAIL no examples manifest at $PAR/examples.json"; exit 1; }
 KOTLIN_PLUGIN=/opt/homebrew/opt/kotlin/libexec/lib/kotlinx-serialization-compiler-plugin.jar
 KLIBS=$HOME/.almadar/kotlin-libs
 KCP=$KLIBS/kotlinx-serialization-core-jvm-1.9.0.jar:$KLIBS/kotlinx-serialization-json-jvm-1.9.0.jar
@@ -28,8 +32,6 @@ T=$(mktemp -d "${TMPDIR:-/tmp}/lolo-source-parity.XXXXXX")
 trap 'rm -rf "$T"' EXIT
 FAILS=0
 
-trait_of() { case $1 in cosine) echo Score;; recall-at-k) echo RecallAtK;; agent-step) echo Loop;; chunk) echo Chunk;; esac; }
-entity_of() { case $1 in cosine) echo Pair;; recall-at-k) echo Eval;; agent-step) echo Run;; chunk) echo Doc;; esac; }
 
 need() { # lang tool...
   local lang=$1 missing=0; shift
@@ -49,15 +51,8 @@ finish() { # lang ex actualfile logfile ranOk
   if python3 -I "$PY" compare "$PAR/$ex.replay.goldens.json" "$actual" >>"$log" 2>&1; then report "$lang" "$ex" ok; else report "$lang" "$ex" bad "$log"; fi
 }
 
-source_of() {
-  case $1 in
-    game-score) echo packages/almadar-std/behaviors/lolo/ui/game/atoms/std-score.lolo;;
-    ml-ladder) echo packages/almadar-std/behaviors/lolo/ml/atoms/std-ml-ladder.lolo;;
-    router-trio) echo packages/almadar-std/behaviors/lolo/spec/codec/lolo-source.fixtures/router-trio.lolo;;
-    store-pair) echo packages/almadar-std/behaviors/lolo/spec/codec/lolo-source.fixtures/store-pair.lolo;;
-    compose-pair) echo packages/almadar-std/behaviors/lolo/spec/codec/lolo-source.fixtures/compose-pair.lolo;;
-  esac
-}
+source_of() { python3 -I "$PY" example "$PAR/examples.json" "$1" source; }
+orbitals_of() { python3 -I "$PY" example "$PAR/examples.json" "$1" orbitals; }
 # A language an example does not cover yet prints PENDING with the gap that tracks it; it is never a pass.
 pending_of() { :; }
 covers() { local gap; gap=$(pending_of "$2" "$1"); [ -z "$gap" ] || { echo "PENDING $1 $2 ($gap)"; return 1; }; }
@@ -73,7 +68,7 @@ models() { # lang ex out shell [server]
 render_text() { # lang ex out
   local src; src=$(source_of "$2")
   if [ -z "$src" ]; then python3 -I "$PY" text "$LOLO/spec/codec/lolo-$1.replay.goldens.json" "course-$2" "$3"; return; fi
-  python3 -I "$PY" drive "$1" "$ROOT" "$src" "$T/drive-$1-$2.lolo" || return 1
+  python3 -I "$PY" drive "$1" "$ROOT" "$src" "$T/drive-$1-$2.lolo" "$(orbitals_of "$2")" || return 1
   (cd "$ROOT" && "$ORB" run "$T/drive-$1-$2.lolo") >"$T/drive-$1-$2.answer" 2>&1
   python3 -I "$PY" live "$T/drive-$1-$2.answer" "$3"
 }
@@ -89,7 +84,7 @@ goldens_leg() { # lang
 for ex in $EXAMPLES; do
   python3 -I "$PY" events "$PAR/$ex.replay.goldens.json" "$PAR/$ex.events.json" || { echo "FAIL events $ex"; FAILS=$((FAILS + 1)); }
 done
-if ! (cd "$LOLO" && "$ORB" goldens spec/codec/lolo-source.parity >"$T/kernel.log" 2>&1); then
+if ! (cd "$PROOT" && "$ORB" goldens spec/codec/lolo-source.parity >"$T/kernel.log" 2>&1); then
   echo "FAIL kernel goldens (the course programs no longer give the pinned answers)"; sed 's/^/  /' "$T/kernel.log"; FAILS=$((FAILS + 1))
 else echo "PASS kernel goldens ($(tail -1 "$T/kernel.log"))"; fi
 
