@@ -94,7 +94,7 @@
             (if (or (= (array/len @config.programOpen) 0) (= (array/len @rows) 0))
               @entity.blocks
               (array/concat @entity.blocks [(array/concat
-                (array/map @config.programOpen (fn l FILL{@l ## i => @ind ## entities => (str/join (array/map @entity.traits (fn t FILL{@config.programEntity ## key => STR{(str/concat (object/get @t "orbital") "." (object/get @t "name"))} ## entity => ENT{(object/get @t "entity")}})) @config.programEntitySep)}))
+                (array/map @config.programOpen (fn l FILL{@l ## i => @ind ## entities => (str/join (array/map (array/range 0 (array/len @entity.traits)) (fn pei (let ((t (default (array/nth @entity.traits @pei) { name: "", path: "", entity: "", initial: "", hasMachine: false, knobs: [], transitions: [], events: [], listenTypes: {}, emitTypes: {}, emitVoid: [], configType: "", orbital: "", listenRows: [] }))) FILL{@config.programEntity ## n => (str/concat "" @pei) ## key => STR{(str/concat (object/get @t "orbital") "." (object/get @t "name"))} ## entity => ENT{(object/get @t "entity")}}))) @config.programEntitySep)}))
                 (array/map (array/range 0 (array/len @entity.traits)) (fn pti (let ((t (default (array/nth @entity.traits @pti) { name: "", path: "", entity: "", initial: "", hasMachine: false, knobs: [], transitions: [], events: [], listenTypes: {}, emitTypes: {}, emitVoid: [], configType: "", orbital: "", listenRows: [] })))
                   FILL{@config.programTrait ## i => @ind ## n => (str/concat "" @pti) ## key => STR{(str/concat (object/get @t "orbital") "." (object/get @t "name"))} ## class => CASE{(object/get @t "name") ## @config.classCase} ## entity => ENT{(object/get @t "entity")}})))
                 (array/map @entity.traits (fn t

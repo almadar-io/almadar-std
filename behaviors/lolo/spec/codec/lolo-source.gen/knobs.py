@@ -53,7 +53,7 @@ KNOBS = [
  ("enumMemberCase", "string", "split-pascal", "domain", "Enum member case", "keep, lower, upper, camel, pascal, split-camel or split-pascal"),
  ("programOpen", "[string]", [], "domain", "Program open", "Lines that open the generated router of a program whose traits listen to each other ({{i}} indent, {{entities}} the programEntity entries); empty renders no router"),
  ("programTrait", "string", "", "domain", "Program trait", "One trait instance of the router: {{key}} the orbital-qualified trait, {{class}}, {{entity}}, {{n}} its position"),
- ("programEntity", "string", "", "domain", "Program entity", "One entry of programOpen's {{entities}}, the row each trait starts from: {{key}}, {{entity}}"),
+ ("programEntity", "string", "", "domain", "Program entity", "One entry of programOpen's {{entities}}, the row each trait starts from: {{key}}, {{entity}}, {{n}} the trait's position"),
  ("programEntitySep", "string", ", ", "domain", "Program entity separator", "Between the entries of {{entities}}"),
  ("programHandles", "string", "", "domain", "Program handles", "The events a trait handles per state: {{key}}, {{table}} (a map literal of state to event list)"),
  ("programRow", "string", "", "domain", "Program row", "One listen route in registration order: {{source}}, {{event}}, {{target}}, {{trigger}}, {{guard}} and {{map}} (a function name, or the null literal)"),
