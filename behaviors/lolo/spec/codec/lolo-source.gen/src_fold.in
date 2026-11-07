@@ -103,7 +103,7 @@
                                   (if (and (= @ptype "") (not @void) (> (array/len @n) 2)) [(str/concat "emit " @ev " carries a payload the trait does not declare")]
                                     (if (and (!= @ptype "") (> (array/len @n) 2) (not @isObj)) [(str/concat "emit " @ev " passes a payload that is not an object literal, so it is not built as " @ptype)] [])))))
                         (let ((call FILL{@config.emitForm ## event => (default (array/nth @ex 1) "") ## payload => @pld}))
-                          REC{ expr => @call ## stmt => [(str/concat @call @term)] ## warns => (array/concat @ws @warn) ## uses => @us })))))
+                          REC{ expr => @call ## stmt => [(str/concat @call @term)] ## warns => (array/concat @ws @warn) ## uses => (if (and (!= @ptype "") @isObj) (array/concat @us ["payload"]) @us) })))))
               (if (= @hd "render-ui")
                 (let ((kind : string (let ((pr (if (> @argc 1) (array/nth @n 2) null))) (if (validate/object @pr) (let ((tv (object/get @pr "type" "ui"))) (if (validate/string @tv) @tv "ui")) "ui"))))
                   REC{ expr => @config.nullLit ## stmt => [FILL{@config.commentForm ## text => (str/concat "render: " @kind)}] ## warns => @ws ## uses => @us })
