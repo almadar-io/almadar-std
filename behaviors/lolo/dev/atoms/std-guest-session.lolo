@@ -16,6 +16,11 @@ type GuestOpened = { guest : string!, page : [string]!, route : string, rendered
 type GuestNavigated = { page : [string]!, route : string, rendered : [GuestPaint]!, outcomes : [GuestMove]! }
 type GuestStepped = { rendered : [GuestPaint]!, outcomes : [GuestMove]! }
 type GuestClosed = { closed : boolean! }
+type GuestPersonaOption = { id : string!, name : string }
+type GuestPersonasReply = { success : boolean, personas : [GuestPersonaOption] }
+type GuestAnswer = { status : number!, body : string! }
+type GuestEmitted = { event : string!, payload : GuestAnswer? }
+type GuestAnswered = { emitted : [GuestEmitted]? }
 
 orbital GuestSessionOrbital {
   entity GuestRun [runtime] {
@@ -27,6 +32,10 @@ orbital GuestSessionOrbital {
     guestError : string = ""
     guestProgram : GuestProgram? @description "The program value being opened, held only until program/compose or program/open takes it: the entity rides every request a stateless host's client posts."
     guestSeed : behavior?
+    guestBase : GuestProgram? @description "The program the open guest was opened from, kept while it is open so picking a persona can open it again as that viewer."
+    guestPersona : string @description "The persona the guest's session is signed in as after a pick: an identity row id; empty while the default persona (the first declared role) is the viewer." = ""
+    guestPersonas : [GuestPersonaOption] @description "The personas the guest's std-dev-personas listed, shown by the stage as its picker." = []
+    guestResume : string @description "The route a persona pick opens again, held only until the guest it reopens is up." = ""
   }
 
   trait GuestMarks = Marks.traits.MarksCheck {
@@ -51,10 +60,14 @@ orbital GuestSessionOrbital {
         (set @entity.guestPaints [])
         (emit GUEST_CLEARED {})
         (set @entity.guestProgram ?program)
+        (set @entity.guestBase ?program)
+        (set @entity.guestPersona "")
+        (set @entity.guestResume "")
         (emit GUEST_PREPARE {})
       GUEST_FAIL -> idle
         (emit GUEST_ERROR { message: ?message })
       GUEST_RESET -> idle
+        (set @entity.guestBase null)
         (emit GUEST_CLEARED {})
       GUEST_OPENED -> idle
         (program/close ?result.guest { emit: { success: GUEST_CLOSED, failure: GUEST_CLOSE_FAILED } })
@@ -64,7 +77,9 @@ orbital GuestSessionOrbital {
       GUEST_PREPARE -> idle
       GUEST_SEED_RESOLVED -> idle
       GUEST_SEED_MARKED -> idle
+      GUEST_PERSONAS_READ -> idle
       GUEST_COMPOSED -> idle
+      GUEST_PERSONAS_ASK -> idle
     }
 
     state opening {
@@ -72,14 +87,19 @@ orbital GuestSessionOrbital {
       GUEST_OPEN -> opening
         (emit GUEST_CLEARED {})
         (set @entity.guestProgram ?program)
+        (set @entity.guestBase ?program)
+        (set @entity.guestPersona "")
+        (set @entity.guestResume "")
         (emit GUEST_PREPARE {})
       GUEST_OPENED -> live
         (set @entity.guestHandle ?result.guest)
         (set @entity.guestPage ?result.page)
         (set @entity.guestRoute (default ?result.route ""))
+        (set @entity.guestResume "")
         (set @entity.guestPaints (array/reduce ?result.rendered [] (fn acc p (array/concat (array/filter @acc (fn q (or (!= @q.trait @p.trait) (!= @q.slot @p.slot)))) (array/filter [@p] (fn x (!= @x.content null)))))))
         (emit GUEST_PAINTS { guest: @entity.guestHandle, route: @entity.guestRoute, page: @entity.guestPage, paints: @entity.guestPaints })
         (emit GUEST_MOVED { guest: @entity.guestHandle, moves: ?result.outcomes })
+        (emit GUEST_PERSONAS_ASK {})
       GUEST_FAILED -> idle
         (emit GUEST_ERROR { message: ?error })
       GUEST_PREPARE -> opening when (= @entity.guestSeed null)
@@ -88,21 +108,29 @@ orbital GuestSessionOrbital {
         (set @entity.guestSeed ?result)
         (emit GUEST_PREPARE {})
       GUEST_PREPARE -> opening when (!= @entity.guestSeed null)
-        (emit GUEST_SEED_ASK { program: @entity.guestProgram })
+        (emit GUEST_SEED_ASK { program: @entity.guestProgram, persona: @entity.guestPersona })
       GUEST_SEED_MARKED -> opening when @payload.marked
-        (program/open @entity.guestProgram { grants: { env: @config.guestEnv }, declared: true } { emit: { success: GUEST_OPENED, failure: GUEST_FAILED } })
+        (program/open @entity.guestProgram (object/merge { grants: { env: @config.guestEnv }, declared: true } (if (!= @entity.guestResume "") { route: @entity.guestResume } {})) { emit: { success: GUEST_OPENED, failure: GUEST_FAILED } })
         (set @entity.guestProgram null)
-      GUEST_SEED_MARKED -> opening when (not @payload.marked)
+      GUEST_SEED_MARKED -> opening when (and (not @payload.marked) (!= @payload.personas ""))
+        (program/read (str/concat "app guest-personas [version: \"1.0.0\"]\n" @payload.personas) { emit: { success: GUEST_PERSONAS_READ, failure: GUEST_FAILED } })
+      GUEST_PERSONAS_READ -> opening
+        (program/compose [@entity.guestProgram, @entity.guestSeed, ?result] { appName: (object/get (default @entity.guestProgram { name: "guest", orbitals: [] }) "name" "guest") } { emit: { success: GUEST_COMPOSED, failure: GUEST_FAILED } })
+        (set @entity.guestProgram null)
+      GUEST_SEED_MARKED -> opening when (and (not @payload.marked) (= @payload.personas ""))
         (program/compose [@entity.guestProgram, @entity.guestSeed] { appName: (object/get (default @entity.guestProgram { name: "guest", orbitals: [] }) "name" "guest") } { emit: { success: GUEST_COMPOSED, failure: GUEST_FAILED } })
         (set @entity.guestProgram null)
       GUEST_COMPOSED -> opening
-        (program/open ?result { grants: { env: @config.guestEnv }, declared: true } { emit: { success: GUEST_OPENED, failure: GUEST_FAILED } })
+        (program/open ?result (object/merge { grants: { env: @config.guestEnv }, declared: true } (if (!= @entity.guestResume "") { route: @entity.guestResume } {})) { emit: { success: GUEST_OPENED, failure: GUEST_FAILED } })
       GUEST_FAIL -> idle
         (emit GUEST_ERROR { message: ?message })
       GUEST_RESET -> idle
+        (set @entity.guestBase null)
         (emit GUEST_CLEARED {})
       GUEST_CLOSED -> opening
       GUEST_CLOSE_FAILED -> opening
+      GUEST_PERSONAS_STEPPED -> opening
+      GUEST_PERSONAS_FAILED -> opening
     }
 
     state live {
@@ -113,21 +141,46 @@ orbital GuestSessionOrbital {
         (set @entity.guestPaints [])
         (emit GUEST_CLEARED {})
         (set @entity.guestProgram ?program)
+        (set @entity.guestBase ?program)
+        (set @entity.guestPersona "")
+        (set @entity.guestResume "")
         (emit GUEST_PREPARE {})
       GUEST_OPENED -> live
         (program/close @entity.guestHandle { emit: { success: GUEST_CLOSED, failure: GUEST_CLOSE_FAILED } })
         (set @entity.guestHandle ?result.guest)
         (set @entity.guestPage ?result.page)
         (set @entity.guestRoute (default ?result.route ""))
+        (set @entity.guestResume "")
         (set @entity.guestPaints (array/reduce ?result.rendered [] (fn acc p (array/concat (array/filter @acc (fn q (or (!= @q.trait @p.trait) (!= @q.slot @p.slot)))) (array/filter [@p] (fn x (!= @x.content null)))))))
         (emit GUEST_PAINTS { guest: @entity.guestHandle, route: @entity.guestRoute, page: @entity.guestPage, paints: @entity.guestPaints })
         (emit GUEST_MOVED { guest: @entity.guestHandle, moves: ?result.outcomes })
+        (emit GUEST_PERSONAS_ASK {})
       GUEST_FAILED -> live
         (emit GUEST_NOTICE { message: ?error })
       GUEST_PREPARE -> live
       GUEST_SEED_RESOLVED -> live
       GUEST_SEED_MARKED -> live
+      GUEST_PERSONAS_READ -> live
       GUEST_COMPOSED -> live
+      GUEST_PERSONAS_ASK -> live
+        (program/dispatch "PERSONAS_REQUESTED" {} { guest: @entity.guestHandle, emit: { success: GUEST_PERSONAS_STEPPED, failure: GUEST_PERSONAS_FAILED } })
+      GUEST_PERSONAS_STEPPED -> live
+        (set @entity.guestPersonas (default (object/get (default (json/parse (default (object/get (default (object/get (default (array/find (default ?result.emitted []) (fn e (= @e.event "PERSONAS_ANSWERED"))) {}) "payload") {}) "body") "") GuestPersonasReply) {}) "personas") []))
+        (emit GUEST_PERSONAS { guest: @entity.guestHandle, personas: @entity.guestPersonas, current: @entity.guestPersona })
+      GUEST_PERSONAS_FAILED -> live
+        (set @entity.guestPersonas [])
+        (emit GUEST_PERSONAS { guest: @entity.guestHandle, personas: [], current: @entity.guestPersona })
+      GUEST_PERSONA_PICK -> opening when (and (= ?guest @entity.guestHandle) (!= @entity.guestBase null))
+        (program/close @entity.guestHandle { emit: { success: GUEST_CLOSED, failure: GUEST_CLOSE_FAILED } })
+        (set @entity.guestPersona ?persona)
+        (set @entity.guestResume @entity.guestRoute)
+        (set @entity.guestHandle "")
+        (set @entity.guestPaints [])
+        (set @entity.guestPersonas [])
+        (emit GUEST_CLEARED {})
+        (set @entity.guestProgram @entity.guestBase)
+        (emit GUEST_PREPARE {})
+      GUEST_PERSONA_PICK -> live when (or (!= ?guest @entity.guestHandle) (= @entity.guestBase null))
       GUEST_SEND -> live when (= ?guest @entity.guestHandle)
         (program/dispatch ?address ?payload { guest: ?guest, emit: { success: GUEST_STEPPED, failure: GUEST_STEP_FAILED } })
       GUEST_SEND -> live when (!= ?guest @entity.guestHandle)
@@ -158,6 +211,7 @@ orbital GuestSessionOrbital {
         (program/close @entity.guestHandle { emit: { success: GUEST_CLOSED, failure: GUEST_CLOSE_FAILED } })
         (set @entity.guestHandle "")
         (set @entity.guestPaints [])
+        (set @entity.guestBase null)
         (emit GUEST_CLEARED {})
       GUEST_CLOSED -> live
       GUEST_CLOSE_FAILED -> live
@@ -186,6 +240,12 @@ orbital GuestSessionOrbital {
         @description "A step of the guest failed, or a second guest could not replace the open one."
       GUEST_CLEARED -> external { }
         @description "The previous guest is gone: a new one is opening or the session was reset."
+      GUEST_PERSONAS -> external {
+        guest : string!
+        personas : [GuestPersonaOption]!
+        current : string!
+      }
+        @description "The development personas the open guest lists (its std-dev-personas answers PERSONAS_REQUESTED, which a program without one or outside the Auth emulator answers with none), and the persona picked as the guest's viewer; empty current while the default persona is."
       GUEST_OPENED {
         result : GuestOpened!
       }
@@ -213,6 +273,17 @@ orbital GuestSessionOrbital {
       GUEST_PREPARE { }
       GUEST_SEED_ASK {
         program : GuestProgram?
+        persona : string?
+      }
+      GUEST_PERSONAS_ASK { }
+      GUEST_PERSONAS_STEPPED {
+        result : GuestAnswered!
+      }
+      GUEST_PERSONAS_FAILED {
+        error : string!
+      }
+      GUEST_PERSONAS_READ {
+        result : behavior!
       }
       GUEST_SEED_RESOLVED {
         result : behavior!
@@ -226,7 +297,14 @@ orbital GuestSessionOrbital {
       GuestMarks.MARKS_CHECKED -> GUEST_SEED_MARKED
       GUEST_SEED_MARKED {
         marked : boolean!
+        personas : string!
       }
+      GuestStage.GUEST_PERSONA_PICK -> GUEST_PERSONA_PICK
+      GUEST_PERSONA_PICK {
+        guest : string!
+        persona : string!
+      }
+        @description "A persona was picked for the open guest: it is closed and opened again, on the route it showed, signed in as that persona, so every page runs its start as the new viewer."
       GUEST_OPEN -> input {
         program : GuestProgram!
       }
@@ -286,6 +364,10 @@ orbital GuestSessionOrbital {
         @label "Other slots painted"
         @description "The message before the list of slots the opened guest did paint."
         @tier "presentation"
+      personasLabel : string = "Viewing as"
+        @label "Personas label"
+        @description "The caption before the personas the guest lists, which the viewer picks to open the guest as that persona."
+        @tier "presentation"
     }
     initial: idle
 
@@ -304,8 +386,17 @@ orbital GuestSessionOrbital {
         (emit GUEST_SHOWN {})
       GUEST_NOTICE -> idle
         (notify error ?message)
+      GUEST_PERSONAS -> idle when (= ?guest @entity.guestHandle)
+        (set @entity.guestPersonas ?personas)
+        (set @entity.guestPersona ?current)
+        (emit GUEST_SHOWN {})
+      GUEST_PERSONAS -> idle when (!= ?guest @entity.guestHandle)
+      GUEST_PERSONA_CHOSEN -> idle when (and (!= @entity.guestHandle "") (!= @payload.id @entity.guestPersona))
+        (emit GUEST_PERSONA_PICK { guest: @entity.guestHandle, persona: @payload.id })
+      GUEST_PERSONA_CHOSEN -> idle when (or (= @entity.guestHandle "") (= @payload.id @entity.guestPersona))
       GUEST_CLEARED -> idle
         (set @entity.guestHandle "")
+        (set @entity.guestPersonas [])
         (set @entity.guestPaints [])
         (set @entity.guestPage [])
         (set @entity.guestRoute "")
@@ -318,7 +409,7 @@ orbital GuestSessionOrbital {
         (emit GUEST_NAVIGATE { guest: ?guest, route: ?route })
       GUEST_ROUTE -> idle when (!= ?guest @entity.guestHandle)
       GUEST_SHOWN -> idle
-        (render-ui main { type: box, className: @config.className, children: [
+        (render-ui main { type: box, className: @config.className, children: (array/concat (if (and (= @entity.guestError "") (> (array/len @entity.guestPersonas) 0)) [{ type: stack, direction: horizontal, gap: sm, align: center, children: (array/concat [{ type: typography, variant: caption, color: muted, content: @config.personasLabel }] (array/map @entity.guestPersonas (fn p { type: button, variant: (if (= (object/get @p "id" "") @entity.guestPersona) primary ghost), size: sm, label: (default (object/get @p "name") (object/get @p "id" "")), action: GUEST_PERSONA_CHOSEN, actionPayload: { id: (object/get @p "id" "") } }))) }] []) [
           (if (!= @entity.guestError "")
             { type: container, size: md, padding: lg, children: [(if (= @config.errorTitle "") { type: alert, variant: error, message: @entity.guestError } { type: alert, variant: error, title: @config.errorTitle, message: @entity.guestError })] }
             (let ((slotRoots (array/filter @entity.guestPaints (fn p (and (= @p.slot @config.slot) (= @p.embedded false) (array/includes @entity.guestPage @p.trait))))) (paint (array/first (array/filter @entity.guestPaints (fn p (and (= @p.slot @config.slot) (= @p.embedded false) (array/includes @entity.guestPage @p.trait)))))))
@@ -327,7 +418,7 @@ orbital GuestSessionOrbital {
                   { type: container, size: full, padding: md, children: [{ type: skeleton, variant: @config.pending, rows: @config.pendingRows }] }
                   { type: container, size: md, padding: lg, children: [{ type: alert, variant: info, title: @config.unpaintedTitle, message: (let ((roots (array/filter @entity.guestPaints (fn p (= @p.embedded false))))) (if (= (array/len @roots) 0) @config.unpaintedNothing (str/concat @config.unpaintedOthers (str/join (array/map @roots (fn p @p.slot)) ", ")))) }] })
                 { type: guest-view, guest: @entity.guestHandle, source: @paint.trait, deliver: GUEST_CONTROL, navigate: GUEST_ROUTE, route: @entity.guestRoute, paints: @entity.guestPaints, children: (array/map @slotRoots (fn p @p.content)) })))
-        ] })
+        ]) })
     }
 
     emits {
@@ -344,6 +435,11 @@ orbital GuestSessionOrbital {
         route : string!
       }
         @description "A link inside the guest was followed: the session opens that route in the guest."
+      GUEST_PERSONA_PICK -> external {
+        guest : string!
+        persona : string!
+      }
+        @description "A persona of the picker was chosen: the session opens the guest again as that viewer."
     }
 
     listens {
@@ -351,6 +447,16 @@ orbital GuestSessionOrbital {
       GuestSession.GUEST_ERROR -> GUEST_ERROR
       GuestSession.GUEST_NOTICE -> GUEST_NOTICE
       GuestSession.GUEST_CLEARED -> GUEST_CLEARED
+      GuestSession.GUEST_PERSONAS -> GUEST_PERSONAS
+      GUEST_PERSONAS {
+        guest : string!
+        personas : [GuestPersonaOption]!
+        current : string!
+      }
+      GUEST_PERSONA_CHOSEN {
+        id : string!
+      }
+        @description "The viewer chose a persona of the picker."
       GUEST_PAINTS {
         guest : string!
         route : string!
