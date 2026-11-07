@@ -41,6 +41,37 @@ class McpStdioNative(unittest.TestCase):
         self.assertIn("source", replies[3]["result"]["structuredContent"])
         self.assertEqual(replies[4]["result"], {})
 
+    def test_client_handshake_notification_after_initialize_is_answered_through(self):
+        messages = [
+            {"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {"protocolVersion": "2025-06-18"}},
+            {"jsonrpc": "2.0", "method": "notifications/initialized"},
+            {"jsonrpc": "2.0", "id": 2, "method": "ping"},
+        ]
+        self.assertEqual([reply["id"] for reply in self.serve(messages)], [1, 2])
+
+    def test_identical_notifications_and_blank_lines_in_one_read_are_each_acknowledged(self):
+        lines = [json.dumps({"jsonrpc": "2.0", "id": 1, "method": "ping"}),
+                 json.dumps({"jsonrpc": "2.0", "method": "notifications/initialized"}),
+                 json.dumps({"jsonrpc": "2.0", "method": "notifications/initialized"}),
+                 "", "",
+                 json.dumps({"jsonrpc": "2.0", "id": 2, "method": "ping"}),
+                 json.dumps({"jsonrpc": "2.0", "id": 2, "method": "ping"})]
+        self.assertEqual([reply["id"] for reply in self.serve_lines(lines)], [1, 2, 2])
+
+    def test_control_requests_without_notifications_still_answer_in_order(self):
+        messages = [{"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {"protocolVersion": "2025-06-18"}},
+                    {"jsonrpc": "2.0", "id": 2, "method": "ping"}]
+        self.assertEqual([reply["id"] for reply in self.serve(messages)], [1, 2])
+
+    def serve(self, messages):
+        return self.serve_lines([json.dumps(message) for message in messages])
+
+    def serve_lines(self, lines):
+        result = subprocess.run([os.environ.get("ORB_BIN", "orb"), "mcp"], input="\n".join(lines).encode(),
+                                capture_output=True, cwd=ROOT, timeout=60)
+        self.assertEqual(result.returncode, 0, result.stdout.decode() + result.stderr.decode())
+        return [json.loads(line) for line in result.stdout.splitlines() if line.strip()]
+
 
 if __name__ == "__main__":
     unittest.main()

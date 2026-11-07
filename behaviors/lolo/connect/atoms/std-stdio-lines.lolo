@@ -10,6 +10,7 @@ orbital StdioLinesOrbital {
     inputBuffer : bytes = ""
     inputEof : boolean = false
     awaitingAck : boolean = false
+    delivered : number = 0
   }
 
   trait StdioLines -> StdioLinesSession [optimistic] {
@@ -37,13 +38,15 @@ orbital StdioLinesOrbital {
       STDIO_PUMP -> closed when (and (and (not @entity.awaitingAck) (>= (bytes/index-of @entity.inputBuffer (bytes/from-string "\n")) 0)) (= (bytes/to-string (bytes/slice @entity.inputBuffer 0 (bytes/index-of @entity.inputBuffer (bytes/from-string "\n")))) null))
         (emit STDIO_ERROR { error: "standard input line is not valid UTF-8" })
       STDIO_PUMP -> active when (and (and (not @entity.awaitingAck) (>= (bytes/index-of @entity.inputBuffer (bytes/from-string "\n")) 0)) (!= (bytes/to-string (bytes/slice @entity.inputBuffer 0 (bytes/index-of @entity.inputBuffer (bytes/from-string "\n")))) null))
-        (emit INPUT_LINE { line: (bytes/to-string (bytes/slice @entity.inputBuffer 0 (bytes/index-of @entity.inputBuffer (bytes/from-string "\n")))) })
+        (emit INPUT_LINE { line: (bytes/to-string (bytes/slice @entity.inputBuffer 0 (bytes/index-of @entity.inputBuffer (bytes/from-string "\n")))) seq: @entity.delivered })
+        (set @entity.delivered (+ @entity.delivered 1))
         (set @entity.inputBuffer (bytes/slice @entity.inputBuffer (+ (bytes/index-of @entity.inputBuffer (bytes/from-string "\n")) 1)))
         (set @entity.awaitingAck true)
       STDIO_PUMP -> closed when (and (and (not @entity.awaitingAck) (= (bytes/index-of @entity.inputBuffer (bytes/from-string "\n")) -1) @entity.inputEof (> (bytes/length @entity.inputBuffer) 0)) (= (bytes/to-string @entity.inputBuffer) null))
         (emit STDIO_ERROR { error: "standard input line is not valid UTF-8" })
       STDIO_PUMP -> active when (and (and (not @entity.awaitingAck) (= (bytes/index-of @entity.inputBuffer (bytes/from-string "\n")) -1) @entity.inputEof (> (bytes/length @entity.inputBuffer) 0)) (!= (bytes/to-string @entity.inputBuffer) null))
-        (emit INPUT_LINE { line: (bytes/to-string @entity.inputBuffer) })
+        (emit INPUT_LINE { line: (bytes/to-string @entity.inputBuffer) seq: @entity.delivered })
+        (set @entity.delivered (+ @entity.delivered 1))
         (set @entity.inputBuffer (bytes/from-string ""))
         (set @entity.awaitingAck true)
       STDIO_PUMP -> closed when (and (not @entity.awaitingAck) @entity.inputEof (= (bytes/length @entity.inputBuffer) 0))
@@ -65,8 +68,8 @@ orbital StdioLinesOrbital {
     }
 
     emits {
-      INPUT_LINE -> external { line : string! }
-        @description "One UTF-8 line without its LF delimiter; acknowledge with INPUT_NEXT after processing."
+      INPUT_LINE -> external { line : string! seq : number! }
+        @description "One UTF-8 line without its LF delimiter and its 0-based delivery number, so two equal lines are distinct deliveries (EXEC-QUEUE-4); acknowledge with INPUT_NEXT after processing."
       STDIO_ERROR -> external { error : string! }
         @description "A native standard input or output operation failed."
       STDIO_CLOSED -> external {}

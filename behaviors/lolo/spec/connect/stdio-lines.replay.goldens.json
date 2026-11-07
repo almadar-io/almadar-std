@@ -341,6 +341,96 @@
      }
     }
    ]
+  },
+  {
+   "id": "two equal lines carry consecutive delivery numbers",
+   "steps": [
+    {
+     "trait": "StdioLines",
+     "from": "active",
+     "event": "STDIO_READ",
+     "payload": {
+      "data": "c2FtZQpzYW1lCg==",
+      "eof": false
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STDIO_PUMP",
+        "payload": {}
+       },
+       {
+        "event": "INPUT_LINE",
+        "payload": {
+         "line": "same",
+         "seq": 0
+        }
+       }
+      ],
+      "state": "active"
+     }
+    },
+    {
+     "trait": "StdioLines",
+     "event": "INPUT_NEXT",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "STDIO_PUMP",
+        "payload": {}
+       },
+       {
+        "event": "INPUT_LINE",
+        "payload": {
+         "line": "same",
+         "seq": 1
+        }
+       }
+      ],
+      "state": "active"
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: an ack with no line outstanding does not advance the delivery number",
+   "steps": [
+    {
+     "trait": "StdioLines",
+     "from": "active",
+     "event": "INPUT_NEXT",
+     "payload": {},
+     "expect": {
+      "emits": [],
+      "state": "active"
+     }
+    },
+    {
+     "trait": "StdioLines",
+     "event": "STDIO_READ",
+     "payload": {
+      "data": "eAo=",
+      "eof": false
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "STDIO_PUMP",
+        "payload": {}
+       },
+       {
+        "event": "INPUT_LINE",
+        "payload": {
+         "line": "x",
+         "seq": 0
+        }
+       }
+      ],
+      "state": "active"
+     }
+    }
+   ]
   }
  ]
 }
