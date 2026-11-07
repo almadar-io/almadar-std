@@ -1,0 +1,69 @@
+{
+ "atom": "../ui/core/atoms/std-tag-strip.lolo",
+ "trait": "TagStrip",
+ "note": "G-STD-293: SHOW_TAG_STRIP stashes the record's tag ids whether the payload carries ids or hydrated tag rows. The atom failing `orb validate` (ORB_X_SET_RETURN_TYPE_MISMATCH) is the failing signal; these pin the behavior across the fix.",
+ "cases": [
+  {
+   "id": "hydrated-tag-rows-are-normalized-to-their-ids",
+   "steps": [
+    {
+     "from": "idle",
+     "event": "SHOW_TAG_STRIP",
+     "entity": {
+      "id": "t"
+     },
+     "payload": {
+      "id": "d1",
+      "tagIds": [
+       "a",
+       {
+        "id": "b"
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "loading",
+      "entity": {
+       "docId": "d1",
+       "docTagIds": [
+        "a",
+        "b"
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-plain-tag-ids-are-stashed-as-they-are",
+   "steps": [
+    {
+     "from": "idle",
+     "event": "SHOW_TAG_STRIP",
+     "entity": {
+      "id": "t"
+     },
+     "payload": {
+      "id": "d1",
+      "tagIds": [
+       "a",
+       "b"
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "loading",
+      "entity": {
+       "docId": "d1",
+       "docTagIds": [
+        "a",
+        "b"
+       ]
+      }
+     }
+    }
+   ]
+  }
+ ]
+}

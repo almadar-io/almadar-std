@@ -1550,7 +1550,9 @@
             "marked": false,
             "personas": "",
             "personasCollection": "",
-            "personasSignIn": ""
+            "personasSignIn": "",
+            "defaultRole": "",
+            "personaTrait": ""
           },
           "entity": {
             "id": "g",
@@ -1641,7 +1643,9 @@
             "marked": true,
             "personas": "",
             "personasCollection": "",
-            "personasSignIn": ""
+            "personasSignIn": "",
+            "defaultRole": "",
+            "personaTrait": ""
           },
           "entity": {
             "id": "g",
@@ -2546,7 +2550,9 @@
             "marked": false,
             "personas": "x",
             "personasCollection": "team_members",
-            "personasSignIn": "owner"
+            "personasSignIn": "owner",
+            "defaultRole": "owner",
+            "personaTrait": ""
           }
         }
       ],
@@ -2586,7 +2592,9 @@
             "marked": false,
             "personas": "",
             "personasCollection": "",
-            "personasSignIn": ""
+            "personasSignIn": "",
+            "defaultRole": "",
+            "personaTrait": ""
           }
         }
       ],
@@ -2709,6 +2717,158 @@
                   "payload": {
                     "status": 200,
                     "body": "{\"success\": true, \"personas\": [{\"id\": \"u1\", \"name\": \"Ada\", \"role\": \"owner\"}, {\"id\": \"u2\", \"name\": \"Bo\", \"role\": \"admin\"}]}"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "a-guest-opens-signed-in-as-the-first-persona-with-the-default-role",
+      "steps": [
+        {
+          "trait": "GuestSession",
+          "event": "GUEST_PERSONAS_STEPPED",
+          "entity": {
+            "id": "g",
+            "guestHandle": "guest-1",
+            "guestPaints": [],
+            "guestError": "",
+            "guestPersona": "",
+            "guestDefaultRole": "owner"
+          },
+          "from": "live",
+          "expect": {
+            "fired": true,
+            "state": "live",
+            "effects": [
+              {
+                "type": "program/dispatch"
+              }
+            ]
+          },
+          "payload": {
+            "result": {
+              "emitted": [
+                {
+                  "event": "PERSONAS_ANSWERED",
+                  "payload": {
+                    "status": 200,
+                    "body": "{\"success\": true, \"personas\": [{\"id\": \"u1\", \"name\": \"Ada\", \"role\": \"admin\"}, {\"id\": \"u2\", \"name\": \"Bo\", \"role\": \"owner\"}, {\"id\": \"u3\", \"name\": \"Cy\", \"role\": \"owner\"}]}"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "control-a-guest-already-signed-in-keeps-its-persona",
+      "steps": [
+        {
+          "trait": "GuestSession",
+          "event": "GUEST_PERSONAS_STEPPED",
+          "entity": {
+            "id": "g",
+            "guestHandle": "guest-1",
+            "guestPaints": [],
+            "guestError": "",
+            "guestPersona": "u1",
+            "guestDefaultRole": "owner"
+          },
+          "from": "live",
+          "expect": {
+            "fired": true,
+            "state": "live",
+            "effects": []
+          },
+          "payload": {
+            "result": {
+              "emitted": [
+                {
+                  "event": "PERSONAS_ANSWERED",
+                  "payload": {
+                    "status": 200,
+                    "body": "{\"success\": true, \"personas\": [{\"id\": \"u1\", \"name\": \"Ada\", \"role\": \"admin\"}, {\"id\": \"u2\", \"name\": \"Bo\", \"role\": \"owner\"}, {\"id\": \"u3\", \"name\": \"Cy\", \"role\": \"owner\"}]}"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "control-a-guest-without-a-default-role-stays-signed-out",
+      "steps": [
+        {
+          "trait": "GuestSession",
+          "event": "GUEST_PERSONAS_STEPPED",
+          "entity": {
+            "id": "g",
+            "guestHandle": "guest-1",
+            "guestPaints": [],
+            "guestError": "",
+            "guestPersona": "",
+            "guestDefaultRole": ""
+          },
+          "from": "live",
+          "expect": {
+            "fired": true,
+            "state": "live",
+            "effects": []
+          },
+          "payload": {
+            "result": {
+              "emitted": [
+                {
+                  "event": "PERSONAS_ANSWERED",
+                  "payload": {
+                    "status": 200,
+                    "body": "{\"success\": true, \"personas\": [{\"id\": \"u1\", \"name\": \"Ada\", \"role\": \"admin\"}, {\"id\": \"u2\", \"name\": \"Bo\", \"role\": \"owner\"}, {\"id\": \"u3\", \"name\": \"Cy\", \"role\": \"owner\"}]}"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "edge-no-persona-has-the-default-role-signs-nobody-in",
+      "steps": [
+        {
+          "trait": "GuestSession",
+          "event": "GUEST_PERSONAS_STEPPED",
+          "entity": {
+            "id": "g",
+            "guestHandle": "guest-1",
+            "guestPaints": [],
+            "guestError": "",
+            "guestPersona": "",
+            "guestDefaultRole": "manager"
+          },
+          "from": "live",
+          "expect": {
+            "fired": true,
+            "state": "live",
+            "effects": []
+          },
+          "payload": {
+            "result": {
+              "emitted": [
+                {
+                  "event": "PERSONAS_ANSWERED",
+                  "payload": {
+                    "status": 200,
+                    "body": "{\"success\": true, \"personas\": [{\"id\": \"u1\", \"name\": \"Ada\", \"role\": \"admin\"}, {\"id\": \"u2\", \"name\": \"Bo\", \"role\": \"owner\"}, {\"id\": \"u3\", \"name\": \"Cy\", \"role\": \"owner\"}]}"
                   }
                 }
               ]

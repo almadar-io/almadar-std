@@ -1835,7 +1835,8 @@
    ]
   },
   {
-   "id": "control-a-ticket-mint-without-a-client-asks-with-an-empty-one",
+   "id": "a-ticket-mint-without-a-client-id-is-400-with-a-typed-reason",
+   "note": "G-CROSS-373: POST /api/events/ticket with no ?clientId= answers 400 naming the missing query; it no longer mints for client session \"\" (StreamTicket.clientId is required, so the persist failed and the client saw 503)",
    "entity": {
     "pending": [
      {
@@ -1859,12 +1860,126 @@
      "expect": {
       "emits": [
        {
+        "event": "RESPOND",
+        "payload": {
+         "requestId": 5,
+         "status": 400
+        }
+       },
+       {
+        "event": "REQUEST_ANSWERED",
+        "payload": {
+         "requestId": 5,
+         "status": 400,
+         "headers": [
+          {
+           "name": "content-type",
+           "value": "application/json"
+          }
+         ],
+         "body": "{\"error\":\"Missing clientId query parameter\",\"code\":\"MISSING_CLIENT_ID\"}"
+        }
+       }
+      ],
+      "neverEmits": [
+       "MINT_IDENTITY_REQUIRED",
+       "MINT_REQUESTED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-ticket-mint-with-an-empty-client-id-is-400-with-a-typed-reason",
+   "note": "an empty ?clientId= is the same absence",
+   "entity": {
+    "pending": [
+     {
+      "requestId": 5,
+      "method": "POST",
+      "path": "/api/events/ticket",
+      "query": "clientId=&x=1",
+      "headers": {},
+      "authorization": "Bearer a.b.c",
+      "responseHeaders": []
+     }
+    ]
+   },
+   "steps": [
+    {
+     "event": "ROUTE_REQUEST",
+     "payload": {
+      "requestId": 5,
+      "rateHeaders": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RESPOND",
+        "payload": {
+         "requestId": 5,
+         "status": 400
+        }
+       },
+       {
+        "event": "REQUEST_ANSWERED",
+        "payload": {
+         "requestId": 5,
+         "status": 400,
+         "headers": [
+          {
+           "name": "content-type",
+           "value": "application/json"
+          }
+         ],
+         "body": "{\"error\":\"Missing clientId query parameter\",\"code\":\"MISSING_CLIENT_ID\"}"
+        }
+       }
+      ],
+      "neverEmits": [
+       "MINT_IDENTITY_REQUIRED",
+       "MINT_REQUESTED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-ticket-mint-with-a-client-id-still-asks-the-identity-binding",
+   "entity": {
+    "pending": [
+     {
+      "requestId": 5,
+      "method": "POST",
+      "path": "/api/events/ticket",
+      "query": "x=1&clientId=tab-1",
+      "headers": {},
+      "authorization": "Bearer a.b.c",
+      "responseHeaders": []
+     }
+    ]
+   },
+   "steps": [
+    {
+     "event": "ROUTE_REQUEST",
+     "payload": {
+      "requestId": 5,
+      "rateHeaders": []
+     },
+     "expect": {
+      "emits": [
+       {
         "event": "MINT_IDENTITY_REQUIRED",
         "payload": {
          "requestId": 5,
-         "clientId": ""
+         "authorization": "Bearer a.b.c",
+         "clientId": "tab-1"
         }
        }
+      ],
+      "neverEmits": [
+       "RESPOND",
+       "REQUEST_ANSWERED"
       ]
      }
     }

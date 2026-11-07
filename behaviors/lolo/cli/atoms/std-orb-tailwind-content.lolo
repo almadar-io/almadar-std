@@ -1,22 +1,36 @@
 app std-orb-tailwind-content [
   version: "1.0.0",
   inbound: ["cli-tailwind-content"],
-  fs: { cwd: "**": [read, write], "/**": [read, write] },
+  exec: [exe],
+  env: ["PATH"],
+  fs: { cwd: "**": [read, write], "/**": [read, write], "~/.orb/node_modules/**": [read] },
   description: "std-orb-tailwind-content — the `orb tailwind-content [--out <file>] [--check] [<registry folder>…]` command, the generator of the prebuilt web client's Tailwind content list (one class token per line, sorted, a trailing newline). It lists the behaviors under the registry folders (behavior/catalog, no vectors; none given means the defaultScope knob), walks every behavior value for each record carrying a className, reads that className's string leaves again so a conditional className (an if form) is covered too, splits them on whitespace, and drops the empty tokens, the tokens holding `@` (a binding) and the strings that head a list (an operator name). The extraTokens knob adds the classes a renderer composes itself and that never appear as a literal. The sorted unique tokens are written to --out (default: the defaultOut knob, relative to the working directory) and the answer is `<N> tokens written to <path>`. With --check nothing is written: the file is read and compared, and any difference answers status 500 with the missing and extra tokens. A usage error answers status 400 (exit 2); a failed catalog, read or write answers status 500 (exit 1)."
 ]
 uses Spec from "almadar-std/orb-tailwind-content"
 uses Args from "std/behaviors/std-args"
+uses Language from "std/behaviors/std-orb-language"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type ArgFlag = { name : string!, aliases : [string]!, takesValue : boolean!, repeatable : boolean! }
 type TailwindHit = { value : behavior! }
 type TailwindDoc = string | number | boolean | [TailwindDoc?] | Map string TailwindDoc?
 type TailwindNodes = [TailwindDoc?]
+type CoreLanguageBlock = { patterns : string }
+type CoreManifest = { orbLanguage : CoreLanguageBlock? }
+type RegistryProp = { kind : string }
+type RegistryPattern = { propsSchema : Map string RegistryProp }
+type PatternRegistry = { patterns : Map string RegistryPattern! }
 
 orbital OrbTailwindContentOrbital {
   uses Args from "std/behaviors/std-args"
+  uses Semver from "std/behaviors/std-semver"
 
   entity TailwindContentRun [runtime] {
     id : string!
+    cwd : string = ""
+    coreRoot : string = ""
+    patternsFile : string = ""
+    classProps : [string] = []
+    positionals : [string] = []
     out : string = ""
     check : boolean = false
     tokens : [string] = []
@@ -33,6 +47,24 @@ orbital OrbTailwindContentOrbital {
     }
   }
 
+  trait Versions = Semver.traits.Semver {
+    listens {
+      Packs.LANG_SEMVER -> SEMVER_SATISFIES
+    }
+  }
+
+  trait Packs = Language.traits.OrbLanguageEngine {
+    listens {
+      OrbTailwindContent.TAILWIND_PACKS_RUN -> LANG_SCAN
+      LANG_SAT { requestId : string!  value : boolean! }
+        @description "std-semver's SEMVER_SATISFIED: the range check answered."
+      LANG_SAT_REFUSED { requestId : string!  operation : string!  reason : string! }
+        @description "std-semver's SEMVER_REFUSED: the range check refused."
+      Versions.SEMVER_SATISFIED -> LANG_SAT
+      Versions.SEMVER_REFUSED -> LANG_SAT_REFUSED
+    }
+  }
+
   trait OrbTailwindContent -> TailwindContentRun [optimistic] {
     initial: ready
 
@@ -41,6 +73,7 @@ orbital OrbTailwindContentOrbital {
       TAILWIND_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
         (emit TAILWIND_ANSWERED { status: 400, body: "usage: orb tailwind-content [--out <file>] [--check] [<registry folder>…]" })
       TAILWIND_CALLED -> parsing when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
+        (set @entity.cwd (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
         (emit TAILWIND_ARGS_PARSE { stage: "tailwind-content" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "out" aliases: [] takesValue: true repeatable: false }, { name: "check" aliases: [] takesValue: false repeatable: false }] })
     }
 
@@ -51,13 +84,34 @@ orbital OrbTailwindContentOrbital {
       TAILWIND_ARGS_DONE -> working when (= (array/len @payload.errors) 0)
         (set @entity.out (default (array/first (default (object/get @payload.flags "out") [])) @config.defaultOut))
         (set @entity.check (object/has @payload.flags "check"))
-        (behavior/catalog { paths: (if (> (array/len @payload.positionals) 0) @payload.positionals @config.defaultScope), exposure: [] } {
-          emit: { success: TAILWIND_LISTED, failure: TAILWIND_CATALOG_FAILED }
-        })
+        (set @entity.positionals @payload.positionals)
+        (emit TAILWIND_PACKS_RUN { cwd: @entity.cwd })
     }
 
     state working {
       INIT -> working
+      TAILWIND_SCAN_ANSWERED -> ready when (!= @payload.status 200)
+        (emit TAILWIND_ANSWERED { status: 500, body: (str/concat "Error: the language scan failed: " @payload.body) })
+      LANGUAGE_PACKS_DONE_HEARD -> ready when (!= @payload.problem "")
+        (emit TAILWIND_ANSWERED { status: 500, body: (str/concat "Error: the language scan found a problem: " @payload.problem) })
+      LANGUAGE_PACKS_DONE_HEARD -> ready when (and (= @payload.problem "") (= @payload.coreRoot ""))
+        (emit TAILWIND_ANSWERED { status: 500, body: "Error: the language scan found no compatible @almadar/core" })
+      LANGUAGE_PACKS_DONE_HEARD -> working when (and (= @payload.problem "") (!= @payload.coreRoot ""))
+        (set @entity.coreRoot @payload.coreRoot)
+        (os/read-file (str/concat "/" (os/path-relative "/" (os/path-join @payload.coreRoot "package.json"))) { key: "tailwind-core" emit: { success: TAILWIND_CORE_MANIFEST, failure: TAILWIND_CORE_FAILED } })
+      TAILWIND_CORE_FAILED -> ready
+        (emit TAILWIND_ANSWERED { status: 500, body: (str/concat "Error: could not read the installed @almadar/core: " @payload.error) })
+      TAILWIND_CORE_MANIFEST -> ready when (let ((text (bytes/to-string @payload.data))) (if (= @text null) true (let ((m (json/parse @text CoreManifest))) (if (= @m null) true (= (object/get (object/get @m "orbLanguage" {}) "patterns" "") "")))))
+        (emit TAILWIND_ANSWERED { status: 500, body: "Error: the installed @almadar/core declares no orbLanguage.patterns" })
+      TAILWIND_CORE_MANIFEST -> working when (let ((text (bytes/to-string @payload.data))) (if (= @text null) false (let ((m (json/parse @text CoreManifest))) (if (= @m null) false (!= (object/get (object/get @m "orbLanguage" {}) "patterns" "") "")))))
+        (os/read-file (str/concat "/" (os/path-relative "/" (os/path-join @entity.coreRoot (let ((m (json/parse (default (bytes/to-string @payload.data) "") CoreManifest))) (if (= @m null) "" (object/get (object/get @m "orbLanguage" {}) "patterns" "")))))) { key: "tailwind-registry" emit: { success: TAILWIND_REGISTRY_FILE, failure: TAILWIND_CORE_FAILED } })
+      TAILWIND_REGISTRY_FILE -> ready when (let ((text (bytes/to-string @payload.data))) (or (= @text null) (= (json/parse @text PatternRegistry) null)))
+        (emit TAILWIND_ANSWERED { status: 500, body: "Error: the installed @almadar/core pattern registry is not a pattern registry" })
+      TAILWIND_REGISTRY_FILE -> working when (let ((text (bytes/to-string @payload.data))) (and (!= @text null) (!= (json/parse @text PatternRegistry) null)))
+        (set @entity.classProps (let ((reg (json/parse (default (bytes/to-string @payload.data) "") PatternRegistry))) (if (= @reg null) [] (array/sort (array/unique (array/flatten (array/map (object/values (object/get @reg "patterns")) (fn pe (let ((ps (object/get @pe "propsSchema" {}))) (array/filter (object/keys @ps) (fn k (= (object/get (object/get @ps @k {}) "kind" "") "class-string"))))))))))))
+        (behavior/catalog { paths: (if (> (array/len @entity.positionals) 0) @entity.positionals @config.defaultScope), exposure: [] } {
+          emit: { success: TAILWIND_LISTED, failure: TAILWIND_CATALOG_FAILED }
+        })
       TAILWIND_CATALOG_FAILED -> ready
         (emit TAILWIND_ANSWERED { status: 500, body: (str/concat "Error: could not list the behaviors: " (default @payload.error "")) })
       TAILWIND_LISTED -> working
@@ -78,12 +132,12 @@ orbital OrbTailwindContentOrbital {
             (array/filter
               (array/flatten (array/map @nodes (fn n
                 (if (validate/object @n)
-                  (let ((cn : TailwindDoc? (object/get @n "className" null)))
+                  (array/flatten (array/map @entity.classProps (fn cp (let ((cn : TailwindDoc? (object/get @n @cp null)))
                     (if (not (or (validate/string @cn) (validate/array @cn)))
                       []
                       (let ((ns (default (as (json/nodes @cn) TailwindNodes) [])))
                         (let ((heads (array/flatten (array/map @ns (fn m (if (validate/array @m) (if (> (array/len @m) 0) (let ((h : TailwindDoc? (array/first @m))) (if (validate/string @h) [@h] [])) []) []))))))
-                          (array/flatten (array/map @ns (fn m (if (validate/string @m) (if (array/includes @heads @m) [] (str/split (str/trim (str/replace-pattern @m "\\s+" " ")) " ")) []))))))))
+                          (array/flatten (array/map @ns (fn m (if (validate/string @m) (if (array/includes @heads @m) [] (str/split (str/trim (str/replace-pattern @m "\\s+" " ")) " ")) [])))))))))))
                   []))))
               (fn t (!= (str/replace-pattern @t "^@[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z0-9_]+)*$" "") ""))))))
         (set @entity.cursor (+ @entity.cursor 1))
@@ -130,6 +184,9 @@ orbital OrbTailwindContentOrbital {
       }
         @description "Internal: parse the call's words."
         @tier "internal"
+      TAILWIND_PACKS_RUN { cwd : string! }
+        @description "Internal: scan the installed language packs for @almadar/core."
+        @tier "internal"
       TAILWIND_NEXT { }
         @description "Internal: read the next behavior's program."
         @tier "internal"
@@ -148,6 +205,15 @@ orbital OrbTailwindContentOrbital {
         @tier "internal"
       TAILWIND_READ_FAILED { error : string!  kind : string }
         @description "Internal: os/read-file's failure."
+        @tier "internal"
+      TAILWIND_CORE_MANIFEST { data : bytes! }
+        @description "Internal: os/read-file's success on the core manifest."
+        @tier "internal"
+      TAILWIND_REGISTRY_FILE { data : bytes! }
+        @description "Internal: os/read-file's success on the pattern registry."
+        @tier "internal"
+      TAILWIND_CORE_FAILED { error : string!  kind : string }
+        @description "Internal: os/read-file's failure on the core manifest or the pattern registry."
         @tier "internal"
       TAILWIND_READ { data : bytes! }
         @description "Internal: os/read-file's success."
@@ -176,6 +242,21 @@ orbital OrbTailwindContentOrbital {
       }
         @description "std-args's ARGS_PARSED."
       ArgsCli.ARGS_PARSED -> TAILWIND_ARGS_DONE
+      TAILWIND_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string!  coreRoot : string!  stdRoot : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished and named the installed @almadar/core root."
+      TAILWIND_CORE_MANIFEST { data : bytes! }
+        @description "os/read-file's success: the installed @almadar/core package.json."
+      TAILWIND_REGISTRY_FILE { data : bytes! }
+        @description "os/read-file's success: the pattern registry the core manifest declares at orbLanguage.patterns."
+      TAILWIND_CORE_FAILED {
+        error : string!
+        kind : string
+      }
+        @description "os/read-file's failure on the core manifest or the pattern registry."
+      Packs.SCAN_ANSWERED -> TAILWIND_SCAN_ANSWERED
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
       TAILWIND_LISTED {
         result : [TailwindHit]!
       }
@@ -225,5 +306,5 @@ orbital OrbTailwindContentOrbital {
     }
   }
 
-  page boot as OrbTailwindContentOrbitalStart -> OrbTailwindContent, ArgsCli
+  page boot as OrbTailwindContentOrbitalStart -> OrbTailwindContent, ArgsCli, Packs, Versions
 }

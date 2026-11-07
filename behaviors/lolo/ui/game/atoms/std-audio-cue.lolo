@@ -4,7 +4,7 @@ app std-audio-cue [
 ]
 orbital AudioCueOrbital {
   type SoundEntry = {
-    path : string
+    path : string!
     volume : number
     loop : boolean
     poolSize : number
@@ -31,11 +31,12 @@ orbital AudioCueOrbital {
         (set @entity.cueSeq 0)
         (set @entity.music @config.initialMusic)
         (set @entity.muted @config.initialMuted)
-        (set @entity.volume @config.initialVolume)
+        (set @entity.volume (math/clamp @config.initialVolume 0 1))
         (render-ui main {
-          cue: @entity.cue
           cueSeq: @entity.cueSeq
-          music: @entity.music
+          cuePlay: (if (object/has @config.manifest @entity.cue) (let ((e (object/get @config.manifest @entity.cue))) { key: @entity.cue, source: (str/concat @config.baseUrl @e.path), volume: (default @e.volume 1), loop: (default @e.loop false), poolSize: (math/max (default @e.poolSize 1) 1), fadeMs: 0 }) { key: "", source: "", volume: 0, loop: false, poolSize: 1, fadeMs: 0 })
+          musicPlay: (if (object/has @config.manifest @entity.music) (let ((e (object/get @config.manifest @entity.music))) { key: @entity.music, source: (str/concat @config.baseUrl @e.path), volume: (default @e.volume 1), loop: true, poolSize: 1, fadeMs: (if (= @e.crossfade false) 0 (default @e.crossfadeDurationMs 1500)) }) { key: "", source: "", volume: 0, loop: true, poolSize: 1, fadeMs: @config.stopFadeMs })
+          autostart: (array/map (array/filter (object/keys @config.manifest) (fn k (default (object/get (object/get @config.manifest @k) "autostart") false))) (fn k (let ((e (object/get @config.manifest @k))) { key: @k, source: (str/concat @config.baseUrl @e.path), volume: (default @e.volume 1), loop: (default @e.loop false), poolSize: (math/max (default @e.poolSize 1) 1), fadeMs: 0 })))
           muted: @entity.muted
           volume: @entity.volume
           manifest: @config.manifest
@@ -43,11 +44,11 @@ orbital AudioCueOrbital {
           type: game-audio-cue
         })
 
-      CUE -> active
+      CUE -> active when (and (not @entity.muted) (object/has @config.manifest ?key))
         (set @entity.cue ?key)
         (set @entity.cueSeq (+ @entity.cueSeq 1))
 
-      MUSIC -> active
+      MUSIC -> active when (object/has @config.manifest ?key)
         (set @entity.music ?key)
 
       STOP_MUSIC -> active
@@ -66,14 +67,14 @@ orbital AudioCueOrbital {
         (emit AUDIO_MUTED { muted: @entity.muted })
 
       SET_VOLUME -> active
-        (set @entity.volume ?volume)
+        (set @entity.volume (math/clamp ?volume 0 1))
 
       RESTART -> active
         (set @entity.cue "")
         (set @entity.cueSeq 0)
         (set @entity.music @config.initialMusic)
         (set @entity.muted @config.initialMuted)
-        (set @entity.volume @config.initialVolume)
+        (set @entity.volume (math/clamp @config.initialVolume 0 1))
     }
 
     emits {
@@ -128,6 +129,10 @@ orbital AudioCueOrbital {
       initialVolume : number = 1
         @label "Initial Volume"
         @description "Master volume 0-1 seeded on INIT/RESTART."
+        @tier "presentation"
+      stopFadeMs : number = 1000
+        @label "Stop Fade Ms"
+        @description "Fade-out length in milliseconds when music stops."
         @tier "presentation"
       initialMusic : string = ""
         @label "Initial Music"

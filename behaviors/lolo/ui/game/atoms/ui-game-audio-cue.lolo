@@ -14,6 +14,15 @@ orbital GameAudioCueOrbital {
     crossfadeDurationMs : number
   }
 
+  type GameAudioCuePlay = {
+    key : string!
+    source : string!
+    volume : number!
+    loop : boolean!
+    poolSize : number!
+    fadeMs : number!
+  }
+
   entity GameAudioCueItem [runtime] {
     id : string!
   }
@@ -24,9 +33,10 @@ orbital GameAudioCueOrbital {
     state idle {
       INIT -> idle
         (render-ui main {
-          cue: @config.cue
           cueSeq: @config.cueSeq
-          music: @config.music
+          cuePlay: @config.cuePlay
+          musicPlay: @config.musicPlay
+          autostart: @config.autostart
           muted: @config.muted
           volume: @config.volume
           manifest: @config.manifest
@@ -36,17 +46,21 @@ orbital GameAudioCueOrbital {
     }
 
     config {
-      cue : string
-        @label "Cue"
-        @description "Manifest key played as a one-shot SFX each time `cueSeq` advances."
-        @tier "presentation"
       cueSeq : number
         @label "Cue Seq"
-        @description "Monotonically increasing counter — bumping it re-triggers `cue`."
+        @description "Monotonically increasing counter — bumping it plays `cuePlay` once; never fires on mount."
         @tier "presentation"
-      music : string
-        @label "Music"
-        @description "Manifest key to crossfade to as looping background music; unset/empty stops music."
+      cuePlay : GameAudioCuePlay = { key: "", source: "", volume: 0, loop: false, poolSize: 1, fadeMs: 0 }
+        @label "Cue Play"
+        @description "The resolved one-shot to play on the next `cueSeq` bump: full source, entry volume, loop, pool size."
+        @tier "presentation"
+      musicPlay : GameAudioCuePlay = { key: "", source: "", volume: 0, loop: true, poolSize: 1, fadeMs: 0 }
+        @label "Music Play"
+        @description "The resolved looping track; a new key crossfades over `fadeMs`, an empty key fades the current track out over `fadeMs`."
+        @tier "presentation"
+      autostart : [GameAudioCuePlay] = []
+        @label "Autostart"
+        @description "Resolved sounds started on the first user gesture while unmuted."
         @tier "presentation"
       muted : boolean
         @label "Muted"
@@ -58,7 +72,7 @@ orbital GameAudioCueOrbital {
         @tier "presentation"
       manifest : Map string GameAudioCueManifestValue = {}
         @label "Manifest"
-        @description "Sound manifest — keys mapped to sound definitions (path, volume, loop, ...)."
+        @description "Sound manifest — answers the audio/* host port by key; the circuit path plays the resolved plans."
         @tier "presentation"
       baseUrl : string
         @label "Base Url"

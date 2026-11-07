@@ -12831,6 +12831,466 @@
         "personaTrait": "DevPersonas",
         "seedTrait": "MockSeed"
       }
+    },
+    {
+      "id": "write-plan-the-identity-store-goes-first-and-is-written-anonymously (an identity row must exist before anyone signs in as it)",
+      "steps": [
+        {
+          "trait": "MockSeed",
+          "event": "DS_WRITE_BEGIN",
+          "from": "ready",
+          "entity": {
+            "id": "mock-seed",
+            "dsMode": "seed",
+            "dsScoped": false,
+            "dsMarked": [],
+            "dsStamped": [],
+            "dsDeferred": [],
+            "dsIdStore": "people",
+            "dsStores": {
+              "visits": [
+                {
+                  "id": "Visit Id 1"
+                }
+              ],
+              "notes": [
+                {
+                  "id": "Note Id 1",
+                  "owner": "Person Id 1"
+                }
+              ],
+              "people": [
+                {
+                  "id": "Person Id 1",
+                  "name": "Ada",
+                  "role": "owner"
+                },
+                {
+                  "id": "Person Id 2",
+                  "name": "Bo",
+                  "role": "admin"
+                }
+              ]
+            },
+            "dsRegsAll": [
+              {
+                "label": "Visit",
+                "store": "visits",
+                "fields": [],
+                "identity": false,
+                "runtime": false,
+                "persistence": "runtime",
+                "seeds": true,
+                "ownerCols": [],
+                "policyEntity": "Visit",
+                "hasRead": false,
+                "hasCreate": false,
+                "policyRefs": [],
+                "instances": []
+              },
+              {
+                "label": "Note",
+                "store": "notes",
+                "fields": [],
+                "identity": false,
+                "runtime": false,
+                "persistence": "persistent",
+                "seeds": true,
+                "ownerCols": [],
+                "policyEntity": "Note",
+                "hasRead": false,
+                "hasCreate": false,
+                "policyRefs": [],
+                "instances": []
+              },
+              {
+                "label": "Person",
+                "store": "people",
+                "fields": [],
+                "identity": true,
+                "runtime": false,
+                "persistence": "persistent",
+                "seeds": true,
+                "ownerCols": [],
+                "policyEntity": "Person",
+                "hasRead": false,
+                "hasCreate": false,
+                "policyRefs": [],
+                "instances": []
+              }
+            ]
+          },
+          "payload": {},
+          "expect": {
+            "entity": {
+              "dsWriteAll": [
+                {
+                  "store": "people",
+                  "i": 0,
+                  "label": "Person",
+                  "entity": "Person",
+                  "owner": "",
+                  "checked": false,
+                  "runtime": false
+                },
+                {
+                  "store": "people",
+                  "i": 1,
+                  "label": "Person",
+                  "entity": "Person",
+                  "owner": "",
+                  "checked": false,
+                  "runtime": false
+                },
+                {
+                  "store": "visits",
+                  "i": 0,
+                  "label": "Visit",
+                  "entity": "Visit",
+                  "owner": "",
+                  "checked": false,
+                  "runtime": true
+                },
+                {
+                  "store": "notes",
+                  "i": 0,
+                  "label": "Note",
+                  "entity": "Note",
+                  "owner": "",
+                  "checked": false,
+                  "runtime": false
+                }
+              ]
+            },
+            "emits": [
+              {
+                "event": "DS_WRITE_NEXT"
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "write-plan-a-chunk-never-mixes-runtime-rows-with-host-store-rows (persist batch refuses the mix)",
+      "steps": [
+        {
+          "trait": "MockSeed",
+          "event": "DS_WRITE_BEGIN",
+          "from": "ready",
+          "entity": {
+            "id": "mock-seed",
+            "dsMode": "seed",
+            "dsScoped": false,
+            "dsMarked": [],
+            "dsStamped": [],
+            "dsDeferred": [],
+            "dsIdStore": "people",
+            "dsStores": {
+              "visits": [
+                {
+                  "id": "Visit Id 1"
+                }
+              ],
+              "notes": [
+                {
+                  "id": "Note Id 1",
+                  "owner": "Person Id 1"
+                }
+              ],
+              "people": [
+                {
+                  "id": "Person Id 1",
+                  "name": "Ada",
+                  "role": "owner"
+                },
+                {
+                  "id": "Person Id 2",
+                  "name": "Bo",
+                  "role": "admin"
+                }
+              ]
+            },
+            "dsRegsAll": [
+              {
+                "label": "Visit",
+                "store": "visits",
+                "fields": [],
+                "identity": false,
+                "runtime": false,
+                "persistence": "runtime",
+                "seeds": true,
+                "ownerCols": [],
+                "policyEntity": "Visit",
+                "hasRead": false,
+                "hasCreate": false,
+                "policyRefs": [],
+                "instances": []
+              },
+              {
+                "label": "Note",
+                "store": "notes",
+                "fields": [],
+                "identity": false,
+                "runtime": false,
+                "persistence": "persistent",
+                "seeds": true,
+                "ownerCols": [],
+                "policyEntity": "Note",
+                "hasRead": false,
+                "hasCreate": false,
+                "policyRefs": [],
+                "instances": []
+              },
+              {
+                "label": "Person",
+                "store": "people",
+                "fields": [],
+                "identity": true,
+                "runtime": false,
+                "persistence": "persistent",
+                "seeds": true,
+                "ownerCols": [],
+                "policyEntity": "Person",
+                "hasRead": false,
+                "hasCreate": false,
+                "policyRefs": [],
+                "instances": []
+              }
+            ]
+          },
+          "payload": {},
+          "expect": {
+            "entity": {
+              "dsWrites": [
+                {
+                  "owner": "",
+                  "ops": [
+                    [
+                      "create",
+                      "Person",
+                      {
+                        "id": "Person Id 1",
+                        "name": "Ada",
+                        "role": "owner"
+                      }
+                    ],
+                    [
+                      "create",
+                      "Person",
+                      {
+                        "id": "Person Id 2",
+                        "name": "Bo",
+                        "role": "admin"
+                      }
+                    ]
+                  ]
+                },
+                {
+                  "owner": "",
+                  "ops": [
+                    [
+                      "create",
+                      "Visit",
+                      {
+                        "id": "Visit Id 1"
+                      }
+                    ]
+                  ]
+                },
+                {
+                  "owner": "",
+                  "ops": [
+                    [
+                      "create",
+                      "Note",
+                      {
+                        "id": "Note Id 1",
+                        "owner": "Person Id 1"
+                      }
+                    ]
+                  ]
+                }
+              ]
+            },
+            "emits": [
+              {
+                "event": "DS_WRITE_NEXT"
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "control-write-plan-adjacent-stores-of-one-persistence-share-a-chunk",
+      "steps": [
+        {
+          "trait": "MockSeed",
+          "event": "DS_WRITE_BEGIN",
+          "from": "ready",
+          "entity": {
+            "id": "mock-seed",
+            "dsMode": "seed",
+            "dsScoped": false,
+            "dsMarked": [],
+            "dsStamped": [],
+            "dsDeferred": [],
+            "dsIdStore": "people",
+            "dsStores": {
+              "people": [
+                {
+                  "id": "Person Id 1",
+                  "name": "Ada",
+                  "role": "owner"
+                },
+                {
+                  "id": "Person Id 2",
+                  "name": "Bo",
+                  "role": "admin"
+                }
+              ],
+              "notes": [
+                {
+                  "id": "Note Id 1",
+                  "owner": "Person Id 1"
+                }
+              ]
+            },
+            "dsRegsAll": [
+              {
+                "label": "Person",
+                "store": "people",
+                "fields": [],
+                "identity": true,
+                "runtime": false,
+                "persistence": "persistent",
+                "seeds": true,
+                "ownerCols": [],
+                "policyEntity": "Person",
+                "hasRead": false,
+                "hasCreate": false,
+                "policyRefs": [],
+                "instances": []
+              },
+              {
+                "label": "Note",
+                "store": "notes",
+                "fields": [],
+                "identity": false,
+                "runtime": false,
+                "persistence": "persistent",
+                "seeds": true,
+                "ownerCols": [],
+                "policyEntity": "Note",
+                "hasRead": false,
+                "hasCreate": false,
+                "policyRefs": [],
+                "instances": []
+              }
+            ]
+          },
+          "payload": {},
+          "expect": {
+            "entity": {
+              "dsWrites": [
+                {
+                  "owner": "",
+                  "ops": [
+                    [
+                      "create",
+                      "Person",
+                      {
+                        "id": "Person Id 1",
+                        "name": "Ada",
+                        "role": "owner"
+                      }
+                    ],
+                    [
+                      "create",
+                      "Person",
+                      {
+                        "id": "Person Id 2",
+                        "name": "Bo",
+                        "role": "admin"
+                      }
+                    ],
+                    [
+                      "create",
+                      "Note",
+                      {
+                        "id": "Note Id 1",
+                        "owner": "Person Id 1"
+                      }
+                    ]
+                  ]
+                }
+              ]
+            },
+            "emits": [
+              {
+                "event": "DS_WRITE_NEXT"
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "a-failed-dataset-records-why-on-the-seeder",
+      "steps": [
+        {
+          "trait": "MockSeed",
+          "event": "DATASET_FAILED",
+          "from": "ready",
+          "entity": {
+            "id": "mock-seed",
+            "dsActive": true,
+            "dsError": ""
+          },
+          "payload": {
+            "error": "Batch operation [create, Ticket] failed: @Create denied"
+          },
+          "expect": {
+            "entity": {
+              "dsActive": false,
+              "dsError": "Batch operation [create, Ticket] failed: @Create denied"
+            }
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "control-a-new-dataset-replaces-the-last-failure-with-its-own-outcome",
+      "steps": [
+        {
+          "trait": "MockSeed",
+          "event": "DATASET_START",
+          "from": "ready",
+          "entity": {
+            "id": "mock-seed",
+            "dsActive": false,
+            "dsError": "Batch operation [create, Ticket] failed: @Create denied"
+          },
+          "payload": {
+            "source": "seed-parity.lolo",
+            "count": 6,
+            "seed": 42,
+            "nowMs": "2026-06-01T00:00:00.000Z",
+            "viewerId": "Person Id 1"
+          },
+          "expect": {
+            "entity": {
+              "dsError": "no substrate host configured for program/read"
+            }
+          }
+        }
+      ],
+      "now": 1760531445678
     }
   ]
 }

@@ -32,6 +32,9 @@ orbital GuestSessionOrbital {
     guestError : string = ""
     guestProgram : GuestProgram? @description "The program value being opened, held only until program/compose or program/open takes it: the entity rides every request a stateless host's client posts."
     guestSeed : behavior?
+    guestSeeded : boolean @description "Whether the catalog composed std-mock-page-seed into the open guest, so its seeder answers the personas it wrote." = false
+    guestPersonaTrait : string @description "The guest's trait that lists personas and signs its session in as one (std-mock-seed-marks personaTrait); persona asks name it, since it may sit on a page the guest has not mounted." = ""
+    guestDefaultRole : string @description "The role the open guest is signed in as when it opens: the first declared value of its [identity] entity's role field (std-mock-seed-marks defaultRole); empty without one." = ""
     guestPersona : string @description "The persona the guest's session was last signed in as by a pick: an identity row id; empty until one is picked." = ""
     guestPersonas : [GuestPersonaOption] @description "The personas the guest's std-dev-personas listed, shown by the stage as its picker." = []
   }
@@ -44,6 +47,10 @@ orbital GuestSessionOrbital {
 
   trait GuestSession -> GuestRun {
     config {
+      seedTrait : string = "MockDataMockSeed"
+        @label "Seeder trait"
+        @description "The composed std-mock-page-seed trait (MockData's MockSeed) the guest asks for the personas it seeded."
+        @tier "internal"
       guestEnv : [string] = ["FIREBASE_AUTH_EMULATOR_HOST", "ALMADAR_PERSONA_OWNS"]
         @label "Guest environment"
         @description "The environment variables a guest may read, passed as its env grant at program/open: the Auth emulator host its persona sign-in checks and the persona-owns list its seeder reads. The orbital's own env grant covers them."
@@ -102,14 +109,23 @@ orbital GuestSessionOrbital {
       GUEST_PREPARE -> opening when (!= @entity.guestSeed null)
         (emit GUEST_SEED_ASK { program: @entity.guestProgram })
       GUEST_SEED_MARKED -> opening when @payload.marked
+        (set @entity.guestSeeded false)
+        (set @entity.guestDefaultRole (default @payload.defaultRole ""))
+        (set @entity.guestPersonaTrait (default @payload.personaTrait ""))
         (program/open @entity.guestProgram { grants: { env: @config.guestEnv }, declared: true } { emit: { success: GUEST_OPENED, failure: GUEST_FAILED } })
         (set @entity.guestProgram null)
       GUEST_SEED_MARKED -> opening when (and (not @payload.marked) (!= @payload.personasCollection ""))
+        (set @entity.guestSeeded true)
+        (set @entity.guestDefaultRole (default @payload.defaultRole ""))
+        (set @entity.guestPersonaTrait (default @payload.personaTrait ""))
         (behavior/resolve (behavior/apply { behavior: "std/behaviors/std-dev-personas", orbital: "DevPersonasOrbital" } { entity: "DevPersona", persistence: "persistent", collection: @payload.personasCollection, traits: { DevPersonas: { config: { autoSignIn: @payload.personasSignIn } } } }) {} { emit: { success: GUEST_PERSONAS_RESOLVED, failure: GUEST_FAILED } })
       GUEST_PERSONAS_RESOLVED -> opening
         (program/compose [@entity.guestProgram, @entity.guestSeed, ?result] { appName: (object/get (default @entity.guestProgram { name: "guest", orbitals: [] }) "name" "guest") } { emit: { success: GUEST_COMPOSED, failure: GUEST_FAILED } })
         (set @entity.guestProgram null)
       GUEST_SEED_MARKED -> opening when (and (not @payload.marked) (= @payload.personasCollection ""))
+        (set @entity.guestSeeded true)
+        (set @entity.guestDefaultRole (default @payload.defaultRole ""))
+        (set @entity.guestPersonaTrait (default @payload.personaTrait ""))
         (program/compose [@entity.guestProgram, @entity.guestSeed] { appName: (object/get (default @entity.guestProgram { name: "guest", orbitals: [] }) "name" "guest") } { emit: { success: GUEST_COMPOSED, failure: GUEST_FAILED } })
         (set @entity.guestProgram null)
       GUEST_COMPOSED -> opening
@@ -152,15 +168,19 @@ orbital GuestSessionOrbital {
       GUEST_PERSONAS_RESOLVED -> live
       GUEST_COMPOSED -> live
       GUEST_PERSONAS_ASK -> live
-        (program/dispatch "PERSONAS_REQUESTED" {} { guest: @entity.guestHandle, emit: { success: GUEST_PERSONAS_STEPPED, failure: GUEST_PERSONAS_FAILED } })
-      GUEST_PERSONAS_STEPPED -> live
-        (set @entity.guestPersonas (default (object/get (default (json/parse (default (object/get (default (object/get (default (array/find (default ?result.emitted []) (fn e (= @e.event "PERSONAS_ANSWERED"))) {}) "payload") {}) "body") "") GuestPersonasReply) {}) "personas") []))
+        (program/dispatch (if @entity.guestSeeded (str/concat @config.seedTrait ".SEED_PERSONAS_ASK") (if (= @entity.guestPersonaTrait "") "PERSONAS_REQUESTED" (str/concat @entity.guestPersonaTrait ".PERSONAS_REQUESTED"))) {} { guest: @entity.guestHandle, emit: { success: GUEST_PERSONAS_STEPPED, failure: GUEST_PERSONAS_FAILED } })
+      GUEST_PERSONAS_STEPPED -> live when (and (= @entity.guestPersona "") (!= @entity.guestDefaultRole "") (array/some (let ((seeded (array/find (default ?result.emitted []) (fn e (= @e.event "SEED_PERSONAS"))))) (if (!= @seeded null) (let ((none : [GuestPersonaOption] [])) (default (object/get (default (as (object/get @seeded "payload") GuestPersonasReply) { success: true, personas: @none }) "personas") @none)) (default (object/get (default (json/parse (default (object/get (default (object/get (default (array/find (default ?result.emitted []) (fn e (= @e.event "PERSONAS_ANSWERED"))) {}) "payload") {}) "body") "") GuestPersonasReply) {}) "personas") []))) (fn r (= (object/get @r "role" "") @entity.guestDefaultRole))))
+        (set @entity.guestPersonas (let ((seeded (array/find (default ?result.emitted []) (fn e (= @e.event "SEED_PERSONAS"))))) (if (!= @seeded null) (let ((none : [GuestPersonaOption] [])) (default (object/get (default (as (object/get @seeded "payload") GuestPersonasReply) { success: true, personas: @none }) "personas") @none)) (default (object/get (default (json/parse (default (object/get (default (object/get (default (array/find (default ?result.emitted []) (fn e (= @e.event "PERSONAS_ANSWERED"))) {}) "payload") {}) "body") "") GuestPersonasReply) {}) "personas") []))))
+        (emit GUEST_PERSONAS { guest: @entity.guestHandle, personas: @entity.guestPersonas, current: @entity.guestPersona })
+        (program/dispatch (if (= @entity.guestPersonaTrait "") "PERSONA_ACT_AS" (str/concat @entity.guestPersonaTrait ".PERSONA_ACT_AS")) { persona: (object/get (default (array/find @entity.guestPersonas (fn r (= (object/get @r "role" "") @entity.guestDefaultRole))) { id: "" }) "id" "") } { guest: @entity.guestHandle, emit: { success: GUEST_PERSONA_ACTED, failure: GUEST_STEP_FAILED } })
+      GUEST_PERSONAS_STEPPED -> live when (not (and (= @entity.guestPersona "") (!= @entity.guestDefaultRole "") (array/some (let ((seeded (array/find (default ?result.emitted []) (fn e (= @e.event "SEED_PERSONAS"))))) (if (!= @seeded null) (let ((none : [GuestPersonaOption] [])) (default (object/get (default (as (object/get @seeded "payload") GuestPersonasReply) { success: true, personas: @none }) "personas") @none)) (default (object/get (default (json/parse (default (object/get (default (object/get (default (array/find (default ?result.emitted []) (fn e (= @e.event "PERSONAS_ANSWERED"))) {}) "payload") {}) "body") "") GuestPersonasReply) {}) "personas") []))) (fn r (= (object/get @r "role" "") @entity.guestDefaultRole)))))
+        (set @entity.guestPersonas (let ((seeded (array/find (default ?result.emitted []) (fn e (= @e.event "SEED_PERSONAS"))))) (if (!= @seeded null) (let ((none : [GuestPersonaOption] [])) (default (object/get (default (as (object/get @seeded "payload") GuestPersonasReply) { success: true, personas: @none }) "personas") @none)) (default (object/get (default (json/parse (default (object/get (default (object/get (default (array/find (default ?result.emitted []) (fn e (= @e.event "PERSONAS_ANSWERED"))) {}) "payload") {}) "body") "") GuestPersonasReply) {}) "personas") []))))
         (emit GUEST_PERSONAS { guest: @entity.guestHandle, personas: @entity.guestPersonas, current: @entity.guestPersona })
       GUEST_PERSONAS_FAILED -> live
         (set @entity.guestPersonas [])
         (emit GUEST_PERSONAS { guest: @entity.guestHandle, personas: [], current: @entity.guestPersona })
       GUEST_PERSONA_PICK -> live when (= ?guest @entity.guestHandle)
-        (program/dispatch "PERSONA_ACT_AS" { persona: ?persona } { guest: ?guest, emit: { success: GUEST_PERSONA_ACTED, failure: GUEST_STEP_FAILED } })
+        (program/dispatch (if (= @entity.guestPersonaTrait "") "PERSONA_ACT_AS" (str/concat @entity.guestPersonaTrait ".PERSONA_ACT_AS")) { persona: ?persona } { guest: ?guest, emit: { success: GUEST_PERSONA_ACTED, failure: GUEST_STEP_FAILED } })
       GUEST_PERSONA_PICK -> live when (!= ?guest @entity.guestHandle)
       GUEST_PERSONA_ACTED -> live when (array/some (default ?result.emitted []) (fn e (= @e.event "PERSONA_SIGNED_IN")))
         (set @entity.guestPersona (default (object/get (default (object/get (default (array/find (default ?result.emitted []) (fn e (= @e.event "PERSONA_SIGNED_IN"))) {}) "payload") {}) "subject") ""))
@@ -288,6 +308,8 @@ orbital GuestSessionOrbital {
         personas : string!
         personasCollection : string!
         personasSignIn : string!
+        defaultRole : string!
+        personaTrait : string!
       }
       GuestStage.GUEST_PERSONA_PICK -> GUEST_PERSONA_PICK
       GUEST_PERSONA_PICK {
