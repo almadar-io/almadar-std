@@ -1,0 +1,44 @@
+app compose-pair [
+  version: "1.0.0",
+  description: "Fixture for the native renderers' composed mode: a local trait whose emit feeds a composed std atom (std-score's ScoreKeeper) with call-site config, so the native program must carry the composed traits the kernel runs."
+]
+
+orbital ArenaOrbital {
+  uses S from "std/behaviors/std-score"
+
+  entity Match [runtime] {
+    id : string!
+    enemies : number = 3
+    score : number = 0
+    scoreBaseline : number = 0
+  }
+
+  trait Arena -> Match [client] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      HIT -> idle
+        (set @entity.enemies (- @entity.enemies ?n))
+        (emit WAVE { enemiesAlive: @entity.enemies, playersAlive: 1 })
+    }
+
+    emits {
+      WAVE -> external { enemiesAlive : number!, playersAlive : number! }
+    }
+
+    listens {
+      HIT { n : number! }
+    }
+  }
+
+  trait Score = S.traits.ScoreKeeper -> Match {
+    config { running: true, pointsPerKill: 5, startScore: 0, initialEnemies: 3 }
+    listens {
+      Arena.WAVE -> UNITS_CHANGED
+      UNITS_CHANGED { playersAlive : number, enemiesAlive : number }
+    }
+  }
+
+  page boot as ArenaStart -> Arena, Score
+}
