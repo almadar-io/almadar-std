@@ -1,0 +1,147 @@
+app std-orb-lint-client-entity-server-only [
+  version: "1.0.0",
+  inbound: ["cli-lint-client-entity-server-only"],
+  env: ["PATH"],
+  exec: [exe],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-client-entity-server-only — the `orb lint client-entity-server-only <file>` command. It resolves the file and, for every orbital whose every page is a protocol endpoint (the server's orbital, EXEC-ENDPOINT-5, which a client program leaves out), collects the entities it declares; it then reports each trait of any other orbital whose linkedEntity names one of them, at `orbitals.<Orbital>.traits.<Trait>` (status 500, exit 1): the client program would carry the trait without the entity it reads. An orbital with no pages, or with one route page, is not the server's. Clean answers `lint client-entity-server-only: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-client-entity-server-only"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type ServerOnlyEntity = { name : string }
+type ServerOnlyPage = { name : string, protocol : string }
+type ServerOnlyTrait = { name : string, linkedEntity : string }
+type ServerOnlyOrbital = { name : string, entity : ServerOnlyEntity, auxiliaryEntities : [ServerOnlyEntity], pages : [ServerOnlyPage], traits : [ServerOnlyTrait] }
+type ClientEntityServerOnlyProgram = { orbitals : [ServerOnlyOrbital] }
+
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintClientEntityServerOnlyCodes = { clientEntityServerOnly : LintCodeDecl }
+
+orbital OrbLintClientEntityServerOnlyOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+
+  entity OrbLintClientEntityServerOnlyRun [runtime] {
+    id : string!
+    scope : string = ""
+    findings : [OrbFinding] = []
+  }
+
+  trait OrbLintClientEntityServerOnly -> OrbLintClientEntityServerOnlyRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
+        (set @entity.findings (let ((orbitals : [ServerOnlyOrbital] (default @payload.program.orbitals [])))
+          (let ((owners (array/flatten (array/map (array/filter @orbitals (fn orb (let ((pgs : [ServerOnlyPage] (default @orb.pages []))) (and (> (array/len @pgs) 0) (array/every @pgs (fn p (!= @p.protocol null))))))) (fn orb
+                  (array/map (array/concat (if (= @orb.entity null) [] [@orb.entity]) (default @orb.auxiliaryEntities [])) (fn e
+                    { entity: (default @e.name ""), orbital: (default @orb.name "") })))))))
+            (array/flatten (array/map (array/filter @orbitals (fn orb (not (let ((pgs : [ServerOnlyPage] (default @orb.pages []))) (and (> (array/len @pgs) 0) (array/every @pgs (fn p (!= @p.protocol null)))))))) (fn orb
+              (array/flatten (array/map (default @orb.traits []) (fn t
+                (let ((owner (array/find @owners (fn o (and (!= @t.linkedEntity null) (= @o.entity @t.linkedEntity))))))
+                  (if (= @owner null)
+                    []
+                    [{ code: @config.codes.clientEntityServerOnly.code, path: (str/concat "orbitals." (default @orb.name "") ".traits." (default @t.name "")), message: (str/concat "Trait '" (default @t.name "") "' reads `" @owner.entity "`, the entity of '" @owner.orbital "', whose every page is a protocol endpoint: that orbital is the server's, so the client program carries this trait without the entity it reads (EXEC-ENDPOINT-5)"), suggestion: (str/concat "Give '" @owner.orbital "' a route page that renders its rows (for example a record detail page), or bind the trait to an entity owned by an orbital with a route page"), severity: "error" }])))))))))))
+        (emit LINT_FINISH { })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "client-entity-server-only", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : ClientEntityServerOnlyProgram!  scope : string! }
+        @description "The lint input: the file read, its language decided and the program resolved."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+    }
+    config {
+      codes : LintClientEntityServerOnlyCodes = { clientEntityServerOnly: { code: "ORB_CLIENT_ENTITY_SERVER_ONLY", category: "orbital", description: "A client trait is linked to the entity of an orbital whose every page is a protocol endpoint, which the client program leaves out" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
+  }
+
+  trait OrbLintClientEntityServerOnlyCli -> OrbLintClientEntityServerOnlyRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint client-entity-server-only <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (let ((argFile (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")))) (if (= @argFile null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint client-entity-server-only <file>" }) (emit LINT_REQUEST { file: @argFile })))
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "client-entity-server-only") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint client-entity-server-only: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "client-entity-server-only") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint client-entity-server-only: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-client-entity-server-only" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string!
+      }
+        @description "Run `orb lint client-entity-server-only` with its arguments and working directory."
+        @synonyms "orb lint client-entity-server-only"
+      OrbLintClientEntityServerOnly.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintClientEntityServerOnlyCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintClientEntityServerOnlyOrbitalStart -> OrbLintClientEntityServerOnly, OrbLintClientEntityServerOnlyCli, OrbLintInput, Packs, Versions
+}

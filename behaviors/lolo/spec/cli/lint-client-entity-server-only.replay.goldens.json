@@ -1,0 +1,606 @@
+{
+  "atom": "cli/atoms/std-orb-lint-client-entity-server-only.lolo",
+  "trait": "OrbLintClientEntityServerOnly",
+  "note": "G-CROSS-492's prevention rung: EXEC-ENDPOINT-5 leaves an orbital whose every page is a protocol endpoint out of the client program, so a client trait linked to its entity reads an entity the client program does not declare. Positive cases: a boot-only data orbital and an http+boot one. Controls: the data orbital with a route page (the owner's fix for the marketing sites), one route page among endpoints, an orbital with no pages, and the server orbital's own traits.",
+  "cases": [
+    {
+      "id": "a-client-trait-linked-to-a-boot-only-orbitals-entity-is-flagged",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Data",
+                  "entity": {
+                    "name": "Article",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "pages": [
+                    {
+                      "name": "DataStart",
+                      "protocol": "boot"
+                    }
+                  ],
+                  "traits": [
+                    {
+                      "name": "ArticleData",
+                      "linkedEntity": "Article"
+                    }
+                  ]
+                },
+                {
+                  "name": "Front",
+                  "entity": {
+                    "name": "Visit",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "pages": [
+                    {
+                      "name": "Home",
+                      "path": "/"
+                    }
+                  ],
+                  "traits": [
+                    {
+                      "name": "Feed",
+                      "linkedEntity": "Article"
+                    },
+                    {
+                      "name": "Page",
+                      "linkedEntity": "Visit"
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintClientEntityServerOnly"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "client-entity-server-only",
+                  "findings": [
+                    {
+                      "code": "ORB_CLIENT_ENTITY_SERVER_ONLY",
+                      "path": "orbitals.Front.traits.Feed",
+                      "message": "Trait 'Feed' reads `Article`, the entity of 'Data', whose every page is a protocol endpoint: that orbital is the server's, so the client program carries this trait without the entity it reads (EXEC-ENDPOINT-5)",
+                      "suggestion": "Give 'Data' a route page that renders its rows (for example a record detail page), or bind the trait to an entity owned by an orbital with a route page",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintClientEntityServerOnly"
+        }
+      ]
+    },
+    {
+      "id": "an-http-and-boot-orbital-is-the-servers-too",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Data",
+                  "entity": {
+                    "name": "Article",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "pages": [
+                    {
+                      "name": "Api",
+                      "protocol": "http"
+                    },
+                    {
+                      "name": "Start",
+                      "protocol": "boot"
+                    }
+                  ],
+                  "traits": []
+                },
+                {
+                  "name": "Front",
+                  "entity": {
+                    "name": "Visit",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "pages": [
+                    {
+                      "name": "Home",
+                      "path": "/"
+                    }
+                  ],
+                  "traits": [
+                    {
+                      "name": "Feed",
+                      "linkedEntity": "Article"
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintClientEntityServerOnly"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "client-entity-server-only",
+                  "findings": [
+                    {
+                      "code": "ORB_CLIENT_ENTITY_SERVER_ONLY",
+                      "path": "orbitals.Front.traits.Feed",
+                      "message": "Trait 'Feed' reads `Article`, the entity of 'Data', whose every page is a protocol endpoint: that orbital is the server's, so the client program carries this trait without the entity it reads (EXEC-ENDPOINT-5)",
+                      "suggestion": "Give 'Data' a route page that renders its rows (for example a record detail page), or bind the trait to an entity owned by an orbital with a route page",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintClientEntityServerOnly"
+        }
+      ]
+    },
+    {
+      "id": "control-the-data-orbital-with-a-route-page-is-clean",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Data",
+                  "entity": {
+                    "name": "Article",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "pages": [
+                    {
+                      "name": "ArticleDetailPage",
+                      "path": "/articles/:id"
+                    }
+                  ],
+                  "traits": [
+                    {
+                      "name": "ArticleDetail",
+                      "linkedEntity": "Article"
+                    }
+                  ]
+                },
+                {
+                  "name": "Front",
+                  "entity": {
+                    "name": "Visit",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "pages": [
+                    {
+                      "name": "Home",
+                      "path": "/"
+                    }
+                  ],
+                  "traits": [
+                    {
+                      "name": "Feed",
+                      "linkedEntity": "Article"
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintClientEntityServerOnly"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "client-entity-server-only",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintClientEntityServerOnly"
+        }
+      ]
+    },
+    {
+      "id": "control-one-route-page-among-endpoints-keeps-the-orbital-the-clients",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Data",
+                  "entity": {
+                    "name": "Article",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "pages": [
+                    {
+                      "name": "Api",
+                      "protocol": "http"
+                    },
+                    {
+                      "name": "Home",
+                      "path": "/data"
+                    }
+                  ],
+                  "traits": []
+                },
+                {
+                  "name": "Front",
+                  "entity": {
+                    "name": "Visit",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "pages": [
+                    {
+                      "name": "Home",
+                      "path": "/"
+                    }
+                  ],
+                  "traits": [
+                    {
+                      "name": "Feed",
+                      "linkedEntity": "Article"
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintClientEntityServerOnly"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "client-entity-server-only",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintClientEntityServerOnly"
+        }
+      ]
+    },
+    {
+      "id": "control-an-orbital-with-no-pages-is-not-the-servers",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Data",
+                  "entity": {
+                    "name": "Article",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "pages": [],
+                  "traits": []
+                },
+                {
+                  "name": "Front",
+                  "entity": {
+                    "name": "Visit",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "pages": [
+                    {
+                      "name": "Home",
+                      "path": "/"
+                    }
+                  ],
+                  "traits": [
+                    {
+                      "name": "Feed",
+                      "linkedEntity": "Article"
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintClientEntityServerOnly"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "client-entity-server-only",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintClientEntityServerOnly"
+        }
+      ]
+    },
+    {
+      "id": "control-the-server-orbitals-own-traits-are-not-reported",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Data",
+                  "entity": {
+                    "name": "Article",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "pages": [
+                    {
+                      "name": "DataStart",
+                      "protocol": "boot"
+                    }
+                  ],
+                  "traits": [
+                    {
+                      "name": "ArticleData",
+                      "linkedEntity": "Article"
+                    }
+                  ]
+                },
+                {
+                  "name": "Front",
+                  "entity": {
+                    "name": "Visit",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "pages": [
+                    {
+                      "name": "Home",
+                      "path": "/"
+                    }
+                  ],
+                  "traits": [
+                    {
+                      "name": "Page",
+                      "linkedEntity": "Visit"
+                    },
+                    {
+                      "name": "Plain"
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintClientEntityServerOnly"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "client-entity-server-only",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintClientEntityServerOnly"
+        }
+      ]
+    }
+  ]
+}
