@@ -111,14 +111,14 @@ orbital DriveOrbital [fs: { cwd: "**": [read] }] {
       INIT -> s
         (os/read-file { anchor: "cwd" path: %(rel)s } { key: "src" emit: { success: SRC_READ, failure: R_FAILED } })
       SRC_READ -> s
-        (emit LOLO_TO_%(up)s { path: %(abs)s, source: (bytes/to-string @payload.data) })
+        (emit LOLO_TO_%(up)s { path: %(abs)s, source: (bytes/to-string @payload.data)%(only)s })
       R_DONE -> s
         (os/stdout-write (bytes/from-string (str/concat (json/stringify { text: @payload.text, warnings: @payload.warnings }) "\\n")))
       R_FAILED -> s
         (os/stdout-write (bytes/from-string (str/concat (json/stringify { error: (default @payload.error "") }) "\\n")))
     }
     emits {
-      LOLO_TO_%(up)s -> external { source : string!  path : string? }
+      LOLO_TO_%(up)s -> external { source : string!  path : string?  orbitals : [string]? }
     }
     listens {
       SRC_READ { data : bytes! }
@@ -133,10 +133,12 @@ orbital DriveOrbital [fs: { cwd: "**": [read] }] {
 """
 
 
-def cmd_drive(lang, root, rel, out):
+def cmd_drive(lang, root, rel, out, orbitals=""):
     atom, trait, up = LIVE_ATOMS[lang]
+    names = [n for n in orbitals.split(",") if n]
+    only = (", orbitals: [" + ", ".join(json.dumps(n) for n in names) + "]") if names else ""
     with open(out, "w") as f:
-        f.write(DRIVE % {"lang": lang, "atom": atom, "trait": trait, "up": up,
+        f.write(DRIVE % {"lang": lang, "atom": atom, "trait": trait, "up": up, "only": only,
                          "rel": json.dumps(rel), "abs": json.dumps(os.path.join(root, rel))})
     return 0
 
@@ -159,6 +161,22 @@ def cmd_live(answer, out):
     return 0
 
 
+def cmd_examples(manifest):
+    for e in load(manifest)["examples"]:
+        print(e["name"])
+    return 0
+
+
+def cmd_example(manifest, name, key):
+    for e in load(manifest)["examples"]:
+        if e["name"] == name:
+            value = e.get(key, [] if key == "orbitals" else "")
+            print(",".join(value) if key == "orbitals" else value)
+            return 0
+    print("no example " + name + " in " + manifest, file=sys.stderr)
+    return 1
+
+
 if __name__ == "__main__":
     cmd, args = sys.argv[1], sys.argv[2:]
-    sys.exit({"text": cmd_text, "events": cmd_events, "compare": cmd_compare, "drive": cmd_drive, "live": cmd_live}[cmd](*args))
+    sys.exit({"text": cmd_text, "events": cmd_events, "compare": cmd_compare, "drive": cmd_drive, "live": cmd_live, "examples": cmd_examples, "example": cmd_example}[cmd](*args))
