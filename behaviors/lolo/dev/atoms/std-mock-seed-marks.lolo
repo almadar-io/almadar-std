@@ -1,0 +1,46 @@
+app std-mock-seed-marks [
+  version: "1.0.0",
+  description: "std-mock-seed-marks — the one answer to whether a program already carries the mock-seed marks store. MARKS_CHECK { program } answers MARKS_CHECKED { marked }: true when an orbital of the program declares an auxiliary entity whose collection is mock_seed_marks (the MockSeedMark store of std-mock-seed, so the program already composes it), false for a program without one or no program. orb serve and the catalog guest session each ask it before composing std-mock-page-seed.",
+  egress: []
+]
+;; @capabilities "mock seed marks store present, program already composes std-mock-seed, seed once"
+
+type MarksEntity = { collection : string }
+type MarksOrbital = { auxiliaryEntities : [MarksEntity] }
+type MarksProgram = { orbitals : [MarksOrbital] }
+
+orbital MockSeedMarksOrbital {
+  entity MarksRun [runtime] {
+    id : string!
+  }
+
+  trait MarksCheck -> MarksRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+
+      MARKS_CHECK -> ready
+        (emit MARKS_CHECKED { marked: (let ((p (as @payload.program MarksProgram))) (and (!= @p null) (array/some (object/get @p "orbitals" []) (fn o (array/some (object/get @o "auxiliaryEntities" []) (fn e (= (object/get @e "collection" "") "mock_seed_marks"))))))) })
+    }
+
+    emits {
+      MARKS_CHECKED -> external {
+        marked : boolean!
+      }
+        @description "Whether the asked program already declares the mock-seed marks store."
+        @synonyms "program already seeds, marks store present"
+        @tier "primary"
+    }
+
+    listens {
+      MARKS_CHECK -> input {
+        program : MarksProgram?
+      }
+        @description "Ask whether this program already declares the mock-seed marks store."
+        @synonyms "already seeds, has mock seed marks"
+    }
+  }
+
+  page boot as MockSeedMarksStart -> MarksCheck
+}

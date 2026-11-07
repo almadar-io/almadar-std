@@ -1,11 +1,18 @@
 app std-fx-particles [
   version: "1.1.0",
-  description: "Headless transient-fx mechanic serving BOTH game boards and learning shells: appends spawned particles on BURST — stamping maxTtl (fade envelope) and bornAt (epoch ms, smooth render interpolation) when absent — decays each entry's ttl every tick, drops the dead ones, and clears on RESTART. Name-blind mechanism: the effect-kind vocabulary is consumer-declared (FxPreset tables at the render call sites). Composed onto a [runtime, shared] entity; renders nothing — the board/shell owns the single render authority (draw-fx-layer for space \"world\", fx-overlay for space \"screen\"). Corresponds to the design-sheet field(s): feedback, rewards."
+  description: "Headless transient-fx mechanic serving BOTH game boards and learning shells: appends spawned particles on BURST — stamping maxTtl (fade envelope), bornAt (epoch ms, smooth render interpolation) and position (scene {x, y: ground row z, z: height y}) when absent — decays each entry's ttl every tick, drops the dead ones, and clears on RESTART. Name-blind mechanism: the effect-kind vocabulary is consumer-declared (FxPreset tables at the render call sites). Composed onto a [runtime, shared] entity; renders nothing — the board/shell owns the single render authority (draw-fx-layer for space \"world\", fx-overlay for space \"screen\"). Corresponds to the design-sheet field(s): feedback, rewards."
 ]
 orbital FxParticlesOrbital {
+  type FxPos = {
+    x : number!
+    y : number!
+    z : number
+  }
+
   type Fx = {
     id : string!
     type : string!
+    position : FxPos
     x : number!
     z : number
     y : number
@@ -37,11 +44,13 @@ orbital FxParticlesOrbital {
         (set @entity.fx (array/map @config.fx (fn p (object/merge @p {
           maxTtl: (object/get @p maxTtl (object/get @p ttl))
           bornAt: (object/get @p bornAt (time/now))
+          position: (object/get @p position { x: @p.x, y: @p.z, z: @p.y })
         }))))
       BURST -> active
         (set @entity.fx (array/concat @entity.fx (array/map @payload.particles (fn p (object/merge @p {
           maxTtl: (object/get @p maxTtl (object/get @p ttl))
           bornAt: (object/get @p bornAt (time/now))
+          position: (object/get @p position { x: @p.x, y: @p.z, z: @p.y })
         })))))
       RESTART -> active
         (set @entity.fx [])

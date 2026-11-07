@@ -7,6 +7,7 @@ app std-orb-serve [
 ]
 uses Spec from "almadar-std/orb-serve"
 uses Args from "std/behaviors/std-args"
+uses Marks from "std/behaviors/std-mock-seed-marks"
 uses Handoff from "std/behaviors/std-orb-serve-handoff"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type ArgFlag = { name : string!, aliases : [string]!, takesValue : boolean!, repeatable : boolean! }
@@ -44,6 +45,12 @@ orbital OrbServeOrbital {
   trait ArgsCli = Args.traits.ArgsParser {
     listens {
       OrbServe.SERVE_ARGS_PARSE -> ARGS_PARSE
+    }
+  }
+
+  trait MarksCli = Marks.traits.MarksCheck {
+    listens {
+      ServeEngine.SERVE_SEED_ASK -> MARKS_CHECK
     }
   }
 
@@ -222,8 +229,12 @@ orbital OrbServeOrbital {
 
     state writing {
       INIT -> writing
-      SERVE_WRITE_SERVER -> writing
-        (emit SERVE_SEED_DECIDED { seed: (if (and @entity.mock (not (array/some (object/get @entity.app "orbitals" []) (fn o (array/some (object/get @o "auxiliaryEntities" []) (fn e (= (object/get @e "collection" "") "mock_seed_marks"))))))) "uses Seed from \"std/behaviors/std-mock-page-seed\"\norbital MockData = Seed.orbitals.MockData {}\n" "") })
+      SERVE_WRITE_SERVER -> writing when (not @entity.mock)
+        (emit SERVE_SEED_DECIDED { seed: "" })
+      SERVE_WRITE_SERVER -> writing when @entity.mock
+        (emit SERVE_SEED_ASK { program: @entity.app })
+      SERVE_SEED_MARKED -> writing
+        (emit SERVE_SEED_DECIDED { seed: (if @payload.marked "" "uses Seed from \"std/behaviors/std-mock-page-seed\"\norbital MockData = Seed.orbitals.MockData {}\n") })
       SERVE_SEED_DECIDED -> resolving
         (os/write-file (str/concat "~/.almadar/serve/" @entity.serverName) (bytes/from-string (str/concat
           "app orb-served-server [version: \"1.0.0\"]\n"
@@ -285,6 +296,11 @@ orbital OrbServeOrbital {
         @tier "internal"
       SERVE_WRITE_SERVER { }
         @description "Write the server program, std-http-server imported with the serve options as its call-site config."
+        @tier "internal"
+      SERVE_SEED_ASK {
+        program : ServeProgram!
+      }
+        @description "Ask std-mock-seed-marks whether the resolved app already declares the MockSeedMark store."
         @tier "internal"
       SERVE_SEED_DECIDED {
         seed : string!
@@ -350,6 +366,10 @@ orbital OrbServeOrbital {
       }
         @description "Compose the app with std-http-server."
       OrbServe.SERVE_START -> SERVE_START
+      MarksCli.MARKS_CHECKED -> SERVE_SEED_MARKED
+      SERVE_SEED_MARKED { marked : boolean! }
+        @description "std-mock-seed-marks's MARKS_CHECKED: whether the app already declares the marks store."
+        @tier "internal"
       SERVE_SEED_DECIDED { seed : string! }
         @description "The seed decision, which the server program write reads."
         @tier "internal"
@@ -363,5 +383,5 @@ orbital OrbServeOrbital {
     }
   }
 
-  page boot as OrbServePage -> OrbServe, ArgsCli, ServeEngine, ServeHandoff
+  page boot as OrbServePage -> OrbServe, ArgsCli, MarksCli, ServeEngine, ServeHandoff
 }

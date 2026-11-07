@@ -1,0 +1,143 @@
+{
+  "atom": "dev/atoms/std-mock-seed-marks.lolo",
+  "trait": "MarksCheck",
+  "cases": [
+    {
+      "id": "a program declaring a mock_seed_marks auxiliary entity is marked",
+      "steps": [
+        {
+          "trait": "MarksCheck",
+          "from": "ready",
+          "event": "MARKS_CHECK",
+          "payload": {
+            "program": {
+              "name": "a",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "auxiliaryEntities": [
+                    {
+                      "collection": "mock_seed_marks"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "entity": {
+            "id": "m"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "MARKS_CHECKED",
+                "payload": {
+                  "marked": true
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a program without the marks store is not marked",
+      "steps": [
+        {
+          "trait": "MarksCheck",
+          "from": "ready",
+          "event": "MARKS_CHECK",
+          "payload": {
+            "program": {
+              "name": "a",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "auxiliaryEntities": [
+                    {
+                      "collection": "other"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "entity": {
+            "id": "m"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "MARKS_CHECKED",
+                "payload": {
+                  "marked": false
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "edge: a program with no orbitals is not marked",
+      "steps": [
+        {
+          "trait": "MarksCheck",
+          "from": "ready",
+          "event": "MARKS_CHECK",
+          "payload": {
+            "program": {
+              "name": "a",
+              "orbitals": []
+            }
+          },
+          "entity": {
+            "id": "m"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "MARKS_CHECKED",
+                "payload": {
+                  "marked": false
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "edge: no program is not marked",
+      "steps": [
+        {
+          "trait": "MarksCheck",
+          "from": "ready",
+          "event": "MARKS_CHECK",
+          "payload": {},
+          "entity": {
+            "id": "m"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "MARKS_CHECKED",
+                "payload": {
+                  "marked": false
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
