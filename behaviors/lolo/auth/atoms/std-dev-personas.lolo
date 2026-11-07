@@ -42,9 +42,17 @@ orbital DevPersonasOrbital {
       INIT -> ready when (!= @config.autoSignIn "")
         (os/getenv "FIREBASE_AUTH_EMULATOR_HOST" { key: "auto" emit: { success: AUTO_HOST failure: AUTO_FAILED } })
       AUTO_HOST -> ready when (= (default @payload.value "") @config.authEmulatorHost)
-        (emit TOKEN_MINT { key: @config.autoSignIn, purpose: "sign-in" })
+        (fetch DevPersona { limit: @config.maxRows emit: { success: AUTO_ROWS failure: AUTO_ROWS_FAILED } })
       AUTO_HOST -> ready when (!= (default @payload.value "") @config.authEmulatorHost)
       AUTO_FAILED -> ready
+      AUTO_ROWS -> ready
+        (emit AUTO_RESOLVED { id: (let ((byId (array/find @payload.data (fn r (= (default @r.id "") @config.autoSignIn)))) (byRole (array/find @payload.data (fn r (= (default @r.role "") @config.autoSignIn))))) (default (object/get (default @byId (default @byRole {})) "id") "")) })
+      AUTO_RESOLVED -> ready when (!= @payload.id "")
+        (emit TOKEN_MINT { key: @payload.id, purpose: "sign-in" })
+      AUTO_RESOLVED -> ready when (= @payload.id "")
+        (emit PERSONA_SIGN_IN_REFUSED { error: (str/concat "persona sign-in refused: no identity row has the id or the role " @config.autoSignIn), kind: "no-persona" })
+      AUTO_ROWS_FAILED -> ready
+        (emit PERSONA_SIGN_IN_REFUSED { error: (str/concat "persona sign-in refused: the identity rows could not be read to resolve " @config.autoSignIn ": " (default @payload.error "")), kind: "no-persona" })
       TOKEN_MINT -> ready
         (emit TOKEN_MINTED { key: @payload.key, purpose: @payload.purpose, token: (str/concat (str/replace-pattern (str/replace-pattern (str/replace-pattern (base64/encode (json/stringify { alg: "none", typ: "JWT" })) "\\+" "-") "/" "_") "=+$" "") "." (str/replace-pattern (str/replace-pattern (str/replace-pattern (base64/encode (json/stringify { aud: (if (!= @config.emulatorAudience "") @config.emulatorAudience @config.projectId), iat: (time/diff @now @config.epoch "s"), exp: (+ (time/diff @now @config.epoch "s") 3600), iss: (if (!= @config.emulatorIssuer "") @config.emulatorIssuer (str/concat "https://securetoken.google.com/" @config.projectId)), sub: @payload.key, uid: @payload.key })) "\\+" "-") "/" "_") "=+$" "") ".") })
       ANSWER_TOKEN_MINT -> ready
@@ -221,6 +229,23 @@ orbital DevPersonasOrbital {
       }
         @description "Internal: the environment could not be read at a session's start; the session stays as it is."
         @tier "internal"
+      AUTO_ROWS -> internal {
+        data : [DevPersona]!
+        totalCount : number!
+      }
+        @description "Internal: the identity rows read to resolve autoSignIn at a session's start."
+        @tier "internal"
+      AUTO_ROWS_FAILED -> internal {
+        error : string
+        code : string
+      }
+        @description "Internal: the identity rows could not be read to resolve autoSignIn."
+        @tier "internal"
+      AUTO_RESOLVED -> internal {
+        id : string!
+      }
+        @description "Internal: the id of the identity row autoSignIn resolved to (an id match, else the first row of that role), or empty when none matched."
+        @tier "internal"
       ACT_AS_HOST -> internal {
         value : string
         key : string
@@ -311,7 +336,7 @@ orbital DevPersonasOrbital {
         @tier "infra"
       autoSignIn : string = ""
         @label "Auto sign-in persona"
-        @description "A persona id; empty signs nobody in. A new session of an app running against the Auth emulator (FIREBASE_AUTH_EMULATOR_HOST equal to authEmulatorHost) signs in as this persona at its start: the persona's unsigned emulator token goes through jws/verify (allowUnsigned, the emulator issuer knob) and identity/sign-in, the same path as the persona picker. Never signs in anywhere else."
+        @description "The ALMADAR_PERSONA spec of the persona to sign in as: an identity row id, else the first row whose role is this value; empty signs nobody in. A new session of an app running against the Auth emulator (FIREBASE_AUTH_EMULATOR_HOST equal to authEmulatorHost) reads the identity rows at its start, resolves the spec and signs in as that row: its unsigned emulator token goes through jws/verify (allowUnsigned, the emulator issuer knob) and identity/sign-in, the same path as the persona picker. A spec no row matches answers PERSONA_SIGN_IN_REFUSED naming it and leaves the session signed out. Never signs in anywhere else."
         @synonyms "default persona, dev user, emulator user"
         @tier "policy"
       emulatorIssuer : string = ""

@@ -24,7 +24,7 @@ Every open gap this repo owns lives here. This file is the source of truth; the 
 - **G-STD-250** — std-http1 reads a request body at about 250 KB/s: every 8 KB `os/recv` chunk runs six dispatches (CHUNK_READ, BODY_CHECK, WANT_MORE, CONN_ADVANCE, the timer's CANCEL/START) that rebuild the `conns` entry holding the whole buffer, so a body's cost grows with its size squared (a 5.6 MB launchpad leg took 21-23 s to read on 2026-11-03, the small requests around it 0.1 s). Repro: `orb -v launchpad --port <p>`, POST a ~5 MB body to `/api/orbitals/Launchpad/events`, count `Http1 CHUNK_READ` lines. almadar-std net (std-http1) [mechanical] — rung: (3) the verifiers (no golden or benchmark reads a large body). Root cause: one-off.
 
 
-Next code: `G-STD-304`
+Next code: `G-STD-305`
 
 - **G-STD-300** [mechanical] — `orb execute <file> --steps <json>` reports `states` as the initial state after every step (std-stdio-lines: `{"StdioLines": "idle"}` on all six steps) while each step's `outcomes[].newState` shows the real transition (active → closed). Owner: `cli/atoms/std-orb-execute.lolo`. Repro: `orb execute behaviors/lolo/connect/atoms/std-stdio-lines.lolo --steps '[{"trait":"StdioLines","event":"STDIO_READ","from":"active","payload":{"data":"YQo=","eof":true}},{"trait":"StdioLines","event":"STDIO_PUMP","payload":{}}]'`. Rung: (3) a std-orb-execute golden asserting `states` after a transition. Root cause: one-off.
 
@@ -43,9 +43,16 @@ Next code: `G-STD-304`
 - **G-STD-288** [mechanical] — ORB_PAGE_UNREACHABLE judges eager and lazy pages by different rules. An eager route page counts as reached by any href in the program, including one in its own nav. A `uses lazy` page is reached only from links outside it (the lazyPages fixed point). So five orb-site demo pages (/demo/compose, /demo/crm-page, /demo/helpdesk-page, /demo/invoices-page, /demo/people-page) pass while eager and fail once lazy. Nothing else on the site links to them; only their own navItems do. Owner: cli/atoms/std-orb-lint-page-unreachable.lolo. Reproduce: in std-almadar-orb.lolo change `uses DemoCompose` to `uses lazy DemoCompose` and run `orb validate`. Prevention rung: (2) one reachability rule for both page kinds (a page's own links never reach itself). Root cause: one-off.
 
 
-- **G-STD-282** [mechanical] — std-lolo-rust leaves out three things: trait `config` is not rendered, so a `@config.x` read does not compile; emits are recorded as `(String, Option<serde_json::Value>)`, not as a typed per-trait enum of the `<Trait><EVENT>Payload` structs; ports are an untyped `FnMut(&str, Value)` callback. Owner: codec/atoms/std-lolo-rust.lolo. Prevention rung: (3) add a parity example that reads `@config` and asserts typed emits. Root cause: one-off.
+- **G-STD-282** [mechanical] — std-lolo-rust leaves out three things: trait `config` is not rendered, so a `@config.x` read does not compile; emits are recorded as `(String, Option<serde_json::Value>)`, not as a typed per-trait enum of the `<Trait><EVENT>Payload` structs; port effects other than persist and fetch (which go through the typed `Store`) are an untyped `FnMut(&str, Value)` callback. Owner: codec/atoms/std-lolo-rust.lolo. Prevention rung: (3) add a parity example that reads `@config` and asserts typed emits. Root cause: one-off.
 - **G-STD-283** [mechanical] — The typed renderers (rust, swift, kotlin) write every number as f64/Double. A field the checker types `int` is `i64`/`Int`/`Long` in the shell's models, so setting it from a computed value does not compile. The templates have no hook for the `set` target's declared type. Owner: codec/atoms/std-lolo-source.lolo generator (spec/codec/lolo-source.gen) plus the three language atoms. Prevention rung: (3) a parity example with an `int` field. Root cause: one-off.
 - **G-STD-284** [mechanical] — std-lolo-typescript's `object/keys`, `object/values` and `object/entries` put integer-like keys first (JS object order), while the kernel keeps insertion order: `{"b":1,"a":2,"1":3}` gives `["b","a","1"]` in the kernel and `["1","b","a"]` in TS. std-lolo-rust leaves these to the stub because the shell's maps are `BTreeMap`. Owner: codec/atoms/std-lolo-typescript.lolo. Prevention rung: (3) a golden plus a parity case. Root cause: one-off.
+- **G-STD-304** [mechanical] — The native typed ports (std-lolo-source `routedEffects`, the per-language `MemoryStore`) render `persist create/update/delete` and `fetch` with a `filter` only. These render a named warning instead, so a gate fails loudly on them:
+  - `persist upsert` and `persist` batches;
+  - fetch `id`, `orderBy`, `offset`, `limit`, `nearest`, `key`, `include` options;
+  - `fetch-stream`;
+  - an entity's `@read` policy.
+
+  A row in a native fetch filter is the stored row: the shells' typed models fill defaults on decode, while the kernel row carries only the written fields. Owner: spec/codec/lolo-source.gen plus the five language atoms. Prevention rung: (3) extend `spec/codec/lolo-source.fixtures/store-pair.lolo` and its kernel goldens per option. Root cause: one-off.
 - **G-STD-285** [mechanical] — std-lolo-source limits:
   - A `let` binding or `fn` parameter named like an operator (`path`, `list`, `log`, `as`) renders correctly, but adds a spurious "no template" or ports warning and may pull in an unused helper.
   - An `fn` body renders its last expression only.

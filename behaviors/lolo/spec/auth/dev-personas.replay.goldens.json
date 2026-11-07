@@ -518,8 +518,7 @@
    ]
   },
   {
-   "id": "auto-sign-in-mints-the-persona-token-when-the-host-is-the-emulator",
-   "note": "With no [identity] entity in the atom the sign-in answers no-identity; the program's identity entity decides it for real.",
+   "id": "auto-sign-in-reads-the-identity-rows-when-the-host-is-the-emulator",
    "config": {
     "maxRows": 200,
     "authEmulatorHost": "127.0.0.1:9099",
@@ -543,6 +542,62 @@
      "expect": {
       "emits": [
        {
+        "event": "AUTO_ROWS",
+        "payload": {
+         "data": [],
+         "totalCount": 0
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "auto-sign-in-mints-the-token-of-the-row-with-that-id",
+   "note": "With no [identity] entity in the atom the sign-in answers no-identity; the program's identity entity decides it for real.",
+   "config": {
+    "maxRows": 200,
+    "authEmulatorHost": "127.0.0.1:9099",
+    "projectId": "demo-almadar",
+    "epoch": "1970-01-01T00:00:00.000Z",
+    "reservedClaims": [
+     "sub"
+    ],
+    "autoSignIn": "ada",
+    "emulatorIssuer": "firebase-auth-emulator@example.com",
+    "emulatorAudience": "https://identitytoolkit.googleapis.com/google.identity.identitytoolkit.v1.IdentityToolkit"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "AUTO_ROWS",
+     "payload": {
+      "data": [
+       {
+        "id": "ada",
+        "name": "ada",
+        "email": "ada@example.com",
+        "role": "owner"
+       },
+       {
+        "id": "bob",
+        "name": "bob",
+        "email": "bob@example.com",
+        "role": "admin"
+       }
+      ],
+      "totalCount": 2
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "AUTO_RESOLVED",
+        "payload": {
+         "id": "ada"
+        }
+       },
+       {
         "event": "TOKEN_MINT",
         "payload": {
          "key": "ada",
@@ -562,6 +617,212 @@
          "kind": "no-identity"
         }
        }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "auto-sign-in-resolves-a-role-to-the-first-row-of-that-role",
+   "config": {
+    "maxRows": 200,
+    "authEmulatorHost": "127.0.0.1:9099",
+    "projectId": "demo-almadar",
+    "epoch": "1970-01-01T00:00:00.000Z",
+    "reservedClaims": [
+     "sub"
+    ],
+    "autoSignIn": "owner",
+    "emulatorIssuer": "firebase-auth-emulator@example.com",
+    "emulatorAudience": "https://identitytoolkit.googleapis.com/google.identity.identitytoolkit.v1.IdentityToolkit"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "AUTO_ROWS",
+     "payload": {
+      "data": [
+       {
+        "id": "u1",
+        "name": "u1",
+        "email": "u1@example.com",
+        "role": "manager"
+       },
+       {
+        "id": "u2",
+        "name": "u2",
+        "email": "u2@example.com",
+        "role": "owner"
+       },
+       {
+        "id": "u3",
+        "name": "u3",
+        "email": "u3@example.com",
+        "role": "owner"
+       }
+      ],
+      "totalCount": 3
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "AUTO_RESOLVED",
+        "payload": {
+         "id": "u2"
+        }
+       },
+       {
+        "event": "TOKEN_MINT",
+        "payload": {
+         "key": "u2",
+         "purpose": "sign-in"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "auto-sign-in-prefers-an-id-match-over-a-role-match",
+   "config": {
+    "maxRows": 200,
+    "authEmulatorHost": "127.0.0.1:9099",
+    "projectId": "demo-almadar",
+    "epoch": "1970-01-01T00:00:00.000Z",
+    "reservedClaims": [
+     "sub"
+    ],
+    "autoSignIn": "owner",
+    "emulatorIssuer": "firebase-auth-emulator@example.com",
+    "emulatorAudience": "https://identitytoolkit.googleapis.com/google.identity.identitytoolkit.v1.IdentityToolkit"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "AUTO_ROWS",
+     "payload": {
+      "data": [
+       {
+        "id": "x",
+        "name": "x",
+        "email": "x@example.com",
+        "role": "owner"
+       },
+       {
+        "id": "owner",
+        "name": "owner",
+        "email": "owner@example.com",
+        "role": "admin"
+       }
+      ],
+      "totalCount": 2
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "AUTO_RESOLVED",
+        "payload": {
+         "id": "owner"
+        }
+       },
+       {
+        "event": "TOKEN_MINT",
+        "payload": {
+         "key": "owner",
+         "purpose": "sign-in"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-an-unresolvable-spec-is-refused-naming-it-not-left-silent",
+   "config": {
+    "maxRows": 200,
+    "authEmulatorHost": "127.0.0.1:9099",
+    "projectId": "demo-almadar",
+    "epoch": "1970-01-01T00:00:00.000Z",
+    "reservedClaims": [
+     "sub"
+    ],
+    "autoSignIn": "ghost",
+    "emulatorIssuer": "firebase-auth-emulator@example.com",
+    "emulatorAudience": "https://identitytoolkit.googleapis.com/google.identity.identitytoolkit.v1.IdentityToolkit"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "AUTO_ROWS",
+     "payload": {
+      "data": [
+       {
+        "id": "u1",
+        "name": "u1",
+        "email": "u1@example.com",
+        "role": "owner"
+       }
+      ],
+      "totalCount": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "AUTO_RESOLVED",
+        "payload": {
+         "id": ""
+        }
+       },
+       {
+        "event": "PERSONA_SIGN_IN_REFUSED",
+        "payload": {
+         "error": "persona sign-in refused: no identity row has the id or the role ghost",
+         "kind": "no-persona"
+        }
+       }
+      ],
+      "neverEmits": [
+       "TOKEN_MINT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-an-unreadable-identity-store-is-refused-naming-the-spec",
+   "config": {
+    "maxRows": 200,
+    "authEmulatorHost": "127.0.0.1:9099",
+    "projectId": "demo-almadar",
+    "epoch": "1970-01-01T00:00:00.000Z",
+    "reservedClaims": [
+     "sub"
+    ],
+    "autoSignIn": "ada",
+    "emulatorIssuer": "firebase-auth-emulator@example.com",
+    "emulatorAudience": "https://identitytoolkit.googleapis.com/google.identity.identitytoolkit.v1.IdentityToolkit"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "AUTO_ROWS_FAILED",
+     "payload": {
+      "error": "down",
+      "code": "store"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PERSONA_SIGN_IN_REFUSED",
+        "payload": {
+         "kind": "no-persona"
+        }
+       }
+      ],
+      "neverEmits": [
+       "TOKEN_MINT"
       ]
      }
     }

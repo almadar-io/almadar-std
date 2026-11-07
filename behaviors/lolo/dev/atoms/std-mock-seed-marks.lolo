@@ -1,12 +1,16 @@
 app std-mock-seed-marks [
   version: "1.0.0",
-  description: "std-mock-seed-marks — the one answer to whether a program already carries the mock-seed marks store. MARKS_CHECK { program } answers MARKS_CHECKED { marked }: true when an orbital of the program declares an auxiliary entity whose collection is mock_seed_marks (the MockSeedMark store of std-mock-seed, so the program already composes it), false for a program without one or no program. orb serve and the catalog guest session each ask it before composing std-mock-page-seed.",
+  description: "std-mock-seed-marks — the one answer to whether a program already carries the mock-seed marks store. MARKS_CHECK { program } answers MARKS_CHECKED { marked }: true when an orbital of the program declares an auxiliary entity whose collection is mock_seed_marks (the MockSeedMark store of std-mock-seed, so the program already composes it), false for a program without one or no program. It also answers `personas`: the .lolo text (a `uses` and `orbital DevLogin`, no app header) that composes std-dev-personas onto the program's `[identity]` entity — a DevPersona entity over the identity entity's collection, signed in as the first declared value of the identity entity's role field (or the persona the ask names) — or empty when the program has no identity entity or a trait already handles PERSONA_ACT_AS, so the mock seeder can sign each owner in and the guest has a signed-in viewer. orb serve and the catalog guest session each ask it before composing std-mock-page-seed.",
   egress: []
 ]
-;; @capabilities "mock seed marks store present, program already composes std-mock-seed, seed once"
+;; @capabilities "mock seed marks store present, program already composes std-mock-seed, seed once, dev personas composition text for the identity entity"
 
-type MarksEntity = { collection : string }
-type MarksOrbital = { auxiliaryEntities : [MarksEntity] }
+type MarksField = { name : string, values : [string]? }
+type MarksEntity = { collection : string, identity : boolean?, fields : [MarksField]? }
+type MarksTransition = { event : string }
+type MarksMachine = { transitions : [MarksTransition] }
+type MarksTrait = { stateMachine : MarksMachine? }
+type MarksOrbital = { entity : MarksEntity?, auxiliaryEntities : [MarksEntity], traits : [MarksTrait]? }
 type MarksProgram = { orbitals : [MarksOrbital] }
 
 orbital MockSeedMarksOrbital {
@@ -21,14 +25,24 @@ orbital MockSeedMarksOrbital {
       INIT -> ready
 
       MARKS_CHECK -> ready
-        (emit MARKS_CHECKED { marked: (let ((p (as @payload.program MarksProgram))) (and (!= @p null) (array/some (object/get @p "orbitals" []) (fn o (array/some (object/get @o "auxiliaryEntities" []) (fn e (= (object/get @e "collection" "") "mock_seed_marks"))))))) })
+        (let ((p (as @payload.program MarksProgram)))
+          (let ((orbitals (object/get (default @p { orbitals: [] }) "orbitals" [])))
+            (let ((identity (array/find (array/map @orbitals (fn o (object/get @o "entity" null))) (fn e (and (!= @e null) (= (object/get @e "identity" false) true))))))
+              (let ((handled (array/some @orbitals (fn o (array/some (object/get @o "traits" []) (fn t (array/some (object/get (object/get @t "stateMachine" {}) "transitions" []) (fn x (= (object/get @x "event" "") "PERSONA_ACT_AS"))))))))
+                    (collection (object/get (default @identity {}) "collection" ""))
+                    (roles (object/get (default (array/find (object/get (default @identity {}) "fields" []) (fn f (= (object/get @f "name" "") "role"))) {}) "values" [])))
+                (emit MARKS_CHECKED {
+                  marked: (and (!= @p null) (array/some @orbitals (fn o (array/some (object/get @o "auxiliaryEntities" []) (fn e (= (object/get @e "collection" "") "mock_seed_marks")))))),
+                  personas: (if (or (= @identity null) (= @collection "") @handled) "" (str/concat "uses Personas from \"std/behaviors/std-dev-personas\"\norbital DevLogin = Personas.orbitals.DevPersonasOrbital {\n  entity DevPersona [persistent: " @collection "]\n  traits { DevPersonas { config { autoSignIn: " (json/stringify (if (!= (default @payload.persona "") "") @payload.persona (default (array/first @roles) ""))) " } } }\n}\n"))
+                })))))
     }
 
     emits {
       MARKS_CHECKED -> external {
         marked : boolean!
+        personas : string!
       }
-        @description "Whether the asked program already declares the mock-seed marks store."
+        @description "Whether the asked program already declares the mock-seed marks store, and the .lolo text that composes std-dev-personas onto the program's [identity] entity (its `uses` and `orbital DevLogin`, no app header): linked to a DevPersona entity over the identity entity's collection, signing the session in as the persona the ask named, else the first declared value of the identity entity's role field. Empty when the program declares no identity entity or a trait of it already handles PERSONA_ACT_AS."
         @synonyms "program already seeds, marks store present"
         @tier "primary"
     }
@@ -36,8 +50,9 @@ orbital MockSeedMarksOrbital {
     listens {
       MARKS_CHECK -> input {
         program : MarksProgram?
+        persona : string?
       }
-        @description "Ask whether this program already declares the mock-seed marks store."
+        @description "Ask whether this program already declares the mock-seed marks store; persona is the ALMADAR_PERSONA spec (an identity row id, else a role) the personas text signs in as, the first declared role when absent."
         @synonyms "already seeds, has mock seed marks"
     }
   }
