@@ -1547,7 +1547,8 @@
           "trait": "GuestSession",
           "event": "GUEST_SEED_MARKED",
           "payload": {
-            "marked": false
+            "marked": false,
+            "personas": ""
           },
           "entity": {
             "id": "g",
@@ -1635,7 +1636,8 @@
           "trait": "GuestSession",
           "event": "GUEST_SEED_MARKED",
           "payload": {
-            "marked": true
+            "marked": true,
+            "personas": ""
           },
           "entity": {
             "id": "g",
@@ -2499,6 +2501,662 @@
                     }
                   ]
                 }
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "seed-marked-with-personas-text-reads-it-as-a-program",
+      "steps": [
+        {
+          "trait": "GuestSession",
+          "event": "GUEST_SEED_MARKED",
+          "entity": {
+            "id": "g",
+            "guestHandle": "",
+            "guestPaints": [],
+            "guestError": "",
+            "guestProgram": {
+              "name": "x",
+              "orbitals": []
+            },
+            "guestSeed": {
+              "name": "s",
+              "orbitals": []
+            }
+          },
+          "from": "opening",
+          "expect": {
+            "fired": true,
+            "state": "opening",
+            "effects": [
+              {
+                "type": "program/read"
+              }
+            ]
+          },
+          "payload": {
+            "marked": false,
+            "personas": "uses P from \"std/behaviors/std-dev-personas\"\n"
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "control-seed-marked-without-personas-text-composes-the-seed-only",
+      "steps": [
+        {
+          "trait": "GuestSession",
+          "event": "GUEST_SEED_MARKED",
+          "entity": {
+            "id": "g",
+            "guestHandle": "",
+            "guestPaints": [],
+            "guestError": "",
+            "guestProgram": {
+              "name": "x",
+              "orbitals": []
+            },
+            "guestSeed": {
+              "name": "s",
+              "orbitals": []
+            }
+          },
+          "from": "opening",
+          "expect": {
+            "fired": true,
+            "state": "opening",
+            "effects": [
+              {
+                "type": "program/compose"
+              }
+            ]
+          },
+          "payload": {
+            "marked": false,
+            "personas": ""
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "the-personas-program-is-composed-beside-the-seed",
+      "steps": [
+        {
+          "trait": "GuestSession",
+          "event": "GUEST_PERSONAS_READ",
+          "entity": {
+            "id": "g",
+            "guestHandle": "",
+            "guestPaints": [],
+            "guestError": "",
+            "guestProgram": {
+              "name": "x",
+              "orbitals": []
+            },
+            "guestSeed": {
+              "name": "s",
+              "orbitals": []
+            }
+          },
+          "from": "opening",
+          "expect": {
+            "fired": true,
+            "state": "opening",
+            "effects": [
+              {
+                "type": "program/compose"
+              },
+              {
+                "type": "set"
+              }
+            ]
+          },
+          "payload": {
+            "result": {
+              "name": "guest-personas",
+              "orbitals": []
+            }
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "a-guest-that-is-up-asks-its-personas",
+      "steps": [
+        {
+          "trait": "GuestSession",
+          "event": "GUEST_PERSONAS_ASK",
+          "entity": {
+            "id": "g",
+            "guestHandle": "guest-1",
+            "guestPaints": [],
+            "guestError": ""
+          },
+          "from": "live",
+          "expect": {
+            "fired": true,
+            "state": "live",
+            "effects": [
+              {
+                "type": "program/dispatch"
+              }
+            ]
+          },
+          "payload": {}
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "the-personas-answer-is-read-and-surfaced",
+      "steps": [
+        {
+          "trait": "GuestSession",
+          "event": "GUEST_PERSONAS_STEPPED",
+          "entity": {
+            "id": "g",
+            "guestHandle": "guest-1",
+            "guestPaints": [],
+            "guestError": "",
+            "guestPersona": "u2"
+          },
+          "from": "live",
+          "expect": {
+            "fired": true,
+            "state": "live",
+            "emits": [
+              {
+                "event": "GUEST_PERSONAS",
+                "payload": {
+                  "guest": "guest-1",
+                  "personas": [
+                    {
+                      "id": "u1",
+                      "name": "Ada",
+                      "role": "owner"
+                    },
+                    {
+                      "id": "u2",
+                      "name": "Bo",
+                      "role": "admin"
+                    }
+                  ],
+                  "current": "u2"
+                }
+              }
+            ]
+          },
+          "payload": {
+            "result": {
+              "emitted": [
+                {
+                  "event": "PERSONAS_ANSWERED",
+                  "payload": {
+                    "status": 200,
+                    "body": "{\"success\": true, \"personas\": [{\"id\": \"u1\", \"name\": \"Ada\", \"role\": \"owner\"}, {\"id\": \"u2\", \"name\": \"Bo\", \"role\": \"admin\"}]}"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "control-a-refused-personas-answer-surfaces-none",
+      "steps": [
+        {
+          "trait": "GuestSession",
+          "event": "GUEST_PERSONAS_STEPPED",
+          "entity": {
+            "id": "g",
+            "guestHandle": "guest-1",
+            "guestPaints": [],
+            "guestError": ""
+          },
+          "from": "live",
+          "expect": {
+            "fired": true,
+            "state": "live",
+            "emits": [
+              {
+                "event": "GUEST_PERSONAS",
+                "payload": {
+                  "guest": "guest-1",
+                  "personas": [],
+                  "current": ""
+                }
+              }
+            ]
+          },
+          "payload": {
+            "result": {
+              "emitted": [
+                {
+                  "event": "PERSONAS_ANSWERED",
+                  "payload": {
+                    "status": 404,
+                    "body": "{\"success\":false,\"error\":\"no dev personas\"}"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "control-a-guest-without-a-personas-answer-surfaces-none",
+      "steps": [
+        {
+          "trait": "GuestSession",
+          "event": "GUEST_PERSONAS_STEPPED",
+          "entity": {
+            "id": "g",
+            "guestHandle": "guest-1",
+            "guestPaints": [],
+            "guestError": ""
+          },
+          "from": "live",
+          "expect": {
+            "fired": true,
+            "state": "live",
+            "emits": [
+              {
+                "event": "GUEST_PERSONAS",
+                "payload": {
+                  "guest": "guest-1",
+                  "personas": [],
+                  "current": ""
+                }
+              }
+            ]
+          },
+          "payload": {
+            "result": {
+              "emitted": []
+            }
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "a-failed-personas-ask-surfaces-none-without-a-notice",
+      "steps": [
+        {
+          "trait": "GuestSession",
+          "event": "GUEST_PERSONAS_FAILED",
+          "entity": {
+            "id": "g",
+            "guestHandle": "guest-1",
+            "guestPaints": [],
+            "guestError": ""
+          },
+          "from": "live",
+          "expect": {
+            "fired": true,
+            "state": "live",
+            "emits": [
+              {
+                "event": "GUEST_PERSONAS",
+                "payload": {
+                  "guest": "guest-1",
+                  "personas": [],
+                  "current": ""
+                }
+              }
+            ],
+            "neverEmits": [
+              "GUEST_NOTICE"
+            ]
+          },
+          "payload": {
+            "error": "no handler"
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "a-picked-persona-closes-the-guest-and-opens-the-kept-program-on-its-route",
+      "steps": [
+        {
+          "trait": "GuestSession",
+          "event": "GUEST_PERSONA_PICK",
+          "entity": {
+            "id": "g",
+            "guestHandle": "guest-1",
+            "guestPaints": [],
+            "guestError": "",
+            "guestBase": {
+              "name": "x",
+              "orbitals": []
+            },
+            "guestRoute": "/deals",
+            "guestSeed": {
+              "name": "s",
+              "orbitals": []
+            }
+          },
+          "from": "live",
+          "expect": {
+            "fired": true,
+            "state": "opening",
+            "effects": [
+              {
+                "type": "program/close"
+              },
+              {
+                "type": "set"
+              },
+              {
+                "type": "set"
+              },
+              {
+                "type": "set"
+              },
+              {
+                "type": "set"
+              },
+              {
+                "type": "set"
+              },
+              {
+                "type": "emit"
+              },
+              {
+                "type": "set"
+              },
+              {
+                "type": "emit"
+              }
+            ],
+            "emits": [
+              {
+                "event": "GUEST_CLEARED"
+              },
+              {
+                "event": "GUEST_PREPARE"
+              }
+            ]
+          },
+          "payload": {
+            "guest": "guest-1",
+            "persona": "u2"
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "control-a-pick-for-another-guest-changes-nothing",
+      "steps": [
+        {
+          "trait": "GuestSession",
+          "event": "GUEST_PERSONA_PICK",
+          "entity": {
+            "id": "g",
+            "guestHandle": "guest-1",
+            "guestPaints": [],
+            "guestError": "",
+            "guestBase": {
+              "name": "x",
+              "orbitals": []
+            }
+          },
+          "from": "live",
+          "expect": {
+            "fired": true,
+            "state": "live",
+            "neverEmits": [
+              "GUEST_CLEARED",
+              "GUEST_PREPARE"
+            ]
+          },
+          "payload": {
+            "guest": "guest-9",
+            "persona": "u2"
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "the-reopened-guest-opens-on-the-route-the-pick-kept",
+      "steps": [
+        {
+          "trait": "GuestSession",
+          "event": "GUEST_COMPOSED",
+          "entity": {
+            "id": "g",
+            "guestHandle": "",
+            "guestPaints": [],
+            "guestError": "",
+            "guestProgram": {
+              "name": "x",
+              "orbitals": []
+            },
+            "guestResume": "/deals",
+            "guestSeed": {
+              "name": "s",
+              "orbitals": []
+            }
+          },
+          "from": "opening",
+          "expect": {
+            "fired": true,
+            "state": "opening",
+            "effects": [
+              {
+                "type": "program/open"
+              }
+            ]
+          },
+          "payload": {
+            "result": {
+              "name": "x",
+              "orbitals": []
+            }
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "the-stage-keeps-the-personas-of-its-guest",
+      "steps": [
+        {
+          "trait": "GuestStage",
+          "event": "GUEST_PERSONAS",
+          "entity": {
+            "id": "g",
+            "guestHandle": "guest-1",
+            "guestPaints": [],
+            "guestError": ""
+          },
+          "from": "idle",
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "GUEST_SHOWN"
+              }
+            ]
+          },
+          "payload": {
+            "guest": "guest-1",
+            "personas": [
+              {
+                "id": "u1",
+                "name": "Ada"
+              }
+            ],
+            "current": "u1"
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "control-the-stage-ignores-the-personas-of-another-guest",
+      "steps": [
+        {
+          "trait": "GuestStage",
+          "event": "GUEST_PERSONAS",
+          "entity": {
+            "id": "g",
+            "guestHandle": "guest-1",
+            "guestPaints": [],
+            "guestError": ""
+          },
+          "from": "idle",
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "neverEmits": [
+              "GUEST_SHOWN"
+            ]
+          },
+          "payload": {
+            "guest": "guest-9",
+            "personas": [
+              {
+                "id": "u1",
+                "name": "Ada"
+              }
+            ],
+            "current": ""
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "a-chosen-persona-asks-the-session-to-reopen-the-guest",
+      "steps": [
+        {
+          "trait": "GuestStage",
+          "event": "GUEST_PERSONA_CHOSEN",
+          "entity": {
+            "id": "g",
+            "guestHandle": "guest-1",
+            "guestPaints": [],
+            "guestError": "",
+            "guestPersona": "u1",
+            "guestPersonas": [
+              {
+                "id": "u1",
+                "name": "Ada"
+              },
+              {
+                "id": "u2",
+                "name": "Bo"
+              }
+            ]
+          },
+          "from": "idle",
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "GUEST_PERSONA_PICK",
+                "payload": {
+                  "guest": "guest-1",
+                  "persona": "u2"
+                }
+              }
+            ]
+          },
+          "payload": {
+            "id": "u2"
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "control-choosing-the-persona-already-viewing-asks-for-nothing",
+      "steps": [
+        {
+          "trait": "GuestStage",
+          "event": "GUEST_PERSONA_CHOSEN",
+          "entity": {
+            "id": "g",
+            "guestHandle": "guest-1",
+            "guestPaints": [],
+            "guestError": "",
+            "guestPersona": "u1"
+          },
+          "from": "idle",
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "neverEmits": [
+              "GUEST_PERSONA_PICK"
+            ]
+          },
+          "payload": {
+            "id": "u1"
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "the-stage-draws-the-picker-above-the-guest",
+      "steps": [
+        {
+          "trait": "GuestStage",
+          "event": "GUEST_SHOWN",
+          "entity": {
+            "id": "g",
+            "guestHandle": "guest-1",
+            "guestPaints": [
+              {
+                "slot": "main",
+                "trait": "A.Root",
+                "embedded": false,
+                "content": {
+                  "type": "stack"
+                }
+              }
+            ],
+            "guestError": "",
+            "guestPersona": "u1",
+            "guestPersonas": [
+              {
+                "id": "u1",
+                "name": "Ada"
+              },
+              {
+                "id": "u2",
+                "name": "Bo"
+              }
+            ],
+            "guestPage": [
+              "A.Root"
+            ]
+          },
+          "from": "idle",
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "effects": [
+              {
+                "type": "render-ui",
+                "arg0": "main"
               }
             ]
           }
