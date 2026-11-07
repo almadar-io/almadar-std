@@ -58,7 +58,7 @@ source_of() {
   esac
 }
 # A language an example does not cover yet prints PENDING with the gap that tracks it; it is never a pass.
-pending_of() { case $1/$2 in store-pair/typescript|store-pair/rust|store-pair/swift|store-pair/kotlin) echo "typed ports not yet rendered in $2";; esac; }
+pending_of() { :; }
 covers() { local gap; gap=$(pending_of "$2" "$1"); [ -z "$gap" ] || { echo "PENDING $1 $2 ($gap)"; return 1; }; }
 # The models a leg compiles against: a std atom example's own file in client mode (so the rendered names are the
 # atom's), a course example's program (the server program for the server shells).
