@@ -4,7 +4,7 @@ app std-orb-lint-circuit-emits [
   env: ["PATH"],
   exec: [exe],
   fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
-  description: "std-orb-lint-circuit-emits - the `orb lint circuit-emits <file>` command, the port of three per-trait checks of validate_all_circuits (circuit/closed_circuit.rs): ORB_RENDER_ACTION_LIFECYCLE_EVENT (a rendered pattern's event-bearing prop, found by the installed pattern registry's event prop names at any depth of the render-ui props, that names an event the bus never delivers: the operator table's emit busExcluded list), ORB_CIRCUIT_LIFECYCLE_EMIT_UNDELIVERED (an `(emit EVENT)` effect, nested at any depth of the transition's effect arrays, of such an event) ORB_CIRCUIT_OWN_EMIT_UNREACHABLE (an `(emit EVENT)` effect with a literal event, nested at any depth of the transition effect arrays but not inside another effect's options object, of an event the same trait handles in some arm but from no arm whose from-states include the transition's target state, so the same-trait cascade never delivers it) and ORB_CIRCUIT_SELF_EMIT_LOOP (a transition arm that re-emits its own trigger event while a same-event arm is enterable from its target state and the emit's payload shows no per-hop progress: no @payload reference, and no @entity reference together with an @entity set in the same arm). Each finding carries the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint circuit-emits: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+  description: "std-orb-lint-circuit-emits - the `orb lint circuit-emits <file>` command, the port of three per-trait checks of validate_all_circuits (circuit/closed_circuit.rs): ORB_RENDER_ACTION_LIFECYCLE_EVENT (an event prop the installed pattern registry declares for a typed rendered pattern, found at any depth of the render-ui props; keys of untyped or data objects are never read, that names an event the bus never delivers: the operator table's emit busExcluded list), ORB_CIRCUIT_LIFECYCLE_EMIT_UNDELIVERED (an `(emit EVENT)` effect, nested at any depth of the transition's effect arrays, of such an event) ORB_CIRCUIT_OWN_EMIT_UNREACHABLE (an `(emit EVENT)` effect with a literal event, nested at any depth of the transition effect arrays but not inside another effect's options object, of an event the same trait handles in some arm but from no arm whose from-states include the transition's target state, so the same-trait cascade never delivers it) and ORB_CIRCUIT_SELF_EMIT_LOOP (a transition arm that re-emits its own trigger event while a same-event arm is enterable from its target state and the emit's payload shows no per-hop progress: no @payload reference, and no @entity reference together with an @entity set in the same arm). Each finding carries the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint circuit-emits: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
 ]
 uses Spec from "almadar-std/lint-circuit-emits"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
@@ -20,6 +20,7 @@ type CeOrbital = { name : string, traits : [CeTrait] }
 type CeProgram = { orbitals : [CeOrbital] }
 type CeR = { s : [string]!, c : number!, m : boolean!, p : boolean!, en : boolean!, h : [CeHit]! }
 type CeHit = { key : string!, ev : string!, ty : string! }
+type CeRow = { pattern : string!, prop : string!, field : string! }
 type CeTr = { e : string!, f : [string]!, fs : string!, to : string! }
 
 type LintCodeDecl = { code : string!, category : string!, description : string! }
@@ -33,7 +34,7 @@ orbital OrbLintCircuitEmitsOrbital {
     id : string!
     scope : string = ""
     program : CeProgram = {}
-    names : [string] = []
+    byPattern : [CeRow] = []
     busExcluded : [string] = []
     findings : [OrbFinding] = []
   }
@@ -52,7 +53,7 @@ orbital OrbLintCircuitEmitsOrbital {
                 (nohit : [CeHit] [])
                 (nr : CeR { s: [], c: 0, m: false, p: false, en: false, h: [] })
                 (busSet (default (object/fromEntries (array/map @entity.busExcluded (fn x [@x, true]))) {}))
-                (nameSet (default (object/fromEntries (array/map @entity.names (fn x [@x, true]))) {})))
+                (rows : [CeRow] @entity.byPattern))
             (array/flatten (array/map (object/get @entity.program "orbitals" []) (fn (o oi)
               (array/flatten (array/map (object/get @o "traits" []) (fn (t ti)
                 (if (not (object/has @t "stateMachine")) @nof
@@ -93,9 +94,14 @@ orbital OrbLintCircuitEmitsOrbital {
                                                               (kids (array/flatten (array/map (object/values @k) (fn q (object/get (if (= @q null) @nr @q) "h"))))))
                                                           { s: @nos, c: 0, m: false, p: false, en: false,
                                                             h: (array/concat
-                                                                 (array/flatten (array/map (array/filter (object/keys @n) (fn key (and (not (str/includes @key ".")) (object/has @nameSet @key))))
-                                                                   (fn key (let ((v (object/get @n @key null))) (if (validate/string @v) (if (object/has @busSet @v) [{ key: @key, ev: @v, ty: @ty }] @nohit) @nohit)))))
-                                                                 (array/map @kids (fn hh { key: (object/get @hh "key"), ev: (object/get @hh "ev"), ty: (if (= (object/get @hh "ty") "") @ty (object/get @hh "ty")) }))) })
+                                                                 (array/flatten (array/map (array/filter @rows (fn r (= (object/get @r "pattern") @ty)))
+                                                                   (fn r (let ((v (object/get @n (object/get @r "prop") null)))
+                                                                     (if (= (object/get @r "field") "")
+                                                                       (if (and (validate/string @v) (object/has @busSet @v)) [{ key: (object/get @r "prop"), ev: @v, ty: @ty }] @nohit)
+                                                                       (if (validate/array @v)
+                                                                         (array/flatten (array/map @v (fn it (let ((iv (if (validate/object @it) (object/get @it (object/get @r "field") null) null))) (if (and (validate/string @iv) (object/has @busSet @iv)) [{ key: (object/get @r "field"), ev: @iv, ty: @ty }] @nohit)))))
+                                                                         @nohit))))))
+                                                                 @kids) })
                                                         @nr))) "CeNode")))
                                               (array/map (object/get (if (= @hr null) @nr @hr) "h") (fn hh
                                                 { code: @config.codes.renderActionLifecycleEvent.code, path: (str/concat @ep @ej "].props." (object/get @hh "key")), message: (str/concat "'" @on "." @tn "': prop '" (object/get @hh "key") "' on rendered '" (if (= (object/get @hh "ty") "") @outer (object/get @hh "ty")) "' targets lifecycle event '" (object/get @hh "ev") "' — the bus never delivers it"), suggestion: "route a named event (e.g. REFRESH) whose arm re-enters via `EVENT -> loading`; lifecycle events are never affordance targets", severity: "error" })))
@@ -129,7 +135,7 @@ orbital OrbLintCircuitEmitsOrbital {
                                           { code: @config.codes.circuitSelfEmitLoop.code, path: (str/concat @ep @ej "]"), message: (str/concat "'" @on "." @tn "': transition " (object/get @x "fs") "--[" (object/get @x "e") "]-->" (object/get @x "to") " re-emits its own trigger event '" (object/get @x "e") "' with a constant payload and a same-event arm is reachable at the target state — the runtime path loops forever re-entering this arm"), suggestion: "this arm re-emits its own trigger event and a same-event arm is reachable at the target state (this very arm, when it is a self-transition) with a constant payload — the runtime path loops forever re-entering this arm. Transition directly, emit a differently-named event, or make the payload derive from @payload / a mutated @entity so each hop makes progress.", severity: "error" })))))))))))))))))))))))))))))
         (emit LINT_FINISH { })
       PROPS_HEARD -> ready
-        (set @entity.names @payload.names)
+        (set @entity.byPattern @payload.byPattern)
       SEMANTICS_HEARD -> ready
         (set @entity.busExcluded @payload.busExcluded)
       LINT_FINISH -> ready
@@ -150,8 +156,8 @@ orbital OrbLintCircuitEmitsOrbital {
       LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : CeProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
-      PROPS_HEARD { names : [string]! }
-        @description "std-orb-lint-input's LINT_EVENT_PROPS: the event-bearing prop names of the installed pattern registry."
+      PROPS_HEARD { byPattern : [CeRow]! }
+        @description "std-orb-lint-input's LINT_EVENT_PROPS: each pattern's declared event props and event-list fields."
       SEMANTICS_HEARD { busExcluded : [string]! }
         @description "std-orb-lint-input's LINT_OPERATOR_SEMANTICS: the events the bus never delivers."
       OrbLintInput.LINT_EVENT_PROPS -> PROPS_HEARD

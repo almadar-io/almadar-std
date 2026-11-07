@@ -441,7 +441,7 @@ orbital WorkspaceOrbital {
         (set @entity.bresults (array/append @entity.bresults (bytes/from-string "")))
         (emit WS_B_ADVANCE { })
       WS_B_DOWNLOADED -> working
-        (set @entity.bresults (array/append @entity.bresults @payload.content))
+        (set @entity.bresults (array/append @entity.bresults (default (bytes/from-base64 @payload.content) (bytes/from-string ""))))
         (emit WS_B_ADVANCE { })
       WS_B_LISTED -> working when @payload.truncated
         (set @entity.bkeys (array/concat @entity.bkeys (array/map @payload.keys (fn k (object/get @k key)))))
@@ -1105,7 +1105,7 @@ orbital WorkspaceOrbital {
         @description "Bucket mode: the store accepted an object."
       WorkspaceCall.STORAGE_DOWNLOADED -> WS_B_DOWNLOADED
       WS_B_DOWNLOADED {
-        content : bytes!
+        content : string!
         size : number
       }
         @description "Bucket mode: an object's bytes as base64."

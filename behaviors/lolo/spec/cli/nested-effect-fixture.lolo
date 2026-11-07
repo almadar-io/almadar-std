@@ -1,0 +1,26 @@
+app nested-effect-fixture [
+  version: "1.0.0",
+  description: "Fixture for G-ORB-498: one transition whose only effect is a let wrapping an emit, so a golden has a nested effect to assert."
+]
+
+orbital NestedEffectOrbital {
+  entity NestedRun [runtime] {
+    id : string!
+  }
+
+  trait NestedEffect -> NestedRun [optimistic] {
+    initial: ready
+
+    emits {
+      FOO -> external { n : number! }
+    }
+
+    state ready {
+      INIT -> ready
+      GO -> ready
+        (let ((x 1)) (emit FOO { n: @x }))
+    }
+  }
+
+  page boot as Nested -> NestedEffect
+}

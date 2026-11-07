@@ -6,8 +6,8 @@ import subprocess
 import unittest
 
 
-ROOT = Path(__file__).resolve().parents[3]
-SOURCE = ROOT / "packages/almadar-std/behaviors/lolo/connect/atoms/std-stdio-lines.lolo"
+ROOT = Path(__file__).resolve().parents[1]
+SOURCE = ROOT / "behaviors/lolo/connect/atoms/std-stdio-lines.lolo"
 
 
 def step(event, payload=None, start=None):

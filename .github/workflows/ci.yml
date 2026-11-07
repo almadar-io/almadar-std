@@ -64,6 +64,12 @@ jobs:
       - name: Lint
         run: pnpm exec eslint --no-warn-ignored --max-warnings 0 .
 
+      - name: Native tests against the installed orb and this std
+        run: |
+          export ORB_BIN="$(pnpm bin)/orb"
+          python3 -I __tests__/mcp-stdio.native.py
+          python3 -I __tests__/stdio-lines.native.py
+
       - name: T4 gate (every goldens file, zero cases or no files fails, ratcheted against scripts/gates/known-failures)
         run: ORB="pnpm exec orb" bash scripts/gates/t4.sh
 

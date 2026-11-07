@@ -1,0 +1,122 @@
+{
+ "atom": "cli/atoms/std-verify-walk.lolo",
+ "trait": "VerifyWalk",
+ "note": "G-ORB-428: the L1 (parse and lower) findings reach program/validate, so the walk fails what `orb verify` fails. Effect args are recorded unevaluated.",
+ "cases": [
+  {
+   "id": "the file text is read for its L1 findings first (g_orb_428)",
+   "steps": [
+    {
+     "trait": "VerifyWalk",
+     "from": "reading",
+     "event": "WALK_FILE_READ",
+     "payload": {
+      "data": "YXBwIGEgWyB2ZXJzaW9uOiAiMS4wLjAiIF0="
+     },
+     "expect": {
+      "state": "reading",
+      "effects": [
+       {
+        "type": "program/read",
+        "arg1": {
+         "findings": true
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "defaults": [
+    "VerifyWalkCli"
+   ]
+  },
+  {
+   "id": "the L1 findings are kept and the source is then parsed (g_orb_428)",
+   "entity": {
+    "source": "app a [ version: \"1.0.0\" ]"
+   },
+   "steps": [
+    {
+     "trait": "VerifyWalk",
+     "from": "reading",
+     "event": "WALK_L1",
+     "payload": {
+      "result": [
+       {
+        "code": "ORB_L_APP_HEADER_LEGACY",
+        "path": "",
+        "message": "m",
+        "suggestion": "",
+        "severity": "warning"
+       }
+      ]
+     },
+     "expect": {
+      "state": "reading",
+      "effects": [
+       {
+        "type": "set"
+       },
+       {
+        "type": "program/read",
+        "arg1": {
+         "key": "program",
+         "emit": {
+          "success": "WALK_PROGRAM",
+          "failure": "WALK_FAILED"
+         }
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "defaults": [
+    "VerifyWalkCli"
+   ]
+  },
+  {
+   "id": "the kept L1 findings go to program/validate as findings (g_orb_428)",
+   "entity": {
+    "path": "/w/a.lolo",
+    "l1": [
+     {
+      "code": "ORB_L_APP_HEADER_LEGACY",
+      "path": "",
+      "message": "m",
+      "suggestion": "",
+      "severity": "warning"
+     }
+    ]
+   },
+   "steps": [
+    {
+     "trait": "VerifyWalk",
+     "from": "reading",
+     "event": "WALK_PROGRAM",
+     "payload": {
+      "result": {
+       "orbitals": []
+      }
+     },
+     "expect": {
+      "state": "validating",
+      "effects": [
+       {
+        "type": "program/validate",
+        "arg1": {
+         "report": true,
+         "path": "@entity.path",
+         "findings": "@entity.l1"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "defaults": [
+    "VerifyWalkCli"
+   ]
+  }
+ ]
+}

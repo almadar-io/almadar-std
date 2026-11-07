@@ -12,7 +12,7 @@ type OrbFinding = { code : string!, path : string!, message : string!, suggestio
 type LintEntry = { name : string!, kind : string! }
 type LintFile = { root : number!, rel : string! }
 type SharedTypesMember = { name : string }
-type SharedTypesOrbital = { types : Map string [SharedTypesMember]! }
+type SharedTypesOrbital = { types : (Map string [SharedTypesMember])? }
 type SharedTypesProgram = { orbitals : [SharedTypesOrbital] }
 
 type LintCodeDecl = { code : string!, category : string!, description : string! }
@@ -98,7 +98,7 @@ orbital OrbLintSharedTypesOrbital {
         (set @entity.cursor (+ @entity.cursor 1))
         (emit LINT_READ { })
       LINT_PROGRAM_READ -> reading
-        (let ((pf (array/nth @entity.paths @entity.cursor))) (if (= @pf null) (emit LINT_ANSWERED { status: 500, body: "shared-types: the file index is out of range" }) (set @entity.copies (array/concat @entity.copies (array/flatten (array/map (object/get @payload.result "orbitals" []) (fn o (let ((ty (object/get @o "types"))) (array/map (object/keys @ty) (fn n { name: @n, file: (object/get @pf "rel"), definition: (json/stringify (object/get @ty @n)), dkey: (value/key (object/get @ty @n)), fields: (array/map (object/get @ty @n) (fn f (json/stringify @f))) }))))))))))
+        (let ((pf (array/nth @entity.paths @entity.cursor))) (if (= @pf null) (emit LINT_ANSWERED { status: 500, body: "shared-types: the file index is out of range" }) (set @entity.copies (array/concat @entity.copies (array/flatten (array/map (object/get @payload.result "orbitals" []) (fn o (let ((ty (object/get @o "types" {}))) (array/map (object/keys @ty) (fn n { name: @n, file: (object/get @pf "rel"), definition: (json/stringify (object/get @ty @n)), dkey: (value/key (object/get @ty @n)), fields: (array/map (object/get @ty @n) (fn f (json/stringify @f))) }))))))))))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit LINT_READ { })
       LINT_FILE_UNREAD -> reading

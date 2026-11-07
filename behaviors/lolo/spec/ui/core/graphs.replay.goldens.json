@@ -1,0 +1,109 @@
+{
+ "atom": "../ui/core/atoms/std-graphs.lolo",
+ "trait": "GraphItemGraph",
+ "cases": [
+  {
+   "id": "a-row-without-a-category-lands-in-the-declared-null-bucket",
+   "note": "nullCategoryLabel names the bucket; no value is invented",
+   "config": {
+    "nullCategoryLabel": "No status"
+   },
+   "steps": [
+    {
+     "trait": "GraphItemGraph",
+     "from": "idle",
+     "entity": {
+      "id": "g",
+      "status": ""
+     },
+     "event": "ITEMS_LOADED",
+     "payload": {
+      "data": [
+       {
+        "id": "a",
+        "status": "open"
+       },
+       {
+        "id": "b",
+        "status": "open"
+       },
+       {
+        "id": "c"
+       }
+      ],
+      "totalCount": 3
+     },
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "rendered": [
+       {
+        "slot": "main",
+        "props": {
+         "data.0.label": "open",
+         "data.0.value": 2,
+         "data.1.label": "No status",
+         "data.1.value": 1
+        }
+       }
+      ]
+     },
+     "options": {
+      "render": true,
+      "renderProps": true
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-blank-null-category-label-leaves-the-row-out",
+   "note": "the documented default: a row with no category has no bucket",
+   "config": {},
+   "steps": [
+    {
+     "trait": "GraphItemGraph",
+     "from": "idle",
+     "entity": {
+      "id": "g",
+      "status": ""
+     },
+     "event": "ITEMS_LOADED",
+     "payload": {
+      "data": [
+       {
+        "id": "a",
+        "status": "open"
+       },
+       {
+        "id": "b",
+        "status": "open"
+       },
+       {
+        "id": "c"
+       }
+      ],
+      "totalCount": 3
+     },
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "rendered": [
+       {
+        "slot": "main",
+        "props": {
+         "data.0.label": "open",
+         "data.0.value": 2,
+         "data.1": null
+        }
+       }
+      ]
+     },
+     "options": {
+      "render": true,
+      "renderProps": true
+     }
+    }
+   ]
+  }
+ ]
+}

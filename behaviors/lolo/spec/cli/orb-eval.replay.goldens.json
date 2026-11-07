@@ -1,0 +1,115 @@
+{
+  "atom": "cli/atoms/std-orb-eval.lolo",
+  "trait": "ExprEvaluator",
+  "note": "G-CROSS-453: an expression whose value is null is a value (printed as null), not a failure; text that is not JSON stays a failure.",
+  "cases": [
+    {
+      "id": "a null value is answered as null",
+      "steps": [
+        {
+          "trait": "ExprEvaluator",
+          "from": "evaluating",
+          "event": "EXPR_EVAL_STEPPED",
+          "payload": {
+            "result": [
+              {
+                "result": {
+                  "emitted": [
+                    {
+                      "payload": {
+                        "value": "null"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "EXPR_EVAL_DONE",
+                "payload": {
+                  "value": null
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: a number is answered as itself",
+      "steps": [
+        {
+          "trait": "ExprEvaluator",
+          "from": "evaluating",
+          "event": "EXPR_EVAL_STEPPED",
+          "payload": {
+            "result": [
+              {
+                "result": {
+                  "emitted": [
+                    {
+                      "payload": {
+                        "value": "1"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "EXPR_EVAL_DONE",
+                "payload": {
+                  "value": 1
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: text that is not JSON is refused",
+      "steps": [
+        {
+          "trait": "ExprEvaluator",
+          "from": "evaluating",
+          "event": "EXPR_EVAL_STEPPED",
+          "payload": {
+            "result": [
+              {
+                "result": {
+                  "emitted": [
+                    {
+                      "payload": {
+                        "value": "{bad"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "EXPR_EVAL_FAILED",
+                "payload": {
+                  "error": "the evaluator emitted a value that is not JSON"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

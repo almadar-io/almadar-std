@@ -110,7 +110,7 @@ orbital OrbLintUserIdentityOrbital {
               (if (validate/array @hs)
                (array/flatten (array/map @hs (fn h (let ((kind (let ((s27 (object/get @h "kind" ""))) (if (validate/string @s27) @s27 ""))) (a (let ((s28 (object/get @h "a" ""))) (if (validate/string @s28) @s28 ""))) (b (let ((s29 (object/get @h "b" ""))) (if (validate/string @s29) @s29 ""))) (vv (let ((v0 (object/get @h "vv" @nov))) (if (validate/array @v0) (array/map @v0 (fn x (if (validate/string @x) @x ""))) @nov))))
  (if (= @kind "role")
-  [{ code: @config.codes.sRoleLiteralNotMember.code, path: (str/concat @tp (let ((s26 (object/get @h "rel" ""))) (if (validate/string @s26) @s26 ""))), message: (str/concat "\"" @a "\" is not a declared value of `@user." @b "` on the [identity] entity `" @idNm "`. This comparison can never be true — the branch is dead."), suggestion: (str/concat "Use one of: " (str/join @vv ", ") ", or add \"" @a "\" to `" @idNm "." @b "`."), severity: "error", validValues: @vv }]
+  [{ code: @config.codes.sRoleLiteralNotMember.code, path: (str/concat @tp (let ((s26 (object/get @h "rel" ""))) (if (validate/string @s26) @s26 ""))), message: (str/concat "\"" @a "\" is not a declared value of `@user." @b "` on the [identity] entity `" @idNm "`. This comparison can never be true — the branch is dead."), suggestion: (if (= @a "") "An empty string is not a role: to test that someone is signed in, compare the identity id instead, `(!= @user.id \"\")`." (str/concat "Use one of: " (str/join @vv ", ") ", or add \"" @a "\" to `" @idNm "." @b "`.")), severity: "error", validValues: @vv }]
   [])))))
                @nof))
              @nof)))))))))))))))))  (array/flatten (array/map @declList (fn declared

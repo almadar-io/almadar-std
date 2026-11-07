@@ -1,0 +1,24 @@
+app update-without-create [
+  version: "1.0.0",
+  description: "Red fixture for G-STD-076: a persistent entity that the program updates but never creates, upserts or batch-creates. A write that can never land; orb validate should refuse it."
+]
+
+orbital UpdateWithoutCreate {
+  entity Note [persistent: notes] {
+    id : string!
+    text : string = ""
+  }
+
+  trait NoteEditor -> Note {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (fetch Note)
+      EDIT -> idle
+        (persist update Note "n1" { text: "edited" })
+    }
+  }
+
+  page boot as NotePage -> NoteEditor
+}

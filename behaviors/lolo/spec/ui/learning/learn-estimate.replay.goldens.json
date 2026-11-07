@@ -1,0 +1,207 @@
+{
+ "atom": "../ui/learning/atoms/std-learn-estimate.lolo",
+ "trait": "EstimateSim",
+ "cases": [
+  {
+   "id": "a prompt's own slider range and explanation reach the entity at INIT (g_std_264)",
+   "config": {
+    "prompts": [
+     {
+      "prompt": "How many people live in Tokyo?",
+      "answer": 37000000,
+      "unit": "",
+      "hint": "h",
+      "explanation": "Greater Tokyo is about 37 million.",
+      "min": 0,
+      "max": 50000000,
+      "step": 1000000
+     },
+     {
+      "prompt": "Boiling point in F?",
+      "answer": 212,
+      "unit": "F"
+     }
+    ],
+    "sliderMin": 0,
+    "sliderMax": 500,
+    "sliderStep": 0.1,
+    "sliderDefault": 100
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "INIT",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "entity": {
+       "sliderLo": 0,
+       "sliderHi": 50000000,
+       "sliderInc": 1000000,
+       "promptExplanation": "Greater Tokyo is about 37 million.",
+       "estimate": 100
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a prompt with no range uses the slider knobs and has no explanation (g_std_264)",
+   "config": {
+    "prompts": [
+     {
+      "prompt": "Boiling point in F?",
+      "answer": 212,
+      "unit": "F"
+     }
+    ],
+    "sliderMin": 10,
+    "sliderMax": 400,
+    "sliderStep": 0.5,
+    "sliderDefault": 100
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "INIT",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "entity": {
+       "sliderLo": 10,
+       "sliderHi": 400,
+       "sliderInc": 0.5,
+       "promptExplanation": ""
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "the default start is clamped into the prompt's own range (g_std_264)",
+   "config": {
+    "prompts": [
+     {
+      "prompt": "How many people live in Tokyo?",
+      "answer": 37000000,
+      "unit": "",
+      "hint": "h",
+      "explanation": "Greater Tokyo is about 37 million.",
+      "min": 0,
+      "max": 50,
+      "step": 1000000
+     }
+    ],
+    "sliderDefault": 100
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "INIT",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "entity": {
+       "estimate": 50
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "the explanation follows the answer in the feedback (g_std_264)",
+   "config": {
+    "prompts": [
+     {
+      "prompt": "How many people live in Tokyo?",
+      "answer": 37000000,
+      "unit": "",
+      "hint": "h",
+      "explanation": "Greater Tokyo is about 37 million.",
+      "min": 0,
+      "max": 50000000,
+      "step": 1000000
+     },
+     {
+      "prompt": "Boiling point in F?",
+      "answer": 212,
+      "unit": "F"
+     }
+    ]
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "INIT",
+     "payload": {},
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "from": "idle",
+     "event": "LOCK_IN",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "entity": {
+       "feedback": "Answer: 37000000  — you were off by 36999900 (100%). +0 points. Greater Tokyo is about 37 million."
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "the next prompt takes its own range (g_std_264)",
+   "config": {
+    "prompts": [
+     {
+      "prompt": "How many people live in Tokyo?",
+      "answer": 37000000,
+      "unit": "",
+      "hint": "h",
+      "explanation": "Greater Tokyo is about 37 million.",
+      "min": 0,
+      "max": 50000000,
+      "step": 1000000
+     },
+     {
+      "prompt": "Boiling point in F?",
+      "answer": 212,
+      "unit": "F"
+     }
+    ]
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "INIT",
+     "payload": {},
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "from": "idle",
+     "event": "LOCK_IN",
+     "payload": {},
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "from": "idle",
+     "event": "NEXT",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "entity": {
+       "sliderHi": 500,
+       "promptExplanation": ""
+      }
+     }
+    }
+   ]
+  }
+ ]
+}

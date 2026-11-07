@@ -78,5 +78,21 @@ case("a-cancel-announces-the-embeddings-wire-key-to-abort",[
 case("control-an-embeddings-cancel-for-another-key-aborts-nothing",[
  {"trait":"AnthropicLlm","event":"LLM_EMBED","payload":{"texts":["a"],"key":"e1"},"expect":{"emits":[{"event":"LLM_EMBED_WIRE"}]}},
  {"trait":"AnthropicLlm","event":"LLM_CANCEL_ANTHROPIC","payload":{"key":"other"},"expect":{"neverEmits":["LLM_EMBED_WIRE_CANCEL","LLM_CANCELLED"]}}])
+# G-STD-243: an anthropic tool loop speaks the Messages tools wire
+TOOLS=[{"name":"read_x","description":"d","parameters":{"type":"object"}}]
+tbody=J({"model":"claude-sonnet-4-5","max_tokens":8192,"messages":[{"role":"user","content":"hi"}],"system":"sys","tools":[{"name":"read_x","description":"d","input_schema":{"type":"object"}}]})
+case("an-anthropic-tool-loop-is-a-messages-request-with-tool-input-schemas",[{"trait":"AnthropicLlm","event":"LLM_CALL_TOOLS","payload":{"messages":[{"role":"user","content":"hi"}],"instructions":"sys","tools":TOOLS,"key":"t1"},"expect":{"emits":[{"event":"LLM_CHAT_WIRE","payload":{"method":"POST","path":"/v1/messages","headers":{"Accept":"application/json","anthropic-version":"2023-06-01"},"json":tbody}}]}}])
+sess=lambda msgs: J({"key":"t1","model":"claude-sonnet-4-5","system":"sys","userPrompt":"hi","maxSteps":8,"tools":TOOLS,"messages":msgs,"steps":[],"usage":{"promptTokens":0,"completionTokens":0,"totalTokens":0,"modelCalls":1}})
+base=[{"role":"system","content":"sys"},{"role":"user","content":"hi"}]
+tk=J({"kind":"tools","id":sess(base)})
+tool_reply=J({"content":[{"type":"text","text":"looking"},{"type":"tool_use","id":"tu1","name":"read_x","input":{"a":1}}],"usage":{"input_tokens":5,"output_tokens":2}})
+case("an-anthropic-tool-use-block-is-a-requested-tool-call",[result("AnthropicLlm",tk,200,tool_reply,{"emits":[{"event":"LLM_TOOLS_REQUESTED","payload":{"calls":[{"id":"tu1","name":"read_x","arguments":{"a":1}}]}}],"neverEmits":["LLM_FAILED"]})])
+text_reply=J({"content":[{"type":"text","text":"done"}],"usage":{"input_tokens":5,"output_tokens":2}})
+case("control-an-anthropic-text-reply-ends-the-tool-loop-without-a-tool-call",[result("AnthropicLlm",tk,200,text_reply,{"emits":[{"event":"LLM_CALL_TOOLS_RESULT","payload":{"reply":"done"}}],"neverEmits":["LLM_TOOLS_REQUESTED","LLM_FAILED"]})])
+case("control-an-anthropic-tool-reply-with-no-content-array-is-a-failure",[result("AnthropicLlm",tk,200,J({"usage":{}}),{"emits":[{"event":"LLM_FAILED"}],"neverEmits":["LLM_TOOLS_REQUESTED"]})])
+turn2=base+[{"role":"assistant","content":"looking","tool_calls":[{"id":"tu1","type":"function","function":{"name":"read_x","arguments":J({"a":1})}}]},{"role":"tool","tool_call_id":"tu1","content":"rows"}]
+t2body=J({"model":"claude-sonnet-4-5","max_tokens":8192,"messages":[{"role":"user","content":"hi"},{"role":"assistant","content":[{"type":"text","text":"looking"},{"type":"tool_use","id":"tu1","name":"read_x","input":{"a":1}}]},{"role":"user","content":[{"type":"tool_result","tool_use_id":"tu1","content":"rows"}]}],"system":"sys","tools":[{"name":"read_x","description":"d","input_schema":{"type":"object"}}]})
+t2=sess(turn2).replace('"modelCalls":1','"modelCalls":1')
+case("an-anthropic-tool-turn-sends-the-call-as-tool-use-and-its-answer-as-tool-result",[{"trait":"AnthropicLlm","event":"LLM_TOOLS_SEND","payload":{"session":t2},"expect":{"emits":[{"event":"LLM_CHAT_WIRE","payload":{"path":"/v1/messages","json":t2body}}]}}])
 json.dump({"atom":"spec/connect/llm-wire-fixture.lolo","trait":"AnthropicLlm","note":"std-llm over std-http-request and std-http-client: an anthropic Messages request and its streamed round trip, a keyless LM Studio request, cancel and the deadline on the wire","cases":cases},open(sys.argv[1],"w"),indent=1)
 print(len(cases))

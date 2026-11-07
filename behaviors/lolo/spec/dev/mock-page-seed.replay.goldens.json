@@ -29,6 +29,1274 @@
       "defaults": [
         "MockDataMockStream"
       ]
+    },
+    {
+      "id": "a-page-seeds-its-entities-from-the-running-program",
+      "steps": [
+        {
+          "event": "INIT",
+          "payload": {},
+          "expect": {
+            "neverEmits": [
+              "DATASET_DONE",
+              "DATASET_PLANNED",
+              "DATASET_FAILED",
+              "DS_MARKS_FAILED",
+              "DS_WRITE_FAILED"
+            ]
+          }
+        },
+        {
+          "event": "SEED_PAGE",
+          "payload": {
+            "page": "/",
+            "route": "/",
+            "traits": [
+              "T"
+            ],
+            "entities": [
+              "Alpha14",
+              "Beta14"
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "DATASET_DONE",
+                "payload": {
+                  "stores": {},
+                  "journal": {
+                    "viewerId": "",
+                    "stamped": [],
+                    "deferred": []
+                  },
+                  "defaultPersona": ""
+                }
+              }
+            ],
+            "neverEmits": [
+              "DATASET_FAILED",
+              "DS_MARKS_FAILED",
+              "DS_WRITE_FAILED"
+            ]
+          }
+        },
+        {
+          "event": "PAGE_SELF_READ",
+          "payload": {
+            "result": {
+              "orbitals": [
+                {
+                  "entity": {
+                    "name": "Alpha14",
+                    "persistence": "persistent",
+                    "browser": false,
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "name",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "beta",
+                        "type": "relation",
+                        "required": true,
+                        "relation": {
+                          "entity": "Beta14",
+                          "cardinality": "many-to-one"
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "entity": {
+                    "name": "Beta14",
+                    "persistence": "persistent",
+                    "browser": false,
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "name",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  }
+                },
+                {
+                  "entity": {
+                    "name": "Gamma14",
+                    "persistence": "persistent",
+                    "browser": false,
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "name",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "neverEmits": [
+              "DATASET_DONE",
+              "DATASET_PLANNED",
+              "DATASET_FAILED",
+              "DS_MARKS_FAILED",
+              "DS_WRITE_FAILED"
+            ]
+          }
+        },
+        {
+          "event": "DS_CHUNK_DONE",
+          "payload": {
+            "result": {
+              "emittedEvents": [
+                {
+                  "event": "DS_CHUNK_WRITTEN"
+                }
+              ]
+            },
+            "key": "mock-seed-write"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "DATASET_DONE",
+                "payload": {
+                  "stores": {
+                    "alpha14": [
+                      {
+                        "name": "Drift Prairie",
+                        "beta": "Beta14 Id 1",
+                        "id": "Alpha14 Id 1",
+                        "createdAt": "2025-07-21T05:09:44.234Z",
+                        "updatedAt": "2025-08-01T05:09:44.234Z"
+                      },
+                      {
+                        "name": "Terrace Grove",
+                        "beta": "Beta14 Id 2",
+                        "id": "Alpha14 Id 2",
+                        "createdAt": "2025-09-27T01:45:01.806Z",
+                        "updatedAt": "2025-10-08T01:45:01.806Z"
+                      },
+                      {
+                        "name": "Meadow Willow",
+                        "beta": "Beta14 Id 3",
+                        "id": "Alpha14 Id 3",
+                        "createdAt": "2025-10-09T12:01:54.997Z",
+                        "updatedAt": "2025-10-15T12:30:45.678Z"
+                      },
+                      {
+                        "name": "Lantern Haven",
+                        "beta": "Beta14 Id 4",
+                        "id": "Alpha14 Id 4",
+                        "createdAt": "2025-03-13T22:03:59.613Z",
+                        "updatedAt": "2025-04-07T22:03:59.613Z"
+                      },
+                      {
+                        "name": "North Estuary",
+                        "beta": "Beta14 Id 5",
+                        "id": "Alpha14 Id 5",
+                        "createdAt": "2024-12-05T07:08:30.269Z",
+                        "updatedAt": "2024-12-15T07:08:30.269Z"
+                      },
+                      {
+                        "name": "Beacon Quarry",
+                        "beta": "Beta14 Id 6",
+                        "id": "Alpha14 Id 6",
+                        "createdAt": "2025-07-28T16:51:38.560Z",
+                        "updatedAt": "2025-07-31T16:51:38.560Z"
+                      }
+                    ],
+                    "beta14": [
+                      {
+                        "name": "Heath Timber",
+                        "id": "Beta14 Id 1",
+                        "createdAt": "2025-08-29T03:19:56.839Z",
+                        "updatedAt": "2025-09-19T03:19:56.839Z"
+                      },
+                      {
+                        "name": "Elm Horizon",
+                        "id": "Beta14 Id 2",
+                        "createdAt": "2025-07-11T13:05:17.643Z",
+                        "updatedAt": "2025-08-03T13:05:17.643Z"
+                      },
+                      {
+                        "name": "Umber Fjord",
+                        "id": "Beta14 Id 3",
+                        "createdAt": "2025-06-15T13:20:58.721Z",
+                        "updatedAt": "2025-07-15T13:20:58.721Z"
+                      },
+                      {
+                        "name": "Brook Prairie",
+                        "id": "Beta14 Id 4",
+                        "createdAt": "2025-04-28T09:16:23.708Z",
+                        "updatedAt": "2025-05-28T09:16:23.708Z"
+                      },
+                      {
+                        "name": "Garnet Timber",
+                        "id": "Beta14 Id 5",
+                        "createdAt": "2024-10-30T22:47:48.407Z",
+                        "updatedAt": "2024-11-29T22:47:48.407Z"
+                      },
+                      {
+                        "name": "Canyon Horizon",
+                        "id": "Beta14 Id 6",
+                        "createdAt": "2025-02-07T01:42:42.705Z",
+                        "updatedAt": "2025-02-12T01:42:42.705Z"
+                      }
+                    ]
+                  },
+                  "journal": {
+                    "viewerId": "",
+                    "stamped": [],
+                    "deferred": []
+                  },
+                  "defaultPersona": ""
+                }
+              }
+            ],
+            "neverEmits": [
+              "DATASET_FAILED",
+              "DS_MARKS_FAILED",
+              "DS_WRITE_FAILED"
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "MockDataMockStream"
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "a-page-revisit-seeds-nothing",
+      "steps": [
+        {
+          "event": "INIT",
+          "payload": {},
+          "expect": {
+            "neverEmits": [
+              "DATASET_DONE",
+              "DATASET_PLANNED",
+              "DATASET_FAILED",
+              "DS_MARKS_FAILED",
+              "DS_WRITE_FAILED"
+            ]
+          }
+        },
+        {
+          "event": "SEED_PAGE",
+          "payload": {
+            "page": "/",
+            "route": "/",
+            "traits": [
+              "T"
+            ],
+            "entities": [
+              "Alpha15",
+              "Beta15"
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "DATASET_DONE",
+                "payload": {
+                  "stores": {},
+                  "journal": {
+                    "viewerId": "",
+                    "stamped": [],
+                    "deferred": []
+                  },
+                  "defaultPersona": ""
+                }
+              }
+            ],
+            "neverEmits": [
+              "DATASET_FAILED",
+              "DS_MARKS_FAILED",
+              "DS_WRITE_FAILED"
+            ]
+          }
+        },
+        {
+          "event": "PAGE_SELF_READ",
+          "payload": {
+            "result": {
+              "orbitals": [
+                {
+                  "entity": {
+                    "name": "Alpha15",
+                    "persistence": "persistent",
+                    "browser": false,
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "name",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "beta",
+                        "type": "relation",
+                        "required": true,
+                        "relation": {
+                          "entity": "Beta15",
+                          "cardinality": "many-to-one"
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "entity": {
+                    "name": "Beta15",
+                    "persistence": "persistent",
+                    "browser": false,
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "name",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  }
+                },
+                {
+                  "entity": {
+                    "name": "Gamma15",
+                    "persistence": "persistent",
+                    "browser": false,
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "name",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "neverEmits": [
+              "DATASET_DONE",
+              "DATASET_PLANNED",
+              "DATASET_FAILED",
+              "DS_MARKS_FAILED",
+              "DS_WRITE_FAILED"
+            ]
+          }
+        },
+        {
+          "event": "DS_CHUNK_DONE",
+          "payload": {
+            "result": {
+              "emittedEvents": [
+                {
+                  "event": "DS_CHUNK_WRITTEN"
+                }
+              ]
+            },
+            "key": "mock-seed-write"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "DATASET_DONE",
+                "payload": {
+                  "stores": {
+                    "alpha15": [
+                      {
+                        "name": "Drift Prairie",
+                        "beta": "Beta15 Id 1",
+                        "id": "Alpha15 Id 1",
+                        "createdAt": "2025-07-21T05:09:44.234Z",
+                        "updatedAt": "2025-08-01T05:09:44.234Z"
+                      },
+                      {
+                        "name": "Terrace Grove",
+                        "beta": "Beta15 Id 2",
+                        "id": "Alpha15 Id 2",
+                        "createdAt": "2025-09-27T01:45:01.806Z",
+                        "updatedAt": "2025-10-08T01:45:01.806Z"
+                      },
+                      {
+                        "name": "Meadow Willow",
+                        "beta": "Beta15 Id 3",
+                        "id": "Alpha15 Id 3",
+                        "createdAt": "2025-10-09T12:01:54.997Z",
+                        "updatedAt": "2025-10-15T12:30:45.678Z"
+                      },
+                      {
+                        "name": "Lantern Haven",
+                        "beta": "Beta15 Id 4",
+                        "id": "Alpha15 Id 4",
+                        "createdAt": "2025-03-13T22:03:59.613Z",
+                        "updatedAt": "2025-04-07T22:03:59.613Z"
+                      },
+                      {
+                        "name": "North Estuary",
+                        "beta": "Beta15 Id 5",
+                        "id": "Alpha15 Id 5",
+                        "createdAt": "2024-12-05T07:08:30.269Z",
+                        "updatedAt": "2024-12-15T07:08:30.269Z"
+                      },
+                      {
+                        "name": "Beacon Quarry",
+                        "beta": "Beta15 Id 6",
+                        "id": "Alpha15 Id 6",
+                        "createdAt": "2025-07-28T16:51:38.560Z",
+                        "updatedAt": "2025-07-31T16:51:38.560Z"
+                      }
+                    ],
+                    "beta15": [
+                      {
+                        "name": "Heath Timber",
+                        "id": "Beta15 Id 1",
+                        "createdAt": "2025-08-29T03:19:56.839Z",
+                        "updatedAt": "2025-09-19T03:19:56.839Z"
+                      },
+                      {
+                        "name": "Elm Horizon",
+                        "id": "Beta15 Id 2",
+                        "createdAt": "2025-07-11T13:05:17.643Z",
+                        "updatedAt": "2025-08-03T13:05:17.643Z"
+                      },
+                      {
+                        "name": "Umber Fjord",
+                        "id": "Beta15 Id 3",
+                        "createdAt": "2025-06-15T13:20:58.721Z",
+                        "updatedAt": "2025-07-15T13:20:58.721Z"
+                      },
+                      {
+                        "name": "Brook Prairie",
+                        "id": "Beta15 Id 4",
+                        "createdAt": "2025-04-28T09:16:23.708Z",
+                        "updatedAt": "2025-05-28T09:16:23.708Z"
+                      },
+                      {
+                        "name": "Garnet Timber",
+                        "id": "Beta15 Id 5",
+                        "createdAt": "2024-10-30T22:47:48.407Z",
+                        "updatedAt": "2024-11-29T22:47:48.407Z"
+                      },
+                      {
+                        "name": "Canyon Horizon",
+                        "id": "Beta15 Id 6",
+                        "createdAt": "2025-02-07T01:42:42.705Z",
+                        "updatedAt": "2025-02-12T01:42:42.705Z"
+                      }
+                    ]
+                  },
+                  "journal": {
+                    "viewerId": "",
+                    "stamped": [],
+                    "deferred": []
+                  },
+                  "defaultPersona": ""
+                }
+              }
+            ],
+            "neverEmits": [
+              "DATASET_FAILED",
+              "DS_MARKS_FAILED",
+              "DS_WRITE_FAILED"
+            ]
+          }
+        },
+        {
+          "event": "SEED_PAGE",
+          "payload": {
+            "page": "/",
+            "route": "/",
+            "traits": [
+              "T"
+            ],
+            "entities": [
+              "Alpha15",
+              "Beta15"
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "DATASET_DONE",
+                "payload": {
+                  "stores": {},
+                  "journal": {
+                    "viewerId": "",
+                    "stamped": [],
+                    "deferred": []
+                  },
+                  "defaultPersona": ""
+                }
+              }
+            ],
+            "neverEmits": [
+              "DATASET_FAILED",
+              "DS_MARKS_FAILED",
+              "DS_WRITE_FAILED"
+            ]
+          }
+        },
+        {
+          "event": "PAGE_SELF_READ",
+          "payload": {
+            "result": {
+              "orbitals": [
+                {
+                  "entity": {
+                    "name": "Alpha15",
+                    "persistence": "persistent",
+                    "browser": false,
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "name",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "beta",
+                        "type": "relation",
+                        "required": true,
+                        "relation": {
+                          "entity": "Beta15",
+                          "cardinality": "many-to-one"
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "entity": {
+                    "name": "Beta15",
+                    "persistence": "persistent",
+                    "browser": false,
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "name",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  }
+                },
+                {
+                  "entity": {
+                    "name": "Gamma15",
+                    "persistence": "persistent",
+                    "browser": false,
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "name",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "DATASET_DONE",
+                "payload": {
+                  "stores": {},
+                  "journal": {
+                    "viewerId": "",
+                    "stamped": [],
+                    "deferred": []
+                  },
+                  "defaultPersona": ""
+                }
+              }
+            ],
+            "neverEmits": [
+              "DATASET_FAILED",
+              "DS_MARKS_FAILED",
+              "DS_WRITE_FAILED"
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "MockDataMockStream"
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "a-page-second-page-seeds-only-its-unseeded-entities",
+      "steps": [
+        {
+          "event": "INIT",
+          "payload": {},
+          "expect": {
+            "neverEmits": [
+              "DATASET_DONE",
+              "DATASET_PLANNED",
+              "DATASET_FAILED",
+              "DS_MARKS_FAILED",
+              "DS_WRITE_FAILED"
+            ]
+          }
+        },
+        {
+          "event": "SEED_PAGE",
+          "payload": {
+            "page": "/",
+            "route": "/",
+            "traits": [
+              "T"
+            ],
+            "entities": [
+              "Alpha16",
+              "Beta16"
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "DATASET_DONE",
+                "payload": {
+                  "stores": {},
+                  "journal": {
+                    "viewerId": "",
+                    "stamped": [],
+                    "deferred": []
+                  },
+                  "defaultPersona": ""
+                }
+              }
+            ],
+            "neverEmits": [
+              "DATASET_FAILED",
+              "DS_MARKS_FAILED",
+              "DS_WRITE_FAILED"
+            ]
+          }
+        },
+        {
+          "event": "PAGE_SELF_READ",
+          "payload": {
+            "result": {
+              "orbitals": [
+                {
+                  "entity": {
+                    "name": "Alpha16",
+                    "persistence": "persistent",
+                    "browser": false,
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "name",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "beta",
+                        "type": "relation",
+                        "required": true,
+                        "relation": {
+                          "entity": "Beta16",
+                          "cardinality": "many-to-one"
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "entity": {
+                    "name": "Beta16",
+                    "persistence": "persistent",
+                    "browser": false,
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "name",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  }
+                },
+                {
+                  "entity": {
+                    "name": "Gamma16",
+                    "persistence": "persistent",
+                    "browser": false,
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "name",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "neverEmits": [
+              "DATASET_DONE",
+              "DATASET_PLANNED",
+              "DATASET_FAILED",
+              "DS_MARKS_FAILED",
+              "DS_WRITE_FAILED"
+            ]
+          }
+        },
+        {
+          "event": "DS_CHUNK_DONE",
+          "payload": {
+            "result": {
+              "emittedEvents": [
+                {
+                  "event": "DS_CHUNK_WRITTEN"
+                }
+              ]
+            },
+            "key": "mock-seed-write"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "DATASET_DONE",
+                "payload": {
+                  "stores": {
+                    "alpha16": [
+                      {
+                        "name": "Drift Prairie",
+                        "beta": "Beta16 Id 1",
+                        "id": "Alpha16 Id 1",
+                        "createdAt": "2025-07-21T05:09:44.234Z",
+                        "updatedAt": "2025-08-01T05:09:44.234Z"
+                      },
+                      {
+                        "name": "Terrace Grove",
+                        "beta": "Beta16 Id 2",
+                        "id": "Alpha16 Id 2",
+                        "createdAt": "2025-09-27T01:45:01.806Z",
+                        "updatedAt": "2025-10-08T01:45:01.806Z"
+                      },
+                      {
+                        "name": "Meadow Willow",
+                        "beta": "Beta16 Id 3",
+                        "id": "Alpha16 Id 3",
+                        "createdAt": "2025-10-09T12:01:54.997Z",
+                        "updatedAt": "2025-10-15T12:30:45.678Z"
+                      },
+                      {
+                        "name": "Lantern Haven",
+                        "beta": "Beta16 Id 4",
+                        "id": "Alpha16 Id 4",
+                        "createdAt": "2025-03-13T22:03:59.613Z",
+                        "updatedAt": "2025-04-07T22:03:59.613Z"
+                      },
+                      {
+                        "name": "North Estuary",
+                        "beta": "Beta16 Id 5",
+                        "id": "Alpha16 Id 5",
+                        "createdAt": "2024-12-05T07:08:30.269Z",
+                        "updatedAt": "2024-12-15T07:08:30.269Z"
+                      },
+                      {
+                        "name": "Beacon Quarry",
+                        "beta": "Beta16 Id 6",
+                        "id": "Alpha16 Id 6",
+                        "createdAt": "2025-07-28T16:51:38.560Z",
+                        "updatedAt": "2025-07-31T16:51:38.560Z"
+                      }
+                    ],
+                    "beta16": [
+                      {
+                        "name": "Heath Timber",
+                        "id": "Beta16 Id 1",
+                        "createdAt": "2025-08-29T03:19:56.839Z",
+                        "updatedAt": "2025-09-19T03:19:56.839Z"
+                      },
+                      {
+                        "name": "Elm Horizon",
+                        "id": "Beta16 Id 2",
+                        "createdAt": "2025-07-11T13:05:17.643Z",
+                        "updatedAt": "2025-08-03T13:05:17.643Z"
+                      },
+                      {
+                        "name": "Umber Fjord",
+                        "id": "Beta16 Id 3",
+                        "createdAt": "2025-06-15T13:20:58.721Z",
+                        "updatedAt": "2025-07-15T13:20:58.721Z"
+                      },
+                      {
+                        "name": "Brook Prairie",
+                        "id": "Beta16 Id 4",
+                        "createdAt": "2025-04-28T09:16:23.708Z",
+                        "updatedAt": "2025-05-28T09:16:23.708Z"
+                      },
+                      {
+                        "name": "Garnet Timber",
+                        "id": "Beta16 Id 5",
+                        "createdAt": "2024-10-30T22:47:48.407Z",
+                        "updatedAt": "2024-11-29T22:47:48.407Z"
+                      },
+                      {
+                        "name": "Canyon Horizon",
+                        "id": "Beta16 Id 6",
+                        "createdAt": "2025-02-07T01:42:42.705Z",
+                        "updatedAt": "2025-02-12T01:42:42.705Z"
+                      }
+                    ]
+                  },
+                  "journal": {
+                    "viewerId": "",
+                    "stamped": [],
+                    "deferred": []
+                  },
+                  "defaultPersona": ""
+                }
+              }
+            ],
+            "neverEmits": [
+              "DATASET_FAILED",
+              "DS_MARKS_FAILED",
+              "DS_WRITE_FAILED"
+            ]
+          }
+        },
+        {
+          "event": "SEED_PAGE",
+          "payload": {
+            "page": "/",
+            "route": "/g",
+            "traits": [
+              "T"
+            ],
+            "entities": [
+              "Alpha16",
+              "Beta16",
+              "Gamma16"
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "DATASET_DONE",
+                "payload": {
+                  "stores": {},
+                  "journal": {
+                    "viewerId": "",
+                    "stamped": [],
+                    "deferred": []
+                  },
+                  "defaultPersona": ""
+                }
+              }
+            ],
+            "neverEmits": [
+              "DATASET_FAILED",
+              "DS_MARKS_FAILED",
+              "DS_WRITE_FAILED"
+            ]
+          }
+        },
+        {
+          "event": "PAGE_SELF_READ",
+          "payload": {
+            "result": {
+              "orbitals": [
+                {
+                  "entity": {
+                    "name": "Alpha16",
+                    "persistence": "persistent",
+                    "browser": false,
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "name",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "beta",
+                        "type": "relation",
+                        "required": true,
+                        "relation": {
+                          "entity": "Beta16",
+                          "cardinality": "many-to-one"
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "entity": {
+                    "name": "Beta16",
+                    "persistence": "persistent",
+                    "browser": false,
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "name",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  }
+                },
+                {
+                  "entity": {
+                    "name": "Gamma16",
+                    "persistence": "persistent",
+                    "browser": false,
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "name",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "neverEmits": [
+              "DATASET_DONE",
+              "DATASET_PLANNED",
+              "DATASET_FAILED",
+              "DS_MARKS_FAILED",
+              "DS_WRITE_FAILED"
+            ]
+          }
+        },
+        {
+          "event": "DS_CHUNK_DONE",
+          "payload": {
+            "result": {
+              "emittedEvents": [
+                {
+                  "event": "DS_CHUNK_WRITTEN"
+                }
+              ]
+            },
+            "key": "mock-seed-write"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "DATASET_DONE",
+                "payload": {
+                  "stores": {
+                    "gamma16": [
+                      {
+                        "name": "Drift Prairie",
+                        "id": "Gamma16 Id 1",
+                        "createdAt": "2025-07-21T05:09:44.234Z",
+                        "updatedAt": "2025-08-01T05:09:44.234Z"
+                      },
+                      {
+                        "name": "Terrace Grove",
+                        "id": "Gamma16 Id 2",
+                        "createdAt": "2025-09-27T01:45:01.806Z",
+                        "updatedAt": "2025-10-08T01:45:01.806Z"
+                      },
+                      {
+                        "name": "Meadow Willow",
+                        "id": "Gamma16 Id 3",
+                        "createdAt": "2025-10-09T12:01:54.997Z",
+                        "updatedAt": "2025-10-15T12:30:45.678Z"
+                      },
+                      {
+                        "name": "Lantern Haven",
+                        "id": "Gamma16 Id 4",
+                        "createdAt": "2025-03-13T22:03:59.613Z",
+                        "updatedAt": "2025-04-07T22:03:59.613Z"
+                      },
+                      {
+                        "name": "North Estuary",
+                        "id": "Gamma16 Id 5",
+                        "createdAt": "2024-12-05T07:08:30.269Z",
+                        "updatedAt": "2024-12-15T07:08:30.269Z"
+                      },
+                      {
+                        "name": "Beacon Quarry",
+                        "id": "Gamma16 Id 6",
+                        "createdAt": "2025-07-28T16:51:38.560Z",
+                        "updatedAt": "2025-07-31T16:51:38.560Z"
+                      }
+                    ]
+                  },
+                  "journal": {
+                    "viewerId": "",
+                    "stamped": [],
+                    "deferred": []
+                  },
+                  "defaultPersona": ""
+                }
+              }
+            ],
+            "neverEmits": [
+              "DATASET_FAILED",
+              "DS_MARKS_FAILED",
+              "DS_WRITE_FAILED"
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "MockDataMockStream"
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "a-page-whose-writer-is-refused-fails-the-dataset",
+      "steps": [
+        {
+          "event": "INIT",
+          "payload": {},
+          "expect": {
+            "neverEmits": [
+              "DATASET_DONE",
+              "DATASET_PLANNED",
+              "DATASET_FAILED",
+              "DS_MARKS_FAILED",
+              "DS_WRITE_FAILED"
+            ]
+          }
+        },
+        {
+          "event": "SEED_PAGE",
+          "payload": {
+            "page": "/",
+            "route": "/",
+            "traits": [
+              "T"
+            ],
+            "entities": [
+              "Alpha14",
+              "Beta14"
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "DATASET_DONE",
+                "payload": {
+                  "stores": {},
+                  "journal": {
+                    "viewerId": "",
+                    "stamped": [],
+                    "deferred": []
+                  },
+                  "defaultPersona": ""
+                }
+              }
+            ],
+            "neverEmits": [
+              "DATASET_FAILED",
+              "DS_MARKS_FAILED",
+              "DS_WRITE_FAILED"
+            ]
+          }
+        },
+        {
+          "event": "PAGE_SELF_READ",
+          "payload": {
+            "result": {
+              "orbitals": [
+                {
+                  "entity": {
+                    "name": "Alpha14",
+                    "persistence": "persistent",
+                    "browser": false,
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "name",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "beta",
+                        "type": "relation",
+                        "required": true,
+                        "relation": {
+                          "entity": "Beta14",
+                          "cardinality": "many-to-one"
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "entity": {
+                    "name": "Beta14",
+                    "persistence": "persistent",
+                    "browser": false,
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "name",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  }
+                },
+                {
+                  "entity": {
+                    "name": "Gamma14",
+                    "persistence": "persistent",
+                    "browser": false,
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "name",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "neverEmits": [
+              "DATASET_DONE",
+              "DATASET_PLANNED",
+              "DATASET_FAILED",
+              "DS_MARKS_FAILED",
+              "DS_WRITE_FAILED"
+            ]
+          }
+        },
+        {
+          "event": "DS_CHUNK_DONE",
+          "payload": {
+            "result": {
+              "emittedEvents": [
+                {
+                  "event": "DS_CHUNK_REFUSED",
+                  "payload": {
+                    "error": "store write refused"
+                  }
+                }
+              ]
+            },
+            "key": "mock-seed-write"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "DATASET_FAILED",
+                "payload": {
+                  "error": "store write refused"
+                }
+              }
+            ],
+            "neverEmits": [
+              "DATASET_DONE"
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "MockDataMockStream"
+      ],
+      "now": 1760531445678
     }
   ]
 }

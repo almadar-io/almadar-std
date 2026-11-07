@@ -56,6 +56,9 @@ type ToolsSession = { key : string, model : string!, system : string, userPrompt
 type ToolsChoice = { index : number, finish_reason : string, message : ToolMessage }
 type ToolsReplyUsage = { prompt_tokens : number, completion_tokens : number, total_tokens : number }
 type ToolsReply = { choices : [ToolsChoice], usage : ToolsReplyUsage }
+type AnthropicToolBlock = { type : string!, text : string, id : string, name : string, input : ToolArguments }
+type AnthropicToolsUsage = { input_tokens : number, output_tokens : number }
+type AnthropicToolsReply = { content : [AnthropicToolBlock]!, usage : AnthropicToolsUsage }
 orbital LlmOrbital {
 
   entity LlmCall [runtime] {
@@ -582,9 +585,7 @@ orbital LlmOrbital {
         })
       LLM_CALL_TOOLS -> idle when (and (not (and (!= @payload.maxSteps null) (or (<= @payload.maxSteps 0) (!= (math/mod @payload.maxSteps 1) 0)))) (> (array/count @payload.tools (fn t (or (< (str/len @t.name) 1) (> (str/len @t.name) 64) (not (array/every (array/map (array/range (str/len @t.name)) (fn n (str/slice @t.name @n (+ @n 1)))) (fn ch (str/includes "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-" @ch))))))) 0))
         (emit LLM_FAILED { code: "", message: (str/concat "call-tools: tool name '" (object/get (default (array/find @payload.tools (fn t (or (< (str/len @t.name) 1) (> (str/len @t.name) 64) (not (array/every (array/map (array/range (str/len @t.name)) (fn n (str/slice @t.name @n (+ @n 1)))) (fn ch (str/includes "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-" @ch))))))) {}) name "") "' is not a valid tool name (letters, digits, _ and -, at most 64)") })
-      LLM_CALL_TOOLS -> idle when (and (not (and (!= @payload.maxSteps null) (or (<= @payload.maxSteps 0) (!= (math/mod @payload.maxSteps 1) 0)))) (not (> (array/count @payload.tools (fn t (or (< (str/len @t.name) 1) (> (str/len @t.name) 64) (not (array/every (array/map (array/range (str/len @t.name)) (fn n (str/slice @t.name @n (+ @n 1)))) (fn ch (str/includes "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-" @ch))))))) 0)) (= @config.provider "anthropic"))
-        (emit LLM_FAILED { code: "", message: "LLMClient.callWithTools: anthropic provider is not supported; use callWithMessages instead" })
-      LLM_CALL_TOOLS -> idle when (and (not (and (!= @payload.maxSteps null) (or (<= @payload.maxSteps 0) (!= (math/mod @payload.maxSteps 1) 0)))) (not (> (array/count @payload.tools (fn t (or (< (str/len @t.name) 1) (> (str/len @t.name) 64) (not (array/every (array/map (array/range (str/len @t.name)) (fn n (str/slice @t.name @n (+ @n 1)))) (fn ch (str/includes "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-" @ch))))))) 0)) (!= @config.provider "anthropic"))
+      LLM_CALL_TOOLS -> idle when (and (not (and (!= @payload.maxSteps null) (or (<= @payload.maxSteps 0) (!= (math/mod @payload.maxSteps 1) 0)))) (not (> (array/count @payload.tools (fn t (or (< (str/len @t.name) 1) (> (str/len @t.name) 64) (not (array/every (array/map (array/range (str/len @t.name)) (fn n (str/slice @t.name @n (+ @n 1)))) (fn ch (str/includes "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-" @ch))))))) 0)))
         (emit LLM_TOOLS_SEND {
           session: (json/stringify {
             key: (if (object/has @payload "key") @payload.key ""),
@@ -607,7 +608,21 @@ orbital LlmOrbital {
         (emit LLM_TOOLS_DISPATCH {
           session: (json/stringify (object/set (default (json/parse @payload.session ToolsSession) {}) startedAt (time/now))),
           body: (let ((s (default (json/parse @payload.session ToolsSession) {})))
-            (json/stringify (object/merge
+            (if (= @config.provider "anthropic")
+              (json/stringify (object/merge
+                (object/merge
+                  { model: @s.model, max_tokens: 8192,
+                    messages: (array/map (array/filter @s.messages (fn m (!= (object/get @m role "") "system")))
+                      (fn m (if (= (object/get @m role "") "tool")
+                        { role: "user", content: [{ type: "tool_result", tool_use_id: (object/get @m tool_call_id ""), content: (object/get @m content "") }] }
+                        (if (> (array/len (object/get @m tool_calls [])) 0)
+                          { role: "assistant", content: (array/concat
+                            (if (= (object/get @m content "") "") [] [{ type: "text", text: (object/get @m content "") }])
+                            (array/map (object/get @m tool_calls []) (fn c { type: "tool_use", id: @c.id, name: @c.function.name, input: (default (json/parse (object/get @c.function arguments "{}") ToolArguments) {}) }))) }
+                          { role: (object/get @m role ""), content: (object/get @m content "") })))) }
+                  (if (validate/required @s.system) { system: @s.system } {}))
+                (if (= (array/len @s.tools) 0) {} { tools: (array/map @s.tools (fn t { name: @t.name, description: @t.description, input_schema: @t.parameters })) })))
+              (json/stringify (object/merge
               (object/merge
               (object/merge
                 {
@@ -618,7 +633,7 @@ orbital LlmOrbital {
                 }
                 (if (= (array/len @s.tools) 0) {} { tools: (array/map @s.tools (fn t { type: "function", function: { name: @t.name, description: @t.description, parameters: @t.parameters } })) }))
               (if (= @config.provider "openrouter") { reasoning: { enabled: true }, usage: { include: true } } {}))
-              (if (!= @config.reasoningEffort "") { reasoning_effort: @config.reasoningEffort } {}))))
+              (if (!= @config.reasoningEffort "") { reasoning_effort: @config.reasoningEffort } {})))))
         })
 
       LLM_TOOLS_DISPATCH -> idle when (or (= @config.provider "lmstudio") (= @config.provider "orbgen"))
@@ -635,8 +650,8 @@ orbital LlmOrbital {
         (set @entity.inflight (let ((k (object/get (default (json/parse @payload.session ToolsSession) {}) key ""))) (if (= @k "") @entity.inflight (array/append (array/filter @entity.inflight (fn c (!= @c.key @k))) { key: @k, httpKey: @payload.session, wireKey: (json/stringify { kind: "tools", id: @payload.session }) }))))
         (emit LLM_CHAT_WIRE {
           key: (json/stringify { kind: "tools", id: @payload.session }),
-          method: "POST", path: (str/concat @config.basePath "/chat/completions"), query: {},
-          headers: { Accept: "application/json" },
+          method: "POST", path: (str/concat @config.basePath (if (= @config.provider "anthropic") "/messages" "/chat/completions")), query: {},
+          headers: (if (= @config.provider "anthropic") { Accept: "application/json", anthropic-version: "2023-06-01" } { Accept: "application/json" }),
           json: @payload.body,
           form: {}, multipartParts: [], stream: "none",
           retryMax: 0, retryOn: [], retryOnFailure: [], retryDelaysMs: [], paginate: "none", maxPages: 1
@@ -652,13 +667,13 @@ orbital LlmOrbital {
       LLM_TOOLS_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (not (json/valid @payload.body)))
         (set @entity.inflight (array/filter @entity.inflight (fn c (!= @c.httpKey @payload.key))))
         (emit LLM_FAILED { code: "", message: (str/concat "parseChatCompletionResponse: not valid JSON: " (str/slice @payload.body 0 400)) })
-      LLM_TOOLS_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (json/valid @payload.body) (not (and (!= (json/parse @payload.body ToolsReply) null) (!= (object/get (default (json/parse @payload.body ToolsReply) {}) choices null) null) (array/every (object/get (default (json/parse @payload.body ToolsReply) {}) choices []) (fn c (and (!= (object/get @c finish_reason null) null) (!= (object/get @c index null) null) (!= (object/get @c message null) null) (!= (object/get (object/get @c message {}) role null) null) (object/has (object/get @c message {}) content)))))))
+      LLM_TOOLS_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (json/valid @payload.body) (!= @config.provider "anthropic") (not (and (!= (json/parse @payload.body ToolsReply) null) (!= (object/get (default (json/parse @payload.body ToolsReply) {}) choices null) null) (array/every (object/get (default (json/parse @payload.body ToolsReply) {}) choices []) (fn c (and (!= (object/get @c finish_reason null) null) (!= (object/get @c index null) null) (!= (object/get @c message null) null) (!= (object/get (object/get @c message {}) role null) null) (object/has (object/get @c message {}) content)))))))
         (set @entity.inflight (array/filter @entity.inflight (fn c (!= @c.httpKey @payload.key))))
         (emit LLM_FAILED { code: "", message: (str/concat "parseChatCompletionResponse: response did not match expected shape: " (str/slice @payload.body 0 400)) })
-      LLM_TOOLS_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (json/valid @payload.body) (and (!= (json/parse @payload.body ToolsReply) null) (!= (object/get (default (json/parse @payload.body ToolsReply) {}) choices null) null) (array/every (object/get (default (json/parse @payload.body ToolsReply) {}) choices []) (fn c (and (!= (object/get @c finish_reason null) null) (!= (object/get @c index null) null) (!= (object/get @c message null) null) (!= (object/get (object/get @c message {}) role null) null) (object/has (object/get @c message {}) content))))) (= (array/len (object/get (default (json/parse @payload.body ToolsReply) {}) choices [])) 0))
+      LLM_TOOLS_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (json/valid @payload.body) (!= @config.provider "anthropic") (and (!= (json/parse @payload.body ToolsReply) null) (!= (object/get (default (json/parse @payload.body ToolsReply) {}) choices null) null) (array/every (object/get (default (json/parse @payload.body ToolsReply) {}) choices []) (fn c (and (!= (object/get @c finish_reason null) null) (!= (object/get @c index null) null) (!= (object/get @c message null) null) (!= (object/get (object/get @c message {}) role null) null) (object/has (object/get @c message {}) content))))) (= (array/len (object/get (default (json/parse @payload.body ToolsReply) {}) choices [])) 0))
         (set @entity.inflight (array/filter @entity.inflight (fn c (!= @c.httpKey @payload.key))))
         (emit LLM_FAILED { code: "", message: "LLMClient.callWithTools: no choices in response" })
-      LLM_TOOLS_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (json/valid @payload.body) (and (!= (json/parse @payload.body ToolsReply) null) (!= (object/get (default (json/parse @payload.body ToolsReply) {}) choices null) null) (array/every (object/get (default (json/parse @payload.body ToolsReply) {}) choices []) (fn c (and (!= (object/get @c finish_reason null) null) (!= (object/get @c index null) null) (!= (object/get @c message null) null) (!= (object/get (object/get @c message {}) role null) null) (object/has (object/get @c message {}) content))))) (> (array/len (object/get (default (json/parse @payload.body ToolsReply) {}) choices [])) 0))
+      LLM_TOOLS_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (json/valid @payload.body) (!= @config.provider "anthropic") (and (!= (json/parse @payload.body ToolsReply) null) (!= (object/get (default (json/parse @payload.body ToolsReply) {}) choices null) null) (array/every (object/get (default (json/parse @payload.body ToolsReply) {}) choices []) (fn c (and (!= (object/get @c finish_reason null) null) (!= (object/get @c index null) null) (!= (object/get @c message null) null) (!= (object/get (object/get @c message {}) role null) null) (object/has (object/get @c message {}) content))))) (> (array/len (object/get (default (json/parse @payload.body ToolsReply) {}) choices [])) 0))
         (set @entity.inflight (array/filter @entity.inflight (fn c (!= @c.httpKey @payload.key))))
         (emit LLM_TOOLS_TURN {
           session: (let ((s (default (json/parse @payload.key ToolsSession) {})) (r (json/parse @payload.body ToolsReply)) (ended (time/now)))
@@ -699,6 +714,53 @@ orbital LlmOrbital {
           action: "call-tools",
           inputTokens: (object/get (object/get (default (json/parse @payload.body ToolsReply) {}) usage {}) prompt_tokens 0),
           outputTokens: (object/get (object/get (default (json/parse @payload.body ToolsReply) {}) usage {}) completion_tokens 0)
+        })
+      LLM_TOOLS_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (json/valid @payload.body) (= @config.provider "anthropic") (= (json/parse @payload.body AnthropicToolsReply) null))
+        (set @entity.inflight (array/filter @entity.inflight (fn c (!= @c.httpKey @payload.key))))
+        (emit LLM_FAILED { code: "", message: (str/concat "parseAnthropicToolsResponse: response did not match expected shape: " (str/slice @payload.body 0 400)) })
+      LLM_TOOLS_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (json/valid @payload.body) (= @config.provider "anthropic") (!= (json/parse @payload.body AnthropicToolsReply) null))
+        (set @entity.inflight (array/filter @entity.inflight (fn c (!= @c.httpKey @payload.key))))
+        (emit LLM_TOOLS_TURN {
+          session: (let ((s (default (json/parse @payload.key ToolsSession) {})) (r (json/parse @payload.body AnthropicToolsReply)) (ended (time/now)))
+            (let ((blocks (object/get @r content [])) (u (object/get @r usage null)))
+              (let ((m { role: "assistant",
+                         content: (str/join (array/map (array/filter @blocks (fn b (= (object/get @b type "") "text"))) (fn b (object/get @b text ""))) ""),
+                         tool_calls: (array/map (array/filter @blocks (fn b (= (object/get @b type "") "tool_use"))) (fn b { id: (object/get @b id ""), type: "function", function: { name: (object/get @b name ""), arguments: (json/stringify (object/get @b input {})) } })) }))
+                (let ((calls (object/get @m tool_calls [])))
+                  (json/stringify (object/merge @s {
+                    messages: (array/append @s.messages @m),
+                    steps: (array/append @s.steps {
+                      type: "llm_response",
+                      content: (if (= (object/get @m content null) null) "" (object/get @m content "")),
+                      llm: (object/merge
+                        (object/merge
+                          (object/merge
+                            {
+                              service: "llm", provider: @config.provider, model: @s.model,
+                              systemPrompt: (if (= (object/get @s system null) null) "" (object/get @s system "")), userPrompt: @s.userPrompt
+                            }
+                            (if (> (array/len @calls) 0) { toolCallsJson: (json/stringify @calls) } {}))
+                          { durationMs: (time/diff @ended (default @s.startedAt @ended) "ms") })
+                        (if (!= @u null) {
+                          promptTokens: (object/get (object/get @r usage {}) input_tokens 0),
+                          completionTokens: (object/get (object/get @r usage {}) output_tokens 0)
+                        } {})),
+                      timestamp: @ended
+                    }),
+                    usage: {
+                      promptTokens: (+ @s.usage.promptTokens (object/get (object/get @r usage {}) input_tokens 0)),
+                      completionTokens: (+ @s.usage.completionTokens (object/get (object/get @r usage {}) output_tokens 0)),
+                      totalTokens: (+ @s.usage.totalTokens (+ (object/get (object/get @r usage {}) input_tokens 0) (object/get (object/get @r usage {}) output_tokens 0))),
+                      modelCalls: (+ @s.usage.modelCalls 1)
+                    }
+                  }))))))
+        })
+        (emit LLM_USAGE_REPORTED {
+          provider: @config.provider,
+          model: (object/get (default (json/parse @payload.key ToolsSession) {}) model ""),
+          action: "call-tools",
+          inputTokens: (object/get (object/get (default (json/parse @payload.body AnthropicToolsReply) {}) usage {}) input_tokens 0),
+          outputTokens: (object/get (object/get (default (json/parse @payload.body AnthropicToolsReply) {}) usage {}) output_tokens 0)
         })
 
       LLM_TOOLS_TURN -> idle when (and (= (array/len (object/get (default (array/last (object/get (default (json/parse @payload.session ToolsSession) {}) messages [])) {}) tool_calls [])) 0) (> (array/len (object/get (default (json/parse @payload.session ToolsSession) {}) steps [])) 0))

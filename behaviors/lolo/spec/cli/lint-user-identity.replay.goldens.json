@@ -5029,6 +5029,214 @@
      }
     }
    ]
+  },
+  {
+   "id": "an-empty-string-literal-points-to-the-signed-in-idiom",
+   "steps": [
+    {
+     "trait": "OrbLintUserIdentity",
+     "from": "ready",
+     "event": "INDEX_HEARD",
+     "payload": {
+      "scope": "",
+      "heads": {
+       "1-0": [
+        "="
+       ],
+       "1-0-0": [],
+       "1-0-c": []
+      },
+      "roots": {
+       "1-0": [
+        "@user"
+       ],
+       "1-0-0": [],
+       "1-0-c": []
+      }
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintUserIdentity",
+     "event": "ENTITIES_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "list": [
+       {
+        "persistence": "persistent",
+        "identity": true,
+        "name": "Person",
+        "oi": 0,
+        "orbital": "PeopleOrbital",
+        "auxiliary": false,
+        "fields": [
+         {
+          "name": "id",
+          "type": "string",
+          "required": true
+         },
+         {
+          "name": "role",
+          "type": "enum",
+          "values": [
+           "manager",
+           "cto"
+          ]
+         }
+        ]
+       },
+       {
+        "persistence": "persistent",
+        "name": "Doc",
+        "oi": 1,
+        "orbital": "DocOrbital",
+        "auxiliary": false,
+        "fields": [
+         {
+          "name": "id",
+          "type": "string",
+          "required": true
+         }
+        ]
+       }
+      ],
+      "primaryDuplicates": []
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "App",
+       "orbitals": [
+        {
+         "name": "PeopleOrbital",
+         "entity": {
+          "name": "Person",
+          "identity": true,
+          "persistence": "persistent",
+          "collection": "people",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "role",
+            "type": "enum",
+            "values": [
+             "manager",
+             "cto"
+            ]
+           }
+          ]
+         },
+         "traits": [],
+         "pages": []
+        },
+        {
+         "name": "DocOrbital",
+         "entity": {
+          "name": "Doc",
+          "persistence": "persistent",
+          "collection": "docs",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "DocView",
+           "linkedEntity": "Doc",
+           "stateMachine": {
+            "events": [],
+            "states": [],
+            "transitions": [
+             {
+              "from": "idle",
+              "event": "OPEN",
+              "to": "idle",
+              "guard": [
+               "=",
+               "@user.role",
+               ""
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": []
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     },
+     "trait": "OrbLintUserIdentity"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "user-identity",
+         "findings": [
+          {
+           "code": "ORB_S_ROLE_LITERAL_NOT_MEMBER",
+           "path": "orbitals[1 (DocOrbital)].traits[0 (DocView)].stateMachine.transitions[0].guard",
+           "message": "\"\" is not a declared value of `@user.role` on the [identity] entity `Person`. This comparison can never be true — the branch is dead.",
+           "suggestion": "An empty string is not a role: to test that someone is signed in, compare the identity id instead, `(!= @user.id \"\")`.",
+           "severity": "error",
+           "validValues": [
+            "manager",
+            "cto"
+           ]
+          }
+         ],
+         "scope": ""
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintUserIdentity"
+    }
+   ],
+   "entity": {
+    "roots": {
+     "1-0": [
+      "@user"
+     ],
+     "1-0-0": []
+    }
+   }
   }
  ]
 }

@@ -5279,6 +5279,552 @@
      }
     }
    ]
+  },
+  {
+   "id": "G-STD-274: json/stringify as an equality operand is an error",
+   "note": "stringify compared with =",
+   "steps": [
+    {
+     "trait": "OrbLintLoopInvariantParse",
+     "from": "ready",
+     "event": "SITES_HEARD",
+     "payload": {
+      "scope": "",
+      "guardHeads": {
+       "0-0-0": []
+      },
+      "guardRoots": {
+       "0-0-0": []
+      },
+      "calls": {
+       "set": [
+        {
+         "path": "orbitals[0].traits[0].stateMachine.transitions[0].effects[0]",
+         "node": [
+          "set",
+          "@entity.same",
+          [
+           "=",
+           [
+            "json/stringify",
+            "@payload.x"
+           ],
+           "@entity.last"
+          ]
+         ],
+         "at": 1
+        }
+       ],
+       "json/stringify": [
+        {
+         "path": "orbitals[0].traits[0].stateMachine.transitions[0].effects[0][2][1]",
+         "node": [
+          "json/stringify",
+          "@payload.x"
+         ],
+         "at": 2
+        }
+       ]
+      },
+      "trait": [],
+      "entity": []
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintLoopInvariantParse",
+     "from": "ready",
+     "event": "LINT_INPUT",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "E",
+              "effects": [
+               [
+                "set",
+                "@entity.same",
+                [
+                 "=",
+                 [
+                  "json/stringify",
+                  "@payload.x"
+                 ],
+                 "@entity.last"
+                ]
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintLoopInvariantParse",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "loop-invariant-parse",
+         "findings": [
+          {
+           "code": "ORB_JSON_STRINGIFY_KEY",
+           "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+           "message": "json/stringify is an operand of =: serialized text used as a key or compared for equality",
+           "suggestion": "Compare or key by value/key, or compare the values themselves; serialized text is order- and format-dependent.",
+           "severity": "error"
+          }
+         ],
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "G-STD-274: json/stringify as an object/set key is an error",
+   "note": "stringify keying a map",
+   "steps": [
+    {
+     "trait": "OrbLintLoopInvariantParse",
+     "from": "ready",
+     "event": "SITES_HEARD",
+     "payload": {
+      "scope": "",
+      "guardHeads": {
+       "0-0-0": []
+      },
+      "guardRoots": {
+       "0-0-0": []
+      },
+      "calls": {
+       "set": [
+        {
+         "path": "orbitals[0].traits[0].stateMachine.transitions[0].effects[0]",
+         "node": [
+          "set",
+          "@entity.m",
+          [
+           "object/set",
+           "@entity.m",
+           [
+            "json/stringify",
+            "@payload.x"
+           ],
+           1
+          ]
+         ],
+         "at": 1
+        }
+       ],
+       "json/stringify": [
+        {
+         "path": "orbitals[0].traits[0].stateMachine.transitions[0].effects[0][2][2]",
+         "node": [
+          "json/stringify",
+          "@payload.x"
+         ],
+         "at": 2
+        }
+       ]
+      },
+      "trait": [],
+      "entity": []
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintLoopInvariantParse",
+     "from": "ready",
+     "event": "LINT_INPUT",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "E",
+              "effects": [
+               [
+                "set",
+                "@entity.m",
+                [
+                 "object/set",
+                 "@entity.m",
+                 [
+                  "json/stringify",
+                  "@payload.x"
+                 ],
+                 1
+                ]
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintLoopInvariantParse",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "loop-invariant-parse",
+         "findings": [
+          {
+           "code": "ORB_JSON_STRINGIFY_KEY",
+           "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+           "message": "json/stringify is an operand of object/set: serialized text used as a key or compared for equality",
+           "suggestion": "Compare or key by value/key, or compare the values themselves; serialized text is order- and format-dependent.",
+           "severity": "error"
+          }
+         ],
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "G-STD-274: json/stringify as an array/indexOf operand is an error",
+   "note": "indexOf by serialized text",
+   "steps": [
+    {
+     "trait": "OrbLintLoopInvariantParse",
+     "from": "ready",
+     "event": "SITES_HEARD",
+     "payload": {
+      "scope": "",
+      "guardHeads": {
+       "0-0-0": []
+      },
+      "guardRoots": {
+       "0-0-0": []
+      },
+      "calls": {
+       "set": [
+        {
+         "path": "orbitals[0].traits[0].stateMachine.transitions[0].effects[0]",
+         "node": [
+          "set",
+          "@entity.i",
+          [
+           "array/indexOf",
+           "@entity.seen",
+           [
+            "json/stringify",
+            "@payload.x"
+           ]
+          ]
+         ],
+         "at": 1
+        }
+       ],
+       "json/stringify": [
+        {
+         "path": "orbitals[0].traits[0].stateMachine.transitions[0].effects[0][2][2]",
+         "node": [
+          "json/stringify",
+          "@payload.x"
+         ],
+         "at": 2
+        }
+       ]
+      },
+      "trait": [],
+      "entity": []
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintLoopInvariantParse",
+     "from": "ready",
+     "event": "LINT_INPUT",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "E",
+              "effects": [
+               [
+                "set",
+                "@entity.i",
+                [
+                 "array/indexOf",
+                 "@entity.seen",
+                 [
+                  "json/stringify",
+                  "@payload.x"
+                 ]
+                ]
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintLoopInvariantParse",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "loop-invariant-parse",
+         "findings": [
+          {
+           "code": "ORB_JSON_STRINGIFY_KEY",
+           "path": "orbitals[0 (A)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+           "message": "json/stringify is an operand of array/indexOf: serialized text used as a key or compared for equality",
+           "suggestion": "Compare or key by value/key, or compare the values themselves; serialized text is order- and format-dependent.",
+           "severity": "error"
+          }
+         ],
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control G-STD-274: = on plain values with a stringify elsewhere is clean",
+   "note": "stringify only builds text",
+   "steps": [
+    {
+     "trait": "OrbLintLoopInvariantParse",
+     "from": "ready",
+     "event": "SITES_HEARD",
+     "payload": {
+      "scope": "",
+      "guardHeads": {
+       "0-0-0": []
+      },
+      "guardRoots": {
+       "0-0-0": []
+      },
+      "calls": {
+       "set": [
+        {
+         "path": "orbitals[0].traits[0].stateMachine.transitions[0].effects[0]",
+         "node": [
+          "set",
+          "@entity.t",
+          [
+           "str/concat",
+           [
+            "json/stringify",
+            "@payload.x"
+           ],
+           "x"
+          ]
+         ],
+         "at": 1
+        }
+       ],
+       "json/stringify": [
+        {
+         "path": "orbitals[0].traits[0].stateMachine.transitions[0].effects[0][2][1]",
+         "node": [
+          "json/stringify",
+          "@payload.x"
+         ],
+         "at": 2
+        }
+       ]
+      },
+      "trait": [],
+      "entity": []
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintLoopInvariantParse",
+     "from": "ready",
+     "event": "LINT_INPUT",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "traits": [
+          {
+           "name": "T",
+           "stateMachine": {
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "E",
+              "effects": [
+               [
+                "set",
+                "@entity.t",
+                [
+                 "str/concat",
+                 [
+                  "json/stringify",
+                  "@payload.x"
+                 ],
+                 "x"
+                ]
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintLoopInvariantParse",
+     "from": "ready",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "loop-invariant-parse",
+         "findings": [],
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
   }
  ]
 }

@@ -442,7 +442,7 @@ orbital AgentBuilderOrbital {
       FILL -> filling
         (set @entity.filledConfig (if (== ?config null) {} ?config))
         (set @entity.filledTraits (if (== ?traits null) {} ?traits))
-        (set @entity.filledFields (default (object/merge (if (== ?fields null) {} ?fields) @entity.pickedFields) {}))
+        (set @entity.filledFields (object/merge (if (== ?fields null) {} ?fields) @entity.pickedFields))
       ASSISTANT_REPLIED -> filling when (and (validate/required (array/nth @config.ladder @entity.step)) (and (not (array/every @config.fieldWordLimits (fn l (<= (array/len (str/split (str/trim (object/get @entity.filledFields @l.name "")) " ")) @l.words)))) (< @entity.repairs @config.maxRepairs)))
         (set @entity.repairs (+ @entity.repairs 1))
         (set @entity.pickedFields {})

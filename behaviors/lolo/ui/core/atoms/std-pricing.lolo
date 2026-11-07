@@ -28,7 +28,12 @@ orbital PricingOrbital {
             size: xl
             maxWidth: xl
             padding: lg
-            children: [{ type: stack, direction: vertical, gap: xl, children: [{
+            children: [{
+ type: animated-reveal
+ trigger: scroll
+ animation: @config.reveal
+ threshold: 0.15
+ children: [{ type: stack, direction: vertical, gap: xl, children: [{
               type: stack
               direction: vertical
               gap: sm
@@ -130,6 +135,7 @@ orbital PricingOrbital {
               align: center
               className: (if (== @config.footnote "") hidden "")
             }] }]
+ }]
           }]
         })
       PLAN_CHOOSE -> idle
@@ -172,6 +178,11 @@ orbital PricingOrbital {
       footnote : string = ""
         @label "Footnote"
         @description "Small print under the plans, e.g. taxes or billing terms"
+        @tier "presentation"
+      reveal : "none" | "fade-up" | "fade-down" | "fade-in" | "fade-left" | "fade-right" | "scale" | "scale-up" = none
+        @label "Reveal"
+        @description "Scroll-reveal for the section's content: it eases in once, the first time it scrolls into view. none shows it at once."
+        @synonyms "scroll animation, fade in on scroll, entrance animation, animated reveal"
         @tier "presentation"
       surface : "plain" | "muted" | "accent" | "inverse" = plain
         @label "Surface"

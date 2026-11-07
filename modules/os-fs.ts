@@ -8,7 +8,7 @@ export const OS_FS_OPERATORS: Record<string, StdOperatorMeta> = {
   'os/read-file': osEffect({
     answer: shape({ data: BYTES }),
     grant: [{ kind: 'fs', access: 'read', path: 0 }],
-    description: 'Read a whole file (grant fs: read). Success payload: { data: bytes }. Always bytes; decode text with bytes/to-string.',
+    description: 'Read a whole file (grant fs: read). Success payload: { data: bytes }. Always bytes; decode text with bytes/to-string. A file over 64 MiB is refused: read it in pieces of at most 64 MiB with os/open and os/read.',
     params: [arg('path', OS_PATH, 'File path')],
     example: '["os/read-file", "/data/in.txt", { "emit": { "success": "FILE_READ", "failure": "FILE_FAILED" } }]',
   }),

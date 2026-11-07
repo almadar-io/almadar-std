@@ -37,16 +37,16 @@ orbital OrbEvalOrbital {
                     (if (not (validate/string @raw))
                       (emit EXPR_EVAL_FAILED { error: "the evaluator emitted no value" })
                       (let ((val (json/parse @raw EvalJson)))
-                        (if (= @val null)
+                        (if (and (= @val null) (!= @raw "null"))
                           (emit EXPR_EVAL_FAILED { error: "the evaluator emitted a value that is not JSON" })
-                          (emit EXPR_EVAL_DONE { value: (default @val "") }))))))))))
+                          (emit EXPR_EVAL_DONE { value: @val }))))))))))
       EXPR_EVAL_REFUSED -> idle
         (emit EXPR_EVAL_FAILED { error: (default @payload.error "") })
     }
 
     emits {
       EXPR_EVAL_DONE -> external {
-        value : EvalJson
+        value : EvalJson?
       }
         @description "The expression's value."
         @tier "primary"

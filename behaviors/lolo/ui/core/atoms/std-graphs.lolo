@@ -1,6 +1,6 @@
 app std-graphs [
   version: "2.0.0",
-  description: "std-graphs — embeddable chart atom. ITEMS_LOADED keeps the rows whose @config.filterField equals @config.filterValue (blank = all), groups them by @config.categoryField, or (timeAxis=true) by the @config.period bucket of @config.timeField — rows without a time value (or, by category, without a category value) have no bucket to land in and are left out — and aggregates per bucket. Multi-series rendering via @config.series (preformatted ChartSeries shape). Histograms via chartType=histogram pass pre-binned @payload.data through unchanged. Stacked / 100% stacked bars via @config.stack. Post-process sort + limit. Clicking a data point emits UI:@config.drillEvent with { label, value, seriesLabel? }. Drop into a dashboard alongside std-stats / std-browse."
+  description: "std-graphs — embeddable chart atom. ITEMS_LOADED keeps the rows whose @config.filterField equals @config.filterValue (blank = all), groups them by @config.categoryField, or (timeAxis=true) by the @config.period bucket of @config.timeField — rows without a time value (or, by category, without a category value) are left out unless @config.nullCategoryLabel names a bucket for them — and aggregates per bucket. Multi-series rendering via @config.series (preformatted ChartSeries shape). Histograms via chartType=histogram pass pre-binned @payload.data through unchanged. Stacked / 100% stacked bars via @config.stack. Post-process sort + limit. Clicking a data point emits UI:@config.drillEvent with { label, value, seriesLabel? }. Drop into a dashboard alongside std-stats / std-browse."
 ]
 orbital GraphItemOrbital {
     type ChartPoint = { label : string!, value : number! }
@@ -40,7 +40,7 @@ orbital GraphItemOrbital {
           (set @entity.chartData (if (= @config.chartType histogram) (array/map @rows (fn p {
           label: (object/get @p label)
           value: (object/get @p value)
-        })) (array/flatten (array/map (object/entries (if @config.timeAxis (array/groupBy (array/reduce (array/filter @rows (fn row (validate/required (object/get @row @config.timeField)))) [] (fn acc row (let ((ts (if (validate/required (object/get @row @config.timeField)) (time/parse (object/get @row @config.timeField)) null))) (if (= @ts null) @acc (array/append @acc (object/set @row "periodStart" (time/startOf @ts @config.period))))))) "periodStart") (array/groupBy (array/filter @rows (fn row (validate/required (object/get @row @config.categoryField)))) @config.categoryField))) (fn entry (let ((v (if (= @config.aggregation sum) (array/sum (object/get @entry "1") @config.valueField) (if (= @config.aggregation avg) (array/avg (object/get @entry "1") @config.valueField) (if (= @config.aggregation min) (array/min (object/get @entry "1") @config.valueField) (if (= @config.aggregation max) (array/max (object/get @entry "1") @config.valueField) (array/len (object/get @entry "1")))))))) (if (= @v null) [] [{
+        })) (array/flatten (array/map (object/entries (if @config.timeAxis (array/groupBy (array/reduce (array/filter @rows (fn row (validate/required (object/get @row @config.timeField)))) [] (fn acc row (let ((ts (if (validate/required (object/get @row @config.timeField)) (time/parse (object/get @row @config.timeField)) null))) (if (= @ts null) @acc (array/append @acc (object/set @row "periodStart" (time/startOf @ts @config.period))))))) "periodStart") (array/groupBy (if (= @config.nullCategoryLabel "") (array/filter @rows (fn row (validate/required (object/get @row @config.categoryField)))) (array/map @rows (fn row (if (validate/required (object/get @row @config.categoryField)) @row (object/set @row @config.categoryField @config.nullCategoryLabel))))) @config.categoryField))) (fn entry (let ((v (if (= @config.aggregation sum) (array/sum (object/get @entry "1") @config.valueField) (if (= @config.aggregation avg) (array/avg (object/get @entry "1") @config.valueField) (if (= @config.aggregation min) (array/min (object/get @entry "1") @config.valueField) (if (= @config.aggregation max) (array/max (object/get @entry "1") @config.valueField) (array/len (object/get @entry "1")))))))) (if (= @v null) [] [{
           label: (object/get @entry "0")
           value: @v
         }]))))))))
@@ -119,6 +119,10 @@ orbital GraphItemOrbital {
         @label "Value field"
         @description "Numeric field aggregated per bucket (blank = row count)"
         @synonyms "the numeric column to aggregate. empty string counts rows. user phrases: 'sum revenue' -> valueField=revenue + aggregation=sum"
+        @tier "presentation"
+      nullCategoryLabel : string = ""
+        @label "No-category label"
+        @description "Bucket name for rows whose categoryField is absent or blank; blank leaves such rows out of the chart"
         @tier "presentation"
       categoryLabels : Map string string = {}
         @label "Category labels"

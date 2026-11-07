@@ -1,8 +1,8 @@
 app std-launchpad [
   version: "5.0.0",
-  theme: "linear-clean-light",
+  theme: "almadar-dark",
   locales: [en, ar, sl],
-  themes: ["linear-clean-dark", "almadar-light", "almadar-dark", "minimalist-light", "minimalist-dark", "notion-editorial-light", "swiss-light", "bloomberg-dense-dark", "terminal-dark", "game-sci-fi-dark"],
+  themes: ["almadar-heritage-light", "almadar-heritage-dark", "almadar-website-light", "almadar-website-dark", "almadar-light", "aqua-light", "aqua-dark", "arabesque-light", "arabesque-dark", "art-deco-light", "art-deco-dark", "art-nouveau-light", "art-nouveau-dark", "atelier-light", "atelier-dark", "bauhaus-light", "bauhaus-dark", "bloomberg-dense-light", "bloomberg-dense-dark", "blueprint-light", "blueprint-dark", "clay-light", "clay-dark", "comic-light", "comic-dark", "constructivist-light", "constructivist-dark", "corporate-light", "corporate-dark", "cyberpunk-light", "cyberpunk-dark", "frutiger-aero-light", "frutiger-aero-dark", "game-adventure-dark", "game-rpg-dark", "game-sci-fi-dark", "game-ui-pack-dark", "gazette-light", "gazette-dark", "glass-light", "glass-dark", "gothic-light", "gothic-dark", "ink-wash-light", "ink-wash-dark", "kawaii-light", "kawaii-dark", "kflow-light", "kflow-dark", "kiosk-light", "kiosk-dark", "linear-clean-light", "linear-clean-dark", "luxury-light", "luxury-dark", "mac-classic-light", "mac-classic-dark", "material-light", "material-dark", "memphis-light", "memphis-dark", "mid-century-light", "mid-century-dark", "minimalist-light", "minimalist-dark", "mudcloth-light", "mudcloth-dark", "nata-light", "nata-dark", "neon-light", "neon-dark", "neumorphic-light", "neumorphic-dark", "newsprint-light", "newsprint-dark", "notion-editorial-light", "notion-editorial-dark", "orb-light", "orb-dark", "pixel-light", "pixel-dark", "prism-light", "prism-dark", "rawi-light", "rawi-dark", "retro-light", "retro-dark", "risograph-light", "risograph-dark", "scandi-light", "scandi-dark", "sketch-light", "sketch-dark", "solarpunk-light", "solarpunk-dark", "steampunk-light", "steampunk-dark", "swiss-light", "swiss-dark", "terminal-light", "terminal-dark", "trait-wars-light", "trait-wars-dark", "ukiyo-e-light", "ukiyo-e-dark", "vaporwave-light", "vaporwave-dark", "victorian-light", "victorian-dark", "wabi-sabi-light", "wabi-sabi-dark", "win95-light", "win95-dark", "wireframe-light", "wireframe-dark", "zine-light", "zine-dark"],
   exec: [exe, "orb", "ps", "aws", "bq", "gcloud", "gh", "ssh", "kill"],
   kernel: { "guest": [spawn] },
   env: ["PATH", "HOME", "FIREBASE_AUTH_EMULATOR_HOST", "ALMADAR_PERSONA_OWNS", "ALMADAR_VECTORS_DIR", "EMBEDDING_PROVIDER", "EMBEDDING_API_KEY", "OPENAI_API_KEY", "OPEN_ROUTER_API_KEY", "EMBEDDING_MODEL", "LMSTUDIO_EMBEDDING_MODEL"],
@@ -66,6 +66,8 @@ orbital Launchpad {
     registeredTraits : number = 0
     activeInstances : number = 0
     cachedEntities : number = 0
+    cpuHistory : [number] = []
+    loadHistory : [number] = []
   }
 
   config {
@@ -112,7 +114,7 @@ orbital Launchpad {
         { type: select, aria-label: "Theme", className: "w-44", options: (array/concat [{ value: "", label: @config.defaultLabel }] @config.themes), value: @entity.current, action: THEME_PICKED },
         { type: typography, variant: caption, color: error, className: (if (== @entity.problem "") hidden ""), content: @entity.problem }
       ] }
-      themes: [{ value: "linear-clean-light", label: "Linear light" }, { value: "linear-clean-dark", label: "Linear dark" }, { value: "almadar-light", label: "Almadar light" }, { value: "almadar-dark", label: "Almadar dark" }, { value: "minimalist-light", label: "Minimalist light" }, { value: "minimalist-dark", label: "Minimalist dark" }, { value: "notion-editorial-light", label: "Editorial" }, { value: "swiss-light", label: "Swiss" }, { value: "bloomberg-dense-dark", label: "Terminal dense" }, { value: "terminal-dark", label: "Terminal" }, { value: "game-sci-fi-dark", label: "Sci-fi" }]
+      themes: [{ value: "almadar-heritage-light", label: "Almadar Heritage light" }, { value: "almadar-heritage-dark", label: "Almadar Heritage dark" }, { value: "almadar-website-light", label: "Almadar Website light" }, { value: "almadar-website-dark", label: "Almadar Website dark" }, { value: "almadar-light", label: "Almadar light" }, { value: "almadar-dark", label: "Almadar dark" }, { value: "aqua-light", label: "Aqua Gel light" }, { value: "aqua-dark", label: "Aqua Gel dark" }, { value: "arabesque-light", label: "Arabesque light" }, { value: "arabesque-dark", label: "Arabesque dark" }, { value: "art-deco-light", label: "Art Deco 1925 light" }, { value: "art-deco-dark", label: "Art Deco 1925 dark" }, { value: "art-nouveau-light", label: "Art Nouveau light" }, { value: "art-nouveau-dark", label: "Art Nouveau dark" }, { value: "atelier-light", label: "Atelier light" }, { value: "atelier-dark", label: "Atelier dark" }, { value: "bauhaus-light", label: "Bauhaus light" }, { value: "bauhaus-dark", label: "Bauhaus dark" }, { value: "bloomberg-dense-light", label: "Bloomberg Dense light" }, { value: "bloomberg-dense-dark", label: "Bloomberg Dense dark" }, { value: "blueprint-light", label: "Blueprint light" }, { value: "blueprint-dark", label: "Blueprint dark" }, { value: "clay-light", label: "Clay light" }, { value: "clay-dark", label: "Clay dark" }, { value: "comic-light", label: "Comic Studio light" }, { value: "comic-dark", label: "Comic Studio dark" }, { value: "constructivist-light", label: "Constructivist light" }, { value: "constructivist-dark", label: "Constructivist dark" }, { value: "corporate-light", label: "Corporate light" }, { value: "corporate-dark", label: "Corporate dark" }, { value: "cyberpunk-light", label: "Cyberpunk HUD light" }, { value: "cyberpunk-dark", label: "Cyberpunk HUD dark" }, { value: "frutiger-aero-light", label: "Frutiger Aero light" }, { value: "frutiger-aero-dark", label: "Frutiger Aero dark" }, { value: "game-adventure-dark", label: "Game: Adventure dark" }, { value: "game-rpg-dark", label: "Game: RPG dark" }, { value: "game-sci-fi-dark", label: "Game: Sci-Fi dark" }, { value: "game-ui-pack-dark", label: "Game: Flat UI dark" }, { value: "gazette-light", label: "Gazette light" }, { value: "gazette-dark", label: "Gazette dark" }, { value: "glass-light", label: "Glass light" }, { value: "glass-dark", label: "Glass dark" }, { value: "gothic-light", label: "Gothic Manuscript light" }, { value: "gothic-dark", label: "Gothic Manuscript dark" }, { value: "ink-wash-light", label: "Ink Wash light" }, { value: "ink-wash-dark", label: "Ink Wash dark" }, { value: "kawaii-light", label: "Kawaii light" }, { value: "kawaii-dark", label: "Kawaii dark" }, { value: "kflow-light", label: "KFlow light" }, { value: "kflow-dark", label: "KFlow dark" }, { value: "kiosk-light", label: "Kiosk light" }, { value: "kiosk-dark", label: "Kiosk dark" }, { value: "linear-clean-light", label: "Linear Clean light" }, { value: "linear-clean-dark", label: "Linear Clean dark" }, { value: "luxury-light", label: "Haute Luxe light" }, { value: "luxury-dark", label: "Haute Luxe dark" }, { value: "mac-classic-light", label: "Classic Mac OS light" }, { value: "mac-classic-dark", label: "Classic Mac OS dark" }, { value: "material-light", label: "Material 3 light" }, { value: "material-dark", label: "Material 3 dark" }, { value: "memphis-light", label: "Memphis 80s light" }, { value: "memphis-dark", label: "Memphis 80s dark" }, { value: "mid-century-light", label: "Mid-Century Modern light" }, { value: "mid-century-dark", label: "Mid-Century Modern dark" }, { value: "minimalist-light", label: "Minimalist light" }, { value: "minimalist-dark", label: "Minimalist dark" }, { value: "mudcloth-light", label: "Mudcloth light" }, { value: "mudcloth-dark", label: "Mudcloth dark" }, { value: "nata-light", label: "Nata light" }, { value: "nata-dark", label: "Nata dark" }, { value: "neon-light", label: "Neon light" }, { value: "neon-dark", label: "Neon dark" }, { value: "neumorphic-light", label: "Neumorphic light" }, { value: "neumorphic-dark", label: "Neumorphic dark" }, { value: "newsprint-light", label: "Newsprint light" }, { value: "newsprint-dark", label: "Newsprint dark" }, { value: "notion-editorial-light", label: "Notion Editorial light" }, { value: "notion-editorial-dark", label: "Notion Editorial dark" }, { value: "orb-light", label: "Orb light" }, { value: "orb-dark", label: "Orb dark" }, { value: "pixel-light", label: "Pixel Quest light" }, { value: "pixel-dark", label: "Pixel Quest dark" }, { value: "prism-light", label: "Prism light" }, { value: "prism-dark", label: "Prism dark" }, { value: "rawi-light", label: "Rawi light" }, { value: "rawi-dark", label: "Rawi dark" }, { value: "retro-light", label: "Retro light" }, { value: "retro-dark", label: "Retro dark" }, { value: "risograph-light", label: "Risograph light" }, { value: "risograph-dark", label: "Risograph dark" }, { value: "scandi-light", label: "Scandinavian light" }, { value: "scandi-dark", label: "Scandinavian dark" }, { value: "sketch-light", label: "Sketchbook light" }, { value: "sketch-dark", label: "Sketchbook dark" }, { value: "solarpunk-light", label: "Solarpunk light" }, { value: "solarpunk-dark", label: "Solarpunk dark" }, { value: "steampunk-light", label: "Steampunk light" }, { value: "steampunk-dark", label: "Steampunk dark" }, { value: "swiss-light", label: "Swiss International light" }, { value: "swiss-dark", label: "Swiss International dark" }, { value: "terminal-light", label: "Terminal light" }, { value: "terminal-dark", label: "Terminal dark" }, { value: "trait-wars-light", label: "Trait Wars light" }, { value: "trait-wars-dark", label: "Trait Wars dark" }, { value: "ukiyo-e-light", label: "Ukiyo-e light" }, { value: "ukiyo-e-dark", label: "Ukiyo-e dark" }, { value: "vaporwave-light", label: "Vaporwave light" }, { value: "vaporwave-dark", label: "Vaporwave dark" }, { value: "victorian-light", label: "Victorian light" }, { value: "victorian-dark", label: "Victorian dark" }, { value: "wabi-sabi-light", label: "Wabi-Sabi light" }, { value: "wabi-sabi-dark", label: "Wabi-Sabi dark" }, { value: "win95-light", label: "Windows 95 light" }, { value: "win95-dark", label: "Windows 95 dark" }, { value: "wireframe-light", label: "Wireframe light" }, { value: "wireframe-dark", label: "Wireframe dark" }, { value: "zine-light", label: "Punk Zine light" }, { value: "zine-dark", label: "Punk Zine dark" }]
     }
   }
   trait LaunchpadHeader -> LaunchpadView [client] {
@@ -506,7 +508,8 @@ orbital Launchpad {
     config {
       hint: "Each star is an open app, coloured by its topic; all stars are the same size because nothing in-process measures an app honestly. Click one to open, close or reopen its tab."
       colors: { ops: "var(--color-success)", dev: "var(--color-info)" }
-      graphHeight: 280
+      graphHeight: 340
+      hubLabel: ""
       openOnClick: true
     }
     listens {
@@ -720,6 +723,23 @@ orbital Launchpad {
       boardList : [LaunchpadBoard] = @config.boards
         @label "Boards"
         @tier "domain"
+      eyebrow : string = "Almadar · المدار"
+        @label "Eyebrow"
+        @tier "presentation"
+      headline : string = "Launchpad"
+        @label "Headline"
+        @tier "presentation"
+      lede : string = "Every program this machine runs, in one orbit: open a board, watch the kernel, and pick up where you left off."
+        @label "Lede"
+        @tier "presentation"
+      heroApps : [string] = ["almadar-std/std-behavior-playground", "almadar-std/std-ci-status"]
+        @label "Hero apps"
+        @description "The boards the hero offers as buttons, the first as the primary one."
+        @tier "presentation"
+      trendSamples : number = 30
+        @label "Trend samples"
+        @description "How many of the latest machine samples the CPU and load sparklines draw."
+        @tier "presentation"
     }
     initial: ready
 
@@ -730,35 +750,99 @@ orbital Launchpad {
         (emit ORB_STATS_ASK {})
         (emit HOME_SHOWN {})
       HOME_SHOWN -> ready
-        (render-ui main { type: stack, direction: vertical, gap: lg, className: "mx-auto w-full max-w-6xl", children: [
+        (render-ui main { type: stack, direction: vertical, gap: xl, className: "mx-auto w-full max-w-7xl pb-12", children: [
             @trait.UpdatesBanner,
-            { type: simple-grid, minChildWidth: 420, gap: lg, children: [
-                { type: card, variant: bordered, padding: lg, children: [@trait.SystemOrb] },
-                { type: stack, direction: vertical, gap: lg, children: [
-                  { type: card, variant: bordered, padding: lg, title: "This machine", children: [
-                    { type: stack, direction: vertical, gap: md, children: [
-                      { type: simple-grid, minChildWidth: 140, gap: md, children: [
-                      { type: stat-display, label: "CPU", value: (if @entity.statsReady (str/concat (math/round @entity.cpuPercent 0) "%") ""), isLoading: (not @entity.statsReady), size: sm },
-                      { type: stat-display, label: "Memory", value: (if @entity.statsReady (str/concat (math/round @entity.memoryPercent 0) "%") ""), isLoading: (not @entity.statsReady), size: sm },
-                      { type: stat-display, label: "Memory used", value: (if @entity.statsReady (format/bytes @entity.memoryUsed) ""), isLoading: (not @entity.statsReady), size: sm },
-                      { type: stat-display, label: "Load (1 min)", value: (if @entity.statsReady (str/concat (math/round @entity.load1 2)) ""), isLoading: (not @entity.statsReady), size: sm },
-                      { type: stat-display, label: "Uptime", value: (if @entity.statsReady (time/duration (* 1000 @entity.machineUptime)) ""), isLoading: (not @entity.statsReady), size: sm }
-                      ] },
-                      (if (= (array/len @entity.statsUnavailable) 0) null { type: typography, content: (str/concat "Not available: " (str/join (array/map @entity.statsUnavailable (fn u (str/concat @u " (" (object/get @entity.statsErrors @u "") ")"))) "; ")), variant: caption, color: muted })
-                    ] }
+            { type: box, position: relative, overflow: hidden, rounded: "2xl", border: true, bg: gradient, texture: true, className: "border-primary/25 shadow-elevation-card", children: [
+              { type: geometric-pattern, variant: khatam, mode: background, opacity: 0.08, scale: 1.4 },
+              { type: box, position: relative, padding: lg, className: "md:p-10", children: [
+                { type: box, className: "grid gap-8 items-center lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]", children: [
+                  { type: stack, direction: vertical, gap: lg, justify: center, children: [
+                    { type: stack, direction: horizontal, gap: sm, align: center, wrap: true, children: [
+                      { type: status-dot, status: (if @entity.kernelReady online away), pulse: true, size: sm, label: (if @entity.kernelReady "Kernel live" "Starting") },
+                      { type: badge, variant: primary, size: md, label: (if (= @entity.orbVersion "") "orb" @entity.orbVersion) },
+                      { type: badge, variant: neutral, size: md, label: (str/concat (array/len @entity.openTabs) " open · " (array/len @config.boardList) " apps") }
+                    ] },
+                    { type: stack, direction: vertical, gap: xs, children: [
+                      { type: typography, variant: overline, color: primary, className: "uppercase tracking-[0.3em]", content: @config.eyebrow },
+                      { type: typography, variant: h1, size: "3xl", weight: bold, className: "tracking-tight", content: @config.headline },
+                      { type: typography, variant: body, color: muted, className: "max-w-xl text-lg", content: @config.lede }
+                    ] },
+                    { type: stack, direction: horizontal, gap: sm, wrap: true, children: (array/map (array/filter @config.heroApps (fn id (array/some @config.boardList (fn a (= @a.id @id))))) (fn id (let ((a (array/find @config.boardList (fn x (= @x.id @id))))) { type: button, variant: (if (= @id (array/first @config.heroApps)) primary secondary), size: lg, icon: @a.icon, label: @a.label, action: APP_OPEN, actionPayload: { behavior: @id } }))) }
                   ] },
-                  { type: card, variant: bordered, padding: lg, title: "Orb runtime", children: [
-                    { type: stack, direction: vertical, gap: md, children: [
-                      { type: simple-grid, minChildWidth: 160, gap: md, children: [
-                      { type: stat-display, label: "Version", value: @entity.orbVersion, isLoading: (= @entity.orbVersion ""), size: sm },
-                      { type: stat-display, label: "Running for", value: (if @entity.orbUptimeReady (time/duration @entity.orbUptimeMs) ""), isLoading: (not @entity.orbUptimeReady), size: sm },
-                      { type: stat-display, label: "Kernel traits", value: (if @entity.kernelReady (str/concat @entity.registeredTraits) ""), isLoading: (not @entity.kernelReady), size: sm },
-                      { type: stat-display, label: "Kernel instances", value: (if @entity.kernelReady (str/concat @entity.activeInstances) ""), isLoading: (not @entity.kernelReady), size: sm }
-                      ] },
-                      (if (= (array/count ["version", "kernel", "process-uptime"] (fn k (object/has @entity.statsErrors @k))) 0) null { type: typography, content: (str/concat "Not read: " (str/join (array/map (array/filter ["version", "kernel", "process-uptime"] (fn k (object/has @entity.statsErrors @k))) (fn k (str/concat @k " (" (object/get @entity.statsErrors @k "") ")"))) "; ")), variant: caption, color: muted })
+                  { type: box, rounded: xl, padding: md, className: "min-w-0 bg-background/50 backdrop-blur border border-primary/20", children: [@trait.SystemOrb] }
+                ] }
+              ] }
+            ] },
+            { type: stack, direction: vertical, gap: sm, children: [
+              { type: simple-grid, minChildWidth: 230, gap: md, children: [
+                { type: box, rounded: xl, border: true, padding: lg, className: "bg-card/70 border-border hover:border-primary/40 transition-colors", children: [{ type: stack, direction: vertical, gap: md, children: [{ type: stack, direction: horizontal, justify: between, align: center, children: [{ type: stack, direction: horizontal, gap: sm, align: center, children: [{ type: box, rounded: lg, className: "w-9 h-9 flex items-center justify-center bg-primary/10", children: [{ type: icon, name: cpu, size: sm, color: primary }] }, { type: typography, variant: overline, color: muted, className: "uppercase tracking-widest", content: "CPU" }] }, { type: status-dot, status: (if (> @entity.cpuPercent 85) critical (if (> @entity.cpuPercent 60) warning online)), pulse: true, size: sm }] }, (if @entity.statsReady { type: stack, direction: vertical, gap: sm, children: [{ type: animated-counter, value: (math/round @entity.cpuPercent 0), suffix: "%", className: "text-4xl font-semibold tabular-nums tracking-tight" }, { type: sparkline, data: @entity.cpuHistory, color: primary, fill: true, height: 44, strokeWidth: 2, className: "w-full" }] } { type: skeleton, variant: text, rows: 2 })] }] },
+                { type: box, rounded: xl, border: true, padding: lg, className: "bg-card/70 border-border hover:border-primary/40 transition-colors", children: [{ type: stack, direction: vertical, gap: md, children: [{ type: stack, direction: horizontal, justify: between, align: center, children: [{ type: stack, direction: horizontal, gap: sm, align: center, children: [{ type: box, rounded: lg, className: "w-9 h-9 flex items-center justify-center bg-primary/10", children: [{ type: icon, name: memory-stick, size: sm, color: primary }] }, { type: typography, variant: overline, color: muted, className: "uppercase tracking-widest", content: "Memory" }] }, { type: typography, variant: caption, color: muted, content: (let ((used (format/bytes @entity.memoryUsed)) (total (format/bytes @entity.memoryTotal))) (if (and @entity.statsReady (!= @used null) (!= @total null)) (str/concat @used " of " @total) "")) }] }, (if @entity.statsReady { type: stack, direction: vertical, gap: sm, children: [{ type: animated-counter, value: (math/round @entity.memoryPercent 0), suffix: "%", className: "text-4xl font-semibold tabular-nums tracking-tight" }, { type: progress-bar, value: @entity.memoryPercent, max: 100, size: sm, color: (if (> @entity.memoryPercent 85) warning primary) }] } { type: skeleton, variant: text, rows: 2 })] }] },
+                { type: box, rounded: xl, border: true, padding: lg, className: "bg-card/70 border-border hover:border-primary/40 transition-colors", children: [{ type: stack, direction: vertical, gap: md, children: [{ type: stack, direction: horizontal, justify: between, align: center, children: [{ type: stack, direction: horizontal, gap: sm, align: center, children: [{ type: box, rounded: lg, className: "w-9 h-9 flex items-center justify-center bg-primary/10", children: [{ type: icon, name: gauge, size: sm, color: primary }] }, { type: typography, variant: overline, color: muted, className: "uppercase tracking-widest", content: "Load" }] }, { type: typography, variant: caption, color: muted, content: "1-minute average" }] }, (if @entity.statsReady { type: stack, direction: vertical, gap: sm, children: [{ type: typography, variant: h2, weight: semibold, className: "text-4xl tabular-nums tracking-tight", content: (str/concat (math/round @entity.load1 2)) }, { type: sparkline, data: @entity.loadHistory, color: info, fill: true, height: 44, strokeWidth: 2, className: "w-full" }] } { type: skeleton, variant: text, rows: 2 })] }] },
+                { type: box, rounded: xl, border: true, padding: lg, className: "bg-card/70 border-border hover:border-primary/40 transition-colors", children: [{ type: stack, direction: vertical, gap: md, children: [{ type: stack, direction: horizontal, justify: between, align: center, children: [{ type: stack, direction: horizontal, gap: sm, align: center, children: [{ type: box, rounded: lg, className: "w-9 h-9 flex items-center justify-center bg-primary/10", children: [{ type: icon, name: clock, size: sm, color: primary }] }, { type: typography, variant: overline, color: muted, className: "uppercase tracking-widest", content: "Uptime" }] }, { type: typography, variant: caption, color: muted, content: "this machine" }] }, (if @entity.statsReady { type: stack, direction: vertical, gap: xs, children: [{ type: typography, variant: h3, size: xl, weight: semibold, className: "tracking-tight", content: (time/duration (* 1000 @entity.machineUptime)) }, { type: typography, variant: caption, color: muted, content: (str/concat "orb " (if @entity.orbUptimeReady (str/concat "up " (time/duration @entity.orbUptimeMs)) "starting")) }] } { type: skeleton, variant: text, rows: 2 })] }] }
+              ] },
+              (if (= (array/len @entity.statsUnavailable) 0) null { type: typography, content: (str/concat "Not available: " (str/join (array/map @entity.statsUnavailable (fn u (str/concat @u " (" (object/get @entity.statsErrors @u "") ")"))) "; ")), variant: caption, color: muted })
+            ] },
+            { type: box, rounded: xl, border: true, padding: lg, className: "bg-card/40 border-border", children: [
+              { type: stack, direction: vertical, gap: md, children: [
+                { type: stack, direction: horizontal, gap: sm, align: center, children: [
+                  { type: icon, name: orbit, size: sm, color: primary },
+                  { type: typography, variant: h4, weight: semibold, content: "Orb runtime" },
+                  { type: status-dot, status: (if @entity.kernelReady online offline), size: sm }
+                ] },
+                { type: simple-grid, minChildWidth: 160, gap: lg, children: [
+                  { type: stack, direction: vertical, gap: xs, children: [{ type: typography, variant: overline, color: muted, className: "uppercase tracking-widest", content: "Version" }, { type: typography, variant: h4, weight: semibold, className: "tabular-nums", content: (if (= @entity.orbVersion "") "…" @entity.orbVersion) }] },
+                  { type: stack, direction: vertical, gap: xs, children: [{ type: typography, variant: overline, color: muted, className: "uppercase tracking-widest", content: "Running for" }, { type: typography, variant: h4, weight: semibold, className: "tabular-nums", content: (if @entity.orbUptimeReady (time/duration @entity.orbUptimeMs) "…") }] },
+                  { type: stack, direction: vertical, gap: xs, children: [{ type: typography, variant: overline, color: muted, className: "uppercase tracking-widest", content: "Kernel traits" }, (if @entity.kernelReady { type: animated-counter, value: @entity.registeredTraits, className: "self-start text-left text-2xl font-semibold tabular-nums text-primary" } { type: typography, variant: h4, content: "…" })] },
+                  { type: stack, direction: vertical, gap: xs, children: [{ type: typography, variant: overline, color: muted, className: "uppercase tracking-widest", content: "Live instances" }, (if @entity.kernelReady { type: animated-counter, value: @entity.activeInstances, className: "self-start text-left text-2xl font-semibold tabular-nums text-primary" } { type: typography, variant: h4, content: "…" })] }
+                ] },
+                (if (= (array/count ["version", "kernel", "process-uptime"] (fn k (object/has @entity.statsErrors @k))) 0) null { type: typography, content: (str/concat "Not read: " (str/join (array/map (array/filter ["version", "kernel", "process-uptime"] (fn k (object/has @entity.statsErrors @k))) (fn k (str/concat @k " (" (object/get @entity.statsErrors @k "") ")"))) "; ")), variant: caption, color: muted })
+              ] }
+            ] },
+            { type: box, className: "grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]", children: [
+              { type: stack, direction: vertical, gap: md, children: [
+                { type: stack, direction: horizontal, justify: between, align: end, children: [
+                  { type: stack, direction: vertical, gap: xs, children: [
+                    { type: typography, variant: overline, color: primary, className: "uppercase tracking-widest", content: "Apps" },
+                    { type: typography, variant: h3, weight: bold, content: "Everything you run, one click away" }
+                  ] },
+                  { type: typography, variant: caption, color: muted, content: (str/concat (array/len @entity.openTabs) " of " (array/len @config.boardList) " open") }
+                ] },
+                { type: simple-grid, minChildWidth: 260, gap: md, children: (array/map @config.boardList (fn b { type: box, action: APP_OPEN, actionPayload: { behavior: @b.id }, rounded: xl, border: true, padding: lg, className: "group cursor-pointer bg-card/60 border-border hover:bg-card hover:border-primary/50 hover:-translate-y-0.5 hover:shadow-elevation-card transition-all", children: [
+                  { type: stack, direction: vertical, gap: md, children: [
+                    { type: stack, direction: horizontal, justify: between, align: center, children: [
+                      { type: box, rounded: lg, className: "w-11 h-11 flex items-center justify-center bg-primary/10 group-hover:bg-primary/20 transition-colors", children: [{ type: icon, name: @b.icon, size: md, color: primary }] },
+                      (if (array/some @entity.openTabs (fn t (= @t.id @b.id))) { type: status-dot, status: online, pulse: true, size: sm, label: "Open" } { type: badge, variant: neutral, size: sm, label: @b.topic })
+                    ] },
+                    { type: stack, direction: vertical, gap: xs, children: [
+                      { type: typography, variant: h4, weight: semibold, content: @b.label },
+                      { type: typography, variant: small, color: muted, className: "line-clamp-2", content: @b.description }
+                    ] },
+                    { type: stack, direction: horizontal, gap: xs, align: center, className: "text-primary opacity-70 group-hover:opacity-100 transition-opacity", children: [
+                      { type: typography, variant: caption, weight: semibold, content: (if (array/some @entity.openTabs (fn t (= @t.id @b.id))) "Bring to front" "Open") },
+                      { type: icon, name: arrow-right, size: xs }
                     ] }
                   ] }
+                ] })) }
+              ] },
+              { type: box, rounded: xl, border: true, padding: lg, className: "bg-card/40 border-border self-start", children: [
+                { type: stack, direction: vertical, gap: md, children: [
+                  { type: stack, direction: horizontal, gap: sm, align: center, children: [
+                    { type: icon, name: history, size: sm, color: primary },
+                    { type: typography, variant: h4, weight: semibold, content: "Recently opened" }
+                  ] },
+                  (if (= (array/len @entity.recents) 0)
+                    { type: typography, variant: small, color: muted, content: "Apps you open show up here." }
+                    { type: stack, direction: vertical, gap: xs, children: (array/map @entity.recents (fn r { type: box, action: APP_OPEN, actionPayload: { behavior: @r.behavior }, rounded: lg, padding: sm, className: "cursor-pointer hover:bg-primary/10 transition-colors", children: [
+                      { type: stack, direction: horizontal, gap: sm, align: center, children: [
+                        { type: box, rounded: md, className: "w-8 h-8 shrink-0 flex items-center justify-center bg-primary/10", children: [{ type: icon, name: (let ((a (array/find @config.boardList (fn x (= @x.id @r.behavior))))) (if (= @a null) "app-window" @a.icon)), size: xs, color: primary }] },
+                        { type: stack, direction: vertical, gap: none, className: "min-w-0", children: [
+                          { type: typography, variant: small, weight: semibold, className: "truncate", content: @r.label },
+                          { type: typography, variant: caption, color: muted, content: (time/relative @r.at) }
+                        ] }
+                      ] }
+                    ] })) })
                 ] }
+              ] }
             ] }
         ] })
       TABS_CHANGED -> ready
@@ -782,6 +866,8 @@ orbital Launchpad {
         (set @entity.memoryPercent ?memoryPercent)
         (set @entity.cpuPercent ?cpuPercent)
         (set @entity.load1 ?load1)
+        (set @entity.cpuHistory (array/takeLast (array/append @entity.cpuHistory ?cpuPercent) @config.trendSamples))
+        (set @entity.loadHistory (array/takeLast (array/append @entity.loadHistory ?load1) @config.trendSamples))
         (set @entity.machineUptime ?uptimeSeconds)
         (set @entity.statsUnavailable ?unavailable)
         (emit ORB_PUSH {})
@@ -909,7 +995,7 @@ orbital Launchpad {
         processes : [LaunchpadProcess]!
         missing : [number]!
         unavailable : [string]!
-        at : number!
+        at : instant!
       }
       STATS_FAILED {
         stat : "memory" | "cpu" | "load" | "uptime" | "processes"!

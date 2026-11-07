@@ -17,6 +17,7 @@ type WalkJudged = { verdicts : [WalkVerdict]! }
 type WalkFull = { orbitals : [orbital] }
 type WalkPayload = Map string WalkJson
 type WalkIssue = { code : string!, message : string }
+type WalkL1Finding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 type WalkValidation = { valid : boolean!, errors : [WalkIssue], warnings : [WalkIssue] }
 type WalkPlanned = { orbital : string!, trait : string!, from : string!, event : string!, to : string!, guarded : boolean!, payload : WalkPayload!, unplanned : string!, reply : string! }
 type WalkEffect = { type : string!, args : [WalkJson?]!, status : string!, error : string }
@@ -66,6 +67,8 @@ orbital VerifyWalkOrbital {
     render : boolean = false
     strict : boolean = false
     path : string = ""
+    source : string = ""
+    l1 : [WalkL1Finding] = []
     viewer : (Map string WalkJson)?
     owners : Map string [string] = {}
   }
@@ -160,10 +163,14 @@ orbital VerifyWalkOrbital {
     state reading {
       INIT -> reading
       WALK_FILE_READ -> reading
-        (program/read (bytes/to-string @payload.data) { key: "program" emit: { success: WALK_PROGRAM, failure: WALK_FAILED } })
+        (set @entity.source (default (bytes/to-string @payload.data) ""))
+        (program/read (bytes/to-string @payload.data) { findings: true } { key: "l1" emit: { success: WALK_L1, failure: WALK_FAILED } })
+      WALK_L1 -> reading
+        (set @entity.l1 @payload.result)
+        (program/read @entity.source { key: "program" emit: { success: WALK_PROGRAM, failure: WALK_FAILED } })
       WALK_PROGRAM -> validating
         (set @entity.program (as @payload.result WalkFull))
-        (program/validate null { report: true, path: @entity.path } { emit: { success: WALK_VALIDATED, failure: WALK_FAILED } })
+        (program/validate null { report: true, path: @entity.path, findings: @entity.l1 } { emit: { success: WALK_VALIDATED, failure: WALK_FAILED } })
       WALK_FAILED -> ready
         (emit VERIFY_WALK_ANSWERED { status: 500, body: (str/concat "verify-walk: " (default @payload.error "")) })
     }
@@ -320,6 +327,9 @@ orbital VerifyWalkOrbital {
         @tier "internal"
       WALK_FILE_READ { data : bytes! }
         @description "The program file read."
+        @tier "internal"
+      WALK_L1 { result : [WalkL1Finding]! }
+        @description "The L1 (parse and lower) findings of the program text."
         @tier "internal"
       WALK_PROGRAM { result : SExpr! }
         @description "The program parsed."

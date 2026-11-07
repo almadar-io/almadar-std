@@ -1,0 +1,87 @@
+{
+  "atom": "spec/cli/nested-effect-fixture.lolo",
+  "trait": "NestedEffect",
+  "note": "G-ORB-498 red goldens: the transition is (let ((x 1)) (emit FOO { n: @x })). The effects list holds one bare let (status skipped though its emit ran), so a nested emit cannot be asserted through effects. red-* cases express what a closed gap must pass; controls pass today.",
+  "cases": [
+    {
+      "id": "control-emits-sees-the-nested-emit",
+      "steps": [
+        {
+          "from": "ready",
+          "event": "GO",
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "FOO",
+                "payload": {
+                  "n": 1
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "red-effects-cannot-assert-the-nested-emit",
+      "note": "Wants the emit FOO as an effect; today the only effect is the let, so this fails: that is the gap.",
+      "steps": [
+        {
+          "from": "ready",
+          "event": "GO",
+          "expect": {
+            "fired": true,
+            "effects": [
+              {
+                "type": "emit"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "blind-effects-let-alone-passes-for-any-nested-emit",
+      "note": "Asserts the let and nothing under it, so a nested emit of any name or payload would pass; the effect list carries no trace of FOO.",
+      "steps": [
+        {
+          "from": "ready",
+          "event": "GO",
+          "expect": {
+            "fired": true,
+            "effects": [
+              {
+                "type": "let"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-effects-arg1-compares-the-let-source-whole",
+      "note": "The only way to pin the nested emit through effects today: the let's raw source in arg1, compared whole. It asserts the written expression (status of the nested emit is lost: the let reports skipped although the emit ran), not the effects that ran.",
+      "steps": [
+        {
+          "from": "ready",
+          "event": "GO",
+          "expect": {
+            "effects": [
+              {
+                "type": "let",
+                "arg1": [
+                  "emit",
+                  "FOO",
+                  {
+                    "n": "@x"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

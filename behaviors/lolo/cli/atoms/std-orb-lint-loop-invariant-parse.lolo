@@ -25,7 +25,7 @@ type RtIndex = Map string [RtCall]
 type RtWrite = { o : string!, f : string!, v : RtVal, w : string! }
 
 type LintCodeDecl = { code : string!, category : string!, description : string! }
-type LintLoopInvariantParseCodes = { lintIndexMissing : LintCodeDecl , lintNodeUnchecked : LintCodeDecl , wLoopInvariantParse : LintCodeDecl , jsonRoundtrip : LintCodeDecl }
+type LintLoopInvariantParseCodes = { lintIndexMissing : LintCodeDecl , lintNodeUnchecked : LintCodeDecl , wLoopInvariantParse : LintCodeDecl , jsonRoundtrip : LintCodeDecl , jsonStringifyKey : LintCodeDecl }
 
 orbital OrbLintLoopInvariantParseOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
@@ -51,7 +51,7 @@ orbital OrbLintLoopInvariantParseOrbital {
       LINT_INPUT -> ready
         (set @entity.scope @payload.scope)
         (set @entity.findings (if (and @entity.sitesHeard (= @entity.sitesScope @payload.scope))
-(let ((orbitals (object/get @payload.program "orbitals" [])) (gate (default (as (object/fromEntries (array/map (array/concat (object/get @entity.sCalls "json/parse" []) (object/get @entity.sCalls "bytes/to-string" [])) (fn c [(str/replaceAll (default (array/first (str/split (default (array/first (str/split (object/get @c "path" "") ".effects[")) "") ".guard")) "") "." "~"), true]))) RtGate) {})))
+(let ((orbitals (object/get @payload.program "orbitals" [])) (gate (default (as (object/fromEntries (array/map (array/concat (object/get @entity.sCalls "json/parse" []) (object/get @entity.sCalls "bytes/to-string" []) (object/get @entity.sCalls "json/stringify" [])) (fn c [(str/replaceAll (default (array/first (str/split (default (array/first (str/split (object/get @c "path" "") ".effects[")) "") ".guard")) "") "." "~"), true]))) RtGate) {})))
           (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
             (let ((orb (array/nth @orbitals @oi)))
               (array/flatten (array/map (array/range 0 (array/len (object/get @orb "traits" []))) (fn ti
@@ -87,7 +87,9 @@ orbital OrbLintLoopInvariantParseOrbital {
                                                 (array/concat
                                                   (array/append @all { kind: "call", name: "", op: @op, refs: (array/map (array/filter @arg (fn f (= (object/get @f "kind") "ref"))) (fn f (object/get @f "name"))), binds: (array/map (array/filter @arg (fn f (= (object/get @f "kind") "bind"))) (fn f (object/get @f "name"))) })
                                                   (if (and (= @op "json/parse") (validate/array @a1) (> (array/len @a1) 0) (= (let ((h (array/nth @a1 0))) (if (validate/string @h) @h "")) "json/stringify")) [{ kind: "roundtrip", name: "", op: @op, refs: (array/filter [""] (fn q false)), binds: (array/filter [""] (fn q false)) }] [])))
-                                              @all))))
+                                              (if (array/includes ["=" "!=" "array/unique" "array/indexOf" "object/set"] @op)
+                                                (array/concat @all (if (array/some (array/drop @n 1) (fn q (and (validate/array @q) (> (array/len @q) 0) (= (array/nth @q 0) "json/stringify")))) [{ kind: "stringify-key", name: "", op: @op, refs: (array/filter [""] (fn q false)), binds: (array/filter [""] (fn q false)) }] []))
+                                                @all)))))
                                       (if (and (validate/string @n) (str/startsWith @n (quote "@")))
                                         [{ kind: "ref", name: (array/first (str/split (str/slice @n 1 (str/len @n)) ".")), op: "", refs: (array/filter [""] (fn q false)), binds: (array/filter [""] (fn q false)) }]
                                         [])))
@@ -97,10 +99,14 @@ orbital OrbLintLoopInvariantParseOrbital {
                                 (fn f (= (object/get @f "kind") "hit")))
                               (fn c
                                 { code: @config.codes.wLoopInvariantParse.code, path: (object/get @x "w"), message: (str/concat (object/get @c "op") " re-parses the same value for every element; bind it once with let outside the lambda"), suggestion: "Bind the parsed value once with `let` outside the lambda and use the bound name inside it.", severity: "warning" }))
+                              (array/concat (array/map
+                                (array/filter @fres (fn f (= (object/get @f "kind") "stringify-key")))
+                                (fn c
+                                  { code: @config.codes.jsonStringifyKey.code, path: (object/get @x "w"), message: (str/concat "json/stringify is an operand of " (object/get @c "op") ": serialized text used as a key or compared for equality"), suggestion: "Compare or key by value/key, or compare the values themselves; serialized text is order- and format-dependent.", severity: "error" }))
                               (array/map
                                 (array/filter @fres (fn f (= (object/get @f "kind") "roundtrip")))
                                 (fn c
-                                  { code: @config.codes.jsonRoundtrip.code, path: (object/get @x "w"), message: "json/parse re-parses a value json/stringify just serialized: this round trip launders the value's type past the checker", suggestion: "Narrow the value with `(as value T)` instead; keep json/parse for text that arrives as text (a body, a file, rawBody).", severity: "error" }))))))))))))))))))))))))
+                                  { code: @config.codes.jsonRoundtrip.code, path: (object/get @x "w"), message: "json/parse re-parses a value json/stringify just serialized: this round trip launders the value's type past the checker", suggestion: "Narrow the value with `(as value T)` instead; keep json/parse for text that arrives as text (a body, a file, rawBody).", severity: "error" })))))))))))))))))))))))))
 [{ code: @config.codes.lintIndexMissing.code, path: "", message: "the lint input arrived without LINT_SITES, so this rule cannot check the program", suggestion: "std-orb-lint-input sends LINT_SITES before LINT_INPUT; this rule did not hear it", severity: "error" }]))
         (set @entity.findings (array/concat @entity.findings (let ((idx (if (and @entity.sitesHeard (= @entity.sitesScope @payload.scope)) @entity.sCalls {})) (ent (quote "@entity.")))
           (let ((writes (array/flatten (array/map (object/get @idx "set" []) (fn c
@@ -183,7 +189,7 @@ orbital OrbLintLoopInvariantParseOrbital {
       OrbLintInput.LINT_SITES -> SITES_HEARD
     }
     config {
-      codes : LintLoopInvariantParseCodes = { lintIndexMissing: { code: "ORB_LINT_INDEX_MISSING", category: "lint", description: "The lint input arrived without a shared program fact the rule reads (the structural index, sites, units, embeds or entities), so the rule cannot check the program" }, lintNodeUnchecked: { code: "LINT_NODE_UNCHECKED", category: "lint", description: "A lint rule met a schema node of an unexpected shape and could not check it" }, wLoopInvariantParse: { code: "ORB_W_LOOP_INVARIANT_PARSE", category: "lint", description: "A parse inside a lambda re-parses the same value for every element and should be bound once outside" } , jsonRoundtrip: { code: "ORB_JSON_ROUNDTRIP", category: "lint", description: "json/parse re-parses what json/stringify just serialized; a stringify→parse round trip launders a value's type past the checker (owner hard rule, CLAUDE.md). Narrow with `as`." } }
+      codes : LintLoopInvariantParseCodes = { lintIndexMissing: { code: "ORB_LINT_INDEX_MISSING", category: "lint", description: "The lint input arrived without a shared program fact the rule reads (the structural index, sites, units, embeds or entities), so the rule cannot check the program" }, lintNodeUnchecked: { code: "LINT_NODE_UNCHECKED", category: "lint", description: "A lint rule met a schema node of an unexpected shape and could not check it" }, wLoopInvariantParse: { code: "ORB_W_LOOP_INVARIANT_PARSE", category: "lint", description: "A parse inside a lambda re-parses the same value for every element and should be bound once outside" } , jsonRoundtrip: { code: "ORB_JSON_ROUNDTRIP", category: "lint", description: "json/parse re-parses what json/stringify just serialized; a stringify→parse round trip launders a value's type past the checker (owner hard rule, CLAUDE.md). Narrow with `as`." } , jsonStringifyKey: { code: "ORB_JSON_STRINGIFY_KEY", category: "lint", description: "json/stringify is an operand of =, !=, array/unique, array/indexOf or an object/set key; compare or key by value/key instead of serialized text" } }
         @label "Emitted codes"
         @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
     }

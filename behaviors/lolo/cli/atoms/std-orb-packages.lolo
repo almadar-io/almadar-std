@@ -506,8 +506,17 @@ orbital OrbPackagesOrbital {
         (os/rmdir { anchor: "cwd" path: (str/concat "node_modules/" (str/concat @entity.stage ".old")) } true { key: "backupclear" emit: { success: PKG_BACKUP_GONE, failure: PKG_BACKUP_GONE } })
       PKG_BACKUP_NEXT -> resolving when (not @entity.hadOld)
         (emit PKG_BACKUP_GONE { })
-      PKG_BACKUP_GONE -> resolving
+      PKG_BACKUP_GONE -> resolving when @entity.global
         (set @entity.hadOld false)
+        (os/rmdir (str/concat "~/.orb/node_modules/" (str/replace-pattern @entity.stage "/[^/]*$" "")) false { key: "stagescope" emit: { success: PKG_STAGE_SCOPE_TIDIED, failure: PKG_STAGE_SCOPE_TIDIED } })
+      PKG_BACKUP_GONE -> resolving when (not @entity.global)
+        (set @entity.hadOld false)
+        (os/rmdir { anchor: "cwd" path: (str/concat "node_modules/" (str/replace-pattern @entity.stage "/[^/]*$" "")) } false { key: "stagescope" emit: { success: PKG_STAGE_SCOPE_TIDIED, failure: PKG_STAGE_SCOPE_TIDIED } })
+      PKG_STAGE_SCOPE_TIDIED -> resolving when @entity.global
+        (os/rmdir "~/.orb/node_modules/.orb-staging" false { key: "stageroot" emit: { success: PKG_STAGE_ROOT_TIDIED, failure: PKG_STAGE_ROOT_TIDIED } })
+      PKG_STAGE_SCOPE_TIDIED -> resolving when (not @entity.global)
+        (os/rmdir { anchor: "cwd" path: "node_modules/.orb-staging" } false { key: "stageroot" emit: { success: PKG_STAGE_ROOT_TIDIED, failure: PKG_STAGE_ROOT_TIDIED } })
+      PKG_STAGE_ROOT_TIDIED -> resolving
         (emit PKG_TARGET_NEXT { })
       PKG_PLAN_ADD -> resolving
         (set @entity.targets (array/map @entity.args (fn s (if (or (str/startsWith @s "https://") (str/startsWith @s "http://")) { name: "", version: "", url: @s, integrity: "" } (let ((rest (str/slice @s 1 (str/len @s)))) (if (!= (str/replace-pattern @rest "\\x40" "") @rest) { name: (str/concat (str/slice @s 0 1) (str/replace-pattern @rest "\\x40.*$" "")), version: (str/replace-pattern @rest "^[^\\x40]*\\x40" ""), url: "", integrity: "" } { name: @s, version: "", url: "", integrity: "" }))))))
@@ -1037,6 +1046,12 @@ orbital OrbPackagesOrbital {
         @tier "internal"
       PKG_BACKUP_GONE { }
         @description "Internal: the backup of the replaced package is removed (or there was none)."
+        @tier "internal"
+      PKG_STAGE_SCOPE_TIDIED { }
+        @description "Internal: the empty scope directory the staging directory was renamed out of is removed, or was not empty."
+        @tier "internal"
+      PKG_STAGE_ROOT_TIDIED { }
+        @description "Internal: the empty staging root is removed, or still holds a kept backup."
         @tier "internal"
       PKG_INSTALL_FAILED { error : string }
         @description "Internal: a host call failed while installing one package; that package is refused."

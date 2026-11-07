@@ -1362,12 +1362,12 @@
    ]
   },
   {
-   "id": "integer beyond 2^53-1",
+   "id": "integer beyond 2^63-1",
    "steps": [
     {
      "event": "TOML_PARSE",
      "payload": {
-      "text": "a = 9007199254740992\n"
+      "text": "a = 9223372036854775808\n"
      }
     },
     {
@@ -1395,6 +1395,49 @@
          "requestId": "",
          "code": "integer-range",
          "line": 1
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "integer above 2^53 is read exactly",
+   "steps": [
+    {
+     "event": "TOML_PARSE",
+     "payload": {
+      "text": "a = 9007199254740993\nb = 9223372036854775807\n"
+     }
+    },
+    {
+     "event": "TOML_LEXED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_DECODED",
+     "payload": {
+      "requestId": ""
+     }
+    },
+    {
+     "event": "TOML_STRUCTURED",
+     "payload": {
+      "requestId": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "TOML_PARSED",
+        "payload": {
+         "requestId": "",
+         "value": {
+          "a": 9007199254740993,
+          "b": 9223372036854775807
+         }
         }
        }
       ]

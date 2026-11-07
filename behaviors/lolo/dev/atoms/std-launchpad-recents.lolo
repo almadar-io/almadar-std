@@ -1,7 +1,7 @@
 app std-launchpad-recents [
   version: "1.0.0",
   fs: { "~/.almadar/launchpad": [create], "~/.almadar/launchpad/**": [read, write, create] },
-  description: "std-launchpad-recents — the behaviors launched from the launchpad, remembered per machine in ~/.almadar/launchpad/recents.json. RECENTS_LOAD reads the file: a file that does not exist (os/read-file's not-found failure, and only that one) is an empty list, a file that is not a list of entries or any other failure answers RECENTS_FAILED { error }, and a good list answers RECENTS_LOADED { items }. RECENT_ADD { behavior, label, kind, command } puts the behavior first, drops its earlier entry, creates ~/.almadar/launchpad and writes the whole list back; RECENTS_CHANGED { items } answers the list after the write succeeded and RECENTS_FAILED when the directory or the file could not be written (the list in memory is still the new one, so the row stays for the session). Entries are kept in full: nothing is dropped but the earlier entry of the same behavior.",
+  description: "std-launchpad-recents — the behaviors launched from the launchpad, remembered per machine in ~/.almadar/launchpad/recents.json. RECENTS_LOAD reads the file: a file that does not exist (os/read-file's not-found failure, and only that one) is an empty list, a file that is not a list of entries or any other failure answers RECENTS_FAILED { error }, and a good list answers RECENTS_LOADED { items }. RECENT_ADD { behavior, label, kind, command } puts the behavior first, drops its earlier entry, creates ~/.almadar/launchpad and writes the whole list back; an add that arrives before the file was read (a fresh store, or one a reload reset) is held and the file is read first, so the held adds go on top of what the file holds and the file is never written from a list that was not read; RECENTS_CHANGED { items } answers the list after the write succeeded and RECENTS_FAILED when the directory or the file could not be written (the list in memory is still the new one, so the row stays for the session). Entries are kept in full: nothing is dropped but the earlier entry of the same behavior.",
   egress: []
 ]
 ;; @capabilities "remember recently launched behaviors, read and write a per-machine recents list"
@@ -20,6 +20,8 @@ orbital LaunchpadRecentsOrbital {
   entity RecentsRun [runtime] {
     id : string!
     items : [RecentEntry] = []
+    loaded : boolean = false
+    pending : [RecentEntry] = []
   }
 
   trait RecentsStore -> RecentsRun {
@@ -31,15 +33,32 @@ orbital LaunchpadRecentsOrbital {
         (os/read-file "~/.almadar/launchpad/recents.json" { key: "recents" emit: { success: RECENTS_READ, failure: RECENTS_READ_FAILED } })
       RECENTS_READ -> ready when (= (json/parse (default (bytes/to-string ?data) "") RecentEntries) null)
         (emit RECENTS_FAILED { error: "the recents file is not a list of launches" })
-      RECENTS_READ -> ready when (!= (json/parse (default (bytes/to-string ?data) "") RecentEntries) null)
+      RECENTS_READ -> ready when (and (!= (json/parse (default (bytes/to-string ?data) "") RecentEntries) null) (= (array/len @entity.pending) 0))
         (set @entity.items (default (json/parse (default (bytes/to-string ?data) "") RecentEntries) []))
+        (set @entity.loaded true)
         (emit RECENTS_LOADED { items: @entity.items })
-      RECENTS_READ_FAILED -> ready when (= ?kind "not-found")
+      RECENTS_READ -> ready when (and (!= (json/parse (default (bytes/to-string ?data) "") RecentEntries) null) (> (array/len @entity.pending) 0))
+        (set @entity.items (array/reduce @entity.pending (default (json/parse (default (bytes/to-string ?data) "") RecentEntries) []) (fn acc e (array/prepend (array/filter @acc (fn x (!= @x.behavior @e.behavior))) @e))))
+        (set @entity.pending [])
+        (set @entity.loaded true)
+        (emit RECENTS_LOADED { items: @entity.items })
+        (os/mkdir "~/.almadar/launchpad" true { key: "dir" emit: { success: RECENTS_DIR, failure: RECENTS_WRITE_FAILED } })
+      RECENTS_READ_FAILED -> ready when (and (= ?kind "not-found") (= (array/len @entity.pending) 0))
         (set @entity.items [])
+        (set @entity.loaded true)
         (emit RECENTS_LOADED { items: [] })
+      RECENTS_READ_FAILED -> ready when (and (= ?kind "not-found") (> (array/len @entity.pending) 0))
+        (set @entity.items (array/reduce @entity.pending [] (fn acc e (array/prepend (array/filter @acc (fn x (!= @x.behavior @e.behavior))) @e))))
+        (set @entity.pending [])
+        (set @entity.loaded true)
+        (emit RECENTS_LOADED { items: @entity.items })
+        (os/mkdir "~/.almadar/launchpad" true { key: "dir" emit: { success: RECENTS_DIR, failure: RECENTS_WRITE_FAILED } })
       RECENTS_READ_FAILED -> ready when (!= ?kind "not-found")
         (emit RECENTS_FAILED { error: ?error })
-      RECENT_ADD -> ready
+      RECENT_ADD -> ready when (not @entity.loaded)
+        (set @entity.pending (array/append @entity.pending { behavior: ?behavior, label: ?label, kind: ?kind, command: ?command, route: ?route, at: @now }))
+        (os/read-file "~/.almadar/launchpad/recents.json" { key: "recents" emit: { success: RECENTS_READ, failure: RECENTS_READ_FAILED } })
+      RECENT_ADD -> ready when @entity.loaded
         (set @entity.items (array/prepend (array/filter @entity.items (fn e (!= @e.behavior ?behavior))) { behavior: ?behavior, label: ?label, kind: ?kind, command: ?command, route: ?route, at: @now }))
         (os/mkdir "~/.almadar/launchpad" true { key: "dir" emit: { success: RECENTS_DIR, failure: RECENTS_WRITE_FAILED } })
       RECENTS_DIR -> ready

@@ -76,13 +76,15 @@ orbital OrbLintPageUnreachableOrbital {
                                     (if (and (validate/object @n) (not (validate/array @n)))
                                       (array/flatten (array/map ["href" "navigatesTo"] (fn k
                                         (let ((hv (object/get @n @k null)))
-                                          (if (and (validate/string @hv) (!= @hv "") (not (str/startsWith @hv (quote "@"))))
-                                            [@hv]
-                                            (let ((parts (if (validate/array @hv) (as @hv ReachStrings) null)))
-                                              (if (and (!= @parts null) (> (array/len @parts) 1) (= (array/first @parts) "str/concat")
-                                                       (array/every (array/drop @parts 1) (fn p (not (str/startsWith @p (quote "@"))))))
-                                                (if (= (str/join (array/drop @parts 1) "") "") [] [(str/join (array/drop @parts 1) "")])
-                                                [])))))))
+                                          (let ((hvs (if (and (validate/array @hv) (= (array/len @hv) 4) (= (array/first @hv) "if")) [(array/nth @hv 2) (array/nth @hv 3)] [@hv])))
+                                            (array/flatten (array/map @hvs (fn c
+                                              (if (and (validate/string @c) (!= @c "") (not (str/startsWith @c (quote "@"))))
+                                                [@c]
+                                                (let ((parts (if (validate/array @c) (as @c ReachStrings) null)))
+                                                  (if (and (!= @parts null) (> (array/len @parts) 1) (= (array/first @parts) "str/concat")
+                                                           (array/every (array/drop @parts 1) (fn p (not (str/startsWith @p (quote "@"))))))
+                                                    (if (= (str/join (array/drop @parts 1) "") "") [] [(str/join (array/drop @parts 1) "")])
+                                                    [])))))))))))
                                       [])
                                     (if (validate/array @n) (array/flatten (array/filter @kids (fn r (!= @r null)))) (if (validate/object @n) (array/flatten (array/filter (object/values @kids) (fn r (!= @r null)))) [])))) ReachVal) []))
                       (navs (array/concat

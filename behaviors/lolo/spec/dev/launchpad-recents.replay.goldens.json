@@ -1,0 +1,369 @@
+{
+  "atom": "dev/atoms/std-launchpad-recents.lolo",
+  "trait": "RecentsStore",
+  "cases": [
+    {
+      "id": "an-add-before-the-file-is-read-reads-the-file-first",
+      "steps": [
+        {
+          "trait": "RecentsStore",
+          "event": "RECENT_ADD",
+          "payload": {
+            "behavior": "std/play",
+            "label": "Playground",
+            "kind": "route",
+            "command": "",
+            "route": ""
+          },
+          "entity": {
+            "id": "r",
+            "items": [],
+            "loaded": false,
+            "pending": []
+          },
+          "expect": {
+            "fired": true,
+            "effects": [
+              {
+                "type": "os/read-file"
+              }
+            ],
+            "neverEmits": [
+              "RECENTS_CHANGED",
+              "RECENTS_LOADED"
+            ],
+            "entity": {
+              "loaded": false,
+              "items": []
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "the-read-puts-the-held-add-on-top-of-the-file-and-writes-both",
+      "steps": [
+        {
+          "trait": "RecentsStore",
+          "event": "RECENTS_READ",
+          "payload": {
+            "data": "W3siYmVoYXZpb3IiOiAic3RkL2NpIiwgImxhYmVsIjogIkNJIiwgImtpbmQiOiAicm91dGUiLCAiY29tbWFuZCI6ICIiLCAicm91dGUiOiAiIiwgImF0IjogIjIwMjYtMDEtMDFUMDA6MDA6MDAuMDAwWiJ9LCB7ImJlaGF2aW9yIjogInN0ZC9hbmFseXRpY3MiLCAibGFiZWwiOiAiQW5hbHl0aWNzIiwgImtpbmQiOiAicm91dGUiLCAiY29tbWFuZCI6ICIiLCAicm91dGUiOiAiIiwgImF0IjogIjIwMjUtMTItMzFUMDA6MDA6MDAuMDAwWiJ9XQ=="
+          },
+          "entity": {
+            "id": "r",
+            "items": [],
+            "loaded": false,
+            "pending": [
+              {
+                "behavior": "std/play",
+                "label": "Playground",
+                "kind": "route",
+                "command": "",
+                "route": "",
+                "at": "2026-02-02T00:00:00.000Z"
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "exactEmits": [
+              {
+                "event": "RECENTS_LOADED",
+                "payload": {
+                  "items": [
+                    {
+                      "behavior": "std/play",
+                      "label": "Playground",
+                      "kind": "route",
+                      "command": "",
+                      "route": "",
+                      "at": "2026-02-02T00:00:00.000Z"
+                    },
+                    {
+                      "behavior": "std/ci",
+                      "label": "CI",
+                      "kind": "route",
+                      "command": "",
+                      "route": "",
+                      "at": "2026-01-01T00:00:00.000Z"
+                    },
+                    {
+                      "behavior": "std/analytics",
+                      "label": "Analytics",
+                      "kind": "route",
+                      "command": "",
+                      "route": "",
+                      "at": "2025-12-31T00:00:00.000Z"
+                    }
+                  ]
+                }
+              }
+            ],
+            "effects": [
+              {
+                "type": "os/mkdir"
+              }
+            ],
+            "entity": {
+              "loaded": true,
+              "pending": []
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-held-add-of-a-listed-behavior-replaces-its-entry",
+      "steps": [
+        {
+          "trait": "RecentsStore",
+          "event": "RECENTS_READ",
+          "payload": {
+            "data": "W3siYmVoYXZpb3IiOiAic3RkL2NpIiwgImxhYmVsIjogIkNJIiwgImtpbmQiOiAicm91dGUiLCAiY29tbWFuZCI6ICIiLCAicm91dGUiOiAiIiwgImF0IjogIjIwMjYtMDEtMDFUMDA6MDA6MDAuMDAwWiJ9LCB7ImJlaGF2aW9yIjogInN0ZC9hbmFseXRpY3MiLCAibGFiZWwiOiAiQW5hbHl0aWNzIiwgImtpbmQiOiAicm91dGUiLCAiY29tbWFuZCI6ICIiLCAicm91dGUiOiAiIiwgImF0IjogIjIwMjUtMTItMzFUMDA6MDA6MDAuMDAwWiJ9XQ=="
+          },
+          "entity": {
+            "id": "r",
+            "items": [],
+            "loaded": false,
+            "pending": [
+              {
+                "behavior": "std/ci",
+                "label": "CI",
+                "kind": "route",
+                "command": "",
+                "route": "",
+                "at": "2026-02-01T00:00:00.000Z"
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "exactEmits": [
+              {
+                "event": "RECENTS_LOADED",
+                "payload": {
+                  "items": [
+                    {
+                      "behavior": "std/ci",
+                      "label": "CI",
+                      "kind": "route",
+                      "command": "",
+                      "route": "",
+                      "at": "2026-02-01T00:00:00.000Z"
+                    },
+                    {
+                      "behavior": "std/analytics",
+                      "label": "Analytics",
+                      "kind": "route",
+                      "command": "",
+                      "route": "",
+                      "at": "2025-12-31T00:00:00.000Z"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-held-add-with-no-file-yet-starts-the-list",
+      "steps": [
+        {
+          "trait": "RecentsStore",
+          "event": "RECENTS_READ_FAILED",
+          "payload": {
+            "error": "missing",
+            "kind": "not-found"
+          },
+          "entity": {
+            "id": "r",
+            "items": [],
+            "loaded": false,
+            "pending": [
+              {
+                "behavior": "std/play",
+                "label": "Playground",
+                "kind": "route",
+                "command": "",
+                "route": "",
+                "at": "2026-02-02T00:00:00.000Z"
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "exactEmits": [
+              {
+                "event": "RECENTS_LOADED",
+                "payload": {
+                  "items": [
+                    {
+                      "behavior": "std/play",
+                      "label": "Playground",
+                      "kind": "route",
+                      "command": "",
+                      "route": "",
+                      "at": "2026-02-02T00:00:00.000Z"
+                    }
+                  ]
+                }
+              }
+            ],
+            "effects": [
+              {
+                "type": "os/mkdir"
+              }
+            ],
+            "entity": {
+              "loaded": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-plain-load-only-answers-the-file",
+      "steps": [
+        {
+          "trait": "RecentsStore",
+          "event": "RECENTS_READ",
+          "payload": {
+            "data": "W3siYmVoYXZpb3IiOiAic3RkL2NpIiwgImxhYmVsIjogIkNJIiwgImtpbmQiOiAicm91dGUiLCAiY29tbWFuZCI6ICIiLCAicm91dGUiOiAiIiwgImF0IjogIjIwMjYtMDEtMDFUMDA6MDA6MDAuMDAwWiJ9LCB7ImJlaGF2aW9yIjogInN0ZC9hbmFseXRpY3MiLCAibGFiZWwiOiAiQW5hbHl0aWNzIiwgImtpbmQiOiAicm91dGUiLCAiY29tbWFuZCI6ICIiLCAicm91dGUiOiAiIiwgImF0IjogIjIwMjUtMTItMzFUMDA6MDA6MDAuMDAwWiJ9XQ=="
+          },
+          "entity": {
+            "id": "r",
+            "items": [],
+            "loaded": false,
+            "pending": []
+          },
+          "expect": {
+            "fired": true,
+            "exactEmits": [
+              {
+                "event": "RECENTS_LOADED",
+                "payload": {
+                  "items": [
+                    {
+                      "behavior": "std/ci",
+                      "label": "CI",
+                      "kind": "route",
+                      "command": "",
+                      "route": "",
+                      "at": "2026-01-01T00:00:00.000Z"
+                    },
+                    {
+                      "behavior": "std/analytics",
+                      "label": "Analytics",
+                      "kind": "route",
+                      "command": "",
+                      "route": "",
+                      "at": "2025-12-31T00:00:00.000Z"
+                    }
+                  ]
+                }
+              }
+            ],
+            "entity": {
+              "loaded": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-loaded-store-adds-without-reading",
+      "steps": [
+        {
+          "trait": "RecentsStore",
+          "event": "RECENT_ADD",
+          "payload": {
+            "behavior": "std/play",
+            "label": "Playground",
+            "kind": "route",
+            "command": "",
+            "route": ""
+          },
+          "entity": {
+            "id": "r",
+            "items": [
+              {
+                "behavior": "std/ci",
+                "label": "CI",
+                "kind": "route",
+                "command": "",
+                "route": "",
+                "at": "2026-01-01T00:00:00.000Z"
+              }
+            ],
+            "loaded": true,
+            "pending": []
+          },
+          "expect": {
+            "fired": true,
+            "effects": [
+              {
+                "type": "os/mkdir"
+              }
+            ],
+            "neverEmits": [
+              "RECENTS_LOADED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-an-unreadable-file-keeps-the-held-add-and-writes-nothing",
+      "steps": [
+        {
+          "trait": "RecentsStore",
+          "event": "RECENTS_READ",
+          "payload": {
+            "data": "bm90IGEgbGlzdA=="
+          },
+          "entity": {
+            "id": "r",
+            "items": [],
+            "loaded": false,
+            "pending": [
+              {
+                "behavior": "std/play",
+                "label": "Playground",
+                "kind": "route",
+                "command": "",
+                "route": "",
+                "at": "2026-02-02T00:00:00.000Z"
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "exactEmits": [
+              {
+                "event": "RECENTS_FAILED",
+                "payload": {
+                  "error": "the recents file is not a list of launches"
+                }
+              }
+            ],
+            "entity": {
+              "loaded": false,
+              "pending": [
+                {
+                  "behavior": "std/play",
+                  "label": "Playground",
+                  "kind": "route",
+                  "command": "",
+                  "route": "",
+                  "at": "2026-02-02T00:00:00.000Z"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

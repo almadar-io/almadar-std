@@ -720,6 +720,175 @@
      }
     }
    ]
+  },
+  {
+   "id": "an-anthropic-tool-loop-is-a-messages-request-with-tool-input-schemas",
+   "steps": [
+    {
+     "trait": "AnthropicLlm",
+     "event": "LLM_CALL_TOOLS",
+     "payload": {
+      "messages": [
+       {
+        "role": "user",
+        "content": "hi"
+       }
+      ],
+      "instructions": "sys",
+      "tools": [
+       {
+        "name": "read_x",
+        "description": "d",
+        "parameters": {
+         "type": "object"
+        }
+       }
+      ],
+      "key": "t1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_CHAT_WIRE",
+        "payload": {
+         "method": "POST",
+         "path": "/v1/messages",
+         "headers": {
+          "Accept": "application/json",
+          "anthropic-version": "2023-06-01"
+         },
+         "json": "{\"model\":\"claude-sonnet-4-5\",\"max_tokens\":8192,\"messages\":[{\"role\":\"user\",\"content\":\"hi\"}],\"system\":\"sys\",\"tools\":[{\"name\":\"read_x\",\"description\":\"d\",\"input_schema\":{\"type\":\"object\"}}]}"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-anthropic-tool-use-block-is-a-requested-tool-call",
+   "steps": [
+    {
+     "trait": "AnthropicLlm",
+     "event": "LLM_CHAT_WIRE_RESULT",
+     "payload": {
+      "key": "{\"kind\":\"tools\",\"id\":\"{\\\"key\\\":\\\"t1\\\",\\\"model\\\":\\\"claude-sonnet-4-5\\\",\\\"system\\\":\\\"sys\\\",\\\"userPrompt\\\":\\\"hi\\\",\\\"maxSteps\\\":8,\\\"tools\\\":[{\\\"name\\\":\\\"read_x\\\",\\\"description\\\":\\\"d\\\",\\\"parameters\\\":{\\\"type\\\":\\\"object\\\"}}],\\\"messages\\\":[{\\\"role\\\":\\\"system\\\",\\\"content\\\":\\\"sys\\\"},{\\\"role\\\":\\\"user\\\",\\\"content\\\":\\\"hi\\\"}],\\\"steps\\\":[],\\\"usage\\\":{\\\"promptTokens\\\":0,\\\"completionTokens\\\":0,\\\"totalTokens\\\":0,\\\"modelCalls\\\":1}}\"}",
+      "status": 200,
+      "headers": {
+       "content-type": "application/json"
+      },
+      "body": "eyJjb250ZW50IjpbeyJ0eXBlIjoidGV4dCIsInRleHQiOiJsb29raW5nIn0seyJ0eXBlIjoidG9vbF91c2UiLCJpZCI6InR1MSIsIm5hbWUiOiJyZWFkX3giLCJpbnB1dCI6eyJhIjoxfX1dLCJ1c2FnZSI6eyJpbnB1dF90b2tlbnMiOjUsIm91dHB1dF90b2tlbnMiOjJ9fQ==",
+      "attempts": 1,
+      "pages": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_TOOLS_REQUESTED",
+        "payload": {
+         "calls": [
+          {
+           "id": "tu1",
+           "name": "read_x",
+           "arguments": {
+            "a": 1
+           }
+          }
+         ]
+        }
+       }
+      ],
+      "neverEmits": [
+       "LLM_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-an-anthropic-text-reply-ends-the-tool-loop-without-a-tool-call",
+   "steps": [
+    {
+     "trait": "AnthropicLlm",
+     "event": "LLM_CHAT_WIRE_RESULT",
+     "payload": {
+      "key": "{\"kind\":\"tools\",\"id\":\"{\\\"key\\\":\\\"t1\\\",\\\"model\\\":\\\"claude-sonnet-4-5\\\",\\\"system\\\":\\\"sys\\\",\\\"userPrompt\\\":\\\"hi\\\",\\\"maxSteps\\\":8,\\\"tools\\\":[{\\\"name\\\":\\\"read_x\\\",\\\"description\\\":\\\"d\\\",\\\"parameters\\\":{\\\"type\\\":\\\"object\\\"}}],\\\"messages\\\":[{\\\"role\\\":\\\"system\\\",\\\"content\\\":\\\"sys\\\"},{\\\"role\\\":\\\"user\\\",\\\"content\\\":\\\"hi\\\"}],\\\"steps\\\":[],\\\"usage\\\":{\\\"promptTokens\\\":0,\\\"completionTokens\\\":0,\\\"totalTokens\\\":0,\\\"modelCalls\\\":1}}\"}",
+      "status": 200,
+      "headers": {
+       "content-type": "application/json"
+      },
+      "body": "eyJjb250ZW50IjpbeyJ0eXBlIjoidGV4dCIsInRleHQiOiJkb25lIn1dLCJ1c2FnZSI6eyJpbnB1dF90b2tlbnMiOjUsIm91dHB1dF90b2tlbnMiOjJ9fQ==",
+      "attempts": 1,
+      "pages": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_CALL_TOOLS_RESULT",
+        "payload": {
+         "reply": "done"
+        }
+       }
+      ],
+      "neverEmits": [
+       "LLM_TOOLS_REQUESTED",
+       "LLM_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-an-anthropic-tool-reply-with-no-content-array-is-a-failure",
+   "steps": [
+    {
+     "trait": "AnthropicLlm",
+     "event": "LLM_CHAT_WIRE_RESULT",
+     "payload": {
+      "key": "{\"kind\":\"tools\",\"id\":\"{\\\"key\\\":\\\"t1\\\",\\\"model\\\":\\\"claude-sonnet-4-5\\\",\\\"system\\\":\\\"sys\\\",\\\"userPrompt\\\":\\\"hi\\\",\\\"maxSteps\\\":8,\\\"tools\\\":[{\\\"name\\\":\\\"read_x\\\",\\\"description\\\":\\\"d\\\",\\\"parameters\\\":{\\\"type\\\":\\\"object\\\"}}],\\\"messages\\\":[{\\\"role\\\":\\\"system\\\",\\\"content\\\":\\\"sys\\\"},{\\\"role\\\":\\\"user\\\",\\\"content\\\":\\\"hi\\\"}],\\\"steps\\\":[],\\\"usage\\\":{\\\"promptTokens\\\":0,\\\"completionTokens\\\":0,\\\"totalTokens\\\":0,\\\"modelCalls\\\":1}}\"}",
+      "status": 200,
+      "headers": {
+       "content-type": "application/json"
+      },
+      "body": "eyJ1c2FnZSI6e319",
+      "attempts": 1,
+      "pages": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_FAILED"
+       }
+      ],
+      "neverEmits": [
+       "LLM_TOOLS_REQUESTED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-anthropic-tool-turn-sends-the-call-as-tool-use-and-its-answer-as-tool-result",
+   "steps": [
+    {
+     "trait": "AnthropicLlm",
+     "event": "LLM_TOOLS_SEND",
+     "payload": {
+      "session": "{\"key\":\"t1\",\"model\":\"claude-sonnet-4-5\",\"system\":\"sys\",\"userPrompt\":\"hi\",\"maxSteps\":8,\"tools\":[{\"name\":\"read_x\",\"description\":\"d\",\"parameters\":{\"type\":\"object\"}}],\"messages\":[{\"role\":\"system\",\"content\":\"sys\"},{\"role\":\"user\",\"content\":\"hi\"},{\"role\":\"assistant\",\"content\":\"looking\",\"tool_calls\":[{\"id\":\"tu1\",\"type\":\"function\",\"function\":{\"name\":\"read_x\",\"arguments\":\"{\\\"a\\\":1}\"}}]},{\"role\":\"tool\",\"tool_call_id\":\"tu1\",\"content\":\"rows\"}],\"steps\":[],\"usage\":{\"promptTokens\":0,\"completionTokens\":0,\"totalTokens\":0,\"modelCalls\":1}}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_CHAT_WIRE",
+        "payload": {
+         "path": "/v1/messages",
+         "json": "{\"model\":\"claude-sonnet-4-5\",\"max_tokens\":8192,\"messages\":[{\"role\":\"user\",\"content\":\"hi\"},{\"role\":\"assistant\",\"content\":[{\"type\":\"text\",\"text\":\"looking\"},{\"type\":\"tool_use\",\"id\":\"tu1\",\"name\":\"read_x\",\"input\":{\"a\":1}}]},{\"role\":\"user\",\"content\":[{\"type\":\"tool_result\",\"tool_use_id\":\"tu1\",\"content\":\"rows\"}]}],\"system\":\"sys\",\"tools\":[{\"name\":\"read_x\",\"description\":\"d\",\"input_schema\":{\"type\":\"object\"}}]}"
+        }
+       }
+      ]
+     }
+    }
+   ]
   }
  ]
 }

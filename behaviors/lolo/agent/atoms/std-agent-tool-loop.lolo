@@ -158,6 +158,7 @@ orbital AgentToolLoopOrbital {
     current : ToolCall @description "The call being executed."
     binding : AgentToolBinding @description "The tool the call being executed names."
     callStartedAt : instant @description "When the call being executed began."
+    turnSteps : [AgentActivity] @description "Every step of the current turn so far, kept so a failed run can be audited." = []
   }
 
   trait LoopLlm = Llm.traits.LlmClient {
@@ -233,6 +234,7 @@ orbital AgentToolLoopOrbital {
         (set @entity.status thinking)
         (set @entity.ephemeral false)
         (set @entity.cancelled false)
+        (set @entity.turnSteps [])
         (set @entity.live (not @config.quiet))
         (set @entity.turnMessages ?messages)
         (set @entity.turnInstructions (if (= (default ?context "") "") @config.instructions (str/concat @config.instructions "\n\nWhat you remember that may be relevant:\n" (default ?context ""))))
@@ -242,6 +244,7 @@ orbital AgentToolLoopOrbital {
         (set @entity.status thinking)
         (set @entity.ephemeral true)
         (set @entity.cancelled false)
+        (set @entity.turnSteps [])
         (set @entity.live false)
         (set @entity.turnMessages ?messages)
         (set @entity.turnInstructions (if (= (default ?instructions "") "") @config.instructions ?instructions))
@@ -299,8 +302,10 @@ orbital AgentToolLoopOrbital {
       CONVERSE -> thinking when @entity.cancelled
         (emit ASSISTANT_REPLY_FAILED { error: "The previous request is still being cancelled; ask again in a moment.", ephemeral: (default ?ephemeral false) })
       ToolsStep -> thinking when (and @entity.live (not @entity.cancelled))
+        (set @entity.turnSteps (array/append @entity.turnSteps ?activity))
         (emit ASSISTANT_STEP { activity: ?activity })
       ToolsStep -> thinking when (or (not @entity.live) @entity.cancelled)
+        (set @entity.turnSteps (array/append @entity.turnSteps ?activity))
       ToolsRequested -> running when (not @entity.cancelled)
         (set @entity.session ?session)
         (set @entity.calls ?calls)
@@ -320,7 +325,7 @@ orbital AgentToolLoopOrbital {
       ToolsFailed -> idle when (not @entity.cancelled)
         (set @entity.status failed)
         (set @entity.error ?message)
-        (emit ASSISTANT_REPLY_FAILED { error: ?message, ephemeral: @entity.ephemeral })
+        (emit ASSISTANT_REPLY_FAILED { error: ?message, steps: @entity.turnSteps, ephemeral: @entity.ephemeral })
     }
 
     state running {
@@ -442,6 +447,7 @@ orbital AgentToolLoopOrbital {
         @tier "domain"
       ASSISTANT_REPLY_FAILED -> external {
         error : string!
+        steps : [AgentActivity]
         ephemeral : boolean
       }
         @description "The assistant could not answer (model unavailable, or out of steps)."

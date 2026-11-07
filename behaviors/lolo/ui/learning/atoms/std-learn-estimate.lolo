@@ -8,6 +8,10 @@ orbital EstimateOrbital {
     answer : number!
     unit : string
     hint : string
+    explanation : string
+    min : number
+    max : number
+    step : number
   }
 
   entity EstimateScene [runtime] {
@@ -24,6 +28,10 @@ orbital EstimateOrbital {
     done : boolean = false
     promptText : string = ""
     promptHint : string = ""
+    promptExplanation : string = ""
+    sliderLo : number = 0
+    sliderHi : number = 500
+    sliderInc : number = 0.1
     answer : number = 0
     unit : string = ""
     feedback : string
@@ -44,7 +52,11 @@ orbital EstimateOrbital {
             (set @entity.title @config.title)
             (set @entity.promptIndex 0)
             (set @entity.totalPrompts (array/len @entity.prompts))
-            (set @entity.estimate @config.sliderDefault)
+            (set @entity.sliderLo (if (== @first null) @config.sliderMin (object/get @first min @config.sliderMin)))
+            (set @entity.sliderHi (if (== @first null) @config.sliderMax (object/get @first max @config.sliderMax)))
+            (set @entity.sliderInc (if (== @first null) @config.sliderStep (object/get @first step @config.sliderStep)))
+            (set @entity.promptExplanation (if (== @first null) "" (object/get @first explanation "")))
+            (set @entity.estimate (math/clamp @config.sliderDefault @entity.sliderLo @entity.sliderHi))
             (set @entity.locked false)
             (set @entity.band "")
             (set @entity.score 0)
@@ -61,7 +73,7 @@ orbital EstimateOrbital {
                 ] },
               { type: stack, direction: vertical, gap: xs, children: [
                   { type: typography, variant: caption, content: (str/concat "Your estimate: " (math/round @entity.estimate 2) " " @entity.unit) },
-                  { type: range-slider, min: @config.sliderMin, max: @config.sliderMax, step: @config.sliderStep, value: @entity.estimate, showTooltip: true, action: "SET_ESTIMATE" }
+                  { type: range-slider, min: @entity.sliderLo, max: @entity.sliderHi, step: @entity.sliderInc, value: @entity.estimate, showTooltip: true, action: "SET_ESTIMATE" }
                 ] },
               { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
                   { type: button, action: LOCK_IN, label: @config.lockLabel, icon: "check", variant: primary, disabled: (if @entity.locked true false) },
@@ -104,7 +116,11 @@ orbital EstimateOrbital {
             (set @entity.title @config.title)
             (set @entity.promptIndex 0)
             (set @entity.totalPrompts (array/len @entity.prompts))
-            (set @entity.estimate @config.sliderDefault)
+            (set @entity.sliderLo (if (== @first null) @config.sliderMin (object/get @first min @config.sliderMin)))
+            (set @entity.sliderHi (if (== @first null) @config.sliderMax (object/get @first max @config.sliderMax)))
+            (set @entity.sliderInc (if (== @first null) @config.sliderStep (object/get @first step @config.sliderStep)))
+            (set @entity.promptExplanation (if (== @first null) "" (object/get @first explanation "")))
+            (set @entity.estimate (math/clamp @config.sliderDefault @entity.sliderLo @entity.sliderHi))
             (set @entity.locked false)
             (set @entity.band "")
             (set @entity.score 0)
@@ -121,7 +137,7 @@ orbital EstimateOrbital {
                 ] },
               { type: stack, direction: vertical, gap: xs, children: [
                   { type: typography, variant: caption, content: (str/concat "Your estimate: " (math/round @entity.estimate 2) " " @entity.unit) },
-                  { type: range-slider, min: @config.sliderMin, max: @config.sliderMax, step: @config.sliderStep, value: @entity.estimate, showTooltip: true, action: "SET_ESTIMATE" }
+                  { type: range-slider, min: @entity.sliderLo, max: @entity.sliderHi, step: @entity.sliderInc, value: @entity.estimate, showTooltip: true, action: "SET_ESTIMATE" }
                 ] },
               { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
                   { type: button, action: LOCK_IN, label: @config.lockLabel, icon: "check", variant: primary, disabled: (if @entity.locked true false) },
@@ -160,7 +176,11 @@ orbital EstimateOrbital {
             (set @entity.title @config.title)
             (set @entity.promptIndex 0)
             (set @entity.totalPrompts (array/len @entity.prompts))
-            (set @entity.estimate @config.sliderDefault)
+            (set @entity.sliderLo (if (== @first null) @config.sliderMin (object/get @first min @config.sliderMin)))
+            (set @entity.sliderHi (if (== @first null) @config.sliderMax (object/get @first max @config.sliderMax)))
+            (set @entity.sliderInc (if (== @first null) @config.sliderStep (object/get @first step @config.sliderStep)))
+            (set @entity.promptExplanation (if (== @first null) "" (object/get @first explanation "")))
+            (set @entity.estimate (math/clamp @config.sliderDefault @entity.sliderLo @entity.sliderHi))
             (set @entity.locked false)
             (set @entity.band "")
             (set @entity.score 0)
@@ -177,7 +197,7 @@ orbital EstimateOrbital {
                 ] },
               { type: stack, direction: vertical, gap: xs, children: [
                   { type: typography, variant: caption, content: (str/concat "Your estimate: " (math/round @entity.estimate 2) " " @entity.unit) },
-                  { type: range-slider, min: @config.sliderMin, max: @config.sliderMax, step: @config.sliderStep, value: @entity.estimate, showTooltip: true, action: "SET_ESTIMATE" }
+                  { type: range-slider, min: @entity.sliderLo, max: @entity.sliderHi, step: @entity.sliderInc, value: @entity.estimate, showTooltip: true, action: "SET_ESTIMATE" }
                 ] },
               { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
                   { type: button, action: LOCK_IN, label: @config.lockLabel, icon: "check", variant: primary, disabled: (if @entity.locked true false) },
@@ -211,7 +231,7 @@ orbital EstimateOrbital {
         (render-ui main null)
 
       SET_ESTIMATE -> idle when (and (== @entity.active true) (and (== @entity.locked false) (== @entity.done false)))
-        (set @entity.estimate (math/clamp (default ?value @entity.estimate) @config.sliderMin @config.sliderMax))
+        (set @entity.estimate (math/clamp (default ?value @entity.estimate) @entity.sliderLo @entity.sliderHi))
         (set @entity.view [
           { type: card, variant: bordered, padding: md, children: [
               { type: typography, variant: body, content: @entity.promptText },
@@ -219,7 +239,7 @@ orbital EstimateOrbital {
             ] },
           { type: stack, direction: vertical, gap: xs, children: [
               { type: typography, variant: caption, content: (str/concat "Your estimate: " (math/round @entity.estimate 2) " " @entity.unit) },
-              { type: range-slider, min: @config.sliderMin, max: @config.sliderMax, step: @config.sliderStep, value: @entity.estimate, showTooltip: true, action: "SET_ESTIMATE" }
+              { type: range-slider, min: @entity.sliderLo, max: @entity.sliderHi, step: @entity.sliderInc, value: @entity.estimate, showTooltip: true, action: "SET_ESTIMATE" }
             ] },
           { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
               { type: button, action: LOCK_IN, label: @config.lockLabel, icon: "check", variant: primary, disabled: (if @entity.locked true false) },
@@ -259,7 +279,7 @@ orbital EstimateOrbital {
             (set @entity.locked true)
             (set @entity.band @band)
             (set @entity.score (+ @entity.score @points))
-            (set @entity.feedback (str/concat "Answer: " (math/round @entity.answer 2) " " @entity.unit " — you were off by " (math/round @err 2) " (" (math/round (* @rel 100) 1) "%). +" (str/concat "" @points) " points."))
+            (set @entity.feedback (str/concat "Answer: " (math/round @entity.answer 2) " " @entity.unit " — you were off by " (math/round @err 2) " (" (math/round (* @rel 100) 1) "%). +" (str/concat "" @points) " points." (if (== @entity.promptExplanation "") "" (str/concat " " @entity.promptExplanation))))
             (set @entity.view [
               { type: card, variant: bordered, padding: md, children: [
                   { type: typography, variant: body, content: @entity.promptText },
@@ -267,7 +287,7 @@ orbital EstimateOrbital {
                 ] },
               { type: stack, direction: vertical, gap: xs, children: [
                   { type: typography, variant: caption, content: (str/concat "Your estimate: " (math/round @entity.estimate 2) " " @entity.unit) },
-                  { type: range-slider, min: @config.sliderMin, max: @config.sliderMax, step: @config.sliderStep, value: @entity.estimate, showTooltip: true, action: "SET_ESTIMATE" }
+                  { type: range-slider, min: @entity.sliderLo, max: @entity.sliderHi, step: @entity.sliderInc, value: @entity.estimate, showTooltip: true, action: "SET_ESTIMATE" }
                 ] },
               { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
                   { type: button, action: LOCK_IN, label: @config.lockLabel, icon: "check", variant: primary, disabled: (if @entity.locked true false) },
@@ -309,7 +329,11 @@ orbital EstimateOrbital {
             (set @entity.done (if @finished true false))
             (set @entity.locked false)
             (set @entity.band "")
-            (set @entity.estimate @config.sliderDefault)
+            (set @entity.sliderLo (if @finished @entity.sliderLo (if (== @next null) @config.sliderMin (object/get @next min @config.sliderMin))))
+            (set @entity.sliderHi (if @finished @entity.sliderHi (if (== @next null) @config.sliderMax (object/get @next max @config.sliderMax))))
+            (set @entity.sliderInc (if @finished @entity.sliderInc (if (== @next null) @config.sliderStep (object/get @next step @config.sliderStep))))
+            (set @entity.promptExplanation (if @finished @entity.promptExplanation (if (== @next null) "" (object/get @next explanation ""))))
+            (set @entity.estimate (math/clamp @config.sliderDefault @entity.sliderLo @entity.sliderHi))
             (set @entity.promptText (if @finished @entity.promptText (if (== @next null) "" (object/get @next prompt))))
             (set @entity.promptHint (if @finished @entity.promptHint (if (== @next null) "" (object/get @next hint ""))))
             (set @entity.answer (if @finished @entity.answer (if (== @next null) 0 (object/get @next answer))))
@@ -328,7 +352,7 @@ orbital EstimateOrbital {
                   ] },
                 { type: stack, direction: vertical, gap: xs, children: [
                     { type: typography, variant: caption, content: (str/concat "Your estimate: " (math/round @entity.estimate 2) " " @entity.unit) },
-                    { type: range-slider, min: @config.sliderMin, max: @config.sliderMax, step: @config.sliderStep, value: @entity.estimate, showTooltip: true, action: "SET_ESTIMATE" }
+                    { type: range-slider, min: @entity.sliderLo, max: @entity.sliderHi, step: @entity.sliderInc, value: @entity.estimate, showTooltip: true, action: "SET_ESTIMATE" }
                   ] },
                 { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
                     { type: button, action: LOCK_IN, label: @config.lockLabel, icon: "check", variant: primary, disabled: (if @entity.locked true false) },
@@ -365,7 +389,11 @@ orbital EstimateOrbital {
           )
           (do
             (set @entity.promptIndex 0)
-            (set @entity.estimate @config.sliderDefault)
+            (set @entity.sliderLo (if (== @first null) @config.sliderMin (object/get @first min @config.sliderMin)))
+            (set @entity.sliderHi (if (== @first null) @config.sliderMax (object/get @first max @config.sliderMax)))
+            (set @entity.sliderInc (if (== @first null) @config.sliderStep (object/get @first step @config.sliderStep)))
+            (set @entity.promptExplanation (if (== @first null) "" (object/get @first explanation "")))
+            (set @entity.estimate (math/clamp @config.sliderDefault @entity.sliderLo @entity.sliderHi))
             (set @entity.locked false)
             (set @entity.band "")
             (set @entity.score 0)
@@ -382,7 +410,7 @@ orbital EstimateOrbital {
                 ] },
               { type: stack, direction: vertical, gap: xs, children: [
                   { type: typography, variant: caption, content: (str/concat "Your estimate: " (math/round @entity.estimate 2) " " @entity.unit) },
-                  { type: range-slider, min: @config.sliderMin, max: @config.sliderMax, step: @config.sliderStep, value: @entity.estimate, showTooltip: true, action: "SET_ESTIMATE" }
+                  { type: range-slider, min: @entity.sliderLo, max: @entity.sliderHi, step: @entity.sliderInc, value: @entity.estimate, showTooltip: true, action: "SET_ESTIMATE" }
                 ] },
               { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
                   { type: button, action: LOCK_IN, label: @config.lockLabel, icon: "check", variant: primary, disabled: (if @entity.locked true false) },
@@ -498,7 +526,7 @@ orbital EstimateOrbital {
         { prompt: "Roughly how many days is one million seconds?", answer: 11.6, unit: "days", hint: "A day is 86,400 seconds." }
       ]
         @label "Prompts"
-        @description "The question roster; each prompt carries the true numeric answer, an optional unit, and an optional hint. Realizations declare their own subject's quantities here."
+        @description "The question roster; each prompt carries the true numeric answer, an optional unit, an optional hint, an optional explanation shown with the answer, and an optional own slider min, max and step that replace the knobs below for that prompt. Realizations declare their own subject's quantities here."
         @tier "domain"
       sliderMin : number = 0
         @label "Slider Min"

@@ -1871,11 +1871,7 @@
         }
        },
        {
-        "event": "PKG_TARGET_NEXT",
-        "payload": {}
-       },
-       {
-        "event": "PKG_LOCK_DIR",
+        "event": "PKG_BACKUP_GONE",
         "payload": {}
        }
       ],
@@ -1883,6 +1879,23 @@
        {
         "type": "set",
         "arg0": "@entity.lock"
+       }
+      ]
+     }
+    },
+    {
+     "event": "PKG_STAGE_ROOT_TIDIED",
+     "payload": {},
+     "from": "resolving",
+     "expect": {
+      "emits": [
+       {
+        "event": "PKG_TARGET_NEXT",
+        "payload": {}
+       },
+       {
+        "event": "PKG_LOCK_DIR",
+        "payload": {}
        }
       ]
      }
@@ -5722,6 +5735,37 @@
      "payload": {},
      "from": "resolving",
      "expect": {
+      "effects": [
+       {
+        "type": "os/rmdir",
+        "key": "stagescope",
+        "optionsAt": 2
+       }
+      ],
+      "neverEmits": [
+       "PKG_TARGET_NEXT"
+      ]
+     }
+    },
+    {
+     "event": "PKG_STAGE_SCOPE_TIDIED",
+     "payload": {},
+     "from": "resolving",
+     "expect": {
+      "effects": [
+       {
+        "type": "os/rmdir",
+        "key": "stageroot",
+        "optionsAt": 2
+       }
+      ]
+     }
+    },
+    {
+     "event": "PKG_STAGE_ROOT_TIDIED",
+     "payload": {},
+     "from": "resolving",
+     "expect": {
       "emits": [
        {
         "event": "PKG_TARGET_NEXT",
@@ -5764,10 +5808,6 @@
       "emits": [
        {
         "event": "PKG_BACKUP_GONE",
-        "payload": {}
-       },
-       {
-        "event": "PKG_TARGET_NEXT",
         "payload": {}
        }
       ]
