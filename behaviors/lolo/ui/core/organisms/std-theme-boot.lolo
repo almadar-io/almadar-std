@@ -55,7 +55,8 @@ type MotionShape = { scale : number!, translateX : number!, translateY : number!
 type CanvasSurfaces = { muted : string!, card : string!, onPrimary : string! }
 type CanvasStrokes = { thin : number!, normal : number!, bold : number! }
 type CanvasLabel = { size : string!, weight : string!, uppercase : boolean! }
-type CanvasThemeWire = { ground : string!, surfaces : CanvasSurfaces!, tones : Map string string!, series : [string]!, strokes : CanvasStrokes!, lineCap : string!, lineJoin : string!, dash : [number]!, dot : [number]!, fillStyle : string!, fillOpacity : number!, marker : string!, label : CanvasLabel!, text : Map string number!, corner : number! }
+type CanvasScene = { roughness : number!, metalness : number!, flat : boolean!, outline : number!, ambient : number!, key : number!, keyColor : string!, fog : number! }
+type CanvasThemeWire = { ground : string!, surfaces : CanvasSurfaces!, tones : Map string string!, series : [string]!, strokes : CanvasStrokes!, lineCap : string!, lineJoin : string!, dash : [number]!, dot : [number]!, fillStyle : string!, fillOpacity : number!, marker : string!, label : CanvasLabel!, text : Map string number!, corner : number!, scene : CanvasScene! }
 type MotionWire = { entryDefault : string!, staggerMs : number!, shapes : Map string MotionShape! }
 
 orbital ThemeBootOrbital {
@@ -127,7 +128,7 @@ orbital ThemeBootOrbital {
         (set @entity.gotTokens true)
         (emit RESOLVE_MOTION { motion: (default (object/get ?tokens "motion" {}) {}) })
       CANVAS_THEME_RESULT -> ready
-        (set @entity.canvasTheme { ground: ?ground, surfaces: { muted: ?surfaceMuted, card: ?surfaceCard, onPrimary: ?surfaceOnPrimary }, tones: ?tones, series: ?series, strokes: { thin: ?strokeThin, normal: ?strokeNormal, bold: ?strokeBold }, lineCap: ?lineCap, lineJoin: ?lineJoin, dash: ?dash, dot: ?dot, fillStyle: ?fillStyle, fillOpacity: ?fillOpacity, marker: ?marker, label: { size: ?labelSize, weight: ?labelWeight, uppercase: ?labelUppercase }, text: ?text, corner: ?corner })
+        (set @entity.canvasTheme { ground: ?ground, surfaces: { muted: ?surfaceMuted, card: ?surfaceCard, onPrimary: ?surfaceOnPrimary }, tones: ?tones, series: ?series, strokes: { thin: ?strokeThin, normal: ?strokeNormal, bold: ?strokeBold }, lineCap: ?lineCap, lineJoin: ?lineJoin, dash: ?dash, dot: ?dot, fillStyle: ?fillStyle, fillOpacity: ?fillOpacity, marker: ?marker, label: { size: ?labelSize, weight: ?labelWeight, uppercase: ?labelUppercase }, text: ?text, corner: ?corner, scene: ?scene })
         (set @entity.gotCanvas true)
         (emit THEME_PART { })
       MOTION_RESOLVED -> ready
@@ -205,6 +206,7 @@ orbital ThemeBootOrbital {
         labelUppercase : boolean!  
         text : Map string number!  
         corner : number!  
+        scene : CanvasScene!
       }
         @description "The canvas theme resolved."
       BootMotion.MOTION_RESOLVED -> MOTION_RESOLVED
