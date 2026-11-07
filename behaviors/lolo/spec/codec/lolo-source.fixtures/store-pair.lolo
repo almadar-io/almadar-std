@@ -1,0 +1,43 @@
+app store-pair [
+  version: "1.0.0",
+  description: "Fixture for the native renderers' typed ports: a trait that persists a row and fetches rows back through their success and failure routes, so a native store must answer what the kernel's store answers."
+]
+
+orbital StoreOrbital {
+  entity Note [runtime] {
+    id : string!
+    text : string = ""
+    kind : string = ""
+    seen : number = 0
+    last : string = ""
+  }
+
+  trait Notes -> Note {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      ADD -> idle
+        (persist create Note { text: ?text, kind: ?kind } { emit: { success: ADDED, failure: ADD_FAILED } })
+      ADDED -> idle
+        (set @entity.last ?text)
+        (fetch Note { filter: (= (object/get @entity "kind") "todo"), emit: { success: LOADED, failure: LOAD_FAILED } })
+      LOADED -> idle
+        (set @entity.seen (array/len ?data))
+      ADD_FAILED -> idle
+        (set @entity.last "failed")
+      LOAD_FAILED -> idle
+        (set @entity.last "load failed")
+    }
+
+    listens {
+      ADD { text : string!, kind : string! }
+      ADDED { id : string!, text : string!, kind : string! }
+      LOADED { data : [Note]!, totalCount : number! }
+      ADD_FAILED { error : string! }
+      LOAD_FAILED { error : string! }
+    }
+  }
+
+  page boot as StoreStart -> Notes
+}
