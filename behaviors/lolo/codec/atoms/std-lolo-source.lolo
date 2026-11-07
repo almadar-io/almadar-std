@@ -22,12 +22,13 @@ type SrcMachine = { states : [SrcState]!, transitions : [SrcTransition]!, events
 type SrcEmitDecl = { event : string!, payloadSchema : [SrcField]? }
 type SrcListenSource = { kind : string!, trait : string?, orbital : string? }
 type SrcListenDecl = { event : string!, triggers : string?, source : SrcListenSource?, guard : SrcExpr?, payloadMapping : SrcExpr? }
-type SrcTraitDecl = { name : string!, linkedEntity : string?, config : Map string SrcKnobDecl?, emits : [SrcEmitDecl]?, stateMachine : SrcMachine?, listens : [SrcListenDecl]? }
+type SrcTraitDecl = { name : string!, ref : string?, linkedEntity : string?, config : Map string SrcKnobDecl?, emits : [SrcEmitDecl]?, stateMachine : SrcMachine?, listens : [SrcListenDecl]? }
 type SrcListenRow = { source : string!, event : string!, trigger : string!, guard : SrcExpr?, map : SrcExpr? }
 type SrcEntityDecl = { name : string!, fields : [SrcField]! }
 type SrcOrbital = { name : string!, entity : SrcEntityDecl?, traits : [SrcTraitDecl]! }
 type SrcProgram = { types : Map string [SrcField]?, orbitals : [SrcOrbital]! }
-type SrcInspect = { authoredProgram : SrcProgram!, types : Map string string!, expected : Map string string!, models : Map string [string]! }
+type SrcResolved = { program : SrcProgram! }
+type SrcInspect = { program : SrcProgram!, authoredProgram : SrcProgram!, types : Map string string!, expected : Map string string!, models : Map string [string]! }
 type SrcContainer = { name : string!, alias : boolean!, fields : [SrcField]! }
 type SrcKnob = { key : string!, default : SrcExpr? }
 type SrcTraitInfo = { name : string!, path : string!, entity : string!, initial : string!, hasMachine : boolean!, knobs : [SrcKnob]!, transitions : [SrcTransition]!, events : [string]!, listenTypes : Map string string!, emitTypes : Map string string!, emitVoid : [string]!, configType : string!, orbital : string!, listenRows : [SrcListenRow]! }
@@ -687,11 +688,18 @@ orbital LoloSourceOrbital [fs: { cwd: "node_modules/@almadar/std/**": [read] }] 
         (emit SOURCE_RENDER_FAILED { error: "a render is already in progress" })
       LOLO_READ_FAILED -> ready
         (emit SOURCE_RENDER_FAILED { error: (default @payload.error "the source could not be read") })
-      LOLO_READ -> rendering
+      LOLO_READ -> rendering when (not (array/some (object/get @payload.result "orbitals") (fn co (array/some (object/get @co "traits") (fn ct (!= (object/get @ct "ref" null) null))))))
         (set @entity.program @payload.result)
         (emit SRC_PREPARE { })
+      LOLO_READ -> reading when (and (array/some (object/get @payload.result "orbitals") (fn co (array/some (object/get @co "traits") (fn ct (!= (object/get @ct "ref" null) null))))) (!= @entity.path ""))
+        (program/read @entity.source { resolve: true, text: false, path: @entity.path } { emit: { success: LOLO_RESOLVED, failure: LOLO_READ_FAILED } })
+      LOLO_READ -> ready when (and (array/some (object/get @payload.result "orbitals") (fn co (array/some (object/get @co "traits") (fn ct (!= (object/get @ct "ref" null) null))))) (= @entity.path ""))
+        (emit SOURCE_RENDER_FAILED { error: "a program that composes behaviors renders from its composed program, which needs the source's absolute path" })
+      LOLO_RESOLVED -> rendering
+        (set @entity.program @payload.result.program)
+        (emit SRC_PREPARE { })
       LOLO_INSPECTED -> rendering
-        (set @entity.program @payload.result.authoredProgram)
+        (set @entity.program (if (array/some (object/get @payload.result.authoredProgram "orbitals") (fn co (array/some (object/get @co "traits") (fn ct (!= (object/get @ct "ref" null) null))))) @payload.result.program @payload.result.authoredProgram))
         (set @entity.types @payload.result.types)
         (set @entity.expected @payload.result.expected)
         (set @entity.models @payload.result.models)
@@ -1163,6 +1171,9 @@ orbital LoloSourceOrbital [fs: { cwd: "node_modules/@almadar/std/**": [read] }] 
         @tier "internal"
       LOLO_READ { result : SrcProgram! }
         @description "Internal: the program read by program/read."
+        @tier "internal"
+      LOLO_RESOLVED { result : SrcResolved! }
+        @description "Internal: the composed program, read by program/read with resolve, of a program that composes behaviors."
         @tier "internal"
       LOLO_INSPECTED { result : SrcInspect! }
         @description "Internal: the program and its types read by program/read with inspect."

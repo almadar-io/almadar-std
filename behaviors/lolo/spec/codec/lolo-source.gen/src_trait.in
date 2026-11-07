@@ -56,11 +56,18 @@
         (emit SOURCE_RENDER_FAILED { error: "a render is already in progress" })
       LOLO_READ_FAILED -> ready
         (emit SOURCE_RENDER_FAILED { error: (default @payload.error "the source could not be read") })
-      LOLO_READ -> rendering
+      LOLO_READ -> rendering when (not (array/some (object/get @payload.result "orbitals") (fn co (array/some (object/get @co "traits") (fn ct (!= (object/get @ct "ref" null) null))))))
         (set @entity.program @payload.result)
         (emit SRC_PREPARE { })
+      LOLO_READ -> reading when (and (array/some (object/get @payload.result "orbitals") (fn co (array/some (object/get @co "traits") (fn ct (!= (object/get @ct "ref" null) null))))) (!= @entity.path ""))
+        (program/read @entity.source { resolve: true, text: false, path: @entity.path } { emit: { success: LOLO_RESOLVED, failure: LOLO_READ_FAILED } })
+      LOLO_READ -> ready when (and (array/some (object/get @payload.result "orbitals") (fn co (array/some (object/get @co "traits") (fn ct (!= (object/get @ct "ref" null) null))))) (= @entity.path ""))
+        (emit SOURCE_RENDER_FAILED { error: "a program that composes behaviors renders from its composed program, which needs the source's absolute path" })
+      LOLO_RESOLVED -> rendering
+        (set @entity.program @payload.result.program)
+        (emit SRC_PREPARE { })
       LOLO_INSPECTED -> rendering
-        (set @entity.program @payload.result.authoredProgram)
+        (set @entity.program (if (array/some (object/get @payload.result.authoredProgram "orbitals") (fn co (array/some (object/get @co "traits") (fn ct (!= (object/get @ct "ref" null) null))))) @payload.result.program @payload.result.authoredProgram))
         (set @entity.types @payload.result.types)
         (set @entity.expected @payload.result.expected)
         (set @entity.models @payload.result.models)
@@ -123,6 +130,9 @@
         @tier "internal"
       LOLO_READ { result : SrcProgram! }
         @description "Internal: the program read by program/read."
+        @tier "internal"
+      LOLO_RESOLVED { result : SrcResolved! }
+        @description "Internal: the composed program, read by program/read with resolve, of a program that composes behaviors."
         @tier "internal"
       LOLO_INSPECTED { result : SrcInspect! }
         @description "Internal: the program and its types read by program/read with inspect."
