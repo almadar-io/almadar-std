@@ -1,6 +1,6 @@
 app std-mock-seed-marks [
   version: "1.0.0",
-  description: "std-mock-seed-marks — the one answer to whether a program already carries the mock-seed marks store. MARKS_CHECK { program } answers MARKS_CHECKED { marked }: true when an orbital of the program declares an auxiliary entity whose collection is mock_seed_marks (the MockSeedMark store of std-mock-seed, so the program already composes it), false for a program without one or no program. It also answers `personas`: the .lolo text (a `uses` and `orbital DevLogin`, no app header) that composes std-dev-personas onto the program's `[identity]` entity — a DevPersona entity over the identity entity's collection, signed in as the first declared value of the identity entity's role field (or the persona the ask names) — or empty when the program has no identity entity or a trait already handles PERSONA_ACT_AS, so the mock seeder can sign each owner in and the guest has a signed-in viewer. orb serve and the catalog guest session each ask it before composing std-mock-page-seed.",
+  description: "std-mock-seed-marks — the one answer to whether a program already carries the mock-seed marks store. MARKS_CHECK { program } answers MARKS_CHECKED { marked }: true when an orbital of the program declares an auxiliary entity whose collection is mock_seed_marks (the MockSeedMark store of std-mock-seed, so the program already composes it), false for a program without one or no program. It also answers `personas`: the .lolo text (a `uses` and `orbital DevLogin`, no app header) that composes std-dev-personas onto the program's `[identity]` entity — a DevPersona entity over the identity entity's collection, signed in as the first declared value of the identity entity's role field — or empty when the program has no identity entity or a trait already handles PERSONA_ACT_AS, so the mock seeder can sign each owner in and the guest has a signed-in viewer. orb serve and the catalog guest session each ask it before composing std-mock-page-seed.",
   egress: []
 ]
 ;; @capabilities "mock seed marks store present, program already composes std-mock-seed, seed once, dev personas composition text for the identity entity"
@@ -32,7 +32,7 @@ orbital MockSeedMarksOrbital {
                     (found (object/get (default @identity {}) "collection" ""))
                     (roles (object/get (default (array/find (object/get (default @identity {}) "fields" []) (fn f (= (object/get @f "name" "") "role"))) {}) "values" [])))
                 (let ((collection (if (or (= @identity null) @handled) "" @found))
-                      (spec (if (!= (default @payload.persona "") "") @payload.persona (default (array/first @roles) ""))))
+                      (spec (default (array/first @roles) "")))
                   (emit MARKS_CHECKED {
                     marked: (and (!= @p null) (array/some @orbitals (fn o (array/some (object/get @o "auxiliaryEntities" []) (fn e (= (object/get @e "collection" "") "mock_seed_marks")))))),
                     personasCollection: @collection,
@@ -48,7 +48,7 @@ orbital MockSeedMarksOrbital {
         personasCollection : string!
         personasSignIn : string!
       }
-        @description "Whether the asked program already declares the mock-seed marks store, and the .lolo text that composes std-dev-personas onto the program's [identity] entity (its `uses` and `orbital DevLogin`, no app header): linked to a DevPersona entity over the identity entity's collection, signing the session in as the persona the ask named, else the first declared value of the identity entity's role field. Empty when the program declares no identity entity or a trait of it already handles PERSONA_ACT_AS. personasCollection and personasSignIn are the two facts the text is built from (the identity entity's collection and the autoSignIn spec), empty with it, for a host that composes the resolved std-dev-personas itself instead of reading text (a guest opens resolved programs only)."
+        @description "Whether the asked program already declares the mock-seed marks store, and the .lolo text that composes std-dev-personas onto the program's [identity] entity (its `uses` and `orbital DevLogin`, no app header): linked to a DevPersona entity over the identity entity's collection, signing the session in as the first declared value of the identity entity's role field (an ALMADAR_PERSONA spec: an identity row id, else a role). Empty when the program declares no identity entity or a trait of it already handles PERSONA_ACT_AS. personasCollection and personasSignIn are the two facts the text is built from (the identity entity's collection and the autoSignIn spec), empty with it, for a host that composes the resolved std-dev-personas itself instead of reading text (a guest opens resolved programs only)."
         @synonyms "program already seeds, marks store present"
         @tier "primary"
     }
@@ -56,9 +56,8 @@ orbital MockSeedMarksOrbital {
     listens {
       MARKS_CHECK -> input {
         program : MarksProgram?
-        persona : string?
       }
-        @description "Ask whether this program already declares the mock-seed marks store; persona is the ALMADAR_PERSONA spec (an identity row id, else a role) the personas text signs in as, the first declared role when absent."
+        @description "Ask whether this program already declares the mock-seed marks store."
         @synonyms "already seeds, has mock seed marks"
     }
   }

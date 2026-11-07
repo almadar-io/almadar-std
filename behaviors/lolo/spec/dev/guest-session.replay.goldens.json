@@ -2836,151 +2836,6 @@
       "now": 1760531445678
     },
     {
-      "id": "a-picked-persona-closes-the-guest-and-opens-the-kept-program-on-its-route",
-      "steps": [
-        {
-          "trait": "GuestSession",
-          "event": "GUEST_PERSONA_PICK",
-          "entity": {
-            "id": "g",
-            "guestHandle": "guest-1",
-            "guestPaints": [],
-            "guestError": "",
-            "guestBase": {
-              "name": "x",
-              "orbitals": []
-            },
-            "guestRoute": "/deals",
-            "guestSeed": {
-              "name": "s",
-              "orbitals": []
-            }
-          },
-          "from": "live",
-          "expect": {
-            "fired": true,
-            "state": "opening",
-            "effects": [
-              {
-                "type": "program/close"
-              },
-              {
-                "type": "set"
-              },
-              {
-                "type": "set"
-              },
-              {
-                "type": "set"
-              },
-              {
-                "type": "set"
-              },
-              {
-                "type": "set"
-              },
-              {
-                "type": "emit"
-              },
-              {
-                "type": "set"
-              },
-              {
-                "type": "emit"
-              }
-            ],
-            "emits": [
-              {
-                "event": "GUEST_CLEARED"
-              },
-              {
-                "event": "GUEST_PREPARE"
-              }
-            ]
-          },
-          "payload": {
-            "guest": "guest-1",
-            "persona": "u2"
-          }
-        }
-      ],
-      "now": 1760531445678
-    },
-    {
-      "id": "control-a-pick-for-another-guest-changes-nothing",
-      "steps": [
-        {
-          "trait": "GuestSession",
-          "event": "GUEST_PERSONA_PICK",
-          "entity": {
-            "id": "g",
-            "guestHandle": "guest-1",
-            "guestPaints": [],
-            "guestError": "",
-            "guestBase": {
-              "name": "x",
-              "orbitals": []
-            }
-          },
-          "from": "live",
-          "expect": {
-            "fired": true,
-            "state": "live",
-            "neverEmits": [
-              "GUEST_CLEARED",
-              "GUEST_PREPARE"
-            ]
-          },
-          "payload": {
-            "guest": "guest-9",
-            "persona": "u2"
-          }
-        }
-      ],
-      "now": 1760531445678
-    },
-    {
-      "id": "the-reopened-guest-opens-on-the-route-the-pick-kept",
-      "steps": [
-        {
-          "trait": "GuestSession",
-          "event": "GUEST_COMPOSED",
-          "entity": {
-            "id": "g",
-            "guestHandle": "",
-            "guestPaints": [],
-            "guestError": "",
-            "guestProgram": {
-              "name": "x",
-              "orbitals": []
-            },
-            "guestResume": "/deals",
-            "guestSeed": {
-              "name": "s",
-              "orbitals": []
-            }
-          },
-          "from": "opening",
-          "expect": {
-            "fired": true,
-            "state": "opening",
-            "effects": [
-              {
-                "type": "program/open"
-              }
-            ]
-          },
-          "payload": {
-            "result": {
-              "name": "x",
-              "orbitals": []
-            }
-          }
-        }
-      ],
-      "now": 1760531445678
-    },
-    {
       "id": "the-stage-keeps-the-personas-of-its-guest",
       "steps": [
         {
@@ -3166,6 +3021,219 @@
                 "type": "render-ui",
                 "arg0": "main"
               }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "a-picked-persona-signs-the-guest-in-as-it",
+      "steps": [
+        {
+          "trait": "GuestSession",
+          "event": "GUEST_PERSONA_PICK",
+          "payload": {
+            "guest": "guest-1",
+            "persona": "u2"
+          },
+          "entity": {
+            "id": "g",
+            "guestHandle": "guest-1",
+            "guestPaints": [],
+            "guestError": "",
+            "guestPersonas": [
+              {
+                "id": "u1",
+                "name": "Ada"
+              },
+              {
+                "id": "u2",
+                "name": "Bo"
+              }
+            ]
+          },
+          "from": "live",
+          "expect": {
+            "fired": true,
+            "state": "live",
+            "effects": [
+              {
+                "type": "program/dispatch"
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "control-a-pick-for-another-guest-dispatches-nothing",
+      "steps": [
+        {
+          "trait": "GuestSession",
+          "event": "GUEST_PERSONA_PICK",
+          "payload": {
+            "guest": "guest-9",
+            "persona": "u2"
+          },
+          "entity": {
+            "id": "g",
+            "guestHandle": "guest-1",
+            "guestPaints": [],
+            "guestError": "",
+            "guestPersonas": [
+              {
+                "id": "u1",
+                "name": "Ada"
+              },
+              {
+                "id": "u2",
+                "name": "Bo"
+              }
+            ]
+          },
+          "from": "live",
+          "expect": {
+            "fired": true,
+            "state": "live",
+            "effects": []
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "a-signed-in-persona-becomes-the-current-one-and-the-guest-runs-its-pages-again",
+      "steps": [
+        {
+          "trait": "GuestSession",
+          "event": "GUEST_PERSONA_ACTED",
+          "payload": {
+            "result": {
+              "emitted": [
+                {
+                  "event": "TOKEN_MINT",
+                  "payload": {}
+                },
+                {
+                  "event": "PERSONA_SIGNED_IN",
+                  "payload": {
+                    "subject": "u2"
+                  }
+                }
+              ]
+            }
+          },
+          "entity": {
+            "id": "g",
+            "guestHandle": "guest-1",
+            "guestPaints": [],
+            "guestError": "",
+            "guestPersonas": [
+              {
+                "id": "u1",
+                "name": "Ada"
+              },
+              {
+                "id": "u2",
+                "name": "Bo"
+              }
+            ]
+          },
+          "from": "live",
+          "expect": {
+            "fired": true,
+            "state": "live",
+            "effects": [
+              {
+                "type": "set"
+              },
+              {
+                "type": "emit"
+              },
+              {
+                "type": "program/dispatch"
+              }
+            ],
+            "emits": [
+              {
+                "event": "GUEST_PERSONAS",
+                "payload": {
+                  "guest": "guest-1",
+                  "personas": [
+                    {
+                      "id": "u1",
+                      "name": "Ada"
+                    },
+                    {
+                      "id": "u2",
+                      "name": "Bo"
+                    }
+                  ],
+                  "current": "u2"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "control-a-refused-sign-in-is-a-notice-and-keeps-the-persona",
+      "steps": [
+        {
+          "trait": "GuestSession",
+          "event": "GUEST_PERSONA_ACTED",
+          "payload": {
+            "result": {
+              "emitted": [
+                {
+                  "event": "PERSONA_SIGN_IN_REFUSED",
+                  "payload": {
+                    "error": "persona sign-in refused: the Auth emulator is not configured"
+                  }
+                }
+              ]
+            }
+          },
+          "entity": {
+            "id": "g",
+            "guestHandle": "guest-1",
+            "guestPaints": [],
+            "guestError": "",
+            "guestPersonas": [
+              {
+                "id": "u1",
+                "name": "Ada"
+              },
+              {
+                "id": "u2",
+                "name": "Bo"
+              }
+            ],
+            "guestPersona": "u1"
+          },
+          "from": "live",
+          "expect": {
+            "fired": true,
+            "state": "live",
+            "effects": [
+              {
+                "type": "emit"
+              }
+            ],
+            "emits": [
+              {
+                "event": "GUEST_NOTICE",
+                "payload": {
+                  "message": "persona sign-in refused: the Auth emulator is not configured"
+                }
+              }
+            ],
+            "neverEmits": [
+              "GUEST_PERSONAS"
             ]
           }
         }
