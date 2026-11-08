@@ -1,0 +1,30 @@
+app browse-field-ref [
+  version: "1.0.0",
+  description: "good"
+]
+uses Browse from "std/behaviors/std-browse"
+
+orbital ArticleOrbital {
+  entity Article [persistent: articles] {
+    id : string!
+    subject : string!
+    body : string
+  }
+  trait ArticleList = Browse.traits.BrowseItemBrowse -> Article {
+    config {
+      searchField: subject
+      detailFields: []
+      fields: [{
+        name: subject
+        label: Title
+        variant: h4
+      }]
+      columns: [{
+        key: c
+        field: body
+        header: Title
+      }]
+    }
+  }
+  page "/articles" as ArticlePage -> ArticleList
+}

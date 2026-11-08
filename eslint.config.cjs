@@ -3,7 +3,7 @@ const tsParser = require("@typescript-eslint/parser");
 const almadarPlugin = require("@almadar/eslint-plugin");
 
 module.exports = [
-  { ignores: ["dist/**", "node_modules/**"] },
+  { ignores: ["dist/**", "node_modules/**", "**/.orbital/**"] },
   {
     files: ["**/*.ts"],
     languageOptions: {

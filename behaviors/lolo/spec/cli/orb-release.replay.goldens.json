@@ -263,7 +263,7 @@
    ]
   },
   {
-   "id": "release.json that is not a list answers 500",
+   "id": "release.json that is not { entries, gates } answers 500",
    "steps": [
     {
      "trait": "OrbRelease",
@@ -280,7 +280,33 @@
         "payload": {
          "status": 500,
          "body": "",
-         "stderr": "Error: orb release: release.json is not a list of { repo, package, file, tag, registry }"
+         "stderr": "Error: orb release: release.json is not { entries: [{ repo, package, file, tag, registry }], gates: [{ name, covers, steps }] }"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a bare list of entries, the old shape, is refused the same way",
+   "steps": [
+    {
+     "trait": "OrbRelease",
+     "from": "running",
+     "event": "REL_LIST_READ",
+     "payload": {
+      "data": "W3sicmVwbyI6ICJvcmJpdGFsLXJ1c3QvY3JhdGVzL29yYml0YWwtc2hlbGwtdHlwZXNjcmlwdCIsICJwYWNrYWdlIjogIkBhbG1hZGFyL2NvcmUiLCAiZmlsZSI6ICJjb3JlL3BhY2thZ2UuanNvbiIsICJ0YWciOiAiY29yZS12IiwgInJlZ2lzdHJ5IjogIm5wbWpzIn1d"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "RELEASE_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "",
+         "stderr": "Error: orb release: release.json is not { entries: [{ repo, package, file, tag, registry }], gates: [{ name, covers, steps }] }"
         }
        }
       ]
@@ -378,7 +404,7 @@
    ]
   },
   {
-   "id": "control: a publish asks for the tree state first",
+   "id": "control: a publish asks for each repo's tree state while planning, before anything is written",
    "steps": [
     {
      "trait": "OrbRelease",
@@ -418,7 +444,60 @@
       "version": "10.129.0",
       "root": "/w",
       "cursor": 0,
-      "publish": true
+      "publish": false,
+      "planning": true,
+      "writing": true
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: the build pass of a publish asks git for the changed files, not the tree state",
+   "steps": [
+    {
+     "trait": "OrbRelease",
+     "from": "running",
+     "event": "REL_CHECK",
+     "payload": {},
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "REL_GIT_STEP",
+        "payload": {
+         "requestId": "diff",
+         "cwd": "/w/orbital-rust/crates/orbital-shell-typescript",
+         "op": "diffNames",
+         "args": [
+          "core-v10.129.0",
+          "HEAD"
+         ]
+        }
+       }
+      ],
+      "neverEmits": [
+       "REL_WRITE"
+      ]
+     },
+     "entity": {
+      "cur": {
+       "repo": "orbital-rust/crates/orbital-shell-typescript",
+       "package": "@almadar/core",
+       "file": "core/package.json",
+       "tag": "core-v",
+       "registry": "npmjs"
+      },
+      "repo": "orbital-rust/crates/orbital-shell-typescript",
+      "name": "@almadar/core",
+      "file": "core/package.json",
+      "tagPrefix": "core-v",
+      "registry": "npmjs",
+      "version": "10.129.0",
+      "root": "/w",
+      "cursor": 0,
+      "publish": true,
+      "planning": false,
+      "writing": true
      }
     }
    ]
@@ -1186,7 +1265,7 @@
    ]
   },
   {
-   "id": "an unchanged entry whose version is not on the registry is pending: its tag is pushed and the poll follows",
+   "id": "an unchanged entry whose version is not on the registry is pending: it is built, then in the ship pass only tagged and pushed before the poll",
    "steps": [
     {
      "trait": "OrbRelease",
@@ -1231,19 +1310,19 @@
       "state": "running",
       "emits": [
        {
-        "event": "REL_GIT_STEP",
+        "event": "REL_STEPS_START",
         "payload": {
-         "requestId": "tag",
-         "cwd": "/w/packages/almadar-behaviors",
-         "op": "tag",
-         "args": [
-          "v0.16.203"
-         ]
+         "phase": "build"
         }
+       },
+       {
+        "event": "REL_ENTRY",
+        "payload": {}
        }
       ],
       "neverEmits": [
-       "REL_WRITE"
+       "REL_WRITE",
+       "REL_GIT_STEP"
       ]
      },
      "entity": {
@@ -1260,7 +1339,76 @@
       "deps": [],
       "news": {},
       "mode": "pending",
-      "target": "0.16.203"
+      "target": "0.16.203",
+      "cur": {
+       "repo": "packages/almadar-behaviors",
+       "package": "@almadar-io/behaviors",
+       "file": "package.json",
+       "tag": "v",
+       "registry": "github"
+      },
+      "entries": [
+       {
+        "repo": "packages/almadar-behaviors",
+        "package": "@almadar-io/behaviors",
+        "file": "package.json",
+        "tag": "v",
+        "registry": "github"
+       },
+       {
+        "repo": "orbital-rust/crates/orbital-shell-typescript",
+        "package": "@almadar/core",
+        "file": "core/package.json",
+        "tag": "core-v",
+        "registry": "npmjs"
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbRelease",
+     "from": "running",
+     "event": "REL_SHIP_NEXT",
+     "payload": {},
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "REL_GIT_STEP",
+        "payload": {
+         "requestId": "tag",
+         "cwd": "/w/packages/almadar-behaviors",
+         "op": "tag",
+         "args": [
+          "v0.16.203"
+         ]
+        }
+       }
+      ],
+      "neverEmits": [
+       "REL_PNPM_RUN"
+      ]
+     },
+     "entity": {
+      "root": "/w",
+      "publish": true,
+      "shipping": true,
+      "shipAt": 0,
+      "ships": [
+       {
+        "entry": {
+         "repo": "packages/almadar-behaviors",
+         "package": "@almadar-io/behaviors",
+         "file": "package.json",
+         "tag": "v",
+         "registry": "github"
+        },
+        "target": "0.16.203",
+        "mode": "pending",
+        "lock": false,
+        "cargoLock": false
+       }
+      ]
      }
     },
     {
@@ -1655,7 +1803,7 @@
    ]
   },
   {
-   "id": "publish: written, committed, tagged, pushed, then the registry poll starts",
+   "id": "publish: written and built in the build pass; the ship pass adds the entry's own file, commits, tags, pushes, then the registry poll starts",
    "steps": [
     {
      "trait": "OrbRelease",
@@ -1668,14 +1816,18 @@
       "state": "running",
       "emits": [
        {
-        "event": "REL_GIT_STEP",
+        "event": "REL_STEPS_START",
         "payload": {
-         "requestId": "add",
-         "cwd": "/w/orbital-rust/crates/orbital-shell-typescript",
-         "op": "add",
-         "args": []
+         "phase": "build"
         }
+       },
+       {
+        "event": "REL_ENTRY",
+        "payload": {}
        }
+      ],
+      "neverEmits": [
+       "REL_GIT_STEP"
       ]
      },
      "entity": {
@@ -1699,7 +1851,66 @@
       "target": "11.0.0",
       "next": "11.0.0",
       "bump": "major",
-      "rewrites": []
+      "rewrites": [],
+      "entries": [
+       {
+        "repo": "orbital-rust/crates/orbital-shell-typescript",
+        "package": "@almadar/core",
+        "file": "core/package.json",
+        "tag": "core-v",
+        "registry": "npmjs"
+       },
+       {
+        "repo": "orbital-rust/crates/orbital-shell-typescript",
+        "package": "@almadar/logger",
+        "file": "runtime/logger/package.json",
+        "tag": "logger-v",
+        "registry": "npmjs"
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbRelease",
+     "from": "running",
+     "event": "REL_SHIP_NEXT",
+     "payload": {},
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "REL_GIT_STEP",
+        "payload": {
+         "requestId": "add",
+         "cwd": "/w/orbital-rust/crates/orbital-shell-typescript",
+         "op": "add",
+         "args": [
+          "core/package.json"
+         ]
+        }
+       }
+      ]
+     },
+     "entity": {
+      "root": "/w",
+      "publish": true,
+      "shipping": true,
+      "shipAt": 0,
+      "ships": [
+       {
+        "entry": {
+         "repo": "orbital-rust/crates/orbital-shell-typescript",
+         "package": "@almadar/core",
+         "file": "core/package.json",
+         "tag": "core-v",
+         "registry": "npmjs"
+        },
+        "target": "11.0.0",
+        "mode": "release",
+        "lock": false,
+        "cargoLock": false
+       }
+      ]
      }
     },
     {
@@ -1952,7 +2163,7 @@
    ]
   },
   {
-   "id": "publish: a package whose ranges changed refreshes its lockfile before the commit",
+   "id": "publish: in the ship pass a package whose ranges changed refreshes its lockfile, then adds its own file and that lockfile",
    "steps": [
     {
      "trait": "OrbRelease",
@@ -2027,7 +2238,10 @@
          "requestId": "add",
          "cwd": "/w/orbital-rust/crates/orbital-shell-typescript",
          "op": "add",
-         "args": []
+         "args": [
+          "core/package.json",
+          "core/pnpm-lock.yaml"
+         ]
         }
        }
       ]
@@ -2076,7 +2290,9 @@
          "requestId": "add",
          "cwd": "/w/orbital-rust/crates/orbital-shell-typescript",
          "op": "add",
-         "args": []
+         "args": [
+          "core/package.json"
+         ]
         }
        }
       ],
@@ -2505,9 +2721,12 @@
       "state": "running",
       "emits": [
        {
-        "event": "REL_ENTRY",
+        "event": "REL_SHIP_NEXT",
         "payload": {}
        }
+      ],
+      "neverEmits": [
+       "REL_ENTRY"
       ]
      },
      "entity": {
@@ -2540,7 +2759,9 @@
         "tag": "core-v",
         "registry": "npmjs"
        }
-      ]
+      ],
+      "shipAt": 0,
+      "shipping": true
      }
     },
     {
@@ -2650,8 +2871,14 @@
       "error": "release.json: No such file or directory"
      },
      "expect": {
-      "state": "ready",
+      "state": "running",
       "emits": [
+       {
+        "event": "REL_FAIL",
+        "payload": {
+         "why": "release.json: No such file or directory"
+        }
+       },
        {
         "event": "RELEASE_ANSWERED",
         "payload": {
@@ -2676,8 +2903,14 @@
       "error": "permission denied"
      },
      "expect": {
-      "state": "ready",
+      "state": "running",
       "emits": [
+       {
+        "event": "REL_FAIL",
+        "payload": {
+         "why": "permission denied"
+        }
+       },
        {
         "event": "RELEASE_ANSWERED",
         "payload": {
@@ -5151,18 +5384,14 @@
    ]
   },
   {
-   "id": "publish: the build steps run after the tag and before the push, the publish steps after the tag is pushed, then the registry is polled",
+   "id": "publish: the build steps run in the build pass, the publish steps once the ship pass pushed the tag, then the registry is polled",
    "steps": [
     {
      "trait": "OrbRelease",
      "from": "running",
-     "event": "REL_GIT_DONE",
+     "event": "REL_CARGO_LOCK_READ",
      "payload": {
-      "requestId": "tag",
-      "op": "tag",
-      "exitCode": 0,
-      "stdout": "",
-      "stderr": ""
+      "data": "IyBsb2NrCg=="
      },
      "expect": {
       "state": "running",
@@ -5228,7 +5457,48 @@
         }
        ]
       },
-      "publish": true
+      "publish": true,
+      "entries": [
+       {
+        "repo": "orbital-rust",
+        "package": "@almadar/orb",
+        "file": "Cargo.toml",
+        "tag": "v",
+        "registry": "npmjs",
+        "steps": [
+         {
+          "phase": "build",
+          "tool": "cargo",
+          "args": [
+           "zigbuild",
+           "--target",
+           "x86_64-unknown-linux-musl"
+          ],
+          "env": {
+           "AR": "{root}/tools/llvm-ar"
+          }
+         },
+         {
+          "phase": "publish",
+          "tool": "npm",
+          "args": [
+           "publish",
+           "stage/orb-{version}",
+           "--tag",
+           "next"
+          ],
+          "env": {}
+         }
+        ]
+       },
+       {
+        "repo": "orbital-rust/crates/orbital-shell-typescript",
+        "package": "@almadar/core",
+        "file": "core/package.json",
+        "tag": "core-v",
+        "registry": "npmjs"
+       }
+      ]
      }
     },
     {
@@ -5247,17 +5517,12 @@
       "state": "running",
       "emits": [
        {
-        "event": "REL_GIT_STEP",
-        "payload": {
-         "requestId": "push-branch",
-         "cwd": "/w/orbital-rust",
-         "op": "pushBranch",
-         "args": [
-          "origin",
-          "main"
-         ]
-        }
+        "event": "REL_ENTRY",
+        "payload": {}
        }
+      ],
+      "neverEmits": [
+       "REL_GIT_STEP"
       ]
      },
      "entity": {
@@ -5333,7 +5598,117 @@
         "AR": "{root}/tools/llvm-ar"
        }
       },
-      "stepPhase": "build"
+      "stepPhase": "build",
+      "entries": [
+       {
+        "repo": "orbital-rust",
+        "package": "@almadar/orb",
+        "file": "Cargo.toml",
+        "tag": "v",
+        "registry": "npmjs",
+        "steps": [
+         {
+          "phase": "build",
+          "tool": "cargo",
+          "args": [
+           "zigbuild",
+           "--target",
+           "x86_64-unknown-linux-musl"
+          ],
+          "env": {
+           "AR": "{root}/tools/llvm-ar"
+          }
+         },
+         {
+          "phase": "publish",
+          "tool": "npm",
+          "args": [
+           "publish",
+           "stage/orb-{version}",
+           "--tag",
+           "next"
+          ],
+          "env": {}
+         }
+        ]
+       },
+       {
+        "repo": "orbital-rust/crates/orbital-shell-typescript",
+        "package": "@almadar/core",
+        "file": "core/package.json",
+        "tag": "core-v",
+        "registry": "npmjs"
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbRelease",
+     "from": "running",
+     "event": "REL_SHIP_NEXT",
+     "payload": {},
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "REL_GIT_STEP",
+        "payload": {
+         "requestId": "add",
+         "cwd": "/w/orbital-rust",
+         "op": "add",
+         "args": [
+          "Cargo.toml",
+          "Cargo.lock"
+         ]
+        }
+       }
+      ]
+     },
+     "entity": {
+      "root": "/w",
+      "publish": true,
+      "shipping": true,
+      "shipAt": 0,
+      "ships": [
+       {
+        "entry": {
+         "repo": "orbital-rust",
+         "package": "@almadar/orb",
+         "file": "Cargo.toml",
+         "tag": "v",
+         "registry": "npmjs",
+         "steps": [
+          {
+           "phase": "build",
+           "tool": "cargo",
+           "args": [
+            "zigbuild",
+            "--target",
+            "x86_64-unknown-linux-musl"
+           ],
+           "env": {
+            "AR": "{root}/tools/llvm-ar"
+           }
+          },
+          {
+           "phase": "publish",
+           "tool": "npm",
+           "args": [
+            "publish",
+            "stage/orb-{version}",
+            "--tag",
+            "next"
+           ],
+           "env": {}
+          }
+         ]
+        },
+        "target": "19.2.0",
+        "mode": "release",
+        "lock": false,
+        "cargoLock": true
+       }
+      ]
      }
     },
     {
@@ -5542,7 +5917,7 @@
    ]
   },
   {
-   "id": "control: a pending entry pushes only its tag once its build steps ran",
+   "id": "control: a pending entry's build steps end the entry in the build pass; nothing is pushed until the ship pass",
    "steps": [
     {
      "trait": "OrbRelease",
@@ -5560,17 +5935,12 @@
       "state": "running",
       "emits": [
        {
-        "event": "REL_GIT_STEP",
-        "payload": {
-         "requestId": "push-tag",
-         "cwd": "/w/orbital-rust",
-         "op": "pushTag",
-         "args": [
-          "origin",
-          "v19.2.0"
-         ]
-        }
+        "event": "REL_ENTRY",
+        "payload": {}
        }
+      ],
+      "neverEmits": [
+       "REL_GIT_STEP"
       ]
      },
      "entity": {
@@ -5646,7 +6016,48 @@
         "AR": "{root}/tools/llvm-ar"
        }
       },
-      "stepPhase": "build"
+      "stepPhase": "build",
+      "entries": [
+       {
+        "repo": "orbital-rust",
+        "package": "@almadar/orb",
+        "file": "Cargo.toml",
+        "tag": "v",
+        "registry": "npmjs",
+        "steps": [
+         {
+          "phase": "build",
+          "tool": "cargo",
+          "args": [
+           "zigbuild",
+           "--target",
+           "x86_64-unknown-linux-musl"
+          ],
+          "env": {
+           "AR": "{root}/tools/llvm-ar"
+          }
+         },
+         {
+          "phase": "publish",
+          "tool": "npm",
+          "args": [
+           "publish",
+           "stage/orb-{version}",
+           "--tag",
+           "next"
+          ],
+          "env": {}
+         }
+        ]
+       },
+       {
+        "repo": "orbital-rust/crates/orbital-shell-typescript",
+        "package": "@almadar/core",
+        "file": "core/package.json",
+        "tag": "core-v",
+        "registry": "npmjs"
+       }
+      ]
      }
     }
    ]
@@ -6144,6 +6555,1289 @@
         }
        }
       ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "gates: a gate covering a package this run releases runs its steps with bash after every build, and a gate covering none is listed as skipped",
+   "steps": [
+    {
+     "trait": "OrbRelease",
+     "from": "running",
+     "event": "REL_GATE_NEXT",
+     "payload": {},
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "REL_STEP_NEXT",
+        "payload": {}
+       },
+       {
+        "event": "REL_STEP_BASH",
+        "payload": {
+         "stage": "step:0",
+         "argv": [
+          "/w/gates/typecheck.sh",
+          "--all"
+         ],
+         "env": {
+          "ORB_BIN": "/w/bin/orb"
+         }
+        }
+       }
+      ],
+      "neverEmits": [
+       "REL_GATE_SKIPPED"
+      ]
+     },
+     "entity": {
+      "root": "/w",
+      "bump": "patch",
+      "lines": [],
+      "gates": [
+       {
+        "name": "typecheck",
+        "covers": [
+         "@almadar/core",
+         "@almadar/orb"
+        ],
+        "steps": [
+         {
+          "phase": "build",
+          "tool": "bash",
+          "args": [
+           "{root}/gates/typecheck.sh",
+           "--all"
+          ],
+          "env": {
+           "ORB_BIN": "{root}/bin/orb"
+          }
+         }
+        ]
+       },
+       {
+        "name": "desktop",
+        "covers": [
+         "@almadar/orb-desktop"
+        ],
+        "steps": [
+         {
+          "phase": "build",
+          "tool": "bash",
+          "args": [
+           "{root}/gates/typecheck.sh",
+           "--all"
+          ],
+          "env": {
+           "ORB_BIN": "{root}/bin/orb"
+          }
+         }
+        ]
+       }
+      ],
+      "ships": [
+       {
+        "entry": {
+         "repo": "orbital-rust/crates/orbital-shell-typescript",
+         "package": "@almadar/core",
+         "file": "core/package.json",
+         "tag": "core-v",
+         "registry": "npmjs"
+        },
+        "target": "11.0.0",
+        "mode": "release",
+        "lock": false,
+        "cargoLock": false
+       }
+      ],
+      "gateAt": 0,
+      "check": true
+     }
+    },
+    {
+     "trait": "OrbRelease",
+     "from": "running",
+     "event": "REL_STEP_DONE",
+     "payload": {
+      "stage": "step:0",
+      "exitCode": 0,
+      "signal": 0,
+      "stdout": "",
+      "stdoutBytes": "",
+      "stderr": ""
+     },
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "REL_GATE_NEXT",
+        "payload": {}
+       },
+       {
+        "event": "REL_GATE_SKIPPED",
+        "payload": {}
+       },
+       {
+        "event": "RELEASE_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "orb release --check (--patch): every build and gate passed; nothing was written\ngate desktop: skipped, none of @almadar/orb-desktop is released in this run\n"
+        }
+       }
+      ],
+      "neverEmits": [
+       "REL_SHIP_NEXT"
+      ]
+     },
+     "entity": {
+      "root": "/w",
+      "bump": "patch",
+      "lines": [],
+      "gates": [
+       {
+        "name": "typecheck",
+        "covers": [
+         "@almadar/core",
+         "@almadar/orb"
+        ],
+        "steps": [
+         {
+          "phase": "build",
+          "tool": "bash",
+          "args": [
+           "{root}/gates/typecheck.sh",
+           "--all"
+          ],
+          "env": {
+           "ORB_BIN": "{root}/bin/orb"
+          }
+         }
+        ]
+       },
+       {
+        "name": "desktop",
+        "covers": [
+         "@almadar/orb-desktop"
+        ],
+        "steps": [
+         {
+          "phase": "build",
+          "tool": "bash",
+          "args": [
+           "{root}/gates/typecheck.sh",
+           "--all"
+          ],
+          "env": {
+           "ORB_BIN": "{root}/bin/orb"
+          }
+         }
+        ]
+       }
+      ],
+      "ships": [
+       {
+        "entry": {
+         "repo": "orbital-rust/crates/orbital-shell-typescript",
+         "package": "@almadar/core",
+         "file": "core/package.json",
+         "tag": "core-v",
+         "registry": "npmjs"
+        },
+        "target": "11.0.0",
+        "mode": "release",
+        "lock": false,
+        "cargoLock": false
+       }
+      ],
+      "gateAt": 0,
+      "check": true,
+      "stepPhase": "gate",
+      "steps": [
+       {
+        "phase": "build",
+        "tool": "bash",
+        "args": [
+         "{root}/gates/typecheck.sh",
+         "--all"
+        ],
+        "env": {
+         "ORB_BIN": "{root}/bin/orb"
+        }
+       }
+      ],
+      "stepAt": 0
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a gate whose covered packages are all released skips, and a publish goes on to the ship pass only after the last gate",
+   "steps": [
+    {
+     "trait": "OrbRelease",
+     "from": "running",
+     "event": "REL_GATE_NEXT",
+     "payload": {},
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "REL_GATE_SKIPPED",
+        "payload": {}
+       },
+       {
+        "event": "REL_SHIP_NEXT",
+        "payload": {}
+       }
+      ],
+      "neverEmits": [
+       "REL_STEP_BASH",
+       "RELEASE_ANSWERED"
+      ]
+     },
+     "entity": {
+      "root": "/w",
+      "bump": "patch",
+      "lines": [],
+      "gates": [
+       {
+        "name": "typecheck",
+        "covers": [
+         "@almadar/core",
+         "@almadar/orb"
+        ],
+        "steps": [
+         {
+          "phase": "build",
+          "tool": "bash",
+          "args": [
+           "{root}/gates/typecheck.sh",
+           "--all"
+          ],
+          "env": {
+           "ORB_BIN": "{root}/bin/orb"
+          }
+         }
+        ]
+       },
+       {
+        "name": "desktop",
+        "covers": [
+         "@almadar/orb-desktop"
+        ],
+        "steps": [
+         {
+          "phase": "build",
+          "tool": "bash",
+          "args": [
+           "{root}/gates/typecheck.sh",
+           "--all"
+          ],
+          "env": {
+           "ORB_BIN": "{root}/bin/orb"
+          }
+         }
+        ]
+       }
+      ],
+      "ships": [
+       {
+        "entry": {
+         "repo": "orbital-rust/crates/orbital-shell-typescript",
+         "package": "@almadar/core",
+         "file": "core/package.json",
+         "tag": "core-v",
+         "registry": "npmjs"
+        },
+        "target": "11.0.0",
+        "mode": "release",
+        "lock": false,
+        "cargoLock": false
+       }
+      ],
+      "gateAt": 1,
+      "publish": true
+     }
+    }
+   ]
+  },
+  {
+   "id": "a failing gate stops the run before anything is committed and puts back every file the run wrote, in order",
+   "steps": [
+    {
+     "trait": "OrbRelease",
+     "from": "running",
+     "event": "REL_STEP_DONE",
+     "payload": {
+      "stage": "step:0",
+      "exitCode": 2,
+      "signal": 0,
+      "stdout": "",
+      "stdoutBytes": "",
+      "stderr": ""
+     },
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "REL_FAIL",
+        "payload": {
+         "why": "gate step 1 (bash) exited 2"
+        }
+       },
+       {
+        "event": "REL_RESTORE_NEXT",
+        "payload": {}
+       }
+      ],
+      "neverEmits": [
+       "REL_SHIP_NEXT",
+       "REL_GIT_STEP",
+       "RELEASE_ANSWERED"
+      ]
+     },
+     "entity": {
+      "root": "/w",
+      "bump": "patch",
+      "lines": [],
+      "gates": [
+       {
+        "name": "typecheck",
+        "covers": [
+         "@almadar/core",
+         "@almadar/orb"
+        ],
+        "steps": [
+         {
+          "phase": "build",
+          "tool": "bash",
+          "args": [
+           "{root}/gates/typecheck.sh",
+           "--all"
+          ],
+          "env": {
+           "ORB_BIN": "{root}/bin/orb"
+          }
+         }
+        ]
+       },
+       {
+        "name": "desktop",
+        "covers": [
+         "@almadar/orb-desktop"
+        ],
+        "steps": [
+         {
+          "phase": "build",
+          "tool": "bash",
+          "args": [
+           "{root}/gates/typecheck.sh",
+           "--all"
+          ],
+          "env": {
+           "ORB_BIN": "{root}/bin/orb"
+          }
+         }
+        ]
+       }
+      ],
+      "ships": [
+       {
+        "entry": {
+         "repo": "orbital-rust/crates/orbital-shell-typescript",
+         "package": "@almadar/core",
+         "file": "core/package.json",
+         "tag": "core-v",
+         "registry": "npmjs"
+        },
+        "target": "11.0.0",
+        "mode": "release",
+        "lock": false,
+        "cargoLock": false
+       }
+      ],
+      "gateAt": 0,
+      "publish": true,
+      "stepPhase": "gate",
+      "steps": [
+       {
+        "phase": "build",
+        "tool": "bash",
+        "args": [
+         "{root}/gates/typecheck.sh",
+         "--all"
+        ],
+        "env": {
+         "ORB_BIN": "{root}/bin/orb"
+        }
+       }
+      ],
+      "stepAt": 0,
+      "restores": [
+       {
+        "path": "orbital-rust/Cargo.toml",
+        "text": "A"
+       },
+       {
+        "path": "orbital-rust/Cargo.lock",
+        "text": "B"
+       }
+      ],
+      "step": {
+       "phase": "build",
+       "tool": "bash",
+       "args": [
+        "{root}/gates/typecheck.sh",
+        "--all"
+       ],
+       "env": {
+        "ORB_BIN": "{root}/bin/orb"
+       }
+      }
+     }
+    },
+    {
+     "trait": "OrbRelease",
+     "from": "running",
+     "event": "REL_RESTORED",
+     "payload": {
+      "bytes": 1
+     },
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "REL_RESTORE_NEXT",
+        "payload": {}
+       }
+      ],
+      "neverEmits": [
+       "RELEASE_ANSWERED"
+      ],
+      "entity": {
+       "restores": [
+        {
+         "path": "orbital-rust/Cargo.lock",
+         "text": "B"
+        }
+       ]
+      }
+     },
+     "entity": {
+      "root": "/w",
+      "bump": "patch",
+      "lines": [],
+      "gates": [
+       {
+        "name": "typecheck",
+        "covers": [
+         "@almadar/core",
+         "@almadar/orb"
+        ],
+        "steps": [
+         {
+          "phase": "build",
+          "tool": "bash",
+          "args": [
+           "{root}/gates/typecheck.sh",
+           "--all"
+          ],
+          "env": {
+           "ORB_BIN": "{root}/bin/orb"
+          }
+         }
+        ]
+       },
+       {
+        "name": "desktop",
+        "covers": [
+         "@almadar/orb-desktop"
+        ],
+        "steps": [
+         {
+          "phase": "build",
+          "tool": "bash",
+          "args": [
+           "{root}/gates/typecheck.sh",
+           "--all"
+          ],
+          "env": {
+           "ORB_BIN": "{root}/bin/orb"
+          }
+         }
+        ]
+       }
+      ],
+      "ships": [
+       {
+        "entry": {
+         "repo": "orbital-rust/crates/orbital-shell-typescript",
+         "package": "@almadar/core",
+         "file": "core/package.json",
+         "tag": "core-v",
+         "registry": "npmjs"
+        },
+        "target": "11.0.0",
+        "mode": "release",
+        "lock": false,
+        "cargoLock": false
+       }
+      ],
+      "gateAt": 0,
+      "publish": true,
+      "failWhy": "gate step 1 (bash) exited 2",
+      "restores": [
+       {
+        "path": "orbital-rust/Cargo.toml",
+        "text": "A"
+       },
+       {
+        "path": "orbital-rust/Cargo.lock",
+        "text": "B"
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbRelease",
+     "from": "running",
+     "event": "REL_RESTORED",
+     "payload": {
+      "bytes": 1
+     },
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "REL_RESTORE_NEXT",
+        "payload": {}
+       },
+       {
+        "event": "RELEASE_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "",
+         "stderr": "Error: orb release: gate step 1 (bash) exited 2. The files this run wrote and had not committed were put back. Fix it and re-run to resume."
+        }
+       }
+      ]
+     },
+     "entity": {
+      "root": "/w",
+      "bump": "patch",
+      "lines": [],
+      "gates": [
+       {
+        "name": "typecheck",
+        "covers": [
+         "@almadar/core",
+         "@almadar/orb"
+        ],
+        "steps": [
+         {
+          "phase": "build",
+          "tool": "bash",
+          "args": [
+           "{root}/gates/typecheck.sh",
+           "--all"
+          ],
+          "env": {
+           "ORB_BIN": "{root}/bin/orb"
+          }
+         }
+        ]
+       },
+       {
+        "name": "desktop",
+        "covers": [
+         "@almadar/orb-desktop"
+        ],
+        "steps": [
+         {
+          "phase": "build",
+          "tool": "bash",
+          "args": [
+           "{root}/gates/typecheck.sh",
+           "--all"
+          ],
+          "env": {
+           "ORB_BIN": "{root}/bin/orb"
+          }
+         }
+        ]
+       }
+      ],
+      "ships": [
+       {
+        "entry": {
+         "repo": "orbital-rust/crates/orbital-shell-typescript",
+         "package": "@almadar/core",
+         "file": "core/package.json",
+         "tag": "core-v",
+         "registry": "npmjs"
+        },
+        "target": "11.0.0",
+        "mode": "release",
+        "lock": false,
+        "cargoLock": false
+       }
+      ],
+      "gateAt": 0,
+      "publish": true,
+      "failWhy": "gate step 1 (bash) exited 2",
+      "restores": [
+       {
+        "path": "orbital-rust/Cargo.lock",
+        "text": "B"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a file that cannot be put back is named, with how many uncommitted writes remain",
+   "steps": [
+    {
+     "trait": "OrbRelease",
+     "from": "running",
+     "event": "REL_RESTORE_FAILED",
+     "payload": {
+      "error": "permission denied"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "RELEASE_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "",
+         "stderr": "Error: orb release: gate step 1 (bash) exited 2. Putting back orbital-rust/Cargo.toml failed (permission denied), so it and 1 other uncommitted writes of this run are still in the tree."
+        }
+       }
+      ]
+     },
+     "entity": {
+      "root": "/w",
+      "bump": "patch",
+      "lines": [],
+      "gates": [
+       {
+        "name": "typecheck",
+        "covers": [
+         "@almadar/core",
+         "@almadar/orb"
+        ],
+        "steps": [
+         {
+          "phase": "build",
+          "tool": "bash",
+          "args": [
+           "{root}/gates/typecheck.sh",
+           "--all"
+          ],
+          "env": {
+           "ORB_BIN": "{root}/bin/orb"
+          }
+         }
+        ]
+       },
+       {
+        "name": "desktop",
+        "covers": [
+         "@almadar/orb-desktop"
+        ],
+        "steps": [
+         {
+          "phase": "build",
+          "tool": "bash",
+          "args": [
+           "{root}/gates/typecheck.sh",
+           "--all"
+          ],
+          "env": {
+           "ORB_BIN": "{root}/bin/orb"
+          }
+         }
+        ]
+       }
+      ],
+      "ships": [
+       {
+        "entry": {
+         "repo": "orbital-rust/crates/orbital-shell-typescript",
+         "package": "@almadar/core",
+         "file": "core/package.json",
+         "tag": "core-v",
+         "registry": "npmjs"
+        },
+        "target": "11.0.0",
+        "mode": "release",
+        "lock": false,
+        "cargoLock": false
+       }
+      ],
+      "gateAt": 0,
+      "failWhy": "gate step 1 (bash) exited 2",
+      "restores": [
+       {
+        "path": "orbital-rust/Cargo.toml",
+        "text": "A"
+       },
+       {
+        "path": "orbital-rust/Cargo.lock",
+        "text": "B"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a written Cargo.toml keeps the Cargo.lock beside it to put back, and its ship adds both",
+   "steps": [
+    {
+     "trait": "OrbRelease",
+     "from": "running",
+     "event": "REL_WRITTEN",
+     "payload": {
+      "bytes": 10
+     },
+     "expect": {
+      "state": "running",
+      "effects": [
+       {
+        "type": "os/exists",
+        "key": "cargo-lock",
+        "optionsAt": 1
+       }
+      ],
+      "neverEmits": [
+       "REL_STEPS_START"
+      ]
+     },
+     "entity": {
+      "root": "/w",
+      "publish": true,
+      "cur": {
+       "repo": "orbital-rust",
+       "package": "@almadar/orb",
+       "file": "Cargo.toml",
+       "tag": "v",
+       "registry": "npmjs"
+      },
+      "repo": "orbital-rust",
+      "name": "@almadar/orb",
+      "file": "Cargo.toml",
+      "mode": "release",
+      "target": "19.2.0",
+      "entries": [
+       {
+        "repo": "orbital-rust",
+        "package": "@almadar/orb",
+        "file": "Cargo.toml",
+        "tag": "v",
+        "registry": "npmjs"
+       },
+       {
+        "repo": "orbital-rust/crates/orbital-shell-typescript",
+        "package": "@almadar/core",
+        "file": "core/package.json",
+        "tag": "core-v",
+        "registry": "npmjs"
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbRelease",
+     "from": "running",
+     "event": "REL_CARGO_LOCK_EXISTS",
+     "payload": {
+      "ok": true
+     },
+     "expect": {
+      "state": "running",
+      "effects": [
+       {
+        "type": "os/read-file",
+        "key": "cargo-lock",
+        "optionsAt": 1
+       }
+      ],
+      "neverEmits": [
+       "REL_STEPS_START"
+      ]
+     },
+     "entity": {
+      "root": "/w",
+      "publish": true,
+      "cur": {
+       "repo": "orbital-rust",
+       "package": "@almadar/orb",
+       "file": "Cargo.toml",
+       "tag": "v",
+       "registry": "npmjs"
+      },
+      "repo": "orbital-rust",
+      "name": "@almadar/orb",
+      "file": "Cargo.toml",
+      "mode": "release",
+      "target": "19.2.0",
+      "entries": [
+       {
+        "repo": "orbital-rust",
+        "package": "@almadar/orb",
+        "file": "Cargo.toml",
+        "tag": "v",
+        "registry": "npmjs"
+       },
+       {
+        "repo": "orbital-rust/crates/orbital-shell-typescript",
+        "package": "@almadar/core",
+        "file": "core/package.json",
+        "tag": "core-v",
+        "registry": "npmjs"
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbRelease",
+     "from": "running",
+     "event": "REL_CARGO_LOCK_READ",
+     "payload": {
+      "data": "IyBsb2NrCg=="
+     },
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "REL_STEPS_START",
+        "payload": {
+         "phase": "build"
+        }
+       }
+      ],
+      "entity": {
+       "restores": [
+        {
+         "path": "orbital-rust/Cargo.toml",
+         "text": "[workspace.package]\nversion = \"19.1.0\"\n"
+        },
+        {
+         "path": "orbital-rust/Cargo.lock",
+         "text": "# lock\n"
+        }
+       ],
+       "ships": [
+        {
+         "entry": {
+          "repo": "orbital-rust",
+          "package": "@almadar/orb",
+          "file": "Cargo.toml",
+          "tag": "v",
+          "registry": "npmjs"
+         },
+         "target": "19.2.0",
+         "mode": "release",
+         "lock": false,
+         "cargoLock": true
+        }
+       ]
+      }
+     },
+     "entity": {
+      "root": "/w",
+      "publish": true,
+      "cur": {
+       "repo": "orbital-rust",
+       "package": "@almadar/orb",
+       "file": "Cargo.toml",
+       "tag": "v",
+       "registry": "npmjs"
+      },
+      "repo": "orbital-rust",
+      "name": "@almadar/orb",
+      "file": "Cargo.toml",
+      "mode": "release",
+      "target": "19.2.0",
+      "entries": [
+       {
+        "repo": "orbital-rust",
+        "package": "@almadar/orb",
+        "file": "Cargo.toml",
+        "tag": "v",
+        "registry": "npmjs"
+       },
+       {
+        "repo": "orbital-rust/crates/orbital-shell-typescript",
+        "package": "@almadar/core",
+        "file": "core/package.json",
+        "tag": "core-v",
+        "registry": "npmjs"
+       }
+      ],
+      "restores": [
+       {
+        "path": "orbital-rust/Cargo.toml",
+        "text": "[workspace.package]\nversion = \"19.1.0\"\n"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a Cargo.toml with no Cargo.lock beside it ships its own file only",
+   "steps": [
+    {
+     "trait": "OrbRelease",
+     "from": "running",
+     "event": "REL_CARGO_LOCK_EXISTS",
+     "payload": {
+      "ok": false
+     },
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "REL_STEPS_START",
+        "payload": {
+         "phase": "build"
+        }
+       }
+      ],
+      "entity": {
+       "ships": [
+        {
+         "entry": {
+          "repo": "orbital-rust",
+          "package": "@almadar/orb",
+          "file": "Cargo.toml",
+          "tag": "v",
+          "registry": "npmjs"
+         },
+         "target": "19.2.0",
+         "mode": "release",
+         "lock": false,
+         "cargoLock": false
+        }
+       ]
+      }
+     },
+     "entity": {
+      "root": "/w",
+      "publish": true,
+      "cur": {
+       "repo": "orbital-rust",
+       "package": "@almadar/orb",
+       "file": "Cargo.toml",
+       "tag": "v",
+       "registry": "npmjs"
+      },
+      "repo": "orbital-rust",
+      "name": "@almadar/orb",
+      "file": "Cargo.toml",
+      "mode": "release",
+      "target": "19.2.0",
+      "entries": [
+       {
+        "repo": "orbital-rust",
+        "package": "@almadar/orb",
+        "file": "Cargo.toml",
+        "tag": "v",
+        "registry": "npmjs"
+       },
+       {
+        "repo": "orbital-rust/crates/orbital-shell-typescript",
+        "package": "@almadar/core",
+        "file": "core/package.json",
+        "tag": "core-v",
+        "registry": "npmjs"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a commit drops the committed entry's files from what a stopped run puts back, and keeps the others",
+   "steps": [
+    {
+     "trait": "OrbRelease",
+     "from": "running",
+     "event": "REL_GIT_DONE",
+     "payload": {
+      "requestId": "commit",
+      "op": "commit",
+      "exitCode": 0,
+      "stdout": "",
+      "stderr": ""
+     },
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "REL_GIT_STEP",
+        "payload": {
+         "requestId": "tag",
+         "cwd": "/w/orbital-rust",
+         "op": "tag",
+         "args": [
+          "v19.2.0"
+         ]
+        }
+       }
+      ],
+      "entity": {
+       "restores": [
+        {
+         "path": "orbital-rust/crates/orbital-shell-typescript/core/package.json",
+         "text": "C"
+        }
+       ]
+      }
+     },
+     "entity": {
+      "root": "/w",
+      "publish": true,
+      "shipping": true,
+      "repo": "orbital-rust",
+      "name": "@almadar/orb",
+      "file": "Cargo.toml",
+      "tagPrefix": "v",
+      "mode": "release",
+      "target": "19.2.0",
+      "restores": [
+       {
+        "path": "orbital-rust/Cargo.toml",
+        "text": "A"
+       },
+       {
+        "path": "orbital-rust/Cargo.lock",
+        "text": "B"
+       },
+       {
+        "path": "orbital-rust/crates/orbital-shell-typescript/core/package.json",
+        "text": "C"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: the ship pass ends with the publish answer once every built entry is shipped",
+   "steps": [
+    {
+     "trait": "OrbRelease",
+     "from": "running",
+     "event": "REL_SHIP_NEXT",
+     "payload": {},
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "RELEASE_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "orb release --publish (--patch): every entry is done\n\n"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "root": "/w",
+      "bump": "patch",
+      "publish": true,
+      "shipping": true,
+      "shipAt": 1,
+      "ships": [
+       {
+        "entry": {
+         "repo": "orbital-rust/crates/orbital-shell-typescript",
+         "package": "@almadar/core",
+         "file": "core/package.json",
+         "tag": "core-v",
+         "registry": "npmjs"
+        },
+        "target": "11.0.0",
+        "mode": "release",
+        "lock": false,
+        "cargoLock": false
+       }
+      ],
+      "lines": []
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: the plan pass of --check runs no build steps; only the build pass does, once",
+   "steps": [
+    {
+     "trait": "OrbRelease",
+     "from": "running",
+     "event": "REL_ROWN",
+     "payload": {},
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "REL_ENTRY",
+        "payload": {}
+       }
+      ],
+      "neverEmits": [
+       "REL_STEPS_START",
+       "REL_STEP_NODE"
+      ],
+      "entity": {
+       "ships": []
+      }
+     },
+     "entity": {
+      "root": "/w",
+      "check": true,
+      "publish": false,
+      "cur": {
+       "repo": "orbital-rust/crates/orbital-shell-typescript",
+       "package": "@almadar/core",
+       "file": "core/package.json",
+       "tag": "core-v",
+       "registry": "npmjs",
+       "steps": [
+        {
+         "phase": "build",
+         "tool": "node",
+         "args": [
+          "build.mjs"
+         ],
+         "env": {}
+        }
+       ]
+      },
+      "repo": "orbital-rust/crates/orbital-shell-typescript",
+      "name": "@almadar/core",
+      "file": "core/package.json",
+      "mode": "release",
+      "target": "11.0.1",
+      "cursor": 0,
+      "entries": [
+       {
+        "repo": "orbital-rust/crates/orbital-shell-typescript",
+        "package": "@almadar/core",
+        "file": "core/package.json",
+        "tag": "core-v",
+        "registry": "npmjs",
+        "steps": [
+         {
+          "phase": "build",
+          "tool": "node",
+          "args": [
+           "build.mjs"
+          ],
+          "env": {}
+         }
+        ]
+       },
+       {
+        "repo": "orbital-rust/crates/orbital-shell-typescript",
+        "package": "@almadar/logger",
+        "file": "runtime/logger/package.json",
+        "tag": "logger-v",
+        "registry": "npmjs"
+       }
+      ],
+      "ships": [],
+      "planning": true
+     }
+    },
+    {
+     "trait": "OrbRelease",
+     "from": "running",
+     "event": "REL_ROWN",
+     "payload": {},
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "REL_STEPS_START",
+        "payload": {
+         "phase": "build"
+        }
+       },
+       {
+        "event": "REL_STEP_NODE",
+        "payload": {
+         "stage": "step:0",
+         "argv": [
+          "build.mjs"
+         ],
+         "env": {}
+        }
+       }
+      ]
+     },
+     "entity": {
+      "root": "/w",
+      "check": true,
+      "publish": false,
+      "cur": {
+       "repo": "orbital-rust/crates/orbital-shell-typescript",
+       "package": "@almadar/core",
+       "file": "core/package.json",
+       "tag": "core-v",
+       "registry": "npmjs",
+       "steps": [
+        {
+         "phase": "build",
+         "tool": "node",
+         "args": [
+          "build.mjs"
+         ],
+         "env": {}
+        }
+       ]
+      },
+      "repo": "orbital-rust/crates/orbital-shell-typescript",
+      "name": "@almadar/core",
+      "file": "core/package.json",
+      "mode": "release",
+      "target": "11.0.1",
+      "cursor": 0,
+      "entries": [
+       {
+        "repo": "orbital-rust/crates/orbital-shell-typescript",
+        "package": "@almadar/core",
+        "file": "core/package.json",
+        "tag": "core-v",
+        "registry": "npmjs",
+        "steps": [
+         {
+          "phase": "build",
+          "tool": "node",
+          "args": [
+           "build.mjs"
+          ],
+          "env": {}
+         }
+        ]
+       },
+       {
+        "repo": "orbital-rust/crates/orbital-shell-typescript",
+        "package": "@almadar/logger",
+        "file": "runtime/logger/package.json",
+        "tag": "logger-v",
+        "registry": "npmjs"
+       }
+      ],
+      "ships": [],
+      "planning": false
      }
     }
    ]

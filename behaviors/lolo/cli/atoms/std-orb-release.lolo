@@ -1,11 +1,11 @@
 app std-orb-release [
   version: "1.0.0",
   inbound: ["cli-release"],
-  exec: ["git", "pnpm", "npm", "cargo", "node", "gh"],
+  exec: ["git", "pnpm", "npm", "cargo", "node", "gh", "bash"],
   stdio: [in, out, err],
   env: ["PATH", "HOME", "SSH_AUTH_SOCK", "GITHUB_TOKEN"],
   fs: { cwd: "**": [read, write], "./orbital-rust": [read] },
-  description: "std-orb-release — the `orb release [--publish] [--major|--minor|--patch]` command (spec/cli/orb-release.lolo): the release publisher for the packages listed in release.json at the working directory. release.json is an ordered list of { repo, package, file, tag, registry }: repo is a git directory under the working directory, package the npm name, file the version file inside repo (a package.json, or a Cargo.toml whose release version is the first key of [workspace.package] or, for a single crate, of [package]), tag the prefix of the tag whose push publishes it (the repo's own workflow publishes on that tag) and registry npmjs or github. Without --publish nothing is written: each entry's version file is read, its next version is std-semver's bump of that version (patch unless --major or --minor is given), and the plan lists the entries in order with the @almadar dependency ranges that would be rewritten to ^<new>. A release never touches a package's language range (orb.language, orbLanguage.language, orbVocabulary.language, orbProgram.language): it is a compatibility declaration the package author owns. The run plans every entry first without writing anything, so an entry listed before another still reads that entry's planned version; with --publish the second pass writes. An entry needs a release when a file other than package.json, Cargo.toml, Cargo.lock or pnpm-lock.yaml changed under its directory since the tag <tag><version> (std-git diffNames; a tag that does not exist counts as changed) or when one of its @almadar dependency ranges differs from ^<version> of an entry earlier in the list; otherwise it is released, or pending when its version is not yet on the registry. With --publish, for each entry in order: the repo's tree must be clean and on main, the version and the dependents' ranges are written, pnpm updates the lockfile of a package whose ranges changed, then git add, commit, tag <tag><new>, push main and the tag, and the registry is polled (`npm view <package> versions` through std-cli under std-retry, waitAttempts every pollIntervalMs, with GITHUB_TOKEN passed through for GitHub Packages, which needs `//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}` in ~/.npmrc) until <package>@<new> is listed before the next entry starts. A released entry is skipped and a pending one only pushes its tag and waits, so a re-run resumes. The first failure stops the run with its repo and reason. Every package.json the run writes also gets a top-level orbRelease block, written in the same write as the new version: `orbRelease: { severity: security|critical|normal, advisory, fixes }` where advisory (one line) and fixes (a semver range of that package's earlier versions the release fixes) are present for security and critical only. The run takes --severity (default normal), --advisory and --fixes; security or critical without both advisory and fixes, normal with either, or an unknown severity is a usage error answered before anything is read or written. The block is one line, an existing one-line block is replaced, and a package.json whose orbRelease block spans several lines stops the run. A package.json that declares a top-level orbLanguage block { version, sources } is the language data owner (@almadar/core); an orbLanguage block without a version (std's { language, operators }) only declares what the package reads and is no owner: sources is its declared list of repo-relative files and directories that produce the language data it ships, and a release of an entry whose orbLanguage has no sources stops the run naming orbLanguage.sources. When any path in sources changed since the entry's last tag (the same git diff, and a tag that does not exist counts as changed), the release raises orbLanguage.version in the same write that sets the new version: a minor bump (patch reset to 0) by default, or a major bump with --language-major, whose consequence is that the orb kernel must be changed to read the new major, so the plan prints a warning line saying the kernel's LANGUAGE_READS must be raised before the release (the release edits no Rust). When sources did not change the orbLanguage.version stays. --language-major is refused, answering status 400 after the plan and before any write, when no released entry's language data changed. The plan shows the bump on that entry's row as `language <old> -> <new>`. A Cargo.toml entry (the orb crate) gets no orbRelease: the orb binary's npm packages are produced elsewhere. The plan shows the orbRelease each released package.json would carry. Usage errors answer status 400; a stopped run answers status 500 with the plan so far. An entry may declare steps, an ordered list of { phase, tool, args, env }: phase is build or publish, tool is cargo (run in the cargoDir knob's directory), node, npm, pnpm or gh, and the literal {version} and {root} in args and env values read as the entry's new version and the working directory. With --publish, the build steps run after the entry is tagged and before its branch and tag are pushed, and the publish steps run once the tag is pushed and before the registry is polled, so a release is built and published from this machine and nothing is published for a tag the remote does not have; with --check, nothing is written and only the build steps of each entry that needs a release run, with {version} reading as the version the plan would release. A step runs on this terminal and a non-zero exit stops the run. --check and --publish together are a usage error."
+  description: "std-orb-release — the `orb release [--publish] [--major|--minor|--patch]` command (spec/cli/orb-release.lolo): the release publisher for the packages listed in release.json at the working directory. release.json is { entries, gates }: entries is an ordered list of { repo, package, file, tag, registry, steps }: repo is a git directory under the working directory, package the npm name, file the version file inside repo (a package.json, or a Cargo.toml whose release version is the first key of [workspace.package] or, for a single crate, of [package]), tag the prefix of its release tag and registry npmjs or github. Without --publish nothing is written: each entry's version file is read, its next version is std-semver's bump of that version (patch unless --major or --minor is given), and the plan lists the entries in order with the @almadar dependency ranges that would be rewritten to ^<new>. A release never touches a package's language range (orb.language, orbLanguage.language, orbVocabulary.language, orbProgram.language): it is a compatibility declaration the package author owns. The run plans every entry first without writing anything, so an entry listed before another still reads that entry's planned version; with --publish every repo of the set must be clean and on main before anything is written. An entry needs a release when a file other than package.json, Cargo.toml, Cargo.lock or pnpm-lock.yaml changed under its directory since the tag <tag><version> (std-git diffNames; a tag that does not exist counts as changed) or when one of its @almadar dependency ranges differs from ^<version> of an entry earlier in the list; otherwise it is released, or pending when its version is not yet on the registry. With --publish the run has three passes after the plan. The build pass writes each entry's version and dependents' ranges and runs its build steps; then every gate runs; only then the ship pass takes each built entry in order: pnpm updates the lockfile of a package whose ranges changed (its upstream is on the registry by then), git adds the entry's own version file (with that lockfile, or the Cargo.lock beside a Cargo.toml), commits and tags <tag><new>, pushes main and the tag, runs the publish steps, and polls the registry (`npm view <package> versions` through std-cli under std-retry, waitAttempts every pollIntervalMs, with GITHUB_TOKEN passed through for GitHub Packages, which needs `//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}` in ~/.npmrc) until <package>@<new> is listed before the next entry ships. A released entry is skipped and a pending one is built, then only tagged, pushed and published, so a re-run resumes. The first failure stops the run with its repo and reason, and every file the run wrote and had not committed (version files, and the Cargo.lock it kept beside a written Cargo.toml) is put back first, so a stopped run leaves the trees as they were for the entries it did not ship. Every package.json the run writes also gets a top-level orbRelease block, written in the same write as the new version: `orbRelease: { severity: security|critical|normal, advisory, fixes }` where advisory (one line) and fixes (a semver range of that package's earlier versions the release fixes) are present for security and critical only. The run takes --severity (default normal), --advisory and --fixes; security or critical without both advisory and fixes, normal with either, or an unknown severity is a usage error answered before anything is read or written. The block is one line, an existing one-line block is replaced, and a package.json whose orbRelease block spans several lines stops the run. A package.json that declares a top-level orbLanguage block { version, sources } is the language data owner (@almadar/core); an orbLanguage block without a version (std's { language, operators }) only declares what the package reads and is no owner: sources is its declared list of repo-relative files and directories that produce the language data it ships, and a release of an entry whose orbLanguage has no sources stops the run naming orbLanguage.sources. When any path in sources changed since the entry's last tag (the same git diff, and a tag that does not exist counts as changed), the release raises orbLanguage.version in the same write that sets the new version: a minor bump (patch reset to 0) by default, or a major bump with --language-major, whose consequence is that the orb kernel must be changed to read the new major, so the plan prints a warning line saying the kernel's LANGUAGE_READS must be raised before the release (the release edits no Rust). When sources did not change the orbLanguage.version stays. --language-major is refused, answering status 400 after the plan and before any write, when no released entry's language data changed. The plan shows the bump on that entry's row as `language <old> -> <new>`. A Cargo.toml entry (the orb crate) gets no orbRelease: the orb binary's npm packages are produced elsewhere. The plan shows the orbRelease each released package.json would carry. Usage errors answer status 400; a stopped run answers status 500 with the plan so far. An entry may declare steps, an ordered list of { phase, tool, args, env }: phase is build or publish, tool is cargo (run in the cargoDir knob's directory), node, npm, pnpm, gh or bash, and the literal {version} and {root} in args and env values read as the entry's new version and the working directory. gates is a list of { name, covers, steps }: covers names packages of the set, and a gate's steps (phase is not read) run after every entry's build steps when at least one covered package is released or pending in this run; a gate that covers none is listed as skipped. So nothing is committed, tagged or published unless the whole set built and every covering gate passed, and nothing is published for a tag the remote does not have. With --check, nothing is written: the build steps of each entry that needs a release run, with {version} reading as the version the plan would release, then the gates. A step runs on this terminal and a non-zero exit stops the run. --check and --publish together are a usage error."
 ]
 uses Spec from "almadar-std/orb-release"
 uses Args from "std/behaviors/std-args"
@@ -17,11 +17,14 @@ uses Pnpm from "std/behaviors/std-cli"
 uses Step from "std/behaviors/std-cli"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type ArgFlag = { name : string!, aliases : [string]!, takesValue : boolean!, repeatable : boolean! }
-type ReleaseStep = { phase : "build" | "publish", tool : "cargo" | "node" | "npm" | "pnpm" | "gh", args : [string]!, env : Map string string }
+type ReleaseStep = { phase : "build" | "publish", tool : "cargo" | "node" | "npm" | "pnpm" | "gh" | "bash", args : [string]!, env : Map string string }
 type ReleaseEntry = { repo : string!, package : string!, file : string!, tag : string!, registry : string!, steps : [ReleaseStep] }
 type OrbLanguage = { version : string, sources : [string] }
 type PkgFile = { name : string, version : string, orbLanguage : OrbLanguage, dependencies : Map string string, devDependencies : Map string string, peerDependencies : Map string string, optionalDependencies : Map string string }
-type ReleaseList = [ReleaseEntry]
+type ReleaseGate = { name : string!, covers : [string]!, steps : [ReleaseStep]! }
+type ReleaseSet = { entries : [ReleaseEntry]!, gates : [ReleaseGate]! }
+type ReleaseShip = { entry : ReleaseEntry!, target : string!, mode : string!, lock : boolean!, cargoLock : boolean! }
+type RelRestore = { path : string!, text : string! }
 type VersionList = [string]
 type RelDep = { dep : string!, range : string! }
 type RelRewrite = { dep : string!, old : string!, new : string! }
@@ -71,7 +74,14 @@ orbital OrbReleaseOrbital {
     check : boolean = false
     steps : [ReleaseStep] = []
     stepAt : number = 0
-    stepPhase : "build" | "publish" = "build"
+    stepPhase : "build" | "gate" | "publish" = "build"
+    gates : [ReleaseGate] = []
+    gateAt : number = 0
+    ships : [ReleaseShip] = []
+    shipAt : number = 0
+    shipping : boolean = false
+    restores : [RelRestore] = []
+    failWhy : string = ""
     step : ReleaseStep = { phase: "build", tool: "node", args: [], env: {} }
     bump : string = "patch"
     root : string = ""
@@ -224,6 +234,15 @@ orbital OrbReleaseOrbital {
     }
   }
 
+  trait StepBash = Step.traits.CliRunner {
+    listens { OrbRelease.REL_STEP_BASH -> CLI_RUN }
+    config {
+      commands: ["bash"]
+      stdio: "inherit"
+      passEnv: ["PATH", "HOME"]
+    }
+  }
+
   trait OrbRelease -> ReleaseRun [optimistic] {
     initial: ready
 
@@ -256,6 +275,9 @@ orbital OrbReleaseOrbital {
         (set @entity.lines [])
         (set @entity.news {})
         (set @entity.cursor 0)
+        (set @entity.ships [])
+        (set @entity.restores [])
+        (set @entity.shipping false)
         (set @entity.severity (default (array/first (default (object/get @payload.flags "severity") [])) "normal"))
         (set @entity.advisory (default (array/first (default (object/get @payload.flags "advisory") [])) ""))
         (set @entity.fixes (default (array/first (default (object/get @payload.flags "fixes") [])) ""))
@@ -265,10 +287,11 @@ orbital OrbReleaseOrbital {
 
     state running {
       INIT -> running
-      REL_LIST_READ -> ready when (= (json/parse (default (bytes/to-string @payload.data) "") ReleaseList) null)
-        (emit RELEASE_ANSWERED { status: 500, body: "", stderr: "Error: orb release: release.json is not a list of { repo, package, file, tag, registry }" })
-      REL_LIST_READ -> running when (!= (json/parse (default (bytes/to-string @payload.data) "") ReleaseList) null)
-        (set @entity.entries (default (json/parse (default (bytes/to-string @payload.data) "") ReleaseList) []))
+      REL_LIST_READ -> ready when (= (json/parse (default (bytes/to-string @payload.data) "") ReleaseSet) null)
+        (emit RELEASE_ANSWERED { status: 500, body: "", stderr: "Error: orb release: release.json is not { entries: [{ repo, package, file, tag, registry }], gates: [{ name, covers, steps }] }" })
+      REL_LIST_READ -> running when (!= (json/parse (default (bytes/to-string @payload.data) "") ReleaseSet) null)
+        (set @entity.entries (default (object/get (json/parse (default (bytes/to-string @payload.data) "") ReleaseSet) "entries") []))
+        (set @entity.gates (default (object/get (json/parse (default (bytes/to-string @payload.data) "") ReleaseSet) "gates") []))
         (emit REL_ENTRY { })
 
       REL_ENTRY -> ready when (and @entity.planning (>= @entity.cursor (array/len @entity.entries)) @entity.langMajor (not @entity.langBumped))
@@ -282,8 +305,29 @@ orbital OrbReleaseOrbital {
         (emit REL_PLANNED { })
       REL_PLANNED -> running
         (emit REL_ENTRY { })
-      REL_ENTRY -> ready when (and (not @entity.planning) (>= @entity.cursor (array/len @entity.entries)))
-        (emit RELEASE_ANSWERED { status: 200, body: (str/concat (if @entity.publish (str/concat "orb release --publish (--" @entity.bump "): every entry is done") (str/concat "orb release dry run (--" @entity.bump "): nothing was written")) "\n" (str/join @entity.lines "\n") "\n") })
+      REL_ENTRY -> ready when (and (not @entity.planning) (>= @entity.cursor (array/len @entity.entries)) (not @entity.publish) (not @entity.check))
+        (emit RELEASE_ANSWERED { status: 200, body: (str/concat "orb release dry run (--" @entity.bump "): nothing was written" "\n" (str/join @entity.lines "\n") "\n") })
+      REL_ENTRY -> running when (and (not @entity.planning) (>= @entity.cursor (array/len @entity.entries)) (or @entity.publish @entity.check))
+        (set @entity.gateAt 0)
+        (emit REL_GATE_NEXT { })
+      REL_GATE_NEXT -> running when (and (< @entity.gateAt (array/len @entity.gates)) (array/some (object/get (default (if (>= @entity.gateAt 0) (array/nth @entity.gates @entity.gateAt) null) { name: "", covers: [], steps: [] }) "covers") (fn c (array/some @entity.ships (fn sh (= (object/get (object/get @sh "entry") "package") @c))))))
+        (set @entity.steps (object/get (default (if (>= @entity.gateAt 0) (array/nth @entity.gates @entity.gateAt) null) { name: "", covers: [], steps: [] }) "steps"))
+        (set @entity.stepPhase "gate")
+        (set @entity.stepAt 0)
+        (set @entity.lines (array/append @entity.lines (str/concat "gate " (object/get (default (if (>= @entity.gateAt 0) (array/nth @entity.gates @entity.gateAt) null) { name: "", covers: [], steps: [] }) "name"))))
+        (emit REL_STEP_NEXT { })
+      REL_GATE_NEXT -> running when (and (< @entity.gateAt (array/len @entity.gates)) (not (array/some (object/get (default (if (>= @entity.gateAt 0) (array/nth @entity.gates @entity.gateAt) null) { name: "", covers: [], steps: [] }) "covers") (fn c (array/some @entity.ships (fn sh (= (object/get (object/get @sh "entry") "package") @c)))))))
+        (set @entity.lines (array/append @entity.lines (str/concat "gate " (object/get (default (if (>= @entity.gateAt 0) (array/nth @entity.gates @entity.gateAt) null) { name: "", covers: [], steps: [] }) "name") ": skipped, none of " (str/join (object/get (default (if (>= @entity.gateAt 0) (array/nth @entity.gates @entity.gateAt) null) { name: "", covers: [], steps: [] }) "covers") ", ") " is released in this run")))
+        (emit REL_GATE_SKIPPED { })
+      REL_GATE_SKIPPED -> running
+        (set @entity.gateAt (+ @entity.gateAt 1))
+        (emit REL_GATE_NEXT { })
+      REL_GATE_NEXT -> ready when (and (>= @entity.gateAt (array/len @entity.gates)) (not @entity.publish))
+        (emit RELEASE_ANSWERED { status: 200, body: (str/concat "orb release --check (--" @entity.bump "): every build and gate passed; nothing was written" "\n" (str/join @entity.lines "\n") "\n") })
+      REL_GATE_NEXT -> running when (and (>= @entity.gateAt (array/len @entity.gates)) @entity.publish)
+        (set @entity.shipping true)
+        (set @entity.shipAt 0)
+        (emit REL_SHIP_NEXT { })
       REL_ENTRY -> running when (< @entity.cursor (array/len @entity.entries))
         (set @entity.cur (default (if (>= @entity.cursor 0) (array/nth @entity.entries @entity.cursor) null) { repo: "", package: "", file: "", tag: "", registry: "" }))
         (emit REL_ENTRY_GO { })
@@ -333,9 +377,9 @@ orbital OrbReleaseOrbital {
       REL_PARSED -> running when (or (and (str/endsWith @entity.file "Cargo.toml") (= @entity.version "")) (and (not (str/endsWith @entity.file "Cargo.toml")) (or (= @entity.pkg null) (!= (default (object/get @entity.pkg "name") "") @entity.name) (= (default (object/get @entity.pkg "version") "") ""))))
         (emit REL_FAIL { why: (str/concat @entity.file " has no readable version for " @entity.name) })
 
-      REL_CHECK -> running when @entity.publish
+      REL_CHECK -> running when (and @entity.planning @entity.writing)
         (emit REL_GIT_STEP { requestId: "status", cwd: (os/path-join @entity.root @entity.repo), op: "status", args: [] })
-      REL_CHECK -> running when (not @entity.publish)
+      REL_CHECK -> running when (not (and @entity.planning @entity.writing))
         (emit REL_GIT_STEP { requestId: "diff", cwd: (os/path-join @entity.root @entity.repo), op: "diffNames", args: [(str/concat @entity.tagPrefix @entity.version) "HEAD"] })
 
       REL_GIT_DONE -> running when (and (= @payload.requestId "status") (!= (str/trim @payload.stdout) ""))
@@ -419,15 +463,17 @@ orbital OrbReleaseOrbital {
       REL_ROW -> running
         (set @entity.lines (array/concat @entity.lines (array/concat [(str/concat (+ @entity.cursor 1) ". " @entity.repo "  " @entity.name "  " @entity.version (if (= @entity.mode "release") (str/concat " -> " @entity.target) "") "  tag " @entity.tagPrefix @entity.target "  " @entity.registry "  [" @entity.mode "]")] (array/concat (if (and (= @entity.mode "release") (not (str/endsWith @entity.file "Cargo.toml"))) [(str/concat "     " @entity.block)] []) (array/concat (if (!= @entity.langNext "") [(str/concat "     language " @entity.langVersion " -> " @entity.langNext)] []) (array/concat (if (and @entity.langMajor (!= @entity.langNext "")) [(str/concat "     warning: the orb kernel's LANGUAGE_READS must be raised to read language " @entity.langNext " before this release")] []) (array/map @entity.rewrites (fn r (str/concat "     " (object/get @r "dep") " " (object/get @r "old") " -> " (object/get @r "new"))))))))))
         (emit REL_ROWN { })
-      REL_ROWN -> running when (or (and (not @entity.publish) (not @entity.check)) (= @entity.mode "released"))
+      REL_ROWN -> running when (or @entity.planning (and (not @entity.publish) (not @entity.check)) (= @entity.mode "released"))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit REL_ENTRY { })
-      REL_ROWN -> running when (and (not @entity.publish) @entity.check (!= @entity.mode "released"))
+      REL_ROWN -> running when (and (not @entity.planning) (not @entity.publish) @entity.check (!= @entity.mode "released"))
+        (set @entity.ships (array/append @entity.ships { entry: @entity.cur, target: @entity.target, mode: @entity.mode, lock: false, cargoLock: false }))
         (emit REL_STEPS_START { phase: "build" })
-      REL_ROWN -> running when (and @entity.publish (= @entity.mode "release"))
+      REL_ROWN -> running when (and (not @entity.planning) @entity.publish (= @entity.mode "release"))
         (emit REL_WRITE { })
-      REL_ROWN -> running when (and @entity.publish (= @entity.mode "pending"))
-        (emit REL_GIT_STEP { requestId: "tag", cwd: (os/path-join @entity.root @entity.repo), op: "tag", args: [(str/concat @entity.tagPrefix @entity.target)] })
+      REL_ROWN -> running when (and (not @entity.planning) @entity.publish (= @entity.mode "pending"))
+        (set @entity.ships (array/append @entity.ships { entry: @entity.cur, target: @entity.target, mode: @entity.mode, lock: false, cargoLock: false }))
+        (emit REL_STEPS_START { phase: "build" })
 
       REL_WRITE -> running when (not (str/includes @entity.text (if (str/endsWith @entity.file "Cargo.toml") (str/concat @entity.vhead @entity.version "\"") (str/concat "\"version\": \"" @entity.version "\""))))
         (emit REL_FAIL { why: (str/concat @entity.file " does not spell its version the way the writer replaces it") })
@@ -438,17 +484,53 @@ orbital OrbReleaseOrbital {
       REL_WRITE -> running when (and (or (= @entity.langNext "") (str/includes @entity.text (str/concat "\"orbLanguage\": {\n    \"version\": \"" @entity.langVersion "\""))) (str/includes @entity.text (if (str/endsWith @entity.file "Cargo.toml") (str/concat @entity.vhead @entity.version "\"") (str/concat "\"version\": \"" @entity.version "\""))) (or (str/endsWith @entity.file "Cargo.toml") (not (array/some (str/split @entity.text "\n") (fn l (and (str/startsWith (str/trim @l) "\"orbRelease\":") (not (str/endsWith (str/trim @l) "}")) (not (str/endsWith (str/trim @l) "},"))))))))
         (emit REL_WRITE_TEXT { text: (array/reduce @entity.rewrites (if (str/endsWith @entity.file "Cargo.toml") (str/replace @entity.text (str/concat @entity.vhead @entity.version "\"") (str/concat @entity.vhead @entity.next "\"")) (str/replace (str/replace (str/join (array/filter (str/split @entity.text "\n") (fn l (not (str/startsWith (str/trim @l) "\"orbRelease\":")))) "\n") (str/concat "\"version\": \"" @entity.version "\"") (str/concat "\"version\": \"" @entity.next "\",\n  " @entity.block)) (str/concat "\"orbLanguage\": {\n    \"version\": \"" @entity.langVersion "\"") (str/concat "\"orbLanguage\": {\n    \"version\": \"" (if (= @entity.langNext "") @entity.langVersion @entity.langNext) "\""))) (fn (acc r) (str/replaceAll @acc (str/concat "\"" (object/get @r "dep") "\": \"" (object/get @r "old") "\"") (str/concat "\"" (object/get @r "dep") "\": \"" (object/get @r "new") "\"")))) })
       REL_WRITE_TEXT -> running
+        (set @entity.restores (array/append @entity.restores { path: (os/path-join @entity.repo @entity.file), text: @entity.text }))
         (os/write-file { anchor: "cwd" path: (os/path-join @entity.repo @entity.file) } (bytes/from-string @payload.text) { key: "write", emit: { success: REL_WRITTEN, failure: REL_FAILED } })
-      REL_WRITTEN -> running when (and (> (array/len @entity.rewrites) 0) (not (str/endsWith @entity.file "Cargo.toml")))
+      REL_WRITTEN -> running when (str/endsWith @entity.file "Cargo.toml")
+        (os/exists { anchor: "cwd" path: (os/path-join @entity.repo (os/path-dir @entity.file) "Cargo.lock") } { key: "cargo-lock", emit: { success: REL_CARGO_LOCK_EXISTS, failure: REL_FAILED } })
+      REL_WRITTEN -> running when (not (str/endsWith @entity.file "Cargo.toml"))
+        (set @entity.ships (array/append @entity.ships { entry: @entity.cur, target: @entity.target, mode: @entity.mode, lock: (> (array/len @entity.rewrites) 0), cargoLock: false }))
+        (emit REL_STEPS_START { phase: "build" })
+      REL_CARGO_LOCK_EXISTS -> running when @payload.ok
+        (os/read-file { anchor: "cwd" path: (os/path-join @entity.repo (os/path-dir @entity.file) "Cargo.lock") } { key: "cargo-lock", emit: { success: REL_CARGO_LOCK_READ, failure: REL_FAILED } })
+      REL_CARGO_LOCK_EXISTS -> running when (not @payload.ok)
+        (set @entity.ships (array/append @entity.ships { entry: @entity.cur, target: @entity.target, mode: @entity.mode, lock: false, cargoLock: false }))
+        (emit REL_STEPS_START { phase: "build" })
+      REL_CARGO_LOCK_READ -> running
+        (set @entity.restores (array/append @entity.restores { path: (os/path-join @entity.repo (os/path-dir @entity.file) "Cargo.lock"), text: (default (bytes/to-string @payload.data) "") }))
+        (set @entity.ships (array/append @entity.ships { entry: @entity.cur, target: @entity.target, mode: @entity.mode, lock: false, cargoLock: true }))
+        (emit REL_STEPS_START { phase: "build" })
+
+      REL_SHIP_NEXT -> ready when (>= @entity.shipAt (array/len @entity.ships))
+        (emit RELEASE_ANSWERED { status: 200, body: (str/concat "orb release --publish (--" @entity.bump "): every entry is done" "\n" (str/join @entity.lines "\n") "\n") })
+      REL_SHIP_NEXT -> running when (< @entity.shipAt (array/len @entity.ships))
+        (set @entity.cur (object/get (default (if (>= @entity.shipAt 0) (array/nth @entity.ships @entity.shipAt) null) { entry: { repo: "", package: "", file: "", tag: "", registry: "" }, target: "", mode: "", lock: false, cargoLock: false }) "entry"))
+        (set @entity.target (object/get (default (if (>= @entity.shipAt 0) (array/nth @entity.ships @entity.shipAt) null) { entry: { repo: "", package: "", file: "", tag: "", registry: "" }, target: "", mode: "", lock: false, cargoLock: false }) "target"))
+        (set @entity.mode (object/get (default (if (>= @entity.shipAt 0) (array/nth @entity.ships @entity.shipAt) null) { entry: { repo: "", package: "", file: "", tag: "", registry: "" }, target: "", mode: "", lock: false, cargoLock: false }) "mode"))
+        (set @entity.cursor @entity.shipAt)
+        (emit REL_SHIP_GO { lock: (object/get (default (if (>= @entity.shipAt 0) (array/nth @entity.ships @entity.shipAt) null) { entry: { repo: "", package: "", file: "", tag: "", registry: "" }, target: "", mode: "", lock: false, cargoLock: false }) "lock"), cargoLock: (object/get (default (if (>= @entity.shipAt 0) (array/nth @entity.ships @entity.shipAt) null) { entry: { repo: "", package: "", file: "", tag: "", registry: "" }, target: "", mode: "", lock: false, cargoLock: false }) "cargoLock") })
+      REL_SHIP_GO -> running
+        (set @entity.repo (object/get @entity.cur "repo"))
+        (set @entity.name (object/get @entity.cur "package"))
+        (set @entity.file (object/get @entity.cur "file"))
+        (set @entity.tagPrefix (object/get @entity.cur "tag"))
+        (set @entity.registry (object/get @entity.cur "registry"))
+        (set @entity.lines (array/append @entity.lines (str/concat "ship " (object/get @entity.cur "package") (quote "@") @entity.target)))
+        (emit REL_SHIP_STEP { lock: @payload.lock, cargoLock: @payload.cargoLock })
+      REL_SHIP_STEP -> running when (and (= @entity.mode "release") @payload.lock)
         (os/exists { anchor: "cwd" path: (os/path-join @entity.repo (os/path-dir @entity.file) "pnpm-lock.yaml") } { key: "lock", emit: { success: REL_LOCK_EXISTS, failure: REL_FAILED } })
-      REL_WRITTEN -> running when (not (and (> (array/len @entity.rewrites) 0) (not (str/endsWith @entity.file "Cargo.toml"))))
-        (emit REL_GIT_STEP { requestId: "add", cwd: (os/path-join @entity.root @entity.repo), op: "add", args: [] })
+      REL_SHIP_STEP -> running when (and (= @entity.mode "release") (not @payload.lock) @payload.cargoLock)
+        (emit REL_GIT_STEP { requestId: "add", cwd: (os/path-join @entity.root @entity.repo), op: "add", args: [@entity.file (os/path-join (os/path-dir @entity.file) "Cargo.lock")] })
+      REL_SHIP_STEP -> running when (and (= @entity.mode "release") (not @payload.lock) (not @payload.cargoLock))
+        (emit REL_GIT_STEP { requestId: "add", cwd: (os/path-join @entity.root @entity.repo), op: "add", args: [@entity.file] })
+      REL_SHIP_STEP -> running when (= @entity.mode "pending")
+        (emit REL_GIT_STEP { requestId: "tag", cwd: (os/path-join @entity.root @entity.repo), op: "tag", args: [(str/concat @entity.tagPrefix @entity.target)] })
       REL_LOCK_EXISTS -> running when @payload.ok
         (emit REL_PNPM_RUN { stage: "lock", argv: ["-C" (os/path-join @entity.root @entity.repo (os/path-dir @entity.file)) "install" "--lockfile-only" "--ignore-scripts" "--ignore-workspace"] })
       REL_LOCK_EXISTS -> running when (not @payload.ok)
-        (emit REL_GIT_STEP { requestId: "add", cwd: (os/path-join @entity.root @entity.repo), op: "add", args: [] })
+        (emit REL_GIT_STEP { requestId: "add", cwd: (os/path-join @entity.root @entity.repo), op: "add", args: [@entity.file] })
       REL_PNPM_DONE -> running when (= @payload.exitCode 0)
-        (emit REL_GIT_STEP { requestId: "add", cwd: (os/path-join @entity.root @entity.repo), op: "add", args: [] })
+        (emit REL_GIT_STEP { requestId: "add", cwd: (os/path-join @entity.root @entity.repo), op: "add", args: [@entity.file (os/path-join (os/path-dir @entity.file) "pnpm-lock.yaml")] })
       REL_PNPM_DONE -> running when (!= @payload.exitCode 0)
         (emit REL_FAIL { why: (str/concat "pnpm could not update the lockfile: " (str/trim @payload.stderr)) })
       REL_PNPM_FAILED -> running
@@ -457,9 +539,12 @@ orbital OrbReleaseOrbital {
       REL_GIT_DONE -> running when (= @payload.requestId "add")
         (emit REL_GIT_STEP { requestId: "commit", cwd: (os/path-join @entity.root @entity.repo), op: "commit", args: [(str/concat "release " @entity.name " " @entity.target)] })
       REL_GIT_DONE -> running when (= @payload.requestId "commit")
+        (set @entity.restores (array/filter @entity.restores (fn r (not (array/includes [(os/path-join @entity.repo @entity.file) (os/path-join @entity.repo (os/path-dir @entity.file) "Cargo.lock")] (object/get @r "path"))))))
         (emit REL_GIT_STEP { requestId: "tag", cwd: (os/path-join @entity.root @entity.repo), op: "tag", args: [(str/concat @entity.tagPrefix @entity.target)] })
-      REL_GIT_DONE -> running when (= @payload.requestId "tag")
-        (emit REL_STEPS_START { phase: "build" })
+      REL_GIT_DONE -> running when (and (= @payload.requestId "tag") (= @entity.mode "release"))
+        (emit REL_GIT_STEP { requestId: "push-branch", cwd: (os/path-join @entity.root @entity.repo), op: "pushBranch", args: [@config.pushRemote @config.releaseBranch] })
+      REL_GIT_DONE -> running when (and (= @payload.requestId "tag") (= @entity.mode "pending"))
+        (emit REL_GIT_STEP { requestId: "push-tag", cwd: (os/path-join @entity.root @entity.repo), op: "pushTag", args: [@config.pushRemote (str/concat @entity.tagPrefix @entity.target)] })
 
       REL_STEPS_START -> running
         (set @entity.stepPhase @payload.phase)
@@ -468,17 +553,16 @@ orbital OrbReleaseOrbital {
         (emit REL_STEP_NEXT { })
       REL_STEP_NEXT -> running when (< @entity.stepAt (array/len @entity.steps))
         (set @entity.step (default (if (>= @entity.stepAt 0) (array/nth @entity.steps @entity.stepAt) null) { phase: "build", tool: "node", args: [], env: {} }))
-        (set @entity.lines (array/append @entity.lines (str/concat "     " (default (object/get @entity.step "phase") "build") " step " (+ @entity.stepAt 1) ": " (default (object/get @entity.step "tool") "node") " " (str/join (array/map (default (object/get @entity.step "args") []) (fn a (str/replaceAll (str/replaceAll @a "{version}" @entity.target) "{root}" @entity.root))) " "))))
+        (set @entity.lines (array/append @entity.lines (str/concat "     " @entity.stepPhase " step " (+ @entity.stepAt 1) ": " (default (object/get @entity.step "tool") "node") " " (str/join (array/map (default (object/get @entity.step "args") []) (fn a (str/replaceAll (str/replaceAll @a "{version}" @entity.target) "{root}" @entity.root))) " "))))
         (emit REL_STEP_GO { })
-      REL_STEP_NEXT -> running when (and (>= @entity.stepAt (array/len @entity.steps)) (not @entity.publish))
+      REL_STEP_NEXT -> running when (and (>= @entity.stepAt (array/len @entity.steps)) (= @entity.stepPhase "build"))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit REL_ENTRY { })
-      REL_STEP_NEXT -> running when (and (>= @entity.stepAt (array/len @entity.steps)) @entity.publish (= @entity.stepPhase "publish"))
+      REL_STEP_NEXT -> running when (and (>= @entity.stepAt (array/len @entity.steps)) (= @entity.stepPhase "gate"))
+        (set @entity.gateAt (+ @entity.gateAt 1))
+        (emit REL_GATE_NEXT { })
+      REL_STEP_NEXT -> running when (and (>= @entity.stepAt (array/len @entity.steps)) (= @entity.stepPhase "publish"))
         (emit REL_RETRY_START { key: (as (str/concat "rel-wait:" @entity.cursor) CallKey) })
-      REL_STEP_NEXT -> running when (and (>= @entity.stepAt (array/len @entity.steps)) @entity.publish (= @entity.stepPhase "build") (= @entity.mode "release"))
-        (emit REL_GIT_STEP { requestId: "push-branch", cwd: (os/path-join @entity.root @entity.repo), op: "pushBranch", args: [@config.pushRemote @config.releaseBranch] })
-      REL_STEP_NEXT -> running when (and (>= @entity.stepAt (array/len @entity.steps)) @entity.publish (= @entity.stepPhase "build") (= @entity.mode "pending"))
-        (emit REL_GIT_STEP { requestId: "push-tag", cwd: (os/path-join @entity.root @entity.repo), op: "pushTag", args: [@config.pushRemote (str/concat @entity.tagPrefix @entity.target)] })
       REL_STEP_GO -> running
         (let ((argv (array/map (default (object/get @entity.step "args") []) (fn a (str/replaceAll (str/replaceAll @a "{version}" @entity.target) "{root}" @entity.root))))
               (env (object/fromEntries (array/map (object/entries (default (object/get @entity.step "env") {})) (fn kv [(default (array/nth @kv 0) ""), (str/replaceAll (str/replaceAll (default (array/nth @kv 1) "") "{version}" @entity.target) "{root}" @entity.root)]))))
@@ -489,20 +573,21 @@ orbital OrbReleaseOrbital {
             (when (= @tool "node") (emit REL_STEP_NODE { stage: @stage, argv: @argv, env: @env }))
             (when (= @tool "npm") (emit REL_STEP_NPM { stage: @stage, argv: @argv, env: @env }))
             (when (= @tool "pnpm") (emit REL_STEP_PNPM { stage: @stage, argv: @argv, env: @env }))
-            (when (= @tool "gh") (emit REL_STEP_GH { stage: @stage, argv: @argv, env: @env }))))
+            (when (= @tool "gh") (emit REL_STEP_GH { stage: @stage, argv: @argv, env: @env }))
+            (when (= @tool "bash") (emit REL_STEP_BASH { stage: @stage, argv: @argv, env: @env }))))
       REL_STEP_DONE -> running when (= @payload.exitCode 0)
         (set @entity.stepAt (+ @entity.stepAt 1))
         (emit REL_STEP_NEXT { })
       REL_STEP_DONE -> running when (!= @payload.exitCode 0)
-        (emit REL_FAIL { why: (str/concat (default (object/get @entity.step "phase") "build") " step " (+ @entity.stepAt 1) " (" (default (object/get @entity.step "tool") "node") ") exited " @payload.exitCode) })
+        (emit REL_FAIL { why: (str/concat @entity.stepPhase " step " (+ @entity.stepAt 1) " (" (default (object/get @entity.step "tool") "node") ") exited " @payload.exitCode) })
       REL_STEP_FAILED -> running
-        (emit REL_FAIL { why: (str/concat (default (object/get @entity.step "phase") "build") " step " (+ @entity.stepAt 1) " (" (default (object/get @entity.step "tool") "node") ") did not run (" @payload.code "): " @payload.error) })
+        (emit REL_FAIL { why: (str/concat @entity.stepPhase " step " (+ @entity.stepAt 1) " (" (default (object/get @entity.step "tool") "node") ") did not run (" @payload.code "): " @payload.error) })
       REL_GIT_DONE -> running when (= @payload.requestId "push-branch")
         (emit REL_GIT_STEP { requestId: "push-tag", cwd: (os/path-join @entity.root @entity.repo), op: "pushTag", args: [@config.pushRemote (str/concat @entity.tagPrefix @entity.target)] })
       REL_GIT_DONE -> running when (= @payload.requestId "push-tag")
         (emit REL_STEPS_START { phase: "publish" })
       REL_GIT_FAILED -> running when (and (= @payload.requestId "tag") (= @payload.code "git_tag_exists") (= @entity.mode "pending"))
-        (emit REL_STEPS_START { phase: "build" })
+        (emit REL_GIT_STEP { requestId: "push-tag", cwd: (os/path-join @entity.root @entity.repo), op: "pushTag", args: [@config.pushRemote (str/concat @entity.tagPrefix @entity.target)] })
       REL_GIT_FAILED -> running when (and (!= @payload.requestId "diff") (not (and (= @payload.requestId "tag") (= @payload.code "git_tag_exists") (= @entity.mode "pending"))))
         (emit REL_FAIL { why: (str/concat "git " @payload.op " failed (" @payload.code "): " (str/trim @payload.stderr)) })
 
@@ -510,15 +595,27 @@ orbital OrbReleaseOrbital {
         (emit REL_REG_ASK { requestId: "wait" })
       REL_WAIT_DONE -> running
         (set @entity.lines (array/append @entity.lines (str/concat "     published " @entity.name (quote "@") @entity.target)))
-        (set @entity.cursor (+ @entity.cursor 1))
-        (emit REL_ENTRY { })
+        (set @entity.shipAt (+ @entity.shipAt 1))
+        (emit REL_SHIP_NEXT { })
       REL_GAVE_UP -> running
         (emit REL_FAIL { why: (str/concat @entity.name (quote "@") @entity.target " was not listed on " @entity.registry " after " @payload.attempts " polls") })
 
-      REL_FAIL -> ready
+      REL_FAIL -> ready when (= (array/len @entity.restores) 0)
         (emit RELEASE_ANSWERED { status: 500, body: (str/join @entity.lines "\n"), stderr: (str/concat "Error: orb release: " (if (= @entity.repo "") "" (str/concat "stopped at " @entity.repo " (" @entity.name "): ")) @payload.why ". Fix it and re-run to resume.") })
-      REL_FAILED -> ready
-        (emit RELEASE_ANSWERED { status: 500, body: (str/join @entity.lines "\n"), stderr: (str/concat "Error: orb release: " (if (= @entity.repo "") "" (str/concat "stopped at " @entity.repo " (" @entity.name "): ")) (default @payload.error "failed") ". Fix it and re-run to resume.") })
+      REL_FAIL -> running when (> (array/len @entity.restores) 0)
+        (set @entity.failWhy @payload.why)
+        (emit REL_RESTORE_NEXT { })
+      REL_FAILED -> running
+        (emit REL_FAIL { why: (default @payload.error "failed") })
+      REL_RESTORE_NEXT -> running when (> (array/len @entity.restores) 0)
+        (os/write-file { anchor: "cwd" path: (object/get (default (array/first @entity.restores) { path: "", text: "" }) "path") } (bytes/from-string (object/get (default (array/first @entity.restores) { path: "", text: "" }) "text")) { key: "restore", emit: { success: REL_RESTORED, failure: REL_RESTORE_FAILED } })
+      REL_RESTORED -> running
+        (set @entity.restores (array/drop @entity.restores 1))
+        (emit REL_RESTORE_NEXT { })
+      REL_RESTORE_NEXT -> ready when (= (array/len @entity.restores) 0)
+        (emit RELEASE_ANSWERED { status: 500, body: (str/join @entity.lines "\n"), stderr: (str/concat "Error: orb release: " (if (= @entity.repo "") "" (str/concat "stopped at " @entity.repo " (" @entity.name "): ")) @entity.failWhy ". The files this run wrote and had not committed were put back. Fix it and re-run to resume.") })
+      REL_RESTORE_FAILED -> ready
+        (emit RELEASE_ANSWERED { status: 500, body: (str/join @entity.lines "\n"), stderr: (str/concat "Error: orb release: " (if (= @entity.repo "") "" (str/concat "stopped at " @entity.repo " (" @entity.name "): ")) @entity.failWhy ". Putting back " (object/get (default (array/first @entity.restores) { path: "", text: "" }) "path") " failed (" (default @payload.error "failed") "), so it and " (- (array/len @entity.restores) 1) " other uncommitted writes of this run are still in the tree.") })
     }
 
     emits {
@@ -611,6 +708,26 @@ orbital OrbReleaseOrbital {
       }
         @description "os/exists: whether the package has a pnpm lockfile."
         @tier "internal"
+      REL_CARGO_LOCK_EXISTS {
+        ok : boolean!
+      }
+        @description "os/exists: whether a Cargo.lock sits beside the written Cargo.toml."
+        @tier "internal"
+      REL_CARGO_LOCK_READ {
+        data : bytes!
+      }
+        @description "os/read-file: the Cargo.lock beside the written Cargo.toml, kept to put back if the run stops."
+        @tier "internal"
+      REL_RESTORED {
+        bytes : number
+      }
+        @description "os/write-file: a file this run wrote is put back."
+        @tier "internal"
+      REL_RESTORE_FAILED {
+        error : string
+      }
+        @description "os/write-file: a file this run wrote could not be put back."
+        @tier "internal"
       REL_FAILED {
         error : string
       }
@@ -620,7 +737,7 @@ orbital OrbReleaseOrbital {
         @description "Internal: take the entry at the cursor."
         @tier "internal"
       REL_PLANNED { }
-        @description "Internal: every entry is planned; the second pass starts from the first entry."
+        @description "Internal: every entry is planned; the build pass starts from the first entry."
         @tier "internal"
       REL_ENTRY_GO { }
         @description "Internal: read the taken entry's version file."
@@ -696,10 +813,41 @@ orbital OrbReleaseOrbital {
       }
         @description "Internal: run a release.json step with gh."
         @tier "internal"
+      REL_STEP_BASH {
+        stage : string!
+        argv : [string]!
+        env : Map string string
+      }
+        @description "Internal: run a release.json step with bash."
+        @tier "internal"
+      REL_GATE_NEXT { }
+        @description "Internal: run the next gate whose covered packages include one this run releases, or go on once every gate is passed."
+        @tier "internal"
+      REL_GATE_SKIPPED { }
+        @description "Internal: the gate covers no package this run releases; take the next one."
+        @tier "internal"
+      REL_SHIP_NEXT { }
+        @description "Internal: commit, tag, push and publish the next built entry, or answer once every entry is shipped."
+        @tier "internal"
+      REL_SHIP_GO {
+        lock : boolean!
+        cargoLock : boolean!
+      }
+        @description "Internal: take the built entry at the ship cursor."
+        @tier "internal"
+      REL_SHIP_STEP {
+        lock : boolean!
+        cargoLock : boolean!
+      }
+        @description "Internal: start shipping the taken entry: refresh its lockfile, or add, or tag a pending one."
+        @tier "internal"
+      REL_RESTORE_NEXT { }
+        @description "Internal: put back the next file this stopped run wrote and did not commit."
+        @tier "internal"
       REL_STEPS_START {
         phase : "build" | "publish"!
       }
-        @description "Internal: take the entry's declared steps of one phase: build before the push, publish after it."
+        @description "Internal: take the entry's declared steps of one phase: build in the build pass, publish once its tag is pushed."
         @tier "internal"
       REL_STEP_NEXT { }
         @description "Internal: run the next declared step, or go on once every step ran."
@@ -846,6 +994,8 @@ orbital OrbReleaseOrbital {
       StepPnpm.CLI_FAILED -> REL_STEP_FAILED
       StepGh.CLI_DONE -> REL_STEP_DONE
       StepGh.CLI_FAILED -> REL_STEP_FAILED
+      StepBash.CLI_DONE -> REL_STEP_DONE
+      StepBash.CLI_FAILED -> REL_STEP_FAILED
     }
 
     config {
@@ -856,5 +1006,5 @@ orbital OrbReleaseOrbital {
     }
   }
 
-  page boot as OrbReleaseOrbitalStart -> OrbRelease, ArgsCli, ReleaseSemver, GitStepRunner, GitSteps, GitCli, NpmCli, WaitRetry, PnpmCli, StepCargo, StepNode, StepNpm, StepPnpm, StepGh
+  page boot as OrbReleaseOrbitalStart -> OrbRelease, ArgsCli, ReleaseSemver, GitStepRunner, GitSteps, GitCli, NpmCli, WaitRetry, PnpmCli, StepCargo, StepNode, StepNpm, StepPnpm, StepGh, StepBash
 }

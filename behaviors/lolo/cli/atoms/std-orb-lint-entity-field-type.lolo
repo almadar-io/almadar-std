@@ -13,10 +13,11 @@ type FieldTypeRelation = { entity : string }
 type FieldTypeField = { name : string, type : string, relation : FieldTypeRelation }
 type FieldTypeEntity = { fields : [FieldTypeField] }
 type FieldTypeOrbital = { entity : FieldTypeEntity, auxiliaryEntities : [FieldTypeEntity], spec : boolean }
+type FieldTypeProgType = { properties : Map string FieldTypeProgType? }
 type FieldTypeProgram = { orbitals : [FieldTypeOrbital] }
 
 type LintCodeDecl = { code : string!, category : string!, description : string! }
-type LintEntityFieldTypeCodes = { eInvalidFieldName : LintCodeDecl , eInvalidFieldType : LintCodeDecl , eInvalidRelation : LintCodeDecl }
+type LintEntityFieldTypeCodes = { eInvalidFieldName : LintCodeDecl , eInvalidFieldType : LintCodeDecl , eInvalidRelation : LintCodeDecl , lintLanguageFactsUnread : LintCodeDecl }
 
 orbital OrbLintEntityFieldTypeOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
@@ -25,6 +26,8 @@ orbital OrbLintEntityFieldTypeOrbital {
     id : string!
     scope : string = ""
     findings : [OrbFinding] = []
+    fieldTypes : [string] = []
+    factsUnread : boolean = true
   }
 
   trait OrbLintEntityFieldType -> OrbLintEntityFieldTypeRun [optimistic] {
@@ -32,9 +35,14 @@ orbital OrbLintEntityFieldTypeOrbital {
 
     state ready {
       INIT -> ready
+      FACTS_HEARD -> ready
+        (set @entity.fieldTypes @payload.fieldTypes)
+        (set @entity.factsUnread false)
+      FACTS_UNREAD -> ready
+        (set @entity.factsUnread true)
       LINT_INPUT -> ready
         (set @entity.scope @payload.scope)
-        (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])))
+        (set @entity.findings (if @entity.factsUnread [{ code: @config.codes.lintLanguageFactsUnread.code, path: "fieldTypes", message: "the installed language facts could not be read, so the valid field types are unknown", suggestion: "Reinstall @almadar/core so its orbLanguage declares programTypes, bindingRules and vocabulary", severity: "error" }] (let ((orbitals (object/get @payload.program "orbitals" [])))
           (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
             (let ((auxs (object/get (default (array/nth @orbitals @oi) {}) "auxiliaryEntities" [])))
               (array/flatten (array/map
@@ -52,25 +60,22 @@ orbital OrbLintEntityFieldTypeOrbital {
                                 (let ((nm (object/get @f "name" null))) (if (and @payload.latin (validate/string @nm) (not (validate/pattern @nm "^[a-z][a-zA-Z0-9]*$")))
                                   [{ code: @config.codes.eInvalidFieldName.code, path: (str/concat @base ".fields[" @fi "].name"), message: (str/concat "Field name '" @nm "' should be camelCase"), suggestion: "Use camelCase for field names (e.g., 'firstName', 'createdAt')", severity: "error" }]
                                   [])))
-                              (if (array/includes @config.fieldTypes (object/get @f "type" "string"))
+                              (if (array/includes @entity.fieldTypes (object/get @f "type" "string"))
                                 []
-                                [{ code: @config.codes.eInvalidFieldType.code, path: (str/concat @base ".fields[" @fi "].type"), message: (str/concat "Invalid field type: '" (object/get @f "type" "") "'"), suggestion: "Use a valid field type", severity: "error", validValues: @config.fieldTypes }])
+                                [{ code: @config.codes.eInvalidFieldType.code, path: (str/concat @base ".fields[" @fi "].type"), message: (str/concat "Invalid field type: '" (object/get @f "type" "") "'"), suggestion: "Use a valid field type", severity: "error", validValues: @entity.fieldTypes }])
                               (if (and (= (object/get @f "type" "") "relation") (not (object/has @f "relation")))
                                 [{ code: @config.codes.eInvalidRelation.code, path: (str/concat @base ".fields[" @fi "].relation"), message: "Relation field requires a 'relation' configuration", suggestion: "Add relation: { entity: 'EntityName', cardinality: 'one' }", severity: "error" }]
                                 [])))))))
-                      [])))))))))))
+                      []))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "entity-field-type", scope: @entity.scope, findings: @entity.findings })
     }
 
     config {
-      codes : LintEntityFieldTypeCodes = { eInvalidFieldName: { code: "ORB_E_INVALID_FIELD_NAME", category: "entity", description: "An entity field or entity name is empty or not in the required naming form" }, eInvalidFieldType: { code: "ORB_E_INVALID_FIELD_TYPE", category: "entity", description: "An entity field declares a type that is not a valid field type" }, eInvalidRelation: { code: "ORB_E_INVALID_RELATION", category: "entity", description: "A relation field is missing its relation configuration or points at an entity that does not exist" } }
+      codes : LintEntityFieldTypeCodes = { eInvalidFieldName: { code: "ORB_E_INVALID_FIELD_NAME", category: "entity", description: "An entity field or entity name is empty or not in the required naming form" }, eInvalidFieldType: { code: "ORB_E_INVALID_FIELD_TYPE", category: "entity", description: "An entity field declares a type that is not a valid field type" }, eInvalidRelation: { code: "ORB_E_INVALID_RELATION", category: "entity", description: "A relation field is missing its relation configuration or points at an entity that does not exist" }, lintLanguageFactsUnread: { code: "ORB_LINT_LANGUAGE_FACTS_UNREAD", category: "lint", description: "The installed language facts could not be read, so the lint rule could not check what it needs" } }
         @label "Emitted codes"
         @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
-      fieldTypes : [string] = ["string", "number", "int", "i8", "i16", "i32", "u8", "u16", "u32", "u64", "f32", "boolean", "date", "datetime", "timestamp", "instant", "email", "url", "phone", "uuid", "image", "money", "file", "bytes", "CallKey", "array", "tuple", "object", "enum", "relation", "trait", "orbital", "behavior", "slot", "pattern", "node", "event", "union"]
-        @label "Field types"
-        @description "The field types an entity field may declare, as the compiler's field validation accepts them (G-STD-145)."
     }
 
     emits {
@@ -86,6 +91,12 @@ orbital OrbLintEntityFieldTypeOrbital {
       LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : FieldTypeProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
+      FACTS_HEARD { programTypes : Map string FieldTypeProgType!  guardSigils : [string]!  effectSigils : [string]!  tickSigils : [string]!  fieldTypes : [string]! }
+        @description "std-orb-lint-input's LINT_LANGUAGE_FACTS: the entity field types the installed language declares, the compiler's own list."
+      FACTS_UNREAD { error : string! }
+        @description "std-orb-lint-input's LINT_LANGUAGE_FACTS_UNREAD: the installed language facts could not be read."
+      OrbLintInput.LINT_LANGUAGE_FACTS -> FACTS_HEARD
+      OrbLintInput.LINT_LANGUAGE_FACTS_UNREAD -> FACTS_UNREAD
     }
   }
 

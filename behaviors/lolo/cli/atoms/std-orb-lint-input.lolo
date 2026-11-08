@@ -111,7 +111,7 @@ type ProgTypeNode = { type : string!, required : boolean, nullable : boolean, it
 type ProgTypeFile = Map string ProgTypeNode
 type BindingRule = { allowed : [string]! }
 type BindingRulesFile = { guard : BindingRule!, effect : BindingRule!, tick : BindingRule! }
-type VocabularyFile = { types : [string]! }
+type VocabularyFile = { fieldTypes : [string]! }
 type UiVocabularyFile = { slots : [string]!, itemActionBaseProps : [string]!, lucideIcons : [string]!, themeKeys : [string]!, deliveryRoots : [string]!, eventSourceKeys : [string]! }
 type ComponentMappingFile = { mappings : Map string ComponentMappingEntry! }
 type HostVal = string | number | boolean | [HostVal?] | Map string HostVal?
@@ -527,7 +527,7 @@ orbital OrbLintInputOrbital {
       LINT_FACTS_VOCAB -> reading when (let ((text (bytes/to-string @payload.data))) (or (= @text null) (= (json/parse @text VocabularyFile) null)))
         (emit LINT_FACTS_FAILED { error: "the installed @almadar/core vocabulary is not a vocabulary" })
       LINT_FACTS_VOCAB -> reading when (let ((text (bytes/to-string @payload.data))) (and (!= @text null) (!= (json/parse @text VocabularyFile) null)))
-        (let ((text (bytes/to-string @payload.data))) (if (= @text null) (emit LINT_FACTS_FAILED { error: "the installed @almadar/core vocabulary are not valid text" }) (let ((vf (json/parse @text VocabularyFile))) (if (= @vf null) (emit LINT_FACTS_FAILED { error: "the installed @almadar/core vocabulary are not a valid table" }) (do (emit LINT_LANGUAGE_FACTS { programTypes: @entity.progTypes, guardSigils: @entity.guardSigils, effectSigils: @entity.effectSigils, tickSigils: @entity.tickSigils, fieldTypes: (object/get @vf "types") }) (emit LINT_UI_VOCAB_READ { }))))))
+        (let ((text (bytes/to-string @payload.data))) (if (= @text null) (emit LINT_FACTS_FAILED { error: "the installed @almadar/core vocabulary are not valid text" }) (let ((vf (json/parse @text VocabularyFile))) (if (= @vf null) (emit LINT_FACTS_FAILED { error: "the installed @almadar/core vocabulary are not a valid table" }) (do (emit LINT_LANGUAGE_FACTS { programTypes: @entity.progTypes, guardSigils: @entity.guardSigils, effectSigils: @entity.effectSigils, tickSigils: @entity.tickSigils, fieldTypes: (object/get @vf "fieldTypes") }) (emit LINT_UI_VOCAB_READ { }))))))
       LINT_UI_VOCAB_READ -> reading when (= @entity.uiVocabFile "")
         (emit LINT_UI_VOCAB_UNREAD { error: "the installed @almadar/core declares no orbLanguage.uiVocabulary" })
         (emit LINT_FACTS_DONE { })
@@ -611,7 +611,7 @@ orbital OrbLintInputOrbital {
         @description "The installed @almadar/std operator table does not match the operator shape type, so LINT_OPERATOR_SHAPES is not sent; LINT_INPUT and every other event are unaffected. A rule that needs the shapes answers its own unread finding."
         @tier "internal"
       LINT_LANGUAGE_FACTS -> external { programTypes : Map string ProgTypeNode!  guardSigils : [string]!  effectSigils : [string]!  tickSigils : [string]!  fieldTypes : [string]! }
-        @description "The installed @almadar/core language facts: the program types (BehaviorRef, OrbitalValue, TraitValue, Viewer, MachineRow, PlayedStep) with their members, the sigils allowed in a guard, an effect and a tick (orbLanguage.bindingRules), and the field-type word list (orbLanguage.vocabulary types); sent before LINT_INPUT."
+        @description "The installed @almadar/core language facts: the program types (BehaviorRef, OrbitalValue, TraitValue, Viewer, MachineRow, PlayedStep) with their members, the sigils allowed in a guard, an effect and a tick (orbLanguage.bindingRules), and the entity field-type list (orbLanguage.vocabulary fieldTypes); sent before LINT_INPUT."
         @tier "internal"
       LINT_LANGUAGE_FACTS_UNREAD -> external { error : string! }
         @description "The installed @almadar/core language facts could not be read, so LINT_LANGUAGE_FACTS is not sent; LINT_INPUT and every other event are unaffected. A rule that needs the facts answers its own unread finding."

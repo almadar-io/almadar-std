@@ -5,7 +5,7 @@ app std-calendar [
 type CalendarInstant = instant
 type ItemAction = { label : string!, event : event, navigatesTo : string | SExpr, variant : primary | secondary | ghost | danger, icon : string, roles : [string], when : SExpr }
 type FilterSpec = { field : string!, label : string, options : [string] }
-type CalendarFieldSpec = { name : string!, label : string, variant : h3 | h4 | body | caption | badge | small | progress, icon : string, format : date | currency | number | boolean | percent }
+type CalendarFieldSpec = { name : field @entity!, label : string, variant : h3 | h4 | body | caption | badge | small | progress, icon : string, format : date | currency | number | boolean | percent }
 type CalendarEventRelatedRow = { id : string! }
 orbital CalendarEventOrbital {
     type CalendarEventLoaded = Event { data : [CalendarEvent]!, totalCount : number! } "Fired when CalendarEvent finishes loading; payload.data holds the events"
@@ -253,25 +253,7 @@ orbital CalendarEventOrbital {
         @label "Description binding"
         @description "Per-row binding for the event description slot."
         @tier "presentation"
-      fields : [CalendarFieldSpec] = [{
-        icon: calendar
-        label: Event
-        name: name
-        variant: h4
-      }, {
-        label: Time
-        name: time
-        variant: badge
-      }, {
-        format: date
-        label: Date
-        name: date
-        variant: caption
-      }, {
-        label: Status
-        name: status
-        variant: badge
-      }]
+      fields : [CalendarFieldSpec] = []
         @label "Upcoming-events columns"
         @description "Row field descriptors for the 'Upcoming Events' data-list under calendarLook='month'. Rebound hosts must override this — it is a literal entity[field.name] lookup, unlike titleBinding/timeBinding/descriptionBinding (expression bindings), so it does not follow a rebind automatically."
         @synonyms "upcoming events columns, month view fields, event list columns"

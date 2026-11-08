@@ -1,0 +1,380 @@
+{
+  "atom": "../ui/learning/atoms/std-lesson-segments.lolo",
+  "trait": "LessonSegments",
+  "cases": [
+    {
+      "id": "full-lesson-in-text-order",
+      "steps": [
+        {
+          "event": "PARSE_LESSON",
+          "payload": {
+            "lessonId": "l1",
+            "text": "<prq>needs algebra</prq>\n<activate>What do you already know about slopes?</activate>\n<connect>Slopes link to rates of change.</connect>\n# Slope\n\nA slope is rise over run.\n\n```python run\nprint(2 / 1)\n```\n\n<reflect>Where have you seen a slope today?</reflect>\n<bloom level=\"apply\"><question>Slope of (0,0)-(2,4)?</question><answer>2</answer></bloom>\n<question>Is a flat line's slope zero?</question>\n<answer>Yes</answer>\n<visualize type=\"math\" description=\"A line with slope 2\" />\nThat is all."
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LESSON_SEGMENTS",
+                "payload": {
+                  "lessonId": "l1",
+                  "segments": [
+                    {
+                      "type": "activate",
+                      "question": "What do you already know about slopes?"
+                    },
+                    {
+                      "type": "connect",
+                      "content": "Slopes link to rates of change."
+                    },
+                    {
+                      "type": "markdown",
+                      "content": "# Slope\n\nA slope is rise over run.\n\n"
+                    },
+                    {
+                      "type": "code",
+                      "language": "python",
+                      "content": "print(2 / 1)",
+                      "runnable": true
+                    },
+                    {
+                      "type": "reflect",
+                      "prompt": "Where have you seen a slope today?"
+                    },
+                    {
+                      "type": "bloom",
+                      "level": "apply",
+                      "question": "Slope of (0,0)-(2,4)?",
+                      "answer": "2"
+                    },
+                    {
+                      "type": "quiz",
+                      "question": "Is a flat line's slope zero?",
+                      "answer": "Yes"
+                    },
+                    {
+                      "type": "visualization",
+                      "visualizationType": "math",
+                      "description": "A line with slope 2"
+                    },
+                    {
+                      "type": "markdown",
+                      "content": "\nThat is all."
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "open-tags-run-to-the-next-tag-or-heading",
+      "steps": [
+        {
+          "event": "PARSE_LESSON",
+          "payload": {
+            "lessonId": "l1",
+            "text": "<activate>Guess first\n<connect>It ties to motion\n<reflect>Think about it\n\n# Next\nMore text."
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LESSON_SEGMENTS",
+                "payload": {
+                  "lessonId": "l1",
+                  "segments": [
+                    {
+                      "type": "activate",
+                      "question": "Guess first"
+                    },
+                    {
+                      "type": "connect",
+                      "content": "It ties to motion"
+                    },
+                    {
+                      "type": "reflect",
+                      "prompt": "Think about it"
+                    },
+                    {
+                      "type": "markdown",
+                      "content": "\n\n# Next\nMore text."
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "bloom-fallbacks-and-any-case-tags",
+      "steps": [
+        {
+          "event": "PARSE_LESSON",
+          "payload": {
+            "lessonId": "l1",
+            "text": "<BLOOM level=\"Remember\">**Question 1:** Name the unit.</BLOOM>\n<bloom level=\"understand\"><question>Why?</question></bloom>\n<Reflect>Upper case reflect</Reflect>"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LESSON_SEGMENTS",
+                "payload": {
+                  "lessonId": "l1",
+                  "segments": [
+                    {
+                      "type": "bloom",
+                      "level": "remember",
+                      "question": "Name the unit.",
+                      "answer": "(See answers section below)"
+                    },
+                    {
+                      "type": "bloom",
+                      "level": "understand",
+                      "question": "Why?",
+                      "answer": "(Answer not provided)"
+                    },
+                    {
+                      "type": "reflect",
+                      "prompt": "Upper case reflect"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "code-fences-language-and-runnable",
+      "steps": [
+        {
+          "event": "PARSE_LESSON",
+          "payload": {
+            "lessonId": "l1",
+            "text": "Intro\n```js-runnable\nconsole.log(1)\n```\nmiddle\n```\nplain\n```\n```ocaml title=\"x\"\nlet x = 1\n```"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LESSON_SEGMENTS",
+                "payload": {
+                  "lessonId": "l1",
+                  "segments": [
+                    {
+                      "type": "markdown",
+                      "content": "Intro\n"
+                    },
+                    {
+                      "type": "code",
+                      "language": "js",
+                      "content": "console.log(1)",
+                      "runnable": true
+                    },
+                    {
+                      "type": "markdown",
+                      "content": "\nmiddle\n"
+                    },
+                    {
+                      "type": "code",
+                      "language": "text",
+                      "content": "plain",
+                      "runnable": false
+                    },
+                    {
+                      "type": "code",
+                      "language": "ocaml",
+                      "content": "let x = 1",
+                      "runnable": false
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "plain-markdown-only",
+      "steps": [
+        {
+          "event": "PARSE_LESSON",
+          "payload": {
+            "lessonId": "l1",
+            "text": "Just prose, no tags."
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LESSON_SEGMENTS",
+                "payload": {
+                  "lessonId": "l1",
+                  "segments": [
+                    {
+                      "type": "markdown",
+                      "content": "Just prose, no tags."
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "empty-text",
+      "steps": [
+        {
+          "event": "PARSE_LESSON",
+          "payload": {
+            "lessonId": "l1",
+            "text": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LESSON_SEGMENTS",
+                "payload": {
+                  "lessonId": "l1",
+                  "segments": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "question-without-answer-stays-prose",
+      "steps": [
+        {
+          "event": "PARSE_LESSON",
+          "payload": {
+            "lessonId": "l1",
+            "text": "Try this <question>Alone?</question> and move on."
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LESSON_SEGMENTS",
+                "payload": {
+                  "lessonId": "l1",
+                  "segments": [
+                    {
+                      "type": "markdown",
+                      "content": "Try this <question>Alone?</question> and move on."
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "unclosed-bloom-runs-to-the-heading",
+      "steps": [
+        {
+          "event": "PARSE_LESSON",
+          "payload": {
+            "lessonId": "l1",
+            "text": "<bloom level=\"evaluate\"><question>Judge it</question><answer>Fair</answer>\n\n# Later\nRest"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LESSON_SEGMENTS",
+                "payload": {
+                  "lessonId": "l1",
+                  "segments": [
+                    {
+                      "type": "quiz",
+                      "question": "Judge it",
+                      "answer": "Fair"
+                    },
+                    {
+                      "type": "markdown",
+                      "content": "\n\n# Later\nRest"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "unknown-bloom-level-and-visual-type-stay-prose",
+      "steps": [
+        {
+          "event": "PARSE_LESSON",
+          "payload": {
+            "lessonId": "l1",
+            "text": "<bloom level=\"guess\">x</bloom> <visualize type=\"art\" description=\"d\"/>"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LESSON_SEGMENTS",
+                "payload": {
+                  "lessonId": "l1",
+                  "segments": [
+                    {
+                      "type": "markdown",
+                      "content": "<bloom level=\"guess\">x</bloom> <visualize type=\"art\" description=\"d\"/>"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "crlf-fence-and-trailing-prose",
+      "steps": [
+        {
+          "event": "PARSE_LESSON",
+          "payload": {
+            "lessonId": "l1",
+            "text": "See:\r\n```rust\r\nfn main() {}\r\n```\r\nDone"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LESSON_SEGMENTS",
+                "payload": {
+                  "lessonId": "l1",
+                  "segments": [
+                    {
+                      "type": "markdown",
+                      "content": "See:\r\n"
+                    },
+                    {
+                      "type": "code",
+                      "language": "rust",
+                      "content": "fn main() {}",
+                      "runnable": false
+                    },
+                    {
+                      "type": "markdown",
+                      "content": "\r\nDone"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

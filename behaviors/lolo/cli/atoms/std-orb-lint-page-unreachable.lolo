@@ -11,9 +11,11 @@ type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 type ReachEntry = { loc : string, path : string, labelled : boolean }
 type ReachVal = string | number | boolean | [ReachVal?] | Map string ReachVal?
-type ReachPage = { path : string, protocol : string, label : string, isNotFound : boolean }
+type ReachPageTrait = { ref : string?, name : string? }
+type ReachPage = { path : string, protocol : string, label : string, isNotFound : boolean, traits : [ReachPageTrait]? }
 type ReachField = { default : ReachVal? }
 type ReachStrings = [string]
+type ReachPart = { ok : boolean!, v : string! }
 type ReachCall = { path : string!, node : ReachVal! }
 type ReachIndex = Map string [ReachCall]
 type ReachEffect = [ReachVal?]
@@ -62,16 +64,22 @@ orbital OrbLintPageUnreachableOrbital {
         (set @entity.scope @payload.scope)
         (set @entity.findings (if (and @entity.indexHeard (= @entity.indexScope @payload.scope) @entity.unitsHeard (= @entity.unitsScope @payload.scope))
 (let ((orbitals (object/get @payload.program "orbitals" [])) (appCfg (object/get @payload.program "config" {})) (signIn (object/get (object/get @payload.program "site" {}) "signIn" "")) (nostr : [string] []) (hrefTr : Map string boolean (default (object/fromEntries (array/map (array/filter (object/keys @entity.uKeys) (fn uk (array/some ["href", "navigatesTo"] (fn h (array/includes (object/get @entity.uKeys @uk @nostr) @h))))) (fn uk [(str/join (array/take (str/split @uk "-") 2) "-"), true]))) {})))
-          (let ((trs (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi (let ((trl (object/get (array/nth @orbitals @oi) "traits" []))) (array/flatten (array/map (array/range 0 (array/len @trl)) (fn ti (let ((tk (str/concat @oi "-" @ti)) (t (array/nth @trl @ti))) (if (or (not (object/has @t "stateMachine")) (array/includes (object/get @entity.iHeads @tk @nostr) "navigate") (array/includes (object/get @entity.iRoots @tk @nostr) (quote "@pages")) (object/get @hrefTr @tk false)) [@t] [])))))))))))
-            (let ((effects (array/concat
-                              (array/flatten (array/map @trs (fn tr (array/flatten (array/map (object/get (object/get @tr "stateMachine" {}) "transitions" []) (fn t (array/map (array/filter (object/get @t "effects" []) (fn r (not (validate/object @r)))) (fn r { w: @r }))))))))
-                              (array/flatten (array/map @trs (fn tr (array/flatten (array/map (object/get @tr "ticks" []) (fn k (array/map (array/filter (object/get @k "effects" []) (fn r (not (validate/object @r)))) (fn r { w: @r }))))))))))
-                  (transEffects (array/flatten (array/map @trs (fn tr (array/flatten (array/map (object/get (object/get @tr "stateMachine" {}) "transitions" []) (fn t (array/map (array/filter (object/get @t "effects" []) (fn r (not (validate/object @r)))) (fn r { w: @r }))))))))))
-              (let ((trCfg (array/map @trs (fn tr (array/filter (array/map (object/values (object/get @tr "config" {})) (fn f (object/get @f "default" null))) (fn v (!= @v null))))))
-                    (orbCfg (array/map @orbitals (fn orb (array/filter (array/map (object/values (object/get @orb "config" {})) (fn f (object/get @f "default" null))) (fn v (!= @v null))))))
-                    (appCfgDefaults (array/filter (array/map (object/values @appCfg) (fn f (object/get @f "default" null))) (fn v (!= @v null))))
-                    (payloads (array/filter (array/map (array/filter (array/map @effects (fn x (let ((w (object/get @x "w" null))) (if (validate/array @w) (default (as @w ReachEffect) []) [])))) (fn e (and (validate/array @e) (> (array/len @e) 2) (validate/string (array/first @e)) (= (array/first @e) "render-ui")))) (fn e (array/nth @e 2))) (fn v (!= @v null)))))
-                (let ((hrefs (default (tree/fold { cfg: @trCfg, pay: @payloads } (fn (n kids)
+          (let ((trx (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi (let ((trl (object/get (array/nth @orbitals @oi) "traits" []))) (array/flatten (array/map (array/range 0 (array/len @trl)) (fn ti (let ((tk (str/concat @oi "-" @ti)) (t (array/nth @trl @ti))) (if (or (not (object/has @t "stateMachine")) (array/includes (object/get @entity.iHeads @tk @nostr) "navigate") (array/includes (object/get @entity.iRoots @tk @nostr) (quote "@pages")) (object/get @hrefTr @tk false)) [{ oi: @oi, nm: (object/get @t "name" ""), t: @t }] [])))))))))))
+            (let ((trs (array/map @trx (fn x (object/get @x "t")))))
+              (let ((effects (array/concat
+                                (array/flatten (array/map @trs (fn tr (array/flatten (array/map (object/get (object/get @tr "stateMachine" {}) "transitions" []) (fn t (array/map (array/filter (object/get @t "effects" []) (fn r (not (validate/object @r)))) (fn r { w: @r }))))))))
+                                (array/flatten (array/map @trs (fn tr (array/flatten (array/map (object/get @tr "ticks" []) (fn k (array/map (array/filter (object/get @k "effects" []) (fn r (not (validate/object @r)))) (fn r { w: @r }))))))))))
+                    (transEffects (array/flatten (array/map @trs (fn tr (array/flatten (array/map (object/get (object/get @tr "stateMachine" {}) "transitions" []) (fn t (array/map (array/filter (object/get @t "effects" []) (fn r (not (validate/object @r)))) (fn r { w: @r }))))))))))
+                (let ((trCfg (array/map @trs (fn tr (array/filter (array/map (object/values (object/get @tr "config" {})) (fn f (object/get @f "default" null))) (fn v (!= @v null))))))
+                      (orbCfg (array/map @orbitals (fn orb (array/filter (array/map (object/values (object/get @orb "config" {})) (fn f (object/get @f "default" null))) (fn v (!= @v null))))))
+                      (appCfgDefaults (array/filter (array/map (object/values @appCfg) (fn f (object/get @f "default" null))) (fn v (!= @v null))))
+                      (trLinks (array/map @trx (fn x (let ((tr (object/get @x "t")))
+                        (let ((cfgDefs : Map string string (object/fromEntries (array/flatten (array/map [@appCfg, (object/get (default (array/nth @orbitals (object/get @x "oi")) {}) "config" {}), (object/get @tr "config" {})] (fn cm (array/flatten (array/map (object/keys @cm) (fn ck (let ((dv (object/get (object/get @cm @ck) "default" null))) (if (validate/string @dv) [[@ck, @dv]] [])))))))))))
+                        (let ((cfgs (array/filter (array/map (object/values (object/get @tr "config" {})) (fn f (object/get @f "default" null))) (fn v (!= @v null))))
+                              (pays (array/filter (array/map (array/filter (array/map (array/filter (array/concat
+                                        (array/flatten (array/map (object/get (object/get @tr "stateMachine" {}) "transitions" []) (fn t (object/get @t "effects" []))))
+                                        (array/flatten (array/map (object/get @tr "ticks" []) (fn k (object/get @k "effects" []))))) (fn r (not (validate/object @r)))) (fn x (if (validate/array @x) (default (as @x ReachEffect) []) []))) (fn e (and (validate/array @e) (> (array/len @e) 2) (validate/string (array/first @e)) (= (array/first @e) "render-ui")))) (fn e (array/nth @e 2))) (fn v (!= @v null)))))
+                          (default (tree/fold { cfg: @cfgs, pay: @pays } (fn (n kids)
                                   (array/concat
                                     (if (and (validate/object @n) (not (validate/array @n)))
                                       (array/flatten (array/map ["href" "navigatesTo"] (fn k
@@ -81,12 +89,17 @@ orbital OrbLintPageUnreachableOrbital {
                                               (if (and (validate/string @c) (!= @c "") (not (str/startsWith @c (quote "@"))))
                                                 [@c]
                                                 (let ((parts (if (validate/array @c) (as @c ReachStrings) null)))
-                                                  (if (and (!= @parts null) (> (array/len @parts) 1) (= (array/first @parts) "str/concat")
-                                                           (array/every (array/drop @parts 1) (fn p (not (str/startsWith @p (quote "@"))))))
-                                                    (if (= (str/join (array/drop @parts 1) "") "") [] [(str/join (array/drop @parts 1) "")])
-                                                    [])))))))))))
+                                                  (let ((rps : [ReachPart] (if (and (!= @parts null) (> (array/len @parts) 1) (= (array/first @parts) "str/concat"))
+                                                                (array/map (array/drop @parts 1) (fn p (if (str/startsWith @p (quote "@config."))
+                                                                  (let ((cs (str/split @p "."))) (if (and (= (array/len @cs) 2) (object/has @cfgDefs (default (array/nth @cs 1) ""))) { ok: true, v: (object/get @cfgDefs (default (array/nth @cs 1) "") "") } { ok: false, v: "" }))
+                                                                  (if (str/startsWith @p (quote "@")) { ok: false, v: "" } { ok: true, v: @p }))))
+                                                                [{ ok: false, v: "" }])))
+                                                    (let ((joined (str/join (array/map @rps (fn r (object/get @r "v"))) "")))
+                                                      (if (and (!= @parts null) (array/every @rps (fn r (object/get @r "ok"))) (!= @joined ""))
+                                                        [@joined]
+                                                        @nostr)))))))))))))
                                       [])
-                                    (if (validate/array @n) (array/flatten (array/filter @kids (fn r (!= @r null)))) (if (validate/object @n) (array/flatten (array/filter (object/values @kids) (fn r (!= @r null)))) [])))) ReachVal) []))
+                                    (if (validate/array @n) (array/flatten (array/filter @kids (fn r (!= @r null)))) (if (validate/object @n) (array/flatten (array/filter (object/values @kids) (fn r (!= @r null)))) [])))) ReachVal) [])))))))
                       (navs (array/concat
                               (if (= @signIn "") [] [@signIn])
                               (array/flatten (array/map @effects (fn v
@@ -111,31 +124,34 @@ orbital OrbLintPageUnreachableOrbital {
                                       (array/flatten (array/map (array/range 0 (array/len @pgs)) (fn pj
                                         (let ((pg (array/nth @pgs @pj)))
                                           (if (and (object/has @pg "path") (not (object/has @pg "protocol")) (!= (object/get @pg "isNotFound" false) true))
-                                            [{ loc: (str/concat "orbitals[" @oi "].pages[" @pj "]"), path: (object/get @pg "path" ""), labelled: (object/has @pg "label") }]
+                                            [{ loc: (str/concat "orbitals[" @oi "].pages[" @pj "]"), path: (object/get @pg "path" ""), labelled: (object/has @pg "label"), oi: @oi, refs: (array/map (object/get @pg "traits" []) (fn r (default (as (object/get @r "ref" (object/get @r "name" "")) string) ""))) }]
                                             [])))))))))))
-                    (let ((linked (array/concat @hrefs (if @sigil (array/map (array/filter @entries (fn en (object/get @en "labelled"))) (fn en (object/get @en "path"))) []))))
-                      (array/concat
-(array/flatten (array/map (array/drop @entries 1) (fn en
-                        (let ((pth (object/get @en "path")))
-                          (if (or (array/some (str/split @pth "/") (fn seg (str/startsWith @seg ":")))
-                                  (array/includes @linked @pth)
-                                  (array/includes @navs @pth)
-                                  (array/some @navs (fn tg (and (> (str/len @tg) 1) (str/startsWith @pth @tg)))))
-                            []
-                            [{ code: @config.codes.pageUnreachable.code, path: (object/get @en "loc"), message: (str/concat "page '" @pth "' is declared but appears in no link, navItems entry or navigate effect"), suggestion: (str/concat "add an href to a nav/footer/link component, or a navigate effect, targeting '" @pth "', or remove the page if nothing should reach it"), severity: "error" }])))))
-                        (let ((lzs (object/get @payload.program "lazyPages" [])))
-                          (let ((reached (array/reduce (array/range 0 (array/len @lzs)) @hrefs (fn (acc pass)
-                                            (array/concat @acc (array/flatten (array/map
-                                              (array/filter @lzs (fn lz (let ((lp (object/get @lz "path" ""))) (or (array/includes @acc @lp) (array/includes @navs @lp) (array/some @navs (fn tg (and (> (str/len @tg) 1) (str/startsWith @lp @tg))))))))
-                                              (fn lz (object/get @lz "links" [])))))))))
-                            (array/flatten (array/map (array/range 0 (array/len @lzs)) (fn k
-                              (let ((lpth (object/get (array/nth @lzs @k) "path" "")))
-                                (if (or (array/some (str/split @lpth "/") (fn seg (str/startsWith @seg ":")))
-                                        (array/includes @reached @lpth)
-                                        (array/includes @navs @lpth)
-                                        (array/some @navs (fn tg (and (> (str/len @tg) 1) (str/startsWith @lpth @tg)))))
-                                  []
-                                  [{ code: @config.codes.pageUnreachable.code, path: (str/concat "lazyPages[" @k "]"), message: (str/concat "page '" @lpth "' is declared but appears in no link, navItems entry or navigate effect"), suggestion: (str/concat "add an href to a nav/footer/link component, or a navigate effect, targeting '" @lpth "', or remove the `uses lazy` page if nothing should reach it"), severity: "error" }])))))))))))))))
+                    (let ((attributed (default (object/fromEntries (array/flatten (array/map @entries (fn en (array/map (object/get @en "refs") (fn nm [(str/concat (object/get @en "oi") "|" @nm) true])))))) {}))
+                          (lzs (object/get @payload.program "lazyPages" [])))
+                      (let ((globalLinks (array/flatten (array/map (array/range 0 (array/len @trx)) (fn i (let ((x (array/nth @trx @i))) (if (object/has @attributed (str/concat (object/get @x "oi") "|" (object/get @x "nm"))) [] (array/nth @trLinks @i)))))))
+                            (items (array/concat
+                              (array/map (array/range 0 (array/len @entries)) (fn n
+                                (let ((en (array/nth @entries @n)))
+                                  (let ((pth (object/get @en "path")) (isParam (array/some (str/split (object/get @en "path") "/") (fn seg (str/startsWith @seg ":")))))
+                                    { loc: (object/get @en "loc"), path: @pth, lazy: false, skip: @isParam, root: (or (= @n 0) @isParam),
+                                      pre: (or (and @sigil (object/get @en "labelled")) (array/includes @navs @pth) (array/some @navs (fn tg (and (> (str/len @tg) 1) (str/startsWith @pth @tg))))),
+                                      links: (array/flatten (array/map (array/range 0 (array/len @trx)) (fn i (let ((x (array/nth @trx @i))) (if (and (= (object/get @x "oi") (object/get @en "oi")) (array/includes (object/get @en "refs") (object/get @x "nm"))) (array/nth @trLinks @i) []))))) }))))
+                              (array/map (array/range 0 (array/len @lzs)) (fn k
+                                (let ((lz (array/nth @lzs @k)))
+                                  (let ((lpth (object/get @lz "path" "")))
+                                    { loc: (str/concat "lazyPages[" @k "]"), path: @lpth, lazy: true, skip: (array/some (str/split @lpth "/") (fn seg (str/startsWith @seg ":"))), root: false,
+                                      pre: (or (array/includes @navs @lpth) (array/some @navs (fn tg (and (> (str/len @tg) 1) (str/startsWith @lpth @tg))))),
+                                      links: (object/get @lz "links" []) }))))))) 
+                        (let ((reached (array/reduce (array/range 0 (+ (array/len @items) 1))
+                                          (array/unique (array/concat @globalLinks (array/flatten (array/map (array/filter @items (fn it (object/get @it "root"))) (fn it (object/get @it "links"))))))
+                                          (fn (acc pass)
+                                            (array/unique (array/concat @acc (array/flatten (array/map
+                                              (array/filter @items (fn it (and (not (object/get @it "root")) (or (object/get @it "pre") (array/includes @acc (object/get @it "path"))))))
+                                              (fn it (object/get @it "links"))))))))))
+                          (array/flatten (array/map @items (fn it
+                            (if (or (object/get @it "skip") (object/get @it "root") (object/get @it "pre") (array/includes @reached (object/get @it "path")))
+                              []
+                              [{ code: @config.codes.pageUnreachable.code, path: (object/get @it "loc"), message: (str/concat "page '" (object/get @it "path") "' is declared but appears in no link, navItems entry or navigate effect"), suggestion: (str/concat "add an href to a nav/footer/link component, or a navigate effect, targeting '" (object/get @it "path") "', or remove the " (if (object/get @it "lazy") "`uses lazy` page" "page") " if nothing should reach it"), severity: "error" }])))))))))))))
 [{ code: @config.codes.lintIndexMissing.code, path: "", message: "the lint input arrived without LINT_INDEX or LINT_UNITS, so this rule cannot check the program", suggestion: "std-orb-lint-input sends LINT_INDEX or LINT_UNITS before LINT_INPUT; this rule did not hear it", severity: "error" }]))
         (set @entity.indexHeard false)
         (set @entity.unitsHeard false)

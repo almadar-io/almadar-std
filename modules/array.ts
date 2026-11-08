@@ -202,7 +202,7 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
     category: 'std-array',
     minArity: 1,
     maxArity: 3,
-    description: 'Sort array (returns new array)',
+    description: 'Sort array (returns new array); null and an object missing the key sort last in both directions',
     hasSideEffects: false,
     returnType: list(tv('T')),
     returnSemantics: 'identity-of-arg<0>',

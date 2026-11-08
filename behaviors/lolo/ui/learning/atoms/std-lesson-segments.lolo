@@ -1,0 +1,208 @@
+app std-lesson-segments [
+  version: "0.1.0",
+  description: "std-lesson-segments — lesson text as segments. PARSE_LESSON { lessonId, text } answers LESSON_SEGMENTS { lessonId, segments }: the segment-renderer `segments` for a lesson written as markdown with learning tags. <prq>…</prq> is dropped; the first <activate> and the first <connect> become the leading activate and connect segments; then, in text order, <reflect> becomes reflect, <bloom level=\"…\"> becomes bloom (its <question>/<answer> pair, or the bare text as the question), <question>…</question><answer>…</answer> becomes quiz and <visualize type=\"…\" description=\"…\"/> becomes visualization. A tag left open runs to the next learning tag, a blank line before a heading, or the end. Text between tags becomes markdown, with each fenced code block its own code segment (the info line's first word is the language; a `run` word or a `-runnable` suffix marks it runnable). Tag names match in any case."
+]
+
+type LessonMarkdown = { type : "markdown"!, content : string! }
+type LessonCode = { type : "code"!, language : string!, content : string!, runnable : boolean }
+type LessonQuiz = { type : "quiz"!, question : string!, answer : string! }
+type LessonActivate = { type : "activate"!, question : string! }
+type LessonConnect = { type : "connect"!, content : string! }
+type LessonReflect = { type : "reflect"!, prompt : string! }
+type LessonBloomLevel = "remember" | "understand" | "apply" | "analyze" | "evaluate" | "create"
+type LessonVisualKind = "algorithms" | "math" | "physics" | "biology" | "chemistry" | "probability"
+type LessonBloom = { type : "bloom"!, level : LessonBloomLevel!, question : string!, answer : string! }
+type LessonVisualization = { type : "visualization"!, visualizationType : LessonVisualKind!, description : string! }
+type LessonSegment = LessonMarkdown | LessonCode | LessonQuiz | LessonActivate | LessonConnect | LessonReflect | LessonBloom | LessonVisualization
+type LessonPiece = { prose : string!, segments : [LessonSegment]! }
+type LessonMatch = { start : number!, end : number!, text : string! }
+type LessonBloomTag = { level : LessonBloomLevel!, word : string! }
+type LessonBloomHit = { start : number!, end : number!, text : string!, level : LessonBloomLevel! }
+type LessonVisualTag = { kind : LessonVisualKind!, word : string! }
+type LessonVisualHit = { start : number!, end : number!, text : string!, kind : LessonVisualKind! }
+type LessonLead = { content : string!, segments : [LessonSegment]! }
+type LessonScan = { pos : number!, pieces : [LessonPiece]! }
+type LessonCodeScan = { pos : number!, segments : [LessonSegment]! }
+
+orbital LessonSegmentsOrbital {
+  entity LessonParse [runtime] {
+    id : string!
+    count : number @description "How many segments the last parse produced." = 0
+  }
+
+  trait LessonSegments -> LessonParse [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      PARSE_LESSON -> ready
+        (let ((none : [LessonMatch] [])
+              (nomatch : LessonMatch { start: -1, end: -1, text: "" })
+              (noBloomHit : LessonBloomHit { start: -1, end: -1, text: "", level: "remember" })
+              (noVisualHit : LessonVisualHit { start: -1, end: -1, text: "", kind: "math" })
+              (noPieces : [LessonPiece] [])
+              (noSegments : [LessonSegment] [])
+              (term "<([aA][cC][tT][iI][vV][aA][tT][eE]|[cC][oO][nN][nN][eE][cC][tT]|[rR][eE][fF][lL][eE][cC][tT]|[bB][lL][oO][oO][mM]|[pP][rR][qQ]|[qQ][uU][eE][sS][tT][iI][oO][nN]|[aA][nN][sS][wW][eE][rR]|[vV][iI][sS][uU][aA][lL][iI][zZ][eE])|\n\n#")
+              (activateOpen "<[aA][cC][tT][iI][vV][aA][tT][eE]>")
+              (activateClose "</[aA][cC][tT][iI][vV][aA][tT][eE]>")
+              (connectOpen "<[cC][oO][nN][nN][eE][cC][tT]>")
+              (connectClose "</[cC][oO][nN][nN][eE][cC][tT]>")
+              (reflectOpen "<[rR][eE][fF][lL][eE][cC][tT]>")
+              (reflectClose "</[rR][eE][fF][lL][eE][cC][tT]>")
+              (bloomPrefix "<[bB][lL][oO][oO][mM]\\s+[lL][eE][vV][eE][lL]=\"")
+              (bloomClose "</[bB][lL][oO][oO][mM]>")
+              (questionOpen "<[qQ][uU][eE][sS][tT][iI][oO][nN]>")
+              (questionClose "</[qQ][uU][eE][sS][tT][iI][oO][nN]>")
+              (answerOpen "<[aA][nN][sS][wW][eE][rR]>")
+              (answerClose "</[aA][nN][sS][wW][eE][rR]>")
+              (quiz "<[qQ][uU][eE][sS][tT][iI][oO][nN]>(.|\\s)*?</[qQ][uU][eE][sS][tT][iI][oO][nN]>\\s*<[aA][nN][sS][wW][eE][rR]>(.|\\s)*?</[aA][nN][sS][wW][eE][rR]>")
+              (visualizePrefix "<[vV][iI][sS][uU][aA][lL][iI][zZ][eE]\\s+[tT][yY][pP][eE]=\"")
+              (visualizeRest "\"\\s+[dD][eE][sS][cC][rR][iI][pP][tT][iI][oO][nN]=\"[^\"]*?\"\\s*/?>")
+              (source (str/trim (str/replace-pattern ?text "<[pP][rR][qQ]>(.|\\s)*?</[pP][rR][qQ]>" ""))))
+          (let ((activate : LessonLead
+                  (let ((open (default (array/first (default (str/find-pattern @source @activateOpen) @none)) @nomatch)))
+                    (if (< @open.start 0) { content: @source, segments: @noSegments }
+                      (let ((close (default (array/first (default (str/find-pattern @source @activateClose @open.end) @none)) @nomatch))
+                            (stop (default (array/first (default (str/find-pattern @source @term @open.end) @none)) @nomatch)))
+                        (let ((innerEnd (if (>= @close.start 0) @close.start (if (>= @stop.start 0) @stop.start (str/len @source))))
+                              (fullEnd (if (>= @close.start 0) @close.end (if (>= @stop.start 0) @stop.start (str/len @source)))))
+                          { content: (str/trim (str/concat (str/slice @source 0 @open.start) (str/slice @source @fullEnd)))
+                            segments: [{ type: "activate", question: (str/trim (str/slice @source @open.end @innerEnd)) }] }))))))
+            (let ((connect : LessonLead
+                    (let ((body @activate.content)
+                          (open (default (array/first (default (str/find-pattern @activate.content @connectOpen) @none)) @nomatch)))
+                      (if (< @open.start 0) { content: @body, segments: @noSegments }
+                        (let ((close (default (array/first (default (str/find-pattern @body @connectClose @open.end) @none)) @nomatch))
+                              (stop (default (array/first (default (str/find-pattern @body @term @open.end) @none)) @nomatch)))
+                          (let ((innerEnd (if (>= @close.start 0) @close.start (if (>= @stop.start 0) @stop.start (str/len @body))))
+                                (fullEnd (if (>= @close.start 0) @close.end (if (>= @stop.start 0) @stop.start (str/len @body)))))
+                            { content: (str/trim (str/concat (str/slice @body 0 @open.start) (str/slice @body @fullEnd)))
+                              segments: [{ type: "connect", content: (str/trim (str/slice @body @open.end @innerEnd)) }] }))))))
+              (let ((body @connect.content)
+                    (start : LessonScan { pos: 0, pieces: @noPieces }))
+                (let ((scan : LessonScan
+                        (array/reduce (default (str/find-pattern @body "<") @none) @start (fn acc lt
+                          (let ((reflect (default (array/first (default (str/find-pattern @body @reflectOpen @acc.pos) @none)) @nomatch))
+                                (question (default (array/first (default (str/find-pattern @body @quiz @acc.pos) @none)) @nomatch)))
+                          (let ((bloom : LessonBloomHit (array/reduce @config.bloomLevels @noBloomHit (fn best tag
+                                  (let ((m (default (array/first (default (str/find-pattern @body (str/concat @bloomPrefix @tag.word "\">") @acc.pos) @none)) @nomatch)))
+                                    (if (and (>= @m.start 0) (or (< @best.start 0) (< @m.start @best.start))) { start: @m.start, end: @m.end, text: @m.text, level: @tag.level } @best)))))
+                                (picture : LessonVisualHit (array/reduce @config.visualizationTypes @noVisualHit (fn best tag
+                                  (let ((m (default (array/first (default (str/find-pattern @body (str/concat @visualizePrefix @tag.word @visualizeRest) @acc.pos) @none)) @nomatch)))
+                                    (if (and (>= @m.start 0) (or (< @best.start 0) (< @m.start @best.start))) { start: @m.start, end: @m.end, text: @m.text, kind: @tag.kind } @best))))))
+                            (let ((found : [LessonMatch] (array/sort (array/filter [@reflect { start: @bloom.start, end: @bloom.end, text: @bloom.text } @question { start: @picture.start, end: @picture.end, text: @picture.text }] (fn m (>= @m.start 0))) "start")))
+                              (if (= (array/len @found) 0) @acc
+                                (let ((next (default (array/first @found) @nomatch)))
+                                  (let ((prose (str/slice @body @acc.pos @next.start)))
+                                  (let ((lead : [LessonPiece] (if (= (str/trim @prose) "") @noPieces [{ prose: @prose, segments: @noSegments }])))
+                                    (if (and (>= @reflect.start 0) (= @next.start @reflect.start))
+                                      (let ((close (default (array/first (default (str/find-pattern @body @reflectClose @reflect.end) @none)) @nomatch))
+                                            (stop (default (array/first (default (str/find-pattern @body @term @reflect.end) @none)) @nomatch)))
+                                        (let ((innerEnd (if (>= @close.start 0) @close.start (if (>= @stop.start 0) @stop.start (str/len @body))))
+                                              (fullEnd (if (>= @close.start 0) @close.end (if (>= @stop.start 0) @stop.start (str/len @body)))))
+                                          (let ((prompt (str/trim (str/slice @body @reflect.end @innerEnd))))
+                                            { pos: @fullEnd
+                                              pieces: (array/concat @acc.pieces @lead (if (= @prompt "") @noPieces [{ prose: "", segments: [{ type: "reflect", prompt: @prompt }] }])) })))
+                                      (if (and (>= @bloom.start 0) (= @next.start @bloom.start))
+                                        (let ((close (default (array/first (default (str/find-pattern @body @bloomClose @bloom.end) @none)) @nomatch))
+                                              (stop (default (array/first (default (str/find-pattern @body @term @bloom.end) @none)) @nomatch)))
+                                          (let ((innerEnd (if (>= @close.start 0) @close.start (if (>= @stop.start 0) @stop.start (str/len @body))))
+                                                (fullEnd (if (>= @close.start 0) @close.end (if (>= @stop.start 0) @stop.start (str/len @body)))))
+                                            (let ((content (str/slice @body @bloom.end @innerEnd)))
+                                              (let ((qo (default (array/first (default (str/find-pattern @content @questionOpen) @none)) @nomatch)))
+                                                (let ((qc (if (< @qo.start 0) @nomatch (default (array/first (default (str/find-pattern @content @questionClose @qo.end) @none)) @nomatch)))
+                                                      (ao (default (array/first (default (str/find-pattern @content @answerOpen) @none)) @nomatch)))
+                                                  (let ((ac (if (< @ao.start 0) @nomatch (default (array/first (default (str/find-pattern @content @answerClose @ao.end) @none)) @nomatch)))
+                                                        (bare (str/trim (str/replace-pattern (str/replace-pattern @content "^\\*\\*[qQ][uU][eE][sS][tT][iI][oO][nN]\\s*\\d*:?\\*\\*\\s*" "") "^\\*\\*[qQ]\\d*:?\\*\\*\\s*" ""))))
+                                                    (let ((segment : [LessonPiece]
+                                                            (if (= @content "") @noPieces
+                                                              (if (and (>= @qc.start 0) (>= @ac.start 0))
+                                                                [{ prose: "", segments: [{ type: "bloom", level: @bloom.level, question: (str/trim (str/slice @content @qo.end @qc.start)), answer: (str/trim (str/slice @content @ao.end @ac.start)) }] }]
+                                                                (if (>= @qc.start 0)
+                                                                  [{ prose: "", segments: [{ type: "bloom", level: @bloom.level, question: (str/trim (str/slice @content @qo.end @qc.start)), answer: @config.missingAnswer }] }]
+                                                                  (if (= @bare "") @noPieces
+                                                                    [{ prose: "", segments: [{ type: "bloom", level: @bloom.level, question: @bare, answer: @config.answersBelow }] }]))))))
+                                                      { pos: @fullEnd, pieces: (array/concat @acc.pieces @lead @segment) })))))))
+                                        (if (and (>= @question.start 0) (= @next.start @question.start))
+                                          (let ((qo (default (array/first (default (str/find-pattern @question.text @questionOpen) @none)) @nomatch)))
+                                            (let ((qc (default (array/first (default (str/find-pattern @question.text @questionClose @qo.end) @none)) @nomatch)))
+                                              (let ((ao (default (array/first (default (str/find-pattern @question.text @answerOpen @qc.end) @none)) @nomatch)))
+                                                (let ((ac (default (array/first (default (str/find-pattern @question.text @answerClose @ao.end) @none)) @nomatch)))
+                                                  { pos: @question.end
+                                                    pieces: (array/concat @acc.pieces @lead [{ prose: "", segments: [{ type: "quiz", question: (str/trim (str/slice @question.text @qo.end @qc.start)), answer: (str/trim (str/slice @question.text @ao.end @ac.start)) }] }]) }))))
+                                          (let ((kind (default (array/first (default (str/find-pattern @picture.text "[tT][yY][pP][eE]=\"[^\"]*\"") @none)) @nomatch))
+                                                (about (default (array/first (default (str/find-pattern @picture.text "[dD][eE][sS][cC][rR][iI][pP][tT][iI][oO][nN]=\"[^\"]*\"") @none)) @nomatch)))
+                                            { pos: @picture.end
+                                              pieces: (array/concat @acc.pieces @lead [{ prose: "", segments: [{ type: "visualization", visualizationType: @picture.kind, description: (str/slice @about.text 13 (- (str/len @about.text) 1)) }] }]) })))))))))))))))
+                  (let ((rest (str/slice @body @scan.pos))
+                        (fences : [LessonMatch] []))
+                    (let ((pieces : [LessonPiece] (array/concat @scan.pieces (if (= (str/trim @rest) "") @noPieces [{ prose: @rest, segments: @noSegments }]))))
+                      (let ((segments : [LessonSegment]
+                              (array/concat @activate.segments @connect.segments
+                                (array/flatten (array/map @pieces (fn piece
+                                  (if (= @piece.prose "") @piece.segments
+                                    (let ((blocks (default (str/find-pattern @piece.prose "```[^\\n\\r]*\\r?\\n(.|\\s)*?```") @fences))
+                                          (begin : LessonCodeScan { pos: 0, segments: @noSegments }))
+                                      (let ((split : LessonCodeScan
+                                              (array/reduce @blocks @begin (fn got block
+                                                (let ((before (str/slice @piece.prose @got.pos @block.start))
+                                                      (newline (default (array/first (default (str/find-pattern @block.text "\\r?\\n") @none)) @nomatch)))
+                                                  (let ((words : [LessonMatch] (default (str/find-pattern (str/trim (str/slice @block.text 3 @newline.start)) "\\S+") @none)))
+                                                    (let ((first (default (array/first @words) @nomatch)))
+                                                    (let ((raw (if (< @first.start 0) "text" @first.text)))
+                                                      (let ((suffixed (and (>= (str/len @raw) 9) (= (str/slice @raw (- (str/len @raw) 9)) "-runnable"))))
+                                                        (let ((language (if @suffixed (if (= (str/len @raw) 9) "text" (str/slice @raw 0 (- (str/len @raw) 9))) @raw)))
+                                                          { pos: @block.end
+                                                            segments: (array/concat @got.segments
+                                                              (if (= (str/trim @before) "") @noSegments [{ type: "markdown", content: @before }])
+                                                              [{ type: "code", language: @language, content: (str/trim (str/slice @block.text @newline.end (- (str/len @block.text) 3))), runnable: (or @suffixed (array/some @words (fn w (= @w.text "run")))) }]) }))))))))))
+                                        (let ((tail (str/slice @piece.prose @split.pos)))
+                                          (array/concat @split.segments (if (= (str/trim @tail) "") @noSegments [{ type: "markdown", content: @tail }]))))))))))))
+                        (do (set @entity.count (array/len @segments))
+                          (emit LESSON_SEGMENTS { lessonId: ?lessonId, segments: @segments }))))))))))
+    }
+
+    emits {
+      LESSON_SEGMENTS -> external {
+        lessonId : string!
+        segments : [LessonSegment]!
+      }
+        @description "A lesson's segments, for segment-renderer `segments`."
+        @synonyms "parsed lesson, lesson blocks"
+        @tier "primary"
+    }
+
+    listens {
+      PARSE_LESSON { lessonId : string!  text : string! }
+        @description "Parse lesson text (markdown with learning tags) into segments."
+        @synonyms "parse lesson, split lesson"
+    }
+
+    config {
+      bloomLevels : [LessonBloomTag] = [
+          { level: "remember", word: "[rR][eE][mM][eE][mM][bB][eE][rR]" },
+          { level: "understand", word: "[uU][nN][dD][eE][rR][sS][tT][aA][nN][dD]" },
+          { level: "apply", word: "[aA][pP][pP][lL][yY]" },
+          { level: "analyze", word: "[aA][nN][aA][lL][yY][zZ][eE]" },
+          { level: "evaluate", word: "[eE][vV][aA][lL][uU][aA][tT][eE]" },
+          { level: "create", word: "[cC][rR][eE][aA][tT][eE]" }]
+        @label "Bloom levels"
+        @description "Each <bloom level=\"…\"> level and the pattern its word matches (any case by default)."
+      visualizationTypes : [LessonVisualTag] = [
+          { kind: "algorithms", word: "[aA][lL][gG][oO][rR][iI][tT][hH][mM][sS]" },
+          { kind: "math", word: "[mM][aA][tT][hH]" },
+          { kind: "physics", word: "[pP][hH][yY][sS][iI][cC][sS]" },
+          { kind: "biology", word: "[bB][iI][oO][lL][oO][gG][yY]" },
+          { kind: "chemistry", word: "[cC][hH][eE][mM][iI][sS][tT][rR][yY]" },
+          { kind: "probability", word: "[pP][rR][oO][bB][aA][bB][iI][lL][iI][tT][yY]" }]
+        @label "Visualization types"
+        @description "Each <visualize type=\"…\"> type and the pattern its word matches (any case by default)."
+      missingAnswer : string = "(Answer not provided)"
+        @label "Missing answer"
+        @description "The answer of a bloom question whose <answer> is missing."
+      answersBelow : string = "(See answers section below)"
+        @label "Answers below"
+        @description "The answer of a bloom block written as bare text, whose answers sit later in the lesson."
+    }
+  }
+}
