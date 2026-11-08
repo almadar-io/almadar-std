@@ -42,7 +42,7 @@ orbital ModalRecordOrbital {
         (notify error (if (validate/required ?error) (str/concat "Couldn't load the record — " ?error) "Couldn't load the record"))
       ;; stash only — a SEED never opens anything; OPEN reads it on demand
       SEED -> closed
-        (set @entity.seedRow (object/merge (default ?row {}) {}))
+        (set @entity.seedRow ?row)
       ;; Mode-aware guard: in create mode the modal opens unconditionally
       ;; (no row exists yet); in edit mode the row must be present — on the
       ;; OPEN payload or already stashed by SEED — or the OPEN is rejected
@@ -82,7 +82,7 @@ orbital ModalRecordOrbital {
         (render-ui @config.detailSlot null)
       ;; a refetch echo while the modal is open refreshes the stash in place
       SEED -> open
-        (set @entity.seedRow (object/merge (default ?row {}) {}))
+        (set @entity.seedRow ?row)
       CLOSE -> closed
         (render-ui @config.detailSlot null)
         (notify info Cancelled)

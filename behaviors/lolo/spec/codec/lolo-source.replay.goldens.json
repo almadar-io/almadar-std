@@ -727,7 +727,241 @@
         "orbitals[0].traits[0].stateMachine.transitions[1].effects[1][2].v": "number"
        },
        "expected": {},
-       "models": {}
+       "models": {},
+       "program": {
+        "typeContractVersion": 1,
+        "name": "divide-default",
+        "version": "1.0.0",
+        "orbitals": [
+         {
+          "name": "Fx",
+          "id": "orb_B8DGPTSDXFPYQYGFYMS9AS30JZ",
+          "entity": {
+           "name": "Rec",
+           "id": "ent_BW6SCNEE3G71R6SSAMTYTWFBR2",
+           "persistence": "runtime",
+           "fields": [
+            {
+             "nullable": false,
+             "name": "id",
+             "type": "string",
+             "required": true
+            },
+            {
+             "nullable": false,
+             "name": "v",
+             "type": "number",
+             "default": 0
+            }
+           ]
+          },
+          "traits": [
+           {
+            "name": "T",
+            "id": "trt_0RV2Q41QK9VSMH32ACW79APD5Z",
+            "effectRow": [
+             {
+              "kind": "emit",
+              "resource": "DONE"
+             },
+             {
+              "kind": "set",
+              "resource": "@entity.v"
+             }
+            ],
+            "linkedEntity": "Rec",
+            "linkedEntityId": "ent_BW6SCNEE3G71R6SSAMTYTWFBR2",
+            "entityRefIds": {
+             "Rec": "ent_BW6SCNEE3G71R6SSAMTYTWFBR2"
+            },
+            "emits": [
+             {
+              "event": "DONE",
+              "eventId": "evt_RNV9A7MWQXEBYKDRPS8XPTME6V",
+              "scope": "external",
+              "payloadSchema": [
+               {
+                "nullable": false,
+                "name": "v",
+                "type": "number",
+                "required": true
+               }
+              ]
+             }
+            ],
+            "stateMachine": {
+             "states": [
+              {
+               "name": "idle",
+               "isInitial": true
+              }
+             ],
+             "events": [
+              {
+               "key": "INIT",
+               "id": "evt_38F30C92QEHBQ42B9DFV0QGHM9",
+               "name": "Initialize"
+              },
+              {
+               "key": "GO",
+               "id": "evt_7D4Y3JQ8R0MC03A57RSDEYSB2D",
+               "name": "Go",
+               "payloadSchema": [
+                {
+                 "nullable": false,
+                 "name": "a",
+                 "type": "number",
+                 "required": true
+                },
+                {
+                 "nullable": false,
+                 "name": "b",
+                 "type": "number",
+                 "required": true
+                }
+               ],
+               "listened": true
+              },
+              {
+               "key": "DONE",
+               "id": "evt_RNV9A7MWQXEBYKDRPS8XPTME6V",
+               "name": "Done",
+               "payloadSchema": [
+                {
+                 "nullable": false,
+                 "name": "v",
+                 "type": "number",
+                 "required": true
+                }
+               ]
+              }
+             ],
+             "transitions": [
+              {
+               "from": "idle",
+               "to": "idle",
+               "event": "INIT",
+               "eventId": "evt_38F30C92QEHBQ42B9DFV0QGHM9"
+              },
+              {
+               "from": "idle",
+               "to": "idle",
+               "event": "GO",
+               "eventId": "evt_7D4Y3JQ8R0MC03A57RSDEYSB2D",
+               "effects": [
+                [
+                 "set",
+                 "@entity.v",
+                 [
+                  "default",
+                  [
+                   "/",
+                   "@payload.a",
+                   "@payload.b"
+                  ],
+                  0
+                 ]
+                ],
+                [
+                 "emit",
+                 "DONE",
+                 {
+                  "v": "@entity.v"
+                 }
+                ]
+               ]
+              }
+             ]
+            },
+            "dispatch": "client",
+            "sourceDeclaration": {
+             "traitId": "trt_0RV2Q41QK9VSMH32ACW79APD5Z",
+             "fingerprint": "13abaef6fa3be212982a414ba927d73c15bc497219358ff16eb359d0d76a52fa"
+            }
+           }
+          ],
+          "pages": [
+           {
+            "name": "FxStart",
+            "id": "pag_9RMD3GD055G2JWWVPSXQ1SVY6P",
+            "path": "",
+            "protocol": "boot",
+            "traits": [
+             {
+              "ref": "T",
+              "refId": "trt_0RV2Q41QK9VSMH32ACW79APD5Z"
+             }
+            ]
+           }
+          ]
+         }
+        ],
+        "schemaVersion": 1,
+        "ledger": {
+         "schemaVersion": 1,
+         "entries": {
+          "ent_BW6SCNEE3G71R6SSAMTYTWFBR2": {
+           "id": "ent_BW6SCNEE3G71R6SSAMTYTWFBR2",
+           "kind": "entity",
+           "bakedName": "Rec",
+           "curName": "Rec",
+           "renames": [],
+           "owner": "workspace"
+          },
+          "evt_38F30C92QEHBQ42B9DFV0QGHM9": {
+           "id": "evt_38F30C92QEHBQ42B9DFV0QGHM9",
+           "kind": "event",
+           "bakedName": "INIT",
+           "curName": "INIT",
+           "renames": [],
+           "owner": "workspace",
+           "parent": "trt_0RV2Q41QK9VSMH32ACW79APD5Z"
+          },
+          "evt_7D4Y3JQ8R0MC03A57RSDEYSB2D": {
+           "id": "evt_7D4Y3JQ8R0MC03A57RSDEYSB2D",
+           "kind": "event",
+           "bakedName": "GO",
+           "curName": "GO",
+           "renames": [],
+           "owner": "workspace",
+           "parent": "trt_0RV2Q41QK9VSMH32ACW79APD5Z"
+          },
+          "evt_RNV9A7MWQXEBYKDRPS8XPTME6V": {
+           "id": "evt_RNV9A7MWQXEBYKDRPS8XPTME6V",
+           "kind": "event",
+           "bakedName": "DONE",
+           "curName": "DONE",
+           "renames": [],
+           "owner": "workspace",
+           "parent": "trt_0RV2Q41QK9VSMH32ACW79APD5Z"
+          },
+          "orb_B8DGPTSDXFPYQYGFYMS9AS30JZ": {
+           "id": "orb_B8DGPTSDXFPYQYGFYMS9AS30JZ",
+           "kind": "orbital",
+           "bakedName": "Fx",
+           "curName": "Fx",
+           "renames": [],
+           "owner": "workspace"
+          },
+          "pag_9RMD3GD055G2JWWVPSXQ1SVY6P": {
+           "id": "pag_9RMD3GD055G2JWWVPSXQ1SVY6P",
+           "kind": "page",
+           "bakedName": "FxStart",
+           "curName": "FxStart",
+           "renames": [],
+           "owner": "workspace"
+          },
+          "trt_0RV2Q41QK9VSMH32ACW79APD5Z": {
+           "id": "trt_0RV2Q41QK9VSMH32ACW79APD5Z",
+           "kind": "trait",
+           "bakedName": "T",
+           "curName": "T",
+           "renames": [],
+           "owner": "workspace"
+          }
+         }
+        }
+       }
       }
      },
      "expect": {

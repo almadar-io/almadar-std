@@ -15,7 +15,7 @@
                            (or (array/includes @entity.operatorNames @hd) (array/includes ["match", "invoke"] @hd)))))
           (let ((rs : [SrcRender] (if @typed
                       (array/map (array/range 0 (array/len @n)) (fn i
-                        (let ((rr : SrcRender (default (array/nth @k @i) @nullR))
+                        (let ((rr : SrcRender (if (and @isCall (>= @i 1) (!= @config.nullTyped "") (= (array/nth @n @i) null)) REC{ expr => "" ## stmt => [@config.nullLit] } (default (array/nth @k @i) @nullR)))
                               (sg (if (not @isCall) (str/concat "[" @i "]")
                                     (if (or (= @hd "let") (= @hd "fn")) (if (>= @i 2) (str/concat ".body[" (- @i 2) "]") (str/concat "[" @i "]"))
                                       (if (= @hd "if") (if (= @i 2) ".then" (if (= @i 3) ".else" (str/concat "[" @i "]")))
@@ -134,7 +134,10 @@
                   (let ((txt FILL{@config.portCall ## name => CASE{@hd ## @config.portCase} ## "*" => (str/join @args ", ")}))
                     REC{ expr => @txt ## stmt => [(str/concat @txt @term)] ## items => @ex ## warns => (array/concat @ws [FILL{@config.portWarn ## op => @hd}]) ## uses => @us }))
               (let ((args (array/drop @ex 1))
-                    (tmplU (if (= @argc 1) (object/get @config.unary @hd "") ""))
+                    (tmplU (let ((nullForm (if (= @hd "!=") @config.nullNeForm @config.nullEqForm)))
+                             (if (and (= @argc 2) (array/includes ["=" "==" "!="] @hd) (!= @nullForm "") (!= (= (array/nth @n 1) null) (= (array/nth @n 2) null)))
+                               (str/replaceAll @nullForm "{{value}}" (if (= (array/nth @n 1) null) "{{1}}" "{{0}}"))
+                               (if (= @argc 1) (object/get @config.unary @hd "") ""))))
                     (sym (if (> @argc 1) (object/get @config.infix @hd "") ""))
                     (tmplA (object/get @config.operators (str/concat @hd "#" @argc) ""))
                     (tmplP (object/get @config.operators @hd ""))

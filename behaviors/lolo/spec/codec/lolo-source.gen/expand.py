@@ -44,6 +44,9 @@ def resolve(T, BASE):
     is_record = '(and (!= @config.recordForm "") (!= @%(a)sex "") (not (str/startsWith @%(a)sex "enum:")))' % dict(a=a)
     is_enum = '(and (!= @config.enumForm "") (str/startsWith @%(a)sex "enum:"))' % dict(a=a)
     is_model = '(and (!= @config.recordForm "") (!= @%(a)sex "") (not (str/startsWith @%(a)sex "enum:")) (not (str/includes @%(a)sex ".")) (object/has @entity.models @%(a)sex))' % dict(a=a)
+    base_ty = '(if (str/endsWith @%(a)sty "?") (str/slice @%(a)sty 0 (- (str/len @%(a)sty) 1)) @%(a)sty)' % dict(a=a)
+    base_mapped = '(let ((%(a)sbt %(bt)s)) (default (array/nth (default (array/find (object/entries @config.typeNames) (fn %(a)sbn (= (array/nth @%(a)sbn 0) @%(a)sbt))) [@%(a)sbt @%(a)sbt]) 1) @%(a)sbt))' % dict(a=a, bt=base_ty)
+    null_typed = F("@config.nullTyped", [("type", base_mapped)])
     body = (
         '(if (= @%(a)sc "\\ue001") (str/concat (if (= @%(a)sty "") @config.typeUnknown (if (!= @%(a)smapped "") @%(a)smapped @%(a)sty)) @%(a)safterc) '
         '(if (= @%(a)sc "\\ue002") (str/concat (if %(isrec)s (str/concat (if %(dotted)s %(arm_open)s "") %(rec_open)s) @config.mapOpen) @%(a)safterc) '
@@ -53,13 +56,14 @@ def resolve(T, BASE):
         '(if (= @%(a)sc "\\ue007") (str/concat (if %(isrec)s (str/concat %(rec_close)s (if %(dotted)s %(arm_close)s "")) @config.mapClose) @%(a)safterc) '
         '(if (= @%(a)sc "\\ue008") (str/concat (if %(isenum)s %(enum_text)s %(lit)s) %(lit_tail)s) '
         '(if (= @%(a)sc "\\ue00b") (str/concat (if %(ismodel)s %(whole_text)s %(whole)s) %(whole_tail)s) '
-        '(str/concat "\\ue000" @%(a)sq)))))))))'
+        '(if (= @%(a)sc "\\ue00f") (str/concat (if (= @%(a)sty "") @config.nullUnknown %(null_typed)s) @%(a)safterc) '
+        '(str/concat "\\ue000" @%(a)sq))))))))))'
     ) % dict(a=a, isrec=is_record, dotted=dotted, arm_open=arm_open, rec_open=rec_open, field_open=field_open, pair_open=pair_open,
              key_tail=key_tail, field_close=field_close, pair_close=pair_close, rec_close=rec_close, arm_close=arm_close,
              isenum=is_enum, enum_text=enum_text, lit=lit, lit_tail=lit_tail, ismodel=is_model, whole_text=whole_text, whole=whole,
-             whole_tail=whole_tail)
+             whole_tail=whole_tail, null_typed=null_typed)
     return ('(let ((%(a)sp (str/split %(T)s %(MO)s))) (str/concat (default (array/first @%(a)sp) "") (str/join (array/map (array/drop @%(a)sp 1) (fn %(a)sq '
-            '(let ((%(a)srest (str/replace-pattern @%(a)sq "^[^\\ue001-\\ue00c]*" ""))) '
+            '(let ((%(a)srest (str/replace-pattern @%(a)sq "^[^\\ue001-\\ue00c\\ue00f]*" ""))) '
             '(let ((%(a)srel (str/slice @%(a)sq 0 (- (str/len @%(a)sq) (str/len @%(a)srest)))) (%(a)sc (str/slice @%(a)srest 0 1)) (%(a)safterc (str/slice @%(a)srest 1 (str/len @%(a)srest)))) '
             '(let ((%(a)slead (default (array/first (str/split (str/slice @%(a)srel 1 (str/len @%(a)srel)) "]")) "")) (%(a)safter (str/join (array/drop (str/split @%(a)srel "]") 1) "]"))) '
             '(let ((%(a)sabs (str/concat %(BASE)s (if (= @%(a)slead "1") ".guard" (str/concat ".effects[" (- (default (str/to-int @%(a)slead) 2) 2) "]")) @%(a)safter))) '
