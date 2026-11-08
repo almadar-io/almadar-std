@@ -57,7 +57,7 @@ orbital OrbSimulateOrbital {
                               (let ((order (array/reduce (array/range 0 (+ (array/len @tx) (array/len @sts) 1)) [@initial] (fn (cur i)
                                   (if (>= @i (array/len @cur))
                                     @cur
-                                    (let ((st (array/nth @cur @i)))
+                                    (let ((st (if (>= @i 0) (array/nth @cur @i) null)))
                                       (array/concat @cur (array/filter (array/unique (array/map (array/filter @tx (fn t (let ((frm (object/get @t "from" ""))) (if (validate/string @frm) (= @frm @st) (array/includes @frm @st))))) (fn t (object/get @t "to" "")))) (fn n (not (array/includes @cur @n)))))))))))
                                 (array/concat
                                   (array/flatten (array/map @order (fn st

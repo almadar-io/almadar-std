@@ -57,7 +57,7 @@ orbital OrbComposeOrbital {
     state reading {
       INIT -> reading
       COMPOSE_NEXT -> reading when (< @entity.cursor (array/len @entity.files))
-        (set @entity.file (default (array/nth @entity.files @entity.cursor) ""))
+        (set @entity.file (default (if (>= @entity.cursor 0) (array/nth @entity.files @entity.cursor) null) ""))
         (emit COMPOSE_OPEN { })
       COMPOSE_OPEN -> reading when (not (os/path-is-absolute @entity.file))
         (os/read-file { anchor: "cwd" path: @entity.file } { key: "program" emit: { success: COMPOSE_READ, failure: COMPOSE_READ_FAILED } })

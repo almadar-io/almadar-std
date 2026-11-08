@@ -72,7 +72,7 @@ orbital CiRunLogsOrbital {
         (emit CI_LOGS_GH { stage: "view", argv: ["run", "view", @entity.runId, "--repo", (str/concat @entity.owner "/" @entity.repo)] })
 
       CI_LOGS_RAN -> reading when (and (= @payload.stage "log") (= @payload.exitCode 0) (!= (str/trim @payload.stdout) ""))
-        (let ((job (array/nth @entity.failed @entity.cursor)))
+        (let ((job (if (>= @entity.cursor 0) (array/nth @entity.failed @entity.cursor) null)))
           (set @entity.lines (array/concat @entity.lines (array/map (array/filter (array/map (array/filter (array/map (str/split @payload.stdout "\n") (fn l (str/trim @l))) (fn l (!= @l ""))) (fn l (str/trim (str/replace-pattern @l "^\\d{4}-\\d{2}-\\d{2}T[\\d:.]+Z\\s*" "")))) (fn m (!= @m ""))) (fn m (if (str/startsWith @m "##[error]") { job: @job.name, step: "", msg: (str/trim (str/slice @m 9)), level: "error" } (if (str/startsWith @m "##[warning]") { job: @job.name, step: "", msg: (str/trim (str/slice @m 11)), level: "warning" } { job: @job.name, step: "", msg: @m, level: "info" })))))))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit CI_LOGS_NEXT { })
@@ -80,7 +80,7 @@ orbital CiRunLogsOrbital {
         (set @entity.cursor (+ @entity.cursor 1))
         (emit CI_LOGS_NEXT { })
       CI_LOGS_NEXT -> reading when (< @entity.cursor (array/len @entity.failed))
-        (emit CI_LOGS_GH { stage: "log", argv: ["api", (str/concat "repos/" @entity.owner "/" @entity.repo "/actions/jobs/" (object/get (default (array/nth @entity.failed @entity.cursor) { id: 0, name: "", conclusion: "" }) "id") "/logs")] })
+        (emit CI_LOGS_GH { stage: "log", argv: ["api", (str/concat "repos/" @entity.owner "/" @entity.repo "/actions/jobs/" (object/get (default (if (>= @entity.cursor 0) (array/nth @entity.failed @entity.cursor) null) { id: 0, name: "", conclusion: "" }) "id") "/logs")] })
       CI_LOGS_NEXT -> idle when (>= @entity.cursor (array/len @entity.failed))
         (emit CI_LOGS { repo: @entity.repo, runId: @entity.runId, lines: @entity.lines })
         (set @entity.errorLines (object/fromEntries (array/map (array/filter (array/range (array/len @entity.lines)) (fn i (= (object/get (array/nth @entity.lines @i) "level" "") "error"))) (fn i [(str/concat (+ @i 1)), "error"]))))

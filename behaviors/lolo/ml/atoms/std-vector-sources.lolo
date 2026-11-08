@@ -91,7 +91,7 @@ orbital VectorSourcesOrbital {
       INIT -> snapshots
       ;; the guard keeps pos inside the list, so the default never answers
       SRC_NEXT -> snapshots when (< @entity.pos (array/len @entity.snaps))
-        (set @entity.cur (default (array/nth @entity.snaps @entity.pos) @entity.cur))
+        (set @entity.cur (default (if (>= @entity.pos 0) (array/nth @entity.snaps @entity.pos) null) @entity.cur))
         (emit SRC_PLACE { })
       SRC_PLACE -> snapshots when (== @entity.cur.in "node-modules")
         (os/read-file { anchor: "cwd" path: (str/concat "node_modules/" @entity.cur.rel) } { key: @entity.cur.path emit: { success: SRC_SNAPSHOT_READ, failure: SRC_SNAPSHOT_ABSENT } })

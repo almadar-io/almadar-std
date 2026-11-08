@@ -35,7 +35,7 @@ orbital VerifyJudgeOrbital {
       JUDGE_REQUEST -> ready
         (let ((evidence (not (object/has @payload.step "unplanned")))
               (failed (array/filter (object/get @payload.played "effects" []) (fn e (and (= (object/get @e "status") "failed") (not (object/has @e "routed")))))))
-          (let ((offenders (array/map (array/filter @failed (fn e @evidence)) (fn e (str/concat (object/get @payload.played "trait") ":" (object/get @payload.played "event") " " (object/get @e "type") "(" (let ((a (array/nth (object/get @e "args" []) (if (= (object/get @e "type") "persist") 1 0)))) (if (validate/string @a) @a (json/stringify @a))) ") failed: " (object/get @e "error" "?")))))
+          (let ((offenders (array/map (array/filter @failed (fn e @evidence)) (fn e (str/concat (object/get @payload.played "trait") ":" (object/get @payload.played "event") " " (object/get @e "type") "(" (let ((a (let ((nxi (if (= (object/get @e "type") "persist") 1 0))) (if (>= @nxi 0) (array/nth (object/get @e "args" []) @nxi) null)))) (if (validate/string @a) @a (json/stringify @a))) ") failed: " (object/get @e "error" "?")))))
                 (ens (object/get @payload.played "ensures" []))
                 (nodes (default @payload.rendered [])))
             (let ((brokenEns (array/filter @ens (fn x (= (object/get @x "verdict") "broken"))))

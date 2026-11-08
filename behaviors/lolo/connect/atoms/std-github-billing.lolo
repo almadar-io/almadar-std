@@ -100,7 +100,7 @@ orbital GithubBillingOrbital {
       BILLING_LOAD -> reading
       BILLING_REFRESH -> reading
       BILLING_NEXT -> reading when (< @entity.cursor (array/len @config.accounts))
-        (let ((a (array/nth @config.accounts @entity.cursor)))
+        (let ((a (if (>= @entity.cursor 0) (array/nth @config.accounts @entity.cursor) null)))
           (let ((y (str/to-number (time/format @entity.startedAt "YYYY"))) (m (str/to-number (time/format @entity.startedAt "MM")))) (if (and (validate/required @y) (validate/required @m)) (emit BILLING_USAGE { account: (default @a.name ""), kind: (default @a.kind ""), year: (default @y 0), month: (default @m 0) }) (emit BILLING_MONTH_FAILED { account: (default @a.name ""), kind: (default @a.kind ""), message: "the billing month could not be read from the clock" }))))
       BILLING_NEXT -> idle when (>= @entity.cursor (array/len @config.accounts))
         (set @entity.accounts @entity.collected)

@@ -95,7 +95,7 @@ orbital OrbSuperviseOrbital {
         (emit SUPERVISE_START { children: [{ name: "child", command: "orb", args: (array/drop @entity.command 1), restart: "permanent" }] })
         (emit SUPERVISE_WATCH { at: 0 })
       SUPERVISE_WATCH -> running when (< @entity.cursor (array/len @entity.watches))
-        (os/watch-files { anchor: "cwd" path: (array/nth @entity.watches @entity.cursor) } { key: "watch" emit: { onMessage: SUPERVISE_CHANGED, failure: SUPERVISE_WATCH_FAILED } })
+        (os/watch-files { anchor: "cwd" path: (if (>= @entity.cursor 0) (array/nth @entity.watches @entity.cursor) null) } { key: "watch" emit: { onMessage: SUPERVISE_CHANGED, failure: SUPERVISE_WATCH_FAILED } })
         (set @entity.cursor (+ @entity.cursor 1))
         (emit SUPERVISE_WATCH { at: (+ @entity.cursor 1) })
       SUPERVISE_CHANGED -> running

@@ -256,7 +256,7 @@ orbital PredictOrbital {
             (set @entity.frameValue (if (== @frame0 null) 0 (object/get @frame0 value)))
             (set @entity.revealSamples [ { x: 0, y: (if (== @frame0 null) 0 (object/get @frame0 value)) } ])
             (set @entity.revealCurves [ { label: @config.revealLabel, color: @config.revealColor, samples: @entity.revealSamples } ])
-            (set @entity.feedback (str/concat "Prediction locked: " (default (array/nth @entity.options (default ?index @entity.chosenIndex)) "") " — watch what happens."))))
+            (set @entity.feedback (str/concat "Prediction locked: " (default (let ((nxi (default ?index @entity.chosenIndex))) (if (>= @nxi 0) (array/nth @entity.options @nxi) null)) "") " — watch what happens."))))
         (emit PREDICTION_COMMITTED { scenarioIndex: @entity.scenarioIndex, chosenIndex: @entity.chosenIndex })
 
       NEXT -> idle when (and (== @entity.active true) (and (== @entity.phase "judged") (== @entity.done false)))
@@ -264,7 +264,7 @@ orbital PredictOrbital {
         (let (
             (nextIndex (+ @entity.scenarioIndex 1))
             (finished (>= @nextIndex (array/len @entity.scenarios)))
-            (next (array/nth @entity.scenarios (math/min @nextIndex (- (array/len @entity.scenarios) 1))))
+            (next (let ((nxi (math/min @nextIndex (- (array/len @entity.scenarios) 1)))) (if (>= @nxi 0) (array/nth @entity.scenarios @nxi) null)))
           )
           (do
             (set @entity.scenarioIndex (if @finished @entity.scenarioIndex @nextIndex))
@@ -387,8 +387,8 @@ orbital PredictOrbital {
       revealTick every 600ms
         when (and (== @entity.active true) (== @entity.phase "reveal"))
         (set @entity.frameIndex (math/min (+ @entity.frameIndex 1) (- (array/len @entity.frames) 1)))
-        (set @entity.frameCaption (object/get (default (array/nth @entity.frames @entity.frameIndex) { caption: "", value: 0 }) caption))
-        (set @entity.frameValue (object/get (default (array/nth @entity.frames @entity.frameIndex) { caption: "", value: 0 }) value))
+        (set @entity.frameCaption (object/get (default (if (>= @entity.frameIndex 0) (array/nth @entity.frames @entity.frameIndex) null) { caption: "", value: 0 }) caption))
+        (set @entity.frameValue (object/get (default (if (>= @entity.frameIndex 0) (array/nth @entity.frames @entity.frameIndex) null) { caption: "", value: 0 }) value))
         (set @entity.revealSamples (array/append @entity.revealSamples { x: @entity.frameIndex, y: @entity.frameValue }))
         (set @entity.revealCurves [ { label: @config.revealLabel, color: @config.revealColor, samples: @entity.revealSamples } ])
         (set @entity.phase (if (>= @entity.frameIndex (- (array/len @entity.frames) 1)) "judged" @entity.phase))
@@ -396,7 +396,7 @@ orbital PredictOrbital {
         (set @entity.feedback (if (== @entity.phase "judged")
           (if (== @entity.chosenIndex @entity.correctIndex)
             (str/concat "Your prediction was right. " @entity.explanation)
-            (str/concat "Not this time — the outcome was: " (default (array/nth @entity.options @entity.correctIndex) "") ". " @entity.explanation))
+            (str/concat "Not this time — the outcome was: " (default (if (>= @entity.correctIndex 0) (array/nth @entity.options @entity.correctIndex) null) "") ". " @entity.explanation))
           @entity.feedback))
     }
 

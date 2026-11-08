@@ -158,9 +158,9 @@ orbital MigrationJobOrbital {
         })
         (emit MIGRATION_FAILED { error: @entity.error })
         (notify error "Couldn't list the source documents: no migration profile is stored for this source.")
-      MIGRATION_SOURCE_NEXT -> fetching when (and (< ?index (array/len (object/get @entity.profile "endpoints" []))) (= (object/get (default (array/nth (object/get @entity.profile "endpoints" []) ?index) { name: "", method: "GET", path: "", params: {}, headers: {}, recordsPath: "" }) "method") "GET") (or (str/startsWith @config.sourceOrigin "https://") (str/startsWith @config.sourceOrigin "http://")))
+      MIGRATION_SOURCE_NEXT -> fetching when (and (< ?index (array/len (object/get @entity.profile "endpoints" []))) (= (object/get (default (if (>= ?index 0) (array/nth (object/get @entity.profile "endpoints" []) ?index) null) { name: "", method: "GET", path: "", params: {}, headers: {}, recordsPath: "" }) "method") "GET") (or (str/startsWith @config.sourceOrigin "https://") (str/startsWith @config.sourceOrigin "http://")))
         ;; an endpoint without params sends no query string
-        (let ((ep (default (array/nth (object/get @entity.profile "endpoints" []) ?index) { name: "", method: "GET", path: "", params: {}, headers: {}, recordsPath: "" })))
+        (let ((ep (default (if (>= ?index 0) (array/nth (object/get @entity.profile "endpoints" []) ?index) null) { name: "", method: "GET", path: "", params: {}, headers: {}, recordsPath: "" })))
           (emit MIGRATION_HTTP_SEND {
             key: "source",
             host: (str/slice @config.sourceOrigin (if (str/startsWith @config.sourceOrigin "https://") 8 7) (str/len @config.sourceOrigin)),
@@ -170,8 +170,8 @@ orbital MigrationJobOrbital {
             body: (bytes/from-string ""),
             stream: "none"
           }))
-      MIGRATION_SOURCE_NEXT -> fetching when (and (< ?index (array/len (object/get @entity.profile "endpoints" []))) (= (object/get (default (array/nth (object/get @entity.profile "endpoints" []) ?index) { name: "", method: "GET", path: "", params: {}, headers: {}, recordsPath: "" }) "method") "POST") (or (str/startsWith @config.sourceOrigin "https://") (str/startsWith @config.sourceOrigin "http://")))
-        (let ((ep (default (array/nth (object/get @entity.profile "endpoints" []) ?index) { name: "", method: "GET", path: "", params: {}, headers: {}, recordsPath: "" })))
+      MIGRATION_SOURCE_NEXT -> fetching when (and (< ?index (array/len (object/get @entity.profile "endpoints" []))) (= (object/get (default (if (>= ?index 0) (array/nth (object/get @entity.profile "endpoints" []) ?index) null) { name: "", method: "GET", path: "", params: {}, headers: {}, recordsPath: "" }) "method") "POST") (or (str/startsWith @config.sourceOrigin "https://") (str/startsWith @config.sourceOrigin "http://")))
+        (let ((ep (default (if (>= ?index 0) (array/nth (object/get @entity.profile "endpoints" []) ?index) null) { name: "", method: "GET", path: "", params: {}, headers: {}, recordsPath: "" })))
           (emit MIGRATION_HTTP_SEND {
             key: "source",
             host: (str/slice @config.sourceOrigin (if (str/startsWith @config.sourceOrigin "https://") 8 7) (str/len @config.sourceOrigin)),
@@ -183,13 +183,13 @@ orbital MigrationJobOrbital {
           }))
       MIGRATION_SOURCE_NEXT -> fetching when (and (< ?index (array/len (object/get @entity.profile "endpoints" []))) (not (or (str/startsWith @config.sourceOrigin "https://") (str/startsWith @config.sourceOrigin "http://"))))
         (emit MIGRATION_SOURCE_UNREACHABLE { error: "the source origin must start with https:// or http://", kind: "refused" })
-      MIGRATION_SOURCE_REPLIED -> fetching when (and (>= ?status 200) (< ?status 300) (json/valid ?body) (!= (let ((rp (object/get (default (array/nth (object/get @entity.profile "endpoints" []) @entity.endpointIndex) { name: "", method: "GET", path: "", params: {}, headers: {}, recordsPath: "" }) "recordsPath" ""))) (if (= @rp "") (json/parse ?body SourceRecords) (let ((env (json/parse ?body SourceEnvelope))) (if (== @env null) null (object/get @env @rp null))))) null) (validate/string (object/get (object/get @entity.profile "shaping") "title")))
+      MIGRATION_SOURCE_REPLIED -> fetching when (and (>= ?status 200) (< ?status 300) (json/valid ?body) (!= (let ((rp (object/get (default (if (>= @entity.endpointIndex 0) (array/nth (object/get @entity.profile "endpoints" []) @entity.endpointIndex) null) { name: "", method: "GET", path: "", params: {}, headers: {}, recordsPath: "" }) "recordsPath" ""))) (if (= @rp "") (json/parse ?body SourceRecords) (let ((env (json/parse ?body SourceEnvelope))) (if (== @env null) null (object/get @env @rp null))))) null) (validate/string (object/get (object/get @entity.profile "shaping") "title")))
         ;; a profile that shapes no title or content key reads "" here: no record has text under it, so each record is skipped with a reason, never dropped
         (set @entity.documents (array/concat @entity.documents
-          (let ((records (let ((rp (object/get (default (array/nth (object/get @entity.profile "endpoints" []) @entity.endpointIndex) { name: "", method: "GET", path: "", params: {}, headers: {}, recordsPath: "" }) "recordsPath" ""))) (if (= @rp "") (json/parse ?body SourceRecords) (let ((env (json/parse ?body SourceEnvelope))) (if (== @env null) null (object/get @env @rp null))))))
+          (let ((records (let ((rp (object/get (default (if (>= @entity.endpointIndex 0) (array/nth (object/get @entity.profile "endpoints" []) @entity.endpointIndex) null) { name: "", method: "GET", path: "", params: {}, headers: {}, recordsPath: "" }) "recordsPath" ""))) (if (= @rp "") (json/parse ?body SourceRecords) (let ((env (json/parse ?body SourceEnvelope))) (if (== @env null) null (object/get @env @rp null))))))
                 (titleKey (default (object/get (object/get @entity.profile "shaping") "title") ""))
                 (contentKey (default (object/get (object/get @entity.profile "shaping") "content") ""))
-                (name (object/get (default (array/nth (object/get @entity.profile "endpoints" []) @entity.endpointIndex) { name: "", method: "GET", path: "", params: {}, headers: {}, recordsPath: "" }) "name" "")))
+                (name (object/get (default (if (>= @entity.endpointIndex 0) (array/nth (object/get @entity.profile "endpoints" []) @entity.endpointIndex) null) { name: "", method: "GET", path: "", params: {}, headers: {}, recordsPath: "" }) "name" "")))
             (if
               (validate/array @records)
               (array/flatten
@@ -214,9 +214,9 @@ orbital MigrationJobOrbital {
               []))))
         ;; a profile that shapes no title key reads "" here: no record has text under it, so each record is skipped with a reason, never dropped
         (set @entity.sourceSkipped (array/concat @entity.sourceSkipped
-          (let ((records (let ((rp (object/get (default (array/nth (object/get @entity.profile "endpoints" []) @entity.endpointIndex) { name: "", method: "GET", path: "", params: {}, headers: {}, recordsPath: "" }) "recordsPath" ""))) (if (= @rp "") (json/parse ?body SourceRecords) (let ((env (json/parse ?body SourceEnvelope))) (if (== @env null) null (object/get @env @rp null))))))
+          (let ((records (let ((rp (object/get (default (if (>= @entity.endpointIndex 0) (array/nth (object/get @entity.profile "endpoints" []) @entity.endpointIndex) null) { name: "", method: "GET", path: "", params: {}, headers: {}, recordsPath: "" }) "recordsPath" ""))) (if (= @rp "") (json/parse ?body SourceRecords) (let ((env (json/parse ?body SourceEnvelope))) (if (== @env null) null (object/get @env @rp null))))))
                 (titleKey (default (object/get (object/get @entity.profile "shaping") "title") ""))
-                (name (object/get (default (array/nth (object/get @entity.profile "endpoints" []) @entity.endpointIndex) { name: "", method: "GET", path: "", params: {}, headers: {}, recordsPath: "" }) "name" "")))
+                (name (object/get (default (if (>= @entity.endpointIndex 0) (array/nth (object/get @entity.profile "endpoints" []) @entity.endpointIndex) null) { name: "", method: "GET", path: "", params: {}, headers: {}, recordsPath: "" }) "name" "")))
             (if
               (validate/array @records)
               (array/flatten
@@ -230,8 +230,8 @@ orbital MigrationJobOrbital {
               []))))
         (set @entity.endpointIndex (+ @entity.endpointIndex 1))
         (emit MIGRATION_SOURCE_NEXT { index: @entity.endpointIndex })
-      MIGRATION_SOURCE_REPLIED -> failed when (and (>= ?status 200) (< ?status 300) (json/valid ?body) (or (== (let ((rp (object/get (default (array/nth (object/get @entity.profile "endpoints" []) @entity.endpointIndex) { name: "", method: "GET", path: "", params: {}, headers: {}, recordsPath: "" }) "recordsPath" ""))) (if (= @rp "") (json/parse ?body SourceRecords) (let ((env (json/parse ?body SourceEnvelope))) (if (== @env null) null (object/get @env @rp null))))) null) (not (validate/string (object/get (object/get @entity.profile "shaping") "title")))))
-        (set @entity.error (if (validate/string (object/get (object/get @entity.profile "shaping") "title")) (str/concat "the source's reply does not hold the record array the profile declares at recordsPath '" (object/get (default (array/nth (object/get @entity.profile "endpoints" []) @entity.endpointIndex) { name: "", method: "GET", path: "", params: {}, headers: {}, recordsPath: "" }) "recordsPath" "") "'") "the profile's shaping declares no title key"))
+      MIGRATION_SOURCE_REPLIED -> failed when (and (>= ?status 200) (< ?status 300) (json/valid ?body) (or (== (let ((rp (object/get (default (if (>= @entity.endpointIndex 0) (array/nth (object/get @entity.profile "endpoints" []) @entity.endpointIndex) null) { name: "", method: "GET", path: "", params: {}, headers: {}, recordsPath: "" }) "recordsPath" ""))) (if (= @rp "") (json/parse ?body SourceRecords) (let ((env (json/parse ?body SourceEnvelope))) (if (== @env null) null (object/get @env @rp null))))) null) (not (validate/string (object/get (object/get @entity.profile "shaping") "title")))))
+        (set @entity.error (if (validate/string (object/get (object/get @entity.profile "shaping") "title")) (str/concat "the source's reply does not hold the record array the profile declares at recordsPath '" (object/get (default (if (>= @entity.endpointIndex 0) (array/nth (object/get @entity.profile "endpoints" []) @entity.endpointIndex) null) { name: "", method: "GET", path: "", params: {}, headers: {}, recordsPath: "" }) "recordsPath" "") "'") "the profile's shaping declares no title key"))
         (set @entity.status failed)
         (persist create MigrationJob {
           createdAt: @entity.createdAt

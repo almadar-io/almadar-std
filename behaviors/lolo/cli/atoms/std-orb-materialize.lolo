@@ -173,8 +173,8 @@ orbital OrbMaterializeOrbital {
         (set @entity.cursor 0)
         (emit MAT_PRUNE_NEXT { })
       MAT_NEXT -> scanning when (< @entity.cursor (array/len @entity.items))
-        (set @entity.rel (default (array/nth @entity.items @entity.cursor) ""))
-        (os/read-file { anchor: "cwd" path: (default (array/nth @entity.items @entity.cursor) "") } { key: (str/concat "read-" @entity.cursor), emit: { success: MAT_READ, failure: MAT_FAILED } })
+        (set @entity.rel (default (if (>= @entity.cursor 0) (array/nth @entity.items @entity.cursor) null) ""))
+        (os/read-file { anchor: "cwd" path: (default (if (>= @entity.cursor 0) (array/nth @entity.items @entity.cursor) null) "") } { key: (str/concat "read-" @entity.cursor), emit: { success: MAT_READ, failure: MAT_FAILED } })
       MAT_READ -> scanning
         (set @entity.data @payload.data)
         (set @entity.sha (hash/sha 256 @payload.data "hex" "bytes"))
@@ -214,7 +214,7 @@ orbital OrbMaterializeOrbital {
       MAT_PRUNE_NEXT -> saving when (>= @entity.cursor (array/len @entity.stale))
         (os/write-file { anchor: { env: "ALMADAR_DERIVED_CACHE" } path: (str/concat @entity.out "/.hashes.json") } (bytes/from-string (json/stringify (default (object/fromEntries @entity.curEntries) {}))) { key: "save", emit: { success: MAT_SAVED, failure: MAT_FAILED } })
       MAT_PRUNE_NEXT -> pruning when (< @entity.cursor (array/len @entity.stale))
-        (os/remove { anchor: { env: "ALMADAR_DERIVED_CACHE" } path: (str/concat @entity.out "/" (str/replace (default (array/nth @entity.stale @entity.cursor) "") ".lolo" ".orb")) } { key: (str/concat "prune-" @entity.cursor), emit: { success: MAT_PRUNED, failure: MAT_PRUNED } })
+        (os/remove { anchor: { env: "ALMADAR_DERIVED_CACHE" } path: (str/concat @entity.out "/" (str/replace (default (if (>= @entity.cursor 0) (array/nth @entity.stale @entity.cursor) null) "") ".lolo" ".orb")) } { key: (str/concat "prune-" @entity.cursor), emit: { success: MAT_PRUNED, failure: MAT_PRUNED } })
       MAT_PRUNED -> pruning
         (set @entity.cursor (+ @entity.cursor 1))
         (emit MAT_PRUNE_NEXT { })

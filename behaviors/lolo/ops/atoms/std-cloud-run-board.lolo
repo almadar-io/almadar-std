@@ -317,7 +317,7 @@ orbital CloudRunBoardOrbital {
                   (when @built.ok
                     (do
                       (set @entity.entries @built.es)
-                      (set @entity.currency (let ((lastRow (array/nth @rows (- (array/len @rows) 1)))) (if (== @lastRow null) "USD" (default @lastRow.currency "USD")))))))))
+                      (set @entity.currency (let ((lastRow (let ((nxi (- (array/len @rows) 1))) (if (>= @nxi 0) (array/nth @rows @nxi) null)))) (if (== @lastRow null) "USD" (default @lastRow.currency "USD")))))))))
             (emit CR_ANSWER { })))
       CR_RAN -> reading when (and (= @payload.stage "rollup") (not (and (= @payload.exitCode 0) (!= (str/trim @payload.stdout) "") (json/valid @payload.stdout))))
         (emit CR_ANSWER { })

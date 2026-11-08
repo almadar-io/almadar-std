@@ -194,10 +194,10 @@ orbital DependencyAuditOrbital {
       AUD_CLOCK_FAILED -> auditing
         (emit AUD_NEXT { })
 
-      AUD_NEXT -> auditing when (== (array/nth @entity.projects @entity.cursor) null)
+      AUD_NEXT -> auditing when (== (if (>= @entity.cursor 0) (array/nth @entity.projects @entity.cursor) null) null)
         (os/clock-monotonic { key: "end" emit: { success: AUD_ENDED failure: AUD_END_CLOCK_FAILED } })
-      AUD_NEXT -> auditing when (!= (array/nth @entity.projects @entity.cursor) null)
-        (set @entity.rel (array/nth @entity.projects @entity.cursor))
+      AUD_NEXT -> auditing when (!= (if (>= @entity.cursor 0) (array/nth @entity.projects @entity.cursor) null) null)
+        (set @entity.rel (if (>= @entity.cursor 0) (array/nth @entity.projects @entity.cursor) null))
         (set @entity.present [])
         (set @entity.checkCursor 0)
         (set @entity.vulns [])
@@ -209,7 +209,7 @@ orbital DependencyAuditOrbital {
         (set @entity.npmrcAuditOff false)
         (set @entity.requirements "")
         (set @entity.pyproject "")
-        (os/exists (str/concat @config.root "/" (array/nth @entity.projects @entity.cursor)) { key: "project" emit: { success: AUD_PROJECT_CHECKED failure: AUD_PROJECT_MISSING } })
+        (os/exists (str/concat @config.root "/" (if (>= @entity.cursor 0) (array/nth @entity.projects @entity.cursor) null)) { key: "project" emit: { success: AUD_PROJECT_CHECKED failure: AUD_PROJECT_MISSING } })
       AUD_PROJECT_CHECKED -> auditing when (not @payload.ok)
         (set @entity.log (array/append @entity.log (str/concat "\u{1b}[31m✗\u{1b}[0m " (str/concat "Path not found: " @config.root "/" @entity.rel))))
         (set @entity.cursor (+ @entity.cursor 1))
@@ -221,12 +221,12 @@ orbital DependencyAuditOrbital {
         (set @entity.cursor (+ @entity.cursor 1))
         (emit AUD_NEXT { })
 
-      AUD_CHECK -> auditing when (!= (array/nth @config.markers @entity.checkCursor) null)
-        (os/exists (str/concat @config.root "/" @entity.rel "/" (array/nth @config.markers @entity.checkCursor)) { key: "marker" emit: { success: AUD_CHECKED failure: AUD_CHECK_FAILED } })
-      AUD_CHECK -> auditing when (== (array/nth @config.markers @entity.checkCursor) null)
+      AUD_CHECK -> auditing when (!= (if (>= @entity.checkCursor 0) (array/nth @config.markers @entity.checkCursor) null) null)
+        (os/exists (str/concat @config.root "/" @entity.rel "/" (if (>= @entity.checkCursor 0) (array/nth @config.markers @entity.checkCursor) null)) { key: "marker" emit: { success: AUD_CHECKED failure: AUD_CHECK_FAILED } })
+      AUD_CHECK -> auditing when (== (if (>= @entity.checkCursor 0) (array/nth @config.markers @entity.checkCursor) null) null)
         (emit AUD_DETECT { })
       AUD_CHECKED -> auditing when @payload.ok
-        (set @entity.present (array/append @entity.present (array/nth @config.markers @entity.checkCursor)))
+        (set @entity.present (array/append @entity.present (if (>= @entity.checkCursor 0) (array/nth @config.markers @entity.checkCursor) null)))
         (set @entity.checkCursor (+ @entity.checkCursor 1))
         (emit AUD_CHECK { })
       AUD_CHECKED -> auditing when (not @payload.ok)
@@ -285,12 +285,12 @@ orbital DependencyAuditOrbital {
 
       AUD_RAN -> auditing when (and (= @payload.stage "audit") (!= @payload.exitCode 0) (!= (json/parse @payload.stdout NodeAuditJson) null) (!= (object/get (json/parse @payload.stdout NodeAuditJson) "advisories") null))
         ;; the guard proves the key is present, so this default never fires
-        (set @entity.vulns (let ((audit (json/parse @payload.stdout NodeAuditJson))) (let ((adv (default (object/get @audit "advisories") {}))) (array/map (array/concat (array/map (array/sort (array/map (array/filter (array/range 0 (array/len (object/keys @adv))) (fn i (validate/pattern (array/nth (object/keys @adv) @i) "^(0|[1-9][0-9]*)$"))) (fn i { i: @i, n: (str/to-number (array/nth (object/keys @adv) @i)) })) "n") (fn x @x.i)) (array/filter (array/range 0 (array/len (object/keys @adv))) (fn i (not (validate/pattern (array/nth (object/keys @adv) @i) "^(0|[1-9][0-9]*)$"))))) (fn i (let ((k (array/nth (object/keys @adv) @i)) (v (array/nth (object/values @adv) @i))) (let ((paths (let ((f0 (array/first (default @v.findings [])))) (if (== @f0 null) null @f0.paths))) (cve (if (== @v.cves null) null (array/first @v.cves))) (base (object/get { critical: 9, high: 7.5, moderate: 5, low: 2, info: 0 } @v.severity)))
+        (set @entity.vulns (let ((audit (json/parse @payload.stdout NodeAuditJson))) (let ((adv (default (object/get @audit "advisories") {}))) (array/map (array/concat (array/map (array/sort (array/map (array/filter (array/range 0 (array/len (object/keys @adv))) (fn i (validate/pattern (array/nth (object/keys @adv) @i) "^(0|[1-9][0-9]*)$"))) (fn i { i: @i, n: (str/to-number (array/nth (object/keys @adv) @i)) })) "n") (fn x @x.i)) (array/filter (array/range 0 (array/len (object/keys @adv))) (fn i (not (validate/pattern (array/nth (object/keys @adv) @i) "^(0|[1-9][0-9]*)$"))))) (fn i (let ((k (if (>= @i 0) (array/nth (object/keys @adv) @i) null)) (v (if (>= @i 0) (array/nth (object/values @adv) @i) null))) (let ((paths (let ((f0 (array/first (default @v.findings [])))) (if (== @f0 null) null @f0.paths))) (cve (if (== @v.cves null) null (array/first @v.cves))) (base (object/get { critical: 9, high: 7.5, moderate: 5, low: 2, info: 0 } @v.severity)))
                   { id: (default @v.github_advisory_id (default @cve (str/concat "NPM-" (default @k "")))), title: @v.title, description: (default @v.overview ""), severity: @v.severity, score: (default @v.cvss.score (if (or (== @base null) (== @base 0)) 5 @base)), package: @v.module_name, affectedVersions: @v.vulnerable_versions, patchedVersion: @v.patched_versions, cve: @cve, ghsa: @v.github_advisory_id, cwe: (if (== @v.cwe null) null (array/first @v.cwe)), references: (if (and (!= @v.url null) (!= @v.url "")) (array/concat [@v.url] (if (== @v.references null) (array/take [@v.url] 0) (str/split @v.references "\n"))) (array/take [@v.url] 0)), exploitAvailable: (or (= @v.severity "critical") (= @v.severity "high")), fixAvailable: (!= (default @v.patched_versions "") ""), dependencyPath: (if (== @paths null) [@v.module_name] @paths), ecosystem: "node" })))))))
         (emit AUD_NODE_OUTDATED { })
       AUD_RAN -> auditing when (and (= @payload.stage "audit") (or (= @payload.exitCode 0) (== (json/parse @payload.stdout NodeAuditJson) null) (== (object/get (json/parse @payload.stdout NodeAuditJson) "advisories") null)) (!= (json/parse @payload.stdout NodeAuditJson) null) (!= (object/get (json/parse @payload.stdout NodeAuditJson) "vulnerabilities") null))
         ;; the guard proves the key is present, so this default never fires
-        (set @entity.vulns (let ((audit (json/parse @payload.stdout NodeAuditJson))) (let ((vul (default (object/get @audit "vulnerabilities") {}))) (array/flatten (array/map (array/concat (array/map (array/sort (array/map (array/filter (array/range 0 (array/len (object/keys @vul))) (fn i (validate/pattern (array/nth (object/keys @vul) @i) "^(0|[1-9][0-9]*)$"))) (fn i { i: @i, n: (str/to-number (array/nth (object/keys @vul) @i)) })) "n") (fn x @x.i)) (array/filter (array/range 0 (array/len (object/keys @vul))) (fn i (not (validate/pattern (array/nth (object/keys @vul) @i) "^(0|[1-9][0-9]*)$"))))) (fn i (let ((e (array/nth (object/values @vul) @i)))
+        (set @entity.vulns (let ((audit (json/parse @payload.stdout NodeAuditJson))) (let ((vul (default (object/get @audit "vulnerabilities") {}))) (array/flatten (array/map (array/concat (array/map (array/sort (array/map (array/filter (array/range 0 (array/len (object/keys @vul))) (fn i (validate/pattern (array/nth (object/keys @vul) @i) "^(0|[1-9][0-9]*)$"))) (fn i { i: @i, n: (str/to-number (array/nth (object/keys @vul) @i)) })) "n") (fn x @x.i)) (array/filter (array/range 0 (array/len (object/keys @vul))) (fn i (not (validate/pattern (array/nth (object/keys @vul) @i) "^(0|[1-9][0-9]*)$"))))) (fn i (let ((e (if (>= @i 0) (array/nth (object/values @vul) @i) null)))
                   (array/map (array/filter (default @e.via []) (fn x (str/startsWith (json/stringify @x) "{"))) (fn x (let ((a (as @x NpmAdvisory)) (base (object/get { critical: 9, high: 7.5, moderate: 5, low: 2, info: 0 } @e.severity)))
                     (let ((ghsa (if (str/startsWith (default (array/last (str/split (default @a.url "") "/")) "") "GHSA-") (array/last (str/split (default @a.url "") "/")) null)))
                       { id: (default @ghsa (str/concat "NPM-" (default @a.source 0))), title: @a.title, description: "", severity: @a.severity, score: (let ((cvssScore (default @a.cvss.score 0))) (if (> @cvssScore 0) @cvssScore (if (or (== @base null) (== @base 0)) 5 @base))), package: @a.name, affectedVersions: @a.range, patchedVersion: (array/first (array/take [@a.name] 0)), cve: (array/first (array/take [@a.name] 0)), ghsa: @ghsa, cwe: (if (== @a.cwe null) null (array/first @a.cwe)), references: (if (and (!= @a.url null) (!= @a.url "")) [@a.url] (array/take [(str/concat "" "")] 0)), exploitAvailable: (or (= @a.severity "critical") (= @a.severity "high")), fixAvailable: (!= @e.fixAvailable false), dependencyPath: [@a.name], ecosystem: "node" })))))))))))
@@ -306,7 +306,7 @@ orbital DependencyAuditOrbital {
       AUD_NODE_OUTDATED -> auditing when (= @entity.pm "npm")
         (emit AUD_NPM_RUN { stage: "outdated", argv: ["--prefix", (str/concat @config.root "/" @entity.rel), "outdated", "--json"], env: @config.env })
       AUD_RAN -> auditing when (and (= @payload.stage "outdated") (or (= @payload.exitCode 0) (= @payload.exitCode 1)))
-        (let ((outdatedMap (json/parse (if (= @payload.stdout "") "{}" @payload.stdout) NodeOutdatedMap))) (if (== @outdatedMap null) (set @entity.log (array/append @entity.log (str/concat "\u{1b}[33m⚠\u{1b}[0m " "outdated report is not valid JSON"))) (set @entity.outdated (array/filter (array/map (array/concat (array/map (array/sort (array/map (array/filter (array/range 0 (array/len (object/keys @outdatedMap))) (fn i (validate/pattern (array/nth (object/keys @outdatedMap) @i) "^(0|[1-9][0-9]*)$"))) (fn i { i: @i, n: (str/to-number (array/nth (object/keys @outdatedMap) @i)) })) "n") (fn x @x.i)) (array/filter (array/range 0 (array/len (object/keys @outdatedMap))) (fn i (not (validate/pattern (array/nth (object/keys @outdatedMap) @i) "^(0|[1-9][0-9]*)$"))))) (fn i (let ((k (array/nth (object/keys @outdatedMap) @i)) (v (array/nth (object/values @outdatedMap) @i))) { package: (default @k ""), current: @v.current, latest: @v.latest, wanted: @v.wanted, ecosystem: "node", isDevDependency: (= @v.type "devDependencies") }))) (fn d (or @entity.includeDev (not @d.isDevDependency)))))))
+        (let ((outdatedMap (json/parse (if (= @payload.stdout "") "{}" @payload.stdout) NodeOutdatedMap))) (if (== @outdatedMap null) (set @entity.log (array/append @entity.log (str/concat "\u{1b}[33m⚠\u{1b}[0m " "outdated report is not valid JSON"))) (set @entity.outdated (array/filter (array/map (array/concat (array/map (array/sort (array/map (array/filter (array/range 0 (array/len (object/keys @outdatedMap))) (fn i (validate/pattern (array/nth (object/keys @outdatedMap) @i) "^(0|[1-9][0-9]*)$"))) (fn i { i: @i, n: (str/to-number (array/nth (object/keys @outdatedMap) @i)) })) "n") (fn x @x.i)) (array/filter (array/range 0 (array/len (object/keys @outdatedMap))) (fn i (not (validate/pattern (array/nth (object/keys @outdatedMap) @i) "^(0|[1-9][0-9]*)$"))))) (fn i (let ((k (if (>= @i 0) (array/nth (object/keys @outdatedMap) @i) null)) (v (if (>= @i 0) (array/nth (object/values @outdatedMap) @i) null))) { package: (default @k ""), current: @v.current, latest: @v.latest, wanted: @v.wanted, ecosystem: "node", isDevDependency: (= @v.type "devDependencies") }))) (fn d (or @entity.includeDev (not @d.isDevDependency)))))))
         (emit AUD_NODE_VERSION { })
       AUD_RAN -> auditing when (and (= @payload.stage "outdated") (!= @payload.exitCode 0) (!= @payload.exitCode 1))
         (emit AUD_NODE_VERSION { })

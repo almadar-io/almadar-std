@@ -225,7 +225,7 @@ orbital OrbReleaseOrbital {
       REL_ENTRY -> ready when (and (not @entity.planning) (>= @entity.cursor (array/len @entity.entries)))
         (emit RELEASE_ANSWERED { status: 200, body: (str/concat (if @entity.publish (str/concat "orb release --publish (--" @entity.bump "): every entry is done") (str/concat "orb release dry run (--" @entity.bump "): nothing was written")) "\n" (str/join @entity.lines "\n") "\n") })
       REL_ENTRY -> running when (< @entity.cursor (array/len @entity.entries))
-        (set @entity.cur (default (array/nth @entity.entries @entity.cursor) { repo: "", package: "", file: "", tag: "", registry: "" }))
+        (set @entity.cur (default (if (>= @entity.cursor 0) (array/nth @entity.entries @entity.cursor) null) { repo: "", package: "", file: "", tag: "", registry: "" }))
         (emit REL_ENTRY_GO { })
       REL_ENTRY_GO -> running
         (set @entity.repo (object/get @entity.cur "repo"))

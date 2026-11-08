@@ -303,7 +303,7 @@ orbital VectorSnapshotOrbital {
 
     state rawLookup {
       VECTOR_RESOLVED -> idle when (array/some @payload.entries (fn en (not @en.found)))
-        (let ((mt (array/nth @entity.texts (array/findIndex @payload.entries (fn en (not @en.found))))))
+        (let ((mt (let ((nxi (array/findIndex @payload.entries (fn en (not @en.found))))) (if (>= @nxi 0) (array/nth @entity.texts @nxi) null))))
           (let ((mw (if (= @mt null) null (array/find @entity.wanted (fn w (== @w.text @mt))))))
             (if (= @mw null)
               (emit SNAPSHOT_REFUSED { code: "ORB_VECTOR_MISSING", detail: "no vector for a wanted text after embedding, and the store's answer does not name which one" })

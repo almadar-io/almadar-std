@@ -82,7 +82,7 @@ orbital WizardOrbital {
           }, {
             allowNavigation: false
             currentStep: @entity.currentStepIndex
-            steps: (if (= (array/len @config.stepLabels) 0) @entity.wizardSteps (array/map @entity.wizardSteps (fn step { id: (object/get @step id ""), title: (array/nth @config.stepLabels @index), description: (if (= (array/len @config.stepDescriptions) 0) (object/get @step description "") (array/nth @config.stepDescriptions @index)) })))
+            steps: (if (= (array/len @config.stepLabels) 0) @entity.wizardSteps (array/map @entity.wizardSteps (fn step { id: (object/get @step id ""), title: (if (>= @index 0) (array/nth @config.stepLabels @index) null), description: (if (= (array/len @config.stepDescriptions) 0) (object/get @step description "") (if (>= @index 0) (array/nth @config.stepDescriptions @index) null)) })))
             type: wizard-progress
           }, {
             children: [{
@@ -94,12 +94,12 @@ orbital WizardOrbital {
                   type: icon
                 }, {
                   children: [{
-                    content: (if (= (array/len @config.stepLabels) 0) @entity.currentStepLabel (array/nth @config.stepLabels @entity.currentStepIndex))
+                    content: (if (= (array/len @config.stepLabels) 0) @entity.currentStepLabel (if (>= @entity.currentStepIndex 0) (array/nth @config.stepLabels @entity.currentStepIndex) null))
                     type: typography
                     variant: h2
                   }, {
                     color: muted
-                    content: (if (= (array/len @config.stepDescriptions) 0) @entity.currentStepDescription (array/nth @config.stepDescriptions @entity.currentStepIndex))
+                    content: (if (= (array/len @config.stepDescriptions) 0) @entity.currentStepDescription (if (>= @entity.currentStepIndex 0) (array/nth @config.stepDescriptions @entity.currentStepIndex) null))
                     type: typography
                     variant: body
                   }]
@@ -195,10 +195,10 @@ orbital WizardOrbital {
         })
       ADVANCE -> running when (not @entity.isLastStep)
         (set @entity.currentStepIndex (+ @entity.currentStepIndex 1))
-        (set @entity.currentStepLabel (let ((step (array/nth @config.steps @entity.currentStepIndex))) (if (= @step null) "" (object/get @step label))))
-        (set @entity.currentStepDescription (let ((step (array/nth @config.steps @entity.currentStepIndex))) (if (= @step null) "" (object/get @step description ""))))
-        (set @entity.currentStepIcon (let ((step (array/nth @config.steps @entity.currentStepIndex))) (if (= @step null) circle (object/get @step icon circle))))
-        (set @entity.currentFields (let ((step (array/nth @config.steps @entity.currentStepIndex))) (if (= @step null) [] (object/get @step fields []))))
+        (set @entity.currentStepLabel (let ((step (if (>= @entity.currentStepIndex 0) (array/nth @config.steps @entity.currentStepIndex) null))) (if (= @step null) "" (object/get @step label))))
+        (set @entity.currentStepDescription (let ((step (if (>= @entity.currentStepIndex 0) (array/nth @config.steps @entity.currentStepIndex) null))) (if (= @step null) "" (object/get @step description ""))))
+        (set @entity.currentStepIcon (let ((step (if (>= @entity.currentStepIndex 0) (array/nth @config.steps @entity.currentStepIndex) null))) (if (= @step null) circle (object/get @step icon circle))))
+        (set @entity.currentFields (let ((step (if (>= @entity.currentStepIndex 0) (array/nth @config.steps @entity.currentStepIndex) null))) (if (= @step null) [] (object/get @step fields []))))
         (set @entity.isFirstStep (= @entity.currentStepIndex 0))
         (set @entity.isLastStep (= @entity.currentStepIndex (- @entity.totalSteps 1)))
         (set @entity.primaryActionLabel (if (= @entity.currentStepIndex (- @entity.totalSteps 1)) Submit Next))
@@ -217,7 +217,7 @@ orbital WizardOrbital {
           }, {
             allowNavigation: false
             currentStep: @entity.currentStepIndex
-            steps: (if (= (array/len @config.stepLabels) 0) @entity.wizardSteps (array/map @entity.wizardSteps (fn step { id: (object/get @step id ""), title: (array/nth @config.stepLabels @index), description: (if (= (array/len @config.stepDescriptions) 0) (object/get @step description "") (array/nth @config.stepDescriptions @index)) })))
+            steps: (if (= (array/len @config.stepLabels) 0) @entity.wizardSteps (array/map @entity.wizardSteps (fn step { id: (object/get @step id ""), title: (if (>= @index 0) (array/nth @config.stepLabels @index) null), description: (if (= (array/len @config.stepDescriptions) 0) (object/get @step description "") (if (>= @index 0) (array/nth @config.stepDescriptions @index) null)) })))
             type: wizard-progress
           }, {
             children: [{
@@ -229,12 +229,12 @@ orbital WizardOrbital {
                   type: icon
                 }, {
                   children: [{
-                    content: (if (= (array/len @config.stepLabels) 0) @entity.currentStepLabel (array/nth @config.stepLabels @entity.currentStepIndex))
+                    content: (if (= (array/len @config.stepLabels) 0) @entity.currentStepLabel (if (>= @entity.currentStepIndex 0) (array/nth @config.stepLabels @entity.currentStepIndex) null))
                     type: typography
                     variant: h2
                   }, {
                     color: muted
-                    content: (if (= (array/len @config.stepDescriptions) 0) @entity.currentStepDescription (array/nth @config.stepDescriptions @entity.currentStepIndex))
+                    content: (if (= (array/len @config.stepDescriptions) 0) @entity.currentStepDescription (if (>= @entity.currentStepIndex 0) (array/nth @config.stepDescriptions @entity.currentStepIndex) null))
                     type: typography
                     variant: body
                   }]
@@ -316,7 +316,7 @@ orbital WizardOrbital {
           }, {
             allowNavigation: false
             currentStep: @entity.totalSteps
-            steps: (if (= (array/len @config.stepLabels) 0) @entity.wizardSteps (array/map @entity.wizardSteps (fn step { id: (object/get @step id ""), title: (array/nth @config.stepLabels @index), description: (if (= (array/len @config.stepDescriptions) 0) (object/get @step description "") (array/nth @config.stepDescriptions @index)) })))
+            steps: (if (= (array/len @config.stepLabels) 0) @entity.wizardSteps (array/map @entity.wizardSteps (fn step { id: (object/get @step id ""), title: (if (>= @index 0) (array/nth @config.stepLabels @index) null), description: (if (= (array/len @config.stepDescriptions) 0) (object/get @step description "") (if (>= @index 0) (array/nth @config.stepDescriptions @index) null)) })))
             type: wizard-progress
           }, {
             action: RESTART
@@ -331,10 +331,10 @@ orbital WizardOrbital {
         })
       RETREAT -> running
         (set @entity.currentStepIndex (- @entity.currentStepIndex 1))
-        (set @entity.currentStepLabel (let ((step (array/nth @config.steps @entity.currentStepIndex))) (if (= @step null) "" (object/get @step label))))
-        (set @entity.currentStepDescription (let ((step (array/nth @config.steps @entity.currentStepIndex))) (if (= @step null) "" (object/get @step description ""))))
-        (set @entity.currentStepIcon (let ((step (array/nth @config.steps @entity.currentStepIndex))) (if (= @step null) circle (object/get @step icon circle))))
-        (set @entity.currentFields (let ((step (array/nth @config.steps @entity.currentStepIndex))) (if (= @step null) [] (object/get @step fields []))))
+        (set @entity.currentStepLabel (let ((step (if (>= @entity.currentStepIndex 0) (array/nth @config.steps @entity.currentStepIndex) null))) (if (= @step null) "" (object/get @step label))))
+        (set @entity.currentStepDescription (let ((step (if (>= @entity.currentStepIndex 0) (array/nth @config.steps @entity.currentStepIndex) null))) (if (= @step null) "" (object/get @step description ""))))
+        (set @entity.currentStepIcon (let ((step (if (>= @entity.currentStepIndex 0) (array/nth @config.steps @entity.currentStepIndex) null))) (if (= @step null) circle (object/get @step icon circle))))
+        (set @entity.currentFields (let ((step (if (>= @entity.currentStepIndex 0) (array/nth @config.steps @entity.currentStepIndex) null))) (if (= @step null) [] (object/get @step fields []))))
         (set @entity.isFirstStep (= @entity.currentStepIndex 0))
         (set @entity.isLastStep (= @entity.currentStepIndex (- @entity.totalSteps 1)))
         (set @entity.primaryActionLabel (if (= @entity.currentStepIndex (- @entity.totalSteps 1)) Submit Next))
@@ -353,7 +353,7 @@ orbital WizardOrbital {
           }, {
             allowNavigation: false
             currentStep: @entity.currentStepIndex
-            steps: (if (= (array/len @config.stepLabels) 0) @entity.wizardSteps (array/map @entity.wizardSteps (fn step { id: (object/get @step id ""), title: (array/nth @config.stepLabels @index), description: (if (= (array/len @config.stepDescriptions) 0) (object/get @step description "") (array/nth @config.stepDescriptions @index)) })))
+            steps: (if (= (array/len @config.stepLabels) 0) @entity.wizardSteps (array/map @entity.wizardSteps (fn step { id: (object/get @step id ""), title: (if (>= @index 0) (array/nth @config.stepLabels @index) null), description: (if (= (array/len @config.stepDescriptions) 0) (object/get @step description "") (if (>= @index 0) (array/nth @config.stepDescriptions @index) null)) })))
             type: wizard-progress
           }, {
             children: [{
@@ -365,12 +365,12 @@ orbital WizardOrbital {
                   type: icon
                 }, {
                   children: [{
-                    content: (if (= (array/len @config.stepLabels) 0) @entity.currentStepLabel (array/nth @config.stepLabels @entity.currentStepIndex))
+                    content: (if (= (array/len @config.stepLabels) 0) @entity.currentStepLabel (if (>= @entity.currentStepIndex 0) (array/nth @config.stepLabels @entity.currentStepIndex) null))
                     type: typography
                     variant: h2
                   }, {
                     color: muted
-                    content: (if (= (array/len @config.stepDescriptions) 0) @entity.currentStepDescription (array/nth @config.stepDescriptions @entity.currentStepIndex))
+                    content: (if (= (array/len @config.stepDescriptions) 0) @entity.currentStepDescription (if (>= @entity.currentStepIndex 0) (array/nth @config.stepDescriptions @entity.currentStepIndex) null))
                     type: typography
                     variant: body
                   }]
@@ -491,7 +491,7 @@ orbital WizardOrbital {
           }, {
             allowNavigation: false
             currentStep: @entity.totalSteps
-            steps: (if (= (array/len @config.stepLabels) 0) @entity.wizardSteps (array/map @entity.wizardSteps (fn step { id: (object/get @step id ""), title: (array/nth @config.stepLabels @index), description: (if (= (array/len @config.stepDescriptions) 0) (object/get @step description "") (array/nth @config.stepDescriptions @index)) })))
+            steps: (if (= (array/len @config.stepLabels) 0) @entity.wizardSteps (array/map @entity.wizardSteps (fn step { id: (object/get @step id ""), title: (if (>= @index 0) (array/nth @config.stepLabels @index) null), description: (if (= (array/len @config.stepDescriptions) 0) (object/get @step description "") (if (>= @index 0) (array/nth @config.stepDescriptions @index) null)) })))
             type: wizard-progress
           }, {
             action: RESTART

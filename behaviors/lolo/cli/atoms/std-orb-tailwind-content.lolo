@@ -120,7 +120,7 @@ orbital OrbTailwindContentOrbital {
         (set @entity.acc [])
         (emit TAILWIND_NEXT { })
       TAILWIND_NEXT -> working when (< @entity.cursor (array/len @entity.hits))
-        (behavior/source (array/nth @entity.hits @entity.cursor) { key: "source" emit: { success: TAILWIND_SOURCED, failure: TAILWIND_SOURCE_FAILED } })
+        (behavior/source (if (>= @entity.cursor 0) (array/nth @entity.hits @entity.cursor) null) { key: "source" emit: { success: TAILWIND_SOURCED, failure: TAILWIND_SOURCE_FAILED } })
       TAILWIND_NEXT -> working when (>= @entity.cursor (array/len @entity.hits))
         (set @entity.tokens (array/sort (array/unique (array/concat @config.extraTokens @entity.acc))))
         (emit TAILWIND_BUILT { })

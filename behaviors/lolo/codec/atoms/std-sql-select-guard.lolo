@@ -23,7 +23,7 @@ orbital SqlSelectGuardOrbital {
                     (let ((m (object/get @a "m")) (sk (object/get @a "sk")))
   (if (< @i @sk)
     @a
-    (let ((c (array/nth @ch @i)) (c1 (if (< (+ @i 1) @n) (array/nth @ch (+ @i 1)) "")))
+    (let ((c (if (>= @i 0) (array/nth @ch @i) null)) (c1 (if (< (+ @i 1) @n) (let ((nxi (+ @i 1))) (if (>= @nxi 0) (array/nth @ch @nxi) null)) "")))
       (if (= @m "n")
         (if (and (= @c "-") (= @c1 "-"))
           (object/merge @a { m: "line", sk: (+ @i 2), o: (array/append (object/get @a "o") " ") })
@@ -32,7 +32,7 @@ orbital SqlSelectGuardOrbital {
             (if (= @c "'")
               (object/merge @a { m: (if (let ((t (str/replace-pattern (str/join (array/slice @ch 0 @i) "") "[ \t\n\r]+$" "")))
   (let ((tc (str/split @t "")))
-    (and (> (array/len @tc) 0) (array/includes ["e", "E"] (array/last @tc)) (or (= (array/len @tc) 1) (not (validate/pattern (default (array/nth @tc (- (array/len @tc) 2)) "") "^[A-Za-z0-9_$]$")))))) "esq" "sq"), o: (array/append (object/get @a "o") "''") })
+    (and (> (array/len @tc) 0) (array/includes ["e", "E"] (array/last @tc)) (or (= (array/len @tc) 1) (not (validate/pattern (default (let ((nxi (- (array/len @tc) 2))) (if (>= @nxi 0) (array/nth @tc @nxi) null)) "") "^[A-Za-z0-9_$]$")))))) "esq" "sq"), o: (array/append (object/get @a "o") "''") })
               (if (= @c "\"")
                 (object/merge @a { m: "dq", o: (array/append (object/get @a "o") "\"\"") })
                 (if (= @c "$")

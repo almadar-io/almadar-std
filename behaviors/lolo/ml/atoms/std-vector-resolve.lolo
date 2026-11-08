@@ -397,9 +397,9 @@ orbital VectorResolveOrbital {
         (emit USER_STORE_NEEDED { model: @entity.model, path: @entity.userPath })
 
       FINISHED -> idle
-        (set @entity.heldVectors (array/concat @entity.heldVectors (array/map @entity.texts (fn ft (let ((en (array/nth @entity.entries (array/indexOf @entity.texts @ft)))) (if @en.found @en.vector (array/nth @entity.got (array/indexOf @entity.misses @ft))))))))
+        (set @entity.heldVectors (array/concat @entity.heldVectors (array/map @entity.texts (fn ft (let ((en (let ((nxi (array/indexOf @entity.texts @ft))) (if (>= @nxi 0) (array/nth @entity.entries @nxi) null)))) (if @en.found @en.vector (let ((nxi (array/indexOf @entity.misses @ft))) (if (>= @nxi 0) (array/nth @entity.got @nxi) null))))))))
         (set @entity.heldTexts (array/concat @entity.heldTexts @entity.texts))
-        (emit VECTORS_ANSWERED { model: @entity.model, vectors: (array/map @entity.wanted (fn w { key: @w.key, vector: (default (array/nth @entity.heldVectors (array/indexOf @entity.heldTexts @w.text)) []) })) })
+        (emit VECTORS_ANSWERED { model: @entity.model, vectors: (array/map @entity.wanted (fn w { key: @w.key, vector: (default (let ((nxi (array/indexOf @entity.heldTexts @w.text))) (if (>= @nxi 0) (array/nth @entity.heldVectors @nxi) null)) []) })) })
     }
 
     state reading {
@@ -443,13 +443,13 @@ orbital VectorResolveOrbital {
         (emit LLM_EMBED_LM { texts: @payload.texts, model: @entity.embedModel })
       EMBED_BATCH -> idle when (and (!= @entity.providerKind "openrouter-shared") (!= @entity.providerKind "openrouter-own") (!= @entity.providerKind "openai-shared") (!= @entity.providerKind "openai-own") (!= @entity.providerKind "lmstudio"))
         (emit VECTORS_REFUSED { code: "ORB_VECTOR_PROVIDER_KIND", detail: (str/concat "no embedding instance serves the provider kind `" @entity.providerKind "`") })
-      LLM_EMBED_RESULT -> idle when (!= (array/len @payload.embeddings) (array/len (default (array/nth @entity.chunks @entity.chunkIdx) [])))
-        (emit VECTORS_REFUSED { code: "ORB_VECTOR_EMBED_COUNT", detail: (str/concat "the embedder returned " (array/len @payload.embeddings) " vectors for " (array/len (default (array/nth @entity.chunks @entity.chunkIdx) [])) " texts") })
-      LLM_EMBED_RESULT -> embedding when (and (== (array/len @payload.embeddings) (array/len (default (array/nth @entity.chunks @entity.chunkIdx) []))) (< (+ @entity.chunkIdx 1) (array/len @entity.chunks)))
+      LLM_EMBED_RESULT -> idle when (!= (array/len @payload.embeddings) (array/len (default (if (>= @entity.chunkIdx 0) (array/nth @entity.chunks @entity.chunkIdx) null) [])))
+        (emit VECTORS_REFUSED { code: "ORB_VECTOR_EMBED_COUNT", detail: (str/concat "the embedder returned " (array/len @payload.embeddings) " vectors for " (array/len (default (if (>= @entity.chunkIdx 0) (array/nth @entity.chunks @entity.chunkIdx) null) [])) " texts") })
+      LLM_EMBED_RESULT -> embedding when (and (== (array/len @payload.embeddings) (array/len (default (if (>= @entity.chunkIdx 0) (array/nth @entity.chunks @entity.chunkIdx) null) []))) (< (+ @entity.chunkIdx 1) (array/len @entity.chunks)))
         (set @entity.got (array/concat @entity.got @payload.embeddings))
         (set @entity.chunkIdx (+ @entity.chunkIdx 1))
-        (emit EMBED_BATCH { texts: (default (array/nth @entity.chunks @entity.chunkIdx) []) })
-      LLM_EMBED_RESULT -> persisting when (and (== (array/len @payload.embeddings) (array/len (default (array/nth @entity.chunks @entity.chunkIdx) []))) (>= (+ @entity.chunkIdx 1) (array/len @entity.chunks)))
+        (emit EMBED_BATCH { texts: (default (if (>= @entity.chunkIdx 0) (array/nth @entity.chunks @entity.chunkIdx) null) []) })
+      LLM_EMBED_RESULT -> persisting when (and (== (array/len @payload.embeddings) (array/len (default (if (>= @entity.chunkIdx 0) (array/nth @entity.chunks @entity.chunkIdx) null) []))) (>= (+ @entity.chunkIdx 1) (array/len @entity.chunks)))
         (set @entity.got (array/concat @entity.got @payload.embeddings))
         (emit VECTORS_EMBEDDED { model: @entity.model, texts: @entity.misses, vectors: @entity.got })
         (emit VECTOR_WRITE { path: (os/path-base @entity.userPath), anchor: @entity.userAnchor, model: @entity.model, records: (array/map (array/range 0 (array/len @entity.misses)) (fn wi { text: (default (array/nth @entity.misses @wi) ""), vector: (default (array/nth @entity.got @wi) []) })) })

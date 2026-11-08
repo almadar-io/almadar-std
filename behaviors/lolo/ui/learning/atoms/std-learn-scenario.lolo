@@ -207,7 +207,7 @@ orbital ScenarioOrbital {
 
       CHOOSE -> idle when (and (== @entity.active true) (== @entity.done false))
         (let (
-            (choice (array/nth @entity.choices (default ?index -1)))
+            (choice (let ((nxi (default ?index -1))) (if (>= @nxi 0) (array/nth @entity.choices @nxi) null)))
             (nextId (if (== @choice null) "" (object/get @choice next)))
             (nextNode (array/find @entity.nodes (fn n (== (object/get @n id) @nextId))))
             (nextChoices (if (== @nextNode null) [] (object/get @nextNode choices [])))

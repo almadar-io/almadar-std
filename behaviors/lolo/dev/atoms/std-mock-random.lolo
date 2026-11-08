@@ -41,17 +41,17 @@ orbital MockRandomOrbital {
       DRAW_WORDS -> ready
         (set @entity.draws (array/reduce (array/range ?count) [@entity.state] (fn acc i (array/append @acc (math/mod (+ (* (default (array/last @acc) 0) 1664525) 1013904223) 4294967296)))))
         (set @entity.state (default (array/last @entity.draws) @entity.state))
-        (set @entity.text (str/join (array/map (array/drop @entity.draws 1) (fn f (default (array/nth @config.words (math/floor (* (/ @f 4294967296) (array/len @config.words)))) ""))) " "))
+        (set @entity.text (str/join (array/map (array/drop @entity.draws 1) (fn f (default (let ((nxi (math/floor (* (/ @f 4294967296) (array/len @config.words))))) (if (>= @nxi 0) (array/nth @config.words @nxi) null)) ""))) " "))
         (emit MOCK_DRAWN { text: @entity.text, int: @entity.int, ms: @entity.ms })
       DRAW_EMAIL -> ready
         (set @entity.draws (array/reduce (array/range 2) [@entity.state] (fn acc i (array/append @acc (math/mod (+ (* (default (array/last @acc) 0) 1664525) 1013904223) 4294967296)))))
         (set @entity.state (default (array/last @entity.draws) @entity.state))
-        (set @entity.text (str/concat (str/lower (default (array/nth (array/map (array/drop @entity.draws 1) (fn f (default (array/nth @config.words (math/floor (* (/ @f 4294967296) (array/len @config.words)))) ""))) 0) "")) (str/slice "x@y" 1 2) (str/lower (default (array/nth (array/map (array/drop @entity.draws 1) (fn f (default (array/nth @config.words (math/floor (* (/ @f 4294967296) (array/len @config.words)))) ""))) 1) "")) ".com"))
+        (set @entity.text (str/concat (str/lower (default (array/nth (array/map (array/drop @entity.draws 1) (fn f (default (let ((nxi (math/floor (* (/ @f 4294967296) (array/len @config.words))))) (if (>= @nxi 0) (array/nth @config.words @nxi) null)) ""))) 0) "")) (str/slice "x@y" 1 2) (str/lower (default (array/nth (array/map (array/drop @entity.draws 1) (fn f (default (let ((nxi (math/floor (* (/ @f 4294967296) (array/len @config.words))))) (if (>= @nxi 0) (array/nth @config.words @nxi) null)) ""))) 1) "")) ".com"))
         (emit MOCK_DRAWN { text: @entity.text, int: @entity.int, ms: @entity.ms })
       DRAW_URL -> ready
         (set @entity.draws (array/reduce (array/range 2) [@entity.state] (fn acc i (array/append @acc (math/mod (+ (* (default (array/last @acc) 0) 1664525) 1013904223) 4294967296)))))
         (set @entity.state (default (array/last @entity.draws) @entity.state))
-        (set @entity.text (str/concat "https://example.com/" (str/lower (default (array/nth (array/map (array/drop @entity.draws 1) (fn f (default (array/nth @config.words (math/floor (* (/ @f 4294967296) (array/len @config.words)))) ""))) 0) "")) "-" (str/lower (default (array/nth (array/map (array/drop @entity.draws 1) (fn f (default (array/nth @config.words (math/floor (* (/ @f 4294967296) (array/len @config.words)))) ""))) 1) ""))))
+        (set @entity.text (str/concat "https://example.com/" (str/lower (default (array/nth (array/map (array/drop @entity.draws 1) (fn f (default (let ((nxi (math/floor (* (/ @f 4294967296) (array/len @config.words))))) (if (>= @nxi 0) (array/nth @config.words @nxi) null)) ""))) 0) "")) "-" (str/lower (default (array/nth (array/map (array/drop @entity.draws 1) (fn f (default (let ((nxi (math/floor (* (/ @f 4294967296) (array/len @config.words))))) (if (>= @nxi 0) (array/nth @config.words @nxi) null)) ""))) 1) ""))))
         (emit MOCK_DRAWN { text: @entity.text, int: @entity.int, ms: @entity.ms })
       DRAW_PHONE -> ready
         (set @entity.draws (array/reduce (array/range 3) [@entity.state] (fn acc i (array/append @acc (math/mod (+ (* (default (array/last @acc) 0) 1664525) 1013904223) 4294967296)))))

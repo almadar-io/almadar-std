@@ -293,6 +293,8 @@ export const STD_MODULES = [
   'credential',
   'rsa',
   'ecdsa',
+  'ed25519',
+  'rsa-pss',
   'jws',
   'ecdh',
   'aes-gcm',

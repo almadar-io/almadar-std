@@ -263,8 +263,8 @@ orbital ImageOrbital {
       IMAGE_HTTP_FAILED -> idle when (and (!= @config.provider "local") (< (object/get (default (json/parse @payload.key ImageJob) { request: { prompt: "" }, attempt: 0, delayMs: 0, dropped: [], supported: [] }) attempt 0) 2))
         (emit IMAGE_DELAY_START {
           key: (let ((j (default (json/parse @payload.key ImageJob) { request: { prompt: "" }, attempt: 0, delayMs: 0, dropped: [], supported: [] })))
-            (json/stringify { request: @j.request, attempt: (+ @j.attempt 1), delayMs: (array/nth [500, 2000] @j.attempt), supported: @j.supported, dropped: @j.dropped })),
-          delayMs: (default (array/nth [500, 2000] (object/get (default (json/parse @payload.key ImageJob) { request: { prompt: "" }, attempt: 0, delayMs: 0, dropped: [], supported: [] }) attempt 0)) 2000)
+            (json/stringify { request: @j.request, attempt: (+ @j.attempt 1), delayMs: (if (>= @j.attempt 0) (array/nth [500, 2000] @j.attempt) null), supported: @j.supported, dropped: @j.dropped })),
+          delayMs: (default (let ((nxi (object/get (default (json/parse @payload.key ImageJob) { request: { prompt: "" }, attempt: 0, delayMs: 0, dropped: [], supported: [] }) attempt 0))) (if (>= @nxi 0) (array/nth [500, 2000] @nxi) null)) 2000)
         })
       IMAGE_HTTP_FAILED -> idle when (or (= @config.provider "local") (>= (object/get (default (json/parse @payload.key ImageJob) { request: { prompt: "" }, attempt: 0, delayMs: 0, dropped: [], supported: [] }) attempt 0) 2))
         (emit IMAGE_FAILED { code: "SERVICE_ERROR", message: (str/concat "ImageClient: " @config.provider " request failed: " @payload.error) })
@@ -272,8 +272,8 @@ orbital ImageOrbital {
       IMAGE_HTTP_OK -> idle when (and (>= @payload.status 500) (!= @config.provider "local") (< (object/get (default (json/parse @payload.key ImageJob) { request: { prompt: "" }, attempt: 0, delayMs: 0, dropped: [], supported: [] }) attempt 0) 2))
         (emit IMAGE_DELAY_START {
           key: (let ((j (default (json/parse @payload.key ImageJob) { request: { prompt: "" }, attempt: 0, delayMs: 0, dropped: [], supported: [] })))
-            (json/stringify { request: @j.request, attempt: (+ @j.attempt 1), delayMs: (array/nth [500, 2000] @j.attempt), supported: @j.supported, dropped: @j.dropped })),
-          delayMs: (default (array/nth [500, 2000] (object/get (default (json/parse @payload.key ImageJob) { request: { prompt: "" }, attempt: 0, delayMs: 0, dropped: [], supported: [] }) attempt 0)) 2000)
+            (json/stringify { request: @j.request, attempt: (+ @j.attempt 1), delayMs: (if (>= @j.attempt 0) (array/nth [500, 2000] @j.attempt) null), supported: @j.supported, dropped: @j.dropped })),
+          delayMs: (default (let ((nxi (object/get (default (json/parse @payload.key ImageJob) { request: { prompt: "" }, attempt: 0, delayMs: 0, dropped: [], supported: [] }) attempt 0))) (if (>= @nxi 0) (array/nth [500, 2000] @nxi) null)) 2000)
         })
       IMAGE_HTTP_OK -> idle when (and (or (< @payload.status 200) (>= @payload.status 300)) (not (and (>= @payload.status 500) (!= @config.provider "local") (< (object/get (default (json/parse @payload.key ImageJob) { request: { prompt: "" }, attempt: 0, delayMs: 0, dropped: [], supported: [] }) attempt 0) 2))))
         (emit IMAGE_FAILED { code: "SERVICE_ERROR", message: (str/concat "ImageClient: " @config.provider " returned " @payload.status ": " @payload.body) })

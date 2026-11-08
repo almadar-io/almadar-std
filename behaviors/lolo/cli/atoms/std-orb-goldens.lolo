@@ -10,7 +10,7 @@ type GoldenValue = string | number | boolean | [GoldenValue?] | Map string Golde
 type GoldenPayload = Map string GoldenValue?
 type GoldenEmit = { event : string!, payload : GoldenPayload, optionsAt : number }
 type GoldenEmitted = { type : string!, payload : GoldenPayload }
-type GoldenExpect = { fired : boolean, state : string, emits : [GoldenEmit], neverEmits : [string], exactEmits : [GoldenEmit], emitCounts : Map string number, effects : [GoldenPayload], rendered : [GoldenPayload], entity : GoldenPayload }
+type GoldenExpect = { fired : boolean, state : string, emits : [GoldenEmit], neverEmits : [string], exactEmits : [GoldenEmit], emitCounts : Map string number, effects : [GoldenEffect], rendered : [GoldenPayload], entity : GoldenPayload }
 type GoldenIdentity = Map string GoldenValue?
 type GoldenAnswerError = { kind : string!, message : string! }
 type GoldenAnswer = { operator : string!, ok : GoldenValue?, error : GoldenAnswerError }
@@ -25,7 +25,7 @@ type GoldenTraitRef = { name : string! }
 type GoldenOrbitalRef = { name : string!, traits : [GoldenTraitRef] }
 type GoldenProgramRef = { orbitals : [GoldenOrbitalRef]! }
 type GoldenState = { before : string, after : string }
-type GoldenEffect = { type : string, args : [GoldenValue?]!, status : string, error : string }
+type GoldenEffect = { type : string, args : [GoldenValue?], status : string, error : string, nested : [GoldenEffect] }
 type GoldenOutcome = { trait : string!, fired : boolean, emitted : [GoldenEmitted] }
 type GoldenResult = { transitionFired : boolean!, guard : string, state : GoldenState!, emitted : [GoldenEmitted]!, outcomes : [GoldenOutcome], effects : [GoldenEffect], rendered : [GoldenPayload], entityAfter : GoldenPayload? }
 type GoldenPlayed = { trait : string!, event : string!, result : GoldenResult! }
@@ -208,8 +208,33 @@ orbital GoldensOrbital {
                 (let ((wantE (object/get @ex "effects" null)) (gotE (object/get @rr "effects" [])))
                   (if (== @wantE null)
                     []
-                    (let ((hitE (object/get (array/reduce @gotE { k: 0 } (fn m e (if (and (< (object/get @m "k") (array/len @wantE)) (let ((x (default (array/nth @wantE (object/get @m "k")) @nx)) (em (default (as @e GoldenPayload) @nx))) (array/every (array/filter (object/keys @x) (fn key (!= @key "optionsAt"))) (fn key (= (let ((av : GoldenValue? (if (= @key "key") (let ((ka (array/nth (object/get @e "args") (let ((oa (object/get @x "optionsAt" 2))) (if (validate/number @oa) @oa 2))))) (if (validate/object @ka) (object/get @ka "key") null)) (if (str/startsWith @key "arg") (let ((idx (str/to-number (str/slice @key 3 (str/len @key))))) (if (= @idx null) null (array/nth (object/get @e "args") @idx))) (object/get @em @key null))))) @av) (object/get @x @key)))))) { k: (+ (object/get @m "k") 1) } @m))) "k")))
-                      (if (< @hitE (array/len @wantE)) [(str/concat "step " (array/len @acc) ": effect " @hitE " " (json/stringify (array/nth @wantE @hitE)) " not found in order; actual effects: " (json/stringify @gotE))] []))))
+                    (array/concat
+                    (let ((hitE (object/get (array/reduce @gotE { k: 0 } (fn m e (if (and (< (object/get @m "k") (array/len @wantE)) (let ((x (default (array/nth @wantE (object/get @m "k")) @nx)) (em (default (as @e GoldenPayload) @nx))) (array/every (array/filter (object/keys @x) (fn key (and (!= @key "optionsAt") (!= @key "nested")))) (fn key (= (let ((av : GoldenValue? (if (= @key "key") (let ((ka (array/nth (object/get @e "args") (let ((oa (object/get @x "optionsAt" 2))) (if (validate/number @oa) @oa 2))))) (if (validate/object @ka) (object/get @ka "key") null)) (if (str/startsWith @key "arg") (let ((idx (str/to-number (str/slice @key 3 (str/len @key))))) (if (= @idx null) null (array/nth (object/get @e "args") @idx))) (object/get @em @key null))))) @av) (object/get @x @key)))))) { k: (+ (object/get @m "k") 1) } @m))) "k")))
+                      (if (< @hitE (array/len @wantE)) [(str/concat "step " (array/len @acc) ": effect " @hitE " " (json/stringify (array/nth @wantE @hitE)) " not found in order; actual effects: " (json/stringify @gotE))] []))
+                    (let ((nr : GoldenEffect { type: "", nested: [] }) (wr (default (as (object/set @nr "nested" @wantE) GoldenEffect) @nr)) (gr (default (as (object/set @nr "nested" @gotE) GoldenEffect) @nr)))
+                      (let ((W (tree/fold @wr
+                  (fn (n k)
+                    (array/concat
+                      [{ path: "", node: (object/omit @n ["nested"]), kids: (array/len (object/get @n "nested" [])) }]
+                      (array/flatten (array/map (array/range 0 (array/len (object/get @k "nested" [])))
+                        (fn i (array/map (default (array/nth (object/get @k "nested" []) @i) [])
+                          (fn en { path: (str/concat "~" @i (object/get @en "path")), node: (object/get @en "node"), kids: (object/get @en "kids") })))))))
+                  "GoldenEffect")))
+        (if (= (array/len (default @W [])) (+ 1 (array/len @wantE))) []
+                        (let ((M (tree/fold @gr
+                  (fn (n k)
+                    (let ((em (default (as @n GoldenPayload) @nx)) (args : [GoldenValue?] (default (object/get @n "args") [])))
+                      (object/fromEntries (array/map (default @W [])
+                        (fn w (let ((x (object/get @w "node")) (kids (object/get @w "kids")))
+                          [(object/get @w "path")
+                           (and (array/every (array/filter (object/keys @x) (fn key (and (!= @key "optionsAt") (!= @key "nested")))) (fn key (= (let ((av : GoldenValue? (if (= @key "key") (let ((ka (array/nth @args (let ((oa (object/get @x "optionsAt" 2))) (if (validate/number @oa) @oa 2))))) (if (validate/object @ka) (object/get @ka "key") null)) (if (str/startsWith @key "arg") (let ((idx (str/to-number (str/slice @key 3 (str/len @key))))) (if (= @idx null) null (array/nth @args @idx))) (object/get @em @key null))))) @av) (object/get @x @key))))
+                                (>= (object/get (array/reduce (array/range 0 (array/len (object/get @n "nested" []))) { c: 0 }
+                                      (fn m i (if (and (< (object/get @m "c") @kids)
+                                                       (default (object/get (default (array/nth (object/get @k "nested" []) @i) {}) (str/concat (object/get @w "path") "~" (object/get @m "c")) false) false))
+                                                { c: (+ (object/get @m "c") 1) }
+                                                @m))) "c") @kids))]))))))
+                  "GoldenEffect")))
+          (if (object/get (default @M {}) "" false) [] [(str/concat "step " (array/len @acc) ": nested effects " (json/stringify @wantE) " not matched under their effects, in order; actual effects: " (json/stringify @gotE))]))))))))
                 (let ((wantR (object/get @ex "rendered" null)) (gotR (object/get @rr "rendered" [])))
                   (if (== @wantR null)
                     []

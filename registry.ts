@@ -53,7 +53,7 @@ import { BEHAVIOR_OPERATORS } from './modules/behavior.js';
 import { PROGRAM_OPERATORS } from './modules/program.js';
 import { BYTES_OPERATORS } from './modules/bytes.js';
 import { BIT_OPERATORS } from './modules/bit.js';
-import { BASE64_OPERATORS, BROTLI_OPERATORS, GZIP_OPERATORS, TAR_OPERATORS, HASH_OPERATORS, HMAC_OPERATORS, CREDENTIAL_VALUE_OPERATORS, RSA_OPERATORS, ECDSA_OPERATORS, JWS_OPERATORS, ECDH_OPERATORS, AES_GCM_OPERATORS } from './modules/codec.js';
+import { BASE64_OPERATORS, BROTLI_OPERATORS, GZIP_OPERATORS, TAR_OPERATORS, HASH_OPERATORS, HMAC_OPERATORS, CREDENTIAL_VALUE_OPERATORS, RSA_OPERATORS, RSA_PSS_OPERATORS, ECDSA_OPERATORS, ED25519_OPERATORS, JWS_OPERATORS, ECDH_OPERATORS, AES_GCM_OPERATORS } from './modules/codec.js';
 
 // ============================================================================
 // Combined Registry
@@ -109,6 +109,8 @@ export const STD_OPERATORS: Record<string, StdOperatorMeta> = {
   ...CREDENTIAL_VALUE_OPERATORS,
   ...RSA_OPERATORS,
   ...ECDSA_OPERATORS,
+  ...ED25519_OPERATORS,
+  ...RSA_PSS_OPERATORS,
   ...JWS_OPERATORS,
   ...ECDH_OPERATORS,
   ...AES_GCM_OPERATORS,
@@ -168,6 +170,8 @@ export const STD_OPERATORS_BY_MODULE: Record<string, Record<string, StdOperatorM
   credential: CREDENTIAL_VALUE_OPERATORS,
   rsa: RSA_OPERATORS,
   ecdsa: ECDSA_OPERATORS,
+  ed25519: ED25519_OPERATORS,
+  'rsa-pss': RSA_PSS_OPERATORS,
   jws: JWS_OPERATORS,
   ecdh: ECDH_OPERATORS,
   'aes-gcm': AES_GCM_OPERATORS,

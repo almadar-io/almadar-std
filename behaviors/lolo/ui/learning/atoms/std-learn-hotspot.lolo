@@ -298,7 +298,7 @@ orbital HotspotOrbital {
         (let (
             (nextIndex (+ @entity.promptIndex 1))
             (finished (>= @nextIndex (array/len @entity.prompts)))
-            (next (default (array/nth @entity.prompts (math/min @nextIndex (- (array/len @entity.prompts) 1))) { prompt: "", targetId: "", explanation: "" }))
+            (next (default (let ((nxi (math/min @nextIndex (- (array/len @entity.prompts) 1)))) (if (>= @nxi 0) (array/nth @entity.prompts @nxi) null)) { prompt: "", targetId: "", explanation: "" }))
             (circles (array/map @entity.shapes (fn s { type: circle, id: (object/get @s id), x: (object/get @s x), y: (object/get @s y), radius: (object/get @s radius 22), tone: (object/get @s color "series-1"), fillTone: (object/get @s color "series-1"), fillStyle: "solid" })))
             (labels (array/map @entity.shapes (fn s { type: text, id: (str/concat "label-" (object/get @s id)), x: (object/get @s x), y: (+ (object/get @s y) (object/get @s radius 22) 14), text: (object/get @s label), textSize: "xs", align: "center", tone: "label" })))
           )

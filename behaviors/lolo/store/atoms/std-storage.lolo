@@ -185,7 +185,7 @@ orbital StorageOrbital {
       STORAGE_BATCH_NEXT -> idle when (>= @payload.batch.idx (array/len @payload.batch.files))
         (emit STORAGE_UPLOADED_MANY { items: @payload.batch.items, count: (array/len @payload.batch.items) })
       STORAGE_BATCH_NEXT -> idle when (< @payload.batch.idx (array/len @payload.batch.files))
-        (let ((f (array/nth @payload.batch.files @payload.batch.idx)))
+        (let ((f (if (>= @payload.batch.idx 0) (array/nth @payload.batch.files @payload.batch.idx) null)))
           (if (= @f null)
             (emit STORAGE_FAILED { message: "The batch has no file at this position" })
             (emit STORAGE_RESOLVE {

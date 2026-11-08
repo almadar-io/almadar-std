@@ -280,11 +280,11 @@ orbital OrbShellRenderersOrbital {
         (set @entity.tcur 0)
         (emit NS_LIST { })
       NS_LIST -> planning when (< @entity.tcur 4)
-        (os/list-dir { anchor: "cwd" path: (str/concat @entity.pack "/renderers/" (default (array/nth (str/split "atoms|molecules|organisms|templates" "|") @entity.tcur) "")) } { key: "dir", emit: { success: NS_DIR, failure: NS_DIR_MISSING } })
+        (os/list-dir { anchor: "cwd" path: (str/concat @entity.pack "/renderers/" (default (if (>= @entity.tcur 0) (array/nth (str/split "atoms|molecules|organisms|templates" "|") @entity.tcur) null) "")) } { key: "dir", emit: { success: NS_DIR, failure: NS_DIR_MISSING } })
       NS_DIR -> planning
         (set @entity.have (array/concat @entity.have
           (array/map (array/filter @payload.entries (fn en (str/endsWith (object/get @en "name") (str/concat "." @entity.ext))))
-            (fn en (str/concat (default (array/nth (str/split "atoms|molecules|organisms|templates" "|") @entity.tcur) "") "/" (object/get @en "name"))))))
+            (fn en (str/concat (default (if (>= @entity.tcur 0) (array/nth (str/split "atoms|molecules|organisms|templates" "|") @entity.tcur) null) "") "/" (object/get @en "name"))))))
         (set @entity.tcur (+ @entity.tcur 1))
         (emit NS_LIST { })
       NS_DIR_MISSING -> planning
@@ -294,7 +294,7 @@ orbital OrbShellRenderersOrbital {
         (set @entity.hcur 0)
         (emit NS_FREAD { })
       NS_FREAD -> planning when (< @entity.hcur (array/len @entity.have))
-        (os/read-file { anchor: "cwd" path: (str/concat @entity.pack "/renderers/" (default (array/nth @entity.have @entity.hcur) "")) } { key: "body", emit: { success: NS_FILE_READ, failure: NS_FILE_FAIL } })
+        (os/read-file { anchor: "cwd" path: (str/concat @entity.pack "/renderers/" (default (if (>= @entity.hcur 0) (array/nth @entity.have @entity.hcur) null) "")) } { key: "body", emit: { success: NS_FILE_READ, failure: NS_FILE_FAIL } })
       NS_FILE_READ -> planning when (= (bytes/to-string @payload.data) null)
         (emit NS_FILE_FAIL { })
       NS_FILE_READ -> planning when (and (!= (bytes/to-string @payload.data) null) (= (json/parse @entity.listsText GateLists) null))
@@ -302,8 +302,8 @@ orbital OrbShellRenderersOrbital {
         (emit NS_READ_FAIL { })
       ;; platform and ext are set only from the targets the arguments guard admits, so each table has their key
       NS_FILE_READ -> planning when (and (!= (bytes/to-string @payload.data) null) (!= (json/parse @entity.listsText GateLists) null) (str/includes (default (bytes/to-string @payload.data) "") "🔧"))
-        (set @entity.stubbed (array/append @entity.stubbed (default (array/nth @entity.have @entity.hcur) "")))
-        (set @entity.violations (array/concat @entity.violations (let ((tx (default (bytes/to-string @payload.data) "")) (ix (array/indexOf @entity.keys (default (array/nth @entity.have @entity.hcur) ""))))
+        (set @entity.stubbed (array/append @entity.stubbed (default (if (>= @entity.hcur 0) (array/nth @entity.have @entity.hcur) null) "")))
+        (set @entity.violations (array/concat @entity.violations (let ((tx (default (bytes/to-string @payload.data) "")) (ix (array/indexOf @entity.keys (default (if (>= @entity.hcur 0) (array/nth @entity.have @entity.hcur) null) ""))))
           (if (< @ix 0) (array/take @entity.violations 0)
             (let ((nm (object/get (default (array/nth @entity.pats @ix) { name: "", tier: "" }) "name")) (tr (object/get (default (array/nth @entity.pats @ix) { name: "", tier: "" }) "tier")) (gl (json/parse @entity.listsText GateLists)))
               (array/concat
@@ -320,13 +320,13 @@ orbital OrbShellRenderersOrbital {
                 (let ((pd (object/get (default (array/nth @entity.pats @ix) { name: "", tier: "" }) "props")))
                   (array/map (array/filter (if (= @pd null) (array/take @entity.violations 0) (array/filter (object/keys @pd) (fn pk (or (= (object/get (object/get @pd @pk) "required") true) (array/includes (str/split "event-ref|event" "|") (default (object/get (object/get @pd @pk) "kind") "")))))) (fn pk (and (not (str/includes @tx (json/stringify @pk))) (not (and (= @pk "children") (str/includes @tx ".children()"))))))
                     (fn pk (str/concat "[props-contract] " @nm ": declared prop " (json/stringify @pk) " is not referenced by the body"))))))))))
-        (set @entity.violations (array/concat @entity.violations (let ((tx (default (bytes/to-string @payload.data) "")) (ix (array/indexOf @entity.keys (default (array/nth @entity.have @entity.hcur) ""))) (qc (str/slice (json/stringify "x") 0 1)))
+        (set @entity.violations (array/concat @entity.violations (let ((tx (default (bytes/to-string @payload.data) "")) (ix (array/indexOf @entity.keys (default (if (>= @entity.hcur 0) (array/nth @entity.have @entity.hcur) null) ""))) (qc (str/slice (json/stringify "x") 0 1)))
           (if (< @ix 0) (array/take @entity.violations 0)
             (let ((nm (object/get (default (array/nth @entity.pats @ix) { name: "", tier: "" }) "name")) (gl (json/parse @entity.listsText GateLists)))
               (array/concat
                 (let ((bare (array/filter
                               (array/map
-                                (array/filter (array/map (array/drop (str/split @tx "onEvent(") 1) (fn pc { pc: @pc, prev: (default (array/nth (str/split @tx "onEvent(") @index) "") }))
+                                (array/filter (array/map (array/drop (str/split @tx "onEvent(") 1) (fn pc { pc: @pc, prev: (default (if (>= @index 0) (array/nth (str/split @tx "onEvent(") @index) null) "") }))
                                   (fn pr (or (= (str/len (object/get @pr "prev")) 0) (not (validate/pattern (str/slice (object/get @pr "prev") (- (str/len (object/get @pr "prev")) 1)) "^[A-Za-z0-9_]$")))))
                                 (fn pr (let ((pc (object/get @pr "pc"))) (object/get (array/reduce (str/split @pc "") { d: 1, s: false, e: false, done: false, o: "" } (fn (a c) (if (object/get @a "done") @a (if (object/get @a "s") (if (object/get @a "e") { d: (object/get @a "d"), s: true, e: false, done: false, o: (str/concat (object/get @a "o") @c) } (if (= @c "\\") { d: (object/get @a "d"), s: true, e: true, done: false, o: (str/concat (object/get @a "o") @c) } (if (= @c @qc) { d: (object/get @a "d"), s: false, e: false, done: false, o: (str/concat (object/get @a "o") @c) } { d: (object/get @a "d"), s: true, e: false, done: false, o: (str/concat (object/get @a "o") @c) }))) (if (= @c @qc) { d: (object/get @a "d"), s: true, e: false, done: false, o: (str/concat (object/get @a "o") @c) } (if (= @c "(") { d: (+ (object/get @a "d") 1), s: false, e: false, done: false, o: (str/concat (object/get @a "o") @c) } (if (= @c ")") (if (= (object/get @a "d") 1) { d: 0, s: false, e: false, done: true, o: (object/get @a "o") } { d: (- (object/get @a "d") 1), s: false, e: false, done: false, o: (str/concat (object/get @a "o") @c) }) { d: (object/get @a "d"), s: false, e: false, done: false, o: (str/concat (object/get @a "o") @c) })))))))  "o"))))
                               (fn ar (not (str/includes @ar "eventEnvelope("))))))
@@ -338,7 +338,7 @@ orbital OrbShellRenderersOrbital {
                       (fn sp { name: (object/get @sp "name"),
                                lit: (array/find
                                       (array/map
-                                        (array/filter (array/map (array/drop (str/split @tx (object/get @sp "opener")) 1) (fn pc { pc: @pc, prev: (default (array/nth (str/split @tx (object/get @sp "opener")) @index) "") }))
+                                        (array/filter (array/map (array/drop (str/split @tx (object/get @sp "opener")) 1) (fn pc { pc: @pc, prev: (default (if (>= @index 0) (array/nth (str/split @tx (object/get @sp "opener")) @index) null) "") }))
                                           (fn pr (or (not (object/get @sp "boundary")) (= (str/len (object/get @pr "prev")) 0) (not (validate/pattern (str/slice (object/get @pr "prev") (- (str/len (object/get @pr "prev")) 1)) "^[A-Za-z0-9_]$")))))
                                         (fn pr (let ((pc (object/get @pr "pc"))) (object/get (array/reduce (str/split @pc "") { d: 1, s: false, e: false, done: false, o: "" } (fn (a c) (if (object/get @a "done") @a (if (object/get @a "s") (if (object/get @a "e") { d: (object/get @a "d"), s: true, e: false, done: false, o: (str/concat (object/get @a "o") @c) } (if (= @c "\\") { d: (object/get @a "d"), s: true, e: true, done: false, o: (str/concat (object/get @a "o") @c) } (if (= @c @qc) { d: (object/get @a "d"), s: false, e: false, done: false, o: (str/concat (object/get @a "o") @c) } { d: (object/get @a "d"), s: true, e: false, done: false, o: (str/concat (object/get @a "o") @c) }))) (if (= @c @qc) { d: (object/get @a "d"), s: true, e: false, done: false, o: (str/concat (object/get @a "o") @c) } (if (= @c "(") { d: (+ (object/get @a "d") 1), s: false, e: false, done: false, o: (str/concat (object/get @a "o") @c) } (if (= @c ")") (if (= (object/get @a "d") 1) { d: 0, s: false, e: false, done: true, o: (object/get @a "o") } { d: (- (object/get @a "d") 1), s: false, e: false, done: false, o: (str/concat (object/get @a "o") @c) }) { d: (object/get @a "d"), s: false, e: false, done: false, o: (str/concat (object/get @a "o") @c) })))))))  "o"))))
                                       (fn ar (let ((sa (let ((fin (array/reduce (str/split @ar "") { d: 0, s: false, e: false, cur: "", out: [] } (fn (b c) (if (object/get @b "s") (if (object/get @b "e") { d: (object/get @b "d"), s: true, e: false, cur: (str/concat (object/get @b "cur") @c), out: (object/get @b "out") } (if (= @c "\\") { d: (object/get @b "d"), s: true, e: true, cur: (str/concat (object/get @b "cur") @c), out: (object/get @b "out") } (if (= @c @qc) { d: (object/get @b "d"), s: false, e: false, cur: (str/concat (object/get @b "cur") @c), out: (object/get @b "out") } { d: (object/get @b "d"), s: true, e: false, cur: (str/concat (object/get @b "cur") @c), out: (object/get @b "out") }))) (if (= @c @qc) { d: (object/get @b "d"), s: true, e: false, cur: (str/concat (object/get @b "cur") @c), out: (object/get @b "out") } (if (str/includes "([{" @c) { d: (+ (object/get @b "d") 1), s: false, e: false, cur: (str/concat (object/get @b "cur") @c), out: (object/get @b "out") } (if (str/includes ")]}" @c) { d: (- (object/get @b "d") 1), s: false, e: false, cur: (str/concat (object/get @b "cur") @c), out: (object/get @b "out") } (if (and (= @c ",") (= (object/get @b "d") 0)) { d: (object/get @b "d"), s: false, e: false, cur: "", out: (array/append (object/get @b "out") (object/get @b "cur")) } { d: (object/get @b "d"), s: false, e: false, cur: (str/concat (object/get @b "cur") @c), out: (object/get @b "out") }))))))))) (if (> (str/len (str/trim (object/get @fin "cur"))) 0) (array/append (object/get @fin "out") (object/get @fin "cur")) (object/get @fin "out")))))
@@ -354,7 +354,7 @@ orbital OrbShellRenderersOrbital {
         (emit NS_FREAD { })
       ;; platform and ext are set only from the targets the arguments guard admits, so each table has their key
       NS_FILE_READ -> planning when (and (!= (bytes/to-string @payload.data) null) (!= (json/parse @entity.listsText GateLists) null) (not (str/includes (default (bytes/to-string @payload.data) "") "🔧")))
-        (set @entity.violations (array/concat @entity.violations (let ((tx (default (bytes/to-string @payload.data) "")) (ix (array/indexOf @entity.keys (default (array/nth @entity.have @entity.hcur) ""))))
+        (set @entity.violations (array/concat @entity.violations (let ((tx (default (bytes/to-string @payload.data) "")) (ix (array/indexOf @entity.keys (default (if (>= @entity.hcur 0) (array/nth @entity.have @entity.hcur) null) ""))))
           (if (< @ix 0) (array/take @entity.violations 0)
             (let ((nm (object/get (default (array/nth @entity.pats @ix) { name: "", tier: "" }) "name")) (tr (object/get (default (array/nth @entity.pats @ix) { name: "", tier: "" }) "tier")) (gl (json/parse @entity.listsText GateLists)))
               (array/concat
@@ -371,13 +371,13 @@ orbital OrbShellRenderersOrbital {
                 (let ((pd (object/get (default (array/nth @entity.pats @ix) { name: "", tier: "" }) "props")))
                   (array/map (array/filter (if (= @pd null) (array/take @entity.violations 0) (array/filter (object/keys @pd) (fn pk (or (= (object/get (object/get @pd @pk) "required") true) (array/includes (str/split "event-ref|event" "|") (default (object/get (object/get @pd @pk) "kind") "")))))) (fn pk (and (not (str/includes @tx (json/stringify @pk))) (not (and (= @pk "children") (str/includes @tx ".children()"))))))
                     (fn pk (str/concat "[props-contract] " @nm ": declared prop " (json/stringify @pk) " is not referenced by the body"))))))))))
-        (set @entity.violations (array/concat @entity.violations (let ((tx (default (bytes/to-string @payload.data) "")) (ix (array/indexOf @entity.keys (default (array/nth @entity.have @entity.hcur) ""))) (qc (str/slice (json/stringify "x") 0 1)))
+        (set @entity.violations (array/concat @entity.violations (let ((tx (default (bytes/to-string @payload.data) "")) (ix (array/indexOf @entity.keys (default (if (>= @entity.hcur 0) (array/nth @entity.have @entity.hcur) null) ""))) (qc (str/slice (json/stringify "x") 0 1)))
           (if (< @ix 0) (array/take @entity.violations 0)
             (let ((nm (object/get (default (array/nth @entity.pats @ix) { name: "", tier: "" }) "name")) (gl (json/parse @entity.listsText GateLists)))
               (array/concat
                 (let ((bare (array/filter
                               (array/map
-                                (array/filter (array/map (array/drop (str/split @tx "onEvent(") 1) (fn pc { pc: @pc, prev: (default (array/nth (str/split @tx "onEvent(") @index) "") }))
+                                (array/filter (array/map (array/drop (str/split @tx "onEvent(") 1) (fn pc { pc: @pc, prev: (default (if (>= @index 0) (array/nth (str/split @tx "onEvent(") @index) null) "") }))
                                   (fn pr (or (= (str/len (object/get @pr "prev")) 0) (not (validate/pattern (str/slice (object/get @pr "prev") (- (str/len (object/get @pr "prev")) 1)) "^[A-Za-z0-9_]$")))))
                                 (fn pr (let ((pc (object/get @pr "pc"))) (object/get (array/reduce (str/split @pc "") { d: 1, s: false, e: false, done: false, o: "" } (fn (a c) (if (object/get @a "done") @a (if (object/get @a "s") (if (object/get @a "e") { d: (object/get @a "d"), s: true, e: false, done: false, o: (str/concat (object/get @a "o") @c) } (if (= @c "\\") { d: (object/get @a "d"), s: true, e: true, done: false, o: (str/concat (object/get @a "o") @c) } (if (= @c @qc) { d: (object/get @a "d"), s: false, e: false, done: false, o: (str/concat (object/get @a "o") @c) } { d: (object/get @a "d"), s: true, e: false, done: false, o: (str/concat (object/get @a "o") @c) }))) (if (= @c @qc) { d: (object/get @a "d"), s: true, e: false, done: false, o: (str/concat (object/get @a "o") @c) } (if (= @c "(") { d: (+ (object/get @a "d") 1), s: false, e: false, done: false, o: (str/concat (object/get @a "o") @c) } (if (= @c ")") (if (= (object/get @a "d") 1) { d: 0, s: false, e: false, done: true, o: (object/get @a "o") } { d: (- (object/get @a "d") 1), s: false, e: false, done: false, o: (str/concat (object/get @a "o") @c) }) { d: (object/get @a "d"), s: false, e: false, done: false, o: (str/concat (object/get @a "o") @c) })))))))  "o"))))
                               (fn ar (not (str/includes @ar "eventEnvelope("))))))
@@ -389,7 +389,7 @@ orbital OrbShellRenderersOrbital {
                       (fn sp { name: (object/get @sp "name"),
                                lit: (array/find
                                       (array/map
-                                        (array/filter (array/map (array/drop (str/split @tx (object/get @sp "opener")) 1) (fn pc { pc: @pc, prev: (default (array/nth (str/split @tx (object/get @sp "opener")) @index) "") }))
+                                        (array/filter (array/map (array/drop (str/split @tx (object/get @sp "opener")) 1) (fn pc { pc: @pc, prev: (default (if (>= @index 0) (array/nth (str/split @tx (object/get @sp "opener")) @index) null) "") }))
                                           (fn pr (or (not (object/get @sp "boundary")) (= (str/len (object/get @pr "prev")) 0) (not (validate/pattern (str/slice (object/get @pr "prev") (- (str/len (object/get @pr "prev")) 1)) "^[A-Za-z0-9_]$")))))
                                         (fn pr (let ((pc (object/get @pr "pc"))) (object/get (array/reduce (str/split @pc "") { d: 1, s: false, e: false, done: false, o: "" } (fn (a c) (if (object/get @a "done") @a (if (object/get @a "s") (if (object/get @a "e") { d: (object/get @a "d"), s: true, e: false, done: false, o: (str/concat (object/get @a "o") @c) } (if (= @c "\\") { d: (object/get @a "d"), s: true, e: true, done: false, o: (str/concat (object/get @a "o") @c) } (if (= @c @qc) { d: (object/get @a "d"), s: false, e: false, done: false, o: (str/concat (object/get @a "o") @c) } { d: (object/get @a "d"), s: true, e: false, done: false, o: (str/concat (object/get @a "o") @c) }))) (if (= @c @qc) { d: (object/get @a "d"), s: true, e: false, done: false, o: (str/concat (object/get @a "o") @c) } (if (= @c "(") { d: (+ (object/get @a "d") 1), s: false, e: false, done: false, o: (str/concat (object/get @a "o") @c) } (if (= @c ")") (if (= (object/get @a "d") 1) { d: 0, s: false, e: false, done: true, o: (object/get @a "o") } { d: (- (object/get @a "d") 1), s: false, e: false, done: false, o: (str/concat (object/get @a "o") @c) }) { d: (object/get @a "d"), s: false, e: false, done: false, o: (str/concat (object/get @a "o") @c) })))))))  "o"))))
                                       (fn ar (let ((sa (let ((fin (array/reduce (str/split @ar "") { d: 0, s: false, e: false, cur: "", out: [] } (fn (b c) (if (object/get @b "s") (if (object/get @b "e") { d: (object/get @b "d"), s: true, e: false, cur: (str/concat (object/get @b "cur") @c), out: (object/get @b "out") } (if (= @c "\\") { d: (object/get @b "d"), s: true, e: true, cur: (str/concat (object/get @b "cur") @c), out: (object/get @b "out") } (if (= @c @qc) { d: (object/get @b "d"), s: false, e: false, cur: (str/concat (object/get @b "cur") @c), out: (object/get @b "out") } { d: (object/get @b "d"), s: true, e: false, cur: (str/concat (object/get @b "cur") @c), out: (object/get @b "out") }))) (if (= @c @qc) { d: (object/get @b "d"), s: true, e: false, cur: (str/concat (object/get @b "cur") @c), out: (object/get @b "out") } (if (str/includes "([{" @c) { d: (+ (object/get @b "d") 1), s: false, e: false, cur: (str/concat (object/get @b "cur") @c), out: (object/get @b "out") } (if (str/includes ")]}" @c) { d: (- (object/get @b "d") 1), s: false, e: false, cur: (str/concat (object/get @b "cur") @c), out: (object/get @b "out") } (if (and (= @c ",") (= (object/get @b "d") 0)) { d: (object/get @b "d"), s: false, e: false, cur: "", out: (array/append (object/get @b "out") (object/get @b "cur")) } { d: (object/get @b "d"), s: false, e: false, cur: (str/concat (object/get @b "cur") @c), out: (object/get @b "out") }))))))))) (if (> (str/len (str/trim (object/get @fin "cur"))) 0) (array/append (object/get @fin "out") (object/get @fin "cur")) (object/get @fin "out")))))
@@ -492,17 +492,17 @@ orbital OrbShellRenderersOrbital {
         (set @entity.removals (array/take @entity.removals 0))
         (emit RS_DOM { })
       RS_DOM -> rscan when (< @entity.dcur (array/len @entity.domains))
-        (set @entity.curDomain (default (array/nth @entity.domains @entity.dcur) ""))
+        (set @entity.curDomain (default (if (>= @entity.dcur 0) (array/nth @entity.domains @entity.dcur) null) ""))
         (set @entity.rfiles (array/take @entity.rfiles 0))
         (set @entity.rrecs (array/take @entity.rrecs 0))
         (set @entity.tcur 0)
         (emit RS_LIST { })
       RS_LIST -> rscan when (< @entity.tcur 4)
-        (os/list-dir { anchor: "cwd" path: (str/concat @entity.pack "/src/components/" @entity.curDomain "/" (default (array/nth (str/split "atoms|molecules|organisms|templates" "|") @entity.tcur) "")) } { key: "dir", emit: { success: RS_DIR, failure: RS_DIR_MISSING } })
+        (os/list-dir { anchor: "cwd" path: (str/concat @entity.pack "/src/components/" @entity.curDomain "/" (default (if (>= @entity.tcur 0) (array/nth (str/split "atoms|molecules|organisms|templates" "|") @entity.tcur) null) "")) } { key: "dir", emit: { success: RS_DIR, failure: RS_DIR_MISSING } })
       RS_DIR -> rscan
         (set @entity.rfiles (array/concat @entity.rfiles
           (array/map (array/filter @payload.entries (fn en (and (str/endsWith (object/get @en "name") ".rs") (!= (object/get @en "name") "mod.rs") (!= (object/get @en "name") "register.rs"))))
-            (fn en (str/concat (default (array/nth (str/split "atoms|molecules|organisms|templates" "|") @entity.tcur) "") "/" (object/get @en "name"))))))
+            (fn en (str/concat (default (if (>= @entity.tcur 0) (array/nth (str/split "atoms|molecules|organisms|templates" "|") @entity.tcur) null) "") "/" (object/get @en "name"))))))
         (set @entity.tcur (+ @entity.tcur 1))
         (emit RS_LIST { })
       RS_DIR_MISSING -> rscan
@@ -512,12 +512,12 @@ orbital OrbShellRenderersOrbital {
         (set @entity.hcur 0)
         (emit RS_FREAD { })
       RS_FREAD -> rscan when (< @entity.hcur (array/len @entity.rfiles))
-        (os/read-file { anchor: "cwd" path: (str/concat @entity.pack "/src/components/" @entity.curDomain "/" (default (array/nth @entity.rfiles @entity.hcur) "")) } { key: "body", emit: { success: RS_FILE_READ, failure: RS_FILE_FAIL } })
+        (os/read-file { anchor: "cwd" path: (str/concat @entity.pack "/src/components/" @entity.curDomain "/" (default (if (>= @entity.hcur 0) (array/nth @entity.rfiles @entity.hcur) null) "")) } { key: "body", emit: { success: RS_FILE_READ, failure: RS_FILE_FAIL } })
       RS_FILE_READ -> rscan when (= (bytes/to-string @payload.data) null)
         (emit RS_FILE_FAIL { })
       RS_FILE_READ -> rscan when (!= (bytes/to-string @payload.data) null)
         (set @entity.rrecs (array/append @entity.rrecs
-          (let ((tx (default (bytes/to-string @payload.data) "")) (fk (default (array/nth @entity.rfiles @entity.hcur) "")))
+          (let ((tx (default (bytes/to-string @payload.data) "")) (fk (default (if (>= @entity.hcur 0) (array/nth @entity.rfiles @entity.hcur) null) "")))
             (let ((first (default (array/first (str/split @tx "\n")) "")))
               { tier: (array/first (str/split @fk "/")),
                 module: (str/replaceAll (default (array/last (str/split @fk "/")) "") ".rs" ""),
@@ -591,7 +591,7 @@ orbital OrbShellRenderersOrbital {
     state pruning {
       INIT -> pruning
       NS_RM_NEXT -> pruning when (< @entity.rcur (array/len @entity.removals))
-        (os/remove { anchor: "cwd" path: (str/concat @entity.pack @entity.rmBase (default (array/nth @entity.removals @entity.rcur) "")) } { key: "rm", emit: { success: NS_RM_OK, failure: SHELL_W_FAILED } })
+        (os/remove { anchor: "cwd" path: (str/concat @entity.pack @entity.rmBase (default (if (>= @entity.rcur 0) (array/nth @entity.removals @entity.rcur) null) "")) } { key: "rm", emit: { success: NS_RM_OK, failure: SHELL_W_FAILED } })
       NS_RM_OK -> pruning
         (set @entity.rcur (+ @entity.rcur 1))
         (emit NS_RM_NEXT { })
@@ -602,18 +602,18 @@ orbital OrbShellRenderersOrbital {
     state writing {
       INIT -> writing
       SHELL_W_NEXT -> writing when (and (< @entity.wcur (array/len @entity.outFiles)) (!= @entity.outDir ""))
-        (os/mkdir { anchor: "cwd" path: (os/path-dir (object/get (default (array/nth @entity.outFiles @entity.wcur) { path: "", text: "" }) "path")) } true { key: "mkdir", emit: { success: SHELL_W_MKDIR, failure: SHELL_W_FAILED } })
+        (os/mkdir { anchor: "cwd" path: (os/path-dir (object/get (default (if (>= @entity.wcur 0) (array/nth @entity.outFiles @entity.wcur) null) { path: "", text: "" }) "path")) } true { key: "mkdir", emit: { success: SHELL_W_MKDIR, failure: SHELL_W_FAILED } })
       SHELL_W_NEXT -> writing when (and (< @entity.wcur (array/len @entity.outFiles)) (= @entity.outDir ""))
         (emit SHELL_W_WRITE { })
       SHELL_W_MKDIR -> writing
         (emit SHELL_W_WRITE { })
       SHELL_W_WRITE -> writing
-        (os/write-file { anchor: "cwd" path: (object/get (default (array/nth @entity.outFiles @entity.wcur) { path: "", text: "" }) "path") } (bytes/from-string (object/get (default (array/nth @entity.outFiles @entity.wcur) { path: "", text: "" }) "text")) { key: "write", emit: { success: SHELL_W_WROTE, failure: SHELL_W_FAILED } })
+        (os/write-file { anchor: "cwd" path: (object/get (default (if (>= @entity.wcur 0) (array/nth @entity.outFiles @entity.wcur) null) { path: "", text: "" }) "path") } (bytes/from-string (object/get (default (if (>= @entity.wcur 0) (array/nth @entity.outFiles @entity.wcur) null) { path: "", text: "" }) "text")) { key: "write", emit: { success: SHELL_W_WROTE, failure: SHELL_W_FAILED } })
       SHELL_W_WROTE -> writing
         (set @entity.wcur (+ @entity.wcur 1))
         (emit SHELL_W_NEXT { })
       SHELL_W_FAILED -> ready
-        (emit SHELL_RENDERERS_ANSWERED { status: 500, body: (str/concat "error: cannot write " (object/get (default (array/nth @entity.outFiles @entity.wcur) { path: "", text: "" }) "path")) })
+        (emit SHELL_RENDERERS_ANSWERED { status: 500, body: (str/concat "error: cannot write " (object/get (default (if (>= @entity.wcur 0) (array/nth @entity.outFiles @entity.wcur) null) { path: "", text: "" }) "path")) })
       SHELL_W_NEXT -> ready when (>= @entity.wcur (array/len @entity.outFiles))
         (emit SHELL_RENDERERS_ANSWERED { status: (if (and (= (array/len @entity.bad) 0) (= (array/len @entity.violations) 0)) 200 500), body: @entity.summary })
     }

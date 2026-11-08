@@ -124,7 +124,7 @@ orbital LiveMachineOrbital {
         (behavior/describe { behavior: ?behavior, trait: ?trait } { emit: { success: DESCRIBED, failure: DESCRIBE_FAILED } })
       ADVANCE -> idle when (array/some @entity.transitions (fn t (and (== @t.event ?event) (== @t.from @entity.active) (or (== ?to null) (== @t.to ?to)))))
         (let ((fired (array/findIndex @entity.transitions (fn t (and (== @t.event ?event) (== @t.from @entity.active) (or (== ?to null) (== @t.to ?to)))))))
-          (let ((target (object/get (default (array/nth @entity.transitions @fired) { from: "", to: "", event: "" }) to)))
+          (let ((target (object/get (default (if (>= @fired 0) (array/nth @entity.transitions @fired) null) { from: "", to: "", event: "" }) to)))
             (do
               (set @entity.highlight (let ((at (array/find @entity.sourceLines (fn l (== @l.index @fired))))) { start: @at.start, end: @at.end }))
               (set @entity.fired @fired)
@@ -133,7 +133,7 @@ orbital LiveMachineOrbital {
         (render-ui main @config.view)
       MOVES -> idle when (> (array/len (array/filter ?moves (fn m (and @m.fired (== @m.trait (object/get (default (as @entity.current TraitRef) { trait: "" }) trait)))))) 0)
         (let ((mine (array/filter ?moves (fn m (and @m.fired (== @m.trait (object/get (default (as @entity.current TraitRef) { trait: "" }) trait)))))))
-          (let ((last (array/nth @mine (- (array/len @mine) 1))))
+          (let ((last (let ((nxi (- (array/len @mine) 1))) (if (>= @nxi 0) (array/nth @mine @nxi) null))))
             (let ((fired (array/findIndex @entity.transitions (fn t (and (== @t.event @last.event) (== @t.from @last.from) (== @t.to @last.to))))))
               (do
                 (set @entity.highlight (let ((at (array/find @entity.sourceLines (fn l (== @l.index @fired))))) (if (== @at null) null { start: @at.start, end: @at.end })))
@@ -305,8 +305,8 @@ orbital LiveMachineOrbital {
         (set @entity.firedMove null)
         (set @entity.route [])
         (render-ui main @config.view)
-      MOVES -> showing when (and (> (array/len (array/filter ?moves (fn m @m.fired))) 0) (== (object/get (default (array/nth (array/filter ?moves (fn m @m.fired)) (- (array/len (array/filter ?moves (fn m @m.fired))) 1)) { trait: "", event: "", from: "", to: "", fired: false }) trait) @entity.title))
-        (let ((last (default (array/nth (array/filter ?moves (fn m @m.fired)) (- (array/len (array/filter ?moves (fn m @m.fired))) 1)) { trait: "", event: "", from: "", to: "", fired: false })))
+      MOVES -> showing when (and (> (array/len (array/filter ?moves (fn m @m.fired))) 0) (== (object/get (default (let ((nxi (- (array/len (array/filter ?moves (fn m @m.fired))) 1))) (if (>= @nxi 0) (array/nth (array/filter ?moves (fn m @m.fired)) @nxi) null)) { trait: "", event: "", from: "", to: "", fired: false }) trait) @entity.title))
+        (let ((last (default (let ((nxi (- (array/len (array/filter ?moves (fn m @m.fired))) 1))) (if (>= @nxi 0) (array/nth (array/filter ?moves (fn m @m.fired)) @nxi) null)) { trait: "", event: "", from: "", to: "", fired: false })))
           (let ((machine (array/find (object/get (default @entity.tree { page: "", traits: [], wires: [] }) traits) (fn t (== @t.trait @last.trait)))))
             (let ((index (if (== @machine null) -1 (array/findIndex @machine.transitions (fn x (and (== @x.event @last.event) (array/includes @x.from @last.from) (== @x.to @last.to)))))))
               (do
@@ -315,8 +315,8 @@ orbital LiveMachineOrbital {
                 (set @entity.route (array/map (array/filter ?moves (fn m @m.fired)) (fn m (let ((machine (array/find (object/get (default @entity.tree { page: "", traits: [], wires: [] }) traits) (fn t (== @t.trait @m.trait))))) { trait: @m.trait, index: (if (== @machine null) -1 (array/findIndex @machine.transitions (fn x (and (== @x.event @m.event) (array/includes @x.from @m.from) (== @x.to @m.to))))) }))))
                 (set @entity.highlight (let ((at (array/find @entity.sourceLines (fn l (== @l.index @index))))) (if (== @at null) null { start: @at.start, end: @at.end })))))))
         (render-ui main @config.view)
-      MOVES -> showing when (and (> (array/len (array/filter ?moves (fn m @m.fired))) 0) (!= (object/get (default (array/nth (array/filter ?moves (fn m @m.fired)) (- (array/len (array/filter ?moves (fn m @m.fired))) 1)) { trait: "", event: "", from: "", to: "", fired: false }) trait) @entity.title) (not @entity.pinned))
-        (let ((last (default (array/nth (array/filter ?moves (fn m @m.fired)) (- (array/len (array/filter ?moves (fn m @m.fired))) 1)) { trait: "", event: "", from: "", to: "", fired: false })))
+      MOVES -> showing when (and (> (array/len (array/filter ?moves (fn m @m.fired))) 0) (!= (object/get (default (let ((nxi (- (array/len (array/filter ?moves (fn m @m.fired))) 1))) (if (>= @nxi 0) (array/nth (array/filter ?moves (fn m @m.fired)) @nxi) null)) { trait: "", event: "", from: "", to: "", fired: false }) trait) @entity.title) (not @entity.pinned))
+        (let ((last (default (let ((nxi (- (array/len (array/filter ?moves (fn m @m.fired))) 1))) (if (>= @nxi 0) (array/nth (array/filter ?moves (fn m @m.fired)) @nxi) null)) { trait: "", event: "", from: "", to: "", fired: false })))
           (let ((machine (array/find (object/get (default @entity.tree { page: "", traits: [], wires: [] }) traits) (fn t (== @t.trait @last.trait)))))
             (let ((index (if (== @machine null) -1 (array/findIndex @machine.transitions (fn x (and (== @x.event @last.event) (array/includes @x.from @last.from) (== @x.to @last.to)))))))
               (do
@@ -326,8 +326,8 @@ orbital LiveMachineOrbital {
                 (do (set @entity.title @last.trait) (set @entity.sourceText "") (set @entity.sourceLines []) (set @entity.highlight null))))))
         (emit SOURCE_WANTED { behavior: @entity.behavior, trait: @entity.title })
         (render-ui main @config.view)
-      MOVES -> showing when (and (> (array/len (array/filter ?moves (fn m @m.fired))) 0) (!= (object/get (default (array/nth (array/filter ?moves (fn m @m.fired)) (- (array/len (array/filter ?moves (fn m @m.fired))) 1)) { trait: "", event: "", from: "", to: "", fired: false }) trait) @entity.title) @entity.pinned)
-        (let ((last (default (array/nth (array/filter ?moves (fn m @m.fired)) (- (array/len (array/filter ?moves (fn m @m.fired))) 1)) { trait: "", event: "", from: "", to: "", fired: false })))
+      MOVES -> showing when (and (> (array/len (array/filter ?moves (fn m @m.fired))) 0) (!= (object/get (default (let ((nxi (- (array/len (array/filter ?moves (fn m @m.fired))) 1))) (if (>= @nxi 0) (array/nth (array/filter ?moves (fn m @m.fired)) @nxi) null)) { trait: "", event: "", from: "", to: "", fired: false }) trait) @entity.title) @entity.pinned)
+        (let ((last (default (let ((nxi (- (array/len (array/filter ?moves (fn m @m.fired))) 1))) (if (>= @nxi 0) (array/nth (array/filter ?moves (fn m @m.fired)) @nxi) null)) { trait: "", event: "", from: "", to: "", fired: false })))
           (let ((machine (array/find (object/get (default @entity.tree { page: "", traits: [], wires: [] }) traits) (fn t (== @t.trait @last.trait)))))
             (let ((index (if (== @machine null) -1 (array/findIndex @machine.transitions (fn x (and (== @x.event @last.event) (array/includes @x.from @last.from) (== @x.to @last.to)))))))
               (do

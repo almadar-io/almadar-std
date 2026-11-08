@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "Canonical operator registry for Almadar. Generated from @almadar/std/modules. Consumed by orbital-compiler via include_str!.",
-  "generated": "2026-11-07T06:36:54.062Z",
+  "generated": "2026-11-07T20:38:19.762Z",
   "categories": {
     "arithmetic": {
       "description": "Numeric operations",
@@ -8666,6 +8666,147 @@
       ],
       "docsSource": "generated"
     },
+    "ecdsa/p384-sign": {
+      "category": "std-codec",
+      "minArity": 2,
+      "maxArity": 2,
+      "returnType": {
+        "kind": "union",
+        "of": [
+          "bytes",
+          {
+            "kind": "literal",
+            "value": null
+          }
+        ]
+      },
+      "description": "Sign a message with ECDSA over P-384 and SHA-384 (FIPS 186-4 section 6.4.1) using the deterministic nonce of RFC 6979; the signature is 96 raw bytes r||s, what JWS ES384 needs. The key argument is a credential slot: a secret-typed @config knob naming the credential that holds a PKCS#8 PEM private key. The kernel resolves it into the evaluation, so the program never receives the key and the journal never records it. The result is null when the credential is not held or is not a P-384 key. Runs only in the kernel.",
+      "module": "ecdsa",
+      "visual": {
+        "form": "block"
+      },
+      "params": [
+        {
+          "name": "key",
+          "type": "string",
+          "description": "A secret-typed @config knob naming the credential that holds the PEM private key"
+        },
+        {
+          "name": "message",
+          "type": "string",
+          "description": "The message to sign, hashed as its UTF-8 bytes"
+        }
+      ],
+      "examples": [
+        "(ecdsa/p384-sign @config.signingKey \"header.payload\") // => \"<96 bytes r||s>\""
+      ],
+      "docsSource": "generated"
+    },
+    "ecdsa/p384-verify": {
+      "category": "std-codec",
+      "minArity": 4,
+      "maxArity": 4,
+      "returnType": "string",
+      "description": "Verify an ECDSA P-384 / SHA-384 signature (FIPS 186-4 section 6.4.2, what JWS ES384 needs). The public key is two 48-byte big-endian coordinates, the message is text hashed as its UTF-8 bytes, the signature is 96 raw bytes r||s. Answers the closed verdicts of ecdsa/p256-verify: valid, mismatch, invalid (an operand is not canonical padded base64), length (a coordinate not 48 bytes or a signature not 96), range or point. Public inputs only: a private key never reaches this operator.",
+      "module": "ecdsa",
+      "visual": {
+        "form": "block"
+      },
+      "params": [
+        {
+          "name": "x",
+          "type": "bytes",
+          "description": "The public key x coordinate, 48 big-endian bytes"
+        },
+        {
+          "name": "y",
+          "type": "bytes",
+          "description": "The public key y coordinate, 48 big-endian bytes"
+        },
+        {
+          "name": "message",
+          "type": "string",
+          "description": "The signed message, hashed as its UTF-8 bytes"
+        },
+        {
+          "name": "signature",
+          "type": "bytes",
+          "description": "The signature, 96 bytes r||s"
+        }
+      ],
+      "examples": [
+        "(ecdsa/p384-verify \"<x>\" \"<y>\" \"header.payload\" \"<signature>\") // => \"valid\""
+      ],
+      "docsSource": "generated"
+    },
+    "ed25519/sign": {
+      "category": "std-codec",
+      "minArity": 2,
+      "maxArity": 2,
+      "returnType": {
+        "kind": "union",
+        "of": [
+          "bytes",
+          {
+            "kind": "literal",
+            "value": null
+          }
+        ]
+      },
+      "description": "Sign a message with Ed25519 (RFC 8032, deterministic, 64 bytes). The key argument is a credential slot: a secret-typed @config knob naming the credential that holds the 32-byte seed as standard padded base64. The kernel resolves it into the evaluation, so the program never receives the key and the journal never records it. The result is null when the credential is not held or is not such a seed. Runs only in the kernel.",
+      "module": "ed25519",
+      "visual": {
+        "form": "block"
+      },
+      "params": [
+        {
+          "name": "key",
+          "type": "string",
+          "description": "A secret-typed @config knob naming the credential that holds the base64 seed"
+        },
+        {
+          "name": "message",
+          "type": "string",
+          "description": "The message to sign, its UTF-8 bytes"
+        }
+      ],
+      "examples": [
+        "(ed25519/sign @config.signingKey \"header.payload\") // => \"<64 bytes>\""
+      ],
+      "docsSource": "generated"
+    },
+    "ed25519/verify": {
+      "category": "std-codec",
+      "minArity": 3,
+      "maxArity": 3,
+      "returnType": "string",
+      "description": "Verify an Ed25519 signature (RFC 8032, what JWS EdDSA needs). The public key is 32 bytes, the message is text hashed as its UTF-8 bytes (Ed25519 signs the message itself), the signature is 64 bytes. Answers a closed verdict: valid, mismatch (the signature does not verify, or the key is not a curve point), invalid (an operand is not canonical padded base64) or length (a key not 32 bytes or a signature not 64). Public inputs only: a private key never reaches this operator.",
+      "module": "ed25519",
+      "visual": {
+        "form": "block"
+      },
+      "params": [
+        {
+          "name": "publicKey",
+          "type": "bytes",
+          "description": "The public key, 32 bytes"
+        },
+        {
+          "name": "message",
+          "type": "string",
+          "description": "The signed message, its UTF-8 bytes"
+        },
+        {
+          "name": "signature",
+          "type": "bytes",
+          "description": "The signature, 64 bytes"
+        }
+      ],
+      "examples": [
+        "(ed25519/verify \"<publicKey>\" \"header.payload\" \"<signature>\") // => \"valid\""
+      ],
+      "docsSource": "generated"
+    },
     "emit": {
       "category": "effect",
       "minArity": 1,
@@ -11698,7 +11839,7 @@
           }
         ]
       },
-      "description": "SHA-2 digest (FIPS 180-4) at 256 or 512 bits, through the sha2 crate, as lower-case hex or standard base64. Input \"text\" (the default) hashes a string's UTF-8 bytes; \"bytes\" hashes a bytes value (standard padded base64, decoded once, as hash/md5 reads it). Another bit count, encoding or input kind, or invalid base64, fails with kind invalid. npm's dist.integrity is \"sha512-\" followed by the 512-bit base64 digest of the tarball bytes",
+      "description": "SHA digest (FIPS 180-4) as lower-case hex or standard base64: SHA-2 at 256, 384 or 512 bits through the sha2 crate, and SHA-1 for bits 1 (for protocols that still name it, HMAC-SHA1 and OAuth 1.0 among them). Input \"text\" (the default) hashes a string's UTF-8 bytes; \"bytes\" hashes a bytes value (standard padded base64, decoded once, as hash/md5 reads it). Another bit count, encoding or input kind, or invalid base64, fails with kind invalid. npm's dist.integrity is \"sha512-\" followed by the 512-bit base64 digest of the tarball bytes",
       "module": "hash",
       "visual": {
         "form": "block"
@@ -11712,7 +11853,15 @@
             "of": [
               {
                 "kind": "literal",
+                "value": 1
+              },
+              {
+                "kind": "literal",
                 "value": 256
+              },
+              {
+                "kind": "literal",
+                "value": 384
               },
               {
                 "kind": "literal",
@@ -11720,7 +11869,7 @@
               }
             ]
           },
-          "description": "The digest size: 256 or 512"
+          "description": "The digest size: 256, 384 or 512 (SHA-2), or 1 for SHA-1"
         },
         {
           "name": "data",
@@ -11772,6 +11921,84 @@
       ],
       "examples": [
         "(hash/sha 256 \"abc\" \"hex\") // => \"ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad\""
+      ],
+      "docsSource": "generated"
+    },
+    "hmac/sha1-bytes": {
+      "category": "std-codec",
+      "minArity": 3,
+      "maxArity": 4,
+      "returnType": {
+        "kind": "union",
+        "of": [
+          "string",
+          {
+            "kind": "literal",
+            "value": null
+          }
+        ]
+      },
+      "description": "HMAC-SHA1 (RFC 2202) of a message under a bytes key that is a program value, as lower-case hex or standard base64; the key and message are read exactly as hmac/sha256-bytes reads them. A key that comes from a credential never goes through here. An operand that is not canonical padded base64, or an unknown input, answers null.",
+      "module": "hmac",
+      "visual": {
+        "form": "block"
+      },
+      "params": [
+        {
+          "name": "key",
+          "type": "bytes",
+          "description": "The key, bytes"
+        },
+        {
+          "name": "message",
+          "type": {
+            "kind": "union",
+            "of": [
+              "string",
+              "bytes"
+            ]
+          },
+          "description": "The message to sign: a string, or a bytes value when input is \"bytes\""
+        },
+        {
+          "name": "encoding",
+          "type": {
+            "kind": "union",
+            "of": [
+              {
+                "kind": "literal",
+                "value": "hex"
+              },
+              {
+                "kind": "literal",
+                "value": "base64"
+              }
+            ]
+          },
+          "description": "Digest encoding: \"hex\" or \"base64\""
+        },
+        {
+          "name": "input",
+          "type": {
+            "kind": "union",
+            "of": [
+              {
+                "kind": "literal",
+                "value": "text"
+              },
+              {
+                "kind": "literal",
+                "value": "bytes"
+              }
+            ]
+          },
+          "description": "Message kind: \"text\" (default) or \"bytes\"",
+          "optional": true,
+          "defaultValue": "text"
+        }
+      ],
+      "examples": [
+        "(hmac/sha1-bytes \"SmVmZQ==\" \"what do ya want for nothing?\" \"hex\") // => \"effcdf6ae5eb2fa2d27416d5f184df9c259a7c79\""
       ],
       "docsSource": "generated"
     },
@@ -11910,6 +12137,162 @@
       ],
       "examples": [
         "(hmac/sha256-bytes \"SmVmZQ==\" \"what do ya want for nothing?\" \"hex\") // => \"5bdcc146bf60754e6a042426089575c75a003f089d2739839dec58b964ec3843\""
+      ],
+      "docsSource": "generated"
+    },
+    "hmac/sha384-bytes": {
+      "category": "std-codec",
+      "minArity": 3,
+      "maxArity": 4,
+      "returnType": {
+        "kind": "union",
+        "of": [
+          "string",
+          {
+            "kind": "literal",
+            "value": null
+          }
+        ]
+      },
+      "description": "HMAC-SHA384 (RFC 4231) of a message under a bytes key that is a program value, as lower-case hex or standard base64; the key and message are read exactly as hmac/sha256-bytes reads them. A key that comes from a credential never goes through here. An operand that is not canonical padded base64, or an unknown input, answers null.",
+      "module": "hmac",
+      "visual": {
+        "form": "block"
+      },
+      "params": [
+        {
+          "name": "key",
+          "type": "bytes",
+          "description": "The key, bytes"
+        },
+        {
+          "name": "message",
+          "type": {
+            "kind": "union",
+            "of": [
+              "string",
+              "bytes"
+            ]
+          },
+          "description": "The message to sign: a string, or a bytes value when input is \"bytes\""
+        },
+        {
+          "name": "encoding",
+          "type": {
+            "kind": "union",
+            "of": [
+              {
+                "kind": "literal",
+                "value": "hex"
+              },
+              {
+                "kind": "literal",
+                "value": "base64"
+              }
+            ]
+          },
+          "description": "Digest encoding: \"hex\" or \"base64\""
+        },
+        {
+          "name": "input",
+          "type": {
+            "kind": "union",
+            "of": [
+              {
+                "kind": "literal",
+                "value": "text"
+              },
+              {
+                "kind": "literal",
+                "value": "bytes"
+              }
+            ]
+          },
+          "description": "Message kind: \"text\" (default) or \"bytes\"",
+          "optional": true,
+          "defaultValue": "text"
+        }
+      ],
+      "examples": [
+        "(hmac/sha384-bytes \"SmVmZQ==\" \"what do ya want for nothing?\" \"hex\") // => \"af45d2e376484031617f78d2b58a6b1b9c7ef464f5a01b47e42ec3736322445e8e2240ca5e69e2c78b3239ecfab21649\""
+      ],
+      "docsSource": "generated"
+    },
+    "hmac/sha512-bytes": {
+      "category": "std-codec",
+      "minArity": 3,
+      "maxArity": 4,
+      "returnType": {
+        "kind": "union",
+        "of": [
+          "string",
+          {
+            "kind": "literal",
+            "value": null
+          }
+        ]
+      },
+      "description": "HMAC-SHA512 (RFC 4231) of a message under a bytes key that is a program value, as lower-case hex or standard base64; the key and message are read exactly as hmac/sha256-bytes reads them. A key that comes from a credential never goes through here. An operand that is not canonical padded base64, or an unknown input, answers null.",
+      "module": "hmac",
+      "visual": {
+        "form": "block"
+      },
+      "params": [
+        {
+          "name": "key",
+          "type": "bytes",
+          "description": "The key, bytes"
+        },
+        {
+          "name": "message",
+          "type": {
+            "kind": "union",
+            "of": [
+              "string",
+              "bytes"
+            ]
+          },
+          "description": "The message to sign: a string, or a bytes value when input is \"bytes\""
+        },
+        {
+          "name": "encoding",
+          "type": {
+            "kind": "union",
+            "of": [
+              {
+                "kind": "literal",
+                "value": "hex"
+              },
+              {
+                "kind": "literal",
+                "value": "base64"
+              }
+            ]
+          },
+          "description": "Digest encoding: \"hex\" or \"base64\""
+        },
+        {
+          "name": "input",
+          "type": {
+            "kind": "union",
+            "of": [
+              {
+                "kind": "literal",
+                "value": "text"
+              },
+              {
+                "kind": "literal",
+                "value": "bytes"
+              }
+            ]
+          },
+          "description": "Message kind: \"text\" (default) or \"bytes\"",
+          "optional": true,
+          "defaultValue": "text"
+        }
+      ],
+      "examples": [
+        "(hmac/sha512-bytes \"SmVmZQ==\" \"what do ya want for nothing?\" \"hex\") // => \"164b7a7bfcf819e2e395fbe73b56e0a387bd64222e831fd610270cd7ea2505549758bf75c05a994a6d034f65f8f0e6fdcaeab1a34d4a6b4b636e070a38bce737\""
       ],
       "docsSource": "generated"
     },
@@ -21234,7 +21617,7 @@
       "minArity": 1,
       "maxArity": 2,
       "returnType": "void",
-      "description": "Read a whole file (grant fs: read). Success payload: { data: bytes }. Always bytes; decode text with bytes/to-string.",
+      "description": "Read a whole file (grant fs: read). Success payload: { data: bytes }. Always bytes; decode text with bytes/to-string. A file over 64 MiB is refused: read it in pieces of at most 64 MiB with os/open and os/read.",
       "module": "os",
       "visual": {
         "form": "actuator"
@@ -29349,6 +29732,79 @@
       ],
       "examples": [
         "(row/matches {\"kind\":\"compare\",\"field\":\"status\",\"op\":\"==\",\"value\":\"open\"} {\"id\":\"t1\",\"status\":\"open\"}) // => true"
+      ],
+      "docsSource": "generated"
+    },
+    "rsa-pss/sign": {
+      "category": "std-codec",
+      "minArity": 2,
+      "maxArity": 2,
+      "returnType": {
+        "kind": "union",
+        "of": [
+          "bytes",
+          {
+            "kind": "literal",
+            "value": null
+          }
+        ]
+      },
+      "description": "Sign a message with RSASSA-PSS, SHA-256, MGF1-SHA-256 and a 32-byte salt (RFC 8017 section 8.1.1, what JWS PS256 needs); the private operation is blinded and the signature is as long as the modulus. The key argument is a credential slot: a secret-typed @config knob naming the credential that holds a PKCS#8 PEM private key of at least 2048 bits. The kernel resolves it into the evaluation, so the program never receives the key and the journal never records it; the salt and the blinding are fresh host entropy that is never journaled (the journal records the signature, and a replay answers with it without signing again). The result is null when the credential is not held or is not such a key. Runs only in the kernel.",
+      "module": "rsa-pss",
+      "visual": {
+        "form": "block"
+      },
+      "params": [
+        {
+          "name": "key",
+          "type": "string",
+          "description": "A secret-typed @config knob naming the credential that holds the PEM private key"
+        },
+        {
+          "name": "message",
+          "type": "string",
+          "description": "The message to sign, hashed as its UTF-8 bytes"
+        }
+      ],
+      "examples": [
+        "(rsa-pss/sign @config.signingKey \"header.payload\") // => \"<signature>\""
+      ],
+      "docsSource": "generated"
+    },
+    "rsa-pss/verify": {
+      "category": "std-codec",
+      "minArity": 4,
+      "maxArity": 4,
+      "returnType": "string",
+      "description": "Verify an RSASSA-PSS signature with SHA-256, MGF1-SHA-256 and a 32-byte salt (RFC 8017 section 8.1.2, what JWS PS256 needs) under a public key of big-endian modulus and exponent. Operands and verdicts are those of rsa/verify: valid, mismatch, invalid, key-size, signature-length or signature-range. A PKCS#1 v1.5 signature is a mismatch here, as a PSS signature is a mismatch in rsa/verify. Public inputs only: a private key never reaches this operator.",
+      "module": "rsa-pss",
+      "visual": {
+        "form": "block"
+      },
+      "params": [
+        {
+          "name": "n",
+          "type": "bytes",
+          "description": "The modulus, big-endian bytes"
+        },
+        {
+          "name": "e",
+          "type": "bytes",
+          "description": "The public exponent, big-endian bytes"
+        },
+        {
+          "name": "message",
+          "type": "string",
+          "description": "The signed message, hashed as its UTF-8 bytes"
+        },
+        {
+          "name": "signature",
+          "type": "bytes",
+          "description": "The signature, as long as the modulus"
+        }
+      ],
+      "examples": [
+        "(rsa-pss/verify \"<n>\" \"AQAB\" \"header.payload\" \"<signature>\") // => \"valid\""
       ],
       "docsSource": "generated"
     },

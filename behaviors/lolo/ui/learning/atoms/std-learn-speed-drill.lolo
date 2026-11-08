@@ -245,7 +245,7 @@ orbital SpeedDrillOrbital {
             (set @entity.bestStreak (math/max @entity.bestStreak @newStreak))
             (set @entity.feedback (if @correct
               (str/concat "Correct with " @bonus "s to spare — +" (str/concat "" @points) " points.")
-              (str/concat "Not quite — the answer was: " (default (array/nth @entity.options @entity.correctIndex) ""))))))
+              (str/concat "Not quite — the answer was: " (default (if (>= @entity.correctIndex 0) (array/nth @entity.options @entity.correctIndex) null) ""))))))
         (emit ANSWER_JUDGED { correct: (== @entity.verdict "correct"), timeLeftTenths: @entity.remaining, score: @entity.score, streak: @entity.streak })
 
       NEXT -> idle when (and (== @entity.active true) (and (== @entity.running false) (and (!= @entity.verdict "") (== @entity.done false))))
@@ -253,7 +253,7 @@ orbital SpeedDrillOrbital {
         (let (
             (nextIndex (+ @entity.itemIndex 1))
             (finished (>= @nextIndex (array/len @entity.items)))
-            (next (default (array/nth @entity.items (math/min @nextIndex (- (array/len @entity.items) 1))) { prompt: "", options: [], correctIndex: 0 }))
+            (next (default (let ((nxi (math/min @nextIndex (- (array/len @entity.items) 1)))) (if (>= @nxi 0) (array/nth @entity.items @nxi) null)) { prompt: "", options: [], correctIndex: 0 }))
           )
           (do
             (set @entity.itemIndex (if @finished @entity.itemIndex @nextIndex))
@@ -370,7 +370,7 @@ orbital SpeedDrillOrbital {
         when (and (== @entity.active true) (== @entity.running true))
         (set @entity.remaining (math/max 0 (- @entity.remaining 1)))
         (set @entity.verdict (if (== @entity.remaining 0) "timeout" @entity.verdict))
-        (set @entity.feedback (if (== @entity.remaining 0) (str/concat "Time's up — the answer was: " (default (array/nth @entity.options @entity.correctIndex) "")) @entity.feedback))
+        (set @entity.feedback (if (== @entity.remaining 0) (str/concat "Time's up — the answer was: " (default (if (>= @entity.correctIndex 0) (array/nth @entity.options @entity.correctIndex) null) "")) @entity.feedback))
         (set @entity.streak (if (== @entity.remaining 0) 0 @entity.streak))
         (set @entity.running (if (== @entity.remaining 0) false true))
     }

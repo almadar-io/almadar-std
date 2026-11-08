@@ -348,7 +348,7 @@ orbital OrbMcpOrbital {
         (set @entity.skipped [])
         (emit MCP_PKG_NEXT { })
       MCP_PKG_NEXT -> working when (< @entity.pkgCursor (array/len @entity.pkgs))
-        (behavior/catalog { paths: [(array/nth @entity.pkgs @entity.pkgCursor)], exposure: (default (object/get @entity.args "exposure") []) } { emit: { success: MCP_PKG_CATALOGED, failure: MCP_PKG_FAILED } })
+        (behavior/catalog { paths: [(if (>= @entity.pkgCursor 0) (array/nth @entity.pkgs @entity.pkgCursor) null)], exposure: (default (object/get @entity.args "exposure") []) } { emit: { success: MCP_PKG_CATALOGED, failure: MCP_PKG_FAILED } })
       MCP_PKG_NEXT -> working when (>= @entity.pkgCursor (array/len @entity.pkgs))
         (emit MCP_TOOL_DONE { result: { behaviors: @entity.found, skipped: @entity.skipped } })
       MCP_PKG_CATALOGED -> working
@@ -356,7 +356,7 @@ orbital OrbMcpOrbital {
         (set @entity.pkgCursor (+ @entity.pkgCursor 1))
         (emit MCP_PKG_NEXT { })
       MCP_PKG_FAILED -> working
-        (set @entity.skipped (array/append @entity.skipped { package: (array/nth @entity.pkgs @entity.pkgCursor), error: @payload.error }))
+        (set @entity.skipped (array/append @entity.skipped { package: (if (>= @entity.pkgCursor 0) (array/nth @entity.pkgs @entity.pkgCursor) null), error: @payload.error }))
         (set @entity.pkgCursor (+ @entity.pkgCursor 1))
         (emit MCP_PKG_NEXT { })
       MCP_RUN -> working when (and (= @entity.tool "evaluate") (not (object/has @entity.args "expr")))

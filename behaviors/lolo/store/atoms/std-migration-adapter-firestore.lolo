@@ -69,7 +69,7 @@ orbital MigrationAdapterFirestoreOrbital {
           key: "doc",
           host: (str/slice @config.sourceOrigin (if (str/startsWith @config.sourceOrigin "https://") 8 7) (str/len @config.sourceOrigin)),
           method: "GET",
-          target: (str/concat "/v1/" (object/get (default (array/nth @entity.refs @entity.cursor) { ref: "", raw: "" }) "raw")),
+          target: (str/concat "/v1/" (object/get (default (if (>= @entity.cursor 0) (array/nth @entity.refs @entity.cursor) null) { ref: "", raw: "" }) "raw")),
           headers: [{ name: "accept", value: "application/json" }],
           body: (bytes/from-string ""),
           stream: "none"
@@ -79,7 +79,7 @@ orbital MigrationAdapterFirestoreOrbital {
       FIRESTORE_REPLIED -> reading when (and (>= ?status 200) (< ?status 300) (json/valid ?body))
         (let ((doc (json/parse ?body FirestoreDocument)))
           (if (or (== @doc null) (<= (array/len (str/split (object/get (default @doc { name: "" }) "name") "/documents/")) 1))
-            (set @entity.unreadable (array/append @entity.unreadable { ref: (object/get (default (array/nth @entity.refs @entity.cursor) { ref: "", raw: "" }) "raw"), reason: (if (== @doc null) "the Firestore reply is not a document" "the Firestore document name is not under /documents/") }))
+            (set @entity.unreadable (array/append @entity.unreadable { ref: (object/get (default (if (>= @entity.cursor 0) (array/nth @entity.refs @entity.cursor) null) { ref: "", raw: "" }) "raw"), reason: (if (== @doc null) "the Firestore reply is not a document" "the Firestore document name is not under /documents/") }))
             (set @entity.docs (array/append @entity.docs @doc))))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit FIRESTORE_NEXT {})
@@ -88,7 +88,7 @@ orbital MigrationAdapterFirestoreOrbital {
           (array/append
             @entity.unreadable
             {
-              ref: (object/get (default (array/nth @entity.refs @entity.cursor) { ref: "", raw: "" }) "raw"),
+              ref: (object/get (default (if (>= @entity.cursor 0) (array/nth @entity.refs @entity.cursor) null) { ref: "", raw: "" }) "raw"),
               reason: (if (and (>= ?status 200) (< ?status 300)) "the Firestore reply is not valid JSON" (str/concat "Firestore answered with HTTP status " ?status))
             }))
         (set @entity.cursor (+ @entity.cursor 1))
@@ -97,7 +97,7 @@ orbital MigrationAdapterFirestoreOrbital {
         (set @entity.unreadable
           (array/append
             @entity.unreadable
-            { ref: (object/get (default (array/nth @entity.refs @entity.cursor) { ref: "", raw: "" }) "raw"), reason: ?error }))
+            { ref: (object/get (default (if (>= @entity.cursor 0) (array/nth @entity.refs @entity.cursor) null) { ref: "", raw: "" }) "raw"), reason: ?error }))
         (notify error (if (validate/required ?error) (str/concat "Couldn't read a Firestore document — " ?error) "Couldn't read a Firestore document"))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit FIRESTORE_NEXT {})

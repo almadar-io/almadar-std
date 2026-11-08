@@ -125,7 +125,7 @@ orbital GraphLayoutOrbital {
                 (let ((lane (+ @entity.bodyWidth (* (+ @i 1) @entity.laneStep)))
                       (sx (+ (object/get @s "x") (math/floor (/ (object/get @s "width") 2))))
                       (tx (+ (object/get @t "x") (math/floor (/ (object/get @t "width") 2))))
-                      (sy (+ (default (array/nth @entity.rankTops (object/get @s "rank")) 0) (default (array/nth @entity.rankHeights (object/get @s "rank")) 0) (* (+ 1 (array/len (array/filter (array/take @entity.edges @i) (fn p (= (object/get @entity.ranks @p.source) (object/get @s "rank")))))) @entity.channelStep)))
+                      (sy (+ (default (let ((nxi (object/get @s "rank"))) (if (>= @nxi 0) (array/nth @entity.rankTops @nxi) null)) 0) (default (let ((nxi (object/get @s "rank"))) (if (>= @nxi 0) (array/nth @entity.rankHeights @nxi) null)) 0) (* (+ 1 (array/len (array/filter (array/take @entity.edges @i) (fn p (= (object/get @entity.ranks @p.source) (object/get @s "rank")))))) @entity.channelStep)))
                       (ty (- (object/get @t "y") (* (+ 1 (array/len (array/filter (array/take @entity.edges @i) (fn p (= (object/get @entity.ranks @p.target) (object/get @t "rank")))))) @entity.channelStep))))
                   (array/append @acc
                     { id: @e.id, source: @e.source, target: @e.target, label: @e.label, labelWidth: (math/ceil @e.labelWidth), labelHeight: (math/ceil @e.labelHeight),

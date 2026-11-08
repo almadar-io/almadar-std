@@ -102,11 +102,11 @@ orbital StepFlowOrbital {
         })
       ;; Role guard idiom: a step that declares no allowedRoles permits everyone; one that does
       ;; falls through to array/includes. checkRoles false drops the @user read for a [client] flow.
-      ADVANCE -> running when (and @config.checkRoles (not @entity.isLastStep) (or (let ((nthv (array/nth @config.steps @entity.currentStepIndex))) (if (= @nthv null) false (not (object/has @nthv allowedRoles)))) (array/includes (let ((nthv (array/nth @config.steps @entity.currentStepIndex))) (if (= @nthv null) [] (object/get @nthv allowedRoles []))) @user.role)))
+      ADVANCE -> running when (and @config.checkRoles (not @entity.isLastStep) (or (let ((nthv (if (>= @entity.currentStepIndex 0) (array/nth @config.steps @entity.currentStepIndex) null))) (if (= @nthv null) false (not (object/has @nthv allowedRoles)))) (array/includes (let ((nthv (if (>= @entity.currentStepIndex 0) (array/nth @config.steps @entity.currentStepIndex) null))) (if (= @nthv null) [] (object/get @nthv allowedRoles []))) @user.role)))
         (set @entity.currentStepIndex (+ @entity.currentStepIndex 1))
-        (set @entity.currentStepLabel (let ((nthv (array/nth @config.steps @entity.currentStepIndex))) (if (= @nthv null) "" (object/get @nthv label))))
-        (set @entity.currentStepDescription (let ((nthv (array/nth @config.steps @entity.currentStepIndex))) (if (= @nthv null) "" (object/get @nthv description ""))))
-        (set @entity.currentStepIcon (let ((nthv (array/nth @config.steps @entity.currentStepIndex))) (if (= @nthv null) user (object/get @nthv icon user))))
+        (set @entity.currentStepLabel (let ((nthv (if (>= @entity.currentStepIndex 0) (array/nth @config.steps @entity.currentStepIndex) null))) (if (= @nthv null) "" (object/get @nthv label))))
+        (set @entity.currentStepDescription (let ((nthv (if (>= @entity.currentStepIndex 0) (array/nth @config.steps @entity.currentStepIndex) null))) (if (= @nthv null) "" (object/get @nthv description ""))))
+        (set @entity.currentStepIcon (let ((nthv (if (>= @entity.currentStepIndex 0) (array/nth @config.steps @entity.currentStepIndex) null))) (if (= @nthv null) user (object/get @nthv icon user))))
         (set @entity.isFirstStep (= @entity.currentStepIndex 0))
         (set @entity.isLastStep (= @entity.currentStepIndex (- @entity.totalSteps 1)))
         (set @entity.primaryActionLabel (if (= @entity.currentStepIndex (- @entity.totalSteps 1)) "Finalize Approval" "Approve & Continue"))
@@ -127,9 +127,9 @@ orbital StepFlowOrbital {
         (render-ui main @config.bodyContent)
       ADVANCE -> running when (and (not @config.checkRoles) (not @entity.isLastStep))
         (set @entity.currentStepIndex (+ @entity.currentStepIndex 1))
-        (set @entity.currentStepLabel (let ((nthv (array/nth @config.steps @entity.currentStepIndex))) (if (= @nthv null) "" (object/get @nthv label))))
-        (set @entity.currentStepDescription (let ((nthv (array/nth @config.steps @entity.currentStepIndex))) (if (= @nthv null) "" (object/get @nthv description ""))))
-        (set @entity.currentStepIcon (let ((nthv (array/nth @config.steps @entity.currentStepIndex))) (if (= @nthv null) user (object/get @nthv icon user))))
+        (set @entity.currentStepLabel (let ((nthv (if (>= @entity.currentStepIndex 0) (array/nth @config.steps @entity.currentStepIndex) null))) (if (= @nthv null) "" (object/get @nthv label))))
+        (set @entity.currentStepDescription (let ((nthv (if (>= @entity.currentStepIndex 0) (array/nth @config.steps @entity.currentStepIndex) null))) (if (= @nthv null) "" (object/get @nthv description ""))))
+        (set @entity.currentStepIcon (let ((nthv (if (>= @entity.currentStepIndex 0) (array/nth @config.steps @entity.currentStepIndex) null))) (if (= @nthv null) user (object/get @nthv icon user))))
         (set @entity.isFirstStep (= @entity.currentStepIndex 0))
         (set @entity.isLastStep (= @entity.currentStepIndex (- @entity.totalSteps 1)))
         (set @entity.primaryActionLabel (if (= @entity.currentStepIndex (- @entity.totalSteps 1)) "Finalize Approval" "Approve & Continue"))
@@ -148,7 +148,7 @@ orbital StepFlowOrbital {
           title: (object/get @step label)
         })))
         (render-ui main @config.bodyContent)
-      ADVANCE -> approved when (and @config.checkRoles @entity.isLastStep (or (let ((nthv (array/nth @config.steps @entity.currentStepIndex))) (if (= @nthv null) false (not (object/has @nthv allowedRoles)))) (array/includes (let ((nthv (array/nth @config.steps @entity.currentStepIndex))) (if (= @nthv null) [] (object/get @nthv allowedRoles []))) @user.role)))
+      ADVANCE -> approved when (and @config.checkRoles @entity.isLastStep (or (let ((nthv (if (>= @entity.currentStepIndex 0) (array/nth @config.steps @entity.currentStepIndex) null))) (if (= @nthv null) false (not (object/has @nthv allowedRoles)))) (array/includes (let ((nthv (if (>= @entity.currentStepIndex 0) (array/nth @config.steps @entity.currentStepIndex) null))) (if (= @nthv null) [] (object/get @nthv allowedRoles []))) @user.role)))
         (set @entity.finalStatus approved)
         (render-ui main {
           align: center
@@ -170,7 +170,7 @@ orbital StepFlowOrbital {
           }, {
             allowNavigation: false
             currentStep: @entity.totalSteps
-            steps: (if (= (array/len @config.stepLabels) 0) @entity.wizardSteps (array/map @entity.wizardSteps (fn step { id: (object/get @step id ""), title: (array/nth @config.stepLabels @index), description: (if (= (array/len @config.stepDescriptions) 0) (object/get @step description "") (array/nth @config.stepDescriptions @index)) })))
+            steps: (if (= (array/len @config.stepLabels) 0) @entity.wizardSteps (array/map @entity.wizardSteps (fn step { id: (object/get @step id ""), title: (if (>= @index 0) (array/nth @config.stepLabels @index) null), description: (if (= (array/len @config.stepDescriptions) 0) (object/get @step description "") (if (>= @index 0) (array/nth @config.stepDescriptions @index) null)) })))
             type: wizard-progress
           }, {
             action: RESTART
@@ -206,7 +206,7 @@ orbital StepFlowOrbital {
           }, {
             allowNavigation: false
             currentStep: @entity.totalSteps
-            steps: (if (= (array/len @config.stepLabels) 0) @entity.wizardSteps (array/map @entity.wizardSteps (fn step { id: (object/get @step id ""), title: (array/nth @config.stepLabels @index), description: (if (= (array/len @config.stepDescriptions) 0) (object/get @step description "") (array/nth @config.stepDescriptions @index)) })))
+            steps: (if (= (array/len @config.stepLabels) 0) @entity.wizardSteps (array/map @entity.wizardSteps (fn step { id: (object/get @step id ""), title: (if (>= @index 0) (array/nth @config.stepLabels @index) null), description: (if (= (array/len @config.stepDescriptions) 0) (object/get @step description "") (if (>= @index 0) (array/nth @config.stepDescriptions @index) null)) })))
             type: wizard-progress
           }, {
             action: RESTART
@@ -222,9 +222,9 @@ orbital StepFlowOrbital {
         })
       BACK -> running
         (set @entity.currentStepIndex (- @entity.currentStepIndex 1))
-        (set @entity.currentStepLabel (let ((nthv (array/nth @config.steps @entity.currentStepIndex))) (if (= @nthv null) "" (object/get @nthv label))))
-        (set @entity.currentStepDescription (let ((nthv (array/nth @config.steps @entity.currentStepIndex))) (if (= @nthv null) "" (object/get @nthv description ""))))
-        (set @entity.currentStepIcon (let ((nthv (array/nth @config.steps @entity.currentStepIndex))) (if (= @nthv null) user (object/get @nthv icon user))))
+        (set @entity.currentStepLabel (let ((nthv (if (>= @entity.currentStepIndex 0) (array/nth @config.steps @entity.currentStepIndex) null))) (if (= @nthv null) "" (object/get @nthv label))))
+        (set @entity.currentStepDescription (let ((nthv (if (>= @entity.currentStepIndex 0) (array/nth @config.steps @entity.currentStepIndex) null))) (if (= @nthv null) "" (object/get @nthv description ""))))
+        (set @entity.currentStepIcon (let ((nthv (if (>= @entity.currentStepIndex 0) (array/nth @config.steps @entity.currentStepIndex) null))) (if (= @nthv null) user (object/get @nthv icon user))))
         (set @entity.isFirstStep (= @entity.currentStepIndex 0))
         (set @entity.isLastStep (= @entity.currentStepIndex (- @entity.totalSteps 1)))
         (set @entity.primaryActionLabel (if (= @entity.currentStepIndex (- @entity.totalSteps 1)) "Finalize Approval" "Approve & Continue"))
@@ -562,7 +562,7 @@ orbital StepFlowOrbital {
         }, {
           allowNavigation: false
           currentStep: @entity.currentStepIndex
-          steps: (if (= (array/len @config.stepLabels) 0) @entity.wizardSteps (array/map @entity.wizardSteps (fn step { id: (object/get @step id ""), title: (array/nth @config.stepLabels @index), description: (if (= (array/len @config.stepDescriptions) 0) (object/get @step description "") (array/nth @config.stepDescriptions @index)) })))
+          steps: (if (= (array/len @config.stepLabels) 0) @entity.wizardSteps (array/map @entity.wizardSteps (fn step { id: (object/get @step id ""), title: (if (>= @index 0) (array/nth @config.stepLabels @index) null), description: (if (= (array/len @config.stepDescriptions) 0) (object/get @step description "") (if (>= @index 0) (array/nth @config.stepDescriptions @index) null)) })))
           type: wizard-progress
         }, {
           children: [{
@@ -574,12 +574,12 @@ orbital StepFlowOrbital {
                 type: icon
               }, {
                 children: [{
-                  content: (if (= (array/len @config.stepLabels) 0) @entity.currentStepLabel (array/nth @config.stepLabels @entity.currentStepIndex))
+                  content: (if (= (array/len @config.stepLabels) 0) @entity.currentStepLabel (if (>= @entity.currentStepIndex 0) (array/nth @config.stepLabels @entity.currentStepIndex) null))
                   type: typography
                   variant: h2
                 }, {
                   color: muted
-                  content: (if (= (array/len @config.stepDescriptions) 0) @entity.currentStepDescription (array/nth @config.stepDescriptions @entity.currentStepIndex))
+                  content: (if (= (array/len @config.stepDescriptions) 0) @entity.currentStepDescription (if (>= @entity.currentStepIndex 0) (array/nth @config.stepDescriptions @entity.currentStepIndex) null))
                   type: typography
                   variant: body
                 }]

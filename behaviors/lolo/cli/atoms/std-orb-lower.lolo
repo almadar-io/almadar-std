@@ -114,18 +114,18 @@ orbital OrbLowerOrbital {
       INIT -> reading
       LOWER_NEXT -> idle when (>= @entity.cursor (array/len @entity.files))
         (emit LOWER_ANSWERED { status: 200, body: (str/join @entity.lines "\n") })
-      LOWER_NEXT -> reading when (and (< @entity.cursor (array/len @entity.files)) (not (os/path-is-absolute (default (array/nth @entity.files @entity.cursor) ""))))
-        (os/read-file { anchor: "cwd" path: (default (array/nth @entity.files @entity.cursor) "") } { key: (str/concat "lower-" @entity.cursor), emit: { success: LOWER_FILE, failure: LOWER_UNREAD } })
-      LOWER_NEXT -> reading when (and (< @entity.cursor (array/len @entity.files)) (os/path-is-absolute (default (array/nth @entity.files @entity.cursor) "")))
-        (os/read-file (str/concat "/" (str/slice (default (array/nth @entity.files @entity.cursor) "") 1 (str/len (default (array/nth @entity.files @entity.cursor) "")))) { key: (str/concat "lower-" @entity.cursor), emit: { success: LOWER_FILE, failure: LOWER_UNREAD } })
+      LOWER_NEXT -> reading when (and (< @entity.cursor (array/len @entity.files)) (not (os/path-is-absolute (default (if (>= @entity.cursor 0) (array/nth @entity.files @entity.cursor) null) ""))))
+        (os/read-file { anchor: "cwd" path: (default (if (>= @entity.cursor 0) (array/nth @entity.files @entity.cursor) null) "") } { key: (str/concat "lower-" @entity.cursor), emit: { success: LOWER_FILE, failure: LOWER_UNREAD } })
+      LOWER_NEXT -> reading when (and (< @entity.cursor (array/len @entity.files)) (os/path-is-absolute (default (if (>= @entity.cursor 0) (array/nth @entity.files @entity.cursor) null) "")))
+        (os/read-file (str/concat "/" (str/slice (default (if (>= @entity.cursor 0) (array/nth @entity.files @entity.cursor) null) "") 1 (str/len (default (if (>= @entity.cursor 0) (array/nth @entity.files @entity.cursor) null) "")))) { key: (str/concat "lower-" @entity.cursor), emit: { success: LOWER_FILE, failure: LOWER_UNREAD } })
       LOWER_FILE -> reading
         (program/read (bytes/to-string @payload.data) { key: (str/concat "lower-" @entity.cursor), emit: { success: LOWER_LOWERED, failure: LOWER_UNREAD } })
       LOWER_LOWERED -> reading
-        (set @entity.lines (array/append @entity.lines (json/stringify { path: (default (array/nth @entity.files @entity.cursor) ""), orb: @payload.result })))
+        (set @entity.lines (array/append @entity.lines (json/stringify { path: (default (if (>= @entity.cursor 0) (array/nth @entity.files @entity.cursor) null) ""), orb: @payload.result })))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit LOWER_NEXT { })
       LOWER_UNREAD -> reading
-        (set @entity.lines (array/append @entity.lines (json/stringify { path: (default (array/nth @entity.files @entity.cursor) ""), error: @payload.error })))
+        (set @entity.lines (array/append @entity.lines (json/stringify { path: (default (if (>= @entity.cursor 0) (array/nth @entity.files @entity.cursor) null) ""), error: @payload.error })))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit LOWER_NEXT { })
     }

@@ -36,9 +36,7 @@ orbital MigrationAdapterSlackOrbital {
                   ref: (object/get @d ref),
                   channel: (if
                              (> (array/len (str/split (object/get @d ref) "/")) 1)
-                             (default (array/nth
-                               (str/split (object/get @d ref) "/")
-                               (- (array/len (str/split (object/get @d ref) "/")) 2)) "channel")
+                             (default (let ((nxi (- (array/len (str/split (object/get @d ref) "/")) 2))) (if (>= @nxi 0) (array/nth (str/split (object/get @d ref) "/") @nxi) null)) "channel")
                              "channel"),
                   ok: (validate/array (json/parse (object/get @d raw) SlackMessages)),
                   valid: true,
@@ -48,9 +46,7 @@ orbital MigrationAdapterSlackOrbital {
                   ref: (object/get @d ref),
                   channel: (if
                              (> (array/len (str/split (object/get @d ref) "/")) 1)
-                             (default (array/nth
-                               (str/split (object/get @d ref) "/")
-                               (- (array/len (str/split (object/get @d ref) "/")) 2)) "channel")
+                             (default (let ((nxi (- (array/len (str/split (object/get @d ref) "/")) 2))) (if (>= @nxi 0) (array/nth (str/split (object/get @d ref) "/") @nxi) null)) "channel")
                              "channel"),
                   ok: false,
                   valid: (json/valid (object/get @d raw)),

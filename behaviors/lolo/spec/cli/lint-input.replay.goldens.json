@@ -2000,7 +2000,28 @@
           "orbital",
           "targetTrait",
           "event"
-         ]
+         ],
+         "categories": {
+          "array": [
+           "array/map"
+          ],
+          "control": [
+           "fn",
+           "if"
+          ],
+          "effect": [
+           "emit"
+          ],
+          "math": [
+           "+"
+          ],
+          "std-program": [
+           "program/dispatch"
+          ],
+          "string": [
+           "str/len"
+          ]
+         }
         }
        }
       ]
@@ -14466,6 +14487,773 @@
      }
     }
    ]
+  },
+  {
+   "id": "G-STD-276: a same-arm @entity.f set to a body holding @trait.X reaches X through the render",
+   "entity": {
+    "file": "a.lolo",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "sitesHeads": []
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "ready",
+     "event": "LINT_INPUT_OFFER",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "app x [\n]\n",
+      "latin": true,
+      "program": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "fields": []
+         },
+         "traits": [
+          {
+           "name": "Owner",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "s"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "s",
+              "to": "s",
+              "event": "E1",
+              "effects": [
+               [
+                "set",
+                "@entity.body",
+                {
+                 "type": "stack",
+                 "children": [
+                  "@trait.Kid"
+                 ]
+                }
+               ],
+               [
+                "render-ui",
+                "main",
+                "@entity.body"
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_EMBEDS",
+        "payload": {
+         "scope": "",
+         "closures": [
+          {
+           "u": "0-0-0",
+           "e": 1,
+           "reach": [
+            "Kid"
+           ],
+           "free": false,
+           "roots": [
+            {
+             "type": "stack",
+             "children": [
+              "@trait.Kid"
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "note": "The closure fact the viewer-stranded rule reads: the set's value is a root of the call's pool, so the embed it holds is reached; no field is left unresolved."
+  },
+  {
+   "id": "G-STD-276 control: a field never set in the arm is free and reaches nothing",
+   "entity": {
+    "file": "a.lolo",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "sitesHeads": []
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "ready",
+     "event": "LINT_INPUT_OFFER",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "app x [\n]\n",
+      "latin": true,
+      "program": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "fields": []
+         },
+         "traits": [
+          {
+           "name": "Owner",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "s"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "s",
+              "to": "s",
+              "event": "E1",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                "@entity.body"
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_EMBEDS",
+        "payload": {
+         "scope": "",
+         "closures": [
+          {
+           "u": "0-0-0",
+           "e": 0,
+           "reach": [],
+           "free": true,
+           "roots": []
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "note": "The render reads @entity.body with no set before it in the arm: the body is data, so the closure is free."
+  },
+  {
+   "id": "G-STD-276: a field set in another arm does not resolve this arm's render",
+   "entity": {
+    "file": "a.lolo",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "sitesHeads": []
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "ready",
+     "event": "LINT_INPUT_OFFER",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "app x [\n]\n",
+      "latin": true,
+      "program": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "fields": []
+         },
+         "traits": [
+          {
+           "name": "Owner",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "s"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "s",
+              "to": "s",
+              "event": "E0",
+              "effects": [
+               [
+                "set",
+                "@entity.body",
+                {
+                 "type": "stack",
+                 "children": [
+                  "@trait.Kid"
+                 ]
+                }
+               ]
+              ]
+             },
+             {
+              "from": "s",
+              "to": "s",
+              "event": "E1",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                "@entity.body"
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_EMBEDS",
+        "payload": {
+         "scope": "",
+         "closures": [
+          {
+           "u": "0-0-1",
+           "e": 0,
+           "reach": [],
+           "free": true,
+           "roots": []
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "note": "Same-arm resolution only: the set in the E0 arm is not before the render in the E1 arm."
+  },
+  {
+   "id": "G-STD-276: a @config.k default shaped as a pattern is a root and its embed is reached",
+   "entity": {
+    "file": "a.lolo",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "sitesHeads": []
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "ready",
+     "event": "LINT_INPUT_OFFER",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "app x [\n]\n",
+      "latin": true,
+      "program": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "fields": []
+         },
+         "traits": [
+          {
+           "name": "Owner",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "s"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "s",
+              "to": "s",
+              "event": "E1",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                "@config.view"
+               ]
+              ]
+             }
+            ]
+           },
+           "config": {
+            "view": {
+             "type": "string",
+             "default": {
+              "type": "stack",
+              "children": [
+               "@trait.Kid"
+              ]
+             }
+            }
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_EMBEDS",
+        "payload": {
+         "scope": "",
+         "closures": [
+          {
+           "u": "0-0-0",
+           "e": 0,
+           "reach": [
+            "Kid"
+           ],
+           "free": false,
+           "roots": [
+            {
+             "type": "stack",
+             "children": [
+              "@trait.Kid"
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "note": "The knob's default is a pattern object, so it is walked like the body."
+  },
+  {
+   "id": "G-STD-276 control: a @config.k default that is no pattern is free",
+   "entity": {
+    "file": "a.lolo",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "sitesHeads": []
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "ready",
+     "event": "LINT_INPUT_OFFER",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "app x [\n]\n",
+      "latin": true,
+      "program": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "fields": []
+         },
+         "traits": [
+          {
+           "name": "Owner",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "s"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "s",
+              "to": "s",
+              "event": "E1",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                "@config.view"
+               ]
+              ]
+             }
+            ]
+           },
+           "config": {
+            "view": {
+             "type": "string",
+             "default": "plain"
+            }
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_EMBEDS",
+        "payload": {
+         "scope": "",
+         "closures": [
+          {
+           "u": "0-0-0",
+           "e": 0,
+           "reach": [],
+           "free": true,
+           "roots": []
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "note": "A string default is not a pattern tree, so the knob is data."
+  },
+  {
+   "id": "G-STD-276: a set chain follows one field into another and a config default nested in a set value",
+   "entity": {
+    "file": "a.lolo",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "sitesHeads": []
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "ready",
+     "event": "LINT_INPUT_OFFER",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "app x [\n]\n",
+      "latin": true,
+      "program": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "fields": []
+         },
+         "traits": [
+          {
+           "name": "Owner",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "s"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "s",
+              "to": "s",
+              "event": "E1",
+              "effects": [
+               [
+                "set",
+                "@entity.inner",
+                {
+                 "type": "stack",
+                 "children": [
+                  "@trait.Kid"
+                 ]
+                }
+               ],
+               [
+                "set",
+                "@entity.body",
+                {
+                 "type": "box",
+                 "children": [
+                  "@entity.inner"
+                 ]
+                }
+               ],
+               [
+                "render-ui",
+                "main",
+                "@entity.body"
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_EMBEDS",
+        "payload": {
+         "scope": "",
+         "closures": [
+          {
+           "u": "0-0-0",
+           "e": 2,
+           "reach": [
+            "Kid"
+           ],
+           "free": false,
+           "roots": [
+            {
+             "type": "box",
+             "children": [
+              "@entity.inner"
+             ]
+            },
+            {
+             "type": "stack",
+             "children": [
+              "@trait.Kid"
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "note": "body holds @entity.inner, whose own set holds the embed: the fixpoint resolves both."
+  },
+  {
+   "id": "G-STD-276: a tick's render is a unit of its own (k index)",
+   "entity": {
+    "file": "a.lolo",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "sitesHeads": []
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "ready",
+     "event": "LINT_INPUT_OFFER",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "app x [\n]\n",
+      "latin": true,
+      "program": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "fields": []
+         },
+         "traits": [
+          {
+           "name": "Owner",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "s"
+             }
+            ],
+            "transitions": []
+           },
+           "ticks": [
+            {
+             "name": "t",
+             "interval": 1000,
+             "effects": [
+              [
+               "set",
+               "@entity.body",
+               {
+                "type": "stack",
+                "children": [
+                 "@trait.Kid"
+                ]
+               }
+              ],
+              [
+               "render-ui",
+               "main",
+               "@entity.body"
+              ]
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_EMBEDS",
+        "payload": {
+         "scope": "",
+         "closures": [
+          {
+           "u": "0-0-k0",
+           "e": 1,
+           "reach": [
+            "Kid"
+           ],
+           "free": false,
+           "roots": [
+            {
+             "type": "stack",
+             "children": [
+              "@trait.Kid"
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "note": "Tick effects resolve the same way; the unit key carries the k."
+  },
+  {
+   "id": "G-STD-276 control: a call that names no @entity, @config or @trait has no closure fact",
+   "entity": {
+    "file": "a.lolo",
+    "raw": "app x [\n]\n",
+    "latin": true,
+    "sitesHeads": []
+   },
+   "steps": [
+    {
+     "trait": "OrbLintInput",
+     "from": "ready",
+     "event": "LINT_INPUT_OFFER",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "app x [\n]\n",
+      "latin": true,
+      "program": {
+       "name": "app",
+       "orbitals": [
+        {
+         "name": "A",
+         "entity": {
+          "name": "E",
+          "fields": []
+         },
+         "traits": [
+          {
+           "name": "Owner",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "s"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "s",
+              "to": "s",
+              "event": "E1",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "typography",
+                 "content": "hi"
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_EMBEDS",
+        "payload": {
+         "scope": "",
+         "closures": []
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "note": "Nothing to resolve, nothing sent."
   }
  ]
 }

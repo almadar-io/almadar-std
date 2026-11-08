@@ -85,10 +85,10 @@ orbital OrbSandboxOrbital {
 
     state running {
       INIT -> running
-      SB_NEXT -> running when (and (< @entity.cursor (array/len @entity.steps)) (!= (array/nth @entity.steps @entity.cursor) null) (= (object/get (array/nth @entity.steps @entity.cursor) "tool") "docker"))
-        (emit SB_DOCKER_RUN { stage: (object/get (array/nth @entity.steps @entity.cursor) "stage") argv: (array/map (object/get (array/nth @entity.steps @entity.cursor) "argv") (fn a (str/replaceAll (str/replaceAll (str/replaceAll @a "%DEPLOY%" @entity.deploy) "%SRC%" @entity.src) "%STAGE%" @entity.stageDir))) })
-      SB_NEXT -> running when (and (< @entity.cursor (array/len @entity.steps)) (!= (array/nth @entity.steps @entity.cursor) null) (= (object/get (array/nth @entity.steps @entity.cursor) "tool") "sh"))
-        (emit SB_SH_RUN { stage: (object/get (array/nth @entity.steps @entity.cursor) "stage") argv: (array/map (object/get (array/nth @entity.steps @entity.cursor) "argv") (fn a (str/replaceAll (str/replaceAll (str/replaceAll @a "%DEPLOY%" @entity.deploy) "%SRC%" @entity.src) "%STAGE%" @entity.stageDir))) })
+      SB_NEXT -> running when (and (< @entity.cursor (array/len @entity.steps)) (!= (if (>= @entity.cursor 0) (array/nth @entity.steps @entity.cursor) null) null) (= (object/get (if (>= @entity.cursor 0) (array/nth @entity.steps @entity.cursor) null) "tool") "docker"))
+        (emit SB_DOCKER_RUN { stage: (object/get (if (>= @entity.cursor 0) (array/nth @entity.steps @entity.cursor) null) "stage") argv: (array/map (object/get (if (>= @entity.cursor 0) (array/nth @entity.steps @entity.cursor) null) "argv") (fn a (str/replaceAll (str/replaceAll (str/replaceAll @a "%DEPLOY%" @entity.deploy) "%SRC%" @entity.src) "%STAGE%" @entity.stageDir))) })
+      SB_NEXT -> running when (and (< @entity.cursor (array/len @entity.steps)) (!= (if (>= @entity.cursor 0) (array/nth @entity.steps @entity.cursor) null) null) (= (object/get (if (>= @entity.cursor 0) (array/nth @entity.steps @entity.cursor) null) "tool") "sh"))
+        (emit SB_SH_RUN { stage: (object/get (if (>= @entity.cursor 0) (array/nth @entity.steps @entity.cursor) null) "stage") argv: (array/map (object/get (if (>= @entity.cursor 0) (array/nth @entity.steps @entity.cursor) null) "argv") (fn a (str/replaceAll (str/replaceAll (str/replaceAll @a "%DEPLOY%" @entity.deploy) "%SRC%" @entity.src) "%STAGE%" @entity.stageDir))) })
       SB_NEXT -> ready when (and (>= @entity.cursor (array/len @entity.steps)) (= @entity.rc 0))
         (emit SANDBOX_ANSWERED { status: 200, body: (str/trim @entity.out) })
       SB_NEXT -> ready when (and (>= @entity.cursor (array/len @entity.steps)) (!= @entity.rc 0))
@@ -109,10 +109,10 @@ orbital OrbSandboxOrbital {
         (set @entity.rc @payload.exitCode)
         (set @entity.cursor (+ @entity.cursor 1))
         (emit SB_NEXT { })
-      SB_DONE -> running when (and (!= @payload.exitCode 0) (!= (array/nth @entity.steps @entity.cursor) null) (= (object/get (array/nth @entity.steps @entity.cursor) "mode") "soft") (!= @payload.stage "rmstage") (!= @payload.stage "check"))
+      SB_DONE -> running when (and (!= @payload.exitCode 0) (!= (if (>= @entity.cursor 0) (array/nth @entity.steps @entity.cursor) null) null) (= (object/get (if (>= @entity.cursor 0) (array/nth @entity.steps @entity.cursor) null) "mode") "soft") (!= @payload.stage "rmstage") (!= @payload.stage "check"))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit SB_NEXT { })
-      SB_DONE -> running when (and (!= @payload.exitCode 0) (!= (array/nth @entity.steps @entity.cursor) null) (= (object/get (array/nth @entity.steps @entity.cursor) "mode") "need") (not @entity.aborted) (!= @payload.stage "check"))
+      SB_DONE -> running when (and (!= @payload.exitCode 0) (!= (if (>= @entity.cursor 0) (array/nth @entity.steps @entity.cursor) null) null) (= (object/get (if (>= @entity.cursor 0) (array/nth @entity.steps @entity.cursor) null) "mode") "need") (not @entity.aborted) (!= @payload.stage "check"))
         (set @entity.out (str/concat @entity.out @payload.stdout @payload.stderr))
         (set @entity.rc 1)
         (set @entity.aborted true)

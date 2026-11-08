@@ -88,16 +88,16 @@ orbital TextChunkerOrbital {
                 (fn st k
                   (if (>= @st.prevEnd @n)
                     @st
-                    (let ((fit (array/count (array/range @n) (fn j (and (>= @j @st.cur) (<= (- (default (array/nth @ue @j) 0) (default (array/nth @us @st.cur) 0)) @config.chunkSize)))))
+                    (let ((fit (array/count (array/range @n) (fn j (and (>= @j @st.cur) (<= (- (default (if (>= @j 0) (array/nth @ue @j) null) 0) (default (if (>= @st.cur 0) (array/nth @us @st.cur) null) 0)) @config.chunkSize)))))
                           (stop (math/min @n (math/max (+ @st.prevEnd 1) (+ @st.cur (math/max 1 @fit))))))
-                      { spans: (array/append @st.spans { start: (default (array/nth @us @st.cur) 0), end: (default (array/nth @ue (- @stop 1)) 0) }),
+                      { spans: (array/append @st.spans { start: (default (if (>= @st.cur 0) (array/nth @us @st.cur) null) 0), end: (default (let ((nxi (- @stop 1))) (if (>= @nxi 0) (array/nth @ue @nxi) null)) 0) }),
                         cur: (if (>= @stop @n) @n (math/max (+ @st.cur 1) (- @stop @config.overlap))),
                         prevEnd: @stop })))))
               (spans (if (== @config.strategy "fixed") @fixedSpans (object/get @unitSpans spans [])))
               (m (array/len @spans))
               (tail (default (array/last @spans) { start: 0, end: 0 }))
               (merged (if (and (> @m 1) (< (- @tail.end @tail.start) @config.minChunkSize))
-                        (array/append (array/dropLast @spans 2) { start: (default (object/get (default (array/nth @spans (- @m 2)) { start: 0, end: 0 }) start 0) 0), end: @tail.end })
+                        (array/append (array/dropLast @spans 2) { start: (default (object/get (default (let ((nxi (- @m 2))) (if (>= @nxi 0) (array/nth @spans @nxi) null)) { start: 0, end: 0 }) start 0) 0), end: @tail.end })
                         @spans))
               (chunks (array/map (array/range (array/len @merged)) (fn i (let ((sp (default (array/nth @merged @i) { start: 0, end: 0 }))) { id: (str/concat @docId "#" @i), docId: @docId, index: @i, text: (str/slice @text @sp.start @sp.end), start: @sp.start, end: @sp.end })))))
           (do

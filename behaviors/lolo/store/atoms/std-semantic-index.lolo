@@ -305,9 +305,9 @@ orbital SemanticIndexOrbital {
           pairs: (array/flatten
             (array/map (array/range 0 (array/len ?embeddings))
               (fn i (array/flatten (array/map (array/range (+ @i 1) (array/len ?embeddings))
-                (fn j (let ((c (array/cosine (default (array/nth ?embeddings @i) []) (default (array/nth ?embeddings @j) []))))
+                (fn j (let ((c (array/cosine (default (array/nth ?embeddings @i) []) (default (if (>= @j 0) (array/nth ?embeddings @j) null) []))))
                   (if (== @c null) []
-                    (if (>= @c @config.pairFloor) [{ a: (object/get (default (array/nth @entity.semTexts @i) {}) id ""), b: (object/get (default (array/nth @entity.semTexts @j) {}) id ""), score: (default @c 0) }] [])))))))))
+                    (if (>= @c @config.pairFloor) [{ a: (object/get (default (array/nth @entity.semTexts @i) {}) id ""), b: (object/get (default (if (>= @j 0) (array/nth @entity.semTexts @j) null) {}) id ""), score: (default @c 0) }] [])))))))))
         })
 
       SemanticResume -> working when (and (= @entity.semPhase "embed") (= @entity.semOp "canonical") (= (array/len ?embeddings) (array/len @entity.semTexts)))
@@ -317,14 +317,14 @@ orbital SemanticIndexOrbital {
 
       SEMANTIC_NEXT -> idle when (and (= @entity.semPhase "canonical") (>= @entity.semCursor (array/len @entity.semItems)))
         (emit SEMANTIC_CANONICAL_RESOLVED { resolutions: @entity.semResolutions, key: @entity.semKey })
-      SEMANTIC_NEXT -> working when (and (= @entity.semPhase "canonical") (< @entity.semCursor (array/len @entity.semItems)) (> (array/len (default (array/nth @entity.semVectors @entity.semCursor) [])) 0))
+      SEMANTIC_NEXT -> working when (and (= @entity.semPhase "canonical") (< @entity.semCursor (array/len @entity.semItems)) (> (array/len (default (if (>= @entity.semCursor 0) (array/nth @entity.semVectors @entity.semCursor) null) [])) 0))
         (fetch SemanticRow {
           filter: (and (array/includes (default @entity.semGraphIds []) (object/get @entity graphId)) (or @entity.semAnyType (array/includes (default @entity.semNodeTypes []) (object/get @entity nodeType)))),
-          nearest: { field: "embedding", vector: (default (array/nth @entity.semVectors @entity.semCursor) []), k: @config.canonicalK },
+          nearest: { field: "embedding", vector: (default (if (>= @entity.semCursor 0) (array/nth @entity.semVectors @entity.semCursor) null) []), k: @config.canonicalK },
           emit: { success: SemanticFetched, failure: SemanticStoreFailed }
         })
-      SEMANTIC_NEXT -> working when (and (= @entity.semPhase "canonical") (< @entity.semCursor (array/len @entity.semItems)) (= (array/len (default (array/nth @entity.semVectors @entity.semCursor) [])) 0))
-        (set @entity.semResolutions (array/concat @entity.semResolutions [{ id: (object/get (default (array/nth @entity.semItems @entity.semCursor) {}) id ""), adopted: false, matchId: "", matchName: "", score: 0 }]))
+      SEMANTIC_NEXT -> working when (and (= @entity.semPhase "canonical") (< @entity.semCursor (array/len @entity.semItems)) (= (array/len (default (if (>= @entity.semCursor 0) (array/nth @entity.semVectors @entity.semCursor) null) [])) 0))
+        (set @entity.semResolutions (array/concat @entity.semResolutions [{ id: (object/get (default (if (>= @entity.semCursor 0) (array/nth @entity.semItems @entity.semCursor) null) {}) id ""), adopted: false, matchId: "", matchName: "", score: 0 }]))
         (set @entity.semCursor (+ @entity.semCursor 1))
         (emit SEMANTIC_NEXT { index: @entity.semCursor })
 
@@ -346,10 +346,10 @@ orbital SemanticIndexOrbital {
       SemanticFetched -> working when (and (= @entity.semPhase "canonical") (= @entity.semOp "canonical"))
         (set @entity.semResolutions
           (array/concat @entity.semResolutions
-            [(let ((best (array/first ?data)) (rid (object/get (default (array/nth @entity.semItems @entity.semCursor) {}) id "")))
+            [(let ((best (array/first ?data)) (rid (object/get (default (if (>= @entity.semCursor 0) (array/nth @entity.semItems @entity.semCursor) null) {}) id "")))
               (if (== @best null)
                 { id: @rid, adopted: false, matchId: "", matchName: "", score: 0 }
-                (let ((score (array/cosine (object/get @best embedding []) (default (array/nth @entity.semVectors @entity.semCursor) []))))
+                (let ((score (array/cosine (object/get @best embedding []) (default (if (>= @entity.semCursor 0) (array/nth @entity.semVectors @entity.semCursor) null) []))))
                   (if (== @score null)
                     { id: @rid, adopted: false, matchId: "", matchName: "", score: 0 }
                     { id: @rid, adopted: (>= @score @config.canonicalThreshold), matchId: (object/get @best id ""), matchName: (object/get @best name ""), score: (default @score 0) }))))]))

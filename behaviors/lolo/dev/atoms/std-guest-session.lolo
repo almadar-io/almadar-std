@@ -1,6 +1,6 @@
 app std-guest-session [
   version: "1.0.0",
-  description: "std-guest-session — runs a program picked at run time as a guest session on the kernel, and paints it. GuestSession (server) takes GUEST_OPEN { program } (a resolved program value, closing any guest already open), resolves std-mock-page-seed once, composes it with the program (program/compose, unless the program already declares the mock_seed_marks store) and opens the composed program with program/open, so the guest seeds each routed page's entities on its first visit inside its own kernel (EXEC-SEED-7), keeps the latest paint of every trait per slot (embedded children included) and emits GUEST_PAINTS { guest, paints } and GUEST_MOVED { guest, moves } (the transitions its traits took); a failed open is GUEST_ERROR { message }, a failed step is GUEST_NOTICE { message }, and GUEST_FAIL { message } lets the host that could not obtain a program say so the same way. GUEST_NAVIGATE { guest, route } opens that route in the guest with program/navigate. GUEST_SEND { guest, address, event, payload } steps the guest with program/dispatch when guest is the open one and is ignored for any other; GUEST_RESET closes it. GUEST_CLEARED tells the painter the guest is gone. GuestStage (client) keeps the paint, shows one guest-view for the configured slot holding the paint of every page-root trait in paint order (never an embedded child's; its source is the first root), and hands it every paint of the guest so an embedded @trait.X resolves to the guest's trait (a skeleton until the guest has painted, an alert when it failed) and turns a control of the guest it shows into GUEST_SEND. The host composes both traits under these names, supplies the program value, and embeds GuestStage inside its own chrome with @trait.GuestStage.",
+  description: "std-guest-session — runs a program picked at run time as a guest session on the kernel, and paints it. GuestSession (server) resolves std-mock-page-seed as it mounts, and takes GUEST_OPEN { program } (a resolved program value, closing any guest already open), resolves std-mock-page-seed once, composes it with the program (program/compose, unless the program already declares the mock_seed_marks store) and opens the composed program with program/open, so the guest seeds each routed page's entities on its first visit inside its own kernel (EXEC-SEED-7), keeps the latest paint of every trait per slot (embedded children included) and emits GUEST_PAINTS { guest, paints } and GUEST_MOVED { guest, moves } (the transitions its traits took); a failed open is GUEST_ERROR { message }, a failed step is GUEST_NOTICE { message }, and GUEST_FAIL { message } lets the host that could not obtain a program say so the same way. GUEST_NAVIGATE { guest, route } opens that route in the guest with program/navigate. GUEST_SEND { guest, address, event, payload } steps the guest with program/dispatch when guest is the open one and is ignored for any other; GUEST_RESET closes it. GUEST_CLEARED tells the painter the guest is gone. GuestStage (client) keeps the paint, shows one guest-view for the configured slot holding the paint of every page-root trait in paint order (never an embedded child's; its source is the first root), and hands it every paint of the guest so an embedded @trait.X resolves to the guest's trait (a skeleton until the guest has painted, an alert when it failed) and turns a control of the guest it shows into GUEST_SEND. The host composes both traits under these names, supplies the program value, and embeds GuestStage inside its own chrome with @trait.GuestStage.",
   egress: [],
   kernel: { "guest": [spawn] },
   env: ["FIREBASE_AUTH_EMULATOR_HOST", "ALMADAR_PERSONA_OWNS"]
@@ -60,7 +60,9 @@ orbital GuestSessionOrbital {
     initial: idle
 
     state idle {
-      INIT -> idle
+      INIT -> idle when (= @entity.guestSeed null)
+        (behavior/resolve { behavior: "std/behaviors/std-mock-page-seed" } {} { emit: { success: GUEST_SEED_RESOLVED, failure: GUEST_SEED_FAILED } })
+      INIT -> idle when (!= @entity.guestSeed null)
       GUEST_OPEN -> opening
         (set @entity.guestPaints [])
         (emit GUEST_CLEARED {})
@@ -78,6 +80,8 @@ orbital GuestSessionOrbital {
       GUEST_CLOSE_FAILED -> idle
       GUEST_PREPARE -> idle
       GUEST_SEED_RESOLVED -> idle
+        (set @entity.guestSeed ?result)
+      GUEST_SEED_FAILED -> idle
       GUEST_SEED_MARKED -> idle
       GUEST_PERSONAS_RESOLVED -> idle
       GUEST_COMPOSED -> idle
@@ -103,9 +107,11 @@ orbital GuestSessionOrbital {
         (emit GUEST_ERROR { message: ?error })
       GUEST_PREPARE -> opening when (= @entity.guestSeed null)
         (behavior/resolve { behavior: "std/behaviors/std-mock-page-seed" } {} { emit: { success: GUEST_SEED_RESOLVED, failure: GUEST_FAILED } })
-      GUEST_SEED_RESOLVED -> opening
+      GUEST_SEED_RESOLVED -> opening when (= @entity.guestSeed null)
         (set @entity.guestSeed ?result)
         (emit GUEST_PREPARE {})
+      GUEST_SEED_RESOLVED -> opening when (!= @entity.guestSeed null)
+      GUEST_SEED_FAILED -> opening
       GUEST_PREPARE -> opening when (!= @entity.guestSeed null)
         (emit GUEST_SEED_ASK { program: @entity.guestProgram })
       GUEST_SEED_MARKED -> opening when @payload.marked
@@ -164,6 +170,7 @@ orbital GuestSessionOrbital {
         (emit GUEST_NOTICE { message: ?error })
       GUEST_PREPARE -> live
       GUEST_SEED_RESOLVED -> live
+      GUEST_SEED_FAILED -> live
       GUEST_SEED_MARKED -> live
       GUEST_PERSONAS_RESOLVED -> live
       GUEST_COMPOSED -> live
@@ -295,6 +302,9 @@ orbital GuestSessionOrbital {
       }
       GUEST_SEED_RESOLVED {
         result : behavior!
+      }
+      GUEST_SEED_FAILED {
+        error : string!
       }
       GUEST_COMPOSED {
         result : behavior!

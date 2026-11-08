@@ -70,12 +70,12 @@ orbital MigrationAdapterClockifyOrbital {
                                        (fn i
                                          (and
                                            (validate/required                                              (object/get
-                                               (default (array/nth (object/get @d entries) @i) {})
+                                               (default (if (>= @i 0) (array/nth (object/get @d entries) @i) null) {})
                                                "timeInterval.start"
                                                ""))
                                            (!=
                                              (object/get
-                                               (default (array/nth (object/get @d entries) @i) {})
+                                               (default (if (>= @i 0) (array/nth (object/get @d entries) @i) null) {})
                                                "timeInterval.start"
                                                "")
                                              ""))))))
@@ -83,7 +83,7 @@ orbital MigrationAdapterClockifyOrbital {
                              (array/map
                                @okIdx
                                (fn i p
-                                 (let ((e (default (array/nth (object/get @d entries) @i) {}))
+                                 (let ((e (default (if (>= @i 0) (array/nth (object/get @d entries) @i) null) {}))
                                        (proj (if
                                               (and
                                                 (validate/required (object/get @e projectName ""))
@@ -99,17 +99,17 @@ orbital MigrationAdapterClockifyOrbital {
                                              (if
                                                (and
                                                  (validate/required                                                    (object/get
-                                                     (default (array/nth (object/get @d entries) @j) {})
+                                                     (default (if (>= @j 0) (array/nth (object/get @d entries) @j) null) {})
                                                      projectName
                                                      ""))
                                                  (!=
                                                    (object/get
-                                                     (default (array/nth (object/get @d entries) @j) {})
+                                                     (default (if (>= @j 0) (array/nth (object/get @d entries) @j) null) {})
                                                      projectName
                                                      "")
                                                    ""))
                                                (object/get
-                                                 (default (array/nth (object/get @d entries) @j) {})
+                                                 (default (if (>= @j 0) (array/nth (object/get @d entries) @j) null) {})
                                                  projectName
                                                  "")
                                                "(no project)")
@@ -204,12 +204,12 @@ orbital MigrationAdapterClockifyOrbital {
                                  (not
                                    (and
                                      (validate/required                                        (object/get
-                                         (default (array/nth (object/get @d entries) @i) {})
+                                         (default (if (>= @i 0) (array/nth (object/get @d entries) @i) null) {})
                                          "timeInterval.start"
                                          ""))
                                      (!=
                                        (object/get
-                                         (default (array/nth (object/get @d entries) @i) {})
+                                         (default (if (>= @i 0) (array/nth (object/get @d entries) @i) null) {})
                                          "timeInterval.start"
                                          "")
                                        "")))))
@@ -219,7 +219,7 @@ orbital MigrationAdapterClockifyOrbital {
                                         "clockify:"
                                         (object/get @d ref)
                                         ":"
-                                        (default (object/get (default (array/nth (object/get @d entries) @i) {}) _id) (default (object/get (default (array/nth (object/get @d entries) @i) {}) id) (str/concat "entry-" @i)))),
+                                        (default (object/get (default (if (>= @i 0) (array/nth (object/get @d entries) @i) null) {}) _id) (default (object/get (default (if (>= @i 0) (array/nth (object/get @d entries) @i) null) {}) id) (str/concat "entry-" @i)))),
                                  reason: "entry has no timeInterval.start"
                                })))))
           })

@@ -167,12 +167,12 @@ orbital TrainingBoardOrbital {
       TR_CLI_FAILED -> idle when (= @payload.stage "list")
         (set @entity.loading false)
         (emit TR_BOARD_FAILED { error: (str/concat "aws is not installed or could not run: " @payload.error) })
-      TR_NEXT -> reading when (and (< @entity.cursor (array/len @entity.found)) (!= (default (array/nth (array/map @entity.found (fn f (default @f.publicIp ""))) @entity.cursor) "") ""))
-        (emit TR_SSH { stage: "visit", argv: ["-i", @config.sshKey, "-o", "ConnectTimeout=5", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", "-l", @config.sshUser, (default (array/nth (array/map @entity.found (fn f (default @f.publicIp ""))) @entity.cursor) ""), (str/concat "echo \"===GPU===\"; nvidia-smi --query-gpu=name,temperature.gpu,memory.used,memory.total,utilization.gpu --format=csv,noheader 2>/dev/null || echo \"N/A\"; echo \"===PROCESS===\"; ps aux | grep -E \"" @config.processPattern "\" | grep -v grep | head -1 || echo \"NONE\"; echo \"===UPTIME===\"; uptime -p 2>/dev/null || uptime; echo \"===LOG===\"; " (str/join (array/map @config.logPaths (fn p (str/concat "tail -" @config.logLines " " @p " 2>/dev/null"))) " || ") " || echo \"NO LOG\"")] })
-      TR_NEXT -> reading when (and (< @entity.cursor (array/len @entity.found)) (= (default (array/nth (array/map @entity.found (fn f (default @f.publicIp ""))) @entity.cursor) "") ""))
+      TR_NEXT -> reading when (and (< @entity.cursor (array/len @entity.found)) (!= (default (if (>= @entity.cursor 0) (array/nth (array/map @entity.found (fn f (default @f.publicIp ""))) @entity.cursor) null) "") ""))
+        (emit TR_SSH { stage: "visit", argv: ["-i", @config.sshKey, "-o", "ConnectTimeout=5", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", "-l", @config.sshUser, (default (if (>= @entity.cursor 0) (array/nth (array/map @entity.found (fn f (default @f.publicIp ""))) @entity.cursor) null) ""), (str/concat "echo \"===GPU===\"; nvidia-smi --query-gpu=name,temperature.gpu,memory.used,memory.total,utilization.gpu --format=csv,noheader 2>/dev/null || echo \"N/A\"; echo \"===PROCESS===\"; ps aux | grep -E \"" @config.processPattern "\" | grep -v grep | head -1 || echo \"NONE\"; echo \"===UPTIME===\"; uptime -p 2>/dev/null || uptime; echo \"===LOG===\"; " (str/join (array/map @config.logPaths (fn p (str/concat "tail -" @config.logLines " " @p " 2>/dev/null"))) " || ") " || echo \"NO LOG\"")] })
+      TR_NEXT -> reading when (and (< @entity.cursor (array/len @entity.found)) (= (default (if (>= @entity.cursor 0) (array/nth (array/map @entity.found (fn f (default @f.publicIp ""))) @entity.cursor) null) "") ""))
         (emit TR_SKIP { })
       TR_SKIP -> reading
-        (set @entity.collected (array/append @entity.collected (let ((inst (array/nth @entity.found @entity.cursor)))
+        (set @entity.collected (array/append @entity.collected (let ((inst (if (>= @entity.cursor 0) (array/nth @entity.found @entity.cursor) null)))
           { instanceId: @inst.instanceId, instanceType: @inst.instanceType, publicIp: @inst.publicIp, launchTime: @inst.launchTime,
             uptime: (array/nth (object/values (object/pick @entity.noText [(str/concat "x")])) 0),
             gpu: (array/nth (object/values (object/pick @entity.noGpu [(str/concat "x")])) 0),
@@ -190,7 +190,7 @@ orbital TrainingBoardOrbital {
         (emit TR_SHOW { })
       ;; the nth defaults below never fire: gpu parts (>= 5), process columns (>= 11) and split heads are length-checked first
       TR_RAN -> reading when (= @payload.stage "visit")
-        (set @entity.collected (array/append @entity.collected (let ((inst (array/nth @entity.found @entity.cursor)) (out (if (= @payload.exitCode 0) (str/trim @payload.stdout) "")))
+        (set @entity.collected (array/append @entity.collected (let ((inst (if (>= @entity.cursor 0) (array/nth @entity.found @entity.cursor) null)) (out (if (= @payload.exitCode 0) (str/trim @payload.stdout) "")))
           (let ((gpuText (let ((parts (str/split @out "==="))) (let ((at (array/findIndex @parts (fn x (= @x "GPU"))))) (if (and (>= @at 0) (= (math/mod @at 2) 1)) (str/trim (default (array/nth @parts (+ @at 1)) "")) "")))) (procText (let ((parts (str/split @out "==="))) (let ((at (array/findIndex @parts (fn x (= @x "PROCESS"))))) (if (and (>= @at 0) (= (math/mod @at 2) 1)) (str/trim (default (array/nth @parts (+ @at 1)) "")) "")))) (upText (let ((parts (str/split @out "==="))) (let ((at (array/findIndex @parts (fn x (= @x "UPTIME"))))) (if (and (>= @at 0) (= (math/mod @at 2) 1)) (str/trim (default (array/nth @parts (+ @at 1)) "")) "")))) (logText (let ((parts (str/split @out "==="))) (let ((at (array/findIndex @parts (fn x (= @x "LOG"))))) (if (and (>= @at 0) (= (math/mod @at 2) 1)) (str/trim (default (array/nth @parts (+ @at 1)) "")) "")))))
             (let ((gpuParts (array/map (str/split @gpuText ",") (fn x (str/trim @x))))
                   (cols (array/filter (str/split @procText " ") (fn c (!= @c ""))))
@@ -201,9 +201,9 @@ orbital TrainingBoardOrbital {
                 process: (if (and (!= @procText "") (!= @procText "NONE") (>= (array/len @cols) 11)) { pid: (str/to-number (default (array/nth @cols 1) "")), cpu: (str/to-number (default (array/nth @cols 2) "")), memoryMb: (let ((rss (str/to-number (default (array/nth @cols 5) "")))) (if (== @rss null) null (math/round (/ @rss 1024) 0))), elapsed: (array/nth @cols 9), command: (str/join (array/slice @cols 10) " ") } (array/nth (object/values (object/pick @entity.noProcess [(str/concat "x")])) 0)),
                 epochs: (array/flatten (array/map @lines (fn l (if (validate/pattern @l "Epoch\\s+\\d+\\s*\\|.+\\(\\d+(?:\\.\\d+)?s\\)") [(let ((afterPipe (str/join (array/slice (str/split @l "|") 1) "|")))
             (let ((parts (str/split @afterPipe "(")))
-              { epoch: (let ((head (default (array/nth (str/split @l "|") 0) ""))) (str/to-number (str/trim (default (array/nth (str/split @head "Epoch") (- (array/len (str/split @head "Epoch")) 1)) "")))),
+              { epoch: (let ((head (default (array/nth (str/split @l "|") 0) ""))) (str/to-number (str/trim (default (let ((nxi (- (array/len (str/split @head "Epoch")) 1))) (if (>= @nxi 0) (array/nth (str/split @head "Epoch") @nxi) null)) "")))),
                 metrics: (object/fromEntries (array/map (array/filter (str/split (str/trim (str/join (array/take @parts (- (array/len @parts) 1)) "(")) " ") (fn t (validate/pattern @t "^\\w+=[\\d.]+$"))) (fn t [(array/nth (str/split @t "=") 0), (str/to-number (default (array/nth (str/split @t "=") 1) ""))]))),
-                time: (str/to-number (default (array/nth (str/split (default (array/nth @parts (- (array/len @parts) 1)) "") "s)") 0) "")),
+                time: (str/to-number (default (array/nth (str/split (default (let ((nxi (- (array/len @parts) 1))) (if (>= @nxi 0) (array/nth @parts @nxi) null)) "") "s)") 0) "")),
                 isBest: (str/includes @l "*BEST*") }))] (let ((dict (if (validate/pattern @l "\\{(?:'[a-z_]+':\\s*'[\\d.e+-]+',?\\s*)+\\}") (json/parse (str/replaceAll (let ((afterBrace (str/join (array/slice (str/split @l "{") 1) "{"))) (str/concat "{" (str/join (array/take (str/split @afterBrace "}") (- (array/len (str/split @afterBrace "}")) 1)) "}") "}")) "'" "\"") TrMetricText) null)))
             (if (== @dict null) (array/take [{ epoch: 0, metrics: @entity.noMetrics, time: 0, isBest: false }] 0) [(let ((metrics (object/fromEntries (array/map (object/entries @dict) (fn e [(array/nth @e 0), (str/to-number (array/nth @e 1))])))))
               { epoch: (math/round (* (object/get @metrics "epoch" 0) 1000) 0), metrics: @metrics, time: 0, isBest: false })])))))),
@@ -211,7 +211,7 @@ orbital TrainingBoardOrbital {
         (set @entity.cursor (+ @entity.cursor 1))
         (emit TR_NEXT { })
       TR_CLI_FAILED -> reading when (= @payload.stage "visit")
-        (set @entity.collected (array/append @entity.collected (let ((inst (array/nth @entity.found @entity.cursor)))
+        (set @entity.collected (array/append @entity.collected (let ((inst (if (>= @entity.cursor 0) (array/nth @entity.found @entity.cursor) null)))
           { instanceId: @inst.instanceId, instanceType: @inst.instanceType, publicIp: @inst.publicIp, launchTime: @inst.launchTime,
             uptime: (array/nth (object/values (object/pick @entity.noText [(str/concat "x")])) 0),
             gpu: (array/nth (object/values (object/pick @entity.noGpu [(str/concat "x")])) 0),

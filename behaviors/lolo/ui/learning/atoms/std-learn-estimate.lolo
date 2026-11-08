@@ -322,7 +322,7 @@ orbital EstimateOrbital {
         (let (
             (nextIndex (+ @entity.promptIndex 1))
             (finished (>= @nextIndex (array/len @entity.prompts)))
-            (next (array/nth @entity.prompts (math/min @nextIndex (- (array/len @entity.prompts) 1))))
+            (next (let ((nxi (math/min @nextIndex (- (array/len @entity.prompts) 1)))) (if (>= @nxi 0) (array/nth @entity.prompts @nxi) null)))
           )
           (do
             (set @entity.promptIndex (if @finished @entity.promptIndex @nextIndex))

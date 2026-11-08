@@ -140,14 +140,14 @@ orbital CouchdbOrbital {
         (set @entity.key @payload.key)
         (set @entity.entityType @payload.entityType)
         (set @entity.mode "read")
-        (set @entity.db (let ((et @payload.entityType) (dc (default @payload.collection ""))) (if (!= @dc "") @dc (let ((snake (let ((cs (str/split @et ""))) (str/join (array/map (array/range 0 (array/len @cs)) (fn i (let ((c (default (array/nth @cs @i) ""))) (if (validate/pattern @c "^[A-Z]$") (str/concat (if (and (> @i 0) (validate/pattern (default (array/nth @cs (- @i 1)) "") "^[a-z0-9]$")) "_" "") (str/lower @c)) @c)))) "")))) (if (validate/pattern @snake "y$") (str/replace-pattern @snake "y$" "ies") (if (validate/pattern @snake "s$") (str/concat @snake "es") (str/concat @snake "s")))))))
+        (set @entity.db (let ((et @payload.entityType) (dc (default @payload.collection ""))) (if (!= @dc "") @dc (let ((snake (let ((cs (str/split @et ""))) (str/join (array/map (array/range 0 (array/len @cs)) (fn i (let ((c (default (array/nth @cs @i) ""))) (if (validate/pattern @c "^[A-Z]$") (str/concat (if (and (> @i 0) (validate/pattern (default (let ((nxi (- @i 1))) (if (>= @nxi 0) (array/nth @cs @nxi) null)) "") "^[a-z0-9]$")) "_" "") (str/lower @c)) @c)))) "")))) (if (validate/pattern @snake "y$") (str/replace-pattern @snake "y$" "ies") (if (validate/pattern @snake "s$") (str/concat @snake "es") (str/concat @snake "s")))))))
         (emit COUCH_GET { db: @entity.db, id: @payload.id })
 
       ROW_LIST -> idle
         (set @entity.key @payload.key)
         (set @entity.entityType @payload.entityType)
         (set @entity.mode "list")
-        (set @entity.db (let ((et @payload.entityType) (dc (default @payload.collection ""))) (if (!= @dc "") @dc (let ((snake (let ((cs (str/split @et ""))) (str/join (array/map (array/range 0 (array/len @cs)) (fn i (let ((c (default (array/nth @cs @i) ""))) (if (validate/pattern @c "^[A-Z]$") (str/concat (if (and (> @i 0) (validate/pattern (default (array/nth @cs (- @i 1)) "") "^[a-z0-9]$")) "_" "") (str/lower @c)) @c)))) "")))) (if (validate/pattern @snake "y$") (str/replace-pattern @snake "y$" "ies") (if (validate/pattern @snake "s$") (str/concat @snake "es") (str/concat @snake "s")))))))
+        (set @entity.db (let ((et @payload.entityType) (dc (default @payload.collection ""))) (if (!= @dc "") @dc (let ((snake (let ((cs (str/split @et ""))) (str/join (array/map (array/range 0 (array/len @cs)) (fn i (let ((c (default (array/nth @cs @i) ""))) (if (validate/pattern @c "^[A-Z]$") (str/concat (if (and (> @i 0) (validate/pattern (default (let ((nxi (- @i 1))) (if (>= @nxi 0) (array/nth @cs @nxi) null)) "") "^[a-z0-9]$")) "_" "") (str/lower @c)) @c)))) "")))) (if (validate/pattern @snake "y$") (str/replace-pattern @snake "y$" "ies") (if (validate/pattern @snake "s$") (str/concat @snake "es") (str/concat @snake "s")))))))
         (emit COUCH_LIST { db: @entity.db })
 
       ROWS_ENSURE_INDEXES -> idle when (= (array/len @payload.indexes) 0)
@@ -159,7 +159,7 @@ orbital CouchdbOrbital {
         (set @entity.op "ensure")
         (set @entity.paths @payload.indexes)
         (set @entity.at 0)
-        (set @entity.db (let ((et @payload.entityType) (dc "")) (if (!= @dc "") @dc (let ((snake (let ((cs (str/split @et ""))) (str/join (array/map (array/range 0 (array/len @cs)) (fn i (let ((c (default (array/nth @cs @i) ""))) (if (validate/pattern @c "^[A-Z]$") (str/concat (if (and (> @i 0) (validate/pattern (default (array/nth @cs (- @i 1)) "") "^[a-z0-9]$")) "_" "") (str/lower @c)) @c)))) "")))) (if (validate/pattern @snake "y$") (str/replace-pattern @snake "y$" "ies") (if (validate/pattern @snake "s$") (str/concat @snake "es") (str/concat @snake "s")))))))
+        (set @entity.db (let ((et @payload.entityType) (dc "")) (if (!= @dc "") @dc (let ((snake (let ((cs (str/split @et ""))) (str/join (array/map (array/range 0 (array/len @cs)) (fn i (let ((c (default (array/nth @cs @i) ""))) (if (validate/pattern @c "^[A-Z]$") (str/concat (if (and (> @i 0) (validate/pattern (default (let ((nxi (- @i 1))) (if (>= @nxi 0) (array/nth @cs @nxi) null)) "") "^[a-z0-9]$")) "_" "") (str/lower @c)) @c)))) "")))) (if (validate/pattern @snake "y$") (str/replace-pattern @snake "y$" "ies") (if (validate/pattern @snake "s$") (str/concat @snake "es") (str/concat @snake "s")))))))
         (emit COUCH_HTTP_SEND {
           key: "idb",
           method: "PUT",
@@ -174,7 +174,7 @@ orbital CouchdbOrbital {
         (set @entity.entityType @payload.entityType)
         (set @entity.mode "query")
         (set @entity.project (if (= @payload.project "ids") "ids" "rows"))
-        (set @entity.db (let ((et @payload.entityType) (dc (default @payload.collection ""))) (if (!= @dc "") @dc (let ((snake (let ((cs (str/split @et ""))) (str/join (array/map (array/range 0 (array/len @cs)) (fn i (let ((c (default (array/nth @cs @i) ""))) (if (validate/pattern @c "^[A-Z]$") (str/concat (if (and (> @i 0) (validate/pattern (default (array/nth @cs (- @i 1)) "") "^[a-z0-9]$")) "_" "") (str/lower @c)) @c)))) "")))) (if (validate/pattern @snake "y$") (str/replace-pattern @snake "y$" "ies") (if (validate/pattern @snake "s$") (str/concat @snake "es") (str/concat @snake "s")))))))
+        (set @entity.db (let ((et @payload.entityType) (dc (default @payload.collection ""))) (if (!= @dc "") @dc (let ((snake (let ((cs (str/split @et ""))) (str/join (array/map (array/range 0 (array/len @cs)) (fn i (let ((c (default (array/nth @cs @i) ""))) (if (validate/pattern @c "^[A-Z]$") (str/concat (if (and (> @i 0) (validate/pattern (default (let ((nxi (- @i 1))) (if (>= @nxi 0) (array/nth @cs @nxi) null)) "") "^[a-z0-9]$")) "_" "") (str/lower @c)) @c)))) "")))) (if (validate/pattern @snake "y$") (str/replace-pattern @snake "y$" "ies") (if (validate/pattern @snake "s$") (str/concat @snake "es") (str/concat @snake "s")))))))
         (let ((r (tree/fold { kind: "all", of: (array/concat (if (!= (object/get @payload.query "policy" null) null) [(object/get @payload.query "policy" null)] []) (if (!= (object/get @payload.query "filter" null) null) [(object/get @payload.query "filter" null)] [])) } (fn (n k)
           (let ((kind (object/get @n "kind" "")) (f (object/get @n "field" "")) (v (object/get @n "value" null)) (op (object/get @n "op" "")))
             (let ((sc (or (validate/string @v) (validate/number @v) (validate/boolean @v)))
@@ -247,10 +247,10 @@ orbital CouchdbOrbital {
         (emit COUCH_STEP { })
 
       COUCH_STEP -> idle
-        (let ((co (array/nth @entity.ops @entity.at))) (if (= @co null) (emit COUCH_FAILED { op: "write", status: 0, message: "the write batch has no op at this position" }) (do
+        (let ((co (if (>= @entity.at 0) (array/nth @entity.ops @entity.at) null))) (if (= @co null) (emit COUCH_FAILED { op: "write", status: 0, message: "the write batch has no op at this position" }) (do
           (set @entity.cur { kind: (object/get @co "kind" ""), entityType: (object/get @co "entityType" ""), id: (object/get @co "id" ""), data: (object/get @co "data" {}), guard: (object/get @co "guard" null) })
           (set @entity.entityType @entity.cur.entityType)
-          (set @entity.db (let ((et @entity.cur.entityType) (dc (object/get @entity.writeCollections @et ""))) (if (!= @dc "") @dc (let ((snake (let ((cs (str/split @et ""))) (str/join (array/map (array/range 0 (array/len @cs)) (fn i (let ((c (default (array/nth @cs @i) ""))) (if (validate/pattern @c "^[A-Z]$") (str/concat (if (and (> @i 0) (validate/pattern (default (array/nth @cs (- @i 1)) "") "^[a-z0-9]$")) "_" "") (str/lower @c)) @c)))) "")))) (if (validate/pattern @snake "y$") (str/replace-pattern @snake "y$" "ies") (if (validate/pattern @snake "s$") (str/concat @snake "es") (str/concat @snake "s")))))))
+          (set @entity.db (let ((et @entity.cur.entityType) (dc (object/get @entity.writeCollections @et ""))) (if (!= @dc "") @dc (let ((snake (let ((cs (str/split @et ""))) (str/join (array/map (array/range 0 (array/len @cs)) (fn i (let ((c (default (array/nth @cs @i) ""))) (if (validate/pattern @c "^[A-Z]$") (str/concat (if (and (> @i 0) (validate/pattern (default (let ((nxi (- @i 1))) (if (>= @nxi 0) (array/nth @cs @nxi) null)) "") "^[a-z0-9]$")) "_" "") (str/lower @c)) @c)))) "")))) (if (validate/pattern @snake "y$") (str/replace-pattern @snake "y$" "ies") (if (validate/pattern @snake "s$") (str/concat @snake "es") (str/concat @snake "s")))))))
           (emit COUCH_DISPATCH { }))))
       COUCH_DISPATCH -> idle when (= @entity.cur.kind "create")
         (emit COUCH_CREATE { db: @entity.db, id: (let ((i (object/get @entity.cur.data "id" null))) (if (validate/string @i) @i "")), row: @entity.cur.data })
@@ -496,7 +496,7 @@ orbital CouchdbOrbital {
           method: "POST",
           target: (str/concat "/" (str/encode-uri-component @entity.db) "/_index"),
           headers: [{ name: "accept", value: "application/json" }, { name: "content-type", value: "application/json" }],
-          body: (bytes/from-string (let ((p (default (array/nth @entity.paths @entity.at) { fields: [], orderBy: "" })))
+          body: (bytes/from-string (let ((p (default (if (>= @entity.at 0) (array/nth @entity.paths @entity.at) null) { fields: [], orderBy: "" })))
             (let ((ob (default (object/get @p "orderBy" "") "")) (fl (default (object/get @p "fields" []) [])))
               (let ((os (str/split @ob ":")))
                 (let ((of (default (array/nth @os 0) "")) (desc (= (array/nth @os 1) "desc")))
@@ -514,7 +514,7 @@ orbital CouchdbOrbital {
           method: "POST",
           target: (str/concat "/" (str/encode-uri-component @entity.db) "/_index"),
           headers: [{ name: "accept", value: "application/json" }, { name: "content-type", value: "application/json" }],
-          body: (bytes/from-string (let ((p (default (array/nth @entity.paths @entity.at) { fields: [], orderBy: "" })))
+          body: (bytes/from-string (let ((p (default (if (>= @entity.at 0) (array/nth @entity.paths @entity.at) null) { fields: [], orderBy: "" })))
             (let ((ob (default (object/get @p "orderBy" "") "")) (fl (default (object/get @p "fields" []) [])))
               (let ((os (str/split @ob ":")))
                 (let ((of (default (array/nth @os 0) "")) (desc (= (array/nth @os 1) "desc")))

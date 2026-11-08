@@ -74,19 +74,19 @@ orbital ServeHandoffOrbital {
         (set @entity.localeCursor 0)
         (emit SERVE_CATALOG_NEXT { })
       SERVE_CATALOG_NEXT -> preparing when (< @entity.localeCursor (array/len @entity.locales))
-        (os/read-file (str/concat "/" (str/slice (os/path-join (os/path-dir @entity.source) "locales" (default (array/nth @entity.locales @entity.localeCursor) "") (str/concat @entity.appName ".json")) 1 (str/len (os/path-join (os/path-dir @entity.source) "locales" (default (array/nth @entity.locales @entity.localeCursor) "") (str/concat @entity.appName ".json"))))) { key: "catalog" emit: { success: SERVE_CATALOG_READ, failure: SERVE_CATALOG_ABSENT } })
+        (os/read-file (str/concat "/" (str/slice (os/path-join (os/path-dir @entity.source) "locales" (default (if (>= @entity.localeCursor 0) (array/nth @entity.locales @entity.localeCursor) null) "") (str/concat @entity.appName ".json")) 1 (str/len (os/path-join (os/path-dir @entity.source) "locales" (default (if (>= @entity.localeCursor 0) (array/nth @entity.locales @entity.localeCursor) null) "") (str/concat @entity.appName ".json"))))) { key: "catalog" emit: { success: SERVE_CATALOG_READ, failure: SERVE_CATALOG_ABSENT } })
       SERVE_CATALOG_READ -> preparing
         (set @entity.catalog @payload.data)
-        (os/mkdir { anchor: "cwd" path: (str/concat ".orbital/serve/" @entity.appName "/locales/" (default (array/nth @entity.locales @entity.localeCursor) "")) } true { key: "catalogDir" emit: { success: SERVE_CATALOG_DIR, failure: SERVE_PREP_FAILED } })
+        (os/mkdir { anchor: "cwd" path: (str/concat ".orbital/serve/" @entity.appName "/locales/" (default (if (>= @entity.localeCursor 0) (array/nth @entity.locales @entity.localeCursor) null) "")) } true { key: "catalogDir" emit: { success: SERVE_CATALOG_DIR, failure: SERVE_PREP_FAILED } })
       SERVE_CATALOG_DIR -> preparing
-        (os/write-file { anchor: "cwd" path: (str/concat ".orbital/serve/" @entity.appName "/locales/" (default (array/nth @entity.locales @entity.localeCursor) "") "/" @entity.appName ".json") } (default @entity.catalog (bytes/from-string "")) { key: "catalogCopy" emit: { success: SERVE_CATALOG_COPIED, failure: SERVE_PREP_FAILED } })
+        (os/write-file { anchor: "cwd" path: (str/concat ".orbital/serve/" @entity.appName "/locales/" (default (if (>= @entity.localeCursor 0) (array/nth @entity.locales @entity.localeCursor) null) "") "/" @entity.appName ".json") } (default @entity.catalog (bytes/from-string "")) { key: "catalogCopy" emit: { success: SERVE_CATALOG_COPIED, failure: SERVE_PREP_FAILED } })
       SERVE_CATALOG_ABSENT -> preparing
         (set @entity.localeCursor (+ @entity.localeCursor 1))
         (emit SERVE_CATALOG_NEXT { })
       SERVE_CATALOG_COPIED -> preparing
-        (os/mkdir { anchor: "cwd" path: (str/concat ".orbital/serve/" @entity.appName "/packages/client/public/locales/" (default (array/nth @entity.locales @entity.localeCursor) "")) } true { key: "clientCatalogDir" emit: { success: SERVE_CATALOG_CLIENT_DIR, failure: SERVE_PREP_FAILED } })
+        (os/mkdir { anchor: "cwd" path: (str/concat ".orbital/serve/" @entity.appName "/packages/client/public/locales/" (default (if (>= @entity.localeCursor 0) (array/nth @entity.locales @entity.localeCursor) null) "")) } true { key: "clientCatalogDir" emit: { success: SERVE_CATALOG_CLIENT_DIR, failure: SERVE_PREP_FAILED } })
       SERVE_CATALOG_CLIENT_DIR -> preparing
-        (os/write-file { anchor: "cwd" path: (str/concat ".orbital/serve/" @entity.appName "/packages/client/public/locales/" (default (array/nth @entity.locales @entity.localeCursor) "") "/" @entity.appName ".json") } (default @entity.catalog (bytes/from-string "")) { key: "clientCatalogCopy" emit: { success: SERVE_CATALOG_CLIENT_COPIED, failure: SERVE_PREP_FAILED } })
+        (os/write-file { anchor: "cwd" path: (str/concat ".orbital/serve/" @entity.appName "/packages/client/public/locales/" (default (if (>= @entity.localeCursor 0) (array/nth @entity.locales @entity.localeCursor) null) "") "/" @entity.appName ".json") } (default @entity.catalog (bytes/from-string "")) { key: "clientCatalogCopy" emit: { success: SERVE_CATALOG_CLIENT_COPIED, failure: SERVE_PREP_FAILED } })
       SERVE_CATALOG_CLIENT_COPIED -> preparing
         (set @entity.localeCursor (+ @entity.localeCursor 1))
         (emit SERVE_CATALOG_NEXT { })

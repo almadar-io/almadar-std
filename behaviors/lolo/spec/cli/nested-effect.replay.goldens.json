@@ -1,7 +1,7 @@
 {
   "atom": "spec/cli/nested-effect-fixture.lolo",
   "trait": "NestedEffect",
-  "note": "G-ORB-498 red goldens: the transition is (let ((x 1)) (emit FOO { n: @x })). The effects list holds one bare let (status skipped though its emit ran), so a nested emit cannot be asserted through effects. red-* cases express what a closed gap must pass; controls pass today.",
+  "note": "G-ORB-498: the transition is (let ((x 1)) (emit FOO { n: @x })). A compound effect carries `nested`, the effects its body ran; `expect.effects` asserts them with a recursive `nested` key (ordered subsequence at every level). The let reports executed when its body ran.",
   "cases": [
     {
       "id": "control-emits-sees-the-nested-emit",
@@ -24,8 +24,8 @@
       ]
     },
     {
-      "id": "red-effects-cannot-assert-the-nested-emit",
-      "note": "Wants the emit FOO as an effect; today the only effect is the let, so this fails: that is the gap.",
+      "id": "effects-assert-the-nested-emit-under-its-let",
+      "note": "The emit FOO is asserted as the let's nested effect, by name (arg0), and the let by status.",
       "steps": [
         {
           "from": "ready",
@@ -34,7 +34,14 @@
             "fired": true,
             "effects": [
               {
-                "type": "emit"
+                "type": "let",
+                "status": "executed",
+                "nested": [
+                  {
+                    "type": "emit",
+                    "arg0": "FOO"
+                  }
+                ]
               }
             ]
           }
