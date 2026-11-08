@@ -4,7 +4,7 @@ app ops-tree [
 ]
 type Cell = { x : number!, y : number! }
 type Hit = { at : number!, path : string!, node : SExpr }
-type Tn = { kind : string!, kids : [Tn] }
+type Tree = string | boolean | number | [Tree]
 orbital OpsOrbital {
   entity Ops [runtime] {
     id : string!
@@ -19,12 +19,12 @@ orbital OpsOrbital {
     initial: idle
     state idle {
       INIT -> idle
-        (set @entity.idxA (object/get (tree/index (quote (do (emit A) (if true (emit B)))) ["emit"]) "emit" []))
-        (set @entity.idxB (object/get (tree/index (quote (do (emit A) (if true (emit B)))) ["emit" "if"]) "if" []))
-        (set @entity.idxC (object/get (tree/index (quote (do (emit A) (if true (emit B)))) ["navigate"]) "navigate" []))
-        (set @entity.idxD (object/keys (tree/index (quote (do (emit A) (if true (emit B)))) ["emit" "if" "do"])))
-        (set @entity.idxE (object/get (tree/index (quote (do (emit A) (if true (emit B)))) ["emit"] {objects: ["emit"]}) "emit" []))
-        (set @entity.idxF (object/get (tree/index (quote (set @entity.x 1)) ["set"]) "set" []))
+        (set @entity.idxA (object/get (let ((t : Tree ["do" ["emit" "A"] ["if" true ["emit" "B"]]])) (tree/index @t ["emit"])) "emit" []))
+        (set @entity.idxB (object/get (let ((t : Tree ["do" ["emit" "A"] ["if" true ["emit" "B"]]])) (tree/index @t ["emit" "if"])) "if" []))
+        (set @entity.idxC (object/get (let ((t : Tree ["do" ["emit" "A"] ["if" true ["emit" "B"]]])) (tree/index @t ["navigate"])) "navigate" []))
+        (set @entity.idxD (object/keys (let ((t : Tree ["do" ["emit" "A"] ["if" true ["emit" "B"]]])) (tree/index @t ["emit" "if" "do"]))))
+        (set @entity.idxE (object/get (let ((t : Tree ["do" ["emit" "A"] ["if" true ["emit" "B"]]])) (tree/index @t ["emit"] {objects: ["emit"]})) "emit" []))
+        (set @entity.idxF (object/get (let ((t : Tree ["set" "count" 1])) (tree/index @t ["set"])) "set" []))
     }
   }
   page boot as OpsStart -> Probe

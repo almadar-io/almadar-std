@@ -1,0 +1,108 @@
+app std-lolo-transitions [
+  version: "0.1.0",
+  description: "std-lolo-transitions — the transitions a .lolo text declares, with where they sit in it. TRANSITIONS_OF { key, path, text } reads the text with program/read inspect (the kernel's own parse, lowering and source map; the text may be unsaved) and answers TRANSITIONS { key, path, items }: one item per transition written in this file (anchors of imported files are left out), in source-map order, each { pointer, trait, event, from, to, fromRow, fromCol, toRow, source } with zero-based rows from the arm's line to the end of its effects and source those lines of the text as written. A text that cannot be read answers TRANSITIONS_FAILED { key, path, error }. One read at a time: a request while reading waits, and only the latest waiting request runs next."
+]
+
+type LtExpr = string | number | boolean | [LtExpr?] | Map string LtExpr?
+type LtTransition = { from : string!, to : string!, event : string!, guard : LtExpr?, effects : [LtExpr?]? }
+type LtMachine = { transitions : [LtTransition]! }
+type LtTrait = { name : string!, stateMachine : LtMachine? }
+type LtOrbital = { name : string!, traits : [LtTrait]! }
+type LtProgram = { orbitals : [LtOrbital]! }
+type LtAnchor = { path : string!, line : number!, column : number!, endLine : number!, exact : boolean!, pointer : string!, scopeEndLine : number? }
+type LtInspect = { program : LtProgram!, sourceMap : [LtAnchor]! }
+type LtItem = { pointer : string!, trait : string!, event : string!, from : string!, to : string!, fromRow : number!, fromCol : number!, toRow : number!, source : string! }
+type LtMatch = { start : number!, end : number!, text : string! }
+
+orbital LoloTransitionsOrbital {
+  entity TransitionsRun [runtime] {
+    id : string!
+    key : string @description "The request being read." = ""
+    path : string = ""
+    text : string @description "The text being read." = ""
+    nextKey : string @description "The latest request waiting for the read in flight." = ""
+    nextPath : string = ""
+    nextText : string = ""
+  }
+
+  trait LoloTransitions -> TransitionsRun {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      TRANSITIONS_OF -> reading
+        (set @entity.key ?key)
+        (set @entity.path ?path)
+        (set @entity.text ?text)
+        (program/read ?text { inspect: true, path: ?path } { emit: { success: LT_INSPECTED, failure: LT_FAILED } })
+    }
+
+    state reading {
+      INIT -> idle
+        (set @entity.nextKey "")
+      TRANSITIONS_OF -> reading
+        (set @entity.nextKey ?key)
+        (set @entity.nextPath ?path)
+        (set @entity.nextText ?text)
+      LT_INSPECTED -> idle when (= @entity.nextKey "")
+        (emit TRANSITIONS { key: @entity.key, path: @entity.path, items: (let ((none : [LtMatch] []) (pattern "^orbitals\\[[0-9]+\\]\\.traits\\[[0-9]+\\]\\.stateMachine\\.transitions\\[[0-9]+\\]$"))
+          (array/flatten (array/map (array/filter ?result.sourceMap (fn a (and (= @a.path @entity.path) @a.exact (> (array/len (default (str/find-pattern @a.pointer @pattern) @none)) 0))))
+            (fn a (let ((ix (array/map (default (str/find-pattern @a.pointer "[0-9]+") @none) (fn m (default (str/to-int @m.text) 0)))))
+              (let ((tr (let ((o (array/nth ?result.program.orbitals (default (array/nth @ix 0) 0))))
+                          (if (= @o null) null
+                            (let ((t (array/nth @o.traits (default (array/nth @ix 1) 0))))
+                              (if (or (= @t null) (= @t.stateMachine null)) null
+                                { trait: @t.name, transition: (array/nth @t.stateMachine.transitions (default (array/nth @ix 2) 0)) }))))))
+                (if (or (= @tr null) (= @tr.transition null)) []
+                  (let ((x : LtTransition (default @tr.transition { from: "", to: "", event: "" })))
+                    [{ pointer: @a.pointer, trait: @tr.trait, event: @x.event, from: @x.from, to: @x.to, fromRow: (- @a.line 1), fromCol: (- @a.column 1), toRow: (- (default @a.scopeEndLine @a.endLine) 1),
+                       source: (str/join (array/slice (str/split @entity.text "\n") (- @a.line 1) (default @a.scopeEndLine @a.endLine)) "\n") }])))))))) })
+      LT_INSPECTED -> reading when (!= @entity.nextKey "")
+        (set @entity.key @entity.nextKey)
+        (set @entity.path @entity.nextPath)
+        (set @entity.text @entity.nextText)
+        (set @entity.nextKey "")
+        (program/read @entity.nextText { inspect: true, path: @entity.path } { emit: { success: LT_INSPECTED, failure: LT_FAILED } })
+        (set @entity.nextText "")
+      LT_FAILED -> idle when (= @entity.nextKey "")
+        (emit TRANSITIONS_FAILED { key: @entity.key, path: @entity.path, error: (default ?error "the text could not be read") })
+      LT_FAILED -> reading when (!= @entity.nextKey "")
+        (set @entity.key @entity.nextKey)
+        (set @entity.path @entity.nextPath)
+        (set @entity.text @entity.nextText)
+        (set @entity.nextKey "")
+        (program/read @entity.nextText { inspect: true, path: @entity.path } { emit: { success: LT_INSPECTED, failure: LT_FAILED } })
+        (set @entity.nextText "")
+    }
+
+    emits {
+      TRANSITIONS -> external {
+        key : string!
+        path : string!
+        items : [LtItem]!
+      }
+        @description "The transitions a .lolo text declares, with their rows and source lines."
+        @synonyms "outline, transitions of a file"
+        @tier "primary"
+      TRANSITIONS_FAILED -> external {
+        key : string!
+        path : string!
+        error : string!
+      }
+        @description "The text could not be read."
+        @tier "secondary"
+    }
+
+    listens {
+      TRANSITIONS_OF { key : string!  path : string!  text : string! }
+        @description "Read a .lolo text's transitions; path is absolute (it resolves the text's imports)."
+        @synonyms "outline, list transitions"
+      LT_INSPECTED { result : LtInspect! }
+        @description "The kernel's inspect answer."
+      LT_FAILED { error : string }
+        @description "The kernel could not read the text."
+    }
+  }
+
+  page boot as LoloTransitionsOrbitalStart -> LoloTransitions
+}

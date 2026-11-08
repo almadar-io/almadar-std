@@ -1,0 +1,734 @@
+{
+  "atom": "dev/atoms/std-lolo-review.lolo",
+  "trait": "LoloReview",
+  "cases": [
+    {
+      "id": "only-lolo-files-are-reviewed",
+      "steps": [
+        {
+          "event": "BUFFER_EDITED",
+          "payload": {
+            "editorId": "e",
+            "path": "/w/a.ts",
+            "version": 1,
+            "text": "x",
+            "dirty": false
+          },
+          "now": 1794142800000,
+          "expect": {
+            "entity": {
+              "editorId": "e"
+            },
+            "neverEmits": [
+              "DECORATE",
+              "POPOVER"
+            ]
+          }
+        },
+        {
+          "event": "BUFFER_EDITED",
+          "payload": {
+            "editorId": "e",
+            "path": "/w/a.lolo",
+            "version": 2,
+            "text": "app a\norbital O {\n  trait T -> R {\n    state s {\n      GO -> s\n        (set @entity.n 1)\n    }\n  }\n}",
+            "dirty": false
+          },
+          "now": 1794142800000,
+          "expect": {
+            "entity": {
+              "reviewing": true,
+              "pending": true,
+              "path": "/w/a.lolo",
+              "indexAsked": true
+            },
+            "emits": [
+              {
+                "event": "TV_INDEX_PACKAGES",
+                "payload": {
+                  "rebuild": false
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "BUFFER_EDITED",
+          "payload": {
+            "editorId": "e",
+            "path": "/w/a.lolo",
+            "version": 3,
+            "text": "app a\norbital O {\n  trait T -> R {\n    state s {\n      GO -> s\n        (set @entity.n 1)\n    }\n  }\n}",
+            "dirty": true
+          },
+          "now": 1794142800000,
+          "expect": {
+            "neverEmits": [
+              "TV_INDEX_PACKAGES"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "transitions-ask-for-peers-and-flag",
+      "steps": [
+        {
+          "event": "TRANSITIONS",
+          "payload": {
+            "key": "3",
+            "path": "/w/a.lolo",
+            "items": [
+              {
+                "pointer": "orbitals[0].traits[0].stateMachine.transitions[0]",
+                "trait": "T",
+                "event": "GO",
+                "from": "s",
+                "to": "s",
+                "fromRow": 4,
+                "fromCol": 6,
+                "toRow": 5,
+                "source": "      GO -> s\n        (set @entity.n 1)"
+              }
+            ]
+          },
+          "now": 1794142800000,
+          "expect": {
+            "emits": [
+              {
+                "event": "TV_NEAREST",
+                "payload": {
+                  "requestId": "3",
+                  "items": [
+                    {
+                      "key": "orbitals[0].traits[0].stateMachine.transitions[0]",
+                      "path": "/w/a.lolo",
+                      "text": "      GO -> s\n        (set @entity.n 1)"
+                    }
+                  ]
+                }
+              },
+              {
+                "event": "DECORATE",
+                "payload": {
+                  "ranges": []
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "entity": {
+        "editorId": "e",
+        "path": "/w/a.lolo",
+        "version": 3,
+        "text": "app a\norbital O {\n  trait T -> R {\n    state s {\n      GO -> s\n        (set @entity.n 1)\n    }\n  }\n}",
+        "reviewing": true,
+        "items": [],
+        "itemsVersion": -1,
+        "blameVersion": -1,
+        "rows": []
+      }
+    },
+    {
+      "id": "stale-transitions-are-ignored",
+      "steps": [
+        {
+          "event": "TRANSITIONS",
+          "payload": {
+            "key": "2",
+            "path": "/w/a.lolo",
+            "items": [
+              {
+                "pointer": "orbitals[0].traits[0].stateMachine.transitions[0]",
+                "trait": "T",
+                "event": "GO",
+                "from": "s",
+                "to": "s",
+                "fromRow": 4,
+                "fromCol": 6,
+                "toRow": 5,
+                "source": "      GO -> s\n        (set @entity.n 1)"
+              }
+            ]
+          },
+          "now": 1794142800000,
+          "expect": {
+            "fired": false
+          }
+        }
+      ],
+      "entity": {
+        "editorId": "e",
+        "path": "/w/a.lolo",
+        "version": 3,
+        "text": "app a\norbital O {\n  trait T -> R {\n    state s {\n      GO -> s\n        (set @entity.n 1)\n    }\n  }\n}",
+        "reviewing": true,
+        "items": [],
+        "itemsVersion": -1,
+        "blameVersion": 3
+      }
+    },
+    {
+      "id": "uncommitted-lines-flag-recent",
+      "steps": [
+        {
+          "event": "GIT_DONE",
+          "payload": {
+            "requestId": "blame:3",
+            "op": "blame",
+            "exitCode": 0,
+            "stdout": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa 1 1 1\nauthor Ada\nauthor-time 1794139200\nsummary add GO\n\tx\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa 2 2 1\nauthor Ada\nauthor-time 1794139200\nsummary add GO\n\tx\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa 3 3 1\nauthor Ada\nauthor-time 1794139200\nsummary add GO\n\tx\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa 4 4 1\nauthor Ada\nauthor-time 1794139200\nsummary add GO\n\tx\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa 5 5 1\nauthor Ada\nauthor-time 1794139200\nsummary add GO\n\tx\n0000000000000000000000000000000000000000 6 6 1\nauthor Not Committed Yet\nauthor-time 1794139200\nsummary Version of a.lolo from a.lolo\n\tx\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa 7 7 1\nauthor Ada\nauthor-time 1794139200\nsummary add GO\n\tx\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa 8 8 1\nauthor Ada\nauthor-time 1794139200\nsummary add GO\n\tx\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa 9 9 1\nauthor Ada\nauthor-time 1794139200\nsummary add GO\n\tx\n",
+            "stderr": ""
+          },
+          "now": 1794142800000,
+          "expect": {
+            "emits": [
+              {
+                "event": "DECORATE",
+                "payload": {
+                  "editorId": "e",
+                  "source": "review",
+                  "ranges": [
+                    {
+                      "id": "recent-orbitals[0].traits[0].stateMachine.transitions[0]",
+                      "fromRow": 4,
+                      "fromCol": 6,
+                      "toRow": 5,
+                      "toCol": 25,
+                      "tone": "review-recent",
+                      "label": "changed and not committed"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "entity": {
+        "editorId": "e",
+        "path": "/w/a.lolo",
+        "version": 3,
+        "text": "app a\norbital O {\n  trait T -> R {\n    state s {\n      GO -> s\n        (set @entity.n 1)\n    }\n  }\n}",
+        "reviewing": true,
+        "items": [
+          {
+            "pointer": "orbitals[0].traits[0].stateMachine.transitions[0]",
+            "trait": "T",
+            "event": "GO",
+            "from": "s",
+            "to": "s",
+            "fromRow": 4,
+            "fromCol": 6,
+            "toRow": 5,
+            "source": "      GO -> s\n        (set @entity.n 1)"
+          }
+        ],
+        "itemsVersion": 3,
+        "blameVersion": 3
+      }
+    },
+    {
+      "id": "old-commits-are-not-flagged",
+      "steps": [
+        {
+          "event": "GIT_DONE",
+          "payload": {
+            "requestId": "blame:3",
+            "op": "blame",
+            "exitCode": 0,
+            "stdout": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa 1 1 1\nauthor Ada\nauthor-time 1700000000\nsummary add GO\n\tx\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa 2 2 1\nauthor Ada\nauthor-time 1700000000\nsummary add GO\n\tx\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa 3 3 1\nauthor Ada\nauthor-time 1700000000\nsummary add GO\n\tx\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa 4 4 1\nauthor Ada\nauthor-time 1700000000\nsummary add GO\n\tx\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa 5 5 1\nauthor Ada\nauthor-time 1700000000\nsummary add GO\n\tx\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa 6 6 1\nauthor Ada\nauthor-time 1700000000\nsummary add GO\n\tx\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa 7 7 1\nauthor Ada\nauthor-time 1700000000\nsummary add GO\n\tx\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa 8 8 1\nauthor Ada\nauthor-time 1700000000\nsummary add GO\n\tx\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa 9 9 1\nauthor Ada\nauthor-time 1700000000\nsummary add GO\n\tx\n",
+            "stderr": ""
+          },
+          "now": 1794142800000,
+          "expect": {
+            "emits": [
+              {
+                "event": "DECORATE",
+                "payload": {
+                  "editorId": "e",
+                  "source": "review",
+                  "ranges": []
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "entity": {
+        "editorId": "e",
+        "path": "/w/a.lolo",
+        "version": 3,
+        "text": "app a\norbital O {\n  trait T -> R {\n    state s {\n      GO -> s\n        (set @entity.n 1)\n    }\n  }\n}",
+        "reviewing": true,
+        "items": [
+          {
+            "pointer": "orbitals[0].traits[0].stateMachine.transitions[0]",
+            "trait": "T",
+            "event": "GO",
+            "from": "s",
+            "to": "s",
+            "fromRow": 4,
+            "fromCol": 6,
+            "toRow": 5,
+            "source": "      GO -> s\n        (set @entity.n 1)"
+          }
+        ],
+        "itemsVersion": 3,
+        "blameVersion": 3
+      }
+    },
+    {
+      "id": "a-low-nearest-score-flags-drift",
+      "steps": [
+        {
+          "event": "TV_PEERS",
+          "payload": {
+            "requestId": "3",
+            "results": [
+              {
+                "key": "orbitals[0].traits[0].stateMachine.transitions[0]",
+                "peers": [
+                  {
+                    "key": "k",
+                    "path": "/c/x.lolo",
+                    "label": "X.GO",
+                    "score": 0.4
+                  }
+                ]
+              }
+            ]
+          },
+          "now": 1794142800000,
+          "expect": {
+            "emits": [
+              {
+                "event": "DECORATE",
+                "payload": {
+                  "editorId": "e",
+                  "source": "review",
+                  "ranges": [
+                    {
+                      "id": "drift-orbitals[0].traits[0].stateMachine.transitions[0]",
+                      "fromRow": 4,
+                      "fromCol": 6,
+                      "toRow": 5,
+                      "toCol": 25,
+                      "tone": "review",
+                      "label": "departs from the catalog: nearest X.GO scores 40%"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "entity": {
+        "editorId": "e",
+        "path": "/w/a.lolo",
+        "version": 3,
+        "text": "app a\norbital O {\n  trait T -> R {\n    state s {\n      GO -> s\n        (set @entity.n 1)\n    }\n  }\n}",
+        "reviewing": true,
+        "items": [
+          {
+            "pointer": "orbitals[0].traits[0].stateMachine.transitions[0]",
+            "trait": "T",
+            "event": "GO",
+            "from": "s",
+            "to": "s",
+            "fromRow": 4,
+            "fromCol": 6,
+            "toRow": 5,
+            "source": "      GO -> s\n        (set @entity.n 1)"
+          }
+        ],
+        "itemsVersion": 3,
+        "blameVersion": 3,
+        "rows": []
+      }
+    },
+    {
+      "id": "a-close-peer-is-not-drift",
+      "steps": [
+        {
+          "event": "TV_PEERS",
+          "payload": {
+            "requestId": "3",
+            "results": [
+              {
+                "key": "orbitals[0].traits[0].stateMachine.transitions[0]",
+                "peers": [
+                  {
+                    "key": "k",
+                    "path": "/c/x.lolo",
+                    "label": "X.GO",
+                    "score": 0.9
+                  }
+                ]
+              }
+            ]
+          },
+          "now": 1794142800000,
+          "expect": {
+            "emits": [
+              {
+                "event": "DECORATE",
+                "payload": {
+                  "editorId": "e",
+                  "source": "review",
+                  "ranges": []
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "entity": {
+        "editorId": "e",
+        "path": "/w/a.lolo",
+        "version": 3,
+        "text": "app a\norbital O {\n  trait T -> R {\n    state s {\n      GO -> s\n        (set @entity.n 1)\n    }\n  }\n}",
+        "reviewing": true,
+        "items": [
+          {
+            "pointer": "orbitals[0].traits[0].stateMachine.transitions[0]",
+            "trait": "T",
+            "event": "GO",
+            "from": "s",
+            "to": "s",
+            "fromRow": 4,
+            "fromCol": 6,
+            "toRow": 5,
+            "source": "      GO -> s\n        (set @entity.n 1)"
+          }
+        ],
+        "itemsVersion": 3,
+        "blameVersion": 3,
+        "rows": []
+      }
+    },
+    {
+      "id": "k-opens-the-instant-popover-and-asks-the-model",
+      "steps": [
+        {
+          "event": "REVIEW_NOW",
+          "payload": {
+            "editorId": "e"
+          },
+          "now": 1794142800000,
+          "expect": {
+            "entity": {
+              "open": "orbitals[0].traits[0].stateMachine.transitions[0]",
+              "asking": "orbitals[0].traits[0].stateMachine.transitions[0]|3"
+            },
+            "emits": [
+              {
+                "event": "POPOVER",
+                "payload": {
+                  "editorId": "e",
+                  "popover": {
+                    "fromRow": 4,
+                    "fromCol": 6,
+                    "toRow": 5,
+                    "toCol": 25,
+                    "title": "T.GO  s -> s",
+                    "sections": [
+                      {
+                        "heading": "Edited",
+                        "lines": [
+                          "no history for these lines"
+                        ]
+                      },
+                      {
+                        "heading": "Nearest in the catalog",
+                        "lines": [
+                          "X.GO  x.lolo  90%"
+                        ]
+                      },
+                      {
+                        "heading": "Review (ternary-bonsai-2-27b)",
+                        "lines": [
+                          "asking the model..."
+                        ]
+                      }
+                    ],
+                    "busy": true
+                  }
+                }
+              },
+              {
+                "event": "LLM_GENERATE",
+                "payload": {
+                  "key": "orbitals[0].traits[0].stateMachine.transitions[0]|3",
+                  "model": "ternary-bonsai-2-27b"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "entity": {
+        "editorId": "e",
+        "path": "/w/a.lolo",
+        "version": 3,
+        "text": "app a\norbital O {\n  trait T -> R {\n    state s {\n      GO -> s\n        (set @entity.n 1)\n    }\n  }\n}",
+        "reviewing": true,
+        "items": [
+          {
+            "pointer": "orbitals[0].traits[0].stateMachine.transitions[0]",
+            "trait": "T",
+            "event": "GO",
+            "from": "s",
+            "to": "s",
+            "fromRow": 4,
+            "fromCol": 6,
+            "toRow": 5,
+            "source": "      GO -> s\n        (set @entity.n 1)"
+          }
+        ],
+        "itemsVersion": 3,
+        "blameVersion": 3,
+        "cursorRow": 5,
+        "rows": [],
+        "peers": {
+          "orbitals[0].traits[0].stateMachine.transitions[0]": [
+            {
+              "key": "k",
+              "path": "/c/x.lolo",
+              "label": "X.GO",
+              "score": 0.9
+            }
+          ]
+        },
+        "indexNote": ""
+      }
+    },
+    {
+      "id": "the-answer-fills-the-popover",
+      "steps": [
+        {
+          "event": "LLM_GENERATE_RESULT",
+          "payload": {
+            "content": "R11: matches on a label\n"
+          },
+          "now": 1794142800000,
+          "expect": {
+            "entity": {
+              "asking": ""
+            },
+            "emits": [
+              {
+                "event": "POPOVER",
+                "payload": {
+                  "popover": {
+                    "fromRow": 4,
+                    "fromCol": 6,
+                    "toRow": 5,
+                    "toCol": 25,
+                    "title": "T.GO  s -> s",
+                    "sections": [
+                      {
+                        "heading": "Edited",
+                        "lines": [
+                          "no history for these lines"
+                        ]
+                      },
+                      {
+                        "heading": "Nearest in the catalog",
+                        "lines": [
+                          "idx"
+                        ]
+                      },
+                      {
+                        "heading": "Review (ternary-bonsai-2-27b)",
+                        "lines": [
+                          "R11: matches on a label"
+                        ]
+                      }
+                    ],
+                    "busy": false
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "entity": {
+        "editorId": "e",
+        "path": "/w/a.lolo",
+        "version": 3,
+        "text": "app a\norbital O {\n  trait T -> R {\n    state s {\n      GO -> s\n        (set @entity.n 1)\n    }\n  }\n}",
+        "reviewing": true,
+        "items": [
+          {
+            "pointer": "orbitals[0].traits[0].stateMachine.transitions[0]",
+            "trait": "T",
+            "event": "GO",
+            "from": "s",
+            "to": "s",
+            "fromRow": 4,
+            "fromCol": 6,
+            "toRow": 5,
+            "source": "      GO -> s\n        (set @entity.n 1)"
+          }
+        ],
+        "itemsVersion": 3,
+        "blameVersion": 3,
+        "open": "orbitals[0].traits[0].stateMachine.transitions[0]",
+        "asking": "orbitals[0].traits[0].stateMachine.transitions[0]|3",
+        "rows": [],
+        "indexNote": "idx"
+      }
+    },
+    {
+      "id": "leaving-closes-and-cancels",
+      "steps": [
+        {
+          "event": "CURSOR_MOVED",
+          "payload": {
+            "editorId": "e",
+            "row": 0,
+            "col": 0,
+            "mode": "NORMAL"
+          },
+          "now": 1794142800000,
+          "expect": {
+            "entity": {
+              "open": "",
+              "asking": ""
+            },
+            "emits": [
+              {
+                "event": "CLOSE_POPOVER",
+                "payload": {
+                  "editorId": "e"
+                }
+              },
+              {
+                "event": "LLM_CANCEL",
+                "payload": {
+                  "key": "orbitals[0].traits[0].stateMachine.transitions[0]|3"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "entity": {
+        "editorId": "e",
+        "path": "/w/a.lolo",
+        "version": 3,
+        "text": "app a\norbital O {\n  trait T -> R {\n    state s {\n      GO -> s\n        (set @entity.n 1)\n    }\n  }\n}",
+        "reviewing": true,
+        "items": [
+          {
+            "pointer": "orbitals[0].traits[0].stateMachine.transitions[0]",
+            "trait": "T",
+            "event": "GO",
+            "from": "s",
+            "to": "s",
+            "fromRow": 4,
+            "fromCol": 6,
+            "toRow": 5,
+            "source": "      GO -> s\n        (set @entity.n 1)"
+          }
+        ],
+        "itemsVersion": 3,
+        "blameVersion": 3,
+        "open": "orbitals[0].traits[0].stateMachine.transitions[0]",
+        "asking": "orbitals[0].traits[0].stateMachine.transitions[0]|3"
+      }
+    },
+    {
+      "id": "a-kept-answer-is-not-asked-again",
+      "steps": [
+        {
+          "event": "REVIEW_NOW",
+          "payload": {
+            "editorId": "e"
+          },
+          "now": 1794142800000,
+          "expect": {
+            "neverEmits": [
+              "LLM_GENERATE"
+            ],
+            "entity": {
+              "open": "orbitals[0].traits[0].stateMachine.transitions[0]"
+            }
+          }
+        }
+      ],
+      "entity": {
+        "editorId": "e",
+        "path": "/w/a.lolo",
+        "version": 3,
+        "text": "app a\norbital O {\n  trait T -> R {\n    state s {\n      GO -> s\n        (set @entity.n 1)\n    }\n  }\n}",
+        "reviewing": true,
+        "items": [
+          {
+            "pointer": "orbitals[0].traits[0].stateMachine.transitions[0]",
+            "trait": "T",
+            "event": "GO",
+            "from": "s",
+            "to": "s",
+            "fromRow": 4,
+            "fromCol": 6,
+            "toRow": 5,
+            "source": "      GO -> s\n        (set @entity.n 1)"
+          }
+        ],
+        "itemsVersion": 3,
+        "blameVersion": 3,
+        "cursorRow": 4,
+        "rows": [],
+        "findings": {
+          "orbitals[0].traits[0].stateMachine.transitions[0]|3": "no findings"
+        }
+      }
+    },
+    {
+      "id": "k-off-a-transition-opens-nothing",
+      "steps": [
+        {
+          "event": "REVIEW_NOW",
+          "payload": {
+            "editorId": "e"
+          },
+          "now": 1794142800000,
+          "expect": {
+            "neverEmits": [
+              "POPOVER",
+              "LLM_GENERATE"
+            ]
+          }
+        }
+      ],
+      "entity": {
+        "editorId": "e",
+        "path": "/w/a.lolo",
+        "version": 3,
+        "text": "app a\norbital O {\n  trait T -> R {\n    state s {\n      GO -> s\n        (set @entity.n 1)\n    }\n  }\n}",
+        "reviewing": true,
+        "items": [
+          {
+            "pointer": "orbitals[0].traits[0].stateMachine.transitions[0]",
+            "trait": "T",
+            "event": "GO",
+            "from": "s",
+            "to": "s",
+            "fromRow": 4,
+            "fromCol": 6,
+            "toRow": 5,
+            "source": "      GO -> s\n        (set @entity.n 1)"
+          }
+        ],
+        "itemsVersion": 3,
+        "blameVersion": 3,
+        "cursorRow": 0
+      }
+    }
+  ]
+}

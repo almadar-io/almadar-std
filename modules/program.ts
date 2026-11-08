@@ -36,7 +36,8 @@ const PROVE_PROPOSITION = shape({ kind: STRING, entity: STRING, trait: STRING, s
 const PROVE_FINDING = shape({ verdict: union(lit('violated'), lit('unproved')), reason: STRING, counterexample: mapOf(STRING, SEXPR), site: STRING, proposition: PROVE_PROPOSITION }, ['counterexample']);
 
 const EVAL_STEP = shape({ kind: union(lit('enter'), lit('exit'), lit('iter'), lit('skip')), path: list(union(NUMBER, STRING)), value: SEXPR, error: STRING }, ['value', 'error']);
-const PLAYED_EFFECT = shape({ type: STRING, args: list(SEXPR), status: union(lit('executed'), lit('failed'), lit('skipped')), error: STRING, routed: BOOLEAN }, ['error']);
+// `nested` holds played effects of this same shape; operator types cannot recurse, so its items are SEXPR.
+const PLAYED_EFFECT = shape({ type: STRING, args: list(SEXPR), status: union(lit('executed'), lit('failed'), lit('skipped')), error: STRING, routed: BOOLEAN, nested: list(SEXPR) }, ['error', 'nested']);
 const PLAYED_EMIT = shape({ type: STRING, payload: mapOf(STRING, SEXPR), timestamp: NUMBER }, ['payload']);
 const PLAYED_GUARD = shape({ arm: NUMBER, guard: SEXPR, passed: BOOLEAN, trace: list(EVAL_STEP), error: STRING }, ['error']);
 const PROPOSITION_BINDINGS = shape({ entity: SEXPR, fromEntity: SEXPR, payload: SEXPR });
@@ -244,7 +245,7 @@ export const PROGRAM_OPERATORS: Record<string, StdOperatorMeta> = {
   'program/navigate': {
     module: 'program', category: 'std-program',
     minArity: 1, maxArity: 2,
-    description: 'Open a route in a guest session `program/open` answered: load the lazy program that serves `route` (one the opened program value carried in `lazyPrograms`), write `rows` (`[{ entity, rows }]`, each row checked against its entity, an undeclared entity or a misfit row refuses the call) into the guest\'s store, then mount the traits of the page `route` resolves to (the `[notFound]` page for an unmatched route) that the guest has not mounted yet, each once, as a route mount whose `$MOUNT` listeners hear `{ page, route, traits, entities }` first, on every navigate (EXEC-SEED-7); navigating to a route already mounted mounts no trait again. The rows are written before the mount, so the traits\' INIT fetches read them. Success carries the record `program/open` answers: `{ result: { guest, states, rendered, emitted, outcomes, rejections? } }`, covering only what this call mounted, with `embedded` following the route navigated to. A failure carries `{ error }` (an unknown guest, a lazy page the opened program did not carry, a bad row). Runs on the server, inside the asking dispatch.',
+    description: 'Open a route in a guest session `program/open` answered: load the lazy program that serves `route` (one the opened program value carried in `lazyPrograms`), write `rows` (`[{ entity, rows }]`, each row checked against its entity, an undeclared entity or a misfit row refuses the call) into the guest\'s store, then mount the traits of the page `route` resolves to (the `[notFound]` page for an unmatched route) that the guest has not mounted yet, each once, as a route mount whose `$MOUNT` listeners hear `{ page, route, traits, entities }` first, on every navigate (EXEC-SEED-7); navigating to a route already mounted mounts no trait again, unless `remount` is true: then every trait of that page runs its lifecycle event again, mounted or not (a host re-runs the page after the identity of the guest session changed). The rows are written before the mount, so the traits\' INIT fetches read them. Success carries the record `program/open` answers: `{ result: { guest, states, rendered, emitted, outcomes, rejections? } }`, covering only what this call mounted, with `embedded` following the route navigated to. A failure carries `{ error }` (an unknown guest, a lazy page the opened program did not carry, a bad row). Runs on the server, inside the asking dispatch.',
     hasSideEffects: true,
     runsOn: 'server',
     host: 'program',
@@ -257,7 +258,7 @@ export const PROGRAM_OPERATORS: Record<string, StdOperatorMeta> = {
       rejections: list(openShape({ code: STRING })),
     }),
     params: [
-      { name: 'options', type: shape({ guest: STRING, route: STRING, rows: list(shape({ entity: STRING, rows: list(mapOf(STRING, SEXPR)) })) }, ['rows']), description: 'The session id `program/open` answered (`guest`), the path to open (`route`) and the optional `rows` to seed before its traits mount' },
+      { name: 'options', type: shape({ guest: STRING, route: STRING, rows: list(shape({ entity: STRING, rows: list(mapOf(STRING, SEXPR)) })), remount: BOOLEAN }, ['rows', 'remount']), description: 'The session id `program/open` answered (`guest`), the path to open (`route`), the optional `rows` to seed before its traits mount, and `remount` (true: run every trait of the page again, not only those not mounted yet)' },
       EMIT_OPTIONS,
     ],
     example: '["program/navigate", { "guest": "@entity.guest", "route": "/list", "rows": [] }, { "emit": { "success": "NAVIGATED", "failure": "NAVIGATE_FAILED" } }]',

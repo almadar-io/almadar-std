@@ -2923,6 +2923,135 @@
      }
     }
    ]
+  },
+  {
+   "id": "blame-a-committed-file-in-porcelain-form",
+   "steps": [
+    {
+     "event": "GIT_STEP",
+     "payload": {
+      "requestId": "r1",
+      "cwd": "/repo",
+      "op": "blame",
+      "args": [
+       "a.lolo"
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GIT_STEPS_RUN",
+        "payload": {
+         "requestId": "r1",
+         "steps": [
+          {
+           "scope": "repo",
+           "args": [
+            "blame",
+            "--porcelain",
+            "--",
+            "a.lolo"
+           ],
+           "stdin": "",
+           "feed": false,
+           "tolerate": false,
+           "raw": false
+          }
+         ],
+         "prefix": [],
+         "env": {
+          "LC_ALL": "C",
+          "GIT_TERMINAL_PROMPT": "0"
+         },
+         "rootDir": "/repo",
+         "repoDir": "/repo",
+         "dirFlag": "-C",
+         "rawInputs": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "blame-unsaved-contents-reads-them-from-stdin",
+   "steps": [
+    {
+     "event": "GIT_STEP",
+     "payload": {
+      "requestId": "r1",
+      "cwd": "/repo",
+      "op": "blame",
+      "args": [
+       "a.lolo",
+       "x\ny\n"
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GIT_STEPS_RUN",
+        "payload": {
+         "requestId": "r1",
+         "steps": [
+          {
+           "scope": "repo",
+           "args": [
+            "blame",
+            "--porcelain",
+            "--contents",
+            "-",
+            "--",
+            "a.lolo"
+           ],
+           "stdin": "x\ny\n",
+           "feed": true,
+           "tolerate": false,
+           "raw": false
+          }
+         ],
+         "prefix": [],
+         "env": {
+          "LC_ALL": "C",
+          "GIT_TERMINAL_PROMPT": "0"
+         },
+         "rootDir": "/repo",
+         "repoDir": "/repo",
+         "dirFlag": "-C",
+         "rawInputs": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "blame-without-a-path-is-refused",
+   "steps": [
+    {
+     "event": "GIT_STEP",
+     "payload": {
+      "requestId": "r1",
+      "cwd": "/repo",
+      "op": "blame",
+      "args": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GIT_FAILED",
+        "payload": {
+         "requestId": "r1",
+         "op": "blame",
+         "code": "git_missing_argument"
+        }
+       }
+      ]
+     }
+    }
+   ]
   }
  ]
 }

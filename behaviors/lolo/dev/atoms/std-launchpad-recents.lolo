@@ -22,6 +22,7 @@ orbital LaunchpadRecentsOrbital {
     items : [RecentEntry] = []
     loaded : boolean = false
     pending : [RecentEntry] = []
+    reading : boolean = false
   }
 
   trait RecentsStore -> RecentsRun {
@@ -29,40 +30,51 @@ orbital LaunchpadRecentsOrbital {
 
     state ready {
       INIT -> ready
-      RECENTS_LOAD -> ready
-        (os/read-file "~/.almadar/launchpad/recents.json" { key: "recents" emit: { success: RECENTS_READ, failure: RECENTS_READ_FAILED } })
+      RECENTS_LOAD -> ready when (not @entity.reading)
+        (set @entity.reading true)
+        (os/read-file "~/.almadar/launchpad/recents.json" { key: "read" emit: { success: RECENTS_READ, failure: RECENTS_READ_FAILED } })
+      RECENTS_LOAD -> ready when @entity.reading
       RECENTS_READ -> ready when (= (json/parse (default (bytes/to-string ?data) "") RecentEntries) null)
+        (set @entity.reading false)
         (emit RECENTS_FAILED { error: "the recents file is not a list of launches" })
       RECENTS_READ -> ready when (and (!= (json/parse (default (bytes/to-string ?data) "") RecentEntries) null) (= (array/len @entity.pending) 0))
+        (set @entity.reading false)
         (set @entity.items (default (json/parse (default (bytes/to-string ?data) "") RecentEntries) []))
         (set @entity.loaded true)
         (emit RECENTS_LOADED { items: @entity.items })
       RECENTS_READ -> ready when (and (!= (json/parse (default (bytes/to-string ?data) "") RecentEntries) null) (> (array/len @entity.pending) 0))
+        (set @entity.reading false)
         (set @entity.items (array/reduce @entity.pending (default (json/parse (default (bytes/to-string ?data) "") RecentEntries) []) (fn acc e (array/prepend (array/filter @acc (fn x (!= @x.behavior @e.behavior))) @e))))
         (set @entity.pending [])
         (set @entity.loaded true)
         (emit RECENTS_LOADED { items: @entity.items })
         (os/mkdir "~/.almadar/launchpad" true { key: "dir" emit: { success: RECENTS_DIR, failure: RECENTS_WRITE_FAILED } })
       RECENTS_READ_FAILED -> ready when (and (= ?kind "not-found") (= (array/len @entity.pending) 0))
+        (set @entity.reading false)
         (set @entity.items [])
         (set @entity.loaded true)
         (emit RECENTS_LOADED { items: [] })
       RECENTS_READ_FAILED -> ready when (and (= ?kind "not-found") (> (array/len @entity.pending) 0))
+        (set @entity.reading false)
         (set @entity.items (array/reduce @entity.pending [] (fn acc e (array/prepend (array/filter @acc (fn x (!= @x.behavior @e.behavior))) @e))))
         (set @entity.pending [])
         (set @entity.loaded true)
         (emit RECENTS_LOADED { items: @entity.items })
         (os/mkdir "~/.almadar/launchpad" true { key: "dir" emit: { success: RECENTS_DIR, failure: RECENTS_WRITE_FAILED } })
       RECENTS_READ_FAILED -> ready when (!= ?kind "not-found")
+        (set @entity.reading false)
         (emit RECENTS_FAILED { error: ?error })
-      RECENT_ADD -> ready when (not @entity.loaded)
+      RECENT_ADD -> ready when (and (not @entity.loaded) (not @entity.reading))
         (set @entity.pending (array/append @entity.pending { behavior: ?behavior, label: ?label, kind: ?kind, command: ?command, route: ?route, at: @now }))
-        (os/read-file "~/.almadar/launchpad/recents.json" { key: "recents" emit: { success: RECENTS_READ, failure: RECENTS_READ_FAILED } })
+        (set @entity.reading true)
+        (os/read-file "~/.almadar/launchpad/recents.json" { key: "read" emit: { success: RECENTS_READ, failure: RECENTS_READ_FAILED } })
+      RECENT_ADD -> ready when (and (not @entity.loaded) @entity.reading)
+        (set @entity.pending (array/append @entity.pending { behavior: ?behavior, label: ?label, kind: ?kind, command: ?command, route: ?route, at: @now }))
       RECENT_ADD -> ready when @entity.loaded
         (set @entity.items (array/prepend (array/filter @entity.items (fn e (!= @e.behavior ?behavior))) { behavior: ?behavior, label: ?label, kind: ?kind, command: ?command, route: ?route, at: @now }))
         (os/mkdir "~/.almadar/launchpad" true { key: "dir" emit: { success: RECENTS_DIR, failure: RECENTS_WRITE_FAILED } })
       RECENTS_DIR -> ready
-        (os/write-file "~/.almadar/launchpad/recents.json" (bytes/from-string (json/stringify @entity.items)) { key: "recents" emit: { success: RECENTS_WRITTEN, failure: RECENTS_WRITE_FAILED } })
+        (os/write-file "~/.almadar/launchpad/recents.json" (bytes/from-string (json/stringify @entity.items)) { key: "write" emit: { success: RECENTS_WRITTEN, failure: RECENTS_WRITE_FAILED } })
       RECENTS_WRITTEN -> ready
         (emit RECENTS_CHANGED { items: @entity.items })
       RECENTS_WRITE_FAILED -> ready

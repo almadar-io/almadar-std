@@ -263,12 +263,12 @@ orbital AgentBuilderOrbital {
         (set @entity.error "The model returned no embedding")
         (set @entity.status failed)
         (emit BUILD_REJECTED { error: "The model returned no embedding", errors: [] })
-      STEP -> searching when (and (validate/required (if (>= @entity.step 0) (array/nth @config.ladder @entity.step) null)) (and (< @entity.step (array/len @config.ladder)) (= (object/get (if (>= @entity.step 0) (array/nth @config.ladder @entity.step) null) source) "catalog")))
-        (behavior/catalog { paths: (object/get (if (>= @entity.step 0) (array/nth @config.ladder @entity.step) null) scope []) } {
+      STEP -> searching when (and (validate/required (array/nth @config.ladder @entity.step)) (and (< @entity.step (array/len @config.ladder)) (= (object/get (array/nth @config.ladder @entity.step) source) "catalog")))
+        (behavior/catalog { paths: (object/get (array/nth @config.ladder @entity.step) scope []) } {
           emit: { failure: BUILD_FAILED, success: CATALOG_LISTED }
         })
-      STEP -> searching when (and (validate/required (if (>= @entity.step 0) (array/nth @config.ladder @entity.step) null)) (and (< @entity.step (array/len @config.ladder)) (= (object/get (if (>= @entity.step 0) (array/nth @config.ladder @entity.step) null) source) "pool")))
-        (emit POOL_SEARCH { vector: @entity.queryVector, take: (object/get (if (>= @entity.step 0) (array/nth @config.ladder @entity.step) null) take 5) })
+      STEP -> searching when (and (validate/required (array/nth @config.ladder @entity.step)) (and (< @entity.step (array/len @config.ladder)) (= (object/get (array/nth @config.ladder @entity.step) source) "pool")))
+        (emit POOL_SEARCH { vector: @entity.queryVector, take: (object/get (array/nth @config.ladder @entity.step) take 5) })
       STEP -> failed when (>= @entity.step (array/len @config.ladder))
         (set @entity.error "No tier of the ladder could serve the request")
         (set @entity.status failed)
@@ -292,46 +292,46 @@ orbital AgentBuilderOrbital {
       POOL_FOUND -> searching
         (set @entity.ranked (array/map ?hits (fn h { behavior: @h.behavior, value: @h.value, description: (object/get @h description ""), fields: (object/get @h fields {}), score: @h.score })))
         (emit RANKED {})
-      RANKED -> searching when (and (validate/required (if (>= @entity.step 0) (array/nth @config.ladder @entity.step) null)) (or (= (array/len @entity.ranked) 0) (< (default (array/first (array/map @entity.ranked (fn r @r.score))) 0) (object/get (if (>= @entity.step 0) (array/nth @config.ladder @entity.step) null) threshold))))
+      RANKED -> searching when (and (validate/required (array/nth @config.ladder @entity.step)) (or (= (array/len @entity.ranked) 0) (< (default (array/first (array/map @entity.ranked (fn r @r.score))) 0) (object/get (array/nth @config.ladder @entity.step) threshold))))
         (set @entity.step (+ @entity.step 1))
         (emit STEP {})
-      RANKED -> building when (and (validate/required (if (>= @entity.step 0) (array/nth @config.ladder @entity.step) null)) (and (> (array/len @entity.ranked) 0) (and (>= (object/get (array/first @entity.ranked) score) (object/get (if (>= @entity.step 0) (array/nth @config.ladder @entity.step) null) threshold)) (= (object/get (if (>= @entity.step 0) (array/nth @config.ladder @entity.step) null) action) "mount"))))
+      RANKED -> building when (and (validate/required (array/nth @config.ladder @entity.step)) (and (> (array/len @entity.ranked) 0) (and (>= (object/get (array/first @entity.ranked) score) (object/get (array/nth @config.ladder @entity.step) threshold)) (= (object/get (array/nth @config.ladder @entity.step) action) "mount"))))
         (set @entity.status building)
-        (emit BUILD_PROGRESS { status: "building", tier: (object/get (if (>= @entity.step 0) (array/nth @config.ladder @entity.step) null) name) })
+        (emit BUILD_PROGRESS { status: "building", tier: (object/get (array/nth @config.ladder @entity.step) name) })
         (program/eval (quasiquote { name: (unquote @entity.orbitalName), orbitals: [(unquote (behavior/apply (object/get (array/first @entity.ranked) value) { config: {}, traits: {} }))] }) {
           emit: { failure: BUILD_FAILED, success: BUILT }
         })
-      RANKED -> done when (and (validate/required (if (>= @entity.step 0) (array/nth @config.ladder @entity.step) null)) (and (> (array/len @entity.ranked) 0) (and (>= (object/get (array/first @entity.ranked) score) (object/get (if (>= @entity.step 0) (array/nth @config.ladder @entity.step) null) threshold)) (= (object/get (if (>= @entity.step 0) (array/nth @config.ladder @entity.step) null) action) "adopt"))))
+      RANKED -> done when (and (validate/required (array/nth @config.ladder @entity.step)) (and (> (array/len @entity.ranked) 0) (and (>= (object/get (array/first @entity.ranked) score) (object/get (array/nth @config.ladder @entity.step) threshold)) (= (object/get (array/nth @config.ladder @entity.step) action) "adopt"))))
         (set @entity.behavior (object/get (array/first @entity.ranked) behavior))
         (set @entity.status done)
-        (emit BUILD_COMPLETE { orbitalName: @entity.orbitalName, behavior: @entity.behavior, value: (object/get (array/first @entity.ranked) value), tier: (object/get (if (>= @entity.step 0) (array/nth @config.ladder @entity.step) null) name), fields: (object/get (array/first @entity.ranked) fields {}) })
-      RANKED -> describing when (and (validate/required (if (>= @entity.step 0) (array/nth @config.ladder @entity.step) null)) (and (and (> (array/len @entity.ranked) 0) (and (>= (object/get (array/first @entity.ranked) score) (object/get (if (>= @entity.step 0) (array/nth @config.ladder @entity.step) null) threshold)) (= (object/get (if (>= @entity.step 0) (array/nth @config.ladder @entity.step) null) action) "fill"))) (or (<= (object/get (if (>= @entity.step 0) (array/nth @config.ladder @entity.step) null) take 1) 1) (= (array/len @entity.ranked) 1))))
+        (emit BUILD_COMPLETE { orbitalName: @entity.orbitalName, behavior: @entity.behavior, value: (object/get (array/first @entity.ranked) value), tier: (object/get (array/nth @config.ladder @entity.step) name), fields: (object/get (array/first @entity.ranked) fields {}) })
+      RANKED -> describing when (and (validate/required (array/nth @config.ladder @entity.step)) (and (and (> (array/len @entity.ranked) 0) (and (>= (object/get (array/first @entity.ranked) score) (object/get (array/nth @config.ladder @entity.step) threshold)) (= (object/get (array/nth @config.ladder @entity.step) action) "fill"))) (or (<= (object/get (array/nth @config.ladder @entity.step) take 1) 1) (= (array/len @entity.ranked) 1))))
         (set @entity.chosen (object/get (array/first @entity.ranked) behavior))
         (set @entity.chosenDescription (object/get (array/first @entity.ranked) description ""))
         (set @entity.pickedFields {})
         (set @entity.status describing)
-        (emit BUILD_PROGRESS { status: "describing", tier: (object/get (if (>= @entity.step 0) (array/nth @config.ladder @entity.step) null) name) })
+        (emit BUILD_PROGRESS { status: "describing", tier: (object/get (array/nth @config.ladder @entity.step) name) })
         (behavior/describe { behavior: @entity.chosen } {
           emit: { failure: BUILD_FAILED, success: DESCRIBED }
         })
-      RANKED -> choosing when (and (validate/required (if (>= @entity.step 0) (array/nth @config.ladder @entity.step) null)) (and (and (> (array/len @entity.ranked) 0) (and (>= (object/get (array/first @entity.ranked) score) (object/get (if (>= @entity.step 0) (array/nth @config.ladder @entity.step) null) threshold)) (= (object/get (if (>= @entity.step 0) (array/nth @config.ladder @entity.step) null) action) "fill"))) (and (> (object/get (if (>= @entity.step 0) (array/nth @config.ladder @entity.step) null) take 1) 1) (and (> (array/len @entity.ranked) 1) (= @config.pickDecider "jev")))))
+      RANKED -> choosing when (and (validate/required (array/nth @config.ladder @entity.step)) (and (and (> (array/len @entity.ranked) 0) (and (>= (object/get (array/first @entity.ranked) score) (object/get (array/nth @config.ladder @entity.step) threshold)) (= (object/get (array/nth @config.ladder @entity.step) action) "fill"))) (and (> (object/get (array/nth @config.ladder @entity.step) take 1) 1) (and (> (array/len @entity.ranked) 1) (= @config.pickDecider "jev")))))
         (set @entity.chosen "")
         (set @entity.pickedFields {})
         (set @entity.status choosing)
-        (emit BUILD_PROGRESS { status: "choosing", tier: (object/get (if (>= @entity.step 0) (array/nth @config.ladder @entity.step) null) name) })
-        (emit LLM_CHOOSE { state: (if (= @entity.context "") @entity.request (str/concat @entity.request "\n\n" @entity.context)), instructions: @config.pickQuestion, options: (array/map (array/take @entity.ranked (object/get (if (>= @entity.step 0) (array/nth @config.ladder @entity.step) null) take 1)) (fn r { value: @r.behavior, description: (object/get @r description "") })) })
-      RANKED -> choosing when (and (validate/required (if (>= @entity.step 0) (array/nth @config.ladder @entity.step) null)) (and (and (> (array/len @entity.ranked) 0) (and (>= (object/get (array/first @entity.ranked) score) (object/get (if (>= @entity.step 0) (array/nth @config.ladder @entity.step) null) threshold)) (= (object/get (if (>= @entity.step 0) (array/nth @config.ladder @entity.step) null) action) "fill"))) (and (> (object/get (if (>= @entity.step 0) (array/nth @config.ladder @entity.step) null) take 1) 1) (and (> (array/len @entity.ranked) 1) (= @config.pickDecider "chat")))))
+        (emit BUILD_PROGRESS { status: "choosing", tier: (object/get (array/nth @config.ladder @entity.step) name) })
+        (emit LLM_CHOOSE { state: (if (= @entity.context "") @entity.request (str/concat @entity.request "\n\n" @entity.context)), instructions: @config.pickQuestion, options: (array/map (array/take @entity.ranked (object/get (array/nth @config.ladder @entity.step) take 1)) (fn r { value: @r.behavior, description: (object/get @r description "") })) })
+      RANKED -> choosing when (and (validate/required (array/nth @config.ladder @entity.step)) (and (and (> (array/len @entity.ranked) 0) (and (>= (object/get (array/first @entity.ranked) score) (object/get (array/nth @config.ladder @entity.step) threshold)) (= (object/get (array/nth @config.ladder @entity.step) action) "fill"))) (and (> (object/get (array/nth @config.ladder @entity.step) take 1) 1) (and (> (array/len @entity.ranked) 1) (= @config.pickDecider "chat")))))
         (set @entity.chosen "")
         (set @entity.pickedFields {})
         (set @entity.status choosing)
-        (emit BUILD_PROGRESS { status: "choosing", tier: (object/get (if (>= @entity.step 0) (array/nth @config.ladder @entity.step) null) name) })
+        (emit BUILD_PROGRESS { status: "choosing", tier: (object/get (array/nth @config.ladder @entity.step) name) })
         (emit CONVERSE {
           messages: [{ role: "user", content: (if (= @entity.context "") @entity.request (str/concat @entity.request "\n\n" @entity.context)) }]
-          instructions: (str/concat @config.pickInstructions "\nThe building blocks:\n" (str/join (array/map (array/take @entity.ranked (object/get (if (>= @entity.step 0) (array/nth @config.ladder @entity.step) null) take 1)) (fn r (str/concat "- " @r.behavior ": " (object/get @r description "")))) "\n"))
-          tools: [{ roles: @config.toolRoles, fireAndForget: true, event: @config.pickEvent, payload: [{ name: "behavior", type: "string", required: true, values: (array/map (array/take @entity.ranked (object/get (if (>= @entity.step 0) (array/nth @config.ladder @entity.step) null) take 1)) (fn r @r.behavior)), description: "The building block that fits the request." }, { name: "fields", type: "object", required: (> (array/len @config.pickFields) 0), properties: @config.pickFields }] }]
+          instructions: (str/concat @config.pickInstructions "\nThe building blocks:\n" (str/join (array/map (array/take @entity.ranked (object/get (array/nth @config.ladder @entity.step) take 1)) (fn r (str/concat "- " @r.behavior ": " (object/get @r description "")))) "\n"))
+          tools: [{ roles: @config.toolRoles, fireAndForget: true, event: @config.pickEvent, payload: [{ name: "behavior", type: "string", required: true, values: (array/map (array/take @entity.ranked (object/get (array/nth @config.ladder @entity.step) take 1)) (fn r @r.behavior)), description: "The building block that fits the request." }, { name: "fields", type: "object", required: (> (array/len @config.pickFields) 0), properties: @config.pickFields }] }]
           ephemeral: true
         })
-      RANKED -> failed when (not (validate/required (if (>= @entity.step 0) (array/nth @config.ladder @entity.step) null)))
+      RANKED -> failed when (not (validate/required (array/nth @config.ladder @entity.step)))
         (set @entity.error "The ladder step is out of range")
         (set @entity.status failed)
         (emit BUILD_REJECTED { error: "The ladder step is out of range", errors: [] })
@@ -348,19 +348,19 @@ orbital AgentBuilderOrbital {
     state choosing {
       INIT -> choosing
         (set @entity.status choosing)
-      CHOSEN -> describing when (and (validate/required (if (>= @entity.step 0) (array/nth @config.ladder @entity.step) null)) (array/some (array/take @entity.ranked (object/get (if (>= @entity.step 0) (array/nth @config.ladder @entity.step) null) take 1)) (fn r (= @r.behavior ?choice))))
+      CHOSEN -> describing when (and (validate/required (array/nth @config.ladder @entity.step)) (array/some (array/take @entity.ranked (object/get (array/nth @config.ladder @entity.step) take 1)) (fn r (= @r.behavior ?choice))))
         (set @entity.chosen ?choice)
         (set @entity.chosenDescription (default (array/first (array/map (array/filter @entity.ranked (fn r (= @r.behavior ?choice))) (fn r (default @r.description "")))) ""))
         (set @entity.status describing)
-        (emit BUILD_PROGRESS { status: "describing", tier: (object/get (if (>= @entity.step 0) (array/nth @config.ladder @entity.step) null) name) })
+        (emit BUILD_PROGRESS { status: "describing", tier: (object/get (array/nth @config.ladder @entity.step) name) })
         (behavior/describe { behavior: ?choice } {
           emit: { failure: BUILD_FAILED, success: DESCRIBED }
         })
-      CHOSEN -> failed when (and (validate/required (if (>= @entity.step 0) (array/nth @config.ladder @entity.step) null)) (not (array/some (array/take @entity.ranked (object/get (if (>= @entity.step 0) (array/nth @config.ladder @entity.step) null) take 1)) (fn r (= @r.behavior ?choice)))))
+      CHOSEN -> failed when (and (validate/required (array/nth @config.ladder @entity.step)) (not (array/some (array/take @entity.ranked (object/get (array/nth @config.ladder @entity.step) take 1)) (fn r (= @r.behavior ?choice)))))
         (set @entity.error "The decision model picked none of the building blocks offered")
         (set @entity.status failed)
         (emit BUILD_REJECTED { error: "The decision model picked none of the building blocks offered", errors: [] })
-      CHOSEN -> failed when (not (validate/required (if (>= @entity.step 0) (array/nth @config.ladder @entity.step) null)))
+      CHOSEN -> failed when (not (validate/required (array/nth @config.ladder @entity.step)))
         (set @entity.error "The ladder step is out of range")
         (set @entity.status failed)
         (emit BUILD_REJECTED { error: "The ladder step is out of range", errors: [] })
@@ -375,18 +375,18 @@ orbital AgentBuilderOrbital {
       PICK -> choosing
         (set @entity.chosen (default ?behavior ""))
         (set @entity.pickedFields (if (== ?fields null) {} ?fields))
-      ASSISTANT_REPLIED -> describing when (and (validate/required (if (>= @entity.step 0) (array/nth @config.ladder @entity.step) null)) (array/some (array/take @entity.ranked (object/get (if (>= @entity.step 0) (array/nth @config.ladder @entity.step) null) take 1)) (fn r (= @r.behavior @entity.chosen))))
+      ASSISTANT_REPLIED -> describing when (and (validate/required (array/nth @config.ladder @entity.step)) (array/some (array/take @entity.ranked (object/get (array/nth @config.ladder @entity.step) take 1)) (fn r (= @r.behavior @entity.chosen))))
         (set @entity.chosenDescription (default (array/first (array/map (array/filter @entity.ranked (fn r (= @r.behavior @entity.chosen))) (fn r (default @r.description "")))) ""))
         (set @entity.status describing)
-        (emit BUILD_PROGRESS { status: "describing", tier: (object/get (if (>= @entity.step 0) (array/nth @config.ladder @entity.step) null) name) })
+        (emit BUILD_PROGRESS { status: "describing", tier: (object/get (array/nth @config.ladder @entity.step) name) })
         (behavior/describe { behavior: @entity.chosen } {
           emit: { failure: BUILD_FAILED, success: DESCRIBED }
         })
-      ASSISTANT_REPLIED -> failed when (and (validate/required (if (>= @entity.step 0) (array/nth @config.ladder @entity.step) null)) (not (array/some (array/take @entity.ranked (object/get (if (>= @entity.step 0) (array/nth @config.ladder @entity.step) null) take 1)) (fn r (= @r.behavior @entity.chosen)))))
+      ASSISTANT_REPLIED -> failed when (and (validate/required (array/nth @config.ladder @entity.step)) (not (array/some (array/take @entity.ranked (object/get (array/nth @config.ladder @entity.step) take 1)) (fn r (= @r.behavior @entity.chosen)))))
         (set @entity.error "The model picked none of the building blocks offered")
         (set @entity.status failed)
         (emit BUILD_REJECTED { error: "The model picked none of the building blocks offered", errors: [] })
-      ASSISTANT_REPLIED -> failed when (not (validate/required (if (>= @entity.step 0) (array/nth @config.ladder @entity.step) null)))
+      ASSISTANT_REPLIED -> failed when (not (validate/required (array/nth @config.ladder @entity.step)))
         (set @entity.error "The ladder step is out of range")
         (set @entity.status failed)
         (emit BUILD_REJECTED { error: "The ladder step is out of range", errors: [] })
@@ -399,7 +399,7 @@ orbital AgentBuilderOrbital {
     state describing {
       INIT -> describing
         (set @entity.status describing)
-      DESCRIBED -> filling when (and (validate/required (if (>= @entity.step 0) (array/nth @config.ladder @entity.step) null)) (> (array/len (object/get ?result orbitals [])) 0))
+      DESCRIBED -> filling when (and (validate/required (array/nth @config.ladder @entity.step)) (> (array/len (object/get ?result orbitals [])) 0))
         (let ((o (array/first (object/get ?result orbitals []))))
           (let ((tl (as [
               { name: "config", type: "object", properties: (array/map (array/filter (object/get @o knobs []) (fn k (!= (object/get @k tier "") "internal"))) (fn k (object/pick @k ["default", "description", "name", "properties", "required", "type", "values"]))) },
@@ -411,7 +411,7 @@ orbital AgentBuilderOrbital {
                 (set @entity.target (object/get @o value))
                 (set @entity.tool @tl)
             (set @entity.status filling)
-            (emit BUILD_PROGRESS { status: "filling", tier: (object/get (if (>= @entity.step 0) (array/nth @config.ladder @entity.step) null) name) })
+            (emit BUILD_PROGRESS { status: "filling", tier: (object/get (array/nth @config.ladder @entity.step) name) })
             (emit CONVERSE {
               messages: [{ role: "user", content: (if (= @entity.context "") @entity.request (str/concat @entity.request "\n\n" @entity.context)) }]
               instructions: (str/concat @config.fillInstructions "\nThe building block: " @entity.chosen " — " @entity.chosenDescription)
@@ -422,7 +422,7 @@ orbital AgentBuilderOrbital {
                 (set @entity.error "The fill tool could not be built from the knobs")
                 (set @entity.status failed)
                 (emit BUILD_REJECTED { error: "The fill tool could not be built from the knobs", errors: [] })))))
-      DESCRIBED -> failed when (not (validate/required (if (>= @entity.step 0) (array/nth @config.ladder @entity.step) null)))
+      DESCRIBED -> failed when (not (validate/required (array/nth @config.ladder @entity.step)))
         (set @entity.error "The ladder step is out of range")
         (set @entity.status failed)
         (emit BUILD_REJECTED { error: "The ladder step is out of range", errors: [] })
@@ -443,23 +443,23 @@ orbital AgentBuilderOrbital {
         (set @entity.filledConfig (if (== ?config null) {} ?config))
         (set @entity.filledTraits (if (== ?traits null) {} ?traits))
         (set @entity.filledFields (object/merge (if (== ?fields null) {} ?fields) @entity.pickedFields))
-      ASSISTANT_REPLIED -> filling when (and (validate/required (if (>= @entity.step 0) (array/nth @config.ladder @entity.step) null)) (and (not (array/every @config.fieldWordLimits (fn l (<= (array/len (str/split (str/trim (object/get @entity.filledFields @l.name "")) " ")) @l.words)))) (< @entity.repairs @config.maxRepairs)))
+      ASSISTANT_REPLIED -> filling when (and (validate/required (array/nth @config.ladder @entity.step)) (and (not (array/every @config.fieldWordLimits (fn l (<= (array/len (str/split (str/trim (object/get @entity.filledFields @l.name "")) " ")) @l.words)))) (< @entity.repairs @config.maxRepairs)))
         (set @entity.repairs (+ @entity.repairs 1))
         (set @entity.pickedFields {})
-        (emit BUILD_PROGRESS { status: "repairing", tier: (object/get (if (>= @entity.step 0) (array/nth @config.ladder @entity.step) null) name) })
+        (emit BUILD_PROGRESS { status: "repairing", tier: (object/get (array/nth @config.ladder @entity.step) name) })
         (emit CONVERSE {
           messages: [{ role: "user", content: @entity.request }, { role: "user", content: (str/concat "Some fields are too long. The most words each field may hold: " (str/join (array/map @config.fieldWordLimits (fn l (str/concat @l.name " " (str/concat @l.words) " words"))) ", ") ". What you wrote: " (json/stringify @entity.filledFields) ". Call FILL again with the same knobs and shorter fields.") }]
           instructions: (str/concat @config.fillInstructions "\nThe building block: " @entity.chosen " — " @entity.chosenDescription)
           tools: [{ roles: @config.toolRoles, fireAndForget: true, event: @config.fillEvent, payload: @entity.tool }]
           ephemeral: true
         })
-      ASSISTANT_REPLIED -> building when (and (validate/required (if (>= @entity.step 0) (array/nth @config.ladder @entity.step) null)) (and (validate/required @entity.target) (or (array/every @config.fieldWordLimits (fn l (<= (array/len (str/split (str/trim (object/get @entity.filledFields @l.name "")) " ")) @l.words))) (>= @entity.repairs @config.maxRepairs))))
+      ASSISTANT_REPLIED -> building when (and (validate/required (array/nth @config.ladder @entity.step)) (and (validate/required @entity.target) (or (array/every @config.fieldWordLimits (fn l (<= (array/len (str/split (str/trim (object/get @entity.filledFields @l.name "")) " ")) @l.words))) (>= @entity.repairs @config.maxRepairs))))
         (set @entity.status building)
-        (emit BUILD_PROGRESS { status: "building", tier: (object/get (if (>= @entity.step 0) (array/nth @config.ladder @entity.step) null) name) })
+        (emit BUILD_PROGRESS { status: "building", tier: (object/get (array/nth @config.ladder @entity.step) name) })
         (program/eval (quasiquote { name: (unquote @entity.orbitalName), orbitals: [(unquote (behavior/apply @entity.target { config: @entity.filledConfig, traits: @entity.filledTraits }))] }) { final: true } {
           emit: { failure: BUILD_FAILED, success: BUILT }
         })
-      ASSISTANT_REPLIED -> failed when (not (validate/required (if (>= @entity.step 0) (array/nth @config.ladder @entity.step) null)))
+      ASSISTANT_REPLIED -> failed when (not (validate/required (array/nth @config.ladder @entity.step)))
         (set @entity.error "The ladder step is out of range")
         (set @entity.status failed)
         (emit BUILD_REJECTED { error: "The ladder step is out of range", errors: [] })
@@ -476,29 +476,29 @@ orbital AgentBuilderOrbital {
     state building {
       INIT -> building
         (set @entity.status building)
-      BUILT -> done when (validate/required (if (>= @entity.step 0) (array/nth @config.ladder @entity.step) null))
+      BUILT -> done when (validate/required (array/nth @config.ladder @entity.step))
         (set @entity.behavior (object/get ?result behavior))
         (set @entity.status done)
-        (emit BUILD_COMPLETE { orbitalName: @entity.orbitalName, behavior: (object/get ?result behavior), value: (object/get ?result value), tier: (object/get (if (>= @entity.step 0) (array/nth @config.ladder @entity.step) null) name), fields: @entity.filledFields })
-      BUILT -> failed when (not (validate/required (if (>= @entity.step 0) (array/nth @config.ladder @entity.step) null)))
+        (emit BUILD_COMPLETE { orbitalName: @entity.orbitalName, behavior: (object/get ?result behavior), value: (object/get ?result value), tier: (object/get (array/nth @config.ladder @entity.step) name), fields: @entity.filledFields })
+      BUILT -> failed when (not (validate/required (array/nth @config.ladder @entity.step)))
         (set @entity.error "The ladder step is out of range")
         (set @entity.status failed)
         (emit BUILD_REJECTED { error: "The ladder step is out of range", errors: [] })
-      BUILD_FAILED -> filling when (and (validate/required (if (>= @entity.step 0) (array/nth @config.ladder @entity.step) null)) (and (= (object/get (if (>= @entity.step 0) (array/nth @config.ladder @entity.step) null) action) "fill") (< @entity.repairs @config.maxRepairs)))
+      BUILD_FAILED -> filling when (and (validate/required (array/nth @config.ladder @entity.step)) (and (= (object/get (array/nth @config.ladder @entity.step) action) "fill") (< @entity.repairs @config.maxRepairs)))
         (set @entity.repairs (+ @entity.repairs 1))
         (set @entity.status filling)
-        (emit BUILD_PROGRESS { status: "repairing", tier: (object/get (if (>= @entity.step 0) (array/nth @config.ladder @entity.step) null) name) })
+        (emit BUILD_PROGRESS { status: "repairing", tier: (object/get (array/nth @config.ladder @entity.step) name) })
         (emit CONVERSE {
           messages: [{ role: "user", content: @entity.request }, { role: "user", content: (str/concat "The result did not validate. The validator's issues: " (json/stringify (if (== ?errors null) [] ?errors)) " (" ?error "). Call FILL again with corrected values.") }]
           instructions: @config.fillInstructions
           tools: [{ roles: @config.toolRoles, fireAndForget: true, event: @config.fillEvent, payload: @entity.tool }]
           ephemeral: true
         })
-      BUILD_FAILED -> failed when (and (validate/required (if (>= @entity.step 0) (array/nth @config.ladder @entity.step) null)) (or (!= (object/get (if (>= @entity.step 0) (array/nth @config.ladder @entity.step) null) action) "fill") (>= @entity.repairs @config.maxRepairs)))
+      BUILD_FAILED -> failed when (and (validate/required (array/nth @config.ladder @entity.step)) (or (!= (object/get (array/nth @config.ladder @entity.step) action) "fill") (>= @entity.repairs @config.maxRepairs)))
         (set @entity.error ?error)
         (set @entity.status failed)
         (emit BUILD_REJECTED { error: ?error, errors: (if (== ?errors null) [] ?errors) })
-      BUILD_FAILED -> failed when (not (validate/required (if (>= @entity.step 0) (array/nth @config.ladder @entity.step) null)))
+      BUILD_FAILED -> failed when (not (validate/required (array/nth @config.ladder @entity.step)))
         (set @entity.error "The ladder step is out of range")
         (set @entity.status failed)
         (emit BUILD_REJECTED { error: "The ladder step is out of range", errors: [] })

@@ -1,0 +1,295 @@
+{
+  "atom": "../ui/core/atoms/std-modal-editor.lolo",
+  "trait": "Macros",
+  "cases": [
+    {
+      "id": "records-keys-and-drops-the-stop-key",
+      "steps": [
+        {
+          "event": "MACRO_RECORD",
+          "payload": {
+            "editorId": "e",
+            "register": "a"
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "j",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "x",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "q",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "MACRO_STOP",
+          "payload": {
+            "editorId": "e",
+            "key": "q"
+          },
+          "expect": {
+            "entity": {
+              "recording": "",
+              "macros": {
+                "a": [
+                  {
+                    "key": "j",
+                    "code": "",
+                    "ctrl": false,
+                    "alt": false,
+                    "shift": false,
+                    "meta": false
+                  },
+                  {
+                    "key": "x",
+                    "code": "",
+                    "ctrl": false,
+                    "alt": false,
+                    "shift": false,
+                    "meta": false
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "keys-outside-a-recording-are-not-kept",
+      "steps": [
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "j",
+            "ctrl": false
+          },
+          "expect": {
+            "fired": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "stop-keeps-a-last-key-that-is-not-the-stop-key",
+      "steps": [
+        {
+          "event": "MACRO_RECORD",
+          "payload": {
+            "editorId": "e",
+            "register": "a"
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "j",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "MACRO_STOP",
+          "payload": {
+            "editorId": "e",
+            "key": "q"
+          },
+          "expect": {
+            "entity": {
+              "macros": {
+                "a": [
+                  {
+                    "key": "j",
+                    "code": "",
+                    "ctrl": false,
+                    "alt": false,
+                    "shift": false,
+                    "meta": false
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "re-recording-replaces-the-register",
+      "steps": [
+        {
+          "event": "MACRO_RECORD",
+          "payload": {
+            "editorId": "e",
+            "register": "a"
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "j",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "MACRO_STOP",
+          "payload": {
+            "editorId": "e",
+            "key": "q"
+          }
+        },
+        {
+          "event": "MACRO_RECORD",
+          "payload": {
+            "editorId": "e",
+            "register": "a"
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "k",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "MACRO_STOP",
+          "payload": {
+            "editorId": "e",
+            "key": "q"
+          },
+          "expect": {
+            "entity": {
+              "macros": {
+                "a": [
+                  {
+                    "key": "k",
+                    "code": "",
+                    "ctrl": false,
+                    "alt": false,
+                    "shift": false,
+                    "meta": false
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "play-queues-count-copies",
+      "steps": [
+        {
+          "event": "MACRO_RECORD",
+          "payload": {
+            "editorId": "e",
+            "register": "a"
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "j",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "x",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "MACRO_STOP",
+          "payload": {
+            "editorId": "e",
+            "key": "q"
+          }
+        },
+        {
+          "event": "MACRO_PLAY",
+          "payload": {
+            "editorId": "e",
+            "register": "a",
+            "count": 2
+          },
+          "expect": {
+            "entity": {
+              "queue": [
+                {
+                  "key": "j",
+                  "code": "",
+                  "ctrl": false,
+                  "alt": false,
+                  "shift": false,
+                  "meta": false
+                },
+                {
+                  "key": "x",
+                  "code": "",
+                  "ctrl": false,
+                  "alt": false,
+                  "shift": false,
+                  "meta": false
+                },
+                {
+                  "key": "j",
+                  "code": "",
+                  "ctrl": false,
+                  "alt": false,
+                  "shift": false,
+                  "meta": false
+                },
+                {
+                  "key": "x",
+                  "code": "",
+                  "ctrl": false,
+                  "alt": false,
+                  "shift": false,
+                  "meta": false
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "play-of-an-empty-register-queues-nothing",
+      "steps": [
+        {
+          "event": "MACRO_PLAY",
+          "payload": {
+            "editorId": "e",
+            "register": "z",
+            "count": 1
+          },
+          "expect": {
+            "fired": false
+          }
+        }
+      ]
+    }
+  ]
+}

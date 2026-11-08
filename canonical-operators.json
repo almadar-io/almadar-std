@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "Canonical operator registry for Almadar. Generated from @almadar/std/modules. Consumed by orbital-compiler via include_str!.",
-  "generated": "2026-11-07T20:38:19.762Z",
+  "generated": "2026-11-08T06:43:53.615Z",
   "categories": {
     "arithmetic": {
       "description": "Numeric operations",
@@ -27571,7 +27571,7 @@
         },
         "open": true
       },
-      "description": "Open a route in a guest session `program/open` answered: load the lazy program that serves `route` (one the opened program value carried in `lazyPrograms`), write `rows` (`[{ entity, rows }]`, each row checked against its entity, an undeclared entity or a misfit row refuses the call) into the guest's store, then mount the traits of the page `route` resolves to (the `[notFound]` page for an unmatched route) that the guest has not mounted yet, each once, as a route mount whose `$MOUNT` listeners hear `{ page, route, traits, entities }` first, on every navigate (EXEC-SEED-7); navigating to a route already mounted mounts no trait again. The rows are written before the mount, so the traits' INIT fetches read them. Success carries the record `program/open` answers: `{ result: { guest, states, rendered, emitted, outcomes, rejections? } }`, covering only what this call mounted, with `embedded` following the route navigated to. A failure carries `{ error }` (an unknown guest, a lazy page the opened program did not carry, a bad row). Runs on the server, inside the asking dispatch.",
+      "description": "Open a route in a guest session `program/open` answered: load the lazy program that serves `route` (one the opened program value carried in `lazyPrograms`), write `rows` (`[{ entity, rows }]`, each row checked against its entity, an undeclared entity or a misfit row refuses the call) into the guest's store, then mount the traits of the page `route` resolves to (the `[notFound]` page for an unmatched route) that the guest has not mounted yet, each once, as a route mount whose `$MOUNT` listeners hear `{ page, route, traits, entities }` first, on every navigate (EXEC-SEED-7); navigating to a route already mounted mounts no trait again, unless `remount` is true: then every trait of that page runs its lifecycle event again, mounted or not (a host re-runs the page after the identity of the guest session changed). The rows are written before the mount, so the traits' INIT fetches read them. Success carries the record `program/open` answers: `{ result: { guest, states, rendered, emitted, outcomes, rejections? } }`, covering only what this call mounted, with `embedded` following the route navigated to. A failure carries `{ error }` (an unknown guest, a lazy page the opened program did not carry, a bad row). Runs on the server, inside the asking dispatch.",
       "module": "program",
       "visual": {
         "form": "actuator"
@@ -27605,13 +27605,15 @@
                     }
                   }
                 }
-              }
+              },
+              "remount": "boolean"
             },
             "optional": [
-              "rows"
+              "rows",
+              "remount"
             ]
           },
-          "description": "The session id `program/open` answered (`guest`), the path to open (`route`) and the optional `rows` to seed before its traits mount"
+          "description": "The session id `program/open` answered (`guest`), the path to open (`route`), the optional `rows` to seed before its traits mount, and `remount` (true: run every trait of the page again, not only those not mounted yet)"
         },
         {
           "name": "options",
@@ -28571,10 +28573,17 @@
                         ]
                       },
                       "error": "string",
-                      "routed": "boolean"
+                      "routed": "boolean",
+                      "nested": {
+                        "kind": "array",
+                        "of": {
+                          "kind": "sexpr"
+                        }
+                      }
                     },
                     "optional": [
-                      "error"
+                      "error",
+                      "nested"
                     ]
                   }
                 },
@@ -28768,10 +28777,17 @@
                               ]
                             },
                             "error": "string",
-                            "routed": "boolean"
+                            "routed": "boolean",
+                            "nested": {
+                              "kind": "array",
+                              "of": {
+                                "kind": "sexpr"
+                              }
+                            }
                           },
                           "optional": [
-                            "error"
+                            "error",
+                            "nested"
                           ]
                         }
                       },
@@ -28917,10 +28933,17 @@
                                   ]
                                 },
                                 "error": "string",
-                                "routed": "boolean"
+                                "routed": "boolean",
+                                "nested": {
+                                  "kind": "array",
+                                  "of": {
+                                    "kind": "sexpr"
+                                  }
+                                }
                               },
                               "optional": [
-                                "error"
+                                "error",
+                                "nested"
                               ]
                             }
                           },
@@ -29110,10 +29133,17 @@
                             ]
                           },
                           "error": "string",
-                          "routed": "boolean"
+                          "routed": "boolean",
+                          "nested": {
+                            "kind": "array",
+                            "of": {
+                              "kind": "sexpr"
+                            }
+                          }
                         },
                         "optional": [
-                          "error"
+                          "error",
+                          "nested"
                         ]
                       }
                     },
@@ -30501,6 +30531,63 @@
         "(str/endsWith \"hello\" \"lo\") // => true"
       ],
       "docsSource": "reference-docs"
+    },
+    "str/find-pattern": {
+      "category": "std-str",
+      "minArity": 2,
+      "maxArity": 3,
+      "returnType": {
+        "kind": "union",
+        "of": [
+          {
+            "kind": "array",
+            "of": {
+              "kind": "object",
+              "fields": {
+                "start": "int",
+                "end": "int",
+                "text": "string"
+              }
+            }
+          },
+          {
+            "kind": "literal",
+            "value": null
+          }
+        ]
+      },
+      "description": "Every match of a regex pattern of the shared dialect (see validate/pattern; Unicode mode) at or after a character offset (default 0), in order, as { start, end, text } with start and end in characters, the units of str/len and str/slice. Empty matches step one character on. An empty list when nothing matches; null for a pattern outside the dialect",
+      "module": "str",
+      "visual": {
+        "form": "block"
+      },
+      "failable": {
+        "unlessLiteral": [
+          1
+        ]
+      },
+      "params": [
+        {
+          "name": "s",
+          "type": "string",
+          "description": "The string"
+        },
+        {
+          "name": "pattern",
+          "type": "string",
+          "description": "Regex pattern"
+        },
+        {
+          "name": "from",
+          "type": "number",
+          "description": "Character offset to search from (default 0)",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(str/find-pattern \"é foo é foo\" \"fo+\") // => [{ \"start\": 2, \"end\": 5, \"text\": \"foo\" }, { \"start\": 8, \"end\": 11, \"text\": \"foo\" }]"
+      ],
+      "docsSource": "generated"
     },
     "str/includes": {
       "category": "std-str",

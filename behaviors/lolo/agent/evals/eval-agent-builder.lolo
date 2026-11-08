@@ -71,12 +71,12 @@ orbital EvalRunOrbital {
     state idle {
       INIT -> idle
         (render-ui main { type: stack, direction: horizontal, gap: sm, children: [{ type: button, variant: ghost, label: "Cases", href: "/" }, { type: button, variant: ghost, label: "Builder", href: "/agent-builder" }, { type: button, variant: ghost, label: "Pool", href: "/agent-pool" }] })
-      RUN_CASE -> running when (!= (if (>= ?index 0) (array/nth @config.cases ?index) null) null)
+      RUN_CASE -> running when (and (>= ?index 0) (!= (array/nth @config.cases ?index) null))
         (set @entity.index ?index)
-        (set @entity.current (if (>= ?index 0) (array/nth @config.cases ?index) null))
+        (set @entity.current (array/nth @config.cases ?index))
         (set @entity.startedAt @now)
         (emit START_BUILD { request: @entity.current.request, orbitalName: (str/concat "EvalCard" @entity.current.id) })
-      RUN_CASE -> idle when (== (if (>= ?index 0) (array/nth @config.cases ?index) null) null)
+      RUN_CASE -> idle when (or (< ?index 0) (== (array/nth @config.cases ?index) null))
       READ_CASES -> idle
         (fetch EvalCase {
           emit: { failure: CASES_FAILED, success: CASES_READ }

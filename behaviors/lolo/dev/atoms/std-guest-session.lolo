@@ -16,7 +16,7 @@ type GuestOpened = { guest : string!, page : [string]!, route : string, rendered
 type GuestNavigated = { page : [string]!, route : string, rendered : [GuestPaint]!, outcomes : [GuestMove]! }
 type GuestStepped = { rendered : [GuestPaint]!, outcomes : [GuestMove]! }
 type GuestClosed = { closed : boolean! }
-type GuestPersonaOption = { id : string!, name : string }
+type GuestPersonaOption = { id : string!, name : string, role : string }
 type GuestPersonasReply = { success : boolean, personas : [GuestPersonaOption] }
 type GuestAnswer = { status : number, body : string, subject : string, error : string }
 type GuestEmitted = { event : string!, payload : GuestAnswer? }
@@ -192,7 +192,7 @@ orbital GuestSessionOrbital {
       GUEST_PERSONA_ACTED -> live when (array/some (default ?result.emitted []) (fn e (= @e.event "PERSONA_SIGNED_IN")))
         (set @entity.guestPersona (default (object/get (default (object/get (default (array/find (default ?result.emitted []) (fn e (= @e.event "PERSONA_SIGNED_IN"))) {}) "payload") {}) "subject") ""))
         (emit GUEST_PERSONAS { guest: @entity.guestHandle, personas: @entity.guestPersonas, current: @entity.guestPersona })
-        (program/dispatch "INIT" {} { guest: @entity.guestHandle, emit: { success: GUEST_STEPPED, failure: GUEST_STEP_FAILED } })
+        (program/navigate { guest: @entity.guestHandle, route: @entity.guestRoute, remount: true } { emit: { success: GUEST_NAVIGATED, failure: GUEST_NAVIGATE_FAILED } })
       GUEST_PERSONA_ACTED -> live when (not (array/some (default ?result.emitted []) (fn e (= @e.event "PERSONA_SIGNED_IN"))))
         (emit GUEST_NOTICE { message: (default (object/get (default (object/get (default (array/find (default ?result.emitted []) (fn e (= @e.event "PERSONA_SIGN_IN_REFUSED"))) {}) "payload") {}) "error") "The persona could not be signed in") })
       GUEST_SEND -> live when (= ?guest @entity.guestHandle)
@@ -413,9 +413,9 @@ orbital GuestSessionOrbital {
         (set @entity.guestPersona ?current)
         (emit GUEST_SHOWN {})
       GUEST_PERSONAS -> idle when (!= ?guest @entity.guestHandle)
-      GUEST_PERSONA_CHOSEN -> idle when (and (!= @entity.guestHandle "") (!= @payload.id @entity.guestPersona))
-        (emit GUEST_PERSONA_PICK { guest: @entity.guestHandle, persona: @payload.id })
-      GUEST_PERSONA_CHOSEN -> idle when (or (= @entity.guestHandle "") (= @payload.id @entity.guestPersona))
+      GUEST_PERSONA_CHOSEN -> idle when (and (!= @entity.guestHandle "") (!= @payload.itemId @entity.guestPersona))
+        (emit GUEST_PERSONA_PICK { guest: @entity.guestHandle, persona: @payload.itemId })
+      GUEST_PERSONA_CHOSEN -> idle when (or (= @entity.guestHandle "") (= @payload.itemId @entity.guestPersona))
       GUEST_CLEARED -> idle
         (set @entity.guestHandle "")
         (set @entity.guestPersonas [])
@@ -431,7 +431,16 @@ orbital GuestSessionOrbital {
         (emit GUEST_NAVIGATE { guest: ?guest, route: ?route })
       GUEST_ROUTE -> idle when (!= ?guest @entity.guestHandle)
       GUEST_SHOWN -> idle
-        (render-ui main { type: box, className: @config.className, children: (array/concat (if (and (= @entity.guestError "") (> (array/len @entity.guestPersonas) 0)) [{ type: stack, direction: horizontal, gap: sm, align: center, children: (array/concat [{ type: typography, variant: caption, color: muted, content: @config.personasLabel }] (array/map @entity.guestPersonas (fn p { type: button, variant: (if (= (object/get @p "id" "") @entity.guestPersona) primary ghost), size: sm, label: (default (object/get @p "name") (object/get @p "id" "")), action: GUEST_PERSONA_CHOSEN, actionPayload: { id: (object/get @p "id" "") } }))) }] []) [
+        (render-ui main { type: box, className: @config.className, children: (array/concat (if (and (= @entity.guestError "") (> (array/len @entity.guestPersonas) 0)) (let ((current (default (array/find @entity.guestPersonas (fn p (= @p.id @entity.guestPersona))) (default (array/first @entity.guestPersonas) { id: "", name: "", role: "" }))) (currentRole (default @current.role "")) (currentName (default @current.name ""))) [{ type: stack, direction: horizontal, justify: end, align: center, gap: sm, className: "px-4 py-2 border-b border-border", children: [
+            { type: menu, position: bottom-end, trigger: { type: button, variant: ghost, size: sm, rightIcon: chevron-down, children: [{ type: stack, direction: horizontal, align: center, gap: sm, children: [
+              { type: icon, name: user-round, size: sm },
+              { type: stack, direction: vertical, gap: none, align: start, children: [
+                { type: typography, variant: caption, color: muted, content: @config.personasLabel },
+                { type: typography, variant: body, weight: semibold, content: (if (= @currentRole "") (if (= @currentName "") @current.id @currentName) @currentRole) },
+                (if (or (= @currentRole "") (= @currentName "")) null { type: typography, variant: caption, color: muted, content: @currentName })
+              ] }
+            ] }] }, items: (array/map @entity.guestPersonas (fn p { id: @p.id, label: (if (= (default @p.role "") "") (default @p.name @p.id) (default @p.role "")), description: (if (= (default @p.role "") "") "" (default @p.name "")), icon: (if (= @p.id @current.id) "check" "user-round"), event: GUEST_PERSONA_CHOSEN })) }
+          ] }]) []) [
           (if (!= @entity.guestError "")
             { type: container, size: md, padding: lg, children: [(if (= @config.errorTitle "") { type: alert, variant: error, message: @entity.guestError } { type: alert, variant: error, title: @config.errorTitle, message: @entity.guestError })] }
             (let ((slotRoots (array/filter @entity.guestPaints (fn p (and (= @p.slot @config.slot) (= @p.embedded false) (array/includes @entity.guestPage @p.trait))))) (paint (array/first (array/filter @entity.guestPaints (fn p (and (= @p.slot @config.slot) (= @p.embedded false) (array/includes @entity.guestPage @p.trait)))))))
@@ -476,7 +485,8 @@ orbital GuestSessionOrbital {
         current : string!
       }
       GUEST_PERSONA_CHOSEN {
-        id : string!
+        itemId : string!
+        label : string
       }
         @description "The viewer chose a persona of the picker."
       GUEST_PAINTS {

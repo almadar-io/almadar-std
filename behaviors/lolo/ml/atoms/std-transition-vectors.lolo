@@ -1,0 +1,360 @@
+app std-transition-vectors [
+  version: "0.1.0",
+  description: "std-transition-vectors — a nearest-neighbour index of the transitions written in a set of .lolo roots, by meaning. TV_INDEX { roots, rebuild } loads the index from cachePath when it holds one for the same roots and rebuild is false; otherwise it lists every .lolo under the roots (absolute paths) with ripgrep (listArgs, so .gitignore and the spec, .orbital and locales folders are skipped), reads each file and outlines it with std-lolo-transitions, keeps one entry per transition { key: <path>#<pointer>, path, label: <trait>.<EVENT>, text: its source lines }, reports TV_PROGRESS { done, total } per file, writes the entries to cachePath, and resolves every entry's vector the way orb does (std-vector-sources, then the composer's std-vector-resolve over TV_RESOLVE: package snapshots, the user store, then the configured embedder, which writes what it embeds back to the user store). TV_INDEX_PACKAGES { rebuild } does the same over every installed behavior package (behavior/packages), each package root's behaviors/lolo. TV_READY { count, model } answers when every entry has its vector. TV_NEAREST { requestId, items: [{ key, path, text }] } resolves the items' vectors and answers TV_PEERS { requestId, results: [{ key, peers: [{ key, path, label, score }] }] }: per item the `peers` most similar entries by cosine, best first, never an entry of the item's own path. Asked before TV_READY or while another lookup runs, the latest lookup waits and runs after. A failure answers TV_REFUSED { code, detail }.",
+  exec: ["rg"],
+  env: ["PATH", "HOME", "ALMADAR_VECTORS_DIR", "EMBEDDING_PROVIDER", "EMBEDDING_API_KEY", "OPENAI_API_KEY", "OPEN_ROUTER_API_KEY", "EMBEDDING_MODEL", "LMSTUDIO_EMBEDDING_MODEL"],
+  fs: { "/**": [read], "~/.almadar/transition-index/**": [read, write, create], "~/.almadar/vectors/**": [read], env ALMADAR_VECTORS_DIR: "**": [read] }
+]
+
+uses Lt from "std/behaviors/std-lolo-transitions"
+uses Cli from "std/behaviors/std-cli"
+uses Sources from "std/behaviors/std-vector-sources"
+
+type WantedText = { key : string!, text : string! }
+type KeyedVector = { key : string!, vector : [number]! }
+type TvEntry = { key : string!, path : string!, label : string!, text : string! }
+type TvCache = { roots : [string]!, entries : [TvEntry]! }
+type TvAsk = { key : string!, path : string!, text : string! }
+type TvPeer = { key : string!, path : string!, label : string!, score : number! }
+type TvResult = { key : string!, peers : [TvPeer]! }
+type TvPackage = { root : string!, prefix : string!, vectors : string?, vectorsRel : string?, vectorsIn : string? }
+type TvItem = { pointer : string!, trait : string!, event : string!, from : string!, to : string!, fromRow : number!, fromCol : number!, toRow : number!, source : string! }
+
+orbital TransitionVectorsOrbital {
+  entity TransitionIndex [runtime] {
+    id : string!
+    roots : [string] = []
+    files : [string] = []
+    cursor : number = 0
+    entries : [TvEntry] = []
+    vectors : Map string [number] @description "Vector by entry key." = {}
+    model : string = ""
+    ready : boolean = false
+    snapshots : [bytes] = []
+    snapshotPaths : [string] = []
+    userDir : string = ""
+    userAnchor : string = ""
+    providerModel : string = ""
+    providerKind : string = ""
+    embedModel : string = ""
+    sourced : boolean = false
+    requestId : string = ""
+    asks : [TvAsk] = []
+    nextId : string = ""
+    nextAsks : [TvAsk] = []
+    rebuildPackages : boolean = false
+  }
+
+  trait TvList = Cli.traits.CliRunner {
+    listens { TransitionVectors.TV_LIST -> CLI_RUN }
+    config {
+      commands: ["rg"]
+      passEnv: ["PATH", "HOME"]
+    }
+  }
+
+  trait TvOutline = Lt.traits.LoloTransitions {
+    listens { TransitionVectors.TV_OUTLINE -> TRANSITIONS_OF }
+  }
+
+  trait TvSources = Sources.traits.VectorSources {
+    listens { TransitionVectors.TV_SOURCES -> SOURCES }
+  }
+
+  trait TransitionVectors -> TransitionIndex {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      TV_INDEX_PACKAGES -> idle
+        (set @entity.rebuildPackages ?rebuild)
+        (behavior/packages { key: "packages" emit: { success: TV_PACKAGES, failure: TV_PACKAGES_FAILED } })
+      TV_PACKAGES -> idle
+        (emit TV_INDEX { roots: (array/map ?result (fn p (str/concat (if (str/endsWith @p.root "/") (str/slice @p.root 0 (- (str/len @p.root) 1)) @p.root) "/behaviors/lolo"))), rebuild: @entity.rebuildPackages })
+      TV_PACKAGES_FAILED -> idle
+        (emit TV_REFUSED { code: "TV_PACKAGES_UNREAD", detail: (default ?error "") })
+      TV_INDEX -> loading when (not ?rebuild)
+        (set @entity.roots ?roots)
+        (set @entity.ready false)
+        (os/read-file @config.cachePath { key: "cache" emit: { success: TV_CACHE_READ, failure: TV_CACHE_MISSING } })
+      TV_INDEX -> listing when ?rebuild
+        (set @entity.roots ?roots)
+        (set @entity.ready false)
+        (emit TV_LIST { stage: "list", argv: (array/concat @config.listArgs ?roots) })
+      TV_NEAREST -> idle
+        (set @entity.nextId ?requestId)
+        (set @entity.nextAsks ?items)
+    }
+
+    state loading {
+      INIT -> idle
+      TV_CACHE_READ -> sourcing when (let ((c (json/parse (default (bytes/to-string ?data) "") TvCache))) (and (!= @c null) (= (object/get @c "roots" []) @entity.roots)))
+        (set @entity.entries (let ((c (json/parse (default (bytes/to-string ?data) "") TvCache))) (if (= @c null) [] @c.entries)))
+        (emit TV_SOURCES { paths: [] })
+      TV_CACHE_READ -> listing when (let ((c (json/parse (default (bytes/to-string ?data) "") TvCache))) (or (= @c null) (!= (object/get @c "roots" []) @entity.roots)))
+        (emit TV_LIST { stage: "list", argv: (array/concat @config.listArgs @entity.roots) })
+      TV_CACHE_MISSING -> listing
+        (emit TV_LIST { stage: "list", argv: (array/concat @config.listArgs @entity.roots) })
+      TV_NEAREST -> loading
+        (set @entity.nextId ?requestId)
+        (set @entity.nextAsks ?items)
+    }
+
+    state listing {
+      INIT -> idle
+      CLI_DONE -> reading when (and (= ?stage "list") (= ?exitCode 0) (> (array/len (array/filter (str/split ?stdout "\n") (fn p (!= @p "")))) 0))
+        (set @entity.files (array/sort (array/filter (str/split ?stdout "\n") (fn p (!= @p "")))))
+        (set @entity.cursor 0)
+        (set @entity.entries [])
+        (os/read-file (str/concat "/" (str/slice (default (array/first @entity.files) "") 1 (str/len (default (array/first @entity.files) "")))) { key: "file" emit: { success: TV_FILE_READ, failure: TV_FILE_FAILED } })
+      CLI_DONE -> idle when (and (= ?stage "list") (or (!= ?exitCode 0) (= (array/len (array/filter (str/split ?stdout "\n") (fn p (!= @p "")))) 0)))
+        (emit TV_REFUSED { code: "TV_NOTHING_LISTED", detail: (str/concat "no .lolo file under " (str/join @entity.roots ", ") (if (= ?stderr "") "" (str/concat ": " ?stderr))) })
+      CLI_FAILED -> idle when (= ?stage "list")
+        (emit TV_REFUSED { code: "TV_LIST_FAILED", detail: ?error })
+      TV_NEAREST -> listing
+        (set @entity.nextId ?requestId)
+        (set @entity.nextAsks ?items)
+    }
+
+    state reading {
+      INIT -> idle
+      TV_FILE_READ -> reading
+        (emit TV_OUTLINE { key: (default (array/nth @entity.files @entity.cursor) ""), path: (default (array/nth @entity.files @entity.cursor) ""), text: (default (bytes/to-string ?data) "") })
+      TV_FILE_FAILED -> reading
+        (emit TV_STEP { })
+      TRANSITIONS -> reading when (= ?key (default (array/nth @entity.files @entity.cursor) ""))
+        (set @entity.entries (array/concat @entity.entries (array/map ?items (fn it { key: (str/concat ?path "#" @it.pointer), path: ?path, label: (str/concat @it.trait "." @it.event), text: @it.source }))))
+        (emit TV_STEP { })
+      TRANSITIONS_FAILED -> reading when (= ?key (default (array/nth @entity.files @entity.cursor) ""))
+        (emit TV_STEP { })
+      TV_STEP -> reading when (< (+ @entity.cursor 1) (array/len @entity.files))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit TV_PROGRESS { done: @entity.cursor, total: (array/len @entity.files) })
+        (os/read-file (str/concat "/" (str/slice (default (array/nth @entity.files @entity.cursor) "") 1 (str/len (default (array/nth @entity.files @entity.cursor) "")))) { key: "file" emit: { success: TV_FILE_READ, failure: TV_FILE_FAILED } })
+      TV_STEP -> sourcing when (>= (+ @entity.cursor 1) (array/len @entity.files))
+        (emit TV_PROGRESS { done: (array/len @entity.files), total: (array/len @entity.files) })
+        (os/write-file @config.cachePath (bytes/from-string (json/stringify { roots: @entity.roots, entries: @entity.entries })) { key: "cache" emit: { success: TV_CACHE_WRITTEN, failure: TV_CACHE_UNWRITTEN } })
+        (emit TV_SOURCES { paths: [] })
+      TV_NEAREST -> reading
+        (set @entity.nextId ?requestId)
+        (set @entity.nextAsks ?items)
+    }
+
+    state sourcing {
+      INIT -> idle
+      TV_CACHE_WRITTEN -> sourcing
+      TV_CACHE_UNWRITTEN -> sourcing
+        (emit TV_REFUSED { code: "TV_CACHE_UNWRITTEN", detail: (default ?error "") })
+      SOURCES_READY -> resolving
+        (set @entity.snapshots ?snapshots)
+        (set @entity.snapshotPaths ?snapshotPaths)
+        (set @entity.userDir ?userDir)
+        (set @entity.userAnchor ?userAnchor)
+        (set @entity.providerModel ?providerModel)
+        (set @entity.providerKind ?providerKind)
+        (set @entity.embedModel ?embedModel)
+        (set @entity.sourced true)
+        (emit TV_RESOLVE { wanted: (array/map @entity.entries (fn e { key: @e.key, text: @e.text })), snapshots: ?snapshots, snapshotPaths: ?snapshotPaths, userDir: ?userDir, userAnchor: ?userAnchor, providerModel: ?providerModel, providerKind: ?providerKind, embedModel: ?embedModel })
+      SOURCES_REFUSED -> idle
+        (emit TV_REFUSED { code: ?code, detail: ?detail })
+      TV_NEAREST -> sourcing
+        (set @entity.nextId ?requestId)
+        (set @entity.nextAsks ?items)
+    }
+
+    state resolving {
+      INIT -> idle
+      TV_CACHE_WRITTEN -> resolving
+      VECTORS_ANSWERED -> ready
+        (set @entity.vectors (object/fromEntries (array/map ?vectors (fn v [@v.key, @v.vector]))))
+        (set @entity.model ?model)
+        (set @entity.ready true)
+        (emit TV_READY { count: (array/len @entity.entries), model: ?model })
+        (emit TV_NEXT { })
+      VECTORS_REFUSED -> idle
+        (emit TV_REFUSED { code: ?code, detail: ?detail })
+      TV_NEAREST -> resolving
+        (set @entity.nextId ?requestId)
+        (set @entity.nextAsks ?items)
+    }
+
+    state ready {
+      INIT -> ready
+      TV_INDEX_PACKAGES -> ready
+        (set @entity.rebuildPackages ?rebuild)
+        (behavior/packages { key: "packages" emit: { success: TV_PACKAGES, failure: TV_PACKAGES_FAILED } })
+      TV_PACKAGES -> ready
+        (emit TV_INDEX { roots: (array/map ?result (fn p (str/concat (if (str/endsWith @p.root "/") (str/slice @p.root 0 (- (str/len @p.root) 1)) @p.root) "/behaviors/lolo"))), rebuild: @entity.rebuildPackages })
+      TV_PACKAGES_FAILED -> ready
+        (emit TV_REFUSED { code: "TV_PACKAGES_UNREAD", detail: (default ?error "") })
+      TV_INDEX -> loading when (not ?rebuild)
+        (set @entity.roots ?roots)
+        (set @entity.ready false)
+        (os/read-file @config.cachePath { key: "cache" emit: { success: TV_CACHE_READ, failure: TV_CACHE_MISSING } })
+      TV_INDEX -> listing when ?rebuild
+        (set @entity.roots ?roots)
+        (set @entity.ready false)
+        (emit TV_LIST { stage: "list", argv: (array/concat @config.listArgs ?roots) })
+      TV_NEXT -> querying when (!= @entity.nextId "")
+        (set @entity.requestId @entity.nextId)
+        (set @entity.asks @entity.nextAsks)
+        (set @entity.nextId "")
+        (set @entity.nextAsks [])
+        (emit TV_RESOLVE { wanted: (array/map @entity.asks (fn a { key: (str/concat "ask:" @a.key), text: @a.text })), snapshots: @entity.snapshots, snapshotPaths: @entity.snapshotPaths, userDir: @entity.userDir, userAnchor: @entity.userAnchor, providerModel: @entity.providerModel, providerKind: @entity.providerKind, embedModel: @entity.embedModel })
+      TV_NEXT -> ready when (= @entity.nextId "")
+      TV_NEAREST -> ready
+        (set @entity.nextId ?requestId)
+        (set @entity.nextAsks ?items)
+        (emit TV_NEXT { })
+    }
+
+    state querying {
+      INIT -> ready
+      TV_NEAREST -> querying
+        (set @entity.nextId ?requestId)
+        (set @entity.nextAsks ?items)
+      VECTORS_ANSWERED -> ready
+        (emit TV_PEERS { requestId: @entity.requestId, results: (array/map @entity.asks (fn a
+          (let ((q (object/get (default (array/find ?vectors (fn v (= @v.key (str/concat "ask:" @a.key)))) { key: "", vector: [] }) "vector" [])))
+            { key: @a.key, peers: (array/take (array/sort (array/map (array/filter @entity.entries (fn e (and (!= @e.path @a.path) (object/has @entity.vectors @e.key)))) (fn e { key: @e.key, path: @e.path, label: @e.label, score: (if (= (array/len @q) 0) 0 (default (array/cosine @q (object/get @entity.vectors @e.key [])) 0)) })) "score" "desc") @config.peers) }))) })
+        (emit TV_NEXT { })
+      VECTORS_REFUSED -> ready
+        (emit TV_REFUSED { code: ?code, detail: ?detail })
+        (emit TV_NEXT { })
+    }
+
+    emits {
+      TV_LIST -> external {
+        stage : string!
+        argv : [string]!
+      }
+        @description "List the roots' .lolo files through the CLI runner."
+        @tier "internal"
+      TV_OUTLINE -> external {
+        key : string!
+        path : string!
+        text : string!
+      }
+        @description "Outline one file's transitions."
+        @tier "internal"
+      TV_SOURCES -> external {
+        paths : [{ path : string!, in : string!, rel : string! }]!
+      }
+        @description "Ask std-vector-sources for the stores and the configured embedder."
+        @tier "internal"
+      TV_INDEX -> internal { roots : [string]!  rebuild : boolean! }
+        @tier "internal"
+      TV_PACKAGES -> internal { result : [TvPackage]! }
+        @tier "internal"
+      TV_PACKAGES_FAILED -> internal { error : string }
+        @tier "internal"
+      TV_STEP -> internal { }
+        @tier "internal"
+      TV_NEXT -> internal { }
+        @tier "internal"
+      TV_CACHE_READ -> internal {
+        data : bytes!
+      }
+        @tier "internal"
+      TV_CACHE_MISSING -> internal {
+        error : string
+      }
+        @tier "internal"
+      TV_CACHE_WRITTEN -> internal { }
+        @tier "internal"
+      TV_CACHE_UNWRITTEN -> internal {
+        error : string
+      }
+        @tier "internal"
+      TV_FILE_READ -> internal {
+        data : bytes!
+      }
+        @tier "internal"
+      TV_FILE_FAILED -> internal {
+        error : string
+      }
+        @tier "internal"
+      TV_RESOLVE -> external {
+        wanted : [WantedText]!
+        snapshots : [bytes]!
+        snapshotPaths : [string]
+        userDir : string!
+        userAnchor : string!
+        providerModel : string!
+        providerKind : string
+        embedModel : string
+      }
+        @description "Ask the composer's std-vector-resolve for the vectors of these texts."
+        @tier "internal"
+      TV_PROGRESS -> external {
+        done : number!
+        total : number!
+      }
+        @description "How many files the build has outlined."
+        @tier "secondary"
+      TV_READY -> external {
+        count : number!
+        model : string!
+      }
+        @description "Every indexed transition has its vector."
+        @synonyms "index ready"
+        @tier "primary"
+      TV_PEERS -> external {
+        requestId : string!
+        results : [TvResult]!
+      }
+        @description "Per asked transition, the most similar indexed transitions, best first."
+        @synonyms "nearest transitions, similar transitions, peers"
+        @tier "primary"
+      TV_REFUSED -> external {
+        code : string!
+        detail : string!
+      }
+        @description "The index could not be built or a lookup failed; the code names why."
+        @tier "primary"
+    }
+
+    listens {
+      TvList.CLI_DONE -> CLI_DONE
+      TvList.CLI_FAILED -> CLI_FAILED
+      TvOutline.TRANSITIONS -> TRANSITIONS
+      TvOutline.TRANSITIONS_FAILED -> TRANSITIONS_FAILED
+      TvSources.SOURCES_READY -> SOURCES_READY
+      TvSources.SOURCES_REFUSED -> SOURCES_REFUSED
+      TV_INDEX { roots : [string]!  rebuild : boolean! }
+        @description "Load or build the index of these roots."
+        @synonyms "index transitions, build catalog index"
+      TV_INDEX_PACKAGES { rebuild : boolean! }
+        @description "Load or build the index of every installed behavior package's .lolo sources."
+        @synonyms "index the catalog"
+      TV_NEAREST { requestId : string!  items : [TvAsk]! }
+        @description "Find the most similar indexed transitions for each item."
+        @synonyms "nearest, similar transitions"
+      CLI_DONE { stage : string!  exitCode : number!  signal : number!  stdout : string!  stdoutBytes : bytes!  stderr : string! }
+      CLI_FAILED { stage : string!  error : string!  code : string! }
+      TRANSITIONS { key : string!  path : string!  items : [TvItem]! }
+      TRANSITIONS_FAILED { key : string!  path : string!  error : string! }
+      SOURCES_READY { snapshots : [bytes]!  snapshotPaths : [string]!  userDir : string!  userAnchor : string!  providerModel : string!  providerKind : string!  embedModel : string! }
+      SOURCES_REFUSED { code : string!  detail : string! }
+      VECTORS_ANSWERED { model : string!  vectors : [KeyedVector]! }
+      VECTORS_REFUSED { code : string!  detail : string! }
+    }
+
+    config {
+      listArgs : [string] = ["--files", "--glob", "*.lolo", "--glob", "!**/spec/**", "--glob", "!**/.orbital/**", "--glob", "!**/locales/**"]
+        @label "Listing arguments"
+        @description "The ripgrep arguments before the roots: .lolo files, skipping spec fixtures, scaffolds and locale catalogs."
+        @tier "domain"
+      cachePath : string = "~/.almadar/transition-index/index.json"
+        @label "Index cache"
+        @description "Where the entries (key, path, label, source text) are kept between runs; vectors live in the user vector store."
+        @tier "infra"
+      peers : number = 3
+        @label "Peers per transition"
+        @description "How many similar transitions a lookup answers per item."
+        @tier "presentation"
+    }
+  }
+
+  page boot as TransitionVectorsPage -> TransitionVectors, TvList, TvOutline, TvSources
+}

@@ -1,0 +1,170 @@
+app std-file-finder [
+  version: "0.1.0",
+  description: "std-file-finder — fuzzy file finding over a directory. FINDER_OPEN { root } lists the root once with ripgrep through std-cli (rg --files --hidden --glob !.git <root>, so .gitignore is honoured) and answers FINDER_READY { root, count } with the paths kept relative to the root. FINDER_QUERY { query } ranks every listed path whose lowercase text holds the query's characters in order (a subsequence; regex characters in the query are literal), and answers FINDER_RESULTS { query, paths }, best first, at most maxResults: a match inside the file name beats one that needs the directories, then the tighter match (its span in characters), then the shorter path, then path order. An empty query answers the paths in path order. FINDER_PICK { path } answers FILE_PICKED with the absolute path. FINDER_GREP { query } searches the files for the literal query (rg --vimgrep, smart case) and answers GREP_RESULTS { query, hits: [{ path, row, col, text }] } with paths relative to the root and zero-based rows and columns; an empty query answers no hits. A listing or grep that cannot run answers FINDER_FAILED { root, error }. FINDER_READY also carries every listed path. The ranking is declared and deterministic: no learned or guessed relevance.",
+  exec: ["rg"],
+  env: ["PATH", "HOME"]
+]
+
+type FinderRank = { path : string!, key : string! }
+type FinderMatch = { start : number!, end : number!, text : string! }
+type GrepHit = { path : string!, row : number!, col : number!, text : string! }
+
+orbital FileFinderOrbital {
+  uses Cli from "std/behaviors/std-cli"
+
+  entity FinderRun [runtime] {
+    id : string!
+    root : string @description "The directory being searched." = ""
+    files : [string] @description "Every listed path, relative to the root." = []
+    query : string @description "The last query." = ""
+    ready : boolean @description "Whether the listing has arrived." = false
+  }
+
+  trait FinderCli = Cli.traits.CliRunner {
+    listens { FileFinder.FINDER_LIST -> CLI_RUN }
+    config {
+      commands: ["rg"]
+      passEnv: ["PATH", "HOME"]
+    }
+  }
+
+  trait FileFinder -> FinderRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      FINDER_OPEN -> ready
+        (set @entity.root ?root)
+        (set @entity.files [])
+        (set @entity.ready false)
+        (emit FINDER_LIST { stage: "list", argv: (array/concat @config.listArgs [?root]) })
+      CLI_DONE -> ready when (and (= ?stage "list") (= ?exitCode 0))
+        (let ((prefix (if (str/endsWith @entity.root "/") @entity.root (str/concat @entity.root "/"))))
+          (set @entity.files (array/map (array/filter (str/split ?stdout "\n") (fn p (!= @p ""))) (fn p (if (str/startsWith @p @prefix) (str/slice @p (str/len @prefix) (str/len @p)) @p)))))
+        (set @entity.ready true)
+        (emit FINDER_READY { root: @entity.root, count: (array/len @entity.files), paths: @entity.files })
+      CLI_DONE -> ready when (and (= ?stage "list") (!= ?exitCode 0))
+        (emit FINDER_FAILED { root: @entity.root, error: (if (= ?stderr "") (str/concat "rg exited " ?exitCode) ?stderr) })
+      CLI_FAILED -> ready when (= ?stage "list")
+        (emit FINDER_FAILED { root: @entity.root, error: ?error })
+      FINDER_QUERY -> ready when (= ?query "")
+        (set @entity.query "")
+        (emit FINDER_RESULTS { query: "", paths: (array/take (array/sort @entity.files) @config.maxResults) })
+      FINDER_QUERY -> ready when (!= ?query "")
+        (set @entity.query ?query)
+        (let ((pat (str/join (array/map (str/split (str/lower ?query) "") (fn c (if (str/includes "\\^$.|?*+()[]{}/" @c) (str/concat "\\" @c) @c))) ".*?"))
+              (none : [FinderMatch] []))
+          (let ((ranked : [FinderRank] (array/flatten (array/map @entity.files (fn p
+                  (let ((lp (str/lower @p)))
+                    (let ((whole (array/first (default (str/find-pattern @lp @pat) @none)))
+                          (base (array/first (default (str/find-pattern (os/path-base @lp) @pat) @none))))
+                      (if (= @whole null) []
+                        (let ((span (if (= @base null) (- (object/get @whole "end" 0) (object/get @whole "start" 0)) (- (object/get @base "end" 0) (object/get @base "start" 0)))))
+                          [{ path: @p, key: (str/concat (if (= @base null) "1" "0") (str/padStart (str/concat @span) 6 "0") (str/padStart (str/concat (str/len @p)) 6 "0") @p) }])))))))))
+            (emit FINDER_RESULTS { query: ?query, paths: (array/map (array/take (array/sort @ranked "key") @config.maxResults) (fn r @r.path)) })))
+      FINDER_GREP -> ready when (= ?query "")
+        (emit GREP_RESULTS { query: "", hits: [] })
+      FINDER_GREP -> ready when (!= ?query "")
+        (set @entity.query ?query)
+        (emit FINDER_LIST { stage: "grep", argv: (array/concat (array/concat @config.grepArgs ["--", ?query]) [@entity.root]) })
+      CLI_DONE -> ready when (and (= ?stage "grep") (<= ?exitCode 1))
+        (let ((prefix (if (str/endsWith @entity.root "/") @entity.root (str/concat @entity.root "/"))) (none : [FinderMatch] []))
+          (emit GREP_RESULTS { query: @entity.query, hits: (array/flatten (array/map (array/filter (str/split ?stdout "\n") (fn l (!= @l ""))) (fn l
+            (let ((m (array/first (default (str/find-pattern @l "^.*?:[0-9]+:[0-9]+:") @none))))
+              (if (= @m null) []
+                (let ((parts (str/split (str/slice @l 0 (- (object/get @m "end" 0) 1)) ":")))
+                  (let ((n (array/len @parts)))
+                    (let ((p (str/join (array/slice @parts 0 (- @n 2)) ":")))
+                      [{ path: (if (str/startsWith @p @prefix) (str/slice @p (str/len @prefix) (str/len @p)) @p),
+                         row: (- (default (str/to-int (default (array/nth @parts (- @n 2)) "1")) 1) 1),
+                         col: (- (default (str/to-int (default (array/nth @parts (- @n 1)) "1")) 1) 1),
+                         text: (str/slice @l (object/get @m "end" 0) (str/len @l)) }])))))))) }))
+      CLI_DONE -> ready when (and (= ?stage "grep") (> ?exitCode 1))
+        (emit FINDER_FAILED { root: @entity.root, error: (if (= ?stderr "") (str/concat "rg exited " ?exitCode) ?stderr) })
+      CLI_FAILED -> ready when (= ?stage "grep")
+        (emit FINDER_FAILED { root: @entity.root, error: ?error })
+      FINDER_PICK -> ready when (!= ?path "")
+        (emit FILE_PICKED { path: (str/concat (if (str/endsWith @entity.root "/") @entity.root (str/concat @entity.root "/")) ?path) })
+    }
+
+    emits {
+      FINDER_LIST -> external {
+        stage : string!
+        argv : [string]!
+      }
+        @description "Run the listing through the CLI runner."
+        @tier "internal"
+      FINDER_READY -> external {
+        root : string!
+        count : number!
+        paths : [string]!
+      }
+        @description "The root is listed; queries rank its files."
+        @tier "secondary"
+      FINDER_RESULTS -> external {
+        query : string!
+        paths : [string]!
+      }
+        @description "The paths a query matches, best first, relative to the root."
+        @synonyms "fuzzy results, file matches"
+        @tier "primary"
+      GREP_RESULTS -> external {
+        query : string!
+        hits : [GrepHit]!
+      }
+        @description "The lines a grep matched: path relative to the root, zero-based row and column, and the line's text."
+        @synonyms "live grep, search in files"
+        @tier "primary"
+      FILE_PICKED -> external {
+        path : string!
+      }
+        @description "A result was chosen; its absolute path."
+        @synonyms "open file"
+        @tier "primary"
+      FINDER_FAILED -> external {
+        root : string!
+        error : string!
+      }
+        @description "The root could not be listed."
+        @tier "secondary"
+    }
+
+    listens {
+      FinderCli.CLI_DONE -> CLI_DONE
+      FinderCli.CLI_FAILED -> CLI_FAILED
+      FINDER_OPEN { root : string! }
+        @description "List a directory for finding."
+        @synonyms "find files, open finder"
+      FINDER_QUERY { query : string! }
+        @description "Rank the listed files against a query."
+        @synonyms "fuzzy find, search files"
+      FINDER_GREP { query : string! }
+        @description "Search the root's files for a literal text (case-insensitive unless it has a capital)."
+        @synonyms "live grep, find in files"
+      FINDER_PICK { path : string! }
+        @description "Choose a result, relative to the root."
+      CLI_DONE { stage : string!  exitCode : number!  signal : number!  stdout : string!  stdoutBytes : bytes!  stderr : string! }
+        @description "The listing finished."
+      CLI_FAILED { stage : string!  error : string!  code : string! }
+        @description "The listing could not run."
+    }
+
+    config {
+      listArgs : [string] = ["--files", "--hidden", "--glob", "!.git"]
+        @label "Listing arguments"
+        @description "The ripgrep arguments before the root; the default honours .gitignore and lists hidden files except .git."
+        @tier "domain"
+      grepArgs : [string] = ["--vimgrep", "--smart-case", "--fixed-strings"]
+        @label "Grep arguments"
+        @description "The ripgrep arguments before the query and the root."
+        @tier "domain"
+      maxResults : number = 50
+        @label "Results shown"
+        @description "How many ranked paths a query answers."
+        @synonyms "result limit"
+        @tier "presentation"
+    }
+  }
+
+  page boot as FileFinderOrbitalStart -> FileFinder, FinderCli
+}

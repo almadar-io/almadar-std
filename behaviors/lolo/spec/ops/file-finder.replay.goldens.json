@@ -1,0 +1,558 @@
+{
+  "atom": "ops/atoms/std-file-finder.lolo",
+  "trait": "FileFinder",
+  "cases": [
+    {
+      "id": "open-lists-the-root-with-ripgrep",
+      "steps": [
+        {
+          "event": "FINDER_OPEN",
+          "payload": {
+            "root": "/w"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "FINDER_LIST",
+                "payload": {
+                  "stage": "list",
+                  "argv": [
+                    "--files",
+                    "--hidden",
+                    "--glob",
+                    "!.git",
+                    "/w"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "listed-files-are-relative-to-the-root",
+      "steps": [
+        {
+          "event": "FINDER_OPEN",
+          "payload": {
+            "root": "/w"
+          }
+        },
+        {
+          "event": "CLI_DONE",
+          "payload": {
+            "stage": "list",
+            "exitCode": 0,
+            "signal": 0,
+            "stdout": "/w/src/app.lolo\n/w/src/apple/pie.ts\n/w/docs/a-p-p.md\n/w/lib/zap.lolo\n",
+            "stdoutBytes": "",
+            "stderr": ""
+          },
+          "expect": {
+            "entity": {
+              "files": [
+                "src/app.lolo",
+                "src/apple/pie.ts",
+                "docs/a-p-p.md",
+                "lib/zap.lolo"
+              ]
+            },
+            "emits": [
+              {
+                "event": "FINDER_READY",
+                "payload": {
+                  "root": "/w",
+                  "count": 4
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "query-ranks-basename-then-span-then-length",
+      "steps": [
+        {
+          "event": "FINDER_OPEN",
+          "payload": {
+            "root": "/w"
+          }
+        },
+        {
+          "event": "CLI_DONE",
+          "payload": {
+            "stage": "list",
+            "exitCode": 0,
+            "signal": 0,
+            "stdout": "/w/src/app.lolo\n/w/src/apple/pie.ts\n/w/docs/a-p-p.md\n/w/lib/zap.lolo\n",
+            "stdoutBytes": "",
+            "stderr": ""
+          }
+        },
+        {
+          "event": "FINDER_QUERY",
+          "payload": {
+            "query": "app"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "FINDER_RESULTS",
+                "payload": {
+                  "query": "app",
+                  "paths": [
+                    "src/app.lolo",
+                    "docs/a-p-p.md",
+                    "src/apple/pie.ts"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "query-is-case-insensitive-and-a-subsequence",
+      "steps": [
+        {
+          "event": "FINDER_OPEN",
+          "payload": {
+            "root": "/w"
+          }
+        },
+        {
+          "event": "CLI_DONE",
+          "payload": {
+            "stage": "list",
+            "exitCode": 0,
+            "signal": 0,
+            "stdout": "/w/src/app.lolo\n/w/src/apple/pie.ts\n/w/docs/a-p-p.md\n/w/lib/zap.lolo\n",
+            "stdoutBytes": "",
+            "stderr": ""
+          }
+        },
+        {
+          "event": "FINDER_QUERY",
+          "payload": {
+            "query": "ZpL"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "FINDER_RESULTS",
+                "payload": {
+                  "query": "ZpL",
+                  "paths": [
+                    "lib/zap.lolo"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "regex-characters-in-a-query-are-literal",
+      "steps": [
+        {
+          "event": "FINDER_OPEN",
+          "payload": {
+            "root": "/w"
+          }
+        },
+        {
+          "event": "CLI_DONE",
+          "payload": {
+            "stage": "list",
+            "exitCode": 0,
+            "signal": 0,
+            "stdout": "/w/a.b\n/w/axb\n",
+            "stdoutBytes": "",
+            "stderr": ""
+          }
+        },
+        {
+          "event": "FINDER_QUERY",
+          "payload": {
+            "query": "a.b"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "FINDER_RESULTS",
+                "payload": {
+                  "query": "a.b",
+                  "paths": [
+                    "a.b"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "empty-query-lists-files-in-path-order",
+      "steps": [
+        {
+          "event": "FINDER_OPEN",
+          "payload": {
+            "root": "/w"
+          }
+        },
+        {
+          "event": "CLI_DONE",
+          "payload": {
+            "stage": "list",
+            "exitCode": 0,
+            "signal": 0,
+            "stdout": "/w/src/app.lolo\n/w/src/apple/pie.ts\n/w/docs/a-p-p.md\n/w/lib/zap.lolo\n",
+            "stdoutBytes": "",
+            "stderr": ""
+          }
+        },
+        {
+          "event": "FINDER_QUERY",
+          "payload": {
+            "query": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "FINDER_RESULTS",
+                "payload": {
+                  "query": "",
+                  "paths": [
+                    "docs/a-p-p.md",
+                    "lib/zap.lolo",
+                    "src/app.lolo",
+                    "src/apple/pie.ts"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "results-stop-at-max-results",
+      "steps": [
+        {
+          "event": "FINDER_OPEN",
+          "payload": {
+            "root": "/w"
+          }
+        },
+        {
+          "event": "CLI_DONE",
+          "payload": {
+            "stage": "list",
+            "exitCode": 0,
+            "signal": 0,
+            "stdout": "/w/src/app.lolo\n/w/src/apple/pie.ts\n/w/docs/a-p-p.md\n/w/lib/zap.lolo\n",
+            "stdoutBytes": "",
+            "stderr": ""
+          }
+        },
+        {
+          "event": "FINDER_QUERY",
+          "payload": {
+            "query": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "FINDER_RESULTS",
+                "payload": {
+                  "query": "",
+                  "paths": [
+                    "docs/a-p-p.md",
+                    "lib/zap.lolo"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "config": {
+        "maxResults": 2
+      }
+    },
+    {
+      "id": "pick-answers-the-absolute-path",
+      "steps": [
+        {
+          "event": "FINDER_OPEN",
+          "payload": {
+            "root": "/w"
+          }
+        },
+        {
+          "event": "CLI_DONE",
+          "payload": {
+            "stage": "list",
+            "exitCode": 0,
+            "signal": 0,
+            "stdout": "/w/src/app.lolo\n/w/src/apple/pie.ts\n/w/docs/a-p-p.md\n/w/lib/zap.lolo\n",
+            "stdoutBytes": "",
+            "stderr": ""
+          }
+        },
+        {
+          "event": "FINDER_PICK",
+          "payload": {
+            "path": "src/app.lolo"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "FILE_PICKED",
+                "payload": {
+                  "path": "/w/src/app.lolo"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-failed-listing-is-reported",
+      "steps": [
+        {
+          "event": "FINDER_OPEN",
+          "payload": {
+            "root": "/w"
+          }
+        },
+        {
+          "event": "CLI_FAILED",
+          "payload": {
+            "stage": "list",
+            "error": "rg not found",
+            "code": "spawn"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "FINDER_FAILED",
+                "payload": {
+                  "root": "/w",
+                  "error": "rg not found"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "grep-runs-ripgrep-vimgrep-under-the-root",
+      "steps": [
+        {
+          "event": "FINDER_OPEN",
+          "payload": {
+            "root": "/w"
+          }
+        },
+        {
+          "event": "CLI_DONE",
+          "payload": {
+            "stage": "list",
+            "exitCode": 0,
+            "signal": 0,
+            "stdout": "/w/src/app.lolo\n/w/src/apple/pie.ts\n/w/docs/a-p-p.md\n/w/lib/zap.lolo\n",
+            "stdoutBytes": "",
+            "stderr": ""
+          }
+        },
+        {
+          "event": "FINDER_GREP",
+          "payload": {
+            "query": "foo bar"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "FINDER_LIST",
+                "payload": {
+                  "stage": "grep",
+                  "argv": [
+                    "--vimgrep",
+                    "--smart-case",
+                    "--fixed-strings",
+                    "--",
+                    "foo bar",
+                    "/w"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "grep-hits-are-relative-zero-based-and-keep-colons-in-text",
+      "steps": [
+        {
+          "event": "FINDER_OPEN",
+          "payload": {
+            "root": "/w"
+          }
+        },
+        {
+          "event": "CLI_DONE",
+          "payload": {
+            "stage": "list",
+            "exitCode": 0,
+            "signal": 0,
+            "stdout": "/w/src/app.lolo\n/w/src/apple/pie.ts\n/w/docs/a-p-p.md\n/w/lib/zap.lolo\n",
+            "stdoutBytes": "",
+            "stderr": ""
+          }
+        },
+        {
+          "event": "FINDER_GREP",
+          "payload": {
+            "query": "x"
+          }
+        },
+        {
+          "event": "CLI_DONE",
+          "payload": {
+            "stage": "grep",
+            "exitCode": 0,
+            "signal": 0,
+            "stdout": "/w/src/a.lolo:3:5:  x: y\n/w/lib/b.ts:1:1:x\n",
+            "stdoutBytes": "",
+            "stderr": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "GREP_RESULTS",
+                "payload": {
+                  "query": "x",
+                  "hits": [
+                    {
+                      "path": "src/a.lolo",
+                      "row": 2,
+                      "col": 4,
+                      "text": "  x: y"
+                    },
+                    {
+                      "path": "lib/b.ts",
+                      "row": 0,
+                      "col": 0,
+                      "text": "x"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "grep-with-no-match-answers-no-hits",
+      "steps": [
+        {
+          "event": "FINDER_OPEN",
+          "payload": {
+            "root": "/w"
+          }
+        },
+        {
+          "event": "CLI_DONE",
+          "payload": {
+            "stage": "list",
+            "exitCode": 0,
+            "signal": 0,
+            "stdout": "/w/src/app.lolo\n/w/src/apple/pie.ts\n/w/docs/a-p-p.md\n/w/lib/zap.lolo\n",
+            "stdoutBytes": "",
+            "stderr": ""
+          }
+        },
+        {
+          "event": "FINDER_GREP",
+          "payload": {
+            "query": "zz"
+          }
+        },
+        {
+          "event": "CLI_DONE",
+          "payload": {
+            "stage": "grep",
+            "exitCode": 1,
+            "signal": 0,
+            "stdout": "",
+            "stdoutBytes": "",
+            "stderr": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "GREP_RESULTS",
+                "payload": {
+                  "query": "zz",
+                  "hits": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an-empty-grep-query-answers-no-hits-without-running",
+      "steps": [
+        {
+          "event": "FINDER_OPEN",
+          "payload": {
+            "root": "/w"
+          }
+        },
+        {
+          "event": "CLI_DONE",
+          "payload": {
+            "stage": "list",
+            "exitCode": 0,
+            "signal": 0,
+            "stdout": "/w/src/app.lolo\n/w/src/apple/pie.ts\n/w/docs/a-p-p.md\n/w/lib/zap.lolo\n",
+            "stdoutBytes": "",
+            "stderr": ""
+          }
+        },
+        {
+          "event": "FINDER_GREP",
+          "payload": {
+            "query": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "GREP_RESULTS",
+                "payload": {
+                  "query": "",
+                  "hits": []
+                }
+              }
+            ],
+            "neverEmits": [
+              "FINDER_LIST"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

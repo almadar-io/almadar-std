@@ -1,0 +1,348 @@
+{
+  "atom": "dev/atoms/std-lolo-transitions.lolo",
+  "trait": "LoloTransitions",
+  "cases": [
+    {
+      "id": "asks-for-the-inspected-program",
+      "steps": [
+        {
+          "event": "TRANSITIONS_OF",
+          "payload": {
+            "key": "k1",
+            "path": "/w/a.lolo",
+            "text": "app x"
+          },
+          "expect": {
+            "state": "reading",
+            "entity": {
+              "key": "k1",
+              "path": "/w/a.lolo"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "answers-each-transition-of-this-file-with-rows",
+      "steps": [
+        {
+          "event": "TRANSITIONS_OF",
+          "payload": {
+            "key": "k1",
+            "path": "/w/a.lolo",
+            "text": "a\nb\nc\nd\ne\nf\ng\nh\ni\nj"
+          }
+        },
+        {
+          "event": "LT_INSPECTED",
+          "payload": {
+            "result": {
+              "program": {
+                "orbitals": [
+                  {
+                    "name": "O",
+                    "traits": [
+                      {
+                        "name": "T",
+                        "stateMachine": {
+                          "states": [
+                            {
+                              "name": "idle"
+                            }
+                          ],
+                          "transitions": [
+                            {
+                              "from": "idle",
+                              "to": "idle",
+                              "event": "INIT"
+                            },
+                            {
+                              "from": "idle",
+                              "to": "busy",
+                              "event": "GO",
+                              "guard": [
+                                ">",
+                                "@entity.n",
+                                0
+                              ],
+                              "effects": [
+                                [
+                                  "set",
+                                  "@entity.n",
+                                  1
+                                ]
+                              ]
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              "sourceMap": [
+                {
+                  "path": "/w/a.lolo",
+                  "line": 3,
+                  "column": 3,
+                  "endLine": 3,
+                  "endColumn": 9,
+                  "exact": true,
+                  "pointer": "orbitals[0].traits[0]",
+                  "scopeEndLine": 12
+                },
+                {
+                  "path": "/w/a.lolo",
+                  "line": 6,
+                  "column": 7,
+                  "endLine": 6,
+                  "endColumn": 9,
+                  "exact": true,
+                  "pointer": "orbitals[0].traits[0].stateMachine.transitions[0]",
+                  "scopeEndLine": 6
+                },
+                {
+                  "path": "/w/a.lolo",
+                  "line": 7,
+                  "column": 7,
+                  "endLine": 7,
+                  "endColumn": 9,
+                  "exact": true,
+                  "pointer": "orbitals[0].traits[0].stateMachine.transitions[1]",
+                  "scopeEndLine": 9
+                },
+                {
+                  "path": "/w/a.lolo",
+                  "line": 8,
+                  "column": 9,
+                  "endLine": 8,
+                  "endColumn": 9,
+                  "exact": true,
+                  "pointer": "orbitals[0].traits[0].stateMachine.transitions[1].effects[0]",
+                  "scopeEndLine": 8
+                },
+                {
+                  "path": "/w/imported.lolo",
+                  "line": 2,
+                  "column": 1,
+                  "endLine": 2,
+                  "endColumn": 9,
+                  "exact": true,
+                  "pointer": "orbitals[0].traits[0].stateMachine.transitions[0]",
+                  "scopeEndLine": 2
+                }
+              ]
+            }
+          },
+          "from": "reading",
+          "expect": {
+            "emits": [
+              {
+                "event": "TRANSITIONS",
+                "payload": {
+                  "key": "k1",
+                  "path": "/w/a.lolo",
+                  "items": [
+                    {
+                      "pointer": "orbitals[0].traits[0].stateMachine.transitions[0]",
+                      "trait": "T",
+                      "event": "INIT",
+                      "from": "idle",
+                      "to": "idle",
+                      "fromRow": 5,
+                      "fromCol": 6,
+                      "toRow": 5,
+                      "source": "f"
+                    },
+                    {
+                      "pointer": "orbitals[0].traits[0].stateMachine.transitions[1]",
+                      "trait": "T",
+                      "event": "GO",
+                      "from": "idle",
+                      "to": "busy",
+                      "fromRow": 6,
+                      "fromCol": 6,
+                      "toRow": 8,
+                      "source": "g\nh\ni"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-read-failure-is-answered",
+      "steps": [
+        {
+          "event": "TRANSITIONS_OF",
+          "payload": {
+            "key": "k1",
+            "path": "/w/a.lolo",
+            "text": "app ("
+          }
+        },
+        {
+          "event": "LT_FAILED",
+          "payload": {
+            "error": "parse error"
+          },
+          "from": "reading",
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "TRANSITIONS_FAILED",
+                "payload": {
+                  "key": "k1",
+                  "path": "/w/a.lolo",
+                  "error": "parse error"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-request-while-reading-runs-next",
+      "steps": [
+        {
+          "event": "TRANSITIONS_OF",
+          "payload": {
+            "key": "k1",
+            "path": "/w/a.lolo",
+            "text": "app x"
+          }
+        },
+        {
+          "event": "TRANSITIONS_OF",
+          "payload": {
+            "key": "k2",
+            "path": "/w/a.lolo",
+            "text": "app y"
+          },
+          "from": "reading",
+          "expect": {
+            "state": "reading",
+            "entity": {
+              "nextKey": "k2"
+            }
+          }
+        },
+        {
+          "event": "LT_INSPECTED",
+          "payload": {
+            "result": {
+              "program": {
+                "orbitals": [
+                  {
+                    "name": "O",
+                    "traits": [
+                      {
+                        "name": "T",
+                        "stateMachine": {
+                          "states": [
+                            {
+                              "name": "idle"
+                            }
+                          ],
+                          "transitions": [
+                            {
+                              "from": "idle",
+                              "to": "idle",
+                              "event": "INIT"
+                            },
+                            {
+                              "from": "idle",
+                              "to": "busy",
+                              "event": "GO",
+                              "guard": [
+                                ">",
+                                "@entity.n",
+                                0
+                              ],
+                              "effects": [
+                                [
+                                  "set",
+                                  "@entity.n",
+                                  1
+                                ]
+                              ]
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              "sourceMap": [
+                {
+                  "path": "/w/a.lolo",
+                  "line": 3,
+                  "column": 3,
+                  "endLine": 3,
+                  "endColumn": 9,
+                  "exact": true,
+                  "pointer": "orbitals[0].traits[0]",
+                  "scopeEndLine": 12
+                },
+                {
+                  "path": "/w/a.lolo",
+                  "line": 6,
+                  "column": 7,
+                  "endLine": 6,
+                  "endColumn": 9,
+                  "exact": true,
+                  "pointer": "orbitals[0].traits[0].stateMachine.transitions[0]",
+                  "scopeEndLine": 6
+                },
+                {
+                  "path": "/w/a.lolo",
+                  "line": 7,
+                  "column": 7,
+                  "endLine": 7,
+                  "endColumn": 9,
+                  "exact": true,
+                  "pointer": "orbitals[0].traits[0].stateMachine.transitions[1]",
+                  "scopeEndLine": 9
+                },
+                {
+                  "path": "/w/a.lolo",
+                  "line": 8,
+                  "column": 9,
+                  "endLine": 8,
+                  "endColumn": 9,
+                  "exact": true,
+                  "pointer": "orbitals[0].traits[0].stateMachine.transitions[1].effects[0]",
+                  "scopeEndLine": 8
+                },
+                {
+                  "path": "/w/imported.lolo",
+                  "line": 2,
+                  "column": 1,
+                  "endLine": 2,
+                  "endColumn": 9,
+                  "exact": true,
+                  "pointer": "orbitals[0].traits[0].stateMachine.transitions[0]",
+                  "scopeEndLine": 2
+                }
+              ]
+            }
+          },
+          "from": "reading",
+          "expect": {
+            "state": "reading",
+            "entity": {
+              "key": "k2",
+              "nextKey": ""
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

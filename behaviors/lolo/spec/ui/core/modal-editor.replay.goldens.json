@@ -1,0 +1,2490 @@
+{
+  "atom": "../ui/core/atoms/std-modal-editor.lolo",
+  "trait": "Modes",
+  "cases": [
+    {
+      "id": "i-enters-insert-and-escape-steps-left",
+      "steps": [
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "i",
+            "ctrl": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "SET_MODE",
+                "payload": {
+                  "editorId": "e",
+                  "mode": "INSERT",
+                  "caret": "bar"
+                }
+              }
+            ],
+            "state": "INSERT"
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "Escape",
+            "ctrl": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "MOTION",
+                "payload": {
+                  "editorId": "e",
+                  "motion": "left",
+                  "count": 1
+                }
+              },
+              {
+                "event": "SET_MODE",
+                "payload": {
+                  "editorId": "e",
+                  "mode": "NORMAL",
+                  "caret": "block"
+                }
+              }
+            ],
+            "state": "NORMAL"
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-moves-right-then-inserts",
+      "steps": [
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "a",
+            "ctrl": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "MOTION",
+                "payload": {
+                  "editorId": "e",
+                  "motion": "right",
+                  "count": 1
+                }
+              },
+              {
+                "event": "SET_MODE",
+                "payload": {
+                  "editorId": "e",
+                  "mode": "INSERT",
+                  "caret": "bar"
+                }
+              }
+            ],
+            "state": "INSERT"
+          }
+        }
+      ]
+    },
+    {
+      "id": "o-opens-below",
+      "steps": [
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "o",
+            "ctrl": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "MOTION",
+                "payload": {
+                  "editorId": "e",
+                  "motion": "line-end",
+                  "count": 1
+                }
+              },
+              {
+                "event": "MOTION",
+                "payload": {
+                  "editorId": "e",
+                  "motion": "right",
+                  "count": 1
+                }
+              },
+              {
+                "event": "INSERT_TEXT",
+                "payload": {
+                  "editorId": "e",
+                  "text": "\n"
+                }
+              },
+              {
+                "event": "SET_MODE",
+                "payload": {
+                  "editorId": "e",
+                  "mode": "INSERT",
+                  "caret": "bar"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "O-opens-above",
+      "steps": [
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "O",
+            "ctrl": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "MOTION",
+                "payload": {
+                  "editorId": "e",
+                  "motion": "line-start",
+                  "count": 1
+                }
+              },
+              {
+                "event": "INSERT_TEXT",
+                "payload": {
+                  "editorId": "e",
+                  "text": "\n"
+                }
+              },
+              {
+                "event": "MOTION",
+                "payload": {
+                  "editorId": "e",
+                  "motion": "up",
+                  "count": 1
+                }
+              },
+              {
+                "event": "SET_MODE",
+                "payload": {
+                  "editorId": "e",
+                  "mode": "INSERT",
+                  "caret": "bar"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "count-then-motion",
+      "steps": [
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "3",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "j",
+            "ctrl": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "MOTION",
+                "payload": {
+                  "editorId": "e",
+                  "motion": "down",
+                  "count": 3
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "zero-alone-is-line-start",
+      "steps": [
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "0",
+            "ctrl": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "MOTION",
+                "payload": {
+                  "editorId": "e",
+                  "motion": "line-start",
+                  "count": 1
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "dw-and-d3w",
+      "steps": [
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "d",
+            "ctrl": false
+          },
+          "expect": {
+            "state": "OPERATOR_PENDING"
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "w",
+            "ctrl": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "OPERATE",
+                "payload": {
+                  "editorId": "e",
+                  "operator": "delete",
+                  "motion": "word-forward",
+                  "count": 1
+                }
+              }
+            ],
+            "state": "NORMAL"
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "d",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "3",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "w",
+            "ctrl": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "OPERATE",
+                "payload": {
+                  "editorId": "e",
+                  "operator": "delete",
+                  "motion": "word-forward",
+                  "count": 3
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "dd-doubles-to-line",
+      "steps": [
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "2",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "d",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "d",
+            "ctrl": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "OPERATE",
+                "payload": {
+                  "editorId": "e",
+                  "operator": "delete",
+                  "motion": "line",
+                  "count": 2
+                }
+              }
+            ],
+            "state": "NORMAL"
+          }
+        }
+      ]
+    },
+    {
+      "id": "cc-and-cw-enter-insert",
+      "steps": [
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "c",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "c",
+            "ctrl": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "OPERATE",
+                "payload": {
+                  "editorId": "e",
+                  "operator": "change",
+                  "motion": "line",
+                  "count": 1
+                }
+              },
+              {
+                "event": "SET_MODE",
+                "payload": {
+                  "editorId": "e",
+                  "mode": "INSERT",
+                  "caret": "bar"
+                }
+              }
+            ],
+            "state": "INSERT"
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "Escape",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "c",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "w",
+            "ctrl": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "OPERATE",
+                "payload": {
+                  "editorId": "e",
+                  "operator": "change",
+                  "motion": "word-forward",
+                  "count": 1
+                }
+              },
+              {
+                "event": "SET_MODE",
+                "payload": {
+                  "editorId": "e",
+                  "mode": "INSERT",
+                  "caret": "bar"
+                }
+              }
+            ],
+            "state": "INSERT"
+          }
+        }
+      ]
+    },
+    {
+      "id": "gg-goes-to-doc-start",
+      "steps": [
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "g",
+            "ctrl": false
+          },
+          "expect": {
+            "state": "OPERATOR_PENDING"
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "g",
+            "ctrl": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "MOTION",
+                "payload": {
+                  "editorId": "e",
+                  "motion": "doc-start",
+                  "count": 1
+                }
+              }
+            ],
+            "state": "NORMAL"
+          }
+        }
+      ]
+    },
+    {
+      "id": "r-replaces-one-char",
+      "steps": [
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "r",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "z",
+            "ctrl": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "OPERATE",
+                "payload": {
+                  "editorId": "e",
+                  "operator": "delete",
+                  "motion": "right",
+                  "count": 1
+                }
+              },
+              {
+                "event": "INSERT_TEXT",
+                "payload": {
+                  "editorId": "e",
+                  "text": "z"
+                }
+              },
+              {
+                "event": "MOTION",
+                "payload": {
+                  "editorId": "e",
+                  "motion": "left",
+                  "count": 1
+                }
+              }
+            ],
+            "state": "NORMAL"
+          }
+        }
+      ]
+    },
+    {
+      "id": "u-and-ctrl-r",
+      "steps": [
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "u",
+            "ctrl": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "OPERATE",
+                "payload": {
+                  "editorId": "e",
+                  "operator": "undo",
+                  "motion": "right",
+                  "count": 1
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "r",
+            "ctrl": true
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "OPERATE",
+                "payload": {
+                  "editorId": "e",
+                  "operator": "redo",
+                  "motion": "right",
+                  "count": 1
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "dot-repeats-last-change",
+      "steps": [
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "d",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "w",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": ".",
+            "ctrl": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "OPERATE",
+                "payload": {
+                  "editorId": "e",
+                  "operator": "delete",
+                  "motion": "word-forward",
+                  "count": 1
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "visual-delete",
+      "steps": [
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "v",
+            "ctrl": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "SET_MODE",
+                "payload": {
+                  "editorId": "e",
+                  "mode": "VISUAL",
+                  "caret": "block"
+                }
+              }
+            ],
+            "state": "VISUAL"
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "e",
+            "ctrl": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "MOTION",
+                "payload": {
+                  "editorId": "e",
+                  "motion": "word-end",
+                  "count": 1
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "d",
+            "ctrl": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "OPERATE",
+                "payload": {
+                  "editorId": "e",
+                  "operator": "delete",
+                  "motion": "selection",
+                  "count": 1
+                }
+              },
+              {
+                "event": "SET_MODE",
+                "payload": {
+                  "editorId": "e",
+                  "mode": "NORMAL",
+                  "caret": "block"
+                }
+              }
+            ],
+            "state": "NORMAL"
+          }
+        }
+      ]
+    },
+    {
+      "id": "ex-command-w",
+      "steps": [
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": ":",
+            "ctrl": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "SET_MODE",
+                "payload": {
+                  "editorId": "e",
+                  "mode": "COMMAND",
+                  "caret": "block"
+                }
+              }
+            ],
+            "state": "COMMAND"
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "w",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "Enter",
+            "ctrl": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "EX_COMMAND",
+                "payload": {
+                  "editorId": "e",
+                  "name": "save"
+                }
+              },
+              {
+                "event": "SET_MODE",
+                "payload": {
+                  "editorId": "e",
+                  "mode": "NORMAL",
+                  "caret": "block"
+                }
+              }
+            ],
+            "state": "NORMAL"
+          }
+        }
+      ]
+    },
+    {
+      "id": "unknown-ex-command-returns-to-normal-silently",
+      "steps": [
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": ":",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "z",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "Enter",
+            "ctrl": false
+          },
+          "expect": {
+            "state": "NORMAL",
+            "neverEmits": [
+              "EX_COMMAND"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "ex-command-carries-the-rest-of-the-line-as-args",
+      "steps": [
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": ":",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "e",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": " ",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "s",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "r",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "c",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "/",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "A",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "_",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "b",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": ".",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "l",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "o",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "l",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "o",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "Enter",
+            "ctrl": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "EX_COMMAND",
+                "payload": {
+                  "editorId": "e",
+                  "name": "edit",
+                  "args": "src/A_b.lolo"
+                }
+              },
+              {
+                "event": "SET_MODE",
+                "payload": {
+                  "editorId": "e",
+                  "mode": "NORMAL",
+                  "caret": "block"
+                }
+              }
+            ],
+            "state": "NORMAL"
+          }
+        }
+      ],
+      "config": {
+        "exCommands": {
+          "w": "save",
+          "q": "close-tab",
+          "q!": "close-tab-discard",
+          "e": "edit",
+          "b": "buffer"
+        },
+        "commandLineAnyChar": true
+      }
+    },
+    {
+      "id": "ex-command-without-args-has-empty-args",
+      "steps": [
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": ":",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "w",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "Enter",
+            "ctrl": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "EX_COMMAND",
+                "payload": {
+                  "editorId": "e",
+                  "name": "save",
+                  "args": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "ex-word-with-bang-still-matches",
+      "steps": [
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": ":",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "q",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "!",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "Enter",
+            "ctrl": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "EX_COMMAND",
+                "payload": {
+                  "editorId": "e",
+                  "name": "close-tab-discard",
+                  "args": ""
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "config": {
+        "exCommands": {
+          "w": "save",
+          "q": "close-tab",
+          "q!": "close-tab-discard",
+          "e": "edit",
+          "b": "buffer"
+        }
+      }
+    },
+    {
+      "id": "command-line-refuses-uncaptured-chars-by-default",
+      "steps": [
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": ":",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "e",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": " ",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "a",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "/",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "b",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "Enter",
+            "ctrl": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "EX_COMMAND",
+                "payload": {
+                  "editorId": "e",
+                  "name": "edit",
+                  "args": "ab"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "config": {
+        "exCommands": {
+          "w": "save",
+          "q": "close-tab",
+          "q!": "close-tab-discard",
+          "e": "edit",
+          "b": "buffer"
+        }
+      }
+    },
+    {
+      "id": "command-line-announces-every-change",
+      "steps": [
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": ":",
+            "ctrl": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "CMDLINE_CHANGED",
+                "payload": {
+                  "editorId": "e",
+                  "kind": ":",
+                  "text": ""
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "w",
+            "ctrl": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "CMDLINE_CHANGED",
+                "payload": {
+                  "editorId": "e",
+                  "kind": ":",
+                  "text": "w"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "Backspace",
+            "ctrl": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "CMDLINE_CHANGED",
+                "payload": {
+                  "editorId": "e",
+                  "kind": ":",
+                  "text": ""
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "Escape",
+            "ctrl": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "CMDLINE_CHANGED",
+                "payload": {
+                  "editorId": "e",
+                  "kind": "",
+                  "text": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "register-prefix-selects-before-an-operator",
+      "steps": [
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "\"",
+            "ctrl": false
+          },
+          "expect": {
+            "state": "OPERATOR_PENDING"
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "a",
+            "ctrl": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "SELECT_REGISTER",
+                "payload": {
+                  "editorId": "e",
+                  "name": "a"
+                }
+              }
+            ],
+            "state": "NORMAL"
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "y",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "y",
+            "ctrl": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "OPERATE",
+                "payload": {
+                  "editorId": "e",
+                  "operator": "yank",
+                  "motion": "line",
+                  "count": 1
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "register-prefix-escape-cancels",
+      "steps": [
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "\"",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "Escape",
+            "ctrl": false
+          },
+          "expect": {
+            "state": "NORMAL",
+            "neverEmits": [
+              "SELECT_REGISTER"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "mark-set-even-on-a-motion-letter",
+      "steps": [
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "m",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "j",
+            "ctrl": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "MARK_SET",
+                "payload": {
+                  "editorId": "e",
+                  "name": "j"
+                }
+              }
+            ],
+            "state": "NORMAL"
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "j",
+            "ctrl": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "MOTION",
+                "payload": {
+                  "editorId": "e",
+                  "motion": "down",
+                  "count": 1
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "mark-jumps-linewise-and-exact",
+      "steps": [
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "'",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "a",
+            "ctrl": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "MARK_JUMP",
+                "payload": {
+                  "editorId": "e",
+                  "name": "a",
+                  "exact": false
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "`",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "a",
+            "ctrl": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "MARK_JUMP",
+                "payload": {
+                  "editorId": "e",
+                  "name": "a",
+                  "exact": true
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "operator-to-a-mark",
+      "steps": [
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "d",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "'",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "a",
+            "ctrl": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "OPERATE",
+                "payload": {
+                  "editorId": "e",
+                  "operator": "delete",
+                  "motion": "mark-line",
+                  "count": 1,
+                  "mark": "a"
+                }
+              }
+            ],
+            "state": "NORMAL"
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "y",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "`",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "b",
+            "ctrl": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "OPERATE",
+                "payload": {
+                  "editorId": "e",
+                  "operator": "yank",
+                  "motion": "mark-exact",
+                  "count": 1,
+                  "mark": "b"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "macro-record-stop-and-play",
+      "steps": [
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "q",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "a",
+            "ctrl": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "MACRO_RECORD",
+                "payload": {
+                  "editorId": "e",
+                  "register": "a"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "j",
+            "ctrl": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "MOTION",
+                "payload": {
+                  "editorId": "e",
+                  "motion": "down",
+                  "count": 1
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "q",
+            "ctrl": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "MACRO_STOP",
+                "payload": {
+                  "editorId": "e"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "2",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "@",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "a",
+            "ctrl": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "MACRO_PLAY",
+                "payload": {
+                  "editorId": "e",
+                  "register": "a",
+                  "count": 2
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "@",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "@",
+            "ctrl": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "MACRO_PLAY",
+                "payload": {
+                  "editorId": "e",
+                  "register": "a",
+                  "count": 1
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "search-forward-backward-and-next",
+      "steps": [
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "/",
+            "ctrl": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "SET_MODE",
+                "payload": {
+                  "editorId": "e",
+                  "mode": "COMMAND",
+                  "caret": "block"
+                }
+              },
+              {
+                "event": "CMDLINE_CHANGED",
+                "payload": {
+                  "editorId": "e",
+                  "kind": "/",
+                  "text": ""
+                }
+              }
+            ],
+            "state": "COMMAND"
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "f",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "o",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "o",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "Enter",
+            "ctrl": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "SEARCH",
+                "payload": {
+                  "editorId": "e",
+                  "pattern": "foo",
+                  "forward": true
+                }
+              },
+              {
+                "event": "SET_MODE",
+                "payload": {
+                  "editorId": "e",
+                  "mode": "NORMAL",
+                  "caret": "block"
+                }
+              }
+            ],
+            "state": "NORMAL"
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "?",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "x",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "Enter",
+            "ctrl": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "SEARCH",
+                "payload": {
+                  "editorId": "e",
+                  "pattern": "x",
+                  "forward": false
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "n",
+            "ctrl": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "SEARCH_NEXT",
+                "payload": {
+                  "editorId": "e",
+                  "reverse": false
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "N",
+            "ctrl": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "SEARCH_NEXT",
+                "payload": {
+                  "editorId": "e",
+                  "reverse": true
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "config": {
+        "commandLineAnyChar": true
+      }
+    },
+    {
+      "id": "empty-search-does-nothing",
+      "steps": [
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "/",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "Enter",
+            "ctrl": false
+          },
+          "expect": {
+            "state": "NORMAL",
+            "neverEmits": [
+              "SEARCH"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "ctrl-w-window-commands-and-plain-w-still-moves",
+      "steps": [
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "w",
+            "ctrl": true
+          },
+          "expect": {
+            "state": "OPERATOR_PENDING"
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "v",
+            "ctrl": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "EX_COMMAND",
+                "payload": {
+                  "editorId": "e",
+                  "name": "window-vsplit",
+                  "args": ""
+                }
+              }
+            ],
+            "state": "NORMAL"
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "w",
+            "ctrl": true
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "l",
+            "ctrl": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "EX_COMMAND",
+                "payload": {
+                  "editorId": "e",
+                  "name": "window-right",
+                  "args": ""
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "w",
+            "ctrl": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "MOTION",
+                "payload": {
+                  "editorId": "e",
+                  "motion": "word-forward",
+                  "count": 1
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "leader-sequences",
+      "steps": [
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": " ",
+            "ctrl": false
+          },
+          "expect": {
+            "state": "OPERATOR_PENDING"
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "f",
+            "ctrl": false
+          },
+          "expect": {
+            "state": "OPERATOR_PENDING"
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "f",
+            "ctrl": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "EX_COMMAND",
+                "payload": {
+                  "editorId": "e",
+                  "name": "find-files",
+                  "args": ""
+                }
+              }
+            ],
+            "state": "NORMAL"
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": " ",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "f",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "g",
+            "ctrl": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "EX_COMMAND",
+                "payload": {
+                  "editorId": "e",
+                  "name": "live-grep",
+                  "args": ""
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": " ",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "x",
+            "ctrl": false
+          },
+          "expect": {
+            "state": "NORMAL",
+            "neverEmits": [
+              "EX_COMMAND"
+            ]
+          }
+        }
+      ],
+      "config": {
+        "leaderMaps": {
+          "ff": "find-files",
+          "fg": "live-grep"
+        }
+      }
+    },
+    {
+      "id": "leader-is-off-without-maps",
+      "steps": [
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": " ",
+            "ctrl": false
+          },
+          "expect": {
+            "state": "NORMAL",
+            "neverEmits": [
+              "EX_COMMAND"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "single-key-commands",
+      "steps": [
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "K",
+            "ctrl": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "EX_COMMAND",
+                "payload": {
+                  "editorId": "e",
+                  "name": "hover",
+                  "args": ""
+                }
+              }
+            ],
+            "state": "NORMAL"
+          }
+        }
+      ],
+      "config": {
+        "normalCommands": {
+          "K": "hover"
+        }
+      }
+    },
+    {
+      "id": "visual-line-and-switching-kinds",
+      "steps": [
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "V",
+            "ctrl": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "SET_MODE",
+                "payload": {
+                  "editorId": "e",
+                  "mode": "VISUAL_LINE",
+                  "caret": "block"
+                }
+              }
+            ],
+            "state": "VISUAL"
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "v",
+            "ctrl": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "SET_MODE",
+                "payload": {
+                  "editorId": "e",
+                  "mode": "VISUAL",
+                  "caret": "block"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "V",
+            "ctrl": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "SET_MODE",
+                "payload": {
+                  "editorId": "e",
+                  "mode": "VISUAL_LINE",
+                  "caret": "block"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "EDITOR_FOCUS",
+          "payload": {
+            "editorId": "e"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "SET_MODE",
+                "payload": {
+                  "editorId": "e",
+                  "mode": "VISUAL_LINE",
+                  "caret": "block"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "d",
+            "ctrl": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "OPERATE",
+                "payload": {
+                  "editorId": "e",
+                  "operator": "delete",
+                  "motion": "selection",
+                  "count": 1
+                }
+              },
+              {
+                "event": "SET_MODE",
+                "payload": {
+                  "editorId": "e",
+                  "mode": "NORMAL",
+                  "caret": "block"
+                }
+              }
+            ],
+            "state": "NORMAL"
+          }
+        }
+      ]
+    },
+    {
+      "id": "insert-types-printable-keys-enter-tab-and-backspace",
+      "steps": [
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "i",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "x",
+            "ctrl": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "TYPE",
+                "payload": {
+                  "editorId": "e",
+                  "text": "x"
+                }
+              }
+            ],
+            "state": "INSERT"
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "Enter",
+            "ctrl": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "TYPE",
+                "payload": {
+                  "editorId": "e",
+                  "text": "\n"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "Tab",
+            "ctrl": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "TYPE",
+                "payload": {
+                  "editorId": "e",
+                  "text": "\t"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "Backspace",
+            "ctrl": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "BACKSPACE",
+                "payload": {
+                  "editorId": "e"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "ArrowLeft",
+            "ctrl": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "MOTION",
+                "payload": {
+                  "editorId": "e",
+                  "motion": "left",
+                  "count": 1
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "insert-ignores-ctrl-chords",
+      "steps": [
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "i",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "s",
+            "ctrl": true
+          },
+          "expect": {
+            "state": "INSERT",
+            "neverEmits": [
+              "TYPE"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "arrows-move-in-normal",
+      "steps": [
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "ArrowDown",
+            "ctrl": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "MOTION",
+                "payload": {
+                  "editorId": "e",
+                  "motion": "down",
+                  "count": 1
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "ArrowRight",
+            "ctrl": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "MOTION",
+                "payload": {
+                  "editorId": "e",
+                  "motion": "right",
+                  "count": 1
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "unknown-commands-pass-through-when-asked",
+      "steps": [
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": ":",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "F",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "m",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "t",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": " ",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "a",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "l",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "l",
+            "ctrl": false
+          }
+        },
+        {
+          "event": "KEY",
+          "payload": {
+            "editorId": "e",
+            "key": "Enter",
+            "ctrl": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "EX_COMMAND",
+                "payload": {
+                  "editorId": "e",
+                  "name": "Fmt",
+                  "args": "all"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "config": {
+        "exCommands": {
+          "w": "save",
+          "q": "close-tab",
+          "q!": "close-tab-discard",
+          "e": "edit",
+          "b": "buffer"
+        },
+        "commandLineAnyChar": true,
+        "passUnknown": true
+      }
+    }
+  ]
+}

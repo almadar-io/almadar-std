@@ -7,7 +7,7 @@
  */
 
 import type { StdOperatorMeta } from '../types.js';
-import { BOOLEAN, INT, NUMBER, PRIMITIVE_VALUE, STRING, list, nullable, rec, tv, union } from '../signature.js';
+import { BOOLEAN, INT, NUMBER, PRIMITIVE_VALUE, STRING, list, nullable, rec, shape, tv, union } from '../signature.js';
 
 /**
  * String module operators.
@@ -188,6 +188,22 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'replace', type: 'string', description: 'Literal replacement' },
     ],
     example: '["str/replace-pattern", "a1, b2!", "[^\\\\p{L}\\\\p{N}]", ""] // => "a1b2"',
+  },
+  'str/find-pattern': {
+    module: 'str',
+    category: 'std-str',
+    minArity: 2,
+    maxArity: 3,
+    description: 'Every match of a regex pattern of the shared dialect (see validate/pattern; Unicode mode) at or after a character offset (default 0), in order, as { start, end, text } with start and end in characters, the units of str/len and str/slice. Empty matches step one character on. An empty list when nothing matches; null for a pattern outside the dialect',
+    hasSideEffects: false,
+    failable: { unlessLiteral: [1] },
+    returnType: nullable(list(shape({ start: INT, end: INT, text: STRING }))),
+    params: [
+      { name: 's', type: 'string', description: 'The string' },
+      { name: 'pattern', type: 'string', description: 'Regex pattern' },
+      { name: 'from', type: 'number', description: 'Character offset to search from (default 0)', optional: true },
+    ],
+    example: '["str/find-pattern", "é foo é foo", "fo+"] // => [{ "start": 2, "end": 5, "text": "foo" }, { "start": 8, "end": 11, "text": "foo" }]',
   },
   'str/replaceAll': {
     module: 'str',

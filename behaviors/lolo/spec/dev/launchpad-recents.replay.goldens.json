@@ -364,6 +364,91 @@
           }
         }
       ]
+    },
+    {
+      "id": "an-add-while-the-load-is-reading-queues-without-a-second-read",
+      "steps": [
+        {
+          "trait": "RecentsStore",
+          "event": "RECENTS_LOAD",
+          "payload": {},
+          "entity": {
+            "id": "r",
+            "items": [],
+            "loaded": false,
+            "pending": [],
+            "reading": false
+          },
+          "expect": {
+            "fired": true,
+            "effects": [
+              {
+                "type": "os/read-file"
+              }
+            ],
+            "entity": {
+              "reading": true
+            }
+          }
+        },
+        {
+          "trait": "RecentsStore",
+          "event": "RECENT_ADD",
+          "payload": {
+            "behavior": "std/play",
+            "label": "Playground",
+            "kind": "route",
+            "command": "",
+            "route": ""
+          },
+          "expect": {
+            "fired": true,
+            "effects": [],
+            "neverEmits": [
+              "RECENTS_CHANGED",
+              "RECENTS_LOADED"
+            ],
+            "entity": {
+              "reading": true,
+              "loaded": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-the-first-add-before-any-read-starts-the-read",
+      "steps": [
+        {
+          "trait": "RecentsStore",
+          "event": "RECENT_ADD",
+          "payload": {
+            "behavior": "std/play",
+            "label": "Playground",
+            "kind": "route",
+            "command": "",
+            "route": ""
+          },
+          "entity": {
+            "id": "r",
+            "items": [],
+            "loaded": false,
+            "pending": [],
+            "reading": false
+          },
+          "expect": {
+            "fired": true,
+            "effects": [
+              {
+                "type": "os/read-file"
+              }
+            ],
+            "entity": {
+              "reading": true
+            }
+          }
+        }
+      ]
     }
   ]
 }

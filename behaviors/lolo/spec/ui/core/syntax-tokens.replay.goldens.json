@@ -1,0 +1,336 @@
+{
+  "atom": "../ui/core/atoms/std-syntax-tokens.lolo",
+  "trait": "SyntaxTokens",
+  "cases": [
+    {
+      "id": "rules-claim-ranges-in-order",
+      "steps": [
+        {
+          "event": "TOKENIZE",
+          "payload": {
+            "editorId": "e",
+            "language": "toy",
+            "text": "\"when\" when 42"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "DECORATE",
+                "payload": {
+                  "editorId": "e",
+                  "source": "syntax",
+                  "ranges": [
+                    {
+                      "id": "syntax-0-0",
+                      "fromRow": 0,
+                      "fromCol": 0,
+                      "toRow": 0,
+                      "toCol": 6,
+                      "tone": "string",
+                      "label": ""
+                    },
+                    {
+                      "id": "syntax-0-7",
+                      "fromRow": 0,
+                      "fromCol": 7,
+                      "toRow": 0,
+                      "toCol": 11,
+                      "tone": "keyword",
+                      "label": ""
+                    },
+                    {
+                      "id": "syntax-0-12",
+                      "fromRow": 0,
+                      "fromCol": 12,
+                      "toRow": 0,
+                      "toCol": 14,
+                      "tone": "number",
+                      "label": ""
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "config": {
+        "languages": {
+          "toy": [
+            {
+              "tone": "comment",
+              "pattern": ";;.*$"
+            },
+            {
+              "tone": "string",
+              "pattern": "\"[^\"]*\""
+            },
+            {
+              "tone": "keyword",
+              "pattern": "\\b(when|state)\\b"
+            },
+            {
+              "tone": "number",
+              "pattern": "\\b[0-9]+\\b"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "a-comment-swallows-what-follows",
+      "steps": [
+        {
+          "event": "TOKENIZE",
+          "payload": {
+            "editorId": "e",
+            "language": "toy",
+            "text": "state ;; when 1\n7"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "DECORATE",
+                "payload": {
+                  "editorId": "e",
+                  "source": "syntax",
+                  "ranges": [
+                    {
+                      "id": "syntax-0-0",
+                      "fromRow": 0,
+                      "fromCol": 0,
+                      "toRow": 0,
+                      "toCol": 5,
+                      "tone": "keyword",
+                      "label": ""
+                    },
+                    {
+                      "id": "syntax-0-6",
+                      "fromRow": 0,
+                      "fromCol": 6,
+                      "toRow": 0,
+                      "toCol": 15,
+                      "tone": "comment",
+                      "label": ""
+                    },
+                    {
+                      "id": "syntax-1-0",
+                      "fromRow": 1,
+                      "fromCol": 0,
+                      "toRow": 1,
+                      "toCol": 1,
+                      "tone": "number",
+                      "label": ""
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "config": {
+        "languages": {
+          "toy": [
+            {
+              "tone": "comment",
+              "pattern": ";;.*$"
+            },
+            {
+              "tone": "string",
+              "pattern": "\"[^\"]*\""
+            },
+            {
+              "tone": "keyword",
+              "pattern": "\\b(when|state)\\b"
+            },
+            {
+              "tone": "number",
+              "pattern": "\\b[0-9]+\\b"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "an-unknown-language-paints-nothing",
+      "steps": [
+        {
+          "event": "TOKENIZE",
+          "payload": {
+            "editorId": "e",
+            "language": "nope",
+            "text": "when 1"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "DECORATE",
+                "payload": {
+                  "editorId": "e",
+                  "source": "syntax",
+                  "ranges": []
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "config": {
+        "languages": {
+          "toy": [
+            {
+              "tone": "comment",
+              "pattern": ";;.*$"
+            },
+            {
+              "tone": "string",
+              "pattern": "\"[^\"]*\""
+            },
+            {
+              "tone": "keyword",
+              "pattern": "\\b(when|state)\\b"
+            },
+            {
+              "tone": "number",
+              "pattern": "\\b[0-9]+\\b"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "an-invalid-rule-pattern-paints-nothing",
+      "steps": [
+        {
+          "event": "TOKENIZE",
+          "payload": {
+            "editorId": "e",
+            "language": "bad",
+            "text": "(x"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "DECORATE",
+                "payload": {
+                  "editorId": "e",
+                  "source": "syntax",
+                  "ranges": []
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "config": {
+        "languages": {
+          "bad": [
+            {
+              "tone": "keyword",
+              "pattern": "(x"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "lolo-default-rules",
+      "steps": [
+        {
+          "event": "TOKENIZE",
+          "payload": {
+            "editorId": "e",
+            "language": "lolo",
+            "text": "  state INIT -> ready when (str/len @entity.x 1) ;; note"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "DECORATE",
+                "payload": {
+                  "editorId": "e",
+                  "source": "syntax",
+                  "ranges": [
+                    {
+                      "id": "syntax-0-2",
+                      "fromRow": 0,
+                      "fromCol": 2,
+                      "toRow": 0,
+                      "toCol": 7,
+                      "tone": "keyword",
+                      "label": ""
+                    },
+                    {
+                      "id": "syntax-0-8",
+                      "fromRow": 0,
+                      "fromCol": 8,
+                      "toRow": 0,
+                      "toCol": 12,
+                      "tone": "function",
+                      "label": ""
+                    },
+                    {
+                      "id": "syntax-0-13",
+                      "fromRow": 0,
+                      "fromCol": 13,
+                      "toRow": 0,
+                      "toCol": 15,
+                      "tone": "operator",
+                      "label": ""
+                    },
+                    {
+                      "id": "syntax-0-22",
+                      "fromRow": 0,
+                      "fromCol": 22,
+                      "toRow": 0,
+                      "toCol": 26,
+                      "tone": "keyword",
+                      "label": ""
+                    },
+                    {
+                      "id": "syntax-0-28",
+                      "fromRow": 0,
+                      "fromCol": 28,
+                      "toRow": 0,
+                      "toCol": 35,
+                      "tone": "function",
+                      "label": ""
+                    },
+                    {
+                      "id": "syntax-0-36",
+                      "fromRow": 0,
+                      "fromCol": 36,
+                      "toRow": 0,
+                      "toCol": 45,
+                      "tone": "variable",
+                      "label": ""
+                    },
+                    {
+                      "id": "syntax-0-46",
+                      "fromRow": 0,
+                      "fromCol": 46,
+                      "toRow": 0,
+                      "toCol": 47,
+                      "tone": "number",
+                      "label": ""
+                    },
+                    {
+                      "id": "syntax-0-49",
+                      "fromRow": 0,
+                      "fromCol": 49,
+                      "toRow": 0,
+                      "toCol": 56,
+                      "tone": "comment",
+                      "label": ""
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

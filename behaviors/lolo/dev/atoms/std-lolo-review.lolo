@@ -1,0 +1,407 @@
+app std-lolo-review [
+  version: "0.1.0",
+  description: "std-lolo-review — reviews the .lolo file open in an editor one transition at a time, and flags the transitions that need attention. Only a path ending in fileSuffix is reviewed; any other file gets no flags and no popover. After an edit and analyzeMs of quiet it asks for the file's transitions (TRANSITIONS_OF, std-lolo-transitions), who last changed each line (GIT_STEP blame of the unsaved text, std-git) and each transition's nearest transitions in the catalog (TV_NEAREST, std-transition-vectors, whose index of the installed packages it asks for once with TV_INDEX_PACKAGES), and paints DECORATE source review: review-recent over a transition with a line not committed or committed within recentHours, review over one whose most similar catalog transition scores below driftThreshold (its shape departs from every known one). When the cursor or the pointer rests dwellMs on a transition, or REVIEW_NOW asks, it shows a POPOVER over that transition at once with its edit recency and nearest catalog transitions, then asks the model (LLM_GENERATE, std-llm) to judge it against the rules in config — each a one-line rule with the EXEC or CLAUDE.md rule it comes from — and adds the answer while the popover stays open; the answer is kept per transition and file version (pointer|version). Leaving the transition closes the popover and cancels a pending answer (LLM_CANCEL). The composer routes each request to its atom and each answer back."
+]
+
+type LrMatch = { start : number!, end : number!, text : string! }
+type LrItem = { pointer : string!, trait : string!, event : string!, from : string!, to : string!, fromRow : number!, fromCol : number!, toRow : number!, source : string! }
+type LrLine = { sha : string!, row : number! }
+type LrMeta = { time : number!, author : string!, summary : string! }
+type LrBlameScan = { sha : string!, final : number!, rows : [LrLine]!, meta : Map string LrMeta! }
+type LrPeer = { key : string!, path : string!, label : string!, score : number! }
+type LrResult = { key : string!, peers : [LrPeer]! }
+type LrRule = { id : string!, text : string!, source : string! }
+type LrAsk = { key : string!, path : string!, text : string! }
+type LrSection = { heading : string!, lines : [string]! }
+type LrPopover = { fromRow : number!, fromCol : number!, toRow : number!, toCol : number!, title : string!, sections : [LrSection]!, busy : boolean! }
+type LrRange = { id : string!, fromRow : number!, fromCol : number!, toRow : number!, toCol : number!, tone : string!, label : string! }
+
+orbital LoloReviewOrbital {
+  entity LoloReview [runtime] {
+    id : string!
+    editorId : string = ""
+    path : string = ""
+    version : number = 0
+    text : string = ""
+    reviewing : boolean @description "The open file is one this atom reviews." = false
+    editedAt : instant? = null
+    pending : boolean @description "An edit waits for analyzeMs of quiet." = false
+    items : [LrItem] = []
+    itemsVersion : number = -1
+    rows : [LrLine] @description "The commit of each line (blame)." = []
+    meta : Map string LrMeta @description "Commit time, author and summary by commit." = {}
+    blameVersion : number = -1
+    peers : Map string [LrPeer] @description "Nearest catalog transitions by pointer." = {}
+    indexNote : string @description "Why peers are missing, when they are." = "the catalog index is not ready"
+    cursorRow : number = 0
+    armed : boolean = false
+    armedAt : instant? = null
+    armRow : number = 0
+    open : string @description "The pointer whose popover is open, empty when none." = ""
+    findings : Map string string @description "The model's answer by pointer@version." = {}
+    asking : string @description "The answer in flight (pointer|version), empty when none." = ""
+    indexAsked : boolean @description "The catalog index was asked for." = false
+  }
+
+  trait LoloReview -> LoloReview [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      BUFFER_EDITED -> ready when (str/endsWith ?path @config.fileSuffix)
+        (set @entity.editorId ?editorId)
+        (set @entity.path ?path)
+        (set @entity.version ?version)
+        (set @entity.text ?text)
+        (set @entity.reviewing true)
+        (set @entity.editedAt @now)
+        (set @entity.pending true)
+        (if @entity.indexAsked (set @entity.indexAsked true) (do (set @entity.indexAsked true) (emit TV_INDEX_PACKAGES { rebuild: false })))
+      BUFFER_EDITED -> ready when (and (not (str/endsWith ?path @config.fileSuffix)) @entity.reviewing)
+        (set @entity.reviewing false)
+        (set @entity.pending false)
+        (set @entity.items [])
+        (set @entity.open "")
+        (emit CLEAR_DECORATIONS { editorId: ?editorId, source: "review" })
+        (emit CLOSE_POPOVER { editorId: ?editorId })
+      BUFFER_EDITED -> ready when (and (not (str/endsWith ?path @config.fileSuffix)) (not @entity.reviewing))
+        (set @entity.editorId ?editorId)
+
+      TRANSITIONS -> ready when (and @entity.reviewing (= ?key (str/concat @entity.version)))
+        (set @entity.items ?items)
+        (set @entity.itemsVersion @entity.version)
+        (emit TV_NEAREST { requestId: (str/concat @entity.version), items: (array/map ?items (fn it { key: @it.pointer, path: @entity.path, text: @it.source })) })
+        (emit FLAG { })
+      TRANSITIONS_FAILED -> ready when (= ?key (str/concat @entity.version))
+      GIT_DONE -> ready when (and @entity.reviewing (= ?requestId (str/concat "blame:" @entity.version)) (= ?exitCode 0))
+        (let ((start : LrBlameScan { sha: "", final: 0, rows: [], meta: {} }))
+          (let ((scan (array/reduce (str/split ?stdout "\n") @start (fn acc ln
+                  (if (validate/pattern @ln "^[0-9a-f]{40} [0-9]+ [0-9]+")
+                    { sha: (default (array/first (str/split @ln " ")) ""), final: (default (str/to-int (default (array/nth (str/split @ln " ") 2) "0")) 0), rows: @acc.rows, meta: @acc.meta }
+                    (if (str/startsWith @ln "\t")
+                      { sha: @acc.sha, final: @acc.final, rows: (array/append @acc.rows { sha: @acc.sha, row: (- @acc.final 1) }), meta: @acc.meta }
+                      (if (str/startsWith @ln "author-time ")
+                        { sha: @acc.sha, final: @acc.final, rows: @acc.rows, meta: (object/set @acc.meta @acc.sha { time: (default (str/to-int (str/slice @ln 12 (str/len @ln))) 0), author: (object/get (object/get @acc.meta @acc.sha { time: 0, author: "", summary: "" }) "author" ""), summary: (object/get (object/get @acc.meta @acc.sha { time: 0, author: "", summary: "" }) "summary" "") }) }
+                        (if (str/startsWith @ln "author ")
+                          { sha: @acc.sha, final: @acc.final, rows: @acc.rows, meta: (object/set @acc.meta @acc.sha { time: (object/get (object/get @acc.meta @acc.sha { time: 0, author: "", summary: "" }) "time" 0), author: (str/slice @ln 7 (str/len @ln)), summary: (object/get (object/get @acc.meta @acc.sha { time: 0, author: "", summary: "" }) "summary" "") }) }
+                          (if (str/startsWith @ln "summary ")
+                            { sha: @acc.sha, final: @acc.final, rows: @acc.rows, meta: (object/set @acc.meta @acc.sha { time: (object/get (object/get @acc.meta @acc.sha { time: 0, author: "", summary: "" }) "time" 0), author: (object/get (object/get @acc.meta @acc.sha { time: 0, author: "", summary: "" }) "author" ""), summary: (str/slice @ln 8 (str/len @ln)) }) }
+                            @acc)))))))))
+            (do (set @entity.rows @scan.rows)
+              (set @entity.meta @scan.meta))))
+        (set @entity.blameVersion @entity.version)
+        (emit FLAG { })
+        (emit SHOW { })
+      GIT_DONE -> ready when (and @entity.reviewing (= ?requestId (str/concat "blame:" @entity.version)) (!= ?exitCode 0))
+        (set @entity.rows [])
+        (set @entity.meta {})
+        (set @entity.blameVersion @entity.version)
+        (emit FLAG { })
+        (emit SHOW { })
+      GIT_FAILED -> ready when (= ?requestId (str/concat "blame:" @entity.version))
+        (set @entity.rows [])
+        (set @entity.blameVersion @entity.version)
+        (emit SHOW { })
+      TV_PEERS -> ready when (= ?requestId (str/concat @entity.version))
+        (set @entity.peers (object/fromEntries (array/map ?results (fn r [@r.key, @r.peers]))))
+        (set @entity.indexNote "")
+        (emit FLAG { })
+        (emit SHOW { })
+      TV_PROGRESS -> ready
+        (set @entity.indexNote (str/concat "indexing the catalog: " ?done " of " ?total " files"))
+        (emit SHOW { })
+      TV_READY -> ready
+        (set @entity.indexNote "")
+        (set @entity.pending @entity.reviewing)
+      TV_REFUSED -> ready
+        (set @entity.indexNote (str/concat "no catalog peers: " ?code " " ?detail))
+        (emit SHOW { })
+
+      FLAG -> ready when (and @entity.reviewing (= @entity.itemsVersion @entity.version))
+        (let ((lines (str/split @entity.text "\n")) (recentMs (* @config.recentHours 3600000)))
+          (emit DECORATE { editorId: @entity.editorId, source: "review", ranges: (array/flatten (array/map @entity.items (fn it
+            (let ((shas (array/map (array/filter @entity.rows (fn l (and (>= @l.row @it.fromRow) (<= @l.row @it.toRow)))) (fn l @l.sha)))
+                  (best (default (array/first (object/get @entity.peers @it.pointer [])) { key: "", path: "", label: "", score: 1 }))
+                  (endCol (str/len (default (array/nth @lines @it.toRow) ""))))
+              (let ((uncommitted (array/includes @shas "0000000000000000000000000000000000000000"))
+                    (newest (array/reduce @shas 0 (fn m s (math/max @m (object/get (object/get @entity.meta @s { time: 0, author: "", summary: "" }) "time" 0))))))
+                (array/concat
+                  (if (and (> (array/len (object/get @entity.peers @it.pointer [])) 0) (< @best.score @config.driftThreshold))
+                    [{ id: (str/concat "drift-" @it.pointer), fromRow: @it.fromRow, fromCol: @it.fromCol, toRow: @it.toRow, toCol: @endCol, tone: "review", label: (str/concat "departs from the catalog: nearest " @best.label " scores " (math/round (* @best.score 100)) "%") }]
+                    [])
+                  (if (or @uncommitted (and (> @newest 0) (< (- (let ((ep (time/parse "1970-01-01T00:00:00Z"))) (if (= @ep null) 0 (time/diff @now @ep))) (* @newest 1000)) @recentMs)))
+                    [{ id: (str/concat "recent-" @it.pointer), fromRow: @it.fromRow, fromCol: @it.fromCol, toRow: @it.toRow, toCol: @endCol, tone: "review-recent", label: (if @uncommitted "changed and not committed" "changed recently") }]
+                    []))))))) }))
+      FLAG -> ready when (or (not @entity.reviewing) (!= @entity.itemsVersion @entity.version))
+
+      CURSOR_MOVED -> ready when (and @entity.reviewing (!= @entity.open "") (let ((it (array/find @entity.items (fn i (= @i.pointer @entity.open))))) (or (= @it null) (< ?row (object/get @it "fromRow" 0)) (> ?row (object/get @it "toRow" 0)))))
+        (set @entity.cursorRow ?row)
+        (emit CLOSE { })
+        (set @entity.armed true)
+        (set @entity.armedAt @now)
+        (set @entity.armRow ?row)
+      CURSOR_MOVED -> ready when (and @entity.reviewing (or (= @entity.open "") (let ((it (array/find @entity.items (fn i (= @i.pointer @entity.open))))) (and (!= @it null) (>= ?row (object/get @it "fromRow" 0)) (<= ?row (object/get @it "toRow" 0))))))
+        (set @entity.cursorRow ?row)
+        (set @entity.armed (= @entity.open ""))
+        (set @entity.armedAt @now)
+        (set @entity.armRow ?row)
+      CURSOR_MOVED -> ready when (not @entity.reviewing)
+        (set @entity.cursorRow ?row)
+      EDITOR_HOVER -> ready when @entity.reviewing
+        (set @entity.armed true)
+        (set @entity.armedAt @now)
+        (set @entity.armRow ?row)
+      EDITOR_HOVER -> ready when (not @entity.reviewing)
+      REVIEW_NOW -> ready when @entity.reviewing
+        (set @entity.armed false)
+        (emit REVIEW_AT { row: @entity.cursorRow })
+      REVIEW_NOW -> ready when (not @entity.reviewing)
+
+      REVIEW_AT -> ready when (= (array/find @entity.items (fn i (and (>= ?row @i.fromRow) (<= ?row @i.toRow)))) null)
+        (emit CLOSE { })
+      REVIEW_AT -> ready when (let ((it (array/find @entity.items (fn i (and (>= ?row @i.fromRow) (<= ?row @i.toRow)))))) (and (!= @it null) (= (object/get @it "pointer" "") @entity.open)))
+      REVIEW_AT -> ready when (let ((it (array/find @entity.items (fn i (and (>= ?row @i.fromRow) (<= ?row @i.toRow)))))) (and (!= @it null) (!= (object/get @it "pointer" "") @entity.open)))
+        (let ((it : LrItem (default (array/find @entity.items (fn i (and (>= ?row @i.fromRow) (<= ?row @i.toRow)))) { pointer: "", trait: "", event: "", from: "", to: "", fromRow: 0, fromCol: 0, toRow: 0, source: "" })))
+          (do (emit CANCEL_ASK { })
+            (set @entity.open @it.pointer)
+            (emit SHOW { })
+            (emit ASK { pointer: @it.pointer })))
+
+      ASK -> ready when (object/has @entity.findings (str/concat ?pointer "|" @entity.version))
+      ASK -> ready when (not (object/has @entity.findings (str/concat ?pointer "|" @entity.version)))
+        (let ((it : LrItem (default (array/find @entity.items (fn i (= @i.pointer ?pointer))) { pointer: "", trait: "", event: "", from: "", to: "", fromRow: 0, fromCol: 0, toRow: 0, source: "" })))
+          (do (set @entity.asking (str/concat ?pointer "|" @entity.version))
+            (emit LLM_GENERATE {
+              key: @entity.asking
+              model: @config.model
+              temperature: @config.temperature
+              maxTokens: @config.maxTokens
+              systemPrompt: (str/concat "You review one transition of an Almadar .lolo program. Judge it only against these rules. For each rule it breaks, answer one line: <rule id>: <what breaks and where>. If it breaks none, answer exactly: no findings.\n" (str/join (array/map @config.rules (fn r (str/concat @r.id " (" @r.source "): " @r.text))) "\n"))
+              userPrompt: (str/concat "Transition " @it.trait "." @it.event " (" @it.from " -> " @it.to "), lines " (+ @it.fromRow 1) "-" (+ @it.toRow 1) " of " (os/path-base @entity.path) ":\n" @it.source "\n\nMost similar transitions in the catalog:\n" (let ((ps (object/get @entity.peers @it.pointer []))) (if (= (array/len @ps) 0) "(none known)" (str/join (array/map @ps (fn p (str/concat @p.label " in " (os/path-base @p.path) " (" (math/round (* @p.score 100)) "%)"))) "\n"))))
+            })))
+      LLM_GENERATE_RESULT -> ready when (!= @entity.asking "")
+        (set @entity.findings (object/set @entity.findings @entity.asking ?content))
+        (set @entity.asking "")
+        (emit SHOW { })
+      LLM_FAILED -> ready when (!= @entity.asking "")
+        (set @entity.findings (object/set @entity.findings @entity.asking (str/concat "the model could not answer: " ?message)))
+        (set @entity.asking "")
+        (emit SHOW { })
+      LLM_CANCELLED -> ready
+      CANCEL_ASK -> ready when (!= @entity.asking "")
+        (emit LLM_CANCEL { key: @entity.asking })
+        (set @entity.asking "")
+      CANCEL_ASK -> ready when (= @entity.asking "")
+      CLOSE -> ready when (!= @entity.open "")
+        (emit CANCEL_ASK { })
+        (set @entity.open "")
+        (emit CLOSE_POPOVER { editorId: @entity.editorId })
+      CLOSE -> ready when (= @entity.open "")
+
+      SHOW -> ready when (and (!= @entity.open "") (!= (array/find @entity.items (fn i (= @i.pointer @entity.open))) null))
+        (let ((it : LrItem (default (array/find @entity.items (fn i (= @i.pointer @entity.open))) { pointer: "", trait: "", event: "", from: "", to: "", fromRow: 0, fromCol: 0, toRow: 0, source: "" }))
+              (fk (str/concat @entity.open "|" @entity.version)))
+          (let ((shas (array/map (array/filter @entity.rows (fn l (and (>= @l.row @it.fromRow) (<= @l.row @it.toRow)))) (fn l @l.sha))))
+            (let ((newestSha (array/reduce @shas "" (fn m s (if (> (object/get (object/get @entity.meta @s { time: 0, author: "", summary: "" }) "time" 0) (object/get (object/get @entity.meta @m { time: 0, author: "", summary: "" }) "time" 0)) @s @m))))
+                  (uncommitted (array/includes @shas "0000000000000000000000000000000000000000")))
+              (let ((nm : LrMeta (object/get @entity.meta @newestSha { time: 0, author: "", summary: "" })))
+                (emit POPOVER { editorId: @entity.editorId, popover: {
+                  fromRow: @it.fromRow, fromCol: @it.fromCol, toRow: @it.toRow, toCol: (str/len (default (array/nth (str/split @entity.text "\n") @it.toRow) "")),
+                  title: (str/concat @it.trait "." @it.event "  " @it.from " -> " @it.to),
+                  sections: [
+                    { heading: "Edited", lines: (if (!= @entity.blameVersion @entity.version) ["reading the history..."]
+                        (if @uncommitted ["changed and not committed"]
+                          (if (= @nm.time 0) ["no history for these lines"]
+                            [(str/concat (let ((mins (math/floor (/ (- (let ((ep (time/parse "1970-01-01T00:00:00Z"))) (if (= @ep null) 0 (time/diff @now @ep))) (* @nm.time 1000)) 60000)))) (if (< @mins 60) (str/concat @mins " min ago") (if (< @mins 2880) (str/concat (math/floor (/ @mins 60)) " h ago") (str/concat (math/floor (/ @mins 1440)) " days ago")))) " by " @nm.author), @nm.summary]))) },
+                    { heading: "Nearest in the catalog", lines: (let ((ps (object/get @entity.peers @it.pointer []))) (if (= (array/len @ps) 0) [@entity.indexNote] (array/map @ps (fn p (str/concat @p.label "  " (os/path-base @p.path) "  " (math/round (* @p.score 100)) "%"))))) },
+                    { heading: (str/concat "Review (" @config.model ")"), lines: (if (object/has @entity.findings @fk) (array/filter (str/split (object/get @entity.findings @fk "") "\n") (fn l (!= (str/trim @l) ""))) ["asking the model..."]) }
+                  ],
+                  busy: (not (object/has @entity.findings @fk))
+                } })))))
+      SHOW -> ready when (or (= @entity.open "") (= (array/find @entity.items (fn i (= @i.pointer @entity.open))) null))
+    }
+
+    ticks {
+      reviewSettle every 100ms
+        when (and @entity.pending (>= (time/diff @now (default @entity.editedAt @now)) @config.analyzeMs))
+        (set @entity.pending false)
+        (emit TRANSITIONS_OF { key: (str/concat @entity.version), path: @entity.path, text: @entity.text })
+        (emit GIT_STEP { requestId: (str/concat "blame:" @entity.version), cwd: (os/path-dir @entity.path), op: "blame", args: [(os/path-base @entity.path), @entity.text] })
+      reviewDwell every 100ms
+        when (and @entity.armed (>= (time/diff @now (default @entity.armedAt @now)) @config.dwellMs))
+        (set @entity.armed false)
+        (emit REVIEW_AT { row: @entity.armRow })
+    }
+
+    emits {
+      TRANSITIONS_OF -> external {
+        key : string!
+        path : string!
+        text : string!
+      }
+        @description "Ask std-lolo-transitions for the file's transitions."
+        @tier "internal"
+      GIT_STEP -> external {
+        requestId : string!
+        cwd : string!
+        op : string!
+        args : [string]!
+      }
+        @description "Ask std-git who last changed each line of the unsaved text."
+        @tier "internal"
+      TV_INDEX_PACKAGES -> external {
+        rebuild : boolean!
+      }
+        @description "Ask std-transition-vectors to load or build the catalog index once."
+        @tier "internal"
+      TV_NEAREST -> external {
+        requestId : string!
+        items : [LrAsk]!
+      }
+        @description "Ask std-transition-vectors for each transition's nearest catalog transitions."
+        @tier "internal"
+      LLM_GENERATE -> external {
+        key : string!
+        model : string!
+        temperature : number!
+        maxTokens : number!
+        systemPrompt : string!
+        userPrompt : string!
+      }
+        @description "Ask the model to judge one transition against the rules."
+        @tier "internal"
+      LLM_CANCEL -> external {
+        key : string!
+      }
+        @description "Drop the answer the user left before it came."
+        @tier "internal"
+      DECORATE -> external {
+        editorId : string!
+        source : string!
+        ranges : [LrRange]!
+      }
+        @description "The review flags, for std-text-buffer."
+        @synonyms "review highlights"
+        @tier "primary"
+      CLEAR_DECORATIONS -> external {
+        editorId : string!
+        source : string!
+      }
+        @tier "secondary"
+      POPOVER -> external {
+        editorId : string!
+        popover : LrPopover!
+      }
+        @description "The review of one transition, for std-text-buffer."
+        @synonyms "review note, transition review"
+        @tier "primary"
+      CLOSE_POPOVER -> external {
+        editorId : string!
+      }
+        @tier "secondary"
+      FLAG -> internal { }
+        @tier "internal"
+      SHOW -> internal { }
+        @tier "internal"
+      CLOSE -> internal { }
+        @tier "internal"
+      CANCEL_ASK -> internal { }
+        @tier "internal"
+      ASK -> internal {
+        pointer : string!
+      }
+        @tier "internal"
+      REVIEW_AT -> internal {
+        row : number!
+      }
+        @tier "internal"
+    }
+
+    listens {
+      BUFFER_EDITED { editorId : string!  path : string!  version : number!  text : string!  dirty : boolean! }
+        @description "The open file changed."
+      CURSOR_MOVED { editorId : string!  row : number!  col : number!  mode : string! }
+        @description "The cursor moved; resting on a transition reviews it."
+      EDITOR_HOVER { editorId : string!  row : number!  col : number! }
+        @description "The pointer moved; resting on a transition reviews it."
+      REVIEW_NOW { editorId : string }
+        @description "Review the transition under the cursor now (the K key)."
+        @synonyms "hover, explain this"
+      TRANSITIONS { key : string!  path : string!  items : [LrItem]! }
+      TRANSITIONS_FAILED { key : string!  path : string!  error : string! }
+      GIT_DONE { requestId : string!  op : string!  exitCode : number!  stdout : string!  stderr : string! }
+      GIT_FAILED { requestId : string!  op : string!  code : string!  stderr : string! }
+      TV_PEERS { requestId : string!  results : [LrResult]! }
+      TV_PROGRESS { done : number!  total : number! }
+      TV_READY { count : number!  model : string! }
+      TV_REFUSED { code : string!  detail : string! }
+      LLM_GENERATE_RESULT { content : string! }
+      LLM_FAILED { code : string  message : string!  key : string }
+      LLM_CANCELLED { key : string! }
+    }
+
+    config {
+      fileSuffix : string = ".lolo"
+        @label "Reviewed files"
+        @description "Only files whose path ends with this are reviewed."
+        @tier "domain"
+      analyzeMs : number = 800
+        @label "Quiet time before analysis"
+        @description "How long after the last edit the file is outlined, blamed and matched."
+        @tier "presentation"
+      dwellMs : number = 600
+        @label "Dwell time"
+        @description "How long the cursor or pointer rests on a transition before it is reviewed."
+        @synonyms "hover delay"
+        @tier "presentation"
+      recentHours : number = 24
+        @label "Recent edit window"
+        @description "A transition with a line committed within this many hours, or not committed, is flagged as recently edited."
+        @tier "domain"
+      driftThreshold : number = 0.75
+        @label "Drift threshold"
+        @description "A transition whose most similar catalog transition scores below this cosine similarity is flagged as departing from the norm."
+        @synonyms "norm, similarity threshold"
+        @tier "domain"
+      model : string = "ternary-bonsai-2-27b"
+        @label "Review model"
+        @description "The model the review asks (served by the composer's std-llm, e.g. LM Studio)."
+        @tier "infra"
+      temperature : number = 0.2
+        @label "Temperature"
+        @tier "infra"
+      maxTokens : number = 400
+        @label "Answer length budget"
+        @description "The token budget of one review answer."
+        @tier "infra"
+      rules : [LrRule] = [
+          { id: "R01", source: "EXEC-QUEUE-2", text: "A trait's own emits that it handles run before any listener delivery; do not rely on a listener running between two of the trait's own steps." },
+          { id: "R02", source: "EXEC-QUEUE-4", text: "Two identical deliveries in one dispatch collapse into one; repeated emits need distinct payloads." },
+          { id: "R03", source: "EXEC-QUEUE-7", text: "A trait hears another trait's emit only through a listens edge naming the source; an arm with the same event name is not a listen." },
+          { id: "R04", source: "EXEC-QUEUE-3", text: "A listen's when guard reads the raw source payload, before its with mapping." },
+          { id: "R05", source: "EXEC-TICK-1", text: "A tick runs only in the states it names; a tick naming none fires in every state." },
+          { id: "R06", source: "EXEC-TICK-3", text: "A client tick may not carry server work." },
+          { id: "R07", source: "EXEC-STEP-8", text: "A persist or fetch can fail with an error and a code; the failure emit must be handled, never assumed away." },
+          { id: "R08", source: "EXEC-EVAL-10", text: "A loose value is narrowed with (as value T) or read through its declared shape; an unchecked shape is never trusted." },
+          { id: "R09", source: "EXEC-BOUND", text: "Hosts only paint and answer raw input and output; filtering, ordering, defaults and decisions stay in the trait." },
+          { id: "R10", source: "CLAUDE.md nothing implicit", text: "Data, order, visibility and security change only because a .lolo line says so; no hidden defaults or derived effects." },
+          { id: "R11", source: "CLAUDE.md no heuristics", text: "No text, label or name matching and no guessed fallbacks to decide behaviour; one declared contract per concept." },
+          { id: "R12", source: "CLAUDE.md no json round trip", text: "Never json/stringify then json/parse a value already held; parse only text that arrives as text." },
+          { id: "R13", source: "CLAUDE.md never truncate", text: "No str/slice, array/take or length cap that drops content without a declared reason." },
+          { id: "R14", source: "CLAUDE.md type safety", text: "No any, json, bare object or bare array types; declare the shape." },
+          { id: "R15", source: "CLAUDE.md closed circuit", text: "Every emit reaches a listener or a declared external consumer, and every listened event is produced somewhere." },
+          { id: "R16", source: "CLAUDE.md upstream first", text: "Compose the atom that owns a mechanism; never re-author its states or transitions at a call site or copy it." },
+          { id: "R17", source: "CLAUDE.md composed listens", text: "Composed-trait listens replace the atom's set; restate every listen that must stay." },
+          { id: "R18", source: "CLAUDE.md substrate", text: "A std behavior never uses an io behavior; generic mechanisms live in std, themed realizations in io." },
+          { id: "R19", source: "determinism", text: "Arms on one event from one state need mutually exclusive guards; an unguarded arm shadows the rest." },
+          { id: "R20", source: "ORB_CIRCUIT_INIT_UNCOVERED_STATE", text: "Every reachable state of a page trait handles INIT." }
+        ]
+        @label "Review rules"
+        @description "The rules the model judges a transition against, each { id, text, source }: the EXEC rule or CLAUDE.md rule it comes from."
+        @synonyms "review rules, checklist"
+        @tier "domain"
+    }
+  }
+
+  page boot as LoloReviewStart -> LoloReview
+}

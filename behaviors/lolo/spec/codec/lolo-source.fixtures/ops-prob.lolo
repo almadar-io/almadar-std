@@ -15,14 +15,13 @@
 ;; prob/beta a b = x / (x + y) with x = gamma_variate(a) then y = gamma_variate(b).
 ;; prob/categorical items weights: r = next() * sum(weights); subtract each weight in order, return the first item where r <= 0 (last item otherwise).
 ;; prob/poisson lambda: limit = exp(-lambda); k = 0; p = 1; loop { k += 1; p *= next(); stop when p <= limit }; answer k - 1.
-;; prob/sample n expr evaluates expr n times on the same stream.  prob/infer and prob/posterior run the model on a private entity copy per sample (rejection sampling).
+;; prob/sample n expr evaluates expr n times on the same stream.  prob/infer and prob/posterior are excluded.
 ;; Seed 42 first draws: 0.6011037519201636, 0.44829055899754167, 0.8524657934904099.
 app ops-prob [
   version: "1.0.0",
   description: "Native renderers operator fixture: the prob family's pure operators on literal inputs, with edge cases."
 ]
 type Hist = { binEdges : [number]!, counts : [number]! }
-type Inf = { mean : number!, variance : number!, samples : [number]!, acceptRate : number! }
 orbital OpsOrbital {
   entity Ops [runtime] {
     id : string!
@@ -76,10 +75,6 @@ orbital OpsOrbital {
     ciD : [number]?
     ciE : [number]?
     x : number = 0
-    inferA : Inf
-    inferB : Inf
-    postA : [number] = []
-    postB : [number] = []
   }
   trait Probe -> Ops {
     initial: idle
@@ -135,10 +130,6 @@ orbital OpsOrbital {
         (set @entity.ciD (let ((een : [number] [])) (prob/credible-interval @een 0.1)))
         (set @entity.ciE (prob/credible-interval [7] 0.1))
         (set @entity.x 0)
-        (set @entity.inferA (prob/infer (do (set @entity.x (prob/gaussian 0 1)) 1) true @entity.x 5))
-        (set @entity.inferB (prob/infer (do (set @entity.x (prob/uniform 0 1)) 1) (< @entity.x 0.5) @entity.x 10))
-        (set @entity.postA (prob/posterior (do (set @entity.x (prob/uniform 0 1)) 1) (< @entity.x 0.5) @entity.x 6))
-        (set @entity.postB (prob/posterior (do (set @entity.x (prob/gaussian 0 1)) 1) true @entity.x 0))
     }
   }
   page boot as OpsStart -> Probe

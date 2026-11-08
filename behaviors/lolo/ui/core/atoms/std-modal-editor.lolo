@@ -2,6 +2,8 @@ app std-modal-editor [
   version: "0.1.0",
   description: "UI substrate: modal keyboard editing over any editable CodeBlock. The topology is fixed (NORMAL / INSERT / VISUAL / OPERATOR_PENDING / COMMAND) and every binding is config: mode-entry keys, motions, operators, ex-commands, the digit table that accumulates a repeat count, and the per-mode captured-key table the host's keyboard router reads. Vim ships as the default flavor; a Kakoune/Helix binding is the same topology with different config, never a fork. Emits are the mechanical vocabulary an editable CodeBlock listens to (SET_MODE / MOTION / OPERATE / INSERT_TEXT) plus one neutral EX_COMMAND for a buffered ':' line — std names no host command; a realization maps EX_COMMAND.name onto its own host vocabulary. A bare EDITOR_FOCUS listen lets every state re-announce its SET_MODE (block caret in NORMAL/VISUAL/OPERATOR_PENDING/COMMAND, bar in INSERT) when the host focuses a different editor surface."
 ]
+type MacroKey = { key : string!, code : string!, ctrl : boolean!, alt : boolean!, shift : boolean!, meta : boolean! }
+
 orbital ModalEditorOrbital {
   entity EditorMode [runtime] {
     id : string!
@@ -13,6 +15,20 @@ orbital ModalEditorOrbital {
     lastOperator : string = ""
     lastMotion : string = ""
     lastCount : number = 0
+    cmdKind : string = ""
+    visualKind : string = "char"
+    markKind : string = ""
+    sequence : string = ""
+    recording : string = ""
+    lastMacro : string = ""
+  }
+
+  entity MacroStore [runtime] {
+    id : string!
+    editorId : string = ""
+    recording : string = ""
+    macros : Map string [MacroKey] = {}
+    queue : [MacroKey] = []
   }
 
   trait Modes -> @rebindable EditorMode [client] {
@@ -64,12 +80,65 @@ orbital ModalEditorOrbital {
 
       KEY -> VISUAL when (= ?key @config.visualKey)
         (set @entity.editorId ?editorId)
+        (set @entity.visualKind "char")
         (emit SET_MODE { editorId: ?editorId, mode: "VISUAL", caret: "block", keys: (object/get @config.keymap VISUAL []) })
 
-      KEY -> COMMAND when (= ?key @config.commandKey)
+      KEY -> VISUAL when (= ?key @config.visualLineKey)
+        (set @entity.editorId ?editorId)
+        (set @entity.visualKind "line")
+        (emit SET_MODE { editorId: ?editorId, mode: "VISUAL_LINE", caret: "block", keys: (object/get @config.keymap VISUAL []) })
+
+      KEY -> COMMAND when (array/includes [@config.commandKey, @config.searchKey, @config.searchBackKey] ?key)
         (set @entity.editorId ?editorId)
         (set @entity.cmdline "")
+        (set @entity.cmdKind ?key)
         (emit SET_MODE { editorId: ?editorId, mode: "COMMAND", caret: "block", keys: (object/get @config.keymap COMMAND []) })
+        (emit CMDLINE_CHANGED { editorId: ?editorId, kind: ?key, text: "" })
+
+      KEY -> NORMAL when (and (= ?key @config.searchNextKey) (not ?ctrl))
+        (emit SEARCH_NEXT { editorId: ?editorId, reverse: false })
+      KEY -> NORMAL when (and (= ?key @config.searchPrevKey) (not ?ctrl))
+        (emit SEARCH_NEXT { editorId: ?editorId, reverse: true })
+
+      KEY -> OPERATOR_PENDING when (and (= ?key @config.registerKey) (not ?ctrl))
+        (set @entity.editorId ?editorId)
+        (set @entity.operator "register")
+        (set @entity.operatorKey ?key)
+      KEY -> OPERATOR_PENDING when (and (= ?key @config.markSetKey) (not ?ctrl))
+        (set @entity.editorId ?editorId)
+        (set @entity.operator "mark-set")
+        (set @entity.operatorKey ?key)
+      KEY -> OPERATOR_PENDING when (and (= ?key @config.markLineKey) (not ?ctrl))
+        (set @entity.editorId ?editorId)
+        (set @entity.operator "mark-jump-line")
+        (set @entity.operatorKey ?key)
+      KEY -> OPERATOR_PENDING when (and (= ?key @config.markExactKey) (not ?ctrl))
+        (set @entity.editorId ?editorId)
+        (set @entity.operator "mark-jump-exact")
+        (set @entity.operatorKey ?key)
+      KEY -> OPERATOR_PENDING when (and (= ?key @config.macroKey) (not ?ctrl) (= @entity.recording ""))
+        (set @entity.editorId ?editorId)
+        (set @entity.operator "macro-record")
+        (set @entity.operatorKey ?key)
+      KEY -> NORMAL when (and (= ?key @config.macroKey) (not ?ctrl) (!= @entity.recording ""))
+        (set @entity.recording "")
+        (emit MACRO_STOP { editorId: ?editorId, key: ?key })
+      KEY -> OPERATOR_PENDING when (and (= ?key @config.macroPlayKey) (not ?ctrl))
+        (set @entity.editorId ?editorId)
+        (set @entity.operator "macro-play")
+        (set @entity.operatorKey ?key)
+      KEY -> OPERATOR_PENDING when (and (= ?key @config.windowKey) ?ctrl)
+        (set @entity.editorId ?editorId)
+        (set @entity.operator "window")
+        (set @entity.operatorKey ?key)
+      KEY -> OPERATOR_PENDING when (and (= ?key @config.leaderKey) (not ?ctrl) (> (array/len (object/keys @config.leaderMaps)) 0))
+        (set @entity.editorId ?editorId)
+        (set @entity.operator "leader")
+        (set @entity.operatorKey ?key)
+        (set @entity.sequence "")
+      KEY -> NORMAL when (and (object/has @config.normalCommands ?key) (not ?ctrl))
+        (set @entity.count 0)
+        (emit EX_COMMAND { editorId: ?editorId, name: (object/get @config.normalCommands ?key ""), args: "" })
 
       KEY -> OPERATOR_PENDING when (object/has @config.operators ?key)
         (set @entity.editorId ?editorId)
@@ -133,7 +202,7 @@ orbital ModalEditorOrbital {
       KEY -> NORMAL when (and (object/has @config.digits ?key) (or (!= ?key "0") (> @entity.count 0)))
         (set @entity.count (+ (* @entity.count 10) (object/get @config.digits ?key)))
 
-      KEY -> NORMAL when (object/has @config.motions ?key)
+      KEY -> NORMAL when (and (object/has @config.motions ?key) (not ?ctrl))
         (set @entity.editorId ?editorId)
         (emit MOTION { editorId: ?editorId, motion: (object/get @config.motions ?key), count: (if (> @entity.count 0) @entity.count 1) })
         (set @entity.count 0)
@@ -151,6 +220,16 @@ orbital ModalEditorOrbital {
     state INSERT {
       INIT -> NORMAL
         (set @entity.count 0)
+      KEY -> INSERT when (and (= (str/len ?key) 1) (not ?ctrl) (not (default ?meta false)))
+        (emit TYPE { editorId: ?editorId, text: ?key })
+      KEY -> INSERT when (= ?key "Enter")
+        (emit TYPE { editorId: ?editorId, text: "\n" })
+      KEY -> INSERT when (= ?key "Tab")
+        (emit TYPE { editorId: ?editorId, text: @config.tabText })
+      KEY -> INSERT when (= ?key "Backspace")
+        (emit BACKSPACE { editorId: ?editorId })
+      KEY -> INSERT when (object/has @config.insertMotions ?key)
+        (emit MOTION { editorId: ?editorId, motion: (object/get @config.insertMotions ?key ""), count: 1 })
       KEY -> NORMAL when (= ?key "Escape")
         (emit MOTION { editorId: ?editorId, motion: "left", count: 1 })
         (emit SET_MODE { editorId: ?editorId, mode: "NORMAL", caret: "block", keys: (object/get @config.keymap NORMAL []) })
@@ -199,13 +278,22 @@ orbital ModalEditorOrbital {
         (set @entity.lastCount 1)
         (emit SET_MODE { editorId: ?editorId, mode: "NORMAL", caret: "block", keys: (object/get @config.keymap NORMAL []) })
 
+      KEY -> VISUAL when (and (= ?key @config.visualKey) (= @entity.visualKind "line"))
+        (set @entity.visualKind "char")
+        (emit SET_MODE { editorId: ?editorId, mode: "VISUAL", caret: "block", keys: (object/get @config.keymap VISUAL []) })
+      KEY -> VISUAL when (and (= ?key @config.visualLineKey) (= @entity.visualKind "char"))
+        (set @entity.visualKind "line")
+        (emit SET_MODE { editorId: ?editorId, mode: "VISUAL_LINE", caret: "block", keys: (object/get @config.keymap VISUAL []) })
+      KEY -> NORMAL when (or (and (= ?key @config.visualKey) (= @entity.visualKind "char")) (and (= ?key @config.visualLineKey) (= @entity.visualKind "line")))
+        (set @entity.count 0)
+        (emit SET_MODE { editorId: ?editorId, mode: "NORMAL", caret: "block", keys: (object/get @config.keymap NORMAL []) })
       KEY -> VISUAL when (object/has @config.motions ?key)
         (emit MOTION { editorId: ?editorId, motion: (object/get @config.motions ?key), count: (if (> @entity.count 0) @entity.count 1) })
         (set @entity.count 0)
 
       EDITOR_FOCUS -> VISUAL
         (set @entity.editorId ?editorId)
-        (emit SET_MODE { editorId: ?editorId, mode: "VISUAL", caret: "block", keys: (object/get @config.keymap VISUAL []) })
+        (emit SET_MODE { editorId: ?editorId, mode: (if (= @entity.visualKind "line") "VISUAL_LINE" "VISUAL"), caret: "block", keys: (object/get @config.keymap VISUAL []) })
     }
 
     state OPERATOR_PENDING {
@@ -217,7 +305,7 @@ orbital ModalEditorOrbital {
         (set @entity.operatorKey "")
         (set @entity.count 0)
 
-      KEY -> INSERT when (and (= ?key @entity.operatorKey) (= @entity.operator "change"))
+      KEY -> INSERT when (and (= ?key @entity.operatorKey) (= @entity.operator "change") (= @entity.markKind ""))
         (emit OPERATE { editorId: ?editorId, operator: @entity.operator, motion: "line", count: (if (> @entity.count 0) @entity.count 1) })
         (set @entity.lastOperator @entity.operator)
         (set @entity.lastMotion "line")
@@ -227,7 +315,7 @@ orbital ModalEditorOrbital {
         (set @entity.count 0)
         (emit SET_MODE { editorId: ?editorId, mode: "INSERT", caret: "bar", keys: (object/get @config.keymap INSERT []) })
 
-      KEY -> NORMAL when (and (= ?key @entity.operatorKey) (!= @entity.operator "change") (!= @entity.operator "goto") (!= @entity.operator "replace"))
+      KEY -> NORMAL when (and (= ?key @entity.operatorKey) (!= @entity.operator "change") (not (array/includes ["goto", "replace", "register", "mark-set", "mark-jump-line", "mark-jump-exact", "macro-record", "macro-play", "window", "leader"] @entity.operator)) (= @entity.markKind ""))
         (emit OPERATE { editorId: ?editorId, operator: @entity.operator, motion: "line", count: (if (> @entity.count 0) @entity.count 1) })
         (set @entity.lastOperator @entity.operator)
         (set @entity.lastMotion "line")
@@ -236,7 +324,7 @@ orbital ModalEditorOrbital {
         (set @entity.operatorKey "")
         (set @entity.count 0)
 
-      KEY -> INSERT when (and (object/has @config.motions ?key) (= @entity.operator "change"))
+      KEY -> INSERT when (and (object/has @config.motions ?key) (= @entity.operator "change") (= @entity.markKind ""))
         (emit OPERATE { editorId: ?editorId, operator: @entity.operator, motion: (object/get @config.motions ?key), count: (if (> @entity.count 0) @entity.count 1) })
         (set @entity.lastOperator @entity.operator)
         (set @entity.lastMotion (default (object/get @config.motions ?key) ""))
@@ -246,7 +334,7 @@ orbital ModalEditorOrbital {
         (set @entity.count 0)
         (emit SET_MODE { editorId: ?editorId, mode: "INSERT", caret: "bar", keys: (object/get @config.keymap INSERT []) })
 
-      KEY -> NORMAL when (and (object/has @config.motions ?key) (!= @entity.operator "change") (!= @entity.operator "goto") (!= @entity.operator "replace"))
+      KEY -> NORMAL when (and (object/has @config.motions ?key) (!= @entity.operator "change") (not (array/includes ["goto", "replace", "register", "mark-set", "mark-jump-line", "mark-jump-exact", "macro-record", "macro-play", "window", "leader"] @entity.operator)) (= @entity.markKind ""))
         (emit OPERATE { editorId: ?editorId, operator: @entity.operator, motion: (object/get @config.motions ?key), count: (if (> @entity.count 0) @entity.count 1) })
         (set @entity.lastOperator @entity.operator)
         (set @entity.lastMotion (default (object/get @config.motions ?key) ""))
@@ -255,7 +343,7 @@ orbital ModalEditorOrbital {
         (set @entity.operatorKey "")
         (set @entity.count 0)
 
-      KEY -> OPERATOR_PENDING when (and (object/has @config.digits ?key) (or (!= ?key "0") (> @entity.count 0)) (!= @entity.operator "goto") (!= @entity.operator "replace"))
+      KEY -> OPERATOR_PENDING when (and (object/has @config.digits ?key) (or (!= ?key "0") (> @entity.count 0)) (not (array/includes ["goto", "replace", "register", "mark-set", "mark-jump-line", "mark-jump-exact", "macro-record", "macro-play", "window", "leader"] @entity.operator)) (= @entity.markKind ""))
         (set @entity.count (+ (* @entity.count 10) (object/get @config.digits ?key)))
 
       KEY -> NORMAL when (and (= @entity.operator "replace") (!= ?key "Escape"))
@@ -272,6 +360,92 @@ orbital ModalEditorOrbital {
       KEY -> NORMAL when (= ?key "Escape")
         (set @entity.operator "")
         (set @entity.operatorKey "")
+        (set @entity.markKind "")
+        (set @entity.sequence "")
+        (set @entity.count 0)
+
+      KEY -> OPERATOR_PENDING when (and (array/includes [@config.markLineKey, @config.markExactKey] ?key) (not (array/includes ["goto", "replace", "register", "mark-set", "mark-jump-line", "mark-jump-exact", "macro-record", "macro-play", "window", "leader"] @entity.operator)) (= @entity.markKind ""))
+        (set @entity.markKind (if (= ?key @config.markLineKey) "line" "exact"))
+      KEY -> INSERT when (and (!= ?key "Escape") (!= @entity.markKind "") (= @entity.operator "change"))
+        (emit OPERATE { editorId: ?editorId, operator: @entity.operator, motion: (if (= @entity.markKind "line") "mark-line" "mark-exact"), count: 1, mark: ?key })
+        (set @entity.operator "")
+        (set @entity.operatorKey "")
+        (set @entity.markKind "")
+        (set @entity.sequence "")
+        (set @entity.count 0)
+        (emit SET_MODE { editorId: ?editorId, mode: "INSERT", caret: "bar", keys: (object/get @config.keymap INSERT []) })
+      KEY -> NORMAL when (and (!= ?key "Escape") (!= @entity.markKind "") (!= @entity.operator "change"))
+        (emit OPERATE { editorId: ?editorId, operator: @entity.operator, motion: (if (= @entity.markKind "line") "mark-line" "mark-exact"), count: 1, mark: ?key })
+        (set @entity.operator "")
+        (set @entity.operatorKey "")
+        (set @entity.markKind "")
+        (set @entity.sequence "")
+        (set @entity.count 0)
+
+      KEY -> NORMAL when (and (= @entity.operator "register") (!= ?key "Escape"))
+        (emit SELECT_REGISTER { editorId: ?editorId, name: ?key })
+        (set @entity.operator "")
+        (set @entity.operatorKey "")
+        (set @entity.markKind "")
+        (set @entity.sequence "")
+        (set @entity.count 0)
+      KEY -> NORMAL when (and (= @entity.operator "mark-set") (!= ?key "Escape"))
+        (emit MARK_SET { editorId: ?editorId, name: ?key })
+        (set @entity.operator "")
+        (set @entity.operatorKey "")
+        (set @entity.markKind "")
+        (set @entity.sequence "")
+        (set @entity.count 0)
+      KEY -> NORMAL when (and (array/includes ["mark-jump-line", "mark-jump-exact"] @entity.operator) (!= ?key "Escape"))
+        (emit MARK_JUMP { editorId: ?editorId, name: ?key, exact: (= @entity.operator "mark-jump-exact") })
+        (set @entity.operator "")
+        (set @entity.operatorKey "")
+        (set @entity.markKind "")
+        (set @entity.sequence "")
+        (set @entity.count 0)
+      KEY -> NORMAL when (and (= @entity.operator "macro-record") (!= ?key "Escape"))
+        (set @entity.recording ?key)
+        (emit MACRO_RECORD { editorId: ?editorId, register: ?key })
+        (set @entity.operator "")
+        (set @entity.operatorKey "")
+        (set @entity.markKind "")
+        (set @entity.sequence "")
+        (set @entity.count 0)
+      KEY -> NORMAL when (and (= @entity.operator "macro-play") (!= ?key "Escape"))
+        (emit MACRO_PLAY { editorId: ?editorId, register: (if (= ?key @config.macroPlayKey) @entity.lastMacro ?key), count: (if (> @entity.count 0) @entity.count 1) })
+        (set @entity.lastMacro (if (= ?key @config.macroPlayKey) @entity.lastMacro ?key))
+        (set @entity.operator "")
+        (set @entity.operatorKey "")
+        (set @entity.markKind "")
+        (set @entity.sequence "")
+        (set @entity.count 0)
+      KEY -> NORMAL when (and (= @entity.operator "window") (!= ?key "Escape") (object/has @config.windowKeys ?key))
+        (emit EX_COMMAND { editorId: ?editorId, name: (object/get @config.windowKeys ?key ""), args: "" })
+        (set @entity.operator "")
+        (set @entity.operatorKey "")
+        (set @entity.markKind "")
+        (set @entity.sequence "")
+        (set @entity.count 0)
+      KEY -> NORMAL when (and (= @entity.operator "window") (!= ?key "Escape") (not (object/has @config.windowKeys ?key)))
+        (set @entity.operator "")
+        (set @entity.operatorKey "")
+        (set @entity.markKind "")
+        (set @entity.sequence "")
+        (set @entity.count 0)
+      KEY -> NORMAL when (and (= @entity.operator "leader") (!= ?key "Escape") (object/has @config.leaderMaps (str/concat @entity.sequence ?key)))
+        (emit EX_COMMAND { editorId: ?editorId, name: (object/get @config.leaderMaps (str/concat @entity.sequence ?key) ""), args: "" })
+        (set @entity.operator "")
+        (set @entity.operatorKey "")
+        (set @entity.markKind "")
+        (set @entity.sequence "")
+        (set @entity.count 0)
+      KEY -> OPERATOR_PENDING when (and (= @entity.operator "leader") (!= ?key "Escape") (not (object/has @config.leaderMaps (str/concat @entity.sequence ?key))) (array/some (object/keys @config.leaderMaps) (fn k (str/startsWith @k (str/concat @entity.sequence ?key)))))
+        (set @entity.sequence (str/concat @entity.sequence ?key))
+      KEY -> NORMAL when (and (= @entity.operator "leader") (!= ?key "Escape") (not (array/some (object/keys @config.leaderMaps) (fn k (str/startsWith @k (str/concat @entity.sequence ?key))))))
+        (set @entity.operator "")
+        (set @entity.operatorKey "")
+        (set @entity.markKind "")
+        (set @entity.sequence "")
         (set @entity.count 0)
 
       KEY -> NORMAL when (and (= @entity.operator "goto") (!= ?key "Escape") (!= ?key @entity.operatorKey))
@@ -289,23 +463,46 @@ orbital ModalEditorOrbital {
         (set @entity.count 0)
       KEY -> COMMAND when (= ?key "Backspace")
         (set @entity.cmdline (str/slice @entity.cmdline 0 (- (str/len @entity.cmdline) 1)))
+        (emit CMDLINE_CHANGED { editorId: ?editorId, kind: @entity.cmdKind, text: @entity.cmdline })
 
-      KEY -> NORMAL when (and (= ?key "Enter") (object/has @config.exCommands @entity.cmdline))
-        (emit EX_COMMAND { editorId: ?editorId, name: (object/get @config.exCommands @entity.cmdline) })
+      KEY -> NORMAL when (and (= ?key "Enter") (= @entity.cmdKind @config.commandKey) (object/has @config.exCommands (default (array/first (str/split @entity.cmdline " ")) "")))
+        (emit EX_COMMAND { editorId: ?editorId, name: (object/get @config.exCommands (default (array/first (str/split @entity.cmdline " ")) "") ""), args: (if (str/includes @entity.cmdline " ") (str/trim (str/slice @entity.cmdline (+ (str/len (default (array/first (str/split @entity.cmdline " ")) "")) 1) (str/len @entity.cmdline))) "") })
         (set @entity.cmdline "")
+        (set @entity.cmdKind "")
+        (emit CMDLINE_CHANGED { editorId: ?editorId, kind: "", text: "" })
         (emit SET_MODE { editorId: ?editorId, mode: "NORMAL", caret: "block", keys: (object/get @config.keymap NORMAL []) })
-
-      KEY -> NORMAL when (and (= ?key "Enter") (not (object/has @config.exCommands @entity.cmdline)))
+      KEY -> NORMAL when (and (= ?key "Enter") (= @entity.cmdKind @config.commandKey) (not (object/has @config.exCommands (default (array/first (str/split @entity.cmdline " ")) ""))) @config.passUnknown (!= (default (array/first (str/split @entity.cmdline " ")) "") ""))
+        (emit EX_COMMAND { editorId: ?editorId, name: (default (array/first (str/split @entity.cmdline " ")) ""), args: (if (str/includes @entity.cmdline " ") (str/trim (str/slice @entity.cmdline (+ (str/len (default (array/first (str/split @entity.cmdline " ")) "")) 1) (str/len @entity.cmdline))) "") })
         (set @entity.cmdline "")
+        (set @entity.cmdKind "")
+        (emit CMDLINE_CHANGED { editorId: ?editorId, kind: "", text: "" })
         (emit SET_MODE { editorId: ?editorId, mode: "NORMAL", caret: "block", keys: (object/get @config.keymap NORMAL []) })
-
+      KEY -> NORMAL when (and (= ?key "Enter") (= @entity.cmdKind @config.commandKey) (not (object/has @config.exCommands (default (array/first (str/split @entity.cmdline " ")) ""))) (or (not @config.passUnknown) (= (default (array/first (str/split @entity.cmdline " ")) "") "")))
+        (set @entity.cmdline "")
+        (set @entity.cmdKind "")
+        (emit CMDLINE_CHANGED { editorId: ?editorId, kind: "", text: "" })
+        (emit SET_MODE { editorId: ?editorId, mode: "NORMAL", caret: "block", keys: (object/get @config.keymap NORMAL []) })
+      KEY -> NORMAL when (and (= ?key "Enter") (!= @entity.cmdKind @config.commandKey) (!= @entity.cmdline ""))
+        (emit SEARCH { editorId: ?editorId, pattern: @entity.cmdline, forward: (= @entity.cmdKind @config.searchKey) })
+        (set @entity.cmdline "")
+        (set @entity.cmdKind "")
+        (emit CMDLINE_CHANGED { editorId: ?editorId, kind: "", text: "" })
+        (emit SET_MODE { editorId: ?editorId, mode: "NORMAL", caret: "block", keys: (object/get @config.keymap NORMAL []) })
+      KEY -> NORMAL when (and (= ?key "Enter") (!= @entity.cmdKind @config.commandKey) (= @entity.cmdline ""))
+        (set @entity.cmdline "")
+        (set @entity.cmdKind "")
+        (emit CMDLINE_CHANGED { editorId: ?editorId, kind: "", text: "" })
+        (emit SET_MODE { editorId: ?editorId, mode: "NORMAL", caret: "block", keys: (object/get @config.keymap NORMAL []) })
       KEY -> NORMAL when (= ?key "Escape")
         (set @entity.cmdline "")
+        (set @entity.cmdKind "")
+        (emit CMDLINE_CHANGED { editorId: ?editorId, kind: "", text: "" })
         (emit SET_MODE { editorId: ?editorId, mode: "NORMAL", caret: "block", keys: (object/get @config.keymap NORMAL []) })
 
       ;; a keymap with no COMMAND keys matches no command key
-      KEY -> COMMAND when (and (array/includes (object/get @config.keymap "COMMAND" []) ?key) (!= ?key "Enter") (!= ?key "Escape") (!= ?key "Backspace"))
+      KEY -> COMMAND when (and (or (array/includes (object/get @config.keymap "COMMAND" []) ?key) (and @config.commandLineAnyChar (= (str/len ?key) 1) (not ?ctrl))) (!= ?key "Enter") (!= ?key "Escape") (!= ?key "Backspace"))
         (set @entity.cmdline (str/concat @entity.cmdline ?key))
+        (emit CMDLINE_CHANGED { editorId: ?editorId, kind: @entity.cmdKind, text: @entity.cmdline })
 
       EDITOR_FOCUS -> COMMAND
         (set @entity.editorId ?editorId)
@@ -313,6 +510,7 @@ orbital ModalEditorOrbital {
     }
 
     listens {
+      Macros.REPLAY_KEY -> KEY
       KEY {
         editorId : string
         key : string!
@@ -351,9 +549,76 @@ orbital ModalEditorOrbital {
         operator : string
         motion : string
         count : number
+        mark : string
       }
         @description "Apply a config-declared operator (delete | yank | change | put | put-before | undo | redo | join | toggle-case | indent | dedent | replace) over the range a motion describes; `line` for doubled operators, `selection` in VISUAL, and a fixed `right` placeholder for the point operators (put | put-before | undo | redo) which the editor ignores."
         @tier "primary"
+      TYPE -> external {
+        editorId : string
+        text : string
+      }
+        @description "Text typed while inserting (a printable key, Enter as a newline, Tab as tabText)."
+        @tier "primary"
+      BACKSPACE -> external {
+        editorId : string
+      }
+        @description "Backspace pressed while inserting."
+        @tier "secondary"
+      SELECT_REGISTER -> external {
+        editorId : string
+        name : string
+      }
+        @description "The next yank, delete or put uses this register (typed after the register key)."
+        @tier "secondary"
+      MARK_SET -> external {
+        editorId : string
+        name : string
+      }
+        @description "Remember the cursor under the mark name typed after the mark key."
+        @tier "secondary"
+      MARK_JUMP -> external {
+        editorId : string
+        name : string
+        exact : boolean
+      }
+        @description "Return to a mark: its exact column, or its line's first non-blank."
+        @tier "secondary"
+      SEARCH -> external {
+        editorId : string
+        pattern : string
+        forward : boolean
+      }
+        @description "The search line typed after the forward or backward search key."
+        @tier "secondary"
+      SEARCH_NEXT -> external {
+        editorId : string
+        reverse : boolean
+      }
+        @description "Repeat the last search in its own direction, or reversed."
+        @tier "secondary"
+      CMDLINE_CHANGED -> external {
+        editorId : string
+        kind : string
+        text : string
+      }
+        @description "The command or search line as typed so far; kind is the key that opened it, empty once it closes."
+        @tier "secondary"
+      MACRO_RECORD -> internal {
+        editorId : string
+        register : string
+      }
+        @tier "internal"
+      MACRO_STOP -> internal {
+        editorId : string
+        key : string
+      }
+        @tier "internal"
+      MACRO_PLAY -> internal {
+        editorId : string
+        register : string
+        count : number
+      }
+        @tier "internal"
       INSERT_TEXT -> external {
         editorId : string
         text : string
@@ -363,6 +628,7 @@ orbital ModalEditorOrbital {
       EX_COMMAND -> external {
         editorId : string
         name : string
+        args : string
       }
         @description "A buffered ':' line resolved through config.exCommands. `name` is a neutral config-declared string; a realization maps it onto its host's command vocabulary."
         @tier "secondary"
@@ -464,12 +730,94 @@ orbital ModalEditorOrbital {
         @description "Arms OPERATOR_PENDING with the `goto` pseudo-operator; pressed again (`gg`) moves to the document start. Any other key cancels back to NORMAL."
         @synonyms "goto, gg, doc start"
         @tier "presentation"
+      tabText : string = "\t"
+        @label "Tab inserts"
+        @description "The text Tab types while inserting (a tab, or spaces for expandtab)."
+        @synonyms "expandtab, tab width"
+        @tier "presentation"
+      insertMotions : Map string string = { ArrowLeft: "left", ArrowRight: "right", ArrowUp: "up", ArrowDown: "down" }
+        @label "Motion keys while inserting"
+        @description "Keys that move the cursor without leaving INSERT, mapped to the motion vocabulary."
+        @tier "domain"
+      visualLineKey : string = "V"
+        @label "Enter VISUAL by lines"
+        @description "Key that switches NORMAL to line-wise VISUAL (announced as VISUAL_LINE); pressed in character VISUAL it switches kinds."
+        @synonyms "visual line, V"
+        @tier "presentation"
+      searchKey : string = "/"
+        @label "Search forward"
+        @description "Key that opens a search line; Enter emits SEARCH forward."
+        @synonyms "search, slash"
+        @tier "presentation"
+      searchBackKey : string = "?"
+        @label "Search backward"
+        @description "Key that opens a search line; Enter emits SEARCH backward."
+        @tier "presentation"
+      searchNextKey : string = "n"
+        @label "Next match"
+        @tier "presentation"
+      searchPrevKey : string = "N"
+        @label "Previous match"
+        @tier "presentation"
+      registerKey : string = "\""
+        @label "Register prefix"
+        @description "Key that arms a register name for the next yank, delete or put."
+        @tier "presentation"
+      markSetKey : string = "m"
+        @label "Set mark"
+        @tier "presentation"
+      markLineKey : string = "'"
+        @label "Jump to mark line"
+        @description "Key that jumps to a mark's line, or after an operator makes it act line-wise up to the mark."
+        @tier "presentation"
+      markExactKey : string = "`"
+        @label "Jump to mark position"
+        @description "Key that jumps to a mark's exact column, or after an operator makes it act up to that position."
+        @tier "presentation"
+      macroKey : string = "q"
+        @label "Record macro"
+        @description "Key that starts recording into the register typed next, and stops recording when pressed again."
+        @synonyms "macro, record"
+        @tier "presentation"
+      macroPlayKey : string = (quote "@")
+        @label "Play macro"
+        @description "Key that replays the register typed next; typed twice it replays the last played register."
+        @tier "presentation"
+      windowKey : string = "w"
+        @label "Window prefix (with Ctrl)"
+        @description "Held with Ctrl, arms a window command read from windowKeys."
+        @tier "presentation"
+      windowKeys : Map string string = { h: "window-left", j: "window-down", k: "window-up", l: "window-right", w: "window-next", s: "window-split", v: "window-vsplit", q: "window-close", o: "window-only" }
+        @label "Window commands"
+        @description "Keys typed after the window prefix, mapped to the neutral command name carried on EX_COMMAND."
+        @tier "domain"
+      leaderKey : string = " "
+        @label "Leader key"
+        @description "Key that starts a leader sequence; active only when leaderMaps declares at least one sequence."
+        @synonyms "leader, space"
+        @tier "presentation"
+      leaderMaps : Map string string = {}
+        @label "Leader sequences"
+        @description "Key sequences typed after the leader, mapped to the neutral command name carried on EX_COMMAND; a key no sequence starts with cancels."
+        @tier "domain"
+      normalCommands : Map string string = {}
+        @label "Single-key commands"
+        @description "NORMAL keys mapped straight to a neutral command name carried on EX_COMMAND (e.g. K for hover)."
+        @tier "domain"
+      passUnknown : boolean = false
+        @label "Pass unknown commands on"
+        @description "When on, a command line whose first word exCommands does not name is emitted as EX_COMMAND with that word as its name (for plugins); when off it is dropped."
+        @tier "domain"
+      commandLineAnyChar : boolean = false
+        @label "Command line takes any character"
+        @description "When on, the command and search lines accept every single-character key (paths, patterns); when off, only the keys keymap.COMMAND lists."
+        @tier "presentation"
       operators : Map string string = { d: "delete", y: "yank", c: "change", ">": "indent", "<": "dedent" }
         @label "Operator keys"
         @description "Keys that arm OPERATOR_PENDING, mapped to the operator name carried on OPERATE. Pressing the same key again operates on the whole line."
         @synonyms "operators, delete, yank, change, indent, dedent"
         @tier "domain"
-      motions : Map string string = { h: "left", j: "down", k: "up", l: "right", w: "word-forward", b: "word-back", e: "word-end", "0": "line-start", "$": "line-end", "^": "first-nonblank", G: "doc-end", "{": "paragraph-back", "}": "paragraph-forward", "%": "match-bracket" }
+      motions : Map string string = { ArrowLeft: "left", ArrowDown: "down", ArrowUp: "up", ArrowRight: "right", h: "left", j: "down", k: "up", l: "right", w: "word-forward", b: "word-back", e: "word-end", "0": "line-start", "$": "line-end", "^": "first-nonblank", G: "doc-end", "{": "paragraph-back", "}": "paragraph-forward", "%": "match-bracket" }
         @label "Motion keys"
         @description "Keys recognized in NORMAL, VISUAL and OPERATOR_PENDING, mapped to the closed motion vocabulary the editor surface understands."
         @synonyms "motions, movement, hjkl, word motion"
@@ -483,12 +831,79 @@ orbital ModalEditorOrbital {
         @description "Buffered COMMAND-mode lines (typed after ':') mapped to a neutral command name carried on EX_COMMAND."
         @synonyms "ex commands, colon commands"
         @tier "domain"
-      keymap : Map string [string] = { NORMAL: ["i", "a", "o", "O", "A", "I", "v", ":", "d", "y", "c", "h", "j", "k", "l", "w", "b", "e", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "$", "^", "G", "{", "}", "%", ">", "<", "x", "X", "p", "P", "u", "r", "~", "J", ".", "g", "Escape"], INSERT: ["Escape"], VISUAL: ["Escape", "d", "y", "c", "h", "j", "k", "l", "w", "b", "e", "0", "$", "^", "G", "{", "}", "%", "~", ">", "<", "J"], OPERATOR_PENDING: ["Escape", "d", "y", "c", "h", "j", "k", "l", "w", "b", "e", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "$", "^", "G", "{", "}", "%", ">", "<", "g"], COMMAND: ["Escape", "Enter", "Backspace", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "!", "%", " "] }
+      keymap : Map string [string] = { NORMAL: ["ArrowLeft", "ArrowDown", "ArrowUp", "ArrowRight", "i", "a", "o", "O", "A", "I", "v", ":", "d", "y", "c", "h", "j", "k", "l", "w", "b", "e", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "$", "^", "G", "{", "}", "%", ">", "<", "x", "X", "p", "P", "u", "r", "~", "J", ".", "g", "Escape", "\"", "m", "'", "`", "q", (quote "@"), "/", "?", "n", "N", "V"], INSERT: ["Escape", "Enter", "Tab", "Backspace", "ArrowLeft", "ArrowDown", "ArrowUp", "ArrowRight"], VISUAL: ["ArrowLeft", "ArrowDown", "ArrowUp", "ArrowRight", "Escape", "d", "y", "c", "h", "j", "k", "l", "w", "b", "e", "0", "$", "^", "G", "{", "}", "%", "~", ">", "<", "J", "v", "V"], OPERATOR_PENDING: ["Escape", "d", "y", "c", "h", "j", "k", "l", "w", "b", "e", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "$", "^", "G", "{", "}", "%", ">", "<", "g", "a", "f", "i", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "x", "z", "A", "B", "C", "D", "E", "F", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "\"", "'", "`", (quote "@")], COMMAND: ["Escape", "Enter", "Backspace", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "!", "%", " "] }
         @label "Captured keys per mode"
         @description "The declared key set the host's keyboard router reads synchronously to decide preventDefault, keyed by this trait's current state name. A key not listed reaches the underlying textarea untouched. Keep in sync with the other knobs."
         @tier "internal"
     }
   }
 
-  page boot as ModalEditorOrbitalStart -> Modes
+  trait Macros -> MacroStore [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      MACRO_RECORD -> ready
+        (set @entity.editorId ?editorId)
+        (set @entity.recording ?register)
+        (set @entity.macros (object/set @entity.macros ?register []))
+      KEY -> ready when (!= @entity.recording "")
+        (set @entity.macros (object/set @entity.macros @entity.recording (array/append (object/get @entity.macros @entity.recording []) { key: ?key, code: (default ?code ""), ctrl: ?ctrl, alt: (default ?alt false), shift: (default ?shift false), meta: (default ?meta false) })))
+      MACRO_STOP -> ready when (!= @entity.recording "")
+        ;; the stop key reaches this trait before the stop when both hear it
+        (set @entity.macros (object/set @entity.macros @entity.recording (let ((ks (object/get @entity.macros @entity.recording []))) (if (and (> (array/len @ks) 0) (= (object/get (default (array/last @ks) { key: "", code: "", ctrl: false, alt: false, shift: false, meta: false }) "key" "") ?key)) (array/slice @ks 0 (- (array/len @ks) 1)) @ks))))
+        (set @entity.recording "")
+      MACRO_PLAY -> ready when (object/has @entity.macros ?register)
+        (set @entity.editorId ?editorId)
+        (set @entity.queue (array/concat @entity.queue (array/flatten (array/map (array/range (math/max 1 ?count)) (fn i (object/get @entity.macros ?register []))))))
+    }
+
+    ticks {
+      ;; one replayed key per dispatch: identical deliveries inside one dispatch collapse (EXEC-QUEUE-4)
+      macroPlayback every 1ms
+        when (> (array/len @entity.queue) 0)
+        (let ((k (default (array/first @entity.queue) { key: "", code: "", ctrl: false, alt: false, shift: false, meta: false })))
+          (emit REPLAY_KEY { editorId: @entity.editorId, key: @k.key, code: @k.code, ctrl: @k.ctrl, alt: @k.alt, shift: @k.shift, meta: @k.meta }))
+        (set @entity.queue (array/slice @entity.queue 1 (array/len @entity.queue)))
+    }
+
+    emits {
+      REPLAY_KEY -> external {
+        editorId : string
+        key : string!
+        code : string
+        ctrl : boolean!
+        alt : boolean
+        shift : boolean
+        meta : boolean
+      }
+        @description "One recorded key, replayed into the modal editor as if typed."
+        @tier "internal"
+    }
+
+    listens {
+      Modes.MACRO_RECORD -> MACRO_RECORD
+      Modes.MACRO_STOP -> MACRO_STOP
+      Modes.MACRO_PLAY -> MACRO_PLAY
+      KEY {
+        editorId : string
+        key : string!
+        code : string
+        ctrl : boolean!
+        alt : boolean
+        shift : boolean
+        meta : boolean
+        repeat : boolean
+      }
+        @description "Every keydown; recorded while a macro register is recording."
+      MACRO_RECORD { editorId : string  register : string! }
+        @description "Start recording keys into a register, replacing what it held."
+      MACRO_STOP { editorId : string  key : string! }
+        @description "Stop recording; the stop key itself is not kept."
+      MACRO_PLAY { editorId : string  register : string!  count : number! }
+        @description "Queue a register's keys count times; a tick replays them one per dispatch."
+    }
+  }
+
+  page boot as ModalEditorOrbitalStart -> Modes, Macros
 }

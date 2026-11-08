@@ -1,0 +1,75 @@
+app std-syntax-tokens [
+  version: "0.1.0",
+  description: "std-syntax-tokens — syntax coloring as data. Each language in config is an ordered list of rules { tone, pattern } (a regex of the shared dialect, matched line by line with str/find-pattern). TOKENIZE { editorId, language, text } answers DECORATE { editorId, source: \"syntax\", ranges }: every match of every rule, the earlier rule claiming its range first, so a later rule never paints inside a range an earlier one claimed (a keyword inside a comment or string stays the comment's or string's). Ranges come back in text order, each { id: syntax-<row>-<col>, fromRow, fromCol, toRow, toCol, tone, label }. A language with no rules, or a rule whose pattern is outside the dialect, paints nothing. Tones are the editor surface's color roles (keyword, string, comment, number, type, function, operator, punctuation, variable). The default rules color .lolo."
+]
+
+type TokenRule = { tone : string!, pattern : string! }
+type TokenRange = { id : string!, fromRow : number!, fromCol : number!, toRow : number!, toCol : number!, tone : string!, label : string! }
+type TokenMatch = { start : number!, end : number!, text : string! }
+type TokenClaim = { start : number!, end : number!, tone : string! }
+
+orbital SyntaxTokensOrbital {
+  entity SyntaxRun [runtime] {
+    id : string!
+    count : number @description "How many ranges the last tokenize painted." = 0
+  }
+
+  trait SyntaxTokens -> SyntaxRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      TOKENIZE -> ready
+        (let ((rules : [TokenRule] (object/get @config.languages ?language []))
+              (none : [TokenMatch] [])
+              (empty : [TokenClaim] [])
+              (lines (str/split ?text "\n")))
+          (let ((ranges : [TokenRange] (array/flatten (array/map (array/range (array/len @lines)) (fn row
+                  (let ((line (default (array/nth @lines @row) "")))
+                    (let ((claims : [TokenClaim] (array/reduce @rules @empty (fn acc rule
+                            (array/reduce (default (str/find-pattern @line @rule.pattern) @none) @acc (fn got m
+                              (if (or (= @m.start @m.end) (array/some @got (fn c (and (< @m.start @c.end) (< @c.start @m.end))))) @got
+                                (array/append @got { start: @m.start, end: @m.end, tone: @rule.tone }))))))))
+                      (array/map (array/sort @claims "start") (fn c { id: (str/concat "syntax-" @row "-" @c.start), fromRow: @row, fromCol: @c.start, toRow: @row, toCol: @c.end, tone: @c.tone, label: "" })))))))))
+            (do (set @entity.count (array/len @ranges))
+              (emit DECORATE { editorId: ?editorId, source: "syntax", ranges: @ranges }))))
+    }
+
+    emits {
+      DECORATE -> external {
+        editorId : string!
+        source : string!
+        ranges : [TokenRange]!
+      }
+        @description "The syntax ranges of a text, for std-text-buffer DECORATE."
+        @synonyms "syntax highlight, token colors"
+        @tier "primary"
+    }
+
+    listens {
+      TOKENIZE { editorId : string!  language : string!  text : string! }
+        @description "Color a text by its language's rules."
+        @synonyms "highlight, syntax color"
+    }
+
+    config {
+      languages : Map string [TokenRule] = { lolo: [
+          { tone: "comment", pattern: ";;.*$" },
+          { tone: "string", pattern: "\"(?:[^\"\\\\]|\\\\.)*\"" },
+          { tone: "variable", pattern: "[\\x40?][A-Za-z_][A-Za-z0-9_.]*" },
+          { tone: "keyword", pattern: "\\b(?:app|orbital|uses|from|entity|type|trait|initial|state|emits|listens|ticks|config|page|as|when|every|external|internal|input|in|boot|true|false|null)\\b" },
+          { tone: "function", pattern: "\\b[A-Z][A-Z0-9_]+\\b" },
+          { tone: "function", pattern: "\\b[a-z][a-z0-9-]*/[A-Za-z][A-Za-z0-9-]*" },
+          { tone: "operator", pattern: "->" },
+          { tone: "number", pattern: "\\b[0-9]+(?:\\.[0-9]+)?\\b" },
+          { tone: "type", pattern: "\\b[A-Z][a-z][A-Za-z0-9]*\\b" }
+        ] }
+        @label "Language rules"
+        @description "Per language, the ordered { tone, pattern } rules; an earlier rule claims its ranges first."
+        @synonyms "syntax rules, grammar"
+        @tier "domain"
+    }
+  }
+
+  page boot as SyntaxTokensOrbitalStart -> SyntaxTokens
+}

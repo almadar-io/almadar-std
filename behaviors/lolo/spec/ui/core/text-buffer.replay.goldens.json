@@ -1,0 +1,3374 @@
+{
+  "atom": "../ui/core/atoms/std-text-buffer.lolo",
+  "trait": "Buffer",
+  "cases": [
+    {
+      "id": "hjkl-clamp-to-line-and-buffer",
+      "steps": [
+        {
+          "event": "LOAD_TEXT",
+          "payload": {
+            "editorId": "e",
+            "path": "f.lolo",
+            "text": "abc\nde\nfghij"
+          }
+        },
+        {
+          "event": "MOTION",
+          "payload": {
+            "editorId": "e",
+            "motion": "right",
+            "count": 2
+          },
+          "expect": {
+            "entity": {
+              "row": 0,
+              "col": 2
+            }
+          }
+        },
+        {
+          "event": "MOTION",
+          "payload": {
+            "editorId": "e",
+            "motion": "down",
+            "count": 1
+          },
+          "expect": {
+            "entity": {
+              "row": 1,
+              "col": 2
+            }
+          }
+        },
+        {
+          "event": "MOTION",
+          "payload": {
+            "editorId": "e",
+            "motion": "down",
+            "count": 1
+          },
+          "expect": {
+            "entity": {
+              "row": 2,
+              "col": 2
+            }
+          }
+        },
+        {
+          "event": "MOTION",
+          "payload": {
+            "editorId": "e",
+            "motion": "up",
+            "count": 5
+          },
+          "expect": {
+            "entity": {
+              "row": 0,
+              "col": 2
+            }
+          }
+        },
+        {
+          "event": "MOTION",
+          "payload": {
+            "editorId": "e",
+            "motion": "left",
+            "count": 5
+          },
+          "expect": {
+            "entity": {
+              "row": 0,
+              "col": 0
+            }
+          }
+        },
+        {
+          "event": "MOTION",
+          "payload": {
+            "editorId": "e",
+            "motion": "right",
+            "count": 9
+          },
+          "expect": {
+            "entity": {
+              "row": 0,
+              "col": 3
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "vertical-motion-keeps-goal-column-across-a-short-line",
+      "steps": [
+        {
+          "event": "LOAD_TEXT",
+          "payload": {
+            "editorId": "e",
+            "path": "f.lolo",
+            "text": "abcdef\nx\nabcdef"
+          }
+        },
+        {
+          "event": "MOTION",
+          "payload": {
+            "editorId": "e",
+            "motion": "right",
+            "count": 4
+          }
+        },
+        {
+          "event": "MOTION",
+          "payload": {
+            "editorId": "e",
+            "motion": "down",
+            "count": 1
+          },
+          "expect": {
+            "entity": {
+              "row": 1,
+              "col": 1
+            }
+          }
+        },
+        {
+          "event": "MOTION",
+          "payload": {
+            "editorId": "e",
+            "motion": "down",
+            "count": 1
+          },
+          "expect": {
+            "entity": {
+              "row": 2,
+              "col": 4
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "word-forward-splits-punctuation-and-crosses-lines",
+      "steps": [
+        {
+          "event": "LOAD_TEXT",
+          "payload": {
+            "editorId": "e",
+            "path": "f.lolo",
+            "text": "foo.bar  baz\nqux"
+          }
+        },
+        {
+          "event": "MOTION",
+          "payload": {
+            "editorId": "e",
+            "motion": "word-forward",
+            "count": 1
+          },
+          "expect": {
+            "entity": {
+              "row": 0,
+              "col": 3
+            }
+          }
+        },
+        {
+          "event": "MOTION",
+          "payload": {
+            "editorId": "e",
+            "motion": "word-forward",
+            "count": 1
+          },
+          "expect": {
+            "entity": {
+              "row": 0,
+              "col": 4
+            }
+          }
+        },
+        {
+          "event": "MOTION",
+          "payload": {
+            "editorId": "e",
+            "motion": "word-forward",
+            "count": 1
+          },
+          "expect": {
+            "entity": {
+              "row": 0,
+              "col": 9
+            }
+          }
+        },
+        {
+          "event": "MOTION",
+          "payload": {
+            "editorId": "e",
+            "motion": "word-forward",
+            "count": 1
+          },
+          "expect": {
+            "entity": {
+              "row": 1,
+              "col": 0
+            }
+          }
+        },
+        {
+          "event": "MOTION",
+          "payload": {
+            "editorId": "e",
+            "motion": "word-forward",
+            "count": 1
+          },
+          "expect": {
+            "entity": {
+              "row": 1,
+              "col": 3
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "word-forward-count",
+      "steps": [
+        {
+          "event": "LOAD_TEXT",
+          "payload": {
+            "editorId": "e",
+            "path": "f.lolo",
+            "text": "foo.bar  baz"
+          }
+        },
+        {
+          "event": "MOTION",
+          "payload": {
+            "editorId": "e",
+            "motion": "word-forward",
+            "count": 2
+          },
+          "expect": {
+            "entity": {
+              "row": 0,
+              "col": 4
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "word-back-crosses-lines",
+      "steps": [
+        {
+          "event": "LOAD_TEXT",
+          "payload": {
+            "editorId": "e",
+            "path": "f.lolo",
+            "text": "foo.bar  baz\nqux"
+          }
+        },
+        {
+          "event": "MOTION",
+          "payload": {
+            "editorId": "e",
+            "motion": "down",
+            "count": 1
+          }
+        },
+        {
+          "event": "MOTION",
+          "payload": {
+            "editorId": "e",
+            "motion": "word-back",
+            "count": 1
+          },
+          "expect": {
+            "entity": {
+              "row": 0,
+              "col": 9
+            }
+          }
+        },
+        {
+          "event": "MOTION",
+          "payload": {
+            "editorId": "e",
+            "motion": "word-back",
+            "count": 1
+          },
+          "expect": {
+            "entity": {
+              "row": 0,
+              "col": 4
+            }
+          }
+        },
+        {
+          "event": "MOTION",
+          "payload": {
+            "editorId": "e",
+            "motion": "word-back",
+            "count": 1
+          },
+          "expect": {
+            "entity": {
+              "row": 0,
+              "col": 3
+            }
+          }
+        },
+        {
+          "event": "MOTION",
+          "payload": {
+            "editorId": "e",
+            "motion": "word-back",
+            "count": 1
+          },
+          "expect": {
+            "entity": {
+              "row": 0,
+              "col": 0
+            }
+          }
+        },
+        {
+          "event": "MOTION",
+          "payload": {
+            "editorId": "e",
+            "motion": "word-back",
+            "count": 1
+          },
+          "expect": {
+            "entity": {
+              "row": 0,
+              "col": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "word-end-skips-blank-lines",
+      "steps": [
+        {
+          "event": "LOAD_TEXT",
+          "payload": {
+            "editorId": "e",
+            "path": "f.lolo",
+            "text": "foo bar\n\n  baz"
+          }
+        },
+        {
+          "event": "MOTION",
+          "payload": {
+            "editorId": "e",
+            "motion": "word-end",
+            "count": 1
+          },
+          "expect": {
+            "entity": {
+              "row": 0,
+              "col": 2
+            }
+          }
+        },
+        {
+          "event": "MOTION",
+          "payload": {
+            "editorId": "e",
+            "motion": "word-end",
+            "count": 1
+          },
+          "expect": {
+            "entity": {
+              "row": 0,
+              "col": 6
+            }
+          }
+        },
+        {
+          "event": "MOTION",
+          "payload": {
+            "editorId": "e",
+            "motion": "word-end",
+            "count": 1
+          },
+          "expect": {
+            "entity": {
+              "row": 2,
+              "col": 4
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "line-end-start-first-nonblank",
+      "steps": [
+        {
+          "event": "LOAD_TEXT",
+          "payload": {
+            "editorId": "e",
+            "path": "f.lolo",
+            "text": "  hello"
+          }
+        },
+        {
+          "event": "MOTION",
+          "payload": {
+            "editorId": "e",
+            "motion": "line-end",
+            "count": 1
+          },
+          "expect": {
+            "entity": {
+              "row": 0,
+              "col": 6
+            }
+          }
+        },
+        {
+          "event": "MOTION",
+          "payload": {
+            "editorId": "e",
+            "motion": "line-start",
+            "count": 1
+          },
+          "expect": {
+            "entity": {
+              "row": 0,
+              "col": 0
+            }
+          }
+        },
+        {
+          "event": "MOTION",
+          "payload": {
+            "editorId": "e",
+            "motion": "first-nonblank",
+            "count": 1
+          },
+          "expect": {
+            "entity": {
+              "row": 0,
+              "col": 2
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "doc-end-and-start",
+      "steps": [
+        {
+          "event": "LOAD_TEXT",
+          "payload": {
+            "editorId": "e",
+            "path": "f.lolo",
+            "text": "a\nbc"
+          }
+        },
+        {
+          "event": "MOTION",
+          "payload": {
+            "editorId": "e",
+            "motion": "doc-end",
+            "count": 1
+          },
+          "expect": {
+            "entity": {
+              "row": 1,
+              "col": 2
+            }
+          }
+        },
+        {
+          "event": "MOTION",
+          "payload": {
+            "editorId": "e",
+            "motion": "doc-start",
+            "count": 1
+          },
+          "expect": {
+            "entity": {
+              "row": 0,
+              "col": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "paragraph-forward-and-back",
+      "steps": [
+        {
+          "event": "LOAD_TEXT",
+          "payload": {
+            "editorId": "e",
+            "path": "f.lolo",
+            "text": "a\nb\n\nc\n\nd"
+          }
+        },
+        {
+          "event": "MOTION",
+          "payload": {
+            "editorId": "e",
+            "motion": "paragraph-forward",
+            "count": 1
+          },
+          "expect": {
+            "entity": {
+              "row": 2,
+              "col": 0
+            }
+          }
+        },
+        {
+          "event": "MOTION",
+          "payload": {
+            "editorId": "e",
+            "motion": "paragraph-forward",
+            "count": 1
+          },
+          "expect": {
+            "entity": {
+              "row": 4,
+              "col": 0
+            }
+          }
+        },
+        {
+          "event": "MOTION",
+          "payload": {
+            "editorId": "e",
+            "motion": "paragraph-forward",
+            "count": 1
+          },
+          "expect": {
+            "entity": {
+              "row": 5,
+              "col": 1
+            }
+          }
+        },
+        {
+          "event": "MOTION",
+          "payload": {
+            "editorId": "e",
+            "motion": "paragraph-back",
+            "count": 1
+          },
+          "expect": {
+            "entity": {
+              "row": 4,
+              "col": 0
+            }
+          }
+        },
+        {
+          "event": "MOTION",
+          "payload": {
+            "editorId": "e",
+            "motion": "paragraph-back",
+            "count": 1
+          },
+          "expect": {
+            "entity": {
+              "row": 2,
+              "col": 0
+            }
+          }
+        },
+        {
+          "event": "MOTION",
+          "payload": {
+            "editorId": "e",
+            "motion": "paragraph-back",
+            "count": 1
+          },
+          "expect": {
+            "entity": {
+              "row": 0,
+              "col": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "match-bracket-scans-to-first-bracket-and-back",
+      "steps": [
+        {
+          "event": "LOAD_TEXT",
+          "payload": {
+            "editorId": "e",
+            "path": "f.lolo",
+            "text": "f(a[b]{c})"
+          }
+        },
+        {
+          "event": "MOTION",
+          "payload": {
+            "editorId": "e",
+            "motion": "match-bracket",
+            "count": 1
+          },
+          "expect": {
+            "entity": {
+              "row": 0,
+              "col": 9
+            }
+          }
+        },
+        {
+          "event": "MOTION",
+          "payload": {
+            "editorId": "e",
+            "motion": "match-bracket",
+            "count": 1
+          },
+          "expect": {
+            "entity": {
+              "row": 0,
+              "col": 1
+            }
+          }
+        },
+        {
+          "event": "MOTION",
+          "payload": {
+            "editorId": "e",
+            "motion": "right",
+            "count": 2
+          }
+        },
+        {
+          "event": "MOTION",
+          "payload": {
+            "editorId": "e",
+            "motion": "match-bracket",
+            "count": 1
+          },
+          "expect": {
+            "entity": {
+              "row": 0,
+              "col": 5
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "match-bracket-across-lines",
+      "steps": [
+        {
+          "event": "LOAD_TEXT",
+          "payload": {
+            "editorId": "e",
+            "path": "f.lolo",
+            "text": "{\n  x\n}"
+          }
+        },
+        {
+          "event": "MOTION",
+          "payload": {
+            "editorId": "e",
+            "motion": "match-bracket",
+            "count": 1
+          },
+          "expect": {
+            "entity": {
+              "row": 2,
+              "col": 0
+            }
+          }
+        },
+        {
+          "event": "MOTION",
+          "payload": {
+            "editorId": "e",
+            "motion": "match-bracket",
+            "count": 1
+          },
+          "expect": {
+            "entity": {
+              "row": 0,
+              "col": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "match-bracket-no-bracket-stays",
+      "steps": [
+        {
+          "event": "LOAD_TEXT",
+          "payload": {
+            "editorId": "e",
+            "path": "f.lolo",
+            "text": "abc"
+          }
+        },
+        {
+          "event": "MOTION",
+          "payload": {
+            "editorId": "e",
+            "motion": "match-bracket",
+            "count": 1
+          },
+          "expect": {
+            "entity": {
+              "row": 0,
+              "col": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "other-editor-is-ignored",
+      "steps": [
+        {
+          "event": "LOAD_TEXT",
+          "payload": {
+            "editorId": "e",
+            "path": "f.lolo",
+            "text": "abc"
+          }
+        },
+        {
+          "event": "MOTION",
+          "payload": {
+            "editorId": "other",
+            "motion": "right",
+            "count": 1
+          },
+          "expect": {
+            "entity": {
+              "row": 0,
+              "col": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "dw-deletes-word-and-trailing-space",
+      "steps": [
+        {
+          "event": "LOAD_TEXT",
+          "payload": {
+            "editorId": "e",
+            "path": "f.lolo",
+            "text": "foo bar baz"
+          }
+        },
+        {
+          "event": "OPERATE",
+          "payload": {
+            "editorId": "e",
+            "operator": "delete",
+            "motion": "word-forward",
+            "count": 1
+          },
+          "expect": {
+            "entity": {
+              "lines": [
+                "bar baz"
+              ],
+              "row": 0,
+              "col": 0,
+              "registers": {
+                "\"": {
+                  "text": "foo ",
+                  "linewise": false
+                },
+                "1": {
+                  "text": "foo ",
+                  "linewise": false
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "dw-on-last-word-stops-at-line-end",
+      "steps": [
+        {
+          "event": "LOAD_TEXT",
+          "payload": {
+            "editorId": "e",
+            "path": "f.lolo",
+            "text": "foo\nbar"
+          }
+        },
+        {
+          "event": "OPERATE",
+          "payload": {
+            "editorId": "e",
+            "operator": "delete",
+            "motion": "word-forward",
+            "count": 1
+          },
+          "expect": {
+            "entity": {
+              "lines": [
+                "",
+                "bar"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "de-is-inclusive",
+      "steps": [
+        {
+          "event": "LOAD_TEXT",
+          "payload": {
+            "editorId": "e",
+            "path": "f.lolo",
+            "text": "foo bar"
+          }
+        },
+        {
+          "event": "OPERATE",
+          "payload": {
+            "editorId": "e",
+            "operator": "delete",
+            "motion": "word-end",
+            "count": 1
+          },
+          "expect": {
+            "entity": {
+              "lines": [
+                " bar"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "d-dollar-from-mid-line",
+      "steps": [
+        {
+          "event": "LOAD_TEXT",
+          "payload": {
+            "editorId": "e",
+            "path": "f.lolo",
+            "text": "abc"
+          }
+        },
+        {
+          "event": "MOTION",
+          "payload": {
+            "editorId": "e",
+            "motion": "right",
+            "count": 1
+          }
+        },
+        {
+          "event": "OPERATE",
+          "payload": {
+            "editorId": "e",
+            "operator": "delete",
+            "motion": "line-end",
+            "count": 1
+          },
+          "expect": {
+            "entity": {
+              "row": 0,
+              "col": 1,
+              "lines": [
+                "a"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "dj-is-linewise",
+      "steps": [
+        {
+          "event": "LOAD_TEXT",
+          "payload": {
+            "editorId": "e",
+            "path": "f.lolo",
+            "text": "a\nb\nc"
+          }
+        },
+        {
+          "event": "OPERATE",
+          "payload": {
+            "editorId": "e",
+            "operator": "delete",
+            "motion": "down",
+            "count": 1
+          },
+          "expect": {
+            "entity": {
+              "row": 0,
+              "col": 0,
+              "lines": [
+                "c"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "dd-count-then-put-linewise",
+      "steps": [
+        {
+          "event": "LOAD_TEXT",
+          "payload": {
+            "editorId": "e",
+            "path": "f.lolo",
+            "text": "a\nb\nc"
+          }
+        },
+        {
+          "event": "OPERATE",
+          "payload": {
+            "editorId": "e",
+            "operator": "delete",
+            "motion": "line",
+            "count": 2
+          },
+          "expect": {
+            "entity": {
+              "lines": [
+                "c"
+              ],
+              "registers": {
+                "\"": {
+                  "text": "a\nb",
+                  "linewise": true
+                },
+                "1": {
+                  "text": "a\nb",
+                  "linewise": true
+                }
+              }
+            }
+          }
+        },
+        {
+          "event": "OPERATE",
+          "payload": {
+            "editorId": "e",
+            "operator": "put",
+            "motion": "right",
+            "count": 1
+          },
+          "expect": {
+            "entity": {
+              "row": 1,
+              "col": 0,
+              "lines": [
+                "c",
+                "a",
+                "b"
+              ]
+            }
+          }
+        },
+        {
+          "event": "OPERATE",
+          "payload": {
+            "editorId": "e",
+            "operator": "put-before",
+            "motion": "right",
+            "count": 1
+          },
+          "expect": {
+            "entity": {
+              "row": 1,
+              "col": 0,
+              "lines": [
+                "c",
+                "a",
+                "b",
+                "a",
+                "b"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "dd-last-line-leaves-one-empty-line",
+      "steps": [
+        {
+          "event": "LOAD_TEXT",
+          "payload": {
+            "editorId": "e",
+            "path": "f.lolo",
+            "text": "a"
+          }
+        },
+        {
+          "event": "OPERATE",
+          "payload": {
+            "editorId": "e",
+            "operator": "delete",
+            "motion": "line",
+            "count": 1
+          },
+          "expect": {
+            "entity": {
+              "row": 0,
+              "col": 0,
+              "lines": [
+                ""
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "cw-keeps-the-space-and-one-undo-reverts-the-change",
+      "steps": [
+        {
+          "event": "LOAD_TEXT",
+          "payload": {
+            "editorId": "e",
+            "path": "f.lolo",
+            "text": "foo bar"
+          }
+        },
+        {
+          "event": "OPERATE",
+          "payload": {
+            "editorId": "e",
+            "operator": "change",
+            "motion": "word-forward",
+            "count": 1
+          },
+          "expect": {
+            "entity": {
+              "row": 0,
+              "col": 0,
+              "lines": [
+                " bar"
+              ]
+            }
+          }
+        },
+        {
+          "event": "SET_MODE",
+          "payload": {
+            "editorId": "e",
+            "mode": "INSERT",
+            "caret": "bar",
+            "keys": []
+          }
+        },
+        {
+          "event": "TYPE",
+          "payload": {
+            "editorId": "e",
+            "text": "x"
+          },
+          "expect": {
+            "entity": {
+              "row": 0,
+              "col": 1,
+              "lines": [
+                "x bar"
+              ]
+            }
+          }
+        },
+        {
+          "event": "MOTION",
+          "payload": {
+            "editorId": "e",
+            "motion": "left",
+            "count": 1
+          }
+        },
+        {
+          "event": "SET_MODE",
+          "payload": {
+            "editorId": "e",
+            "mode": "NORMAL",
+            "caret": "block",
+            "keys": []
+          }
+        },
+        {
+          "event": "OPERATE",
+          "payload": {
+            "editorId": "e",
+            "operator": "undo",
+            "motion": "right",
+            "count": 1
+          },
+          "expect": {
+            "entity": {
+              "lines": [
+                "foo bar"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "x-twice-is-two-undo-steps-and-redo-replays",
+      "steps": [
+        {
+          "event": "LOAD_TEXT",
+          "payload": {
+            "editorId": "e",
+            "path": "f.lolo",
+            "text": "abc"
+          }
+        },
+        {
+          "event": "OPERATE",
+          "payload": {
+            "editorId": "e",
+            "operator": "delete",
+            "motion": "right",
+            "count": 1
+          }
+        },
+        {
+          "event": "OPERATE",
+          "payload": {
+            "editorId": "e",
+            "operator": "delete",
+            "motion": "right",
+            "count": 1
+          },
+          "expect": {
+            "entity": {
+              "lines": [
+                "c"
+              ]
+            }
+          }
+        },
+        {
+          "event": "OPERATE",
+          "payload": {
+            "editorId": "e",
+            "operator": "undo",
+            "motion": "right",
+            "count": 1
+          },
+          "expect": {
+            "entity": {
+              "lines": [
+                "bc"
+              ]
+            }
+          }
+        },
+        {
+          "event": "OPERATE",
+          "payload": {
+            "editorId": "e",
+            "operator": "undo",
+            "motion": "right",
+            "count": 1
+          },
+          "expect": {
+            "entity": {
+              "lines": [
+                "abc"
+              ]
+            }
+          }
+        },
+        {
+          "event": "OPERATE",
+          "payload": {
+            "editorId": "e",
+            "operator": "redo",
+            "motion": "right",
+            "count": 1
+          },
+          "expect": {
+            "entity": {
+              "lines": [
+                "bc"
+              ]
+            }
+          }
+        },
+        {
+          "event": "OPERATE",
+          "payload": {
+            "editorId": "e",
+            "operator": "redo",
+            "motion": "right",
+            "count": 1
+          },
+          "expect": {
+            "entity": {
+              "lines": [
+                "c"
+              ]
+            }
+          }
+        },
+        {
+          "event": "OPERATE",
+          "payload": {
+            "editorId": "e",
+            "operator": "redo",
+            "motion": "right",
+            "count": 1
+          },
+          "expect": {
+            "entity": {
+              "lines": [
+                "c"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "undo-count-and-redo-order",
+      "steps": [
+        {
+          "event": "LOAD_TEXT",
+          "payload": {
+            "editorId": "e",
+            "path": "f.lolo",
+            "text": "abcd"
+          }
+        },
+        {
+          "event": "OPERATE",
+          "payload": {
+            "editorId": "e",
+            "operator": "delete",
+            "motion": "right",
+            "count": 1
+          }
+        },
+        {
+          "event": "OPERATE",
+          "payload": {
+            "editorId": "e",
+            "operator": "delete",
+            "motion": "right",
+            "count": 1
+          }
+        },
+        {
+          "event": "OPERATE",
+          "payload": {
+            "editorId": "e",
+            "operator": "delete",
+            "motion": "right",
+            "count": 1
+          },
+          "expect": {
+            "entity": {
+              "lines": [
+                "d"
+              ]
+            }
+          }
+        },
+        {
+          "event": "OPERATE",
+          "payload": {
+            "editorId": "e",
+            "operator": "undo",
+            "motion": "right",
+            "count": 2
+          },
+          "expect": {
+            "entity": {
+              "lines": [
+                "bcd"
+              ]
+            }
+          }
+        },
+        {
+          "event": "OPERATE",
+          "payload": {
+            "editorId": "e",
+            "operator": "redo",
+            "motion": "right",
+            "count": 1
+          },
+          "expect": {
+            "entity": {
+              "lines": [
+                "cd"
+              ]
+            }
+          }
+        },
+        {
+          "event": "OPERATE",
+          "payload": {
+            "editorId": "e",
+            "operator": "redo",
+            "motion": "right",
+            "count": 1
+          },
+          "expect": {
+            "entity": {
+              "lines": [
+                "d"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "r-replace-is-one-undo-step",
+      "steps": [
+        {
+          "event": "LOAD_TEXT",
+          "payload": {
+            "editorId": "e",
+            "path": "f.lolo",
+            "text": "abc"
+          }
+        },
+        {
+          "event": "OPERATE",
+          "payload": {
+            "editorId": "e",
+            "operator": "delete",
+            "motion": "right",
+            "count": 1
+          }
+        },
+        {
+          "event": "INSERT_TEXT",
+          "payload": {
+            "editorId": "e",
+            "text": "Z"
+          }
+        },
+        {
+          "event": "MOTION",
+          "payload": {
+            "editorId": "e",
+            "motion": "left",
+            "count": 1
+          },
+          "expect": {
+            "entity": {
+              "row": 0,
+              "col": 0,
+              "lines": [
+                "Zbc"
+              ]
+            }
+          }
+        },
+        {
+          "event": "OPERATE",
+          "payload": {
+            "editorId": "e",
+            "operator": "undo",
+            "motion": "right",
+            "count": 1
+          },
+          "expect": {
+            "entity": {
+              "lines": [
+                "abc"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "o-opens-a-line-and-one-undo-removes-it-with-its-text",
+      "steps": [
+        {
+          "event": "LOAD_TEXT",
+          "payload": {
+            "editorId": "e",
+            "path": "f.lolo",
+            "text": "a"
+          }
+        },
+        {
+          "event": "MOTION",
+          "payload": {
+            "editorId": "e",
+            "motion": "line-end",
+            "count": 1
+          }
+        },
+        {
+          "event": "MOTION",
+          "payload": {
+            "editorId": "e",
+            "motion": "right",
+            "count": 1
+          }
+        },
+        {
+          "event": "INSERT_TEXT",
+          "payload": {
+            "editorId": "e",
+            "text": "\n"
+          }
+        },
+        {
+          "event": "SET_MODE",
+          "payload": {
+            "editorId": "e",
+            "mode": "INSERT",
+            "caret": "bar",
+            "keys": []
+          }
+        },
+        {
+          "event": "TYPE",
+          "payload": {
+            "editorId": "e",
+            "text": "b"
+          }
+        },
+        {
+          "event": "MOTION",
+          "payload": {
+            "editorId": "e",
+            "motion": "left",
+            "count": 1
+          }
+        },
+        {
+          "event": "SET_MODE",
+          "payload": {
+            "editorId": "e",
+            "mode": "NORMAL",
+            "caret": "block",
+            "keys": []
+          },
+          "expect": {
+            "entity": {
+              "row": 1,
+              "col": 0,
+              "lines": [
+                "a",
+                "b"
+              ]
+            }
+          }
+        },
+        {
+          "event": "OPERATE",
+          "payload": {
+            "editorId": "e",
+            "operator": "undo",
+            "motion": "right",
+            "count": 1
+          },
+          "expect": {
+            "entity": {
+              "lines": [
+                "a"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "an-insert-session-that-changes-nothing-leaves-no-step",
+      "steps": [
+        {
+          "event": "LOAD_TEXT",
+          "payload": {
+            "editorId": "e",
+            "path": "f.lolo",
+            "text": "a"
+          }
+        },
+        {
+          "event": "SET_MODE",
+          "payload": {
+            "editorId": "e",
+            "mode": "INSERT",
+            "caret": "bar",
+            "keys": []
+          }
+        },
+        {
+          "event": "SET_MODE",
+          "payload": {
+            "editorId": "e",
+            "mode": "NORMAL",
+            "caret": "block",
+            "keys": []
+          },
+          "expect": {
+            "entity": {
+              "past": []
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "yank-then-put-charwise",
+      "steps": [
+        {
+          "event": "LOAD_TEXT",
+          "payload": {
+            "editorId": "e",
+            "path": "f.lolo",
+            "text": "abc"
+          }
+        },
+        {
+          "event": "OPERATE",
+          "payload": {
+            "editorId": "e",
+            "operator": "yank",
+            "motion": "right",
+            "count": 2
+          },
+          "expect": {
+            "entity": {
+              "lines": [
+                "abc"
+              ],
+              "col": 0,
+              "registers": {
+                "\"": {
+                  "text": "ab",
+                  "linewise": false
+                },
+                "0": {
+                  "text": "ab",
+                  "linewise": false
+                }
+              }
+            }
+          }
+        },
+        {
+          "event": "OPERATE",
+          "payload": {
+            "editorId": "e",
+            "operator": "put",
+            "motion": "right",
+            "count": 1
+          },
+          "expect": {
+            "entity": {
+              "row": 0,
+              "col": 2,
+              "lines": [
+                "aabbc"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "put-with-empty-register-does-nothing",
+      "steps": [
+        {
+          "event": "LOAD_TEXT",
+          "payload": {
+            "editorId": "e",
+            "path": "f.lolo",
+            "text": "abc"
+          }
+        },
+        {
+          "event": "OPERATE",
+          "payload": {
+            "editorId": "e",
+            "operator": "put",
+            "motion": "right",
+            "count": 1
+          },
+          "expect": {
+            "entity": {
+              "row": 0,
+              "col": 0,
+              "lines": [
+                "abc"
+              ],
+              "past": []
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "named-register-and-uppercase-append",
+      "steps": [
+        {
+          "event": "LOAD_TEXT",
+          "payload": {
+            "editorId": "e",
+            "path": "f.lolo",
+            "text": "l1\nl2"
+          }
+        },
+        {
+          "event": "SELECT_REGISTER",
+          "payload": {
+            "editorId": "e",
+            "name": "a"
+          }
+        },
+        {
+          "event": "OPERATE",
+          "payload": {
+            "editorId": "e",
+            "operator": "yank",
+            "motion": "line",
+            "count": 1
+          }
+        },
+        {
+          "event": "MOTION",
+          "payload": {
+            "editorId": "e",
+            "motion": "down",
+            "count": 1
+          }
+        },
+        {
+          "event": "SELECT_REGISTER",
+          "payload": {
+            "editorId": "e",
+            "name": "A"
+          }
+        },
+        {
+          "event": "OPERATE",
+          "payload": {
+            "editorId": "e",
+            "operator": "yank",
+            "motion": "line",
+            "count": 1
+          },
+          "expect": {
+            "entity": {
+              "registers": {
+                "\"": {
+                  "text": "l1\nl2",
+                  "linewise": true
+                },
+                "0": {
+                  "text": "l2",
+                  "linewise": true
+                },
+                "a": {
+                  "text": "l1\nl2",
+                  "linewise": true
+                }
+              },
+              "activeRegister": "\""
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "black-hole-register-keeps-the-unnamed-one",
+      "steps": [
+        {
+          "event": "LOAD_TEXT",
+          "payload": {
+            "editorId": "e",
+            "path": "f.lolo",
+            "text": "a\nb"
+          }
+        },
+        {
+          "event": "OPERATE",
+          "payload": {
+            "editorId": "e",
+            "operator": "yank",
+            "motion": "line",
+            "count": 1
+          }
+        },
+        {
+          "event": "SELECT_REGISTER",
+          "payload": {
+            "editorId": "e",
+            "name": "_"
+          }
+        },
+        {
+          "event": "OPERATE",
+          "payload": {
+            "editorId": "e",
+            "operator": "delete",
+            "motion": "line",
+            "count": 1
+          },
+          "expect": {
+            "entity": {
+              "lines": [
+                "b"
+              ],
+              "registers": {
+                "\"": {
+                  "text": "a",
+                  "linewise": true
+                },
+                "0": {
+                  "text": "a",
+                  "linewise": true
+                }
+              },
+              "activeRegister": "\""
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "visual-delete-is-inclusive",
+      "steps": [
+        {
+          "event": "LOAD_TEXT",
+          "payload": {
+            "editorId": "e",
+            "path": "f.lolo",
+            "text": "hello world"
+          }
+        },
+        {
+          "event": "SET_MODE",
+          "payload": {
+            "editorId": "e",
+            "mode": "VISUAL",
+            "caret": "block",
+            "keys": []
+          }
+        },
+        {
+          "event": "MOTION",
+          "payload": {
+            "editorId": "e",
+            "motion": "word-end",
+            "count": 1
+          }
+        },
+        {
+          "event": "OPERATE",
+          "payload": {
+            "editorId": "e",
+            "operator": "delete",
+            "motion": "selection",
+            "count": 1
+          },
+          "expect": {
+            "entity": {
+              "row": 0,
+              "col": 0,
+              "lines": [
+                " world"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "toggle-case",
+      "steps": [
+        {
+          "event": "LOAD_TEXT",
+          "payload": {
+            "editorId": "e",
+            "path": "f.lolo",
+            "text": "abC"
+          }
+        },
+        {
+          "event": "OPERATE",
+          "payload": {
+            "editorId": "e",
+            "operator": "toggle-case",
+            "motion": "right",
+            "count": 3
+          },
+          "expect": {
+            "entity": {
+              "lines": [
+                "ABc"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "indent-and-dedent",
+      "steps": [
+        {
+          "event": "LOAD_TEXT",
+          "payload": {
+            "editorId": "e",
+            "path": "f.lolo",
+            "text": "a\n\tb"
+          }
+        },
+        {
+          "event": "OPERATE",
+          "payload": {
+            "editorId": "e",
+            "operator": "indent",
+            "motion": "line",
+            "count": 1
+          },
+          "expect": {
+            "entity": {
+              "row": 0,
+              "col": 2,
+              "lines": [
+                "  a",
+                "\tb"
+              ]
+            }
+          }
+        },
+        {
+          "event": "OPERATE",
+          "payload": {
+            "editorId": "e",
+            "operator": "dedent",
+            "motion": "line",
+            "count": 1
+          },
+          "expect": {
+            "entity": {
+              "lines": [
+                "a",
+                "\tb"
+              ]
+            }
+          }
+        },
+        {
+          "event": "MOTION",
+          "payload": {
+            "editorId": "e",
+            "motion": "down",
+            "count": 1
+          }
+        },
+        {
+          "event": "OPERATE",
+          "payload": {
+            "editorId": "e",
+            "operator": "dedent",
+            "motion": "line",
+            "count": 1
+          },
+          "expect": {
+            "entity": {
+              "lines": [
+                "a",
+                "b"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "join-trims-leading-blanks",
+      "steps": [
+        {
+          "event": "LOAD_TEXT",
+          "payload": {
+            "editorId": "e",
+            "path": "f.lolo",
+            "text": "a\n   b\nc"
+          }
+        },
+        {
+          "event": "OPERATE",
+          "payload": {
+            "editorId": "e",
+            "operator": "join",
+            "motion": "line",
+            "count": 2
+          },
+          "expect": {
+            "entity": {
+              "row": 0,
+              "col": 1,
+              "lines": [
+                "a b",
+                "c"
+              ]
+            }
+          }
+        },
+        {
+          "event": "OPERATE",
+          "payload": {
+            "editorId": "e",
+            "operator": "join",
+            "motion": "line",
+            "count": 2
+          },
+          "expect": {
+            "entity": {
+              "lines": [
+                "a b c"
+              ]
+            }
+          }
+        },
+        {
+          "event": "OPERATE",
+          "payload": {
+            "editorId": "e",
+            "operator": "join",
+            "motion": "line",
+            "count": 2
+          },
+          "expect": {
+            "entity": {
+              "lines": [
+                "a b c"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "type-newline-splits-and-backspace-joins",
+      "steps": [
+        {
+          "event": "LOAD_TEXT",
+          "payload": {
+            "editorId": "e",
+            "path": "f.lolo",
+            "text": "ab"
+          }
+        },
+        {
+          "event": "MOTION",
+          "payload": {
+            "editorId": "e",
+            "motion": "right",
+            "count": 1
+          }
+        },
+        {
+          "event": "SET_MODE",
+          "payload": {
+            "editorId": "e",
+            "mode": "INSERT",
+            "caret": "bar",
+            "keys": []
+          }
+        },
+        {
+          "event": "TYPE",
+          "payload": {
+            "editorId": "e",
+            "text": "x\ny"
+          },
+          "expect": {
+            "entity": {
+              "row": 1,
+              "col": 1,
+              "lines": [
+                "ax",
+                "yb"
+              ]
+            }
+          }
+        },
+        {
+          "event": "BACKSPACE",
+          "payload": {
+            "editorId": "e"
+          },
+          "expect": {
+            "entity": {
+              "row": 1,
+              "col": 0,
+              "lines": [
+                "ax",
+                "b"
+              ]
+            }
+          }
+        },
+        {
+          "event": "BACKSPACE",
+          "payload": {
+            "editorId": "e"
+          },
+          "expect": {
+            "entity": {
+              "row": 0,
+              "col": 2,
+              "lines": [
+                "axb"
+              ]
+            }
+          }
+        },
+        {
+          "event": "MOTION",
+          "payload": {
+            "editorId": "e",
+            "motion": "doc-start",
+            "count": 1
+          }
+        },
+        {
+          "event": "BACKSPACE",
+          "payload": {
+            "editorId": "e"
+          },
+          "expect": {
+            "entity": {
+              "row": 0,
+              "col": 0,
+              "lines": [
+                "axb"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "search-forward-wraps-and-reverses",
+      "steps": [
+        {
+          "event": "LOAD_TEXT",
+          "payload": {
+            "editorId": "e",
+            "path": "f.lolo",
+            "text": "foo\nbar foo\nbaz"
+          }
+        },
+        {
+          "event": "SEARCH",
+          "payload": {
+            "editorId": "e",
+            "pattern": "foo",
+            "forward": true
+          },
+          "expect": {
+            "entity": {
+              "row": 1,
+              "col": 4
+            },
+            "emits": [
+              {
+                "event": "SEARCH_RESULT",
+                "payload": {
+                  "found": true,
+                  "row": 1,
+                  "col": 4,
+                  "wrapped": false
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "SEARCH_NEXT",
+          "payload": {
+            "editorId": "e",
+            "reverse": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "SEARCH_RESULT",
+                "payload": {
+                  "found": true,
+                  "row": 0,
+                  "col": 0,
+                  "wrapped": true
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "SEARCH_NEXT",
+          "payload": {
+            "editorId": "e",
+            "reverse": true
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "SEARCH_RESULT",
+                "payload": {
+                  "found": true,
+                  "row": 1,
+                  "col": 4,
+                  "wrapped": true
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "SEARCH",
+          "payload": {
+            "editorId": "e",
+            "pattern": "zzz",
+            "forward": true
+          },
+          "expect": {
+            "entity": {
+              "row": 1,
+              "col": 4
+            },
+            "emits": [
+              {
+                "event": "SEARCH_RESULT",
+                "payload": {
+                  "found": false
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "marks-exact-and-linewise",
+      "steps": [
+        {
+          "event": "LOAD_TEXT",
+          "payload": {
+            "editorId": "e",
+            "path": "f.lolo",
+            "text": "abc\n  def"
+          }
+        },
+        {
+          "event": "MOTION",
+          "payload": {
+            "editorId": "e",
+            "motion": "down",
+            "count": 1
+          }
+        },
+        {
+          "event": "MOTION",
+          "payload": {
+            "editorId": "e",
+            "motion": "right",
+            "count": 3
+          }
+        },
+        {
+          "event": "MARK_SET",
+          "payload": {
+            "editorId": "e",
+            "name": "a"
+          }
+        },
+        {
+          "event": "MOTION",
+          "payload": {
+            "editorId": "e",
+            "motion": "doc-start",
+            "count": 1
+          }
+        },
+        {
+          "event": "MARK_JUMP",
+          "payload": {
+            "editorId": "e",
+            "name": "a",
+            "exact": true
+          },
+          "expect": {
+            "entity": {
+              "row": 1,
+              "col": 3
+            }
+          }
+        },
+        {
+          "event": "MOTION",
+          "payload": {
+            "editorId": "e",
+            "motion": "doc-start",
+            "count": 1
+          }
+        },
+        {
+          "event": "MARK_JUMP",
+          "payload": {
+            "editorId": "e",
+            "name": "a",
+            "exact": false
+          },
+          "expect": {
+            "entity": {
+              "row": 1,
+              "col": 2
+            }
+          }
+        },
+        {
+          "event": "MARK_JUMP",
+          "payload": {
+            "editorId": "e",
+            "name": "b",
+            "exact": true
+          },
+          "expect": {
+            "entity": {
+              "row": 1,
+              "col": 2
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "decorations-by-source",
+      "steps": [
+        {
+          "event": "LOAD_TEXT",
+          "payload": {
+            "editorId": "e",
+            "path": "f.lolo",
+            "text": "abc"
+          }
+        },
+        {
+          "event": "DECORATE",
+          "payload": {
+            "editorId": "e",
+            "source": "syntax",
+            "ranges": [
+              {
+                "id": "k1",
+                "fromRow": 0,
+                "fromCol": 0,
+                "toRow": 0,
+                "toCol": 3,
+                "tone": "keyword"
+              }
+            ]
+          },
+          "expect": {
+            "entity": {
+              "decorations": {
+                "syntax": [
+                  {
+                    "id": "k1",
+                    "fromRow": 0,
+                    "fromCol": 0,
+                    "toRow": 0,
+                    "toCol": 3,
+                    "tone": "keyword"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "event": "CLEAR_DECORATIONS",
+          "payload": {
+            "editorId": "e",
+            "source": "syntax"
+          },
+          "expect": {
+            "entity": {
+              "decorations": {}
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "load-reports-clean-and-edits-report-dirty",
+      "steps": [
+        {
+          "event": "LOAD_TEXT",
+          "payload": {
+            "editorId": "e",
+            "path": "f.lolo",
+            "text": "ab"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "BUFFER_EDITED",
+                "payload": {
+                  "text": "ab",
+                  "dirty": false,
+                  "version": 0
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "OPERATE",
+          "payload": {
+            "editorId": "e",
+            "operator": "delete",
+            "motion": "right",
+            "count": 1
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "BUFFER_EDITED",
+                "payload": {
+                  "text": "b",
+                  "dirty": true,
+                  "version": 1
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "SAVED",
+          "payload": {
+            "editorId": "e",
+            "version": 1
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "BUFFER_EDITED",
+                "payload": {
+                  "dirty": false
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "undo-levels-caps-the-oldest-steps",
+      "steps": [
+        {
+          "event": "LOAD_TEXT",
+          "payload": {
+            "editorId": "e",
+            "path": "f.lolo",
+            "text": "abcd"
+          }
+        },
+        {
+          "event": "OPERATE",
+          "payload": {
+            "editorId": "e",
+            "operator": "delete",
+            "motion": "right",
+            "count": 1
+          }
+        },
+        {
+          "event": "OPERATE",
+          "payload": {
+            "editorId": "e",
+            "operator": "delete",
+            "motion": "right",
+            "count": 1
+          }
+        },
+        {
+          "event": "OPERATE",
+          "payload": {
+            "editorId": "e",
+            "operator": "delete",
+            "motion": "right",
+            "count": 1
+          },
+          "expect": {
+            "entity": {
+              "lines": [
+                "d"
+              ],
+              "past": [
+                {
+                  "lines": [
+                    "bcd"
+                  ],
+                  "row": 0,
+                  "col": 0
+                },
+                {
+                  "lines": [
+                    "cd"
+                  ],
+                  "row": 0,
+                  "col": 0
+                }
+              ]
+            }
+          }
+        },
+        {
+          "event": "OPERATE",
+          "payload": {
+            "editorId": "e",
+            "operator": "undo",
+            "motion": "right",
+            "count": 1
+          },
+          "expect": {
+            "entity": {
+              "lines": [
+                "cd"
+              ]
+            }
+          }
+        },
+        {
+          "event": "OPERATE",
+          "payload": {
+            "editorId": "e",
+            "operator": "undo",
+            "motion": "right",
+            "count": 1
+          },
+          "expect": {
+            "entity": {
+              "lines": [
+                "bcd"
+              ]
+            }
+          }
+        },
+        {
+          "event": "OPERATE",
+          "payload": {
+            "editorId": "e",
+            "operator": "undo",
+            "motion": "right",
+            "count": 1
+          },
+          "expect": {
+            "entity": {
+              "lines": [
+                "bcd"
+              ]
+            }
+          }
+        }
+      ],
+      "config": {
+        "undoLevels": 2
+      }
+    },
+    {
+      "id": "undo-levels-default-keeps-every-step",
+      "steps": [
+        {
+          "event": "LOAD_TEXT",
+          "payload": {
+            "editorId": "e",
+            "path": "f.lolo",
+            "text": "abcd"
+          }
+        },
+        {
+          "event": "OPERATE",
+          "payload": {
+            "editorId": "e",
+            "operator": "delete",
+            "motion": "right",
+            "count": 1
+          }
+        },
+        {
+          "event": "OPERATE",
+          "payload": {
+            "editorId": "e",
+            "operator": "delete",
+            "motion": "right",
+            "count": 1
+          }
+        },
+        {
+          "event": "OPERATE",
+          "payload": {
+            "editorId": "e",
+            "operator": "delete",
+            "motion": "right",
+            "count": 1
+          }
+        },
+        {
+          "event": "OPERATE",
+          "payload": {
+            "editorId": "e",
+            "operator": "undo",
+            "motion": "right",
+            "count": 3
+          },
+          "expect": {
+            "entity": {
+              "lines": [
+                "abcd"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "snapshot-and-restore-carry-history-and-marks",
+      "steps": [
+        {
+          "event": "LOAD_TEXT",
+          "payload": {
+            "editorId": "e",
+            "path": "f.lolo",
+            "text": "abc"
+          }
+        },
+        {
+          "event": "OPERATE",
+          "payload": {
+            "editorId": "e",
+            "operator": "delete",
+            "motion": "right",
+            "count": 1
+          }
+        },
+        {
+          "event": "MARK_SET",
+          "payload": {
+            "editorId": "e",
+            "name": "a"
+          }
+        },
+        {
+          "event": "SNAPSHOT",
+          "payload": {
+            "editorId": "e"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "BUFFER_STATE",
+                "payload": {
+                  "editorId": "e",
+                  "state": {
+                    "path": "f.lolo",
+                    "lines": [
+                      "bc"
+                    ],
+                    "row": 0,
+                    "col": 0,
+                    "goalCol": 0,
+                    "version": 1,
+                    "savedVersion": 0,
+                    "past": [
+                      {
+                        "lines": [
+                          "abc"
+                        ],
+                        "row": 0,
+                        "col": 0
+                      }
+                    ],
+                    "future": [],
+                    "marks": {
+                      "a": {
+                        "row": 0,
+                        "col": 0
+                      }
+                    },
+                    "lastSearch": "",
+                    "lastForward": true
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "LOAD_TEXT",
+          "payload": {
+            "editorId": "e",
+            "path": "g.lolo",
+            "text": "other"
+          },
+          "expect": {
+            "entity": {
+              "lines": [
+                "other"
+              ]
+            }
+          }
+        },
+        {
+          "event": "RESTORE",
+          "payload": {
+            "editorId": "e",
+            "state": {
+              "path": "f.lolo",
+              "lines": [
+                "bc"
+              ],
+              "row": 0,
+              "col": 0,
+              "goalCol": 0,
+              "version": 1,
+              "savedVersion": 0,
+              "past": [
+                {
+                  "lines": [
+                    "abc"
+                  ],
+                  "row": 0,
+                  "col": 0
+                }
+              ],
+              "future": [],
+              "marks": {
+                "a": {
+                  "row": 0,
+                  "col": 0
+                }
+              },
+              "lastSearch": "",
+              "lastForward": true
+            }
+          },
+          "expect": {
+            "entity": {
+              "path": "f.lolo",
+              "lines": [
+                "bc"
+              ],
+              "version": 1
+            },
+            "emits": [
+              {
+                "event": "BUFFER_EDITED",
+                "payload": {
+                  "path": "f.lolo",
+                  "text": "bc",
+                  "dirty": true
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "OPERATE",
+          "payload": {
+            "editorId": "e",
+            "operator": "undo",
+            "motion": "right",
+            "count": 1
+          },
+          "expect": {
+            "entity": {
+              "lines": [
+                "abc"
+              ]
+            }
+          }
+        },
+        {
+          "event": "MARK_JUMP",
+          "payload": {
+            "editorId": "e",
+            "name": "a",
+            "exact": true
+          },
+          "expect": {
+            "entity": {
+              "row": 0,
+              "col": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "delete-to-mark-line-is-linewise",
+      "steps": [
+        {
+          "event": "LOAD_TEXT",
+          "payload": {
+            "editorId": "e",
+            "path": "f.lolo",
+            "text": "a\nb\nc\nd"
+          }
+        },
+        {
+          "event": "MARK_SET",
+          "payload": {
+            "editorId": "e",
+            "name": "a"
+          }
+        },
+        {
+          "event": "MOTION",
+          "payload": {
+            "editorId": "e",
+            "motion": "down",
+            "count": 2
+          }
+        },
+        {
+          "event": "OPERATE",
+          "payload": {
+            "editorId": "e",
+            "operator": "delete",
+            "motion": "mark-line",
+            "count": 1,
+            "mark": "a"
+          },
+          "expect": {
+            "entity": {
+              "row": 0,
+              "col": 0,
+              "lines": [
+                "d"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "delete-to-mark-exact-is-charwise-exclusive",
+      "steps": [
+        {
+          "event": "LOAD_TEXT",
+          "payload": {
+            "editorId": "e",
+            "path": "f.lolo",
+            "text": "abcdef"
+          }
+        },
+        {
+          "event": "MOTION",
+          "payload": {
+            "editorId": "e",
+            "motion": "right",
+            "count": 1
+          }
+        },
+        {
+          "event": "MARK_SET",
+          "payload": {
+            "editorId": "e",
+            "name": "a"
+          }
+        },
+        {
+          "event": "MOTION",
+          "payload": {
+            "editorId": "e",
+            "motion": "right",
+            "count": 3
+          }
+        },
+        {
+          "event": "OPERATE",
+          "payload": {
+            "editorId": "e",
+            "operator": "delete",
+            "motion": "mark-exact",
+            "count": 1,
+            "mark": "a"
+          },
+          "expect": {
+            "entity": {
+              "row": 0,
+              "col": 1,
+              "lines": [
+                "aef"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "operator-to-a-missing-mark-does-nothing",
+      "steps": [
+        {
+          "event": "LOAD_TEXT",
+          "payload": {
+            "editorId": "e",
+            "path": "f.lolo",
+            "text": "abc"
+          }
+        },
+        {
+          "event": "OPERATE",
+          "payload": {
+            "editorId": "e",
+            "operator": "delete",
+            "motion": "mark-line",
+            "count": 1,
+            "mark": "z"
+          },
+          "expect": {
+            "entity": {
+              "lines": [
+                "abc"
+              ],
+              "past": [],
+              "pendingOperator": ""
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "visual-line-delete-is-linewise",
+      "steps": [
+        {
+          "event": "LOAD_TEXT",
+          "payload": {
+            "editorId": "e",
+            "path": "f.lolo",
+            "text": "a\nb\nc"
+          }
+        },
+        {
+          "event": "SET_MODE",
+          "payload": {
+            "editorId": "e",
+            "mode": "VISUAL_LINE",
+            "caret": "block",
+            "keys": []
+          }
+        },
+        {
+          "event": "MOTION",
+          "payload": {
+            "editorId": "e",
+            "motion": "down",
+            "count": 1
+          }
+        },
+        {
+          "event": "OPERATE",
+          "payload": {
+            "editorId": "e",
+            "operator": "delete",
+            "motion": "selection",
+            "count": 1
+          },
+          "expect": {
+            "entity": {
+              "lines": [
+                "c"
+              ],
+              "registers": {
+                "\"": {
+                  "text": "a\nb",
+                  "linewise": true
+                },
+                "1": {
+                  "text": "a\nb",
+                  "linewise": true
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "switching-visual-kinds-keeps-the-anchor",
+      "steps": [
+        {
+          "event": "LOAD_TEXT",
+          "payload": {
+            "editorId": "e",
+            "path": "f.lolo",
+            "text": "a\nb\nc"
+          }
+        },
+        {
+          "event": "SET_MODE",
+          "payload": {
+            "editorId": "e",
+            "mode": "VISUAL",
+            "caret": "block",
+            "keys": []
+          }
+        },
+        {
+          "event": "MOTION",
+          "payload": {
+            "editorId": "e",
+            "motion": "down",
+            "count": 1
+          }
+        },
+        {
+          "event": "SET_MODE",
+          "payload": {
+            "editorId": "e",
+            "mode": "VISUAL_LINE",
+            "caret": "block",
+            "keys": []
+          },
+          "expect": {
+            "entity": {
+              "anchorRow": 0,
+              "anchorCol": 0,
+              "mode": "VISUAL_LINE"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "search-highlights-every-match-and-follow-edits",
+      "steps": [
+        {
+          "event": "LOAD_TEXT",
+          "payload": {
+            "editorId": "e",
+            "path": "f.lolo",
+            "text": "foo x foo\nfoo"
+          }
+        },
+        {
+          "event": "SEARCH",
+          "payload": {
+            "editorId": "e",
+            "pattern": "foo",
+            "forward": true
+          },
+          "expect": {
+            "entity": {
+              "decorations": {
+                "search": [
+                  {
+                    "id": "search-0-0",
+                    "fromRow": 0,
+                    "fromCol": 0,
+                    "toRow": 0,
+                    "toCol": 3,
+                    "tone": "search",
+                    "label": ""
+                  },
+                  {
+                    "id": "search-0-6",
+                    "fromRow": 0,
+                    "fromCol": 6,
+                    "toRow": 0,
+                    "toCol": 9,
+                    "tone": "search",
+                    "label": ""
+                  },
+                  {
+                    "id": "search-1-0",
+                    "fromRow": 1,
+                    "fromCol": 0,
+                    "toRow": 1,
+                    "toCol": 3,
+                    "tone": "search",
+                    "label": ""
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "event": "MOTION",
+          "payload": {
+            "editorId": "e",
+            "motion": "doc-start",
+            "count": 1
+          }
+        },
+        {
+          "event": "OPERATE",
+          "payload": {
+            "editorId": "e",
+            "operator": "delete",
+            "motion": "right",
+            "count": 1
+          },
+          "expect": {
+            "entity": {
+              "decorations": {
+                "search": [
+                  {
+                    "id": "search-0-5",
+                    "fromRow": 0,
+                    "fromCol": 5,
+                    "toRow": 0,
+                    "toCol": 8,
+                    "tone": "search",
+                    "label": ""
+                  },
+                  {
+                    "id": "search-1-0",
+                    "fromRow": 1,
+                    "fromCol": 0,
+                    "toRow": 1,
+                    "toCol": 3,
+                    "tone": "search",
+                    "label": ""
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "event": "CLEAR_DECORATIONS",
+          "payload": {
+            "editorId": "e",
+            "source": "search"
+          },
+          "expect": {
+            "entity": {
+              "decorations": {}
+            }
+          }
+        },
+        {
+          "event": "OPERATE",
+          "payload": {
+            "editorId": "e",
+            "operator": "delete",
+            "motion": "right",
+            "count": 1
+          },
+          "expect": {
+            "entity": {
+              "decorations": {}
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "regex-search-forward-and-backward",
+      "steps": [
+        {
+          "event": "LOAD_TEXT",
+          "payload": {
+            "editorId": "e",
+            "path": "f.lolo",
+            "text": "cat cot\ncut"
+          }
+        },
+        {
+          "event": "SEARCH",
+          "payload": {
+            "editorId": "e",
+            "pattern": "c[aeiou]t",
+            "forward": true
+          },
+          "expect": {
+            "entity": {
+              "row": 0,
+              "col": 4
+            }
+          }
+        },
+        {
+          "event": "SEARCH_NEXT",
+          "payload": {
+            "editorId": "e",
+            "reverse": false
+          },
+          "expect": {
+            "entity": {
+              "row": 1,
+              "col": 0
+            }
+          }
+        },
+        {
+          "event": "SEARCH_NEXT",
+          "payload": {
+            "editorId": "e",
+            "reverse": true
+          },
+          "expect": {
+            "entity": {
+              "row": 0,
+              "col": 4
+            }
+          }
+        },
+        {
+          "event": "SEARCH_NEXT",
+          "payload": {
+            "editorId": "e",
+            "reverse": true
+          },
+          "expect": {
+            "entity": {
+              "row": 0,
+              "col": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "regex-highlights-use-match-lengths",
+      "steps": [
+        {
+          "event": "LOAD_TEXT",
+          "payload": {
+            "editorId": "e",
+            "path": "f.lolo",
+            "text": "a1 b22 c333"
+          }
+        },
+        {
+          "event": "SEARCH",
+          "payload": {
+            "editorId": "e",
+            "pattern": "[0-9]{2,}",
+            "forward": true
+          },
+          "expect": {
+            "entity": {
+              "decorations": {
+                "search": [
+                  {
+                    "id": "search-0-4",
+                    "fromRow": 0,
+                    "fromCol": 4,
+                    "toRow": 0,
+                    "toCol": 6,
+                    "tone": "search",
+                    "label": ""
+                  },
+                  {
+                    "id": "search-0-8",
+                    "fromRow": 0,
+                    "fromCol": 8,
+                    "toRow": 0,
+                    "toCol": 11,
+                    "tone": "search",
+                    "label": ""
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "invalid-pattern-finds-nothing",
+      "steps": [
+        {
+          "event": "LOAD_TEXT",
+          "payload": {
+            "editorId": "e",
+            "path": "f.lolo",
+            "text": "abc"
+          }
+        },
+        {
+          "event": "SEARCH",
+          "payload": {
+            "editorId": "e",
+            "pattern": "(x",
+            "forward": true
+          },
+          "expect": {
+            "entity": {
+              "row": 0,
+              "col": 0
+            },
+            "emits": [
+              {
+                "event": "SEARCH_RESULT",
+                "payload": {
+                  "found": false
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "cursor-set-clamps-into-the-buffer",
+      "steps": [
+        {
+          "event": "LOAD_TEXT",
+          "payload": {
+            "editorId": "e",
+            "path": "f.lolo",
+            "text": "abc\nde"
+          }
+        },
+        {
+          "event": "CURSOR_SET",
+          "payload": {
+            "editorId": "e",
+            "row": 1,
+            "col": 9
+          },
+          "expect": {
+            "entity": {
+              "row": 1,
+              "col": 2
+            }
+          }
+        },
+        {
+          "event": "CURSOR_SET",
+          "payload": {
+            "editorId": "e",
+            "row": 7,
+            "col": 0
+          },
+          "expect": {
+            "entity": {
+              "row": 1,
+              "col": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "popover-opens-and-closes",
+      "steps": [
+        {
+          "event": "LOAD_TEXT",
+          "payload": {
+            "editorId": "e",
+            "path": "f.lolo",
+            "text": "abc"
+          }
+        },
+        {
+          "event": "POPOVER",
+          "payload": {
+            "editorId": "e",
+            "popover": {
+              "fromRow": 0,
+              "fromCol": 0,
+              "toRow": 0,
+              "toCol": 3,
+              "title": "t",
+              "sections": [
+                {
+                  "heading": "h",
+                  "lines": [
+                    "x"
+                  ]
+                }
+              ],
+              "busy": true
+            }
+          },
+          "expect": {
+            "entity": {
+              "popover": {
+                "fromRow": 0,
+                "fromCol": 0,
+                "toRow": 0,
+                "toCol": 3,
+                "title": "t",
+                "sections": [
+                  {
+                    "heading": "h",
+                    "lines": [
+                      "x"
+                    ]
+                  }
+                ],
+                "busy": true
+              }
+            }
+          }
+        },
+        {
+          "event": "CLOSE_POPOVER",
+          "payload": {
+            "editorId": "e"
+          },
+          "expect": {
+            "entity": {
+              "popover": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-change-paints-the-surface-once-more-than-before",
+      "steps": [
+        {
+          "event": "LOAD_TEXT",
+          "payload": {
+            "editorId": "e",
+            "path": "f.lolo",
+            "text": "ab"
+          }
+        },
+        {
+          "event": "OPERATE",
+          "payload": {
+            "editorId": "e",
+            "operator": "delete",
+            "motion": "right",
+            "count": 1
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "PAINT",
+                "payload": {}
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

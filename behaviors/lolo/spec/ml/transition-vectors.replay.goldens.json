@@ -1,0 +1,695 @@
+{
+  "atom": "ml/atoms/std-transition-vectors.lolo",
+  "trait": "TransitionVectors",
+  "cases": [
+    {
+      "id": "rebuild-lists-the-roots",
+      "steps": [
+        {
+          "event": "TV_INDEX",
+          "payload": {
+            "roots": [
+              "/c"
+            ],
+            "rebuild": true
+          },
+          "expect": {
+            "state": "listing",
+            "emits": [
+              {
+                "event": "TV_LIST",
+                "payload": {
+                  "stage": "list"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "listing-sorts-the-files-and-reads-the-first",
+      "steps": [
+        {
+          "event": "TV_INDEX",
+          "payload": {
+            "roots": [
+              "/c"
+            ],
+            "rebuild": true
+          }
+        },
+        {
+          "event": "CLI_DONE",
+          "payload": {
+            "stage": "list",
+            "exitCode": 0,
+            "signal": 0,
+            "stdout": "/c/b.lolo\n/c/broken.lolo\n/c/a.lolo\n",
+            "stdoutBytes": "",
+            "stderr": ""
+          },
+          "from": "listing",
+          "expect": {
+            "state": "reading",
+            "entity": {
+              "files": [
+                "/c/a.lolo",
+                "/c/b.lolo",
+                "/c/broken.lolo"
+              ],
+              "cursor": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-read-file-is-outlined",
+      "steps": [
+        {
+          "event": "TV_FILE_READ",
+          "payload": {
+            "data": "YWE="
+          },
+          "from": "reading",
+          "expect": {
+            "emits": [
+              {
+                "event": "TV_OUTLINE",
+                "payload": {
+                  "key": "/c/a.lolo",
+                  "path": "/c/a.lolo",
+                  "text": "aa"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "entity": {
+        "roots": [
+          "/c"
+        ],
+        "files": [
+          "/c/a.lolo",
+          "/c/b.lolo",
+          "/c/broken.lolo"
+        ],
+        "cursor": 0,
+        "entries": []
+      }
+    },
+    {
+      "id": "outlines-accumulate-and-the-last-file-resolves",
+      "steps": [
+        {
+          "event": "TRANSITIONS",
+          "payload": {
+            "key": "/c/a.lolo",
+            "path": "/c/a.lolo",
+            "items": [
+              {
+                "pointer": "p0",
+                "trait": "A",
+                "event": "GO",
+                "from": "s",
+                "to": "s",
+                "fromRow": 0,
+                "fromCol": 0,
+                "toRow": 0,
+                "source": "GO -> x"
+              }
+            ]
+          },
+          "from": "reading",
+          "expect": {
+            "entity": {
+              "cursor": 1,
+              "entries": [
+                {
+                  "key": "/c/a.lolo#p0",
+                  "path": "/c/a.lolo",
+                  "label": "A.GO",
+                  "text": "GO -> x"
+                }
+              ]
+            },
+            "emits": [
+              {
+                "event": "TV_PROGRESS",
+                "payload": {
+                  "done": 1,
+                  "total": 3
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "TRANSITIONS",
+          "payload": {
+            "key": "/c/b.lolo",
+            "path": "/c/b.lolo",
+            "items": [
+              {
+                "pointer": "p0",
+                "trait": "B",
+                "event": "STOP",
+                "from": "s",
+                "to": "s",
+                "fromRow": 0,
+                "fromCol": 0,
+                "toRow": 0,
+                "source": "STOP -> y"
+              },
+              {
+                "pointer": "p1",
+                "trait": "B",
+                "event": "GO",
+                "from": "s",
+                "to": "s",
+                "fromRow": 0,
+                "fromCol": 0,
+                "toRow": 0,
+                "source": "GO -> z"
+              }
+            ]
+          },
+          "from": "reading",
+          "expect": {
+            "entity": {
+              "cursor": 2,
+              "entries": [
+                {
+                  "key": "/c/a.lolo#p0",
+                  "path": "/c/a.lolo",
+                  "label": "A.GO",
+                  "text": "GO -> x"
+                },
+                {
+                  "key": "/c/b.lolo#p0",
+                  "path": "/c/b.lolo",
+                  "label": "B.STOP",
+                  "text": "STOP -> y"
+                },
+                {
+                  "key": "/c/b.lolo#p1",
+                  "path": "/c/b.lolo",
+                  "label": "B.GO",
+                  "text": "GO -> z"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "event": "TRANSITIONS_FAILED",
+          "payload": {
+            "key": "/c/broken.lolo",
+            "path": "/c/broken.lolo",
+            "error": "parse"
+          },
+          "from": "reading",
+          "expect": {
+            "emits": [
+              {
+                "event": "TV_PROGRESS",
+                "payload": {
+                  "done": 3,
+                  "total": 3
+                }
+              },
+              {
+                "event": "TV_SOURCES",
+                "payload": {
+                  "paths": []
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "SOURCES_READY",
+          "payload": {
+            "snapshots": [],
+            "snapshotPaths": [],
+            "userDir": "/u",
+            "userAnchor": "home",
+            "providerModel": "m",
+            "providerKind": "lmstudio",
+            "embedModel": "m"
+          },
+          "from": "sourcing",
+          "expect": {
+            "emits": [
+              {
+                "event": "TV_RESOLVE",
+                "payload": {
+                  "wanted": [
+                    {
+                      "key": "/c/a.lolo#p0",
+                      "text": "GO -> x"
+                    },
+                    {
+                      "key": "/c/b.lolo#p0",
+                      "text": "STOP -> y"
+                    },
+                    {
+                      "key": "/c/b.lolo#p1",
+                      "text": "GO -> z"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "VECTORS_ANSWERED",
+          "payload": {
+            "model": "m",
+            "vectors": [
+              {
+                "key": "/c/a.lolo#p0",
+                "vector": [
+                  1,
+                  0
+                ]
+              },
+              {
+                "key": "/c/b.lolo#p0",
+                "vector": [
+                  0,
+                  1
+                ]
+              },
+              {
+                "key": "/c/b.lolo#p1",
+                "vector": [
+                  0.8,
+                  0.6
+                ]
+              }
+            ]
+          },
+          "from": "resolving",
+          "expect": {
+            "emits": [
+              {
+                "event": "TV_READY",
+                "payload": {
+                  "count": 3,
+                  "model": "m"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "entity": {
+        "roots": [
+          "/c"
+        ],
+        "files": [
+          "/c/a.lolo",
+          "/c/b.lolo",
+          "/c/broken.lolo"
+        ],
+        "cursor": 0,
+        "entries": []
+      }
+    },
+    {
+      "id": "nothing-listed-is-refused",
+      "steps": [
+        {
+          "event": "TV_INDEX",
+          "payload": {
+            "roots": [
+              "/c"
+            ],
+            "rebuild": true
+          }
+        },
+        {
+          "event": "CLI_DONE",
+          "payload": {
+            "stage": "list",
+            "exitCode": 1,
+            "signal": 0,
+            "stdout": "",
+            "stdoutBytes": "",
+            "stderr": ""
+          },
+          "from": "listing",
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "TV_REFUSED",
+                "payload": {
+                  "code": "TV_NOTHING_LISTED"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-cache-for-other-roots-rebuilds",
+      "steps": [
+        {
+          "event": "TV_INDEX",
+          "payload": {
+            "roots": [
+              "/c"
+            ],
+            "rebuild": false
+          },
+          "expect": {
+            "state": "loading"
+          }
+        },
+        {
+          "event": "TV_CACHE_READ",
+          "payload": {
+            "data": "eyJyb290cyI6IFsiL290aGVyIl0sICJlbnRyaWVzIjogW3sia2V5IjogIi9jL2EubG9sbyNwMCIsICJwYXRoIjogIi9jL2EubG9sbyIsICJsYWJlbCI6ICJBLkdPIiwgInRleHQiOiAiR08gLT4geCJ9LCB7ImtleSI6ICIvYy9iLmxvbG8jcDAiLCAicGF0aCI6ICIvYy9iLmxvbG8iLCAibGFiZWwiOiAiQi5TVE9QIiwgInRleHQiOiAiU1RPUCAtPiB5In0sIHsia2V5IjogIi9jL2IubG9sbyNwMSIsICJwYXRoIjogIi9jL2IubG9sbyIsICJsYWJlbCI6ICJCLkdPIiwgInRleHQiOiAiR08gLT4geiJ9XX0="
+          },
+          "from": "loading",
+          "expect": {
+            "state": "listing"
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-cache-for-these-roots-loads",
+      "steps": [
+        {
+          "event": "TV_INDEX",
+          "payload": {
+            "roots": [
+              "/c"
+            ],
+            "rebuild": false
+          }
+        },
+        {
+          "event": "TV_CACHE_READ",
+          "payload": {
+            "data": "eyJyb290cyI6IFsiL2MiXSwgImVudHJpZXMiOiBbeyJrZXkiOiAiL2MvYS5sb2xvI3AwIiwgInBhdGgiOiAiL2MvYS5sb2xvIiwgImxhYmVsIjogIkEuR08iLCAidGV4dCI6ICJHTyAtPiB4In0sIHsia2V5IjogIi9jL2IubG9sbyNwMCIsICJwYXRoIjogIi9jL2IubG9sbyIsICJsYWJlbCI6ICJCLlNUT1AiLCAidGV4dCI6ICJTVE9QIC0+IHkifSwgeyJrZXkiOiAiL2MvYi5sb2xvI3AxIiwgInBhdGgiOiAiL2MvYi5sb2xvIiwgImxhYmVsIjogIkIuR08iLCAidGV4dCI6ICJHTyAtPiB6In1dfQ=="
+          },
+          "from": "loading",
+          "expect": {
+            "state": "sourcing",
+            "entity": {
+              "entries": [
+                {
+                  "key": "/c/a.lolo#p0",
+                  "path": "/c/a.lolo",
+                  "label": "A.GO",
+                  "text": "GO -> x"
+                },
+                {
+                  "key": "/c/b.lolo#p0",
+                  "path": "/c/b.lolo",
+                  "label": "B.STOP",
+                  "text": "STOP -> y"
+                },
+                {
+                  "key": "/c/b.lolo#p1",
+                  "path": "/c/b.lolo",
+                  "label": "B.GO",
+                  "text": "GO -> z"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-missing-cache-builds",
+      "steps": [
+        {
+          "event": "TV_INDEX",
+          "payload": {
+            "roots": [
+              "/c"
+            ],
+            "rebuild": false
+          }
+        },
+        {
+          "event": "TV_CACHE_MISSING",
+          "payload": {
+            "error": "absent"
+          },
+          "from": "loading",
+          "expect": {
+            "state": "listing"
+          }
+        }
+      ]
+    },
+    {
+      "id": "nearest-ranks-by-cosine-and-skips-its-own-file",
+      "steps": [
+        {
+          "event": "TV_NEAREST",
+          "payload": {
+            "requestId": "r1",
+            "items": [
+              {
+                "key": "q",
+                "path": "/c/a.lolo",
+                "text": "GO -> q"
+              }
+            ]
+          },
+          "from": "ready",
+          "expect": {
+            "entity": {
+              "requestId": "r1"
+            },
+            "emits": [
+              {
+                "event": "TV_RESOLVE",
+                "payload": {
+                  "wanted": [
+                    {
+                      "key": "ask:q",
+                      "text": "GO -> q"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "VECTORS_ANSWERED",
+          "payload": {
+            "model": "m",
+            "vectors": [
+              {
+                "key": "ask:q",
+                "vector": [
+                  1,
+                  0
+                ]
+              }
+            ]
+          },
+          "from": "querying",
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "TV_PEERS",
+                "payload": {
+                  "requestId": "r1",
+                  "results": [
+                    {
+                      "key": "q",
+                      "peers": [
+                        {
+                          "key": "/c/b.lolo#p1",
+                          "path": "/c/b.lolo",
+                          "label": "B.GO",
+                          "score": 0.8
+                        },
+                        {
+                          "key": "/c/b.lolo#p0",
+                          "path": "/c/b.lolo",
+                          "label": "B.STOP",
+                          "score": 0
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "entity": {
+        "entries": [
+          {
+            "key": "/c/a.lolo#p0",
+            "path": "/c/a.lolo",
+            "label": "A.GO",
+            "text": "GO -> x"
+          },
+          {
+            "key": "/c/b.lolo#p0",
+            "path": "/c/b.lolo",
+            "label": "B.STOP",
+            "text": "STOP -> y"
+          },
+          {
+            "key": "/c/b.lolo#p1",
+            "path": "/c/b.lolo",
+            "label": "B.GO",
+            "text": "GO -> z"
+          }
+        ],
+        "vectors": {
+          "/c/a.lolo#p0": [
+            1,
+            0
+          ],
+          "/c/b.lolo#p0": [
+            0,
+            1
+          ],
+          "/c/b.lolo#p1": [
+            0.8,
+            0.6
+          ]
+        },
+        "ready": true,
+        "model": "m",
+        "snapshots": [],
+        "snapshotPaths": [],
+        "userDir": "/u",
+        "userAnchor": "home",
+        "providerModel": "m",
+        "providerKind": "lmstudio",
+        "embedModel": "m",
+        "sourced": true
+      }
+    },
+    {
+      "id": "a-lookup-before-ready-waits",
+      "steps": [
+        {
+          "event": "TV_INDEX",
+          "payload": {
+            "roots": [
+              "/c"
+            ],
+            "rebuild": true
+          }
+        },
+        {
+          "event": "TV_NEAREST",
+          "payload": {
+            "requestId": "r9",
+            "items": []
+          },
+          "from": "listing",
+          "expect": {
+            "state": "listing",
+            "entity": {
+              "nextId": "r9"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "installed-packages-are-the-roots",
+      "steps": [
+        {
+          "event": "TV_INDEX_PACKAGES",
+          "payload": {
+            "rebuild": true
+          },
+          "expect": {
+            "entity": {
+              "rebuildPackages": true
+            }
+          }
+        },
+        {
+          "event": "TV_PACKAGES",
+          "payload": {
+            "result": [
+              {
+                "root": "/n/std",
+                "prefix": "std",
+                "vectors": null,
+                "vectorsRel": null,
+                "vectorsIn": null
+              },
+              {
+                "root": "/n/io/",
+                "prefix": "almadar-behaviors",
+                "vectors": null,
+                "vectorsRel": null,
+                "vectorsIn": null
+              }
+            ]
+          },
+          "from": "idle",
+          "expect": {
+            "emits": [
+              {
+                "event": "TV_INDEX",
+                "payload": {
+                  "roots": [
+                    "/n/std/behaviors/lolo",
+                    "/n/io/behaviors/lolo"
+                  ],
+                  "rebuild": true
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "unreadable-packages-are-refused",
+      "steps": [
+        {
+          "event": "TV_INDEX_PACKAGES",
+          "payload": {
+            "rebuild": false
+          }
+        },
+        {
+          "event": "TV_PACKAGES_FAILED",
+          "payload": {
+            "error": "no store"
+          },
+          "from": "idle",
+          "expect": {
+            "emits": [
+              {
+                "event": "TV_REFUSED",
+                "payload": {
+                  "code": "TV_PACKAGES_UNREAD"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

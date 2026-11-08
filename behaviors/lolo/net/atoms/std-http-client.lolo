@@ -21,7 +21,8 @@ orbital HttpClientOrbital {
     credUse : boolean @description "The request carries the credential." = false
     credEnc : string @description "The encode the host applies to the credential value: none, base64, uri or form." = "none"
     buf : bytes @description "Bytes read and not yet consumed." = ""
-    dec : bytes @description "Decoded body bytes not yet framed (a stream) or the whole body." = ""
+    dec : bytes @description "Decoded body bytes of a stream not yet framed." = ""
+    parts : [bytes] @description "The decoded body of a call that is not a stream, as the pieces read; joined once, when the reply is whole." = []
     status : number @description "The status of the final head." = 0
     headers : [HttpHeader] @description "The headers of the final head, names lower-cased." = []
     left : number @description "Body bytes still to come: the content-length remainder or the chunk remainder." = 0
@@ -186,6 +187,7 @@ orbital HttpClientOrbital {
         (set @entity.stage "head")
         (set @entity.buf (bytes/from-string ""))
         (set @entity.dec (bytes/from-string ""))
+        (set @entity.parts [])
         (set @entity.status 0)
         (set @entity.headers [])
         (set @entity.left 0)
@@ -227,6 +229,7 @@ orbital HttpClientOrbital {
         (set @entity.stage "head")
         (set @entity.buf (bytes/from-string ""))
         (set @entity.dec (bytes/from-string ""))
+        (set @entity.parts [])
         (set @entity.status 0)
         (set @entity.headers [])
         (set @entity.left 0)
@@ -267,6 +270,7 @@ orbital HttpClientOrbital {
         (set @entity.stage "head")
         (set @entity.buf (bytes/from-string ""))
         (set @entity.dec (bytes/from-string ""))
+        (set @entity.parts [])
         (set @entity.status 0)
         (set @entity.headers [])
         (set @entity.left 0)
@@ -307,6 +311,7 @@ orbital HttpClientOrbital {
         (set @entity.stage "head")
         (set @entity.buf (bytes/from-string ""))
         (set @entity.dec (bytes/from-string ""))
+        (set @entity.parts [])
         (set @entity.status 0)
         (set @entity.headers [])
         (set @entity.left 0)
@@ -349,6 +354,7 @@ orbital HttpClientOrbital {
         (set @entity.stage "head")
         (set @entity.buf (bytes/from-string ""))
         (set @entity.dec (bytes/from-string ""))
+        (set @entity.parts [])
         (set @entity.status 0)
         (set @entity.headers [])
         (set @entity.left 0)
@@ -389,6 +395,7 @@ orbital HttpClientOrbital {
         (set @entity.stage "head")
         (set @entity.buf (bytes/from-string ""))
         (set @entity.dec (bytes/from-string ""))
+        (set @entity.parts [])
         (set @entity.status 0)
         (set @entity.headers [])
         (set @entity.left 0)
@@ -429,6 +436,7 @@ orbital HttpClientOrbital {
         (set @entity.stage "head")
         (set @entity.buf (bytes/from-string ""))
         (set @entity.dec (bytes/from-string ""))
+        (set @entity.parts [])
         (set @entity.status 0)
         (set @entity.headers [])
         (set @entity.left 0)
@@ -696,7 +704,7 @@ orbital HttpClientOrbital {
                 (emit HC_ADVANCE { n: (+ @entity.total (bytes/length @entity.buf)) })))))
 
       HC_ADVANCE -> reading when (and (and (= @entity.stage "length") (>= (bytes/length @entity.buf) @entity.left)) (>= @entity.left 0))
-        (set @entity.dec (bytes/concat [@entity.dec, (bytes/slice @entity.buf 0 @entity.left)]))
+        (if (= @entity.stream "none") (set @entity.parts (array/append @entity.parts (bytes/slice @entity.buf 0 @entity.left))) (set @entity.dec (bytes/concat [@entity.dec, (bytes/slice @entity.buf 0 @entity.left)])))
         (set @entity.total (+ @entity.total @entity.left))
         (set @entity.buf (bytes/slice @entity.buf @entity.left))
         (set @entity.left 0)
@@ -705,7 +713,7 @@ orbital HttpClientOrbital {
       HC_ADVANCE -> reading when (and (= @entity.stage "length") (= (bytes/length @entity.buf) 0) (> @entity.left 0))
         (emit HC_WANT {})
       HC_ADVANCE -> reading when (and (and (= @entity.stage "length") (> (bytes/length @entity.buf) 0) (< (bytes/length @entity.buf) @entity.left)) (>= (+ @entity.total (bytes/length @entity.buf)) 0))
-        (set @entity.dec (bytes/concat [@entity.dec, @entity.buf]))
+        (if (= @entity.stream "none") (set @entity.parts (array/append @entity.parts @entity.buf)) (set @entity.dec (bytes/concat [@entity.dec, @entity.buf])))
         (set @entity.total (+ @entity.total (bytes/length @entity.buf)))
         (set @entity.left (- @entity.left (bytes/length @entity.buf)))
         (set @entity.buf (bytes/from-string ""))
@@ -714,12 +722,12 @@ orbital HttpClientOrbital {
       HC_ADVANCE -> reading when (and (= @entity.stage "close") (not @entity.eof) (= (bytes/length @entity.buf) 0))
         (emit HC_WANT {})
       HC_ADVANCE -> reading when (and (and (= @entity.stage "close") (not @entity.eof) (> (bytes/length @entity.buf) 0)) (>= (+ @entity.total (bytes/length @entity.buf)) 0))
-        (set @entity.dec (bytes/concat [@entity.dec, @entity.buf]))
+        (if (= @entity.stream "none") (set @entity.parts (array/append @entity.parts @entity.buf)) (set @entity.dec (bytes/concat [@entity.dec, @entity.buf])))
         (set @entity.total (+ @entity.total (bytes/length @entity.buf)))
         (set @entity.buf (bytes/from-string ""))
         (emit HC_FRAMED { n: (+ @entity.total (bytes/length @entity.dec)) })
       HC_ADVANCE -> reading when (and (and (= @entity.stage "close") @entity.eof) (>= (+ @entity.total (bytes/length @entity.buf)) 0))
-        (set @entity.dec (bytes/concat [@entity.dec, @entity.buf]))
+        (if (= @entity.stream "none") (set @entity.parts (array/append @entity.parts @entity.buf)) (set @entity.dec (bytes/concat [@entity.dec, @entity.buf])))
         (set @entity.total (+ @entity.total (bytes/length @entity.buf)))
         (set @entity.buf (bytes/from-string ""))
         (set @entity.stage "done")
@@ -748,7 +756,7 @@ orbital HttpClientOrbital {
         (set @entity.sock -1)
         (emit HTTP_FAILED { key: @entity.key, error: "a chunk is not followed by CRLF", kind: "io" })
       HC_ADVANCE -> reading when (and (and (= @entity.stage "chunk-data") (>= (bytes/length @entity.buf) (+ @entity.left 2)) (bytes/equals (bytes/slice @entity.buf @entity.left (+ @entity.left 2)) (bytes/from-string "\r\n"))) (>= @entity.left 0))
-        (set @entity.dec (bytes/concat [@entity.dec, (bytes/slice @entity.buf 0 @entity.left)]))
+        (if (= @entity.stream "none") (set @entity.parts (array/append @entity.parts (bytes/slice @entity.buf 0 @entity.left))) (set @entity.dec (bytes/concat [@entity.dec, (bytes/slice @entity.buf 0 @entity.left)])))
         (set @entity.total (+ @entity.total @entity.left))
         (set @entity.buf (bytes/slice @entity.buf (+ @entity.left 2)))
         (set @entity.left 0)
@@ -789,6 +797,7 @@ orbital HttpClientOrbital {
       HC_AFTER -> reading when (= @entity.stage "flush")
         (set @entity.stage "final")
         (set @entity.dec (bytes/from-string ""))
+        (set @entity.parts [])
         (emit HC_ADVANCE { n: @entity.total })
       HC_AFTER -> reading when (array/includes ["length", "close"] @entity.stage)
         (emit HC_WANT {})
@@ -797,11 +806,11 @@ orbital HttpClientOrbital {
       HC_ADVANCE -> ready when (and (or (= @entity.stage "final") (and (= @entity.stage "done") (or (= @entity.stream "none") (= (bytes/length @entity.dec) 0)))) @entity.keep (not @entity.eof) (= (bytes/length @entity.buf) 0))
         (set @entity.idle @entity.sock)
         (set @entity.sock -1)
-        (emit HTTP_REPLIED { key: @entity.key, status: @entity.status, headers: (default (object/fromEntries (array/map @entity.headers (fn h [@h.name, (str/join (array/map (array/filter @entity.headers (fn g (= @g.name @h.name))) (fn g @g.value)) ", ")]))) {}), body: @entity.dec })
+        (emit HTTP_REPLIED { key: @entity.key, status: @entity.status, headers: (default (object/fromEntries (array/map @entity.headers (fn h [@h.name, (str/join (array/map (array/filter @entity.headers (fn g (= @g.name @h.name))) (fn g @g.value)) ", ")]))) {}), body: (bytes/concat @entity.parts) })
       HC_ADVANCE -> ready when (and (or (= @entity.stage "final") (and (= @entity.stage "done") (or (= @entity.stream "none") (= (bytes/length @entity.dec) 0)))) (not (and @entity.keep (not @entity.eof) (= (bytes/length @entity.buf) 0))))
         (os/close @entity.sock { key: "close" emit: { success: HC_CLOSED, failure: HC_CLOSED } })
         (set @entity.sock -1)
-        (emit HTTP_REPLIED { key: @entity.key, status: @entity.status, headers: (default (object/fromEntries (array/map @entity.headers (fn h [@h.name, (str/join (array/map (array/filter @entity.headers (fn g (= @g.name @h.name))) (fn g @g.value)) ", ")]))) {}), body: (if (= @entity.stream "none") @entity.dec (bytes/from-string "")) })
+        (emit HTTP_REPLIED { key: @entity.key, status: @entity.status, headers: (default (object/fromEntries (array/map @entity.headers (fn h [@h.name, (str/join (array/map (array/filter @entity.headers (fn g (= @g.name @h.name))) (fn g @g.value)) ", ")]))) {}), body: (if (= @entity.stream "none") (bytes/concat @entity.parts) (bytes/from-string "")) })
     }
 
     emits {

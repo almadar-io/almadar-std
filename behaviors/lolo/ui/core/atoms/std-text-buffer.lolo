@@ -1,0 +1,820 @@
+app std-text-buffer [
+  version: "0.1.0",
+  description: "UI substrate: one editable text buffer run on the kernel — lines, a row/column cursor with a sticky goal column, the closed motion vocabulary (left right up down word-forward word-back word-end line-start line-end first-nonblank doc-start doc-end paragraph-forward paragraph-back match-bracket line selection), the operators (delete yank change replace toggle-case indent dedent put put-before join undo redo), registers (unnamed, 0 for yanks, 1 for deletes, a-z, A-Z appending, _ discarding), marks, regex search (the shared dialect, str/find-pattern) with wraparound, and decoration ranges painted by the renderer. It listens to the std-modal-editor vocabulary (MOTION / OPERATE / INSERT_TEXT / SET_MODE) so any modal flavor drives it, and to TYPE / BACKSPACE from the editor surface while inserting. Each normal-mode command is one undo step: an operator opens a step that the INSERT_TEXT or insert session it starts joins, and a plain motion closes it. Renderers only paint lines, the cursor, the visual anchor and decorations; no editing semantics live in a host."
+]
+
+type BufferPos = { row : number!, col : number! }
+type BufferSnapshot = { lines : [string]!, row : number!, col : number! }
+type BufferRegister = { text : string!, linewise : boolean! }
+type BracketScan = { depth : number!, at : number! }
+type OffsetScan = { row : number!, col : number!, rem : number! }
+type BufferState = { path : string!, lines : [string]!, row : number!, col : number!, goalCol : number!, version : number!, savedVersion : number!, past : [BufferSnapshot]!, future : [BufferSnapshot]!, marks : Map string BufferPos!, lastSearch : string!, lastForward : boolean! }
+type PatternMatch = { start : number!, end : number!, text : string! }
+type PopoverSection = { heading : string!, lines : [string]! }
+type BufferPopover = { fromRow : number!, fromCol : number!, toRow : number!, toCol : number!, title : string!, sections : [PopoverSection]!, busy : boolean! }
+type BufferDecoration = { id : string!, fromRow : number!, fromCol : number!, toRow : number!, toCol : number!, tone : string!, label : string }
+
+orbital TextBufferOrbital {
+  entity TextBuffer [runtime] {
+    id : string!
+    editorId : string @description "The editor surface this buffer serves; every listen names it." = ""
+    path : string @description "The file the buffer was loaded from, empty for a scratch buffer." = ""
+    lines : [string] @description "The buffer's text, one entry per line, without separators." = [""]
+    row : number @description "Cursor line, zero-based." = 0
+    col : number @description "Cursor column within the line: a gap index in [0, line length]." = 0
+    goalCol : number @description "The column vertical motions aim for, kept across short lines." = 0
+    anchorRow : number @description "Where VISUAL started (line)." = 0
+    anchorCol : number @description "Where VISUAL started (column)." = 0
+    mode : string @description "The mode std-modal-editor last announced." = "NORMAL"
+    caret : string @description "The caret shape the mode asks the surface to paint: block or bar." = "block"
+    version : number @description "Bumped on every content change." = 0
+    savedVersion : number @description "The version last written to disk." = 0
+    past : [BufferSnapshot] @description "Undo stack, oldest first." = []
+    future : [BufferSnapshot] @description "Redo stack, next redo last." = []
+    stepOpen : boolean @description "An operator or insert session is collecting into the current undo step." = false
+    registers : Map string BufferRegister @description "Register contents by name." = {}
+    activeRegister : string @description "The register the next yank, delete or put uses." = "\""
+    marks : Map string BufferPos @description "Marks by name." = {}
+    lastSearch : string @description "The last searched pattern." = ""
+    lastForward : boolean @description "Whether the last search ran forward." = true
+    pendingOperator : string @description "The operator waiting for its motion to land." = ""
+    pendingMotion : string = ""
+    pendingCount : number = 1
+    pendingRow : number = 0
+    pendingCol : number = 0
+    rangeSR : number @description "Start line of the range the pending operator acts on." = 0
+    rangeSC : number = 0
+    rangeER : number = 0
+    rangeEC : number = 0
+    rangeLinewise : boolean = false
+    decorations : Map string [BufferDecoration] @description "Painted ranges by source (syntax, search, review, ...)." = {}
+    popover : BufferPopover? @description "A note anchored to a range, painted over the text until closed." = null
+    paints : number @description "Counts paints, so each paint in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
+    highlightSearch : boolean @description "Every match of the last search is painted until its source is cleared." = false
+  }
+
+  trait Buffer -> @rebindable TextBuffer [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LOAD_TEXT -> ready
+        (set @entity.editorId ?editorId)
+        (set @entity.path ?path)
+        (set @entity.lines (str/split ?text "\n"))
+        (set @entity.row 0)
+        (set @entity.col 0)
+        (set @entity.goalCol 0)
+        (set @entity.version 0)
+        (set @entity.savedVersion 0)
+        (set @entity.past [])
+        (set @entity.future [])
+        (set @entity.stepOpen false)
+        (set @entity.marks {})
+        (set @entity.pendingOperator "")
+        (set @entity.decorations {})
+        (set @entity.highlightSearch false)
+        (emit BUFFER_EDITED { editorId: @entity.editorId, path: @entity.path, version: @entity.version, text: ?text, dirty: false })
+        (emit CURSOR_MOVED { editorId: @entity.editorId, row: 0, col: 0, mode: @entity.mode })
+      SNAPSHOT -> ready when (= ?editorId @entity.editorId)
+        (emit BUFFER_STATE { editorId: @entity.editorId, state: { path: @entity.path, lines: @entity.lines, row: @entity.row, col: @entity.col, goalCol: @entity.goalCol, version: @entity.version, savedVersion: @entity.savedVersion, past: @entity.past, future: @entity.future, marks: @entity.marks, lastSearch: @entity.lastSearch, lastForward: @entity.lastForward } })
+      RESTORE -> ready
+        (set @entity.editorId ?editorId)
+        (set @entity.path ?state.path)
+        (set @entity.lines ?state.lines)
+        (set @entity.row ?state.row)
+        (set @entity.col ?state.col)
+        (set @entity.goalCol ?state.goalCol)
+        (set @entity.version ?state.version)
+        (set @entity.savedVersion ?state.savedVersion)
+        (set @entity.past ?state.past)
+        (set @entity.future ?state.future)
+        (set @entity.marks ?state.marks)
+        (set @entity.lastSearch ?state.lastSearch)
+        (set @entity.lastForward ?state.lastForward)
+        (set @entity.stepOpen false)
+        (set @entity.pendingOperator "")
+        (set @entity.decorations {})
+        (set @entity.highlightSearch false)
+        (emit BUFFER_EDITED { editorId: @entity.editorId, path: @entity.path, version: @entity.version, text: (str/join @entity.lines "\n"), dirty: (!= @entity.version @entity.savedVersion) })
+        (emit CURSOR_MOVED { editorId: @entity.editorId, row: @entity.row, col: @entity.col, mode: @entity.mode })
+      SAVED -> ready when (= ?editorId @entity.editorId)
+        (set @entity.savedVersion ?version)
+        (emit BUFFER_EDITED { editorId: @entity.editorId, path: @entity.path, version: @entity.version, text: (str/join @entity.lines "\n"), dirty: (!= @entity.version ?version) })
+
+      SET_MODE -> ready when (and (= ?editorId @entity.editorId) (= ?mode "INSERT") (not @entity.stepOpen))
+        (set @entity.past (let ((np (array/append @entity.past { lines: @entity.lines, row: @entity.row, col: @entity.col }))) (if (and (> @config.undoLevels 0) (> (array/len @np) @config.undoLevels)) (array/slice @np (- (array/len @np) @config.undoLevels) (array/len @np)) @np)))
+        (set @entity.future [])
+        (set @entity.stepOpen true)
+        (set @entity.mode ?mode)
+        (set @entity.caret ?caret)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit PAINT { n: @entity.paints })
+      SET_MODE -> ready when (and (= ?editorId @entity.editorId) (= ?mode "INSERT") @entity.stepOpen)
+        (set @entity.mode ?mode)
+        (set @entity.caret ?caret)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit PAINT { n: @entity.paints })
+      SET_MODE -> ready when (and (= ?editorId @entity.editorId) (array/includes ["VISUAL", "VISUAL_LINE"] ?mode))
+        (set @entity.anchorRow (if (array/includes ["VISUAL", "VISUAL_LINE"] @entity.mode) @entity.anchorRow @entity.row))
+        (set @entity.anchorCol (if (array/includes ["VISUAL", "VISUAL_LINE"] @entity.mode) @entity.anchorCol @entity.col))
+        (set @entity.stepOpen false)
+        (set @entity.mode ?mode)
+        (set @entity.caret ?caret)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit PAINT { n: @entity.paints })
+      SET_MODE -> ready when (and (= ?editorId @entity.editorId) (!= ?mode "INSERT") (not (array/includes ["VISUAL", "VISUAL_LINE"] ?mode)))
+        ;; an insert session that changed nothing leaves no undo step
+        (set @entity.past (if (and (= @entity.mode "INSERT") (> (array/len @entity.past) 0) (= (object/get (default (array/last @entity.past) { lines: [], row: 0, col: 0 }) "lines" []) @entity.lines)) (array/slice @entity.past 0 (- (array/len @entity.past) 1)) @entity.past))
+        (set @entity.stepOpen false)
+        (set @entity.mode ?mode)
+        (set @entity.caret ?caret)
+
+        (set @entity.paints (+ @entity.paints 1))
+        (emit PAINT { n: @entity.paints })
+      TYPE -> ready when (= ?editorId @entity.editorId)
+        (emit INSERT_AT { text: ?text })
+      INSERT_TEXT -> ready when (and (= ?editorId @entity.editorId) (not @entity.stepOpen))
+        (set @entity.past (let ((np (array/append @entity.past { lines: @entity.lines, row: @entity.row, col: @entity.col }))) (if (and (> @config.undoLevels 0) (> (array/len @np) @config.undoLevels)) (array/slice @np (- (array/len @np) @config.undoLevels) (array/len @np)) @np)))
+        (set @entity.future [])
+        (set @entity.stepOpen true)
+        (emit INSERT_AT { text: ?text })
+      INSERT_TEXT -> ready when (and (= ?editorId @entity.editorId) @entity.stepOpen)
+        (emit INSERT_AT { text: ?text })
+      INSERT_AT -> ready
+        (let ((ln (default (array/nth @entity.lines @entity.row) ""))
+              (parts (str/split ?text "\n")))
+          (let ((pre (str/slice @ln 0 @entity.col))
+                (post (str/slice @ln @entity.col (str/len @ln)))
+                (n (array/len @parts)))
+            (do (set @entity.lines (array/concat (array/concat (array/slice @entity.lines 0 @entity.row) (if (= @n 1) (list (str/concat @pre ?text @post)) (array/concat (array/concat (list (str/concat @pre (default (array/first @parts) ""))) (array/slice @parts 1 (- @n 1))) (list (str/concat (default (array/last @parts) "") @post))))) (array/slice @entity.lines (+ @entity.row 1) (array/len @entity.lines))))
+            (set @entity.col (if (= @n 1) (+ @entity.col (str/len ?text)) (str/len (default (array/last @parts) ""))))
+            (set @entity.row (+ @entity.row (- @n 1))))))
+        (set @entity.goalCol @entity.col)
+        (set @entity.version (+ @entity.version 1))
+        (emit BUFFER_EDITED { editorId: @entity.editorId, path: @entity.path, version: @entity.version, text: (str/join @entity.lines "\n"), dirty: (!= @entity.version @entity.savedVersion) })
+        (emit CURSOR_MOVED { editorId: @entity.editorId, row: @entity.row, col: @entity.col, mode: @entity.mode })
+      BACKSPACE -> ready when (and (= ?editorId @entity.editorId) (> @entity.col 0))
+        (let ((ln (default (array/nth @entity.lines @entity.row) "")))
+          (set @entity.lines (array/concat (array/concat (array/slice @entity.lines 0 @entity.row) (list (str/concat (str/slice @ln 0 (- @entity.col 1)) (str/slice @ln @entity.col (str/len @ln))))) (array/slice @entity.lines (+ @entity.row 1) (array/len @entity.lines)))))
+        (set @entity.col (- @entity.col 1))
+        (set @entity.goalCol @entity.col)
+        (set @entity.version (+ @entity.version 1))
+        (emit BUFFER_EDITED { editorId: @entity.editorId, path: @entity.path, version: @entity.version, text: (str/join @entity.lines "\n"), dirty: (!= @entity.version @entity.savedVersion) })
+        (emit CURSOR_MOVED { editorId: @entity.editorId, row: @entity.row, col: @entity.col, mode: @entity.mode })
+      BACKSPACE -> ready when (and (= ?editorId @entity.editorId) (= @entity.col 0) (> @entity.row 0))
+        (let ((prev (default (array/nth @entity.lines (- @entity.row 1)) ""))
+              (ln (default (array/nth @entity.lines @entity.row) "")))
+          (do (set @entity.lines (array/concat (array/concat (array/slice @entity.lines 0 (- @entity.row 1)) (list (str/concat @prev @ln))) (array/slice @entity.lines (+ @entity.row 1) (array/len @entity.lines))))
+          (set @entity.row (- @entity.row 1))
+          (set @entity.col (str/len @prev))))
+        (set @entity.goalCol @entity.col)
+        (set @entity.version (+ @entity.version 1))
+        (emit BUFFER_EDITED { editorId: @entity.editorId, path: @entity.path, version: @entity.version, text: (str/join @entity.lines "\n"), dirty: (!= @entity.version @entity.savedVersion) })
+        (emit CURSOR_MOVED { editorId: @entity.editorId, row: @entity.row, col: @entity.col, mode: @entity.mode })
+
+      MOTION -> ready when (and (= ?editorId @entity.editorId) (= ?motion "left"))
+        (set @entity.stepOpen (if (= @entity.pendingOperator "") false @entity.stepOpen))
+        (set @entity.col (math/max 0 (- @entity.col (math/max 1 ?count))))
+        (set @entity.goalCol @entity.col)
+        (emit MOVED { motion: ?motion })
+      MOTION -> ready when (and (= ?editorId @entity.editorId) (= ?motion "right"))
+        (set @entity.stepOpen (if (= @entity.pendingOperator "") false @entity.stepOpen))
+        (set @entity.col (math/min (str/len (default (array/nth @entity.lines @entity.row) "")) (+ @entity.col (math/max 1 ?count))))
+        (set @entity.goalCol @entity.col)
+        (emit MOVED { motion: ?motion })
+      MOTION -> ready when (and (= ?editorId @entity.editorId) (= ?motion "up"))
+        (set @entity.stepOpen (if (= @entity.pendingOperator "") false @entity.stepOpen))
+        (set @entity.row (math/max 0 (- @entity.row (math/max 1 ?count))))
+        (set @entity.col (math/min @entity.goalCol (str/len (default (array/nth @entity.lines @entity.row) ""))))
+        (emit MOVED { motion: ?motion })
+      MOTION -> ready when (and (= ?editorId @entity.editorId) (= ?motion "down"))
+        (set @entity.stepOpen (if (= @entity.pendingOperator "") false @entity.stepOpen))
+        (set @entity.row (math/min (- (array/len @entity.lines) 1) (+ @entity.row (math/max 1 ?count))))
+        (set @entity.col (math/min @entity.goalCol (str/len (default (array/nth @entity.lines @entity.row) ""))))
+        (emit MOVED { motion: ?motion })
+      MOTION -> ready when (and (= ?editorId @entity.editorId) (= ?motion "line-start"))
+        (set @entity.stepOpen (if (= @entity.pendingOperator "") false @entity.stepOpen))
+        (set @entity.col 0)
+        (set @entity.goalCol 0)
+        (emit MOVED { motion: ?motion })
+      MOTION -> ready when (and (= ?editorId @entity.editorId) (= ?motion "line-end"))
+        (set @entity.stepOpen (if (= @entity.pendingOperator "") false @entity.stepOpen))
+        (set @entity.col (math/max 0 (- (str/len (default (array/nth @entity.lines @entity.row) "")) 1)))
+        (set @entity.goalCol @entity.col)
+        (emit MOVED { motion: ?motion })
+      MOTION -> ready when (and (= ?editorId @entity.editorId) (= ?motion "first-nonblank"))
+        (set @entity.stepOpen (if (= @entity.pendingOperator "") false @entity.stepOpen))
+        (let ((ln (default (array/nth @entity.lines @entity.row) "")))
+          (set @entity.col (- (str/len @ln) (str/len (str/replace-pattern @ln "^[ \\t]+" "")))))
+        (set @entity.goalCol @entity.col)
+        (emit MOVED { motion: ?motion })
+      MOTION -> ready when (and (= ?editorId @entity.editorId) (= ?motion "doc-start"))
+        (set @entity.stepOpen (if (= @entity.pendingOperator "") false @entity.stepOpen))
+        (set @entity.row 0)
+        (set @entity.col 0)
+        (set @entity.goalCol 0)
+        (emit MOVED { motion: ?motion })
+      MOTION -> ready when (and (= ?editorId @entity.editorId) (= ?motion "doc-end"))
+        (set @entity.stepOpen (if (= @entity.pendingOperator "") false @entity.stepOpen))
+        (set @entity.row (- (array/len @entity.lines) 1))
+        (set @entity.col (str/len (default (array/last @entity.lines) "")))
+        (set @entity.goalCol @entity.col)
+        (emit MOVED { motion: ?motion })
+      MOTION -> ready when (and (= ?editorId @entity.editorId) (= ?motion "word-forward"))
+        (set @entity.stepOpen (if (= @entity.pendingOperator "") false @entity.stepOpen))
+        (let ((start : BufferPos { row: @entity.row, col: @entity.col }))
+          (let ((p (array/reduce (array/range (math/max 1 ?count)) @start (fn acc step
+                    (let ((ln (default (array/nth @entity.lines @acc.row) "")))
+                      (let ((rest (str/slice @ln @acc.col (str/len @ln))))
+                        (let ((skip (- (str/len @rest) (str/len (str/replace-pattern @rest "^(\\w+|[^\\w\\s]+)?\\s*" "")))))
+                          (if (< (+ @acc.col @skip) (str/len @ln))
+                            { row: @acc.row, col: (+ @acc.col @skip) }
+                            (if (< @acc.row (- (array/len @entity.lines) 1))
+                              (let ((nx (default (array/nth @entity.lines (+ @acc.row 1)) "")))
+                                { row: (+ @acc.row 1), col: (- (str/len @nx) (str/len (str/replace-pattern @nx "^\\s+" ""))) })
+                              { row: @acc.row, col: (str/len @ln) })))))))))
+            (do (set @entity.row @p.row)
+            (set @entity.col @p.col))))
+        (set @entity.goalCol @entity.col)
+        (emit MOVED { motion: ?motion })
+      MOTION -> ready when (and (= ?editorId @entity.editorId) (= ?motion "word-back"))
+        (set @entity.stepOpen (if (= @entity.pendingOperator "") false @entity.stepOpen))
+        (let ((start : BufferPos { row: @entity.row, col: @entity.col }))
+          (let ((p (array/reduce (array/range (math/max 1 ?count)) @start (fn acc step
+                    (let ((before (str/replace-pattern (str/slice (default (array/nth @entity.lines @acc.row) "") 0 @acc.col) "\\s+$" "")))
+                      (if (> (str/len @before) 0)
+                        { row: @acc.row, col: (str/len (str/replace-pattern @before "(\\w+|[^\\w\\s]+)$" "")) }
+                        (if (> @acc.row 0)
+                          (let ((pl (str/replace-pattern (default (array/nth @entity.lines (- @acc.row 1)) "") "\\s+$" "")))
+                            { row: (- @acc.row 1), col: (str/len (str/replace-pattern @pl "(\\w+|[^\\w\\s]+)$" "")) })
+                          { row: 0, col: 0 })))))))
+            (do (set @entity.row @p.row)
+            (set @entity.col @p.col))))
+        (set @entity.goalCol @entity.col)
+        (emit MOVED { motion: ?motion })
+      MOTION -> ready when (and (= ?editorId @entity.editorId) (= ?motion "word-end"))
+        (set @entity.stepOpen (if (= @entity.pendingOperator "") false @entity.stepOpen))
+        (let ((start : BufferPos { row: @entity.row, col: @entity.col }))
+          (let ((p (array/reduce (array/range (math/max 1 ?count)) @start (fn acc step
+                    (let ((ln (default (array/nth @entity.lines @acc.row) "")))
+                      (let ((rest (str/slice @ln (+ @acc.col 1) (str/len @ln))))
+                        (let ((lead (- (str/len @rest) (str/len (str/replace-pattern @rest "^\\s+" "")))))
+                          (if (< (+ (+ @acc.col 1) @lead) (str/len @ln))
+                            (let ((w (str/slice @rest @lead (str/len @rest))))
+                              { row: @acc.row, col: (+ (+ @acc.col @lead) (- (str/len @w) (str/len (str/replace-pattern @w "^(\\w+|[^\\w\\s]+)" "")))) })
+                            (let ((nr (array/find (array/range (+ @acc.row 1) (array/len @entity.lines)) (fn k (!= (str/trim (default (array/nth @entity.lines @k) "")) "")))))
+                              (if (= @nr null)
+                                { row: @acc.row, col: (math/max 0 (- (str/len @ln) 1)) }
+                                (let ((nl (default (array/nth @entity.lines @nr) "")))
+                                  (let ((lead2 (- (str/len @nl) (str/len (str/replace-pattern @nl "^\\s+" "")))))
+                                    (let ((w2 (str/slice @nl @lead2 (str/len @nl))))
+                                      { row: @nr, col: (- (+ @lead2 (- (str/len @w2) (str/len (str/replace-pattern @w2 "^(\\w+|[^\\w\\s]+)" "")))) 1) })))))))))))))
+            (do (set @entity.row @p.row)
+            (set @entity.col @p.col))))
+        (set @entity.goalCol @entity.col)
+        (emit MOVED { motion: ?motion })
+      MOTION -> ready when (and (= ?editorId @entity.editorId) (= ?motion "paragraph-forward"))
+        (set @entity.stepOpen (if (= @entity.pendingOperator "") false @entity.stepOpen))
+        (let ((start : BufferPos { row: @entity.row, col: @entity.col }))
+          (let ((p (array/reduce (array/range (math/max 1 ?count)) @start (fn acc step
+                    (let ((nr (array/find (array/range (+ @acc.row 1) (array/len @entity.lines)) (fn k (= (default (array/nth @entity.lines @k) "") "")))))
+                      (if (= @nr null)
+                        { row: (- (array/len @entity.lines) 1), col: (str/len (default (array/last @entity.lines) "")) }
+                        { row: @nr, col: 0 }))))))
+            (do (set @entity.row @p.row)
+            (set @entity.col @p.col))))
+        (set @entity.goalCol @entity.col)
+        (emit MOVED { motion: ?motion })
+      MOTION -> ready when (and (= ?editorId @entity.editorId) (= ?motion "paragraph-back"))
+        (set @entity.stepOpen (if (= @entity.pendingOperator "") false @entity.stepOpen))
+        (let ((start : BufferPos { row: @entity.row, col: @entity.col }))
+          (let ((p (array/reduce (array/range (math/max 1 ?count)) @start (fn acc step
+                    (let ((nr (array/find (array/reverse (array/range 0 @acc.row)) (fn k (= (default (array/nth @entity.lines @k) "") "")))))
+                      (if (= @nr null) { row: 0, col: 0 } { row: @nr, col: 0 }))))))
+            (do (set @entity.row @p.row)
+            (set @entity.col @p.col))))
+        (set @entity.goalCol @entity.col)
+        (emit MOVED { motion: ?motion })
+      MOTION -> ready when (and (= ?editorId @entity.editorId) (= ?motion "match-bracket"))
+        (set @entity.stepOpen (if (= @entity.pendingOperator "") false @entity.stepOpen))
+        (let ((partners { "(": ")", ")": "(", "[": "]", "]": "[", "{": "}", "}": "{" })
+              (chars (str/split (str/join @entity.lines "\n") ""))
+              (ln (default (array/nth @entity.lines @entity.row) ""))
+              (off (+ (array/reduce (array/range @entity.row) 0 (fn a k (+ @a (+ (str/len (default (array/nth @entity.lines @k) "")) 1)))) @entity.col)))
+          (let ((hit (array/find (array/range @entity.col (str/len @ln)) (fn k (object/has @partners (str/slice @ln @k (+ @k 1)))))))
+            (let ((s (if (= @hit null) -1 (+ (- @off @entity.col) @hit))))
+              (let ((ch (if (< @s 0) "" (default (array/nth @chars @s) "")))
+                    (scan0 : BracketScan { depth: 1, at: -1 }))
+                (let ((t (if (< @s 0) -1
+                          (if (array/includes ["(", "[", "{"] @ch)
+                            (object/get (array/reduce (array/range (+ @s 1) (array/len @chars)) @scan0 (fn a k (if (>= @a.at 0) @a (let ((x (default (array/nth @chars @k) ""))) (if (= @x @ch) { depth: (+ @a.depth 1), at: -1 } (if (= @x (object/get @partners @ch "")) (if (= @a.depth 1) { depth: 0, at: @k } { depth: (- @a.depth 1), at: -1 }) @a)))))) "at" -1)
+                            (object/get (array/reduce (array/reverse (array/range 0 @s)) @scan0 (fn a k (if (>= @a.at 0) @a (let ((x (default (array/nth @chars @k) ""))) (if (= @x @ch) { depth: (+ @a.depth 1), at: -1 } (if (= @x (object/get @partners @ch "")) (if (= @a.depth 1) { depth: 0, at: @k } { depth: (- @a.depth 1), at: -1 }) @a)))))) "at" -1)))))
+                  (let ((o0 : OffsetScan { row: -1, col: 0, rem: @t }))
+                    (let ((q (array/reduce (array/range (array/len @entity.lines)) @o0 (fn a k (if (>= @a.row 0) @a (let ((ll (+ (str/len (default (array/nth @entity.lines @k) "")) 1))) (if (< @a.rem @ll) { row: @k, col: @a.rem, rem: 0 } { row: -1, col: 0, rem: (- @a.rem @ll) })))))))
+                      (do (set @entity.row (if (or (< @t 0) (< @q.row 0)) @entity.row @q.row))
+                      (set @entity.col (if (or (< @t 0) (< @q.row 0)) @entity.col @q.col))))))))))
+        (set @entity.goalCol @entity.col)
+        (emit MOVED { motion: ?motion })
+
+      MOVED -> ready when (= @entity.pendingOperator "")
+        (emit CURSOR_MOVED { editorId: @entity.editorId, row: @entity.row, col: @entity.col, mode: @entity.mode })
+      MOVED -> ready when (!= @entity.pendingOperator "")
+        (let ((fr @entity.pendingRow) (fc @entity.pendingCol) (tr @entity.row) (tc @entity.col) (m @entity.pendingMotion))
+          (let ((before (or (< @tr @fr) (and (= @tr @fr) (< @tc @fc)))))
+            (let ((sr (if @before @tr @fr)) (sc (if @before @tc @fc)) (er (if @before @fr @tr)) (ec (if @before @fc @tc)))
+              (let ((ec2 (if (and (array/includes ["word-end", "line-end", "match-bracket"] @m) (or (!= @tr @fr) (!= @tc @fc))) (math/min (+ @ec 1) (str/len (default (array/nth @entity.lines @er) ""))) @ec))
+                    (clamp (and (= @m "word-forward") (> @er @sr))))
+                (let ((er3 (if @clamp @sr @er))
+                      (ec3 (if @clamp (str/len (default (array/nth @entity.lines @sr) "")) (if (and (= @m "word-forward") (= @entity.pendingOperator "change")) (+ @sc (str/len (str/replace-pattern (str/slice (default (array/nth @entity.lines @sr) "") @sc @ec) "\\s+$" ""))) @ec2))))
+                  (do (set @entity.rangeSR @sr)
+                  (set @entity.rangeSC @sc)
+                  (set @entity.rangeER @er3)
+                  (set @entity.rangeEC @ec3)
+                  (set @entity.rangeLinewise (array/includes ["up", "down", "doc-start", "doc-end", "mark-line"] @m))))))))
+        (set @entity.row @entity.pendingRow)
+        (set @entity.col @entity.pendingCol)
+        (emit APPLY { operator: @entity.pendingOperator })
+
+      OPERATE -> ready when (and (= ?editorId @entity.editorId) (array/includes ["delete", "yank", "change", "replace", "toggle-case", "indent", "dedent"] ?operator) (not (array/includes ["line", "selection", "mark-line", "mark-exact"] ?motion)))
+        (set @entity.past (if (= ?operator "yank") @entity.past (let ((np (array/append @entity.past { lines: @entity.lines, row: @entity.row, col: @entity.col }))) (if (and (> @config.undoLevels 0) (> (array/len @np) @config.undoLevels)) (array/slice @np (- (array/len @np) @config.undoLevels) (array/len @np)) @np))))
+        (set @entity.future (if (= ?operator "yank") @entity.future []))
+        (set @entity.stepOpen (!= ?operator "yank"))
+        (set @entity.pendingOperator ?operator)
+        (set @entity.pendingMotion ?motion)
+        (set @entity.pendingCount (math/max 1 ?count))
+        (set @entity.pendingRow @entity.row)
+        (set @entity.pendingCol @entity.col)
+        (emit MOTION { editorId: ?editorId, motion: ?motion, count: ?count })
+      OPERATE -> ready when (and (= ?editorId @entity.editorId) (array/includes ["delete", "yank", "change", "replace", "toggle-case", "indent", "dedent"] ?operator) (array/includes ["mark-line", "mark-exact"] ?motion) (object/has @entity.marks (default ?mark "")))
+        (set @entity.past (if (= ?operator "yank") @entity.past (let ((np (array/append @entity.past { lines: @entity.lines, row: @entity.row, col: @entity.col }))) (if (and (> @config.undoLevels 0) (> (array/len @np) @config.undoLevels)) (array/slice @np (- (array/len @np) @config.undoLevels) (array/len @np)) @np))))
+        (set @entity.future (if (= ?operator "yank") @entity.future []))
+        (set @entity.stepOpen (!= ?operator "yank"))
+        (set @entity.pendingOperator ?operator)
+        (set @entity.pendingMotion ?motion)
+        (set @entity.pendingCount 1)
+        (set @entity.pendingRow @entity.row)
+        (set @entity.pendingCol @entity.col)
+        (emit MARK_JUMP { editorId: ?editorId, name: (default ?mark ""), exact: (= ?motion "mark-exact") })
+      OPERATE -> ready when (and (= ?editorId @entity.editorId) (array/includes ["mark-line", "mark-exact"] ?motion) (not (object/has @entity.marks (default ?mark ""))))
+      OPERATE -> ready when (and (= ?editorId @entity.editorId) (array/includes ["delete", "yank", "change", "replace", "toggle-case", "indent", "dedent"] ?operator) (= ?motion "line"))
+        (set @entity.past (if (= ?operator "yank") @entity.past (let ((np (array/append @entity.past { lines: @entity.lines, row: @entity.row, col: @entity.col }))) (if (and (> @config.undoLevels 0) (> (array/len @np) @config.undoLevels)) (array/slice @np (- (array/len @np) @config.undoLevels) (array/len @np)) @np))))
+        (set @entity.future (if (= ?operator "yank") @entity.future []))
+        (set @entity.stepOpen (!= ?operator "yank"))
+        (set @entity.pendingOperator ?operator)
+        (set @entity.pendingMotion ?motion)
+        (set @entity.rangeSR @entity.row)
+        (set @entity.rangeSC 0)
+        (set @entity.rangeER (math/min (- (array/len @entity.lines) 1) (+ @entity.row (- (math/max 1 ?count) 1))))
+        (set @entity.rangeEC (str/len (default (array/nth @entity.lines (math/min (- (array/len @entity.lines) 1) (+ @entity.row (- (math/max 1 ?count) 1)))) "")))
+        (set @entity.rangeLinewise true)
+        (emit APPLY { operator: ?operator })
+      OPERATE -> ready when (and (= ?editorId @entity.editorId) (array/includes ["delete", "yank", "change", "replace", "toggle-case", "indent", "dedent"] ?operator) (= ?motion "selection"))
+        (set @entity.past (if (= ?operator "yank") @entity.past (let ((np (array/append @entity.past { lines: @entity.lines, row: @entity.row, col: @entity.col }))) (if (and (> @config.undoLevels 0) (> (array/len @np) @config.undoLevels)) (array/slice @np (- (array/len @np) @config.undoLevels) (array/len @np)) @np))))
+        (set @entity.future (if (= ?operator "yank") @entity.future []))
+        (set @entity.stepOpen (!= ?operator "yank"))
+        (set @entity.pendingOperator ?operator)
+        (set @entity.pendingMotion ?motion)
+        (let ((before (or (< @entity.row @entity.anchorRow) (and (= @entity.row @entity.anchorRow) (< @entity.col @entity.anchorCol)))))
+          (do (set @entity.rangeSR (if @before @entity.row @entity.anchorRow))
+          (set @entity.rangeSC (if @before @entity.col @entity.anchorCol))
+          (set @entity.rangeER (if @before @entity.anchorRow @entity.row))
+          (set @entity.rangeEC (if (= @entity.mode "VISUAL_LINE") (str/len (default (array/nth @entity.lines (if @before @entity.anchorRow @entity.row)) "")) (math/min (+ (if @before @entity.anchorCol @entity.col) 1) (str/len (default (array/nth @entity.lines (if @before @entity.anchorRow @entity.row)) "")))))))
+        (set @entity.rangeSC (if (= @entity.mode "VISUAL_LINE") 0 @entity.rangeSC))
+        (set @entity.rangeLinewise (= @entity.mode "VISUAL_LINE"))
+        (emit APPLY { operator: ?operator })
+
+      APPLY -> ready when (= ?operator "yank")
+        (emit REGISTER_WRITE { kind: "yank", linewise: @entity.rangeLinewise, text: (if @entity.rangeLinewise (str/join (array/slice @entity.lines @entity.rangeSR (+ @entity.rangeER 1)) "\n") (if (= @entity.rangeSR @entity.rangeER) (str/slice (default (array/nth @entity.lines @entity.rangeSR) "") @entity.rangeSC @entity.rangeEC) (str/join (array/concat (array/concat (list (str/slice (default (array/nth @entity.lines @entity.rangeSR) "") @entity.rangeSC (str/len (default (array/nth @entity.lines @entity.rangeSR) "")))) (array/slice @entity.lines (+ @entity.rangeSR 1) @entity.rangeER)) (list (str/slice (default (array/nth @entity.lines @entity.rangeER) "") 0 @entity.rangeEC))) "\n"))) })
+        (set @entity.row @entity.rangeSR)
+        (set @entity.col (if @entity.rangeLinewise @entity.col @entity.rangeSC))
+        (set @entity.goalCol @entity.col)
+        (set @entity.pendingOperator "")
+        (emit CURSOR_MOVED { editorId: @entity.editorId, row: @entity.row, col: @entity.col, mode: @entity.mode })
+      APPLY -> ready when (array/includes ["delete", "change", "replace"] ?operator)
+        (emit REGISTER_WRITE { kind: "delete", linewise: @entity.rangeLinewise, text: (if @entity.rangeLinewise (str/join (array/slice @entity.lines @entity.rangeSR (+ @entity.rangeER 1)) "\n") (if (= @entity.rangeSR @entity.rangeER) (str/slice (default (array/nth @entity.lines @entity.rangeSR) "") @entity.rangeSC @entity.rangeEC) (str/join (array/concat (array/concat (list (str/slice (default (array/nth @entity.lines @entity.rangeSR) "") @entity.rangeSC (str/len (default (array/nth @entity.lines @entity.rangeSR) "")))) (array/slice @entity.lines (+ @entity.rangeSR 1) @entity.rangeER)) (list (str/slice (default (array/nth @entity.lines @entity.rangeER) "") 0 @entity.rangeEC))) "\n"))) })
+        (let ((head (array/slice @entity.lines 0 @entity.rangeSR))
+              (tail (array/slice @entity.lines (+ @entity.rangeER 1) (array/len @entity.lines)))
+              (first (default (array/nth @entity.lines @entity.rangeSR) ""))
+              (last (default (array/nth @entity.lines @entity.rangeER) "")))
+          (set @entity.lines
+            (if @entity.rangeLinewise
+              (if (= ?operator "change")
+                (array/concat (array/concat @head (list "")) @tail)
+                (if (= (array/len (array/concat @head @tail)) 0) (list "") (array/concat @head @tail)))
+              (array/concat (array/concat @head (list (str/concat (str/slice @first 0 @entity.rangeSC) (str/slice @last @entity.rangeEC (str/len @last))))) @tail))))
+        (set @entity.row (math/min @entity.rangeSR (- (array/len @entity.lines) 1)))
+        (set @entity.col (if @entity.rangeLinewise (if (= ?operator "change") 0 (let ((ln (default (array/nth @entity.lines @entity.row) ""))) (- (str/len @ln) (str/len (str/replace-pattern @ln "^[ \\t]+" ""))))) @entity.rangeSC))
+        (set @entity.goalCol @entity.col)
+        (set @entity.pendingOperator "")
+        (set @entity.version (+ @entity.version 1))
+        (emit BUFFER_EDITED { editorId: @entity.editorId, path: @entity.path, version: @entity.version, text: (str/join @entity.lines "\n"), dirty: (!= @entity.version @entity.savedVersion) })
+        (emit CURSOR_MOVED { editorId: @entity.editorId, row: @entity.row, col: @entity.col, mode: @entity.mode })
+      APPLY -> ready when (= ?operator "toggle-case")
+        (set @entity.lines (array/map (array/range (array/len @entity.lines)) (fn k
+          (let ((ln (default (array/nth @entity.lines @k) "")))
+            (if (or (< @k @entity.rangeSR) (> @k @entity.rangeER)) @ln
+              (let ((a (if (= @k @entity.rangeSR) @entity.rangeSC 0))
+                    (b (if (or @entity.rangeLinewise (!= @k @entity.rangeER)) (str/len @ln) @entity.rangeEC)))
+                (str/concat (str/slice @ln 0 @a) (str/join (array/map (str/split (str/slice @ln @a @b) "") (fn ch (if (= (str/upper @ch) @ch) (str/lower @ch) (str/upper @ch)))) "") (str/slice @ln @b (str/len @ln)))))))))
+        (set @entity.row @entity.rangeER)
+        (set @entity.col (math/min @entity.rangeEC (str/len (default (array/nth @entity.lines @entity.rangeER) ""))))
+        (set @entity.goalCol @entity.col)
+        (set @entity.pendingOperator "")
+        (set @entity.version (+ @entity.version 1))
+        (emit BUFFER_EDITED { editorId: @entity.editorId, path: @entity.path, version: @entity.version, text: (str/join @entity.lines "\n"), dirty: (!= @entity.version @entity.savedVersion) })
+        (emit CURSOR_MOVED { editorId: @entity.editorId, row: @entity.row, col: @entity.col, mode: @entity.mode })
+      APPLY -> ready when (array/includes ["indent", "dedent"] ?operator)
+        (set @entity.lines (array/map (array/range (array/len @entity.lines)) (fn k
+          (let ((ln (default (array/nth @entity.lines @k) "")))
+            (if (or (< @k @entity.rangeSR) (> @k @entity.rangeER)) @ln
+              (if (= ?operator "indent")
+                (str/concat @config.indentUnit @ln)
+                (if (str/startsWith @ln "\t")
+                  (str/slice @ln 1 (str/len @ln))
+                  (let ((spaces (- (str/len @ln) (str/len (str/replace-pattern @ln "^ +" "")))))
+                    (str/slice @ln (math/min @spaces (str/len @config.indentUnit)) (str/len @ln))))))))))
+        (set @entity.row @entity.rangeSR)
+        (let ((ln (default (array/nth @entity.lines @entity.rangeSR) "")))
+          (set @entity.col (- (str/len @ln) (str/len (str/replace-pattern @ln "^[ \\t]+" "")))))
+        (set @entity.goalCol @entity.col)
+        (set @entity.pendingOperator "")
+        (set @entity.version (+ @entity.version 1))
+        (emit BUFFER_EDITED { editorId: @entity.editorId, path: @entity.path, version: @entity.version, text: (str/join @entity.lines "\n"), dirty: (!= @entity.version @entity.savedVersion) })
+        (emit CURSOR_MOVED { editorId: @entity.editorId, row: @entity.row, col: @entity.col, mode: @entity.mode })
+
+      REGISTER_WRITE -> ready when (= @entity.activeRegister "_")
+        (set @entity.activeRegister "\"")
+      REGISTER_WRITE -> ready when (!= @entity.activeRegister "_")
+        (let ((r : BufferRegister { text: ?text, linewise: ?linewise })
+              (name @entity.activeRegister))
+          (let ((old (object/get @entity.registers (str/lower @name) { text: "", linewise: false })))
+            (let ((written : BufferRegister (if (validate/pattern @name "^[A-Z]$") { text: (if (= @old.text "") ?text (str/concat @old.text (if (or ?linewise @old.linewise) "\n" "") ?text)), linewise: (or ?linewise @old.linewise) } @r)))
+              (let ((base (object/set (object/set @entity.registers "\"" @written) (if (= ?kind "yank") "0" "1") @r)))
+                (set @entity.registers (if (validate/pattern @name "^[a-zA-Z]$") (object/set @base (str/lower @name) @written) @base))))))
+        (set @entity.activeRegister "\"")
+
+      OPERATE -> ready when (and (= ?editorId @entity.editorId) (array/includes ["put", "put-before"] ?operator) (!= (object/get (object/get @entity.registers (str/lower @entity.activeRegister) { text: "", linewise: false }) "text" "") ""))
+        (set @entity.past (let ((np (array/append @entity.past { lines: @entity.lines, row: @entity.row, col: @entity.col }))) (if (and (> @config.undoLevels 0) (> (array/len @np) @config.undoLevels)) (array/slice @np (- (array/len @np) @config.undoLevels) (array/len @np)) @np)))
+        (set @entity.future [])
+        (set @entity.stepOpen true)
+        (let ((reg (object/get @entity.registers (str/lower @entity.activeRegister) { text: "", linewise: false }))
+              (n (math/max 1 ?count))
+              (ln (default (array/nth @entity.lines @entity.row) "")))
+          (if @reg.linewise
+            (let ((rows (array/flatten (array/map (array/range @n) (fn k (str/split @reg.text "\n")))))
+                  (at (if (= ?operator "put") (+ @entity.row 1) @entity.row)))
+              (do (set @entity.lines (array/concat (array/concat (array/slice @entity.lines 0 @at) @rows) (array/slice @entity.lines @at (array/len @entity.lines))))
+              (set @entity.row @at)
+              (let ((first (default (array/first @rows) "")))
+                (set @entity.col (- (str/len @first) (str/len (str/replace-pattern @first "^[ \\t]+" "")))))))
+            (let ((content (str/repeat @reg.text @n))
+                  (pos (if (= ?operator "put-before") @entity.col (math/min (+ @entity.col 1) (str/len @ln)))))
+              (let ((parts (str/split @content "\n"))
+                    (pre (str/slice @ln 0 @pos))
+                    (post (str/slice @ln @pos (str/len @ln))))
+                (do (set @entity.lines (array/concat (array/concat (array/slice @entity.lines 0 @entity.row) (if (= (array/len @parts) 1) (list (str/concat @pre @content @post)) (array/concat (array/concat (list (str/concat @pre (default (array/first @parts) ""))) (array/slice @parts 1 (- (array/len @parts) 1))) (list (str/concat (default (array/last @parts) "") @post))))) (array/slice @entity.lines (+ @entity.row 1) (array/len @entity.lines))))
+                (set @entity.col (if (= (array/len @parts) 1) (math/max 0 (- (+ @pos (str/len @content)) 1)) @pos)))))))
+        (set @entity.goalCol @entity.col)
+        (set @entity.activeRegister "\"")
+        (set @entity.version (+ @entity.version 1))
+        (emit BUFFER_EDITED { editorId: @entity.editorId, path: @entity.path, version: @entity.version, text: (str/join @entity.lines "\n"), dirty: (!= @entity.version @entity.savedVersion) })
+        (emit CURSOR_MOVED { editorId: @entity.editorId, row: @entity.row, col: @entity.col, mode: @entity.mode })
+      OPERATE -> ready when (and (= ?editorId @entity.editorId) (array/includes ["put", "put-before"] ?operator) (= (object/get (object/get @entity.registers (str/lower @entity.activeRegister) { text: "", linewise: false }) "text" "") ""))
+        (set @entity.activeRegister "\"")
+
+      OPERATE -> ready when (and (= ?editorId @entity.editorId) (= ?operator "join"))
+        (let ((sr (if (= ?motion "selection") (math/min @entity.row @entity.anchorRow) @entity.row)))
+          (let ((er (if (= ?motion "selection") (math/max (math/max @entity.row @entity.anchorRow) (+ @sr 1)) (+ @sr (- (math/max 2 ?count) 1)))))
+            (let ((last (math/min @er (- (array/len @entity.lines) 1))))
+              (if (> @last @sr)
+                (let ((joinCol (str/len (default (array/nth @entity.lines @sr) ""))))
+                  (do (set @entity.past (let ((np (array/append @entity.past { lines: @entity.lines, row: @entity.row, col: @entity.col }))) (if (and (> @config.undoLevels 0) (> (array/len @np) @config.undoLevels)) (array/slice @np (- (array/len @np) @config.undoLevels) (array/len @np)) @np)))
+                  (set @entity.future [])
+                  (set @entity.stepOpen true)
+                  (set @entity.lines (array/concat (array/concat (array/slice @entity.lines 0 @sr) (list (array/reduce (array/range (+ @sr 1) (+ @last 1)) (default (array/nth @entity.lines @sr) "") (fn acc k (str/concat @acc " " (str/replace-pattern (default (array/nth @entity.lines @k) "") "^[ \\t]+" "")))))) (array/slice @entity.lines (+ @last 1) (array/len @entity.lines))))
+                  (set @entity.row @sr)
+                  (set @entity.col @joinCol)
+                  (set @entity.version (+ @entity.version 1))))
+                (set @entity.stepOpen false)))))
+        (set @entity.goalCol @entity.col)
+        (emit BUFFER_EDITED { editorId: @entity.editorId, path: @entity.path, version: @entity.version, text: (str/join @entity.lines "\n"), dirty: (!= @entity.version @entity.savedVersion) })
+        (emit CURSOR_MOVED { editorId: @entity.editorId, row: @entity.row, col: @entity.col, mode: @entity.mode })
+
+      OPERATE -> ready when (and (= ?editorId @entity.editorId) (= ?operator "undo") (> (array/len @entity.past) 0))
+        (let ((m (array/len @entity.past)) (k (math/min (math/max 1 ?count) (array/len @entity.past)))
+              (cur : BufferSnapshot { lines: @entity.lines, row: @entity.row, col: @entity.col }))
+          (let ((to (default (array/nth @entity.past (- @m @k)) @cur)))
+            (do (set @entity.future (array/concat (array/concat @entity.future (list @cur)) (array/reverse (array/slice @entity.past (+ (- @m @k) 1) @m))))
+            (set @entity.past (array/slice @entity.past 0 (- @m @k)))
+            (set @entity.lines @to.lines)
+            (set @entity.row @to.row)
+            (set @entity.col @to.col))))
+        (set @entity.goalCol @entity.col)
+        (set @entity.stepOpen false)
+        (set @entity.version (+ @entity.version 1))
+        (emit BUFFER_EDITED { editorId: @entity.editorId, path: @entity.path, version: @entity.version, text: (str/join @entity.lines "\n"), dirty: (!= @entity.version @entity.savedVersion) })
+        (emit CURSOR_MOVED { editorId: @entity.editorId, row: @entity.row, col: @entity.col, mode: @entity.mode })
+      OPERATE -> ready when (and (= ?editorId @entity.editorId) (= ?operator "redo") (> (array/len @entity.future) 0))
+        (let ((q (array/len @entity.future)) (k (math/min (math/max 1 ?count) (array/len @entity.future)))
+              (cur : BufferSnapshot { lines: @entity.lines, row: @entity.row, col: @entity.col }))
+          (let ((to (default (array/nth @entity.future (- @q @k)) @cur)))
+            (do (set @entity.past (array/concat (array/concat @entity.past (list @cur)) (array/reverse (array/slice @entity.future (+ (- @q @k) 1) @q))))
+            (set @entity.future (array/slice @entity.future 0 (- @q @k)))
+            (set @entity.lines @to.lines)
+            (set @entity.row @to.row)
+            (set @entity.col @to.col))))
+        (set @entity.goalCol @entity.col)
+        (set @entity.stepOpen false)
+        (set @entity.version (+ @entity.version 1))
+        (emit BUFFER_EDITED { editorId: @entity.editorId, path: @entity.path, version: @entity.version, text: (str/join @entity.lines "\n"), dirty: (!= @entity.version @entity.savedVersion) })
+        (emit CURSOR_MOVED { editorId: @entity.editorId, row: @entity.row, col: @entity.col, mode: @entity.mode })
+
+      SELECT_REGISTER -> ready when (and (= ?editorId @entity.editorId) (validate/pattern ?name "^[a-zA-Z0-9\"_]$"))
+        (set @entity.activeRegister ?name)
+      MARK_SET -> ready when (and (= ?editorId @entity.editorId) (validate/pattern ?name "^[a-z]$"))
+        (set @entity.marks (object/set @entity.marks ?name { row: @entity.row, col: @entity.col }))
+      MARK_JUMP -> ready when (and (= ?editorId @entity.editorId) (object/has @entity.marks ?name))
+        (let ((at (object/get @entity.marks ?name { row: 0, col: 0 })))
+          (let ((r (math/min @at.row (- (array/len @entity.lines) 1))))
+            (let ((ln (default (array/nth @entity.lines @r) "")))
+              (do (set @entity.row @r)
+              (set @entity.col (if ?exact (math/min @at.col (str/len @ln)) (- (str/len @ln) (str/len (str/replace-pattern @ln "^[ \\t]+" "")))))))))
+        (set @entity.goalCol @entity.col)
+        (set @entity.stepOpen (if (= @entity.pendingOperator "") false @entity.stepOpen))
+        (emit MOVED { motion: (if ?exact "mark-exact" "mark-line") })
+
+      SEARCH -> ready when (and (= ?editorId @entity.editorId) (!= ?pattern ""))
+        (set @entity.lastSearch ?pattern)
+        (set @entity.lastForward ?forward)
+        (set @entity.highlightSearch @config.highlightSearch)
+        (set @entity.decorations (if @config.highlightSearch (object/set @entity.decorations "search" (let ((none : [PatternMatch] [])) (array/flatten (array/map (array/range (array/len @entity.lines)) (fn k (array/map (default (str/find-pattern (default (array/nth @entity.lines @k) "") @entity.lastSearch) @none) (fn m { id: (str/concat "search-" @k "-" @m.start), fromRow: @k, fromCol: @m.start, toRow: @k, toCol: @m.end, tone: "search", label: "" }))))))) @entity.decorations))
+        (emit FIND { forward: ?forward })
+      SEARCH_NEXT -> ready when (and (= ?editorId @entity.editorId) (!= @entity.lastSearch ""))
+        (emit FIND { forward: (if ?reverse (not @entity.lastForward) @entity.lastForward) })
+      FIND -> ready when ?forward
+        (let ((none : [PatternMatch] []) (pat @entity.lastSearch) (n (array/len @entity.lines)) (r @entity.row))
+          (let ((here (array/first (default (str/find-pattern (default (array/nth @entity.lines @r) "") @pat (+ @entity.col 1)) @none))))
+            (if (!= @here null)
+              (do (set @entity.col @here.start)
+                (emit SEARCH_RESULT { editorId: @entity.editorId, found: true, row: @r, col: @entity.col, wrapped: false }))
+              (let ((k (array/find (array/concat (array/range (+ @r 1) @n) (array/range 0 (+ @r 1))) (fn i (> (array/len (default (str/find-pattern (default (array/nth @entity.lines @i) "") @pat) @none)) 0)))))
+                (if (= @k null)
+                  (emit SEARCH_RESULT { editorId: @entity.editorId, found: false, row: @r, col: @entity.col, wrapped: false })
+                  (do (set @entity.row @k)
+                    (let ((hit : PatternMatch (default (array/first (default (str/find-pattern (default (array/nth @entity.lines @k) "") @pat) @none)) { start: 0, end: 0, text: "" }))) (set @entity.col @hit.start))
+                    (emit SEARCH_RESULT { editorId: @entity.editorId, found: true, row: @k, col: @entity.col, wrapped: (<= @k @r) })))))))
+        (set @entity.goalCol @entity.col)
+        (set @entity.stepOpen false)
+        (emit CURSOR_MOVED { editorId: @entity.editorId, row: @entity.row, col: @entity.col, mode: @entity.mode })
+      FIND -> ready when (not ?forward)
+        (let ((none : [PatternMatch] []) (pat @entity.lastSearch) (n (array/len @entity.lines)) (r @entity.row))
+          (let ((here (array/last (array/filter (default (str/find-pattern (default (array/nth @entity.lines @r) "") @pat) @none) (fn m (< @m.start @entity.col))))))
+            (if (!= @here null)
+              (do (set @entity.col @here.start)
+                (emit SEARCH_RESULT { editorId: @entity.editorId, found: true, row: @r, col: @entity.col, wrapped: false }))
+              (let ((k (array/find (array/concat (array/reverse (array/range 0 @r)) (array/reverse (array/range @r @n))) (fn i (> (array/len (default (str/find-pattern (default (array/nth @entity.lines @i) "") @pat) @none)) 0)))))
+                (if (= @k null)
+                  (emit SEARCH_RESULT { editorId: @entity.editorId, found: false, row: @r, col: @entity.col, wrapped: false })
+                  (do (set @entity.row @k)
+                    (let ((hit : PatternMatch (default (array/last (default (str/find-pattern (default (array/nth @entity.lines @k) "") @pat) @none)) { start: 0, end: 0, text: "" }))) (set @entity.col @hit.start))
+                    (emit SEARCH_RESULT { editorId: @entity.editorId, found: true, row: @k, col: @entity.col, wrapped: (>= @k @r) })))))))
+        (set @entity.goalCol @entity.col)
+        (set @entity.stepOpen false)
+        (emit CURSOR_MOVED { editorId: @entity.editorId, row: @entity.row, col: @entity.col, mode: @entity.mode })
+
+      DECORATE -> ready when (= ?editorId @entity.editorId)
+        (set @entity.decorations (object/set @entity.decorations ?source ?ranges))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit PAINT { n: @entity.paints })
+      CLEAR_DECORATIONS -> ready when (= ?editorId @entity.editorId)
+        (set @entity.decorations (object/omit @entity.decorations (list ?source)))
+        (set @entity.highlightSearch (and @entity.highlightSearch (!= ?source "search")))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit PAINT { n: @entity.paints })
+      POPOVER -> ready when (= ?editorId @entity.editorId)
+        (set @entity.popover ?popover)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit PAINT { n: @entity.paints })
+      CLOSE_POPOVER -> ready when (= ?editorId @entity.editorId)
+        (set @entity.popover null)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit PAINT { n: @entity.paints })
+      CURSOR_SET -> ready when (= ?editorId @entity.editorId)
+        (set @entity.row (math/max 0 (math/min ?row (- (array/len @entity.lines) 1))))
+        (set @entity.col (math/max 0 (math/min ?col (str/len (default (array/nth @entity.lines @entity.row) "")))))
+        (set @entity.goalCol @entity.col)
+        (set @entity.stepOpen false)
+        (emit CURSOR_MOVED { editorId: @entity.editorId, row: @entity.row, col: @entity.col, mode: @entity.mode })
+      CURSOR_MOVED -> ready
+        (set @entity.paints (+ @entity.paints 1))
+        (emit PAINT { n: @entity.paints })
+      PAINT -> ready
+        (render-ui @config.slot {
+          type: code-block
+          code: (str/join @entity.lines "\n")
+          language: text
+          editorId: @entity.editorId
+          cursor: { row: @entity.row, col: @entity.col }
+          caret: @entity.caret
+          selection: (if (array/includes ["VISUAL", "VISUAL_LINE"] @entity.mode) { fromRow: @entity.anchorRow, fromCol: @entity.anchorCol, toRow: @entity.row, toCol: @entity.col, linewise: (= @entity.mode "VISUAL_LINE") } null)
+          decorations: (array/flatten (object/values @entity.decorations))
+          popover: @entity.popover
+          lineNumbers: true
+          relativeLineNumbers: @config.relativeLineNumbers
+          onKey: @config.keyEvent
+          onPointerDown: @config.pointerEvent
+          onHover: @config.hoverEvent
+        })
+      BUFFER_EDITED -> ready when @entity.highlightSearch
+        (set @entity.decorations (object/set @entity.decorations "search" (let ((none : [PatternMatch] [])) (array/flatten (array/map (array/range (array/len @entity.lines)) (fn k (array/map (default (str/find-pattern (default (array/nth @entity.lines @k) "") @entity.lastSearch) @none) (fn m { id: (str/concat "search-" @k "-" @m.start), fromRow: @k, fromCol: @m.start, toRow: @k, toCol: @m.end, tone: "search", label: "" }))))))))
+    }
+
+    emits {
+      BUFFER_EDITED -> external {
+        editorId : string!
+        path : string!
+        version : number!
+        text : string!
+        dirty : boolean!
+      }
+        @description "The buffer's content changed (or was loaded or saved): its full text, version and whether it differs from disk."
+        @synonyms "buffer changed, text changed"
+        @tier "primary"
+      CURSOR_MOVED -> external {
+        editorId : string!
+        row : number!
+        col : number!
+        mode : string!
+      }
+        @description "The cursor settled at a new position."
+        @synonyms "cursor moved, caret moved"
+        @tier "primary"
+      BUFFER_STATE -> external {
+        editorId : string!
+        state : BufferState!
+      }
+        @description "The buffer's whole state (text, cursor, history, marks, last search), for a buffer list to keep while another file is in front."
+        @synonyms "buffer snapshot"
+        @tier "secondary"
+      PAINT -> internal {
+        n : number!
+      }
+        @description "Repaint the editor surface from the buffer's current state."
+        @tier "internal"
+      MARK_JUMP -> internal {
+        editorId : string
+        name : string
+        exact : boolean
+      }
+        @description "An operator over a mark runs the same jump a mark key does."
+        @tier "internal"
+      KEY -> external {
+        editorId : string
+        key : string!
+        code : string
+        ctrl : boolean!
+        alt : boolean
+        shift : boolean
+        meta : boolean
+        repeat : boolean
+      }
+        @description "A keydown on the editor surface, raw; route it to a modal editor (std-modal-editor KEY)."
+        @synonyms "keystroke"
+        @tier "primary"
+      EDITOR_HOVER -> external {
+        editorId : string!
+        row : number!
+        col : number!
+      }
+        @description "The pointer moved onto a character of the surface."
+        @synonyms "hover, mouse over"
+        @tier "secondary"
+      SEARCH_RESULT -> external {
+        editorId : string!
+        found : boolean!
+        row : number!
+        col : number!
+        wrapped : boolean!
+      }
+        @description "Where a search landed, or that the text was not found; wrapped says it passed the buffer's end."
+        @tier "secondary"
+      MOTION -> internal {
+        editorId : string
+        motion : string
+        count : number
+      }
+        @description "An operator runs its motion through the same motion transitions a key does."
+        @tier "internal"
+      MOVED -> internal {
+        motion : string!
+      }
+        @tier "internal"
+      APPLY -> internal {
+        operator : string!
+      }
+        @tier "internal"
+      INSERT_AT -> internal {
+        text : string!
+      }
+        @tier "internal"
+      REGISTER_WRITE -> internal {
+        kind : string!
+        linewise : boolean!
+        text : string!
+      }
+        @tier "internal"
+      FIND -> internal {
+        forward : boolean!
+      }
+        @tier "internal"
+    }
+
+    listens {
+      LOAD_TEXT { editorId : string!  path : string!  text : string! }
+        @description "Replace the buffer with a file's text; history, marks and decorations reset."
+        @synonyms "open file, load buffer"
+      SNAPSHOT { editorId : string! }
+        @description "Answer the buffer's whole state as BUFFER_STATE."
+      RESTORE { editorId : string!  state : BufferState! }
+        @description "Bring back a state BUFFER_STATE answered, history and marks included, for this editor."
+      SAVED { editorId : string!  version : number! }
+        @description "The host wrote this version to disk; the buffer is clean at that version."
+      SET_MODE { editorId : string!  mode : string!  caret : string!  keys : [string] }
+        @description "The modal editor's mode and caret shape. Entering INSERT opens an undo step, VISUAL drops the selection anchor at the cursor."
+      MOTION { editorId : string!  motion : string!  count : number! }
+        @description "Move the cursor by a closed motion name, count times."
+      OPERATE { editorId : string!  operator : string!  motion : string!  count : number!  mark : string }
+        @description "Apply an operator over the range a motion describes (line for doubled operators, selection in VISUAL or VISUAL_LINE, mark-line or mark-exact up to the named mark); put, join, undo and redo act at the cursor."
+      INSERT_TEXT { editorId : string!  text : string! }
+        @description "Insert text at the cursor as part of a command (o, O, r); it joins the step its operator opened."
+      TYPE { editorId : string!  text : string! }
+        @description "Text typed on the surface while inserting; it joins the insert session's undo step."
+        @synonyms "typing, keystroke text"
+      BACKSPACE { editorId : string! }
+        @description "Delete the character before the cursor, joining with the line above at column 0."
+      SELECT_REGISTER { editorId : string!  name : string! }
+        @description "The next yank, delete or put uses this register (a-z, A-Z to append, 0-9, \" unnamed, _ discard)."
+      MARK_SET { editorId : string!  name : string! }
+        @description "Remember the cursor under a lowercase mark name."
+      MARK_JUMP { editorId : string!  name : string!  exact : boolean! }
+        @description "Return to a mark: its exact column, or the line's first non-blank."
+      SEARCH { editorId : string!  pattern : string!  forward : boolean! }
+        @description "Find a regex (the shared dialect) from the cursor, wrapping at the buffer's end; an invalid pattern finds nothing."
+      SEARCH_NEXT { editorId : string!  reverse : boolean! }
+        @description "Repeat the last search in its direction, or the opposite one."
+      CURSOR_SET { editorId : string!  row : number!  col : number! }
+        @description "Put the cursor at a position (a click on the surface), clamped into the buffer."
+        @synonyms "click, place cursor"
+      POPOVER { editorId : string!  popover : BufferPopover! }
+        @description "Show a note anchored to a range (a review, a hover), replacing any open one."
+      CLOSE_POPOVER { editorId : string! }
+        @description "Close the anchored note."
+      DECORATE { editorId : string!  source : string!  ranges : [BufferDecoration]! }
+        @description "Replace the ranges one source paints (syntax, search hits, review highlights)."
+      CLEAR_DECORATIONS { editorId : string!  source : string! }
+        @description "Remove every range one source paints."
+    }
+
+    config {
+      slot : slot = main
+        @label "Slot"
+        @description "Where the editor surface renders."
+        @tier "presentation"
+      relativeLineNumbers : boolean = false
+        @label "Relative line numbers"
+        @description "Number each line by its distance from the cursor line (relativenumber)."
+        @synonyms "relativenumber, relative numbers"
+        @tier "presentation"
+      keyEvent : string = "KEY"
+        @label "Key event"
+        @description "The event the surface emits for every keydown in buffer mode; route it to the modal editor."
+        @tier "internal"
+      pointerEvent : string = "CURSOR_SET"
+        @label "Pointer event"
+        @description "The event the surface emits with the row and column a pointer pressed."
+        @tier "internal"
+      hoverEvent : string = "EDITOR_HOVER"
+        @label "Hover event"
+        @description "The event the surface emits with the row and column the pointer rests over."
+        @tier "internal"
+      undoLevels : number = 0
+        @label "Undo levels"
+        @description "How many undo steps the buffer keeps; 0 keeps every step, a positive number drops the oldest beyond it."
+        @synonyms "undolevels, history size"
+        @tier "presentation"
+      highlightSearch : boolean = true
+        @label "Highlight search"
+        @description "Paint every match of the last search as the search decoration source, following edits, until that source is cleared."
+        @synonyms "hlsearch"
+        @tier "presentation"
+      indentUnit : string = "  "
+        @label "Indent unit"
+        @description "What indent adds to and dedent removes from the start of each line."
+        @synonyms "shiftwidth, indent width"
+        @tier "presentation"
+    }
+  }
+
+  page "/text-buffer" as TextBufferPage -> Buffer
+}

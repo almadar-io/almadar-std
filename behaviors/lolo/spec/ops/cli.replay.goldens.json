@@ -1,0 +1,30 @@
+{
+ "atom": "ops/atoms/std-cli.lolo",
+ "trait": "CliRunner",
+ "cases": [
+  {
+   "id": "an inherited child's spawn answer carries no descriptors and the runner waits for its exit",
+   "config": { "stdio": "inherit" },
+   "steps": [
+    {
+     "event": "CLI_SPAWNED",
+     "from": "running",
+     "payload": { "pid": 4242, "key": "spawn" },
+     "expect": { "state": "running", "effects": [{ "type": "os/wait", "key": "wait", "optionsAt": 1 }] }
+    }
+   ]
+  },
+  {
+   "id": "control: a piped child's spawn answer carries both descriptors and the runner reads them",
+   "config": { "stdio": "pipe" },
+   "steps": [
+    {
+     "event": "CLI_SPAWNED",
+     "from": "running",
+     "payload": { "pid": 4242, "stdout": 5, "stderr": 6, "key": "spawn" },
+     "expect": { "state": "running", "effects": [{ "type": "os/read", "key": "out", "optionsAt": 2 }] }
+    }
+   ]
+  }
+ ]
+}
