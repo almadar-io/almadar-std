@@ -1,0 +1,72 @@
+app ops-bit [
+  version: "1.0.0",
+  description: "Native renderers operator fixture: the bit family's pure operators on literal inputs, with edge cases."
+]
+orbital OpsOrbital {
+  entity Ops [runtime] {
+    id : string!
+    andA : number?
+    andB : number?
+    andC : number?
+    andD : number?
+    notA : number?
+    notB : number?
+    notC : number?
+    orA : number?
+    orB : number?
+    orC : number?
+    rotlA : number?
+    rotlB : number?
+    rotlC : number?
+    rotlD : number?
+    rotrA : number?
+    rotrB : number?
+    rotrC : number?
+    shlA : number?
+    shlB : number?
+    shlC : number?
+    shlD : number?
+    shrA : number?
+    shrB : number?
+    shrC : number?
+    shrD : number?
+    xorA : number?
+    xorB : number?
+    xorC : number?
+  }
+  trait Probe -> Ops {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (set @entity.andA (bit/and 305419896 255))
+        (set @entity.andB (bit/and 4294967295 0))
+        (set @entity.andC (bit/and -1 65535))
+        (set @entity.andD (bit/and 15 12 10))
+        (set @entity.notA (bit/not 0))
+        (set @entity.notB (bit/not 4294967295))
+        (set @entity.notC (bit/not 305419896))
+        (set @entity.orA (bit/or 2147483648 1))
+        (set @entity.orB (bit/or 0 0))
+        (set @entity.orC (bit/or 1 2 4))
+        (set @entity.rotlA (bit/rotl 305419896 8))
+        (set @entity.rotlB (bit/rotl 2147483648 1))
+        (set @entity.rotlC (bit/rotl 1 32))
+        (set @entity.rotlD (bit/rotl 1 0))
+        (set @entity.rotrA (bit/rotr 305419896 8))
+        (set @entity.rotrB (bit/rotr 1 1))
+        (set @entity.rotrC (bit/rotr 1 32))
+        (set @entity.shlA (bit/shl 305419896 4))
+        (set @entity.shlB (bit/shl 1 31))
+        (set @entity.shlC (bit/shl 1 32))
+        (set @entity.shlD (bit/shl 1 0))
+        (set @entity.shrA (bit/shr 305419896 8))
+        (set @entity.shrB (bit/shr 4294967295 31))
+        (set @entity.shrC (bit/shr 1 32))
+        (set @entity.shrD (bit/shr 0 5))
+        (set @entity.xorA (bit/xor 305419896 2596069104))
+        (set @entity.xorB (bit/xor 5 5))
+        (set @entity.xorC (bit/xor 1 2 4))
+    }
+  }
+  page boot as OpsStart -> Probe
+}

@@ -1,0 +1,109 @@
+app ops-vec [
+  version: "1.0.0",
+  description: "Native renderers operator fixture: the vec family's pure operators on literal inputs, with edge cases."
+]
+type V2 = { x : number!, y : number! }
+type V3 = { x : number!, y : number!, z : number! }
+type VecOrNum = V2 | V3 | number
+orbital OpsOrbital {
+  entity Ops [runtime] {
+    id : string!
+    addA : V2
+    addB : V2
+    addC : V3
+    angA : number = 0
+    angB : number = 0
+    angC : number = 0
+    angD : number = 0
+    angE : number = 0
+    clA : V2
+    clB : V2
+    clC : V2
+    clD : V2
+    crossA : VecOrNum
+    crossB : VecOrNum
+    crossC : VecOrNum
+    distA : number = 0
+    distB : number = 0
+    distC : number = 0
+    dsqA : number = 0
+    dsqB : number = 0
+    dotA : number = 0
+    dotB : number = 0
+    dotC : number = 0
+    lenA : number = 0
+    lenB : number = 0
+    lenC : number = 0
+    lsqA : number = 0
+    lsqB : number = 0
+    lerpA : V2
+    lerpB : V2
+    lerpC : V2
+    lerpD : V2
+    normA : V2
+    normB : V2
+    normC : V2
+    rotA : V2
+    rotB : V2
+    rotC : V2
+    rotD : V2
+    scaleA : V2
+    scaleB : V2
+    scaleC : V2
+    subA : V2
+    subB : V2
+    subC : V3
+  }
+  trait Probe -> Ops {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (set @entity.addA (vec/add {x: 1, y: 2} {x: 3, y: 4}))
+        (set @entity.addB (vec/add {x: 0, y: 0} {x: -1, y: -2}))
+        (set @entity.addC (vec/add {x: 1, y: 2, z: 3} {x: 4, y: 5, z: 6}))
+        (set @entity.angA (vec/angle {x: 1, y: 0} {x: 0, y: 1}))
+        (set @entity.angB (vec/angle {x: 1, y: 0} {x: 1, y: 0}))
+        (set @entity.angC (vec/angle {x: 1, y: 0} {x: -1, y: 0}))
+        (set @entity.angD (vec/angle {x: 0, y: 0} {x: 1, y: 0}))
+        (set @entity.angE (vec/angle {x: 1, y: 1} {x: 1, y: 0}))
+        (set @entity.clA (vec/clamp-length {x: 3, y: 4} 2.5))
+        (set @entity.clB (vec/clamp-length {x: 3, y: 4} 10))
+        (set @entity.clC (vec/clamp-length {x: 0, y: 0} 1))
+        (set @entity.clD (vec/clamp-length {x: 3, y: 4} 0))
+        (set @entity.crossA (vec/cross {x: 1, y: 0} {x: 0, y: 1}))
+        (set @entity.crossB (vec/cross {x: 2, y: 3} {x: 4, y: 6}))
+        (set @entity.crossC (vec/cross {x: 1, y: 0, z: 0} {x: 0, y: 1, z: 0}))
+        (set @entity.distA (vec/distance {x: 0, y: 0} {x: 3, y: 4}))
+        (set @entity.distB (vec/distance {x: 1, y: 1} {x: 1, y: 1}))
+        (set @entity.distC (vec/distance {x: -1, y: -1} {x: 2, y: 3}))
+        (set @entity.dsqA (vec/distance-sq {x: 0, y: 0} {x: 3, y: 4}))
+        (set @entity.dsqB (vec/distance-sq {x: 1, y: 1} {x: 1, y: 1}))
+        (set @entity.dotA (vec/dot {x: 1, y: 2} {x: 3, y: 4}))
+        (set @entity.dotB (vec/dot {x: 1, y: 0} {x: 0, y: 1}))
+        (set @entity.dotC (vec/dot {x: 1, y: 2, z: 3} {x: 4, y: 5, z: 6}))
+        (set @entity.lenA (vec/length {x: 3, y: 4}))
+        (set @entity.lenB (vec/length {x: 0, y: 0}))
+        (set @entity.lenC (vec/length {x: -3, y: -4}))
+        (set @entity.lsqA (vec/length-sq {x: 3, y: 4}))
+        (set @entity.lsqB (vec/length-sq {x: 0, y: 0}))
+        (set @entity.lerpA (vec/lerp {x: 0, y: 0} {x: 10, y: 20} 0.5))
+        (set @entity.lerpB (vec/lerp {x: 0, y: 0} {x: 10, y: 20} 0))
+        (set @entity.lerpC (vec/lerp {x: 0, y: 0} {x: 10, y: 20} 1.5))
+        (set @entity.lerpD (vec/lerp {x: 0, y: 0} {x: 10, y: 20} -1))
+        (set @entity.normA (vec/normalize {x: 3, y: 4}))
+        (set @entity.normB (vec/normalize {x: 0, y: 0}))
+        (set @entity.normC (vec/normalize {x: -2, y: 0}))
+        (set @entity.rotA (vec/rotate {x: 1, y: 0} 1.5707963267948966))
+        (set @entity.rotB (vec/rotate {x: 1, y: 0} 0))
+        (set @entity.rotC (vec/rotate {x: 1, y: 1} 3.141592653589793))
+        (set @entity.rotD (vec/rotate {x: 2, y: 0} -1))
+        (set @entity.scaleA (vec/scale {x: 2, y: 3} 2))
+        (set @entity.scaleB (vec/scale {x: 2, y: 3} 0))
+        (set @entity.scaleC (vec/scale {x: 2, y: 3} -0.5))
+        (set @entity.subA (vec/sub {x: 5, y: 7} {x: 1, y: 2}))
+        (set @entity.subB (vec/sub {x: 0, y: 0} {x: 1, y: 1}))
+        (set @entity.subC (vec/sub {x: 5, y: 7, z: 9} {x: 1, y: 2, z: 3}))
+    }
+  }
+  page boot as OpsStart -> Probe
+}

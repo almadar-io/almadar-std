@@ -1,0 +1,73 @@
+app ops-json [
+  version: "1.0.0",
+  description: "Native renderers operator fixture: the json family's pure operators on literal inputs, with edge cases."
+]
+type Pt = { x : number!, y : number! }
+orbital OpsOrbital {
+  entity Ops [runtime] {
+    id : string!
+    nodesA : [SExpr] = []
+    nodesB : [SExpr] = []
+    nodesC : [SExpr] = []
+    nodesD : [SExpr] = []
+    nodesE : [SExpr] = []
+    parseA : Pt?
+    parseB : Pt?
+    parseC : Pt?
+    parseD : Pt?
+    parseE : Pt?
+    parseF : Pt?
+    parseG : Pt?
+    strA : string = ""
+    strB : string = ""
+    strC : string = ""
+    strD : string = ""
+    strE : string = ""
+    strF : string = ""
+    strG : string = ""
+    strH : string = ""
+    strI : string = ""
+    validA : boolean = false
+    validB : boolean = false
+    validC : boolean = false
+    validD : boolean = false
+    validE : boolean = false
+    validF : boolean = false
+    validG : boolean = false
+  }
+  trait Probe -> Ops {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (set @entity.nodesA (json/nodes {a: [1]}))
+        (set @entity.nodesB (json/nodes 5))
+        (set @entity.nodesC (json/nodes [1 [2 3]]))
+        (set @entity.nodesD (json/nodes "s"))
+        (set @entity.nodesE (json/nodes {a: {b: 1}, c: 2}))
+        (set @entity.parseA (json/parse "{\"x\": 1, \"y\": 2}" Pt))
+        (set @entity.parseB (json/parse "garbage" Pt))
+        (set @entity.parseC (json/parse "{\"x\": \"s\"}" Pt))
+        (set @entity.parseD (json/parse "" Pt))
+        (set @entity.parseE (json/parse "{\"x\": 1}" Pt))
+        (set @entity.parseF (json/parse "{\"x\": 1, \"y\": 2, \"z\": 3}" Pt))
+        (set @entity.parseG (json/parse "null" Pt))
+        (set @entity.strA (json/stringify {y: 2, x: 1}))
+        (set @entity.strB (json/stringify {y: 2, x: 1} {sorted: true}))
+        (set @entity.strC (json/stringify {y: 2, x: 1} {pretty: true}))
+        (set @entity.strD (json/stringify "é😀"))
+        (set @entity.strE (json/stringify [1 2.5 -3]))
+        (set @entity.strF (json/stringify {a: [1 2], c: "q\"uote"}))
+        (set @entity.strG (json/stringify null))
+        (set @entity.strH (json/stringify {y: 2, x: 1} {pretty: true, sorted: true}))
+        (set @entity.strI (json/stringify 1.0))
+        (set @entity.validA (json/valid "null"))
+        (set @entity.validB (json/valid "{"))
+        (set @entity.validC (json/valid ""))
+        (set @entity.validD (json/valid "[1, 2, 3]"))
+        (set @entity.validE (json/valid "{\"a\": }"))
+        (set @entity.validF (json/valid "  true  "))
+        (set @entity.validG (json/valid "'a'"))
+    }
+  }
+  page boot as OpsStart -> Probe
+}

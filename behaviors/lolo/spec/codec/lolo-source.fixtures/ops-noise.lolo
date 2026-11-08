@@ -1,0 +1,46 @@
+app ops-noise [
+  version: "1.0.0",
+  description: "Native renderers operator fixture: the noise family's pure operators on literal inputs, with edge cases."
+]
+orbital OpsOrbital {
+  entity Ops [runtime] {
+    id : string!
+    fbmA : number = 0
+    fbmB : number = 0
+    fbmC : number = 0
+    fbmD : number = 0
+    fbmE : number = 0
+    perA : number = 0
+    perB : number = 0
+    perC : number = 0
+    perD : number = 0
+    perE : number = 0
+    simA : number = 0
+    simB : number = 0
+    simC : number = 0
+    simD : number = 0
+    simE : number = 0
+  }
+  trait Probe -> Ops {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (set @entity.fbmA (noise/fbm 0.5 0.3 4 1))
+        (set @entity.fbmB (noise/fbm 0 0 1 0))
+        (set @entity.fbmC (noise/fbm 10.25 -3.75 3 42))
+        (set @entity.fbmD (noise/fbm 1.5 2.5 0 7))
+        (set @entity.fbmE (noise/fbm -0.5 0.5 6 123))
+        (set @entity.perA (noise/perlin 0.5 0.3 1))
+        (set @entity.perB (noise/perlin 0 0 0))
+        (set @entity.perC (noise/perlin 10.25 -3.75 42))
+        (set @entity.perD (noise/perlin 1 1 7))
+        (set @entity.perE (noise/perlin -2.5 8.125 123))
+        (set @entity.simA (noise/simplex 0.5 0.3 1))
+        (set @entity.simB (noise/simplex 0 0 0))
+        (set @entity.simC (noise/simplex 10.25 -3.75 42))
+        (set @entity.simD (noise/simplex 1 1 7))
+        (set @entity.simE (noise/simplex -2.5 8.125 123))
+    }
+  }
+  page boot as OpsStart -> Probe
+}

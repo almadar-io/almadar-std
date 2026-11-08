@@ -1,0 +1,56 @@
+app ops-base64 [
+  version: "1.0.0",
+  description: "Native renderers operator fixture: the base64 family's pure operators on literal inputs, with edge cases."
+]
+orbital OpsOrbital {
+  entity Ops [runtime] {
+    id : string!
+    decA : string?
+    decB : string?
+    decC : string?
+    decD : string?
+    decE : string?
+    decF : string?
+    decG : string?
+    encA : string = ""
+    encB : string = ""
+    encC : string = ""
+    encD : string = ""
+    encE : string = ""
+    encF : string = ""
+    validA : boolean = false
+    validB : boolean = false
+    validC : boolean = false
+    validD : boolean = false
+    validE : boolean = false
+    validF : boolean = false
+    validG : boolean = false
+  }
+  trait Probe -> Ops {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (set @entity.decA (base64/decode "Zm9vYmFy"))
+        (set @entity.decB (base64/decode ""))
+        (set @entity.decC (base64/decode "Zm9v!"))
+        (set @entity.decD (base64/decode "Zg=="))
+        (set @entity.decE (base64/decode "Zg"))
+        (set @entity.decF (base64/decode "w6nwn5iA"))
+        (set @entity.decG (base64/decode "/w=="))
+        (set @entity.encA (base64/encode "foobar"))
+        (set @entity.encB (base64/encode ""))
+        (set @entity.encC (base64/encode "f"))
+        (set @entity.encD (base64/encode "fo"))
+        (set @entity.encE (base64/encode "é😀"))
+        (set @entity.encF (base64/encode "??>>"))
+        (set @entity.validA (base64/valid "Zm9vYmFy"))
+        (set @entity.validB (base64/valid ""))
+        (set @entity.validC (base64/valid "Zm9v!"))
+        (set @entity.validD (base64/valid "Zg=="))
+        (set @entity.validE (base64/valid "Zg"))
+        (set @entity.validF (base64/valid "Z"))
+        (set @entity.validG (base64/valid "Zm9vYmFy="))
+    }
+  }
+  page boot as OpsStart -> Probe
+}

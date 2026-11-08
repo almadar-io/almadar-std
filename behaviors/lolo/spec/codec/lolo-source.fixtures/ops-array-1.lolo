@@ -1,0 +1,188 @@
+app ops-array-1 [
+  version: "1.0.0",
+  description: "Native renderers operator fixture: the array-1 family's pure operators on literal inputs, with edge cases."
+]
+type Item = { name : string!, price : number!, status : string! }
+type Near = { index : number!, score : number!, margin : number! }
+orbital OpsOrbital {
+  entity Ops [runtime] {
+    id : string!
+    appA : [number] = []
+    appB : [number] = []
+    appC : [string] = []
+    avgA : number?
+    avgB : number?
+    avgC : number?
+    catA : [number] = []
+    catB : [number] = []
+    catC : [number] = []
+    cosA : number?
+    cosB : number?
+    cosC : number?
+    cosD : number?
+    cosE : number?
+    cosF : number?
+    cntA : number = 0
+    cntB : number = 0
+    cntC : number = 0
+    dropA : [number] = []
+    dropB : [number] = []
+    dropC : [number] = []
+    dropD : [number] = []
+    dlA : [number] = []
+    dlB : [number] = []
+    dlC : [number] = []
+    dlD : [number] = []
+    evA : boolean = false
+    evB : boolean = false
+    evC : boolean = false
+    filtA : [number] = []
+    filtB : [number] = []
+    filtC : [number] = []
+    filtD : [Item] = []
+    findA : number?
+    findB : number?
+    findC : number?
+    findD : Item?
+    fiA : number = 0
+    fiB : number = 0
+    fiC : number = 0
+    firstA : number?
+    firstB : number?
+    firstC : string?
+    flatA : [number] = []
+    flatB : [number] = []
+    flatC : [[number]] = []
+    flatD : [number] = []
+    grpA : [string] = []
+    grpB : [number] = []
+    grpC : [number] = []
+    grpD : [string] = []
+    inclA : boolean = false
+    inclB : boolean = false
+    inclC : boolean = false
+    inclD : boolean = false
+    idxA : number = 0
+    idxB : number = 0
+    idxC : number = 0
+    idxD : number = 0
+    insA : [number] = []
+    insC : [number] = []
+    insD : [number] = []
+    lastA : number?
+    lastB : number?
+    lastC : string?
+    lenA : number = 0
+    lenB : number = 0
+    lenC : number = 0
+    mapA : [number] = []
+    mapB : [number] = []
+    mapC : [string] = []
+    mapD : [number] = []
+    maxA : number?
+    maxB : number?
+    maxC : number?
+    minA : number?
+    minB : number?
+    minC : number?
+    nearA : Near?
+    nearB : Near?
+    nearC : Near?
+    nearD : Near?
+    nthA : number?
+    nthB : number?
+    nthD : number?
+  }
+  trait Probe -> Ops {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (set @entity.appA (array/append [1 2] 3))
+        (set @entity.appB (array/append [] 1))
+        (set @entity.appC (array/append ["a"] "é"))
+        (set @entity.avgA (array/avg [{price: 80}, {price: 90}] "price"))
+        (set @entity.avgB (let ((eei : [Item] [])) (array/avg @eei "price")))
+        (set @entity.avgC (array/avg [{price: 1}, {price: 2}, {price: 4}] "price"))
+        (set @entity.catA (array/concat [1 2] [3 4]))
+        (set @entity.catB (array/concat [] []))
+        (set @entity.catC (array/concat [1] [] [2] [3 4]))
+        (set @entity.cosA (array/cosine [1 0] [1 0]))
+        (set @entity.cosB (array/cosine [1 0] [0 1]))
+        (set @entity.cosC (array/cosine [0 0] [1 1]))
+        (set @entity.cosD (array/cosine [1 2 3] [4 5 6]))
+        (set @entity.cosE (array/cosine [1 2] [1 2 3]))
+        (set @entity.cosF (array/cosine [] []))
+        (set @entity.cntA (array/count [1 2 3 4] (fn x (> @x 2))))
+        (set @entity.cntB (let ((een : [number] [])) (array/count @een (fn x true))))
+        (set @entity.cntC (array/count [1 2] (fn x false)))
+        (set @entity.dropA (array/drop [1 2 3 4 5] 2))
+        (set @entity.dropB (array/drop [1 2 3] 5))
+        (set @entity.dropC (array/drop [1 2 3] 0))
+        (set @entity.dropD (let ((een : [number] [])) (array/drop @een 2)))
+        (set @entity.dlA (array/dropLast [1 2 3 4 5] 2))
+        (set @entity.dlB (array/dropLast [1 2 3] 5))
+        (set @entity.dlC (array/dropLast [1 2 3] 0))
+        (set @entity.dlD (let ((een : [number] [])) (array/dropLast @een 1)))
+        (set @entity.evA (array/every [1 2 3] (fn x (> @x 0))))
+        (set @entity.evB (array/every [1 -2 3] (fn x (> @x 0))))
+        (set @entity.evC (let ((een : [number] [])) (array/every @een (fn x false))))
+        (set @entity.filtA (array/filter [1 2 3 4 5] (fn x (> @x 2))))
+        (set @entity.filtB (let ((een : [number] [])) (array/filter @een (fn x true))))
+        (set @entity.filtC (array/filter [1 2] (fn x false)))
+        (set @entity.filtD (array/filter [{name: "a", price: 50, status: "x"}, {name: "b", price: 150, status: "y"}] (fn x (> @x.price 100))))
+        (set @entity.findA (array/find [1 2 3 4] (fn x (> @x 2))))
+        (set @entity.findB (array/find [1 2] (fn x (> @x 5))))
+        (set @entity.findC (let ((een : [number] [])) (array/find @een (fn x true))))
+        (set @entity.findD (array/find [{name: "a", price: 50, status: "x"}, {name: "b", price: 150, status: "y"}] (fn x (= @x.status "y"))))
+        (set @entity.fiA (array/findIndex [1 2 3 4] (fn x (> @x 2))))
+        (set @entity.fiB (array/findIndex [1 2] (fn x (> @x 5))))
+        (set @entity.fiC (let ((een : [number] [])) (array/findIndex @een (fn x true))))
+        (set @entity.firstA (array/first [1 2 3]))
+        (set @entity.firstB (let ((een : [number] [])) (array/first @een)))
+        (set @entity.firstC (array/first ["é"]))
+        (set @entity.flatA (array/flatten [[1 2] [3 4]]))
+        (set @entity.flatB (array/flatten [[] [1] []]))
+        (set @entity.flatC (array/flatten [[[1]] [[2 3]]]))
+        (set @entity.flatD (array/flatten []))
+        (set @entity.grpA (object/keys (array/groupBy [1 2 3 4 5] (fn x (str/concat "k" (% @x 2))))))
+        (set @entity.grpB (object/get (array/groupBy [1 2 3 4 5] (fn x (str/concat "k" (% @x 2)))) "k1" []))
+        (set @entity.grpC (object/get (array/groupBy [1 2 3] (fn x "all")) "none" []))
+        (set @entity.grpD (let ((een : [number] [])) (object/keys (array/groupBy @een (fn x "k")))))
+        (set @entity.inclA (array/includes [1 2 3] 2))
+        (set @entity.inclB (array/includes [1 2 3] 5))
+        (set @entity.inclC (array/includes [] 1))
+        (set @entity.inclD (array/includes ["a" "é"] "é"))
+        (set @entity.idxA (array/indexOf [1 2 3 2] 2))
+        (set @entity.idxB (array/indexOf [1 2 3] 9))
+        (set @entity.idxC (array/indexOf [] 1))
+        (set @entity.idxD (array/indexOf ["a" "b"] "b"))
+        (set @entity.insA (array/insert [1 3] 1 2))
+        (set @entity.insC (array/insert [1 2] 0 9))
+        (set @entity.insD (array/insert [] 0 1))
+        (set @entity.lastA (array/last [1 2 3]))
+        (set @entity.lastB (let ((een : [number] [])) (array/last @een)))
+        (set @entity.lastC (array/last ["a" "😀"]))
+        (set @entity.lenA (array/len [1 2 3]))
+        (set @entity.lenB (let ((een : [number] [])) (array/len @een)))
+        (set @entity.lenC (array/len [[1] [2]]))
+        (set @entity.mapA (array/map [1 2 3] (fn x (* @x 2))))
+        (set @entity.mapB (let ((een : [number] [])) (array/map @een (fn x (* @x 2)))))
+        (set @entity.mapC (array/map ["a" "b"] (fn x (str/upper @x))))
+        (set @entity.mapD (array/map [{price: 100}, {price: 200}] (fn x (* @x.price 1.1))))
+        (set @entity.maxA (array/max [{price: 3}, {price: 9}, {price: 5}] "price"))
+        (set @entity.maxB (let ((eei : [Item] [])) (array/max @eei "price")))
+        (set @entity.maxC (array/max [{price: -3}, {price: -9}] "price"))
+        (set @entity.minA (array/min [{price: 3}, {price: 9}, {price: 5}] "price"))
+        (set @entity.minB (let ((eei : [Item] [])) (array/min @eei "price")))
+        (set @entity.minC (array/min [{price: -3}, {price: -9}] "price"))
+        (set @entity.nearA (array/nearest [1 0] [[1 0] [0 1]]))
+        (set @entity.nearB (array/nearest [1 0] []))
+        (set @entity.nearC (array/nearest [0 1] [[1 0]]))
+        (set @entity.nearD (array/nearest [1 1] [[1 0] [0 1] [1 1]]))
+        (set @entity.nthA (array/nth [1 2 3] 1))
+        (set @entity.nthB (array/nth [1 2 3] 3))
+        (set @entity.nthD (let ((een : [number] [])) (array/nth @een 0)))
+    }
+  }
+  page boot as OpsStart -> Probe
+}

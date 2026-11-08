@@ -1,0 +1,83 @@
+app ops-geo [
+  version: "1.0.0",
+  description: "Native renderers operator fixture: the geo family's pure operators on literal inputs, with edge cases."
+]
+type V2 = { x : number!, y : number! }
+orbital OpsOrbital {
+  entity Ops [runtime] {
+    id : string!
+    aabbA : boolean = false
+    aabbB : boolean = false
+    aabbC : boolean = false
+    aabbD : boolean = false
+    aabbE : boolean = false
+    cirA : boolean = false
+    cirB : boolean = false
+    cirC : boolean = false
+    cirD : boolean = false
+    pcA : boolean = false
+    pcB : boolean = false
+    pcC : boolean = false
+    pcD : boolean = false
+    prA : boolean = false
+    prB : boolean = false
+    prC : boolean = false
+    prD : boolean = false
+    prE : boolean = false
+    rcA : boolean = false
+    rcB : boolean = false
+    rcC : boolean = false
+    rcD : boolean = false
+    rcE : boolean = false
+    refA : V2
+    refB : V2
+    refC : V2
+    refD : V2
+    segA : V2?
+    segB : V2?
+    segC : V2?
+    segD : V2?
+    segE : V2?
+    segF : V2?
+  }
+  trait Probe -> Ops {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (set @entity.aabbA (geo/aabb-overlap {x: 0, y: 0, w: 10, h: 10} {x: 5, y: 5, w: 10, h: 10}))
+        (set @entity.aabbB (geo/aabb-overlap {x: 0, y: 0, w: 10, h: 10} {x: 10, y: 0, w: 5, h: 5}))
+        (set @entity.aabbC (geo/aabb-overlap {x: 0, y: 0, w: 10, h: 10} {x: 11, y: 0, w: 5, h: 5}))
+        (set @entity.aabbD (geo/aabb-overlap {x: 0, y: 0, w: 0, h: 0} {x: 0, y: 0, w: 0, h: 0}))
+        (set @entity.aabbE (geo/aabb-overlap {x: 0, y: 0, w: 10, h: 10} {x: 2, y: 2, w: 3, h: 3}))
+        (set @entity.cirA (geo/circle-overlap {x: 0, y: 0, r: 3} {x: 4, y: 0, r: 2}))
+        (set @entity.cirB (geo/circle-overlap {x: 0, y: 0, r: 3} {x: 5, y: 0, r: 2}))
+        (set @entity.cirC (geo/circle-overlap {x: 0, y: 0, r: 3} {x: 6, y: 0, r: 2}))
+        (set @entity.cirD (geo/circle-overlap {x: 0, y: 0, r: 0} {x: 0, y: 0, r: 0}))
+        (set @entity.pcA (geo/point-in-circle {x: 1, y: 1} {x: 0, y: 0, r: 2}))
+        (set @entity.pcB (geo/point-in-circle {x: 2, y: 0} {x: 0, y: 0, r: 2}))
+        (set @entity.pcC (geo/point-in-circle {x: 3, y: 0} {x: 0, y: 0, r: 2}))
+        (set @entity.pcD (geo/point-in-circle {x: 0, y: 0} {x: 0, y: 0, r: 0}))
+        (set @entity.prA (geo/point-in-rect {x: 5, y: 5} {x: 0, y: 0, w: 10, h: 10}))
+        (set @entity.prB (geo/point-in-rect {x: 10, y: 10} {x: 0, y: 0, w: 10, h: 10}))
+        (set @entity.prC (geo/point-in-rect {x: 0, y: 0} {x: 0, y: 0, w: 10, h: 10}))
+        (set @entity.prD (geo/point-in-rect {x: 11, y: 5} {x: 0, y: 0, w: 10, h: 10}))
+        (set @entity.prE (geo/point-in-rect {x: -1, y: 5} {x: 0, y: 0, w: 10, h: 10}))
+        (set @entity.rcA (geo/rect-circle-overlap {x: 0, y: 0, w: 10, h: 10} {x: 12, y: 5, r: 3}))
+        (set @entity.rcB (geo/rect-circle-overlap {x: 0, y: 0, w: 10, h: 10} {x: 14, y: 5, r: 3}))
+        (set @entity.rcC (geo/rect-circle-overlap {x: 0, y: 0, w: 10, h: 10} {x: 5, y: 5, r: 1}))
+        (set @entity.rcD (geo/rect-circle-overlap {x: 0, y: 0, w: 10, h: 10} {x: 13, y: 14, r: 5}))
+        (set @entity.rcE (geo/rect-circle-overlap {x: 0, y: 0, w: 10, h: 10} {x: 13, y: 14, r: 4}))
+        (set @entity.refA (geo/reflect {x: 1, y: -1} {x: 0, y: 1}))
+        (set @entity.refB (geo/reflect {x: 1, y: 0} {x: 1, y: 0}))
+        (set @entity.refC (geo/reflect {x: 3, y: 4} {x: 0, y: 0}))
+        (set @entity.refD (geo/reflect {x: 1, y: 1} {x: 0, y: 2}))
+        (set @entity.segA (geo/segment-intersect {x1: 0, y1: 0, x2: 4, y2: 4} {x1: 0, y1: 4, x2: 4, y2: 0}))
+        (set @entity.segB (geo/segment-intersect {x1: 0, y1: 0, x2: 1, y2: 0} {x1: 0, y1: 1, x2: 1, y2: 1}))
+        (set @entity.segC (geo/segment-intersect {x1: 0, y1: 0, x2: 4, y2: 0} {x1: 2, y1: 0, x2: 6, y2: 0}))
+        (set @entity.segD (geo/segment-intersect {x1: 0, y1: 0, x2: 2, y2: 2} {x1: 3, y1: 3, x2: 4, y2: 0}))
+        (set @entity.segE (geo/segment-intersect {x1: 0, y1: 0, x2: 4, y2: 0} {x1: 4, y1: 0, x2: 4, y2: 4}))
+        (set @entity.segF (geo/segment-intersect {x1: 0, y1: 0, x2: 0, y2: 0} {x1: 0, y1: 0, x2: 0, y2: 0}))
+    }
+  }
+  page boot as OpsStart -> Probe
+}

@@ -1,0 +1,219 @@
+app ops-validate [
+  version: "1.0.0",
+  description: "Native renderers operator fixture: the validate family's pure operators on literal inputs, with edge cases."
+]
+type Check = { valid : boolean!, errors : [string]! }
+orbital OpsOrbital {
+  entity Ops [runtime] {
+    id : string!
+    arrA : boolean = false
+    arrB : boolean = false
+    arrC : boolean = false
+    arrD : boolean = false
+    boolA : boolean = false
+    boolB : boolean = false
+    boolC : boolean = false
+    boolD : boolean = false
+    checkA : Check
+    checkB : Check
+    checkC : Check
+    creditA : boolean = false
+    creditB : boolean = false
+    creditC : boolean = false
+    creditD : boolean = false
+    dateA : boolean = false
+    dateB : boolean = false
+    dateC : boolean = false
+    dateD : boolean = false
+    dateE : boolean = false
+    emailA : boolean = false
+    emailB : boolean = false
+    emailC : boolean = false
+    emailD : boolean = false
+    emailE : boolean = false
+    eqA : boolean = false
+    eqB : boolean = false
+    eqC : boolean = false
+    eqD : boolean = false
+    lenA : boolean = false
+    lenB : boolean = false
+    lenC : boolean = false
+    lenD : boolean = false
+    lenE : boolean = false
+    maxA : boolean = false
+    maxB : boolean = false
+    maxC : boolean = false
+    maxD : boolean = false
+    mlA : boolean = false
+    mlB : boolean = false
+    mlC : boolean = false
+    mlD : boolean = false
+    mlE : boolean = false
+    minA : boolean = false
+    minB : boolean = false
+    minC : boolean = false
+    minD : boolean = false
+    milA : boolean = false
+    milB : boolean = false
+    milC : boolean = false
+    milD : boolean = false
+    noneA : boolean = false
+    noneB : boolean = false
+    noneC : boolean = false
+    numA : boolean = false
+    numB : boolean = false
+    numC : boolean = false
+    numD : boolean = false
+    numE : boolean = false
+    objA : boolean = false
+    objB : boolean = false
+    objC : boolean = false
+    objD : boolean = false
+    oneA : boolean = false
+    oneB : boolean = false
+    oneC : boolean = false
+    oneD : boolean = false
+    patA : boolean = false
+    patB : boolean = false
+    patC : boolean = false
+    patD : boolean = false
+    patE : boolean = false
+    phoneA : boolean = false
+    phoneB : boolean = false
+    phoneC : boolean = false
+    phoneD : boolean = false
+    phoneE : boolean = false
+    rangeA : boolean = false
+    rangeB : boolean = false
+    rangeC : boolean = false
+    rangeD : boolean = false
+    rangeE : boolean = false
+    reqA : boolean = false
+    reqB : boolean = false
+    reqC : boolean = false
+    reqD : boolean = false
+    reqE : boolean = false
+    reqF : boolean = false
+    strA : boolean = false
+    strB : boolean = false
+    strC : boolean = false
+    strD : boolean = false
+    urlA : boolean = false
+    urlB : boolean = false
+    urlC : boolean = false
+    urlD : boolean = false
+    urlE : boolean = false
+    uuidA : boolean = false
+    uuidB : boolean = false
+    uuidC : boolean = false
+    uuidD : boolean = false
+  }
+  trait Probe -> Ops {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (set @entity.arrA (validate/array [1 2]))
+        (set @entity.arrB (validate/array "a"))
+        (set @entity.arrC (let ((een : [number] [])) (validate/array @een)))
+        (set @entity.arrD (validate/array null))
+        (set @entity.boolA (validate/boolean true))
+        (set @entity.boolB (validate/boolean "true"))
+        (set @entity.boolC (validate/boolean 0))
+        (set @entity.boolD (validate/boolean false))
+        (set @entity.checkA (validate/check {name: "Ann", email: "ann@example.com", age: 20} {name: [["required"], ["minLength", 2], ["maxLength", 50]], email: [["required"], ["email"]], age: [["number"]]}))
+        (set @entity.checkB (validate/check {name: "", email: "bad", age: "x"} {name: [["required"], ["minLength", 2]], email: [["required"], ["email"]], age: [["number"]]}))
+        (set @entity.checkC (validate/check {a: 5} {a: [["min", 10]]}))
+        (set @entity.creditA (validate/creditCard "4111111111111111"))
+        (set @entity.creditB (validate/creditCard "4111111111111112"))
+        (set @entity.creditC (validate/creditCard ""))
+        (set @entity.creditD (validate/creditCard "4111 1111 1111 1111"))
+        (set @entity.dateA (validate/date "2024-01-18"))
+        (set @entity.dateB (validate/date "2024-02-30"))
+        (set @entity.dateC (validate/date "not a date"))
+        (set @entity.dateD (validate/date ""))
+        (set @entity.dateE (validate/date 5))
+        (set @entity.emailA (validate/email "ann@example.com"))
+        (set @entity.emailB (validate/email "ann@"))
+        (set @entity.emailC (validate/email ""))
+        (set @entity.emailD (validate/email "a b@example.com"))
+        (set @entity.emailE (validate/email "ann@example"))
+        (set @entity.eqA (validate/equals "secret" "secret"))
+        (set @entity.eqB (validate/equals "a" "A"))
+        (set @entity.eqC (validate/equals 1 1))
+        (set @entity.eqD (validate/equals [1 2] [1 2]))
+        (set @entity.lenA (validate/length "ABC123" 6))
+        (set @entity.lenB (validate/length "ABC" 6))
+        (set @entity.lenC (validate/length "" 0))
+        (set @entity.lenD (validate/length [1 2] 2))
+        (set @entity.lenE (validate/length "é😀" 2))
+        (set @entity.maxA (validate/max 50 100))
+        (set @entity.maxB (validate/max 100 100))
+        (set @entity.maxC (validate/max 101 100))
+        (set @entity.maxD (validate/max -1 0))
+        (set @entity.mlA (validate/maxLength "Ann" 50))
+        (set @entity.mlB (validate/maxLength "Ann" 3))
+        (set @entity.mlC (validate/maxLength "Anna" 3))
+        (set @entity.mlD (validate/maxLength "" 0))
+        (set @entity.mlE (validate/maxLength [1 2 3] 2))
+        (set @entity.minA (validate/min 21 18))
+        (set @entity.minB (validate/min 18 18))
+        (set @entity.minC (validate/min 17 18))
+        (set @entity.minD (validate/min -1 0))
+        (set @entity.milA (validate/minLength "password123" 8))
+        (set @entity.milB (validate/minLength "abc" 4))
+        (set @entity.milC (validate/minLength "" 0))
+        (set @entity.milD (validate/minLength [1 2] 2))
+        (set @entity.noneA (validate/noneOf "alice" ["admin" "root" "system"]))
+        (set @entity.noneB (validate/noneOf "root" ["admin" "root" "system"]))
+        (set @entity.noneC (let ((ees : [string] [])) (validate/noneOf "x" @ees)))
+        (set @entity.numA (validate/number 42))
+        (set @entity.numB (validate/number "42"))
+        (set @entity.numC (validate/number 0))
+        (set @entity.numD (validate/number -1.5))
+        (set @entity.numE (validate/number null))
+        (set @entity.objA (validate/object {a: 1}))
+        (set @entity.objB (validate/object [1]))
+        (set @entity.objC (validate/object "a"))
+        (set @entity.objD (validate/object {}))
+        (set @entity.oneA (validate/oneOf "admin" ["admin" "user" "guest"]))
+        (set @entity.oneB (validate/oneOf "root" ["admin" "user" "guest"]))
+        (set @entity.oneC (let ((ees : [string] [])) (validate/oneOf "x" @ees)))
+        (set @entity.oneD (validate/oneOf 2 [1 2 3]))
+        (set @entity.patA (validate/pattern "ABC123" "^[A-Z]{3}[0-9]{3}$"))
+        (set @entity.patB (validate/pattern "abc123" "^[A-Z]{3}[0-9]{3}$"))
+        (set @entity.patC (validate/pattern "" "^$"))
+        (set @entity.patD (validate/pattern "é" "^\\p{L}$"))
+        (set @entity.patE (validate/pattern "abc" "b"))
+        (set @entity.phoneA (validate/phone "+15551234567"))
+        (set @entity.phoneB (validate/phone "555-123-4567"))
+        (set @entity.phoneC (validate/phone "abc"))
+        (set @entity.phoneD (validate/phone ""))
+        (set @entity.phoneE (validate/phone "12"))
+        (set @entity.rangeA (validate/range 4 1 5))
+        (set @entity.rangeB (validate/range 1 1 5))
+        (set @entity.rangeC (validate/range 5 1 5))
+        (set @entity.rangeD (validate/range 6 1 5))
+        (set @entity.rangeE (validate/range 0 1 5))
+        (set @entity.reqA (validate/required "Ann"))
+        (set @entity.reqB (validate/required ""))
+        (set @entity.reqC (validate/required null))
+        (set @entity.reqD (validate/required 0))
+        (set @entity.reqE (let ((een : [number] [])) (validate/required @een)))
+        (set @entity.reqF (validate/required false))
+        (set @entity.strA (validate/string "Ann"))
+        (set @entity.strB (validate/string 5))
+        (set @entity.strC (validate/string ""))
+        (set @entity.strD (validate/string null))
+        (set @entity.urlA (validate/url "https://example.com"))
+        (set @entity.urlB (validate/url "example.com"))
+        (set @entity.urlC (validate/url ""))
+        (set @entity.urlD (validate/url "http://localhost:3000/a?b=c"))
+        (set @entity.urlE (validate/url "ftp://x.org"))
+        (set @entity.uuidA (validate/uuid "550e8400-e29b-41d4-a716-446655440000"))
+        (set @entity.uuidB (validate/uuid "550e8400e29b41d4a716446655440000"))
+        (set @entity.uuidC (validate/uuid ""))
+        (set @entity.uuidD (validate/uuid "550E8400-E29B-41D4-A716-446655440000"))
+    }
+  }
+  page boot as OpsStart -> Probe
+}

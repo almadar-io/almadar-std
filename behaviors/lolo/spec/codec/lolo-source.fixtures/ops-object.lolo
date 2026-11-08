@@ -1,0 +1,110 @@
+app ops-object [
+  version: "1.0.0",
+  description: "Native renderers operator fixture: the object family's pure operators on literal inputs, with edge cases."
+]
+type AB = { a : number, b : number }
+type ABC = { a : number, b : number, c : number }
+type Nest = { a : AB }
+type NestC = { a : ABC }
+type Prof = { profile : Person }
+type Person = { name : string }
+type OnlyA = { a : number }
+type OnlyB = { b : number }
+orbital OpsOrbital {
+  entity Ops [runtime] {
+    id : string!
+    cloneA : AB
+    cloneB : Nest
+    dcloneA : Nest
+    dcloneB : AB
+    dmergeA : NestC
+    dmergeB : NestC
+    dmergeC : AB
+    entA : [[string]] = []
+    eqA : boolean = false
+    eqB : boolean = false
+    eqC : boolean = false
+    eqD : boolean = false
+    eqE : boolean = false
+    filtA : [string] = []
+    fromA : [string] = []
+    fromB : [number] = []
+    getA : string = ""
+    getB : string = ""
+    getC : number = 0
+    getD : number = 0
+    getE : string = ""
+    hasA : boolean = false
+    hasB : boolean = false
+    hasC : boolean = false
+    hasD : boolean = false
+    keysA : [string] = []
+    keysB : [string] = []
+    keysC : [string] = []
+    mkA : [string] = []
+    mvA : [number] = []
+    mergeA : AB
+    mergeB : AB
+    mergeC : ABC
+    mergeD : AB
+    omitA : OnlyA
+    omitB : AB
+    pickA : OnlyB
+    pickB : OnlyA
+    setA : Prof?
+    setB : AB?
+    setC : AB?
+    valsA : [number] = []
+    valsB : [number] = []
+  }
+  trait Probe -> Ops {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (set @entity.cloneA (object/clone {a: 1, b: 2}))
+        (set @entity.cloneB (object/clone {a: {a: 1, b: 2}}))
+        (set @entity.dcloneA (object/deepClone {a: {a: 1, b: 2}}))
+        (set @entity.dcloneB (object/deepClone {a: 0, b: -1}))
+        (set @entity.dmergeA (object/deepMerge {a: {a: 1, b: 2}} {a: {c: 3}}))
+        (set @entity.dmergeB (object/deepMerge {a: {a: 1, b: 2, c: 9}} {a: {c: 3}}))
+        (set @entity.dmergeC (object/deepMerge {a: 1} {b: 2}))
+        (set @entity.entA (array/map (object/entries {a: "x", b: "y"}) (fn e (list (array/nth @e 0) (array/nth @e 1)))))
+        (set @entity.eqA (object/equals {a: 1} {a: 1}))
+        (set @entity.eqB (object/equals {a: 1} {a: 2}))
+        (set @entity.eqC (object/equals {a: 1, b: 2} {b: 2, a: 1}))
+        (set @entity.eqD (object/equals {a: {a: 1}} {a: {a: 1}}))
+        (set @entity.eqE (object/equals {a: 1} {a: 1, b: 2}))
+        (set @entity.filtA (object/keys (object/filter {a: 1, b: 0} (fn k v (> @v 0)))))
+        (set @entity.fromA (object/keys (object/fromEntries [["a" 1] ["b" 2]])))
+        (set @entity.fromB (object/values (object/fromEntries [["a" 1] ["b" 2]])))
+        (set @entity.getA (object/get {profile: {name: "Ann"}} "profile.name" "Anonymous"))
+        (set @entity.getB (object/get {profile: {name: "Ann"}} "profile.age" "Anonymous"))
+        (set @entity.getC (object/get {a: 1, b: 2} "b" 0))
+        (set @entity.getD (object/get {a: 1, b: 2} "z" -1))
+        (set @entity.getE (object/get {profile: {name: ""}} "profile.name" "d"))
+        (set @entity.hasA (object/has {profile: {name: "Ann"}} "profile.name"))
+        (set @entity.hasB (object/has {profile: {name: "Ann"}} "profile.age"))
+        (set @entity.hasC (object/has {a: 1} "a"))
+        (set @entity.hasD (object/has {a: 1} "b"))
+        (set @entity.keysA (object/keys {a: 1, b: 2}))
+        (set @entity.keysB (object/keys {z: 1, a: 2, m: 3}))
+        (set @entity.keysC (object/keys {}))
+        (set @entity.mkA (object/keys (object/mapKeys {a: 1, b: 2} (fn k (str/upper @k)))))
+        (set @entity.mvA (object/values (object/mapValues {a: 0.5, b: 0.25} (fn v (* @v 100)))))
+        (set @entity.mergeA (object/merge {a: 1} {b: 2}))
+        (set @entity.mergeB (object/merge {a: 1, b: 2} {b: 3}))
+        (set @entity.mergeC (object/merge {a: 1} {b: 2} {c: 3}))
+        (set @entity.mergeD (object/merge {a: 1, b: 2} {}))
+        (set @entity.omitA (object/omit {a: 1, b: 2} ["b"]))
+        (set @entity.omitB (object/omit {a: 1, b: 2} []))
+        (set @entity.pickA (object/pick {a: 1, b: 2} ["b"]))
+        (set @entity.pickB (object/pick {a: 1, b: 2} ["a" "z"]))
+        (set @entity.setA (object/set {profile: {name: "Ann"}} "profile.name" "John"))
+        (set @entity.setB (object/set {a: 1, b: 2} "a" 9))
+        (set @entity.setC (object/set {a: 1, b: 2} "b" 0))
+        (set @entity.valsA (object/values {a: 1, b: 2}))
+        (set @entity.valsB (object/values {z: 3, a: 1}))
+    }
+  }
+  page boot as OpsStart -> Probe
+}

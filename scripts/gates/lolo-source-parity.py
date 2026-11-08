@@ -177,6 +177,37 @@ def cmd_example(manifest, name, key):
     return 1
 
 
+TEMPLATE_KNOBS = ("operators", "unary", "infix", "lambdaOperators", "callees")
+
+
+def in_scope(families, table):
+    scope, bare, structural = set(families["inScope"]), set(families["inScopeBare"]), set(families["structural"])
+    pure = (name for name, op in table["operators"].items() if not op.get("hasSideEffects"))
+    return sorted(n for n in pure if n not in structural and (n in bare or ("/" in n and n.split("/")[0] in scope)))
+
+
+def templated(resolved):
+    program = resolved.get("program", resolved)
+    for orbital in program["orbitals"]:
+        for trait in orbital["traits"]:
+            config = trait.get("config") or {}
+            if "operators" in config:
+                return {key.split("#")[0] for knob in TEMPLATE_KNOBS for key in (config.get(knob) or {}).get("default", {})}
+    raise SystemExit("the resolved atom composes no renderer config")
+
+
+def cmd_coverage(families, table, *resolved_atoms):
+    scope = in_scope(load(families), load(table))
+    missing = 0
+    for pair in resolved_atoms:
+        lang, path = pair.split("=", 1)
+        have = templated(load(path))
+        gaps = [n for n in scope if n not in have]
+        missing += len(gaps)
+        print("%s %d/%d%s" % (lang, len(scope) - len(gaps), len(scope), (": " + " ".join(gaps)) if gaps else ""))
+    return 1 if missing else 0
+
+
 if __name__ == "__main__":
     cmd, args = sys.argv[1], sys.argv[2:]
-    sys.exit({"text": cmd_text, "events": cmd_events, "compare": cmd_compare, "drive": cmd_drive, "live": cmd_live, "examples": cmd_examples, "example": cmd_example}[cmd](*args))
+    sys.exit({"text": cmd_text, "events": cmd_events, "compare": cmd_compare, "drive": cmd_drive, "live": cmd_live, "examples": cmd_examples, "example": cmd_example, "coverage": cmd_coverage}[cmd](*args))

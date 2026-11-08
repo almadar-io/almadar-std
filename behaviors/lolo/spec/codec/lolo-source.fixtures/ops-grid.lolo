@@ -1,0 +1,91 @@
+app ops-grid [
+  version: "1.0.0",
+  description: "Native renderers operator fixture: the grid family's pure operators on literal inputs, with edge cases."
+]
+type Cell = { x : number!, y : number! }
+orbital OpsOrbital {
+  entity Ops [runtime] {
+    id : string!
+    radA : [Cell] = []
+    radB : [Cell] = []
+    radC : [Cell] = []
+    radD : [Cell] = []
+    distA : number = 0
+    distB : number = 0
+    distC : number = 0
+    fwA : Cell
+    fwB : Cell
+    fwC : Cell
+    fwD : Cell
+    ibA : boolean = false
+    ibB : boolean = false
+    ibC : boolean = false
+    ibD : boolean = false
+    ibE : boolean = false
+    isoA : Cell
+    isoB : Cell
+    isoC : Cell
+    isoD : Cell
+    lineA : [Cell] = []
+    lineB : [Cell] = []
+    lineC : [Cell] = []
+    lineD : [Cell] = []
+    manA : number = 0
+    manB : number = 0
+    manC : number = 0
+    nbA : [Cell] = []
+    nbB : [Cell] = []
+    nbC : [Cell] = []
+    s2iA : Cell
+    s2iB : Cell
+    s2iC : Cell
+    s2iD : Cell
+    twA : Cell
+    twB : Cell
+    twC : Cell
+  }
+  trait Probe -> Ops {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (set @entity.radA (grid/cells-in-radius {x: 0, y: 0} 1))
+        (set @entity.radB (grid/cells-in-radius {x: 2, y: 3} 0))
+        (set @entity.radC (grid/cells-in-radius {x: 0, y: 0} 2))
+        (set @entity.radD (grid/cells-in-radius {x: 0, y: 0} -1))
+        (set @entity.distA (grid/distance {x: 0, y: 0} {x: 3, y: 2}))
+        (set @entity.distB (grid/distance {x: 0, y: 0} {x: 0, y: 0}))
+        (set @entity.distC (grid/distance {x: -2, y: 5} {x: 1, y: -1}))
+        (set @entity.fwA (grid/from-world {x: 80, y: 112} 32))
+        (set @entity.fwB (grid/from-world {x: -1, y: -33} 32))
+        (set @entity.fwC (grid/from-world {x: 0, y: 0} 32))
+        (set @entity.fwD (grid/from-world {x: 31.9, y: 32} 32))
+        (set @entity.ibA (grid/in-bounds {x: 2, y: 3} 5 5))
+        (set @entity.ibB (grid/in-bounds {x: 5, y: 0} 5 5))
+        (set @entity.ibC (grid/in-bounds {x: -1, y: 0} 5 5))
+        (set @entity.ibD (grid/in-bounds {x: 0, y: 0} 0 0))
+        (set @entity.ibE (grid/in-bounds {x: 4, y: 4} 5 5))
+        (set @entity.isoA (grid/iso-to-screen {x: 1, y: 0} 64 32))
+        (set @entity.isoB (grid/iso-to-screen {x: 0, y: 1} 64 32))
+        (set @entity.isoC (grid/iso-to-screen {x: 0, y: 0} 64 32))
+        (set @entity.isoD (grid/iso-to-screen {x: 3, y: 2} 64 32))
+        (set @entity.lineA (grid/line {x: 0, y: 0} {x: 2, y: 2}))
+        (set @entity.lineB (grid/line {x: 0, y: 0} {x: 0, y: 0}))
+        (set @entity.lineC (grid/line {x: 0, y: 0} {x: 4, y: 1}))
+        (set @entity.lineD (grid/line {x: 3, y: 3} {x: 0, y: 1}))
+        (set @entity.manA (grid/manhattan-distance {x: 0, y: 0} {x: 3, y: 2}))
+        (set @entity.manB (grid/manhattan-distance {x: 0, y: 0} {x: 0, y: 0}))
+        (set @entity.manC (grid/manhattan-distance {x: -2, y: 5} {x: 1, y: -1}))
+        (set @entity.nbA (grid/neighbors {x: 1, y: 1} false))
+        (set @entity.nbB (grid/neighbors {x: 1, y: 1} true))
+        (set @entity.nbC (grid/neighbors {x: 0, y: 0} false))
+        (set @entity.s2iA (grid/screen-to-iso {x: 32, y: 16} 64 32))
+        (set @entity.s2iB (grid/screen-to-iso {x: 0, y: 0} 64 32))
+        (set @entity.s2iC (grid/screen-to-iso {x: 0, y: 32} 64 32))
+        (set @entity.s2iD (grid/screen-to-iso {x: -32, y: 16} 64 32))
+        (set @entity.twA (grid/to-world {x: 2, y: 3} 32))
+        (set @entity.twB (grid/to-world {x: 0, y: 0} 32))
+        (set @entity.twC (grid/to-world {x: -1, y: -1} 32))
+    }
+  }
+  page boot as OpsStart -> Probe
+}

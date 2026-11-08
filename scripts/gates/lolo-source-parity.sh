@@ -1,7 +1,7 @@
 #!/bin/bash
 # Proves the native renderers of std-lolo-source (python typescript rust swift kotlin) emit code that
 # compiles against each shell's real `orb compile` models and gives the kernel's answers.
-# Usage: lolo-source-parity.sh [--par DIR] [lang...]    (default: all five). Runs the dev build (orb-dev; ORB_DEV overrides).
+# Usage: lolo-source-parity.sh [--par DIR] [--only EXAMPLE] [lang...]    (default: all five). Runs the dev build (orb-dev; ORB_DEV overrides).
 # The examples are DIR/examples.json (default: this package's spec/codec/lolo-source.parity); a package downstream of std
 # keeps its own examples, kernel goldens and drivers in its own spec/codec/lolo-source.parity and runs this script on it.
 # Kernel answers: spec/codec/lolo-source.parity/<example>.replay.goldens.json (pinned by `orb goldens`): the emits and,
@@ -16,11 +16,19 @@ STD=$(cd "$HERE/../.." && pwd)
 ROOT=$(cd "$STD/../.." && pwd)
 LOLO=$STD/behaviors/lolo
 PAR=$LOLO/spec/codec/lolo-source.parity
-if [ "${1:-}" = --par ]; then PAR=$(cd "$2" && pwd); shift 2; fi
+ONLY=""
+while [ "${1:-}" = --par ] || [ "${1:-}" = --only ]; do
+  if [ "$1" = --par ]; then PAR=$(cd "$2" && pwd); else ONLY=$2; fi
+  shift 2
+done
 PROOT=$(cd "$PAR/../../.." && pwd)
 PY=$HERE/lolo-source-parity.py
 LANGS="${*:-python typescript rust swift kotlin}"
 EXAMPLES=$(python3 -I "$PY" examples "$PAR/examples.json") || { echo "FAIL no examples manifest at $PAR/examples.json"; exit 1; }
+if [ -n "$ONLY" ]; then
+  echo "$EXAMPLES" | grep -qx "$ONLY" || { echo "FAIL no example $ONLY in $PAR/examples.json"; exit 1; }
+  EXAMPLES=$ONLY
+fi
 KOTLIN_PLUGIN=/opt/homebrew/opt/kotlin/libexec/lib/kotlinx-serialization-compiler-plugin.jar
 KLIBS=$HOME/.almadar/kotlin-libs
 KCP=$KLIBS/kotlinx-serialization-core-jvm-1.9.0.jar:$KLIBS/kotlinx-serialization-json-jvm-1.9.0.jar
@@ -84,7 +92,7 @@ goldens_leg() { # lang
 for ex in $EXAMPLES; do
   python3 -I "$PY" events "$PAR/$ex.replay.goldens.json" "$PAR/$ex.events.json" || { echo "FAIL events $ex"; FAILS=$((FAILS + 1)); }
 done
-if ! (cd "$PROOT" && "$ORB" goldens spec/codec/lolo-source.parity >"$T/kernel.log" 2>&1); then
+if ! (cd "$PROOT" && "$ORB" goldens "spec/codec/lolo-source.parity${ONLY:+/$ONLY.replay.goldens.json}" >"$T/kernel.log" 2>&1); then
   echo "FAIL kernel goldens (the course programs no longer give the pinned answers)"; sed 's/^/  /' "$T/kernel.log"; FAILS=$((FAILS + 1))
 else echo "PASS kernel goldens ($(tail -1 "$T/kernel.log"))"; fi
 
@@ -186,6 +194,18 @@ run_kotlin() {
     finish kotlin "$ex" "$d/actual" "$log"
   done
 }
+
+FAMILIES=$LOLO/spec/codec/lolo-source.parity/operator-families.json
+if [ -z "$ONLY" ]; then
+  TABLE=$ROOT/node_modules/@almadar/std/$(python3 -I -c "import json,sys; print(json.load(open(sys.argv[1]))['orbLanguage']['operators'])" "$ROOT/node_modules/@almadar/std/package.json")
+  pairs=""
+  for lang in $LANGS; do
+    (cd "$ROOT" && "$ORB" resolve "$LOLO/codec/atoms/std-lolo-$lang.lolo") >"$T/atom-$lang.json" 2>"$T/atom-$lang.err" || { echo "FAIL $lang atom does not resolve"; FAILS=$((FAILS + 1)); continue; }
+    pairs="$pairs $lang=$T/atom-$lang.json"
+  done
+  if python3 -I "$PY" coverage "$FAMILIES" "$TABLE" $pairs >"$T/coverage.txt"; then echo "PASS operator coverage ($(tr '\n' ' ' <"$T/coverage.txt"))"
+  else echo "FAIL operator coverage (an in-scope operator has no template)"; sed 's/^/  /' "$T/coverage.txt"; FAILS=$((FAILS + 1)); fi
+fi
 
 for lang in $LANGS; do
   case $lang in

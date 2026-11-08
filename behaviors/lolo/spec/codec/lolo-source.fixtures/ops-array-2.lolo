@@ -1,0 +1,154 @@
+app ops-array-2 [
+  version: "1.0.0",
+  description: "Native renderers operator fixture: the array-2 family's pure operators on literal inputs, with edge cases."
+]
+type Item = { name : string!, price : number!, status : string! }
+type Near = { index : number!, score : number!, margin : number! }
+orbital OpsOrbital {
+  entity Ops [runtime] {
+    id : string!
+    partA : [[number]] = []
+    partB : [[number]] = []
+    partC : [[number]] = []
+    pmapA : [number] = []
+    pmapB : [number] = []
+    pmapC : [string] = []
+    predB : number = 0
+    predC : number = 0
+    preA : [number] = []
+    preB : [number] = []
+    preC : [string] = []
+    rangeA : [number] = []
+    rangeB : [number] = []
+    rangeC : [number] = []
+    rangeD : [number] = []
+    rangeE : [number] = []
+    rangeF : [number] = []
+    rangeG : [number] = []
+    redA : number = 0
+    redB : number = 0
+    redC : string = ""
+    redD : [number] = []
+    rejA : [number] = []
+    rejB : [number] = []
+    rejC : [number] = []
+    remA : [number] = []
+    remB : [number] = []
+    remC : [number] = []
+    rmiA : [number] = []
+    rmiB : [number] = []
+    rmiC : [number] = []
+    rmiD : [string] = []
+    revA : [number] = []
+    revB : [number] = []
+    revC : [string] = []
+    revD : [number] = []
+    sliceA : [number] = []
+    sliceB : [number] = []
+    sliceC : [number] = []
+    sliceE : [number] = []
+    sliceF : [number] = []
+    someA : boolean = false
+    someB : boolean = false
+    someC : boolean = false
+    sortA : [Item] = []
+    sortB : [Item] = []
+    sortC : [Item] = []
+    sortD : [Item] = []
+    sortE : [Item] = []
+    sortF : [Item] = []
+    sumA : number = 0
+    sumB : number = 0
+    sumC : number = 0
+    takeA : [number] = []
+    takeB : [number] = []
+    takeC : [number] = []
+    takeD : [number] = []
+    tlA : [number] = []
+    tlB : [number] = []
+    tlC : [number] = []
+    tlD : [number] = []
+    uniA : [number] = []
+    uniB : [number] = []
+    uniC : [string] = []
+    zipA : [[number]] = []
+    zipB : [[number]] = []
+    zipC : [[number]] = []
+    zipD : [[string]] = []
+  }
+  trait Probe -> Ops {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (set @entity.partA (array/partition [1 2 3 4] (fn x (> @x 2))))
+        (set @entity.partB (let ((een : [number] [])) (array/partition @een (fn x true))))
+        (set @entity.partC (array/partition [1 2] (fn x true)))
+        (set @entity.pmapA (array/pmap [1 2 3] (fn x (* @x 2))))
+        (set @entity.pmapB (let ((een : [number] [])) (array/pmap @een (fn x (* @x 2)))))
+        (set @entity.pmapC (array/pmap ["a" "é"] (fn x (str/upper @x))))
+        (set @entity.predB (let ((eei : [Item] [])) (array/preduce @eei 7 (fn acc x (+ @acc @x.price)))))
+        (set @entity.predC (array/preduce [1 2 3 4] 1 (fn acc x (* @acc @x))))
+        (set @entity.preA (array/prepend [2 3] 1))
+        (set @entity.preB (let ((een : [number] [])) (array/prepend @een 1)))
+        (set @entity.preC (array/prepend ["b"] "é"))
+        (set @entity.rangeA (array/range 3))
+        (set @entity.rangeB (array/range 2 5))
+        (set @entity.rangeC (array/range 0 10 3))
+        (set @entity.rangeD (array/range 5 0 -2))
+        (set @entity.rangeE (array/range 3 3))
+        (set @entity.rangeF (array/range 0))
+        (set @entity.rangeG (array/range 5 2))
+        (set @entity.redA (array/reduce [{price: 10}, {price: 25}] 0 (fn acc x (+ @acc @x.price))))
+        (set @entity.redB (let ((eei : [Item] [])) (array/reduce @eei 7 (fn acc x (+ @acc @x.price)))))
+        (set @entity.redC (array/reduce ["a" "b" "c"] "" (fn acc x (str/concat @acc @x))))
+        (set @entity.redD (let ((een : [number] [])) (array/reduce [1 2 3] @een (fn acc x (array/prepend @acc @x)))))
+        (set @entity.rejA (array/reject [1 2 3 4 5] (fn x (> @x 2))))
+        (set @entity.rejB (let ((een : [number] [])) (array/reject @een (fn x true))))
+        (set @entity.rejC (array/reject [1 2] (fn x false)))
+        (set @entity.remA (array/remove [1 2 3] 1))
+        (set @entity.remB (array/remove [1 2 3] 0))
+        (set @entity.remC (array/remove [1 2 3] 2))
+        (set @entity.rmiA (array/removeItem [1 2 3 2] 2))
+        (set @entity.rmiB (array/removeItem [1 2 3] 9))
+        (set @entity.rmiC (let ((een : [number] [])) (array/removeItem @een 1)))
+        (set @entity.rmiD (array/removeItem ["a" "é" "é"] "é"))
+        (set @entity.revA (array/reverse [1 2 3]))
+        (set @entity.revB (let ((een : [number] [])) (array/reverse @een)))
+        (set @entity.revC (array/reverse ["a" "😀"]))
+        (set @entity.revD (array/reverse [1]))
+        (set @entity.sliceA (array/slice [1 2 3 4] 1 3))
+        (set @entity.sliceB (array/slice [1 2 3 4] 0 0))
+        (set @entity.sliceC (array/slice [1 2 3 4] 2 100))
+        (set @entity.sliceE (array/slice [1 2 3 4] 3 1))
+        (set @entity.sliceF (let ((een : [number] [])) (array/slice @een 0 1)))
+        (set @entity.someA (array/some [1 2 3] (fn x (> @x 2))))
+        (set @entity.someB (array/some [1 2 3] (fn x (> @x 5))))
+        (set @entity.someC (let ((een : [number] [])) (array/some @een (fn x true))))
+        (set @entity.sortA (array/sort [{name: "a", price: 3, status: "x"}, {name: "b", price: 9, status: "x"}, {name: "c", price: 5, status: "x"}] "price" "desc"))
+        (set @entity.sortB (array/sort [{name: "a", price: 3, status: "x"}, {name: "b", price: 9, status: "x"}, {name: "c", price: 5, status: "x"}] "price" "asc"))
+        (set @entity.sortC (let ((eei : [Item] [])) (array/sort @eei "price" "asc")))
+        (set @entity.sortD (array/sort [{name: "b", price: 1, status: "x"}, {name: "a", price: 1, status: "y"}, {name: "c", price: 0, status: "z"}] "price" "asc"))
+        (set @entity.sortE (array/sort [{name: "b", price: 1, status: "x"}, {name: "Z", price: 1, status: "y"}, {name: "a", price: 0, status: "z"}] "name" "asc"))
+        (set @entity.sortF (array/sort [{name: "b", price: 1, status: "x"}, {name: "é", price: 1, status: "y"}, {name: "a", price: 0, status: "z"}] "name" "desc"))
+        (set @entity.sumA (array/sum [{price: 10}, {price: 25}] "price"))
+        (set @entity.sumB (let ((eei : [Item] [])) (array/sum @eei "price")))
+        (set @entity.sumC (array/sum [{price: 0.1}, {price: 0.2}] "price"))
+        (set @entity.takeA (array/take [1 2 3 4 5] 2))
+        (set @entity.takeB (array/take [1 2 3] 5))
+        (set @entity.takeC (array/take [1 2 3] 0))
+        (set @entity.takeD (let ((een : [number] [])) (array/take @een 2)))
+        (set @entity.tlA (array/takeLast [1 2 3 4 5] 2))
+        (set @entity.tlB (array/takeLast [1 2 3] 5))
+        (set @entity.tlC (array/takeLast [1 2 3] 0))
+        (set @entity.tlD (let ((een : [number] [])) (array/takeLast @een 2)))
+        (set @entity.uniA (array/unique [1 2 2 3 1]))
+        (set @entity.uniB (let ((een : [number] [])) (array/unique @een)))
+        (set @entity.uniC (array/unique ["a" "A" "a" "é" "é"]))
+        (set @entity.zipA (array/zip [1 2] [3 4]))
+        (set @entity.zipB (array/zip [1 2 3] [4]))
+        (set @entity.zipC (let ((een : [number] [])) (array/zip @een [1 2])))
+        (set @entity.zipD (array/zip ["a" "b"] ["c" "d"]))
+    }
+  }
+  page boot as OpsStart -> Probe
+}

@@ -1,0 +1,44 @@
+app ops-path [
+  version: "1.0.0",
+  description: "Native renderers operator fixture: the path family's pure operators on literal inputs, with edge cases."
+]
+type Cell = { x : number!, y : number! }
+type Hit = { at : number!, path : string! }
+orbital OpsOrbital {
+  entity Ops [runtime] {
+    id : string!
+    astarA : [Cell] = []
+    astarB : [Cell] = []
+    astarC : [Cell] = []
+    astarD : [Cell] = []
+    astarE : [Cell] = []
+    astarF : [Cell] = []
+    astarG : [Cell] = []
+    astarH : [Cell] = []
+    reachA : [Cell] = []
+    reachB : [Cell] = []
+    reachC : [Cell] = []
+    reachD : [Cell] = []
+    reachE : [Cell] = []
+  }
+  trait Probe -> Ops {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (set @entity.astarA (let ((eec : [Cell] [])) (path/astar {x: 0, y: 0} {x: 2, y: 0} @eec 3 1 false)))
+        (set @entity.astarB (let ((eec : [Cell] [])) (path/astar {x: 0, y: 0} {x: 2, y: 2} @eec 3 3 false)))
+        (set @entity.astarC (let ((eec : [Cell] [])) (path/astar {x: 0, y: 0} {x: 2, y: 2} @eec 3 3 true)))
+        (set @entity.astarD (path/astar {x: 0, y: 0} {x: 2, y: 0} [{x: 1, y: 0}] 3 1 false))
+        (set @entity.astarE (path/astar {x: 0, y: 0} {x: 2, y: 0} [{x: 1, y: 0}] 3 2 false))
+        (set @entity.astarF (let ((eec : [Cell] [])) (path/astar {x: 0, y: 0} {x: 0, y: 0} @eec 3 3 false)))
+        (set @entity.astarG (let ((eec : [Cell] [])) (path/astar {x: 0, y: 0} {x: 5, y: 5} @eec 3 3 false)))
+        (set @entity.astarH (path/astar {x: 0, y: 0} {x: 2, y: 2} [{x: 1, y: 0} {x: 1, y: 1} {x: 0, y: 1}] 3 3 true))
+        (set @entity.reachA (let ((eec : [Cell] [])) (path/reachable {x: 1, y: 1} 1 @eec 3 3 false)))
+        (set @entity.reachB (let ((eec : [Cell] [])) (path/reachable {x: 1, y: 1} 1 @eec 3 3 true)))
+        (set @entity.reachC (let ((eec : [Cell] [])) (path/reachable {x: 0, y: 0} 0 @eec 3 3 false)))
+        (set @entity.reachD (path/reachable {x: 0, y: 0} 2 [{x: 1, y: 0}] 3 3 false))
+        (set @entity.reachE (let ((eec : [Cell] [])) (path/reachable {x: 0, y: 0} 1 @eec 1 1 false)))
+    }
+  }
+  page boot as OpsStart -> Probe
+}

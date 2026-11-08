@@ -1,0 +1,61 @@
+app ops-anim [
+  version: "1.0.0",
+  description: "Native renderers operator fixture: the anim family's pure operators on literal inputs, with edge cases."
+]
+type Rect = { sx : number!, sy : number!, sw : number!, sh : number! }
+orbital OpsOrbital {
+  entity Ops [runtime] {
+    id : string!
+    dirA : string = ""
+    dirB : string = ""
+    dirC : string = ""
+    dirD : string = ""
+    dirE : string = ""
+    dirF : string = ""
+    dirG : string = ""
+    dirH : string = ""
+    dirI : string = ""
+    dirJ : string = ""
+    dirM : string = ""
+    frameA : number = 0
+    frameB : number = 0
+    frameC : number = 0
+    frameD : number = 0
+    frameE : number = 0
+    frameF : number = 0
+    sheetA : Rect
+    sheetB : Rect
+    sheetC : Rect
+    sheetD : Rect
+    sheetF : Rect
+  }
+  trait Probe -> Ops {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (set @entity.dirA (anim/direction-from-delta 1 0 4))
+        (set @entity.dirB (anim/direction-from-delta 0 1 4))
+        (set @entity.dirC (anim/direction-from-delta -1 0 4))
+        (set @entity.dirD (anim/direction-from-delta 0 -1 4))
+        (set @entity.dirE (anim/direction-from-delta 0 0 4))
+        (set @entity.dirF (anim/direction-from-delta 1 1 8))
+        (set @entity.dirG (anim/direction-from-delta -1 -1 8))
+        (set @entity.dirH (anim/direction-from-delta 1 -1 8))
+        (set @entity.dirI (anim/direction-from-delta 3 1 4))
+        (set @entity.dirJ (anim/direction-from-delta 1 3 4))
+        (set @entity.dirM (anim/direction-from-delta 0 0 8))
+        (set @entity.frameA (anim/frame-at 1000 8 100 true))
+        (set @entity.frameB (anim/frame-at 0 8 100 true))
+        (set @entity.frameC (anim/frame-at 10000 100 4 true))
+        (set @entity.frameD (anim/frame-at 10000 100 4 false))
+        (set @entity.frameE (anim/frame-at 250 100 4 false))
+        (set @entity.frameF (anim/frame-at -100 100 4 true))
+        (set @entity.sheetA (anim/sheet-rect 1 32 32 128))
+        (set @entity.sheetB (anim/sheet-rect 0 4 16 16))
+        (set @entity.sheetC (anim/sheet-rect 5 4 16 24))
+        (set @entity.sheetD (anim/sheet-rect 7 4 16 16))
+        (set @entity.sheetF (anim/sheet-rect -1 4 16 16))
+    }
+  }
+  page boot as OpsStart -> Probe
+}

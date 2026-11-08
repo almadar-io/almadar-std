@@ -1,0 +1,134 @@
+app ops-format [
+  version: "1.0.0",
+  description: "Native renderers operator fixture: the format family's pure operators on literal inputs, with edge cases."
+]
+orbital OpsOrbital {
+  entity Ops [runtime] {
+    id : string!
+    bytesA : string?
+    bytesB : string?
+    bytesC : string?
+    bytesD : string?
+    bytesE : string?
+    bytesF : string?
+    bytesG : string?
+    ccA : string = ""
+    ccB : string = ""
+    ccC : string = ""
+    ccD : string = ""
+    curA : string?
+    curB : string?
+    curC : string?
+    curD : string?
+    curE : string?
+    curF : string?
+    curG : string?
+    listA : string = ""
+    listB : string = ""
+    listC : string = ""
+    listD : string = ""
+    listE : string = ""
+    numA : string?
+    numB : string?
+    numC : string?
+    numD : string?
+    numE : string?
+    numF : string?
+    numG : string?
+    ordA : string = ""
+    ordB : string = ""
+    ordC : string = ""
+    ordD : string = ""
+    ordE : string = ""
+    ordF : string = ""
+    ordG : string = ""
+    ordH : string = ""
+    ordI : string = ""
+    ordJ : string = ""
+    ordK : string = ""
+    pctA : string?
+    pctB : string?
+    pctC : string?
+    pctD : string?
+    pctE : string?
+    pctF : string?
+    phoneA : string = ""
+    phoneB : string = ""
+    phoneC : string = ""
+    phoneD : string = ""
+    phoneE : string = ""
+    plurA : string = ""
+    plurB : string = ""
+    plurC : string = ""
+    plurD : string = ""
+    phoneF : string = ""
+    phoneG : string = ""
+    phoneH : string = ""
+  }
+  trait Probe -> Ops {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (set @entity.bytesA (format/bytes 2500000))
+        (set @entity.bytesB (format/bytes 0))
+        (set @entity.bytesC (format/bytes 1023))
+        (set @entity.bytesD (format/bytes 1024))
+        (set @entity.bytesE (format/bytes -5))
+        (set @entity.bytesF (format/bytes 1536))
+        (set @entity.bytesG (format/bytes 1099511627776))
+        (set @entity.ccA (format/creditCard "4111111111111234"))
+        (set @entity.ccB (format/creditCard ""))
+        (set @entity.ccC (format/creditCard "1234"))
+        (set @entity.ccD (format/creditCard "4111 1111 1111 1234"))
+        (set @entity.curA (format/currency 1234.56 "USD" "en-US"))
+        (set @entity.curB (format/currency 0 "USD" "en-US"))
+        (set @entity.curC (format/currency -5.5 "USD" "en-US"))
+        (set @entity.curD (format/currency 1234.5 "EUR" "de-DE"))
+        (set @entity.curE (format/currency 1234567 "JPY" "ja-JP"))
+        (set @entity.curF (format/currency 1 "XXX" "en-US"))
+        (set @entity.curG (format/currency 0.005 "USD" "en-US"))
+        (set @entity.listA (format/list ["Alice" "Bob" "Charlie"] "and"))
+        (set @entity.listB (format/list ["Alice"] "and"))
+        (set @entity.listC (format/list ["Alice" "Bob"] "or"))
+        (set @entity.listD (let ((ees : [string] [])) (format/list @ees "and")))
+        (set @entity.listE (format/list [1 2 3] "or"))
+        (set @entity.numA (format/number 1234567.89 {}))
+        (set @entity.numB (format/number 0 {}))
+        (set @entity.numC (format/number -1234.5 {decimals: 1}))
+        (set @entity.numD (format/number 3.14159 {maximumFractionDigits: 2}))
+        (set @entity.numE (format/number 5 {minimumFractionDigits: 2}))
+        (set @entity.numF (format/number 1234567.89 {locale: "de-DE"}))
+        (set @entity.numG (format/number 0.5 {decimals: 0}))
+        (set @entity.ordA (format/ordinal 42))
+        (set @entity.ordB (format/ordinal 1))
+        (set @entity.ordC (format/ordinal 2))
+        (set @entity.ordD (format/ordinal 3))
+        (set @entity.ordE (format/ordinal 11))
+        (set @entity.ordF (format/ordinal 12))
+        (set @entity.ordG (format/ordinal 13))
+        (set @entity.ordH (format/ordinal 21))
+        (set @entity.ordI (format/ordinal 0))
+        (set @entity.ordJ (format/ordinal -1))
+        (set @entity.ordK (format/ordinal 111))
+        (set @entity.pctA (format/percent 0.856 1))
+        (set @entity.pctB (format/percent 0 0))
+        (set @entity.pctC (format/percent 1 0))
+        (set @entity.pctD (format/percent 1.5 2))
+        (set @entity.pctE (format/percent -0.25 0))
+        (set @entity.pctF (format/percent 0.12345 -1))
+        (set @entity.phoneA (format/phone "5551234567" "us"))
+        (set @entity.phoneB (format/phone "555123" "us"))
+        (set @entity.phoneC (format/phone "" "us"))
+        (set @entity.phoneD (format/phone "+15551234567" "us"))
+        (set @entity.phoneE (format/phone "(555) 123-4567" "us"))
+        (set @entity.plurA (format/plural 5 "item" "items"))
+        (set @entity.plurB (format/plural 1 "item" "items"))
+        (set @entity.plurC (format/plural 0 "item" "items"))
+        (set @entity.plurD (format/plural -1 "item" "items"))
+        (set @entity.phoneF (format/phone "5551234567" "(###) ###-####"))
+        (set @entity.phoneG (format/phone "555" "(###) ###-####"))
+        (set @entity.phoneH (format/phone "5551234567" ""))
+    }
+  }
+  page boot as OpsStart -> Probe
+}

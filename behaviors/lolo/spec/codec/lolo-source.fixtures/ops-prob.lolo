@@ -1,0 +1,145 @@
+;; prob/* PRNG as the kernel runs it: Mulberry32.
+;; Source: orbital-rust/crates/orbital-core/crates/eval/src/evaluator/context.rs:105-136 (ProbState), operators/prob.rs.
+;; seed(n): state = trunc(n) mod 2^32 as u32 (non-finite n gives 0); (prob/seed n) draws nothing.
+;; next(): state += 0x6D2B79F5 (u32 wrapping); t = state;
+;;   t = (t ^ (t >> 15)) * (t | 1)           (u32 wrapping multiply)
+;;   t = t ^ (t + ((t ^ (t >> 7)) * (t | 61)))   (u32 wrapping add and multiply)
+;;   result = (t ^ (t >> 14)) / 4294967296.0   (f64 in [0, 1))
+;; The stream is shared by every prob/* call of the dispatch, in call order, one draw per next().
+;; prob/uniform lo hi = lo + next() * (hi - lo).  prob/flip p = next() < p.
+;; standard_normal = sqrt(-2 ln u1) * cos(2 pi u2) with u1 = next(), then u2 = next() (operators/prob.rs:25).
+;; prob/gaussian mu sigma = mu + sigma * standard_normal.
+;; gamma_variate(shape) is Marsaglia-Tsang (operators/prob.rs:32): shape < 1 gives gamma(shape + 1) * next()^(1 / shape), drawing next() first;
+;;   else d = shape - 1/3, c = 1 / sqrt(9 d); loop { loop { x = standard_normal; v = 1 + c x; stop when v > 0 }; v = v^3; u = next();
+;;   accept d v when u < 1 - 0.0331 x^4, or when ln u < 0.5 x^2 + d (1 - v + ln v) }.
+;; prob/beta a b = x / (x + y) with x = gamma_variate(a) then y = gamma_variate(b).
+;; prob/categorical items weights: r = next() * sum(weights); subtract each weight in order, return the first item where r <= 0 (last item otherwise).
+;; prob/poisson lambda: limit = exp(-lambda); k = 0; p = 1; loop { k += 1; p *= next(); stop when p <= limit }; answer k - 1.
+;; prob/sample n expr evaluates expr n times on the same stream.  prob/infer and prob/posterior run the model on a private entity copy per sample (rejection sampling).
+;; Seed 42 first draws: 0.6011037519201636, 0.44829055899754167, 0.8524657934904099.
+app ops-prob [
+  version: "1.0.0",
+  description: "Native renderers operator fixture: the prob family's pure operators on literal inputs, with edge cases."
+]
+type Hist = { binEdges : [number]!, counts : [number]! }
+type Inf = { mean : number!, variance : number!, samples : [number]!, acceptRate : number! }
+orbital OpsOrbital {
+  entity Ops [runtime] {
+    id : string!
+    seed : number?
+    unifA : number = 0
+    unifB : number = 0
+    unifC : number = 0
+    unifD : number = 0
+    gaussA : number = 0
+    gaussB : number = 0
+    gaussC : number = 0
+    betaA : number = 0
+    betaB : number = 0
+    betaC : number = 0
+    flipA : boolean = false
+    flipB : boolean = false
+    flipC : boolean = false
+    flipD : boolean = false
+    catA : string = ""
+    catB : string = ""
+    catC : number = 0
+    poisA : number = 0
+    poisB : number = 0
+    poisC : number = 0
+    sampA : [number] = []
+    sampB : [boolean] = []
+    sampC : [number] = []
+    sampD : [number] = []
+    evA : number = 0
+    evB : number = 0
+    evC : number = 0
+    varA : number = 0
+    varB : number = 0
+    varC : number = 0
+    histA : Hist?
+    histB : Hist?
+    histC : Hist?
+    histD : Hist?
+    histE : Hist?
+    histF : Hist?
+    pctA : number?
+    pctB : number?
+    pctC : number?
+    pctD : number?
+    pctE : number?
+    pctF : number?
+    pctG : number?
+    ciA : [number]?
+    ciB : [number]?
+    ciC : [number]?
+    ciD : [number]?
+    ciE : [number]?
+    x : number = 0
+    inferA : Inf
+    inferB : Inf
+    postA : [number] = []
+    postB : [number] = []
+  }
+  trait Probe -> Ops {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (set @entity.seed (prob/seed 42))
+        (set @entity.unifA (prob/uniform 0 1))
+        (set @entity.unifB (prob/uniform 3 7))
+        (set @entity.unifC (prob/uniform 7 3))
+        (set @entity.unifD (prob/uniform 5 5))
+        (set @entity.gaussA (prob/gaussian 0 1))
+        (set @entity.gaussB (prob/gaussian 5 2))
+        (set @entity.gaussC (prob/gaussian 1.5 0))
+        (set @entity.betaA (prob/beta 2 5))
+        (set @entity.betaB (prob/beta 0.5 0.5))
+        (set @entity.betaC (prob/beta 1 1))
+        (set @entity.flipA (prob/flip 0.7))
+        (set @entity.flipB (prob/flip 0))
+        (set @entity.flipC (prob/flip 1))
+        (set @entity.flipD (prob/flip 0.5))
+        (set @entity.catA (prob/categorical ["a" "b" "c"] [1 2 1]))
+        (set @entity.catB (prob/categorical ["a" "b" "c"] [1 0 0]))
+        (set @entity.catC (prob/categorical [10 20 30] [0.2 0.5 0.3]))
+        (set @entity.poisA (prob/poisson 4))
+        (set @entity.poisB (prob/poisson 0))
+        (set @entity.poisC (prob/poisson 20))
+        (set @entity.sampA (prob/sample 4 (prob/uniform 0 1)))
+        (set @entity.sampB (prob/sample 6 (prob/flip 0.3)))
+        (set @entity.sampC (prob/sample 0 (prob/uniform 0 1)))
+        (set @entity.sampD (prob/sample 3 (prob/gaussian 0 1)))
+        (set @entity.evA (prob/expected-value [1 2 3 4]))
+        (set @entity.evB (prob/expected-value [5]))
+        (set @entity.evC (prob/expected-value [-1 1]))
+        (set @entity.varA (prob/variance [2 4 4 4 5 5 7 9]))
+        (set @entity.varB (prob/variance [3]))
+        (set @entity.varC (prob/variance [1 1 1]))
+        (set @entity.histA (prob/histogram [1 2 3 4 5] 2))
+        (set @entity.histB (prob/histogram [1 1 1] 3))
+        (set @entity.histC (let ((een : [number] [])) (prob/histogram @een 2)))
+        (set @entity.histD (prob/histogram [1 2 3] 0))
+        (set @entity.histE (prob/histogram [1 2 3] 1.5))
+        (set @entity.histF (prob/histogram [0 10 5 5 10] 5))
+        (set @entity.pctA (prob/percentile [1 2 3 4 5] 50))
+        (set @entity.pctB (prob/percentile [1 2 3 4] 50))
+        (set @entity.pctC (prob/percentile [1 2 3 4 5] 0))
+        (set @entity.pctD (prob/percentile [1 2 3 4 5] 100))
+        (set @entity.pctE (prob/percentile [1 2 3 4 5] 101))
+        (set @entity.pctF (let ((een : [number] [])) (prob/percentile @een 50)))
+        (set @entity.pctG (prob/percentile [5 1 3] 25))
+        (set @entity.ciA (prob/credible-interval [1 2 3 4 5] 0.05))
+        (set @entity.ciB (prob/credible-interval [1 2 3 4 5 6 7 8 9 10] 0.5))
+        (set @entity.ciC (prob/credible-interval [1 2 3] 2))
+        (set @entity.ciD (let ((een : [number] [])) (prob/credible-interval @een 0.1)))
+        (set @entity.ciE (prob/credible-interval [7] 0.1))
+        (set @entity.x 0)
+        (set @entity.inferA (prob/infer (do (set @entity.x (prob/gaussian 0 1)) 1) true @entity.x 5))
+        (set @entity.inferB (prob/infer (do (set @entity.x (prob/uniform 0 1)) 1) (< @entity.x 0.5) @entity.x 10))
+        (set @entity.postA (prob/posterior (do (set @entity.x (prob/uniform 0 1)) 1) (< @entity.x 0.5) @entity.x 6))
+        (set @entity.postB (prob/posterior (do (set @entity.x (prob/gaussian 0 1)) 1) true @entity.x 0))
+    }
+  }
+  page boot as OpsStart -> Probe
+}

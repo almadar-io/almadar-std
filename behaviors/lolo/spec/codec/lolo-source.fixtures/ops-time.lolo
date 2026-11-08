@@ -1,0 +1,223 @@
+app ops-time [
+  version: "1.0.0",
+  description: "Native renderers operator fixture: the time family's pure operators on literal inputs, with edge cases."
+]
+type AnyDate = date | datetime
+orbital OpsOrbital {
+  entity Ops [runtime] {
+    id : string!
+    addA : date
+    addB : date
+    addC : date
+    addD : date
+    addE : date
+    addF : date
+    addG : date
+    addH : datetime
+    addI : datetime
+    addJ : datetime
+    addK : datetime
+    addL : datetime
+    dayA : number = 0
+    dayB : number = 0
+    dayC : number = 0
+    diffA : number = 0
+    diffB : number = 0
+    diffC : number = 0
+    diffD : number = 0
+    diffE : number = 0
+    diffF : number = 0
+    diffG : number = 0
+    diffH : number = 0
+    diffI : number = 0
+    durA : string = ""
+    durB : string = ""
+    durC : string = ""
+    durD : string = ""
+    durE : string = ""
+    durF : string = ""
+    durG : string = ""
+    endA : date
+    endB : date
+    endC : date
+    endD : datetime
+    endE : datetime
+    endF : datetime
+    endG : date
+    endH : date
+    fmtA : string = ""
+    fmtB : string = ""
+    fmtC : string = ""
+    fmtD : string = ""
+    fmtE : string = ""
+    fmtF : string = ""
+    fmtG : string = ""
+    fmtH : string = ""
+    hourA : number = 0
+    hourB : number = 0
+    hourC : number = 0
+    afterA : boolean = false
+    afterB : boolean = false
+    afterC : boolean = false
+    afterD : boolean = false
+    beforeA : boolean = false
+    beforeB : boolean = false
+    beforeC : boolean = false
+    beforeD : boolean = false
+    betwA : boolean = false
+    betwB : boolean = false
+    betwC : boolean = false
+    betwD : boolean = false
+    sameA : boolean = false
+    sameB : boolean = false
+    sameC : boolean = false
+    sameD : boolean = false
+    sameE : boolean = false
+    minA : number = 0
+    minB : number = 0
+    monA : number = 0
+    monB : number = 0
+    monC : number = 0
+    parseA : AnyDate?
+    parseB : AnyDate?
+    parseC : AnyDate?
+    parseD : AnyDate?
+    parseE : AnyDate?
+    parseF : AnyDate?
+    parseG : AnyDate?
+    secA : number = 0
+    secB : number = 0
+    startA : date
+    startB : date
+    startC : date
+    startD : datetime
+    startE : datetime
+    startF : date
+    subA : date
+    subB : date
+    subC : datetime
+    subD : date
+    subE : datetime
+    validA : boolean = false
+    validB : boolean = false
+    validC : boolean = false
+    validD : boolean = false
+    validE : boolean = false
+    wdayA : number = 0
+    wdayB : number = 0
+    wdayC : number = 0
+    wdayD : number = 0
+    yearA : number = 0
+    yearB : number = 0
+  }
+  trait Probe -> Ops {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (set @entity.addA (let ((da : date "2024-01-18")) (time/add @da 1 "month")))
+        (set @entity.addB (let ((dc : date "2024-01-31")) (time/add @dc 1 "month")))
+        (set @entity.addC (let ((da : date "2024-01-18")) (time/add @da 7 "day")))
+        (set @entity.addD (let ((da : date "2024-01-18")) (time/add @da -18 "day")))
+        (set @entity.addE (let ((da : date "2024-01-18")) (time/add @da 1 "year")))
+        (set @entity.addF (let ((da : date "2024-01-18")) (time/add @da 2 "week")))
+        (set @entity.addG (let ((da : date "2024-01-18")) (time/add @da 1 "quarter")))
+        (set @entity.addH (let ((ta : datetime "2024-01-18T09:30:00Z")) (time/add @ta 90 "minute")))
+        (set @entity.addI (let ((ta : datetime "2024-01-18T09:30:00Z")) (time/add @ta 36 "hour")))
+        (set @entity.addJ (let ((ta : datetime "2024-01-18T09:30:00Z")) (time/add @ta 1500 "ms")))
+        (set @entity.addK (let ((tc : datetime "2023-12-31T23:59:59Z")) (time/add @tc 1 "s")))
+        (set @entity.addL (let ((ta : datetime "2024-01-18T09:30:00Z")) (time/add @ta 0 "day")))
+        (set @entity.dayA (let ((da : date "2024-01-18")) (time/day @da)))
+        (set @entity.dayB (let ((ta : datetime "2024-01-18T09:30:00Z")) (time/day @ta)))
+        (set @entity.dayC (let ((dc : date "2024-01-31")) (time/day @dc)))
+        (set @entity.diffA (let ((da : date "2024-01-18")) (let ((db : date "2024-02-01")) (time/diff @db @da "day"))))
+        (set @entity.diffB (let ((da : date "2024-01-18")) (let ((db : date "2024-02-01")) (time/diff @da @db "day"))))
+        (set @entity.diffC (let ((ta : datetime "2024-01-18T09:30:00Z")) (let ((tb : datetime "2024-01-19T10:45:30Z")) (time/diff @tb @ta "hour"))))
+        (set @entity.diffD (let ((ta : datetime "2024-01-18T09:30:00Z")) (let ((tb : datetime "2024-01-19T10:45:30Z")) (time/diff @tb @ta "ms"))))
+        (set @entity.diffE (let ((da : date "2024-01-18")) (let ((db : date "2024-02-01")) (time/diff @db @da "month"))))
+        (set @entity.diffF (let ((da : date "2024-01-18")) (let ((dd : date "2024-12-31")) (time/diff @dd @da "year"))))
+        (set @entity.diffG (let ((ta : datetime "2024-01-18T09:30:00Z")) (let ((tb : datetime "2024-01-19T10:45:30Z")) (time/diff @tb @ta "minute"))))
+        (set @entity.diffH (let ((da : date "2024-01-18")) (let ((db : date "2024-02-01")) (time/diff @db @da "week"))))
+        (set @entity.diffI (let ((da : date "2024-01-18")) (time/diff @da @da "day")))
+        (set @entity.durA (time/duration 9000000))
+        (set @entity.durB (time/duration 0))
+        (set @entity.durC (time/duration 1000))
+        (set @entity.durD (time/duration 59999))
+        (set @entity.durE (time/duration 90061000))
+        (set @entity.durF (time/duration -1000))
+        (set @entity.durG (time/duration 500))
+        (set @entity.endA (let ((da : date "2024-01-18")) (time/endOf @da "month")))
+        (set @entity.endB (let ((da : date "2024-01-18")) (time/endOf @da "year")))
+        (set @entity.endC (let ((da : date "2024-01-18")) (time/endOf @da "day")))
+        (set @entity.endD (let ((ta : datetime "2024-01-18T09:30:00Z")) (time/endOf @ta "day")))
+        (set @entity.endE (let ((ta : datetime "2024-01-18T09:30:00Z")) (time/endOf @ta "hour")))
+        (set @entity.endF (let ((ta : datetime "2024-01-18T09:30:00Z")) (time/endOf @ta "month")))
+        (set @entity.endG (let ((da : date "2024-01-18")) (time/endOf @da "week")))
+        (set @entity.endH (let ((da : date "2024-01-18")) (time/endOf @da "quarter")))
+        (set @entity.fmtA (let ((da : date "2024-01-18")) (time/format @da "YYYY-MM-DD")))
+        (set @entity.fmtB (let ((ta : datetime "2024-01-18T09:30:00Z")) (time/format @ta "YYYY-MM-DD HH:mm:ss")))
+        (set @entity.fmtC (let ((da : date "2024-01-18")) (time/format @da "MMM DD, YYYY")))
+        (set @entity.fmtD (let ((ta : datetime "2024-01-18T09:30:00Z")) (time/format @ta "HH:mm")))
+        (set @entity.fmtE (let ((da : date "2024-01-18")) (time/format @da "")))
+        (set @entity.fmtF (let ((da : date "2024-01-18")) (time/format @da "dddd")))
+        (set @entity.fmtG (let ((da : date "2024-01-18")) (time/format @da "MMMM D, YY")))
+        (set @entity.fmtH (let ((tc : datetime "2023-12-31T23:59:59Z")) (time/format @tc "YYYY/MM/DD hh:mm A")))
+        (set @entity.hourA (let ((ta : datetime "2024-01-18T09:30:00Z")) (time/hour @ta)))
+        (set @entity.hourB (let ((tc : datetime "2023-12-31T23:59:59Z")) (time/hour @tc)))
+        (set @entity.hourC (let ((td : datetime "2024-03-10T00:00:00Z")) (time/hour @td)))
+        (set @entity.afterA (let ((da : date "2024-01-18")) (let ((db : date "2024-02-01")) (time/isAfter @db @da))))
+        (set @entity.afterB (let ((da : date "2024-01-18")) (let ((db : date "2024-02-01")) (time/isAfter @da @db))))
+        (set @entity.afterC (let ((da : date "2024-01-18")) (time/isAfter @da @da)))
+        (set @entity.afterD (let ((ta : datetime "2024-01-18T09:30:00Z")) (let ((tb : datetime "2024-01-19T10:45:30Z")) (time/isAfter @tb @ta))))
+        (set @entity.beforeA (let ((da : date "2024-01-18")) (let ((db : date "2024-02-01")) (time/isBefore @da @db))))
+        (set @entity.beforeB (let ((da : date "2024-01-18")) (let ((db : date "2024-02-01")) (time/isBefore @db @da))))
+        (set @entity.beforeC (let ((da : date "2024-01-18")) (time/isBefore @da @da)))
+        (set @entity.beforeD (let ((ta : datetime "2024-01-18T09:30:00Z")) (let ((tb : datetime "2024-01-19T10:45:30Z")) (time/isBefore @ta @tb))))
+        (set @entity.betwA (let ((da : date "2024-01-18")) (let ((db : date "2024-02-01")) (time/isBetween @da @da @db))))
+        (set @entity.betwB (let ((da : date "2024-01-18")) (let ((db : date "2024-02-01")) (time/isBetween @db @da @db))))
+        (set @entity.betwC (let ((da : date "2024-01-18")) (let ((db : date "2024-02-01")) (let ((dd : date "2024-12-31")) (time/isBetween @dd @da @db)))))
+        (set @entity.betwD (let ((ta : datetime "2024-01-18T09:30:00Z")) (let ((tb : datetime "2024-01-19T10:45:30Z")) (time/isBetween @ta @ta @tb))))
+        (set @entity.sameA (let ((ta : datetime "2024-01-18T09:30:00Z")) (let ((tb : datetime "2024-01-19T10:45:30Z")) (time/isSame @ta @tb "day"))))
+        (set @entity.sameB (let ((ta : datetime "2024-01-18T09:30:00Z")) (let ((tb : datetime "2024-01-19T10:45:30Z")) (time/isSame @ta @tb "month"))))
+        (set @entity.sameC (let ((ta : datetime "2024-01-18T09:30:00Z")) (let ((tb : datetime "2024-01-19T10:45:30Z")) (time/isSame @ta @tb "hour"))))
+        (set @entity.sameD (let ((da : date "2024-01-18")) (time/isSame @da @da "year")))
+        (set @entity.sameE (let ((da : date "2024-01-18")) (let ((db : date "2024-02-01")) (time/isSame @da @db "month"))))
+        (set @entity.minA (let ((ta : datetime "2024-01-18T09:30:00Z")) (time/minute @ta)))
+        (set @entity.minB (let ((tb : datetime "2024-01-19T10:45:30Z")) (time/minute @tb)))
+        (set @entity.monA (let ((da : date "2024-01-18")) (time/month @da)))
+        (set @entity.monB (let ((ta : datetime "2024-01-18T09:30:00Z")) (time/month @ta)))
+        (set @entity.monC (let ((dd : date "2024-12-31")) (time/month @dd)))
+        (set @entity.parseA (time/parse "2024-01-18"))
+        (set @entity.parseB (time/parse "2024-01-18T09:30:00Z"))
+        (set @entity.parseC (time/parse "garbage"))
+        (set @entity.parseD (time/parse ""))
+        (set @entity.parseE (time/parse "2024-02-30"))
+        (set @entity.parseF (time/parse "2024-01-18T09:30:00+02:00"))
+        (set @entity.parseG (time/parse "2024-01-18T09:30:00.123Z"))
+        (set @entity.secA (let ((ta : datetime "2024-01-18T09:30:00Z")) (time/second @ta)))
+        (set @entity.secB (let ((tb : datetime "2024-01-19T10:45:30Z")) (time/second @tb)))
+        (set @entity.startA (let ((da : date "2024-01-18")) (time/startOf @da "month")))
+        (set @entity.startB (let ((da : date "2024-01-18")) (time/startOf @da "year")))
+        (set @entity.startC (let ((da : date "2024-01-18")) (time/startOf @da "week")))
+        (set @entity.startD (let ((ta : datetime "2024-01-18T09:30:00Z")) (time/startOf @ta "day")))
+        (set @entity.startE (let ((ta : datetime "2024-01-18T09:30:00Z")) (time/startOf @ta "hour")))
+        (set @entity.startF (let ((da : date "2024-01-18")) (time/startOf @da "quarter")))
+        (set @entity.subA (let ((da : date "2024-01-18")) (time/subtract @da 1 "month")))
+        (set @entity.subB (let ((da : date "2024-01-18")) (time/subtract @da 18 "day")))
+        (set @entity.subC (let ((ta : datetime "2024-01-18T09:30:00Z")) (time/subtract @ta 90 "minute")))
+        (set @entity.subD (let ((da : date "2024-01-18")) (time/subtract @da 1 "year")))
+        (set @entity.subE (let ((ta : datetime "2024-01-18T09:30:00Z")) (time/subtract @ta 1 "s")))
+        (set @entity.validA (time/valid "2024-01-18T09:30:00Z"))
+        (set @entity.validB (time/valid "2024-01-18"))
+        (set @entity.validC (time/valid "garbage"))
+        (set @entity.validD (time/valid ""))
+        (set @entity.validE (time/valid "2024-02-30"))
+        (set @entity.wdayA (let ((da : date "2024-01-18")) (time/weekday @da)))
+        (set @entity.wdayB (let ((db : date "2024-02-01")) (time/weekday @db)))
+        (set @entity.wdayC (let ((dd : date "2024-12-31")) (time/weekday @dd)))
+        (set @entity.wdayD (let ((ta : datetime "2024-01-18T09:30:00Z")) (time/weekday @ta)))
+        (set @entity.yearA (let ((da : date "2024-01-18")) (time/year @da)))
+        (set @entity.yearB (let ((tc : datetime "2023-12-31T23:59:59Z")) (time/year @tc)))
+    }
+  }
+  page boot as OpsStart -> Probe
+}

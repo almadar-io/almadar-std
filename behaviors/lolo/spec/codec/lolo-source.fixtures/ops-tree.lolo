@@ -1,0 +1,31 @@
+app ops-tree [
+  version: "1.0.0",
+  description: "Native renderers operator fixture: the tree family's pure operators on literal inputs, with edge cases."
+]
+type Cell = { x : number!, y : number! }
+type Hit = { at : number!, path : string!, node : SExpr }
+type Tn = { kind : string!, kids : [Tn] }
+orbital OpsOrbital {
+  entity Ops [runtime] {
+    id : string!
+    idxA : [Hit] = []
+    idxB : [Hit] = []
+    idxC : [Hit] = []
+    idxD : [string] = []
+    idxE : [Hit] = []
+    idxF : [Hit] = []
+  }
+  trait Probe -> Ops {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (set @entity.idxA (object/get (tree/index (quote (do (emit A) (if true (emit B)))) ["emit"]) "emit" []))
+        (set @entity.idxB (object/get (tree/index (quote (do (emit A) (if true (emit B)))) ["emit" "if"]) "if" []))
+        (set @entity.idxC (object/get (tree/index (quote (do (emit A) (if true (emit B)))) ["navigate"]) "navigate" []))
+        (set @entity.idxD (object/keys (tree/index (quote (do (emit A) (if true (emit B)))) ["emit" "if" "do"])))
+        (set @entity.idxE (object/get (tree/index (quote (do (emit A) (if true (emit B)))) ["emit"] {objects: ["emit"]}) "emit" []))
+        (set @entity.idxF (object/get (tree/index (quote (set @entity.x 1)) ["set"]) "set" []))
+    }
+  }
+  page boot as OpsStart -> Probe
+}
