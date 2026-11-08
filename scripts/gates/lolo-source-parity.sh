@@ -157,9 +157,13 @@ run_swift() {
     if ! models swift "$ex" "$d" ios >"$log" 2>&1; then report swift "$ex" bad "$log"; continue; fi
     local b=$d/build; mkdir -p "$b"
     cp "$d/Sources/OrbitalApp/Generated/Entities.swift" "$d/Sources/OrbitalApp/Generated/Events.swift" "$b/"
+    local support=""
+    for f in AnyCodable.swift Indirect.swift; do
+      if [ -f "$d/Sources/OrbitalApp/$f" ]; then cp "$d/Sources/OrbitalApp/$f" "$b/"; support="$support $f"; fi
+    done
     render_text swift "$ex" "$b/Emitted.swift" || { report swift "$ex" bad "$log"; continue; }
     cp "$PAR/drivers/swift/$ex.swift" "$b/main.swift"
-    if ! (cd "$b" && swiftc -o run Entities.swift Events.swift Emitted.swift main.swift) >"$log" 2>&1; then report swift "$ex" bad "$log"; continue; fi
+    if ! (cd "$b" && swiftc -o run $support Entities.swift Events.swift Emitted.swift main.swift) >"$log" 2>&1; then report swift "$ex" bad "$log"; continue; fi
     "$b/run" "$PAR/$ex.events.json" >"$d/actual" 2>"$log"
     finish swift "$ex" "$d/actual" "$log"
   done

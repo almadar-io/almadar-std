@@ -81,11 +81,13 @@
                     (let ((copyOk (and (= @config.setStyle "copy") (= (array/len @parts) 2)))
                           (copyBad (and (= @config.setStyle "copy") (!= (array/len @parts) 2)))
                           (root (object/get @config.attributeRoots (default (array/nth @parts 0) "") "")))
+                      (let ((boxedSet (and (!= @config.boxForm "") (= (array/len @parts) 2) (= (default (array/nth @parts 0) "") "entity") (array/includes @ctx.boxed (default (array/nth @parts 1) "")))))
+                      (let ((value (if @boxedSet FILL{@config.boxForm ## value => @value} @value)))
                       (let ((line (if @copyOk FILL{@config.setCopy ## root => @root ## field => CASE{(default (array/nth @parts 1) "") ## @config.fieldCase} ## value => @value}
                                     (if @copyBad FILL{@config.unsupportedForm ## op => "set"} FILL{@config.setAssign ## target => @target ## value => @value}))))
                         REC{ expr => @config.nullLit ## stmt => [(str/concat @line @term)]
                           ## warns => (array/concat @ws (if @copyBad [(str/concat "set path " @raw " is deeper than one field, which this target cannot assign")] []))
-                          ## uses => (array/concat @us (if @copyBad ["unsupported"] [])) }))))
+                          ## uses => (array/concat @us (if @copyBad ["unsupported"] []) (if @boxedSet ["box"] [])) }))))))
               (if (= @hd "emit")
                 (let ((e1 (array/nth @n 1))
                       (ev : string (if (validate/string @e1) @e1 ""))
@@ -187,7 +189,7 @@
            (dtext (if (and (= @root "entity") (= (array/len @rest) 1)) LOOKUP{@ctx.defaults ## (default (array/nth @rest 0) "")} "")))
       (let ((txt (if (and @typed (!= @config.recordForm "") (= @root "payload") (= (array/len @rest) 0)) (str/concat "" @plain "")
                    (if (and (!= @config.entityReadDefault "") (!= @dtext "")) FILL{@config.entityReadDefault ## read => @plain ## default => @dtext} @plain))))
-        REC{ expr => @txt ## stmt => [(str/concat @txt @term)] ## body => @plain ## uses => (if (= @root "user") ["user"] []) })))))))
+        REC{ expr => (if (and @typed (!= @config.narrowUnwrap "")) (str/concat @txt "") @txt) ## stmt => [(str/concat @txt @term)] ## body => @plain ## uses => (if (= @root "user") ["user"] []) })))))))
             (let ((txt (if (and @typed (!= @config.enumForm "")) (str/concat "" @sv "" STR{@sv} "") STR{@sv})))
               REC{ expr => @txt ## stmt => [(str/concat @txt @term)] })))
         (let ((txt (if (validate/boolean @n) (if (= @n true) @config.trueLit @config.falseLit) NUM{@n})))

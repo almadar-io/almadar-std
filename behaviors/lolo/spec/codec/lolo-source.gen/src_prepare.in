@@ -37,10 +37,11 @@
               (array/map (object/get @t "transitions") (fn tr (array/concat [0, (if (!= (object/get @tr "guard" null) null) (object/get @tr "guard") true)] (default (object/get @tr "effects" []) []))))
               (array/map (object/get @t "listenRows") (fn lr [0, (if (!= (object/get @lr "guard" null) null) (object/get @lr "guard") true), (default (object/get @lr "map" null) {})])))))))
         (set @entity.groupCtx (array/concat
-          (if @config.renderModels (array/map @entity.containers (fn c { emitTypes: {}, emitVoid: [], defaults: {} })) [])
+          (if @config.renderModels (array/map @entity.containers (fn c { emitTypes: {}, emitVoid: [], defaults: {}, boxed: [] })) [])
           (array/map @entity.traits (fn t
             { emitTypes: (object/get @t "emitTypes"),
               emitVoid: (object/get @t "emitVoid"),
+              boxed: (default (object/get @entity.boxed (object/get @t "entity")) []),
               defaults: (let ((en (default (array/find @entity.containers (fn c (and (= (object/get @c "name") (object/get @t "entity")) (not (object/get @c "alias"))))) { name: "", alias: true, fields: [] })))
                 (object/fromEntries (array/filter (array/map (object/get @en "fields") (fn f [(default (object/get @f "name") "")
                   (let ((d (object/get @f "default" null)))

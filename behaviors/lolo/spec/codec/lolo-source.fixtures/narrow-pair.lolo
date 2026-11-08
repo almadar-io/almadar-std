@@ -1,0 +1,22 @@
+app nar [
+  version: "1.0.0",
+  description: "Native renderers fixture: a payload read a presence guard proves, written to a required field."
+]
+orbital NarOrbital {
+  entity Rec [runtime] {
+    id : string!
+    label : string = ""
+  }
+  trait Pick -> Rec {
+    initial: idle
+    state idle {
+      INIT -> idle
+      PICK -> idle
+        (when (validate/required ?name) (set @entity.label ?name))
+    }
+    listens {
+      PICK { name : string }
+    }
+  }
+  page boot as NarStart -> Pick
+}

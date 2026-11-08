@@ -56,14 +56,15 @@ def resolve(T, BASE):
         '(if (= @%(a)sc "\\ue007") (str/concat (if %(isrec)s (str/concat %(rec_close)s (if %(dotted)s %(arm_close)s "")) @config.mapClose) @%(a)safterc) '
         '(if (= @%(a)sc "\\ue008") (str/concat (if %(isenum)s %(enum_text)s %(lit)s) %(lit_tail)s) '
         '(if (= @%(a)sc "\\ue00b") (str/concat (if %(ismodel)s %(whole_text)s %(whole)s) %(whole_tail)s) '
+        '(if (= @%(a)sc "\\ue010") (str/concat (if (array/includes @entity.narrowed @%(a)sabs) @config.narrowUnwrap "") @%(a)safterc) '
         '(if (= @%(a)sc "\\ue00f") (str/concat (if (= @%(a)sty "") @config.nullUnknown %(null_typed)s) @%(a)safterc) '
-        '(str/concat "\\ue000" @%(a)sq))))))))))'
+        '(str/concat "\\ue000" @%(a)sq)))))))))))'
     ) % dict(a=a, isrec=is_record, dotted=dotted, arm_open=arm_open, rec_open=rec_open, field_open=field_open, pair_open=pair_open,
              key_tail=key_tail, field_close=field_close, pair_close=pair_close, rec_close=rec_close, arm_close=arm_close,
              isenum=is_enum, enum_text=enum_text, lit=lit, lit_tail=lit_tail, ismodel=is_model, whole_text=whole_text, whole=whole,
              whole_tail=whole_tail, null_typed=null_typed)
     return ('(let ((%(a)sp (str/split %(T)s %(MO)s))) (str/concat (default (array/first @%(a)sp) "") (str/join (array/map (array/drop @%(a)sp 1) (fn %(a)sq '
-            '(let ((%(a)srest (str/replace-pattern @%(a)sq "^[^\\ue001-\\ue00c\\ue00f]*" ""))) '
+            '(let ((%(a)srest (str/replace-pattern @%(a)sq "^[^\\ue001-\\ue00c\\ue00f\\ue010]*" ""))) '
             '(let ((%(a)srel (str/slice @%(a)sq 0 (- (str/len @%(a)sq) (str/len @%(a)srest)))) (%(a)sc (str/slice @%(a)srest 0 1)) (%(a)safterc (str/slice @%(a)srest 1 (str/len @%(a)srest)))) '
             '(let ((%(a)slead (default (array/first (str/split (str/slice @%(a)srel 1 (str/len @%(a)srel)) "]")) "")) (%(a)safter (str/join (array/drop (str/split @%(a)srel "]") 1) "]"))) '
             '(let ((%(a)sabs (str/concat %(BASE)s (if (= @%(a)slead "1") ".guard" (str/concat ".effects[" (- (default (str/to-int @%(a)slead) 2) 2) "]")) @%(a)safter))) '

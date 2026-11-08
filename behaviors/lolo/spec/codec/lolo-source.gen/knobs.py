@@ -39,6 +39,8 @@ KNOBS = [
  ("typeUnknown", "string", "", "domain", "Unknown type", "Written for a {{type}} placeholder whose path the checker has no type for"),
  ("nullLit", "string", "null", "domain", "null", "The null literal"),
  ("nullTyped", "string", "", "domain", "Typed null", "A null literal an operator call takes as an argument, at the type the checker requires there ({{type}} the target's name for it, without the optional); empty renders nullLit"),
+ ("boxForm", "string", "", "domain", "Boxed field write", "A value written to an entity field the target stores boxed (a field that reaches its own record by value, inspect's boxed): {{value}} the value; its helper is under the token box. Empty writes the value as is"),
+ ("narrowUnwrap", "string", "", "domain", "Narrowed read unwrap", "Written after a read the checker narrowed from optional to present (a read under a presence guard); empty writes nothing"),
  ("nullEqForm", "string", "", "domain", "Null equality form", "An equality with exactly one literal null side, a presence check ({{value}} the other side); empty renders the = operator"),
  ("nullNeForm", "string", "", "domain", "Null inequality form", "An inequality with exactly one literal null side ({{value}} the other side); empty renders the != operator"),
  ("nullUnknown", "string", "null", "domain", "Untyped null", "A null literal an operator call takes as an argument where the checker determines no type (two nulls compared): the target's JSON null"),
