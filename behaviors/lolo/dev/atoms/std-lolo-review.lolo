@@ -1,6 +1,6 @@
 app std-lolo-review [
   version: "0.1.0",
-  description: "std-lolo-review — reviews the .lolo file open in an editor one transition at a time, and flags the transitions that need attention. Only a path ending in fileSuffix is reviewed; any other file gets no flags and no popover. After an edit and analyzeMs of quiet it asks for the file's transitions (TRANSITIONS_OF, std-lolo-transitions), who last changed each line (GIT_STEP blame of the unsaved text, std-git) and each transition's nearest transitions in the catalog (TV_NEAREST, std-transition-vectors, whose index of the installed packages it asks for once with TV_INDEX_PACKAGES), and paints DECORATE source review: review-recent over a transition with a line not committed or committed within recentHours, review over one whose most similar catalog transition scores below driftThreshold (its shape departs from every known one). When the cursor or the pointer rests dwellMs on a transition, or REVIEW_NOW asks, it shows a POPOVER over that transition at once with its edit recency and nearest catalog transitions, then asks the model (LLM_GENERATE, std-llm) to judge it against the rules in config — each a one-line rule with the EXEC or CLAUDE.md rule it comes from — and adds the answer while the popover stays open; the answer is kept per transition and file version (pointer|version). Leaving the transition closes the popover and cancels a pending answer (LLM_CANCEL). The composer routes each request to its atom and each answer back."
+  description: "std-lolo-review — reviews the .lolo file open in an editor one transition at a time, and flags the transitions that need attention. Only a path ending in fileSuffix is reviewed; any other file gets no flags and no popover. After an edit and analyzeMs of quiet it asks for the file's transitions (TRANSITIONS_OF, std-lolo-transitions), who last changed each line (GIT_STEP blame of the unsaved text, std-git) and each transition's nearest transitions in the catalog (TV_NEAREST, std-transition-vectors, whose index of the installed packages named by indexPackages it asks for once with TV_INDEX_PACKAGES), and paints DECORATE source review: review-recent over a transition with a line not committed or committed within recentHours, review over one whose most similar catalog transition scores below driftThreshold (its shape departs from every known one). When the cursor or the pointer rests dwellMs on a transition, or REVIEW_NOW asks, it shows a POPOVER over that transition at once with its edit recency and nearest catalog transitions, then asks the model (LLM_GENERATE, std-llm) to judge it against the rules in config — each a one-line rule with the EXEC or CLAUDE.md rule it comes from — and adds the answer while the popover stays open; the answer is kept per transition and file version (pointer|version). Leaving the transition closes the popover and cancels a pending answer (LLM_CANCEL). The composer routes each request to its atom and each answer back."
 ]
 
 type LrMatch = { start : number!, end : number!, text : string! }
@@ -56,7 +56,7 @@ orbital LoloReviewOrbital {
         (set @entity.reviewing true)
         (set @entity.editedAt @now)
         (set @entity.pending true)
-        (if @entity.indexAsked (set @entity.indexAsked true) (do (set @entity.indexAsked true) (emit TV_INDEX_PACKAGES { rebuild: false })))
+        (if @entity.indexAsked (set @entity.indexAsked true) (do (set @entity.indexAsked true) (emit TV_INDEX_PACKAGES { rebuild: false, prefixes: @config.indexPackages })))
       BUFFER_EDITED -> ready when (and (not (str/endsWith ?path @config.fileSuffix)) @entity.reviewing)
         (set @entity.reviewing false)
         (set @entity.pending false)
@@ -251,6 +251,7 @@ orbital LoloReviewOrbital {
         @tier "internal"
       TV_INDEX_PACKAGES -> external {
         rebuild : boolean!
+        prefixes : [string]!
       }
         @description "Ask std-transition-vectors to load or build the catalog index once."
         @tier "internal"
@@ -344,6 +345,10 @@ orbital LoloReviewOrbital {
       fileSuffix : string = ".lolo"
         @label "Reviewed files"
         @description "Only files whose path ends with this are reviewed."
+        @tier "domain"
+      indexPackages : [string] = ["almadar-std"]
+        @label "Indexed packages"
+        @description "The prefixes of the installed behavior packages whose transitions are the catalog peers."
         @tier "domain"
       analyzeMs : number = 800
         @label "Quiet time before analysis"

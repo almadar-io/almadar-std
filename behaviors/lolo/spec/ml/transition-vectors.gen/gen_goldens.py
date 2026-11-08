@@ -12,6 +12,7 @@ ENTRIES = [{"key": "/c/a.lolo#p0", "path": "/c/a.lolo", "label": "A.GO", "text":
 SRC = {"snapshots": [], "snapshotPaths": [], "userDir": "/u", "userAnchor": "home", "providerModel": "m", "providerKind": "lmstudio", "embedModel": "m"}
 VECS = [{"key": "/c/a.lolo#p0", "vector": [1, 0]}, {"key": "/c/b.lolo#p0", "vector": [0, 1]}, {"key": "/c/b.lolo#p1", "vector": [0.8, 0.6]}]
 def item(ptr, trait, event, src): return {"pointer": ptr, "trait": trait, "event": event, "from": "s", "to": "s", "fromRow": 0, "fromCol": 0, "toRow": 0, "source": src}
+PKGS = [{"root": "/n/std", "prefix": "std", "vectors": None, "vectorsRel": None, "vectorsIn": None}, {"root": "/n/io/", "prefix": "almadar-behaviors", "vectors": None, "vectorsRel": None, "vectorsIn": None}]
 cases = [
  ("rebuild-lists-the-roots", [ev("TV_INDEX", {"state": "listing", "emits": [{"event": "TV_LIST", "payload": {"stage": "list"}}]}, roots=ROOTS, rebuild=True)]),
  ("listing-sorts-the-files-and-reads-the-first", [ev("TV_INDEX", roots=ROOTS, rebuild=True),
@@ -39,10 +40,11 @@ cases = [
   ),
  ("a-lookup-before-ready-waits", [ev("TV_INDEX", roots=ROOTS, rebuild=True), ev("TV_NEAREST", {"state": "listing", "entity": {"nextId": "r9"}}, frm="listing", requestId="r9", items=[])]),
 
- ("installed-packages-are-the-roots", [ev("TV_INDEX_PACKAGES", {"entity": {"rebuildPackages": True}}, rebuild=True),
-   ev("TV_PACKAGES", {"emits": [{"event": "TV_INDEX", "payload": {"roots": ["/n/std/behaviors/lolo", "/n/io/behaviors/lolo"], "rebuild": True}}]}, frm="idle",
-      result=[{"root": "/n/std", "prefix": "std", "vectors": None, "vectorsRel": None, "vectorsIn": None}, {"root": "/n/io/", "prefix": "almadar-behaviors", "vectors": None, "vectorsRel": None, "vectorsIn": None}])]),
- ("unreadable-packages-are-refused", [ev("TV_INDEX_PACKAGES", rebuild=False),
+ ("listed-packages-are-the-roots", [ev("TV_INDEX_PACKAGES", {"entity": {"rebuildPackages": True, "packagePrefixes": ["std", "almadar-behaviors"]}}, rebuild=True, prefixes=["std", "almadar-behaviors"]),
+   ev("TV_PACKAGES", {"emits": [{"event": "TV_INDEX", "payload": {"roots": ["/n/std/behaviors/lolo", "/n/io/behaviors/lolo"], "rebuild": True}}]}, frm="idle", result=PKGS)]),
+ ("unlisted-packages-are-not-roots", [ev("TV_INDEX_PACKAGES", {"entity": {"packagePrefixes": ["std"]}}, rebuild=True, prefixes=["std"]),
+   ev("TV_PACKAGES", {"emits": [{"event": "TV_INDEX", "payload": {"roots": ["/n/std/behaviors/lolo"], "rebuild": True}}]}, frm="idle", result=PKGS)]),
+ ("unreadable-packages-are-refused", [ev("TV_INDEX_PACKAGES", rebuild=False, prefixes=["std"]),
    ev("TV_PACKAGES_FAILED", {"emits": [{"event": "TV_REFUSED", "payload": {"code": "TV_PACKAGES_UNREAD"}}]}, frm="idle", error="no store")]),
 ]
 ENTITY_READY = {"entries": ENTRIES, "vectors": {v["key"]: v["vector"] for v in VECS}, "ready": True, "model": "m", **SRC, "sourced": True}

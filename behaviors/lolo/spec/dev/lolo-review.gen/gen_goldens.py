@@ -24,7 +24,7 @@ REC = {"id": "recent-" + PTR, "fromRow": 4, "fromCol": 6, "toRow": 5, "toCol": 2
 DRIFT = {"id": "drift-" + PTR, "fromRow": 4, "fromCol": 6, "toRow": 5, "toCol": 25, "tone": "review", "label": "departs from the catalog: nearest X.GO scores 40%"}
 cases = [
  ("only-lolo-files-are-reviewed", {}, [ev("BUFFER_EDITED", {"entity": {"editorId": "e"}, "neverEmits": ["DECORATE", "POPOVER"]}, editorId="e", path="/w/a.ts", version=1, text="x", dirty=False),
-   ev("BUFFER_EDITED", {"entity": {"reviewing": True, "pending": True, "path": P, "indexAsked": True}, "emits": [{"event": "TV_INDEX_PACKAGES", "payload": {"rebuild": False}}]}, editorId="e", path=P, version=2, text=TEXT, dirty=False),
+   ev("BUFFER_EDITED", {"entity": {"reviewing": True, "pending": True, "path": P, "indexAsked": True}, "emits": [{"event": "TV_INDEX_PACKAGES", "payload": {"rebuild": False, "prefixes": ["almadar-std"]}}]}, editorId="e", path=P, version=2, text=TEXT, dirty=False),
    ev("BUFFER_EDITED", {"neverEmits": ["TV_INDEX_PACKAGES"]}, editorId="e", path=P, version=3, text=TEXT, dirty=True)]),
  ("transitions-ask-for-peers-and-flag", dict(BASE, items=[], itemsVersion=-1, rows=[], blameVersion=-1),
    [ev("TRANSITIONS", {"emits": [{"event": "TV_NEAREST", "payload": {"requestId": "3", "items": [{"key": PTR, "path": P, "text": ITEM["source"]}]}}, {"event": "DECORATE", "payload": {"ranges": []}}]}, key="3", path=P, items=[ITEM])]),

@@ -612,16 +612,24 @@
       ]
     },
     {
-      "id": "installed-packages-are-the-roots",
+      "id": "listed-packages-are-the-roots",
       "steps": [
         {
           "event": "TV_INDEX_PACKAGES",
           "payload": {
-            "rebuild": true
+            "rebuild": true,
+            "prefixes": [
+              "std",
+              "almadar-behaviors"
+            ]
           },
           "expect": {
             "entity": {
-              "rebuildPackages": true
+              "rebuildPackages": true,
+              "packagePrefixes": [
+                "std",
+                "almadar-behaviors"
+              ]
             }
           }
         },
@@ -664,12 +672,71 @@
       ]
     },
     {
+      "id": "unlisted-packages-are-not-roots",
+      "steps": [
+        {
+          "event": "TV_INDEX_PACKAGES",
+          "payload": {
+            "rebuild": true,
+            "prefixes": [
+              "std"
+            ]
+          },
+          "expect": {
+            "entity": {
+              "packagePrefixes": [
+                "std"
+              ]
+            }
+          }
+        },
+        {
+          "event": "TV_PACKAGES",
+          "payload": {
+            "result": [
+              {
+                "root": "/n/std",
+                "prefix": "std",
+                "vectors": null,
+                "vectorsRel": null,
+                "vectorsIn": null
+              },
+              {
+                "root": "/n/io/",
+                "prefix": "almadar-behaviors",
+                "vectors": null,
+                "vectorsRel": null,
+                "vectorsIn": null
+              }
+            ]
+          },
+          "from": "idle",
+          "expect": {
+            "emits": [
+              {
+                "event": "TV_INDEX",
+                "payload": {
+                  "roots": [
+                    "/n/std/behaviors/lolo"
+                  ],
+                  "rebuild": true
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
       "id": "unreadable-packages-are-refused",
       "steps": [
         {
           "event": "TV_INDEX_PACKAGES",
           "payload": {
-            "rebuild": false
+            "rebuild": false,
+            "prefixes": [
+              "std"
+            ]
           }
         },
         {

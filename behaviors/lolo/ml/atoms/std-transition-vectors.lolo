@@ -1,6 +1,6 @@
 app std-transition-vectors [
   version: "0.1.0",
-  description: "std-transition-vectors — a nearest-neighbour index of the transitions written in a set of .lolo roots, by meaning. TV_INDEX { roots, rebuild } loads the index from cachePath when it holds one for the same roots and rebuild is false; otherwise it lists every .lolo under the roots (absolute paths) with ripgrep (listArgs, so .gitignore and the spec, .orbital and locales folders are skipped), reads each file and outlines it with std-lolo-transitions, keeps one entry per transition { key: <path>#<pointer>, path, label: <trait>.<EVENT>, text: its source lines }, reports TV_PROGRESS { done, total } per file, writes the entries to cachePath, and resolves every entry's vector the way orb does (std-vector-sources, then the composer's std-vector-resolve over TV_RESOLVE: package snapshots, the user store, then the configured embedder, which writes what it embeds back to the user store). TV_INDEX_PACKAGES { rebuild } does the same over every installed behavior package (behavior/packages), each package root's behaviors/lolo. TV_READY { count, model } answers when every entry has its vector. TV_NEAREST { requestId, items: [{ key, path, text }] } resolves the items' vectors and answers TV_PEERS { requestId, results: [{ key, peers: [{ key, path, label, score }] }] }: per item the `peers` most similar entries by cosine, best first, never an entry of the item's own path. Asked before TV_READY or while another lookup runs, the latest lookup waits and runs after. A failure answers TV_REFUSED { code, detail }.",
+  description: "std-transition-vectors — a nearest-neighbour index of the transitions written in a set of .lolo roots, by meaning. TV_INDEX { roots, rebuild } loads the index from cachePath when it holds one for the same roots and rebuild is false; otherwise it lists every .lolo under the roots (absolute paths) with ripgrep (listArgs, so .gitignore and the spec, .orbital and locales folders are skipped), reads each file and outlines it with std-lolo-transitions, keeps one entry per transition { key: <path>#<pointer>, path, label: <trait>.<EVENT>, text: its source lines }, reports TV_PROGRESS { done, total } per file, writes the entries to cachePath, and resolves every entry's vector the way orb does (std-vector-sources, then the composer's std-vector-resolve over TV_RESOLVE: package snapshots, the user store, then the configured embedder, which writes what it embeds back to the user store). TV_INDEX_PACKAGES { rebuild, prefixes } does the same over the installed behavior packages (behavior/packages) whose prefix is in prefixes, each package root's behaviors/lolo. TV_READY { count, model } answers when every entry has its vector. TV_NEAREST { requestId, items: [{ key, path, text }] } resolves the items' vectors and answers TV_PEERS { requestId, results: [{ key, peers: [{ key, path, label, score }] }] }: per item the `peers` most similar entries by cosine, best first, never an entry of the item's own path. Asked before TV_READY or while another lookup runs, the latest lookup waits and runs after. A failure answers TV_REFUSED { code, detail }.",
   exec: ["rg"],
   env: ["PATH", "HOME", "ALMADAR_VECTORS_DIR", "EMBEDDING_PROVIDER", "EMBEDDING_API_KEY", "OPENAI_API_KEY", "OPEN_ROUTER_API_KEY", "EMBEDDING_MODEL", "LMSTUDIO_EMBEDDING_MODEL"],
   fs: { "/**": [read], "~/.almadar/transition-index/**": [read, write, create], "~/.almadar/vectors/**": [read], env ALMADAR_VECTORS_DIR: "**": [read] }
@@ -43,6 +43,7 @@ orbital TransitionVectorsOrbital {
     nextId : string = ""
     nextAsks : [TvAsk] = []
     rebuildPackages : boolean = false
+    packagePrefixes : [string] = []
   }
 
   trait TvList = Cli.traits.CliRunner {
@@ -68,9 +69,10 @@ orbital TransitionVectorsOrbital {
       INIT -> idle
       TV_INDEX_PACKAGES -> idle
         (set @entity.rebuildPackages ?rebuild)
+        (set @entity.packagePrefixes ?prefixes)
         (behavior/packages { key: "packages" emit: { success: TV_PACKAGES, failure: TV_PACKAGES_FAILED } })
       TV_PACKAGES -> idle
-        (emit TV_INDEX { roots: (array/map ?result (fn p (str/concat (if (str/endsWith @p.root "/") (str/slice @p.root 0 (- (str/len @p.root) 1)) @p.root) "/behaviors/lolo"))), rebuild: @entity.rebuildPackages })
+        (emit TV_INDEX { roots: (array/map (array/filter ?result (fn q (array/includes @entity.packagePrefixes @q.prefix))) (fn p (str/concat (if (str/endsWith @p.root "/") (str/slice @p.root 0 (- (str/len @p.root) 1)) @p.root) "/behaviors/lolo"))), rebuild: @entity.rebuildPackages })
       TV_PACKAGES_FAILED -> idle
         (emit TV_REFUSED { code: "TV_PACKAGES_UNREAD", detail: (default ?error "") })
       TV_INDEX -> loading when (not ?rebuild)
@@ -182,9 +184,10 @@ orbital TransitionVectorsOrbital {
       INIT -> ready
       TV_INDEX_PACKAGES -> ready
         (set @entity.rebuildPackages ?rebuild)
+        (set @entity.packagePrefixes ?prefixes)
         (behavior/packages { key: "packages" emit: { success: TV_PACKAGES, failure: TV_PACKAGES_FAILED } })
       TV_PACKAGES -> ready
-        (emit TV_INDEX { roots: (array/map ?result (fn p (str/concat (if (str/endsWith @p.root "/") (str/slice @p.root 0 (- (str/len @p.root) 1)) @p.root) "/behaviors/lolo"))), rebuild: @entity.rebuildPackages })
+        (emit TV_INDEX { roots: (array/map (array/filter ?result (fn q (array/includes @entity.packagePrefixes @q.prefix))) (fn p (str/concat (if (str/endsWith @p.root "/") (str/slice @p.root 0 (- (str/len @p.root) 1)) @p.root) "/behaviors/lolo"))), rebuild: @entity.rebuildPackages })
       TV_PACKAGES_FAILED -> ready
         (emit TV_REFUSED { code: "TV_PACKAGES_UNREAD", detail: (default ?error "") })
       TV_INDEX -> loading when (not ?rebuild)
@@ -324,8 +327,8 @@ orbital TransitionVectorsOrbital {
       TV_INDEX { roots : [string]!  rebuild : boolean! }
         @description "Load or build the index of these roots."
         @synonyms "index transitions, build catalog index"
-      TV_INDEX_PACKAGES { rebuild : boolean! }
-        @description "Load or build the index of every installed behavior package's .lolo sources."
+      TV_INDEX_PACKAGES { rebuild : boolean!  prefixes : [string]! }
+        @description "Load or build the index of the .lolo sources of the installed behavior packages whose prefix is listed."
         @synonyms "index the catalog"
       TV_NEAREST { requestId : string!  items : [TvAsk]! }
         @description "Find the most similar indexed transitions for each item."
