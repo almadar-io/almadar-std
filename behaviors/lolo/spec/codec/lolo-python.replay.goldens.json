@@ -3206,7 +3206,7 @@
       "entity": {
         "operatorNames": [
           "emit",
-          "format/phone",
+          "str/collate-key",
           "set"
         ]
       },
@@ -3335,7 +3335,7 @@
                                 "set",
                                 "@entity.t",
                                 [
-                                  "format/phone",
+                                  "str/collate-key",
                                   "@payload.p"
                                 ]
                               ],
@@ -3445,9 +3445,9 @@
               {
                 "event": "PYTHON_RENDERED",
                 "payload": {
-                  "text": "from orbital_app.generated.entities import Rec\nfrom orbital_app.generated.events import TDONEPayload, TGOPayload\n\n\ndef _unsupported(name): raise NotImplementedError('no native template for operator ' + name)\n\n\nclass T:\n    def __init__(self, entity: Rec, ports=None):\n        self.state = \"idle\"\n        self.entity = entity\n        self.ports = ports\n        self.emitted: list[tuple[str, object]] = []\n\n    def emit(self, event, payload):\n        self.emitted.append((event, payload))\n\n    def on_init(self, payload=None) -> None:\n        if self.state == \"idle\":\n            self.state = \"idle\"\n\n    def on_go(self, payload: TGOPayload) -> None:\n        if self.state == \"idle\":\n            self.entity.t = _unsupported(\"format/phone\")\n            self.emit(\"DONE\", TDONEPayload(t=self.entity.t))\n            self.state = \"idle\"\n",
+                  "text": "from orbital_app.generated.entities import Rec\nfrom orbital_app.generated.events import TDONEPayload, TGOPayload\n\n\ndef _unsupported(name): raise NotImplementedError('no native template for operator ' + name)\n\n\nclass T:\n    def __init__(self, entity: Rec, ports=None):\n        self.state = \"idle\"\n        self.entity = entity\n        self.ports = ports\n        self.emitted: list[tuple[str, object]] = []\n\n    def emit(self, event, payload):\n        self.emitted.append((event, payload))\n\n    def on_init(self, payload=None) -> None:\n        if self.state == \"idle\":\n            self.state = \"idle\"\n\n    def on_go(self, payload: TGOPayload) -> None:\n        if self.state == \"idle\":\n            self.entity.t = _unsupported(\"str/collate-key\")\n            self.emit(\"DONE\", TDONEPayload(t=self.entity.t))\n            self.state = \"idle\"\n",
                   "warnings": [
-                    "T.GO: no Python template for operator format/phone"
+                    "T.GO: no Python template for operator str/collate-key"
                   ]
                 }
               }
@@ -3996,7 +3996,7 @@
               {
                 "event": "PYTHON_RENDERED",
                 "payload": {
-                  "text": "import math\nfrom orbital_app.generated.entities import Pair\nfrom orbital_app.generated.events import ScoreSCOREDPayload, ScoreSCOREPayload\n\n\ndef _default(v, d): return d if v is None else v\ndef _div(a, b): return None if b == 0 else a / b\ndef _nth(a, i):\n    if i != int(i) or i < 0: raise ValueError('nth: index is not a whole number from 0')\n    return a[int(i)] if i < len(a) else None\ndef _range(a, b=None, step=1):\n    start, end = (0, a) if b is None else (a, b)\n    if step == 0: raise ValueError('range: step 0 must be a non-zero finite number')\n    out = []\n    x = start\n    while (x < end) if step > 0 else (x > end):\n        out.append(x)\n        x += step\n    return out\ndef _sqrt(x): return None if x < 0 else math.sqrt(x)\ndef _sum(a, k=None): return sum(a) if k is None else sum(x[k] for x in a)\n\n\nclass Score:\n    def __init__(self, entity: Pair, ports=None):\n        self.state = \"idle\"\n        self.entity = entity\n        self.ports = ports\n        self.emitted: list[tuple[str, object]] = []\n\n    def emit(self, event, payload):\n        self.emitted.append((event, payload))\n\n    def on_init(self, payload=None) -> None:\n        if self.state == \"idle\":\n            self.state = \"idle\"\n\n    def on_score(self, payload: ScoreSCOREPayload) -> None:\n        if self.state == \"idle\":\n            dot = _sum([(_default(_nth(payload.a, i), 0) * _default(_nth(payload.b, i), 0)) for i in _range(len(payload.a))])\n            norms = (_default(_sqrt(_sum([(x * x) for x in payload.a])), 0) * _default(_sqrt(_sum([(x * x) for x in payload.b])), 0))\n            self.entity.score = (_default(_div(dot, norms), 0) if (norms > 0) else 0)\n            self.emit(\"SCORED\", ScoreSCOREDPayload(score=self.entity.score))\n            self.state = \"idle\"\n",
+                  "text": "import math\nfrom orbital_app.generated.entities import Pair\nfrom orbital_app.generated.events import ScoreSCOREDPayload, ScoreSCOREPayload\n\n\ndef _default(v, d): return d if v is None else v\ndef _div(a, b): return None if b == 0 else a / b\ndef _nth(a, i):\n    if i != int(i) or i < 0: raise ValueError('nth: index is not a whole number from 0')\n    return a[int(i)] if i < len(a) else None\ndef _nums(a, k=None):\n    v = []\n    for x in a:\n        if k is not None:\n            if not isinstance(x, dict): raise TypeError('expected object')\n            x = x.get(k)\n            if x is None: continue\n        if isinstance(x, bool) or not isinstance(x, (int, float)): raise TypeError('expected number')\n        v.append(x)\n    return v\ndef _range(a, b=None, step=1):\n    start, end = (0, a) if b is None else (a, b)\n    if step == 0: raise ValueError('range: step 0 must be a non-zero finite number')\n    out = []\n    x = start\n    while (x < end) if step > 0 else (x > end):\n        out.append(x)\n        x += step\n    return out\ndef _sqrt(x): return None if x < 0 else math.sqrt(x)\ndef _sum(a, k=None):\n    v = _nums(a, k)\n    if all(isinstance(x, int) for x in v):\n        t = sum(v)\n        if not -2 ** 63 <= t < 2 ** 63: raise ValueError('array/sum: int overflow')\n        return t\n    acc = 0.0\n    for x in v: acc += float(x)\n    return acc\n\n\nclass Score:\n    def __init__(self, entity: Pair, ports=None):\n        self.state = \"idle\"\n        self.entity = entity\n        self.ports = ports\n        self.emitted: list[tuple[str, object]] = []\n\n    def emit(self, event, payload):\n        self.emitted.append((event, payload))\n\n    def on_init(self, payload=None) -> None:\n        if self.state == \"idle\":\n            self.state = \"idle\"\n\n    def on_score(self, payload: ScoreSCOREPayload) -> None:\n        if self.state == \"idle\":\n            dot = _sum([(_default(_nth(payload.a, i), 0) * _default(_nth(payload.b, i), 0)) for i in _range(len(payload.a))])\n            norms = (_default(_sqrt(_sum([(x * x) for x in payload.a])), 0) * _default(_sqrt(_sum([(x * x) for x in payload.b])), 0))\n            self.entity.score = (_default(_div(dot, norms), 0) if (norms > 0) else 0)\n            self.emit(\"SCORED\", ScoreSCOREDPayload(score=self.entity.score))\n            self.state = \"idle\"\n",
                   "warnings": []
                 }
               }

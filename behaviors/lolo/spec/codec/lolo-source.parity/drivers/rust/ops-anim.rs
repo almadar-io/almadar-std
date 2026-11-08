@@ -6,10 +6,7 @@ use serde::Deserialize;
 
 #[derive(Deserialize)]
 struct Step {
-    #[serde(rename = "trait")]
-    trait_name: String,
     event: String,
-    payload: serde_json::Value,
 }
 
 #[derive(Deserialize)]
@@ -21,14 +18,14 @@ fn main() {
     let path = std::env::args().nth(1).expect("events file argument");
     let spec: Spec = serde_json::from_str(&std::fs::read_to_string(path).expect("read events")).expect("parse events");
     let row: Ops = serde_json::from_value(serde_json::json!({ "id": "1" })).expect("row");
-    let mut program = lolo::Program::new((row,));
-    let key = "OpsOrbital.Probe";
+    let mut probe = lolo::Probe::new(row);
     for (i, step) in spec.steps.into_iter().enumerate() {
-        let n = program.router.log.len();
-        program.dispatch(&format!("OpsOrbital.{}", step.trait_name), &step.event, step.payload);
-        for (_, event, payload) in &program.router.log[n..] {
-            println!("{}", serde_json::json!({"step": i, "event": event, "payload": payload}));
+        let n = probe.emitted.len();
+        assert_eq!(step.event, "INIT", "the operator fixtures dispatch INIT only");
+        probe.on_init();
+        for (event, payload) in &probe.emitted[n..] {
+            println!("{}", serde_json::json!({"step": i, "event": event, "payload": payload.clone().unwrap_or(serde_json::Value::Object(Default::default()))}));
         }
-        println!("{}", serde_json::json!({"step": i, "entity": program.router.entity_of(key)}));
+        println!("{}", serde_json::json!({"step": i, "entity": probe.entity}));
     }
 }

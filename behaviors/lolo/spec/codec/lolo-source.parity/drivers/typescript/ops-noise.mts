@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import type { EventPayload } from '@almadar/core';
-import { Program } from './packages/shared/src/traits/rendered.ts';
+import { Probe } from './packages/shared/src/traits/rendered.ts';
 import type { Ops } from './packages/shared/src/types/entities.ts';
 
 interface Step {
@@ -14,11 +14,11 @@ interface Spec {
 
 const spec: Spec = JSON.parse(readFileSync(process.argv[2] ?? '', 'utf8'));
 const row: Ops = { id: '1', createdAt: '', updatedAt: '' };
-const key = 'OpsOrbital.Probe';
-const program = new Program({ [key]: row });
+const probe = new Probe(row);
 spec.steps.forEach((step, i) => {
-  const n = program.log.length;
-  program.dispatch('OpsOrbital.' + step.trait, step.event, step.payload);
-  for (const e of program.log.slice(n)) console.log(JSON.stringify({ step: i, event: e.event, payload: e.payload }));
-  console.log(JSON.stringify({ step: i, entity: program.traits[key]?.entity }));
+  const n = probe.emitted.length;
+  if (step.event !== 'INIT') throw new Error('the operator fixtures dispatch INIT only, not ' + step.event);
+  probe.onInit();
+  for (const e of probe.emitted.slice(n)) console.log(JSON.stringify({ step: i, event: e.event, payload: e.payload }));
+  console.log(JSON.stringify({ step: i, entity: probe.entity }));
 });

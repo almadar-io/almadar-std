@@ -182,8 +182,9 @@ TEMPLATE_KNOBS = ("operators", "unary", "infix", "lambdaOperators", "callees")
 
 def in_scope(families, table):
     scope, bare, structural = set(families["inScope"]), set(families["inScopeBare"]), set(families["structural"])
+    excluded = {op for ops in families.get("excludedOps", {}).values() for op in ops}
     pure = (name for name, op in table["operators"].items() if not op.get("hasSideEffects"))
-    return sorted(n for n in pure if n not in structural and (n in bare or ("/" in n and n.split("/")[0] in scope)))
+    return sorted(n for n in pure if n not in structural and n not in excluded and (n in bare or ("/" in n and n.split("/")[0] in scope)))
 
 
 def templated(resolved):

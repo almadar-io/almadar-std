@@ -98,7 +98,7 @@ else echo "PASS kernel goldens ($(tail -1 "$T/kernel.log"))"; fi
 
 run_python() {
   need python python3 "$ORB" || { FAILS=$((FAILS + 1)); return; }
-  goldens_leg python || return
+  goldens_leg python
   for ex in $EXAMPLES; do
     covers python "$ex" || continue
     local d=$T/py-$ex log=$T/py-$ex.log
@@ -111,7 +111,7 @@ run_python() {
 
 run_typescript() {
   need typescript node "$ORB" "$TSC" || { FAILS=$((FAILS + 1)); return; }
-  goldens_leg typescript || return
+  goldens_leg typescript
   for ex in $EXAMPLES; do
     covers typescript "$ex" || continue
     local d=$T/ts-$ex log=$T/ts-$ex.log
@@ -130,9 +130,9 @@ J
 
 run_rust() {
   need rust rustc "$CARGO_ONE" "$ORB" || { FAILS=$((FAILS + 1)); return; }
-  goldens_leg rust || return
+  goldens_leg rust
   local c=$T/rs-crate; mkdir -p "$c"
-  printf '[package]\nname = "lolo-source-parity"\nversion = "0.1.0"\nedition = "2021"\n\n[workspace]\n\n[dependencies]\nserde = { version = "1", features = ["derive"] }\nserde_json = "1"\n' >"$c/Cargo.toml"
+  printf '[package]\nname = "lolo-source-parity"\nversion = "0.1.0"\nedition = "2021"\n\n[workspace]\n\n[dependencies]\nserde = { version = "1", features = ["derive"] }\nserde_json = "1"\nlibm = "=0.2.16"\n' >"$c/Cargo.toml"
   local ex ready=""
   for ex in $EXAMPLES; do
     covers rust "$ex" || continue
@@ -158,7 +158,7 @@ run_rust() {
 
 run_swift() {
   need swift swiftc "$ORB" || { FAILS=$((FAILS + 1)); return; }
-  goldens_leg swift || return
+  goldens_leg swift
   for ex in $EXAMPLES; do
     covers swift "$ex" || continue
     local d=$T/sw-$ex log=$T/sw-$ex.log
@@ -180,7 +180,7 @@ run_swift() {
 run_kotlin() {
   need kotlin kotlinc java "$ORB" || { FAILS=$((FAILS + 1)); return; }
   need_file kotlin "$KOTLIN_PLUGIN" && need_file kotlin "$KLIBS/kotlinx-serialization-core-jvm-1.9.0.jar" && need_file kotlin "$KLIBS/kotlinx-serialization-json-jvm-1.9.0.jar" || { FAILS=$((FAILS + 1)); return; }
-  goldens_leg kotlin || return
+  goldens_leg kotlin
   for ex in $EXAMPLES; do
     covers kotlin "$ex" || continue
     local d=$T/kt-$ex log=$T/kt-$ex.log
