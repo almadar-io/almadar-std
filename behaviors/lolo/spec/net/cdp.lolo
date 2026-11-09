@@ -1,0 +1,28 @@
+app cdp-spec [
+  version: "1.0.0",
+  description: "Design contract for a Chrome DevTools Protocol client over one composed std-ws-client connection. CDP_CONNECT {} reads GET /json/version on the configured debugging host and port (composed std-http-client) and opens its webSocketDebuggerUrl, answering CDP_CONNECTED { browser } or CDP_FAILED. CDP_COMMAND { key, method, sessionId?, paramsJson } sends { id, method, sessionId?, params } with the next id (paramsJson is the caller's own typed params serialized once with json/stringify) and answers CDP_REPLY { key, method, frame } with the raw reply frame text, which the caller parses under the result type it declares for that method; a protocol error answers CDP_ERROR { key, method, code, message }; a reply that does not arrive within timeoutMs answers CDP_ERROR code timeout. A frame with a method and no id answers CDP_EVENT { method, sessionId, frame }. Commands may be in flight together; each reply goes to its own key. CDP_DISCONNECT closes the socket; a lost connection fails every pending command (CDP_ERROR code disconnected) and answers CDP_DISCONNECTED."
+]
+
+orbital CdpSpec {
+  expects entity CdpConnection [runtime] {
+    id : string!
+    nextId : number
+  }
+  expects trait Cdp {
+    state disconnected
+    state connecting
+    state connected
+    state disconnected {
+      CDP_CONNECT -> connecting
+    }
+    emits {
+      CDP_CONNECTED { browser : string! }
+      CDP_REPLY { key : string!  method : string!  frame : string! }
+      CDP_ERROR { key : string!  method : string!  code : string!  message : string! }
+      CDP_EVENT { method : string!  sessionId : string  frame : string! }
+      CDP_DISCONNECTED { reason : string! }
+      CDP_FAILED { error : string!  kind : string! }
+    }
+  }
+  expects page boot -> Cdp
+}

@@ -1,0 +1,350 @@
+app std-a11y-probe-focus-walk [
+  version: "1.0.0",
+  description: "std-a11y-probe-focus-walk — keyboard navigation of one page, WCAG 2.1.2, 2.4.1, 2.4.3 and 2.4.7. PROBE_RUN { key, pageUrl } on a tab already at pageUrl lists the focusable elements in DOM order and the same-page links (PAGE_MEASURE), then presses Tab (PAGE_KEY) and reads the focused element (PAGE_FOCUSED) until focus returns to the first element, nothing is focused, or the maxTabs knob is reached (the cap ends the walk with a focus-walk-capped finding). At each new stop PAGE_MEASURE reads the focused element's outline, box-shadow, border and background colour, blurs it, reads them again and refocuses it. An element whose outline is none or 0 and whose box-shadow, border and background do not change is a focus-not-visible-element finding (needs-verification); when every stop is, one confirmed focus-not-visible finding. The same element focused for trapRepeat consecutive Tabs with Shift+Tab not leaving it is a confirmed keyboard-trap. A tab order that has a positive tabindex, goes back in DOM order or jumps up the page by more than backJumpPx is a needs-verification focus-order finding. The first stop decides the skip link: a same-page link whose target is missing is a confirmed skip-broken; one whose target follows it is activated with Enter and, when neither focus nor scroll nor the :target element moves to the target, is a confirmed skip-broken; a first stop that is not such a link with an in-page link elsewhere whose target follows it is skip-not-first, and with none skip-missing (both needs-verification). The page is navigated to pageUrl again before PROBE_DONE { key, probe, findings } or PROBE_FAILED { key, probe, error, code }. Page requests are PAGE_MEASURE, PAGE_KEY, PAGE_FOCUSED and PAGE_NAVIGATE; the composer wires them to a std-chrome instance."
+]
+uses Spec from "almadar-std/probe-focus-walk"
+
+type WcagRef = { criterion : string!, level : "A" | "AA" | "AAA"!, version : "2.0" | "2.1" | "2.2"! }
+type A11yFinding = { id : string!, pageUrl : string!, rule : string!, wcag : [WcagRef]!, method : "engine" | "probe" | "llm"!, engines : [string]!, impact : "critical" | "serious" | "moderate" | "minor"!, confidence : "confirmed" | "needs-verification"!, selector : string!, snippet : string!, evidence : string!, count : number! }
+type PageRect = { x : number!, y : number!, width : number!, height : number! }
+type PageFocus = { tag : string!, role : string!, name : string!, selector : string!, rect : PageRect! }
+type DomFocusable = { selector : string!, snippet : string!, domIndex : number!, tabindex : number! }
+type DomAnchor = { selector : string!, snippet : string!, href : string!, domIndex : number!, targetExists : boolean!, targetAfter : boolean! }
+type DomFacts = { focusables : [DomFocusable]!, anchors : [DomAnchor]! }
+type FocusStyle = { outlineStyle : string!, outlineWidth : string!, outlineColor : string!, boxShadow : string!, border : string!, background : string! }
+type Indicator = { present : boolean!, selector : string!, snippet : string!, tag : string!, href : string!, domIndex : number!, focused : FocusStyle!, blurred : FocusStyle! }
+type SkipState = { scrollY : number!, activeIsTarget : boolean!, targetPseudo : boolean! }
+type WalkStop = { selector : string!, snippet : string!, tag : string!, href : string!, domIndex : number!, rect : PageRect!, visible : boolean! }
+type Verdict = { rule : string!, confidence : "confirmed" | "needs-verification"!, selector : string!, snippet : string!, count : number! }
+type RuleSpec = { rule : string!, impact : "critical" | "serious" | "moderate" | "minor"!, wcag : [WcagRef]! }
+
+orbital FocusWalkOrbital {
+  entity FocusWalkRun [runtime] {
+    id : string!
+    runKey : string @description "The caller's name for the run in flight." = ""
+    pageUrl : string @description "The page the run in flight is about." = ""
+    dom : DomFacts @description "The focusable elements in DOM order and the same-page links, measured before the first Tab." = { focusables: [], anchors: [] }
+    stops : [WalkStop] @description "The distinct elements Tab reached, in order, each with its focus indicator verdict." = []
+    presses : number @description "The Tab presses sent so far." = 0
+    repeat : number @description "The consecutive Tab presses that landed on the element last recorded." = 0
+    firstSel : string @description "The selector of the first element Tab reached, empty before any." = ""
+    lastSel : string @description "The selector of the element the last Tab reached, empty before any." = ""
+    firstIdx : number @description "The DOM-order index of the first element Tab reached, negative before any." = -1
+    pendingSel : string @description "The selector of the element focus was read on while its indicator is measured." = ""
+    pendingRect : PageRect @description "The rectangle of that element." = { x: 0, y: 0, width: 0, height: 0 }
+    skipPlan : "test" | "none" | "done" @description "test while the first stop is a same-page link still to be activated with Enter, done after it was." = "none"
+    skipHref : string @description "The fragment the first stop links to when it is activated." = ""
+    skipPre : SkipState @description "The scroll and target state read before Enter." = { scrollY: 0, activeIsTarget: false, targetPseudo: false }
+    verdicts : [Verdict] @description "The verdicts held while the page is restored." = []
+  }
+
+  trait FocusWalkProbe -> FocusWalkRun {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      PROBE_RUN -> scanning
+        (set @entity.runKey @payload.key)
+        (set @entity.pageUrl @payload.pageUrl)
+        (set @entity.dom { focusables: [], anchors: [] })
+        (set @entity.stops [])
+        (set @entity.presses 0)
+        (set @entity.repeat 0)
+        (set @entity.firstSel "")
+        (set @entity.lastSel "")
+        (set @entity.firstIdx -1)
+        (set @entity.skipPlan "none")
+        (set @entity.skipHref "")
+        (set @entity.verdicts [])
+        (emit PAGE_MEASURE { key: (str/concat @payload.key ":dom"), expression: (str/concat "(" @config.domMeasure ")()") })
+    }
+
+    state scanning {
+      INIT -> idle
+      PAGE_MEASURED -> advancing when (and (= @payload.key (str/concat @entity.runKey ":dom")) (!= (json/parse @payload.json DomFacts) null))
+        (set @entity.dom (json/parse @payload.json DomFacts))
+        (emit WALK_NEXT {})
+      PAGE_MEASURED -> idle when (and (= @payload.key (str/concat @entity.runKey ":dom")) (= (json/parse @payload.json DomFacts) null))
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "focus-walk", error: "the page measurement is not the focusable list shape", code: "probe_bad_measure" })
+      PAGE_FAILED -> idle when (str/startsWith @payload.key @entity.runKey)
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "focus-walk", error: @payload.error, code: "probe_page_failed" })
+    }
+
+    state advancing {
+      INIT -> idle
+      WALK_NEXT -> tabbing when (< @entity.presses @config.maxTabs)
+        (set @entity.presses (+ @entity.presses 1))
+        (emit PAGE_KEY { key: (str/concat @entity.runKey ":tab" @entity.presses), keyName: "Tab" })
+      WALK_NEXT -> ending when (>= @entity.presses @config.maxTabs)
+        (emit WALK_END { reason: "capped" })
+      PAGE_FAILED -> idle when (str/startsWith @payload.key @entity.runKey)
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "focus-walk", error: @payload.error, code: "probe_page_failed" })
+    }
+
+    state tabbing {
+      INIT -> idle
+      PAGE_KEY_SENT -> reading when (= @payload.key (str/concat @entity.runKey ":tab" @entity.presses))
+        (emit PAGE_FOCUSED { key: (str/concat @entity.runKey ":focus" @entity.presses) })
+      PAGE_FAILED -> idle when (str/startsWith @payload.key @entity.runKey)
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "focus-walk", error: @payload.error, code: "probe_page_failed" })
+    }
+
+    state reading {
+      INIT -> idle
+      PAGE_FOCUS_READ -> ending when (and (= @payload.key (str/concat @entity.runKey ":focus" @entity.presses)) (= @payload.focused null))
+        (emit WALK_END { reason: "end" })
+      PAGE_FOCUS_READ -> shifting when (and (= @payload.key (str/concat @entity.runKey ":focus" @entity.presses)) (!= @payload.focused null) (= @payload.focused.selector @entity.lastSel) (>= (+ @entity.repeat 1) @config.trapRepeat))
+        (set @entity.repeat (+ @entity.repeat 1))
+        (emit PAGE_KEY { key: (str/concat @entity.runKey ":shift"), keyName: "Tab", shift: true })
+      PAGE_FOCUS_READ -> advancing when (and (= @payload.key (str/concat @entity.runKey ":focus" @entity.presses)) (!= @payload.focused null) (= @payload.focused.selector @entity.lastSel) (< (+ @entity.repeat 1) @config.trapRepeat))
+        (set @entity.repeat (+ @entity.repeat 1))
+        (emit WALK_NEXT {})
+      PAGE_FOCUS_READ -> ending when (and (= @payload.key (str/concat @entity.runKey ":focus" @entity.presses)) (!= @payload.focused null) (!= @payload.focused.selector @entity.lastSel) (= @payload.focused.selector @entity.firstSel))
+        (emit WALK_END { reason: "end" })
+      PAGE_FOCUS_READ -> measuring when (and (= @payload.key (str/concat @entity.runKey ":focus" @entity.presses)) (!= @payload.focused null) (!= @payload.focused.selector @entity.lastSel) (!= @payload.focused.selector @entity.firstSel))
+        (set @entity.pendingSel @payload.focused.selector)
+        (set @entity.pendingRect @payload.focused.rect)
+        (set @entity.repeat 1)
+        (emit PAGE_MEASURE { key: (str/concat @entity.runKey ":ind" @entity.presses), expression: (str/concat "(" @config.indicatorMeasure ")()") })
+      PAGE_FAILED -> idle when (str/startsWith @payload.key @entity.runKey)
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "focus-walk", error: @payload.error, code: "probe_page_failed" })
+    }
+
+    state measuring {
+      INIT -> idle
+      PAGE_MEASURED -> advancing when (and (= @payload.key (str/concat @entity.runKey ":ind" @entity.presses)) (let ((m (json/parse @payload.json Indicator))) (and (!= @m null) (= @m.present true))))
+        (set @entity.stops (array/append @entity.stops (let ((m (json/parse @payload.json Indicator))) {
+          selector: @entity.pendingSel,
+          snippet: @m.snippet,
+          tag: @m.tag,
+          href: @m.href,
+          domIndex: @m.domIndex,
+          rect: @entity.pendingRect,
+          visible: (not (and (or (= @m.focused.outlineStyle "none") (str/startsWith @m.focused.outlineWidth "0px")) (= @m.focused.boxShadow @m.blurred.boxShadow) (= @m.focused.border @m.blurred.border) (= @m.focused.background @m.blurred.background)))
+        })))
+        (set @entity.lastSel @entity.pendingSel)
+        (set @entity.firstSel (if (= @entity.firstSel "") @entity.pendingSel @entity.firstSel))
+        (set @entity.firstIdx (let ((m (json/parse @payload.json Indicator))) (if (< @entity.firstIdx 0) @m.domIndex @entity.firstIdx)))
+        (emit WALK_NEXT {})
+      PAGE_MEASURED -> ending when (and (= @payload.key (str/concat @entity.runKey ":ind" @entity.presses)) (let ((m (json/parse @payload.json Indicator))) (and (!= @m null) (= @m.present false))))
+        (emit WALK_END { reason: "end" })
+      PAGE_MEASURED -> idle when (and (= @payload.key (str/concat @entity.runKey ":ind" @entity.presses)) (= (json/parse @payload.json Indicator) null))
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "focus-walk", error: "the page measurement is not the focus indicator shape", code: "probe_bad_measure" })
+      PAGE_FAILED -> idle when (str/startsWith @payload.key @entity.runKey)
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "focus-walk", error: @payload.error, code: "probe_page_failed" })
+    }
+
+    state shifting {
+      INIT -> idle
+      PAGE_KEY_SENT -> shiftReading when (= @payload.key (str/concat @entity.runKey ":shift"))
+        (emit PAGE_FOCUSED { key: (str/concat @entity.runKey ":shiftfocus") })
+      PAGE_FAILED -> idle when (str/startsWith @payload.key @entity.runKey)
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "focus-walk", error: @payload.error, code: "probe_page_failed" })
+    }
+
+    state shiftReading {
+      INIT -> idle
+      PAGE_FOCUS_READ -> ending when (and (= @payload.key (str/concat @entity.runKey ":shiftfocus")) (!= @payload.focused null) (= @payload.focused.selector @entity.lastSel))
+        (set @entity.verdicts (array/append @entity.verdicts (let ((l (array/last @entity.stops))) {
+          rule: "keyboard-trap",
+          confidence: "confirmed",
+          selector: @entity.lastSel,
+          snippet: @l.snippet,
+          count: @entity.repeat
+        })))
+        (emit WALK_END { reason: "end" })
+      PAGE_FOCUS_READ -> ending when (and (= @payload.key (str/concat @entity.runKey ":shiftfocus")) (or (= @payload.focused null) (!= @payload.focused.selector @entity.lastSel)))
+        (emit WALK_END { reason: "end" })
+      PAGE_FAILED -> idle when (str/startsWith @payload.key @entity.runKey)
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "focus-walk", error: @payload.error, code: "probe_page_failed" })
+    }
+
+    state ending {
+      INIT -> idle
+      WALK_END -> restoring
+        (set @entity.skipHref (let ((fa (array/find @entity.dom.anchors (fn a (and (>= @entity.firstIdx 0) (= @a.domIndex @entity.firstIdx)))))) (if (= @fa null) "" @fa.href)))
+        (set @entity.skipPlan (let ((fa (array/find @entity.dom.anchors (fn a (and (>= @entity.firstIdx 0) (= @a.domIndex @entity.firstIdx)))))) (if (and (!= @fa null) (= @fa.targetExists true) (= @fa.targetAfter true)) "test" "none")))
+        (set @entity.verdicts (array/concat
+          @entity.verdicts
+          (if (= @payload.reason "capped")
+            [{ rule: "focus-walk-capped", confidence: "needs-verification", selector: "html", snippet: (str/concat "no return to the first element within " @config.maxTabs " Tab presses"), count: @entity.presses }]
+            [])
+          (if (and (> (array/len @entity.stops) 0) (= (array/len (array/filter @entity.stops (fn s (= @s.visible false)))) (array/len @entity.stops)))
+            (let ((f (array/first @entity.stops))) [{ rule: "focus-not-visible", confidence: "confirmed", selector: @f.selector, snippet: @f.snippet, count: (array/len @entity.stops) }])
+            (array/map (array/filter @entity.stops (fn s (= @s.visible false))) (fn s { rule: "focus-not-visible-element", confidence: "needs-verification", selector: @s.selector, snippet: @s.snippet, count: 1 })))
+          (let ((pos (array/find @entity.dom.focusables (fn f (> @f.tabindex 0))))
+                (back (array/find (array/zip @entity.stops (array/drop @entity.stops 1)) (fn p (let ((a (array/nth @p 0)) (b (array/nth @p 1))) (or (< @b.domIndex @a.domIndex) (< @b.rect.y (- @a.rect.y @config.backJumpPx))))))))
+            (if (!= @pos null)
+              [{ rule: "focus-order", confidence: "needs-verification", selector: @pos.selector, snippet: @pos.snippet, count: 1 }]
+              (if (!= @back null)
+                (let ((b (array/nth @back 1))) [{ rule: "focus-order", confidence: "needs-verification", selector: @b.selector, snippet: @b.snippet, count: 1 }])
+                [])))
+          (let ((fa (array/find @entity.dom.anchors (fn a (and (>= @entity.firstIdx 0) (= @a.domIndex @entity.firstIdx)))))
+                (other (array/find @entity.dom.anchors (fn a (and (= @a.targetAfter true) (!= @a.domIndex @entity.firstIdx))))))
+            (if (= (array/len @entity.stops) 0)
+              []
+              (if (and (!= @fa null) (= @fa.targetExists false))
+                [{ rule: "skip-broken", confidence: "confirmed", selector: @fa.selector, snippet: @fa.snippet, count: 1 }]
+                (if (and (!= @fa null) (= @fa.targetAfter true))
+                  []
+                  (if (!= @other null)
+                    [{ rule: "skip-not-first", confidence: "needs-verification", selector: @other.selector, snippet: @other.snippet, count: 1 }]
+                    [{ rule: "skip-missing", confidence: "needs-verification", selector: "body", snippet: "", count: 1 }])))))))
+        (emit PAGE_NAVIGATE { key: (str/concat @entity.runKey ":restore"), url: @entity.pageUrl })
+      PAGE_FAILED -> idle when (str/startsWith @payload.key @entity.runKey)
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "focus-walk", error: @payload.error, code: "probe_page_failed" })
+    }
+
+    state restoring {
+      INIT -> idle
+      PAGE_LOADED -> skipTabbing when (and (= @payload.key (str/concat @entity.runKey ":restore")) (= @entity.skipPlan "test"))
+        (emit PAGE_KEY { key: (str/concat @entity.runKey ":skiptab"), keyName: "Tab" })
+      PAGE_LOADED -> idle when (and (= @payload.key (str/concat @entity.runKey ":restore")) (!= @entity.skipPlan "test"))
+        (emit PROBE_DONE {
+          key: @entity.runKey,
+          probe: "focus-walk",
+          findings: (array/map @entity.verdicts (fn v (let ((r (array/find @config.rules (fn x (= @x.rule @v.rule))))) {
+            id: (str/concat @entity.pageUrl "#" @v.rule "#" @v.selector),
+            pageUrl: @entity.pageUrl,
+            rule: @v.rule,
+            wcag: @r.wcag,
+            method: "probe",
+            engines: ["probe"],
+            impact: @r.impact,
+            confidence: @v.confidence,
+            selector: @v.selector,
+            snippet: @v.snippet,
+            evidence: "",
+            count: @v.count
+          })))
+        })
+      PAGE_FAILED -> idle when (str/startsWith @payload.key @entity.runKey)
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "focus-walk", error: @payload.error, code: "probe_page_failed" })
+    }
+
+    state skipTabbing {
+      INIT -> idle
+      PAGE_KEY_SENT -> skipPre when (= @payload.key (str/concat @entity.runKey ":skiptab"))
+        (emit PAGE_MEASURE { key: (str/concat @entity.runKey ":skippre"), expression: (str/concat "(" @config.skipState ")(" (json/stringify @entity.skipHref) ")") })
+      PAGE_FAILED -> idle when (str/startsWith @payload.key @entity.runKey)
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "focus-walk", error: @payload.error, code: "probe_page_failed" })
+    }
+
+    state skipPre {
+      INIT -> idle
+      PAGE_MEASURED -> skipEnter when (and (= @payload.key (str/concat @entity.runKey ":skippre")) (!= (json/parse @payload.json SkipState) null))
+        (set @entity.skipPre (json/parse @payload.json SkipState))
+        (emit PAGE_KEY { key: (str/concat @entity.runKey ":skipenter"), keyName: "Enter" })
+      PAGE_MEASURED -> idle when (and (= @payload.key (str/concat @entity.runKey ":skippre")) (= (json/parse @payload.json SkipState) null))
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "focus-walk", error: "the page measurement is not the skip link state shape", code: "probe_bad_measure" })
+      PAGE_FAILED -> idle when (str/startsWith @payload.key @entity.runKey)
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "focus-walk", error: @payload.error, code: "probe_page_failed" })
+    }
+
+    state skipEnter {
+      INIT -> idle
+      PAGE_KEY_SENT -> skipPost when (= @payload.key (str/concat @entity.runKey ":skipenter"))
+        (emit PAGE_MEASURE { key: (str/concat @entity.runKey ":skippost"), expression: (str/concat "(" @config.skipState ")(" (json/stringify @entity.skipHref) ")") })
+      PAGE_FAILED -> idle when (str/startsWith @payload.key @entity.runKey)
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "focus-walk", error: @payload.error, code: "probe_page_failed" })
+    }
+
+    state skipPost {
+      INIT -> idle
+      PAGE_MEASURED -> restoring when (and (= @payload.key (str/concat @entity.runKey ":skippost")) (let ((s (json/parse @payload.json SkipState))) (and (!= @s null) (or (and (= @s.activeIsTarget true) (= @entity.skipPre.activeIsTarget false)) (and (= @s.targetPseudo true) (= @entity.skipPre.targetPseudo false)) (!= @s.scrollY @entity.skipPre.scrollY)))))
+        (set @entity.skipPlan "done")
+        (emit PAGE_NAVIGATE { key: (str/concat @entity.runKey ":restore"), url: @entity.pageUrl })
+      PAGE_MEASURED -> restoring when (and (= @payload.key (str/concat @entity.runKey ":skippost")) (let ((s (json/parse @payload.json SkipState))) (and (!= @s null) (not (or (and (= @s.activeIsTarget true) (= @entity.skipPre.activeIsTarget false)) (and (= @s.targetPseudo true) (= @entity.skipPre.targetPseudo false)) (!= @s.scrollY @entity.skipPre.scrollY))))))
+        (set @entity.skipPlan "done")
+        (set @entity.verdicts (array/append @entity.verdicts (let ((f (array/first @entity.stops))) {
+          rule: "skip-broken",
+          confidence: "confirmed",
+          selector: @f.selector,
+          snippet: @f.snippet,
+          count: 1
+        })))
+        (emit PAGE_NAVIGATE { key: (str/concat @entity.runKey ":restore"), url: @entity.pageUrl })
+      PAGE_MEASURED -> idle when (and (= @payload.key (str/concat @entity.runKey ":skippost")) (= (json/parse @payload.json SkipState) null))
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "focus-walk", error: "the page measurement is not the skip link state shape", code: "probe_bad_measure" })
+      PAGE_FAILED -> idle when (str/startsWith @payload.key @entity.runKey)
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "focus-walk", error: @payload.error, code: "probe_page_failed" })
+    }
+
+    emits {
+      PAGE_MEASURE -> external { key : string!  expression : string! }
+        @description "Page request: evaluate the expression in the page; it answers a JSON string."
+        @synonyms "measure page, evaluate in page"
+        @tier "primary"
+      PAGE_KEY -> external { key : string!  keyName : "Tab" | "Enter" | "Space" | "Escape" | "ArrowDown" | "ArrowUp" | "ArrowLeft" | "ArrowRight" | "Home" | "End"!  shift : boolean }
+        @description "Page request: press a key in the tab; the composer wires it to the std-chrome PAGE_KEY input."
+        @synonyms "press key, send key"
+        @tier "primary"
+      PAGE_FOCUSED -> external { key : string! }
+        @description "Page request: read the focused element; the composer wires it to the std-chrome PAGE_FOCUSED input."
+        @synonyms "read focus, focused element"
+        @tier "primary"
+      PAGE_NAVIGATE -> external { key : string!  url : string! }
+        @description "Page request: load the page again, which puts the focus and scroll back."
+        @synonyms "reload page, navigate"
+        @tier "primary"
+      PROBE_DONE -> external { key : string!  probe : string!  findings : [A11yFinding]! }
+        @description "The keyboard walk finished: its findings, empty when Tab reaches every element in order with a visible focus and a working skip link."
+        @synonyms "keyboard findings, focus walk result"
+        @tier "primary"
+      PROBE_FAILED -> external { key : string!  probe : string!  error : string!  code : string! }
+        @description "The probe could not finish: code is probe_page_failed or probe_bad_measure."
+        @synonyms "probe failed, focus walk error"
+        @tier "primary"
+      WALK_NEXT {}
+        @description "Internal: send the next Tab press, or end the walk at the maxTabs cap."
+        @tier "internal"
+      WALK_END { reason : "end" | "capped"! }
+        @description "Internal: the walk is over, either because focus came back to the first element or nothing was focused (end) or because the Tab cap was reached (capped)."
+        @tier "internal"
+    }
+
+    listens {
+      PROBE_RUN { key : string!  pageUrl : string! }
+        @description "Walk the page the tab is on with the Tab key and check focus visibility, the skip link, keyboard traps and focus order."
+        @synonyms "keyboard check, tab walk, focus visible check, skip link check, wcag 2.4.7"
+      PAGE_LOADED { key : string!  url : string!  title : string! }
+      PAGE_KEY_SENT { key : string! }
+      PAGE_FOCUS_READ { key : string!  focused : PageFocus? }
+      PAGE_MEASURED { key : string!  json : string! }
+      PAGE_FAILED { key : string!  error : string!  code : string! }
+    }
+
+    config {
+      maxTabs : number = 200
+        @label "Tab cap"
+        @description "The most Tab presses the walk sends; reaching it ends the walk with a focus-walk-capped finding."
+        @tier "domain"
+      trapRepeat : number = 5
+        @label "Trap repeat"
+        @description "The consecutive Tab presses on one element, with Shift+Tab not leaving it either, that make a keyboard trap."
+        @tier "domain"
+      backJumpPx : number = 200
+        @label "Backward jump"
+        @description "CSS px by which the next stop may sit above the previous one before the tab order counts as jumping backward."
+        @tier "domain"
+      rules : [RuleSpec] = [{ rule: "skip-missing", impact: "moderate", wcag: [{ criterion: "2.4.1", level: "A", version: "2.0" }] }, { rule: "skip-not-first", impact: "moderate", wcag: [{ criterion: "2.4.1", level: "A", version: "2.0" }] }, { rule: "skip-broken", impact: "serious", wcag: [{ criterion: "2.4.1", level: "A", version: "2.0" }] }, { rule: "focus-not-visible", impact: "serious", wcag: [{ criterion: "2.4.7", level: "AA", version: "2.0" }] }, { rule: "focus-not-visible-element", impact: "serious", wcag: [{ criterion: "2.4.7", level: "AA", version: "2.0" }] }, { rule: "focus-order", impact: "moderate", wcag: [{ criterion: "2.4.3", level: "A", version: "2.0" }] }, { rule: "keyboard-trap", impact: "critical", wcag: [{ criterion: "2.1.2", level: "A", version: "2.0" }] }, { rule: "focus-walk-capped", impact: "minor", wcag: [{ criterion: "2.4.3", level: "A", version: "2.0" }] }]
+        @label "Rule table"
+        @description "Each finding code with its impact and the WCAG success criteria it maps to."
+        @tier "domain"
+      domMeasure : string = @@DOM@@
+        @label "DOM measure expression"
+        @description "A page function returning a JSON string of the focusable elements in DOM order (selector, snippet, tabindex) and the same-page links with whether their target exists and follows them."
+        @tier "infra"
+      indicatorMeasure : string = @@IND@@
+        @label "Focus indicator measure expression"
+        @description "A page function returning a JSON string of the focused element (selector, snippet, tag, href, DOM-order index) and its outline, box-shadow, border and background colour focused and blurred; it refocuses the element after reading."
+        @tier "infra"
+      skipState : string = @@SKIP@@
+        @label "Skip link state expression"
+        @description "A page function taking a fragment and returning a JSON string of the scroll position, whether focus is inside the fragment's target and whether the target is the :target element."
+        @tier "infra"
+    }
+  }
+
+  page boot as FocusWalkProbePage -> FocusWalkProbe
+}

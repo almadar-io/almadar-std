@@ -1,0 +1,1219 @@
+{
+ "atom": "a11y/atoms/std-a11y-probe-operability.lolo",
+ "trait": "OperabilityProbe",
+ "note": "std-a11y-probe-operability with the page answers played as events. Every measurement JSON is the real output of the page functions and Enter/Space key events (CDP Input.dispatchKeyEvent) in headless Chrome against spec/a11y/fixtures/operability-{fail,pass}.html and probe-operability.gen/{pointer-only,keyboard-ok}.html (probe-operability.gen/record.py). Regenerate with python3 -I probe-operability.gen/record.py then python3 -I probe-operability.gen/gen_goldens.py.",
+ "cases": [
+  {
+   "id": "PROBE_RUN asks for the clickable list under the run's step key",
+   "steps": [
+    {
+     "from": "idle",
+     "event": "PROBE_RUN",
+     "payload": {
+      "key": "k1",
+      "pageUrl": "http://127.0.0.1:24680/x.html"
+     },
+     "expect": {
+      "state": "listing",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k1:list"
+        }
+       }
+      ],
+      "entity": {
+       "runKey": "k1",
+       "pageUrl": "http://127.0.0.1:24680/x.html",
+       "queue": [],
+       "idx": 0,
+       "verdicts": []
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "operability-fail.html: a div with onclick, no role and no tabindex is neither native nor focusable, a confirmed not-operable; the links are native",
+   "steps": [
+    {
+     "from": "listing",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k1:list",
+      "json": "{\"items\":[{\"selector\":\"html:nth-of-type(1)>body:nth-of-type(1)>a:nth-of-type(1)\",\"snippet\":\"<a class=\\\"skip\\\" href=\\\"#main\\\"></a>\",\"tag\":\"a\",\"role\":\"\",\"tabIndex\":0,\"native\":true,\"onclick\":false,\"pointer\":true},{\"selector\":\"html:nth-of-type(1)>body:nth-of-type(1)>nav:nth-of-type(1)>a:nth-of-type(1)\",\"snippet\":\"<a href=\\\"index.html\\\"></a>\",\"tag\":\"a\",\"role\":\"\",\"tabIndex\":0,\"native\":true,\"onclick\":false,\"pointer\":true},{\"selector\":\"html:nth-of-type(1)>body:nth-of-type(1)>nav:nth-of-type(1)>a:nth-of-type(2)\",\"snippet\":\"<a href=\\\"index.html\\\"></a>\",\"tag\":\"a\",\"role\":\"\",\"tabIndex\":0,\"native\":true,\"onclick\":false,\"pointer\":true},{\"selector\":\"#main>div:nth-of-type(1)\",\"snippet\":\"<div class=\\\"add\\\" onclick=\\\"document.getElementById('out').textContent='Dodano'\\\" style=\\\"display:inline-block;padding:.5rem 1rem;background:#0b3d91;color:#fff;cursor:pointer\\\"></div>\",\"tag\":\"div\",\"role\":\"\",\"tabIndex\":-1,\"native\":false,\"onclick\":true,\"pointer\":true}]}"
+     },
+     "expect": {
+      "state": "checking",
+      "emits": [
+       {
+        "event": "OP_NEXT",
+        "payload": {}
+       }
+      ],
+      "entity": {
+       "verdicts": [
+        {
+         "rule": "not-operable",
+         "confidence": "confirmed",
+         "selector": "#main>div:nth-of-type(1)",
+         "snippet": "<div class=\"add\" onclick=\"document.getElementById('out').textContent='Dodano'\" style=\"display:inline-block;padding:.5rem 1rem;background:#0b3d91;color:#fff;cursor:pointer\"></div>",
+         "count": 1
+        }
+       ],
+       "queue": []
+      }
+     },
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/x.html"
+     }
+    },
+    {
+     "from": "checking",
+     "event": "OP_NEXT",
+     "payload": {},
+     "expect": {
+      "state": "restoring",
+      "emits": [
+       {
+        "event": "PAGE_NAVIGATE",
+        "payload": {
+         "key": "k1:restore",
+         "url": "http://127.0.0.1:24680/x.html"
+        }
+       }
+      ],
+      "neverEmits": [
+       "PAGE_KEY"
+      ]
+     },
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/x.html",
+      "verdicts": [
+       {
+        "rule": "not-operable",
+        "confidence": "confirmed",
+        "selector": "#main>div:nth-of-type(1)",
+        "snippet": "<div class=\"add\" onclick=\"document.getElementById('out').textContent='Dodano'\" style=\"display:inline-block;padding:.5rem 1rem;background:#0b3d91;color:#fff;cursor:pointer\"></div>",
+        "count": 1
+       }
+      ]
+     }
+    },
+    {
+     "from": "restoring",
+     "event": "PAGE_LOADED",
+     "payload": {
+      "key": "k1:restore",
+      "url": "http://127.0.0.1:24680/x.html",
+      "title": "t"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k1",
+         "probe": "operability",
+         "findings": [
+          {
+           "id": "http://127.0.0.1:24680/x.html#not-operable##main>div:nth-of-type(1)",
+           "pageUrl": "http://127.0.0.1:24680/x.html",
+           "rule": "not-operable",
+           "wcag": [
+            {
+             "criterion": "2.1.1",
+             "level": "A",
+             "version": "2.0"
+            },
+            {
+             "criterion": "4.1.2",
+             "level": "A",
+             "version": "2.0"
+            }
+           ],
+           "method": "probe",
+           "engines": [
+            "probe"
+           ],
+           "impact": "serious",
+           "confidence": "confirmed",
+           "selector": "#main>div:nth-of-type(1)",
+           "snippet": "<div class=\"add\" onclick=\"document.getElementById('out').textContent='Dodano'\" style=\"display:inline-block;padding:.5rem 1rem;background:#0b3d91;color:#fff;cursor:pointer\"></div>",
+           "evidence": "",
+           "count": 1
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/x.html",
+      "verdicts": [
+       {
+        "rule": "not-operable",
+        "confidence": "confirmed",
+        "selector": "#main>div:nth-of-type(1)",
+        "snippet": "<div class=\"add\" onclick=\"document.getElementById('out').textContent='Dodano'\" style=\"display:inline-block;padding:.5rem 1rem;background:#0b3d91;color:#fff;cursor:pointer\"></div>",
+        "count": 1
+       }
+      ]
+     }
+    }
+   ],
+   "note": "recorded in headless Chrome (probe-operability.gen/record.py); the div has onclick and cursor:pointer, tabIndex -1"
+  },
+  {
+   "id": "control: operability-pass.html: a native button with onclick is focusable, no findings",
+   "steps": [
+    {
+     "from": "listing",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k1:list",
+      "json": "{\"items\":[{\"selector\":\"html:nth-of-type(1)>body:nth-of-type(1)>a:nth-of-type(1)\",\"snippet\":\"<a class=\\\"skip\\\" href=\\\"#main\\\"></a>\",\"tag\":\"a\",\"role\":\"\",\"tabIndex\":0,\"native\":true,\"onclick\":false,\"pointer\":true},{\"selector\":\"html:nth-of-type(1)>body:nth-of-type(1)>nav:nth-of-type(1)>a:nth-of-type(1)\",\"snippet\":\"<a href=\\\"index.html\\\"></a>\",\"tag\":\"a\",\"role\":\"\",\"tabIndex\":0,\"native\":true,\"onclick\":false,\"pointer\":true},{\"selector\":\"html:nth-of-type(1)>body:nth-of-type(1)>nav:nth-of-type(1)>a:nth-of-type(2)\",\"snippet\":\"<a href=\\\"index.html\\\"></a>\",\"tag\":\"a\",\"role\":\"\",\"tabIndex\":0,\"native\":true,\"onclick\":false,\"pointer\":true},{\"selector\":\"#main>button:nth-of-type(1)\",\"snippet\":\"<button class=\\\"add\\\" type=\\\"button\\\" onclick=\\\"document.getElementById('out').textContent='Dodano'\\\"></button>\",\"tag\":\"button\",\"role\":\"\",\"tabIndex\":0,\"native\":true,\"onclick\":true,\"pointer\":false}]}"
+     },
+     "expect": {
+      "state": "checking",
+      "emits": [
+       {
+        "event": "OP_NEXT",
+        "payload": {}
+       }
+      ],
+      "entity": {
+       "verdicts": [],
+       "queue": []
+      }
+     },
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/x.html"
+     }
+    },
+    {
+     "from": "restoring",
+     "event": "PAGE_LOADED",
+     "payload": {
+      "key": "k1:restore",
+      "url": "http://127.0.0.1:24680/x.html",
+      "title": "t"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k1",
+         "probe": "operability",
+         "findings": []
+        }
+       }
+      ]
+     },
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/x.html",
+      "verdicts": []
+     }
+    }
+   ]
+  },
+  {
+   "id": "a focusable role=button div is queued for the Enter and Space check and is not a not-operable",
+   "steps": [
+    {
+     "from": "listing",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k1:list",
+      "json": "{\"items\":[{\"selector\":\"html:nth-of-type(1)>body:nth-of-type(1)>div:nth-of-type(1)\",\"snippet\":\"<div class=\\\"menu\\\" role=\\\"button\\\" tabindex=\\\"0\\\" aria-expanded=\\\"false\\\" onclick=\\\"this.setAttribute('aria-expanded','true')\\\" style=\\\"display:inline-block;padding:.5rem;cursor:pointer\\\"></div>\",\"tag\":\"div\",\"role\":\"button\",\"tabIndex\":0,\"native\":false,\"onclick\":true,\"pointer\":true}]}"
+     },
+     "expect": {
+      "state": "checking",
+      "emits": [
+       {
+        "event": "OP_NEXT",
+        "payload": {}
+       }
+      ],
+      "entity": {
+       "verdicts": [],
+       "queue": [
+        {
+         "selector": "html:nth-of-type(1)>body:nth-of-type(1)>div:nth-of-type(1)",
+         "snippet": "<div class=\"menu\" role=\"button\" tabindex=\"0\" aria-expanded=\"false\" onclick=\"this.setAttribute('aria-expanded','true')\" style=\"display:inline-block;padding:.5rem;cursor:pointer\"></div>",
+         "tag": "div",
+         "role": "button",
+         "tabIndex": 0,
+         "native": false,
+         "onclick": true,
+         "pointer": true
+        }
+       ]
+      }
+     },
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/x.html"
+     }
+    },
+    {
+     "from": "checking",
+     "event": "OP_NEXT",
+     "payload": {},
+     "expect": {
+      "state": "focusing",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k1:focus0"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/x.html",
+      "queue": [
+       {
+        "selector": "html:nth-of-type(1)>body:nth-of-type(1)>div:nth-of-type(1)",
+        "snippet": "<div class=\"menu\" role=\"button\" tabindex=\"0\" aria-expanded=\"false\" onclick=\"this.setAttribute('aria-expanded','true')\" style=\"display:inline-block;padding:.5rem;cursor:pointer\"></div>",
+        "tag": "div",
+        "role": "button",
+        "tabIndex": 0,
+        "native": false,
+        "onclick": true,
+        "pointer": true
+       }
+      ]
+     }
+    }
+   ],
+   "note": "probe-operability.gen/pointer-only.html: role=button tabindex=0 with an onclick and no key handler"
+  },
+  {
+   "id": "elements past the maxChecks cap are counted in one finding, not dropped",
+   "steps": [
+    {
+     "from": "listing",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k1:list",
+      "json": "{\"items\":[{\"selector\":\"html:nth-of-type(1)>body:nth-of-type(1)>div:nth-of-type(1)\",\"snippet\":\"<div class=\\\"menu\\\" role=\\\"button\\\" tabindex=\\\"0\\\" aria-expanded=\\\"false\\\" onclick=\\\"this.setAttribute('aria-expanded','true')\\\" style=\\\"display:inline-block;padding:.5rem;cursor:pointer\\\"></div>\",\"tag\":\"div\",\"role\":\"button\",\"tabIndex\":0,\"native\":false,\"onclick\":true,\"pointer\":true}]}"
+     },
+     "expect": {
+      "state": "checking",
+      "emits": [
+       {
+        "event": "OP_NEXT",
+        "payload": {}
+       }
+      ],
+      "entity": {
+       "verdicts": [
+        {
+         "rule": "pointer-only-unchecked",
+         "confidence": "needs-verification",
+         "selector": "html",
+         "snippet": "1 focusable role=button elements past the cap of 0 were not tried with Enter and Space",
+         "count": 1
+        }
+       ],
+       "queue": []
+      }
+     },
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/x.html"
+     }
+    }
+   ],
+   "config": {
+    "maxChecks": 0
+   }
+  },
+  {
+   "id": "control: a cap of one leaves the one element queued and no unchecked finding",
+   "steps": [
+    {
+     "from": "listing",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k1:list",
+      "json": "{\"items\":[{\"selector\":\"html:nth-of-type(1)>body:nth-of-type(1)>div:nth-of-type(1)\",\"snippet\":\"<div class=\\\"menu\\\" role=\\\"button\\\" tabindex=\\\"0\\\" aria-expanded=\\\"false\\\" onclick=\\\"this.setAttribute('aria-expanded','true')\\\" style=\\\"display:inline-block;padding:.5rem;cursor:pointer\\\"></div>\",\"tag\":\"div\",\"role\":\"button\",\"tabIndex\":0,\"native\":false,\"onclick\":true,\"pointer\":true}]}"
+     },
+     "expect": {
+      "state": "checking",
+      "entity": {
+       "verdicts": [],
+       "queue": [
+        {
+         "selector": "html:nth-of-type(1)>body:nth-of-type(1)>div:nth-of-type(1)",
+         "snippet": "<div class=\"menu\" role=\"button\" tabindex=\"0\" aria-expanded=\"false\" onclick=\"this.setAttribute('aria-expanded','true')\" style=\"display:inline-block;padding:.5rem;cursor:pointer\"></div>",
+         "tag": "div",
+         "role": "button",
+         "tabIndex": 0,
+         "native": false,
+         "onclick": true,
+         "pointer": true
+        }
+       ]
+      }
+     },
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/x.html"
+     }
+    }
+   ],
+   "config": {
+    "maxChecks": 1
+   }
+  },
+  {
+   "id": "control: a clickable list under another run's key is ignored",
+   "steps": [
+    {
+     "from": "listing",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k2:list",
+      "json": "{\"items\":[{\"selector\":\"html:nth-of-type(1)>body:nth-of-type(1)>div:nth-of-type(1)\",\"snippet\":\"<div class=\\\"menu\\\" role=\\\"button\\\" tabindex=\\\"0\\\" aria-expanded=\\\"false\\\" onclick=\\\"this.setAttribute('aria-expanded','true')\\\" style=\\\"display:inline-block;padding:.5rem;cursor:pointer\\\"></div>\",\"tag\":\"div\",\"role\":\"button\",\"tabIndex\":0,\"native\":false,\"onclick\":true,\"pointer\":true}]}"
+     },
+     "expect": {
+      "state": "listing",
+      "emits": []
+     },
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/x.html"
+     }
+    }
+   ]
+  },
+  {
+   "id": "a clickable list that is not the ClickList shape fails the probe",
+   "steps": [
+    {
+     "from": "listing",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k1:list",
+      "json": "{\"items\":\"many\"}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_FAILED",
+        "payload": {
+         "key": "k1",
+         "probe": "operability",
+         "code": "probe_bad_measure"
+        }
+       }
+      ],
+      "neverEmits": [
+       "PAGE_KEY"
+      ]
+     },
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/x.html"
+     }
+    }
+   ]
+  },
+  {
+   "id": "a page failure under the run's key fails the probe",
+   "steps": [
+    {
+     "from": "focusing",
+     "event": "PAGE_FAILED",
+     "payload": {
+      "key": "k1:focus0",
+      "error": "gone",
+      "code": "x"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_FAILED",
+        "payload": {
+         "key": "k1",
+         "probe": "operability",
+         "error": "gone",
+         "code": "probe_page_failed"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/x.html",
+      "queue": [
+       {
+        "selector": "html:nth-of-type(1)>body:nth-of-type(1)>div:nth-of-type(1)",
+        "snippet": "<div class=\"menu\" role=\"button\" tabindex=\"0\" aria-expanded=\"false\" onclick=\"this.setAttribute('aria-expanded','true')\" style=\"display:inline-block;padding:.5rem;cursor:pointer\"></div>",
+        "tag": "div",
+        "role": "button",
+        "tabIndex": 0,
+        "native": false,
+        "onclick": true,
+        "pointer": true
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the focus observation puts Enter next and keeps the observation as the baseline",
+   "steps": [
+    {
+     "from": "focusing",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k1:focus0",
+      "json": "{\"found\":true,\"focused\":true,\"href\":\"file:///Users/osamaalghanmi/kflow.ai.builder/packages/almadar-std/behaviors/lolo/spec/a11y/probe-operability.gen/pointer-only.html\",\"expanded\":\"false\",\"pressed\":\"\",\"selected\":\"\",\"bodyLength\":191}"
+     },
+     "expect": {
+      "state": "pressingEnter",
+      "emits": [
+       {
+        "event": "PAGE_KEY",
+        "payload": {
+         "key": "k1:enter0",
+         "keyName": "Enter"
+        }
+       }
+      ],
+      "entity": {
+       "baseline": {
+        "found": true,
+        "focused": true,
+        "href": "file:///Users/osamaalghanmi/kflow.ai.builder/packages/almadar-std/behaviors/lolo/spec/a11y/probe-operability.gen/pointer-only.html",
+        "expanded": "false",
+        "pressed": "",
+        "selected": "",
+        "bodyLength": 191
+       }
+      }
+     },
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/x.html",
+      "queue": [
+       {
+        "selector": "html:nth-of-type(1)>body:nth-of-type(1)>div:nth-of-type(1)",
+        "snippet": "<div class=\"menu\" role=\"button\" tabindex=\"0\" aria-expanded=\"false\" onclick=\"this.setAttribute('aria-expanded','true')\" style=\"display:inline-block;padding:.5rem;cursor:pointer\"></div>",
+        "tag": "div",
+        "role": "button",
+        "tabIndex": 0,
+        "native": false,
+        "onclick": true,
+        "pointer": true
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an element that took no focus is counted as unchecked and the next one is tried",
+   "steps": [
+    {
+     "from": "focusing",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k1:focus0",
+      "json": "{\"found\":true,\"focused\":false,\"href\":\"file:///Users/osamaalghanmi/kflow.ai.builder/packages/almadar-std/behaviors/lolo/spec/a11y/probe-operability.gen/pointer-only.html\",\"expanded\":\"false\",\"pressed\":\"\",\"selected\":\"\",\"bodyLength\":191}"
+     },
+     "expect": {
+      "state": "checking",
+      "emits": [
+       {
+        "event": "OP_NEXT",
+        "payload": {}
+       }
+      ],
+      "entity": {
+       "verdicts": [
+        {
+         "rule": "pointer-only-unchecked",
+         "confidence": "needs-verification",
+         "selector": "html:nth-of-type(1)>body:nth-of-type(1)>div:nth-of-type(1)",
+         "snippet": "<div class=\"menu\" role=\"button\" tabindex=\"0\" aria-expanded=\"false\" onclick=\"this.setAttribute('aria-expanded','true')\" style=\"display:inline-block;padding:.5rem;cursor:pointer\"></div>",
+         "count": 1
+        }
+       ],
+       "idx": 1
+      }
+     },
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/x.html",
+      "queue": [
+       {
+        "selector": "html:nth-of-type(1)>body:nth-of-type(1)>div:nth-of-type(1)",
+        "snippet": "<div class=\"menu\" role=\"button\" tabindex=\"0\" aria-expanded=\"false\" onclick=\"this.setAttribute('aria-expanded','true')\" style=\"display:inline-block;padding:.5rem;cursor:pointer\"></div>",
+        "tag": "div",
+        "role": "button",
+        "tabIndex": 0,
+        "native": false,
+        "onclick": true,
+        "pointer": true
+       }
+      ]
+     }
+    }
+   ],
+   "note": "the pointer-only focus observation with focused set to false"
+  },
+  {
+   "id": "the Enter key answer asks for the observation",
+   "steps": [
+    {
+     "from": "pressingEnter",
+     "event": "PAGE_KEY_SENT",
+     "payload": {
+      "key": "k1:enter0"
+     },
+     "expect": {
+      "state": "afterEnter",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k1:aenter0"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/x.html",
+      "queue": [
+       {
+        "selector": "html:nth-of-type(1)>body:nth-of-type(1)>div:nth-of-type(1)",
+        "snippet": "<div class=\"menu\" role=\"button\" tabindex=\"0\" aria-expanded=\"false\" onclick=\"this.setAttribute('aria-expanded','true')\" style=\"display:inline-block;padding:.5rem;cursor:pointer\"></div>",
+        "tag": "div",
+        "role": "button",
+        "tabIndex": 0,
+        "native": false,
+        "onclick": true,
+        "pointer": true
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a key answer under a stale step key is ignored",
+   "steps": [
+    {
+     "from": "pressingEnter",
+     "event": "PAGE_KEY_SENT",
+     "payload": {
+      "key": "k1:enter1"
+     },
+     "expect": {
+      "state": "pressingEnter",
+      "emits": []
+     },
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/x.html",
+      "queue": [
+       {
+        "selector": "html:nth-of-type(1)>body:nth-of-type(1)>div:nth-of-type(1)",
+        "snippet": "<div class=\"menu\" role=\"button\" tabindex=\"0\" aria-expanded=\"false\" onclick=\"this.setAttribute('aria-expanded','true')\" style=\"display:inline-block;padding:.5rem;cursor:pointer\"></div>",
+        "tag": "div",
+        "role": "button",
+        "tabIndex": 0,
+        "native": false,
+        "onclick": true,
+        "pointer": true
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "pointer-only.html: Enter changes nothing observable, so Space is tried next with enterChanged false",
+   "steps": [
+    {
+     "from": "afterEnter",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k1:aenter0",
+      "json": "{\"found\":true,\"focused\":true,\"href\":\"file:///Users/osamaalghanmi/kflow.ai.builder/packages/almadar-std/behaviors/lolo/spec/a11y/probe-operability.gen/pointer-only.html\",\"expanded\":\"false\",\"pressed\":\"\",\"selected\":\"\",\"bodyLength\":191}"
+     },
+     "expect": {
+      "state": "pressingSpace",
+      "emits": [
+       {
+        "event": "PAGE_KEY",
+        "payload": {
+         "key": "k1:space0",
+         "keyName": "Space"
+        }
+       }
+      ],
+      "entity": {
+       "enterChanged": false
+      }
+     },
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/x.html",
+      "queue": [
+       {
+        "selector": "html:nth-of-type(1)>body:nth-of-type(1)>div:nth-of-type(1)",
+        "snippet": "<div class=\"menu\" role=\"button\" tabindex=\"0\" aria-expanded=\"false\" onclick=\"this.setAttribute('aria-expanded','true')\" style=\"display:inline-block;padding:.5rem;cursor:pointer\"></div>",
+        "tag": "div",
+        "role": "button",
+        "tabIndex": 0,
+        "native": false,
+        "onclick": true,
+        "pointer": true
+       }
+      ],
+      "baseline": {
+       "found": true,
+       "focused": true,
+       "href": "file:///Users/osamaalghanmi/kflow.ai.builder/packages/almadar-std/behaviors/lolo/spec/a11y/probe-operability.gen/pointer-only.html",
+       "expanded": "false",
+       "pressed": "",
+       "selected": "",
+       "bodyLength": 191
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: keyboard-ok.html: Enter flips aria-expanded, so enterChanged is true",
+   "steps": [
+    {
+     "from": "afterEnter",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k1:aenter0",
+      "json": "{\"found\":true,\"focused\":true,\"href\":\"file:///Users/osamaalghanmi/kflow.ai.builder/packages/almadar-std/behaviors/lolo/spec/a11y/probe-operability.gen/keyboard-ok.html\",\"expanded\":\"true\",\"pressed\":\"\",\"selected\":\"\",\"bodyLength\":425}"
+     },
+     "expect": {
+      "state": "pressingSpace",
+      "emits": [
+       {
+        "event": "PAGE_KEY",
+        "payload": {
+         "key": "k1:space0",
+         "keyName": "Space"
+        }
+       }
+      ],
+      "entity": {
+       "enterChanged": true
+      }
+     },
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/x.html",
+      "queue": [
+       {
+        "selector": "html:nth-of-type(1)>body:nth-of-type(1)>div:nth-of-type(1)",
+        "snippet": "<div class=\"menu\" role=\"button\" tabindex=\"0\" aria-expanded=\"false\" style=\"display:inline-block;padding:.5rem;cursor:pointer\"></div>",
+        "tag": "div",
+        "role": "button",
+        "tabIndex": 0,
+        "native": false,
+        "onclick": false,
+        "pointer": true
+       }
+      ],
+      "baseline": {
+       "found": true,
+       "focused": true,
+       "href": "file:///Users/osamaalghanmi/kflow.ai.builder/packages/almadar-std/behaviors/lolo/spec/a11y/probe-operability.gen/keyboard-ok.html",
+       "expanded": "false",
+       "pressed": "",
+       "selected": "",
+       "bodyLength": 426
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "the Space key answer asks for the observation",
+   "steps": [
+    {
+     "from": "pressingSpace",
+     "event": "PAGE_KEY_SENT",
+     "payload": {
+      "key": "k1:space0"
+     },
+     "expect": {
+      "state": "afterSpace",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k1:aspace0"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/x.html",
+      "queue": [
+       {
+        "selector": "html:nth-of-type(1)>body:nth-of-type(1)>div:nth-of-type(1)",
+        "snippet": "<div class=\"menu\" role=\"button\" tabindex=\"0\" aria-expanded=\"false\" onclick=\"this.setAttribute('aria-expanded','true')\" style=\"display:inline-block;padding:.5rem;cursor:pointer\"></div>",
+        "tag": "div",
+        "role": "button",
+        "tabIndex": 0,
+        "native": false,
+        "onclick": true,
+        "pointer": true
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "pointer-only.html: neither Enter nor Space changed anything, a needs-verification pointer-only",
+   "steps": [
+    {
+     "from": "afterSpace",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k1:aspace0",
+      "json": "{\"found\":true,\"focused\":true,\"href\":\"file:///Users/osamaalghanmi/kflow.ai.builder/packages/almadar-std/behaviors/lolo/spec/a11y/probe-operability.gen/pointer-only.html\",\"expanded\":\"false\",\"pressed\":\"\",\"selected\":\"\",\"bodyLength\":191}"
+     },
+     "expect": {
+      "state": "checking",
+      "emits": [
+       {
+        "event": "OP_NEXT",
+        "payload": {}
+       }
+      ],
+      "entity": {
+       "verdicts": [
+        {
+         "rule": "pointer-only",
+         "confidence": "needs-verification",
+         "selector": "html:nth-of-type(1)>body:nth-of-type(1)>div:nth-of-type(1)",
+         "snippet": "<div class=\"menu\" role=\"button\" tabindex=\"0\" aria-expanded=\"false\" onclick=\"this.setAttribute('aria-expanded','true')\" style=\"display:inline-block;padding:.5rem;cursor:pointer\"></div>",
+         "count": 1
+        }
+       ],
+       "idx": 1
+      }
+     },
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/x.html",
+      "queue": [
+       {
+        "selector": "html:nth-of-type(1)>body:nth-of-type(1)>div:nth-of-type(1)",
+        "snippet": "<div class=\"menu\" role=\"button\" tabindex=\"0\" aria-expanded=\"false\" onclick=\"this.setAttribute('aria-expanded','true')\" style=\"display:inline-block;padding:.5rem;cursor:pointer\"></div>",
+        "tag": "div",
+        "role": "button",
+        "tabIndex": 0,
+        "native": false,
+        "onclick": true,
+        "pointer": true
+       }
+      ],
+      "baseline": {
+       "found": true,
+       "focused": true,
+       "href": "file:///Users/osamaalghanmi/kflow.ai.builder/packages/almadar-std/behaviors/lolo/spec/a11y/probe-operability.gen/pointer-only.html",
+       "expanded": "false",
+       "pressed": "",
+       "selected": "",
+       "bodyLength": 191
+      },
+      "enterChanged": false
+     }
+    },
+    {
+     "from": "checking",
+     "event": "OP_NEXT",
+     "payload": {},
+     "expect": {
+      "state": "restoring",
+      "emits": [
+       {
+        "event": "PAGE_NAVIGATE",
+        "payload": {
+         "key": "k1:restore",
+         "url": "http://127.0.0.1:24680/x.html"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/x.html",
+      "queue": [
+       {
+        "selector": "html:nth-of-type(1)>body:nth-of-type(1)>div:nth-of-type(1)",
+        "snippet": "<div class=\"menu\" role=\"button\" tabindex=\"0\" aria-expanded=\"false\" onclick=\"this.setAttribute('aria-expanded','true')\" style=\"display:inline-block;padding:.5rem;cursor:pointer\"></div>",
+        "tag": "div",
+        "role": "button",
+        "tabIndex": 0,
+        "native": false,
+        "onclick": true,
+        "pointer": true
+       }
+      ],
+      "idx": 1,
+      "verdicts": [
+       {
+        "rule": "pointer-only",
+        "confidence": "needs-verification",
+        "selector": "html:nth-of-type(1)>body:nth-of-type(1)>div:nth-of-type(1)",
+        "snippet": "<div class=\"menu\" role=\"button\" tabindex=\"0\" aria-expanded=\"false\" onclick=\"this.setAttribute('aria-expanded','true')\" style=\"display:inline-block;padding:.5rem;cursor:pointer\"></div>",
+        "count": 1
+       }
+      ]
+     }
+    },
+    {
+     "from": "restoring",
+     "event": "PAGE_LOADED",
+     "payload": {
+      "key": "k1:restore",
+      "url": "http://127.0.0.1:24680/x.html",
+      "title": "t"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k1",
+         "probe": "operability",
+         "findings": [
+          {
+           "id": "http://127.0.0.1:24680/x.html#pointer-only#html:nth-of-type(1)>body:nth-of-type(1)>div:nth-of-type(1)",
+           "pageUrl": "http://127.0.0.1:24680/x.html",
+           "rule": "pointer-only",
+           "wcag": [
+            {
+             "criterion": "2.1.1",
+             "level": "A",
+             "version": "2.0"
+            }
+           ],
+           "method": "probe",
+           "engines": [
+            "probe"
+           ],
+           "impact": "serious",
+           "confidence": "needs-verification",
+           "selector": "html:nth-of-type(1)>body:nth-of-type(1)>div:nth-of-type(1)",
+           "snippet": "<div class=\"menu\" role=\"button\" tabindex=\"0\" aria-expanded=\"false\" onclick=\"this.setAttribute('aria-expanded','true')\" style=\"display:inline-block;padding:.5rem;cursor:pointer\"></div>",
+           "evidence": "",
+           "count": 1
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/x.html",
+      "queue": [
+       {
+        "selector": "html:nth-of-type(1)>body:nth-of-type(1)>div:nth-of-type(1)",
+        "snippet": "<div class=\"menu\" role=\"button\" tabindex=\"0\" aria-expanded=\"false\" onclick=\"this.setAttribute('aria-expanded','true')\" style=\"display:inline-block;padding:.5rem;cursor:pointer\"></div>",
+        "tag": "div",
+        "role": "button",
+        "tabIndex": 0,
+        "native": false,
+        "onclick": true,
+        "pointer": true
+       }
+      ],
+      "idx": 1,
+      "verdicts": [
+       {
+        "rule": "pointer-only",
+        "confidence": "needs-verification",
+        "selector": "html:nth-of-type(1)>body:nth-of-type(1)>div:nth-of-type(1)",
+        "snippet": "<div class=\"menu\" role=\"button\" tabindex=\"0\" aria-expanded=\"false\" onclick=\"this.setAttribute('aria-expanded','true')\" style=\"display:inline-block;padding:.5rem;cursor:pointer\"></div>",
+        "count": 1
+       }
+      ]
+     }
+    }
+   ],
+   "note": "recorded: pointer-only.html in headless Chrome, Enter then Space key events, observed after each"
+  },
+  {
+   "id": "control: keyboard-ok.html: Enter flipped aria-expanded and Space flipped it back, no finding",
+   "steps": [
+    {
+     "from": "afterSpace",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k1:aspace0",
+      "json": "{\"found\":true,\"focused\":true,\"href\":\"file:///Users/osamaalghanmi/kflow.ai.builder/packages/almadar-std/behaviors/lolo/spec/a11y/probe-operability.gen/keyboard-ok.html\",\"expanded\":\"false\",\"pressed\":\"\",\"selected\":\"\",\"bodyLength\":426}"
+     },
+     "expect": {
+      "state": "checking",
+      "emits": [
+       {
+        "event": "OP_NEXT",
+        "payload": {}
+       }
+      ],
+      "entity": {
+       "verdicts": [
+        {
+         "rule": "pointer-only-unchecked",
+         "confidence": "needs-verification",
+         "selector": "html:nth-of-type(1)>body:nth-of-type(1)>div:nth-of-type(1)",
+         "snippet": "<div class=\"menu\" role=\"button\" tabindex=\"0\" aria-expanded=\"false\" onclick=\"this.setAttribute('aria-expanded','true')\" style=\"display:inline-block;padding:.5rem;cursor:pointer\"></div>",
+         "count": 1
+        }
+       ],
+       "idx": 1
+      }
+     },
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/x.html",
+      "queue": [
+       {
+        "selector": "html:nth-of-type(1)>body:nth-of-type(1)>div:nth-of-type(1)",
+        "snippet": "<div class=\"menu\" role=\"button\" tabindex=\"0\" aria-expanded=\"false\" style=\"display:inline-block;padding:.5rem;cursor:pointer\"></div>",
+        "tag": "div",
+        "role": "button",
+        "tabIndex": 0,
+        "native": false,
+        "onclick": false,
+        "pointer": true
+       }
+      ],
+      "baseline": {
+       "found": true,
+       "focused": true,
+       "href": "file:///Users/osamaalghanmi/kflow.ai.builder/packages/almadar-std/behaviors/lolo/spec/a11y/probe-operability.gen/keyboard-ok.html",
+       "expanded": "true",
+       "pressed": "",
+       "selected": "",
+       "bodyLength": 425
+      },
+      "verdicts": [
+       {
+        "rule": "pointer-only-unchecked",
+        "confidence": "needs-verification",
+        "selector": "html:nth-of-type(1)>body:nth-of-type(1)>div:nth-of-type(1)",
+        "snippet": "<div class=\"menu\" role=\"button\" tabindex=\"0\" aria-expanded=\"false\" onclick=\"this.setAttribute('aria-expanded','true')\" style=\"display:inline-block;padding:.5rem;cursor:pointer\"></div>",
+        "count": 1
+       }
+      ],
+      "enterChanged": true
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: Enter changed nothing but Space changed the element, so no finding",
+   "steps": [
+    {
+     "from": "afterSpace",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k1:aspace0",
+      "json": "{\"found\":true,\"focused\":true,\"href\":\"file:///Users/osamaalghanmi/kflow.ai.builder/packages/almadar-std/behaviors/lolo/spec/a11y/probe-operability.gen/keyboard-ok.html\",\"expanded\":\"false\",\"pressed\":\"\",\"selected\":\"\",\"bodyLength\":426}"
+     },
+     "expect": {
+      "state": "checking",
+      "entity": {
+       "verdicts": [
+        {
+         "rule": "pointer-only-unchecked",
+         "confidence": "needs-verification",
+         "selector": "html:nth-of-type(1)>body:nth-of-type(1)>div:nth-of-type(1)",
+         "snippet": "<div class=\"menu\" role=\"button\" tabindex=\"0\" aria-expanded=\"false\" onclick=\"this.setAttribute('aria-expanded','true')\" style=\"display:inline-block;padding:.5rem;cursor:pointer\"></div>",
+         "count": 1
+        }
+       ],
+       "idx": 1
+      }
+     },
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/x.html",
+      "queue": [
+       {
+        "selector": "html:nth-of-type(1)>body:nth-of-type(1)>div:nth-of-type(1)",
+        "snippet": "<div class=\"menu\" role=\"button\" tabindex=\"0\" aria-expanded=\"false\" style=\"display:inline-block;padding:.5rem;cursor:pointer\"></div>",
+        "tag": "div",
+        "role": "button",
+        "tabIndex": 0,
+        "native": false,
+        "onclick": false,
+        "pointer": true
+       }
+      ],
+      "baseline": {
+       "found": true,
+       "focused": true,
+       "href": "file:///Users/osamaalghanmi/kflow.ai.builder/packages/almadar-std/behaviors/lolo/spec/a11y/probe-operability.gen/keyboard-ok.html",
+       "expanded": "true",
+       "pressed": "",
+       "selected": "",
+       "bodyLength": 425
+      },
+      "verdicts": [
+       {
+        "rule": "pointer-only-unchecked",
+        "confidence": "needs-verification",
+        "selector": "html:nth-of-type(1)>body:nth-of-type(1)>div:nth-of-type(1)",
+        "snippet": "<div class=\"menu\" role=\"button\" tabindex=\"0\" aria-expanded=\"false\" onclick=\"this.setAttribute('aria-expanded','true')\" style=\"display:inline-block;padding:.5rem;cursor:pointer\"></div>",
+        "count": 1
+       }
+      ],
+      "enterChanged": false
+     }
+    }
+   ],
+   "note": "keyboard-ok.html's Space observation against a baseline that differs from it"
+  },
+  {
+   "id": "control: Enter changed the element but Space left it as it was, so no finding",
+   "steps": [
+    {
+     "from": "afterSpace",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k1:aspace0",
+      "json": "{\"found\":true,\"focused\":true,\"href\":\"file:///Users/osamaalghanmi/kflow.ai.builder/packages/almadar-std/behaviors/lolo/spec/a11y/probe-operability.gen/keyboard-ok.html\",\"expanded\":\"true\",\"pressed\":\"\",\"selected\":\"\",\"bodyLength\":425}"
+     },
+     "expect": {
+      "state": "checking",
+      "entity": {
+       "verdicts": [
+        {
+         "rule": "pointer-only-unchecked",
+         "confidence": "needs-verification",
+         "selector": "html:nth-of-type(1)>body:nth-of-type(1)>div:nth-of-type(1)",
+         "snippet": "<div class=\"menu\" role=\"button\" tabindex=\"0\" aria-expanded=\"false\" onclick=\"this.setAttribute('aria-expanded','true')\" style=\"display:inline-block;padding:.5rem;cursor:pointer\"></div>",
+         "count": 1
+        }
+       ],
+       "idx": 1
+      }
+     },
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/x.html",
+      "queue": [
+       {
+        "selector": "html:nth-of-type(1)>body:nth-of-type(1)>div:nth-of-type(1)",
+        "snippet": "<div class=\"menu\" role=\"button\" tabindex=\"0\" aria-expanded=\"false\" style=\"display:inline-block;padding:.5rem;cursor:pointer\"></div>",
+        "tag": "div",
+        "role": "button",
+        "tabIndex": 0,
+        "native": false,
+        "onclick": false,
+        "pointer": true
+       }
+      ],
+      "baseline": {
+       "found": true,
+       "focused": true,
+       "href": "file:///Users/osamaalghanmi/kflow.ai.builder/packages/almadar-std/behaviors/lolo/spec/a11y/probe-operability.gen/keyboard-ok.html",
+       "expanded": "true",
+       "pressed": "",
+       "selected": "",
+       "bodyLength": 425
+      },
+      "verdicts": [
+       {
+        "rule": "pointer-only-unchecked",
+        "confidence": "needs-verification",
+        "selector": "html:nth-of-type(1)>body:nth-of-type(1)>div:nth-of-type(1)",
+        "snippet": "<div class=\"menu\" role=\"button\" tabindex=\"0\" aria-expanded=\"false\" onclick=\"this.setAttribute('aria-expanded','true')\" style=\"display:inline-block;padding:.5rem;cursor:pointer\"></div>",
+        "count": 1
+       }
+      ],
+      "enterChanged": true
+     }
+    }
+   ]
+  },
+  {
+   "id": "the queue's second element is focused with its own selector under the next step key",
+   "steps": [
+    {
+     "from": "checking",
+     "event": "OP_NEXT",
+     "payload": {},
+     "expect": {
+      "state": "focusing",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k1:focus1"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/x.html",
+      "queue": [
+       {
+        "selector": "html:nth-of-type(1)>body:nth-of-type(1)>div:nth-of-type(1)",
+        "snippet": "<div class=\"menu\" role=\"button\" tabindex=\"0\" aria-expanded=\"false\" onclick=\"this.setAttribute('aria-expanded','true')\" style=\"display:inline-block;padding:.5rem;cursor:pointer\"></div>",
+        "tag": "div",
+        "role": "button",
+        "tabIndex": 0,
+        "native": false,
+        "onclick": true,
+        "pointer": true
+       },
+       {
+        "selector": "html:nth-of-type(1)>body:nth-of-type(1)>div:nth-of-type(1)",
+        "snippet": "<div class=\"menu\" role=\"button\" tabindex=\"0\" aria-expanded=\"false\" style=\"display:inline-block;padding:.5rem;cursor:pointer\"></div>",
+        "tag": "div",
+        "role": "button",
+        "tabIndex": 0,
+        "native": false,
+        "onclick": false,
+        "pointer": true
+       }
+      ],
+      "idx": 1
+     }
+    }
+   ]
+  }
+ ]
+}

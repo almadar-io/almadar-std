@@ -1,0 +1,858 @@
+{
+ "atom": "a11y/atoms/std-a11y-probe-text-spacing.lolo",
+ "trait": "TextSpacingProbe",
+ "note": "std-a11y-probe-text-spacing with the page answers played as events. Every measure JSON of the fixture cases is the real result of the atom's expressions in headless Chrome with the WCAG 1.4.12 style injected and removed (probe-text-spacing.gen/record.py); the style text asserted is the one the knobs build. Regenerate with python3 -I probe-text-spacing.gen/gen_goldens.py.",
+ "cases": [
+  {
+   "id": "PROBE_RUN measures the clipped text before any change",
+   "steps": [
+    {
+     "from": "idle",
+     "event": "PROBE_RUN",
+     "payload": {
+      "key": "k1",
+      "pageUrl": "http://127.0.0.1:24680/"
+     },
+     "expect": {
+      "state": "baselining",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k1:base",
+         "expression": "(() => { const sel = (e) => { const p = []; for (let n = e; n && n.nodeType === 1; n = n.parentElement) { if (n.id) { p.unshift('#' + CSS.escape(n.id)); break; } let i = 1; for (let s = n.previousElementSibling; s; s = s.previousElementSibling) { if (s.tagName === n.tagName) i++; } p.unshift(n.tagName.toLowerCase() + ':nth-of-type(' + i + ')'); } return p.join('>'); }; const out = []; for (const e of document.body.querySelectorAll('*')) { let own = false; for (const n of e.childNodes) { if (n.nodeType === 3 && n.nodeValue.trim().length > 0) { own = true; break; } } if (!own) continue; const cs = getComputedStyle(e); if (cs.overflowX === 'visible' && cs.overflowY === 'visible') continue; out.push({ selector: sel(e), snippet: e.cloneNode(false).outerHTML, overflowX: cs.overflowX, overflowY: cs.overflowY, scrollWidth: e.scrollWidth, clientWidth: e.clientWidth, scrollHeight: e.scrollHeight, clientHeight: e.clientHeight }); } return JSON.stringify({ elements: out }); })()"
+        }
+       }
+      ],
+      "entity": {
+       "runKey": "k1",
+       "pageUrl": "http://127.0.0.1:24680/",
+       "baseline": [],
+       "findings": []
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "text-spacing-fail.html at normal spacing: the 3-line note already overflows its 2-line box and is the baseline",
+   "steps": [
+    {
+     "from": "baselining",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/",
+      "baseline": [],
+      "findings": []
+     },
+     "payload": {
+      "key": "k1:base",
+      "json": "{\"elements\":[{\"selector\":\"#main>p:nth-of-type(1)\",\"snippet\":\"<p class=\\\"note\\\" style=\\\"width:20em;height:2.4em;line-height:1.2;overflow:hidden;background:#eef\\\"></p>\",\"overflowX\":\"hidden\",\"overflowY\":\"hidden\",\"scrollWidth\":320,\"clientWidth\":320,\"scrollHeight\":58,\"clientHeight\":38}]}"
+     },
+     "expect": {
+      "state": "injecting",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k1:inject",
+         "expression": "((id, css) => { const old = document.getElementById(id); if (old) old.remove(); const s = document.createElement('style'); s.id = id; s.textContent = css; document.head.appendChild(s); return JSON.stringify({ id: id, injected: true }); })(\"almadar-a11y-text-spacing\",\"* { line-height: 1.5 !important; letter-spacing: 0.12em !important; word-spacing: 0.16em !important; } p { margin-bottom: 2em !important; }\")"
+        }
+       }
+      ],
+      "entity": {
+       "baseline": [
+        {
+         "selector": "#main>p:nth-of-type(1)",
+         "snippet": "<p class=\"note\" style=\"width:20em;height:2.4em;line-height:1.2;overflow:hidden;background:#eef\"></p>",
+         "overflowX": "hidden",
+         "overflowY": "hidden",
+         "scrollWidth": 320,
+         "clientWidth": 320,
+         "scrollHeight": 58,
+         "clientHeight": 38
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: text-spacing-pass.html has nothing clipped",
+   "steps": [
+    {
+     "from": "baselining",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/",
+      "baseline": [],
+      "findings": []
+     },
+     "payload": {
+      "key": "k1:base",
+      "json": "{\"elements\":[]}"
+     },
+     "expect": {
+      "state": "injecting",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k1:inject",
+         "expression": "((id, css) => { const old = document.getElementById(id); if (old) old.remove(); const s = document.createElement('style'); s.id = id; s.textContent = css; document.head.appendChild(s); return JSON.stringify({ id: id, injected: true }); })(\"almadar-a11y-text-spacing\",\"* { line-height: 1.5 !important; letter-spacing: 0.12em !important; word-spacing: 0.16em !important; } p { margin-bottom: 2em !important; }\")"
+        }
+       }
+      ],
+      "entity": {
+       "baseline": []
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "text-spacing-preclipped.html at normal spacing: only the box already losing lines is in the baseline",
+   "steps": [
+    {
+     "from": "baselining",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/",
+      "baseline": [],
+      "findings": []
+     },
+     "payload": {
+      "key": "k1:base",
+      "json": "{\"elements\":[{\"selector\":\"#main>p:nth-of-type(1)\",\"snippet\":\"<p class=\\\"fresh\\\" style=\\\"width:20em;height:2.4em;overflow:hidden;margin:0;background:#eee\\\"></p>\",\"overflowX\":\"hidden\",\"overflowY\":\"hidden\",\"scrollWidth\":320,\"clientWidth\":320,\"scrollHeight\":38,\"clientHeight\":38},{\"selector\":\"#main>p:nth-of-type(2)\",\"snippet\":\"<p class=\\\"old\\\" style=\\\"width:20em;height:2.4em;overflow:hidden;margin:0;background:#eef\\\"></p>\",\"overflowX\":\"hidden\",\"overflowY\":\"hidden\",\"scrollWidth\":320,\"clientWidth\":320,\"scrollHeight\":58,\"clientHeight\":38}]}"
+     },
+     "expect": {
+      "state": "injecting",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k1:inject",
+         "expression": "((id, css) => { const old = document.getElementById(id); if (old) old.remove(); const s = document.createElement('style'); s.id = id; s.textContent = css; document.head.appendChild(s); return JSON.stringify({ id: id, injected: true }); })(\"almadar-a11y-text-spacing\",\"* { line-height: 1.5 !important; letter-spacing: 0.12em !important; word-spacing: 0.16em !important; } p { margin-bottom: 2em !important; }\")"
+        }
+       }
+      ],
+      "entity": {
+       "baseline": [
+        {
+         "selector": "#main>p:nth-of-type(2)",
+         "snippet": "<p class=\"old\" style=\"width:20em;height:2.4em;overflow:hidden;margin:0;background:#eef\"></p>",
+         "overflowX": "hidden",
+         "overflowY": "hidden",
+         "scrollWidth": 320,
+         "clientWidth": 320,
+         "scrollHeight": 58,
+         "clientHeight": 38
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "the style answer asks for the measurement under the overrides",
+   "steps": [
+    {
+     "from": "injecting",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/",
+      "baseline": [],
+      "findings": []
+     },
+     "payload": {
+      "key": "k1:inject",
+      "json": "{\"id\":\"almadar-a11y-text-spacing\",\"injected\":true}"
+     },
+     "expect": {
+      "state": "spaced",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k1:spaced",
+         "expression": "(() => { const sel = (e) => { const p = []; for (let n = e; n && n.nodeType === 1; n = n.parentElement) { if (n.id) { p.unshift('#' + CSS.escape(n.id)); break; } let i = 1; for (let s = n.previousElementSibling; s; s = s.previousElementSibling) { if (s.tagName === n.tagName) i++; } p.unshift(n.tagName.toLowerCase() + ':nth-of-type(' + i + ')'); } return p.join('>'); }; const out = []; for (const e of document.body.querySelectorAll('*')) { let own = false; for (const n of e.childNodes) { if (n.nodeType === 3 && n.nodeValue.trim().length > 0) { own = true; break; } } if (!own) continue; const cs = getComputedStyle(e); if (cs.overflowX === 'visible' && cs.overflowY === 'visible') continue; out.push({ selector: sel(e), snippet: e.cloneNode(false).outerHTML, overflowX: cs.overflowX, overflowY: cs.overflowY, scrollWidth: e.scrollWidth, clientWidth: e.clientWidth, scrollHeight: e.scrollHeight, clientHeight: e.clientHeight }); } return JSON.stringify({ elements: out }); })()"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "text-spacing-fail.html with the overrides: the note loses more lines (scrollHeight 58 to 96 in a 38px box), one finding",
+   "steps": [
+    {
+     "from": "spaced",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/",
+      "baseline": [
+       {
+        "selector": "#main>p:nth-of-type(1)",
+        "snippet": "<p class=\"note\" style=\"width:20em;height:2.4em;line-height:1.2;overflow:hidden;background:#eef\"></p>",
+        "overflowX": "hidden",
+        "overflowY": "hidden",
+        "scrollWidth": 320,
+        "clientWidth": 320,
+        "scrollHeight": 58,
+        "clientHeight": 38
+       }
+      ],
+      "findings": []
+     },
+     "payload": {
+      "key": "k1:spaced",
+      "json": "{\"elements\":[{\"selector\":\"#main>p:nth-of-type(1)\",\"snippet\":\"<p class=\\\"note\\\" style=\\\"width:20em;height:2.4em;line-height:1.2;overflow:hidden;background:#eef\\\"></p>\",\"overflowX\":\"hidden\",\"overflowY\":\"hidden\",\"scrollWidth\":320,\"clientWidth\":320,\"scrollHeight\":96,\"clientHeight\":38}]}"
+     },
+     "expect": {
+      "state": "removing",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k1:remove",
+         "expression": "((id) => { const s = document.getElementById(id); const found = s !== null; if (found) s.remove(); return JSON.stringify({ id: id, removed: found }); })(\"almadar-a11y-text-spacing\")"
+        }
+       }
+      ],
+      "entity": {
+       "findings": [
+        {
+         "id": "http://127.0.0.1:24680/#text-spacing##main>p:nth-of-type(1)",
+         "pageUrl": "http://127.0.0.1:24680/",
+         "rule": "text-spacing",
+         "wcag": [
+          {
+           "criterion": "1.4.12",
+           "level": "AA",
+           "version": "2.1"
+          }
+         ],
+         "method": "probe",
+         "engines": [
+          "probe"
+         ],
+         "impact": "moderate",
+         "confidence": "needs-verification",
+         "selector": "#main>p:nth-of-type(1)",
+         "snippet": "<p class=\"note\" style=\"width:20em;height:2.4em;line-height:1.2;overflow:hidden;background:#eef\"></p>",
+         "evidence": "",
+         "count": 1
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: text-spacing-pass.html grows with its text and has no findings",
+   "steps": [
+    {
+     "from": "spaced",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/",
+      "baseline": [],
+      "findings": []
+     },
+     "payload": {
+      "key": "k1:spaced",
+      "json": "{\"elements\":[]}"
+     },
+     "expect": {
+      "state": "removing",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k1:remove",
+         "expression": "((id) => { const s = document.getElementById(id); const found = s !== null; if (found) s.remove(); return JSON.stringify({ id: id, removed: found }); })(\"almadar-a11y-text-spacing\")"
+        }
+       }
+      ],
+      "entity": {
+       "findings": []
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "a box that fitted and now clips is a finding, and so is a box that already clipped and loses more",
+   "steps": [
+    {
+     "from": "spaced",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/",
+      "baseline": [
+       {
+        "selector": "#main>p:nth-of-type(2)",
+        "snippet": "<p class=\"old\" style=\"width:20em;height:2.4em;overflow:hidden;margin:0;background:#eef\"></p>",
+        "overflowX": "hidden",
+        "overflowY": "hidden",
+        "scrollWidth": 320,
+        "clientWidth": 320,
+        "scrollHeight": 58,
+        "clientHeight": 38
+       }
+      ],
+      "findings": []
+     },
+     "payload": {
+      "key": "k1:spaced",
+      "json": "{\"elements\":[{\"selector\":\"#main>p:nth-of-type(1)\",\"snippet\":\"<p class=\\\"fresh\\\" style=\\\"width:20em;height:2.4em;overflow:hidden;margin:0;background:#eee\\\"></p>\",\"overflowX\":\"hidden\",\"overflowY\":\"hidden\",\"scrollWidth\":320,\"clientWidth\":320,\"scrollHeight\":48,\"clientHeight\":38},{\"selector\":\"#main>p:nth-of-type(2)\",\"snippet\":\"<p class=\\\"old\\\" style=\\\"width:20em;height:2.4em;overflow:hidden;margin:0;background:#eef\\\"></p>\",\"overflowX\":\"hidden\",\"overflowY\":\"hidden\",\"scrollWidth\":320,\"clientWidth\":320,\"scrollHeight\":96,\"clientHeight\":38}]}"
+     },
+     "expect": {
+      "state": "removing",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k1:remove",
+         "expression": "((id) => { const s = document.getElementById(id); const found = s !== null; if (found) s.remove(); return JSON.stringify({ id: id, removed: found }); })(\"almadar-a11y-text-spacing\")"
+        }
+       }
+      ],
+      "entity": {
+       "findings": [
+        {
+         "id": "http://127.0.0.1:24680/#text-spacing##main>p:nth-of-type(1)",
+         "pageUrl": "http://127.0.0.1:24680/",
+         "rule": "text-spacing",
+         "wcag": [
+          {
+           "criterion": "1.4.12",
+           "level": "AA",
+           "version": "2.1"
+          }
+         ],
+         "method": "probe",
+         "engines": [
+          "probe"
+         ],
+         "impact": "moderate",
+         "confidence": "needs-verification",
+         "selector": "#main>p:nth-of-type(1)",
+         "snippet": "<p class=\"fresh\" style=\"width:20em;height:2.4em;overflow:hidden;margin:0;background:#eee\"></p>",
+         "evidence": "",
+         "count": 1
+        },
+        {
+         "id": "http://127.0.0.1:24680/#text-spacing##main>p:nth-of-type(2)",
+         "pageUrl": "http://127.0.0.1:24680/",
+         "rule": "text-spacing",
+         "wcag": [
+          {
+           "criterion": "1.4.12",
+           "level": "AA",
+           "version": "2.1"
+          }
+         ],
+         "method": "probe",
+         "engines": [
+          "probe"
+         ],
+         "impact": "moderate",
+         "confidence": "needs-verification",
+         "selector": "#main>p:nth-of-type(2)",
+         "snippet": "<p class=\"old\" style=\"width:20em;height:2.4em;overflow:hidden;margin:0;background:#eef\"></p>",
+         "evidence": "",
+         "count": 1
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a box clipped before and clipped the same amount is not reported",
+   "steps": [
+    {
+     "from": "spaced",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/",
+      "baseline": [
+       {
+        "selector": "#a",
+        "snippet": "<p>",
+        "overflowX": "hidden",
+        "overflowY": "hidden",
+        "scrollWidth": 100,
+        "clientWidth": 100,
+        "scrollHeight": 58,
+        "clientHeight": 38
+       }
+      ],
+      "findings": []
+     },
+     "payload": {
+      "key": "k1:spaced",
+      "json": "{\"elements\":[{\"selector\":\"#a\",\"snippet\":\"<p>\",\"overflowX\":\"hidden\",\"overflowY\":\"hidden\",\"scrollWidth\":100,\"clientWidth\":100,\"scrollHeight\":58,\"clientHeight\":38}]}"
+     },
+     "expect": {
+      "state": "removing",
+      "entity": {
+       "findings": []
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: growth of one px is inside the tolerance of 1",
+   "steps": [
+    {
+     "from": "spaced",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/",
+      "baseline": [
+       {
+        "selector": "#a",
+        "snippet": "<p>",
+        "overflowX": "hidden",
+        "overflowY": "hidden",
+        "scrollWidth": 100,
+        "clientWidth": 100,
+        "scrollHeight": 58,
+        "clientHeight": 38
+       }
+      ],
+      "findings": []
+     },
+     "payload": {
+      "key": "k1:spaced",
+      "json": "{\"elements\":[{\"selector\":\"#a\",\"snippet\":\"<p>\",\"overflowX\":\"hidden\",\"overflowY\":\"hidden\",\"scrollWidth\":100,\"clientWidth\":100,\"scrollHeight\":59,\"clientHeight\":38}]}"
+     },
+     "expect": {
+      "state": "removing",
+      "entity": {
+       "findings": []
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "growth of two px past the baseline extent is reported",
+   "steps": [
+    {
+     "from": "spaced",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/",
+      "baseline": [
+       {
+        "selector": "#a",
+        "snippet": "<p>",
+        "overflowX": "hidden",
+        "overflowY": "hidden",
+        "scrollWidth": 100,
+        "clientWidth": 100,
+        "scrollHeight": 58,
+        "clientHeight": 38
+       }
+      ],
+      "findings": []
+     },
+     "payload": {
+      "key": "k1:spaced",
+      "json": "{\"elements\":[{\"selector\":\"#a\",\"snippet\":\"<p>\",\"overflowX\":\"hidden\",\"overflowY\":\"hidden\",\"scrollWidth\":100,\"clientWidth\":100,\"scrollHeight\":60,\"clientHeight\":38}]}"
+     },
+     "expect": {
+      "state": "removing",
+      "entity": {
+       "findings": [
+        {
+         "id": "http://127.0.0.1:24680/#text-spacing##a",
+         "pageUrl": "http://127.0.0.1:24680/",
+         "rule": "text-spacing",
+         "wcag": [
+          {
+           "criterion": "1.4.12",
+           "level": "AA",
+           "version": "2.1"
+          }
+         ],
+         "method": "probe",
+         "engines": [
+          "probe"
+         ],
+         "impact": "moderate",
+         "confidence": "needs-verification",
+         "selector": "#a",
+         "snippet": "<p>",
+         "evidence": "",
+         "count": 1
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "growth on an axis that does not clip is not reported",
+   "steps": [
+    {
+     "from": "spaced",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/",
+      "baseline": [
+       {
+        "selector": "#a",
+        "snippet": "<p>",
+        "overflowX": "hidden",
+        "overflowY": "auto",
+        "scrollWidth": 100,
+        "clientWidth": 100,
+        "scrollHeight": 58,
+        "clientHeight": 38
+       }
+      ],
+      "findings": []
+     },
+     "payload": {
+      "key": "k1:spaced",
+      "json": "{\"elements\":[{\"selector\":\"#a\",\"snippet\":\"<p>\",\"overflowX\":\"hidden\",\"overflowY\":\"auto\",\"scrollWidth\":100,\"clientWidth\":100,\"scrollHeight\":90,\"clientHeight\":38}]}"
+     },
+     "expect": {
+      "state": "removing",
+      "entity": {
+       "findings": []
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "clipping on x that appears with the overrides is reported",
+   "steps": [
+    {
+     "from": "spaced",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/",
+      "baseline": [],
+      "findings": []
+     },
+     "payload": {
+      "key": "k1:spaced",
+      "json": "{\"elements\":[{\"selector\":\"#a\",\"snippet\":\"<p>\",\"overflowX\":\"clip\",\"overflowY\":\"visible\",\"scrollWidth\":140,\"clientWidth\":100,\"scrollHeight\":20,\"clientHeight\":20}]}"
+     },
+     "expect": {
+      "state": "removing",
+      "entity": {
+       "findings": [
+        {
+         "id": "http://127.0.0.1:24680/#text-spacing##a",
+         "pageUrl": "http://127.0.0.1:24680/",
+         "rule": "text-spacing",
+         "wcag": [
+          {
+           "criterion": "1.4.12",
+           "level": "AA",
+           "version": "2.1"
+          }
+         ],
+         "method": "probe",
+         "engines": [
+          "probe"
+         ],
+         "impact": "moderate",
+         "confidence": "needs-verification",
+         "selector": "#a",
+         "snippet": "<p>",
+         "evidence": "",
+         "count": 1
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "the removal answer finishes with the held findings",
+   "steps": [
+    {
+     "from": "removing",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/",
+      "baseline": [],
+      "findings": [
+       {
+        "id": "http://127.0.0.1:24680/#text-spacing##main>p:nth-of-type(1)",
+        "pageUrl": "http://127.0.0.1:24680/",
+        "rule": "text-spacing",
+        "wcag": [
+         {
+          "criterion": "1.4.12",
+          "level": "AA",
+          "version": "2.1"
+         }
+        ],
+        "method": "probe",
+        "engines": [
+         "probe"
+        ],
+        "impact": "moderate",
+        "confidence": "needs-verification",
+        "selector": "#main>p:nth-of-type(1)",
+        "snippet": "<p class=\"note\" style=\"width:20em;height:2.4em;line-height:1.2;overflow:hidden;background:#eef\"></p>",
+        "evidence": "",
+        "count": 1
+       }
+      ]
+     },
+     "payload": {
+      "key": "k1:remove",
+      "json": "{\"id\":\"almadar-a11y-text-spacing\",\"removed\":true}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k1",
+         "probe": "text-spacing",
+         "findings": [
+          {
+           "id": "http://127.0.0.1:24680/#text-spacing##main>p:nth-of-type(1)",
+           "pageUrl": "http://127.0.0.1:24680/",
+           "rule": "text-spacing",
+           "wcag": [
+            {
+             "criterion": "1.4.12",
+             "level": "AA",
+             "version": "2.1"
+            }
+           ],
+           "method": "probe",
+           "engines": [
+            "probe"
+           ],
+           "impact": "moderate",
+           "confidence": "needs-verification",
+           "selector": "#main>p:nth-of-type(1)",
+           "snippet": "<p class=\"note\" style=\"width:20em;height:2.4em;line-height:1.2;overflow:hidden;background:#eef\"></p>",
+           "evidence": "",
+           "count": 1
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a removal that finds no style fails the probe",
+   "steps": [
+    {
+     "from": "removing",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/",
+      "baseline": [],
+      "findings": []
+     },
+     "payload": {
+      "key": "k1:remove",
+      "json": "{\"id\":\"almadar-a11y-text-spacing\",\"removed\":false}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_FAILED",
+        "payload": {
+         "key": "k1",
+         "probe": "text-spacing",
+         "code": "probe_style_missing"
+        }
+       }
+      ],
+      "neverEmits": [
+       "PROBE_DONE"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a removal answer that is not the declared shape fails the probe",
+   "steps": [
+    {
+     "from": "removing",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/",
+      "baseline": [],
+      "findings": []
+     },
+     "payload": {
+      "key": "k1:remove",
+      "json": "[]"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_FAILED",
+        "payload": {
+         "key": "k1",
+         "probe": "text-spacing",
+         "code": "probe_style_missing"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a removal answer under another run's key is ignored",
+   "steps": [
+    {
+     "from": "removing",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/",
+      "baseline": [],
+      "findings": []
+     },
+     "payload": {
+      "key": "k2:remove",
+      "json": "{\"id\":\"almadar-a11y-text-spacing\",\"removed\":true}"
+     },
+     "expect": {
+      "state": "removing",
+      "emits": []
+     }
+    }
+   ]
+  },
+  {
+   "id": "a clipped-text measurement that is not the declared shape fails the probe",
+   "steps": [
+    {
+     "from": "spaced",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/",
+      "baseline": [],
+      "findings": []
+     },
+     "payload": {
+      "key": "k1:spaced",
+      "json": "{\"elements\":3}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_FAILED",
+        "payload": {
+         "key": "k1",
+         "probe": "text-spacing",
+         "code": "probe_bad_measure"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a page failure under the run key fails the probe",
+   "steps": [
+    {
+     "from": "injecting",
+     "event": "PAGE_FAILED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/",
+      "baseline": [],
+      "findings": []
+     },
+     "payload": {
+      "key": "k1:inject",
+      "error": "eval threw",
+      "code": "chrome_eval"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_FAILED",
+        "payload": {
+         "key": "k1",
+         "probe": "text-spacing",
+         "error": "eval threw",
+         "code": "probe_page_failed"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a page failure under another run's key is ignored",
+   "steps": [
+    {
+     "from": "injecting",
+     "event": "PAGE_FAILED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/",
+      "baseline": [],
+      "findings": []
+     },
+     "payload": {
+      "key": "k2:inject",
+      "error": "eval threw",
+      "code": "chrome_eval"
+     },
+     "expect": {
+      "state": "injecting",
+      "emits": []
+     }
+    }
+   ]
+  }
+ ]
+}

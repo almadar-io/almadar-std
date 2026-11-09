@@ -1,0 +1,228 @@
+app std-daemon [
+  version: "1.0.0",
+  description: "std-daemon — keeps one long-running child process (a browser, an emulator suite, a local server) alive for the program. DAEMON_START carries the arguments and an optional environment: the atom first connects to the readyHost and readyPort knobs, and a port that already accepts a connection answers DAEMON_READY { pid: 0, reused: true } without starting anything. Otherwise it spawns the first of the commands knob that exists, detached (its own session, no piped stream, so it outlives the program), and probes the ready port every pollMs milliseconds until it accepts a connection (DAEMON_READY { pid, reused: false }) or readyTimeoutMs has passed (DAEMON_FAILED daemon_timeout; the child is left running). The child runs in the cwd knob's directory (the host's working directory when it is empty) with exactly the environment the run's env names, with the inheritEnv knob's host variables passed through. DAEMON_STOP sends TERM to the process this atom started and answers DAEMON_STOPPED; a reused process is never stopped, and a stop with nothing started answers daemon_idle. DAEMON_FAILED codes: daemon_busy (a start while one is starting or running), daemon_spawn_failed (no command could start), daemon_timeout, daemon_host_failed (a connect, close or kill failed) and daemon_idle. The commands knob is matched exactly against the exec grant, and the ready host and port against the net grant, of the program that composes this atom."
+]
+uses Spec from "almadar-std/daemon"
+type AnchoredEnv = { anchor : { env : string! }! }
+type AnchoredPath = { anchor : string!, path : string! }
+type DaemonCommand = string | AnchoredEnv | AnchoredPath
+orbital DaemonOrbital {
+  entity DaemonProcess [runtime] {
+    id : string!
+    pid : number @description "Process id of the daemon this atom started; 0 when none is." = 0
+    reused : boolean @description "True when the ready port was already accepting connections and nothing was started." = false
+    spawned : boolean @description "This run spawned the child and waits for its ready port." = false
+    argv : [string] @description "The arguments of the start in flight." = []
+    env : Map string string @description "The environment of the start in flight." = {}
+    cmdCursor : number @description "Index of the candidate command being tried." = 0
+    pollDueAt : instant? @description "When the next ready-port probe is due; null when none is." = null
+    deadline : instant? @description "When waiting for the ready port gives up; null while idle." = null
+  }
+
+  trait Daemon -> @rebindable DaemonProcess [optimistic] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.pollDueAt null)
+      DAEMON_STOP -> idle
+        (emit DAEMON_FAILED { code: "daemon_idle" message: "no daemon was started" })
+      DAEMON_START -> starting
+        (set @entity.argv @payload.argv)
+        (set @entity.env (default @payload.env {}))
+        (set @entity.pid 0)
+        (set @entity.reused false)
+        (set @entity.spawned false)
+        (set @entity.cmdCursor 0)
+        (set @entity.pollDueAt null)
+        (set @entity.deadline null)
+        (emit DAEMON_PROBE { })
+    }
+
+    state starting {
+      INIT -> starting
+      DAEMON_START -> starting
+        (emit DAEMON_FAILED { code: "daemon_busy" message: "a daemon is already being started" })
+      DAEMON_STOP -> starting
+        (emit DAEMON_FAILED { code: "daemon_busy" message: "the daemon is still starting" })
+      DAEMON_PROBE -> starting
+        (os/tcp-connect @config.readyHost @config.readyPort { emit: { success: DAEMON_PORT_UP failure: DAEMON_PORT_DOWN } })
+      DAEMON_PORT_UP -> running when (not @entity.spawned)
+        (set @entity.reused true)
+        (set @entity.pollDueAt null)
+        (os/close @payload.sock { emit: { failure: DAEMON_HOST_FAILED } })
+        (emit DAEMON_READY { pid: 0 reused: true })
+      DAEMON_PORT_UP -> running when @entity.spawned
+        (set @entity.pollDueAt null)
+        (os/close @payload.sock { emit: { failure: DAEMON_HOST_FAILED } })
+        (emit DAEMON_READY { pid: @entity.pid reused: false })
+      DAEMON_PORT_DOWN -> starting when (not @entity.spawned)
+        (emit DAEMON_SPAWN_NEXT { })
+      DAEMON_PORT_DOWN -> starting when (and @entity.spawned (time/isBefore @now (default @entity.deadline @now)))
+        (set @entity.pollDueAt (time/add @now @config.pollMs "ms"))
+      DAEMON_PORT_DOWN -> idle when (and @entity.spawned (not (time/isBefore @now (default @entity.deadline @now))))
+        (set @entity.pollDueAt null)
+        (emit DAEMON_FAILED { code: "daemon_timeout" message: (str/concat "the daemon did not listen on " @config.readyHost ":" @config.readyPort " in time") })
+      DAEMON_SPAWN_NEXT -> starting when (and (>= @entity.cmdCursor 0) (!= (array/nth @config.commands @entity.cmdCursor) null) (= @config.cwd ""))
+        (os/spawn (array/nth @config.commands @entity.cmdCursor) @entity.argv { cwd: null env: (object/merge (object/fromEntries (array/map @config.inheritEnv (fn n [@n null]))) @entity.env) stdin: "null" stdout: "null" stderr: "null" detached: true } { emit: { success: DAEMON_SPAWNED failure: DAEMON_SPAWN_FAILED } })
+      DAEMON_SPAWN_NEXT -> starting when (and (>= @entity.cmdCursor 0) (!= (array/nth @config.commands @entity.cmdCursor) null) (!= @config.cwd ""))
+        (os/spawn (array/nth @config.commands @entity.cmdCursor) @entity.argv { cwd: @config.cwd env: (object/merge (object/fromEntries (array/map @config.inheritEnv (fn n [@n null]))) @entity.env) stdin: "null" stdout: "null" stderr: "null" detached: true } { emit: { success: DAEMON_SPAWNED failure: DAEMON_SPAWN_FAILED } })
+      DAEMON_SPAWN_NEXT -> idle when (== (if (>= @entity.cmdCursor 0) (array/nth @config.commands @entity.cmdCursor) null) null)
+        (emit DAEMON_FAILED { code: "daemon_spawn_failed" message: "no command to start" })
+      DAEMON_SPAWNED -> starting
+        (set @entity.pid @payload.pid)
+        (set @entity.spawned true)
+        (set @entity.deadline (time/add @now @config.readyTimeoutMs "ms"))
+        (set @entity.pollDueAt (time/add @now @config.pollMs "ms"))
+      DAEMON_SPAWN_FAILED -> starting when (and (= @payload.kind "not-found") (< (+ @entity.cmdCursor 1) (array/len @config.commands)))
+        (set @entity.cmdCursor (+ @entity.cmdCursor 1))
+        (emit DAEMON_SPAWN_NEXT { })
+      DAEMON_SPAWN_FAILED -> idle when (or (!= @payload.kind "not-found") (>= (+ @entity.cmdCursor 1) (array/len @config.commands)))
+        (emit DAEMON_FAILED { code: "daemon_spawn_failed" message: (default @payload.error "") })
+      DAEMON_POLL -> starting
+        (set @entity.pollDueAt null)
+        (emit DAEMON_PROBE { })
+      DAEMON_HOST_FAILED -> idle
+        (set @entity.pollDueAt null)
+        (emit DAEMON_FAILED { code: "daemon_host_failed" message: (default @payload.error "") })
+    }
+
+    state running {
+      INIT -> running
+      DAEMON_START -> running
+        (emit DAEMON_FAILED { code: "daemon_busy" message: "a daemon is already running" })
+      DAEMON_STOP -> running when (or @entity.reused (= @entity.pid 0))
+        (emit DAEMON_FAILED { code: "daemon_idle" message: "the running daemon was not started by this program, so it is not stopped" })
+      DAEMON_STOP -> running when (and (not @entity.reused) (> @entity.pid 0))
+        (os/kill @entity.pid "TERM" { emit: { success: DAEMON_KILLED failure: DAEMON_HOST_FAILED } })
+      DAEMON_KILLED -> idle
+        (emit DAEMON_STOPPED { pid: @entity.pid })
+        (set @entity.pid 0)
+        (set @entity.spawned false)
+      DAEMON_HOST_FAILED -> running
+        (emit DAEMON_FAILED { code: "daemon_host_failed" message: (default @payload.error "") })
+    }
+
+    ticks {
+      pollReady every 100ms [background]
+        when (and (!= @entity.pollDueAt null) (not (time/isBefore @now (default @entity.pollDueAt @now))))
+        (emit DAEMON_POLL { })
+    }
+
+    emits {
+      DAEMON_READY -> external {
+        pid : number!
+        reused : boolean!
+      }
+        @description "The daemon's ready port accepts connections: the pid this atom started (0 when reused) and whether the process was already running."
+        @synonyms "daemon ready, process started"
+        @tier "domain"
+      DAEMON_FAILED -> external {
+        code : string!
+        message : string!
+      }
+        @description "The daemon could not be started or stopped: busy, spawn failed, timeout, host failed or idle."
+        @synonyms "daemon failed, cannot start process"
+        @tier "domain"
+      DAEMON_STOPPED -> external {
+        pid : number!
+      }
+        @description "The daemon this atom started was sent TERM."
+        @synonyms "daemon stopped, process stopped"
+        @tier "domain"
+      DAEMON_PROBE -> internal { }
+        @description "Internal: probe the ready port."
+        @tier "internal"
+      DAEMON_POLL -> internal { }
+        @description "Internal: the next ready-port probe is due."
+        @tier "internal"
+      DAEMON_SPAWN_NEXT -> internal { }
+        @description "Internal: spawn the candidate command at the cursor."
+        @tier "internal"
+      DAEMON_PORT_UP -> internal {
+        sock : number!
+      }
+        @description "Internal: the ready port accepted a connection."
+        @tier "internal"
+      DAEMON_PORT_DOWN -> internal {
+        error : string
+        kind : string
+      }
+        @description "Internal: the ready port refused a connection."
+        @tier "internal"
+      DAEMON_SPAWNED -> internal {
+        pid : number!
+      }
+        @description "Internal: the detached child started."
+        @tier "internal"
+      DAEMON_SPAWN_FAILED -> internal {
+        error : string
+        kind : string
+      }
+        @description "Internal: the child could not be started."
+        @tier "internal"
+      DAEMON_KILLED -> internal { }
+        @description "Internal: TERM was sent to the child."
+        @tier "internal"
+      DAEMON_HOST_FAILED -> internal {
+        error : string
+        kind : string
+      }
+        @description "Internal: an os/close or os/kill failure."
+        @tier "internal"
+    }
+
+    config {
+      commands : [DaemonCommand] = []
+        @label "Commands"
+        @description "The executables to try, in order, each matched exactly against the exec grant of the program that composes this atom, e.g. [\"firebase\"] or [{ anchor: { env: \"ORB_CHROME_PATH\" } }, \"chromium\"]. A candidate that is absent (not found) is skipped for the next; any other start failure, or the end of the list, fails the start with daemon_spawn_failed."
+        @synonyms "program, executable, binary, command candidates"
+        @tier "domain"
+      cwd : string = ""
+        @label "Working directory"
+        @description "The directory the child runs in, covered by the composing program's fs read grant; empty runs it in the host's working directory."
+        @synonyms "directory, folder"
+        @tier "domain"
+      readyHost : string = "127.0.0.1"
+        @label "Ready host"
+        @description "The host whose ready port is probed, named in the composing program's net grant."
+        @synonyms "host, address"
+        @tier "infra"
+      readyPort : number = 0
+        @label "Ready port"
+        @description "The TCP port that accepts connections once the daemon is ready; one that already accepts connections is reused and nothing is started. It is named in the composing program's net grant."
+        @synonyms "port, listen port"
+        @tier "infra"
+      readyTimeoutMs : number = 30000
+        @label "Ready timeout"
+        @description "Milliseconds to wait for the ready port after the child starts before answering daemon_timeout."
+        @synonyms "timeout, startup deadline"
+        @tier "infra"
+      pollMs : number = 500
+        @label "Poll interval"
+        @description "Milliseconds between ready-port probes after the child starts."
+        @synonyms "poll interval, probe interval"
+        @tier "infra"
+      inheritEnv : [string] = []
+        @label "Host variables inherited"
+        @description "Names of environment variables the child inherits from the host (for example HOME); each must be in the composing program's env grant. The start's env names every other variable."
+        @synonyms "inherit env, pass through variables"
+        @tier "domain"
+    }
+
+    listens {
+      DAEMON_START -> input {
+        argv : [string]!
+        env : (Map string string)?
+      }
+        @description "Start the daemon with these arguments, or reuse the process already listening on the ready port; env, when given, is the child's environment."
+        @synonyms "start daemon, run in background"
+      DAEMON_STOP -> input {
+      }
+        @description "Send TERM to the daemon this atom started; a reused daemon is not stopped."
+        @synonyms "stop daemon, kill process"
+    }
+  }
+
+  page boot as DaemonOrbitalStart -> Daemon
+}

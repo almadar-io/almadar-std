@@ -119,6 +119,8 @@ orbital AgentConversationOrbital {
     working : boolean @description "The assistant is answering." = false
     chatInstructions : string @description "The ephemeral conversation's own instructions (empty: the assistant's configured ones)." = ""
     chatTools : [AgentToolData] @description "The ephemeral conversation's own tools (empty: none)." = []
+    chatHasLive : boolean @description "The ephemeral conversation was started with a `live` flag, so each ask forwards it; absent stays absent." = false
+    chatLive : boolean @description "The ephemeral conversation's `live` flag: whether its turns stream steps." = false
     chatTitle : string @description "The ephemeral conversation's header title." = ""
     chatSubtitle : string @description "The ephemeral conversation's header subtitle." = ""
     chatAvatar : string @description "The ephemeral conversation's header avatar image." = ""
@@ -450,7 +452,7 @@ orbital AgentConversationOrbital {
           gap: sm
           type: stack
         })
-      ASK -> idle when (and @config.ephemeral (not @entity.working) (not (= (default ?message "") "")))
+      ASK -> idle when (and @config.ephemeral (not @entity.working) (not (= (default ?message "") "")) (not @entity.chatHasLive))
         (set @entity.entries (array/append @entity.entries { type: message, role: user, content: ?message, timestamp: @now }))
         (set @entity.working true)
         (emit ASSISTANT_EPHEMERAL_SEND {
@@ -527,10 +529,90 @@ orbital AgentConversationOrbital {
           gap: sm
           type: stack
         })
+      ASK -> idle when (and @config.ephemeral (not @entity.working) (not (= (default ?message "") "")) @entity.chatHasLive)
+        (set @entity.entries (array/append @entity.entries { type: message, role: user, content: ?message, timestamp: @now }))
+        (set @entity.working true)
+        (emit ASSISTANT_EPHEMERAL_SEND {
+          messages: (array/map (array/filter @entity.entries (fn item (= @item.type "message"))) (fn item { role: (object/get @item role "user"), content: (object/get @item content "") }))
+          instructions: @entity.chatInstructions
+          tools: @entity.chatTools
+          ephemeral: true
+          live: @entity.chatLive
+        })
+        (render-ui main {
+          children: [(if @config.ephemeral { type: stack, direction: horizontal, align: center, gap: sm, className: shrink-0, children: [{ type: avatar, src: (object/get @entity chatAvatar ""), name: @entity.chatTitle, size: md, className: (if (= @entity.chatAvatar "") hidden "") }, { type: stack, direction: vertical, gap: none, children: [{ type: typography, variant: h4, content: @entity.chatTitle }, { type: typography, variant: caption, content: @entity.chatSubtitle }] }] } {
+            children: [{
+              action: NEW_CHAT_CLICKED
+              aria-label: @config.newChatLabel
+              icon: message-square-plus
+              label: @config.newChatLabel
+              size: sm
+              type: button
+              variant: secondary
+            }, {
+              children: [{
+                action: OPEN_CHATS_CLICKED
+                aria-label: @config.chatsLabel
+                label: @config.chatsLabel
+                size: sm
+                type: button
+                variant: ghost
+              }, {
+                action: OPEN_MEMORY_CLICKED
+                aria-label: @config.memoryLabel
+                label: @config.memoryLabel
+                size: sm
+                type: button
+                variant: ghost
+              }, {
+                children: (array/map @config.links (fn item {
+                  href: @item.href
+                  label: @item.label
+                  size: sm
+                  type: button
+                  variant: ghost
+                }))
+                direction: horizontal
+                gap: xs
+                type: stack
+              }]
+              align: center
+              className: shrink-0
+              direction: horizontal
+              gap: none
+              type: stack
+            }]
+            align: center
+            className: shrink-0
+            direction: horizontal
+            gap: sm
+            justify: between
+            wrap: true
+            type: stack
+          }), {
+            activities: @entity.entries
+            className: flex-1
+            emptyTitle: @config.emptyTitle
+            idPrefix: agent-conversation
+            rawLlmPreferenceKey: agent-conversation-raw-llm
+            type: agent-chat-feed
+            working: @entity.working
+          }, {
+            placeholder: @config.placeholder
+            sendEvent: ASK
+            type: chat-bar
+          }]
+          className: "h-full min-h-0 flex-1"
+          direction: vertical
+          gap: sm
+          type: stack
+        })
       START_CHAT -> idle when (and @config.ephemeral (not @entity.working))
         (set @entity.entries (if (= (default ?greeting "") "") [] [{ type: message, role: assistant, content: ?greeting, timestamp: @now }]))
         (set @entity.chatInstructions (default ?instructions ""))
         (set @entity.chatTools (object/get ? tools []))
+        (set @entity.chatHasLive (object/has ? live))
+        (set @entity.chatLive (default ?live false))
         (set @entity.chatTitle (default ?title ""))
         (set @entity.chatSubtitle (default ?subtitle ""))
         (set @entity.chatAvatar (default ?avatar ""))
@@ -1152,6 +1234,7 @@ orbital AgentConversationOrbital {
         instructions : string
         tools : [AgentToolData]
         ephemeral : boolean!
+        live : boolean
       }
         @description "An ephemeral conversation asked something: the whole conversation so far (greeting included), and its own `instructions` and `tools`. Nothing is stored or remembered; the assistant answers under exactly these."
         @synonyms "ask privately, scoped ask"
@@ -1216,8 +1299,9 @@ orbital AgentConversationOrbital {
         title : string
         subtitle : string
         avatar : string
+        live : boolean
       }
-        @description "Start an ephemeral conversation (only on an AgentConversation whose `ephemeral` knob is on): it opens with `greeting` as the assistant's first message under a header of `title`, `subtitle` and `avatar` (an image URL), and every ask runs under `instructions` (empty: the assistant's configured ones) and exactly `tools` (absent or `[]`: none). Ignored while it is answering."
+        @description "Start an ephemeral conversation (only on an AgentConversation whose `ephemeral` knob is on): it opens with `greeting` as the assistant's first message under a header of `title`, `subtitle` and `avatar` (an image URL), and every ask runs under `instructions` (empty: the assistant's configured ones) and exactly `tools` (absent or `[]`: none). Ignored while it is answering. `live`, when given, is forwarded on every ask and decides whether its turns stream steps; absent, the assistant's default for an ephemeral turn holds."
         @synonyms "open private chat, begin scoped conversation"
       CHATS_LISTED {
         data : [AgentChatRow]

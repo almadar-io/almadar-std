@@ -1,0 +1,216 @@
+app std-a11y-probe-documents [
+  version: "1.0.0",
+  exec: ["pdftotext"],
+  description: "std-a11y-probe-documents — reads the documents a page links and finds PDFs with no text layer. PROBE_RUN { key, pageUrl } asks the tab already at pageUrl for its links (PAGE_LINKS); the anchors with the download flag, or whose href matches a documentPatterns entry, are the documents, each href once. At most maxPdfs of them are checked in page order; DOCUMENTS_UNCHECKED { key, unchecked, total } reports the rest, never silently. Each document is PAGE_DOWNLOAD { key, index } then PAGE_DOWNLOADED { path }, then read page by page by the composed std-pdf-text. A PDF none of whose pages carries text (PDF_NO_TEXT) is the pdf-scanned finding (WCAG 1.1.1, EN 301 549 chapter 10; confirmed: no text layer is a measured fact). A PDF with text is no finding and answers DOCUMENT_READ { key, url, path, pages } so the organism can add its text to a knowledge base. A document that cannot be downloaded, or is not a readable PDF, answers DOCUMENT_UNREADABLE and the run goes on. PROBE_DONE { key, probe, findings } ends the run; PAGE_FAILED on the links read answers PROBE_FAILED { key, probe, error, code } with the page's own code, and a run while another is in flight probe_busy. The atom composes no browser: the composer wires the page events to std-chrome, and grants the filesystem read of the download directory that pdftotext opens; the pdftotext exec grant is the atom's own. The page is not changed, so nothing is restored. Answers count only under this run's keys."
+]
+;; @capabilities "find scanned PDFs without a text layer among a page's linked documents, read linked PDFs for a knowledge base"
+uses Spec from "almadar-std/probe-documents"
+uses Pdf from "std/behaviors/std-pdf-text"
+
+type WcagRef = { criterion : string!, level : "A" | "AA" | "AAA"!, version : "2.0" | "2.1" | "2.2"! }
+type A11yFinding = { id : string!, pageUrl : string!, rule : string!, wcag : [WcagRef]!, method : "engine" | "probe" | "llm"!, engines : [string]!, impact : "critical" | "serious" | "moderate" | "minor"!, confidence : "confirmed" | "needs-verification"!, selector : string!, snippet : string!, evidence : string!, count : number! }
+type PageLink = { index : number!, text : string!, href : string!, download : boolean!, kind : "link" | "button"! }
+type PdfPage = { page : number!, text : string! }
+type DocLink = { index : number!, text : string!, href : string! }
+
+orbital DocumentsOrbital {
+  entity DocumentsRun [runtime] {
+    id : string!
+    runKey : string @description "The caller's name for the run in flight; blank when idle." = ""
+    pageUrl : string @description "The page the run in flight is about." = ""
+    docs : [DocLink] @description "The documents to check, in page order, each href once, at most maxPdfs." = []
+    total : number @description "How many documents the page links, before the maxPdfs cap." = 0
+    pos : number @description "The document being downloaded or read." = 0
+    path : string @description "Where the download of the current document landed." = ""
+    findings : [A11yFinding] @description "The pdf-scanned findings so far." = []
+  }
+
+  trait PdfCli = Pdf.traits.PdfCli {
+    listens {
+      PdfText.PDF_EXEC -> CLI_RUN
+    }
+  }
+
+  trait PdfText = Pdf.traits.PdfText {
+    listens {
+      DocumentsProbe.PDF_REQUEST -> PDF_READ
+      PdfCli.CLI_DONE -> PDF_RAN
+      PdfCli.CLI_FAILED -> PDF_CLI_FAILED
+      PDF_READ {
+        key : string!
+        path : string!
+      }
+      PDF_RAN {
+        stage : string!
+        exitCode : number!
+        signal : number!
+        stdout : string!
+        stdoutBytes : bytes!
+        stderr : string!
+      }
+      PDF_CLI_FAILED {
+        stage : string!
+        error : string!
+        code : string!
+      }
+    }
+  }
+
+  trait DocumentsProbe -> DocumentsRun [optimistic] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      PROBE_RUN -> linking
+        (set @entity.runKey @payload.key)
+        (set @entity.pageUrl @payload.pageUrl)
+        (set @entity.docs [])
+        (set @entity.total 0)
+        (set @entity.pos 0)
+        (set @entity.findings [])
+        (emit PAGE_LINKS { key: (str/concat @payload.key ":links") })
+    }
+
+    state linking {
+      INIT -> idle
+      PROBE_RUN -> linking
+        (emit PROBE_FAILED { key: @payload.key, probe: "documents", error: (str/concat "a run on " @entity.pageUrl " is in flight"), code: "probe_busy" })
+      PAGE_FAILED -> idle when (= @payload.key (str/concat @entity.runKey ":links"))
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "documents", error: @payload.error, code: @payload.code })
+      PAGE_LINKS_READ -> stepping when (= @payload.key (str/concat @entity.runKey ":links"))
+        (let ((found (array/reduce (array/filter @payload.links (fn l (and (== @l.kind "link") (!= @l.href "") (or @l.download (array/some @config.documentPatterns (fn p (validate/pattern @l.href @p))))))) [] (fn acc l (if (array/some @acc (fn d (== @d.href @l.href))) @acc (array/append @acc { index: @l.index, text: @l.text, href: @l.href }))))))
+          (do
+            (set @entity.total (array/len @found))
+            (set @entity.docs (array/take @found @config.maxPdfs))
+            (emit DOCS_NEXT { })))
+    }
+
+    state stepping {
+      INIT -> idle
+      PROBE_RUN -> stepping
+        (emit PROBE_FAILED { key: @payload.key, probe: "documents", error: (str/concat "a run on " @entity.pageUrl " is in flight"), code: "probe_busy" })
+      DOCS_NEXT -> downloading when (< @entity.pos (array/len @entity.docs))
+        (emit PAGE_DOWNLOAD { key: (str/concat @entity.runKey ":dl:" @entity.pos), index: (object/get (default (array/nth @entity.docs @entity.pos) { index: 0, text: "", href: "" }) "index") })
+      DOCS_NEXT -> idle when (>= @entity.pos (array/len @entity.docs))
+        (when (> @entity.total (array/len @entity.docs))
+          (emit DOCUMENTS_UNCHECKED { key: @entity.runKey, unchecked: (- @entity.total (array/len @entity.docs)), total: @entity.total }))
+        (emit PROBE_DONE { key: @entity.runKey, probe: "documents", findings: @entity.findings })
+        (set @entity.runKey "")
+    }
+
+    state downloading {
+      INIT -> idle
+      PROBE_RUN -> downloading
+        (emit PROBE_FAILED { key: @payload.key, probe: "documents", error: (str/concat "a run on " @entity.pageUrl " is in flight"), code: "probe_busy" })
+      PAGE_DOWNLOADED -> reading when (= @payload.key (str/concat @entity.runKey ":dl:" @entity.pos))
+        (set @entity.path @payload.path)
+        (emit PDF_REQUEST { key: (str/concat @entity.runKey ":pdf:" @entity.pos), path: @payload.path })
+      PAGE_FAILED -> stepping when (= @payload.key (str/concat @entity.runKey ":dl:" @entity.pos))
+        (emit DOCUMENT_UNREADABLE { key: @entity.runKey, url: (object/get (default (array/nth @entity.docs @entity.pos) { index: 0, text: "", href: "" }) "href"), error: @payload.error, code: @payload.code })
+        (set @entity.pos (+ @entity.pos 1))
+        (emit DOCS_NEXT { })
+    }
+
+    state reading {
+      INIT -> idle
+      PROBE_RUN -> reading
+        (emit PROBE_FAILED { key: @payload.key, probe: "documents", error: (str/concat "a run on " @entity.pageUrl " is in flight"), code: "probe_busy" })
+      PDF_TEXT -> stepping when (= @payload.key (str/concat @entity.runKey ":pdf:" @entity.pos))
+        (emit DOCUMENT_READ { key: @entity.runKey, url: (object/get (default (array/nth @entity.docs @entity.pos) { index: 0, text: "", href: "" }) "href"), path: @entity.path, pages: @payload.pages })
+        (set @entity.pos (+ @entity.pos 1))
+        (emit DOCS_NEXT { })
+      PDF_NO_TEXT -> stepping when (= @payload.key (str/concat @entity.runKey ":pdf:" @entity.pos))
+        (let ((doc (default (array/nth @entity.docs @entity.pos) { index: 0, text: "", href: "" })))
+          (do
+            (set @entity.findings (array/append @entity.findings {
+              id: (str/concat "pdf-scanned:" @entity.pageUrl ":" @doc.href),
+              pageUrl: @entity.pageUrl,
+              rule: "pdf-scanned",
+              wcag: [{ criterion: "1.1.1", level: "A", version: "2.0" }],
+              method: "probe",
+              engines: ["probe"],
+              impact: "serious",
+              confidence: "confirmed",
+              selector: (str/concat "a[href=\"" @doc.href "\"]"),
+              snippet: (str/concat "<a href=\"" @doc.href "\">" @doc.text "</a> is a PDF of " @payload.pageCount " pages with no text"),
+              evidence: "",
+              count: 1
+            }))
+            (set @entity.pos (+ @entity.pos 1))
+            (emit DOCS_NEXT { })))
+      PDF_FAILED -> stepping when (= @payload.key (str/concat @entity.runKey ":pdf:" @entity.pos))
+        (emit DOCUMENT_UNREADABLE { key: @entity.runKey, url: (object/get (default (array/nth @entity.docs @entity.pos) { index: 0, text: "", href: "" }) "href"), error: @payload.error, code: @payload.code })
+        (set @entity.pos (+ @entity.pos 1))
+        (emit DOCS_NEXT { })
+    }
+
+    emits {
+      PROBE_DONE -> external { key : string!  probe : string!  findings : [A11yFinding]! }
+        @description "The run's findings: one pdf-scanned finding per linked PDF without a text layer, none otherwise."
+        @synonyms "documents check, scanned pdf check"
+        @tier "primary"
+      PROBE_FAILED -> external { key : string!  probe : string!  error : string!  code : string! }
+        @description "The run failed: code is probe_busy or the page's own failure code from reading the links."
+        @synonyms "documents probe failed"
+        @tier "primary"
+      DOCUMENT_READ -> external { key : string!  url : string!  path : string!  pages : [PdfPage]! }
+        @description "A linked PDF with a text layer was read: its url, the downloaded path and its text page by page, for a knowledge base."
+        @synonyms "document text, pdf read"
+        @tier "domain"
+      DOCUMENT_UNREADABLE -> external { key : string!  url : string!  error : string!  code : string! }
+        @description "A linked document could not be downloaded or is not a readable PDF; the run went on without it."
+        @synonyms "document failed"
+        @tier "domain"
+      DOCUMENTS_UNCHECKED -> external { key : string!  unchecked : number!  total : number! }
+        @description "The page links more documents than the maxPdfs knob; unchecked of total were not checked."
+        @synonyms "documents over the cap"
+        @tier "domain"
+      PAGE_LINKS -> external { key : string! }
+        @description "Ask the tab for its links and buttons."
+        @tier "secondary"
+      PAGE_DOWNLOAD -> external { key : string!  index : number }
+        @description "Download the link with this index from PAGE_LINKS into the download directory."
+        @tier "secondary"
+      PDF_REQUEST { key : string!  path : string! }
+        @description "Internal: ask the composed std-pdf-text to read the downloaded file."
+        @tier "internal"
+      DOCS_NEXT { }
+        @description "Internal: take the next document or end the run."
+        @tier "internal"
+    }
+
+    listens {
+      PROBE_RUN { key : string!  pageUrl : string! }
+        @description "Download the documents the page links and find the PDFs without text."
+        @synonyms "documents probe, scanned pdf probe"
+      PAGE_LINKS_READ { key : string!  links : [PageLink]! }
+        @description "The links and buttons of the tab."
+      PAGE_DOWNLOADED { key : string!  path : string!  url : string!  size : number! }
+        @description "The download finished: where the file is."
+      PAGE_FAILED { key : string!  error : string!  code : string! }
+        @description "A page request failed."
+      PdfText.PDF_TEXT -> PDF_TEXT
+      PdfText.PDF_NO_TEXT -> PDF_NO_TEXT
+      PdfText.PDF_FAILED -> PDF_FAILED
+      PDF_TEXT { key : string!  pages : [PdfPage]! }
+        @description "std-pdf-text read the PDF: its pages."
+      PDF_NO_TEXT { key : string!  pageCount : number! }
+        @description "std-pdf-text found no text on any page."
+      PDF_FAILED { key : string!  error : string!  code : string! }
+        @description "std-pdf-text could not read the file."
+    }
+
+    config {
+      maxPdfs : number = 10
+        @label "Most documents"
+        @description "The most linked documents downloaded and read per page; the rest are counted in DOCUMENTS_UNCHECKED."
+        @tier "domain"
+      documentPatterns : [string] = ["\\.[pP][dD][fF]([?#]|$)"]
+        @label "Document patterns"
+        @description "Regex patterns of the shared dialect; an anchor whose href matches one is a document, like an anchor with the download flag."
+        @tier "domain"
+    }
+  }
+
+  page boot as DocumentsProbePage -> DocumentsProbe, PdfText, PdfCli
+}

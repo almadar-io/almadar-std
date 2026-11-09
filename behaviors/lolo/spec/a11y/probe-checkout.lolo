@@ -1,0 +1,33 @@
+app a11y-probe-checkout-spec [
+  version: "1.0.0",
+  description: "Design contract for the checkout probe (WCAG 2.1.1, 3.3.4, 1.1.1). PROBE_RUN { key, pageUrl } on a tab at a product page walks add-to-cart, cart and checkout by keyboard (Tab to the control, Enter), runs the forms probe on every page reached through FORMS_RUN and FORMS_PROBE_DONE, stops at the checkout page and Tab-walks to the pay control without pressing Enter. It never submits an order or a payment and never activates a control on the stop list. PROBE_DONE carries all findings and CHECKOUT_WALKED { key, reached, stoppedAt, stopControlReachable } is sent beside it."
+]
+
+type WcagRef = { criterion : string!, level : "A" | "AA" | "AAA"!, version : "2.0" | "2.1" | "2.2"! }
+type A11yFinding = { id : string!, pageUrl : string!, rule : string!, wcag : [WcagRef]!, method : "engine" | "probe" | "llm"!, engines : [string]!, impact : "critical" | "serious" | "moderate" | "minor"!, confidence : "confirmed" | "needs-verification"!, selector : string!, snippet : string!, evidence : string!, count : number! }
+
+orbital A11yProbeCheckoutSpec {
+  expects entity CheckoutRun [runtime] {
+    id : string!
+  }
+  expects trait CheckoutProbe {
+    state idle {
+      PROBE_RUN -> forms
+    }
+    state returning {
+      PAGE_LOADED -> idle
+    }
+    emits {
+      PAGE_MEASURE { key : string!  expression : string! }
+      PAGE_KEY { key : string!  keyName : "Tab" | "Enter" | "Space" | "Escape" | "ArrowDown" | "ArrowUp" | "ArrowLeft" | "ArrowRight" | "Home" | "End"!  shift : boolean }
+      PAGE_FOCUSED { key : string! }
+      PAGE_TEXT { key : string! }
+      PAGE_NAVIGATE { key : string!  url : string! }
+      FORMS_RUN { key : string!  pageUrl : string! }
+      PROBE_DONE { key : string!  probe : string!  findings : [A11yFinding]! }
+      PROBE_FAILED { key : string!  probe : string!  error : string!  code : string! }
+      CHECKOUT_WALKED { key : string!  reached : [string]!  stoppedAt : string!  stopControlReachable : boolean! }
+    }
+  }
+  expects page boot -> CheckoutProbe
+}

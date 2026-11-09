@@ -1,0 +1,962 @@
+app std-chrome [
+  version: "1.0.0",
+  description: "std-chrome — drives one headless Chrome tab through a composed std-daemon (launch) and std-cdp (transport). CHROME_START creates the profile and download directories (anchored knobs), launches Chrome detached with --headless=new, --remote-debugging-port, --user-data-dir and the extraArgs knob (no --no-sandbox by default: the container organism sets it), connects, creates a target (Target.createTarget about:blank), attaches it with a flat session (Target.attachToTarget), enables Page, Runtime and Accessibility on the session, sets Browser.setDownloadBehavior allow into the download directory with events, and answers CHROME_READY. Every page request carries a caller key, runs one at a time (a second one answers PAGE_FAILED busy) and answers on that key. NAVIGATE: Page.navigate, then the session's Page.loadEventFired or the navigation timeout, then location and title; an errorText answers navigation-failed. TEXT, LINKS, FOCUSED and MEASURE are Runtime.evaluate of measuring-only expressions held in knobs; LINKS and CLICK share one element list. CLICK clicks and, after clickSettleMs, reports navigated (location changed or main-frame Page.frameNavigated). KEY sends Input.dispatchKeyEvent keyDown and keyUp from the keys table. VIEWPORT is Emulation.setDeviceMetricsOverride with page zoom for textZoom. SCREENSHOT is Page.captureScreenshot (base64 to bytes); AX_TREE is Accessibility.getFullAXTree. DOWNLOAD clicks as CLICK does and waits for Browser.downloadWillBegin and downloadProgress completed; the path is the filePath of the completed event. PRINT_PDF navigates about:blank, sets the document content from Page.getFrameTree and prints with Page.printToPDF. INJECT reads the script file (a path relative to the scriptDir knob; an absolute path or one that climbs out with .. answers PAGE_FAILED bad-script) and evaluates it. CHROME_STOP closes the target, disconnects and stops the browser it started (a browser that was already listening is left running). The composer grants exec for the Chrome binary, net 127.0.0.1 on the port, fs create, read and write on the profile directory, fs create and read on the download directory and fs read on the scriptDir directory, and sets ChromeDaemon commands (default the ORB_CHROME environment variable), readyPort and the CdpHttp and CdpWs port when it changes port."
+]
+;; @capabilities "drive a headless Chrome tab: navigate, read text and links, click, press keys, read focus, resize, screenshot, accessibility tree, download, print PDF, inject and measure"
+uses Spec from "almadar-std/chrome"
+uses Daemon from "std/behaviors/std-daemon"
+uses CdpAtom from "std/behaviors/std-cdp"
+uses Delay from "std/behaviors/std-delay"
+
+type PageLink = { index : number!, text : string!, href : string!, download : boolean!, kind : "link" | "button"! }
+type PageRect = { x : number!, y : number!, width : number!, height : number! }
+type PageFocus = { tag : string!, role : string!, name : string!, selector : string!, rect : PageRect! }
+type PageAxNode = { id : string!, parent : string?, role : string!, name : string!, ignored : boolean! }
+type ChromePath = { anchor : "cwd" | "exe-dir" | { env : string! }!, path : string! }
+type ChromeKey = { key : string!, code : string!, vk : number!, text : string, nav : boolean }
+type EvalException = { text : string! }
+type EvalValue = { value : string? }
+type EvalReply = { result : { result : EvalValue!, exceptionDetails : EvalException? }! }
+type MeasureHead = { result : { result : { type : string! }!, exceptionDetails : EvalException? }! }
+type InjectReply = { result : { exceptionDetails : EvalException? }! }
+type NavigateReply = { result : { frameId : string!, errorText : string? }! }
+type CreateTargetReply = { result : { targetId : string! }! }
+type AttachReply = { result : { sessionId : string! }! }
+type DataReply = { result : { data : string! }! }
+type FrameTreeReply = { result : { frameTree : { frame : { id : string! }! }! }! }
+type AxValue = { value : string? }
+type AxNodeWire = { nodeId : string!, ignored : boolean?, role : AxValue?, name : AxValue?, parentId : string? }
+type AxReply = { result : { nodes : [AxNodeWire]! }! }
+type NavInfo = { url : string!, title : string! }
+type TextRead = { url : string!, title : string!, lang : string!, text : string! }
+type LinkList = [PageLink]
+type ClickRead = { found : boolean!, url : string! }
+type FocusRead = { focused : PageFocus? }
+type FrameNavigated = { id : string!, parentId : string? }
+type FrameNavigatedEvent = { params : { frame : FrameNavigated! }! }
+type DownloadBegin = { guid : string!, url : string!, suggestedFilename : string! }
+type DownloadBeginEvent = { params : DownloadBegin! }
+type DownloadProgress = { guid : string!, receivedBytes : number!, state : string!, filePath : string? }
+type DownloadProgressEvent = { params : DownloadProgress! }
+
+orbital ChromeOrbital {
+  entity ChromeTab [runtime] {
+    id : string!
+    sessionId : string @description "The flat session id of the attached page target; every page command carries it."
+    url : string @description "The location after the last navigation or click."
+    targetId : string @description "The page target Target.createTarget made." = ""
+    browser : string @description "The Browser version string CDP_CONNECTED reported." = ""
+    op : string @description "The page operation in flight." = ""
+    callerKey : string @description "The key of the request in flight; every answer carries it." = ""
+    stage : string @description "The step of the operation in flight; it is also the key of the CDP command awaited." = ""
+    loadSeen : boolean @description "Page.loadEventFired arrived before the Page.navigate reply." = false
+    navSeen : boolean @description "A main-frame Page.frameNavigated arrived during a click." = false
+    startUrl : string @description "The location at the moment of the click." = ""
+    profilePath : string @description "The resolved profile directory." = ""
+    downloadPath : string @description "The resolved download directory." = ""
+    keyName : string @description "The key of the PAGE_KEY in flight." = ""
+    shift : boolean @description "Shift is held for the PAGE_KEY in flight." = false
+    html : string @description "The HTML of the PAGE_PRINT_PDF in flight." = ""
+    keyNav : boolean @description "The key of the PAGE_KEY in flight activates controls, so the press waits for a navigation." = false
+    dlGuid : string @description "Guid of the download in flight." = ""
+    dlName : string @description "Suggested file name of the download in flight." = ""
+    dlUrl : string @description "Source url of the download in flight." = ""
+  }
+
+  trait ChromeDaemon = Daemon.traits.Daemon {
+    listens {
+      Chrome.DAEMON_START -> DAEMON_START
+      Chrome.DAEMON_STOP -> DAEMON_STOP
+    }
+    config {
+      commands: [{ anchor: { env: "ORB_CHROME" } }]
+      readyPort: 9222
+    }
+  }
+
+  trait Cdp = CdpAtom.traits.Cdp {
+    listens {
+      Chrome.CDP_CONNECT -> CDP_CONNECT
+      Chrome.CDP_COMMAND -> CDP_COMMAND
+      Chrome.CDP_DISCONNECT -> CDP_DISCONNECT
+      CDP_VERSION {
+        status : number!
+        body : string!
+      }
+      CDP_WS_OPENED { }
+      CDP_WS_MESSAGE {
+        text : string
+        binary : boolean!
+      }
+      CDP_WS_CLOSED {
+        code : number!
+        reason : string!
+      }
+      CDP_WS_FAILED {
+        error : string!
+        kind : string!
+      }
+      CDP_TIMEOUT {
+        key : string!
+      }
+      CdpHttp.HTTP_REPLIED -> CDP_VERSION with { status: ?status, body: (default (bytes/to-string ?body) "") } when (= ?key "cdp-version")
+      CdpHttp.HTTP_FAILED -> CDP_CONNECT_FAILED with { error: ?error, kind: ?kind } when (= ?key "cdp-version")
+      CdpWs.WS_OPENED -> CDP_WS_OPENED
+      CdpWs.WS_MESSAGE -> CDP_WS_MESSAGE with { text: ?text, binary: ?binary }
+      CdpWs.WS_CLOSED -> CDP_WS_CLOSED with { code: ?code, reason: ?reason }
+      CdpWs.WS_FAILED -> CDP_WS_FAILED with { error: ?error, kind: ?kind }
+      CdpDelay.ELAPSED -> CDP_TIMEOUT with { key: ?key }
+    }
+  }
+
+  trait CdpHttp = CdpAtom.traits.CdpHttp { }
+
+  trait CdpWs = CdpAtom.traits.CdpWs {
+    config {
+    }
+  }
+
+  trait CdpDelay = CdpAtom.traits.CdpDelay { }
+
+  trait ChromeDelay = Delay.traits.Delay {
+    listens {
+      Chrome.CHROME_TIMER_ARM -> START
+      Chrome.CHROME_TIMER_CANCEL -> CANCEL
+    }
+  }
+
+  trait Chrome -> ChromeTab [optimistic] {
+    initial: stopped
+
+    state stopped {
+      INIT -> stopped
+        (set @entity.stage "")
+      CHROME_START -> starting
+        (set @entity.stage "mk-profile")
+        (set @entity.sessionId "")
+        (os/mkdir @config.preferencesDir true { emit: { success: CHROME_DIR_MADE, failure: CHROME_HOST_FAILED } })
+      CHROME_STOP -> stopped
+        (emit CHROME_STOPPED { })
+      PAGE_NAVIGATE -> stopped
+        (emit PAGE_FAILED { key: @payload.key error: "the browser is not started; send CHROME_START first" code: "not-started" })
+      PAGE_TEXT -> stopped
+        (emit PAGE_FAILED { key: @payload.key error: "the browser is not started; send CHROME_START first" code: "not-started" })
+      PAGE_LINKS -> stopped
+        (emit PAGE_FAILED { key: @payload.key error: "the browser is not started; send CHROME_START first" code: "not-started" })
+      PAGE_CLICK -> stopped
+        (emit PAGE_FAILED { key: @payload.key error: "the browser is not started; send CHROME_START first" code: "not-started" })
+      PAGE_KEY -> stopped
+        (emit PAGE_FAILED { key: @payload.key error: "the browser is not started; send CHROME_START first" code: "not-started" })
+      PAGE_FOCUSED -> stopped
+        (emit PAGE_FAILED { key: @payload.key error: "the browser is not started; send CHROME_START first" code: "not-started" })
+      PAGE_VIEWPORT -> stopped
+        (emit PAGE_FAILED { key: @payload.key error: "the browser is not started; send CHROME_START first" code: "not-started" })
+      PAGE_SCREENSHOT -> stopped
+        (emit PAGE_FAILED { key: @payload.key error: "the browser is not started; send CHROME_START first" code: "not-started" })
+      PAGE_AX_TREE -> stopped
+        (emit PAGE_FAILED { key: @payload.key error: "the browser is not started; send CHROME_START first" code: "not-started" })
+      PAGE_DOWNLOAD -> stopped
+        (emit PAGE_FAILED { key: @payload.key error: "the browser is not started; send CHROME_START first" code: "not-started" })
+      PAGE_PRINT_PDF -> stopped
+        (emit PAGE_FAILED { key: @payload.key error: "the browser is not started; send CHROME_START first" code: "not-started" })
+      PAGE_INJECT -> stopped
+        (emit PAGE_FAILED { key: @payload.key error: "the browser is not started; send CHROME_START first" code: "not-started" })
+      PAGE_MEASURE -> stopped
+        (emit PAGE_FAILED { key: @payload.key error: "the browser is not started; send CHROME_START first" code: "not-started" })
+    }
+
+    state starting {
+      INIT -> starting
+
+      CHROME_START -> starting
+        (emit CHROME_FAILED { code: "busy" message: "the browser is already starting" })
+      CHROME_STOP -> starting
+        (emit CHROME_FAILED { code: "busy" message: "the browser is still starting" })
+      PAGE_NAVIGATE -> starting
+        (emit PAGE_FAILED { key: @payload.key error: "the browser is still starting" code: "not-ready" })
+      PAGE_TEXT -> starting
+        (emit PAGE_FAILED { key: @payload.key error: "the browser is still starting" code: "not-ready" })
+      PAGE_LINKS -> starting
+        (emit PAGE_FAILED { key: @payload.key error: "the browser is still starting" code: "not-ready" })
+      PAGE_CLICK -> starting
+        (emit PAGE_FAILED { key: @payload.key error: "the browser is still starting" code: "not-ready" })
+      PAGE_KEY -> starting
+        (emit PAGE_FAILED { key: @payload.key error: "the browser is still starting" code: "not-ready" })
+      PAGE_FOCUSED -> starting
+        (emit PAGE_FAILED { key: @payload.key error: "the browser is still starting" code: "not-ready" })
+      PAGE_VIEWPORT -> starting
+        (emit PAGE_FAILED { key: @payload.key error: "the browser is still starting" code: "not-ready" })
+      PAGE_SCREENSHOT -> starting
+        (emit PAGE_FAILED { key: @payload.key error: "the browser is still starting" code: "not-ready" })
+      PAGE_AX_TREE -> starting
+        (emit PAGE_FAILED { key: @payload.key error: "the browser is still starting" code: "not-ready" })
+      PAGE_DOWNLOAD -> starting
+        (emit PAGE_FAILED { key: @payload.key error: "the browser is still starting" code: "not-ready" })
+      PAGE_PRINT_PDF -> starting
+        (emit PAGE_FAILED { key: @payload.key error: "the browser is still starting" code: "not-ready" })
+      PAGE_INJECT -> starting
+        (emit PAGE_FAILED { key: @payload.key error: "the browser is still starting" code: "not-ready" })
+      PAGE_MEASURE -> starting
+        (emit PAGE_FAILED { key: @payload.key error: "the browser is still starting" code: "not-ready" })
+      CHROME_DIR_MADE -> starting when (= @entity.stage "mk-profile")
+        (set @entity.stage "rp-profile")
+        (os/realpath @config.profileDir { emit: { success: CHROME_PATH_RESOLVED, failure: CHROME_HOST_FAILED } })
+      CHROME_PATH_RESOLVED -> starting when (and (= @entity.stage "rp-profile") (!= @config.preferences ""))
+        (set @entity.profilePath @payload.path)
+        (set @entity.stage "write-prefs")
+        (os/write-file @config.preferencesFile (bytes/from-string @config.preferences) { emit: { success: CHROME_FILE_WROTE, failure: CHROME_HOST_FAILED } })
+      CHROME_FILE_WROTE -> starting when (= @entity.stage "write-prefs")
+        (set @entity.stage "mk-download")
+        (os/mkdir @config.downloadDir true { emit: { success: CHROME_DIR_MADE, failure: CHROME_HOST_FAILED } })
+      CHROME_PATH_RESOLVED -> starting when (and (= @entity.stage "rp-profile") (= @config.preferences ""))
+        (set @entity.profilePath @payload.path)
+        (set @entity.stage "mk-download")
+        (os/mkdir @config.downloadDir true { emit: { success: CHROME_DIR_MADE, failure: CHROME_HOST_FAILED } })
+      CHROME_DIR_MADE -> starting when (= @entity.stage "mk-download")
+        (set @entity.stage "rp-download")
+        (os/realpath @config.downloadDir { emit: { success: CHROME_PATH_RESOLVED, failure: CHROME_HOST_FAILED } })
+      CHROME_PATH_RESOLVED -> starting when (= @entity.stage "rp-download")
+        (set @entity.downloadPath @payload.path)
+        (set @entity.stage "launch")
+        (emit DAEMON_START { argv: (array/concat ["--headless=new" (str/concat "--remote-debugging-port=" @config.port) "--no-first-run" "--no-default-browser-check" "--disable-gpu" (str/concat "--window-size=" @config.windowWidth "," @config.windowHeight) (str/concat "--user-data-dir=" @entity.profilePath) "about:blank"] @config.extraArgs) })
+      CHROME_DAEMON_READY -> starting when (= @entity.stage "launch")
+        (set @entity.stage "connect")
+        (emit CDP_CONNECT { })
+      CHROME_CONNECTED -> starting when (= @entity.stage "connect")
+        (set @entity.browser @payload.browser)
+        (set @entity.stage "create")
+        (emit CDP_COMMAND { key: "create" method: "Target.createTarget" paramsJson: (json/stringify { url: "about:blank" }) })
+      CHROME_REPLY -> starting when (= @payload.key "create")
+        (let ((r (json/parse @payload.frame CreateTargetReply)))
+          (if (= @r null)
+            (emit CHROME_START_FAILED { code: "bad-reply" message: "Target.createTarget answered an unexpected shape" })
+            (do
+              (set @entity.targetId @r.result.targetId)
+              (set @entity.stage "attach")
+              (emit CDP_COMMAND { key: "attach" method: "Target.attachToTarget" paramsJson: (json/stringify { targetId: @r.result.targetId flatten: true }) }))))
+      CHROME_REPLY -> starting when (= @payload.key "attach")
+        (let ((r (json/parse @payload.frame AttachReply)))
+          (if (= @r null)
+            (emit CHROME_START_FAILED { code: "bad-reply" message: "Target.attachToTarget answered an unexpected shape" })
+            (do
+              (set @entity.sessionId @r.result.sessionId)
+              (set @entity.stage "enable-page")
+              (emit CDP_COMMAND { key: "enable-page" method: "Page.enable" sessionId: @r.result.sessionId paramsJson: (json/stringify { }) }))))
+      CHROME_REPLY -> starting when (= @payload.key "enable-page")
+        (set @entity.stage "enable-runtime")
+        (emit CDP_COMMAND { key: "enable-runtime" method: "Runtime.enable" sessionId: @entity.sessionId paramsJson: (json/stringify { }) })
+      CHROME_REPLY -> starting when (= @payload.key "enable-runtime")
+        (set @entity.stage "enable-ax")
+        (emit CDP_COMMAND { key: "enable-ax" method: "Accessibility.enable" sessionId: @entity.sessionId paramsJson: (json/stringify { }) })
+      CHROME_REPLY -> starting when (= @payload.key "enable-ax")
+        (set @entity.stage "download")
+        (emit CDP_COMMAND { key: "download" method: "Browser.setDownloadBehavior" paramsJson: (json/stringify { behavior: "allow" downloadPath: @entity.downloadPath eventsEnabled: true }) })
+      CHROME_REPLY -> ready when (= @payload.key "download")
+        (set @entity.stage "")
+        (emit CHROME_READY { browser: @entity.browser })
+      CHROME_ERROR -> starting when (= @payload.key @entity.stage)
+        (emit CHROME_START_FAILED { code: @payload.code message: @payload.message })
+      CHROME_START_FAILED -> stopped
+        (emit CHROME_FAILED { code: @payload.code message: @payload.message })
+        (emit CDP_DISCONNECT { })
+        (emit DAEMON_STOP { })
+      CHROME_DAEMON_FAILED -> stopped
+        (emit CHROME_FAILED { code: @payload.code message: @payload.message })
+      CHROME_CDP_FAILED -> stopped
+        (emit CHROME_FAILED { code: @payload.kind message: @payload.error })
+        (emit DAEMON_STOP { })
+      CHROME_HOST_FAILED -> stopped
+        (emit CHROME_FAILED { code: "host-failed" message: (default @payload.error "") })
+    }
+
+    state ready {
+      INIT -> ready
+
+      CHROME_START -> ready
+        (emit CHROME_FAILED { code: "already-started" message: "the browser is already running" })
+      CHROME_STOP -> stopping
+        (set @entity.stage "close-target")
+        (emit CDP_COMMAND { key: "close-target" method: "Target.closeTarget" paramsJson: (json/stringify { targetId: @entity.targetId }) })
+      CHROME_DISCONNECTED -> stopped
+        (emit CHROME_FAILED { code: "disconnected" message: @payload.reason })
+      PAGE_NAVIGATE -> busy
+        (set @entity.op "navigate") (set @entity.callerKey @payload.key) (set @entity.stage "nav") (set @entity.loadSeen false) (set @entity.navSeen false)
+        (emit CDP_COMMAND { key: "nav" method: "Page.navigate" sessionId: @entity.sessionId paramsJson: (json/stringify { url: @payload.url }) })
+        (emit CHROME_TIMER_ARM { key: "op" delayMs: @config.navigationTimeoutMs })
+      PAGE_TEXT -> busy
+        (set @entity.op "text") (set @entity.callerKey @payload.key) (set @entity.stage "text")
+        (emit CDP_COMMAND { key: "text" method: "Runtime.evaluate" sessionId: @entity.sessionId paramsJson: (json/stringify { expression: @config.textScript returnByValue: true }) })
+      PAGE_LINKS -> busy
+        (set @entity.op "links") (set @entity.callerKey @payload.key) (set @entity.stage "links")
+        (emit CDP_COMMAND { key: "links" method: "Runtime.evaluate" sessionId: @entity.sessionId paramsJson: (json/stringify { expression: (str/concat @config.linksScript "(" (json/stringify { sel: @config.elementSelector exts: @config.downloadExtensions }) ")") returnByValue: true }) })
+      PAGE_CLICK -> ready when (= (== @payload.index null) (== @payload.selector null))
+        (emit PAGE_FAILED { key: @payload.key error: "exactly one of index and selector is required" code: "bad-request" })
+      PAGE_CLICK -> busy when (not (= (== @payload.index null) (== @payload.selector null)))
+        (set @entity.op "click") (set @entity.callerKey @payload.key) (set @entity.stage "click") (set @entity.navSeen false)
+        (emit CDP_COMMAND { key: "click" method: "Runtime.evaluate" sessionId: @entity.sessionId paramsJson: (json/stringify { expression: (str/concat @config.clickScript "(" (json/stringify { sel: @config.elementSelector index: (default @payload.index null) selector: (default @payload.selector null) }) ")") returnByValue: true }) })
+      PAGE_KEY -> ready when (= (object/get @config.keys @payload.keyName) null)
+        (emit PAGE_FAILED { key: @payload.key error: "the key name is not in the keys table" code: "unknown-key" })
+      PAGE_KEY -> busy when (!= (object/get @config.keys @payload.keyName) null)
+        (set @entity.op "key") (set @entity.callerKey @payload.key) (set @entity.stage "key-down") (set @entity.keyName @payload.keyName) (set @entity.shift (default @payload.shift false)) (set @entity.loadSeen false) (set @entity.navSeen false)
+        (let ((d (object/get @config.keys @payload.keyName)))
+          (do (set @entity.keyNav (default @d.nav false))
+          (emit CDP_COMMAND { key: "key-down" method: "Input.dispatchKeyEvent" sessionId: @entity.sessionId paramsJson: (json/stringify { type: (if (!= (default @d.text "") "") "keyDown" "rawKeyDown") key: @d.key code: @d.code windowsVirtualKeyCode: @d.vk modifiers: (if (default @payload.shift false) 8 0) text: (default @d.text "") }) })))
+      PAGE_FOCUSED -> busy
+        (set @entity.op "focused") (set @entity.callerKey @payload.key) (set @entity.stage "focused")
+        (emit CDP_COMMAND { key: "focused" method: "Runtime.evaluate" sessionId: @entity.sessionId paramsJson: (json/stringify { expression: (str/concat @config.focusScript "(" (json/stringify @config.implicitRoles) ")") returnByValue: true }) })
+      PAGE_VIEWPORT -> ready when (<= @payload.textZoom 0)
+        (emit PAGE_FAILED { key: @payload.key error: "textZoom must be above zero" code: "bad-request" })
+      PAGE_VIEWPORT -> busy when (> @payload.textZoom 0)
+        (set @entity.op "viewport") (set @entity.callerKey @payload.key) (set @entity.stage "viewport")
+        (emit CDP_COMMAND { key: "viewport" method: "Emulation.setDeviceMetricsOverride" sessionId: @entity.sessionId paramsJson: (json/stringify { width: (math/round (/ @payload.width @payload.textZoom)) height: (math/round (/ @payload.height @payload.textZoom)) deviceScaleFactor: (* @payload.deviceScaleFactor @payload.textZoom) mobile: @payload.mobile }) })
+      PAGE_SCREENSHOT -> busy
+        (set @entity.op "screenshot") (set @entity.callerKey @payload.key) (set @entity.stage "screenshot")
+        (emit CDP_COMMAND { key: "screenshot" method: "Page.captureScreenshot" sessionId: @entity.sessionId paramsJson: (json/stringify { format: "png" captureBeyondViewport: @payload.fullPage }) })
+      PAGE_AX_TREE -> busy
+        (set @entity.op "ax") (set @entity.callerKey @payload.key) (set @entity.stage "ax")
+        (emit CDP_COMMAND { key: "ax" method: "Accessibility.getFullAXTree" sessionId: @entity.sessionId paramsJson: (json/stringify { }) })
+      PAGE_DOWNLOAD -> ready when (= (== @payload.index null) (== @payload.selector null))
+        (emit PAGE_FAILED { key: @payload.key error: "exactly one of index and selector is required" code: "bad-request" })
+      PAGE_DOWNLOAD -> busy when (not (= (== @payload.index null) (== @payload.selector null)))
+        (set @entity.op "download") (set @entity.callerKey @payload.key) (set @entity.stage "dl-click") (set @entity.dlGuid "") (set @entity.dlName "") (set @entity.dlUrl "")
+        (emit CHROME_TIMER_ARM { key: "op" delayMs: @config.downloadTimeoutMs })
+        (emit CDP_COMMAND { key: "dl-click" method: "Runtime.evaluate" sessionId: @entity.sessionId paramsJson: (json/stringify { expression: (str/concat @config.clickScript "(" (json/stringify { sel: @config.elementSelector index: (default @payload.index null) selector: (default @payload.selector null) }) ")") returnByValue: true }) })
+      PAGE_PRINT_PDF -> busy
+        (set @entity.op "pdf") (set @entity.callerKey @payload.key) (set @entity.stage "pdf-blank") (set @entity.html @payload.html)
+        (emit CDP_COMMAND { key: "pdf-blank" method: "Page.navigate" sessionId: @entity.sessionId paramsJson: (json/stringify { url: "about:blank" }) })
+      PAGE_INJECT -> ready when (or (os/path-is-absolute @payload.script) (== (os/path-normalize @payload.script) "..") (str/startsWith (os/path-normalize @payload.script) "../"))
+        (emit PAGE_FAILED { key: @payload.key error: "the script path must be relative and stay under scriptDir" code: "bad-script" })
+      PAGE_INJECT -> busy when (not (or (os/path-is-absolute @payload.script) (== (os/path-normalize @payload.script) "..") (str/startsWith (os/path-normalize @payload.script) "../")))
+        (set @entity.op "inject") (set @entity.callerKey @payload.key) (set @entity.stage "inject-read")
+        (os/read-file { anchor: "cwd", path: (str/concat @config.scriptDir @payload.script) } { emit: { success: CHROME_FILE_READ, failure: CHROME_HOST_FAILED } })
+      PAGE_MEASURE -> busy
+        (set @entity.op "measure") (set @entity.callerKey @payload.key) (set @entity.stage "measure")
+        (emit CDP_COMMAND { key: "measure" method: "Runtime.evaluate" sessionId: @entity.sessionId paramsJson: (json/stringify { expression: @payload.expression returnByValue: true awaitPromise: true }) })
+    }
+
+    state busy {
+      INIT -> busy
+
+      CHROME_START -> busy
+        (emit CHROME_FAILED { code: "already-started" message: "the browser is already running" })
+      PAGE_NAVIGATE -> busy
+        (emit PAGE_FAILED { key: @payload.key error: "another page operation is running on this tab" code: "busy" })
+      PAGE_TEXT -> busy
+        (emit PAGE_FAILED { key: @payload.key error: "another page operation is running on this tab" code: "busy" })
+      PAGE_LINKS -> busy
+        (emit PAGE_FAILED { key: @payload.key error: "another page operation is running on this tab" code: "busy" })
+      PAGE_CLICK -> busy
+        (emit PAGE_FAILED { key: @payload.key error: "another page operation is running on this tab" code: "busy" })
+      PAGE_KEY -> busy
+        (emit PAGE_FAILED { key: @payload.key error: "another page operation is running on this tab" code: "busy" })
+      PAGE_FOCUSED -> busy
+        (emit PAGE_FAILED { key: @payload.key error: "another page operation is running on this tab" code: "busy" })
+      PAGE_VIEWPORT -> busy
+        (emit PAGE_FAILED { key: @payload.key error: "another page operation is running on this tab" code: "busy" })
+      PAGE_SCREENSHOT -> busy
+        (emit PAGE_FAILED { key: @payload.key error: "another page operation is running on this tab" code: "busy" })
+      PAGE_AX_TREE -> busy
+        (emit PAGE_FAILED { key: @payload.key error: "another page operation is running on this tab" code: "busy" })
+      PAGE_DOWNLOAD -> busy
+        (emit PAGE_FAILED { key: @payload.key error: "another page operation is running on this tab" code: "busy" })
+      PAGE_PRINT_PDF -> busy
+        (emit PAGE_FAILED { key: @payload.key error: "another page operation is running on this tab" code: "busy" })
+      PAGE_INJECT -> busy
+        (emit PAGE_FAILED { key: @payload.key error: "another page operation is running on this tab" code: "busy" })
+      PAGE_MEASURE -> busy
+        (emit PAGE_FAILED { key: @payload.key error: "another page operation is running on this tab" code: "busy" })
+      CHROME_STOP -> stopping
+        (emit PAGE_FAILED { key: @entity.callerKey error: "the browser was stopped during the operation" code: "stopped" })
+        (emit CHROME_TIMER_CANCEL { key: "op" })
+        (set @entity.stage "close-target")
+        (emit CDP_COMMAND { key: "close-target" method: "Target.closeTarget" paramsJson: (json/stringify { targetId: @entity.targetId }) })
+      CHROME_DISCONNECTED -> stopped
+        (emit PAGE_FAILED { key: @entity.callerKey error: @payload.reason code: "disconnected" })
+        (emit CHROME_FAILED { code: "disconnected" message: @payload.reason })
+      CHROME_FAIL -> ready
+        (emit PAGE_FAILED { key: @entity.callerKey error: @payload.error code: @payload.code })
+        (emit CHROME_TIMER_CANCEL { key: "op" })
+      CHROME_HOST_FAILED -> ready
+        (emit PAGE_FAILED { key: @entity.callerKey error: (default @payload.error "") code: "read-failed" })
+      CHROME_ERROR -> ready when (= @payload.key @entity.stage)
+        (emit PAGE_FAILED { key: @entity.callerKey error: @payload.message code: @payload.code })
+        (emit CHROME_TIMER_CANCEL { key: "op" })
+      CHROME_ERROR -> busy when (!= @payload.key @entity.stage)
+
+      CHROME_REPLY -> busy when (= @payload.key "nav")
+        (let ((r (json/parse @payload.frame NavigateReply)))
+          (if (= @r null) (emit CHROME_FAIL { code: "bad-reply" error: "Page.navigate answered an unexpected shape" })
+            (if (!= @r.result.errorText null) (emit CHROME_FAIL { code: "navigation-failed" error: @r.result.errorText })
+              (if @entity.loadSeen
+                (do (emit CHROME_TIMER_CANCEL { key: "op" }) (set @entity.stage "nav-info") (emit CDP_COMMAND { key: "nav-info" method: "Runtime.evaluate" sessionId: @entity.sessionId paramsJson: (json/stringify { expression: @config.infoScript returnByValue: true }) }))
+                (set @entity.stage "nav-wait")))))
+      CHROME_EVENT -> busy when (and (= @payload.method "Page.loadEventFired") (= (default @payload.sessionId "") (default @entity.sessionId "")) (= @entity.stage "nav"))
+        (set @entity.loadSeen true)
+      CHROME_EVENT -> busy when (and (= @payload.method "Page.loadEventFired") (= (default @payload.sessionId "") (default @entity.sessionId "")) (= @entity.stage "nav-wait"))
+        (emit CHROME_TIMER_CANCEL { key: "op" })
+        (set @entity.stage "nav-info")
+        (emit CDP_COMMAND { key: "nav-info" method: "Runtime.evaluate" sessionId: @entity.sessionId paramsJson: (json/stringify { expression: @config.infoScript returnByValue: true }) })
+      CHROME_EVENT -> busy when (and (= @payload.method "Page.frameNavigated") (= (default @payload.sessionId "") (default @entity.sessionId "")))
+        (let ((e (json/parse @payload.frame FrameNavigatedEvent)))
+          (when (and (!= @e null) (= @e.params.frame.parentId null)) (set @entity.navSeen true)))
+      CHROME_EVENT -> busy when (and (= @payload.method "Browser.downloadWillBegin") (= @entity.op "download"))
+        (let ((e (json/parse @payload.frame DownloadBeginEvent)))
+          (when (!= @e null) (do (set @entity.dlGuid @e.params.guid) (set @entity.dlName @e.params.suggestedFilename) (set @entity.dlUrl @e.params.url))))
+      CHROME_EVENT -> busy when (and (= @payload.method "Browser.downloadProgress") (= @entity.op "download"))
+        (let ((e (json/parse @payload.frame DownloadProgressEvent)))
+          (when (!= @e null) (emit CHROME_DL_PROGRESS { guid: @e.params.guid state: @e.params.state received: @e.params.receivedBytes filePath: (default @e.params.filePath "") })))
+      CHROME_DL_PROGRESS -> ready when (and (= @entity.op "download") (= @payload.guid @entity.dlGuid) (= @payload.state "completed"))
+        (emit CHROME_TIMER_CANCEL { key: "op" })
+        (emit PAGE_DOWNLOADED { key: @entity.callerKey path: (if (!= @payload.filePath "") @payload.filePath (os/path-join @entity.downloadPath @entity.dlName)) url: @entity.dlUrl size: @payload.received })
+      CHROME_DL_PROGRESS -> ready when (and (= @entity.op "download") (= @payload.guid @entity.dlGuid) (= @payload.state "canceled"))
+        (emit CHROME_TIMER_CANCEL { key: "op" })
+        (emit PAGE_FAILED { key: @entity.callerKey error: "Chrome canceled the download" code: "download-canceled" })
+      CHROME_DL_PROGRESS -> busy when (!= @payload.state "completed")
+
+      CHROME_TIMER_DUE -> busy when (and (= @payload.key "op") (or (= @entity.stage "nav") (= @entity.stage "nav-wait")))
+        (emit CHROME_FAIL { code: "navigation-timeout" error: "the page did not fire its load event in time" })
+      CHROME_TIMER_DUE -> busy when (and (= @payload.key "op") (= @entity.op "download"))
+        (emit CHROME_FAIL { code: "download-timeout" error: "no completed download in time" })
+      CHROME_REPLY -> ready when (= @payload.key "nav-info")
+        (let ((r (json/parse @payload.frame EvalReply))) (if (= @r null) (emit PAGE_FAILED { key: @entity.callerKey error: "the evaluate reply is not the declared shape" code: "bad-reply" }) (if (!= @r.result.exceptionDetails null) (emit PAGE_FAILED { key: @entity.callerKey error: @r.result.exceptionDetails.text code: "script-error" }) (if (= @r.result.result.value null) (emit PAGE_FAILED { key: @entity.callerKey error: "the expression did not evaluate to a string" code: "not-json" }) (let ((v (json/parse @r.result.result.value NavInfo))) (if (= @v null) (emit PAGE_FAILED { key: @entity.callerKey error: "the page answered text of an unexpected shape" code: "bad-reply" }) (do (set @entity.url @v.url) (emit PAGE_LOADED { key: @entity.callerKey url: @v.url title: @v.title }))))))))
+      CHROME_REPLY -> ready when (= @payload.key "text")
+        (let ((r (json/parse @payload.frame EvalReply))) (if (= @r null) (emit PAGE_FAILED { key: @entity.callerKey error: "the evaluate reply is not the declared shape" code: "bad-reply" }) (if (!= @r.result.exceptionDetails null) (emit PAGE_FAILED { key: @entity.callerKey error: @r.result.exceptionDetails.text code: "script-error" }) (if (= @r.result.result.value null) (emit PAGE_FAILED { key: @entity.callerKey error: "the expression did not evaluate to a string" code: "not-json" }) (let ((v (json/parse @r.result.result.value TextRead))) (if (= @v null) (emit PAGE_FAILED { key: @entity.callerKey error: "the page answered text of an unexpected shape" code: "bad-reply" }) (emit PAGE_TEXT_READ { key: @entity.callerKey url: @v.url title: @v.title lang: @v.lang text: @v.text })))))))
+      CHROME_REPLY -> ready when (= @payload.key "links")
+        (let ((r (json/parse @payload.frame EvalReply))) (if (= @r null) (emit PAGE_FAILED { key: @entity.callerKey error: "the evaluate reply is not the declared shape" code: "bad-reply" }) (if (!= @r.result.exceptionDetails null) (emit PAGE_FAILED { key: @entity.callerKey error: @r.result.exceptionDetails.text code: "script-error" }) (if (= @r.result.result.value null) (emit PAGE_FAILED { key: @entity.callerKey error: "the expression did not evaluate to a string" code: "not-json" }) (let ((v (json/parse @r.result.result.value LinkList))) (if (= @v null) (emit PAGE_FAILED { key: @entity.callerKey error: "the page answered text of an unexpected shape" code: "bad-reply" }) (emit PAGE_LINKS_READ { key: @entity.callerKey links: @v })))))))
+      CHROME_REPLY -> busy when (= @payload.key "click")
+        (let ((r (json/parse @payload.frame EvalReply))) (if (= @r null) (emit CHROME_FAIL { code: "bad-reply" error: "the evaluate reply is not the declared shape" }) (if (!= @r.result.exceptionDetails null) (emit CHROME_FAIL { code: "script-error" error: @r.result.exceptionDetails.text }) (if (= @r.result.result.value null) (emit CHROME_FAIL { code: "not-json" error: "the expression did not evaluate to a string" }) (let ((v (json/parse @r.result.result.value ClickRead))) (if (= @v null) (emit CHROME_FAIL { code: "bad-reply" error: "the page answered text of an unexpected shape" }) (if (not @v.found) (emit CHROME_FAIL { code: "not-found" error: "no element matched" }) (do (set @entity.startUrl @v.url) (set @entity.stage "click-settle") (emit CHROME_TIMER_ARM { key: "op" delayMs: @config.clickSettleMs })))))))))
+      CHROME_TIMER_DUE -> busy when (and (= @payload.key "op") (= @entity.stage "click-settle"))
+        (set @entity.stage "click-after")
+        (emit CDP_COMMAND { key: "click-after" method: "Runtime.evaluate" sessionId: @entity.sessionId paramsJson: (json/stringify { expression: @config.infoScript returnByValue: true }) })
+      CHROME_REPLY -> ready when (= @payload.key "click-after")
+        (let ((r (json/parse @payload.frame EvalReply))) (if (= @r null) (emit PAGE_FAILED { key: @entity.callerKey error: "the evaluate reply is not the declared shape" code: "bad-reply" }) (if (!= @r.result.exceptionDetails null) (emit PAGE_FAILED { key: @entity.callerKey error: @r.result.exceptionDetails.text code: "script-error" }) (if (= @r.result.result.value null) (emit PAGE_FAILED { key: @entity.callerKey error: "the expression did not evaluate to a string" code: "not-json" }) (let ((v (json/parse @r.result.result.value NavInfo))) (if (= @v null) (emit PAGE_FAILED { key: @entity.callerKey error: "the page answered text of an unexpected shape" code: "bad-reply" }) (do (set @entity.url @v.url) (emit PAGE_CLICKED { key: @entity.callerKey url: @v.url navigated: (or @entity.navSeen (!= @v.url @entity.startUrl)) }))))))))
+      CHROME_REPLY -> busy when (= @payload.key "dl-click")
+        (let ((r (json/parse @payload.frame EvalReply))) (if (= @r null) (emit CHROME_FAIL { code: "bad-reply" error: "the evaluate reply is not the declared shape" }) (if (!= @r.result.exceptionDetails null) (emit CHROME_FAIL { code: "script-error" error: @r.result.exceptionDetails.text }) (if (= @r.result.result.value null) (emit CHROME_FAIL { code: "not-json" error: "the expression did not evaluate to a string" }) (let ((v (json/parse @r.result.result.value ClickRead))) (if (= @v null) (emit CHROME_FAIL { code: "bad-reply" error: "the page answered text of an unexpected shape" }) (if (not @v.found) (emit CHROME_FAIL { code: "not-found" error: "no element matched" }) (set @entity.stage "dl-wait"))))))))
+      CHROME_REPLY -> busy when (= @payload.key "key-down")
+        (let ((d (object/get @config.keys @entity.keyName)))
+          (do (set @entity.stage "key-up") (emit CDP_COMMAND { key: "key-up" method: "Input.dispatchKeyEvent" sessionId: @entity.sessionId paramsJson: (json/stringify { type: "keyUp" key: @d.key code: @d.code windowsVirtualKeyCode: @d.vk modifiers: (if @entity.shift 8 0) }) })))
+      CHROME_REPLY -> ready when (and (= @payload.key "key-up") (not @entity.keyNav))
+        (emit PAGE_KEY_SENT { key: @entity.callerKey })
+      CHROME_REPLY -> busy when (and (= @payload.key "key-up") @entity.keyNav)
+        (set @entity.stage "key-settle")
+        (emit CHROME_TIMER_ARM { key: "op" delayMs: @config.keyNavigationWaitMs })
+      CHROME_TIMER_DUE -> busy when (and (= @payload.key "op") (= @entity.stage "key-settle") @entity.navSeen (not @entity.loadSeen))
+        (set @entity.stage "key-load")
+        (emit CHROME_TIMER_ARM { key: "op" delayMs: @config.navigationTimeoutMs })
+      CHROME_TIMER_DUE -> ready when (and (= @payload.key "op") (= @entity.stage "key-settle") (or (not @entity.navSeen) @entity.loadSeen))
+        (emit PAGE_KEY_SENT { key: @entity.callerKey })
+      CHROME_TIMER_DUE -> busy when (and (= @payload.key "op") (= @entity.stage "key-load"))
+        (emit CHROME_FAIL { code: "navigation-timeout" error: "the page did not fire its load event in time" })
+      CHROME_EVENT -> busy when (and (= @payload.method "Page.loadEventFired") (= (default @payload.sessionId "") (default @entity.sessionId "")) (or (= @entity.stage "key-down") (= @entity.stage "key-up") (= @entity.stage "key-settle")))
+        (set @entity.loadSeen true)
+      CHROME_EVENT -> ready when (and (= @payload.method "Page.loadEventFired") (= (default @payload.sessionId "") (default @entity.sessionId "")) (= @entity.stage "key-load"))
+        (emit CHROME_TIMER_CANCEL { key: "op" })
+        (emit PAGE_KEY_SENT { key: @entity.callerKey })
+      CHROME_REPLY -> ready when (= @payload.key "focused")
+        (let ((r (json/parse @payload.frame EvalReply))) (if (= @r null) (emit PAGE_FAILED { key: @entity.callerKey error: "the evaluate reply is not the declared shape" code: "bad-reply" }) (if (!= @r.result.exceptionDetails null) (emit PAGE_FAILED { key: @entity.callerKey error: @r.result.exceptionDetails.text code: "script-error" }) (if (= @r.result.result.value null) (emit PAGE_FAILED { key: @entity.callerKey error: "the expression did not evaluate to a string" code: "not-json" }) (let ((v (json/parse @r.result.result.value FocusRead))) (if (= @v null) (emit PAGE_FAILED { key: @entity.callerKey error: "the page answered text of an unexpected shape" code: "bad-reply" }) (emit PAGE_FOCUS_READ { key: @entity.callerKey focused: @v.focused })))))))
+      CHROME_REPLY -> ready when (= @payload.key "viewport")
+        (emit PAGE_VIEWPORT_SET { key: @entity.callerKey })
+      CHROME_REPLY -> ready when (= @payload.key "screenshot")
+        (let ((r (json/parse @payload.frame DataReply)))
+          (let ((b (bytes/from-base64 (default @r.result.data ""))))
+            (if (or (= @r null) (= @b null)) (emit PAGE_FAILED { key: @entity.callerKey error: "Page.captureScreenshot answered an unexpected shape" code: "bad-reply" }) (emit PAGE_SCREENSHOT_TAKEN { key: @entity.callerKey png: @b }))))
+      CHROME_REPLY -> ready when (= @payload.key "ax")
+        (let ((r (json/parse @payload.frame AxReply)))
+          (if (= @r null) (emit PAGE_FAILED { key: @entity.callerKey error: "Accessibility.getFullAXTree answered an unexpected shape" code: "bad-reply" }) (emit PAGE_AX_TREE_READ { key: @entity.callerKey nodes: (array/map @r.result.nodes (fn n (object/merge { id: @n.nodeId role: (default @n.role.value "") name: (default @n.name.value "") ignored: (default @n.ignored false) } (if (= @n.parentId null) {} { parent: @n.parentId })))) })))
+      CHROME_REPLY -> busy when (= @payload.key "pdf-blank")
+        (set @entity.stage "pdf-tree")
+        (emit CDP_COMMAND { key: "pdf-tree" method: "Page.getFrameTree" sessionId: @entity.sessionId paramsJson: (json/stringify { }) })
+      CHROME_REPLY -> busy when (= @payload.key "pdf-tree")
+        (let ((r (json/parse @payload.frame FrameTreeReply)))
+          (if (= @r null) (emit CHROME_FAIL { code: "bad-reply" error: "Page.getFrameTree answered an unexpected shape" })
+            (do (set @entity.stage "pdf-set") (emit CDP_COMMAND { key: "pdf-set" method: "Page.setDocumentContent" sessionId: @entity.sessionId paramsJson: (json/stringify { frameId: @r.result.frameTree.frame.id html: @entity.html }) }))))
+      CHROME_REPLY -> busy when (= @payload.key "pdf-set")
+        (set @entity.stage "pdf-print")
+        (emit CDP_COMMAND { key: "pdf-print" method: "Page.printToPDF" sessionId: @entity.sessionId paramsJson: (json/stringify { printBackground: true preferCSSPageSize: true }) })
+      CHROME_REPLY -> ready when (= @payload.key "pdf-print")
+        (let ((r (json/parse @payload.frame DataReply)))
+          (let ((b (bytes/from-base64 (default @r.result.data ""))))
+            (if (or (= @r null) (= @b null)) (emit PAGE_FAILED { key: @entity.callerKey error: "Printing answered an unexpected shape" code: "bad-reply" }) (emit PAGE_PDF_PRINTED { key: @entity.callerKey pdf: @b }))))
+      CHROME_FILE_READ -> busy when (= @entity.stage "inject-read")
+        (set @entity.stage "inject")
+        (emit CDP_COMMAND { key: "inject" method: "Runtime.evaluate" sessionId: @entity.sessionId paramsJson: (json/stringify { expression: (bytes/to-string @payload.data) }) })
+      CHROME_REPLY -> ready when (= @payload.key "inject")
+        (let ((r (json/parse @payload.frame InjectReply)))
+          (if (= @r null) (emit PAGE_FAILED { key: @entity.callerKey error: "Runtime.evaluate answered an unexpected shape" code: "bad-reply" }) (if (!= @r.result.exceptionDetails null) (emit PAGE_FAILED { key: @entity.callerKey error: @r.result.exceptionDetails.text code: "script-error" }) (emit PAGE_INJECTED { key: @entity.callerKey }))))
+      CHROME_REPLY -> ready when (= @payload.key "measure")
+        (let ((h (json/parse @payload.frame MeasureHead)))
+          (if (= @h null) (emit PAGE_FAILED { key: @entity.callerKey error: "Runtime.evaluate answered an unexpected shape" code: "bad-reply" })
+            (if (!= @h.result.exceptionDetails null) (emit PAGE_FAILED { key: @entity.callerKey error: @h.result.exceptionDetails.text code: "script-error" })
+              (if (!= @h.result.result.type "string") (emit PAGE_FAILED { key: @entity.callerKey error: "the expression did not evaluate to a string" code: "not-json" })
+                (let ((r (json/parse @payload.frame EvalReply))) (if (= @r null) (emit PAGE_FAILED { key: @entity.callerKey error: "the evaluate reply is not the declared shape" code: "bad-reply" }) (if (!= @r.result.exceptionDetails null) (emit PAGE_FAILED { key: @entity.callerKey error: @r.result.exceptionDetails.text code: "script-error" }) (if (= @r.result.result.value null) (emit PAGE_FAILED { key: @entity.callerKey error: "the expression did not evaluate to a string" code: "not-json" }) (emit PAGE_MEASURED { key: @entity.callerKey json: @r.result.result.value })))))))))
+    }
+
+    state stopping {
+      INIT -> stopping
+
+      CHROME_START -> stopping
+        (emit CHROME_FAILED { code: "busy" message: "the browser is stopping" })
+      CHROME_STOP -> stopping
+
+      PAGE_NAVIGATE -> stopping
+        (emit PAGE_FAILED { key: @payload.key error: "the browser is stopping" code: "not-ready" })
+      PAGE_TEXT -> stopping
+        (emit PAGE_FAILED { key: @payload.key error: "the browser is stopping" code: "not-ready" })
+      PAGE_LINKS -> stopping
+        (emit PAGE_FAILED { key: @payload.key error: "the browser is stopping" code: "not-ready" })
+      PAGE_CLICK -> stopping
+        (emit PAGE_FAILED { key: @payload.key error: "the browser is stopping" code: "not-ready" })
+      PAGE_KEY -> stopping
+        (emit PAGE_FAILED { key: @payload.key error: "the browser is stopping" code: "not-ready" })
+      PAGE_FOCUSED -> stopping
+        (emit PAGE_FAILED { key: @payload.key error: "the browser is stopping" code: "not-ready" })
+      PAGE_VIEWPORT -> stopping
+        (emit PAGE_FAILED { key: @payload.key error: "the browser is stopping" code: "not-ready" })
+      PAGE_SCREENSHOT -> stopping
+        (emit PAGE_FAILED { key: @payload.key error: "the browser is stopping" code: "not-ready" })
+      PAGE_AX_TREE -> stopping
+        (emit PAGE_FAILED { key: @payload.key error: "the browser is stopping" code: "not-ready" })
+      PAGE_DOWNLOAD -> stopping
+        (emit PAGE_FAILED { key: @payload.key error: "the browser is stopping" code: "not-ready" })
+      PAGE_PRINT_PDF -> stopping
+        (emit PAGE_FAILED { key: @payload.key error: "the browser is stopping" code: "not-ready" })
+      PAGE_INJECT -> stopping
+        (emit PAGE_FAILED { key: @payload.key error: "the browser is stopping" code: "not-ready" })
+      PAGE_MEASURE -> stopping
+        (emit PAGE_FAILED { key: @payload.key error: "the browser is stopping" code: "not-ready" })
+      CHROME_REPLY -> stopping when (= @payload.key "close-target")
+        (set @entity.stage "disconnect")
+        (emit CDP_DISCONNECT { })
+      CHROME_ERROR -> stopping when (= @payload.key "close-target")
+        (set @entity.stage "disconnect")
+        (emit CDP_DISCONNECT { })
+      CHROME_DISCONNECTED -> stopping
+        (set @entity.stage "daemon-stop")
+        (emit DAEMON_STOP { })
+      CHROME_DAEMON_STOPPED -> stopped
+        (set @entity.sessionId "")
+        (emit CHROME_STOPPED { })
+      CHROME_DAEMON_FAILED -> stopped
+        (set @entity.sessionId "")
+        (emit CHROME_STOPPED { })
+    }
+
+    emits {
+      CHROME_READY -> external {
+        browser : string!
+      }
+        @description "Chrome is running with one attached page; browser is its version string."
+        @tier "primary"
+      CHROME_FAILED -> external {
+        code : string!
+        message : string!
+      }
+        @description "Chrome could not be started or was lost: the daemon or connection code, host-failed, bad-reply, disconnected, busy or already-started."
+        @tier "primary"
+      PAGE_LOADED -> external {
+        key : string!
+        url : string!
+        title : string!
+      }
+        @description "The page fired its load event; url and title are read after it."
+        @tier "primary"
+      PAGE_TEXT_READ -> external {
+        key : string!
+        url : string!
+        title : string!
+        lang : string!
+        text : string!
+      }
+        @description "The visible text of the page with its url, title and language."
+        @tier "primary"
+      PAGE_LINKS_READ -> external {
+        key : string!
+        links : [PageLink]!
+      }
+        @description "Every link and button of the page in document order."
+        @tier "primary"
+      PAGE_CLICKED -> external {
+        key : string!
+        url : string!
+        navigated : boolean!
+      }
+        @description "The element was clicked; navigated tells whether the location changed."
+        @tier "primary"
+      PAGE_KEY_SENT -> external {
+        key : string!
+      }
+        @description "The key press was delivered."
+        @tier "primary"
+      PAGE_FOCUS_READ -> external {
+        key : string!
+        focused : PageFocus?
+      }
+        @description "The focused element; absent when nothing but the body has focus."
+        @tier "primary"
+      PAGE_VIEWPORT_SET -> external {
+        key : string!
+      }
+        @description "The viewport metrics are set."
+        @tier "primary"
+      PAGE_SCREENSHOT_TAKEN -> external {
+        key : string!
+        png : bytes!
+      }
+        @description "A PNG of the viewport or of the whole page."
+        @tier "primary"
+      PAGE_AX_TREE_READ -> external {
+        key : string!
+        nodes : [PageAxNode]!
+      }
+        @description "The accessibility tree nodes with role, name, parent and ignored flag."
+        @tier "primary"
+      PAGE_DOWNLOADED -> external {
+        key : string!
+        path : string!
+        url : string!
+        size : number!
+      }
+        @description "The download finished: path is the file Chrome reports it saved (the download directory joined with the suggested file name when it reports none)."
+        @tier "primary"
+      PAGE_PDF_PRINTED -> external {
+        key : string!
+        pdf : bytes!
+      }
+        @description "The given HTML printed to a PDF."
+        @tier "primary"
+      PAGE_INJECTED -> external {
+        key : string!
+      }
+        @description "The script ran in the page."
+        @tier "primary"
+      PAGE_MEASURED -> external {
+        key : string!
+        json : string!
+      }
+        @description "The JSON text the measurement expression returned, for the caller to parse."
+        @tier "primary"
+      PAGE_FAILED -> external {
+        key : string!
+        error : string!
+        code : string!
+      }
+        @description "A page operation failed: busy, not-ready, not-started, bad-request, bad-script, unknown-key, not-found, navigation-failed, navigation-timeout, download-timeout, download-canceled, script-error, not-json, bad-reply, read-failed, disconnected, stopped, or the protocol code text."
+        @tier "primary"
+      CHROME_STOPPED -> external { }
+        @description "The tab is closed and the browser this atom started is stopped."
+        @tier "primary"
+      CHROME_START_FAILED -> internal {
+        code : string!
+        message : string!
+      }
+        @description "Internal: a start step failed."
+        @tier "internal"
+      CHROME_FAIL -> internal {
+        code : string!
+        error : string!
+      }
+        @description "Internal: the operation in flight failed."
+        @tier "internal"
+      CHROME_DL_PROGRESS -> internal {
+        guid : string!
+        state : string!
+        received : number!
+        filePath : string
+      }
+        @description "Internal: a parsed Browser.downloadProgress event."
+        @tier "internal"
+      CHROME_DIR_MADE -> internal { }
+        @description "Internal: os/mkdir answered."
+        @tier "internal"
+      CHROME_PATH_RESOLVED -> internal {
+        path : string!
+      }
+        @description "Internal: os/realpath answered."
+        @tier "internal"
+      CHROME_FILE_WROTE -> internal { }
+        @description "Internal: os/write-file answered."
+        @tier "internal"
+      CHROME_FILE_READ -> internal {
+        data : bytes!
+      }
+        @description "Internal: os/read-file answered."
+        @tier "internal"
+      CHROME_HOST_FAILED -> internal {
+        error : string
+        kind : string
+      }
+        @description "Internal: an os/ effect failed."
+        @tier "internal"
+      CHROME_TIMER_ARM {
+        key : string!
+        delayMs : number!
+      }
+        @description "Internal: arm a keyed deadline."
+        @tier "internal"
+      CHROME_TIMER_CANCEL {
+        key : string!
+      }
+        @description "Internal: disarm a keyed deadline."
+        @tier "internal"
+      DAEMON_START {
+        argv : [string]!
+      }
+        @description "Internal: launch Chrome through the daemon."
+        @tier "internal"
+      DAEMON_STOP { }
+        @description "Internal: stop the Chrome this atom started."
+        @tier "internal"
+      CDP_CONNECT { }
+        @description "Internal: open the debugging connection."
+        @tier "internal"
+      CDP_DISCONNECT { }
+        @description "Internal: close the debugging connection."
+        @tier "internal"
+      CDP_COMMAND {
+        key : string!
+        method : string!
+        sessionId : string?
+        paramsJson : string!
+      }
+        @description "Internal: one protocol command."
+        @tier "internal"
+    }
+
+    config {
+      port : number = 9222
+        @label "Debugging port"
+        @description "The remote debugging port Chrome is launched with. The composed daemon probe and the CDP connection read their own port: a composer that changes this knob also sets readyPort of ChromeDaemon and port of CdpHttp and CdpWs to the same number, and grants net 127.0.0.1 on it."
+        @tier "infra"
+      profileDir : ChromePath
+        @label "Profile directory"
+        @description "The anchored directory Chrome keeps its user profile in, created when missing; Required, no default. The composer grants fs create and read on it."
+        @tier "domain"
+      downloadDir : ChromePath
+        @label "Download directory"
+        @description "The anchored directory downloads are saved in, created when missing; Required, no default. A name already taken is saved by Chrome under a numbered name, and the path reported is the one Chrome names."
+        @tier "domain"
+      preferences : string = "{\"plugins\":{\"always_open_pdf_externally\":true}}"
+        @label "Chrome preferences"
+        @description "The JSON written to Default/Preferences of the profile before launch, replacing any file there, so use a fresh profile. The default makes Chrome save a PDF link instead of opening it in its viewer, which PAGE_DOWNLOAD needs; an empty text writes nothing and leaves PDFs to the viewer."
+        @tier "policy"
+      preferencesDir : ChromePath
+        @label "Preferences directory"
+        @description "The anchored directory of the profile that holds Preferences (profileDir/Default); Required, no default. It is its own knob, with preferencesFile, because an os/ target must be static for the grant check; a composer that sets profileDir sets all three consistently."
+        @tier "domain"
+      preferencesFile : ChromePath
+        @label "Preferences file"
+        @description "The anchored path of the Preferences file written before launch (profileDir/Default/Preferences); Required, no default."
+        @tier "domain"
+      keyNavigationWaitMs : number = 1500
+        @label "Key navigation wait (ms)"
+        @description "After a key whose row in the keys table has nav true (Enter, Space), how long PAGE_KEY waits for a main-frame navigation to begin before answering PAGE_KEY_SENT; when one began it waits for its load event, up to navigationTimeoutMs."
+        @tier "domain"
+      scriptDir : string
+        @label "Script directory"
+        @description "A directory under the working directory, ending with /, that PAGE_INJECT script paths are relative to. The composer sets it and grants fs read on it."
+        @tier "domain"
+      extraArgs : [string] = []
+        @label "Extra Chrome arguments"
+        @description "Arguments appended to the launch command. Empty by default: --no-sandbox is NOT default, because it drops the browser sandbox, and only a container that cannot create user namespaces (the organism that runs Chrome as root in a container) sets it."
+        @tier "policy"
+      navigationTimeoutMs : number = 30000
+        @label "Navigation timeout (ms)"
+        @description "How long PAGE_NAVIGATE waits for the load event before answering PAGE_FAILED navigation-timeout. Resolution is the 100ms deadline check of std-delay."
+        @tier "domain"
+      windowWidth : number = 1280
+        @label "Window width"
+        @description "Width of the browser window at launch, in pixels."
+        @tier "domain"
+      windowHeight : number = 800
+        @label "Window height"
+        @description "Height of the browser window at launch, in pixels."
+        @tier "domain"
+      clickSettleMs : number = 500
+        @label "Click settle (ms)"
+        @description "How long PAGE_CLICK waits after the click for a navigation to begin before it reads the location; navigated is a changed location or a main-frame Page.frameNavigated in that window."
+        @tier "domain"
+      downloadTimeoutMs : number = 30000
+        @label "Download timeout (ms)"
+        @description "How long PAGE_DOWNLOAD waits for the download to complete before answering PAGE_FAILED download-timeout."
+        @tier "domain"
+      elementSelector : string = "a[href], button, [role=button]"
+        @label "Clickable elements"
+        @description "The CSS selector PAGE_LINKS enumerates, in document order; PAGE_CLICK and PAGE_DOWNLOAD index into the same list."
+        @tier "domain"
+      downloadExtensions : [string] = ["pdf", "doc", "docx", "xls", "xlsx", "zip", "csv"]
+        @label "Download extensions"
+        @description "Lower-case file extensions that mark a link as a download when it has no download attribute."
+        @tier "domain"
+      keys : Map string ChromeKey = { Tab: { key: "Tab", code: "Tab", vk: 9 }, Enter: { key: "Enter", code: "Enter", vk: 13, text: "\r", nav: true }, Space: { key: " ", code: "Space", vk: 32, text: " ", nav: true }, Escape: { key: "Escape", code: "Escape", vk: 27 }, ArrowDown: { key: "ArrowDown", code: "ArrowDown", vk: 40 }, ArrowUp: { key: "ArrowUp", code: "ArrowUp", vk: 38 }, ArrowLeft: { key: "ArrowLeft", code: "ArrowLeft", vk: 37 }, ArrowRight: { key: "ArrowRight", code: "ArrowRight", vk: 39 }, Home: { key: "Home", code: "Home", vk: 36 }, End: { key: "End", code: "End", vk: 35 } }
+        @label "Key table"
+        @description "Per key name, the DOM key, code, windowsVirtualKeyCode and the text a press types; PAGE_KEY sends keyDown then keyUp from this row, with modifiers 8 for Shift."
+        @tier "domain"
+      implicitRoles : Map string string = { a: "link", button: "button", select: "combobox", textarea: "textbox", "input:text": "textbox", "input:search": "searchbox", "input:email": "textbox", "input:password": "textbox", "input:checkbox": "checkbox", "input:radio": "radio", "input:submit": "button", "input:button": "button" }
+        @label "Implicit roles"
+        @description "Role per tag, or per input:<type>, that PAGE_FOCUSED reports when the focused element has no role attribute."
+        @tier "domain"
+      textScript : string = "JSON.stringify({url:location.href,title:document.title,lang:document.documentElement.lang,text:document.body.innerText})"
+        @label "Text expression"
+        @description "Page expression behind PAGE_TEXT; it evaluates to a JSON string of url, title, lang and visible text."
+        @tier "infra"
+      infoScript : string = "JSON.stringify({url:location.href,title:document.title})"
+        @label "Location expression"
+        @description "Page expression that reads the location and title after a navigation or a click."
+        @tier "infra"
+      linksScript : string = "((a)=>{const els=[...document.querySelectorAll(a.sel)];return JSON.stringify(els.map((e,i)=>{const isA=e.tagName==='A';const href=isA?e.href:'';const path=isA?new URL(href).pathname:'';const ext=path.includes('.')?path.split('.').pop().toLowerCase():'';return {index:i,text:(e.innerText||'').trim()||e.getAttribute('aria-label')||'',href:href,download:isA&&(e.hasAttribute('download')||a.exts.includes(ext)),kind:isA?'link':'button'};}));})"
+        @label "Links function"
+        @description "Page function taking { sel, exts } that lists the clickable elements as a JSON string; measuring only."
+        @tier "infra"
+      clickScript : string = "((a)=>{const e=a.selector!==null?document.querySelector(a.selector):([...document.querySelectorAll(a.sel)][a.index]||null);if(!e){return JSON.stringify({found:false,url:location.href});}const u=location.href;e.click();return JSON.stringify({found:true,url:u});})"
+        @label "Click function"
+        @description "Page function taking { sel, index, selector } that clicks one element and answers { found, url } as a JSON string."
+        @tier "infra"
+      focusScript : string = "((r)=>{const e=document.activeElement;if(!e||e===document.body||e===document.documentElement){return JSON.stringify({focused:null});}const tag=e.tagName.toLowerCase();const key=tag==='input'?'input:'+(e.getAttribute('type')||'text'):tag;const role=e.getAttribute('role')||r[key]||r[tag]||'';const lb=e.getAttribute('aria-labelledby');const lt=lb?lb.split(' ').map(i=>{const n=document.getElementById(i);return n?n.innerText:'';}).join(' ').trim():'';const name=e.getAttribute('aria-label')||lt||(e.innerText||'').trim()||e.getAttribute('alt')||e.getAttribute('title')||'';const sel=(n)=>{if(n.id){return '#'+CSS.escape(n.id);}const p=[];let c=n;while(c&&c.nodeType===1&&c!==document.documentElement){const par=c.parentElement;const t=c.tagName.toLowerCase();if(!par){break;}const k=[...par.children].filter(x=>x.tagName===c.tagName);p.unshift(t+':nth-of-type('+(k.indexOf(c)+1)+')');c=par;}return 'html > '+p.join(' > ');};const b=e.getBoundingClientRect();return JSON.stringify({focused:{tag:tag,role:role,name:name,selector:sel(e),rect:{x:b.x,y:b.y,width:b.width,height:b.height}}});})"
+        @label "Focus function"
+        @description "Page function taking the implicit role table that reads the focused element: tag, role, accessible name (aria-label, aria-labelledby text, inner text, alt, title in that order), a unique CSS selector from the id or an nth-of-type path, and its rectangle."
+        @tier "infra"
+    }
+
+    listens {
+      CHROME_START { }
+        @description "Launch headless Chrome, connect to it and attach one page target; answers CHROME_READY or CHROME_FAILED."
+        @synonyms "start browser, launch chrome"
+      CHROME_STOP { }
+        @description "Close the tab, disconnect and stop the browser this atom started; answers CHROME_STOPPED."
+        @synonyms "stop browser, quit chrome"
+      PAGE_NAVIGATE {
+        key : string!
+        url : string!
+      }
+        @description "Load a URL and wait for its load event; answers PAGE_LOADED."
+        @synonyms "open page, go to url"
+      PAGE_TEXT {
+        key : string!
+      }
+        @description "Read the url, title, language and visible text; answers PAGE_TEXT_READ."
+        @synonyms "read page text"
+      PAGE_LINKS {
+        key : string!
+      }
+        @description "List every link and button in document order; answers PAGE_LINKS_READ."
+        @synonyms "list links, list buttons"
+      PAGE_CLICK {
+        key : string!
+        index : number
+        selector : string
+      }
+        @description "Click the element at a PAGE_LINKS index or matching a CSS selector (exactly one); answers PAGE_CLICKED."
+        @synonyms "click link, press button"
+      PAGE_KEY {
+        key : string!
+        keyName : "Tab" | "Enter" | "Space" | "Escape" | "ArrowDown" | "ArrowUp" | "ArrowLeft" | "ArrowRight" | "Home" | "End"!
+        shift : boolean
+      }
+        @description "Press one key, with Shift when asked; answers PAGE_KEY_SENT."
+        @synonyms "press key, keyboard"
+      PAGE_FOCUSED {
+        key : string!
+      }
+        @description "Describe the focused element; answers PAGE_FOCUS_READ, focused absent when nothing but the body is focused."
+        @synonyms "focused element, active element"
+      PAGE_VIEWPORT {
+        key : string!
+        width : number!
+        height : number!
+        deviceScaleFactor : number!
+        mobile : boolean!
+        textZoom : number!
+      }
+        @description "Set the viewport. textZoom z is browser page zoom: the CSS viewport becomes width/z by height/z at device scale factor times z, so 2 at 1280x800 is 640x400 CSS pixels at twice the scale and text sized in px grows too; 1 restores the plain metrics. Answers PAGE_VIEWPORT_SET."
+        @synonyms "resize, zoom, device metrics"
+      PAGE_SCREENSHOT {
+        key : string!
+        fullPage : boolean!
+      }
+        @description "Take a PNG of the viewport, or of the whole page; answers PAGE_SCREENSHOT_TAKEN."
+        @synonyms "screenshot, capture page"
+      PAGE_AX_TREE {
+        key : string!
+      }
+        @description "Read the full accessibility tree; answers PAGE_AX_TREE_READ."
+        @synonyms "accessibility tree"
+      PAGE_DOWNLOAD {
+        key : string!
+        index : number
+        selector : string
+      }
+        @description "Click a link or button into the download directory and wait for the file; answers PAGE_DOWNLOADED."
+        @synonyms "download file"
+      PAGE_PRINT_PDF {
+        key : string!
+        html : string!
+      }
+        @description "Render the given HTML to a PDF; answers PAGE_PDF_PRINTED."
+        @synonyms "print pdf, html to pdf"
+      PAGE_INJECT {
+        key : string!
+        script : string!
+      }
+        @description "Evaluate a script file, a path relative to scriptDir, in the page; answers PAGE_INJECTED or PAGE_FAILED bad-script."
+        @synonyms "inject script"
+      PAGE_MEASURE {
+        key : string!
+        expression : string!
+      }
+        @description "Evaluate an expression that returns a JSON string; answers PAGE_MEASURED with that text."
+        @synonyms "measure page, evaluate"
+      CHROME_DAEMON_READY {
+        pid : number!
+        reused : boolean!
+      }
+      CHROME_DAEMON_FAILED {
+        code : string!
+        message : string!
+      }
+      CHROME_DAEMON_STOPPED {
+        pid : number!
+      }
+      CHROME_CONNECTED {
+        browser : string!
+      }
+      CHROME_CDP_FAILED {
+        error : string!
+        kind : string!
+      }
+      CHROME_DISCONNECTED {
+        reason : string!
+      }
+      CHROME_REPLY {
+        key : string!
+        method : string!
+        frame : string!
+      }
+      CHROME_ERROR {
+        key : string!
+        method : string!
+        code : string!
+        message : string!
+      }
+      CHROME_EVENT {
+        method : string!
+        sessionId : string
+        frame : string!
+      }
+      CHROME_TIMER_DUE {
+        key : string!
+      }
+      ChromeDaemon.DAEMON_READY -> CHROME_DAEMON_READY with { pid: ?pid, reused: ?reused }
+      ChromeDaemon.DAEMON_FAILED -> CHROME_DAEMON_FAILED with { code: ?code, message: ?message }
+      ChromeDaemon.DAEMON_STOPPED -> CHROME_DAEMON_STOPPED with { pid: ?pid }
+      Cdp.CDP_CONNECTED -> CHROME_CONNECTED with { browser: ?browser }
+      Cdp.CDP_FAILED -> CHROME_CDP_FAILED with { error: ?error, kind: ?kind }
+      Cdp.CDP_DISCONNECTED -> CHROME_DISCONNECTED with { reason: ?reason }
+      Cdp.CDP_REPLY -> CHROME_REPLY with { key: ?key, method: ?method, frame: ?frame }
+      Cdp.CDP_ERROR -> CHROME_ERROR with { key: ?key, method: ?method, code: ?code, message: ?message }
+      Cdp.CDP_EVENT -> CHROME_EVENT with { method: ?method, sessionId: ?sessionId, frame: ?frame }
+      ChromeDelay.ELAPSED -> CHROME_TIMER_DUE with { key: ?key }
+    }
+  }
+
+  page boot as ChromePage -> Chrome, ChromeDaemon, Cdp, CdpHttp, CdpWs, CdpDelay, ChromeDelay
+}

@@ -1,0 +1,230 @@
+app std-agent-file-tools [
+  version: "1.0.0",
+  exec: ["pdftotext"],
+  description: "std-agent-file-tools — the file tools an agent loop offers over one workspace directory. Each tool is a declared input the loop dispatches; the atom hears the loop's TOOL_PENDING for the call id and answers that call with TOOL_RESULT or TOOL_FAILED. READ_FILE { path } answers the file's text; a path ending in .pdf (any case) goes through std-pdf-text and answers the pages in order, each under a `--- page N ---` marker line and joined by a blank line, and a PDF with no text answers TOOL_FAILED. A file that is not valid UTF-8 text and is not a PDF answers TOOL_FAILED `binary file`. WRITE_FILE { path, content } writes text and answers `written`. LIST_FILES { path } answers a JSON array of { name, kind, size } for the directory's entries. GLOB { pattern } answers a JSON array of the matching paths relative to the root. Every path is relative to the rootDir knob, a directory under the working directory ending with /; an absolute path, or one that climbs out of the root with .., answers TOOL_FAILED before any file is touched. The fs grant for the root and the exec grant for pdftotext on a PDF path are the composer's to declare; nothing is truncated."
+]
+;; @capabilities "read, write, list and glob files under a workspace directory as agent tools, read the text of a PDF page by page"
+uses Spec from "almadar-std/agent-file-tools"
+uses Pdf from "std/behaviors/std-pdf-text"
+
+type DirEntry = { name : string!, kind : string! }
+type DirEntrySize = { name : string!, kind : string!, size : number! }
+type PdfPage = { page : number!, text : string! }
+
+orbital AgentFileToolsOrbital {
+  entity AgentFileCall [runtime] {
+    id : string!
+    callId : string @description "The tool call the loop waits on." = ""
+    dir : string @description "The directory a LIST_FILES call is listing, relative to the root." = ""
+    entries : [DirEntry] @description "The entries of the directory being listed, not yet sized." = []
+    sized : [DirEntrySize] @description "The entries of the directory being listed that have their size." = []
+  }
+
+  trait PdfCli = Pdf.traits.PdfCli {
+    listens {
+      PdfText.PDF_EXEC -> CLI_RUN
+    }
+  }
+
+  trait PdfText = Pdf.traits.PdfText {
+    listens {
+      AgentFileTools.PDF_REQUEST -> PDF_READ
+      PdfCli.CLI_DONE -> PDF_RAN
+      PdfCli.CLI_FAILED -> PDF_CLI_FAILED
+      PDF_READ {
+        key : string!
+        path : string!
+      }
+      PDF_RAN {
+        stage : string!
+        exitCode : number!
+        signal : number!
+        stdout : string!
+        stdoutBytes : bytes!
+        stderr : string!
+      }
+      PDF_CLI_FAILED {
+        stage : string!
+        error : string!
+        code : string!
+      }
+    }
+  }
+
+  trait AgentFileTools -> AgentFileCall [optimistic] {
+    config {
+      rootDir : string
+        @label "Workspace root"
+        @description "A directory under the working directory, ending with /, that every tool path is relative to; empty is the working directory itself. The composer sets it and grants the fs access it names."
+        @tier "policy"
+    }
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      TOOL_PENDING -> ready
+        (set @entity.callId @payload.callId)
+
+      READ_FILE -> ready when (or (os/path-is-absolute @payload.path) (== (os/path-normalize @payload.path) "..") (str/startsWith (os/path-normalize @payload.path) "../"))
+        (emit TOOL_FAILED { callId: @entity.callId, error: "the path is outside the workspace" })
+      READ_FILE -> ready when (and (not (or (os/path-is-absolute @payload.path) (== (os/path-normalize @payload.path) "..") (str/startsWith (os/path-normalize @payload.path) "../"))) (str/endsWith (str/lower @payload.path) ".pdf"))
+        (os/realpath { anchor: "cwd", path: (str/concat @config.rootDir @payload.path) } { emit: { success: PDF_PATH, failure: FILE_FAILED } })
+      READ_FILE -> ready when (and (not (or (os/path-is-absolute @payload.path) (== (os/path-normalize @payload.path) "..") (str/startsWith (os/path-normalize @payload.path) "../"))) (not (str/endsWith (str/lower @payload.path) ".pdf")))
+        (os/read-file { anchor: "cwd", path: (str/concat @config.rootDir @payload.path) } { emit: { success: FILE_READ, failure: FILE_FAILED } })
+      FILE_READ -> ready when (== (bytes/to-string @payload.data) null)
+        (emit TOOL_FAILED { callId: @entity.callId, error: "binary file" })
+      FILE_READ -> ready when (!= (bytes/to-string @payload.data) null)
+        (emit TOOL_RESULT { callId: @entity.callId, result: (default (bytes/to-string @payload.data) "") })
+      PDF_PATH -> ready
+        (emit PDF_REQUEST { key: @entity.callId, path: @payload.path })
+      PDF_TEXT -> ready
+        (emit TOOL_RESULT { callId: @entity.callId, result: (str/join (array/map @payload.pages (fn pg (str/concat "--- page " @pg.page " ---\n" @pg.text))) "\n") })
+      PDF_NO_TEXT -> ready
+        (emit TOOL_FAILED { callId: @entity.callId, error: (str/concat "the PDF has " @payload.pageCount " pages and none has text") })
+      PDF_FAILED -> ready
+        (emit TOOL_FAILED { callId: @entity.callId, error: (str/concat @payload.code ": " @payload.error) })
+
+      WRITE_FILE -> ready when (or (os/path-is-absolute @payload.path) (== (os/path-normalize @payload.path) "..") (str/startsWith (os/path-normalize @payload.path) "../"))
+        (emit TOOL_FAILED { callId: @entity.callId, error: "the path is outside the workspace" })
+      WRITE_FILE -> ready when (not (or (os/path-is-absolute @payload.path) (== (os/path-normalize @payload.path) "..") (str/startsWith (os/path-normalize @payload.path) "../")))
+        (os/write-file { anchor: "cwd", path: (str/concat @config.rootDir @payload.path) } (bytes/from-string @payload.content) { emit: { success: FILE_WROTE, failure: FILE_FAILED } })
+      FILE_WROTE -> ready
+        (emit TOOL_RESULT { callId: @entity.callId, result: "written" })
+
+      LIST_FILES -> ready when (or (os/path-is-absolute @payload.path) (== (os/path-normalize @payload.path) "..") (str/startsWith (os/path-normalize @payload.path) "../"))
+        (emit TOOL_FAILED { callId: @entity.callId, error: "the path is outside the workspace" })
+      LIST_FILES -> ready when (not (or (os/path-is-absolute @payload.path) (== (os/path-normalize @payload.path) "..") (str/startsWith (os/path-normalize @payload.path) "../")))
+        (set @entity.dir @payload.path)
+        (os/list-dir { anchor: "cwd", path: (str/concat @config.rootDir @payload.path) } { emit: { success: DIR_LISTED, failure: FILE_FAILED } })
+      DIR_LISTED -> ready
+        (set @entity.entries @payload.entries)
+        (set @entity.sized [])
+        (emit LIST_NEXT { })
+      LIST_NEXT -> ready when (< (array/len @entity.sized) (array/len @entity.entries))
+        (let ((cur (default (array/nth @entity.entries (array/len @entity.sized)) { name: "", kind: "" })))
+          (os/stat { anchor: "cwd", path: (str/concat @config.rootDir (os/path-join @entity.dir @cur.name)) } { emit: { success: ENTRY_STAT, failure: FILE_FAILED } }))
+      ENTRY_STAT -> ready
+        (let ((cur (default (array/nth @entity.entries (array/len @entity.sized)) { name: "", kind: "" })))
+          (set @entity.sized (array/append @entity.sized { name: @cur.name, kind: @cur.kind, size: @payload.size })))
+        (emit LIST_NEXT { })
+      LIST_NEXT -> ready when (>= (array/len @entity.sized) (array/len @entity.entries))
+        (emit TOOL_RESULT { callId: @entity.callId, result: (json/stringify @entity.sized) })
+
+      GLOB -> ready when (or (os/path-is-absolute @payload.pattern) (== (os/path-normalize @payload.pattern) "..") (str/startsWith (os/path-normalize @payload.pattern) "../"))
+        (emit TOOL_FAILED { callId: @entity.callId, error: "the pattern is outside the workspace" })
+      GLOB -> ready when (not (or (os/path-is-absolute @payload.pattern) (== (os/path-normalize @payload.pattern) "..") (str/startsWith (os/path-normalize @payload.pattern) "../")))
+        (os/glob { anchor: "cwd", path: (str/concat @config.rootDir @payload.pattern) } { emit: { success: GLOBBED, failure: FILE_FAILED } })
+      GLOBBED -> ready
+        (emit TOOL_RESULT { callId: @entity.callId, result: (json/stringify (array/map @payload.paths (fn m (os/path-relative @config.rootDir @m)))) })
+
+      FILE_FAILED -> ready
+        (emit TOOL_FAILED { callId: @entity.callId, error: (default @payload.error "the file operation failed") })
+    }
+
+    emits {
+      TOOL_RESULT -> external {
+        callId : string!
+        result : string!
+      }
+        @description "A tool's outcome, which std-agent-tool-loop hands back to the model."
+        @tier "internal"
+      TOOL_FAILED -> external {
+        callId : string!
+        error : string!
+      }
+        @description "A tool failed or was refused; std-agent-tool-loop hands the reason back to the model."
+        @tier "internal"
+      PDF_REQUEST -> external {
+        key : string!
+        path : string!
+      }
+        @description "Internal: ask std-pdf-text to read the PDF at the resolved path."
+        @tier "internal"
+      FILE_READ -> internal {
+        data : bytes!
+      }
+        @description "Internal: the os/read-file answer."
+        @tier "internal"
+      FILE_WROTE -> internal {
+      }
+        @description "Internal: the os/write-file answer."
+        @tier "internal"
+      PDF_PATH -> internal {
+        path : string!
+      }
+        @description "Internal: the os/realpath answer for a PDF path."
+        @tier "internal"
+      DIR_LISTED -> internal {
+        entries : [DirEntry]!
+      }
+        @description "Internal: the os/list-dir answer."
+        @tier "internal"
+      LIST_NEXT -> internal {
+      }
+        @description "Internal: size the next listed entry, or answer when all are sized."
+        @tier "internal"
+      ENTRY_STAT -> internal {
+        size : number!
+      }
+        @description "Internal: the os/stat answer for one listed entry."
+        @tier "internal"
+      GLOBBED -> internal {
+        paths : [string]!
+      }
+        @description "Internal: the os/glob answer."
+        @tier "internal"
+      FILE_FAILED -> internal {
+        error : string
+      }
+        @description "Internal: a file operation failed."
+        @tier "internal"
+    }
+
+    listens {
+      READ_FILE -> input {
+        path : string!
+      }
+        @description "Read a text file under the workspace root, or the pages of a PDF."
+        @synonyms "open file, show file, read pdf"
+      WRITE_FILE -> input {
+        path : string!
+        content : string!
+      }
+        @description "Write a text file under the workspace root, replacing it whole."
+        @synonyms "edit file, save file"
+      LIST_FILES -> input {
+        path : string!
+      }
+        @description "List the entries of a directory under the workspace root with name, kind and size."
+        @synonyms "list directory, ls"
+      GLOB -> input {
+        pattern : string!
+      }
+        @description "List the paths under the workspace root that match a glob pattern."
+        @synonyms "find files, match paths"
+      *.TOOL_PENDING -> TOOL_PENDING
+      TOOL_PENDING {
+        callId : string!
+        tool : string!
+      }
+      PdfText.PDF_TEXT -> PDF_TEXT
+      PdfText.PDF_NO_TEXT -> PDF_NO_TEXT
+      PdfText.PDF_FAILED -> PDF_FAILED
+      PDF_TEXT {
+        key : string!
+        pages : [PdfPage]!
+      }
+      PDF_NO_TEXT {
+        key : string!
+        pageCount : number!
+      }
+      PDF_FAILED {
+        key : string!
+        error : string!
+        code : string!
+      }
+    }
+  }
+
+  page boot as AgentFileToolsOrbitalStart -> AgentFileTools, PdfText, PdfCli
+}

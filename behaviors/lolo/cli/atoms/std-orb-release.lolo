@@ -82,6 +82,7 @@ orbital OrbReleaseOrbital {
     shipping : boolean = false
     restores : [RelRestore] = []
     failWhy : string = ""
+    stepStart : instant = "1970-01-01T00:00:00.000Z"
     step : ReleaseStep = { phase: "build", tool: "node", args: [], env: {} }
     bump : string = "patch"
     root : string = ""
@@ -569,16 +570,22 @@ orbital OrbReleaseOrbital {
               (stage (str/concat "step:" @entity.stepAt))
               (tool (object/get @entity.step "tool")))
           (do
+            (set @entity.stepStart (time/now))
+            (emit REL_LOG { line: (str/concat "[orb release] " @entity.stepPhase " " (if (= @entity.stepPhase "gate") (object/get (default (if (>= @entity.gateAt 0) (array/nth @entity.gates @entity.gateAt) null) { name: "", covers: [], steps: [] }) "name") @entity.name) " step " (+ @entity.stepAt 1) "/" (array/len @entity.steps) ": " (default @tool "node") " " (str/join @argv " ") "\n") })
             (when (= @tool "cargo") (emit REL_STEP_CARGO { stage: @stage, argv: @argv, env: @env }))
             (when (= @tool "node") (emit REL_STEP_NODE { stage: @stage, argv: @argv, env: @env }))
             (when (= @tool "npm") (emit REL_STEP_NPM { stage: @stage, argv: @argv, env: @env }))
             (when (= @tool "pnpm") (emit REL_STEP_PNPM { stage: @stage, argv: @argv, env: @env }))
             (when (= @tool "gh") (emit REL_STEP_GH { stage: @stage, argv: @argv, env: @env }))
             (when (= @tool "bash") (emit REL_STEP_BASH { stage: @stage, argv: @argv, env: @env }))))
+      REL_LOG -> running
+        (os/stderr-write (bytes/from-string @payload.line))
       REL_STEP_DONE -> running when (= @payload.exitCode 0)
+        (emit REL_LOG { line: (str/concat "[orb release] " @entity.stepPhase " " (if (= @entity.stepPhase "gate") (object/get (default (if (>= @entity.gateAt 0) (array/nth @entity.gates @entity.gateAt) null) { name: "", covers: [], steps: [] }) "name") @entity.name) " step " (+ @entity.stepAt 1) "/" (array/len @entity.steps) " done in " (math/round (/ (time/diff (time/now) @entity.stepStart "ms") 1000)) "s\n") })
         (set @entity.stepAt (+ @entity.stepAt 1))
         (emit REL_STEP_NEXT { })
       REL_STEP_DONE -> running when (!= @payload.exitCode 0)
+        (emit REL_LOG { line: (str/concat "[orb release] " @entity.stepPhase " " (if (= @entity.stepPhase "gate") (object/get (default (if (>= @entity.gateAt 0) (array/nth @entity.gates @entity.gateAt) null) { name: "", covers: [], steps: [] }) "name") @entity.name) " step " (+ @entity.stepAt 1) "/" (array/len @entity.steps) " exited " @payload.exitCode " after " (math/round (/ (time/diff (time/now) @entity.stepStart "ms") 1000)) "s\n") })
         (emit REL_FAIL { why: (str/concat @entity.stepPhase " step " (+ @entity.stepAt 1) " (" (default (object/get @entity.step "tool") "node") ") exited " @payload.exitCode) })
       REL_STEP_FAILED -> running
         (emit REL_FAIL { why: (str/concat @entity.stepPhase " step " (+ @entity.stepAt 1) " (" (default (object/get @entity.step "tool") "node") ") did not run (" @payload.code "): " @payload.error) })
@@ -851,6 +858,11 @@ orbital OrbReleaseOrbital {
         @tier "internal"
       REL_STEP_NEXT { }
         @description "Internal: run the next declared step, or go on once every step ran."
+        @tier "internal"
+      REL_LOG {
+        line : string!
+      }
+        @description "Internal: one progress line for stderr, written while the run goes on."
         @tier "internal"
       REL_STEP_GO { }
         @description "Internal: hand the step to the runner of its tool."

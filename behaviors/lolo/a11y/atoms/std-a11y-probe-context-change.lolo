@@ -1,0 +1,163 @@
+app std-a11y-probe-context-change [
+  version: "1.0.0",
+  description: "std-a11y-probe-context-change — WCAG 3.2.2 On Input. PROBE_RUN { key, pageUrl } on a tab already at pageUrl lists the visible enabled selects (with more than one enabled option) and search inputs (input type search or role searchbox, and text inputs inside role search) with one PAGE_MEASURE, then takes them one by one: a PAGE_MEASURE moves a select to its next enabled option and dispatches input and change, or sets a search input to the typedCharacter knob and dispatches input; it first starts watching for a navigation (the Navigation API navigate event, which fires the moment the page asks for one and is cancelled, so the tab stays put) and counts window.open calls (which it answers null). A second PAGE_MEASURE reads what was watched and the url, and the tab is navigated back to pageUrl (PAGE_NAVIGATE, answered by PAGE_LOADED) before the next element. A navigation that is not a same-document hash change, a window opened, or a url that differs from the one before is a finding: context-change-select (N64) for a select, context-change-input (N73) for a search input, both WCAG 3.2.2, serious, confirmed. Elements are only changed, never submitted: no button is clicked and no form is submitted by the probe. Failure codes: probe_page_failed, probe_bad_measure, probe_element_missing (an element listed disappeared before it was changed). Page state is restored by the navigation back after every element."
+]
+uses Spec from "almadar-std/probe-context-change"
+
+type WcagRef = { criterion : string!, level : "A" | "AA" | "AAA"!, version : "2.0" | "2.1" | "2.2"! }
+type A11yFinding = { id : string!, pageUrl : string!, rule : string!, wcag : [WcagRef]!, method : "engine" | "probe" | "llm"!, engines : [string]!, impact : "critical" | "serious" | "moderate" | "minor"!, confidence : "confirmed" | "needs-verification"!, selector : string!, snippet : string!, evidence : string!, count : number! }
+type CcItem = { selector : string!, snippet : string!, kind : "select" | "search"!, testable : boolean! }
+type CcInventory = { items : [CcItem]! }
+type CcActed = { found : boolean!, href : string!, api : boolean! }
+type CcNav = { url : string!, hashChange : boolean!, cancelable : boolean! }
+type CcRead = { patched : boolean!, href : string!, navigations : [CcNav]!, opened : number!, api : boolean! }
+type RuleDef = { key : string!, impact : "critical" | "serious" | "moderate" | "minor"!, wcag : [WcagRef]! }
+
+orbital ContextChangeOrbital {
+  entity ContextRun [runtime] {
+    id : string!
+    runKey : string @description "The caller's name for the run in flight." = ""
+    pageUrl : string @description "The page the run in flight is about." = ""
+    items : [CcItem] @description "The elements to change, in page order." = []
+    cursor : number @description "The element being changed." = 0
+    hrefBefore : string @description "The tab's url before the element was changed." = ""
+    findings : [A11yFinding] @description "The findings so far." = []
+  }
+
+  trait ContextChangeProbe -> ContextRun {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      PROBE_RUN -> inventorying
+        (set @entity.runKey @payload.key)
+        (set @entity.pageUrl @payload.pageUrl)
+        (set @entity.items [])
+        (set @entity.cursor 0)
+        (set @entity.findings [])
+        (emit PAGE_MEASURE { key: (str/concat @payload.key ":inventory"), expression: (str/concat "(" @config.inventory ")()") })
+    }
+
+    state inventorying {
+      INIT -> idle
+      PAGE_MEASURED -> acting when (and (= @payload.key (str/concat @entity.runKey ":inventory")) (!= (json/parse @payload.json CcInventory) null) (array/some (let ((m (json/parse @payload.json CcInventory))) @m.items) (fn i @i.testable)))
+        (set @entity.items (let ((m (json/parse @payload.json CcInventory))) (array/filter @m.items (fn i @i.testable))))
+        (set @entity.cursor 0)
+        (emit PAGE_MEASURE { key: (str/concat @entity.runKey ":act"), expression: (str/concat "(" @config.act ")(" (json/stringify (default (array/first (array/map (array/take @entity.items 1) (fn i @i.selector))) "")) "," (json/stringify (default (array/first (array/map (array/take @entity.items 1) (fn i @i.kind))) "")) "," (json/stringify @config.typedCharacter) ")") })
+      PAGE_MEASURED -> idle when (and (= @payload.key (str/concat @entity.runKey ":inventory")) (!= (json/parse @payload.json CcInventory) null) (not (array/some (let ((m (json/parse @payload.json CcInventory))) @m.items) (fn i @i.testable))))
+        (emit PROBE_DONE { key: @entity.runKey, probe: "context-change", findings: [] })
+      PAGE_MEASURED -> idle when (and (= @payload.key (str/concat @entity.runKey ":inventory")) (= (json/parse @payload.json CcInventory) null))
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "context-change", error: "the page measurement is not the select and search list", code: "probe_bad_measure" })
+      PAGE_FAILED -> idle when (str/startsWith @payload.key @entity.runKey)
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "context-change", error: @payload.error, code: "probe_page_failed" })
+    }
+
+    state acting {
+      INIT -> idle
+      PAGE_MEASURED -> reading when (and (= @payload.key (str/concat @entity.runKey ":act")) (!= (json/parse @payload.json CcActed) null) (let ((m (json/parse @payload.json CcActed))) @m.found))
+        (set @entity.hrefBefore (let ((m (json/parse @payload.json CcActed))) @m.href))
+        (emit PAGE_MEASURE { key: (str/concat @entity.runKey ":read"), expression: (str/concat "(" @config.read ")()") })
+      PAGE_MEASURED -> idle when (and (= @payload.key (str/concat @entity.runKey ":act")) (!= (json/parse @payload.json CcActed) null) (not (let ((m (json/parse @payload.json CcActed))) @m.found)))
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "context-change", error: (str/concat "the element " (default (array/first (array/map (array/take (array/drop @entity.items @entity.cursor) 1) (fn i @i.selector))) "") " is gone"), code: "probe_element_missing" })
+        (emit PAGE_NAVIGATE { key: (str/concat @entity.runKey ":back"), url: @entity.pageUrl })
+      PAGE_MEASURED -> idle when (and (= @payload.key (str/concat @entity.runKey ":act")) (= (json/parse @payload.json CcActed) null))
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "context-change", error: "the page did not answer the change", code: "probe_bad_measure" })
+        (emit PAGE_NAVIGATE { key: (str/concat @entity.runKey ":back"), url: @entity.pageUrl })
+      PAGE_FAILED -> idle when (str/startsWith @payload.key @entity.runKey)
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "context-change", error: @payload.error, code: "probe_page_failed" })
+        (emit PAGE_NAVIGATE { key: (str/concat @entity.runKey ":back"), url: @entity.pageUrl })
+    }
+
+    state reading {
+      INIT -> idle
+      PAGE_MEASURED -> returning when (and (= @payload.key (str/concat @entity.runKey ":read")) (!= (json/parse @payload.json CcRead) null))
+        (set @entity.findings (let ((m (json/parse @payload.json CcRead))) (let ((it (array/nth @entity.items @entity.cursor))) (if (or (array/some @m.navigations (fn n (not @n.hashChange))) (> @m.opened 0) (not @m.patched) (!= @m.href @entity.hrefBefore))
+          (array/append @entity.findings (let ((d (array/find @config.catalog (fn r (= @r.key (if (= @it.kind "select") "context-change-select" "context-change-input")))))) {
+            id: (str/concat @entity.pageUrl "#" (if (= @it.kind "select") "context-change-select" "context-change-input") "#" @it.selector),
+            pageUrl: @entity.pageUrl,
+            rule: (if (= @it.kind "select") "context-change-select" "context-change-input"),
+            wcag: (if (= @d null) [] @d.wcag),
+            method: "probe",
+            engines: ["probe"],
+            impact: (if (= @d null) "serious" @d.impact),
+            confidence: "confirmed",
+            selector: @it.selector,
+            snippet: @it.snippet,
+            evidence: "",
+            count: 1
+          }))
+          @entity.findings))))
+        (emit PAGE_NAVIGATE { key: (str/concat @entity.runKey ":back"), url: @entity.pageUrl })
+      PAGE_MEASURED -> idle when (and (= @payload.key (str/concat @entity.runKey ":read")) (= (json/parse @payload.json CcRead) null))
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "context-change", error: "the page measurement is not the change result", code: "probe_bad_measure" })
+        (emit PAGE_NAVIGATE { key: (str/concat @entity.runKey ":back"), url: @entity.pageUrl })
+      PAGE_FAILED -> idle when (str/startsWith @payload.key @entity.runKey)
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "context-change", error: @payload.error, code: "probe_page_failed" })
+        (emit PAGE_NAVIGATE { key: (str/concat @entity.runKey ":back"), url: @entity.pageUrl })
+    }
+
+    state returning {
+      INIT -> idle
+      PAGE_LOADED -> acting when (and (= @payload.key (str/concat @entity.runKey ":back")) (< (+ @entity.cursor 1) (array/len @entity.items)))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit PAGE_MEASURE { key: (str/concat @entity.runKey ":act"), expression: (str/concat "(" @config.act ")(" (json/stringify (default (array/first (array/map (array/take (array/drop @entity.items @entity.cursor) 1) (fn i @i.selector))) "")) "," (json/stringify (default (array/first (array/map (array/take (array/drop @entity.items @entity.cursor) 1) (fn i @i.kind))) "")) "," (json/stringify @config.typedCharacter) ")") })
+      PAGE_LOADED -> idle when (and (= @payload.key (str/concat @entity.runKey ":back")) (>= (+ @entity.cursor 1) (array/len @entity.items)))
+        (emit PROBE_DONE { key: @entity.runKey, probe: "context-change", findings: @entity.findings })
+      PAGE_FAILED -> idle when (str/startsWith @payload.key @entity.runKey)
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "context-change", error: @payload.error, code: "probe_page_failed" })
+    }
+
+    emits {
+      PAGE_MEASURE -> external { key : string!  expression : string! }
+        @description "Page request: evaluate the expression in the page; it answers a JSON string."
+        @synonyms "measure page, evaluate in page"
+        @tier "primary"
+      PAGE_NAVIGATE -> external { key : string!  url : string! }
+        @description "Page request: load the url in the tab; here it returns the tab to the probed page after each change."
+        @synonyms "navigate, load page"
+        @tier "primary"
+      PROBE_DONE -> external { key : string!  probe : string!  findings : [A11yFinding]! }
+        @description "The context-change probe finished: its findings, empty when no select or search input changes the page on input."
+        @synonyms "context change findings, on input result"
+        @tier "primary"
+      PROBE_FAILED -> external { key : string!  probe : string!  error : string!  code : string! }
+        @description "The probe could not finish: code is probe_page_failed, probe_bad_measure or probe_element_missing."
+        @synonyms "probe failed, context change error"
+        @tier "primary"
+    }
+
+    listens {
+      PROBE_RUN { key : string!  pageUrl : string! }
+        @description "Check the page the tab is on for selects and search inputs that change the page when changed, without a submit button."
+        @synonyms "context change check, on input check, wcag 3.2.2"
+      PAGE_MEASURED { key : string!  json : string! }
+      PAGE_LOADED { key : string!  url : string!  title : string! }
+      PAGE_FAILED { key : string!  error : string!  code : string! }
+    }
+
+    config {
+      typedCharacter : string = "a"
+        @label "Typed character"
+        @description "The character put into a search input before its input event."
+        @tier "domain"
+      catalog : [RuleDef] = [{ key: "context-change-select", impact: "serious", wcag: [{ criterion: "3.2.2", level: "A", version: "2.0" }] }, { key: "context-change-input", impact: "serious", wcag: [{ criterion: "3.2.2", level: "A", version: "2.0" }] }]
+        @label "Rule catalog"
+        @description "The impact and WCAG success criteria of each rule."
+        @tier "domain"
+      inventory : string = "() => { const sel = (e) => { const p = []; for (let n = e; n && n.nodeType === 1; n = n.parentElement) { if (n.id) { p.unshift('#' + CSS.escape(n.id)); break; } let i = 1; for (let s = n.previousElementSibling; s; s = s.previousElementSibling) { if (s.tagName === n.tagName) i++; } p.unshift(n.tagName.toLowerCase() + (n.parentElement && n.parentElement.querySelectorAll(':scope > ' + n.tagName.toLowerCase()).length > 1 ? ':nth-of-type(' + i + ')' : '')); } return p.join(' > '); }; const q = 'select,input[type=search],input[role=searchbox],[role=search] input:not([type]),[role=search] input[type=text]'; const items = Array.from(document.querySelectorAll(q)).filter((el) => !el.disabled && !el.closest('[aria-hidden=true],[hidden]') && (!el.checkVisibility || el.checkVisibility({ visibilityProperty: true }))).map((el) => ({ selector: sel(el), snippet: el.outerHTML.split('>')[0] + '>', kind: el.tagName === 'SELECT' ? 'select' : 'search', testable: el.tagName === 'SELECT' ? Array.from(el.options).filter((o) => !o.disabled).length > 1 : true })); return JSON.stringify({ items }); }"
+        @label "Inventory expression"
+        @description "A page function returning a JSON string of the visible enabled selects and search inputs with selector, opening tag, kind and whether a select has a second enabled option."
+        @tier "infra"
+      act : string = "(selector, kind, ch) => { const el = document.querySelector(selector); if (!el) return JSON.stringify({ found: false, href: location.href, api: !!window.navigation }); const ctx = { navigations: [], opened: 0, open: window.open }; window.__a11yCtx = ctx; window.open = () => { ctx.opened++; return null; }; if (window.navigation) { ctx.handler = (e) => { ctx.navigations.push({ url: e.destination.url, hashChange: e.hashChange, cancelable: e.cancelable }); if (e.cancelable && !e.hashChange) e.preventDefault(); }; window.navigation.addEventListener('navigate', ctx.handler); } if (kind === 'select') { const opts = Array.from(el.options); let next = el.selectedIndex; for (let n = 1; n <= opts.length; n++) { const j = (el.selectedIndex + n) % opts.length; if (!opts[j].disabled) { next = j; break; } } el.selectedIndex = next; el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); } else { el.value = ch; el.dispatchEvent(new Event('input', { bubbles: true })); } return JSON.stringify({ found: true, href: location.href, api: !!window.navigation }); }"
+        @label "Change expression"
+        @description "A page function taking selector, kind and a character: it starts watching navigations and window.open calls, moves a select to its next enabled option (input and change events) or types the character into a search input (input event), and returns a JSON string of where the tab is."
+        @tier "infra"
+      read : string = "() => { const ctx = window.__a11yCtx; const out = { patched: !!ctx, href: location.href, navigations: ctx ? ctx.navigations : [], opened: ctx ? ctx.opened : 0, api: !!window.navigation }; if (ctx) { window.open = ctx.open; if (ctx.handler) window.navigation.removeEventListener('navigate', ctx.handler); delete window.__a11yCtx; } return JSON.stringify(out); }"
+        @label "Result expression"
+        @description "A page function returning a JSON string of the navigations and window opens watched since the change, the url, and whether the watch survived; it then stops watching."
+        @tier "infra"
+    }
+  }
+
+  page boot as ContextChangeProbePage -> ContextChangeProbe
+}

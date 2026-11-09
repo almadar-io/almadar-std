@@ -1,0 +1,458 @@
+{
+ "atom": "codec/atoms/std-pdf-text.lolo",
+ "trait": "PdfText",
+ "note": "stdout shapes taken from poppler pdftotext -layout on hand-written PDFs: a form feed after every page, nothing else for an empty page",
+ "cases": [
+  {
+   "id": "a read starts pdftotext in layout mode on the path and waits for it",
+   "steps": [
+    {
+     "trait": "PdfText",
+     "event": "PDF_READ",
+     "from": "ready",
+     "payload": {
+      "key": "k1",
+      "path": "/docs/a.pdf"
+     },
+     "entity": {
+      "id": "r",
+      "key": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "reading",
+      "emits": [
+       {
+        "event": "PDF_EXEC",
+        "payload": {
+         "stage": "k1",
+         "argv": [
+          "-layout",
+          "/docs/a.pdf",
+          "-"
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a path that starts with a dash is refused and pdftotext is not run",
+   "steps": [
+    {
+     "trait": "PdfText",
+     "event": "PDF_READ",
+     "from": "ready",
+     "payload": {
+      "key": "k1",
+      "path": "-opt.pdf"
+     },
+     "entity": {
+      "id": "r",
+      "key": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "PDF_FAILED",
+        "payload": {
+         "key": "k1",
+         "error": "a path may not start with a dash",
+         "code": "pdf_unreadable"
+        }
+       }
+      ],
+      "neverEmits": [
+       "PDF_EXEC"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a read while another is in flight answers pdf_busy",
+   "steps": [
+    {
+     "trait": "PdfText",
+     "event": "PDF_READ",
+     "from": "reading",
+     "payload": {
+      "key": "k2",
+      "path": "/docs/b.pdf"
+     },
+     "entity": {
+      "id": "r",
+      "key": "k1"
+     },
+     "expect": {
+      "fired": true,
+      "state": "reading",
+      "emits": [
+       {
+        "event": "PDF_FAILED",
+        "payload": {
+         "key": "k2",
+         "error": "another PDF is being read",
+         "code": "pdf_busy"
+        }
+       }
+      ],
+      "neverEmits": [
+       "PDF_EXEC"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a read from ready is not busy",
+   "steps": [
+    {
+     "trait": "PdfText",
+     "event": "PDF_READ",
+     "from": "ready",
+     "payload": {
+      "key": "k2",
+      "path": "/docs/b.pdf"
+     },
+     "entity": {
+      "id": "r",
+      "key": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "reading",
+      "neverEmits": [
+       "PDF_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "three pages split at the form feed are numbered from 1 and the empty piece after the last form feed is dropped",
+   "steps": [
+    {
+     "trait": "PdfText",
+     "event": "PDF_RAN",
+     "from": "reading",
+     "payload": {
+      "stage": "k1",
+      "exitCode": 0,
+      "signal": 0,
+      "stdout": "Page one\n\f\fPage three\n\f",
+      "stdoutBytes": "",
+      "stderr": ""
+     },
+     "entity": {
+      "id": "r",
+      "key": "k1"
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "PDF_TEXT",
+        "payload": {
+         "key": "k1",
+         "pages": [
+          {
+           "page": 1,
+           "text": "Page one\n"
+          },
+          {
+           "page": 2,
+           "text": ""
+          },
+          {
+           "page": 3,
+           "text": "Page three\n"
+          }
+         ]
+        }
+       }
+      ],
+      "neverEmits": [
+       "PDF_NO_TEXT",
+       "PDF_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: two full pages answer two entries",
+   "steps": [
+    {
+     "trait": "PdfText",
+     "event": "PDF_RAN",
+     "from": "reading",
+     "payload": {
+      "stage": "k1",
+      "exitCode": 0,
+      "signal": 0,
+      "stdout": "Hello page one\n\fSecond page text\n\f",
+      "stdoutBytes": "",
+      "stderr": ""
+     },
+     "entity": {
+      "id": "r",
+      "key": "k1"
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "PDF_TEXT",
+        "payload": {
+         "key": "k1",
+         "pages": [
+          {
+           "page": 1,
+           "text": "Hello page one\n"
+          },
+          {
+           "page": 2,
+           "text": "Second page text\n"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a PDF whose pages are all empty answers PDF_NO_TEXT with the page count",
+   "steps": [
+    {
+     "trait": "PdfText",
+     "event": "PDF_RAN",
+     "from": "reading",
+     "payload": {
+      "stage": "k1",
+      "exitCode": 0,
+      "signal": 0,
+      "stdout": "\f\f",
+      "stdoutBytes": "",
+      "stderr": ""
+     },
+     "entity": {
+      "id": "r",
+      "key": "k1"
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "PDF_NO_TEXT",
+        "payload": {
+         "key": "k1",
+         "pageCount": 2
+        }
+       }
+      ],
+      "neverEmits": [
+       "PDF_TEXT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "whitespace-only pages count as no text",
+   "steps": [
+    {
+     "trait": "PdfText",
+     "event": "PDF_RAN",
+     "from": "reading",
+     "payload": {
+      "stage": "k1",
+      "exitCode": 0,
+      "signal": 0,
+      "stdout": "  \n\f\n\n\f",
+      "stdoutBytes": "",
+      "stderr": ""
+     },
+     "entity": {
+      "id": "r",
+      "key": "k1"
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "PDF_NO_TEXT",
+        "payload": {
+         "key": "k1",
+         "pageCount": 2
+        }
+       }
+      ],
+      "neverEmits": [
+       "PDF_TEXT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: one page with text among empty ones is text, not no-text",
+   "steps": [
+    {
+     "trait": "PdfText",
+     "event": "PDF_RAN",
+     "from": "reading",
+     "payload": {
+      "stage": "k1",
+      "exitCode": 0,
+      "signal": 0,
+      "stdout": "\f x\n\f",
+      "stdoutBytes": "",
+      "stderr": ""
+     },
+     "entity": {
+      "id": "r",
+      "key": "k1"
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "PDF_TEXT",
+        "payload": {
+         "key": "k1",
+         "pages": [
+          {
+           "page": 1,
+           "text": ""
+          },
+          {
+           "page": 2,
+           "text": " x\n"
+          }
+         ]
+        }
+       }
+      ],
+      "neverEmits": [
+       "PDF_NO_TEXT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a missing file makes pdftotext exit non-zero and answers pdf_unreadable with its message",
+   "steps": [
+    {
+     "trait": "PdfText",
+     "event": "PDF_RAN",
+     "from": "reading",
+     "payload": {
+      "stage": "k1",
+      "exitCode": 1,
+      "signal": 0,
+      "stdout": "",
+      "stdoutBytes": "",
+      "stderr": "I/O Error: Couldn't open file '/docs/missing.pdf': No such file or directory.\n"
+     },
+     "entity": {
+      "id": "r",
+      "key": "k1"
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "PDF_FAILED",
+        "payload": {
+         "key": "k1",
+         "error": "pdftotext exited 1: I/O Error: Couldn't open file '/docs/missing.pdf': No such file or directory.",
+         "code": "pdf_unreadable"
+        }
+       }
+      ],
+      "neverEmits": [
+       "PDF_TEXT",
+       "PDF_NO_TEXT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a zero exit never answers PDF_FAILED",
+   "steps": [
+    {
+     "trait": "PdfText",
+     "event": "PDF_RAN",
+     "from": "reading",
+     "payload": {
+      "stage": "k1",
+      "exitCode": 0,
+      "signal": 0,
+      "stdout": "x\n\f",
+      "stdoutBytes": "",
+      "stderr": ""
+     },
+     "entity": {
+      "id": "r",
+      "key": "k1"
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "neverEmits": [
+       "PDF_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a command that could not be run answers pdf_command_failed",
+   "steps": [
+    {
+     "trait": "PdfText",
+     "event": "PDF_CLI_FAILED",
+     "from": "reading",
+     "payload": {
+      "stage": "k1",
+      "error": "no command to run",
+      "code": "cli_spawn_failed"
+     },
+     "entity": {
+      "id": "r",
+      "key": "k1"
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "PDF_FAILED",
+        "payload": {
+         "key": "k1",
+         "error": "no command to run",
+         "code": "pdf_command_failed"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

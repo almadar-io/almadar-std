@@ -1,11 +1,19 @@
 app std-detail-layout [
   version: "1.0.0",
-  description: "std-detail-layout — detail-page chrome band (back button + navigation-stack breadcrumb trail) above a single contentTrait slot. Use as the contentTrait of a detail page's AppShell binding: the band renders `Contracts › Contract details` (phones: `← Back`) from the orbital-scoped client navigation stack (session history, seeded from declared page-path ancestry on cold loads — the trail is never empty), and the consumer's detail trait renders below it. Back pops the stack; crumb clicks navigate to their level; a list router's `(navigate path payload { crumb: ?row.title })` labels the detail crumb with the real record title. Bind once per detail page — `XDetailLayout = DetailShell.traits.DetailLayout` with `contentTrait: @trait.XDetail`."
+  description: "std-detail-layout — detail-page chrome band (back button + navigation-stack breadcrumb trail) above a single contentTrait slot. Use as the contentTrait of a detail page's AppShell binding: the band renders `Contracts › Contract details` (phones: `← Back`) from the std-nav-stack trail this orbital composes (the route mounts the session walked, seeded from the declared page-path ancestors on a cold load — the trail is never empty), and the consumer's detail trait renders below it. Back pops the stack; crumb clicks navigate to their level; a list router's `(navigate path payload { crumb: ?row.title })` labels the detail crumb with the real record title. Bind once per detail page — `XDetailLayout = DetailShell.traits.DetailLayout` with `contentTrait: @trait.XDetail`."
 ]
 ;; @capabilities "detail page shell, breadcrumb trail, back navigation, record detail chrome, navigation stack, drill-down hierarchy"
 orbital DetailLayoutOrbital {
+  type TrailEntry = { href : string!, label : string }
+
   entity DetailLayoutData [runtime] {
     id : string!
+    trail : [TrailEntry] @description "The navigation trail std-nav-stack keeps for this orbital; the band's breadcrumb and back read it." = []
+  }
+
+  uses NavStack from "std/behaviors/std-nav-stack"
+
+  trait Trail = NavStack.traits.NavStackTrail -> DetailLayoutData {
   }
 
   trait DetailLayout -> @rebindable DetailLayoutData [client] {
@@ -34,22 +42,52 @@ orbital DetailLayoutOrbital {
               className: "md:hidden"
             }, {
               type: breadcrumb
-              fromNavStack: true
+              items: (array/map @entity.trail (fn e { label: (default @e.label ""), href: @e.href }))
               itemEvent: CRUMB_NAV
               className: "hidden md:flex"
             }]
           },
-          @config.contentTrait]
+          @config.contentTrait, @trait.Trail]
         })
-      BACK -> composing
-        (navigate-back)
+      TRAIL_IS -> composing
+        (do (set @entity.trail ?entries)
+          (render-ui main {
+          type: stack
+          direction: vertical
+          gap: lg
+          className: "w-full"
+          children: [{
+            type: stack
+            direction: vertical
+            align: start
+            gap: xs
+            className: "w-full border-b border-border pb-3"
+            children: [{
+              type: button
+              variant: ghost
+              size: sm
+              icon: arrow-left
+              label: @config.backLabel
+              action: BACK
+              className: "md:hidden"
+            }, {
+              type: breadcrumb
+              items: (array/map @entity.trail (fn e { label: (default @e.label ""), href: @e.href }))
+              itemEvent: CRUMB_NAV
+              className: "hidden md:flex"
+            }]
+          },
+          @config.contentTrait, @trait.Trail]
+        }))
+      BACK -> composing when (>= (array/len @entity.trail) 2)
+        (navigate (object/get (default (array/nth @entity.trail (- (array/len @entity.trail) 2)) { href: "/", label: "" }) href))
       CRUMB_NAV -> composing
         (navigate ?href)
     }
 
     emits {
       BACK
-        @description "The shell's back affordance was pressed; the layout pops the navigation stack."
+        @description "The shell's back affordance was pressed; the layout navigates to the entry before the current one in the trail."
         @synonyms "go back, return, previous page, up one level"
         @tier "internal"
       CRUMB_NAV
@@ -67,6 +105,11 @@ orbital DetailLayoutOrbital {
         @description "Breadcrumb level picked from the navigation-stack trail."
         @synonyms "breadcrumb click, trail navigation"
         @tier "internal"
+      TRAIL_IS { entries : [TrailEntry]! }
+        @description "std-nav-stack's trail after a route mount: the band repaints its breadcrumb and back target from it."
+        @synonyms "trail changed, navigation trail"
+        @tier "internal"
+      Trail.TRAIL -> TRAIL_IS
     }
 
     config {

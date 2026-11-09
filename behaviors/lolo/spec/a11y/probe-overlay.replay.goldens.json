@@ -1,0 +1,364 @@
+{
+ "atom": "a11y/atoms/std-a11y-probe-overlay.lolo",
+ "trait": "OverlayProbe",
+ "note": "std-a11y-probe-overlay with the page answer played as an event. The script lists of the fixtures are real, recorded through headless Chrome with record.py and expression.js. Regenerate with python3 -I probe-overlay.gen/gen_goldens.py.",
+ "cases": [
+  {
+   "id": "PROBE_RUN asks the page for every script src under the run key",
+   "steps": [
+    {
+     "from": "idle",
+     "event": "PROBE_RUN",
+     "payload": {
+      "key": "k1",
+      "pageUrl": "http://127.0.0.1:24812/"
+     },
+     "expect": {
+      "state": "measuring",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k1:measure",
+         "expression": "JSON.stringify({ scripts: Array.from(document.querySelectorAll(\"script[src]\")).map(function (s) { return s.src; }) })"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "overlay-script-fail: the local widget script is one confirmed overlay finding with no WCAG criterion",
+   "steps": [
+    {
+     "from": "measuring",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24812/"
+     },
+     "payload": {
+      "key": "k1:measure",
+      "json": "{\"scripts\":[\"http://127.0.0.1:24812/vendor/userway/userway.js\"]}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k1",
+         "probe": "overlay",
+         "findings": [
+          {
+           "id": "overlay:UserWay:http://127.0.0.1:24812/vendor/userway/userway.js",
+           "pageUrl": "http://127.0.0.1:24812/",
+           "rule": "overlay",
+           "wcag": [],
+           "method": "probe",
+           "engines": [
+            "probe"
+           ],
+           "impact": "moderate",
+           "confidence": "confirmed",
+           "selector": "script[src=\"http://127.0.0.1:24812/vendor/userway/userway.js\"]",
+           "snippet": "http://127.0.0.1:24812/vendor/userway/userway.js",
+           "evidence": "",
+           "count": 1
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: overlay-script-pass lists only the site's own script and finds no overlay",
+   "steps": [
+    {
+     "from": "measuring",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24812/"
+     },
+     "payload": {
+      "key": "k1:measure",
+      "json": "{\"scripts\":[\"http://127.0.0.1:24812/assets/app.js\"]}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k1",
+         "probe": "overlay",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "each of the five vendors' hosts is recognised and the site's own script beside them is not",
+   "steps": [
+    {
+     "from": "measuring",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24812/"
+     },
+     "payload": {
+      "key": "k1:measure",
+      "json": "{\"scripts\": [\"https://a.test/app.js\", \"https://cdn.acsbapp.com/widget.js\", \"https://cdn.userway.org/widget.js\", \"https://vlibras.equalweb.com/x.js\", \"https://x.audioeye.com/ae.js\", \"https://api.reciteme.com/asset/js\"]}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k1",
+         "probe": "overlay",
+         "findings": [
+          {
+           "id": "overlay:accessiBe:https://cdn.acsbapp.com/widget.js",
+           "pageUrl": "http://127.0.0.1:24812/",
+           "rule": "overlay",
+           "wcag": [],
+           "method": "probe",
+           "engines": [
+            "probe"
+           ],
+           "impact": "moderate",
+           "confidence": "confirmed",
+           "selector": "script[src=\"https://cdn.acsbapp.com/widget.js\"]",
+           "snippet": "https://cdn.acsbapp.com/widget.js",
+           "evidence": "",
+           "count": 1
+          },
+          {
+           "id": "overlay:UserWay:https://cdn.userway.org/widget.js",
+           "pageUrl": "http://127.0.0.1:24812/",
+           "rule": "overlay",
+           "wcag": [],
+           "method": "probe",
+           "engines": [
+            "probe"
+           ],
+           "impact": "moderate",
+           "confidence": "confirmed",
+           "selector": "script[src=\"https://cdn.userway.org/widget.js\"]",
+           "snippet": "https://cdn.userway.org/widget.js",
+           "evidence": "",
+           "count": 1
+          },
+          {
+           "id": "overlay:EqualWeb:https://vlibras.equalweb.com/x.js",
+           "pageUrl": "http://127.0.0.1:24812/",
+           "rule": "overlay",
+           "wcag": [],
+           "method": "probe",
+           "engines": [
+            "probe"
+           ],
+           "impact": "moderate",
+           "confidence": "confirmed",
+           "selector": "script[src=\"https://vlibras.equalweb.com/x.js\"]",
+           "snippet": "https://vlibras.equalweb.com/x.js",
+           "evidence": "",
+           "count": 1
+          },
+          {
+           "id": "overlay:AudioEye:https://x.audioeye.com/ae.js",
+           "pageUrl": "http://127.0.0.1:24812/",
+           "rule": "overlay",
+           "wcag": [],
+           "method": "probe",
+           "engines": [
+            "probe"
+           ],
+           "impact": "moderate",
+           "confidence": "confirmed",
+           "selector": "script[src=\"https://x.audioeye.com/ae.js\"]",
+           "snippet": "https://x.audioeye.com/ae.js",
+           "evidence": "",
+           "count": 1
+          },
+          {
+           "id": "overlay:Recite Me:https://api.reciteme.com/asset/js",
+           "pageUrl": "http://127.0.0.1:24812/",
+           "rule": "overlay",
+           "wcag": [],
+           "method": "probe",
+           "engines": [
+            "probe"
+           ],
+           "impact": "moderate",
+           "confidence": "confirmed",
+           "selector": "script[src=\"https://api.reciteme.com/asset/js\"]",
+           "snippet": "https://api.reciteme.com/asset/js",
+           "evidence": "",
+           "count": 1
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a host that only resembles a vendor name does not match",
+   "steps": [
+    {
+     "from": "measuring",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24812/"
+     },
+     "payload": {
+      "key": "k1:measure",
+      "json": "{\"scripts\": [\"https://acsbapp-com.example/x.js\", \"https://notuserway.example/x.js\"]}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k1",
+         "probe": "overlay",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a page failure answers PROBE_FAILED with the page's code",
+   "steps": [
+    {
+     "from": "measuring",
+     "event": "PAGE_FAILED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24812/"
+     },
+     "payload": {
+      "key": "k1:measure",
+      "error": "evaluate threw",
+      "code": "measure_failed"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_FAILED",
+        "payload": {
+         "key": "k1",
+         "probe": "overlay",
+         "error": "evaluate threw",
+         "code": "measure_failed"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: an answer under another run's key is ignored",
+   "steps": [
+    {
+     "from": "measuring",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24812/"
+     },
+     "payload": {
+      "key": "k2:measure",
+      "json": "{\"scripts\":[\"http://127.0.0.1:24812/vendor/userway/userway.js\"]}"
+     },
+     "expect": {
+      "state": "measuring",
+      "emits": []
+     }
+    }
+   ]
+  },
+  {
+   "id": "a measurement that is not a script list answers overlay_bad_reply",
+   "steps": [
+    {
+     "from": "measuring",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24812/"
+     },
+     "payload": {
+      "key": "k1:measure",
+      "json": "{\"x\":1}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_FAILED",
+        "payload": {
+         "key": "k1",
+         "probe": "overlay",
+         "error": "the page answered no script list",
+         "code": "overlay_bad_reply"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a second PROBE_RUN while one is in flight answers probe_busy",
+   "steps": [
+    {
+     "from": "measuring",
+     "event": "PROBE_RUN",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24812/"
+     },
+     "payload": {
+      "key": "k2",
+      "pageUrl": "http://127.0.0.1:24812/"
+     },
+     "expect": {
+      "state": "measuring",
+      "emits": [
+       {
+        "event": "PROBE_FAILED",
+        "payload": {
+         "key": "k2",
+         "probe": "overlay",
+         "code": "probe_busy"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

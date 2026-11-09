@@ -1,0 +1,105 @@
+app std-a11y-probe-consistency [
+  version: "1.0.0",
+  description: "std-a11y-probe-consistency — compares pages of one site for consistent navigation (WCAG 3.2.3) and consistent help (WCAG 3.2.6, version 2.2). CONSISTENCY_CHECK { key, pages : [{ url, nav, helpLinks }] } takes, per page, the link texts of its navigation landmarks in order and the hrefs of the links inside its header and footer in order; the organism measures them per page with PAGE_MEASURE and the measureExpression knob, which this atom exports so it can be read and replaced. The atom only compares and answers PROBE_DONE { key, probe, findings }. nav-inconsistent: against the first page, the navigation links the page shares with it (each text once) are in another order. help-inconsistent: a header or footer link whose href matches a helpPatterns entry (a declared list, lowercase) is present on some page and, on another page, missing, or at another index among that page's header and footer links; the reference for a link is the first page that has it. Both findings are needs-verification: the measurement is a fact, whether the change is a real inconsistency is a reviewer's call. A single page, or none, has nothing to compare and no finding. Plain data in, findings out, no page events. 3.2.4 Consistent Identification is not checked: it needs the href of each navigation link, which the measurement does not carry."
+]
+;; @capabilities "compare navigation order and help link placement across the pages of a site"
+uses Spec from "almadar-std/probe-consistency"
+
+type WcagRef = { criterion : string!, level : "A" | "AA" | "AAA"!, version : "2.0" | "2.1" | "2.2"! }
+type A11yFinding = { id : string!, pageUrl : string!, rule : string!, wcag : [WcagRef]!, method : "engine" | "probe" | "llm"!, engines : [string]!, impact : "critical" | "serious" | "moderate" | "minor"!, confidence : "confirmed" | "needs-verification"!, selector : string!, snippet : string!, evidence : string!, count : number! }
+type ConsistencyPage = { url : string!, nav : [string]!, helpLinks : [string]! }
+type HelpAt = { href : string!, pos : number! }
+type HelpRow = { url : string!, helps : [HelpAt]! }
+
+orbital ConsistencyOrbital {
+  entity ConsistencyRun [runtime] {
+    id : string!
+    runKey : string @description "The caller's name for the last check." = ""
+  }
+
+  trait ConsistencyProbe -> ConsistencyRun {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      CONSISTENCY_CHECK -> ready
+        (set @entity.runKey @payload.key)
+        (let ((ref (default (array/first @payload.pages) { url: "", nav: [], helpLinks: [] })))
+          (let ((refNav (array/unique @ref.nav)))
+            (let ((navFindings (array/map
+                (array/filter (array/drop @payload.pages 1) (fn p (!= (array/filter @refNav (fn t (array/includes (array/unique @p.nav) @t))) (array/filter (array/unique @p.nav) (fn t (array/includes @refNav @t))))))
+                (fn p {
+                  id: (str/concat "nav-inconsistent:" @p.url),
+                  pageUrl: @p.url,
+                  rule: "nav-inconsistent",
+                  wcag: [{ criterion: "3.2.3", level: "AA", version: "2.0" }],
+                  method: "probe",
+                  engines: ["probe"],
+                  impact: "moderate",
+                  confidence: "needs-verification",
+                  selector: "nav",
+                  snippet: (str/concat "order on " @ref.url ": " (str/join (array/filter @refNav (fn t (array/includes (array/unique @p.nav) @t))) " > ") "; on " @p.url ": " (str/join (array/filter (array/unique @p.nav) (fn t (array/includes @refNav @t))) " > ")),
+                  evidence: "",
+                  count: 1
+                }))))
+              (let ((rows (array/map @payload.pages (fn p { url: @p.url, helps: (array/reduce (array/range 0 (array/len @p.helpLinks)) [] (fn acc i (let ((h (default (array/nth @p.helpLinks @i) ""))) (if (and (array/some @config.helpPatterns (fn pat (validate/pattern (str/lower @h) @pat))) (not (array/some @acc (fn e (== @e.href @h))))) (array/append @acc { href: @h, pos: @i }) @acc)))) }))))
+                (let ((helpFindings (array/flatten (array/map (array/unique (array/flatten (array/map @rows (fn r (array/map @r.helps (fn e @e.href)))))) (fn h
+                    (let ((first (default (array/find @rows (fn r (array/some @r.helps (fn e (== @e.href @h))))) { url: "", helps: [] })))
+                      (let ((at (default (array/find @first.helps (fn e (== @e.href @h))) { href: "", pos: 0 })))
+                        (array/flatten (array/map (array/filter @rows (fn r (!= @r.url @first.url))) (fn r
+                          (let ((mine (default (array/find @r.helps (fn e (== @e.href @h))) { href: "", pos: -1 })))
+                            (if (== @mine.pos @at.pos)
+                              []
+                              [{
+                                id: (str/concat "help-inconsistent:" @r.url ":" @h),
+                                pageUrl: @r.url,
+                                rule: "help-inconsistent",
+                                wcag: [{ criterion: "3.2.6", level: "A", version: "2.2" }],
+                                method: "probe",
+                                engines: ["probe"],
+                                impact: "moderate",
+                                confidence: "needs-verification",
+                                selector: (str/concat "a[href=\"" @h "\"]"),
+                                snippet: (if (== @mine.pos -1) (str/concat "help link " @h " is at index " @at.pos " on " @first.url " and missing here") (str/concat "help link " @h " is at index " @at.pos " on " @first.url " and at index " @mine.pos " here")),
+                                evidence: "",
+                                count: 1
+                              }]))))))))))))
+                (emit PROBE_DONE { key: @payload.key, probe: "consistency", findings: (array/concat @navFindings @helpFindings) }))))))
+      CONSISTENCY_EXPRESSION_ASK -> ready
+        (emit CONSISTENCY_EXPRESSION { key: @payload.key, expression: @config.measureExpression })
+    }
+
+    emits {
+      PROBE_DONE -> external { key : string!  probe : string!  findings : [A11yFinding]! }
+        @description "The check's findings: nav-inconsistent for a page whose shared navigation links are in another order than on the first page, help-inconsistent for a help link missing from a page or at another position, none otherwise."
+        @synonyms "consistency check, consistent navigation, consistent help"
+        @tier "primary"
+      CONSISTENCY_EXPRESSION -> external { key : string!  expression : string! }
+        @description "The expression to run with PAGE_MEASURE on each page: it answers JSON text for a { nav, helpLinks } record."
+        @synonyms "consistency measurement"
+        @tier "secondary"
+    }
+
+    listens {
+      CONSISTENCY_EXPRESSION_ASK -> input { key : string! }
+        @description "Ask for the measurement expression, so the organism can run it on every page."
+        @synonyms "consistency expression"
+      CONSISTENCY_CHECK -> input { key : string!  pages : [ConsistencyPage]! }
+        @description "Compare the navigation order and help link placement of the pages; the data per page is measured with the measureExpression knob."
+        @synonyms "consistency probe, consistent navigation check, consistent help check"
+    }
+
+    config {
+      helpPatterns : [string] = ["^mailto:", "^tel:", "/kontakt", "/contact", "/pomoc", "/help"]
+        @label "Help link patterns"
+        @description "Regex patterns of the shared dialect, tried on the lowercase href; a header or footer link matching one is a help or contact link."
+        @tier "domain"
+      measureExpression : string = "JSON.stringify({ nav: Array.from(document.querySelectorAll('nav a[href], [role=navigation] a[href]')).map(a => (a.innerText || a.textContent).trim()), helpLinks: Array.from(document.querySelectorAll('header a[href], footer a[href], [role=banner] a[href], [role=contentinfo] a[href]')).map(a => a.href) })"
+        @label "Measurement expression"
+        @description "The PAGE_MEASURE expression the organism runs on each page: the link texts of the navigation landmarks in order and the hrefs of the header and footer links in order, as JSON text for a { nav, helpLinks } record."
+        @tier "infra"
+    }
+  }
+
+  page boot as ConsistencyProbePage -> ConsistencyProbe
+}

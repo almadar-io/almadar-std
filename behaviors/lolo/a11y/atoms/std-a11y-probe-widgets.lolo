@@ -1,0 +1,289 @@
+app std-a11y-probe-widgets [
+  version: "1.0.0",
+  description: "std-a11y-probe-widgets — WCAG 2.1.1 Keyboard, 4.1.2 Name, Role, Value and 2.5.8 Target Size (Minimum) on the page a tab already shows. PROBE_RUN { key, pageUrl } asks the page for the widgets the patterns knob declares by ARIA role (PAGE_MEASURE), and for each one runs the WAI-ARIA Authoring Practices keyboard pattern of its role: focus the widget's entry point (PAGE_MEASURE), then for each step press the key (PAGE_KEY) and read the widget's state again (PAGE_MEASURE: focus, aria-selected, open, aria-activedescendant, trigger focus). A step lists the observables that must hold afterwards (expect: all of them; expectAny: at least one), from the closed set focusMoved, ariaSelectedMoved, expandedFalse, focusInside, focusReturned, activeDescendantChanged. A failed observable is one finding with the rule widget-keyboard, needs-verification. A pattern that needs a trigger (a dialog opened by the element its aria-controls names) is skipped for a widget with none. The page is navigated again to pageUrl after each widget (PAGE_NAVIGATE) so it is left as found. Last, PAGE_MEASURE lists the rects of the interactive elements the targetSelectors knob names, and every target smaller than minTarget CSS px on a side that is not inline in a sentence and whose minTarget-diameter circle meets another target, or the circle of another undersized target, is one target-size finding (needs-verification). It answers PROBE_DONE { key, probe, findings } or PROBE_FAILED { key, probe, error, code } (probe_busy, probe_page_failed, probe_bad_measure)."
+]
+uses Spec from "almadar-std/probe-widgets"
+
+type WcagRef = { criterion : string!, level : "A" | "AA" | "AAA"!, version : "2.0" | "2.1" | "2.2"! }
+type A11yFinding = { id : string!, pageUrl : string!, rule : string!, wcag : [WcagRef]!, method : "engine" | "probe" | "llm"!, engines : [string]!, impact : "critical" | "serious" | "moderate" | "minor"!, confidence : "confirmed" | "needs-verification"!, selector : string!, snippet : string!, evidence : string!, count : number! }
+type PageKeyName = "Tab" | "Enter" | "Space" | "Escape" | "ArrowDown" | "ArrowUp" | "ArrowLeft" | "ArrowRight" | "Home" | "End"
+type WidgetObservable = "focusMoved" | "ariaSelectedMoved" | "expandedFalse" | "focusInside" | "focusReturned" | "activeDescendantChanged"
+type WidgetStep = { key : PageKeyName!, expect : [WidgetObservable]!, expectAny : [WidgetObservable]! }
+type WidgetPattern = { role : string!, selector : string!, focus : string!, focusTrigger : boolean!, needsTrigger : boolean!, steps : [WidgetStep]! }
+type WidgetRef = { role : string!, selector : string!, snippet : string! }
+type WidgetFind = { widgets : [WidgetRef]! }
+type WidgetState = { hasTrigger : boolean!, active : string!, inside : boolean!, selected : [string]!, open : boolean!, activeDescendant : string!, triggerFocused : boolean! }
+type TargetRect = { selector : string!, snippet : string!, x : number!, y : number!, width : number!, height : number!, inline : boolean! }
+type TargetMeasure = { targets : [TargetRect]! }
+
+orbital WidgetsOrbital {
+  entity WidgetsRun [runtime] {
+    id : string!
+    runKey : string @description "The caller's name for the run in flight." = ""
+    pageUrl : string @description "The page the run in flight is about." = ""
+    widgets : [WidgetRef] @description "The widgets the run checks, in pattern then document order." = []
+    w : number @description "The index of the widget being checked." = 0
+    j : number @description "The index of the keyboard step being checked." = 0
+    cur : WidgetRef @description "The widget being checked." = { role: "", selector: "", snippet: "" }
+    pattern : WidgetPattern @description "The keyboard pattern of the widget being checked." = { role: "", selector: "", focus: "", focusTrigger: false, needsTrigger: false, steps: [] }
+    before : WidgetState @description "The widget's state before the key of the current step." = { hasTrigger: false, active: "", inside: false, selected: [], open: false, activeDescendant: "", triggerFocused: false }
+    findings : [A11yFinding] @description "The findings held until the page is measured for target sizes." = []
+  }
+
+  trait WidgetsProbe -> WidgetsRun {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      PROBE_RUN -> finding
+        (set @entity.runKey @payload.key)
+        (set @entity.pageUrl @payload.pageUrl)
+        (set @entity.widgets [])
+        (set @entity.w 0)
+        (set @entity.j 0)
+        (set @entity.findings [])
+        (emit PAGE_MEASURE { key: (str/concat @payload.key ":find"), expression: (str/concat "(" @config.findMeasure ")(" (json/stringify @config.patterns) ")") })
+    }
+
+    state finding {
+      INIT -> idle
+      PROBE_RUN -> finding
+        (emit PROBE_FAILED { key: @payload.key, probe: "widgets", error: (str/concat "a run on " @entity.pageUrl " is in flight"), code: "probe_busy" })
+      PAGE_FAILED -> idle when (str/startsWith @payload.key @entity.runKey)
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "widgets", error: @payload.error, code: "probe_page_failed" })
+      PAGE_MEASURED -> idle when (and (= @payload.key (str/concat @entity.runKey ":find")) (= (json/parse @payload.json WidgetFind) null))
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "widgets", error: "the page measurement is not the widget list shape", code: "probe_bad_measure" })
+      PAGE_MEASURED -> finding when (and (= @payload.key (str/concat @entity.runKey ":find")) (!= (json/parse @payload.json WidgetFind) null))
+        (set @entity.widgets (let ((d (json/parse @payload.json WidgetFind))) (array/filter @d.widgets (fn x (array/some @config.patterns (fn p (and (= @p.role @x.role) (> (array/len @p.steps) 0))))))))
+        (emit WIDGETS_FOUND {})
+      WIDGETS_FOUND -> sizing when (= (array/len @entity.widgets) 0)
+        (emit PAGE_MEASURE { key: (str/concat @entity.runKey ":targets"), expression: (str/concat "(" @config.targetMeasure ")(" (json/stringify (str/join @config.targetSelectors ",")) ")") })
+      WIDGETS_FOUND -> focusing when (> (array/len @entity.widgets) 0)
+        (emit WIDGET_START {})
+    }
+
+    state focusing {
+      INIT -> idle
+      PROBE_RUN -> focusing
+        (emit PROBE_FAILED { key: @payload.key, probe: "widgets", error: (str/concat "a run on " @entity.pageUrl " is in flight"), code: "probe_busy" })
+      PAGE_FAILED -> idle when (str/startsWith @payload.key @entity.runKey)
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "widgets", error: @payload.error, code: "probe_page_failed" })
+      WIDGET_START -> focusing
+        (set @entity.cur (default (array/nth @entity.widgets @entity.w) @entity.cur))
+        (set @entity.pattern (let ((x (default (array/nth @entity.widgets @entity.w) @entity.cur))) (default (array/find @config.patterns (fn p (= @p.role @x.role))) @entity.pattern)))
+        (let ((x (array/nth @entity.widgets @entity.w)))
+          (let ((p (array/find @config.patterns (fn p (= @p.role @x.role)))))
+            (emit PAGE_MEASURE { key: (str/concat @entity.runKey ":focus"), expression: (str/concat "(" @config.stateMeasure ")(" (json/stringify @x.selector) "," (json/stringify @p.focus) "," (json/stringify @p.focusTrigger) ",true)") })))
+      PAGE_MEASURED -> idle when (and (= @payload.key (str/concat @entity.runKey ":focus")) (= (json/parse @payload.json WidgetState) null))
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "widgets", error: "the page measurement is not the widget state shape", code: "probe_bad_measure" })
+      PAGE_MEASURED -> focusing when (and (= @payload.key (str/concat @entity.runKey ":focus")) (!= (json/parse @payload.json WidgetState) null))
+        (set @entity.before (let ((d (json/parse @payload.json WidgetState))) @d))
+        (set @entity.j 0)
+        (emit WIDGET_FOCUSED {})
+      WIDGET_FOCUSED -> restoring when (and @entity.pattern.needsTrigger (not @entity.before.hasTrigger))
+        (emit PAGE_NAVIGATE { key: (str/concat @entity.runKey ":restore"), url: @entity.pageUrl })
+      WIDGET_FOCUSED -> pressing when (not (and @entity.pattern.needsTrigger (not @entity.before.hasTrigger)))
+        (let ((s (array/nth @entity.pattern.steps 0)))
+          (emit PAGE_KEY { key: (str/concat @entity.runKey ":press"), keyName: @s.key }))
+    }
+
+    state pressing {
+      INIT -> idle
+      PROBE_RUN -> pressing
+        (emit PROBE_FAILED { key: @payload.key, probe: "widgets", error: (str/concat "a run on " @entity.pageUrl " is in flight"), code: "probe_busy" })
+      PAGE_FAILED -> idle when (str/startsWith @payload.key @entity.runKey)
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "widgets", error: @payload.error, code: "probe_page_failed" })
+      PAGE_KEY_SENT -> reading when (= @payload.key (str/concat @entity.runKey ":press"))
+        (emit PAGE_MEASURE { key: (str/concat @entity.runKey ":read"), expression: (str/concat "(" @config.stateMeasure ")(" (json/stringify @entity.cur.selector) ",\"\",false,false)") })
+    }
+
+    state reading {
+      INIT -> idle
+      PROBE_RUN -> reading
+        (emit PROBE_FAILED { key: @payload.key, probe: "widgets", error: (str/concat "a run on " @entity.pageUrl " is in flight"), code: "probe_busy" })
+      PAGE_FAILED -> idle when (str/startsWith @payload.key @entity.runKey)
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "widgets", error: @payload.error, code: "probe_page_failed" })
+      PAGE_MEASURED -> idle when (and (= @payload.key (str/concat @entity.runKey ":read")) (= (json/parse @payload.json WidgetState) null))
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "widgets", error: "the page measurement is not the widget state shape", code: "probe_bad_measure" })
+      PAGE_MEASURED -> reading when (and (= @payload.key (str/concat @entity.runKey ":read")) (!= (json/parse @payload.json WidgetState) null))
+        (set @entity.findings (array/concat @entity.findings
+          (let ((st (array/nth @entity.pattern.steps @entity.j)) (bef @entity.before) (aft (json/parse @payload.json WidgetState)))
+            (let ((held (array/filter @config.observables (fn o (or
+                    (and (= @o "focusMoved") (!= @aft.active @bef.active))
+                    (and (= @o "ariaSelectedMoved") (!= @aft.selected @bef.selected))
+                    (and (= @o "expandedFalse") (not @aft.open))
+                    (and (= @o "focusInside") @aft.inside)
+                    (and (= @o "focusReturned") @aft.triggerFocused)
+                    (and (= @o "activeDescendantChanged") (or (!= @aft.activeDescendant @bef.activeDescendant) (and @aft.open (not @bef.open)))))))))
+              (array/map
+                (array/concat
+                  (array/filter @st.expect (fn o (not (array/includes @held @o))))
+                  (if (or (= (array/len @st.expectAny) 0) (array/some @st.expectAny (fn o (array/includes @held @o)))) [] [(str/join @st.expectAny "|")]))
+                (fn o {
+                  id: (str/concat @entity.pageUrl "#widget-keyboard#" @entity.cur.selector "#" @entity.pattern.role ":" @st.key ":" @o),
+                  pageUrl: @entity.pageUrl,
+                  rule: "widget-keyboard",
+                  wcag: [{ criterion: "2.1.1", level: "A", version: "2.0" }, { criterion: "4.1.2", level: "A", version: "2.0" }],
+                  method: "probe",
+                  engines: ["probe"],
+                  impact: @config.impact,
+                  confidence: "needs-verification",
+                  selector: @entity.cur.selector,
+                  snippet: @entity.cur.snippet,
+                  evidence: "",
+                  count: 1
+                }))))))
+        (set @entity.before (let ((d (json/parse @payload.json WidgetState))) @d))
+        (emit WIDGET_READ {})
+      WIDGET_READ -> pressing when (< (+ @entity.j 1) (array/len @entity.pattern.steps))
+        (let ((s (array/nth @entity.pattern.steps (+ @entity.j 1))))
+          (emit PAGE_KEY { key: (str/concat @entity.runKey ":press"), keyName: @s.key }))
+        (set @entity.j (+ @entity.j 1))
+      WIDGET_READ -> restoring when (>= (+ @entity.j 1) (array/len @entity.pattern.steps))
+        (emit PAGE_NAVIGATE { key: (str/concat @entity.runKey ":restore"), url: @entity.pageUrl })
+    }
+
+    state restoring {
+      INIT -> idle
+      PROBE_RUN -> restoring
+        (emit PROBE_FAILED { key: @payload.key, probe: "widgets", error: (str/concat "a run on " @entity.pageUrl " is in flight"), code: "probe_busy" })
+      PAGE_FAILED -> idle when (str/startsWith @payload.key @entity.runKey)
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "widgets", error: @payload.error, code: "probe_page_failed" })
+      PAGE_LOADED -> focusing when (and (= @payload.key (str/concat @entity.runKey ":restore")) (< (+ @entity.w 1) (array/len @entity.widgets)))
+        (set @entity.w (+ @entity.w 1))
+        (emit WIDGET_START {})
+      PAGE_LOADED -> sizing when (and (= @payload.key (str/concat @entity.runKey ":restore")) (>= (+ @entity.w 1) (array/len @entity.widgets)))
+        (emit PAGE_MEASURE { key: (str/concat @entity.runKey ":targets"), expression: (str/concat "(" @config.targetMeasure ")(" (json/stringify (str/join @config.targetSelectors ",")) ")") })
+    }
+
+    state sizing {
+      INIT -> idle
+      PROBE_RUN -> sizing
+        (emit PROBE_FAILED { key: @payload.key, probe: "widgets", error: (str/concat "a run on " @entity.pageUrl " is in flight"), code: "probe_busy" })
+      PAGE_FAILED -> idle when (str/startsWith @payload.key @entity.runKey)
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "widgets", error: @payload.error, code: "probe_page_failed" })
+      PAGE_MEASURED -> idle when (and (= @payload.key (str/concat @entity.runKey ":targets")) (= (json/parse @payload.json TargetMeasure) null))
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "widgets", error: "the page measurement is not the target list shape", code: "probe_bad_measure" })
+      PAGE_MEASURED -> idle when (and (= @payload.key (str/concat @entity.runKey ":targets")) (!= (json/parse @payload.json TargetMeasure) null))
+        (let ((ts (json/parse @payload.json TargetMeasure)))
+          (emit PROBE_DONE {
+            key: @entity.runKey,
+            probe: "widgets",
+            findings: (array/concat @entity.findings (array/map
+              (array/filter @ts.targets (fn t (and
+                (not @t.inline)
+                (or (< @t.width @config.minTarget) (< @t.height @config.minTarget))
+                (array/some @ts.targets (fn u (and
+                  (!= @u.selector @t.selector)
+                  (let ((cx (+ @t.x (/ @t.width 2))) (cy (+ @t.y (/ @t.height 2))) (r (/ @config.minTarget 2)))
+                    (let ((dx (math/max (- @u.x @cx) (- @cx (+ @u.x @u.width)) 0)) (dy (math/max (- @u.y @cy) (- @cy (+ @u.y @u.height)) 0)) (ex (- (+ @u.x (/ @u.width 2)) @cx)) (ey (- (+ @u.y (/ @u.height 2)) @cy)))
+                      (or
+                        (< (+ (* @dx @dx) (* @dy @dy)) (* @r @r))
+                        (and
+                          (not @u.inline)
+                          (or (< @u.width @config.minTarget) (< @u.height @config.minTarget))
+                          (< (+ (* @ex @ex) (* @ey @ey)) (* @config.minTarget @config.minTarget))))))))))))
+              (fn t {
+                id: (str/concat @entity.pageUrl "#target-size#" @t.selector),
+                pageUrl: @entity.pageUrl,
+                rule: "target-size",
+                wcag: [{ criterion: "2.5.8", level: "AA", version: "2.2" }],
+                method: "probe",
+                engines: ["probe"],
+                impact: @config.targetImpact,
+                confidence: "needs-verification",
+                selector: @t.selector,
+                snippet: @t.snippet,
+                evidence: "",
+                count: 1
+              })))
+          }))
+    }
+
+    emits {
+      PAGE_MEASURE -> external { key : string!  expression : string! }
+        @description "Page request: evaluate the expression in the page; it answers a JSON string."
+        @synonyms "measure page, evaluate in page"
+        @tier "primary"
+      PAGE_KEY -> external { key : string!  keyName : "Tab" | "Enter" | "Space" | "Escape" | "ArrowDown" | "ArrowUp" | "ArrowLeft" | "ArrowRight" | "Home" | "End"!  shift : boolean }
+        @description "Page request: press a key in the page; the composer wires it to the std-chrome PAGE_KEY input."
+        @synonyms "press key, send key"
+        @tier "primary"
+      PAGE_NAVIGATE -> external { key : string!  url : string! }
+        @description "Page request: load the url in the tab, restoring the page after a widget was driven."
+        @synonyms "navigate, reload page"
+        @tier "primary"
+      PROBE_DONE -> external { key : string!  probe : string!  findings : [A11yFinding]! }
+        @description "The widgets probe finished: its widget-keyboard and target-size findings, empty when every widget answers its keyboard pattern and every target is large enough or spaced."
+        @synonyms "widget findings, keyboard pattern result, target size result"
+        @tier "primary"
+      PROBE_FAILED -> external { key : string!  probe : string!  error : string!  code : string! }
+        @description "The probe could not finish: code is probe_busy, probe_page_failed or probe_bad_measure."
+        @synonyms "probe failed, widgets error"
+        @tier "primary"
+      WIDGETS_FOUND {}
+        @description "Internal: the widget list is held; decide whether there is anything to drive."
+        @tier "internal"
+      WIDGET_START {}
+        @description "Internal: begin the widget at the held index by focusing its entry point."
+        @tier "internal"
+      WIDGET_FOCUSED {}
+        @description "Internal: the entry point is focused and its state held; decide whether the pattern can run."
+        @tier "internal"
+      WIDGET_READ {}
+        @description "Internal: the state after a key is held and judged; decide whether another step follows."
+        @tier "internal"
+    }
+
+    listens {
+      PROBE_RUN { key : string!  pageUrl : string! }
+        @description "Check the page the tab is on for tabs, menus, dialogs, comboboxes, listboxes and trees that ignore their keyboard pattern, and for interactive targets smaller than 24 CSS px."
+        @synonyms "keyboard widget check, aria pattern check, target size check, wcag 2.1.1, wcag 2.5.8"
+      PAGE_KEY_SENT { key : string! }
+      PAGE_LOADED { key : string!  url : string!  title : string! }
+      PAGE_MEASURED { key : string!  json : string! }
+      PAGE_FAILED { key : string!  error : string!  code : string! }
+    }
+
+    config {
+      patterns : [WidgetPattern] = [{ role: "tablist", selector: "[role=\"tablist\"]", focus: "[role=\"tab\"][aria-selected=\"true\"]", focusTrigger: false, needsTrigger: false, steps: [{ key: "ArrowRight", expect: ["focusMoved", "ariaSelectedMoved"], expectAny: [] }] }, { role: "menu", selector: "[role=\"menu\"]", focus: "[role=\"menuitem\"]", focusTrigger: false, needsTrigger: false, steps: [{ key: "ArrowDown", expect: ["focusMoved", "focusInside"], expectAny: [] }, { key: "Escape", expect: ["expandedFalse"], expectAny: [] }] }, { role: "menubar", selector: "[role=\"menubar\"]", focus: "[role=\"menuitem\"]", focusTrigger: false, needsTrigger: false, steps: [{ key: "ArrowRight", expect: ["focusMoved", "focusInside"], expectAny: [] }] }, { role: "dialog", selector: "[role=\"dialog\"]", focus: "", focusTrigger: true, needsTrigger: true, steps: [{ key: "Enter", expect: ["focusInside"], expectAny: [] }, { key: "Escape", expect: ["expandedFalse", "focusReturned"], expectAny: [] }] }, { role: "combobox", selector: "[role=\"combobox\"]", focus: "", focusTrigger: false, needsTrigger: false, steps: [{ key: "ArrowDown", expect: [], expectAny: ["activeDescendantChanged"] }] }, { role: "listbox", selector: "[role=\"listbox\"]", focus: "[role=\"option\"]", focusTrigger: false, needsTrigger: false, steps: [{ key: "ArrowDown", expect: [], expectAny: ["focusMoved", "activeDescendantChanged"] }] }, { role: "tree", selector: "[role=\"tree\"]", focus: "[role=\"treeitem\"]", focusTrigger: false, needsTrigger: false, steps: [{ key: "ArrowDown", expect: [], expectAny: ["focusMoved", "activeDescendantChanged"] }] }, { role: "carousel", selector: "[aria-roledescription=\"carousel\"]", focus: "", focusTrigger: false, needsTrigger: false, steps: [] }]
+        @label "Keyboard patterns"
+        @description "Each widget role with the CSS selector that finds it, the entry point inside it that takes focus (blank for the widget itself, or the element its aria-controls trigger is when focusTrigger is true), whether it needs a trigger to be tested, and the WAI-ARIA Authoring Practices steps: a key to press and the observables that must hold afterwards (expect: all, expectAny: at least one). A role with no steps is not driven."
+        @tier "domain"
+      observables : [WidgetObservable] = ["focusMoved", "ariaSelectedMoved", "expandedFalse", "focusInside", "focusReturned", "activeDescendantChanged"]
+        @label "Observables"
+        @description "The closed set of facts a step may expect: focusMoved (the focused element changed), ariaSelectedMoved (the set of aria-selected elements changed), expandedFalse (the widget is hidden or its trigger has aria-expanded false), focusInside (focus is within the widget), focusReturned (focus is on the trigger), activeDescendantChanged (aria-activedescendant changed, or the widget went from closed to open)."
+        @tier "domain"
+      targetSelectors : [string] = ["a[href]", "button", "input:not([type=\"hidden\"])", "select", "textarea", "summary", "[role=\"button\"]", "[role=\"link\"]", "[role=\"tab\"]", "[role=\"menuitem\"]", "[role=\"checkbox\"]", "[role=\"radio\"]", "[role=\"switch\"]", "[tabindex]:not([tabindex=\"-1\"])"]
+        @label "Target selectors"
+        @description "CSS selectors of the interactive elements whose size is measured."
+        @tier "domain"
+      minTarget : number = 24
+        @label "Minimum target"
+        @description "CSS px a target must measure on each side, or be spaced by; WCAG 2.5.8 names 24."
+        @tier "domain"
+      impact : "critical" | "serious" | "moderate" | "minor" = "serious"
+        @label "Keyboard impact"
+        @description "The impact of a widget-keyboard finding."
+        @tier "domain"
+      targetImpact : "critical" | "serious" | "moderate" | "minor" = "moderate"
+        @label "Target impact"
+        @description "The impact of a target-size finding."
+        @tier "domain"
+      findMeasure : string = "(patterns) => { const vis = (e) => { const s = getComputedStyle(e); const r = e.getBoundingClientRect(); return s.display !== 'none' && s.visibility !== 'hidden' && r.width > 0 && r.height > 0; }; const sel = (e) => { const p = []; for (let n = e; n && n.nodeType === 1; n = n.parentElement) { if (n.id) { p.unshift('#' + CSS.escape(n.id)); break; } let i = 1; for (let s = n.previousElementSibling; s; s = s.previousElementSibling) { if (s.tagName === n.tagName) i++; } p.unshift(n.tagName.toLowerCase() + ':nth-of-type(' + i + ')'); } return p.join('>'); }; const widgets = []; for (const p of patterns) { for (const e of document.querySelectorAll(p.selector)) { if (!p.needsTrigger && !vis(e)) continue; widgets.push({ role: p.role, selector: sel(e), snippet: e.cloneNode(false).outerHTML }); } } return JSON.stringify({ widgets: widgets }); }"
+        @label "Find expression"
+        @description "A page function taking the patterns and returning a JSON string of the elements each pattern's selector matches, with role, selector and opening tag."
+        @tier "infra"
+      stateMeasure : string = "(widgetSel, focusSel, focusTrigger, doFocus) => { const sel = (e) => { const p = []; for (let n = e; n && n.nodeType === 1; n = n.parentElement) { if (n.id) { p.unshift('#' + CSS.escape(n.id)); break; } let i = 1; for (let s = n.previousElementSibling; s; s = s.previousElementSibling) { if (s.tagName === n.tagName) i++; } p.unshift(n.tagName.toLowerCase() + ':nth-of-type(' + i + ')'); } return p.join('>'); }; const vis = (e) => { const s = getComputedStyle(e); const r = e.getBoundingClientRect(); return s.display !== 'none' && s.visibility !== 'hidden' && r.width > 0 && r.height > 0; }; const w = document.querySelector(widgetSel); const trig = w.id !== '' ? document.querySelector('[aria-controls~=\"' + CSS.escape(w.id) + '\"]') : null; if (doFocus) { const cands = focusTrigger ? [trig] : (focusSel === '' ? [w] : Array.from(w.querySelectorAll(focusSel)).concat([w])); for (const t of cands) { if (t === null) continue; t.focus(); if (document.activeElement === t) break; } } const a = document.activeElement; const has = a !== null && a !== document.body; const owner = has && w.contains(a) ? a : w; return JSON.stringify({ hasTrigger: trig !== null, active: has ? sel(a) : '', inside: has && w.contains(a), selected: Array.from(w.querySelectorAll('[aria-selected=\"true\"]')).map(sel), open: vis(w) && (trig === null || trig.getAttribute('aria-expanded') !== 'false'), activeDescendant: owner.getAttribute('aria-activedescendant') || '', triggerFocused: trig !== null && has && a === trig }); }"
+        @label "State expression"
+        @description "A page function taking a widget selector, an entry point selector, whether the entry point is the trigger, and whether to focus it; it returns a JSON string of the widget's focus, aria-selected, open, aria-activedescendant and trigger state."
+        @tier "infra"
+      targetMeasure : string = "(selectors) => { const sel = (e) => { const p = []; for (let n = e; n && n.nodeType === 1; n = n.parentElement) { if (n.id) { p.unshift('#' + CSS.escape(n.id)); break; } let i = 1; for (let s = n.previousElementSibling; s; s = s.previousElementSibling) { if (s.tagName === n.tagName) i++; } p.unshift(n.tagName.toLowerCase() + ':nth-of-type(' + i + ')'); } return p.join('>'); }; const out = []; for (const e of document.querySelectorAll(selectors)) { const s = getComputedStyle(e); const r = e.getBoundingClientRect(); if (s.display === 'none' || s.visibility === 'hidden' || r.width === 0 || r.height === 0 || r.x + r.width <= 0 || r.y + r.height <= 0) continue; const inline = s.display === 'inline' && Array.from(e.parentNode.childNodes).some((n) => n.nodeType === 3 && n.textContent.trim() !== ''); out.push({ selector: sel(e), snippet: e.cloneNode(false).outerHTML, x: r.x, y: r.y, width: r.width, height: r.height, inline: inline }); } return JSON.stringify({ targets: out }); }"
+        @label "Target expression"
+        @description "A page function taking the joined target selector and returning a JSON string of the rendered targets with selector, opening tag, rect and whether the element is inline in a sentence."
+        @tier "infra"
+    }
+  }
+
+  page boot as WidgetsProbePage -> WidgetsProbe
+}

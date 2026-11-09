@@ -1,0 +1,49 @@
+app web-crawl-spec [
+  version: "1.0.0",
+  description: "Design contract for a bounded crawl of one site through page events. CRAWL_START { key, startUrl, maxDepth?, maxPages? } fixes the origin (scheme, host and port of startUrl), optionally reads <origin>/robots.txt (PAGE_NAVIGATE, PAGE_TEXT; the Disallow and Allow rules of User-agent * apply), then visits the frontier breadth first: PAGE_NAVIGATE, PAGE_LOADED, PAGE_LINKS, PAGE_LINKS_READ. Each visited page answers CRAWL_PAGE { key, url, title, depth, links }; a page that fails to load answers CRAWL_PAGE with an error and the crawl goes on. Same-origin links without their fragment, matching the include and not the exclude patterns, not blocked by robots and not seen before are queued one level deeper while depth is below maxDepth. Links that download, or match the declared document patterns, are recorded as documents and never navigated. CRAWL_DONE { key, pages, documents, truncated, skipped, blocked, robots } ends the run; truncated is true when maxPages stopped it and skipped counts the URLs left in the frontier."
+]
+
+type PageLink = { index : number!, text : string!, href : string!, download : boolean!, kind : "link" | "button"! }
+type CrawlPageRec = { url : string!, title : string!, depth : number!, error : string? }
+type CrawlDocument = { url : string!, text : string!, fromPage : string! }
+
+orbital WebCrawlSpec {
+  expects entity CrawlRun [runtime] {
+    id : string!
+  }
+  expects trait WebCrawl {
+    state idle {
+      CRAWL_START -> robots_loading
+    }
+    state robots_loading {
+      PAGE_LOADED -> robots_reading
+    }
+    state robots_reading {
+      PAGE_TEXT_READ -> enqueuing
+    }
+    state enqueuing {
+      CRAWL_ENQUEUE -> stepping
+    }
+    state stepping {
+      CRAWL_NEXT -> loading
+    }
+    state pausing {
+      CRAWL_WAITED -> loading
+    }
+    state loading {
+      PAGE_LOADED -> linking
+    }
+    state linking {
+      PAGE_LINKS_READ -> enqueuing
+    }
+    emits {
+      PAGE_NAVIGATE { key : string!  url : string! }
+      PAGE_TEXT { key : string! }
+      PAGE_LINKS { key : string! }
+      CRAWL_PAGE { key : string!  url : string!  title : string!  depth : number!  links : [PageLink]!  error : string? }
+      CRAWL_DONE { key : string!  pages : [CrawlPageRec]!  documents : [CrawlDocument]!  truncated : boolean!  skipped : number!  blocked : number!  robots : string! }
+      CRAWL_FAILED { key : string!  error : string!  code : string! }
+    }
+  }
+  expects page boot -> WebCrawl
+}

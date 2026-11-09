@@ -1,0 +1,31 @@
+app a11y-probe-context-change-spec [
+  version: "1.0.0",
+  description: "Design contract for the context-change probe (WCAG 3.2.2 On Input). PROBE_RUN { key, pageUrl } on a tab already at pageUrl lists the selects and search inputs (PAGE_MEASURE), and for each one changes it (a select moves to its next option and gets a change event; a search input gets a typed character and an input event), reads whether that started a navigation or opened a window (PAGE_MEASURE), and navigates the tab back to pageUrl (PAGE_NAVIGATE, answered by PAGE_LOADED) before the next one. It answers PROBE_DONE { key, probe, findings } or PROBE_FAILED { key, probe, error, code }."
+]
+
+type WcagRef = { criterion : string!, level : "A" | "AA" | "AAA"!, version : "2.0" | "2.1" | "2.2"! }
+type A11yFinding = { id : string!, pageUrl : string!, rule : string!, wcag : [WcagRef]!, method : "engine" | "probe" | "llm"!, engines : [string]!, impact : "critical" | "serious" | "moderate" | "minor"!, confidence : "confirmed" | "needs-verification"!, selector : string!, snippet : string!, evidence : string!, count : number! }
+
+orbital A11yProbeContextChangeSpec {
+  expects entity ContextRun [runtime] {
+    id : string!
+  }
+  expects trait ContextChangeProbe {
+    state idle {
+      PROBE_RUN -> inventorying
+    }
+    state inventorying {
+      PAGE_MEASURED -> acting
+    }
+    state returning {
+      PAGE_LOADED -> idle
+    }
+    emits {
+      PAGE_MEASURE { key : string!  expression : string! }
+      PAGE_NAVIGATE { key : string!  url : string! }
+      PROBE_DONE { key : string!  probe : string!  findings : [A11yFinding]! }
+      PROBE_FAILED { key : string!  probe : string!  error : string!  code : string! }
+    }
+  }
+  expects page boot -> ContextChangeProbe
+}

@@ -1,0 +1,1193 @@
+{
+ "atom": "ops/atoms/std-daemon.lolo",
+ "trait": "Daemon",
+ "note": "Host ports are faked: each effect is asserted and the host's answer is played as the next step's event. The one-tick background poll is not played.",
+ "cases": [
+  {
+   "id": "start-probes-the-ready-port-first",
+   "note": "a start from idle moves to starting and asks for the probe, never a spawn",
+   "steps": [
+    {
+     "trait": "Daemon",
+     "event": "DAEMON_START",
+     "from": "idle",
+     "payload": {
+      "argv": [
+       "emulators:start"
+      ]
+     },
+     "entity": {
+      "id": "d",
+      "pid": 0,
+      "reused": false,
+      "spawned": false,
+      "argv": [
+       "a"
+      ],
+      "env": {},
+      "cmdCursor": 0,
+      "pollDueAt": null,
+      "deadline": null
+     },
+     "expect": {
+      "state": "starting",
+      "emits": [
+       {
+        "event": "DAEMON_PROBE"
+       }
+      ],
+      "entity": {
+       "argv": [
+        "emulators:start"
+       ],
+       "spawned": false
+      }
+     }
+    }
+   ],
+   "config": {
+    "commands": [
+     "firebase"
+    ],
+    "readyHost": "127.0.0.1",
+    "readyPort": 8080,
+    "readyTimeoutMs": 120000,
+    "pollMs": 500
+   }
+  },
+  {
+   "id": "probe-connects-to-the-configured-port",
+   "note": "the probe is an os/tcp-connect to the readyHost and readyPort knobs",
+   "steps": [
+    {
+     "trait": "Daemon",
+     "event": "DAEMON_PROBE",
+     "from": "starting",
+     "payload": {},
+     "entity": {
+      "id": "d",
+      "pid": 0,
+      "reused": false,
+      "spawned": false,
+      "argv": [
+       "a"
+      ],
+      "env": {},
+      "cmdCursor": 0,
+      "pollDueAt": null,
+      "deadline": null
+     },
+     "expect": {
+      "state": "starting",
+      "effects": [
+       {
+        "type": "os/tcp-connect"
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "commands": [
+     "firebase"
+    ],
+    "readyHost": "127.0.0.1",
+    "readyPort": 8080,
+    "readyTimeoutMs": 120000,
+    "pollMs": 500
+   }
+  },
+  {
+   "id": "a-port-already-listening-is-reused",
+   "note": "nothing was spawned and the port accepts: ready with pid 0 and reused true",
+   "steps": [
+    {
+     "trait": "Daemon",
+     "event": "DAEMON_PORT_UP",
+     "from": "starting",
+     "payload": {
+      "sock": 7
+     },
+     "entity": {
+      "id": "d",
+      "pid": 0,
+      "reused": false,
+      "spawned": false,
+      "argv": [
+       "a"
+      ],
+      "env": {},
+      "cmdCursor": 0,
+      "pollDueAt": null,
+      "deadline": null
+     },
+     "expect": {
+      "state": "running",
+      "effects": [
+       {
+        "type": "os/close"
+       }
+      ],
+      "emits": [
+       {
+        "event": "DAEMON_READY",
+        "payload": {
+         "pid": 0,
+         "reused": true
+        }
+       }
+      ],
+      "entity": {
+       "reused": true
+      }
+     }
+    }
+   ],
+   "config": {
+    "commands": [
+     "firebase"
+    ],
+    "readyHost": "127.0.0.1",
+    "readyPort": 8080,
+    "readyTimeoutMs": 120000,
+    "pollMs": 500
+   }
+  },
+  {
+   "id": "control-a-spawned-child-whose-port-accepts-is-not-reused",
+   "note": "the child this atom started became ready: its pid and reused false",
+   "steps": [
+    {
+     "trait": "Daemon",
+     "event": "DAEMON_PORT_UP",
+     "from": "starting",
+     "payload": {
+      "sock": 7
+     },
+     "entity": {
+      "id": "d",
+      "pid": 4242,
+      "reused": false,
+      "spawned": true,
+      "argv": [
+       "a"
+      ],
+      "env": {},
+      "cmdCursor": 0,
+      "pollDueAt": null,
+      "deadline": "2025-10-15T12:30:46.678Z"
+     },
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "DAEMON_READY",
+        "payload": {
+         "pid": 4242,
+         "reused": false
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "commands": [
+     "firebase"
+    ],
+    "readyHost": "127.0.0.1",
+    "readyPort": 8080,
+    "readyTimeoutMs": 120000,
+    "pollMs": 500
+   },
+   "now": 1760531445678
+  },
+  {
+   "id": "a-closed-port-spawns-the-first-command-detached",
+   "note": "port down with nothing spawned asks for the spawn",
+   "steps": [
+    {
+     "trait": "Daemon",
+     "event": "DAEMON_PORT_DOWN",
+     "from": "starting",
+     "payload": {
+      "error": "refused",
+      "kind": "refused"
+     },
+     "entity": {
+      "id": "d",
+      "pid": 0,
+      "reused": false,
+      "spawned": false,
+      "argv": [
+       "a"
+      ],
+      "env": {},
+      "cmdCursor": 0,
+      "pollDueAt": null,
+      "deadline": null
+     },
+     "expect": {
+      "state": "starting",
+      "emits": [
+       {
+        "event": "DAEMON_SPAWN_NEXT"
+       }
+      ]
+     }
+    },
+    {
+     "trait": "Daemon",
+     "event": "DAEMON_SPAWN_NEXT",
+     "from": "starting",
+     "payload": {},
+     "entity": {
+      "id": "d",
+      "pid": 0,
+      "reused": false,
+      "spawned": false,
+      "argv": [
+       "emulators:start"
+      ],
+      "env": {
+       "JAVA_HOME": "/j"
+      },
+      "cmdCursor": 0,
+      "pollDueAt": null,
+      "deadline": null
+     },
+     "expect": {
+      "state": "starting",
+      "effects": [
+       {
+        "type": "os/spawn"
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "commands": [
+     "firebase"
+    ],
+    "readyHost": "127.0.0.1",
+    "readyPort": 8080,
+    "readyTimeoutMs": 120000,
+    "pollMs": 500
+   }
+  },
+  {
+   "id": "spawned-sets-the-deadline-and-the-first-poll",
+   "note": "the pid is kept, the deadline is readyTimeoutMs ahead and the poll pollMs ahead",
+   "steps": [
+    {
+     "trait": "Daemon",
+     "event": "DAEMON_SPAWNED",
+     "from": "starting",
+     "payload": {
+      "pid": 4242
+     },
+     "entity": {
+      "id": "d",
+      "pid": 0,
+      "reused": false,
+      "spawned": false,
+      "argv": [
+       "a"
+      ],
+      "env": {},
+      "cmdCursor": 0,
+      "pollDueAt": null,
+      "deadline": null
+     },
+     "expect": {
+      "state": "starting",
+      "entity": {
+       "pid": 4242,
+       "spawned": true,
+       "deadline": "2025-10-15T12:32:45.678Z",
+       "pollDueAt": "2025-10-15T12:30:46.178Z"
+      }
+     }
+    }
+   ],
+   "config": {
+    "commands": [
+     "firebase"
+    ],
+    "readyHost": "127.0.0.1",
+    "readyPort": 8080,
+    "readyTimeoutMs": 120000,
+    "pollMs": 500
+   },
+   "now": 1760531445678
+  },
+  {
+   "id": "not-ready-before-the-deadline-schedules-the-next-poll",
+   "note": "spawned and the port refuses within the deadline: wait pollMs and probe again",
+   "steps": [
+    {
+     "trait": "Daemon",
+     "event": "DAEMON_PORT_DOWN",
+     "from": "starting",
+     "payload": {
+      "error": "refused",
+      "kind": "refused"
+     },
+     "entity": {
+      "id": "d",
+      "pid": 4242,
+      "reused": false,
+      "spawned": true,
+      "argv": [
+       "a"
+      ],
+      "env": {},
+      "cmdCursor": 0,
+      "pollDueAt": null,
+      "deadline": "2025-10-15T12:31:45.678Z"
+     },
+     "expect": {
+      "state": "starting",
+      "entity": {
+       "pollDueAt": "2025-10-15T12:30:46.178Z"
+      },
+      "neverEmits": [
+       "DAEMON_FAILED",
+       "DAEMON_READY"
+      ]
+     }
+    },
+    {
+     "trait": "Daemon",
+     "event": "DAEMON_POLL",
+     "from": "starting",
+     "payload": {},
+     "entity": {
+      "id": "d",
+      "pid": 4242,
+      "reused": false,
+      "spawned": true,
+      "argv": [
+       "a"
+      ],
+      "env": {},
+      "cmdCursor": 0,
+      "pollDueAt": "2025-10-15T12:30:45.678Z",
+      "deadline": "2025-10-15T12:31:45.678Z"
+     },
+     "expect": {
+      "state": "starting",
+      "emits": [
+       {
+        "event": "DAEMON_PROBE"
+       }
+      ]
+     }
+    },
+    {
+     "trait": "Daemon",
+     "event": "DAEMON_PORT_UP",
+     "from": "starting",
+     "payload": {
+      "sock": 9
+     },
+     "entity": {
+      "id": "d",
+      "pid": 4242,
+      "reused": false,
+      "spawned": true,
+      "argv": [
+       "a"
+      ],
+      "env": {},
+      "cmdCursor": 0,
+      "pollDueAt": null,
+      "deadline": "2025-10-15T12:31:45.678Z"
+     },
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "DAEMON_READY",
+        "payload": {
+         "pid": 4242,
+         "reused": false
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "commands": [
+     "firebase"
+    ],
+    "readyHost": "127.0.0.1",
+    "readyPort": 8080,
+    "readyTimeoutMs": 120000,
+    "pollMs": 500
+   },
+   "now": 1760531445678
+  },
+  {
+   "id": "past-the-deadline-times-out",
+   "note": "spawned and the port still refuses after the deadline",
+   "steps": [
+    {
+     "trait": "Daemon",
+     "event": "DAEMON_PORT_DOWN",
+     "from": "starting",
+     "payload": {
+      "error": "refused",
+      "kind": "refused"
+     },
+     "entity": {
+      "id": "d",
+      "pid": 4242,
+      "reused": false,
+      "spawned": true,
+      "argv": [
+       "a"
+      ],
+      "env": {},
+      "cmdCursor": 0,
+      "pollDueAt": null,
+      "deadline": "2025-10-15T12:30:45.677Z"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "DAEMON_FAILED",
+        "payload": {
+         "code": "daemon_timeout"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DAEMON_READY"
+      ],
+      "entity": {
+       "pollDueAt": null
+      }
+     }
+    }
+   ],
+   "config": {
+    "commands": [
+     "firebase"
+    ],
+    "readyHost": "127.0.0.1",
+    "readyPort": 8080,
+    "readyTimeoutMs": 120000,
+    "pollMs": 500
+   },
+   "now": 1760531445678
+  },
+  {
+   "id": "control-at-the-deadline-edge-keeps-waiting",
+   "note": "one millisecond before the deadline the wait goes on",
+   "steps": [
+    {
+     "trait": "Daemon",
+     "event": "DAEMON_PORT_DOWN",
+     "from": "starting",
+     "payload": {
+      "error": "refused",
+      "kind": "refused"
+     },
+     "entity": {
+      "id": "d",
+      "pid": 4242,
+      "reused": false,
+      "spawned": true,
+      "argv": [
+       "a"
+      ],
+      "env": {},
+      "cmdCursor": 0,
+      "pollDueAt": null,
+      "deadline": "2025-10-15T12:30:45.679Z"
+     },
+     "expect": {
+      "state": "starting",
+      "neverEmits": [
+       "DAEMON_FAILED"
+      ]
+     }
+    }
+   ],
+   "config": {
+    "commands": [
+     "firebase"
+    ],
+    "readyHost": "127.0.0.1",
+    "readyPort": 8080,
+    "readyTimeoutMs": 120000,
+    "pollMs": 500
+   },
+   "now": 1760531445678
+  },
+  {
+   "id": "a-spawn-failure-fails-the-start",
+   "note": "a start error other than not-found fails with daemon_spawn_failed",
+   "steps": [
+    {
+     "trait": "Daemon",
+     "event": "DAEMON_SPAWN_FAILED",
+     "from": "starting",
+     "payload": {
+      "error": "permission denied",
+      "kind": "denied"
+     },
+     "entity": {
+      "id": "d",
+      "pid": 0,
+      "reused": false,
+      "spawned": false,
+      "argv": [
+       "a"
+      ],
+      "env": {},
+      "cmdCursor": 0,
+      "pollDueAt": null,
+      "deadline": null
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "DAEMON_FAILED",
+        "payload": {
+         "code": "daemon_spawn_failed",
+         "message": "permission denied"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "commands": [
+     "firebase"
+    ],
+    "readyHost": "127.0.0.1",
+    "readyPort": 8080,
+    "readyTimeoutMs": 120000,
+    "pollMs": 500
+   }
+  },
+  {
+   "id": "control-a-missing-first-command-tries-the-next",
+   "note": "not-found with another candidate left moves the cursor and spawns again",
+   "steps": [
+    {
+     "trait": "Daemon",
+     "event": "DAEMON_SPAWN_FAILED",
+     "from": "starting",
+     "payload": {
+      "error": "no such file",
+      "kind": "not-found"
+     },
+     "entity": {
+      "id": "d",
+      "pid": 0,
+      "reused": false,
+      "spawned": false,
+      "argv": [
+       "a"
+      ],
+      "env": {},
+      "cmdCursor": 0,
+      "pollDueAt": null,
+      "deadline": null
+     },
+     "expect": {
+      "state": "starting",
+      "emits": [
+       {
+        "event": "DAEMON_SPAWN_NEXT"
+       }
+      ],
+      "entity": {
+       "cmdCursor": 1
+      }
+     }
+    }
+   ],
+   "config": {
+    "commands": [
+     "a",
+     "b"
+    ],
+    "readyHost": "127.0.0.1",
+    "readyPort": 8080,
+    "readyTimeoutMs": 120000,
+    "pollMs": 500
+   }
+  },
+  {
+   "id": "a-missing-last-command-fails-the-start",
+   "note": "not-found with no candidate left is daemon_spawn_failed",
+   "steps": [
+    {
+     "trait": "Daemon",
+     "event": "DAEMON_SPAWN_FAILED",
+     "from": "starting",
+     "payload": {
+      "error": "no such file",
+      "kind": "not-found"
+     },
+     "entity": {
+      "id": "d",
+      "pid": 0,
+      "reused": false,
+      "spawned": false,
+      "argv": [
+       "a"
+      ],
+      "env": {},
+      "cmdCursor": 1,
+      "pollDueAt": null,
+      "deadline": null
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "DAEMON_FAILED",
+        "payload": {
+         "code": "daemon_spawn_failed"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "commands": [
+     "a",
+     "b"
+    ],
+    "readyHost": "127.0.0.1",
+    "readyPort": 8080,
+    "readyTimeoutMs": 120000,
+    "pollMs": 500
+   }
+  },
+  {
+   "id": "no-command-configured-fails-the-start",
+   "note": "an empty commands knob never spawns",
+   "steps": [
+    {
+     "trait": "Daemon",
+     "event": "DAEMON_SPAWN_NEXT",
+     "from": "starting",
+     "payload": {},
+     "entity": {
+      "id": "d",
+      "pid": 0,
+      "reused": false,
+      "spawned": false,
+      "argv": [
+       "a"
+      ],
+      "env": {},
+      "cmdCursor": 0,
+      "pollDueAt": null,
+      "deadline": null
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "DAEMON_FAILED",
+        "payload": {
+         "code": "daemon_spawn_failed"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DAEMON_SPAWNED"
+      ]
+     }
+    }
+   ],
+   "config": {
+    "commands": [],
+    "readyHost": "127.0.0.1",
+    "readyPort": 8080,
+    "readyTimeoutMs": 120000,
+    "pollMs": 500
+   }
+  },
+  {
+   "id": "a-start-while-starting-is-busy",
+   "note": "a second start answers daemon_busy and changes nothing",
+   "steps": [
+    {
+     "trait": "Daemon",
+     "event": "DAEMON_START",
+     "from": "starting",
+     "payload": {
+      "argv": [
+       "x"
+      ]
+     },
+     "entity": {
+      "id": "d",
+      "pid": 0,
+      "reused": false,
+      "spawned": false,
+      "argv": [
+       "a"
+      ],
+      "env": {},
+      "cmdCursor": 0,
+      "pollDueAt": null,
+      "deadline": null
+     },
+     "expect": {
+      "state": "starting",
+      "emits": [
+       {
+        "event": "DAEMON_FAILED",
+        "payload": {
+         "code": "daemon_busy"
+        }
+       }
+      ],
+      "entity": {
+       "argv": [
+        "a"
+       ]
+      }
+     }
+    }
+   ],
+   "config": {
+    "commands": [
+     "firebase"
+    ],
+    "readyHost": "127.0.0.1",
+    "readyPort": 8080,
+    "readyTimeoutMs": 120000,
+    "pollMs": 500
+   }
+  },
+  {
+   "id": "a-start-while-running-is-busy",
+   "note": "a second start on a running daemon answers daemon_busy",
+   "steps": [
+    {
+     "trait": "Daemon",
+     "event": "DAEMON_START",
+     "from": "running",
+     "payload": {
+      "argv": [
+       "x"
+      ]
+     },
+     "entity": {
+      "id": "d",
+      "pid": 4242,
+      "reused": false,
+      "spawned": false,
+      "argv": [
+       "a"
+      ],
+      "env": {},
+      "cmdCursor": 0,
+      "pollDueAt": null,
+      "deadline": null
+     },
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "DAEMON_FAILED",
+        "payload": {
+         "code": "daemon_busy"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DAEMON_PROBE"
+      ]
+     }
+    }
+   ],
+   "config": {
+    "commands": [
+     "firebase"
+    ],
+    "readyHost": "127.0.0.1",
+    "readyPort": 8080,
+    "readyTimeoutMs": 120000,
+    "pollMs": 500
+   }
+  },
+  {
+   "id": "control-a-start-while-idle-is-not-busy",
+   "note": "idle accepts the start",
+   "steps": [
+    {
+     "trait": "Daemon",
+     "event": "DAEMON_START",
+     "from": "idle",
+     "payload": {
+      "argv": [
+       "x"
+      ]
+     },
+     "entity": {
+      "id": "d",
+      "pid": 0,
+      "reused": false,
+      "spawned": false,
+      "argv": [
+       "a"
+      ],
+      "env": {},
+      "cmdCursor": 0,
+      "pollDueAt": null,
+      "deadline": null
+     },
+     "expect": {
+      "state": "starting",
+      "emits": [
+       {
+        "event": "DAEMON_PROBE"
+       }
+      ],
+      "entity": {
+       "argv": [
+        "x"
+       ]
+      }
+     }
+    }
+   ],
+   "config": {
+    "commands": [
+     "firebase"
+    ],
+    "readyHost": "127.0.0.1",
+    "readyPort": 8080,
+    "readyTimeoutMs": 120000,
+    "pollMs": 500
+   }
+  },
+  {
+   "id": "stop-sends-term-to-the-started-process",
+   "note": "a started daemon gets TERM",
+   "steps": [
+    {
+     "trait": "Daemon",
+     "event": "DAEMON_STOP",
+     "from": "running",
+     "payload": {},
+     "entity": {
+      "id": "d",
+      "pid": 4242,
+      "reused": false,
+      "spawned": true,
+      "argv": [
+       "a"
+      ],
+      "env": {},
+      "cmdCursor": 0,
+      "pollDueAt": null,
+      "deadline": null
+     },
+     "expect": {
+      "state": "running",
+      "effects": [
+       {
+        "type": "os/kill"
+       }
+      ]
+     }
+    },
+    {
+     "trait": "Daemon",
+     "event": "DAEMON_KILLED",
+     "from": "running",
+     "payload": {},
+     "entity": {
+      "id": "d",
+      "pid": 4242,
+      "reused": false,
+      "spawned": true,
+      "argv": [
+       "a"
+      ],
+      "env": {},
+      "cmdCursor": 0,
+      "pollDueAt": null,
+      "deadline": null
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "DAEMON_STOPPED",
+        "payload": {
+         "pid": 4242
+        }
+       }
+      ],
+      "entity": {
+       "pid": 0
+      }
+     }
+    }
+   ],
+   "config": {
+    "commands": [
+     "firebase"
+    ],
+    "readyHost": "127.0.0.1",
+    "readyPort": 8080,
+    "readyTimeoutMs": 120000,
+    "pollMs": 500
+   }
+  },
+  {
+   "id": "a-reused-process-is-never-stopped",
+   "note": "a reused daemon answers daemon_idle and no kill is made",
+   "steps": [
+    {
+     "trait": "Daemon",
+     "event": "DAEMON_STOP",
+     "from": "running",
+     "payload": {},
+     "entity": {
+      "id": "d",
+      "pid": 0,
+      "reused": true,
+      "spawned": false,
+      "argv": [
+       "a"
+      ],
+      "env": {},
+      "cmdCursor": 0,
+      "pollDueAt": null,
+      "deadline": null
+     },
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "DAEMON_FAILED",
+        "payload": {
+         "code": "daemon_idle"
+        }
+       }
+      ],
+      "effects": []
+     }
+    }
+   ],
+   "config": {
+    "commands": [
+     "firebase"
+    ],
+    "readyHost": "127.0.0.1",
+    "readyPort": 8080,
+    "readyTimeoutMs": 120000,
+    "pollMs": 500
+   }
+  },
+  {
+   "id": "stop-with-nothing-started-is-idle",
+   "note": "idle has nothing to stop",
+   "steps": [
+    {
+     "trait": "Daemon",
+     "event": "DAEMON_STOP",
+     "from": "idle",
+     "payload": {},
+     "entity": {
+      "id": "d",
+      "pid": 0,
+      "reused": false,
+      "spawned": false,
+      "argv": [
+       "a"
+      ],
+      "env": {},
+      "cmdCursor": 0,
+      "pollDueAt": null,
+      "deadline": null
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "DAEMON_FAILED",
+        "payload": {
+         "code": "daemon_idle"
+        }
+       }
+      ],
+      "effects": []
+     }
+    }
+   ],
+   "config": {
+    "commands": [
+     "firebase"
+    ],
+    "readyHost": "127.0.0.1",
+    "readyPort": 8080,
+    "readyTimeoutMs": 120000,
+    "pollMs": 500
+   }
+  },
+  {
+   "id": "stop-while-starting-is-busy",
+   "note": "a stop before the daemon is ready is refused and kills nothing",
+   "steps": [
+    {
+     "trait": "Daemon",
+     "event": "DAEMON_STOP",
+     "from": "starting",
+     "payload": {},
+     "entity": {
+      "id": "d",
+      "pid": 4242,
+      "reused": false,
+      "spawned": true,
+      "argv": [
+       "a"
+      ],
+      "env": {},
+      "cmdCursor": 0,
+      "pollDueAt": null,
+      "deadline": null
+     },
+     "expect": {
+      "state": "starting",
+      "emits": [
+       {
+        "event": "DAEMON_FAILED",
+        "payload": {
+         "code": "daemon_busy"
+        }
+       }
+      ],
+      "effects": []
+     }
+    }
+   ],
+   "config": {
+    "commands": [
+     "firebase"
+    ],
+    "readyHost": "127.0.0.1",
+    "readyPort": 8080,
+    "readyTimeoutMs": 120000,
+    "pollMs": 500
+   }
+  },
+  {
+   "id": "a-host-failure-while-starting-fails-the-start",
+   "note": "an os/close failure answers daemon_host_failed",
+   "steps": [
+    {
+     "trait": "Daemon",
+     "event": "DAEMON_HOST_FAILED",
+     "from": "starting",
+     "payload": {
+      "error": "closed",
+      "kind": "io"
+     },
+     "entity": {
+      "id": "d",
+      "pid": 0,
+      "reused": false,
+      "spawned": false,
+      "argv": [
+       "a"
+      ],
+      "env": {},
+      "cmdCursor": 0,
+      "pollDueAt": null,
+      "deadline": null
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "DAEMON_FAILED",
+        "payload": {
+         "code": "daemon_host_failed",
+         "message": "closed"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "commands": [
+     "firebase"
+    ],
+    "readyHost": "127.0.0.1",
+    "readyPort": 8080,
+    "readyTimeoutMs": 120000,
+    "pollMs": 500
+   }
+  },
+  {
+   "id": "a-kill-failure-keeps-the-daemon-running",
+   "note": "an os/kill failure answers daemon_host_failed and the state stays running",
+   "steps": [
+    {
+     "trait": "Daemon",
+     "event": "DAEMON_HOST_FAILED",
+     "from": "running",
+     "payload": {
+      "error": "no such process",
+      "kind": "io"
+     },
+     "entity": {
+      "id": "d",
+      "pid": 4242,
+      "reused": false,
+      "spawned": true,
+      "argv": [
+       "a"
+      ],
+      "env": {},
+      "cmdCursor": 0,
+      "pollDueAt": null,
+      "deadline": null
+     },
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "DAEMON_FAILED",
+        "payload": {
+         "code": "daemon_host_failed"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "commands": [
+     "firebase"
+    ],
+    "readyHost": "127.0.0.1",
+    "readyPort": 8080,
+    "readyTimeoutMs": 120000,
+    "pollMs": 500
+   }
+  }
+ ]
+}

@@ -1,0 +1,31 @@
+app probe-language-spec [
+  version: "1.0.0",
+  description: "Design contract for comparing a page's declared lang with its text language (see the probe contract and a11y-findings). PROBE_RUN { key, pageUrl } emits PAGE_TEXT { key }; the PAGE_TEXT_READ answer yields lang-missing when lang is empty, else the text is classified with LLM_CLASSIFY { text, categories, key } and the LLM_CLASSIFY_RESULT is compared with the declared primary subtag (lang-wrong when they differ). Text over the declared limit is refused with PROBE_FAILED code text_too_long. The atom composes neither a browser nor a model: the composer wires both."
+]
+
+type WcagRef = { criterion : string!, level : "A" | "AA" | "AAA"!, version : "2.0" | "2.1" | "2.2"! }
+type A11yFinding = { id : string!, pageUrl : string!, rule : string!, wcag : [WcagRef]!, method : "engine" | "probe" | "llm"!, engines : [string]!, impact : "critical" | "serious" | "moderate" | "minor"!, confidence : "confirmed" | "needs-verification"!, selector : string!, snippet : string!, evidence : string!, count : number! }
+
+orbital ProbeLanguageSpec {
+  expects entity LanguageRun [runtime] {
+    id : string!
+  }
+  expects trait LanguageProbe {
+    state idle {
+      PROBE_RUN -> reading
+    }
+    state reading {
+      PAGE_TEXT_READ -> classifying
+    }
+    state classifying {
+      LLM_CLASSIFY_RESULT -> idle
+    }
+    emits {
+      PROBE_DONE { key : string!  probe : string!  findings : [A11yFinding]! }
+      PROBE_FAILED { key : string!  probe : string!  error : string!  code : string! }
+      PAGE_TEXT { key : string! }
+      LLM_CLASSIFY { text : string!  categories : [string]!  key : string }
+    }
+  }
+  expects page boot -> LanguageProbe
+}

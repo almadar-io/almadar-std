@@ -1,0 +1,209 @@
+app std-a11y-probe-a11y-tree [
+  version: "1.0.0",
+  description: "std-a11y-probe-a11y-tree — the screen reader check (WCAG 1.1.1, 2.4.4, 2.5.3, 4.1.2). PROBE_RUN { key, pageUrl } on a tab already at pageUrl reads the accessibility tree (PAGE_AX_TREE, CDP Accessibility.getFullAXTree) and measures every interactive element (PAGE_MEASURE: selector, opening tag, tag, type, role attribute, innerText, aria-label, the text of the aria-labelledby targets, the content text without aria-hidden subtrees and with image alt text, alt, title, value, href, hidden). The answer is TRANSCRIPT_READY { key, pageUrl, lines } and then PROBE_DONE { key, probe: a11y-tree, findings }, or PROBE_FAILED { key, probe, error, code } (probe_page_failed, probe_bad_measure, probe_tree_too_deep). The transcript is the non-ignored nodes of the tree in tree (pre-order) order, one line per node as `<role word>: <name>`; the role word comes from the roleLabels knob (an unmapped role is shown as it is), roles in silentRoles are left out, and a role in foldedRoles is left out when its parent already has a name (the parent speaks it). The accessible name of an element follows the accname precedence: aria-labelledby text, aria-label, then alt (image), value (button input) or content, then title. Rules, each decided here from the measurement: name-missing (a button, link or img with an empty name; a decorative img with alt=\"\" is not one; confirmed when the accessibility tree also holds a non-ignored node of that role with an empty name), name-mismatch (WCAG 2.5.3: the visible text, whose punctuation is dropped and whose case is ignored, is not contained as whole words in the accessible name; only button and link, only when the visible text holds a letter or digit; confirmed), duplicate-name (two or more links with the same name and different hrefs; one finding per name, count = links), redundant-link (a link right after another link with the same name and the same href). Page state is not changed. Catalogue codes: name-missing maps to N14, N61 and N1; name-mismatch to N67; duplicate-name to N30; redundant-link to N72."
+]
+uses Spec from "almadar-std/probe-a11y-tree"
+
+type WcagRef = { criterion : string!, level : "A" | "AA" | "AAA"!, version : "2.0" | "2.1" | "2.2"! }
+type A11yFinding = { id : string!, pageUrl : string!, rule : string!, wcag : [WcagRef]!, method : "engine" | "probe" | "llm"!, engines : [string]!, impact : "critical" | "serious" | "moderate" | "minor"!, confidence : "confirmed" | "needs-verification"!, selector : string!, snippet : string!, evidence : string!, count : number! }
+type PageAxNode = { id : string!, parent : string?, role : string!, name : string!, ignored : boolean! }
+type AxRow = { id : string!, pid : string!, role : string!, name : string!, ignored : boolean! }
+type AxInfo = { pid : string!, sib : number! }
+type AxKeyed = { id : string!, key : string!, pid : string!, role : string!, name : string!, ignored : boolean!, deep : boolean! }
+type MeasuredItem = { selector : string!, snippet : string!, tag : string!, type : string!, roleAttr : string!, visible : string!, ariaLabel : string!, labelledby : string!, content : string!, alt : string!, altPresent : boolean!, title : string!, value : string!, href : string!, hidden : boolean! }
+type TreeMeasure = { items : [MeasuredItem]! }
+type ResolvedItem = { selector : string!, snippet : string!, role : string!, name : string!, visible : string!, href : string!, hidden : boolean!, decorative : boolean! }
+type RoleLabel = { role : string!, label : string! }
+type RuleDef = { key : string!, impact : "critical" | "serious" | "moderate" | "minor"!, wcag : [WcagRef]! }
+
+orbital A11yTreeOrbital {
+  entity TreeRun [runtime] {
+    id : string!
+    runKey : string @description "The caller's name for the run in flight." = ""
+    pageUrl : string @description "The page the run in flight is about." = ""
+    rows : [AxRow] @description "The accessibility nodes with their parent id flattened to text." = []
+    groups : Map string [AxRow] @description "The nodes grouped by parent id, in tree-list order." = {}
+    info : Map string AxInfo @description "Each node id with its parent id and its position among its siblings." = {}
+    names : Map string string @description "Each node id with its name." = {}
+    keyed : [AxKeyed] @description "The nodes with their pre-order key." = []
+    ordered : [AxKeyed] @description "The nodes in tree (pre-order) order." = []
+    lines : [string] @description "The screen-reader transcript." = []
+    items : [MeasuredItem] @description "The measured interactive elements." = []
+    resolved : [ResolvedItem] @description "The measured elements with their role and accessible name." = []
+    findings : [A11yFinding] @description "The findings of the run." = []
+  }
+
+  trait TreeProbe -> TreeRun {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      PROBE_RUN -> reading
+        (set @entity.runKey @payload.key)
+        (set @entity.pageUrl @payload.pageUrl)
+        (set @entity.lines [])
+        (set @entity.findings [])
+        (emit PAGE_AX_TREE { key: (str/concat @payload.key ":ax") })
+    }
+
+    state reading {
+      INIT -> idle
+      PAGE_AX_TREE_READ -> measuring when (= @payload.key (str/concat @entity.runKey ":ax"))
+        (set @entity.rows (array/map @payload.nodes (fn n { id: @n.id, pid: (default @n.parent ""), role: @n.role, name: @n.name, ignored: @n.ignored })))
+        (set @entity.groups (array/groupBy @entity.rows "pid"))
+        (set @entity.info (object/fromEntries (array/map @entity.rows (fn r [@r.id { pid: @r.pid, sib: (array/findIndex (default (object/get @entity.groups @r.pid) []) (fn x (= @x.id @r.id))) }]))))
+        (set @entity.names (object/fromEntries (array/map @entity.rows (fn r [@r.id @r.name]))))
+        (set @entity.keyed (array/map @entity.rows (fn r (let ((walk (array/reduce (array/range @config.maxDepth) { cur: @r.id, key: "" } (fn acc i (if (= @acc.cur "") @acc (let ((inf (object/get @entity.info @acc.cur))) { cur: @inf.pid, key: (if (= @acc.key "") (str/padStart (str/concat "" @inf.sib) 6 "0") (str/concat (str/padStart (str/concat "" @inf.sib) 6 "0") "." @acc.key)) })))))) { id: @r.id, key: @walk.key, pid: @r.pid, role: @r.role, name: @r.name, ignored: @r.ignored, deep: (!= @walk.cur "") }))))
+        (set @entity.ordered (array/sort @entity.keyed "key"))
+        (set @entity.lines (array/map (array/filter @entity.ordered (fn r (and (not @r.ignored) (not (array/includes @config.silentRoles @r.role)) (not (and (array/includes @config.foldedRoles @r.role) (!= (default (object/get @entity.names @r.pid) "") "")))))) (fn r (str/concat (let ((lab (array/find @config.roleLabels (fn x (= @x.role @r.role))))) (if (= @lab null) @r.role @lab.label)) ": " @r.name))))
+        (emit PAGE_MEASURE { key: (str/concat @entity.runKey ":measure"), expression: (str/concat "(" @config.measure ")()") })
+      PAGE_FAILED -> idle when (str/startsWith @payload.key @entity.runKey)
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "a11y-tree", error: @payload.error, code: "probe_page_failed" })
+    }
+
+    state measuring {
+      INIT -> idle
+      PAGE_MEASURED -> idle when (and (= @payload.key (str/concat @entity.runKey ":measure")) (!= (json/parse @payload.json TreeMeasure) null))
+        (set @entity.items (let ((m (json/parse @payload.json TreeMeasure))) @m.items))
+        (set @entity.resolved (array/map @entity.items (fn i { selector: @i.selector, snippet: @i.snippet, role: (if (!= @i.roleAttr "") @i.roleAttr (if (= @i.tag "a") "link" (if (= @i.tag "button") "button" (if (= @i.tag "img") "img" (if (and (= @i.tag "input") (array/includes ["button" "submit" "reset"] @i.type)) "button" ""))))), name: (if (!= @i.labelledby "") @i.labelledby (if (!= @i.ariaLabel "") @i.ariaLabel (if (= @i.tag "img") (if (!= @i.alt "") @i.alt @i.title) (if (= @i.tag "input") (if (!= @i.value "") @i.value @i.title) (if (!= @i.content "") @i.content @i.title))))), visible: @i.visible, href: @i.href, hidden: @i.hidden, decorative: (and (= @i.tag "img") @i.altPresent (= @i.alt "")) })))
+        (set @entity.findings (array/concat
+          (array/map (array/filter @entity.resolved (fn r (and (not @r.hidden) (not @r.decorative) (array/includes @config.nameRoles @r.role) (= @r.name "")))) (fn r (let ((d (array/find @config.catalog (fn c (= @c.key (str/concat "name-missing:" @r.role)))))) {
+            id: (str/concat @entity.pageUrl "#name-missing#" @r.selector),
+            pageUrl: @entity.pageUrl,
+            rule: "name-missing",
+            wcag: (if (= @d null) [] @d.wcag),
+            method: "probe",
+            engines: ["probe"],
+            impact: (if (= @d null) "serious" @d.impact),
+            confidence: (if (array/some @entity.ordered (fn a (and (not @a.ignored) (= @a.role (if (= @r.role "img") "image" @r.role)) (= @a.name "")))) "confirmed" "needs-verification"),
+            selector: @r.selector,
+            snippet: @r.snippet,
+            evidence: "",
+            count: 1
+          })))
+          (array/map (array/filter @entity.resolved (fn r (and (not @r.hidden) (array/includes @config.mismatchRoles @r.role) (!= @r.name "") (> (array/len (str/find-pattern @r.visible "[\\p{L}\\p{N}]")) 0) (not (str/includes (str/concat " " (str/trim (str/lower (str/replace-pattern @r.name "[^\\p{L}\\p{N}]+" " "))) " ") (str/concat " " (str/trim (str/lower (str/replace-pattern @r.visible "[^\\p{L}\\p{N}]+" " "))) " ")))))) (fn r (let ((d (array/find @config.catalog (fn c (= @c.key "name-mismatch"))))) {
+            id: (str/concat @entity.pageUrl "#name-mismatch#" @r.selector),
+            pageUrl: @entity.pageUrl,
+            rule: "name-mismatch",
+            wcag: (if (= @d null) [] @d.wcag),
+            method: "probe",
+            engines: ["probe"],
+            impact: (if (= @d null) "moderate" @d.impact),
+            confidence: "confirmed",
+            selector: @r.selector,
+            snippet: @r.snippet,
+            evidence: "",
+            count: 1
+          })))
+          (let ((links (array/filter @entity.resolved (fn r (and (not @r.hidden) (= @r.role "link") (!= @r.name ""))))))
+            (array/map (array/filter @links (fn l i (and (== @i (array/findIndex @links (fn x (= (str/lower @x.name) (str/lower @l.name))))) (> (array/len (array/unique (array/map (array/filter @links (fn x (= (str/lower @x.name) (str/lower @l.name)))) (fn x @x.href)))) 1)))) (fn l (let ((d (array/find @config.catalog (fn c (= @c.key "duplicate-name"))))) {
+              id: (str/concat @entity.pageUrl "#duplicate-name#" @l.selector),
+              pageUrl: @entity.pageUrl,
+              rule: "duplicate-name",
+              wcag: (if (= @d null) [] @d.wcag),
+              method: "probe",
+              engines: ["probe"],
+              impact: (if (= @d null) "moderate" @d.impact),
+              confidence: "needs-verification",
+              selector: @l.selector,
+              snippet: @l.snippet,
+              evidence: "",
+              count: (array/len (array/filter @links (fn x (= (str/lower @x.name) (str/lower @l.name)))))
+            }))))
+          (let ((vis (array/filter @entity.resolved (fn r (not @r.hidden)))))
+            (array/map (array/filter @vis (fn r i (and (> @i 0) (let ((p (array/nth @vis (- @i 1)))) (and (= @p.role "link") (= @r.role "link") (!= @r.name "") (= @p.href @r.href) (= (str/lower @p.name) (str/lower @r.name))))))) (fn r (let ((d (array/find @config.catalog (fn c (= @c.key "redundant-link"))))) {
+              id: (str/concat @entity.pageUrl "#redundant-link#" @r.selector),
+              pageUrl: @entity.pageUrl,
+              rule: "redundant-link",
+              wcag: (if (= @d null) [] @d.wcag),
+              method: "probe",
+              engines: ["probe"],
+              impact: (if (= @d null) "minor" @d.impact),
+              confidence: "needs-verification",
+              selector: @r.selector,
+              snippet: @r.snippet,
+              evidence: "",
+              count: 2
+            }))))))
+        (if (array/some @entity.keyed (fn k @k.deep))
+          (emit PROBE_FAILED { key: @entity.runKey, probe: "a11y-tree", error: (str/concat "the accessibility tree is deeper than " @config.maxDepth " levels"), code: "probe_tree_too_deep" })
+          (emit TRANSCRIPT_READY { key: @entity.runKey, pageUrl: @entity.pageUrl, lines: @entity.lines }))
+        (if (not (array/some @entity.keyed (fn k @k.deep)))
+          (emit PROBE_DONE { key: @entity.runKey, probe: "a11y-tree", findings: @entity.findings })
+          null)
+      PAGE_MEASURED -> idle when (and (= @payload.key (str/concat @entity.runKey ":measure")) (= (json/parse @payload.json TreeMeasure) null))
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "a11y-tree", error: "the page measurement is not the interactive element list", code: "probe_bad_measure" })
+      PAGE_FAILED -> idle when (str/startsWith @payload.key @entity.runKey)
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "a11y-tree", error: @payload.error, code: "probe_page_failed" })
+    }
+
+    emits {
+      PAGE_AX_TREE -> external { key : string! }
+        @description "Page request: read the tab's accessibility tree; the composer wires it to the std-chrome PAGE_AX_TREE input."
+        @synonyms "read accessibility tree, ax tree"
+        @tier "primary"
+      PAGE_MEASURE -> external { key : string!  expression : string! }
+        @description "Page request: evaluate the expression in the page; it answers a JSON string."
+        @synonyms "measure page, evaluate in page"
+        @tier "primary"
+      TRANSCRIPT_READY -> external { key : string!  pageUrl : string!  lines : [string]! }
+        @description "The screen-reader transcript of the page: one line per spoken node in tree order, as role word and name."
+        @synonyms "screen reader transcript, spoken text"
+        @tier "primary"
+      PROBE_DONE -> external { key : string!  probe : string!  findings : [A11yFinding]! }
+        @description "The accessibility-tree probe finished: its findings, empty when every control is named."
+        @synonyms "accessible name findings, screen reader findings"
+        @tier "primary"
+      PROBE_FAILED -> external { key : string!  probe : string!  error : string!  code : string! }
+        @description "The probe could not finish: code is probe_page_failed, probe_bad_measure or probe_tree_too_deep."
+        @synonyms "probe failed, a11y tree error"
+        @tier "primary"
+    }
+
+    listens {
+      PROBE_RUN { key : string!  pageUrl : string! }
+        @description "Check the page the tab is on for accessible names and produce its screen-reader transcript."
+        @synonyms "screen reader check, accessible name check, wcag 2.5.3"
+      PAGE_AX_TREE_READ { key : string!  nodes : [PageAxNode]! }
+      PAGE_MEASURED { key : string!  json : string! }
+      PAGE_FAILED { key : string!  error : string!  code : string! }
+    }
+
+    config {
+      maxDepth : number = 64
+        @label "Deepest tree"
+        @description "The most ancestor levels a node may have; a deeper tree answers probe_tree_too_deep rather than a wrong order."
+        @tier "domain"
+      roleLabels : [RoleLabel] = [{ role: "button", label: "gumb" }, { role: "link", label: "povezava" }, { role: "heading", label: "naslov" }, { role: "img", label: "slika" }, { role: "image", label: "slika" }, { role: "textbox", label: "polje za vnos" }, { role: "checkbox", label: "potrditveno polje" }, { role: "radio", label: "izbirni gumb" }, { role: "combobox", label: "spustni seznam" }, { role: "list", label: "seznam" }, { role: "listitem", label: "element seznama" }, { role: "navigation", label: "navigacija" }, { role: "main", label: "glavna vsebina" }, { role: "banner", label: "glava strani" }, { role: "contentinfo", label: "noga strani" }, { role: "form", label: "obrazec" }, { role: "StaticText", label: "besedilo" }, { role: "RootWebArea", label: "dokument" }]
+        @label "Role words"
+        @description "The word spoken for each accessibility role in the transcript (Slovenian by default); a role with no entry is shown as it is."
+        @tier "domain"
+      silentRoles : [string] = ["InlineTextBox", "LineBreak", "generic", "none", "presentation"]
+        @label "Silent roles"
+        @description "Roles that carry no speech of their own and are left out of the transcript."
+        @tier "domain"
+      foldedRoles : [string] = ["StaticText"]
+        @label "Folded roles"
+        @description "Roles left out of the transcript when their parent node already has a name, because the parent speaks that text."
+        @tier "domain"
+      nameRoles : [string] = ["button", "link", "img"]
+        @label "Named roles"
+        @description "The roles that must have an accessible name."
+        @tier "domain"
+      mismatchRoles : [string] = ["button", "link"]
+        @label "Label-in-name roles"
+        @description "The roles whose visible text must be contained in the accessible name (WCAG 2.5.3)."
+        @tier "domain"
+      catalog : [RuleDef] = [{ key: "name-missing:button", impact: "serious", wcag: [{ criterion: "4.1.2", level: "A", version: "2.0" }] }, { key: "name-missing:link", impact: "serious", wcag: [{ criterion: "2.4.4", level: "A", version: "2.0" }, { criterion: "4.1.2", level: "A", version: "2.0" }] }, { key: "name-missing:img", impact: "serious", wcag: [{ criterion: "1.1.1", level: "A", version: "2.0" }] }, { key: "name-mismatch", impact: "moderate", wcag: [{ criterion: "2.5.3", level: "A", version: "2.1" }] }, { key: "duplicate-name", impact: "moderate", wcag: [{ criterion: "2.4.4", level: "A", version: "2.0" }] }, { key: "redundant-link", impact: "minor", wcag: [{ criterion: "2.4.4", level: "A", version: "2.0" }] }]
+        @label "Rule catalog"
+        @description "The impact and WCAG success criteria of each rule; name-missing is keyed by the role it names."
+        @tier "domain"
+      measure : string = "() => { const norm = (s) => (s || '').replace(/\\s+/g, ' ').trim(); const sel = (e) => { const p = []; for (let n = e; n && n.nodeType === 1; n = n.parentElement) { if (n.id) { p.unshift('#' + CSS.escape(n.id)); break; } let i = 1; for (let s = n.previousElementSibling; s; s = s.previousElementSibling) { if (s.tagName === n.tagName) i++; } p.unshift(n.tagName.toLowerCase() + (n.parentElement && n.parentElement.querySelectorAll(':scope > ' + n.tagName.toLowerCase()).length > 1 ? ':nth-of-type(' + i + ')' : '')); } return p.join(' > '); }; const content = (n) => { if (n.nodeType === 3) return n.textContent; if (n.nodeType !== 1 || n.getAttribute('aria-hidden') === 'true' || n.hidden) return ''; if (n.tagName === 'IMG') return ' ' + (n.getAttribute('alt') || '') + ' '; return Array.from(n.childNodes).map(content).join(''); }; const ids = (el, attr) => norm((el.getAttribute(attr) || '').split(/\\s+/).filter(Boolean).map((id) => { const t = document.getElementById(id); return t ? content(t) : ''; }).join(' ')); const q = 'a[href],button,img,input:not([type=hidden]),select,textarea,[role=button],[role=link],[role=checkbox],[role=textbox]'; const items = Array.from(document.querySelectorAll(q)).map((el) => ({ selector: sel(el), tag: el.tagName.toLowerCase(), type: el.getAttribute('type') || '', roleAttr: el.getAttribute('role') || '', visible: norm(el.innerText), ariaLabel: norm(el.getAttribute('aria-label')), labelledby: ids(el, 'aria-labelledby'), content: norm(el.tagName === 'IMG' ? '' : content(el)), alt: norm(el.getAttribute('alt')), altPresent: el.hasAttribute('alt'), title: norm(el.getAttribute('title')), value: norm(el.tagName === 'INPUT' && ['button', 'submit', 'reset'].includes(el.type) ? el.value : ''), href: el.tagName === 'A' ? el.href : '', hidden: !!el.closest('[aria-hidden=true],[hidden]') || (el.checkVisibility ? !el.checkVisibility({ visibilityProperty: true }) : false), snippet: el.outerHTML.split('>')[0] + '>' })); return JSON.stringify({ items }); }"
+        @label "Measure expression"
+        @description "A page function returning a JSON string of every interactive element (links, buttons, images, inputs, selects, textareas and ARIA button, link, checkbox and textbox roles) with selector, opening tag, tag, type, role attribute, innerText, aria-label, aria-labelledby text, content text, alt, title, value, href and hidden."
+        @tier "infra"
+    }
+  }
+
+  page boot as TreeProbePage -> TreeProbe
+}

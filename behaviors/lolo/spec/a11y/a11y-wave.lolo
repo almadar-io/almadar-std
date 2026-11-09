@@ -1,0 +1,27 @@
+app a11y-wave-spec [
+  version: "1.0.0",
+  description: "Design contract for scanning a URL with the hosted WAVE API and answering in the shared accessibility finding shape (see a11y-findings). WAVE_SCAN { key, url } answers WAVE_SCANNED { key, url, findings, credits } or WAVE_FAILED { key, error, code }. When the host holds no WAVE credential the answer is WAVE_DISABLED { key } and nothing is sent. Every finding has method engine, engines [wave] and confidence needs-verification; confirmation is the merge atom's job when axe agrees."
+]
+
+type WcagRef = { criterion : string!, level : "A" | "AA" | "AAA"!, version : "2.0" | "2.1" | "2.2"! }
+type A11yFinding = { id : string!, pageUrl : string!, rule : string!, wcag : [WcagRef]!, method : "engine" | "probe" | "llm"!, engines : [string]!, impact : "critical" | "serious" | "moderate" | "minor"!, confidence : "confirmed" | "needs-verification"!, selector : string!, snippet : string!, evidence : string!, count : number! }
+
+orbital A11yWaveSpec {
+  expects entity WaveAsk [runtime] {
+    id : string!
+  }
+  expects trait WaveScan {
+    state idle {
+      WAVE_SCAN -> scanning
+    }
+    state scanning {
+      WAVE_SCAN -> scanning
+    }
+    emits {
+      WAVE_SCANNED { key : string!  url : string!  findings : [A11yFinding]!  credits : number! }
+      WAVE_FAILED { key : string!  error : string!  code : string! }
+      WAVE_DISABLED { key : string! }
+    }
+  }
+  expects page boot -> WaveScan
+}

@@ -1,6 +1,6 @@
 app std-audio-cue [
   version: "1.0.0",
-  description: "Headless-ish sound driver: the SOLE writer of cue/cueSeq/music/muted/volume, rendered through the game-audio-cue atom which mounts @almadar/ui's useGameAudio hook. Intents: CUE plays a one-shot SFX by manifest key (cueSeq increments so the same key can re-fire), MUSIC crossfades to a looping track by key, STOP_MUSIC fades it out, MUTE/UNMUTE/TOGGLE_MUTE flip playback and emit AUDIO_MUTED, SET_VOLUME sets master volume, RESTART reseeds from config. The manifest and baseUrl are config, not runtime state — swap them per game by rebinding this atom's config, never by hand-authoring a second audio layer."
+  description: "Headless-ish sound driver: the SOLE writer of cue/cueSeq/music/muted/volume, rendered through the game-audio-cue atom, which plays the sounds this atom resolves. Intents: CUE plays a one-shot SFX by manifest key (cueSeq increments so the same key can re-fire), MUSIC crossfades to a looping track by key, STOP_MUSIC fades it out, MUTE/UNMUTE/TOGGLE_MUTE flip playback and emit AUDIO_MUTED, SET_VOLUME sets master volume, RESTART reseeds from config. The manifest and baseUrl are config, not runtime state, and are resolved here: the host only ever receives the resolved sound (cuePlay, musicPlay, autostart). Swap them per game by rebinding this atom's config, never by hand-authoring a second audio layer."
 ]
 orbital AudioCueOrbital {
   type SoundEntry = {
@@ -39,8 +39,6 @@ orbital AudioCueOrbital {
           autostart: (array/map (array/filter (object/keys @config.manifest) (fn k (default (object/get (object/get @config.manifest @k) "autostart") false))) (fn k (let ((e (object/get @config.manifest @k))) { key: @k, source: (str/concat @config.baseUrl @e.path), volume: (default @e.volume 1), loop: (default @e.loop false), poolSize: (math/max (default @e.poolSize 1) 1), fadeMs: 0 })))
           muted: @entity.muted
           volume: @entity.volume
-          manifest: @config.manifest
-          baseUrl: @config.baseUrl
           type: game-audio-cue
         })
 

@@ -1,0 +1,175 @@
+app std-a11y-wave [
+  version: "1.0.0",
+  description: "std-a11y-wave — scans a URL with the hosted WAVE API (WebAIM, reporttype 4: CSS selectors, 3 credits per scan) and answers in the shared accessibility finding shape. WAVE_SCAN { key, url } answers WAVE_SCANNED { key, url, findings, credits } where credits is the account's remaining credits, or WAVE_FAILED { key, error, code } (wave_busy while another scan is in flight, wave_http_<status> for a non-200 reply, wave_error when the reply says status.success is false, wave_bad_reply when the body is not a WAVE reply, wave_<kind> for a transport failure). When the host holds no WAVE credential the scan is off: WAVE_DISABLED { key } answers before any socket opens. The API key is the secret credential knob naming a host env var; it rides the query string as key=, filled by the host at the send boundary, and never enters the program. Each selector of an item in the error, contrast and alert categories (impact from the errorImpact, contrastImpact and alertImpact knobs: serious, serious, moderate; feature, structure and aria are informational and produce nothing) becomes one finding with count 1, method engine, engines wave and confidence needs-verification (the merge atom confirms it when axe agrees). The WCAG references of an item come from the catalog knob, generated from the WAVE docs by spec/a11y/a11y-wave.gen/gen_catalog.py; an item with no catalog entry keeps an empty wcag list. WAVE gives no HTML snippet, so snippet is empty.",
+  net: { "wave.webaim.org:443": [tcp] }
+]
+uses Spec from "almadar-std/a11y-wave"
+uses Http from "std/behaviors/std-http-client"
+uses Timeout from "std/behaviors/std-timeout"
+
+type WcagRef = { criterion : string!, level : "A" | "AA" | "AAA"!, version : "2.0" | "2.1" | "2.2"! }
+type A11yFinding = { id : string!, pageUrl : string!, rule : string!, wcag : [WcagRef]!, method : "engine" | "probe" | "llm"!, engines : [string]!, impact : "critical" | "serious" | "moderate" | "minor"!, confidence : "confirmed" | "needs-verification"!, selector : string!, snippet : string!, evidence : string!, count : number! }
+type HttpHeader = { name : string!, value : string! }
+type WaveCatalogEntry = { item : string!, wcag : [WcagRef]! }
+type WaveStatus = { success : boolean!, error : string, httpstatuscode : number }
+type WaveStatistics = { creditsremaining : number }
+type WaveItem = { id : string!, description : string, count : number, selectors : [string] }
+type WaveCategory = { description : string, count : number, items : Map string WaveItem }
+type WaveCategories = { error : WaveCategory, contrast : WaveCategory, alert : WaveCategory }
+type WaveReply = { status : WaveStatus!, statistics : WaveStatistics, categories : WaveCategories }
+
+orbital WaveOrbital {
+  entity WaveAsk [runtime] {
+    id : string!
+    key : string @description "The caller's name for the scan in flight." = ""
+    url : string @description "The page the scan in flight is about." = ""
+    keyLen : number @description "The byte length of the held WAVE credential, negative when the host holds none." = -1
+  }
+
+  trait WaveHttp = Http.traits.HttpClient {
+    config {
+      host: "wave.webaim.org"
+      port: 443
+      tls: true
+      serverName: "wave.webaim.org"
+      credential: "WAVE_API_KEY"
+      credentialIn: "query"
+      credentialName: "key"
+    }
+    listens {
+      WaveScan.WAVE_HTTP_SEND -> HTTP_SEND
+      WaveTimeout.TIMED_OUT -> HTTP_CANCEL with { key: ?key }
+    }
+  }
+
+  trait WaveTimeout = Timeout.traits.Timeout {
+    config {
+      timeoutMs: 120000
+      cancelOnDeadline: false
+    }
+    listens {
+      WaveScan.WAVE_HTTP_SEND -> START with { key: (as ?key CallKey) }
+      WaveHttp.HTTP_REPLIED -> SUCCEEDED with { key: (as ?key CallKey) }
+      WaveHttp.HTTP_FAILED -> FAILED with { key: (as ?key CallKey), error: ?error }
+    }
+  }
+
+  trait WaveScan -> WaveAsk {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      WAVE_SCAN -> scanning
+        (set @entity.key @payload.key)
+        (set @entity.url @payload.url)
+        (set @entity.keyLen (default (credential/byte-length @config.credential) -1))
+        (emit WAVE_GATE {})
+    }
+
+    state scanning {
+      INIT -> idle
+      WAVE_GATE -> idle when (< @entity.keyLen 0)
+        (emit WAVE_DISABLED { key: @entity.key })
+      WAVE_GATE -> scanning when (>= @entity.keyLen 0)
+        (emit WAVE_HTTP_SEND {
+          key: "wave",
+          method: "GET",
+          target: (str/concat "/api/request?url=" (str/encode-uri-component @entity.url) "&reporttype=4"),
+          headers: [{ name: "accept", value: "application/json" }],
+          body: (bytes/from-string ""),
+          stream: "none"
+        })
+      WAVE_SCAN -> scanning
+        (emit WAVE_FAILED { key: @payload.key, error: (str/concat "a scan of " @entity.url " is in flight"), code: "wave_busy" })
+      WAVE_REPLY -> idle when (!= @payload.status 200)
+        (emit WAVE_FAILED { key: @entity.key, error: (str/concat "WAVE answered " @payload.status), code: (str/concat "wave_http_" @payload.status) })
+      WAVE_REPLY -> idle when (= @payload.status 200)
+        (let ((doc (json/parse @payload.body WaveReply)))
+          (if (= @doc null)
+            (emit WAVE_FAILED { key: @entity.key, error: "the reply is not a WAVE report", code: "wave_bad_reply" })
+            (if (!= @doc.status.success true)
+              (emit WAVE_FAILED { key: @entity.key, error: (default @doc.status.error "WAVE refused the scan"), code: "wave_error" })
+              (emit WAVE_SCANNED {
+                key: @entity.key,
+                url: @entity.url,
+                credits: (default @doc.statistics.creditsremaining 0),
+                findings: (array/flatten (array/map [{ cat: @doc.categories.error, impact: @config.errorImpact }, { cat: @doc.categories.contrast, impact: @config.contrastImpact }, { cat: @doc.categories.alert, impact: @config.alertImpact }] (fn row (array/flatten (array/map (array/map (object/values (default @row.cat.items {})) (fn raw (as @raw WaveItem))) (fn w (array/map (default @w.selectors []) (fn sel {
+                  id: (str/concat "wave:" @w.id ":" @sel),
+                  pageUrl: @entity.url,
+                  rule: @w.id,
+                  wcag: (let ((e (array/find @config.catalog (fn c (= @c.item @w.id))))) (if (= @e null) [] @e.wcag)),
+                  method: "engine",
+                  engines: ["wave"],
+                  impact: @row.impact,
+                  confidence: "needs-verification",
+                  selector: @sel,
+                  snippet: "",
+                  evidence: "",
+                  count: 1
+                }))))))))
+              }))))
+      WAVE_UNREACHABLE -> idle when (= @payload.kind "denied")
+        (emit WAVE_DISABLED { key: @entity.key })
+      WAVE_UNREACHABLE -> idle when (!= @payload.kind "denied")
+        (emit WAVE_FAILED { key: @entity.key, error: @payload.error, code: (str/concat "wave_" @payload.kind) })
+    }
+
+    emits {
+      WAVE_SCANNED -> external { key : string!  url : string!  findings : [A11yFinding]!  credits : number! }
+        @description "The scan's findings, one per selector of each error, contrast and alert item, and the credits the account has left."
+        @synonyms "wave results, accessibility scan, wave findings"
+        @tier "primary"
+      WAVE_FAILED -> external { key : string!  error : string!  code : string! }
+        @description "The scan failed: code is wave_busy, wave_http_<status>, wave_error, wave_bad_reply or wave_<kind> for a transport failure."
+        @synonyms "wave failed, wave error"
+        @tier "primary"
+      WAVE_DISABLED -> external { key : string! }
+        @description "The scan is off: the host holds no WAVE credential, so nothing was sent."
+        @synonyms "wave off, no api key"
+        @tier "primary"
+      WAVE_GATE {}
+        @description "Internal: decide whether the host holds the WAVE credential before anything is sent."
+        @tier "internal"
+      WAVE_HTTP_SEND { key : string!  method : string!  target : string!  headers : [HttpHeader]!  body : bytes!  stream : string! }
+        @description "Internal: the WAVE report request, for the HTTP client."
+        @tier "internal"
+    }
+
+    listens {
+      WAVE_SCAN { key : string!  url : string! }
+        @description "Scan this page with WAVE and answer its accessibility findings."
+        @synonyms "wave scan, accessibility audit, wcag check"
+      WAVE_REPLY { status : number!  body : string! }
+      WAVE_UNREACHABLE { error : string!  kind : string! }
+      WaveHttp.HTTP_REPLIED -> WAVE_REPLY with { status: ?status, body: (default (bytes/to-string ?body) "") } when (= ?key "wave")
+      WaveHttp.HTTP_FAILED -> WAVE_UNREACHABLE with { error: ?error, kind: ?kind } when (= ?key "wave")
+      WaveTimeout.TIMED_OUT -> WAVE_UNREACHABLE with { error: (str/concat "timeout of " ?timeoutMs "ms exceeded"), kind: "timeout" } when (= ?key "wave")
+    }
+
+    config {
+      credential : secret = "WAVE_API_KEY"
+        @label "WAVE API key"
+        @description "Name of the host credential holding the WAVE API key; empty of a held value turns the scan off. Set the same name on the WaveHttp credential knob."
+        @synonyms "wave key, api key"
+        @tier "infra"
+      errorImpact : "critical" | "serious" | "moderate" | "minor" = "serious"
+        @label "Error impact"
+        @description "The impact of a finding from a WAVE error item."
+        @tier "domain"
+      contrastImpact : "critical" | "serious" | "moderate" | "minor" = "serious"
+        @label "Contrast impact"
+        @description "The impact of a finding from a WAVE contrast item."
+        @tier "domain"
+      alertImpact : "critical" | "serious" | "moderate" | "minor" = "moderate"
+        @label "Alert impact"
+        @description "The impact of a finding from a WAVE alert item; feature, structure and aria items are informational and produce no findings."
+        @tier "domain"
+      catalog : [WaveCatalogEntry] = [{ item: "alt_missing", wcag: [{ criterion: "1.1.1", level: "A", version: "2.0" }] }, { item: "alt_link_missing", wcag: [{ criterion: "1.1.1", level: "A", version: "2.0" }, { criterion: "2.4.4", level: "A", version: "2.0" }] }, { item: "alt_spacer_missing", wcag: [{ criterion: "1.1.1", level: "A", version: "2.0" }] }, { item: "alt_input_missing", wcag: [{ criterion: "1.1.1", level: "A", version: "2.0" }, { criterion: "2.4.4", level: "A", version: "2.0" }] }, { item: "alt_area_missing", wcag: [{ criterion: "1.1.1", level: "A", version: "2.0" }, { criterion: "2.4.4", level: "A", version: "2.0" }] }, { item: "alt_map_missing", wcag: [{ criterion: "1.1.1", level: "A", version: "2.0" }] }, { item: "longdesc_invalid", wcag: [{ criterion: "1.1.1", level: "A", version: "2.0" }] }, { item: "label_missing", wcag: [{ criterion: "1.1.1", level: "A", version: "2.0" }, { criterion: "1.3.1", level: "A", version: "2.0" }, { criterion: "2.4.6", level: "AA", version: "2.0" }, { criterion: "3.3.2", level: "A", version: "2.0" }] }, { item: "label_empty", wcag: [{ criterion: "1.1.1", level: "A", version: "2.0" }, { criterion: "1.3.1", level: "A", version: "2.0" }, { criterion: "2.4.6", level: "AA", version: "2.0" }, { criterion: "3.3.2", level: "A", version: "2.0" }] }, { item: "label_multiple", wcag: [{ criterion: "1.1.1", level: "A", version: "2.0" }, { criterion: "1.3.1", level: "A", version: "2.0" }, { criterion: "2.4.6", level: "AA", version: "2.0" }, { criterion: "3.3.2", level: "A", version: "2.0" }] }, { item: "aria_reference_broken", wcag: [{ criterion: "1.3.1", level: "A", version: "2.0" }, { criterion: "4.1.2", level: "A", version: "2.0" }] }, { item: "aria_menu_broken", wcag: [{ criterion: "2.1.1", level: "A", version: "2.0" }, { criterion: "4.1.2", level: "A", version: "2.0" }] }, { item: "title_invalid", wcag: [{ criterion: "2.4.2", level: "A", version: "2.0" }] }, { item: "language_missing", wcag: [{ criterion: "3.1.1", level: "A", version: "2.0" }] }, { item: "meta_refresh", wcag: [{ criterion: "2.2.1", level: "A", version: "2.0" }, { criterion: "2.2.2", level: "A", version: "2.0" }] }, { item: "heading_empty", wcag: [{ criterion: "1.3.1", level: "A", version: "2.0" }, { criterion: "2.4.1", level: "A", version: "2.0" }, { criterion: "2.4.6", level: "AA", version: "2.0" }] }, { item: "button_empty", wcag: [{ criterion: "1.1.1", level: "A", version: "2.0" }, { criterion: "2.4.4", level: "A", version: "2.0" }] }, { item: "link_empty", wcag: [{ criterion: "2.4.4", level: "A", version: "2.0" }] }, { item: "link_skip_broken", wcag: [{ criterion: "2.1.1", level: "A", version: "2.0" }, { criterion: "2.4.1", level: "A", version: "2.0" }] }, { item: "th_empty", wcag: [{ criterion: "1.3.1", level: "A", version: "2.0" }] }, { item: "blink", wcag: [{ criterion: "2.2.2", level: "A", version: "2.0" }] }, { item: "marquee", wcag: [{ criterion: "2.2.2", level: "A", version: "2.0" }] }, { item: "contrast", wcag: [{ criterion: "1.4.3", level: "AA", version: "2.0" }] }, { item: "alt_suspicious", wcag: [{ criterion: "1.1.1", level: "A", version: "2.0" }] }, { item: "alt_redundant", wcag: [{ criterion: "1.1.1", level: "A", version: "2.0" }] }, { item: "alt_duplicate", wcag: [{ criterion: "1.1.1", level: "A", version: "2.0" }] }, { item: "alt_long", wcag: [{ criterion: "1.1.1", level: "A", version: "2.0" }] }, { item: "longdesc", wcag: [{ criterion: "1.1.1", level: "A", version: "2.0" }] }, { item: "image_title", wcag: [{ criterion: "1.1.1", level: "A", version: "2.0" }] }, { item: "label_orphaned", wcag: [{ criterion: "1.1.1", level: "A", version: "2.0" }, { criterion: "1.3.1", level: "A", version: "2.0" }, { criterion: "2.4.6", level: "AA", version: "2.0" }, { criterion: "3.3.2", level: "A", version: "2.0" }] }, { item: "label_title", wcag: [{ criterion: "1.1.1", level: "A", version: "2.0" }, { criterion: "1.3.1", level: "A", version: "2.0" }, { criterion: "2.4.6", level: "AA", version: "2.0" }, { criterion: "3.3.2", level: "A", version: "2.0" }] }, { item: "select_missing_label", wcag: [{ criterion: "1.3.1", level: "A", version: "2.0" }, { criterion: "2.4.6", level: "AA", version: "2.0" }, { criterion: "3.3.2", level: "A", version: "2.0" }] }, { item: "fieldset_missing", wcag: [{ criterion: "1.1.1", level: "A", version: "2.0" }, { criterion: "1.3.1", level: "A", version: "2.0" }, { criterion: "2.4.6", level: "AA", version: "2.0" }, { criterion: "3.3.2", level: "A", version: "2.0" }] }, { item: "legend_missing", wcag: [{ criterion: "1.1.1", level: "A", version: "2.0" }, { criterion: "1.3.1", level: "A", version: "2.0" }, { criterion: "2.4.6", level: "AA", version: "2.0" }, { criterion: "3.3.2", level: "A", version: "2.0" }] }, { item: "heading_missing", wcag: [{ criterion: "1.3.1", level: "A", version: "2.0" }, { criterion: "2.4.6", level: "AA", version: "2.0" }] }, { item: "h1_missing", wcag: [{ criterion: "1.3.1", level: "A", version: "2.0" }, { criterion: "2.4.6", level: "AA", version: "2.0" }] }, { item: "region_missing", wcag: [{ criterion: "1.3.1", level: "A", version: "2.0" }, { criterion: "2.4.1", level: "A", version: "2.0" }] }, { item: "heading_skipped", wcag: [{ criterion: "1.3.1", level: "A", version: "2.0" }, { criterion: "2.4.1", level: "A", version: "2.0" }, { criterion: "2.4.6", level: "AA", version: "2.0" }] }, { item: "heading_possible", wcag: [{ criterion: "1.3.1", level: "A", version: "2.0" }, { criterion: "2.4.1", level: "A", version: "2.0" }, { criterion: "2.4.6", level: "AA", version: "2.0" }] }, { item: "table_layout", wcag: [{ criterion: "1.3.1", level: "A", version: "2.0" }, { criterion: "1.3.2", level: "A", version: "2.0" }] }, { item: "table_caption_possible", wcag: [{ criterion: "1.3.1", level: "A", version: "2.0" }] }, { item: "list_possible", wcag: [{ criterion: "1.3.1", level: "A", version: "2.0" }] }, { item: "link_internal_broken", wcag: [{ criterion: "2.1.1", level: "A", version: "2.0" }] }, { item: "link_suspicious", wcag: [{ criterion: "2.4.4", level: "A", version: "2.0" }] }, { item: "link_redundant", wcag: [{ criterion: "2.4.4", level: "A", version: "2.0" }] }, { item: "link_word", wcag: [] }, { item: "link_excel", wcag: [] }, { item: "link_powerpoint", wcag: [] }, { item: "link_pdf", wcag: [] }, { item: "link_document", wcag: [] }, { item: "audio_video", wcag: [{ criterion: "1.2.1", level: "A", version: "2.0" }, { criterion: "1.2.2", level: "A", version: "2.0" }, { criterion: "1.2.3", level: "A", version: "2.0" }, { criterion: "1.2.5", level: "AA", version: "2.0" }, { criterion: "1.4.2", level: "A", version: "2.0" }] }, { item: "html5_video_audio", wcag: [{ criterion: "1.2.1", level: "A", version: "2.0" }, { criterion: "1.2.2", level: "A", version: "2.0" }, { criterion: "1.2.3", level: "A", version: "2.0" }, { criterion: "1.2.5", level: "AA", version: "2.0" }, { criterion: "1.4.2", level: "A", version: "2.0" }] }, { item: "youtube_video", wcag: [{ criterion: "1.2.1", level: "A", version: "2.0" }, { criterion: "1.2.2", level: "A", version: "2.0" }, { criterion: "1.2.3", level: "A", version: "2.0" }] }, { item: "flash", wcag: [{ criterion: "1.2.1", level: "A", version: "2.0" }, { criterion: "1.2.2", level: "A", version: "2.0" }, { criterion: "1.2.3", level: "A", version: "2.0" }, { criterion: "1.2.5", level: "AA", version: "2.0" }, { criterion: "2.1.2", level: "A", version: "2.0" }] }, { item: "applet", wcag: [] }, { item: "plugin", wcag: [] }, { item: "noscript", wcag: [] }, { item: "event_handler", wcag: [{ criterion: "2.1.1", level: "A", version: "2.0" }] }, { item: "javascript_jumpmenu", wcag: [{ criterion: "2.1.1", level: "A", version: "2.0" }, { criterion: "3.2.2", level: "A", version: "2.0" }] }, { item: "accesskey", wcag: [{ criterion: "2.4.1", level: "A", version: "2.0" }] }, { item: "tabindex", wcag: [{ criterion: "2.4.3", level: "A", version: "2.0" }] }, { item: "text_small", wcag: [] }, { item: "text_justified", wcag: [] }, { item: "underline", wcag: [] }, { item: "title_redundant", wcag: [] }, { item: "alt", wcag: [{ criterion: "1.1.1", level: "A", version: "2.0" }] }, { item: "alt_null", wcag: [{ criterion: "1.1.1", level: "A", version: "2.0" }] }, { item: "alt_spacer", wcag: [{ criterion: "1.1.1", level: "A", version: "2.0" }] }, { item: "alt_link", wcag: [{ criterion: "1.1.1", level: "A", version: "2.0" }, { criterion: "2.4.4", level: "A", version: "2.0" }] }, { item: "alt_input", wcag: [{ criterion: "1.1.1", level: "A", version: "2.0" }, { criterion: "2.4.4", level: "A", version: "2.0" }] }, { item: "alt_map", wcag: [{ criterion: "1.1.1", level: "A", version: "2.0" }] }, { item: "alt_area", wcag: [{ criterion: "1.1.1", level: "A", version: "2.0" }, { criterion: "2.4.4", level: "A", version: "2.0" }] }, { item: "figure", wcag: [{ criterion: "1.1.1", level: "A", version: "2.0" }] }, { item: "label", wcag: [{ criterion: "1.1.1", level: "A", version: "2.0" }, { criterion: "1.3.1", level: "A", version: "2.0" }, { criterion: "2.4.6", level: "AA", version: "2.0" }] }, { item: "fieldset", wcag: [{ criterion: "1.1.1", level: "A", version: "2.0" }, { criterion: "1.3.1", level: "A", version: "2.0" }, { criterion: "2.4.6", level: "AA", version: "2.0" }] }, { item: "link_skip", wcag: [{ criterion: "2.4.1", level: "A", version: "2.0" }] }, { item: "link_skip_target", wcag: [{ criterion: "2.4.1", level: "A", version: "2.0" }] }, { item: "lang", wcag: [{ criterion: "3.1.2", level: "AA", version: "2.0" }] }, { item: "h1", wcag: [{ criterion: "1.3.1", level: "A", version: "2.0" }, { criterion: "2.4.1", level: "A", version: "2.0" }, { criterion: "2.4.6", level: "AA", version: "2.0" }] }, { item: "h2", wcag: [{ criterion: "1.3.1", level: "A", version: "2.0" }, { criterion: "2.4.1", level: "A", version: "2.0" }, { criterion: "2.4.6", level: "AA", version: "2.0" }] }, { item: "h3", wcag: [{ criterion: "1.3.1", level: "A", version: "2.0" }, { criterion: "2.4.1", level: "A", version: "2.0" }, { criterion: "2.4.6", level: "AA", version: "2.0" }] }, { item: "h4", wcag: [{ criterion: "1.3.1", level: "A", version: "2.0" }, { criterion: "2.4.1", level: "A", version: "2.0" }, { criterion: "2.4.6", level: "AA", version: "2.0" }] }, { item: "h5", wcag: [{ criterion: "1.3.1", level: "A", version: "2.0" }, { criterion: "2.4.1", level: "A", version: "2.0" }, { criterion: "2.4.6", level: "AA", version: "2.0" }] }, { item: "h6", wcag: [{ criterion: "1.3.1", level: "A", version: "2.0" }, { criterion: "2.4.1", level: "A", version: "2.0" }, { criterion: "2.4.6", level: "AA", version: "2.0" }] }, { item: "ol", wcag: [{ criterion: "1.3.1", level: "A", version: "2.0" }] }, { item: "ul", wcag: [{ criterion: "1.3.1", level: "A", version: "2.0" }] }, { item: "dl", wcag: [{ criterion: "1.3.1", level: "A", version: "2.0" }] }, { item: "header", wcag: [{ criterion: "1.3.1", level: "A", version: "2.0" }, { criterion: "2.4.1", level: "A", version: "2.0" }] }, { item: "nav", wcag: [{ criterion: "1.3.1", level: "A", version: "2.0" }, { criterion: "2.4.1", level: "A", version: "2.0" }] }, { item: "search", wcag: [{ criterion: "1.3.1", level: "A", version: "2.0" }, { criterion: "2.4.1", level: "A", version: "2.0" }] }, { item: "main", wcag: [{ criterion: "1.3.1", level: "A", version: "2.0" }, { criterion: "2.4.1", level: "A", version: "2.0" }] }, { item: "aside", wcag: [{ criterion: "1.3.1", level: "A", version: "2.0" }, { criterion: "2.4.1", level: "A", version: "2.0" }] }, { item: "footer", wcag: [{ criterion: "1.3.1", level: "A", version: "2.0" }, { criterion: "2.4.1", level: "A", version: "2.0" }] }, { item: "region", wcag: [{ criterion: "1.3.1", level: "A", version: "2.0" }, { criterion: "2.4.1", level: "A", version: "2.0" }] }, { item: "table_data", wcag: [{ criterion: "1.3.1", level: "A", version: "2.0" }] }, { item: "table_caption", wcag: [{ criterion: "1.3.1", level: "A", version: "2.0" }] }, { item: "th", wcag: [{ criterion: "1.3.1", level: "A", version: "2.0" }] }, { item: "th_col", wcag: [{ criterion: "1.3.1", level: "A", version: "2.0" }] }, { item: "th_row", wcag: [{ criterion: "1.3.1", level: "A", version: "2.0" }] }, { item: "iframe", wcag: [] }, { item: "aria", wcag: [{ criterion: "4.1.2", level: "A", version: "2.0" }] }, { item: "aria_label", wcag: [{ criterion: "1.1.1", level: "A", version: "2.0" }, { criterion: "1.3.1", level: "A", version: "2.0" }, { criterion: "2.4.6", level: "AA", version: "2.0" }, { criterion: "4.1.2", level: "A", version: "2.0" }, { criterion: "2.5.3", level: "A", version: "2.1" }] }, { item: "aria_describedby", wcag: [{ criterion: "1.3.1", level: "A", version: "2.0" }, { criterion: "4.1.2", level: "A", version: "2.0" }] }, { item: "aria_live_region", wcag: [{ criterion: "3.3.1", level: "A", version: "2.0" }, { criterion: "4.1.3", level: "AA", version: "2.1" }] }, { item: "aria_menu", wcag: [{ criterion: "2.1.1", level: "A", version: "2.0" }, { criterion: "4.1.2", level: "A", version: "2.0" }] }, { item: "aria_button", wcag: [{ criterion: "2.1.1", level: "A", version: "2.0" }, { criterion: "4.1.2", level: "A", version: "2.0" }] }, { item: "aria_expanded", wcag: [{ criterion: "4.1.2", level: "A", version: "2.0" }] }, { item: "aria_haspopup", wcag: [{ criterion: "4.1.2", level: "A", version: "2.0" }] }, { item: "aria_tabindex", wcag: [{ criterion: "2.1.1", level: "A", version: "2.0" }] }, { item: "aria_hidden", wcag: [{ criterion: "4.1.2", level: "A", version: "2.0" }] }]
+        @label "WCAG catalog"
+        @description "Each WAVE item id with the WCAG success criteria it maps to, generated from the WAVE docs by spec/a11y/a11y-wave.gen/gen_catalog.py."
+        @tier "domain"
+    }
+  }
+
+  page boot as WaveScanPage -> WaveScan, WaveHttp, WaveTimeout
+}

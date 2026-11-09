@@ -59,6 +59,8 @@ orbital AgentMemoryOrbital {
     embedding : [number] @description "The content's embedding, for similarity recall." = []
     createdAt : instant! @description "When it was remembered." @synonyms "time, timestamp"
     pendingMessages : [AgentChatMessage] @intrinsic @description "The conversation a recall is running for." = []
+    pendingHasLive : boolean @intrinsic @description "The conversation being recalled for carried a `live` flag, so it is forwarded; absent stays absent." = false
+    pendingLive : boolean @intrinsic @description "The `live` flag of the conversation being recalled for." = false
     pendingQuery : string @intrinsic @description "The turn a recall is running for." = ""
     pendingContent : string @intrinsic @description "The exchange being remembered." = ""
     page : number @intrinsic @description "The page the list shows." = 1
@@ -144,10 +146,14 @@ orbital AgentMemoryOrbital {
       MemoryListFailed -> ready
         (emit ASSISTANT_MEMORIES_LOADED { data: [], totalCount: 0 })
         (emit MEMORY_RECALL_NOTICE { message: ?error, variant: "error" })
-      RECALL -> ready when (default ?ephemeral false)
+      RECALL -> ready when (and (default ?ephemeral false) (not (object/has ? live)))
         (emit RECALLED { messages: ?messages, context: "", instructions: (default ?instructions ""), tools: (object/get ? tools []), ephemeral: true })
+      RECALL -> ready when (and (default ?ephemeral false) (object/has ? live))
+        (emit RECALLED { messages: ?messages, context: "", instructions: (default ?instructions ""), tools: (object/get ? tools []), ephemeral: true, live: ?live })
       RECALL -> recalling when (not (default ?ephemeral false))
         (set @entity.pendingMessages ?messages)
+        (set @entity.pendingHasLive (object/has ? live))
+        (set @entity.pendingLive (default ?live false))
         (set @entity.pendingQuery (object/get (default (array/last ?messages) {}) content ""))
         (emit LLM_EMBED {
           texts: (array/prepend [] (object/get (default (array/last ?messages) {}) content "")),
@@ -166,16 +172,28 @@ orbital AgentMemoryOrbital {
         })
       MemoriesForRecall -> recalling when (> ?totalCount (array/len (default ?data [])))
         (emit AgentMemoriesLoadFailed { error: (str/concat "AgentMemory has " ?totalCount " rows, over the maxRows cap of " @config.maxRows), code: "AGENT_MEMORY_OVER_CAP" })
-      MemoriesForRecall -> ready
+      MemoriesForRecall -> ready when (not @entity.pendingHasLive)
         (emit RECALLED {
           messages: @entity.pendingMessages
           context: (str/join (array/map (array/take (array/sort (array/map (array/filter (default ?data []) (fn item (and (> (array/len @entity.queryVector) 0) (= (array/len @item.embedding) (array/len @entity.queryVector))))) (fn item { content: @item.content, score: (array/cosine @item.embedding @entity.queryVector) })) score desc) @config.recallLimit) (fn item @item.content)) "\n")
         })
-      MemoryEmbedFailed -> ready when (= (default ?key "") "recall")
+      MemoriesForRecall -> ready when @entity.pendingHasLive
+        (emit RECALLED {
+          messages: @entity.pendingMessages
+          context: (str/join (array/map (array/take (array/sort (array/map (array/filter (default ?data []) (fn item (and (> (array/len @entity.queryVector) 0) (= (array/len @item.embedding) (array/len @entity.queryVector))))) (fn item { content: @item.content, score: (array/cosine @item.embedding @entity.queryVector) })) score desc) @config.recallLimit) (fn item @item.content)) "\n")
+          live: @entity.pendingLive
+        })
+      MemoryEmbedFailed -> ready when (and (= (default ?key "") "recall") (not @entity.pendingHasLive))
         (emit RECALLED { messages: @entity.pendingMessages, context: "" })
         (emit MEMORY_RECALL_NOTICE { message: ?message, variant: "warning" })
-      AgentMemoriesLoadFailed -> ready
+      MemoryEmbedFailed -> ready when (and (= (default ?key "") "recall") @entity.pendingHasLive)
+        (emit RECALLED { messages: @entity.pendingMessages, context: "", live: @entity.pendingLive })
+        (emit MEMORY_RECALL_NOTICE { message: ?message, variant: "warning" })
+      AgentMemoriesLoadFailed -> ready when (not @entity.pendingHasLive)
         (emit RECALLED { messages: @entity.pendingMessages, context: "" })
+        (emit MEMORY_RECALL_NOTICE { message: ?error, variant: "warning" })
+      AgentMemoriesLoadFailed -> ready when @entity.pendingHasLive
+        (emit RECALLED { messages: @entity.pendingMessages, context: "", live: @entity.pendingLive })
         (emit MEMORY_RECALL_NOTICE { message: ?error, variant: "warning" })
     }
 
@@ -186,8 +204,9 @@ orbital AgentMemoryOrbital {
         instructions : string
         tools : [AgentTool]
         ephemeral : boolean
+        live : boolean
       }
-        @description "The conversation, with what the assistant remembers that is closest to its last turn. An ephemeral conversation is never recalled for: empty `context`, its own `instructions`, `tools` and `ephemeral` flag pass through."
+        @description "The conversation, with what the assistant remembers that is closest to its last turn. An ephemeral conversation is never recalled for: empty `context`, its own `instructions`, `tools` and `ephemeral` flag pass through. A `live` flag passes through when it was given."
         @synonyms "recalled, remembered, context ready"
         @tier "domain"
       ASSISTANT_MEMORIES_LOADED -> external {
@@ -251,6 +270,7 @@ orbital AgentMemoryOrbital {
         instructions : string
         tools : [AgentTool]
         ephemeral : boolean
+        live : boolean
       }
         @description "Recall what is relevant to this conversation's last turn. An ephemeral conversation skips the recall."
     }

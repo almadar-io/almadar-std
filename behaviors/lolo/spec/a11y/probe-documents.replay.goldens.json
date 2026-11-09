@@ -1,0 +1,1829 @@
+{
+ "atom": "a11y/atoms/std-a11y-probe-documents.lolo",
+ "trait": "DocumentsProbe",
+ "spec": "spec/a11y/probe-documents.lolo",
+ "note": "std-a11y-probe-documents with the page answers and the std-pdf-text answers played as events. The links are real, read through headless Chrome with the PAGE_LINKS expression (record.py); the PDF text and page counts are real pdftotext -layout output of the fixture PDFs. The download path is played. The replay runner delivers the internal DOCS_NEXT itself. Regenerate with python3 -I record.py && python3 -I gen_goldens.py.",
+ "cases": [
+  {
+   "id": "PROBE_RUN asks the tab for its links under the run key",
+   "defaults": [
+    "PdfText",
+    "PdfCli"
+   ],
+   "steps": [
+    {
+     "trait": "DocumentsProbe",
+     "event": "PROBE_RUN",
+     "payload": {
+      "key": "k1",
+      "pageUrl": "http://127.0.0.1:24682/documents-pdf-notext-fail.html"
+     },
+     "expect": {
+      "state": "linking",
+      "emits": [
+       {
+        "event": "PAGE_LINKS",
+        "payload": {
+         "key": "k1:links"
+        }
+       }
+      ]
+     },
+     "from": "idle"
+    }
+   ]
+  },
+  {
+   "id": "pdf-scanned-fail: the linked PDF has no text on any page, so it is the confirmed pdf-scanned finding",
+   "note": "links from headless Chrome (record.py); scan.pdf is a real PDF of drawn rectangles, pageCount from real pdftotext; the download is played",
+   "defaults": [
+    "PdfText",
+    "PdfCli"
+   ],
+   "steps": [
+    {
+     "trait": "DocumentsProbe",
+     "event": "PROBE_RUN",
+     "payload": {
+      "key": "k1",
+      "pageUrl": "http://127.0.0.1:24682/documents-pdf-notext-fail.html"
+     },
+     "expect": {
+      "state": "linking",
+      "emits": [
+       {
+        "event": "PAGE_LINKS",
+        "payload": {
+         "key": "k1:links"
+        }
+       }
+      ]
+     },
+     "from": "idle"
+    },
+    {
+     "trait": "DocumentsProbe",
+     "event": "PAGE_LINKS_READ",
+     "payload": {
+      "key": "k1:links",
+      "links": [
+       {
+        "index": 0,
+        "text": "Preskoči na vsebino",
+        "href": "http://127.0.0.1:24682/documents-pdf-notext-fail.html#main",
+        "download": false,
+        "kind": "link"
+       },
+       {
+        "index": 1,
+        "text": "Domov",
+        "href": "http://127.0.0.1:24682/index.html",
+        "download": false,
+        "kind": "link"
+       },
+       {
+        "index": 2,
+        "text": "Izdelki",
+        "href": "http://127.0.0.1:24682/index.html",
+        "download": false,
+        "kind": "link"
+       },
+       {
+        "index": 3,
+        "text": "Cenik (PDF)",
+        "href": "http://127.0.0.1:24682/docs/scan.pdf",
+        "download": true,
+        "kind": "link"
+       }
+      ]
+     },
+     "expect": {
+      "state": "stepping",
+      "emits": [
+       {
+        "event": "DOCS_NEXT",
+        "payload": {}
+       },
+       {
+        "event": "PAGE_DOWNLOAD",
+        "payload": {
+         "key": "k1:dl:0",
+         "index": 3
+        }
+       }
+      ],
+      "entity": {
+       "docs": [
+        {
+         "index": 3,
+         "text": "Cenik (PDF)",
+         "href": "http://127.0.0.1:24682/docs/scan.pdf"
+        }
+       ],
+       "total": 1,
+       "pos": 0
+      }
+     }
+    },
+    {
+     "trait": "DocumentsProbe",
+     "event": "PAGE_DOWNLOADED",
+     "payload": {
+      "key": "k1:dl:0",
+      "path": "/downloads/scan.pdf",
+      "url": "http://127.0.0.1:24682/docs/scan.pdf",
+      "size": 1024
+     },
+     "expect": {
+      "state": "reading",
+      "emits": [
+       {
+        "event": "PDF_REQUEST",
+        "payload": {
+         "key": "k1:pdf:0",
+         "path": "/downloads/scan.pdf"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "PdfText",
+     "event": "PDF_RAN",
+     "payload": {
+      "stage": "k1:pdf:0",
+      "exitCode": 0,
+      "signal": 0,
+      "stdout": "\f",
+      "stdoutBytes": "",
+      "stderr": ""
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "PDF_NO_TEXT",
+        "payload": {
+         "key": "k1:pdf:0",
+         "pageCount": 1
+        }
+       },
+       {
+        "event": "DOCS_NEXT",
+        "payload": {}
+       },
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k1",
+         "probe": "documents",
+         "findings": [
+          {
+           "id": "pdf-scanned:http://127.0.0.1:24682/documents-pdf-notext-fail.html:http://127.0.0.1:24682/docs/scan.pdf",
+           "pageUrl": "http://127.0.0.1:24682/documents-pdf-notext-fail.html",
+           "rule": "pdf-scanned",
+           "wcag": [
+            {
+             "criterion": "1.1.1",
+             "level": "A",
+             "version": "2.0"
+            }
+           ],
+           "method": "probe",
+           "engines": [
+            "probe"
+           ],
+           "impact": "serious",
+           "confidence": "confirmed",
+           "selector": "a[href=\"http://127.0.0.1:24682/docs/scan.pdf\"]",
+           "snippet": "<a href=\"http://127.0.0.1:24682/docs/scan.pdf\">Cenik (PDF)</a> is a PDF of 1 pages with no text",
+           "evidence": "",
+           "count": 1
+          }
+         ]
+        }
+       }
+      ],
+      "neverEmits": [
+       "DOCUMENT_READ"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a linked PDF with a text layer is no finding and answers DOCUMENT_READ with its pages, for the knowledge base",
+   "note": "the pages are the text of the real cenik.pdf from pdftotext -layout",
+   "defaults": [
+    "PdfText",
+    "PdfCli"
+   ],
+   "steps": [
+    {
+     "trait": "DocumentsProbe",
+     "event": "PROBE_RUN",
+     "payload": {
+      "key": "k2",
+      "pageUrl": "http://127.0.0.1:24682/documents-pdf-text-pass.html"
+     },
+     "expect": {
+      "state": "linking",
+      "emits": [
+       {
+        "event": "PAGE_LINKS",
+        "payload": {
+         "key": "k2:links"
+        }
+       }
+      ]
+     },
+     "from": "idle"
+    },
+    {
+     "trait": "DocumentsProbe",
+     "event": "PAGE_LINKS_READ",
+     "payload": {
+      "key": "k2:links",
+      "links": [
+       {
+        "index": 0,
+        "text": "Preskoči na vsebino",
+        "href": "http://127.0.0.1:24682/documents-pdf-text-pass.html#main",
+        "download": false,
+        "kind": "link"
+       },
+       {
+        "index": 1,
+        "text": "Domov",
+        "href": "http://127.0.0.1:24682/index.html",
+        "download": false,
+        "kind": "link"
+       },
+       {
+        "index": 2,
+        "text": "Izdelki",
+        "href": "http://127.0.0.1:24682/index.html",
+        "download": false,
+        "kind": "link"
+       },
+       {
+        "index": 3,
+        "text": "Cenik (PDF)",
+        "href": "http://127.0.0.1:24682/docs/cenik.pdf",
+        "download": true,
+        "kind": "link"
+       }
+      ]
+     },
+     "expect": {
+      "state": "stepping",
+      "emits": [
+       {
+        "event": "DOCS_NEXT",
+        "payload": {}
+       },
+       {
+        "event": "PAGE_DOWNLOAD",
+        "payload": {
+         "key": "k2:dl:0",
+         "index": 3
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "DocumentsProbe",
+     "event": "PAGE_DOWNLOADED",
+     "payload": {
+      "key": "k2:dl:0",
+      "path": "/downloads/cenik.pdf",
+      "url": "http://127.0.0.1:24682/docs/cenik.pdf",
+      "size": 2048
+     },
+     "expect": {
+      "state": "reading",
+      "emits": [
+       {
+        "event": "PDF_REQUEST",
+        "payload": {
+         "key": "k2:pdf:0",
+         "path": "/downloads/cenik.pdf"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "PdfText",
+     "event": "PDF_RAN",
+     "payload": {
+      "stage": "k2:pdf:0",
+      "exitCode": 0,
+      "signal": 0,
+      "stdout": "Cenik - Loncarna Mala\nKeramicni lonec ........ 24,90 EUR\nSkodelica za caj ...... 9,50 EUR\nKroznik globoki ....... 12,00 EUR\nCene vsebujejo DDV.\n\f",
+      "stdoutBytes": "",
+      "stderr": ""
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "PDF_TEXT",
+        "payload": {
+         "key": "k2:pdf:0",
+         "pages": [
+          {
+           "page": 1,
+           "text": "Cenik - Loncarna Mala\nKeramicni lonec ........ 24,90 EUR\nSkodelica za caj ...... 9,50 EUR\nKroznik globoki ....... 12,00 EUR\nCene vsebujejo DDV.\n"
+          }
+         ]
+        }
+       },
+       {
+        "event": "DOCUMENT_READ",
+        "payload": {
+         "key": "k2",
+         "url": "http://127.0.0.1:24682/docs/cenik.pdf",
+         "path": "/downloads/cenik.pdf",
+         "pages": [
+          {
+           "page": 1,
+           "text": "Cenik - Loncarna Mala\nKeramicni lonec ........ 24,90 EUR\nSkodelica za caj ...... 9,50 EUR\nKroznik globoki ....... 12,00 EUR\nCene vsebujejo DDV.\n"
+          }
+         ]
+        }
+       },
+       {
+        "event": "DOCS_NEXT",
+        "payload": {}
+       },
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k2",
+         "probe": "documents",
+         "findings": []
+        }
+       }
+      ],
+      "neverEmits": [
+       "DOCUMENTS_UNCHECKED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a page that links no document ends at once with no finding and downloads nothing",
+   "defaults": [
+    "PdfText",
+    "PdfCli"
+   ],
+   "steps": [
+    {
+     "trait": "DocumentsProbe",
+     "event": "PROBE_RUN",
+     "payload": {
+      "key": "k3",
+      "pageUrl": "http://127.0.0.1:24682/lang-missing-pass.html"
+     },
+     "expect": {
+      "state": "linking",
+      "emits": [
+       {
+        "event": "PAGE_LINKS",
+        "payload": {
+         "key": "k3:links"
+        }
+       }
+      ]
+     },
+     "from": "idle"
+    },
+    {
+     "trait": "DocumentsProbe",
+     "event": "PAGE_LINKS_READ",
+     "payload": {
+      "key": "k3:links",
+      "links": [
+       {
+        "index": 0,
+        "text": "Preskoči na vsebino",
+        "href": "http://127.0.0.1:24682/lang-missing-pass.html#main",
+        "download": false,
+        "kind": "link"
+       },
+       {
+        "index": 1,
+        "text": "Domov",
+        "href": "http://127.0.0.1:24682/index.html",
+        "download": false,
+        "kind": "link"
+       },
+       {
+        "index": 2,
+        "text": "Izdelki",
+        "href": "http://127.0.0.1:24682/index.html",
+        "download": false,
+        "kind": "link"
+       }
+      ]
+     },
+     "expect": {
+      "state": "stepping",
+      "emits": [
+       {
+        "event": "DOCS_NEXT",
+        "payload": {}
+       },
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k3",
+         "probe": "documents",
+         "findings": []
+        }
+       }
+      ],
+      "neverEmits": [
+       "PAGE_DOWNLOAD"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "documents: the download flag, a .PDF in any case with a query, and .pdf with a fragment are documents; a page, a name containing pdf, a button and an empty href are not",
+   "defaults": [
+    "PdfText",
+    "PdfCli"
+   ],
+   "config": {
+    "maxPdfs": 10
+   },
+   "steps": [
+    {
+     "trait": "DocumentsProbe",
+     "event": "PROBE_RUN",
+     "payload": {
+      "key": "s",
+      "pageUrl": "http://127.0.0.1:24682/documents-pdf-notext-fail.html"
+     },
+     "expect": {
+      "state": "linking",
+      "emits": [
+       {
+        "event": "PAGE_LINKS",
+        "payload": {
+         "key": "s:links"
+        }
+       }
+      ]
+     },
+     "from": "idle"
+    },
+    {
+     "trait": "DocumentsProbe",
+     "event": "PAGE_LINKS_READ",
+     "payload": {
+      "key": "s:links",
+      "links": [
+       {
+        "index": 0,
+        "text": "page",
+        "href": "http://127.0.0.1:24682/a.html",
+        "download": false,
+        "kind": "link"
+       },
+       {
+        "index": 1,
+        "text": "Podatki",
+        "href": "http://127.0.0.1:24682/export/podatki.csv",
+        "download": true,
+        "kind": "link"
+       },
+       {
+        "index": 2,
+        "text": "upper",
+        "href": "http://127.0.0.1:24682/B.PDF?v=2",
+        "download": false,
+        "kind": "link"
+       },
+       {
+        "index": 3,
+        "text": "fragment",
+        "href": "http://127.0.0.1:24682/c.pdf#page=3",
+        "download": false,
+        "kind": "link"
+       },
+       {
+        "index": 4,
+        "text": "pdf word in the name",
+        "href": "http://127.0.0.1:24682/pdf-info.html",
+        "download": false,
+        "kind": "link"
+       },
+       {
+        "index": 5,
+        "text": "btn",
+        "href": "http://127.0.0.1:24682/x.pdf",
+        "download": false,
+        "kind": "button"
+       },
+       {
+        "index": 6,
+        "text": "empty",
+        "href": "",
+        "download": false,
+        "kind": "link"
+       }
+      ]
+     },
+     "expect": {
+      "state": "stepping",
+      "emits": [
+       {
+        "event": "DOCS_NEXT",
+        "payload": {}
+       },
+       {
+        "event": "PAGE_DOWNLOAD",
+        "payload": {
+         "key": "s:dl:0",
+         "index": 1
+        }
+       }
+      ],
+      "entity": {
+       "docs": [
+        {
+         "index": 1,
+         "text": "Podatki",
+         "href": "http://127.0.0.1:24682/export/podatki.csv"
+        },
+        {
+         "index": 2,
+         "text": "upper",
+         "href": "http://127.0.0.1:24682/B.PDF?v=2"
+        },
+        {
+         "index": 3,
+         "text": "fragment",
+         "href": "http://127.0.0.1:24682/c.pdf#page=3"
+        }
+       ],
+       "total": 3
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: with no document patterns only the download flag makes a document",
+   "defaults": [
+    "PdfText",
+    "PdfCli"
+   ],
+   "config": {
+    "maxPdfs": 10,
+    "documentPatterns": []
+   },
+   "steps": [
+    {
+     "trait": "DocumentsProbe",
+     "event": "PROBE_RUN",
+     "payload": {
+      "key": "s",
+      "pageUrl": "http://127.0.0.1:24682/documents-pdf-notext-fail.html"
+     },
+     "expect": {
+      "state": "linking",
+      "emits": [
+       {
+        "event": "PAGE_LINKS",
+        "payload": {
+         "key": "s:links"
+        }
+       }
+      ]
+     },
+     "from": "idle"
+    },
+    {
+     "trait": "DocumentsProbe",
+     "event": "PAGE_LINKS_READ",
+     "payload": {
+      "key": "s:links",
+      "links": [
+       {
+        "index": 0,
+        "text": "page",
+        "href": "http://127.0.0.1:24682/a.html",
+        "download": false,
+        "kind": "link"
+       },
+       {
+        "index": 1,
+        "text": "Podatki",
+        "href": "http://127.0.0.1:24682/export/podatki.csv",
+        "download": true,
+        "kind": "link"
+       },
+       {
+        "index": 2,
+        "text": "upper",
+        "href": "http://127.0.0.1:24682/B.PDF?v=2",
+        "download": false,
+        "kind": "link"
+       },
+       {
+        "index": 3,
+        "text": "fragment",
+        "href": "http://127.0.0.1:24682/c.pdf#page=3",
+        "download": false,
+        "kind": "link"
+       },
+       {
+        "index": 4,
+        "text": "pdf word in the name",
+        "href": "http://127.0.0.1:24682/pdf-info.html",
+        "download": false,
+        "kind": "link"
+       },
+       {
+        "index": 5,
+        "text": "btn",
+        "href": "http://127.0.0.1:24682/x.pdf",
+        "download": false,
+        "kind": "button"
+       },
+       {
+        "index": 6,
+        "text": "empty",
+        "href": "",
+        "download": false,
+        "kind": "link"
+       }
+      ]
+     },
+     "expect": {
+      "state": "stepping",
+      "emits": [
+       {
+        "event": "DOCS_NEXT",
+        "payload": {}
+       },
+       {
+        "event": "PAGE_DOWNLOAD",
+        "payload": {
+         "key": "s:dl:0",
+         "index": 1
+        }
+       }
+      ],
+      "entity": {
+       "docs": [
+        {
+         "index": 1,
+         "text": "Podatki",
+         "href": "http://127.0.0.1:24682/export/podatki.csv"
+        }
+       ],
+       "total": 1
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "documents: the same href linked twice is checked once, at its first link",
+   "defaults": [
+    "PdfText",
+    "PdfCli"
+   ],
+   "config": {
+    "maxPdfs": 10
+   },
+   "steps": [
+    {
+     "trait": "DocumentsProbe",
+     "event": "PROBE_RUN",
+     "payload": {
+      "key": "s",
+      "pageUrl": "http://127.0.0.1:24682/documents-pdf-notext-fail.html"
+     },
+     "expect": {
+      "state": "linking",
+      "emits": [
+       {
+        "event": "PAGE_LINKS",
+        "payload": {
+         "key": "s:links"
+        }
+       }
+      ]
+     },
+     "from": "idle"
+    },
+    {
+     "trait": "DocumentsProbe",
+     "event": "PAGE_LINKS_READ",
+     "payload": {
+      "key": "s:links",
+      "links": [
+       {
+        "index": 2,
+        "text": "first",
+        "href": "http://127.0.0.1:24682/x.pdf",
+        "download": false,
+        "kind": "link"
+       },
+       {
+        "index": 7,
+        "text": "second",
+        "href": "http://127.0.0.1:24682/x.pdf",
+        "download": false,
+        "kind": "link"
+       },
+       {
+        "index": 8,
+        "text": "other",
+        "href": "http://127.0.0.1:24682/y.pdf",
+        "download": false,
+        "kind": "link"
+       }
+      ]
+     },
+     "expect": {
+      "state": "stepping",
+      "emits": [
+       {
+        "event": "DOCS_NEXT",
+        "payload": {}
+       },
+       {
+        "event": "PAGE_DOWNLOAD",
+        "payload": {
+         "key": "s:dl:0",
+         "index": 2
+        }
+       }
+      ],
+      "entity": {
+       "docs": [
+        {
+         "index": 2,
+         "text": "first",
+         "href": "http://127.0.0.1:24682/x.pdf"
+        },
+        {
+         "index": 8,
+         "text": "other",
+         "href": "http://127.0.0.1:24682/y.pdf"
+        }
+       ],
+       "total": 2
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "cap: with maxPdfs 1 and three PDFs linked, the first is checked and DOCUMENTS_UNCHECKED reports the other two",
+   "defaults": [
+    "PdfText",
+    "PdfCli"
+   ],
+   "config": {
+    "maxPdfs": 1
+   },
+   "steps": [
+    {
+     "trait": "DocumentsProbe",
+     "event": "PROBE_RUN",
+     "payload": {
+      "key": "c1",
+      "pageUrl": "http://127.0.0.1:24682/documents-pdf-notext-fail.html"
+     },
+     "expect": {
+      "state": "linking",
+      "emits": [
+       {
+        "event": "PAGE_LINKS",
+        "payload": {
+         "key": "c1:links"
+        }
+       }
+      ]
+     },
+     "from": "idle"
+    },
+    {
+     "trait": "DocumentsProbe",
+     "event": "PAGE_LINKS_READ",
+     "payload": {
+      "key": "c1:links",
+      "links": [
+       {
+        "index": 1,
+        "text": "one",
+        "href": "http://127.0.0.1:24682/1.pdf",
+        "download": false,
+        "kind": "link"
+       },
+       {
+        "index": 2,
+        "text": "two",
+        "href": "http://127.0.0.1:24682/2.pdf",
+        "download": false,
+        "kind": "link"
+       },
+       {
+        "index": 3,
+        "text": "three",
+        "href": "http://127.0.0.1:24682/3.pdf",
+        "download": false,
+        "kind": "link"
+       }
+      ]
+     },
+     "expect": {
+      "state": "stepping",
+      "emits": [
+       {
+        "event": "DOCS_NEXT",
+        "payload": {}
+       },
+       {
+        "event": "PAGE_DOWNLOAD",
+        "payload": {
+         "key": "c1:dl:0",
+         "index": 1
+        }
+       }
+      ],
+      "entity": {
+       "total": 3,
+       "docs": [
+        {
+         "index": 1,
+         "text": "one",
+         "href": "http://127.0.0.1:24682/1.pdf"
+        }
+       ]
+      }
+     }
+    },
+    {
+     "trait": "DocumentsProbe",
+     "event": "PAGE_DOWNLOADED",
+     "payload": {
+      "key": "c1:dl:0",
+      "path": "/downloads/1.pdf",
+      "url": "http://127.0.0.1:24682/1.pdf",
+      "size": 1
+     },
+     "expect": {
+      "state": "reading"
+     }
+    },
+    {
+     "trait": "PdfText",
+     "event": "PDF_RAN",
+     "payload": {
+      "stage": "c1:pdf:0",
+      "exitCode": 0,
+      "signal": 0,
+      "stdout": "Cenik - Loncarna Mala\nKeramicni lonec ........ 24,90 EUR\nSkodelica za caj ...... 9,50 EUR\nKroznik globoki ....... 12,00 EUR\nCene vsebujejo DDV.\n\f",
+      "stdoutBytes": "",
+      "stderr": ""
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "DOCUMENT_READ",
+        "payload": {
+         "key": "c1"
+        }
+       },
+       {
+        "event": "DOCS_NEXT",
+        "payload": {}
+       },
+       {
+        "event": "DOCUMENTS_UNCHECKED",
+        "payload": {
+         "key": "c1",
+         "unchecked": 2,
+         "total": 3
+        }
+       },
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "c1",
+         "probe": "documents",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: with maxPdfs 3 all three are checked and nothing is reported unchecked",
+   "defaults": [
+    "PdfText",
+    "PdfCli"
+   ],
+   "config": {
+    "maxPdfs": 3
+   },
+   "steps": [
+    {
+     "trait": "DocumentsProbe",
+     "event": "PROBE_RUN",
+     "payload": {
+      "key": "c2",
+      "pageUrl": "http://127.0.0.1:24682/documents-pdf-notext-fail.html"
+     },
+     "expect": {
+      "state": "linking",
+      "emits": [
+       {
+        "event": "PAGE_LINKS",
+        "payload": {
+         "key": "c2:links"
+        }
+       }
+      ]
+     },
+     "from": "idle"
+    },
+    {
+     "trait": "DocumentsProbe",
+     "event": "PAGE_LINKS_READ",
+     "payload": {
+      "key": "c2:links",
+      "links": [
+       {
+        "index": 1,
+        "text": "one",
+        "href": "http://127.0.0.1:24682/1.pdf",
+        "download": false,
+        "kind": "link"
+       },
+       {
+        "index": 2,
+        "text": "two",
+        "href": "http://127.0.0.1:24682/2.pdf",
+        "download": false,
+        "kind": "link"
+       },
+       {
+        "index": 3,
+        "text": "three",
+        "href": "http://127.0.0.1:24682/3.pdf",
+        "download": false,
+        "kind": "link"
+       }
+      ]
+     },
+     "expect": {
+      "state": "stepping",
+      "entity": {
+       "total": 3,
+       "docs": [
+        {
+         "index": 1,
+         "text": "one",
+         "href": "http://127.0.0.1:24682/1.pdf"
+        },
+        {
+         "index": 2,
+         "text": "two",
+         "href": "http://127.0.0.1:24682/2.pdf"
+        },
+        {
+         "index": 3,
+         "text": "three",
+         "href": "http://127.0.0.1:24682/3.pdf"
+        }
+       ]
+      }
+     }
+    },
+    {
+     "trait": "DocumentsProbe",
+     "event": "PAGE_DOWNLOADED",
+     "payload": {
+      "key": "c2:dl:0",
+      "path": "/downloads/1.pdf",
+      "url": "http://127.0.0.1:24682/1.pdf",
+      "size": 1
+     },
+     "expect": {
+      "state": "reading"
+     }
+    },
+    {
+     "trait": "PdfText",
+     "event": "PDF_RAN",
+     "payload": {
+      "stage": "c2:pdf:0",
+      "exitCode": 0,
+      "signal": 0,
+      "stdout": "Cenik - Loncarna Mala\nKeramicni lonec ........ 24,90 EUR\nSkodelica za caj ...... 9,50 EUR\nKroznik globoki ....... 12,00 EUR\nCene vsebujejo DDV.\n\f",
+      "stdoutBytes": "",
+      "stderr": ""
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "DOCUMENT_READ",
+        "payload": {
+         "key": "c2"
+        }
+       },
+       {
+        "event": "DOCS_NEXT",
+        "payload": {}
+       },
+       {
+        "event": "PAGE_DOWNLOAD",
+        "payload": {
+         "key": "c2:dl:1",
+         "index": 2
+        }
+       }
+      ],
+      "neverEmits": [
+       "DOCUMENTS_UNCHECKED"
+      ]
+     }
+    },
+    {
+     "trait": "PdfCli",
+     "event": "INIT",
+     "from": "idle",
+     "payload": {},
+     "expect": {}
+    },
+    {
+     "trait": "DocumentsProbe",
+     "event": "PAGE_DOWNLOADED",
+     "payload": {
+      "key": "c2:dl:1",
+      "path": "/downloads/2.pdf",
+      "url": "http://127.0.0.1:24682/2.pdf",
+      "size": 1
+     },
+     "expect": {
+      "state": "reading"
+     }
+    },
+    {
+     "trait": "PdfText",
+     "event": "PDF_RAN",
+     "payload": {
+      "stage": "c2:pdf:1",
+      "exitCode": 0,
+      "signal": 0,
+      "stdout": "\f",
+      "stdoutBytes": "",
+      "stderr": ""
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "DOCS_NEXT",
+        "payload": {}
+       },
+       {
+        "event": "PAGE_DOWNLOAD",
+        "payload": {
+         "key": "c2:dl:2",
+         "index": 3
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "PdfCli",
+     "event": "INIT",
+     "from": "idle",
+     "payload": {},
+     "expect": {}
+    },
+    {
+     "trait": "DocumentsProbe",
+     "event": "PAGE_DOWNLOADED",
+     "payload": {
+      "key": "c2:dl:2",
+      "path": "/downloads/3.pdf",
+      "url": "http://127.0.0.1:24682/3.pdf",
+      "size": 1
+     },
+     "expect": {
+      "state": "reading"
+     }
+    },
+    {
+     "trait": "PdfText",
+     "event": "PDF_RAN",
+     "payload": {
+      "stage": "c2:pdf:2",
+      "exitCode": 0,
+      "signal": 0,
+      "stdout": "Cenik - Loncarna Mala\nKeramicni lonec ........ 24,90 EUR\nSkodelica za caj ...... 9,50 EUR\nKroznik globoki ....... 12,00 EUR\nCene vsebujejo DDV.\n\f",
+      "stdoutBytes": "",
+      "stderr": ""
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "DOCUMENT_READ",
+        "payload": {
+         "key": "c2"
+        }
+       },
+       {
+        "event": "DOCS_NEXT",
+        "payload": {}
+       },
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "c2",
+         "probe": "documents",
+         "findings": [
+          {
+           "id": "pdf-scanned:http://127.0.0.1:24682/documents-pdf-notext-fail.html:http://127.0.0.1:24682/2.pdf",
+           "pageUrl": "http://127.0.0.1:24682/documents-pdf-notext-fail.html",
+           "rule": "pdf-scanned",
+           "wcag": [
+            {
+             "criterion": "1.1.1",
+             "level": "A",
+             "version": "2.0"
+            }
+           ],
+           "method": "probe",
+           "engines": [
+            "probe"
+           ],
+           "impact": "serious",
+           "confidence": "confirmed",
+           "selector": "a[href=\"http://127.0.0.1:24682/2.pdf\"]",
+           "snippet": "<a href=\"http://127.0.0.1:24682/2.pdf\">two</a> is a PDF of 1 pages with no text",
+           "evidence": "",
+           "count": 1
+          }
+         ]
+        }
+       }
+      ],
+      "neverEmits": [
+       "DOCUMENTS_UNCHECKED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a PDF pdftotext cannot read answers DOCUMENT_UNREADABLE and the run goes on to the next document",
+   "note": "the exit code and stderr are what real pdftotext answers for a file that is not a PDF",
+   "defaults": [
+    "PdfText",
+    "PdfCli"
+   ],
+   "steps": [
+    {
+     "trait": "DocumentsProbe",
+     "event": "PROBE_RUN",
+     "payload": {
+      "key": "u1",
+      "pageUrl": "http://127.0.0.1:24682/documents-pdf-notext-fail.html"
+     },
+     "expect": {
+      "state": "linking",
+      "emits": [
+       {
+        "event": "PAGE_LINKS",
+        "payload": {
+         "key": "u1:links"
+        }
+       }
+      ]
+     },
+     "from": "idle"
+    },
+    {
+     "trait": "DocumentsProbe",
+     "event": "PAGE_LINKS_READ",
+     "payload": {
+      "key": "u1:links",
+      "links": [
+       {
+        "index": 1,
+        "text": "one",
+        "href": "http://127.0.0.1:24682/1.pdf",
+        "download": false,
+        "kind": "link"
+       },
+       {
+        "index": 2,
+        "text": "two",
+        "href": "http://127.0.0.1:24682/2.pdf",
+        "download": false,
+        "kind": "link"
+       }
+      ]
+     },
+     "expect": {
+      "state": "stepping"
+     }
+    },
+    {
+     "trait": "DocumentsProbe",
+     "event": "PAGE_DOWNLOADED",
+     "payload": {
+      "key": "u1:dl:0",
+      "path": "/downloads/1.pdf",
+      "url": "http://127.0.0.1:24682/1.pdf",
+      "size": 1
+     },
+     "expect": {
+      "state": "reading"
+     }
+    },
+    {
+     "trait": "PdfText",
+     "event": "PDF_RAN",
+     "payload": {
+      "stage": "u1:pdf:0",
+      "exitCode": 1,
+      "signal": 0,
+      "stdout": "",
+      "stdoutBytes": "",
+      "stderr": "Syntax Warning: May not be a PDF file (continuing anyway)\nSyntax Error (1): Illegal character '{'\nSyntax Error: Couldn't find trailer dictionary\nSyntax Error: Couldn't find trailer dictionary\nSyntax Error: Couldn't read xref table\n"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "PDF_FAILED",
+        "payload": {
+         "key": "u1:pdf:0",
+         "code": "pdf_unreadable"
+        }
+       },
+       {
+        "event": "DOCUMENT_UNREADABLE",
+        "payload": {
+         "key": "u1",
+         "url": "http://127.0.0.1:24682/1.pdf",
+         "code": "pdf_unreadable"
+        }
+       },
+       {
+        "event": "DOCS_NEXT",
+        "payload": {}
+       },
+       {
+        "event": "PAGE_DOWNLOAD",
+        "payload": {
+         "key": "u1:dl:1",
+         "index": 2
+        }
+       }
+      ],
+      "neverEmits": [
+       "PROBE_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a download that fails answers DOCUMENT_UNREADABLE with the page's code and the run goes on",
+   "defaults": [
+    "PdfText",
+    "PdfCli"
+   ],
+   "steps": [
+    {
+     "trait": "DocumentsProbe",
+     "event": "PROBE_RUN",
+     "payload": {
+      "key": "u2",
+      "pageUrl": "http://127.0.0.1:24682/documents-pdf-notext-fail.html"
+     },
+     "expect": {
+      "state": "linking",
+      "emits": [
+       {
+        "event": "PAGE_LINKS",
+        "payload": {
+         "key": "u2:links"
+        }
+       }
+      ]
+     },
+     "from": "idle"
+    },
+    {
+     "trait": "DocumentsProbe",
+     "event": "PAGE_LINKS_READ",
+     "payload": {
+      "key": "u2:links",
+      "links": [
+       {
+        "index": 1,
+        "text": "one",
+        "href": "http://127.0.0.1:24682/1.pdf",
+        "download": false,
+        "kind": "link"
+       },
+       {
+        "index": 2,
+        "text": "two",
+        "href": "http://127.0.0.1:24682/2.pdf",
+        "download": false,
+        "kind": "link"
+       }
+      ]
+     },
+     "expect": {
+      "state": "stepping"
+     }
+    },
+    {
+     "trait": "DocumentsProbe",
+     "event": "PAGE_FAILED",
+     "payload": {
+      "key": "u2:dl:0",
+      "error": "download timed out",
+      "code": "download_timeout"
+     },
+     "expect": {
+      "state": "stepping",
+      "emits": [
+       {
+        "event": "DOCUMENT_UNREADABLE",
+        "payload": {
+         "key": "u2",
+         "url": "http://127.0.0.1:24682/1.pdf",
+         "error": "download timed out",
+         "code": "download_timeout"
+        }
+       },
+       {
+        "event": "DOCS_NEXT",
+        "payload": {}
+       },
+       {
+        "event": "PAGE_DOWNLOAD",
+        "payload": {
+         "key": "u2:dl:1",
+         "index": 2
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: the last document failing ends the run with PROBE_DONE and no finding",
+   "defaults": [
+    "PdfText",
+    "PdfCli"
+   ],
+   "steps": [
+    {
+     "trait": "DocumentsProbe",
+     "event": "PROBE_RUN",
+     "payload": {
+      "key": "u3",
+      "pageUrl": "http://127.0.0.1:24682/documents-pdf-notext-fail.html"
+     },
+     "expect": {
+      "state": "linking",
+      "emits": [
+       {
+        "event": "PAGE_LINKS",
+        "payload": {
+         "key": "u3:links"
+        }
+       }
+      ]
+     },
+     "from": "idle"
+    },
+    {
+     "trait": "DocumentsProbe",
+     "event": "PAGE_LINKS_READ",
+     "payload": {
+      "key": "u3:links",
+      "links": [
+       {
+        "index": 1,
+        "text": "one",
+        "href": "http://127.0.0.1:24682/1.pdf",
+        "download": false,
+        "kind": "link"
+       }
+      ]
+     },
+     "expect": {
+      "state": "stepping"
+     }
+    },
+    {
+     "trait": "DocumentsProbe",
+     "event": "PAGE_FAILED",
+     "payload": {
+      "key": "u3:dl:0",
+      "error": "gone",
+      "code": "download_failed"
+     },
+     "expect": {
+      "state": "stepping",
+      "emits": [
+       {
+        "event": "DOCUMENT_UNREADABLE",
+        "payload": {
+         "key": "u3"
+        }
+       },
+       {
+        "event": "DOCS_NEXT",
+        "payload": {}
+       },
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "u3",
+         "probe": "documents",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a failure reading the links answers PROBE_FAILED with the page's code",
+   "defaults": [
+    "PdfText",
+    "PdfCli"
+   ],
+   "steps": [
+    {
+     "trait": "DocumentsProbe",
+     "event": "PROBE_RUN",
+     "payload": {
+      "key": "f1",
+      "pageUrl": "http://127.0.0.1:24682/documents-pdf-notext-fail.html"
+     },
+     "expect": {
+      "state": "linking",
+      "emits": [
+       {
+        "event": "PAGE_LINKS",
+        "payload": {
+         "key": "f1:links"
+        }
+       }
+      ]
+     },
+     "from": "idle"
+    },
+    {
+     "trait": "DocumentsProbe",
+     "event": "PAGE_FAILED",
+     "payload": {
+      "key": "f1:links",
+      "error": "tab gone",
+      "code": "page_gone"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_FAILED",
+        "payload": {
+         "key": "f1",
+         "probe": "documents",
+         "code": "page_gone",
+         "error": "tab gone"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a links failure under another run's key is ignored",
+   "defaults": [
+    "PdfText",
+    "PdfCli"
+   ],
+   "steps": [
+    {
+     "trait": "DocumentsProbe",
+     "event": "PAGE_FAILED",
+     "payload": {
+      "key": "zz:links",
+      "error": "x",
+      "code": "c"
+     },
+     "expect": {
+      "state": "linking",
+      "emits": []
+     },
+     "from": "linking",
+     "entity": {
+      "runKey": "f1",
+      "pageUrl": "http://127.0.0.1:24682/documents-pdf-notext-fail.html"
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a links answer under another run's key is ignored",
+   "defaults": [
+    "PdfText",
+    "PdfCli"
+   ],
+   "steps": [
+    {
+     "trait": "DocumentsProbe",
+     "event": "PAGE_LINKS_READ",
+     "payload": {
+      "key": "zz:links",
+      "links": [
+       {
+        "index": 0,
+        "text": "Preskoči na vsebino",
+        "href": "http://127.0.0.1:24682/documents-pdf-notext-fail.html#main",
+        "download": false,
+        "kind": "link"
+       },
+       {
+        "index": 1,
+        "text": "Domov",
+        "href": "http://127.0.0.1:24682/index.html",
+        "download": false,
+        "kind": "link"
+       },
+       {
+        "index": 2,
+        "text": "Izdelki",
+        "href": "http://127.0.0.1:24682/index.html",
+        "download": false,
+        "kind": "link"
+       },
+       {
+        "index": 3,
+        "text": "Cenik (PDF)",
+        "href": "http://127.0.0.1:24682/docs/scan.pdf",
+        "download": true,
+        "kind": "link"
+       }
+      ]
+     },
+     "expect": {
+      "state": "linking",
+      "emits": []
+     },
+     "from": "linking",
+     "entity": {
+      "runKey": "f1",
+      "pageUrl": "http://127.0.0.1:24682/documents-pdf-notext-fail.html"
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a download answer for another document is ignored",
+   "defaults": [
+    "PdfText",
+    "PdfCli"
+   ],
+   "steps": [
+    {
+     "trait": "DocumentsProbe",
+     "event": "PAGE_DOWNLOADED",
+     "payload": {
+      "key": "z1:dl:5",
+      "path": "/x",
+      "url": "u",
+      "size": 1
+     },
+     "expect": {
+      "state": "downloading",
+      "emits": []
+     },
+     "from": "downloading",
+     "entity": {
+      "runKey": "z1",
+      "pageUrl": "http://127.0.0.1:24682/documents-pdf-notext-fail.html",
+      "pos": 0,
+      "docs": [
+       {
+        "index": 3,
+        "text": "Cenik (PDF)",
+        "href": "http://127.0.0.1:24682/docs/scan.pdf"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a PDF answer for another document is ignored",
+   "defaults": [
+    "PdfText",
+    "PdfCli"
+   ],
+   "steps": [
+    {
+     "trait": "DocumentsProbe",
+     "event": "PDF_NO_TEXT",
+     "payload": {
+      "key": "z1:pdf:5",
+      "pageCount": 1
+     },
+     "expect": {
+      "state": "reading",
+      "emits": []
+     },
+     "from": "reading",
+     "entity": {
+      "runKey": "z1",
+      "pageUrl": "http://127.0.0.1:24682/documents-pdf-notext-fail.html",
+      "pos": 0,
+      "docs": [
+       {
+        "index": 3,
+        "text": "Cenik (PDF)",
+        "href": "http://127.0.0.1:24682/docs/scan.pdf"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a second PROBE_RUN while the run is in linking answers probe_busy and leaves it",
+   "defaults": [
+    "PdfText",
+    "PdfCli"
+   ],
+   "steps": [
+    {
+     "trait": "DocumentsProbe",
+     "event": "PROBE_RUN",
+     "payload": {
+      "key": "b2",
+      "pageUrl": "http://127.0.0.1:24682/documents-pdf-notext-fail.html"
+     },
+     "expect": {
+      "state": "linking",
+      "emits": [
+       {
+        "event": "PROBE_FAILED",
+        "payload": {
+         "key": "b2",
+         "probe": "documents",
+         "code": "probe_busy"
+        }
+       }
+      ]
+     },
+     "from": "linking",
+     "entity": {
+      "runKey": "b1",
+      "pageUrl": "http://127.0.0.1:24682/documents-pdf-notext-fail.html"
+     }
+    }
+   ]
+  },
+  {
+   "id": "a second PROBE_RUN while the run is in stepping answers probe_busy and leaves it",
+   "defaults": [
+    "PdfText",
+    "PdfCli"
+   ],
+   "steps": [
+    {
+     "trait": "DocumentsProbe",
+     "event": "PROBE_RUN",
+     "payload": {
+      "key": "b2",
+      "pageUrl": "http://127.0.0.1:24682/documents-pdf-notext-fail.html"
+     },
+     "expect": {
+      "state": "stepping",
+      "emits": [
+       {
+        "event": "PROBE_FAILED",
+        "payload": {
+         "key": "b2",
+         "probe": "documents",
+         "code": "probe_busy"
+        }
+       }
+      ]
+     },
+     "from": "stepping",
+     "entity": {
+      "runKey": "b1",
+      "pageUrl": "http://127.0.0.1:24682/documents-pdf-notext-fail.html"
+     }
+    }
+   ]
+  },
+  {
+   "id": "a second PROBE_RUN while the run is in downloading answers probe_busy and leaves it",
+   "defaults": [
+    "PdfText",
+    "PdfCli"
+   ],
+   "steps": [
+    {
+     "trait": "DocumentsProbe",
+     "event": "PROBE_RUN",
+     "payload": {
+      "key": "b2",
+      "pageUrl": "http://127.0.0.1:24682/documents-pdf-notext-fail.html"
+     },
+     "expect": {
+      "state": "downloading",
+      "emits": [
+       {
+        "event": "PROBE_FAILED",
+        "payload": {
+         "key": "b2",
+         "probe": "documents",
+         "code": "probe_busy"
+        }
+       }
+      ]
+     },
+     "from": "downloading",
+     "entity": {
+      "runKey": "b1",
+      "pageUrl": "http://127.0.0.1:24682/documents-pdf-notext-fail.html"
+     }
+    }
+   ]
+  },
+  {
+   "id": "a second PROBE_RUN while the run is in reading answers probe_busy and leaves it",
+   "defaults": [
+    "PdfText",
+    "PdfCli"
+   ],
+   "steps": [
+    {
+     "trait": "DocumentsProbe",
+     "event": "PROBE_RUN",
+     "payload": {
+      "key": "b2",
+      "pageUrl": "http://127.0.0.1:24682/documents-pdf-notext-fail.html"
+     },
+     "expect": {
+      "state": "reading",
+      "emits": [
+       {
+        "event": "PROBE_FAILED",
+        "payload": {
+         "key": "b2",
+         "probe": "documents",
+         "code": "probe_busy"
+        }
+       }
+      ]
+     },
+     "from": "reading",
+     "entity": {
+      "runKey": "b1",
+      "pageUrl": "http://127.0.0.1:24682/documents-pdf-notext-fail.html"
+     }
+    }
+   ]
+  }
+ ]
+}

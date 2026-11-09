@@ -1,0 +1,27 @@
+app a11y-probe-text-spacing-spec [
+  version: "1.0.0",
+  description: "Design contract for the text-spacing probe (WCAG 1.4.12): applying line-height 1.5, letter-spacing 0.12em, word-spacing 0.16em and paragraph spacing 2em must not clip text that was not clipped before. PROBE_RUN { key, pageUrl } on a tab already at pageUrl answers PROBE_DONE { key, probe, findings } or PROBE_FAILED { key, probe, error, code }. Page requests are PAGE_MEASURE only; the injected style is removed before PROBE_DONE."
+]
+
+type WcagRef = { criterion : string!, level : "A" | "AA" | "AAA"!, version : "2.0" | "2.1" | "2.2"! }
+type A11yFinding = { id : string!, pageUrl : string!, rule : string!, wcag : [WcagRef]!, method : "engine" | "probe" | "llm"!, engines : [string]!, impact : "critical" | "serious" | "moderate" | "minor"!, confidence : "confirmed" | "needs-verification"!, selector : string!, snippet : string!, evidence : string!, count : number! }
+
+orbital A11yProbeTextSpacingSpec {
+  expects entity TextSpacingRun [runtime] {
+    id : string!
+  }
+  expects trait TextSpacingProbe {
+    state idle {
+      PROBE_RUN -> baselining
+    }
+    state removing {
+      PAGE_MEASURED -> idle
+    }
+    emits {
+      PAGE_MEASURE { key : string!  expression : string! }
+      PROBE_DONE { key : string!  probe : string!  findings : [A11yFinding]! }
+      PROBE_FAILED { key : string!  probe : string!  error : string!  code : string! }
+    }
+  }
+  expects page boot -> TextSpacingProbe
+}

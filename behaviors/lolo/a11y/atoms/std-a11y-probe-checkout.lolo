@@ -1,0 +1,335 @@
+app std-a11y-probe-checkout [
+  version: "1.0.0",
+  description: "std-a11y-probe-checkout — can a purchase be completed by keyboard (WCAG 2.1.1, 3.3.4, 1.1.1; IRSID N74, N48). PROBE_RUN { key, pageUrl } on a tab already at a product page walks the declared steps (add-to-cart, cart, checkout; the steps knob holds the Slovenian and English link vocabulary as case-insensitive regex patterns) by keyboard only: a PAGE_MEASURE lists the links and buttons with their selectors, the first one whose text or href matches the step and none of the stop patterns is reached by Tab (PAGE_KEY, PAGE_FOCUSED, up to maxTabs) and activated with Enter, then PAGE_TEXT reads the page reached. At the start page and every page reached the forms checks run by emitting FORMS_RUN { key, pageUrl }, which the composer wires to the forms probe's PROBE_RUN, and its FORMS_PROBE_DONE is heard by key and its findings kept (FORMS_PROBE_FAILED fails the run with probe_forms_failed). At the checkout page the walk stops: the stop patterns (the final pay and order controls) are Tab-walked to without Enter to record whether a stop control exists and is keyboard-reachable, the page text is checked for the reviewPatterns (checkout-no-review, N74, 3.3.4, needs-verification) and the iframes for the captchaPatterns (captcha, N48, 1.1.1, needs-verification). A step that Tab cannot reach is checkout-not-keyboard (2.1.1, confirmed) and ends the walk; a step whose patterns match nothing is checkout-step-not-found (informational, minor) and ends the walk, and PROBE_DONE is still sent. NEVER SUBMITS: the probe never activates a control whose text, href or focused name matches the stop patterns (checked before every Enter, also against the name the browser reports for the focused element), never submits an order or a payment, and types nothing, so no personal data is entered. The forms probe it is wired to must not dispatch submit events on a shop. The tab is navigated back to pageUrl before PROBE_DONE. PROBE_DONE carries all findings and CHECKOUT_WALKED { key, reached, stoppedAt, stopControlReachable } is emitted beside it. Failure codes: probe_page_failed, probe_bad_measure, probe_forms_failed."
+]
+uses Spec from "almadar-std/probe-checkout"
+
+type WcagRef = { criterion : string!, level : "A" | "AA" | "AAA"!, version : "2.0" | "2.1" | "2.2"! }
+type A11yFinding = { id : string!, pageUrl : string!, rule : string!, wcag : [WcagRef]!, method : "engine" | "probe" | "llm"!, engines : [string]!, impact : "critical" | "serious" | "moderate" | "minor"!, confidence : "confirmed" | "needs-verification"!, selector : string!, snippet : string!, evidence : string!, count : number! }
+type PageRect = { x : number!, y : number!, width : number!, height : number! }
+type PageFocus = { tag : string!, role : string!, name : string!, selector : string!, rect : PageRect! }
+type LinkFact = { selector : string!, text : string!, href : string!, snippet : string! }
+type LinkList = { links : [LinkFact]!, frames : [string]! }
+type StepDef = { step : string!, linkPatterns : [string]! }
+type RuleDef = { key : string!, impact : "critical" | "serious" | "moderate" | "minor"!, wcag : [WcagRef]! }
+
+orbital CheckoutOrbital {
+  entity CheckoutRun [runtime] {
+    id : string!
+    runKey : string @description "The caller's name for the run in flight." = ""
+    startUrl : string @description "The product page the run started on; the tab returns to it." = ""
+    pageUrl : string @description "The page the walk is on." = ""
+    pageText : string @description "The text of the page the walk is on." = ""
+    stepIdx : number @description "How many declared steps have been reached." = 0
+    reached : [string] @description "The names of the steps reached, in order." = []
+    links : [LinkFact] @description "The links and buttons of the page the walk is on." = []
+    frames : [string] @description "The iframe sources of the page the walk is on." = []
+    targetSel : string @description "The selector of the control Tab is walking to, empty when none matched." = ""
+    targetHay : string @description "The lower-cased text and href of that control." = ""
+    targetSnippet : string @description "The opening tag of that control." = ""
+    mode : "step" | "stop" @description "step walks to a step's control and presses Enter; stop walks to the stop control and never presses Enter." = "step"
+    tabs : number @description "The Tab presses sent toward the current target." = 0
+    formsSeq : number @description "The number of forms probe runs started." = 0
+    complete : boolean @description "Every declared step was reached." = false
+    stoppedAt : string @description "The step the walk ended on." = ""
+    stopReachable : boolean @description "A stop control exists and Tab reached it." = false
+    findings : [A11yFinding] @description "The findings collected so far, the forms probe's included." = []
+  }
+
+  trait CheckoutProbe -> CheckoutRun {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      PROBE_RUN -> forms
+        (set @entity.runKey @payload.key)
+        (set @entity.startUrl @payload.pageUrl)
+        (set @entity.pageUrl @payload.pageUrl)
+        (set @entity.pageText "")
+        (set @entity.stepIdx 0)
+        (set @entity.reached [])
+        (set @entity.links [])
+        (set @entity.frames [])
+        (set @entity.targetSel "")
+        (set @entity.targetHay "")
+        (set @entity.targetSnippet "")
+        (set @entity.mode "step")
+        (set @entity.tabs 0)
+        (set @entity.formsSeq 0)
+        (set @entity.complete false)
+        (set @entity.stoppedAt "")
+        (set @entity.stopReachable false)
+        (set @entity.findings [])
+        (emit FORMS_RUN { key: (str/concat @payload.key ":forms0"), pageUrl: @payload.pageUrl })
+    }
+
+    state forms {
+      INIT -> idle
+      FORMS_PROBE_DONE -> listing when (= @payload.key (str/concat @entity.runKey ":forms" @entity.formsSeq))
+        (set @entity.findings (array/concat @entity.findings @payload.findings))
+        (emit PAGE_MEASURE { key: (str/concat @entity.runKey ":links" @entity.formsSeq), expression: (str/concat "(" @config.linksMeasure ")()") })
+      FORMS_PROBE_FAILED -> idle when (= @payload.key (str/concat @entity.runKey ":forms" @entity.formsSeq))
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "checkout", error: @payload.error, code: "probe_forms_failed" })
+        (emit PAGE_NAVIGATE { key: (str/concat @entity.runKey ":back"), url: @entity.startUrl })
+      PAGE_FAILED -> idle when (and (str/startsWith @payload.key @entity.runKey) (not (str/startsWith @payload.key (str/concat @entity.runKey ":forms"))))
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "checkout", error: @payload.error, code: "probe_page_failed" })
+        (emit PAGE_NAVIGATE { key: (str/concat @entity.runKey ":back"), url: @entity.startUrl })
+    }
+
+    state listing {
+      INIT -> idle
+      PAGE_MEASURED -> planning when (and (= @payload.key (str/concat @entity.runKey ":links" @entity.formsSeq)) (!= (json/parse @payload.json LinkList) null))
+        (set @entity.links (let ((m (json/parse @payload.json LinkList))) @m.links))
+        (set @entity.frames (let ((m (json/parse @payload.json LinkList))) @m.frames))
+        (set @entity.targetSel (let ((st (array/first (array/drop @config.steps @entity.stepIdx)))) (default (array/first (array/map (array/filter @entity.links (fn l (if (= @st null) (array/some @config.stopPatterns (fn p (let ((m (str/find-pattern (str/lower (str/concat @l.text " " @l.href)) @p))) (and (!= @m null) (> (array/len @m) 0))))) (and (not (str/startsWith @l.href (str/concat @entity.pageUrl "#"))) (array/some @st.linkPatterns (fn p (let ((m (str/find-pattern (str/lower (str/concat @l.text " " @l.href)) @p))) (and (!= @m null) (> (array/len @m) 0))))) (not (array/some @config.stopPatterns (fn p (let ((m (str/find-pattern (str/lower (str/concat @l.text " " @l.href)) @p))) (and (!= @m null) (> (array/len @m) 0)))))))))) (fn l @l.selector))) "")))
+        (set @entity.targetHay (default (array/first (array/map (array/filter @entity.links (fn l (= @l.selector @entity.targetSel))) (fn l (str/lower (str/concat @l.text " " @l.href))))) ""))
+        (set @entity.targetSnippet (default (array/first (array/map (array/filter @entity.links (fn l (= @l.selector @entity.targetSel))) (fn l @l.snippet))) ""))
+        (emit CHECKOUT_PLAN {})
+      PAGE_MEASURED -> idle when (and (= @payload.key (str/concat @entity.runKey ":links" @entity.formsSeq)) (= (json/parse @payload.json LinkList) null))
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "checkout", error: "the page measurement is not the link list", code: "probe_bad_measure" })
+        (emit PAGE_NAVIGATE { key: (str/concat @entity.runKey ":back"), url: @entity.startUrl })
+      PAGE_FAILED -> idle when (and (str/startsWith @payload.key @entity.runKey) (not (str/startsWith @payload.key (str/concat @entity.runKey ":forms"))))
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "checkout", error: @payload.error, code: "probe_page_failed" })
+        (emit PAGE_NAVIGATE { key: (str/concat @entity.runKey ":back"), url: @entity.startUrl })
+    }
+
+    state planning {
+      INIT -> idle
+      CHECKOUT_PLAN -> tabbing when (and (< @entity.stepIdx (array/len @config.steps)) (!= @entity.targetSel ""))
+        (set @entity.mode "step")
+        (set @entity.tabs 0)
+        (set @entity.stoppedAt (default (array/first (array/map (array/take (array/drop @config.steps @entity.stepIdx) 1) (fn s @s.step))) ""))
+        (emit CHECKOUT_TAB {})
+      CHECKOUT_PLAN -> ending when (and (< @entity.stepIdx (array/len @config.steps)) (= @entity.targetSel ""))
+        (set @entity.stoppedAt (default (array/first (array/map (array/take (array/drop @config.steps @entity.stepIdx) 1) (fn s @s.step))) ""))
+        (set @entity.findings (array/append @entity.findings (let ((d (array/find @config.catalog (fn r (= @r.key "checkout-step-not-found"))))) {
+            id: (str/concat @entity.pageUrl "#checkout-step-not-found#" @entity.stoppedAt),
+            pageUrl: @entity.pageUrl,
+            rule: "checkout-step-not-found",
+            wcag: (if (= @d null) [] @d.wcag),
+            method: "probe",
+            engines: ["probe"],
+            impact: (if (= @d null) "moderate" @d.impact),
+            confidence: "needs-verification",
+            selector: "",
+            snippet: @entity.stoppedAt,
+            evidence: "",
+            count: 1
+          })))
+        (emit CHECKOUT_END {})
+      CHECKOUT_PLAN -> tabbing when (and (>= @entity.stepIdx (array/len @config.steps)) (!= @entity.targetSel ""))
+        (set @entity.mode "stop")
+        (set @entity.complete true)
+        (set @entity.tabs 0)
+        (set @entity.stoppedAt (default (array/first (array/reverse @entity.reached)) ""))
+        (emit CHECKOUT_TAB {})
+      CHECKOUT_PLAN -> ending when (and (>= @entity.stepIdx (array/len @config.steps)) (= @entity.targetSel ""))
+        (set @entity.complete true)
+        (set @entity.stoppedAt (default (array/first (array/reverse @entity.reached)) ""))
+        (emit CHECKOUT_END {})
+    }
+
+    state tabbing {
+      INIT -> idle
+      CHECKOUT_TAB -> tabbing when (< @entity.tabs @config.maxTabs)
+        (set @entity.tabs (+ @entity.tabs 1))
+        (emit PAGE_KEY { key: (str/concat @entity.runKey ":tab" @entity.tabs), keyName: "Tab" })
+      CHECKOUT_TAB -> ending when (>= @entity.tabs @config.maxTabs)
+        (set @entity.findings (array/append @entity.findings (let ((d (array/find @config.catalog (fn r (= @r.key "checkout-not-keyboard"))))) {
+            id: (str/concat @entity.pageUrl "#checkout-not-keyboard#" @entity.targetSel),
+            pageUrl: @entity.pageUrl,
+            rule: "checkout-not-keyboard",
+            wcag: (if (= @d null) [] @d.wcag),
+            method: "probe",
+            engines: ["probe"],
+            impact: (if (= @d null) "moderate" @d.impact),
+            confidence: "confirmed",
+            selector: @entity.targetSel,
+            snippet: @entity.targetSnippet,
+            evidence: "",
+            count: 1
+          })))
+        (emit CHECKOUT_END {})
+      PAGE_KEY_SENT -> tabbing when (= @payload.key (str/concat @entity.runKey ":tab" @entity.tabs))
+        (emit PAGE_FOCUSED { key: (str/concat @entity.runKey ":focus" @entity.tabs) })
+      PAGE_FOCUS_READ -> entering when (and (= @payload.key (str/concat @entity.runKey ":focus" @entity.tabs)) (!= @payload.focused null) (= @payload.focused.selector @entity.targetSel) (= @entity.mode "step") (not (array/some @config.stopPatterns (fn p (let ((m (str/find-pattern (str/concat @entity.targetHay " " (str/lower @payload.focused.name)) @p))) (and (!= @m null) (> (array/len @m) 0)))))))
+        (emit PAGE_KEY { key: (str/concat @entity.runKey ":enter" @entity.stepIdx), keyName: "Enter" })
+      PAGE_FOCUS_READ -> ending when (and (= @payload.key (str/concat @entity.runKey ":focus" @entity.tabs)) (!= @payload.focused null) (= @payload.focused.selector @entity.targetSel) (or (= @entity.mode "stop") (array/some @config.stopPatterns (fn p (let ((m (str/find-pattern (str/concat @entity.targetHay " " (str/lower @payload.focused.name)) @p))) (and (!= @m null) (> (array/len @m) 0)))))))
+        (set @entity.stopReachable true)
+        (emit CHECKOUT_END {})
+      PAGE_FOCUS_READ -> tabbing when (and (= @payload.key (str/concat @entity.runKey ":focus" @entity.tabs)) (or (= @payload.focused null) (!= @payload.focused.selector @entity.targetSel)))
+        (emit CHECKOUT_TAB {})
+      PAGE_FAILED -> idle when (and (str/startsWith @payload.key @entity.runKey) (not (str/startsWith @payload.key (str/concat @entity.runKey ":forms"))))
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "checkout", error: @payload.error, code: "probe_page_failed" })
+        (emit PAGE_NAVIGATE { key: (str/concat @entity.runKey ":back"), url: @entity.startUrl })
+    }
+
+    state entering {
+      INIT -> idle
+      PAGE_KEY_SENT -> paging when (= @payload.key (str/concat @entity.runKey ":enter" @entity.stepIdx))
+        (emit PAGE_TEXT { key: (str/concat @entity.runKey ":page" @entity.stepIdx) })
+      PAGE_FAILED -> idle when (and (str/startsWith @payload.key @entity.runKey) (not (str/startsWith @payload.key (str/concat @entity.runKey ":forms"))))
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "checkout", error: @payload.error, code: "probe_page_failed" })
+        (emit PAGE_NAVIGATE { key: (str/concat @entity.runKey ":back"), url: @entity.startUrl })
+    }
+
+    state paging {
+      INIT -> idle
+      PAGE_TEXT_READ -> forms when (= @payload.key (str/concat @entity.runKey ":page" @entity.stepIdx))
+        (set @entity.pageUrl @payload.url)
+        (set @entity.pageText @payload.text)
+        (set @entity.reached (array/concat @entity.reached (array/map (array/take (array/drop @config.steps @entity.stepIdx) 1) (fn s @s.step))))
+        (set @entity.stepIdx (+ @entity.stepIdx 1))
+        (set @entity.formsSeq (+ @entity.formsSeq 1))
+        (emit FORMS_RUN { key: (str/concat @entity.runKey ":forms" @entity.formsSeq), pageUrl: @payload.url })
+      PAGE_FAILED -> idle when (and (str/startsWith @payload.key @entity.runKey) (not (str/startsWith @payload.key (str/concat @entity.runKey ":forms"))))
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "checkout", error: @payload.error, code: "probe_page_failed" })
+        (emit PAGE_NAVIGATE { key: (str/concat @entity.runKey ":back"), url: @entity.startUrl })
+    }
+
+    state ending {
+      INIT -> idle
+      CHECKOUT_END -> returning
+        (set @entity.findings (array/concat @entity.findings (if @entity.complete (array/concat
+          (if (array/some @config.reviewPatterns (fn p (let ((m (str/find-pattern (str/lower @entity.pageText) @p))) (and (!= @m null) (> (array/len @m) 0))))) [] [(let ((d (array/find @config.catalog (fn r (= @r.key "checkout-no-review"))))) {
+            id: (str/concat @entity.pageUrl "#checkout-no-review"),
+            pageUrl: @entity.pageUrl,
+            rule: "checkout-no-review",
+            wcag: (if (= @d null) [] @d.wcag),
+            method: "probe",
+            engines: ["probe"],
+            impact: (if (= @d null) "moderate" @d.impact),
+            confidence: "needs-verification",
+            selector: "",
+            snippet: "",
+            evidence: "",
+            count: 1
+          })])
+          (array/map (array/filter @entity.frames (fn f (array/some @config.captchaPatterns (fn p (let ((m (str/find-pattern (str/lower @f) @p))) (and (!= @m null) (> (array/len @m) 0))))))) (fn f (let ((d (array/find @config.catalog (fn r (= @r.key "captcha"))))) {
+            id: (str/concat @entity.pageUrl "#captcha#" @f),
+            pageUrl: @entity.pageUrl,
+            rule: "captcha",
+            wcag: (if (= @d null) [] @d.wcag),
+            method: "probe",
+            engines: ["probe"],
+            impact: (if (= @d null) "moderate" @d.impact),
+            confidence: "needs-verification",
+            selector: "iframe",
+            snippet: @f,
+            evidence: "",
+            count: 1
+          })))) [])))
+        (emit PAGE_NAVIGATE { key: (str/concat @entity.runKey ":back"), url: @entity.startUrl })
+    }
+
+    state returning {
+      INIT -> idle
+      PAGE_LOADED -> idle when (= @payload.key (str/concat @entity.runKey ":back"))
+        (emit PROBE_DONE { key: @entity.runKey, probe: "checkout", findings: @entity.findings })
+        (emit CHECKOUT_WALKED { key: @entity.runKey, reached: @entity.reached, stoppedAt: @entity.stoppedAt, stopControlReachable: @entity.stopReachable })
+      PAGE_FAILED -> idle when (and (str/startsWith @payload.key @entity.runKey) (not (str/startsWith @payload.key (str/concat @entity.runKey ":forms"))))
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "checkout", error: @payload.error, code: "probe_page_failed" })
+    }
+
+    emits {
+      PAGE_MEASURE -> external { key : string!  expression : string! }
+        @description "Page request: evaluate the expression in the page; it answers a JSON string."
+        @synonyms "measure page, evaluate in page"
+        @tier "primary"
+      PAGE_KEY -> external { key : string!  keyName : "Tab" | "Enter" | "Space" | "Escape" | "ArrowDown" | "ArrowUp" | "ArrowLeft" | "ArrowRight" | "Home" | "End"!  shift : boolean }
+        @description "Page request: press a key. Tab walks toward the next control; Enter is pressed only on a control the stop patterns do not match."
+        @synonyms "press key, keyboard"
+        @tier "primary"
+      PAGE_FOCUSED -> external { key : string! }
+        @description "Page request: read the focused element."
+        @synonyms "read focus"
+        @tier "primary"
+      PAGE_TEXT -> external { key : string! }
+        @description "Page request: read the text of the page the walk reached."
+        @synonyms "read page text"
+        @tier "primary"
+      PAGE_NAVIGATE -> external { key : string!  url : string! }
+        @description "Page request: load the url in the tab; here it returns the tab to the product page."
+        @synonyms "navigate, load page"
+        @tier "primary"
+      FORMS_RUN -> external { key : string!  pageUrl : string! }
+        @description "Run the forms probe on the page the tab is on; the composer wires it to the forms probe's PROBE_RUN."
+        @synonyms "run forms probe, check forms"
+        @tier "primary"
+      PROBE_DONE -> external { key : string!  probe : string!  findings : [A11yFinding]! }
+        @description "The checkout walk finished: the forms findings of every page reached and the checkout findings."
+        @synonyms "checkout findings, purchase walk result"
+        @tier "primary"
+      PROBE_FAILED -> external { key : string!  probe : string!  error : string!  code : string! }
+        @description "The probe could not finish: code is probe_page_failed, probe_bad_measure or probe_forms_failed."
+        @synonyms "probe failed, checkout error"
+        @tier "primary"
+      CHECKOUT_WALKED -> external { key : string!  reached : [string]!  stoppedAt : string!  stopControlReachable : boolean! }
+        @description "Where the walk got to: the steps reached, the step it ended on and whether a stop control exists and Tab reached it."
+        @synonyms "checkout walk result, steps reached"
+        @tier "primary"
+      CHECKOUT_PLAN {}
+        @description "Internal: the page's links are measured; choose the control to walk to."
+        @tier "internal"
+      CHECKOUT_TAB {}
+        @description "Internal: send the next Tab press, or end the walk at the maxTabs cap."
+        @tier "internal"
+      CHECKOUT_END {}
+        @description "Internal: the walk is over; run the stop-page checks and return the tab."
+        @tier "internal"
+    }
+
+    listens {
+      PROBE_RUN { key : string!  pageUrl : string! }
+        @description "Walk a product page to the checkout by keyboard without ever submitting an order or a payment."
+        @synonyms "checkout check, purchase walk, keyboard purchase, wcag 2.1.1 checkout"
+      PAGE_MEASURED { key : string!  json : string! }
+      PAGE_KEY_SENT { key : string! }
+      PAGE_FOCUS_READ { key : string!  focused : PageFocus? }
+      PAGE_TEXT_READ { key : string!  url : string!  title : string!  lang : string!  text : string! }
+      PAGE_LOADED { key : string!  url : string!  title : string! }
+      PAGE_FAILED { key : string!  error : string!  code : string! }
+      FORMS_PROBE_DONE { key : string!  probe : string!  findings : [A11yFinding]! }
+        @description "The forms probe's PROBE_DONE, wired by the composer."
+      FORMS_PROBE_FAILED { key : string!  probe : string!  error : string!  code : string! }
+        @description "The forms probe's PROBE_FAILED, wired by the composer."
+    }
+
+    config {
+      steps : [StepDef] = [
+        { step: "add-to-cart", linkPatterns: ["dodaj v košarico", "v košarico", "add to cart", "add to basket"] }
+        { step: "cart", linkPatterns: ["košarica", "/kosarica", "/cart", "basket"] }
+        { step: "checkout", linkPatterns: ["na blagajno", "blagajna", "zaključi nakup", "checkout", "/blagajna", "/checkout"] }
+      ]
+        @label "Steps"
+        @description "The purchase steps in order, each with the case-insensitive regex patterns (written in lower case) its link or button text or href matches."
+        @tier "domain"
+      stopPatterns : [string] = ["plačaj", "oddaj naročilo", "potrdi naročilo", "naroči", "pay now", "place order", "complete order", "buy now"]
+        @label "Stop list"
+        @description "Patterns (lower case) of the final pay and order controls. A control that matches is never activated, whichever step it also matches; at the checkout page it is only Tab-walked to."
+        @tier "domain"
+      reviewPatterns : [string] = ["pregled naročila", "review order"]
+        @label "Review vocabulary"
+        @description "Patterns (lower case) a checkout page's text shows when the order can be reviewed before it is placed."
+        @tier "domain"
+      captchaPatterns : [string] = ["recaptcha", "hcaptcha", "turnstile"]
+        @label "CAPTCHA signatures"
+        @description "Patterns (lower case) of iframe src values that are CAPTCHA widgets."
+        @tier "domain"
+      maxTabs : number = 200
+        @label "Tab cap"
+        @description "The most Tab presses sent toward one control; reaching it without focus on the control is checkout-not-keyboard."
+        @tier "domain"
+      catalog : [RuleDef] = [{ key: "checkout-not-keyboard", impact: "serious", wcag: [{ criterion: "2.1.1", level: "A", version: "2.0" }] }, { key: "checkout-step-not-found", impact: "minor", wcag: [] }, { key: "checkout-no-review", impact: "moderate", wcag: [{ criterion: "3.3.4", level: "AA", version: "2.0" }] }, { key: "captcha", impact: "serious", wcag: [{ criterion: "1.1.1", level: "A", version: "2.0" }] }]
+        @label "Rule catalog"
+        @description "The impact and WCAG success criteria of each rule."
+        @tier "domain"
+      linksMeasure : string = "() => { const norm = (s) => (s || '').replace(/\\s+/g, ' ').trim(); const sel = (n) => { if (n.id) { return '#' + CSS.escape(n.id); } const p = []; let c = n; while (c && c.nodeType === 1 && c !== document.documentElement) { const par = c.parentElement; const t = c.tagName.toLowerCase(); if (!par) { break; } const k = [...par.children].filter((x) => x.tagName === c.tagName); p.unshift(t + ':nth-of-type(' + (k.indexOf(c) + 1) + ')'); c = par; } return 'html > ' + p.join(' > '); }; const shown = (e) => e.getClientRects().length > 0 && getComputedStyle(e).visibility !== 'hidden'; const els = Array.from(document.querySelectorAll(\"a[href],button,input[type=submit],input[type=button],[role=button]\")).filter((e) => !e.disabled && e.tabIndex >= 0 && shown(e)); const links = els.map((e) => ({ selector: sel(e), text: norm(e.getAttribute('aria-label') || e.innerText || e.value || e.getAttribute('title') || ''), href: e.tagName === 'A' ? e.href : '', snippet: e.cloneNode(false).outerHTML })); const frames = Array.from(document.querySelectorAll('iframe[src]')).map((f) => f.src); return JSON.stringify({ links: links, frames: frames }); }"
+        @label "Links expression"
+        @description "A page function returning a JSON string of the visible enabled links and buttons (selector in the focus function's form, text, href, opening tag) and the iframe sources."
+        @tier "infra"
+    }
+  }
+
+  page boot as CheckoutProbePage -> CheckoutProbe
+}

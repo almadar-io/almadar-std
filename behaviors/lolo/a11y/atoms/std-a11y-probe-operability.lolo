@@ -1,0 +1,210 @@
+app std-a11y-probe-operability [
+  version: "1.0.0",
+  description: "std-a11y-probe-operability — WCAG 2.1.1 and 4.1.2. PROBE_RUN { key, pageUrl } on a tab already at pageUrl lists the elements that look clickable by declared facts only (PAGE_MEASURE: an onclick property or attribute, cursor:pointer computed on the element and not inherited from its parent, or a role of button, link, tab or menuitem), each with tag, role, tabIndex, whether it is natively focusable (a with href, button, input, select, textarea, summary, contenteditable), selector and tag snippet. A clickable element that is neither natively focusable nor has tabIndex 0 or more is a confirmed not-operable finding. Each element with role button that is focusable but not native (up to the maxChecks knob) is focused (PAGE_MEASURE), sent Enter and then Space (PAGE_KEY), and read after each key (PAGE_MEASURE: location.href, aria-expanded, aria-pressed, aria-selected on the element and the body innerHTML length); when neither key changed anything it is a needs-verification pointer-only finding. The elements past the cap, and those that took no focus, are counted in one pointer-only-unchecked finding. The page is navigated to pageUrl again before PROBE_DONE { key, probe, findings } or PROBE_FAILED { key, probe, error, code }. Page requests are PAGE_MEASURE, PAGE_KEY and PAGE_NAVIGATE; the composer wires them to a std-chrome instance."
+]
+uses Spec from "almadar-std/probe-operability"
+
+type WcagRef = { criterion : string!, level : "A" | "AA" | "AAA"!, version : "2.0" | "2.1" | "2.2"! }
+type A11yFinding = { id : string!, pageUrl : string!, rule : string!, wcag : [WcagRef]!, method : "engine" | "probe" | "llm"!, engines : [string]!, impact : "critical" | "serious" | "moderate" | "minor"!, confidence : "confirmed" | "needs-verification"!, selector : string!, snippet : string!, evidence : string!, count : number! }
+type Clickable = { selector : string!, snippet : string!, tag : string!, role : string!, tabIndex : number!, native : boolean!, onclick : boolean!, pointer : boolean! }
+type ClickList = { items : [Clickable]! }
+type Observation = { found : boolean!, focused : boolean!, href : string!, expanded : string!, pressed : string!, selected : string!, bodyLength : number! }
+type Verdict = { rule : string!, confidence : "confirmed" | "needs-verification"!, selector : string!, snippet : string!, count : number! }
+type RuleSpec = { rule : string!, impact : "critical" | "serious" | "moderate" | "minor"!, wcag : [WcagRef]! }
+
+orbital OperabilityOrbital {
+  entity OperabilityRun [runtime] {
+    id : string!
+    runKey : string @description "The caller's name for the run in flight." = ""
+    pageUrl : string @description "The page the run in flight is about." = ""
+    queue : [Clickable] @description "The focusable role=button elements still to be tried with Enter and Space, up to the maxChecks cap." = []
+    idx : number @description "The position in the queue of the element being tried." = 0
+    baseline : Observation @description "The observation the next key press is compared with." = { found: false, focused: false, href: "", expanded: "", pressed: "", selected: "", bodyLength: 0 }
+    enterChanged : boolean @description "Whether Enter changed any observed fact of the element in hand." = false
+    verdicts : [Verdict] @description "The verdicts held while the page is restored." = []
+  }
+
+  trait OperabilityProbe -> OperabilityRun {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      PROBE_RUN -> listing
+        (set @entity.runKey @payload.key)
+        (set @entity.pageUrl @payload.pageUrl)
+        (set @entity.queue [])
+        (set @entity.idx 0)
+        (set @entity.enterChanged false)
+        (set @entity.verdicts [])
+        (emit PAGE_MEASURE { key: (str/concat @payload.key ":list"), expression: (str/concat "(" @config.clickableMeasure ")()") })
+    }
+
+    state listing {
+      INIT -> idle
+      PAGE_MEASURED -> checking when (and (= @payload.key (str/concat @entity.runKey ":list")) (!= (json/parse @payload.json ClickList) null))
+        (set @entity.verdicts (let ((l (json/parse @payload.json ClickList)))
+          (let ((b (array/filter @l.items (fn c (and (= @c.role "button") (= @c.native false) (>= @c.tabIndex 0))))))
+            (array/concat
+              (array/map (array/filter @l.items (fn c (and (= @c.native false) (< @c.tabIndex 0)))) (fn c { rule: "not-operable", confidence: "confirmed", selector: @c.selector, snippet: @c.snippet, count: 1 }))
+              (if (> (array/len @b) @config.maxChecks)
+                [{ rule: "pointer-only-unchecked", confidence: "needs-verification", selector: "html", snippet: (str/concat (- (array/len @b) @config.maxChecks) " focusable role=button elements past the cap of " @config.maxChecks " were not tried with Enter and Space"), count: (- (array/len @b) @config.maxChecks) }]
+                [])))))
+        (set @entity.queue (let ((l (json/parse @payload.json ClickList))) (array/take (array/filter @l.items (fn c (and (= @c.role "button") (= @c.native false) (>= @c.tabIndex 0)))) @config.maxChecks)))
+        (emit OP_NEXT {})
+      PAGE_MEASURED -> idle when (and (= @payload.key (str/concat @entity.runKey ":list")) (= (json/parse @payload.json ClickList) null))
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "operability", error: "the page measurement is not the clickable list shape", code: "probe_bad_measure" })
+      PAGE_FAILED -> idle when (str/startsWith @payload.key @entity.runKey)
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "operability", error: @payload.error, code: "probe_page_failed" })
+    }
+
+    state checking {
+      INIT -> idle
+      OP_NEXT -> focusing when (< @entity.idx (array/len @entity.queue))
+        (emit PAGE_MEASURE { key: (str/concat @entity.runKey ":focus" @entity.idx), expression: (let ((q (array/nth @entity.queue @entity.idx))) (str/concat "(" @config.observe ")(" (json/stringify @q.selector) ",true)")) })
+      OP_NEXT -> restoring when (>= @entity.idx (array/len @entity.queue))
+        (emit PAGE_NAVIGATE { key: (str/concat @entity.runKey ":restore"), url: @entity.pageUrl })
+      PAGE_FAILED -> idle when (str/startsWith @payload.key @entity.runKey)
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "operability", error: @payload.error, code: "probe_page_failed" })
+    }
+
+    state focusing {
+      INIT -> idle
+      PAGE_MEASURED -> pressingEnter when (and (= @payload.key (str/concat @entity.runKey ":focus" @entity.idx)) (let ((o (json/parse @payload.json Observation))) (and (!= @o null) (= @o.focused true))))
+        (set @entity.baseline (default (json/parse @payload.json Observation) @entity.baseline))
+        (emit PAGE_KEY { key: (str/concat @entity.runKey ":enter" @entity.idx), keyName: "Enter" })
+      PAGE_MEASURED -> checking when (and (= @payload.key (str/concat @entity.runKey ":focus" @entity.idx)) (let ((o (json/parse @payload.json Observation))) (and (!= @o null) (= @o.focused false))))
+        (set @entity.verdicts (array/append @entity.verdicts (let ((q (array/nth @entity.queue @entity.idx))) { rule: "pointer-only-unchecked", confidence: "needs-verification", selector: @q.selector, snippet: @q.snippet, count: 1 })))
+        (set @entity.idx (+ @entity.idx 1))
+        (emit OP_NEXT {})
+      PAGE_MEASURED -> idle when (and (= @payload.key (str/concat @entity.runKey ":focus" @entity.idx)) (= (json/parse @payload.json Observation) null))
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "operability", error: "the page measurement is not the observation shape", code: "probe_bad_measure" })
+      PAGE_FAILED -> idle when (str/startsWith @payload.key @entity.runKey)
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "operability", error: @payload.error, code: "probe_page_failed" })
+    }
+
+    state pressingEnter {
+      INIT -> idle
+      PAGE_KEY_SENT -> afterEnter when (= @payload.key (str/concat @entity.runKey ":enter" @entity.idx))
+        (emit PAGE_MEASURE { key: (str/concat @entity.runKey ":aenter" @entity.idx), expression: (let ((q (array/nth @entity.queue @entity.idx))) (str/concat "(" @config.observe ")(" (json/stringify @q.selector) ",false)")) })
+      PAGE_FAILED -> idle when (str/startsWith @payload.key @entity.runKey)
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "operability", error: @payload.error, code: "probe_page_failed" })
+    }
+
+    state afterEnter {
+      INIT -> idle
+      PAGE_MEASURED -> pressingSpace when (and (= @payload.key (str/concat @entity.runKey ":aenter" @entity.idx)) (!= (json/parse @payload.json Observation) null))
+        (set @entity.enterChanged (!= (json/parse @payload.json Observation) @entity.baseline))
+        (set @entity.baseline (default (json/parse @payload.json Observation) @entity.baseline))
+        (emit PAGE_KEY { key: (str/concat @entity.runKey ":space" @entity.idx), keyName: "Space" })
+      PAGE_MEASURED -> idle when (and (= @payload.key (str/concat @entity.runKey ":aenter" @entity.idx)) (= (json/parse @payload.json Observation) null))
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "operability", error: "the page measurement is not the observation shape", code: "probe_bad_measure" })
+      PAGE_FAILED -> idle when (str/startsWith @payload.key @entity.runKey)
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "operability", error: @payload.error, code: "probe_page_failed" })
+    }
+
+    state pressingSpace {
+      INIT -> idle
+      PAGE_KEY_SENT -> afterSpace when (= @payload.key (str/concat @entity.runKey ":space" @entity.idx))
+        (emit PAGE_MEASURE { key: (str/concat @entity.runKey ":aspace" @entity.idx), expression: (let ((q (array/nth @entity.queue @entity.idx))) (str/concat "(" @config.observe ")(" (json/stringify @q.selector) ",false)")) })
+      PAGE_FAILED -> idle when (str/startsWith @payload.key @entity.runKey)
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "operability", error: @payload.error, code: "probe_page_failed" })
+    }
+
+    state afterSpace {
+      INIT -> idle
+      PAGE_MEASURED -> checking when (and (= @payload.key (str/concat @entity.runKey ":aspace" @entity.idx)) (let ((o (json/parse @payload.json Observation))) (and (!= @o null) (= @entity.enterChanged false) (= @o @entity.baseline))))
+        (set @entity.verdicts (array/append @entity.verdicts (let ((q (array/nth @entity.queue @entity.idx))) { rule: "pointer-only", confidence: "needs-verification", selector: @q.selector, snippet: @q.snippet, count: 1 })))
+        (set @entity.idx (+ @entity.idx 1))
+        (emit OP_NEXT {})
+      PAGE_MEASURED -> checking when (and (= @payload.key (str/concat @entity.runKey ":aspace" @entity.idx)) (let ((o (json/parse @payload.json Observation))) (and (!= @o null) (or (= @entity.enterChanged true) (!= @o @entity.baseline)))))
+        (set @entity.idx (+ @entity.idx 1))
+        (emit OP_NEXT {})
+      PAGE_MEASURED -> idle when (and (= @payload.key (str/concat @entity.runKey ":aspace" @entity.idx)) (= (json/parse @payload.json Observation) null))
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "operability", error: "the page measurement is not the observation shape", code: "probe_bad_measure" })
+      PAGE_FAILED -> idle when (str/startsWith @payload.key @entity.runKey)
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "operability", error: @payload.error, code: "probe_page_failed" })
+    }
+
+    state restoring {
+      INIT -> idle
+      PAGE_LOADED -> idle when (= @payload.key (str/concat @entity.runKey ":restore"))
+        (emit PROBE_DONE {
+          key: @entity.runKey,
+          probe: "operability",
+          findings: (array/map @entity.verdicts (fn v (let ((r (array/find @config.rules (fn x (= @x.rule @v.rule))))) {
+            id: (str/concat @entity.pageUrl "#" @v.rule "#" @v.selector),
+            pageUrl: @entity.pageUrl,
+            rule: @v.rule,
+            wcag: @r.wcag,
+            method: "probe",
+            engines: ["probe"],
+            impact: @r.impact,
+            confidence: @v.confidence,
+            selector: @v.selector,
+            snippet: @v.snippet,
+            evidence: "",
+            count: @v.count
+          })))
+        })
+      PAGE_FAILED -> idle when (str/startsWith @payload.key @entity.runKey)
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "operability", error: @payload.error, code: "probe_page_failed" })
+    }
+
+    emits {
+      PAGE_MEASURE -> external { key : string!  expression : string! }
+        @description "Page request: evaluate the expression in the page; it answers a JSON string."
+        @synonyms "measure page, evaluate in page"
+        @tier "primary"
+      PAGE_KEY -> external { key : string!  keyName : "Tab" | "Enter" | "Space" | "Escape" | "ArrowDown" | "ArrowUp" | "ArrowLeft" | "ArrowRight" | "Home" | "End"!  shift : boolean }
+        @description "Page request: press a key in the tab; the composer wires it to the std-chrome PAGE_KEY input."
+        @synonyms "press key, send key"
+        @tier "primary"
+      PAGE_NAVIGATE -> external { key : string!  url : string! }
+        @description "Page request: load the page again, which undoes what the key presses changed."
+        @synonyms "reload page, navigate"
+        @tier "primary"
+      PROBE_DONE -> external { key : string!  probe : string!  findings : [A11yFinding]! }
+        @description "The operability probe finished: its findings, empty when every clickable element is reachable and answers the keyboard."
+        @synonyms "operability findings, keyboard operable result"
+        @tier "primary"
+      PROBE_FAILED -> external { key : string!  probe : string!  error : string!  code : string! }
+        @description "The probe could not finish: code is probe_page_failed or probe_bad_measure."
+        @synonyms "probe failed, operability error"
+        @tier "primary"
+      OP_NEXT {}
+        @description "Internal: try the next queued role=button element, or restore the page when the queue is spent."
+        @tier "internal"
+    }
+
+    listens {
+      PROBE_RUN { key : string!  pageUrl : string! }
+        @description "Check the page the tab is on for clickable elements the keyboard cannot reach or operate."
+        @synonyms "keyboard operable check, clickable div check, pointer only check, wcag 2.1.1"
+      PAGE_LOADED { key : string!  url : string!  title : string! }
+      PAGE_KEY_SENT { key : string! }
+      PAGE_MEASURED { key : string!  json : string! }
+      PAGE_FAILED { key : string!  error : string!  code : string! }
+    }
+
+    config {
+      maxChecks : number = 20
+        @label "Element cap"
+        @description "The most role=button elements tried with Enter and Space; the rest are counted in a pointer-only-unchecked finding."
+        @tier "domain"
+      rules : [RuleSpec] = [{ rule: "not-operable", impact: "serious", wcag: [{ criterion: "2.1.1", level: "A", version: "2.0" }, { criterion: "4.1.2", level: "A", version: "2.0" }] }, { rule: "pointer-only", impact: "serious", wcag: [{ criterion: "2.1.1", level: "A", version: "2.0" }] }, { rule: "pointer-only-unchecked", impact: "minor", wcag: [{ criterion: "2.1.1", level: "A", version: "2.0" }] }]
+        @label "Rule table"
+        @description "Each finding code with its impact and the WCAG success criteria it maps to."
+        @tier "domain"
+      clickableMeasure : string = "() => { const sel = (e) => { const p = []; for (let n = e; n && n.nodeType === 1; n = n.parentElement) { if (n.id) { p.unshift('#' + CSS.escape(n.id)); break; } let i = 1; for (let s = n.previousElementSibling; s; s = s.previousElementSibling) { if (s.tagName === n.tagName) i++; } p.unshift(n.tagName.toLowerCase() + ':nth-of-type(' + i + ')'); } return p.join('>'); }; const roles = ['button', 'link', 'tab', 'menuitem']; const nativeSel = 'a[href],button,input:not([type=hidden]),select,textarea,summary,[contenteditable]:not([contenteditable=false])'; const out = []; for (const e of document.body.querySelectorAll('*')) { if (e.getClientRects().length === 0) continue; const role = e.getAttribute('role') || ''; const onclick = typeof e.onclick === 'function' || e.hasAttribute('onclick'); const parent = e.parentElement; const pointer = getComputedStyle(e).cursor === 'pointer' && (!parent || getComputedStyle(parent).cursor !== 'pointer'); if (!onclick && !pointer && !roles.includes(role)) continue; out.push({ selector: sel(e), snippet: e.cloneNode(false).outerHTML, tag: e.tagName.toLowerCase(), role: role, tabIndex: e.tabIndex, native: e.matches(nativeSel), onclick: onclick, pointer: pointer }); } return JSON.stringify({ items: out }); }"
+        @label "Clickable measure expression"
+        @description "A page function returning a JSON string of the elements that look clickable by declared facts only (onclick, own cursor:pointer, role button, link, tab or menuitem) with tag, role, tabIndex, natively-focusable flag, selector and tag snippet."
+        @tier "infra"
+      observe : string = "(selector, focus) => { const el = document.querySelector(selector); if (!el) return JSON.stringify({ found: false, focused: false, href: location.href, expanded: '', pressed: '', selected: '', bodyLength: document.body.innerHTML.length }); if (focus) el.focus(); return JSON.stringify({ found: true, focused: document.activeElement === el, href: location.href, expanded: el.getAttribute('aria-expanded') || '', pressed: el.getAttribute('aria-pressed') || '', selected: el.getAttribute('aria-selected') || '', bodyLength: document.body.innerHTML.length }); }"
+        @label "Observe expression"
+        @description "A page function taking a selector and whether to focus it, returning a JSON string of whether it is focused, location.href, its aria-expanded, aria-pressed and aria-selected, and the body innerHTML length."
+        @tier "infra"
+    }
+  }
+
+  page boot as OperabilityProbePage -> OperabilityProbe
+}

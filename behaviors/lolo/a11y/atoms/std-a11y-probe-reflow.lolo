@@ -1,0 +1,156 @@
+app std-a11y-probe-reflow [
+  version: "1.0.0",
+  description: "std-a11y-probe-reflow — WCAG 1.4.10 Reflow. PROBE_RUN { key, pageUrl } on a tab already at pageUrl narrows the viewport to 320x256 (PAGE_VIEWPORT), measures the page (PAGE_MEASURE: the document scrollWidth against its clientWidth, and every element whose right edge passes the viewport except those inside an element of the allowed knob, which may scroll in two dimensions), restores the viewport and answers PROBE_DONE { key, probe, findings } or PROBE_FAILED { key, probe, error, code } (probe_page_failed when the page answers PAGE_FAILED, probe_bad_measure when the measurement is not the declared shape). A scrollWidth above clientWidth plus the tolerance knob is one confirmed reflow finding on the document; each element past the viewport is a further needs-verification finding. The composer wires the page requests to a std-chrome instance and its answers back; answers whose key does not start with the run key are ignored."
+]
+uses Spec from "almadar-std/probe-reflow"
+
+type WcagRef = { criterion : string!, level : "A" | "AA" | "AAA"!, version : "2.0" | "2.1" | "2.2"! }
+type A11yFinding = { id : string!, pageUrl : string!, rule : string!, wcag : [WcagRef]!, method : "engine" | "probe" | "llm"!, engines : [string]!, impact : "critical" | "serious" | "moderate" | "minor"!, confidence : "confirmed" | "needs-verification"!, selector : string!, snippet : string!, evidence : string!, count : number! }
+type PageRect = { x : number!, y : number!, width : number!, height : number! }
+type ReflowOffender = { selector : string!, snippet : string!, rect : PageRect! }
+type ReflowMeasure = { scrollWidth : number!, clientWidth : number!, offenders : [ReflowOffender]! }
+
+orbital ReflowOrbital {
+  entity ReflowRun [runtime] {
+    id : string!
+    runKey : string @description "The caller's name for the run in flight." = ""
+    pageUrl : string @description "The page the run in flight is about." = ""
+    findings : [A11yFinding] @description "The findings held while the viewport is restored." = []
+  }
+
+  trait ReflowProbe -> ReflowRun {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      PROBE_RUN -> narrowing
+        (set @entity.runKey @payload.key)
+        (set @entity.pageUrl @payload.pageUrl)
+        (set @entity.findings [])
+        (emit PAGE_VIEWPORT { key: (str/concat @payload.key ":narrow"), width: @config.width, height: @config.height, deviceScaleFactor: 1, mobile: false, textZoom: 1 })
+    }
+
+    state narrowing {
+      INIT -> idle
+      PAGE_VIEWPORT_SET -> measuring when (= @payload.key (str/concat @entity.runKey ":narrow"))
+        (emit PAGE_MEASURE { key: (str/concat @entity.runKey ":measure"), expression: (str/concat "(" @config.measure ")(" (json/stringify @config.allowed) ")") })
+      PAGE_FAILED -> idle when (str/startsWith @payload.key @entity.runKey)
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "reflow", error: @payload.error, code: "probe_page_failed" })
+    }
+
+    state measuring {
+      INIT -> idle
+      PAGE_MEASURED -> restoring when (and (= @payload.key (str/concat @entity.runKey ":measure")) (!= (json/parse @payload.json ReflowMeasure) null))
+        (set @entity.findings (let ((m (json/parse @payload.json ReflowMeasure)))
+          (if (> @m.scrollWidth (+ @m.clientWidth @config.tolerance))
+            (array/concat
+              [{
+                id: (str/concat @entity.pageUrl "#reflow#html"),
+                pageUrl: @entity.pageUrl,
+                rule: "reflow",
+                wcag: [{ criterion: "1.4.10", level: "AA", version: "2.1" }],
+                method: "probe",
+                engines: ["probe"],
+                impact: @config.impact,
+                confidence: "confirmed",
+                selector: "html",
+                snippet: (str/concat "scrollWidth " @m.scrollWidth " exceeds clientWidth " @m.clientWidth " at " @config.width " CSS px"),
+                evidence: "",
+                count: 1
+              }]
+              (array/map @m.offenders (fn o {
+                id: (str/concat @entity.pageUrl "#reflow#" @o.selector),
+                pageUrl: @entity.pageUrl,
+                rule: "reflow",
+                wcag: [{ criterion: "1.4.10", level: "AA", version: "2.1" }],
+                method: "probe",
+                engines: ["probe"],
+                impact: @config.impact,
+                confidence: "needs-verification",
+                selector: @o.selector,
+                snippet: @o.snippet,
+                evidence: "",
+                count: 1
+              })))
+            [])))
+        (emit PAGE_VIEWPORT { key: (str/concat @entity.runKey ":restore"), width: @config.restoreWidth, height: @config.restoreHeight, deviceScaleFactor: 1, mobile: false, textZoom: 1 })
+      PAGE_MEASURED -> idle when (and (= @payload.key (str/concat @entity.runKey ":measure")) (= (json/parse @payload.json ReflowMeasure) null))
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "reflow", error: "the page measurement is not the reflow shape", code: "probe_bad_measure" })
+      PAGE_FAILED -> idle when (str/startsWith @payload.key @entity.runKey)
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "reflow", error: @payload.error, code: "probe_page_failed" })
+    }
+
+    state restoring {
+      INIT -> idle
+      PAGE_VIEWPORT_SET -> idle when (= @payload.key (str/concat @entity.runKey ":restore"))
+        (emit PROBE_DONE { key: @entity.runKey, probe: "reflow", findings: @entity.findings })
+      PAGE_FAILED -> idle when (str/startsWith @payload.key @entity.runKey)
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "reflow", error: @payload.error, code: "probe_page_failed" })
+    }
+
+    emits {
+      PAGE_VIEWPORT -> external { key : string!  width : number!  height : number!  deviceScaleFactor : number!  mobile : boolean!  textZoom : number! }
+        @description "Page request: set the tab's viewport; the composer wires it to the std-chrome PAGE_VIEWPORT input."
+        @synonyms "set viewport, resize page"
+        @tier "primary"
+      PAGE_MEASURE -> external { key : string!  expression : string! }
+        @description "Page request: evaluate the expression in the page; it answers a JSON string."
+        @synonyms "measure page, evaluate in page"
+        @tier "primary"
+      PROBE_DONE -> external { key : string!  probe : string!  findings : [A11yFinding]! }
+        @description "The reflow probe finished: its findings, empty when the page reflows."
+        @synonyms "reflow findings, reflow result"
+        @tier "primary"
+      PROBE_FAILED -> external { key : string!  probe : string!  error : string!  code : string! }
+        @description "The probe could not finish: code is probe_page_failed or probe_bad_measure."
+        @synonyms "probe failed, reflow error"
+        @tier "primary"
+    }
+
+    listens {
+      PROBE_RUN { key : string!  pageUrl : string! }
+        @description "Check the page the tab is on for reflow at 320 CSS px."
+        @synonyms "reflow check, horizontal scroll check, wcag 1.4.10"
+      PAGE_VIEWPORT_SET { key : string! }
+      PAGE_MEASURED { key : string!  json : string! }
+      PAGE_FAILED { key : string!  error : string!  code : string! }
+    }
+
+    config {
+      width : number = 320
+        @label "Viewport width"
+        @description "The CSS px width the page is measured at; WCAG 1.4.10 names 320."
+        @tier "domain"
+      height : number = 256
+        @label "Viewport height"
+        @description "The CSS px height the page is measured at."
+        @tier "domain"
+      restoreWidth : number = 1280
+        @label "Restored width"
+        @description "The CSS px width the viewport returns to before the probe answers."
+        @tier "domain"
+      restoreHeight : number = 800
+        @label "Restored height"
+        @description "The CSS px height the viewport returns to before the probe answers."
+        @tier "domain"
+      tolerance : number = 1
+        @label "Overflow tolerance"
+        @description "CSS px by which scrollWidth may exceed clientWidth before the page counts as overflowing."
+        @tier "domain"
+      impact : "critical" | "serious" | "moderate" | "minor" = "serious"
+        @label "Impact"
+        @description "The impact of a reflow finding."
+        @tier "domain"
+      allowed : string = "table,pre,img,video,canvas,svg,[role=img],map,object,embed"
+        @label "Two-dimensional content"
+        @description "CSS selector list of content that may scroll in two dimensions; elements inside a match are not listed as offenders."
+        @tier "domain"
+      measure : string = "(allowed) => { const de = document.documentElement; const vw = de.clientWidth; const sel = (e) => { const p = []; for (let n = e; n && n.nodeType === 1; n = n.parentElement) { if (n.id) { p.unshift('#' + CSS.escape(n.id)); break; } let i = 1; for (let s = n.previousElementSibling; s; s = s.previousElementSibling) { if (s.tagName === n.tagName) i++; } p.unshift(n.tagName.toLowerCase() + ':nth-of-type(' + i + ')'); } return p.join('>'); }; const out = []; for (const e of document.body.querySelectorAll('*')) { if (e.closest(allowed)) continue; const r = e.getBoundingClientRect(); if (r.width === 0 && r.height === 0) continue; if (r.right > vw) out.push({ selector: sel(e), snippet: e.cloneNode(false).outerHTML, rect: { x: r.x, y: r.y, width: r.width, height: r.height } }); } return JSON.stringify({ scrollWidth: de.scrollWidth, clientWidth: vw, offenders: out }); }"
+        @label "Measure expression"
+        @description "A page function taking the allowed selector list and returning a JSON string of the document scrollWidth, clientWidth and the elements whose right edge passes the viewport, each with selector, opening tag and rect."
+        @tier "infra"
+    }
+  }
+
+  page boot as ReflowProbePage -> ReflowProbe
+}

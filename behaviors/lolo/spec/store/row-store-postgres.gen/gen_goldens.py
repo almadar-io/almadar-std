@@ -205,7 +205,7 @@ def scram_to_proof():
 case("good-scram-sha-256-login-sends-first-then-proof-and-verifies-the-server",
      scram_to_proof() + [recv(R(12, server_final.encode()) + ok_session, expect={"state": "running", "emits": [stmt("statement", READ_SQL, ["t1"])], "neverEmits": ["STORE_FAILED"]})],
      credentials=PG_CRED,
-     note="client nonce = base64 of 18 bytes 01..12 (random-bytes 18); salt, iterations and server nonce are the recorded fixtures/postgres/scram-wrong-password-fails values; the kernel derives the proof and the server signature from the credential (hash/pbkdf2 and hmac/sha256-bytes slots)")
+     note="client nonce = base64 of 18 bytes 01..12 (random-bytes 18); salt, iterations and server nonce are the recorded fixtures/postgres/scram-wrong-password-fails values; the kernel derives the proof and the server signature from the credential (hash/pbkdf2 and hmac/sha slots)")
 case("bad-scram-server-first-that-is-not-text-is-store-failed",
      scram_to_first() + [recv(R(11, b"\xff\xfe"), expect={"emits": [emit("STORE_FAILED", key="k", message="the SCRAM server-first message is not text")], "neverEmits": ["ROW_FOUND"]})],
      credentials=PG_CRED,

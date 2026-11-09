@@ -4,11 +4,13 @@ app std-firebase-emulators [
   env: ["NODE_ENV", "JAVA21_HOME", "PATH", "HOME"],
   net: { "127.0.0.1:8080": [tcp], "127.0.0.1:9099": [tcp] },
   fs: { "~/.almadar/emulator-data/**": [read, write, create], "/opt/homebrew/opt/openjdk@21/bin/java": [read], "/usr/local/opt/openjdk@21/bin/java": [read], "/usr/lib/jvm/java-21-openjdk-amd64/bin/java": [read], "/usr/lib/jvm/java-21-openjdk/bin/java": [read] },
-  description: "std-firebase-emulators — starts the local Firebase emulator suite (Firestore on 127.0.0.1:8080, Auth on 127.0.0.1:9099) a development host stores rows and signs personas in against. EMULATORS_START reuses a suite already listening on both ports, refuses when only one of them is taken (emulators_port_split), refuses under NODE_ENV=production (emulators_production) and a project that does not start with demo- (emulators_not_demo). Otherwise it finds Java 21 (JAVA21_HOME, else the first of the usual install locations that has bin/java; emulators_no_java when none), writes firebase.json and open Firestore rules under ~/.almadar/emulator-data/, starts `firebase emulators:start` detached (so the suite outlives the program and every host on the machine reuses it; its data is exported there on exit and imported on the next start), and polls both ports until they listen (emulators_timeout after 120 seconds). The answer is EMULATORS_READY { projectId, firestoreHost, authHost, reused }, or EMULATORS_FAILED { code, message }."
+  description: "std-firebase-emulators — starts the local Firebase emulator suite (Firestore on 127.0.0.1:8080, Auth on 127.0.0.1:9099) a development host stores rows and signs personas in against. EMULATORS_START reuses a suite already listening on both ports, refuses when only one of them is taken (emulators_port_split), refuses under NODE_ENV=production (emulators_production) and a project that does not start with demo- (emulators_not_demo). Otherwise it finds Java 21 (JAVA21_HOME, else the first of the usual install locations that has bin/java; emulators_no_java when none), writes firebase.json and open Firestore rules under ~/.almadar/emulator-data/, starts `firebase emulators:start` detached through std-daemon (so the suite outlives the program and every host on the machine reuses it; its data is exported there on exit and imported on the next start; the daemon waits for the Firestore port), then polls both ports until they listen (emulators_timeout after 120 seconds). The answer is EMULATORS_READY { projectId, firestoreHost, authHost, reused }, or EMULATORS_FAILED { code, message }."
 ]
 uses Spec from "almadar-std/firebase-emulators"
 
 orbital FirebaseEmulatorsOrbital {
+  uses Daemon from "std/behaviors/std-daemon"
+
   entity EmulatorSuite [runtime] {
     id : string!
     projectId : string @description "The demo project the suite runs under." = "demo-almadar"
@@ -22,6 +24,21 @@ orbital FirebaseEmulatorsOrbital {
     started : boolean @description "This run started the suite and waits for its ports." = false
     pollDueAt : instant? @description "When the next port probe is due; null when none is." = null
     deadline : instant? @description "When waiting for the ports gives up; null while idle." = null
+  }
+
+  trait EmulatorDaemon = Daemon.traits.Daemon {
+    listens {
+      FirebaseEmulators.EMULATORS_DAEMON_START -> DAEMON_START
+    }
+    config {
+      commands: ["firebase"]
+      cwd: "~/.almadar/emulator-data/"
+      readyHost: "127.0.0.1"
+      readyPort: 8080
+      readyTimeoutMs: 120000
+      pollMs: 500
+      inheritEnv: ["HOME"]
+    }
   }
 
   trait FirebaseEmulators -> EmulatorSuite [optimistic] {
@@ -115,16 +132,24 @@ orbital FirebaseEmulatorsOrbital {
         (os/exists "~/.almadar/emulator-data/export/firebase-export-metadata.json" { emit: { success: EMULATORS_EXPORT_CHECKED failure: EMULATORS_HOST_FAILED } })
       EMULATORS_EXPORT_CHECKED -> starting when @payload.ok
         (set @entity.imports true)
-        (os/spawn "firebase" ["emulators:start", "--only", "firestore,auth", "--project", @entity.projectId, "--config", "firebase.json", "--export-on-exit", "export", "--import", "export"] { cwd: "~/.almadar/emulator-data/" env: { JAVA_HOME: @entity.javaHome PATH: @entity.hostPath HOME: null } stdin: "null" stdout: "null" stderr: "null" detached: true } { emit: { success: EMULATORS_SPAWNED failure: EMULATORS_SPAWN_FAILED } })
+        (set @entity.deadline (time/add @now 120000 "ms"))
+        (emit EMULATORS_DAEMON_START { argv: ["emulators:start", "--only", "firestore,auth", "--project", @entity.projectId, "--config", "firebase.json", "--export-on-exit", "export", "--import", "export"] env: { JAVA_HOME: @entity.javaHome PATH: @entity.hostPath } })
       EMULATORS_EXPORT_CHECKED -> starting when (not @payload.ok)
         (set @entity.imports false)
-        (os/spawn "firebase" ["emulators:start", "--only", "firestore,auth", "--project", @entity.projectId, "--config", "firebase.json", "--export-on-exit", "export"] { cwd: "~/.almadar/emulator-data/" env: { JAVA_HOME: @entity.javaHome PATH: @entity.hostPath HOME: null } stdin: "null" stdout: "null" stderr: "null" detached: true } { emit: { success: EMULATORS_SPAWNED failure: EMULATORS_SPAWN_FAILED } })
-      EMULATORS_SPAWNED -> starting
-        (set @entity.started true)
         (set @entity.deadline (time/add @now 120000 "ms"))
-        (set @entity.pollDueAt (time/add @now 500 "ms"))
-      EMULATORS_SPAWN_FAILED -> idle
-        (emit EMULATORS_FAILED { code: "emulators_spawn_failed" message: (str/concat "firebase did not start (it needs firebase-tools on the PATH): " (default @payload.error "")) })
+        (emit EMULATORS_DAEMON_START { argv: ["emulators:start", "--only", "firestore,auth", "--project", @entity.projectId, "--config", "firebase.json", "--export-on-exit", "export"] env: { JAVA_HOME: @entity.javaHome PATH: @entity.hostPath } })
+      EMULATORS_DAEMON_START -> starting
+      EMULATORS_DAEMON_READY -> starting
+        (set @entity.started (not @payload.reused))
+        (emit EMULATORS_PROBE { })
+      EMULATORS_DAEMON_FAILED -> idle when (= @payload.code "daemon_spawn_failed")
+        (emit EMULATORS_FAILED { code: "emulators_spawn_failed" message: (str/concat "firebase did not start (it needs firebase-tools on the PATH): " @payload.message) })
+      EMULATORS_DAEMON_FAILED -> idle when (= @payload.code "daemon_timeout")
+        (set @entity.pollDueAt null)
+        (emit EMULATORS_FAILED { code: "emulators_timeout" message: "the Firebase emulators did not listen on 8080 and 9099 within 120 seconds; see ~/.almadar/emulator-data/*-debug.log" })
+      EMULATORS_DAEMON_FAILED -> idle when (and (!= @payload.code "daemon_spawn_failed") (!= @payload.code "daemon_timeout"))
+        (set @entity.pollDueAt null)
+        (emit EMULATORS_FAILED { code: "emulators_host_failed" message: @payload.message })
       EMULATORS_POLL -> starting
         (set @entity.pollDueAt null)
         (emit EMULATORS_PROBE { })
@@ -229,16 +254,11 @@ orbital FirebaseEmulatorsOrbital {
       }
         @description "Internal: whether a previous export exists to import."
         @tier "internal"
-      EMULATORS_SPAWNED -> internal {
-        pid : number!
+      EMULATORS_DAEMON_START -> internal {
+        argv : [string]!
+        env : Map string string
       }
-        @description "Internal: the detached firebase process started."
-        @tier "internal"
-      EMULATORS_SPAWN_FAILED -> internal {
-        error : string
-        kind : string
-      }
-        @description "Internal: firebase could not be started."
+        @description "Internal: ask std-daemon to start the detached firebase process."
         @tier "internal"
       EMULATORS_HOST_FAILED -> internal {
         error : string
@@ -261,8 +281,25 @@ orbital FirebaseEmulatorsOrbital {
       }
         @description "Start the emulator suite, or reuse the one already listening."
         @synonyms "start emulators, run firebase emulators"
+      EMULATORS_DAEMON_START {
+        argv : [string]!
+        env : Map string string
+      }
+        @description "Internal: ask std-daemon to start the detached firebase process."
+      EMULATORS_DAEMON_READY {
+        pid : number!
+        reused : boolean!
+      }
+        @description "std-daemon's DAEMON_READY: the Firestore port listens."
+      EMULATORS_DAEMON_FAILED {
+        code : string!
+        message : string!
+      }
+        @description "std-daemon's DAEMON_FAILED: the process did not start or its port did not listen in time."
+      EmulatorDaemon.DAEMON_READY -> EMULATORS_DAEMON_READY
+      EmulatorDaemon.DAEMON_FAILED -> EMULATORS_DAEMON_FAILED
     }
   }
 
-  page boot as FirebaseEmulatorsOrbitalStart -> FirebaseEmulators
+  page boot as FirebaseEmulatorsOrbitalStart -> FirebaseEmulators, EmulatorDaemon
 }

@@ -4,6 +4,12 @@ app ui-box [
 ]
 ;; @pattern "box"
 orbital BoxOrbital {
+  type BoxMarquee = {
+    direction : "start" | "end"!
+    speed : number!
+    clip : boolean!
+    loop : boolean!
+  }
   entity BoxItem [runtime] {
     id : string!
   }
@@ -41,6 +47,7 @@ orbital BoxOrbital {
           edgeFlip: @config.edgeFlip
           texture: @config.texture
           animateChanges: @config.animateChanges
+          marquee: @config.marquee
           backdrop: @config.backdrop
           children: @config.children
           enter: @config.enter
@@ -183,6 +190,10 @@ orbital BoxOrbital {
       animateChanges : boolean = false
         @label "Animate Changes"
         @description "Content that appears or changes inside the box eases in instead of switching in one frame (new rows, swapped views, changed text), played in presentation motion (the theme's dramatic duration, standard easing) so it can be watched. Off under reduced motion."
+        @tier "presentation"
+      marquee : BoxMarquee
+        @label "Marquee"
+        @description "Scroll the content as a moving strip (pauses on hover; stands still and wraps under reduced motion)"
         @tier "presentation"
       backdrop : node
         @label "Backdrop"

@@ -37,6 +37,7 @@ orbital GuestSessionOrbital {
     guestDefaultRole : string @description "The role the open guest is signed in as when it opens: the first declared value of its [identity] entity's role field (std-mock-seed-marks defaultRole); empty without one." = ""
     guestPersona : string @description "The persona the guest's session was last signed in as by a pick: an identity row id; empty until one is picked." = ""
     guestPersonas : [GuestPersonaOption] @description "The personas the guest's std-dev-personas listed, shown by the stage as its picker." = []
+    guestIntegrations : "mock" | "live" @description "How the guest reaches real services: mock opens it with no credentials and every row in its own store, live with the opener's credentials and its declared store drivers (program/open integrations)." = mock
   }
 
   trait GuestMarks = Marks.traits.MarksCheck {
@@ -76,6 +77,8 @@ orbital GuestSessionOrbital {
       GUEST_OPENED -> idle
         (program/close ?result.guest { emit: { success: GUEST_CLOSED, failure: GUEST_CLOSE_FAILED } })
       GUEST_FAILED -> idle
+      GUEST_TICKED -> idle
+      GUEST_TICKS_FAILED -> idle
       GUEST_CLOSED -> idle
       GUEST_CLOSE_FAILED -> idle
       GUEST_PREPARE -> idle
@@ -86,6 +89,9 @@ orbital GuestSessionOrbital {
       GUEST_PERSONAS_RESOLVED -> idle
       GUEST_COMPOSED -> idle
       GUEST_PERSONAS_ASK -> idle
+      GUEST_INTEGRATIONS_PICK -> idle
+        (set @entity.guestIntegrations ?integrations)
+        (emit GUEST_INTEGRATIONS { guest: "", integrations: @entity.guestIntegrations })
     }
 
     state opening {
@@ -103,6 +109,8 @@ orbital GuestSessionOrbital {
         (emit GUEST_PAINTS { guest: @entity.guestHandle, route: @entity.guestRoute, page: @entity.guestPage, paints: @entity.guestPaints })
         (emit GUEST_MOVED { guest: @entity.guestHandle, moves: ?result.outcomes })
         (emit GUEST_PERSONAS_ASK {})
+        (emit GUEST_INTEGRATIONS { guest: @entity.guestHandle, integrations: @entity.guestIntegrations })
+        (program/live { kind: "guest", guest: ?result.guest } { key: (str/concat "guest-ticks-" ?result.guest), emit: { onMessage: GUEST_TICKED, failure: GUEST_TICKS_FAILED } })
       GUEST_FAILED -> idle
         (emit GUEST_ERROR { message: ?error })
       GUEST_PREPARE -> opening when (= @entity.guestSeed null)
@@ -118,7 +126,7 @@ orbital GuestSessionOrbital {
         (set @entity.guestSeeded false)
         (set @entity.guestDefaultRole (default @payload.defaultRole ""))
         (set @entity.guestPersonaTrait (default @payload.personaTrait ""))
-        (program/open @entity.guestProgram { grants: { env: @config.guestEnv }, declared: true } { emit: { success: GUEST_OPENED, failure: GUEST_FAILED } })
+        (program/open @entity.guestProgram { grants: { env: @config.guestEnv }, declared: true, integrations: @entity.guestIntegrations } { emit: { success: GUEST_OPENED, failure: GUEST_FAILED } })
         (set @entity.guestProgram null)
       GUEST_SEED_MARKED -> opening when (and (not @payload.marked) (!= @payload.personasCollection ""))
         (set @entity.guestSeeded true)
@@ -135,16 +143,21 @@ orbital GuestSessionOrbital {
         (program/compose [@entity.guestProgram, @entity.guestSeed] { appName: (object/get (default @entity.guestProgram { name: "guest", orbitals: [] }) "name" "guest") } { emit: { success: GUEST_COMPOSED, failure: GUEST_FAILED } })
         (set @entity.guestProgram null)
       GUEST_COMPOSED -> opening
-        (program/open ?result { grants: { env: @config.guestEnv }, declared: true } { emit: { success: GUEST_OPENED, failure: GUEST_FAILED } })
+        (program/open ?result { grants: { env: @config.guestEnv }, declared: true, integrations: @entity.guestIntegrations } { emit: { success: GUEST_OPENED, failure: GUEST_FAILED } })
       GUEST_FAIL -> idle
         (emit GUEST_ERROR { message: ?message })
       GUEST_RESET -> idle
         (emit GUEST_CLEARED {})
+      GUEST_TICKED -> opening
+      GUEST_TICKS_FAILED -> opening
       GUEST_CLOSED -> opening
       GUEST_CLOSE_FAILED -> opening
       GUEST_PERSONAS_STEPPED -> opening
       GUEST_PERSONAS_FAILED -> opening
       GUEST_PERSONA_ACTED -> opening
+      GUEST_INTEGRATIONS_PICK -> opening
+        (set @entity.guestIntegrations ?integrations)
+        (emit GUEST_INTEGRATIONS { guest: "", integrations: @entity.guestIntegrations })
     }
 
     state live {
@@ -166,6 +179,8 @@ orbital GuestSessionOrbital {
         (emit GUEST_PAINTS { guest: @entity.guestHandle, route: @entity.guestRoute, page: @entity.guestPage, paints: @entity.guestPaints })
         (emit GUEST_MOVED { guest: @entity.guestHandle, moves: ?result.outcomes })
         (emit GUEST_PERSONAS_ASK {})
+        (emit GUEST_INTEGRATIONS { guest: @entity.guestHandle, integrations: @entity.guestIntegrations })
+        (program/live { kind: "guest", guest: ?result.guest } { key: (str/concat "guest-ticks-" ?result.guest), emit: { onMessage: GUEST_TICKED, failure: GUEST_TICKS_FAILED } })
       GUEST_FAILED -> live
         (emit GUEST_NOTICE { message: ?error })
       GUEST_PREPARE -> live
@@ -189,6 +204,11 @@ orbital GuestSessionOrbital {
       GUEST_PERSONA_PICK -> live when (= ?guest @entity.guestHandle)
         (program/dispatch (if (= @entity.guestPersonaTrait "") "PERSONA_ACT_AS" (str/concat @entity.guestPersonaTrait ".PERSONA_ACT_AS")) { persona: ?persona } { guest: ?guest, emit: { success: GUEST_PERSONA_ACTED, failure: GUEST_STEP_FAILED } })
       GUEST_PERSONA_PICK -> live when (!= ?guest @entity.guestHandle)
+      GUEST_INTEGRATIONS_PICK -> live when (and (= ?guest @entity.guestHandle) (!= ?integrations @entity.guestIntegrations))
+        (set @entity.guestIntegrations ?integrations)
+        (emit GUEST_INTEGRATIONS { guest: @entity.guestHandle, integrations: @entity.guestIntegrations })
+        (emit GUEST_REOPEN {})
+      GUEST_INTEGRATIONS_PICK -> live when (or (!= ?guest @entity.guestHandle) (= ?integrations @entity.guestIntegrations))
       GUEST_PERSONA_ACTED -> live when (array/some (default ?result.emitted []) (fn e (= @e.event "PERSONA_SIGNED_IN")))
         (set @entity.guestPersona (default (object/get (default (object/get (default (array/find (default ?result.emitted []) (fn e (= @e.event "PERSONA_SIGNED_IN"))) {}) "payload") {}) "subject") ""))
         (emit GUEST_PERSONAS { guest: @entity.guestHandle, personas: @entity.guestPersonas, current: @entity.guestPersona })
@@ -203,6 +223,12 @@ orbital GuestSessionOrbital {
         (emit GUEST_PAINTS { guest: @entity.guestHandle, route: @entity.guestRoute, page: @entity.guestPage, paints: @entity.guestPaints })
         (emit GUEST_MOVED { guest: @entity.guestHandle, moves: ?result.outcomes })
       GUEST_STEP_FAILED -> live
+        (emit GUEST_NOTICE { message: ?error })
+      GUEST_TICKED -> live when (= ?guest @entity.guestHandle)
+        (set @entity.guestPaints (array/reduce ?rendered @entity.guestPaints (fn acc p (array/concat (array/filter @acc (fn q (or (!= @q.trait @p.trait) (!= @q.slot @p.slot)))) (array/filter [@p] (fn x (!= @x.content null)))))))
+        (emit GUEST_PAINTS { guest: @entity.guestHandle, route: @entity.guestRoute, page: @entity.guestPage, paints: @entity.guestPaints })
+      GUEST_TICKED -> live when (!= ?guest @entity.guestHandle)
+      GUEST_TICKS_FAILED -> live
         (emit GUEST_NOTICE { message: ?error })
       GUEST_NAVIGATE -> live when (= ?guest @entity.guestHandle)
         (program/navigate { guest: ?guest, route: ?route } { emit: { success: GUEST_NAVIGATED, failure: GUEST_NAVIGATE_FAILED } })
@@ -259,6 +285,13 @@ orbital GuestSessionOrbital {
         current : string!
       }
         @description "The development personas the open guest lists (its std-dev-personas answers PERSONAS_REQUESTED, which a program without one or outside the Auth emulator answers with none), and the persona picked as the guest's viewer; empty current while the default persona is."
+      GUEST_INTEGRATIONS -> external {
+        guest : string!
+        integrations : "mock" | "live"!
+      }
+        @description "How the guest reaches real services now (mock or live); guest is empty while none is open."
+      GUEST_REOPEN -> external { }
+        @description "The open guest must be opened again (its integrations changed): the host sends GUEST_OPEN with the same program."
       GUEST_OPENED {
         result : GuestOpened!
       }
@@ -269,6 +302,15 @@ orbital GuestSessionOrbital {
         result : GuestStepped!
       }
       GUEST_STEP_FAILED {
+        error : string!
+      }
+      GUEST_TICKED {
+        guest : string!
+        rendered : [GuestPaint]!
+        key : string
+      }
+        @description "One pass of the open guest's own tick clock that painted something (program/live { kind: guest }): its page traits' ticks, [client] ones included, since a guest has no browser."
+      GUEST_TICKS_FAILED {
         error : string!
       }
       GUEST_NAVIGATED {
@@ -321,6 +363,12 @@ orbital GuestSessionOrbital {
         defaultRole : string!
         personaTrait : string!
       }
+      GuestStage.GUEST_INTEGRATIONS_PICK -> GUEST_INTEGRATIONS_PICK
+      GUEST_INTEGRATIONS_PICK {
+        guest : string!
+        integrations : "mock" | "live"!
+      }
+        @description "The viewer switched the guest between mocked and live integrations: the guest is opened again that way."
       GuestStage.GUEST_PERSONA_PICK -> GUEST_PERSONA_PICK
       GUEST_PERSONA_PICK {
         guest : string!
@@ -390,6 +438,10 @@ orbital GuestSessionOrbital {
         @label "Personas label"
         @description "The caption before the personas the guest lists, which the viewer picks to open the guest as that persona."
         @tier "presentation"
+      integrationsLabel : string = "Real integrations"
+        @label "Integrations label"
+        @description "The label of the switch beside the persona picker that opens the guest again with live integrations (on) or mocked ones (off)."
+        @tier "presentation"
     }
     initial: idle
 
@@ -413,6 +465,13 @@ orbital GuestSessionOrbital {
         (set @entity.guestPersona ?current)
         (emit GUEST_SHOWN {})
       GUEST_PERSONAS -> idle when (!= ?guest @entity.guestHandle)
+      GUEST_INTEGRATIONS -> idle when (or (= ?guest "") (= ?guest @entity.guestHandle))
+        (set @entity.guestIntegrations ?integrations)
+        (emit GUEST_SHOWN {})
+      GUEST_INTEGRATIONS -> idle when (and (!= ?guest "") (!= ?guest @entity.guestHandle))
+      GUEST_INTEGRATIONS_CHOSEN -> idle when (!= @entity.guestHandle "")
+        (emit GUEST_INTEGRATIONS_PICK { guest: @entity.guestHandle, integrations: (if ?checked live mock) })
+      GUEST_INTEGRATIONS_CHOSEN -> idle when (= @entity.guestHandle "")
       GUEST_PERSONA_CHOSEN -> idle when (and (!= @entity.guestHandle "") (!= @payload.itemId @entity.guestPersona))
         (emit GUEST_PERSONA_PICK { guest: @entity.guestHandle, persona: @payload.itemId })
       GUEST_PERSONA_CHOSEN -> idle when (or (= @entity.guestHandle "") (= @payload.itemId @entity.guestPersona))
@@ -431,7 +490,9 @@ orbital GuestSessionOrbital {
         (emit GUEST_NAVIGATE { guest: ?guest, route: ?route })
       GUEST_ROUTE -> idle when (!= ?guest @entity.guestHandle)
       GUEST_SHOWN -> idle
-        (render-ui main { type: box, className: @config.className, children: (array/concat (if (and (= @entity.guestError "") (> (array/len @entity.guestPersonas) 0)) (let ((current (default (array/find @entity.guestPersonas (fn p (= @p.id @entity.guestPersona))) (default (array/first @entity.guestPersonas) { id: "", name: "", role: "" }))) (currentRole (default @current.role "")) (currentName (default @current.name ""))) [{ type: stack, direction: horizontal, justify: end, align: center, gap: sm, className: "px-4 py-2 border-b border-border", children: [
+        (render-ui main { type: box, className: @config.className, children: (array/concat (if (and (= @entity.guestError "") (!= @entity.guestHandle "")) (let ((current (default (array/find @entity.guestPersonas (fn p (= @p.id @entity.guestPersona))) (default (array/first @entity.guestPersonas) { id: "", name: "", role: "" }))) (currentRole (default @current.role "")) (currentName (default @current.name ""))) [{ type: stack, direction: horizontal, justify: end, align: center, gap: md, className: "px-4 py-2 border-b border-border", children: (array/concat [
+            { type: switch, label: @config.integrationsLabel, checked: (= @entity.guestIntegrations live), action: GUEST_INTEGRATIONS_CHOSEN }
+          ] (if (= (array/len @entity.guestPersonas) 0) [] [
             { type: menu, position: bottom-end, trigger: { type: button, variant: ghost, size: sm, rightIcon: chevron-down, children: [{ type: stack, direction: horizontal, align: center, gap: sm, children: [
               { type: icon, name: user-round, size: sm },
               { type: stack, direction: vertical, gap: none, align: start, children: [
@@ -440,7 +501,7 @@ orbital GuestSessionOrbital {
                 (if (or (= @currentRole "") (= @currentName "")) null { type: typography, variant: caption, color: muted, content: @currentName })
               ] }
             ] }] }, items: (array/map @entity.guestPersonas (fn p { id: @p.id, label: (if (= (default @p.role "") "") (default @p.name @p.id) (default @p.role "")), description: (if (= (default @p.role "") "") "" (default @p.name "")), icon: (if (= @p.id @current.id) "check" "user-round"), event: GUEST_PERSONA_CHOSEN })) }
-          ] }]) []) [
+          ])) }]) []) [
           (if (!= @entity.guestError "")
             { type: container, size: md, padding: lg, children: [(if (= @config.errorTitle "") { type: alert, variant: error, message: @entity.guestError } { type: alert, variant: error, title: @config.errorTitle, message: @entity.guestError })] }
             (let ((slotRoots (array/filter @entity.guestPaints (fn p (and (= @p.slot @config.slot) (= @p.embedded false) (array/includes @entity.guestPage @p.trait))))) (paint (array/first (array/filter @entity.guestPaints (fn p (and (= @p.slot @config.slot) (= @p.embedded false) (array/includes @entity.guestPage @p.trait)))))))
@@ -471,6 +532,11 @@ orbital GuestSessionOrbital {
         persona : string!
       }
         @description "A persona of the picker was chosen: the session signs the guest's session in as that persona and runs its pages again."
+      GUEST_INTEGRATIONS_PICK -> external {
+        guest : string!
+        integrations : "mock" | "live"!
+      }
+        @description "The integrations switch was flipped: the session opens the guest again with live or mocked integrations."
     }
 
     listens {
@@ -479,6 +545,15 @@ orbital GuestSessionOrbital {
       GuestSession.GUEST_NOTICE -> GUEST_NOTICE
       GuestSession.GUEST_CLEARED -> GUEST_CLEARED
       GuestSession.GUEST_PERSONAS -> GUEST_PERSONAS
+      GuestSession.GUEST_INTEGRATIONS -> GUEST_INTEGRATIONS
+      GUEST_INTEGRATIONS {
+        guest : string!
+        integrations : "mock" | "live"!
+      }
+      GUEST_INTEGRATIONS_CHOSEN {
+        checked : boolean!
+      }
+        @description "The viewer flipped the integrations switch: on is live, off is mock."
       GUEST_PERSONAS {
         guest : string!
         personas : [GuestPersonaOption]!

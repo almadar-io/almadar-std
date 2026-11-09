@@ -1,0 +1,26 @@
+app daemon-spec [
+  version: "1.0.0",
+  description: "Design contract for keeping one long-running child process (a browser, an emulator suite, a local server) alive for the program: DAEMON_START { argv, env? } reuses a process already listening on the configured ready port, otherwise spawns the configured command detached (no piped stream) and probes the ready port until it accepts a connection or the ready timeout passes; DAEMON_READY { pid, reused } or DAEMON_FAILED { code, message } answers. DAEMON_STOP sends TERM to the process it started and answers DAEMON_STOPPED; a reused process is never stopped. Codes: daemon_busy, daemon_spawn_failed, daemon_timeout, daemon_host_failed, daemon_idle."
+]
+
+orbital DaemonSpec {
+  expects entity DaemonProcess [runtime] {
+    id : string!
+    pid : number
+    reused : boolean
+  }
+  expects trait Daemon {
+    state idle
+    state starting
+    state running
+    state idle {
+      DAEMON_START -> starting
+    }
+    emits {
+      DAEMON_READY { pid : number!  reused : boolean! }
+      DAEMON_FAILED { code : string!  message : string! }
+      DAEMON_STOPPED { pid : number! }
+    }
+  }
+  expects page boot -> Daemon
+}

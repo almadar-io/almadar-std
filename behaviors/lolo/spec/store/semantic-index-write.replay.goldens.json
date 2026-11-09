@@ -254,6 +254,103 @@
      }
     }
    ]
+  },
+  {
+   "id": "an index on a fresh row stages its pending row and asks for embeddings",
+   "config": {
+    "indexedTypes": [
+     "Chunk"
+    ],
+    "partKeys": [
+     [
+      "text"
+     ]
+    ]
+   },
+   "entity": {
+    "id": "r"
+   },
+   "steps": [
+    {
+     "event": "SEMANTIC_INDEX",
+     "payload": {
+      "key": "k1",
+      "items": [
+       {
+        "id": "c1",
+        "graphId": "g",
+        "nodeType": "Chunk",
+        "name": "n",
+        "texts": {
+         "text": "hello"
+        },
+        "numbers": {},
+        "lists": {}
+       }
+      ]
+     },
+     "expect": {
+      "neverEmits": [
+       "SEMANTIC_FAILED"
+      ],
+      "emits": [
+       {
+        "event": "LLM_EMBED"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an index after a search, whose node-type filter was left set, stages the same way",
+   "config": {
+    "indexedTypes": [
+     "Chunk"
+    ],
+    "partKeys": [
+     [
+      "text"
+     ]
+    ]
+   },
+   "entity": {
+    "id": "r",
+    "semGraphIds": [
+     "old"
+    ]
+   },
+   "steps": [
+    {
+     "event": "SEMANTIC_INDEX",
+     "payload": {
+      "key": "k1",
+      "items": [
+       {
+        "id": "c1",
+        "graphId": "g",
+        "nodeType": "Chunk",
+        "name": "n",
+        "texts": {
+         "text": "hello"
+        },
+        "numbers": {},
+        "lists": {}
+       }
+      ]
+     },
+     "expect": {
+      "neverEmits": [
+       "SEMANTIC_FAILED"
+      ],
+      "emits": [
+       {
+        "event": "LLM_EMBED"
+       }
+      ]
+     }
+    }
+   ]
   }
  ]
 }

@@ -1,0 +1,120 @@
+app std-a11y-probe-media [
+  version: "1.0.0",
+  description: "std-a11y-probe-media — WCAG 1.2.x and 1.4.2 on the page a tab already shows. PROBE_RUN { key, pageUrl } asks the page for one measurement (PAGE_MEASURE: every video and audio element with its track kinds, controls, autoplay, muted, duration and the number of elements its aria-describedby and aria-details resolve to, and every iframe src) and answers PROBE_DONE { key, probe, findings } or PROBE_FAILED { key, probe, error, code } (probe_busy, probe_page_failed, probe_bad_measure). The verdicts are decided here from the numbers. video-no-captions: a video with no captions or subtitles track (needs-verification, captions may be burned in). video-no-description: a video with no descriptions track (needs-verification). audio-no-transcript: an audio element whose aria-describedby and aria-details resolve to nothing (needs-verification). media-autoplay-sound: an autoplay element not muted, WCAG 1.4.2 (confirmed). An iframe whose src contains a video host of the hosts knob answers player-no-captions and player-no-description, minor and needs-verification: the player's captions and description are checked by hand. Each rule's WCAG criteria, impact and confidence come from the rules knob. The probe changes no page state."
+]
+uses Spec from "almadar-std/probe-media"
+
+type WcagRef = { criterion : string!, level : "A" | "AA" | "AAA"!, version : "2.0" | "2.1" | "2.2"! }
+type A11yFinding = { id : string!, pageUrl : string!, rule : string!, wcag : [WcagRef]!, method : "engine" | "probe" | "llm"!, engines : [string]!, impact : "critical" | "serious" | "moderate" | "minor"!, confidence : "confirmed" | "needs-verification"!, selector : string!, snippet : string!, evidence : string!, count : number! }
+type MediaElement = { kind : "video" | "audio"!, selector : string!, snippet : string!, trackKinds : [string]!, controls : boolean!, autoplay : boolean!, muted : boolean!, duration : number, transcriptRefs : number! }
+type MediaFrame = { selector : string!, snippet : string!, src : string! }
+type MediaMeasure = { media : [MediaElement]!, frames : [MediaFrame]! }
+type MediaHit = { rule : string!, selector : string!, snippet : string! }
+type MediaRule = { rule : string!, wcag : [WcagRef]!, impact : "critical" | "serious" | "moderate" | "minor"!, confidence : "confirmed" | "needs-verification"! }
+
+orbital MediaOrbital {
+  entity MediaRun [runtime] {
+    id : string!
+    runKey : string @description "The caller's name for the run in flight." = ""
+    pageUrl : string @description "The page the run in flight is about." = ""
+  }
+
+  trait MediaProbe -> MediaRun {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      PROBE_RUN -> measuring
+        (set @entity.runKey @payload.key)
+        (set @entity.pageUrl @payload.pageUrl)
+        (emit PAGE_MEASURE { key: (str/concat @payload.key ":measure"), expression: (str/concat "(" @config.measure ")()") })
+    }
+
+    state measuring {
+      INIT -> idle
+      PROBE_RUN -> measuring
+        (emit PROBE_FAILED { key: @payload.key, probe: "media", error: (str/concat "a run on " @entity.pageUrl " is in flight"), code: "probe_busy" })
+      PAGE_FAILED -> idle when (str/startsWith @payload.key @entity.runKey)
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "media", error: @payload.error, code: "probe_page_failed" })
+      PAGE_MEASURED -> idle when (and (= @payload.key (str/concat @entity.runKey ":measure")) (= (json/parse @payload.json MediaMeasure) null))
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "media", error: "the page measurement is not the media shape", code: "probe_bad_measure" })
+      PAGE_MEASURED -> idle when (and (= @payload.key (str/concat @entity.runKey ":measure")) (!= (json/parse @payload.json MediaMeasure) null))
+        (let ((m (json/parse @payload.json MediaMeasure)))
+          (emit PROBE_DONE {
+            key: @entity.runKey,
+            probe: "media",
+            findings: (array/map
+              (array/flatten [
+                (array/map (array/filter @m.media (fn e (and (= @e.kind "video") (not (array/some @e.trackKinds (fn k (array/includes @config.captionKinds @k))))))) (fn e { rule: "video-no-captions", selector: @e.selector, snippet: @e.snippet }))
+                (array/map (array/filter @m.media (fn e (and (= @e.kind "video") (not (array/includes @e.trackKinds @config.descriptionKind))))) (fn e { rule: "video-no-description", selector: @e.selector, snippet: @e.snippet }))
+                (array/map (array/filter @m.media (fn e (and (= @e.kind "audio") (= @e.transcriptRefs 0)))) (fn e { rule: "audio-no-transcript", selector: @e.selector, snippet: @e.snippet }))
+                (array/map (array/filter @m.media (fn e (and @e.autoplay (not @e.muted)))) (fn e { rule: "media-autoplay-sound", selector: @e.selector, snippet: @e.snippet }))
+                (array/flatten (array/map (array/filter @m.frames (fn f (array/some @config.hostPatterns (fn p (str/includes @f.src @p))))) (fn f [{ rule: "player-no-captions", selector: @f.selector, snippet: @f.snippet }, { rule: "player-no-description", selector: @f.selector, snippet: @f.snippet }])))
+              ])
+              (fn h (let ((r (array/find @config.rules (fn x (= @x.rule @h.rule)))))
+                {
+                  id: (str/concat @entity.pageUrl "#" @h.rule "#" @h.selector),
+                  pageUrl: @entity.pageUrl,
+                  rule: @h.rule,
+                  wcag: @r.wcag,
+                  method: "probe",
+                  engines: ["probe"],
+                  impact: @r.impact,
+                  confidence: @r.confidence,
+                  selector: @h.selector,
+                  snippet: @h.snippet,
+                  evidence: "",
+                  count: 1
+                })))
+          }))
+    }
+
+    emits {
+      PAGE_MEASURE -> external { key : string!  expression : string! }
+        @description "Page request: evaluate the expression in the page; it answers a JSON string."
+        @synonyms "measure page, evaluate in page"
+        @tier "primary"
+      PROBE_DONE -> external { key : string!  probe : string!  findings : [A11yFinding]! }
+        @description "The media probe finished: its findings, empty when every video and audio element is described."
+        @synonyms "media findings, captions result, transcript result"
+        @tier "primary"
+      PROBE_FAILED -> external { key : string!  probe : string!  error : string!  code : string! }
+        @description "The probe could not finish: code is probe_busy, probe_page_failed or probe_bad_measure."
+        @synonyms "probe failed, media error"
+        @tier "primary"
+    }
+
+    listens {
+      PROBE_RUN { key : string!  pageUrl : string! }
+        @description "Check the page the tab is on for captions, audio description, transcripts and autoplaying sound on its video and audio."
+        @synonyms "captions check, video accessibility, transcript check, autoplay check, wcag 1.2"
+      PAGE_MEASURED { key : string!  json : string! }
+      PAGE_FAILED { key : string!  error : string!  code : string! }
+    }
+
+    config {
+      captionKinds : [string] = ["captions", "subtitles"]
+        @label "Caption track kinds"
+        @description "The track kinds that count as captions for a video."
+        @tier "domain"
+      descriptionKind : string = "descriptions"
+        @label "Description track kind"
+        @description "The track kind that counts as an audio description for a video."
+        @tier "domain"
+      hostPatterns : [string] = ["youtube.com/embed", "player.vimeo.com"]
+        @label "Video host patterns"
+        @description "Substrings of an iframe src that name an embedded video player."
+        @tier "domain"
+      rules : [MediaRule] = [{ rule: "video-no-captions", wcag: [{ criterion: "1.2.2", level: "A", version: "2.0" }], impact: "serious", confidence: "needs-verification" }, { rule: "video-no-description", wcag: [{ criterion: "1.2.3", level: "A", version: "2.0" }, { criterion: "1.2.5", level: "AA", version: "2.0" }], impact: "moderate", confidence: "needs-verification" }, { rule: "audio-no-transcript", wcag: [{ criterion: "1.2.1", level: "A", version: "2.0" }], impact: "serious", confidence: "needs-verification" }, { rule: "media-autoplay-sound", wcag: [{ criterion: "1.4.2", level: "A", version: "2.0" }], impact: "serious", confidence: "confirmed" }, { rule: "player-no-captions", wcag: [{ criterion: "1.2.2", level: "A", version: "2.0" }], impact: "minor", confidence: "needs-verification" }, { rule: "player-no-description", wcag: [{ criterion: "1.2.3", level: "A", version: "2.0" }, { criterion: "1.2.5", level: "AA", version: "2.0" }], impact: "minor", confidence: "needs-verification" }]
+        @label "Rules"
+        @description "Each finding code with the WCAG success criteria it maps to, its impact and its confidence."
+        @tier "domain"
+      measure : string = "() => { const sel = (e) => { const p = []; for (let n = e; n && n.nodeType === 1; n = n.parentElement) { if (n.id) { p.unshift('#' + CSS.escape(n.id)); break; } let i = 1; for (let s = n.previousElementSibling; s; s = s.previousElementSibling) { if (s.tagName === n.tagName) i++; } p.unshift(n.tagName.toLowerCase() + ':nth-of-type(' + i + ')'); } return p.join('>'); }; const refs = (e) => ['aria-describedby', 'aria-details'].reduce((n, a) => n + (e.getAttribute(a) || '').split(' ').filter((id) => id !== '' && document.getElementById(id) !== null).length, 0); const media = Array.from(document.querySelectorAll('video,audio')).map((e) => ({ kind: e.tagName.toLowerCase(), selector: sel(e), snippet: e.cloneNode(false).outerHTML, trackKinds: Array.from(e.querySelectorAll('track')).map((t) => t.kind), controls: e.hasAttribute('controls'), autoplay: e.hasAttribute('autoplay'), muted: e.hasAttribute('muted'), duration: Number.isFinite(e.duration) ? e.duration : null, transcriptRefs: refs(e) })); const frames = Array.from(document.querySelectorAll('iframe')).map((f) => ({ selector: sel(f), snippet: f.cloneNode(false).outerHTML, src: f.getAttribute('src') || '' })); return JSON.stringify({ media: media, frames: frames }); }"
+        @label "Measure expression"
+        @description "A page function returning a JSON string of every video and audio element (track kinds, controls, autoplay, muted, duration, transcript references) and every iframe src; it only measures, the verdict is made here."
+        @tier "infra"
+    }
+  }
+
+  page boot as MediaProbePage -> MediaProbe
+}

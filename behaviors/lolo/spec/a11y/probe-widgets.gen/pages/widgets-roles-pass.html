@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>widgets-roles-pass</title>
+<style>button,input{min-width:30px;min-height:30px;margin:8px}[hidden]{display:none}</style></head>
+<body><main id="main">
+<button id="opener" aria-haspopup="dialog" aria-controls="dlg">Open</button>
+<div id="dlg" role="dialog" aria-modal="true" aria-label="Dialog" hidden><button id="ok">OK</button></div>
+<div id="menu" role="menu" aria-label="Menu"><button role="menuitem" tabindex="0">One</button><button role="menuitem" tabindex="-1">Two</button></div>
+<input id="cb" role="combobox" aria-expanded="false" aria-controls="pop" aria-autocomplete="list">
+<ul id="pop" role="listbox" aria-label="Options" hidden><li role="option" id="o1">A</li><li role="option" id="o2">B</li></ul>
+<ul id="lb" role="listbox" tabindex="0" aria-label="List" aria-activedescendant="p1"><li role="option" id="p1">A</li><li role="option" id="p2">B</li></ul>
+<script>
+var $=function(i){return document.getElementById(i)};
+$("opener").addEventListener("click",function(){$("dlg").hidden=false;$("opener").setAttribute("aria-expanded","true");$("ok").focus();});
+$("dlg").addEventListener("keydown",function(e){if(e.key==="Escape"){$("dlg").hidden=true;$("opener").setAttribute("aria-expanded","false");$("opener").focus();}});
+var items=Array.prototype.slice.call(document.querySelectorAll('[role=menuitem]'));
+items.forEach(function(it,i){it.addEventListener("keydown",function(e){if(e.key==="ArrowDown"){e.preventDefault();items[(i+1)%items.length].focus();}else if(e.key==="Escape"){$("menu").hidden=true;}});});
+$("cb").addEventListener("keydown",function(e){if(e.key==="ArrowDown"){$("pop").hidden=false;$("cb").setAttribute("aria-expanded","true");$("cb").setAttribute("aria-activedescendant","o1");}});
+$("lb").addEventListener("keydown",function(e){if(e.key==="ArrowDown"){e.preventDefault();$("lb").setAttribute("aria-activedescendant","p2");}});
+</script></main></body></html>

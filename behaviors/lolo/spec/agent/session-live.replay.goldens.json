@@ -1,0 +1,173 @@
+{
+  "atom": "agent/atoms/std-agent-session.lolo",
+  "trait": "AgentConversation",
+  "note": "`live` on ASSISTANT_CHAT_START is kept on the ephemeral conversation and forwarded on each ASK",
+  "cases": [
+    {
+      "id": "chat-start-live-true-reaches-every-ask",
+      "note": "START_CHAT with live: true; the ask forwards live: true",
+      "config": {
+        "ephemeral": true
+      },
+      "steps": [
+        {
+          "trait": "AgentConversation",
+          "event": "START_CHAT",
+          "from": "idle",
+          "payload": {
+            "greeting": "hello",
+            "instructions": "i",
+            "tools": [],
+            "live": true
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle"
+          }
+        },
+        {
+          "trait": "AgentConversation",
+          "event": "ASK",
+          "payload": {
+            "message": "q"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "ASSISTANT_EPHEMERAL_SEND",
+                "payload": {
+                  "messages": [
+                    {
+                      "role": "assistant",
+                      "content": "hello"
+                    },
+                    {
+                      "role": "user",
+                      "content": "q"
+                    }
+                  ],
+                  "instructions": "i",
+                  "tools": [],
+                  "ephemeral": true,
+                  "live": true
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "defaults": []
+    },
+    {
+      "id": "chat-start-live-false-reaches-every-ask",
+      "note": "live: false is present and forwarded as false",
+      "config": {
+        "ephemeral": true
+      },
+      "steps": [
+        {
+          "trait": "AgentConversation",
+          "event": "START_CHAT",
+          "from": "idle",
+          "payload": {
+            "greeting": "hello",
+            "instructions": "i",
+            "tools": [],
+            "live": false
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle"
+          }
+        },
+        {
+          "trait": "AgentConversation",
+          "event": "ASK",
+          "payload": {
+            "message": "q"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "ASSISTANT_EPHEMERAL_SEND",
+                "payload": {
+                  "messages": [
+                    {
+                      "role": "assistant",
+                      "content": "hello"
+                    },
+                    {
+                      "role": "user",
+                      "content": "q"
+                    }
+                  ],
+                  "instructions": "i",
+                  "tools": [],
+                  "ephemeral": true,
+                  "live": false
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "defaults": []
+    },
+    {
+      "id": "control-chat-start-without-live-asks-without-live",
+      "note": "absent live stays absent on the ask",
+      "config": {
+        "ephemeral": true
+      },
+      "steps": [
+        {
+          "trait": "AgentConversation",
+          "event": "START_CHAT",
+          "from": "idle",
+          "payload": {
+            "greeting": "hello",
+            "instructions": "i",
+            "tools": []
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle"
+          }
+        },
+        {
+          "trait": "AgentConversation",
+          "event": "ASK",
+          "payload": {
+            "message": "q"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "ASSISTANT_EPHEMERAL_SEND",
+                "payload": {
+                  "messages": [
+                    {
+                      "role": "assistant",
+                      "content": "hello"
+                    },
+                    {
+                      "role": "user",
+                      "content": "q"
+                    }
+                  ],
+                  "instructions": "i",
+                  "tools": [],
+                  "ephemeral": true
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "defaults": []
+    }
+  ]
+}

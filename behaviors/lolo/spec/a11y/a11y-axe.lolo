@@ -1,0 +1,34 @@
+app a11y-axe-spec [
+  version: "1.0.0",
+  description: "Design contract for running axe-core in the page a Chrome tab shows and answering in the shared accessibility finding shape (see a11y-findings and the probe contract). PROBE_RUN { key, pageUrl } emits PAGE_INJECT { key, script } then, on PAGE_INJECTED, PAGE_MEASURE { key, expression }, and answers PROBE_DONE { key, probe, findings } from the PAGE_MEASURED JSON, or PROBE_FAILED { key, probe, error, code }. The atom composes no browser: the composer wires the page requests to std-chrome."
+]
+
+type WcagRef = { criterion : string!, level : "A" | "AA" | "AAA"!, version : "2.0" | "2.1" | "2.2"! }
+type A11yFinding = { id : string!, pageUrl : string!, rule : string!, wcag : [WcagRef]!, method : "engine" | "probe" | "llm"!, engines : [string]!, impact : "critical" | "serious" | "moderate" | "minor"!, confidence : "confirmed" | "needs-verification"!, selector : string!, snippet : string!, evidence : string!, count : number! }
+type AnchoredEnv = { anchor : { env : string! }! }
+type AnchoredPath = { anchor : string!, path : string! }
+type ScriptPath = AnchoredEnv | AnchoredPath
+
+orbital A11yAxeSpec {
+  expects entity AxeRun [runtime] {
+    id : string!
+  }
+  expects trait AxeProbe {
+    state idle {
+      PROBE_RUN -> injecting
+    }
+    state injecting {
+      PAGE_INJECTED -> measuring
+    }
+    state measuring {
+      PAGE_MEASURED -> idle
+    }
+    emits {
+      PROBE_DONE { key : string!  probe : string!  findings : [A11yFinding]! }
+      PROBE_FAILED { key : string!  probe : string!  error : string!  code : string! }
+      PAGE_INJECT { key : string!  script : string! }
+      PAGE_MEASURE { key : string!  expression : string! }
+    }
+  }
+  expects page boot -> AxeProbe
+}

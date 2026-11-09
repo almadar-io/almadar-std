@@ -1,0 +1,184 @@
+app std-a11y-probe-motion [
+  version: "1.0.0",
+  description: "std-a11y-probe-motion — WCAG 2.2.2 Pause, Stop, Hide on the page a tab already shows. PROBE_RUN { key, pageUrl } asks the page for a snapshot (PAGE_MEASURE: the transform, left, top, scroll position and rect of the elements styled to move or scroll, the text and current slide index of each carousel the carouselSelectors knob names, every running CSS animation with its play state, whether it repeats forever and its active duration, every marquee or blink element, and for each of these the number of declared pause controls), waits intervalMs on a due-at instant that a tick turns into MOTION_DUE, takes a second snapshot, and answers PROBE_DONE { key, probe, findings } or PROBE_FAILED { key, probe, error, code } (probe_busy, probe_page_failed, probe_bad_measure). Findings carry the rule motion-no-pause: an element whose transform, left, top, scroll or position changed between the snapshots (moved), a carousel whose slide index or text changed (advanced), a running animation that repeats forever or lasts more than minAnimationMs (animation), a marquee or blink element (marquee). A pause control is declared, never guessed from a name: a button whose aria-controls names the element, one that contains it or one it contains, or a button with aria-pressed inside the element. A subject with a pause control produces nothing. A finding is confirmed when the page has no button with aria-controls at all, and needs-verification otherwise. An element that is also the target of a reported animation is not reported as moved. The probe changes no page state."
+]
+uses Spec from "almadar-std/probe-motion"
+
+type WcagRef = { criterion : string!, level : "A" | "AA" | "AAA"!, version : "2.0" | "2.1" | "2.2"! }
+type A11yFinding = { id : string!, pageUrl : string!, rule : string!, wcag : [WcagRef]!, method : "engine" | "probe" | "llm"!, engines : [string]!, impact : "critical" | "serious" | "moderate" | "minor"!, confidence : "confirmed" | "needs-verification"!, selector : string!, snippet : string!, evidence : string!, count : number! }
+type MotionElement = { selector : string!, snippet : string!, transform : string!, left : string!, top : string!, scrollLeft : number!, scrollTop : number!, x : number!, y : number!, controls : number! }
+type MotionCarousel = { selector : string!, snippet : string!, index : number!, text : string!, controls : number! }
+type MotionAnimation = { selector : string!, snippet : string!, name : string!, playState : string!, infinite : boolean!, activeDuration : number!, controls : number! }
+type MotionMarquee = { selector : string!, snippet : string!, controls : number! }
+type MotionSnapshot = { elements : [MotionElement]!, carousels : [MotionCarousel]!, animations : [MotionAnimation]!, marquees : [MotionMarquee]!, ariaControlsButtons : number! }
+type MotionHit = { reason : string!, selector : string!, snippet : string! }
+
+orbital MotionOrbital {
+  entity MotionRun [runtime] {
+    id : string!
+    runKey : string @description "The caller's name for the run in flight." = ""
+    pageUrl : string @description "The page the run in flight is about." = ""
+    snap : MotionSnapshot @description "The first snapshot, held while the interval runs." = { elements: [], carousels: [], animations: [], marquees: [], ariaControlsButtons: 0 }
+    dueAt : instant? @description "When the second snapshot is due; null when none is." = null
+  }
+
+  trait MotionProbe -> MotionRun {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      PROBE_RUN -> first
+        (set @entity.runKey @payload.key)
+        (set @entity.pageUrl @payload.pageUrl)
+        (set @entity.dueAt null)
+        (emit PAGE_MEASURE { key: (str/concat @payload.key ":first"), expression: (str/concat "(" @config.measure ")(" (json/stringify (str/join @config.carouselSelectors ",")) "," (json/stringify (str/join @config.markupSelectors ",")) ")") })
+    }
+
+    state first {
+      INIT -> idle
+      PROBE_RUN -> first
+        (emit PROBE_FAILED { key: @payload.key, probe: "motion", error: (str/concat "a run on " @entity.pageUrl " is in flight"), code: "probe_busy" })
+      PAGE_FAILED -> idle when (str/startsWith @payload.key @entity.runKey)
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "motion", error: @payload.error, code: "probe_page_failed" })
+      PAGE_MEASURED -> idle when (and (= @payload.key (str/concat @entity.runKey ":first")) (= (json/parse @payload.json MotionSnapshot) null))
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "motion", error: "the page measurement is not the motion shape", code: "probe_bad_measure" })
+      PAGE_MEASURED -> waiting when (and (= @payload.key (str/concat @entity.runKey ":first")) (!= (json/parse @payload.json MotionSnapshot) null))
+        (set @entity.snap (let ((d (json/parse @payload.json MotionSnapshot))) @d))
+        (set @entity.dueAt (time/add @now @config.intervalMs "ms"))
+    }
+
+    state waiting {
+      INIT -> idle
+      PROBE_RUN -> waiting
+        (emit PROBE_FAILED { key: @payload.key, probe: "motion", error: (str/concat "a run on " @entity.pageUrl " is in flight"), code: "probe_busy" })
+      PAGE_FAILED -> idle when (str/startsWith @payload.key @entity.runKey)
+        (set @entity.dueAt null)
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "motion", error: @payload.error, code: "probe_page_failed" })
+      MOTION_DUE -> second
+        (set @entity.dueAt null)
+        (emit PAGE_MEASURE { key: (str/concat @entity.runKey ":second"), expression: (str/concat "(" @config.measure ")(" (json/stringify (str/join @config.carouselSelectors ",")) "," (json/stringify (str/join @config.markupSelectors ",")) ")") })
+    }
+
+    state second {
+      INIT -> idle
+      PROBE_RUN -> second
+        (emit PROBE_FAILED { key: @payload.key, probe: "motion", error: (str/concat "a run on " @entity.pageUrl " is in flight"), code: "probe_busy" })
+      PAGE_FAILED -> idle when (str/startsWith @payload.key @entity.runKey)
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "motion", error: @payload.error, code: "probe_page_failed" })
+      PAGE_MEASURED -> idle when (and (= @payload.key (str/concat @entity.runKey ":second")) (= (json/parse @payload.json MotionSnapshot) null))
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "motion", error: "the page measurement is not the motion shape", code: "probe_bad_measure" })
+      PAGE_MEASURED -> idle when (and (= @payload.key (str/concat @entity.runKey ":second")) (!= (json/parse @payload.json MotionSnapshot) null))
+        (let ((s2 (json/parse @payload.json MotionSnapshot)) (s1 @entity.snap))
+          (emit PROBE_DONE {
+            key: @entity.runKey,
+            probe: "motion",
+            findings: (array/map
+              (array/flatten [
+                (array/map
+                  (array/filter @s2.animations (fn a (and (= @a.playState "running") (= @a.controls 0) (or @a.infinite (> @a.activeDuration @config.minAnimationMs)))))
+                  (fn a { reason: "animation", selector: @a.selector, snippet: @a.snippet }))
+                (array/map
+                  (array/filter @s2.elements (fn e (and
+                    (= @e.controls 0)
+                    (not (array/some @s2.animations (fn a (and (= @a.playState "running") (= @a.controls 0) (or @a.infinite (> @a.activeDuration @config.minAnimationMs)) (= @a.selector @e.selector)))))
+                    (array/some @s1.elements (fn b (and (= @b.selector @e.selector) (or
+                      (!= @b.transform @e.transform)
+                      (!= @b.left @e.left)
+                      (!= @b.top @e.top)
+                      (!= @b.scrollLeft @e.scrollLeft)
+                      (!= @b.scrollTop @e.scrollTop)
+                      (> (math/abs (- @b.x @e.x)) @config.tolerance)
+                      (> (math/abs (- @b.y @e.y)) @config.tolerance))))))))
+                  (fn e { reason: "moved", selector: @e.selector, snippet: @e.snippet }))
+                (array/map
+                  (array/filter @s2.carousels (fn c (and
+                    (= @c.controls 0)
+                    (array/some @s1.carousels (fn b (and (= @b.selector @c.selector) (or (!= @b.index @c.index) (!= @b.text @c.text))))))))
+                  (fn c { reason: "advanced", selector: @c.selector, snippet: @c.snippet }))
+                (array/map
+                  (array/filter @s2.marquees (fn m (= @m.controls 0)))
+                  (fn m { reason: "marquee", selector: @m.selector, snippet: @m.snippet }))
+              ])
+              (fn h {
+                id: (str/concat @entity.pageUrl "#motion-no-pause#" @h.selector "#" @h.reason),
+                pageUrl: @entity.pageUrl,
+                rule: "motion-no-pause",
+                wcag: [{ criterion: "2.2.2", level: "A", version: "2.0" }],
+                method: "probe",
+                engines: ["probe"],
+                impact: @config.impact,
+                confidence: (if (= @s2.ariaControlsButtons 0) "confirmed" "needs-verification"),
+                selector: @h.selector,
+                snippet: @h.snippet,
+                evidence: "",
+                count: 1
+              }))
+          }))
+    }
+
+    ticks {
+      waitDue every 100ms in waiting [background]
+        when (and (!= @entity.dueAt null) (not (time/isBefore @now (default @entity.dueAt @now))))
+        (emit MOTION_DUE { })
+    }
+
+    emits {
+      PAGE_MEASURE -> external { key : string!  expression : string! }
+        @description "Page request: evaluate the expression in the page; it answers a JSON string."
+        @synonyms "measure page, evaluate in page"
+        @tier "primary"
+      PROBE_DONE -> external { key : string!  probe : string!  findings : [A11yFinding]! }
+        @description "The motion probe finished: its findings, empty when nothing moved or every moving thing has a pause control."
+        @synonyms "motion findings, carousel result, animation result"
+        @tier "primary"
+      PROBE_FAILED -> external { key : string!  probe : string!  error : string!  code : string! }
+        @description "The probe could not finish: code is probe_busy, probe_page_failed or probe_bad_measure."
+        @synonyms "probe failed, motion error"
+        @tier "primary"
+      MOTION_DUE {}
+        @description "Internal: the interval has passed and the second snapshot is due."
+        @tier "internal"
+    }
+
+    listens {
+      PROBE_RUN { key : string!  pageUrl : string! }
+        @description "Check the page the tab is on for content that moves, auto-advances or animates for more than five seconds with no pause control."
+        @synonyms "carousel check, animation check, auto-play check, marquee check, wcag 2.2.2"
+      PAGE_MEASURED { key : string!  json : string! }
+      PAGE_FAILED { key : string!  error : string!  code : string! }
+    }
+
+    config {
+      intervalMs : number = 3000
+        @label "Interval"
+        @description "Milliseconds between the two snapshots."
+        @tier "domain"
+      minAnimationMs : number = 5000
+        @label "Minimum animation"
+        @description "A finite animation lasting longer than this many milliseconds counts; WCAG 2.2.2 names five seconds. An animation that repeats forever always counts."
+        @tier "domain"
+      tolerance : number = 0.5
+        @label "Position tolerance"
+        @description "CSS px by which an element's position may differ between the snapshots before it counts as moved."
+        @tier "domain"
+      impact : "critical" | "serious" | "moderate" | "minor" = "serious"
+        @label "Impact"
+        @description "The impact of a motion finding."
+        @tier "domain"
+      carouselSelectors : [string] = ["[aria-roledescription=\"carousel\"]"]
+        @label "Carousel selectors"
+        @description "CSS selectors of the regions that announce themselves as carousels."
+        @tier "domain"
+      markupSelectors : [string] = ["marquee", "blink"]
+        @label "Moving elements"
+        @description "CSS selectors of elements that move by definition."
+        @tier "domain"
+      measure : string = "(carousels, tags) => { const sel = (e) => { const p = []; for (let n = e; n && n.nodeType === 1; n = n.parentElement) { if (n.id) { p.unshift('#' + CSS.escape(n.id)); break; } let i = 1; for (let s = n.previousElementSibling; s; s = s.previousElementSibling) { if (s.tagName === n.tagName) i++; } p.unshift(n.tagName.toLowerCase() + ':nth-of-type(' + i + ')'); } return p.join('>'); }; const tag = (e) => e.cloneNode(false).outerHTML; const controls = (e) => Array.from(document.querySelectorAll('button[aria-controls]')).filter((b) => b.getAttribute('aria-controls').split(' ').some((id) => { const t = document.getElementById(id); return t !== null && (t === e || t.contains(e) || e.contains(t)); })).length + e.querySelectorAll('button[aria-pressed]').length; const elements = Array.from(document.body.querySelectorAll('*')).filter((e) => { const s = getComputedStyle(e); return s.transform !== 'none' || (s.position !== 'static' && (s.left !== 'auto' || s.top !== 'auto')) || ((s.overflowX === 'auto' || s.overflowX === 'scroll' || s.overflowY === 'auto' || s.overflowY === 'scroll') && (e.scrollWidth > e.clientWidth || e.scrollHeight > e.clientHeight)); }).map((e) => { const s = getComputedStyle(e); const r = e.getBoundingClientRect(); return { selector: sel(e), snippet: tag(e), transform: s.transform, left: s.left, top: s.top, scrollLeft: e.scrollLeft, scrollTop: e.scrollTop, x: r.x, y: r.y, controls: controls(e) }; }); const cars = Array.from(document.querySelectorAll(carousels)).map((c) => { const slides = Array.from(c.querySelectorAll('[aria-roledescription=\"slide\"]')); const clone = c.cloneNode(true); clone.querySelectorAll('button').forEach((b) => b.remove()); return { selector: sel(c), snippet: tag(c), index: slides.findIndex((x) => x.getAttribute('aria-hidden') !== 'true' && getComputedStyle(x).display !== 'none'), text: clone.textContent, controls: controls(c) }; }); const animations = document.getAnimations().filter((a) => a.effect !== null && a.effect.target !== null && a.effect.target !== undefined).map((a) => { const t = a.effect.getComputedTiming(); return { selector: sel(a.effect.target), snippet: tag(a.effect.target), name: a.animationName || a.transitionProperty || '', playState: a.playState, infinite: t.iterations === Infinity, activeDuration: Number.isFinite(t.activeDuration) ? t.activeDuration : 0, controls: controls(a.effect.target) }; }); const marquees = Array.from(document.querySelectorAll(tags)).map((m) => ({ selector: sel(m), snippet: tag(m), controls: controls(m) })); return JSON.stringify({ elements: elements, carousels: cars, animations: animations, marquees: marquees, ariaControlsButtons: document.querySelectorAll('button[aria-controls]').length }); }"
+        @label "Measure expression"
+        @description "A page function taking the carousel and moving-element selector lists and returning a JSON string snapshot of moving, scrolling and animated elements, carousels, animations and marquees with their declared pause control counts; it only measures, the verdict is made here."
+        @tier "infra"
+    }
+  }
+
+  page boot as MotionProbePage -> MotionProbe
+}

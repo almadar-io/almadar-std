@@ -1,0 +1,1438 @@
+{
+ "atom": "net/atoms/std-cdp.lolo",
+ "trait": "Cdp",
+ "spec": "spec/net/cdp.lolo",
+ "note": "CDP client: connect via /json/version, command frames, id routing, errors, events, per-command timeout, disconnect drain, strays; the version body, reply, error and event frames are captured from real headless Chrome by cdp.gen/capture.py (python3 -I capture.py capture.json; python3 -I gen_goldens.py capture.json ../cdp.replay.goldens.json)",
+ "cases": [
+  {
+   "id": "connect-reads-json-version-opens-the-socket-and-answers-connected",
+   "note": "the version body and socket path are captured from real headless Chrome by cdp.gen/capture.py",
+   "defaults": [
+    "CdpHttp",
+    "CdpWs",
+    "CdpDelay"
+   ],
+   "steps": [
+    {
+     "event": "CDP_CONNECT",
+     "payload": {},
+     "expect": {
+      "state": "connecting",
+      "emits": [
+       {
+        "event": "CDP_HTTP_SEND",
+        "payload": {
+         "key": "cdp-version",
+         "method": "GET",
+         "target": "/json/version",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "CDP_VERSION",
+     "payload": {
+      "status": 200,
+      "body": "{\n   \"Browser\": \"Chrome/156.0.8078.81\",\n   \"File-Path-Style\": \"posix\",\n   \"Protocol-Version\": \"1.3\",\n   \"User-Agent\": \"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.0.0 Safari/537.36\",\n   \"V8-Version\": \"15.6.75.27\",\n   \"WebKit-Version\": \"537.36 (@060bedfb508f73250e93aeb9ca8149b3958995d8)\",\n   \"webSocketDebuggerUrl\": \"ws://127.0.0.1:53151/devtools/browser/348a70ca-edd6-4ecd-ab6a-a243165b9509\"\n}\n"
+     },
+     "expect": {
+      "state": "connecting",
+      "emits": [
+       {
+        "event": "CDP_PROBED",
+        "payload": {
+         "browser": "Chrome/156.0.8078.81",
+         "path": "/devtools/browser/348a70ca-edd6-4ecd-ab6a-a243165b9509"
+        }
+       },
+       {
+        "event": "CDP_WS_OPEN",
+        "payload": {
+         "path": "/devtools/browser/348a70ca-edd6-4ecd-ab6a-a243165b9509"
+        }
+       }
+      ],
+      "entity": {
+       "browser": "Chrome/156.0.8078.81"
+      },
+      "neverEmits": [
+       "CDP_CONNECT_FAILED",
+       "CDP_FAILED"
+      ]
+     }
+    },
+    {
+     "event": "CDP_WS_OPENED",
+     "payload": {},
+     "from": "connecting",
+     "entity": {
+      "id": "c",
+      "browser": "Chrome/156.0.8078.81"
+     },
+     "expect": {
+      "state": "connected",
+      "emits": [
+       {
+        "event": "CDP_CONNECTED",
+        "payload": {
+         "browser": "Chrome/156.0.8078.81"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "connect-control-a-port-that-answers-500-fails-with-kind-http",
+   "defaults": [
+    "CdpHttp",
+    "CdpWs",
+    "CdpDelay"
+   ],
+   "steps": [
+    {
+     "event": "CDP_CONNECT",
+     "payload": {},
+     "expect": {
+      "state": "connecting"
+     }
+    },
+    {
+     "event": "CDP_VERSION",
+     "payload": {
+      "status": 500,
+      "body": ""
+     },
+     "expect": {
+      "state": "connecting",
+      "emits": [
+       {
+        "event": "CDP_CONNECT_FAILED",
+        "payload": {
+         "kind": "http"
+        }
+       },
+       {
+        "event": "CDP_FAILED",
+        "payload": {
+         "kind": "http"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CDP_PROBED",
+       "CDP_CONNECTED"
+      ]
+     }
+    },
+    {
+     "event": "CDP_COMMAND",
+     "payload": {
+      "key": "a",
+      "method": "Browser.getVersion",
+      "paramsJson": "{}"
+     },
+     "expect": {
+      "state": "disconnected",
+      "emits": [
+       {
+        "event": "CDP_ERROR",
+        "payload": {
+         "key": "a",
+         "method": "Browser.getVersion",
+         "code": "not-connected"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "connect-control-a-body-that-is-not-the-version-document-fails-with-kind-protocol",
+   "defaults": [
+    "CdpHttp",
+    "CdpWs",
+    "CdpDelay"
+   ],
+   "steps": [
+    {
+     "event": "CDP_CONNECT",
+     "payload": {},
+     "expect": {
+      "state": "connecting"
+     }
+    },
+    {
+     "event": "CDP_VERSION",
+     "payload": {
+      "status": 200,
+      "body": "{\"Browser\":\"x\"}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CDP_CONNECT_FAILED",
+        "payload": {
+         "kind": "protocol"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CDP_PROBED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "connect-control-a-socket-url-without-a-path-fails-with-kind-protocol",
+   "defaults": [
+    "CdpHttp",
+    "CdpWs",
+    "CdpDelay"
+   ],
+   "steps": [
+    {
+     "event": "CDP_CONNECT",
+     "payload": {},
+     "expect": {
+      "state": "connecting"
+     }
+    },
+    {
+     "event": "CDP_VERSION",
+     "payload": {
+      "status": 200,
+      "body": "{\"Browser\":\"x\",\"webSocketDebuggerUrl\":\"ws://127.0.0.1:9222\"}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CDP_CONNECT_FAILED",
+        "payload": {
+         "kind": "protocol"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CDP_PROBED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "connect-a-transport-failure-of-the-socket-answers-cdp-failed-with-its-kind",
+   "defaults": [
+    "CdpHttp",
+    "CdpWs",
+    "CdpDelay"
+   ],
+   "steps": [
+    {
+     "event": "CDP_WS_FAILED",
+     "payload": {
+      "error": "bad accept",
+      "kind": "handshake"
+     },
+     "from": "connecting",
+     "expect": {
+      "state": "disconnected",
+      "emits": [
+       {
+        "event": "CDP_FAILED",
+        "payload": {
+         "error": "bad accept",
+         "kind": "handshake"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CDP_CONNECTED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "connect-control-a-second-connect-while-connecting-or-connected-is-refused-and-changes-nothing",
+   "defaults": [
+    "CdpHttp",
+    "CdpWs",
+    "CdpDelay"
+   ],
+   "steps": [
+    {
+     "event": "CDP_CONNECT",
+     "payload": {},
+     "from": "connecting",
+     "expect": {
+      "state": "connecting",
+      "emits": [
+       {
+        "event": "CDP_FAILED",
+        "payload": {
+         "kind": "busy"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CDP_HTTP_SEND"
+      ]
+     }
+    },
+    {
+     "event": "CDP_CONNECT",
+     "payload": {},
+     "from": "connected",
+     "entity": {
+      "id": "c",
+      "nextId": 1,
+      "pending": [],
+      "closing": false
+     },
+     "expect": {
+      "state": "connected",
+      "emits": [
+       {
+        "event": "CDP_FAILED",
+        "payload": {
+         "kind": "connected"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CDP_HTTP_SEND"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-command-writes-the-assembled-frame-and-its-reply-is-routed-by-id",
+   "note": "the reply frame is the real Browser.getVersion answer of headless Chrome",
+   "defaults": [
+    "CdpHttp",
+    "CdpWs",
+    "CdpDelay"
+   ],
+   "steps": [
+    {
+     "event": "CDP_COMMAND",
+     "payload": {
+      "key": "a",
+      "method": "Browser.getVersion",
+      "paramsJson": "{}"
+     },
+     "from": "connected",
+     "entity": {
+      "id": "c",
+      "nextId": 1,
+      "pending": [],
+      "closing": false
+     },
+     "expect": {
+      "state": "connected",
+      "entity": {
+       "wire": "{\"id\":1,\"method\":\"Browser.getVersion\",\"params\":{}}",
+       "nextId": 2,
+       "pending": [
+        {
+         "id": 1,
+         "key": "a",
+         "method": "Browser.getVersion"
+        }
+       ]
+      },
+      "emits": [
+       {
+        "event": "CDP_TIMER_ARM",
+        "payload": {
+         "key": "1",
+         "delayMs": 30000
+        }
+       },
+       {
+        "event": "CDP_WS_SEND",
+        "payload": {
+         "text": "{\"id\":1,\"method\":\"Browser.getVersion\",\"params\":{}}"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "CDP_WS_MESSAGE",
+     "payload": {
+      "text": "{\"id\":1,\"result\":{\"protocolVersion\":\"1.3\",\"product\":\"Chrome/156.0.8078.81\",\"revision\":\"@060bedfb508f73250e93aeb9ca8149b3958995d8\",\"userAgent\":\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.0.0 Safari/537.36\",\"jsVersion\":\"15.6.75.27\"}}",
+      "binary": false
+     },
+     "expect": {
+      "state": "connected",
+      "emits": [
+       {
+        "event": "CDP_TIMER_CANCEL",
+        "payload": {
+         "key": "1"
+        }
+       },
+       {
+        "event": "CDP_REPLY",
+        "payload": {
+         "key": "a",
+         "method": "Browser.getVersion",
+         "frame": "{\"id\":1,\"result\":{\"protocolVersion\":\"1.3\",\"product\":\"Chrome/156.0.8078.81\",\"revision\":\"@060bedfb508f73250e93aeb9ca8149b3958995d8\",\"userAgent\":\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.0.0 Safari/537.36\",\"jsVersion\":\"15.6.75.27\"}}"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CDP_ERROR",
+       "CDP_STRAY"
+      ],
+      "entity": {
+       "pending": []
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-command-with-a-session-and-params-carries-both-in-the-frame",
+   "defaults": [
+    "CdpHttp",
+    "CdpWs",
+    "CdpDelay"
+   ],
+   "steps": [
+    {
+     "event": "CDP_COMMAND",
+     "payload": {
+      "key": "a",
+      "method": "Page.enable",
+      "paramsJson": "{\"a\":[1,\"x\"]}",
+      "sessionId": "SESS"
+     },
+     "from": "connected",
+     "entity": {
+      "id": "c",
+      "nextId": 1,
+      "pending": [],
+      "closing": false
+     },
+     "expect": {
+      "entity": {
+       "wire": "{\"id\":1,\"method\":\"Page.enable\",\"sessionId\":\"SESS\",\"params\":{\"a\":[1,\"x\"]}}"
+      },
+      "emits": [
+       {
+        "event": "CDP_WS_SEND",
+        "payload": {
+         "text": "{\"id\":1,\"method\":\"Page.enable\",\"sessionId\":\"SESS\",\"params\":{\"a\":[1,\"x\"]}}"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-command-without-a-session-has-no-sessionId-in-the-frame",
+   "defaults": [
+    "CdpHttp",
+    "CdpWs",
+    "CdpDelay"
+   ],
+   "steps": [
+    {
+     "event": "CDP_COMMAND",
+     "payload": {
+      "key": "a",
+      "method": "Page.enable",
+      "paramsJson": "{\"a\":[1,\"x\"]}"
+     },
+     "from": "connected",
+     "entity": {
+      "id": "c",
+      "nextId": 1,
+      "pending": [],
+      "closing": false
+     },
+     "expect": {
+      "entity": {
+       "wire": "{\"id\":1,\"method\":\"Page.enable\",\"params\":{\"a\":[1,\"x\"]}}"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-command-whose-params-are-not-json-answers-bad-params-and-writes-nothing",
+   "defaults": [
+    "CdpHttp",
+    "CdpWs",
+    "CdpDelay"
+   ],
+   "steps": [
+    {
+     "event": "CDP_COMMAND",
+     "payload": {
+      "key": "a",
+      "method": "Browser.getVersion",
+      "paramsJson": "{oops"
+     },
+     "from": "connected",
+     "entity": {
+      "id": "c",
+      "nextId": 1,
+      "pending": [],
+      "closing": false
+     },
+     "expect": {
+      "state": "connected",
+      "emits": [
+       {
+        "event": "CDP_ERROR",
+        "payload": {
+         "key": "a",
+         "method": "Browser.getVersion",
+         "code": "bad-params"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CDP_WS_SEND",
+       "CDP_TIMER_ARM"
+      ],
+      "entity": {
+       "nextId": 1,
+       "pending": []
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-error-reply-answers-cdp-error-with-the-protocol-code-and-message",
+   "note": "the error frame is the real answer of headless Chrome to an unknown method",
+   "defaults": [
+    "CdpHttp",
+    "CdpWs",
+    "CdpDelay"
+   ],
+   "steps": [
+    {
+     "event": "CDP_WS_MESSAGE",
+     "payload": {
+      "text": "{\"id\":2,\"error\":{\"code\":-32601,\"message\":\"'Nope.nothing' wasn't found\"}}",
+      "binary": false
+     },
+     "from": "connected",
+     "entity": {
+      "id": "c",
+      "nextId": 3,
+      "pending": [
+       {
+        "id": 2,
+        "key": "b",
+        "method": "Nope.nothing"
+       }
+      ],
+      "closing": false
+     },
+     "expect": {
+      "state": "connected",
+      "emits": [
+       {
+        "event": "CDP_ERROR",
+        "payload": {
+         "key": "b",
+         "method": "Nope.nothing",
+         "code": "-32601",
+         "message": "'Nope.nothing' wasn't found"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CDP_REPLY"
+      ],
+      "entity": {
+       "pending": []
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-reply-with-a-result-and-the-same-id-is-not-an-error",
+   "defaults": [
+    "CdpHttp",
+    "CdpWs",
+    "CdpDelay"
+   ],
+   "steps": [
+    {
+     "event": "CDP_WS_MESSAGE",
+     "payload": {
+      "text": "{\"id\":2,\"result\":{}}",
+      "binary": false
+     },
+     "from": "connected",
+     "entity": {
+      "id": "c",
+      "nextId": 3,
+      "pending": [
+       {
+        "id": 2,
+        "key": "b",
+        "method": "Nope.nothing"
+       }
+      ],
+      "closing": false
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CDP_REPLY",
+        "payload": {
+         "key": "b",
+         "method": "Nope.nothing"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CDP_ERROR"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "two-commands-in-flight-are-answered-out-of-order-each-to-its-own-key",
+   "defaults": [
+    "CdpHttp",
+    "CdpWs",
+    "CdpDelay"
+   ],
+   "steps": [
+    {
+     "event": "CDP_COMMAND",
+     "payload": {
+      "key": "a",
+      "method": "A.one",
+      "paramsJson": "{}"
+     },
+     "from": "connected",
+     "entity": {
+      "id": "c",
+      "nextId": 1,
+      "pending": [],
+      "closing": false
+     },
+     "expect": {
+      "entity": {
+       "nextId": 2
+      }
+     }
+    },
+    {
+     "event": "CDP_COMMAND",
+     "payload": {
+      "key": "b",
+      "method": "B.two",
+      "paramsJson": "{}"
+     },
+     "expect": {
+      "entity": {
+       "nextId": 3,
+       "wire": "{\"id\":2,\"method\":\"B.two\",\"params\":{}}",
+       "pending": [
+        {
+         "id": 1,
+         "key": "a",
+         "method": "A.one"
+        },
+        {
+         "id": 2,
+         "key": "b",
+         "method": "B.two"
+        }
+       ]
+      }
+     }
+    },
+    {
+     "event": "CDP_WS_MESSAGE",
+     "payload": {
+      "text": "{\"id\":2,\"result\":{\"v\":2}}",
+      "binary": false
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CDP_REPLY",
+        "payload": {
+         "key": "b",
+         "method": "B.two",
+         "frame": "{\"id\":2,\"result\":{\"v\":2}}"
+        }
+       }
+      ],
+      "entity": {
+       "pending": [
+        {
+         "id": 1,
+         "key": "a",
+         "method": "A.one"
+        }
+       ]
+      }
+     }
+    },
+    {
+     "event": "CDP_WS_MESSAGE",
+     "payload": {
+      "text": "{\"id\":1,\"result\":{\"v\":1}}",
+      "binary": false
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CDP_REPLY",
+        "payload": {
+         "key": "a",
+         "method": "A.one",
+         "frame": "{\"id\":1,\"result\":{\"v\":1}}"
+        }
+       }
+      ],
+      "entity": {
+       "pending": []
+      },
+      "neverEmits": [
+       "CDP_STRAY"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-frame-with-a-method-and-no-id-answers-cdp-event",
+   "note": "the event frame is a real Target.targetCreated of headless Chrome; control: the pending command is untouched",
+   "defaults": [
+    "CdpHttp",
+    "CdpWs",
+    "CdpDelay"
+   ],
+   "steps": [
+    {
+     "event": "CDP_WS_MESSAGE",
+     "payload": {
+      "text": "{\"method\":\"Target.targetCreated\",\"params\":{\"targetInfo\":{\"targetId\":\"5D93F1FEBC1AABE3BBA444D828C3DEB5\",\"type\":\"background_page\",\"title\":\"Google Hangouts\",\"url\":\"chrome-extension://nkeimhogjdpnpccoofpliimaahmaaome/background.html\",\"attached\":false,\"canAccessOpener\":false,\"browserContextId\":\"3EBD69FF9AE13F3508347BC758AAE3E8\"}}}",
+      "binary": false
+     },
+     "from": "connected",
+     "entity": {
+      "id": "c",
+      "nextId": 2,
+      "pending": [
+       {
+        "id": 1,
+        "key": "a",
+        "method": "A.one"
+       }
+      ],
+      "closing": false
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CDP_EVENT",
+        "payload": {
+         "method": "Target.targetCreated",
+         "frame": "{\"method\":\"Target.targetCreated\",\"params\":{\"targetInfo\":{\"targetId\":\"5D93F1FEBC1AABE3BBA444D828C3DEB5\",\"type\":\"background_page\",\"title\":\"Google Hangouts\",\"url\":\"chrome-extension://nkeimhogjdpnpccoofpliimaahmaaome/background.html\",\"attached\":false,\"canAccessOpener\":false,\"browserContextId\":\"3EBD69FF9AE13F3508347BC758AAE3E8\"}}}"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CDP_REPLY",
+       "CDP_ERROR",
+       "CDP_STRAY"
+      ],
+      "entity": {
+       "pending": [
+        {
+         "id": 1,
+         "key": "a",
+         "method": "A.one"
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-event-with-a-session-carries-its-sessionId",
+   "defaults": [
+    "CdpHttp",
+    "CdpWs",
+    "CdpDelay"
+   ],
+   "steps": [
+    {
+     "event": "CDP_WS_MESSAGE",
+     "payload": {
+      "text": "{\"method\":\"Page.loadEventFired\",\"sessionId\":\"S1\",\"params\":{\"timestamp\":1}}",
+      "binary": false
+     },
+     "from": "connected",
+     "entity": {
+      "id": "c",
+      "nextId": 1,
+      "pending": [],
+      "closing": false
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CDP_EVENT",
+        "payload": {
+         "method": "Page.loadEventFired",
+         "sessionId": "S1",
+         "frame": "{\"method\":\"Page.loadEventFired\",\"sessionId\":\"S1\",\"params\":{\"timestamp\":1}}"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-command-still-pending-at-its-deadline-answers-timeout-and-is-forgotten",
+   "note": "control: the other command stays pending and the late reply of the timed-out one is a stray",
+   "defaults": [
+    "CdpHttp",
+    "CdpWs",
+    "CdpDelay"
+   ],
+   "steps": [
+    {
+     "event": "CDP_TIMEOUT",
+     "payload": {
+      "key": "1"
+     },
+     "from": "connected",
+     "entity": {
+      "id": "c",
+      "nextId": 3,
+      "pending": [
+       {
+        "id": 1,
+        "key": "a",
+        "method": "A.one"
+       },
+       {
+        "id": 2,
+        "key": "b",
+        "method": "B.two"
+       }
+      ],
+      "closing": false
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CDP_ERROR",
+        "payload": {
+         "key": "a",
+         "method": "A.one",
+         "code": "timeout"
+        }
+       }
+      ],
+      "entity": {
+       "pending": [
+        {
+         "id": 2,
+         "key": "b",
+         "method": "B.two"
+        }
+       ]
+      },
+      "neverEmits": [
+       "CDP_STRAY"
+      ]
+     }
+    },
+    {
+     "event": "CDP_WS_MESSAGE",
+     "payload": {
+      "text": "{\"id\":1,\"result\":{}}",
+      "binary": false
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CDP_STRAY",
+        "payload": {
+         "reason": "unknown-id"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CDP_REPLY"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-timer-of-a-command-already-answered-is-a-stray-not-an-error",
+   "defaults": [
+    "CdpHttp",
+    "CdpWs",
+    "CdpDelay"
+   ],
+   "steps": [
+    {
+     "event": "CDP_TIMEOUT",
+     "payload": {
+      "key": "7"
+     },
+     "from": "connected",
+     "entity": {
+      "id": "c",
+      "nextId": 2,
+      "pending": [
+       {
+        "id": 1,
+        "key": "a",
+        "method": "A.one"
+       }
+      ],
+      "closing": false
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CDP_STRAY",
+        "payload": {
+         "reason": "timer-without-command"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CDP_ERROR"
+      ],
+      "entity": {
+       "pending": [
+        {
+         "id": 1,
+         "key": "a",
+         "method": "A.one"
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "timeoutMs-sets-the-deadline-armed-for-a-command",
+   "config": {
+    "timeoutMs": 5000
+   },
+   "defaults": [
+    "CdpHttp",
+    "CdpWs",
+    "CdpDelay"
+   ],
+   "steps": [
+    {
+     "event": "CDP_COMMAND",
+     "payload": {
+      "key": "a",
+      "method": "A.one",
+      "paramsJson": "{}"
+     },
+     "from": "connected",
+     "entity": {
+      "id": "c",
+      "nextId": 1,
+      "pending": [],
+      "closing": false
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CDP_TIMER_ARM",
+        "payload": {
+         "key": "1",
+         "delayMs": 5000
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "disconnect-closes-the-socket-then-fails-every-pending-command-oldest-first",
+   "defaults": [
+    "CdpHttp",
+    "CdpWs",
+    "CdpDelay"
+   ],
+   "steps": [
+    {
+     "event": "CDP_DISCONNECT",
+     "payload": {},
+     "from": "connected",
+     "entity": {
+      "id": "c",
+      "nextId": 3,
+      "pending": [
+       {
+        "id": 1,
+        "key": "a",
+        "method": "A.one"
+       },
+       {
+        "id": 2,
+        "key": "b",
+        "method": "B.two"
+       }
+      ],
+      "closing": false
+     },
+     "expect": {
+      "state": "connected",
+      "emits": [
+       {
+        "event": "CDP_WS_CLOSE"
+       }
+      ],
+      "entity": {
+       "closing": true
+      }
+     }
+    },
+    {
+     "event": "CDP_COMMAND",
+     "payload": {
+      "key": "c",
+      "method": "C.three",
+      "paramsJson": "{}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CDP_ERROR",
+        "payload": {
+         "key": "c",
+         "method": "C.three",
+         "code": "not-connected"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CDP_WS_SEND"
+      ]
+     }
+    },
+    {
+     "event": "CDP_WS_CLOSED",
+     "payload": {
+      "code": 1000,
+      "reason": ""
+     },
+     "expect": {
+      "state": "disconnected",
+      "emits": [
+       {
+        "event": "CDP_ERROR",
+        "payload": {
+         "key": "a",
+         "method": "A.one",
+         "code": "disconnected"
+        }
+       },
+       {
+        "event": "CDP_ERROR",
+        "payload": {
+         "key": "b",
+         "method": "B.two",
+         "code": "disconnected"
+        }
+       },
+       {
+        "event": "CDP_DISCONNECTED",
+        "payload": {
+         "reason": "closed 1000: "
+        }
+       }
+      ],
+      "entity": {
+       "pending": []
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-lost-connection-fails-pending-commands-with-the-failure-as-the-reason",
+   "defaults": [
+    "CdpHttp",
+    "CdpWs",
+    "CdpDelay"
+   ],
+   "steps": [
+    {
+     "event": "CDP_WS_FAILED",
+     "payload": {
+      "error": "reset",
+      "kind": "io"
+     },
+     "from": "connected",
+     "entity": {
+      "id": "c",
+      "nextId": 2,
+      "pending": [
+       {
+        "id": 1,
+        "key": "a",
+        "method": "A.one"
+       }
+      ],
+      "closing": false
+     },
+     "expect": {
+      "state": "disconnected",
+      "emits": [
+       {
+        "event": "CDP_ERROR",
+        "payload": {
+         "key": "a",
+         "code": "disconnected",
+         "message": "failed io: reset"
+        }
+       },
+       {
+        "event": "CDP_DISCONNECTED",
+        "payload": {
+         "reason": "failed io: reset"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-refused-socket-failure-keeps-the-connection-and-its-pending-commands",
+   "defaults": [
+    "CdpHttp",
+    "CdpWs",
+    "CdpDelay"
+   ],
+   "steps": [
+    {
+     "event": "CDP_WS_FAILED",
+     "payload": {
+      "error": "closing",
+      "kind": "refused"
+     },
+     "from": "connected",
+     "entity": {
+      "id": "c",
+      "nextId": 2,
+      "pending": [
+       {
+        "id": 1,
+        "key": "a",
+        "method": "A.one"
+       }
+      ],
+      "closing": false
+     },
+     "expect": {
+      "state": "connected",
+      "emits": [
+       {
+        "event": "CDP_STRAY",
+        "payload": {
+         "reason": "ws-refused"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CDP_DRAIN",
+       "CDP_DISCONNECTED"
+      ],
+      "entity": {
+       "pending": [
+        {
+         "id": 1,
+         "key": "a",
+         "method": "A.one"
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "disconnect-with-no-connection-answers-disconnected-at-once",
+   "defaults": [
+    "CdpHttp",
+    "CdpWs",
+    "CdpDelay"
+   ],
+   "steps": [
+    {
+     "event": "CDP_DISCONNECT",
+     "payload": {},
+     "expect": {
+      "state": "disconnected",
+      "emits": [
+       {
+        "event": "CDP_DISCONNECTED"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-command-before-the-connection-is-open-answers-not-connected",
+   "note": "control: the same command in the connected state writes a frame (the command cases above)",
+   "defaults": [
+    "CdpHttp",
+    "CdpWs",
+    "CdpDelay"
+   ],
+   "steps": [
+    {
+     "event": "CDP_COMMAND",
+     "payload": {
+      "key": "a",
+      "method": "Browser.getVersion",
+      "paramsJson": "{}"
+     },
+     "expect": {
+      "state": "disconnected",
+      "emits": [
+       {
+        "event": "CDP_ERROR",
+        "payload": {
+         "key": "a",
+         "method": "Browser.getVersion",
+         "code": "not-connected"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CDP_WS_SEND",
+       "CDP_TIMER_ARM"
+      ]
+     }
+    },
+    {
+     "event": "CDP_COMMAND",
+     "payload": {
+      "key": "b",
+      "method": "Browser.getVersion",
+      "paramsJson": "{}"
+     },
+     "from": "connecting",
+     "expect": {
+      "state": "connecting",
+      "emits": [
+       {
+        "event": "CDP_ERROR",
+        "payload": {
+         "key": "b",
+         "method": "Browser.getVersion",
+         "code": "not-connected"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CDP_WS_SEND"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-reply-with-an-unknown-id-is-a-stray-and-leaves-the-pending-command",
+   "defaults": [
+    "CdpHttp",
+    "CdpWs",
+    "CdpDelay"
+   ],
+   "steps": [
+    {
+     "event": "CDP_WS_MESSAGE",
+     "payload": {
+      "text": "{\"id\":9,\"result\":{}}",
+      "binary": false
+     },
+     "from": "connected",
+     "entity": {
+      "id": "c",
+      "nextId": 2,
+      "pending": [
+       {
+        "id": 1,
+        "key": "a",
+        "method": "A.one"
+       }
+      ],
+      "closing": false
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CDP_STRAY",
+        "payload": {
+         "reason": "unknown-id"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CDP_REPLY",
+       "CDP_ERROR"
+      ],
+      "entity": {
+       "pending": [
+        {
+         "id": 1,
+         "key": "a",
+         "method": "A.one"
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-frame-that-is-not-json-is-a-stray-unparseable",
+   "defaults": [
+    "CdpHttp",
+    "CdpWs",
+    "CdpDelay"
+   ],
+   "steps": [
+    {
+     "event": "CDP_WS_MESSAGE",
+     "payload": {
+      "text": "not json",
+      "binary": false
+     },
+     "from": "connected",
+     "entity": {
+      "id": "c",
+      "nextId": 1,
+      "pending": [],
+      "closing": false
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CDP_STRAY",
+        "payload": {
+         "reason": "unparseable",
+         "frame": "not json"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CDP_REPLY",
+       "CDP_EVENT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-frame-with-neither-id-nor-method-is-a-stray",
+   "defaults": [
+    "CdpHttp",
+    "CdpWs",
+    "CdpDelay"
+   ],
+   "steps": [
+    {
+     "event": "CDP_WS_MESSAGE",
+     "payload": {
+      "text": "{\"result\":{}}",
+      "binary": false
+     },
+     "from": "connected",
+     "entity": {
+      "id": "c",
+      "nextId": 1,
+      "pending": [],
+      "closing": false
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CDP_STRAY",
+        "payload": {
+         "reason": "no-id-no-method"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CDP_EVENT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-binary-message-is-a-stray",
+   "defaults": [
+    "CdpHttp",
+    "CdpWs",
+    "CdpDelay"
+   ],
+   "steps": [
+    {
+     "event": "CDP_WS_MESSAGE",
+     "payload": {
+      "binary": true
+     },
+     "from": "connected",
+     "entity": {
+      "id": "c",
+      "nextId": 1,
+      "pending": [],
+      "closing": false
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CDP_STRAY",
+        "payload": {
+         "reason": "binary"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CDP_REPLY"
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

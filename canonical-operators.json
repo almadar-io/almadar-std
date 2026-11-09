@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "Canonical operator registry for Almadar. Generated from @almadar/std/modules. Consumed by orbital-compiler via include_str!.",
-  "generated": "2026-11-08T18:07:39.787Z",
+  "generated": "2026-11-08T20:49:21.465Z",
   "categories": {
     "arithmetic": {
       "description": "Numeric operations",
@@ -3258,10 +3258,10 @@
     },
     "audio/change-music": {
       "category": "std-audio",
-      "minArity": 0,
+      "minArity": 1,
       "maxArity": 1,
       "returnType": "void",
-      "description": "Crossfade to the looping track the host manifest names by key; with no key, stop the music.",
+      "description": "Crossfade over the play's fadeMs to the looping track std-audio-cue resolved.",
       "module": "audio",
       "visual": {
         "form": "actuator"
@@ -3271,10 +3271,9 @@
       "host": "substrate",
       "params": [
         {
-          "name": "key",
-          "type": "string",
-          "description": "Manifest key of the track; absent stops the music",
-          "optional": true
+          "name": "play",
+          "type": "AudioPlay",
+          "description": "The resolved track: key, source, volume, loop, poolSize, fadeMs"
         }
       ],
       "examples": [
@@ -3287,7 +3286,7 @@
       "minArity": 1,
       "maxArity": 1,
       "returnType": "void",
-      "description": "Play the one-shot sound the host manifest names by key.",
+      "description": "Play a one-shot sound std-audio-cue resolved: the host plays the source as given (volume, pooling) and picks nothing.",
       "module": "audio",
       "visual": {
         "form": "actuator"
@@ -3297,9 +3296,9 @@
       "host": "substrate",
       "params": [
         {
-          "name": "key",
-          "type": "string",
-          "description": "Manifest key of the sound"
+          "name": "play",
+          "type": "AudioPlay",
+          "description": "The resolved sound: key, source, volume, loop, poolSize, fadeMs"
         }
       ],
       "examples": [
@@ -3309,10 +3308,10 @@
     },
     "audio/stop-music": {
       "category": "std-audio",
-      "minArity": 0,
-      "maxArity": 0,
+      "minArity": 1,
+      "maxArity": 1,
       "returnType": "void",
-      "description": "Stop the looping music.",
+      "description": "Fade the looping music out over fadeMs milliseconds and stop it.",
       "module": "audio",
       "visual": {
         "form": "actuator"
@@ -3320,6 +3319,13 @@
       "hasSideEffects": true,
       "runsOn": "client",
       "host": "substrate",
+      "params": [
+        {
+          "name": "fadeMs",
+          "type": "number",
+          "description": "Fade-out length in milliseconds (0 stops at once)"
+        }
+      ],
       "examples": [
         "(audio/stop-music)"
       ],
@@ -3330,7 +3336,7 @@
       "minArity": 0,
       "maxArity": 1,
       "returnType": "void",
-      "description": "Stop the sound the host manifest names by key; with no key, stop every sound.",
+      "description": "Stop the playing sound with this key; with no key, stop every sound.",
       "module": "audio",
       "visual": {
         "form": "actuator"
@@ -3342,7 +3348,7 @@
         {
           "name": "key",
           "type": "string",
-          "description": "Manifest key of the sound; absent stops all",
+          "description": "Key of the playing sound; absent stops all",
           "optional": true
         }
       ],
@@ -11924,10 +11930,10 @@
       ],
       "docsSource": "generated"
     },
-    "hmac/sha1-bytes": {
+    "hmac/sha": {
       "category": "std-codec",
-      "minArity": 3,
-      "maxArity": 4,
+      "minArity": 5,
+      "maxArity": 7,
       "returnType": {
         "kind": "union",
         "of": [
@@ -11938,16 +11944,64 @@
           }
         ]
       },
-      "description": "HMAC-SHA1 (RFC 2202) of a message under a bytes key that is a program value, as lower-case hex or standard base64; the key and message are read exactly as hmac/sha256-bytes reads them. A key that comes from a credential never goes through here. An operand that is not canonical padded base64, or an unknown input, answers null.",
+      "description": "HMAC (RFC 2202, RFC 4231) of a message under a key, as lower-case hex or standard base64: SHA-2 at 256, 384 or 512 bits, or SHA-1 for bits 1. keyForm is the literal \"credential\" or \"bytes\". \"credential\": the key is a credential slot, a secret-typed @config knob naming the credential that holds the key; the kernel resolves its value into the evaluation, so the program never receives it, and the result is null when the credential is not held; the optional literal `prefix` is put in front of the credential value to form the key (the SigV4 chain starts at HMAC(\"AWS4\" + secret, date)), it is a literal string, never a computed value, and the credential value never enters program state. \"bytes\": the key is a program value (bytes, or standard padded base64), such as one step of a SigV4 signing chain; it is never looked up as a credential, a secret knob is refused as a bytes key, and a prefix is an error. Input \"text\" (the default) signs the UTF-8 of the message, \"bytes\" decodes it as standard padded base64 first (RFC 8291 key derivation). A key or message that is not canonical padded base64, an unknown input or another bit count answers null; another keyForm or encoding fails with kind invalid. Runs only in the kernel.",
       "module": "hmac",
       "visual": {
         "form": "block"
       },
       "params": [
         {
+          "name": "bits",
+          "type": {
+            "kind": "union",
+            "of": [
+              {
+                "kind": "literal",
+                "value": 1
+              },
+              {
+                "kind": "literal",
+                "value": 256
+              },
+              {
+                "kind": "literal",
+                "value": 384
+              },
+              {
+                "kind": "literal",
+                "value": 512
+              }
+            ]
+          },
+          "description": "The digest size: 256, 384 or 512 (SHA-2), or 1 for SHA-1"
+        },
+        {
+          "name": "keyForm",
+          "type": {
+            "kind": "union",
+            "of": [
+              {
+                "kind": "literal",
+                "value": "credential"
+              },
+              {
+                "kind": "literal",
+                "value": "bytes"
+              }
+            ]
+          },
+          "description": "How the key is given: \"credential\" (a secret knob naming the credential) or \"bytes\" (a program value)"
+        },
+        {
           "name": "key",
-          "type": "bytes",
-          "description": "The key, bytes"
+          "type": {
+            "kind": "union",
+            "of": [
+              "string",
+              "bytes"
+            ]
+          },
+          "description": "With \"credential\", a secret-typed @config knob naming the credential that holds the key; with \"bytes\", the derived key"
         },
         {
           "name": "message",
@@ -11995,304 +12049,17 @@
           "description": "Message kind: \"text\" (default) or \"bytes\"",
           "optional": true,
           "defaultValue": "text"
-        }
-      ],
-      "examples": [
-        "(hmac/sha1-bytes \"SmVmZQ==\" \"what do ya want for nothing?\" \"hex\") // => \"effcdf6ae5eb2fa2d27416d5f184df9c259a7c79\""
-      ],
-      "docsSource": "generated"
-    },
-    "hmac/sha256": {
-      "category": "std-codec",
-      "minArity": 3,
-      "maxArity": 4,
-      "returnType": {
-        "kind": "union",
-        "of": [
-          "string",
-          {
-            "kind": "literal",
-            "value": null
-          }
-        ]
-      },
-      "description": "HMAC-SHA256 (RFC 4231) of a message (UTF-8) under a key, as lower-case hex or standard base64. The key argument is a credential slot: a secret-typed @config knob naming the credential that holds the key. The kernel resolves its value into the evaluation, so the program never receives it; the result is null when the credential is not held. The optional literal `prefix` is put in front of the credential value to form the key (the SigV4 chain starts at HMAC(\"AWS4\" + secret, date)); it is a literal string, never a computed value, and the credential value never enters program state. Runs only in the kernel.",
-      "module": "hmac",
-      "visual": {
-        "form": "block"
-      },
-      "params": [
-        {
-          "name": "key",
-          "type": "string",
-          "description": "A secret-typed @config knob naming the credential that holds the key"
-        },
-        {
-          "name": "message",
-          "type": "string",
-          "description": "The message to sign"
-        },
-        {
-          "name": "encoding",
-          "type": {
-            "kind": "union",
-            "of": [
-              {
-                "kind": "literal",
-                "value": "hex"
-              },
-              {
-                "kind": "literal",
-                "value": "base64"
-              }
-            ]
-          },
-          "description": "Digest encoding: \"hex\" or \"base64\""
         },
         {
           "name": "prefix",
           "type": "string",
-          "description": "A literal string put before the credential value to form the key, such as \"AWS4\"; default: none",
+          "description": "With \"credential\" only: a literal string put before the credential value to form the key, such as \"AWS4\"; default: none",
           "optional": true,
           "defaultValue": ""
         }
       ],
       "examples": [
-        "(hmac/sha256 \"Jefe\" \"what do ya want for nothing?\" \"hex\") // => \"5bdcc146bf60754e6a042426089575c75a003f089d2739839dec58b964ec3843\""
-      ],
-      "docsSource": "generated"
-    },
-    "hmac/sha256-bytes": {
-      "category": "std-codec",
-      "minArity": 3,
-      "maxArity": 4,
-      "returnType": {
-        "kind": "union",
-        "of": [
-          "string",
-          {
-            "kind": "literal",
-            "value": null
-          }
-        ]
-      },
-      "description": "HMAC-SHA256 (RFC 4231) of a message under a bytes key that is a program value, as lower-case hex or standard base64: a key derived inside the program, such as one step of a SigV4 signing chain. The message is the UTF-8 of a string, or bytes when input is \"bytes\" (RFC 8291 key derivation). A key that comes from a credential goes through hmac/sha256, never here. An operand that is not canonical padded base64, or an unknown input, answers null.",
-      "module": "hmac",
-      "visual": {
-        "form": "block"
-      },
-      "params": [
-        {
-          "name": "key",
-          "type": "bytes",
-          "description": "The derived key, bytes"
-        },
-        {
-          "name": "message",
-          "type": {
-            "kind": "union",
-            "of": [
-              "string",
-              "bytes"
-            ]
-          },
-          "description": "The message to sign: a string, or a bytes value when input is \"bytes\""
-        },
-        {
-          "name": "encoding",
-          "type": {
-            "kind": "union",
-            "of": [
-              {
-                "kind": "literal",
-                "value": "hex"
-              },
-              {
-                "kind": "literal",
-                "value": "base64"
-              }
-            ]
-          },
-          "description": "Digest encoding: \"hex\" or \"base64\""
-        },
-        {
-          "name": "input",
-          "type": {
-            "kind": "union",
-            "of": [
-              {
-                "kind": "literal",
-                "value": "text"
-              },
-              {
-                "kind": "literal",
-                "value": "bytes"
-              }
-            ]
-          },
-          "description": "Message kind: \"text\" (default) or \"bytes\"",
-          "optional": true,
-          "defaultValue": "text"
-        }
-      ],
-      "examples": [
-        "(hmac/sha256-bytes \"SmVmZQ==\" \"what do ya want for nothing?\" \"hex\") // => \"5bdcc146bf60754e6a042426089575c75a003f089d2739839dec58b964ec3843\""
-      ],
-      "docsSource": "generated"
-    },
-    "hmac/sha384-bytes": {
-      "category": "std-codec",
-      "minArity": 3,
-      "maxArity": 4,
-      "returnType": {
-        "kind": "union",
-        "of": [
-          "string",
-          {
-            "kind": "literal",
-            "value": null
-          }
-        ]
-      },
-      "description": "HMAC-SHA384 (RFC 4231) of a message under a bytes key that is a program value, as lower-case hex or standard base64; the key and message are read exactly as hmac/sha256-bytes reads them. A key that comes from a credential never goes through here. An operand that is not canonical padded base64, or an unknown input, answers null.",
-      "module": "hmac",
-      "visual": {
-        "form": "block"
-      },
-      "params": [
-        {
-          "name": "key",
-          "type": "bytes",
-          "description": "The key, bytes"
-        },
-        {
-          "name": "message",
-          "type": {
-            "kind": "union",
-            "of": [
-              "string",
-              "bytes"
-            ]
-          },
-          "description": "The message to sign: a string, or a bytes value when input is \"bytes\""
-        },
-        {
-          "name": "encoding",
-          "type": {
-            "kind": "union",
-            "of": [
-              {
-                "kind": "literal",
-                "value": "hex"
-              },
-              {
-                "kind": "literal",
-                "value": "base64"
-              }
-            ]
-          },
-          "description": "Digest encoding: \"hex\" or \"base64\""
-        },
-        {
-          "name": "input",
-          "type": {
-            "kind": "union",
-            "of": [
-              {
-                "kind": "literal",
-                "value": "text"
-              },
-              {
-                "kind": "literal",
-                "value": "bytes"
-              }
-            ]
-          },
-          "description": "Message kind: \"text\" (default) or \"bytes\"",
-          "optional": true,
-          "defaultValue": "text"
-        }
-      ],
-      "examples": [
-        "(hmac/sha384-bytes \"SmVmZQ==\" \"what do ya want for nothing?\" \"hex\") // => \"af45d2e376484031617f78d2b58a6b1b9c7ef464f5a01b47e42ec3736322445e8e2240ca5e69e2c78b3239ecfab21649\""
-      ],
-      "docsSource": "generated"
-    },
-    "hmac/sha512-bytes": {
-      "category": "std-codec",
-      "minArity": 3,
-      "maxArity": 4,
-      "returnType": {
-        "kind": "union",
-        "of": [
-          "string",
-          {
-            "kind": "literal",
-            "value": null
-          }
-        ]
-      },
-      "description": "HMAC-SHA512 (RFC 4231) of a message under a bytes key that is a program value, as lower-case hex or standard base64; the key and message are read exactly as hmac/sha256-bytes reads them. A key that comes from a credential never goes through here. An operand that is not canonical padded base64, or an unknown input, answers null.",
-      "module": "hmac",
-      "visual": {
-        "form": "block"
-      },
-      "params": [
-        {
-          "name": "key",
-          "type": "bytes",
-          "description": "The key, bytes"
-        },
-        {
-          "name": "message",
-          "type": {
-            "kind": "union",
-            "of": [
-              "string",
-              "bytes"
-            ]
-          },
-          "description": "The message to sign: a string, or a bytes value when input is \"bytes\""
-        },
-        {
-          "name": "encoding",
-          "type": {
-            "kind": "union",
-            "of": [
-              {
-                "kind": "literal",
-                "value": "hex"
-              },
-              {
-                "kind": "literal",
-                "value": "base64"
-              }
-            ]
-          },
-          "description": "Digest encoding: \"hex\" or \"base64\""
-        },
-        {
-          "name": "input",
-          "type": {
-            "kind": "union",
-            "of": [
-              {
-                "kind": "literal",
-                "value": "text"
-              },
-              {
-                "kind": "literal",
-                "value": "bytes"
-              }
-            ]
-          },
-          "description": "Message kind: \"text\" (default) or \"bytes\"",
-          "optional": true,
-          "defaultValue": "text"
-        }
-      ],
-      "examples": [
-        "(hmac/sha512-bytes \"SmVmZQ==\" \"what do ya want for nothing?\" \"hex\") // => \"164b7a7bfcf819e2e395fbe73b56e0a387bd64222e831fd610270cd7ea2505549758bf75c05a994a6d034f65f8f0e6fdcaeab1a34d4a6b4b636e070a38bce737\""
+        "(hmac/sha 256 \"credential\" @config.signingKey \"what do ya want for nothing?\" \"hex\") // => \"5bdcc146bf60754e6a042426089575c75a003f089d2739839dec58b964ec3843\" when the credential holds Jefe; [\"hmac/sha\", 384, \"bytes\", \"SmVmZQ==\", \"what do ya want for nothing?\", \"hex\"] signs under the bytes key Jefe"
       ],
       "docsSource": "generated"
     },
@@ -27438,7 +27205,7 @@
         },
         "open": true
       },
-      "description": "Subscribe to the host's live broadcast, the feed `orb serve`'s `/api/events` stream carries (the success emits of `persist` and running calls' messages, EXEC-QUEUE-13). Keyed with an `onMessage` route, each item a connection would receive arrives as that event `{ event, payload?, source, key }`, in order, until `cancel-call` names the key: a peer's row only when the identity bound to the `clientId` session may read it (the anonymous viewer when none is bound), never an item `clientId`'s own request produced. Unkeyed, it is refused. For a server program pushing the feed to its clients; who may subscribe is the program's own gate.",
+      "description": "Subscribe to the host's live broadcast, the feed `orb serve`'s `/api/events` stream carries (the success emits of `persist` and running calls' messages, EXEC-QUEUE-13). Keyed with an `onMessage` route, each item a connection would receive arrives as that event `{ event, payload?, source, key }`, in order, until `cancel-call` names the key: a peer's row only when the identity bound to the `clientId` session may read it (the anonymous viewer when none is bound), never an item `clientId`'s own request produced. Unkeyed, it is refused. For a server program pushing the feed to its clients; who may subscribe is the program's own gate. `kind: \"trace\"` with `traits` streams each dispatch that moved one of them instead (EXEC-DIST-14); `kind: \"guest\"` with a `guest` handle streams each tick pass of that hosted guest that painted something, shaped as a `program/dispatch` answer for it, until the guest closes (EXEC-ENDPOINT-3a).",
       "module": "program",
       "visual": {
         "form": "actuator"
@@ -27452,11 +27219,13 @@
           "type": {
             "kind": "object",
             "fields": {
-              "clientId": "string"
+              "clientId": "string",
+              "kind": "string",
+              "guest": "string"
             },
             "open": true
           },
-          "description": "Whose feed it is: the `clientId` session, whose bound identity's `@read` filters peers' rows and whose own items are left out",
+          "description": "Whose feed it is: the `clientId` session, whose bound identity's `@read` filters peers' rows and whose own items are left out; or `kind` (`trace`, `guest`) and what that kind streams",
           "optional": true
         },
         {

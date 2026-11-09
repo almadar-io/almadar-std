@@ -1,0 +1,567 @@
+{
+ "atom": "a11y/atoms/std-a11y-axe.lolo",
+ "trait": "AxeProbe",
+ "note": "std-a11y-axe with the page answers played as events. The measure JSON of the img-alt, contrast and lang-missing cases is the real reduced result of axe-core 4.14.0 run through headless Chrome (a11y-axe.gen/record.py) on the fixtures; the expression asserted is a11y-axe.gen/expression.js. Regenerate with python3 -I a11y-axe.gen/gen_goldens.py.",
+ "cases": [
+  {
+   "id": "PROBE_RUN asks the page to evaluate the granted script under the run key",
+   "steps": [
+    {
+     "from": "idle",
+     "event": "PROBE_RUN",
+     "payload": {
+      "key": "k1",
+      "pageUrl": "http://127.0.0.1:24680/"
+     },
+     "expect": {
+      "state": "injecting",
+      "emits": [
+       {
+        "event": "PAGE_INJECT",
+        "payload": {
+         "key": "k1:inject",
+         "script": "axe-core/axe.min.js"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "PAGE_INJECTED asks the page to run axe with the recorded expression",
+   "steps": [
+    {
+     "from": "injecting",
+     "event": "PAGE_INJECTED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/"
+     },
+     "payload": {
+      "key": "k1:inject"
+     },
+     "expect": {
+      "state": "measuring",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k1:measure",
+         "expression": "axe.run(document, { runOnly: { type: \"tag\", values: [\"wcag2a\", \"wcag2aa\", \"wcag21a\", \"wcag21aa\", \"wcag22aa\"] } }).then(function (r) { return JSON.stringify({ version: r.testEngine.version, violations: r.violations.map(function (v) { return { id: v.id, impact: v.impact || undefined, tags: v.tags, nodes: v.nodes.map(function (n) { return { target: n.target.map(function (t) { return Array.isArray(t) ? t.join(\" \") : t; }).join(\" \"), html: n.html }; }) }; }) }); })"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: an injected answer under another run's key is ignored",
+   "steps": [
+    {
+     "from": "injecting",
+     "event": "PAGE_INJECTED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/"
+     },
+     "payload": {
+      "key": "k2:inject"
+     },
+     "expect": {
+      "state": "injecting",
+      "emits": []
+     }
+    }
+   ]
+  },
+  {
+   "id": "img-alt-fail: the missing alt is one confirmed critical finding with WCAG 1.1.1 and the axe version",
+   "steps": [
+    {
+     "from": "measuring",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/"
+     },
+     "payload": {
+      "key": "k1:measure",
+      "json": "{\"version\":\"4.14.0\",\"violations\":[{\"id\":\"image-alt\",\"impact\":\"critical\",\"tags\":[\"cat.text-alternatives\",\"wcag2a\",\"wcag111\",\"section508\",\"section508.22.a\",\"TTv5\",\"TT7.a\",\"TT7.b\",\"EN-301-549\",\"EN-9.1.1.1\",\"ACT\",\"RGAAv4\",\"RGAA-1.1.1\"],\"nodes\":[{\"target\":\"img\",\"html\":\"<img class=\\\"photo\\\" src=\\\"img/lonec.svg\\\" width=\\\"120\\\" height=\\\"80\\\">\"}]}]}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k1",
+         "probe": "axe",
+         "findings": [
+          {
+           "id": "axe:image-alt:img",
+           "pageUrl": "http://127.0.0.1:24680/",
+           "rule": "image-alt",
+           "wcag": [
+            {
+             "criterion": "1.1.1",
+             "level": "A",
+             "version": "2.0"
+            }
+           ],
+           "method": "engine",
+           "engines": [
+            "axe"
+           ],
+           "impact": "critical",
+           "confidence": "confirmed",
+           "selector": "img",
+           "snippet": "<img class=\"photo\" src=\"img/lonec.svg\" width=\"120\" height=\"80\">",
+           "evidence": "axe-core 4.14.0",
+           "count": 1
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: img-alt-pass has no violation and answers no findings",
+   "steps": [
+    {
+     "from": "measuring",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/"
+     },
+     "payload": {
+      "key": "k1:measure",
+      "json": "{\"version\":\"4.14.0\",\"violations\":[]}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k1",
+         "probe": "axe",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "contrast-fail: low contrast is serious and needs verification, WCAG 1.4.3 AA",
+   "steps": [
+    {
+     "from": "measuring",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/"
+     },
+     "payload": {
+      "key": "k1:measure",
+      "json": "{\"version\":\"4.14.0\",\"violations\":[{\"id\":\"color-contrast\",\"impact\":\"serious\",\"tags\":[\"cat.color\",\"wcag2aa\",\"wcag143\",\"TTv5\",\"TT13.c\",\"EN-301-549\",\"EN-9.1.4.3\",\"ACT\",\"RGAAv4\",\"RGAA-3.2.1\"],\"nodes\":[{\"target\":\"p\",\"html\":\"<p class=\\\"muted\\\" style=\\\"color:#999\\\">Cena brez DDV ni prikazana.</p>\"}]}]}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k1",
+         "probe": "axe",
+         "findings": [
+          {
+           "id": "axe:color-contrast:p",
+           "pageUrl": "http://127.0.0.1:24680/",
+           "rule": "color-contrast",
+           "wcag": [
+            {
+             "criterion": "1.4.3",
+             "level": "AA",
+             "version": "2.0"
+            }
+           ],
+           "method": "engine",
+           "engines": [
+            "axe"
+           ],
+           "impact": "serious",
+           "confidence": "needs-verification",
+           "selector": "p",
+           "snippet": "<p class=\"muted\" style=\"color:#999\">Cena brez DDV ni prikazana.</p>",
+           "evidence": "axe-core 4.14.0",
+           "count": 1
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: contrast-pass has no violation and answers no findings",
+   "steps": [
+    {
+     "from": "measuring",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/"
+     },
+     "payload": {
+      "key": "k1:measure",
+      "json": "{\"version\":\"4.14.0\",\"violations\":[]}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k1",
+         "probe": "axe",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "lang-missing-fail: html-has-lang is confirmed, WCAG 3.1.1",
+   "steps": [
+    {
+     "from": "measuring",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/"
+     },
+     "payload": {
+      "key": "k1:measure",
+      "json": "{\"version\":\"4.14.0\",\"violations\":[{\"id\":\"html-has-lang\",\"impact\":\"serious\",\"tags\":[\"cat.language\",\"wcag2a\",\"wcag311\",\"TTv5\",\"TT11.a\",\"EN-301-549\",\"EN-9.3.1.1\",\"ACT\",\"RGAAv4\",\"RGAA-8.3.1\"],\"nodes\":[{\"target\":\"html\",\"html\":\"<html>\"}]}]}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k1",
+         "probe": "axe",
+         "findings": [
+          {
+           "id": "axe:html-has-lang:html",
+           "pageUrl": "http://127.0.0.1:24680/",
+           "rule": "html-has-lang",
+           "wcag": [
+            {
+             "criterion": "3.1.1",
+             "level": "A",
+             "version": "2.0"
+            }
+           ],
+           "method": "engine",
+           "engines": [
+            "axe"
+           ],
+           "impact": "serious",
+           "confidence": "confirmed",
+           "selector": "html",
+           "snippet": "<html>",
+           "evidence": "axe-core 4.14.0",
+           "count": 1
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a WCAG 2.2 rule with a two digit sub-criterion keeps its version and dotted criterion; a rule with two nodes gives two findings",
+   "steps": [
+    {
+     "from": "measuring",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/"
+     },
+     "payload": {
+      "key": "k1:measure",
+      "json": "{\"version\":\"4.14.0\",\"violations\":[{\"id\":\"target-size\",\"impact\":\"serious\",\"tags\":[\"cat.sensory-and-visual-cues\",\"wcag22aa\",\"wcag258\"],\"nodes\":[{\"target\":\"#a\",\"html\":\"<a id=\\\"a\\\">x</a>\"},{\"target\":\"#b\",\"html\":\"<a id=\\\"b\\\">y</a>\"}]}]}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k1",
+         "probe": "axe",
+         "findings": [
+          {
+           "id": "axe:target-size:#a",
+           "pageUrl": "http://127.0.0.1:24680/",
+           "rule": "target-size",
+           "wcag": [
+            {
+             "criterion": "2.5.8",
+             "level": "AA",
+             "version": "2.2"
+            }
+           ],
+           "method": "engine",
+           "engines": [
+            "axe"
+           ],
+           "impact": "serious",
+           "confidence": "needs-verification",
+           "selector": "#a",
+           "snippet": "<a id=\"a\">x</a>",
+           "evidence": "axe-core 4.14.0",
+           "count": 1
+          },
+          {
+           "id": "axe:target-size:#b",
+           "pageUrl": "http://127.0.0.1:24680/",
+           "rule": "target-size",
+           "wcag": [
+            {
+             "criterion": "2.5.8",
+             "level": "AA",
+             "version": "2.2"
+            }
+           ],
+           "method": "engine",
+           "engines": [
+            "axe"
+           ],
+           "impact": "serious",
+           "confidence": "needs-verification",
+           "selector": "#b",
+           "snippet": "<a id=\"b\">y</a>",
+           "evidence": "axe-core 4.14.0",
+           "count": 1
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a four digit criterion tag becomes a dotted criterion and a null impact takes the unmapped impact",
+   "steps": [
+    {
+     "from": "measuring",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/"
+     },
+     "payload": {
+      "key": "k1:measure",
+      "json": "{\"version\":\"4.14.0\",\"violations\":[{\"id\":\"avoid-inline-spacing\",\"tags\":[\"wcag21aa\",\"wcag1412\"],\"nodes\":[{\"target\":\"p\",\"html\":\"<p>\"}]}]}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k1",
+         "probe": "axe",
+         "findings": [
+          {
+           "id": "axe:avoid-inline-spacing:p",
+           "pageUrl": "http://127.0.0.1:24680/",
+           "rule": "avoid-inline-spacing",
+           "wcag": [
+            {
+             "criterion": "1.4.12",
+             "level": "AA",
+             "version": "2.1"
+            }
+           ],
+           "method": "engine",
+           "engines": [
+            "axe"
+           ],
+           "impact": "moderate",
+           "confidence": "needs-verification",
+           "selector": "p",
+           "snippet": "<p>",
+           "evidence": "axe-core 4.14.0",
+           "count": 1
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a rule with no wcagNNN tag keeps an empty wcag list",
+   "steps": [
+    {
+     "from": "measuring",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/"
+     },
+     "payload": {
+      "key": "k1:measure",
+      "json": "{\"version\":\"4.14.0\",\"violations\":[{\"id\":\"x-rule\",\"impact\":\"minor\",\"tags\":[\"wcag2a\"],\"nodes\":[{\"target\":\"p\",\"html\":\"<p>\"}]}]}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k1",
+         "probe": "axe",
+         "findings": [
+          {
+           "id": "axe:x-rule:p",
+           "pageUrl": "http://127.0.0.1:24680/",
+           "rule": "x-rule",
+           "wcag": [],
+           "method": "engine",
+           "engines": [
+            "axe"
+           ],
+           "impact": "minor",
+           "confidence": "needs-verification",
+           "selector": "p",
+           "snippet": "<p>",
+           "evidence": "axe-core 4.14.0",
+           "count": 1
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a page failure while injecting answers PROBE_FAILED with the page's code",
+   "steps": [
+    {
+     "from": "injecting",
+     "event": "PAGE_FAILED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/"
+     },
+     "payload": {
+      "key": "k1:inject",
+      "error": "no such file",
+      "code": "inject_failed"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_FAILED",
+        "payload": {
+         "key": "k1",
+         "probe": "axe",
+         "error": "no such file",
+         "code": "inject_failed"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a measure answer that is not an axe result answers axe_bad_reply",
+   "steps": [
+    {
+     "from": "measuring",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/"
+     },
+     "payload": {
+      "key": "k1:measure",
+      "json": "{\"x\":1}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_FAILED",
+        "payload": {
+         "key": "k1",
+         "probe": "axe",
+         "error": "the page answered no axe result",
+         "code": "axe_bad_reply"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a second PROBE_RUN while one is in flight answers probe_busy and keeps the first",
+   "steps": [
+    {
+     "from": "measuring",
+     "event": "PROBE_RUN",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/"
+     },
+     "payload": {
+      "key": "k2",
+      "pageUrl": "http://127.0.0.1:24680/"
+     },
+     "expect": {
+      "state": "measuring",
+      "emits": [
+       {
+        "event": "PROBE_FAILED",
+        "payload": {
+         "key": "k2",
+         "probe": "axe",
+         "code": "probe_busy"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

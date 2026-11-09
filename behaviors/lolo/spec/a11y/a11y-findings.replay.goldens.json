@@ -1,0 +1,2219 @@
+{
+ "atom": "a11y/atoms/std-a11y-findings.lolo",
+ "trait": "A11yFindings",
+ "cases": [
+  {
+   "id": "the same element from axe and WAVE is one confirmed finding listing both engines",
+   "steps": [
+    {
+     "trait": "A11yFindings",
+     "event": "FINDINGS_MERGE",
+     "payload": {
+      "key": "k",
+      "findings": [
+       {
+        "id": "ax1",
+        "pageUrl": "https://a.test/",
+        "rule": "color-contrast",
+        "wcag": [
+         {
+          "criterion": "1.4.3",
+          "level": "AA",
+          "version": "2.1"
+         }
+        ],
+        "method": "engine",
+        "engines": [
+         "axe-core"
+        ],
+        "impact": "serious",
+        "confidence": "needs-verification",
+        "selector": "#a",
+        "snippet": "<a class=x>",
+        "evidence": "",
+        "count": 1
+       },
+       {
+        "id": "wv1",
+        "pageUrl": "https://a.test/",
+        "rule": "color-contrast",
+        "wcag": [
+         {
+          "criterion": "1.4.3",
+          "level": "AA",
+          "version": "2.1"
+         }
+        ],
+        "method": "engine",
+        "engines": [
+         "wave"
+        ],
+        "impact": "moderate",
+        "confidence": "needs-verification",
+        "selector": "#a",
+        "snippet": "<a>",
+        "evidence": "shot.png",
+        "count": 1
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "FINDINGS_MERGED",
+        "payload": {
+         "key": "k",
+         "findings": [
+          {
+           "id": "ax1",
+           "pageUrl": "https://a.test/",
+           "rule": "color-contrast",
+           "wcag": [
+            {
+             "criterion": "1.4.3",
+             "level": "AA",
+             "version": "2.1"
+            }
+           ],
+           "method": "engine",
+           "engines": [
+            "axe-core",
+            "wave"
+           ],
+           "impact": "serious",
+           "confidence": "confirmed",
+           "selector": "#a",
+           "snippet": "<a class=x>",
+           "evidence": "shot.png",
+           "count": 2
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: axe alone on the element stays needs-verification",
+   "steps": [
+    {
+     "trait": "A11yFindings",
+     "event": "FINDINGS_MERGE",
+     "payload": {
+      "key": "k",
+      "findings": [
+       {
+        "id": "ax1",
+        "pageUrl": "https://a.test/",
+        "rule": "color-contrast",
+        "wcag": [
+         {
+          "criterion": "1.4.3",
+          "level": "AA",
+          "version": "2.1"
+         }
+        ],
+        "method": "engine",
+        "engines": [
+         "axe-core"
+        ],
+        "impact": "serious",
+        "confidence": "needs-verification",
+        "selector": "#a",
+        "snippet": "<a class=x>",
+        "evidence": "",
+        "count": 1
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "FINDINGS_MERGED",
+        "payload": {
+         "key": "k",
+         "findings": [
+          {
+           "id": "ax1",
+           "pageUrl": "https://a.test/",
+           "rule": "color-contrast",
+           "wcag": [
+            {
+             "criterion": "1.4.3",
+             "level": "AA",
+             "version": "2.1"
+            }
+           ],
+           "method": "engine",
+           "engines": [
+            "axe-core"
+           ],
+           "impact": "serious",
+           "confidence": "needs-verification",
+           "selector": "#a",
+           "snippet": "<a class=x>",
+           "evidence": "",
+           "count": 1
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "one engine reporting the element twice is not two engines",
+   "steps": [
+    {
+     "trait": "A11yFindings",
+     "event": "FINDINGS_MERGE",
+     "payload": {
+      "key": "k",
+      "findings": [
+       {
+        "id": "ax1",
+        "pageUrl": "https://a.test/",
+        "rule": "color-contrast",
+        "wcag": [
+         {
+          "criterion": "1.4.3",
+          "level": "AA",
+          "version": "2.1"
+         }
+        ],
+        "method": "engine",
+        "engines": [
+         "axe-core"
+        ],
+        "impact": "serious",
+        "confidence": "needs-verification",
+        "selector": "#a",
+        "snippet": "<a class=x>",
+        "evidence": "",
+        "count": 1
+       },
+       {
+        "id": "ax2",
+        "pageUrl": "https://a.test/",
+        "rule": "color-contrast",
+        "wcag": [
+         {
+          "criterion": "1.4.3",
+          "level": "AA",
+          "version": "2.1"
+         }
+        ],
+        "method": "engine",
+        "engines": [
+         "axe-core"
+        ],
+        "impact": "serious",
+        "confidence": "needs-verification",
+        "selector": "#a",
+        "snippet": "<a>",
+        "evidence": "",
+        "count": 1
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "FINDINGS_MERGED",
+        "payload": {
+         "key": "k",
+         "findings": [
+          {
+           "id": "ax1",
+           "pageUrl": "https://a.test/",
+           "rule": "color-contrast",
+           "wcag": [
+            {
+             "criterion": "1.4.3",
+             "level": "AA",
+             "version": "2.1"
+            }
+           ],
+           "method": "engine",
+           "engines": [
+            "axe-core"
+           ],
+           "impact": "serious",
+           "confidence": "needs-verification",
+           "selector": "#a",
+           "snippet": "<a class=x>",
+           "evidence": "",
+           "count": 2
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a finding already confirmed by a probe stays confirmed alone",
+   "steps": [
+    {
+     "trait": "A11yFindings",
+     "event": "FINDINGS_MERGE",
+     "payload": {
+      "key": "k",
+      "findings": [
+       {
+        "id": "p1",
+        "pageUrl": "https://a.test/",
+        "rule": "color-contrast",
+        "wcag": [
+         {
+          "criterion": "1.4.3",
+          "level": "AA",
+          "version": "2.1"
+         }
+        ],
+        "method": "probe",
+        "engines": [
+         "focus-probe"
+        ],
+        "impact": "serious",
+        "confidence": "confirmed",
+        "selector": "#a",
+        "snippet": "<a>",
+        "evidence": "",
+        "count": 1
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "FINDINGS_MERGED",
+        "payload": {
+         "key": "k",
+         "findings": [
+          {
+           "id": "p1",
+           "pageUrl": "https://a.test/",
+           "rule": "color-contrast",
+           "wcag": [
+            {
+             "criterion": "1.4.3",
+             "level": "AA",
+             "version": "2.1"
+            }
+           ],
+           "method": "probe",
+           "engines": [
+            "focus-probe"
+           ],
+           "impact": "serious",
+           "confidence": "confirmed",
+           "selector": "#a",
+           "snippet": "<a>",
+           "evidence": "",
+           "count": 1
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "two engines with method probe do not confirm by agreement",
+   "steps": [
+    {
+     "trait": "A11yFindings",
+     "event": "FINDINGS_MERGE",
+     "payload": {
+      "key": "k",
+      "findings": [
+       {
+        "id": "p1",
+        "pageUrl": "https://a.test/",
+        "rule": "color-contrast",
+        "wcag": [
+         {
+          "criterion": "1.4.3",
+          "level": "AA",
+          "version": "2.1"
+         }
+        ],
+        "method": "probe",
+        "engines": [
+         "a-probe"
+        ],
+        "impact": "serious",
+        "confidence": "needs-verification",
+        "selector": "#a",
+        "snippet": "<a>",
+        "evidence": "",
+        "count": 1
+       },
+       {
+        "id": "p2",
+        "pageUrl": "https://a.test/",
+        "rule": "color-contrast",
+        "wcag": [
+         {
+          "criterion": "1.4.3",
+          "level": "AA",
+          "version": "2.1"
+         }
+        ],
+        "method": "probe",
+        "engines": [
+         "b-probe"
+        ],
+        "impact": "serious",
+        "confidence": "needs-verification",
+        "selector": "#a",
+        "snippet": "<a>",
+        "evidence": "",
+        "count": 1
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "FINDINGS_MERGED",
+        "payload": {
+         "key": "k",
+         "findings": [
+          {
+           "id": "p1",
+           "pageUrl": "https://a.test/",
+           "rule": "color-contrast",
+           "wcag": [
+            {
+             "criterion": "1.4.3",
+             "level": "AA",
+             "version": "2.1"
+            }
+           ],
+           "method": "probe",
+           "engines": [
+            "a-probe",
+            "b-probe"
+           ],
+           "impact": "serious",
+           "confidence": "needs-verification",
+           "selector": "#a",
+           "snippet": "<a>",
+           "evidence": "",
+           "count": 2
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a confirmed finding in the group confirms the merge",
+   "steps": [
+    {
+     "trait": "A11yFindings",
+     "event": "FINDINGS_MERGE",
+     "payload": {
+      "key": "k",
+      "findings": [
+       {
+        "id": "p1",
+        "pageUrl": "https://a.test/",
+        "rule": "color-contrast",
+        "wcag": [
+         {
+          "criterion": "1.4.3",
+          "level": "AA",
+          "version": "2.1"
+         }
+        ],
+        "method": "probe",
+        "engines": [
+         "a-probe"
+        ],
+        "impact": "serious",
+        "confidence": "needs-verification",
+        "selector": "#a",
+        "snippet": "<a>",
+        "evidence": "",
+        "count": 1
+       },
+       {
+        "id": "p2",
+        "pageUrl": "https://a.test/",
+        "rule": "color-contrast",
+        "wcag": [
+         {
+          "criterion": "1.4.3",
+          "level": "AA",
+          "version": "2.1"
+         }
+        ],
+        "method": "probe",
+        "engines": [
+         "b-probe"
+        ],
+        "impact": "serious",
+        "confidence": "confirmed",
+        "selector": "#a",
+        "snippet": "<a>",
+        "evidence": "",
+        "count": 1
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "FINDINGS_MERGED",
+        "payload": {
+         "key": "k",
+         "findings": [
+          {
+           "id": "p1",
+           "pageUrl": "https://a.test/",
+           "rule": "color-contrast",
+           "wcag": [
+            {
+             "criterion": "1.4.3",
+             "level": "AA",
+             "version": "2.1"
+            }
+           ],
+           "method": "probe",
+           "engines": [
+            "a-probe",
+            "b-probe"
+           ],
+           "impact": "serious",
+           "confidence": "confirmed",
+           "selector": "#a",
+           "snippet": "<a>",
+           "evidence": "",
+           "count": 2
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "different selectors stay separate findings",
+   "steps": [
+    {
+     "trait": "A11yFindings",
+     "event": "FINDINGS_MERGE",
+     "payload": {
+      "key": "k",
+      "findings": [
+       {
+        "id": "s2",
+        "pageUrl": "https://a.test/",
+        "rule": "color-contrast",
+        "wcag": [
+         {
+          "criterion": "1.4.3",
+          "level": "AA",
+          "version": "2.1"
+         }
+        ],
+        "method": "engine",
+        "engines": [
+         "axe-core"
+        ],
+        "impact": "serious",
+        "confidence": "needs-verification",
+        "selector": "#b",
+        "snippet": "<a>",
+        "evidence": "",
+        "count": 1
+       },
+       {
+        "id": "s1",
+        "pageUrl": "https://a.test/",
+        "rule": "color-contrast",
+        "wcag": [
+         {
+          "criterion": "1.4.3",
+          "level": "AA",
+          "version": "2.1"
+         }
+        ],
+        "method": "engine",
+        "engines": [
+         "axe-core"
+        ],
+        "impact": "serious",
+        "confidence": "needs-verification",
+        "selector": "#a",
+        "snippet": "<a>",
+        "evidence": "",
+        "count": 1
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "FINDINGS_MERGED",
+        "payload": {
+         "key": "k",
+         "findings": [
+          {
+           "id": "s1",
+           "pageUrl": "https://a.test/",
+           "rule": "color-contrast",
+           "wcag": [
+            {
+             "criterion": "1.4.3",
+             "level": "AA",
+             "version": "2.1"
+            }
+           ],
+           "method": "engine",
+           "engines": [
+            "axe-core"
+           ],
+           "impact": "serious",
+           "confidence": "needs-verification",
+           "selector": "#a",
+           "snippet": "<a>",
+           "evidence": "",
+           "count": 1
+          },
+          {
+           "id": "s2",
+           "pageUrl": "https://a.test/",
+           "rule": "color-contrast",
+           "wcag": [
+            {
+             "criterion": "1.4.3",
+             "level": "AA",
+             "version": "2.1"
+            }
+           ],
+           "method": "engine",
+           "engines": [
+            "axe-core"
+           ],
+           "impact": "serious",
+           "confidence": "needs-verification",
+           "selector": "#b",
+           "snippet": "<a>",
+           "evidence": "",
+           "count": 1
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: the same selector merges into one finding",
+   "steps": [
+    {
+     "trait": "A11yFindings",
+     "event": "FINDINGS_MERGE",
+     "payload": {
+      "key": "k",
+      "findings": [
+       {
+        "id": "s1",
+        "pageUrl": "https://a.test/",
+        "rule": "color-contrast",
+        "wcag": [
+         {
+          "criterion": "1.4.3",
+          "level": "AA",
+          "version": "2.1"
+         }
+        ],
+        "method": "engine",
+        "engines": [
+         "axe-core"
+        ],
+        "impact": "serious",
+        "confidence": "needs-verification",
+        "selector": "#a",
+        "snippet": "<a>",
+        "evidence": "",
+        "count": 1
+       },
+       {
+        "id": "s3",
+        "pageUrl": "https://a.test/",
+        "rule": "color-contrast",
+        "wcag": [
+         {
+          "criterion": "1.4.3",
+          "level": "AA",
+          "version": "2.1"
+         }
+        ],
+        "method": "engine",
+        "engines": [
+         "axe-core"
+        ],
+        "impact": "serious",
+        "confidence": "needs-verification",
+        "selector": "#a",
+        "snippet": "<a>",
+        "evidence": "",
+        "count": 1
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "FINDINGS_MERGED",
+        "payload": {
+         "key": "k",
+         "findings": [
+          {
+           "id": "s1",
+           "pageUrl": "https://a.test/",
+           "rule": "color-contrast",
+           "wcag": [
+            {
+             "criterion": "1.4.3",
+             "level": "AA",
+             "version": "2.1"
+            }
+           ],
+           "method": "engine",
+           "engines": [
+            "axe-core"
+           ],
+           "impact": "serious",
+           "confidence": "needs-verification",
+           "selector": "#a",
+           "snippet": "<a>",
+           "evidence": "",
+           "count": 2
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the merged impact is the highest of the group",
+   "steps": [
+    {
+     "trait": "A11yFindings",
+     "event": "FINDINGS_MERGE",
+     "payload": {
+      "key": "k",
+      "findings": [
+       {
+        "id": "i1",
+        "pageUrl": "https://a.test/",
+        "rule": "color-contrast",
+        "wcag": [
+         {
+          "criterion": "1.4.3",
+          "level": "AA",
+          "version": "2.1"
+         }
+        ],
+        "method": "engine",
+        "engines": [
+         "axe-core"
+        ],
+        "impact": "minor",
+        "confidence": "needs-verification",
+        "selector": "#a",
+        "snippet": "<a>",
+        "evidence": "",
+        "count": 1
+       },
+       {
+        "id": "i2",
+        "pageUrl": "https://a.test/",
+        "rule": "color-contrast",
+        "wcag": [
+         {
+          "criterion": "1.4.3",
+          "level": "AA",
+          "version": "2.1"
+         }
+        ],
+        "method": "engine",
+        "engines": [
+         "wave"
+        ],
+        "impact": "serious",
+        "confidence": "needs-verification",
+        "selector": "#a",
+        "snippet": "<a>",
+        "evidence": "",
+        "count": 1
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "FINDINGS_MERGED",
+        "payload": {
+         "key": "k",
+         "findings": [
+          {
+           "id": "i1",
+           "pageUrl": "https://a.test/",
+           "rule": "color-contrast",
+           "wcag": [
+            {
+             "criterion": "1.4.3",
+             "level": "AA",
+             "version": "2.1"
+            }
+           ],
+           "method": "engine",
+           "engines": [
+            "axe-core",
+            "wave"
+           ],
+           "impact": "serious",
+           "confidence": "confirmed",
+           "selector": "#a",
+           "snippet": "<a>",
+           "evidence": "",
+           "count": 2
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: equal impacts keep that impact",
+   "steps": [
+    {
+     "trait": "A11yFindings",
+     "event": "FINDINGS_MERGE",
+     "payload": {
+      "key": "k",
+      "findings": [
+       {
+        "id": "i1",
+        "pageUrl": "https://a.test/",
+        "rule": "color-contrast",
+        "wcag": [
+         {
+          "criterion": "1.4.3",
+          "level": "AA",
+          "version": "2.1"
+         }
+        ],
+        "method": "engine",
+        "engines": [
+         "axe-core"
+        ],
+        "impact": "minor",
+        "confidence": "needs-verification",
+        "selector": "#a",
+        "snippet": "<a>",
+        "evidence": "",
+        "count": 1
+       },
+       {
+        "id": "i3",
+        "pageUrl": "https://a.test/",
+        "rule": "color-contrast",
+        "wcag": [
+         {
+          "criterion": "1.4.3",
+          "level": "AA",
+          "version": "2.1"
+         }
+        ],
+        "method": "engine",
+        "engines": [
+         "wave"
+        ],
+        "impact": "minor",
+        "confidence": "needs-verification",
+        "selector": "#a",
+        "snippet": "<a>",
+        "evidence": "",
+        "count": 1
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "FINDINGS_MERGED",
+        "payload": {
+         "key": "k",
+         "findings": [
+          {
+           "id": "i1",
+           "pageUrl": "https://a.test/",
+           "rule": "color-contrast",
+           "wcag": [
+            {
+             "criterion": "1.4.3",
+             "level": "AA",
+             "version": "2.1"
+            }
+           ],
+           "method": "engine",
+           "engines": [
+            "axe-core",
+            "wave"
+           ],
+           "impact": "minor",
+           "confidence": "confirmed",
+           "selector": "#a",
+           "snippet": "<a>",
+           "evidence": "",
+           "count": 2
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "critical outranks every other impact",
+   "steps": [
+    {
+     "trait": "A11yFindings",
+     "event": "FINDINGS_MERGE",
+     "payload": {
+      "key": "k",
+      "findings": [
+       {
+        "id": "c1",
+        "pageUrl": "https://a.test/",
+        "rule": "color-contrast",
+        "wcag": [
+         {
+          "criterion": "1.4.3",
+          "level": "AA",
+          "version": "2.1"
+         }
+        ],
+        "method": "engine",
+        "engines": [
+         "axe-core"
+        ],
+        "impact": "moderate",
+        "confidence": "needs-verification",
+        "selector": "#a",
+        "snippet": "<a>",
+        "evidence": "",
+        "count": 1
+       },
+       {
+        "id": "c2",
+        "pageUrl": "https://a.test/",
+        "rule": "color-contrast",
+        "wcag": [
+         {
+          "criterion": "1.4.3",
+          "level": "AA",
+          "version": "2.1"
+         }
+        ],
+        "method": "engine",
+        "engines": [
+         "axe-core"
+        ],
+        "impact": "critical",
+        "confidence": "needs-verification",
+        "selector": "#a",
+        "snippet": "<a>",
+        "evidence": "",
+        "count": 1
+       },
+       {
+        "id": "c3",
+        "pageUrl": "https://a.test/",
+        "rule": "color-contrast",
+        "wcag": [
+         {
+          "criterion": "1.4.3",
+          "level": "AA",
+          "version": "2.1"
+         }
+        ],
+        "method": "engine",
+        "engines": [
+         "axe-core"
+        ],
+        "impact": "serious",
+        "confidence": "needs-verification",
+        "selector": "#a",
+        "snippet": "<a>",
+        "evidence": "",
+        "count": 1
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "FINDINGS_MERGED",
+        "payload": {
+         "key": "k",
+         "findings": [
+          {
+           "id": "c1",
+           "pageUrl": "https://a.test/",
+           "rule": "color-contrast",
+           "wcag": [
+            {
+             "criterion": "1.4.3",
+             "level": "AA",
+             "version": "2.1"
+            }
+           ],
+           "method": "engine",
+           "engines": [
+            "axe-core"
+           ],
+           "impact": "critical",
+           "confidence": "needs-verification",
+           "selector": "#a",
+           "snippet": "<a>",
+           "evidence": "",
+           "count": 3
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: moderate outranks minor",
+   "steps": [
+    {
+     "trait": "A11yFindings",
+     "event": "FINDINGS_MERGE",
+     "payload": {
+      "key": "k",
+      "findings": [
+       {
+        "id": "c1",
+        "pageUrl": "https://a.test/",
+        "rule": "color-contrast",
+        "wcag": [
+         {
+          "criterion": "1.4.3",
+          "level": "AA",
+          "version": "2.1"
+         }
+        ],
+        "method": "engine",
+        "engines": [
+         "axe-core"
+        ],
+        "impact": "minor",
+        "confidence": "needs-verification",
+        "selector": "#a",
+        "snippet": "<a>",
+        "evidence": "",
+        "count": 1
+       },
+       {
+        "id": "c2",
+        "pageUrl": "https://a.test/",
+        "rule": "color-contrast",
+        "wcag": [
+         {
+          "criterion": "1.4.3",
+          "level": "AA",
+          "version": "2.1"
+         }
+        ],
+        "method": "engine",
+        "engines": [
+         "axe-core"
+        ],
+        "impact": "moderate",
+        "confidence": "needs-verification",
+        "selector": "#a",
+        "snippet": "<a>",
+        "evidence": "",
+        "count": 1
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "FINDINGS_MERGED",
+        "payload": {
+         "key": "k",
+         "findings": [
+          {
+           "id": "c1",
+           "pageUrl": "https://a.test/",
+           "rule": "color-contrast",
+           "wcag": [
+            {
+             "criterion": "1.4.3",
+             "level": "AA",
+             "version": "2.1"
+            }
+           ],
+           "method": "engine",
+           "engines": [
+            "axe-core"
+           ],
+           "impact": "moderate",
+           "confidence": "needs-verification",
+           "selector": "#a",
+           "snippet": "<a>",
+           "evidence": "",
+           "count": 2
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "order is page, then first criterion by its numeric parts, then selector",
+   "steps": [
+    {
+     "trait": "A11yFindings",
+     "event": "FINDINGS_MERGE",
+     "payload": {
+      "key": "k",
+      "findings": [
+       {
+        "id": "o4",
+        "pageUrl": "https://b.test/",
+        "rule": "image-alt",
+        "wcag": [
+         {
+          "criterion": "1.1.1",
+          "level": "A",
+          "version": "2.0"
+         }
+        ],
+        "method": "engine",
+        "engines": [
+         "axe-core"
+        ],
+        "impact": "serious",
+        "confidence": "needs-verification",
+        "selector": "#a",
+        "snippet": "<a>",
+        "evidence": "",
+        "count": 1
+       },
+       {
+        "id": "o2",
+        "pageUrl": "https://a.test/",
+        "rule": "reflow",
+        "wcag": [
+         {
+          "criterion": "1.4.10",
+          "level": "AA",
+          "version": "2.1"
+         }
+        ],
+        "method": "engine",
+        "engines": [
+         "axe-core"
+        ],
+        "impact": "serious",
+        "confidence": "needs-verification",
+        "selector": "#a",
+        "snippet": "<a>",
+        "evidence": "",
+        "count": 1
+       },
+       {
+        "id": "o1",
+        "pageUrl": "https://a.test/",
+        "rule": "color-contrast",
+        "wcag": [
+         {
+          "criterion": "1.4.3",
+          "level": "AA",
+          "version": "2.1"
+         }
+        ],
+        "method": "engine",
+        "engines": [
+         "axe-core"
+        ],
+        "impact": "serious",
+        "confidence": "needs-verification",
+        "selector": "#z",
+        "snippet": "<a>",
+        "evidence": "",
+        "count": 1
+       },
+       {
+        "id": "o3",
+        "pageUrl": "https://a.test/",
+        "rule": "r3",
+        "wcag": [
+         {
+          "criterion": "1.4.3",
+          "level": "AA",
+          "version": "2.1"
+         }
+        ],
+        "method": "engine",
+        "engines": [
+         "axe-core"
+        ],
+        "impact": "serious",
+        "confidence": "needs-verification",
+        "selector": "#a",
+        "snippet": "<a>",
+        "evidence": "",
+        "count": 1
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "FINDINGS_MERGED",
+        "payload": {
+         "key": "k",
+         "findings": [
+          {
+           "id": "o3",
+           "pageUrl": "https://a.test/",
+           "rule": "r3",
+           "wcag": [
+            {
+             "criterion": "1.4.3",
+             "level": "AA",
+             "version": "2.1"
+            }
+           ],
+           "method": "engine",
+           "engines": [
+            "axe-core"
+           ],
+           "impact": "serious",
+           "confidence": "needs-verification",
+           "selector": "#a",
+           "snippet": "<a>",
+           "evidence": "",
+           "count": 1
+          },
+          {
+           "id": "o1",
+           "pageUrl": "https://a.test/",
+           "rule": "color-contrast",
+           "wcag": [
+            {
+             "criterion": "1.4.3",
+             "level": "AA",
+             "version": "2.1"
+            }
+           ],
+           "method": "engine",
+           "engines": [
+            "axe-core"
+           ],
+           "impact": "serious",
+           "confidence": "needs-verification",
+           "selector": "#z",
+           "snippet": "<a>",
+           "evidence": "",
+           "count": 1
+          },
+          {
+           "id": "o2",
+           "pageUrl": "https://a.test/",
+           "rule": "reflow",
+           "wcag": [
+            {
+             "criterion": "1.4.10",
+             "level": "AA",
+             "version": "2.1"
+            }
+           ],
+           "method": "engine",
+           "engines": [
+            "axe-core"
+           ],
+           "impact": "serious",
+           "confidence": "needs-verification",
+           "selector": "#a",
+           "snippet": "<a>",
+           "evidence": "",
+           "count": 1
+          },
+          {
+           "id": "o4",
+           "pageUrl": "https://b.test/",
+           "rule": "image-alt",
+           "wcag": [
+            {
+             "criterion": "1.1.1",
+             "level": "A",
+             "version": "2.0"
+            }
+           ],
+           "method": "engine",
+           "engines": [
+            "axe-core"
+           ],
+           "impact": "serious",
+           "confidence": "needs-verification",
+           "selector": "#a",
+           "snippet": "<a>",
+           "evidence": "",
+           "count": 1
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: an already ordered input keeps its order",
+   "steps": [
+    {
+     "trait": "A11yFindings",
+     "event": "FINDINGS_MERGE",
+     "payload": {
+      "key": "k",
+      "findings": [
+       {
+        "id": "o3",
+        "pageUrl": "https://a.test/",
+        "rule": "r3",
+        "wcag": [
+         {
+          "criterion": "1.4.3",
+          "level": "AA",
+          "version": "2.1"
+         }
+        ],
+        "method": "engine",
+        "engines": [
+         "axe-core"
+        ],
+        "impact": "serious",
+        "confidence": "needs-verification",
+        "selector": "#a",
+        "snippet": "<a>",
+        "evidence": "",
+        "count": 1
+       },
+       {
+        "id": "o1",
+        "pageUrl": "https://a.test/",
+        "rule": "color-contrast",
+        "wcag": [
+         {
+          "criterion": "1.4.3",
+          "level": "AA",
+          "version": "2.1"
+         }
+        ],
+        "method": "engine",
+        "engines": [
+         "axe-core"
+        ],
+        "impact": "serious",
+        "confidence": "needs-verification",
+        "selector": "#z",
+        "snippet": "<a>",
+        "evidence": "",
+        "count": 1
+       },
+       {
+        "id": "o2",
+        "pageUrl": "https://a.test/",
+        "rule": "reflow",
+        "wcag": [
+         {
+          "criterion": "1.4.10",
+          "level": "AA",
+          "version": "2.1"
+         }
+        ],
+        "method": "engine",
+        "engines": [
+         "axe-core"
+        ],
+        "impact": "serious",
+        "confidence": "needs-verification",
+        "selector": "#a",
+        "snippet": "<a>",
+        "evidence": "",
+        "count": 1
+       },
+       {
+        "id": "o4",
+        "pageUrl": "https://b.test/",
+        "rule": "image-alt",
+        "wcag": [
+         {
+          "criterion": "1.1.1",
+          "level": "A",
+          "version": "2.0"
+         }
+        ],
+        "method": "engine",
+        "engines": [
+         "axe-core"
+        ],
+        "impact": "serious",
+        "confidence": "needs-verification",
+        "selector": "#a",
+        "snippet": "<a>",
+        "evidence": "",
+        "count": 1
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "FINDINGS_MERGED",
+        "payload": {
+         "key": "k",
+         "findings": [
+          {
+           "id": "o3",
+           "pageUrl": "https://a.test/",
+           "rule": "r3",
+           "wcag": [
+            {
+             "criterion": "1.4.3",
+             "level": "AA",
+             "version": "2.1"
+            }
+           ],
+           "method": "engine",
+           "engines": [
+            "axe-core"
+           ],
+           "impact": "serious",
+           "confidence": "needs-verification",
+           "selector": "#a",
+           "snippet": "<a>",
+           "evidence": "",
+           "count": 1
+          },
+          {
+           "id": "o1",
+           "pageUrl": "https://a.test/",
+           "rule": "color-contrast",
+           "wcag": [
+            {
+             "criterion": "1.4.3",
+             "level": "AA",
+             "version": "2.1"
+            }
+           ],
+           "method": "engine",
+           "engines": [
+            "axe-core"
+           ],
+           "impact": "serious",
+           "confidence": "needs-verification",
+           "selector": "#z",
+           "snippet": "<a>",
+           "evidence": "",
+           "count": 1
+          },
+          {
+           "id": "o2",
+           "pageUrl": "https://a.test/",
+           "rule": "reflow",
+           "wcag": [
+            {
+             "criterion": "1.4.10",
+             "level": "AA",
+             "version": "2.1"
+            }
+           ],
+           "method": "engine",
+           "engines": [
+            "axe-core"
+           ],
+           "impact": "serious",
+           "confidence": "needs-verification",
+           "selector": "#a",
+           "snippet": "<a>",
+           "evidence": "",
+           "count": 1
+          },
+          {
+           "id": "o4",
+           "pageUrl": "https://b.test/",
+           "rule": "image-alt",
+           "wcag": [
+            {
+             "criterion": "1.1.1",
+             "level": "A",
+             "version": "2.0"
+            }
+           ],
+           "method": "engine",
+           "engines": [
+            "axe-core"
+           ],
+           "impact": "serious",
+           "confidence": "needs-verification",
+           "selector": "#a",
+           "snippet": "<a>",
+           "evidence": "",
+           "count": 1
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a finding with an empty wcag list is kept and sorts after those with a criterion",
+   "steps": [
+    {
+     "trait": "A11yFindings",
+     "event": "FINDINGS_MERGE",
+     "payload": {
+      "key": "k",
+      "findings": [
+       {
+        "id": "n1",
+        "pageUrl": "https://a.test/",
+        "rule": "custom-rule",
+        "wcag": [],
+        "method": "engine",
+        "engines": [
+         "axe-core"
+        ],
+        "impact": "serious",
+        "confidence": "needs-verification",
+        "selector": "#a",
+        "snippet": "<a>",
+        "evidence": "",
+        "count": 1
+       },
+       {
+        "id": "n2",
+        "pageUrl": "https://a.test/",
+        "rule": "color-contrast",
+        "wcag": [
+         {
+          "criterion": "1.4.3",
+          "level": "AA",
+          "version": "2.1"
+         }
+        ],
+        "method": "engine",
+        "engines": [
+         "axe-core"
+        ],
+        "impact": "serious",
+        "confidence": "needs-verification",
+        "selector": "#z",
+        "snippet": "<a>",
+        "evidence": "",
+        "count": 1
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "FINDINGS_MERGED",
+        "payload": {
+         "key": "k",
+         "findings": [
+          {
+           "id": "n2",
+           "pageUrl": "https://a.test/",
+           "rule": "color-contrast",
+           "wcag": [
+            {
+             "criterion": "1.4.3",
+             "level": "AA",
+             "version": "2.1"
+            }
+           ],
+           "method": "engine",
+           "engines": [
+            "axe-core"
+           ],
+           "impact": "serious",
+           "confidence": "needs-verification",
+           "selector": "#z",
+           "snippet": "<a>",
+           "evidence": "",
+           "count": 1
+          },
+          {
+           "id": "n1",
+           "pageUrl": "https://a.test/",
+           "rule": "custom-rule",
+           "wcag": [],
+           "method": "engine",
+           "engines": [
+            "axe-core"
+           ],
+           "impact": "serious",
+           "confidence": "needs-verification",
+           "selector": "#a",
+           "snippet": "<a>",
+           "evidence": "",
+           "count": 1
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a mapped rule alone is kept with its criterion",
+   "steps": [
+    {
+     "trait": "A11yFindings",
+     "event": "FINDINGS_MERGE",
+     "payload": {
+      "key": "k",
+      "findings": [
+       {
+        "id": "n2",
+        "pageUrl": "https://a.test/",
+        "rule": "color-contrast",
+        "wcag": [
+         {
+          "criterion": "1.4.3",
+          "level": "AA",
+          "version": "2.1"
+         }
+        ],
+        "method": "engine",
+        "engines": [
+         "axe-core"
+        ],
+        "impact": "serious",
+        "confidence": "needs-verification",
+        "selector": "#z",
+        "snippet": "<a>",
+        "evidence": "",
+        "count": 1
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "FINDINGS_MERGED",
+        "payload": {
+         "key": "k",
+         "findings": [
+          {
+           "id": "n2",
+           "pageUrl": "https://a.test/",
+           "rule": "color-contrast",
+           "wcag": [
+            {
+             "criterion": "1.4.3",
+             "level": "AA",
+             "version": "2.1"
+            }
+           ],
+           "method": "engine",
+           "engines": [
+            "axe-core"
+           ],
+           "impact": "serious",
+           "confidence": "needs-verification",
+           "selector": "#z",
+           "snippet": "<a>",
+           "evidence": "",
+           "count": 1
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an empty input answers an empty list",
+   "steps": [
+    {
+     "trait": "A11yFindings",
+     "event": "FINDINGS_MERGE",
+     "payload": {
+      "key": "k",
+      "findings": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "FINDINGS_MERGED",
+        "payload": {
+         "key": "k",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: one finding answers one finding",
+   "steps": [
+    {
+     "trait": "A11yFindings",
+     "event": "FINDINGS_MERGE",
+     "payload": {
+      "key": "k",
+      "findings": [
+       {
+        "id": "s1",
+        "pageUrl": "https://a.test/",
+        "rule": "color-contrast",
+        "wcag": [
+         {
+          "criterion": "1.4.3",
+          "level": "AA",
+          "version": "2.1"
+         }
+        ],
+        "method": "engine",
+        "engines": [
+         "axe-core"
+        ],
+        "impact": "serious",
+        "confidence": "needs-verification",
+        "selector": "#a",
+        "snippet": "<a>",
+        "evidence": "",
+        "count": 1
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "FINDINGS_MERGED",
+        "payload": {
+         "key": "k",
+         "findings": [
+          {
+           "id": "s1",
+           "pageUrl": "https://a.test/",
+           "rule": "color-contrast",
+           "wcag": [
+            {
+             "criterion": "1.4.3",
+             "level": "AA",
+             "version": "2.1"
+            }
+           ],
+           "method": "engine",
+           "engines": [
+            "axe-core"
+           ],
+           "impact": "serious",
+           "confidence": "needs-verification",
+           "selector": "#a",
+           "snippet": "<a>",
+           "evidence": "",
+           "count": 1
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "wcag refs are the union deduplicated by criterion; id, snippet and first non-empty evidence follow the group",
+   "steps": [
+    {
+     "trait": "A11yFindings",
+     "event": "FINDINGS_MERGE",
+     "payload": {
+      "key": "k",
+      "findings": [
+       {
+        "id": "u1",
+        "pageUrl": "https://a.test/",
+        "rule": "color-contrast",
+        "wcag": [
+         {
+          "criterion": "1.4.3",
+          "level": "AA",
+          "version": "2.1"
+         }
+        ],
+        "method": "engine",
+        "engines": [
+         "axe-core"
+        ],
+        "impact": "serious",
+        "confidence": "needs-verification",
+        "selector": "#a",
+        "snippet": "<first>",
+        "evidence": "",
+        "count": 1
+       },
+       {
+        "id": "u2",
+        "pageUrl": "https://a.test/",
+        "rule": "color-contrast",
+        "wcag": [
+         {
+          "criterion": "1.4.3",
+          "level": "AA",
+          "version": "2.1"
+         },
+         {
+          "criterion": "1.4.11",
+          "level": "AA",
+          "version": "2.1"
+         }
+        ],
+        "method": "engine",
+        "engines": [
+         "wave"
+        ],
+        "impact": "serious",
+        "confidence": "needs-verification",
+        "selector": "#a",
+        "snippet": "<second>",
+        "evidence": "e2.png",
+        "count": 1
+       },
+       {
+        "id": "u3",
+        "pageUrl": "https://a.test/",
+        "rule": "color-contrast",
+        "wcag": [
+         {
+          "criterion": "1.4.11",
+          "level": "AA",
+          "version": "2.1"
+         }
+        ],
+        "method": "engine",
+        "engines": [
+         "pa11y"
+        ],
+        "impact": "serious",
+        "confidence": "needs-verification",
+        "selector": "#a",
+        "snippet": "<third>",
+        "evidence": "e3.png",
+        "count": 1
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "FINDINGS_MERGED",
+        "payload": {
+         "key": "k",
+         "findings": [
+          {
+           "id": "u1",
+           "pageUrl": "https://a.test/",
+           "rule": "color-contrast",
+           "wcag": [
+            {
+             "criterion": "1.4.3",
+             "level": "AA",
+             "version": "2.1"
+            },
+            {
+             "criterion": "1.4.11",
+             "level": "AA",
+             "version": "2.1"
+            }
+           ],
+           "method": "engine",
+           "engines": [
+            "axe-core",
+            "wave",
+            "pa11y"
+           ],
+           "impact": "serious",
+           "confidence": "confirmed",
+           "selector": "#a",
+           "snippet": "<first>",
+           "evidence": "e2.png",
+           "count": 3
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: the same refs on one finding stay as they are",
+   "steps": [
+    {
+     "trait": "A11yFindings",
+     "event": "FINDINGS_MERGE",
+     "payload": {
+      "key": "k",
+      "findings": [
+       {
+        "id": "u1",
+        "pageUrl": "https://a.test/",
+        "rule": "color-contrast",
+        "wcag": [
+         {
+          "criterion": "1.4.3",
+          "level": "AA",
+          "version": "2.1"
+         },
+         {
+          "criterion": "1.4.11",
+          "level": "AA",
+          "version": "2.1"
+         }
+        ],
+        "method": "engine",
+        "engines": [
+         "axe-core"
+        ],
+        "impact": "serious",
+        "confidence": "needs-verification",
+        "selector": "#a",
+        "snippet": "<a>",
+        "evidence": "",
+        "count": 1
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "FINDINGS_MERGED",
+        "payload": {
+         "key": "k",
+         "findings": [
+          {
+           "id": "u1",
+           "pageUrl": "https://a.test/",
+           "rule": "color-contrast",
+           "wcag": [
+            {
+             "criterion": "1.4.3",
+             "level": "AA",
+             "version": "2.1"
+            },
+            {
+             "criterion": "1.4.11",
+             "level": "AA",
+             "version": "2.1"
+            }
+           ],
+           "method": "engine",
+           "engines": [
+            "axe-core"
+           ],
+           "impact": "serious",
+           "confidence": "needs-verification",
+           "selector": "#a",
+           "snippet": "<a>",
+           "evidence": "",
+           "count": 1
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the same rule and selector on another page stays separate",
+   "steps": [
+    {
+     "trait": "A11yFindings",
+     "event": "FINDINGS_MERGE",
+     "payload": {
+      "key": "k",
+      "findings": [
+       {
+        "id": "g1",
+        "pageUrl": "https://b.test/",
+        "rule": "color-contrast",
+        "wcag": [
+         {
+          "criterion": "1.4.3",
+          "level": "AA",
+          "version": "2.1"
+         }
+        ],
+        "method": "engine",
+        "engines": [
+         "axe-core"
+        ],
+        "impact": "serious",
+        "confidence": "needs-verification",
+        "selector": "#a",
+        "snippet": "<a>",
+        "evidence": "",
+        "count": 1
+       },
+       {
+        "id": "g2",
+        "pageUrl": "https://a.test/",
+        "rule": "color-contrast",
+        "wcag": [
+         {
+          "criterion": "1.4.3",
+          "level": "AA",
+          "version": "2.1"
+         }
+        ],
+        "method": "engine",
+        "engines": [
+         "axe-core"
+        ],
+        "impact": "serious",
+        "confidence": "needs-verification",
+        "selector": "#a",
+        "snippet": "<a>",
+        "evidence": "",
+        "count": 1
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "FINDINGS_MERGED",
+        "payload": {
+         "key": "k",
+         "findings": [
+          {
+           "id": "g2",
+           "pageUrl": "https://a.test/",
+           "rule": "color-contrast",
+           "wcag": [
+            {
+             "criterion": "1.4.3",
+             "level": "AA",
+             "version": "2.1"
+            }
+           ],
+           "method": "engine",
+           "engines": [
+            "axe-core"
+           ],
+           "impact": "serious",
+           "confidence": "needs-verification",
+           "selector": "#a",
+           "snippet": "<a>",
+           "evidence": "",
+           "count": 1
+          },
+          {
+           "id": "g1",
+           "pageUrl": "https://b.test/",
+           "rule": "color-contrast",
+           "wcag": [
+            {
+             "criterion": "1.4.3",
+             "level": "AA",
+             "version": "2.1"
+            }
+           ],
+           "method": "engine",
+           "engines": [
+            "axe-core"
+           ],
+           "impact": "serious",
+           "confidence": "needs-verification",
+           "selector": "#a",
+           "snippet": "<a>",
+           "evidence": "",
+           "count": 1
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: another rule on the same page and selector stays separate",
+   "steps": [
+    {
+     "trait": "A11yFindings",
+     "event": "FINDINGS_MERGE",
+     "payload": {
+      "key": "k",
+      "findings": [
+       {
+        "id": "g1",
+        "pageUrl": "https://a.test/",
+        "rule": "x",
+        "wcag": [
+         {
+          "criterion": "1.4.3",
+          "level": "AA",
+          "version": "2.1"
+         }
+        ],
+        "method": "engine",
+        "engines": [
+         "axe-core"
+        ],
+        "impact": "serious",
+        "confidence": "needs-verification",
+        "selector": "#a",
+        "snippet": "<a>",
+        "evidence": "",
+        "count": 1
+       },
+       {
+        "id": "g2",
+        "pageUrl": "https://a.test/",
+        "rule": "y",
+        "wcag": [
+         {
+          "criterion": "1.4.3",
+          "level": "AA",
+          "version": "2.1"
+         }
+        ],
+        "method": "engine",
+        "engines": [
+         "axe-core"
+        ],
+        "impact": "serious",
+        "confidence": "needs-verification",
+        "selector": "#a",
+        "snippet": "<a>",
+        "evidence": "",
+        "count": 1
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "FINDINGS_MERGED",
+        "payload": {
+         "key": "k",
+         "findings": [
+          {
+           "id": "g1",
+           "pageUrl": "https://a.test/",
+           "rule": "x",
+           "wcag": [
+            {
+             "criterion": "1.4.3",
+             "level": "AA",
+             "version": "2.1"
+            }
+           ],
+           "method": "engine",
+           "engines": [
+            "axe-core"
+           ],
+           "impact": "serious",
+           "confidence": "needs-verification",
+           "selector": "#a",
+           "snippet": "<a>",
+           "evidence": "",
+           "count": 1
+          },
+          {
+           "id": "g2",
+           "pageUrl": "https://a.test/",
+           "rule": "y",
+           "wcag": [
+            {
+             "criterion": "1.4.3",
+             "level": "AA",
+             "version": "2.1"
+            }
+           ],
+           "method": "engine",
+           "engines": [
+            "axe-core"
+           ],
+           "impact": "serious",
+           "confidence": "needs-verification",
+           "selector": "#a",
+           "snippet": "<a>",
+           "evidence": "",
+           "count": 1
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

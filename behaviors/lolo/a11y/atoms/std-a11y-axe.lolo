@@ -1,0 +1,141 @@
+app std-a11y-axe [
+  version: "1.0.0",
+  description: "std-a11y-axe — runs the axe-core engine inside the tab a composed std-chrome drives and answers in the shared accessibility finding shape. PROBE_RUN { key, pageUrl } asks the page to evaluate the bundled axe.min.js (the script knob, a path relative to the scriptDir the composer gives std-chrome; axe-core 4.14.0, MPL-2.0), then asks it to run the WCAG 2.0 to 2.2 A and AA rules and answer a reduced result as JSON text (the version, and for each violation its id, impact, tags and for each node its target selector and HTML). PROBE_DONE { key, probe: axe, findings } carries one finding per node: rule is the axe rule id, method engine, engines axe, wcag derived from the wcagNNN tags (wcag143 is 1.4.3) with the level and version of the rule's wcag2a, wcag2aa, wcag21a, wcag21aa or wcag22aa tag, impact from the impactMap knob, confidence confirmed for a rule in the confirmedRules knob and needs-verification otherwise, and the axe version in evidence as axe-core <version>. PROBE_FAILED { key, probe, error, code } answers a page failure (the page's own code), an unreadable result (axe_bad_reply) or a run while another is in flight (probe_busy). The atom does not compose std-chrome: it emits the page requests and hears the page answers, whatever the composer wires. Answers count only under this run's keys."
+]
+uses Spec from "almadar-std/a11y-axe"
+
+type WcagRef = { criterion : string!, level : "A" | "AA" | "AAA"!, version : "2.0" | "2.1" | "2.2"! }
+type A11yFinding = { id : string!, pageUrl : string!, rule : string!, wcag : [WcagRef]!, method : "engine" | "probe" | "llm"!, engines : [string]!, impact : "critical" | "serious" | "moderate" | "minor"!, confidence : "confirmed" | "needs-verification"!, selector : string!, snippet : string!, evidence : string!, count : number! }
+type AnchoredEnv = { anchor : { env : string! }! }
+type AnchoredPath = { anchor : string!, path : string! }
+type ScriptPath = AnchoredEnv | AnchoredPath
+type AxeNode = { target : string!, html : string! }
+type AxeViolation = { id : string!, impact : string, tags : [string]!, nodes : [AxeNode]! }
+type AxeReply = { version : string!, violations : [AxeViolation]! }
+type AxeLevelTag = { tag : string!, level : "A" | "AA" | "AAA"!, version : "2.0" | "2.1" | "2.2"! }
+type AxeImpact = { axe : string!, impact : "critical" | "serious" | "moderate" | "minor"! }
+
+orbital AxeOrbital {
+  entity AxeRun [runtime] {
+    id : string!
+    runKey : string @description "The caller's name for the run in flight; blank when idle." = ""
+    pageUrl : string @description "The page the run in flight is about." = ""
+  }
+
+  trait AxeProbe -> AxeRun {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      PROBE_RUN -> injecting
+        (set @entity.runKey @payload.key)
+        (set @entity.pageUrl @payload.pageUrl)
+        (emit PAGE_INJECT { key: (str/concat @payload.key ":inject"), script: @config.script })
+    }
+
+    state injecting {
+      INIT -> idle
+      PROBE_RUN -> injecting
+        (emit PROBE_FAILED { key: @payload.key, probe: "axe", error: (str/concat "a run on " @entity.pageUrl " is in flight"), code: "probe_busy" })
+      PAGE_INJECTED -> measuring when (= @payload.key (str/concat @entity.runKey ":inject"))
+        (emit PAGE_MEASURE { key: (str/concat @entity.runKey ":measure"), expression: @config.expression })
+      PAGE_FAILED -> idle when (= @payload.key (str/concat @entity.runKey ":inject"))
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "axe", error: @payload.error, code: @payload.code })
+    }
+
+    state measuring {
+      INIT -> idle
+      PROBE_RUN -> measuring
+        (emit PROBE_FAILED { key: @payload.key, probe: "axe", error: (str/concat "a run on " @entity.pageUrl " is in flight"), code: "probe_busy" })
+      PAGE_FAILED -> idle when (= @payload.key (str/concat @entity.runKey ":measure"))
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "axe", error: @payload.error, code: @payload.code })
+      PAGE_MEASURED -> idle when (= @payload.key (str/concat @entity.runKey ":measure"))
+        (let ((doc (json/parse @payload.json AxeReply)))
+          (if (= @doc null)
+            (emit PROBE_FAILED { key: @entity.runKey, probe: "axe", error: "the page answered no axe result", code: "axe_bad_reply" })
+            (emit PROBE_DONE {
+              key: @entity.runKey,
+              probe: "axe",
+              findings: (array/flatten (array/map @doc.violations (fn v
+                (let ((lv (array/find @config.levelTags (fn e (array/includes @v.tags @e.tag))))
+                      (im (array/find @config.impactMap (fn e (= @e.axe @v.impact)))))
+                  (array/map @v.nodes (fn n {
+                    id: (str/concat "axe:" @v.id ":" @n.target),
+                    pageUrl: @entity.pageUrl,
+                    rule: @v.id,
+                    wcag: (if (= @lv null) [] (array/map (array/filter @v.tags (fn t (validate/pattern @t "^wcag[0-9]{3,4}$"))) (fn t {
+                      criterion: (str/concat (str/slice @t 4 5) "." (str/slice @t 5 6) "." (str/slice @t 6 (str/len @t))),
+                      level: @lv.level,
+                      version: @lv.version
+                    }))),
+                    method: "engine",
+                    engines: ["axe"],
+                    impact: (if (= @im null) @config.unmappedImpact @im.impact),
+                    confidence: (if (array/includes @config.confirmedRules @v.id) "confirmed" "needs-verification"),
+                    selector: @n.target,
+                    snippet: @n.html,
+                    evidence: (str/concat "axe-core " @doc.version),
+                    count: 1
+                  }))))))
+            })))
+    }
+
+    emits {
+      PROBE_DONE -> external { key : string!  probe : string!  findings : [A11yFinding]! }
+        @description "The run's findings, one per node of each axe violation, in the shared finding shape."
+        @synonyms "axe results, axe findings, accessibility engine findings"
+        @tier "primary"
+      PROBE_FAILED -> external { key : string!  probe : string!  error : string!  code : string! }
+        @description "The run failed: code is probe_busy, axe_bad_reply or the page's own failure code."
+        @synonyms "axe failed, axe error"
+        @tier "primary"
+      PAGE_INJECT -> external { key : string!  script : string! }
+        @description "Ask the page to evaluate the axe-core script file."
+        @tier "secondary"
+      PAGE_MEASURE -> external { key : string!  expression : string! }
+        @description "Ask the page to evaluate the axe run expression and answer its JSON text."
+        @tier "secondary"
+    }
+
+    listens {
+      PROBE_RUN { key : string!  pageUrl : string! }
+        @description "Run axe-core on the page the tab is already on and answer its accessibility findings."
+        @synonyms "axe run, axe scan, accessibility engine scan"
+      PAGE_INJECTED { key : string! }
+        @description "The page evaluated the injected script."
+      PAGE_MEASURED { key : string!  json : string! }
+        @description "The page's measurement as JSON text."
+      PAGE_FAILED { key : string!  error : string!  code : string! }
+        @description "A page request failed."
+    }
+
+    config {
+      script : string = "axe-core/axe.min.js"
+        @label "axe-core script"
+        @description "The axe.min.js path the page evaluates, relative to the scriptDir the composer gives std-chrome; the composer grants the read."
+        @tier "infra"
+      expression : string = "axe.run(document, { runOnly: { type: \"tag\", values: [\"wcag2a\", \"wcag2aa\", \"wcag21a\", \"wcag21aa\", \"wcag22aa\"] } }).then(function (r) { return JSON.stringify({ version: r.testEngine.version, violations: r.violations.map(function (v) { return { id: v.id, impact: v.impact || undefined, tags: v.tags, nodes: v.nodes.map(function (n) { return { target: n.target.map(function (t) { return Array.isArray(t) ? t.join(\" \") : t; }).join(\" \"), html: n.html }; }) }; }) }); })"
+        @label "Run expression"
+        @description "The page expression that runs axe-core and returns a JSON string of the reduced result; it only measures, the verdict is made here. The page host awaits the returned promise."
+        @tier "infra"
+      levelTags : [AxeLevelTag] = [{ tag: "wcag2a", level: "A", version: "2.0" }, { tag: "wcag2aa", level: "AA", version: "2.0" }, { tag: "wcag21a", level: "A", version: "2.1" }, { tag: "wcag21aa", level: "AA", version: "2.1" }, { tag: "wcag22aa", level: "AA", version: "2.2" }]
+        @label "Level tags"
+        @description "The axe tag that names a rule's conformance level and WCAG version; the first of these a rule carries is used for every criterion of the rule."
+        @tier "domain"
+      impactMap : [AxeImpact] = [{ axe: "critical", impact: "critical" }, { axe: "serious", impact: "serious" }, { axe: "moderate", impact: "moderate" }, { axe: "minor", impact: "minor" }]
+        @label "Impact map"
+        @description "Each axe impact with the finding impact it becomes."
+        @tier "domain"
+      unmappedImpact : "critical" | "serious" | "moderate" | "minor" = "moderate"
+        @label "Unmapped impact"
+        @description "The impact of a finding whose axe impact is absent or not in the impact map."
+        @tier "domain"
+      confirmedRules : [string] = ["html-has-lang", "html-lang-valid", "document-title", "duplicate-id", "duplicate-id-aria", "image-alt", "input-image-alt", "label", "button-name", "link-name", "frame-title", "meta-viewport"]
+        @label "Deterministic rules"
+        @description "The axe rules whose violation is a deterministic DOM fact; their findings are confirmed, every other rule's needs verification."
+        @tier "domain"
+    }
+  }
+
+  page boot as AxeProbePage -> AxeProbe
+}

@@ -378,6 +378,7 @@ orbital BehaviorPlayground {
 
     state browsing {
       INIT -> browsing
+      GUEST_REOPEN -> browsing
       STAGE_SHOWN -> browsing
         (render-ui main { type: stack, direction: vertical, gap: md, className: "h-full overflow-y-auto p-6", children: [
           { type: stack, direction: vertical, gap: xs, children: [
@@ -427,6 +428,7 @@ orbital BehaviorPlayground {
           { type: alert, variant: error, title: (str/concat @entity.behavior " could not be opened"), message: @entity.error }
         ] }] })
       BEHAVIOR_FAILED -> opening when (!= ?behavior @entity.behavior)
+      GUEST_REOPEN -> opening
       TOPIC_PICKED -> browsing
         (set @entity.topicPackage ?package)
         (set @entity.topic ?topic)
@@ -440,6 +442,16 @@ orbital BehaviorPlayground {
         (when (validate/required @entity.value)
         (render-ui main { type: box, className: "h-full min-h-0 overflow-auto", children: [@trait.GuestStage] }))
         (emit STATUS { behavior: @entity.behavior, topic: @entity.topic })
+      GUEST_REOPEN -> open
+        (when (!= @entity.value null) (emit LOAD_BEHAVIOR { behavior: @entity.behavior, value: @entity.value }))
+      BEHAVIOR_LOADED -> open
+      BEHAVIOR_FAILED -> failed when (= ?behavior @entity.behavior)
+        (set @entity.error ?error)
+        (set @entity.status failed)
+        (render-ui main { type: container, size: md, padding: lg, children: [{ type: stack, direction: vertical, gap: md, children: [
+          { type: alert, variant: error, title: (str/concat @entity.behavior " could not be opened"), message: @entity.error }
+        ] }] })
+      BEHAVIOR_FAILED -> open when (!= ?behavior @entity.behavior)
       TOPIC_PICKED -> browsing
         (emit GUEST_RESET {})
         (set @entity.topicPackage ?package)
@@ -461,6 +473,7 @@ orbital BehaviorPlayground {
     }
 
     state failed {
+      GUEST_REOPEN -> failed
       INIT -> browsing
         (emit STAGE_SHOWN {})
       OPEN -> opening
@@ -504,6 +517,9 @@ orbital BehaviorPlayground {
       PlaygroundRoute.ROUTE_OPEN -> OPEN
       PlaygroundLoader.BEHAVIOR_LOADED -> BEHAVIOR_LOADED
       PlaygroundLoader.BEHAVIOR_FAILED -> BEHAVIOR_FAILED
+      GuestSession.GUEST_REOPEN -> GUEST_REOPEN
+      GUEST_REOPEN { }
+        @description "The guest session asked for the open behavior's program again (its integrations changed)."
       OPEN {
         behavior : string!
         description : string
@@ -566,6 +582,7 @@ orbital BehaviorPlayground {
       GuestStage.GUEST_SEND -> GUEST_SEND
       GuestStage.GUEST_NAVIGATE -> GUEST_NAVIGATE
       GuestStage.GUEST_PERSONA_PICK -> GUEST_PERSONA_PICK
+      GuestStage.GUEST_INTEGRATIONS_PICK -> GUEST_INTEGRATIONS_PICK
       GuestMarks.MARKS_CHECKED -> GUEST_SEED_MARKED
     }
   }

@@ -1,0 +1,1 @@
+() => { const ctx = window.__a11yCtx; const out = { patched: !!ctx, href: location.href, navigations: ctx ? ctx.navigations : [], opened: ctx ? ctx.opened : 0, api: !!window.navigation }; if (ctx) { window.open = ctx.open; if (ctx.handler) window.navigation.removeEventListener('navigate', ctx.handler); delete window.__a11yCtx; } return JSON.stringify(out); }

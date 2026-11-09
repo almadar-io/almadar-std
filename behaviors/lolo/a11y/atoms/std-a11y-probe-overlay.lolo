@@ -1,0 +1,99 @@
+app std-a11y-probe-overlay [
+  version: "1.0.0",
+  description: "std-a11y-probe-overlay — finds accessibility overlay widgets (accessiBe, UserWay, EqualWeb, AudioEye, Recite Me) in the page a composed std-chrome shows; an overlay does not make a site compliant, so its presence is reported as information. PROBE_RUN { key, pageUrl } asks the page for the src of every script element as JSON text, then matches each src against the signatures knob (a vendor and a regex pattern) and answers PROBE_DONE { key, probe: overlay, findings } with one finding per matching script: rule overlay, no WCAG criterion, impact moderate, confidence confirmed (the script is a DOM fact), the script src as snippet and a script[src] selector. PROBE_FAILED { key, probe, error, code } answers a page failure (the page's own code), an unreadable measurement (overlay_bad_reply) or a run while another is in flight (probe_busy). The atom does not compose std-chrome: it emits the page request and hears the page answer, whatever the composer wires. Answers count only under this run's key."
+]
+uses Spec from "almadar-std/probe-overlay"
+
+type WcagRef = { criterion : string!, level : "A" | "AA" | "AAA"!, version : "2.0" | "2.1" | "2.2"! }
+type A11yFinding = { id : string!, pageUrl : string!, rule : string!, wcag : [WcagRef]!, method : "engine" | "probe" | "llm"!, engines : [string]!, impact : "critical" | "serious" | "moderate" | "minor"!, confidence : "confirmed" | "needs-verification"!, selector : string!, snippet : string!, evidence : string!, count : number! }
+type OverlayScripts = { scripts : [string]! }
+type OverlaySignature = { vendor : string!, srcPattern : string! }
+
+orbital OverlayOrbital {
+  entity OverlayRun [runtime] {
+    id : string!
+    runKey : string @description "The caller's name for the run in flight; blank when idle." = ""
+    pageUrl : string @description "The page the run in flight is about." = ""
+  }
+
+  trait OverlayProbe -> OverlayRun {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      PROBE_RUN -> measuring
+        (set @entity.runKey @payload.key)
+        (set @entity.pageUrl @payload.pageUrl)
+        (emit PAGE_MEASURE { key: (str/concat @payload.key ":measure"), expression: @config.expression })
+    }
+
+    state measuring {
+      INIT -> idle
+      PROBE_RUN -> measuring
+        (emit PROBE_FAILED { key: @payload.key, probe: "overlay", error: (str/concat "a run on " @entity.pageUrl " is in flight"), code: "probe_busy" })
+      PAGE_FAILED -> idle when (= @payload.key (str/concat @entity.runKey ":measure"))
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "overlay", error: @payload.error, code: @payload.code })
+      PAGE_MEASURED -> idle when (= @payload.key (str/concat @entity.runKey ":measure"))
+        (let ((doc (json/parse @payload.json OverlayScripts)))
+          (if (= @doc null)
+            (emit PROBE_FAILED { key: @entity.runKey, probe: "overlay", error: "the page answered no script list", code: "overlay_bad_reply" })
+            (emit PROBE_DONE {
+              key: @entity.runKey,
+              probe: "overlay",
+              findings: (array/map (array/filter @doc.scripts (fn src (array/some @config.signatures (fn sg (validate/pattern @src @sg.srcPattern))))) (fn src
+                (let ((sg (array/find @config.signatures (fn sg (validate/pattern @src @sg.srcPattern)))))
+                  {
+                    id: (str/concat "overlay:" @sg.vendor ":" @src),
+                    pageUrl: @entity.pageUrl,
+                    rule: "overlay",
+                    wcag: [],
+                    method: "probe",
+                    engines: ["probe"],
+                    impact: "moderate",
+                    confidence: "confirmed",
+                    selector: (str/concat "script[src=\"" @src "\"]"),
+                    snippet: @src,
+                    evidence: "",
+                    count: 1
+                  })))
+            })))
+    }
+
+    emits {
+      PROBE_DONE -> external { key : string!  probe : string!  findings : [A11yFinding]! }
+        @description "The run's findings, one per script that matches an overlay signature; an overlay is informational, it does not make a site compliant."
+        @synonyms "overlay found, accessibility overlay, accessibe userway"
+        @tier "primary"
+      PROBE_FAILED -> external { key : string!  probe : string!  error : string!  code : string! }
+        @description "The run failed: code is probe_busy, overlay_bad_reply or the page's own failure code."
+        @synonyms "overlay probe failed"
+        @tier "primary"
+      PAGE_MEASURE -> external { key : string!  expression : string! }
+        @description "Ask the page to list the src of every script element as JSON text."
+        @tier "secondary"
+    }
+
+    listens {
+      PROBE_RUN { key : string!  pageUrl : string! }
+        @description "Look for accessibility overlay widgets on the page the tab is already on."
+        @synonyms "overlay probe, detect overlay"
+      PAGE_MEASURED { key : string!  json : string! }
+        @description "The page's measurement as JSON text."
+      PAGE_FAILED { key : string!  error : string!  code : string! }
+        @description "A page request failed."
+    }
+
+    config {
+      expression : string = "JSON.stringify({ scripts: Array.from(document.querySelectorAll(\"script[src]\")).map(function (s) { return s.src; }) })"
+        @label "Script list expression"
+        @description "The page expression that returns a JSON string listing the src of every script element; it only measures, the verdict is made here."
+        @tier "infra"
+      signatures : [OverlaySignature] = [{ vendor: "accessiBe", srcPattern: "acsbapp\\.com" }, { vendor: "UserWay", srcPattern: "userway\\.org" }, { vendor: "EqualWeb", srcPattern: "equalweb\\.com" }, { vendor: "AudioEye", srcPattern: "audioeye\\.com" }, { vendor: "Recite Me", srcPattern: "reciteme\\.com" }, { vendor: "UserWay", srcPattern: "/vendor/userway/" }]
+        @label "Overlay signatures"
+        @description "Each overlay vendor with a regex matched against script src URLs; the last entry is the local fixture's stand-in widget."
+        @tier "domain"
+    }
+  }
+
+  page boot as OverlayProbePage -> OverlayProbe
+}

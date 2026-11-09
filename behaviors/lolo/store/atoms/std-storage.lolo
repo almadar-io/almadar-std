@@ -1,6 +1,6 @@
 app std-storage [
   version: "1.3.0",
-  description: "std-storage — S3-compatible object storage over SigV4-signed HTTP, signed in .lolo and sent through the composed std-http-keyed under keyed std-retry and std-timeout, so every call (upload, batch item, download, list, delete, presigned url) runs on its own row under its own key and concurrent calls stay independent. The host comes from the STORAGE_S3_HOST environment variable (granted as an env-anchored net entry, read at boot) and the signing region from STORAGE_S3_REGION (the region knob when unset), so a virtual-hosted bucket host, a regional endpoint or an emulator is a deployment setting. STORAGE_UPLOAD stores one object (a file payload with a base64 data URL, or a key + content pair), STORAGE_UPLOAD_MANY stores a batch one after another, STORAGE_DOWNLOAD returns an object as base64, STORAGE_LIST lists keys, STORAGE_DELETE removes one, STORAGE_GET_SIGNED_URL presigns a get or put url. A request that reaches the store is retried on 429, 500, 502, 503, 504, a timeout or a transport failure: three attempts in all, 100 then 200 ms apart, each attempt signed again with a fresh date. Every action answers with its result event, or STORAGE_FAILED ({code, message}). One signing step (STORAGE_SIGN, STORAGE_SIGN_KEY, STORAGE_SIGN_KEYED) builds the canonical request, the string to sign and the signature for every request and every presigned url; the secret access key never enters program data, it is a credential slot of hmac/sha256. The StorageClient tls and port knobs and the StorageHttp tls and port must agree, since the signed host header is the host the client sends.",
+  description: "std-storage — S3-compatible object storage over SigV4-signed HTTP, signed in .lolo and sent through the composed std-http-keyed under keyed std-retry and std-timeout, so every call (upload, batch item, download, list, delete, presigned url) runs on its own row under its own key and concurrent calls stay independent. The host comes from the STORAGE_S3_HOST environment variable (granted as an env-anchored net entry, read at boot) and the signing region from STORAGE_S3_REGION (the region knob when unset), so a virtual-hosted bucket host, a regional endpoint or an emulator is a deployment setting. STORAGE_UPLOAD stores one object (a file payload with a base64 data URL, or a key + content pair), STORAGE_UPLOAD_MANY stores a batch one after another, STORAGE_DOWNLOAD returns an object as base64, STORAGE_LIST lists keys, STORAGE_DELETE removes one, STORAGE_GET_SIGNED_URL presigns a get or put url. A request that reaches the store is retried on 429, 500, 502, 503, 504, a timeout or a transport failure: three attempts in all, 100 then 200 ms apart, each attempt signed again with a fresh date. Every action answers with its result event, or STORAGE_FAILED ({code, message}). One signing step (STORAGE_SIGN, STORAGE_SIGN_KEY, STORAGE_SIGN_KEYED) builds the canonical request, the string to sign and the signature for every request and every presigned url; the secret access key never enters program data, it is a credential slot of hmac/sha. The StorageClient tls and port knobs and the StorageHttp tls and port must agree, since the signed host header is the host the client sends.",
   env: ["STORAGE_S3_HOST", "STORAGE_S3_REGION", "STORAGE_ACCESS_KEY_ID"],
   net: { env STORAGE_S3_HOST, 443: [tcp] }
 ]
@@ -726,25 +726,25 @@ orbital StorageOrbital {
                                 scope: @scope
                               }))))))))))))
       STORAGE_SIGN_KEY -> idle
-        (let ((kd (hmac/sha256 @config.secretAccessKey @payload.day "base64" "AWS4")))
+        (let ((kd (hmac/sha 256 "credential" @config.secretAccessKey @payload.day "base64" "text" "AWS4")))
           (if (= @kd null)
             (emit STORAGE_SIGN_FAILED { mode: @payload.mode, message: "Storage credential not configured" })
             (let ((bd (bytes/from-base64 @kd)))
               (if (= @bd null)
                 (emit STORAGE_SIGN_FAILED { mode: @payload.mode, message: "The request could not be signed" })
-                (let ((kr (hmac/sha256-bytes @bd @payload.region "base64")))
+                (let ((kr (hmac/sha 256 "bytes" @bd @payload.region "base64")))
                   (if (= @kr null)
                     (emit STORAGE_SIGN_FAILED { mode: @payload.mode, message: "The request could not be signed" })
                     (let ((br (bytes/from-base64 @kr)))
                       (if (= @br null)
                         (emit STORAGE_SIGN_FAILED { mode: @payload.mode, message: "The request could not be signed" })
-                        (let ((ks (hmac/sha256-bytes @br @payload.service "base64")))
+                        (let ((ks (hmac/sha 256 "bytes" @br @payload.service "base64")))
                           (if (= @ks null)
                             (emit STORAGE_SIGN_FAILED { mode: @payload.mode, message: "The request could not be signed" })
                             (let ((bs (bytes/from-base64 @ks)))
                               (if (= @bs null)
                                 (emit STORAGE_SIGN_FAILED { mode: @payload.mode, message: "The request could not be signed" })
-                                (let ((kg (hmac/sha256-bytes @bs "aws4_request" "base64")))
+                                (let ((kg (hmac/sha 256 "bytes" @bs "aws4_request" "base64")))
                                   (if (= @kg null)
                                     (emit STORAGE_SIGN_FAILED { mode: @payload.mode, message: "The request could not be signed" })
                                     (emit STORAGE_SIGN_KEYED { kDate: @kd, signing: @kg, tag: @payload.tag, mode: @payload.mode, method: @payload.method, target: @payload.target, origin: @payload.origin, headers: @payload.headers, b64: @payload.b64, sts: @payload.sts, signedNames: @payload.signedNames, scope: @payload.scope })))))))))))))))
@@ -752,7 +752,7 @@ orbital StorageOrbital {
         (let ((kb (bytes/from-base64 @payload.signing)) (body (bytes/from-base64 @payload.b64)))
           (if (or (= @kb null) (= @body null))
             (emit STORAGE_SIGN_FAILED { mode: @payload.mode, message: "The request could not be signed" })
-            (let ((sig (hmac/sha256-bytes @kb @payload.sts "hex")))
+            (let ((sig (hmac/sha 256 "bytes" @kb @payload.sts "hex")))
               (if (= @sig null)
                 (emit STORAGE_SIGN_FAILED { mode: @payload.mode, message: "The request could not be signed" })
                 (if (= @payload.mode "header")
@@ -1064,7 +1064,7 @@ orbital StorageOrbital {
         @tier "infra"
       secretAccessKey : secret = "STORAGE_SECRET_ACCESS_KEY"
         @label "Secret access key credential"
-        @description "Name of the credential holding the S3 secret access key; resolved by the kernel inside hmac/sha256 on every signature, never held by the program."
+        @description "Name of the credential holding the S3 secret access key; resolved by the kernel inside hmac/sha on every signature, never held by the program."
         @synonyms "s3 secret, aws secret"
         @tier "infra"
       pathStyle : boolean = true

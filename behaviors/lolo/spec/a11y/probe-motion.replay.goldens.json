@@ -1,0 +1,714 @@
+{
+ "atom": "a11y/atoms/std-a11y-probe-motion.lolo",
+ "trait": "MotionProbe",
+ "note": "std-a11y-probe-motion with the page answers played as events. The snapshot JSON of each live case is the real result of the measure knob run in headless Chrome twice, 3.2 s apart (probe-motion.gen/gen_goldens.py), on carousel-fail, carousel-pass and probe-motion.gen/pages/motion-extra.html and motion-controlled.html; the expression asserted is probe-motion.gen/snapshot.measure.js. The 100 ms [background] tick that turns the due-at instant into MOTION_DUE is not played; MOTION_DUE is sent by hand. Regenerate with python3 -I probe-motion.gen/gen_goldens.py.",
+ "cases": [
+  {
+   "id": "PROBE_RUN asks the page for the first snapshot",
+   "steps": [
+    {
+     "from": "idle",
+     "event": "PROBE_RUN",
+     "payload": {
+      "key": "k1",
+      "pageUrl": "http://127.0.0.1:24680/"
+     },
+     "expect": {
+      "state": "first",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k1:first",
+         "expression": "((carousels, tags) => { const sel = (e) => { const p = []; for (let n = e; n && n.nodeType === 1; n = n.parentElement) { if (n.id) { p.unshift('#' + CSS.escape(n.id)); break; } let i = 1; for (let s = n.previousElementSibling; s; s = s.previousElementSibling) { if (s.tagName === n.tagName) i++; } p.unshift(n.tagName.toLowerCase() + ':nth-of-type(' + i + ')'); } return p.join('>'); }; const tag = (e) => e.cloneNode(false).outerHTML; const controls = (e) => Array.from(document.querySelectorAll('button[aria-controls]')).filter((b) => b.getAttribute('aria-controls').split(' ').some((id) => { const t = document.getElementById(id); return t !== null && (t === e || t.contains(e) || e.contains(t)); })).length + e.querySelectorAll('button[aria-pressed]').length; const elements = Array.from(document.body.querySelectorAll('*')).filter((e) => { const s = getComputedStyle(e); return s.transform !== 'none' || (s.position !== 'static' && (s.left !== 'auto' || s.top !== 'auto')) || ((s.overflowX === 'auto' || s.overflowX === 'scroll' || s.overflowY === 'auto' || s.overflowY === 'scroll') && (e.scrollWidth > e.clientWidth || e.scrollHeight > e.clientHeight)); }).map((e) => { const s = getComputedStyle(e); const r = e.getBoundingClientRect(); return { selector: sel(e), snippet: tag(e), transform: s.transform, left: s.left, top: s.top, scrollLeft: e.scrollLeft, scrollTop: e.scrollTop, x: r.x, y: r.y, controls: controls(e) }; }); const cars = Array.from(document.querySelectorAll(carousels)).map((c) => { const slides = Array.from(c.querySelectorAll('[aria-roledescription=\"slide\"]')); const clone = c.cloneNode(true); clone.querySelectorAll('button').forEach((b) => b.remove()); return { selector: sel(c), snippet: tag(c), index: slides.findIndex((x) => x.getAttribute('aria-hidden') !== 'true' && getComputedStyle(x).display !== 'none'), text: clone.textContent, controls: controls(c) }; }); const animations = document.getAnimations().filter((a) => a.effect !== null && a.effect.target !== null && a.effect.target !== undefined).map((a) => { const t = a.effect.getComputedTiming(); return { selector: sel(a.effect.target), snippet: tag(a.effect.target), name: a.animationName || a.transitionProperty || '', playState: a.playState, infinite: t.iterations === Infinity, activeDuration: Number.isFinite(t.activeDuration) ? t.activeDuration : 0, controls: controls(a.effect.target) }; }); const marquees = Array.from(document.querySelectorAll(tags)).map((m) => ({ selector: sel(m), snippet: tag(m), controls: controls(m) })); return JSON.stringify({ elements: elements, carousels: cars, animations: animations, marquees: marquees, ariaControlsButtons: document.querySelectorAll('button[aria-controls]').length }); })(\"[aria-roledescription=\\\"carousel\\\"]\",\"marquee,blink\")"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a second PROBE_RUN while a run is in flight is refused as probe_busy",
+   "steps": [
+    {
+     "from": "waiting",
+     "event": "PROBE_RUN",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/carousel-fail.html"
+     },
+     "payload": {
+      "key": "k2",
+      "pageUrl": "http://127.0.0.1:24680/"
+     },
+     "expect": {
+      "state": "waiting",
+      "emits": [
+       {
+        "event": "PROBE_FAILED",
+        "payload": {
+         "key": "k2",
+         "probe": "motion",
+         "error": "a run on http://127.0.0.1:24680/carousel-fail.html is in flight",
+         "code": "probe_busy"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a snapshot under another run's key is ignored",
+   "steps": [
+    {
+     "from": "first",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/carousel-fail.html"
+     },
+     "payload": {
+      "key": "k2:first",
+      "json": "{\"elements\":[{\"selector\":\"html:nth-of-type(1)>body:nth-of-type(1)>a:nth-of-type(1)\",\"snippet\":\"<a class=\\\"skip\\\" href=\\\"#main\\\"></a>\",\"transform\":\"none\",\"left\":\"-9999px\",\"top\":\"0px\",\"scrollLeft\":0,\"scrollTop\":0,\"x\":-9999,\"y\":0,\"controls\":0}],\"carousels\":[{\"selector\":\"#main>div:nth-of-type(1)\",\"snippet\":\"<div class=\\\"carousel\\\" aria-roledescription=\\\"carousel\\\" aria-label=\\\"Akcije\\\"></div>\",\"index\":-1,\"text\":\"Akcija 1: -10 % na lonce\",\"controls\":0}],\"animations\":[],\"marquees\":[],\"ariaControlsButtons\":0}"
+     },
+     "expect": {
+      "state": "first",
+      "emits": []
+     }
+    }
+   ]
+  },
+  {
+   "id": "a page failure while waiting answers PROBE_FAILED probe_page_failed",
+   "steps": [
+    {
+     "from": "waiting",
+     "event": "PAGE_FAILED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/carousel-fail.html"
+     },
+     "payload": {
+      "key": "k1:first",
+      "error": "tab closed",
+      "code": "chrome_gone"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_FAILED",
+        "payload": {
+         "key": "k1",
+         "probe": "motion",
+         "error": "tab closed",
+         "code": "probe_page_failed"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a first snapshot that is not the motion shape answers probe_bad_measure",
+   "steps": [
+    {
+     "from": "first",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/carousel-fail.html"
+     },
+     "payload": {
+      "key": "k1:first",
+      "json": "{\"elements\":3}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_FAILED",
+        "payload": {
+         "key": "k1",
+         "probe": "motion",
+         "error": "the page measurement is not the motion shape",
+         "code": "probe_bad_measure"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a second snapshot that is not the motion shape answers probe_bad_measure",
+   "steps": [
+    {
+     "from": "second",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/carousel-fail.html"
+     },
+     "payload": {
+      "key": "k1:second",
+      "json": "[]"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_FAILED",
+        "payload": {
+         "key": "k1",
+         "probe": "motion",
+         "error": "the page measurement is not the motion shape",
+         "code": "probe_bad_measure"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "carousel-fail: the first snapshot is held and the second is due intervalMs later",
+   "steps": [
+    {
+     "from": "first",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/carousel-fail.html"
+     },
+     "payload": {
+      "key": "k1:first",
+      "json": "{\"elements\":[{\"selector\":\"html:nth-of-type(1)>body:nth-of-type(1)>a:nth-of-type(1)\",\"snippet\":\"<a class=\\\"skip\\\" href=\\\"#main\\\"></a>\",\"transform\":\"none\",\"left\":\"-9999px\",\"top\":\"0px\",\"scrollLeft\":0,\"scrollTop\":0,\"x\":-9999,\"y\":0,\"controls\":0}],\"carousels\":[{\"selector\":\"#main>div:nth-of-type(1)\",\"snippet\":\"<div class=\\\"carousel\\\" aria-roledescription=\\\"carousel\\\" aria-label=\\\"Akcije\\\"></div>\",\"index\":-1,\"text\":\"Akcija 1: -10 % na lonce\",\"controls\":0}],\"animations\":[],\"marquees\":[],\"ariaControlsButtons\":0}"
+     },
+     "expect": {
+      "state": "waiting",
+      "entity": {
+       "snap": {
+        "elements": [
+         {
+          "selector": "html:nth-of-type(1)>body:nth-of-type(1)>a:nth-of-type(1)",
+          "snippet": "<a class=\"skip\" href=\"#main\"></a>",
+          "transform": "none",
+          "left": "-9999px",
+          "top": "0px",
+          "scrollLeft": 0,
+          "scrollTop": 0,
+          "x": -9999,
+          "y": 0,
+          "controls": 0
+         }
+        ],
+        "carousels": [
+         {
+          "selector": "#main>div:nth-of-type(1)",
+          "snippet": "<div class=\"carousel\" aria-roledescription=\"carousel\" aria-label=\"Akcije\"></div>",
+          "index": -1,
+          "text": "Akcija 1: -10 % na lonce",
+          "controls": 0
+         }
+        ],
+        "animations": [],
+        "marquees": [],
+        "ariaControlsButtons": 0
+       },
+       "dueAt": "2023-11-14T22:13:23.000Z"
+      }
+     },
+     "now": 1700000000000
+    }
+   ]
+  },
+  {
+   "id": "MOTION_DUE asks the page for the second snapshot",
+   "steps": [
+    {
+     "from": "waiting",
+     "event": "MOTION_DUE",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/carousel-fail.html"
+     },
+     "payload": {},
+     "expect": {
+      "state": "second",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k1:second",
+         "expression": "((carousels, tags) => { const sel = (e) => { const p = []; for (let n = e; n && n.nodeType === 1; n = n.parentElement) { if (n.id) { p.unshift('#' + CSS.escape(n.id)); break; } let i = 1; for (let s = n.previousElementSibling; s; s = s.previousElementSibling) { if (s.tagName === n.tagName) i++; } p.unshift(n.tagName.toLowerCase() + ':nth-of-type(' + i + ')'); } return p.join('>'); }; const tag = (e) => e.cloneNode(false).outerHTML; const controls = (e) => Array.from(document.querySelectorAll('button[aria-controls]')).filter((b) => b.getAttribute('aria-controls').split(' ').some((id) => { const t = document.getElementById(id); return t !== null && (t === e || t.contains(e) || e.contains(t)); })).length + e.querySelectorAll('button[aria-pressed]').length; const elements = Array.from(document.body.querySelectorAll('*')).filter((e) => { const s = getComputedStyle(e); return s.transform !== 'none' || (s.position !== 'static' && (s.left !== 'auto' || s.top !== 'auto')) || ((s.overflowX === 'auto' || s.overflowX === 'scroll' || s.overflowY === 'auto' || s.overflowY === 'scroll') && (e.scrollWidth > e.clientWidth || e.scrollHeight > e.clientHeight)); }).map((e) => { const s = getComputedStyle(e); const r = e.getBoundingClientRect(); return { selector: sel(e), snippet: tag(e), transform: s.transform, left: s.left, top: s.top, scrollLeft: e.scrollLeft, scrollTop: e.scrollTop, x: r.x, y: r.y, controls: controls(e) }; }); const cars = Array.from(document.querySelectorAll(carousels)).map((c) => { const slides = Array.from(c.querySelectorAll('[aria-roledescription=\"slide\"]')); const clone = c.cloneNode(true); clone.querySelectorAll('button').forEach((b) => b.remove()); return { selector: sel(c), snippet: tag(c), index: slides.findIndex((x) => x.getAttribute('aria-hidden') !== 'true' && getComputedStyle(x).display !== 'none'), text: clone.textContent, controls: controls(c) }; }); const animations = document.getAnimations().filter((a) => a.effect !== null && a.effect.target !== null && a.effect.target !== undefined).map((a) => { const t = a.effect.getComputedTiming(); return { selector: sel(a.effect.target), snippet: tag(a.effect.target), name: a.animationName || a.transitionProperty || '', playState: a.playState, infinite: t.iterations === Infinity, activeDuration: Number.isFinite(t.activeDuration) ? t.activeDuration : 0, controls: controls(a.effect.target) }; }); const marquees = Array.from(document.querySelectorAll(tags)).map((m) => ({ selector: sel(m), snippet: tag(m), controls: controls(m) })); return JSON.stringify({ elements: elements, carousels: cars, animations: animations, marquees: marquees, ariaControlsButtons: document.querySelectorAll('button[aria-controls]').length }); })(\"[aria-roledescription=\\\"carousel\\\"]\",\"marquee,blink\")"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: MOTION_DUE before the first snapshot is ignored",
+   "steps": [
+    {
+     "from": "first",
+     "event": "MOTION_DUE",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/carousel-fail.html"
+     },
+     "payload": {},
+     "expect": {
+      "state": "first",
+      "emits": []
+     }
+    }
+   ]
+  },
+  {
+   "id": "carousel-fail: the slide text changed between the snapshots and no button has aria-controls, so one confirmed finding",
+   "steps": [
+    {
+     "from": "second",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/carousel-fail.html",
+      "snap": {
+       "elements": [
+        {
+         "selector": "html:nth-of-type(1)>body:nth-of-type(1)>a:nth-of-type(1)",
+         "snippet": "<a class=\"skip\" href=\"#main\"></a>",
+         "transform": "none",
+         "left": "-9999px",
+         "top": "0px",
+         "scrollLeft": 0,
+         "scrollTop": 0,
+         "x": -9999,
+         "y": 0,
+         "controls": 0
+        }
+       ],
+       "carousels": [
+        {
+         "selector": "#main>div:nth-of-type(1)",
+         "snippet": "<div class=\"carousel\" aria-roledescription=\"carousel\" aria-label=\"Akcije\"></div>",
+         "index": -1,
+         "text": "Akcija 1: -10 % na lonce",
+         "controls": 0
+        }
+       ],
+       "animations": [],
+       "marquees": [],
+       "ariaControlsButtons": 0
+      }
+     },
+     "payload": {
+      "key": "k1:second",
+      "json": "{\"elements\":[{\"selector\":\"html:nth-of-type(1)>body:nth-of-type(1)>a:nth-of-type(1)\",\"snippet\":\"<a class=\\\"skip\\\" href=\\\"#main\\\"></a>\",\"transform\":\"none\",\"left\":\"-9999px\",\"top\":\"0px\",\"scrollLeft\":0,\"scrollTop\":0,\"x\":-9999,\"y\":0,\"controls\":0}],\"carousels\":[{\"selector\":\"#main>div:nth-of-type(1)\",\"snippet\":\"<div class=\\\"carousel\\\" aria-roledescription=\\\"carousel\\\" aria-label=\\\"Akcije\\\"></div>\",\"index\":-1,\"text\":\"Akcija 3: nove skodelice\",\"controls\":0}],\"animations\":[],\"marquees\":[],\"ariaControlsButtons\":0}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k1",
+         "probe": "motion",
+         "findings": [
+          {
+           "id": "http://127.0.0.1:24680/carousel-fail.html#motion-no-pause##main>div:nth-of-type(1)#advanced",
+           "pageUrl": "http://127.0.0.1:24680/carousel-fail.html",
+           "rule": "motion-no-pause",
+           "wcag": [
+            {
+             "criterion": "2.2.2",
+             "level": "A",
+             "version": "2.0"
+            }
+           ],
+           "method": "probe",
+           "engines": [
+            "probe"
+           ],
+           "impact": "serious",
+           "confidence": "confirmed",
+           "selector": "#main>div:nth-of-type(1)",
+           "snippet": "<div class=\"carousel\" aria-roledescription=\"carousel\" aria-label=\"Akcije\"></div>",
+           "evidence": "",
+           "count": 1
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: carousel-pass advances too but holds a button with aria-pressed, a declared pause control, so no finding",
+   "steps": [
+    {
+     "from": "second",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/carousel-pass.html",
+      "snap": {
+       "elements": [
+        {
+         "selector": "html:nth-of-type(1)>body:nth-of-type(1)>a:nth-of-type(1)",
+         "snippet": "<a class=\"skip\" href=\"#main\"></a>",
+         "transform": "none",
+         "left": "-9999px",
+         "top": "0px",
+         "scrollLeft": 0,
+         "scrollTop": 0,
+         "x": -9999,
+         "y": 0,
+         "controls": 0
+        }
+       ],
+       "carousels": [
+        {
+         "selector": "#main>div:nth-of-type(1)",
+         "snippet": "<div class=\"carousel\" aria-roledescription=\"carousel\" aria-label=\"Akcije\"></div>",
+         "index": -1,
+         "text": "Akcija 1: -10 % na lonce",
+         "controls": 1
+        }
+       ],
+       "animations": [],
+       "marquees": [],
+       "ariaControlsButtons": 0
+      }
+     },
+     "payload": {
+      "key": "k1:second",
+      "json": "{\"elements\":[{\"selector\":\"html:nth-of-type(1)>body:nth-of-type(1)>a:nth-of-type(1)\",\"snippet\":\"<a class=\\\"skip\\\" href=\\\"#main\\\"></a>\",\"transform\":\"none\",\"left\":\"-9999px\",\"top\":\"0px\",\"scrollLeft\":0,\"scrollTop\":0,\"x\":-9999,\"y\":0,\"controls\":0}],\"carousels\":[{\"selector\":\"#main>div:nth-of-type(1)\",\"snippet\":\"<div class=\\\"carousel\\\" aria-roledescription=\\\"carousel\\\" aria-label=\\\"Akcije\\\"></div>\",\"index\":-1,\"text\":\"Akcija 3: nove skodelice\",\"controls\":1}],\"animations\":[],\"marquees\":[],\"ariaControlsButtons\":0}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k1",
+         "probe": "motion",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "motion-extra: the endless spinner, the 6 s fade, the moving slider and the marquee are found; the still element, the 4 s fade and the ended 2 s fade are not, and the spinner is not also reported as moved",
+   "steps": [
+    {
+     "from": "second",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/motion-extra.html",
+      "snap": {
+       "elements": [
+        {
+         "selector": "#slider",
+         "snippet": "<div id=\"slider\" style=\"left: 10px;\"></div>",
+         "transform": "none",
+         "left": "10px",
+         "top": "0px",
+         "scrollLeft": 0,
+         "scrollTop": 0,
+         "x": 18,
+         "y": 8,
+         "controls": 0
+        },
+        {
+         "selector": "#still",
+         "snippet": "<div id=\"still\"></div>",
+         "transform": "none",
+         "left": "10px",
+         "top": "0px",
+         "scrollLeft": 0,
+         "scrollTop": 0,
+         "x": 18,
+         "y": 26,
+         "controls": 0
+        },
+        {
+         "selector": "#spin",
+         "snippet": "<div id=\"spin\"></div>",
+         "transform": "matrix(0.308407, -0.951254, 0.951254, 0.308407, 0, 0)",
+         "left": "auto",
+         "top": "auto",
+         "scrollLeft": 0,
+         "scrollTop": 0,
+         "x": 5.403382301330566,
+         "y": 41.40338134765625,
+         "controls": 0
+        }
+       ],
+       "carousels": [],
+       "animations": [
+        {
+         "selector": "#spin",
+         "snippet": "<div id=\"spin\"></div>",
+         "name": "spin",
+         "playState": "running",
+         "infinite": true,
+         "activeDuration": 0,
+         "controls": 0
+        },
+        {
+         "selector": "#brief",
+         "snippet": "<div id=\"brief\"></div>",
+         "name": "blip",
+         "playState": "running",
+         "infinite": false,
+         "activeDuration": 2000,
+         "controls": 0
+        },
+        {
+         "selector": "#long",
+         "snippet": "<div id=\"long\"></div>",
+         "name": "fade",
+         "playState": "running",
+         "infinite": false,
+         "activeDuration": 6000,
+         "controls": 0
+        },
+        {
+         "selector": "#medium",
+         "snippet": "<div id=\"medium\"></div>",
+         "name": "fade",
+         "playState": "running",
+         "infinite": false,
+         "activeDuration": 4000,
+         "controls": 0
+        }
+       ],
+       "marquees": [
+        {
+         "selector": "#news",
+         "snippet": "<marquee id=\"news\"></marquee>",
+         "controls": 0
+        }
+       ],
+       "ariaControlsButtons": 0
+      }
+     },
+     "payload": {
+      "key": "k1:second",
+      "json": "{\"elements\":[{\"selector\":\"#slider\",\"snippet\":\"<div id=\\\"slider\\\" style=\\\"left: 80px;\\\"></div>\",\"transform\":\"none\",\"left\":\"80px\",\"top\":\"0px\",\"scrollLeft\":0,\"scrollTop\":0,\"x\":88,\"y\":8,\"controls\":0},{\"selector\":\"#still\",\"snippet\":\"<div id=\\\"still\\\"></div>\",\"transform\":\"none\",\"left\":\"10px\",\"top\":\"0px\",\"scrollLeft\":0,\"scrollTop\":0,\"x\":18,\"y\":26,\"controls\":0},{\"selector\":\"#spin\",\"snippet\":\"<div id=\\\"spin\\\"></div>\",\"transform\":\"matrix(0.994646, 0.103337, -0.103337, 0.994646, 0, 0)\",\"left\":\"auto\",\"top\":\"auto\",\"scrollLeft\":0,\"scrollTop\":0,\"x\":7.020166397094727,\"y\":43.020164489746094,\"controls\":0}],\"carousels\":[],\"animations\":[{\"selector\":\"#spin\",\"snippet\":\"<div id=\\\"spin\\\"></div>\",\"name\":\"spin\",\"playState\":\"running\",\"infinite\":true,\"activeDuration\":0,\"controls\":0},{\"selector\":\"#long\",\"snippet\":\"<div id=\\\"long\\\"></div>\",\"name\":\"fade\",\"playState\":\"running\",\"infinite\":false,\"activeDuration\":6000,\"controls\":0}],\"marquees\":[{\"selector\":\"#news\",\"snippet\":\"<marquee id=\\\"news\\\"></marquee>\",\"controls\":0}],\"ariaControlsButtons\":0}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k1",
+         "probe": "motion",
+         "findings": [
+          {
+           "id": "http://127.0.0.1:24680/motion-extra.html#motion-no-pause##spin#animation",
+           "pageUrl": "http://127.0.0.1:24680/motion-extra.html",
+           "rule": "motion-no-pause",
+           "wcag": [
+            {
+             "criterion": "2.2.2",
+             "level": "A",
+             "version": "2.0"
+            }
+           ],
+           "method": "probe",
+           "engines": [
+            "probe"
+           ],
+           "impact": "serious",
+           "confidence": "confirmed",
+           "selector": "#spin",
+           "snippet": "<div id=\"spin\"></div>",
+           "evidence": "",
+           "count": 1
+          },
+          {
+           "id": "http://127.0.0.1:24680/motion-extra.html#motion-no-pause##long#animation",
+           "pageUrl": "http://127.0.0.1:24680/motion-extra.html",
+           "rule": "motion-no-pause",
+           "wcag": [
+            {
+             "criterion": "2.2.2",
+             "level": "A",
+             "version": "2.0"
+            }
+           ],
+           "method": "probe",
+           "engines": [
+            "probe"
+           ],
+           "impact": "serious",
+           "confidence": "confirmed",
+           "selector": "#long",
+           "snippet": "<div id=\"long\"></div>",
+           "evidence": "",
+           "count": 1
+          },
+          {
+           "id": "http://127.0.0.1:24680/motion-extra.html#motion-no-pause##slider#moved",
+           "pageUrl": "http://127.0.0.1:24680/motion-extra.html",
+           "rule": "motion-no-pause",
+           "wcag": [
+            {
+             "criterion": "2.2.2",
+             "level": "A",
+             "version": "2.0"
+            }
+           ],
+           "method": "probe",
+           "engines": [
+            "probe"
+           ],
+           "impact": "serious",
+           "confidence": "confirmed",
+           "selector": "#slider",
+           "snippet": "<div id=\"slider\" style=\"left: 80px;\"></div>",
+           "evidence": "",
+           "count": 1
+          },
+          {
+           "id": "http://127.0.0.1:24680/motion-extra.html#motion-no-pause##news#marquee",
+           "pageUrl": "http://127.0.0.1:24680/motion-extra.html",
+           "rule": "motion-no-pause",
+           "wcag": [
+            {
+             "criterion": "2.2.2",
+             "level": "A",
+             "version": "2.0"
+            }
+           ],
+           "method": "probe",
+           "engines": [
+            "probe"
+           ],
+           "impact": "serious",
+           "confidence": "confirmed",
+           "selector": "#news",
+           "snippet": "<marquee id=\"news\"></marquee>",
+           "evidence": "",
+           "count": 1
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "motion-controlled: the spinner has an aria-controls pause button so only the slider is found, needs-verification because the page has a button with aria-controls",
+   "steps": [
+    {
+     "from": "second",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/motion-controlled.html",
+      "snap": {
+       "elements": [
+        {
+         "selector": "#spin",
+         "snippet": "<div id=\"spin\"></div>",
+         "transform": "matrix(0.30876, -0.95114, 0.95114, 0.30876, 0, 0)",
+         "left": "auto",
+         "top": "auto",
+         "scrollLeft": 0,
+         "scrollTop": 0,
+         "x": 5.401000022888184,
+         "y": 5.401000022888184,
+         "controls": 1
+        },
+        {
+         "selector": "#slider",
+         "snippet": "<div id=\"slider\" style=\"left: 10px;\"></div>",
+         "transform": "none",
+         "left": "10px",
+         "top": "0px",
+         "scrollLeft": 0,
+         "scrollTop": 0,
+         "x": 18,
+         "y": 49,
+         "controls": 0
+        }
+       ],
+       "carousels": [],
+       "animations": [
+        {
+         "selector": "#spin",
+         "snippet": "<div id=\"spin\"></div>",
+         "name": "spin",
+         "playState": "running",
+         "infinite": true,
+         "activeDuration": 0,
+         "controls": 1
+        }
+       ],
+       "marquees": [],
+       "ariaControlsButtons": 1
+      }
+     },
+     "payload": {
+      "key": "k1:second",
+      "json": "{\"elements\":[{\"selector\":\"#spin\",\"snippet\":\"<div id=\\\"spin\\\"></div>\",\"transform\":\"matrix(1, -0.000948761, 0.000948761, 1, 0, 0)\",\"left\":\"auto\",\"top\":\"auto\",\"scrollLeft\":0,\"scrollTop\":0,\"x\":7.990516662597656,\"y\":7.990516662597656,\"controls\":1},{\"selector\":\"#slider\",\"snippet\":\"<div id=\\\"slider\\\" style=\\\"left: 80px;\\\"></div>\",\"transform\":\"none\",\"left\":\"80px\",\"top\":\"0px\",\"scrollLeft\":0,\"scrollTop\":0,\"x\":88,\"y\":49,\"controls\":0}],\"carousels\":[],\"animations\":[{\"selector\":\"#spin\",\"snippet\":\"<div id=\\\"spin\\\"></div>\",\"name\":\"spin\",\"playState\":\"running\",\"infinite\":true,\"activeDuration\":0,\"controls\":1}],\"marquees\":[],\"ariaControlsButtons\":1}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k1",
+         "probe": "motion",
+         "findings": [
+          {
+           "id": "http://127.0.0.1:24680/motion-controlled.html#motion-no-pause##slider#moved",
+           "pageUrl": "http://127.0.0.1:24680/motion-controlled.html",
+           "rule": "motion-no-pause",
+           "wcag": [
+            {
+             "criterion": "2.2.2",
+             "level": "A",
+             "version": "2.0"
+            }
+           ],
+           "method": "probe",
+           "engines": [
+            "probe"
+           ],
+           "impact": "serious",
+           "confidence": "needs-verification",
+           "selector": "#slider",
+           "snippet": "<div id=\"slider\" style=\"left: 80px;\"></div>",
+           "evidence": "",
+           "count": 1
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

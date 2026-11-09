@@ -1,6 +1,6 @@
 app std-webhook [
   version: "1.0.0",
-  description: "std-webhook — a signed outbound webhook POST to ONE declared destination. WEBHOOK_SEND carries the event name and the payload; the atom posts {event, payload, timestamp} as JSON to the `path` of the destination its sibling WebhookHttp trait declares (host, port, tls, serverName: literal knobs, so the net grant is static) with X-Almadar-Event, and when `signed` is on the signingSecret credential signs the exact body as X-Almadar-Signature: sha256=<hex HMAC-SHA256>, computed in .lolo over the credential slot (the signature is not the secret; the secret never enters program data). A signing secret is never a send value: only the credential's name is configured. A destination chosen at runtime is not carried: a program with several destinations composes one webhook instance per destination. A reply below 500 answers WEBHOOK_RESULT {status, ok, durationMs} (a 4xx is a result, not a failure); a 5xx reply, an attempt past the sibling WebhookTimeout deadline or an unreachable endpoint is retried with exponential backoff by std-retry and, once the attempts are spent, answers WEBHOOK_FAILED. An empty event name answers WEBHOOK_FAILED before any attempt.",
+  description: "std-webhook — a signed outbound webhook POST to the declared destination, or to a destination the delivery names. WEBHOOK_SEND carries the event name and the payload; the atom posts {event, payload, timestamp} as JSON to the `path` of the destination its sibling WebhookHttp trait declares (host, port, tls, serverName: literal knobs, so the net grant is static) with X-Almadar-Event, and when `signed` is on the signingSecret credential signs the exact body as X-Almadar-Signature: sha256=<hex HMAC-SHA256>, computed in .lolo over the credential slot (the signature is not the secret; the secret never enters program data). A signing secret is never a send value: only the credential's name is configured. A delivery may carry its own destination { host, path } (the callback address an external caller passes with a run): with the allowDynamicDestination knob on it goes to that host and path, with the knob off (the default) it is refused with WEBHOOK_FAILED code destination-not-allowed; a host that does not match the hostPattern knob (a DNS host name) or a path that does not match the pathPattern knob (a slash first, no space or control character) is refused with code destination-invalid before anything is sent. A delivery without a destination goes to the configured one. Per-delivery destinations need the composer to set dynamicHost: true on the sibling WebhookHttp trait and to grant a pattern net entry covering the hosts (a net entry such as *.example.test:443 with tcp, EXEC-GRANTS-1), and to set destinationHost to the host WebhookHttp declares, which a delivery without a destination is sent to as the call host. Signing, retries, the timeout and the body are the same for both kinds, and a retry goes to the destination its delivery named. Several fixed destinations still compose one webhook instance each. A reply below 500 answers WEBHOOK_RESULT {status, ok, durationMs} (a 4xx is a result, not a failure); a 5xx reply, an attempt past the sibling WebhookTimeout deadline or an unreachable endpoint is retried with exponential backoff by std-retry and, once the attempts are spent, answers WEBHOOK_FAILED. An empty event name answers WEBHOOK_FAILED before any attempt.",
 ]
 uses Http from "std/behaviors/std-http-client"
 uses Timeout from "std/behaviors/std-timeout"
@@ -16,6 +16,8 @@ orbital WebhookOrbital {
     payload : string @description "The payload of the send in flight, as JSON text." = "{}"
     attempts : number @description "Attempts made for the send in flight." = 0
     lastError : string @description "The latest attempt's error message." = ""
+    destHost : string @description "The host the send in flight names as the call host; empty when the sibling client uses its declared host." = ""
+    destPath : string @description "The request target the send in flight names; empty when the path knob applies." = ""
     startedAt : instant @description "The instant at which the latest attempt was sent." = "1970-01-01T00:00:00Z"
   }
 
@@ -64,13 +66,28 @@ orbital WebhookOrbital {
     state idle {
       INIT -> idle
 
-      WEBHOOK_SEND -> sending when (!= @payload.event "")
+      WEBHOOK_SEND -> sending when (and (!= @payload.event "") (= @payload.destination null))
+        (set @entity.destHost (if @config.allowDynamicDestination @config.destinationHost ""))
+        (set @entity.destPath "")
         (set @entity.seq (+ @entity.seq 1))
         (set @entity.key (as (str/concat "webhook:" @entity.seq) CallKey))
         (set @entity.event @payload.event)
         (set @entity.payload (json/stringify @payload.payload))
         (set @entity.attempts 0)
         (emit WEBHOOK_RETRY_START { key: (as (str/concat "webhook:" @entity.seq) CallKey) })
+      WEBHOOK_SEND -> sending when (and (!= @payload.event "") (!= @payload.destination null) @config.allowDynamicDestination (validate/pattern @payload.destination.host @config.hostPattern) (validate/pattern @payload.destination.path @config.pathPattern))
+        (set @entity.destHost @payload.destination.host)
+        (set @entity.destPath @payload.destination.path)
+        (set @entity.seq (+ @entity.seq 1))
+        (set @entity.key (as (str/concat "webhook:" @entity.seq) CallKey))
+        (set @entity.event @payload.event)
+        (set @entity.payload (json/stringify @payload.payload))
+        (set @entity.attempts 0)
+        (emit WEBHOOK_RETRY_START { key: (as (str/concat "webhook:" @entity.seq) CallKey) })
+      WEBHOOK_SEND -> idle when (and (!= @payload.event "") (!= @payload.destination null) (not @config.allowDynamicDestination))
+        (emit WEBHOOK_FAILED { code: "destination-not-allowed", message: "Refused: the delivery names a destination and allowDynamicDestination is off", attempts: 0 })
+      WEBHOOK_SEND -> idle when (and (!= @payload.event "") (!= @payload.destination null) @config.allowDynamicDestination (not (and (validate/pattern @payload.destination.host @config.hostPattern) (validate/pattern @payload.destination.path @config.pathPattern))))
+        (emit WEBHOOK_FAILED { code: "destination-invalid", message: "Refused: the destination host or path is not valid", attempts: 0 })
       WEBHOOK_SEND -> idle when (= @payload.event "")
         (emit WEBHOOK_FAILED { message: "Invalid event: the event name is empty", attempts: 0 })
     }
@@ -82,14 +99,15 @@ orbital WebhookOrbital {
         (set @entity.startedAt @now)
         (set @entity.attempts (+ @entity.attempts 1))
         (let ((body (str/concat "{\"event\":" (json/stringify @entity.event) ",\"payload\":" @entity.payload ",\"timestamp\":\"" (time/format (time/now) "YYYY-MM-DDTHH:mm:ss") "." (str/padStart (str/concat (time/diff @now (time/startOf @now "second"))) 3 "0") "Z\"}"))
-              (signature (hmac/sha256 @config.signingSecret @body "hex")))
+              (signature (hmac/sha 256 "credential" @config.signingSecret @body "hex")))
           (if (= @signature null)
             (do (set @entity.lastError "the signing secret credential is not held")
                 (emit WEBHOOK_SECRET_MISSING {}))
             (emit WEBHOOK_HTTP_SEND {
               key: (str/concat "webhook:" @entity.seq),
               method: "POST",
-              target: @config.path,
+              host: @entity.destHost,
+              target: (if (!= @entity.destPath "") @entity.destPath @config.path),
               headers: [{ name: "Accept", value: "*/*" }, { name: "Content-Type", value: "application/json" }, { name: "X-Almadar-Event", value: @entity.event }, { name: "X-Almadar-Signature", value: (str/concat "sha256=" @signature) }],
               body: (bytes/from-string @body),
               stream: "none"
@@ -103,7 +121,8 @@ orbital WebhookOrbital {
           (emit WEBHOOK_HTTP_SEND {
             key: (str/concat "webhook:" @entity.seq),
             method: "POST",
-            target: @config.path,
+            host: @entity.destHost,
+            target: (if (!= @entity.destPath "") @entity.destPath @config.path),
             headers: [{ name: "Accept", value: "*/*" }, { name: "Content-Type", value: "application/json" }, { name: "X-Almadar-Event", value: @entity.event }],
             body: (bytes/from-string @body),
             stream: "none"
@@ -153,6 +172,7 @@ orbital WebhookOrbital {
         headers : [HttpHeader]!
         body : bytes!
         stream : string!
+        host : string
       }
         @description "Internal: the webhook POST, for the HTTP client."
         @tier "secondary"
@@ -178,8 +198,9 @@ orbital WebhookOrbital {
       WEBHOOK_SEND {
         event : string!
         payload : p!
+        destination : { host : string!, path : string! }?
       }
-        @description "Post one webhook to the declared destination: the event name and the payload (any type the caller binds to `p` with `::`, stringified into the body)."
+        @description "Post one webhook: the event name and the payload (any type the caller binds to `p` with `::`, stringified into the body), to the declared destination or, with allowDynamicDestination on, to the destination { host, path } this delivery names."
         @synonyms "send webhook, notify endpoint, post event"
       WEBHOOK_REPLIED {
         status : number!
@@ -213,6 +234,24 @@ orbital WebhookOrbital {
         @description "The request target on the destination the sibling WebhookHttp trait declares (host, port, tls, serverName)."
         @synonyms "webhook path, endpoint path, url path"
         @tier "infra"
+      allowDynamicDestination : boolean = false
+        @label "Allow per-delivery destination"
+        @description "A delivery may name its own destination { host, path }. False refuses such a delivery with WEBHOOK_FAILED code destination-not-allowed. True sends it to that host and path through the sibling client, so the composer sets dynamicHost: true on WebhookHttp and grants a pattern net entry covering the hosts (net: { \"*.example.test:443\": [tcp] }, EXEC-GRANTS-1)."
+        @synonyms "callback url, dynamic destination, per-request destination"
+        @tier "infra"
+      destinationHost : string = "hooks.example.test"
+        @label "Declared destination host"
+        @description "The host WebhookHttp declares: with allowDynamicDestination on, a delivery without a destination names it as the call host, because a dynamic-host client refuses a call with none. Set it to the same value as the WebhookHttp host."
+        @synonyms "default host, webhook host"
+        @tier "infra"
+      hostPattern : string = "^([A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?\\.)+[A-Za-z]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?$"
+        @label "Destination host"
+        @description "What a per-delivery destination host must match: a DNS host name of two or more labels with a non-numeric last label."
+        @tier "domain"
+      pathPattern : string = "^/[^ \\x00-\\x20\\x7f]*$"
+        @label "Destination path"
+        @description "What a per-delivery destination path must match: a slash first and no space or control character."
+        @tier "domain"
     }
   }
 

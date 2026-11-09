@@ -1,0 +1,161 @@
+app std-a11y-probe-text-spacing [
+  version: "1.0.0",
+  description: "std-a11y-probe-text-spacing — WCAG 1.4.12 Text Spacing. PROBE_RUN { key, pageUrl } on a tab already at pageUrl measures the clipped text elements (PAGE_MEASURE), injects a style element with the WCAG 1.4.12 overrides (line-height, letter-spacing and word-spacing on every element, bottom margin on paragraphs, each from a knob), measures again, removes the style and answers PROBE_DONE { key, probe, findings } or PROBE_FAILED { key, probe, error, code } (probe_page_failed when the page answers PAGE_FAILED, probe_bad_measure when a measurement is not the declared shape, probe_style_missing when the injected style was already gone at removal). A text element is clipped on an axis when its computed overflow there is hidden or clip and its scroll extent exceeds its client extent by more than the tolerance knob; each element clipped with the overrides that was not clipped before, or whose scroll extent on a clipped axis grew by more than the tolerance (matched by selector, so more content is lost than before), is a needs-verification text-spacing finding. The composer wires PAGE_MEASURE to a std-chrome instance and its answers back; answers whose key does not start with the run key are ignored."
+]
+uses Spec from "almadar-std/probe-text-spacing"
+
+type WcagRef = { criterion : string!, level : "A" | "AA" | "AAA"!, version : "2.0" | "2.1" | "2.2"! }
+type A11yFinding = { id : string!, pageUrl : string!, rule : string!, wcag : [WcagRef]!, method : "engine" | "probe" | "llm"!, engines : [string]!, impact : "critical" | "serious" | "moderate" | "minor"!, confidence : "confirmed" | "needs-verification"!, selector : string!, snippet : string!, evidence : string!, count : number! }
+type ClippedElement = { selector : string!, snippet : string!, overflowX : string!, overflowY : string!, scrollWidth : number!, clientWidth : number!, scrollHeight : number!, clientHeight : number! }
+type ClippedMeasure = { elements : [ClippedElement]! }
+type StyleInjected = { id : string!, injected : boolean! }
+type StyleRemoved = { id : string!, removed : boolean! }
+
+orbital TextSpacingOrbital {
+  entity TextSpacingRun [runtime] {
+    id : string!
+    runKey : string @description "The caller's name for the run in flight." = ""
+    pageUrl : string @description "The page the run in flight is about." = ""
+    baseline : [ClippedElement] @description "The elements clipped before the overrides, with their extents." = []
+    findings : [A11yFinding] @description "The findings held until the style is removed." = []
+  }
+
+  trait TextSpacingProbe -> TextSpacingRun {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      PROBE_RUN -> baselining
+        (set @entity.runKey @payload.key)
+        (set @entity.pageUrl @payload.pageUrl)
+        (set @entity.baseline [])
+        (set @entity.findings [])
+        (emit PAGE_MEASURE { key: (str/concat @payload.key ":base"), expression: (str/concat "(" @config.clippedMeasure ")()") })
+    }
+
+    state baselining {
+      INIT -> idle
+      PAGE_MEASURED -> injecting when (and (= @payload.key (str/concat @entity.runKey ":base")) (!= (json/parse @payload.json ClippedMeasure) null))
+        (set @entity.baseline (let ((m (json/parse @payload.json ClippedMeasure)))
+          (array/filter @m.elements (fn e (or (and (array/includes ["hidden" "clip"] @e.overflowY) (> @e.scrollHeight (+ @e.clientHeight @config.tolerance))) (and (array/includes ["hidden" "clip"] @e.overflowX) (> @e.scrollWidth (+ @e.clientWidth @config.tolerance))))))))
+        (emit PAGE_MEASURE { key: (str/concat @entity.runKey ":inject"), expression: (str/concat "(" @config.injectMeasure ")(" (json/stringify @config.styleId) "," (json/stringify (str/concat "* { line-height: " @config.lineHeight " !important; letter-spacing: " @config.letterSpacing "em !important; word-spacing: " @config.wordSpacing "em !important; } p { margin-bottom: " @config.paragraphSpacing "em !important; }")) ")") })
+      PAGE_MEASURED -> idle when (and (= @payload.key (str/concat @entity.runKey ":base")) (= (json/parse @payload.json ClippedMeasure) null))
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "text-spacing", error: "the page measurement is not the ClippedMeasure shape", code: "probe_bad_measure" })
+      PAGE_FAILED -> idle when (str/startsWith @payload.key @entity.runKey)
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "text-spacing", error: @payload.error, code: "probe_page_failed" })
+    }
+
+    state injecting {
+      INIT -> idle
+      PAGE_MEASURED -> spaced when (and (= @payload.key (str/concat @entity.runKey ":inject")) (!= (json/parse @payload.json StyleInjected) null))
+        (emit PAGE_MEASURE { key: (str/concat @entity.runKey ":spaced"), expression: (str/concat "(" @config.clippedMeasure ")()") })
+      PAGE_MEASURED -> idle when (and (= @payload.key (str/concat @entity.runKey ":inject")) (= (json/parse @payload.json StyleInjected) null))
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "text-spacing", error: "the page measurement is not the StyleInjected shape", code: "probe_bad_measure" })
+      PAGE_FAILED -> idle when (str/startsWith @payload.key @entity.runKey)
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "text-spacing", error: @payload.error, code: "probe_page_failed" })
+    }
+
+    state spaced {
+      INIT -> idle
+      PAGE_MEASURED -> removing when (and (= @payload.key (str/concat @entity.runKey ":spaced")) (!= (json/parse @payload.json ClippedMeasure) null))
+        (set @entity.findings (let ((m (json/parse @payload.json ClippedMeasure)))
+          (array/map (array/filter (array/filter @m.elements (fn e (or (and (array/includes ["hidden" "clip"] @e.overflowY) (> @e.scrollHeight (+ @e.clientHeight @config.tolerance))) (and (array/includes ["hidden" "clip"] @e.overflowX) (> @e.scrollWidth (+ @e.clientWidth @config.tolerance)))))) (fn e (let ((b (array/find @entity.baseline (fn o (= @o.selector @e.selector))))) (or (= @b null) (and (array/includes ["hidden" "clip"] @e.overflowY) (> @e.scrollHeight (+ @b.scrollHeight @config.tolerance))) (and (array/includes ["hidden" "clip"] @e.overflowX) (> @e.scrollWidth (+ @b.scrollWidth @config.tolerance))))))) (fn e {
+                  id: (str/concat @entity.pageUrl "#text-spacing#" @e.selector),
+                  pageUrl: @entity.pageUrl,
+                  rule: "text-spacing",
+                  wcag: [{ criterion: "1.4.12", level: "AA", version: "2.1" }],
+                  method: "probe",
+                  engines: ["probe"],
+                  impact: @config.impact,
+                  confidence: "needs-verification",
+                  selector: @e.selector,
+                  snippet: @e.snippet,
+                  evidence: "",
+                  count: 1
+                }))))
+        (emit PAGE_MEASURE { key: (str/concat @entity.runKey ":remove"), expression: (str/concat "(" @config.removeMeasure ")(" (json/stringify @config.styleId) ")") })
+      PAGE_MEASURED -> idle when (and (= @payload.key (str/concat @entity.runKey ":spaced")) (= (json/parse @payload.json ClippedMeasure) null))
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "text-spacing", error: "the page measurement is not the ClippedMeasure shape", code: "probe_bad_measure" })
+      PAGE_FAILED -> idle when (str/startsWith @payload.key @entity.runKey)
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "text-spacing", error: @payload.error, code: "probe_page_failed" })
+    }
+
+    state removing {
+      INIT -> idle
+      PAGE_MEASURED -> idle when (and (= @payload.key (str/concat @entity.runKey ":remove")) (let ((r (json/parse @payload.json StyleRemoved))) (and (!= @r null) (= @r.removed true))))
+        (emit PROBE_DONE { key: @entity.runKey, probe: "text-spacing", findings: @entity.findings })
+      PAGE_MEASURED -> idle when (and (= @payload.key (str/concat @entity.runKey ":remove")) (let ((r (json/parse @payload.json StyleRemoved))) (or (= @r null) (= @r.removed false))))
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "text-spacing", error: "the injected style was not found at removal", code: "probe_style_missing" })
+      PAGE_FAILED -> idle when (str/startsWith @payload.key @entity.runKey)
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "text-spacing", error: @payload.error, code: "probe_page_failed" })
+    }
+
+    emits {
+      PAGE_MEASURE -> external { key : string!  expression : string! }
+        @description "Page request: evaluate the expression in the page; it answers a JSON string."
+        @synonyms "measure page, evaluate in page"
+        @tier "primary"
+      PROBE_DONE -> external { key : string!  probe : string!  findings : [A11yFinding]! }
+        @description "The text-spacing probe finished: its findings, empty when no text clips under the overrides."
+        @synonyms "text spacing findings, spacing result"
+        @tier "primary"
+      PROBE_FAILED -> external { key : string!  probe : string!  error : string!  code : string! }
+        @description "The probe could not finish: code is probe_page_failed, probe_bad_measure or probe_style_missing."
+        @synonyms "probe failed, text spacing error"
+        @tier "primary"
+    }
+
+    listens {
+      PROBE_RUN { key : string!  pageUrl : string! }
+        @description "Check the page the tab is on for text that clips under the WCAG 1.4.12 text spacing overrides."
+        @synonyms "text spacing check, line height check, wcag 1.4.12"
+      PAGE_MEASURED { key : string!  json : string! }
+      PAGE_FAILED { key : string!  error : string!  code : string! }
+    }
+
+    config {
+      lineHeight : number = 1.5
+        @label "Line height"
+        @description "The line-height, in times the font size, applied to every element; WCAG 1.4.12 names 1.5."
+        @tier "domain"
+      letterSpacing : number = 0.12
+        @label "Letter spacing"
+        @description "The letter-spacing in em applied to every element; WCAG 1.4.12 names 0.12."
+        @tier "domain"
+      wordSpacing : number = 0.16
+        @label "Word spacing"
+        @description "The word-spacing in em applied to every element; WCAG 1.4.12 names 0.16."
+        @tier "domain"
+      paragraphSpacing : number = 2
+        @label "Paragraph spacing"
+        @description "The bottom margin in em applied to paragraphs; WCAG 1.4.12 names 2."
+        @tier "domain"
+      tolerance : number = 1
+        @label "Clip tolerance"
+        @description "CSS px by which scroll extent may exceed client extent before text counts as clipped."
+        @tier "domain"
+      impact : "critical" | "serious" | "moderate" | "minor" = "moderate"
+        @label "Impact"
+        @description "The impact of a text-spacing finding."
+        @tier "domain"
+      styleId : string = "almadar-a11y-text-spacing"
+        @label "Style id"
+        @description "The id of the style element the probe injects and removes."
+        @tier "infra"
+      injectMeasure : string = "(id, css) => { const old = document.getElementById(id); if (old) old.remove(); const s = document.createElement('style'); s.id = id; s.textContent = css; document.head.appendChild(s); return JSON.stringify({ id: id, injected: true }); }"
+        @label "Inject expression"
+        @description "A page function taking the style id and CSS text, adding the style element and returning a JSON string with the id and injected true."
+        @tier "infra"
+      removeMeasure : string = "(id) => { const s = document.getElementById(id); const found = s !== null; if (found) s.remove(); return JSON.stringify({ id: id, removed: found }); }"
+        @label "Remove expression"
+        @description "A page function taking the style id, removing the style element and returning a JSON string with the id and whether it was found."
+        @tier "infra"
+      clippedMeasure : string = "() => { const sel = (e) => { const p = []; for (let n = e; n && n.nodeType === 1; n = n.parentElement) { if (n.id) { p.unshift('#' + CSS.escape(n.id)); break; } let i = 1; for (let s = n.previousElementSibling; s; s = s.previousElementSibling) { if (s.tagName === n.tagName) i++; } p.unshift(n.tagName.toLowerCase() + ':nth-of-type(' + i + ')'); } return p.join('>'); }; const out = []; for (const e of document.body.querySelectorAll('*')) { let own = false; for (const n of e.childNodes) { if (n.nodeType === 3 && n.nodeValue.trim().length > 0) { own = true; break; } } if (!own) continue; const cs = getComputedStyle(e); if (cs.overflowX === 'visible' && cs.overflowY === 'visible') continue; out.push({ selector: sel(e), snippet: e.cloneNode(false).outerHTML, overflowX: cs.overflowX, overflowY: cs.overflowY, scrollWidth: e.scrollWidth, clientWidth: e.clientWidth, scrollHeight: e.scrollHeight, clientHeight: e.clientHeight }); } return JSON.stringify({ elements: out }); }"
+        @label "Clipped text expression"
+        @description "A page function returning a JSON string of the text-bearing elements whose computed overflow is not visible, each with selector, opening tag, overflow per axis, scroll and client extents."
+        @tier "infra"
+    }
+  }
+
+  page boot as TextSpacingProbePage -> TextSpacingProbe
+}

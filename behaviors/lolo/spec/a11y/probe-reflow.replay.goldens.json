@@ -1,0 +1,649 @@
+{
+ "atom": "a11y/atoms/std-a11y-probe-reflow.lolo",
+ "trait": "ReflowProbe",
+ "note": "std-a11y-probe-reflow with the page answers played as events. The measure JSON of the reflow-fail, reflow-pass and reflow-offender cases is the real result of the measure expression in headless Chrome at 320x256 (probe-reflow.gen/record.py). Regenerate with python3 -I probe-reflow.gen/gen_goldens.py.",
+ "cases": [
+  {
+   "id": "PROBE_RUN narrows the viewport to 320x256 under the run's step key",
+   "steps": [
+    {
+     "from": "idle",
+     "event": "PROBE_RUN",
+     "payload": {
+      "key": "k1",
+      "pageUrl": "http://127.0.0.1:24680/"
+     },
+     "expect": {
+      "state": "narrowing",
+      "emits": [
+       {
+        "event": "PAGE_VIEWPORT",
+        "payload": {
+         "key": "k1:narrow",
+         "width": 320,
+         "height": 256,
+         "deviceScaleFactor": 1,
+         "mobile": false,
+         "textZoom": 1
+        }
+       }
+      ],
+      "entity": {
+       "runKey": "k1",
+       "pageUrl": "http://127.0.0.1:24680/",
+       "findings": []
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "the narrow viewport answer asks for the measurement with the allowed list embedded",
+   "steps": [
+    {
+     "from": "narrowing",
+     "event": "PAGE_VIEWPORT_SET",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/"
+     },
+     "payload": {
+      "key": "k1:narrow"
+     },
+     "expect": {
+      "state": "measuring",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k1:measure",
+         "expression": "((allowed) => { const de = document.documentElement; const vw = de.clientWidth; const sel = (e) => { const p = []; for (let n = e; n && n.nodeType === 1; n = n.parentElement) { if (n.id) { p.unshift('#' + CSS.escape(n.id)); break; } let i = 1; for (let s = n.previousElementSibling; s; s = s.previousElementSibling) { if (s.tagName === n.tagName) i++; } p.unshift(n.tagName.toLowerCase() + ':nth-of-type(' + i + ')'); } return p.join('>'); }; const out = []; for (const e of document.body.querySelectorAll('*')) { if (e.closest(allowed)) continue; const r = e.getBoundingClientRect(); if (r.width === 0 && r.height === 0) continue; if (r.right > vw) out.push({ selector: sel(e), snippet: e.cloneNode(false).outerHTML, rect: { x: r.x, y: r.y, width: r.width, height: r.height } }); } return JSON.stringify({ scrollWidth: de.scrollWidth, clientWidth: vw, offenders: out }); })(\"table,pre,img,video,canvas,svg,[role=img],map,object,embed\")"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a viewport answer under another run's key is ignored",
+   "steps": [
+    {
+     "from": "narrowing",
+     "event": "PAGE_VIEWPORT_SET",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/"
+     },
+     "payload": {
+      "key": "k2:narrow"
+     },
+     "expect": {
+      "state": "narrowing",
+      "emits": []
+     }
+    }
+   ]
+  },
+  {
+   "id": "reflow-fail.html: a table 600px wide leaves scrollWidth 616 over clientWidth 320, one confirmed finding on the document",
+   "steps": [
+    {
+     "from": "measuring",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/"
+     },
+     "payload": {
+      "key": "k1:measure",
+      "json": "{\"scrollWidth\":616,\"clientWidth\":320,\"offenders\":[]}"
+     },
+     "expect": {
+      "state": "restoring",
+      "emits": [
+       {
+        "event": "PAGE_VIEWPORT",
+        "payload": {
+         "key": "k1:restore",
+         "width": 1280,
+         "height": 800,
+         "deviceScaleFactor": 1,
+         "mobile": false,
+         "textZoom": 1
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "restoring",
+     "event": "PAGE_VIEWPORT_SET",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/",
+      "findings": [
+       {
+        "id": "http://127.0.0.1:24680/#reflow#html",
+        "pageUrl": "http://127.0.0.1:24680/",
+        "rule": "reflow",
+        "wcag": [
+         {
+          "criterion": "1.4.10",
+          "level": "AA",
+          "version": "2.1"
+         }
+        ],
+        "method": "probe",
+        "engines": [
+         "probe"
+        ],
+        "impact": "serious",
+        "confidence": "confirmed",
+        "selector": "html",
+        "snippet": "scrollWidth 616 exceeds clientWidth 320 at 320 CSS px",
+        "evidence": "",
+        "count": 1
+       }
+      ]
+     },
+     "payload": {
+      "key": "k1:restore"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k1",
+         "probe": "reflow",
+         "findings": [
+          {
+           "id": "http://127.0.0.1:24680/#reflow#html",
+           "pageUrl": "http://127.0.0.1:24680/",
+           "rule": "reflow",
+           "wcag": [
+            {
+             "criterion": "1.4.10",
+             "level": "AA",
+             "version": "2.1"
+            }
+           ],
+           "method": "probe",
+           "engines": [
+            "probe"
+           ],
+           "impact": "serious",
+           "confidence": "confirmed",
+           "selector": "html",
+           "snippet": "scrollWidth 616 exceeds clientWidth 320 at 320 CSS px",
+           "evidence": "",
+           "count": 1
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "note": "recorded in headless Chrome at 320x256 (probe-reflow.gen/record.py); the table is two-dimensional content so no element is listed"
+  },
+  {
+   "id": "control: reflow-pass.html scrolls no wider than the viewport and has no findings",
+   "steps": [
+    {
+     "from": "measuring",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/"
+     },
+     "payload": {
+      "key": "k1:measure",
+      "json": "{\"scrollWidth\":320,\"clientWidth\":320,\"offenders\":[]}"
+     },
+     "expect": {
+      "state": "restoring",
+      "emits": [
+       {
+        "event": "PAGE_VIEWPORT",
+        "payload": {
+         "key": "k1:restore",
+         "width": 1280,
+         "height": 800,
+         "deviceScaleFactor": 1,
+         "mobile": false,
+         "textZoom": 1
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "restoring",
+     "event": "PAGE_VIEWPORT_SET",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/",
+      "findings": []
+     },
+     "payload": {
+      "key": "k1:restore"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k1",
+         "probe": "reflow",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an element outside the allowed list that passes the viewport is a needs-verification finding after the confirmed one",
+   "steps": [
+    {
+     "from": "measuring",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/"
+     },
+     "payload": {
+      "key": "k1:measure",
+      "json": "{\"scrollWidth\":500,\"clientWidth\":320,\"offenders\":[{\"selector\":\"#main>div:nth-of-type(1)\",\"snippet\":\"<div class=\\\"banner\\\" style=\\\"width:500px;background:#eef\\\"></div>\",\"rect\":{\"x\":0,\"y\":0,\"width\":500,\"height\":22.390625}}]}"
+     },
+     "expect": {
+      "state": "restoring",
+      "emits": [
+       {
+        "event": "PAGE_VIEWPORT",
+        "payload": {
+         "key": "k1:restore",
+         "width": 1280,
+         "height": 800,
+         "deviceScaleFactor": 1,
+         "mobile": false,
+         "textZoom": 1
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "restoring",
+     "event": "PAGE_VIEWPORT_SET",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/",
+      "findings": [
+       {
+        "id": "http://127.0.0.1:24680/#reflow#html",
+        "pageUrl": "http://127.0.0.1:24680/",
+        "rule": "reflow",
+        "wcag": [
+         {
+          "criterion": "1.4.10",
+          "level": "AA",
+          "version": "2.1"
+         }
+        ],
+        "method": "probe",
+        "engines": [
+         "probe"
+        ],
+        "impact": "serious",
+        "confidence": "confirmed",
+        "selector": "html",
+        "snippet": "scrollWidth 500 exceeds clientWidth 320 at 320 CSS px",
+        "evidence": "",
+        "count": 1
+       },
+       {
+        "id": "http://127.0.0.1:24680/#reflow##main>div:nth-of-type(1)",
+        "pageUrl": "http://127.0.0.1:24680/",
+        "rule": "reflow",
+        "wcag": [
+         {
+          "criterion": "1.4.10",
+          "level": "AA",
+          "version": "2.1"
+         }
+        ],
+        "method": "probe",
+        "engines": [
+         "probe"
+        ],
+        "impact": "serious",
+        "confidence": "needs-verification",
+        "selector": "#main>div:nth-of-type(1)",
+        "snippet": "<div class=\"banner\" style=\"width:500px;background:#eef\"></div>",
+        "evidence": "",
+        "count": 1
+       }
+      ]
+     },
+     "payload": {
+      "key": "k1:restore"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k1",
+         "probe": "reflow",
+         "findings": [
+          {
+           "id": "http://127.0.0.1:24680/#reflow#html",
+           "pageUrl": "http://127.0.0.1:24680/",
+           "rule": "reflow",
+           "wcag": [
+            {
+             "criterion": "1.4.10",
+             "level": "AA",
+             "version": "2.1"
+            }
+           ],
+           "method": "probe",
+           "engines": [
+            "probe"
+           ],
+           "impact": "serious",
+           "confidence": "confirmed",
+           "selector": "html",
+           "snippet": "scrollWidth 500 exceeds clientWidth 320 at 320 CSS px",
+           "evidence": "",
+           "count": 1
+          },
+          {
+           "id": "http://127.0.0.1:24680/#reflow##main>div:nth-of-type(1)",
+           "pageUrl": "http://127.0.0.1:24680/",
+           "rule": "reflow",
+           "wcag": [
+            {
+             "criterion": "1.4.10",
+             "level": "AA",
+             "version": "2.1"
+            }
+           ],
+           "method": "probe",
+           "engines": [
+            "probe"
+           ],
+           "impact": "serious",
+           "confidence": "needs-verification",
+           "selector": "#main>div:nth-of-type(1)",
+           "snippet": "<div class=\"banner\" style=\"width:500px;background:#eef\"></div>",
+           "evidence": "",
+           "count": 1
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "note": "probe-reflow.gen/reflow-offender.html: a 500px div and a 300px table"
+  },
+  {
+   "id": "scrollWidth one over clientWidth is inside the tolerance of 1: no findings",
+   "steps": [
+    {
+     "from": "measuring",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/"
+     },
+     "payload": {
+      "key": "k1:measure",
+      "json": "{\"scrollWidth\":321,\"clientWidth\":320,\"offenders\":[]}"
+     },
+     "expect": {
+      "state": "restoring",
+      "emits": [
+       {
+        "event": "PAGE_VIEWPORT",
+        "payload": {
+         "key": "k1:restore",
+         "width": 1280,
+         "height": 800,
+         "deviceScaleFactor": 1,
+         "mobile": false,
+         "textZoom": 1
+        }
+       }
+      ],
+      "entity": {
+       "findings": []
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: scrollWidth two over clientWidth is overflow",
+   "steps": [
+    {
+     "from": "measuring",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/"
+     },
+     "payload": {
+      "key": "k1:measure",
+      "json": "{\"scrollWidth\":322,\"clientWidth\":320,\"offenders\":[]}"
+     },
+     "expect": {
+      "state": "restoring",
+      "emits": [
+       {
+        "event": "PAGE_VIEWPORT",
+        "payload": {
+         "key": "k1:restore",
+         "width": 1280,
+         "height": 800,
+         "deviceScaleFactor": 1,
+         "mobile": false,
+         "textZoom": 1
+        }
+       }
+      ],
+      "entity": {
+       "findings": [
+        {
+         "id": "http://127.0.0.1:24680/#reflow#html",
+         "pageUrl": "http://127.0.0.1:24680/",
+         "rule": "reflow",
+         "wcag": [
+          {
+           "criterion": "1.4.10",
+           "level": "AA",
+           "version": "2.1"
+          }
+         ],
+         "method": "probe",
+         "engines": [
+          "probe"
+         ],
+         "impact": "serious",
+         "confidence": "confirmed",
+         "selector": "html",
+         "snippet": "scrollWidth 322 exceeds clientWidth 320 at 320 CSS px",
+         "evidence": "",
+         "count": 1
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "offenders without a page overflow are not reported",
+   "steps": [
+    {
+     "from": "measuring",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/"
+     },
+     "payload": {
+      "key": "k1:measure",
+      "json": "{\"scrollWidth\":320,\"clientWidth\":320,\"offenders\":[{\"selector\":\"#a\",\"snippet\":\"<div>\",\"rect\":{\"x\":0,\"y\":0,\"width\":400,\"height\":10}}]}"
+     },
+     "expect": {
+      "state": "restoring",
+      "emits": [
+       {
+        "event": "PAGE_VIEWPORT",
+        "payload": {
+         "key": "k1:restore",
+         "width": 1280,
+         "height": 800,
+         "deviceScaleFactor": 1,
+         "mobile": false,
+         "textZoom": 1
+        }
+       }
+      ],
+      "entity": {
+       "findings": []
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "a measurement that is not the reflow shape fails the probe",
+   "steps": [
+    {
+     "from": "measuring",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/"
+     },
+     "payload": {
+      "key": "k1:measure",
+      "json": "{\"scrollWidth\":\"wide\"}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_FAILED",
+        "payload": {
+         "key": "k1",
+         "probe": "reflow",
+         "code": "probe_bad_measure"
+        }
+       }
+      ],
+      "neverEmits": [
+       "PAGE_VIEWPORT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a page failure under the run key fails the probe",
+   "steps": [
+    {
+     "from": "measuring",
+     "event": "PAGE_FAILED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/"
+     },
+     "payload": {
+      "key": "k1:measure",
+      "error": "no tab",
+      "code": "chrome_no_tab"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_FAILED",
+        "payload": {
+         "key": "k1",
+         "probe": "reflow",
+         "error": "no tab",
+         "code": "probe_page_failed"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a page failure under another run's key is ignored",
+   "steps": [
+    {
+     "from": "measuring",
+     "event": "PAGE_FAILED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/"
+     },
+     "payload": {
+      "key": "k2:measure",
+      "error": "no tab",
+      "code": "chrome_no_tab"
+     },
+     "expect": {
+      "state": "measuring",
+      "emits": []
+     }
+    }
+   ]
+  },
+  {
+   "id": "the restore answer finishes with an empty list when nothing was found",
+   "steps": [
+    {
+     "from": "restoring",
+     "event": "PAGE_VIEWPORT_SET",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/",
+      "findings": []
+     },
+     "payload": {
+      "key": "k1:restore"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k1",
+         "probe": "reflow",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

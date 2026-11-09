@@ -1,0 +1,2163 @@
+{
+ "atom": "a11y/atoms/std-a11y-probe-widgets.lolo",
+ "trait": "WidgetsProbe",
+ "note": "std-a11y-probe-widgets with the page answers played as events. The state JSON of each live case is the real result of the measure knobs run in headless Chrome with real keys through CDP (probe-widgets.gen/gen_goldens.py) on widgets-tabs-fail and widgets-tabs-pass, probe-widgets.gen/pages/widgets-roles-fail.html and widgets-roles-pass.html (menu, dialog, combobox, listbox) and targets-fail.html and targets-pass.html; the expressions asserted are probe-widgets.gen/*.measure.js. Regenerate with python3 -I probe-widgets.gen/gen_goldens.py.",
+ "cases": [
+  {
+   "id": "PROBE_RUN asks the page for the widgets the patterns declare",
+   "steps": [
+    {
+     "from": "idle",
+     "event": "PROBE_RUN",
+     "payload": {
+      "key": "k1",
+      "pageUrl": "http://127.0.0.1:24680/"
+     },
+     "expect": {
+      "state": "finding",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k1:find",
+         "expression": "((patterns) => { const vis = (e) => { const s = getComputedStyle(e); const r = e.getBoundingClientRect(); return s.display !== 'none' && s.visibility !== 'hidden' && r.width > 0 && r.height > 0; }; const sel = (e) => { const p = []; for (let n = e; n && n.nodeType === 1; n = n.parentElement) { if (n.id) { p.unshift('#' + CSS.escape(n.id)); break; } let i = 1; for (let s = n.previousElementSibling; s; s = s.previousElementSibling) { if (s.tagName === n.tagName) i++; } p.unshift(n.tagName.toLowerCase() + ':nth-of-type(' + i + ')'); } return p.join('>'); }; const widgets = []; for (const p of patterns) { for (const e of document.querySelectorAll(p.selector)) { if (!p.needsTrigger && !vis(e)) continue; widgets.push({ role: p.role, selector: sel(e), snippet: e.cloneNode(false).outerHTML }); } } return JSON.stringify({ widgets: widgets }); })([{\"role\":\"tablist\",\"selector\":\"[role=\\\"tablist\\\"]\",\"focus\":\"[role=\\\"tab\\\"][aria-selected=\\\"true\\\"]\",\"focusTrigger\":false,\"needsTrigger\":false,\"steps\":[{\"key\":\"ArrowRight\",\"expect\":[\"focusMoved\",\"ariaSelectedMoved\"],\"expectAny\":[]}]},{\"role\":\"menu\",\"selector\":\"[role=\\\"menu\\\"]\",\"focus\":\"[role=\\\"menuitem\\\"]\",\"focusTrigger\":false,\"needsTrigger\":false,\"steps\":[{\"key\":\"ArrowDown\",\"expect\":[\"focusMoved\",\"focusInside\"],\"expectAny\":[]},{\"key\":\"Escape\",\"expect\":[\"expandedFalse\"],\"expectAny\":[]}]},{\"role\":\"menubar\",\"selector\":\"[role=\\\"menubar\\\"]\",\"focus\":\"[role=\\\"menuitem\\\"]\",\"focusTrigger\":false,\"needsTrigger\":false,\"steps\":[{\"key\":\"ArrowRight\",\"expect\":[\"focusMoved\",\"focusInside\"],\"expectAny\":[]}]},{\"role\":\"dialog\",\"selector\":\"[role=\\\"dialog\\\"]\",\"focus\":\"\",\"focusTrigger\":true,\"needsTrigger\":true,\"steps\":[{\"key\":\"Enter\",\"expect\":[\"focusInside\"],\"expectAny\":[]},{\"key\":\"Escape\",\"expect\":[\"expandedFalse\",\"focusReturned\"],\"expectAny\":[]}]},{\"role\":\"combobox\",\"selector\":\"[role=\\\"combobox\\\"]\",\"focus\":\"\",\"focusTrigger\":false,\"needsTrigger\":false,\"steps\":[{\"key\":\"ArrowDown\",\"expect\":[],\"expectAny\":[\"activeDescendantChanged\"]}]},{\"role\":\"listbox\",\"selector\":\"[role=\\\"listbox\\\"]\",\"focus\":\"[role=\\\"option\\\"]\",\"focusTrigger\":false,\"needsTrigger\":false,\"steps\":[{\"key\":\"ArrowDown\",\"expect\":[],\"expectAny\":[\"focusMoved\",\"activeDescendantChanged\"]}]},{\"role\":\"tree\",\"selector\":\"[role=\\\"tree\\\"]\",\"focus\":\"[role=\\\"treeitem\\\"]\",\"focusTrigger\":false,\"needsTrigger\":false,\"steps\":[{\"key\":\"ArrowDown\",\"expect\":[],\"expectAny\":[\"focusMoved\",\"activeDescendantChanged\"]}]},{\"role\":\"carousel\",\"selector\":\"[aria-roledescription=\\\"carousel\\\"]\",\"focus\":\"\",\"focusTrigger\":false,\"needsTrigger\":false,\"steps\":[]}])"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a second PROBE_RUN while a run is in flight is refused as probe_busy",
+   "steps": [
+    {
+     "from": "pressing",
+     "event": "PROBE_RUN",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/widgets-tabs-pass.html"
+     },
+     "payload": {
+      "key": "k2",
+      "pageUrl": "http://127.0.0.1:24680/"
+     },
+     "expect": {
+      "state": "pressing",
+      "emits": [
+       {
+        "event": "PROBE_FAILED",
+        "payload": {
+         "key": "k2",
+         "probe": "widgets",
+         "error": "a run on http://127.0.0.1:24680/widgets-tabs-pass.html is in flight",
+         "code": "probe_busy"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a widget list under another run's key is ignored",
+   "steps": [
+    {
+     "from": "finding",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/widgets-roles-pass.html"
+     },
+     "payload": {
+      "key": "k2:find",
+      "json": "{\"widgets\":[{\"role\":\"menu\",\"selector\":\"#menu\",\"snippet\":\"<div id=\\\"menu\\\" role=\\\"menu\\\" aria-label=\\\"Menu\\\"></div>\"},{\"role\":\"dialog\",\"selector\":\"#dlg\",\"snippet\":\"<div id=\\\"dlg\\\" role=\\\"dialog\\\" aria-modal=\\\"true\\\" aria-label=\\\"Dialog\\\" hidden=\\\"\\\"></div>\"},{\"role\":\"combobox\",\"selector\":\"#cb\",\"snippet\":\"<input id=\\\"cb\\\" role=\\\"combobox\\\" aria-expanded=\\\"false\\\" aria-controls=\\\"pop\\\" aria-autocomplete=\\\"list\\\">\"},{\"role\":\"listbox\",\"selector\":\"#lb\",\"snippet\":\"<ul id=\\\"lb\\\" role=\\\"listbox\\\" tabindex=\\\"0\\\" aria-label=\\\"List\\\" aria-activedescendant=\\\"p1\\\"></ul>\"}]}"
+     },
+     "expect": {
+      "state": "finding",
+      "emits": []
+     }
+    }
+   ]
+  },
+  {
+   "id": "a page failure answers PROBE_FAILED probe_page_failed",
+   "steps": [
+    {
+     "from": "reading",
+     "event": "PAGE_FAILED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/widgets-tabs-pass.html"
+     },
+     "payload": {
+      "key": "k1:read",
+      "error": "evaluation threw",
+      "code": "chrome_eval"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_FAILED",
+        "payload": {
+         "key": "k1",
+         "probe": "widgets",
+         "error": "evaluation threw",
+         "code": "probe_page_failed"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a widget list that is not the declared shape answers probe_bad_measure",
+   "steps": [
+    {
+     "from": "finding",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/widgets-tabs-pass.html"
+     },
+     "payload": {
+      "key": "k1:find",
+      "json": "{\"widgets\":3}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_FAILED",
+        "payload": {
+         "key": "k1",
+         "probe": "widgets",
+         "error": "the page measurement is not the widget list shape",
+         "code": "probe_bad_measure"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "widgets-roles-pass: the visible menu, the dialog that a trigger opens, the combobox and the visible listbox are held; the closed combobox popup is not",
+   "steps": [
+    {
+     "from": "finding",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/widgets-roles-pass.html"
+     },
+     "payload": {
+      "key": "k1:find",
+      "json": "{\"widgets\":[{\"role\":\"menu\",\"selector\":\"#menu\",\"snippet\":\"<div id=\\\"menu\\\" role=\\\"menu\\\" aria-label=\\\"Menu\\\"></div>\"},{\"role\":\"dialog\",\"selector\":\"#dlg\",\"snippet\":\"<div id=\\\"dlg\\\" role=\\\"dialog\\\" aria-modal=\\\"true\\\" aria-label=\\\"Dialog\\\" hidden=\\\"\\\"></div>\"},{\"role\":\"combobox\",\"selector\":\"#cb\",\"snippet\":\"<input id=\\\"cb\\\" role=\\\"combobox\\\" aria-expanded=\\\"false\\\" aria-controls=\\\"pop\\\" aria-autocomplete=\\\"list\\\">\"},{\"role\":\"listbox\",\"selector\":\"#lb\",\"snippet\":\"<ul id=\\\"lb\\\" role=\\\"listbox\\\" tabindex=\\\"0\\\" aria-label=\\\"List\\\" aria-activedescendant=\\\"p1\\\"></ul>\"}]}"
+     },
+     "expect": {
+      "state": "finding",
+      "entity": {
+       "widgets": [
+        {
+         "role": "menu",
+         "selector": "#menu",
+         "snippet": "<div id=\"menu\" role=\"menu\" aria-label=\"Menu\"></div>"
+        },
+        {
+         "role": "dialog",
+         "selector": "#dlg",
+         "snippet": "<div id=\"dlg\" role=\"dialog\" aria-modal=\"true\" aria-label=\"Dialog\" hidden=\"\"></div>"
+        },
+        {
+         "role": "combobox",
+         "selector": "#cb",
+         "snippet": "<input id=\"cb\" role=\"combobox\" aria-expanded=\"false\" aria-controls=\"pop\" aria-autocomplete=\"list\">"
+        },
+        {
+         "role": "listbox",
+         "selector": "#lb",
+         "snippet": "<ul id=\"lb\" role=\"listbox\" tabindex=\"0\" aria-label=\"List\" aria-activedescendant=\"p1\"></ul>"
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "a page with no widget goes straight to the target measurement",
+   "steps": [
+    {
+     "from": "finding",
+     "event": "WIDGETS_FOUND",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/widgets-tabs-pass.html",
+      "widgets": []
+     },
+     "payload": {},
+     "expect": {
+      "state": "sizing",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k1:targets",
+         "expression": "((selectors) => { const sel = (e) => { const p = []; for (let n = e; n && n.nodeType === 1; n = n.parentElement) { if (n.id) { p.unshift('#' + CSS.escape(n.id)); break; } let i = 1; for (let s = n.previousElementSibling; s; s = s.previousElementSibling) { if (s.tagName === n.tagName) i++; } p.unshift(n.tagName.toLowerCase() + ':nth-of-type(' + i + ')'); } return p.join('>'); }; const out = []; for (const e of document.querySelectorAll(selectors)) { const s = getComputedStyle(e); const r = e.getBoundingClientRect(); if (s.display === 'none' || s.visibility === 'hidden' || r.width === 0 || r.height === 0 || r.x + r.width <= 0 || r.y + r.height <= 0) continue; const inline = s.display === 'inline' && Array.from(e.parentNode.childNodes).some((n) => n.nodeType === 3 && n.textContent.trim() !== ''); out.push({ selector: sel(e), snippet: e.cloneNode(false).outerHTML, x: r.x, y: r.y, width: r.width, height: r.height, inline: inline }); } return JSON.stringify({ targets: out }); })(\"a[href],button,input:not([type=\\\"hidden\\\"]),select,textarea,summary,[role=\\\"button\\\"],[role=\\\"link\\\"],[role=\\\"tab\\\"],[role=\\\"menuitem\\\"],[role=\\\"checkbox\\\"],[role=\\\"radio\\\"],[role=\\\"switch\\\"],[tabindex]:not([tabindex=\\\"-1\\\"])\")"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a page with widgets starts the first one",
+   "steps": [
+    {
+     "from": "finding",
+     "event": "WIDGETS_FOUND",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/widgets-tabs-pass.html",
+      "widgets": [
+       {
+        "role": "tablist",
+        "selector": "#main>div:nth-of-type(1)",
+        "snippet": "<div role=\"tablist\" aria-label=\"Podrobnosti\"></div>"
+       }
+      ]
+     },
+     "payload": {},
+     "expect": {
+      "state": "focusing"
+     }
+    }
+   ]
+  },
+  {
+   "id": "WIDGET_START holds the widget and its pattern and focuses the entry point",
+   "steps": [
+    {
+     "from": "focusing",
+     "event": "WIDGET_START",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/widgets-tabs-pass.html",
+      "widgets": [
+       {
+        "role": "tablist",
+        "selector": "#main>div:nth-of-type(1)",
+        "snippet": "<div role=\"tablist\" aria-label=\"Podrobnosti\"></div>"
+       }
+      ],
+      "w": 0
+     },
+     "payload": {},
+     "expect": {
+      "state": "focusing",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k1:focus",
+         "expression": "((widgetSel, focusSel, focusTrigger, doFocus) => { const sel = (e) => { const p = []; for (let n = e; n && n.nodeType === 1; n = n.parentElement) { if (n.id) { p.unshift('#' + CSS.escape(n.id)); break; } let i = 1; for (let s = n.previousElementSibling; s; s = s.previousElementSibling) { if (s.tagName === n.tagName) i++; } p.unshift(n.tagName.toLowerCase() + ':nth-of-type(' + i + ')'); } return p.join('>'); }; const vis = (e) => { const s = getComputedStyle(e); const r = e.getBoundingClientRect(); return s.display !== 'none' && s.visibility !== 'hidden' && r.width > 0 && r.height > 0; }; const w = document.querySelector(widgetSel); const trig = w.id !== '' ? document.querySelector('[aria-controls~=\"' + CSS.escape(w.id) + '\"]') : null; if (doFocus) { const cands = focusTrigger ? [trig] : (focusSel === '' ? [w] : Array.from(w.querySelectorAll(focusSel)).concat([w])); for (const t of cands) { if (t === null) continue; t.focus(); if (document.activeElement === t) break; } } const a = document.activeElement; const has = a !== null && a !== document.body; const owner = has && w.contains(a) ? a : w; return JSON.stringify({ hasTrigger: trig !== null, active: has ? sel(a) : '', inside: has && w.contains(a), selected: Array.from(w.querySelectorAll('[aria-selected=\"true\"]')).map(sel), open: vis(w) && (trig === null || trig.getAttribute('aria-expanded') !== 'false'), activeDescendant: owner.getAttribute('aria-activedescendant') || '', triggerFocused: trig !== null && has && a === trig }); })(\"#main>div:nth-of-type(1)\",\"[role=\\\"tab\\\"][aria-selected=\\\"true\\\"]\",false,true)"
+        }
+       }
+      ],
+      "entity": {
+       "cur": {
+        "role": "tablist",
+        "selector": "#main>div:nth-of-type(1)",
+        "snippet": "<div role=\"tablist\" aria-label=\"Podrobnosti\"></div>"
+       },
+       "pattern": {
+        "role": "tablist",
+        "selector": "[role=\"tablist\"]",
+        "focus": "[role=\"tab\"][aria-selected=\"true\"]",
+        "focusTrigger": false,
+        "needsTrigger": false,
+        "steps": [
+         {
+          "key": "ArrowRight",
+          "expect": [
+           "focusMoved",
+           "ariaSelectedMoved"
+          ],
+          "expectAny": []
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "a dialog's entry point is its trigger",
+   "steps": [
+    {
+     "from": "focusing",
+     "event": "WIDGET_START",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/widgets-roles-pass.html",
+      "widgets": [
+       {
+        "role": "dialog",
+        "selector": "#dlg",
+        "snippet": "<div id=\"dlg\" role=\"dialog\" aria-modal=\"true\" aria-label=\"Dialog\" hidden=\"\"></div>"
+       }
+      ],
+      "w": 0
+     },
+     "payload": {},
+     "expect": {
+      "state": "focusing",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k1:focus",
+         "expression": "((widgetSel, focusSel, focusTrigger, doFocus) => { const sel = (e) => { const p = []; for (let n = e; n && n.nodeType === 1; n = n.parentElement) { if (n.id) { p.unshift('#' + CSS.escape(n.id)); break; } let i = 1; for (let s = n.previousElementSibling; s; s = s.previousElementSibling) { if (s.tagName === n.tagName) i++; } p.unshift(n.tagName.toLowerCase() + ':nth-of-type(' + i + ')'); } return p.join('>'); }; const vis = (e) => { const s = getComputedStyle(e); const r = e.getBoundingClientRect(); return s.display !== 'none' && s.visibility !== 'hidden' && r.width > 0 && r.height > 0; }; const w = document.querySelector(widgetSel); const trig = w.id !== '' ? document.querySelector('[aria-controls~=\"' + CSS.escape(w.id) + '\"]') : null; if (doFocus) { const cands = focusTrigger ? [trig] : (focusSel === '' ? [w] : Array.from(w.querySelectorAll(focusSel)).concat([w])); for (const t of cands) { if (t === null) continue; t.focus(); if (document.activeElement === t) break; } } const a = document.activeElement; const has = a !== null && a !== document.body; const owner = has && w.contains(a) ? a : w; return JSON.stringify({ hasTrigger: trig !== null, active: has ? sel(a) : '', inside: has && w.contains(a), selected: Array.from(w.querySelectorAll('[aria-selected=\"true\"]')).map(sel), open: vis(w) && (trig === null || trig.getAttribute('aria-expanded') !== 'false'), activeDescendant: owner.getAttribute('aria-activedescendant') || '', triggerFocused: trig !== null && has && a === trig }); })(\"#dlg\",\"\",true,true)"
+        }
+       }
+      ],
+      "entity": {
+       "cur": {
+        "role": "dialog",
+        "selector": "#dlg",
+        "snippet": "<div id=\"dlg\" role=\"dialog\" aria-modal=\"true\" aria-label=\"Dialog\" hidden=\"\"></div>"
+       },
+       "pattern": {
+        "role": "dialog",
+        "selector": "[role=\"dialog\"]",
+        "focus": "",
+        "focusTrigger": true,
+        "needsTrigger": true,
+        "steps": [
+         {
+          "key": "Enter",
+          "expect": [
+           "focusInside"
+          ],
+          "expectAny": []
+         },
+         {
+          "key": "Escape",
+          "expect": [
+           "expandedFalse",
+           "focusReturned"
+          ],
+          "expectAny": []
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "widgets-tabs-pass: the focused tab is held as the state before the key",
+   "steps": [
+    {
+     "from": "focusing",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/widgets-tabs-pass.html",
+      "cur": {
+       "role": "tablist",
+       "selector": "#main>div:nth-of-type(1)",
+       "snippet": "<div role=\"tablist\" aria-label=\"Podrobnosti\"></div>"
+      },
+      "pattern": {
+       "role": "tablist",
+       "selector": "[role=\"tablist\"]",
+       "focus": "[role=\"tab\"][aria-selected=\"true\"]",
+       "focusTrigger": false,
+       "needsTrigger": false,
+       "steps": [
+        {
+         "key": "ArrowRight",
+         "expect": [
+          "focusMoved",
+          "ariaSelectedMoved"
+         ],
+         "expectAny": []
+        }
+       ]
+      }
+     },
+     "payload": {
+      "key": "k1:focus",
+      "json": "{\"hasTrigger\":false,\"active\":\"#t1\",\"inside\":true,\"selected\":[\"#t1\"],\"open\":true,\"activeDescendant\":\"\",\"triggerFocused\":false}"
+     },
+     "expect": {
+      "state": "focusing",
+      "entity": {
+       "before": {
+        "hasTrigger": false,
+        "active": "#t1",
+        "inside": true,
+        "selected": [
+         "#t1"
+        ],
+        "open": true,
+        "activeDescendant": "",
+        "triggerFocused": false
+       },
+       "j": 0
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "a focused widget presses the first key of its pattern",
+   "steps": [
+    {
+     "from": "focusing",
+     "event": "WIDGET_FOCUSED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/widgets-tabs-pass.html",
+      "cur": {
+       "role": "tablist",
+       "selector": "#main>div:nth-of-type(1)",
+       "snippet": "<div role=\"tablist\" aria-label=\"Podrobnosti\"></div>"
+      },
+      "pattern": {
+       "role": "tablist",
+       "selector": "[role=\"tablist\"]",
+       "focus": "[role=\"tab\"][aria-selected=\"true\"]",
+       "focusTrigger": false,
+       "needsTrigger": false,
+       "steps": [
+        {
+         "key": "ArrowRight",
+         "expect": [
+          "focusMoved",
+          "ariaSelectedMoved"
+         ],
+         "expectAny": []
+        }
+       ]
+      },
+      "before": {
+       "hasTrigger": false,
+       "active": "#t1",
+       "inside": true,
+       "selected": [
+        "#t1"
+       ],
+       "open": true,
+       "activeDescendant": "",
+       "triggerFocused": false
+      }
+     },
+     "payload": {},
+     "expect": {
+      "state": "pressing",
+      "emits": [
+       {
+        "event": "PAGE_KEY",
+        "payload": {
+         "key": "k1:press",
+         "keyName": "ArrowRight"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a dialog with no trigger is skipped and the page restored",
+   "steps": [
+    {
+     "from": "focusing",
+     "event": "WIDGET_FOCUSED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/widgets-roles-pass.html",
+      "cur": {
+       "role": "dialog",
+       "selector": "#dlg",
+       "snippet": "<div id=\"dlg\" role=\"dialog\" aria-modal=\"true\" aria-label=\"Dialog\" hidden=\"\"></div>"
+      },
+      "pattern": {
+       "role": "dialog",
+       "selector": "[role=\"dialog\"]",
+       "focus": "",
+       "focusTrigger": true,
+       "needsTrigger": true,
+       "steps": [
+        {
+         "key": "Enter",
+         "expect": [
+          "focusInside"
+         ],
+         "expectAny": []
+        },
+        {
+         "key": "Escape",
+         "expect": [
+          "expandedFalse",
+          "focusReturned"
+         ],
+         "expectAny": []
+        }
+       ]
+      },
+      "before": {
+       "hasTrigger": false,
+       "active": "",
+       "inside": false,
+       "selected": [],
+       "open": false,
+       "activeDescendant": "",
+       "triggerFocused": false
+      }
+     },
+     "payload": {},
+     "expect": {
+      "state": "restoring",
+      "emits": [
+       {
+        "event": "PAGE_NAVIGATE",
+        "payload": {
+         "key": "k1:restore",
+         "url": "http://127.0.0.1:24680/widgets-roles-pass.html"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a key sent asks for the widget's state without focusing",
+   "steps": [
+    {
+     "from": "pressing",
+     "event": "PAGE_KEY_SENT",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/widgets-tabs-pass.html",
+      "cur": {
+       "role": "tablist",
+       "selector": "#main>div:nth-of-type(1)",
+       "snippet": "<div role=\"tablist\" aria-label=\"Podrobnosti\"></div>"
+      },
+      "pattern": {
+       "role": "tablist",
+       "selector": "[role=\"tablist\"]",
+       "focus": "[role=\"tab\"][aria-selected=\"true\"]",
+       "focusTrigger": false,
+       "needsTrigger": false,
+       "steps": [
+        {
+         "key": "ArrowRight",
+         "expect": [
+          "focusMoved",
+          "ariaSelectedMoved"
+         ],
+         "expectAny": []
+        }
+       ]
+      }
+     },
+     "payload": {
+      "key": "k1:press"
+     },
+     "expect": {
+      "state": "reading",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k1:read",
+         "expression": "((widgetSel, focusSel, focusTrigger, doFocus) => { const sel = (e) => { const p = []; for (let n = e; n && n.nodeType === 1; n = n.parentElement) { if (n.id) { p.unshift('#' + CSS.escape(n.id)); break; } let i = 1; for (let s = n.previousElementSibling; s; s = s.previousElementSibling) { if (s.tagName === n.tagName) i++; } p.unshift(n.tagName.toLowerCase() + ':nth-of-type(' + i + ')'); } return p.join('>'); }; const vis = (e) => { const s = getComputedStyle(e); const r = e.getBoundingClientRect(); return s.display !== 'none' && s.visibility !== 'hidden' && r.width > 0 && r.height > 0; }; const w = document.querySelector(widgetSel); const trig = w.id !== '' ? document.querySelector('[aria-controls~=\"' + CSS.escape(w.id) + '\"]') : null; if (doFocus) { const cands = focusTrigger ? [trig] : (focusSel === '' ? [w] : Array.from(w.querySelectorAll(focusSel)).concat([w])); for (const t of cands) { if (t === null) continue; t.focus(); if (document.activeElement === t) break; } } const a = document.activeElement; const has = a !== null && a !== document.body; const owner = has && w.contains(a) ? a : w; return JSON.stringify({ hasTrigger: trig !== null, active: has ? sel(a) : '', inside: has && w.contains(a), selected: Array.from(w.querySelectorAll('[aria-selected=\"true\"]')).map(sel), open: vis(w) && (trig === null || trig.getAttribute('aria-expanded') !== 'false'), activeDescendant: owner.getAttribute('aria-activedescendant') || '', triggerFocused: trig !== null && has && a === trig }); })(\"#main>div:nth-of-type(1)\",\"\",false,false)"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a key answer under another run's key is ignored",
+   "steps": [
+    {
+     "from": "pressing",
+     "event": "PAGE_KEY_SENT",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/widgets-tabs-pass.html"
+     },
+     "payload": {
+      "key": "k2:press"
+     },
+     "expect": {
+      "state": "pressing",
+      "emits": []
+     }
+    }
+   ]
+  },
+  {
+   "id": "widgets-tabs-fail: div tabs take no focus and ignore ArrowRight, so neither focusMoved nor ariaSelectedMoved holds (two findings)",
+   "steps": [
+    {
+     "from": "reading",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/widgets-tabs-fail.html",
+      "cur": {
+       "role": "tablist",
+       "selector": "#main>div:nth-of-type(1)",
+       "snippet": "<div role=\"tablist\" aria-label=\"Podrobnosti\"></div>"
+      },
+      "pattern": {
+       "role": "tablist",
+       "selector": "[role=\"tablist\"]",
+       "focus": "[role=\"tab\"][aria-selected=\"true\"]",
+       "focusTrigger": false,
+       "needsTrigger": false,
+       "steps": [
+        {
+         "key": "ArrowRight",
+         "expect": [
+          "focusMoved",
+          "ariaSelectedMoved"
+         ],
+         "expectAny": []
+        }
+       ]
+      },
+      "j": 0,
+      "before": {
+       "hasTrigger": false,
+       "active": "",
+       "inside": false,
+       "selected": [
+        "#t1"
+       ],
+       "open": true,
+       "activeDescendant": "",
+       "triggerFocused": false
+      },
+      "findings": []
+     },
+     "payload": {
+      "key": "k1:read",
+      "json": "{\"hasTrigger\":false,\"active\":\"\",\"inside\":false,\"selected\":[\"#t1\"],\"open\":true,\"activeDescendant\":\"\",\"triggerFocused\":false}"
+     },
+     "expect": {
+      "state": "reading",
+      "entity": {
+       "findings": [
+        {
+         "id": "http://127.0.0.1:24680/widgets-tabs-fail.html#widget-keyboard##main>div:nth-of-type(1)#tablist:ArrowRight:focusMoved",
+         "pageUrl": "http://127.0.0.1:24680/widgets-tabs-fail.html",
+         "rule": "widget-keyboard",
+         "wcag": [
+          {
+           "criterion": "2.1.1",
+           "level": "A",
+           "version": "2.0"
+          },
+          {
+           "criterion": "4.1.2",
+           "level": "A",
+           "version": "2.0"
+          }
+         ],
+         "method": "probe",
+         "engines": [
+          "probe"
+         ],
+         "impact": "serious",
+         "confidence": "needs-verification",
+         "selector": "#main>div:nth-of-type(1)",
+         "snippet": "<div role=\"tablist\" aria-label=\"Podrobnosti\"></div>",
+         "evidence": "",
+         "count": 1
+        },
+        {
+         "id": "http://127.0.0.1:24680/widgets-tabs-fail.html#widget-keyboard##main>div:nth-of-type(1)#tablist:ArrowRight:ariaSelectedMoved",
+         "pageUrl": "http://127.0.0.1:24680/widgets-tabs-fail.html",
+         "rule": "widget-keyboard",
+         "wcag": [
+          {
+           "criterion": "2.1.1",
+           "level": "A",
+           "version": "2.0"
+          },
+          {
+           "criterion": "4.1.2",
+           "level": "A",
+           "version": "2.0"
+          }
+         ],
+         "method": "probe",
+         "engines": [
+          "probe"
+         ],
+         "impact": "serious",
+         "confidence": "needs-verification",
+         "selector": "#main>div:nth-of-type(1)",
+         "snippet": "<div role=\"tablist\" aria-label=\"Podrobnosti\"></div>",
+         "evidence": "",
+         "count": 1
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: widgets-tabs-pass moves focus and aria-selected to the next tab, so no finding",
+   "steps": [
+    {
+     "from": "reading",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/widgets-tabs-pass.html",
+      "cur": {
+       "role": "tablist",
+       "selector": "#main>div:nth-of-type(1)",
+       "snippet": "<div role=\"tablist\" aria-label=\"Podrobnosti\"></div>"
+      },
+      "pattern": {
+       "role": "tablist",
+       "selector": "[role=\"tablist\"]",
+       "focus": "[role=\"tab\"][aria-selected=\"true\"]",
+       "focusTrigger": false,
+       "needsTrigger": false,
+       "steps": [
+        {
+         "key": "ArrowRight",
+         "expect": [
+          "focusMoved",
+          "ariaSelectedMoved"
+         ],
+         "expectAny": []
+        }
+       ]
+      },
+      "j": 0,
+      "before": {
+       "hasTrigger": false,
+       "active": "#t1",
+       "inside": true,
+       "selected": [
+        "#t1"
+       ],
+       "open": true,
+       "activeDescendant": "",
+       "triggerFocused": false
+      },
+      "findings": []
+     },
+     "payload": {
+      "key": "k1:read",
+      "json": "{\"hasTrigger\":false,\"active\":\"#t2\",\"inside\":true,\"selected\":[\"#t2\"],\"open\":true,\"activeDescendant\":\"\",\"triggerFocused\":false}"
+     },
+     "expect": {
+      "state": "reading",
+      "entity": {
+       "findings": []
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "widgets-roles-fail: ArrowDown in the menu moves nothing (focusMoved)",
+   "steps": [
+    {
+     "from": "reading",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/widgets-roles-fail.html",
+      "cur": {
+       "role": "menu",
+       "selector": "#menu",
+       "snippet": "<div id=\"menu\" role=\"menu\" aria-label=\"Menu\"></div>"
+      },
+      "pattern": {
+       "role": "menu",
+       "selector": "[role=\"menu\"]",
+       "focus": "[role=\"menuitem\"]",
+       "focusTrigger": false,
+       "needsTrigger": false,
+       "steps": [
+        {
+         "key": "ArrowDown",
+         "expect": [
+          "focusMoved",
+          "focusInside"
+         ],
+         "expectAny": []
+        },
+        {
+         "key": "Escape",
+         "expect": [
+          "expandedFalse"
+         ],
+         "expectAny": []
+        }
+       ]
+      },
+      "j": 0,
+      "before": {
+       "hasTrigger": false,
+       "active": "#menu>button:nth-of-type(1)",
+       "inside": true,
+       "selected": [],
+       "open": true,
+       "activeDescendant": "",
+       "triggerFocused": false
+      },
+      "findings": []
+     },
+     "payload": {
+      "key": "k1:read",
+      "json": "{\"hasTrigger\":false,\"active\":\"#menu>button:nth-of-type(1)\",\"inside\":true,\"selected\":[],\"open\":true,\"activeDescendant\":\"\",\"triggerFocused\":false}"
+     },
+     "expect": {
+      "state": "reading",
+      "entity": {
+       "findings": [
+        {
+         "id": "http://127.0.0.1:24680/widgets-roles-fail.html#widget-keyboard##menu#menu:ArrowDown:focusMoved",
+         "pageUrl": "http://127.0.0.1:24680/widgets-roles-fail.html",
+         "rule": "widget-keyboard",
+         "wcag": [
+          {
+           "criterion": "2.1.1",
+           "level": "A",
+           "version": "2.0"
+          },
+          {
+           "criterion": "4.1.2",
+           "level": "A",
+           "version": "2.0"
+          }
+         ],
+         "method": "probe",
+         "engines": [
+          "probe"
+         ],
+         "impact": "serious",
+         "confidence": "needs-verification",
+         "selector": "#menu",
+         "snippet": "<div id=\"menu\" role=\"menu\" aria-label=\"Menu\"></div>",
+         "evidence": "",
+         "count": 1
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: widgets-roles-pass ArrowDown moves focus inside the menu",
+   "steps": [
+    {
+     "from": "reading",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/widgets-roles-pass.html",
+      "cur": {
+       "role": "menu",
+       "selector": "#menu",
+       "snippet": "<div id=\"menu\" role=\"menu\" aria-label=\"Menu\"></div>"
+      },
+      "pattern": {
+       "role": "menu",
+       "selector": "[role=\"menu\"]",
+       "focus": "[role=\"menuitem\"]",
+       "focusTrigger": false,
+       "needsTrigger": false,
+       "steps": [
+        {
+         "key": "ArrowDown",
+         "expect": [
+          "focusMoved",
+          "focusInside"
+         ],
+         "expectAny": []
+        },
+        {
+         "key": "Escape",
+         "expect": [
+          "expandedFalse"
+         ],
+         "expectAny": []
+        }
+       ]
+      },
+      "j": 0,
+      "before": {
+       "hasTrigger": false,
+       "active": "#menu>button:nth-of-type(1)",
+       "inside": true,
+       "selected": [],
+       "open": true,
+       "activeDescendant": "",
+       "triggerFocused": false
+      },
+      "findings": []
+     },
+     "payload": {
+      "key": "k1:read",
+      "json": "{\"hasTrigger\":false,\"active\":\"#menu>button:nth-of-type(2)\",\"inside\":true,\"selected\":[],\"open\":true,\"activeDescendant\":\"\",\"triggerFocused\":false}"
+     },
+     "expect": {
+      "state": "reading",
+      "entity": {
+       "findings": []
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "widgets-roles-fail: Escape leaves the menu open (expandedFalse)",
+   "steps": [
+    {
+     "from": "reading",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/widgets-roles-fail.html",
+      "cur": {
+       "role": "menu",
+       "selector": "#menu",
+       "snippet": "<div id=\"menu\" role=\"menu\" aria-label=\"Menu\"></div>"
+      },
+      "pattern": {
+       "role": "menu",
+       "selector": "[role=\"menu\"]",
+       "focus": "[role=\"menuitem\"]",
+       "focusTrigger": false,
+       "needsTrigger": false,
+       "steps": [
+        {
+         "key": "ArrowDown",
+         "expect": [
+          "focusMoved",
+          "focusInside"
+         ],
+         "expectAny": []
+        },
+        {
+         "key": "Escape",
+         "expect": [
+          "expandedFalse"
+         ],
+         "expectAny": []
+        }
+       ]
+      },
+      "j": 1,
+      "before": {
+       "hasTrigger": false,
+       "active": "#menu>button:nth-of-type(1)",
+       "inside": true,
+       "selected": [],
+       "open": true,
+       "activeDescendant": "",
+       "triggerFocused": false
+      },
+      "findings": []
+     },
+     "payload": {
+      "key": "k1:read",
+      "json": "{\"hasTrigger\":false,\"active\":\"#menu>button:nth-of-type(1)\",\"inside\":true,\"selected\":[],\"open\":true,\"activeDescendant\":\"\",\"triggerFocused\":false}"
+     },
+     "expect": {
+      "state": "reading",
+      "entity": {
+       "findings": [
+        {
+         "id": "http://127.0.0.1:24680/widgets-roles-fail.html#widget-keyboard##menu#menu:Escape:expandedFalse",
+         "pageUrl": "http://127.0.0.1:24680/widgets-roles-fail.html",
+         "rule": "widget-keyboard",
+         "wcag": [
+          {
+           "criterion": "2.1.1",
+           "level": "A",
+           "version": "2.0"
+          },
+          {
+           "criterion": "4.1.2",
+           "level": "A",
+           "version": "2.0"
+          }
+         ],
+         "method": "probe",
+         "engines": [
+          "probe"
+         ],
+         "impact": "serious",
+         "confidence": "needs-verification",
+         "selector": "#menu",
+         "snippet": "<div id=\"menu\" role=\"menu\" aria-label=\"Menu\"></div>",
+         "evidence": "",
+         "count": 1
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: widgets-roles-pass Escape closes the menu",
+   "steps": [
+    {
+     "from": "reading",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/widgets-roles-pass.html",
+      "cur": {
+       "role": "menu",
+       "selector": "#menu",
+       "snippet": "<div id=\"menu\" role=\"menu\" aria-label=\"Menu\"></div>"
+      },
+      "pattern": {
+       "role": "menu",
+       "selector": "[role=\"menu\"]",
+       "focus": "[role=\"menuitem\"]",
+       "focusTrigger": false,
+       "needsTrigger": false,
+       "steps": [
+        {
+         "key": "ArrowDown",
+         "expect": [
+          "focusMoved",
+          "focusInside"
+         ],
+         "expectAny": []
+        },
+        {
+         "key": "Escape",
+         "expect": [
+          "expandedFalse"
+         ],
+         "expectAny": []
+        }
+       ]
+      },
+      "j": 1,
+      "before": {
+       "hasTrigger": false,
+       "active": "#menu>button:nth-of-type(2)",
+       "inside": true,
+       "selected": [],
+       "open": true,
+       "activeDescendant": "",
+       "triggerFocused": false
+      },
+      "findings": []
+     },
+     "payload": {
+      "key": "k1:read",
+      "json": "{\"hasTrigger\":false,\"active\":\"\",\"inside\":false,\"selected\":[],\"open\":false,\"activeDescendant\":\"\",\"triggerFocused\":false}"
+     },
+     "expect": {
+      "state": "reading",
+      "entity": {
+       "findings": []
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "widgets-roles-fail: the dialog opens but focus stays outside (focusInside)",
+   "steps": [
+    {
+     "from": "reading",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/widgets-roles-fail.html",
+      "cur": {
+       "role": "dialog",
+       "selector": "#dlg",
+       "snippet": "<div id=\"dlg\" role=\"dialog\" aria-modal=\"true\" aria-label=\"Dialog\" hidden=\"\"></div>"
+      },
+      "pattern": {
+       "role": "dialog",
+       "selector": "[role=\"dialog\"]",
+       "focus": "",
+       "focusTrigger": true,
+       "needsTrigger": true,
+       "steps": [
+        {
+         "key": "Enter",
+         "expect": [
+          "focusInside"
+         ],
+         "expectAny": []
+        },
+        {
+         "key": "Escape",
+         "expect": [
+          "expandedFalse",
+          "focusReturned"
+         ],
+         "expectAny": []
+        }
+       ]
+      },
+      "j": 0,
+      "before": {
+       "hasTrigger": true,
+       "active": "#opener",
+       "inside": false,
+       "selected": [],
+       "open": false,
+       "activeDescendant": "",
+       "triggerFocused": true
+      },
+      "findings": []
+     },
+     "payload": {
+      "key": "k1:read",
+      "json": "{\"hasTrigger\":true,\"active\":\"#opener\",\"inside\":false,\"selected\":[],\"open\":true,\"activeDescendant\":\"\",\"triggerFocused\":true}"
+     },
+     "expect": {
+      "state": "reading",
+      "entity": {
+       "findings": [
+        {
+         "id": "http://127.0.0.1:24680/widgets-roles-fail.html#widget-keyboard##dlg#dialog:Enter:focusInside",
+         "pageUrl": "http://127.0.0.1:24680/widgets-roles-fail.html",
+         "rule": "widget-keyboard",
+         "wcag": [
+          {
+           "criterion": "2.1.1",
+           "level": "A",
+           "version": "2.0"
+          },
+          {
+           "criterion": "4.1.2",
+           "level": "A",
+           "version": "2.0"
+          }
+         ],
+         "method": "probe",
+         "engines": [
+          "probe"
+         ],
+         "impact": "serious",
+         "confidence": "needs-verification",
+         "selector": "#dlg",
+         "snippet": "<div id=\"dlg\" role=\"dialog\" aria-modal=\"true\" aria-label=\"Dialog\" hidden=\"\"></div>",
+         "evidence": "",
+         "count": 1
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: widgets-roles-pass moves focus into the dialog",
+   "steps": [
+    {
+     "from": "reading",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/widgets-roles-pass.html",
+      "cur": {
+       "role": "dialog",
+       "selector": "#dlg",
+       "snippet": "<div id=\"dlg\" role=\"dialog\" aria-modal=\"true\" aria-label=\"Dialog\" hidden=\"\"></div>"
+      },
+      "pattern": {
+       "role": "dialog",
+       "selector": "[role=\"dialog\"]",
+       "focus": "",
+       "focusTrigger": true,
+       "needsTrigger": true,
+       "steps": [
+        {
+         "key": "Enter",
+         "expect": [
+          "focusInside"
+         ],
+         "expectAny": []
+        },
+        {
+         "key": "Escape",
+         "expect": [
+          "expandedFalse",
+          "focusReturned"
+         ],
+         "expectAny": []
+        }
+       ]
+      },
+      "j": 0,
+      "before": {
+       "hasTrigger": true,
+       "active": "#opener",
+       "inside": false,
+       "selected": [],
+       "open": false,
+       "activeDescendant": "",
+       "triggerFocused": true
+      },
+      "findings": []
+     },
+     "payload": {
+      "key": "k1:read",
+      "json": "{\"hasTrigger\":true,\"active\":\"#ok\",\"inside\":true,\"selected\":[],\"open\":true,\"activeDescendant\":\"\",\"triggerFocused\":false}"
+     },
+     "expect": {
+      "state": "reading",
+      "entity": {
+       "findings": []
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "widgets-roles-fail: Escape does not close the dialog (expandedFalse; focus never left the trigger, so focusReturned holds)",
+   "steps": [
+    {
+     "from": "reading",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/widgets-roles-fail.html",
+      "cur": {
+       "role": "dialog",
+       "selector": "#dlg",
+       "snippet": "<div id=\"dlg\" role=\"dialog\" aria-modal=\"true\" aria-label=\"Dialog\" hidden=\"\"></div>"
+      },
+      "pattern": {
+       "role": "dialog",
+       "selector": "[role=\"dialog\"]",
+       "focus": "",
+       "focusTrigger": true,
+       "needsTrigger": true,
+       "steps": [
+        {
+         "key": "Enter",
+         "expect": [
+          "focusInside"
+         ],
+         "expectAny": []
+        },
+        {
+         "key": "Escape",
+         "expect": [
+          "expandedFalse",
+          "focusReturned"
+         ],
+         "expectAny": []
+        }
+       ]
+      },
+      "j": 1,
+      "before": {
+       "hasTrigger": true,
+       "active": "#opener",
+       "inside": false,
+       "selected": [],
+       "open": true,
+       "activeDescendant": "",
+       "triggerFocused": true
+      },
+      "findings": []
+     },
+     "payload": {
+      "key": "k1:read",
+      "json": "{\"hasTrigger\":true,\"active\":\"#opener\",\"inside\":false,\"selected\":[],\"open\":true,\"activeDescendant\":\"\",\"triggerFocused\":true}"
+     },
+     "expect": {
+      "state": "reading",
+      "entity": {
+       "findings": [
+        {
+         "id": "http://127.0.0.1:24680/widgets-roles-fail.html#widget-keyboard##dlg#dialog:Escape:expandedFalse",
+         "pageUrl": "http://127.0.0.1:24680/widgets-roles-fail.html",
+         "rule": "widget-keyboard",
+         "wcag": [
+          {
+           "criterion": "2.1.1",
+           "level": "A",
+           "version": "2.0"
+          },
+          {
+           "criterion": "4.1.2",
+           "level": "A",
+           "version": "2.0"
+          }
+         ],
+         "method": "probe",
+         "engines": [
+          "probe"
+         ],
+         "impact": "serious",
+         "confidence": "needs-verification",
+         "selector": "#dlg",
+         "snippet": "<div id=\"dlg\" role=\"dialog\" aria-modal=\"true\" aria-label=\"Dialog\" hidden=\"\"></div>",
+         "evidence": "",
+         "count": 1
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: widgets-roles-pass Escape closes the dialog and returns focus to the trigger",
+   "steps": [
+    {
+     "from": "reading",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/widgets-roles-pass.html",
+      "cur": {
+       "role": "dialog",
+       "selector": "#dlg",
+       "snippet": "<div id=\"dlg\" role=\"dialog\" aria-modal=\"true\" aria-label=\"Dialog\" hidden=\"\"></div>"
+      },
+      "pattern": {
+       "role": "dialog",
+       "selector": "[role=\"dialog\"]",
+       "focus": "",
+       "focusTrigger": true,
+       "needsTrigger": true,
+       "steps": [
+        {
+         "key": "Enter",
+         "expect": [
+          "focusInside"
+         ],
+         "expectAny": []
+        },
+        {
+         "key": "Escape",
+         "expect": [
+          "expandedFalse",
+          "focusReturned"
+         ],
+         "expectAny": []
+        }
+       ]
+      },
+      "j": 1,
+      "before": {
+       "hasTrigger": true,
+       "active": "#ok",
+       "inside": true,
+       "selected": [],
+       "open": true,
+       "activeDescendant": "",
+       "triggerFocused": false
+      },
+      "findings": []
+     },
+     "payload": {
+      "key": "k1:read",
+      "json": "{\"hasTrigger\":true,\"active\":\"#opener\",\"inside\":false,\"selected\":[],\"open\":false,\"activeDescendant\":\"\",\"triggerFocused\":true}"
+     },
+     "expect": {
+      "state": "reading",
+      "entity": {
+       "findings": []
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "widgets-roles-fail: ArrowDown in the combobox opens nothing and sets no active descendant",
+   "steps": [
+    {
+     "from": "reading",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/widgets-roles-fail.html",
+      "cur": {
+       "role": "combobox",
+       "selector": "#cb",
+       "snippet": "<input id=\"cb\" role=\"combobox\" aria-expanded=\"false\" aria-controls=\"pop\" aria-autocomplete=\"list\">"
+      },
+      "pattern": {
+       "role": "combobox",
+       "selector": "[role=\"combobox\"]",
+       "focus": "",
+       "focusTrigger": false,
+       "needsTrigger": false,
+       "steps": [
+        {
+         "key": "ArrowDown",
+         "expect": [],
+         "expectAny": [
+          "activeDescendantChanged"
+         ]
+        }
+       ]
+      },
+      "j": 0,
+      "before": {
+       "hasTrigger": false,
+       "active": "#cb",
+       "inside": true,
+       "selected": [],
+       "open": true,
+       "activeDescendant": "",
+       "triggerFocused": false
+      },
+      "findings": []
+     },
+     "payload": {
+      "key": "k1:read",
+      "json": "{\"hasTrigger\":false,\"active\":\"#cb\",\"inside\":true,\"selected\":[],\"open\":true,\"activeDescendant\":\"\",\"triggerFocused\":false}"
+     },
+     "expect": {
+      "state": "reading",
+      "entity": {
+       "findings": [
+        {
+         "id": "http://127.0.0.1:24680/widgets-roles-fail.html#widget-keyboard##cb#combobox:ArrowDown:activeDescendantChanged",
+         "pageUrl": "http://127.0.0.1:24680/widgets-roles-fail.html",
+         "rule": "widget-keyboard",
+         "wcag": [
+          {
+           "criterion": "2.1.1",
+           "level": "A",
+           "version": "2.0"
+          },
+          {
+           "criterion": "4.1.2",
+           "level": "A",
+           "version": "2.0"
+          }
+         ],
+         "method": "probe",
+         "engines": [
+          "probe"
+         ],
+         "impact": "serious",
+         "confidence": "needs-verification",
+         "selector": "#cb",
+         "snippet": "<input id=\"cb\" role=\"combobox\" aria-expanded=\"false\" aria-controls=\"pop\" aria-autocomplete=\"list\">",
+         "evidence": "",
+         "count": 1
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: widgets-roles-pass ArrowDown opens the popup and sets the active descendant",
+   "steps": [
+    {
+     "from": "reading",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/widgets-roles-pass.html",
+      "cur": {
+       "role": "combobox",
+       "selector": "#cb",
+       "snippet": "<input id=\"cb\" role=\"combobox\" aria-expanded=\"false\" aria-controls=\"pop\" aria-autocomplete=\"list\">"
+      },
+      "pattern": {
+       "role": "combobox",
+       "selector": "[role=\"combobox\"]",
+       "focus": "",
+       "focusTrigger": false,
+       "needsTrigger": false,
+       "steps": [
+        {
+         "key": "ArrowDown",
+         "expect": [],
+         "expectAny": [
+          "activeDescendantChanged"
+         ]
+        }
+       ]
+      },
+      "j": 0,
+      "before": {
+       "hasTrigger": false,
+       "active": "#cb",
+       "inside": true,
+       "selected": [],
+       "open": true,
+       "activeDescendant": "",
+       "triggerFocused": false
+      },
+      "findings": []
+     },
+     "payload": {
+      "key": "k1:read",
+      "json": "{\"hasTrigger\":false,\"active\":\"#cb\",\"inside\":true,\"selected\":[],\"open\":true,\"activeDescendant\":\"o1\",\"triggerFocused\":false}"
+     },
+     "expect": {
+      "state": "reading",
+      "entity": {
+       "findings": []
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "widgets-roles-fail: ArrowDown in the listbox moves neither focus nor the active descendant (any of two)",
+   "steps": [
+    {
+     "from": "reading",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/widgets-roles-fail.html",
+      "cur": {
+       "role": "listbox",
+       "selector": "#lb",
+       "snippet": "<ul id=\"lb\" role=\"listbox\" tabindex=\"0\" aria-label=\"List\" aria-activedescendant=\"p1\"></ul>"
+      },
+      "pattern": {
+       "role": "listbox",
+       "selector": "[role=\"listbox\"]",
+       "focus": "[role=\"option\"]",
+       "focusTrigger": false,
+       "needsTrigger": false,
+       "steps": [
+        {
+         "key": "ArrowDown",
+         "expect": [],
+         "expectAny": [
+          "focusMoved",
+          "activeDescendantChanged"
+         ]
+        }
+       ]
+      },
+      "j": 0,
+      "before": {
+       "hasTrigger": false,
+       "active": "#lb",
+       "inside": true,
+       "selected": [],
+       "open": true,
+       "activeDescendant": "p1",
+       "triggerFocused": false
+      },
+      "findings": []
+     },
+     "payload": {
+      "key": "k1:read",
+      "json": "{\"hasTrigger\":false,\"active\":\"#lb\",\"inside\":true,\"selected\":[],\"open\":true,\"activeDescendant\":\"p1\",\"triggerFocused\":false}"
+     },
+     "expect": {
+      "state": "reading",
+      "entity": {
+       "findings": [
+        {
+         "id": "http://127.0.0.1:24680/widgets-roles-fail.html#widget-keyboard##lb#listbox:ArrowDown:focusMoved|activeDescendantChanged",
+         "pageUrl": "http://127.0.0.1:24680/widgets-roles-fail.html",
+         "rule": "widget-keyboard",
+         "wcag": [
+          {
+           "criterion": "2.1.1",
+           "level": "A",
+           "version": "2.0"
+          },
+          {
+           "criterion": "4.1.2",
+           "level": "A",
+           "version": "2.0"
+          }
+         ],
+         "method": "probe",
+         "engines": [
+          "probe"
+         ],
+         "impact": "serious",
+         "confidence": "needs-verification",
+         "selector": "#lb",
+         "snippet": "<ul id=\"lb\" role=\"listbox\" tabindex=\"0\" aria-label=\"List\" aria-activedescendant=\"p1\"></ul>",
+         "evidence": "",
+         "count": 1
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: widgets-roles-pass ArrowDown moves the active descendant",
+   "steps": [
+    {
+     "from": "reading",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/widgets-roles-pass.html",
+      "cur": {
+       "role": "listbox",
+       "selector": "#lb",
+       "snippet": "<ul id=\"lb\" role=\"listbox\" tabindex=\"0\" aria-label=\"List\" aria-activedescendant=\"p1\"></ul>"
+      },
+      "pattern": {
+       "role": "listbox",
+       "selector": "[role=\"listbox\"]",
+       "focus": "[role=\"option\"]",
+       "focusTrigger": false,
+       "needsTrigger": false,
+       "steps": [
+        {
+         "key": "ArrowDown",
+         "expect": [],
+         "expectAny": [
+          "focusMoved",
+          "activeDescendantChanged"
+         ]
+        }
+       ]
+      },
+      "j": 0,
+      "before": {
+       "hasTrigger": false,
+       "active": "#lb",
+       "inside": true,
+       "selected": [],
+       "open": true,
+       "activeDescendant": "p1",
+       "triggerFocused": false
+      },
+      "findings": []
+     },
+     "payload": {
+      "key": "k1:read",
+      "json": "{\"hasTrigger\":false,\"active\":\"#lb\",\"inside\":true,\"selected\":[],\"open\":true,\"activeDescendant\":\"p2\",\"triggerFocused\":false}"
+     },
+     "expect": {
+      "state": "reading",
+      "entity": {
+       "findings": []
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "a pattern with another step presses its next key",
+   "steps": [
+    {
+     "from": "reading",
+     "event": "WIDGET_READ",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/widgets-roles-pass.html",
+      "cur": {
+       "role": "menu",
+       "selector": "#menu",
+       "snippet": "<div id=\"menu\" role=\"menu\" aria-label=\"Menu\"></div>"
+      },
+      "pattern": {
+       "role": "menu",
+       "selector": "[role=\"menu\"]",
+       "focus": "[role=\"menuitem\"]",
+       "focusTrigger": false,
+       "needsTrigger": false,
+       "steps": [
+        {
+         "key": "ArrowDown",
+         "expect": [
+          "focusMoved",
+          "focusInside"
+         ],
+         "expectAny": []
+        },
+        {
+         "key": "Escape",
+         "expect": [
+          "expandedFalse"
+         ],
+         "expectAny": []
+        }
+       ]
+      },
+      "j": 0
+     },
+     "payload": {},
+     "expect": {
+      "state": "pressing",
+      "emits": [
+       {
+        "event": "PAGE_KEY",
+        "payload": {
+         "key": "k1:press",
+         "keyName": "Escape"
+        }
+       }
+      ],
+      "entity": {
+       "j": 1
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: after the last step the page is restored",
+   "steps": [
+    {
+     "from": "reading",
+     "event": "WIDGET_READ",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/widgets-roles-pass.html",
+      "cur": {
+       "role": "menu",
+       "selector": "#menu",
+       "snippet": "<div id=\"menu\" role=\"menu\" aria-label=\"Menu\"></div>"
+      },
+      "pattern": {
+       "role": "menu",
+       "selector": "[role=\"menu\"]",
+       "focus": "[role=\"menuitem\"]",
+       "focusTrigger": false,
+       "needsTrigger": false,
+       "steps": [
+        {
+         "key": "ArrowDown",
+         "expect": [
+          "focusMoved",
+          "focusInside"
+         ],
+         "expectAny": []
+        },
+        {
+         "key": "Escape",
+         "expect": [
+          "expandedFalse"
+         ],
+         "expectAny": []
+        }
+       ]
+      },
+      "j": 1
+     },
+     "payload": {},
+     "expect": {
+      "state": "restoring",
+      "emits": [
+       {
+        "event": "PAGE_NAVIGATE",
+        "payload": {
+         "key": "k1:restore",
+         "url": "http://127.0.0.1:24680/widgets-roles-pass.html"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a restored page starts the next widget",
+   "steps": [
+    {
+     "from": "restoring",
+     "event": "PAGE_LOADED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/widgets-roles-pass.html",
+      "widgets": [
+       {
+        "role": "menu",
+        "selector": "#menu",
+        "snippet": "<div id=\"menu\" role=\"menu\" aria-label=\"Menu\"></div>"
+       },
+       {
+        "role": "dialog",
+        "selector": "#dlg",
+        "snippet": "<div id=\"dlg\" role=\"dialog\" aria-modal=\"true\" aria-label=\"Dialog\" hidden=\"\"></div>"
+       },
+       {
+        "role": "combobox",
+        "selector": "#cb",
+        "snippet": "<input id=\"cb\" role=\"combobox\" aria-expanded=\"false\" aria-controls=\"pop\" aria-autocomplete=\"list\">"
+       },
+       {
+        "role": "listbox",
+        "selector": "#lb",
+        "snippet": "<ul id=\"lb\" role=\"listbox\" tabindex=\"0\" aria-label=\"List\" aria-activedescendant=\"p1\"></ul>"
+       }
+      ],
+      "w": 0
+     },
+     "payload": {
+      "key": "k1:restore",
+      "url": "http://127.0.0.1:24680/widgets-roles-pass.html",
+      "title": "t"
+     },
+     "expect": {
+      "state": "focusing",
+      "entity": {
+       "w": 1
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: after the last widget the restored page measures targets",
+   "steps": [
+    {
+     "from": "restoring",
+     "event": "PAGE_LOADED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/widgets-roles-pass.html",
+      "widgets": [
+       {
+        "role": "menu",
+        "selector": "#menu",
+        "snippet": "<div id=\"menu\" role=\"menu\" aria-label=\"Menu\"></div>"
+       },
+       {
+        "role": "dialog",
+        "selector": "#dlg",
+        "snippet": "<div id=\"dlg\" role=\"dialog\" aria-modal=\"true\" aria-label=\"Dialog\" hidden=\"\"></div>"
+       },
+       {
+        "role": "combobox",
+        "selector": "#cb",
+        "snippet": "<input id=\"cb\" role=\"combobox\" aria-expanded=\"false\" aria-controls=\"pop\" aria-autocomplete=\"list\">"
+       },
+       {
+        "role": "listbox",
+        "selector": "#lb",
+        "snippet": "<ul id=\"lb\" role=\"listbox\" tabindex=\"0\" aria-label=\"List\" aria-activedescendant=\"p1\"></ul>"
+       }
+      ],
+      "w": 3
+     },
+     "payload": {
+      "key": "k1:restore",
+      "url": "http://127.0.0.1:24680/widgets-roles-pass.html",
+      "title": "t"
+     },
+     "expect": {
+      "state": "sizing",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k1:targets",
+         "expression": "((selectors) => { const sel = (e) => { const p = []; for (let n = e; n && n.nodeType === 1; n = n.parentElement) { if (n.id) { p.unshift('#' + CSS.escape(n.id)); break; } let i = 1; for (let s = n.previousElementSibling; s; s = s.previousElementSibling) { if (s.tagName === n.tagName) i++; } p.unshift(n.tagName.toLowerCase() + ':nth-of-type(' + i + ')'); } return p.join('>'); }; const out = []; for (const e of document.querySelectorAll(selectors)) { const s = getComputedStyle(e); const r = e.getBoundingClientRect(); if (s.display === 'none' || s.visibility === 'hidden' || r.width === 0 || r.height === 0 || r.x + r.width <= 0 || r.y + r.height <= 0) continue; const inline = s.display === 'inline' && Array.from(e.parentNode.childNodes).some((n) => n.nodeType === 3 && n.textContent.trim() !== ''); out.push({ selector: sel(e), snippet: e.cloneNode(false).outerHTML, x: r.x, y: r.y, width: r.width, height: r.height, inline: inline }); } return JSON.stringify({ targets: out }); })(\"a[href],button,input:not([type=\\\"hidden\\\"]),select,textarea,summary,[role=\\\"button\\\"],[role=\\\"link\\\"],[role=\\\"tab\\\"],[role=\\\"menuitem\\\"],[role=\\\"checkbox\\\"],[role=\\\"radio\\\"],[role=\\\"switch\\\"],[tabindex]:not([tabindex=\\\"-1\\\"])\")"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "targets-fail: two 16 px buttons 20 px apart are both found; the isolated 16 px button, the 24 px button and the link inside a sentence are not",
+   "steps": [
+    {
+     "from": "sizing",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/targets-fail.html",
+      "findings": []
+     },
+     "payload": {
+      "key": "k1:targets",
+      "json": "{\"targets\":[{\"selector\":\"#a\",\"snippet\":\"<button id=\\\"a\\\" aria-label=\\\"Close one\\\"></button>\",\"x\":10,\"y\":8,\"width\":16,\"height\":16,\"inline\":false},{\"selector\":\"#b\",\"snippet\":\"<button id=\\\"b\\\" aria-label=\\\"Close two\\\"></button>\",\"x\":30,\"y\":8,\"width\":16,\"height\":16,\"inline\":false},{\"selector\":\"#lone\",\"snippet\":\"<button id=\\\"lone\\\" class=\\\"lone\\\" aria-label=\\\"Alone\\\"></button>\",\"x\":8,\"y\":107,\"width\":16,\"height\":16,\"inline\":false},{\"selector\":\"#big\",\"snippet\":\"<button id=\\\"big\\\" class=\\\"big\\\" aria-label=\\\"Big\\\"></button>\",\"x\":10,\"y\":203,\"width\":24,\"height\":24,\"inline\":false},{\"selector\":\"#inl\",\"snippet\":\"<a id=\\\"inl\\\" href=\\\"#x\\\"></a>\",\"x\":44.875,\"y\":246,\"width\":59.09375,\"height\":18,\"inline\":true}]}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k1",
+         "probe": "widgets",
+         "findings": [
+          {
+           "id": "http://127.0.0.1:24680/targets-fail.html#target-size##a",
+           "pageUrl": "http://127.0.0.1:24680/targets-fail.html",
+           "rule": "target-size",
+           "wcag": [
+            {
+             "criterion": "2.5.8",
+             "level": "AA",
+             "version": "2.2"
+            }
+           ],
+           "method": "probe",
+           "engines": [
+            "probe"
+           ],
+           "impact": "moderate",
+           "confidence": "needs-verification",
+           "selector": "#a",
+           "snippet": "<button id=\"a\" aria-label=\"Close one\"></button>",
+           "evidence": "",
+           "count": 1
+          },
+          {
+           "id": "http://127.0.0.1:24680/targets-fail.html#target-size##b",
+           "pageUrl": "http://127.0.0.1:24680/targets-fail.html",
+           "rule": "target-size",
+           "wcag": [
+            {
+             "criterion": "2.5.8",
+             "level": "AA",
+             "version": "2.2"
+            }
+           ],
+           "method": "probe",
+           "engines": [
+            "probe"
+           ],
+           "impact": "moderate",
+           "confidence": "needs-verification",
+           "selector": "#b",
+           "snippet": "<button id=\"b\" aria-label=\"Close two\"></button>",
+           "evidence": "",
+           "count": 1
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: targets-pass has 24 px buttons so no finding",
+   "steps": [
+    {
+     "from": "sizing",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/targets-pass.html",
+      "findings": []
+     },
+     "payload": {
+      "key": "k1:targets",
+      "json": "{\"targets\":[{\"selector\":\"#a\",\"snippet\":\"<button id=\\\"a\\\" aria-label=\\\"Close one\\\"></button>\",\"x\":10,\"y\":8,\"width\":24,\"height\":24,\"inline\":false},{\"selector\":\"#b\",\"snippet\":\"<button id=\\\"b\\\" aria-label=\\\"Close two\\\"></button>\",\"x\":38,\"y\":8,\"width\":24,\"height\":24,\"inline\":false},{\"selector\":\"#inl\",\"snippet\":\"<a id=\\\"inl\\\" href=\\\"#x\\\"></a>\",\"x\":44.875,\"y\":51,\"width\":59.09375,\"height\":18,\"inline\":true}]}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k1",
+         "probe": "widgets",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the held widget findings come before the target findings",
+   "steps": [
+    {
+     "from": "sizing",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/targets-fail.html",
+      "findings": [
+       {
+        "id": "http://127.0.0.1:24680/widgets-tabs-fail.html#widget-keyboard##main>div:nth-of-type(1)#tablist:ArrowRight:focusMoved",
+        "pageUrl": "http://127.0.0.1:24680/widgets-tabs-fail.html",
+        "rule": "widget-keyboard",
+        "wcag": [
+         {
+          "criterion": "2.1.1",
+          "level": "A",
+          "version": "2.0"
+         },
+         {
+          "criterion": "4.1.2",
+          "level": "A",
+          "version": "2.0"
+         }
+        ],
+        "method": "probe",
+        "engines": [
+         "probe"
+        ],
+        "impact": "serious",
+        "confidence": "needs-verification",
+        "selector": "#main>div:nth-of-type(1)",
+        "snippet": "<div role=\"tablist\" aria-label=\"Podrobnosti\"></div>",
+        "evidence": "",
+        "count": 1
+       }
+      ]
+     },
+     "payload": {
+      "key": "k1:targets",
+      "json": "{\"targets\":[{\"selector\":\"#a\",\"snippet\":\"<button id=\\\"a\\\" aria-label=\\\"Close one\\\"></button>\",\"x\":10,\"y\":8,\"width\":16,\"height\":16,\"inline\":false},{\"selector\":\"#b\",\"snippet\":\"<button id=\\\"b\\\" aria-label=\\\"Close two\\\"></button>\",\"x\":30,\"y\":8,\"width\":16,\"height\":16,\"inline\":false},{\"selector\":\"#lone\",\"snippet\":\"<button id=\\\"lone\\\" class=\\\"lone\\\" aria-label=\\\"Alone\\\"></button>\",\"x\":8,\"y\":107,\"width\":16,\"height\":16,\"inline\":false},{\"selector\":\"#big\",\"snippet\":\"<button id=\\\"big\\\" class=\\\"big\\\" aria-label=\\\"Big\\\"></button>\",\"x\":10,\"y\":203,\"width\":24,\"height\":24,\"inline\":false},{\"selector\":\"#inl\",\"snippet\":\"<a id=\\\"inl\\\" href=\\\"#x\\\"></a>\",\"x\":44.875,\"y\":246,\"width\":59.09375,\"height\":18,\"inline\":true}]}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k1",
+         "probe": "widgets",
+         "findings": [
+          {
+           "id": "http://127.0.0.1:24680/widgets-tabs-fail.html#widget-keyboard##main>div:nth-of-type(1)#tablist:ArrowRight:focusMoved",
+           "pageUrl": "http://127.0.0.1:24680/widgets-tabs-fail.html",
+           "rule": "widget-keyboard",
+           "wcag": [
+            {
+             "criterion": "2.1.1",
+             "level": "A",
+             "version": "2.0"
+            },
+            {
+             "criterion": "4.1.2",
+             "level": "A",
+             "version": "2.0"
+            }
+           ],
+           "method": "probe",
+           "engines": [
+            "probe"
+           ],
+           "impact": "serious",
+           "confidence": "needs-verification",
+           "selector": "#main>div:nth-of-type(1)",
+           "snippet": "<div role=\"tablist\" aria-label=\"Podrobnosti\"></div>",
+           "evidence": "",
+           "count": 1
+          },
+          {
+           "id": "http://127.0.0.1:24680/targets-fail.html#target-size##a",
+           "pageUrl": "http://127.0.0.1:24680/targets-fail.html",
+           "rule": "target-size",
+           "wcag": [
+            {
+             "criterion": "2.5.8",
+             "level": "AA",
+             "version": "2.2"
+            }
+           ],
+           "method": "probe",
+           "engines": [
+            "probe"
+           ],
+           "impact": "moderate",
+           "confidence": "needs-verification",
+           "selector": "#a",
+           "snippet": "<button id=\"a\" aria-label=\"Close one\"></button>",
+           "evidence": "",
+           "count": 1
+          },
+          {
+           "id": "http://127.0.0.1:24680/targets-fail.html#target-size##b",
+           "pageUrl": "http://127.0.0.1:24680/targets-fail.html",
+           "rule": "target-size",
+           "wcag": [
+            {
+             "criterion": "2.5.8",
+             "level": "AA",
+             "version": "2.2"
+            }
+           ],
+           "method": "probe",
+           "engines": [
+            "probe"
+           ],
+           "impact": "moderate",
+           "confidence": "needs-verification",
+           "selector": "#b",
+           "snippet": "<button id=\"b\" aria-label=\"Close two\"></button>",
+           "evidence": "",
+           "count": 1
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a target list that is not the declared shape answers probe_bad_measure",
+   "steps": [
+    {
+     "from": "sizing",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/widgets-tabs-pass.html"
+     },
+     "payload": {
+      "key": "k1:targets",
+      "json": "[]"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_FAILED",
+        "payload": {
+         "key": "k1",
+         "probe": "widgets",
+         "error": "the page measurement is not the target list shape",
+         "code": "probe_bad_measure"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

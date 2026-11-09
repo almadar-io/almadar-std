@@ -1,0 +1,503 @@
+{
+  "atom": "../ui/core/atoms/std-nav-stack.lolo",
+  "trait": "NavStackTrail",
+  "cases": [
+    {
+      "id": "cold-load-seeds-the-trail-from-the-declared-ancestors",
+      "note": "an empty trail takes the mount's ancestors, then the opened route with its crumb",
+      "steps": [
+        {
+          "event": "MOUNTED",
+          "payload": {
+            "page": "Doc",
+            "route": "/docs/7",
+            "ancestors": [
+              {
+                "path": "/docs",
+                "page": "Docs",
+                "label": "Documents"
+              }
+            ],
+            "crumb": "Seven"
+          },
+          "expect": {
+            "entity": {
+              "trail": [
+                {
+                  "href": "/docs",
+                  "label": "Documents"
+                },
+                {
+                  "href": "/docs/7",
+                  "label": "Seven"
+                }
+              ]
+            },
+            "emits": [
+              {
+                "event": "TRAIL",
+                "payload": {
+                  "entries": [
+                    {
+                      "href": "/docs",
+                      "label": "Documents"
+                    },
+                    {
+                      "href": "/docs/7",
+                      "label": "Seven"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-new-route-is-pushed-and-the-ancestors-are-not-seeded-again",
+      "steps": [
+        {
+          "event": "MOUNTED",
+          "payload": {
+            "page": "Docs",
+            "route": "/docs",
+            "ancestors": [],
+            "label": "Documents"
+          },
+          "expect": {
+            "entity": {
+              "trail": [
+                {
+                  "href": "/docs",
+                  "label": "Documents"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "event": "MOUNTED",
+          "payload": {
+            "page": "Doc",
+            "route": "/docs/7",
+            "ancestors": [
+              {
+                "path": "/docs",
+                "page": "Docs",
+                "label": "Documents"
+              }
+            ],
+            "crumb": "Seven"
+          },
+          "expect": {
+            "entity": {
+              "trail": [
+                {
+                  "href": "/docs",
+                  "label": "Documents"
+                },
+                {
+                  "href": "/docs/7",
+                  "label": "Seven"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "event": "MOUNTED",
+          "payload": {
+            "page": "DocEdit",
+            "route": "/docs/7/edit",
+            "ancestors": [
+              {
+                "path": "/docs",
+                "page": "Docs",
+                "label": "Documents"
+              },
+              {
+                "path": "/docs/7",
+                "page": "Doc"
+              }
+            ],
+            "label": "Edit"
+          },
+          "expect": {
+            "entity": {
+              "trail": [
+                {
+                  "href": "/docs",
+                  "label": "Documents"
+                },
+                {
+                  "href": "/docs/7",
+                  "label": "Seven"
+                },
+                {
+                  "href": "/docs/7/edit",
+                  "label": "Edit"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-revisit-truncates-the-trail-back-to-the-visited-entry-and-keeps-its-label",
+      "steps": [
+        {
+          "event": "MOUNTED",
+          "payload": {
+            "page": "Docs",
+            "route": "/docs",
+            "ancestors": [],
+            "label": "Documents"
+          },
+          "expect": {
+            "entity": {
+              "trail": [
+                {
+                  "href": "/docs",
+                  "label": "Documents"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "event": "MOUNTED",
+          "payload": {
+            "page": "Doc",
+            "route": "/docs/7",
+            "ancestors": [
+              {
+                "path": "/docs",
+                "page": "Docs",
+                "label": "Documents"
+              }
+            ],
+            "crumb": "Seven"
+          },
+          "expect": {
+            "entity": {
+              "trail": [
+                {
+                  "href": "/docs",
+                  "label": "Documents"
+                },
+                {
+                  "href": "/docs/7",
+                  "label": "Seven"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "event": "MOUNTED",
+          "payload": {
+            "page": "DocEdit",
+            "route": "/docs/7/edit",
+            "ancestors": [
+              {
+                "path": "/docs",
+                "page": "Docs",
+                "label": "Documents"
+              }
+            ],
+            "label": "Edit"
+          },
+          "expect": {
+            "entity": {
+              "trail": [
+                {
+                  "href": "/docs",
+                  "label": "Documents"
+                },
+                {
+                  "href": "/docs/7",
+                  "label": "Seven"
+                },
+                {
+                  "href": "/docs/7/edit",
+                  "label": "Edit"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "event": "MOUNTED",
+          "payload": {
+            "page": "Doc",
+            "route": "/docs/7",
+            "ancestors": [
+              {
+                "path": "/docs",
+                "page": "Docs",
+                "label": "Documents"
+              }
+            ]
+          },
+          "expect": {
+            "entity": {
+              "trail": [
+                {
+                  "href": "/docs",
+                  "label": "Documents"
+                },
+                {
+                  "href": "/docs/7",
+                  "label": "Seven"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-revisit-with-a-crumb-relabels-its-entry",
+      "steps": [
+        {
+          "event": "MOUNTED",
+          "payload": {
+            "page": "Docs",
+            "route": "/docs",
+            "ancestors": [],
+            "label": "Documents"
+          },
+          "expect": {
+            "entity": {
+              "trail": [
+                {
+                  "href": "/docs",
+                  "label": "Documents"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "event": "MOUNTED",
+          "payload": {
+            "page": "Doc",
+            "route": "/docs/7",
+            "ancestors": [
+              {
+                "path": "/docs",
+                "page": "Docs",
+                "label": "Documents"
+              }
+            ],
+            "crumb": "Seven"
+          },
+          "expect": {
+            "entity": {
+              "trail": [
+                {
+                  "href": "/docs",
+                  "label": "Documents"
+                },
+                {
+                  "href": "/docs/7",
+                  "label": "Seven"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "event": "MOUNTED",
+          "payload": {
+            "page": "Doc",
+            "route": "/docs/7",
+            "ancestors": [
+              {
+                "path": "/docs",
+                "page": "Docs",
+                "label": "Documents"
+              }
+            ],
+            "crumb": "Seven again"
+          },
+          "expect": {
+            "entity": {
+              "trail": [
+                {
+                  "href": "/docs",
+                  "label": "Documents"
+                },
+                {
+                  "href": "/docs/7",
+                  "label": "Seven again"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "the-crumb-beats-the-declared-label",
+      "steps": [
+        {
+          "event": "MOUNTED",
+          "payload": {
+            "page": "Contract",
+            "route": "/contracts/9",
+            "ancestors": [],
+            "label": "Contract details",
+            "crumb": "Acme MSA"
+          },
+          "expect": {
+            "entity": {
+              "trail": [
+                {
+                  "href": "/contracts/9",
+                  "label": "Acme MSA"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-the-declared-label-is-used-when-no-crumb-arrived",
+      "steps": [
+        {
+          "event": "MOUNTED",
+          "payload": {
+            "page": "Contract",
+            "route": "/contracts/9",
+            "ancestors": [],
+            "label": "Contract details"
+          },
+          "expect": {
+            "entity": {
+              "trail": [
+                {
+                  "href": "/contracts/9",
+                  "label": "Contract details"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-no-crumb-and-no-label-leaves-the-label-empty",
+      "steps": [
+        {
+          "event": "MOUNTED",
+          "payload": {
+            "page": "Contract",
+            "route": "/contracts/9",
+            "ancestors": []
+          },
+          "expect": {
+            "entity": {
+              "trail": [
+                {
+                  "href": "/contracts/9",
+                  "label": ""
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-root-route-has-no-ancestors-and-is-the-only-entry",
+      "steps": [
+        {
+          "event": "MOUNTED",
+          "payload": {
+            "page": "Home",
+            "route": "/",
+            "ancestors": []
+          },
+          "expect": {
+            "entity": {
+              "trail": [
+                {
+                  "href": "/",
+                  "label": ""
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-an-empty-crumb-is-no-crumb",
+      "steps": [
+        {
+          "event": "MOUNTED",
+          "payload": {
+            "page": "Contract",
+            "route": "/contracts/9",
+            "ancestors": [],
+            "label": "Contract details",
+            "crumb": ""
+          },
+          "expect": {
+            "entity": {
+              "trail": [
+                {
+                  "href": "/contracts/9",
+                  "label": "Contract details"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-back-with-one-entry-does-nothing",
+      "steps": [
+        {
+          "event": "MOUNTED",
+          "payload": {
+            "page": "Docs",
+            "route": "/docs",
+            "ancestors": [],
+            "label": "Documents"
+          },
+          "expect": {
+            "entity": {
+              "trail": [
+                {
+                  "href": "/docs",
+                  "label": "Documents"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "event": "BACK",
+          "payload": {},
+          "expect": {
+            "fired": false,
+            "entity": {
+              "trail": [
+                {
+                  "href": "/docs",
+                  "label": "Documents"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

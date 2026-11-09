@@ -1,0 +1,28 @@
+app a11y-probe-text-resize-spec [
+  version: "1.0.0",
+  description: "Design contract for the text-resize probe (WCAG 1.4.4): the page must not block zoom, and text at 200% must not be clipped. PROBE_RUN { key, pageUrl } on a tab already at pageUrl answers PROBE_DONE { key, probe, findings } or PROBE_FAILED { key, probe, error, code }. Page requests ride PAGE_MEASURE and PAGE_VIEWPORT; the text zoom is restored to 1 before PROBE_DONE."
+]
+
+type WcagRef = { criterion : string!, level : "A" | "AA" | "AAA"!, version : "2.0" | "2.1" | "2.2"! }
+type A11yFinding = { id : string!, pageUrl : string!, rule : string!, wcag : [WcagRef]!, method : "engine" | "probe" | "llm"!, engines : [string]!, impact : "critical" | "serious" | "moderate" | "minor"!, confidence : "confirmed" | "needs-verification"!, selector : string!, snippet : string!, evidence : string!, count : number! }
+
+orbital A11yProbeTextResizeSpec {
+  expects entity TextResizeRun [runtime] {
+    id : string!
+  }
+  expects trait TextResizeProbe {
+    state idle {
+      PROBE_RUN -> reading
+    }
+    state restoring {
+      PAGE_VIEWPORT_SET -> idle
+    }
+    emits {
+      PAGE_VIEWPORT { key : string!  width : number!  height : number!  deviceScaleFactor : number!  mobile : boolean!  textZoom : number! }
+      PAGE_MEASURE { key : string!  expression : string! }
+      PROBE_DONE { key : string!  probe : string!  findings : [A11yFinding]! }
+      PROBE_FAILED { key : string!  probe : string!  error : string!  code : string! }
+    }
+  }
+  expects page boot -> TextResizeProbe
+}

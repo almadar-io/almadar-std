@@ -55,6 +55,8 @@ orbital AgentContextOrbital {
     pendingInstructions : string @description "The ephemeral conversation's own instructions, carried through a summarizing." = ""
     pendingTools : [AgentToolData] @description "The ephemeral conversation's own tools, carried through a summarizing." = []
     pendingEphemeral : boolean @description "The conversation being compacted is ephemeral." = false
+    pendingHasLive : boolean @description "The conversation being compacted carried a `live` flag, so it is forwarded; absent stays absent." = false
+    pendingLive : boolean @description "The `live` flag of the conversation being compacted, carried through a summarizing." = false
   }
 
   trait ContextSummarizerLlm = Llm.traits.LlmClient {
@@ -105,15 +107,20 @@ orbital AgentContextOrbital {
     state ready {
       INIT -> ready
         (set @entity.lastSize 0)
-      COMPACT -> ready when (<= (array/len ?messages) @config.keepMessages)
+      COMPACT -> ready when (and (<= (array/len ?messages) @config.keepMessages) (not (object/has ? live)))
         (set @entity.lastSize (array/len ?messages))
         (emit COMPACTED { messages: ?messages, instructions: (default ?instructions ""), tools: (object/get ? tools []), ephemeral: (default ?ephemeral false) })
+      COMPACT -> ready when (and (<= (array/len ?messages) @config.keepMessages) (object/has ? live))
+        (set @entity.lastSize (array/len ?messages))
+        (emit COMPACTED { messages: ?messages, instructions: (default ?instructions ""), tools: (object/get ? tools []), ephemeral: (default ?ephemeral false), live: ?live })
       COMPACT -> summarizing when (> (array/len ?messages) @config.keepMessages)
         (set @entity.lastSize (array/len ?messages))
         (set @entity.pendingMessages ?messages)
         (set @entity.pendingInstructions (default ?instructions ""))
         (set @entity.pendingTools (object/get ? tools []))
         (set @entity.pendingEphemeral (default ?ephemeral false))
+        (set @entity.pendingHasLive (object/has ? live))
+        (set @entity.pendingLive (default ?live false))
         (emit LLM_SUMMARIZE {
           text: (str/join (array/map (array/dropLast ?messages @config.keepMessages) (fn item (str/concat @item.role ": " @item.content))) "\n")
         })
@@ -122,15 +129,30 @@ orbital AgentContextOrbital {
     state summarizing {
       INIT -> ready
         (set @entity.lastSize 0)
-      ContextSummarized -> ready
+      ContextSummarized -> ready when (not @entity.pendingHasLive)
         (emit COMPACTED {
           messages: (array/prepend (array/takeLast @entity.pendingMessages @config.keepMessages) { role: assistant, content: (str/concat "Earlier in this conversation: " ?summary) })
           instructions: @entity.pendingInstructions
           tools: @entity.pendingTools
           ephemeral: @entity.pendingEphemeral
         })
-      ContextSummarizeFailed -> ready
+      ContextSummarized -> ready when @entity.pendingHasLive
+        (emit COMPACTED {
+          messages: (array/prepend (array/takeLast @entity.pendingMessages @config.keepMessages) { role: assistant, content: (str/concat "Earlier in this conversation: " ?summary) })
+          instructions: @entity.pendingInstructions
+          tools: @entity.pendingTools
+          ephemeral: @entity.pendingEphemeral
+          live: @entity.pendingLive
+        })
+      ContextSummarizeFailed -> ready when (not @entity.pendingHasLive)
         (emit COMPACTED { messages: (array/takeLast @entity.pendingMessages @config.keepMessages), instructions: @entity.pendingInstructions, tools: @entity.pendingTools, ephemeral: @entity.pendingEphemeral })
+        (render-ui toast {
+          message: ?message
+          type: alert
+          variant: warning
+        })
+      ContextSummarizeFailed -> ready when @entity.pendingHasLive
+        (emit COMPACTED { messages: (array/takeLast @entity.pendingMessages @config.keepMessages), instructions: @entity.pendingInstructions, tools: @entity.pendingTools, ephemeral: @entity.pendingEphemeral, live: @entity.pendingLive })
         (render-ui toast {
           message: ?message
           type: alert
@@ -144,8 +166,9 @@ orbital AgentContextOrbital {
         instructions : string
         tools : [AgentToolData]
         ephemeral : boolean
+        live : boolean
       }
-        @description "The conversation, bounded: recent turns verbatim, older turns as one summary note. An ephemeral conversation's own `instructions`, `tools` and `ephemeral` flag pass through untouched."
+        @description "The conversation, bounded: recent turns verbatim, older turns as one summary note. An ephemeral conversation's own `instructions`, `tools`, `ephemeral` flag and `live` flag (only when it was given) pass through untouched."
         @synonyms "compacted, trimmed, bounded"
         @tier "domain"
       LLM_SUMMARIZE -> external {
@@ -171,8 +194,9 @@ orbital AgentContextOrbital {
         instructions : string
         tools : [AgentToolData]
         ephemeral : boolean
+        live : boolean
       }
-        @description "Bound this conversation for the model. An ephemeral conversation's own `instructions`, `tools` and `ephemeral` flag ride along."
+        @description "Bound this conversation for the model. An ephemeral conversation's own `instructions`, `tools`, `ephemeral` flag and, when given, `live` flag ride along."
     }
   }
 

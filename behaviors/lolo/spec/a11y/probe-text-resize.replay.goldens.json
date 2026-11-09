@@ -1,0 +1,1039 @@
+{
+ "atom": "a11y/atoms/std-a11y-probe-text-resize.lolo",
+ "trait": "TextResizeProbe",
+ "note": "std-a11y-probe-text-resize with the page answers played as events. Every measure JSON of the fixture cases is the real result of the atom's expressions in headless Chrome (probe-text-resize.gen/record.py); 200% text zoom was recorded as Chrome page zoom, a 640x400 CSS px viewport at device scale 2, because scaling the root font-size does not reach text sized in px. Regenerate with python3 -I probe-text-resize.gen/gen_goldens.py.",
+ "cases": [
+  {
+   "id": "PROBE_RUN reads the viewport meta tag under the run's step key",
+   "steps": [
+    {
+     "from": "idle",
+     "event": "PROBE_RUN",
+     "payload": {
+      "key": "k1",
+      "pageUrl": "http://127.0.0.1:24680/"
+     },
+     "expect": {
+      "state": "reading",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k1:meta",
+         "expression": "(() => { const m = document.querySelector('meta[name=viewport]'); const content = m ? m.getAttribute('content') : null; const pairs = content === null ? [] : content.split(/[,;]/).map((s) => s.trim()).filter((s) => s.length > 0).map((s) => { const i = s.indexOf('='); const name = (i < 0 ? s : s.slice(0, i)).trim().toLowerCase(); const value = (i < 0 ? '' : s.slice(i + 1)).trim().toLowerCase(); const n = parseFloat(value); return { name: name, value: value, number: Number.isNaN(n) ? null : n }; }); return JSON.stringify({ present: m !== null, snippet: m ? m.cloneNode(false).outerHTML : '', pairs: pairs }); })()"
+        }
+       }
+      ],
+      "entity": {
+       "runKey": "k1",
+       "pageUrl": "http://127.0.0.1:24680/",
+       "baseline": [],
+       "findings": []
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "viewport-blocked.html: user-scalable=no is one confirmed viewport-zoom-blocked finding",
+   "steps": [
+    {
+     "from": "reading",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/",
+      "baseline": [],
+      "findings": []
+     },
+     "payload": {
+      "key": "k1:meta",
+      "json": "{\"present\":true,\"snippet\":\"<meta name=\\\"viewport\\\" content=\\\"width=device-width, initial-scale=1, user-scalable=no\\\">\",\"pairs\":[{\"name\":\"width\",\"value\":\"device-width\",\"number\":null},{\"name\":\"initial-scale\",\"value\":\"1\",\"number\":1},{\"name\":\"user-scalable\",\"value\":\"no\",\"number\":null}]}"
+     },
+     "expect": {
+      "state": "baselining",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k1:base",
+         "expression": "(() => { const sel = (e) => { const p = []; for (let n = e; n && n.nodeType === 1; n = n.parentElement) { if (n.id) { p.unshift('#' + CSS.escape(n.id)); break; } let i = 1; for (let s = n.previousElementSibling; s; s = s.previousElementSibling) { if (s.tagName === n.tagName) i++; } p.unshift(n.tagName.toLowerCase() + ':nth-of-type(' + i + ')'); } return p.join('>'); }; const out = []; for (const e of document.body.querySelectorAll('*')) { let own = false; for (const n of e.childNodes) { if (n.nodeType === 3 && n.nodeValue.trim().length > 0) { own = true; break; } } if (!own) continue; const cs = getComputedStyle(e); if (cs.overflowX === 'visible' && cs.overflowY === 'visible') continue; out.push({ selector: sel(e), snippet: e.cloneNode(false).outerHTML, overflowX: cs.overflowX, overflowY: cs.overflowY, scrollWidth: e.scrollWidth, clientWidth: e.clientWidth, scrollHeight: e.scrollHeight, clientHeight: e.clientHeight }); } return JSON.stringify({ elements: out }); })()"
+        }
+       }
+      ],
+      "entity": {
+       "findings": [
+        {
+         "id": "http://127.0.0.1:24680/#viewport-zoom-blocked#meta[name=viewport]",
+         "pageUrl": "http://127.0.0.1:24680/",
+         "rule": "viewport-zoom-blocked",
+         "wcag": [
+          {
+           "criterion": "1.4.4",
+           "level": "AA",
+           "version": "2.0"
+          }
+         ],
+         "method": "probe",
+         "engines": [
+          "probe"
+         ],
+         "impact": "critical",
+         "confidence": "confirmed",
+         "selector": "meta[name=viewport]",
+         "snippet": "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1, user-scalable=no\">",
+         "evidence": "",
+         "count": 1
+        }
+       ]
+      }
+     }
+    }
+   ],
+   "note": "recorded in headless Chrome (probe-text-resize.gen/record.py)"
+  },
+  {
+   "id": "viewport-maxscale.html: maximum-scale=1.5 is below 2 and blocks zoom",
+   "steps": [
+    {
+     "from": "reading",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/",
+      "baseline": [],
+      "findings": []
+     },
+     "payload": {
+      "key": "k1:meta",
+      "json": "{\"present\":true,\"snippet\":\"<meta name=\\\"viewport\\\" content=\\\"width=device-width, initial-scale=1, maximum-scale=1.5\\\">\",\"pairs\":[{\"name\":\"width\",\"value\":\"device-width\",\"number\":null},{\"name\":\"initial-scale\",\"value\":\"1\",\"number\":1},{\"name\":\"maximum-scale\",\"value\":\"1.5\",\"number\":1.5}]}"
+     },
+     "expect": {
+      "state": "baselining",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k1:base",
+         "expression": "(() => { const sel = (e) => { const p = []; for (let n = e; n && n.nodeType === 1; n = n.parentElement) { if (n.id) { p.unshift('#' + CSS.escape(n.id)); break; } let i = 1; for (let s = n.previousElementSibling; s; s = s.previousElementSibling) { if (s.tagName === n.tagName) i++; } p.unshift(n.tagName.toLowerCase() + ':nth-of-type(' + i + ')'); } return p.join('>'); }; const out = []; for (const e of document.body.querySelectorAll('*')) { let own = false; for (const n of e.childNodes) { if (n.nodeType === 3 && n.nodeValue.trim().length > 0) { own = true; break; } } if (!own) continue; const cs = getComputedStyle(e); if (cs.overflowX === 'visible' && cs.overflowY === 'visible') continue; out.push({ selector: sel(e), snippet: e.cloneNode(false).outerHTML, overflowX: cs.overflowX, overflowY: cs.overflowY, scrollWidth: e.scrollWidth, clientWidth: e.clientWidth, scrollHeight: e.scrollHeight, clientHeight: e.clientHeight }); } return JSON.stringify({ elements: out }); })()"
+        }
+       }
+      ],
+      "entity": {
+       "findings": [
+        {
+         "id": "http://127.0.0.1:24680/#viewport-zoom-blocked#meta[name=viewport]",
+         "pageUrl": "http://127.0.0.1:24680/",
+         "rule": "viewport-zoom-blocked",
+         "wcag": [
+          {
+           "criterion": "1.4.4",
+           "level": "AA",
+           "version": "2.0"
+          }
+         ],
+         "method": "probe",
+         "engines": [
+          "probe"
+         ],
+         "impact": "critical",
+         "confidence": "confirmed",
+         "selector": "meta[name=viewport]",
+         "snippet": "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1, maximum-scale=1.5\">",
+         "evidence": "",
+         "count": 1
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: maximum-scale=5 leaves zoom open",
+   "steps": [
+    {
+     "from": "reading",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/",
+      "baseline": [],
+      "findings": []
+     },
+     "payload": {
+      "key": "k1:meta",
+      "json": "{\"present\":true,\"snippet\":\"<meta name=\\\"viewport\\\" content=\\\"width=device-width, initial-scale=1, maximum-scale=5\\\">\",\"pairs\":[{\"name\":\"width\",\"value\":\"device-width\",\"number\":null},{\"name\":\"initial-scale\",\"value\":\"1\",\"number\":1},{\"name\":\"maximum-scale\",\"value\":\"5\",\"number\":5}]}"
+     },
+     "expect": {
+      "state": "baselining",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k1:base",
+         "expression": "(() => { const sel = (e) => { const p = []; for (let n = e; n && n.nodeType === 1; n = n.parentElement) { if (n.id) { p.unshift('#' + CSS.escape(n.id)); break; } let i = 1; for (let s = n.previousElementSibling; s; s = s.previousElementSibling) { if (s.tagName === n.tagName) i++; } p.unshift(n.tagName.toLowerCase() + ':nth-of-type(' + i + ')'); } return p.join('>'); }; const out = []; for (const e of document.body.querySelectorAll('*')) { let own = false; for (const n of e.childNodes) { if (n.nodeType === 3 && n.nodeValue.trim().length > 0) { own = true; break; } } if (!own) continue; const cs = getComputedStyle(e); if (cs.overflowX === 'visible' && cs.overflowY === 'visible') continue; out.push({ selector: sel(e), snippet: e.cloneNode(false).outerHTML, overflowX: cs.overflowX, overflowY: cs.overflowY, scrollWidth: e.scrollWidth, clientWidth: e.clientWidth, scrollHeight: e.scrollHeight, clientHeight: e.clientHeight }); } return JSON.stringify({ elements: out }); })()"
+        }
+       }
+      ],
+      "entity": {
+       "findings": []
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a page with no viewport meta blocks nothing",
+   "steps": [
+    {
+     "from": "reading",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/",
+      "baseline": [],
+      "findings": []
+     },
+     "payload": {
+      "key": "k1:meta",
+      "json": "{\"present\":false,\"snippet\":\"\",\"pairs\":[]}"
+     },
+     "expect": {
+      "state": "baselining",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k1:base",
+         "expression": "(() => { const sel = (e) => { const p = []; for (let n = e; n && n.nodeType === 1; n = n.parentElement) { if (n.id) { p.unshift('#' + CSS.escape(n.id)); break; } let i = 1; for (let s = n.previousElementSibling; s; s = s.previousElementSibling) { if (s.tagName === n.tagName) i++; } p.unshift(n.tagName.toLowerCase() + ':nth-of-type(' + i + ')'); } return p.join('>'); }; const out = []; for (const e of document.body.querySelectorAll('*')) { let own = false; for (const n of e.childNodes) { if (n.nodeType === 3 && n.nodeValue.trim().length > 0) { own = true; break; } } if (!own) continue; const cs = getComputedStyle(e); if (cs.overflowX === 'visible' && cs.overflowY === 'visible') continue; out.push({ selector: sel(e), snippet: e.cloneNode(false).outerHTML, overflowX: cs.overflowX, overflowY: cs.overflowY, scrollWidth: e.scrollWidth, clientWidth: e.clientWidth, scrollHeight: e.scrollHeight, clientHeight: e.clientHeight }); } return JSON.stringify({ elements: out }); })()"
+        }
+       }
+      ],
+      "entity": {
+       "findings": []
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: the fixtures' width=device-width, initial-scale=1 blocks nothing",
+   "steps": [
+    {
+     "from": "reading",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/",
+      "baseline": [],
+      "findings": []
+     },
+     "payload": {
+      "key": "k1:meta",
+      "json": "{\"present\":true,\"snippet\":\"<meta name=\\\"viewport\\\" content=\\\"width=device-width, initial-scale=1\\\">\",\"pairs\":[{\"name\":\"width\",\"value\":\"device-width\",\"number\":null},{\"name\":\"initial-scale\",\"value\":\"1\",\"number\":1}]}"
+     },
+     "expect": {
+      "state": "baselining",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k1:base",
+         "expression": "(() => { const sel = (e) => { const p = []; for (let n = e; n && n.nodeType === 1; n = n.parentElement) { if (n.id) { p.unshift('#' + CSS.escape(n.id)); break; } let i = 1; for (let s = n.previousElementSibling; s; s = s.previousElementSibling) { if (s.tagName === n.tagName) i++; } p.unshift(n.tagName.toLowerCase() + ':nth-of-type(' + i + ')'); } return p.join('>'); }; const out = []; for (const e of document.body.querySelectorAll('*')) { let own = false; for (const n of e.childNodes) { if (n.nodeType === 3 && n.nodeValue.trim().length > 0) { own = true; break; } } if (!own) continue; const cs = getComputedStyle(e); if (cs.overflowX === 'visible' && cs.overflowY === 'visible') continue; out.push({ selector: sel(e), snippet: e.cloneNode(false).outerHTML, overflowX: cs.overflowX, overflowY: cs.overflowY, scrollWidth: e.scrollWidth, clientWidth: e.clientWidth, scrollHeight: e.scrollHeight, clientHeight: e.clientHeight }); } return JSON.stringify({ elements: out }); })()"
+        }
+       }
+      ],
+      "entity": {
+       "findings": []
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "text-resize-fail.html at zoom 1: the promo box is not yet clipped, the baseline is empty and zoom 2 is requested",
+   "steps": [
+    {
+     "from": "baselining",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/",
+      "baseline": [],
+      "findings": []
+     },
+     "payload": {
+      "key": "k1:base",
+      "json": "{\"elements\":[{\"selector\":\"#main>div:nth-of-type(1)\",\"snippet\":\"<div class=\\\"promo\\\" style=\\\"height:24px;overflow:hidden;font-size:16px;line-height:24px;background:#eef\\\"></div>\",\"overflowX\":\"hidden\",\"overflowY\":\"hidden\",\"scrollWidth\":960,\"clientWidth\":960,\"scrollHeight\":24,\"clientHeight\":24}]}"
+     },
+     "expect": {
+      "state": "zooming",
+      "emits": [
+       {
+        "event": "PAGE_VIEWPORT",
+        "payload": {
+         "key": "k1:zoom",
+         "width": 1280,
+         "height": 800,
+         "deviceScaleFactor": 1,
+         "mobile": false,
+         "textZoom": 2
+        }
+       }
+      ],
+      "entity": {
+       "baseline": []
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: text-resize-pass.html has no clipping candidates",
+   "steps": [
+    {
+     "from": "baselining",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/",
+      "baseline": [],
+      "findings": []
+     },
+     "payload": {
+      "key": "k1:base",
+      "json": "{\"elements\":[]}"
+     },
+     "expect": {
+      "state": "zooming",
+      "emits": [
+       {
+        "event": "PAGE_VIEWPORT",
+        "payload": {
+         "key": "k1:zoom",
+         "width": 1280,
+         "height": 800,
+         "deviceScaleFactor": 1,
+         "mobile": false,
+         "textZoom": 2
+        }
+       }
+      ],
+      "entity": {
+       "baseline": []
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "text-resize-preclipped.html at zoom 1: the box that already loses lines goes into the baseline",
+   "steps": [
+    {
+     "from": "baselining",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/",
+      "baseline": [],
+      "findings": []
+     },
+     "payload": {
+      "key": "k1:base",
+      "json": "{\"elements\":[{\"selector\":\"#main>div:nth-of-type(1)\",\"snippet\":\"<div class=\\\"old\\\" style=\\\"height:24px;overflow:hidden;background:#eee\\\"></div>\",\"overflowX\":\"hidden\",\"overflowY\":\"hidden\",\"scrollWidth\":1280,\"clientWidth\":1280,\"scrollHeight\":72,\"clientHeight\":24},{\"selector\":\"#main>div:nth-of-type(2)\",\"snippet\":\"<div class=\\\"promo\\\" style=\\\"height:24px;overflow:hidden;background:#eef\\\"></div>\",\"overflowX\":\"hidden\",\"overflowY\":\"hidden\",\"scrollWidth\":1280,\"clientWidth\":1280,\"scrollHeight\":24,\"clientHeight\":24}]}"
+     },
+     "expect": {
+      "state": "zooming",
+      "emits": [
+       {
+        "event": "PAGE_VIEWPORT",
+        "payload": {
+         "key": "k1:zoom",
+         "width": 1280,
+         "height": 800,
+         "deviceScaleFactor": 1,
+         "mobile": false,
+         "textZoom": 2
+        }
+       }
+      ],
+      "entity": {
+       "baseline": [
+        "#main>div:nth-of-type(1)"
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "the zoom viewport answer asks for the measurement again",
+   "steps": [
+    {
+     "from": "zooming",
+     "event": "PAGE_VIEWPORT_SET",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/",
+      "baseline": [],
+      "findings": []
+     },
+     "payload": {
+      "key": "k1:zoom"
+     },
+     "expect": {
+      "state": "zoomed",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k1:zoomed",
+         "expression": "(() => { const sel = (e) => { const p = []; for (let n = e; n && n.nodeType === 1; n = n.parentElement) { if (n.id) { p.unshift('#' + CSS.escape(n.id)); break; } let i = 1; for (let s = n.previousElementSibling; s; s = s.previousElementSibling) { if (s.tagName === n.tagName) i++; } p.unshift(n.tagName.toLowerCase() + ':nth-of-type(' + i + ')'); } return p.join('>'); }; const out = []; for (const e of document.body.querySelectorAll('*')) { let own = false; for (const n of e.childNodes) { if (n.nodeType === 3 && n.nodeValue.trim().length > 0) { own = true; break; } } if (!own) continue; const cs = getComputedStyle(e); if (cs.overflowX === 'visible' && cs.overflowY === 'visible') continue; out.push({ selector: sel(e), snippet: e.cloneNode(false).outerHTML, overflowX: cs.overflowX, overflowY: cs.overflowY, scrollWidth: e.scrollWidth, clientWidth: e.clientWidth, scrollHeight: e.scrollHeight, clientHeight: e.clientHeight }); } return JSON.stringify({ elements: out }); })()"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "text-resize-fail.html at 200%: the promo box wraps to 48px in a 24px box, one text-resize finding",
+   "steps": [
+    {
+     "from": "zoomed",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/",
+      "baseline": [],
+      "findings": []
+     },
+     "payload": {
+      "key": "k1:zoomed",
+      "json": "{\"elements\":[{\"selector\":\"#main>div:nth-of-type(1)\",\"snippet\":\"<div class=\\\"promo\\\" style=\\\"height:24px;overflow:hidden;font-size:16px;line-height:24px;background:#eef\\\"></div>\",\"overflowX\":\"hidden\",\"overflowY\":\"hidden\",\"scrollWidth\":608,\"clientWidth\":608,\"scrollHeight\":48,\"clientHeight\":24}]}"
+     },
+     "expect": {
+      "state": "restoring",
+      "emits": [
+       {
+        "event": "PAGE_VIEWPORT",
+        "payload": {
+         "key": "k1:restore",
+         "width": 1280,
+         "height": 800,
+         "deviceScaleFactor": 1,
+         "mobile": false,
+         "textZoom": 1
+        }
+       }
+      ],
+      "entity": {
+       "findings": [
+        {
+         "id": "http://127.0.0.1:24680/#text-resize##main>div:nth-of-type(1)",
+         "pageUrl": "http://127.0.0.1:24680/",
+         "rule": "text-resize",
+         "wcag": [
+          {
+           "criterion": "1.4.4",
+           "level": "AA",
+           "version": "2.0"
+          }
+         ],
+         "method": "probe",
+         "engines": [
+          "probe"
+         ],
+         "impact": "serious",
+         "confidence": "needs-verification",
+         "selector": "#main>div:nth-of-type(1)",
+         "snippet": "<div class=\"promo\" style=\"height:24px;overflow:hidden;font-size:16px;line-height:24px;background:#eef\"></div>",
+         "evidence": "",
+         "count": 1
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: text-resize-pass.html grows with its text at 200% and has no findings",
+   "steps": [
+    {
+     "from": "zoomed",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/",
+      "baseline": [],
+      "findings": []
+     },
+     "payload": {
+      "key": "k1:zoomed",
+      "json": "{\"elements\":[]}"
+     },
+     "expect": {
+      "state": "restoring",
+      "emits": [
+       {
+        "event": "PAGE_VIEWPORT",
+        "payload": {
+         "key": "k1:restore",
+         "width": 1280,
+         "height": 800,
+         "deviceScaleFactor": 1,
+         "mobile": false,
+         "textZoom": 1
+        }
+       }
+      ],
+      "entity": {
+       "findings": []
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "a box clipped at both sizes is not reported, only the one newly clipped",
+   "steps": [
+    {
+     "from": "zoomed",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/",
+      "baseline": [
+       "#main>div:nth-of-type(1)"
+      ],
+      "findings": []
+     },
+     "payload": {
+      "key": "k1:zoomed",
+      "json": "{\"elements\":[{\"selector\":\"#main>div:nth-of-type(1)\",\"snippet\":\"<div class=\\\"old\\\" style=\\\"height:24px;overflow:hidden;background:#eee\\\"></div>\",\"overflowX\":\"hidden\",\"overflowY\":\"hidden\",\"scrollWidth\":640,\"clientWidth\":640,\"scrollHeight\":72,\"clientHeight\":24},{\"selector\":\"#main>div:nth-of-type(2)\",\"snippet\":\"<div class=\\\"promo\\\" style=\\\"height:24px;overflow:hidden;background:#eef\\\"></div>\",\"overflowX\":\"hidden\",\"overflowY\":\"hidden\",\"scrollWidth\":640,\"clientWidth\":640,\"scrollHeight\":48,\"clientHeight\":24}]}"
+     },
+     "expect": {
+      "state": "restoring",
+      "emits": [
+       {
+        "event": "PAGE_VIEWPORT",
+        "payload": {
+         "key": "k1:restore",
+         "width": 1280,
+         "height": 800,
+         "deviceScaleFactor": 1,
+         "mobile": false,
+         "textZoom": 1
+        }
+       }
+      ],
+      "entity": {
+       "findings": [
+        {
+         "id": "http://127.0.0.1:24680/#text-resize##main>div:nth-of-type(2)",
+         "pageUrl": "http://127.0.0.1:24680/",
+         "rule": "text-resize",
+         "wcag": [
+          {
+           "criterion": "1.4.4",
+           "level": "AA",
+           "version": "2.0"
+          }
+         ],
+         "method": "probe",
+         "engines": [
+          "probe"
+         ],
+         "impact": "serious",
+         "confidence": "needs-verification",
+         "selector": "#main>div:nth-of-type(2)",
+         "snippet": "<div class=\"promo\" style=\"height:24px;overflow:hidden;background:#eef\"></div>",
+         "evidence": "",
+         "count": 1
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: with an empty baseline both boxes are reported",
+   "steps": [
+    {
+     "from": "zoomed",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/",
+      "baseline": [],
+      "findings": []
+     },
+     "payload": {
+      "key": "k1:zoomed",
+      "json": "{\"elements\":[{\"selector\":\"#main>div:nth-of-type(1)\",\"snippet\":\"<div class=\\\"old\\\" style=\\\"height:24px;overflow:hidden;background:#eee\\\"></div>\",\"overflowX\":\"hidden\",\"overflowY\":\"hidden\",\"scrollWidth\":640,\"clientWidth\":640,\"scrollHeight\":72,\"clientHeight\":24},{\"selector\":\"#main>div:nth-of-type(2)\",\"snippet\":\"<div class=\\\"promo\\\" style=\\\"height:24px;overflow:hidden;background:#eef\\\"></div>\",\"overflowX\":\"hidden\",\"overflowY\":\"hidden\",\"scrollWidth\":640,\"clientWidth\":640,\"scrollHeight\":48,\"clientHeight\":24}]}"
+     },
+     "expect": {
+      "state": "restoring",
+      "emits": [
+       {
+        "event": "PAGE_VIEWPORT",
+        "payload": {
+         "key": "k1:restore",
+         "width": 1280,
+         "height": 800,
+         "deviceScaleFactor": 1,
+         "mobile": false,
+         "textZoom": 1
+        }
+       }
+      ],
+      "entity": {
+       "findings": [
+        {
+         "id": "http://127.0.0.1:24680/#text-resize##main>div:nth-of-type(1)",
+         "pageUrl": "http://127.0.0.1:24680/",
+         "rule": "text-resize",
+         "wcag": [
+          {
+           "criterion": "1.4.4",
+           "level": "AA",
+           "version": "2.0"
+          }
+         ],
+         "method": "probe",
+         "engines": [
+          "probe"
+         ],
+         "impact": "serious",
+         "confidence": "needs-verification",
+         "selector": "#main>div:nth-of-type(1)",
+         "snippet": "<div class=\"old\" style=\"height:24px;overflow:hidden;background:#eee\"></div>",
+         "evidence": "",
+         "count": 1
+        },
+        {
+         "id": "http://127.0.0.1:24680/#text-resize##main>div:nth-of-type(2)",
+         "pageUrl": "http://127.0.0.1:24680/",
+         "rule": "text-resize",
+         "wcag": [
+          {
+           "criterion": "1.4.4",
+           "level": "AA",
+           "version": "2.0"
+          }
+         ],
+         "method": "probe",
+         "engines": [
+          "probe"
+         ],
+         "impact": "serious",
+         "confidence": "needs-verification",
+         "selector": "#main>div:nth-of-type(2)",
+         "snippet": "<div class=\"promo\" style=\"height:24px;overflow:hidden;background:#eef\"></div>",
+         "evidence": "",
+         "count": 1
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "a blocked-zoom finding is kept ahead of the clipped-text findings",
+   "steps": [
+    {
+     "from": "zoomed",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/",
+      "baseline": [],
+      "findings": [
+       {
+        "id": "http://127.0.0.1:24680/#viewport-zoom-blocked#meta[name=viewport]",
+        "pageUrl": "http://127.0.0.1:24680/",
+        "rule": "viewport-zoom-blocked",
+        "wcag": [
+         {
+          "criterion": "1.4.4",
+          "level": "AA",
+          "version": "2.0"
+         }
+        ],
+        "method": "probe",
+        "engines": [
+         "probe"
+        ],
+        "impact": "critical",
+        "confidence": "confirmed",
+        "selector": "meta[name=viewport]",
+        "snippet": "<meta>",
+        "evidence": "",
+        "count": 1
+       }
+      ]
+     },
+     "payload": {
+      "key": "k1:zoomed",
+      "json": "{\"elements\":[{\"selector\":\"#main>div:nth-of-type(1)\",\"snippet\":\"<div class=\\\"promo\\\" style=\\\"height:24px;overflow:hidden;font-size:16px;line-height:24px;background:#eef\\\"></div>\",\"overflowX\":\"hidden\",\"overflowY\":\"hidden\",\"scrollWidth\":608,\"clientWidth\":608,\"scrollHeight\":48,\"clientHeight\":24}]}"
+     },
+     "expect": {
+      "state": "restoring",
+      "emits": [
+       {
+        "event": "PAGE_VIEWPORT",
+        "payload": {
+         "key": "k1:restore",
+         "width": 1280,
+         "height": 800,
+         "deviceScaleFactor": 1,
+         "mobile": false,
+         "textZoom": 1
+        }
+       }
+      ],
+      "entity": {
+       "findings": [
+        {
+         "id": "http://127.0.0.1:24680/#viewport-zoom-blocked#meta[name=viewport]",
+         "pageUrl": "http://127.0.0.1:24680/",
+         "rule": "viewport-zoom-blocked",
+         "wcag": [
+          {
+           "criterion": "1.4.4",
+           "level": "AA",
+           "version": "2.0"
+          }
+         ],
+         "method": "probe",
+         "engines": [
+          "probe"
+         ],
+         "impact": "critical",
+         "confidence": "confirmed",
+         "selector": "meta[name=viewport]",
+         "snippet": "<meta>",
+         "evidence": "",
+         "count": 1
+        },
+        {
+         "id": "http://127.0.0.1:24680/#text-resize##main>div:nth-of-type(1)",
+         "pageUrl": "http://127.0.0.1:24680/",
+         "rule": "text-resize",
+         "wcag": [
+          {
+           "criterion": "1.4.4",
+           "level": "AA",
+           "version": "2.0"
+          }
+         ],
+         "method": "probe",
+         "engines": [
+          "probe"
+         ],
+         "impact": "serious",
+         "confidence": "needs-verification",
+         "selector": "#main>div:nth-of-type(1)",
+         "snippet": "<div class=\"promo\" style=\"height:24px;overflow:hidden;font-size:16px;line-height:24px;background:#eef\"></div>",
+         "evidence": "",
+         "count": 1
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "text within the tolerance of its box is not clipped",
+   "steps": [
+    {
+     "from": "zoomed",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/",
+      "baseline": [],
+      "findings": []
+     },
+     "payload": {
+      "key": "k1:zoomed",
+      "json": "{\"elements\":[{\"selector\":\"#a\",\"snippet\":\"<p>\",\"overflowX\":\"hidden\",\"overflowY\":\"hidden\",\"scrollWidth\":100,\"clientWidth\":100,\"scrollHeight\":25,\"clientHeight\":24}]}"
+     },
+     "expect": {
+      "state": "restoring",
+      "entity": {
+       "findings": []
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: scroll overflow on an axis whose overflow is auto is not clipping",
+   "steps": [
+    {
+     "from": "zoomed",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/",
+      "baseline": [],
+      "findings": []
+     },
+     "payload": {
+      "key": "k1:zoomed",
+      "json": "{\"elements\":[{\"selector\":\"#a\",\"snippet\":\"<p>\",\"overflowX\":\"auto\",\"overflowY\":\"auto\",\"scrollWidth\":300,\"clientWidth\":100,\"scrollHeight\":90,\"clientHeight\":24}]}"
+     },
+     "expect": {
+      "state": "restoring",
+      "entity": {
+       "findings": []
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: the same extents with overflow hidden on x only are clipped on x",
+   "steps": [
+    {
+     "from": "zoomed",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/",
+      "baseline": [],
+      "findings": []
+     },
+     "payload": {
+      "key": "k1:zoomed",
+      "json": "{\"elements\":[{\"selector\":\"#a\",\"snippet\":\"<p>\",\"overflowX\":\"hidden\",\"overflowY\":\"auto\",\"scrollWidth\":300,\"clientWidth\":100,\"scrollHeight\":90,\"clientHeight\":24}]}"
+     },
+     "expect": {
+      "state": "restoring",
+      "entity": {
+       "findings": [
+        {
+         "id": "http://127.0.0.1:24680/#text-resize##a",
+         "pageUrl": "http://127.0.0.1:24680/",
+         "rule": "text-resize",
+         "wcag": [
+          {
+           "criterion": "1.4.4",
+           "level": "AA",
+           "version": "2.0"
+          }
+         ],
+         "method": "probe",
+         "engines": [
+          "probe"
+         ],
+         "impact": "serious",
+         "confidence": "needs-verification",
+         "selector": "#a",
+         "snippet": "<p>",
+         "evidence": "",
+         "count": 1
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "the restore answer finishes with the held findings",
+   "steps": [
+    {
+     "from": "restoring",
+     "event": "PAGE_VIEWPORT_SET",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/",
+      "baseline": [],
+      "findings": [
+       {
+        "id": "http://127.0.0.1:24680/#text-resize##main>div:nth-of-type(1)",
+        "pageUrl": "http://127.0.0.1:24680/",
+        "rule": "text-resize",
+        "wcag": [
+         {
+          "criterion": "1.4.4",
+          "level": "AA",
+          "version": "2.0"
+         }
+        ],
+        "method": "probe",
+        "engines": [
+         "probe"
+        ],
+        "impact": "serious",
+        "confidence": "needs-verification",
+        "selector": "#main>div:nth-of-type(1)",
+        "snippet": "<div class=\"promo\" style=\"height:24px;overflow:hidden;font-size:16px;line-height:24px;background:#eef\"></div>",
+        "evidence": "",
+        "count": 1
+       }
+      ]
+     },
+     "payload": {
+      "key": "k1:restore"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k1",
+         "probe": "text-resize",
+         "findings": [
+          {
+           "id": "http://127.0.0.1:24680/#text-resize##main>div:nth-of-type(1)",
+           "pageUrl": "http://127.0.0.1:24680/",
+           "rule": "text-resize",
+           "wcag": [
+            {
+             "criterion": "1.4.4",
+             "level": "AA",
+             "version": "2.0"
+            }
+           ],
+           "method": "probe",
+           "engines": [
+            "probe"
+           ],
+           "impact": "serious",
+           "confidence": "needs-verification",
+           "selector": "#main>div:nth-of-type(1)",
+           "snippet": "<div class=\"promo\" style=\"height:24px;overflow:hidden;font-size:16px;line-height:24px;background:#eef\"></div>",
+           "evidence": "",
+           "count": 1
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a restore answer under another run's key is ignored",
+   "steps": [
+    {
+     "from": "restoring",
+     "event": "PAGE_VIEWPORT_SET",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/",
+      "baseline": [],
+      "findings": []
+     },
+     "payload": {
+      "key": "k2:restore"
+     },
+     "expect": {
+      "state": "restoring",
+      "emits": []
+     }
+    }
+   ]
+  },
+  {
+   "id": "a clipped-text measurement that is not the declared shape fails the probe",
+   "steps": [
+    {
+     "from": "baselining",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/",
+      "baseline": [],
+      "findings": []
+     },
+     "payload": {
+      "key": "k1:base",
+      "json": "{\"elements\":3}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_FAILED",
+        "payload": {
+         "key": "k1",
+         "probe": "text-resize",
+         "code": "probe_bad_measure"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a page failure under the run key fails the probe",
+   "steps": [
+    {
+     "from": "zooming",
+     "event": "PAGE_FAILED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/",
+      "baseline": [],
+      "findings": []
+     },
+     "payload": {
+      "key": "k1:zoom",
+      "error": "no tab",
+      "code": "chrome_no_tab"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_FAILED",
+        "payload": {
+         "key": "k1",
+         "probe": "text-resize",
+         "error": "no tab",
+         "code": "probe_page_failed"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a page failure under another run's key is ignored",
+   "steps": [
+    {
+     "from": "zooming",
+     "event": "PAGE_FAILED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/",
+      "baseline": [],
+      "findings": []
+     },
+     "payload": {
+      "key": "k2:zoom",
+      "error": "no tab",
+      "code": "chrome_no_tab"
+     },
+     "expect": {
+      "state": "zooming",
+      "emits": []
+     }
+    }
+   ]
+  }
+ ]
+}

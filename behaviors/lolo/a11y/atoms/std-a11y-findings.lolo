@@ -1,0 +1,54 @@
+app std-a11y-findings [
+  version: "1.0.0",
+  description: "std-a11y-findings — merges accessibility findings from every engine (axe-core, WAVE) and browser probe, all answered in one finding shape. FINDINGS_MERGE { key, findings } answers FINDINGS_MERGED { key, findings }. Findings group by page, rule and selector; a group is one finding whose engines are the union of the group's engines, whose wcag refs are the union deduplicated by criterion, whose impact is the highest of the group (critical, serious, moderate, minor), whose count is the sum of the counts, whose evidence is the first non-empty evidence, and whose id, method and snippet are the first finding's. Confidence is confirmed when a finding of the group is confirmed or two distinct engines with method engine reported it, otherwise needs-verification. Order is page, then the first wcag criterion by its numeric parts (a finding with an empty wcag list comes last), then selector; the sort is stable. Nothing is dropped: a finding with an empty wcag list stays, and an empty input answers an empty list."
+]
+uses Spec from "almadar-std/a11y-findings"
+
+type WcagRef = { criterion : string!, level : "A" | "AA" | "AAA"!, version : "2.0" | "2.1" | "2.2"! }
+type A11yFinding = { id : string!, pageUrl : string!, rule : string!, wcag : [WcagRef]!, method : "engine" | "probe" | "llm"!, engines : [string]!, impact : "critical" | "serious" | "moderate" | "minor"!, confidence : "confirmed" | "needs-verification"!, selector : string!, snippet : string!, evidence : string!, count : number! }
+type KeyedFinding = { finding : A11yFinding!, page : string!, crit : string?, sel : string! }
+
+orbital A11yFindingsOrbital {
+  entity A11yMerge [runtime] {
+    id : string!
+    input : [A11yFinding] @description "The findings of the merge in flight." = []
+    firsts : [A11yFinding] @description "The first finding of each page, rule and selector, in first-seen order." = []
+    merged : [A11yFinding] @description "One merged finding per group, before ordering." = []
+    keyed : [KeyedFinding] @description "The merged findings with their ordering keys." = []
+    ordered : [KeyedFinding] @description "The keyed findings in page, criterion, selector order." = []
+  }
+
+  trait A11yFindings -> A11yMerge [client] {
+    initial: ready
+
+    state ready {
+      FINDINGS_MERGE -> ready
+        (set @entity.input ?findings)
+        (set @entity.firsts (array/filter @entity.input (fn f i (== (array/findIndex @entity.input (fn x (and (= @x.pageUrl @f.pageUrl) (= @x.rule @f.rule) (= @x.selector @f.selector)))) @i))))
+        (set @entity.merged (array/map @entity.firsts (fn first (let ((ms (array/filter @entity.input (fn x (and (= @x.pageUrl @first.pageUrl) (= @x.rule @first.rule) (= @x.selector @first.selector)))))) { id: @first.id pageUrl: @first.pageUrl rule: @first.rule wcag: (let ((all (array/flatten (array/map @ms (fn m @m.wcag))))) (array/filter @all (fn w i (== (array/findIndex @all (fn x (= @x.criterion @w.criterion))) @i)))) method: @first.method engines: (array/unique (array/flatten (array/map @ms (fn m @m.engines)))) impact: (if (array/some @ms (fn m (= @m.impact "critical"))) "critical" (if (array/some @ms (fn m (= @m.impact "serious"))) "serious" (if (array/some @ms (fn m (= @m.impact "moderate"))) "moderate" "minor"))) confidence: (if (or (array/some @ms (fn m (= @m.confidence "confirmed"))) (>= (array/len (array/unique (array/flatten (array/map (array/filter @ms (fn m (= @m.method "engine"))) (fn m @m.engines))))) 2)) "confirmed" "needs-verification") selector: @first.selector snippet: @first.snippet evidence: (let ((e (array/find @ms (fn m (!= @m.evidence ""))))) (if (= @e null) "" @e.evidence)) count: (array/sum @ms "count") }))))
+        (set @entity.keyed (array/map @entity.merged (fn f { finding: @f page: @f.pageUrl crit: (if (== (array/len @f.wcag) 0) null (default (array/first (array/map (array/take @f.wcag 1) (fn w (str/join (array/map (str/split @w.criterion ".") (fn p (str/padStart @p 6 "0"))) ".")))) "")) sel: @f.selector })))
+        (set @entity.ordered (array/sort (array/sort (array/sort @entity.keyed "sel") "crit") "page"))
+        (emit FINDINGS_MERGED { key: ?key findings: (array/map @entity.ordered (fn k @k.finding)) })
+    }
+
+    emits {
+      FINDINGS_MERGED -> external {
+        key : string!
+        findings : [A11yFinding]!
+      }
+        @description "The merged findings, one per page, rule and selector, ordered by page, first criterion and selector."
+        @tier "primary"
+    }
+
+    listens {
+      FINDINGS_MERGE -> input {
+        key : string!
+        findings : [A11yFinding]!
+      }
+        @description "Merge these findings from every engine and probe into one list."
+        @synonyms "merge accessibility findings, combine axe and wave results"
+    }
+  }
+
+  page boot as A11yFindingsStart -> A11yFindings
+}

@@ -1,0 +1,1 @@
+JSON.stringify({ nav: Array.from(document.querySelectorAll('nav a[href], [role=navigation] a[href]')).map(a => (a.innerText || a.textContent).trim()), helpLinks: Array.from(document.querySelectorAll('header a[href], footer a[href], [role=banner] a[href], [role=contentinfo] a[href]')).map(a => a.href) })

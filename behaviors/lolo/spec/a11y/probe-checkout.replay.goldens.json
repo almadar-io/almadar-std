@@ -1,0 +1,1719 @@
+{
+ "atom": "a11y/atoms/std-a11y-probe-checkout.lolo",
+ "trait": "CheckoutProbe",
+ "note": "std-a11y-probe-checkout with the page answers played as events. The link lists, focus reads and page texts are the real answers recorded by probe-checkout.gen/record.py from headless Chrome on the Slovenian fixture shop (Tab presses and Enter over CDP, keyDown with text \\r; the server log shows only page GETs, nothing was submitted and the Plačaj control was only focused). The stop-list cases prove a control matching the stop patterns is never activated. Regenerate with python3 -I probe-checkout.gen/gen_goldens.py.",
+ "cases": [
+  {
+   "id": "PROBE_RUN starts the forms probe on the product page, nothing is pressed",
+   "steps": [
+    {
+     "from": "idle",
+     "event": "PROBE_RUN",
+     "payload": {
+      "key": "k",
+      "pageUrl": "http://127.0.0.1:22402/shop/izdelek-1.html"
+     },
+     "expect": {
+      "state": "forms",
+      "emits": [
+       {
+        "event": "FORMS_RUN",
+        "payload": {
+         "key": "k:forms0",
+         "pageUrl": "http://127.0.0.1:22402/shop/izdelek-1.html"
+        }
+       }
+      ],
+      "neverEmits": [
+       "PAGE_KEY",
+       "PAGE_MEASURE"
+      ],
+      "entity": {
+       "runKey": "k",
+       "startUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+       "stepIdx": 0,
+       "reached": [],
+       "findings": []
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "the forms probe's answer for this run is kept and the page links are measured; another run's answer is ignored (control)",
+   "steps": [
+    {
+     "from": "forms",
+     "event": "FORMS_PROBE_DONE",
+     "payload": {
+      "key": "k:forms0",
+      "probe": "forms",
+      "findings": [
+       {
+        "id": "http://127.0.0.1:22402/shop/izdelek-1.html#form-label",
+        "pageUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+        "rule": "form-label",
+        "wcag": [],
+        "method": "probe",
+        "engines": [
+         "probe"
+        ],
+        "impact": "serious",
+        "confidence": "confirmed",
+        "selector": "#x",
+        "snippet": "<input>",
+        "evidence": "",
+        "count": 1
+       }
+      ]
+     },
+     "expect": {
+      "state": "listing",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k:links0",
+         "expression": "(() => { const norm = (s) => (s || '').replace(/\\s+/g, ' ').trim(); const sel = (n) => { if (n.id) { return '#' + CSS.escape(n.id); } const p = []; let c = n; while (c && c.nodeType === 1 && c !== document.documentElement) { const par = c.parentElement; const t = c.tagName.toLowerCase(); if (!par) { break; } const k = [...par.children].filter((x) => x.tagName === c.tagName); p.unshift(t + ':nth-of-type(' + (k.indexOf(c) + 1) + ')'); c = par; } return 'html > ' + p.join(' > '); }; const shown = (e) => e.getClientRects().length > 0 && getComputedStyle(e).visibility !== 'hidden'; const els = Array.from(document.querySelectorAll(\"a[href],button,input[type=submit],input[type=button],[role=button]\")).filter((e) => !e.disabled && e.tabIndex >= 0 && shown(e)); const links = els.map((e) => ({ selector: sel(e), text: norm(e.getAttribute('aria-label') || e.innerText || e.value || e.getAttribute('title') || ''), href: e.tagName === 'A' ? e.href : '', snippet: e.cloneNode(false).outerHTML })); const frames = Array.from(document.querySelectorAll('iframe[src]')).map((f) => f.src); return JSON.stringify({ links: links, frames: frames }); })()"
+        }
+       }
+      ],
+      "entity": {
+       "findings": [
+        {
+         "id": "http://127.0.0.1:22402/shop/izdelek-1.html#form-label",
+         "pageUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+         "rule": "form-label",
+         "wcag": [],
+         "method": "probe",
+         "engines": [
+          "probe"
+         ],
+         "impact": "serious",
+         "confidence": "confirmed",
+         "selector": "#x",
+         "snippet": "<input>",
+         "evidence": "",
+         "count": 1
+        }
+       ]
+      }
+     },
+     "entity": {
+      "runKey": "k",
+      "startUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+      "pageUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+      "findings": [],
+      "complete": false,
+      "stopReachable": false,
+      "formsSeq": 0
+     }
+    },
+    {
+     "from": "forms",
+     "event": "FORMS_PROBE_DONE",
+     "payload": {
+      "key": "z:forms0",
+      "probe": "forms",
+      "findings": []
+     },
+     "expect": {
+      "state": "forms",
+      "neverEmits": [
+       "PAGE_MEASURE"
+      ]
+     },
+     "entity": {
+      "runKey": "k",
+      "startUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+      "pageUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+      "findings": [],
+      "complete": false,
+      "stopReachable": false,
+      "formsSeq": 0
+     }
+    }
+   ]
+  },
+  {
+   "id": "the forms probe failing fails the run and returns the tab; a failure of another run is ignored (control)",
+   "steps": [
+    {
+     "from": "forms",
+     "event": "FORMS_PROBE_FAILED",
+     "payload": {
+      "key": "k:forms0",
+      "probe": "forms",
+      "error": "x",
+      "code": "probe_page_failed"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_FAILED",
+        "payload": {
+         "key": "k",
+         "probe": "checkout",
+         "code": "probe_forms_failed"
+        }
+       },
+       {
+        "event": "PAGE_NAVIGATE",
+        "payload": {
+         "key": "k:back",
+         "url": "http://127.0.0.1:22402/shop/izdelek-1.html"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "runKey": "k",
+      "startUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+      "pageUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+      "findings": [],
+      "complete": false,
+      "stopReachable": false,
+      "formsSeq": 0
+     }
+    },
+    {
+     "from": "forms",
+     "event": "FORMS_PROBE_FAILED",
+     "payload": {
+      "key": "z:forms0",
+      "probe": "forms",
+      "error": "x",
+      "code": "probe_page_failed"
+     },
+     "expect": {
+      "state": "forms",
+      "neverEmits": [
+       "PROBE_FAILED"
+      ]
+     },
+     "entity": {
+      "runKey": "k",
+      "startUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+      "pageUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+      "findings": [],
+      "complete": false,
+      "stopReachable": false,
+      "formsSeq": 0
+     }
+    }
+   ]
+  },
+  {
+   "id": "real product page links: the add-to-cart button is the target for step 0",
+   "steps": [
+    {
+     "from": "listing",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k:links0",
+      "json": "{\"links\":[{\"selector\":\"html > body:nth-of-type(1) > a:nth-of-type(1)\",\"text\":\"Preskoči na vsebino\",\"href\":\"http://127.0.0.1:22402/shop/izdelek-1.html#main\",\"snippet\":\"<a class=\\\"skip\\\" href=\\\"#main\\\" style=\\\"position:absolute;left:-9999px\\\"></a>\"},{\"selector\":\"html > body:nth-of-type(1) > nav:nth-of-type(1) > a:nth-of-type(1)\",\"text\":\"Domov\",\"href\":\"http://127.0.0.1:22402/shop/index.html\",\"snippet\":\"<a href=\\\"index.html\\\"></a>\"},{\"selector\":\"html > body:nth-of-type(1) > nav:nth-of-type(1) > a:nth-of-type(2)\",\"text\":\"Košarica\",\"href\":\"http://127.0.0.1:22402/shop/kosarica.html\",\"snippet\":\"<a href=\\\"kosarica.html\\\"></a>\"},{\"selector\":\"html > body:nth-of-type(1) > nav:nth-of-type(1) > a:nth-of-type(3)\",\"text\":\"Izjava o dostopnosti\",\"href\":\"http://127.0.0.1:22402/shop/izjava-o-dostopnosti.html\",\"snippet\":\"<a href=\\\"izjava-o-dostopnosti.html\\\"></a>\"},{\"selector\":\"html > body:nth-of-type(1) > main:nth-of-type(1) > form:nth-of-type(1) > button:nth-of-type(1)\",\"text\":\"Dodaj v košarico\",\"href\":\"\",\"snippet\":\"<button class=\\\"btn\\\" type=\\\"submit\\\"></button>\"},{\"selector\":\"html > body:nth-of-type(1) > footer:nth-of-type(1) > div:nth-of-type(1) > p:nth-of-type(1) > a:nth-of-type(1)\",\"text\":\"Izjava o dostopnosti\",\"href\":\"http://127.0.0.1:22402/shop/izjava-o-dostopnosti.html\",\"snippet\":\"<a href=\\\"izjava-o-dostopnosti.html\\\"></a>\"},{\"selector\":\"html > body:nth-of-type(1) > footer:nth-of-type(1) > div:nth-of-type(1) > p:nth-of-type(1) > a:nth-of-type(2)\",\"text\":\"Cenik (PDF)\",\"href\":\"http://127.0.0.1:22402/shop/docs/cenik.pdf\",\"snippet\":\"<a href=\\\"docs/cenik.pdf\\\"></a>\"}],\"frames\":[]}"
+     },
+     "expect": {
+      "state": "planning",
+      "emits": [
+       {
+        "event": "CHECKOUT_PLAN",
+        "payload": {}
+       }
+      ],
+      "entity": {
+       "targetSel": "html > body:nth-of-type(1) > main:nth-of-type(1) > form:nth-of-type(1) > button:nth-of-type(1)",
+       "targetHay": "dodaj v košarico ",
+       "targetSnippet": "<button class=\"btn\" type=\"submit\"></button>"
+      }
+     },
+     "entity": {
+      "runKey": "k",
+      "startUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+      "pageUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+      "findings": [],
+      "complete": false,
+      "stopReachable": false,
+      "formsSeq": 0,
+      "stepIdx": 0
+     }
+    }
+   ]
+  },
+  {
+   "id": "a page without any add-to-cart control leaves no target (control)",
+   "steps": [
+    {
+     "from": "listing",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k:links0",
+      "json": "{\"links\":[{\"selector\":\"html > body:nth-of-type(1) > a:nth-of-type(1)\",\"text\":\"Preskoči na vsebino\",\"href\":\"http://127.0.0.1:22402/shop/izdelek-1.html#main\",\"snippet\":\"<a class=\\\"skip\\\" href=\\\"#main\\\" style=\\\"position:absolute;left:-9999px\\\"></a>\"},{\"selector\":\"html > body:nth-of-type(1) > nav:nth-of-type(1) > a:nth-of-type(1)\",\"text\":\"Domov\",\"href\":\"http://127.0.0.1:22402/shop/index.html\",\"snippet\":\"<a href=\\\"index.html\\\"></a>\"},{\"selector\":\"html > body:nth-of-type(1) > nav:nth-of-type(1) > a:nth-of-type(2)\",\"text\":\"Košarica\",\"href\":\"http://127.0.0.1:22402/shop/kosarica.html\",\"snippet\":\"<a href=\\\"kosarica.html\\\"></a>\"},{\"selector\":\"html > body:nth-of-type(1) > nav:nth-of-type(1) > a:nth-of-type(3)\",\"text\":\"Izjava o dostopnosti\",\"href\":\"http://127.0.0.1:22402/shop/izjava-o-dostopnosti.html\",\"snippet\":\"<a href=\\\"izjava-o-dostopnosti.html\\\"></a>\"},{\"selector\":\"html > body:nth-of-type(1) > footer:nth-of-type(1) > div:nth-of-type(1) > p:nth-of-type(1) > a:nth-of-type(1)\",\"text\":\"Izjava o dostopnosti\",\"href\":\"http://127.0.0.1:22402/shop/izjava-o-dostopnosti.html\",\"snippet\":\"<a href=\\\"izjava-o-dostopnosti.html\\\"></a>\"},{\"selector\":\"html > body:nth-of-type(1) > footer:nth-of-type(1) > div:nth-of-type(1) > p:nth-of-type(1) > a:nth-of-type(2)\",\"text\":\"Cenik (PDF)\",\"href\":\"http://127.0.0.1:22402/shop/docs/cenik.pdf\",\"snippet\":\"<a href=\\\"docs/cenik.pdf\\\"></a>\"}],\"frames\":[]}"
+     },
+     "expect": {
+      "state": "planning",
+      "emits": [
+       {
+        "event": "CHECKOUT_PLAN",
+        "payload": {}
+       }
+      ],
+      "entity": {
+       "targetSel": ""
+      }
+     },
+     "entity": {
+      "runKey": "k",
+      "startUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+      "pageUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+      "findings": [],
+      "complete": false,
+      "stopReachable": false,
+      "formsSeq": 0,
+      "stepIdx": 0
+     }
+    }
+   ]
+  },
+  {
+   "id": "real cart page: step 1 is the Košarica link and step 2 the Na blagajno link",
+   "steps": [
+    {
+     "from": "listing",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k:links1",
+      "json": "{\"links\":[{\"selector\":\"html > body:nth-of-type(1) > a:nth-of-type(1)\",\"text\":\"Preskoči na vsebino\",\"href\":\"http://127.0.0.1:22402/shop/kosarica.html?kol=1#main\",\"snippet\":\"<a class=\\\"skip\\\" href=\\\"#main\\\" style=\\\"position:absolute;left:-9999px\\\"></a>\"},{\"selector\":\"html > body:nth-of-type(1) > nav:nth-of-type(1) > a:nth-of-type(1)\",\"text\":\"Domov\",\"href\":\"http://127.0.0.1:22402/shop/index.html\",\"snippet\":\"<a href=\\\"index.html\\\"></a>\"},{\"selector\":\"html > body:nth-of-type(1) > nav:nth-of-type(1) > a:nth-of-type(2)\",\"text\":\"Košarica\",\"href\":\"http://127.0.0.1:22402/shop/kosarica.html\",\"snippet\":\"<a href=\\\"kosarica.html\\\"></a>\"},{\"selector\":\"html > body:nth-of-type(1) > nav:nth-of-type(1) > a:nth-of-type(3)\",\"text\":\"Izjava o dostopnosti\",\"href\":\"http://127.0.0.1:22402/shop/izjava-o-dostopnosti.html\",\"snippet\":\"<a href=\\\"izjava-o-dostopnosti.html\\\"></a>\"},{\"selector\":\"html > body:nth-of-type(1) > main:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(4) > button:nth-of-type(1)\",\"text\":\"\",\"href\":\"\",\"snippet\":\"<button type=\\\"button\\\" class=\\\"remove\\\"></button>\"},{\"selector\":\"html > body:nth-of-type(1) > main:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(2) > td:nth-of-type(4) > button:nth-of-type(1)\",\"text\":\"\",\"href\":\"\",\"snippet\":\"<button type=\\\"button\\\" class=\\\"remove\\\"></button>\"},{\"selector\":\"html > body:nth-of-type(1) > main:nth-of-type(1) > p:nth-of-type(2) > a:nth-of-type(1)\",\"text\":\"Na blagajno\",\"href\":\"http://127.0.0.1:22402/shop/blagajna.html\",\"snippet\":\"<a class=\\\"btn\\\" href=\\\"blagajna.html\\\"></a>\"},{\"selector\":\"html > body:nth-of-type(1) > footer:nth-of-type(1) > div:nth-of-type(1) > p:nth-of-type(1) > a:nth-of-type(1)\",\"text\":\"Izjava o dostopnosti\",\"href\":\"http://127.0.0.1:22402/shop/izjava-o-dostopnosti.html\",\"snippet\":\"<a href=\\\"izjava-o-dostopnosti.html\\\"></a>\"},{\"selector\":\"html > body:nth-of-type(1) > footer:nth-of-type(1) > div:nth-of-type(1) > p:nth-of-type(1) > a:nth-of-type(2)\",\"text\":\"Cenik (PDF)\",\"href\":\"http://127.0.0.1:22402/shop/docs/cenik.pdf\",\"snippet\":\"<a href=\\\"docs/cenik.pdf\\\"></a>\"}],\"frames\":[]}"
+     },
+     "expect": {
+      "state": "planning",
+      "emits": [
+       {
+        "event": "CHECKOUT_PLAN",
+        "payload": {}
+       }
+      ],
+      "entity": {
+       "targetSel": "html > body:nth-of-type(1) > nav:nth-of-type(1) > a:nth-of-type(2)"
+      }
+     },
+     "entity": {
+      "runKey": "k",
+      "startUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+      "pageUrl": "http://127.0.0.1:22402/shop/kosarica.html?kol=1",
+      "findings": [],
+      "complete": false,
+      "stopReachable": false,
+      "formsSeq": 1,
+      "stepIdx": 1
+     }
+    },
+    {
+     "from": "listing",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k:links2",
+      "json": "{\"links\":[{\"selector\":\"html > body:nth-of-type(1) > a:nth-of-type(1)\",\"text\":\"Preskoči na vsebino\",\"href\":\"http://127.0.0.1:22402/shop/kosarica.html?kol=1#main\",\"snippet\":\"<a class=\\\"skip\\\" href=\\\"#main\\\" style=\\\"position:absolute;left:-9999px\\\"></a>\"},{\"selector\":\"html > body:nth-of-type(1) > nav:nth-of-type(1) > a:nth-of-type(1)\",\"text\":\"Domov\",\"href\":\"http://127.0.0.1:22402/shop/index.html\",\"snippet\":\"<a href=\\\"index.html\\\"></a>\"},{\"selector\":\"html > body:nth-of-type(1) > nav:nth-of-type(1) > a:nth-of-type(2)\",\"text\":\"Košarica\",\"href\":\"http://127.0.0.1:22402/shop/kosarica.html\",\"snippet\":\"<a href=\\\"kosarica.html\\\"></a>\"},{\"selector\":\"html > body:nth-of-type(1) > nav:nth-of-type(1) > a:nth-of-type(3)\",\"text\":\"Izjava o dostopnosti\",\"href\":\"http://127.0.0.1:22402/shop/izjava-o-dostopnosti.html\",\"snippet\":\"<a href=\\\"izjava-o-dostopnosti.html\\\"></a>\"},{\"selector\":\"html > body:nth-of-type(1) > main:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(4) > button:nth-of-type(1)\",\"text\":\"\",\"href\":\"\",\"snippet\":\"<button type=\\\"button\\\" class=\\\"remove\\\"></button>\"},{\"selector\":\"html > body:nth-of-type(1) > main:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(2) > td:nth-of-type(4) > button:nth-of-type(1)\",\"text\":\"\",\"href\":\"\",\"snippet\":\"<button type=\\\"button\\\" class=\\\"remove\\\"></button>\"},{\"selector\":\"html > body:nth-of-type(1) > main:nth-of-type(1) > p:nth-of-type(2) > a:nth-of-type(1)\",\"text\":\"Na blagajno\",\"href\":\"http://127.0.0.1:22402/shop/blagajna.html\",\"snippet\":\"<a class=\\\"btn\\\" href=\\\"blagajna.html\\\"></a>\"},{\"selector\":\"html > body:nth-of-type(1) > footer:nth-of-type(1) > div:nth-of-type(1) > p:nth-of-type(1) > a:nth-of-type(1)\",\"text\":\"Izjava o dostopnosti\",\"href\":\"http://127.0.0.1:22402/shop/izjava-o-dostopnosti.html\",\"snippet\":\"<a href=\\\"izjava-o-dostopnosti.html\\\"></a>\"},{\"selector\":\"html > body:nth-of-type(1) > footer:nth-of-type(1) > div:nth-of-type(1) > p:nth-of-type(1) > a:nth-of-type(2)\",\"text\":\"Cenik (PDF)\",\"href\":\"http://127.0.0.1:22402/shop/docs/cenik.pdf\",\"snippet\":\"<a href=\\\"docs/cenik.pdf\\\"></a>\"}],\"frames\":[]}"
+     },
+     "expect": {
+      "state": "planning",
+      "emits": [
+       {
+        "event": "CHECKOUT_PLAN",
+        "payload": {}
+       }
+      ],
+      "entity": {
+       "targetSel": "html > body:nth-of-type(1) > main:nth-of-type(1) > p:nth-of-type(2) > a:nth-of-type(1)"
+      }
+     },
+     "entity": {
+      "runKey": "k",
+      "startUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+      "pageUrl": "http://127.0.0.1:22402/shop/kosarica.html?kol=1",
+      "findings": [],
+      "complete": false,
+      "stopReachable": false,
+      "formsSeq": 2,
+      "stepIdx": 2
+     }
+    }
+   ]
+  },
+  {
+   "id": "SAFETY: a link that matches the checkout step and the stop list is never chosen; the plain one is",
+   "steps": [
+    {
+     "from": "listing",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k:links2",
+      "json": "{\"links\":[{\"selector\":\"#pay\",\"text\":\"Plačaj in zaključi nakup\",\"href\":\"http://s.test/checkout/pay\",\"snippet\":\"<a id=\\\"pay\\\">\"},{\"selector\":\"#go\",\"text\":\"Na blagajno\",\"href\":\"http://s.test/checkout\",\"snippet\":\"<a id=\\\"go\\\">\"}],\"frames\":[]}"
+     },
+     "expect": {
+      "state": "planning",
+      "emits": [
+       {
+        "event": "CHECKOUT_PLAN",
+        "payload": {}
+       }
+      ],
+      "entity": {
+       "targetSel": "#go"
+      }
+     },
+     "entity": {
+      "runKey": "k",
+      "startUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+      "pageUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+      "findings": [],
+      "complete": false,
+      "stopReachable": false,
+      "formsSeq": 2,
+      "stepIdx": 2
+     }
+    },
+    {
+     "from": "listing",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k:links2",
+      "json": "{\"links\":[{\"selector\":\"#pay\",\"text\":\"Plačaj in zaključi nakup\",\"href\":\"http://s.test/checkout/pay\",\"snippet\":\"<a id=\\\"pay\\\">\"}],\"frames\":[]}"
+     },
+     "expect": {
+      "state": "planning",
+      "emits": [
+       {
+        "event": "CHECKOUT_PLAN",
+        "payload": {}
+       }
+      ],
+      "entity": {
+       "targetSel": ""
+      }
+     },
+     "entity": {
+      "runKey": "k",
+      "startUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+      "pageUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+      "findings": [],
+      "complete": false,
+      "stopReachable": false,
+      "formsSeq": 2,
+      "stepIdx": 2
+     }
+    }
+   ]
+  },
+  {
+   "id": "a measurement that is not the link list fails the run (control: the real list above is accepted)",
+   "steps": [
+    {
+     "from": "listing",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k:links0",
+      "json": "{\"links\":\"many\"}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_FAILED",
+        "payload": {
+         "key": "k",
+         "probe": "checkout",
+         "code": "probe_bad_measure"
+        }
+       },
+       {
+        "event": "PAGE_NAVIGATE",
+        "payload": {
+         "key": "k:back",
+         "url": "http://127.0.0.1:22402/shop/izdelek-1.html"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "runKey": "k",
+      "startUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+      "pageUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+      "findings": [],
+      "complete": false,
+      "stopReachable": false,
+      "formsSeq": 0
+     }
+    }
+   ]
+  },
+  {
+   "id": "planning with a target starts the Tab walk",
+   "steps": [
+    {
+     "from": "planning",
+     "event": "CHECKOUT_PLAN",
+     "payload": {},
+     "expect": {
+      "state": "tabbing",
+      "emits": [
+       {
+        "event": "CHECKOUT_TAB",
+        "payload": {}
+       },
+       {
+        "event": "PAGE_KEY",
+        "payload": {
+         "key": "k:tab1",
+         "keyName": "Tab"
+        }
+       }
+      ],
+      "entity": {
+       "mode": "step",
+       "tabs": 1,
+       "stoppedAt": "add-to-cart",
+       "complete": false
+      }
+     },
+     "entity": {
+      "runKey": "k",
+      "startUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+      "pageUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+      "findings": [],
+      "complete": false,
+      "stopReachable": false,
+      "stepIdx": 0,
+      "targetSel": "html > body:nth-of-type(1) > main:nth-of-type(1) > form:nth-of-type(1) > button:nth-of-type(1)"
+     }
+    }
+   ]
+  },
+  {
+   "id": "planning without a target ends with checkout-step-not-found and no key is pressed (control: the case above has a target)",
+   "steps": [
+    {
+     "from": "planning",
+     "event": "CHECKOUT_PLAN",
+     "payload": {},
+     "expect": {
+      "state": "ending",
+      "emits": [
+       {
+        "event": "CHECKOUT_END",
+        "payload": {}
+       }
+      ],
+      "neverEmits": [
+       "CHECKOUT_TAB",
+       "PAGE_KEY"
+      ],
+      "entity": {
+       "stoppedAt": "cart",
+       "complete": false,
+       "findings": [
+        {
+         "id": "http://127.0.0.1:22402/shop/izdelek-1.html#checkout-step-not-found#cart",
+         "pageUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+         "rule": "checkout-step-not-found",
+         "wcag": [],
+         "method": "probe",
+         "engines": [
+          "probe"
+         ],
+         "impact": "minor",
+         "confidence": "needs-verification",
+         "selector": "",
+         "snippet": "cart",
+         "evidence": "",
+         "count": 1
+        }
+       ]
+      }
+     },
+     "entity": {
+      "runKey": "k",
+      "startUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+      "pageUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+      "findings": [],
+      "complete": false,
+      "stopReachable": false,
+      "stepIdx": 1,
+      "targetSel": "",
+      "reached": [
+       "add-to-cart"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "Tab is pressed below the cap; at the cap the walk ends with checkout-not-keyboard (2.1.1, confirmed)",
+   "steps": [
+    {
+     "from": "tabbing",
+     "event": "CHECKOUT_TAB",
+     "payload": {},
+     "expect": {
+      "state": "tabbing",
+      "emits": [
+       {
+        "event": "PAGE_KEY",
+        "payload": {
+         "key": "k:tab1",
+         "keyName": "Tab"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "runKey": "k",
+      "startUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+      "pageUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+      "findings": [],
+      "complete": false,
+      "stopReachable": false,
+      "tabs": 0,
+      "targetSel": "html > body:nth-of-type(1) > main:nth-of-type(1) > form:nth-of-type(1) > button:nth-of-type(1)"
+     }
+    },
+    {
+     "from": "tabbing",
+     "event": "CHECKOUT_TAB",
+     "payload": {},
+     "expect": {
+      "state": "ending",
+      "emits": [
+       {
+        "event": "CHECKOUT_END",
+        "payload": {}
+       }
+      ],
+      "neverEmits": [
+       "PAGE_KEY"
+      ],
+      "entity": {
+       "findings": [
+        {
+         "id": "http://127.0.0.1:22402/shop/izdelek-1.html#checkout-not-keyboard#html > body:nth-of-type(1) > main:nth-of-type(1) > form:nth-of-type(1) > button:nth-of-type(1)",
+         "pageUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+         "rule": "checkout-not-keyboard",
+         "wcag": [
+          {
+           "criterion": "2.1.1",
+           "level": "A",
+           "version": "2.0"
+          }
+         ],
+         "method": "probe",
+         "engines": [
+          "probe"
+         ],
+         "impact": "serious",
+         "confidence": "confirmed",
+         "selector": "html > body:nth-of-type(1) > main:nth-of-type(1) > form:nth-of-type(1) > button:nth-of-type(1)",
+         "snippet": "<button class=\"btn\" type=\"submit\"></button>",
+         "evidence": "",
+         "count": 1
+        }
+       ]
+      }
+     },
+     "entity": {
+      "runKey": "k",
+      "startUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+      "pageUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+      "findings": [],
+      "complete": false,
+      "stopReachable": false,
+      "tabs": 3,
+      "targetSel": "html > body:nth-of-type(1) > main:nth-of-type(1) > form:nth-of-type(1) > button:nth-of-type(1)",
+      "targetSnippet": "<button class=\"btn\" type=\"submit\"></button>"
+     }
+    }
+   ],
+   "config": {
+    "maxTabs": 3
+   }
+  },
+  {
+   "id": "a Tab acknowledgement asks for the focused element; another key's acknowledgement is ignored (control)",
+   "steps": [
+    {
+     "from": "tabbing",
+     "event": "PAGE_KEY_SENT",
+     "payload": {
+      "key": "k:tab2"
+     },
+     "expect": {
+      "state": "tabbing",
+      "emits": [
+       {
+        "event": "PAGE_FOCUSED",
+        "payload": {
+         "key": "k:focus2"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "runKey": "k",
+      "startUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+      "pageUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+      "findings": [],
+      "complete": false,
+      "stopReachable": false,
+      "tabs": 2
+     }
+    },
+    {
+     "from": "tabbing",
+     "event": "PAGE_KEY_SENT",
+     "payload": {
+      "key": "k:enter0"
+     },
+     "expect": {
+      "state": "tabbing",
+      "neverEmits": [
+       "PAGE_FOCUSED"
+      ]
+     },
+     "entity": {
+      "runKey": "k",
+      "startUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+      "pageUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+      "findings": [],
+      "complete": false,
+      "stopReachable": false,
+      "tabs": 2
+     }
+    }
+   ]
+  },
+  {
+   "id": "real focus read: Tab reached the add-to-cart button, Enter is pressed; focus elsewhere or on nothing keeps tabbing (controls)",
+   "steps": [
+    {
+     "from": "tabbing",
+     "event": "PAGE_FOCUS_READ",
+     "payload": {
+      "key": "k:focus6",
+      "focused": {
+       "tag": "button",
+       "role": "button",
+       "name": "Dodaj v košarico",
+       "selector": "html > body:nth-of-type(1) > main:nth-of-type(1) > form:nth-of-type(1) > button:nth-of-type(1)",
+       "rect": {
+        "x": 0,
+        "y": 0,
+        "width": 10,
+        "height": 10
+       }
+      }
+     },
+     "expect": {
+      "state": "entering",
+      "emits": [
+       {
+        "event": "PAGE_KEY",
+        "payload": {
+         "key": "k:enter0",
+         "keyName": "Enter"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "runKey": "k",
+      "startUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+      "pageUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+      "findings": [],
+      "complete": false,
+      "stopReachable": false,
+      "tabs": 6,
+      "mode": "step",
+      "stepIdx": 0,
+      "targetSel": "html > body:nth-of-type(1) > main:nth-of-type(1) > form:nth-of-type(1) > button:nth-of-type(1)",
+      "targetHay": "dodaj v košarico "
+     }
+    },
+    {
+     "from": "tabbing",
+     "event": "PAGE_FOCUS_READ",
+     "payload": {
+      "key": "k:focus5",
+      "focused": {
+       "tag": "a",
+       "role": "link",
+       "name": "Domov",
+       "selector": "#other",
+       "rect": {
+        "x": 0,
+        "y": 0,
+        "width": 10,
+        "height": 10
+       }
+      }
+     },
+     "expect": {
+      "state": "tabbing",
+      "emits": [
+       {
+        "event": "CHECKOUT_TAB",
+        "payload": {}
+       }
+      ],
+      "neverEmits": [
+       "PAGE_FOCUSED"
+      ]
+     },
+     "entity": {
+      "runKey": "k",
+      "startUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+      "pageUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+      "findings": [],
+      "complete": false,
+      "stopReachable": false,
+      "tabs": 5,
+      "mode": "step",
+      "stepIdx": 0,
+      "targetSel": "html > body:nth-of-type(1) > main:nth-of-type(1) > form:nth-of-type(1) > button:nth-of-type(1)",
+      "targetHay": "dodaj v košarico "
+     }
+    },
+    {
+     "from": "tabbing",
+     "event": "PAGE_FOCUS_READ",
+     "payload": {
+      "key": "k:focus1"
+     },
+     "expect": {
+      "state": "tabbing",
+      "emits": [
+       {
+        "event": "CHECKOUT_TAB",
+        "payload": {}
+       }
+      ],
+      "neverEmits": [
+       "PAGE_FOCUSED"
+      ]
+     },
+     "entity": {
+      "runKey": "k",
+      "startUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+      "pageUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+      "findings": [],
+      "complete": false,
+      "stopReachable": false,
+      "tabs": 1,
+      "mode": "step",
+      "stepIdx": 0,
+      "targetSel": "html > body:nth-of-type(1) > main:nth-of-type(1) > form:nth-of-type(1) > button:nth-of-type(1)",
+      "targetHay": "dodaj v košarico "
+     }
+    }
+   ]
+  },
+  {
+   "id": "SAFETY: the browser reports a stop-list name for the focused target, so Enter is never pressed; with a harmless name it is (control)",
+   "steps": [
+    {
+     "from": "tabbing",
+     "event": "PAGE_FOCUS_READ",
+     "payload": {
+      "key": "k:focus7",
+      "focused": {
+       "tag": "a",
+       "role": "link",
+       "name": "Plačaj 43,90 EUR",
+       "selector": "html > body:nth-of-type(1) > main:nth-of-type(1) > p:nth-of-type(2) > a:nth-of-type(1)",
+       "rect": {
+        "x": 0,
+        "y": 0,
+        "width": 10,
+        "height": 10
+       }
+      }
+     },
+     "expect": {
+      "state": "ending",
+      "emits": [
+       {
+        "event": "CHECKOUT_END",
+        "payload": {}
+       }
+      ],
+      "neverEmits": [
+       "PAGE_KEY"
+      ],
+      "entity": {
+       "stopReachable": true
+      }
+     },
+     "entity": {
+      "runKey": "k",
+      "startUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+      "pageUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+      "findings": [],
+      "complete": false,
+      "stopReachable": false,
+      "tabs": 7,
+      "mode": "step",
+      "stepIdx": 2,
+      "targetSel": "html > body:nth-of-type(1) > main:nth-of-type(1) > p:nth-of-type(2) > a:nth-of-type(1)",
+      "targetHay": "na blagajno http://127.0.0.1:22402/shop/blagajna.html"
+     }
+    },
+    {
+     "from": "tabbing",
+     "event": "PAGE_FOCUS_READ",
+     "payload": {
+      "key": "k:focus7",
+      "focused": {
+       "tag": "a",
+       "role": "link",
+       "name": "Na blagajno",
+       "selector": "html > body:nth-of-type(1) > main:nth-of-type(1) > p:nth-of-type(2) > a:nth-of-type(1)",
+       "rect": {
+        "x": 0,
+        "y": 0,
+        "width": 10,
+        "height": 10
+       }
+      }
+     },
+     "expect": {
+      "state": "entering",
+      "emits": [
+       {
+        "event": "PAGE_KEY",
+        "payload": {
+         "key": "k:enter2",
+         "keyName": "Enter"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "runKey": "k",
+      "startUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+      "pageUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+      "findings": [],
+      "complete": false,
+      "stopReachable": false,
+      "tabs": 7,
+      "mode": "step",
+      "stepIdx": 2,
+      "targetSel": "html > body:nth-of-type(1) > main:nth-of-type(1) > p:nth-of-type(2) > a:nth-of-type(1)",
+      "targetHay": "na blagajno http://127.0.0.1:22402/shop/blagajna.html"
+     }
+    }
+   ]
+  },
+  {
+   "id": "an Enter acknowledgement reads the page reached; another key's is ignored (control)",
+   "steps": [
+    {
+     "from": "entering",
+     "event": "PAGE_KEY_SENT",
+     "payload": {
+      "key": "k:enter0"
+     },
+     "expect": {
+      "state": "paging",
+      "emits": [
+       {
+        "event": "PAGE_TEXT",
+        "payload": {
+         "key": "k:page0"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "runKey": "k",
+      "startUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+      "pageUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+      "findings": [],
+      "complete": false,
+      "stopReachable": false,
+      "stepIdx": 0
+     }
+    },
+    {
+     "from": "entering",
+     "event": "PAGE_KEY_SENT",
+     "payload": {
+      "key": "k:tab3"
+     },
+     "expect": {
+      "state": "entering",
+      "neverEmits": [
+       "PAGE_TEXT"
+      ]
+     },
+     "entity": {
+      "runKey": "k",
+      "startUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+      "pageUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+      "findings": [],
+      "complete": false,
+      "stopReachable": false,
+      "stepIdx": 0
+     }
+    }
+   ]
+  },
+  {
+   "id": "the page reached is recorded and the forms probe runs on it; another page read is ignored (control)",
+   "steps": [
+    {
+     "from": "paging",
+     "event": "PAGE_TEXT_READ",
+     "payload": {
+      "key": "k:page0",
+      "url": "http://127.0.0.1:22402/shop/kosarica.html?kol=1",
+      "title": "Košarica | Lončarna Mala",
+      "lang": "sl",
+      "text": "Košarica"
+     },
+     "expect": {
+      "state": "forms",
+      "emits": [
+       {
+        "event": "FORMS_RUN",
+        "payload": {
+         "key": "k:forms1",
+         "pageUrl": "http://127.0.0.1:22402/shop/kosarica.html?kol=1"
+        }
+       }
+      ],
+      "entity": {
+       "reached": [
+        "add-to-cart"
+       ],
+       "stepIdx": 1,
+       "formsSeq": 1,
+       "pageUrl": "http://127.0.0.1:22402/shop/kosarica.html?kol=1"
+      }
+     },
+     "entity": {
+      "runKey": "k",
+      "startUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+      "pageUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+      "findings": [],
+      "complete": false,
+      "stopReachable": false,
+      "stepIdx": 0,
+      "formsSeq": 0
+     }
+    },
+    {
+     "from": "paging",
+     "event": "PAGE_TEXT_READ",
+     "payload": {
+      "key": "k:page9",
+      "url": "u",
+      "title": "t",
+      "lang": "sl",
+      "text": ""
+     },
+     "expect": {
+      "state": "paging",
+      "neverEmits": [
+       "FORMS_RUN"
+      ]
+     },
+     "entity": {
+      "runKey": "k",
+      "startUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+      "pageUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+      "findings": [],
+      "complete": false,
+      "stopReachable": false,
+      "stepIdx": 0,
+      "formsSeq": 0
+     }
+    }
+   ]
+  },
+  {
+   "id": "checkout page (blagajna): every step reached, no stop control on it, so the walk ends without a Tab",
+   "steps": [
+    {
+     "from": "listing",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k:links3",
+      "json": "{\"links\":[{\"selector\":\"html > body:nth-of-type(1) > a:nth-of-type(1)\",\"text\":\"Preskoči na vsebino\",\"href\":\"http://127.0.0.1:22402/shop/blagajna.html#main\",\"snippet\":\"<a class=\\\"skip\\\" href=\\\"#main\\\" style=\\\"position:absolute;left:-9999px\\\"></a>\"},{\"selector\":\"html > body:nth-of-type(1) > nav:nth-of-type(1) > a:nth-of-type(1)\",\"text\":\"Domov\",\"href\":\"http://127.0.0.1:22402/shop/index.html\",\"snippet\":\"<a href=\\\"index.html\\\"></a>\"},{\"selector\":\"html > body:nth-of-type(1) > nav:nth-of-type(1) > a:nth-of-type(2)\",\"text\":\"Košarica\",\"href\":\"http://127.0.0.1:22402/shop/kosarica.html\",\"snippet\":\"<a href=\\\"kosarica.html\\\"></a>\"},{\"selector\":\"html > body:nth-of-type(1) > nav:nth-of-type(1) > a:nth-of-type(3)\",\"text\":\"Izjava o dostopnosti\",\"href\":\"http://127.0.0.1:22402/shop/izjava-o-dostopnosti.html\",\"snippet\":\"<a href=\\\"izjava-o-dostopnosti.html\\\"></a>\"},{\"selector\":\"html > body:nth-of-type(1) > main:nth-of-type(1) > form:nth-of-type(1) > p:nth-of-type(1) > button:nth-of-type(1)\",\"text\":\"Nadaljuj na plačilo\",\"href\":\"\",\"snippet\":\"<button class=\\\"btn\\\" type=\\\"submit\\\"></button>\"},{\"selector\":\"html > body:nth-of-type(1) > footer:nth-of-type(1) > div:nth-of-type(1) > p:nth-of-type(1) > a:nth-of-type(1)\",\"text\":\"Izjava o dostopnosti\",\"href\":\"http://127.0.0.1:22402/shop/izjava-o-dostopnosti.html\",\"snippet\":\"<a href=\\\"izjava-o-dostopnosti.html\\\"></a>\"},{\"selector\":\"html > body:nth-of-type(1) > footer:nth-of-type(1) > div:nth-of-type(1) > p:nth-of-type(1) > a:nth-of-type(2)\",\"text\":\"Cenik (PDF)\",\"href\":\"http://127.0.0.1:22402/shop/docs/cenik.pdf\",\"snippet\":\"<a href=\\\"docs/cenik.pdf\\\"></a>\"}],\"frames\":[]}"
+     },
+     "expect": {
+      "state": "planning",
+      "emits": [
+       {
+        "event": "CHECKOUT_PLAN",
+        "payload": {}
+       }
+      ],
+      "entity": {
+       "targetSel": ""
+      }
+     },
+     "entity": {
+      "runKey": "k",
+      "startUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+      "pageUrl": "http://127.0.0.1:22402/shop/blagajna.html",
+      "findings": [],
+      "complete": false,
+      "stopReachable": false,
+      "formsSeq": 3,
+      "stepIdx": 3,
+      "reached": [
+       "add-to-cart",
+       "cart",
+       "checkout"
+      ]
+     }
+    },
+    {
+     "from": "planning",
+     "event": "CHECKOUT_PLAN",
+     "payload": {},
+     "expect": {
+      "state": "ending",
+      "emits": [
+       {
+        "event": "CHECKOUT_END",
+        "payload": {}
+       }
+      ],
+      "neverEmits": [
+       "CHECKOUT_TAB",
+       "PAGE_KEY"
+      ],
+      "entity": {
+       "complete": true,
+       "stoppedAt": "checkout",
+       "stopReachable": false
+      }
+     },
+     "entity": {
+      "runKey": "k",
+      "startUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+      "pageUrl": "http://127.0.0.1:22402/shop/blagajna.html",
+      "findings": [],
+      "complete": false,
+      "stopReachable": false,
+      "stepIdx": 3,
+      "targetSel": "",
+      "reached": [
+       "add-to-cart",
+       "cart",
+       "checkout"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "payment page: the real Plačaj control is the stop target, Tab-walked to and Enter is never pressed",
+   "steps": [
+    {
+     "from": "listing",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k:links3",
+      "json": "{\"links\":[{\"selector\":\"html > body:nth-of-type(1) > a:nth-of-type(1)\",\"text\":\"Preskoči na vsebino\",\"href\":\"http://127.0.0.1:22402/shop/placilo.html#main\",\"snippet\":\"<a class=\\\"skip\\\" href=\\\"#main\\\" style=\\\"position:absolute;left:-9999px\\\"></a>\"},{\"selector\":\"html > body:nth-of-type(1) > nav:nth-of-type(1) > a:nth-of-type(1)\",\"text\":\"Domov\",\"href\":\"http://127.0.0.1:22402/shop/index.html\",\"snippet\":\"<a href=\\\"index.html\\\"></a>\"},{\"selector\":\"html > body:nth-of-type(1) > nav:nth-of-type(1) > a:nth-of-type(2)\",\"text\":\"Košarica\",\"href\":\"http://127.0.0.1:22402/shop/kosarica.html\",\"snippet\":\"<a href=\\\"kosarica.html\\\"></a>\"},{\"selector\":\"html > body:nth-of-type(1) > nav:nth-of-type(1) > a:nth-of-type(3)\",\"text\":\"Izjava o dostopnosti\",\"href\":\"http://127.0.0.1:22402/shop/izjava-o-dostopnosti.html\",\"snippet\":\"<a href=\\\"izjava-o-dostopnosti.html\\\"></a>\"},{\"selector\":\"html > body:nth-of-type(1) > main:nth-of-type(1) > form:nth-of-type(1) > p:nth-of-type(1) > a:nth-of-type(1)\",\"text\":\"Plačaj 43,90 EUR\",\"href\":\"http://127.0.0.1:22402/shop/placilo.html#\",\"snippet\":\"<a class=\\\"btn pay\\\" href=\\\"#\\\"></a>\"},{\"selector\":\"html > body:nth-of-type(1) > footer:nth-of-type(1) > div:nth-of-type(1) > p:nth-of-type(1) > a:nth-of-type(1)\",\"text\":\"Izjava o dostopnosti\",\"href\":\"http://127.0.0.1:22402/shop/izjava-o-dostopnosti.html\",\"snippet\":\"<a href=\\\"izjava-o-dostopnosti.html\\\"></a>\"},{\"selector\":\"html > body:nth-of-type(1) > footer:nth-of-type(1) > div:nth-of-type(1) > p:nth-of-type(1) > a:nth-of-type(2)\",\"text\":\"Cenik (PDF)\",\"href\":\"http://127.0.0.1:22402/shop/docs/cenik.pdf\",\"snippet\":\"<a href=\\\"docs/cenik.pdf\\\"></a>\"}],\"frames\":[]}"
+     },
+     "expect": {
+      "state": "planning",
+      "emits": [
+       {
+        "event": "CHECKOUT_PLAN",
+        "payload": {}
+       }
+      ],
+      "entity": {
+       "targetSel": "html > body:nth-of-type(1) > main:nth-of-type(1) > form:nth-of-type(1) > p:nth-of-type(1) > a:nth-of-type(1)"
+      }
+     },
+     "entity": {
+      "runKey": "k",
+      "startUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+      "pageUrl": "http://127.0.0.1:22402/shop/placilo.html",
+      "findings": [],
+      "complete": false,
+      "stopReachable": false,
+      "formsSeq": 3,
+      "stepIdx": 3,
+      "reached": [
+       "add-to-cart",
+       "cart",
+       "checkout"
+      ]
+     }
+    },
+    {
+     "from": "planning",
+     "event": "CHECKOUT_PLAN",
+     "payload": {},
+     "expect": {
+      "state": "tabbing",
+      "emits": [
+       {
+        "event": "CHECKOUT_TAB",
+        "payload": {}
+       }
+      ],
+      "neverEmits": [
+       "PAGE_FOCUSED"
+      ],
+      "entity": {
+       "mode": "stop",
+       "complete": true,
+       "stoppedAt": "checkout"
+      }
+     },
+     "entity": {
+      "runKey": "k",
+      "startUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+      "pageUrl": "http://127.0.0.1:22402/shop/placilo.html",
+      "findings": [],
+      "complete": false,
+      "stopReachable": false,
+      "stepIdx": 3,
+      "targetSel": "html > body:nth-of-type(1) > main:nth-of-type(1) > form:nth-of-type(1) > p:nth-of-type(1) > a:nth-of-type(1)",
+      "reached": [
+       "add-to-cart",
+       "cart",
+       "checkout"
+      ]
+     }
+    },
+    {
+     "from": "tabbing",
+     "event": "PAGE_FOCUS_READ",
+     "payload": {
+      "key": "k:focus6",
+      "focused": {
+       "tag": "a",
+       "role": "link",
+       "name": "Plačaj 43,90 EUR",
+       "selector": "html > body:nth-of-type(1) > main:nth-of-type(1) > form:nth-of-type(1) > p:nth-of-type(1) > a:nth-of-type(1)",
+       "rect": {
+        "x": 0,
+        "y": 0,
+        "width": 10,
+        "height": 10
+       }
+      }
+     },
+     "expect": {
+      "state": "ending",
+      "emits": [
+       {
+        "event": "CHECKOUT_END",
+        "payload": {}
+       }
+      ],
+      "neverEmits": [
+       "PAGE_KEY"
+      ],
+      "entity": {
+       "stopReachable": true
+      }
+     },
+     "entity": {
+      "runKey": "k",
+      "startUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+      "pageUrl": "http://127.0.0.1:22402/shop/placilo.html",
+      "findings": [],
+      "complete": true,
+      "stopReachable": false,
+      "tabs": 6,
+      "mode": "stop",
+      "stepIdx": 3,
+      "targetSel": "html > body:nth-of-type(1) > main:nth-of-type(1) > form:nth-of-type(1) > p:nth-of-type(1) > a:nth-of-type(1)",
+      "targetHay": "plačaj 43,90 eur http://127.0.0.1:22402/shop/placilo.html#"
+     }
+    }
+   ]
+  },
+  {
+   "id": "a stop control that Tab cannot reach is checkout-not-keyboard on the pay control and Enter is never pressed",
+   "steps": [
+    {
+     "from": "tabbing",
+     "event": "CHECKOUT_TAB",
+     "payload": {},
+     "expect": {
+      "state": "ending",
+      "emits": [
+       {
+        "event": "CHECKOUT_END",
+        "payload": {}
+       }
+      ],
+      "neverEmits": [
+       "PAGE_KEY"
+      ],
+      "entity": {
+       "stopReachable": false
+      }
+     },
+     "entity": {
+      "runKey": "k",
+      "startUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+      "pageUrl": "http://127.0.0.1:22402/shop/placilo.html",
+      "findings": [],
+      "complete": true,
+      "stopReachable": false,
+      "tabs": 2,
+      "mode": "stop",
+      "stepIdx": 3,
+      "targetSel": "html > body:nth-of-type(1) > main:nth-of-type(1) > form:nth-of-type(1) > p:nth-of-type(1) > a:nth-of-type(1)",
+      "targetSnippet": "<a class=\"btn pay\" href=\"#\"></a>"
+     }
+    }
+   ],
+   "config": {
+    "maxTabs": 2
+   }
+  },
+  {
+   "id": "the stop page without a review step is checkout-no-review (3.3.4, needs-verification); with the review text there is none (control)",
+   "steps": [
+    {
+     "from": "ending",
+     "event": "CHECKOUT_END",
+     "payload": {},
+     "expect": {
+      "state": "returning",
+      "emits": [
+       {
+        "event": "PAGE_NAVIGATE",
+        "payload": {
+         "key": "k:back",
+         "url": "http://127.0.0.1:22402/shop/izdelek-1.html"
+        }
+       }
+      ],
+      "entity": {
+       "findings": [
+        {
+         "id": "http://127.0.0.1:22402/shop/blagajna.html#checkout-no-review",
+         "pageUrl": "http://127.0.0.1:22402/shop/blagajna.html",
+         "rule": "checkout-no-review",
+         "wcag": [
+          {
+           "criterion": "3.3.4",
+           "level": "AA",
+           "version": "2.0"
+          }
+         ],
+         "method": "probe",
+         "engines": [
+          "probe"
+         ],
+         "impact": "moderate",
+         "confidence": "needs-verification",
+         "selector": "",
+         "snippet": "",
+         "evidence": "",
+         "count": 1
+        }
+       ]
+      }
+     },
+     "entity": {
+      "runKey": "k",
+      "startUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+      "pageUrl": "http://127.0.0.1:22402/shop/blagajna.html",
+      "findings": [],
+      "complete": true,
+      "stopReachable": false,
+      "reached": [
+       "add-to-cart",
+       "cart",
+       "checkout"
+      ],
+      "pageText": "Preskoči na vsebino\nLončarna Mala\nDomovKošaricaIzjava o dostopnosti\nBlagajna\nPodatki kupca (gost)\nIme in priimek\nNaslov\nPoštna številka\n\nNadaljuj na plačilo\n\nIzjava o dostopnosti · Cenik (PDF)"
+     }
+    },
+    {
+     "from": "ending",
+     "event": "CHECKOUT_END",
+     "payload": {},
+     "expect": {
+      "state": "returning",
+      "emits": [
+       {
+        "event": "PAGE_NAVIGATE",
+        "payload": {
+         "key": "k:back",
+         "url": "http://127.0.0.1:22402/shop/izdelek-1.html"
+        }
+       }
+      ],
+      "entity": {
+       "findings": []
+      }
+     },
+     "entity": {
+      "runKey": "k",
+      "startUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+      "pageUrl": "http://127.0.0.1:22402/shop/blagajna.html",
+      "findings": [],
+      "complete": true,
+      "stopReachable": false,
+      "reached": [
+       "add-to-cart",
+       "cart",
+       "checkout"
+      ],
+      "pageText": "Preskoči na vsebino\nLončarna Mala\nDomovKošaricaIzjava o dostopnosti\nBlagajna\nPodatki kupca (gost)\nIme in priimek\nNaslov\nPoštna številka\n\nNadaljuj na plačilo\n\nIzjava o dostopnosti · Cenik (PDF)\nPregled naročila"
+     }
+    }
+   ]
+  },
+  {
+   "id": "an iframe with a CAPTCHA signature is captcha (N48, needs-verification); another iframe is not (control)",
+   "steps": [
+    {
+     "from": "ending",
+     "event": "CHECKOUT_END",
+     "payload": {},
+     "expect": {
+      "state": "returning",
+      "emits": [
+       {
+        "event": "PAGE_NAVIGATE",
+        "payload": {
+         "key": "k:back",
+         "url": "http://127.0.0.1:22402/shop/izdelek-1.html"
+        }
+       }
+      ],
+      "entity": {
+       "findings": [
+        {
+         "id": "http://127.0.0.1:22402/shop/blagajna.html#captcha#https://www.google.com/recaptcha/api2/anchor?k=1",
+         "pageUrl": "http://127.0.0.1:22402/shop/blagajna.html",
+         "rule": "captcha",
+         "wcag": [
+          {
+           "criterion": "1.1.1",
+           "level": "A",
+           "version": "2.0"
+          }
+         ],
+         "method": "probe",
+         "engines": [
+          "probe"
+         ],
+         "impact": "serious",
+         "confidence": "needs-verification",
+         "selector": "iframe",
+         "snippet": "https://www.google.com/recaptcha/api2/anchor?k=1",
+         "evidence": "",
+         "count": 1
+        }
+       ]
+      }
+     },
+     "entity": {
+      "runKey": "k",
+      "startUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+      "pageUrl": "http://127.0.0.1:22402/shop/blagajna.html",
+      "findings": [],
+      "complete": true,
+      "stopReachable": false,
+      "reached": [
+       "add-to-cart",
+       "cart",
+       "checkout"
+      ],
+      "pageText": "review order",
+      "frames": [
+       "https://www.google.com/recaptcha/api2/anchor?k=1"
+      ]
+     }
+    },
+    {
+     "from": "ending",
+     "event": "CHECKOUT_END",
+     "payload": {},
+     "expect": {
+      "state": "returning",
+      "emits": [
+       {
+        "event": "PAGE_NAVIGATE",
+        "payload": {
+         "key": "k:back",
+         "url": "http://127.0.0.1:22402/shop/izdelek-1.html"
+        }
+       }
+      ],
+      "entity": {
+       "findings": []
+      }
+     },
+     "entity": {
+      "runKey": "k",
+      "startUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+      "pageUrl": "http://127.0.0.1:22402/shop/blagajna.html",
+      "findings": [],
+      "complete": true,
+      "stopReachable": false,
+      "reached": [
+       "add-to-cart",
+       "cart",
+       "checkout"
+      ],
+      "pageText": "review order",
+      "frames": [
+       "https://maps.example/embed"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a walk that did not complete gives no review or captcha verdict (control)",
+   "steps": [
+    {
+     "from": "ending",
+     "event": "CHECKOUT_END",
+     "payload": {},
+     "expect": {
+      "state": "returning",
+      "emits": [
+       {
+        "event": "PAGE_NAVIGATE",
+        "payload": {
+         "key": "k:back",
+         "url": "http://127.0.0.1:22402/shop/izdelek-1.html"
+        }
+       }
+      ],
+      "entity": {
+       "findings": []
+      }
+     },
+     "entity": {
+      "runKey": "k",
+      "startUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+      "pageUrl": "http://127.0.0.1:22402/shop/blagajna.html",
+      "findings": [],
+      "complete": false,
+      "stopReachable": false,
+      "reached": [
+       "add-to-cart"
+      ],
+      "pageText": "Preskoči na vsebino\nLončarna Mala\nDomovKošaricaIzjava o dostopnosti\nBlagajna\nPodatki kupca (gost)\nIme in priimek\nNaslov\nPoštna številka\n\nNadaljuj na plačilo\n\nIzjava o dostopnosti · Cenik (PDF)",
+      "frames": [
+       "https://www.google.com/recaptcha/api2/anchor?k=1"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the tab is back: PROBE_DONE and CHECKOUT_WALKED; another key's load is ignored (control)",
+   "steps": [
+    {
+     "from": "returning",
+     "event": "PAGE_LOADED",
+     "payload": {
+      "key": "k:back",
+      "url": "http://127.0.0.1:22402/shop/izdelek-1.html",
+      "title": "t"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k",
+         "probe": "checkout",
+         "findings": []
+        }
+       },
+       {
+        "event": "CHECKOUT_WALKED",
+        "payload": {
+         "key": "k",
+         "reached": [
+          "add-to-cart",
+          "cart",
+          "checkout"
+         ],
+         "stoppedAt": "checkout",
+         "stopControlReachable": true
+        }
+       }
+      ]
+     },
+     "entity": {
+      "runKey": "k",
+      "startUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+      "pageUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+      "findings": [],
+      "complete": false,
+      "stopReachable": true,
+      "reached": [
+       "add-to-cart",
+       "cart",
+       "checkout"
+      ],
+      "stoppedAt": "checkout"
+     }
+    },
+    {
+     "from": "returning",
+     "event": "PAGE_LOADED",
+     "payload": {
+      "key": "z:back",
+      "url": "http://127.0.0.1:22402/shop/izdelek-1.html",
+      "title": "t"
+     },
+     "expect": {
+      "state": "returning",
+      "neverEmits": [
+       "PROBE_DONE",
+       "CHECKOUT_WALKED"
+      ]
+     },
+     "entity": {
+      "runKey": "k",
+      "startUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+      "pageUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+      "findings": [],
+      "complete": false,
+      "stopReachable": false
+     }
+    }
+   ]
+  },
+  {
+   "id": "a missing step still ends in PROBE_DONE with the informational finding, not PROBE_FAILED",
+   "steps": [
+    {
+     "from": "returning",
+     "event": "PAGE_LOADED",
+     "payload": {
+      "key": "k:back",
+      "url": "http://127.0.0.1:22402/shop/izdelek-1.html",
+      "title": "t"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k",
+         "probe": "checkout"
+        }
+       },
+       {
+        "event": "CHECKOUT_WALKED",
+        "payload": {
+         "key": "k",
+         "reached": [
+          "add-to-cart"
+         ],
+         "stoppedAt": "cart",
+         "stopControlReachable": false
+        }
+       }
+      ],
+      "neverEmits": [
+       "PROBE_FAILED"
+      ]
+     },
+     "entity": {
+      "runKey": "k",
+      "startUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+      "pageUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+      "findings": [],
+      "complete": false,
+      "stopReachable": false,
+      "reached": [
+       "add-to-cart"
+      ],
+      "stoppedAt": "cart"
+     }
+    }
+   ]
+  },
+  {
+   "id": "a page failure of the walk fails the run; a failure keyed to the forms probe is left to it (control)",
+   "steps": [
+    {
+     "from": "tabbing",
+     "event": "PAGE_FAILED",
+     "payload": {
+      "key": "k:tab2",
+      "error": "busy",
+      "code": "busy"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_FAILED",
+        "payload": {
+         "key": "k",
+         "probe": "checkout",
+         "code": "probe_page_failed"
+        }
+       },
+       {
+        "event": "PAGE_NAVIGATE",
+        "payload": {
+         "key": "k:back",
+         "url": "http://127.0.0.1:22402/shop/izdelek-1.html"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "runKey": "k",
+      "startUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+      "pageUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+      "findings": [],
+      "complete": false,
+      "stopReachable": false
+     }
+    },
+    {
+     "from": "tabbing",
+     "event": "PAGE_FAILED",
+     "payload": {
+      "key": "k:forms1:inventory",
+      "error": "busy",
+      "code": "busy"
+     },
+     "expect": {
+      "state": "tabbing",
+      "neverEmits": [
+       "PROBE_FAILED"
+      ]
+     },
+     "entity": {
+      "runKey": "k",
+      "startUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+      "pageUrl": "http://127.0.0.1:22402/shop/izdelek-1.html",
+      "findings": [],
+      "complete": false,
+      "stopReachable": false
+     }
+    }
+   ]
+  }
+ ]
+}

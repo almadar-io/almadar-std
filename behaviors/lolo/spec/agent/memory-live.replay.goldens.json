@@ -1,0 +1,531 @@
+{
+  "atom": "agent/atoms/std-agent-memory.lolo",
+  "trait": "AgentMemoryRecall",
+  "note": "`live` on RECALL reaches RECALLED when given and stays absent when not, on the ephemeral and every normal path",
+  "cases": [
+    {
+      "id": "recall-ephemeral-live-true",
+      "note": "ephemeral recall forwards live",
+      "steps": [
+        {
+          "trait": "AgentMemoryRecall",
+          "event": "RECALL",
+          "payload": {
+            "messages": [
+              {
+                "role": "user",
+                "content": "hi"
+              }
+            ],
+            "instructions": "i",
+            "tools": [],
+            "ephemeral": true,
+            "live": true
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RECALLED",
+                "payload": {
+                  "messages": [
+                    {
+                      "role": "user",
+                      "content": "hi"
+                    }
+                  ],
+                  "context": "",
+                  "instructions": "i",
+                  "tools": [],
+                  "ephemeral": true,
+                  "live": true
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "AgentMemoryLlm",
+        "MemEmbedWait",
+        "MemEmbedRequest",
+        "MemEmbedHttp",
+        "AgentMemoryBrowse",
+        "AgentMemoryView"
+      ]
+    },
+    {
+      "id": "control-recall-ephemeral-without-live",
+      "note": "absent live stays absent",
+      "steps": [
+        {
+          "trait": "AgentMemoryRecall",
+          "event": "RECALL",
+          "payload": {
+            "messages": [
+              {
+                "role": "user",
+                "content": "hi"
+              }
+            ],
+            "instructions": "i",
+            "tools": [],
+            "ephemeral": true
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RECALLED",
+                "payload": {
+                  "messages": [
+                    {
+                      "role": "user",
+                      "content": "hi"
+                    }
+                  ],
+                  "context": "",
+                  "instructions": "i",
+                  "tools": [],
+                  "ephemeral": true
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "AgentMemoryLlm",
+        "MemEmbedWait",
+        "MemEmbedRequest",
+        "MemEmbedHttp",
+        "AgentMemoryBrowse",
+        "AgentMemoryView"
+      ]
+    },
+    {
+      "id": "recall-live-true",
+      "note": "a normal recall; live rides through",
+      "steps": [
+        {
+          "trait": "AgentMemoryRecall",
+          "event": "RECALL",
+          "payload": {
+            "messages": [
+              {
+                "role": "user",
+                "content": "hi"
+              }
+            ],
+            "live": true
+          },
+          "expect": {
+            "fired": true,
+            "state": "recalling",
+            "emits": [
+              {
+                "event": "LLM_EMBED",
+                "payload": {
+                  "key": "recall"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "AgentMemoryRecall",
+          "event": "MemoryEmbedFailed",
+          "payload": {
+            "message": "x",
+            "key": "recall"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RECALLED",
+                "payload": {
+                  "messages": [
+                    {
+                      "role": "user",
+                      "content": "hi"
+                    }
+                  ],
+                  "context": "",
+                  "live": true
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "AgentMemoryLlm",
+        "MemEmbedWait",
+        "MemEmbedRequest",
+        "MemEmbedHttp",
+        "AgentMemoryBrowse",
+        "AgentMemoryView"
+      ]
+    },
+    {
+      "id": "recall-load-failed-live-true",
+      "note": "memories fail to load; live rides through",
+      "steps": [
+        {
+          "trait": "AgentMemoryRecall",
+          "event": "RECALL",
+          "payload": {
+            "messages": [
+              {
+                "role": "user",
+                "content": "hi"
+              }
+            ],
+            "live": true
+          },
+          "expect": {
+            "fired": true,
+            "state": "recalling",
+            "emits": [
+              {
+                "event": "LLM_EMBED",
+                "payload": {
+                  "key": "recall"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "AgentMemoryRecall",
+          "event": "AgentMemoriesLoadFailed",
+          "payload": {
+            "error": "x"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RECALLED",
+                "payload": {
+                  "messages": [
+                    {
+                      "role": "user",
+                      "content": "hi"
+                    }
+                  ],
+                  "context": "",
+                  "live": true
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "AgentMemoryLlm",
+        "MemEmbedWait",
+        "MemEmbedRequest",
+        "MemEmbedHttp",
+        "AgentMemoryBrowse",
+        "AgentMemoryView"
+      ]
+    },
+    {
+      "id": "recall-ranked-live-true",
+      "note": "memories load and rank; live rides through",
+      "steps": [
+        {
+          "trait": "AgentMemoryRecall",
+          "event": "RECALL",
+          "payload": {
+            "messages": [
+              {
+                "role": "user",
+                "content": "hi"
+              }
+            ],
+            "live": true
+          },
+          "expect": {
+            "fired": true,
+            "state": "recalling",
+            "emits": [
+              {
+                "event": "LLM_EMBED",
+                "payload": {
+                  "key": "recall"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "AgentMemoryRecall",
+          "event": "MemoryEmbedded",
+          "payload": {
+            "embeddings": [
+              [
+                1,
+                0
+              ]
+            ],
+            "key": "recall"
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "AgentMemoryRecall",
+          "event": "MemoriesForRecall",
+          "payload": {
+            "data": [],
+            "totalCount": 0
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RECALLED",
+                "payload": {
+                  "messages": [
+                    {
+                      "role": "user",
+                      "content": "hi"
+                    }
+                  ],
+                  "context": "",
+                  "live": true
+                }
+              }
+            ]
+          },
+          "from": "recalling"
+        }
+      ],
+      "defaults": [
+        "AgentMemoryLlm",
+        "MemEmbedWait",
+        "MemEmbedRequest",
+        "MemEmbedHttp",
+        "AgentMemoryBrowse",
+        "AgentMemoryView"
+      ]
+    },
+    {
+      "id": "recall-control-without-live",
+      "note": "a normal recall; live stays absent",
+      "steps": [
+        {
+          "trait": "AgentMemoryRecall",
+          "event": "RECALL",
+          "payload": {
+            "messages": [
+              {
+                "role": "user",
+                "content": "hi"
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "recalling",
+            "emits": [
+              {
+                "event": "LLM_EMBED",
+                "payload": {
+                  "key": "recall"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "AgentMemoryRecall",
+          "event": "MemoryEmbedFailed",
+          "payload": {
+            "message": "x",
+            "key": "recall"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RECALLED",
+                "payload": {
+                  "messages": [
+                    {
+                      "role": "user",
+                      "content": "hi"
+                    }
+                  ],
+                  "context": ""
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "AgentMemoryLlm",
+        "MemEmbedWait",
+        "MemEmbedRequest",
+        "MemEmbedHttp",
+        "AgentMemoryBrowse",
+        "AgentMemoryView"
+      ]
+    },
+    {
+      "id": "recall-load-failed-control-without-live",
+      "note": "memories fail to load; live stays absent",
+      "steps": [
+        {
+          "trait": "AgentMemoryRecall",
+          "event": "RECALL",
+          "payload": {
+            "messages": [
+              {
+                "role": "user",
+                "content": "hi"
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "recalling",
+            "emits": [
+              {
+                "event": "LLM_EMBED",
+                "payload": {
+                  "key": "recall"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "AgentMemoryRecall",
+          "event": "AgentMemoriesLoadFailed",
+          "payload": {
+            "error": "x"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RECALLED",
+                "payload": {
+                  "messages": [
+                    {
+                      "role": "user",
+                      "content": "hi"
+                    }
+                  ],
+                  "context": ""
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "AgentMemoryLlm",
+        "MemEmbedWait",
+        "MemEmbedRequest",
+        "MemEmbedHttp",
+        "AgentMemoryBrowse",
+        "AgentMemoryView"
+      ]
+    },
+    {
+      "id": "recall-ranked-control-without-live",
+      "note": "memories load and rank; live stays absent",
+      "steps": [
+        {
+          "trait": "AgentMemoryRecall",
+          "event": "RECALL",
+          "payload": {
+            "messages": [
+              {
+                "role": "user",
+                "content": "hi"
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "recalling",
+            "emits": [
+              {
+                "event": "LLM_EMBED",
+                "payload": {
+                  "key": "recall"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "AgentMemoryRecall",
+          "event": "MemoryEmbedded",
+          "payload": {
+            "embeddings": [
+              [
+                1,
+                0
+              ]
+            ],
+            "key": "recall"
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "AgentMemoryRecall",
+          "event": "MemoriesForRecall",
+          "payload": {
+            "data": [],
+            "totalCount": 0
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RECALLED",
+                "payload": {
+                  "messages": [
+                    {
+                      "role": "user",
+                      "content": "hi"
+                    }
+                  ],
+                  "context": ""
+                }
+              }
+            ]
+          },
+          "from": "recalling"
+        }
+      ],
+      "defaults": [
+        "AgentMemoryLlm",
+        "MemEmbedWait",
+        "MemEmbedRequest",
+        "MemEmbedHttp",
+        "AgentMemoryBrowse",
+        "AgentMemoryView"
+      ]
+    }
+  ]
+}

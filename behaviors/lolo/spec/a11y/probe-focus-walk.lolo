@@ -1,0 +1,27 @@
+app a11y-probe-focus-walk-spec [
+  version: "1.0.0",
+  description: "Design contract for the keyboard navigation probe (WCAG 2.1.2, 2.4.1, 2.4.3, 2.4.7). PROBE_RUN { key, pageUrl } on a tab already at pageUrl walks the page with the Tab key and answers PROBE_DONE { key, probe, findings } or PROBE_FAILED { key, probe, error, code }. Page requests ride PAGE_MEASURE, PAGE_KEY, PAGE_FOCUSED and PAGE_NAVIGATE; the page is navigated to pageUrl again before PROBE_DONE."
+]
+
+type WcagRef = { criterion : string!, level : "A" | "AA" | "AAA"!, version : "2.0" | "2.1" | "2.2"! }
+type A11yFinding = { id : string!, pageUrl : string!, rule : string!, wcag : [WcagRef]!, method : "engine" | "probe" | "llm"!, engines : [string]!, impact : "critical" | "serious" | "moderate" | "minor"!, confidence : "confirmed" | "needs-verification"!, selector : string!, snippet : string!, evidence : string!, count : number! }
+
+orbital A11yProbeFocusWalkSpec {
+  expects entity FocusWalkRun [runtime] {
+    id : string!
+  }
+  expects trait FocusWalkProbe {
+    state idle {
+      PROBE_RUN -> scanning
+    }
+    emits {
+      PAGE_MEASURE { key : string!  expression : string! }
+      PAGE_KEY { key : string!  keyName : "Tab" | "Enter" | "Space" | "Escape" | "ArrowDown" | "ArrowUp" | "ArrowLeft" | "ArrowRight" | "Home" | "End"!  shift : boolean }
+      PAGE_FOCUSED { key : string! }
+      PAGE_NAVIGATE { key : string!  url : string! }
+      PROBE_DONE { key : string!  probe : string!  findings : [A11yFinding]! }
+      PROBE_FAILED { key : string!  probe : string!  error : string!  code : string! }
+    }
+  }
+  expects page boot -> FocusWalkProbe
+}

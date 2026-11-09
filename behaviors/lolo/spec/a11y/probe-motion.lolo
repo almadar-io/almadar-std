@@ -1,0 +1,33 @@
+app a11y-probe-motion-spec [
+  version: "1.0.0",
+  description: "Design contract for the motion probe (WCAG 2.2.2 Pause, Stop, Hide): content that moves, auto-advances or animates for more than five seconds needs a control to pause it. PROBE_RUN { key, pageUrl } on a tab already at pageUrl measures the page (PAGE_MEASURE), waits the interval, measures it again, and answers PROBE_DONE { key, probe, findings } or PROBE_FAILED { key, probe, error, code }. The wait is a due-at instant on the entity that a tick turns into MOTION_DUE. The probe changes no page state."
+]
+
+type WcagRef = { criterion : string!, level : "A" | "AA" | "AAA"!, version : "2.0" | "2.1" | "2.2"! }
+type A11yFinding = { id : string!, pageUrl : string!, rule : string!, wcag : [WcagRef]!, method : "engine" | "probe" | "llm"!, engines : [string]!, impact : "critical" | "serious" | "moderate" | "minor"!, confidence : "confirmed" | "needs-verification"!, selector : string!, snippet : string!, evidence : string!, count : number! }
+
+orbital A11yProbeMotionSpec {
+  expects entity MotionRun [runtime] {
+    id : string!
+  }
+  expects trait MotionProbe {
+    state idle {
+      PROBE_RUN -> first
+    }
+    state first {
+      PAGE_MEASURED -> waiting
+    }
+    state waiting {
+      MOTION_DUE -> second
+    }
+    state second {
+      PAGE_MEASURED -> idle
+    }
+    emits {
+      PAGE_MEASURE { key : string!  expression : string! }
+      PROBE_DONE { key : string!  probe : string!  findings : [A11yFinding]! }
+      PROBE_FAILED { key : string!  probe : string!  error : string!  code : string! }
+    }
+  }
+  expects page boot -> MotionProbe
+}

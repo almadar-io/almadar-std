@@ -1,0 +1,594 @@
+app std-ws-client [
+  version: "1.0.0",
+  description: "std-ws-client — one RFC 6455 WebSocket client connection in .lolo over os/tcp-connect, os/send, os/recv and os/close, bytes/*, bit/* and hash/sha. WS_OPEN { host, port, path, tls, headers? } draws a Sec-WebSocket-Key (random-bytes), connects (tls true: the kernel runs the TLS handshake and offers http/1.1), writes the Upgrade request and accepts only a 101 whose Sec-WebSocket-Accept is base64(SHA-1(key + 258EAFA5-E914-47DA-95CA-C5AB0DC85B11)), answering WS_OPENED { protocol }; anything else answers WS_FAILED kind handshake. Frame bytes that followed the reply head are the first frame bytes. While open a standing os/recv feeds the frame decoder: a text or binary message (continuation frames joined) answers WS_MESSAGE { text?, data?, binary }, a ping is answered with a pong carrying its payload, a close frame is answered with a close frame and ends in WS_CLOSED { code, reason }. WS_SEND { text } or { data } writes one frame, always masked with a fresh random-bytes 4 mask (the mask is applied four bytes at a time, the tail one byte at a time); sends that arrive while a frame is being written are queued in order and never dropped. WS_CLOSE { code?, reason? } starts the close handshake and the connection ends in WS_CLOSED when the peer answers. A message longer than the maxMessage knob, a text message that is not valid UTF-8, a masked server frame, a reserved bit, an unknown opcode or a broken fragmentation fails the connection as WS_FAILED kind protocol and nothing is truncated. A request the atom will not write answers WS_FAILED kind refused before a socket opens; a transport failure keeps kind denied, timeout or tls, else io. The net grant for the host and port is the composer's: both arrive in the WS_OPEN payload."
+]
+uses Spec from "almadar-std/ws-client"
+type WsHeader = { name : string!, value : string! }
+type WsOut = { op : number!, data : bytes! }
+
+orbital WsClientOrbital {
+  entity WsConnection [runtime] {
+    id : string!
+    sock : number @description "The open socket, -1 when none." = -1
+    host : string @description "The host of the connection: the Host header and the TLS server name." = ""
+    port : number @description "The port of the connection." = 0
+    path : string @description "The request target of the Upgrade request." = "/"
+    tls : boolean @description "The kernel runs the TLS client handshake over the socket." = false
+    headers : [WsHeader] @description "The caller's extra headers of the Upgrade request." = []
+    request : bytes @description "The Upgrade request as written." = ""
+    wire : bytes @description "The last frame as written: header, mask and masked payload." = ""
+    wsKey : string @description "The Sec-WebSocket-Key of this connection, standard base64." = ""
+    buf : bytes @description "Bytes read and not yet consumed." = ""
+    eof : boolean @description "The peer closed." = false
+    frag : bytes @description "The data frames of the message being assembled." = ""
+    fragBinary : boolean @description "The message being assembled is binary." = false
+    fragging : boolean @description "A fragmented message is waiting for its continuation frames." = false
+    queue : [WsOut] @description "Frames waiting to be written, oldest first; the head is the frame being written." = []
+    busy : boolean @description "A frame of the queue is being masked or written." = false
+    closing : boolean @description "A close frame was sent or received; no data frame is written after it." = false
+    ending : boolean @description "The peer's close frame was received; the connection closes once the answering close frame is written." = false
+  }
+
+  trait WsClient -> WsConnection [optimistic] {
+    initial: closed
+
+    config {
+      host : string = "127.0.0.1"
+        @label "Host"
+        @description "The server os/tcp-connect opens and the Host header, a literal because the net grant is checked against it. Used when dynamicHost is false; a host in the WS_OPEN payload is then ignored."
+        @tier "infra"
+      port : number = 9222
+        @label "Port"
+        @description "The server port os/tcp-connect opens, a literal knob because the net grant is checked against it. Used when dynamicHost is false."
+        @tier "infra"
+      tls : boolean = false
+        @label "TLS"
+        @description "Whether the kernel runs the TLS client handshake over the socket (wss). Used when dynamicHost is false."
+        @tier "infra"
+      serverName : string = "127.0.0.1"
+        @label "Server name"
+        @description "The name the server certificate is verified against; a host the net grant names. Read only when tls is true and dynamicHost is false."
+        @tier "infra"
+      dynamicHost : boolean = false
+        @label "Dynamic host"
+        @description "The client may connect to the host, port and tls a WS_OPEN names (all three required then), which are also its Host header and TLS server name. It needs a pattern net grant covering the hosts, such as net: { \"*.example.test:443\": [tcp] }. False keeps the host, port, tls and serverName knobs whatever a call names."
+        @tier "infra"
+      recvBytes : number = 65536
+        @label "Read size"
+        @description "The most bytes one os/recv takes."
+        @tier "infra"
+      alpn : [string] = ["http/1.1"]
+        @label "ALPN"
+        @description "The application protocols offered to the peer when WS_OPEN asks for tls, in order."
+        @tier "infra"
+      maxHead : number = 65536
+        @label "Largest head"
+        @description "An Upgrade reply head with no end after this many bytes fails."
+        @tier "infra"
+      maxMessage : number = 67108864
+        @label "Largest message"
+        @description "A received message, its fragments together, longer than this many bytes fails the connection as protocol; nothing is truncated."
+        @tier "infra"
+      hostPattern : string = "^[^\\x00-\\x20\\x7f/]+$"
+        @label "Host"
+        @description "What a host must match: no space, control character or slash."
+        @tier "domain"
+      pathPattern : string = "^/[^ \\x00-\\x20\\x7f]*$"
+        @label "Path"
+        @description "A request target: a slash and no space or control character."
+        @tier "domain"
+      tokenPattern : string = "^[!#$%&'*+.^_`|~0-9A-Za-z-]+$"
+        @label "Token"
+        @description "What a header name must match."
+        @tier "domain"
+      valuePattern : string = "^[^\\x00-\\x08\\x0a-\\x1f\\x7f]*$"
+        @label "Header value"
+        @description "What a header value may hold: no control character other than a tab."
+        @tier "domain"
+      statusLinePattern : string = "^HTTP/1\\.1 101( .*)?$"
+        @label "Status line"
+        @description "The only status line the handshake accepts."
+        @tier "domain"
+      reservedHeaders : [string] = ["host", "upgrade", "connection", "sec-websocket-key", "sec-websocket-version", "sec-websocket-accept"]
+        @label "Reserved headers"
+        @description "Header names the atom writes itself; a WS_OPEN that sets one is refused."
+        @tier "domain"
+      acceptGuid : string = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
+        @label "Accept GUID"
+        @description "The RFC 6455 GUID appended to the key to form the expected Sec-WebSocket-Accept."
+        @tier "domain"
+    }
+
+    state closed {
+      INIT -> closed
+      WC_SOCK_CLOSED -> closed
+      WC_IO_FAILED -> closed
+      WC_SENT -> closed
+      WC_READ -> closed
+      WC_MASKED -> closed
+      WC_RANDOM_FAILED -> closed
+      WC_KEYED -> closed
+      WS_CLOSE -> closed
+      WS_SEND -> closed
+        (emit WS_FAILED { error: "the connection is not open", kind: "refused" })
+
+      WS_OPEN -> closed when (not (if @config.dynamicHost (and (!= (default @payload.host "") "") (validate/pattern (default @payload.host "") @config.hostPattern) (>= (default @payload.port 0) 1) (<= (default @payload.port 0) 65535) (= (math/mod (default @payload.port 0) 1) 0) (validate/pattern @payload.path @config.pathPattern) (array/every (default @payload.headers []) (fn h (and (validate/pattern @h.name @config.tokenPattern) (validate/pattern @h.value @config.valuePattern) (not (array/includes @config.reservedHeaders (str/lower @h.name))))))) (and (validate/pattern @payload.path @config.pathPattern) (array/every (default @payload.headers []) (fn h (and (validate/pattern @h.name @config.tokenPattern) (validate/pattern @h.value @config.valuePattern) (not (array/includes @config.reservedHeaders (str/lower @h.name)))))))))
+        (emit WS_FAILED { error: "the Upgrade request cannot be written: a path or header is not allowed, a header names what the atom writes itself, or with dynamicHost the host or port is missing or not allowed", kind: "refused" })
+      WS_OPEN -> connecting when (and (not @config.dynamicHost) (not @config.tls) (validate/pattern @payload.path @config.pathPattern) (array/every (default @payload.headers []) (fn h (and (validate/pattern @h.name @config.tokenPattern) (validate/pattern @h.value @config.valuePattern) (not (array/includes @config.reservedHeaders (str/lower @h.name)))))))
+        (set @entity.sock -1)
+        (set @entity.host @config.host)
+        (set @entity.port @config.port)
+        (set @entity.path @payload.path)
+        (set @entity.tls false)
+        (set @entity.headers (default @payload.headers []))
+        (set @entity.wsKey "")
+        (set @entity.buf (bytes/from-string ""))
+        (set @entity.eof false)
+        (set @entity.frag (bytes/from-string ""))
+        (set @entity.fragBinary false)
+        (set @entity.fragging false)
+        (set @entity.queue [])
+        (set @entity.busy false)
+        (set @entity.closing false)
+        (set @entity.ending false)
+        (os/tcp-connect @config.host @config.port { key: "connect" emit: { success: WC_CONNECTED, failure: WC_IO_FAILED } })
+      WS_OPEN -> connecting when (and (not @config.dynamicHost) @config.tls (validate/pattern @payload.path @config.pathPattern) (array/every (default @payload.headers []) (fn h (and (validate/pattern @h.name @config.tokenPattern) (validate/pattern @h.value @config.valuePattern) (not (array/includes @config.reservedHeaders (str/lower @h.name)))))))
+        (set @entity.sock -1)
+        (set @entity.host @config.host)
+        (set @entity.port @config.port)
+        (set @entity.path @payload.path)
+        (set @entity.tls true)
+        (set @entity.headers (default @payload.headers []))
+        (set @entity.wsKey "")
+        (set @entity.buf (bytes/from-string ""))
+        (set @entity.eof false)
+        (set @entity.frag (bytes/from-string ""))
+        (set @entity.fragBinary false)
+        (set @entity.fragging false)
+        (set @entity.queue [])
+        (set @entity.busy false)
+        (set @entity.closing false)
+        (set @entity.ending false)
+        (os/tcp-connect @config.host @config.port { serverName: @config.serverName, alpn: @config.alpn } { key: "connect" emit: { success: WC_CONNECTED, failure: WC_IO_FAILED } })
+      WS_OPEN -> connecting when (and @config.dynamicHost (not (default @payload.tls false)) (!= (default @payload.host "") "") (validate/pattern (default @payload.host "") @config.hostPattern) (>= (default @payload.port 0) 1) (<= (default @payload.port 0) 65535) (= (math/mod (default @payload.port 0) 1) 0) (validate/pattern @payload.path @config.pathPattern) (array/every (default @payload.headers []) (fn h (and (validate/pattern @h.name @config.tokenPattern) (validate/pattern @h.value @config.valuePattern) (not (array/includes @config.reservedHeaders (str/lower @h.name)))))))
+        (set @entity.sock -1)
+        (set @entity.host @payload.host)
+        (set @entity.port @payload.port)
+        (set @entity.path @payload.path)
+        (set @entity.tls false)
+        (set @entity.headers (default @payload.headers []))
+        (set @entity.wsKey "")
+        (set @entity.buf (bytes/from-string ""))
+        (set @entity.eof false)
+        (set @entity.frag (bytes/from-string ""))
+        (set @entity.fragBinary false)
+        (set @entity.fragging false)
+        (set @entity.queue [])
+        (set @entity.busy false)
+        (set @entity.closing false)
+        (set @entity.ending false)
+        (os/tcp-connect (default @payload.host "") (default @payload.port 0) { key: "connect" emit: { success: WC_CONNECTED, failure: WC_IO_FAILED } })
+      WS_OPEN -> connecting when (and @config.dynamicHost (default @payload.tls false) (!= (default @payload.host "") "") (validate/pattern (default @payload.host "") @config.hostPattern) (>= (default @payload.port 0) 1) (<= (default @payload.port 0) 65535) (= (math/mod (default @payload.port 0) 1) 0) (validate/pattern @payload.path @config.pathPattern) (array/every (default @payload.headers []) (fn h (and (validate/pattern @h.name @config.tokenPattern) (validate/pattern @h.value @config.valuePattern) (not (array/includes @config.reservedHeaders (str/lower @h.name)))))))
+        (set @entity.sock -1)
+        (set @entity.host @payload.host)
+        (set @entity.port @payload.port)
+        (set @entity.path @payload.path)
+        (set @entity.tls true)
+        (set @entity.headers (default @payload.headers []))
+        (set @entity.wsKey "")
+        (set @entity.buf (bytes/from-string ""))
+        (set @entity.eof false)
+        (set @entity.frag (bytes/from-string ""))
+        (set @entity.fragBinary false)
+        (set @entity.fragging false)
+        (set @entity.queue [])
+        (set @entity.busy false)
+        (set @entity.closing false)
+        (set @entity.ending false)
+        (os/tcp-connect (default @payload.host "") (default @payload.port 0) { serverName: (default @payload.host ""), alpn: @config.alpn } { key: "connect" emit: { success: WC_CONNECTED, failure: WC_IO_FAILED } })
+    }
+
+    state connecting {
+      INIT -> connecting
+      WC_SOCK_CLOSED -> connecting
+      WC_RANDOM_FAILED -> connecting
+      WS_OPEN -> connecting
+        (emit WS_FAILED { error: "a connection is being opened", kind: "refused" })
+      WS_SEND -> connecting
+        (emit WS_FAILED { error: "the connection is not open", kind: "refused" })
+      WS_CLOSE -> connecting
+        (emit WS_FAILED { error: "the connection is not open", kind: "refused" })
+      WC_CONNECTED -> handshaking
+        (set @entity.sock @payload.sock)
+        (random-bytes 16 { key: "key" emit: { success: WC_KEYED, failure: WC_RANDOM_FAILED } })
+      WC_IO_FAILED -> closed
+        (emit WS_FAILED { error: @payload.error, kind: (if (array/includes ["denied", "unsupported", "timeout", "tls"] @payload.kind) @payload.kind "io") })
+    }
+
+    state handshaking {
+      INIT -> handshaking
+      WC_SOCK_CLOSED -> handshaking
+      WS_OPEN -> handshaking
+        (emit WS_FAILED { error: "a connection is being opened", kind: "refused" })
+      WS_SEND -> handshaking
+        (emit WS_FAILED { error: "the connection is not open", kind: "refused" })
+      WS_CLOSE -> handshaking
+        (emit WS_FAILED { error: "the connection is not open", kind: "refused" })
+      WC_KEYED -> handshaking
+        (set @entity.wsKey (str/concat (str/replaceAll (str/replaceAll @payload.value "-" "+") "_" "/") "=="))
+        (set @entity.request (bytes/from-string (str/concat "GET " @entity.path " HTTP/1.1\r\nHost: " @entity.host (if (= @entity.port (if @entity.tls 443 80)) "" (str/concat ":" @entity.port)) "\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Key: " (str/concat (str/replaceAll (str/replaceAll @payload.value "-" "+") "_" "/") "==") "\r\nSec-WebSocket-Version: 13\r\n" (str/join (array/map @entity.headers (fn h (str/concat @h.name ": " @h.value "\r\n"))) "") "\r\n")))
+        (os/send @entity.sock @entity.request { key: "send" emit: { success: WC_SENT, failure: WC_IO_FAILED } })
+      WC_RANDOM_FAILED -> closed
+        (os/close @entity.sock { key: "close" emit: { success: WC_SOCK_CLOSED, failure: WC_SOCK_CLOSED } })
+        (set @entity.sock -1)
+        (emit WS_FAILED { error: @payload.error, kind: "io" })
+      WC_SENT -> handshaking
+        (os/recv @entity.sock @config.recvBytes { key: "read" emit: { success: WC_READ, failure: WC_IO_FAILED } })
+      WC_IO_FAILED -> closed
+        (os/close @entity.sock { key: "close" emit: { success: WC_SOCK_CLOSED, failure: WC_SOCK_CLOSED } })
+        (set @entity.sock -1)
+        (emit WS_FAILED { error: @payload.error, kind: (if (array/includes ["denied", "unsupported", "timeout", "tls"] @payload.kind) @payload.kind "io") })
+      WC_READ -> handshaking
+        (set @entity.buf (bytes/concat [@entity.buf, @payload.data]))
+        (set @entity.eof @payload.eof)
+        (emit WC_ADVANCE {})
+      WC_WANT -> handshaking when (not @entity.eof)
+        (os/recv @entity.sock @config.recvBytes { key: "read" emit: { success: WC_READ, failure: WC_IO_FAILED } })
+      WC_WANT -> closed when @entity.eof
+        (os/close @entity.sock { key: "close" emit: { success: WC_SOCK_CLOSED, failure: WC_SOCK_CLOSED } })
+        (set @entity.sock -1)
+        (emit WS_FAILED { error: "the peer closed before the Upgrade reply was whole", kind: "io" })
+      WC_ADVANCE -> closed when (and (< (bytes/index-of @entity.buf (bytes/from-string "\r\n\r\n") 0) 0) (> (bytes/length @entity.buf) @config.maxHead))
+        (os/close @entity.sock { key: "close" emit: { success: WC_SOCK_CLOSED, failure: WC_SOCK_CLOSED } })
+        (set @entity.sock -1)
+        (emit WS_FAILED { error: "the Upgrade reply head is past the largest head", kind: "io" })
+      WC_ADVANCE -> handshaking when (and (< (bytes/index-of @entity.buf (bytes/from-string "\r\n\r\n") 0) 0) (<= (bytes/length @entity.buf) @config.maxHead))
+        (emit WC_WANT {})
+      WC_ADVANCE -> handshaking when (>= (bytes/index-of @entity.buf (bytes/from-string "\r\n\r\n") 0) 0)
+        (emit WC_HEAD { end: (bytes/index-of @entity.buf (bytes/from-string "\r\n\r\n") 0) })
+
+      WC_HEAD -> closed when (not (let ((text (bytes/to-string (bytes/slice @entity.buf 0 @payload.end)))) (and (!= @text null) (validate/pattern (default (array/first (str/split @text "\r\n")) "") @config.statusLinePattern))))
+        (os/close @entity.sock { key: "close" emit: { success: WC_SOCK_CLOSED, failure: WC_SOCK_CLOSED } })
+        (set @entity.sock -1)
+        (emit WS_FAILED { error: "the server did not upgrade the connection: the reply is not a 101", kind: "handshake" })
+      WC_HEAD -> closed when (let ((text (bytes/to-string (bytes/slice @entity.buf 0 @payload.end)))) (and (!= @text null) (validate/pattern (default (array/first (str/split @text "\r\n")) "") @config.statusLinePattern) (not (let ((accepts (array/map (array/filter (array/map (array/drop (str/split @text "\r\n") 1) (fn l { name: (str/lower (str/trim (default (array/first (str/split @l ":")) ""))), value: (str/trim (str/join (array/drop (str/split @l ":") 1) ":")) })) (fn h (= @h.name "sec-websocket-accept"))) (fn h @h.value)))) (and (= (array/len @accepts) 1) (= (array/first @accepts) (hash/sha 1 (str/concat @entity.wsKey @config.acceptGuid) "base64")))))))
+        (os/close @entity.sock { key: "close" emit: { success: WC_SOCK_CLOSED, failure: WC_SOCK_CLOSED } })
+        (set @entity.sock -1)
+        (emit WS_FAILED { error: "the Sec-WebSocket-Accept header is missing, repeated or does not match the key", kind: "handshake" })
+      WC_HEAD -> open when (let ((text (bytes/to-string (bytes/slice @entity.buf 0 @payload.end)))) (and (!= @text null) (validate/pattern (default (array/first (str/split @text "\r\n")) "") @config.statusLinePattern) (let ((accepts (array/map (array/filter (array/map (array/drop (str/split @text "\r\n") 1) (fn l { name: (str/lower (str/trim (default (array/first (str/split @l ":")) ""))), value: (str/trim (str/join (array/drop (str/split @l ":") 1) ":")) })) (fn h (= @h.name "sec-websocket-accept"))) (fn h @h.value)))) (and (= (array/len @accepts) 1) (= (array/first @accepts) (hash/sha 1 (str/concat @entity.wsKey @config.acceptGuid) "base64"))))))
+        (emit WS_OPENED { protocol: (default (array/first (array/map (array/filter (array/map (array/drop (str/split (default (bytes/to-string (bytes/slice @entity.buf 0 @payload.end)) "") "\r\n") 1) (fn l { name: (str/lower (str/trim (default (array/first (str/split @l ":")) ""))), value: (str/trim (str/join (array/drop (str/split @l ":") 1) ":")) })) (fn h (= @h.name "sec-websocket-protocol"))) (fn h @h.value))) "") })
+        (set @entity.buf (bytes/slice @entity.buf (+ @payload.end 4)))
+        (emit WC_ADVANCE {})
+    }
+
+    state open {
+      INIT -> open
+      WC_SOCK_CLOSED -> open
+      WS_OPEN -> open
+        (emit WS_FAILED { error: "the connection is already open", kind: "refused" })
+
+      WS_SEND -> open when (or @entity.closing (= (!= (default @payload.text null) null) (!= (default @payload.data null) null)))
+        (emit WS_FAILED { error: "the frame cannot be written: the connection is closing, or the send names neither or both of text and data", kind: "refused" })
+      WS_SEND -> open when (and (not @entity.closing) (!= (default @payload.text null) null) (= (default @payload.data null) null) @entity.busy)
+        (set @entity.queue (array/append @entity.queue { op: 1, data: (bytes/from-string @payload.text) }))
+      WS_SEND -> open when (and (not @entity.closing) (!= (default @payload.text null) null) (= (default @payload.data null) null) (not @entity.busy))
+        (set @entity.queue (array/append @entity.queue { op: 1, data: (bytes/from-string @payload.text) }))
+        (set @entity.busy true)
+        (random-bytes 4 { key: "mask" emit: { success: WC_MASKED, failure: WC_RANDOM_FAILED } })
+      WS_SEND -> open when (and (not @entity.closing) (= (default @payload.text null) null) (!= (default @payload.data null) null) @entity.busy)
+        (set @entity.queue (array/append @entity.queue { op: 2, data: @payload.data }))
+      WS_SEND -> open when (and (not @entity.closing) (= (default @payload.text null) null) (!= (default @payload.data null) null) (not @entity.busy))
+        (set @entity.queue (array/append @entity.queue { op: 2, data: @payload.data }))
+        (set @entity.busy true)
+        (random-bytes 4 { key: "mask" emit: { success: WC_MASKED, failure: WC_RANDOM_FAILED } })
+
+      WS_CLOSE -> open when @entity.closing
+      WS_CLOSE -> open when (and (not @entity.closing) (not (and (>= (default @payload.code 1000) 1000) (<= (default @payload.code 1000) 4999) (= (math/mod (default @payload.code 1000) 1) 0) (<= (bytes/length (bytes/from-string (default @payload.reason ""))) 123))))
+        (emit WS_FAILED { error: "the close frame cannot be written: a code outside 1000..4999 or a reason longer than 123 bytes", kind: "refused" })
+      WS_CLOSE -> open when (and (not @entity.closing) (and (>= (default @payload.code 1000) 1000) (<= (default @payload.code 1000) 4999) (= (math/mod (default @payload.code 1000) 1) 0) (<= (bytes/length (bytes/from-string (default @payload.reason ""))) 123)) @entity.busy)
+        (set @entity.closing true)
+        (set @entity.queue (array/append @entity.queue { op: 8, data: (bytes/concat [(default (bytes/write-uint (default @payload.code 1000) 2 "be") (bytes/from-string "")), (bytes/from-string (default @payload.reason ""))]) }))
+      WS_CLOSE -> open when (and (not @entity.closing) (and (>= (default @payload.code 1000) 1000) (<= (default @payload.code 1000) 4999) (= (math/mod (default @payload.code 1000) 1) 0) (<= (bytes/length (bytes/from-string (default @payload.reason ""))) 123)) (not @entity.busy))
+        (set @entity.closing true)
+        (set @entity.queue (array/append @entity.queue { op: 8, data: (bytes/concat [(default (bytes/write-uint (default @payload.code 1000) 2 "be") (bytes/from-string "")), (bytes/from-string (default @payload.reason ""))]) }))
+        (set @entity.busy true)
+        (random-bytes 4 { key: "mask" emit: { success: WC_MASKED, failure: WC_RANDOM_FAILED } })
+
+      WC_MASKED -> open
+        (set @entity.wire (let ((mask (default (bytes/from-base64 (str/concat (str/replaceAll (str/replaceAll @payload.value "-" "+") "_" "/") "==")) (bytes/from-string "")))
+                                    (item (array/first @entity.queue)))
+                                (let ((d @item.data)
+                                      (n (bytes/length @item.data)))
+                                  (let ((full (- @n (math/mod @n 4)))
+                                        (mw (default (bytes/read-uint @mask 0 4 "be") 0)))
+                                    (bytes/concat [
+                                      (default (bytes/write-uint (+ 128 @item.op) 1 "be") (bytes/from-string "")),
+                                      (if (< @n 126) (default (bytes/write-uint (+ 128 @n) 1 "be") (bytes/from-string "")) (if (< @n 65536) (bytes/concat [(default (bytes/write-uint 254 1 "be") (bytes/from-string "")), (default (bytes/write-uint @n 2 "be") (bytes/from-string ""))]) (bytes/concat [(default (bytes/write-uint 255 1 "be") (bytes/from-string "")), (default (bytes/write-uint @n 8 "be") (bytes/from-string ""))]))),
+                                      @mask,
+                                      (bytes/concat (array/map (array/range 0 @full 4) (fn i (default (bytes/write-uint (default (bit/xor (default (bytes/read-uint @d @i 4 "be") 0) @mw) 0) 4 "be") (bytes/from-string ""))))),
+                                      (bytes/concat (array/map (array/range @full @n) (fn j (default (bytes/write-uint (default (bit/xor (default (bytes/read-uint @d @j 1 "be") 0) (default (bytes/read-uint @mask (math/mod @j 4) 1 "be") 0)) 0) 1 "be") (bytes/from-string "")))))
+                                    ])))))
+        (os/send @entity.sock @entity.wire { key: "send" emit: { success: WC_SENT, failure: WC_IO_FAILED } })
+      WC_SENT -> open when (> (array/len @entity.queue) 1)
+        (set @entity.queue (array/drop @entity.queue 1))
+        (random-bytes 4 { key: "mask" emit: { success: WC_MASKED, failure: WC_RANDOM_FAILED } })
+      WC_SENT -> open when (and (<= (array/len @entity.queue) 1) (not @entity.ending))
+        (set @entity.queue [])
+        (set @entity.busy false)
+      WC_SENT -> closed when (and (<= (array/len @entity.queue) 1) @entity.ending)
+        (os/close @entity.sock { key: "close" emit: { success: WC_SOCK_CLOSED, failure: WC_SOCK_CLOSED } })
+        (set @entity.sock -1)
+        (set @entity.queue [])
+        (set @entity.busy false)
+
+      WC_RANDOM_FAILED -> closed
+        (os/close @entity.sock { key: "close" emit: { success: WC_SOCK_CLOSED, failure: WC_SOCK_CLOSED } })
+        (set @entity.sock -1)
+        (emit WS_FAILED { error: @payload.error, kind: "io" })
+      WC_IO_FAILED -> closed when (not @entity.closing)
+        (os/close @entity.sock { key: "close" emit: { success: WC_SOCK_CLOSED, failure: WC_SOCK_CLOSED } })
+        (set @entity.sock -1)
+        (emit WS_FAILED { error: @payload.error, kind: (if (array/includes ["denied", "unsupported", "timeout", "tls"] @payload.kind) @payload.kind "io") })
+      WC_IO_FAILED -> closed when @entity.closing
+        (os/close @entity.sock { key: "close" emit: { success: WC_SOCK_CLOSED, failure: WC_SOCK_CLOSED } })
+        (set @entity.sock -1)
+        (emit WS_FAILED { error: @payload.error, kind: (if (array/includes ["denied", "unsupported", "timeout", "tls"] @payload.kind) @payload.kind "io") })
+
+      WC_READ -> open
+        (set @entity.buf (bytes/concat [@entity.buf, @payload.data]))
+        (set @entity.eof @payload.eof)
+        (emit WC_ADVANCE {})
+      WC_WANT -> open when (not @entity.eof)
+        (os/recv @entity.sock @config.recvBytes { key: "read" emit: { success: WC_READ, failure: WC_IO_FAILED } })
+      WC_WANT -> closed when (and @entity.eof @entity.closing)
+        (os/close @entity.sock { key: "close" emit: { success: WC_SOCK_CLOSED, failure: WC_SOCK_CLOSED } })
+        (set @entity.sock -1)
+        (emit WS_CLOSED { code: 1006, reason: "the peer closed the socket without a close frame" })
+      WC_WANT -> closed when (and @entity.eof (not @entity.closing))
+        (os/close @entity.sock { key: "close" emit: { success: WC_SOCK_CLOSED, failure: WC_SOCK_CLOSED } })
+        (set @entity.sock -1)
+        (emit WS_FAILED { error: "the peer closed the socket without a close frame", kind: "io" })
+
+      WC_ADVANCE -> open when (< (bytes/length @entity.buf) 2)
+        (emit WC_WANT {})
+      WC_ADVANCE -> open when (and (>= (bytes/length @entity.buf) 2) (< (bytes/length @entity.buf) (+ 2 (let ((l7 (bit/and (default (bytes/read-uint @entity.buf 1 1 "be") 0) 127))) (if (= @l7 126) 2 (if (= @l7 127) 8 0))))))
+        (emit WC_WANT {})
+      WC_ADVANCE -> open when (and (>= (bytes/length @entity.buf) 2) (>= (bytes/length @entity.buf) (+ 2 (let ((l7 (bit/and (default (bytes/read-uint @entity.buf 1 1 "be") 0) 127))) (if (= @l7 126) 2 (if (= @l7 127) 8 0))))))
+        (let ((b0 (default (bytes/read-uint @entity.buf 0 1 "be") 0))
+              (b1 (default (bytes/read-uint @entity.buf 1 1 "be") 0)))
+          (let ((l7 (bit/and @b1 127)))
+            (let ((hdr (+ 2 (if (= @l7 126) 2 (if (= @l7 127) 8 0))))
+                  (plen (default (if (= @l7 126) (bytes/read-uint @entity.buf 2 2 "be") (if (= @l7 127) (bytes/read-uint @entity.buf 2 8 "be") @l7)) -1)))
+              (let ((op (default (bit/and @b0 15) 0))
+                    (fin (>= @b0 128)))
+                (emit WC_HEADER {
+                  op: @op,
+                  fin: @fin,
+                  hdr: @hdr,
+                  plen: @plen,
+                  bad: (if (< @plen 0) "a frame length does not fit"
+                       (if (!= (bit/and @b0 112) 0) "a reserved bit is set"
+                       (if (>= @b1 128) "a server frame is masked"
+                       (if (not (array/includes [0, 1, 2, 8, 9, 10] @op)) "a frame has an unknown opcode"
+                       (if (and (>= @op 8) (or (not @fin) (> @plen 125))) "a control frame is fragmented or longer than 125 bytes"
+                       (if (and (= @op 0) (not @entity.fragging)) "a continuation frame has no message to continue"
+                       (if (and (or (= @op 1) (= @op 2)) @entity.fragging) "a new message starts inside a fragmented one"
+                       (if (and (< @op 8) (> (+ (if (= @op 0) (bytes/length @entity.frag) 0) @plen) @config.maxMessage)) "a message is longer than maxMessage"
+                         ""))))))))
+                })))))
+      WC_HEADER -> closed when (!= @payload.bad "")
+        (os/close @entity.sock { key: "close" emit: { success: WC_SOCK_CLOSED, failure: WC_SOCK_CLOSED } })
+        (set @entity.sock -1)
+        (emit WS_FAILED { error: @payload.bad, kind: "protocol" })
+      WC_HEADER -> open when (and (= @payload.bad "") (< (bytes/length @entity.buf) (+ @payload.hdr @payload.plen)))
+        (emit WC_WANT {})
+      WC_HEADER -> open when (and (= @payload.bad "") (>= (bytes/length @entity.buf) (+ @payload.hdr @payload.plen)))
+        (emit WC_FRAME { op: @payload.op, fin: @payload.fin, data: (bytes/slice @entity.buf @payload.hdr (+ @payload.hdr @payload.plen)), rest: (bytes/slice @entity.buf (+ @payload.hdr @payload.plen)) })
+
+      WC_FRAME -> open when (<= @payload.op 2)
+        (set @entity.buf @payload.rest)
+        (set @entity.frag (if (= @payload.op 0) (bytes/concat [@entity.frag, @payload.data]) @payload.data))
+        (set @entity.fragBinary (if (= @payload.op 0) @entity.fragBinary (= @payload.op 2)))
+        (set @entity.fragging (not @payload.fin))
+        (if @payload.fin (emit WC_MESSAGE {}) (emit WC_ADVANCE {}))
+      WC_FRAME -> open when (= @payload.op 10)
+        (set @entity.buf @payload.rest)
+        (emit WC_ADVANCE {})
+      WC_FRAME -> open when (and (= @payload.op 9) @entity.busy)
+        (set @entity.buf @payload.rest)
+        (set @entity.queue (array/append @entity.queue { op: 10, data: @payload.data }))
+        (emit WC_ADVANCE {})
+      WC_FRAME -> open when (and (= @payload.op 9) (not @entity.busy))
+        (set @entity.buf @payload.rest)
+        (set @entity.queue (array/append @entity.queue { op: 10, data: @payload.data }))
+        (set @entity.busy true)
+        (random-bytes 4 { key: "mask" emit: { success: WC_MASKED, failure: WC_RANDOM_FAILED } })
+        (emit WC_ADVANCE {})
+      WC_FRAME -> closed when (and (= @payload.op 8) (or (= (bytes/length @payload.data) 1) (and (> (bytes/length @payload.data) 2) (not (bytes/valid-utf8 (bytes/slice @payload.data 2))))))
+        (os/close @entity.sock { key: "close" emit: { success: WC_SOCK_CLOSED, failure: WC_SOCK_CLOSED } })
+        (set @entity.sock -1)
+        (emit WS_FAILED { error: "a close frame carries a one byte payload or a reason that is not valid UTF-8", kind: "protocol" })
+      WC_FRAME -> closed when (and (= @payload.op 8) @entity.closing (or (= (bytes/length @payload.data) 0) (and (>= (bytes/length @payload.data) 2) (bytes/valid-utf8 (bytes/slice @payload.data 2)))))
+        (os/close @entity.sock { key: "close" emit: { success: WC_SOCK_CLOSED, failure: WC_SOCK_CLOSED } })
+        (set @entity.sock -1)
+        (emit WS_CLOSED { code: (if (= (bytes/length @payload.data) 0) 1005 (bytes/read-uint @payload.data 0 2 "be")), reason: (default (bytes/to-string (bytes/slice @payload.data (math/min 2 (bytes/length @payload.data)))) "") })
+      WC_FRAME -> open when (and (= @payload.op 8) (not @entity.closing) @entity.busy (or (= (bytes/length @payload.data) 0) (and (>= (bytes/length @payload.data) 2) (bytes/valid-utf8 (bytes/slice @payload.data 2)))))
+        (set @entity.closing true)
+        (set @entity.ending true)
+        (set @entity.queue (array/append @entity.queue { op: 8, data: @payload.data }))
+        (emit WS_CLOSED { code: (if (= (bytes/length @payload.data) 0) 1005 (bytes/read-uint @payload.data 0 2 "be")), reason: (default (bytes/to-string (bytes/slice @payload.data (math/min 2 (bytes/length @payload.data)))) "") })
+      WC_FRAME -> open when (and (= @payload.op 8) (not @entity.closing) (not @entity.busy) (or (= (bytes/length @payload.data) 0) (and (>= (bytes/length @payload.data) 2) (bytes/valid-utf8 (bytes/slice @payload.data 2)))))
+        (set @entity.closing true)
+        (set @entity.ending true)
+        (set @entity.queue (array/append @entity.queue { op: 8, data: @payload.data }))
+        (set @entity.busy true)
+        (random-bytes 4 { key: "mask" emit: { success: WC_MASKED, failure: WC_RANDOM_FAILED } })
+        (emit WS_CLOSED { code: (if (= (bytes/length @payload.data) 0) 1005 (bytes/read-uint @payload.data 0 2 "be")), reason: (default (bytes/to-string (bytes/slice @payload.data (math/min 2 (bytes/length @payload.data)))) "") })
+
+      WC_MESSAGE -> open when @entity.fragBinary
+        (emit WS_MESSAGE { data: @entity.frag, binary: true })
+        (set @entity.frag (bytes/from-string ""))
+        (emit WC_ADVANCE {})
+      WC_MESSAGE -> open when (and (not @entity.fragBinary) (bytes/valid-utf8 @entity.frag))
+        (emit WS_MESSAGE { text: (default (bytes/to-string @entity.frag) ""), binary: false })
+        (set @entity.frag (bytes/from-string ""))
+        (emit WC_ADVANCE {})
+      WC_MESSAGE -> closed when (and (not @entity.fragBinary) (not (bytes/valid-utf8 @entity.frag)))
+        (os/close @entity.sock { key: "close" emit: { success: WC_SOCK_CLOSED, failure: WC_SOCK_CLOSED } })
+        (set @entity.sock -1)
+        (emit WS_FAILED { error: "a text message is not valid UTF-8", kind: "protocol" })
+    }
+
+    emits {
+      WS_OPENED -> external {
+        protocol : string
+      }
+        @description "The server accepted the Upgrade; protocol is the Sec-WebSocket-Protocol it chose, empty when none."
+        @tier "primary"
+      WS_MESSAGE -> external {
+        text : string
+        data : bytes
+        binary : boolean!
+      }
+        @description "One whole message: text for a text message, data for a binary one (continuation frames joined)."
+        @tier "primary"
+      WS_CLOSED -> external {
+        code : number!
+        reason : string!
+      }
+        @description "The close handshake ended: the code and reason of the peer's close frame (1005 when it carried none; 1006 when the peer dropped the socket after our close frame)."
+        @tier "primary"
+      WS_FAILED -> external {
+        error : string!
+        kind : string!
+      }
+        @description "The connection or a request failed: kind refused (nothing written), handshake (the server did not upgrade), protocol (a frame broke RFC 6455, a message passed maxMessage or a text message was not UTF-8), denied, unsupported, timeout, tls or io."
+        @tier "primary"
+      WC_RANDOM_FAILED {
+        error : string
+      }
+        @description "Internal: a random-bytes draw failed."
+        @tier "internal"
+      WC_KEYED {
+        value : string!
+      }
+        @description "Internal: the Sec-WebSocket-Key draw, base64url."
+        @tier "internal"
+      WC_MASKED {
+        value : string!
+      }
+        @description "Internal: the four mask bytes of the frame at the head of the queue, base64url."
+        @tier "internal"
+      WC_CONNECTED {
+        sock : number!
+        alpn : string
+      }
+        @description "Internal: the os/tcp-connect answer."
+        @tier "internal"
+      WC_SENT {
+        bytes : number!
+      }
+        @description "Internal: one os/send answer."
+        @tier "internal"
+      WC_READ {
+        data : bytes!
+        eof : boolean!
+      }
+        @description "Internal: one os/recv answer."
+        @tier "internal"
+      WC_IO_FAILED {
+        error : string
+        kind : string
+      }
+        @description "Internal: a socket or random-bytes operation failed."
+        @tier "internal"
+      WC_SOCK_CLOSED {
+      }
+        @description "Internal: the socket was closed."
+        @tier "internal"
+      WC_ADVANCE -> internal {
+      }
+        @description "Internal: decide what the bytes read so far allow."
+        @tier "internal"
+      WC_WANT -> internal {
+      }
+        @description "Internal: read more."
+        @tier "internal"
+      WC_HEAD -> internal {
+        end : number!
+      }
+        @description "Internal: the Upgrade reply head ends at this offset."
+        @tier "internal"
+      WC_HEADER -> internal {
+        op : number!
+        fin : boolean!
+        hdr : number!
+        plen : number!
+        bad : string!
+      }
+        @description "Internal: a frame header was read; bad names the protocol violation, empty when none, plen is -1 when the length does not fit."
+        @tier "internal"
+      WC_FRAME -> internal {
+        op : number!
+        fin : boolean!
+        data : bytes!
+        rest : bytes!
+      }
+        @description "Internal: one whole frame and the bytes after it."
+        @tier "internal"
+      WC_MESSAGE -> internal {
+      }
+        @description "Internal: the message in frag is whole."
+        @tier "internal"
+    }
+
+    listens {
+      WS_OPEN {
+        host : string
+        port : number
+        path : string!
+        tls : boolean
+        headers : [WsHeader]
+      }
+        @description "Open a connection: write the Upgrade request at path with the extra headers. host, port and tls are read only when the dynamicHost knob is true (then all required); otherwise the host, port, tls and serverName knobs decide and these are ignored."
+      WS_SEND {
+        text : string
+        data : bytes
+      }
+        @description "Write one masked frame: a text frame for text, a binary frame for data; exactly one of the two."
+      WS_CLOSE {
+        code : number
+        reason : string
+      }
+        @description "Start the close handshake with a close frame (code 1000 when none; reason at most 123 bytes)."
+      WC_RANDOM_FAILED {
+        error : string
+      }
+      WC_KEYED {
+        value : string!
+      }
+      WC_MASKED {
+        value : string!
+      }
+      WC_CONNECTED {
+        sock : number!
+        alpn : string
+      }
+      WC_SENT {
+        bytes : number!
+      }
+      WC_READ {
+        data : bytes!
+        eof : boolean!
+      }
+      WC_IO_FAILED {
+        error : string
+        kind : string
+      }
+      WC_SOCK_CLOSED {
+      }
+    }
+  }
+
+  page boot as WsClientPage -> WsClient
+}

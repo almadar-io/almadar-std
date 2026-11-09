@@ -1,0 +1,45 @@
+app chrome-spec [
+  version: "1.0.0",
+  description: "Design contract for driving one headless Chrome tab from a program. CHROME_START launches headless Chrome through a composed std-daemon (the binary is the composer's anchored exec grant; a fixed debugging port, a fresh profile and a download directory are knobs), connects a composed std-cdp, creates and attaches one page target (flatten sessions) and answers CHROME_READY { browser } or CHROME_FAILED { code, message }. Every page operation carries a caller key and answers on that key or PAGE_FAILED { key, error, code }. The operations are a closed set: PAGE_NAVIGATE (load a URL and wait for its load event), PAGE_TEXT (url, title, lang, visible text), PAGE_LINKS (every link and button with index, text, href, download flag), PAGE_CLICK (a link index or a CSS selector; reports whether it navigated), PAGE_KEY (one key press, optionally with Shift), PAGE_FOCUSED (the focused element's tag, role, accessible name, selector and rectangle), PAGE_VIEWPORT (width, height, device scale, mobile, text zoom), PAGE_SCREENSHOT (png bytes, viewport or full page), PAGE_AX_TREE (the accessibility tree nodes with role, name, parent and ignored flag), PAGE_DOWNLOAD (click a link into the download directory and report path, url and size), PAGE_PRINT_PDF (render HTML the caller gives and answer pdf bytes), PAGE_INJECT (evaluate a script file, a path relative to the composer's scriptDir; absolute or .. paths answer bad-script) and PAGE_MEASURE (evaluate a measurement expression that returns JSON text, answered as text for the caller to parse under its own declared type). In-page code only measures; no verdict is made in the page. CHROME_STOP closes the tab and stops the browser it started. Requests (events the atom listens to): CHROME_START {}, CHROME_STOP {}, PAGE_NAVIGATE {key,url}, PAGE_TEXT {key}, PAGE_LINKS {key}, PAGE_CLICK {key,index?,selector?} (exactly one of the two), PAGE_KEY {key,keyName,shift?} (keyName one of Tab, Enter, Space, Escape, ArrowDown, ArrowUp, ArrowLeft, ArrowRight, Home, End), PAGE_FOCUSED {key}, PAGE_VIEWPORT {key,width,height,deviceScaleFactor,mobile,textZoom} (textZoom is page zoom: the CSS viewport is width/z by height/z at device scale factor times z), PAGE_SCREENSHOT {key,fullPage}, PAGE_AX_TREE {key}, PAGE_DOWNLOAD {key,index?,selector?}, PAGE_PRINT_PDF {key,html}, PAGE_INJECT {key,script} (script a string path relative to scriptDir) and PAGE_MEASURE {key,expression}. One operation runs at a time per tab: a request while another runs answers PAGE_FAILED code busy, before CHROME_READY not-started or not-ready. PAGE_FAILED codes: busy, not-started, not-ready, bad-request, bad-script, unknown-key, not-found, navigation-failed, navigation-timeout, download-timeout, download-canceled, script-error, not-json, bad-reply, read-failed, disconnected, stopped, or the protocol error code text."
+]
+
+type PageLink = { index : number!, text : string!, href : string!, download : boolean!, kind : "link" | "button"! }
+type PageRect = { x : number!, y : number!, width : number!, height : number! }
+type PageFocus = { tag : string!, role : string!, name : string!, selector : string!, rect : PageRect! }
+type PageAxNode = { id : string!, parent : string?, role : string!, name : string!, ignored : boolean! }
+
+orbital ChromeSpec {
+  expects entity ChromeTab [runtime] {
+    id : string!
+    sessionId : string
+    url : string
+  }
+  expects trait Chrome {
+    state stopped
+    state starting
+    state ready
+    state stopped {
+      CHROME_START -> starting
+    }
+    emits {
+      CHROME_READY { browser : string! }
+      CHROME_FAILED { code : string!  message : string! }
+      PAGE_LOADED { key : string!  url : string!  title : string! }
+      PAGE_TEXT_READ { key : string!  url : string!  title : string!  lang : string!  text : string! }
+      PAGE_LINKS_READ { key : string!  links : [PageLink]! }
+      PAGE_CLICKED { key : string!  url : string!  navigated : boolean! }
+      PAGE_KEY_SENT { key : string! }
+      PAGE_FOCUS_READ { key : string!  focused : PageFocus? }
+      PAGE_VIEWPORT_SET { key : string! }
+      PAGE_SCREENSHOT_TAKEN { key : string!  png : bytes! }
+      PAGE_AX_TREE_READ { key : string!  nodes : [PageAxNode]! }
+      PAGE_DOWNLOADED { key : string!  path : string!  url : string!  size : number! }
+      PAGE_PDF_PRINTED { key : string!  pdf : bytes! }
+      PAGE_INJECTED { key : string! }
+      PAGE_MEASURED { key : string!  json : string! }
+      PAGE_FAILED { key : string!  error : string!  code : string! }
+      CHROME_STOPPED { }
+    }
+  }
+  expects page boot -> Chrome
+}

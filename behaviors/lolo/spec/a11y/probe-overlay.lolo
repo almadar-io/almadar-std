@@ -1,0 +1,27 @@
+app probe-overlay-spec [
+  version: "1.0.0",
+  description: "Design contract for detecting accessibility overlay widgets in the page a Chrome tab shows (see the probe contract and a11y-findings). PROBE_RUN { key, pageUrl } emits PAGE_MEASURE { key, expression } and answers PROBE_DONE { key, probe, findings } from the PAGE_MEASURED JSON, or PROBE_FAILED { key, probe, error, code }. The atom composes no browser: the composer wires the page request to std-chrome."
+]
+
+type WcagRef = { criterion : string!, level : "A" | "AA" | "AAA"!, version : "2.0" | "2.1" | "2.2"! }
+type A11yFinding = { id : string!, pageUrl : string!, rule : string!, wcag : [WcagRef]!, method : "engine" | "probe" | "llm"!, engines : [string]!, impact : "critical" | "serious" | "moderate" | "minor"!, confidence : "confirmed" | "needs-verification"!, selector : string!, snippet : string!, evidence : string!, count : number! }
+
+orbital ProbeOverlaySpec {
+  expects entity OverlayRun [runtime] {
+    id : string!
+  }
+  expects trait OverlayProbe {
+    state idle {
+      PROBE_RUN -> measuring
+    }
+    state measuring {
+      PAGE_MEASURED -> idle
+    }
+    emits {
+      PROBE_DONE { key : string!  probe : string!  findings : [A11yFinding]! }
+      PROBE_FAILED { key : string!  probe : string!  error : string!  code : string! }
+      PAGE_MEASURE { key : string!  expression : string! }
+    }
+  }
+  expects page boot -> OverlayProbe
+}

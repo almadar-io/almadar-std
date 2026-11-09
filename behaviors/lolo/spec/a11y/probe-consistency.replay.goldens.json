@@ -1,0 +1,1437 @@
+{
+ "atom": "a11y/atoms/std-a11y-probe-consistency.lolo",
+ "trait": "ConsistencyProbe",
+ "spec": "spec/a11y/probe-consistency.lolo",
+ "note": "std-a11y-probe-consistency on per-page measurements taken in headless Chrome with the measureExpression knob from a copy of the a11y fixture shop whose footers and navs are patched to plant the defects (record.py). Regenerate with python3 -I record.py && python3 -I gen_goldens.py.",
+ "cases": [
+  {
+   "id": "control: pages with the same navigation order and the same help links at the same positions have no finding",
+   "note": "pages measured in headless Chrome with the measureExpression (record.py); some footers and navs of the shop copy are patched there to plant the defects",
+   "steps": [
+    {
+     "event": "CONSISTENCY_CHECK",
+     "payload": {
+      "key": "k1",
+      "pages": [
+       {
+        "url": "http://127.0.0.1:28077/index.html",
+        "nav": [
+         "Domov",
+         "Košarica",
+         "Izjava o dostopnosti"
+        ],
+        "helpLinks": [
+         "http://127.0.0.1:28077/izjava-o-dostopnosti.html",
+         "http://127.0.0.1:28077/docs/cenik.pdf",
+         "http://127.0.0.1:28077/kontakt.html",
+         "mailto:info@loncarna.example"
+        ]
+       },
+       {
+        "url": "http://127.0.0.1:28077/kosarica.html",
+        "nav": [
+         "Domov",
+         "Košarica",
+         "Izjava o dostopnosti"
+        ],
+        "helpLinks": [
+         "http://127.0.0.1:28077/izjava-o-dostopnosti.html",
+         "http://127.0.0.1:28077/docs/cenik.pdf",
+         "http://127.0.0.1:28077/kontakt.html",
+         "mailto:info@loncarna.example"
+        ]
+       },
+       {
+        "url": "http://127.0.0.1:28077/izdelek-1.html",
+        "nav": [
+         "Domov",
+         "Košarica",
+         "Izjava o dostopnosti"
+        ],
+        "helpLinks": [
+         "http://127.0.0.1:28077/izjava-o-dostopnosti.html",
+         "http://127.0.0.1:28077/docs/cenik.pdf",
+         "http://127.0.0.1:28077/kontakt.html",
+         "mailto:info@loncarna.example"
+        ]
+       },
+       {
+        "url": "http://127.0.0.1:28077/placilo.html",
+        "nav": [
+         "Domov",
+         "Košarica",
+         "Izjava o dostopnosti"
+        ],
+        "helpLinks": [
+         "http://127.0.0.1:28077/izjava-o-dostopnosti.html",
+         "http://127.0.0.1:28077/docs/cenik.pdf",
+         "http://127.0.0.1:28077/kontakt.html",
+         "mailto:info@loncarna.example"
+        ]
+       }
+      ]
+     },
+     "from": "ready",
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k1",
+         "probe": "consistency",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: an extra navigation link on a page does not change the order of the links it shares, so no finding",
+   "steps": [
+    {
+     "event": "CONSISTENCY_CHECK",
+     "payload": {
+      "key": "k1",
+      "pages": [
+       {
+        "url": "http://127.0.0.1:28077/index.html",
+        "nav": [
+         "Domov",
+         "Košarica",
+         "Izjava o dostopnosti"
+        ],
+        "helpLinks": [
+         "http://127.0.0.1:28077/izjava-o-dostopnosti.html",
+         "http://127.0.0.1:28077/docs/cenik.pdf",
+         "http://127.0.0.1:28077/kontakt.html",
+         "mailto:info@loncarna.example"
+        ]
+       },
+       {
+        "url": "http://127.0.0.1:28077/povratne-informacije.html",
+        "nav": [
+         "Nadzorni organ",
+         "Domov",
+         "Košarica",
+         "Izjava o dostopnosti"
+        ],
+        "helpLinks": [
+         "http://127.0.0.1:28077/izjava-o-dostopnosti.html",
+         "http://127.0.0.1:28077/docs/cenik.pdf",
+         "http://127.0.0.1:28077/kontakt.html",
+         "mailto:info@loncarna.example"
+        ]
+       }
+      ]
+     },
+     "from": "ready",
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k1",
+         "probe": "consistency",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a navigation link missing from a page does not change the order of the others, so no finding",
+   "steps": [
+    {
+     "event": "CONSISTENCY_CHECK",
+     "payload": {
+      "key": "k1",
+      "pages": [
+       {
+        "url": "http://127.0.0.1:28077/index.html",
+        "nav": [
+         "Domov",
+         "Košarica",
+         "Izjava o dostopnosti"
+        ],
+        "helpLinks": [
+         "http://127.0.0.1:28077/izjava-o-dostopnosti.html",
+         "http://127.0.0.1:28077/docs/cenik.pdf",
+         "http://127.0.0.1:28077/kontakt.html",
+         "mailto:info@loncarna.example"
+        ]
+       },
+       {
+        "url": "http://127.0.0.1:28077/izdelek-2.html",
+        "nav": [
+         "Domov",
+         "Izjava o dostopnosti"
+        ],
+        "helpLinks": [
+         "http://127.0.0.1:28077/izjava-o-dostopnosti.html",
+         "http://127.0.0.1:28077/docs/cenik.pdf",
+         "http://127.0.0.1:28077/kontakt.html",
+         "mailto:info@loncarna.example"
+        ]
+       }
+      ]
+     },
+     "from": "ready",
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k1",
+         "probe": "consistency",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nav-inconsistent: two shared navigation links in the other order is one needs-verification finding on that page",
+   "steps": [
+    {
+     "event": "CONSISTENCY_CHECK",
+     "payload": {
+      "key": "k1",
+      "pages": [
+       {
+        "url": "http://127.0.0.1:28077/index.html",
+        "nav": [
+         "Domov",
+         "Košarica",
+         "Izjava o dostopnosti"
+        ],
+        "helpLinks": [
+         "http://127.0.0.1:28077/izjava-o-dostopnosti.html",
+         "http://127.0.0.1:28077/docs/cenik.pdf",
+         "http://127.0.0.1:28077/kontakt.html",
+         "mailto:info@loncarna.example"
+        ]
+       },
+       {
+        "url": "http://127.0.0.1:28077/kosarica.html",
+        "nav": [
+         "Domov",
+         "Košarica",
+         "Izjava o dostopnosti"
+        ],
+        "helpLinks": [
+         "http://127.0.0.1:28077/izjava-o-dostopnosti.html",
+         "http://127.0.0.1:28077/docs/cenik.pdf",
+         "http://127.0.0.1:28077/kontakt.html",
+         "mailto:info@loncarna.example"
+        ]
+       },
+       {
+        "url": "http://127.0.0.1:28077/izdelek-1.html",
+        "nav": [
+         "Domov",
+         "Košarica",
+         "Izjava o dostopnosti"
+        ],
+        "helpLinks": [
+         "http://127.0.0.1:28077/izjava-o-dostopnosti.html",
+         "http://127.0.0.1:28077/docs/cenik.pdf",
+         "http://127.0.0.1:28077/kontakt.html",
+         "mailto:info@loncarna.example"
+        ]
+       },
+       {
+        "url": "http://127.0.0.1:28077/placilo.html",
+        "nav": [
+         "Domov",
+         "Košarica",
+         "Izjava o dostopnosti"
+        ],
+        "helpLinks": [
+         "http://127.0.0.1:28077/izjava-o-dostopnosti.html",
+         "http://127.0.0.1:28077/docs/cenik.pdf",
+         "http://127.0.0.1:28077/kontakt.html",
+         "mailto:info@loncarna.example"
+        ]
+       },
+       {
+        "url": "http://127.0.0.1:28077/nadzorni-organ.html",
+        "nav": [
+         "Košarica",
+         "Domov",
+         "Izjava o dostopnosti"
+        ],
+        "helpLinks": [
+         "http://127.0.0.1:28077/izjava-o-dostopnosti.html",
+         "http://127.0.0.1:28077/docs/cenik.pdf",
+         "http://127.0.0.1:28077/kontakt.html",
+         "mailto:info@loncarna.example"
+        ]
+       }
+      ]
+     },
+     "from": "ready",
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k1",
+         "probe": "consistency",
+         "findings": [
+          {
+           "id": "nav-inconsistent:http://127.0.0.1:28077/nadzorni-organ.html",
+           "pageUrl": "http://127.0.0.1:28077/nadzorni-organ.html",
+           "rule": "nav-inconsistent",
+           "wcag": [
+            {
+             "criterion": "3.2.3",
+             "level": "AA",
+             "version": "2.0"
+            }
+           ],
+           "method": "probe",
+           "engines": [
+            "probe"
+           ],
+           "impact": "moderate",
+           "confidence": "needs-verification",
+           "selector": "nav",
+           "snippet": "order on http://127.0.0.1:28077/index.html: Domov > Košarica > Izjava o dostopnosti; on http://127.0.0.1:28077/nadzorni-organ.html: Košarica > Domov > Izjava o dostopnosti",
+           "evidence": "",
+           "count": 1
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "help-inconsistent: contact links missing from a page that has the other pages' footer are one finding each",
+   "steps": [
+    {
+     "event": "CONSISTENCY_CHECK",
+     "payload": {
+      "key": "k1",
+      "pages": [
+       {
+        "url": "http://127.0.0.1:28077/index.html",
+        "nav": [
+         "Domov",
+         "Košarica",
+         "Izjava o dostopnosti"
+        ],
+        "helpLinks": [
+         "http://127.0.0.1:28077/izjava-o-dostopnosti.html",
+         "http://127.0.0.1:28077/docs/cenik.pdf",
+         "http://127.0.0.1:28077/kontakt.html",
+         "mailto:info@loncarna.example"
+        ]
+       },
+       {
+        "url": "http://127.0.0.1:28077/izjava-o-dostopnosti.html",
+        "nav": [
+         "Domov",
+         "Košarica",
+         "Izjava o dostopnosti"
+        ],
+        "helpLinks": [
+         "http://127.0.0.1:28077/izjava-o-dostopnosti.html",
+         "http://127.0.0.1:28077/docs/cenik.pdf"
+        ]
+       }
+      ]
+     },
+     "from": "ready",
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k1",
+         "probe": "consistency",
+         "findings": [
+          {
+           "id": "help-inconsistent:http://127.0.0.1:28077/izjava-o-dostopnosti.html:http://127.0.0.1:28077/kontakt.html",
+           "pageUrl": "http://127.0.0.1:28077/izjava-o-dostopnosti.html",
+           "rule": "help-inconsistent",
+           "wcag": [
+            {
+             "criterion": "3.2.6",
+             "level": "A",
+             "version": "2.2"
+            }
+           ],
+           "method": "probe",
+           "engines": [
+            "probe"
+           ],
+           "impact": "moderate",
+           "confidence": "needs-verification",
+           "selector": "a[href=\"http://127.0.0.1:28077/kontakt.html\"]",
+           "snippet": "help link http://127.0.0.1:28077/kontakt.html is at index 2 on http://127.0.0.1:28077/index.html and missing here",
+           "evidence": "",
+           "count": 1
+          },
+          {
+           "id": "help-inconsistent:http://127.0.0.1:28077/izjava-o-dostopnosti.html:mailto:info@loncarna.example",
+           "pageUrl": "http://127.0.0.1:28077/izjava-o-dostopnosti.html",
+           "rule": "help-inconsistent",
+           "wcag": [
+            {
+             "criterion": "3.2.6",
+             "level": "A",
+             "version": "2.2"
+            }
+           ],
+           "method": "probe",
+           "engines": [
+            "probe"
+           ],
+           "impact": "moderate",
+           "confidence": "needs-verification",
+           "selector": "a[href=\"mailto:info@loncarna.example\"]",
+           "snippet": "help link mailto:info@loncarna.example is at index 3 on http://127.0.0.1:28077/index.html and missing here",
+           "evidence": "",
+           "count": 1
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "help-inconsistent: contact links at another index among the footer links are one finding each",
+   "steps": [
+    {
+     "event": "CONSISTENCY_CHECK",
+     "payload": {
+      "key": "k1",
+      "pages": [
+       {
+        "url": "http://127.0.0.1:28077/index.html",
+        "nav": [
+         "Domov",
+         "Košarica",
+         "Izjava o dostopnosti"
+        ],
+        "helpLinks": [
+         "http://127.0.0.1:28077/izjava-o-dostopnosti.html",
+         "http://127.0.0.1:28077/docs/cenik.pdf",
+         "http://127.0.0.1:28077/kontakt.html",
+         "mailto:info@loncarna.example"
+        ]
+       },
+       {
+        "url": "http://127.0.0.1:28077/blagajna.html",
+        "nav": [
+         "Domov",
+         "Košarica",
+         "Izjava o dostopnosti"
+        ],
+        "helpLinks": [
+         "http://127.0.0.1:28077/kontakt.html",
+         "mailto:info@loncarna.example",
+         "http://127.0.0.1:28077/izjava-o-dostopnosti.html",
+         "http://127.0.0.1:28077/docs/cenik.pdf"
+        ]
+       }
+      ]
+     },
+     "from": "ready",
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k1",
+         "probe": "consistency",
+         "findings": [
+          {
+           "id": "help-inconsistent:http://127.0.0.1:28077/blagajna.html:http://127.0.0.1:28077/kontakt.html",
+           "pageUrl": "http://127.0.0.1:28077/blagajna.html",
+           "rule": "help-inconsistent",
+           "wcag": [
+            {
+             "criterion": "3.2.6",
+             "level": "A",
+             "version": "2.2"
+            }
+           ],
+           "method": "probe",
+           "engines": [
+            "probe"
+           ],
+           "impact": "moderate",
+           "confidence": "needs-verification",
+           "selector": "a[href=\"http://127.0.0.1:28077/kontakt.html\"]",
+           "snippet": "help link http://127.0.0.1:28077/kontakt.html is at index 2 on http://127.0.0.1:28077/index.html and at index 0 here",
+           "evidence": "",
+           "count": 1
+          },
+          {
+           "id": "help-inconsistent:http://127.0.0.1:28077/blagajna.html:mailto:info@loncarna.example",
+           "pageUrl": "http://127.0.0.1:28077/blagajna.html",
+           "rule": "help-inconsistent",
+           "wcag": [
+            {
+             "criterion": "3.2.6",
+             "level": "A",
+             "version": "2.2"
+            }
+           ],
+           "method": "probe",
+           "engines": [
+            "probe"
+           ],
+           "impact": "moderate",
+           "confidence": "needs-verification",
+           "selector": "a[href=\"mailto:info@loncarna.example\"]",
+           "snippet": "help link mailto:info@loncarna.example is at index 3 on http://127.0.0.1:28077/index.html and at index 1 here",
+           "evidence": "",
+           "count": 1
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "help-inconsistent: when the first page lacks the link, the first page that has it is the reference and the first page is flagged",
+   "steps": [
+    {
+     "event": "CONSISTENCY_CHECK",
+     "payload": {
+      "key": "k1",
+      "pages": [
+       {
+        "url": "http://127.0.0.1:28077/izjava-o-dostopnosti.html",
+        "nav": [
+         "Domov",
+         "Košarica",
+         "Izjava o dostopnosti"
+        ],
+        "helpLinks": [
+         "http://127.0.0.1:28077/izjava-o-dostopnosti.html",
+         "http://127.0.0.1:28077/docs/cenik.pdf"
+        ]
+       },
+       {
+        "url": "http://127.0.0.1:28077/index.html",
+        "nav": [
+         "Domov",
+         "Košarica",
+         "Izjava o dostopnosti"
+        ],
+        "helpLinks": [
+         "http://127.0.0.1:28077/izjava-o-dostopnosti.html",
+         "http://127.0.0.1:28077/docs/cenik.pdf",
+         "http://127.0.0.1:28077/kontakt.html",
+         "mailto:info@loncarna.example"
+        ]
+       },
+       {
+        "url": "http://127.0.0.1:28077/kosarica.html",
+        "nav": [
+         "Domov",
+         "Košarica",
+         "Izjava o dostopnosti"
+        ],
+        "helpLinks": [
+         "http://127.0.0.1:28077/izjava-o-dostopnosti.html",
+         "http://127.0.0.1:28077/docs/cenik.pdf",
+         "http://127.0.0.1:28077/kontakt.html",
+         "mailto:info@loncarna.example"
+        ]
+       }
+      ]
+     },
+     "from": "ready",
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k1",
+         "probe": "consistency",
+         "findings": [
+          {
+           "id": "help-inconsistent:http://127.0.0.1:28077/izjava-o-dostopnosti.html:http://127.0.0.1:28077/kontakt.html",
+           "pageUrl": "http://127.0.0.1:28077/izjava-o-dostopnosti.html",
+           "rule": "help-inconsistent",
+           "wcag": [
+            {
+             "criterion": "3.2.6",
+             "level": "A",
+             "version": "2.2"
+            }
+           ],
+           "method": "probe",
+           "engines": [
+            "probe"
+           ],
+           "impact": "moderate",
+           "confidence": "needs-verification",
+           "selector": "a[href=\"http://127.0.0.1:28077/kontakt.html\"]",
+           "snippet": "help link http://127.0.0.1:28077/kontakt.html is at index 2 on http://127.0.0.1:28077/index.html and missing here",
+           "evidence": "",
+           "count": 1
+          },
+          {
+           "id": "help-inconsistent:http://127.0.0.1:28077/izjava-o-dostopnosti.html:mailto:info@loncarna.example",
+           "pageUrl": "http://127.0.0.1:28077/izjava-o-dostopnosti.html",
+           "rule": "help-inconsistent",
+           "wcag": [
+            {
+             "criterion": "3.2.6",
+             "level": "A",
+             "version": "2.2"
+            }
+           ],
+           "method": "probe",
+           "engines": [
+            "probe"
+           ],
+           "impact": "moderate",
+           "confidence": "needs-verification",
+           "selector": "a[href=\"mailto:info@loncarna.example\"]",
+           "snippet": "help link mailto:info@loncarna.example is at index 3 on http://127.0.0.1:28077/index.html and missing here",
+           "evidence": "",
+           "count": 1
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "findings of a whole site: navigation first, then help, each on its page",
+   "steps": [
+    {
+     "event": "CONSISTENCY_CHECK",
+     "payload": {
+      "key": "k1",
+      "pages": [
+       {
+        "url": "http://127.0.0.1:28077/index.html",
+        "nav": [
+         "Domov",
+         "Košarica",
+         "Izjava o dostopnosti"
+        ],
+        "helpLinks": [
+         "http://127.0.0.1:28077/izjava-o-dostopnosti.html",
+         "http://127.0.0.1:28077/docs/cenik.pdf",
+         "http://127.0.0.1:28077/kontakt.html",
+         "mailto:info@loncarna.example"
+        ]
+       },
+       {
+        "url": "http://127.0.0.1:28077/kosarica.html",
+        "nav": [
+         "Domov",
+         "Košarica",
+         "Izjava o dostopnosti"
+        ],
+        "helpLinks": [
+         "http://127.0.0.1:28077/izjava-o-dostopnosti.html",
+         "http://127.0.0.1:28077/docs/cenik.pdf",
+         "http://127.0.0.1:28077/kontakt.html",
+         "mailto:info@loncarna.example"
+        ]
+       },
+       {
+        "url": "http://127.0.0.1:28077/izdelek-1.html",
+        "nav": [
+         "Domov",
+         "Košarica",
+         "Izjava o dostopnosti"
+        ],
+        "helpLinks": [
+         "http://127.0.0.1:28077/izjava-o-dostopnosti.html",
+         "http://127.0.0.1:28077/docs/cenik.pdf",
+         "http://127.0.0.1:28077/kontakt.html",
+         "mailto:info@loncarna.example"
+        ]
+       },
+       {
+        "url": "http://127.0.0.1:28077/placilo.html",
+        "nav": [
+         "Domov",
+         "Košarica",
+         "Izjava o dostopnosti"
+        ],
+        "helpLinks": [
+         "http://127.0.0.1:28077/izjava-o-dostopnosti.html",
+         "http://127.0.0.1:28077/docs/cenik.pdf",
+         "http://127.0.0.1:28077/kontakt.html",
+         "mailto:info@loncarna.example"
+        ]
+       },
+       {
+        "url": "http://127.0.0.1:28077/nadzorni-organ.html",
+        "nav": [
+         "Košarica",
+         "Domov",
+         "Izjava o dostopnosti"
+        ],
+        "helpLinks": [
+         "http://127.0.0.1:28077/izjava-o-dostopnosti.html",
+         "http://127.0.0.1:28077/docs/cenik.pdf",
+         "http://127.0.0.1:28077/kontakt.html",
+         "mailto:info@loncarna.example"
+        ]
+       },
+       {
+        "url": "http://127.0.0.1:28077/izjava-o-dostopnosti.html",
+        "nav": [
+         "Domov",
+         "Košarica",
+         "Izjava o dostopnosti"
+        ],
+        "helpLinks": [
+         "http://127.0.0.1:28077/izjava-o-dostopnosti.html",
+         "http://127.0.0.1:28077/docs/cenik.pdf"
+        ]
+       },
+       {
+        "url": "http://127.0.0.1:28077/blagajna.html",
+        "nav": [
+         "Domov",
+         "Košarica",
+         "Izjava o dostopnosti"
+        ],
+        "helpLinks": [
+         "http://127.0.0.1:28077/kontakt.html",
+         "mailto:info@loncarna.example",
+         "http://127.0.0.1:28077/izjava-o-dostopnosti.html",
+         "http://127.0.0.1:28077/docs/cenik.pdf"
+        ]
+       }
+      ]
+     },
+     "from": "ready",
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k1",
+         "probe": "consistency",
+         "findings": [
+          {
+           "id": "nav-inconsistent:http://127.0.0.1:28077/nadzorni-organ.html",
+           "pageUrl": "http://127.0.0.1:28077/nadzorni-organ.html",
+           "rule": "nav-inconsistent",
+           "wcag": [
+            {
+             "criterion": "3.2.3",
+             "level": "AA",
+             "version": "2.0"
+            }
+           ],
+           "method": "probe",
+           "engines": [
+            "probe"
+           ],
+           "impact": "moderate",
+           "confidence": "needs-verification",
+           "selector": "nav",
+           "snippet": "order on http://127.0.0.1:28077/index.html: Domov > Košarica > Izjava o dostopnosti; on http://127.0.0.1:28077/nadzorni-organ.html: Košarica > Domov > Izjava o dostopnosti",
+           "evidence": "",
+           "count": 1
+          },
+          {
+           "id": "help-inconsistent:http://127.0.0.1:28077/izjava-o-dostopnosti.html:http://127.0.0.1:28077/kontakt.html",
+           "pageUrl": "http://127.0.0.1:28077/izjava-o-dostopnosti.html",
+           "rule": "help-inconsistent",
+           "wcag": [
+            {
+             "criterion": "3.2.6",
+             "level": "A",
+             "version": "2.2"
+            }
+           ],
+           "method": "probe",
+           "engines": [
+            "probe"
+           ],
+           "impact": "moderate",
+           "confidence": "needs-verification",
+           "selector": "a[href=\"http://127.0.0.1:28077/kontakt.html\"]",
+           "snippet": "help link http://127.0.0.1:28077/kontakt.html is at index 2 on http://127.0.0.1:28077/index.html and missing here",
+           "evidence": "",
+           "count": 1
+          },
+          {
+           "id": "help-inconsistent:http://127.0.0.1:28077/blagajna.html:http://127.0.0.1:28077/kontakt.html",
+           "pageUrl": "http://127.0.0.1:28077/blagajna.html",
+           "rule": "help-inconsistent",
+           "wcag": [
+            {
+             "criterion": "3.2.6",
+             "level": "A",
+             "version": "2.2"
+            }
+           ],
+           "method": "probe",
+           "engines": [
+            "probe"
+           ],
+           "impact": "moderate",
+           "confidence": "needs-verification",
+           "selector": "a[href=\"http://127.0.0.1:28077/kontakt.html\"]",
+           "snippet": "help link http://127.0.0.1:28077/kontakt.html is at index 2 on http://127.0.0.1:28077/index.html and at index 0 here",
+           "evidence": "",
+           "count": 1
+          },
+          {
+           "id": "help-inconsistent:http://127.0.0.1:28077/izjava-o-dostopnosti.html:mailto:info@loncarna.example",
+           "pageUrl": "http://127.0.0.1:28077/izjava-o-dostopnosti.html",
+           "rule": "help-inconsistent",
+           "wcag": [
+            {
+             "criterion": "3.2.6",
+             "level": "A",
+             "version": "2.2"
+            }
+           ],
+           "method": "probe",
+           "engines": [
+            "probe"
+           ],
+           "impact": "moderate",
+           "confidence": "needs-verification",
+           "selector": "a[href=\"mailto:info@loncarna.example\"]",
+           "snippet": "help link mailto:info@loncarna.example is at index 3 on http://127.0.0.1:28077/index.html and missing here",
+           "evidence": "",
+           "count": 1
+          },
+          {
+           "id": "help-inconsistent:http://127.0.0.1:28077/blagajna.html:mailto:info@loncarna.example",
+           "pageUrl": "http://127.0.0.1:28077/blagajna.html",
+           "rule": "help-inconsistent",
+           "wcag": [
+            {
+             "criterion": "3.2.6",
+             "level": "A",
+             "version": "2.2"
+            }
+           ],
+           "method": "probe",
+           "engines": [
+            "probe"
+           ],
+           "impact": "moderate",
+           "confidence": "needs-verification",
+           "selector": "a[href=\"mailto:info@loncarna.example\"]",
+           "snippet": "help link mailto:info@loncarna.example is at index 3 on http://127.0.0.1:28077/index.html and at index 1 here",
+           "evidence": "",
+           "count": 1
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a help pattern list that matches nothing finds no help inconsistency",
+   "config": {
+    "helpPatterns": []
+   },
+   "steps": [
+    {
+     "event": "CONSISTENCY_CHECK",
+     "payload": {
+      "key": "k1",
+      "pages": [
+       {
+        "url": "http://127.0.0.1:28077/index.html",
+        "nav": [
+         "Domov",
+         "Košarica",
+         "Izjava o dostopnosti"
+        ],
+        "helpLinks": [
+         "http://127.0.0.1:28077/izjava-o-dostopnosti.html",
+         "http://127.0.0.1:28077/docs/cenik.pdf",
+         "http://127.0.0.1:28077/kontakt.html",
+         "mailto:info@loncarna.example"
+        ]
+       },
+       {
+        "url": "http://127.0.0.1:28077/izjava-o-dostopnosti.html",
+        "nav": [
+         "Domov",
+         "Košarica",
+         "Izjava o dostopnosti"
+        ],
+        "helpLinks": [
+         "http://127.0.0.1:28077/izjava-o-dostopnosti.html",
+         "http://127.0.0.1:28077/docs/cenik.pdf"
+        ]
+       }
+      ]
+     },
+     "from": "ready",
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k1",
+         "probe": "consistency",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "help patterns are declared: with only the cenik pdf as a pattern its position is compared",
+   "config": {
+    "helpPatterns": [
+     "\\.pdf$"
+    ]
+   },
+   "steps": [
+    {
+     "event": "CONSISTENCY_CHECK",
+     "payload": {
+      "key": "k1",
+      "pages": [
+       {
+        "url": "http://127.0.0.1:28077/index.html",
+        "nav": [
+         "Domov",
+         "Košarica",
+         "Izjava o dostopnosti"
+        ],
+        "helpLinks": [
+         "http://127.0.0.1:28077/izjava-o-dostopnosti.html",
+         "http://127.0.0.1:28077/docs/cenik.pdf",
+         "http://127.0.0.1:28077/kontakt.html",
+         "mailto:info@loncarna.example"
+        ]
+       },
+       {
+        "url": "http://127.0.0.1:28077/blagajna.html",
+        "nav": [
+         "Domov",
+         "Košarica",
+         "Izjava o dostopnosti"
+        ],
+        "helpLinks": [
+         "http://127.0.0.1:28077/kontakt.html",
+         "mailto:info@loncarna.example",
+         "http://127.0.0.1:28077/izjava-o-dostopnosti.html",
+         "http://127.0.0.1:28077/docs/cenik.pdf"
+        ]
+       }
+      ]
+     },
+     "from": "ready",
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k1",
+         "probe": "consistency",
+         "findings": [
+          {
+           "id": "help-inconsistent:http://127.0.0.1:28077/blagajna.html:http://127.0.0.1:28077/docs/cenik.pdf",
+           "pageUrl": "http://127.0.0.1:28077/blagajna.html",
+           "rule": "help-inconsistent",
+           "wcag": [
+            {
+             "criterion": "3.2.6",
+             "level": "A",
+             "version": "2.2"
+            }
+           ],
+           "method": "probe",
+           "engines": [
+            "probe"
+           ],
+           "impact": "moderate",
+           "confidence": "needs-verification",
+           "selector": "a[href=\"http://127.0.0.1:28077/docs/cenik.pdf\"]",
+           "snippet": "help link http://127.0.0.1:28077/docs/cenik.pdf is at index 1 on http://127.0.0.1:28077/index.html and at index 3 here",
+           "evidence": "",
+           "count": 1
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: only links matching a pattern are compared, so with /kontakt alone the mailto link is not",
+   "config": {
+    "helpPatterns": [
+     "/kontakt"
+    ]
+   },
+   "steps": [
+    {
+     "event": "CONSISTENCY_CHECK",
+     "payload": {
+      "key": "k1",
+      "pages": [
+       {
+        "url": "http://127.0.0.1:28077/index.html",
+        "nav": [
+         "Domov",
+         "Košarica",
+         "Izjava o dostopnosti"
+        ],
+        "helpLinks": [
+         "http://127.0.0.1:28077/izjava-o-dostopnosti.html",
+         "http://127.0.0.1:28077/docs/cenik.pdf",
+         "http://127.0.0.1:28077/kontakt.html",
+         "mailto:info@loncarna.example"
+        ]
+       },
+       {
+        "url": "http://127.0.0.1:28077/blagajna.html",
+        "nav": [
+         "Domov",
+         "Košarica",
+         "Izjava o dostopnosti"
+        ],
+        "helpLinks": [
+         "http://127.0.0.1:28077/kontakt.html",
+         "mailto:info@loncarna.example",
+         "http://127.0.0.1:28077/izjava-o-dostopnosti.html",
+         "http://127.0.0.1:28077/docs/cenik.pdf"
+        ]
+       }
+      ]
+     },
+     "from": "ready",
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k1",
+         "probe": "consistency",
+         "findings": [
+          {
+           "id": "help-inconsistent:http://127.0.0.1:28077/blagajna.html:http://127.0.0.1:28077/kontakt.html",
+           "pageUrl": "http://127.0.0.1:28077/blagajna.html",
+           "rule": "help-inconsistent",
+           "wcag": [
+            {
+             "criterion": "3.2.6",
+             "level": "A",
+             "version": "2.2"
+            }
+           ],
+           "method": "probe",
+           "engines": [
+            "probe"
+           ],
+           "impact": "moderate",
+           "confidence": "needs-verification",
+           "selector": "a[href=\"http://127.0.0.1:28077/kontakt.html\"]",
+           "snippet": "help link http://127.0.0.1:28077/kontakt.html is at index 2 on http://127.0.0.1:28077/index.html and at index 0 here",
+           "evidence": "",
+           "count": 1
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "help patterns are tried on the lowercase href (KONTAKT matches /kontakt), and tel: counts",
+   "steps": [
+    {
+     "event": "CONSISTENCY_CHECK",
+     "payload": {
+      "key": "k1",
+      "pages": [
+       {
+        "url": "http://127.0.0.1:28077/a",
+        "nav": [
+         "A",
+         "B"
+        ],
+        "helpLinks": [
+         "https://x.example/KONTAKT",
+         "tel:+38612345678"
+        ]
+       },
+       {
+        "url": "http://127.0.0.1:28077/b",
+        "nav": [
+         "A",
+         "B"
+        ],
+        "helpLinks": [
+         "tel:+38612345678"
+        ]
+       }
+      ]
+     },
+     "from": "ready",
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k1",
+         "probe": "consistency",
+         "findings": [
+          {
+           "id": "help-inconsistent:http://127.0.0.1:28077/b:https://x.example/KONTAKT",
+           "pageUrl": "http://127.0.0.1:28077/b",
+           "rule": "help-inconsistent",
+           "wcag": [
+            {
+             "criterion": "3.2.6",
+             "level": "A",
+             "version": "2.2"
+            }
+           ],
+           "method": "probe",
+           "engines": [
+            "probe"
+           ],
+           "impact": "moderate",
+           "confidence": "needs-verification",
+           "selector": "a[href=\"https://x.example/KONTAKT\"]",
+           "snippet": "help link https://x.example/KONTAKT is at index 0 on http://127.0.0.1:28077/a and missing here",
+           "evidence": "",
+           "count": 1
+          },
+          {
+           "id": "help-inconsistent:http://127.0.0.1:28077/b:tel:+38612345678",
+           "pageUrl": "http://127.0.0.1:28077/b",
+           "rule": "help-inconsistent",
+           "wcag": [
+            {
+             "criterion": "3.2.6",
+             "level": "A",
+             "version": "2.2"
+            }
+           ],
+           "method": "probe",
+           "engines": [
+            "probe"
+           ],
+           "impact": "moderate",
+           "confidence": "needs-verification",
+           "selector": "a[href=\"tel:+38612345678\"]",
+           "snippet": "help link tel:+38612345678 is at index 1 on http://127.0.0.1:28077/a and at index 0 here",
+           "evidence": "",
+           "count": 1
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: the same two pages with the same help links are consistent",
+   "steps": [
+    {
+     "event": "CONSISTENCY_CHECK",
+     "payload": {
+      "key": "k1",
+      "pages": [
+       {
+        "url": "http://127.0.0.1:28077/a",
+        "nav": [
+         "A",
+         "B"
+        ],
+        "helpLinks": [
+         "https://x.example/KONTAKT",
+         "tel:+38612345678"
+        ]
+       },
+       {
+        "url": "http://127.0.0.1:28077/c",
+        "nav": [
+         "A",
+         "B"
+        ],
+        "helpLinks": [
+         "https://x.example/KONTAKT",
+         "tel:+38612345678"
+        ]
+       }
+      ]
+     },
+     "from": "ready",
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k1",
+         "probe": "consistency",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a navigation text that appears twice counts once, at its first place",
+   "steps": [
+    {
+     "event": "CONSISTENCY_CHECK",
+     "payload": {
+      "key": "k1",
+      "pages": [
+       {
+        "url": "http://127.0.0.1:28077/d",
+        "nav": [
+         "A",
+         "B",
+         "A",
+         "C"
+        ],
+        "helpLinks": []
+       },
+       {
+        "url": "http://127.0.0.1:28077/e",
+        "nav": [
+         "A",
+         "C",
+         "B"
+        ],
+        "helpLinks": []
+       }
+      ]
+     },
+     "from": "ready",
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k1",
+         "probe": "consistency",
+         "findings": [
+          {
+           "id": "nav-inconsistent:http://127.0.0.1:28077/e",
+           "pageUrl": "http://127.0.0.1:28077/e",
+           "rule": "nav-inconsistent",
+           "wcag": [
+            {
+             "criterion": "3.2.3",
+             "level": "AA",
+             "version": "2.0"
+            }
+           ],
+           "method": "probe",
+           "engines": [
+            "probe"
+           ],
+           "impact": "moderate",
+           "confidence": "needs-verification",
+           "selector": "nav",
+           "snippet": "order on http://127.0.0.1:28077/d: A > B > C; on http://127.0.0.1:28077/e: A > C > B",
+           "evidence": "",
+           "count": 1
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: the same duplicated texts in the same order are consistent",
+   "steps": [
+    {
+     "event": "CONSISTENCY_CHECK",
+     "payload": {
+      "key": "k1",
+      "pages": [
+       {
+        "url": "http://127.0.0.1:28077/d",
+        "nav": [
+         "A",
+         "B",
+         "A",
+         "C"
+        ],
+        "helpLinks": []
+       },
+       {
+        "url": "http://127.0.0.1:28077/f",
+        "nav": [
+         "A",
+         "B",
+         "A",
+         "C"
+        ],
+        "helpLinks": []
+       }
+      ]
+     },
+     "from": "ready",
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k1",
+         "probe": "consistency",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "one page has nothing to compare",
+   "steps": [
+    {
+     "event": "CONSISTENCY_CHECK",
+     "payload": {
+      "key": "k1",
+      "pages": [
+       {
+        "url": "http://127.0.0.1:28077/index.html",
+        "nav": [
+         "Domov",
+         "Košarica",
+         "Izjava o dostopnosti"
+        ],
+        "helpLinks": [
+         "http://127.0.0.1:28077/izjava-o-dostopnosti.html",
+         "http://127.0.0.1:28077/docs/cenik.pdf",
+         "http://127.0.0.1:28077/kontakt.html",
+         "mailto:info@loncarna.example"
+        ]
+       }
+      ]
+     },
+     "from": "ready",
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k1",
+         "probe": "consistency",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "no pages have nothing to compare",
+   "steps": [
+    {
+     "event": "CONSISTENCY_CHECK",
+     "payload": {
+      "key": "k1",
+      "pages": []
+     },
+     "from": "ready",
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k1",
+         "probe": "consistency",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "CONSISTENCY_EXPRESSION_ASK answers the measureExpression knob, which is the expression record.py ran in Chrome",
+   "steps": [
+    {
+     "event": "CONSISTENCY_EXPRESSION_ASK",
+     "payload": {
+      "key": "k2"
+     },
+     "from": "ready",
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "CONSISTENCY_EXPRESSION",
+        "payload": {
+         "key": "k2",
+         "expression": "JSON.stringify({ nav: Array.from(document.querySelectorAll('nav a[href], [role=navigation] a[href]')).map(a => (a.innerText || a.textContent).trim()), helpLinks: Array.from(document.querySelectorAll('header a[href], footer a[href], [role=banner] a[href], [role=contentinfo] a[href]')).map(a => a.href) })"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

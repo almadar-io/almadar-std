@@ -1,0 +1,220 @@
+app std-a11y-probe-forms [
+  version: "1.0.0",
+  description: "std-a11y-probe-forms — forms and error identification (WCAG 1.3.1, 1.3.5, 1.4.1, 3.3.1, 3.3.2, 4.1.2, 4.1.3). PROBE_RUN { key, pageUrl } on a tab already at pageUrl measures every visible form control (PAGE_MEASURE inventory: label texts, aria-label, aria-labelledby text, title, required, type, autocomplete, aria-describedby), then triggers the page's own client-side validation WITHOUT submitting anything: one PAGE_MEASURE records each control's value and colours, sets an empty value on required controls and the value x on non-required email and url controls, and dispatches input, change, blur and focusout events; a second reads aria-invalid, the text of the aria-describedby and aria-errormessage targets, the computed colour and border colour of each control against its colour before and against a fresh control of the same type, and every text that appeared in the form and whether it sits in a live region (role alert, status, log or aria-live) or is referenced by a control; a third restores the recorded values. The tab is then navigated back to pageUrl (PAGE_NAVIGATE, answered by PAGE_LOADED) so any message the page added is gone, and PROBE_DONE { key, probe: forms, findings } answers. It never calls submit() or requestSubmit(), never clicks a submit button, and by default dispatches no submit event: the dispatchSubmit knob, off by default, also dispatches one synthetic submit event per form so the page's own submit handler runs, which a page may use to send data. Rules: form-label (a visible control with no accessible name from aria-labelledby, aria-label, a label or title; confirmed), autocomplete-missing (WCAG 1.3.5; only type email and tel with no autocomplete attribute, because name-like fields cannot be told without guessing; needs-verification), form-error-colour (the page marked a control in error, by aria-invalid true or a colour change, but no error text is associated and its colour differs; needs-verification), form-error-not-identified (the page marked a control in error and no error text is associated; needs-verification), form-error-not-announced (a text appeared in the form that is neither in a live region nor referenced by aria-describedby or aria-errormessage; needs-verification). A control is associated with error text when its describedby or errormessage targets have text or a text appeared in its form. The browser's own validity is not used as a verdict because the browser then shows its own message. Failure codes: probe_page_failed, probe_bad_measure, probe_page_changed (the page replaced itself while validating). Catalogue codes: form-label maps to N12, form-error-not-identified to N47, form-error-colour to N77, form-error-not-announced to N41, autocomplete-missing to WCAG 1.3.5 (no N code). An error that the page renders after a timer longer than one round trip is not seen."
+]
+uses Spec from "almadar-std/probe-forms"
+
+type WcagRef = { criterion : string!, level : "A" | "AA" | "AAA"!, version : "2.0" | "2.1" | "2.2"! }
+type A11yFinding = { id : string!, pageUrl : string!, rule : string!, wcag : [WcagRef]!, method : "engine" | "probe" | "llm"!, engines : [string]!, impact : "critical" | "serious" | "moderate" | "minor"!, confidence : "confirmed" | "needs-verification"!, selector : string!, snippet : string!, evidence : string!, count : number! }
+type InvControl = { selector : string!, snippet : string!, tag : string!, type : string!, form : string!, labels : string!, ariaLabel : string!, labelledby : string!, title : string!, required : boolean!, autocomplete : string!, describedby : string!, disabled : boolean!, hidden : boolean! }
+type FormsInventory = { controls : [InvControl]! }
+type FormsStimulated = { stimulated : [string]!, submitted : number! }
+type ReadControl = { selector : string!, snippet : string!, form : string!, ariaInvalid : string!, describedText : string!, errorText : string!, borderBefore : string!, borderAfter : string!, borderRef : string!, styleBefore : string!, styleAfter : string!, styleRef : string!, colorBefore : string!, colorAfter : string!, colorRef : string! }
+type AppearedText = { selector : string!, snippet : string!, text : string!, form : string!, live : boolean!, referenced : boolean! }
+type FormsRead = { lost : boolean!, controls : [ReadControl]!, appeared : [AppearedText]! }
+type FormsRestored = { restored : number! }
+type RuleDef = { key : string!, impact : "critical" | "serious" | "moderate" | "minor"!, wcag : [WcagRef]! }
+
+orbital FormsOrbital {
+  entity FormsRun [runtime] {
+    id : string!
+    runKey : string @description "The caller's name for the run in flight." = ""
+    pageUrl : string @description "The page the run in flight is about." = ""
+    controls : [InvControl] @description "The measured form controls." = []
+    findings : [A11yFinding] @description "The findings held while the tab returns to the page." = []
+  }
+
+  trait FormsProbe -> FormsRun {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      PROBE_RUN -> inventorying
+        (set @entity.runKey @payload.key)
+        (set @entity.pageUrl @payload.pageUrl)
+        (set @entity.controls [])
+        (set @entity.findings [])
+        (emit PAGE_MEASURE { key: (str/concat @payload.key ":inventory"), expression: (str/concat "(" @config.inventory ")()") })
+    }
+
+    state inventorying {
+      INIT -> idle
+      PAGE_MEASURED -> stimulating when (and (= @payload.key (str/concat @entity.runKey ":inventory")) (!= (json/parse @payload.json FormsInventory) null) (array/some (let ((m (json/parse @payload.json FormsInventory))) @m.controls) (fn c (and (not @c.hidden) (not @c.disabled)))))
+        (set @entity.controls (let ((m (json/parse @payload.json FormsInventory))) (array/filter @m.controls (fn c (and (not @c.hidden) (not @c.disabled))))))
+        (set @entity.findings (array/concat
+          (array/map (array/filter @entity.controls (fn c (and (= @c.labelledby "") (= @c.ariaLabel "") (= @c.labels "") (= @c.title "")))) (fn c (let ((d (array/find @config.catalog (fn r (= @r.key "form-label"))))) {
+            id: (str/concat @entity.pageUrl "#form-label#" @c.selector),
+            pageUrl: @entity.pageUrl,
+            rule: "form-label",
+            wcag: (if (= @d null) [] @d.wcag),
+            method: "probe",
+            engines: ["probe"],
+            impact: (if (= @d null) "serious" @d.impact),
+            confidence: "confirmed",
+            selector: @c.selector,
+            snippet: @c.snippet,
+            evidence: "",
+            count: 1
+          })))
+          (array/map (array/filter @entity.controls (fn c (and (array/includes @config.autocompleteTypes @c.type) (= @c.autocomplete "")))) (fn c (let ((d (array/find @config.catalog (fn r (= @r.key "autocomplete-missing"))))) {
+            id: (str/concat @entity.pageUrl "#autocomplete-missing#" @c.selector),
+            pageUrl: @entity.pageUrl,
+            rule: "autocomplete-missing",
+            wcag: (if (= @d null) [] @d.wcag),
+            method: "probe",
+            engines: ["probe"],
+            impact: (if (= @d null) "moderate" @d.impact),
+            confidence: "needs-verification",
+            selector: @c.selector,
+            snippet: @c.snippet,
+            evidence: "",
+            count: 1
+          })))))
+        (emit PAGE_MEASURE { key: (str/concat @entity.runKey ":stimulate"), expression: (str/concat "(" @config.stimulate ")(" (if @config.dispatchSubmit "true" "false") ")") })
+      PAGE_MEASURED -> idle when (and (= @payload.key (str/concat @entity.runKey ":inventory")) (!= (json/parse @payload.json FormsInventory) null) (not (array/some (let ((m (json/parse @payload.json FormsInventory))) @m.controls) (fn c (and (not @c.hidden) (not @c.disabled))))))
+        (emit PROBE_DONE { key: @entity.runKey, probe: "forms", findings: [] })
+      PAGE_MEASURED -> idle when (and (= @payload.key (str/concat @entity.runKey ":inventory")) (= (json/parse @payload.json FormsInventory) null))
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "forms", error: "the page measurement is not the form control list", code: "probe_bad_measure" })
+      PAGE_FAILED -> idle when (str/startsWith @payload.key @entity.runKey)
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "forms", error: @payload.error, code: "probe_page_failed" })
+    }
+
+    state stimulating {
+      INIT -> idle
+      PAGE_MEASURED -> reading when (and (= @payload.key (str/concat @entity.runKey ":stimulate")) (!= (json/parse @payload.json FormsStimulated) null))
+        (emit PAGE_MEASURE { key: (str/concat @entity.runKey ":read"), expression: (str/concat "(" @config.read ")()") })
+      PAGE_MEASURED -> idle when (and (= @payload.key (str/concat @entity.runKey ":stimulate")) (= (json/parse @payload.json FormsStimulated) null))
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "forms", error: "the page did not answer the validation trigger", code: "probe_bad_measure" })
+        (emit PAGE_NAVIGATE { key: (str/concat @entity.runKey ":back"), url: @entity.pageUrl })
+      PAGE_FAILED -> idle when (str/startsWith @payload.key @entity.runKey)
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "forms", error: @payload.error, code: "probe_page_failed" })
+        (emit PAGE_NAVIGATE { key: (str/concat @entity.runKey ":back"), url: @entity.pageUrl })
+    }
+
+    state reading {
+      INIT -> idle
+      PAGE_MEASURED -> restoring when (and (= @payload.key (str/concat @entity.runKey ":read")) (!= (json/parse @payload.json FormsRead) null) (not (let ((m (json/parse @payload.json FormsRead))) @m.lost)))
+        (set @entity.findings (let ((m (json/parse @payload.json FormsRead))) (array/concat
+          @entity.findings
+          (array/map (array/filter @m.controls (fn c (and (or (= @c.ariaInvalid "true") (!= @c.borderBefore @c.borderAfter) (!= @c.colorBefore @c.colorAfter)) (= @c.describedText "") (= @c.errorText "") (not (array/some @m.appeared (fn a (and (!= @a.form "") (= @a.form @c.form)))))))) (fn c (let ((colour (or (!= @c.borderBefore @c.borderAfter) (!= @c.colorBefore @c.colorAfter) (!= @c.borderAfter @c.borderRef) (!= @c.styleAfter @c.styleRef) (!= @c.colorAfter @c.colorRef)))) (let ((d (array/find @config.catalog (fn r (= @r.key (if @colour "form-error-colour" "form-error-not-identified")))))) {
+            id: (str/concat @entity.pageUrl "#" (if @colour "form-error-colour" "form-error-not-identified") "#" @c.selector),
+            pageUrl: @entity.pageUrl,
+            rule: (if @colour "form-error-colour" "form-error-not-identified"),
+            wcag: (if (= @d null) [] @d.wcag),
+            method: "probe",
+            engines: ["probe"],
+            impact: (if (= @d null) "serious" @d.impact),
+            confidence: "needs-verification",
+            selector: @c.selector,
+            snippet: @c.snippet,
+            evidence: "",
+            count: 1
+          }))))
+          (array/map (array/filter @m.appeared (fn a (and (not @a.live) (not @a.referenced)))) (fn a (let ((d (array/find @config.catalog (fn r (= @r.key "form-error-not-announced"))))) {
+            id: (str/concat @entity.pageUrl "#form-error-not-announced#" @a.selector),
+            pageUrl: @entity.pageUrl,
+            rule: "form-error-not-announced",
+            wcag: (if (= @d null) [] @d.wcag),
+            method: "probe",
+            engines: ["probe"],
+            impact: (if (= @d null) "moderate" @d.impact),
+            confidence: "needs-verification",
+            selector: @a.selector,
+            snippet: @a.snippet,
+            evidence: "",
+            count: 1
+          }))))))
+        (emit PAGE_MEASURE { key: (str/concat @entity.runKey ":restore"), expression: (str/concat "(" @config.restore ")()") })
+      PAGE_MEASURED -> idle when (and (= @payload.key (str/concat @entity.runKey ":read")) (!= (json/parse @payload.json FormsRead) null) (let ((m (json/parse @payload.json FormsRead))) @m.lost))
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "forms", error: "the page replaced itself while its validation was triggered", code: "probe_page_changed" })
+        (emit PAGE_NAVIGATE { key: (str/concat @entity.runKey ":back"), url: @entity.pageUrl })
+      PAGE_MEASURED -> idle when (and (= @payload.key (str/concat @entity.runKey ":read")) (= (json/parse @payload.json FormsRead) null))
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "forms", error: "the page measurement is not the validation result", code: "probe_bad_measure" })
+        (emit PAGE_NAVIGATE { key: (str/concat @entity.runKey ":back"), url: @entity.pageUrl })
+      PAGE_FAILED -> idle when (str/startsWith @payload.key @entity.runKey)
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "forms", error: @payload.error, code: "probe_page_failed" })
+        (emit PAGE_NAVIGATE { key: (str/concat @entity.runKey ":back"), url: @entity.pageUrl })
+    }
+
+    state restoring {
+      INIT -> idle
+      PAGE_MEASURED -> returning when (and (= @payload.key (str/concat @entity.runKey ":restore")) (!= (json/parse @payload.json FormsRestored) null))
+        (emit PAGE_NAVIGATE { key: (str/concat @entity.runKey ":back"), url: @entity.pageUrl })
+      PAGE_MEASURED -> idle when (and (= @payload.key (str/concat @entity.runKey ":restore")) (= (json/parse @payload.json FormsRestored) null))
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "forms", error: "the page did not confirm the values were restored", code: "probe_bad_measure" })
+        (emit PAGE_NAVIGATE { key: (str/concat @entity.runKey ":back"), url: @entity.pageUrl })
+      PAGE_FAILED -> idle when (str/startsWith @payload.key @entity.runKey)
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "forms", error: @payload.error, code: "probe_page_failed" })
+        (emit PAGE_NAVIGATE { key: (str/concat @entity.runKey ":back"), url: @entity.pageUrl })
+    }
+
+    state returning {
+      INIT -> idle
+      PAGE_LOADED -> idle when (= @payload.key (str/concat @entity.runKey ":back"))
+        (emit PROBE_DONE { key: @entity.runKey, probe: "forms", findings: @entity.findings })
+      PAGE_FAILED -> idle when (str/startsWith @payload.key @entity.runKey)
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "forms", error: @payload.error, code: "probe_page_failed" })
+    }
+
+    emits {
+      PAGE_MEASURE -> external { key : string!  expression : string! }
+        @description "Page request: evaluate the expression in the page; it answers a JSON string."
+        @synonyms "measure page, evaluate in page"
+        @tier "primary"
+      PAGE_NAVIGATE -> external { key : string!  url : string! }
+        @description "Page request: load the url in the tab; here it returns the tab to the probed page so nothing the validation changed stays."
+        @synonyms "navigate, load page"
+        @tier "primary"
+      PROBE_DONE -> external { key : string!  probe : string!  findings : [A11yFinding]! }
+        @description "The forms probe finished: its findings, empty when every control is labelled and every error is stated."
+        @synonyms "form findings, form accessibility result"
+        @tier "primary"
+      PROBE_FAILED -> external { key : string!  probe : string!  error : string!  code : string! }
+        @description "The probe could not finish: code is probe_page_failed, probe_bad_measure or probe_page_changed."
+        @synonyms "probe failed, forms error"
+        @tier "primary"
+    }
+
+    listens {
+      PROBE_RUN { key : string!  pageUrl : string! }
+        @description "Check the page the tab is on for form labels and error identification, triggering its validation without submitting."
+        @synonyms "form check, form label check, error identification check, wcag 3.3.1"
+      PAGE_MEASURED { key : string!  json : string! }
+      PAGE_LOADED { key : string!  url : string!  title : string! }
+      PAGE_FAILED { key : string!  error : string!  code : string! }
+    }
+
+    config {
+      dispatchSubmit : boolean = false
+        @label "Dispatch submit events"
+        @description "Also dispatch one synthetic submit event per form while validating, so the page's own submit handler runs and can show its errors. The form is never submitted by the probe, but a page's handler may send data, so it is off unless the composer turns it on."
+        @tier "domain"
+      autocompleteTypes : [string] = ["email", "tel"]
+        @label "Autocomplete input types"
+        @description "The input types that must carry an autocomplete attribute (WCAG 1.3.5); name-like fields are left out because they cannot be told from their type."
+        @tier "domain"
+      catalog : [RuleDef] = [{ key: "form-label", impact: "serious", wcag: [{ criterion: "1.3.1", level: "A", version: "2.0" }, { criterion: "3.3.2", level: "A", version: "2.0" }, { criterion: "4.1.2", level: "A", version: "2.0" }] }, { key: "autocomplete-missing", impact: "moderate", wcag: [{ criterion: "1.3.5", level: "AA", version: "2.1" }] }, { key: "form-error-not-identified", impact: "serious", wcag: [{ criterion: "3.3.1", level: "A", version: "2.0" }] }, { key: "form-error-colour", impact: "serious", wcag: [{ criterion: "1.4.1", level: "A", version: "2.0" }, { criterion: "3.3.1", level: "A", version: "2.0" }] }, { key: "form-error-not-announced", impact: "moderate", wcag: [{ criterion: "4.1.3", level: "AA", version: "2.1" }] }]
+        @label "Rule catalog"
+        @description "The impact and WCAG success criteria of each rule."
+        @tier "domain"
+      inventory : string = "() => { const norm = (s) => (s || '').replace(/\\s+/g, ' ').trim(); const sel = (e) => { const p = []; for (let n = e; n && n.nodeType === 1; n = n.parentElement) { if (n.id) { p.unshift('#' + CSS.escape(n.id)); break; } let i = 1; for (let s = n.previousElementSibling; s; s = s.previousElementSibling) { if (s.tagName === n.tagName) i++; } p.unshift(n.tagName.toLowerCase() + (n.parentElement && n.parentElement.querySelectorAll(':scope > ' + n.tagName.toLowerCase()).length > 1 ? ':nth-of-type(' + i + ')' : '')); } return p.join(' > '); }; const content = (n) => { if (n.nodeType === 3) return n.textContent; if (n.nodeType !== 1 || n.getAttribute('aria-hidden') === 'true' || n.hidden) return ''; if (n.tagName === 'IMG') return ' ' + (n.getAttribute('alt') || '') + ' '; return Array.from(n.childNodes).map(content).join(''); }; const ids = (el, attr) => norm((el.getAttribute(attr) || '').split(/\\s+/).filter(Boolean).map((id) => { const t = document.getElementById(id); return t ? content(t) : ''; }).join(' ')); const q = 'input:not([type=hidden]):not([type=submit]):not([type=button]):not([type=reset]):not([type=image]),select,textarea'; const controls = Array.from(document.querySelectorAll(q)).map((el) => ({ selector: sel(el), snippet: el.outerHTML.split('>')[0] + '>', tag: el.tagName.toLowerCase(), type: (el.getAttribute('type') || '').toLowerCase(), form: el.form ? sel(el.form) : '', labels: norm(Array.from(el.labels || []).map((l) => content(l)).join(' ')), ariaLabel: norm(el.getAttribute('aria-label')), labelledby: ids(el, 'aria-labelledby'), title: norm(el.getAttribute('title')), required: el.required === true, autocomplete: norm(el.getAttribute('autocomplete')), describedby: norm(el.getAttribute('aria-describedby')), disabled: el.disabled === true, hidden: !!el.closest('[aria-hidden=true],[hidden]') || (el.checkVisibility ? !el.checkVisibility({ visibilityProperty: true }) : false) })); return JSON.stringify({ controls }); }"
+        @label "Inventory expression"
+        @description "A page function returning a JSON string of every form control with selector, opening tag, tag, type, form, label texts, aria-label, aria-labelledby text, title, required, autocomplete, aria-describedby, disabled and hidden."
+        @tier "infra"
+      stimulate : string = "(submit) => { const norm = (s) => (s || '').replace(/\\s+/g, ' ').trim(); const sel = (e) => { const p = []; for (let n = e; n && n.nodeType === 1; n = n.parentElement) { if (n.id) { p.unshift('#' + CSS.escape(n.id)); break; } let i = 1; for (let s = n.previousElementSibling; s; s = s.previousElementSibling) { if (s.tagName === n.tagName) i++; } p.unshift(n.tagName.toLowerCase() + (n.parentElement && n.parentElement.querySelectorAll(':scope > ' + n.tagName.toLowerCase()).length > 1 ? ':nth-of-type(' + i + ')' : '')); } return p.join(' > '); }; const leafTexts = (scope) => Array.from(scope.querySelectorAll('*')).filter((e) => norm(e.textContent) && !Array.from(e.children).some((c) => norm(c.textContent))).map((e) => norm(e.textContent)); const q = 'input:not([type=hidden]):not([type=submit]):not([type=button]):not([type=reset]):not([type=image]),select,textarea'; const entries = []; const scopes = new Map(); for (const el of Array.from(document.querySelectorAll(q))) { if (el.disabled || el.closest('[aria-hidden=true],[hidden]') || (el.checkVisibility && !el.checkVisibility({ visibilityProperty: true }))) continue; const scope = el.form || el.parentElement; if (!scopes.has(scope)) scopes.set(scope, { selector: sel(scope), before: new Set(leafTexts(scope)) }); const cs = getComputedStyle(el); entries.push({ el, scope, value: el.value, checked: el.checked, selectedIndex: el.selectedIndex, borderBefore: cs.borderTopColor, styleBefore: cs.borderTopStyle, colorBefore: cs.color }); } window.__a11yFormsProbe = { entries, scopes }; const fire = (el, ev) => el.dispatchEvent(ev); for (const e of entries) { const el = e.el; const type = (el.getAttribute('type') || '').toLowerCase(); if (el.tagName === 'SELECT') { if (el.required) el.selectedIndex = -1; } else if (type === 'checkbox' || type === 'radio') { if (el.required) el.checked = false; } else if (type !== 'file') { if (el.required) el.value = ''; else if (type === 'email' || type === 'url') el.value = 'x'; } fire(el, new Event('input', { bubbles: true })); fire(el, new Event('change', { bubbles: true })); fire(el, new FocusEvent('blur')); fire(el, new FocusEvent('focusout', { bubbles: true })); } let submitted = 0; if (submit) { for (const f of new Set(entries.map((e) => e.el.form).filter(Boolean))) { f.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })); submitted++; } } return JSON.stringify({ stimulated: entries.map((e) => sel(e.el)), submitted }); }"
+        @label "Validation trigger expression"
+        @description "A page function taking whether to dispatch submit events: it records each control's value and colours in the page, sets empty values on required controls and x on non-required email and url controls, dispatches input, change, blur and focusout events, and returns a JSON string of the controls it touched."
+        @tier "infra"
+      read : string = "() => { const norm = (s) => (s || '').replace(/\\s+/g, ' ').trim(); const sel = (e) => { const p = []; for (let n = e; n && n.nodeType === 1; n = n.parentElement) { if (n.id) { p.unshift('#' + CSS.escape(n.id)); break; } let i = 1; for (let s = n.previousElementSibling; s; s = s.previousElementSibling) { if (s.tagName === n.tagName) i++; } p.unshift(n.tagName.toLowerCase() + (n.parentElement && n.parentElement.querySelectorAll(':scope > ' + n.tagName.toLowerCase()).length > 1 ? ':nth-of-type(' + i + ')' : '')); } return p.join(' > '); }; const st = window.__a11yFormsProbe; if (!st) return JSON.stringify({ lost: true, controls: [], appeared: [] }); const content = (n) => { if (n.nodeType === 3) return n.textContent; if (n.nodeType !== 1 || n.getAttribute('aria-hidden') === 'true' || n.hidden) return ''; return Array.from(n.childNodes).map(content).join(''); }; const ids = (el, attr) => norm((el.getAttribute(attr) || '').split(/\\s+/).filter(Boolean).map((id) => { const t = document.getElementById(id); return t ? content(t) : ''; }).join(' ')); const refd = (el) => st.entries.some((e) => ['aria-describedby', 'aria-errormessage'].some((a) => (e.el.getAttribute(a) || '').split(/\\s+/).filter(Boolean).some((id) => { const t = document.getElementById(id); return t && t.contains(el); }))); const controls = st.entries.filter((e) => e.el.isConnected).map((e) => { const el = e.el; const cs = getComputedStyle(el); const ref = document.createElement(el.tagName.toLowerCase()); if (el.tagName === 'INPUT') ref.type = el.type; e.scope.appendChild(ref); const rs = getComputedStyle(ref); const out = { selector: sel(el), snippet: el.outerHTML.split('>')[0] + '>', form: el.form ? sel(el.form) : '', valid: el.validity.valid, ariaInvalid: el.getAttribute('aria-invalid') || '', describedText: ids(el, 'aria-describedby'), errorText: ids(el, 'aria-errormessage'), borderBefore: e.borderBefore, borderAfter: cs.borderTopColor, borderRef: rs.borderTopColor, styleBefore: e.styleBefore, styleAfter: cs.borderTopStyle, styleRef: rs.borderTopStyle, colorBefore: e.colorBefore, colorAfter: cs.color, colorRef: rs.color }; ref.remove(); return out; }); const appeared = []; for (const [scope, info] of st.scopes) { if (!scope.isConnected) continue; for (const el of Array.from(scope.querySelectorAll('*'))) { const t = norm(el.textContent); if (!t || Array.from(el.children).some((c) => norm(c.textContent)) || info.before.has(t)) continue; appeared.push({ selector: sel(el), snippet: el.outerHTML.split('>')[0] + '>', text: t, form: scope.tagName === 'FORM' ? info.selector : '', live: !!el.closest('[role=alert],[role=status],[role=log],[aria-live=assertive],[aria-live=polite]'), referenced: refd(el) }); } } return JSON.stringify({ lost: false, controls, appeared }); }"
+        @label "Validation result expression"
+        @description "A page function returning a JSON string of each touched control's aria-invalid, error text targets and colours before and after (and those of a fresh control of its type), and every text that appeared in its form with whether it is in a live region or referenced by a control."
+        @tier "infra"
+      restore : string = "() => { const st = window.__a11yFormsProbe; if (!st) return JSON.stringify({ restored: 0 }); let n = 0; for (const e of st.entries) { if (!e.el.isConnected) continue; if (e.el.tagName === 'SELECT') e.el.selectedIndex = e.selectedIndex; else { e.el.value = e.value; e.el.checked = e.checked; } n++; } delete window.__a11yFormsProbe; return JSON.stringify({ restored: n }); }"
+        @label "Restore expression"
+        @description "A page function that puts back the values recorded by the validation trigger and returns a JSON string of how many it restored."
+        @tier "infra"
+    }
+  }
+
+  page boot as FormsProbePage -> FormsProbe
+}

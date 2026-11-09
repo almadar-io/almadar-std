@@ -106,6 +106,22 @@ orbital ProofOrbital {
         @label "Texture"
         @description "Lay the theme's texture over the section"
         @tier "presentation"
+      marqueeDirection : "start" | "end" = "start"
+        @label "Marquee direction"
+        @description "marquee: start moves the strip toward the reading start (left in left-to-right text), end toward the reading end"
+        @tier "presentation"
+      marqueeSpeed : number = 80
+        @label "Marquee speed"
+        @description "marquee: how fast the strip moves, in pixels per second (0 holds it still)"
+        @tier "presentation"
+      marqueeClip : boolean = true
+        @label "Clip the marquee"
+        @description "marquee: clip the strip to the section and fade its two edges"
+        @tier "presentation"
+      marqueeLoop : boolean = true
+        @label "Loop the marquee"
+        @description "marquee: repeat the names right after themselves so the strip never runs out; off, the names pass once and start over"
+        @tier "presentation"
       marqueeContent : render-ui = {
         type: box
         paddingY: xl
@@ -147,48 +163,12 @@ orbital ProofOrbital {
           }, {
             type: box
             fullWidth: true
-            className: "proof-marquee motion-reduce:[mask-image:none]"
+            marquee: { direction: @config.marqueeDirection, speed: @config.marqueeSpeed, clip: @config.marqueeClip, loop: @config.marqueeLoop }
             children: [{
-              type: box
-              className: "proof-marquee-track animate-almadar-marquee hover:[animation-play-state:paused] motion-reduce:animate-none motion-reduce:w-auto motion-reduce:flex-wrap motion-reduce:justify-center"
-              children: [{
                 type: stack
                 direction: horizontal
                 gap: none
                 align: center
-                children: (array/map @config.entries (fn item {
-                type: stack
-                direction: horizontal
-                gap: sm
-                align: center
-                className: "shrink-0 px-8"
-                children: [{
-                  type: image
-                  src: (object/get @item logo "")
-                  alt: (object/get @item name "")
-                  fit: contain
-                  rounded: none
-                  className: "h-10 w-auto"
-                }, {
-                  type: icon
-                  name: (object/get @item icon @config.markIcon)
-                  size: lg
-                  color: primary
-                  className: (if (== (object/get @item logo "") "") "" hidden)
-                }, {
-                  type: typography
-                  variant: h3
-                  content: (object/get @item name "")
-                  className: "whitespace-nowrap"
-                }]
-              }))
-              }, {
-                type: stack
-                direction: horizontal
-                gap: none
-                align: center
-                className: "motion-reduce:hidden"
-                aria-hidden: true
                 children: (array/map @config.entries (fn item {
                 type: stack
                 direction: horizontal
@@ -216,7 +196,6 @@ orbital ProofOrbital {
                 }]
               }))
               }]
-            }]
           }]
         }]
       }

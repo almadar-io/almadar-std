@@ -1,0 +1,1565 @@
+{
+ "atom": "agent/atoms/std-agent-file-tools.lolo",
+ "trait": "AgentFileTools",
+ "note": "root work under cwd; host answers are played as the next step's event; effect arguments are not asserted, the refusal controls prove no effect fires",
+ "cases": [
+  {
+   "id": "the loop's call id is what the answer carries",
+   "config": {
+    "rootDir": "work/"
+   },
+   "steps": [
+    {
+     "trait": "AgentFileTools",
+     "event": "TOOL_PENDING",
+     "from": "ready",
+     "payload": {
+      "callId": "c9",
+      "tool": "AgentFileTools.READ_FILE"
+     },
+     "entity": {
+      "id": "f",
+      "callId": "",
+      "dir": "",
+      "entries": [],
+      "sized": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready"
+     }
+    },
+    {
+     "trait": "AgentFileTools",
+     "event": "FILE_FAILED",
+     "from": "ready",
+     "payload": {
+      "error": "gone"
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "TOOL_FAILED",
+        "payload": {
+         "callId": "c9",
+         "error": "gone"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a text path reads the file through os/read-file",
+   "config": {
+    "rootDir": "work/"
+   },
+   "steps": [
+    {
+     "trait": "AgentFileTools",
+     "event": "READ_FILE",
+     "from": "ready",
+     "payload": {
+      "path": "notes/a.txt"
+     },
+     "entity": {
+      "id": "f",
+      "callId": "c1",
+      "dir": "",
+      "entries": [],
+      "sized": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "effects": [
+       {
+        "type": "os/read-file",
+        "optionsAt": 1,
+        "routed": true
+       }
+      ],
+      "emits": [
+       {
+        "event": "FILE_FAILED",
+        "payload": {
+         "error": "os/read-file: no os host configured",
+         "kind": "unsupported"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: read of ../x.txt leaves the root and is refused before any file is touched",
+   "config": {
+    "rootDir": "work/"
+   },
+   "steps": [
+    {
+     "trait": "AgentFileTools",
+     "event": "READ_FILE",
+     "from": "ready",
+     "payload": {
+      "path": "../x.txt"
+     },
+     "entity": {
+      "id": "f",
+      "callId": "c1",
+      "dir": "",
+      "entries": [],
+      "sized": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "TOOL_FAILED",
+        "payload": {
+         "callId": "c1",
+         "error": "the path is outside the workspace"
+        }
+       }
+      ],
+      "neverEmits": [
+       "TOOL_RESULT"
+      ],
+      "effects": []
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: read of /etc/passwd leaves the root and is refused before any file is touched",
+   "config": {
+    "rootDir": "work/"
+   },
+   "steps": [
+    {
+     "trait": "AgentFileTools",
+     "event": "READ_FILE",
+     "from": "ready",
+     "payload": {
+      "path": "/etc/passwd"
+     },
+     "entity": {
+      "id": "f",
+      "callId": "c1",
+      "dir": "",
+      "entries": [],
+      "sized": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "TOOL_FAILED",
+        "payload": {
+         "callId": "c1",
+         "error": "the path is outside the workspace"
+        }
+       }
+      ],
+      "neverEmits": [
+       "TOOL_RESULT"
+      ],
+      "effects": []
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: read of a/../../x.txt leaves the root and is refused before any file is touched",
+   "config": {
+    "rootDir": "work/"
+   },
+   "steps": [
+    {
+     "trait": "AgentFileTools",
+     "event": "READ_FILE",
+     "from": "ready",
+     "payload": {
+      "path": "a/../../x.txt"
+     },
+     "entity": {
+      "id": "f",
+      "callId": "c1",
+      "dir": "",
+      "entries": [],
+      "sized": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "TOOL_FAILED",
+        "payload": {
+         "callId": "c1",
+         "error": "the path is outside the workspace"
+        }
+       }
+      ],
+      "neverEmits": [
+       "TOOL_RESULT"
+      ],
+      "effects": []
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: read of .. leaves the root and is refused before any file is touched",
+   "config": {
+    "rootDir": "work/"
+   },
+   "steps": [
+    {
+     "trait": "AgentFileTools",
+     "event": "READ_FILE",
+     "from": "ready",
+     "payload": {
+      "path": ".."
+     },
+     "entity": {
+      "id": "f",
+      "callId": "c1",
+      "dir": "",
+      "entries": [],
+      "sized": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "TOOL_FAILED",
+        "payload": {
+         "callId": "c1",
+         "error": "the path is outside the workspace"
+        }
+       }
+      ],
+      "neverEmits": [
+       "TOOL_RESULT"
+      ],
+      "effects": []
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: read of a/../b.txt stays in the root and reads",
+   "config": {
+    "rootDir": "work/"
+   },
+   "steps": [
+    {
+     "trait": "AgentFileTools",
+     "event": "READ_FILE",
+     "from": "ready",
+     "payload": {
+      "path": "a/../b.txt"
+     },
+     "entity": {
+      "id": "f",
+      "callId": "c1",
+      "dir": "",
+      "entries": [],
+      "sized": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "effects": [
+       {
+        "type": "os/read-file",
+        "optionsAt": 1,
+        "routed": true
+       }
+      ],
+      "emits": [
+       {
+        "event": "FILE_FAILED",
+        "payload": {
+         "error": "os/read-file: no os host configured",
+         "kind": "unsupported"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: read of ..hidden.txt stays in the root and reads",
+   "config": {
+    "rootDir": "work/"
+   },
+   "steps": [
+    {
+     "trait": "AgentFileTools",
+     "event": "READ_FILE",
+     "from": "ready",
+     "payload": {
+      "path": "..hidden.txt"
+     },
+     "entity": {
+      "id": "f",
+      "callId": "c1",
+      "dir": "",
+      "entries": [],
+      "sized": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "effects": [
+       {
+        "type": "os/read-file",
+        "optionsAt": 1,
+        "routed": true
+       }
+      ],
+      "emits": [
+       {
+        "event": "FILE_FAILED",
+        "payload": {
+         "error": "os/read-file: no os host configured",
+         "kind": "unsupported"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a .pdf path resolves its real path for std-pdf-text",
+   "config": {
+    "rootDir": "work/"
+   },
+   "steps": [
+    {
+     "trait": "AgentFileTools",
+     "event": "READ_FILE",
+     "from": "ready",
+     "payload": {
+      "path": "docs/a.pdf"
+     },
+     "entity": {
+      "id": "f",
+      "callId": "c1",
+      "dir": "",
+      "entries": [],
+      "sized": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "effects": [
+       {
+        "type": "os/realpath",
+        "optionsAt": 1,
+        "routed": true
+       }
+      ],
+      "emits": [
+       {
+        "event": "FILE_FAILED",
+        "payload": {
+         "error": "os/realpath: no os host configured",
+         "kind": "unsupported"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the .pdf suffix is matched in any case",
+   "config": {
+    "rootDir": "work/"
+   },
+   "steps": [
+    {
+     "trait": "AgentFileTools",
+     "event": "READ_FILE",
+     "from": "ready",
+     "payload": {
+      "path": "docs/A.PDF"
+     },
+     "entity": {
+      "id": "f",
+      "callId": "c1",
+      "dir": "",
+      "entries": [],
+      "sized": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "effects": [
+       {
+        "type": "os/realpath",
+        "optionsAt": 1,
+        "routed": true
+       }
+      ],
+      "emits": [
+       {
+        "event": "FILE_FAILED",
+        "payload": {
+         "error": "os/realpath: no os host configured",
+         "kind": "unsupported"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a path that only mentions pdf reads as a text file",
+   "config": {
+    "rootDir": "work/"
+   },
+   "steps": [
+    {
+     "trait": "AgentFileTools",
+     "event": "READ_FILE",
+     "from": "ready",
+     "payload": {
+      "path": "docs/pdf.txt"
+     },
+     "entity": {
+      "id": "f",
+      "callId": "c1",
+      "dir": "",
+      "entries": [],
+      "sized": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "effects": [
+       {
+        "type": "os/read-file",
+        "optionsAt": 1,
+        "routed": true
+       }
+      ],
+      "emits": [
+       {
+        "event": "FILE_FAILED",
+        "payload": {
+         "error": "os/read-file: no os host configured",
+         "kind": "unsupported"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a PDF path that leaves the root is refused",
+   "config": {
+    "rootDir": "work/"
+   },
+   "steps": [
+    {
+     "trait": "AgentFileTools",
+     "event": "READ_FILE",
+     "from": "ready",
+     "payload": {
+      "path": "../a.pdf"
+     },
+     "entity": {
+      "id": "f",
+      "callId": "c1",
+      "dir": "",
+      "entries": [],
+      "sized": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "TOOL_FAILED",
+        "payload": {
+         "callId": "c1",
+         "error": "the path is outside the workspace"
+        }
+       }
+      ],
+      "neverEmits": [
+       "TOOL_RESULT"
+      ],
+      "effects": []
+     }
+    }
+   ]
+  },
+  {
+   "id": "valid UTF-8 bytes answer their text",
+   "config": {
+    "rootDir": "work/"
+   },
+   "steps": [
+    {
+     "trait": "AgentFileTools",
+     "event": "FILE_READ",
+     "from": "ready",
+     "payload": {
+      "data": "aGVsbG8="
+     },
+     "entity": {
+      "id": "f",
+      "callId": "c1",
+      "dir": "",
+      "entries": [],
+      "sized": []
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "TOOL_RESULT",
+        "payload": {
+         "callId": "c1",
+         "result": "hello"
+        }
+       }
+      ],
+      "neverEmits": [
+       "TOOL_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "bytes that are not UTF-8 text and not a PDF answer binary file",
+   "config": {
+    "rootDir": "work/"
+   },
+   "steps": [
+    {
+     "trait": "AgentFileTools",
+     "event": "FILE_READ",
+     "from": "ready",
+     "payload": {
+      "data": "//4="
+     },
+     "entity": {
+      "id": "f",
+      "callId": "c1",
+      "dir": "",
+      "entries": [],
+      "sized": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "TOOL_FAILED",
+        "payload": {
+         "callId": "c1",
+         "error": "binary file"
+        }
+       }
+      ],
+      "neverEmits": [
+       "TOOL_RESULT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the resolved PDF path goes to std-pdf-text under the call id",
+   "config": {
+    "rootDir": "work/"
+   },
+   "steps": [
+    {
+     "trait": "AgentFileTools",
+     "event": "PDF_PATH",
+     "from": "ready",
+     "payload": {
+      "path": "/ws/work/docs/a.pdf"
+     },
+     "entity": {
+      "id": "f",
+      "callId": "c1",
+      "dir": "",
+      "entries": [],
+      "sized": []
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "PDF_REQUEST",
+        "payload": {
+         "key": "c1",
+         "path": "/ws/work/docs/a.pdf"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "PDF pages answer in order, each under a page marker line, joined by a blank line",
+   "config": {
+    "rootDir": "work/"
+   },
+   "steps": [
+    {
+     "trait": "AgentFileTools",
+     "event": "PDF_TEXT",
+     "from": "ready",
+     "payload": {
+      "key": "c1",
+      "pages": [
+       {
+        "page": 1,
+        "text": "Hello page one\n"
+       },
+       {
+        "page": 2,
+        "text": "Second page text\n"
+       }
+      ]
+     },
+     "entity": {
+      "id": "f",
+      "callId": "c1",
+      "dir": "",
+      "entries": [],
+      "sized": []
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "TOOL_RESULT",
+        "payload": {
+         "callId": "c1",
+         "result": "--- page 1 ---\nHello page one\n\n--- page 2 ---\nSecond page text\n"
+        }
+       }
+      ],
+      "neverEmits": [
+       "TOOL_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a page without text keeps its marker",
+   "config": {
+    "rootDir": "work/"
+   },
+   "steps": [
+    {
+     "trait": "AgentFileTools",
+     "event": "PDF_TEXT",
+     "from": "ready",
+     "payload": {
+      "key": "c1",
+      "pages": [
+       {
+        "page": 1,
+        "text": ""
+       },
+       {
+        "page": 2,
+        "text": "x\n"
+       }
+      ]
+     },
+     "entity": {
+      "id": "f",
+      "callId": "c1",
+      "dir": "",
+      "entries": [],
+      "sized": []
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "TOOL_RESULT",
+        "payload": {
+         "callId": "c1",
+         "result": "--- page 1 ---\n\n--- page 2 ---\nx\n"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a PDF with no text answers TOOL_FAILED",
+   "config": {
+    "rootDir": "work/"
+   },
+   "steps": [
+    {
+     "trait": "AgentFileTools",
+     "event": "PDF_NO_TEXT",
+     "from": "ready",
+     "payload": {
+      "key": "c1",
+      "pageCount": 3
+     },
+     "entity": {
+      "id": "f",
+      "callId": "c1",
+      "dir": "",
+      "entries": [],
+      "sized": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "TOOL_FAILED",
+        "payload": {
+         "callId": "c1",
+         "error": "the PDF has 3 pages and none has text"
+        }
+       }
+      ],
+      "neverEmits": [
+       "TOOL_RESULT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a failed PDF read answers TOOL_FAILED with its code and message",
+   "config": {
+    "rootDir": "work/"
+   },
+   "steps": [
+    {
+     "trait": "AgentFileTools",
+     "event": "PDF_FAILED",
+     "from": "ready",
+     "payload": {
+      "key": "c1",
+      "error": "pdftotext exited 1: no such file",
+      "code": "pdf_unreadable"
+     },
+     "entity": {
+      "id": "f",
+      "callId": "c1",
+      "dir": "",
+      "entries": [],
+      "sized": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "TOOL_FAILED",
+        "payload": {
+         "callId": "c1",
+         "error": "pdf_unreadable: pdftotext exited 1: no such file"
+        }
+       }
+      ],
+      "neverEmits": [
+       "TOOL_RESULT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a write goes through os/write-file",
+   "config": {
+    "rootDir": "work/"
+   },
+   "steps": [
+    {
+     "trait": "AgentFileTools",
+     "event": "WRITE_FILE",
+     "from": "ready",
+     "payload": {
+      "path": "out/b.txt",
+      "content": "hi"
+     },
+     "entity": {
+      "id": "f",
+      "callId": "c1",
+      "dir": "",
+      "entries": [],
+      "sized": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "effects": [
+       {
+        "type": "os/write-file",
+        "optionsAt": 2,
+        "routed": true
+       }
+      ],
+      "emits": [
+       {
+        "event": "FILE_FAILED",
+        "payload": {
+         "error": "os/write-file: no os host configured",
+         "kind": "unsupported"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: write to ../b.txt leaves the root and is refused",
+   "config": {
+    "rootDir": "work/"
+   },
+   "steps": [
+    {
+     "trait": "AgentFileTools",
+     "event": "WRITE_FILE",
+     "from": "ready",
+     "payload": {
+      "path": "../b.txt",
+      "content": "hi"
+     },
+     "entity": {
+      "id": "f",
+      "callId": "c1",
+      "dir": "",
+      "entries": [],
+      "sized": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "TOOL_FAILED",
+        "payload": {
+         "callId": "c1",
+         "error": "the path is outside the workspace"
+        }
+       }
+      ],
+      "neverEmits": [
+       "TOOL_RESULT"
+      ],
+      "effects": []
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: write to /tmp/b.txt leaves the root and is refused",
+   "config": {
+    "rootDir": "work/"
+   },
+   "steps": [
+    {
+     "trait": "AgentFileTools",
+     "event": "WRITE_FILE",
+     "from": "ready",
+     "payload": {
+      "path": "/tmp/b.txt",
+      "content": "hi"
+     },
+     "entity": {
+      "id": "f",
+      "callId": "c1",
+      "dir": "",
+      "entries": [],
+      "sized": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "TOOL_FAILED",
+        "payload": {
+         "callId": "c1",
+         "error": "the path is outside the workspace"
+        }
+       }
+      ],
+      "neverEmits": [
+       "TOOL_RESULT"
+      ],
+      "effects": []
+     }
+    }
+   ]
+  },
+  {
+   "id": "a finished write answers written",
+   "config": {
+    "rootDir": "work/"
+   },
+   "steps": [
+    {
+     "trait": "AgentFileTools",
+     "event": "FILE_WROTE",
+     "from": "ready",
+     "payload": {},
+     "entity": {
+      "id": "f",
+      "callId": "c1",
+      "dir": "",
+      "entries": [],
+      "sized": []
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "TOOL_RESULT",
+        "payload": {
+         "callId": "c1",
+         "result": "written"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a listing reads the directory through os/list-dir",
+   "config": {
+    "rootDir": "work/"
+   },
+   "steps": [
+    {
+     "trait": "AgentFileTools",
+     "event": "LIST_FILES",
+     "from": "ready",
+     "payload": {
+      "path": "src"
+     },
+     "entity": {
+      "id": "f",
+      "callId": "c1",
+      "dir": "",
+      "entries": [],
+      "sized": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "effects": [
+       {
+        "type": "os/list-dir",
+        "optionsAt": 1,
+        "routed": true
+       }
+      ],
+      "emits": [
+       {
+        "event": "FILE_FAILED",
+        "payload": {
+         "error": "os/list-dir: no os host configured",
+         "kind": "unsupported"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the root itself is listed by an empty path",
+   "config": {
+    "rootDir": "work/"
+   },
+   "steps": [
+    {
+     "trait": "AgentFileTools",
+     "event": "LIST_FILES",
+     "from": "ready",
+     "payload": {
+      "path": ""
+     },
+     "entity": {
+      "id": "f",
+      "callId": "c1",
+      "dir": "",
+      "entries": [],
+      "sized": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "effects": [
+       {
+        "type": "os/list-dir",
+        "optionsAt": 1,
+        "routed": true
+       }
+      ],
+      "emits": [
+       {
+        "event": "FILE_FAILED",
+        "payload": {
+         "error": "os/list-dir: no os host configured",
+         "kind": "unsupported"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: listing ../ leaves the root and is refused",
+   "config": {
+    "rootDir": "work/"
+   },
+   "steps": [
+    {
+     "trait": "AgentFileTools",
+     "event": "LIST_FILES",
+     "from": "ready",
+     "payload": {
+      "path": "../"
+     },
+     "entity": {
+      "id": "f",
+      "callId": "c1",
+      "dir": "",
+      "entries": [],
+      "sized": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "TOOL_FAILED",
+        "payload": {
+         "callId": "c1",
+         "error": "the path is outside the workspace"
+        }
+       }
+      ],
+      "neverEmits": [
+       "TOOL_RESULT"
+      ],
+      "effects": []
+     }
+    }
+   ]
+  },
+  {
+   "id": "the listed entries are kept and the first is sized",
+   "config": {
+    "rootDir": "work/"
+   },
+   "steps": [
+    {
+     "trait": "AgentFileTools",
+     "event": "DIR_LISTED",
+     "from": "ready",
+     "payload": {
+      "entries": [
+       {
+        "name": "a.txt",
+        "kind": "file"
+       },
+       {
+        "name": "sub",
+        "kind": "dir"
+       }
+      ]
+     },
+     "entity": {
+      "id": "f",
+      "callId": "c1",
+      "dir": "",
+      "entries": [],
+      "sized": []
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LIST_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an unsized entry is stat-ed",
+   "config": {
+    "rootDir": "work/"
+   },
+   "steps": [
+    {
+     "trait": "AgentFileTools",
+     "event": "LIST_NEXT",
+     "from": "ready",
+     "payload": {},
+     "entity": {
+      "id": "f",
+      "callId": "c1",
+      "dir": "src",
+      "entries": [
+       {
+        "name": "a.txt",
+        "kind": "file"
+       }
+      ],
+      "sized": []
+     },
+     "expect": {
+      "fired": true,
+      "effects": [
+       {
+        "type": "let",
+        "routed": true
+       }
+      ],
+      "emits": [
+       {
+        "event": "FILE_FAILED",
+        "payload": {
+         "error": "os/stat: no os host configured",
+         "kind": "unsupported"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a stat answer sized the entry and moves on",
+   "config": {
+    "rootDir": "work/"
+   },
+   "steps": [
+    {
+     "trait": "AgentFileTools",
+     "event": "ENTRY_STAT",
+     "from": "ready",
+     "payload": {
+      "size": 12
+     },
+     "entity": {
+      "id": "f",
+      "callId": "c1",
+      "dir": "src",
+      "entries": [
+       {
+        "name": "a.txt",
+        "kind": "file"
+       }
+      ],
+      "sized": []
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LIST_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: when every entry is sized the listing answers name, kind and size",
+   "config": {
+    "rootDir": "work/"
+   },
+   "steps": [
+    {
+     "trait": "AgentFileTools",
+     "event": "LIST_NEXT",
+     "from": "ready",
+     "payload": {},
+     "entity": {
+      "id": "f",
+      "callId": "c1",
+      "dir": "",
+      "entries": [
+       {
+        "name": "a.txt",
+        "kind": "file"
+       },
+       {
+        "name": "sub",
+        "kind": "dir"
+       }
+      ],
+      "sized": [
+       {
+        "name": "a.txt",
+        "kind": "file",
+        "size": 12
+       },
+       {
+        "name": "sub",
+        "kind": "dir",
+        "size": 96
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "TOOL_RESULT",
+        "payload": {
+         "callId": "c1",
+         "result": "[{\"name\":\"a.txt\",\"kind\":\"file\",\"size\":12},{\"name\":\"sub\",\"kind\":\"dir\",\"size\":96}]"
+        }
+       }
+      ],
+      "effects": []
+     }
+    }
+   ]
+  },
+  {
+   "id": "an empty directory answers an empty list",
+   "config": {
+    "rootDir": "work/"
+   },
+   "steps": [
+    {
+     "trait": "AgentFileTools",
+     "event": "LIST_NEXT",
+     "from": "ready",
+     "payload": {},
+     "entity": {
+      "id": "f",
+      "callId": "c1",
+      "dir": "",
+      "entries": [],
+      "sized": []
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "TOOL_RESULT",
+        "payload": {
+         "callId": "c1",
+         "result": "[]"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a glob expands through os/glob",
+   "config": {
+    "rootDir": "work/"
+   },
+   "steps": [
+    {
+     "trait": "AgentFileTools",
+     "event": "GLOB",
+     "from": "ready",
+     "payload": {
+      "pattern": "**/*.lolo"
+     },
+     "entity": {
+      "id": "f",
+      "callId": "c1",
+      "dir": "",
+      "entries": [],
+      "sized": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "effects": [
+       {
+        "type": "os/glob",
+        "optionsAt": 1,
+        "routed": true
+       }
+      ],
+      "emits": [
+       {
+        "event": "FILE_FAILED",
+        "payload": {
+         "error": "os/glob: no os host configured",
+         "kind": "unsupported"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: glob ../*.lolo leaves the root and is refused",
+   "config": {
+    "rootDir": "work/"
+   },
+   "steps": [
+    {
+     "trait": "AgentFileTools",
+     "event": "GLOB",
+     "from": "ready",
+     "payload": {
+      "pattern": "../*.lolo"
+     },
+     "entity": {
+      "id": "f",
+      "callId": "c1",
+      "dir": "",
+      "entries": [],
+      "sized": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "TOOL_FAILED",
+        "payload": {
+         "callId": "c1",
+         "error": "the pattern is outside the workspace"
+        }
+       }
+      ],
+      "neverEmits": [
+       "TOOL_RESULT"
+      ],
+      "effects": []
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: glob /etc/* leaves the root and is refused",
+   "config": {
+    "rootDir": "work/"
+   },
+   "steps": [
+    {
+     "trait": "AgentFileTools",
+     "event": "GLOB",
+     "from": "ready",
+     "payload": {
+      "pattern": "/etc/*"
+     },
+     "entity": {
+      "id": "f",
+      "callId": "c1",
+      "dir": "",
+      "entries": [],
+      "sized": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "TOOL_FAILED",
+        "payload": {
+         "callId": "c1",
+         "error": "the pattern is outside the workspace"
+        }
+       }
+      ],
+      "neverEmits": [
+       "TOOL_RESULT"
+      ],
+      "effects": []
+     }
+    }
+   ]
+  },
+  {
+   "id": "matches answer relative to the root",
+   "config": {
+    "rootDir": "work/"
+   },
+   "steps": [
+    {
+     "trait": "AgentFileTools",
+     "event": "GLOBBED",
+     "from": "ready",
+     "payload": {
+      "paths": [
+       "work/src/a.lolo",
+       "work/b.lolo"
+      ]
+     },
+     "entity": {
+      "id": "f",
+      "callId": "c1",
+      "dir": "",
+      "entries": [],
+      "sized": []
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "TOOL_RESULT",
+        "payload": {
+         "callId": "c1",
+         "result": "[\"src/a.lolo\",\"b.lolo\"]"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "no match answers an empty list",
+   "config": {
+    "rootDir": "work/"
+   },
+   "steps": [
+    {
+     "trait": "AgentFileTools",
+     "event": "GLOBBED",
+     "from": "ready",
+     "payload": {
+      "paths": []
+     },
+     "entity": {
+      "id": "f",
+      "callId": "c1",
+      "dir": "",
+      "entries": [],
+      "sized": []
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "TOOL_RESULT",
+        "payload": {
+         "callId": "c1",
+         "result": "[]"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a failed operation hands the host's reason back",
+   "config": {
+    "rootDir": "work/"
+   },
+   "steps": [
+    {
+     "trait": "AgentFileTools",
+     "event": "FILE_FAILED",
+     "from": "ready",
+     "payload": {
+      "error": "not-found"
+     },
+     "entity": {
+      "id": "f",
+      "callId": "c1",
+      "dir": "",
+      "entries": [],
+      "sized": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "TOOL_FAILED",
+        "payload": {
+         "callId": "c1",
+         "error": "not-found"
+        }
+       }
+      ],
+      "neverEmits": [
+       "TOOL_RESULT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a failure with no reason still answers TOOL_FAILED",
+   "config": {
+    "rootDir": "work/"
+   },
+   "steps": [
+    {
+     "trait": "AgentFileTools",
+     "event": "FILE_FAILED",
+     "from": "ready",
+     "payload": {},
+     "entity": {
+      "id": "f",
+      "callId": "c1",
+      "dir": "",
+      "entries": [],
+      "sized": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "TOOL_FAILED",
+        "payload": {
+         "callId": "c1",
+         "error": "the file operation failed"
+        }
+       }
+      ],
+      "neverEmits": [
+       "TOOL_RESULT"
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

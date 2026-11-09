@@ -1,0 +1,43 @@
+app a11y-probe-documents-spec [
+  version: "1.0.0",
+  description: "Design contract for the linked-documents probe (WCAG 1.1.1, EN 301 549 chapter 10, rule pdf-scanned). PROBE_RUN { key, pageUrl } on a tab already at pageUrl asks PAGE_LINKS, keeps the document links (download flag, or an href matching the documentPatterns knob), downloads each up to the maxPdfs knob with PAGE_DOWNLOAD { key, index } and reads the downloaded path with std-pdf-text. A PDF with no text layer is the confirmed pdf-scanned finding; a PDF with text answers DOCUMENT_READ { key, url, path, pages } and no finding. A document that cannot be downloaded or read answers DOCUMENT_UNREADABLE and the run goes on; documents over the cap answer DOCUMENTS_UNCHECKED. PROBE_DONE { key, probe, findings } ends the run, PROBE_FAILED { key, probe, error, code } a failure to read the page's links."
+]
+
+type WcagRef = { criterion : string!, level : "A" | "AA" | "AAA"!, version : "2.0" | "2.1" | "2.2"! }
+type A11yFinding = { id : string!, pageUrl : string!, rule : string!, wcag : [WcagRef]!, method : "engine" | "probe" | "llm"!, engines : [string]!, impact : "critical" | "serious" | "moderate" | "minor"!, confidence : "confirmed" | "needs-verification"!, selector : string!, snippet : string!, evidence : string!, count : number! }
+type PageLink = { index : number!, text : string!, href : string!, download : boolean!, kind : "link" | "button"! }
+type PdfPage = { page : number!, text : string! }
+
+orbital A11yProbeDocumentsSpec {
+  expects entity DocumentsRun [runtime] {
+    id : string!
+  }
+  expects trait DocumentsProbe {
+    state idle {
+      PROBE_RUN -> linking
+    }
+    state linking {
+      PAGE_LINKS_READ -> stepping
+    }
+    state stepping {
+      DOCS_NEXT -> downloading
+    }
+    state downloading {
+      PAGE_DOWNLOADED -> reading
+    }
+    state reading {
+      PDF_TEXT -> stepping
+    }
+    emits {
+      PAGE_LINKS { key : string! }
+      PAGE_DOWNLOAD { key : string!  index : number! }
+      PDF_REQUEST { key : string!  path : string! }
+      DOCUMENT_READ { key : string!  url : string!  path : string!  pages : [PdfPage]! }
+      DOCUMENT_UNREADABLE { key : string!  url : string!  error : string!  code : string! }
+      DOCUMENTS_UNCHECKED { key : string!  unchecked : number!  total : number! }
+      PROBE_DONE { key : string!  probe : string!  findings : [A11yFinding]! }
+      PROBE_FAILED { key : string!  probe : string!  error : string!  code : string! }
+    }
+  }
+  expects page boot -> DocumentsProbe
+}

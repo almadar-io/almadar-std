@@ -1,0 +1,225 @@
+app std-a11y-probe-hover [
+  version: "1.0.0",
+  description: "std-a11y-probe-hover — WCAG 1.4.13 Content on Hover or Focus. PROBE_RUN { key, pageUrl } on a tab already at pageUrl asks the page for the elements the triggerSelectors knob names (PAGE_MEASURE), and for each one focuses it and records which elements became visible (PAGE_MEASURE), dispatches mouseover on the trigger and on the revealed content and checks the content stays visible (PAGE_MEASURE), presses Escape (PAGE_KEY) and checks whether the revealed content is still visible (PAGE_MEASURE). The page is navigated again to pageUrl after each trigger (PAGE_NAVIGATE) so it is left as found. A trigger that reveals nothing when focused produces nothing. Findings carry the rule hover-content: not dismissible (the revealed content is still visible after Escape, confirmed), not hoverable (the content hides when the pointer moves onto it, confirmed) and a gap (the revealed content does not touch its trigger by more than the gapTolerance knob, so a pointer cannot reach it, needs-verification). It answers PROBE_DONE { key, probe, findings } or PROBE_FAILED { key, probe, error, code } (probe_busy, probe_page_failed, probe_bad_measure)."
+]
+uses Spec from "almadar-std/probe-hover"
+
+type WcagRef = { criterion : string!, level : "A" | "AA" | "AAA"!, version : "2.0" | "2.1" | "2.2"! }
+type A11yFinding = { id : string!, pageUrl : string!, rule : string!, wcag : [WcagRef]!, method : "engine" | "probe" | "llm"!, engines : [string]!, impact : "critical" | "serious" | "moderate" | "minor"!, confidence : "confirmed" | "needs-verification"!, selector : string!, snippet : string!, evidence : string!, count : number! }
+type HoverTrigger = { selector : string!, snippet : string! }
+type HoverFind = { triggers : [HoverTrigger]! }
+type HoverFocus = { focused : boolean!, revealed : [string]!, content : string!, gap : number! }
+type HoverStay = { visible : boolean! }
+type HoverAfter = { visible : [string]! }
+type HoverRule = { reason : string!, impact : "critical" | "serious" | "moderate" | "minor"!, confidence : "confirmed" | "needs-verification"! }
+
+orbital HoverOrbital {
+  entity HoverRun [runtime] {
+    id : string!
+    runKey : string @description "The caller's name for the run in flight." = ""
+    pageUrl : string @description "The page the run in flight is about." = ""
+    triggers : [HoverTrigger] @description "The elements the run focuses, in document order." = []
+    at : number @description "The index of the trigger being checked." = 0
+    revealed : [string] @description "The selectors of the elements that became visible when the trigger took focus." = []
+    content : string @description "The selector of the outermost revealed element, blank when nothing was revealed." = ""
+    gap : number @description "The CSS px between the trigger and the revealed content." = 0
+    focused : boolean @description "True when the trigger took focus." = false
+    hoverLost : boolean @description "True when the revealed content hid itself as the pointer moved onto it." = false
+    findings : [A11yFinding] @description "The findings of the triggers checked so far." = []
+  }
+
+  trait HoverProbe -> HoverRun {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      PROBE_RUN -> finding
+        (set @entity.runKey @payload.key)
+        (set @entity.pageUrl @payload.pageUrl)
+        (set @entity.triggers [])
+        (set @entity.at 0)
+        (set @entity.findings [])
+        (emit PAGE_MEASURE { key: (str/concat @payload.key ":find"), expression: (str/concat "(" @config.findMeasure ")(" (json/stringify (str/join @config.triggerSelectors ",")) ")") })
+    }
+
+    state finding {
+      INIT -> idle
+      PROBE_RUN -> finding
+        (emit PROBE_FAILED { key: @payload.key, probe: "hover", error: (str/concat "a run on " @entity.pageUrl " is in flight"), code: "probe_busy" })
+      PAGE_FAILED -> idle when (str/startsWith @payload.key @entity.runKey)
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "hover", error: @payload.error, code: "probe_page_failed" })
+      PAGE_MEASURED -> idle when (and (= @payload.key (str/concat @entity.runKey ":find")) (= (json/parse @payload.json HoverFind) null))
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "hover", error: "the page measurement is not the trigger list shape", code: "probe_bad_measure" })
+      PAGE_MEASURED -> finding when (and (= @payload.key (str/concat @entity.runKey ":find")) (!= (json/parse @payload.json HoverFind) null))
+        (set @entity.triggers (let ((d (json/parse @payload.json HoverFind))) @d.triggers))
+        (emit HOVER_FOUND {})
+      HOVER_FOUND -> idle when (= (array/len @entity.triggers) 0)
+        (emit PROBE_DONE { key: @entity.runKey, probe: "hover", findings: [] })
+      HOVER_FOUND -> focusing when (> (array/len @entity.triggers) 0)
+        (let ((t (array/nth @entity.triggers 0)))
+          (emit PAGE_MEASURE { key: (str/concat @entity.runKey ":focus"), expression: (str/concat "(" @config.focusMeasure ")(" (json/stringify @t.selector) ")") }))
+    }
+
+    state focusing {
+      INIT -> idle
+      PROBE_RUN -> focusing
+        (emit PROBE_FAILED { key: @payload.key, probe: "hover", error: (str/concat "a run on " @entity.pageUrl " is in flight"), code: "probe_busy" })
+      PAGE_FAILED -> idle when (str/startsWith @payload.key @entity.runKey)
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "hover", error: @payload.error, code: "probe_page_failed" })
+      PAGE_MEASURED -> idle when (and (= @payload.key (str/concat @entity.runKey ":focus")) (= (json/parse @payload.json HoverFocus) null))
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "hover", error: "the page measurement is not the focus shape", code: "probe_bad_measure" })
+      PAGE_MEASURED -> focusing when (and (= @payload.key (str/concat @entity.runKey ":focus")) (!= (json/parse @payload.json HoverFocus) null))
+        (set @entity.focused (let ((f (json/parse @payload.json HoverFocus))) @f.focused))
+        (set @entity.revealed (let ((f (json/parse @payload.json HoverFocus))) @f.revealed))
+        (set @entity.content (let ((f (json/parse @payload.json HoverFocus))) @f.content))
+        (set @entity.gap (let ((f (json/parse @payload.json HoverFocus))) @f.gap))
+        (emit HOVER_FOCUSED {})
+      HOVER_FOCUSED -> restoring when (or (not @entity.focused) (= (array/len @entity.revealed) 0))
+        (emit PAGE_NAVIGATE { key: (str/concat @entity.runKey ":restore"), url: @entity.pageUrl })
+      HOVER_FOCUSED -> hovering when (and @entity.focused (> (array/len @entity.revealed) 0))
+        (let ((t (array/nth @entity.triggers @entity.at)))
+          (emit PAGE_MEASURE { key: (str/concat @entity.runKey ":hover"), expression: (str/concat "(" @config.hoverMeasure ")(" (json/stringify @t.selector) "," (json/stringify @entity.content) ")") }))
+    }
+
+    state hovering {
+      INIT -> idle
+      PROBE_RUN -> hovering
+        (emit PROBE_FAILED { key: @payload.key, probe: "hover", error: (str/concat "a run on " @entity.pageUrl " is in flight"), code: "probe_busy" })
+      PAGE_FAILED -> idle when (str/startsWith @payload.key @entity.runKey)
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "hover", error: @payload.error, code: "probe_page_failed" })
+      PAGE_MEASURED -> idle when (and (= @payload.key (str/concat @entity.runKey ":hover")) (= (json/parse @payload.json HoverStay) null))
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "hover", error: "the page measurement is not the hover shape", code: "probe_bad_measure" })
+      PAGE_MEASURED -> escaping when (and (= @payload.key (str/concat @entity.runKey ":hover")) (!= (json/parse @payload.json HoverStay) null))
+        (set @entity.hoverLost (let ((h (json/parse @payload.json HoverStay))) (not @h.visible)))
+        (emit PAGE_KEY { key: (str/concat @entity.runKey ":escape"), keyName: "Escape" })
+    }
+
+    state escaping {
+      INIT -> idle
+      PROBE_RUN -> escaping
+        (emit PROBE_FAILED { key: @payload.key, probe: "hover", error: (str/concat "a run on " @entity.pageUrl " is in flight"), code: "probe_busy" })
+      PAGE_FAILED -> idle when (str/startsWith @payload.key @entity.runKey)
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "hover", error: @payload.error, code: "probe_page_failed" })
+      PAGE_KEY_SENT -> checking when (= @payload.key (str/concat @entity.runKey ":escape"))
+        (emit PAGE_MEASURE { key: (str/concat @entity.runKey ":after"), expression: (str/concat "(" @config.afterMeasure ")(" (json/stringify @entity.revealed) ")") })
+    }
+
+    state checking {
+      INIT -> idle
+      PROBE_RUN -> checking
+        (emit PROBE_FAILED { key: @payload.key, probe: "hover", error: (str/concat "a run on " @entity.pageUrl " is in flight"), code: "probe_busy" })
+      PAGE_FAILED -> idle when (str/startsWith @payload.key @entity.runKey)
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "hover", error: @payload.error, code: "probe_page_failed" })
+      PAGE_MEASURED -> idle when (and (= @payload.key (str/concat @entity.runKey ":after")) (= (json/parse @payload.json HoverAfter) null))
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "hover", error: "the page measurement is not the visibility shape", code: "probe_bad_measure" })
+      PAGE_MEASURED -> restoring when (and (= @payload.key (str/concat @entity.runKey ":after")) (!= (json/parse @payload.json HoverAfter) null))
+        (let ((after (json/parse @payload.json HoverAfter)) (t (array/nth @entity.triggers @entity.at)))
+          (set @entity.findings (array/concat @entity.findings (array/map
+            (array/filter @config.rules (fn r (or
+              (and (= @r.reason "not-dismissible") (> (array/len @after.visible) 0))
+              (and (= @r.reason "not-hoverable") @entity.hoverLost)
+              (and (= @r.reason "gap") (> @entity.gap @config.gapTolerance)))))
+            (fn r {
+              id: (str/concat @entity.pageUrl "#hover-content#" @t.selector "#" @r.reason),
+              pageUrl: @entity.pageUrl,
+              rule: "hover-content",
+              wcag: [{ criterion: "1.4.13", level: "AA", version: "2.1" }],
+              method: "probe",
+              engines: ["probe"],
+              impact: @r.impact,
+              confidence: @r.confidence,
+              selector: @t.selector,
+              snippet: @t.snippet,
+              evidence: "",
+              count: 1
+            })))))
+        (emit PAGE_NAVIGATE { key: (str/concat @entity.runKey ":restore"), url: @entity.pageUrl })
+    }
+
+    state restoring {
+      INIT -> idle
+      PROBE_RUN -> restoring
+        (emit PROBE_FAILED { key: @payload.key, probe: "hover", error: (str/concat "a run on " @entity.pageUrl " is in flight"), code: "probe_busy" })
+      PAGE_FAILED -> idle when (str/startsWith @payload.key @entity.runKey)
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "hover", error: @payload.error, code: "probe_page_failed" })
+      PAGE_LOADED -> focusing when (and (= @payload.key (str/concat @entity.runKey ":restore")) (< (+ @entity.at 1) (array/len @entity.triggers)))
+        (let ((t (array/nth @entity.triggers (+ @entity.at 1))))
+          (emit PAGE_MEASURE { key: (str/concat @entity.runKey ":focus"), expression: (str/concat "(" @config.focusMeasure ")(" (json/stringify @t.selector) ")") }))
+        (set @entity.at (+ @entity.at 1))
+      PAGE_LOADED -> idle when (and (= @payload.key (str/concat @entity.runKey ":restore")) (>= (+ @entity.at 1) (array/len @entity.triggers)))
+        (emit PROBE_DONE { key: @entity.runKey, probe: "hover", findings: @entity.findings })
+    }
+
+    emits {
+      PAGE_MEASURE -> external { key : string!  expression : string! }
+        @description "Page request: evaluate the expression in the page; it answers a JSON string."
+        @synonyms "measure page, evaluate in page"
+        @tier "primary"
+      PAGE_KEY -> external { key : string!  keyName : "Tab" | "Enter" | "Space" | "Escape" | "ArrowDown" | "ArrowUp" | "ArrowLeft" | "ArrowRight" | "Home" | "End"!  shift : boolean }
+        @description "Page request: press a key in the page; the composer wires it to the std-chrome PAGE_KEY input."
+        @synonyms "press key, send key"
+        @tier "primary"
+      PAGE_NAVIGATE -> external { key : string!  url : string! }
+        @description "Page request: load the url in the tab, restoring the page after a trigger was focused."
+        @synonyms "navigate, reload page"
+        @tier "primary"
+      PROBE_DONE -> external { key : string!  probe : string!  findings : [A11yFinding]! }
+        @description "The hover probe finished: its findings, empty when every revealed content dismisses with Escape and can be hovered."
+        @synonyms "hover findings, tooltip result"
+        @tier "primary"
+      PROBE_FAILED -> external { key : string!  probe : string!  error : string!  code : string! }
+        @description "The probe could not finish: code is probe_busy, probe_page_failed or probe_bad_measure."
+        @synonyms "probe failed, hover error"
+        @tier "primary"
+      HOVER_FOUND {}
+        @description "Internal: the trigger list is held; decide whether there is anything to focus."
+        @tier "internal"
+      HOVER_FOCUSED {}
+        @description "Internal: the focus measurement is held; decide whether anything was revealed."
+        @tier "internal"
+    }
+
+    listens {
+      PROBE_RUN { key : string!  pageUrl : string! }
+        @description "Check the page the tab is on for content that appears on hover or focus and cannot be dismissed with Escape or reached with the pointer."
+        @synonyms "tooltip check, hover content check, wcag 1.4.13"
+      PAGE_KEY_SENT { key : string! }
+      PAGE_LOADED { key : string!  url : string!  title : string! }
+      PAGE_MEASURED { key : string!  json : string! }
+      PAGE_FAILED { key : string!  error : string!  code : string! }
+    }
+
+    config {
+      triggerSelectors : [string] = ["[aria-describedby]", "[aria-haspopup]", "[data-tooltip]"]
+        @label "Trigger selectors"
+        @description "CSS selectors of the elements whose focus may reveal content: a described element, a popup trigger or a declared tooltip trigger."
+        @tier "domain"
+      gapTolerance : number = 1
+        @label "Gap tolerance"
+        @description "CSS px of space allowed between a trigger and its revealed content before the pointer cannot reach it; the default absorbs sub-pixel layout rounding."
+        @tier "domain"
+      rules : [HoverRule] = [{ reason: "not-dismissible", impact: "serious", confidence: "confirmed" }, { reason: "not-hoverable", impact: "serious", confidence: "confirmed" }, { reason: "gap", impact: "moderate", confidence: "needs-verification" }]
+        @label "Rules"
+        @description "Each way revealed content fails WCAG 1.4.13 with the impact and confidence of its finding."
+        @tier "domain"
+      findMeasure : string = "(selectors) => { const sel = (e) => { const p = []; for (let n = e; n && n.nodeType === 1; n = n.parentElement) { if (n.id) { p.unshift('#' + CSS.escape(n.id)); break; } let i = 1; for (let s = n.previousElementSibling; s; s = s.previousElementSibling) { if (s.tagName === n.tagName) i++; } p.unshift(n.tagName.toLowerCase() + ':nth-of-type(' + i + ')'); } return p.join('>'); }; return JSON.stringify({ triggers: Array.from(document.querySelectorAll(selectors)).map((e) => ({ selector: sel(e), snippet: e.cloneNode(false).outerHTML })) }); }"
+        @label "Find expression"
+        @description "A page function taking the joined trigger selector and returning a JSON string of the matching elements with selector and opening tag."
+        @tier "infra"
+      focusMeasure : string = "(selector) => { const sel = (e) => { const p = []; for (let n = e; n && n.nodeType === 1; n = n.parentElement) { if (n.id) { p.unshift('#' + CSS.escape(n.id)); break; } let i = 1; for (let s = n.previousElementSibling; s; s = s.previousElementSibling) { if (s.tagName === n.tagName) i++; } p.unshift(n.tagName.toLowerCase() + ':nth-of-type(' + i + ')'); } return p.join('>'); }; const vis = (e) => { const s = getComputedStyle(e); const r = e.getBoundingClientRect(); return s.display !== 'none' && s.visibility !== 'hidden' && Number(s.opacity) > 0 && r.width > 0 && r.height > 0; }; const t = document.querySelector(selector); const all = Array.from(document.body.querySelectorAll('*')); const before = all.map(vis); t.focus(); const revealed = all.filter((e, i) => !before[i] && vis(e)); const roots = revealed.filter((e) => !revealed.includes(e.parentElement)); let gap = 0; if (roots.length > 0) { const a = t.getBoundingClientRect(); const b = roots[0].getBoundingClientRect(); gap = Math.hypot(Math.max(b.left - a.right, a.left - b.right, 0), Math.max(b.top - a.bottom, a.top - b.bottom, 0)); } return JSON.stringify({ focused: document.activeElement === t, revealed: revealed.map(sel), content: roots.length > 0 ? sel(roots[0]) : '', gap: gap }); }"
+        @label "Focus expression"
+        @description "A page function taking a trigger selector, focusing it and returning a JSON string of whether it took focus, the selectors of the elements that became visible, the outermost one and its gap to the trigger."
+        @tier "infra"
+      hoverMeasure : string = "(selector, content) => { const vis = (e) => { const s = getComputedStyle(e); const r = e.getBoundingClientRect(); return s.display !== 'none' && s.visibility !== 'hidden' && Number(s.opacity) > 0 && r.width > 0 && r.height > 0; }; const t = document.querySelector(selector); const c = document.querySelector(content); t.dispatchEvent(new MouseEvent('mouseover', { bubbles: true, cancelable: true, view: window })); t.dispatchEvent(new MouseEvent('mouseout', { bubbles: true, cancelable: true, view: window, relatedTarget: c })); c.dispatchEvent(new MouseEvent('mouseover', { bubbles: true, cancelable: true, view: window, relatedTarget: t })); return JSON.stringify({ visible: vis(c) }); }"
+        @label "Hover expression"
+        @description "A page function taking the trigger and content selectors, dispatching mouseover on the trigger and then on the content, and returning a JSON string of whether the content is still visible."
+        @tier "infra"
+      afterMeasure : string = "(selectors) => { const vis = (e) => { const s = getComputedStyle(e); const r = e.getBoundingClientRect(); return s.display !== 'none' && s.visibility !== 'hidden' && Number(s.opacity) > 0 && r.width > 0 && r.height > 0; }; return JSON.stringify({ visible: selectors.filter((s) => { const e = document.querySelector(s); return e !== null && vis(e); }) }); }"
+        @label "Visibility expression"
+        @description "A page function taking the revealed selectors and returning a JSON string of those still visible."
+        @tier "infra"
+    }
+  }
+
+  page boot as HoverProbePage -> HoverProbe
+}

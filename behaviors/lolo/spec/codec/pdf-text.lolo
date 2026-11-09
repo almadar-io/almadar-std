@@ -1,0 +1,25 @@
+app pdf-text-spec [
+  version: "1.0.0",
+  description: "Design contract for reading the text of a PDF file page by page through the poppler pdftotext command (composed std-cli, an exec grant the composer declares). PDF_READ { key, path } answers PDF_TEXT { key, pages: [{ page, text }] } with pages numbered from 1 in document order, split at the form feed pdftotext writes after each page, layout preserved; a PDF whose pages carry no text at all answers PDF_NO_TEXT { key, pageCount } (a scanned document); a missing file, an unreadable PDF or a failed command answers PDF_FAILED { key, error, code }. Nothing is truncated."
+]
+
+type PdfPage = { page : number!, text : string! }
+
+orbital PdfTextSpec {
+  expects entity PdfRead [runtime] {
+    id : string!
+  }
+  expects trait PdfText {
+    state ready
+    state reading
+    state ready {
+      PDF_READ -> reading
+    }
+    emits {
+      PDF_TEXT { key : string!  pages : [PdfPage]! }
+      PDF_NO_TEXT { key : string!  pageCount : number! }
+      PDF_FAILED { key : string!  error : string!  code : string! }
+    }
+  }
+  expects page boot -> PdfText
+}

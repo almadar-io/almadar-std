@@ -1,0 +1,409 @@
+{
+ "atom": "a11y/atoms/std-a11y-probe-media.lolo",
+ "trait": "MediaProbe",
+ "note": "std-a11y-probe-media with the page answers played as events. The measure JSON of each live case is the real result of the measure knob run in headless Chrome (probe-media.gen/gen_goldens.py) on video-captions-fail, video-captions-pass and probe-media.gen/pages/media-extra.html; the expression asserted is probe-media.gen/media.measure.js. Regenerate with python3 -I probe-media.gen/gen_goldens.py.",
+ "cases": [
+  {
+   "id": "PROBE_RUN asks the page to measure under the run key",
+   "steps": [
+    {
+     "from": "idle",
+     "event": "PROBE_RUN",
+     "payload": {
+      "key": "k1",
+      "pageUrl": "http://127.0.0.1:24680/"
+     },
+     "expect": {
+      "state": "measuring",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k1:measure",
+         "expression": "(() => { const sel = (e) => { const p = []; for (let n = e; n && n.nodeType === 1; n = n.parentElement) { if (n.id) { p.unshift('#' + CSS.escape(n.id)); break; } let i = 1; for (let s = n.previousElementSibling; s; s = s.previousElementSibling) { if (s.tagName === n.tagName) i++; } p.unshift(n.tagName.toLowerCase() + ':nth-of-type(' + i + ')'); } return p.join('>'); }; const refs = (e) => ['aria-describedby', 'aria-details'].reduce((n, a) => n + (e.getAttribute(a) || '').split(' ').filter((id) => id !== '' && document.getElementById(id) !== null).length, 0); const media = Array.from(document.querySelectorAll('video,audio')).map((e) => ({ kind: e.tagName.toLowerCase(), selector: sel(e), snippet: e.cloneNode(false).outerHTML, trackKinds: Array.from(e.querySelectorAll('track')).map((t) => t.kind), controls: e.hasAttribute('controls'), autoplay: e.hasAttribute('autoplay'), muted: e.hasAttribute('muted'), duration: Number.isFinite(e.duration) ? e.duration : null, transcriptRefs: refs(e) })); const frames = Array.from(document.querySelectorAll('iframe')).map((f) => ({ selector: sel(f), snippet: f.cloneNode(false).outerHTML, src: f.getAttribute('src') || '' })); return JSON.stringify({ media: media, frames: frames }); })()"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a second PROBE_RUN while measuring is refused as probe_busy",
+   "steps": [
+    {
+     "from": "measuring",
+     "event": "PROBE_RUN",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/"
+     },
+     "payload": {
+      "key": "k2",
+      "pageUrl": "http://127.0.0.1:24680/"
+     },
+     "expect": {
+      "state": "measuring",
+      "emits": [
+       {
+        "event": "PROBE_FAILED",
+        "payload": {
+         "key": "k2",
+         "probe": "media",
+         "error": "a run on http://127.0.0.1:24680/ is in flight",
+         "code": "probe_busy"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a measurement under another run's key is ignored",
+   "steps": [
+    {
+     "from": "measuring",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/"
+     },
+     "payload": {
+      "key": "k2:measure",
+      "json": "{\"media\":[{\"kind\":\"video\",\"selector\":\"#main>video:nth-of-type(1)\",\"snippet\":\"<video class=\\\"clip\\\" controls=\\\"\\\" width=\\\"320\\\" preload=\\\"metadata\\\"></video>\",\"trackKinds\":[],\"controls\":true,\"autoplay\":false,\"muted\":false,\"duration\":1,\"transcriptRefs\":0}],\"frames\":[]}"
+     },
+     "expect": {
+      "state": "measuring",
+      "emits": []
+     }
+    }
+   ]
+  },
+  {
+   "id": "a page failure answers PROBE_FAILED probe_page_failed",
+   "steps": [
+    {
+     "from": "measuring",
+     "event": "PAGE_FAILED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/"
+     },
+     "payload": {
+      "key": "k1:measure",
+      "error": "evaluation threw",
+      "code": "chrome_eval"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_FAILED",
+        "payload": {
+         "key": "k1",
+         "probe": "media",
+         "error": "evaluation threw",
+         "code": "probe_page_failed"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a measurement that is not the media shape answers probe_bad_measure",
+   "steps": [
+    {
+     "from": "measuring",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/"
+     },
+     "payload": {
+      "key": "k1:measure",
+      "json": "{\"media\":3}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_FAILED",
+        "payload": {
+         "key": "k1",
+         "probe": "media",
+         "error": "the page measurement is not the media shape",
+         "code": "probe_bad_measure"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "video-captions-fail: a video with no captions track is video-no-captions and, with no descriptions track, video-no-description (both needs-verification)",
+   "steps": [
+    {
+     "from": "measuring",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/video-captions-fail.html"
+     },
+     "payload": {
+      "key": "k1:measure",
+      "json": "{\"media\":[{\"kind\":\"video\",\"selector\":\"#main>video:nth-of-type(1)\",\"snippet\":\"<video class=\\\"clip\\\" controls=\\\"\\\" width=\\\"320\\\" preload=\\\"metadata\\\"></video>\",\"trackKinds\":[],\"controls\":true,\"autoplay\":false,\"muted\":false,\"duration\":1,\"transcriptRefs\":0}],\"frames\":[]}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k1",
+         "probe": "media",
+         "findings": [
+          {
+           "id": "http://127.0.0.1:24680/video-captions-fail.html#video-no-captions##main>video:nth-of-type(1)",
+           "pageUrl": "http://127.0.0.1:24680/video-captions-fail.html",
+           "rule": "video-no-captions",
+           "wcag": [
+            {
+             "criterion": "1.2.2",
+             "level": "A",
+             "version": "2.0"
+            }
+           ],
+           "method": "probe",
+           "engines": [
+            "probe"
+           ],
+           "impact": "serious",
+           "confidence": "needs-verification",
+           "selector": "#main>video:nth-of-type(1)",
+           "snippet": "<video class=\"clip\" controls=\"\" width=\"320\" preload=\"metadata\"></video>",
+           "evidence": "",
+           "count": 1
+          },
+          {
+           "id": "http://127.0.0.1:24680/video-captions-fail.html#video-no-description##main>video:nth-of-type(1)",
+           "pageUrl": "http://127.0.0.1:24680/video-captions-fail.html",
+           "rule": "video-no-description",
+           "wcag": [
+            {
+             "criterion": "1.2.3",
+             "level": "A",
+             "version": "2.0"
+            },
+            {
+             "criterion": "1.2.5",
+             "level": "AA",
+             "version": "2.0"
+            }
+           ],
+           "method": "probe",
+           "engines": [
+            "probe"
+           ],
+           "impact": "moderate",
+           "confidence": "needs-verification",
+           "selector": "#main>video:nth-of-type(1)",
+           "snippet": "<video class=\"clip\" controls=\"\" width=\"320\" preload=\"metadata\"></video>",
+           "evidence": "",
+           "count": 1
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: video-captions-pass has a captions track so only video-no-description remains",
+   "steps": [
+    {
+     "from": "measuring",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/video-captions-pass.html"
+     },
+     "payload": {
+      "key": "k1:measure",
+      "json": "{\"media\":[{\"kind\":\"video\",\"selector\":\"#main>video:nth-of-type(1)\",\"snippet\":\"<video class=\\\"clip\\\" controls=\\\"\\\" width=\\\"320\\\" preload=\\\"metadata\\\"></video>\",\"trackKinds\":[\"captions\"],\"controls\":true,\"autoplay\":false,\"muted\":false,\"duration\":1,\"transcriptRefs\":0}],\"frames\":[]}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k1",
+         "probe": "media",
+         "findings": [
+          {
+           "id": "http://127.0.0.1:24680/video-captions-pass.html#video-no-description##main>video:nth-of-type(1)",
+           "pageUrl": "http://127.0.0.1:24680/video-captions-pass.html",
+           "rule": "video-no-description",
+           "wcag": [
+            {
+             "criterion": "1.2.3",
+             "level": "A",
+             "version": "2.0"
+            },
+            {
+             "criterion": "1.2.5",
+             "level": "AA",
+             "version": "2.0"
+            }
+           ],
+           "method": "probe",
+           "engines": [
+            "probe"
+           ],
+           "impact": "moderate",
+           "confidence": "needs-verification",
+           "selector": "#main>video:nth-of-type(1)",
+           "snippet": "<video class=\"clip\" controls=\"\" width=\"320\" preload=\"metadata\"></video>",
+           "evidence": "",
+           "count": 1
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "media-extra: audio without a transcript, an autoplay video with sound (confirmed) and a YouTube embed are found; the muted autoplay video, the described audio and the non-video iframe are not",
+   "steps": [
+    {
+     "from": "measuring",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/media-extra.html"
+     },
+     "payload": {
+      "key": "k1:measure",
+      "json": "{\"media\":[{\"kind\":\"video\",\"selector\":\"#loud\",\"snippet\":\"<video id=\\\"loud\\\" autoplay=\\\"\\\" controls=\\\"\\\" width=\\\"320\\\" preload=\\\"metadata\\\"></video>\",\"trackKinds\":[\"captions\",\"descriptions\"],\"controls\":true,\"autoplay\":true,\"muted\":false,\"duration\":1,\"transcriptRefs\":0},{\"kind\":\"video\",\"selector\":\"#quiet\",\"snippet\":\"<video id=\\\"quiet\\\" autoplay=\\\"\\\" muted=\\\"\\\" controls=\\\"\\\" width=\\\"320\\\" preload=\\\"metadata\\\"></video>\",\"trackKinds\":[\"subtitles\",\"descriptions\"],\"controls\":true,\"autoplay\":true,\"muted\":true,\"duration\":1,\"transcriptRefs\":0},{\"kind\":\"audio\",\"selector\":\"#podcast\",\"snippet\":\"<audio id=\\\"podcast\\\" controls=\\\"\\\" src=\\\"media/clip.mp4\\\"></audio>\",\"trackKinds\":[],\"controls\":true,\"autoplay\":false,\"muted\":false,\"duration\":1,\"transcriptRefs\":0},{\"kind\":\"audio\",\"selector\":\"#podcast2\",\"snippet\":\"<audio id=\\\"podcast2\\\" controls=\\\"\\\" src=\\\"media/clip.mp4\\\" aria-describedby=\\\"tr\\\"></audio>\",\"trackKinds\":[],\"controls\":true,\"autoplay\":false,\"muted\":false,\"duration\":1,\"transcriptRefs\":1}],\"frames\":[{\"selector\":\"#yt\",\"snippet\":\"<iframe id=\\\"yt\\\" src=\\\"https://www.youtube.com/embed/abc\\\" title=\\\"clip\\\"></iframe>\",\"src\":\"https://www.youtube.com/embed/abc\"},{\"selector\":\"#map\",\"snippet\":\"<iframe id=\\\"map\\\" src=\\\"https://example.com/map\\\" title=\\\"map\\\"></iframe>\",\"src\":\"https://example.com/map\"}]}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k1",
+         "probe": "media",
+         "findings": [
+          {
+           "id": "http://127.0.0.1:24680/media-extra.html#audio-no-transcript##podcast",
+           "pageUrl": "http://127.0.0.1:24680/media-extra.html",
+           "rule": "audio-no-transcript",
+           "wcag": [
+            {
+             "criterion": "1.2.1",
+             "level": "A",
+             "version": "2.0"
+            }
+           ],
+           "method": "probe",
+           "engines": [
+            "probe"
+           ],
+           "impact": "serious",
+           "confidence": "needs-verification",
+           "selector": "#podcast",
+           "snippet": "<audio id=\"podcast\" controls=\"\" src=\"media/clip.mp4\"></audio>",
+           "evidence": "",
+           "count": 1
+          },
+          {
+           "id": "http://127.0.0.1:24680/media-extra.html#media-autoplay-sound##loud",
+           "pageUrl": "http://127.0.0.1:24680/media-extra.html",
+           "rule": "media-autoplay-sound",
+           "wcag": [
+            {
+             "criterion": "1.4.2",
+             "level": "A",
+             "version": "2.0"
+            }
+           ],
+           "method": "probe",
+           "engines": [
+            "probe"
+           ],
+           "impact": "serious",
+           "confidence": "confirmed",
+           "selector": "#loud",
+           "snippet": "<video id=\"loud\" autoplay=\"\" controls=\"\" width=\"320\" preload=\"metadata\"></video>",
+           "evidence": "",
+           "count": 1
+          },
+          {
+           "id": "http://127.0.0.1:24680/media-extra.html#player-no-captions##yt",
+           "pageUrl": "http://127.0.0.1:24680/media-extra.html",
+           "rule": "player-no-captions",
+           "wcag": [
+            {
+             "criterion": "1.2.2",
+             "level": "A",
+             "version": "2.0"
+            }
+           ],
+           "method": "probe",
+           "engines": [
+            "probe"
+           ],
+           "impact": "minor",
+           "confidence": "needs-verification",
+           "selector": "#yt",
+           "snippet": "<iframe id=\"yt\" src=\"https://www.youtube.com/embed/abc\" title=\"clip\"></iframe>",
+           "evidence": "",
+           "count": 1
+          },
+          {
+           "id": "http://127.0.0.1:24680/media-extra.html#player-no-description##yt",
+           "pageUrl": "http://127.0.0.1:24680/media-extra.html",
+           "rule": "player-no-description",
+           "wcag": [
+            {
+             "criterion": "1.2.3",
+             "level": "A",
+             "version": "2.0"
+            },
+            {
+             "criterion": "1.2.5",
+             "level": "AA",
+             "version": "2.0"
+            }
+           ],
+           "method": "probe",
+           "engines": [
+            "probe"
+           ],
+           "impact": "minor",
+           "confidence": "needs-verification",
+           "selector": "#yt",
+           "snippet": "<iframe id=\"yt\" src=\"https://www.youtube.com/embed/abc\" title=\"clip\"></iframe>",
+           "evidence": "",
+           "count": 1
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

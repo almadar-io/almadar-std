@@ -1,0 +1,118 @@
+app std-pdf-text [
+  version: "1.0.0",
+  exec: ["pdftotext"],
+  description: "std-pdf-text — reads the text of a PDF file page by page through the poppler pdftotext command, run by std-cli as `pdftotext -layout <path> -`. PDF_READ { key, path } answers PDF_TEXT { key, pages } with one { page, text } per page, numbered from 1 in document order and split at the form feed pdftotext writes after each page, layout preserved and nothing truncated. A PDF whose pages carry no text at all answers PDF_NO_TEXT { key, pageCount } (a scanned document). A missing file, an unreadable PDF or a path that starts with a dash answers PDF_FAILED { key, error, code } with code pdf_unreadable; a command that could not be run answers pdf_command_failed; a read while another is in flight answers pdf_busy. The path is opened by the pdftotext child, so the composer decides which files it can name; the pdftotext exec grant is this atom's own."
+]
+;; @capabilities "read the text of a PDF file, page by page, detect a PDF with no text layer"
+uses Spec from "almadar-std/pdf-text"
+uses Cli from "std/behaviors/std-cli"
+
+type PdfPage = { page : number!, text : string! }
+
+orbital PdfTextOrbital {
+  entity PdfRead [runtime] {
+    id : string!
+    key : string @description "The caller's name for the read in flight; blank when idle." = ""
+  }
+
+  trait PdfCli = Cli.traits.CliRunner {
+    listens {
+      PdfText.PDF_EXEC -> CLI_RUN
+    }
+    config {
+      commands: ["pdftotext"]
+    }
+  }
+
+  trait PdfText -> PdfRead [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+        (set @entity.key "")
+      PDF_READ -> ready when (str/startsWith @payload.path "-")
+        (emit PDF_FAILED { key: @payload.key, error: "a path may not start with a dash", code: "pdf_unreadable" })
+      PDF_READ -> reading when (not (str/startsWith @payload.path "-"))
+        (set @entity.key @payload.key)
+        (emit PDF_EXEC { stage: @payload.key, argv: ["-layout" @payload.path "-"] })
+    }
+
+    state reading {
+      INIT -> reading
+      PDF_READ -> reading
+        (emit PDF_FAILED { key: @payload.key, error: "another PDF is being read", code: "pdf_busy" })
+      PDF_RAN -> ready when (!= @payload.exitCode 0)
+        (emit PDF_FAILED { key: @entity.key, error: (str/concat "pdftotext exited " @payload.exitCode ": " (str/trim @payload.stderr)), code: "pdf_unreadable" })
+        (set @entity.key "")
+      PDF_RAN -> ready when (== @payload.exitCode 0)
+        (let ((pieces (str/split @payload.stdout "\u{c}")))
+          (let ((leaves (if (and (> (array/len @pieces) 0) (== (array/last @pieces) "")) (array/dropLast @pieces 1) @pieces)))
+            (if (array/every @leaves (fn leaf (== (str/trim @leaf) "")))
+              (emit PDF_NO_TEXT { key: @entity.key, pageCount: (array/len @leaves) })
+              (emit PDF_TEXT { key: @entity.key, pages: (array/map (array/range 0 (array/len @leaves) 1) (fn n { page: (+ @n 1), text: (array/nth @leaves @n) })) }))))
+        (set @entity.key "")
+      PDF_CLI_FAILED -> ready
+        (emit PDF_FAILED { key: @entity.key, error: @payload.error, code: "pdf_command_failed" })
+        (set @entity.key "")
+    }
+
+    emits {
+      PDF_TEXT -> external {
+        key : string!
+        pages : [PdfPage]!
+      }
+        @description "The PDF was read: one entry per page, numbered from 1 in document order, with that page's text in layout form."
+        @synonyms "pdf pages, extracted text"
+        @tier "domain"
+      PDF_NO_TEXT -> external {
+        key : string!
+        pageCount : number!
+      }
+        @description "The PDF has pageCount pages and none of them carries text, as in a scanned document."
+        @synonyms "scanned pdf, no text layer"
+        @tier "domain"
+      PDF_FAILED -> external {
+        key : string!
+        error : string!
+        code : string!
+      }
+        @description "The read failed: pdf_unreadable (pdftotext exited non-zero, or the path starts with a dash), pdf_command_failed (pdftotext could not be run) or pdf_busy (another read is in flight)."
+        @synonyms "pdf error, unreadable pdf"
+        @tier "domain"
+      PDF_EXEC -> external {
+        stage : string!
+        argv : [string]!
+      }
+        @description "The pdftotext run, handed to std-cli."
+        @tier "internal"
+    }
+
+    listens {
+      PDF_READ -> input {
+        key : string!
+        path : string!
+      }
+        @description "Read the text of the PDF at path, page by page; key names the read in the answer."
+        @synonyms "read pdf, extract pdf text, pdf to text"
+      PdfCli.CLI_DONE -> PDF_RAN
+      PdfCli.CLI_FAILED -> PDF_CLI_FAILED
+      PDF_RAN {
+        stage : string!
+        exitCode : number!
+        signal : number!
+        stdout : string!
+        stdoutBytes : bytes!
+        stderr : string!
+      }
+        @description "std-cli's CLI_DONE: pdftotext exited, with its code and both streams."
+      PDF_CLI_FAILED {
+        stage : string!
+        error : string!
+        code : string!
+      }
+        @description "std-cli's CLI_FAILED: pdftotext could not be run."
+    }
+  }
+
+  page boot as PdfTextOrbitalStart -> PdfText, PdfCli
+}

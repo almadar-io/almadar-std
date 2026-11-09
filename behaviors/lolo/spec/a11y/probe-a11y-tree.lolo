@@ -1,0 +1,32 @@
+app a11y-probe-a11y-tree-spec [
+  version: "1.0.0",
+  description: "Design contract for the accessibility-tree probe (screen reader check: WCAG 1.1.1, 2.4.4, 2.5.3, 4.1.2). PROBE_RUN { key, pageUrl } on a tab already at pageUrl reads the accessibility tree (PAGE_AX_TREE) and measures every interactive element (PAGE_MEASURE: selector, tag, visible text, aria-label, aria-labelledby text, content, alt, title, href). It answers TRANSCRIPT_READY { key, pageUrl, lines } (the screen-reader transcript, one line per spoken node in tree order) and then PROBE_DONE { key, probe, findings }, or PROBE_FAILED { key, probe, error, code }. Rules: name-missing, name-mismatch, duplicate-name, redundant-link. The probe changes no page state."
+]
+
+type WcagRef = { criterion : string!, level : "A" | "AA" | "AAA"!, version : "2.0" | "2.1" | "2.2"! }
+type A11yFinding = { id : string!, pageUrl : string!, rule : string!, wcag : [WcagRef]!, method : "engine" | "probe" | "llm"!, engines : [string]!, impact : "critical" | "serious" | "moderate" | "minor"!, confidence : "confirmed" | "needs-verification"!, selector : string!, snippet : string!, evidence : string!, count : number! }
+
+orbital A11yProbeA11yTreeSpec {
+  expects entity TreeRun [runtime] {
+    id : string!
+  }
+  expects trait TreeProbe {
+    state idle {
+      PROBE_RUN -> reading
+    }
+    state reading {
+      PAGE_AX_TREE_READ -> measuring
+    }
+    state measuring {
+      PAGE_MEASURED -> idle
+    }
+    emits {
+      PAGE_AX_TREE { key : string! }
+      PAGE_MEASURE { key : string!  expression : string! }
+      TRANSCRIPT_READY { key : string!  pageUrl : string!  lines : [string]! }
+      PROBE_DONE { key : string!  probe : string!  findings : [A11yFinding]! }
+      PROBE_FAILED { key : string!  probe : string!  error : string!  code : string! }
+    }
+  }
+  expects page boot -> TreeProbe
+}

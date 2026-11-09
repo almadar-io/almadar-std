@@ -1,0 +1,147 @@
+app std-a11y-probe-language [
+  version: "1.0.0",
+  description: "std-a11y-probe-language — compares the language a page declares with the language its text is written in. PROBE_RUN { key, pageUrl } asks the page for its lang and visible text (PAGE_TEXT); an empty lang is the lang-missing finding (IRSID N71, confirmed: it is a DOM fact) and nothing is classified. Otherwise the whole text goes to a classifier as LLM_CLASSIFY with the languages knob plus the declared primary subtag as the categories, and the answer LLM_CLASSIFY_RESULT is compared with the declared primary subtag (sl-SI is sl): a different language is the lang-wrong finding (N43, needs-verification, the classifier is a model). Findings are WCAG 3.1.1 Language of Page, method probe, selector html. Text longer than the maxClassifyChars knob is refused, never cut: PROBE_FAILED code text_too_long. PROBE_FAILED { key, probe, error, code } also answers a page failure (the page's own code), a classifier failure (LLM_FAILED, its code or llm_failed) and a run while another is in flight (probe_busy). The atom composes neither std-chrome nor std-llm: it emits PAGE_TEXT and LLM_CLASSIFY and hears the answers, whatever the composer wires; the classifier answer carries no key, so one classification runs at a time. Answers count only under this run's keys."
+]
+uses Spec from "almadar-std/probe-language"
+
+type WcagRef = { criterion : string!, level : "A" | "AA" | "AAA"!, version : "2.0" | "2.1" | "2.2"! }
+type A11yFinding = { id : string!, pageUrl : string!, rule : string!, wcag : [WcagRef]!, method : "engine" | "probe" | "llm"!, engines : [string]!, impact : "critical" | "serious" | "moderate" | "minor"!, confidence : "confirmed" | "needs-verification"!, selector : string!, snippet : string!, evidence : string!, count : number! }
+
+orbital LanguageOrbital {
+  entity LanguageRun [runtime] {
+    id : string!
+    runKey : string @description "The caller's name for the run in flight; blank when idle." = ""
+    pageUrl : string @description "The page the run in flight is about." = ""
+    lang : string @description "The lang the page declares, as read." = ""
+    declared : string @description "The primary subtag of the declared lang, lowercase." = ""
+  }
+
+  trait LanguageProbe -> LanguageRun {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      PROBE_RUN -> reading
+        (set @entity.runKey @payload.key)
+        (set @entity.pageUrl @payload.pageUrl)
+        (emit PAGE_TEXT { key: (str/concat @payload.key ":text") })
+    }
+
+    state reading {
+      INIT -> idle
+      PROBE_RUN -> reading
+        (emit PROBE_FAILED { key: @payload.key, probe: "language", error: (str/concat "a run on " @entity.pageUrl " is in flight"), code: "probe_busy" })
+      PAGE_FAILED -> idle when (= @payload.key (str/concat @entity.runKey ":text"))
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "language", error: @payload.error, code: @payload.code })
+      PAGE_TEXT_READ -> idle when (and (= @payload.key (str/concat @entity.runKey ":text")) (= (str/trim @payload.lang) ""))
+        (emit PROBE_DONE {
+          key: @entity.runKey,
+          probe: "language",
+          findings: [{
+            id: (str/concat "lang-missing:" @entity.pageUrl),
+            pageUrl: @entity.pageUrl,
+            rule: "lang-missing",
+            wcag: [{ criterion: "3.1.1", level: "A", version: "2.0" }],
+            method: "probe",
+            engines: ["probe"],
+            impact: "serious",
+            confidence: "confirmed",
+            selector: "html",
+            snippet: "<html>",
+            evidence: "",
+            count: 1
+          }]
+        })
+      PAGE_TEXT_READ -> idle when (and (= @payload.key (str/concat @entity.runKey ":text")) (!= (str/trim @payload.lang) "") (> (str/len @payload.text) @config.maxClassifyChars))
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "language", error: (str/concat "the page text is " (str/len @payload.text) " characters, over the " @config.maxClassifyChars " the classifier takes") , code: "text_too_long" })
+      PAGE_TEXT_READ -> idle when (and (= @payload.key (str/concat @entity.runKey ":text")) (!= (str/trim @payload.lang) "") (<= (str/len @payload.text) @config.maxClassifyChars) (= (str/trim @payload.text) ""))
+        (emit PROBE_DONE { key: @entity.runKey, probe: "language", findings: [] })
+      PAGE_TEXT_READ -> classifying when (and (= @payload.key (str/concat @entity.runKey ":text")) (!= (str/trim @payload.lang) "") (<= (str/len @payload.text) @config.maxClassifyChars) (!= (str/trim @payload.text) ""))
+        (set @entity.lang @payload.lang)
+        (set @entity.declared (str/lower (default (array/first (str/split (str/trim @payload.lang) "-")) "")))
+        (emit LANGUAGE_CLASSIFY_GO { text: @payload.text })
+    }
+
+    state classifying {
+      INIT -> idle
+      PROBE_RUN -> classifying
+        (emit PROBE_FAILED { key: @payload.key, probe: "language", error: (str/concat "a run on " @entity.pageUrl " is in flight"), code: "probe_busy" })
+      LANGUAGE_CLASSIFY_GO -> classifying
+        (emit LLM_CLASSIFY {
+          text: @payload.text,
+          categories: (array/unique (array/append @config.languages @entity.declared)),
+          key: (str/concat @entity.runKey ":classify")
+        })
+      LLM_CLASSIFY_RESULT -> idle when (= @payload.category @entity.declared)
+        (emit PROBE_DONE { key: @entity.runKey, probe: "language", findings: [] })
+      LLM_CLASSIFY_RESULT -> idle when (!= @payload.category @entity.declared)
+        (emit PROBE_DONE {
+          key: @entity.runKey,
+          probe: "language",
+          findings: [{
+            id: (str/concat "lang-wrong:" @entity.pageUrl),
+            pageUrl: @entity.pageUrl,
+            rule: "lang-wrong",
+            wcag: [{ criterion: "3.1.1", level: "A", version: "2.0" }],
+            method: "probe",
+            engines: ["probe"],
+            impact: "serious",
+            confidence: "needs-verification",
+            selector: "html",
+            snippet: (str/concat "<html lang=\"" @entity.lang "\"> text classified as " @payload.category),
+            evidence: "",
+            count: 1
+          }]
+        })
+      LLM_FAILED -> idle when (= @payload.key (str/concat @entity.runKey ":classify"))
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "language", error: @payload.message, code: (default @payload.code "llm_failed") })
+    }
+
+    emits {
+      PROBE_DONE -> external { key : string!  probe : string!  findings : [A11yFinding]! }
+        @description "The run's findings: lang-missing when the page declares no lang, lang-wrong when the text is in another language than the declared one, none otherwise."
+        @synonyms "language check, page language, lang mismatch"
+        @tier "primary"
+      PROBE_FAILED -> external { key : string!  probe : string!  error : string!  code : string! }
+        @description "The run failed: code is probe_busy, text_too_long, llm_failed or the page's or classifier's own failure code."
+        @synonyms "language probe failed"
+        @tier "primary"
+      PAGE_TEXT -> external { key : string! }
+        @description "Ask the page for its url, title, lang and visible text."
+        @tier "secondary"
+      LLM_CLASSIFY -> external { text : string!  categories : [string]!  key : string }
+        @description "Ask a classifier which language the page text is written in, from the languages knob and the declared one."
+        @tier "secondary"
+      LANGUAGE_CLASSIFY_GO { text : string! }
+        @description "Internal: start the classification once the run holds its declared language."
+        @tier "internal"
+    }
+
+    listens {
+      PROBE_RUN { key : string!  pageUrl : string! }
+        @description "Compare the language the page declares with the language of its text."
+        @synonyms "language probe, check lang attribute"
+      PAGE_TEXT_READ { key : string!  url : string!  title : string!  lang : string!  text : string! }
+        @description "The page's lang and visible text."
+      PAGE_FAILED { key : string!  error : string!  code : string! }
+        @description "A page request failed."
+      LLM_CLASSIFY_RESULT { category : string!  confidence : number!  reasoning : string! }
+        @description "The language the classifier chose."
+      LLM_FAILED { code : string  message : string!  key : string }
+        @description "The classifier failed."
+    }
+
+    config {
+      languages : [string] = ["sl", "en", "de", "hr", "it", "hu"]
+        @label "Languages"
+        @description "The language subtags the classifier chooses among; the page's declared primary subtag is always added so it can be chosen."
+        @tier "domain"
+      maxClassifyChars : number = 200000
+        @label "Longest text"
+        @description "The longest page text, in characters, that is classified; a longer text is refused, never cut."
+        @tier "domain"
+    }
+  }
+
+  page boot as LanguageProbePage -> LanguageProbe
+}

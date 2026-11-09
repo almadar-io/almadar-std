@@ -1,0 +1,483 @@
+{
+  "atom": "agent/atoms/std-agent-context.lolo",
+  "trait": "AgentContextCompactor",
+  "note": "`live` on COMPACT reaches COMPACTED when given and stays absent when not, on the pass-through, summarized and summarizer-failed paths",
+  "cases": [
+    {
+      "id": "compact-passes-live-true",
+      "note": "COMPACT with live: true forwards live on the short path",
+      "steps": [
+        {
+          "trait": "AgentContextCompactor",
+          "event": "COMPACT",
+          "payload": {
+            "messages": [
+              {
+                "role": "user",
+                "content": "hi"
+              }
+            ],
+            "instructions": "i",
+            "tools": [],
+            "ephemeral": true,
+            "live": true
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "COMPACTED",
+                "payload": {
+                  "messages": [
+                    {
+                      "role": "user",
+                      "content": "hi"
+                    }
+                  ],
+                  "instructions": "i",
+                  "tools": [],
+                  "ephemeral": true,
+                  "live": true
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "ContextSummarizerLlm",
+        "CtxChatRequest",
+        "CtxChatHttp"
+      ]
+    },
+    {
+      "id": "compact-passes-live-false",
+      "note": "live: false is present, so it is forwarded as false",
+      "steps": [
+        {
+          "trait": "AgentContextCompactor",
+          "event": "COMPACT",
+          "payload": {
+            "messages": [
+              {
+                "role": "user",
+                "content": "hi"
+              }
+            ],
+            "instructions": "i",
+            "tools": [],
+            "ephemeral": true,
+            "live": false
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "COMPACTED",
+                "payload": {
+                  "messages": [
+                    {
+                      "role": "user",
+                      "content": "hi"
+                    }
+                  ],
+                  "instructions": "i",
+                  "tools": [],
+                  "ephemeral": true,
+                  "live": false
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "ContextSummarizerLlm",
+        "CtxChatRequest",
+        "CtxChatHttp"
+      ]
+    },
+    {
+      "id": "control-compact-without-live-omits-live",
+      "note": "absent live stays absent",
+      "steps": [
+        {
+          "trait": "AgentContextCompactor",
+          "event": "COMPACT",
+          "payload": {
+            "messages": [
+              {
+                "role": "user",
+                "content": "hi"
+              }
+            ],
+            "instructions": "i",
+            "tools": [],
+            "ephemeral": true
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "COMPACTED",
+                "payload": {
+                  "messages": [
+                    {
+                      "role": "user",
+                      "content": "hi"
+                    }
+                  ],
+                  "instructions": "i",
+                  "tools": [],
+                  "ephemeral": true
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "ContextSummarizerLlm",
+        "CtxChatRequest",
+        "CtxChatHttp"
+      ]
+    },
+    {
+      "id": "summarized-live-true",
+      "note": "the older turns are summarized; live rides through",
+      "steps": [
+        {
+          "trait": "AgentContextCompactor",
+          "event": "COMPACT",
+          "payload": {
+            "messages": [
+              {
+                "role": "user",
+                "content": "a"
+              },
+              {
+                "role": "assistant",
+                "content": "b"
+              },
+              {
+                "role": "user",
+                "content": "c"
+              }
+            ],
+            "instructions": "i",
+            "tools": [],
+            "ephemeral": true,
+            "live": true
+          },
+          "expect": {
+            "fired": true,
+            "state": "summarizing",
+            "emits": [
+              {
+                "event": "LLM_SUMMARIZE",
+                "payload": {
+                  "text": "user: a"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "AgentContextCompactor",
+          "event": "ContextSummarized",
+          "payload": {
+            "summary": "S",
+            "keyPoints": []
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "COMPACTED",
+                "payload": {
+                  "messages": [
+                    {
+                      "role": "assistant",
+                      "content": "Earlier in this conversation: S"
+                    },
+                    {
+                      "role": "assistant",
+                      "content": "b"
+                    },
+                    {
+                      "role": "user",
+                      "content": "c"
+                    }
+                  ],
+                  "instructions": "i",
+                  "tools": [],
+                  "ephemeral": true,
+                  "live": true
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "ContextSummarizerLlm",
+        "CtxChatRequest",
+        "CtxChatHttp"
+      ],
+      "config": {
+        "keepMessages": 2
+      }
+    },
+    {
+      "id": "summary-failed-live-true",
+      "note": "a summarizer outage still forwards the recent turns; live rides through",
+      "steps": [
+        {
+          "trait": "AgentContextCompactor",
+          "event": "COMPACT",
+          "payload": {
+            "messages": [
+              {
+                "role": "user",
+                "content": "a"
+              },
+              {
+                "role": "assistant",
+                "content": "b"
+              },
+              {
+                "role": "user",
+                "content": "c"
+              }
+            ],
+            "instructions": "i",
+            "tools": [],
+            "ephemeral": true,
+            "live": true
+          },
+          "expect": {
+            "fired": true,
+            "state": "summarizing",
+            "emits": [
+              {
+                "event": "LLM_SUMMARIZE",
+                "payload": {
+                  "text": "user: a"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "AgentContextCompactor",
+          "event": "ContextSummarizeFailed",
+          "payload": {
+            "message": "down"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "COMPACTED",
+                "payload": {
+                  "messages": [
+                    {
+                      "role": "assistant",
+                      "content": "b"
+                    },
+                    {
+                      "role": "user",
+                      "content": "c"
+                    }
+                  ],
+                  "instructions": "i",
+                  "tools": [],
+                  "ephemeral": true,
+                  "live": true
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "ContextSummarizerLlm",
+        "CtxChatRequest",
+        "CtxChatHttp"
+      ],
+      "config": {
+        "keepMessages": 2
+      }
+    },
+    {
+      "id": "summarized-control-without-live",
+      "note": "the older turns are summarized; live stays absent",
+      "steps": [
+        {
+          "trait": "AgentContextCompactor",
+          "event": "COMPACT",
+          "payload": {
+            "messages": [
+              {
+                "role": "user",
+                "content": "a"
+              },
+              {
+                "role": "assistant",
+                "content": "b"
+              },
+              {
+                "role": "user",
+                "content": "c"
+              }
+            ],
+            "instructions": "i",
+            "tools": [],
+            "ephemeral": true
+          },
+          "expect": {
+            "fired": true,
+            "state": "summarizing",
+            "emits": [
+              {
+                "event": "LLM_SUMMARIZE",
+                "payload": {
+                  "text": "user: a"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "AgentContextCompactor",
+          "event": "ContextSummarized",
+          "payload": {
+            "summary": "S",
+            "keyPoints": []
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "COMPACTED",
+                "payload": {
+                  "messages": [
+                    {
+                      "role": "assistant",
+                      "content": "Earlier in this conversation: S"
+                    },
+                    {
+                      "role": "assistant",
+                      "content": "b"
+                    },
+                    {
+                      "role": "user",
+                      "content": "c"
+                    }
+                  ],
+                  "instructions": "i",
+                  "tools": [],
+                  "ephemeral": true
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "ContextSummarizerLlm",
+        "CtxChatRequest",
+        "CtxChatHttp"
+      ],
+      "config": {
+        "keepMessages": 2
+      }
+    },
+    {
+      "id": "summary-failed-control-without-live",
+      "note": "a summarizer outage still forwards the recent turns; live stays absent",
+      "steps": [
+        {
+          "trait": "AgentContextCompactor",
+          "event": "COMPACT",
+          "payload": {
+            "messages": [
+              {
+                "role": "user",
+                "content": "a"
+              },
+              {
+                "role": "assistant",
+                "content": "b"
+              },
+              {
+                "role": "user",
+                "content": "c"
+              }
+            ],
+            "instructions": "i",
+            "tools": [],
+            "ephemeral": true
+          },
+          "expect": {
+            "fired": true,
+            "state": "summarizing",
+            "emits": [
+              {
+                "event": "LLM_SUMMARIZE",
+                "payload": {
+                  "text": "user: a"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "AgentContextCompactor",
+          "event": "ContextSummarizeFailed",
+          "payload": {
+            "message": "down"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "COMPACTED",
+                "payload": {
+                  "messages": [
+                    {
+                      "role": "assistant",
+                      "content": "b"
+                    },
+                    {
+                      "role": "user",
+                      "content": "c"
+                    }
+                  ],
+                  "instructions": "i",
+                  "tools": [],
+                  "ephemeral": true
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "ContextSummarizerLlm",
+        "CtxChatRequest",
+        "CtxChatHttp"
+      ],
+      "config": {
+        "keepMessages": 2
+      }
+    }
+  ]
+}

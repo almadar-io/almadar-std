@@ -1,0 +1,186 @@
+app std-a11y-probe-text-resize [
+  version: "1.0.0",
+  description: "std-a11y-probe-text-resize — WCAG 1.4.4 Resize Text. PROBE_RUN { key, pageUrl } on a tab already at pageUrl reads the viewport meta tag (PAGE_MEASURE), measures the text elements clipped at text zoom 1, sets text zoom 2 at the restore viewport size (PAGE_VIEWPORT), measures them again, restores text zoom 1 and answers PROBE_DONE { key, probe, findings } or PROBE_FAILED { key, probe, error, code } (probe_page_failed when the page answers PAGE_FAILED, probe_bad_measure when a measurement is not the declared shape). A viewport meta with user-scalable no or 0, or a maximum-scale below the minScale knob, is one confirmed viewport-zoom-blocked finding. A text element is clipped on an axis when its computed overflow there is hidden or clip and its scroll extent exceeds its client extent by more than the tolerance knob; each element clipped at zoom 2 and not at zoom 1 (matched by selector) is a needs-verification text-resize finding. The composer wires the page requests to a std-chrome instance and its answers back; answers whose key does not start with the run key are ignored."
+]
+uses Spec from "almadar-std/probe-text-resize"
+
+type WcagRef = { criterion : string!, level : "A" | "AA" | "AAA"!, version : "2.0" | "2.1" | "2.2"! }
+type A11yFinding = { id : string!, pageUrl : string!, rule : string!, wcag : [WcagRef]!, method : "engine" | "probe" | "llm"!, engines : [string]!, impact : "critical" | "serious" | "moderate" | "minor"!, confidence : "confirmed" | "needs-verification"!, selector : string!, snippet : string!, evidence : string!, count : number! }
+type ViewportPair = { name : string!, value : string!, number : number? }
+type ViewportMeasure = { present : boolean!, snippet : string!, pairs : [ViewportPair]! }
+type ClippedElement = { selector : string!, snippet : string!, overflowX : string!, overflowY : string!, scrollWidth : number!, clientWidth : number!, scrollHeight : number!, clientHeight : number! }
+type ClippedMeasure = { elements : [ClippedElement]! }
+
+orbital TextResizeOrbital {
+  entity TextResizeRun [runtime] {
+    id : string!
+    runKey : string @description "The caller's name for the run in flight." = ""
+    pageUrl : string @description "The page the run in flight is about." = ""
+    baseline : [string] @description "Selectors of the elements clipped at text zoom 1." = []
+    findings : [A11yFinding] @description "The findings held until the text zoom is restored." = []
+  }
+
+  trait TextResizeProbe -> TextResizeRun {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      PROBE_RUN -> reading
+        (set @entity.runKey @payload.key)
+        (set @entity.pageUrl @payload.pageUrl)
+        (set @entity.baseline [])
+        (set @entity.findings [])
+        (emit PAGE_MEASURE { key: (str/concat @payload.key ":meta"), expression: (str/concat "(" @config.viewportMeasure ")()") })
+    }
+
+    state reading {
+      INIT -> idle
+      PAGE_MEASURED -> baselining when (and (= @payload.key (str/concat @entity.runKey ":meta")) (!= (json/parse @payload.json ViewportMeasure) null))
+        (set @entity.findings (let ((m (json/parse @payload.json ViewportMeasure)))
+          (if (array/some @m.pairs (fn p (or (and (= @p.name "user-scalable") (array/includes ["no" "0"] @p.value)) (and (= @p.name "maximum-scale") (!= @p.number null) (< @p.number @config.minScale)))))
+            [{
+              id: (str/concat @entity.pageUrl "#viewport-zoom-blocked#meta[name=viewport]"),
+              pageUrl: @entity.pageUrl,
+              rule: "viewport-zoom-blocked",
+              wcag: [{ criterion: "1.4.4", level: "AA", version: "2.0" }],
+              method: "probe",
+              engines: ["probe"],
+              impact: @config.zoomImpact,
+              confidence: "confirmed",
+              selector: "meta[name=viewport]",
+              snippet: @m.snippet,
+              evidence: "",
+              count: 1
+            }]
+            [])))
+        (emit PAGE_MEASURE { key: (str/concat @entity.runKey ":base"), expression: (str/concat "(" @config.clippedMeasure ")()") })
+      PAGE_MEASURED -> idle when (and (= @payload.key (str/concat @entity.runKey ":meta")) (= (json/parse @payload.json ViewportMeasure) null))
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "text-resize", error: "the page measurement is not the ViewportMeasure shape", code: "probe_bad_measure" })
+      PAGE_FAILED -> idle when (str/startsWith @payload.key @entity.runKey)
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "text-resize", error: @payload.error, code: "probe_page_failed" })
+    }
+
+    state baselining {
+      INIT -> idle
+      PAGE_MEASURED -> zooming when (and (= @payload.key (str/concat @entity.runKey ":base")) (!= (json/parse @payload.json ClippedMeasure) null))
+        (set @entity.baseline (let ((m (json/parse @payload.json ClippedMeasure)))
+          (array/map (array/filter @m.elements (fn e (or (and (array/includes ["hidden" "clip"] @e.overflowY) (> @e.scrollHeight (+ @e.clientHeight @config.tolerance))) (and (array/includes ["hidden" "clip"] @e.overflowX) (> @e.scrollWidth (+ @e.clientWidth @config.tolerance)))))) (fn e @e.selector))))
+        (emit PAGE_VIEWPORT { key: (str/concat @entity.runKey ":zoom"), width: @config.width, height: @config.height, deviceScaleFactor: 1, mobile: false, textZoom: @config.zoom })
+      PAGE_MEASURED -> idle when (and (= @payload.key (str/concat @entity.runKey ":base")) (= (json/parse @payload.json ClippedMeasure) null))
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "text-resize", error: "the page measurement is not the ClippedMeasure shape", code: "probe_bad_measure" })
+      PAGE_FAILED -> idle when (str/startsWith @payload.key @entity.runKey)
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "text-resize", error: @payload.error, code: "probe_page_failed" })
+    }
+
+    state zooming {
+      INIT -> idle
+      PAGE_VIEWPORT_SET -> zoomed when (= @payload.key (str/concat @entity.runKey ":zoom"))
+        (emit PAGE_MEASURE { key: (str/concat @entity.runKey ":zoomed"), expression: (str/concat "(" @config.clippedMeasure ")()") })
+      PAGE_FAILED -> idle when (str/startsWith @payload.key @entity.runKey)
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "text-resize", error: @payload.error, code: "probe_page_failed" })
+    }
+
+    state zoomed {
+      INIT -> idle
+      PAGE_MEASURED -> restoring when (and (= @payload.key (str/concat @entity.runKey ":zoomed")) (!= (json/parse @payload.json ClippedMeasure) null))
+        (set @entity.findings (let ((m (json/parse @payload.json ClippedMeasure)))
+          (array/concat @entity.findings
+            (array/map (array/filter (array/filter @m.elements (fn e (or (and (array/includes ["hidden" "clip"] @e.overflowY) (> @e.scrollHeight (+ @e.clientHeight @config.tolerance))) (and (array/includes ["hidden" "clip"] @e.overflowX) (> @e.scrollWidth (+ @e.clientWidth @config.tolerance)))))) (fn e (not (array/includes @entity.baseline @e.selector)))) (fn e {
+                  id: (str/concat @entity.pageUrl "#text-resize#" @e.selector),
+                  pageUrl: @entity.pageUrl,
+                  rule: "text-resize",
+                  wcag: [{ criterion: "1.4.4", level: "AA", version: "2.0" }],
+                  method: "probe",
+                  engines: ["probe"],
+                  impact: @config.impact,
+                  confidence: "needs-verification",
+                  selector: @e.selector,
+                  snippet: @e.snippet,
+                  evidence: "",
+                  count: 1
+                })))))
+        (emit PAGE_VIEWPORT { key: (str/concat @entity.runKey ":restore"), width: @config.width, height: @config.height, deviceScaleFactor: 1, mobile: false, textZoom: 1 })
+      PAGE_MEASURED -> idle when (and (= @payload.key (str/concat @entity.runKey ":zoomed")) (= (json/parse @payload.json ClippedMeasure) null))
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "text-resize", error: "the page measurement is not the ClippedMeasure shape", code: "probe_bad_measure" })
+      PAGE_FAILED -> idle when (str/startsWith @payload.key @entity.runKey)
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "text-resize", error: @payload.error, code: "probe_page_failed" })
+    }
+
+    state restoring {
+      INIT -> idle
+      PAGE_VIEWPORT_SET -> idle when (= @payload.key (str/concat @entity.runKey ":restore"))
+        (emit PROBE_DONE { key: @entity.runKey, probe: "text-resize", findings: @entity.findings })
+      PAGE_FAILED -> idle when (str/startsWith @payload.key @entity.runKey)
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "text-resize", error: @payload.error, code: "probe_page_failed" })
+    }
+
+    emits {
+      PAGE_VIEWPORT -> external { key : string!  width : number!  height : number!  deviceScaleFactor : number!  mobile : boolean!  textZoom : number! }
+        @description "Page request: set the tab's viewport and text zoom; the composer wires it to the std-chrome PAGE_VIEWPORT input."
+        @synonyms "set viewport, set text zoom"
+        @tier "primary"
+      PAGE_MEASURE -> external { key : string!  expression : string! }
+        @description "Page request: evaluate the expression in the page; it answers a JSON string."
+        @synonyms "measure page, evaluate in page"
+        @tier "primary"
+      PROBE_DONE -> external { key : string!  probe : string!  findings : [A11yFinding]! }
+        @description "The text-resize probe finished: its findings, empty when zoom is allowed and no text clips at 200%."
+        @synonyms "text resize findings, zoom result"
+        @tier "primary"
+      PROBE_FAILED -> external { key : string!  probe : string!  error : string!  code : string! }
+        @description "The probe could not finish: code is probe_page_failed or probe_bad_measure."
+        @synonyms "probe failed, text resize error"
+        @tier "primary"
+    }
+
+    listens {
+      PROBE_RUN { key : string!  pageUrl : string! }
+        @description "Check the page the tab is on for blocked zoom and for text clipped at 200% text zoom."
+        @synonyms "text resize check, zoom check, wcag 1.4.4"
+      PAGE_VIEWPORT_SET { key : string! }
+      PAGE_MEASURED { key : string!  json : string! }
+      PAGE_FAILED { key : string!  error : string!  code : string! }
+    }
+
+    config {
+      zoom : number = 2
+        @label "Text zoom"
+        @description "The text zoom the page is measured at; WCAG 1.4.4 names 200 percent."
+        @tier "domain"
+      width : number = 1280
+        @label "Viewport width"
+        @description "The CSS px width of the viewport during the probe and after it."
+        @tier "domain"
+      height : number = 800
+        @label "Viewport height"
+        @description "The CSS px height of the viewport during the probe and after it."
+        @tier "domain"
+      tolerance : number = 1
+        @label "Clip tolerance"
+        @description "CSS px by which scroll extent may exceed client extent before text counts as clipped."
+        @tier "domain"
+      minScale : number = 2
+        @label "Minimum maximum-scale"
+        @description "A viewport maximum-scale below this blocks zoom."
+        @tier "domain"
+      impact : "critical" | "serious" | "moderate" | "minor" = "serious"
+        @label "Clipped text impact"
+        @description "The impact of a text-resize finding."
+        @tier "domain"
+      zoomImpact : "critical" | "serious" | "moderate" | "minor" = "critical"
+        @label "Blocked zoom impact"
+        @description "The impact of a viewport-zoom-blocked finding."
+        @tier "domain"
+      viewportMeasure : string = "() => { const m = document.querySelector('meta[name=viewport]'); const content = m ? m.getAttribute('content') : null; const pairs = content === null ? [] : content.split(/[,;]/).map((s) => s.trim()).filter((s) => s.length > 0).map((s) => { const i = s.indexOf('='); const name = (i < 0 ? s : s.slice(0, i)).trim().toLowerCase(); const value = (i < 0 ? '' : s.slice(i + 1)).trim().toLowerCase(); const n = parseFloat(value); return { name: name, value: value, number: Number.isNaN(n) ? null : n }; }); return JSON.stringify({ present: m !== null, snippet: m ? m.cloneNode(false).outerHTML : '', pairs: pairs }); }"
+        @label "Viewport measure expression"
+        @description "A page function returning a JSON string of whether a viewport meta tag exists, its opening tag, and its directives as name, lower-cased value and numeric value."
+        @tier "infra"
+      clippedMeasure : string = "() => { const sel = (e) => { const p = []; for (let n = e; n && n.nodeType === 1; n = n.parentElement) { if (n.id) { p.unshift('#' + CSS.escape(n.id)); break; } let i = 1; for (let s = n.previousElementSibling; s; s = s.previousElementSibling) { if (s.tagName === n.tagName) i++; } p.unshift(n.tagName.toLowerCase() + ':nth-of-type(' + i + ')'); } return p.join('>'); }; const out = []; for (const e of document.body.querySelectorAll('*')) { let own = false; for (const n of e.childNodes) { if (n.nodeType === 3 && n.nodeValue.trim().length > 0) { own = true; break; } } if (!own) continue; const cs = getComputedStyle(e); if (cs.overflowX === 'visible' && cs.overflowY === 'visible') continue; out.push({ selector: sel(e), snippet: e.cloneNode(false).outerHTML, overflowX: cs.overflowX, overflowY: cs.overflowY, scrollWidth: e.scrollWidth, clientWidth: e.clientWidth, scrollHeight: e.scrollHeight, clientHeight: e.clientHeight }); } return JSON.stringify({ elements: out }); }"
+        @label "Clipped text expression"
+        @description "A page function returning a JSON string of the text-bearing elements whose computed overflow is not visible, each with selector, opening tag, overflow per axis, scroll and client extents."
+        @tier "infra"
+    }
+  }
+
+  page boot as TextResizeProbePage -> TextResizeProbe
+}

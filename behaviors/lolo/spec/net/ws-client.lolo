@@ -1,0 +1,26 @@
+app ws-client-spec [
+  version: "1.0.0",
+  description: "Design contract for one RFC 6455 WebSocket client connection over os/tcp-connect (TLS through its option argument). WS_OPEN { path, headers?, host?, port?, tls? } connects to the configured host and port (the payload host, port and tls are read only when the dynamicHost knob is on), writes the Upgrade request with a fresh Sec-WebSocket-Key and accepts only a 101 whose Sec-WebSocket-Accept is base64(SHA-1(key + 258EAFA5-E914-47DA-95CA-C5AB0DC85B11)), answering WS_OPENED; anything else answers WS_FAILED. While open a standing read decodes frames: text and binary messages (continuations joined) answer WS_MESSAGE { text?, data?, binary }, a ping is answered with a pong, a close is answered and ends in WS_CLOSED { code, reason }. WS_SEND { text } or { data } writes one masked frame. A message longer than maxMessage, an invalid UTF-8 text message or a protocol violation fails the connection (WS_FAILED kind protocol) and is never truncated. WS_CLOSE starts the close handshake."
+]
+
+orbital WsClientSpec {
+  expects entity WsConnection [runtime] {
+    id : string!
+    sock : number
+  }
+  expects trait WsClient {
+    state closed
+    state connecting
+    state open
+    state closed {
+      WS_OPEN -> connecting
+    }
+    emits {
+      WS_OPENED { protocol : string }
+      WS_MESSAGE { text : string  data : bytes  binary : boolean! }
+      WS_CLOSED { code : number!  reason : string! }
+      WS_FAILED { error : string!  kind : string! }
+    }
+  }
+  expects page boot -> WsClient
+}

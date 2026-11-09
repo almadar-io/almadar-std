@@ -1,0 +1,894 @@
+{
+ "atom": "a11y/atoms/std-a11y-probe-language.lolo",
+ "trait": "LanguageProbe",
+ "note": "std-a11y-probe-language with the page and classifier answers played as events. The lang and text of the fixture cases are real, read through headless Chrome (record.py, read-text.js). The classifier answers are played by the golden, no model ran. Regenerate with python3 -I probe-language.gen/gen_goldens.py.",
+ "cases": [
+  {
+   "id": "PROBE_RUN asks the page for its text under the run key",
+   "steps": [
+    {
+     "from": "idle",
+     "event": "PROBE_RUN",
+     "payload": {
+      "key": "k1",
+      "pageUrl": "http://127.0.0.1:24700/"
+     },
+     "expect": {
+      "state": "reading",
+      "emits": [
+       {
+        "event": "PAGE_TEXT",
+        "payload": {
+         "key": "k1:text"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "lang-missing-fail: an empty lang is the confirmed lang-missing finding and nothing is classified",
+   "steps": [
+    {
+     "from": "reading",
+     "event": "PAGE_TEXT_READ",
+     "payload": {
+      "key": "k1:text",
+      "url": "http://127.0.0.1:24700/",
+      "title": "lang-missing-fail.html",
+      "lang": "",
+      "text": "Preskoči na vsebino\nDomovIzdelki\nlang-missing\n\nPreprosta stran za preverjanje dostopnosti."
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k1",
+         "probe": "language",
+         "findings": [
+          {
+           "id": "lang-missing:http://127.0.0.1:24700/",
+           "pageUrl": "http://127.0.0.1:24700/",
+           "rule": "lang-missing",
+           "wcag": [
+            {
+             "criterion": "3.1.1",
+             "level": "A",
+             "version": "2.0"
+            }
+           ],
+           "method": "probe",
+           "engines": [
+            "probe"
+           ],
+           "impact": "serious",
+           "confidence": "confirmed",
+           "selector": "html",
+           "snippet": "<html>",
+           "evidence": "",
+           "count": 1
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24700/",
+      "lang": "",
+      "declared": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "lang-mismatch-fail: lang en over Slovenian text is lang-wrong, needs verification, and the whole text goes to the classifier",
+   "steps": [
+    {
+     "from": "reading",
+     "event": "PAGE_TEXT_READ",
+     "payload": {
+      "key": "k1:text",
+      "url": "http://127.0.0.1:24700/",
+      "title": "lang-mismatch-fail.html",
+      "lang": "en",
+      "text": "Preskoči na vsebino\nDomovIzdelki\nlang-mismatch\n\nTo je stran v slovenščini. Dobrodošli v naši spletni trgovini, kjer najdete lonce in skodelice."
+     },
+     "expect": {
+      "state": "classifying",
+      "emits": [
+       {
+        "event": "LANGUAGE_CLASSIFY_GO",
+        "payload": {
+         "text": "Preskoči na vsebino\nDomovIzdelki\nlang-mismatch\n\nTo je stran v slovenščini. Dobrodošli v naši spletni trgovini, kjer najdete lonce in skodelice."
+        }
+       }
+      ]
+     },
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24700/",
+      "lang": "",
+      "declared": ""
+     }
+    },
+    {
+     "from": "classifying",
+     "event": "LANGUAGE_CLASSIFY_GO",
+     "payload": {
+      "text": "Preskoči na vsebino\nDomovIzdelki\nlang-mismatch\n\nTo je stran v slovenščini. Dobrodošli v naši spletni trgovini, kjer najdete lonce in skodelice."
+     },
+     "expect": {
+      "state": "classifying",
+      "emits": [
+       {
+        "event": "LLM_CLASSIFY",
+        "payload": {
+         "text": "Preskoči na vsebino\nDomovIzdelki\nlang-mismatch\n\nTo je stran v slovenščini. Dobrodošli v naši spletni trgovini, kjer najdete lonce in skodelice.",
+         "categories": [
+          "sl",
+          "en",
+          "de",
+          "hr",
+          "it",
+          "hu"
+         ],
+         "key": "k1:classify"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24700/",
+      "lang": "en",
+      "declared": "en"
+     }
+    },
+    {
+     "from": "classifying",
+     "event": "LLM_CLASSIFY_RESULT",
+     "payload": {
+      "category": "sl",
+      "confidence": 0.97,
+      "reasoning": "classifier answer played by the golden"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k1",
+         "probe": "language",
+         "findings": [
+          {
+           "id": "lang-wrong:http://127.0.0.1:24700/",
+           "pageUrl": "http://127.0.0.1:24700/",
+           "rule": "lang-wrong",
+           "wcag": [
+            {
+             "criterion": "3.1.1",
+             "level": "A",
+             "version": "2.0"
+            }
+           ],
+           "method": "probe",
+           "engines": [
+            "probe"
+           ],
+           "impact": "serious",
+           "confidence": "needs-verification",
+           "selector": "html",
+           "snippet": "<html lang=\"en\"> text classified as sl",
+           "evidence": "",
+           "count": 1
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24700/",
+      "lang": "en",
+      "declared": "en"
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: lang-mismatch-pass, lang sl over Slovenian text, has no finding",
+   "steps": [
+    {
+     "from": "reading",
+     "event": "PAGE_TEXT_READ",
+     "payload": {
+      "key": "k1:text",
+      "url": "http://127.0.0.1:24700/",
+      "title": "lang-mismatch-pass.html",
+      "lang": "sl",
+      "text": "Preskoči na vsebino\nDomovIzdelki\nlang-mismatch\n\nTo je stran v slovenščini. Dobrodošli v naši spletni trgovini, kjer najdete lonce in skodelice."
+     },
+     "expect": {
+      "state": "classifying",
+      "emits": [
+       {
+        "event": "LANGUAGE_CLASSIFY_GO",
+        "payload": {
+         "text": "Preskoči na vsebino\nDomovIzdelki\nlang-mismatch\n\nTo je stran v slovenščini. Dobrodošli v naši spletni trgovini, kjer najdete lonce in skodelice."
+        }
+       }
+      ]
+     },
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24700/",
+      "lang": "",
+      "declared": ""
+     }
+    },
+    {
+     "from": "classifying",
+     "event": "LANGUAGE_CLASSIFY_GO",
+     "payload": {
+      "text": "Preskoči na vsebino\nDomovIzdelki\nlang-mismatch\n\nTo je stran v slovenščini. Dobrodošli v naši spletni trgovini, kjer najdete lonce in skodelice."
+     },
+     "expect": {
+      "state": "classifying",
+      "emits": [
+       {
+        "event": "LLM_CLASSIFY",
+        "payload": {
+         "text": "Preskoči na vsebino\nDomovIzdelki\nlang-mismatch\n\nTo je stran v slovenščini. Dobrodošli v naši spletni trgovini, kjer najdete lonce in skodelice.",
+         "categories": [
+          "sl",
+          "en",
+          "de",
+          "hr",
+          "it",
+          "hu"
+         ],
+         "key": "k1:classify"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24700/",
+      "lang": "sl",
+      "declared": "sl"
+     }
+    },
+    {
+     "from": "classifying",
+     "event": "LLM_CLASSIFY_RESULT",
+     "payload": {
+      "category": "sl",
+      "confidence": 0.97,
+      "reasoning": "classifier answer played by the golden"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k1",
+         "probe": "language",
+         "findings": []
+        }
+       }
+      ]
+     },
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24700/",
+      "lang": "sl",
+      "declared": "sl"
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: lang-missing-pass declares sl and is classified, no finding",
+   "steps": [
+    {
+     "from": "reading",
+     "event": "PAGE_TEXT_READ",
+     "payload": {
+      "key": "k1:text",
+      "url": "http://127.0.0.1:24700/",
+      "title": "lang-missing-pass.html",
+      "lang": "sl",
+      "text": "Preskoči na vsebino\nDomovIzdelki\nlang-missing\n\nPreprosta stran za preverjanje dostopnosti."
+     },
+     "expect": {
+      "state": "classifying",
+      "emits": [
+       {
+        "event": "LANGUAGE_CLASSIFY_GO",
+        "payload": {
+         "text": "Preskoči na vsebino\nDomovIzdelki\nlang-missing\n\nPreprosta stran za preverjanje dostopnosti."
+        }
+       }
+      ]
+     },
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24700/",
+      "lang": "",
+      "declared": ""
+     }
+    },
+    {
+     "from": "classifying",
+     "event": "LANGUAGE_CLASSIFY_GO",
+     "payload": {
+      "text": "Preskoči na vsebino\nDomovIzdelki\nlang-missing\n\nPreprosta stran za preverjanje dostopnosti."
+     },
+     "expect": {
+      "state": "classifying",
+      "emits": [
+       {
+        "event": "LLM_CLASSIFY",
+        "payload": {
+         "text": "Preskoči na vsebino\nDomovIzdelki\nlang-missing\n\nPreprosta stran za preverjanje dostopnosti.",
+         "categories": [
+          "sl",
+          "en",
+          "de",
+          "hr",
+          "it",
+          "hu"
+         ],
+         "key": "k1:classify"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24700/",
+      "lang": "sl",
+      "declared": "sl"
+     }
+    },
+    {
+     "from": "classifying",
+     "event": "LLM_CLASSIFY_RESULT",
+     "payload": {
+      "category": "sl",
+      "confidence": 0.97,
+      "reasoning": "classifier answer played by the golden"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k1",
+         "probe": "language",
+         "findings": []
+        }
+       }
+      ]
+     },
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24700/",
+      "lang": "sl",
+      "declared": "sl"
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a regional subtag compares by its primary subtag (sl-SI against sl)",
+   "steps": [
+    {
+     "from": "reading",
+     "event": "PAGE_TEXT_READ",
+     "payload": {
+      "key": "k1:text",
+      "url": "http://127.0.0.1:24700/",
+      "title": "lang-mismatch-pass.html",
+      "lang": "sl-SI",
+      "text": "Preskoči na vsebino\nDomovIzdelki\nlang-mismatch\n\nTo je stran v slovenščini. Dobrodošli v naši spletni trgovini, kjer najdete lonce in skodelice."
+     },
+     "expect": {
+      "state": "classifying",
+      "emits": [
+       {
+        "event": "LANGUAGE_CLASSIFY_GO",
+        "payload": {
+         "text": "Preskoči na vsebino\nDomovIzdelki\nlang-mismatch\n\nTo je stran v slovenščini. Dobrodošli v naši spletni trgovini, kjer najdete lonce in skodelice."
+        }
+       }
+      ]
+     },
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24700/",
+      "lang": "",
+      "declared": ""
+     }
+    },
+    {
+     "from": "classifying",
+     "event": "LLM_CLASSIFY_RESULT",
+     "payload": {
+      "category": "sl",
+      "confidence": 0.9,
+      "reasoning": "r"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k1",
+         "probe": "language",
+         "findings": []
+        }
+       }
+      ]
+     },
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24700/",
+      "lang": "sl-SI",
+      "declared": "sl"
+     }
+    }
+   ]
+  },
+  {
+   "id": "a declared language outside the languages knob is added to the categories so it can be chosen",
+   "steps": [
+    {
+     "from": "classifying",
+     "event": "LANGUAGE_CLASSIFY_GO",
+     "payload": {
+      "text": "Bonjour"
+     },
+     "expect": {
+      "state": "classifying",
+      "emits": [
+       {
+        "event": "LLM_CLASSIFY",
+        "payload": {
+         "text": "Bonjour",
+         "categories": [
+          "sl",
+          "en",
+          "de",
+          "hr",
+          "it",
+          "hu",
+          "fr"
+         ],
+         "key": "k1:classify"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24700/",
+      "lang": "fr",
+      "declared": "fr"
+     }
+    }
+   ]
+  },
+  {
+   "id": "a declared language that the classifier does not recognise in the text is lang-wrong with the classified language in the snippet",
+   "steps": [
+    {
+     "from": "classifying",
+     "event": "LLM_CLASSIFY_RESULT",
+     "payload": {
+      "category": "de",
+      "confidence": 0.8,
+      "reasoning": "r"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k1",
+         "probe": "language",
+         "findings": [
+          {
+           "id": "lang-wrong:http://127.0.0.1:24700/",
+           "pageUrl": "http://127.0.0.1:24700/",
+           "rule": "lang-wrong",
+           "wcag": [
+            {
+             "criterion": "3.1.1",
+             "level": "A",
+             "version": "2.0"
+            }
+           ],
+           "method": "probe",
+           "engines": [
+            "probe"
+           ],
+           "impact": "serious",
+           "confidence": "needs-verification",
+           "selector": "html",
+           "snippet": "<html lang=\"sl-SI\"> text classified as de",
+           "evidence": "",
+           "count": 1
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24700/",
+      "lang": "sl-SI",
+      "declared": "sl"
+     }
+    }
+   ]
+  },
+  {
+   "id": "text over maxClassifyChars is refused, never cut",
+   "steps": [
+    {
+     "from": "reading",
+     "event": "PAGE_TEXT_READ",
+     "payload": {
+      "key": "k1:text",
+      "url": "http://127.0.0.1:24700/",
+      "title": "lang-mismatch-fail.html",
+      "lang": "en",
+      "text": "Preskoči na vsebino\nDomovIzdelki\nlang-mismatch\n\nTo je stran v slovenščini. Dobrodošli v naši spletni trgovini, kjer najdete lonce in skodelice."
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_FAILED",
+        "payload": {
+         "key": "k1",
+         "probe": "language",
+         "code": "text_too_long"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24700/",
+      "lang": "",
+      "declared": ""
+     }
+    }
+   ],
+   "config": {
+    "maxClassifyChars": 20
+   }
+  },
+  {
+   "id": "control: text of exactly maxClassifyChars is classified",
+   "steps": [
+    {
+     "from": "reading",
+     "event": "PAGE_TEXT_READ",
+     "payload": {
+      "key": "k1:text",
+      "url": "http://127.0.0.1:24700/",
+      "title": "lang-mismatch-fail.html",
+      "lang": "en",
+      "text": "xxxxxxxxxxxxxxxxxxxx"
+     },
+     "expect": {
+      "state": "classifying"
+     },
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24700/",
+      "lang": "",
+      "declared": ""
+     }
+    }
+   ],
+   "config": {
+    "maxClassifyChars": 20
+   }
+  },
+  {
+   "id": "control: a lang-missing page over the limit is still lang-missing, the text size does not matter",
+   "steps": [
+    {
+     "from": "reading",
+     "event": "PAGE_TEXT_READ",
+     "payload": {
+      "key": "k1:text",
+      "url": "http://127.0.0.1:24700/",
+      "title": "lang-missing-fail.html",
+      "lang": "",
+      "text": "Preskoči na vsebino\nDomovIzdelki\nlang-missing\n\nPreprosta stran za preverjanje dostopnosti."
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k1",
+         "probe": "language",
+         "findings": [
+          {
+           "id": "lang-missing:http://127.0.0.1:24700/",
+           "pageUrl": "http://127.0.0.1:24700/",
+           "rule": "lang-missing",
+           "wcag": [
+            {
+             "criterion": "3.1.1",
+             "level": "A",
+             "version": "2.0"
+            }
+           ],
+           "method": "probe",
+           "engines": [
+            "probe"
+           ],
+           "impact": "serious",
+           "confidence": "confirmed",
+           "selector": "html",
+           "snippet": "<html>",
+           "evidence": "",
+           "count": 1
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24700/",
+      "lang": "",
+      "declared": ""
+     }
+    }
+   ],
+   "config": {
+    "maxClassifyChars": 20
+   }
+  },
+  {
+   "id": "a page with a lang and no visible text has nothing to classify and no finding",
+   "steps": [
+    {
+     "from": "reading",
+     "event": "PAGE_TEXT_READ",
+     "payload": {
+      "key": "k1:text",
+      "url": "http://127.0.0.1:24700/",
+      "title": "lang-mismatch-pass.html",
+      "lang": "sl",
+      "text": "  "
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k1",
+         "probe": "language",
+         "findings": []
+        }
+       }
+      ]
+     },
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24700/",
+      "lang": "",
+      "declared": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "a page failure answers PROBE_FAILED with the page's code",
+   "steps": [
+    {
+     "from": "reading",
+     "event": "PAGE_FAILED",
+     "payload": {
+      "key": "k1:text",
+      "error": "gone",
+      "code": "page_gone"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_FAILED",
+        "payload": {
+         "key": "k1",
+         "probe": "language",
+         "code": "page_gone",
+         "error": "gone"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24700/",
+      "lang": "",
+      "declared": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "a classifier failure answers PROBE_FAILED with its code",
+   "steps": [
+    {
+     "from": "classifying",
+     "event": "LLM_FAILED",
+     "payload": {
+      "code": "SERVICE_ERROR",
+      "message": "model down",
+      "key": "k1:classify"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_FAILED",
+        "payload": {
+         "key": "k1",
+         "probe": "language",
+         "code": "SERVICE_ERROR",
+         "error": "model down"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24700/",
+      "lang": "en",
+      "declared": "en"
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a classifier failure without a code answers llm_failed",
+   "steps": [
+    {
+     "from": "classifying",
+     "event": "LLM_FAILED",
+     "payload": {
+      "message": "model down",
+      "key": "k1:classify"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_FAILED",
+        "payload": {
+         "key": "k1",
+         "probe": "language",
+         "code": "llm_failed",
+         "error": "model down"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24700/",
+      "lang": "en",
+      "declared": "en"
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a classifier failure under another run's key is ignored",
+   "steps": [
+    {
+     "from": "classifying",
+     "event": "LLM_FAILED",
+     "payload": {
+      "message": "model down",
+      "key": "k2:classify"
+     },
+     "expect": {
+      "state": "classifying",
+      "emits": []
+     },
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24700/",
+      "lang": "en",
+      "declared": "en"
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a text answer under another run's key is ignored",
+   "steps": [
+    {
+     "from": "reading",
+     "event": "PAGE_TEXT_READ",
+     "payload": {
+      "key": "k2:text",
+      "url": "http://127.0.0.1:24700/",
+      "title": "lang-missing-fail.html",
+      "lang": "",
+      "text": "Preskoči na vsebino\nDomovIzdelki\nlang-missing\n\nPreprosta stran za preverjanje dostopnosti."
+     },
+     "expect": {
+      "state": "reading",
+      "emits": []
+     },
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24700/",
+      "lang": "",
+      "declared": ""
+     }
+    }
+   ]
+  },
+  {
+   "id": "a second PROBE_RUN while one is in flight answers probe_busy",
+   "steps": [
+    {
+     "from": "classifying",
+     "event": "PROBE_RUN",
+     "payload": {
+      "key": "k2",
+      "pageUrl": "http://127.0.0.1:24700/"
+     },
+     "expect": {
+      "state": "classifying",
+      "emits": [
+       {
+        "event": "PROBE_FAILED",
+        "payload": {
+         "key": "k2",
+         "probe": "language",
+         "code": "probe_busy"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24700/",
+      "lang": "en",
+      "declared": "en"
+     }
+    }
+   ]
+  }
+ ]
+}

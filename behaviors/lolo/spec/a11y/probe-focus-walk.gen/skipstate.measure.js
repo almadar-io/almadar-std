@@ -1,0 +1,1 @@
+(href) => { const t = document.getElementById(decodeURIComponent(href.replace(/^#/, ''))); const a = document.activeElement; const inTarget = t !== null && a !== null && a !== document.body && t.contains(a); return JSON.stringify({ scrollY: Math.round(window.scrollY), activeIsTarget: inTarget, targetPseudo: t !== null && document.querySelector(':target') === t }); }

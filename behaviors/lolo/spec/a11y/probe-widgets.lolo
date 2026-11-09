@@ -1,0 +1,35 @@
+app a11y-probe-widgets-spec [
+  version: "1.0.0",
+  description: "Design contract for the widgets probe (WCAG 2.1.1, 4.1.2, 2.5.8): widgets found by declared ARIA role answer their WAI-ARIA Authoring Practices keyboard pattern, and interactive targets are at least 24 CSS px or spaced. PROBE_RUN { key, pageUrl } on a tab already at pageUrl finds the widgets (PAGE_MEASURE), drives each one with keys (PAGE_KEY) and reads its state (PAGE_MEASURE), restoring the page after each (PAGE_NAVIGATE), then measures target sizes (PAGE_MEASURE), and answers PROBE_DONE { key, probe, findings } or PROBE_FAILED { key, probe, error, code }."
+]
+
+type WcagRef = { criterion : string!, level : "A" | "AA" | "AAA"!, version : "2.0" | "2.1" | "2.2"! }
+type A11yFinding = { id : string!, pageUrl : string!, rule : string!, wcag : [WcagRef]!, method : "engine" | "probe" | "llm"!, engines : [string]!, impact : "critical" | "serious" | "moderate" | "minor"!, confidence : "confirmed" | "needs-verification"!, selector : string!, snippet : string!, evidence : string!, count : number! }
+
+orbital A11yProbeWidgetsSpec {
+  expects entity WidgetsRun [runtime] {
+    id : string!
+  }
+  expects trait WidgetsProbe {
+    state idle {
+      PROBE_RUN -> finding
+    }
+    state pressing {
+      PAGE_KEY_SENT -> reading
+    }
+    state restoring {
+      PAGE_LOADED -> sizing
+    }
+    state sizing {
+      PAGE_MEASURED -> idle
+    }
+    emits {
+      PAGE_MEASURE { key : string!  expression : string! }
+      PAGE_KEY { key : string!  keyName : "Tab" | "Enter" | "Space" | "Escape" | "ArrowDown" | "ArrowUp" | "ArrowLeft" | "ArrowRight" | "Home" | "End"! }
+      PAGE_NAVIGATE { key : string!  url : string! }
+      PROBE_DONE { key : string!  probe : string!  findings : [A11yFinding]! }
+      PROBE_FAILED { key : string!  probe : string!  error : string!  code : string! }
+    }
+  }
+  expects page boot -> WidgetsProbe
+}

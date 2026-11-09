@@ -1,0 +1,342 @@
+app std-web-crawl [
+  version: "1.0.0",
+  description: "std-web-crawl — a bounded breadth-first crawl of one site through page events, whatever Chrome the composer wires. CRAWL_START { key, startUrl, maxDepth?, maxPages? } takes the origin (scheme, host and port, lowercase) of startUrl; maxDepth and maxPages default to the knobs. With respectRobots on, <origin>/robots.txt is loaded (PAGE_NAVIGATE then PAGE_TEXT) and the Allow and Disallow rules of the User-agent * group apply by the longest matching rule, * and a trailing $ as RFC 9309 defines them; a robots file that cannot be loaded allows everything and CRAWL_DONE says robots unreadable. Each page is PAGE_NAVIGATE, PAGE_LOADED, PAGE_LINKS, PAGE_LINKS_READ and answers CRAWL_PAGE { key, url, title, depth, links }; a page that fails to load answers CRAWL_PAGE with an error and the crawl goes on. Links are made of anchors only: the fragment is dropped, the origin must equal the start origin, the url must match an include pattern when the include knob is not empty and no exclude pattern, must not be blocked by robots and must not have been queued before. Links of pages at maxDepth are reported but not followed. An anchor with the download flag (std-chrome sets it from the download attribute or a download extension) is a document: recorded with its text and the page it came from, never navigated; documents are collected on the start origin only. delayMs separates two navigations through a composed std-delay. CRAWL_DONE { key, pages, documents, truncated, skipped, blocked, robots } ends the run: truncated is true when maxPages stopped it and skipped counts the urls left in the frontier; blocked counts the urls robots refused. A run while another is in flight answers CRAWL_FAILED code crawl_busy; a start url that is not http or https answers bad_start_url. Answers count only under this run's keys. The atom composes no browser; the composer wires the page events to std-chrome and grants nothing."
+]
+;; @capabilities "crawl one website breadth first, honour robots.txt, collect linked documents"
+uses Spec from "almadar-std/web-crawl"
+uses Delay from "std/behaviors/std-delay"
+
+type PageLink = { index : number!, text : string!, href : string!, download : boolean!, kind : "link" | "button"! }
+type CrawlItem = { url : string!, depth : number!, fromPage : string! }
+type CrawlPageRec = { url : string!, title : string!, depth : number!, error : string? }
+type CrawlDocument = { url : string!, text : string!, fromPage : string! }
+type RobotRule = { allow : boolean!, rule : string!, pattern : string! }
+type RobotScan = { star : boolean!, afterRule : boolean!, rules : [RobotRule]! }
+type CrawlAnchor = { href : string!, text : string!, download : boolean! }
+
+orbital WebCrawlOrbital {
+  entity CrawlRun [runtime] {
+    id : string!
+    runKey : string @description "The caller's name for the crawl in flight; blank when idle." = ""
+    origin : string @description "Scheme, host and port of the start url, lowercase; the only origin the crawl follows." = ""
+    maxDepth : number @description "Links are followed from pages shallower than this; the start page is depth 0." = 0
+    maxPages : number @description "The most pages visited, failed ones included." = 0
+    queue : [CrawlItem] @description "The frontier, oldest first." = []
+    seen : [string] @description "Every url queued so far, so none is queued twice." = []
+    pages : [CrawlPageRec] @description "The pages visited, in order." = []
+    documents : [CrawlDocument] @description "The document links found." = []
+    rules : [RobotRule] @description "The Allow and Disallow rules of User-agent * in robots.txt." = []
+    robots : string @description "off when robots is not respected, read when robots.txt was loaded, unreadable when it could not be." = "off"
+    blocked : number @description "Urls robots refused." = 0
+    navigations : number @description "Navigations made in this run, robots.txt included." = 0
+    curUrl : string @description "The url being visited." = ""
+    curDepth : number @description "The depth of the url being visited." = 0
+    curTitle : string @description "The title the page loaded with." = ""
+  }
+
+  trait CrawlDelay = Delay.traits.Delay {
+    listens {
+      WebCrawl.CRAWL_TIMER_ARM -> START
+    }
+  }
+
+  trait WebCrawl -> CrawlRun [optimistic] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      CRAWL_START -> idle when (not (validate/pattern @payload.startUrl "^[hH][tT][tT][pP][sS]?://[^/?#]+"))
+        (emit CRAWL_FAILED { key: @payload.key, error: (str/concat "not an http or https url: " @payload.startUrl), code: "bad_start_url" })
+      CRAWL_START -> robots_loading when (and (validate/pattern @payload.startUrl "^[hH][tT][tT][pP][sS]?://[^/?#]+") @config.respectRobots)
+        (let ((origin (str/lower (str/slice @payload.startUrl 0 (default (object/get (default (array/first (str/find-pattern @payload.startUrl "^[a-zA-Z][a-zA-Z0-9+.-]*://[^/?#]+")) { start: 0, end: 0, text: "" }) "end") 0)))))
+          (do
+            (set @entity.runKey @payload.key)
+            (set @entity.origin @origin)
+            (set @entity.maxDepth (if (== @payload.maxDepth null) @config.maxDepth @payload.maxDepth))
+            (set @entity.maxPages (if (== @payload.maxPages null) @config.maxPages @payload.maxPages))
+            (set @entity.queue [])
+            (set @entity.seen [])
+            (set @entity.pages [])
+            (set @entity.documents [])
+            (set @entity.rules [])
+            (set @entity.robots "unreadable")
+            (set @entity.blocked 0)
+            (set @entity.navigations 1)
+            (set @entity.curUrl @payload.startUrl)
+            (set @entity.curDepth 0)
+            (emit PAGE_NAVIGATE { key: (str/concat @payload.key ":robots"), url: (str/concat @origin "/robots.txt") })))
+      CRAWL_START -> enqueuing when (and (validate/pattern @payload.startUrl "^[hH][tT][tT][pP][sS]?://[^/?#]+") (not @config.respectRobots))
+        (let ((origin (str/lower (str/slice @payload.startUrl 0 (default (object/get (default (array/first (str/find-pattern @payload.startUrl "^[a-zA-Z][a-zA-Z0-9+.-]*://[^/?#]+")) { start: 0, end: 0, text: "" }) "end") 0)))))
+          (do
+            (set @entity.runKey @payload.key)
+            (set @entity.origin @origin)
+            (set @entity.maxDepth (if (== @payload.maxDepth null) @config.maxDepth @payload.maxDepth))
+            (set @entity.maxPages (if (== @payload.maxPages null) @config.maxPages @payload.maxPages))
+            (set @entity.queue [])
+            (set @entity.seen [])
+            (set @entity.pages [])
+            (set @entity.documents [])
+            (set @entity.rules [])
+            (set @entity.robots "off")
+            (set @entity.blocked 0)
+            (set @entity.navigations 0)
+            (set @entity.curUrl @payload.startUrl)
+            (set @entity.curDepth 0)
+            (emit CRAWL_ENQUEUE { fromPage: "", childDepth: 0, links: [{ index: 0, text: "", href: @payload.startUrl, download: false, kind: "link" }] })))
+    }
+
+    state robots_loading {
+      INIT -> idle
+      CRAWL_START -> robots_loading
+        (emit CRAWL_FAILED { key: @payload.key, error: (str/concat "a crawl of " @entity.origin " is in flight"), code: "crawl_busy" })
+      PAGE_LOADED -> robots_reading when (= @payload.key (str/concat @entity.runKey ":robots"))
+        (emit PAGE_TEXT { key: (str/concat @entity.runKey ":robots-text") })
+      PAGE_FAILED -> enqueuing when (= @payload.key (str/concat @entity.runKey ":robots"))
+        (emit CRAWL_ENQUEUE { fromPage: "", childDepth: 0, links: [{ index: 0, text: "", href: @entity.curUrl, download: false, kind: "link" }] })
+    }
+
+    state robots_reading {
+      INIT -> idle
+      CRAWL_START -> robots_reading
+        (emit CRAWL_FAILED { key: @payload.key, error: (str/concat "a crawl of " @entity.origin " is in flight"), code: "crawl_busy" })
+      PAGE_FAILED -> enqueuing when (= @payload.key (str/concat @entity.runKey ":robots-text"))
+        (emit CRAWL_ENQUEUE { fromPage: "", childDepth: 0, links: [{ index: 0, text: "", href: @entity.curUrl, download: false, kind: "link" }] })
+      PAGE_TEXT_READ -> enqueuing when (= @payload.key (str/concat @entity.runKey ":robots-text"))
+        (set @entity.robots "read")
+        (set @entity.rules (let ((scan (array/reduce (str/split @payload.text "\n") { star: false, afterRule: false, rules: [] } (fn st raw
+          (let ((line (str/trim (str/replace-pattern @raw "#.*$" ""))))
+            (let ((m (array/first (str/find-pattern @line "^[^:]*:"))))
+              (if (== @m null)
+                @st
+                (let ((field (str/lower (str/trim (str/slice @m.text 0 (- (str/len @m.text) 1))))))
+                  (let ((value (str/trim (str/slice @line @m.end))))
+                    (if (== @field "user-agent")
+                      { star: (if @st.afterRule (== @value "*") (or @st.star (== @value "*"))), afterRule: false, rules: @st.rules }
+                      (if (or (== @field "allow") (== @field "disallow"))
+                        (let ((anchored (str/endsWith @value "$")))
+                          (let ((body (if @anchored (str/slice @value 0 (- (str/len @value) 1)) @value)))
+                            { star: @st.star, afterRule: true, rules: (if (and @st.star (!= @value "")) (array/append @st.rules { allow: (== @field "allow"), rule: @value, pattern: (str/concat "^" (str/join (array/map (str/split @body "*") (fn seg (array/reduce ["\\" "." "+" "?" "^" "{" "}" "(" ")" "|" "[" "]" "$"] @seg (fn s c (str/replaceAll @s @c (str/concat "\\" @c)))))) ".*") (if @anchored "$" "")) }) @st.rules) }))
+                        @st)))))))))))
+          @scan.rules))
+        (emit CRAWL_ENQUEUE { fromPage: "", childDepth: 0, links: [{ index: 0, text: "", href: @entity.curUrl, download: false, kind: "link" }] })
+    }
+
+    state enqueuing {
+      INIT -> idle
+      CRAWL_START -> enqueuing
+        (emit CRAWL_FAILED { key: @payload.key, error: (str/concat "a crawl of " @entity.origin " is in flight"), code: "crawl_busy" })
+      CRAWL_ENQUEUE -> stepping
+        (let ((anchors (array/map (array/filter @payload.links (fn l (== @l.kind "link"))) (fn l { href: (default (array/first (str/split @l.href "#")) ""), text: @l.text, download: @l.download }))))
+          (let ((here (array/filter @anchors (fn a (and (!= @a.href "") (or (== (str/lower @a.href) @entity.origin) (str/startsWith (str/lower @a.href) (str/concat @entity.origin "/")) (str/startsWith (str/lower @a.href) (str/concat @entity.origin "?"))))))))
+            (let ((docs (array/filter @here (fn a @a.download))))
+              (let ((wanted (array/filter (array/reject @here (fn a @a.download)) (fn a (and (or (== (array/len @config.include) 0) (array/some @config.include (fn p (validate/pattern @a.href @p)))) (not (array/some @config.exclude (fn p (validate/pattern @a.href @p)))))))))
+                (let ((fresh (array/filter (array/unique (array/map @wanted (fn a @a.href))) (fn u (not (array/includes @entity.seen @u))))))
+                  (let ((allowed (array/filter @fresh (fn u (let ((path (let ((rest (str/slice @u (str/len @entity.origin)))) (if (== @rest "") "/" (if (str/startsWith @rest "?") (str/concat "/" @rest) @rest))))) (>= (array/reduce @entity.rules 0 (fn acc r (if (and @r.allow (validate/pattern @path @r.pattern) (> (str/len @r.rule) @acc)) (str/len @r.rule) @acc))) (array/reduce @entity.rules 0 (fn acc r (if (and (not @r.allow) (validate/pattern @path @r.pattern) (> (str/len @r.rule) @acc)) (str/len @r.rule) @acc)))))))))
+                    (do
+                      (set @entity.documents (array/reduce @docs @entity.documents (fn acc a (if (array/some @acc (fn d (== @d.url @a.href))) @acc (array/append @acc { url: @a.href, text: @a.text, fromPage: @payload.fromPage })))))
+                      (set @entity.seen (array/concat @entity.seen @fresh))
+                      (set @entity.blocked (+ @entity.blocked (- (array/len @fresh) (array/len @allowed))))
+                      (set @entity.queue (array/concat @entity.queue (array/map @allowed (fn u { url: @u, depth: @payload.childDepth, fromPage: @payload.fromPage }))))
+                      (emit CRAWL_NEXT { }))))))))
+    }
+
+    state stepping {
+      INIT -> idle
+      CRAWL_START -> stepping
+        (emit CRAWL_FAILED { key: @payload.key, error: (str/concat "a crawl of " @entity.origin " is in flight"), code: "crawl_busy" })
+      CRAWL_NEXT -> idle when (== (array/len @entity.queue) 0)
+        (emit CRAWL_DONE { key: @entity.runKey, pages: @entity.pages, documents: @entity.documents, truncated: false, skipped: 0, blocked: @entity.blocked, robots: @entity.robots })
+        (set @entity.runKey "")
+      CRAWL_NEXT -> idle when (and (> (array/len @entity.queue) 0) (>= (array/len @entity.pages) @entity.maxPages))
+        (emit CRAWL_DONE { key: @entity.runKey, pages: @entity.pages, documents: @entity.documents, truncated: true, skipped: (array/len @entity.queue), blocked: @entity.blocked, robots: @entity.robots })
+        (set @entity.runKey "")
+      CRAWL_NEXT -> pausing when (and (> (array/len @entity.queue) 0) (< (array/len @entity.pages) @entity.maxPages) (> @entity.navigations 0) (> @config.delayMs 0))
+        (let ((head (array/first @entity.queue)))
+          (do
+            (set @entity.curUrl @head.url)
+            (set @entity.curDepth @head.depth)
+            (set @entity.queue (array/drop @entity.queue 1))
+            (set @entity.navigations (+ @entity.navigations 1))
+            (emit CRAWL_TIMER_ARM { key: @entity.runKey, delayMs: @config.delayMs })))
+      CRAWL_NEXT -> loading when (and (> (array/len @entity.queue) 0) (< (array/len @entity.pages) @entity.maxPages) (or (== @entity.navigations 0) (<= @config.delayMs 0)))
+        (let ((head (array/first @entity.queue)))
+          (do
+            (set @entity.curUrl @head.url)
+            (set @entity.curDepth @head.depth)
+            (set @entity.queue (array/drop @entity.queue 1))
+            (set @entity.navigations (+ @entity.navigations 1))
+            (emit PAGE_NAVIGATE { key: (str/concat @entity.runKey ":nav"), url: @head.url })))
+    }
+
+    state pausing {
+      INIT -> idle
+      CRAWL_START -> pausing
+        (emit CRAWL_FAILED { key: @payload.key, error: (str/concat "a crawl of " @entity.origin " is in flight"), code: "crawl_busy" })
+      CRAWL_WAITED -> loading when (= @payload.key @entity.runKey)
+        (emit PAGE_NAVIGATE { key: (str/concat @entity.runKey ":nav"), url: @entity.curUrl })
+    }
+
+    state loading {
+      INIT -> idle
+      CRAWL_START -> loading
+        (emit CRAWL_FAILED { key: @payload.key, error: (str/concat "a crawl of " @entity.origin " is in flight"), code: "crawl_busy" })
+      PAGE_LOADED -> linking when (= @payload.key (str/concat @entity.runKey ":nav"))
+        (set @entity.curTitle @payload.title)
+        (emit PAGE_LINKS { key: (str/concat @entity.runKey ":links") })
+      PAGE_FAILED -> stepping when (= @payload.key (str/concat @entity.runKey ":nav"))
+        (set @entity.pages (array/append @entity.pages { url: @entity.curUrl, title: "", depth: @entity.curDepth, error: @payload.error }))
+        (emit CRAWL_PAGE { key: @entity.runKey, url: @entity.curUrl, title: "", depth: @entity.curDepth, links: [], error: @payload.error })
+        (emit CRAWL_NEXT { })
+    }
+
+    state linking {
+      INIT -> idle
+      CRAWL_START -> linking
+        (emit CRAWL_FAILED { key: @payload.key, error: (str/concat "a crawl of " @entity.origin " is in flight"), code: "crawl_busy" })
+      PAGE_LINKS_READ -> enqueuing when (= @payload.key (str/concat @entity.runKey ":links"))
+        (set @entity.pages (array/append @entity.pages { url: @entity.curUrl, title: @entity.curTitle, depth: @entity.curDepth }))
+        (emit CRAWL_PAGE { key: @entity.runKey, url: @entity.curUrl, title: @entity.curTitle, depth: @entity.curDepth, links: @payload.links })
+        (emit CRAWL_ENQUEUE { fromPage: @entity.curUrl, childDepth: (+ @entity.curDepth 1), links: (if (< @entity.curDepth @entity.maxDepth) @payload.links []) })
+      PAGE_FAILED -> stepping when (= @payload.key (str/concat @entity.runKey ":links"))
+        (set @entity.pages (array/append @entity.pages { url: @entity.curUrl, title: @entity.curTitle, depth: @entity.curDepth, error: @payload.error }))
+        (emit CRAWL_PAGE { key: @entity.runKey, url: @entity.curUrl, title: @entity.curTitle, depth: @entity.curDepth, links: [], error: @payload.error })
+        (emit CRAWL_NEXT { })
+    }
+
+    emits {
+      CRAWL_PAGE -> external {
+        key : string!
+        url : string!
+        title : string!
+        depth : number!
+        links : [PageLink]!
+        error : string?
+      }
+        @description "One page was visited: its url, title, depth from the start page (0) and every anchor and button it holds. error is set, links empty, when the page did not load."
+        @synonyms "page crawled, page visited"
+        @tier "primary"
+      CRAWL_DONE -> external {
+        key : string!
+        pages : [CrawlPageRec]!
+        documents : [CrawlDocument]!
+        truncated : boolean!
+        skipped : number!
+        blocked : number!
+        robots : string!
+      }
+        @description "The crawl ended: the pages in visit order, the document links with the page that held them, truncated when maxPages stopped it with skipped urls still in the frontier, blocked urls robots refused, and robots as off, read or unreadable."
+        @synonyms "crawl finished, crawl report, site map"
+        @tier "primary"
+      CRAWL_FAILED -> external {
+        key : string!
+        error : string!
+        code : string!
+      }
+        @description "The crawl did not start: bad_start_url or crawl_busy."
+        @synonyms "crawl refused"
+        @tier "primary"
+      PAGE_NAVIGATE -> external {
+        key : string!
+        url : string!
+      }
+        @description "Load a url in the tab and wait for it."
+        @tier "secondary"
+      PAGE_TEXT -> external {
+        key : string!
+      }
+        @description "Read the text of the loaded page; used for robots.txt."
+        @tier "secondary"
+      PAGE_LINKS -> external {
+        key : string!
+      }
+        @description "Read every anchor and button of the loaded page."
+        @tier "secondary"
+      CRAWL_ENQUEUE {
+        fromPage : string!
+        childDepth : number!
+        links : [PageLink]!
+      }
+        @description "Internal: queue the links of a page that pass the origin, pattern and robots filters."
+        @tier "internal"
+      CRAWL_NEXT { }
+        @description "Internal: visit the next url of the frontier or end the crawl."
+        @tier "internal"
+      CRAWL_TIMER_ARM {
+        key : string!
+        delayMs : number!
+      }
+        @description "Internal: arm the pause before the next navigation."
+        @tier "internal"
+    }
+
+    listens {
+      CRAWL_START -> input {
+        key : string!
+        startUrl : string!
+        maxDepth : number?
+        maxPages : number?
+      }
+        @description "Crawl the site of startUrl breadth first; maxDepth and maxPages default to the knobs."
+        @synonyms "crawl site, spider, walk website"
+      PAGE_LOADED {
+        key : string!
+        url : string!
+        title : string!
+      }
+        @description "The tab finished loading."
+      PAGE_TEXT_READ {
+        key : string!
+        url : string!
+        title : string!
+        lang : string!
+        text : string!
+      }
+        @description "The text of the loaded page."
+      PAGE_LINKS_READ {
+        key : string!
+        links : [PageLink]!
+      }
+        @description "The anchors and buttons of the loaded page."
+      PAGE_FAILED {
+        key : string!
+        error : string!
+        code : string!
+      }
+        @description "A page request failed."
+      CrawlDelay.ELAPSED -> CRAWL_WAITED with { key: ?key }
+      CRAWL_WAITED {
+        key : string?
+      }
+        @description "The pause before the next navigation passed."
+    }
+
+    config {
+      maxDepth : number = 2
+        @label "Depth"
+        @description "How many links deep from the start page the crawl goes; a payload maxDepth overrides it."
+        @tier "domain"
+      maxPages : number = 25
+        @label "Pages"
+        @description "The most pages visited; when urls remain, CRAWL_DONE says truncated and how many were skipped."
+        @tier "domain"
+      delayMs : number = 500
+        @label "Delay (ms)"
+        @description "Milliseconds between two navigations; 0 turns the pause off. Resolution is the 100ms check of std-delay."
+        @tier "domain"
+      respectRobots : boolean = true
+        @label "Respect robots.txt"
+        @description "Load <origin>/robots.txt first and skip the urls its User-agent * group disallows."
+        @tier "domain"
+      include : [string] = []
+        @label "Include patterns"
+        @description "Regex patterns of the shared dialect; when not empty a url must match one to be queued."
+        @tier "domain"
+      exclude : [string] = []
+        @label "Exclude patterns"
+        @description "Regex patterns of the shared dialect; a url matching one is not queued."
+        @tier "domain"
+    }
+  }
+
+  page boot as WebCrawlPage -> WebCrawl, CrawlDelay
+}

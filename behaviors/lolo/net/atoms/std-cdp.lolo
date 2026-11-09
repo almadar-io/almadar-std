@@ -1,0 +1,345 @@
+app std-cdp [
+  version: "1.0.0",
+  description: "std-cdp — a Chrome DevTools Protocol client over one composed std-ws-client connection, a generic typed transport. CDP_CONNECT {} reads GET /json/version on the debugging port (composed std-http-client, the host and port knobs), takes the path of its webSocketDebuggerUrl and opens it, answering CDP_CONNECTED { browser }; a port that does not answer 200, a body that is not the declared version document or a socket that does not open answers CDP_FAILED { error, kind }. CDP_COMMAND { key, method, sessionId?, paramsJson } writes one text frame {\"id\":N,\"method\":M,\"sessionId\":S,\"params\":P} by string assembly, N the next id and P the caller's own params serialized once with json/stringify (a paramsJson that is not valid JSON answers CDP_ERROR code bad-params and writes nothing), and answers CDP_REPLY { key, method, frame } with the raw reply frame text for the caller to parse under the result type it declares for that method; a reply that carries an error answers CDP_ERROR { key, method, code, message } with the protocol code as text. std-cdp parses an incoming frame only under the small envelope type CdpEnvelope { id?, method?, sessionId?, error? } and routes by it: a frame with a method and no id answers CDP_EVENT { method, sessionId, frame }. Commands may be in flight together and each reply goes to its own key. Each command has its own deadline, a keyed wait of the composed std-delay: a reply that does not arrive within timeoutMs answers CDP_ERROR code timeout and the command is forgotten. CDP_DISCONNECT closes the socket; a closed or failed connection answers CDP_ERROR code disconnected for every pending command, oldest first, and then CDP_DISCONNECTED { reason }. A command while no connection is open answers CDP_ERROR code not-connected. A frame that is binary, is not the envelope, carries an id no command is waiting for (an answer that came after its timeout) or has neither id nor method is not routed: it is announced as the internal CDP_STRAY { reason, frame }. The net grant for the debugging port is the composer's: the host and port knobs of the composed std-http-client and std-ws-client name it."
+]
+uses Spec from "almadar-std/cdp"
+uses Http from "std/behaviors/std-http-client"
+uses Ws from "std/behaviors/std-ws-client"
+uses Delay from "std/behaviors/std-delay"
+type HttpHeader = { name : string!, value : string! }
+type CdpPending = { id : number!, key : string!, method : string! }
+type CdpVersion = { Browser : string!, webSocketDebuggerUrl : string! }
+type CdpErrorBody = { code : number!, message : string! }
+type CdpEnvelope = { id : number?, method : string?, sessionId : string?, error : CdpErrorBody? }
+
+orbital CdpOrbital {
+  entity CdpConnection [runtime] {
+    id : string!
+    nextId : number @description "The id the next command is written with; it only grows, so a late answer or timer of an earlier connection never meets a new command." = 1
+    pending : [CdpPending] @description "The commands written and not yet answered, oldest first." = []
+    browser : string @description "The Browser field of /json/version of the connection being opened or open." = ""
+    wire : string @description "The last command frame as written." = ""
+    closing : boolean @description "CDP_DISCONNECT closed the socket; no command is written until the connection ends." = false
+    reason : string @description "Why the connection that ended is gone, kept for CDP_DISCONNECTED once the pending commands are answered." = ""
+  }
+
+  trait CdpHttp = Http.traits.HttpClient {
+    config {
+      host: "127.0.0.1"
+      port: 9222
+      tls: false
+      dynamicHost: false
+    }
+    listens {
+      Cdp.CDP_HTTP_SEND -> HTTP_SEND
+    }
+  }
+
+  trait CdpWs = Ws.traits.WsClient {
+    config {
+      host: "127.0.0.1"
+      port: 9222
+      tls: false
+      dynamicHost: false
+    }
+    listens {
+      Cdp.CDP_WS_OPEN -> WS_OPEN
+      Cdp.CDP_WS_SEND -> WS_SEND
+      Cdp.CDP_WS_CLOSE -> WS_CLOSE
+    }
+  }
+
+  trait CdpDelay = Delay.traits.Delay {
+    listens {
+      Cdp.CDP_TIMER_ARM -> START
+      Cdp.CDP_TIMER_CANCEL -> CANCEL
+    }
+  }
+
+  trait Cdp -> CdpConnection [optimistic] {
+    initial: disconnected
+
+    config {
+      timeoutMs : number = 30000
+        @label "Command timeout (ms)"
+        @description "How long a command may wait for its reply before it answers CDP_ERROR code timeout. Resolution is the 100ms deadline check of std-delay."
+        @tier "domain"
+    }
+
+    state disconnected {
+      INIT -> disconnected
+        (set @entity.pending [])
+      CDP_CONNECT -> connecting
+        (set @entity.browser "")
+        (set @entity.closing false)
+        (emit CDP_HTTP_SEND { key: "cdp-version", method: "GET", target: "/json/version", headers: [], body: (bytes/from-string ""), stream: "none" })
+      CDP_COMMAND -> disconnected
+        (emit CDP_ERROR { key: @payload.key, method: @payload.method, code: "not-connected", message: "no connection is open" })
+      CDP_DISCONNECT -> disconnected
+        (emit CDP_DISCONNECTED { reason: "no connection is open" })
+      CDP_DRAIN -> disconnected when (> (array/len @entity.pending) 0)
+        (let ((head (array/first @entity.pending)))
+          (do
+            (set @entity.pending (array/drop @entity.pending 1))
+            (emit CDP_TIMER_CANCEL { key: (str/concat @head.id) })
+            (emit CDP_ERROR { key: @head.key, method: @head.method, code: "disconnected", message: @entity.reason })
+            (emit CDP_DRAIN { left: (array/len @entity.pending) })))
+      CDP_DRAIN -> disconnected when (= (array/len @entity.pending) 0)
+        (emit CDP_DISCONNECTED { reason: @entity.reason })
+      CDP_TIMEOUT -> disconnected
+        (emit CDP_STRAY { reason: "timer-without-command", frame: @payload.key })
+      CDP_WS_OPENED -> disconnected
+        (emit CDP_WS_CLOSE {})
+      CDP_WS_MESSAGE -> disconnected
+        (emit CDP_STRAY { reason: "no-connection", frame: (default @payload.text "") })
+      CDP_WS_CLOSED -> disconnected
+      CDP_WS_FAILED -> disconnected
+      CDP_VERSION -> disconnected
+      CDP_CONNECT_FAILED -> disconnected
+    }
+
+    state connecting {
+      INIT -> disconnected
+      CDP_CONNECT -> connecting
+        (emit CDP_FAILED { error: "a connection is being opened", kind: "busy" })
+      CDP_DISCONNECT -> connecting
+        (emit CDP_FAILED { error: "a connection is being opened and cannot be closed yet", kind: "busy" })
+      CDP_COMMAND -> connecting
+        (emit CDP_ERROR { key: @payload.key, method: @payload.method, code: "not-connected", message: "the connection is being opened" })
+      CDP_VERSION -> connecting when (!= @payload.status 200)
+        (emit CDP_CONNECT_FAILED { error: (str/concat "the debugging port answered status " @payload.status), kind: "http" })
+      CDP_VERSION -> connecting when (= @payload.status 200)
+        (let ((v (json/parse @payload.body CdpVersion)))
+          (if (= @v null)
+            (emit CDP_CONNECT_FAILED { error: "/json/version is not a version document with Browser and webSocketDebuggerUrl", kind: "protocol" })
+            (let ((parts (str/split @v.webSocketDebuggerUrl "/")))
+              (if (and (>= (array/len @parts) 4) (array/includes ["ws:", "wss:"] (array/nth @parts 0)) (= (array/nth @parts 1) "") (!= (array/nth @parts 2) ""))
+                (emit CDP_PROBED { browser: @v.Browser, path: (str/concat "/" (str/join (array/drop @parts 3) "/")) })
+                (emit CDP_CONNECT_FAILED { error: "webSocketDebuggerUrl is not ws://host:port/path", kind: "protocol" })))))
+      CDP_PROBED -> connecting
+        (set @entity.browser @payload.browser)
+        (emit CDP_WS_OPEN { path: @payload.path })
+      CDP_CONNECT_FAILED -> disconnected
+        (emit CDP_FAILED { error: @payload.error, kind: @payload.kind })
+      CDP_WS_OPENED -> connected
+        (emit CDP_CONNECTED { browser: @entity.browser })
+      CDP_WS_FAILED -> disconnected
+        (emit CDP_FAILED { error: @payload.error, kind: @payload.kind })
+      CDP_WS_CLOSED -> disconnected
+        (emit CDP_FAILED { error: (str/concat "the socket closed while opening: " @payload.code), kind: "io" })
+      CDP_WS_MESSAGE -> connecting
+        (emit CDP_STRAY { reason: "before-open", frame: (default @payload.text "") })
+      CDP_TIMEOUT -> connecting
+        (emit CDP_STRAY { reason: "timer-without-command", frame: @payload.key })
+    }
+
+    state connected {
+      INIT -> disconnected
+      CDP_CONNECT -> connected
+        (emit CDP_FAILED { error: "a connection is open", kind: "connected" })
+      CDP_DISCONNECT -> connected
+        (set @entity.closing true)
+        (emit CDP_WS_CLOSE {})
+      CDP_COMMAND -> connected when (or @entity.closing (not (json/valid @payload.paramsJson)))
+        (emit CDP_ERROR { key: @payload.key, method: @payload.method, code: (if @entity.closing "not-connected" "bad-params"), message: (if @entity.closing "the connection is closing" "paramsJson is not valid JSON") })
+      CDP_COMMAND -> connected when (and (not @entity.closing) (json/valid @payload.paramsJson))
+        (let ((id @entity.nextId))
+          (let ((text (str/concat "{\"id\":" @id ",\"method\":" (json/stringify @payload.method) (if (!= (default @payload.sessionId "") "") (str/concat ",\"sessionId\":" (json/stringify @payload.sessionId)) "") ",\"params\":" @payload.paramsJson "}")))
+            (do
+              (set @entity.nextId (+ @id 1))
+              (set @entity.pending (array/append @entity.pending { id: @id, key: @payload.key, method: @payload.method }))
+              (set @entity.wire @text)
+              (emit CDP_TIMER_ARM { key: (str/concat @id), delayMs: @config.timeoutMs })
+              (emit CDP_WS_SEND { text: @text }))))
+      CDP_WS_MESSAGE -> connected when @payload.binary
+        (emit CDP_STRAY { reason: "binary", frame: "" })
+      CDP_WS_MESSAGE -> connected when (not @payload.binary)
+        (let ((text (default @payload.text "")))
+          (let ((env (json/parse @text CdpEnvelope)))
+            (if (= @env null)
+              (emit CDP_STRAY { reason: "unparseable", frame: @text })
+              (if (!= @env.id null)
+                (let ((p (array/find @entity.pending (fn e (= @e.id @env.id)))))
+                  (if (= @p null)
+                    (emit CDP_STRAY { reason: "unknown-id", frame: @text })
+                    (do
+                      (set @entity.pending (array/filter @entity.pending (fn e (!= @e.id @p.id))))
+                      (emit CDP_TIMER_CANCEL { key: (str/concat @p.id) })
+                      (if (!= @env.error null)
+                        (emit CDP_ERROR { key: @p.key, method: @p.method, code: (str/concat @env.error.code), message: @env.error.message })
+                        (emit CDP_REPLY { key: @p.key, method: @p.method, frame: @text })))))
+                (if (!= @env.method null)
+                  (emit CDP_EVENT { method: @env.method, sessionId: @env.sessionId, frame: @text })
+                  (emit CDP_STRAY { reason: "no-id-no-method", frame: @text }))))))
+      CDP_TIMEOUT -> connected when (array/some @entity.pending (fn e (= (str/concat @e.id) @payload.key)))
+        (let ((p (array/find @entity.pending (fn e (= (str/concat @e.id) @payload.key)))))
+          (do
+            (set @entity.pending (array/filter @entity.pending (fn e (!= @e.id @p.id))))
+            (emit CDP_ERROR { key: @p.key, method: @p.method, code: "timeout", message: (str/concat "no reply within " @config.timeoutMs "ms") })))
+      CDP_TIMEOUT -> connected when (not (array/some @entity.pending (fn e (= (str/concat @e.id) @payload.key))))
+        (emit CDP_STRAY { reason: "timer-without-command", frame: @payload.key })
+      CDP_WS_CLOSED -> disconnected
+        (set @entity.reason (str/concat "closed " @payload.code ": " @payload.reason))
+        (emit CDP_DRAIN { left: (array/len @entity.pending) })
+      CDP_WS_FAILED -> disconnected when (!= @payload.kind "refused")
+        (set @entity.reason (str/concat "failed " @payload.kind ": " @payload.error))
+        (emit CDP_DRAIN { left: (array/len @entity.pending) })
+      CDP_WS_FAILED -> connected when (= @payload.kind "refused")
+        (emit CDP_STRAY { reason: "ws-refused", frame: @payload.error })
+      CDP_DRAIN -> connected
+        (emit CDP_STRAY { reason: "drain-while-connected", frame: "" })
+      CDP_WS_OPENED -> connected
+        (emit CDP_STRAY { reason: "already-open", frame: "" })
+    }
+
+    emits {
+      CDP_CONNECTED -> external {
+        browser : string!
+      }
+        @description "The debugging socket is open; browser is the Browser field of /json/version, for example Chrome/130.0.0.0."
+        @synonyms "connected, devtools open, debugger attached"
+        @tier "primary"
+      CDP_REPLY -> external {
+        key : string!
+        method : string!
+        frame : string!
+      }
+        @description "The reply of the command named key: the raw reply frame text, which the caller parses under the result type it declares for that method."
+        @synonyms "command result, protocol reply"
+        @tier "primary"
+      CDP_ERROR -> external {
+        key : string!
+        method : string!
+        code : string!
+        message : string!
+      }
+        @description "The command named key did not succeed: the protocol error code as text, or timeout, disconnected, not-connected or bad-params."
+        @synonyms "command failed, protocol error"
+        @tier "primary"
+      CDP_EVENT -> external {
+        method : string!
+        sessionId : string?
+        frame : string!
+      }
+        @description "A protocol event: its method, the session it belongs to when it has one, and the raw frame text for the caller to parse."
+        @synonyms "devtools event, page event"
+        @tier "primary"
+      CDP_DISCONNECTED -> external {
+        reason : string!
+      }
+        @description "The connection is gone and every pending command has answered CDP_ERROR code disconnected."
+        @synonyms "closed, detached"
+        @tier "primary"
+      CDP_FAILED -> external {
+        error : string!
+        kind : string!
+      }
+        @description "The connection could not be opened: kind http (the port did not answer 200), protocol (an unexpected body or url), busy, connected, or the kind of the failed transport (denied, timeout, tls, io, handshake, refused)."
+        @synonyms "connect failed, browser unreachable"
+        @tier "primary"
+      CDP_STRAY -> internal {
+        reason : string!
+        frame : string!
+      }
+        @description "Internal: a frame or timer that matched no pending command was not routed. reason is binary, unparseable, unknown-id, no-id-no-method, no-connection, before-open, timer-without-command, ws-refused, already-open or drain-while-connected."
+        @tier "internal"
+      CDP_HTTP_SEND {
+        key : string!
+        method : string!
+        target : string!
+        headers : [HttpHeader]!
+        body : bytes!
+        stream : string!
+      }
+        @description "Internal: the /json/version read, for the HTTP client."
+        @tier "internal"
+      CDP_WS_OPEN {
+        path : string!
+      }
+        @description "Internal: open the debugging socket at path."
+        @tier "internal"
+      CDP_WS_SEND {
+        text : string!
+      }
+        @description "Internal: write one command frame."
+        @tier "internal"
+      CDP_WS_CLOSE { }
+        @description "Internal: start the close handshake."
+        @tier "internal"
+      CDP_TIMER_ARM {
+        key : string!
+        delayMs : number!
+      }
+        @description "Internal: arm the deadline of the command with this id."
+        @tier "internal"
+      CDP_TIMER_CANCEL {
+        key : string!
+      }
+        @description "Internal: disarm the deadline of the command with this id."
+        @tier "internal"
+      CDP_PROBED -> internal {
+        browser : string!
+        path : string!
+      }
+        @description "Internal: /json/version was read; path is the socket path of its webSocketDebuggerUrl."
+        @tier "internal"
+      CDP_CONNECT_FAILED -> internal {
+        error : string!
+        kind : string!
+      }
+        @description "Internal: opening the connection failed before the socket."
+        @tier "internal"
+      CDP_DRAIN -> internal {
+        left : number
+      }
+        @description "Internal: answer the oldest pending command disconnected, then continue until none is left and CDP_DISCONNECTED follows."
+        @tier "internal"
+    }
+
+    listens {
+      CDP_CONNECT { }
+        @description "Open the connection: read /json/version on the debugging port and open its webSocketDebuggerUrl."
+        @synonyms "connect, attach, open devtools"
+      CDP_COMMAND {
+        key : string!
+        method : string!
+        sessionId : string
+        paramsJson : string!
+      }
+        @description "Send one protocol command. paramsJson is the caller's params serialized once with json/stringify; the answer carries key."
+        @synonyms "send command, call method, devtools command"
+      CDP_DISCONNECT { }
+        @description "Close the socket; pending commands answer disconnected when it ends."
+        @synonyms "detach, close"
+      CDP_VERSION {
+        status : number!
+        body : string!
+      }
+      CDP_WS_OPENED { }
+      CDP_WS_MESSAGE {
+        text : string
+        binary : boolean!
+      }
+      CDP_WS_CLOSED {
+        code : number!
+        reason : string!
+      }
+      CDP_WS_FAILED {
+        error : string!
+        kind : string!
+      }
+      CDP_TIMEOUT {
+        key : string!
+      }
+      CdpHttp.HTTP_REPLIED -> CDP_VERSION with { status: ?status, body: (default (bytes/to-string ?body) "") } when (= ?key "cdp-version")
+      CdpHttp.HTTP_FAILED -> CDP_CONNECT_FAILED with { error: ?error, kind: ?kind } when (= ?key "cdp-version")
+      CdpWs.WS_OPENED -> CDP_WS_OPENED
+      CdpWs.WS_MESSAGE -> CDP_WS_MESSAGE with { text: ?text, binary: ?binary }
+      CdpWs.WS_CLOSED -> CDP_WS_CLOSED with { code: ?code, reason: ?reason }
+      CdpWs.WS_FAILED -> CDP_WS_FAILED with { error: ?error, kind: ?kind }
+      CdpDelay.ELAPSED -> CDP_TIMEOUT with { key: ?key }
+    }
+  }
+
+  page boot as CdpPage -> Cdp, CdpHttp, CdpWs, CdpDelay
+}

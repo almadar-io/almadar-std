@@ -1,0 +1,504 @@
+{
+ "atom": "a11y/atoms/std-a11y-wave.lolo",
+ "trait": "WaveScan",
+ "note": "std-a11y-wave over the composed std-http-client: WAVE_SCAN is one WAVE_HTTP_SEND (reporttype 4, the url percent-encoded, the key a query credential the host fills), the report returns as WAVE_REPLY from the sibling client, and the findings are built from the declared WaveReply shape.",
+ "cases": [
+  {
+   "id": "a scan with a held credential sends the report request with the url encoded",
+   "credentials": {
+    "WAVE_API_KEY": "test-key"
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "WAVE_SCAN",
+     "payload": {
+      "key": "k1",
+      "url": "https://a.test/p?x=1&y=2"
+     },
+     "expect": {
+      "state": "scanning"
+     }
+    },
+    {
+     "from": "scanning",
+     "event": "WAVE_GATE",
+     "entity": {
+      "key": "k1",
+      "url": "https://a.test/p?x=1&y=2",
+      "keyLen": 7
+     },
+     "payload": {},
+     "expect": {
+      "state": "scanning",
+      "emits": [
+       {
+        "event": "WAVE_HTTP_SEND",
+        "payload": {
+         "key": "wave",
+         "method": "GET",
+         "target": "/api/request?url=https%3A%2F%2Fa.test%2Fp%3Fx%3D1%26y%3D2&reporttype=4"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "defaults": [
+    "WaveHttp",
+    "WaveTimeout"
+   ],
+   "config": {
+    "credential": "WAVE_API_KEY"
+   }
+  },
+  {
+   "id": "control: a scan with no held credential answers WAVE_DISABLED and sends nothing",
+   "credentials": {},
+   "steps": [
+    {
+     "from": "scanning",
+     "event": "WAVE_GATE",
+     "entity": {
+      "key": "k1",
+      "url": "https://a.test/p?x=1&y=2",
+      "keyLen": -1
+     },
+     "payload": {},
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "WAVE_DISABLED",
+        "payload": {
+         "key": "k1"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "defaults": [
+    "WaveHttp",
+    "WaveTimeout"
+   ],
+   "config": {
+    "credential": "WAVE_API_KEY"
+   }
+  },
+  {
+   "id": "two errors, one contrast item and one alert become four findings with their WCAG references",
+   "credentials": {
+    "WAVE_API_KEY": "test-key"
+   },
+   "steps": [
+    {
+     "from": "scanning",
+     "event": "WAVE_REPLY",
+     "entity": {
+      "key": "k1",
+      "url": "https://a.test/p?x=1&y=2"
+     },
+     "payload": {
+      "status": 200,
+      "body": "{\"status\": {\"success\": true, \"httpstatuscode\": 200}, \"statistics\": {\"pagetitle\": \"T\", \"pageurl\": \"https://a.test/p?x=1&y=2\", \"time\": 1.2, \"creditsremaining\": 1487, \"allitemcount\": 9, \"totalelements\": 50, \"waveurl\": \"https://wave.webaim.org/report?url=https://a.test/p?x=1&y=2\"}, \"categories\": {\"error\": {\"description\": \"Errors\", \"count\": 2, \"items\": {\"alt_missing\": {\"id\": \"alt_missing\", \"description\": \"Missing alternative text\", \"count\": 1, \"selectors\": [\"body > img:nth-of-type(1)\"]}, \"alt_link_missing\": {\"id\": \"alt_link_missing\", \"description\": \"Linked image missing alternative text\", \"count\": 1, \"selectors\": [\"body > a > img\"]}}}, \"contrast\": {\"description\": \"Contrast Errors\", \"count\": 1, \"items\": {\"contrast\": {\"id\": \"contrast\", \"description\": \"Very Low Contrast\", \"count\": 1, \"selectors\": [\"body > p\"], \"contrastdata\": [[2.48, \"#9a9aff\", \"#ffffff\", false]]}}}, \"alert\": {\"description\": \"Alerts\", \"count\": 1, \"items\": {\"alt_suspicious\": {\"id\": \"alt_suspicious\", \"description\": \"Suspicious alternative text\", \"count\": 1, \"selectors\": [\"body > img:nth-of-type(2)\"]}}}, \"feature\": {\"description\": \"Features\", \"count\": 1, \"items\": {\"alt\": {\"id\": \"alt\", \"description\": \"Alternative text\", \"count\": 1, \"selectors\": [\"body > img:nth-of-type(3)\"]}}}, \"structure\": {\"description\": \"Structural Elements\", \"count\": 1, \"items\": {\"region\": {\"id\": \"region\", \"description\": \"Region\", \"count\": 1, \"selectors\": [\"body > main\"]}}}, \"aria\": {\"description\": \"ARIA\", \"count\": 1, \"items\": {\"aria_label\": {\"id\": \"aria_label\", \"description\": \"ARIA label\", \"count\": 1, \"selectors\": [\"body > nav\"]}}}}}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "WAVE_SCANNED",
+        "payload": {
+         "key": "k1",
+         "url": "https://a.test/p?x=1&y=2",
+         "credits": 1487,
+         "findings": [
+          {
+           "id": "wave:alt_missing:body > img:nth-of-type(1)",
+           "pageUrl": "https://a.test/p?x=1&y=2",
+           "rule": "alt_missing",
+           "wcag": [
+            {
+             "criterion": "1.1.1",
+             "level": "A",
+             "version": "2.0"
+            }
+           ],
+           "method": "engine",
+           "engines": [
+            "wave"
+           ],
+           "impact": "serious",
+           "confidence": "needs-verification",
+           "selector": "body > img:nth-of-type(1)",
+           "snippet": "",
+           "evidence": "",
+           "count": 1
+          },
+          {
+           "id": "wave:alt_link_missing:body > a > img",
+           "pageUrl": "https://a.test/p?x=1&y=2",
+           "rule": "alt_link_missing",
+           "wcag": [
+            {
+             "criterion": "1.1.1",
+             "level": "A",
+             "version": "2.0"
+            },
+            {
+             "criterion": "2.4.4",
+             "level": "A",
+             "version": "2.0"
+            }
+           ],
+           "method": "engine",
+           "engines": [
+            "wave"
+           ],
+           "impact": "serious",
+           "confidence": "needs-verification",
+           "selector": "body > a > img",
+           "snippet": "",
+           "evidence": "",
+           "count": 1
+          },
+          {
+           "id": "wave:contrast:body > p",
+           "pageUrl": "https://a.test/p?x=1&y=2",
+           "rule": "contrast",
+           "wcag": [
+            {
+             "criterion": "1.4.3",
+             "level": "AA",
+             "version": "2.0"
+            }
+           ],
+           "method": "engine",
+           "engines": [
+            "wave"
+           ],
+           "impact": "serious",
+           "confidence": "needs-verification",
+           "selector": "body > p",
+           "snippet": "",
+           "evidence": "",
+           "count": 1
+          },
+          {
+           "id": "wave:alt_suspicious:body > img:nth-of-type(2)",
+           "pageUrl": "https://a.test/p?x=1&y=2",
+           "rule": "alt_suspicious",
+           "wcag": [
+            {
+             "criterion": "1.1.1",
+             "level": "A",
+             "version": "2.0"
+            }
+           ],
+           "method": "engine",
+           "engines": [
+            "wave"
+           ],
+           "impact": "moderate",
+           "confidence": "needs-verification",
+           "selector": "body > img:nth-of-type(2)",
+           "snippet": "",
+           "evidence": "",
+           "count": 1
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "defaults": [
+    "WaveHttp",
+    "WaveTimeout"
+   ],
+   "config": {
+    "credential": "WAVE_API_KEY"
+   }
+  },
+  {
+   "id": "control: feature, structure and aria items produce no findings",
+   "credentials": {
+    "WAVE_API_KEY": "test-key"
+   },
+   "steps": [
+    {
+     "from": "scanning",
+     "event": "WAVE_REPLY",
+     "entity": {
+      "key": "k1",
+      "url": "https://a.test/p?x=1&y=2"
+     },
+     "payload": {
+      "status": 200,
+      "body": "{\"status\": {\"success\": true, \"httpstatuscode\": 200}, \"statistics\": {\"pagetitle\": \"T\", \"pageurl\": \"https://a.test/p?x=1&y=2\", \"time\": 1.2, \"creditsremaining\": 1487, \"allitemcount\": 9, \"totalelements\": 50, \"waveurl\": \"https://wave.webaim.org/report?url=https://a.test/p?x=1&y=2\"}, \"categories\": {\"feature\": {\"description\": \"Features\", \"count\": 1, \"items\": {\"alt\": {\"id\": \"alt\", \"description\": \"Alternative text\", \"count\": 1, \"selectors\": [\"body > img:nth-of-type(3)\"]}}}, \"structure\": {\"description\": \"Structural Elements\", \"count\": 1, \"items\": {\"region\": {\"id\": \"region\", \"description\": \"Region\", \"count\": 1, \"selectors\": [\"body > main\"]}}}, \"aria\": {\"description\": \"ARIA\", \"count\": 1, \"items\": {\"aria_label\": {\"id\": \"aria_label\", \"description\": \"ARIA label\", \"count\": 1, \"selectors\": [\"body > nav\"]}}}}}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "WAVE_SCANNED",
+        "payload": {
+         "key": "k1",
+         "url": "https://a.test/p?x=1&y=2",
+         "credits": 1487,
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "defaults": [
+    "WaveHttp",
+    "WaveTimeout"
+   ],
+   "config": {
+    "credential": "WAVE_API_KEY"
+   }
+  },
+  {
+   "id": "status.success false is WAVE_FAILED wave_error with WAVE's text",
+   "credentials": {
+    "WAVE_API_KEY": "test-key"
+   },
+   "steps": [
+    {
+     "from": "scanning",
+     "event": "WAVE_REPLY",
+     "entity": {
+      "key": "k1",
+      "url": "https://a.test/p?x=1&y=2"
+     },
+     "payload": {
+      "status": 200,
+      "body": "{\"status\": {\"success\": false, \"httpstatuscode\": 500, \"error\": \"Invalid API key\"}, \"statistics\": {\"pagetitle\": \"T\", \"pageurl\": \"https://a.test/p?x=1&y=2\", \"time\": 1.2, \"creditsremaining\": 1487, \"allitemcount\": 9, \"totalelements\": 50, \"waveurl\": \"https://wave.webaim.org/report?url=https://a.test/p?x=1&y=2\"}, \"categories\": {}}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "WAVE_FAILED",
+        "payload": {
+         "key": "k1",
+         "error": "Invalid API key",
+         "code": "wave_error"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "defaults": [
+    "WaveHttp",
+    "WaveTimeout"
+   ],
+   "config": {
+    "credential": "WAVE_API_KEY"
+   }
+  },
+  {
+   "id": "a non-200 reply is WAVE_FAILED wave_http_<status>",
+   "credentials": {
+    "WAVE_API_KEY": "test-key"
+   },
+   "steps": [
+    {
+     "from": "scanning",
+     "event": "WAVE_REPLY",
+     "entity": {
+      "key": "k1",
+      "url": "https://a.test/p?x=1&y=2"
+     },
+     "payload": {
+      "status": 503,
+      "body": ""
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "WAVE_FAILED",
+        "payload": {
+         "key": "k1",
+         "error": "WAVE answered 503",
+         "code": "wave_http_503"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "defaults": [
+    "WaveHttp",
+    "WaveTimeout"
+   ],
+   "config": {
+    "credential": "WAVE_API_KEY"
+   }
+  },
+  {
+   "id": "a 200 reply that is not a WAVE report is WAVE_FAILED wave_bad_reply",
+   "credentials": {
+    "WAVE_API_KEY": "test-key"
+   },
+   "steps": [
+    {
+     "from": "scanning",
+     "event": "WAVE_REPLY",
+     "entity": {
+      "key": "k1",
+      "url": "https://a.test/p?x=1&y=2"
+     },
+     "payload": {
+      "status": 200,
+      "body": "<html>"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "WAVE_FAILED",
+        "payload": {
+         "key": "k1",
+         "error": "the reply is not a WAVE report",
+         "code": "wave_bad_reply"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "defaults": [
+    "WaveHttp",
+    "WaveTimeout"
+   ],
+   "config": {
+    "credential": "WAVE_API_KEY"
+   }
+  },
+  {
+   "id": "a missing credential refused by the client (denied) is WAVE_DISABLED",
+   "credentials": {
+    "WAVE_API_KEY": "test-key"
+   },
+   "steps": [
+    {
+     "from": "scanning",
+     "event": "WAVE_UNREACHABLE",
+     "entity": {
+      "key": "k1",
+      "url": "https://a.test/p?x=1&y=2"
+     },
+     "payload": {
+      "error": "the credential is not held",
+      "kind": "denied"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "WAVE_DISABLED",
+        "payload": {
+         "key": "k1"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "defaults": [
+    "WaveHttp",
+    "WaveTimeout"
+   ],
+   "config": {
+    "credential": "WAVE_API_KEY"
+   }
+  },
+  {
+   "id": "control: a timeout is WAVE_FAILED wave_timeout",
+   "credentials": {
+    "WAVE_API_KEY": "test-key"
+   },
+   "steps": [
+    {
+     "from": "scanning",
+     "event": "WAVE_UNREACHABLE",
+     "entity": {
+      "key": "k1",
+      "url": "https://a.test/p?x=1&y=2"
+     },
+     "payload": {
+      "error": "timeout of 120000ms exceeded",
+      "kind": "timeout"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "WAVE_FAILED",
+        "payload": {
+         "key": "k1",
+         "error": "timeout of 120000ms exceeded",
+         "code": "wave_timeout"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "defaults": [
+    "WaveHttp",
+    "WaveTimeout"
+   ],
+   "config": {
+    "credential": "WAVE_API_KEY"
+   }
+  },
+  {
+   "id": "a scan while another is in flight is WAVE_FAILED wave_busy and keeps the first",
+   "credentials": {
+    "WAVE_API_KEY": "test-key"
+   },
+   "steps": [
+    {
+     "from": "scanning",
+     "event": "WAVE_SCAN",
+     "entity": {
+      "key": "k1",
+      "url": "https://a.test/p?x=1&y=2"
+     },
+     "payload": {
+      "key": "k2",
+      "url": "https://b.test/"
+     },
+     "expect": {
+      "state": "scanning",
+      "emits": [
+       {
+        "event": "WAVE_FAILED",
+        "payload": {
+         "key": "k2",
+         "error": "a scan of https://a.test/p?x=1&y=2 is in flight",
+         "code": "wave_busy"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "defaults": [
+    "WaveHttp",
+    "WaveTimeout"
+   ],
+   "config": {
+    "credential": "WAVE_API_KEY"
+   }
+  }
+ ]
+}

@@ -6458,6 +6458,91 @@
    ]
   },
   {
+   "id": "progress: each step writes a live stderr line naming its phase, entry, position and command before the child runs",
+   "steps": [
+    {
+     "trait": "OrbRelease",
+     "from": "running",
+     "event": "REL_ROWN",
+     "payload": {},
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "REL_LOG",
+        "payload": {
+         "line": "[orb release] build @almadar/orb step 1/1: cargo zigbuild --target x86_64-unknown-linux-musl\n"
+        }
+       },
+       {
+        "event": "REL_STEP_CARGO",
+        "payload": {
+         "stage": "step:0",
+         "argv": [
+          "zigbuild",
+          "--target",
+          "x86_64-unknown-linux-musl"
+         ],
+         "env": {
+          "AR": "/w/tools/llvm-ar"
+         }
+        }
+       }
+      ]
+     },
+     "entity": {
+      "repo": "orbital-rust",
+      "name": "@almadar/orb",
+      "file": "Cargo.toml",
+      "tagPrefix": "v",
+      "registry": "npmjs",
+      "version": "19.1.0",
+      "root": "/w",
+      "cursor": 0,
+      "mode": "release",
+      "target": "19.2.0",
+      "next": "19.2.0",
+      "bump": "minor",
+      "cur": {
+       "repo": "orbital-rust",
+       "package": "@almadar/orb",
+       "file": "Cargo.toml",
+       "tag": "v",
+       "registry": "npmjs",
+       "steps": [
+        {
+         "phase": "build",
+         "tool": "cargo",
+         "args": [
+          "zigbuild",
+          "--target",
+          "x86_64-unknown-linux-musl"
+         ],
+         "env": {
+          "AR": "{root}/tools/llvm-ar"
+         }
+        },
+        {
+         "phase": "publish",
+         "tool": "npm",
+         "args": [
+          "publish",
+          "stage/orb-{version}",
+          "--tag",
+          "next"
+         ],
+         "env": {}
+        }
+       ]
+      },
+      "publish": false,
+      "check": true,
+      "planning": false
+     }
+    }
+   ]
+  },
+  {
    "id": "control: --check of a released entry runs nothing",
    "steps": [
     {
@@ -6768,6 +6853,111 @@
        }
       ],
       "stepAt": 0
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a gate step names its gate, not the last entry built, in its progress line",
+   "steps": [
+    {
+     "trait": "OrbRelease",
+     "from": "running",
+     "event": "REL_GATE_NEXT",
+     "payload": {},
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "REL_STEP_NEXT",
+        "payload": {}
+       },
+       {
+        "event": "REL_LOG",
+        "payload": {
+         "line": "[orb release] gate typecheck step 1/1: bash /w/gates/typecheck.sh --all\n"
+        }
+       },
+       {
+        "event": "REL_STEP_BASH",
+        "payload": {
+         "stage": "step:0",
+         "argv": [
+          "/w/gates/typecheck.sh",
+          "--all"
+         ],
+         "env": {
+          "ORB_BIN": "/w/bin/orb"
+         }
+        }
+       }
+      ],
+      "neverEmits": [
+       "REL_GATE_SKIPPED"
+      ]
+     },
+     "entity": {
+      "root": "/w",
+      "bump": "patch",
+      "lines": [],
+      "gates": [
+       {
+        "name": "typecheck",
+        "covers": [
+         "@almadar/core",
+         "@almadar/orb"
+        ],
+        "steps": [
+         {
+          "phase": "build",
+          "tool": "bash",
+          "args": [
+           "{root}/gates/typecheck.sh",
+           "--all"
+          ],
+          "env": {
+           "ORB_BIN": "{root}/bin/orb"
+          }
+         }
+        ]
+       },
+       {
+        "name": "desktop",
+        "covers": [
+         "@almadar/orb-desktop"
+        ],
+        "steps": [
+         {
+          "phase": "build",
+          "tool": "bash",
+          "args": [
+           "{root}/gates/typecheck.sh",
+           "--all"
+          ],
+          "env": {
+           "ORB_BIN": "{root}/bin/orb"
+          }
+         }
+        ]
+       }
+      ],
+      "ships": [
+       {
+        "entry": {
+         "repo": "orbital-rust/crates/orbital-shell-typescript",
+         "package": "@almadar/core",
+         "file": "core/package.json",
+         "tag": "core-v",
+         "registry": "npmjs"
+        },
+        "target": "11.0.0",
+        "mode": "release",
+        "lock": false,
+        "cargoLock": false
+       }
+      ],
+      "gateAt": 0,
+      "check": true
      }
     }
    ]

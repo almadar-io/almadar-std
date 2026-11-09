@@ -1,0 +1,855 @@
+{
+ "atom": "a11y/atoms/std-a11y-probe-hover.lolo",
+ "trait": "HoverProbe",
+ "note": "std-a11y-probe-hover with the page answers played as events. The measure JSON of each live case is the real result of the four measure knobs run in headless Chrome (probe-hover.gen/gen_goldens.py, with a real Escape key through CDP) on hover-content-fail and hover-content-pass; the expressions asserted are probe-hover.gen/*.measure.js. Regenerate with python3 -I probe-hover.gen/gen_goldens.py.",
+ "cases": [
+  {
+   "id": "PROBE_RUN asks the page for the declared trigger elements",
+   "steps": [
+    {
+     "from": "idle",
+     "event": "PROBE_RUN",
+     "payload": {
+      "key": "k1",
+      "pageUrl": "http://127.0.0.1:24680/"
+     },
+     "expect": {
+      "state": "finding",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k1:find",
+         "expression": "((selectors) => { const sel = (e) => { const p = []; for (let n = e; n && n.nodeType === 1; n = n.parentElement) { if (n.id) { p.unshift('#' + CSS.escape(n.id)); break; } let i = 1; for (let s = n.previousElementSibling; s; s = s.previousElementSibling) { if (s.tagName === n.tagName) i++; } p.unshift(n.tagName.toLowerCase() + ':nth-of-type(' + i + ')'); } return p.join('>'); }; return JSON.stringify({ triggers: Array.from(document.querySelectorAll(selectors)).map((e) => ({ selector: sel(e), snippet: e.cloneNode(false).outerHTML })) }); })(\"[aria-describedby],[aria-haspopup],[data-tooltip]\")"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a second PROBE_RUN while a run is in flight is refused as probe_busy",
+   "steps": [
+    {
+     "from": "finding",
+     "event": "PROBE_RUN",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/hover-content-fail.html"
+     },
+     "payload": {
+      "key": "k2",
+      "pageUrl": "http://127.0.0.1:24680/"
+     },
+     "expect": {
+      "state": "finding",
+      "emits": [
+       {
+        "event": "PROBE_FAILED",
+        "payload": {
+         "key": "k2",
+         "probe": "hover",
+         "error": "a run on http://127.0.0.1:24680/hover-content-fail.html is in flight",
+         "code": "probe_busy"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a trigger list under another run's key is ignored",
+   "steps": [
+    {
+     "from": "finding",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/hover-content-fail.html"
+     },
+     "payload": {
+      "key": "k2:find",
+      "json": "{\"triggers\":[{\"selector\":\"#main>span:nth-of-type(1)>button:nth-of-type(1)\",\"snippet\":\"<button type=\\\"button\\\" class=\\\"help\\\" aria-describedby=\\\"b1\\\"></button>\"}]}"
+     },
+     "expect": {
+      "state": "finding",
+      "emits": []
+     }
+    }
+   ]
+  },
+  {
+   "id": "a page failure answers PROBE_FAILED probe_page_failed",
+   "steps": [
+    {
+     "from": "finding",
+     "event": "PAGE_FAILED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/hover-content-fail.html"
+     },
+     "payload": {
+      "key": "k1:find",
+      "error": "evaluation threw",
+      "code": "chrome_eval"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_FAILED",
+        "payload": {
+         "key": "k1",
+         "probe": "hover",
+         "error": "evaluation threw",
+         "code": "probe_page_failed"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a trigger list that is not the declared shape answers probe_bad_measure",
+   "steps": [
+    {
+     "from": "finding",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/hover-content-fail.html"
+     },
+     "payload": {
+      "key": "k1:find",
+      "json": "{\"triggers\":3}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_FAILED",
+        "payload": {
+         "key": "k1",
+         "probe": "hover",
+         "error": "the page measurement is not the trigger list shape",
+         "code": "probe_bad_measure"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "hover-content-fail: the trigger list is held",
+   "steps": [
+    {
+     "from": "finding",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/hover-content-fail.html"
+     },
+     "payload": {
+      "key": "k1:find",
+      "json": "{\"triggers\":[{\"selector\":\"#main>span:nth-of-type(1)>button:nth-of-type(1)\",\"snippet\":\"<button type=\\\"button\\\" class=\\\"help\\\" aria-describedby=\\\"b1\\\"></button>\"}]}"
+     },
+     "expect": {
+      "state": "finding",
+      "entity": {
+       "triggers": [
+        {
+         "selector": "#main>span:nth-of-type(1)>button:nth-of-type(1)",
+         "snippet": "<button type=\"button\" class=\"help\" aria-describedby=\"b1\"></button>"
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "a held trigger list focuses the first trigger",
+   "steps": [
+    {
+     "from": "finding",
+     "event": "HOVER_FOUND",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/hover-content-fail.html",
+      "triggers": [
+       {
+        "selector": "#main>span:nth-of-type(1)>button:nth-of-type(1)",
+        "snippet": "<button type=\"button\" class=\"help\" aria-describedby=\"b1\"></button>"
+       }
+      ]
+     },
+     "payload": {},
+     "expect": {
+      "state": "focusing",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k1:focus",
+         "expression": "((selector) => { const sel = (e) => { const p = []; for (let n = e; n && n.nodeType === 1; n = n.parentElement) { if (n.id) { p.unshift('#' + CSS.escape(n.id)); break; } let i = 1; for (let s = n.previousElementSibling; s; s = s.previousElementSibling) { if (s.tagName === n.tagName) i++; } p.unshift(n.tagName.toLowerCase() + ':nth-of-type(' + i + ')'); } return p.join('>'); }; const vis = (e) => { const s = getComputedStyle(e); const r = e.getBoundingClientRect(); return s.display !== 'none' && s.visibility !== 'hidden' && Number(s.opacity) > 0 && r.width > 0 && r.height > 0; }; const t = document.querySelector(selector); const all = Array.from(document.body.querySelectorAll('*')); const before = all.map(vis); t.focus(); const revealed = all.filter((e, i) => !before[i] && vis(e)); const roots = revealed.filter((e) => !revealed.includes(e.parentElement)); let gap = 0; if (roots.length > 0) { const a = t.getBoundingClientRect(); const b = roots[0].getBoundingClientRect(); gap = Math.hypot(Math.max(b.left - a.right, a.left - b.right, 0), Math.max(b.top - a.bottom, a.top - b.bottom, 0)); } return JSON.stringify({ focused: document.activeElement === t, revealed: revealed.map(sel), content: roots.length > 0 ? sel(roots[0]) : '', gap: gap }); })(\"#main>span:nth-of-type(1)>button:nth-of-type(1)\")"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a page with no trigger answers no findings and touches nothing",
+   "steps": [
+    {
+     "from": "finding",
+     "event": "HOVER_FOUND",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/hover-content-fail.html",
+      "triggers": []
+     },
+     "payload": {},
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k1",
+         "probe": "hover",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "hover-content-fail: focusing the trigger reveals the bubble, held with its gap to the trigger",
+   "steps": [
+    {
+     "from": "focusing",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/hover-content-fail.html",
+      "triggers": [
+       {
+        "selector": "#main>span:nth-of-type(1)>button:nth-of-type(1)",
+        "snippet": "<button type=\"button\" class=\"help\" aria-describedby=\"b1\"></button>"
+       }
+      ],
+      "at": 0
+     },
+     "payload": {
+      "key": "k1:focus",
+      "json": "{\"focused\":true,\"revealed\":[\"#b1\"],\"content\":\"#b1\",\"gap\":26}"
+     },
+     "expect": {
+      "state": "focusing",
+      "entity": {
+       "focused": true,
+       "revealed": [
+        "#b1"
+       ],
+       "content": "#b1",
+       "gap": 26
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "hover-content-pass: the bubble touches its trigger so the gap is zero",
+   "steps": [
+    {
+     "from": "focusing",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/hover-content-pass.html",
+      "triggers": [
+       {
+        "selector": "#main>span:nth-of-type(1)>button:nth-of-type(1)",
+        "snippet": "<button type=\"button\" class=\"help\" aria-describedby=\"b1\"></button>"
+       }
+      ],
+      "at": 0
+     },
+     "payload": {
+      "key": "k1:focus",
+      "json": "{\"focused\":true,\"revealed\":[\"#b1\"],\"content\":\"#b1\",\"gap\":0.390625}"
+     },
+     "expect": {
+      "state": "focusing",
+      "entity": {
+       "gap": 0.390625
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "revealed content sends mouseover to the trigger and the content",
+   "steps": [
+    {
+     "from": "focusing",
+     "event": "HOVER_FOCUSED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/hover-content-fail.html",
+      "triggers": [
+       {
+        "selector": "#main>span:nth-of-type(1)>button:nth-of-type(1)",
+        "snippet": "<button type=\"button\" class=\"help\" aria-describedby=\"b1\"></button>"
+       }
+      ],
+      "at": 0,
+      "focused": true,
+      "revealed": [
+       "#b1"
+      ],
+      "content": "#b1"
+     },
+     "payload": {},
+     "expect": {
+      "state": "hovering",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k1:hover",
+         "expression": "((selector, content) => { const vis = (e) => { const s = getComputedStyle(e); const r = e.getBoundingClientRect(); return s.display !== 'none' && s.visibility !== 'hidden' && Number(s.opacity) > 0 && r.width > 0 && r.height > 0; }; const t = document.querySelector(selector); const c = document.querySelector(content); t.dispatchEvent(new MouseEvent('mouseover', { bubbles: true, cancelable: true, view: window })); t.dispatchEvent(new MouseEvent('mouseout', { bubbles: true, cancelable: true, view: window, relatedTarget: c })); c.dispatchEvent(new MouseEvent('mouseover', { bubbles: true, cancelable: true, view: window, relatedTarget: t })); return JSON.stringify({ visible: vis(c) }); })(\"#main>span:nth-of-type(1)>button:nth-of-type(1)\",\"#b1\")"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a trigger that did not take focus is skipped and the page restored",
+   "steps": [
+    {
+     "from": "focusing",
+     "event": "HOVER_FOCUSED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/hover-content-fail.html",
+      "triggers": [
+       {
+        "selector": "#main>span:nth-of-type(1)>button:nth-of-type(1)",
+        "snippet": "<button type=\"button\" class=\"help\" aria-describedby=\"b1\"></button>"
+       }
+      ],
+      "at": 0,
+      "focused": false,
+      "revealed": []
+     },
+     "payload": {},
+     "expect": {
+      "state": "restoring",
+      "emits": [
+       {
+        "event": "PAGE_NAVIGATE",
+        "payload": {
+         "key": "k1:restore",
+         "url": "http://127.0.0.1:24680/hover-content-fail.html"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a focused trigger that revealed nothing is skipped and the page restored",
+   "steps": [
+    {
+     "from": "focusing",
+     "event": "HOVER_FOCUSED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/hover-content-fail.html",
+      "triggers": [
+       {
+        "selector": "#main>span:nth-of-type(1)>button:nth-of-type(1)",
+        "snippet": "<button type=\"button\" class=\"help\" aria-describedby=\"b1\"></button>"
+       }
+      ],
+      "at": 0,
+      "focused": true,
+      "revealed": []
+     },
+     "payload": {},
+     "expect": {
+      "state": "restoring",
+      "emits": [
+       {
+        "event": "PAGE_NAVIGATE",
+        "payload": {
+         "key": "k1:restore",
+         "url": "http://127.0.0.1:24680/hover-content-fail.html"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "hover-content-fail: content that stays visible under the pointer presses Escape",
+   "steps": [
+    {
+     "from": "hovering",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/hover-content-fail.html"
+     },
+     "payload": {
+      "key": "k1:hover",
+      "json": "{\"visible\":true}"
+     },
+     "expect": {
+      "state": "escaping",
+      "emits": [
+       {
+        "event": "PAGE_KEY",
+        "payload": {
+         "key": "k1:escape",
+         "keyName": "Escape"
+        }
+       }
+      ],
+      "entity": {
+       "hoverLost": false
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "content that hides as the pointer moves onto it is held as lost",
+   "steps": [
+    {
+     "from": "hovering",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/hover-content-fail.html"
+     },
+     "payload": {
+      "key": "k1:hover",
+      "json": "{\"visible\":false}"
+     },
+     "expect": {
+      "state": "escaping",
+      "emits": [
+       {
+        "event": "PAGE_KEY",
+        "payload": {
+         "key": "k1:escape",
+         "keyName": "Escape"
+        }
+       }
+      ],
+      "entity": {
+       "hoverLost": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "Escape sent asks which revealed elements are still visible",
+   "steps": [
+    {
+     "from": "escaping",
+     "event": "PAGE_KEY_SENT",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/hover-content-fail.html",
+      "revealed": [
+       "#b1"
+      ]
+     },
+     "payload": {
+      "key": "k1:escape"
+     },
+     "expect": {
+      "state": "checking",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k1:after",
+         "expression": "((selectors) => { const vis = (e) => { const s = getComputedStyle(e); const r = e.getBoundingClientRect(); return s.display !== 'none' && s.visibility !== 'hidden' && Number(s.opacity) > 0 && r.width > 0 && r.height > 0; }; return JSON.stringify({ visible: selectors.filter((s) => { const e = document.querySelector(s); return e !== null && vis(e); }) }); })([\"#b1\"])"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a key answer under another run's key is ignored",
+   "steps": [
+    {
+     "from": "escaping",
+     "event": "PAGE_KEY_SENT",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/hover-content-fail.html"
+     },
+     "payload": {
+      "key": "k2:escape"
+     },
+     "expect": {
+      "state": "escaping",
+      "emits": []
+     }
+    }
+   ]
+  },
+  {
+   "id": "hover-content-fail: the bubble is still visible after Escape, so not dismissible (confirmed) and a gap to its trigger (needs-verification)",
+   "steps": [
+    {
+     "from": "checking",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/hover-content-fail.html",
+      "triggers": [
+       {
+        "selector": "#main>span:nth-of-type(1)>button:nth-of-type(1)",
+        "snippet": "<button type=\"button\" class=\"help\" aria-describedby=\"b1\"></button>"
+       }
+      ],
+      "at": 0,
+      "revealed": [
+       "#b1"
+      ],
+      "gap": 26,
+      "hoverLost": false,
+      "findings": []
+     },
+     "payload": {
+      "key": "k1:after",
+      "json": "{\"visible\":[\"#b1\"]}"
+     },
+     "expect": {
+      "state": "restoring",
+      "emits": [
+       {
+        "event": "PAGE_NAVIGATE",
+        "payload": {
+         "key": "k1:restore",
+         "url": "http://127.0.0.1:24680/hover-content-fail.html"
+        }
+       }
+      ],
+      "entity": {
+       "findings": [
+        {
+         "id": "http://127.0.0.1:24680/hover-content-fail.html#hover-content##main>span:nth-of-type(1)>button:nth-of-type(1)#not-dismissible",
+         "pageUrl": "http://127.0.0.1:24680/hover-content-fail.html",
+         "rule": "hover-content",
+         "wcag": [
+          {
+           "criterion": "1.4.13",
+           "level": "AA",
+           "version": "2.1"
+          }
+         ],
+         "method": "probe",
+         "engines": [
+          "probe"
+         ],
+         "impact": "serious",
+         "confidence": "confirmed",
+         "selector": "#main>span:nth-of-type(1)>button:nth-of-type(1)",
+         "snippet": "<button type=\"button\" class=\"help\" aria-describedby=\"b1\"></button>",
+         "evidence": "",
+         "count": 1
+        },
+        {
+         "id": "http://127.0.0.1:24680/hover-content-fail.html#hover-content##main>span:nth-of-type(1)>button:nth-of-type(1)#gap",
+         "pageUrl": "http://127.0.0.1:24680/hover-content-fail.html",
+         "rule": "hover-content",
+         "wcag": [
+          {
+           "criterion": "1.4.13",
+           "level": "AA",
+           "version": "2.1"
+          }
+         ],
+         "method": "probe",
+         "engines": [
+          "probe"
+         ],
+         "impact": "moderate",
+         "confidence": "needs-verification",
+         "selector": "#main>span:nth-of-type(1)>button:nth-of-type(1)",
+         "snippet": "<button type=\"button\" class=\"help\" aria-describedby=\"b1\"></button>",
+         "evidence": "",
+         "count": 1
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: hover-content-pass dismisses on Escape and touches its trigger, so no finding",
+   "steps": [
+    {
+     "from": "checking",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/hover-content-pass.html",
+      "triggers": [
+       {
+        "selector": "#main>span:nth-of-type(1)>button:nth-of-type(1)",
+        "snippet": "<button type=\"button\" class=\"help\" aria-describedby=\"b1\"></button>"
+       }
+      ],
+      "at": 0,
+      "revealed": [
+       "#b1"
+      ],
+      "gap": 0.390625,
+      "hoverLost": false,
+      "findings": []
+     },
+     "payload": {
+      "key": "k1:after",
+      "json": "{\"visible\":[]}"
+     },
+     "expect": {
+      "state": "restoring",
+      "emits": [
+       {
+        "event": "PAGE_NAVIGATE",
+        "payload": {
+         "key": "k1:restore",
+         "url": "http://127.0.0.1:24680/hover-content-pass.html"
+        }
+       }
+      ],
+      "entity": {
+       "findings": []
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "content lost under the pointer is not hoverable (confirmed)",
+   "steps": [
+    {
+     "from": "checking",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/hover-content-pass.html",
+      "triggers": [
+       {
+        "selector": "#main>span:nth-of-type(1)>button:nth-of-type(1)",
+        "snippet": "<button type=\"button\" class=\"help\" aria-describedby=\"b1\"></button>"
+       }
+      ],
+      "at": 0,
+      "revealed": [
+       "#b1"
+      ],
+      "gap": 0,
+      "hoverLost": true,
+      "findings": []
+     },
+     "payload": {
+      "key": "k1:after",
+      "json": "{\"visible\":[]}"
+     },
+     "expect": {
+      "state": "restoring",
+      "emits": [
+       {
+        "event": "PAGE_NAVIGATE",
+        "payload": {
+         "key": "k1:restore",
+         "url": "http://127.0.0.1:24680/hover-content-pass.html"
+        }
+       }
+      ],
+      "entity": {
+       "findings": [
+        {
+         "id": "http://127.0.0.1:24680/hover-content-pass.html#hover-content##main>span:nth-of-type(1)>button:nth-of-type(1)#not-hoverable",
+         "pageUrl": "http://127.0.0.1:24680/hover-content-pass.html",
+         "rule": "hover-content",
+         "wcag": [
+          {
+           "criterion": "1.4.13",
+           "level": "AA",
+           "version": "2.1"
+          }
+         ],
+         "method": "probe",
+         "engines": [
+          "probe"
+         ],
+         "impact": "serious",
+         "confidence": "confirmed",
+         "selector": "#main>span:nth-of-type(1)>button:nth-of-type(1)",
+         "snippet": "<button type=\"button\" class=\"help\" aria-describedby=\"b1\"></button>",
+         "evidence": "",
+         "count": 1
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "a restored page moves to the next trigger",
+   "steps": [
+    {
+     "from": "restoring",
+     "event": "PAGE_LOADED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/hover-content-fail.html",
+      "triggers": [
+       {
+        "selector": "#main>span:nth-of-type(1)>button:nth-of-type(1)",
+        "snippet": "<button type=\"button\" class=\"help\" aria-describedby=\"b1\"></button>"
+       },
+       {
+        "selector": "#second",
+        "snippet": "<a id=\"second\">"
+       }
+      ],
+      "at": 0
+     },
+     "payload": {
+      "key": "k1:restore",
+      "url": "http://127.0.0.1:24680/hover-content-fail.html",
+      "title": "t"
+     },
+     "expect": {
+      "state": "focusing",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k1:focus",
+         "expression": "((selector) => { const sel = (e) => { const p = []; for (let n = e; n && n.nodeType === 1; n = n.parentElement) { if (n.id) { p.unshift('#' + CSS.escape(n.id)); break; } let i = 1; for (let s = n.previousElementSibling; s; s = s.previousElementSibling) { if (s.tagName === n.tagName) i++; } p.unshift(n.tagName.toLowerCase() + ':nth-of-type(' + i + ')'); } return p.join('>'); }; const vis = (e) => { const s = getComputedStyle(e); const r = e.getBoundingClientRect(); return s.display !== 'none' && s.visibility !== 'hidden' && Number(s.opacity) > 0 && r.width > 0 && r.height > 0; }; const t = document.querySelector(selector); const all = Array.from(document.body.querySelectorAll('*')); const before = all.map(vis); t.focus(); const revealed = all.filter((e, i) => !before[i] && vis(e)); const roots = revealed.filter((e) => !revealed.includes(e.parentElement)); let gap = 0; if (roots.length > 0) { const a = t.getBoundingClientRect(); const b = roots[0].getBoundingClientRect(); gap = Math.hypot(Math.max(b.left - a.right, a.left - b.right, 0), Math.max(b.top - a.bottom, a.top - b.bottom, 0)); } return JSON.stringify({ focused: document.activeElement === t, revealed: revealed.map(sel), content: roots.length > 0 ? sel(roots[0]) : '', gap: gap }); })(\"#second\")"
+        }
+       }
+      ],
+      "entity": {
+       "at": 1
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: after the last trigger the restored page answers the held findings",
+   "steps": [
+    {
+     "from": "restoring",
+     "event": "PAGE_LOADED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/hover-content-fail.html",
+      "triggers": [
+       {
+        "selector": "#main>span:nth-of-type(1)>button:nth-of-type(1)",
+        "snippet": "<button type=\"button\" class=\"help\" aria-describedby=\"b1\"></button>"
+       }
+      ],
+      "at": 0,
+      "findings": [
+       {
+        "id": "http://127.0.0.1:24680/hover-content-fail.html#hover-content##main>span:nth-of-type(1)>button:nth-of-type(1)#not-dismissible",
+        "pageUrl": "http://127.0.0.1:24680/hover-content-fail.html",
+        "rule": "hover-content",
+        "wcag": [
+         {
+          "criterion": "1.4.13",
+          "level": "AA",
+          "version": "2.1"
+         }
+        ],
+        "method": "probe",
+        "engines": [
+         "probe"
+        ],
+        "impact": "serious",
+        "confidence": "confirmed",
+        "selector": "#main>span:nth-of-type(1)>button:nth-of-type(1)",
+        "snippet": "<button type=\"button\" class=\"help\" aria-describedby=\"b1\"></button>",
+        "evidence": "",
+        "count": 1
+       }
+      ]
+     },
+     "payload": {
+      "key": "k1:restore",
+      "url": "http://127.0.0.1:24680/hover-content-fail.html",
+      "title": "t"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k1",
+         "probe": "hover",
+         "findings": [
+          {
+           "id": "http://127.0.0.1:24680/hover-content-fail.html#hover-content##main>span:nth-of-type(1)>button:nth-of-type(1)#not-dismissible",
+           "pageUrl": "http://127.0.0.1:24680/hover-content-fail.html",
+           "rule": "hover-content",
+           "wcag": [
+            {
+             "criterion": "1.4.13",
+             "level": "AA",
+             "version": "2.1"
+            }
+           ],
+           "method": "probe",
+           "engines": [
+            "probe"
+           ],
+           "impact": "serious",
+           "confidence": "confirmed",
+           "selector": "#main>span:nth-of-type(1)>button:nth-of-type(1)",
+           "snippet": "<button type=\"button\" class=\"help\" aria-describedby=\"b1\"></button>",
+           "evidence": "",
+           "count": 1
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

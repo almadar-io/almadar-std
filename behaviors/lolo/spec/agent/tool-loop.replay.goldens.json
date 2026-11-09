@@ -786,6 +786,372 @@
         "LoopChatRequest",
         "LoopChatHttp"
       ]
+    },
+    {
+      "id": "an-ephemeral-turn-with-live-streams-its-steps",
+      "note": "Owner 2026-11-08: `live` decides, whatever `ephemeral` is.",
+      "steps": [
+        {
+          "event": "CONVERSE",
+          "from": "idle",
+          "payload": {
+            "ephemeral": true,
+            "tools": [
+              {
+                "read": "Note",
+                "roles": [
+                  "staff"
+                ]
+              }
+            ],
+            "live": true,
+            "messages": [
+              {
+                "role": "user",
+                "content": "show my notes"
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "preparing"
+          },
+          "identity": {
+            "id": "u1",
+            "role": "staff"
+          }
+        },
+        {
+          "event": "INPUTS_KNOWN",
+          "from": "preparing",
+          "payload": {
+            "result": {
+              "inputs": [],
+              "entities": [],
+              "selected": []
+            },
+            "text": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "thinking"
+          },
+          "identity": {
+            "id": "u1",
+            "role": "staff"
+          }
+        },
+        {
+          "event": "ToolsStep",
+          "from": "thinking",
+          "payload": {
+            "activity": {
+              "type": "tool_call",
+              "tool": "read__Note",
+              "kind": "read",
+              "argsText": "{}",
+              "timestamp": "2026-11-07T00:00:00.000Z",
+              "isExecuting": false
+            }
+          },
+          "identity": {
+            "id": "u1",
+            "role": "staff"
+          },
+          "expect": {
+            "fired": true,
+            "state": "thinking",
+            "emits": [
+              {
+                "event": "ASSISTANT_STEP",
+                "payload": {
+                  "activity": {
+                    "type": "tool_call",
+                    "tool": "read__Note",
+                    "kind": "read",
+                    "argsText": "{}",
+                    "timestamp": "2026-11-07T00:00:00.000Z",
+                    "isExecuting": false
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "config": {},
+      "defaults": [
+        "LoopLlm",
+        "LoopChatRequest",
+        "LoopChatHttp"
+      ]
+    },
+    {
+      "id": "control-an-ephemeral-turn-without-live-streams-nothing",
+      "note": "Absent `live`, an ephemeral turn streams no steps.",
+      "steps": [
+        {
+          "event": "CONVERSE",
+          "from": "idle",
+          "payload": {
+            "ephemeral": true,
+            "tools": [
+              {
+                "read": "Note",
+                "roles": [
+                  "staff"
+                ]
+              }
+            ],
+            "messages": [
+              {
+                "role": "user",
+                "content": "show my notes"
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "preparing"
+          },
+          "identity": {
+            "id": "u1",
+            "role": "staff"
+          }
+        },
+        {
+          "event": "INPUTS_KNOWN",
+          "from": "preparing",
+          "payload": {
+            "result": {
+              "inputs": [],
+              "entities": [],
+              "selected": []
+            },
+            "text": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "thinking"
+          },
+          "identity": {
+            "id": "u1",
+            "role": "staff"
+          }
+        },
+        {
+          "event": "ToolsStep",
+          "from": "thinking",
+          "payload": {
+            "activity": {
+              "type": "tool_call",
+              "tool": "read__Note",
+              "kind": "read",
+              "argsText": "{}",
+              "timestamp": "2026-11-07T00:00:00.000Z",
+              "isExecuting": false
+            }
+          },
+          "identity": {
+            "id": "u1",
+            "role": "staff"
+          },
+          "expect": {
+            "fired": true,
+            "state": "thinking",
+            "emits": []
+          }
+        }
+      ],
+      "config": {},
+      "defaults": [
+        "LoopLlm",
+        "LoopChatRequest",
+        "LoopChatHttp"
+      ]
+    },
+    {
+      "id": "a-non-ephemeral-turn-with-live-false-streams-nothing",
+      "note": "`live: false` silences a turn that `quiet` would let stream.",
+      "steps": [
+        {
+          "event": "CONVERSE",
+          "from": "idle",
+          "payload": {
+            "live": false,
+            "messages": [
+              {
+                "role": "user",
+                "content": "show my notes"
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "preparing"
+          },
+          "identity": {
+            "id": "u1",
+            "role": "staff"
+          }
+        },
+        {
+          "event": "INPUTS_KNOWN",
+          "from": "preparing",
+          "payload": {
+            "result": {
+              "inputs": [],
+              "entities": [],
+              "selected": []
+            },
+            "text": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "thinking"
+          },
+          "identity": {
+            "id": "u1",
+            "role": "staff"
+          }
+        },
+        {
+          "event": "ToolsStep",
+          "from": "thinking",
+          "payload": {
+            "activity": {
+              "type": "tool_call",
+              "tool": "read__Note",
+              "kind": "read",
+              "argsText": "{}",
+              "timestamp": "2026-11-07T00:00:00.000Z",
+              "isExecuting": false
+            }
+          },
+          "identity": {
+            "id": "u1",
+            "role": "staff"
+          },
+          "expect": {
+            "fired": true,
+            "state": "thinking",
+            "emits": []
+          }
+        }
+      ],
+      "config": {
+        "tools": [
+          {
+            "read": "Note",
+            "roles": [
+              "staff"
+            ]
+          }
+        ]
+      },
+      "defaults": [
+        "LoopLlm",
+        "LoopChatRequest",
+        "LoopChatHttp"
+      ]
+    },
+    {
+      "id": "control-a-non-ephemeral-turn-without-live-follows-quiet",
+      "note": "Absent `live`, the turn streams unless `quiet`.",
+      "steps": [
+        {
+          "event": "CONVERSE",
+          "from": "idle",
+          "payload": {
+            "messages": [
+              {
+                "role": "user",
+                "content": "show my notes"
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "preparing"
+          },
+          "identity": {
+            "id": "u1",
+            "role": "staff"
+          }
+        },
+        {
+          "event": "INPUTS_KNOWN",
+          "from": "preparing",
+          "payload": {
+            "result": {
+              "inputs": [],
+              "entities": [],
+              "selected": []
+            },
+            "text": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "thinking"
+          },
+          "identity": {
+            "id": "u1",
+            "role": "staff"
+          }
+        },
+        {
+          "event": "ToolsStep",
+          "from": "thinking",
+          "payload": {
+            "activity": {
+              "type": "tool_call",
+              "tool": "read__Note",
+              "kind": "read",
+              "argsText": "{}",
+              "timestamp": "2026-11-07T00:00:00.000Z",
+              "isExecuting": false
+            }
+          },
+          "identity": {
+            "id": "u1",
+            "role": "staff"
+          },
+          "expect": {
+            "fired": true,
+            "state": "thinking",
+            "emits": [
+              {
+                "event": "ASSISTANT_STEP",
+                "payload": {
+                  "activity": {
+                    "type": "tool_call",
+                    "tool": "read__Note",
+                    "kind": "read",
+                    "argsText": "{}",
+                    "timestamp": "2026-11-07T00:00:00.000Z",
+                    "isExecuting": false
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "config": {
+        "tools": [
+          {
+            "read": "Note",
+            "roles": [
+              "staff"
+            ]
+          }
+        ]
+      },
+      "defaults": [
+        "LoopLlm",
+        "LoopChatRequest",
+        "LoopChatHttp"
+      ]
     }
   ]
 }

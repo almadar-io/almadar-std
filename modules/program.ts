@@ -333,13 +333,13 @@ export const PROGRAM_OPERATORS: Record<string, StdOperatorMeta> = {
   'program/live': {
     module: 'program', category: 'std-program',
     minArity: 0, maxArity: 2,
-    description: 'Subscribe to the host\'s live broadcast, the feed `orb serve`\'s `/api/events` stream carries (the success emits of `persist` and running calls\' messages, EXEC-QUEUE-13). Keyed with an `onMessage` route, each item a connection would receive arrives as that event `{ event, payload?, source, key }`, in order, until `cancel-call` names the key: a peer\'s row only when the identity bound to the `clientId` session may read it (the anonymous viewer when none is bound), never an item `clientId`\'s own request produced. Unkeyed, it is refused. For a server program pushing the feed to its clients; who may subscribe is the program\'s own gate.',
+    description: 'Subscribe to the host\'s live broadcast, the feed `orb serve`\'s `/api/events` stream carries (the success emits of `persist` and running calls\' messages, EXEC-QUEUE-13). Keyed with an `onMessage` route, each item a connection would receive arrives as that event `{ event, payload?, source, key }`, in order, until `cancel-call` names the key: a peer\'s row only when the identity bound to the `clientId` session may read it (the anonymous viewer when none is bound), never an item `clientId`\'s own request produced. Unkeyed, it is refused. For a server program pushing the feed to its clients; who may subscribe is the program\'s own gate. `kind: "trace"` with `traits` streams each dispatch that moved one of them instead (EXEC-DIST-14); `kind: "guest"` with a `guest` handle streams each tick pass of that hosted guest that painted something, shaped as a `program/dispatch` answer for it, until the guest closes (EXEC-ENDPOINT-3a).',
     hasSideEffects: true,
     runsOn: 'server',
     host: 'program',
     returnType: openShape({ event: STRING }),
     params: [
-      { name: 'subscription', type: openShape({ clientId: STRING }), description: 'Whose feed it is: the `clientId` session, whose bound identity\'s `@read` filters peers\' rows and whose own items are left out', optional: true },
+      { name: 'subscription', type: openShape({ clientId: STRING, kind: STRING, guest: STRING }), description: 'Whose feed it is: the `clientId` session, whose bound identity\'s `@read` filters peers\' rows and whose own items are left out; or `kind` (`trace`, `guest`) and what that kind streams', optional: true },
       { name: 'options', type: openShape({ key: STRING, emit: openShape({ onMessage: EVENT_KEY, failure: EVENT_KEY }) }), description: 'The stream key (required) and its routes: { key, emit: { onMessage, failure } }; cancel-call with the key ends the stream', optional: true },
     ],
     example: '["program/live", { "clientId": "@payload.clientId" }, { "key": "@payload.streamKey", "emit": { "onMessage": "LIVE_ITEM", "failure": "LIVE_FAILED" } }]',

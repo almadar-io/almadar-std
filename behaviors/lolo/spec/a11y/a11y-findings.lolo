@@ -1,0 +1,22 @@
+app a11y-findings-spec [
+  version: "1.0.0",
+  description: "Design contract for the one accessibility finding shape every engine (axe-core, WAVE) and every browser probe answers in, and for merging them. A finding names the page, the rule (engine rule id or probe code), the WCAG success criteria it maps to (criterion, level, version), its method (engine, probe, llm), the engines that reported it, impact, confidence (confirmed when a deterministic signal backs it, needs-verification otherwise), the element (selector and HTML snippet), an evidence screenshot reference and a count of further instances. FINDINGS_MERGE { key, findings } answers FINDINGS_MERGED { key, findings } where the same rule on the same element of the same page is one finding listing every engine that reported it, a finding two engines agree on is confirmed, and order is page, then criterion, then selector. Nothing is dropped: an unmapped rule keeps an empty wcag list."
+]
+
+type WcagRef = { criterion : string!, level : "A" | "AA" | "AAA"!, version : "2.0" | "2.1" | "2.2"! }
+type A11yFinding = { id : string!, pageUrl : string!, rule : string!, wcag : [WcagRef]!, method : "engine" | "probe" | "llm"!, engines : [string]!, impact : "critical" | "serious" | "moderate" | "minor"!, confidence : "confirmed" | "needs-verification"!, selector : string!, snippet : string!, evidence : string!, count : number! }
+
+orbital A11yFindingsSpec {
+  expects entity A11yMerge [runtime] {
+    id : string!
+  }
+  expects trait A11yFindings {
+    state ready {
+      FINDINGS_MERGE -> ready
+    }
+    emits {
+      FINDINGS_MERGED { key : string!  findings : [A11yFinding]! }
+    }
+  }
+  expects page boot -> A11yFindings
+}

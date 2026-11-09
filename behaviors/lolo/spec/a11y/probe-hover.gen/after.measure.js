@@ -1,0 +1,1 @@
+(selectors) => { const vis = (e) => { const s = getComputedStyle(e); const r = e.getBoundingClientRect(); return s.display !== 'none' && s.visibility !== 'hidden' && Number(s.opacity) > 0 && r.width > 0 && r.height > 0; }; return JSON.stringify({ visible: selectors.filter((s) => { const e = document.querySelector(s); return e !== null && vis(e); }) }); }

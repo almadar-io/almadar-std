@@ -1,0 +1,1 @@
+() => { const st = window.__a11yFormsProbe; if (!st) return JSON.stringify({ restored: 0 }); let n = 0; for (const e of st.entries) { if (!e.el.isConnected) continue; if (e.el.tagName === 'SELECT') e.el.selectedIndex = e.selectedIndex; else { e.el.value = e.value; e.el.checked = e.checked; } n++; } delete window.__a11yFormsProbe; return JSON.stringify({ restored: n }); }

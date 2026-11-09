@@ -1,0 +1,24 @@
+app agent-file-tools-spec [
+  version: "1.0.0",
+  description: "Design contract for the file tools an agent loop offers over one scoped workspace directory (an fs grant the composer declares, addressed with an anchor). Each tool is a declared input the loop dispatches and answers through the loop's TOOL_PENDING callId: READ_FILE { path } answers its text (a PDF is read through std-pdf-text, page by page), WRITE_FILE { path, content } writes text, LIST_FILES { path } lists entries with name, kind and size, GLOB { pattern } lists matching paths. A path outside the workspace, a missing file or binary content that is not a PDF answers TOOL_FAILED with the reason; nothing is truncated."
+]
+
+orbital AgentFileToolsSpec {
+  expects entity AgentFileCall [runtime] {
+    id : string!
+    callId : string
+  }
+  expects trait AgentFileTools {
+    state ready {
+      READ_FILE -> ready
+      WRITE_FILE -> ready
+      LIST_FILES -> ready
+      GLOB -> ready
+    }
+    emits {
+      TOOL_RESULT { callId : string!  result : string! }
+      TOOL_FAILED { callId : string!  error : string! }
+    }
+  }
+  expects page boot -> AgentFileTools
+}

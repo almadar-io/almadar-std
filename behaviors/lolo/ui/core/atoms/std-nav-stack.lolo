@@ -1,0 +1,58 @@
+app std-nav-stack [
+  version: "1.0.0",
+  description: "std-nav-stack — the navigation trail a session has walked, kept by the program. It listens for the route mount's $MOUNT (EXEC-SEED-7): on a cold load (an empty trail) it seeds the trail from the mount's declared ancestors, then a visited href already in the trail truncates the trail back to it (a revisit) and any other href is pushed. An entry's label is the crumb of the navigate that opened the route, else the page's declared label, else empty; a revisit relabels its entry only when a crumb arrived. The trail is the entity's `trail`: a breadcrumb band reads it, BACK navigates to the entry before the last, and CRUMB_NAV navigates to a picked level. Compose it in the orbital that shows the trail; each orbital composing it keeps its own trail."
+]
+;; @capabilities "navigation trail, breadcrumb stack, back navigation, drill-down history, revisit truncates"
+orbital NavStackOrbital {
+  type TrailEntry = { href : string!, label : string }
+  type TrailAncestor = { path : string!, page : string!, label : string }
+
+  entity NavStack [runtime] {
+    id : string!
+    trail : [TrailEntry] @description "The trail walked so far, first visited first; the last entry is the current page." = []
+  }
+
+  trait NavStackTrail -> @rebindable NavStack [client] {
+    initial: tracking
+
+    state tracking {
+      MOUNTED -> tracking
+        (let ((own : TrailEntry { href: ?route, label: (if (= (default ?crumb "") "") (default ?label "") ?crumb) }))
+          (let ((base (if (> (array/len @entity.trail) 0) @entity.trail (array/map ?ancestors (fn a { href: @a.path, label: (default @a.label "") })))))
+            (let ((at (array/reduce (array/range (array/len @base)) -1 (fn acc i (if (and (< @acc 0) (= (object/get (array/nth @base @i) href) ?route)) @i @acc)))))
+              (do (set @entity.trail (if (< @at 0)
+                (array/append @base @own)
+                (array/append (array/take @base @at) (if (= (default ?crumb "") "") (array/nth @base @at) @own))))
+              (emit TRAIL { entries: @entity.trail })))))
+      BACK -> tracking when (>= (array/len @entity.trail) 2)
+        (navigate (object/get (default (array/nth @entity.trail (- (array/len @entity.trail) 2)) { href: "/", label: "" }) href))
+      CRUMB_NAV -> tracking
+        (navigate ?href)
+    }
+
+    emits {
+      TRAIL -> external {
+        entries : [TrailEntry]!
+      }
+        @description "The trail after a route mount: every entry walked, the last the current page. A band that shows the trail or navigates back listens for it."
+        @synonyms "navigation trail changed, breadcrumb trail"
+        @tier "essential"
+    }
+
+    listens {
+      MOUNTED { page : string!  route : string!  ancestors : [TrailAncestor]!  label : string  crumb : string }
+        @description "A route mount named its page, the path opened, the page's declared ancestors, its declared label and the crumb of the navigate that opened it (the $MOUNT payload)."
+        @synonyms "route mounted, page entered, navigation happened"
+        @tier "internal"
+      $MOUNT -> MOUNTED
+      BACK { }
+        @description "Navigate to the entry before the current one; nothing happens with no earlier entry."
+        @synonyms "go back, previous page, up one level"
+        @tier "essential"
+      CRUMB_NAV { href : string!  label : string  index : number }
+        @description "A trail level was picked: navigate to its href."
+        @synonyms "breadcrumb click, jump to level"
+        @tier "essential"
+    }
+  }
+}

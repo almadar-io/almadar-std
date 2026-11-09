@@ -1,0 +1,24 @@
+app a11y-probe-consistency-spec [
+  version: "1.0.0",
+  description: "Design contract for the cross-page consistency probe (WCAG 3.2.3 Consistent Navigation, 3.2.6 Consistent Help). CONSISTENCY_CHECK { key, pages } takes, per page, its url, the link texts of its navigation landmarks in order and the hrefs of the links in its header and footer in order, as measured in the page by the measureExpression knob. The first page is the reference for navigation; for a help link, the first page that has it. It answers PROBE_DONE { key, probe, findings }: nav-inconsistent when the links a page shares with the reference come in another order, help-inconsistent when a link matching the helpPatterns knob is missing from a page that is not the reference for it or sits at another position among the header and footer links. Both are needs-verification. No page events: the data comes in, the findings go out; CONSISTENCY_EXPRESSION_ASK { key } answers CONSISTENCY_EXPRESSION { key, expression } with the measureExpression knob."
+]
+
+type WcagRef = { criterion : string!, level : "A" | "AA" | "AAA"!, version : "2.0" | "2.1" | "2.2"! }
+type A11yFinding = { id : string!, pageUrl : string!, rule : string!, wcag : [WcagRef]!, method : "engine" | "probe" | "llm"!, engines : [string]!, impact : "critical" | "serious" | "moderate" | "minor"!, confidence : "confirmed" | "needs-verification"!, selector : string!, snippet : string!, evidence : string!, count : number! }
+
+orbital A11yProbeConsistencySpec {
+  expects entity ConsistencyRun [runtime] {
+    id : string!
+  }
+  expects trait ConsistencyProbe {
+    state ready {
+      CONSISTENCY_CHECK -> ready
+      CONSISTENCY_EXPRESSION_ASK -> ready
+    }
+    emits {
+      PROBE_DONE { key : string!  probe : string!  findings : [A11yFinding]! }
+      CONSISTENCY_EXPRESSION { key : string!  expression : string! }
+    }
+  }
+  expects page boot -> ConsistencyProbe
+}

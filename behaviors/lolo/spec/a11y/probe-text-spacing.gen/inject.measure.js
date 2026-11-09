@@ -1,0 +1,1 @@
+(id, css) => { const old = document.getElementById(id); if (old) old.remove(); const s = document.createElement('style'); s.id = id; s.textContent = css; document.head.appendChild(s); return JSON.stringify({ id: id, injected: true }); }

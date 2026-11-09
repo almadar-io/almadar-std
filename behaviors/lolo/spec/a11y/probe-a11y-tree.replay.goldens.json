@@ -1,0 +1,2926 @@
+{
+ "atom": "a11y/atoms/std-a11y-probe-a11y-tree.lolo",
+ "trait": "TreeProbe",
+ "note": "std-a11y-probe-a11y-tree with the page answers played as events. The icon-name and label-in-name cases carry the real PAGE_AX_TREE_READ nodes (CDP Accessibility.getFullAXTree, mapped to id, parent, role, name, ignored) and the real PAGE_MEASURED json recorded by probe-a11y-tree.gen/record.py from headless Chrome on the fixtures; the other cases are small hand-built pages. The expression asserted is probe-a11y-tree.gen/a11y-tree.measure.js. Regenerate with python3 -I probe-a11y-tree.gen/gen_goldens.py.",
+ "cases": [
+  {
+   "id": "icon-name-fail: the icon-only button has no name; the transcript reads an empty gumb and the finding is confirmed by the tree",
+   "steps": [
+    {
+     "from": "idle",
+     "event": "PROBE_RUN",
+     "payload": {
+      "key": "k",
+      "pageUrl": "http://127.0.0.1:24215/icon-name-fail.html"
+     },
+     "expect": {
+      "state": "reading",
+      "emits": [
+       {
+        "event": "PAGE_AX_TREE",
+        "payload": {
+         "key": "k:ax"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "reading",
+     "event": "PAGE_AX_TREE_READ",
+     "payload": {
+      "key": "k:ax",
+      "nodes": [
+       {
+        "id": "2",
+        "role": "RootWebArea",
+        "name": "icon-name",
+        "ignored": false
+       },
+       {
+        "id": "3",
+        "role": "none",
+        "name": "",
+        "ignored": true,
+        "parent": "2"
+       },
+       {
+        "id": "9",
+        "role": "none",
+        "name": "",
+        "ignored": true,
+        "parent": "3"
+       },
+       {
+        "id": "10",
+        "role": "link",
+        "name": "Preskoči na vsebino",
+        "ignored": false,
+        "parent": "9"
+       },
+       {
+        "id": "11",
+        "role": "navigation",
+        "name": "Glavna navigacija",
+        "ignored": false,
+        "parent": "9"
+       },
+       {
+        "id": "14",
+        "role": "main",
+        "name": "",
+        "ignored": false,
+        "parent": "9"
+       },
+       {
+        "id": "20",
+        "role": "StaticText",
+        "name": "Preskoči na vsebino",
+        "ignored": false,
+        "parent": "10"
+       },
+       {
+        "id": "12",
+        "role": "link",
+        "name": "Domov",
+        "ignored": false,
+        "parent": "11"
+       },
+       {
+        "id": "13",
+        "role": "link",
+        "name": "Izdelki",
+        "ignored": false,
+        "parent": "11"
+       },
+       {
+        "id": "15",
+        "role": "heading",
+        "name": "icon-name",
+        "ignored": false,
+        "parent": "14"
+       },
+       {
+        "id": "16",
+        "role": "button",
+        "name": "",
+        "ignored": false,
+        "parent": "14"
+       },
+       {
+        "id": "-1000000002",
+        "role": "InlineTextBox",
+        "name": "Preskoči na vsebino",
+        "ignored": false,
+        "parent": "20"
+       },
+       {
+        "id": "21",
+        "role": "StaticText",
+        "name": "Domov",
+        "ignored": false,
+        "parent": "12"
+       },
+       {
+        "id": "22",
+        "role": "StaticText",
+        "name": "Izdelki",
+        "ignored": false,
+        "parent": "13"
+       },
+       {
+        "id": "23",
+        "role": "StaticText",
+        "name": "icon-name",
+        "ignored": false,
+        "parent": "15"
+       },
+       {
+        "id": "-1000000003",
+        "role": "InlineTextBox",
+        "name": "Domov",
+        "ignored": false,
+        "parent": "21"
+       },
+       {
+        "id": "-1000000004",
+        "role": "InlineTextBox",
+        "name": "Izdelki",
+        "ignored": false,
+        "parent": "22"
+       },
+       {
+        "id": "-1000000005",
+        "role": "InlineTextBox",
+        "name": "icon-name",
+        "ignored": false,
+        "parent": "23"
+       }
+      ]
+     },
+     "expect": {
+      "state": "measuring",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k:measure",
+         "expression": "(() => { const norm = (s) => (s || '').replace(/\\s+/g, ' ').trim(); const sel = (e) => { const p = []; for (let n = e; n && n.nodeType === 1; n = n.parentElement) { if (n.id) { p.unshift('#' + CSS.escape(n.id)); break; } let i = 1; for (let s = n.previousElementSibling; s; s = s.previousElementSibling) { if (s.tagName === n.tagName) i++; } p.unshift(n.tagName.toLowerCase() + (n.parentElement && n.parentElement.querySelectorAll(':scope > ' + n.tagName.toLowerCase()).length > 1 ? ':nth-of-type(' + i + ')' : '')); } return p.join(' > '); }; const content = (n) => { if (n.nodeType === 3) return n.textContent; if (n.nodeType !== 1 || n.getAttribute('aria-hidden') === 'true' || n.hidden) return ''; if (n.tagName === 'IMG') return ' ' + (n.getAttribute('alt') || '') + ' '; return Array.from(n.childNodes).map(content).join(''); }; const ids = (el, attr) => norm((el.getAttribute(attr) || '').split(/\\s+/).filter(Boolean).map((id) => { const t = document.getElementById(id); return t ? content(t) : ''; }).join(' ')); const q = 'a[href],button,img,input:not([type=hidden]),select,textarea,[role=button],[role=link],[role=checkbox],[role=textbox]'; const items = Array.from(document.querySelectorAll(q)).map((el) => ({ selector: sel(el), tag: el.tagName.toLowerCase(), type: el.getAttribute('type') || '', roleAttr: el.getAttribute('role') || '', visible: norm(el.innerText), ariaLabel: norm(el.getAttribute('aria-label')), labelledby: ids(el, 'aria-labelledby'), content: norm(el.tagName === 'IMG' ? '' : content(el)), alt: norm(el.getAttribute('alt')), altPresent: el.hasAttribute('alt'), title: norm(el.getAttribute('title')), value: norm(el.tagName === 'INPUT' && ['button', 'submit', 'reset'].includes(el.type) ? el.value : ''), href: el.tagName === 'A' ? el.href : '', hidden: !!el.closest('[aria-hidden=true],[hidden]') || (el.checkVisibility ? !el.checkVisibility({ visibilityProperty: true }) : false), snippet: el.outerHTML.split('>')[0] + '>' })); return JSON.stringify({ items }); })()"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "measuring",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k:measure",
+      "json": "{\"items\":[{\"selector\":\"html > body > a\",\"tag\":\"a\",\"type\":\"\",\"roleAttr\":\"\",\"visible\":\"Preskoči na vsebino\",\"ariaLabel\":\"\",\"labelledby\":\"\",\"content\":\"Preskoči na vsebino\",\"alt\":\"\",\"altPresent\":false,\"title\":\"\",\"value\":\"\",\"href\":\"http://127.0.0.1:24215/icon-name-fail.html#main\",\"hidden\":false,\"snippet\":\"<a class=\\\"skip\\\" href=\\\"#main\\\">\"},{\"selector\":\"html > body > nav > a:nth-of-type(1)\",\"tag\":\"a\",\"type\":\"\",\"roleAttr\":\"\",\"visible\":\"Domov\",\"ariaLabel\":\"\",\"labelledby\":\"\",\"content\":\"Domov\",\"alt\":\"\",\"altPresent\":false,\"title\":\"\",\"value\":\"\",\"href\":\"http://127.0.0.1:24215/index.html\",\"hidden\":false,\"snippet\":\"<a href=\\\"index.html\\\">\"},{\"selector\":\"html > body > nav > a:nth-of-type(2)\",\"tag\":\"a\",\"type\":\"\",\"roleAttr\":\"\",\"visible\":\"Izdelki\",\"ariaLabel\":\"\",\"labelledby\":\"\",\"content\":\"Izdelki\",\"alt\":\"\",\"altPresent\":false,\"title\":\"\",\"value\":\"\",\"href\":\"http://127.0.0.1:24215/index.html\",\"hidden\":false,\"snippet\":\"<a href=\\\"index.html\\\">\"},{\"selector\":\"#main > button\",\"tag\":\"button\",\"type\":\"button\",\"roleAttr\":\"\",\"visible\":\"\",\"ariaLabel\":\"\",\"labelledby\":\"\",\"content\":\"\",\"alt\":\"\",\"altPresent\":false,\"title\":\"\",\"value\":\"\",\"href\":\"\",\"hidden\":false,\"snippet\":\"<button type=\\\"button\\\" class=\\\"icon-btn\\\">\"}]}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "TRANSCRIPT_READY",
+        "payload": {
+         "key": "k",
+         "pageUrl": "http://127.0.0.1:24215/icon-name-fail.html",
+         "lines": [
+          "dokument: icon-name",
+          "povezava: Preskoči na vsebino",
+          "navigacija: Glavna navigacija",
+          "povezava: Domov",
+          "povezava: Izdelki",
+          "glavna vsebina: ",
+          "naslov: icon-name",
+          "gumb: "
+         ]
+        }
+       },
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k",
+         "probe": "a11y-tree",
+         "findings": [
+          {
+           "id": "http://127.0.0.1:24215/icon-name-fail.html#name-missing##main > button",
+           "pageUrl": "http://127.0.0.1:24215/icon-name-fail.html",
+           "rule": "name-missing",
+           "wcag": [
+            {
+             "criterion": "4.1.2",
+             "level": "A",
+             "version": "2.0"
+            }
+           ],
+           "method": "probe",
+           "engines": [
+            "probe"
+           ],
+           "impact": "serious",
+           "confidence": "confirmed",
+           "selector": "#main > button",
+           "snippet": "<button type=\"button\" class=\"icon-btn\">",
+           "evidence": "",
+           "count": 1
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: icon-name-pass has an aria-label, so the transcript reads gumb: Iskanje and there is no finding",
+   "steps": [
+    {
+     "from": "idle",
+     "event": "PROBE_RUN",
+     "payload": {
+      "key": "k",
+      "pageUrl": "http://127.0.0.1:24215/icon-name-pass.html"
+     },
+     "expect": {
+      "state": "reading",
+      "emits": [
+       {
+        "event": "PAGE_AX_TREE",
+        "payload": {
+         "key": "k:ax"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "reading",
+     "event": "PAGE_AX_TREE_READ",
+     "payload": {
+      "key": "k:ax",
+      "nodes": [
+       {
+        "id": "28",
+        "role": "RootWebArea",
+        "name": "icon-name",
+        "ignored": false
+       },
+       {
+        "id": "29",
+        "role": "none",
+        "name": "",
+        "ignored": true,
+        "parent": "28"
+       },
+       {
+        "id": "35",
+        "role": "none",
+        "name": "",
+        "ignored": true,
+        "parent": "29"
+       },
+       {
+        "id": "36",
+        "role": "link",
+        "name": "Preskoči na vsebino",
+        "ignored": false,
+        "parent": "35"
+       },
+       {
+        "id": "37",
+        "role": "navigation",
+        "name": "Glavna navigacija",
+        "ignored": false,
+        "parent": "35"
+       },
+       {
+        "id": "40",
+        "role": "main",
+        "name": "",
+        "ignored": false,
+        "parent": "35"
+       },
+       {
+        "id": "27",
+        "role": "StaticText",
+        "name": "Preskoči na vsebino",
+        "ignored": false,
+        "parent": "36"
+       },
+       {
+        "id": "38",
+        "role": "link",
+        "name": "Domov",
+        "ignored": false,
+        "parent": "37"
+       },
+       {
+        "id": "39",
+        "role": "link",
+        "name": "Izdelki",
+        "ignored": false,
+        "parent": "37"
+       },
+       {
+        "id": "41",
+        "role": "heading",
+        "name": "icon-name",
+        "ignored": false,
+        "parent": "40"
+       },
+       {
+        "id": "42",
+        "role": "button",
+        "name": "Iskanje",
+        "ignored": false,
+        "parent": "40"
+       },
+       {
+        "id": "-1000000013",
+        "role": "InlineTextBox",
+        "name": "Preskoči na vsebino",
+        "ignored": false,
+        "parent": "27"
+       },
+       {
+        "id": "24",
+        "role": "StaticText",
+        "name": "Domov",
+        "ignored": false,
+        "parent": "38"
+       },
+       {
+        "id": "25",
+        "role": "StaticText",
+        "name": "Izdelki",
+        "ignored": false,
+        "parent": "39"
+       },
+       {
+        "id": "26",
+        "role": "StaticText",
+        "name": "icon-name",
+        "ignored": false,
+        "parent": "41"
+       },
+       {
+        "id": "-1000000010",
+        "role": "InlineTextBox",
+        "name": "Domov",
+        "ignored": false,
+        "parent": "24"
+       },
+       {
+        "id": "-1000000011",
+        "role": "InlineTextBox",
+        "name": "Izdelki",
+        "ignored": false,
+        "parent": "25"
+       },
+       {
+        "id": "-1000000012",
+        "role": "InlineTextBox",
+        "name": "icon-name",
+        "ignored": false,
+        "parent": "26"
+       }
+      ]
+     },
+     "expect": {
+      "state": "measuring",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k:measure",
+         "expression": "(() => { const norm = (s) => (s || '').replace(/\\s+/g, ' ').trim(); const sel = (e) => { const p = []; for (let n = e; n && n.nodeType === 1; n = n.parentElement) { if (n.id) { p.unshift('#' + CSS.escape(n.id)); break; } let i = 1; for (let s = n.previousElementSibling; s; s = s.previousElementSibling) { if (s.tagName === n.tagName) i++; } p.unshift(n.tagName.toLowerCase() + (n.parentElement && n.parentElement.querySelectorAll(':scope > ' + n.tagName.toLowerCase()).length > 1 ? ':nth-of-type(' + i + ')' : '')); } return p.join(' > '); }; const content = (n) => { if (n.nodeType === 3) return n.textContent; if (n.nodeType !== 1 || n.getAttribute('aria-hidden') === 'true' || n.hidden) return ''; if (n.tagName === 'IMG') return ' ' + (n.getAttribute('alt') || '') + ' '; return Array.from(n.childNodes).map(content).join(''); }; const ids = (el, attr) => norm((el.getAttribute(attr) || '').split(/\\s+/).filter(Boolean).map((id) => { const t = document.getElementById(id); return t ? content(t) : ''; }).join(' ')); const q = 'a[href],button,img,input:not([type=hidden]),select,textarea,[role=button],[role=link],[role=checkbox],[role=textbox]'; const items = Array.from(document.querySelectorAll(q)).map((el) => ({ selector: sel(el), tag: el.tagName.toLowerCase(), type: el.getAttribute('type') || '', roleAttr: el.getAttribute('role') || '', visible: norm(el.innerText), ariaLabel: norm(el.getAttribute('aria-label')), labelledby: ids(el, 'aria-labelledby'), content: norm(el.tagName === 'IMG' ? '' : content(el)), alt: norm(el.getAttribute('alt')), altPresent: el.hasAttribute('alt'), title: norm(el.getAttribute('title')), value: norm(el.tagName === 'INPUT' && ['button', 'submit', 'reset'].includes(el.type) ? el.value : ''), href: el.tagName === 'A' ? el.href : '', hidden: !!el.closest('[aria-hidden=true],[hidden]') || (el.checkVisibility ? !el.checkVisibility({ visibilityProperty: true }) : false), snippet: el.outerHTML.split('>')[0] + '>' })); return JSON.stringify({ items }); })()"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "measuring",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k:measure",
+      "json": "{\"items\":[{\"selector\":\"html > body > a\",\"tag\":\"a\",\"type\":\"\",\"roleAttr\":\"\",\"visible\":\"Preskoči na vsebino\",\"ariaLabel\":\"\",\"labelledby\":\"\",\"content\":\"Preskoči na vsebino\",\"alt\":\"\",\"altPresent\":false,\"title\":\"\",\"value\":\"\",\"href\":\"http://127.0.0.1:24215/icon-name-pass.html#main\",\"hidden\":false,\"snippet\":\"<a class=\\\"skip\\\" href=\\\"#main\\\">\"},{\"selector\":\"html > body > nav > a:nth-of-type(1)\",\"tag\":\"a\",\"type\":\"\",\"roleAttr\":\"\",\"visible\":\"Domov\",\"ariaLabel\":\"\",\"labelledby\":\"\",\"content\":\"Domov\",\"alt\":\"\",\"altPresent\":false,\"title\":\"\",\"value\":\"\",\"href\":\"http://127.0.0.1:24215/index.html\",\"hidden\":false,\"snippet\":\"<a href=\\\"index.html\\\">\"},{\"selector\":\"html > body > nav > a:nth-of-type(2)\",\"tag\":\"a\",\"type\":\"\",\"roleAttr\":\"\",\"visible\":\"Izdelki\",\"ariaLabel\":\"\",\"labelledby\":\"\",\"content\":\"Izdelki\",\"alt\":\"\",\"altPresent\":false,\"title\":\"\",\"value\":\"\",\"href\":\"http://127.0.0.1:24215/index.html\",\"hidden\":false,\"snippet\":\"<a href=\\\"index.html\\\">\"},{\"selector\":\"#main > button\",\"tag\":\"button\",\"type\":\"button\",\"roleAttr\":\"\",\"visible\":\"\",\"ariaLabel\":\"Iskanje\",\"labelledby\":\"\",\"content\":\"\",\"alt\":\"\",\"altPresent\":false,\"title\":\"\",\"value\":\"\",\"href\":\"\",\"hidden\":false,\"snippet\":\"<button type=\\\"button\\\" class=\\\"icon-btn\\\" aria-label=\\\"Iskanje\\\">\"}]}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "TRANSCRIPT_READY",
+        "payload": {
+         "key": "k",
+         "pageUrl": "http://127.0.0.1:24215/icon-name-pass.html",
+         "lines": [
+          "dokument: icon-name",
+          "povezava: Preskoči na vsebino",
+          "navigacija: Glavna navigacija",
+          "povezava: Domov",
+          "povezava: Izdelki",
+          "glavna vsebina: ",
+          "naslov: icon-name",
+          "gumb: Iskanje"
+         ]
+        }
+       },
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k",
+         "probe": "a11y-tree",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "label-in-name-fail: the visible Išči is not whole words of the name Poišči izdelke, a confirmed name-mismatch",
+   "steps": [
+    {
+     "from": "idle",
+     "event": "PROBE_RUN",
+     "payload": {
+      "key": "k",
+      "pageUrl": "http://127.0.0.1:24215/label-in-name-fail.html"
+     },
+     "expect": {
+      "state": "reading",
+      "emits": [
+       {
+        "event": "PAGE_AX_TREE",
+        "payload": {
+         "key": "k:ax"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "reading",
+     "event": "PAGE_AX_TREE_READ",
+     "payload": {
+      "key": "k:ax",
+      "nodes": [
+       {
+        "id": "51",
+        "role": "RootWebArea",
+        "name": "label-in-name",
+        "ignored": false
+       },
+       {
+        "id": "52",
+        "role": "none",
+        "name": "",
+        "ignored": true,
+        "parent": "51"
+       },
+       {
+        "id": "58",
+        "role": "none",
+        "name": "",
+        "ignored": true,
+        "parent": "52"
+       },
+       {
+        "id": "59",
+        "role": "link",
+        "name": "Preskoči na vsebino",
+        "ignored": false,
+        "parent": "58"
+       },
+       {
+        "id": "60",
+        "role": "navigation",
+        "name": "Glavna navigacija",
+        "ignored": false,
+        "parent": "58"
+       },
+       {
+        "id": "63",
+        "role": "main",
+        "name": "",
+        "ignored": false,
+        "parent": "58"
+       },
+       {
+        "id": "50",
+        "role": "StaticText",
+        "name": "Preskoči na vsebino",
+        "ignored": false,
+        "parent": "59"
+       },
+       {
+        "id": "61",
+        "role": "link",
+        "name": "Domov",
+        "ignored": false,
+        "parent": "60"
+       },
+       {
+        "id": "62",
+        "role": "link",
+        "name": "Izdelki",
+        "ignored": false,
+        "parent": "60"
+       },
+       {
+        "id": "64",
+        "role": "heading",
+        "name": "label-in-name",
+        "ignored": false,
+        "parent": "63"
+       },
+       {
+        "id": "65",
+        "role": "button",
+        "name": "Poišči izdelke",
+        "ignored": false,
+        "parent": "63"
+       },
+       {
+        "id": "-1000000023",
+        "role": "InlineTextBox",
+        "name": "Preskoči na vsebino",
+        "ignored": false,
+        "parent": "50"
+       },
+       {
+        "id": "46",
+        "role": "StaticText",
+        "name": "Domov",
+        "ignored": false,
+        "parent": "61"
+       },
+       {
+        "id": "47",
+        "role": "StaticText",
+        "name": "Izdelki",
+        "ignored": false,
+        "parent": "62"
+       },
+       {
+        "id": "48",
+        "role": "StaticText",
+        "name": "label-in-name",
+        "ignored": false,
+        "parent": "64"
+       },
+       {
+        "id": "49",
+        "role": "StaticText",
+        "name": "Išči",
+        "ignored": false,
+        "parent": "65"
+       },
+       {
+        "id": "-1000000019",
+        "role": "InlineTextBox",
+        "name": "Domov",
+        "ignored": false,
+        "parent": "46"
+       },
+       {
+        "id": "-1000000020",
+        "role": "InlineTextBox",
+        "name": "Izdelki",
+        "ignored": false,
+        "parent": "47"
+       },
+       {
+        "id": "-1000000021",
+        "role": "InlineTextBox",
+        "name": "label-in-name",
+        "ignored": false,
+        "parent": "48"
+       },
+       {
+        "id": "-1000000022",
+        "role": "InlineTextBox",
+        "name": "Išči",
+        "ignored": false,
+        "parent": "49"
+       }
+      ]
+     },
+     "expect": {
+      "state": "measuring",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k:measure",
+         "expression": "(() => { const norm = (s) => (s || '').replace(/\\s+/g, ' ').trim(); const sel = (e) => { const p = []; for (let n = e; n && n.nodeType === 1; n = n.parentElement) { if (n.id) { p.unshift('#' + CSS.escape(n.id)); break; } let i = 1; for (let s = n.previousElementSibling; s; s = s.previousElementSibling) { if (s.tagName === n.tagName) i++; } p.unshift(n.tagName.toLowerCase() + (n.parentElement && n.parentElement.querySelectorAll(':scope > ' + n.tagName.toLowerCase()).length > 1 ? ':nth-of-type(' + i + ')' : '')); } return p.join(' > '); }; const content = (n) => { if (n.nodeType === 3) return n.textContent; if (n.nodeType !== 1 || n.getAttribute('aria-hidden') === 'true' || n.hidden) return ''; if (n.tagName === 'IMG') return ' ' + (n.getAttribute('alt') || '') + ' '; return Array.from(n.childNodes).map(content).join(''); }; const ids = (el, attr) => norm((el.getAttribute(attr) || '').split(/\\s+/).filter(Boolean).map((id) => { const t = document.getElementById(id); return t ? content(t) : ''; }).join(' ')); const q = 'a[href],button,img,input:not([type=hidden]),select,textarea,[role=button],[role=link],[role=checkbox],[role=textbox]'; const items = Array.from(document.querySelectorAll(q)).map((el) => ({ selector: sel(el), tag: el.tagName.toLowerCase(), type: el.getAttribute('type') || '', roleAttr: el.getAttribute('role') || '', visible: norm(el.innerText), ariaLabel: norm(el.getAttribute('aria-label')), labelledby: ids(el, 'aria-labelledby'), content: norm(el.tagName === 'IMG' ? '' : content(el)), alt: norm(el.getAttribute('alt')), altPresent: el.hasAttribute('alt'), title: norm(el.getAttribute('title')), value: norm(el.tagName === 'INPUT' && ['button', 'submit', 'reset'].includes(el.type) ? el.value : ''), href: el.tagName === 'A' ? el.href : '', hidden: !!el.closest('[aria-hidden=true],[hidden]') || (el.checkVisibility ? !el.checkVisibility({ visibilityProperty: true }) : false), snippet: el.outerHTML.split('>')[0] + '>' })); return JSON.stringify({ items }); })()"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "measuring",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k:measure",
+      "json": "{\"items\":[{\"selector\":\"html > body > a\",\"tag\":\"a\",\"type\":\"\",\"roleAttr\":\"\",\"visible\":\"Preskoči na vsebino\",\"ariaLabel\":\"\",\"labelledby\":\"\",\"content\":\"Preskoči na vsebino\",\"alt\":\"\",\"altPresent\":false,\"title\":\"\",\"value\":\"\",\"href\":\"http://127.0.0.1:24215/label-in-name-fail.html#main\",\"hidden\":false,\"snippet\":\"<a class=\\\"skip\\\" href=\\\"#main\\\">\"},{\"selector\":\"html > body > nav > a:nth-of-type(1)\",\"tag\":\"a\",\"type\":\"\",\"roleAttr\":\"\",\"visible\":\"Domov\",\"ariaLabel\":\"\",\"labelledby\":\"\",\"content\":\"Domov\",\"alt\":\"\",\"altPresent\":false,\"title\":\"\",\"value\":\"\",\"href\":\"http://127.0.0.1:24215/index.html\",\"hidden\":false,\"snippet\":\"<a href=\\\"index.html\\\">\"},{\"selector\":\"html > body > nav > a:nth-of-type(2)\",\"tag\":\"a\",\"type\":\"\",\"roleAttr\":\"\",\"visible\":\"Izdelki\",\"ariaLabel\":\"\",\"labelledby\":\"\",\"content\":\"Izdelki\",\"alt\":\"\",\"altPresent\":false,\"title\":\"\",\"value\":\"\",\"href\":\"http://127.0.0.1:24215/index.html\",\"hidden\":false,\"snippet\":\"<a href=\\\"index.html\\\">\"},{\"selector\":\"#main > button\",\"tag\":\"button\",\"type\":\"button\",\"roleAttr\":\"\",\"visible\":\"Išči\",\"ariaLabel\":\"Poišči izdelke\",\"labelledby\":\"\",\"content\":\"Išči\",\"alt\":\"\",\"altPresent\":false,\"title\":\"\",\"value\":\"\",\"href\":\"\",\"hidden\":false,\"snippet\":\"<button type=\\\"button\\\" class=\\\"search\\\" aria-label=\\\"Poišči izdelke\\\">\"}]}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "TRANSCRIPT_READY",
+        "payload": {
+         "key": "k",
+         "pageUrl": "http://127.0.0.1:24215/label-in-name-fail.html",
+         "lines": [
+          "dokument: label-in-name",
+          "povezava: Preskoči na vsebino",
+          "navigacija: Glavna navigacija",
+          "povezava: Domov",
+          "povezava: Izdelki",
+          "glavna vsebina: ",
+          "naslov: label-in-name",
+          "gumb: Poišči izdelke"
+         ]
+        }
+       },
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k",
+         "probe": "a11y-tree",
+         "findings": [
+          {
+           "id": "http://127.0.0.1:24215/label-in-name-fail.html#name-mismatch##main > button",
+           "pageUrl": "http://127.0.0.1:24215/label-in-name-fail.html",
+           "rule": "name-mismatch",
+           "wcag": [
+            {
+             "criterion": "2.5.3",
+             "level": "A",
+             "version": "2.1"
+            }
+           ],
+           "method": "probe",
+           "engines": [
+            "probe"
+           ],
+           "impact": "moderate",
+           "confidence": "confirmed",
+           "selector": "#main > button",
+           "snippet": "<button type=\"button\" class=\"search\" aria-label=\"Poišči izdelke\">",
+           "evidence": "",
+           "count": 1
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: label-in-name-pass has the name Išči izdelke, which starts with the visible Išči",
+   "steps": [
+    {
+     "from": "idle",
+     "event": "PROBE_RUN",
+     "payload": {
+      "key": "k",
+      "pageUrl": "http://127.0.0.1:24215/label-in-name-pass.html"
+     },
+     "expect": {
+      "state": "reading",
+      "emits": [
+       {
+        "event": "PAGE_AX_TREE",
+        "payload": {
+         "key": "k:ax"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "reading",
+     "event": "PAGE_AX_TREE_READ",
+     "payload": {
+      "key": "k:ax",
+      "nodes": [
+       {
+        "id": "71",
+        "role": "RootWebArea",
+        "name": "label-in-name",
+        "ignored": false
+       },
+       {
+        "id": "72",
+        "role": "none",
+        "name": "",
+        "ignored": true,
+        "parent": "71"
+       },
+       {
+        "id": "78",
+        "role": "none",
+        "name": "",
+        "ignored": true,
+        "parent": "72"
+       },
+       {
+        "id": "79",
+        "role": "link",
+        "name": "Preskoči na vsebino",
+        "ignored": false,
+        "parent": "78"
+       },
+       {
+        "id": "80",
+        "role": "navigation",
+        "name": "Glavna navigacija",
+        "ignored": false,
+        "parent": "78"
+       },
+       {
+        "id": "83",
+        "role": "main",
+        "name": "",
+        "ignored": false,
+        "parent": "78"
+       },
+       {
+        "id": "70",
+        "role": "StaticText",
+        "name": "Preskoči na vsebino",
+        "ignored": false,
+        "parent": "79"
+       },
+       {
+        "id": "81",
+        "role": "link",
+        "name": "Domov",
+        "ignored": false,
+        "parent": "80"
+       },
+       {
+        "id": "82",
+        "role": "link",
+        "name": "Izdelki",
+        "ignored": false,
+        "parent": "80"
+       },
+       {
+        "id": "84",
+        "role": "heading",
+        "name": "label-in-name",
+        "ignored": false,
+        "parent": "83"
+       },
+       {
+        "id": "85",
+        "role": "button",
+        "name": "Išči izdelke",
+        "ignored": false,
+        "parent": "83"
+       },
+       {
+        "id": "-1000000033",
+        "role": "InlineTextBox",
+        "name": "Preskoči na vsebino",
+        "ignored": false,
+        "parent": "70"
+       },
+       {
+        "id": "66",
+        "role": "StaticText",
+        "name": "Domov",
+        "ignored": false,
+        "parent": "81"
+       },
+       {
+        "id": "67",
+        "role": "StaticText",
+        "name": "Izdelki",
+        "ignored": false,
+        "parent": "82"
+       },
+       {
+        "id": "68",
+        "role": "StaticText",
+        "name": "label-in-name",
+        "ignored": false,
+        "parent": "84"
+       },
+       {
+        "id": "69",
+        "role": "StaticText",
+        "name": "Išči",
+        "ignored": false,
+        "parent": "85"
+       },
+       {
+        "id": "-1000000029",
+        "role": "InlineTextBox",
+        "name": "Domov",
+        "ignored": false,
+        "parent": "66"
+       },
+       {
+        "id": "-1000000030",
+        "role": "InlineTextBox",
+        "name": "Izdelki",
+        "ignored": false,
+        "parent": "67"
+       },
+       {
+        "id": "-1000000031",
+        "role": "InlineTextBox",
+        "name": "label-in-name",
+        "ignored": false,
+        "parent": "68"
+       },
+       {
+        "id": "-1000000032",
+        "role": "InlineTextBox",
+        "name": "Išči",
+        "ignored": false,
+        "parent": "69"
+       }
+      ]
+     },
+     "expect": {
+      "state": "measuring",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k:measure",
+         "expression": "(() => { const norm = (s) => (s || '').replace(/\\s+/g, ' ').trim(); const sel = (e) => { const p = []; for (let n = e; n && n.nodeType === 1; n = n.parentElement) { if (n.id) { p.unshift('#' + CSS.escape(n.id)); break; } let i = 1; for (let s = n.previousElementSibling; s; s = s.previousElementSibling) { if (s.tagName === n.tagName) i++; } p.unshift(n.tagName.toLowerCase() + (n.parentElement && n.parentElement.querySelectorAll(':scope > ' + n.tagName.toLowerCase()).length > 1 ? ':nth-of-type(' + i + ')' : '')); } return p.join(' > '); }; const content = (n) => { if (n.nodeType === 3) return n.textContent; if (n.nodeType !== 1 || n.getAttribute('aria-hidden') === 'true' || n.hidden) return ''; if (n.tagName === 'IMG') return ' ' + (n.getAttribute('alt') || '') + ' '; return Array.from(n.childNodes).map(content).join(''); }; const ids = (el, attr) => norm((el.getAttribute(attr) || '').split(/\\s+/).filter(Boolean).map((id) => { const t = document.getElementById(id); return t ? content(t) : ''; }).join(' ')); const q = 'a[href],button,img,input:not([type=hidden]),select,textarea,[role=button],[role=link],[role=checkbox],[role=textbox]'; const items = Array.from(document.querySelectorAll(q)).map((el) => ({ selector: sel(el), tag: el.tagName.toLowerCase(), type: el.getAttribute('type') || '', roleAttr: el.getAttribute('role') || '', visible: norm(el.innerText), ariaLabel: norm(el.getAttribute('aria-label')), labelledby: ids(el, 'aria-labelledby'), content: norm(el.tagName === 'IMG' ? '' : content(el)), alt: norm(el.getAttribute('alt')), altPresent: el.hasAttribute('alt'), title: norm(el.getAttribute('title')), value: norm(el.tagName === 'INPUT' && ['button', 'submit', 'reset'].includes(el.type) ? el.value : ''), href: el.tagName === 'A' ? el.href : '', hidden: !!el.closest('[aria-hidden=true],[hidden]') || (el.checkVisibility ? !el.checkVisibility({ visibilityProperty: true }) : false), snippet: el.outerHTML.split('>')[0] + '>' })); return JSON.stringify({ items }); })()"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "measuring",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k:measure",
+      "json": "{\"items\":[{\"selector\":\"html > body > a\",\"tag\":\"a\",\"type\":\"\",\"roleAttr\":\"\",\"visible\":\"Preskoči na vsebino\",\"ariaLabel\":\"\",\"labelledby\":\"\",\"content\":\"Preskoči na vsebino\",\"alt\":\"\",\"altPresent\":false,\"title\":\"\",\"value\":\"\",\"href\":\"http://127.0.0.1:24215/label-in-name-pass.html#main\",\"hidden\":false,\"snippet\":\"<a class=\\\"skip\\\" href=\\\"#main\\\">\"},{\"selector\":\"html > body > nav > a:nth-of-type(1)\",\"tag\":\"a\",\"type\":\"\",\"roleAttr\":\"\",\"visible\":\"Domov\",\"ariaLabel\":\"\",\"labelledby\":\"\",\"content\":\"Domov\",\"alt\":\"\",\"altPresent\":false,\"title\":\"\",\"value\":\"\",\"href\":\"http://127.0.0.1:24215/index.html\",\"hidden\":false,\"snippet\":\"<a href=\\\"index.html\\\">\"},{\"selector\":\"html > body > nav > a:nth-of-type(2)\",\"tag\":\"a\",\"type\":\"\",\"roleAttr\":\"\",\"visible\":\"Izdelki\",\"ariaLabel\":\"\",\"labelledby\":\"\",\"content\":\"Izdelki\",\"alt\":\"\",\"altPresent\":false,\"title\":\"\",\"value\":\"\",\"href\":\"http://127.0.0.1:24215/index.html\",\"hidden\":false,\"snippet\":\"<a href=\\\"index.html\\\">\"},{\"selector\":\"#main > button\",\"tag\":\"button\",\"type\":\"button\",\"roleAttr\":\"\",\"visible\":\"Išči\",\"ariaLabel\":\"Išči izdelke\",\"labelledby\":\"\",\"content\":\"Išči\",\"alt\":\"\",\"altPresent\":false,\"title\":\"\",\"value\":\"\",\"href\":\"\",\"hidden\":false,\"snippet\":\"<button type=\\\"button\\\" class=\\\"search\\\" aria-label=\\\"Išči izdelke\\\">\"}]}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "TRANSCRIPT_READY",
+        "payload": {
+         "key": "k",
+         "pageUrl": "http://127.0.0.1:24215/label-in-name-pass.html",
+         "lines": [
+          "dokument: label-in-name",
+          "povezava: Preskoči na vsebino",
+          "navigacija: Glavna navigacija",
+          "povezava: Domov",
+          "povezava: Izdelki",
+          "glavna vsebina: ",
+          "naslov: label-in-name",
+          "gumb: Išči izdelke"
+         ]
+        }
+       },
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k",
+         "probe": "a11y-tree",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a link with only an image with no alt has no name (needs-verification when the tree holds no nameless link); the image is a name-missing too",
+   "steps": [
+    {
+     "from": "idle",
+     "event": "PROBE_RUN",
+     "payload": {
+      "key": "k",
+      "pageUrl": "https://a.test/p"
+     },
+     "expect": {
+      "state": "reading",
+      "emits": [
+       {
+        "event": "PAGE_AX_TREE",
+        "payload": {
+         "key": "k:ax"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "reading",
+     "event": "PAGE_AX_TREE_READ",
+     "payload": {
+      "key": "k:ax",
+      "nodes": [
+       {
+        "id": "1",
+        "role": "RootWebArea",
+        "name": "T",
+        "ignored": false
+       },
+       {
+        "id": "2",
+        "role": "main",
+        "name": "",
+        "ignored": false,
+        "parent": "1"
+       }
+      ]
+     },
+     "expect": {
+      "state": "measuring",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k:measure",
+         "expression": "(() => { const norm = (s) => (s || '').replace(/\\s+/g, ' ').trim(); const sel = (e) => { const p = []; for (let n = e; n && n.nodeType === 1; n = n.parentElement) { if (n.id) { p.unshift('#' + CSS.escape(n.id)); break; } let i = 1; for (let s = n.previousElementSibling; s; s = s.previousElementSibling) { if (s.tagName === n.tagName) i++; } p.unshift(n.tagName.toLowerCase() + (n.parentElement && n.parentElement.querySelectorAll(':scope > ' + n.tagName.toLowerCase()).length > 1 ? ':nth-of-type(' + i + ')' : '')); } return p.join(' > '); }; const content = (n) => { if (n.nodeType === 3) return n.textContent; if (n.nodeType !== 1 || n.getAttribute('aria-hidden') === 'true' || n.hidden) return ''; if (n.tagName === 'IMG') return ' ' + (n.getAttribute('alt') || '') + ' '; return Array.from(n.childNodes).map(content).join(''); }; const ids = (el, attr) => norm((el.getAttribute(attr) || '').split(/\\s+/).filter(Boolean).map((id) => { const t = document.getElementById(id); return t ? content(t) : ''; }).join(' ')); const q = 'a[href],button,img,input:not([type=hidden]),select,textarea,[role=button],[role=link],[role=checkbox],[role=textbox]'; const items = Array.from(document.querySelectorAll(q)).map((el) => ({ selector: sel(el), tag: el.tagName.toLowerCase(), type: el.getAttribute('type') || '', roleAttr: el.getAttribute('role') || '', visible: norm(el.innerText), ariaLabel: norm(el.getAttribute('aria-label')), labelledby: ids(el, 'aria-labelledby'), content: norm(el.tagName === 'IMG' ? '' : content(el)), alt: norm(el.getAttribute('alt')), altPresent: el.hasAttribute('alt'), title: norm(el.getAttribute('title')), value: norm(el.tagName === 'INPUT' && ['button', 'submit', 'reset'].includes(el.type) ? el.value : ''), href: el.tagName === 'A' ? el.href : '', hidden: !!el.closest('[aria-hidden=true],[hidden]') || (el.checkVisibility ? !el.checkVisibility({ visibilityProperty: true }) : false), snippet: el.outerHTML.split('>')[0] + '>' })); return JSON.stringify({ items }); })()"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "measuring",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k:measure",
+      "json": "{\"items\":[{\"selector\":\"a.home\",\"snippet\":\"<a class=\\\"home\\\">\",\"tag\":\"a\",\"type\":\"\",\"roleAttr\":\"\",\"visible\":\"\",\"ariaLabel\":\"\",\"labelledby\":\"\",\"content\":\"\",\"alt\":\"\",\"altPresent\":false,\"title\":\"\",\"value\":\"\",\"href\":\"https://a.test/\",\"hidden\":false},{\"selector\":\"a.home img\",\"snippet\":\"<img>\",\"tag\":\"img\",\"type\":\"\",\"roleAttr\":\"\",\"visible\":\"\",\"ariaLabel\":\"\",\"labelledby\":\"\",\"content\":\"\",\"alt\":\"\",\"altPresent\":false,\"title\":\"\",\"value\":\"\",\"href\":\"\",\"hidden\":false}]}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "TRANSCRIPT_READY",
+        "payload": {
+         "key": "k",
+         "pageUrl": "https://a.test/p",
+         "lines": [
+          "dokument: T",
+          "glavna vsebina: "
+         ]
+        }
+       },
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k",
+         "probe": "a11y-tree",
+         "findings": [
+          {
+           "id": "https://a.test/p#name-missing#a.home",
+           "pageUrl": "https://a.test/p",
+           "rule": "name-missing",
+           "wcag": [
+            {
+             "criterion": "2.4.4",
+             "level": "A",
+             "version": "2.0"
+            },
+            {
+             "criterion": "4.1.2",
+             "level": "A",
+             "version": "2.0"
+            }
+           ],
+           "method": "probe",
+           "engines": [
+            "probe"
+           ],
+           "impact": "serious",
+           "confidence": "needs-verification",
+           "selector": "a.home",
+           "snippet": "<a class=\"home\">",
+           "evidence": "",
+           "count": 1
+          },
+          {
+           "id": "https://a.test/p#name-missing#a.home img",
+           "pageUrl": "https://a.test/p",
+           "rule": "name-missing",
+           "wcag": [
+            {
+             "criterion": "1.1.1",
+             "level": "A",
+             "version": "2.0"
+            }
+           ],
+           "method": "probe",
+           "engines": [
+            "probe"
+           ],
+           "impact": "serious",
+           "confidence": "needs-verification",
+           "selector": "a.home img",
+           "snippet": "<img>",
+           "evidence": "",
+           "count": 1
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: an img with alt attribute and empty text is decorative and is not a name-missing",
+   "steps": [
+    {
+     "from": "idle",
+     "event": "PROBE_RUN",
+     "payload": {
+      "key": "k",
+      "pageUrl": "https://a.test/p"
+     },
+     "expect": {
+      "state": "reading",
+      "emits": [
+       {
+        "event": "PAGE_AX_TREE",
+        "payload": {
+         "key": "k:ax"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "reading",
+     "event": "PAGE_AX_TREE_READ",
+     "payload": {
+      "key": "k:ax",
+      "nodes": [
+       {
+        "id": "1",
+        "role": "RootWebArea",
+        "name": "T",
+        "ignored": false
+       },
+       {
+        "id": "2",
+        "role": "main",
+        "name": "",
+        "ignored": false,
+        "parent": "1"
+       }
+      ]
+     },
+     "expect": {
+      "state": "measuring",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k:measure",
+         "expression": "(() => { const norm = (s) => (s || '').replace(/\\s+/g, ' ').trim(); const sel = (e) => { const p = []; for (let n = e; n && n.nodeType === 1; n = n.parentElement) { if (n.id) { p.unshift('#' + CSS.escape(n.id)); break; } let i = 1; for (let s = n.previousElementSibling; s; s = s.previousElementSibling) { if (s.tagName === n.tagName) i++; } p.unshift(n.tagName.toLowerCase() + (n.parentElement && n.parentElement.querySelectorAll(':scope > ' + n.tagName.toLowerCase()).length > 1 ? ':nth-of-type(' + i + ')' : '')); } return p.join(' > '); }; const content = (n) => { if (n.nodeType === 3) return n.textContent; if (n.nodeType !== 1 || n.getAttribute('aria-hidden') === 'true' || n.hidden) return ''; if (n.tagName === 'IMG') return ' ' + (n.getAttribute('alt') || '') + ' '; return Array.from(n.childNodes).map(content).join(''); }; const ids = (el, attr) => norm((el.getAttribute(attr) || '').split(/\\s+/).filter(Boolean).map((id) => { const t = document.getElementById(id); return t ? content(t) : ''; }).join(' ')); const q = 'a[href],button,img,input:not([type=hidden]),select,textarea,[role=button],[role=link],[role=checkbox],[role=textbox]'; const items = Array.from(document.querySelectorAll(q)).map((el) => ({ selector: sel(el), tag: el.tagName.toLowerCase(), type: el.getAttribute('type') || '', roleAttr: el.getAttribute('role') || '', visible: norm(el.innerText), ariaLabel: norm(el.getAttribute('aria-label')), labelledby: ids(el, 'aria-labelledby'), content: norm(el.tagName === 'IMG' ? '' : content(el)), alt: norm(el.getAttribute('alt')), altPresent: el.hasAttribute('alt'), title: norm(el.getAttribute('title')), value: norm(el.tagName === 'INPUT' && ['button', 'submit', 'reset'].includes(el.type) ? el.value : ''), href: el.tagName === 'A' ? el.href : '', hidden: !!el.closest('[aria-hidden=true],[hidden]') || (el.checkVisibility ? !el.checkVisibility({ visibilityProperty: true }) : false), snippet: el.outerHTML.split('>')[0] + '>' })); return JSON.stringify({ items }); })()"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "measuring",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k:measure",
+      "json": "{\"items\":[{\"selector\":\"img.deco\",\"snippet\":\"<img>\",\"tag\":\"img\",\"type\":\"\",\"roleAttr\":\"\",\"visible\":\"\",\"ariaLabel\":\"\",\"labelledby\":\"\",\"content\":\"\",\"alt\":\"\",\"altPresent\":true,\"title\":\"\",\"value\":\"\",\"href\":\"\",\"hidden\":false}]}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "TRANSCRIPT_READY",
+        "payload": {
+         "key": "k",
+         "pageUrl": "https://a.test/p",
+         "lines": [
+          "dokument: T",
+          "glavna vsebina: "
+         ]
+        }
+       },
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k",
+         "probe": "a11y-tree",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an img with no alt attribute is a name-missing, confirmed when the tree has a nameless image node",
+   "steps": [
+    {
+     "from": "idle",
+     "event": "PROBE_RUN",
+     "payload": {
+      "key": "k",
+      "pageUrl": "https://a.test/p"
+     },
+     "expect": {
+      "state": "reading",
+      "emits": [
+       {
+        "event": "PAGE_AX_TREE",
+        "payload": {
+         "key": "k:ax"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "reading",
+     "event": "PAGE_AX_TREE_READ",
+     "payload": {
+      "key": "k:ax",
+      "nodes": [
+       {
+        "id": "1",
+        "role": "RootWebArea",
+        "name": "T",
+        "ignored": false
+       },
+       {
+        "id": "2",
+        "role": "main",
+        "name": "",
+        "ignored": false,
+        "parent": "1"
+       },
+       {
+        "id": "3",
+        "role": "image",
+        "name": "",
+        "ignored": false,
+        "parent": "2"
+       }
+      ]
+     },
+     "expect": {
+      "state": "measuring",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k:measure",
+         "expression": "(() => { const norm = (s) => (s || '').replace(/\\s+/g, ' ').trim(); const sel = (e) => { const p = []; for (let n = e; n && n.nodeType === 1; n = n.parentElement) { if (n.id) { p.unshift('#' + CSS.escape(n.id)); break; } let i = 1; for (let s = n.previousElementSibling; s; s = s.previousElementSibling) { if (s.tagName === n.tagName) i++; } p.unshift(n.tagName.toLowerCase() + (n.parentElement && n.parentElement.querySelectorAll(':scope > ' + n.tagName.toLowerCase()).length > 1 ? ':nth-of-type(' + i + ')' : '')); } return p.join(' > '); }; const content = (n) => { if (n.nodeType === 3) return n.textContent; if (n.nodeType !== 1 || n.getAttribute('aria-hidden') === 'true' || n.hidden) return ''; if (n.tagName === 'IMG') return ' ' + (n.getAttribute('alt') || '') + ' '; return Array.from(n.childNodes).map(content).join(''); }; const ids = (el, attr) => norm((el.getAttribute(attr) || '').split(/\\s+/).filter(Boolean).map((id) => { const t = document.getElementById(id); return t ? content(t) : ''; }).join(' ')); const q = 'a[href],button,img,input:not([type=hidden]),select,textarea,[role=button],[role=link],[role=checkbox],[role=textbox]'; const items = Array.from(document.querySelectorAll(q)).map((el) => ({ selector: sel(el), tag: el.tagName.toLowerCase(), type: el.getAttribute('type') || '', roleAttr: el.getAttribute('role') || '', visible: norm(el.innerText), ariaLabel: norm(el.getAttribute('aria-label')), labelledby: ids(el, 'aria-labelledby'), content: norm(el.tagName === 'IMG' ? '' : content(el)), alt: norm(el.getAttribute('alt')), altPresent: el.hasAttribute('alt'), title: norm(el.getAttribute('title')), value: norm(el.tagName === 'INPUT' && ['button', 'submit', 'reset'].includes(el.type) ? el.value : ''), href: el.tagName === 'A' ? el.href : '', hidden: !!el.closest('[aria-hidden=true],[hidden]') || (el.checkVisibility ? !el.checkVisibility({ visibilityProperty: true }) : false), snippet: el.outerHTML.split('>')[0] + '>' })); return JSON.stringify({ items }); })()"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "measuring",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k:measure",
+      "json": "{\"items\":[{\"selector\":\"img.photo\",\"snippet\":\"<img class=\\\"photo\\\">\",\"tag\":\"img\",\"type\":\"\",\"roleAttr\":\"\",\"visible\":\"\",\"ariaLabel\":\"\",\"labelledby\":\"\",\"content\":\"\",\"alt\":\"\",\"altPresent\":false,\"title\":\"\",\"value\":\"\",\"href\":\"\",\"hidden\":false}]}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "TRANSCRIPT_READY",
+        "payload": {
+         "key": "k",
+         "pageUrl": "https://a.test/p",
+         "lines": [
+          "dokument: T",
+          "glavna vsebina: ",
+          "slika: "
+         ]
+        }
+       },
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k",
+         "probe": "a11y-tree",
+         "findings": [
+          {
+           "id": "https://a.test/p#name-missing#img.photo",
+           "pageUrl": "https://a.test/p",
+           "rule": "name-missing",
+           "wcag": [
+            {
+             "criterion": "1.1.1",
+             "level": "A",
+             "version": "2.0"
+            }
+           ],
+           "method": "probe",
+           "engines": [
+            "probe"
+           ],
+           "impact": "serious",
+           "confidence": "confirmed",
+           "selector": "img.photo",
+           "snippet": "<img class=\"photo\">",
+           "evidence": "",
+           "count": 1
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a hidden unnamed button (aria-hidden ancestor) is not a name-missing",
+   "steps": [
+    {
+     "from": "idle",
+     "event": "PROBE_RUN",
+     "payload": {
+      "key": "k",
+      "pageUrl": "https://a.test/p"
+     },
+     "expect": {
+      "state": "reading",
+      "emits": [
+       {
+        "event": "PAGE_AX_TREE",
+        "payload": {
+         "key": "k:ax"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "reading",
+     "event": "PAGE_AX_TREE_READ",
+     "payload": {
+      "key": "k:ax",
+      "nodes": [
+       {
+        "id": "1",
+        "role": "RootWebArea",
+        "name": "T",
+        "ignored": false
+       },
+       {
+        "id": "2",
+        "role": "main",
+        "name": "",
+        "ignored": false,
+        "parent": "1"
+       }
+      ]
+     },
+     "expect": {
+      "state": "measuring",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k:measure",
+         "expression": "(() => { const norm = (s) => (s || '').replace(/\\s+/g, ' ').trim(); const sel = (e) => { const p = []; for (let n = e; n && n.nodeType === 1; n = n.parentElement) { if (n.id) { p.unshift('#' + CSS.escape(n.id)); break; } let i = 1; for (let s = n.previousElementSibling; s; s = s.previousElementSibling) { if (s.tagName === n.tagName) i++; } p.unshift(n.tagName.toLowerCase() + (n.parentElement && n.parentElement.querySelectorAll(':scope > ' + n.tagName.toLowerCase()).length > 1 ? ':nth-of-type(' + i + ')' : '')); } return p.join(' > '); }; const content = (n) => { if (n.nodeType === 3) return n.textContent; if (n.nodeType !== 1 || n.getAttribute('aria-hidden') === 'true' || n.hidden) return ''; if (n.tagName === 'IMG') return ' ' + (n.getAttribute('alt') || '') + ' '; return Array.from(n.childNodes).map(content).join(''); }; const ids = (el, attr) => norm((el.getAttribute(attr) || '').split(/\\s+/).filter(Boolean).map((id) => { const t = document.getElementById(id); return t ? content(t) : ''; }).join(' ')); const q = 'a[href],button,img,input:not([type=hidden]),select,textarea,[role=button],[role=link],[role=checkbox],[role=textbox]'; const items = Array.from(document.querySelectorAll(q)).map((el) => ({ selector: sel(el), tag: el.tagName.toLowerCase(), type: el.getAttribute('type') || '', roleAttr: el.getAttribute('role') || '', visible: norm(el.innerText), ariaLabel: norm(el.getAttribute('aria-label')), labelledby: ids(el, 'aria-labelledby'), content: norm(el.tagName === 'IMG' ? '' : content(el)), alt: norm(el.getAttribute('alt')), altPresent: el.hasAttribute('alt'), title: norm(el.getAttribute('title')), value: norm(el.tagName === 'INPUT' && ['button', 'submit', 'reset'].includes(el.type) ? el.value : ''), href: el.tagName === 'A' ? el.href : '', hidden: !!el.closest('[aria-hidden=true],[hidden]') || (el.checkVisibility ? !el.checkVisibility({ visibilityProperty: true }) : false), snippet: el.outerHTML.split('>')[0] + '>' })); return JSON.stringify({ items }); })()"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "measuring",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k:measure",
+      "json": "{\"items\":[{\"selector\":\"button.x\",\"snippet\":\"<button>\",\"tag\":\"button\",\"type\":\"\",\"roleAttr\":\"\",\"visible\":\"\",\"ariaLabel\":\"\",\"labelledby\":\"\",\"content\":\"\",\"alt\":\"\",\"altPresent\":false,\"title\":\"\",\"value\":\"\",\"href\":\"\",\"hidden\":true}]}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "TRANSCRIPT_READY",
+        "payload": {
+         "key": "k",
+         "pageUrl": "https://a.test/p",
+         "lines": [
+          "dokument: T",
+          "glavna vsebina: "
+         ]
+        }
+       },
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k",
+         "probe": "a11y-tree",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "aria-labelledby text wins over aria-label and content, so the button is named",
+   "steps": [
+    {
+     "from": "idle",
+     "event": "PROBE_RUN",
+     "payload": {
+      "key": "k",
+      "pageUrl": "https://a.test/p"
+     },
+     "expect": {
+      "state": "reading",
+      "emits": [
+       {
+        "event": "PAGE_AX_TREE",
+        "payload": {
+         "key": "k:ax"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "reading",
+     "event": "PAGE_AX_TREE_READ",
+     "payload": {
+      "key": "k:ax",
+      "nodes": [
+       {
+        "id": "1",
+        "role": "RootWebArea",
+        "name": "T",
+        "ignored": false
+       },
+       {
+        "id": "2",
+        "role": "main",
+        "name": "",
+        "ignored": false,
+        "parent": "1"
+       }
+      ]
+     },
+     "expect": {
+      "state": "measuring",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k:measure",
+         "expression": "(() => { const norm = (s) => (s || '').replace(/\\s+/g, ' ').trim(); const sel = (e) => { const p = []; for (let n = e; n && n.nodeType === 1; n = n.parentElement) { if (n.id) { p.unshift('#' + CSS.escape(n.id)); break; } let i = 1; for (let s = n.previousElementSibling; s; s = s.previousElementSibling) { if (s.tagName === n.tagName) i++; } p.unshift(n.tagName.toLowerCase() + (n.parentElement && n.parentElement.querySelectorAll(':scope > ' + n.tagName.toLowerCase()).length > 1 ? ':nth-of-type(' + i + ')' : '')); } return p.join(' > '); }; const content = (n) => { if (n.nodeType === 3) return n.textContent; if (n.nodeType !== 1 || n.getAttribute('aria-hidden') === 'true' || n.hidden) return ''; if (n.tagName === 'IMG') return ' ' + (n.getAttribute('alt') || '') + ' '; return Array.from(n.childNodes).map(content).join(''); }; const ids = (el, attr) => norm((el.getAttribute(attr) || '').split(/\\s+/).filter(Boolean).map((id) => { const t = document.getElementById(id); return t ? content(t) : ''; }).join(' ')); const q = 'a[href],button,img,input:not([type=hidden]),select,textarea,[role=button],[role=link],[role=checkbox],[role=textbox]'; const items = Array.from(document.querySelectorAll(q)).map((el) => ({ selector: sel(el), tag: el.tagName.toLowerCase(), type: el.getAttribute('type') || '', roleAttr: el.getAttribute('role') || '', visible: norm(el.innerText), ariaLabel: norm(el.getAttribute('aria-label')), labelledby: ids(el, 'aria-labelledby'), content: norm(el.tagName === 'IMG' ? '' : content(el)), alt: norm(el.getAttribute('alt')), altPresent: el.hasAttribute('alt'), title: norm(el.getAttribute('title')), value: norm(el.tagName === 'INPUT' && ['button', 'submit', 'reset'].includes(el.type) ? el.value : ''), href: el.tagName === 'A' ? el.href : '', hidden: !!el.closest('[aria-hidden=true],[hidden]') || (el.checkVisibility ? !el.checkVisibility({ visibilityProperty: true }) : false), snippet: el.outerHTML.split('>')[0] + '>' })); return JSON.stringify({ items }); })()"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "measuring",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k:measure",
+      "json": "{\"items\":[{\"selector\":\"button.x\",\"snippet\":\"<button>\",\"tag\":\"button\",\"type\":\"\",\"roleAttr\":\"\",\"visible\":\"Dodaj\",\"ariaLabel\":\"x\",\"labelledby\":\"Dodaj v košarico\",\"content\":\"Dodaj\",\"alt\":\"\",\"altPresent\":false,\"title\":\"\",\"value\":\"\",\"href\":\"\",\"hidden\":false}]}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "TRANSCRIPT_READY",
+        "payload": {
+         "key": "k",
+         "pageUrl": "https://a.test/p",
+         "lines": [
+          "dokument: T",
+          "glavna vsebina: "
+         ]
+        }
+       },
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k",
+         "probe": "a11y-tree",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a button named only by its title is named",
+   "steps": [
+    {
+     "from": "idle",
+     "event": "PROBE_RUN",
+     "payload": {
+      "key": "k",
+      "pageUrl": "https://a.test/p"
+     },
+     "expect": {
+      "state": "reading",
+      "emits": [
+       {
+        "event": "PAGE_AX_TREE",
+        "payload": {
+         "key": "k:ax"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "reading",
+     "event": "PAGE_AX_TREE_READ",
+     "payload": {
+      "key": "k:ax",
+      "nodes": [
+       {
+        "id": "1",
+        "role": "RootWebArea",
+        "name": "T",
+        "ignored": false
+       },
+       {
+        "id": "2",
+        "role": "main",
+        "name": "",
+        "ignored": false,
+        "parent": "1"
+       }
+      ]
+     },
+     "expect": {
+      "state": "measuring",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k:measure",
+         "expression": "(() => { const norm = (s) => (s || '').replace(/\\s+/g, ' ').trim(); const sel = (e) => { const p = []; for (let n = e; n && n.nodeType === 1; n = n.parentElement) { if (n.id) { p.unshift('#' + CSS.escape(n.id)); break; } let i = 1; for (let s = n.previousElementSibling; s; s = s.previousElementSibling) { if (s.tagName === n.tagName) i++; } p.unshift(n.tagName.toLowerCase() + (n.parentElement && n.parentElement.querySelectorAll(':scope > ' + n.tagName.toLowerCase()).length > 1 ? ':nth-of-type(' + i + ')' : '')); } return p.join(' > '); }; const content = (n) => { if (n.nodeType === 3) return n.textContent; if (n.nodeType !== 1 || n.getAttribute('aria-hidden') === 'true' || n.hidden) return ''; if (n.tagName === 'IMG') return ' ' + (n.getAttribute('alt') || '') + ' '; return Array.from(n.childNodes).map(content).join(''); }; const ids = (el, attr) => norm((el.getAttribute(attr) || '').split(/\\s+/).filter(Boolean).map((id) => { const t = document.getElementById(id); return t ? content(t) : ''; }).join(' ')); const q = 'a[href],button,img,input:not([type=hidden]),select,textarea,[role=button],[role=link],[role=checkbox],[role=textbox]'; const items = Array.from(document.querySelectorAll(q)).map((el) => ({ selector: sel(el), tag: el.tagName.toLowerCase(), type: el.getAttribute('type') || '', roleAttr: el.getAttribute('role') || '', visible: norm(el.innerText), ariaLabel: norm(el.getAttribute('aria-label')), labelledby: ids(el, 'aria-labelledby'), content: norm(el.tagName === 'IMG' ? '' : content(el)), alt: norm(el.getAttribute('alt')), altPresent: el.hasAttribute('alt'), title: norm(el.getAttribute('title')), value: norm(el.tagName === 'INPUT' && ['button', 'submit', 'reset'].includes(el.type) ? el.value : ''), href: el.tagName === 'A' ? el.href : '', hidden: !!el.closest('[aria-hidden=true],[hidden]') || (el.checkVisibility ? !el.checkVisibility({ visibilityProperty: true }) : false), snippet: el.outerHTML.split('>')[0] + '>' })); return JSON.stringify({ items }); })()"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "measuring",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k:measure",
+      "json": "{\"items\":[{\"selector\":\"button.x\",\"snippet\":\"<button>\",\"tag\":\"button\",\"type\":\"\",\"roleAttr\":\"\",\"visible\":\"\",\"ariaLabel\":\"\",\"labelledby\":\"\",\"content\":\"\",\"alt\":\"\",\"altPresent\":false,\"title\":\"Zapri\",\"value\":\"\",\"href\":\"\",\"hidden\":false}]}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "TRANSCRIPT_READY",
+        "payload": {
+         "key": "k",
+         "pageUrl": "https://a.test/p",
+         "lines": [
+          "dokument: T",
+          "glavna vsebina: "
+         ]
+        }
+       },
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k",
+         "probe": "a11y-tree",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an input of type submit is named by its value, and is empty without it",
+   "steps": [
+    {
+     "from": "idle",
+     "event": "PROBE_RUN",
+     "payload": {
+      "key": "k",
+      "pageUrl": "https://a.test/p"
+     },
+     "expect": {
+      "state": "reading",
+      "emits": [
+       {
+        "event": "PAGE_AX_TREE",
+        "payload": {
+         "key": "k:ax"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "reading",
+     "event": "PAGE_AX_TREE_READ",
+     "payload": {
+      "key": "k:ax",
+      "nodes": [
+       {
+        "id": "1",
+        "role": "RootWebArea",
+        "name": "T",
+        "ignored": false
+       },
+       {
+        "id": "2",
+        "role": "main",
+        "name": "",
+        "ignored": false,
+        "parent": "1"
+       }
+      ]
+     },
+     "expect": {
+      "state": "measuring",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k:measure",
+         "expression": "(() => { const norm = (s) => (s || '').replace(/\\s+/g, ' ').trim(); const sel = (e) => { const p = []; for (let n = e; n && n.nodeType === 1; n = n.parentElement) { if (n.id) { p.unshift('#' + CSS.escape(n.id)); break; } let i = 1; for (let s = n.previousElementSibling; s; s = s.previousElementSibling) { if (s.tagName === n.tagName) i++; } p.unshift(n.tagName.toLowerCase() + (n.parentElement && n.parentElement.querySelectorAll(':scope > ' + n.tagName.toLowerCase()).length > 1 ? ':nth-of-type(' + i + ')' : '')); } return p.join(' > '); }; const content = (n) => { if (n.nodeType === 3) return n.textContent; if (n.nodeType !== 1 || n.getAttribute('aria-hidden') === 'true' || n.hidden) return ''; if (n.tagName === 'IMG') return ' ' + (n.getAttribute('alt') || '') + ' '; return Array.from(n.childNodes).map(content).join(''); }; const ids = (el, attr) => norm((el.getAttribute(attr) || '').split(/\\s+/).filter(Boolean).map((id) => { const t = document.getElementById(id); return t ? content(t) : ''; }).join(' ')); const q = 'a[href],button,img,input:not([type=hidden]),select,textarea,[role=button],[role=link],[role=checkbox],[role=textbox]'; const items = Array.from(document.querySelectorAll(q)).map((el) => ({ selector: sel(el), tag: el.tagName.toLowerCase(), type: el.getAttribute('type') || '', roleAttr: el.getAttribute('role') || '', visible: norm(el.innerText), ariaLabel: norm(el.getAttribute('aria-label')), labelledby: ids(el, 'aria-labelledby'), content: norm(el.tagName === 'IMG' ? '' : content(el)), alt: norm(el.getAttribute('alt')), altPresent: el.hasAttribute('alt'), title: norm(el.getAttribute('title')), value: norm(el.tagName === 'INPUT' && ['button', 'submit', 'reset'].includes(el.type) ? el.value : ''), href: el.tagName === 'A' ? el.href : '', hidden: !!el.closest('[aria-hidden=true],[hidden]') || (el.checkVisibility ? !el.checkVisibility({ visibilityProperty: true }) : false), snippet: el.outerHTML.split('>')[0] + '>' })); return JSON.stringify({ items }); })()"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "measuring",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k:measure",
+      "json": "{\"items\":[{\"selector\":\"input.a\",\"snippet\":\"<input>\",\"tag\":\"input\",\"type\":\"submit\",\"roleAttr\":\"\",\"visible\":\"\",\"ariaLabel\":\"\",\"labelledby\":\"\",\"content\":\"\",\"alt\":\"\",\"altPresent\":false,\"title\":\"\",\"value\":\"Naprej\",\"href\":\"\",\"hidden\":false},{\"selector\":\"input.b\",\"snippet\":\"<input type=\\\"submit\\\">\",\"tag\":\"input\",\"type\":\"submit\",\"roleAttr\":\"\",\"visible\":\"\",\"ariaLabel\":\"\",\"labelledby\":\"\",\"content\":\"\",\"alt\":\"\",\"altPresent\":false,\"title\":\"\",\"value\":\"\",\"href\":\"\",\"hidden\":false}]}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "TRANSCRIPT_READY",
+        "payload": {
+         "key": "k",
+         "pageUrl": "https://a.test/p",
+         "lines": [
+          "dokument: T",
+          "glavna vsebina: "
+         ]
+        }
+       },
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k",
+         "probe": "a11y-tree",
+         "findings": [
+          {
+           "id": "https://a.test/p#name-missing#input.b",
+           "pageUrl": "https://a.test/p",
+           "rule": "name-missing",
+           "wcag": [
+            {
+             "criterion": "4.1.2",
+             "level": "A",
+             "version": "2.0"
+            }
+           ],
+           "method": "probe",
+           "engines": [
+            "probe"
+           ],
+           "impact": "serious",
+           "confidence": "needs-verification",
+           "selector": "input.b",
+           "snippet": "<input type=\"submit\">",
+           "evidence": "",
+           "count": 1
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the visible text is matched case-insensitively and ignoring punctuation: ISKANJE! is in iskanje izdelkov",
+   "steps": [
+    {
+     "from": "idle",
+     "event": "PROBE_RUN",
+     "payload": {
+      "key": "k",
+      "pageUrl": "https://a.test/p"
+     },
+     "expect": {
+      "state": "reading",
+      "emits": [
+       {
+        "event": "PAGE_AX_TREE",
+        "payload": {
+         "key": "k:ax"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "reading",
+     "event": "PAGE_AX_TREE_READ",
+     "payload": {
+      "key": "k:ax",
+      "nodes": [
+       {
+        "id": "1",
+        "role": "RootWebArea",
+        "name": "T",
+        "ignored": false
+       },
+       {
+        "id": "2",
+        "role": "main",
+        "name": "",
+        "ignored": false,
+        "parent": "1"
+       }
+      ]
+     },
+     "expect": {
+      "state": "measuring",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k:measure",
+         "expression": "(() => { const norm = (s) => (s || '').replace(/\\s+/g, ' ').trim(); const sel = (e) => { const p = []; for (let n = e; n && n.nodeType === 1; n = n.parentElement) { if (n.id) { p.unshift('#' + CSS.escape(n.id)); break; } let i = 1; for (let s = n.previousElementSibling; s; s = s.previousElementSibling) { if (s.tagName === n.tagName) i++; } p.unshift(n.tagName.toLowerCase() + (n.parentElement && n.parentElement.querySelectorAll(':scope > ' + n.tagName.toLowerCase()).length > 1 ? ':nth-of-type(' + i + ')' : '')); } return p.join(' > '); }; const content = (n) => { if (n.nodeType === 3) return n.textContent; if (n.nodeType !== 1 || n.getAttribute('aria-hidden') === 'true' || n.hidden) return ''; if (n.tagName === 'IMG') return ' ' + (n.getAttribute('alt') || '') + ' '; return Array.from(n.childNodes).map(content).join(''); }; const ids = (el, attr) => norm((el.getAttribute(attr) || '').split(/\\s+/).filter(Boolean).map((id) => { const t = document.getElementById(id); return t ? content(t) : ''; }).join(' ')); const q = 'a[href],button,img,input:not([type=hidden]),select,textarea,[role=button],[role=link],[role=checkbox],[role=textbox]'; const items = Array.from(document.querySelectorAll(q)).map((el) => ({ selector: sel(el), tag: el.tagName.toLowerCase(), type: el.getAttribute('type') || '', roleAttr: el.getAttribute('role') || '', visible: norm(el.innerText), ariaLabel: norm(el.getAttribute('aria-label')), labelledby: ids(el, 'aria-labelledby'), content: norm(el.tagName === 'IMG' ? '' : content(el)), alt: norm(el.getAttribute('alt')), altPresent: el.hasAttribute('alt'), title: norm(el.getAttribute('title')), value: norm(el.tagName === 'INPUT' && ['button', 'submit', 'reset'].includes(el.type) ? el.value : ''), href: el.tagName === 'A' ? el.href : '', hidden: !!el.closest('[aria-hidden=true],[hidden]') || (el.checkVisibility ? !el.checkVisibility({ visibilityProperty: true }) : false), snippet: el.outerHTML.split('>')[0] + '>' })); return JSON.stringify({ items }); })()"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "measuring",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k:measure",
+      "json": "{\"items\":[{\"selector\":\"button.a\",\"snippet\":\"<button>\",\"tag\":\"button\",\"type\":\"\",\"roleAttr\":\"\",\"visible\":\"ISKANJE!\",\"ariaLabel\":\"iskanje izdelkov\",\"labelledby\":\"\",\"content\":\"ISKANJE!\",\"alt\":\"\",\"altPresent\":false,\"title\":\"\",\"value\":\"\",\"href\":\"\",\"hidden\":false}]}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "TRANSCRIPT_READY",
+        "payload": {
+         "key": "k",
+         "pageUrl": "https://a.test/p",
+         "lines": [
+          "dokument: T",
+          "glavna vsebina: "
+         ]
+        }
+       },
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k",
+         "probe": "a11y-tree",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a symbol-only visible text (no letter or digit) is not compared with the name",
+   "steps": [
+    {
+     "from": "idle",
+     "event": "PROBE_RUN",
+     "payload": {
+      "key": "k",
+      "pageUrl": "https://a.test/p"
+     },
+     "expect": {
+      "state": "reading",
+      "emits": [
+       {
+        "event": "PAGE_AX_TREE",
+        "payload": {
+         "key": "k:ax"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "reading",
+     "event": "PAGE_AX_TREE_READ",
+     "payload": {
+      "key": "k:ax",
+      "nodes": [
+       {
+        "id": "1",
+        "role": "RootWebArea",
+        "name": "T",
+        "ignored": false
+       },
+       {
+        "id": "2",
+        "role": "main",
+        "name": "",
+        "ignored": false,
+        "parent": "1"
+       }
+      ]
+     },
+     "expect": {
+      "state": "measuring",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k:measure",
+         "expression": "(() => { const norm = (s) => (s || '').replace(/\\s+/g, ' ').trim(); const sel = (e) => { const p = []; for (let n = e; n && n.nodeType === 1; n = n.parentElement) { if (n.id) { p.unshift('#' + CSS.escape(n.id)); break; } let i = 1; for (let s = n.previousElementSibling; s; s = s.previousElementSibling) { if (s.tagName === n.tagName) i++; } p.unshift(n.tagName.toLowerCase() + (n.parentElement && n.parentElement.querySelectorAll(':scope > ' + n.tagName.toLowerCase()).length > 1 ? ':nth-of-type(' + i + ')' : '')); } return p.join(' > '); }; const content = (n) => { if (n.nodeType === 3) return n.textContent; if (n.nodeType !== 1 || n.getAttribute('aria-hidden') === 'true' || n.hidden) return ''; if (n.tagName === 'IMG') return ' ' + (n.getAttribute('alt') || '') + ' '; return Array.from(n.childNodes).map(content).join(''); }; const ids = (el, attr) => norm((el.getAttribute(attr) || '').split(/\\s+/).filter(Boolean).map((id) => { const t = document.getElementById(id); return t ? content(t) : ''; }).join(' ')); const q = 'a[href],button,img,input:not([type=hidden]),select,textarea,[role=button],[role=link],[role=checkbox],[role=textbox]'; const items = Array.from(document.querySelectorAll(q)).map((el) => ({ selector: sel(el), tag: el.tagName.toLowerCase(), type: el.getAttribute('type') || '', roleAttr: el.getAttribute('role') || '', visible: norm(el.innerText), ariaLabel: norm(el.getAttribute('aria-label')), labelledby: ids(el, 'aria-labelledby'), content: norm(el.tagName === 'IMG' ? '' : content(el)), alt: norm(el.getAttribute('alt')), altPresent: el.hasAttribute('alt'), title: norm(el.getAttribute('title')), value: norm(el.tagName === 'INPUT' && ['button', 'submit', 'reset'].includes(el.type) ? el.value : ''), href: el.tagName === 'A' ? el.href : '', hidden: !!el.closest('[aria-hidden=true],[hidden]') || (el.checkVisibility ? !el.checkVisibility({ visibilityProperty: true }) : false), snippet: el.outerHTML.split('>')[0] + '>' })); return JSON.stringify({ items }); })()"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "measuring",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k:measure",
+      "json": "{\"items\":[{\"selector\":\"button.a\",\"snippet\":\"<button>\",\"tag\":\"button\",\"type\":\"\",\"roleAttr\":\"\",\"visible\":\"×\",\"ariaLabel\":\"Zapri\",\"labelledby\":\"\",\"content\":\"×\",\"alt\":\"\",\"altPresent\":false,\"title\":\"\",\"value\":\"\",\"href\":\"\",\"hidden\":false}]}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "TRANSCRIPT_READY",
+        "payload": {
+         "key": "k",
+         "pageUrl": "https://a.test/p",
+         "lines": [
+          "dokument: T",
+          "glavna vsebina: "
+         ]
+        }
+       },
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k",
+         "probe": "a11y-tree",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the visible text must be whole words of the name: Iš is not in Išči izdelke",
+   "steps": [
+    {
+     "from": "idle",
+     "event": "PROBE_RUN",
+     "payload": {
+      "key": "k",
+      "pageUrl": "https://a.test/p"
+     },
+     "expect": {
+      "state": "reading",
+      "emits": [
+       {
+        "event": "PAGE_AX_TREE",
+        "payload": {
+         "key": "k:ax"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "reading",
+     "event": "PAGE_AX_TREE_READ",
+     "payload": {
+      "key": "k:ax",
+      "nodes": [
+       {
+        "id": "1",
+        "role": "RootWebArea",
+        "name": "T",
+        "ignored": false
+       },
+       {
+        "id": "2",
+        "role": "main",
+        "name": "",
+        "ignored": false,
+        "parent": "1"
+       }
+      ]
+     },
+     "expect": {
+      "state": "measuring",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k:measure",
+         "expression": "(() => { const norm = (s) => (s || '').replace(/\\s+/g, ' ').trim(); const sel = (e) => { const p = []; for (let n = e; n && n.nodeType === 1; n = n.parentElement) { if (n.id) { p.unshift('#' + CSS.escape(n.id)); break; } let i = 1; for (let s = n.previousElementSibling; s; s = s.previousElementSibling) { if (s.tagName === n.tagName) i++; } p.unshift(n.tagName.toLowerCase() + (n.parentElement && n.parentElement.querySelectorAll(':scope > ' + n.tagName.toLowerCase()).length > 1 ? ':nth-of-type(' + i + ')' : '')); } return p.join(' > '); }; const content = (n) => { if (n.nodeType === 3) return n.textContent; if (n.nodeType !== 1 || n.getAttribute('aria-hidden') === 'true' || n.hidden) return ''; if (n.tagName === 'IMG') return ' ' + (n.getAttribute('alt') || '') + ' '; return Array.from(n.childNodes).map(content).join(''); }; const ids = (el, attr) => norm((el.getAttribute(attr) || '').split(/\\s+/).filter(Boolean).map((id) => { const t = document.getElementById(id); return t ? content(t) : ''; }).join(' ')); const q = 'a[href],button,img,input:not([type=hidden]),select,textarea,[role=button],[role=link],[role=checkbox],[role=textbox]'; const items = Array.from(document.querySelectorAll(q)).map((el) => ({ selector: sel(el), tag: el.tagName.toLowerCase(), type: el.getAttribute('type') || '', roleAttr: el.getAttribute('role') || '', visible: norm(el.innerText), ariaLabel: norm(el.getAttribute('aria-label')), labelledby: ids(el, 'aria-labelledby'), content: norm(el.tagName === 'IMG' ? '' : content(el)), alt: norm(el.getAttribute('alt')), altPresent: el.hasAttribute('alt'), title: norm(el.getAttribute('title')), value: norm(el.tagName === 'INPUT' && ['button', 'submit', 'reset'].includes(el.type) ? el.value : ''), href: el.tagName === 'A' ? el.href : '', hidden: !!el.closest('[aria-hidden=true],[hidden]') || (el.checkVisibility ? !el.checkVisibility({ visibilityProperty: true }) : false), snippet: el.outerHTML.split('>')[0] + '>' })); return JSON.stringify({ items }); })()"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "measuring",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k:measure",
+      "json": "{\"items\":[{\"selector\":\"button.a\",\"snippet\":\"<button class=\\\"a\\\">\",\"tag\":\"button\",\"type\":\"\",\"roleAttr\":\"\",\"visible\":\"Iš\",\"ariaLabel\":\"Išči izdelke\",\"labelledby\":\"\",\"content\":\"Iš\",\"alt\":\"\",\"altPresent\":false,\"title\":\"\",\"value\":\"\",\"href\":\"\",\"hidden\":false}]}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "TRANSCRIPT_READY",
+        "payload": {
+         "key": "k",
+         "pageUrl": "https://a.test/p",
+         "lines": [
+          "dokument: T",
+          "glavna vsebina: "
+         ]
+        }
+       },
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k",
+         "probe": "a11y-tree",
+         "findings": [
+          {
+           "id": "https://a.test/p#name-mismatch#button.a",
+           "pageUrl": "https://a.test/p",
+           "rule": "name-mismatch",
+           "wcag": [
+            {
+             "criterion": "2.5.3",
+             "level": "A",
+             "version": "2.1"
+            }
+           ],
+           "method": "probe",
+           "engines": [
+            "probe"
+           ],
+           "impact": "moderate",
+           "confidence": "confirmed",
+           "selector": "button.a",
+           "snippet": "<button class=\"a\">",
+           "evidence": "",
+           "count": 1
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "duplicate-name: two links named Več to different hrefs are one finding with count 2",
+   "steps": [
+    {
+     "from": "idle",
+     "event": "PROBE_RUN",
+     "payload": {
+      "key": "k",
+      "pageUrl": "https://a.test/p"
+     },
+     "expect": {
+      "state": "reading",
+      "emits": [
+       {
+        "event": "PAGE_AX_TREE",
+        "payload": {
+         "key": "k:ax"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "reading",
+     "event": "PAGE_AX_TREE_READ",
+     "payload": {
+      "key": "k:ax",
+      "nodes": [
+       {
+        "id": "1",
+        "role": "RootWebArea",
+        "name": "T",
+        "ignored": false
+       },
+       {
+        "id": "2",
+        "role": "main",
+        "name": "",
+        "ignored": false,
+        "parent": "1"
+       }
+      ]
+     },
+     "expect": {
+      "state": "measuring",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k:measure",
+         "expression": "(() => { const norm = (s) => (s || '').replace(/\\s+/g, ' ').trim(); const sel = (e) => { const p = []; for (let n = e; n && n.nodeType === 1; n = n.parentElement) { if (n.id) { p.unshift('#' + CSS.escape(n.id)); break; } let i = 1; for (let s = n.previousElementSibling; s; s = s.previousElementSibling) { if (s.tagName === n.tagName) i++; } p.unshift(n.tagName.toLowerCase() + (n.parentElement && n.parentElement.querySelectorAll(':scope > ' + n.tagName.toLowerCase()).length > 1 ? ':nth-of-type(' + i + ')' : '')); } return p.join(' > '); }; const content = (n) => { if (n.nodeType === 3) return n.textContent; if (n.nodeType !== 1 || n.getAttribute('aria-hidden') === 'true' || n.hidden) return ''; if (n.tagName === 'IMG') return ' ' + (n.getAttribute('alt') || '') + ' '; return Array.from(n.childNodes).map(content).join(''); }; const ids = (el, attr) => norm((el.getAttribute(attr) || '').split(/\\s+/).filter(Boolean).map((id) => { const t = document.getElementById(id); return t ? content(t) : ''; }).join(' ')); const q = 'a[href],button,img,input:not([type=hidden]),select,textarea,[role=button],[role=link],[role=checkbox],[role=textbox]'; const items = Array.from(document.querySelectorAll(q)).map((el) => ({ selector: sel(el), tag: el.tagName.toLowerCase(), type: el.getAttribute('type') || '', roleAttr: el.getAttribute('role') || '', visible: norm(el.innerText), ariaLabel: norm(el.getAttribute('aria-label')), labelledby: ids(el, 'aria-labelledby'), content: norm(el.tagName === 'IMG' ? '' : content(el)), alt: norm(el.getAttribute('alt')), altPresent: el.hasAttribute('alt'), title: norm(el.getAttribute('title')), value: norm(el.tagName === 'INPUT' && ['button', 'submit', 'reset'].includes(el.type) ? el.value : ''), href: el.tagName === 'A' ? el.href : '', hidden: !!el.closest('[aria-hidden=true],[hidden]') || (el.checkVisibility ? !el.checkVisibility({ visibilityProperty: true }) : false), snippet: el.outerHTML.split('>')[0] + '>' })); return JSON.stringify({ items }); })()"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "measuring",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k:measure",
+      "json": "{\"items\":[{\"selector\":\"a.one\",\"snippet\":\"<a class=\\\"one\\\">\",\"tag\":\"a\",\"type\":\"\",\"roleAttr\":\"\",\"visible\":\"Več\",\"ariaLabel\":\"\",\"labelledby\":\"\",\"content\":\"Več\",\"alt\":\"\",\"altPresent\":false,\"title\":\"\",\"value\":\"\",\"href\":\"https://a.test/a\",\"hidden\":false},{\"selector\":\"button.mid\",\"snippet\":\"<button>\",\"tag\":\"button\",\"type\":\"\",\"roleAttr\":\"\",\"visible\":\"Mid\",\"ariaLabel\":\"\",\"labelledby\":\"\",\"content\":\"Mid\",\"alt\":\"\",\"altPresent\":false,\"title\":\"\",\"value\":\"\",\"href\":\"\",\"hidden\":false},{\"selector\":\"a.two\",\"snippet\":\"<a>\",\"tag\":\"a\",\"type\":\"\",\"roleAttr\":\"\",\"visible\":\"Več\",\"ariaLabel\":\"\",\"labelledby\":\"\",\"content\":\"Več\",\"alt\":\"\",\"altPresent\":false,\"title\":\"\",\"value\":\"\",\"href\":\"https://a.test/b\",\"hidden\":false}]}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "TRANSCRIPT_READY",
+        "payload": {
+         "key": "k",
+         "pageUrl": "https://a.test/p",
+         "lines": [
+          "dokument: T",
+          "glavna vsebina: "
+         ]
+        }
+       },
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k",
+         "probe": "a11y-tree",
+         "findings": [
+          {
+           "id": "https://a.test/p#duplicate-name#a.one",
+           "pageUrl": "https://a.test/p",
+           "rule": "duplicate-name",
+           "wcag": [
+            {
+             "criterion": "2.4.4",
+             "level": "A",
+             "version": "2.0"
+            }
+           ],
+           "method": "probe",
+           "engines": [
+            "probe"
+           ],
+           "impact": "moderate",
+           "confidence": "needs-verification",
+           "selector": "a.one",
+           "snippet": "<a class=\"one\">",
+           "evidence": "",
+           "count": 2
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: two links named Več to the same href are not a duplicate-name",
+   "steps": [
+    {
+     "from": "idle",
+     "event": "PROBE_RUN",
+     "payload": {
+      "key": "k",
+      "pageUrl": "https://a.test/p"
+     },
+     "expect": {
+      "state": "reading",
+      "emits": [
+       {
+        "event": "PAGE_AX_TREE",
+        "payload": {
+         "key": "k:ax"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "reading",
+     "event": "PAGE_AX_TREE_READ",
+     "payload": {
+      "key": "k:ax",
+      "nodes": [
+       {
+        "id": "1",
+        "role": "RootWebArea",
+        "name": "T",
+        "ignored": false
+       },
+       {
+        "id": "2",
+        "role": "main",
+        "name": "",
+        "ignored": false,
+        "parent": "1"
+       }
+      ]
+     },
+     "expect": {
+      "state": "measuring",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k:measure",
+         "expression": "(() => { const norm = (s) => (s || '').replace(/\\s+/g, ' ').trim(); const sel = (e) => { const p = []; for (let n = e; n && n.nodeType === 1; n = n.parentElement) { if (n.id) { p.unshift('#' + CSS.escape(n.id)); break; } let i = 1; for (let s = n.previousElementSibling; s; s = s.previousElementSibling) { if (s.tagName === n.tagName) i++; } p.unshift(n.tagName.toLowerCase() + (n.parentElement && n.parentElement.querySelectorAll(':scope > ' + n.tagName.toLowerCase()).length > 1 ? ':nth-of-type(' + i + ')' : '')); } return p.join(' > '); }; const content = (n) => { if (n.nodeType === 3) return n.textContent; if (n.nodeType !== 1 || n.getAttribute('aria-hidden') === 'true' || n.hidden) return ''; if (n.tagName === 'IMG') return ' ' + (n.getAttribute('alt') || '') + ' '; return Array.from(n.childNodes).map(content).join(''); }; const ids = (el, attr) => norm((el.getAttribute(attr) || '').split(/\\s+/).filter(Boolean).map((id) => { const t = document.getElementById(id); return t ? content(t) : ''; }).join(' ')); const q = 'a[href],button,img,input:not([type=hidden]),select,textarea,[role=button],[role=link],[role=checkbox],[role=textbox]'; const items = Array.from(document.querySelectorAll(q)).map((el) => ({ selector: sel(el), tag: el.tagName.toLowerCase(), type: el.getAttribute('type') || '', roleAttr: el.getAttribute('role') || '', visible: norm(el.innerText), ariaLabel: norm(el.getAttribute('aria-label')), labelledby: ids(el, 'aria-labelledby'), content: norm(el.tagName === 'IMG' ? '' : content(el)), alt: norm(el.getAttribute('alt')), altPresent: el.hasAttribute('alt'), title: norm(el.getAttribute('title')), value: norm(el.tagName === 'INPUT' && ['button', 'submit', 'reset'].includes(el.type) ? el.value : ''), href: el.tagName === 'A' ? el.href : '', hidden: !!el.closest('[aria-hidden=true],[hidden]') || (el.checkVisibility ? !el.checkVisibility({ visibilityProperty: true }) : false), snippet: el.outerHTML.split('>')[0] + '>' })); return JSON.stringify({ items }); })()"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "measuring",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k:measure",
+      "json": "{\"items\":[{\"selector\":\"a.one\",\"snippet\":\"<a>\",\"tag\":\"a\",\"type\":\"\",\"roleAttr\":\"\",\"visible\":\"Več\",\"ariaLabel\":\"\",\"labelledby\":\"\",\"content\":\"Več\",\"alt\":\"\",\"altPresent\":false,\"title\":\"\",\"value\":\"\",\"href\":\"https://a.test/a\",\"hidden\":false},{\"selector\":\"button.mid\",\"snippet\":\"<button>\",\"tag\":\"button\",\"type\":\"\",\"roleAttr\":\"\",\"visible\":\"Mid\",\"ariaLabel\":\"\",\"labelledby\":\"\",\"content\":\"Mid\",\"alt\":\"\",\"altPresent\":false,\"title\":\"\",\"value\":\"\",\"href\":\"\",\"hidden\":false},{\"selector\":\"a.two\",\"snippet\":\"<a>\",\"tag\":\"a\",\"type\":\"\",\"roleAttr\":\"\",\"visible\":\"Več\",\"ariaLabel\":\"\",\"labelledby\":\"\",\"content\":\"Več\",\"alt\":\"\",\"altPresent\":false,\"title\":\"\",\"value\":\"\",\"href\":\"https://a.test/a\",\"hidden\":false}]}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "TRANSCRIPT_READY",
+        "payload": {
+         "key": "k",
+         "pageUrl": "https://a.test/p",
+         "lines": [
+          "dokument: T",
+          "glavna vsebina: "
+         ]
+        }
+       },
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k",
+         "probe": "a11y-tree",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "redundant-link: a link right after a link with the same name and href is one finding on the second",
+   "steps": [
+    {
+     "from": "idle",
+     "event": "PROBE_RUN",
+     "payload": {
+      "key": "k",
+      "pageUrl": "https://a.test/p"
+     },
+     "expect": {
+      "state": "reading",
+      "emits": [
+       {
+        "event": "PAGE_AX_TREE",
+        "payload": {
+         "key": "k:ax"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "reading",
+     "event": "PAGE_AX_TREE_READ",
+     "payload": {
+      "key": "k:ax",
+      "nodes": [
+       {
+        "id": "1",
+        "role": "RootWebArea",
+        "name": "T",
+        "ignored": false
+       },
+       {
+        "id": "2",
+        "role": "main",
+        "name": "",
+        "ignored": false,
+        "parent": "1"
+       }
+      ]
+     },
+     "expect": {
+      "state": "measuring",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k:measure",
+         "expression": "(() => { const norm = (s) => (s || '').replace(/\\s+/g, ' ').trim(); const sel = (e) => { const p = []; for (let n = e; n && n.nodeType === 1; n = n.parentElement) { if (n.id) { p.unshift('#' + CSS.escape(n.id)); break; } let i = 1; for (let s = n.previousElementSibling; s; s = s.previousElementSibling) { if (s.tagName === n.tagName) i++; } p.unshift(n.tagName.toLowerCase() + (n.parentElement && n.parentElement.querySelectorAll(':scope > ' + n.tagName.toLowerCase()).length > 1 ? ':nth-of-type(' + i + ')' : '')); } return p.join(' > '); }; const content = (n) => { if (n.nodeType === 3) return n.textContent; if (n.nodeType !== 1 || n.getAttribute('aria-hidden') === 'true' || n.hidden) return ''; if (n.tagName === 'IMG') return ' ' + (n.getAttribute('alt') || '') + ' '; return Array.from(n.childNodes).map(content).join(''); }; const ids = (el, attr) => norm((el.getAttribute(attr) || '').split(/\\s+/).filter(Boolean).map((id) => { const t = document.getElementById(id); return t ? content(t) : ''; }).join(' ')); const q = 'a[href],button,img,input:not([type=hidden]),select,textarea,[role=button],[role=link],[role=checkbox],[role=textbox]'; const items = Array.from(document.querySelectorAll(q)).map((el) => ({ selector: sel(el), tag: el.tagName.toLowerCase(), type: el.getAttribute('type') || '', roleAttr: el.getAttribute('role') || '', visible: norm(el.innerText), ariaLabel: norm(el.getAttribute('aria-label')), labelledby: ids(el, 'aria-labelledby'), content: norm(el.tagName === 'IMG' ? '' : content(el)), alt: norm(el.getAttribute('alt')), altPresent: el.hasAttribute('alt'), title: norm(el.getAttribute('title')), value: norm(el.tagName === 'INPUT' && ['button', 'submit', 'reset'].includes(el.type) ? el.value : ''), href: el.tagName === 'A' ? el.href : '', hidden: !!el.closest('[aria-hidden=true],[hidden]') || (el.checkVisibility ? !el.checkVisibility({ visibilityProperty: true }) : false), snippet: el.outerHTML.split('>')[0] + '>' })); return JSON.stringify({ items }); })()"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "measuring",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k:measure",
+      "json": "{\"items\":[{\"selector\":\"a.one\",\"snippet\":\"<a>\",\"tag\":\"a\",\"type\":\"\",\"roleAttr\":\"\",\"visible\":\"Domov\",\"ariaLabel\":\"\",\"labelledby\":\"\",\"content\":\"Domov\",\"alt\":\"\",\"altPresent\":false,\"title\":\"\",\"value\":\"\",\"href\":\"https://a.test/\",\"hidden\":false},{\"selector\":\"a.two\",\"snippet\":\"<a class=\\\"two\\\">\",\"tag\":\"a\",\"type\":\"\",\"roleAttr\":\"\",\"visible\":\"Domov\",\"ariaLabel\":\"\",\"labelledby\":\"\",\"content\":\"Domov\",\"alt\":\"\",\"altPresent\":false,\"title\":\"\",\"value\":\"\",\"href\":\"https://a.test/\",\"hidden\":false}]}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "TRANSCRIPT_READY",
+        "payload": {
+         "key": "k",
+         "pageUrl": "https://a.test/p",
+         "lines": [
+          "dokument: T",
+          "glavna vsebina: "
+         ]
+        }
+       },
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k",
+         "probe": "a11y-tree",
+         "findings": [
+          {
+           "id": "https://a.test/p#redundant-link#a.two",
+           "pageUrl": "https://a.test/p",
+           "rule": "redundant-link",
+           "wcag": [
+            {
+             "criterion": "2.4.4",
+             "level": "A",
+             "version": "2.0"
+            }
+           ],
+           "method": "probe",
+           "engines": [
+            "probe"
+           ],
+           "impact": "minor",
+           "confidence": "needs-verification",
+           "selector": "a.two",
+           "snippet": "<a class=\"two\">",
+           "evidence": "",
+           "count": 2
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a link and a link with different names to the same href (the shared nav of the fixtures) is not redundant",
+   "steps": [
+    {
+     "from": "idle",
+     "event": "PROBE_RUN",
+     "payload": {
+      "key": "k",
+      "pageUrl": "https://a.test/p"
+     },
+     "expect": {
+      "state": "reading",
+      "emits": [
+       {
+        "event": "PAGE_AX_TREE",
+        "payload": {
+         "key": "k:ax"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "reading",
+     "event": "PAGE_AX_TREE_READ",
+     "payload": {
+      "key": "k:ax",
+      "nodes": [
+       {
+        "id": "1",
+        "role": "RootWebArea",
+        "name": "T",
+        "ignored": false
+       },
+       {
+        "id": "2",
+        "role": "main",
+        "name": "",
+        "ignored": false,
+        "parent": "1"
+       }
+      ]
+     },
+     "expect": {
+      "state": "measuring",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k:measure",
+         "expression": "(() => { const norm = (s) => (s || '').replace(/\\s+/g, ' ').trim(); const sel = (e) => { const p = []; for (let n = e; n && n.nodeType === 1; n = n.parentElement) { if (n.id) { p.unshift('#' + CSS.escape(n.id)); break; } let i = 1; for (let s = n.previousElementSibling; s; s = s.previousElementSibling) { if (s.tagName === n.tagName) i++; } p.unshift(n.tagName.toLowerCase() + (n.parentElement && n.parentElement.querySelectorAll(':scope > ' + n.tagName.toLowerCase()).length > 1 ? ':nth-of-type(' + i + ')' : '')); } return p.join(' > '); }; const content = (n) => { if (n.nodeType === 3) return n.textContent; if (n.nodeType !== 1 || n.getAttribute('aria-hidden') === 'true' || n.hidden) return ''; if (n.tagName === 'IMG') return ' ' + (n.getAttribute('alt') || '') + ' '; return Array.from(n.childNodes).map(content).join(''); }; const ids = (el, attr) => norm((el.getAttribute(attr) || '').split(/\\s+/).filter(Boolean).map((id) => { const t = document.getElementById(id); return t ? content(t) : ''; }).join(' ')); const q = 'a[href],button,img,input:not([type=hidden]),select,textarea,[role=button],[role=link],[role=checkbox],[role=textbox]'; const items = Array.from(document.querySelectorAll(q)).map((el) => ({ selector: sel(el), tag: el.tagName.toLowerCase(), type: el.getAttribute('type') || '', roleAttr: el.getAttribute('role') || '', visible: norm(el.innerText), ariaLabel: norm(el.getAttribute('aria-label')), labelledby: ids(el, 'aria-labelledby'), content: norm(el.tagName === 'IMG' ? '' : content(el)), alt: norm(el.getAttribute('alt')), altPresent: el.hasAttribute('alt'), title: norm(el.getAttribute('title')), value: norm(el.tagName === 'INPUT' && ['button', 'submit', 'reset'].includes(el.type) ? el.value : ''), href: el.tagName === 'A' ? el.href : '', hidden: !!el.closest('[aria-hidden=true],[hidden]') || (el.checkVisibility ? !el.checkVisibility({ visibilityProperty: true }) : false), snippet: el.outerHTML.split('>')[0] + '>' })); return JSON.stringify({ items }); })()"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "measuring",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k:measure",
+      "json": "{\"items\":[{\"selector\":\"a.one\",\"snippet\":\"<a>\",\"tag\":\"a\",\"type\":\"\",\"roleAttr\":\"\",\"visible\":\"Domov\",\"ariaLabel\":\"\",\"labelledby\":\"\",\"content\":\"Domov\",\"alt\":\"\",\"altPresent\":false,\"title\":\"\",\"value\":\"\",\"href\":\"https://a.test/\",\"hidden\":false},{\"selector\":\"a.two\",\"snippet\":\"<a>\",\"tag\":\"a\",\"type\":\"\",\"roleAttr\":\"\",\"visible\":\"Izdelki\",\"ariaLabel\":\"\",\"labelledby\":\"\",\"content\":\"Izdelki\",\"alt\":\"\",\"altPresent\":false,\"title\":\"\",\"value\":\"\",\"href\":\"https://a.test/\",\"hidden\":false}]}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "TRANSCRIPT_READY",
+        "payload": {
+         "key": "k",
+         "pageUrl": "https://a.test/p",
+         "lines": [
+          "dokument: T",
+          "glavna vsebina: "
+         ]
+        }
+       },
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k",
+         "probe": "a11y-tree",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a role with no word is shown as it is, an ignored node is left out, a StaticText under a named parent is folded and one under an unnamed parent is kept",
+   "steps": [
+    {
+     "from": "idle",
+     "event": "PROBE_RUN",
+     "payload": {
+      "key": "k",
+      "pageUrl": "https://a.test/p"
+     },
+     "expect": {
+      "state": "reading",
+      "emits": [
+       {
+        "event": "PAGE_AX_TREE",
+        "payload": {
+         "key": "k:ax"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "reading",
+     "event": "PAGE_AX_TREE_READ",
+     "payload": {
+      "key": "k:ax",
+      "nodes": [
+       {
+        "id": "1",
+        "role": "RootWebArea",
+        "name": "T",
+        "ignored": false
+       },
+       {
+        "id": "2",
+        "role": "tablist",
+        "name": "",
+        "ignored": false,
+        "parent": "1"
+       },
+       {
+        "id": "3",
+        "role": "none",
+        "name": "",
+        "ignored": true,
+        "parent": "2"
+       },
+       {
+        "id": "4",
+        "role": "paragraph",
+        "name": "",
+        "ignored": false,
+        "parent": "1"
+       },
+       {
+        "id": "5",
+        "role": "StaticText",
+        "name": "Pozdravljeni",
+        "ignored": false,
+        "parent": "4"
+       },
+       {
+        "id": "6",
+        "role": "heading",
+        "name": "Naslov",
+        "ignored": false,
+        "parent": "1"
+       },
+       {
+        "id": "7",
+        "role": "StaticText",
+        "name": "Naslov",
+        "ignored": false,
+        "parent": "6"
+       }
+      ]
+     },
+     "expect": {
+      "state": "measuring",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k:measure",
+         "expression": "(() => { const norm = (s) => (s || '').replace(/\\s+/g, ' ').trim(); const sel = (e) => { const p = []; for (let n = e; n && n.nodeType === 1; n = n.parentElement) { if (n.id) { p.unshift('#' + CSS.escape(n.id)); break; } let i = 1; for (let s = n.previousElementSibling; s; s = s.previousElementSibling) { if (s.tagName === n.tagName) i++; } p.unshift(n.tagName.toLowerCase() + (n.parentElement && n.parentElement.querySelectorAll(':scope > ' + n.tagName.toLowerCase()).length > 1 ? ':nth-of-type(' + i + ')' : '')); } return p.join(' > '); }; const content = (n) => { if (n.nodeType === 3) return n.textContent; if (n.nodeType !== 1 || n.getAttribute('aria-hidden') === 'true' || n.hidden) return ''; if (n.tagName === 'IMG') return ' ' + (n.getAttribute('alt') || '') + ' '; return Array.from(n.childNodes).map(content).join(''); }; const ids = (el, attr) => norm((el.getAttribute(attr) || '').split(/\\s+/).filter(Boolean).map((id) => { const t = document.getElementById(id); return t ? content(t) : ''; }).join(' ')); const q = 'a[href],button,img,input:not([type=hidden]),select,textarea,[role=button],[role=link],[role=checkbox],[role=textbox]'; const items = Array.from(document.querySelectorAll(q)).map((el) => ({ selector: sel(el), tag: el.tagName.toLowerCase(), type: el.getAttribute('type') || '', roleAttr: el.getAttribute('role') || '', visible: norm(el.innerText), ariaLabel: norm(el.getAttribute('aria-label')), labelledby: ids(el, 'aria-labelledby'), content: norm(el.tagName === 'IMG' ? '' : content(el)), alt: norm(el.getAttribute('alt')), altPresent: el.hasAttribute('alt'), title: norm(el.getAttribute('title')), value: norm(el.tagName === 'INPUT' && ['button', 'submit', 'reset'].includes(el.type) ? el.value : ''), href: el.tagName === 'A' ? el.href : '', hidden: !!el.closest('[aria-hidden=true],[hidden]') || (el.checkVisibility ? !el.checkVisibility({ visibilityProperty: true }) : false), snippet: el.outerHTML.split('>')[0] + '>' })); return JSON.stringify({ items }); })()"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "measuring",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k:measure",
+      "json": "{\"items\":[]}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "TRANSCRIPT_READY",
+        "payload": {
+         "key": "k",
+         "pageUrl": "https://a.test/p",
+         "lines": [
+          "dokument: T",
+          "tablist: ",
+          "paragraph: ",
+          "besedilo: Pozdravljeni",
+          "naslov: Naslov"
+         ]
+        }
+       },
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k",
+         "probe": "a11y-tree",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "tree order is pre-order whatever the list order: the children of the first node come before its next sibling",
+   "steps": [
+    {
+     "from": "idle",
+     "event": "PROBE_RUN",
+     "payload": {
+      "key": "k",
+      "pageUrl": "https://a.test/p"
+     },
+     "expect": {
+      "state": "reading",
+      "emits": [
+       {
+        "event": "PAGE_AX_TREE",
+        "payload": {
+         "key": "k:ax"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "reading",
+     "event": "PAGE_AX_TREE_READ",
+     "payload": {
+      "key": "k:ax",
+      "nodes": [
+       {
+        "id": "1",
+        "role": "RootWebArea",
+        "name": "T",
+        "ignored": false
+       },
+       {
+        "id": "2",
+        "role": "navigation",
+        "name": "N1",
+        "ignored": false,
+        "parent": "1"
+       },
+       {
+        "id": "3",
+        "role": "main",
+        "name": "",
+        "ignored": false,
+        "parent": "1"
+       },
+       {
+        "id": "4",
+        "role": "link",
+        "name": "A",
+        "ignored": false,
+        "parent": "3"
+       },
+       {
+        "id": "5",
+        "role": "link",
+        "name": "B",
+        "ignored": false,
+        "parent": "2"
+       }
+      ]
+     },
+     "expect": {
+      "state": "measuring",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k:measure",
+         "expression": "(() => { const norm = (s) => (s || '').replace(/\\s+/g, ' ').trim(); const sel = (e) => { const p = []; for (let n = e; n && n.nodeType === 1; n = n.parentElement) { if (n.id) { p.unshift('#' + CSS.escape(n.id)); break; } let i = 1; for (let s = n.previousElementSibling; s; s = s.previousElementSibling) { if (s.tagName === n.tagName) i++; } p.unshift(n.tagName.toLowerCase() + (n.parentElement && n.parentElement.querySelectorAll(':scope > ' + n.tagName.toLowerCase()).length > 1 ? ':nth-of-type(' + i + ')' : '')); } return p.join(' > '); }; const content = (n) => { if (n.nodeType === 3) return n.textContent; if (n.nodeType !== 1 || n.getAttribute('aria-hidden') === 'true' || n.hidden) return ''; if (n.tagName === 'IMG') return ' ' + (n.getAttribute('alt') || '') + ' '; return Array.from(n.childNodes).map(content).join(''); }; const ids = (el, attr) => norm((el.getAttribute(attr) || '').split(/\\s+/).filter(Boolean).map((id) => { const t = document.getElementById(id); return t ? content(t) : ''; }).join(' ')); const q = 'a[href],button,img,input:not([type=hidden]),select,textarea,[role=button],[role=link],[role=checkbox],[role=textbox]'; const items = Array.from(document.querySelectorAll(q)).map((el) => ({ selector: sel(el), tag: el.tagName.toLowerCase(), type: el.getAttribute('type') || '', roleAttr: el.getAttribute('role') || '', visible: norm(el.innerText), ariaLabel: norm(el.getAttribute('aria-label')), labelledby: ids(el, 'aria-labelledby'), content: norm(el.tagName === 'IMG' ? '' : content(el)), alt: norm(el.getAttribute('alt')), altPresent: el.hasAttribute('alt'), title: norm(el.getAttribute('title')), value: norm(el.tagName === 'INPUT' && ['button', 'submit', 'reset'].includes(el.type) ? el.value : ''), href: el.tagName === 'A' ? el.href : '', hidden: !!el.closest('[aria-hidden=true],[hidden]') || (el.checkVisibility ? !el.checkVisibility({ visibilityProperty: true }) : false), snippet: el.outerHTML.split('>')[0] + '>' })); return JSON.stringify({ items }); })()"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "measuring",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k:measure",
+      "json": "{\"items\":[]}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "TRANSCRIPT_READY",
+        "payload": {
+         "key": "k",
+         "pageUrl": "https://a.test/p",
+         "lines": [
+          "dokument: T",
+          "navigacija: N1",
+          "povezava: B",
+          "glavna vsebina: ",
+          "povezava: A"
+         ]
+        }
+       },
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k",
+         "probe": "a11y-tree",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a tree deeper than maxDepth answers probe_tree_too_deep and no transcript",
+   "steps": [
+    {
+     "from": "idle",
+     "event": "PROBE_RUN",
+     "payload": {
+      "key": "k",
+      "pageUrl": "https://a.test/p"
+     },
+     "expect": {
+      "state": "reading",
+      "emits": [
+       {
+        "event": "PAGE_AX_TREE",
+        "payload": {
+         "key": "k:ax"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "reading",
+     "event": "PAGE_AX_TREE_READ",
+     "payload": {
+      "key": "k:ax",
+      "nodes": [
+       {
+        "id": "1",
+        "role": "RootWebArea",
+        "name": "T",
+        "ignored": false
+       },
+       {
+        "id": "2",
+        "role": "main",
+        "name": "",
+        "ignored": false,
+        "parent": "1"
+       },
+       {
+        "id": "3",
+        "role": "navigation",
+        "name": "N",
+        "ignored": false,
+        "parent": "2"
+       },
+       {
+        "id": "4",
+        "role": "list",
+        "name": "",
+        "ignored": false,
+        "parent": "3"
+       },
+       {
+        "id": "5",
+        "role": "listitem",
+        "name": "",
+        "ignored": false,
+        "parent": "4"
+       }
+      ]
+     },
+     "expect": {
+      "state": "measuring",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k:measure",
+         "expression": "(() => { const norm = (s) => (s || '').replace(/\\s+/g, ' ').trim(); const sel = (e) => { const p = []; for (let n = e; n && n.nodeType === 1; n = n.parentElement) { if (n.id) { p.unshift('#' + CSS.escape(n.id)); break; } let i = 1; for (let s = n.previousElementSibling; s; s = s.previousElementSibling) { if (s.tagName === n.tagName) i++; } p.unshift(n.tagName.toLowerCase() + (n.parentElement && n.parentElement.querySelectorAll(':scope > ' + n.tagName.toLowerCase()).length > 1 ? ':nth-of-type(' + i + ')' : '')); } return p.join(' > '); }; const content = (n) => { if (n.nodeType === 3) return n.textContent; if (n.nodeType !== 1 || n.getAttribute('aria-hidden') === 'true' || n.hidden) return ''; if (n.tagName === 'IMG') return ' ' + (n.getAttribute('alt') || '') + ' '; return Array.from(n.childNodes).map(content).join(''); }; const ids = (el, attr) => norm((el.getAttribute(attr) || '').split(/\\s+/).filter(Boolean).map((id) => { const t = document.getElementById(id); return t ? content(t) : ''; }).join(' ')); const q = 'a[href],button,img,input:not([type=hidden]),select,textarea,[role=button],[role=link],[role=checkbox],[role=textbox]'; const items = Array.from(document.querySelectorAll(q)).map((el) => ({ selector: sel(el), tag: el.tagName.toLowerCase(), type: el.getAttribute('type') || '', roleAttr: el.getAttribute('role') || '', visible: norm(el.innerText), ariaLabel: norm(el.getAttribute('aria-label')), labelledby: ids(el, 'aria-labelledby'), content: norm(el.tagName === 'IMG' ? '' : content(el)), alt: norm(el.getAttribute('alt')), altPresent: el.hasAttribute('alt'), title: norm(el.getAttribute('title')), value: norm(el.tagName === 'INPUT' && ['button', 'submit', 'reset'].includes(el.type) ? el.value : ''), href: el.tagName === 'A' ? el.href : '', hidden: !!el.closest('[aria-hidden=true],[hidden]') || (el.checkVisibility ? !el.checkVisibility({ visibilityProperty: true }) : false), snippet: el.outerHTML.split('>')[0] + '>' })); return JSON.stringify({ items }); })()"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "measuring",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k:measure",
+      "json": "{\"items\":[]}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_FAILED",
+        "payload": {
+         "key": "k",
+         "probe": "a11y-tree",
+         "code": "probe_tree_too_deep"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "maxDepth": 3
+   }
+  },
+  {
+   "id": "control: the same tree within maxDepth answers its transcript",
+   "steps": [
+    {
+     "from": "idle",
+     "event": "PROBE_RUN",
+     "payload": {
+      "key": "k",
+      "pageUrl": "https://a.test/p"
+     },
+     "expect": {
+      "state": "reading",
+      "emits": [
+       {
+        "event": "PAGE_AX_TREE",
+        "payload": {
+         "key": "k:ax"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "reading",
+     "event": "PAGE_AX_TREE_READ",
+     "payload": {
+      "key": "k:ax",
+      "nodes": [
+       {
+        "id": "1",
+        "role": "RootWebArea",
+        "name": "T",
+        "ignored": false
+       },
+       {
+        "id": "2",
+        "role": "main",
+        "name": "",
+        "ignored": false,
+        "parent": "1"
+       },
+       {
+        "id": "3",
+        "role": "navigation",
+        "name": "N",
+        "ignored": false,
+        "parent": "2"
+       },
+       {
+        "id": "4",
+        "role": "list",
+        "name": "",
+        "ignored": false,
+        "parent": "3"
+       },
+       {
+        "id": "5",
+        "role": "listitem",
+        "name": "",
+        "ignored": false,
+        "parent": "4"
+       }
+      ]
+     },
+     "expect": {
+      "state": "measuring",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k:measure",
+         "expression": "(() => { const norm = (s) => (s || '').replace(/\\s+/g, ' ').trim(); const sel = (e) => { const p = []; for (let n = e; n && n.nodeType === 1; n = n.parentElement) { if (n.id) { p.unshift('#' + CSS.escape(n.id)); break; } let i = 1; for (let s = n.previousElementSibling; s; s = s.previousElementSibling) { if (s.tagName === n.tagName) i++; } p.unshift(n.tagName.toLowerCase() + (n.parentElement && n.parentElement.querySelectorAll(':scope > ' + n.tagName.toLowerCase()).length > 1 ? ':nth-of-type(' + i + ')' : '')); } return p.join(' > '); }; const content = (n) => { if (n.nodeType === 3) return n.textContent; if (n.nodeType !== 1 || n.getAttribute('aria-hidden') === 'true' || n.hidden) return ''; if (n.tagName === 'IMG') return ' ' + (n.getAttribute('alt') || '') + ' '; return Array.from(n.childNodes).map(content).join(''); }; const ids = (el, attr) => norm((el.getAttribute(attr) || '').split(/\\s+/).filter(Boolean).map((id) => { const t = document.getElementById(id); return t ? content(t) : ''; }).join(' ')); const q = 'a[href],button,img,input:not([type=hidden]),select,textarea,[role=button],[role=link],[role=checkbox],[role=textbox]'; const items = Array.from(document.querySelectorAll(q)).map((el) => ({ selector: sel(el), tag: el.tagName.toLowerCase(), type: el.getAttribute('type') || '', roleAttr: el.getAttribute('role') || '', visible: norm(el.innerText), ariaLabel: norm(el.getAttribute('aria-label')), labelledby: ids(el, 'aria-labelledby'), content: norm(el.tagName === 'IMG' ? '' : content(el)), alt: norm(el.getAttribute('alt')), altPresent: el.hasAttribute('alt'), title: norm(el.getAttribute('title')), value: norm(el.tagName === 'INPUT' && ['button', 'submit', 'reset'].includes(el.type) ? el.value : ''), href: el.tagName === 'A' ? el.href : '', hidden: !!el.closest('[aria-hidden=true],[hidden]') || (el.checkVisibility ? !el.checkVisibility({ visibilityProperty: true }) : false), snippet: el.outerHTML.split('>')[0] + '>' })); return JSON.stringify({ items }); })()"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "measuring",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k:measure",
+      "json": "{\"items\":[]}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "TRANSCRIPT_READY",
+        "payload": {
+         "key": "k",
+         "lines": [
+          "dokument: T",
+          "glavna vsebina: ",
+          "navigacija: N",
+          "seznam: ",
+          "element seznama: "
+         ]
+        }
+       },
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k",
+         "probe": "a11y-tree",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "maxDepth": 8
+   }
+  },
+  {
+   "id": "a page failure while reading the tree answers PROBE_FAILED with probe_page_failed",
+   "steps": [
+    {
+     "from": "reading",
+     "event": "PAGE_FAILED",
+     "entity": {
+      "runKey": "k",
+      "pageUrl": "https://a.test/p"
+     },
+     "payload": {
+      "key": "k:ax",
+      "error": "no tab",
+      "code": "no_tab"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_FAILED",
+        "payload": {
+         "key": "k",
+         "probe": "a11y-tree",
+         "error": "no tab",
+         "code": "probe_page_failed"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a page failure under another run's key is ignored",
+   "steps": [
+    {
+     "from": "reading",
+     "event": "PAGE_FAILED",
+     "entity": {
+      "runKey": "k",
+      "pageUrl": "https://a.test/p"
+     },
+     "payload": {
+      "key": "j:ax",
+      "error": "no tab",
+      "code": "no_tab"
+     },
+     "expect": {
+      "state": "reading",
+      "emits": []
+     }
+    }
+   ]
+  },
+  {
+   "id": "a measurement that is not the element list answers probe_bad_measure",
+   "steps": [
+    {
+     "from": "measuring",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k",
+      "pageUrl": "https://a.test/p"
+     },
+     "payload": {
+      "key": "k:measure",
+      "json": "{\"x\":1}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_FAILED",
+        "payload": {
+         "key": "k",
+         "probe": "a11y-tree",
+         "code": "probe_bad_measure"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a tree answer under another run's key is ignored",
+   "steps": [
+    {
+     "from": "reading",
+     "event": "PAGE_AX_TREE_READ",
+     "entity": {
+      "runKey": "k",
+      "pageUrl": "https://a.test/p"
+     },
+     "payload": {
+      "key": "j:ax",
+      "nodes": [
+       {
+        "id": "1",
+        "role": "RootWebArea",
+        "name": "T",
+        "ignored": false
+       },
+       {
+        "id": "2",
+        "role": "main",
+        "name": "",
+        "ignored": false,
+        "parent": "1"
+       }
+      ]
+     },
+     "expect": {
+      "state": "reading",
+      "emits": []
+     }
+    }
+   ]
+  }
+ ]
+}

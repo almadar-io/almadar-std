@@ -491,6 +491,426 @@
           }
         }
       ]
+    },
+    {
+      "id": "a delivery with a destination and the knob on starts a send and keeps the destination",
+      "config": {
+        "allowDynamicDestination": true
+      },
+      "steps": [
+        {
+          "from": "idle",
+          "event": "WEBHOOK_SEND",
+          "payload": {
+            "event": "run.finished",
+            "payload": "{\"id\":1}",
+            "destination": {
+              "host": "cb.client.example.test",
+              "path": "/runs/42/done"
+            }
+          },
+          "expect": {
+            "state": "sending",
+            "emits": [
+              {
+                "event": "WEBHOOK_RETRY_START",
+                "payload": {
+                  "key": "webhook:1"
+                }
+              }
+            ],
+            "neverEmits": [
+              "WEBHOOK_FAILED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "the same delivery with the knob off is refused before any attempt",
+      "steps": [
+        {
+          "from": "idle",
+          "event": "WEBHOOK_SEND",
+          "payload": {
+            "event": "run.finished",
+            "payload": "{\"id\":1}",
+            "destination": {
+              "host": "cb.client.example.test",
+              "path": "/runs/42/done"
+            }
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "WEBHOOK_FAILED",
+                "payload": {
+                  "code": "destination-not-allowed",
+                  "message": "Refused: the delivery names a destination and allowDynamicDestination is off",
+                  "attempts": 0
+                }
+              }
+            ],
+            "neverEmits": [
+              "WEBHOOK_RETRY_START"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "CONTROL a delivery without a destination and the knob on goes to the configured one",
+      "config": {
+        "allowDynamicDestination": true
+      },
+      "steps": [
+        {
+          "from": "idle",
+          "event": "WEBHOOK_SEND",
+          "payload": {
+            "event": "run.finished",
+            "payload": "{\"id\":1}"
+          },
+          "expect": {
+            "state": "sending",
+            "emits": [
+              {
+                "event": "WEBHOOK_RETRY_START",
+                "payload": {
+                  "key": "webhook:1"
+                }
+              }
+            ],
+            "neverEmits": [
+              "WEBHOOK_FAILED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an attempt for a delivery with a destination sends to that host and path",
+      "config": {
+        "allowDynamicDestination": true
+      },
+      "steps": [
+        {
+          "from": "sending",
+          "event": "WEBHOOK_ATTEMPT",
+          "entity": {
+            "key": "webhook:1",
+            "seq": 1,
+            "event": "run.finished",
+            "payload": "{\"id\":1}",
+            "attempts": 0,
+            "destHost": "cb.client.example.test",
+            "destPath": "/runs/42/done"
+          },
+          "payload": {},
+          "expect": {
+            "state": "sending",
+            "emits": [
+              {
+                "event": "WEBHOOK_HTTP_SEND",
+                "payload": {
+                  "key": "webhook:1",
+                  "method": "POST",
+                  "host": "cb.client.example.test",
+                  "target": "/runs/42/done"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "WebhookHttp",
+        "WebhookTimeout"
+      ]
+    },
+    {
+      "id": "CONTROL an attempt for a delivery without a destination sends to the configured path and host",
+      "config": {
+        "allowDynamicDestination": true,
+        "path": "/hooks/orders"
+      },
+      "steps": [
+        {
+          "from": "sending",
+          "event": "WEBHOOK_ATTEMPT",
+          "entity": {
+            "key": "webhook:1",
+            "seq": 1,
+            "event": "run.finished",
+            "payload": "{\"id\":1}",
+            "attempts": 0
+          },
+          "payload": {},
+          "expect": {
+            "state": "sending",
+            "emits": [
+              {
+                "event": "WEBHOOK_HTTP_SEND",
+                "payload": {
+                  "key": "webhook:1",
+                  "method": "POST",
+                  "target": "/hooks/orders"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "WebhookHttp",
+        "WebhookTimeout"
+      ]
+    },
+    {
+      "id": "a retry attempt keeps the destination its delivery named",
+      "config": {
+        "allowDynamicDestination": true
+      },
+      "steps": [
+        {
+          "from": "sending",
+          "event": "WEBHOOK_ATTEMPT",
+          "entity": {
+            "key": "webhook:1",
+            "seq": 1,
+            "event": "run.finished",
+            "payload": "{\"id\":1}",
+            "attempts": 1,
+            "destHost": "cb.client.example.test",
+            "destPath": "/runs/42/done"
+          },
+          "payload": {},
+          "expect": {
+            "state": "sending",
+            "emits": [
+              {
+                "event": "WEBHOOK_HTTP_SEND",
+                "payload": {
+                  "key": "webhook:1",
+                  "host": "cb.client.example.test",
+                  "target": "/runs/42/done"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "WebhookHttp",
+        "WebhookTimeout"
+      ]
+    },
+    {
+      "id": "an invalid destination is refused before any attempt: host",
+      "config": {
+        "allowDynamicDestination": true
+      },
+      "steps": [
+        {
+          "from": "idle",
+          "event": "WEBHOOK_SEND",
+          "payload": {
+            "event": "run.finished",
+            "payload": "{\"id\":1}",
+            "destination": {
+              "host": "not a host",
+              "path": "/x"
+            }
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "WEBHOOK_FAILED",
+                "payload": {
+                  "code": "destination-invalid",
+                  "message": "Refused: the destination host or path is not valid",
+                  "attempts": 0
+                }
+              }
+            ],
+            "neverEmits": [
+              "WEBHOOK_RETRY_START"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an invalid destination is refused before any attempt: single-label host",
+      "config": {
+        "allowDynamicDestination": true
+      },
+      "steps": [
+        {
+          "from": "idle",
+          "event": "WEBHOOK_SEND",
+          "payload": {
+            "event": "run.finished",
+            "payload": "{\"id\":1}",
+            "destination": {
+              "host": "localhost",
+              "path": "/x"
+            }
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "WEBHOOK_FAILED",
+                "payload": {
+                  "code": "destination-invalid",
+                  "message": "Refused: the destination host or path is not valid",
+                  "attempts": 0
+                }
+              }
+            ],
+            "neverEmits": [
+              "WEBHOOK_RETRY_START"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an invalid destination is refused before any attempt: numeric host",
+      "config": {
+        "allowDynamicDestination": true
+      },
+      "steps": [
+        {
+          "from": "idle",
+          "event": "WEBHOOK_SEND",
+          "payload": {
+            "event": "run.finished",
+            "payload": "{\"id\":1}",
+            "destination": {
+              "host": "10.0.0.1",
+              "path": "/x"
+            }
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "WEBHOOK_FAILED",
+                "payload": {
+                  "code": "destination-invalid",
+                  "message": "Refused: the destination host or path is not valid",
+                  "attempts": 0
+                }
+              }
+            ],
+            "neverEmits": [
+              "WEBHOOK_RETRY_START"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an invalid destination is refused before any attempt: path without a leading slash",
+      "config": {
+        "allowDynamicDestination": true
+      },
+      "steps": [
+        {
+          "from": "idle",
+          "event": "WEBHOOK_SEND",
+          "payload": {
+            "event": "run.finished",
+            "payload": "{\"id\":1}",
+            "destination": {
+              "host": "cb.client.example.test",
+              "path": "runs/1"
+            }
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "WEBHOOK_FAILED",
+                "payload": {
+                  "code": "destination-invalid",
+                  "message": "Refused: the destination host or path is not valid",
+                  "attempts": 0
+                }
+              }
+            ],
+            "neverEmits": [
+              "WEBHOOK_RETRY_START"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an invalid destination is refused before any attempt: path with a space",
+      "config": {
+        "allowDynamicDestination": true
+      },
+      "steps": [
+        {
+          "from": "idle",
+          "event": "WEBHOOK_SEND",
+          "payload": {
+            "event": "run.finished",
+            "payload": "{\"id\":1}",
+            "destination": {
+              "host": "cb.client.example.test",
+              "path": "/a b"
+            }
+          },
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "WEBHOOK_FAILED",
+                "payload": {
+                  "code": "destination-invalid",
+                  "message": "Refused: the destination host or path is not valid",
+                  "attempts": 0
+                }
+              }
+            ],
+            "neverEmits": [
+              "WEBHOOK_RETRY_START"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "CONTROL a valid destination with the knob on is accepted where the invalid ones are refused",
+      "config": {
+        "allowDynamicDestination": true
+      },
+      "steps": [
+        {
+          "from": "idle",
+          "event": "WEBHOOK_SEND",
+          "payload": {
+            "event": "run.finished",
+            "payload": "{\"id\":1}",
+            "destination": {
+              "host": "a.b.example.test",
+              "path": "/"
+            }
+          },
+          "expect": {
+            "state": "sending",
+            "neverEmits": [
+              "WEBHOOK_FAILED"
+            ]
+          }
+        }
+      ]
     }
   ]
 }

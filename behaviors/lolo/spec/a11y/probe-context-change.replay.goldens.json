@@ -1,0 +1,1731 @@
+{
+ "atom": "a11y/atoms/std-a11y-probe-context-change.lolo",
+ "trait": "ContextChangeProbe",
+ "note": "std-a11y-probe-context-change with the page answers played as events. The four fixture cases carry the real PAGE_MEASURED json recorded by probe-context-change.gen/record.py from headless Chrome on the context-change fixtures and on probe-context-change.gen/search-fail.html and search-pass.html (the fixtures hold no search input); the navigate event the page's own handler raised was recorded and cancelled, and the tab stayed on its page. The other cases are hand-built answers. The expressions asserted are probe-context-change.gen/context-*.measure.js. Regenerate with python3 -I probe-context-change.gen/gen_goldens.py.",
+ "cases": [
+  {
+   "id": "context-change-fail: the select onchange asks for a navigation, a confirmed context-change-select",
+   "steps": [
+    {
+     "from": "idle",
+     "event": "PROBE_RUN",
+     "payload": {
+      "key": "k",
+      "pageUrl": "http://127.0.0.1:28448/context-change-fail.html"
+     },
+     "expect": {
+      "state": "inventorying",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k:inventory",
+         "expression": "(() => { const sel = (e) => { const p = []; for (let n = e; n && n.nodeType === 1; n = n.parentElement) { if (n.id) { p.unshift('#' + CSS.escape(n.id)); break; } let i = 1; for (let s = n.previousElementSibling; s; s = s.previousElementSibling) { if (s.tagName === n.tagName) i++; } p.unshift(n.tagName.toLowerCase() + (n.parentElement && n.parentElement.querySelectorAll(':scope > ' + n.tagName.toLowerCase()).length > 1 ? ':nth-of-type(' + i + ')' : '')); } return p.join(' > '); }; const q = 'select,input[type=search],input[role=searchbox],[role=search] input:not([type]),[role=search] input[type=text]'; const items = Array.from(document.querySelectorAll(q)).filter((el) => !el.disabled && !el.closest('[aria-hidden=true],[hidden]') && (!el.checkVisibility || el.checkVisibility({ visibilityProperty: true }))).map((el) => ({ selector: sel(el), snippet: el.outerHTML.split('>')[0] + '>', kind: el.tagName === 'SELECT' ? 'select' : 'search', testable: el.tagName === 'SELECT' ? Array.from(el.options).filter((o) => !o.disabled).length > 1 : true })); return JSON.stringify({ items }); })()"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "inventorying",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k:inventory",
+      "json": "{\"items\":[{\"selector\":\"#cat\",\"snippet\":\"<select onchange=\\\"if(this.value)location.href=this.value\\\" id=\\\"cat\\\" name=\\\"cat\\\">\",\"kind\":\"select\",\"testable\":true}]}"
+     },
+     "expect": {
+      "state": "acting",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k:act",
+         "expression": "((selector, kind, ch) => { const el = document.querySelector(selector); if (!el) return JSON.stringify({ found: false, href: location.href, api: !!window.navigation }); const ctx = { navigations: [], opened: 0, open: window.open }; window.__a11yCtx = ctx; window.open = () => { ctx.opened++; return null; }; if (window.navigation) { ctx.handler = (e) => { ctx.navigations.push({ url: e.destination.url, hashChange: e.hashChange, cancelable: e.cancelable }); if (e.cancelable && !e.hashChange) e.preventDefault(); }; window.navigation.addEventListener('navigate', ctx.handler); } if (kind === 'select') { const opts = Array.from(el.options); let next = el.selectedIndex; for (let n = 1; n <= opts.length; n++) { const j = (el.selectedIndex + n) % opts.length; if (!opts[j].disabled) { next = j; break; } } el.selectedIndex = next; el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); } else { el.value = ch; el.dispatchEvent(new Event('input', { bubbles: true })); } return JSON.stringify({ found: true, href: location.href, api: !!window.navigation }); })(\"#cat\",\"select\",\"a\")"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "acting",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k:act",
+      "json": "{\"found\":true,\"href\":\"http://127.0.0.1:28448/context-change-fail.html\",\"api\":true}"
+     },
+     "expect": {
+      "state": "reading",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k:read",
+         "expression": "(() => { const ctx = window.__a11yCtx; const out = { patched: !!ctx, href: location.href, navigations: ctx ? ctx.navigations : [], opened: ctx ? ctx.opened : 0, api: !!window.navigation }; if (ctx) { window.open = ctx.open; if (ctx.handler) window.navigation.removeEventListener('navigate', ctx.handler); delete window.__a11yCtx; } return JSON.stringify(out); })()"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "reading",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k:read",
+      "json": "{\"patched\":true,\"href\":\"http://127.0.0.1:28448/context-change-fail.html\",\"navigations\":[{\"url\":\"http://127.0.0.1:28448/context-change-target.html\",\"hashChange\":false,\"cancelable\":true}],\"opened\":0,\"api\":true}"
+     },
+     "expect": {
+      "state": "returning",
+      "emits": [
+       {
+        "event": "PAGE_NAVIGATE",
+        "payload": {
+         "key": "k:back",
+         "url": "http://127.0.0.1:28448/context-change-fail.html"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "returning",
+     "event": "PAGE_LOADED",
+     "payload": {
+      "key": "k:back",
+      "url": "http://127.0.0.1:28448/context-change-fail.html",
+      "title": "T"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k",
+         "probe": "context-change",
+         "findings": [
+          {
+           "id": "http://127.0.0.1:28448/context-change-fail.html#context-change-select##cat",
+           "pageUrl": "http://127.0.0.1:28448/context-change-fail.html",
+           "rule": "context-change-select",
+           "wcag": [
+            {
+             "criterion": "3.2.2",
+             "level": "A",
+             "version": "2.0"
+            }
+           ],
+           "method": "probe",
+           "engines": [
+            "probe"
+           ],
+           "impact": "serious",
+           "confidence": "confirmed",
+           "selector": "#cat",
+           "snippet": "<select onchange=\"if(this.value)location.href=this.value\" id=\"cat\" name=\"cat\">",
+           "evidence": "",
+           "count": 1
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: context-change-pass changes nothing until the Pojdi button, so no finding",
+   "steps": [
+    {
+     "from": "idle",
+     "event": "PROBE_RUN",
+     "payload": {
+      "key": "k",
+      "pageUrl": "http://127.0.0.1:28448/context-change-pass.html"
+     },
+     "expect": {
+      "state": "inventorying",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k:inventory",
+         "expression": "(() => { const sel = (e) => { const p = []; for (let n = e; n && n.nodeType === 1; n = n.parentElement) { if (n.id) { p.unshift('#' + CSS.escape(n.id)); break; } let i = 1; for (let s = n.previousElementSibling; s; s = s.previousElementSibling) { if (s.tagName === n.tagName) i++; } p.unshift(n.tagName.toLowerCase() + (n.parentElement && n.parentElement.querySelectorAll(':scope > ' + n.tagName.toLowerCase()).length > 1 ? ':nth-of-type(' + i + ')' : '')); } return p.join(' > '); }; const q = 'select,input[type=search],input[role=searchbox],[role=search] input:not([type]),[role=search] input[type=text]'; const items = Array.from(document.querySelectorAll(q)).filter((el) => !el.disabled && !el.closest('[aria-hidden=true],[hidden]') && (!el.checkVisibility || el.checkVisibility({ visibilityProperty: true }))).map((el) => ({ selector: sel(el), snippet: el.outerHTML.split('>')[0] + '>', kind: el.tagName === 'SELECT' ? 'select' : 'search', testable: el.tagName === 'SELECT' ? Array.from(el.options).filter((o) => !o.disabled).length > 1 : true })); return JSON.stringify({ items }); })()"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "inventorying",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k:inventory",
+      "json": "{\"items\":[{\"selector\":\"#cat\",\"snippet\":\"<select id=\\\"cat\\\" name=\\\"cat\\\">\",\"kind\":\"select\",\"testable\":true}]}"
+     },
+     "expect": {
+      "state": "acting",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k:act",
+         "expression": "((selector, kind, ch) => { const el = document.querySelector(selector); if (!el) return JSON.stringify({ found: false, href: location.href, api: !!window.navigation }); const ctx = { navigations: [], opened: 0, open: window.open }; window.__a11yCtx = ctx; window.open = () => { ctx.opened++; return null; }; if (window.navigation) { ctx.handler = (e) => { ctx.navigations.push({ url: e.destination.url, hashChange: e.hashChange, cancelable: e.cancelable }); if (e.cancelable && !e.hashChange) e.preventDefault(); }; window.navigation.addEventListener('navigate', ctx.handler); } if (kind === 'select') { const opts = Array.from(el.options); let next = el.selectedIndex; for (let n = 1; n <= opts.length; n++) { const j = (el.selectedIndex + n) % opts.length; if (!opts[j].disabled) { next = j; break; } } el.selectedIndex = next; el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); } else { el.value = ch; el.dispatchEvent(new Event('input', { bubbles: true })); } return JSON.stringify({ found: true, href: location.href, api: !!window.navigation }); })(\"#cat\",\"select\",\"a\")"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "acting",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k:act",
+      "json": "{\"found\":true,\"href\":\"http://127.0.0.1:28448/context-change-pass.html\",\"api\":true}"
+     },
+     "expect": {
+      "state": "reading",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k:read",
+         "expression": "(() => { const ctx = window.__a11yCtx; const out = { patched: !!ctx, href: location.href, navigations: ctx ? ctx.navigations : [], opened: ctx ? ctx.opened : 0, api: !!window.navigation }; if (ctx) { window.open = ctx.open; if (ctx.handler) window.navigation.removeEventListener('navigate', ctx.handler); delete window.__a11yCtx; } return JSON.stringify(out); })()"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "reading",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k:read",
+      "json": "{\"patched\":true,\"href\":\"http://127.0.0.1:28448/context-change-pass.html\",\"navigations\":[],\"opened\":0,\"api\":true}"
+     },
+     "expect": {
+      "state": "returning",
+      "emits": [
+       {
+        "event": "PAGE_NAVIGATE",
+        "payload": {
+         "key": "k:back",
+         "url": "http://127.0.0.1:28448/context-change-pass.html"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "returning",
+     "event": "PAGE_LOADED",
+     "payload": {
+      "key": "k:back",
+      "url": "http://127.0.0.1:28448/context-change-pass.html",
+      "title": "T"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k",
+         "probe": "context-change",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "search-fail: typing in the search input asks for a navigation, a confirmed context-change-input",
+   "steps": [
+    {
+     "from": "idle",
+     "event": "PROBE_RUN",
+     "payload": {
+      "key": "k",
+      "pageUrl": "http://127.0.0.1:20184/search-fail.html"
+     },
+     "expect": {
+      "state": "inventorying",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k:inventory",
+         "expression": "(() => { const sel = (e) => { const p = []; for (let n = e; n && n.nodeType === 1; n = n.parentElement) { if (n.id) { p.unshift('#' + CSS.escape(n.id)); break; } let i = 1; for (let s = n.previousElementSibling; s; s = s.previousElementSibling) { if (s.tagName === n.tagName) i++; } p.unshift(n.tagName.toLowerCase() + (n.parentElement && n.parentElement.querySelectorAll(':scope > ' + n.tagName.toLowerCase()).length > 1 ? ':nth-of-type(' + i + ')' : '')); } return p.join(' > '); }; const q = 'select,input[type=search],input[role=searchbox],[role=search] input:not([type]),[role=search] input[type=text]'; const items = Array.from(document.querySelectorAll(q)).filter((el) => !el.disabled && !el.closest('[aria-hidden=true],[hidden]') && (!el.checkVisibility || el.checkVisibility({ visibilityProperty: true }))).map((el) => ({ selector: sel(el), snippet: el.outerHTML.split('>')[0] + '>', kind: el.tagName === 'SELECT' ? 'select' : 'search', testable: el.tagName === 'SELECT' ? Array.from(el.options).filter((o) => !o.disabled).length > 1 : true })); return JSON.stringify({ items }); })()"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "inventorying",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k:inventory",
+      "json": "{\"items\":[{\"selector\":\"#q\",\"snippet\":\"<input type=\\\"search\\\" id=\\\"q\\\" name=\\\"q\\\" oninput=\\\"location.href='about:blank'\\\">\",\"kind\":\"search\",\"testable\":true}]}"
+     },
+     "expect": {
+      "state": "acting",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k:act",
+         "expression": "((selector, kind, ch) => { const el = document.querySelector(selector); if (!el) return JSON.stringify({ found: false, href: location.href, api: !!window.navigation }); const ctx = { navigations: [], opened: 0, open: window.open }; window.__a11yCtx = ctx; window.open = () => { ctx.opened++; return null; }; if (window.navigation) { ctx.handler = (e) => { ctx.navigations.push({ url: e.destination.url, hashChange: e.hashChange, cancelable: e.cancelable }); if (e.cancelable && !e.hashChange) e.preventDefault(); }; window.navigation.addEventListener('navigate', ctx.handler); } if (kind === 'select') { const opts = Array.from(el.options); let next = el.selectedIndex; for (let n = 1; n <= opts.length; n++) { const j = (el.selectedIndex + n) % opts.length; if (!opts[j].disabled) { next = j; break; } } el.selectedIndex = next; el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); } else { el.value = ch; el.dispatchEvent(new Event('input', { bubbles: true })); } return JSON.stringify({ found: true, href: location.href, api: !!window.navigation }); })(\"#q\",\"search\",\"a\")"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "acting",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k:act",
+      "json": "{\"found\":true,\"href\":\"http://127.0.0.1:20184/search-fail.html\",\"api\":true}"
+     },
+     "expect": {
+      "state": "reading",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k:read",
+         "expression": "(() => { const ctx = window.__a11yCtx; const out = { patched: !!ctx, href: location.href, navigations: ctx ? ctx.navigations : [], opened: ctx ? ctx.opened : 0, api: !!window.navigation }; if (ctx) { window.open = ctx.open; if (ctx.handler) window.navigation.removeEventListener('navigate', ctx.handler); delete window.__a11yCtx; } return JSON.stringify(out); })()"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "reading",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k:read",
+      "json": "{\"patched\":true,\"href\":\"http://127.0.0.1:20184/search-fail.html\",\"navigations\":[{\"url\":\"about:blank\",\"hashChange\":false,\"cancelable\":true}],\"opened\":0,\"api\":true}"
+     },
+     "expect": {
+      "state": "returning",
+      "emits": [
+       {
+        "event": "PAGE_NAVIGATE",
+        "payload": {
+         "key": "k:back",
+         "url": "http://127.0.0.1:20184/search-fail.html"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "returning",
+     "event": "PAGE_LOADED",
+     "payload": {
+      "key": "k:back",
+      "url": "http://127.0.0.1:20184/search-fail.html",
+      "title": "T"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k",
+         "probe": "context-change",
+         "findings": [
+          {
+           "id": "http://127.0.0.1:20184/search-fail.html#context-change-input##q",
+           "pageUrl": "http://127.0.0.1:20184/search-fail.html",
+           "rule": "context-change-input",
+           "wcag": [
+            {
+             "criterion": "3.2.2",
+             "level": "A",
+             "version": "2.0"
+            }
+           ],
+           "method": "probe",
+           "engines": [
+            "probe"
+           ],
+           "impact": "serious",
+           "confidence": "confirmed",
+           "selector": "#q",
+           "snippet": "<input type=\"search\" id=\"q\" name=\"q\" oninput=\"location.href='about:blank'\">",
+           "evidence": "",
+           "count": 1
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: search-pass waits for a submit button, so no finding",
+   "steps": [
+    {
+     "from": "idle",
+     "event": "PROBE_RUN",
+     "payload": {
+      "key": "k",
+      "pageUrl": "http://127.0.0.1:20184/search-pass.html"
+     },
+     "expect": {
+      "state": "inventorying",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k:inventory",
+         "expression": "(() => { const sel = (e) => { const p = []; for (let n = e; n && n.nodeType === 1; n = n.parentElement) { if (n.id) { p.unshift('#' + CSS.escape(n.id)); break; } let i = 1; for (let s = n.previousElementSibling; s; s = s.previousElementSibling) { if (s.tagName === n.tagName) i++; } p.unshift(n.tagName.toLowerCase() + (n.parentElement && n.parentElement.querySelectorAll(':scope > ' + n.tagName.toLowerCase()).length > 1 ? ':nth-of-type(' + i + ')' : '')); } return p.join(' > '); }; const q = 'select,input[type=search],input[role=searchbox],[role=search] input:not([type]),[role=search] input[type=text]'; const items = Array.from(document.querySelectorAll(q)).filter((el) => !el.disabled && !el.closest('[aria-hidden=true],[hidden]') && (!el.checkVisibility || el.checkVisibility({ visibilityProperty: true }))).map((el) => ({ selector: sel(el), snippet: el.outerHTML.split('>')[0] + '>', kind: el.tagName === 'SELECT' ? 'select' : 'search', testable: el.tagName === 'SELECT' ? Array.from(el.options).filter((o) => !o.disabled).length > 1 : true })); return JSON.stringify({ items }); })()"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "inventorying",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k:inventory",
+      "json": "{\"items\":[{\"selector\":\"#q\",\"snippet\":\"<input type=\\\"search\\\" id=\\\"q\\\" name=\\\"q\\\">\",\"kind\":\"search\",\"testable\":true}]}"
+     },
+     "expect": {
+      "state": "acting",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k:act",
+         "expression": "((selector, kind, ch) => { const el = document.querySelector(selector); if (!el) return JSON.stringify({ found: false, href: location.href, api: !!window.navigation }); const ctx = { navigations: [], opened: 0, open: window.open }; window.__a11yCtx = ctx; window.open = () => { ctx.opened++; return null; }; if (window.navigation) { ctx.handler = (e) => { ctx.navigations.push({ url: e.destination.url, hashChange: e.hashChange, cancelable: e.cancelable }); if (e.cancelable && !e.hashChange) e.preventDefault(); }; window.navigation.addEventListener('navigate', ctx.handler); } if (kind === 'select') { const opts = Array.from(el.options); let next = el.selectedIndex; for (let n = 1; n <= opts.length; n++) { const j = (el.selectedIndex + n) % opts.length; if (!opts[j].disabled) { next = j; break; } } el.selectedIndex = next; el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); } else { el.value = ch; el.dispatchEvent(new Event('input', { bubbles: true })); } return JSON.stringify({ found: true, href: location.href, api: !!window.navigation }); })(\"#q\",\"search\",\"a\")"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "acting",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k:act",
+      "json": "{\"found\":true,\"href\":\"http://127.0.0.1:20184/search-pass.html\",\"api\":true}"
+     },
+     "expect": {
+      "state": "reading",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k:read",
+         "expression": "(() => { const ctx = window.__a11yCtx; const out = { patched: !!ctx, href: location.href, navigations: ctx ? ctx.navigations : [], opened: ctx ? ctx.opened : 0, api: !!window.navigation }; if (ctx) { window.open = ctx.open; if (ctx.handler) window.navigation.removeEventListener('navigate', ctx.handler); delete window.__a11yCtx; } return JSON.stringify(out); })()"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "reading",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k:read",
+      "json": "{\"patched\":true,\"href\":\"http://127.0.0.1:20184/search-pass.html\",\"navigations\":[],\"opened\":0,\"api\":true}"
+     },
+     "expect": {
+      "state": "returning",
+      "emits": [
+       {
+        "event": "PAGE_NAVIGATE",
+        "payload": {
+         "key": "k:back",
+         "url": "http://127.0.0.1:20184/search-pass.html"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "returning",
+     "event": "PAGE_LOADED",
+     "payload": {
+      "key": "k:back",
+      "url": "http://127.0.0.1:20184/search-pass.html",
+      "title": "T"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k",
+         "probe": "context-change",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "two selects then a search: the first changes the page, the second does not, the third opens a window; the cursor moves on after each navigation back and a non-testable select is skipped",
+   "steps": [
+    {
+     "from": "idle",
+     "event": "PROBE_RUN",
+     "payload": {
+      "key": "k",
+      "pageUrl": "https://a.test/p"
+     },
+     "expect": {
+      "state": "inventorying",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k:inventory",
+         "expression": "(() => { const sel = (e) => { const p = []; for (let n = e; n && n.nodeType === 1; n = n.parentElement) { if (n.id) { p.unshift('#' + CSS.escape(n.id)); break; } let i = 1; for (let s = n.previousElementSibling; s; s = s.previousElementSibling) { if (s.tagName === n.tagName) i++; } p.unshift(n.tagName.toLowerCase() + (n.parentElement && n.parentElement.querySelectorAll(':scope > ' + n.tagName.toLowerCase()).length > 1 ? ':nth-of-type(' + i + ')' : '')); } return p.join(' > '); }; const q = 'select,input[type=search],input[role=searchbox],[role=search] input:not([type]),[role=search] input[type=text]'; const items = Array.from(document.querySelectorAll(q)).filter((el) => !el.disabled && !el.closest('[aria-hidden=true],[hidden]') && (!el.checkVisibility || el.checkVisibility({ visibilityProperty: true }))).map((el) => ({ selector: sel(el), snippet: el.outerHTML.split('>')[0] + '>', kind: el.tagName === 'SELECT' ? 'select' : 'search', testable: el.tagName === 'SELECT' ? Array.from(el.options).filter((o) => !o.disabled).length > 1 : true })); return JSON.stringify({ items }); })()"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "inventorying",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k:inventory",
+      "json": "{\"items\":[{\"selector\":\"#a\",\"snippet\":\"<select id=\\\"a\\\">\",\"kind\":\"select\",\"testable\":true},{\"selector\":\"#skip\",\"snippet\":\"<select id=\\\"skip\\\">\",\"kind\":\"select\",\"testable\":false},{\"selector\":\"#b\",\"snippet\":\"<select id=\\\"b\\\">\",\"kind\":\"select\",\"testable\":true},{\"selector\":\"#c\",\"snippet\":\"<input id=\\\"c\\\">\",\"kind\":\"search\",\"testable\":true}]}"
+     },
+     "expect": {
+      "state": "acting",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k:act",
+         "expression": "((selector, kind, ch) => { const el = document.querySelector(selector); if (!el) return JSON.stringify({ found: false, href: location.href, api: !!window.navigation }); const ctx = { navigations: [], opened: 0, open: window.open }; window.__a11yCtx = ctx; window.open = () => { ctx.opened++; return null; }; if (window.navigation) { ctx.handler = (e) => { ctx.navigations.push({ url: e.destination.url, hashChange: e.hashChange, cancelable: e.cancelable }); if (e.cancelable && !e.hashChange) e.preventDefault(); }; window.navigation.addEventListener('navigate', ctx.handler); } if (kind === 'select') { const opts = Array.from(el.options); let next = el.selectedIndex; for (let n = 1; n <= opts.length; n++) { const j = (el.selectedIndex + n) % opts.length; if (!opts[j].disabled) { next = j; break; } } el.selectedIndex = next; el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); } else { el.value = ch; el.dispatchEvent(new Event('input', { bubbles: true })); } return JSON.stringify({ found: true, href: location.href, api: !!window.navigation }); })(\"#a\",\"select\",\"a\")"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "acting",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k:act",
+      "json": "{\"found\":true,\"href\":\"https://a.test/p\",\"api\":true}"
+     },
+     "expect": {
+      "state": "reading",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k:read",
+         "expression": "(() => { const ctx = window.__a11yCtx; const out = { patched: !!ctx, href: location.href, navigations: ctx ? ctx.navigations : [], opened: ctx ? ctx.opened : 0, api: !!window.navigation }; if (ctx) { window.open = ctx.open; if (ctx.handler) window.navigation.removeEventListener('navigate', ctx.handler); delete window.__a11yCtx; } return JSON.stringify(out); })()"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "reading",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k:read",
+      "json": "{\"patched\":true,\"href\":\"https://a.test/p\",\"navigations\":[{\"url\":\"https://a.test/other\",\"hashChange\":false,\"cancelable\":true}],\"opened\":0,\"api\":true}"
+     },
+     "expect": {
+      "state": "returning",
+      "emits": [
+       {
+        "event": "PAGE_NAVIGATE",
+        "payload": {
+         "key": "k:back",
+         "url": "https://a.test/p"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "returning",
+     "event": "PAGE_LOADED",
+     "payload": {
+      "key": "k:back",
+      "url": "https://a.test/p",
+      "title": "T"
+     },
+     "expect": {
+      "state": "acting",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k:act",
+         "expression": "((selector, kind, ch) => { const el = document.querySelector(selector); if (!el) return JSON.stringify({ found: false, href: location.href, api: !!window.navigation }); const ctx = { navigations: [], opened: 0, open: window.open }; window.__a11yCtx = ctx; window.open = () => { ctx.opened++; return null; }; if (window.navigation) { ctx.handler = (e) => { ctx.navigations.push({ url: e.destination.url, hashChange: e.hashChange, cancelable: e.cancelable }); if (e.cancelable && !e.hashChange) e.preventDefault(); }; window.navigation.addEventListener('navigate', ctx.handler); } if (kind === 'select') { const opts = Array.from(el.options); let next = el.selectedIndex; for (let n = 1; n <= opts.length; n++) { const j = (el.selectedIndex + n) % opts.length; if (!opts[j].disabled) { next = j; break; } } el.selectedIndex = next; el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); } else { el.value = ch; el.dispatchEvent(new Event('input', { bubbles: true })); } return JSON.stringify({ found: true, href: location.href, api: !!window.navigation }); })(\"#b\",\"select\",\"a\")"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "acting",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k:act",
+      "json": "{\"found\":true,\"href\":\"https://a.test/p\",\"api\":true}"
+     },
+     "expect": {
+      "state": "reading",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k:read",
+         "expression": "(() => { const ctx = window.__a11yCtx; const out = { patched: !!ctx, href: location.href, navigations: ctx ? ctx.navigations : [], opened: ctx ? ctx.opened : 0, api: !!window.navigation }; if (ctx) { window.open = ctx.open; if (ctx.handler) window.navigation.removeEventListener('navigate', ctx.handler); delete window.__a11yCtx; } return JSON.stringify(out); })()"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "reading",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k:read",
+      "json": "{\"patched\":true,\"href\":\"https://a.test/p\",\"navigations\":[],\"opened\":0,\"api\":true}"
+     },
+     "expect": {
+      "state": "returning",
+      "emits": [
+       {
+        "event": "PAGE_NAVIGATE",
+        "payload": {
+         "key": "k:back",
+         "url": "https://a.test/p"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "returning",
+     "event": "PAGE_LOADED",
+     "payload": {
+      "key": "k:back",
+      "url": "https://a.test/p",
+      "title": "T"
+     },
+     "expect": {
+      "state": "acting",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k:act",
+         "expression": "((selector, kind, ch) => { const el = document.querySelector(selector); if (!el) return JSON.stringify({ found: false, href: location.href, api: !!window.navigation }); const ctx = { navigations: [], opened: 0, open: window.open }; window.__a11yCtx = ctx; window.open = () => { ctx.opened++; return null; }; if (window.navigation) { ctx.handler = (e) => { ctx.navigations.push({ url: e.destination.url, hashChange: e.hashChange, cancelable: e.cancelable }); if (e.cancelable && !e.hashChange) e.preventDefault(); }; window.navigation.addEventListener('navigate', ctx.handler); } if (kind === 'select') { const opts = Array.from(el.options); let next = el.selectedIndex; for (let n = 1; n <= opts.length; n++) { const j = (el.selectedIndex + n) % opts.length; if (!opts[j].disabled) { next = j; break; } } el.selectedIndex = next; el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); } else { el.value = ch; el.dispatchEvent(new Event('input', { bubbles: true })); } return JSON.stringify({ found: true, href: location.href, api: !!window.navigation }); })(\"#c\",\"search\",\"a\")"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "acting",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k:act",
+      "json": "{\"found\":true,\"href\":\"https://a.test/p\",\"api\":true}"
+     },
+     "expect": {
+      "state": "reading",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k:read",
+         "expression": "(() => { const ctx = window.__a11yCtx; const out = { patched: !!ctx, href: location.href, navigations: ctx ? ctx.navigations : [], opened: ctx ? ctx.opened : 0, api: !!window.navigation }; if (ctx) { window.open = ctx.open; if (ctx.handler) window.navigation.removeEventListener('navigate', ctx.handler); delete window.__a11yCtx; } return JSON.stringify(out); })()"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "reading",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k:read",
+      "json": "{\"patched\":true,\"href\":\"https://a.test/p\",\"navigations\":[],\"opened\":1,\"api\":true}"
+     },
+     "expect": {
+      "state": "returning",
+      "emits": [
+       {
+        "event": "PAGE_NAVIGATE",
+        "payload": {
+         "key": "k:back",
+         "url": "https://a.test/p"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "returning",
+     "event": "PAGE_LOADED",
+     "payload": {
+      "key": "k:back",
+      "url": "https://a.test/p",
+      "title": "T"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k",
+         "probe": "context-change",
+         "findings": [
+          {
+           "id": "https://a.test/p#context-change-select##a",
+           "pageUrl": "https://a.test/p",
+           "rule": "context-change-select",
+           "wcag": [
+            {
+             "criterion": "3.2.2",
+             "level": "A",
+             "version": "2.0"
+            }
+           ],
+           "method": "probe",
+           "engines": [
+            "probe"
+           ],
+           "impact": "serious",
+           "confidence": "confirmed",
+           "selector": "#a",
+           "snippet": "<select id=\"a\">",
+           "evidence": "",
+           "count": 1
+          },
+          {
+           "id": "https://a.test/p#context-change-input##c",
+           "pageUrl": "https://a.test/p",
+           "rule": "context-change-input",
+           "wcag": [
+            {
+             "criterion": "3.2.2",
+             "level": "A",
+             "version": "2.0"
+            }
+           ],
+           "method": "probe",
+           "engines": [
+            "probe"
+           ],
+           "impact": "serious",
+           "confidence": "confirmed",
+           "selector": "#c",
+           "snippet": "<input id=\"c\">",
+           "evidence": "",
+           "count": 1
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a same-document hash change is not a context change",
+   "steps": [
+    {
+     "from": "idle",
+     "event": "PROBE_RUN",
+     "payload": {
+      "key": "k",
+      "pageUrl": "https://a.test/p"
+     },
+     "expect": {
+      "state": "inventorying",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k:inventory",
+         "expression": "(() => { const sel = (e) => { const p = []; for (let n = e; n && n.nodeType === 1; n = n.parentElement) { if (n.id) { p.unshift('#' + CSS.escape(n.id)); break; } let i = 1; for (let s = n.previousElementSibling; s; s = s.previousElementSibling) { if (s.tagName === n.tagName) i++; } p.unshift(n.tagName.toLowerCase() + (n.parentElement && n.parentElement.querySelectorAll(':scope > ' + n.tagName.toLowerCase()).length > 1 ? ':nth-of-type(' + i + ')' : '')); } return p.join(' > '); }; const q = 'select,input[type=search],input[role=searchbox],[role=search] input:not([type]),[role=search] input[type=text]'; const items = Array.from(document.querySelectorAll(q)).filter((el) => !el.disabled && !el.closest('[aria-hidden=true],[hidden]') && (!el.checkVisibility || el.checkVisibility({ visibilityProperty: true }))).map((el) => ({ selector: sel(el), snippet: el.outerHTML.split('>')[0] + '>', kind: el.tagName === 'SELECT' ? 'select' : 'search', testable: el.tagName === 'SELECT' ? Array.from(el.options).filter((o) => !o.disabled).length > 1 : true })); return JSON.stringify({ items }); })()"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "inventorying",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k:inventory",
+      "json": "{\"items\":[{\"selector\":\"#a\",\"snippet\":\"<select id=\\\"a\\\">\",\"kind\":\"select\",\"testable\":true}]}"
+     },
+     "expect": {
+      "state": "acting",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k:act",
+         "expression": "((selector, kind, ch) => { const el = document.querySelector(selector); if (!el) return JSON.stringify({ found: false, href: location.href, api: !!window.navigation }); const ctx = { navigations: [], opened: 0, open: window.open }; window.__a11yCtx = ctx; window.open = () => { ctx.opened++; return null; }; if (window.navigation) { ctx.handler = (e) => { ctx.navigations.push({ url: e.destination.url, hashChange: e.hashChange, cancelable: e.cancelable }); if (e.cancelable && !e.hashChange) e.preventDefault(); }; window.navigation.addEventListener('navigate', ctx.handler); } if (kind === 'select') { const opts = Array.from(el.options); let next = el.selectedIndex; for (let n = 1; n <= opts.length; n++) { const j = (el.selectedIndex + n) % opts.length; if (!opts[j].disabled) { next = j; break; } } el.selectedIndex = next; el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); } else { el.value = ch; el.dispatchEvent(new Event('input', { bubbles: true })); } return JSON.stringify({ found: true, href: location.href, api: !!window.navigation }); })(\"#a\",\"select\",\"a\")"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "acting",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k:act",
+      "json": "{\"found\":true,\"href\":\"https://a.test/p\",\"api\":true}"
+     },
+     "expect": {
+      "state": "reading",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k:read",
+         "expression": "(() => { const ctx = window.__a11yCtx; const out = { patched: !!ctx, href: location.href, navigations: ctx ? ctx.navigations : [], opened: ctx ? ctx.opened : 0, api: !!window.navigation }; if (ctx) { window.open = ctx.open; if (ctx.handler) window.navigation.removeEventListener('navigate', ctx.handler); delete window.__a11yCtx; } return JSON.stringify(out); })()"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "reading",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k:read",
+      "json": "{\"patched\":true,\"href\":\"https://a.test/p\",\"navigations\":[{\"url\":\"https://a.test/p#x\",\"hashChange\":true,\"cancelable\":true}],\"opened\":0,\"api\":true}"
+     },
+     "expect": {
+      "state": "returning",
+      "emits": [
+       {
+        "event": "PAGE_NAVIGATE",
+        "payload": {
+         "key": "k:back",
+         "url": "https://a.test/p"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "returning",
+     "event": "PAGE_LOADED",
+     "payload": {
+      "key": "k:back",
+      "url": "https://a.test/p",
+      "title": "T"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k",
+         "probe": "context-change",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a url that differs after the change is a context change even when no navigate event was seen",
+   "steps": [
+    {
+     "from": "idle",
+     "event": "PROBE_RUN",
+     "payload": {
+      "key": "k",
+      "pageUrl": "https://a.test/p"
+     },
+     "expect": {
+      "state": "inventorying",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k:inventory",
+         "expression": "(() => { const sel = (e) => { const p = []; for (let n = e; n && n.nodeType === 1; n = n.parentElement) { if (n.id) { p.unshift('#' + CSS.escape(n.id)); break; } let i = 1; for (let s = n.previousElementSibling; s; s = s.previousElementSibling) { if (s.tagName === n.tagName) i++; } p.unshift(n.tagName.toLowerCase() + (n.parentElement && n.parentElement.querySelectorAll(':scope > ' + n.tagName.toLowerCase()).length > 1 ? ':nth-of-type(' + i + ')' : '')); } return p.join(' > '); }; const q = 'select,input[type=search],input[role=searchbox],[role=search] input:not([type]),[role=search] input[type=text]'; const items = Array.from(document.querySelectorAll(q)).filter((el) => !el.disabled && !el.closest('[aria-hidden=true],[hidden]') && (!el.checkVisibility || el.checkVisibility({ visibilityProperty: true }))).map((el) => ({ selector: sel(el), snippet: el.outerHTML.split('>')[0] + '>', kind: el.tagName === 'SELECT' ? 'select' : 'search', testable: el.tagName === 'SELECT' ? Array.from(el.options).filter((o) => !o.disabled).length > 1 : true })); return JSON.stringify({ items }); })()"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "inventorying",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k:inventory",
+      "json": "{\"items\":[{\"selector\":\"#a\",\"snippet\":\"<select id=\\\"a\\\">\",\"kind\":\"select\",\"testable\":true}]}"
+     },
+     "expect": {
+      "state": "acting",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k:act",
+         "expression": "((selector, kind, ch) => { const el = document.querySelector(selector); if (!el) return JSON.stringify({ found: false, href: location.href, api: !!window.navigation }); const ctx = { navigations: [], opened: 0, open: window.open }; window.__a11yCtx = ctx; window.open = () => { ctx.opened++; return null; }; if (window.navigation) { ctx.handler = (e) => { ctx.navigations.push({ url: e.destination.url, hashChange: e.hashChange, cancelable: e.cancelable }); if (e.cancelable && !e.hashChange) e.preventDefault(); }; window.navigation.addEventListener('navigate', ctx.handler); } if (kind === 'select') { const opts = Array.from(el.options); let next = el.selectedIndex; for (let n = 1; n <= opts.length; n++) { const j = (el.selectedIndex + n) % opts.length; if (!opts[j].disabled) { next = j; break; } } el.selectedIndex = next; el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); } else { el.value = ch; el.dispatchEvent(new Event('input', { bubbles: true })); } return JSON.stringify({ found: true, href: location.href, api: !!window.navigation }); })(\"#a\",\"select\",\"a\")"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "acting",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k:act",
+      "json": "{\"found\":true,\"href\":\"https://a.test/p\",\"api\":true}"
+     },
+     "expect": {
+      "state": "reading",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k:read",
+         "expression": "(() => { const ctx = window.__a11yCtx; const out = { patched: !!ctx, href: location.href, navigations: ctx ? ctx.navigations : [], opened: ctx ? ctx.opened : 0, api: !!window.navigation }; if (ctx) { window.open = ctx.open; if (ctx.handler) window.navigation.removeEventListener('navigate', ctx.handler); delete window.__a11yCtx; } return JSON.stringify(out); })()"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "reading",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k:read",
+      "json": "{\"patched\":true,\"href\":\"https://a.test/next\",\"navigations\":[],\"opened\":0,\"api\":true}"
+     },
+     "expect": {
+      "state": "returning",
+      "emits": [
+       {
+        "event": "PAGE_NAVIGATE",
+        "payload": {
+         "key": "k:back",
+         "url": "https://a.test/p"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "returning",
+     "event": "PAGE_LOADED",
+     "payload": {
+      "key": "k:back",
+      "url": "https://a.test/p",
+      "title": "T"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k",
+         "probe": "context-change",
+         "findings": [
+          {
+           "id": "https://a.test/p#context-change-select##a",
+           "pageUrl": "https://a.test/p",
+           "rule": "context-change-select",
+           "wcag": [
+            {
+             "criterion": "3.2.2",
+             "level": "A",
+             "version": "2.0"
+            }
+           ],
+           "method": "probe",
+           "engines": [
+            "probe"
+           ],
+           "impact": "serious",
+           "confidence": "confirmed",
+           "selector": "#a",
+           "snippet": "<select id=\"a\">",
+           "evidence": "",
+           "count": 1
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a page that replaced itself (the watch is gone) is a context change",
+   "steps": [
+    {
+     "from": "idle",
+     "event": "PROBE_RUN",
+     "payload": {
+      "key": "k",
+      "pageUrl": "https://a.test/p"
+     },
+     "expect": {
+      "state": "inventorying",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k:inventory",
+         "expression": "(() => { const sel = (e) => { const p = []; for (let n = e; n && n.nodeType === 1; n = n.parentElement) { if (n.id) { p.unshift('#' + CSS.escape(n.id)); break; } let i = 1; for (let s = n.previousElementSibling; s; s = s.previousElementSibling) { if (s.tagName === n.tagName) i++; } p.unshift(n.tagName.toLowerCase() + (n.parentElement && n.parentElement.querySelectorAll(':scope > ' + n.tagName.toLowerCase()).length > 1 ? ':nth-of-type(' + i + ')' : '')); } return p.join(' > '); }; const q = 'select,input[type=search],input[role=searchbox],[role=search] input:not([type]),[role=search] input[type=text]'; const items = Array.from(document.querySelectorAll(q)).filter((el) => !el.disabled && !el.closest('[aria-hidden=true],[hidden]') && (!el.checkVisibility || el.checkVisibility({ visibilityProperty: true }))).map((el) => ({ selector: sel(el), snippet: el.outerHTML.split('>')[0] + '>', kind: el.tagName === 'SELECT' ? 'select' : 'search', testable: el.tagName === 'SELECT' ? Array.from(el.options).filter((o) => !o.disabled).length > 1 : true })); return JSON.stringify({ items }); })()"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "inventorying",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k:inventory",
+      "json": "{\"items\":[{\"selector\":\"#a\",\"snippet\":\"<select id=\\\"a\\\">\",\"kind\":\"select\",\"testable\":true}]}"
+     },
+     "expect": {
+      "state": "acting",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k:act",
+         "expression": "((selector, kind, ch) => { const el = document.querySelector(selector); if (!el) return JSON.stringify({ found: false, href: location.href, api: !!window.navigation }); const ctx = { navigations: [], opened: 0, open: window.open }; window.__a11yCtx = ctx; window.open = () => { ctx.opened++; return null; }; if (window.navigation) { ctx.handler = (e) => { ctx.navigations.push({ url: e.destination.url, hashChange: e.hashChange, cancelable: e.cancelable }); if (e.cancelable && !e.hashChange) e.preventDefault(); }; window.navigation.addEventListener('navigate', ctx.handler); } if (kind === 'select') { const opts = Array.from(el.options); let next = el.selectedIndex; for (let n = 1; n <= opts.length; n++) { const j = (el.selectedIndex + n) % opts.length; if (!opts[j].disabled) { next = j; break; } } el.selectedIndex = next; el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); } else { el.value = ch; el.dispatchEvent(new Event('input', { bubbles: true })); } return JSON.stringify({ found: true, href: location.href, api: !!window.navigation }); })(\"#a\",\"select\",\"a\")"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "acting",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k:act",
+      "json": "{\"found\":true,\"href\":\"https://a.test/p\",\"api\":true}"
+     },
+     "expect": {
+      "state": "reading",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k:read",
+         "expression": "(() => { const ctx = window.__a11yCtx; const out = { patched: !!ctx, href: location.href, navigations: ctx ? ctx.navigations : [], opened: ctx ? ctx.opened : 0, api: !!window.navigation }; if (ctx) { window.open = ctx.open; if (ctx.handler) window.navigation.removeEventListener('navigate', ctx.handler); delete window.__a11yCtx; } return JSON.stringify(out); })()"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "reading",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k:read",
+      "json": "{\"patched\":false,\"href\":\"https://a.test/p\",\"navigations\":[],\"opened\":0,\"api\":true}"
+     },
+     "expect": {
+      "state": "returning",
+      "emits": [
+       {
+        "event": "PAGE_NAVIGATE",
+        "payload": {
+         "key": "k:back",
+         "url": "https://a.test/p"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "returning",
+     "event": "PAGE_LOADED",
+     "payload": {
+      "key": "k:back",
+      "url": "https://a.test/p",
+      "title": "T"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k",
+         "probe": "context-change",
+         "findings": [
+          {
+           "id": "https://a.test/p#context-change-select##a",
+           "pageUrl": "https://a.test/p",
+           "rule": "context-change-select",
+           "wcag": [
+            {
+             "criterion": "3.2.2",
+             "level": "A",
+             "version": "2.0"
+            }
+           ],
+           "method": "probe",
+           "engines": [
+            "probe"
+           ],
+           "impact": "serious",
+           "confidence": "confirmed",
+           "selector": "#a",
+           "snippet": "<select id=\"a\">",
+           "evidence": "",
+           "count": 1
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a select that only changes its own value leaves url, windows and navigations untouched",
+   "steps": [
+    {
+     "from": "idle",
+     "event": "PROBE_RUN",
+     "payload": {
+      "key": "k",
+      "pageUrl": "https://a.test/p"
+     },
+     "expect": {
+      "state": "inventorying",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k:inventory",
+         "expression": "(() => { const sel = (e) => { const p = []; for (let n = e; n && n.nodeType === 1; n = n.parentElement) { if (n.id) { p.unshift('#' + CSS.escape(n.id)); break; } let i = 1; for (let s = n.previousElementSibling; s; s = s.previousElementSibling) { if (s.tagName === n.tagName) i++; } p.unshift(n.tagName.toLowerCase() + (n.parentElement && n.parentElement.querySelectorAll(':scope > ' + n.tagName.toLowerCase()).length > 1 ? ':nth-of-type(' + i + ')' : '')); } return p.join(' > '); }; const q = 'select,input[type=search],input[role=searchbox],[role=search] input:not([type]),[role=search] input[type=text]'; const items = Array.from(document.querySelectorAll(q)).filter((el) => !el.disabled && !el.closest('[aria-hidden=true],[hidden]') && (!el.checkVisibility || el.checkVisibility({ visibilityProperty: true }))).map((el) => ({ selector: sel(el), snippet: el.outerHTML.split('>')[0] + '>', kind: el.tagName === 'SELECT' ? 'select' : 'search', testable: el.tagName === 'SELECT' ? Array.from(el.options).filter((o) => !o.disabled).length > 1 : true })); return JSON.stringify({ items }); })()"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "inventorying",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k:inventory",
+      "json": "{\"items\":[{\"selector\":\"#a\",\"snippet\":\"<select id=\\\"a\\\">\",\"kind\":\"select\",\"testable\":true}]}"
+     },
+     "expect": {
+      "state": "acting",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k:act",
+         "expression": "((selector, kind, ch) => { const el = document.querySelector(selector); if (!el) return JSON.stringify({ found: false, href: location.href, api: !!window.navigation }); const ctx = { navigations: [], opened: 0, open: window.open }; window.__a11yCtx = ctx; window.open = () => { ctx.opened++; return null; }; if (window.navigation) { ctx.handler = (e) => { ctx.navigations.push({ url: e.destination.url, hashChange: e.hashChange, cancelable: e.cancelable }); if (e.cancelable && !e.hashChange) e.preventDefault(); }; window.navigation.addEventListener('navigate', ctx.handler); } if (kind === 'select') { const opts = Array.from(el.options); let next = el.selectedIndex; for (let n = 1; n <= opts.length; n++) { const j = (el.selectedIndex + n) % opts.length; if (!opts[j].disabled) { next = j; break; } } el.selectedIndex = next; el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); } else { el.value = ch; el.dispatchEvent(new Event('input', { bubbles: true })); } return JSON.stringify({ found: true, href: location.href, api: !!window.navigation }); })(\"#a\",\"select\",\"a\")"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "acting",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k:act",
+      "json": "{\"found\":true,\"href\":\"https://a.test/p\",\"api\":true}"
+     },
+     "expect": {
+      "state": "reading",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k:read",
+         "expression": "(() => { const ctx = window.__a11yCtx; const out = { patched: !!ctx, href: location.href, navigations: ctx ? ctx.navigations : [], opened: ctx ? ctx.opened : 0, api: !!window.navigation }; if (ctx) { window.open = ctx.open; if (ctx.handler) window.navigation.removeEventListener('navigate', ctx.handler); delete window.__a11yCtx; } return JSON.stringify(out); })()"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "reading",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k:read",
+      "json": "{\"patched\":true,\"href\":\"https://a.test/p\",\"navigations\":[],\"opened\":0,\"api\":true}"
+     },
+     "expect": {
+      "state": "returning",
+      "emits": [
+       {
+        "event": "PAGE_NAVIGATE",
+        "payload": {
+         "key": "k:back",
+         "url": "https://a.test/p"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "returning",
+     "event": "PAGE_LOADED",
+     "payload": {
+      "key": "k:back",
+      "url": "https://a.test/p",
+      "title": "T"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k",
+         "probe": "context-change",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a page with no testable select or search input answers an empty list at once",
+   "steps": [
+    {
+     "from": "inventorying",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k:inventory",
+      "json": "{\"items\":[{\"selector\":\"#a\",\"snippet\":\"<select id=\\\"a\\\">\",\"kind\":\"select\",\"testable\":false}]}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k",
+         "probe": "context-change",
+         "findings": []
+        }
+       }
+      ]
+     },
+     "entity": {
+      "runKey": "k",
+      "pageUrl": "https://a.test/p"
+     }
+    },
+    {
+     "from": "inventorying",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k:inventory",
+      "json": "{\"items\":[]}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_DONE",
+        "payload": {
+         "key": "k",
+         "probe": "context-change",
+         "findings": []
+        }
+       }
+      ]
+     },
+     "entity": {
+      "runKey": "k",
+      "pageUrl": "https://a.test/p"
+     }
+    }
+   ]
+  },
+  {
+   "id": "an element that disappeared before it was changed answers probe_element_missing and navigates back",
+   "steps": [
+    {
+     "from": "acting",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k:act",
+      "json": "{\"found\":false,\"href\":\"https://a.test/p\",\"api\":true}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_FAILED",
+        "payload": {
+         "key": "k",
+         "probe": "context-change",
+         "code": "probe_element_missing"
+        }
+       },
+       {
+        "event": "PAGE_NAVIGATE",
+        "payload": {
+         "key": "k:back",
+         "url": "https://a.test/p"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "runKey": "k",
+      "pageUrl": "https://a.test/p",
+      "items": [
+       {
+        "selector": "#a",
+        "snippet": "<select id=\"a\">",
+        "kind": "select",
+        "testable": true
+       }
+      ],
+      "cursor": 0
+     }
+    }
+   ]
+  },
+  {
+   "id": "a page failure while listing answers probe_page_failed and changes nothing",
+   "steps": [
+    {
+     "from": "inventorying",
+     "event": "PAGE_FAILED",
+     "payload": {
+      "key": "k:inventory",
+      "error": "boom",
+      "code": "x"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_FAILED",
+        "payload": {
+         "key": "k",
+         "probe": "context-change",
+         "error": "boom",
+         "code": "probe_page_failed"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "runKey": "k",
+      "pageUrl": "https://a.test/p",
+      "items": [
+       {
+        "selector": "#a",
+        "snippet": "<select id=\"a\">",
+        "kind": "select",
+        "testable": true
+       }
+      ],
+      "cursor": 0
+     }
+    }
+   ]
+  },
+  {
+   "id": "a page failure while changing answers probe_page_failed and navigates back",
+   "steps": [
+    {
+     "from": "acting",
+     "event": "PAGE_FAILED",
+     "payload": {
+      "key": "k:act",
+      "error": "boom",
+      "code": "x"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_FAILED",
+        "payload": {
+         "key": "k",
+         "probe": "context-change",
+         "error": "boom",
+         "code": "probe_page_failed"
+        }
+       },
+       {
+        "event": "PAGE_NAVIGATE",
+        "payload": {
+         "key": "k:back",
+         "url": "https://a.test/p"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "runKey": "k",
+      "pageUrl": "https://a.test/p",
+      "items": [
+       {
+        "selector": "#a",
+        "snippet": "<select id=\"a\">",
+        "kind": "select",
+        "testable": true
+       }
+      ],
+      "cursor": 0
+     }
+    }
+   ]
+  },
+  {
+   "id": "a page failure while reading answers probe_page_failed and navigates back",
+   "steps": [
+    {
+     "from": "reading",
+     "event": "PAGE_FAILED",
+     "payload": {
+      "key": "k:read",
+      "error": "boom",
+      "code": "x"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_FAILED",
+        "payload": {
+         "key": "k",
+         "probe": "context-change",
+         "error": "boom",
+         "code": "probe_page_failed"
+        }
+       },
+       {
+        "event": "PAGE_NAVIGATE",
+        "payload": {
+         "key": "k:back",
+         "url": "https://a.test/p"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "runKey": "k",
+      "pageUrl": "https://a.test/p",
+      "items": [
+       {
+        "selector": "#a",
+        "snippet": "<select id=\"a\">",
+        "kind": "select",
+        "testable": true
+       }
+      ],
+      "cursor": 0
+     }
+    }
+   ]
+  },
+  {
+   "id": "a navigation back that fails answers probe_page_failed",
+   "steps": [
+    {
+     "from": "returning",
+     "event": "PAGE_FAILED",
+     "payload": {
+      "key": "k:back",
+      "error": "boom",
+      "code": "x"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_FAILED",
+        "payload": {
+         "key": "k",
+         "probe": "context-change",
+         "error": "boom",
+         "code": "probe_page_failed"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "runKey": "k",
+      "pageUrl": "https://a.test/p",
+      "items": [
+       {
+        "selector": "#a",
+        "snippet": "<select id=\"a\">",
+        "kind": "select",
+        "testable": true
+       }
+      ],
+      "cursor": 0
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a page failure under another run's key is ignored",
+   "steps": [
+    {
+     "from": "acting",
+     "event": "PAGE_FAILED",
+     "payload": {
+      "key": "j:act",
+      "error": "boom",
+      "code": "x"
+     },
+     "expect": {
+      "state": "acting",
+      "emits": []
+     },
+     "entity": {
+      "runKey": "k",
+      "pageUrl": "https://a.test/p",
+      "items": [
+       {
+        "selector": "#a",
+        "snippet": "<select id=\"a\">",
+        "kind": "select",
+        "testable": true
+       }
+      ],
+      "cursor": 0
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a load answer under another run's key does not move the run on",
+   "steps": [
+    {
+     "from": "returning",
+     "event": "PAGE_LOADED",
+     "payload": {
+      "key": "j:back",
+      "url": "https://a.test/p",
+      "title": "T"
+     },
+     "expect": {
+      "state": "returning",
+      "emits": []
+     },
+     "entity": {
+      "runKey": "k",
+      "pageUrl": "https://a.test/p",
+      "items": [
+       {
+        "selector": "#a",
+        "snippet": "<select id=\"a\">",
+        "kind": "select",
+        "testable": true
+       }
+      ],
+      "cursor": 0
+     }
+    }
+   ]
+  },
+  {
+   "id": "an inventory that is not the list answers probe_bad_measure",
+   "steps": [
+    {
+     "from": "inventorying",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k:inventory",
+      "json": "{\"x\":1}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_FAILED",
+        "payload": {
+         "key": "k",
+         "probe": "context-change",
+         "code": "probe_bad_measure"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "runKey": "k",
+      "pageUrl": "https://a.test/p",
+      "items": [
+       {
+        "selector": "#a",
+        "snippet": "<select id=\"a\">",
+        "kind": "select",
+        "testable": true
+       }
+      ],
+      "cursor": 0
+     }
+    }
+   ]
+  },
+  {
+   "id": "a change answer that is not its shape answers probe_bad_measure and navigates back",
+   "steps": [
+    {
+     "from": "acting",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k:act",
+      "json": "{\"x\":1}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_FAILED",
+        "payload": {
+         "key": "k",
+         "probe": "context-change",
+         "code": "probe_bad_measure"
+        }
+       },
+       {
+        "event": "PAGE_NAVIGATE",
+        "payload": {
+         "key": "k:back",
+         "url": "https://a.test/p"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "runKey": "k",
+      "pageUrl": "https://a.test/p",
+      "items": [
+       {
+        "selector": "#a",
+        "snippet": "<select id=\"a\">",
+        "kind": "select",
+        "testable": true
+       }
+      ],
+      "cursor": 0
+     }
+    }
+   ]
+  },
+  {
+   "id": "a result that is not its shape answers probe_bad_measure and navigates back",
+   "steps": [
+    {
+     "from": "reading",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "k:read",
+      "json": "{\"x\":1}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_FAILED",
+        "payload": {
+         "key": "k",
+         "probe": "context-change",
+         "code": "probe_bad_measure"
+        }
+       },
+       {
+        "event": "PAGE_NAVIGATE",
+        "payload": {
+         "key": "k:back",
+         "url": "https://a.test/p"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "runKey": "k",
+      "pageUrl": "https://a.test/p",
+      "items": [
+       {
+        "selector": "#a",
+        "snippet": "<select id=\"a\">",
+        "kind": "select",
+        "testable": true
+       }
+      ],
+      "cursor": 0
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a measure answer under another run's key is ignored",
+   "steps": [
+    {
+     "from": "reading",
+     "event": "PAGE_MEASURED",
+     "payload": {
+      "key": "j:read",
+      "json": "{\"patched\":true,\"href\":\"https://a.test/p\",\"navigations\":[],\"opened\":0,\"api\":true}"
+     },
+     "expect": {
+      "state": "reading",
+      "emits": []
+     },
+     "entity": {
+      "runKey": "k",
+      "pageUrl": "https://a.test/p",
+      "items": [
+       {
+        "selector": "#a",
+        "snippet": "<select id=\"a\">",
+        "kind": "select",
+        "testable": true
+       }
+      ],
+      "cursor": 0
+     }
+    }
+   ]
+  }
+ ]
+}
