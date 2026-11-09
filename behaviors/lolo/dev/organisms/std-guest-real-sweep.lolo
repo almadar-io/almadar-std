@@ -1,0 +1,26 @@
+app std-guest-real-sweep [
+  version: "1.0.0",
+  description: "std-guest-real-sweep — the reads-only Real integrations sweep of the behavior catalog. It plans its own pages with std-guest-read-plan, opens every read-only page of every behavior it clears in Real mode through std-guest-e2e, and writes { ok, error, scenarios, coverage } to reportFile, where coverage names every behavior and page left out and why. A denial control runs first, so a run whose denial detection has gone blind fails. Run: ORB_CHROME=<chrome binary> orb-dev run std-guest-real-sweep.lolo with the launchpad up; read reportFile.",
+  exec: [env ORB_CHROME],
+  env: ["ORB_CHROME"],
+  fs: { cwd: ".orbital/guest-e2e/**": [read, write, create], cwd: ".orbital/guest-e2e": [create] },
+  net: { "127.0.0.1:9333": [tcp] }
+]
+;; @capabilities "end-to-end reads-only sweep of the behavior catalog with real integrations"
+
+uses E2e from "std/behaviors/std-guest-e2e"
+
+orbital GuestE2eOrbital = E2e.orbitals.GuestE2eOrbital {
+  traits {
+    GuestE2e {
+      config {
+        plan: true
+        reportFile: ".orbital/guest-e2e/real-sweep.json"
+      }
+    }
+  }
+}
+
+orbital E2ePlan = E2e.orbitals.E2ePlan { }
+
+orbital E2eChrome = E2e.orbitals.E2eChrome { }

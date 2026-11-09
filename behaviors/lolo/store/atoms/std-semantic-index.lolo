@@ -115,10 +115,26 @@ orbital SemanticIndexOrbital {
 
   trait SemIdxEmbedRequest = Req.traits.HttpRequest {
     listens {
+      SemIdxEmbedRequestDelay.ELAPSED -> RETRY_ELAPSED
+      SemIdxEmbedRequestDeadline.ELAPSED -> TIMEOUT_ELAPSED
       SemanticIndexLlm.LLM_EMBED_WIRE -> HTTP_REQUEST
       SemanticIndexLlm.LLM_EMBED_WIRE_CANCEL -> HTTP_REQUEST_CANCEL
       SemIdxEmbedHttp.HTTP_REPLIED -> HTTP_REPLIED
       SemIdxEmbedHttp.HTTP_FAILED -> HTTP_FAILED
+    }
+  }
+
+  trait SemIdxEmbedRequestDelay = Req.traits.RequestDelay {
+    listens {
+      SemIdxEmbedRequest.RETRY_WAIT -> START
+      SemIdxEmbedRequest.RETRY_STOP -> CANCEL
+    }
+  }
+
+  trait SemIdxEmbedRequestDeadline = Req.traits.RequestDeadline {
+    listens {
+      SemIdxEmbedRequest.TIMEOUT_START -> START
+      SemIdxEmbedRequest.TIMEOUT_STOP -> CANCEL
     }
   }
 
@@ -567,5 +583,5 @@ orbital SemanticIndexOrbital {
     }
   }
 
-  page boot as SemanticIndexStart -> SemanticIndex, SemanticIndexLlm, SemIdxEmbedWait, SemIdxEmbedRequest, SemIdxEmbedHttp
+  page boot as SemanticIndexStart -> SemanticIndex, SemanticIndexLlm, SemIdxEmbedWait, SemIdxEmbedRequest, SemIdxEmbedRequestDelay, SemIdxEmbedRequestDeadline, SemIdxEmbedHttp
 }

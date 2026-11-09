@@ -1,0 +1,40 @@
+app std-guest-denial-probe [
+  version: "1.0.0",
+  description: "std-guest-denial-probe — a page that asks for a file it holds no grant to read, so a guest session must report one denied operation: the path is computed from the entity, so only the kernel can refuse it. It is the control of the reads-only sweep: a sweep that opens this page and reports no denial cannot be trusted when it reports none elsewhere.",
+  fs: { cwd: ".orbital/guest-denial-probe/granted": [read] }
+]
+;; @capabilities "control page that triggers one denied file read in a guest session"
+
+orbital GuestDenialProbeOrbital {
+  entity GuestDenialProbeRun [runtime] {
+    id : string!
+    outcome : string @description "What the file read answered." = "asking"
+    target : string @description "The file asked for, which the grant does not cover." = "ungranted"
+  }
+
+  trait GuestDenialProbe -> GuestDenialProbeRun {
+    initial: asking
+
+    state asking {
+      INIT -> asking
+        (set @entity.target "ungranted")
+        (os/read-file { anchor: "cwd", path: (str/concat ".orbital/guest-denial-probe/" @entity.target) } { emit: { success: PROBE_READ, failure: PROBE_REFUSED } })
+        (render-ui main { type: "typography", content: "Asking for a file this page holds no grant to read." })
+      PROBE_READ -> asking
+        (set @entity.outcome "read")
+        (render-ui main { type: "typography", content: "The file was read: the grant check did not run." })
+      PROBE_REFUSED -> asking
+        (set @entity.outcome "refused")
+        (render-ui main { type: "typography", content: "The file read was refused, as it should be." })
+    }
+
+    listens {
+      PROBE_READ { }
+      PROBE_REFUSED {
+        error : string!
+      }
+    }
+  }
+
+  page "/probe" as GuestDenialProbePage -> GuestDenialProbe
+}

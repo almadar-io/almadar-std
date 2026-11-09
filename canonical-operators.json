@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "Canonical operator registry for Almadar. Generated from @almadar/std/modules. Consumed by orbital-compiler via include_str!.",
-  "generated": "2026-11-08T20:49:21.465Z",
+  "generated": "2026-11-09T20:43:09.975Z",
   "categories": {
     "arithmetic": {
       "description": "Numeric operations",
@@ -3433,7 +3433,7 @@
       "minArity": 1,
       "maxArity": 2,
       "returnType": "void",
-      "description": "Start the viewer session through the host auth provider. The request names the method: google; email (email, password); emailLink with a continueUrl sends the link, with a link completes the sign-in (exactly one of the two); customToken (token). Success carries { uid, email?, displayName? } (emailLink send: { sent: true }); failure carries { error, kind } with kind cancelled, denied, invalid or unavailable.",
+      "description": "Start the viewer session through the host auth provider. The request names the method: google; email (email, password); emailLink with a continueUrl sends the link, with a link completes the sign-in (exactly one of the two); customToken (token). Success carries { uid, email?, displayName?, idToken? }, idToken being the ID token of the viewer (emailLink send: { sent: true }); failure carries { error, kind } with kind cancelled, denied, invalid or unavailable.",
       "module": "auth",
       "visual": {
         "form": "actuator"
@@ -3448,9 +3448,11 @@
             "email": "string",
             "displayName": "string",
             "sent": "boolean",
+            "idToken": "string",
             "key": "string"
           },
           "optional": [
+            "idToken",
             "uid",
             "email",
             "displayName",
@@ -27327,6 +27329,16 @@
               }
             }
           },
+          "access": {
+            "kind": "object",
+            "fields": {
+              "verdict": "string",
+              "signIn": "string",
+              "returnTo": "string",
+              "viewer": "string"
+            },
+            "open": true
+          },
           "rejections": {
             "kind": "array",
             "of": {
@@ -27382,7 +27394,7 @@
               "remount"
             ]
           },
-          "description": "The session id `program/open` answered (`guest`), the path to open (`route`), the optional `rows` to seed before its traits mount, and `remount` (true: run every trait of the page again, not only those not mounted yet)"
+          "description": "The session id `program/open` answered (`guest`), the path to open (`route`), the optional `rows` to seed before its traits mount, and `remount` (true: run every trait of the page again, not only those not mounted yet). The `access` in the answer is the page access verdict: a denied route mounts nothing and answers `page: []`"
         },
         {
           "name": "options",
@@ -27485,6 +27497,16 @@
                 "fired": "boolean"
               }
             }
+          },
+          "access": {
+            "kind": "object",
+            "fields": {
+              "verdict": "string",
+              "signIn": "string",
+              "returnTo": "string",
+              "viewer": "string"
+            },
+            "open": true
           },
           "rejections": {
             "kind": "array",
@@ -27659,16 +27681,31 @@
                     }
                   }
                 }
+              },
+              "env": {
+                "kind": "map",
+                "key": "string",
+                "value": {
+                  "kind": "union",
+                  "of": [
+                    "string",
+                    {
+                      "kind": "literal",
+                      "value": null
+                    }
+                  ]
+                }
               }
             },
             "optional": [
               "route",
               "grants",
               "arenas",
-              "rows"
+              "rows",
+              "env"
             ]
           },
-          "description": "The guest options: `route` (the path of the page to mount besides the boot traits; absent: the `[initial]` page, else the first route page), `grants` (the os grants the guest's asks are answered under), `arenas` (shared Arenas of the opener the guest may use) and `rows` (`[{ entity, rows }]`, written into the guest's store before its page mounts, each row checked against its entity; an undeclared entity or a misfit row refuses the open); all optional",
+          "description": "The guest options: `route` (the path of the page to mount besides the boot traits; absent: the `[initial]` page, else the first route page), `grants` (the os grants the guest's asks are answered under), `arenas` (shared Arenas of the opener the guest may use) and `rows` (`[{ entity, rows }]`, written into the guest's store before its page mounts, each row checked against its entity; an undeclared entity or a misfit row refuses the open) and `env` (variables set for this guest alone, null unsets one, each covered by the env grant of the opener); all optional. The `access` in the answer is the page access verdict: a denied page mounts nothing",
           "optional": true
         },
         {

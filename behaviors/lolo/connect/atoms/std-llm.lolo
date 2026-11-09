@@ -8,7 +8,7 @@ type LlmJob = { stream : boolean, action : string!, attempt : number!, system : 
 type WireKey = { kind : string!, id : string! }
 type LlmInFlight = { key : string!, httpKey : string!, wireKey : string! }
 type LlmStreamed = { key : string!, text : string!, inputTokens : number, outputTokens : number }
-type StreamDelta = { content : string, text : string }
+type StreamDelta = { content : string, text : string, reasoning : string, thinking : string }
 type StreamChoice = { delta : StreamDelta }
 type StreamUsage = { prompt_tokens : number, completion_tokens : number, input_tokens : number, output_tokens : number, cache_creation_input_tokens : number, cache_read_input_tokens : number }
 type StreamStart = { usage : StreamUsage }
@@ -261,11 +261,15 @@ orbital LlmOrbital {
         (emit LLM_GENERATE_DELTA { key: (object/get (default (json/parse @payload.key LlmJob) {}) callKey ""), delta: (object/get (object/get (default (json/parse @payload.data StreamEvent) {}) delta {}) text ""), text: (object/get (default (array/find @entity.streamed (fn c (= @c.key @payload.key))) {}) text "") })
       LLM_CHAT_STREAM_MSG -> idle when (and (= @config.provider "anthropic") (= (str/len (object/get (object/get (default (json/parse @payload.data StreamEvent) {}) delta {}) text "")) 0))
         (set @entity.streamed (let ((cur (array/find @entity.streamed (fn c (= @c.key @payload.key)))) (ev (default (json/parse @payload.data StreamEvent) {}))) (array/append (array/filter @entity.streamed (fn c (!= @c.key @payload.key))) { key: @payload.key, text: (if (= @cur null) "" @cur.text), inputTokens: (if (and (= (object/get @ev type "") "message_start") (!= (object/get (object/get (object/get @ev message {}) usage {}) input_tokens null) null)) (+ (object/get (object/get (object/get @ev message {}) usage {}) input_tokens 0) (object/get (object/get (object/get @ev message {}) usage {}) cache_creation_input_tokens 0) (object/get (object/get (object/get @ev message {}) usage {}) cache_read_input_tokens 0)) (if (= @cur null) null @cur.inputTokens)), outputTokens: (if (and (= (object/get @ev type "") "message_delta") (!= (object/get (object/get @ev usage {}) output_tokens null) null)) (object/get (object/get @ev usage {}) output_tokens 0) (if (= @cur null) null @cur.outputTokens)) })))
+        (when (> (str/len (object/get (object/get (default (json/parse @payload.data StreamEvent) {}) delta {}) thinking "")) 0)
+          (emit LLM_REASONING_DELTA { key: (object/get (default (json/parse @payload.key LlmJob) {}) callKey ""), delta: (object/get (object/get (default (json/parse @payload.data StreamEvent) {}) delta {}) thinking "") }))
       LLM_CHAT_STREAM_MSG -> idle when (and (!= @config.provider "anthropic") (> (str/len (object/get (object/get (default (array/first (object/get (default (json/parse @payload.data StreamEvent) {}) choices [])) {}) delta {}) content "")) 0))
         (set @entity.streamed (let ((cur (array/find @entity.streamed (fn c (= @c.key @payload.key))))) (array/append (array/filter @entity.streamed (fn c (!= @c.key @payload.key))) { key: @payload.key, text: (str/concat (if (= @cur null) "" @cur.text) (object/get (object/get (default (array/first (object/get (default (json/parse @payload.data StreamEvent) {}) choices [])) {}) delta {}) content "")), inputTokens: (if (= @cur null) null @cur.inputTokens), outputTokens: (if (= @cur null) null @cur.outputTokens) })))
         (emit LLM_GENERATE_DELTA { key: (object/get (default (json/parse @payload.key LlmJob) {}) callKey ""), delta: (object/get (object/get (default (array/first (object/get (default (json/parse @payload.data StreamEvent) {}) choices [])) {}) delta {}) content ""), text: (object/get (default (array/find @entity.streamed (fn c (= @c.key @payload.key))) {}) text "") })
       LLM_CHAT_STREAM_MSG -> idle when (and (!= @config.provider "anthropic") (= (str/len (object/get (object/get (default (array/first (object/get (default (json/parse @payload.data StreamEvent) {}) choices [])) {}) delta {}) content "")) 0))
         (set @entity.streamed (let ((cur (array/find @entity.streamed (fn c (= @c.key @payload.key)))) (u (object/get (default (json/parse @payload.data StreamEvent) {}) usage {}))) (array/append (array/filter @entity.streamed (fn c (!= @c.key @payload.key))) { key: @payload.key, text: (if (= @cur null) "" @cur.text), inputTokens: (if (> (object/get @u prompt_tokens 0) 0) (object/get @u prompt_tokens 0) (if (= @cur null) null @cur.inputTokens)), outputTokens: (if (> (object/get @u completion_tokens 0) 0) (object/get @u completion_tokens 0) (if (= @cur null) null @cur.outputTokens)) })))
+        (when (> (str/len (object/get (object/get (default (array/first (object/get (default (json/parse @payload.data StreamEvent) {}) choices [])) {}) delta {}) reasoning "")) 0)
+          (emit LLM_REASONING_DELTA { key: (object/get (default (json/parse @payload.key LlmJob) {}) callKey ""), delta: (object/get (object/get (default (array/first (object/get (default (json/parse @payload.data StreamEvent) {}) choices [])) {}) delta {}) reasoning "") }))
 
       LLM_CHAT_HTTP_OK -> idle when (and (>= @payload.status 200) (< @payload.status 300) (object/get (default (json/parse @payload.key LlmJob) {}) stream false))
         (emit LLM_CHAT_CONTENT { job: @payload.key, content: (object/get (default (array/find @entity.streamed (fn c (= @c.key @payload.key))) {}) text ""), inputTokens: (object/get (default (array/find @entity.streamed (fn c (= @c.key @payload.key))) {}) inputTokens null), outputTokens: (object/get (default (array/find @entity.streamed (fn c (= @c.key @payload.key))) {}) outputTokens null) })
@@ -570,7 +574,8 @@ orbital LlmOrbital {
             temperature: (if (object/has @payload "temperature") @payload.temperature 0.2), maxTokens: (if (object/has @payload "maxTokens") @payload.maxTokens 0),
             categories: [], itemIds: [],
             callKey: (if (object/has @payload "key") @payload.key ""),
-            images: (if (object/has @payload "images") @payload.images [])
+            images: (if (object/has @payload "images") @payload.images []),
+            stream: (= @payload.stream true)
           })
         })
 
@@ -956,6 +961,13 @@ orbital LlmOrbital {
       }
         @description "A chunk of a streamed generate: the text that just arrived and the reply so far, under the call's key. Fires only for an LLM_GENERATE sent with stream true; the final LLM_GENERATE_RESULT follows."
         @synonyms "streamed text, reply chunk, token stream"
+        @tier "secondary"
+      LLM_REASONING_DELTA -> external {
+        key : string
+        delta : string!
+      }
+        @description "A chunk of the model's reasoning in a streamed call (OpenRouter `reasoning`, Anthropic `thinking`), under the call's key, for showing the model at work; it is not part of the answer."
+        @synonyms "thinking, reasoning stream, model thoughts"
         @tier "secondary"
       LLM_CLASSIFY_RESULT -> external {
         category : string!
@@ -1420,8 +1432,9 @@ orbital LlmOrbital {
         model : string?
         key : string?
         images : [{ mediaType : string!, data : string! }]?
+        stream : boolean?
       }
-        @description "Extract structured data from a text. An optional key names the call for LLM_CANCEL. `schema` is the JSON Schema text the reply must follow, sent to the model as written inside the built-in extractor prompt; an optional systemPrompt replaces that whole prompt (the schema is then not sent) and an optional temperature replaces the default 0.2. The answer is the JSON text, read by the caller with json/parse under its own shape."
+        @description "Extract structured data from a text. An optional key names the call for LLM_CANCEL. With stream true the reply is read as it arrives: each chunk is announced as LLM_GENERATE_DELTA and each reasoning chunk as LLM_REASONING_DELTA before LLM_EXTRACT_RESULT. `schema` is the JSON Schema text the reply must follow, sent to the model as written inside the built-in extractor prompt; an optional systemPrompt replaces that whole prompt (the schema is then not sent) and an optional temperature replaces the default 0.2. The answer is the JSON text, read by the caller with json/parse under its own shape."
         @synonyms "parse, structure, pull fields"
       LLM_CALL_TOOLS -> input {
         messages : [{ role : "user" | "assistant", content : string! }]!

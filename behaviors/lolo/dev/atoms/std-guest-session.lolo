@@ -3,7 +3,7 @@ app std-guest-session [
   description: "std-guest-session — runs a program picked at run time as a guest session on the kernel, and paints it. GuestSession (server) resolves std-mock-page-seed as it mounts, and takes GUEST_OPEN { program } (a resolved program value, closing any guest already open), resolves std-mock-page-seed once, composes it with the program (program/compose, unless the program already declares the mock_seed_marks store) and opens the composed program with program/open, so the guest seeds each routed page's entities on its first visit inside its own kernel (EXEC-SEED-7), keeps the latest paint of every trait per slot (embedded children included) and emits GUEST_PAINTS { guest, paints } and GUEST_MOVED { guest, moves } (the transitions its traits took); a failed open is GUEST_ERROR { message }, a failed step is GUEST_NOTICE { message }, and GUEST_FAIL { message } lets the host that could not obtain a program say so the same way. GUEST_NAVIGATE { guest, route } opens that route in the guest with program/navigate. GUEST_SEND { guest, address, event, payload } steps the guest with program/dispatch when guest is the open one and is ignored for any other; GUEST_RESET closes it. GUEST_CLEARED tells the painter the guest is gone. GuestStage (client) keeps the paint, shows one guest-view for the configured slot holding the paint of every page-root trait in paint order (never an embedded child's; its source is the first root), and hands it every paint of the guest so an embedded @trait.X resolves to the guest's trait (a skeleton until the guest has painted, an alert when it failed) and turns a control of the guest it shows into GUEST_SEND. The host composes both traits under these names, supplies the program value, and embeds GuestStage inside its own chrome with @trait.GuestStage.",
   egress: [],
   kernel: { "guest": [spawn, declared] },
-  env: ["FIREBASE_AUTH_EMULATOR_HOST", "ALMADAR_PERSONA_OWNS", "ORB_LAUNCHPAD_HOST"],
+  env: ["FIREBASE_AUTH_EMULATOR_HOST", "FIREBASE_PROJECT_ID", "ALMADAR_PERSONA_OWNS", "ORB_LAUNCHPAD_HOST"],
   fs: { "~/.almadar/launchpad/live/**": [read, write, create, remove, meta], cwd: "node_modules": [read] }
 ]
 ;; @capabilities "run a program chosen at run time as a live guest, paint it, forward its controls, close it"
@@ -33,7 +33,8 @@ type GuestRevealInputs = { environment : GuestEnvValue?, credentials : GuestEnvV
 type GuestPaint = { slot : string!, trait : string!, orbital : string?, embedded : boolean!, content : node? }
 type GuestMove = { trait : string!, event : string?, from : string!, to : string!, fired : boolean! }
 type GuestOpened = { guest : string!, page : [string]!, route : string, rendered : [GuestPaint]!, outcomes : [GuestMove]! }
-type GuestNavigated = { page : [string]!, route : string, rendered : [GuestPaint]!, outcomes : [GuestMove]! }
+type GuestAccess = { verdict : string!, signIn : string, returnTo : string, viewer : string }
+type GuestNavigated = { page : [string]!, route : string, rendered : [GuestPaint]!, outcomes : [GuestMove]!, access : GuestAccess }
 type GuestStepped = { rendered : [GuestPaint]!, outcomes : [GuestMove]! }
 type GuestClosed = { closed : boolean! }
 type GuestPersonaOption = { id : string!, name : string, role : string }
@@ -50,6 +51,7 @@ orbital GuestSessionOrbital {
     guestRoute : string @description "The route the guest shows, as program/open or program/navigate resolved it; empty when no page matched." = ""
     guestPage : [string] @description "The traits of the page the guest shows: its page-root paints are the ones drawn." = []
     guestError : string = ""
+    guestReturnTo : string @description "The page a denied guest asked for, opened again once it has signed in." = ""
     guestProgram : GuestProgram? @description "The program value being opened, held only until program/compose or program/open takes it: the entity rides every request a stateless host's client posts."
     guestSeed : behavior?
     guestSeeded : boolean @description "Whether the catalog composed std-mock-page-seed into the open guest, so its seeder answers the personas it wrote." = false
@@ -85,6 +87,7 @@ orbital GuestSessionOrbital {
     guestEnvironment : [GuestEnvStatus] @description "The environment names the guest holds, whether each is set and its last four characters; never a value." = []
     guestCredentials : [GuestCredentialStatus] @description "The credential slots the guest's program declares, whether each is set and its last four characters; never a value." = []
     guestComputedCredentials : [string] @description "The credential slots whose names are only known at run time." = []
+    guestTraceAnswered : boolean @description "Whether the trace on show is the kernel's answer for this guest, not the state before it arrived." = false
     guestDenials : [GuestDenial] @description "What the guest was refused, each message with how many times." = []
     guestGrantRows : [GuestGrantRow] @description "Per grant kind, what the program declares and what the guest really holds." = []
     guestRevealed : [GuestRevealed] @description "The values the viewer revealed, held by the stage until the sidebar closes or the guest changes." = []
@@ -110,11 +113,23 @@ orbital GuestSessionOrbital {
         @label "Reveal refused"
         @description "Shown when the viewer asks to reveal an environment value on a launchpad bound beyond loopback."
         @tier "domain"
+      mockAuthHost : string = "127.0.0.1:9099"
+        @label "Auth emulator a mocked guest signs its personas in through"
+        @tier "policy"
+      mockAuthProject : string = "demo-almadar"
+        @label "Auth project of a mocked guest"
+        @tier "policy"
+      signInNeeded : string = "This page needs a signed-in viewer. Pick a persona to open it."
+        @label "Notice when a mocked guest is denied a page"
+        @tier "domain"
+      signInRefused : string = "That sign-in was not accepted by this behavior."
+        @label "Notice when a signed-in token is refused"
+        @tier "domain"
       liveRoot : string = "~/.almadar/launchpad/live"
         @label "Live guest folders"
         @description "The directory holding one folder per program opened with real integrations; that folder is the guest's working directory, so its relative file stores never meet another program's."
         @tier "policy"
-      guestEnv : [string] = ["FIREBASE_AUTH_EMULATOR_HOST", "ALMADAR_PERSONA_OWNS"]
+      guestEnv : [string] = ["FIREBASE_AUTH_EMULATOR_HOST", "FIREBASE_PROJECT_ID", "ALMADAR_PERSONA_OWNS"]
         @label "Guest environment"
         @description "The environment variables a guest may read, passed as its env grant at program/open: the Auth emulator host its persona sign-in checks and the persona-owns list its seeder reads. The orbital's own env grant covers them."
         @tier "policy"
@@ -243,7 +258,7 @@ orbital GuestSessionOrbital {
         (set @entity.guestSeeded false)
         (set @entity.guestDefaultRole (default @payload.defaultRole ""))
         (set @entity.guestPersonaTrait (default @payload.personaTrait ""))
-        (program/open @entity.guestProgram { grants: { env: @config.guestEnv }, declared: true, integrations: @entity.guestIntegrations } { emit: { success: GUEST_OPENED, failure: GUEST_FAILED } })
+        (program/open @entity.guestProgram { grants: { env: @config.guestEnv }, env: { FIREBASE_AUTH_EMULATOR_HOST: @config.mockAuthHost, FIREBASE_PROJECT_ID: @config.mockAuthProject }, declared: true, integrations: @entity.guestIntegrations } { emit: { success: GUEST_OPENED, failure: GUEST_FAILED } })
         (set @entity.guestProgram null)
       GUEST_SEED_MARKED -> opening when (and (not @payload.marked) (!= @payload.personasCollection ""))
         (set @entity.guestSeeded true)
@@ -260,7 +275,7 @@ orbital GuestSessionOrbital {
         (program/compose [@entity.guestProgram, @entity.guestSeed] { appName: (object/get (default @entity.guestProgram { name: "guest", orbitals: [] }) "name" "guest") } { emit: { success: GUEST_COMPOSED, failure: GUEST_FAILED } })
         (set @entity.guestProgram null)
       GUEST_COMPOSED -> opening
-        (program/open ?result { grants: { env: @config.guestEnv }, declared: true, integrations: @entity.guestIntegrations } { emit: { success: GUEST_OPENED, failure: GUEST_FAILED } })
+        (program/open ?result { grants: { env: @config.guestEnv }, env: { FIREBASE_AUTH_EMULATOR_HOST: @config.mockAuthHost, FIREBASE_PROJECT_ID: @config.mockAuthProject }, declared: true, integrations: @entity.guestIntegrations } { emit: { success: GUEST_OPENED, failure: GUEST_FAILED } })
       GUEST_FAIL -> idle
         (emit GUEST_ERROR { message: ?message })
       GUEST_RESET -> idle
@@ -431,7 +446,21 @@ orbital GuestSessionOrbital {
       GUEST_NAVIGATE -> live when (= ?guest @entity.guestHandle)
         (program/navigate { guest: ?guest, route: ?route } { emit: { success: GUEST_NAVIGATED, failure: GUEST_NAVIGATE_FAILED } })
       GUEST_NAVIGATE -> live when (!= ?guest @entity.guestHandle)
-      GUEST_NAVIGATED -> live
+      GUEST_NAVIGATED -> live when (and (= (default ?result.access.verdict "") "denied") (= @entity.guestIntegrations "live"))
+        (set @entity.guestReturnTo (default ?result.access.returnTo ""))
+        (emit GUEST_SIGN_IN { guest: @entity.guestHandle })
+      GUEST_NAVIGATED -> live when (and (= (default ?result.access.verdict "") "denied") (= @entity.guestIntegrations "mock"))
+        (emit GUEST_NOTICE { message: @config.signInNeeded })
+      GUEST_CREDENTIAL -> live when (= ?guest @entity.guestHandle)
+        (program/dispatch "CREDENTIAL_PRESENTED" { requestId: 0, authorization: (str/concat "Bearer " ?token) } { guest: ?guest, emit: { success: GUEST_CREDENTIAL_ANSWERED, failure: GUEST_CREDENTIAL_FAILED } })
+      GUEST_CREDENTIAL -> live when (!= ?guest @entity.guestHandle)
+      GUEST_CREDENTIAL_ANSWERED -> live when (array/some (default ?result.emitted []) (fn e (= @e.event "CREDENTIAL_BOUND")))
+        (program/navigate { guest: @entity.guestHandle, route: @entity.guestReturnTo, remount: true } { emit: { success: GUEST_NAVIGATED, failure: GUEST_NAVIGATE_FAILED } })
+      GUEST_CREDENTIAL_ANSWERED -> live when (not (array/some (default ?result.emitted []) (fn e (= @e.event "CREDENTIAL_BOUND"))))
+        (emit GUEST_NOTICE { message: @config.signInRefused })
+      GUEST_CREDENTIAL_FAILED -> live
+        (emit GUEST_NOTICE { message: ?error })
+      GUEST_NAVIGATED -> live when (!= (default ?result.access.verdict "") "denied")
         (set @entity.guestPage ?result.page)
         (set @entity.guestRoute (default ?result.route ""))
         (set @entity.guestPaints (array/reduce ?result.rendered (array/filter @entity.guestPaints (fn q (!= @q.slot "toast"))) (fn acc p (array/concat (array/filter @acc (fn q (or (!= @q.trait @p.trait) (!= @q.slot @p.slot)))) (array/filter [@p] (fn x (!= @x.content null)))))))
@@ -474,6 +503,9 @@ orbital GuestSessionOrbital {
         moves : [GuestMove]!
       }
         @description "The transitions the guest's traits took while opening or on a step, in order."
+      GUEST_SIGN_IN -> external {
+        guest : string!
+      }
       GUEST_NOTICE -> external {
         message : string!
       }
@@ -530,6 +562,16 @@ orbital GuestSessionOrbital {
       }
         @description "One pass of the open guest's own tick clock that painted something (program/live { kind: guest }): its page traits' ticks, [client] ones included, since a guest has no browser."
       GUEST_TICKS_FAILED {
+        error : string!
+      }
+      GUEST_CREDENTIAL {
+        guest : string!
+        token : string!
+      }
+      GUEST_CREDENTIAL_ANSWERED {
+        result : GuestAnswered!
+      }
+      GUEST_CREDENTIAL_FAILED {
         error : string!
       }
       GUEST_NAVIGATED {
@@ -745,6 +787,7 @@ orbital GuestSessionOrbital {
         (if (and @entity.guestTraceOpen (!= ?guest @entity.guestHandle))
           (do
             (set @entity.guestRevealed [])
+            (set @entity.guestTraceAnswered false)
             (emit GUEST_TRACE_ASK { guest: ?guest }))
           null)
         (set @entity.guestHandle ?guest)
@@ -756,6 +799,12 @@ orbital GuestSessionOrbital {
       GUEST_ERROR -> idle
         (set @entity.guestError ?message)
         (emit GUEST_SHOWN {})
+      GUEST_SIGN_IN -> idle
+        (auth/sign-in { method: "google" } { emit: { success: GUEST_GOOGLE_IN, failure: GUEST_GOOGLE_FAILED } })
+      GUEST_GOOGLE_IN -> idle
+        (emit GUEST_CREDENTIAL { guest: @entity.guestHandle, token: (default ?idToken "") })
+      GUEST_GOOGLE_FAILED -> idle
+        (notify error ?error)
       GUEST_NOTICE -> idle
         (notify error ?message)
       GUEST_PERSONAS -> idle when (= ?guest @entity.guestHandle)
@@ -775,6 +824,7 @@ orbital GuestSessionOrbital {
       GUEST_PERSONA_CHOSEN -> idle when (or (= @entity.guestHandle "") (= @payload.itemId @entity.guestPersona))
       GUEST_TRACE_TOGGLED -> idle when (and (not @entity.guestTraceOpen) (!= @entity.guestHandle ""))
         (set @entity.guestTraceOpen true)
+        (set @entity.guestTraceAnswered false)
         (emit GUEST_TRACE_ASK { guest: @entity.guestHandle })
         (emit GUEST_SHOWN {})
       GUEST_TRACE_TOGGLED -> idle when (and (not @entity.guestTraceOpen) (= @entity.guestHandle ""))
@@ -795,6 +845,7 @@ orbital GuestSessionOrbital {
         (set @entity.guestCredentials ?credentials)
         (set @entity.guestComputedCredentials ?computedCredentials)
         (set @entity.guestDenials ?denials)
+        (set @entity.guestTraceAnswered true)
         (set @entity.guestGrantRows ?rows)
         (emit GUEST_SHOWN {})
       GUEST_TRACE -> idle when (!= ?guest @entity.guestHandle)
@@ -813,6 +864,7 @@ orbital GuestSessionOrbital {
         (set @entity.guestCredentials [])
         (set @entity.guestComputedCredentials [])
         (set @entity.guestDenials [])
+        (set @entity.guestTraceAnswered false)
         (set @entity.guestGrantRows [])
         (set @entity.guestRevealed [])
         (set @entity.guestHandle "")
@@ -850,7 +902,7 @@ orbital GuestSessionOrbital {
                   { type: container, size: full, padding: md, children: [{ type: skeleton, variant: @config.pending, rows: @config.pendingRows }] }
                   { type: container, size: md, padding: lg, children: [{ type: alert, variant: info, title: @config.unpaintedTitle, message: (let ((roots (array/filter @entity.guestPaints (fn p (= @p.embedded false))))) (if (= (array/len @roots) 0) @config.unpaintedNothing (str/concat @config.unpaintedOthers (str/join (array/map @roots (fn p @p.slot)) ", ")))) }] })
                 { type: guest-view, guest: @entity.guestHandle, source: @paint.trait, deliver: GUEST_CONTROL, navigate: GUEST_ROUTE, route: @entity.guestRoute, paints: @entity.guestPaints, children: (array/map @slotRoots (fn p @p.content)) })))
-        ]) (if @entity.guestTraceOpen [{ type: drawer, isOpen: true, modal: false, title: @config.traceTitle, position: right, width: "min(520px, 92vw)", closeEvent: GUEST_TRACE_CLOSED, children: [(let ((none : GuestGrants {}) (head (default @entity.guestHeader { name: "" }))) (let ((dg (default (object/get @head "osGrants") @none))) { type: stack, direction: vertical, gap: lg, className: "p-4", children: [{ type: stack, direction: vertical, gap: sm, children: (array/concat [{ type: typography, variant: label, weight: semibold, content: "Header" }] (array/map [["Name", @head.name], ["Version", (default @head.version "")], ["Description", (default @head.description "")], ["Store", (default @head.store "")], ["Inbound", (str/join (default @head.inbound []) ", ")], ["Egress", (str/join (default @head.egress []) ", ")]] (fn p { type: stack, direction: horizontal, gap: sm, align: start, children: [{ type: typography, variant: caption, color: muted, className: "w-28 shrink-0", content: (array/nth @p 0) }, { type: typography, variant: body, className: "break-all", content: (array/nth @p 1) }] }))) }, { type: stack, direction: vertical, gap: sm, children: (array/concat [{ type: typography, variant: label, weight: semibold, content: "Runtime" }] (array/map [["Integrations", @entity.guestIntegrations], ["Working directory", (if (= @entity.guestWorkdir "") @config.traceOwnMemory @entity.guestWorkdir)]] (fn p { type: stack, direction: horizontal, gap: sm, align: start, children: [{ type: typography, variant: caption, color: muted, className: "w-28 shrink-0", content: (array/nth @p 0) }, { type: typography, variant: body, className: "break-all", content: (array/nth @p 1) }] }))) }, { type: stack, direction: vertical, gap: sm, children: (array/concat [{ type: typography, variant: label, weight: semibold, content: "Environment" }] (array/concat (if (= (array/len @entity.guestEnvironment) 0) [{ type: typography, variant: caption, color: muted, content: "No environment variables" }] []) (array/map @entity.guestEnvironment (fn e (let ((shown (array/find @entity.guestRevealed (fn r (and (= @r.name @e.name) (= @r.via "environment")))))) { type: stack, direction: horizontal, align: center, gap: sm, children: [ { type: icon, name: (if @e.set "check" "x"), size: sm }, { type: typography, variant: body, weight: medium, className: "break-all", content: @e.name }, { type: badge, variant: (if @e.set "success" "danger"), size: sm, label: (if @e.set "set" "missing") }, { type: typography, variant: caption, color: muted, className: "break-all", content: (if (= @shown null) (if (and @e.set (!= @e.tail "")) (str/concat "••••" @e.tail) "") (default @shown.value "")) }, (if (and (= @entity.guestIntegrations "live") @e.set (= @shown null)) { type: button, label: "Reveal", icon: eye, variant: ghost, size: sm, action: GUEST_TRACE_REVEAL_CHOSEN, actionPayload: { name: @e.name, via: "environment" } } null)] }))))) }, { type: stack, direction: vertical, gap: sm, children: (array/concat [{ type: typography, variant: label, weight: semibold, content: "Credentials" }] (array/concat (if (and (= (array/len @entity.guestCredentials) 0) (= (array/len @entity.guestComputedCredentials) 0)) [{ type: typography, variant: caption, color: muted, content: "No credentials" }] []) (array/map @entity.guestCredentials (fn e (let ((shown (array/find @entity.guestRevealed (fn r (and (= @r.name @e.name) (= @r.via "credentials")))))) { type: stack, direction: horizontal, align: center, gap: sm, children: [ { type: icon, name: (if @e.set "check" "x"), size: sm }, { type: typography, variant: body, weight: medium, className: "break-all", content: @e.name }, { type: badge, variant: (if @e.set "success" "danger"), size: sm, label: (if @e.set "set" "missing") }, { type: typography, variant: caption, color: muted, className: "break-all", content: (if (= @shown null) (if (and @e.set (!= @e.tail "")) (str/concat "••••" @e.tail) "") (default @shown.value "")) }, (if (and (= @entity.guestIntegrations "live") @e.set (= @shown null)) { type: button, label: "Reveal", icon: eye, variant: ghost, size: sm, action: GUEST_TRACE_REVEAL_CHOSEN, actionPayload: { name: @e.name, via: "credentials" } } null)] })))) (array/map @entity.guestComputedCredentials (fn n { type: typography, variant: caption, color: muted, content: (str/concat @n " — its name is only known at run time") }))) }, { type: stack, direction: vertical, gap: sm, children: (array/concat [{ type: typography, variant: label, weight: semibold, content: "Grants" }] (array/map @entity.guestGrantRows (fn r { type: stack, direction: vertical, gap: xs, children: [{ type: typography, variant: body, weight: medium, content: @r.kind }, { type: stack, direction: horizontal, gap: md, align: start, children: [{ type: stack, direction: vertical, gap: xs, className: "min-w-0 flex-1", children: (array/concat [{ type: typography, variant: caption, color: muted, content: "Declared" }] (array/concat (if (= (array/len @r.declared) 0) [{ type: typography, variant: caption, color: muted, content: "none" }] []) (array/map @r.declared (fn d { type: stack, direction: horizontal, align: center, gap: xs, children: [{ type: typography, variant: caption, className: "break-all", content: @d }, (if (array/includes @r.missing @d) { type: badge, variant: "danger", size: sm, label: "not held" } null)] })))) }, { type: stack, direction: vertical, gap: xs, className: "min-w-0 flex-1", children: (array/concat [{ type: typography, variant: caption, color: muted, content: "Held" }] (array/concat (if (= (array/len @r.effective) 0) [{ type: typography, variant: caption, color: muted, content: "none" }] []) (array/map @r.effective (fn d { type: typography, variant: caption, className: "break-all", content: @d })))) }] }] }))) }, { type: stack, direction: vertical, gap: sm, children: (array/concat [{ type: stack, id: "guest-denials", direction: vertical, gap: xs, children: (array/concat [{ type: typography, variant: label, weight: semibold, content: "Denied operations" }] (array/map @entity.guestDenials (fn d { type: stack, direction: horizontal, align: start, gap: sm, children: [{ type: typography, variant: caption, className: "break-all", content: @d.message }, (if (> @d.count 1) { type: badge, variant: "neutral", size: sm, label: (str/concat "×" @d.count) } null)] }))) }] (if (= (array/len @entity.guestDenials) 0) [{ type: typography, variant: caption, color: muted, content: "None" }] [])) }, { type: stack, direction: vertical, gap: sm, children: (array/concat [{ type: typography, variant: label, weight: semibold, content: "Integrations" }] [{ type: stack, direction: horizontal, gap: md, align: start, children: [{ type: stack, direction: vertical, gap: xs, className: "min-w-0 flex-1", children: (array/concat [{ type: typography, variant: caption, color: muted, content: "Hosts (tcp)" }] (let ((hosts (array/filter (default (object/get @dg "net") []) (fn n (array/includes @n.kinds "tcp"))))) (array/concat (if (= (array/len @hosts) 0) [{ type: typography, variant: caption, color: muted, content: "none" }] []) (array/map @hosts (fn n { type: typography, variant: caption, className: "break-all", content: (str/concat @n.target " [tcp]") }))))) }, { type: stack, direction: vertical, gap: xs, className: "min-w-0 flex-1", children: (array/concat [{ type: typography, variant: caption, color: muted, content: "Environment names" }] (array/concat (if (= (array/len @entity.guestEnvironment) 0) [{ type: typography, variant: caption, color: muted, content: "none" }] []) (array/map @entity.guestEnvironment (fn e { type: typography, variant: caption, className: "break-all", content: @e.name })))) }] }]) }] }))] }] [])) })
+        ]) (if @entity.guestTraceOpen [{ type: drawer, isOpen: true, modal: false, title: @config.traceTitle, position: right, width: "min(520px, 92vw)", closeEvent: GUEST_TRACE_CLOSED, children: [(let ((none : GuestGrants {}) (head (default @entity.guestHeader { name: "" }))) (let ((dg (default (object/get @head "osGrants") @none))) { type: stack, direction: vertical, gap: lg, className: "p-4", children: [{ type: stack, direction: vertical, gap: sm, children: (array/concat [{ type: typography, variant: label, weight: semibold, content: "Header" }] (array/map [["Name", @head.name], ["Version", (default @head.version "")], ["Description", (default @head.description "")], ["Store", (default @head.store "")], ["Inbound", (str/join (default @head.inbound []) ", ")], ["Egress", (str/join (default @head.egress []) ", ")]] (fn p { type: stack, direction: horizontal, gap: sm, align: start, children: [{ type: typography, variant: caption, color: muted, className: "w-28 shrink-0", content: (array/nth @p 0) }, { type: typography, variant: body, className: "break-all", content: (array/nth @p 1) }] }))) }, { type: stack, direction: vertical, gap: sm, children: (array/concat [{ type: typography, variant: label, weight: semibold, content: "Runtime" }] (array/map [["Integrations", @entity.guestIntegrations], ["Working directory", (if (= @entity.guestWorkdir "") @config.traceOwnMemory @entity.guestWorkdir)]] (fn p { type: stack, direction: horizontal, gap: sm, align: start, children: [{ type: typography, variant: caption, color: muted, className: "w-28 shrink-0", content: (array/nth @p 0) }, { type: typography, variant: body, className: "break-all", content: (array/nth @p 1) }] }))) }, { type: stack, direction: vertical, gap: sm, children: (array/concat [{ type: typography, variant: label, weight: semibold, content: "Environment" }] (array/concat (if (= (array/len @entity.guestEnvironment) 0) [{ type: typography, variant: caption, color: muted, content: "No environment variables" }] []) (array/map @entity.guestEnvironment (fn e (let ((shown (array/find @entity.guestRevealed (fn r (and (= @r.name @e.name) (= @r.via "environment")))))) { type: stack, direction: horizontal, align: center, gap: sm, children: [ { type: icon, name: (if @e.set "check" "x"), size: sm }, { type: typography, variant: body, weight: medium, className: "break-all", content: @e.name }, { type: badge, variant: (if @e.set "success" "danger"), size: sm, label: (if @e.set "set" "missing") }, { type: typography, variant: caption, color: muted, className: "break-all", content: (if (= @shown null) (if (and @e.set (!= @e.tail "")) (str/concat "••••" @e.tail) "") (default @shown.value "")) }, (if (and (= @entity.guestIntegrations "live") @e.set (= @shown null)) { type: button, label: "Reveal", icon: eye, variant: ghost, size: sm, action: GUEST_TRACE_REVEAL_CHOSEN, actionPayload: { name: @e.name, via: "environment" } } null)] }))))) }, { type: stack, direction: vertical, gap: sm, children: (array/concat [{ type: typography, variant: label, weight: semibold, content: "Credentials" }] (array/concat (if (and (= (array/len @entity.guestCredentials) 0) (= (array/len @entity.guestComputedCredentials) 0)) [{ type: typography, variant: caption, color: muted, content: "No credentials" }] []) (array/map @entity.guestCredentials (fn e (let ((shown (array/find @entity.guestRevealed (fn r (and (= @r.name @e.name) (= @r.via "credentials")))))) { type: stack, direction: horizontal, align: center, gap: sm, children: [ { type: icon, name: (if @e.set "check" "x"), size: sm }, { type: typography, variant: body, weight: medium, className: "break-all", content: @e.name }, { type: badge, variant: (if @e.set "success" "danger"), size: sm, label: (if @e.set "set" "missing") }, { type: typography, variant: caption, color: muted, className: "break-all", content: (if (= @shown null) (if (and @e.set (!= @e.tail "")) (str/concat "••••" @e.tail) "") (default @shown.value "")) }, (if (and (= @entity.guestIntegrations "live") @e.set (= @shown null)) { type: button, label: "Reveal", icon: eye, variant: ghost, size: sm, action: GUEST_TRACE_REVEAL_CHOSEN, actionPayload: { name: @e.name, via: "credentials" } } null)] })))) (array/map @entity.guestComputedCredentials (fn n { type: typography, variant: caption, color: muted, content: (str/concat @n " — its name is only known at run time") }))) }, { type: stack, direction: vertical, gap: sm, children: (array/concat [{ type: typography, variant: label, weight: semibold, content: "Grants" }] (array/map @entity.guestGrantRows (fn r { type: stack, direction: vertical, gap: xs, children: [{ type: typography, variant: body, weight: medium, content: @r.kind }, { type: stack, direction: horizontal, gap: md, align: start, children: [{ type: stack, direction: vertical, gap: xs, className: "min-w-0 flex-1", children: (array/concat [{ type: typography, variant: caption, color: muted, content: "Declared" }] (array/concat (if (= (array/len @r.declared) 0) [{ type: typography, variant: caption, color: muted, content: "none" }] []) (array/map @r.declared (fn d { type: stack, direction: horizontal, align: center, gap: xs, children: [{ type: typography, variant: caption, className: "break-all", content: @d }, (if (array/includes @r.missing @d) { type: badge, variant: "danger", size: sm, label: "not held" } null)] })))) }, { type: stack, direction: vertical, gap: xs, className: "min-w-0 flex-1", children: (array/concat [{ type: typography, variant: caption, color: muted, content: "Held" }] (array/concat (if (= (array/len @r.effective) 0) [{ type: typography, variant: caption, color: muted, content: "none" }] []) (array/map @r.effective (fn d { type: typography, variant: caption, className: "break-all", content: @d })))) }] }] }))) }, { type: stack, direction: vertical, gap: sm, children: (if @entity.guestTraceAnswered (array/concat [{ type: stack, id: "guest-denials", direction: vertical, gap: xs, children: (array/concat [{ type: typography, variant: label, weight: semibold, content: "Denied operations" }] (array/map @entity.guestDenials (fn d { type: stack, direction: horizontal, align: start, gap: sm, children: [{ type: typography, variant: caption, className: "break-all", content: @d.message }, (if (> @d.count 1) { type: badge, variant: "neutral", size: sm, label: (str/concat "×" @d.count) } null)] }))) }] (if (= (array/len @entity.guestDenials) 0) [{ type: typography, variant: caption, color: muted, content: "None" }] [])) [{ type: typography, variant: caption, color: muted, content: "Reading what the guest was refused" }]) }, { type: stack, direction: vertical, gap: sm, children: (array/concat [{ type: typography, variant: label, weight: semibold, content: "Integrations" }] [{ type: stack, direction: horizontal, gap: md, align: start, children: [{ type: stack, direction: vertical, gap: xs, className: "min-w-0 flex-1", children: (array/concat [{ type: typography, variant: caption, color: muted, content: "Hosts (tcp)" }] (let ((hosts (array/filter (default (object/get @dg "net") []) (fn n (array/includes @n.kinds "tcp"))))) (array/concat (if (= (array/len @hosts) 0) [{ type: typography, variant: caption, color: muted, content: "none" }] []) (array/map @hosts (fn n { type: typography, variant: caption, className: "break-all", content: (str/concat @n.target " [tcp]") }))))) }, { type: stack, direction: vertical, gap: xs, className: "min-w-0 flex-1", children: (array/concat [{ type: typography, variant: caption, color: muted, content: "Environment names" }] (array/concat (if (= (array/len @entity.guestEnvironment) 0) [{ type: typography, variant: caption, color: muted, content: "none" }] []) (array/map @entity.guestEnvironment (fn e { type: typography, variant: caption, className: "break-all", content: @e.name })))) }] }]) }] }))] }] [])) })
     }
 
     emits {
@@ -881,6 +933,10 @@ orbital GuestSessionOrbital {
         guest : string!
       }
         @description "The trace sidebar opened, or the guest it shows changed: the session answers what the guest declares and holds."
+      GUEST_CREDENTIAL -> external {
+        guest : string!
+        token : string!
+      }
       GUEST_TRACE_REVEAL -> external {
         guest : string!
         name : string!
@@ -893,6 +949,20 @@ orbital GuestSessionOrbital {
       GuestSession.GUEST_PAINTS -> GUEST_PAINTS
       GuestSession.GUEST_ERROR -> GUEST_ERROR
       GuestSession.GUEST_NOTICE -> GUEST_NOTICE
+      GuestSession.GUEST_SIGN_IN -> GUEST_SIGN_IN
+      GUEST_SIGN_IN {
+        guest : string!
+      }
+      GUEST_GOOGLE_IN {
+        uid : string
+        email : string
+        displayName : string
+        idToken : string
+      }
+      GUEST_GOOGLE_FAILED {
+        error : string!
+        kind : string
+      }
       GuestSession.GUEST_CLEARED -> GUEST_CLEARED
       GuestSession.GUEST_PERSONAS -> GUEST_PERSONAS
       GuestSession.GUEST_INTEGRATIONS -> GUEST_INTEGRATIONS

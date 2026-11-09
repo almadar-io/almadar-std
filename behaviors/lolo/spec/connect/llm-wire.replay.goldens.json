@@ -1011,6 +1011,95 @@
           }
         }
       ]
+    },
+    {
+      "id": "a-streamed-reasoning-chunk-is-announced-as-a-reasoning-delta-not-as-text",
+      "steps": [
+        {
+          "trait": "LocalLlm",
+          "event": "LLM_CHAT_STREAM_MSG",
+          "payload": {
+            "key": "{\"stream\": true, \"action\": \"extract\", \"attempt\": 0, \"system\": \"s\", \"user\": \"u\", \"base\": \"u\", \"model\": \"qwen\", \"temperature\": 0, \"maxTokens\": 0, \"callKey\": \"r1\"}",
+            "data": "{\"choices\": [{\"delta\": {\"content\": \"\", \"reasoning\": \"Najprej pre\\u0161tejem kode.\"}}]}"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LLM_REASONING_DELTA",
+                "payload": {
+                  "key": "r1",
+                  "delta": "Najprej preštejem kode."
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-streamed-text-chunk-is-a-text-delta-and-no-reasoning",
+      "steps": [
+        {
+          "trait": "LocalLlm",
+          "event": "LLM_CHAT_STREAM_MSG",
+          "payload": {
+            "key": "{\"stream\": true, \"action\": \"extract\", \"attempt\": 0, \"system\": \"s\", \"user\": \"u\", \"base\": \"u\", \"model\": \"qwen\", \"temperature\": 0, \"maxTokens\": 0, \"callKey\": \"r1\"}",
+            "data": "{\"choices\": [{\"delta\": {\"content\": \"{\\\"summary\\\"\"}}]}"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LLM_GENERATE_DELTA",
+                "payload": {
+                  "key": "r1",
+                  "delta": "{\"summary\"",
+                  "text": "{\"summary\""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "edge-a-usage-only-frame-announces-no-reasoning",
+      "steps": [
+        {
+          "trait": "LocalLlm",
+          "event": "LLM_CHAT_STREAM_MSG",
+          "payload": {
+            "key": "{\"stream\": true, \"action\": \"extract\", \"attempt\": 0, \"system\": \"s\", \"user\": \"u\", \"base\": \"u\", \"model\": \"qwen\", \"temperature\": 0, \"maxTokens\": 0, \"callKey\": \"r1\"}",
+            "data": "{\"choices\": [], \"usage\": {\"prompt_tokens\": 5, \"completion_tokens\": 7}}"
+          },
+          "expect": {
+            "emits": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "an-anthropic-thinking-chunk-is-announced-as-a-reasoning-delta",
+      "steps": [
+        {
+          "trait": "AnthropicLlm",
+          "event": "LLM_CHAT_STREAM_MSG",
+          "payload": {
+            "key": "{\"stream\": true, \"action\": \"extract\", \"attempt\": 0, \"system\": \"s\", \"user\": \"u\", \"base\": \"u\", \"model\": \"qwen\", \"temperature\": 0, \"maxTokens\": 0, \"callKey\": \"r1\"}",
+            "data": "{\"type\": \"content_block_delta\", \"delta\": {\"type\": \"thinking_delta\", \"thinking\": \"Preverim obliko.\"}}"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LLM_REASONING_DELTA",
+                "payload": {
+                  "key": "r1",
+                  "delta": "Preverim obliko."
+                }
+              }
+            ]
+          }
+        }
+      ]
     }
   ]
 }

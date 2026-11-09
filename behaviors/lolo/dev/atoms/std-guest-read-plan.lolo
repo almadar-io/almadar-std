@@ -1,0 +1,172 @@
+app std-guest-read-plan [
+  version: "1.0.0",
+  description: "std-guest-read-plan — works out, from resolved programs alone, which pages of the installed behaviors can be opened without changing anything. READ_PLAN_PAGES { program } answers READ_PLAN_PAGED: a page is read-only when nothing reachable from the INIT, $MOUNT and tick effects of its traits is an operator of the writeHeads knob. Reachable means following every emit and every emit route by event name, through trait listens, over every transition of that event in any state: the walk over-approximates, so a page it clears cannot reach a write and a page it refuses may only reach one behind a click. A behavior is closed when its startup or the page it opens on can reach a write, since a guest runs those before any route is chosen. A page with access authenticated is listed apart as needing sign-in and never opened: an anonymous guest is refused it. READ_PLAN_START lists the behaviors of the paths, exposure and level knobs, less the skipTopics knob, resolves them one at a time, and answers READ_PLAN_READY { targets, coverage }, where coverage names everything left out and why. A call-service always counts as a write: a program does not declare which service actions only read."
+]
+;; @capabilities "static read-only page planning over resolved programs for end-to-end sweeps"
+
+type ReadExpr = string | number | boolean | [ReadExpr?] | Map string ReadExpr?
+type ReadTransition = { event : string!, effects : [ReadExpr?] }
+type ReadMachine = { transitions : [ReadTransition] }
+type ReadTick = { effects : [ReadExpr?] }
+type ReadListen = { event : string!, triggers : string }
+type ReadTrait = { name : string, stateMachine : ReadMachine, ticks : [ReadTick], listens : [ReadListen] }
+type ReadPageRef = { ref : string }
+type ReadPage = { path : string, isInitial : boolean, access : string, traits : [ReadPageRef] }
+type ReadOrbital = { traits : [ReadTrait], pages : [ReadPage] }
+type ReadProgram = { orbitals : [ReadOrbital] }
+type ReadRouteMap = Map string string
+type ReadCallHit = { node : [ReadExpr?]! }
+type ReadRouteHit = { node : Map string ReadExpr?! }
+type ReadCallIndex = Map string [ReadCallHit]
+type ReadRouteIndex = Map string [ReadRouteHit]
+type ReadNode = { event : string!, why : [string]!, next : [string]! }
+type ReadListenRow = { event : string!, trait : string!, triggers : string! }
+type ReadFixpoint = { taint : Map string [string]!, size : number!, done : boolean! }
+type ReadPageRow = { path : string!, isInitial : boolean!, signIn : boolean!, writes : [string]! }
+type ReadSkippedPage = { route : string!, writes : [string]! }
+type ReadCatalogEntry = { behavior : string!, level : string!, topic : string! }
+type ReadTarget = { behavior : string!, routes : [string]! }
+type ReadClosed = { behavior : string!, at : string!, writes : [string]! }
+type ReadSkippedRoutes = { behavior : string!, skipped : [ReadSkippedPage]!, paramRoutes : [string]! }
+type ReadFailed = { behavior : string!, error : string! }
+type ReadSignInPages = { behavior : string!, opening : boolean!, routes : [string]! }
+type ReadCoverage = { closed : [ReadClosed]!, needsSignIn : [ReadSignInPages]!, noPage : [string]!, skippedRoutes : [ReadSkippedRoutes]!, unresolved : [ReadFailed]! }
+
+orbital GuestReadPlanOrbital {
+  entity GuestReadPlanRun [runtime] {
+    id : string!
+    queue : [string] @description "The behaviors still to plan." = []
+    current : string @description "The behavior being resolved." = ""
+    targets : [ReadTarget] @description "The behaviors that can be opened, with their read-only pages." = []
+    closed : [ReadClosed] @description "The behaviors whose startup or opening page can reach a write." = []
+    needsSignIn : [ReadSignInPages] @description "The pages an anonymous guest cannot open, by behavior." = []
+    noPage : [string] @description "The behaviors with no read-only page to open." = []
+    skippedRoutes : [ReadSkippedRoutes] @description "The pages left out of the behaviors that can be opened." = []
+    unresolved : [ReadFailed] @description "The behaviors that could not be resolved." = []
+  }
+
+  trait GuestReadPlan -> GuestReadPlanRun {
+    config {
+      paths : [string] = ["almadar-behaviors"]
+        @label "Catalog paths"
+        @tier "domain"
+      exposure : [string] = ["app", "experience", "internal"]
+        @label "Catalog exposure"
+        @tier "domain"
+      level : string = "organism"
+        @label "Catalog level"
+        @tier "domain"
+      skipTopics : [string] = ["spec"]
+        @label "Catalog topics left out"
+        @tier "domain"
+      writeHeads : [string] = ["persist", "call-service", "credential-connect", "credential-forget", "credential-mode", "credential-remove", "credential-rotate", "credential-set", "oauth-authorize", "oauth-connection-forget", "auth/consent", "auth/sign-out", "identity/sign-out", "browser/beacon", "browser/push-subscribe", "browser/tab-act", "browser/tab-apply", "browser/tab-apply-many", "browser/tab-close", "browser/tab-navigate", "browser/tab-open", "ffi/call", "kv/batch", "kv/delete", "kv/put", "llm/call-tools", "llm/compact", "llm/embed", "llm/generate", "os/append-file", "os/brightness-set", "os/chdir", "os/chmod", "os/chown", "os/copy", "os/fetch", "os/fsync", "os/hibernate", "os/kill", "os/link", "os/mkdir", "os/mktemp", "os/mmio-write", "os/remove", "os/rename", "os/rmdir", "os/send", "os/sendto", "os/setenv", "os/shutdown", "os/spawn", "os/stdout-write", "os/suspend", "os/symlink", "os/tcp-listen", "os/truncate", "os/udp-bind", "os/unsetenv", "os/utimes", "os/volume-mute", "os/volume-set", "os/write", "os/write-file", "program/dispatch", "program/eval", "program/step", "program/tick", "session/append-history", "session/write-errors", "session/write-memory", "session/write-spec", "workspace/archive-orbital", "workspace/write-file", "workspace/write-orbital", "workspace/write-plan", "workspace/write-schema"]
+        @label "Operators that count as a write"
+        @tier "internal"
+    }
+
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      READ_PLAN_START -> ready
+        (behavior/catalog { paths: @config.paths, exposure: @config.exposure } { traits: false, emit: { success: READ_PLAN_LISTED, failure: READ_PLAN_LIST_FAILED } })
+      READ_PLAN_LISTED -> ready
+        (set @entity.queue (array/map (array/filter ?result (fn e (and (= @e.level @config.level) (not (array/includes @config.skipTopics @e.topic))))) (fn e @e.behavior)))
+        (emit READ_PLAN_NEXT {})
+      READ_PLAN_LIST_FAILED -> ready
+        (emit READ_PLAN_FAILED { error: ?error })
+      READ_PLAN_NEXT -> ready when (= (array/len @entity.queue) 0)
+        (emit READ_PLAN_READY { targets: @entity.targets, coverage: { closed: @entity.closed, needsSignIn: @entity.needsSignIn, noPage: @entity.noPage, skippedRoutes: @entity.skippedRoutes, unresolved: @entity.unresolved } })
+      READ_PLAN_NEXT -> ready when (> (array/len @entity.queue) 0)
+        (set @entity.current (default (array/first @entity.queue) ""))
+        (set @entity.queue (array/drop @entity.queue 1))
+        (behavior/resolve { behavior: @entity.current } {} { emit: { success: READ_PLAN_RESOLVED, failure: READ_PLAN_UNRESOLVED } })
+      READ_PLAN_RESOLVED -> ready
+        (emit READ_PLAN_PAGES { program: ?result })
+      READ_PLAN_UNRESOLVED -> ready
+        (set @entity.unresolved (array/append @entity.unresolved { behavior: @entity.current, error: ?error }))
+        (emit READ_PLAN_NEXT {})
+      READ_PLAN_PAGES -> ready
+        (let ((allTraits : [ReadTrait] (array/flatten (array/map (default ?program.orbitals []) (fn o (default @o.traits []))))))
+          (let ((allPages : [ReadPage] (array/flatten (array/map (default ?program.orbitals []) (fn o (default @o.pages []))))))
+            (let ((listenRows : [ReadListenRow] (array/flatten (array/map @allTraits (fn t (array/map (array/filter (default @t.listens []) (fn l (validate/required @l.triggers))) (fn l { event: (default (array/last (str/split @l.event ".")) ""), trait: (default @t.name ""), triggers: (default @l.triggers "") })))))))
+              (let ((listens : Map string [ReadListenRow] (array/groupBy @listenRows "event")))
+                (let ((roots : [ReadTransition] (array/map @allTraits (fn t { event: (str/concat "$ROOT:" (default @t.name "")), effects: [(array/map (array/filter (default @t.stateMachine.transitions []) (fn x (array/includes ["INIT", "$MOUNT"] @x.event))) (fn x (default @x.effects []))), (array/map (default @t.ticks []) (fn k (default @k.effects [])))] }))))
+                  (let ((handlers : [ReadTransition] (array/concat @roots (array/flatten (array/map @allTraits (fn t (default @t.stateMachine.transitions [])))))))
+                    (let ((byEvent : Map string [ReadTransition] (array/groupBy @handlers "event")))
+                    (let ((nodes : [ReadNode] (array/map (array/unique (array/map @handlers (fn x @x.event))) (fn name (let ((group : [ReadTransition] (object/get @byEvent @name []))) (let ((heads : ReadCallIndex (default (as (tree/index @group (array/append @config.writeHeads "emit")) ReadCallIndex) {}))) (let ((routes : ReadRouteIndex (default (as (tree/index @group [] { objects: ["emit"] }) ReadRouteIndex) {}))) (let ((named : [string] (array/concat (array/map (object/get @heads "emit" []) (fn h (default (as (array/nth @h.node 1) string) ""))) (array/flatten (array/map (object/get @routes "emit" []) (fn h (object/values (default (as (object/get @h.node "emit") ReadRouteMap) {})))))))) { event: @name, why: (array/filter @config.writeHeads (fn head (> (array/len (object/get @heads @head [])) 0))), next: (array/unique (array/flatten (array/map @named (fn n (let ((short : string (default (array/last (str/split @n ".")) ""))) (array/prepend (array/map (object/get @listens @short []) (fn l @l.triggers)) @short)))))) }))))))))
+                      (let ((closure : ReadFixpoint (array/reduce (array/range (+ (array/len @nodes) 1)) { taint: (object/fromEntries (array/map @nodes (fn n [@n.event, @n.why]))), size: -1, done: false } (fn acc round (if @acc.done @acc (let ((widened : [ReadNode] (array/map @nodes (fn n { event: @n.event, why: (array/unique (array/concat @n.why (array/flatten (array/map @n.next (fn x (object/get @acc.taint @x [])))))), next: @n.next })))) (let ((size : number (array/sum (array/map @widened (fn n (array/len @n.why)))))) { taint: (object/fromEntries (array/map @widened (fn n [@n.event, @n.why]))), size: @size, done: (= @size @acc.size) })))))))
+                        (let ((rows : [ReadPageRow] (array/map @allPages (fn p { path: (default @p.path ""), isInitial: (default @p.isInitial false), signIn: (= (default @p.access "public") "authenticated"), writes: (array/unique (array/flatten (array/map (default @p.traits []) (fn r (object/get @closure.taint (str/concat "$ROOT:" (default @r.ref "")) []))))) }))))
+                          (let ((routed : [ReadPageRow] (array/filter @rows (fn r (!= @r.path "")))))
+                            (let ((opening : ReadPageRow (default (array/find @routed (fn r @r.isInitial)) (default (array/first @routed) { path: "", isInitial: false, signIn: false, writes: [] }))))
+                              (let ((open : [ReadPageRow] (array/filter @routed (fn r (not @r.signIn)))))
+                              (let ((plain : [ReadPageRow] (array/filter @open (fn r (not (str/includes @r.path ":"))))))
+                                (emit READ_PLAN_PAGED {
+                                  bootWrites: (array/unique (array/concat (array/flatten (array/map (array/filter @rows (fn r (= @r.path ""))) (fn r @r.writes))) (array/flatten (array/map (object/get @listens "$MOUNT" []) (fn l (array/concat (object/get @closure.taint (str/concat "$ROOT:" @l.trait) []) (object/get @closure.taint @l.triggers []))))))),
+                                  opening: @opening.path,
+                                  openingWrites: @opening.writes,
+                                  openingNeedsSignIn: @opening.signIn,
+                                  needsSignIn: (array/map (array/filter @routed (fn r @r.signIn)) (fn r @r.path)),
+                                  routes: (array/map (array/filter @plain (fn r (= (array/len @r.writes) 0))) (fn r @r.path)),
+                                  skipped: (array/map (array/filter @plain (fn r (> (array/len @r.writes) 0))) (fn r { route: @r.path, writes: @r.writes })),
+                                  paramRoutes: (array/map (array/filter @open (fn r (str/includes @r.path ":"))) (fn r @r.path))
+                                })))))))))))))))
+      READ_PLAN_PAGED -> ready when (or (> (array/len ?bootWrites) 0) (and (not ?openingNeedsSignIn) (> (array/len ?openingWrites) 0)))
+        (set @entity.closed (array/append @entity.closed { behavior: @entity.current, at: (if (> (array/len ?bootWrites) 0) "startup" ?opening), writes: (if (> (array/len ?bootWrites) 0) ?bootWrites ?openingWrites) }))
+        (emit READ_PLAN_NEXT {})
+      READ_PLAN_PAGED -> ready when (and (= (array/len ?bootWrites) 0) ?openingNeedsSignIn)
+        (set @entity.needsSignIn (array/append @entity.needsSignIn { behavior: @entity.current, opening: true, routes: ?needsSignIn }))
+        (emit READ_PLAN_NEXT {})
+      READ_PLAN_PAGED -> ready when (and (= (array/len ?bootWrites) 0) (not ?openingNeedsSignIn) (= (array/len ?openingWrites) 0) (= (array/len ?routes) 0))
+        (set @entity.noPage (array/append @entity.noPage @entity.current))
+        (emit READ_PLAN_NEXT {})
+      READ_PLAN_PAGED -> ready when (and (= (array/len ?bootWrites) 0) (not ?openingNeedsSignIn) (= (array/len ?openingWrites) 0) (> (array/len ?routes) 0))
+        (set @entity.needsSignIn (if (> (array/len ?needsSignIn) 0) (array/append @entity.needsSignIn { behavior: @entity.current, opening: false, routes: ?needsSignIn }) @entity.needsSignIn))
+        (set @entity.targets (array/append @entity.targets { behavior: @entity.current, routes: ?routes }))
+        (set @entity.skippedRoutes (array/append @entity.skippedRoutes { behavior: @entity.current, skipped: ?skipped, paramRoutes: ?paramRoutes }))
+        (emit READ_PLAN_NEXT {})
+    }
+
+    emits {
+      READ_PLAN_NEXT { }
+      READ_PLAN_PAGES -> external {
+        program : ReadProgram!
+      }
+      READ_PLAN_PAGED -> external {
+        bootWrites : [string]!
+        opening : string!
+        openingWrites : [string]!
+        openingNeedsSignIn : boolean!
+        needsSignIn : [string]!
+        routes : [string]!
+        skipped : [ReadSkippedPage]!
+        paramRoutes : [string]!
+      }
+      READ_PLAN_READY -> external {
+        targets : [ReadTarget]!
+        coverage : ReadCoverage!
+      }
+      READ_PLAN_FAILED -> external {
+        error : string!
+      }
+    }
+
+    listens {
+      READ_PLAN_START { }
+      READ_PLAN_LISTED {
+        result : [ReadCatalogEntry]!
+      }
+      READ_PLAN_LIST_FAILED {
+        error : string!
+      }
+      READ_PLAN_RESOLVED {
+        result : ReadProgram!
+      }
+      READ_PLAN_UNRESOLVED {
+        error : string!
+      }
+    }
+  }
+
+  page boot as GuestReadPlanBoot -> GuestReadPlan
+}

@@ -270,6 +270,303 @@
         }
       ],
       "defaults": []
+    },
+    {
+      "id": "the-declared-tool-labels-reach-the-chat-feed",
+      "config": {
+        "ephemeral": true,
+        "toolLabels": [
+          {
+            "tool": "Shop.AgentTools.OPEN_PAGE",
+            "label": "Odpiram stran"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "trait": "AgentConversation",
+          "event": "START_CHAT",
+          "from": "idle",
+          "payload": {
+            "greeting": "",
+            "instructions": "i",
+            "tools": [],
+            "live": true
+          },
+          "expect": {
+            "fired": true,
+            "rendered": [
+              {
+                "slot": "main",
+                "props": {
+                  "children.1.type": "agent-chat-feed",
+                  "children.1.toolLabels": [
+                    {
+                      "tool": "Shop.AgentTools.OPEN_PAGE",
+                      "label": "Odpiram stran"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "options": {
+            "render": true,
+            "renderProps": true
+          }
+        }
+      ],
+      "defaults": []
+    },
+    {
+      "id": "control-without-declared-labels-the-feed-gets-none",
+      "config": {
+        "ephemeral": true
+      },
+      "steps": [
+        {
+          "trait": "AgentConversation",
+          "event": "START_CHAT",
+          "from": "idle",
+          "payload": {
+            "greeting": "",
+            "instructions": "i",
+            "tools": [],
+            "live": true
+          },
+          "expect": {
+            "fired": true,
+            "rendered": [
+              {
+                "slot": "main",
+                "props": {
+                  "children.1.type": "agent-chat-feed",
+                  "children.1.toolLabels": []
+                }
+              }
+            ]
+          },
+          "options": {
+            "render": true,
+            "renderProps": true
+          }
+        }
+      ],
+      "defaults": []
+    },
+    {
+      "id": "a-draft-fills-the-chat-bar-and-sends-nothing",
+      "config": {
+        "ephemeral": true
+      },
+      "steps": [
+        {
+          "trait": "AgentConversation",
+          "event": "START_CHAT",
+          "from": "idle",
+          "payload": {
+            "greeting": "",
+            "instructions": "i",
+            "tools": [],
+            "live": true
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "AgentConversation",
+          "event": "DRAFT",
+          "payload": {
+            "message": "Preveri dostopnost https://"
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [],
+            "entity": {
+              "draft": "Preveri dostopnost https://",
+              "draftNo": 1
+            },
+            "rendered": [
+              {
+                "slot": "main",
+                "props": {
+                  "children.2.type": "chat-bar",
+                  "children.2.focusRequest": {
+                    "id": 1,
+                    "text": "Preveri dostopnost https://"
+                  }
+                }
+              }
+            ]
+          },
+          "options": {
+            "render": true,
+            "renderProps": true
+          }
+        }
+      ],
+      "defaults": []
+    },
+    {
+      "id": "a-second-draft-gets-a-new-id",
+      "config": {
+        "ephemeral": true
+      },
+      "steps": [
+        {
+          "trait": "AgentConversation",
+          "event": "START_CHAT",
+          "from": "idle",
+          "payload": {
+            "greeting": "",
+            "instructions": "i",
+            "tools": [],
+            "live": true
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "AgentConversation",
+          "event": "DRAFT",
+          "payload": {
+            "message": "first"
+          },
+          "expect": {
+            "fired": true
+          },
+          "options": {
+            "render": true,
+            "renderProps": true
+          }
+        },
+        {
+          "trait": "AgentConversation",
+          "event": "DRAFT",
+          "payload": {
+            "message": "second"
+          },
+          "expect": {
+            "fired": true,
+            "entity": {
+              "draft": "second",
+              "draftNo": 2
+            },
+            "rendered": [
+              {
+                "slot": "main",
+                "props": {
+                  "children.2.focusRequest.text": "second"
+                }
+              }
+            ]
+          },
+          "options": {
+            "render": true,
+            "renderProps": true
+          }
+        }
+      ],
+      "defaults": []
+    },
+    {
+      "id": "edge-sending-clears-the-draft",
+      "config": {
+        "ephemeral": true
+      },
+      "steps": [
+        {
+          "trait": "AgentConversation",
+          "event": "START_CHAT",
+          "from": "idle",
+          "payload": {
+            "greeting": "",
+            "instructions": "i",
+            "tools": [],
+            "live": true
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "AgentConversation",
+          "event": "DRAFT",
+          "payload": {
+            "message": "Preveri https://a.si"
+          },
+          "expect": {
+            "fired": true
+          },
+          "options": {
+            "render": true,
+            "renderProps": true
+          }
+        },
+        {
+          "trait": "AgentConversation",
+          "event": "ASK",
+          "payload": {
+            "message": "Preveri https://a.si"
+          },
+          "expect": {
+            "fired": true,
+            "entity": {
+              "draft": ""
+            },
+            "rendered": [
+              {
+                "slot": "main",
+                "props": {
+                  "children.2.type": "chat-bar",
+                  "children.2.focusRequest": null
+                }
+              }
+            ]
+          },
+          "options": {
+            "render": true,
+            "renderProps": true
+          }
+        }
+      ],
+      "defaults": []
+    },
+    {
+      "id": "control-a-blank-draft-is-ignored",
+      "config": {
+        "ephemeral": true
+      },
+      "steps": [
+        {
+          "trait": "AgentConversation",
+          "event": "START_CHAT",
+          "from": "idle",
+          "payload": {
+            "greeting": "",
+            "instructions": "i",
+            "tools": [],
+            "live": true
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "AgentConversation",
+          "event": "DRAFT",
+          "payload": {
+            "message": ""
+          },
+          "expect": {
+            "fired": false
+          }
+        }
+      ],
+      "defaults": []
     }
   ]
 }

@@ -104,6 +104,60 @@
      }
     }
    ]
+  },
+  {
+   "id": "a-numeric-category-groups-under-its-text",
+   "note": "a status code column is a number; array/groupBy keys are text, so the atom renders the value as text",
+   "config": {
+    "categoryField": "statusCode"
+   },
+   "steps": [
+    {
+     "trait": "GraphItemGraph",
+     "from": "idle",
+     "entity": {
+      "id": "g",
+      "status": ""
+     },
+     "event": "ITEMS_LOADED",
+     "payload": {
+      "data": [
+       {
+        "id": "a",
+        "statusCode": 200
+       },
+       {
+        "id": "b",
+        "statusCode": 200
+       },
+       {
+        "id": "c",
+        "statusCode": 404
+       }
+      ],
+      "totalCount": 3
+     },
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "rendered": [
+       {
+        "slot": "main",
+        "props": {
+         "data.0.label": "200",
+         "data.0.value": 2,
+         "data.1.label": "404",
+         "data.1.value": 1
+        }
+       }
+      ]
+     },
+     "options": {
+      "render": true,
+      "renderProps": true
+     }
+    }
+   ]
   }
  ]
 }

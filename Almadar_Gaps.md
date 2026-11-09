@@ -10,6 +10,7 @@ Every open gap this repo owns lives here. This file is the source of truth; the 
 
 
 
+- **G-STD-340** [architectural] — The Real-mode read-only route sweep has no durable home: the classifier that picks read-only pages and writes the `std-guest-e2e` scenarios is a throwaway script, not an std `.lolo` organism, so the catalog's Real coverage cannot be re-run from the repo. It also treats every `call-service` as a write, so pages that read a third-party service on load are skipped. Owner: almadar-std (`dev/organisms/std-guest-e2e.lolo`). Prevention rung: verifiers. Root cause: one-off.
 - **G-STD-337** [mechanical] — `dev/organisms/std-guest-e2e.lolo` with `ORB_CHROME` unset writes `{"ok":false,"scenarios":[]}` and exits 0: the anchored exec grant grants nothing, only a WARN says so, and a caller reading the exit code sees a pass. Reproduce: run it from a shell without `ORB_CHROME`. Prevention rung: (3) the verifiers (a run with no scenario executed fails with a non-zero exit). Root cause: one-off.
 
 - **G-STD-338** [mechanical] — The operator description of `program/inputs` (`modules/program.ts`, `canonical-operators.json`) does not list the guest reads `environment`, `credentials` and `denials`, so `orb signatures` under-describes them; EXEC-CONC-7 is the only statement of them. Reproduce: `orb signatures`, read `program/inputs`. Prevention rung: none (non-structural documentation). Root cause: one-off.
@@ -29,7 +30,7 @@ Every open gap this repo owns lives here. This file is the source of truth; the 
 - **G-STD-250** — std-http1 reads a request body at about 250 KB/s: every 8 KB `os/recv` chunk runs six dispatches (CHUNK_READ, BODY_CHECK, WANT_MORE, CONN_ADVANCE, the timer's CANCEL/START) that rebuild the `conns` entry holding the whole buffer, so a body's cost grows with its size squared (a 5.6 MB launchpad leg took 21-23 s to read on 2026-11-03, the small requests around it 0.1 s). Repro: `orb -v launchpad --port <p>`, POST a ~5 MB body to `/api/orbitals/Launchpad/events`, count `Http1 CHUNK_READ` lines. almadar-std net (std-http1) [mechanical] — rung: (3) the verifiers (no golden or benchmark reads a large body). Root cause: one-off.
 
 
-Next code: `G-STD-340`
+Next code: `G-STD-341`
 
 
 - **G-STD-333** [mechanical] — `std-app-layout`'s `NavItem.icon` (and `ItemAction.icon`) are typed `string`, so a misspelled icon in `navItems` passes `orb validate` and paints nothing (P-028 used `house`, which this Lucide set lacks; the `icon` prop of a pattern is checked, the nav knob is not). Typing the field `icon` does not help: the icon-existence check (`ORB_UI_ICON_NOT_FOUND`) runs on pattern props only, not on `type` alias fields or config knobs (verified 2026-11-09), and 147 atoms redeclare their own `NavItem` with `icon : string`. Needs a rung-1 change in orbital-lolo / orbital-core (the `icon` type checks existence everywhere; owner decision) and convergence of the local NavItem copies onto std-app-layout\'s. Prevention rung: (1) the type system. Root cause: one-off.

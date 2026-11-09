@@ -41,10 +41,26 @@ orbital GroundedAnswerOrbital {
 
   trait GroundedChatRequest = Req.traits.HttpRequest {
     listens {
+      GroundedChatRequestDelay.ELAPSED -> RETRY_ELAPSED
+      GroundedChatRequestDeadline.ELAPSED -> TIMEOUT_ELAPSED
       GroundedLlm.LLM_CHAT_WIRE -> HTTP_REQUEST
       GroundedLlm.LLM_CHAT_WIRE_CANCEL -> HTTP_REQUEST_CANCEL
       GroundedChatHttp.HTTP_REPLIED -> HTTP_REPLIED
       GroundedChatHttp.HTTP_FAILED -> HTTP_FAILED
+    }
+  }
+
+  trait GroundedChatRequestDelay = Req.traits.RequestDelay {
+    listens {
+      GroundedChatRequest.RETRY_WAIT -> START
+      GroundedChatRequest.RETRY_STOP -> CANCEL
+    }
+  }
+
+  trait GroundedChatRequestDeadline = Req.traits.RequestDeadline {
+    listens {
+      GroundedChatRequest.TIMEOUT_START -> START
+      GroundedChatRequest.TIMEOUT_STOP -> CANCEL
     }
   }
 
@@ -226,5 +242,5 @@ orbital GroundedAnswerOrbital {
     }
   }
 
-  page boot as GroundedAnswerPage -> GroundedRun, GroundedLlm, GroundedChatRequest, GroundedChatHttp
+  page boot as GroundedAnswerPage -> GroundedRun, GroundedLlm, GroundedChatRequest, GroundedChatRequestDelay, GroundedChatRequestDeadline, GroundedChatHttp
 }

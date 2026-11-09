@@ -175,10 +175,26 @@ orbital AgentToolLoopOrbital {
 
   trait LoopChatRequest = Req.traits.HttpRequest {
     listens {
+      LoopChatRequestDelay.ELAPSED -> RETRY_ELAPSED
+      LoopChatRequestDeadline.ELAPSED -> TIMEOUT_ELAPSED
       LoopLlm.LLM_CHAT_WIRE -> HTTP_REQUEST
       LoopLlm.LLM_CHAT_WIRE_CANCEL -> HTTP_REQUEST_CANCEL
       LoopChatHttp.HTTP_REPLIED -> HTTP_REPLIED
       LoopChatHttp.HTTP_FAILED -> HTTP_FAILED
+    }
+  }
+
+  trait LoopChatRequestDelay = Req.traits.RequestDelay {
+    listens {
+      LoopChatRequest.RETRY_WAIT -> START
+      LoopChatRequest.RETRY_STOP -> CANCEL
+    }
+  }
+
+  trait LoopChatRequestDeadline = Req.traits.RequestDeadline {
+    listens {
+      LoopChatRequest.TIMEOUT_START -> START
+      LoopChatRequest.TIMEOUT_STOP -> CANCEL
     }
   }
 
@@ -564,5 +580,5 @@ orbital AgentToolLoopOrbital {
     }
   }
 
-  page boot as AgentToolLoopPage -> AgentToolLoop, LoopLlm, LoopChatRequest, LoopChatHttp
+  page boot as AgentToolLoopPage -> AgentToolLoop, LoopLlm, LoopChatRequest, LoopChatRequestDelay, LoopChatRequestDeadline, LoopChatHttp
 }

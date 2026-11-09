@@ -1,6 +1,6 @@
 app std-agent-session [
   version: "3.0.0",
-  description: "std-agent-session — the conversation with an in-app assistant. AgentThread owns the persisted AgentMessage rows (role, content, ownerId stamped with the real @user, createdAt): SEND stores the user's message, reloads the thread and emits CONVERSE with the whole conversation, oldest first, for std-agent-tool-loop to answer; REPLIED stores the reply. AgentConversation is what the user sees, in the browser: the thread as chat bubbles with every step the assistant takes interleaved live (STEP: each model call, each tool it used and what the app answered), a thinking row while it works, and a chat bar. The two talk over the assistant contract, from any orbital: AgentConversation emits ASSISTANT_SEND and hears AgentMessagesLoaded, ASSISTANT_THREAD_FAILED, ASSISTANT_STEP, ASSISTANT_REPLIED and ASSISTANT_REPLY_FAILED; AgentThread hears ASSISTANT_SEND. So a conversation placed on any section's page reaches the app's one assistant (std-agent-assistant) with no wiring. Rows are meant to be private to their owner: owner-scoped access needs an [identity] roster, so the binding organism declares the @read/@create scoping on AgentMessage — this generic atom cannot."
+  description: "std-agent-session — the conversation with an in-app assistant. AgentThread owns the persisted AgentMessage rows (role, content, ownerId stamped with the real @user, createdAt): SEND stores the user's message, reloads the thread and emits CONVERSE with the whole conversation, oldest first, for std-agent-tool-loop to answer; REPLIED stores the reply. AgentConversation is what the user sees, in the browser: the thread as chat bubbles with every step the assistant takes interleaved live (STEP: each model call, each tool it used and what the app answered), a thinking row while it works, and a chat bar that DRAFT { message } fills for the person to edit and send. The two talk over the assistant contract, from any orbital: AgentConversation emits ASSISTANT_SEND and hears AgentMessagesLoaded, ASSISTANT_THREAD_FAILED, ASSISTANT_STEP, ASSISTANT_REPLIED and ASSISTANT_REPLY_FAILED; AgentThread hears ASSISTANT_SEND. So a conversation placed on any section's page reaches the app's one assistant (std-agent-assistant) with no wiring. Rows are meant to be private to their owner: owner-scoped access needs an [identity] roster, so the binding organism declares the @read/@create scoping on AgentMessage — this generic atom cannot."
 ]
 uses Lifecycle from "std/behaviors/std-lifecycle"
 uses Browse from "std/behaviors/std-browse"
@@ -109,6 +109,7 @@ type AgentLlmResponseActivity = {
   llm : AgentLlmCall
   timestamp : instant!
 }
+type AgentToolLabel = { tool : string!, label : string! }
 type AgentActivity = AgentToolCallActivity | AgentToolResultActivity | AgentLlmResponseActivity
 type AgentFeedEntry = AgentMessageEntry | AgentToolCallActivity | AgentToolResultActivity | AgentLlmResponseActivity | AgentErrorEntry
 
@@ -124,6 +125,8 @@ orbital AgentConversationOrbital {
     chatTitle : string @description "The ephemeral conversation's header title." = ""
     chatSubtitle : string @description "The ephemeral conversation's header subtitle." = ""
     chatAvatar : string @description "The ephemeral conversation's header avatar image." = ""
+    draft : string @description "Text the app put in the chat bar for the person to edit and send; cleared when a message is sent." = ""
+    draftNo : number @description "Counts the drafts put in the chat bar, so each new one fills it again." = 0
   }
 
   trait AgentConversation -> @rebindable AgentConversationView [client] {
@@ -133,6 +136,10 @@ orbital AgentConversationOrbital {
         @tier "presentation"
       emptyTitle : string = "Ask me to do something in this app"
         @label "Empty conversation title"
+        @tier "presentation"
+      toolLabels : [AgentToolLabel] = []
+        @label "Tool step labels"
+        @description "The short label each tool's steps are shown under while the assistant works, by tool address; a tool not listed shows its address."
         @tier "presentation"
       links : [AgentLink] = [{ label: "All conversations", href: "/agent-session/chats" }, { label: "Stored messages", href: "/agent-session/messages" }]
         @label "Links above the conversation"
@@ -225,6 +232,7 @@ orbital AgentConversationOrbital {
             type: stack
           }), {
             activities: @entity.entries
+            toolLabels: @config.toolLabels
             className: flex-1
             emptyTitle: @config.emptyTitle
             idPrefix: agent-conversation
@@ -232,6 +240,7 @@ orbital AgentConversationOrbital {
             type: agent-chat-feed
             working: @entity.working
           }, {
+            focusRequest: (if (= @entity.draft "") null { id: @entity.draftNo, text: @entity.draft })
             placeholder: @config.placeholder
             sendEvent: ASK
             type: chat-bar
@@ -294,6 +303,7 @@ orbital AgentConversationOrbital {
             type: stack
           }), {
             activities: @entity.entries
+            toolLabels: @config.toolLabels
             className: flex-1
             emptyTitle: @config.emptyTitle
             idPrefix: agent-conversation
@@ -301,6 +311,7 @@ orbital AgentConversationOrbital {
             type: agent-chat-feed
             working: @entity.working
           }, {
+            focusRequest: (if (= @entity.draft "") null { id: @entity.draftNo, text: @entity.draft })
             placeholder: @config.placeholder
             sendEvent: ASK
             type: chat-bar
@@ -364,6 +375,7 @@ orbital AgentConversationOrbital {
             type: stack
           }), {
             activities: @entity.entries
+            toolLabels: @config.toolLabels
             className: flex-1
             emptyTitle: @config.emptyTitle
             idPrefix: agent-conversation
@@ -371,6 +383,7 @@ orbital AgentConversationOrbital {
             type: agent-chat-feed
             working: @entity.working
           }, {
+            focusRequest: (if (= @entity.draft "") null { id: @entity.draftNo, text: @entity.draft })
             placeholder: @config.placeholder
             sendEvent: ASK
             type: chat-bar
@@ -381,6 +394,7 @@ orbital AgentConversationOrbital {
           type: stack
         })
       ASK -> idle when (and (not @config.ephemeral) (not @entity.working) (not (= (default ?message "") "")))
+        (set @entity.draft "")
         (set @entity.entries (array/append @entity.entries { type: message, role: user, content: ?message, timestamp: @now }))
         (set @entity.working true)
         (emit ASSISTANT_SEND { message: ?message })
@@ -436,6 +450,7 @@ orbital AgentConversationOrbital {
             type: stack
           }), {
             activities: @entity.entries
+            toolLabels: @config.toolLabels
             className: flex-1
             emptyTitle: @config.emptyTitle
             idPrefix: agent-conversation
@@ -443,6 +458,7 @@ orbital AgentConversationOrbital {
             type: agent-chat-feed
             working: @entity.working
           }, {
+            focusRequest: (if (= @entity.draft "") null { id: @entity.draftNo, text: @entity.draft })
             placeholder: @config.placeholder
             sendEvent: ASK
             type: chat-bar
@@ -453,6 +469,7 @@ orbital AgentConversationOrbital {
           type: stack
         })
       ASK -> idle when (and @config.ephemeral (not @entity.working) (not (= (default ?message "") "")) (not @entity.chatHasLive))
+        (set @entity.draft "")
         (set @entity.entries (array/append @entity.entries { type: message, role: user, content: ?message, timestamp: @now }))
         (set @entity.working true)
         (emit ASSISTANT_EPHEMERAL_SEND {
@@ -513,6 +530,7 @@ orbital AgentConversationOrbital {
             type: stack
           }), {
             activities: @entity.entries
+            toolLabels: @config.toolLabels
             className: flex-1
             emptyTitle: @config.emptyTitle
             idPrefix: agent-conversation
@@ -520,6 +538,7 @@ orbital AgentConversationOrbital {
             type: agent-chat-feed
             working: @entity.working
           }, {
+            focusRequest: (if (= @entity.draft "") null { id: @entity.draftNo, text: @entity.draft })
             placeholder: @config.placeholder
             sendEvent: ASK
             type: chat-bar
@@ -530,6 +549,7 @@ orbital AgentConversationOrbital {
           type: stack
         })
       ASK -> idle when (and @config.ephemeral (not @entity.working) (not (= (default ?message "") "")) @entity.chatHasLive)
+        (set @entity.draft "")
         (set @entity.entries (array/append @entity.entries { type: message, role: user, content: ?message, timestamp: @now }))
         (set @entity.working true)
         (emit ASSISTANT_EPHEMERAL_SEND {
@@ -591,6 +611,7 @@ orbital AgentConversationOrbital {
             type: stack
           }), {
             activities: @entity.entries
+            toolLabels: @config.toolLabels
             className: flex-1
             emptyTitle: @config.emptyTitle
             idPrefix: agent-conversation
@@ -598,6 +619,7 @@ orbital AgentConversationOrbital {
             type: agent-chat-feed
             working: @entity.working
           }, {
+            focusRequest: (if (= @entity.draft "") null { id: @entity.draftNo, text: @entity.draft })
             placeholder: @config.placeholder
             sendEvent: ASK
             type: chat-bar
@@ -668,6 +690,7 @@ orbital AgentConversationOrbital {
             type: stack
           }), {
             activities: @entity.entries
+            toolLabels: @config.toolLabels
             className: flex-1
             emptyTitle: @config.emptyTitle
             idPrefix: agent-conversation
@@ -675,6 +698,7 @@ orbital AgentConversationOrbital {
             type: agent-chat-feed
             working: @entity.working
           }, {
+            focusRequest: (if (= @entity.draft "") null { id: @entity.draftNo, text: @entity.draft })
             placeholder: @config.placeholder
             sendEvent: ASK
             type: chat-bar
@@ -738,6 +762,7 @@ orbital AgentConversationOrbital {
             type: stack
           }), {
             activities: @entity.entries
+            toolLabels: @config.toolLabels
             className: flex-1
             emptyTitle: @config.emptyTitle
             idPrefix: agent-conversation
@@ -745,6 +770,80 @@ orbital AgentConversationOrbital {
             type: agent-chat-feed
             working: @entity.working
           }, {
+            focusRequest: (if (= @entity.draft "") null { id: @entity.draftNo, text: @entity.draft })
+            placeholder: @config.placeholder
+            sendEvent: ASK
+            type: chat-bar
+          }]
+          className: "h-full min-h-0 flex-1"
+          direction: vertical
+          gap: sm
+          type: stack
+        })
+      DRAFT -> idle when (not (= (default ?message "") ""))
+        (set @entity.draft ?message)
+        (set @entity.draftNo (+ @entity.draftNo 1))
+        (render-ui main {
+          children: [(if @config.ephemeral { type: stack, direction: horizontal, align: center, gap: sm, className: shrink-0, children: [{ type: avatar, src: (object/get @entity chatAvatar ""), name: @entity.chatTitle, size: md, className: (if (= @entity.chatAvatar "") hidden "") }, { type: stack, direction: vertical, gap: none, children: [{ type: typography, variant: h4, content: @entity.chatTitle }, { type: typography, variant: caption, content: @entity.chatSubtitle }] }] } {
+            children: [{
+              action: NEW_CHAT_CLICKED
+              aria-label: @config.newChatLabel
+              icon: message-square-plus
+              label: @config.newChatLabel
+              size: sm
+              type: button
+              variant: secondary
+            }, {
+              children: [{
+                action: OPEN_CHATS_CLICKED
+                aria-label: @config.chatsLabel
+                label: @config.chatsLabel
+                size: sm
+                type: button
+                variant: ghost
+              }, {
+                action: OPEN_MEMORY_CLICKED
+                aria-label: @config.memoryLabel
+                label: @config.memoryLabel
+                size: sm
+                type: button
+                variant: ghost
+              }, {
+                children: (array/map @config.links (fn item {
+                  href: @item.href
+                  label: @item.label
+                  size: sm
+                  type: button
+                  variant: ghost
+                }))
+                direction: horizontal
+                gap: xs
+                type: stack
+              }]
+              align: center
+              className: shrink-0
+              direction: horizontal
+              gap: none
+              type: stack
+            }]
+            align: center
+            className: shrink-0
+            direction: horizontal
+            gap: sm
+            justify: between
+            wrap: true
+            type: stack
+          }), {
+            activities: @entity.entries
+            toolLabels: @config.toolLabels
+            className: flex-1
+            emptyTitle: @config.emptyTitle
+            idPrefix: agent-conversation
+            rawLlmPreferenceKey: agent-conversation-raw-llm
+            type: agent-chat-feed
+            working: @entity.working
+          }, {
+            focusRequest: (if (= @entity.draft "") null { id: @entity.draftNo, text: @entity.draft })
             placeholder: @config.placeholder
             sendEvent: ASK
             type: chat-bar
@@ -809,6 +908,7 @@ orbital AgentConversationOrbital {
             type: stack
           }), {
             activities: @entity.entries
+            toolLabels: @config.toolLabels
             className: flex-1
             emptyTitle: @config.emptyTitle
             idPrefix: agent-conversation
@@ -816,6 +916,7 @@ orbital AgentConversationOrbital {
             type: agent-chat-feed
             working: @entity.working
           }, {
+            focusRequest: (if (= @entity.draft "") null { id: @entity.draftNo, text: @entity.draft })
             placeholder: @config.placeholder
             sendEvent: ASK
             type: chat-bar
@@ -880,6 +981,7 @@ orbital AgentConversationOrbital {
             type: stack
           }), {
             activities: @entity.entries
+            toolLabels: @config.toolLabels
             className: flex-1
             emptyTitle: @config.emptyTitle
             idPrefix: agent-conversation
@@ -887,6 +989,7 @@ orbital AgentConversationOrbital {
             type: agent-chat-feed
             working: @entity.working
           }, {
+            focusRequest: (if (= @entity.draft "") null { id: @entity.draftNo, text: @entity.draft })
             placeholder: @config.placeholder
             sendEvent: ASK
             type: chat-bar
@@ -1004,6 +1107,7 @@ orbital AgentConversationOrbital {
             type: stack
           }), {
             activities: @entity.entries
+            toolLabels: @config.toolLabels
             className: flex-1
             emptyTitle: @config.emptyTitle
             idPrefix: agent-conversation
@@ -1011,6 +1115,7 @@ orbital AgentConversationOrbital {
             type: agent-chat-feed
             working: @entity.working
           }, {
+            focusRequest: (if (= @entity.draft "") null { id: @entity.draftNo, text: @entity.draft })
             placeholder: @config.placeholder
             sendEvent: ASK
             type: chat-bar
@@ -1124,6 +1229,7 @@ orbital AgentConversationOrbital {
             type: stack
           }), {
             activities: @entity.entries
+            toolLabels: @config.toolLabels
             className: flex-1
             emptyTitle: @config.emptyTitle
             idPrefix: agent-conversation
@@ -1131,6 +1237,7 @@ orbital AgentConversationOrbital {
             type: agent-chat-feed
             working: @entity.working
           }, {
+            focusRequest: (if (= @entity.draft "") null { id: @entity.draftNo, text: @entity.draft })
             placeholder: @config.placeholder
             sendEvent: ASK
             type: chat-bar
@@ -1195,6 +1302,7 @@ orbital AgentConversationOrbital {
             type: stack
           }), {
             activities: @entity.entries
+            toolLabels: @config.toolLabels
             className: flex-1
             emptyTitle: @config.emptyTitle
             idPrefix: agent-conversation
@@ -1202,6 +1310,7 @@ orbital AgentConversationOrbital {
             type: agent-chat-feed
             working: @entity.working
           }, {
+            focusRequest: (if (= @entity.draft "") null { id: @entity.draftNo, text: @entity.draft })
             placeholder: @config.placeholder
             sendEvent: ASK
             type: chat-bar
@@ -1323,6 +1432,11 @@ orbital AgentConversationOrbital {
       }
         @description "One step the assistant just took, shown as it happens."
         @synonyms "progress, activity, working"
+      DRAFT {
+        message : string!
+      }
+        @description "Put this text in the chat bar for the person to edit and send; nothing is sent. A blank text is ignored."
+        @synonyms "prefill, fill the input, suggested prompt"
       REPLIED {
         reply : string!
         ephemeral : boolean

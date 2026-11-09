@@ -1,6 +1,6 @@
 app std-orb-serve-handoff [
   version: "1.0.0",
-  env: ["FIREBASE_AUTH_EMULATOR_HOST", "FIREBASE_PROJECT_ID"],
+  env: ["FIREBASE_AUTH_EMULATOR_HOST", "FIREBASE_PROJECT_ID", "FIREBASE_WEB_CONFIG"],
   fs: { cwd: ".orbital": [create], cwd: ".orbital/serve": [create], cwd: ".orbital/serve/**": [write, create], "/**": [read] },
   description: "std-orb-serve-handoff — the half of `orb serve` that turns a resolved app and its server into the bootloader hand-off, composed by std-orb-serve and std-orb-launchpad. It hears the serve engine's SERVE_DECLARED_READY (an app that declares its own http endpoint, composed alone with the serve options set on that orbital) or SERVE_COMPOSE_READY (the app and the std-http-server program that wraps it, composed with the listen grant for host:port and, when a client is served, the anchored cwd read grant of its folder) and composes them with program/compose. Without a client to prepare it answers at once; with one (prepare) it writes the composed program to .orbital/serve/<app>/program.orb, compiles it client-mode with program/eval generate { mode: client, webClient: true } so the typescript shell's prebuilt web client, with the app's runtime files over it, is laid out in .orbital/serve/<app>/web-client, and, when FIREBASE_AUTH_EMULATOR_HOST and FIREBASE_PROJECT_ID are both set, writes that folder's __/firebase/init.json naming the Auth emulator for the page. The answer is SERVE_ANSWERED: status 200 with headers orb-run: server and orb-app: the resolved app its lazy files and locale catalogs sit beside, and the composed program's JSON as the body; a refused composition or a client that could not be prepared answers status 500 on stderr `Error: <reason>`.",
   egress: []
@@ -18,6 +18,7 @@ orbital ServeHandoffOrbital {
     prepare : boolean @description "The client is prepared here (no --client-dir), from the composed program." = false
     appName : string = ""
     cwd : string = ""
+    webConfig : string @description "The Firebase web config this page signs in with, as text, when the environment names one." = ""
     emulatorHost : string = ""
     emulatorProject : string = ""
     composed : behavior?
@@ -93,6 +94,11 @@ orbital ServeHandoffOrbital {
       SERVE_CATALOG_NEXT -> preparing when (>= @entity.localeCursor (array/len @entity.locales))
         (program/eval null { generate: { path: (os/path-join @entity.cwd ".orbital/serve" @entity.appName "program.orb"), output: (os/path-join @entity.cwd ".orbital/serve" @entity.appName), shell: "typescript", mode: "client", webClient: true, source: @entity.source } } { key: "client" emit: { success: SERVE_CLIENT_BUILT, failure: SERVE_GENERATE_FAILED } })
       SERVE_CLIENT_BUILT -> preparing
+        (os/getenv "FIREBASE_WEB_CONFIG" { key: "webConfig" emit: { success: SERVE_WEB_CONFIG, failure: SERVE_EMU_UNSET } })
+      SERVE_WEB_CONFIG -> preparing when (!= (default @payload.value "") "")
+        (set @entity.webConfig @payload.value)
+        (os/mkdir { anchor: "cwd" path: (str/concat @entity.rel "/__/firebase") } true { key: "hosting" emit: { success: SERVE_HOSTING_DIR, failure: SERVE_PREP_FAILED } })
+      SERVE_WEB_CONFIG -> preparing when (= (default @payload.value "") "")
         (os/getenv "FIREBASE_AUTH_EMULATOR_HOST" { key: "emuHost" emit: { success: SERVE_EMU_HOST, failure: SERVE_EMU_UNSET } })
       SERVE_EMU_UNSET -> preparing
         (emit SERVE_CLIENT_READY { })
@@ -106,7 +112,9 @@ orbital ServeHandoffOrbital {
       SERVE_EMU_PROJECT -> preparing when (!= (default @payload.value "") "")
         (set @entity.emulatorProject @payload.value)
         (os/mkdir { anchor: "cwd" path: (str/concat @entity.rel "/__/firebase") } true { key: "hosting" emit: { success: SERVE_HOSTING_DIR, failure: SERVE_PREP_FAILED } })
-      SERVE_HOSTING_DIR -> preparing
+      SERVE_HOSTING_DIR -> preparing when (!= @entity.webConfig "")
+        (os/write-file { anchor: "cwd" path: (str/concat @entity.rel "/__/firebase/init.json") } (bytes/from-string @entity.webConfig) { key: "hostingConfig" emit: { success: SERVE_HOSTING_WRITTEN, failure: SERVE_PREP_FAILED } })
+      SERVE_HOSTING_DIR -> preparing when (= @entity.webConfig "")
         (os/write-file { anchor: "cwd" path: (str/concat @entity.rel "/__/firebase/init.json") } (bytes/from-string (json/stringify { apiKey: "emulator", projectId: @entity.emulatorProject, authEmulatorHost: @entity.emulatorHost })) { key: "hostingConfig" emit: { success: SERVE_HOSTING_WRITTEN, failure: SERVE_PREP_FAILED } })
       SERVE_HOSTING_WRITTEN -> preparing
         (emit SERVE_CLIENT_READY { })
@@ -149,6 +157,9 @@ orbital ServeHandoffOrbital {
       }
         @description "os/getenv: an emulator variable is not set, so the page gets no Firebase config."
         @tier "internal"
+      SERVE_WEB_CONFIG {
+        value : string
+      }
       SERVE_HOSTING_DIR { }
         @description "os/mkdir: the web client's __/firebase folder exists."
         @tier "internal"

@@ -1,0 +1,1768 @@
+{
+ "atom": "dev/atoms/std-guest-read-plan.lolo",
+ "trait": "GuestReadPlan",
+ "note": "Hand-written contract for which pages a reads-only sweep may open; each refusal is paired with a control.",
+ "cases": [
+  {
+   "id": "a-page-that-only-fetches-is-read-only",
+   "steps": [
+    {
+     "event": "READ_PLAN_PAGES",
+     "payload": {
+      "program": {
+       "orbitals": [
+        {
+         "traits": [
+          {
+           "name": "Read",
+           "stateMachine": {
+            "transitions": [
+             {
+              "event": "INIT",
+              "effects": [
+               [
+                "fetch",
+                "Deal",
+                {}
+               ]
+              ]
+             }
+            ]
+           },
+           "ticks": [],
+           "listens": []
+          }
+         ],
+         "pages": [
+          {
+           "path": "/home",
+           "isInitial": false,
+           "traits": [
+            {
+             "ref": "Read"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "READ_PLAN_PAGED",
+        "payload": {
+         "bootWrites": [],
+         "opening": "/home",
+         "openingWrites": [],
+         "routes": [
+          "/home"
+         ],
+         "skipped": [],
+         "paramRoutes": [],
+         "openingNeedsSignIn": false,
+         "needsSignIn": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-persist-on-init-refuses-the-page",
+   "steps": [
+    {
+     "event": "READ_PLAN_PAGES",
+     "payload": {
+      "program": {
+       "orbitals": [
+        {
+         "traits": [
+          {
+           "name": "Read",
+           "stateMachine": {
+            "transitions": [
+             {
+              "event": "INIT",
+              "effects": [
+               [
+                "fetch",
+                "Deal",
+                {}
+               ]
+              ]
+             }
+            ]
+           },
+           "ticks": [],
+           "listens": []
+          },
+          {
+           "name": "Saves",
+           "stateMachine": {
+            "transitions": [
+             {
+              "event": "INIT",
+              "effects": [
+               [
+                "persist",
+                "create",
+                "Deal",
+                {}
+               ]
+              ]
+             }
+            ]
+           },
+           "ticks": [],
+           "listens": []
+          }
+         ],
+         "pages": [
+          {
+           "path": "/home",
+           "isInitial": false,
+           "traits": [
+            {
+             "ref": "Read"
+            }
+           ]
+          },
+          {
+           "path": "/save",
+           "isInitial": false,
+           "traits": [
+            {
+             "ref": "Saves"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "READ_PLAN_PAGED",
+        "payload": {
+         "bootWrites": [],
+         "opening": "/home",
+         "openingWrites": [],
+         "routes": [
+          "/home"
+         ],
+         "skipped": [
+          {
+           "route": "/save",
+           "writes": [
+            "persist"
+           ]
+          }
+         ],
+         "paramRoutes": [],
+         "openingNeedsSignIn": false,
+         "needsSignIn": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-write-behind-a-click-does-not-refuse-the-page",
+   "steps": [
+    {
+     "event": "READ_PLAN_PAGES",
+     "payload": {
+      "program": {
+       "orbitals": [
+        {
+         "traits": [
+          {
+           "name": "Click",
+           "stateMachine": {
+            "transitions": [
+             {
+              "event": "INIT",
+              "effects": [
+               [
+                "fetch",
+                "Deal",
+                {}
+               ]
+              ]
+             },
+             {
+              "event": "SAVE",
+              "effects": [
+               [
+                "persist",
+                "create",
+                "Deal",
+                {}
+               ]
+              ]
+             }
+            ]
+           },
+           "ticks": [],
+           "listens": []
+          }
+         ],
+         "pages": [
+          {
+           "path": "/home",
+           "isInitial": false,
+           "traits": [
+            {
+             "ref": "Click"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "READ_PLAN_PAGED",
+        "payload": {
+         "bootWrites": [],
+         "opening": "/home",
+         "openingWrites": [],
+         "routes": [
+          "/home"
+         ],
+         "skipped": [],
+         "paramRoutes": [],
+         "openingNeedsSignIn": false,
+         "needsSignIn": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-write-two-emits-away-refuses-the-page",
+   "steps": [
+    {
+     "event": "READ_PLAN_PAGES",
+     "payload": {
+      "program": {
+       "orbitals": [
+        {
+         "traits": [
+          {
+           "name": "Read",
+           "stateMachine": {
+            "transitions": [
+             {
+              "event": "INIT",
+              "effects": [
+               [
+                "fetch",
+                "Deal",
+                {}
+               ]
+              ]
+             }
+            ]
+           },
+           "ticks": [],
+           "listens": []
+          },
+          {
+           "name": "Hop",
+           "stateMachine": {
+            "transitions": [
+             {
+              "event": "INIT",
+              "effects": [
+               [
+                "emit",
+                "A"
+               ]
+              ]
+             },
+             {
+              "event": "A",
+              "effects": [
+               [
+                "emit",
+                "B"
+               ]
+              ]
+             },
+             {
+              "event": "B",
+              "effects": [
+               [
+                "persist",
+                "create",
+                "Deal",
+                {}
+               ]
+              ]
+             }
+            ]
+           },
+           "ticks": [],
+           "listens": []
+          }
+         ],
+         "pages": [
+          {
+           "path": "/home",
+           "isInitial": false,
+           "traits": [
+            {
+             "ref": "Read"
+            }
+           ]
+          },
+          {
+           "path": "/hop",
+           "isInitial": false,
+           "traits": [
+            {
+             "ref": "Hop"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "READ_PLAN_PAGED",
+        "payload": {
+         "bootWrites": [],
+         "opening": "/home",
+         "openingWrites": [],
+         "routes": [
+          "/home"
+         ],
+         "skipped": [
+          {
+           "route": "/hop",
+           "writes": [
+            "persist"
+           ]
+          }
+         ],
+         "paramRoutes": [],
+         "openingNeedsSignIn": false,
+         "needsSignIn": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "two-emits-with-no-write-stay-read-only",
+   "steps": [
+    {
+     "event": "READ_PLAN_PAGES",
+     "payload": {
+      "program": {
+       "orbitals": [
+        {
+         "traits": [
+          {
+           "name": "Hop",
+           "stateMachine": {
+            "transitions": [
+             {
+              "event": "INIT",
+              "effects": [
+               [
+                "emit",
+                "A"
+               ]
+              ]
+             },
+             {
+              "event": "A",
+              "effects": [
+               [
+                "emit",
+                "B"
+               ]
+              ]
+             },
+             {
+              "event": "B",
+              "effects": [
+               [
+                "fetch",
+                "Deal",
+                {}
+               ]
+              ]
+             }
+            ]
+           },
+           "ticks": [],
+           "listens": []
+          }
+         ],
+         "pages": [
+          {
+           "path": "/home",
+           "isInitial": false,
+           "traits": [
+            {
+             "ref": "Hop"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "READ_PLAN_PAGED",
+        "payload": {
+         "bootWrites": [],
+         "opening": "/home",
+         "openingWrites": [],
+         "routes": [
+          "/home"
+         ],
+         "skipped": [],
+         "paramRoutes": [],
+         "openingNeedsSignIn": false,
+         "needsSignIn": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-write-reached-through-a-listen-refuses-the-page",
+   "steps": [
+    {
+     "event": "READ_PLAN_PAGES",
+     "payload": {
+      "program": {
+       "orbitals": [
+        {
+         "traits": [
+          {
+           "name": "Read",
+           "stateMachine": {
+            "transitions": [
+             {
+              "event": "INIT",
+              "effects": [
+               [
+                "fetch",
+                "Deal",
+                {}
+               ]
+              ]
+             }
+            ]
+           },
+           "ticks": [],
+           "listens": []
+          },
+          {
+           "name": "Src",
+           "stateMachine": {
+            "transitions": [
+             {
+              "event": "INIT",
+              "effects": [
+               [
+                "emit",
+                "DONE"
+               ]
+              ]
+             }
+            ]
+           },
+           "ticks": [],
+           "listens": []
+          },
+          {
+           "name": "Sink",
+           "stateMachine": {
+            "transitions": [
+             {
+              "event": "GOT",
+              "effects": [
+               [
+                "persist",
+                "create",
+                "Deal",
+                {}
+               ]
+              ]
+             }
+            ]
+           },
+           "ticks": [],
+           "listens": [
+            {
+             "event": "Orb.Src.DONE",
+             "triggers": "GOT"
+            }
+           ]
+          }
+         ],
+         "pages": [
+          {
+           "path": "/home",
+           "isInitial": false,
+           "traits": [
+            {
+             "ref": "Read"
+            }
+           ]
+          },
+          {
+           "path": "/l",
+           "isInitial": false,
+           "traits": [
+            {
+             "ref": "Src"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "READ_PLAN_PAGED",
+        "payload": {
+         "bootWrites": [],
+         "opening": "/home",
+         "openingWrites": [],
+         "routes": [
+          "/home"
+         ],
+         "skipped": [
+          {
+           "route": "/l",
+           "writes": [
+            "persist"
+           ]
+          }
+         ],
+         "paramRoutes": [],
+         "openingNeedsSignIn": false,
+         "needsSignIn": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-write-reached-through-an-emit-route-refuses-the-page",
+   "steps": [
+    {
+     "event": "READ_PLAN_PAGES",
+     "payload": {
+      "program": {
+       "orbitals": [
+        {
+         "traits": [
+          {
+           "name": "Read",
+           "stateMachine": {
+            "transitions": [
+             {
+              "event": "INIT",
+              "effects": [
+               [
+                "fetch",
+                "Deal",
+                {}
+               ]
+              ]
+             }
+            ]
+           },
+           "ticks": [],
+           "listens": []
+          },
+          {
+           "name": "R",
+           "stateMachine": {
+            "transitions": [
+             {
+              "event": "INIT",
+              "effects": [
+               [
+                "fetch",
+                "Deal",
+                {
+                 "emit": {
+                  "success": "OK"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "event": "OK",
+              "effects": [
+               [
+                "call-service",
+                "stripe",
+                "list",
+                {}
+               ]
+              ]
+             }
+            ]
+           },
+           "ticks": [],
+           "listens": []
+          }
+         ],
+         "pages": [
+          {
+           "path": "/home",
+           "isInitial": false,
+           "traits": [
+            {
+             "ref": "Read"
+            }
+           ]
+          },
+          {
+           "path": "/r",
+           "isInitial": false,
+           "traits": [
+            {
+             "ref": "R"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "READ_PLAN_PAGED",
+        "payload": {
+         "bootWrites": [],
+         "opening": "/home",
+         "openingWrites": [],
+         "routes": [
+          "/home"
+         ],
+         "skipped": [
+          {
+           "route": "/r",
+           "writes": [
+            "call-service"
+           ]
+          }
+         ],
+         "paramRoutes": [],
+         "openingNeedsSignIn": false,
+         "needsSignIn": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-loop-of-emits-ends-and-stays-read-only",
+   "steps": [
+    {
+     "event": "READ_PLAN_PAGES",
+     "payload": {
+      "program": {
+       "orbitals": [
+        {
+         "traits": [
+          {
+           "name": "L",
+           "stateMachine": {
+            "transitions": [
+             {
+              "event": "INIT",
+              "effects": [
+               [
+                "emit",
+                "A"
+               ]
+              ]
+             },
+             {
+              "event": "A",
+              "effects": [
+               [
+                "emit",
+                "B"
+               ]
+              ]
+             },
+             {
+              "event": "B",
+              "effects": [
+               [
+                "emit",
+                "A"
+               ]
+              ]
+             }
+            ]
+           },
+           "ticks": [],
+           "listens": []
+          }
+         ],
+         "pages": [
+          {
+           "path": "/home",
+           "isInitial": false,
+           "traits": [
+            {
+             "ref": "L"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "READ_PLAN_PAGED",
+        "payload": {
+         "bootWrites": [],
+         "opening": "/home",
+         "openingWrites": [],
+         "routes": [
+          "/home"
+         ],
+         "skipped": [],
+         "paramRoutes": [],
+         "openingNeedsSignIn": false,
+         "needsSignIn": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-tick-that-writes-refuses-the-page",
+   "steps": [
+    {
+     "event": "READ_PLAN_PAGES",
+     "payload": {
+      "program": {
+       "orbitals": [
+        {
+         "traits": [
+          {
+           "name": "Read",
+           "stateMachine": {
+            "transitions": [
+             {
+              "event": "INIT",
+              "effects": [
+               [
+                "fetch",
+                "Deal",
+                {}
+               ]
+              ]
+             }
+            ]
+           },
+           "ticks": [],
+           "listens": []
+          },
+          {
+           "name": "Tk",
+           "stateMachine": {
+            "transitions": [
+             {
+              "event": "INIT",
+              "effects": []
+             }
+            ]
+           },
+           "ticks": [
+            {
+             "effects": [
+              [
+               "persist",
+               "create",
+               "Deal",
+               {}
+              ]
+             ]
+            }
+           ],
+           "listens": []
+          }
+         ],
+         "pages": [
+          {
+           "path": "/home",
+           "isInitial": false,
+           "traits": [
+            {
+             "ref": "Read"
+            }
+           ]
+          },
+          {
+           "path": "/t",
+           "isInitial": false,
+           "traits": [
+            {
+             "ref": "Tk"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "READ_PLAN_PAGED",
+        "payload": {
+         "bootWrites": [],
+         "opening": "/home",
+         "openingWrites": [],
+         "routes": [
+          "/home"
+         ],
+         "skipped": [
+          {
+           "route": "/t",
+           "writes": [
+            "persist"
+           ]
+          }
+         ],
+         "paramRoutes": [],
+         "openingNeedsSignIn": false,
+         "needsSignIn": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-boot-page-write-is-a-startup-write",
+   "steps": [
+    {
+     "event": "READ_PLAN_PAGES",
+     "payload": {
+      "program": {
+       "orbitals": [
+        {
+         "traits": [
+          {
+           "name": "Read",
+           "stateMachine": {
+            "transitions": [
+             {
+              "event": "INIT",
+              "effects": [
+               [
+                "fetch",
+                "Deal",
+                {}
+               ]
+              ]
+             }
+            ]
+           },
+           "ticks": [],
+           "listens": []
+          },
+          {
+           "name": "Boot",
+           "stateMachine": {
+            "transitions": [
+             {
+              "event": "INIT",
+              "effects": [
+               [
+                "persist",
+                "create",
+                "Deal",
+                {}
+               ]
+              ]
+             }
+            ]
+           },
+           "ticks": [],
+           "listens": []
+          }
+         ],
+         "pages": [
+          {
+           "path": "",
+           "isInitial": false,
+           "traits": [
+            {
+             "ref": "Boot"
+            }
+           ]
+          },
+          {
+           "path": "/home",
+           "isInitial": false,
+           "traits": [
+            {
+             "ref": "Read"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "READ_PLAN_PAGED",
+        "payload": {
+         "bootWrites": [
+          "persist"
+         ],
+         "opening": "/home",
+         "openingWrites": [],
+         "routes": [
+          "/home"
+         ],
+         "skipped": [],
+         "paramRoutes": [],
+         "openingNeedsSignIn": false,
+         "needsSignIn": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-mount-listener-write-is-a-startup-write",
+   "steps": [
+    {
+     "event": "READ_PLAN_PAGES",
+     "payload": {
+      "program": {
+       "orbitals": [
+        {
+         "traits": [
+          {
+           "name": "Read",
+           "stateMachine": {
+            "transitions": [
+             {
+              "event": "INIT",
+              "effects": [
+               [
+                "fetch",
+                "Deal",
+                {}
+               ]
+              ]
+             }
+            ]
+           },
+           "ticks": [],
+           "listens": []
+          },
+          {
+           "name": "Mnt",
+           "stateMachine": {
+            "transitions": [
+             {
+              "event": "SEED",
+              "effects": [
+               [
+                "persist",
+                "create",
+                "Deal",
+                {}
+               ]
+              ]
+             }
+            ]
+           },
+           "ticks": [],
+           "listens": [
+            {
+             "event": "$MOUNT",
+             "triggers": "SEED"
+            }
+           ]
+          }
+         ],
+         "pages": [
+          {
+           "path": "/home",
+           "isInitial": false,
+           "traits": [
+            {
+             "ref": "Read"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "READ_PLAN_PAGED",
+        "payload": {
+         "bootWrites": [
+          "persist"
+         ],
+         "opening": "/home",
+         "openingWrites": [],
+         "routes": [
+          "/home"
+         ],
+         "skipped": [],
+         "paramRoutes": [],
+         "openingNeedsSignIn": false,
+         "needsSignIn": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-initial-page-is-the-opening-page",
+   "steps": [
+    {
+     "event": "READ_PLAN_PAGES",
+     "payload": {
+      "program": {
+       "orbitals": [
+        {
+         "traits": [
+          {
+           "name": "Read",
+           "stateMachine": {
+            "transitions": [
+             {
+              "event": "INIT",
+              "effects": [
+               [
+                "fetch",
+                "Deal",
+                {}
+               ]
+              ]
+             }
+            ]
+           },
+           "ticks": [],
+           "listens": []
+          },
+          {
+           "name": "S",
+           "stateMachine": {
+            "transitions": [
+             {
+              "event": "INIT",
+              "effects": [
+               [
+                "persist",
+                "create",
+                "Deal",
+                {}
+               ]
+              ]
+             }
+            ]
+           },
+           "ticks": [],
+           "listens": []
+          }
+         ],
+         "pages": [
+          {
+           "path": "/home",
+           "isInitial": false,
+           "traits": [
+            {
+             "ref": "Read"
+            }
+           ]
+          },
+          {
+           "path": "/start",
+           "isInitial": true,
+           "traits": [
+            {
+             "ref": "S"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "READ_PLAN_PAGED",
+        "payload": {
+         "bootWrites": [],
+         "opening": "/start",
+         "openingWrites": [
+          "persist"
+         ],
+         "routes": [
+          "/home"
+         ],
+         "skipped": [
+          {
+           "route": "/start",
+           "writes": [
+            "persist"
+           ]
+          }
+         ],
+         "paramRoutes": [],
+         "openingNeedsSignIn": false,
+         "needsSignIn": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "without-an-initial-page-the-first-route-opens",
+   "steps": [
+    {
+     "event": "READ_PLAN_PAGES",
+     "payload": {
+      "program": {
+       "orbitals": [
+        {
+         "traits": [
+          {
+           "name": "Read",
+           "stateMachine": {
+            "transitions": [
+             {
+              "event": "INIT",
+              "effects": [
+               [
+                "fetch",
+                "Deal",
+                {}
+               ]
+              ]
+             }
+            ]
+           },
+           "ticks": [],
+           "listens": []
+          },
+          {
+           "name": "S",
+           "stateMachine": {
+            "transitions": [
+             {
+              "event": "INIT",
+              "effects": [
+               [
+                "persist",
+                "create",
+                "Deal",
+                {}
+               ]
+              ]
+             }
+            ]
+           },
+           "ticks": [],
+           "listens": []
+          }
+         ],
+         "pages": [
+          {
+           "path": "/first",
+           "isInitial": false,
+           "traits": [
+            {
+             "ref": "S"
+            }
+           ]
+          },
+          {
+           "path": "/home",
+           "isInitial": false,
+           "traits": [
+            {
+             "ref": "Read"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "READ_PLAN_PAGED",
+        "payload": {
+         "bootWrites": [],
+         "opening": "/first",
+         "openingWrites": [
+          "persist"
+         ],
+         "routes": [
+          "/home"
+         ],
+         "skipped": [
+          {
+           "route": "/first",
+           "writes": [
+            "persist"
+           ]
+          }
+         ],
+         "paramRoutes": [],
+         "openingNeedsSignIn": false,
+         "needsSignIn": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-param-route-is-listed-apart",
+   "steps": [
+    {
+     "event": "READ_PLAN_PAGES",
+     "payload": {
+      "program": {
+       "orbitals": [
+        {
+         "traits": [
+          {
+           "name": "Read",
+           "stateMachine": {
+            "transitions": [
+             {
+              "event": "INIT",
+              "effects": [
+               [
+                "fetch",
+                "Deal",
+                {}
+               ]
+              ]
+             }
+            ]
+           },
+           "ticks": [],
+           "listens": []
+          }
+         ],
+         "pages": [
+          {
+           "path": "/home",
+           "isInitial": false,
+           "traits": [
+            {
+             "ref": "Read"
+            }
+           ]
+          },
+          {
+           "path": "/deal/:id",
+           "isInitial": false,
+           "traits": [
+            {
+             "ref": "Read"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "READ_PLAN_PAGED",
+        "payload": {
+         "bootWrites": [],
+         "opening": "/home",
+         "openingWrites": [],
+         "routes": [
+          "/home"
+         ],
+         "skipped": [],
+         "paramRoutes": [
+          "/deal/:id"
+         ],
+         "openingNeedsSignIn": false,
+         "needsSignIn": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "atoms-and-specs-are-left-out-of-the-plan",
+   "steps": [
+    {
+     "event": "READ_PLAN_LISTED",
+     "payload": {
+      "result": [
+       {
+        "behavior": "p/an-atom",
+        "level": "atom",
+        "topic": "app"
+       },
+       {
+        "behavior": "p/a-spec",
+        "level": "organism",
+        "topic": "spec"
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "READ_PLAN_READY",
+        "payload": {
+         "targets": [],
+         "coverage": {
+          "closed": [],
+          "noPage": [],
+          "skippedRoutes": [],
+          "unresolved": [],
+          "needsSignIn": []
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-signed-in-page-is-listed-apart-and-not-opened",
+   "steps": [
+    {
+     "event": "READ_PLAN_PAGES",
+     "payload": {
+      "program": {
+       "orbitals": [
+        {
+         "traits": [
+          {
+           "name": "Read",
+           "stateMachine": {
+            "transitions": [
+             {
+              "event": "INIT",
+              "effects": [
+               [
+                "fetch",
+                "Deal",
+                {}
+               ]
+              ]
+             }
+            ]
+           },
+           "ticks": [],
+           "listens": []
+          }
+         ],
+         "pages": [
+          {
+           "path": "/home",
+           "isInitial": false,
+           "traits": [
+            {
+             "ref": "Read"
+            }
+           ]
+          },
+          {
+           "path": "/mine",
+           "isInitial": false,
+           "traits": [
+            {
+             "ref": "Read"
+            }
+           ],
+           "access": "authenticated"
+          },
+          {
+           "path": "/mine/:id",
+           "isInitial": false,
+           "traits": [
+            {
+             "ref": "Read"
+            }
+           ],
+           "access": "authenticated"
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "READ_PLAN_PAGED",
+        "payload": {
+         "bootWrites": [],
+         "opening": "/home",
+         "openingWrites": [],
+         "openingNeedsSignIn": false,
+         "needsSignIn": [
+          "/mine",
+          "/mine/:id"
+         ],
+         "routes": [
+          "/home"
+         ],
+         "skipped": [],
+         "paramRoutes": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-public-page-is-opened",
+   "steps": [
+    {
+     "event": "READ_PLAN_PAGES",
+     "payload": {
+      "program": {
+       "orbitals": [
+        {
+         "traits": [
+          {
+           "name": "Read",
+           "stateMachine": {
+            "transitions": [
+             {
+              "event": "INIT",
+              "effects": [
+               [
+                "fetch",
+                "Deal",
+                {}
+               ]
+              ]
+             }
+            ]
+           },
+           "ticks": [],
+           "listens": []
+          }
+         ],
+         "pages": [
+          {
+           "path": "/home",
+           "isInitial": false,
+           "traits": [
+            {
+             "ref": "Read"
+            }
+           ]
+          },
+          {
+           "path": "/open",
+           "isInitial": false,
+           "traits": [
+            {
+             "ref": "Read"
+            }
+           ],
+           "access": "public"
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "READ_PLAN_PAGED",
+        "payload": {
+         "bootWrites": [],
+         "opening": "/home",
+         "openingWrites": [],
+         "openingNeedsSignIn": false,
+         "needsSignIn": [],
+         "routes": [
+          "/home",
+          "/open"
+         ],
+         "skipped": [],
+         "paramRoutes": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-opening-page-that-needs-sign-in-is-reported",
+   "steps": [
+    {
+     "event": "READ_PLAN_PAGES",
+     "payload": {
+      "program": {
+       "orbitals": [
+        {
+         "traits": [
+          {
+           "name": "Read",
+           "stateMachine": {
+            "transitions": [
+             {
+              "event": "INIT",
+              "effects": [
+               [
+                "fetch",
+                "Deal",
+                {}
+               ]
+              ]
+             }
+            ]
+           },
+           "ticks": [],
+           "listens": []
+          }
+         ],
+         "pages": [
+          {
+           "path": "/mine",
+           "isInitial": false,
+           "traits": [
+            {
+             "ref": "Read"
+            }
+           ],
+           "access": "authenticated"
+          },
+          {
+           "path": "/home",
+           "isInitial": false,
+           "traits": [
+            {
+             "ref": "Read"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "READ_PLAN_PAGED",
+        "payload": {
+         "bootWrites": [],
+         "opening": "/mine",
+         "openingWrites": [],
+         "openingNeedsSignIn": true,
+         "needsSignIn": [
+          "/mine"
+         ],
+         "routes": [
+          "/home"
+         ],
+         "skipped": [],
+         "paramRoutes": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-behavior-opening-on-sign-in-is-not-a-target",
+   "steps": [
+    {
+     "event": "READ_PLAN_PAGED",
+     "payload": {
+      "bootWrites": [],
+      "opening": "/mine",
+      "openingWrites": [],
+      "openingNeedsSignIn": true,
+      "needsSignIn": [
+       "/mine"
+      ],
+      "routes": [
+       "/home"
+      ],
+      "skipped": [],
+      "paramRoutes": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "READ_PLAN_READY",
+        "payload": {
+         "targets": [],
+         "coverage": {
+          "closed": [],
+          "noPage": [],
+          "skippedRoutes": [],
+          "unresolved": [],
+          "needsSignIn": [
+           {
+            "behavior": "",
+            "opening": true,
+            "routes": [
+             "/mine"
+            ]
+           }
+          ]
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-signed-in-pages-do-not-stop-a-public-opening",
+   "steps": [
+    {
+     "event": "READ_PLAN_PAGED",
+     "payload": {
+      "bootWrites": [],
+      "opening": "/home",
+      "openingWrites": [],
+      "openingNeedsSignIn": false,
+      "needsSignIn": [
+       "/mine"
+      ],
+      "routes": [
+       "/home"
+      ],
+      "skipped": [],
+      "paramRoutes": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "READ_PLAN_READY",
+        "payload": {
+         "targets": [
+          {
+           "behavior": "",
+           "routes": [
+            "/home"
+           ]
+          }
+         ],
+         "coverage": {
+          "closed": [],
+          "noPage": [],
+          "skippedRoutes": [
+           {
+            "behavior": "",
+            "skipped": [],
+            "paramRoutes": []
+           }
+          ],
+          "unresolved": [],
+          "needsSignIn": [
+           {
+            "behavior": "",
+            "opening": false,
+            "routes": [
+             "/mine"
+            ]
+           }
+          ]
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

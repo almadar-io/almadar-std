@@ -15,10 +15,10 @@ export const AUTH_OPERATORS: Record<string, StdOperatorMeta> = {
     module: 'auth', category: 'std-auth',
     host: 'substrate',
     minArity: 1, maxArity: 2,
-    description: 'Start the viewer session through the host auth provider. The request names the method: google; email (email, password); emailLink with a continueUrl sends the link, with a link completes the sign-in (exactly one of the two); customToken (token). Success carries { uid, email?, displayName? } (emailLink send: { sent: true }); failure carries { error, kind } with kind cancelled, denied, invalid or unavailable.',
+    description: 'Start the viewer session through the host auth provider. The request names the method: google; email (email, password); emailLink with a continueUrl sends the link, with a link completes the sign-in (exactly one of the two); customToken (token). Success carries { uid, email?, displayName?, idToken? }, idToken being the ID token of the viewer (emailLink send: { sent: true }); failure carries { error, kind } with kind cancelled, denied, invalid or unavailable.',
     hasSideEffects: true, runsOn: 'client', returnType: 'void',
     exampleSource: 'module',
-    effect: { kind: 'custom', produces: withKey(shape({ uid: STRING, email: STRING, displayName: STRING, sent: BOOLEAN }, ['uid', 'email', 'displayName', 'sent'])) },
+    effect: { kind: 'custom', produces: withKey(shape({ uid: STRING, email: STRING, displayName: STRING, sent: BOOLEAN, idToken: STRING }, ['idToken', 'uid', 'email', 'displayName', 'sent'])) },
     params: [
       { name: 'request', type: shape({ method: STRING, email: STRING, password: STRING, token: STRING, continueUrl: STRING, link: STRING }, ['email', 'password', 'token', 'continueUrl', 'link']), description: 'The method (google | email | emailLink | customToken) and the credentials it takes' },
       { name: 'options', type: EMIT_ENVELOPE, description: 'Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure', optional: true }
