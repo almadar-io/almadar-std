@@ -6466,6 +6466,196 @@
         "MockStream"
       ],
       "now": 1760531445678
+    },
+    {
+      "id": "a-page-asked-for-while-a-seed-runs-is-kept-for-after-it",
+      "steps": [
+        {
+          "event": "SEED_PAGE",
+          "payload": {
+            "page": "/b",
+            "route": "/b",
+            "traits": [
+              "T"
+            ],
+            "entities": [
+              "Note",
+              "Tag"
+            ]
+          },
+          "entity": {
+            "dsActive": true,
+            "dsPending": [
+              "Note"
+            ]
+          },
+          "from": "ready",
+          "expect": {
+            "fired": true,
+            "neverEmits": [
+              "DATASET_DONE",
+              "DATASET_FAILED"
+            ],
+            "entity": {
+              "dsPending": [
+                "Note",
+                "Tag"
+              ]
+            }
+          }
+        }
+      ],
+      "config": {
+        "seedOrbital": "SeedOrbital",
+        "personaOrbital": "PersonaOrbital",
+        "personaTrait": "DevPersonas",
+        "seedTrait": "MockSeed"
+      },
+      "defaults": [
+        "MockStream"
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "a-finished-seed-runs-the-pages-that-waited",
+      "steps": [
+        {
+          "event": "DATASET_DONE",
+          "payload": {
+            "journal": {
+              "viewerId": "",
+              "stamped": [],
+              "deferred": []
+            }
+          },
+          "entity": {
+            "dsActive": true,
+            "dsPending": [
+              "Note",
+              "Tag"
+            ]
+          },
+          "from": "ready",
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "SEED_PAGE",
+                "payload": {
+                  "page": "",
+                  "route": "",
+                  "traits": [],
+                  "entities": [
+                    "Note",
+                    "Tag"
+                  ]
+                }
+              }
+            ],
+            "entity": {
+              "dsPending": [],
+              "dsActive": false
+            }
+          }
+        }
+      ],
+      "config": {
+        "seedOrbital": "SeedOrbital",
+        "personaOrbital": "PersonaOrbital",
+        "personaTrait": "DevPersonas",
+        "seedTrait": "MockSeed"
+      },
+      "defaults": [
+        "MockStream"
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "a-failed-seed-still-runs-the-pages-that-waited",
+      "steps": [
+        {
+          "event": "DATASET_FAILED",
+          "payload": {
+            "error": "x"
+          },
+          "entity": {
+            "dsActive": true,
+            "dsPending": [
+              "Tag"
+            ]
+          },
+          "from": "ready",
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "SEED_PAGE",
+                "payload": {
+                  "page": "",
+                  "route": "",
+                  "traits": [],
+                  "entities": [
+                    "Tag"
+                  ]
+                }
+              }
+            ],
+            "entity": {
+              "dsPending": [],
+              "dsActive": false
+            }
+          }
+        }
+      ],
+      "config": {
+        "seedOrbital": "SeedOrbital",
+        "personaOrbital": "PersonaOrbital",
+        "personaTrait": "DevPersonas",
+        "seedTrait": "MockSeed"
+      },
+      "defaults": [
+        "MockStream"
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "control-a-finished-seed-with-no-page-waiting-asks-for-nothing",
+      "steps": [
+        {
+          "event": "DATASET_DONE",
+          "payload": {
+            "journal": {
+              "viewerId": "",
+              "stamped": [],
+              "deferred": []
+            }
+          },
+          "entity": {
+            "dsActive": true,
+            "dsPending": []
+          },
+          "from": "ready",
+          "expect": {
+            "fired": true,
+            "neverEmits": [
+              "SEED_PAGE"
+            ],
+            "entity": {
+              "dsActive": false
+            }
+          }
+        }
+      ],
+      "config": {
+        "seedOrbital": "SeedOrbital",
+        "personaOrbital": "PersonaOrbital",
+        "personaTrait": "DevPersonas",
+        "seedTrait": "MockSeed"
+      },
+      "defaults": [
+        "MockStream"
+      ],
+      "now": 1760531445678
     }
   ]
 }

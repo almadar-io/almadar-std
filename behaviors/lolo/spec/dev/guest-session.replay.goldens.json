@@ -684,7 +684,8 @@
                   "type": "stack"
                 }
               }
-            ]
+            ],
+            "seq": 1
           },
           "entity": {
             "id": "g",
@@ -1849,6 +1850,22 @@
                   "className": "",
                   "children": [
                     {
+                      "type": "stack",
+                      "direction": "horizontal",
+                      "justify": "end",
+                      "align": "center",
+                      "gap": "md",
+                      "className": "px-4 py-2 border-b border-border",
+                      "children": [
+                        {
+                          "type": "switch",
+                          "label": "Real integrations",
+                          "checked": false,
+                          "action": "GUEST_INTEGRATIONS_CHOSEN"
+                        }
+                      ]
+                    },
+                    {
                       "type": "guest-view",
                       "guest": "guest-1",
                       "source": "A.One",
@@ -1936,6 +1953,22 @@
                   "type": "box",
                   "className": "",
                   "children": [
+                    {
+                      "type": "stack",
+                      "direction": "horizontal",
+                      "justify": "end",
+                      "align": "center",
+                      "gap": "md",
+                      "className": "px-4 py-2 border-b border-border",
+                      "children": [
+                        {
+                          "type": "switch",
+                          "label": "Real integrations",
+                          "checked": false,
+                          "action": "GUEST_INTEGRATIONS_CHOSEN"
+                        }
+                      ]
+                    },
                     {
                       "type": "container",
                       "size": "md",
@@ -2245,6 +2278,22 @@
                   "className": "",
                   "children": [
                     {
+                      "type": "stack",
+                      "direction": "horizontal",
+                      "justify": "end",
+                      "align": "center",
+                      "gap": "md",
+                      "className": "px-4 py-2 border-b border-border",
+                      "children": [
+                        {
+                          "type": "switch",
+                          "label": "Real integrations",
+                          "checked": false,
+                          "action": "GUEST_INTEGRATIONS_CHOSEN"
+                        }
+                      ]
+                    },
+                    {
                       "type": "guest-view",
                       "guest": "guest-1",
                       "source": "A.Two",
@@ -2354,6 +2403,22 @@
                   "type": "box",
                   "className": "",
                   "children": [
+                    {
+                      "type": "stack",
+                      "direction": "horizontal",
+                      "justify": "end",
+                      "align": "center",
+                      "gap": "md",
+                      "className": "px-4 py-2 border-b border-border",
+                      "children": [
+                        {
+                          "type": "switch",
+                          "label": "Real integrations",
+                          "checked": false,
+                          "action": "GUEST_INTEGRATIONS_CHOSEN"
+                        }
+                      ]
+                    },
                     {
                       "type": "guest-view",
                       "guest": "guest-1",
@@ -3523,6 +3588,929 @@
             "neverEmits": [
               "GUEST_PREPARE"
             ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "the-switch-on-asks-the-session-for-live-integrations",
+      "steps": [
+        {
+          "trait": "GuestStage",
+          "event": "GUEST_INTEGRATIONS_CHOSEN",
+          "entity": {
+            "id": "g",
+            "guestHandle": "guest-1"
+          },
+          "from": "idle",
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "GUEST_INTEGRATIONS_PICK",
+                "payload": {
+                  "guest": "guest-1",
+                  "integrations": "live"
+                }
+              }
+            ]
+          },
+          "payload": {
+            "checked": true
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "the-switch-off-asks-the-session-for-mocked-integrations",
+      "steps": [
+        {
+          "trait": "GuestStage",
+          "event": "GUEST_INTEGRATIONS_CHOSEN",
+          "entity": {
+            "id": "g",
+            "guestHandle": "guest-1"
+          },
+          "from": "idle",
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "GUEST_INTEGRATIONS_PICK",
+                "payload": {
+                  "guest": "guest-1",
+                  "integrations": "mock"
+                }
+              }
+            ]
+          },
+          "payload": {
+            "checked": false
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "control-the-switch-with-no-guest-asks-nothing",
+      "steps": [
+        {
+          "trait": "GuestStage",
+          "event": "GUEST_INTEGRATIONS_CHOSEN",
+          "entity": {
+            "id": "g",
+            "guestHandle": ""
+          },
+          "from": "idle",
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "neverEmits": [
+              "GUEST_INTEGRATIONS_PICK"
+            ]
+          },
+          "payload": {
+            "checked": true
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "a-changed-integrations-pick-reopens-the-guest",
+      "steps": [
+        {
+          "trait": "GuestSession",
+          "event": "GUEST_INTEGRATIONS_PICK",
+          "entity": {
+            "id": "g",
+            "guestHandle": "guest-1",
+            "guestIntegrations": "mock"
+          },
+          "from": "live",
+          "expect": {
+            "fired": true,
+            "state": "live",
+            "emits": [
+              {
+                "event": "GUEST_INTEGRATIONS",
+                "payload": {
+                  "guest": "guest-1",
+                  "integrations": "live"
+                }
+              },
+              {
+                "event": "GUEST_REOPEN",
+                "payload": {}
+              }
+            ]
+          },
+          "payload": {
+            "guest": "guest-1",
+            "integrations": "live"
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "control-the-same-integrations-pick-reopens-nothing",
+      "steps": [
+        {
+          "trait": "GuestSession",
+          "event": "GUEST_INTEGRATIONS_PICK",
+          "entity": {
+            "id": "g",
+            "guestHandle": "guest-1",
+            "guestIntegrations": "mock"
+          },
+          "from": "live",
+          "expect": {
+            "fired": true,
+            "state": "live",
+            "neverEmits": [
+              "GUEST_REOPEN",
+              "GUEST_INTEGRATIONS"
+            ]
+          },
+          "payload": {
+            "guest": "guest-1",
+            "integrations": "mock"
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "control-a-pick-for-another-guest-reopens-nothing",
+      "steps": [
+        {
+          "trait": "GuestSession",
+          "event": "GUEST_INTEGRATIONS_PICK",
+          "entity": {
+            "id": "g",
+            "guestHandle": "guest-1",
+            "guestIntegrations": "mock"
+          },
+          "from": "live",
+          "expect": {
+            "fired": true,
+            "state": "live",
+            "neverEmits": [
+              "GUEST_REOPEN",
+              "GUEST_INTEGRATIONS"
+            ]
+          },
+          "payload": {
+            "guest": "guest-9",
+            "integrations": "live"
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "edge-a-pick-with-no-guest-open-only-remembers-the-mode",
+      "steps": [
+        {
+          "trait": "GuestSession",
+          "event": "GUEST_INTEGRATIONS_PICK",
+          "entity": {
+            "id": "g",
+            "guestHandle": ""
+          },
+          "from": "idle",
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "GUEST_INTEGRATIONS",
+                "payload": {
+                  "guest": "",
+                  "integrations": "live"
+                }
+              }
+            ],
+            "neverEmits": [
+              "GUEST_REOPEN"
+            ]
+          },
+          "payload": {
+            "guest": "",
+            "integrations": "live"
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "a-navigation-asks-the-personas-again",
+      "steps": [
+        {
+          "trait": "GuestSession",
+          "event": "GUEST_NAVIGATED",
+          "entity": {
+            "id": "g",
+            "guestHandle": "guest-1",
+            "guestPaints": [],
+            "guestPage": []
+          },
+          "from": "live",
+          "expect": {
+            "fired": true,
+            "state": "live",
+            "emits": [
+              {
+                "event": "GUEST_PERSONAS_ASK",
+                "payload": {}
+              }
+            ]
+          },
+          "payload": {
+            "result": {
+              "page": [
+                "A.Root"
+              ],
+              "route": "/x",
+              "rendered": [],
+              "outcomes": []
+            }
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "the-stage-takes-a-newer-paint",
+      "steps": [
+        {
+          "trait": "GuestStage",
+          "event": "GUEST_PAINTS",
+          "entity": {
+            "id": "g",
+            "guestHandle": "guest-1",
+            "guestPaintSeq": 5
+          },
+          "from": "idle",
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "GUEST_SHOWN",
+                "payload": {}
+              }
+            ]
+          },
+          "payload": {
+            "guest": "guest-1",
+            "route": "/deals",
+            "page": [
+              "A"
+            ],
+            "paints": [],
+            "seq": 6
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "control-the-stage-drops-a-paint-older-than-the-one-it-shows",
+      "steps": [
+        {
+          "trait": "GuestStage",
+          "event": "GUEST_PAINTS",
+          "entity": {
+            "id": "g",
+            "guestHandle": "guest-1",
+            "guestPaintSeq": 5
+          },
+          "from": "idle",
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "neverEmits": [
+              "GUEST_SHOWN"
+            ]
+          },
+          "payload": {
+            "guest": "guest-1",
+            "route": "/deals",
+            "page": [
+              "A"
+            ],
+            "paints": [],
+            "seq": 4
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "edge-the-stage-drops-a-repeat-of-the-paint-it-shows",
+      "steps": [
+        {
+          "trait": "GuestStage",
+          "event": "GUEST_PAINTS",
+          "entity": {
+            "id": "g",
+            "guestHandle": "guest-1",
+            "guestPaintSeq": 5
+          },
+          "from": "idle",
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "neverEmits": [
+              "GUEST_SHOWN"
+            ]
+          },
+          "payload": {
+            "guest": "guest-1",
+            "route": "/deals",
+            "page": [
+              "A"
+            ],
+            "paints": [],
+            "seq": 5
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "a-navigation-numbers-its-paints",
+      "steps": [
+        {
+          "trait": "GuestSession",
+          "event": "GUEST_NAVIGATED",
+          "entity": {
+            "id": "g",
+            "guestHandle": "guest-1",
+            "guestPaints": [],
+            "guestPage": [],
+            "guestPaintSeq": 7
+          },
+          "from": "live",
+          "expect": {
+            "fired": true,
+            "state": "live",
+            "emits": [
+              {
+                "event": "GUEST_PAINTS",
+                "payload": {
+                  "guest": "guest-1",
+                  "route": "/x",
+                  "page": [
+                    "A"
+                  ],
+                  "paints": [],
+                  "seq": 8
+                }
+              }
+            ]
+          },
+          "payload": {
+            "result": {
+              "page": [
+                "A"
+              ],
+              "route": "/x",
+              "rendered": [],
+              "outcomes": []
+            }
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "a-step-numbers-its-paints",
+      "steps": [
+        {
+          "trait": "GuestSession",
+          "event": "GUEST_STEPPED",
+          "entity": {
+            "id": "g",
+            "guestHandle": "guest-1",
+            "guestPaints": [],
+            "guestPage": [
+              "A"
+            ],
+            "guestRoute": "/x",
+            "guestPaintSeq": 7
+          },
+          "from": "live",
+          "expect": {
+            "fired": true,
+            "state": "live",
+            "emits": [
+              {
+                "event": "GUEST_PAINTS",
+                "payload": {
+                  "guest": "guest-1",
+                  "route": "/x",
+                  "page": [
+                    "A"
+                  ],
+                  "paints": [],
+                  "seq": 8
+                }
+              }
+            ]
+          },
+          "payload": {
+            "result": {
+              "rendered": [],
+              "outcomes": []
+            }
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "guest-navigate-before-the-browser-knows-the-guest-is-live-is-accepted-in-idle",
+      "steps": [
+        {
+          "trait": "GuestSession",
+          "event": "GUEST_NAVIGATE",
+          "entity": {
+            "id": "g",
+            "guestHandle": ""
+          },
+          "from": "idle",
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "effects": [
+              {
+                "type": "program/navigate"
+              }
+            ]
+          },
+          "payload": {
+            "guest": "guest-1",
+            "route": "/x"
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "guest-navigate-before-the-browser-knows-the-guest-is-live-is-accepted-in-opening",
+      "steps": [
+        {
+          "trait": "GuestSession",
+          "event": "GUEST_NAVIGATE",
+          "entity": {
+            "id": "g",
+            "guestHandle": ""
+          },
+          "from": "opening",
+          "expect": {
+            "fired": true,
+            "state": "opening",
+            "effects": [
+              {
+                "type": "program/navigate"
+              }
+            ]
+          },
+          "payload": {
+            "guest": "guest-1",
+            "route": "/x"
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "guest-send-before-the-browser-knows-the-guest-is-live-is-accepted-in-idle",
+      "steps": [
+        {
+          "trait": "GuestSession",
+          "event": "GUEST_SEND",
+          "entity": {
+            "id": "g",
+            "guestHandle": ""
+          },
+          "from": "idle",
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "effects": [
+              {
+                "type": "program/dispatch"
+              }
+            ]
+          },
+          "payload": {
+            "guest": "guest-1",
+            "address": "A.B",
+            "event": "GO",
+            "payload": {}
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "guest-send-before-the-browser-knows-the-guest-is-live-is-accepted-in-opening",
+      "steps": [
+        {
+          "trait": "GuestSession",
+          "event": "GUEST_SEND",
+          "entity": {
+            "id": "g",
+            "guestHandle": ""
+          },
+          "from": "opening",
+          "expect": {
+            "fired": true,
+            "state": "opening",
+            "effects": [
+              {
+                "type": "program/dispatch"
+              }
+            ]
+          },
+          "payload": {
+            "guest": "guest-1",
+            "address": "A.B",
+            "event": "GO",
+            "payload": {}
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "guest-persona-pick-before-the-browser-knows-the-guest-is-live-is-accepted-in-idle",
+      "steps": [
+        {
+          "trait": "GuestSession",
+          "event": "GUEST_PERSONA_PICK",
+          "entity": {
+            "id": "g",
+            "guestHandle": ""
+          },
+          "from": "idle",
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "effects": [
+              {
+                "type": "program/dispatch"
+              }
+            ]
+          },
+          "payload": {
+            "guest": "guest-1",
+            "persona": "u1"
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "guest-persona-pick-before-the-browser-knows-the-guest-is-live-is-accepted-in-opening",
+      "steps": [
+        {
+          "trait": "GuestSession",
+          "event": "GUEST_PERSONA_PICK",
+          "entity": {
+            "id": "g",
+            "guestHandle": ""
+          },
+          "from": "opening",
+          "expect": {
+            "fired": true,
+            "state": "opening",
+            "effects": [
+              {
+                "type": "program/dispatch"
+              }
+            ]
+          },
+          "payload": {
+            "guest": "guest-1",
+            "persona": "u1"
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "a-toast-is-shown-once-and-is-gone-from-the-next-step",
+      "steps": [
+        {
+          "trait": "GuestSession",
+          "event": "GUEST_STEPPED",
+          "entity": {
+            "id": "g",
+            "guestHandle": "guest-1",
+            "guestPaints": [
+              {
+                "slot": "main",
+                "trait": "A.Root",
+                "embedded": false,
+                "content": {
+                  "type": "stack"
+                }
+              },
+              {
+                "slot": "toast",
+                "trait": "A.Modal",
+                "embedded": false,
+                "content": {
+                  "type": "alert",
+                  "message": "Cancelled"
+                }
+              }
+            ],
+            "guestPage": [
+              "A.Root"
+            ],
+            "guestRoute": "/x",
+            "guestPaintSeq": 3
+          },
+          "from": "live",
+          "expect": {
+            "fired": true,
+            "state": "live",
+            "emits": [
+              {
+                "event": "GUEST_PAINTS",
+                "payload": {
+                  "guest": "guest-1",
+                  "route": "/x",
+                  "page": [
+                    "A.Root"
+                  ],
+                  "paints": [
+                    {
+                      "slot": "main",
+                      "trait": "A.Root",
+                      "embedded": false,
+                      "content": {
+                        "type": "stack"
+                      }
+                    }
+                  ],
+                  "seq": 4
+                }
+              }
+            ]
+          },
+          "payload": {
+            "result": {
+              "rendered": [],
+              "outcomes": []
+            }
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "a-toast-is-gone-from-the-next-navigation",
+      "steps": [
+        {
+          "trait": "GuestSession",
+          "event": "GUEST_NAVIGATED",
+          "entity": {
+            "id": "g",
+            "guestHandle": "guest-1",
+            "guestPaints": [
+              {
+                "slot": "main",
+                "trait": "A.Root",
+                "embedded": false,
+                "content": {
+                  "type": "stack"
+                }
+              },
+              {
+                "slot": "toast",
+                "trait": "A.Modal",
+                "embedded": false,
+                "content": {
+                  "type": "alert",
+                  "message": "Cancelled"
+                }
+              }
+            ],
+            "guestPage": [
+              "A.Root"
+            ],
+            "guestRoute": "/x",
+            "guestPaintSeq": 3
+          },
+          "from": "live",
+          "expect": {
+            "fired": true,
+            "state": "live",
+            "emits": [
+              {
+                "event": "GUEST_PAINTS",
+                "payload": {
+                  "guest": "guest-1",
+                  "route": "/y",
+                  "page": [
+                    "A.Root"
+                  ],
+                  "paints": [
+                    {
+                      "slot": "main",
+                      "trait": "A.Root",
+                      "embedded": false,
+                      "content": {
+                        "type": "stack"
+                      }
+                    }
+                  ],
+                  "seq": 4
+                }
+              }
+            ]
+          },
+          "payload": {
+            "result": {
+              "page": [
+                "A.Root"
+              ],
+              "route": "/y",
+              "rendered": [],
+              "outcomes": []
+            }
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "a-toast-is-gone-from-the-next-tick",
+      "steps": [
+        {
+          "trait": "GuestSession",
+          "event": "GUEST_TICKED",
+          "entity": {
+            "id": "g",
+            "guestHandle": "guest-1",
+            "guestPaints": [
+              {
+                "slot": "main",
+                "trait": "A.Root",
+                "embedded": false,
+                "content": {
+                  "type": "stack"
+                }
+              },
+              {
+                "slot": "toast",
+                "trait": "A.Modal",
+                "embedded": false,
+                "content": {
+                  "type": "alert",
+                  "message": "Cancelled"
+                }
+              }
+            ],
+            "guestPage": [
+              "A.Root"
+            ],
+            "guestRoute": "/x",
+            "guestPaintSeq": 3
+          },
+          "from": "live",
+          "expect": {
+            "fired": true,
+            "state": "live",
+            "emits": [
+              {
+                "event": "GUEST_PAINTS",
+                "payload": {
+                  "guest": "guest-1",
+                  "route": "/x",
+                  "page": [
+                    "A.Root"
+                  ],
+                  "paints": [
+                    {
+                      "slot": "main",
+                      "trait": "A.Root",
+                      "embedded": false,
+                      "content": {
+                        "type": "stack"
+                      }
+                    }
+                  ],
+                  "seq": 4
+                }
+              }
+            ]
+          },
+          "payload": {
+            "guest": "guest-1",
+            "rendered": []
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "control-a-new-toast-of-this-step-is-handed-on",
+      "steps": [
+        {
+          "trait": "GuestSession",
+          "event": "GUEST_STEPPED",
+          "entity": {
+            "id": "g",
+            "guestHandle": "guest-1",
+            "guestPaints": [
+              {
+                "slot": "main",
+                "trait": "A.Root",
+                "embedded": false,
+                "content": {
+                  "type": "stack"
+                }
+              },
+              {
+                "slot": "toast",
+                "trait": "A.Modal",
+                "embedded": false,
+                "content": {
+                  "type": "alert",
+                  "message": "Cancelled"
+                }
+              }
+            ],
+            "guestPage": [
+              "A.Root"
+            ],
+            "guestRoute": "/x",
+            "guestPaintSeq": 3
+          },
+          "from": "live",
+          "expect": {
+            "fired": true,
+            "state": "live",
+            "emits": [
+              {
+                "event": "GUEST_PAINTS",
+                "payload": {
+                  "guest": "guest-1",
+                  "route": "/x",
+                  "page": [
+                    "A.Root"
+                  ],
+                  "paints": [
+                    {
+                      "slot": "main",
+                      "trait": "A.Root",
+                      "embedded": false,
+                      "content": {
+                        "type": "stack"
+                      }
+                    },
+                    {
+                      "slot": "toast",
+                      "trait": "A.Modal",
+                      "embedded": false,
+                      "content": {
+                        "type": "alert",
+                        "message": "Saved"
+                      }
+                    }
+                  ],
+                  "seq": 4
+                }
+              }
+            ]
+          },
+          "payload": {
+            "result": {
+              "rendered": [
+                {
+                  "slot": "toast",
+                  "trait": "A.Modal",
+                  "embedded": false,
+                  "content": {
+                    "type": "alert",
+                    "message": "Saved"
+                  }
+                }
+              ],
+              "outcomes": []
+            }
           }
         }
       ],

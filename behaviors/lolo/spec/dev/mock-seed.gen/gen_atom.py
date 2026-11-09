@@ -425,7 +425,7 @@ PLAN_ROWS=('(array/map (object/keys @entity.dsStores) (fn sc { entity: '+entity_
 WR='(array/nth @entity.dsWriteAll @entity.dsWriteAt)'
 WRITER_PLAN=('(let ((wr '+WR+')) (let ((row (default (array/nth (object/get @entity.dsStores (object/get @wr "store") []) (object/get @wr "i")) { })) (idrows '+ID_ROWS+') (own (object/get @wr "owner"))) '
              '(let ((cands (array/concat (if (= @own "") [""] [@own, ""]) (array/filter (array/map @idrows (fn t '+SID('(object/get @t "id")')+')) (fn x (!= @x @own)))))) '
-             '{ queue: (array/map @cands (fn c { entity: (object/get @wr "entity"), action: "create", row: @row, identity: (if (= @c "") @user (array/find @idrows (fn t (= '+SID('(object/get @t "id")')+' @c)))) })), n: (array/len @cands), read: false, rel: false, ids: @cands, viewer: false })))')
+             '{ queue: (array/map @cands (fn c { entity: (object/get @wr "entity"), action: "create", row: @row, identity: (if (= @c "") null (array/find @idrows (fn t (= '+SID('(object/get @t "id")')+' @c)))) })), n: (array/len @cands), read: false, rel: false, ids: @cands, viewer: false })))')
 WRITER_OF='(let ((k (array/findIndex @entity.acAnswers (fn a @a)))) (if (>= @k 0) (array/nth @entity.acIds @k) ""))'
 OWNED_OPS=('(array/map (array/range (array/len @entity.dsWriteAll)) (fn k (let ((wr (default (array/nth @entity.dsWriteAll @k) { store: "", i: 0, label: "", entity: "", owner: "", checked: false }))) '
            '{ owner: (default (array/nth @entity.dsWriters @k) ""), op: ["create" (object/get @wr "label") (array/nth (object/get @entity.dsStores (object/get @wr "store") []) (object/get @wr "i"))] })))')
@@ -454,7 +454,7 @@ def _idl(all_):
     return f'(let ((ir (array/find {all_} (fn q (object/get @q "identity"))))) (if (= @ir null) "" (object/get @ir "label")))'
 def scoped_regs(regs):
     return (f'(let ((allr {regs})) (if (= (array/len @entity.dsEntities) 0) @allr '
-            f'(array/filter @allr (fn r (array/includes @entity.dsEntities (object/get @r "label"))))))')
+            f'(array/filter @allr (fn r (or (and (object/get @r "identity") (= (array/len @entity.dsIdRows) 0)) (array/includes @entity.dsEntities (object/get @r "label")))))))')
 SCOPED_REGS=scoped_regs(regs_expr)
 MARKED='(array/includes @entity.dsMarked (object/get @r "label"))'
 TRIM=(f'(let ((idl {_idl("@entity.dsRegsAll")}) (need (array/flatten (array/map (array/filter @entity.dsRegsAll (fn r (not {MARKED}))) (fn r {_rel_targets("@r")}))))) '
@@ -631,8 +631,12 @@ STORE_AFTER=f'''      DS_STAMP -> ready when (= (array/len @entity.dsStamps) 0)
         (emit DS_WRITE_NEXT {{ at: (array/len @entity.dsWrites) }})
       DS_CHUNK_DONE -> ready when (not (array/some ?result.emittedEvents (fn e (= (object/get @e "event") "DS_CHUNK_WRITTEN"))))
         (emit DATASET_FAILED {{ error: (str/template "{{{{error}}}}" {{ error: (let ((rf (array/find ?result.emittedEvents (fn e (= (object/get @e "event") "DS_CHUNK_REFUSED"))))) (if (= @rf null) "" (object/get (object/get @rf "payload" {{ }}) "error" ""))) }}) }})
-      DATASET_DONE -> ready
+      DATASET_DONE -> ready when (= (array/len @entity.dsPending) 0)
         (set @entity.dsActive false)
+      DATASET_DONE -> ready when (> (array/len @entity.dsPending) 0)
+        (set @entity.dsActive false)
+        (emit SEED_PAGE {{ page: "", route: "", traits: [], entities: @entity.dsPending }})
+        (set @entity.dsPending [])
       DATASET_FAILED -> ready
         (set @entity.dsActive false)
       DS_WRITE_CHUNK -> ready
@@ -675,7 +679,9 @@ DATASET=f'''      RESTAMP_INPUT -> ready when (not (or (= ?firstOwner true) @con
         (set @entity.rsChanges [])
         (set @entity.dsStamps (if (or (= @entity.dsViewer "") (= @entity.dsViewer (object/get ?journal "viewerId"))) [] {restamp_queue}))
         (if (> (array/len @entity.words) 0) (emit DS_PROGRAM_READ {{ result: ?program }}) (do (set @entity.dsHeld ?program) (emit CORPUS_ASK {{ }})))
-      SEED_PAGE -> ready when (or @entity.dsActive (= (array/len ?entities) 0))
+      SEED_PAGE -> ready when (= (array/len ?entities) 0)
+      SEED_PAGE -> ready when (and @entity.dsActive (> (array/len ?entities) 0))
+        (set @entity.dsPending (array/unique (array/concat @entity.dsPending ?entities)))
       SEED_PAGE -> ready when (and (not @entity.dsActive) (> (array/len ?entities) 0))
         (set @entity.dsActive true)
         (set @entity.dsMode "seed")

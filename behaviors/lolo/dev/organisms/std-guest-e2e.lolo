@@ -1,0 +1,195 @@
+app std-guest-e2e [
+  version: "1.0.0",
+  description: "std-guest-e2e — drives the behavior catalog's guest sessions in a real headless Chrome and reports what a viewer would hit. For each scenario of the scenarios knob it opens baseUrl/<behavior>, loads the app again in a same-origin frame with a React commit counter installed before it starts, runs the scenario's steps as real clicks (each step clicks the control with that exact text, as soon as it exists, then waits for the text it expects or for a dialog, which it cancels), and then fails on a crashed page, a missing persona picker when the scenario asks for one, and more React commits in an idle second than the scenario allows (idleMax: a late answer settling is a commit or two, a render loop is dozens). It writes { ok, scenarios } to reportFile and stops Chrome. Run: ORB_CHROME=<chrome binary> orb-dev run std-guest-e2e.lolo with the launchpad up; read reportFile.",
+  exec: [env ORB_CHROME],
+  env: ["ORB_CHROME"],
+  fs: { cwd: ".orbital/guest-e2e/**": [read, write, create], cwd: ".orbital/guest-e2e": [create] },
+  net: { "127.0.0.1:9333": [tcp] }
+]
+;; @capabilities "end-to-end check of catalog guest sessions in a real browser: crashes, render loops, navigation, dialogs, persona picker"
+
+uses ChromeA from "std/behaviors/std-chrome"
+
+type E2eStep = { click : string!, see : string?, dialog : boolean?, times : number? }
+type E2eScenario = { behavior : string!, persona : boolean!, idleMax : number!, steps : [E2eStep]! }
+type E2eOutcome = { behavior : string!, ok : boolean!, failures : [string]!, persona : boolean!, idle : number! }
+
+orbital GuestE2eOrbital {
+  entity GuestE2eRun [runtime] {
+    id : string!
+    at : number @description "The scenario being run." = 0
+    outcomes : [E2eOutcome] @description "What each finished scenario found." = []
+    allOk : boolean @description "Whether every scenario finished clean so far." = true
+  }
+
+  trait GuestE2e -> GuestE2eRun {
+    config {
+      baseUrl : string = "http://127.0.0.1:4790"
+        @label "Catalog address"
+        @tier "domain"
+      reportFile : string = ".orbital/guest-e2e/report.json"
+        @label "Report file"
+        @tier "domain"
+      scenarios : [E2eScenario] = [
+        { behavior: "almadar-behaviors/std-crm", persona: true, idleMax: 5, steps: [{ click: "Add a deal", see: "New Deal", dialog: false, times: 1 }, { click: "New Deal", see: "", dialog: true, times: 3 }] },
+        { behavior: "almadar-behaviors/std-accounting", persona: true, idleMax: 5, steps: [{ click: "Journal", see: "New Period", dialog: false, times: 1 }, { click: "New Period", see: "", dialog: true, times: 2 }, { click: "Entries", see: "New transaction", dialog: false, times: 1 }, { click: "New transaction", see: "", dialog: true, times: 2 }, { click: "Recurring Invoices", see: "Customer", dialog: false, times: 1 }] },
+        { behavior: "almadar-behaviors/std-kflow", persona: false, idleMax: 5, steps: [{ click: "Sign in", see: "Welcome back", dialog: false, times: 1 }] }
+      ]
+        @label "Scenarios"
+        @tier "domain"
+      flowScript : string = "async (s) => { const html = await (await fetch(location.href)).text(); document.body.innerHTML = ''; const ifr = document.createElement('iframe'); ifr.style.cssText = 'position:fixed;inset:0;width:1280px;height:800px;border:0'; document.body.appendChild(ifr); const w = ifr.contentWindow; w.__n = 0; w.__REACT_DEVTOOLS_GLOBAL_HOOK__ = { supportsFiber: true, isDisabled: false, renderers: new Map(), checkDCE() {}, inject() { return 1; }, onCommitFiberUnmount() {}, onPostCommitFiberRoot() {}, onCommitFiberRoot() { w.__n++; } }; const d = ifr.contentDocument; d.open(); d.write(html); d.close(); const wait = (m) => new Promise((r) => setTimeout(r, m)); const until = async (f, ms) => { const t = Date.now(); while (Date.now() - t < ms) { const v = f(); if (v) return v; await wait(60); } return null; }; const text = () => { const f = ifr.contentDocument.querySelector('[data-guest-frame]'); return f ? f.innerText : ''; }; const find = (q) => [...ifr.contentDocument.querySelectorAll('a,button')].find((e) => e.textContent.trim() === q); const dialog = () => ifr.contentDocument.querySelector('[role=dialog]'); const r = { behavior: s.behavior, ok: true, failures: [], persona: false, idle: 0 }; const fail = (m) => { r.ok = false; r.failures.push(m); }; for (const step of s.steps) { for (let i = 0; i < (step.times || 1); i++) { const el = await until(() => find(step.click), 90000); if (!el) { fail('no control: ' + step.click + ' | frame: ' + text() + ' | page: ' + ifr.contentDocument.body.innerText.length); continue; } el.click(); if (step.see && !(await until(() => text().includes(step.see), 30000))) fail('after ' + step.click + ' never saw: ' + step.see); if (step.dialog) { const dl = await until(dialog, 8000); if (!dl) { fail('no dialog after: ' + step.click); continue; } const c = [...dl.querySelectorAll('button')].find((b) => b.textContent.trim() === 'Cancel'); if (c) c.click(); await until(() => !dialog(), 5000); await wait(300); } } } await wait(4500); const a = w.__n; await wait(1000); r.idle = w.__n - a; r.persona = ifr.contentDocument.body.innerText.includes('Viewing as'); if (text().includes('Something went wrong')) fail('the page crashed'); const frame = ifr.contentDocument.querySelector('[data-guest-frame]'); if (frame) { const box = frame.getBoundingClientRect(); for (const el of frame.querySelectorAll('button')) { if (ifr.contentWindow.getComputedStyle(el.parentElement).position !== 'fixed') continue; const b = el.getBoundingClientRect(); if (b.left < box.left || b.right > box.right || b.top < box.top || b.bottom > box.bottom) fail('a fixed control left the preview: ' + (el.getAttribute('aria-label') || el.textContent)); } } if (text().includes('Cancelled')) fail('a Cancelled toast is still showing after the last step'); if (s.persona && !r.persona) fail('no persona picker'); if (r.idle > s.idleMax) fail('render loop: ' + r.idle + ' commits in an idle second'); return JSON.stringify(r); }"
+        @label "Browser flow"
+        @tier "internal"
+    }
+
+    initial: starting
+
+    state starting {
+      INIT -> starting
+        (emit CHROME_START {})
+      CHROME_READY -> running
+        (emit E2E_NEXT {})
+      CHROME_FAILED -> finishing
+        (set @entity.allOk false)
+        (emit E2E_FINISH { error: ?message })
+    }
+
+    state running {
+      INIT -> running
+      E2E_NEXT -> running when (>= @entity.at (array/len @config.scenarios))
+        (emit E2E_FINISH { error: "" })
+      E2E_NEXT -> running when (< @entity.at (array/len @config.scenarios))
+        (let ((scenario (let ((none : E2eScenario { behavior: "", persona: false, idleMax: 5, steps: [] })) (default (as (array/nth @config.scenarios @entity.at) E2eScenario) @none)))) (emit PAGE_NAVIGATE { key: "e2e", url: (str/concat @config.baseUrl "/" (object/get @scenario "behavior" "")) }))
+      PAGE_LOADED -> running
+        (let ((scenario (let ((none : E2eScenario { behavior: "", persona: false, idleMax: 5, steps: [] })) (default (as (array/nth @config.scenarios @entity.at) E2eScenario) @none)))) (emit PAGE_MEASURE { key: "e2e", expression: (str/concat "(" @config.flowScript ")(" (json/stringify @scenario) ")") }))
+      PAGE_MEASURED -> running
+        (let ((outcome (as (default (json/parse ?json E2eOutcome) { behavior: "", ok: false, failures: ["the flow answered no outcome"], persona: false, idle: 0 }) E2eOutcome))) (do
+          (set @entity.outcomes (array/append @entity.outcomes @outcome))
+          (set @entity.allOk (and @entity.allOk (object/get @outcome "ok" false)))))
+        (set @entity.at (+ @entity.at 1))
+        (emit E2E_NEXT {})
+      PAGE_FAILED -> running
+        (set @entity.outcomes (array/append @entity.outcomes { behavior: (object/get (let ((none : E2eScenario { behavior: "", persona: false, idleMax: 5, steps: [] })) (default (as (array/nth @config.scenarios @entity.at) E2eScenario) @none)) "behavior" ""), ok: false, failures: [?error], persona: false, idle: 0 }))
+        (set @entity.allOk false)
+        (set @entity.at (+ @entity.at 1))
+        (emit E2E_NEXT {})
+      CHROME_FAILED -> finishing
+        (set @entity.allOk false)
+        (emit E2E_FINISH { error: ?message })
+      E2E_FINISH -> finishing
+        (os/mkdir { anchor: "cwd", path: ".orbital/guest-e2e" } true { emit: { success: E2E_DIR_READY, failure: E2E_WRITE_FAILED } })
+    }
+
+    state finishing {
+      INIT -> finishing
+      E2E_FINISH -> finishing
+        (os/mkdir { anchor: "cwd", path: ".orbital/guest-e2e" } true { emit: { success: E2E_DIR_READY, failure: E2E_WRITE_FAILED } })
+      E2E_DIR_READY -> finishing
+        (os/write-file { anchor: "cwd", path: @config.reportFile } (bytes/from-string (json/stringify { ok: @entity.allOk, scenarios: @entity.outcomes })) { emit: { success: E2E_WRITTEN, failure: E2E_WRITE_FAILED } })
+      E2E_WRITTEN -> finishing
+        (emit CHROME_STOP {})
+      E2E_WRITE_FAILED -> finishing
+        (emit CHROME_STOP {})
+      CHROME_STOPPED -> done
+      CHROME_FAILED -> finishing
+      PAGE_LOADED -> finishing
+      PAGE_MEASURED -> finishing
+      PAGE_FAILED -> finishing
+      E2E_NEXT -> finishing
+    }
+
+    state done {
+      INIT -> done
+    }
+
+    ticks {
+      keepRunning every 500ms in starting, running, finishing [background]
+        (set @entity.at @entity.at)
+    }
+
+    emits {
+      CHROME_START -> external { }
+      CHROME_STOP -> external { }
+      PAGE_NAVIGATE -> external {
+        key : string!
+        url : string!
+      }
+      PAGE_MEASURE -> external {
+        key : string!
+        expression : string!
+      }
+      E2E_NEXT { }
+      E2E_FINISH {
+        error : string!
+      }
+      E2E_DIR_READY { }
+      E2E_WRITTEN { }
+      E2E_WRITE_FAILED { }
+    }
+
+    listens {
+      E2eChrome.Chrome.CHROME_READY -> CHROME_READY
+      E2eChrome.Chrome.CHROME_FAILED -> CHROME_FAILED
+      E2eChrome.Chrome.CHROME_STOPPED -> CHROME_STOPPED
+      E2eChrome.Chrome.PAGE_LOADED -> PAGE_LOADED
+      E2eChrome.Chrome.PAGE_MEASURED -> PAGE_MEASURED
+      E2eChrome.Chrome.PAGE_FAILED -> PAGE_FAILED
+      CHROME_READY {
+        browser : string!
+      }
+      CHROME_FAILED {
+        code : string!
+        message : string!
+      }
+      CHROME_STOPPED { }
+      PAGE_LOADED {
+        key : string!
+        url : string!
+        title : string!
+      }
+      PAGE_MEASURED {
+        key : string!
+        json : string!
+      }
+      PAGE_FAILED {
+        key : string!
+        error : string!
+        code : string!
+      }
+    }
+  }
+
+  page boot as GuestE2eBoot -> GuestE2e
+}
+
+orbital E2eChrome = ChromeA.orbitals.ChromeOrbital {
+  traits {
+    ChromeDaemon {
+      config { readyPort: 9333 }
+    }
+    CdpHttp {
+      config { port: 9333 }
+    }
+    CdpWs {
+      config { port: 9333 }
+    }
+    Cdp {
+      config { timeoutMs: 120000 }
+    }
+    Chrome {
+      config {
+        port: 9333
+        profileDir: { anchor: "cwd" path: ".orbital/guest-e2e/profile" }
+        downloadDir: { anchor: "cwd" path: ".orbital/guest-e2e/downloads" }
+        preferencesDir: { anchor: "cwd" path: ".orbital/guest-e2e/profile/Default" }
+        preferencesFile: { anchor: "cwd" path: ".orbital/guest-e2e/profile/Default/Preferences" }
+      }
+    }
+  }
+  listens {
+    GuestE2eOrbital.GuestE2e.CHROME_START -> Chrome.CHROME_START
+    GuestE2eOrbital.GuestE2e.CHROME_STOP -> Chrome.CHROME_STOP
+    GuestE2eOrbital.GuestE2e.PAGE_NAVIGATE -> Chrome.PAGE_NAVIGATE
+    GuestE2eOrbital.GuestE2e.PAGE_MEASURE -> Chrome.PAGE_MEASURE
+  }
+}

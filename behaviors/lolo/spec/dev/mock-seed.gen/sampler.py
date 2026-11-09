@@ -65,7 +65,7 @@ def sampler_step(P):
     mock_typed=(f'(let ((lt {lit_t})) (let ((nv (if (and (array/includes ["number", "money"] @ty) {numok("@lt")}) {numv("@lt")} null))) (if (and (!= @nv null) (= (- (default @nv 0) (default @nv 0)) 0)) {C(qs("number"),"@lt","(default @nv 0)")} '
                 f'(if (and (= @ty "boolean") (array/includes ["true", "false"] @lt)) {C(qs("boolean"),"@lt")} {C(qs("string"),"@lt")}))))')
     mock_chain=(f'(if (and (> (array/len @vals) 0) (> {ncs} 0)) {res(mock_member)} (if (= @ty "behavior") {res(mock_beh)} '
-                f'(if (array/includes ["date", "datetime", "timestamp"] @ty) {res(mock_date)} {res(mock_typed)})))')
+                f'(if (array/includes ["date", "datetime", "timestamp", "instant"] @ty) {res(mock_date)} {res(mock_typed)})))')
     mock_gate=f'(let ((cs {cands})) {mock_chain})'
     projected=f'(!= {field_projection("@sp")} null)'
     vocab=C(qs('string'),f'(default (array/nth @vals {modlen("(- @o 1)","@vals")}) "")')
@@ -147,7 +147,7 @@ def sampler_step(P):
     typed_dispatch=(f'(if (= @ty "array") {arr} (if (= @ty "object") {obj} (if (= @ty "tuple") {tup} (if (= @ty "union") {uni} '
         f'(if (= @ty "email") {email} (if (= @ty "url") {url} (if (= @ty "phone") {phone} (if (= @ty "uuid") {uuid} '
         f'(if (= @ty "number") {stepped(numeric(1,250))} (if (= @ty "money") {stepped(numeric(10,900))} (if (= @ty "boolean") {bool_} '
-        f'(if (= @ty "string") {string} (if (= @ty "image") {img} (if (array/includes ["date", "datetime", "timestamp"] @ty) {date} '
+        f'(if (= @ty "string") {string} (if (= @ty "image") {img} (if (array/includes ["date", "datetime", "timestamp", "instant"] @ty) {date} '
         f'(if (= @ty "bytes") {bytes_} (if (= @ty "file") {file_} (if (= @ty "relation") {rel} '
         f'(if (array/includes ["enum", "trait", "orbital", "behavior"] @ty) {nullr} {omitr}))))))))))))))))))')
     intr='(= (object/get @sp "intrinsic" false) true)'
