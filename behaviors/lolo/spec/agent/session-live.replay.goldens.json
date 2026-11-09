@@ -168,6 +168,108 @@
         }
       ],
       "defaults": []
+    },
+    {
+      "id": "a-live-ephemeral-chat-shows-each-step-as-it-happens",
+      "note": "live: true streams steps, so the chat appends each one while the assistant works",
+      "config": {
+        "ephemeral": true
+      },
+      "steps": [
+        {
+          "trait": "AgentConversation",
+          "event": "START_CHAT",
+          "from": "idle",
+          "payload": {
+            "greeting": "",
+            "instructions": "i",
+            "tools": [],
+            "live": true
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle"
+          }
+        },
+        {
+          "trait": "AgentConversation",
+          "event": "ASK",
+          "payload": {
+            "message": "q"
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "AgentConversation",
+          "event": "STEP",
+          "payload": {
+            "activity": {
+              "type": "tool_call",
+              "tool": "PAGE_OPEN",
+              "argsText": "{\"url\":\"https://a.test\"}",
+              "timestamp": "2026-11-09T10:00:00Z",
+              "isExecuting": true
+            }
+          },
+          "expect": {
+            "fired": true
+          }
+        }
+      ],
+      "defaults": []
+    },
+    {
+      "id": "control-a-non-live-ephemeral-chat-ignores-steps",
+      "note": "live: false streams nothing; a stray step is not shown",
+      "config": {
+        "ephemeral": true
+      },
+      "steps": [
+        {
+          "trait": "AgentConversation",
+          "event": "START_CHAT",
+          "from": "idle",
+          "payload": {
+            "greeting": "",
+            "instructions": "i",
+            "tools": [],
+            "live": false
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle"
+          }
+        },
+        {
+          "trait": "AgentConversation",
+          "event": "ASK",
+          "payload": {
+            "message": "q"
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "AgentConversation",
+          "event": "STEP",
+          "payload": {
+            "activity": {
+              "type": "tool_call",
+              "tool": "PAGE_OPEN",
+              "argsText": "{\"url\":\"https://a.test\"}",
+              "timestamp": "2026-11-09T10:00:00Z",
+              "isExecuting": true
+            }
+          },
+          "expect": {
+            "fired": false
+          }
+        }
+      ],
+      "defaults": []
     }
   ]
 }

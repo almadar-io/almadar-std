@@ -351,24 +351,24 @@ orbital AgentToolLoopOrbital {
         (let ((b (array/find @entity.table (fn x (= @x.name @entity.current.name)))))
           (do
             (set @entity.binding @b)
-            (program/dispatch @b.address @entity.current.arguments { emit: { success: DISPATCHED, failure: DISPATCH_FAILED } })))
+            (program/dispatch @b.address @entity.current.arguments { key: (str/concat "tool-call:" @entity.current.id), emit: { success: DISPATCHED, failure: DISPATCH_FAILED } })))
       CALL_BEGIN -> awaitingResult when (let ((b (array/find @entity.table (fn x (= @x.name @entity.current.name))))) (and (!= @b null) (= @b.kind "input") (not @b.contracted) (not @b.fireAndForget)))
         (let ((b (array/find @entity.table (fn x (= @x.name @entity.current.name)))))
           (do
             (set @entity.binding @b)
             (emit TOOL_PENDING { callId: @entity.current.id, tool: @b.label })
-            (program/dispatch @b.address @entity.current.arguments { emit: { success: AWAIT_DISPATCHED, failure: AWAIT_DISPATCH_FAILED } })))
+            (program/dispatch @b.address @entity.current.arguments { key: (str/concat "tool-call:" @entity.current.id), emit: { success: AWAIT_DISPATCHED, failure: AWAIT_DISPATCH_FAILED } })))
       CALL_BEGIN -> running when (let ((b (array/find @entity.table (fn x (= @x.name @entity.current.name))))) (and (!= @b null) (= @b.kind "input") @b.contracted @b.fireAndForget))
         (let ((b (array/find @entity.table (fn x (= @x.name @entity.current.name)))))
           (do
             (set @entity.binding @b)
-            (program/dispatch @b.address @entity.current.arguments { schema: @b.contract } { emit: { success: DISPATCHED, failure: DISPATCH_FAILED } })))
+            (program/dispatch @b.address @entity.current.arguments { schema: @b.contract } { key: (str/concat "tool-call:" @entity.current.id), emit: { success: DISPATCHED, failure: DISPATCH_FAILED } })))
       CALL_BEGIN -> awaitingResult when (let ((b (array/find @entity.table (fn x (= @x.name @entity.current.name))))) (and (!= @b null) (= @b.kind "input") @b.contracted (not @b.fireAndForget)))
         (let ((b (array/find @entity.table (fn x (= @x.name @entity.current.name)))))
           (do
             (set @entity.binding @b)
             (emit TOOL_PENDING { callId: @entity.current.id, tool: @b.label })
-            (program/dispatch @b.address @entity.current.arguments { schema: @b.contract } { emit: { success: AWAIT_DISPATCHED, failure: AWAIT_DISPATCH_FAILED } })))
+            (program/dispatch @b.address @entity.current.arguments { schema: @b.contract } { key: (str/concat "tool-call:" @entity.current.id), emit: { success: AWAIT_DISPATCHED, failure: AWAIT_DISPATCH_FAILED } })))
       CALL_BEGIN -> running when (let ((b (array/find @entity.table (fn x (= @x.name @entity.current.name))))) (and (!= @b null) (= @b.kind "read") (not @b.readAny)))
         (let ((b (array/find @entity.table (fn x (= @x.name @entity.current.name)))))
           (do

@@ -684,7 +684,7 @@ orbital AgentConversationOrbital {
           gap: sm
           type: stack
         })
-      STEP -> idle when (not @config.ephemeral)
+      STEP -> idle when (or (not @config.ephemeral) @entity.chatLive)
         (set @entity.entries (array/append @entity.entries ?activity))
         (render-ui main {
           children: [(if @config.ephemeral { type: stack, direction: horizontal, align: center, gap: sm, className: shrink-0, children: [{ type: avatar, src: (object/get @entity chatAvatar ""), name: @entity.chatTitle, size: md, className: (if (= @entity.chatAvatar "") hidden "") }, { type: stack, direction: vertical, gap: none, children: [{ type: typography, variant: h4, content: @entity.chatTitle }, { type: typography, variant: caption, content: @entity.chatSubtitle }] }] } {

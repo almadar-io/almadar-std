@@ -13,7 +13,7 @@ type StreamChoice = { delta : StreamDelta }
 type StreamUsage = { prompt_tokens : number, completion_tokens : number, input_tokens : number, output_tokens : number, cache_creation_input_tokens : number, cache_read_input_tokens : number }
 type StreamStart = { usage : StreamUsage }
 type StreamEvent = { type : string, choices : [StreamChoice], usage : StreamUsage, delta : StreamDelta, message : StreamStart }
-type OpenaiMessage = { content : string }
+type OpenaiMessage = { content : string? }
 type OpenaiChoice = { message : OpenaiMessage }
 type OpenaiUsage = { prompt_tokens : number, completion_tokens : number }
 type OpenaiReply = { choices : [OpenaiChoice], usage : OpenaiUsage }
@@ -42,7 +42,7 @@ type ToolArguments = Map string JsonValue
 type ToolCall = { id : string!, name : string!, arguments : ToolArguments }
 type ToolFunctionCall = { name : string!, arguments : string }
 type ToolCallRef = { id : string!, type : string, function : ToolFunctionCall! }
-type ToolMessage = { role : string, content : string, tool_calls : [ToolCallRef], tool_call_id : string, reasoning_content : string, reasoning : string }
+type ToolMessage = { role : string, content : string?, tool_calls : [ToolCallRef], tool_call_id : string?, reasoning_content : string?, reasoning : string? }
 type LlmSchema = { type : string, additionalProperties : boolean, properties : Map string LlmSchema, required : [string], enum : [string], items : LlmSchema }
 type LlmToolDef = { name : string!, description : string!, parameters : LlmSchema! }
 type ToolsUsage = { promptTokens : number!, completionTokens : number!, totalTokens : number!, modelCalls : number! }
@@ -289,7 +289,7 @@ orbital LlmOrbital {
       LLM_CHAT_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (!= @config.provider "anthropic") (!= (json/parse @payload.body OpenaiReply) null) (> (array/len (object/get (default (json/parse @payload.body OpenaiReply) {}) choices [])) 0))
         (emit LLM_CHAT_CONTENT {
           job: @payload.key,
-          content: (object/get (object/get (default (array/first (object/get (default (json/parse @payload.body OpenaiReply) {}) choices [])) {}) message {}) content ""),
+          content: (default (object/get (object/get (default (array/first (object/get (default (json/parse @payload.body OpenaiReply) {}) choices [])) {}) message {}) content "") ""),
           inputTokens: (object/get (object/get (default (json/parse @payload.body OpenaiReply) {}) usage {}) prompt_tokens null),
           outputTokens: (object/get (object/get (default (json/parse @payload.body OpenaiReply) {}) usage {}) completion_tokens null)
         })
@@ -428,7 +428,7 @@ orbital LlmOrbital {
       LLM_CHAT_JSON -> idle when (= @payload.json "")
         (emit LLM_CHAT_ERROR { job: @payload.job, message: "No valid JSON found in response. Expected a JSON value (object, array, string, number, boolean, or null), possibly wrapped in markdown code blocks." })
       LLM_CHAT_JSON -> idle when (and (!= @payload.json "") (= (object/get (default (json/parse @payload.job LlmJob) {}) action "") "classify") (= (json/parse @payload.json ClassificationReply) null))
-        (emit LLM_CHAT_ERROR { job: @payload.job, message: (str/concat "Failed to parse JSON. Raw text: " (str/slice @payload.json 0 200) "...") })
+        (emit LLM_CHAT_ERROR { job: @payload.job, message: (str/concat "Failed to parse JSON. Raw text: " @payload.json) })
       LLM_CHAT_JSON -> idle when (and (!= @payload.json "") (= (object/get (default (json/parse @payload.job LlmJob) {}) action "") "classify") (!= (json/parse @payload.json ClassificationReply) null))
         (let ((c (json/parse @payload.json ClassificationReply)) (cats (object/get (default (json/parse @payload.job LlmJob) {}) categories [])))
           (emit LLM_CHAT_CHECKED {
@@ -443,7 +443,7 @@ orbital LlmOrbital {
               (if (= (object/get @c reasoning null) null) ["reasoning: Required"] [])) "; ")
           }))
       LLM_CHAT_JSON -> idle when (and (!= @payload.json "") (= (object/get (default (json/parse @payload.job LlmJob) {}) action "") "summarize") (= (json/parse @payload.json SummaryReply) null))
-        (emit LLM_CHAT_ERROR { job: @payload.job, message: (str/concat "Failed to parse JSON. Raw text: " (str/slice @payload.json 0 200) "...") })
+        (emit LLM_CHAT_ERROR { job: @payload.job, message: (str/concat "Failed to parse JSON. Raw text: " @payload.json) })
       LLM_CHAT_JSON -> idle when (and (!= @payload.json "") (= (object/get (default (json/parse @payload.job LlmJob) {}) action "") "summarize") (!= (json/parse @payload.json SummaryReply) null))
         (emit LLM_CHAT_CHECKED {
           job: @payload.job, json: @payload.json,
@@ -452,7 +452,7 @@ orbital LlmOrbital {
             (if (= (object/get (default (json/parse @payload.json SummaryReply) {}) keyPoints null) null) ["keyPoints: Required"] [])) "; ")
         })
       LLM_CHAT_JSON -> idle when (and (!= @payload.json "") (= (object/get (default (json/parse @payload.job LlmJob) {}) action "") "classifyMany") (= (json/parse @payload.json VerdictsReply) null))
-        (emit LLM_CHAT_ERROR { job: @payload.job, message: (str/concat "Failed to parse JSON. Raw text: " (str/slice @payload.json 0 200) "...") })
+        (emit LLM_CHAT_ERROR { job: @payload.job, message: (str/concat "Failed to parse JSON. Raw text: " @payload.json) })
       LLM_CHAT_JSON -> idle when (and (!= @payload.json "") (= (object/get (default (json/parse @payload.job LlmJob) {}) action "") "classifyMany") (!= (json/parse @payload.json VerdictsReply) null))
         (let ((vs (object/get (default (json/parse @payload.json VerdictsReply) {}) verdicts null)) (cats (object/get (default (json/parse @payload.job LlmJob) {}) categories [])))
           (emit LLM_CHAT_CHECKED {
@@ -471,7 +471,7 @@ orbital LlmOrbital {
           }))
 
       LLM_CHAT_JSON -> idle when (and (!= @payload.json "") (= (object/get (default (json/parse @payload.job LlmJob) {}) action "") "extract") (not (json/valid @payload.json)))
-        (emit LLM_CHAT_ERROR { job: @payload.job, message: (str/concat "Failed to parse JSON. Raw text: " (str/slice @payload.json 0 200) "...") })
+        (emit LLM_CHAT_ERROR { job: @payload.job, message: (str/concat "Failed to parse JSON. Raw text: " @payload.json) })
       LLM_CHAT_JSON -> idle when (and (!= @payload.json "") (= (object/get (default (json/parse @payload.job LlmJob) {}) action "") "extract") (json/valid @payload.json))
         (emit LLM_CHAT_CHECKED { job: @payload.job, json: @payload.json, issues: "" })
 
