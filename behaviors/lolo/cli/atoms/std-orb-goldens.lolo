@@ -244,7 +244,7 @@ orbital GoldensOrbital {
                           (not (array/some @gotR (fn g (let ((gp (default (as @g GoldenPayload) @nx)))
                             (and (or (not (object/has @x "slot")) (= (object/get @gp "slot") (object/get @x "slot")))
                                  (array/every (object/entries (default (as (object/get @x "props" {}) GoldenPayload) @nx))
-                                   (fn en (= (array/reduce (str/split (default (array/nth @en 0) "") ".") (default (as (object/get @gp "props" {}) GoldenPayload) @nx) (fn pv seg (object/get @pv @seg null))) (array/nth @en 1))))))))))))
+                                   (fn en (= (array/reduce (str/split (default (array/nth @en 0) "") ".") (default (as (object/get @gp "props" {}) GoldenPayload) @nx) (fn pv seg (if (== @pv null) null (object/get @pv @seg null)))) (array/nth @en 1))))))))))))
                       (fn i (str/concat "step " (array/len @acc) ": rendered " @i " " (json/stringify (array/nth @wantR @i)) " not found; actual rendered: " (json/stringify @gotR))))))
                 (let ((wantN (default (as (object/get @ex "entity" {}) GoldenPayload) @nx)) (gotN (default (as (object/get @rr "entityAfter" null) GoldenPayload) @nx)))
                   (array/map

@@ -1,152 +1,292 @@
 {
- "atom": "cli/atoms/std-orb-launchpad.lolo",
- "trait": "OrbLaunchpad",
- "cases": [
-  {
-   "id": "the-located-launchpad-is-served-on-production-credentials",
-   "steps": [
+  "atom": "cli/atoms/std-orb-launchpad.lolo",
+  "trait": "OrbLaunchpad",
+  "cases": [
     {
-     "trait": "OrbLaunchpad",
-     "from": "locating",
-     "event": "LAUNCHPAD_LOCATED",
-     "payload": {
-      "result": {
-       "path": "/p/std-launchpad.lolo"
-      }
-     },
-     "entity": {
-      "id": "r",
-      "cwd": "/w",
-      "port": "3030",
-      "host": "127.0.0.1"
-     },
-     "expect": {
-      "fired": true,
-      "state": "working",
-      "emits": [
-       {
-        "event": "SERVE_START",
-        "payload": {
-         "cwd": "/w",
-         "path": "/p/std-launchpad.lolo",
-         "portText": "3030",
-         "portOk": true,
-         "host": "127.0.0.1",
-         "mock": false,
-         "open": false,
-         "noEmulators": false
+      "id": "the-located-launchpad-is-served-on-production-credentials",
+      "steps": [
+        {
+          "trait": "OrbLaunchpad",
+          "from": "locating",
+          "event": "LAUNCHPAD_LOCATED",
+          "payload": {
+            "result": {
+              "path": "/p/std-launchpad.lolo"
+            }
+          },
+          "entity": {
+            "id": "r",
+            "cwd": "/w",
+            "port": "3030",
+            "host": "127.0.0.1"
+          },
+          "expect": {
+            "fired": true,
+            "state": "working",
+            "emits": [
+              {
+                "event": "SERVE_START",
+                "payload": {
+                  "cwd": "/w",
+                  "path": "/p/std-launchpad.lolo",
+                  "portText": "3030",
+                  "portOk": true,
+                  "host": "127.0.0.1",
+                  "mock": false,
+                  "open": false,
+                  "noEmulators": false
+                }
+              }
+            ]
+          }
         }
-       }
-      ]
-     }
-    }
-   ],
-   "now": 1760531445678
-  },
-  {
-   "id": "control-the-served-launchpad-is-never-mocked",
-   "steps": [
+      ],
+      "now": 1760531445678
+    },
     {
-     "trait": "OrbLaunchpad",
-     "from": "locating",
-     "event": "LAUNCHPAD_LOCATED",
-     "payload": {
-      "result": {
-       "path": "/p/std-launchpad.lolo"
-      }
-     },
-     "entity": {
-      "id": "r",
-      "cwd": "/w",
-      "port": "3030",
-      "host": "127.0.0.1"
-     },
-     "expect": {
-      "fired": true,
-      "neverEmits": [
-       "LAUNCHPAD_ANSWERED"
-      ]
-     }
-    }
-   ],
-   "now": 1760531445678
-  },
-  {
-   "id": "an-unlocatable-launchpad-answers-status-500",
-   "steps": [
-    {
-     "trait": "OrbLaunchpad",
-     "from": "locating",
-     "event": "LAUNCHPAD_LOCATE_FAILED",
-     "payload": {
-      "error": "not installed"
-     },
-     "entity": {
-      "id": "r",
-      "cwd": "/w",
-      "port": "3030",
-      "host": "127.0.0.1"
-     },
-     "expect": {
-      "fired": true,
-      "state": "ready",
-      "emits": [
-       {
-        "event": "LAUNCHPAD_ANSWERED",
-        "payload": {
-         "status": 500,
-         "body": "",
-         "stderr": "Error: std/behaviors/std-launchpad could not be found: not installed"
+      "id": "control-the-served-launchpad-is-never-mocked",
+      "steps": [
+        {
+          "trait": "OrbLaunchpad",
+          "from": "locating",
+          "event": "LAUNCHPAD_LOCATED",
+          "payload": {
+            "result": {
+              "path": "/p/std-launchpad.lolo"
+            }
+          },
+          "entity": {
+            "id": "r",
+            "cwd": "/w",
+            "port": "3030",
+            "host": "127.0.0.1"
+          },
+          "expect": {
+            "fired": true,
+            "neverEmits": [
+              "LAUNCHPAD_ANSWERED"
+            ]
+          }
         }
-       }
-      ]
-     }
-    }
-   ],
-   "now": 1760531445678
-  },
-  {
-   "id": "the-engine-answer-is-handed-to-the-bootloader-unchanged",
-   "steps": [
+      ],
+      "now": 1760531445678
+    },
     {
-     "trait": "OrbLaunchpad",
-     "from": "working",
-     "event": "LAUNCHPAD_ENGINE_ANSWERED",
-     "payload": {
-      "status": 200,
-      "body": "{}",
-      "stderr": "",
-      "headers": {
-       "orb-run": "server",
-       "orb-app": "/p/std-launchpad.lolo"
-      }
-     },
-     "entity": {
-      "id": "r",
-      "cwd": "/w",
-      "port": "3030",
-      "host": "127.0.0.1"
-     },
-     "expect": {
-      "fired": true,
-      "state": "ready",
-      "emits": [
-       {
-        "event": "LAUNCHPAD_ANSWERED",
-        "payload": {
-         "status": 200,
-         "body": "{}",
-         "headers": {
-          "orb-run": "server",
-          "orb-app": "/p/std-launchpad.lolo"
-         }
+      "id": "an-unlocatable-launchpad-answers-status-500",
+      "steps": [
+        {
+          "trait": "OrbLaunchpad",
+          "from": "locating",
+          "event": "LAUNCHPAD_LOCATE_FAILED",
+          "payload": {
+            "error": "not installed"
+          },
+          "entity": {
+            "id": "r",
+            "cwd": "/w",
+            "port": "3030",
+            "host": "127.0.0.1"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LAUNCHPAD_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "",
+                  "stderr": "Error: std/behaviors/std-launchpad could not be found: not installed"
+                }
+              }
+            ]
+          }
         }
-       }
-      ]
-     }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "the-engine-answer-is-handed-to-the-bootloader-unchanged",
+      "steps": [
+        {
+          "trait": "OrbLaunchpad",
+          "from": "working",
+          "event": "LAUNCHPAD_ENGINE_ANSWERED",
+          "payload": {
+            "status": 200,
+            "body": "{}",
+            "stderr": "",
+            "headers": {
+              "orb-run": "server",
+              "orb-app": "/p/std-launchpad.lolo"
+            }
+          },
+          "entity": {
+            "id": "r",
+            "cwd": "/w",
+            "port": "3030",
+            "host": "127.0.0.1"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LAUNCHPAD_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "{}",
+                  "headers": {
+                    "orb-run": "server",
+                    "orb-app": "/p/std-launchpad.lolo"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "a-launchpad-on-loopback-is-not-rate-limited",
+      "steps": [
+        {
+          "trait": "OrbLaunchpad",
+          "from": "locating",
+          "event": "LAUNCHPAD_LOCATED",
+          "payload": {
+            "result": {
+              "path": "/p/std-launchpad.lolo"
+            }
+          },
+          "entity": {
+            "id": "r",
+            "cwd": "/w",
+            "port": "3030",
+            "host": "127.0.0.1"
+          },
+          "expect": {
+            "fired": true,
+            "state": "working",
+            "emits": [
+              {
+                "event": "SERVE_START",
+                "payload": {
+                  "host": "127.0.0.1",
+                  "rateLimit": false
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "a-launchpad-on-localhost-is-not-rate-limited",
+      "steps": [
+        {
+          "trait": "OrbLaunchpad",
+          "from": "locating",
+          "event": "LAUNCHPAD_LOCATED",
+          "payload": {
+            "result": {
+              "path": "/p/std-launchpad.lolo"
+            }
+          },
+          "entity": {
+            "id": "r",
+            "cwd": "/w",
+            "port": "3030",
+            "host": "localhost"
+          },
+          "expect": {
+            "fired": true,
+            "state": "working",
+            "emits": [
+              {
+                "event": "SERVE_START",
+                "payload": {
+                  "host": "localhost",
+                  "rateLimit": false
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "a-launchpad-on-ipv6-loopback-is-not-rate-limited",
+      "steps": [
+        {
+          "trait": "OrbLaunchpad",
+          "from": "locating",
+          "event": "LAUNCHPAD_LOCATED",
+          "payload": {
+            "result": {
+              "path": "/p/std-launchpad.lolo"
+            }
+          },
+          "entity": {
+            "id": "r",
+            "cwd": "/w",
+            "port": "3030",
+            "host": "::1"
+          },
+          "expect": {
+            "fired": true,
+            "state": "working",
+            "emits": [
+              {
+                "event": "SERVE_START",
+                "payload": {
+                  "host": "::1",
+                  "rateLimit": false
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "control-a-launchpad-on-a-reachable-host-keeps-the-limit",
+      "steps": [
+        {
+          "trait": "OrbLaunchpad",
+          "from": "locating",
+          "event": "LAUNCHPAD_LOCATED",
+          "payload": {
+            "result": {
+              "path": "/p/std-launchpad.lolo"
+            }
+          },
+          "entity": {
+            "id": "r",
+            "cwd": "/w",
+            "port": "3030",
+            "host": "0.0.0.0"
+          },
+          "expect": {
+            "fired": true,
+            "state": "working",
+            "emits": [
+              {
+                "event": "SERVE_START",
+                "payload": {
+                  "host": "0.0.0.0",
+                  "rateLimit": true
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
     }
-   ],
-   "now": 1760531445678
-  }
- ]
+  ]
 }

@@ -32,6 +32,7 @@ orbital OrbServeOrbital {
     mock : boolean = true
     out : string = ""
     flagged : boolean = false
+    rateLimit : boolean @description "Whether the served server counts /api requests per client; std-orb-launchpad turns it off on a loopback host." = true
     serverName : string = ""
     serverPath : string = ""
     serverOrbitals : [ServeOrbital] = []
@@ -85,6 +86,7 @@ orbital OrbServeOrbital {
           open: (object/has @payload.flags "open")
           noEmulators: (object/has @payload.flags "no-emulators")
           flagged: (or (object/has @payload.flags "port") (object/has @payload.flags "host") (object/has @payload.flags "client-dir"))
+          rateLimit: true
         })
     }
 
@@ -124,6 +126,7 @@ orbital OrbServeOrbital {
         open : boolean!
         noEmulators : boolean!
         flagged : boolean!
+        rateLimit : boolean!
       }
         @description "Internal: the parsed serve request."
         @tier "internal"
@@ -174,6 +177,7 @@ orbital OrbServeOrbital {
         (set @entity.rel (if @payload.hasClient (str/slice @payload.clientDir (+ (str/len @payload.cwd) 1) (str/len @payload.clientDir)) ""))
         (set @entity.mock @payload.mock)
         (set @entity.flagged @payload.flagged)
+        (set @entity.rateLimit @payload.rateLimit)
         (set @entity.cwd @payload.cwd)
         (os/getenv "HOME" { key: "home" emit: { success: SERVE_HOME, failure: SERVE_REFUSED } })
     }
@@ -243,6 +247,7 @@ orbital OrbServeOrbital {
           "    host: " (json/stringify @entity.host) "\n"
           "    port: " (json/stringify @entity.port) "\n"
           "    portFromEnv: false\n"
+          "    rateLimit: " (json/stringify @entity.rateLimit) "\n"
           (if @entity.hasClient (str/concat "    clientDir: " (json/stringify @entity.rel) "\n") "")
           "  }\n}\n"
           @payload.seed)) { key: "serverText" emit: { success: SERVE_SERVER_WRITTEN, failure: SERVE_REFUSED } })
@@ -363,6 +368,7 @@ orbital OrbServeOrbital {
         open : boolean!
         noEmulators : boolean!
         flagged : boolean!
+        rateLimit : boolean!
       }
         @description "Compose the app with std-http-server."
       OrbServe.SERVE_START -> SERVE_START

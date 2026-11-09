@@ -64,7 +64,7 @@ orbital OrbLaunchpadOrbital {
       LAUNCHPAD_LOCATE_FAILED -> ready
         (emit LAUNCHPAD_ANSWERED { status: 500, body: "", stderr: (str/concat "Error: " @config.organism " could not be found: " (default @payload.error "")) })
       LAUNCHPAD_LOCATED -> working
-        (emit SERVE_START { cwd: @entity.cwd, path: @payload.result.path, portText: @entity.port, portOk: true, host: @entity.host, hasClient: false, clientDir: "", clientGiven: "", clientInside: true, mock: false, open: false, noEmulators: false, flagged: false })
+        (emit SERVE_START { cwd: @entity.cwd, path: @payload.result.path, portText: @entity.port, portOk: true, host: @entity.host, hasClient: false, clientDir: "", clientGiven: "", clientInside: true, mock: false, open: false, noEmulators: false, flagged: false, rateLimit: (not (array/includes ["127.0.0.1", "localhost", "::1"] @entity.host)) })
     }
 
     state working {
@@ -110,6 +110,7 @@ orbital OrbLaunchpadOrbital {
         open : boolean!
         noEmulators : boolean!
         flagged : boolean!
+        rateLimit : boolean!
       }
         @description "Internal: the serve request for the launchpad organism's file, which ServeEngine resolves and wraps with std-http-server."
         @tier "internal"
@@ -185,6 +186,7 @@ orbital OrbLaunchpadOrbital {
         open : boolean!
         noEmulators : boolean!
         flagged : boolean!
+        rateLimit : boolean!
       }
         @description "Resolve the app and wrap it with std-http-server."
     }

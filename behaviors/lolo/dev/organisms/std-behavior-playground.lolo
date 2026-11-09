@@ -42,6 +42,8 @@ orbital BehaviorPlayground {
     machineBehavior : string @description "The behavior whose running page the dock draws." = ""
     machineGuest : string @description "The guest session the dock draws." = ""
     machinePage : string @description "The traits of the guest page the dock last drew, joined by spaces." = ""
+    dispatched : [PlaygroundMove] @description "The transitions the drawn guest fired, newest first; a new guest or a loaded behavior empties it, and nothing else bounds it." = []
+    focusNonce : number @description "How many times the dock asked the diagram to scroll to a transition." = 0
     error : string = ""
     status : "browsing" | "opening" | "open" | "failed" = browsing
   }
@@ -139,6 +141,7 @@ orbital BehaviorPlayground {
       PlaygroundSource.TREE_FAILED -> TREE_FAILED
       PlaygroundSource.SOURCE -> SOURCE
       PlaygroundSource.SOURCE_FAILED -> SOURCE_FAILED
+      PlaygroundMachine.FOCUS_MOVE -> FOCUS_MOVE
     }
   }
 
@@ -154,17 +157,42 @@ orbital BehaviorPlayground {
 
     state idle {
       INIT -> idle
-        (render-ui main { type: stack, direction: vertical, gap: sm, className: "h-full p-2", children: [@trait.PlaygroundOrbit] })
+        (emit PILLS_SHOWN {})
+      PILLS_SHOWN -> idle
+        (render-ui main { type: stack, direction: vertical, gap: sm, className: "h-full p-2", children: [
+          { type: stack, direction: horizontal, align: center, gap: sm, className: "min-w-0", children: [
+            { type: button, label: "Latest", icon: crosshair, variant: ghost, size: sm, action: LOCATE_LATEST, className: "shrink-0" },
+            { type: stack, direction: horizontal, align: center, gap: xs, className: "min-w-0 flex-1 flex-nowrap overflow-x-auto pb-1", children: (array/concat
+              (if (= (array/len @entity.dispatched) 0) [{ type: typography, content: "No event dispatched yet", variant: caption, color: muted }] [])
+              (array/map @entity.dispatched (fn d { type: filter-pill, label: (str/concat @d.trait " · " (default @d.event "")), size: sm, className: "shrink-0 whitespace-nowrap", clickEvent: PILL_PICKED, clickPayload: { trait: @d.trait, event: (default @d.event ""), from: @d.from, to: @d.to } }))) }
+          ] },
+          @trait.PlaygroundOrbit
+        ] })
+      PILL_PICKED -> idle
+        (set @entity.focusNonce (+ @entity.focusNonce 1))
+        (emit FOCUS_MOVE { trait: ?trait, event: ?event, from: ?from, to: ?to, nonce: @entity.focusNonce })
+      LOCATE_LATEST -> idle when (> (array/len @entity.dispatched) 0)
+        (let ((latest (array/nth @entity.dispatched 0)))
+          (do
+            (set @entity.focusNonce (+ @entity.focusNonce 1))
+            (emit FOCUS_MOVE { trait: @latest.trait, event: (default @latest.event ""), from: @latest.from, to: @latest.to, nonce: @entity.focusNonce })))
+      LOCATE_LATEST -> idle when (== (array/len @entity.dispatched) 0)
       BEHAVIOR_LOADED -> idle
         (set @entity.machineBehavior ?behavior)
         (set @entity.machineGuest "")
         (set @entity.machinePage "")
+        (set @entity.dispatched [])
+        (emit PILLS_SHOWN {})
       GUEST_PAINTS -> idle when (and (!= @entity.machineBehavior "") (or (!= ?guest @entity.machineGuest) (!= (str/join ?page " ") @entity.machinePage)))
+        (if (!= ?guest @entity.machineGuest) (set @entity.dispatched []) null)
         (set @entity.machineGuest ?guest)
         (set @entity.machinePage (str/join ?page " "))
         (emit GUEST_ORBIT { behavior: @entity.machineBehavior, guest: ?guest })
+        (emit PILLS_SHOWN {})
       GUEST_MOVED -> idle when (and (!= @entity.machineGuest "") (= ?guest @entity.machineGuest))
+        (set @entity.dispatched (array/concat (array/reverse (array/filter ?moves (fn m @m.fired))) @entity.dispatched))
         (emit GUEST_MOVES { moves: ?moves })
+        (emit PILLS_SHOWN {})
       GUEST_MOVED -> idle when (not (and (!= @entity.machineGuest "") (= ?guest @entity.machineGuest)))
       GUEST_PAINTS -> idle when (not (and (!= @entity.machineBehavior "") (or (!= ?guest @entity.machineGuest) (!= (str/join ?page " ") @entity.machinePage))))
     }
@@ -179,6 +207,17 @@ orbital BehaviorPlayground {
         moves : [PlaygroundMove]!
       }
         @description "The transitions of the guest the dock draws; a closed or replaced guest's moves never reach it."
+      FOCUS_MOVE -> external {
+        trait : string!
+        event : string!
+        from : string!
+        to : string!
+        nonce : number!
+      }
+        @description "The diagram scrolls to this transition: a dispatched-event pill was picked, or the locate button asked for the newest dispatch."
+      PILLS_SHOWN
+        @description "Internal: draw the dispatched-event pills above the diagram."
+        @tier "internal"
     }
 
     listens {
@@ -200,6 +239,16 @@ orbital BehaviorPlayground {
         moves : [PlaygroundMove]!
       }
         @description "The transitions a guest took; only the drawn guest's reach the dock."
+      PILL_PICKED {
+        label : string
+        trait : string!
+        event : string!
+        from : string!
+        to : string!
+      }
+        @description "A dispatched-event pill was picked: the diagram scrolls to its transition."
+      LOCATE_LATEST { }
+        @description "The locate button: the diagram scrolls to the newest dispatched event."
     }
   }
   trait PlaygroundTopics -> PlaygroundView [client] {
