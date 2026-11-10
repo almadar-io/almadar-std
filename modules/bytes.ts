@@ -109,6 +109,21 @@ export const BYTES_OPERATORS: Record<string, StdOperatorMeta> = {
     params: [{ name: 'parts', type: list(BYTES), description: 'The bytes values to join' }],
     example: '["bytes/concat", ["aGk=", "IQ=="]] // => "aGkh"',
   },
+  'bytes/xor': {
+    module: 'bytes',
+    category: 'std-codec',
+    minArity: 2,
+    maxArity: 2,
+    description: `Each byte of data XOR the key byte at the same position, the key repeated cyclically; empty data answers empty bytes. An empty key fails with kind invalid. ${REPRESENTATION}`,
+    hasSideEffects: false,
+    failable: {},
+    returnType: nullable(BYTES),
+    params: [
+      { name: 'data', type: BYTES, description: 'The bytes to mask' },
+      { name: 'key', type: BYTES, description: 'The key bytes, at least one' },
+    ],
+    example: '["bytes/xor", "AQI=", "/w=="] // => "/v0="',
+  },
   'bytes/equals': {
     module: 'bytes',
     category: 'std-codec',

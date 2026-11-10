@@ -1,0 +1,694 @@
+{
+ "atom": "codec/atoms/std-document-text.lolo",
+ "trait": "DocumentText",
+ "note": "the composed readers' answers (std-pdf-text's PDF_TEXT / PDF_NO_TEXT / PDF_FAILED, std-ocr's OCR_TEXT / OCR_NO_TEXT / OCR_FAILED, the os/read-file answer) are played as each step's event",
+ "cases": [
+  {
+   "id": "a PDF path goes to the PDF text layer reader, matched case-insensitively",
+   "steps": [
+    {
+     "trait": "DocumentText",
+     "event": "DOC_TEXT_READ",
+     "from": "ready",
+     "payload": {
+      "key": "k1",
+      "path": "/s/A.PDF"
+     },
+     "entity": {
+      "id": "d",
+      "key": "",
+      "path": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "pdf",
+      "entity": {
+       "key": "k1",
+       "path": "/s/A.PDF"
+      },
+      "emits": [
+       {
+        "event": "DOC_PDF_REQUEST",
+        "payload": {
+         "key": "k1",
+         "path": "/s/A.PDF"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DOC_OCR_REQUEST",
+       "DOC_TEXT_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an image path goes to OCR",
+   "steps": [
+    {
+     "trait": "DocumentText",
+     "event": "DOC_TEXT_READ",
+     "from": "ready",
+     "payload": {
+      "key": "k1",
+      "path": "/s/scan.Jpeg"
+     },
+     "entity": {
+      "id": "d",
+      "key": "",
+      "path": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ocr",
+      "emits": [
+       {
+        "event": "DOC_OCR_REQUEST",
+        "payload": {
+         "key": "k1",
+         "path": "/s/scan.Jpeg"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DOC_PDF_REQUEST",
+       "DOC_TEXT_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a text path is read as a file",
+   "steps": [
+    {
+     "trait": "DocumentText",
+     "event": "DOC_TEXT_READ",
+     "from": "ready",
+     "payload": {
+      "key": "k1",
+      "path": "notes/mail.EML"
+     },
+     "entity": {
+      "id": "d",
+      "key": "",
+      "path": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "reading",
+      "effects": [
+       {
+        "type": "os/read-file"
+       }
+      ],
+      "neverEmits": [
+       "DOC_PDF_REQUEST",
+       "DOC_OCR_REQUEST",
+       "DOC_TEXT_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a path in no list answers doc_unsupported",
+   "steps": [
+    {
+     "trait": "DocumentText",
+     "event": "DOC_TEXT_READ",
+     "from": "ready",
+     "payload": {
+      "key": "k1",
+      "path": "/s/a.docx"
+     },
+     "entity": {
+      "id": "d",
+      "key": "",
+      "path": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "DOC_TEXT_FAILED",
+        "payload": {
+         "key": "k1",
+         "error": "the file extension is in none of the pdf, image or text lists",
+         "code": "doc_unsupported"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DOC_PDF_REQUEST",
+       "DOC_OCR_REQUEST"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a declared extension moves a path from unsupported to the text reader",
+   "steps": [
+    {
+     "trait": "DocumentText",
+     "event": "DOC_TEXT_READ",
+     "from": "ready",
+     "payload": {
+      "key": "k1",
+      "path": "a.docx"
+     },
+     "entity": {
+      "id": "d",
+      "key": "",
+      "path": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "reading",
+      "neverEmits": [
+       "DOC_TEXT_FAILED"
+      ]
+     }
+    }
+   ],
+   "config": {
+    "textExtensions": [
+     ".docx"
+    ]
+   }
+  },
+  {
+   "id": "control: a PDF extension also listed as text goes to the PDF reader, never the text read",
+   "steps": [
+    {
+     "trait": "DocumentText",
+     "event": "DOC_TEXT_READ",
+     "from": "ready",
+     "payload": {
+      "key": "k1",
+      "path": "a.pdf"
+     },
+     "entity": {
+      "id": "d",
+      "key": "",
+      "path": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "pdf",
+      "emits": [
+       {
+        "event": "DOC_PDF_REQUEST",
+        "payload": {
+         "key": "k1",
+         "path": "a.pdf"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "textExtensions": [
+     ".pdf"
+    ]
+   }
+  },
+  {
+   "id": "a read while pdf answers doc_busy",
+   "steps": [
+    {
+     "trait": "DocumentText",
+     "event": "DOC_TEXT_READ",
+     "from": "pdf",
+     "payload": {
+      "key": "k2",
+      "path": "/s/b.pdf"
+     },
+     "entity": {
+      "id": "d",
+      "key": "k1",
+      "path": "/s/a.pdf"
+     },
+     "expect": {
+      "fired": true,
+      "state": "pdf",
+      "emits": [
+       {
+        "event": "DOC_TEXT_FAILED",
+        "payload": {
+         "key": "k2",
+         "error": "another document is being read",
+         "code": "doc_busy"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DOC_PDF_REQUEST",
+       "DOC_OCR_REQUEST"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a read while ocr answers doc_busy",
+   "steps": [
+    {
+     "trait": "DocumentText",
+     "event": "DOC_TEXT_READ",
+     "from": "ocr",
+     "payload": {
+      "key": "k2",
+      "path": "/s/b.pdf"
+     },
+     "entity": {
+      "id": "d",
+      "key": "k1",
+      "path": "/s/a.pdf"
+     },
+     "expect": {
+      "fired": true,
+      "state": "ocr",
+      "emits": [
+       {
+        "event": "DOC_TEXT_FAILED",
+        "payload": {
+         "key": "k2",
+         "error": "another document is being read",
+         "code": "doc_busy"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DOC_PDF_REQUEST",
+       "DOC_OCR_REQUEST"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a read while reading answers doc_busy",
+   "steps": [
+    {
+     "trait": "DocumentText",
+     "event": "DOC_TEXT_READ",
+     "from": "reading",
+     "payload": {
+      "key": "k2",
+      "path": "/s/b.pdf"
+     },
+     "entity": {
+      "id": "d",
+      "key": "k1",
+      "path": "a.txt"
+     },
+     "expect": {
+      "fired": true,
+      "state": "reading",
+      "emits": [
+       {
+        "event": "DOC_TEXT_FAILED",
+        "payload": {
+         "key": "k2",
+         "error": "another document is being read",
+         "code": "doc_busy"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DOC_PDF_REQUEST",
+       "DOC_OCR_REQUEST"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a PDF with a text layer answers its pages with method pdftotext",
+   "steps": [
+    {
+     "trait": "DocumentText",
+     "event": "DOC_PDF_TEXT",
+     "from": "pdf",
+     "payload": {
+      "key": "k1",
+      "pages": [
+       {
+        "page": 1,
+        "text": "Hello page one\n"
+       },
+       {
+        "page": 2,
+        "text": "Second page here\n"
+       }
+      ]
+     },
+     "entity": {
+      "id": "d",
+      "key": "k1",
+      "path": "/s/a.pdf"
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "DOC_TEXT",
+        "payload": {
+         "key": "k1",
+         "pages": [
+          {
+           "page": 1,
+           "text": "Hello page one\n"
+          },
+          {
+           "page": 2,
+           "text": "Second page here\n"
+          }
+         ],
+         "method": "pdftotext"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DOC_OCR_REQUEST"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a PDF without a text layer falls back to OCR on the same path",
+   "steps": [
+    {
+     "trait": "DocumentText",
+     "event": "DOC_PDF_NO_TEXT",
+     "from": "pdf",
+     "payload": {
+      "key": "k1",
+      "pageCount": 3
+     },
+     "entity": {
+      "id": "d",
+      "key": "k1",
+      "path": "/s/scan.pdf"
+     },
+     "expect": {
+      "fired": true,
+      "state": "ocr",
+      "emits": [
+       {
+        "event": "DOC_OCR_REQUEST",
+        "payload": {
+         "key": "k1",
+         "path": "/s/scan.pdf"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DOC_TEXT",
+       "DOC_TEXT_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a PDF the reader could not read passes its failure through",
+   "steps": [
+    {
+     "trait": "DocumentText",
+     "event": "DOC_PDF_FAILED",
+     "from": "pdf",
+     "payload": {
+      "key": "k1",
+      "error": "pdftotext exited 1: Couldn't open file",
+      "code": "pdf_unreadable"
+     },
+     "entity": {
+      "id": "d",
+      "key": "k1",
+      "path": "/s/a.pdf"
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "DOC_TEXT_FAILED",
+        "payload": {
+         "key": "k1",
+         "error": "pdftotext exited 1: Couldn't open file",
+         "code": "pdf_unreadable"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DOC_OCR_REQUEST"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "OCR pages answer with method ocr",
+   "steps": [
+    {
+     "trait": "DocumentText",
+     "event": "DOC_OCR_TEXT",
+     "from": "ocr",
+     "payload": {
+      "key": "k1",
+      "pages": [
+       {
+        "page": 1,
+        "text": "Hello page one\n"
+       },
+       {
+        "page": 2,
+        "text": "Second page here\n"
+       }
+      ]
+     },
+     "entity": {
+      "id": "d",
+      "key": "k1",
+      "path": "/s/scan.pdf"
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "DOC_TEXT",
+        "payload": {
+         "key": "k1",
+         "pages": [
+          {
+           "page": 1,
+           "text": "Hello page one\n"
+          },
+          {
+           "page": 2,
+           "text": "Second page here\n"
+          }
+         ],
+         "method": "ocr"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "OCR that finds no text answers doc_no_text",
+   "steps": [
+    {
+     "trait": "DocumentText",
+     "event": "DOC_OCR_NO_TEXT",
+     "from": "ocr",
+     "payload": {
+      "key": "k1",
+      "pageCount": 2
+     },
+     "entity": {
+      "id": "d",
+      "key": "k1",
+      "path": "/s/scan.pdf"
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "DOC_TEXT_FAILED",
+        "payload": {
+         "key": "k1",
+         "error": "OCR found no text on any of the pages",
+         "code": "doc_no_text"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DOC_TEXT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an OCR failure passes through with its own code",
+   "steps": [
+    {
+     "trait": "DocumentText",
+     "event": "DOC_OCR_FAILED",
+     "from": "ocr",
+     "payload": {
+      "key": "k1",
+      "error": "tesseract exited 1: boom",
+      "code": "ocr_unreadable"
+     },
+     "entity": {
+      "id": "d",
+      "key": "k1",
+      "path": "/s/scan.png"
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "DOC_TEXT_FAILED",
+        "payload": {
+         "key": "k1",
+         "error": "tesseract exited 1: boom",
+         "code": "ocr_unreadable"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a text file's UTF-8 content answers one page with method text",
+   "steps": [
+    {
+     "trait": "DocumentText",
+     "event": "DOC_FILE_READ",
+     "from": "reading",
+     "payload": {
+      "data": "RGVhciBhbGwsCmxpbmUgdHdvCg==",
+      "key": "text"
+     },
+     "entity": {
+      "id": "d",
+      "key": "k1",
+      "path": "a.txt"
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "DOC_TEXT",
+        "payload": {
+         "key": "k1",
+         "pages": [
+          {
+           "page": 1,
+           "text": "Dear all,\nline two\n"
+          }
+         ],
+         "method": "text"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DOC_TEXT_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a text file that cannot be read answers doc_unreadable",
+   "steps": [
+    {
+     "trait": "DocumentText",
+     "event": "DOC_FILE_FAILED",
+     "from": "reading",
+     "payload": {
+      "error": "not found",
+      "kind": "not_found",
+      "key": "text"
+     },
+     "entity": {
+      "id": "d",
+      "key": "k1",
+      "path": "a.txt"
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "DOC_TEXT_FAILED",
+        "payload": {
+         "key": "k1",
+         "error": "the file could not be read: not found",
+         "code": "doc_unreadable"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DOC_TEXT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a text file that is not valid UTF-8 answers doc_not_text",
+   "steps": [
+    {
+     "trait": "DocumentText",
+     "event": "DOC_FILE_READ",
+     "from": "reading",
+     "payload": {
+      "data": "//79",
+      "key": "text"
+     },
+     "entity": {
+      "id": "d",
+      "key": "k1",
+      "path": "a.eml"
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "DOC_TEXT_FAILED",
+        "payload": {
+         "key": "k1",
+         "error": "the file is not valid UTF-8 text",
+         "code": "doc_not_text"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DOC_TEXT"
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

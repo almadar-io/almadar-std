@@ -1,0 +1,150 @@
+app llm-knobs-fixture [
+  version: "1.0.0",
+  description: "Replay fixture for the std-llm request knobs: an openrouter client with every routing, reasoning, tool, cache-control and first-byte knob set, one with the response cache on, and an untouched openrouter client as the control, the first-byte deadline composed with a keyed std-delay the way a consumer composes it. The wire itself is pinned by llm-wire-fixture."
+]
+uses Llm from "std/behaviors/std-llm"
+uses Delay from "std/behaviors/std-delay"
+
+orbital LlmKnobsFixtureOrbital {
+  entity KnobCall [runtime] {
+    id : string!
+    text : string = ""
+    failure : string = ""
+  }
+
+  trait KnobDriver -> KnobCall [client] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      ANSWERED -> idle
+        (set @entity.text ?content)
+      FAILED -> idle
+        (set @entity.failure ?message)
+      EXTRACTED -> idle
+      CLASSIFIED -> idle
+      MANY -> idle
+      TOOLS_DONE -> idle
+      BYTE_WAIT -> idle
+      BYTE_STOP -> idle
+      CACHE_WRITE_FAILED -> idle
+      WIRE_SEEN -> idle
+      WIRE_CANCEL_SEEN -> idle
+    }
+
+    listens {
+      KnobLlm.LLM_GENERATE_RESULT -> ANSWERED
+      CacheLlm.LLM_GENERATE_RESULT -> ANSWERED
+      PlainLlm.LLM_GENERATE_RESULT -> ANSWERED
+      KnobLlm.LLM_FAILED -> FAILED
+      CacheLlm.LLM_FAILED -> FAILED
+      PlainLlm.LLM_FAILED -> FAILED
+      KnobLlm.LLM_EXTRACT_RESULT -> EXTRACTED
+      CacheLlm.LLM_EXTRACT_RESULT -> EXTRACTED
+      CacheLlm.LLM_CLASSIFY_RESULT -> CLASSIFIED
+      KnobLlm.LLM_CLASSIFY_RESULT -> CLASSIFIED
+      CacheLlm.LLM_CLASSIFY_MANY_RESULT -> MANY
+      KnobLlm.LLM_CLASSIFY_MANY_RESULT -> MANY
+      KnobLlm.LLM_CALL_TOOLS_RESULT -> TOOLS_DONE
+      PlainLlm.LLM_CALL_TOOLS_RESULT -> TOOLS_DONE
+      CacheLlm.LLM_CACHE_WRITE_FAILED -> CACHE_WRITE_FAILED
+      KnobLlm.LLM_CHAT_WIRE -> WIRE_SEEN
+      CacheLlm.LLM_CHAT_WIRE -> WIRE_SEEN
+      PlainLlm.LLM_CHAT_WIRE -> WIRE_SEEN
+      OnLlm.LLM_CHAT_WIRE -> WIRE_SEEN
+      KnobLlm.LLM_CHAT_WIRE_CANCEL -> WIRE_CANCEL_SEEN
+      ANSWERED {
+        content : string!
+      }
+      FAILED {
+        code : string
+        message : string!
+        key : string
+      }
+      EXTRACTED {
+        json : string!
+      }
+      CLASSIFIED {
+        category : string!
+        confidence : number!
+        reasoning : string!
+      }
+      MANY {
+        verdicts : [{ id : string!, category : string!, confidence : number!, reasoning : string! }]!
+      }
+      TOOLS_DONE {
+        reply : string!
+      }
+      BYTE_WAIT {
+        key : string!
+        delayMs : number!
+      }
+      BYTE_STOP {
+        key : string!
+      }
+      CACHE_WRITE_FAILED {
+        message : string!
+      }
+      WIRE_SEEN {
+        key : string!
+      }
+      WIRE_CANCEL_SEEN {
+        key : string!
+      }
+    }
+  }
+
+  trait KnobLlm = Llm.traits.LlmClient {
+    config {
+      provider: openrouter
+      basePath: "/api/v1"
+      model: "vendor/model"
+      reasoning: off
+      providerSort: "throughput"
+      providerOrder: ["a", "b"]
+      providerQuantizations: ["fp8"]
+      toolTemperature: 0.2
+      parallelToolCalls: true
+      cacheControl: true
+      firstByteTimeoutMs: 5000
+    }
+    listens {
+      KnobDelay.ELAPSED -> LLM_FIRST_BYTE_ELAPSED
+    }
+  }
+
+  trait KnobDelay = Delay.traits.Delay {
+    listens {
+      KnobLlm.LLM_FIRST_BYTE_START -> START
+      KnobLlm.LLM_FIRST_BYTE_STOP -> CANCEL
+    }
+  }
+
+  trait CacheLlm = Llm.traits.LlmClient {
+    config {
+      provider: openrouter
+      basePath: "/api/v1"
+      model: "vendor/model"
+      cache: true
+    }
+  }
+
+  trait PlainLlm = Llm.traits.LlmClient {
+    config {
+      provider: openrouter
+      basePath: "/api/v1"
+      model: "vendor/model"
+    }
+  }
+
+  trait OnLlm = Llm.traits.LlmClient {
+    config {
+      provider: openrouter
+      basePath: "/api/v1"
+      model: "vendor/model"
+      reasoning: on
+    }
+  }
+
+  page boot as LlmKnobsFixturePage -> KnobDriver, KnobLlm, KnobDelay, CacheLlm, PlainLlm, OnLlm
+}

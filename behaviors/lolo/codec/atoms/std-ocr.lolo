@@ -1,0 +1,299 @@
+app std-ocr [
+  version: "1.0.0",
+  exec: ["pdftoppm", "tesseract"],
+  fs: { "~/.almadar/ocr/**": [read, write, create, remove], "~/.almadar/ocr": [read, create] },
+  description: "std-ocr — reads the text of a scanned document or an image by optical character recognition, page by page, through the poppler pdftoppm and the tesseract commands, both run by std-cli. OCR_READ { key, path } answers OCR_TEXT { key, pages } with one { page, text } per page, numbered from 1 in document order and split at the form feed tesseract writes between pages, nothing truncated. A path whose extension (compared case-insensitively) is in the pdfExtensions knob is rendered by `pdftoppm -r <dpi> -png <path> <workDir>/<key>`; the produced <key>-<n>.png files are ordered by the page number n parsed from their names, written one per line to <workDir>/<key>.list and read by `tesseract <list> - -l <languages>`; a path whose extension is in imageExtensions is read directly by `tesseract <path> - -l <languages>` as one page. The page images and the list file are removed afterwards, on failure too. Pages that carry no text at all answer OCR_NO_TEXT { key, pageCount }. A path that starts with a dash, a missing file or a document the commands refuse answers OCR_FAILED { key, error, code } with code ocr_unreadable; a command that could not be run or a work directory that could not be prepared answers ocr_command_failed; an extension in neither list answers ocr_unsupported; a read while another is in flight answers ocr_busy. The key must be a name the caller makes unique per document: every character outside letters, digits, underscore and dash becomes an underscore in the file names. The work directory and the pdftoppm and tesseract exec grants are this atom's own; the path is opened by the child, so the composer decides which files it can name."
+]
+;; @capabilities "read the text of a scanned PDF or an image by OCR, page by page"
+uses Spec from "almadar-std/ocr"
+uses Cli from "std/behaviors/std-cli"
+
+type OcrPage = { page : number!, text : string! }
+type OcrDirEntry = { name : string!, kind : string! }
+
+orbital OcrOrbital {
+  entity OcrRead [runtime] {
+    id : string!
+    key : string @description "The caller's name for the read in flight; blank when idle." = ""
+    path : string @description "The file being read." = ""
+    prefix : string @description "The key with every character outside letters, digits, underscore and dash replaced by an underscore: the page image file name stem." = ""
+    realDir : string @description "The absolute work directory the child writes the page images to." = ""
+    cleanup : [string] @description "The file names in the work directory to remove once the read is done." = []
+    cursor : number @description "Index of the next file to remove." = 0
+    failed : boolean @description "The read in flight has already failed; the cleanup runs, then the failure is answered." = false
+    error : string @description "The failure message of the read in flight." = ""
+    code : string @description "The failure code of the read in flight." = ""
+    recognized : string @description "The text tesseract wrote for the read in flight." = ""
+  }
+
+  trait OcrCli = Cli.traits.CliRunner {
+    listens {
+      OcrReader.OCR_EXEC -> CLI_RUN
+    }
+    config {
+      commands: ["pdftoppm", "tesseract"]
+    }
+  }
+
+  trait OcrReader -> OcrRead [optimistic] {
+    initial: ready
+
+    config {
+      pdfExtensions : [string] = [".pdf"]
+        @label "PDF extensions"
+        @description "Path extensions, lower case with the dot, read as PDF documents: rendered page by page with pdftoppm. Compared case-insensitively against the end of the path."
+        @synonyms "document extensions, scanned document"
+        @tier "domain"
+      imageExtensions : [string] = [".png", ".jpg", ".jpeg", ".tif", ".tiff", ".bmp", ".webp"]
+        @label "Image extensions"
+        @description "Path extensions, lower case with the dot, read as one image page directly by tesseract. Compared case-insensitively against the end of the path."
+        @synonyms "picture extensions, photo"
+        @tier "domain"
+      dpi : number = 300
+        @label "Render resolution"
+        @description "Dots per inch pdftoppm renders each PDF page at before recognition."
+        @synonyms "resolution, scan quality"
+        @tier "domain"
+      languages : string = "slv+eng"
+        @label "Recognition languages"
+        @description "The tesseract -l value: language codes joined with a plus. Each must be installed as tesseract data."
+        @synonyms "language, tessdata"
+        @tier "domain"
+      workDir : string = "~/.almadar/ocr"
+        @label "Work directory"
+        @description "The directory the page images and the list file are written to and removed from, created when missing. The composing program's fs grant must cover it."
+        @synonyms "scratch directory, temp directory"
+        @tier "policy"
+    }
+
+    state ready {
+      INIT -> ready
+        (set @entity.key "")
+      OCR_READ -> ready when (str/startsWith @payload.path "-")
+        (emit OCR_FAILED { key: @payload.key, error: "a path may not start with a dash", code: "ocr_unreadable" })
+      OCR_READ -> rendering when (and (not (str/startsWith @payload.path "-")) (array/some @config.pdfExtensions (fn e (str/endsWith (str/lower @payload.path) (str/lower @e)))))
+        (set @entity.key @payload.key)
+        (set @entity.path @payload.path)
+        (set @entity.prefix (str/replace-pattern @payload.key "[^A-Za-z0-9_-]" "_"))
+        (set @entity.cleanup [])
+        (set @entity.cursor 0)
+        (set @entity.failed false)
+        (set @entity.error "")
+        (set @entity.code "")
+        (set @entity.recognized "")
+        (set @entity.realDir "")
+        (os/mkdir @config.workDir true { key: "mkdir", emit: { success: OCR_DIR_MADE, failure: OCR_HOST_FAILED } })
+      OCR_READ -> recognizing when (and (not (str/startsWith @payload.path "-")) (not (array/some @config.pdfExtensions (fn e (str/endsWith (str/lower @payload.path) (str/lower @e))))) (array/some @config.imageExtensions (fn e (str/endsWith (str/lower @payload.path) (str/lower @e)))))
+        (set @entity.key @payload.key)
+        (set @entity.path @payload.path)
+        (set @entity.cleanup [])
+        (set @entity.cursor 0)
+        (set @entity.failed false)
+        (set @entity.error "")
+        (set @entity.code "")
+        (set @entity.recognized "")
+        (emit OCR_EXEC { stage: @payload.key, argv: [@payload.path "-" "-l" @config.languages] })
+      OCR_READ -> ready when (and (not (str/startsWith @payload.path "-")) (not (array/some @config.pdfExtensions (fn e (str/endsWith (str/lower @payload.path) (str/lower @e))))) (not (array/some @config.imageExtensions (fn e (str/endsWith (str/lower @payload.path) (str/lower @e))))))
+        (emit OCR_FAILED { key: @payload.key, error: "the file is neither a PDF nor an image the OCR reads", code: "ocr_unsupported" })
+    }
+
+    state rendering {
+      INIT -> rendering
+      OCR_READ -> rendering
+        (emit OCR_FAILED { key: @payload.key, error: "another document is being read", code: "ocr_busy" })
+      OCR_DIR_MADE -> rendering
+        (os/realpath @config.workDir { key: "realpath", emit: { success: OCR_DIR_REAL, failure: OCR_HOST_FAILED } })
+      OCR_DIR_REAL -> rendering
+        (set @entity.realDir @payload.path)
+        (emit OCR_EXEC { stage: @entity.key, argv: ["-r" (str/concat "" @config.dpi) "-png" @entity.path (str/concat @payload.path "/" @entity.prefix)] })
+      OCR_HOST_FAILED -> ready
+        (emit OCR_FAILED { key: @entity.key, error: (str/concat "the work directory could not be prepared: " (default @payload.error "unknown")), code: "ocr_command_failed" })
+        (set @entity.key "")
+      OCR_RAN -> listing when (!= @payload.exitCode 0)
+        (set @entity.failed true)
+        (set @entity.error (str/concat "pdftoppm exited " @payload.exitCode ": " (str/trim @payload.stderr)))
+        (set @entity.code "ocr_unreadable")
+        (os/list-dir @config.workDir { key: "list", emit: { success: OCR_LISTED, failure: OCR_HOST_FAILED } })
+      OCR_RAN -> listing when (== @payload.exitCode 0)
+        (os/list-dir @config.workDir { key: "list", emit: { success: OCR_LISTED, failure: OCR_HOST_FAILED } })
+      OCR_CLI_FAILED -> listing
+        (set @entity.failed true)
+        (set @entity.error @payload.error)
+        (set @entity.code "ocr_command_failed")
+        (os/list-dir @config.workDir { key: "list", emit: { success: OCR_LISTED, failure: OCR_HOST_FAILED } })
+    }
+
+    state listing {
+      INIT -> listing
+      OCR_READ -> listing
+        (emit OCR_FAILED { key: @payload.key, error: "another document is being read", code: "ocr_busy" })
+      OCR_LISTED -> listing
+        (let ((mine (array/filter (array/map @payload.entries (fn en @en.name)) (fn nm (validate/pattern @nm (str/concat "^" @entity.prefix "-[0-9]+[.]png$"))))))
+          (let ((numbered (array/map @mine (fn nm { name: @nm, n: (str/to-number (str/replace (str/slice @nm (+ (str/len @entity.prefix) 1)) ".png" "")) }))))
+            (let ((names (array/map (array/sort @numbered "n" "asc") (fn p @p.name))))
+              (set @entity.cleanup (array/append @names (str/concat @entity.prefix ".list"))))))
+        (emit OCR_LISTED_NEXT { })
+      OCR_LISTED_NEXT -> cleaning when @entity.failed
+        (emit OCR_CLEAN_NEXT { })
+      OCR_LISTED_NEXT -> cleaning when (and (not @entity.failed) (<= (array/len @entity.cleanup) 1))
+        (set @entity.failed true)
+        (set @entity.error "pdftoppm produced no page images")
+        (set @entity.code "ocr_unreadable")
+        (emit OCR_CLEAN_NEXT { })
+      OCR_LISTED_NEXT -> writing when (and (not @entity.failed) (> (array/len @entity.cleanup) 1))
+        (os/write-file (str/concat @config.workDir "/" @entity.prefix ".list") (bytes/from-string (str/join (array/map (array/dropLast @entity.cleanup 1) (fn nm (str/concat @entity.realDir "/" @nm))) "\n")) { key: "listfile", emit: { success: OCR_LIST_WRITTEN, failure: OCR_HOST_FAILED } })
+      OCR_HOST_FAILED -> cleaning
+        (set @entity.failed true)
+        (set @entity.error (str/concat "the work directory could not be listed: " (default @payload.error "unknown")))
+        (set @entity.code "ocr_command_failed")
+        (set @entity.cleanup [])
+        (emit OCR_CLEAN_NEXT { })
+    }
+
+    state writing {
+      INIT -> writing
+      OCR_READ -> writing
+        (emit OCR_FAILED { key: @payload.key, error: "another document is being read", code: "ocr_busy" })
+      OCR_LIST_WRITTEN -> recognizing
+        (emit OCR_EXEC { stage: @entity.key, argv: [(str/concat @entity.realDir "/" @entity.prefix ".list") "-" "-l" @config.languages] })
+      OCR_HOST_FAILED -> cleaning
+        (set @entity.failed true)
+        (set @entity.error (str/concat "the page list could not be written: " (default @payload.error "unknown")))
+        (set @entity.code "ocr_command_failed")
+        (emit OCR_CLEAN_NEXT { })
+    }
+
+    state recognizing {
+      INIT -> recognizing
+      OCR_READ -> recognizing
+        (emit OCR_FAILED { key: @payload.key, error: "another document is being read", code: "ocr_busy" })
+      OCR_RAN -> cleaning when (!= @payload.exitCode 0)
+        (set @entity.failed true)
+        (set @entity.error (str/concat "tesseract exited " @payload.exitCode ": " (str/trim @payload.stderr)))
+        (set @entity.code "ocr_unreadable")
+        (emit OCR_CLEAN_NEXT { })
+      OCR_RAN -> cleaning when (== @payload.exitCode 0)
+        (set @entity.recognized @payload.stdout)
+        (emit OCR_CLEAN_NEXT { })
+      OCR_CLI_FAILED -> cleaning
+        (set @entity.failed true)
+        (set @entity.error @payload.error)
+        (set @entity.code "ocr_command_failed")
+        (emit OCR_CLEAN_NEXT { })
+    }
+
+    state cleaning {
+      INIT -> cleaning
+      OCR_READ -> cleaning
+        (emit OCR_FAILED { key: @payload.key, error: "another document is being read", code: "ocr_busy" })
+      OCR_CLEAN_NEXT -> cleaning when (< @entity.cursor (array/len @entity.cleanup))
+        (os/remove (str/concat @config.workDir "/" (default (array/nth @entity.cleanup @entity.cursor) "")) { key: "remove", emit: { success: OCR_REMOVED, failure: OCR_REMOVED } })
+      OCR_REMOVED -> cleaning
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit OCR_CLEAN_NEXT { })
+      OCR_CLEAN_NEXT -> ready when (and (>= @entity.cursor (array/len @entity.cleanup)) @entity.failed)
+        (emit OCR_FAILED { key: @entity.key, error: @entity.error, code: @entity.code })
+        (set @entity.key "")
+      OCR_CLEAN_NEXT -> ready when (and (>= @entity.cursor (array/len @entity.cleanup)) (not @entity.failed))
+        (let ((pieces (str/split @entity.recognized "\u{c}")))
+          (let ((leaves (if (and (> (array/len @pieces) 0) (== (array/last @pieces) "")) (array/dropLast @pieces 1) @pieces)))
+            (if (array/every @leaves (fn leaf (== (str/trim @leaf) "")))
+              (emit OCR_NO_TEXT { key: @entity.key, pageCount: (array/len @leaves) })
+              (emit OCR_TEXT { key: @entity.key, pages: (array/map (array/range 0 (array/len @leaves) 1) (fn n { page: (+ @n 1), text: (array/nth @leaves @n) })) }))))
+        (set @entity.key "")
+    }
+
+    emits {
+      OCR_TEXT -> external {
+        key : string!
+        pages : [OcrPage]!
+      }
+        @description "The document was read: one entry per page, numbered from 1 in document order, with that page's recognized text."
+        @synonyms "ocr pages, recognized text"
+        @tier "domain"
+      OCR_NO_TEXT -> external {
+        key : string!
+        pageCount : number!
+      }
+        @description "The document has pageCount pages and OCR found no text on any of them."
+        @synonyms "blank scan, no text recognized"
+        @tier "domain"
+      OCR_FAILED -> external {
+        key : string!
+        error : string!
+        code : string!
+      }
+        @description "The read failed: ocr_unreadable (a command exited non-zero, or the path starts with a dash), ocr_command_failed (a command could not be run or the work directory could not be prepared), ocr_unsupported (the extension is in neither list) or ocr_busy (another read is in flight)."
+        @synonyms "ocr error, unreadable scan"
+        @tier "domain"
+      OCR_EXEC -> external {
+        stage : string!
+        argv : [string]!
+      }
+        @description "A pdftoppm or tesseract run, handed to std-cli."
+        @tier "internal"
+      OCR_LISTED_NEXT -> internal {
+      }
+        @description "Internal: the page images are listed and ordered; decide whether to recognize or clean up."
+        @tier "internal"
+      OCR_CLEAN_NEXT -> internal {
+      }
+        @description "Internal: remove the next scratch file, or answer when none is left."
+        @tier "internal"
+    }
+
+    listens {
+      OCR_READ -> input {
+        key : string!
+        path : string!
+      }
+        @description "Read the text of the scanned PDF or image at path by OCR, page by page; key names the read in the answer and in its scratch file names."
+        @synonyms "ocr, read scan, scanned pdf to text, image to text"
+      OcrCli.CLI_DONE -> OCR_RAN
+      OcrCli.CLI_FAILED -> OCR_CLI_FAILED
+      OCR_RAN {
+        stage : string!
+        exitCode : number!
+        signal : number!
+        stdout : string!
+        stdoutBytes : bytes!
+        stderr : string!
+      }
+        @description "std-cli's CLI_DONE: a command exited, with its code and both streams."
+      OCR_CLI_FAILED {
+        stage : string!
+        error : string!
+        code : string!
+      }
+        @description "std-cli's CLI_FAILED: a command could not be run."
+      OCR_DIR_MADE {
+        key : string!
+      }
+        @description "The os/mkdir answer for the work directory."
+      OCR_DIR_REAL {
+        path : string!
+      }
+        @description "The os/realpath answer: the absolute work directory."
+      OCR_LISTED {
+        entries : [OcrDirEntry]!
+      }
+        @description "The os/list-dir answer for the work directory."
+      OCR_LIST_WRITTEN {
+        key : string!
+      }
+        @description "The os/write-file answer for the page list."
+      OCR_REMOVED {
+        key : string!
+      }
+        @description "The os/remove answer for a scratch file; an absent file is fine."
+      OCR_HOST_FAILED {
+        error : string
+        kind : string
+        key : string!
+      }
+        @description "A work directory operation failed."
+    }
+  }
+
+  page boot as OcrOrbitalStart -> OcrReader, OcrCli
+}

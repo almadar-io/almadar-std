@@ -1,0 +1,1638 @@
+{
+ "atom": "codec/atoms/std-ocr.lolo",
+ "trait": "OcrReader",
+ "note": "host answers (os/mkdir, os/realpath, os/list-dir, os/write-file, os/remove, std-cli's CLI_DONE) are played as each step's event; stdout shapes taken from tesseract 5 on a two-page list file: pages joined by a form feed, no trailing form feed after the last page, the last page ends with a newline; a single image answers one page with no form feed",
+ "cases": [
+  {
+   "id": "an image starts tesseract on the path with the default languages and waits",
+   "steps": [
+    {
+     "trait": "OcrReader",
+     "event": "OCR_READ",
+     "from": "ready",
+     "payload": {
+      "key": "k1",
+      "path": "/s/a.png"
+     },
+     "entity": {
+      "id": "r",
+      "key": "",
+      "path": "",
+      "prefix": "",
+      "realDir": "",
+      "cleanup": [],
+      "cursor": 0,
+      "failed": false,
+      "error": "",
+      "code": "",
+      "recognized": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "recognizing",
+      "emits": [
+       {
+        "event": "OCR_EXEC",
+        "payload": {
+         "stage": "k1",
+         "argv": [
+          "/s/a.png",
+          "-",
+          "-l",
+          "slv+eng"
+         ]
+        }
+       }
+      ],
+      "neverEmits": [
+       "OCR_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: the image extension is matched case-insensitively and the languages knob is used",
+   "steps": [
+    {
+     "trait": "OcrReader",
+     "event": "OCR_READ",
+     "from": "ready",
+     "payload": {
+      "key": "k1",
+      "path": "/s/SCAN.JPG"
+     },
+     "entity": {
+      "id": "r",
+      "key": "",
+      "path": "",
+      "prefix": "",
+      "realDir": "",
+      "cleanup": [],
+      "cursor": 0,
+      "failed": false,
+      "error": "",
+      "code": "",
+      "recognized": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "recognizing",
+      "emits": [
+       {
+        "event": "OCR_EXEC",
+        "payload": {
+         "stage": "k1",
+         "argv": [
+          "/s/SCAN.JPG",
+          "-",
+          "-l",
+          "eng"
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "languages": "eng"
+   }
+  },
+  {
+   "id": "control: an image extension taken out of the knob is unsupported",
+   "steps": [
+    {
+     "trait": "OcrReader",
+     "event": "OCR_READ",
+     "from": "ready",
+     "payload": {
+      "key": "k1",
+      "path": "/s/a.png"
+     },
+     "entity": {
+      "id": "r",
+      "key": "",
+      "path": "",
+      "prefix": "",
+      "realDir": "",
+      "cleanup": [],
+      "cursor": 0,
+      "failed": false,
+      "error": "",
+      "code": "",
+      "recognized": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "OCR_FAILED",
+        "payload": {
+         "key": "k1",
+         "error": "the file is neither a PDF nor an image the OCR reads",
+         "code": "ocr_unsupported"
+        }
+       }
+      ],
+      "neverEmits": [
+       "OCR_EXEC"
+      ]
+     }
+    }
+   ],
+   "config": {
+    "imageExtensions": [
+     ".tif"
+    ]
+   }
+  },
+  {
+   "id": "a path whose extension is in neither list answers ocr_unsupported",
+   "steps": [
+    {
+     "trait": "OcrReader",
+     "event": "OCR_READ",
+     "from": "ready",
+     "payload": {
+      "key": "k1",
+      "path": "/s/a.docx"
+     },
+     "entity": {
+      "id": "r",
+      "key": "",
+      "path": "",
+      "prefix": "",
+      "realDir": "",
+      "cleanup": [],
+      "cursor": 0,
+      "failed": false,
+      "error": "",
+      "code": "",
+      "recognized": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "OCR_FAILED",
+        "payload": {
+         "key": "k1",
+         "error": "the file is neither a PDF nor an image the OCR reads",
+         "code": "ocr_unsupported"
+        }
+       }
+      ],
+      "neverEmits": [
+       "OCR_EXEC"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a path that starts with a dash is refused and no command is run",
+   "steps": [
+    {
+     "trait": "OcrReader",
+     "event": "OCR_READ",
+     "from": "ready",
+     "payload": {
+      "key": "k1",
+      "path": "-opt.pdf"
+     },
+     "entity": {
+      "id": "r",
+      "key": "",
+      "path": "",
+      "prefix": "",
+      "realDir": "",
+      "cleanup": [],
+      "cursor": 0,
+      "failed": false,
+      "error": "",
+      "code": "",
+      "recognized": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "OCR_FAILED",
+        "payload": {
+         "key": "k1",
+         "error": "a path may not start with a dash",
+         "code": "ocr_unreadable"
+        }
+       }
+      ],
+      "neverEmits": [
+       "OCR_EXEC"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a PDF read prepares the work directory first and names the scratch files by the safe key",
+   "steps": [
+    {
+     "trait": "OcrReader",
+     "event": "OCR_READ",
+     "from": "ready",
+     "payload": {
+      "key": "Doc 1/a",
+      "path": "/s/a.PDF"
+     },
+     "entity": {
+      "id": "r",
+      "key": "",
+      "path": "",
+      "prefix": "",
+      "realDir": "",
+      "cleanup": [],
+      "cursor": 0,
+      "failed": false,
+      "error": "",
+      "code": "",
+      "recognized": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "rendering",
+      "effects": [
+       {
+        "type": "os/mkdir"
+       }
+      ],
+      "entity": {
+       "key": "Doc 1/a",
+       "path": "/s/a.PDF",
+       "prefix": "Doc_1_a",
+       "failed": false
+      },
+      "neverEmits": [
+       "OCR_EXEC",
+       "OCR_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the work directory made, its absolute path is resolved",
+   "steps": [
+    {
+     "trait": "OcrReader",
+     "event": "OCR_DIR_MADE",
+     "from": "rendering",
+     "payload": {
+      "key": "mkdir"
+     },
+     "entity": {
+      "id": "r",
+      "key": "k1",
+      "path": "/s/a.pdf",
+      "prefix": "k1",
+      "realDir": "",
+      "cleanup": [],
+      "cursor": 0,
+      "failed": false,
+      "error": "",
+      "code": "",
+      "recognized": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "rendering",
+      "effects": [
+       {
+        "type": "os/realpath"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the absolute work directory known, pdftoppm renders PNG pages at the dpi under the safe key",
+   "steps": [
+    {
+     "trait": "OcrReader",
+     "event": "OCR_DIR_REAL",
+     "from": "rendering",
+     "payload": {
+      "path": "/h/.almadar/ocr"
+     },
+     "entity": {
+      "id": "r",
+      "key": "Doc 1",
+      "path": "/s/a.pdf",
+      "prefix": "Doc_1",
+      "realDir": "",
+      "cleanup": [],
+      "cursor": 0,
+      "failed": false,
+      "error": "",
+      "code": "",
+      "recognized": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "rendering",
+      "entity": {
+       "realDir": "/h/.almadar/ocr"
+      },
+      "emits": [
+       {
+        "event": "OCR_EXEC",
+        "payload": {
+         "stage": "Doc 1",
+         "argv": [
+          "-r",
+          "300",
+          "-png",
+          "/s/a.pdf",
+          "/h/.almadar/ocr/Doc_1"
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: the dpi knob is used",
+   "steps": [
+    {
+     "trait": "OcrReader",
+     "event": "OCR_DIR_REAL",
+     "from": "rendering",
+     "payload": {
+      "path": "/w"
+     },
+     "entity": {
+      "id": "r",
+      "key": "k1",
+      "path": "/s/a.pdf",
+      "prefix": "k1",
+      "realDir": "",
+      "cleanup": [],
+      "cursor": 0,
+      "failed": false,
+      "error": "",
+      "code": "",
+      "recognized": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "rendering",
+      "emits": [
+       {
+        "event": "OCR_EXEC",
+        "payload": {
+         "stage": "k1",
+         "argv": [
+          "-r",
+          "150",
+          "-png",
+          "/s/a.pdf",
+          "/w/k1"
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "dpi": 150
+   }
+  },
+  {
+   "id": "a work directory that cannot be prepared answers ocr_command_failed",
+   "steps": [
+    {
+     "trait": "OcrReader",
+     "event": "OCR_HOST_FAILED",
+     "from": "rendering",
+     "payload": {
+      "error": "permission denied",
+      "kind": "denied",
+      "key": "mkdir"
+     },
+     "entity": {
+      "id": "r",
+      "key": "k1",
+      "path": "/s/a.pdf",
+      "prefix": "k1",
+      "realDir": "",
+      "cleanup": [],
+      "cursor": 0,
+      "failed": false,
+      "error": "",
+      "code": "",
+      "recognized": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "OCR_FAILED",
+        "payload": {
+         "key": "k1",
+         "error": "the work directory could not be prepared: permission denied",
+         "code": "ocr_command_failed"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "pdftoppm exiting zero moves on to list the produced pages",
+   "steps": [
+    {
+     "trait": "OcrReader",
+     "event": "OCR_RAN",
+     "from": "rendering",
+     "payload": {
+      "stage": "k1",
+      "exitCode": 0,
+      "signal": 0,
+      "stdout": "",
+      "stdoutBytes": "",
+      "stderr": ""
+     },
+     "entity": {
+      "id": "r",
+      "key": "k1",
+      "path": "/s/a.pdf",
+      "prefix": "k1",
+      "realDir": "/w",
+      "cleanup": [],
+      "cursor": 0,
+      "failed": false,
+      "error": "",
+      "code": "",
+      "recognized": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "listing",
+      "effects": [
+       {
+        "type": "os/list-dir"
+       }
+      ],
+      "entity": {
+       "failed": false
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "pdftoppm exiting non-zero records the failure, then still lists the pages to clean them up",
+   "steps": [
+    {
+     "trait": "OcrReader",
+     "event": "OCR_RAN",
+     "from": "rendering",
+     "payload": {
+      "stage": "k1",
+      "exitCode": 1,
+      "signal": 0,
+      "stdout": "",
+      "stdoutBytes": "",
+      "stderr": "I/O Error: Couldn't open file 'a.pdf': No such file or directory.\n"
+     },
+     "entity": {
+      "id": "r",
+      "key": "k1",
+      "path": "/s/a.pdf",
+      "prefix": "k1",
+      "realDir": "/w",
+      "cleanup": [],
+      "cursor": 0,
+      "failed": false,
+      "error": "",
+      "code": "",
+      "recognized": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "listing",
+      "effects": [
+       {
+        "type": "os/list-dir"
+       }
+      ],
+      "entity": {
+       "failed": true,
+       "code": "ocr_unreadable",
+       "error": "pdftoppm exited 1: I/O Error: Couldn't open file 'a.pdf': No such file or directory."
+      },
+      "neverEmits": [
+       "OCR_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a pdftoppm that could not be run records ocr_command_failed and lists for cleanup",
+   "steps": [
+    {
+     "trait": "OcrReader",
+     "event": "OCR_CLI_FAILED",
+     "from": "rendering",
+     "payload": {
+      "stage": "k1",
+      "error": "no such command",
+      "code": "cli_spawn_failed"
+     },
+     "entity": {
+      "id": "r",
+      "key": "k1",
+      "path": "/s/a.pdf",
+      "prefix": "k1",
+      "realDir": "/w",
+      "cleanup": [],
+      "cursor": 0,
+      "failed": false,
+      "error": "",
+      "code": "",
+      "recognized": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "listing",
+      "entity": {
+       "failed": true,
+       "code": "ocr_command_failed",
+       "error": "no such command"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "the listing keeps only this key's pages, orders them by the parsed number and adds the list file for cleanup",
+   "steps": [
+    {
+     "trait": "OcrReader",
+     "event": "OCR_LISTED",
+     "from": "listing",
+     "payload": {
+      "entries": [
+       {
+        "name": "Doc-10.png",
+        "kind": "file"
+       },
+       {
+        "name": "Doc-2.png",
+        "kind": "file"
+       },
+       {
+        "name": "Other-1.png",
+        "kind": "file"
+       },
+       {
+        "name": "Doc-1.png",
+        "kind": "file"
+       },
+       {
+        "name": "Doc-1.png.bak",
+        "kind": "file"
+       },
+       {
+        "name": "Doc-x.png",
+        "kind": "file"
+       },
+       {
+        "name": "Doc.list",
+        "kind": "file"
+       }
+      ]
+     },
+     "entity": {
+      "id": "r",
+      "key": "Doc",
+      "path": "/s/a.pdf",
+      "prefix": "Doc",
+      "realDir": "/w",
+      "cleanup": [],
+      "cursor": 0,
+      "failed": false,
+      "error": "",
+      "code": "",
+      "recognized": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "listing",
+      "entity": {
+       "cleanup": [
+        "Doc-1.png",
+        "Doc-2.png",
+        "Doc-10.png",
+        "Doc.list"
+       ]
+      },
+      "emits": [
+       {
+        "event": "OCR_LISTED_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: zero-padded page names order by number too",
+   "steps": [
+    {
+     "trait": "OcrReader",
+     "event": "OCR_LISTED",
+     "from": "listing",
+     "payload": {
+      "entries": [
+       {
+        "name": "Doc-02.png",
+        "kind": "file"
+       },
+       {
+        "name": "Doc-01.png",
+        "kind": "file"
+       },
+       {
+        "name": "Doc-10.png",
+        "kind": "file"
+       }
+      ]
+     },
+     "entity": {
+      "id": "r",
+      "key": "Doc",
+      "path": "",
+      "prefix": "Doc",
+      "realDir": "/w",
+      "cleanup": [],
+      "cursor": 0,
+      "failed": false,
+      "error": "",
+      "code": "",
+      "recognized": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "listing",
+      "entity": {
+       "cleanup": [
+        "Doc-01.png",
+        "Doc-02.png",
+        "Doc-10.png",
+        "Doc.list"
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "pages found, the list file is written one absolute path per line",
+   "steps": [
+    {
+     "trait": "OcrReader",
+     "event": "OCR_LISTED_NEXT",
+     "from": "listing",
+     "payload": {},
+     "entity": {
+      "id": "r",
+      "key": "Doc",
+      "path": "/s/a.pdf",
+      "prefix": "Doc",
+      "realDir": "/w",
+      "cleanup": [
+       "Doc-1.png",
+       "Doc-2.png",
+       "Doc.list"
+      ],
+      "cursor": 0,
+      "failed": false,
+      "error": "",
+      "code": "",
+      "recognized": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "writing",
+      "effects": [
+       {
+        "type": "os/write-file"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "no page image produced answers a failure after the cleanup",
+   "steps": [
+    {
+     "trait": "OcrReader",
+     "event": "OCR_LISTED_NEXT",
+     "from": "listing",
+     "payload": {},
+     "entity": {
+      "id": "r",
+      "key": "Doc",
+      "path": "/s/a.pdf",
+      "prefix": "Doc",
+      "realDir": "/w",
+      "cleanup": [
+       "Doc.list"
+      ],
+      "cursor": 0,
+      "failed": false,
+      "error": "",
+      "code": "",
+      "recognized": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "cleaning",
+      "entity": {
+       "failed": true,
+       "code": "ocr_unreadable",
+       "error": "pdftoppm produced no page images"
+      },
+      "emits": [
+       {
+        "event": "OCR_CLEAN_NEXT",
+        "payload": {}
+       }
+      ],
+      "neverEmits": [
+       "OCR_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: an earlier failure keeps its message and goes to the cleanup",
+   "steps": [
+    {
+     "trait": "OcrReader",
+     "event": "OCR_LISTED_NEXT",
+     "from": "listing",
+     "payload": {},
+     "entity": {
+      "id": "r",
+      "key": "Doc",
+      "path": "",
+      "prefix": "Doc",
+      "realDir": "/w",
+      "cleanup": [
+       "Doc-1.png",
+       "Doc.list"
+      ],
+      "cursor": 0,
+      "failed": true,
+      "error": "pdftoppm exited 1: boom",
+      "code": "ocr_unreadable",
+      "recognized": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "cleaning",
+      "entity": {
+       "failed": true,
+       "error": "pdftoppm exited 1: boom"
+      },
+      "emits": [
+       {
+        "event": "OCR_CLEAN_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a work directory that cannot be listed answers ocr_command_failed",
+   "steps": [
+    {
+     "trait": "OcrReader",
+     "event": "OCR_HOST_FAILED",
+     "from": "listing",
+     "payload": {
+      "error": "no such directory",
+      "kind": "not_found",
+      "key": "list"
+     },
+     "entity": {
+      "id": "r",
+      "key": "Doc",
+      "path": "",
+      "prefix": "Doc",
+      "realDir": "/w",
+      "cleanup": [],
+      "cursor": 0,
+      "failed": false,
+      "error": "",
+      "code": "",
+      "recognized": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "cleaning",
+      "entity": {
+       "failed": true,
+       "code": "ocr_command_failed",
+       "error": "the work directory could not be listed: no such directory",
+       "cleanup": []
+      },
+      "emits": [
+       {
+        "event": "OCR_CLEAN_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the list file written, tesseract reads it with the languages",
+   "steps": [
+    {
+     "trait": "OcrReader",
+     "event": "OCR_LIST_WRITTEN",
+     "from": "writing",
+     "payload": {
+      "key": "listfile"
+     },
+     "entity": {
+      "id": "r",
+      "key": "Doc",
+      "path": "",
+      "prefix": "Doc",
+      "realDir": "/w",
+      "cleanup": [
+       "Doc-1.png",
+       "Doc.list"
+      ],
+      "cursor": 0,
+      "failed": false,
+      "error": "",
+      "code": "",
+      "recognized": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "recognizing",
+      "emits": [
+       {
+        "event": "OCR_EXEC",
+        "payload": {
+         "stage": "Doc",
+         "argv": [
+          "/w/Doc.list",
+          "-",
+          "-l",
+          "slv+eng"
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a list file that cannot be written goes to the cleanup with ocr_command_failed",
+   "steps": [
+    {
+     "trait": "OcrReader",
+     "event": "OCR_HOST_FAILED",
+     "from": "writing",
+     "payload": {
+      "error": "disk full",
+      "kind": "io",
+      "key": "listfile"
+     },
+     "entity": {
+      "id": "r",
+      "key": "Doc",
+      "path": "",
+      "prefix": "Doc",
+      "realDir": "/w",
+      "cleanup": [
+       "Doc-1.png",
+       "Doc.list"
+      ],
+      "cursor": 0,
+      "failed": false,
+      "error": "",
+      "code": "",
+      "recognized": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "cleaning",
+      "entity": {
+       "failed": true,
+       "code": "ocr_command_failed",
+       "error": "the page list could not be written: disk full"
+      },
+      "emits": [
+       {
+        "event": "OCR_CLEAN_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "tesseract exiting zero keeps its text and goes to the cleanup",
+   "steps": [
+    {
+     "trait": "OcrReader",
+     "event": "OCR_RAN",
+     "from": "recognizing",
+     "payload": {
+      "stage": "Doc",
+      "exitCode": 0,
+      "signal": 0,
+      "stdout": "Hello page one\n\fSecond page here\n",
+      "stdoutBytes": "",
+      "stderr": ""
+     },
+     "entity": {
+      "id": "r",
+      "key": "Doc",
+      "path": "",
+      "prefix": "Doc",
+      "realDir": "/w",
+      "cleanup": [
+       "Doc-1.png",
+       "Doc-2.png",
+       "Doc.list"
+      ],
+      "cursor": 0,
+      "failed": false,
+      "error": "",
+      "code": "",
+      "recognized": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "cleaning",
+      "entity": {
+       "failed": false,
+       "recognized": "Hello page one\n\fSecond page here\n"
+      },
+      "emits": [
+       {
+        "event": "OCR_CLEAN_NEXT",
+        "payload": {}
+       }
+      ],
+      "neverEmits": [
+       "OCR_TEXT",
+       "OCR_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "tesseract exiting non-zero records ocr_unreadable and goes to the cleanup",
+   "steps": [
+    {
+     "trait": "OcrReader",
+     "event": "OCR_RAN",
+     "from": "recognizing",
+     "payload": {
+      "stage": "k1",
+      "exitCode": 1,
+      "signal": 0,
+      "stdout": "",
+      "stdoutBytes": "",
+      "stderr": "Error, cannot read input file nope.png: No such file or directory\nError during processing.\n"
+     },
+     "entity": {
+      "id": "r",
+      "key": "k1",
+      "path": "/s/nope.png",
+      "prefix": "",
+      "realDir": "",
+      "cleanup": [],
+      "cursor": 0,
+      "failed": false,
+      "error": "",
+      "code": "",
+      "recognized": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "cleaning",
+      "entity": {
+       "failed": true,
+       "code": "ocr_unreadable",
+       "error": "tesseract exited 1: Error, cannot read input file nope.png: No such file or directory\nError during processing."
+      },
+      "emits": [
+       {
+        "event": "OCR_CLEAN_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a tesseract that could not be run records ocr_command_failed",
+   "steps": [
+    {
+     "trait": "OcrReader",
+     "event": "OCR_CLI_FAILED",
+     "from": "recognizing",
+     "payload": {
+      "stage": "k1",
+      "error": "no such command",
+      "code": "cli_spawn_failed"
+     },
+     "entity": {
+      "id": "r",
+      "key": "k1",
+      "path": "",
+      "prefix": "",
+      "realDir": "",
+      "cleanup": [],
+      "cursor": 0,
+      "failed": false,
+      "error": "",
+      "code": "",
+      "recognized": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "cleaning",
+      "entity": {
+       "failed": true,
+       "code": "ocr_command_failed",
+       "error": "no such command"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "the cleanup removes the next scratch file from the work directory",
+   "steps": [
+    {
+     "trait": "OcrReader",
+     "event": "OCR_CLEAN_NEXT",
+     "from": "cleaning",
+     "payload": {},
+     "entity": {
+      "id": "r",
+      "key": "Doc",
+      "path": "",
+      "prefix": "",
+      "realDir": "",
+      "cleanup": [
+       "Doc-1.png",
+       "Doc-2.png",
+       "Doc.list"
+      ],
+      "cursor": 1,
+      "failed": false,
+      "error": "",
+      "code": "",
+      "recognized": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "cleaning",
+      "effects": [
+       {
+        "type": "os/remove"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a removed file advances the cursor, absent or not",
+   "steps": [
+    {
+     "trait": "OcrReader",
+     "event": "OCR_REMOVED",
+     "from": "cleaning",
+     "payload": {
+      "key": "remove"
+     },
+     "entity": {
+      "id": "r",
+      "key": "Doc",
+      "path": "",
+      "prefix": "",
+      "realDir": "",
+      "cleanup": [
+       "Doc-1.png",
+       "Doc.list"
+      ],
+      "cursor": 0,
+      "failed": false,
+      "error": "",
+      "code": "",
+      "recognized": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "cleaning",
+      "entity": {
+       "cursor": 1
+      },
+      "emits": [
+       {
+        "event": "OCR_CLEAN_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "cleaned up, two pages split at the form feed are numbered from 1",
+   "steps": [
+    {
+     "trait": "OcrReader",
+     "event": "OCR_CLEAN_NEXT",
+     "from": "cleaning",
+     "payload": {},
+     "entity": {
+      "id": "r",
+      "key": "Doc",
+      "path": "",
+      "prefix": "",
+      "realDir": "",
+      "cleanup": [
+       "Doc-1.png",
+       "Doc-2.png",
+       "Doc.list"
+      ],
+      "cursor": 3,
+      "failed": false,
+      "error": "",
+      "code": "",
+      "recognized": "Hello page one\n\fSecond page here\n"
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "OCR_TEXT",
+        "payload": {
+         "key": "Doc",
+         "pages": [
+          {
+           "page": 1,
+           "text": "Hello page one\n"
+          },
+          {
+           "page": 2,
+           "text": "Second page here\n"
+          }
+         ]
+        }
+       }
+      ],
+      "neverEmits": [
+       "OCR_NO_TEXT",
+       "OCR_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "cleaned up, an image's single page is one entry",
+   "steps": [
+    {
+     "trait": "OcrReader",
+     "event": "OCR_CLEAN_NEXT",
+     "from": "cleaning",
+     "payload": {},
+     "entity": {
+      "id": "r",
+      "key": "k1",
+      "path": "",
+      "prefix": "",
+      "realDir": "",
+      "cleanup": [],
+      "cursor": 0,
+      "failed": false,
+      "error": "",
+      "code": "",
+      "recognized": "Hello page one\n"
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "OCR_TEXT",
+        "payload": {
+         "key": "k1",
+         "pages": [
+          {
+           "page": 1,
+           "text": "Hello page one\n"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "cleaned up, pages with only blanks answer no text with the page count",
+   "steps": [
+    {
+     "trait": "OcrReader",
+     "event": "OCR_CLEAN_NEXT",
+     "from": "cleaning",
+     "payload": {},
+     "entity": {
+      "id": "r",
+      "key": "Doc",
+      "path": "",
+      "prefix": "",
+      "realDir": "",
+      "cleanup": [
+       "Doc.list"
+      ],
+      "cursor": 1,
+      "failed": false,
+      "error": "",
+      "code": "",
+      "recognized": "\n\f \n"
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "OCR_NO_TEXT",
+        "payload": {
+         "key": "Doc",
+         "pageCount": 2
+        }
+       }
+      ],
+      "neverEmits": [
+       "OCR_TEXT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: one page with text among blank ones is text, not no-text",
+   "steps": [
+    {
+     "trait": "OcrReader",
+     "event": "OCR_CLEAN_NEXT",
+     "from": "cleaning",
+     "payload": {},
+     "entity": {
+      "id": "r",
+      "key": "Doc",
+      "path": "",
+      "prefix": "",
+      "realDir": "",
+      "cleanup": [
+       "Doc.list"
+      ],
+      "cursor": 1,
+      "failed": false,
+      "error": "",
+      "code": "",
+      "recognized": "\n\fSecond page here\n"
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "OCR_TEXT",
+        "payload": {
+         "key": "Doc",
+         "pages": [
+          {
+           "page": 1,
+           "text": "\n"
+          },
+          {
+           "page": 2,
+           "text": "Second page here\n"
+          }
+         ]
+        }
+       }
+      ],
+      "neverEmits": [
+       "OCR_NO_TEXT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "cleaned up after a failure, the recorded failure is answered",
+   "steps": [
+    {
+     "trait": "OcrReader",
+     "event": "OCR_CLEAN_NEXT",
+     "from": "cleaning",
+     "payload": {},
+     "entity": {
+      "id": "r",
+      "key": "Doc",
+      "path": "",
+      "prefix": "",
+      "realDir": "",
+      "cleanup": [
+       "Doc.list"
+      ],
+      "cursor": 1,
+      "failed": true,
+      "error": "tesseract exited 1: boom",
+      "code": "ocr_unreadable",
+      "recognized": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "OCR_FAILED",
+        "payload": {
+         "key": "Doc",
+         "error": "tesseract exited 1: boom",
+         "code": "ocr_unreadable"
+        }
+       }
+      ],
+      "neverEmits": [
+       "OCR_TEXT",
+       "OCR_NO_TEXT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a read while rendering answers ocr_busy",
+   "steps": [
+    {
+     "trait": "OcrReader",
+     "event": "OCR_READ",
+     "from": "rendering",
+     "payload": {
+      "key": "k2",
+      "path": "/s/b.pdf"
+     },
+     "entity": {
+      "id": "r",
+      "key": "k1",
+      "path": "",
+      "prefix": "",
+      "realDir": "",
+      "cleanup": [],
+      "cursor": 0,
+      "failed": false,
+      "error": "",
+      "code": "",
+      "recognized": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "rendering",
+      "emits": [
+       {
+        "event": "OCR_FAILED",
+        "payload": {
+         "key": "k2",
+         "error": "another document is being read",
+         "code": "ocr_busy"
+        }
+       }
+      ],
+      "neverEmits": [
+       "OCR_EXEC"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a read while listing answers ocr_busy",
+   "steps": [
+    {
+     "trait": "OcrReader",
+     "event": "OCR_READ",
+     "from": "listing",
+     "payload": {
+      "key": "k2",
+      "path": "/s/b.pdf"
+     },
+     "entity": {
+      "id": "r",
+      "key": "k1",
+      "path": "",
+      "prefix": "",
+      "realDir": "",
+      "cleanup": [],
+      "cursor": 0,
+      "failed": false,
+      "error": "",
+      "code": "",
+      "recognized": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "listing",
+      "emits": [
+       {
+        "event": "OCR_FAILED",
+        "payload": {
+         "key": "k2",
+         "error": "another document is being read",
+         "code": "ocr_busy"
+        }
+       }
+      ],
+      "neverEmits": [
+       "OCR_EXEC"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a read while writing answers ocr_busy",
+   "steps": [
+    {
+     "trait": "OcrReader",
+     "event": "OCR_READ",
+     "from": "writing",
+     "payload": {
+      "key": "k2",
+      "path": "/s/b.pdf"
+     },
+     "entity": {
+      "id": "r",
+      "key": "k1",
+      "path": "",
+      "prefix": "",
+      "realDir": "",
+      "cleanup": [],
+      "cursor": 0,
+      "failed": false,
+      "error": "",
+      "code": "",
+      "recognized": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "writing",
+      "emits": [
+       {
+        "event": "OCR_FAILED",
+        "payload": {
+         "key": "k2",
+         "error": "another document is being read",
+         "code": "ocr_busy"
+        }
+       }
+      ],
+      "neverEmits": [
+       "OCR_EXEC"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a read while recognizing answers ocr_busy",
+   "steps": [
+    {
+     "trait": "OcrReader",
+     "event": "OCR_READ",
+     "from": "recognizing",
+     "payload": {
+      "key": "k2",
+      "path": "/s/b.pdf"
+     },
+     "entity": {
+      "id": "r",
+      "key": "k1",
+      "path": "",
+      "prefix": "",
+      "realDir": "",
+      "cleanup": [],
+      "cursor": 0,
+      "failed": false,
+      "error": "",
+      "code": "",
+      "recognized": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "recognizing",
+      "emits": [
+       {
+        "event": "OCR_FAILED",
+        "payload": {
+         "key": "k2",
+         "error": "another document is being read",
+         "code": "ocr_busy"
+        }
+       }
+      ],
+      "neverEmits": [
+       "OCR_EXEC"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a read while cleaning answers ocr_busy",
+   "steps": [
+    {
+     "trait": "OcrReader",
+     "event": "OCR_READ",
+     "from": "cleaning",
+     "payload": {
+      "key": "k2",
+      "path": "/s/b.pdf"
+     },
+     "entity": {
+      "id": "r",
+      "key": "k1",
+      "path": "",
+      "prefix": "",
+      "realDir": "",
+      "cleanup": [],
+      "cursor": 0,
+      "failed": false,
+      "error": "",
+      "code": "",
+      "recognized": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "cleaning",
+      "emits": [
+       {
+        "event": "OCR_FAILED",
+        "payload": {
+         "key": "k2",
+         "error": "another document is being read",
+         "code": "ocr_busy"
+        }
+       }
+      ],
+      "neverEmits": [
+       "OCR_EXEC"
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

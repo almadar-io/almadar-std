@@ -1,0 +1,258 @@
+app std-document-text [
+  version: "1.0.0",
+  exec: ["pdftotext", "pdftoppm", "tesseract"],
+  fs: { cwd: "**": [read], "~/.almadar/ocr/**": [read, write, create, remove], "~/.almadar/ocr": [read, create] },
+  description: "std-document-text — the one owner for turning a file into text by pages, composing std-pdf-text, std-ocr and the file read. DOC_TEXT_READ { key, path } chooses by the path's extension, compared case-insensitively against three declared lists: a path in pdfExtensions is read by pdftotext through std-pdf-text and answers DOC_TEXT with method pdftotext, and when the PDF carries no text layer it is read by OCR through std-ocr and answers method ocr; a path in imageExtensions is read by OCR and answers method ocr; a path in textExtensions is read as UTF-8 text and answers one page with method text. DOC_TEXT { key, pages, method } numbers the pages from 1 in document order, nothing truncated. DOC_TEXT_FAILED { key, error, code } answers doc_unsupported (the extension is in no list), doc_not_text (a text file that is not valid UTF-8), doc_unreadable (a text file that could not be read), doc_no_text (OCR found no text on any page) and doc_busy (a read while another is in flight); a failure of the composed readers passes through with its own pdf_unreadable, pdf_command_failed, ocr_unreadable, ocr_command_failed or ocr_unsupported code. The pdftotext, pdftoppm and tesseract exec grants and the OCR work directory grant are this atom's own; the path is opened by the child or by the host relative to the working directory, so the composer decides which files it can name and may narrow the cwd read grant."
+]
+;; @capabilities "turn a PDF, a scanned PDF, an image or a text file into text, page by page, with OCR as the fallback for pages without a text layer"
+uses Spec from "almadar-std/document-text"
+uses Pdf from "std/behaviors/std-pdf-text"
+uses Ocr from "std/behaviors/std-ocr"
+
+type DocPage = { page : number!, text : string! }
+
+orbital DocumentTextOrbital {
+  entity DocRead [runtime] {
+    id : string!
+    key : string @description "The caller's name for the read in flight; blank when idle." = ""
+    path : string @description "The file being read." = ""
+  }
+
+  trait PdfCli = Pdf.traits.PdfCli {
+    listens {
+      PdfText.PDF_EXEC -> CLI_RUN
+    }
+  }
+
+  trait PdfText = Pdf.traits.PdfText {
+    listens {
+      DocumentText.DOC_PDF_REQUEST -> PDF_READ
+      PdfCli.CLI_DONE -> PDF_RAN
+      PdfCli.CLI_FAILED -> PDF_CLI_FAILED
+      PDF_READ {
+        key : string!
+        path : string!
+      }
+      PDF_RAN {
+        stage : string!
+        exitCode : number!
+        signal : number!
+        stdout : string!
+        stdoutBytes : bytes!
+        stderr : string!
+      }
+      PDF_CLI_FAILED {
+        stage : string!
+        error : string!
+        code : string!
+      }
+    }
+  }
+
+  trait OcrCli = Ocr.traits.OcrCli {
+    listens {
+      OcrReader.OCR_EXEC -> CLI_RUN
+    }
+  }
+
+  trait OcrReader = Ocr.traits.OcrReader {
+    listens {
+      DocumentText.DOC_OCR_REQUEST -> OCR_READ
+      OcrCli.CLI_DONE -> OCR_RAN
+      OcrCli.CLI_FAILED -> OCR_CLI_FAILED
+      OCR_READ {
+        key : string!
+        path : string!
+      }
+      OCR_RAN {
+        stage : string!
+        exitCode : number!
+        signal : number!
+        stdout : string!
+        stdoutBytes : bytes!
+        stderr : string!
+      }
+      OCR_CLI_FAILED {
+        stage : string!
+        error : string!
+        code : string!
+      }
+    }
+  }
+
+  trait DocumentText -> DocRead [optimistic] {
+    initial: ready
+
+    config {
+      pdfExtensions : [string] = [".pdf"]
+        @label "PDF extensions"
+        @description "Path extensions, lower case with the dot, read as PDF documents: pdftotext first, OCR when the PDF has no text layer. Compared case-insensitively against the end of the path."
+        @synonyms "document extensions, pdf files"
+        @tier "domain"
+      imageExtensions : [string] = [".png", ".jpg", ".jpeg", ".tif", ".tiff", ".bmp", ".webp"]
+        @label "Image extensions"
+        @description "Path extensions, lower case with the dot, read as one image page by OCR. Compared case-insensitively against the end of the path."
+        @synonyms "picture extensions, photo, scan"
+        @tier "domain"
+      textExtensions : [string] = [".txt", ".eml", ".md", ".csv"]
+        @label "Text extensions"
+        @description "Path extensions, lower case with the dot, read as UTF-8 text and answered as one page. Compared case-insensitively against the end of the path."
+        @synonyms "plain text extensions, mail, markdown"
+        @tier "domain"
+    }
+
+    state ready {
+      INIT -> ready
+        (set @entity.key "")
+      DOC_TEXT_READ -> pdf when (array/some @config.pdfExtensions (fn e (str/endsWith (str/lower @payload.path) (str/lower @e))))
+        (set @entity.key @payload.key)
+        (set @entity.path @payload.path)
+        (emit DOC_PDF_REQUEST { key: @payload.key, path: @payload.path })
+      DOC_TEXT_READ -> ocr when (and (not (array/some @config.pdfExtensions (fn e (str/endsWith (str/lower @payload.path) (str/lower @e))))) (array/some @config.imageExtensions (fn e (str/endsWith (str/lower @payload.path) (str/lower @e)))))
+        (set @entity.key @payload.key)
+        (set @entity.path @payload.path)
+        (emit DOC_OCR_REQUEST { key: @payload.key, path: @payload.path })
+      DOC_TEXT_READ -> reading when (and (not (array/some @config.pdfExtensions (fn e (str/endsWith (str/lower @payload.path) (str/lower @e))))) (not (array/some @config.imageExtensions (fn e (str/endsWith (str/lower @payload.path) (str/lower @e))))) (array/some @config.textExtensions (fn e (str/endsWith (str/lower @payload.path) (str/lower @e)))))
+        (set @entity.key @payload.key)
+        (set @entity.path @payload.path)
+        (os/read-file { anchor: "cwd", path: @payload.path } { key: "text", emit: { success: DOC_FILE_READ, failure: DOC_FILE_FAILED } })
+      DOC_TEXT_READ -> ready when (and (not (array/some @config.pdfExtensions (fn e (str/endsWith (str/lower @payload.path) (str/lower @e))))) (not (array/some @config.imageExtensions (fn e (str/endsWith (str/lower @payload.path) (str/lower @e))))) (not (array/some @config.textExtensions (fn e (str/endsWith (str/lower @payload.path) (str/lower @e))))))
+        (emit DOC_TEXT_FAILED { key: @payload.key, error: "the file extension is in none of the pdf, image or text lists", code: "doc_unsupported" })
+    }
+
+    state pdf {
+      INIT -> pdf
+      DOC_TEXT_READ -> pdf
+        (emit DOC_TEXT_FAILED { key: @payload.key, error: "another document is being read", code: "doc_busy" })
+      DOC_PDF_TEXT -> ready
+        (emit DOC_TEXT { key: @entity.key, pages: @payload.pages, method: "pdftotext" })
+        (set @entity.key "")
+      DOC_PDF_NO_TEXT -> ocr
+        (emit DOC_OCR_REQUEST { key: @entity.key, path: @entity.path })
+      DOC_PDF_FAILED -> ready
+        (emit DOC_TEXT_FAILED { key: @entity.key, error: @payload.error, code: @payload.code })
+        (set @entity.key "")
+    }
+
+    state ocr {
+      INIT -> ocr
+      DOC_TEXT_READ -> ocr
+        (emit DOC_TEXT_FAILED { key: @payload.key, error: "another document is being read", code: "doc_busy" })
+      DOC_OCR_TEXT -> ready
+        (emit DOC_TEXT { key: @entity.key, pages: @payload.pages, method: "ocr" })
+        (set @entity.key "")
+      DOC_OCR_NO_TEXT -> ready
+        (emit DOC_TEXT_FAILED { key: @entity.key, error: "OCR found no text on any of the pages", code: "doc_no_text" })
+        (set @entity.key "")
+      DOC_OCR_FAILED -> ready
+        (emit DOC_TEXT_FAILED { key: @entity.key, error: @payload.error, code: @payload.code })
+        (set @entity.key "")
+    }
+
+    state reading {
+      INIT -> reading
+      DOC_TEXT_READ -> reading
+        (emit DOC_TEXT_FAILED { key: @payload.key, error: "another document is being read", code: "doc_busy" })
+      DOC_FILE_READ -> ready when (== (bytes/to-string @payload.data) null)
+        (emit DOC_TEXT_FAILED { key: @entity.key, error: "the file is not valid UTF-8 text", code: "doc_not_text" })
+        (set @entity.key "")
+      DOC_FILE_READ -> ready when (!= (bytes/to-string @payload.data) null)
+        (emit DOC_TEXT { key: @entity.key, pages: [{ page: 1, text: (default (bytes/to-string @payload.data) "") }], method: "text" })
+        (set @entity.key "")
+      DOC_FILE_FAILED -> ready
+        (emit DOC_TEXT_FAILED { key: @entity.key, error: (str/concat "the file could not be read: " (default @payload.error "unknown")), code: "doc_unreadable" })
+        (set @entity.key "")
+    }
+
+    emits {
+      DOC_TEXT -> external {
+        key : string!
+        pages : [DocPage]!
+        method : string!
+      }
+        @description "The file was read: one entry per page, numbered from 1 in document order, and the method that produced the text: text (a plain text file), pdftotext (the PDF's text layer) or ocr (recognized from page images)."
+        @synonyms "document pages, extracted text, file text"
+        @tier "domain"
+      DOC_TEXT_FAILED -> external {
+        key : string!
+        error : string!
+        code : string!
+      }
+        @description "The read failed: doc_unsupported, doc_not_text, doc_unreadable, doc_no_text, doc_busy, or the pdf_* / ocr_* code of the composed reader that failed."
+        @synonyms "document error, unreadable file"
+        @tier "domain"
+      DOC_PDF_REQUEST -> external {
+        key : string!
+        path : string!
+      }
+        @description "The PDF read, handed to std-pdf-text."
+        @tier "internal"
+      DOC_OCR_REQUEST -> external {
+        key : string!
+        path : string!
+      }
+        @description "The OCR read, handed to std-ocr."
+        @tier "internal"
+    }
+
+    listens {
+      DOC_TEXT_READ -> input {
+        key : string!
+        path : string!
+      }
+        @description "Read the text of the file at path, page by page, choosing the reader by the path's extension; key names the read in the answer."
+        @synonyms "read document, file to text, extract text, ocr or pdf text"
+      PdfText.PDF_TEXT -> DOC_PDF_TEXT
+      PdfText.PDF_NO_TEXT -> DOC_PDF_NO_TEXT
+      PdfText.PDF_FAILED -> DOC_PDF_FAILED
+      OcrReader.OCR_TEXT -> DOC_OCR_TEXT
+      OcrReader.OCR_NO_TEXT -> DOC_OCR_NO_TEXT
+      OcrReader.OCR_FAILED -> DOC_OCR_FAILED
+      DOC_PDF_TEXT {
+        key : string!
+        pages : [DocPage]!
+      }
+        @description "std-pdf-text's PDF_TEXT."
+      DOC_PDF_NO_TEXT {
+        key : string!
+        pageCount : number!
+      }
+        @description "std-pdf-text's PDF_NO_TEXT."
+      DOC_PDF_FAILED {
+        key : string!
+        error : string!
+        code : string!
+      }
+        @description "std-pdf-text's PDF_FAILED."
+      DOC_OCR_TEXT {
+        key : string!
+        pages : [DocPage]!
+      }
+        @description "std-ocr's OCR_TEXT."
+      DOC_OCR_NO_TEXT {
+        key : string!
+        pageCount : number!
+      }
+        @description "std-ocr's OCR_NO_TEXT."
+      DOC_OCR_FAILED {
+        key : string!
+        error : string!
+        code : string!
+      }
+        @description "std-ocr's OCR_FAILED."
+      DOC_FILE_READ {
+        data : bytes!
+        key : string
+      }
+        @description "The os/read-file answer for a text file."
+      DOC_FILE_FAILED {
+        error : string
+        kind : string
+        key : string
+      }
+        @description "The os/read-file failure."
+    }
+  }
+
+  page boot as DocumentTextOrbitalStart -> DocumentText, PdfText, PdfCli, OcrReader, OcrCli
+}

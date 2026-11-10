@@ -1,0 +1,26 @@
+app document-text-spec [
+  version: "1.0.0",
+  description: "Design contract for turning a file into text by pages, the one owner composing the PDF text layer reader, the OCR reader and the text file read. DOC_TEXT_READ { key, path } chooses by the path's extension against declared pdf, image and text lists and answers DOC_TEXT { key, pages: [{ page, text }], method } with method text, pdftotext or ocr (OCR is the fallback for a PDF without a text layer), or DOC_TEXT_FAILED { key, error, code }. Nothing is truncated."
+]
+
+type DocPage = { page : number!, text : string! }
+
+orbital DocumentTextSpec {
+  expects entity DocRead [runtime] {
+    id : string!
+  }
+  expects trait DocumentText {
+    state ready
+    state pdf
+    state ocr
+    state reading
+    state ready {
+      DOC_TEXT_READ -> pdf
+    }
+    emits {
+      DOC_TEXT { key : string!  pages : [DocPage]!  method : string! }
+      DOC_TEXT_FAILED { key : string!  error : string!  code : string! }
+    }
+  }
+  expects page boot -> DocumentText
+}

@@ -1,0 +1,1444 @@
+{
+ "atom": "spec/connect/llm-knobs-fixture.lolo",
+ "trait": "PlainLlm",
+ "note": "std-llm request knobs: openrouter provider routing, reasoning switch, tool temperature and parallel calls, cache control, classify instructions and classify-many reasoning, first-byte timeout with one re-send, and the temperature-0 response cache",
+ "cases": [
+  {
+   "id": "every-routing-reasoning-and-cache-control-knob-shapes-the-openrouter-chat-body",
+   "defaults": [
+    "KnobDriver",
+    "KnobDelay"
+   ],
+   "steps": [
+    {
+     "trait": "KnobLlm",
+     "event": "LLM_GENERATE",
+     "payload": {
+      "userPrompt": "hi"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_CHAT_WIRE",
+        "payload": {
+         "key": "{\"kind\":\"chat\",\"id\":\"{\\\"action\\\":\\\"generate\\\",\\\"attempt\\\":0,\\\"system\\\":\\\"You are a helpful assistant.\\\",\\\"user\\\":\\\"hi\\\",\\\"base\\\":\\\"hi\\\",\\\"model\\\":\\\"vendor/model\\\",\\\"temperature\\\":0.7,\\\"maxTokens\\\":1024,\\\"categories\\\":[],\\\"itemIds\\\":[],\\\"callKey\\\":\\\"\\\",\\\"images\\\":[],\\\"stream\\\":false}\"}",
+         "path": "/api/v1/chat/completions",
+         "json": "{\"model\":\"vendor/model\",\"temperature\":0.7,\"stream\":false,\"tool_choice\":\"auto\",\"usage\":{\"include\":true},\"max_tokens\":1024,\"reasoning\":{\"enabled\":false},\"provider\":{\"sort\":\"throughput\",\"order\":[\"a\",\"b\"],\"quantizations\":[\"fp8\"]},\"messages\":[{\"role\":\"system\",\"content\":[{\"type\":\"text\",\"text\":\"You are a helpful assistant.\",\"cache_control\":{\"type\":\"ephemeral\"}}]},{\"role\":\"user\",\"content\":\"hi\"}]}"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-an-openrouter-chat-with-no-knob-keeps-today-s-body-and-arms-no-timer",
+   "defaults": [
+    "KnobDriver",
+    "KnobDelay"
+   ],
+   "steps": [
+    {
+     "trait": "PlainLlm",
+     "event": "LLM_GENERATE",
+     "payload": {
+      "userPrompt": "hi"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_CHAT_WIRE",
+        "payload": {
+         "json": "{\"model\":\"vendor/model\",\"temperature\":0.7,\"stream\":false,\"tool_choice\":\"auto\",\"usage\":{\"include\":true},\"max_tokens\":1024,\"messages\":[{\"role\":\"system\",\"content\":\"You are a helpful assistant.\"},{\"role\":\"user\",\"content\":\"hi\"}]}"
+        }
+       }
+      ],
+      "neverEmits": [
+       "LLM_FIRST_BYTE_START"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "reasoning-on-sends-enabled-true-on-a-plain-openrouter-chat",
+   "defaults": [
+    "KnobDriver",
+    "KnobDelay"
+   ],
+   "steps": [
+    {
+     "trait": "OnLlm",
+     "event": "LLM_GENERATE",
+     "payload": {
+      "userPrompt": "hi"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_CHAT_WIRE",
+        "payload": {
+         "json": "{\"model\":\"vendor/model\",\"temperature\":0.7,\"stream\":false,\"tool_choice\":\"auto\",\"usage\":{\"include\":true},\"max_tokens\":1024,\"reasoning\":{\"enabled\":true},\"messages\":[{\"role\":\"system\",\"content\":\"You are a helpful assistant.\"},{\"role\":\"user\",\"content\":\"hi\"}]}"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "every-knob-shapes-the-openrouter-tool-body-reasoning-off-parallel-calls-temperature-provider-and-cache-control",
+   "defaults": [
+    "KnobDriver",
+    "KnobDelay"
+   ],
+   "steps": [
+    {
+     "trait": "KnobLlm",
+     "event": "LLM_CALL_TOOLS",
+     "payload": {
+      "messages": [
+       {
+        "role": "user",
+        "content": "hi"
+       }
+      ],
+      "instructions": "sys",
+      "tools": [
+       {
+        "name": "read_x",
+        "description": "d",
+        "parameters": {
+         "type": "object"
+        }
+       }
+      ],
+      "key": "t1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_CHAT_WIRE",
+        "payload": {
+         "path": "/api/v1/chat/completions",
+         "json": "{\"model\":\"vendor/model\",\"messages\":[{\"role\":\"system\",\"content\":[{\"type\":\"text\",\"text\":\"sys\",\"cache_control\":{\"type\":\"ephemeral\"}}]},{\"role\":\"user\",\"content\":\"hi\"}],\"parallel_tool_calls\":true,\"temperature\":0.2,\"tools\":[{\"type\":\"function\",\"function\":{\"name\":\"read_x\",\"description\":\"d\",\"parameters\":{\"type\":\"object\"}}}],\"reasoning\":{\"enabled\":false},\"usage\":{\"include\":true},\"provider\":{\"sort\":\"throughput\",\"order\":[\"a\",\"b\"],\"quantizations\":[\"fp8\"]}}"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-an-openrouter-tool-call-with-no-knob-keeps-reasoning-on-sequential-calls-and-0-7",
+   "defaults": [
+    "KnobDriver",
+    "KnobDelay"
+   ],
+   "steps": [
+    {
+     "trait": "PlainLlm",
+     "event": "LLM_CALL_TOOLS",
+     "payload": {
+      "messages": [
+       {
+        "role": "user",
+        "content": "hi"
+       }
+      ],
+      "instructions": "sys",
+      "tools": [
+       {
+        "name": "read_x",
+        "description": "d",
+        "parameters": {
+         "type": "object"
+        }
+       }
+      ],
+      "key": "t1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_CHAT_WIRE",
+        "payload": {
+         "json": "{\"model\":\"vendor/model\",\"messages\":[{\"role\":\"system\",\"content\":\"sys\"},{\"role\":\"user\",\"content\":\"hi\"}],\"parallel_tool_calls\":false,\"temperature\":0.7,\"tools\":[{\"type\":\"function\",\"function\":{\"name\":\"read_x\",\"description\":\"d\",\"parameters\":{\"type\":\"object\"}}}],\"reasoning\":{\"enabled\":true},\"usage\":{\"include\":true}}"
+        }
+       }
+      ],
+      "neverEmits": [
+       "LLM_FIRST_BYTE_START"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "classify-instructions-go-before-the-text-between-instruction-tags-and-the-temperature-is-the-caller-s",
+   "defaults": [
+    "KnobDriver",
+    "KnobDelay"
+   ],
+   "steps": [
+    {
+     "trait": "PlainLlm",
+     "event": "LLM_CLASSIFY",
+     "payload": {
+      "text": "the text",
+      "categories": [
+       "a",
+       "b"
+      ],
+      "instructions": "be strict",
+      "temperature": 0
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_CHAT_WIRE",
+        "payload": {
+         "json": "{\"model\":\"vendor/model\",\"temperature\":0,\"stream\":false,\"tool_choice\":\"auto\",\"usage\":{\"include\":true},\"messages\":[{\"role\":\"system\",\"content\":\"You are a text classifier. Classify the given text into one of these categories: a, b. Return JSON with: category, confidence (0-1), and reasoning.\"},{\"role\":\"user\",\"content\":\"<instructions>\\nbe strict\\n</instructions>\\n\\nthe text\"}]}"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-classify-without-instructions-sends-the-bare-text-at-0-1",
+   "defaults": [
+    "KnobDriver",
+    "KnobDelay"
+   ],
+   "steps": [
+    {
+     "trait": "PlainLlm",
+     "event": "LLM_CLASSIFY",
+     "payload": {
+      "text": "the text",
+      "categories": [
+       "a",
+       "b"
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_CHAT_WIRE",
+        "payload": {
+         "json": "{\"model\":\"vendor/model\",\"temperature\":0.1,\"stream\":false,\"tool_choice\":\"auto\",\"usage\":{\"include\":true},\"messages\":[{\"role\":\"system\",\"content\":\"You are a text classifier. Classify the given text into one of these categories: a, b. Return JSON with: category, confidence (0-1), and reasoning.\"},{\"role\":\"user\",\"content\":\"the text\"}]}"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-classify-reply-with-an-undeclared-category-is-still-refused-with-instructions",
+   "defaults": [
+    "KnobDriver",
+    "KnobDelay"
+   ],
+   "steps": [
+    {
+     "trait": "PlainLlm",
+     "event": "LLM_CHAT_JSON",
+     "payload": {
+      "job": "{\"action\":\"classify\",\"attempt\":0,\"system\":\"You are a text classifier. Classify the given text into one of these categories: a, b. Return JSON with: category, confidence (0-1), and reasoning.\",\"user\":\"<instructions>\\nbe strict\\n</instructions>\\n\\nthe text\",\"base\":\"<instructions>\\nbe strict\\n</instructions>\\n\\nthe text\",\"model\":\"vendor/model\",\"temperature\":0,\"maxTokens\":0,\"categories\":[\"a\",\"b\"],\"itemIds\":[],\"callKey\":\"\"}",
+      "json": "{\"category\":\"zzz\",\"confidence\":0.9,\"reasoning\":\"r\"}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_CHAT_CHECKED",
+        "payload": {
+         "issues": "category: Invalid enum value. Expected 'a' | 'b', received 'zzz'"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-classify-reply-with-a-declared-category-passes",
+   "defaults": [
+    "KnobDriver",
+    "KnobDelay"
+   ],
+   "steps": [
+    {
+     "trait": "PlainLlm",
+     "event": "LLM_CHAT_JSON",
+     "payload": {
+      "job": "{\"action\":\"classify\",\"attempt\":0,\"system\":\"You are a text classifier. Classify the given text into one of these categories: a, b. Return JSON with: category, confidence (0-1), and reasoning.\",\"user\":\"<instructions>\\nbe strict\\n</instructions>\\n\\nthe text\",\"base\":\"<instructions>\\nbe strict\\n</instructions>\\n\\nthe text\",\"model\":\"vendor/model\",\"temperature\":0,\"maxTokens\":0,\"categories\":[\"a\",\"b\"],\"itemIds\":[],\"callKey\":\"\"}",
+      "json": "{\"category\":\"a\",\"confidence\":0.9,\"reasoning\":\"r\"}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_CHAT_CHECKED",
+        "payload": {
+         "issues": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "classify-many-asks-for-a-reasoning-per-verdict-and-puts-instructions-before-the-items",
+   "defaults": [
+    "KnobDriver",
+    "KnobDelay"
+   ],
+   "steps": [
+    {
+     "trait": "PlainLlm",
+     "event": "LLM_CLASSIFY_MANY",
+     "payload": {
+      "items": [
+       {
+        "id": "x",
+        "text": "x"
+       }
+      ],
+      "categories": [
+       "a",
+       "b"
+      ],
+      "instructions": "be strict"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_CHAT_WIRE",
+        "payload": {
+         "json": "{\"model\":\"vendor/model\",\"temperature\":0.1,\"stream\":false,\"tool_choice\":\"auto\",\"usage\":{\"include\":true},\"messages\":[{\"role\":\"system\",\"content\":\"You are a text classifier. Classify each item below into exactly one of these categories:\\n- a\\n- b\\nAnswer with one verdict per item: its id, the category, your confidence from 0 to 1 and a short reasoning. Return JSON: { \\\"verdicts\\\": [{ \\\"id\\\", \\\"category\\\", \\\"confidence\\\", \\\"reasoning\\\" }] }.\"},{\"role\":\"user\",\"content\":\"<instructions>\\nbe strict\\n</instructions>\\n\\n[1] x\"}]}"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-classify-many-verdict-without-reasoning-is-refused-for-the-model-to-redo",
+   "defaults": [
+    "KnobDriver",
+    "KnobDelay"
+   ],
+   "steps": [
+    {
+     "trait": "PlainLlm",
+     "event": "LLM_CHAT_JSON",
+     "payload": {
+      "job": "{\"action\":\"classifyMany\",\"attempt\":0,\"system\":\"s\",\"user\":\"[1] x\",\"base\":\"[1] x\",\"model\":\"vendor/model\",\"temperature\":0.1,\"maxTokens\":0,\"categories\":[\"a\",\"b\"],\"itemIds\":[\"x\"],\"callKey\":\"\"}",
+      "json": "{\"verdicts\":[{\"id\":\"1\",\"category\":\"a\",\"confidence\":0.8}]}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_CHAT_CHECKED",
+        "payload": {
+         "issues": "verdicts.0.reasoning: Required"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-classify-many-verdict-with-reasoning-passes-and-the-result-carries-it",
+   "defaults": [
+    "KnobDriver",
+    "KnobDelay"
+   ],
+   "steps": [
+    {
+     "trait": "PlainLlm",
+     "event": "LLM_CHAT_JSON",
+     "payload": {
+      "job": "{\"action\":\"classifyMany\",\"attempt\":0,\"system\":\"s\",\"user\":\"[1] x\",\"base\":\"[1] x\",\"model\":\"vendor/model\",\"temperature\":0.1,\"maxTokens\":0,\"categories\":[\"a\",\"b\"],\"itemIds\":[\"x\"],\"callKey\":\"\"}",
+      "json": "{\"verdicts\":[{\"id\":\"1\",\"category\":\"a\",\"confidence\":0.8,\"reasoning\":\"because\"}]}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_CHAT_CHECKED",
+        "payload": {
+         "issues": ""
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "PlainLlm",
+     "event": "LLM_CHAT_VERDICTS",
+     "payload": {
+      "job": "{\"action\":\"classifyMany\",\"attempt\":0,\"system\":\"s\",\"user\":\"[1] x\",\"base\":\"[1] x\",\"model\":\"vendor/model\",\"temperature\":0.1,\"maxTokens\":0,\"categories\":[\"a\",\"b\"],\"itemIds\":[\"x\"],\"callKey\":\"\"}",
+      "json": "{\"verdicts\":[{\"id\":\"1\",\"category\":\"a\",\"confidence\":0.8,\"reasoning\":\"because\"}]}",
+      "problem": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_CLASSIFY_MANY_RESULT",
+        "payload": {
+         "verdicts": [
+          {
+           "id": "x",
+           "category": "a",
+           "confidence": 0.8,
+           "reasoning": "because"
+          }
+         ]
+        }
+       }
+      ],
+      "neverEmits": [
+       "LLM_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-classify-many-verdict-with-an-undeclared-category-is-still-refused",
+   "defaults": [
+    "KnobDriver",
+    "KnobDelay"
+   ],
+   "steps": [
+    {
+     "trait": "PlainLlm",
+     "event": "LLM_CHAT_JSON",
+     "payload": {
+      "job": "{\"action\":\"classifyMany\",\"attempt\":0,\"system\":\"s\",\"user\":\"[1] x\",\"base\":\"[1] x\",\"model\":\"vendor/model\",\"temperature\":0.1,\"maxTokens\":0,\"categories\":[\"a\",\"b\"],\"itemIds\":[\"x\"],\"callKey\":\"\"}",
+      "json": "{\"verdicts\":[{\"id\":\"1\",\"category\":\"zzz\",\"confidence\":0.8,\"reasoning\":\"r\"}]}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_CHAT_CHECKED",
+        "payload": {
+         "issues": ": every category must be a declared one"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-first-byte-miss-aborts-the-request-on-the-wire-and-sends-it-once-more-and-the-answer-then-completes",
+   "defaults": [
+    "KnobDriver",
+    "KnobDelay"
+   ],
+   "steps": [
+    {
+     "trait": "KnobLlm",
+     "event": "LLM_GENERATE",
+     "payload": {
+      "userPrompt": "hi"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_FIRST_BYTE_START",
+        "payload": {
+         "key": "{\"kind\":\"chat\",\"id\":\"{\\\"action\\\":\\\"generate\\\",\\\"attempt\\\":0,\\\"system\\\":\\\"You are a helpful assistant.\\\",\\\"user\\\":\\\"hi\\\",\\\"base\\\":\\\"hi\\\",\\\"model\\\":\\\"vendor/model\\\",\\\"temperature\\\":0.7,\\\"maxTokens\\\":1024,\\\"categories\\\":[],\\\"itemIds\\\":[],\\\"callKey\\\":\\\"\\\",\\\"images\\\":[],\\\"stream\\\":false}\"}",
+         "delayMs": 5000
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "KnobLlm",
+     "event": "LLM_FIRST_BYTE_ELAPSED",
+     "payload": {
+      "key": "{\"kind\":\"chat\",\"id\":\"{\\\"action\\\":\\\"generate\\\",\\\"attempt\\\":0,\\\"system\\\":\\\"You are a helpful assistant.\\\",\\\"user\\\":\\\"hi\\\",\\\"base\\\":\\\"hi\\\",\\\"model\\\":\\\"vendor/model\\\",\\\"temperature\\\":0.7,\\\"maxTokens\\\":1024,\\\"categories\\\":[],\\\"itemIds\\\":[],\\\"callKey\\\":\\\"\\\",\\\"images\\\":[],\\\"stream\\\":false}\"}",
+      "waitedMs": 5000
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_CHAT_WIRE_CANCEL",
+        "payload": {
+         "key": "{\"kind\":\"chat\",\"id\":\"{\\\"action\\\":\\\"generate\\\",\\\"attempt\\\":0,\\\"system\\\":\\\"You are a helpful assistant.\\\",\\\"user\\\":\\\"hi\\\",\\\"base\\\":\\\"hi\\\",\\\"model\\\":\\\"vendor/model\\\",\\\"temperature\\\":0.7,\\\"maxTokens\\\":1024,\\\"categories\\\":[],\\\"itemIds\\\":[],\\\"callKey\\\":\\\"\\\",\\\"images\\\":[],\\\"stream\\\":false}\"}"
+        }
+       },
+       {
+        "event": "LLM_CHAT_WIRE",
+        "payload": {
+         "key": "{\"kind\":\"chat\",\"id\":\"{\\\"action\\\":\\\"generate\\\",\\\"attempt\\\":0,\\\"system\\\":\\\"You are a helpful assistant.\\\",\\\"user\\\":\\\"hi\\\",\\\"base\\\":\\\"hi\\\",\\\"model\\\":\\\"vendor/model\\\",\\\"temperature\\\":0.7,\\\"maxTokens\\\":1024,\\\"categories\\\":[],\\\"itemIds\\\":[],\\\"callKey\\\":\\\"\\\",\\\"images\\\":[],\\\"stream\\\":false}\"}",
+         "json": "{\"model\":\"vendor/model\",\"temperature\":0.7,\"stream\":false,\"tool_choice\":\"auto\",\"usage\":{\"include\":true},\"max_tokens\":1024,\"reasoning\":{\"enabled\":false},\"provider\":{\"sort\":\"throughput\",\"order\":[\"a\",\"b\"],\"quantizations\":[\"fp8\"]},\"messages\":[{\"role\":\"system\",\"content\":[{\"type\":\"text\",\"text\":\"You are a helpful assistant.\",\"cache_control\":{\"type\":\"ephemeral\"}}]},{\"role\":\"user\",\"content\":\"hi\"}]}"
+        }
+       },
+       {
+        "event": "LLM_FIRST_BYTE_START",
+        "payload": {
+         "key": "{\"kind\":\"chat\",\"id\":\"{\\\"action\\\":\\\"generate\\\",\\\"attempt\\\":0,\\\"system\\\":\\\"You are a helpful assistant.\\\",\\\"user\\\":\\\"hi\\\",\\\"base\\\":\\\"hi\\\",\\\"model\\\":\\\"vendor/model\\\",\\\"temperature\\\":0.7,\\\"maxTokens\\\":1024,\\\"categories\\\":[],\\\"itemIds\\\":[],\\\"callKey\\\":\\\"\\\",\\\"images\\\":[],\\\"stream\\\":false}\"}",
+         "delayMs": 5000
+        }
+       }
+      ],
+      "neverEmits": [
+       "LLM_FAILED"
+      ]
+     }
+    },
+    {
+     "trait": "KnobLlm",
+     "event": "LLM_CHAT_WIRE_RESULT",
+     "payload": {
+      "key": "{\"kind\":\"chat\",\"id\":\"{\\\"action\\\":\\\"generate\\\",\\\"attempt\\\":0,\\\"system\\\":\\\"You are a helpful assistant.\\\",\\\"user\\\":\\\"hi\\\",\\\"base\\\":\\\"hi\\\",\\\"model\\\":\\\"vendor/model\\\",\\\"temperature\\\":0.7,\\\"maxTokens\\\":1024,\\\"categories\\\":[],\\\"itemIds\\\":[],\\\"callKey\\\":\\\"\\\",\\\"images\\\":[],\\\"stream\\\":false}\"}",
+      "status": 200,
+      "headers": {},
+      "body": "eyJjaG9pY2VzIjpbeyJtZXNzYWdlIjp7ImNvbnRlbnQiOiJoZWxsbyJ9fV0sInVzYWdlIjp7InByb21wdF90b2tlbnMiOjEsImNvbXBsZXRpb25fdG9rZW5zIjoxfX0=",
+      "attempts": 1,
+      "pages": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_FIRST_BYTE_STOP",
+        "payload": {
+         "key": "{\"kind\":\"chat\",\"id\":\"{\\\"action\\\":\\\"generate\\\",\\\"attempt\\\":0,\\\"system\\\":\\\"You are a helpful assistant.\\\",\\\"user\\\":\\\"hi\\\",\\\"base\\\":\\\"hi\\\",\\\"model\\\":\\\"vendor/model\\\",\\\"temperature\\\":0.7,\\\"maxTokens\\\":1024,\\\"categories\\\":[],\\\"itemIds\\\":[],\\\"callKey\\\":\\\"\\\",\\\"images\\\":[],\\\"stream\\\":false}\"}"
+        }
+       },
+       {
+        "event": "LLM_GENERATE_RESULT",
+        "payload": {
+         "content": "hello"
+        }
+       }
+      ],
+      "neverEmits": [
+       "LLM_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-second-first-byte-miss-ends-in-llm-failed-first-byte-timeout",
+   "defaults": [
+    "KnobDriver",
+    "KnobDelay"
+   ],
+   "steps": [
+    {
+     "trait": "KnobLlm",
+     "event": "LLM_GENERATE",
+     "payload": {
+      "userPrompt": "hi"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_FIRST_BYTE_START",
+        "payload": {
+         "key": "{\"kind\":\"chat\",\"id\":\"{\\\"action\\\":\\\"generate\\\",\\\"attempt\\\":0,\\\"system\\\":\\\"You are a helpful assistant.\\\",\\\"user\\\":\\\"hi\\\",\\\"base\\\":\\\"hi\\\",\\\"model\\\":\\\"vendor/model\\\",\\\"temperature\\\":0.7,\\\"maxTokens\\\":1024,\\\"categories\\\":[],\\\"itemIds\\\":[],\\\"callKey\\\":\\\"\\\",\\\"images\\\":[],\\\"stream\\\":false}\"}",
+         "delayMs": 5000
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "KnobLlm",
+     "event": "LLM_FIRST_BYTE_ELAPSED",
+     "payload": {
+      "key": "{\"kind\":\"chat\",\"id\":\"{\\\"action\\\":\\\"generate\\\",\\\"attempt\\\":0,\\\"system\\\":\\\"You are a helpful assistant.\\\",\\\"user\\\":\\\"hi\\\",\\\"base\\\":\\\"hi\\\",\\\"model\\\":\\\"vendor/model\\\",\\\"temperature\\\":0.7,\\\"maxTokens\\\":1024,\\\"categories\\\":[],\\\"itemIds\\\":[],\\\"callKey\\\":\\\"\\\",\\\"images\\\":[],\\\"stream\\\":false}\"}",
+      "waitedMs": 5000
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_CHAT_WIRE_CANCEL",
+        "payload": {
+         "key": "{\"kind\":\"chat\",\"id\":\"{\\\"action\\\":\\\"generate\\\",\\\"attempt\\\":0,\\\"system\\\":\\\"You are a helpful assistant.\\\",\\\"user\\\":\\\"hi\\\",\\\"base\\\":\\\"hi\\\",\\\"model\\\":\\\"vendor/model\\\",\\\"temperature\\\":0.7,\\\"maxTokens\\\":1024,\\\"categories\\\":[],\\\"itemIds\\\":[],\\\"callKey\\\":\\\"\\\",\\\"images\\\":[],\\\"stream\\\":false}\"}"
+        }
+       },
+       {
+        "event": "LLM_CHAT_WIRE",
+        "payload": {
+         "key": "{\"kind\":\"chat\",\"id\":\"{\\\"action\\\":\\\"generate\\\",\\\"attempt\\\":0,\\\"system\\\":\\\"You are a helpful assistant.\\\",\\\"user\\\":\\\"hi\\\",\\\"base\\\":\\\"hi\\\",\\\"model\\\":\\\"vendor/model\\\",\\\"temperature\\\":0.7,\\\"maxTokens\\\":1024,\\\"categories\\\":[],\\\"itemIds\\\":[],\\\"callKey\\\":\\\"\\\",\\\"images\\\":[],\\\"stream\\\":false}\"}",
+         "json": "{\"model\":\"vendor/model\",\"temperature\":0.7,\"stream\":false,\"tool_choice\":\"auto\",\"usage\":{\"include\":true},\"max_tokens\":1024,\"reasoning\":{\"enabled\":false},\"provider\":{\"sort\":\"throughput\",\"order\":[\"a\",\"b\"],\"quantizations\":[\"fp8\"]},\"messages\":[{\"role\":\"system\",\"content\":[{\"type\":\"text\",\"text\":\"You are a helpful assistant.\",\"cache_control\":{\"type\":\"ephemeral\"}}]},{\"role\":\"user\",\"content\":\"hi\"}]}"
+        }
+       },
+       {
+        "event": "LLM_FIRST_BYTE_START",
+        "payload": {
+         "key": "{\"kind\":\"chat\",\"id\":\"{\\\"action\\\":\\\"generate\\\",\\\"attempt\\\":0,\\\"system\\\":\\\"You are a helpful assistant.\\\",\\\"user\\\":\\\"hi\\\",\\\"base\\\":\\\"hi\\\",\\\"model\\\":\\\"vendor/model\\\",\\\"temperature\\\":0.7,\\\"maxTokens\\\":1024,\\\"categories\\\":[],\\\"itemIds\\\":[],\\\"callKey\\\":\\\"\\\",\\\"images\\\":[],\\\"stream\\\":false}\"}",
+         "delayMs": 5000
+        }
+       }
+      ],
+      "neverEmits": [
+       "LLM_FAILED"
+      ]
+     }
+    },
+    {
+     "trait": "KnobLlm",
+     "event": "LLM_FIRST_BYTE_ELAPSED",
+     "payload": {
+      "key": "{\"kind\":\"chat\",\"id\":\"{\\\"action\\\":\\\"generate\\\",\\\"attempt\\\":0,\\\"system\\\":\\\"You are a helpful assistant.\\\",\\\"user\\\":\\\"hi\\\",\\\"base\\\":\\\"hi\\\",\\\"model\\\":\\\"vendor/model\\\",\\\"temperature\\\":0.7,\\\"maxTokens\\\":1024,\\\"categories\\\":[],\\\"itemIds\\\":[],\\\"callKey\\\":\\\"\\\",\\\"images\\\":[],\\\"stream\\\":false}\"}",
+      "waitedMs": 5000
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_CHAT_WIRE_CANCEL",
+        "payload": {
+         "key": "{\"kind\":\"chat\",\"id\":\"{\\\"action\\\":\\\"generate\\\",\\\"attempt\\\":0,\\\"system\\\":\\\"You are a helpful assistant.\\\",\\\"user\\\":\\\"hi\\\",\\\"base\\\":\\\"hi\\\",\\\"model\\\":\\\"vendor/model\\\",\\\"temperature\\\":0.7,\\\"maxTokens\\\":1024,\\\"categories\\\":[],\\\"itemIds\\\":[],\\\"callKey\\\":\\\"\\\",\\\"images\\\":[],\\\"stream\\\":false}\"}"
+        }
+       },
+       {
+        "event": "LLM_FAILED",
+        "payload": {
+         "code": "first-byte-timeout"
+        }
+       }
+      ],
+      "neverEmits": [
+       "LLM_CHAT_WIRE"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-second-miss-after-the-answer-did-nothing-is-ignored",
+   "defaults": [
+    "KnobDriver",
+    "KnobDelay"
+   ],
+   "steps": [
+    {
+     "trait": "KnobLlm",
+     "event": "LLM_GENERATE",
+     "payload": {
+      "userPrompt": "hi"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_FIRST_BYTE_START",
+        "payload": {
+         "key": "{\"kind\":\"chat\",\"id\":\"{\\\"action\\\":\\\"generate\\\",\\\"attempt\\\":0,\\\"system\\\":\\\"You are a helpful assistant.\\\",\\\"user\\\":\\\"hi\\\",\\\"base\\\":\\\"hi\\\",\\\"model\\\":\\\"vendor/model\\\",\\\"temperature\\\":0.7,\\\"maxTokens\\\":1024,\\\"categories\\\":[],\\\"itemIds\\\":[],\\\"callKey\\\":\\\"\\\",\\\"images\\\":[],\\\"stream\\\":false}\"}",
+         "delayMs": 5000
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "KnobLlm",
+     "event": "LLM_CHAT_WIRE_RESULT",
+     "payload": {
+      "key": "{\"kind\":\"chat\",\"id\":\"{\\\"action\\\":\\\"generate\\\",\\\"attempt\\\":0,\\\"system\\\":\\\"You are a helpful assistant.\\\",\\\"user\\\":\\\"hi\\\",\\\"base\\\":\\\"hi\\\",\\\"model\\\":\\\"vendor/model\\\",\\\"temperature\\\":0.7,\\\"maxTokens\\\":1024,\\\"categories\\\":[],\\\"itemIds\\\":[],\\\"callKey\\\":\\\"\\\",\\\"images\\\":[],\\\"stream\\\":false}\"}",
+      "status": 200,
+      "headers": {},
+      "body": "eyJjaG9pY2VzIjpbeyJtZXNzYWdlIjp7ImNvbnRlbnQiOiJoZWxsbyJ9fV0sInVzYWdlIjp7InByb21wdF90b2tlbnMiOjEsImNvbXBsZXRpb25fdG9rZW5zIjoxfX0=",
+      "attempts": 1,
+      "pages": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_FIRST_BYTE_STOP",
+        "payload": {
+         "key": "{\"kind\":\"chat\",\"id\":\"{\\\"action\\\":\\\"generate\\\",\\\"attempt\\\":0,\\\"system\\\":\\\"You are a helpful assistant.\\\",\\\"user\\\":\\\"hi\\\",\\\"base\\\":\\\"hi\\\",\\\"model\\\":\\\"vendor/model\\\",\\\"temperature\\\":0.7,\\\"maxTokens\\\":1024,\\\"categories\\\":[],\\\"itemIds\\\":[],\\\"callKey\\\":\\\"\\\",\\\"images\\\":[],\\\"stream\\\":false}\"}"
+        }
+       },
+       {
+        "event": "LLM_GENERATE_RESULT",
+        "payload": {
+         "content": "hello"
+        }
+       }
+      ],
+      "neverEmits": [
+       "LLM_FAILED"
+      ]
+     }
+    },
+    {
+     "trait": "KnobLlm",
+     "event": "LLM_FIRST_BYTE_ELAPSED",
+     "payload": {
+      "key": "{\"kind\":\"chat\",\"id\":\"{\\\"action\\\":\\\"generate\\\",\\\"attempt\\\":0,\\\"system\\\":\\\"You are a helpful assistant.\\\",\\\"user\\\":\\\"hi\\\",\\\"base\\\":\\\"hi\\\",\\\"model\\\":\\\"vendor/model\\\",\\\"temperature\\\":0.7,\\\"maxTokens\\\":1024,\\\"categories\\\":[],\\\"itemIds\\\":[],\\\"callKey\\\":\\\"\\\",\\\"images\\\":[],\\\"stream\\\":false}\"}",
+      "waitedMs": 5000
+     },
+     "expect": {
+      "neverEmits": [
+       "LLM_CHAT_WIRE_CANCEL",
+       "LLM_CHAT_WIRE",
+       "LLM_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-first-stream-frame-disarms-the-first-byte-deadline-so-a-late-elapse-aborts-nothing",
+   "defaults": [
+    "KnobDriver",
+    "KnobDelay"
+   ],
+   "steps": [
+    {
+     "trait": "KnobLlm",
+     "event": "LLM_GENERATE",
+     "payload": {
+      "userPrompt": "hi",
+      "key": "c2",
+      "stream": true
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_FIRST_BYTE_START",
+        "payload": {
+         "key": "{\"kind\":\"chat\",\"id\":\"{\\\"action\\\":\\\"generate\\\",\\\"attempt\\\":0,\\\"system\\\":\\\"You are a helpful assistant.\\\",\\\"user\\\":\\\"hi\\\",\\\"base\\\":\\\"hi\\\",\\\"model\\\":\\\"vendor/model\\\",\\\"temperature\\\":0.7,\\\"maxTokens\\\":1024,\\\"categories\\\":[],\\\"itemIds\\\":[],\\\"callKey\\\":\\\"c2\\\",\\\"images\\\":[],\\\"stream\\\":true}\"}",
+         "delayMs": 5000
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "KnobLlm",
+     "event": "LLM_CHAT_WIRE_STREAM",
+     "payload": {
+      "key": "{\"kind\":\"chat\",\"id\":\"{\\\"action\\\":\\\"generate\\\",\\\"attempt\\\":0,\\\"system\\\":\\\"You are a helpful assistant.\\\",\\\"user\\\":\\\"hi\\\",\\\"base\\\":\\\"hi\\\",\\\"model\\\":\\\"vendor/model\\\",\\\"temperature\\\":0.7,\\\"maxTokens\\\":1024,\\\"categories\\\":[],\\\"itemIds\\\":[],\\\"callKey\\\":\\\"c2\\\",\\\"images\\\":[],\\\"stream\\\":true}\"}",
+      "data": "{\"choices\":[{\"delta\":{\"content\":\"h\"}}]}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_FIRST_BYTE_STOP",
+        "payload": {
+         "key": "{\"kind\":\"chat\",\"id\":\"{\\\"action\\\":\\\"generate\\\",\\\"attempt\\\":0,\\\"system\\\":\\\"You are a helpful assistant.\\\",\\\"user\\\":\\\"hi\\\",\\\"base\\\":\\\"hi\\\",\\\"model\\\":\\\"vendor/model\\\",\\\"temperature\\\":0.7,\\\"maxTokens\\\":1024,\\\"categories\\\":[],\\\"itemIds\\\":[],\\\"callKey\\\":\\\"c2\\\",\\\"images\\\":[],\\\"stream\\\":true}\"}"
+        }
+       },
+       {
+        "event": "LLM_GENERATE_DELTA",
+        "payload": {
+         "delta": "h"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "KnobLlm",
+     "event": "LLM_FIRST_BYTE_ELAPSED",
+     "payload": {
+      "key": "{\"kind\":\"chat\",\"id\":\"{\\\"action\\\":\\\"generate\\\",\\\"attempt\\\":0,\\\"system\\\":\\\"You are a helpful assistant.\\\",\\\"user\\\":\\\"hi\\\",\\\"base\\\":\\\"hi\\\",\\\"model\\\":\\\"vendor/model\\\",\\\"temperature\\\":0.7,\\\"maxTokens\\\":1024,\\\"categories\\\":[],\\\"itemIds\\\":[],\\\"callKey\\\":\\\"c2\\\",\\\"images\\\":[],\\\"stream\\\":true}\"}",
+      "waitedMs": 5000
+     },
+     "expect": {
+      "neverEmits": [
+       "LLM_CHAT_WIRE_CANCEL",
+       "LLM_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-wire-failure-disarms-the-first-byte-deadline",
+   "defaults": [
+    "KnobDriver",
+    "KnobDelay"
+   ],
+   "steps": [
+    {
+     "trait": "KnobLlm",
+     "event": "LLM_GENERATE",
+     "payload": {
+      "userPrompt": "hi"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_FIRST_BYTE_START",
+        "payload": {
+         "key": "{\"kind\":\"chat\",\"id\":\"{\\\"action\\\":\\\"generate\\\",\\\"attempt\\\":0,\\\"system\\\":\\\"You are a helpful assistant.\\\",\\\"user\\\":\\\"hi\\\",\\\"base\\\":\\\"hi\\\",\\\"model\\\":\\\"vendor/model\\\",\\\"temperature\\\":0.7,\\\"maxTokens\\\":1024,\\\"categories\\\":[],\\\"itemIds\\\":[],\\\"callKey\\\":\\\"\\\",\\\"images\\\":[],\\\"stream\\\":false}\"}",
+         "delayMs": 5000
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "KnobLlm",
+     "event": "LLM_CHAT_WIRE_FAILED",
+     "payload": {
+      "key": "{\"kind\":\"chat\",\"id\":\"{\\\"action\\\":\\\"generate\\\",\\\"attempt\\\":0,\\\"system\\\":\\\"You are a helpful assistant.\\\",\\\"user\\\":\\\"hi\\\",\\\"base\\\":\\\"hi\\\",\\\"model\\\":\\\"vendor/model\\\",\\\"temperature\\\":0.7,\\\"maxTokens\\\":1024,\\\"categories\\\":[],\\\"itemIds\\\":[],\\\"callKey\\\":\\\"\\\",\\\"images\\\":[],\\\"stream\\\":false}\"}",
+      "error": "x",
+      "kind": "io"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_FIRST_BYTE_STOP",
+        "payload": {
+         "key": "{\"kind\":\"chat\",\"id\":\"{\\\"action\\\":\\\"generate\\\",\\\"attempt\\\":0,\\\"system\\\":\\\"You are a helpful assistant.\\\",\\\"user\\\":\\\"hi\\\",\\\"base\\\":\\\"hi\\\",\\\"model\\\":\\\"vendor/model\\\",\\\"temperature\\\":0.7,\\\"maxTokens\\\":1024,\\\"categories\\\":[],\\\"itemIds\\\":[],\\\"callKey\\\":\\\"\\\",\\\"images\\\":[],\\\"stream\\\":false}\"}"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "KnobLlm",
+     "event": "LLM_FIRST_BYTE_ELAPSED",
+     "payload": {
+      "key": "{\"kind\":\"chat\",\"id\":\"{\\\"action\\\":\\\"generate\\\",\\\"attempt\\\":0,\\\"system\\\":\\\"You are a helpful assistant.\\\",\\\"user\\\":\\\"hi\\\",\\\"base\\\":\\\"hi\\\",\\\"model\\\":\\\"vendor/model\\\",\\\"temperature\\\":0.7,\\\"maxTokens\\\":1024,\\\"categories\\\":[],\\\"itemIds\\\":[],\\\"callKey\\\":\\\"\\\",\\\"images\\\":[],\\\"stream\\\":false}\"}",
+      "waitedMs": 5000
+     },
+     "expect": {
+      "neverEmits": [
+       "LLM_CHAT_WIRE_CANCEL"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-first-byte-miss-on-a-tool-call-resends-the-same-model-call-and-a-second-miss-fails-the-run-under-its-key",
+   "defaults": [
+    "KnobDriver",
+    "KnobDelay"
+   ],
+   "steps": [
+    {
+     "trait": "KnobLlm",
+     "event": "LLM_FIRST_BYTE_ELAPSED",
+     "payload": {
+      "key": "{\"kind\":\"tools\",\"id\":\"{\\\"key\\\":\\\"t1\\\",\\\"model\\\":\\\"vendor/model\\\",\\\"system\\\":\\\"sys\\\",\\\"userPrompt\\\":\\\"hi\\\",\\\"maxSteps\\\":8,\\\"tools\\\":[{\\\"name\\\":\\\"read_x\\\",\\\"description\\\":\\\"d\\\",\\\"parameters\\\":{\\\"type\\\":\\\"object\\\"}}],\\\"messages\\\":[{\\\"role\\\":\\\"system\\\",\\\"content\\\":\\\"sys\\\"},{\\\"role\\\":\\\"user\\\",\\\"content\\\":\\\"hi\\\"}],\\\"steps\\\":[],\\\"usage\\\":{\\\"promptTokens\\\":0,\\\"completionTokens\\\":0,\\\"totalTokens\\\":0,\\\"modelCalls\\\":0}}\"}",
+      "waitedMs": 5000
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_CHAT_WIRE_CANCEL",
+        "payload": {
+         "key": "{\"kind\":\"tools\",\"id\":\"{\\\"key\\\":\\\"t1\\\",\\\"model\\\":\\\"vendor/model\\\",\\\"system\\\":\\\"sys\\\",\\\"userPrompt\\\":\\\"hi\\\",\\\"maxSteps\\\":8,\\\"tools\\\":[{\\\"name\\\":\\\"read_x\\\",\\\"description\\\":\\\"d\\\",\\\"parameters\\\":{\\\"type\\\":\\\"object\\\"}}],\\\"messages\\\":[{\\\"role\\\":\\\"system\\\",\\\"content\\\":\\\"sys\\\"},{\\\"role\\\":\\\"user\\\",\\\"content\\\":\\\"hi\\\"}],\\\"steps\\\":[],\\\"usage\\\":{\\\"promptTokens\\\":0,\\\"completionTokens\\\":0,\\\"totalTokens\\\":0,\\\"modelCalls\\\":0}}\"}"
+        }
+       },
+       {
+        "event": "LLM_CHAT_WIRE",
+        "payload": {
+         "key": "{\"kind\":\"tools\",\"id\":\"{\\\"key\\\":\\\"t1\\\",\\\"model\\\":\\\"vendor/model\\\",\\\"system\\\":\\\"sys\\\",\\\"userPrompt\\\":\\\"hi\\\",\\\"maxSteps\\\":8,\\\"tools\\\":[{\\\"name\\\":\\\"read_x\\\",\\\"description\\\":\\\"d\\\",\\\"parameters\\\":{\\\"type\\\":\\\"object\\\"}}],\\\"messages\\\":[{\\\"role\\\":\\\"system\\\",\\\"content\\\":\\\"sys\\\"},{\\\"role\\\":\\\"user\\\",\\\"content\\\":\\\"hi\\\"}],\\\"steps\\\":[],\\\"usage\\\":{\\\"promptTokens\\\":0,\\\"completionTokens\\\":0,\\\"totalTokens\\\":0,\\\"modelCalls\\\":0}}\"}",
+         "json": "{}"
+        }
+       }
+      ],
+      "neverEmits": [
+       "LLM_FAILED"
+      ]
+     }
+    },
+    {
+     "trait": "KnobLlm",
+     "event": "LLM_FIRST_BYTE_ELAPSED",
+     "payload": {
+      "key": "{\"kind\":\"tools\",\"id\":\"{\\\"key\\\":\\\"t1\\\",\\\"model\\\":\\\"vendor/model\\\",\\\"system\\\":\\\"sys\\\",\\\"userPrompt\\\":\\\"hi\\\",\\\"maxSteps\\\":8,\\\"tools\\\":[{\\\"name\\\":\\\"read_x\\\",\\\"description\\\":\\\"d\\\",\\\"parameters\\\":{\\\"type\\\":\\\"object\\\"}}],\\\"messages\\\":[{\\\"role\\\":\\\"system\\\",\\\"content\\\":\\\"sys\\\"},{\\\"role\\\":\\\"user\\\",\\\"content\\\":\\\"hi\\\"}],\\\"steps\\\":[],\\\"usage\\\":{\\\"promptTokens\\\":0,\\\"completionTokens\\\":0,\\\"totalTokens\\\":0,\\\"modelCalls\\\":0}}\"}",
+      "waitedMs": 5000
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_FAILED",
+        "payload": {
+         "code": "first-byte-timeout",
+         "key": "t1"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "fbArmed": [
+     {
+      "key": "{\"kind\":\"tools\",\"id\":\"{\\\"key\\\":\\\"t1\\\",\\\"model\\\":\\\"vendor/model\\\",\\\"system\\\":\\\"sys\\\",\\\"userPrompt\\\":\\\"hi\\\",\\\"maxSteps\\\":8,\\\"tools\\\":[{\\\"name\\\":\\\"read_x\\\",\\\"description\\\":\\\"d\\\",\\\"parameters\\\":{\\\"type\\\":\\\"object\\\"}}],\\\"messages\\\":[{\\\"role\\\":\\\"system\\\",\\\"content\\\":\\\"sys\\\"},{\\\"role\\\":\\\"user\\\",\\\"content\\\":\\\"hi\\\"}],\\\"steps\\\":[],\\\"usage\\\":{\\\"promptTokens\\\":0,\\\"completionTokens\\\":0,\\\"totalTokens\\\":0,\\\"modelCalls\\\":0}}\"}",
+      "kind": "tools",
+      "id": "{\"key\":\"t1\",\"model\":\"vendor/model\",\"system\":\"sys\",\"userPrompt\":\"hi\",\"maxSteps\":8,\"tools\":[{\"name\":\"read_x\",\"description\":\"d\",\"parameters\":{\"type\":\"object\"}}],\"messages\":[{\"role\":\"system\",\"content\":\"sys\"},{\"role\":\"user\",\"content\":\"hi\"}],\"steps\":[],\"usage\":{\"promptTokens\":0,\"completionTokens\":0,\"totalTokens\":0,\"modelCalls\":0}}",
+      "body": "{}",
+      "retried": false
+     }
+    ]
+   }
+  },
+  {
+   "id": "a-cache-miss-sends-the-request-and-writes-the-validated-reply-under-the-request-key-and-the-next-call-hits",
+   "defaults": [
+    "KnobDriver",
+    "KnobDelay"
+   ],
+   "steps": [
+    {
+     "trait": "CacheLlm",
+     "event": "LLM_EXTRACT",
+     "payload": {
+      "text": "doc",
+      "schema": "{}",
+      "temperature": 0
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_CACHE_LOOKUP",
+        "payload": {
+         "job": "{\"action\":\"extract\",\"attempt\":0,\"system\":\"You are a structured data extractor. Extract data from the given text according to this schema:\\n\\n{}\\n\\nReturn ONLY valid JSON matching the schema.\",\"user\":\"doc\",\"base\":\"doc\",\"model\":\"vendor/model\",\"temperature\":0,\"maxTokens\":0,\"categories\":[],\"itemIds\":[],\"callKey\":\"\",\"images\":[],\"stream\":false,\"ck\":\"979466e72b07e0d7066931b9fdc08887e414257322d2945338995ea5852e63ee\"}"
+        }
+       },
+       {
+        "event": "LLM_CHAT_SEND",
+        "payload": {
+         "job": "{\"action\":\"extract\",\"attempt\":0,\"system\":\"You are a structured data extractor. Extract data from the given text according to this schema:\\n\\n{}\\n\\nReturn ONLY valid JSON matching the schema.\",\"user\":\"doc\",\"base\":\"doc\",\"model\":\"vendor/model\",\"temperature\":0,\"maxTokens\":0,\"categories\":[],\"itemIds\":[],\"callKey\":\"\",\"images\":[],\"stream\":false,\"ck\":\"979466e72b07e0d7066931b9fdc08887e414257322d2945338995ea5852e63ee\"}"
+        }
+       },
+       {
+        "event": "LLM_CHAT_WIRE"
+       }
+      ]
+     },
+     "now": 1700000000000
+    },
+    {
+     "trait": "CacheLlm",
+     "event": "LLM_CHAT_WIRE_RESULT",
+     "payload": {
+      "key": "{\"kind\":\"chat\",\"id\":\"{\\\"action\\\":\\\"extract\\\",\\\"attempt\\\":0,\\\"system\\\":\\\"You are a structured data extractor. Extract data from the given text according to this schema:\\\\n\\\\n{}\\\\n\\\\nReturn ONLY valid JSON matching the schema.\\\",\\\"user\\\":\\\"doc\\\",\\\"base\\\":\\\"doc\\\",\\\"model\\\":\\\"vendor/model\\\",\\\"temperature\\\":0,\\\"maxTokens\\\":0,\\\"categories\\\":[],\\\"itemIds\\\":[],\\\"callKey\\\":\\\"\\\",\\\"images\\\":[],\\\"stream\\\":false,\\\"ck\\\":\\\"979466e72b07e0d7066931b9fdc08887e414257322d2945338995ea5852e63ee\\\"}\"}",
+      "status": 200,
+      "headers": {},
+      "body": "eyJjaG9pY2VzIjpbeyJtZXNzYWdlIjp7ImNvbnRlbnQiOiJ7XCJhXCI6MX0ifX1dLCJ1c2FnZSI6eyJwcm9tcHRfdG9rZW5zIjoxLCJjb21wbGV0aW9uX3Rva2VucyI6MX19",
+      "attempts": 1,
+      "pages": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_EXTRACT_RESULT",
+        "payload": {
+         "json": "{\"a\":1}"
+        }
+       },
+       {
+        "event": "LLM_CACHE_STORE",
+        "payload": {
+         "key": "979466e72b07e0d7066931b9fdc08887e414257322d2945338995ea5852e63ee",
+         "result": "{\"a\":1}"
+        }
+       },
+       {
+        "event": "LLM_CACHE_STORED"
+       }
+      ]
+     },
+     "now": 1700000000000
+    },
+    {
+     "trait": "CacheLlm",
+     "event": "LLM_EXTRACT",
+     "payload": {
+      "text": "doc",
+      "schema": "{}",
+      "temperature": 0
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_EXTRACT_RESULT",
+        "payload": {
+         "json": "{\"a\":1}"
+        }
+       }
+      ],
+      "neverEmits": [
+       "LLM_CHAT_WIRE",
+       "LLM_CACHE_STORE"
+      ]
+     },
+     "now": 1700000001000
+    }
+   ]
+  },
+  {
+   "id": "a-cache-hit-within-the-ttl-answers-the-result-with-no-request-and-no-write",
+   "defaults": [
+    "KnobDriver",
+    "KnobDelay"
+   ],
+   "steps": [
+    {
+     "trait": "CacheLlm",
+     "event": "LLM_CACHE_STORE",
+     "payload": {
+      "key": "979466e72b07e0d7066931b9fdc08887e414257322d2945338995ea5852e63ee",
+      "result": "{\"a\":1}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_CACHE_STORED"
+       }
+      ]
+     },
+     "now": 1700000000000
+    },
+    {
+     "trait": "CacheLlm",
+     "event": "LLM_EXTRACT",
+     "payload": {
+      "text": "doc",
+      "schema": "{}",
+      "temperature": 0
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_EXTRACT_RESULT",
+        "payload": {
+         "json": "{\"a\":1}"
+        }
+       }
+      ],
+      "neverEmits": [
+       "LLM_CHAT_WIRE",
+       "LLM_CACHE_STORE"
+      ]
+     },
+     "now": 1700604799999
+    }
+   ]
+  },
+  {
+   "id": "edge-a-row-exactly-ttl-old-is-expired",
+   "defaults": [
+    "KnobDriver",
+    "KnobDelay"
+   ],
+   "steps": [
+    {
+     "trait": "CacheLlm",
+     "event": "LLM_CACHE_STORE",
+     "payload": {
+      "key": "979466e72b07e0d7066931b9fdc08887e414257322d2945338995ea5852e63ee",
+      "result": "{\"a\":1}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_CACHE_STORED"
+       }
+      ]
+     },
+     "now": 1700000000000
+    },
+    {
+     "trait": "CacheLlm",
+     "event": "LLM_EXTRACT",
+     "payload": {
+      "text": "doc",
+      "schema": "{}",
+      "temperature": 0
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_CHAT_WIRE"
+       }
+      ],
+      "neverEmits": [
+       "LLM_EXTRACT_RESULT"
+      ]
+     },
+     "now": 1700604800000
+    }
+   ]
+  },
+  {
+   "id": "an-expired-cache-row-is-a-miss-the-request-is-sent-and-the-row-replaced",
+   "defaults": [
+    "KnobDriver",
+    "KnobDelay"
+   ],
+   "steps": [
+    {
+     "trait": "CacheLlm",
+     "event": "LLM_CACHE_STORE",
+     "payload": {
+      "key": "979466e72b07e0d7066931b9fdc08887e414257322d2945338995ea5852e63ee",
+      "result": "{\"old\":1}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_CACHE_STORED"
+       }
+      ]
+     },
+     "now": 1700000000000
+    },
+    {
+     "trait": "CacheLlm",
+     "event": "LLM_EXTRACT",
+     "payload": {
+      "text": "doc",
+      "schema": "{}",
+      "temperature": 0
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_CHAT_WIRE"
+       }
+      ],
+      "neverEmits": [
+       "LLM_EXTRACT_RESULT"
+      ]
+     },
+     "now": 1700604800001
+    },
+    {
+     "trait": "CacheLlm",
+     "event": "LLM_CHAT_WIRE_RESULT",
+     "payload": {
+      "key": "{\"kind\":\"chat\",\"id\":\"{\\\"action\\\":\\\"extract\\\",\\\"attempt\\\":0,\\\"system\\\":\\\"You are a structured data extractor. Extract data from the given text according to this schema:\\\\n\\\\n{}\\\\n\\\\nReturn ONLY valid JSON matching the schema.\\\",\\\"user\\\":\\\"doc\\\",\\\"base\\\":\\\"doc\\\",\\\"model\\\":\\\"vendor/model\\\",\\\"temperature\\\":0,\\\"maxTokens\\\":0,\\\"categories\\\":[],\\\"itemIds\\\":[],\\\"callKey\\\":\\\"\\\",\\\"images\\\":[],\\\"stream\\\":false,\\\"ck\\\":\\\"979466e72b07e0d7066931b9fdc08887e414257322d2945338995ea5852e63ee\\\"}\"}",
+      "status": 200,
+      "headers": {},
+      "body": "eyJjaG9pY2VzIjpbeyJtZXNzYWdlIjp7ImNvbnRlbnQiOiJ7XCJhXCI6MX0ifX1dLCJ1c2FnZSI6eyJwcm9tcHRfdG9rZW5zIjoxLCJjb21wbGV0aW9uX3Rva2VucyI6MX19",
+      "attempts": 1,
+      "pages": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_EXTRACT_RESULT",
+        "payload": {
+         "json": "{\"a\":1}"
+        }
+       },
+       {
+        "event": "LLM_CACHE_STORE"
+       },
+       {
+        "event": "LLM_CACHE_STORED"
+       }
+      ]
+     },
+     "now": 1700604800002
+    },
+    {
+     "trait": "CacheLlm",
+     "event": "LLM_EXTRACT",
+     "payload": {
+      "text": "doc",
+      "schema": "{}",
+      "temperature": 0
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_EXTRACT_RESULT",
+        "payload": {
+         "json": "{\"a\":1}"
+        }
+       }
+      ],
+      "neverEmits": [
+       "LLM_CHAT_WIRE",
+       "LLM_CACHE_STORE"
+      ]
+     },
+     "now": 1700604800003
+    }
+   ]
+  },
+  {
+   "id": "control-a-request-above-temperature-0-is-never-cached",
+   "defaults": [
+    "KnobDriver",
+    "KnobDelay"
+   ],
+   "steps": [
+    {
+     "trait": "CacheLlm",
+     "event": "LLM_EXTRACT",
+     "payload": {
+      "text": "doc",
+      "schema": "{}",
+      "temperature": 0.2
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_CHAT_WIRE"
+       }
+      ],
+      "neverEmits": [
+       "LLM_CACHE_LOOKUP"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-tool-call-is-never-cached",
+   "defaults": [
+    "KnobDriver",
+    "KnobDelay"
+   ],
+   "steps": [
+    {
+     "trait": "CacheLlm",
+     "event": "LLM_CALL_TOOLS",
+     "payload": {
+      "messages": [
+       {
+        "role": "user",
+        "content": "hi"
+       }
+      ],
+      "instructions": "sys",
+      "tools": [
+       {
+        "name": "read_x",
+        "description": "d",
+        "parameters": {
+         "type": "object"
+        }
+       }
+      ],
+      "key": "t1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_CHAT_WIRE"
+       }
+      ],
+      "neverEmits": [
+       "LLM_CACHE_LOOKUP"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-with-the-cache-knob-off-a-temperature-0-request-is-sent",
+   "defaults": [
+    "KnobDriver",
+    "KnobDelay"
+   ],
+   "steps": [
+    {
+     "trait": "PlainLlm",
+     "event": "LLM_EXTRACT",
+     "payload": {
+      "text": "doc",
+      "schema": "{}",
+      "temperature": 0
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_CHAT_WIRE"
+       }
+      ],
+      "neverEmits": [
+       "LLM_CACHE_LOOKUP"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-cached-stream-generate-answers-the-final-result-directly-with-zero-usage-and-no-delta",
+   "defaults": [
+    "KnobDriver",
+    "KnobDelay"
+   ],
+   "steps": [
+    {
+     "trait": "CacheLlm",
+     "event": "LLM_CACHE_STORE",
+     "payload": {
+      "key": "dcd6d5dcf9618d93f7df69ff4a2b696d61c415715f36d0e49a185d65c3287efd",
+      "result": "cached text"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_CACHE_STORED"
+       }
+      ]
+     },
+     "now": 1700000000000
+    },
+    {
+     "trait": "CacheLlm",
+     "event": "LLM_GENERATE",
+     "payload": {
+      "userPrompt": "hi",
+      "temperature": 0,
+      "stream": true
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_GENERATE_RESULT",
+        "payload": {
+         "content": "cached text",
+         "usage": {
+          "promptTokens": 0,
+          "completionTokens": 0,
+          "totalTokens": 0
+         }
+        }
+       }
+      ],
+      "neverEmits": [
+       "LLM_GENERATE_DELTA",
+       "LLM_CHAT_WIRE",
+       "LLM_USAGE_REPORTED"
+      ]
+     },
+     "now": 1700000000001
+    }
+   ]
+  },
+  {
+   "id": "a-classify-at-temperature-0-is-answered-from-the-cache",
+   "defaults": [
+    "KnobDriver",
+    "KnobDelay"
+   ],
+   "steps": [
+    {
+     "trait": "CacheLlm",
+     "event": "LLM_CACHE_STORE",
+     "payload": {
+      "key": "a415191260064cc2324351d40bd6da2ca446317ffcc9cb099fc76b0e129950d8",
+      "result": "{\"category\":\"a\",\"confidence\":0.9,\"reasoning\":\"r\"}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_CACHE_STORED"
+       }
+      ]
+     },
+     "now": 1700000000000
+    },
+    {
+     "trait": "CacheLlm",
+     "event": "LLM_CLASSIFY",
+     "payload": {
+      "text": "t",
+      "categories": [
+       "a",
+       "b"
+      ],
+      "temperature": 0
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_CLASSIFY_RESULT",
+        "payload": {
+         "category": "a",
+         "confidence": 0.9,
+         "reasoning": "r"
+        }
+       }
+      ],
+      "neverEmits": [
+       "LLM_CHAT_WIRE",
+       "LLM_CACHE_STORE"
+      ]
+     },
+     "now": 1700000000001
+    }
+   ]
+  },
+  {
+   "id": "a-store-failure-other-than-not-found-fails-the-request-and-sends-nothing",
+   "defaults": [
+    "KnobDriver",
+    "KnobDelay"
+   ],
+   "steps": [
+    {
+     "trait": "CacheLlm",
+     "event": "LLM_CACHE_ABSENT",
+     "payload": {
+      "code": "denied",
+      "error": "no store"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_FAILED",
+        "payload": {
+         "code": "cache-read-failed",
+         "key": "k9"
+        }
+       }
+      ],
+      "neverEmits": [
+       "LLM_CHAT_WIRE"
+      ]
+     },
+     "entity": {
+      "cacheQueue": [
+       "{\"action\":\"extract\",\"attempt\":0,\"system\":\"You are a structured data extractor. Extract data from the given text according to this schema:\\n\\n{}\\n\\nReturn ONLY valid JSON matching the schema.\",\"user\":\"doc\",\"base\":\"doc\",\"model\":\"vendor/model\",\"temperature\":0,\"maxTokens\":0,\"categories\":[],\"itemIds\":[],\"callKey\":\"k9\",\"images\":[],\"stream\":false,\"ck\":\"979466e72b07e0d7066931b9fdc08887e414257322d2945338995ea5852e63ee\"}"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-cache-write-failure-is-reported-and-never-hidden",
+   "defaults": [
+    "KnobDriver",
+    "KnobDelay"
+   ],
+   "steps": [
+    {
+     "trait": "CacheLlm",
+     "event": "LLM_CACHE_NOT_STORED",
+     "payload": {
+      "error": "disk full"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_CACHE_WRITE_FAILED",
+        "payload": {
+         "message": "disk full"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

@@ -39,7 +39,7 @@ type GuestStepped = { rendered : [GuestPaint]!, outcomes : [GuestMove]! }
 type GuestClosed = { closed : boolean! }
 type GuestPersonaOption = { id : string!, name : string, role : string }
 type GuestPersonasReply = { success : boolean, personas : [GuestPersonaOption] }
-type GuestAnswer = { status : number, body : string, subject : string, error : string }
+type GuestAnswer = { status : number, body : string, subject : string, error : string, reason : string }
 type GuestEmitted = { event : string!, payload : GuestAnswer? }
 type GuestAnswered = { emitted : [GuestEmitted]? }
 
@@ -123,6 +123,14 @@ orbital GuestSessionOrbital {
         @label "Notice when a mocked guest is denied a page"
         @tier "domain"
       signInRefused : string = "That sign-in was not accepted by this behavior."
+        @label "Notice when a guest refuses a signed-in credential"
+        @tier "policy"
+      signInReason : string = "Reason:"
+        @label "Prefix of the reason a guest gives for refusing a credential"
+        @tier "policy"
+      signInUnanswered : string = "It answered with:"
+        @label "Prefix of the events a guest answered when it neither bound nor refused a credential"
+        @tier "policy"
         @label "Notice when a signed-in token is refused"
         @tier "domain"
       liveRoot : string = "~/.almadar/launchpad/live"
@@ -457,7 +465,7 @@ orbital GuestSessionOrbital {
       GUEST_CREDENTIAL_ANSWERED -> live when (array/some (default ?result.emitted []) (fn e (= @e.event "CREDENTIAL_BOUND")))
         (program/navigate { guest: @entity.guestHandle, route: @entity.guestReturnTo, remount: true } { emit: { success: GUEST_NAVIGATED, failure: GUEST_NAVIGATE_FAILED } })
       GUEST_CREDENTIAL_ANSWERED -> live when (not (array/some (default ?result.emitted []) (fn e (= @e.event "CREDENTIAL_BOUND"))))
-        (emit GUEST_NOTICE { message: @config.signInRefused })
+        (emit GUEST_NOTICE { message: (let ((refused (array/find (default ?result.emitted []) (fn e (= @e.event "CREDENTIAL_REFUSED"))))) (if (= @refused null) (str/concat @config.signInRefused " " @config.signInUnanswered " " (str/join (array/map (default ?result.emitted []) (fn e @e.event)) ", ")) (str/concat @config.signInRefused " " @config.signInReason " " (default @refused.payload.reason "")))) })
       GUEST_CREDENTIAL_FAILED -> live
         (emit GUEST_NOTICE { message: ?error })
       GUEST_NAVIGATED -> live when (!= (default ?result.access.verdict "") "denied")
@@ -801,7 +809,7 @@ orbital GuestSessionOrbital {
         (set @entity.guestError ?message)
         (emit GUEST_SHOWN {})
       GUEST_SIGN_IN -> idle
-        (auth/sign-in { method: "google" } { emit: { success: GUEST_GOOGLE_IN, failure: GUEST_GOOGLE_FAILED } })
+        (auth/sign-in { method: "google", viewer: false } { emit: { success: GUEST_GOOGLE_IN, failure: GUEST_GOOGLE_FAILED } })
       GUEST_GOOGLE_IN -> idle
         (emit GUEST_CREDENTIAL { guest: @entity.guestHandle, token: (default ?idToken "") })
       GUEST_GOOGLE_FAILED -> idle

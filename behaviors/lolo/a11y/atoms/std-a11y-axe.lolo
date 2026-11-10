@@ -20,6 +20,7 @@ orbital AxeOrbital {
     id : string!
     runKey : string @description "The caller's name for the run in flight; blank when idle." = ""
     pageUrl : string @description "The page the run in flight is about." = ""
+    preloaded : boolean @description "True once the preload knob made the tab carry the axe script into every later page; the first run injects it into the page already open." = false
   }
 
   trait AxeProbe -> AxeRun {
@@ -27,10 +28,29 @@ orbital AxeOrbital {
 
     state idle {
       INIT -> idle
-      PROBE_RUN -> injecting
+      PROBE_RUN -> injecting when (not @config.preload)
         (set @entity.runKey @payload.key)
         (set @entity.pageUrl @payload.pageUrl)
         (emit PAGE_INJECT { key: (str/concat @payload.key ":inject"), script: @config.script })
+      PROBE_RUN -> measuring when (and @config.preload @entity.preloaded)
+        (set @entity.runKey @payload.key)
+        (set @entity.pageUrl @payload.pageUrl)
+        (emit PAGE_MEASURE { key: (str/concat @payload.key ":measure"), expression: @config.expression })
+      PROBE_RUN -> preloading when (and @config.preload (not @entity.preloaded))
+        (set @entity.runKey @payload.key)
+        (set @entity.pageUrl @payload.pageUrl)
+        (emit PAGE_PRELOAD { key: (str/concat @payload.key ":preload"), script: @config.script })
+    }
+
+    state preloading {
+      INIT -> idle
+      PROBE_RUN -> preloading
+        (emit PROBE_FAILED { key: @payload.key, probe: "axe", error: (str/concat "a run on " @entity.pageUrl " is in flight"), code: "probe_busy" })
+      PAGE_PRELOADED -> injecting when (= @payload.key (str/concat @entity.runKey ":preload"))
+        (set @entity.preloaded true)
+        (emit PAGE_INJECT { key: (str/concat @entity.runKey ":inject"), script: @config.script })
+      PAGE_FAILED -> idle when (= @payload.key (str/concat @entity.runKey ":preload"))
+        (emit PROBE_FAILED { key: @entity.runKey, probe: "axe", error: @payload.error, code: @payload.code })
     }
 
     state injecting {
@@ -89,6 +109,9 @@ orbital AxeOrbital {
         @description "The run failed: code is probe_busy, axe_bad_reply or the page's own failure code."
         @synonyms "axe failed, axe error"
         @tier "primary"
+      PAGE_PRELOAD -> external { key : string!  script : string! }
+        @description "Ask the tab to evaluate the axe-core script in every page it loads from now on; sent once, on the first run, when the preload knob is on."
+        @tier "secondary"
       PAGE_INJECT -> external { key : string!  script : string! }
         @description "Ask the page to evaluate the axe-core script file."
         @tier "secondary"
@@ -101,6 +124,8 @@ orbital AxeOrbital {
       PROBE_RUN { key : string!  pageUrl : string! }
         @description "Run axe-core on the page the tab is already on and answer its accessibility findings."
         @synonyms "axe run, axe scan, accessibility engine scan"
+      PAGE_PRELOADED { key : string!  identifier : string! }
+        @description "The tab will evaluate the script in every page it loads from now on."
       PAGE_INJECTED { key : string! }
         @description "The page evaluated the injected script."
       PAGE_MEASURED { key : string!  json : string! }
@@ -113,6 +138,10 @@ orbital AxeOrbital {
       script : string = "axe-core/axe.min.js"
         @label "axe-core script"
         @description "The axe.min.js path the page evaluates, relative to the scriptDir the composer gives std-chrome; the composer grants the read."
+        @tier "infra"
+      preload : boolean = false
+        @label "Preload the script"
+        @description "Off: every run injects the script into the page. On: the first run preloads it so every later page the tab loads already carries it, and injects it once into the page already open; later runs only evaluate the run expression. A run on a page that was not loaded after the preload (a page loaded before it) is the caller's to avoid."
         @tier "infra"
       expression : string = "axe.run(document, { runOnly: { type: \"tag\", values: [\"wcag2a\", \"wcag2aa\", \"wcag21a\", \"wcag21aa\", \"wcag22aa\"] } }).then(function (r) { return JSON.stringify({ version: r.testEngine.version, violations: r.violations.map(function (v) { return { id: v.id, impact: v.impact || undefined, tags: v.tags, nodes: v.nodes.map(function (n) { return { target: n.target.map(function (t) { return Array.isArray(t) ? t.join(\" \") : t; }).join(\" \"), html: n.html }; }) }; }) }); })"
         @label "Run expression"

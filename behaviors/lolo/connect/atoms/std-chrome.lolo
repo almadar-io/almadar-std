@@ -1,6 +1,6 @@
 app std-chrome [
   version: "1.0.0",
-  description: "std-chrome — drives one headless Chrome tab through a composed std-daemon (launch) and std-cdp (transport). CHROME_START creates the profile and download directories (anchored knobs), launches Chrome detached with --headless=new, --remote-debugging-port, --user-data-dir and the extraArgs knob (no --no-sandbox by default: the container organism sets it), connects, creates a target (Target.createTarget about:blank), attaches it with a flat session (Target.attachToTarget), enables Page, Runtime and Accessibility on the session, sets Browser.setDownloadBehavior allow into the download directory with events, and answers CHROME_READY. Every page request carries a caller key, runs one at a time (a second one answers PAGE_FAILED busy) and answers on that key. NAVIGATE: Page.navigate, then the session's Page.loadEventFired or the navigation timeout, then location and title; an errorText answers navigation-failed. TEXT, LINKS, FOCUSED and MEASURE are Runtime.evaluate of measuring-only expressions held in knobs; LINKS and CLICK share one element list. CLICK clicks and, after clickSettleMs, reports navigated (location changed or main-frame Page.frameNavigated). KEY sends Input.dispatchKeyEvent keyDown and keyUp from the keys table. VIEWPORT is Emulation.setDeviceMetricsOverride with page zoom for textZoom. SCREENSHOT is Page.captureScreenshot (base64 to bytes); AX_TREE is Accessibility.getFullAXTree. DOWNLOAD clicks as CLICK does and waits for Browser.downloadWillBegin and downloadProgress completed; the path is the filePath of the completed event. PRINT_PDF navigates about:blank, sets the document content from Page.getFrameTree and prints with Page.printToPDF. INJECT reads the script file (a path relative to the scriptDir knob; an absolute path or one that climbs out with .. answers PAGE_FAILED bad-script) and evaluates it. CHROME_STOP closes the target, disconnects and stops the browser it started (a browser that was already listening is left running). The composer grants exec for the Chrome binary, net 127.0.0.1 on the port, fs create, read and write on the profile directory, fs create and read on the download directory and fs read on the scriptDir directory, and sets ChromeDaemon commands (default the ORB_CHROME environment variable), readyPort and the CdpHttp and CdpWs port when it changes port."
+  description: "std-chrome — drives one headless Chrome tab through a composed std-daemon (launch) and std-cdp (transport). CHROME_START creates the profile and download directories (anchored knobs), launches Chrome detached with --headless=new, --remote-debugging-port, --user-data-dir and the extraArgs knob (no --no-sandbox by default: the container organism sets it), connects, creates a target (Target.createTarget about:blank), attaches it with a flat session (Target.attachToTarget), enables Page, Runtime and Accessibility on the session, sets Browser.setDownloadBehavior allow into the download directory with events, and answers CHROME_READY. Every page request carries a caller key, runs one at a time (a second one answers PAGE_FAILED busy) and answers on that key. NAVIGATE: Page.navigate, then the session's Page.loadEventFired or the navigation timeout, then location and title; an errorText answers navigation-failed. With the waitFor knob networkIdle it first enables Page.setLifecycleEventsEnabled and answers only after the navigated frame's networkIdle lifecycle event (after load), the evaluation of document.fonts.ready and the settleMs wait, all inside the navigation timeout. ELEMENT_SHOT is DOM.getDocument, DOM.querySelector, DOM.scrollIntoViewIfNeeded, the elementSettleMs wait, DOM.getBoxModel, Page.getLayoutMetrics and a clipped Page.captureScreenshot (the margin knob elementMargin clamped inside the content), answering the image with its clip and the element box relative to the clip; no match answers element-missing, no box or size element-hidden. PRELOAD is Page.addScriptToEvaluateOnNewDocument. TEXT, LINKS, FOCUSED and MEASURE are Runtime.evaluate of measuring-only expressions held in knobs; LINKS and CLICK share one element list. CLICK clicks and, after clickSettleMs, reports navigated (location changed or main-frame Page.frameNavigated). KEY sends Input.dispatchKeyEvent keyDown and keyUp from the keys table. VIEWPORT is Emulation.setDeviceMetricsOverride with page zoom for textZoom. SCREENSHOT is Page.captureScreenshot (base64 to bytes); AX_TREE is Accessibility.getFullAXTree. DOWNLOAD clicks as CLICK does and waits for Browser.downloadWillBegin and downloadProgress completed; the path is the filePath of the completed event. PRINT_PDF with html navigates about:blank, sets the document content from Page.getFrameTree and prints with Page.printToPDF; with an absolute path it navigates to file:// plus the path, waits for load and prints; exactly one of html and path. INJECT reads the script file (a path relative to the scriptDir knob; an absolute path or one that climbs out with .. answers PAGE_FAILED bad-script) and evaluates it. CHROME_STOP closes the target, disconnects and stops the browser it started (a browser that was already listening is left running). The composer grants exec for the Chrome binary, net 127.0.0.1 on the port, fs create, read and write on the profile directory, fs create and read on the download directory and fs read on the scriptDir directory, and sets ChromeDaemon commands (default the ORB_CHROME environment variable), readyPort and the CdpHttp and CdpWs port when it changes port."
 ]
 ;; @capabilities "drive a headless Chrome tab: navigate, read text and links, click, press keys, read focus, resize, screenshot, accessibility tree, download, print PDF, inject and measure"
 uses Spec from "almadar-std/chrome"
@@ -27,6 +27,12 @@ type FrameTreeReply = { result : { frameTree : { frame : { id : string! }! }! }!
 type AxValue = { value : string? }
 type AxNodeWire = { nodeId : string!, ignored : boolean?, role : AxValue?, name : AxValue?, parentId : string? }
 type AxReply = { result : { nodes : [AxNodeWire]! }! }
+type LifecycleEvent = { params : { frameId : string!, name : string! }! }
+type DocReply = { result : { root : { nodeId : number! }! }! }
+type QueryReply = { result : { nodeId : number! }! }
+type BoxReply = { result : { model : { border : [number]! }! }! }
+type MetricsReply = { result : { contentSize : { width : number!, height : number! }!, cssVisualViewport : { pageX : number!, pageY : number! }! }! }
+type PreloadReply = { result : { identifier : string! }! }
 type NavInfo = { url : string!, title : string! }
 type TextRead = { url : string!, title : string!, lang : string!, text : string! }
 type LinkList = [PageLink]
@@ -61,6 +67,16 @@ orbital ChromeOrbital {
     dlGuid : string @description "Guid of the download in flight." = ""
     dlName : string @description "Suggested file name of the download in flight." = ""
     dlUrl : string @description "Source url of the download in flight." = ""
+    navUrl : string @description "The url of the PAGE_NAVIGATE in flight." = ""
+    frameId : string @description "The frame Page.navigate reported for the navigation in flight; lifecycle events of other frames are ignored." = ""
+    nodeId : number @description "The DOM node id DOM.querySelector found for the PAGE_ELEMENT_SHOT in flight." = 0
+    selector : string @description "The CSS selector of the PAGE_ELEMENT_SHOT in flight." = ""
+    shotMargin : number @description "The margin around the element of the PAGE_ELEMENT_SHOT in flight." = 0
+    shotFormat : string @description "The image format of the PAGE_ELEMENT_SHOT in flight." = "png"
+    shotQuality : number? @description "The jpeg quality of the PAGE_ELEMENT_SHOT in flight; absent when none was asked."
+    elRect : PageRect @description "The element border rectangle, relative to the viewport, from DOM.getBoxModel." = { x: 0, y: 0, width: 0, height: 0 }
+    shotClip : PageRect @description "The clip of the PAGE_ELEMENT_SHOT in flight, in page coordinates." = { x: 0, y: 0, width: 0, height: 0 }
+    shotBox : PageRect @description "The element rectangle relative to the clip origin." = { x: 0, y: 0, width: 0, height: 0 }
   }
 
   trait ChromeDaemon = Daemon.traits.Daemon {
@@ -163,6 +179,10 @@ orbital ChromeOrbital {
         (emit PAGE_FAILED { key: @payload.key error: "the browser is not started; send CHROME_START first" code: "not-started" })
       PAGE_MEASURE -> stopped
         (emit PAGE_FAILED { key: @payload.key error: "the browser is not started; send CHROME_START first" code: "not-started" })
+      PAGE_ELEMENT_SHOT -> stopped
+        (emit PAGE_FAILED { key: @payload.key error: "the browser is not started; send CHROME_START first" code: "not-started" })
+      PAGE_PRELOAD -> stopped
+        (emit PAGE_FAILED { key: @payload.key error: "the browser is not started; send CHROME_START first" code: "not-started" })
     }
 
     state starting {
@@ -197,6 +217,10 @@ orbital ChromeOrbital {
       PAGE_INJECT -> starting
         (emit PAGE_FAILED { key: @payload.key error: "the browser is still starting" code: "not-ready" })
       PAGE_MEASURE -> starting
+        (emit PAGE_FAILED { key: @payload.key error: "the browser is still starting" code: "not-ready" })
+      PAGE_ELEMENT_SHOT -> starting
+        (emit PAGE_FAILED { key: @payload.key error: "the browser is still starting" code: "not-ready" })
+      PAGE_PRELOAD -> starting
         (emit PAGE_FAILED { key: @payload.key error: "the browser is still starting" code: "not-ready" })
       CHROME_DIR_MADE -> starting when (= @entity.stage "mk-profile")
         (set @entity.stage "rp-profile")
@@ -279,9 +303,13 @@ orbital ChromeOrbital {
         (emit CDP_COMMAND { key: "close-target" method: "Target.closeTarget" paramsJson: (json/stringify { targetId: @entity.targetId }) })
       CHROME_DISCONNECTED -> stopped
         (emit CHROME_FAILED { code: "disconnected" message: @payload.reason })
-      PAGE_NAVIGATE -> busy
+      PAGE_NAVIGATE -> busy when (= @config.waitFor "load")
         (set @entity.op "navigate") (set @entity.callerKey @payload.key) (set @entity.stage "nav") (set @entity.loadSeen false) (set @entity.navSeen false)
         (emit CDP_COMMAND { key: "nav" method: "Page.navigate" sessionId: @entity.sessionId paramsJson: (json/stringify { url: @payload.url }) })
+        (emit CHROME_TIMER_ARM { key: "op" delayMs: @config.navigationTimeoutMs })
+      PAGE_NAVIGATE -> busy when (= @config.waitFor "networkIdle")
+        (set @entity.op "navigate") (set @entity.callerKey @payload.key) (set @entity.stage "nav-lc") (set @entity.loadSeen false) (set @entity.navSeen false) (set @entity.navUrl @payload.url)
+        (emit CDP_COMMAND { key: "nav-lc" method: "Page.setLifecycleEventsEnabled" sessionId: @entity.sessionId paramsJson: (json/stringify { enabled: true }) })
         (emit CHROME_TIMER_ARM { key: "op" delayMs: @config.navigationTimeoutMs })
       PAGE_TEXT -> busy
         (set @entity.op "text") (set @entity.callerKey @payload.key) (set @entity.stage "text")
@@ -321,9 +349,21 @@ orbital ChromeOrbital {
         (set @entity.op "download") (set @entity.callerKey @payload.key) (set @entity.stage "dl-click") (set @entity.dlGuid "") (set @entity.dlName "") (set @entity.dlUrl "")
         (emit CHROME_TIMER_ARM { key: "op" delayMs: @config.downloadTimeoutMs })
         (emit CDP_COMMAND { key: "dl-click" method: "Runtime.evaluate" sessionId: @entity.sessionId paramsJson: (json/stringify { expression: (str/concat @config.clickScript "(" (json/stringify { sel: @config.elementSelector index: (default @payload.index null) selector: (default @payload.selector null) }) ")") returnByValue: true }) })
-      PAGE_PRINT_PDF -> busy
+      PAGE_PRINT_PDF -> ready when (= (== @payload.html null) (== @payload.path null))
+        (emit PAGE_FAILED { key: @payload.key error: "exactly one of html and path is required" code: "bad-request" })
+      PAGE_PRINT_PDF -> busy when (and (not (= (== @payload.html null) (== @payload.path null))) (== @payload.path null))
         (set @entity.op "pdf") (set @entity.callerKey @payload.key) (set @entity.stage "pdf-blank") (set @entity.html @payload.html)
         (emit CDP_COMMAND { key: "pdf-blank" method: "Page.navigate" sessionId: @entity.sessionId paramsJson: (json/stringify { url: "about:blank" }) })
+      PAGE_PRINT_PDF -> busy when (and (not (= (== @payload.html null) (== @payload.path null))) (not (== @payload.path null)))
+        (set @entity.op "pdf") (set @entity.callerKey @payload.key) (set @entity.stage "pdf-nav") (set @entity.loadSeen false)
+        (emit CDP_COMMAND { key: "pdf-nav" method: "Page.navigate" sessionId: @entity.sessionId paramsJson: (json/stringify { url: (str/concat "file://" @payload.path) }) })
+        (emit CHROME_TIMER_ARM { key: "op" delayMs: @config.navigationTimeoutMs })
+      PAGE_ELEMENT_SHOT -> busy
+        (set @entity.op "elshot") (set @entity.callerKey @payload.key) (set @entity.stage "el-doc") (set @entity.selector @payload.selector) (set @entity.shotMargin (default @payload.margin @config.elementMargin)) (set @entity.shotFormat (default @payload.format "png")) (set @entity.shotQuality (default @payload.quality null))
+        (emit CDP_COMMAND { key: "el-doc" method: "DOM.getDocument" sessionId: @entity.sessionId paramsJson: (json/stringify { depth: 0 }) })
+      PAGE_PRELOAD -> busy
+        (set @entity.op "preload") (set @entity.callerKey @payload.key) (set @entity.stage "preload")
+        (emit CDP_COMMAND { key: "preload" method: "Page.addScriptToEvaluateOnNewDocument" sessionId: @entity.sessionId paramsJson: (json/stringify { source: @payload.script }) })
       PAGE_INJECT -> ready when (or (os/path-is-absolute @payload.script) (== (os/path-normalize @payload.script) "..") (str/startsWith (os/path-normalize @payload.script) "../"))
         (emit PAGE_FAILED { key: @payload.key error: "the script path must be relative and stay under scriptDir" code: "bad-script" })
       PAGE_INJECT -> busy when (not (or (os/path-is-absolute @payload.script) (== (os/path-normalize @payload.script) "..") (str/startsWith (os/path-normalize @payload.script) "../")))
@@ -365,6 +405,10 @@ orbital ChromeOrbital {
         (emit PAGE_FAILED { key: @payload.key error: "another page operation is running on this tab" code: "busy" })
       PAGE_MEASURE -> busy
         (emit PAGE_FAILED { key: @payload.key error: "another page operation is running on this tab" code: "busy" })
+      PAGE_ELEMENT_SHOT -> busy
+        (emit PAGE_FAILED { key: @payload.key error: "another page operation is running on this tab" code: "busy" })
+      PAGE_PRELOAD -> busy
+        (emit PAGE_FAILED { key: @payload.key error: "another page operation is running on this tab" code: "busy" })
       CHROME_STOP -> stopping
         (emit PAGE_FAILED { key: @entity.callerKey error: "the browser was stopped during the operation" code: "stopped" })
         (emit CHROME_TIMER_CANCEL { key: "op" })
@@ -376,9 +420,12 @@ orbital ChromeOrbital {
       CHROME_FAIL -> ready
         (emit PAGE_FAILED { key: @entity.callerKey error: @payload.error code: @payload.code })
         (emit CHROME_TIMER_CANCEL { key: "op" })
+        (emit CHROME_TIMER_CANCEL { key: "settle" })
       CHROME_HOST_FAILED -> ready
         (emit PAGE_FAILED { key: @entity.callerKey error: (default @payload.error "") code: "read-failed" })
-      CHROME_ERROR -> ready when (= @payload.key @entity.stage)
+      CHROME_ERROR -> busy when (and (= @payload.key @entity.stage) (or (= @entity.stage "el-scroll") (= @entity.stage "el-box")))
+        (emit CHROME_FAIL { code: "element-hidden" error: "the element has no box to capture" })
+      CHROME_ERROR -> ready when (and (= @payload.key @entity.stage) (not (or (= @entity.stage "el-scroll") (= @entity.stage "el-box"))))
         (emit PAGE_FAILED { key: @entity.callerKey error: @payload.message code: @payload.code })
         (emit CHROME_TIMER_CANCEL { key: "op" })
       CHROME_ERROR -> busy when (!= @payload.key @entity.stage)
@@ -387,12 +434,36 @@ orbital ChromeOrbital {
         (let ((r (json/parse @payload.frame NavigateReply)))
           (if (= @r null) (emit CHROME_FAIL { code: "bad-reply" error: "Page.navigate answered an unexpected shape" })
             (if (!= @r.result.errorText null) (emit CHROME_FAIL { code: "navigation-failed" error: @r.result.errorText })
-              (if @entity.loadSeen
-                (do (emit CHROME_TIMER_CANCEL { key: "op" }) (set @entity.stage "nav-info") (emit CDP_COMMAND { key: "nav-info" method: "Runtime.evaluate" sessionId: @entity.sessionId paramsJson: (json/stringify { expression: @config.infoScript returnByValue: true }) }))
-                (set @entity.stage "nav-wait")))))
+              (do
+                (set @entity.frameId @r.result.frameId)
+                (if @entity.loadSeen
+                  (if (= @config.waitFor "networkIdle")
+                    (set @entity.stage "nav-idle")
+                    (do (emit CHROME_TIMER_CANCEL { key: "op" }) (set @entity.stage "nav-info") (emit CDP_COMMAND { key: "nav-info" method: "Runtime.evaluate" sessionId: @entity.sessionId paramsJson: (json/stringify { expression: @config.infoScript returnByValue: true }) })))
+                  (set @entity.stage "nav-wait"))))))
+      CHROME_REPLY -> busy when (= @payload.key "nav-lc")
+        (set @entity.stage "nav")
+        (emit CDP_COMMAND { key: "nav" method: "Page.navigate" sessionId: @entity.sessionId paramsJson: (json/stringify { url: @entity.navUrl }) })
       CHROME_EVENT -> busy when (and (= @payload.method "Page.loadEventFired") (= (default @payload.sessionId "") (default @entity.sessionId "")) (= @entity.stage "nav"))
         (set @entity.loadSeen true)
-      CHROME_EVENT -> busy when (and (= @payload.method "Page.loadEventFired") (= (default @payload.sessionId "") (default @entity.sessionId "")) (= @entity.stage "nav-wait"))
+      CHROME_EVENT -> busy when (and (= @payload.method "Page.loadEventFired") (= (default @payload.sessionId "") (default @entity.sessionId "")) (= @entity.stage "nav-wait") (= @config.waitFor "networkIdle"))
+        (set @entity.stage "nav-idle")
+      CHROME_EVENT -> busy when (and (= @payload.method "Page.lifecycleEvent") (= (default @payload.sessionId "") (default @entity.sessionId "")) (= @entity.stage "nav-idle"))
+        (let ((e (json/parse @payload.frame LifecycleEvent)))
+          (when (and (!= @e null) (= @e.params.name "networkIdle") (= @e.params.frameId @entity.frameId))
+            (do (set @entity.stage "nav-fonts") (emit CDP_COMMAND { key: "nav-fonts" method: "Runtime.evaluate" sessionId: @entity.sessionId paramsJson: (json/stringify { expression: @config.fontsScript awaitPromise: true returnByValue: true }) }))))
+      CHROME_REPLY -> busy when (= @payload.key "nav-fonts")
+        (let ((r (json/parse @payload.frame InjectReply)))
+          (if (= @r null) (emit CHROME_FAIL { code: "bad-reply" error: "Runtime.evaluate answered an unexpected shape" })
+            (if (!= @r.result.exceptionDetails null) (emit CHROME_FAIL { code: "script-error" error: @r.result.exceptionDetails.text })
+              (if (> @config.settleMs 0)
+                (do (set @entity.stage "nav-settle") (emit CHROME_TIMER_ARM { key: "settle" delayMs: @config.settleMs }))
+                (do (emit CHROME_TIMER_CANCEL { key: "op" }) (set @entity.stage "nav-info") (emit CDP_COMMAND { key: "nav-info" method: "Runtime.evaluate" sessionId: @entity.sessionId paramsJson: (json/stringify { expression: @config.infoScript returnByValue: true }) }))))))
+      CHROME_TIMER_DUE -> busy when (and (= @payload.key "settle") (= @entity.stage "nav-settle"))
+        (emit CHROME_TIMER_CANCEL { key: "op" })
+        (set @entity.stage "nav-info")
+        (emit CDP_COMMAND { key: "nav-info" method: "Runtime.evaluate" sessionId: @entity.sessionId paramsJson: (json/stringify { expression: @config.infoScript returnByValue: true }) })
+      CHROME_EVENT -> busy when (and (= @payload.method "Page.loadEventFired") (= (default @payload.sessionId "") (default @entity.sessionId "")) (= @entity.stage "nav-wait") (= @config.waitFor "load"))
         (emit CHROME_TIMER_CANCEL { key: "op" })
         (set @entity.stage "nav-info")
         (emit CDP_COMMAND { key: "nav-info" method: "Runtime.evaluate" sessionId: @entity.sessionId paramsJson: (json/stringify { expression: @config.infoScript returnByValue: true }) })
@@ -413,7 +484,7 @@ orbital ChromeOrbital {
         (emit PAGE_FAILED { key: @entity.callerKey error: "Chrome canceled the download" code: "download-canceled" })
       CHROME_DL_PROGRESS -> busy when (!= @payload.state "completed")
 
-      CHROME_TIMER_DUE -> busy when (and (= @payload.key "op") (or (= @entity.stage "nav") (= @entity.stage "nav-wait")))
+      CHROME_TIMER_DUE -> busy when (and (= @payload.key "op") (or (= @entity.stage "nav") (= @entity.stage "nav-lc") (= @entity.stage "nav-wait") (= @entity.stage "nav-idle") (= @entity.stage "nav-fonts") (= @entity.stage "nav-settle") (= @entity.stage "pdf-nav") (= @entity.stage "pdf-load")))
         (emit CHROME_FAIL { code: "navigation-timeout" error: "the page did not fire its load event in time" })
       CHROME_TIMER_DUE -> busy when (and (= @payload.key "op") (= @entity.op "download"))
         (emit CHROME_FAIL { code: "download-timeout" error: "no completed download in time" })
@@ -463,6 +534,57 @@ orbital ChromeOrbital {
       CHROME_REPLY -> ready when (= @payload.key "ax")
         (let ((r (json/parse @payload.frame AxReply)))
           (if (= @r null) (emit PAGE_FAILED { key: @entity.callerKey error: "Accessibility.getFullAXTree answered an unexpected shape" code: "bad-reply" }) (emit PAGE_AX_TREE_READ { key: @entity.callerKey nodes: (array/map @r.result.nodes (fn n (object/merge { id: @n.nodeId role: (default @n.role.value "") name: (default @n.name.value "") ignored: (default @n.ignored false) } (if (= @n.parentId null) {} { parent: @n.parentId })))) })))
+      CHROME_REPLY -> busy when (= @payload.key "pdf-nav")
+        (let ((r (json/parse @payload.frame NavigateReply)))
+          (if (= @r null) (emit CHROME_FAIL { code: "bad-reply" error: "Page.navigate answered an unexpected shape" })
+            (if (!= @r.result.errorText null) (emit CHROME_FAIL { code: "navigation-failed" error: @r.result.errorText })
+              (if @entity.loadSeen
+                (do (emit CHROME_TIMER_CANCEL { key: "op" }) (set @entity.stage "pdf-print") (emit CDP_COMMAND { key: "pdf-print" method: "Page.printToPDF" sessionId: @entity.sessionId paramsJson: (json/stringify { printBackground: true preferCSSPageSize: true }) }))
+                (set @entity.stage "pdf-load")))))
+      CHROME_EVENT -> busy when (and (= @payload.method "Page.loadEventFired") (= (default @payload.sessionId "") (default @entity.sessionId "")) (= @entity.stage "pdf-nav"))
+        (set @entity.loadSeen true)
+      CHROME_EVENT -> busy when (and (= @payload.method "Page.loadEventFired") (= (default @payload.sessionId "") (default @entity.sessionId "")) (= @entity.stage "pdf-load"))
+        (emit CHROME_TIMER_CANCEL { key: "op" })
+        (set @entity.stage "pdf-print")
+        (emit CDP_COMMAND { key: "pdf-print" method: "Page.printToPDF" sessionId: @entity.sessionId paramsJson: (json/stringify { printBackground: true preferCSSPageSize: true }) })
+      CHROME_REPLY -> busy when (= @payload.key "el-doc")
+        (let ((r (json/parse @payload.frame DocReply)))
+          (if (= @r null) (emit CHROME_FAIL { code: "bad-reply" error: "DOM.getDocument answered an unexpected shape" })
+            (do (set @entity.stage "el-query") (emit CDP_COMMAND { key: "el-query" method: "DOM.querySelector" sessionId: @entity.sessionId paramsJson: (json/stringify { nodeId: @r.result.root.nodeId selector: @entity.selector }) }))))
+      CHROME_REPLY -> busy when (= @payload.key "el-query")
+        (let ((r (json/parse @payload.frame QueryReply)))
+          (if (= @r null) (emit CHROME_FAIL { code: "bad-reply" error: "DOM.querySelector answered an unexpected shape" })
+            (if (= @r.result.nodeId 0) (emit CHROME_FAIL { code: "element-missing" error: "no element matched the selector" })
+              (do (set @entity.nodeId @r.result.nodeId) (set @entity.stage "el-scroll") (emit CDP_COMMAND { key: "el-scroll" method: "DOM.scrollIntoViewIfNeeded" sessionId: @entity.sessionId paramsJson: (json/stringify { nodeId: @r.result.nodeId }) })))))
+      CHROME_REPLY -> busy when (= @payload.key "el-scroll")
+        (set @entity.stage "el-settle")
+        (emit CHROME_TIMER_ARM { key: "op" delayMs: @config.elementSettleMs })
+      CHROME_TIMER_DUE -> busy when (and (= @payload.key "op") (= @entity.stage "el-settle"))
+        (set @entity.stage "el-box")
+        (emit CDP_COMMAND { key: "el-box" method: "DOM.getBoxModel" sessionId: @entity.sessionId paramsJson: (json/stringify { nodeId: @entity.nodeId }) })
+      CHROME_REPLY -> busy when (= @payload.key "el-box")
+        (let ((r (json/parse @payload.frame BoxReply)))
+          (if (or (= @r null) (< (array/len @r.result.model.border) 8)) (emit CHROME_FAIL { code: "bad-reply" error: "DOM.getBoxModel answered an unexpected shape" })
+            (let ((x (default (array/nth @r.result.model.border 0) 0)) (y (default (array/nth @r.result.model.border 1) 0)) (w (- (default (array/nth @r.result.model.border 2) 0) (default (array/nth @r.result.model.border 0) 0))) (h (- (default (array/nth @r.result.model.border 5) 0) (default (array/nth @r.result.model.border 1) 0))))
+              (if (or (<= @w 0) (<= @h 0)) (emit CHROME_FAIL { code: "element-hidden" error: "the element has no width or height" })
+                (do (set @entity.elRect { x: @x y: @y width: @w height: @h }) (set @entity.stage "el-metrics") (emit CDP_COMMAND { key: "el-metrics" method: "Page.getLayoutMetrics" sessionId: @entity.sessionId paramsJson: (json/stringify { }) }))))))
+      CHROME_REPLY -> busy when (= @payload.key "el-metrics")
+        (let ((r (json/parse @payload.frame MetricsReply)))
+          (if (= @r null) (emit CHROME_FAIL { code: "bad-reply" error: "Page.getLayoutMetrics answered an unexpected shape" })
+            (let ((px (+ @entity.elRect.x @r.result.cssVisualViewport.pageX)) (py (+ @entity.elRect.y @r.result.cssVisualViewport.pageY)))
+              (let ((x0 (math/max 0 (- @px @entity.shotMargin))) (y0 (math/max 0 (- @py @entity.shotMargin))) (x1 (math/min @r.result.contentSize.width (+ @px @entity.elRect.width @entity.shotMargin))) (y1 (math/min @r.result.contentSize.height (+ @py @entity.elRect.height @entity.shotMargin))))
+                (do
+                  (set @entity.shotClip { x: @x0 y: @y0 width: (- @x1 @x0) height: (- @y1 @y0) })
+                  (set @entity.shotBox { x: (- @px @x0) y: (- @py @y0) width: @entity.elRect.width height: @entity.elRect.height })
+                  (set @entity.stage "el-shot")
+                  (emit CDP_COMMAND { key: "el-shot" method: "Page.captureScreenshot" sessionId: @entity.sessionId paramsJson: (json/stringify (object/merge { format: @entity.shotFormat captureBeyondViewport: true clip: { x: @x0 y: @y0 width: (- @x1 @x0) height: (- @y1 @y0) scale: 1 } } (if (and (= @entity.shotFormat "jpeg") (!= @entity.shotQuality null)) { quality: @entity.shotQuality } {}))) }))))))
+      CHROME_REPLY -> ready when (= @payload.key "el-shot")
+        (let ((r (json/parse @payload.frame DataReply)))
+          (let ((b (bytes/from-base64 (default @r.result.data ""))))
+            (if (or (= @r null) (= @b null)) (emit PAGE_FAILED { key: @entity.callerKey error: "Page.captureScreenshot answered an unexpected shape" code: "bad-reply" }) (emit PAGE_ELEMENT_SHOT_TAKEN { key: @entity.callerKey image: @b format: @entity.shotFormat clip: @entity.shotClip box: @entity.shotBox }))))
+      CHROME_REPLY -> ready when (= @payload.key "preload")
+        (let ((r (json/parse @payload.frame PreloadReply)))
+          (if (= @r null) (emit PAGE_FAILED { key: @entity.callerKey error: "Page.addScriptToEvaluateOnNewDocument answered an unexpected shape" code: "bad-reply" }) (emit PAGE_PRELOADED { key: @entity.callerKey identifier: @r.result.identifier })))
       CHROME_REPLY -> busy when (= @payload.key "pdf-blank")
         (set @entity.stage "pdf-tree")
         (emit CDP_COMMAND { key: "pdf-tree" method: "Page.getFrameTree" sessionId: @entity.sessionId paramsJson: (json/stringify { }) })
@@ -523,6 +645,10 @@ orbital ChromeOrbital {
       PAGE_INJECT -> stopping
         (emit PAGE_FAILED { key: @payload.key error: "the browser is stopping" code: "not-ready" })
       PAGE_MEASURE -> stopping
+        (emit PAGE_FAILED { key: @payload.key error: "the browser is stopping" code: "not-ready" })
+      PAGE_ELEMENT_SHOT -> stopping
+        (emit PAGE_FAILED { key: @payload.key error: "the browser is stopping" code: "not-ready" })
+      PAGE_PRELOAD -> stopping
         (emit PAGE_FAILED { key: @payload.key error: "the browser is stopping" code: "not-ready" })
       CHROME_REPLY -> stopping when (= @payload.key "close-target")
         (set @entity.stage "disconnect")
@@ -622,7 +748,22 @@ orbital ChromeOrbital {
         key : string!
         pdf : bytes!
       }
-        @description "The given HTML printed to a PDF."
+        @description "The given HTML, or the file at the given path, printed to a PDF."
+        @tier "primary"
+      PAGE_ELEMENT_SHOT_TAKEN -> external {
+        key : string!
+        image : bytes!
+        format : string!
+        clip : PageRect!
+        box : PageRect!
+      }
+        @description "The image of one element with its margin: clip is the captured rectangle in page coordinates, box the element rectangle relative to the clip origin; both in CSS pixels."
+        @tier "primary"
+      PAGE_PRELOADED -> external {
+        key : string!
+        identifier : string!
+      }
+        @description "The script is registered to run in every document the tab loads from now on; identifier is Chrome's script id."
         @tier "primary"
       PAGE_INJECTED -> external {
         key : string!
@@ -640,7 +781,7 @@ orbital ChromeOrbital {
         error : string!
         code : string!
       }
-        @description "A page operation failed: busy, not-ready, not-started, bad-request, bad-script, unknown-key, not-found, navigation-failed, navigation-timeout, download-timeout, download-canceled, script-error, not-json, bad-reply, read-failed, disconnected, stopped, or the protocol code text."
+        @description "A page operation failed: busy, not-ready, not-started, bad-request, bad-script, unknown-key, not-found, element-missing, element-hidden, navigation-failed, navigation-timeout, download-timeout, download-canceled, script-error, not-json, bad-reply, read-failed, disconnected, stopped, or the protocol code text."
         @tier "primary"
       CHROME_STOPPED -> external { }
         @description "The tab is closed and the browser this atom started is stopped."
@@ -762,6 +903,26 @@ orbital ChromeOrbital {
       navigationTimeoutMs : number = 30000
         @label "Navigation timeout (ms)"
         @description "How long PAGE_NAVIGATE waits for the load event before answering PAGE_FAILED navigation-timeout. Resolution is the 100ms deadline check of std-delay."
+        @tier "domain"
+      waitFor : "load" | "networkIdle" = "load"
+        @label "Navigation settle mode"
+        @description "What PAGE_NAVIGATE waits for. load answers PAGE_LOADED at the load event. networkIdle also enables Page.setLifecycleEventsEnabled, waits for a Page.lifecycleEvent named networkIdle of the navigated frame after the load event, evaluates fontsScript, then waits settleMs; the whole wait is inside navigationTimeoutMs."
+        @tier "domain"
+      settleMs : number = 0
+        @label "Settle wait (ms)"
+        @description "With waitFor networkIdle, how long PAGE_NAVIGATE waits after network idle and fonts ready before it reads the location and answers PAGE_LOADED; it has no effect with waitFor load."
+        @tier "domain"
+      fontsScript : string = "document.fonts.ready.then(() => true)"
+        @label "Fonts-ready expression"
+        @description "Page expression, awaited as a promise, that PAGE_NAVIGATE evaluates after network idle."
+        @tier "infra"
+      elementSettleMs : number = 150
+        @label "Element settle (ms)"
+        @description "How long PAGE_ELEMENT_SHOT waits after scrolling the element into view before it measures the element."
+        @tier "domain"
+      elementMargin : number = 160
+        @label "Element margin"
+        @description "The default margin, in CSS pixels, PAGE_ELEMENT_SHOT adds around the element when the request has none; the clip is clamped inside the page content."
         @tier "domain"
       windowWidth : number = 1280
         @label "Window width"
@@ -889,10 +1050,26 @@ orbital ChromeOrbital {
         @synonyms "download file"
       PAGE_PRINT_PDF {
         key : string!
-        html : string!
+        html : string
+        path : string
       }
-        @description "Render the given HTML to a PDF; answers PAGE_PDF_PRINTED."
+        @description "Render the given HTML, or the local file at the absolute path (navigated as file://, waiting for load), to a PDF; exactly one of html and path, else PAGE_FAILED bad-request; answers PAGE_PDF_PRINTED."
         @synonyms "print pdf, html to pdf"
+      PAGE_ELEMENT_SHOT {
+        key : string!
+        selector : string!
+        margin : number
+        format : "png" | "jpeg"
+        quality : number
+      }
+        @description "Screenshot one element found by a CSS selector: scroll it into view, wait elementSettleMs, measure its border box and capture it with margin (default elementMargin) clamped inside the page content, without changing the page; quality applies to jpeg only. Answers PAGE_ELEMENT_SHOT_TAKEN, PAGE_FAILED element-missing when nothing matches, element-hidden when it has no box or no size."
+        @synonyms "element screenshot, capture element"
+      PAGE_PRELOAD {
+        key : string!
+        script : string!
+      }
+        @description "Register script source to run in every document this tab loads from now on (Page.addScriptToEvaluateOnNewDocument); answers PAGE_PRELOADED."
+        @synonyms "preload script, run on new document"
       PAGE_INJECT {
         key : string!
         script : string!

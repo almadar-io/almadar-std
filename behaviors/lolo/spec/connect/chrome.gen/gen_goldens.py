@@ -463,6 +463,133 @@ case("control-a-protocol-error-for-another-command-is-ignored", [
     step("CHROME_ERROR", {"key": "stale", "method": "X.y", "code": "1", "message": "m"}, {"state": "busy", "neverEmits": ["PAGE_FAILED"]}, **busy("text", "text")),
 ])
 
+# ---------------- settle, element shot, preload, print from path (frames below are written from the CDP protocol shapes, not captured)
+J = lambda o: json.dumps(o, separators=(",", ":"))
+NAVF = json.loads(R("navigate"))["result"]["frameId"]
+OK = lambda **r: J({"id": 1, "result": r, "sessionId": SESS})
+LC = lambda name, frame=NAVF: J({"method": "Page.lifecycleEvent", "params": {"frameId": frame, "loaderId": "L1", "name": name, "timestamp": 1.5}, "sessionId": SESS})
+IDLE = {"waitFor": "networkIdle"}
+FONTS = '{"expression":"document.fonts.ready.then(() => true)","awaitPromise":true,"returnByValue":true}'
+FONTS_OK = OK(result={"type": "boolean", "value": True})
+
+case("settle-network-idle-enables-lifecycle-waits-for-load-then-idle-then-fonts-then-settle-then-reads-location", [
+    step("PAGE_NAVIGATE", {"key": "k1", "url": URL}, {"state": "busy", "entity": {"stage": "nav-lc", "navUrl": URL}, "emits": [cmd("nav-lc", "Page.setLifecycleEventsEnabled", '{"enabled":true}'), emit("CHROME_TIMER_ARM", {"key": "op", "delayMs": 30000})], "neverEmits": ["PAGE_LOADED"]}, **ready()),
+    step("CHROME_REPLY", reply("nav-lc", "Page.setLifecycleEventsEnabled", OK()), {"state": "busy", "entity": {"stage": "nav"}, "emits": [cmd("nav", "Page.navigate", J({"url": URL}))]}),
+    step("CHROME_REPLY", reply("nav", "Page.navigate", R("navigate")), {"state": "busy", "entity": {"stage": "nav-wait", "frameId": NAVF}, "neverEmits": ["PAGE_LOADED", "CHROME_FAIL"]}),
+    step("CHROME_EVENT", event("Page.loadEventFired", LOAD), {"state": "busy", "entity": {"stage": "nav-idle"}, "neverEmits": ["CDP_COMMAND", "CHROME_TIMER_CANCEL"]}),
+    step("CHROME_EVENT", event("Page.lifecycleEvent", LC("networkAlmostIdle")), {"state": "busy", "entity": {"stage": "nav-idle"}, "neverEmits": ["CDP_COMMAND"]}),
+    step("CHROME_EVENT", event("Page.lifecycleEvent", LC("networkIdle", "OTHERFRAME")), {"state": "busy", "entity": {"stage": "nav-idle"}, "neverEmits": ["CDP_COMMAND"]}),
+    step("CHROME_EVENT", event("Page.lifecycleEvent", LC("networkIdle")), {"state": "busy", "entity": {"stage": "nav-fonts"}, "emits": [cmd("nav-fonts", "Runtime.evaluate", FONTS)]}),
+    step("CHROME_REPLY", reply("nav-fonts", "Runtime.evaluate", FONTS_OK), {"state": "busy", "entity": {"stage": "nav-settle"}, "emits": [emit("CHROME_TIMER_ARM", {"key": "settle", "delayMs": 250})], "neverEmits": ["PAGE_LOADED"]}),
+    step("CHROME_TIMER_DUE", {"key": "settle"}, {"state": "busy", "entity": {"stage": "nav-info"}, "emits": [emit("CHROME_TIMER_CANCEL", {"key": "op"}), cmd("nav-info", "Runtime.evaluate")]}),
+    step("CHROME_REPLY", reply("nav-info", "Runtime.evaluate", R("navInfo")), {"state": "ready", "entity": {"url": URL}, "emits": [emit("PAGE_LOADED", {"key": "k1", "url": URL, "title": NAVINFO["title"]})]}),
+], config={"waitFor": "networkIdle", "settleMs": 250}, note="the navigate reply, load event and location reply are the captured frames; the lifecycle frames follow the Page.lifecycleEvent shape")
+case("settle-network-idle-with-zero-settle-reads-the-location-right-after-fonts", [
+    step("CHROME_REPLY", reply("nav-fonts", "Runtime.evaluate", FONTS_OK), {"state": "busy", "entity": {"stage": "nav-info"}, "emits": [emit("CHROME_TIMER_CANCEL", {"key": "op"}), cmd("nav-info", "Runtime.evaluate")], "neverEmits": ["CHROME_TIMER_ARM"]}, **busy("navigate", "nav-fonts", frameId=NAVF)),
+], config=IDLE)
+case("settle-network-idle-reply_after_load-goes-straight-to-waiting-for-idle", [
+    step("CHROME_REPLY", reply("nav", "Page.navigate", R("navigate")), {"state": "busy", "entity": {"stage": "nav-idle", "frameId": NAVF}, "neverEmits": ["CDP_COMMAND"]}, **busy("navigate", "nav", loadSeen=True, navUrl=URL)),
+], config=IDLE)
+case("settle-network-idle-control-an-idle-event-before-the-load-event-is-ignored", [
+    step("CHROME_EVENT", event("Page.lifecycleEvent", LC("networkIdle")), {"state": "busy", "entity": {"stage": "nav-wait"}, "neverEmits": ["CDP_COMMAND"]}, **busy("navigate", "nav-wait", frameId=NAVF)),
+], config=IDLE)
+case("settle-network-idle-a-fonts-exception-answers-script-error", [
+    step("CHROME_REPLY", reply("nav-fonts", "Runtime.evaluate", OK(exceptionDetails={"text": "Uncaught"})), {"state": "busy", "emits": [emit("CHROME_FAIL", {"code": "script-error", "error": "Uncaught"})]}, **busy("navigate", "nav-fonts", frameId=NAVF)),
+], config=IDLE)
+for stg in ["nav-lc", "nav-idle", "nav-fonts", "nav-settle"]:
+    case("settle-network-idle-the-timeout-during-%s-answers-navigation-timeout" % stg, [
+        step("CHROME_TIMER_DUE", {"key": "op"}, {"state": "busy", "emits": [emit("CHROME_FAIL", {"code": "navigation-timeout"})]}, **busy("navigate", stg, frameId=NAVF)),
+        step("CHROME_FAIL", {"code": "navigation-timeout", "error": "the page did not fire its load event in time"}, {"state": "ready", "emits": [failed("k1", "navigation-timeout"), emit("CHROME_TIMER_CANCEL", {"key": "settle"})]}),
+    ], config=IDLE)
+case("settle-control-the-default-load-mode-never-enables-lifecycle-events", [
+    step("PAGE_NAVIGATE", {"key": "k1", "url": URL}, {"state": "busy", "entity": {"stage": "nav"}, "emits": [cmd("nav", "Page.navigate")], "neverEmits": ["CHROME_FAIL"]}, **ready()),
+])
+case("settle-control-the-default-load-mode-ignores-a-lifecycle-event", [
+    step("CHROME_EVENT", event("Page.lifecycleEvent", LC("networkIdle")), {"state": "busy", "entity": {"stage": "nav-wait"}, "neverEmits": ["CDP_COMMAND"]}, **busy("navigate", "nav-wait", frameId=NAVF)),
+])
+
+# element shot
+SEL = "#hero"
+QUAD = [20, 300, 220, 300, 220, 380, 20, 380]
+def el_run(extra_payload, fmt, params_clip, clip, box, extra_cfg=None, margin=160, quality=None, note=None, cid=""):
+    cfg = dict(extra_cfg or {})
+    shot_params = '{"format":"%s","captureBeyondViewport":true,"clip":%s%s}' % (fmt, params_clip, "" if quality is None else ',"quality":%s' % quality)
+    payload = {"key": "k1", "selector": SEL}
+    payload.update(extra_payload)
+    case(cid, [
+        step("PAGE_ELEMENT_SHOT", payload, {"state": "busy", "entity": {"stage": "el-doc", "shotMargin": margin, "shotFormat": fmt}, "emits": [cmd("el-doc", "DOM.getDocument", '{"depth":0}')]}, **ready()),
+        step("CHROME_REPLY", reply("el-doc", "DOM.getDocument", OK(root={"nodeId": 1, "backendNodeId": 2, "nodeType": 9})), {"state": "busy", "entity": {"stage": "el-query"}, "emits": [cmd("el-query", "DOM.querySelector", J({"nodeId": 1, "selector": SEL}))]}),
+        step("CHROME_REPLY", reply("el-query", "DOM.querySelector", OK(nodeId=7)), {"state": "busy", "entity": {"stage": "el-scroll", "nodeId": 7}, "emits": [cmd("el-scroll", "DOM.scrollIntoViewIfNeeded", '{"nodeId":7}')]}),
+        step("CHROME_REPLY", reply("el-scroll", "DOM.scrollIntoViewIfNeeded", OK()), {"state": "busy", "entity": {"stage": "el-settle"}, "emits": [emit("CHROME_TIMER_ARM", {"key": "op", "delayMs": cfg.get("elementSettleMs", 150)})], "neverEmits": ["CDP_COMMAND"]}),
+        step("CHROME_TIMER_DUE", {"key": "op"}, {"state": "busy", "entity": {"stage": "el-box"}, "emits": [cmd("el-box", "DOM.getBoxModel", '{"nodeId":7}')]}),
+        step("CHROME_REPLY", reply("el-box", "DOM.getBoxModel", OK(model={"content": QUAD, "padding": QUAD, "border": QUAD, "margin": QUAD, "width": 200, "height": 80})), {"state": "busy", "entity": {"stage": "el-metrics", "elRect": {"x": 20, "y": 300, "width": 200, "height": 80}}, "emits": [cmd("el-metrics", "Page.getLayoutMetrics", "{}")]}),
+        step("CHROME_REPLY", reply("el-metrics", "Page.getLayoutMetrics", OK(contentSize={"x": 0, "y": 0, "width": 1000, "height": 900}, cssVisualViewport={"pageX": 0, "pageY": 500, "clientWidth": 1280, "clientHeight": 800})),
+             {"state": "busy", "entity": {"stage": "el-shot", "shotClip": clip, "shotBox": box}, "emits": [cmd("el-shot", "Page.captureScreenshot", shot_params)]}),
+        step("CHROME_REPLY", reply("el-shot", "Page.captureScreenshot", R("screenshot")), {"state": "ready", "emits": [emit("PAGE_ELEMENT_SHOT_TAKEN", {"key": "k1", "image": SHOT, "format": fmt, "clip": clip, "box": box})]}),
+    ], config=cfg, note=note)
+
+el_run({}, "png", '{"x":0,"y":640,"width":380,"height":260,"scale":1}', {"x": 0, "y": 640, "width": 380, "height": 260}, {"x": 20, "y": 160, "width": 200, "height": 80},
+       note="margin 160 around the element at page (20,800) of size 200x80 in a 1000x900 page: the left edge clamps to 0 and the bottom edge to 900, so the box origin inside the clip is (20,160)", cid="element-shot-scrolls-settles-measures-clamps-the-clip-inside-the-content-and-answers-the-image-with-the-box-relative-to-the-clip")
+el_run({"margin": 10, "format": "jpeg", "quality": 80}, "jpeg", '{"x":10,"y":790,"width":220,"height":100,"scale":1}', {"x": 10, "y": 790, "width": 220, "height": 100}, {"x": 10, "y": 10, "width": 200, "height": 80}, margin=10, quality=80,
+       note="a margin of 10 and jpeg at quality 80: the quality reaches Page.captureScreenshot and the clip is not clamped except at the bottom (800+80+10=890<900 so 100 high)", cid="element-shot-control-a-request-margin-and-jpeg-quality-replace-the-defaults")
+el_run({"quality": 80}, "png", '{"x":0,"y":640,"width":380,"height":260,"scale":1}', {"x": 0, "y": 640, "width": 380, "height": 260}, {"x": 20, "y": 160, "width": 200, "height": 80}, extra_cfg={"elementMargin": 160, "elementSettleMs": 40},
+       note="control: png ignores quality; the elementSettleMs knob sets the wait", cid="element-shot-control-png-leaves-quality-out-and-the-settle-knob-sets-the-wait")
+case("element-shot-no-match-answers-element-missing", [
+    step("CHROME_REPLY", reply("el-query", "DOM.querySelector", OK(nodeId=0)), {"state": "busy", "emits": [emit("CHROME_FAIL", {"code": "element-missing"})], "neverEmits": ["CDP_COMMAND"]}, **busy("elshot", "el-query", selector=SEL)),
+    step("CHROME_FAIL", {"code": "element-missing", "error": "no element matched the selector"}, {"state": "ready", "emits": [failed("k1", "element-missing")]}),
+])
+case("element-shot-a-box-model-error-answers-element-hidden", [
+    step("CHROME_ERROR", {"key": "el-box", "method": "DOM.getBoxModel", "code": "-32000", "message": "Could not compute box model."}, {"state": "busy", "emits": [emit("CHROME_FAIL", {"code": "element-hidden"})]}, **busy("elshot", "el-box", nodeId=7)),
+    step("CHROME_FAIL", {"code": "element-hidden", "error": "the element has no box to capture"}, {"state": "ready", "emits": [failed("k1", "element-hidden")]}),
+])
+case("element-shot-a-scroll-error-answers-element-hidden", [
+    step("CHROME_ERROR", {"key": "el-scroll", "method": "DOM.scrollIntoViewIfNeeded", "code": "-32000", "message": "Node does not have a layout object"}, {"state": "busy", "emits": [emit("CHROME_FAIL", {"code": "element-hidden"})]}, **busy("elshot", "el-scroll", nodeId=7)),
+])
+for nm, q in [("zero-width", [20, 300, 20, 300, 20, 380, 20, 380]), ("zero-height", [20, 300, 220, 300, 220, 300, 20, 300])]:
+    case("element-shot-%s-answers-element-hidden" % nm, [
+        step("CHROME_REPLY", reply("el-box", "DOM.getBoxModel", OK(model={"content": q, "padding": q, "border": q, "margin": q, "width": 0, "height": 0})), {"state": "busy", "emits": [emit("CHROME_FAIL", {"code": "element-hidden"})], "neverEmits": ["CDP_COMMAND"]}, **busy("elshot", "el-box", nodeId=7)),
+    ])
+case("element-shot-control-another-protocol-error-keeps-its-code", [
+    step("CHROME_ERROR", {"key": "el-query", "method": "DOM.querySelector", "code": "-32000", "message": "invalid selector"}, {"state": "ready", "emits": [failed("k1", "-32000")]}, **busy("elshot", "el-query")),
+])
+
+# preload
+case("preload-registers-the-script-for-new-documents-and-answers-the-identifier", [
+    step("PAGE_PRELOAD", {"key": "k1", "script": "window.__axe = 1"}, {"state": "busy", "emits": [cmd("preload", "Page.addScriptToEvaluateOnNewDocument", '{"source":"window.__axe = 1"}')]}, **ready()),
+    step("CHROME_REPLY", reply("preload", "Page.addScriptToEvaluateOnNewDocument", OK(identifier="3")), {"state": "ready", "emits": [emit("PAGE_PRELOADED", {"key": "k1", "identifier": "3"})]}),
+])
+case("preload-a-protocol-error-answers-page-failed", [
+    step("CHROME_ERROR", {"key": "preload", "method": "Page.addScriptToEvaluateOnNewDocument", "code": "-32000", "message": "bad"}, {"state": "ready", "emits": [failed("k1", "-32000")]}, **busy("preload", "preload")),
+])
+
+# print from path
+PATH = "/tmp/report.html"
+case("print-pdf-from-a-path-navigates-to-the-file-waits-for-load-and-prints", [
+    step("PAGE_PRINT_PDF", {"key": "k1", "path": PATH}, {"state": "busy", "entity": {"stage": "pdf-nav"}, "emits": [cmd("pdf-nav", "Page.navigate", J({"url": "file://" + PATH})), emit("CHROME_TIMER_ARM", {"key": "op", "delayMs": 30000})]}, **ready()),
+    step("CHROME_REPLY", reply("pdf-nav", "Page.navigate", R("navigate")), {"state": "busy", "entity": {"stage": "pdf-load"}, "neverEmits": ["CDP_COMMAND"]}),
+    step("CHROME_EVENT", event("Page.loadEventFired", LOAD), {"state": "busy", "entity": {"stage": "pdf-print"}, "emits": [emit("CHROME_TIMER_CANCEL", {"key": "op"}), cmd("pdf-print", "Page.printToPDF", '{"printBackground":true,"preferCSSPageSize":true}')]}),
+    step("CHROME_REPLY", reply("pdf-print", "Page.printToPDF", R("pdfPrint")), {"state": "ready", "emits": [emit("PAGE_PDF_PRINTED", {"key": "k1", "pdf": PDF})]}),
+], note="the navigate, load and print frames are the captured ones")
+case("print-pdf-from-a-path-the-load-event-before-the-reply-also-prints", [
+    step("CHROME_EVENT", event("Page.loadEventFired", LOAD), {"state": "busy", "entity": {"loadSeen": True}, "neverEmits": ["CDP_COMMAND"]}, **busy("pdf", "pdf-nav")),
+    step("CHROME_REPLY", reply("pdf-nav", "Page.navigate", R("navigate")), {"state": "busy", "entity": {"stage": "pdf-print"}, "emits": [emit("CHROME_TIMER_CANCEL", {"key": "op"}), cmd("pdf-print", "Page.printToPDF")]}),
+])
+case("print-pdf-from-a-path-an-error-text-answers-navigation-failed", [
+    step("CHROME_REPLY", reply("pdf-nav", "Page.navigate", R("navFail")), {"state": "busy", "emits": [emit("CHROME_FAIL", {"code": "navigation-failed"})]}, **busy("pdf", "pdf-nav")),
+])
+case("print-pdf-from-a-path-the-timeout-answers-navigation-timeout", [
+    step("CHROME_TIMER_DUE", {"key": "op"}, {"state": "busy", "emits": [emit("CHROME_FAIL", {"code": "navigation-timeout"})]}, **busy("pdf", "pdf-load")),
+])
+case("print-pdf-both-html-and-path-answers-bad-request", [
+    step("PAGE_PRINT_PDF", {"key": "k1", "html": HTML, "path": PATH}, {"state": "ready", "emits": [failed("k1", "bad-request")], "neverEmits": ["CDP_COMMAND"]}, **ready()),
+])
+case("print-pdf-neither-html-nor-path-answers-bad-request", [
+    step("PAGE_PRINT_PDF", {"key": "k1"}, {"state": "ready", "emits": [failed("k1", "bad-request")], "neverEmits": ["CDP_COMMAND"]}, **ready()),
+])
+case("print-pdf-control-html-alone-still-blanks-the-page-first", [
+    step("PAGE_PRINT_PDF", {"key": "k1", "html": HTML}, {"state": "busy", "entity": {"stage": "pdf-blank"}, "emits": [cmd("pdf-blank", "Page.navigate", '{"url":"about:blank"}')], "neverEmits": ["CHROME_TIMER_ARM"]}, **ready()),
+])
+
 json.dump({
     "atom": "connect/atoms/std-chrome.lolo",
     "trait": "Chrome",

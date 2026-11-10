@@ -562,6 +562,231 @@
      }
     }
    ]
+  },
+  {
+   "id": "preload on: the first run preloads the script instead of injecting it",
+   "steps": [
+    {
+     "from": "idle",
+     "event": "PROBE_RUN",
+     "payload": {
+      "key": "k1",
+      "pageUrl": "http://127.0.0.1:24680/"
+     },
+     "expect": {
+      "state": "preloading",
+      "emits": [
+       {
+        "event": "PAGE_PRELOAD",
+        "payload": {
+         "key": "k1:preload",
+         "script": "axe-core/axe.min.js"
+        }
+       }
+      ],
+      "neverEmits": [
+       "PAGE_INJECT",
+       "PAGE_MEASURE"
+      ]
+     }
+    }
+   ],
+   "config": {
+    "preload": true
+   }
+  },
+  {
+   "id": "preload on: once preloaded the page already open is injected once and the run goes on",
+   "steps": [
+    {
+     "from": "preloading",
+     "event": "PAGE_PRELOADED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/"
+     },
+     "payload": {
+      "key": "k1:preload",
+      "identifier": "7"
+     },
+     "expect": {
+      "state": "injecting",
+      "emits": [
+       {
+        "event": "PAGE_INJECT",
+        "payload": {
+         "key": "k1:inject",
+         "script": "axe-core/axe.min.js"
+        }
+       }
+      ],
+      "entity": {
+       "preloaded": true
+      }
+     }
+    }
+   ],
+   "config": {
+    "preload": true
+   }
+  },
+  {
+   "id": "preload on: a later run on a page loaded after the preload only evaluates the run expression",
+   "steps": [
+    {
+     "from": "idle",
+     "event": "PROBE_RUN",
+     "entity": {
+      "preloaded": true
+     },
+     "payload": {
+      "key": "k2",
+      "pageUrl": "http://127.0.0.1:24680/"
+     },
+     "expect": {
+      "state": "measuring",
+      "emits": [
+       {
+        "event": "PAGE_MEASURE",
+        "payload": {
+         "key": "k2:measure",
+         "expression": "axe.run(document, { runOnly: { type: \"tag\", values: [\"wcag2a\", \"wcag2aa\", \"wcag21a\", \"wcag21aa\", \"wcag22aa\"] } }).then(function (r) { return JSON.stringify({ version: r.testEngine.version, violations: r.violations.map(function (v) { return { id: v.id, impact: v.impact || undefined, tags: v.tags, nodes: v.nodes.map(function (n) { return { target: n.target.map(function (t) { return Array.isArray(t) ? t.join(\" \") : t; }).join(\" \"), html: n.html }; }) }; }) }); })"
+        }
+       }
+      ],
+      "neverEmits": [
+       "PAGE_INJECT",
+       "PAGE_PRELOAD"
+      ]
+     }
+    }
+   ],
+   "config": {
+    "preload": true
+   }
+  },
+  {
+   "id": "preload on: a failed preload answers PROBE_FAILED with the page's code",
+   "steps": [
+    {
+     "from": "preloading",
+     "event": "PAGE_FAILED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/"
+     },
+     "payload": {
+      "key": "k1:preload",
+      "error": "no such file",
+      "code": "preload_failed"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_FAILED",
+        "payload": {
+         "key": "k1",
+         "probe": "axe",
+         "error": "no such file",
+         "code": "preload_failed"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "preload": true
+   }
+  },
+  {
+   "id": "control: a preloaded answer under another run's key is ignored",
+   "steps": [
+    {
+     "from": "preloading",
+     "event": "PAGE_PRELOADED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/"
+     },
+     "payload": {
+      "key": "k2:preload",
+      "identifier": "7"
+     },
+     "expect": {
+      "state": "preloading",
+      "emits": []
+     }
+    }
+   ],
+   "config": {
+    "preload": true
+   }
+  },
+  {
+   "id": "a second PROBE_RUN while the preload is in flight answers probe_busy and keeps the first",
+   "steps": [
+    {
+     "from": "preloading",
+     "event": "PROBE_RUN",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/"
+     },
+     "payload": {
+      "key": "k2",
+      "pageUrl": "http://127.0.0.1:24680/"
+     },
+     "expect": {
+      "state": "preloading",
+      "emits": [
+       {
+        "event": "PROBE_FAILED",
+        "payload": {
+         "key": "k2",
+         "probe": "axe",
+         "code": "probe_busy"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "preload": true
+   }
+  },
+  {
+   "id": "control: with the preload knob off a run injects even when the entity says preloaded",
+   "steps": [
+    {
+     "from": "idle",
+     "event": "PROBE_RUN",
+     "entity": {
+      "preloaded": true
+     },
+     "payload": {
+      "key": "k3",
+      "pageUrl": "http://127.0.0.1:24680/"
+     },
+     "expect": {
+      "state": "injecting",
+      "emits": [
+       {
+        "event": "PAGE_INJECT",
+        "payload": {
+         "key": "k3:inject",
+         "script": "axe-core/axe.min.js"
+        }
+       }
+      ],
+      "neverEmits": [
+       "PAGE_PRELOAD"
+      ]
+     }
+    }
+   ]
   }
  ]
 }

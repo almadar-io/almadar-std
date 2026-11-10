@@ -1,0 +1,29 @@
+app ocr-spec [
+  version: "1.0.0",
+  description: "Design contract for reading the text of a scanned PDF or an image by optical character recognition, page by page, through the poppler pdftoppm and tesseract commands (composed std-cli, exec grants the composer declares). OCR_READ { key, path } answers OCR_TEXT { key, pages: [{ page, text }] } with pages numbered from 1 in document order, split at the form feed tesseract writes between pages; pages without any text answer OCR_NO_TEXT { key, pageCount }; a missing file, an unreadable document, a failed or missing command, an unsupported extension or a read while another is in flight answers OCR_FAILED { key, error, code }. The scratch page images and list file are removed on success and on failure. Nothing is truncated."
+]
+
+type OcrPage = { page : number!, text : string! }
+
+orbital OcrSpec {
+  expects entity OcrRead [runtime] {
+    id : string!
+  }
+  expects trait OcrReader {
+    state ready
+    state rendering
+    state listing
+    state writing
+    state recognizing
+    state cleaning
+    state ready {
+      OCR_READ -> rendering
+    }
+    emits {
+      OCR_TEXT { key : string!  pages : [OcrPage]! }
+      OCR_NO_TEXT { key : string!  pageCount : number! }
+      OCR_FAILED { key : string!  error : string!  code : string! }
+    }
+  }
+  expects page boot -> OcrReader
+}
