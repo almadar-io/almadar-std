@@ -1,0 +1,32 @@
+app model-fit-spec [
+  version: "1.0.0",
+  description: "Design contract for deciding which model a machine runs, from declared data only. The options knob is an ordered list: each option names a provider, a model, where it runs (local or remote) and, for a local one, the memory and disk it needs. MODEL_FIT { requestId, allowRemote } reads the machine's total memory once (std-system-stats, STATS_SAMPLE) and answers MODEL_FIT_DECIDED with the first option, in declared order, that fits: a local option fits when its memoryGb plus the reserveGb knob is at most the machine's total memory; a remote option fits only when allowRemote is true. Every option passed over is listed in refused with its reason (memory, with the gigabytes missing, or remote-not-allowed), so the caller can tell a person exactly what a bigger machine or a remote plan would change. When nothing fits, fits is false and option is absent; nothing is picked on the machine's behalf. MODEL_PROBE { requestId, option } then measures the chosen option on this machine: one fixed prompt through the caller's std-llm, timed, answered as MODEL_PROBED { requestId, tokensPerSecond, ok } where ok is tokensPerSecond >= the minTokensPerSecond knob. A stat the host cannot read, or a probe that fails, answers MODEL_FIT_FAILED with a code (stats_unavailable, probe_failed, busy). No option is ranked, guessed or matched by name."
+]
+
+type ModelOption = { id : string!, provider : string!, model : string!, placement : "local" | "remote"!, memoryGb : number!, diskGb : number! }
+type ModelRefusal = { id : string!, reason : "memory" | "remote-not-allowed"!, missingGb : number! }
+
+orbital ModelFitSpec {
+  expects config { options : [ModelOption] = []  reserveGb : number = 6  minTokensPerSecond : number = 10 }
+  expects entity ModelFitRun [runtime] {
+    id : string!
+    requestId : string
+    memoryTotalGb : number
+    chosen : string
+  }
+  expects trait ModelFit {
+    state idle {
+      MODEL_FIT -> measuring
+      MODEL_PROBE -> probing
+    }
+    state measuring
+    state probing
+    emits {
+      STATS_SAMPLE { }
+      MODEL_FIT_DECIDED { requestId : string!  fits : boolean!  option : ModelOption?  memoryTotalGb : number!  refused : [ModelRefusal]! }
+      MODEL_PROBED { requestId : string!  tokensPerSecond : number!  ok : boolean! }
+      MODEL_FIT_FAILED { requestId : string!  code : string!  error : string! }
+    }
+  }
+  expects page boot -> ModelFit
+}

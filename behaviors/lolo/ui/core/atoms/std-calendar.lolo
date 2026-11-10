@@ -39,7 +39,7 @@ orbital CalendarEventOrbital {
           emit: { failure: CalendarEventLoadFailed, success: CalendarEventLoaded }
           include: @config.include
           limit: @config.maxRows
-          filter: (or (not (validate/required @config.parentField)) (= (object/get @entity @config.parentField) (default ?id "")))
+          filter: (and (or (not (validate/required @config.scopeField)) (= (object/get @entity @config.scopeField) @user.id)) (or (not (validate/required @config.parentField)) (= (object/get @entity @config.parentField) (default ?id ""))))
         })
         (render-ui main { type: skeleton, variant: card })
       CalendarEventRelatedLoaded -> loading when (> ?totalCount (array/len ?data))
@@ -49,7 +49,7 @@ orbital CalendarEventOrbital {
           emit: { failure: CalendarEventLoadFailed, success: CalendarEventLoaded }
           include: @config.include
           limit: @config.maxRows
-          filter: (and (or (not (validate/required @config.parentField)) (= (object/get @entity @config.parentField) @entity.calendarParentId)) (if (not (validate/required @config.searchRelation)) false (array/includes (array/map ?data (fn r (object/get @r id))) (object/get @entity @config.searchRelation))))
+          filter: (and (and (or (not (validate/required @config.scopeField)) (= (object/get @entity @config.scopeField) @user.id)) (or (not (validate/required @config.parentField)) (= (object/get @entity @config.parentField) @entity.calendarParentId))) (if (not (validate/required @config.searchRelation)) false (array/includes (array/map ?data (fn r (object/get @r id))) (object/get @entity @config.searchRelation))))
         })
       CalendarEventLoaded -> loading when (> ?totalCount (array/len ?data))
         (emit CalendarEventLoadFailed { error: (str/concat "CalendarEvent has " ?totalCount " events, over the maxRows cap of " @config.maxRows), code: "CALENDAR_OVER_CAP" })
@@ -97,7 +97,7 @@ orbital CalendarEventOrbital {
           emit: { failure: CalendarEventLoadFailed, success: CalendarEventLoaded }
           include: @config.include
           limit: @config.maxRows
-          filter: (or (not (validate/required @config.parentField)) (= (object/get @entity @config.parentField) (default ?id "")))
+          filter: (and (or (not (validate/required @config.scopeField)) (= (object/get @entity @config.scopeField) @user.id)) (or (not (validate/required @config.parentField)) (= (object/get @entity @config.parentField) (default ?id ""))))
         })
         (render-ui main { type: skeleton, variant: card })
       SELECT_DAY -> loading
@@ -108,7 +108,7 @@ orbital CalendarEventOrbital {
           emit: { failure: CalendarEventLoadFailed, success: CalendarEventLoaded }
           include: @config.include
           limit: @config.maxRows
-          filter: (and (or (not (validate/required @config.parentField)) (= (object/get @entity @config.parentField) @entity.calendarParentId)) (let ((t (as (default (object/get @entity @config.startField) "") CalendarInstant))) (and (!= @t null) (time/isAfter @t (if (= ?value week) (time/subtract (time/now) 1 week) (if (= ?value "3months") (time/subtract (time/now) 3 month) (if (= ?value year) (time/subtract (time/now) 1 year) (time/subtract (time/now) 1 month))))))))
+          filter: (and (and (or (not (validate/required @config.scopeField)) (= (object/get @entity @config.scopeField) @user.id)) (or (not (validate/required @config.parentField)) (= (object/get @entity @config.parentField) @entity.calendarParentId))) (let ((t (as (default (object/get @entity @config.startField) "") CalendarInstant))) (and (!= @t null) (time/isAfter @t (if (= ?value week) (time/subtract (time/now) 1 week) (if (= ?value "3months") (time/subtract (time/now) 3 month) (if (= ?value year) (time/subtract (time/now) 1 year) (time/subtract (time/now) 1 month))))))))
         })
       CALENDAR_PREV_WEEK -> loading
         (set @entity.weekAnchor (if (= @entity.weekAnchor null) (time/now) (time/subtract @entity.weekAnchor 1 week)))
@@ -116,7 +116,7 @@ orbital CalendarEventOrbital {
           emit: { failure: CalendarEventLoadFailed, success: CalendarEventLoaded }
           include: @config.include
           limit: @config.maxRows
-          filter: (or (not (validate/required @config.parentField)) (= (object/get @entity @config.parentField) @entity.calendarParentId))
+          filter: (and (or (not (validate/required @config.scopeField)) (= (object/get @entity @config.scopeField) @user.id)) (or (not (validate/required @config.parentField)) (= (object/get @entity @config.parentField) @entity.calendarParentId)))
         })
       CALENDAR_NEXT_WEEK -> loading
         (set @entity.weekAnchor (if (= @entity.weekAnchor null) (time/now) (time/add @entity.weekAnchor 1 week)))
@@ -124,7 +124,7 @@ orbital CalendarEventOrbital {
           emit: { failure: CalendarEventLoadFailed, success: CalendarEventLoaded }
           include: @config.include
           limit: @config.maxRows
-          filter: (or (not (validate/required @config.parentField)) (= (object/get @entity @config.parentField) @entity.calendarParentId))
+          filter: (and (or (not (validate/required @config.scopeField)) (= (object/get @entity @config.scopeField) @user.id)) (or (not (validate/required @config.parentField)) (= (object/get @entity @config.parentField) @entity.calendarParentId)))
         })
       ;; Same no-render-ui shape as SELECT_DAY/CALENDAR_*_WEEK above: transition
       ;; to `loading` without repainting, so the current grid/agenda/timeline
@@ -136,7 +136,7 @@ orbital CalendarEventOrbital {
           include: @config.include
           limit: @config.maxRows
           ;; no search field means nothing matches the term
-          filter: (and (or (not (validate/required @config.parentField)) (= (object/get @entity @config.parentField) @entity.calendarParentId)) (or (= ?searchTerm "") (if (= @config.searchField null) false (str/includes (default (object/get @entity @config.searchField) "") ?searchTerm))))
+          filter: (and (and (or (not (validate/required @config.scopeField)) (= (object/get @entity @config.scopeField) @user.id)) (or (not (validate/required @config.parentField)) (= (object/get @entity @config.parentField) @entity.calendarParentId))) (or (= ?searchTerm "") (if (= @config.searchField null) false (str/includes (default (object/get @entity @config.searchField) "") ?searchTerm))))
         })
       REFETCH_QUERY -> loading when (and (validate/required @config.searchRelation) (!= ?searchTerm ""))
         (fetch @config.relatedEntity {
@@ -149,7 +149,7 @@ orbital CalendarEventOrbital {
           emit: { failure: CalendarEventLoadFailed, success: CalendarEventLoaded }
           include: @config.include
           limit: @config.maxRows
-          filter: (and (or (not (validate/required @config.parentField)) (= (object/get @entity @config.parentField) @entity.calendarParentId)) (or (= ?value "") (= (object/get @entity ?field) ?value)))
+          filter: (and (and (or (not (validate/required @config.scopeField)) (= (object/get @entity @config.scopeField) @user.id)) (or (not (validate/required @config.parentField)) (= (object/get @entity @config.parentField) @entity.calendarParentId))) (or (= ?value "") (= (object/get @entity ?field) ?value)))
         })
     }
 
@@ -160,7 +160,7 @@ orbital CalendarEventOrbital {
           emit: { failure: CalendarEventLoadFailed, success: CalendarEventLoaded }
           include: @config.include
           limit: @config.maxRows
-          filter: (or (not (validate/required @config.parentField)) (= (object/get @entity @config.parentField) (default ?id "")))
+          filter: (and (or (not (validate/required @config.scopeField)) (= (object/get @entity @config.scopeField) @user.id)) (or (not (validate/required @config.parentField)) (= (object/get @entity @config.parentField) (default ?id ""))))
         })
         (render-ui main { type: skeleton, variant: card })
       ;; the error screen's Retry button: INIT is lifecycle-only and the bus never
@@ -170,7 +170,7 @@ orbital CalendarEventOrbital {
           emit: { failure: CalendarEventLoadFailed, success: CalendarEventLoaded }
           include: @config.include
           limit: @config.maxRows
-          filter: (or (not (validate/required @config.parentField)) (= (object/get @entity @config.parentField) @entity.calendarParentId))
+          filter: (and (or (not (validate/required @config.scopeField)) (= (object/get @entity @config.scopeField) @user.id)) (or (not (validate/required @config.parentField)) (= (object/get @entity @config.parentField) @entity.calendarParentId)))
         })
         (render-ui main { type: skeleton, variant: card })
     }
@@ -248,6 +248,11 @@ orbital CalendarEventOrbital {
     }
 
     config {
+      scopeField : field @entity
+        @label "Only show entries owned by the signed-in user?"
+        @description "Name the field that holds the viewer's id (e.g. personId). When set, the calendar loads only rows whose that field equals @user.id — the 'my calendar' view. Left blank it shows every row, which is the default."
+        @synonyms "owner field, my entries, only mine, scope to user"
+        @tier "policy"
       parentField : field @entity
         @label "Which field ties these rows to the page's record?"
         @description "For a related view on a detail page (a project's tasks, a client's events): name the field that holds the parent record's id. The view then loads and refetches only rows whose that field equals the page's :id. Left blank it is not scoped, which is the default. A scoped view refreshes through REFETCH_FILTER with an empty value, which keeps the page's id; re-sending INIT would re-scope it to whatever id that payload carries."

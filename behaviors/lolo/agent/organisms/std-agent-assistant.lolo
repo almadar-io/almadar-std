@@ -98,6 +98,7 @@ orbital AgentAssistantOrbital {
   uses Delay from "std/behaviors/std-delay"
   uses Loop from "std/behaviors/std-agent-tool-loop"
   uses Trace from "std/behaviors/std-agent-trace"
+  uses Identity from "std/behaviors/std-agent-identity"
   uses Shell from "std/behaviors/std-app-layout"
 
   config {
@@ -137,6 +138,32 @@ orbital AgentAssistantOrbital {
       @description "Pass the app's own account (avatar) menu entries so the assistant page keeps them."
       @synonyms "account menu, user menu, profile menu, avatar menu"
       @tier "presentation"
+    actsAs : "user" | "identity" = user
+      @label "Who does the assistant act as?"
+      @description "user: the person asking; every tool runs with their permissions. identity: the assistant's own row of the app's identity entity (`agentSubject`); every tool is offered and runs by that row's role, whoever asks."
+      @synonyms "service account, support agent, agent role, acts as"
+      @tier "policy"
+    agentSubject : string = ""
+      @label "The assistant's identity"
+      @description "The id of the assistant's row in the app's [identity] entity, read when `actsAs` is identity. Give that row the role the assistant should hold."
+      @synonyms "agent user, agent id"
+      @tier "policy"
+    agentSigningKey : secret = "AGENT_IDENTITY_KEY"
+      @label "Assistant signing key credential"
+      @description "Name of the credential holding the P-256 private key (PKCS#8 PEM) that signs the assistant's sign-in token."
+      @tier "infra"
+    agentPublicKeyX : string = ""
+      @label "Assistant public key, x"
+      @description "The base64url x coordinate of the public key matching the signing key."
+      @tier "infra"
+    agentPublicKeyY : string = ""
+      @label "Assistant public key, y"
+      @description "The base64url y coordinate of the public key matching the signing key."
+      @tier "infra"
+    ownOrbital : string = "AgentAssistantOrbital"
+      @label "Own orbital"
+      @description "The name this orbital has in the app, which the assistant's identity names when it signs in. Restate it when the app imports the orbital under another name."
+      @tier "infra"
     viewerRole : string = ""
       @label "Viewer role on the assistant page"
       @description "The role the assistant page's sidebar items and their `roles` are checked against. Bind `@user.role` in an app whose identity carries a role; left empty, only items with no `roles` show."
@@ -207,6 +234,12 @@ orbital AgentAssistantOrbital {
         code : string
         message : string!
       }
+    }
+  }
+
+  trait AssistantContextView = Context.traits.AgentContextView -> AgentContextWindow {
+    listens {
+      AssistantContext.CONTEXT_NOTICE -> CONTEXT_NOTICE
     }
   }
 
@@ -388,9 +421,16 @@ orbital AgentAssistantOrbital {
       tools: @config.tools
       instructions: @config.instructions
       maxSteps: @config.maxSteps
+      caller: @config.actsAs
     }
     listens {
       AssistantMemory.RECALLED -> CONVERSE
+      AssistantIdentity.AGENT_IDENTITY_READY -> AgentIdentityReady
+      AssistantIdentity.AGENT_IDENTITY_REFUSED -> AgentIdentityRefused
+      AssistantIdentity.AGENT_ACTED -> AgentActed
+      AssistantIdentity.AGENT_ACT_FAILED -> AgentActFailed
+      AssistantIdentity.AGENT_LOOKED -> AgentLooked
+      AssistantIdentity.AGENT_LOOK_FAILED -> AgentLookFailed
       AssistantLlm.LLM_TOOLS_REQUESTED -> ToolsRequested
       AssistantLlm.LLM_TOOLS_STEP -> ToolsStep
       AssistantLlm.LLM_CALL_TOOLS_RESULT -> ToolsReplied
@@ -418,6 +458,22 @@ orbital AgentAssistantOrbital {
     }
   }
 
+  trait AssistantIdentity = Identity.traits.AgentIdentity {
+    config {
+      subject: @config.agentSubject
+      signingKey: @config.agentSigningKey
+      publicKeyX: @config.agentPublicKeyX
+      publicKeyY: @config.agentPublicKeyY
+      ownOrbital: @config.ownOrbital
+      ownTrait: "AssistantIdentity"
+    }
+    listens {
+      AssistantLoop.AGENT_IDENTITY_REQUESTED -> AGENT_IDENTITY_REQUESTED
+      AssistantLoop.AGENT_ACT -> AGENT_ACT
+      AssistantLoop.AGENT_LOOK -> AGENT_LOOK
+    }
+  }
+
   trait AssistantTrace = Trace.traits.AgentTraceRecorder -> AgentRun {
     listens {
       AssistantLoop.ASSISTANT_REPLIED -> REPLIED
@@ -425,7 +481,7 @@ orbital AgentAssistantOrbital {
     }
   }
 
-  page "/assistant" as AssistantPage -> AssistantLayout, AssistantThread, AssistantChatKeeper, AssistantContext, AssistantMemory, AssistantMemoryStore, AssistantMemoryView, AssistantLlm, AsstEmbedWait, AsstEmbedRequest, AsstEmbedRequestDelay, AsstEmbedRequestDeadline, AsstEmbedHttp, AsstEmbedHttpFrame, AsstChatRequest, AsstChatRequestDelay, AsstChatRequestDeadline, AsstChatHttp, AsstChatHttpFrame, AssistantLoop, AssistantTrace
+  page "/assistant" as AssistantPage -> AssistantLayout, AssistantThread, AssistantChatKeeper, AssistantContext, AssistantContextView, AssistantMemory, AssistantMemoryStore, AssistantMemoryView, AssistantLlm, AsstEmbedWait, AsstEmbedRequest, AsstEmbedRequestDelay, AsstEmbedRequestDeadline, AsstEmbedHttp, AsstEmbedHttpFrame, AsstChatRequest, AsstChatRequestDelay, AsstChatRequestDeadline, AsstChatHttp, AsstChatHttpFrame, AssistantLoop, AssistantIdentity, AssistantTrace
 }
 
 ;; The assistant's records live outside AgentAssistantOrbital, so a consumer

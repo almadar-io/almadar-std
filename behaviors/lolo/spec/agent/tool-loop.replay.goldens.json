@@ -2,7 +2,7 @@
   "atom": "agent/atoms/std-agent-tool-loop.lolo",
   "trait": "AgentToolLoop",
   "orbital": "AgentToolLoopOrbital",
-  "note": "S1 deny by default (owner decision 5, 2026-10-27): a tool is offered to the model only when its `roles` include the signed-in viewer's role; empty or absent roles, and no viewer, offer nothing.",
+  "note": "S1 deny by default (owner decision 5, 2026-10-27): a tool is offered to the model only when its `roles` include the signed-in viewer's role; empty or absent roles, and no viewer, offer nothing. caller identity (2026-11-10): the assistant is its own identity row (std-agent-identity); tools are offered by that row's role and every call and read goes through it, never the asking session.",
   "cases": [
     {
       "id": "a-tool-granted-to-the-viewers-role-is-offered",
@@ -1152,6 +1152,1065 @@
         "LoopChatRequest",
         "LoopChatHttp"
       ]
+    },
+    {
+      "id": "identity-caller-with-no-identity-wired-fails-the-turn-and-offers-nothing",
+      "note": "caller identity: the composed std-agent-identity has no subject, so the turn fails; it never falls back to the asking user's role.",
+      "config": {
+        "caller": "identity",
+        "tools": [
+          {
+            "read": "Ticket",
+            "roles": [
+              "support"
+            ]
+          },
+          {
+            "read": "Payroll",
+            "roles": [
+              "admin"
+            ]
+          }
+        ]
+      },
+      "defaults": [
+        "LoopLlm",
+        "LoopChatRequest",
+        "LoopChatHttp",
+        "LoopIdentity"
+      ],
+      "steps": [
+        {
+          "event": "CONVERSE",
+          "from": "idle",
+          "payload": {
+            "messages": [
+              {
+                "role": "user",
+                "content": "close my ticket"
+              }
+            ]
+          },
+          "identity": {
+            "id": "u1",
+            "role": "admin"
+          },
+          "expect": {
+            "fired": true,
+            "effects": [],
+            "emits": [
+              {
+                "event": "AGENT_IDENTITY_REQUESTED"
+              },
+              {
+                "event": "ASSISTANT_REPLY_FAILED",
+                "payload": {
+                  "error": "The assistant's own identity could not sign in: no-subject"
+                }
+              }
+            ],
+            "neverEmits": [
+              "LLM_CALL_TOOLS",
+              "INPUTS_KNOWN"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "attack-identity-caller-offers-by-the-agents-role-never-the-asking-admins",
+      "note": "The person asking is an admin and Payroll lists admin; the agent's identity row is support, so only Ticket is offered.",
+      "config": {
+        "caller": "identity",
+        "tools": [
+          {
+            "read": "Ticket",
+            "roles": [
+              "support"
+            ]
+          },
+          {
+            "read": "Payroll",
+            "roles": [
+              "admin"
+            ]
+          }
+        ]
+      },
+      "defaults": [
+        "LoopLlm",
+        "LoopChatRequest",
+        "LoopChatHttp",
+        "LoopIdentity"
+      ],
+      "steps": [
+        {
+          "event": "AgentIdentityReady",
+          "from": "preparing",
+          "payload": {
+            "subject": "support-agent",
+            "role": "support"
+          },
+          "entity": {
+            "pendingTools": [
+              {
+                "read": "Ticket",
+                "roles": [
+                  "support"
+                ]
+              },
+              {
+                "read": "Payroll",
+                "roles": [
+                  "admin"
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "preparing"
+          },
+          "identity": {
+            "id": "u1",
+            "role": "admin"
+          }
+        },
+        {
+          "event": "INPUTS_KNOWN",
+          "from": "preparing",
+          "payload": {
+            "result": {
+              "inputs": [],
+              "entities": [],
+              "selected": []
+            },
+            "text": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "thinking",
+            "emits": [
+              {
+                "event": "LLM_CALL_TOOLS",
+                "payload": {
+                  "tools": [
+                    {
+                      "name": "read__Ticket",
+                      "description": "Read the Ticket rows you may see",
+                      "parameters": {
+                        "type": "object",
+                        "properties": {}
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "identity": {
+            "id": "u1",
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-identity-caller-offers-the-agents-tools-to-an-anonymous-asker",
+      "note": "Who asks does not decide: the agent's role does.",
+      "config": {
+        "caller": "identity",
+        "tools": [
+          {
+            "read": "Ticket",
+            "roles": [
+              "support"
+            ]
+          },
+          {
+            "read": "Payroll",
+            "roles": [
+              "admin"
+            ]
+          }
+        ]
+      },
+      "defaults": [
+        "LoopLlm",
+        "LoopChatRequest",
+        "LoopChatHttp",
+        "LoopIdentity"
+      ],
+      "steps": [
+        {
+          "event": "AgentIdentityReady",
+          "from": "preparing",
+          "payload": {
+            "subject": "support-agent",
+            "role": "support"
+          },
+          "entity": {
+            "pendingTools": [
+              {
+                "read": "Ticket",
+                "roles": [
+                  "support"
+                ]
+              },
+              {
+                "read": "Payroll",
+                "roles": [
+                  "admin"
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "preparing"
+          }
+        },
+        {
+          "event": "INPUTS_KNOWN",
+          "from": "preparing",
+          "payload": {
+            "result": {
+              "inputs": [],
+              "entities": [],
+              "selected": []
+            },
+            "text": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "thinking",
+            "emits": [
+              {
+                "event": "LLM_CALL_TOOLS",
+                "payload": {
+                  "tools": [
+                    {
+                      "name": "read__Ticket",
+                      "description": "Read the Ticket rows you may see",
+                      "parameters": {
+                        "type": "object",
+                        "properties": {}
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-an-agent-whose-role-no-tool-lists-is-offered-nothing",
+      "config": {
+        "caller": "identity",
+        "tools": [
+          {
+            "read": "Ticket",
+            "roles": [
+              "support"
+            ]
+          },
+          {
+            "read": "Payroll",
+            "roles": [
+              "admin"
+            ]
+          }
+        ]
+      },
+      "defaults": [
+        "LoopLlm",
+        "LoopChatRequest",
+        "LoopChatHttp",
+        "LoopIdentity"
+      ],
+      "steps": [
+        {
+          "event": "AgentIdentityReady",
+          "from": "preparing",
+          "payload": {
+            "subject": "support-agent",
+            "role": "guest"
+          },
+          "entity": {
+            "pendingTools": [
+              {
+                "read": "Ticket",
+                "roles": [
+                  "support"
+                ]
+              },
+              {
+                "read": "Payroll",
+                "roles": [
+                  "admin"
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "preparing"
+          }
+        },
+        {
+          "event": "INPUTS_KNOWN",
+          "from": "preparing",
+          "payload": {
+            "result": {
+              "inputs": [],
+              "entities": [],
+              "selected": []
+            },
+            "text": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "thinking",
+            "emits": [
+              {
+                "event": "LLM_CALL_TOOLS",
+                "payload": {
+                  "tools": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "attack-identity-caller-never-dispatches-a-tool-as-the-asking-user",
+      "note": "With no identity wired the call fails; it is not dispatched in the asking session.",
+      "config": {
+        "caller": "identity",
+        "tools": [
+          {
+            "read": "Ticket",
+            "roles": [
+              "support"
+            ]
+          }
+        ]
+      },
+      "defaults": [
+        "LoopLlm",
+        "LoopChatRequest",
+        "LoopChatHttp",
+        "LoopIdentity"
+      ],
+      "steps": [
+        {
+          "event": "CALL_BEGIN",
+          "from": "running",
+          "payload": {},
+          "entity": {
+            "table": [
+              {
+                "name": "Board__CLOSE",
+                "description": "Close",
+                "parameters": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "label": "Board.CLOSE",
+                "kind": "input",
+                "address": "App.Board.CLOSE",
+                "readAny": false,
+                "contracted": false,
+                "fireAndForget": false
+              }
+            ],
+            "calls": [
+              {
+                "id": "c1",
+                "name": "Board__CLOSE",
+                "arguments": {}
+              }
+            ],
+            "current": {
+              "id": "c1",
+              "name": "Board__CLOSE",
+              "arguments": {}
+            },
+            "binding": {
+              "name": "Board__CLOSE",
+              "description": "Close",
+              "parameters": {
+                "type": "object",
+                "properties": {}
+              },
+              "label": "Board.CLOSE",
+              "kind": "input",
+              "address": "App.Board.CLOSE",
+              "readAny": false,
+              "contracted": false,
+              "fireAndForget": false
+            },
+            "cursor": 0,
+            "results": [],
+            "session": "s1",
+            "callStartedAt": "2023-11-14T22:13:20Z"
+          },
+          "identity": {
+            "id": "u1",
+            "role": "admin"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "AGENT_ACT",
+                "payload": {
+                  "callId": "c1",
+                  "address": "App.Board.CLOSE",
+                  "contracted": false
+                }
+              },
+              {
+                "event": "LLM_TOOLS_ANSWERED",
+                "payload": {
+                  "session": "s1",
+                  "results": [
+                    {
+                      "id": "c1",
+                      "tool": "Board.CLOSE",
+                      "kind": "input",
+                      "success": false,
+                      "detail": "The assistant has no identity to act as.",
+                      "content": "{\"ok\":false,\"error\":\"The assistant has no identity to act as.\"}",
+                      "startedAt": "2023-11-14T22:13:20Z",
+                      "endedAt": "2023-11-14T22:13:20.000Z"
+                    }
+                  ]
+                }
+              }
+            ],
+            "neverEmits": [
+              "DISPATCHED",
+              "AWAIT_DISPATCHED",
+              "DISPATCH_FAILED",
+              "AWAIT_DISPATCH_FAILED",
+              "TOOL_PENDING"
+            ]
+          }
+        }
+      ],
+      "now": 1700000000000
+    },
+    {
+      "id": "attack-identity-caller-never-reads-as-the-asking-user",
+      "config": {
+        "caller": "identity",
+        "tools": [
+          {
+            "read": "Ticket",
+            "roles": [
+              "support"
+            ]
+          }
+        ]
+      },
+      "defaults": [
+        "LoopLlm",
+        "LoopChatRequest",
+        "LoopChatHttp",
+        "LoopIdentity"
+      ],
+      "steps": [
+        {
+          "event": "CALL_BEGIN",
+          "from": "running",
+          "payload": {},
+          "entity": {
+            "table": [
+              {
+                "name": "read__Ticket",
+                "description": "Read",
+                "parameters": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "label": "Ticket",
+                "kind": "read",
+                "entity": "Ticket",
+                "readAny": false,
+                "contracted": false,
+                "fireAndForget": false
+              }
+            ],
+            "calls": [
+              {
+                "id": "c1",
+                "name": "read__Ticket",
+                "arguments": {}
+              }
+            ],
+            "current": {
+              "id": "c1",
+              "name": "read__Ticket",
+              "arguments": {}
+            },
+            "binding": {
+              "name": "read__Ticket",
+              "description": "Read",
+              "parameters": {
+                "type": "object",
+                "properties": {}
+              },
+              "label": "Ticket",
+              "kind": "read",
+              "entity": "Ticket",
+              "readAny": false,
+              "contracted": false,
+              "fireAndForget": false
+            },
+            "cursor": 0,
+            "results": [],
+            "session": "s1",
+            "callStartedAt": "2023-11-14T22:13:20Z"
+          },
+          "identity": {
+            "id": "u1",
+            "role": "admin"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "AGENT_LOOK",
+                "payload": {
+                  "callId": "c1",
+                  "entity": "Ticket"
+                }
+              },
+              {
+                "event": "LLM_TOOLS_ANSWERED",
+                "payload": {
+                  "session": "s1",
+                  "results": [
+                    {
+                      "id": "c1",
+                      "tool": "Ticket",
+                      "kind": "read",
+                      "success": false,
+                      "detail": "The assistant has no identity to act as.",
+                      "content": "{\"error\":\"The assistant has no identity to act as.\"}",
+                      "startedAt": "2023-11-14T22:13:20Z",
+                      "endedAt": "2023-11-14T22:13:20.000Z"
+                    }
+                  ]
+                }
+              }
+            ],
+            "neverEmits": [
+              "READ_DONE",
+              "READ_FAILED"
+            ]
+          }
+        }
+      ],
+      "now": 1700000000000
+    },
+    {
+      "id": "control-a-user-caller-still-dispatches-the-tool-itself",
+      "config": {
+        "tools": [
+          {
+            "read": "Ticket",
+            "roles": [
+              "support"
+            ]
+          }
+        ]
+      },
+      "defaults": [
+        "LoopLlm",
+        "LoopChatRequest",
+        "LoopChatHttp",
+        "LoopIdentity"
+      ],
+      "steps": [
+        {
+          "event": "CALL_BEGIN",
+          "from": "running",
+          "payload": {},
+          "entity": {
+            "table": [
+              {
+                "name": "Board__CLOSE",
+                "description": "Close",
+                "parameters": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "label": "Board.CLOSE",
+                "kind": "input",
+                "address": "App.Board.CLOSE",
+                "readAny": false,
+                "contracted": false,
+                "fireAndForget": false
+              }
+            ],
+            "calls": [
+              {
+                "id": "c1",
+                "name": "Board__CLOSE",
+                "arguments": {}
+              }
+            ],
+            "current": {
+              "id": "c1",
+              "name": "Board__CLOSE",
+              "arguments": {}
+            },
+            "binding": {
+              "name": "Board__CLOSE",
+              "description": "Close",
+              "parameters": {
+                "type": "object",
+                "properties": {}
+              },
+              "label": "Board.CLOSE",
+              "kind": "input",
+              "address": "App.Board.CLOSE",
+              "readAny": false,
+              "contracted": false,
+              "fireAndForget": false
+            },
+            "cursor": 0,
+            "results": [],
+            "session": "s1",
+            "callStartedAt": "2023-11-14T22:13:20Z"
+          },
+          "identity": {
+            "id": "u1",
+            "role": "admin"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "TOOL_PENDING",
+                "payload": {
+                  "callId": "c1",
+                  "tool": "Board.CLOSE"
+                }
+              }
+            ],
+            "neverEmits": [
+              "AGENT_ACT",
+              "AGENT_LOOK"
+            ]
+          }
+        }
+      ],
+      "now": 1700000000000
+    },
+    {
+      "id": "an-act-answered-by-the-agent-identity-is-the-tool-result",
+      "config": {
+        "caller": "identity",
+        "tools": [
+          {
+            "read": "Ticket",
+            "roles": [
+              "support"
+            ]
+          }
+        ]
+      },
+      "defaults": [
+        "LoopLlm",
+        "LoopChatRequest",
+        "LoopChatHttp",
+        "LoopIdentity"
+      ],
+      "steps": [
+        {
+          "event": "AgentActed",
+          "from": "running",
+          "payload": {
+            "callId": "c1",
+            "ok": true,
+            "error": "",
+            "content": "{\"ok\":true,\"emitted\":[]}"
+          },
+          "entity": {
+            "table": [
+              {
+                "name": "Board__CLOSE",
+                "description": "Close",
+                "parameters": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "label": "Board.CLOSE",
+                "kind": "input",
+                "address": "App.Board.CLOSE",
+                "readAny": false,
+                "contracted": false,
+                "fireAndForget": false
+              }
+            ],
+            "calls": [
+              {
+                "id": "c1",
+                "name": "Board__CLOSE",
+                "arguments": {}
+              }
+            ],
+            "current": {
+              "id": "c1",
+              "name": "Board__CLOSE",
+              "arguments": {}
+            },
+            "binding": {
+              "name": "Board__CLOSE",
+              "description": "Close",
+              "parameters": {
+                "type": "object",
+                "properties": {}
+              },
+              "label": "Board.CLOSE",
+              "kind": "input",
+              "address": "App.Board.CLOSE",
+              "readAny": false,
+              "contracted": false,
+              "fireAndForget": false
+            },
+            "cursor": 0,
+            "results": [],
+            "session": "s1",
+            "callStartedAt": "2023-11-14T22:13:20Z"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LLM_TOOLS_ANSWERED",
+                "payload": {
+                  "session": "s1",
+                  "results": [
+                    {
+                      "id": "c1",
+                      "tool": "Board.CLOSE",
+                      "kind": "input",
+                      "success": true,
+                      "content": "{\"ok\":true,\"emitted\":[]}",
+                      "startedAt": "2023-11-14T22:13:20Z",
+                      "endedAt": "2023-11-14T22:13:20.000Z"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1700000000000
+    },
+    {
+      "id": "an-act-refused-for-the-agents-role-is-a-failed-tool-result",
+      "config": {
+        "caller": "identity",
+        "tools": [
+          {
+            "read": "Ticket",
+            "roles": [
+              "support"
+            ]
+          }
+        ]
+      },
+      "defaults": [
+        "LoopLlm",
+        "LoopChatRequest",
+        "LoopChatHttp",
+        "LoopIdentity"
+      ],
+      "steps": [
+        {
+          "event": "AgentActed",
+          "from": "running",
+          "payload": {
+            "callId": "c1",
+            "ok": false,
+            "error": "guard failed: Board.CLOSE",
+            "content": "{\"ok\":false,\"error\":\"guard failed: Board.CLOSE\"}"
+          },
+          "entity": {
+            "table": [
+              {
+                "name": "Board__CLOSE",
+                "description": "Close",
+                "parameters": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "label": "Board.CLOSE",
+                "kind": "input",
+                "address": "App.Board.CLOSE",
+                "readAny": false,
+                "contracted": false,
+                "fireAndForget": false
+              }
+            ],
+            "calls": [
+              {
+                "id": "c1",
+                "name": "Board__CLOSE",
+                "arguments": {}
+              }
+            ],
+            "current": {
+              "id": "c1",
+              "name": "Board__CLOSE",
+              "arguments": {}
+            },
+            "binding": {
+              "name": "Board__CLOSE",
+              "description": "Close",
+              "parameters": {
+                "type": "object",
+                "properties": {}
+              },
+              "label": "Board.CLOSE",
+              "kind": "input",
+              "address": "App.Board.CLOSE",
+              "readAny": false,
+              "contracted": false,
+              "fireAndForget": false
+            },
+            "cursor": 0,
+            "results": [],
+            "session": "s1",
+            "callStartedAt": "2023-11-14T22:13:20Z"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LLM_TOOLS_ANSWERED",
+                "payload": {
+                  "session": "s1",
+                  "results": [
+                    {
+                      "id": "c1",
+                      "tool": "Board.CLOSE",
+                      "kind": "input",
+                      "success": false,
+                      "detail": "guard failed: Board.CLOSE",
+                      "content": "{\"ok\":false,\"error\":\"guard failed: Board.CLOSE\"}",
+                      "startedAt": "2023-11-14T22:13:20Z",
+                      "endedAt": "2023-11-14T22:13:20.000Z"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1700000000000
+    },
+    {
+      "id": "a-look-answered-by-the-agent-identity-is-the-read-result",
+      "config": {
+        "caller": "identity",
+        "tools": [
+          {
+            "read": "Ticket",
+            "roles": [
+              "support"
+            ]
+          }
+        ]
+      },
+      "defaults": [
+        "LoopLlm",
+        "LoopChatRequest",
+        "LoopChatHttp",
+        "LoopIdentity"
+      ],
+      "steps": [
+        {
+          "event": "AgentLooked",
+          "from": "running",
+          "payload": {
+            "callId": "c1",
+            "entity": "Ticket",
+            "count": 2,
+            "content": "{\"entity\":\"Ticket\",\"count\":2,\"rows\":[]}"
+          },
+          "entity": {
+            "table": [
+              {
+                "name": "read__Ticket",
+                "description": "Read",
+                "parameters": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "label": "Ticket",
+                "kind": "read",
+                "entity": "Ticket",
+                "readAny": false,
+                "contracted": false,
+                "fireAndForget": false
+              }
+            ],
+            "calls": [
+              {
+                "id": "c1",
+                "name": "read__Ticket",
+                "arguments": {}
+              }
+            ],
+            "current": {
+              "id": "c1",
+              "name": "read__Ticket",
+              "arguments": {}
+            },
+            "binding": {
+              "name": "read__Ticket",
+              "description": "Read",
+              "parameters": {
+                "type": "object",
+                "properties": {}
+              },
+              "label": "Ticket",
+              "kind": "read",
+              "entity": "Ticket",
+              "readAny": false,
+              "contracted": false,
+              "fireAndForget": false
+            },
+            "cursor": 0,
+            "results": [],
+            "session": "s1",
+            "callStartedAt": "2023-11-14T22:13:20Z"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LLM_TOOLS_ANSWERED",
+                "payload": {
+                  "session": "s1",
+                  "results": [
+                    {
+                      "id": "c1",
+                      "tool": "Ticket",
+                      "kind": "read",
+                      "success": true,
+                      "rows": 2,
+                      "content": "{\"entity\":\"Ticket\",\"count\":2,\"rows\":[]}",
+                      "startedAt": "2023-11-14T22:13:20Z",
+                      "endedAt": "2023-11-14T22:13:20.000Z"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1700000000000
+    },
+    {
+      "id": "control-an-answer-for-another-call-is-ignored",
+      "config": {
+        "caller": "identity",
+        "tools": [
+          {
+            "read": "Ticket",
+            "roles": [
+              "support"
+            ]
+          }
+        ]
+      },
+      "defaults": [
+        "LoopLlm",
+        "LoopChatRequest",
+        "LoopChatHttp",
+        "LoopIdentity"
+      ],
+      "steps": [
+        {
+          "event": "AgentActed",
+          "from": "running",
+          "payload": {
+            "callId": "other",
+            "ok": true,
+            "error": "",
+            "content": "{}"
+          },
+          "entity": {
+            "table": [
+              {
+                "name": "Board__CLOSE",
+                "description": "Close",
+                "parameters": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "label": "Board.CLOSE",
+                "kind": "input",
+                "address": "App.Board.CLOSE",
+                "readAny": false,
+                "contracted": false,
+                "fireAndForget": false
+              }
+            ],
+            "calls": [
+              {
+                "id": "c1",
+                "name": "Board__CLOSE",
+                "arguments": {}
+              }
+            ],
+            "current": {
+              "id": "c1",
+              "name": "Board__CLOSE",
+              "arguments": {}
+            },
+            "binding": {
+              "name": "Board__CLOSE",
+              "description": "Close",
+              "parameters": {
+                "type": "object",
+                "properties": {}
+              },
+              "label": "Board.CLOSE",
+              "kind": "input",
+              "address": "App.Board.CLOSE",
+              "readAny": false,
+              "contracted": false,
+              "fireAndForget": false
+            },
+            "cursor": 0,
+            "results": [],
+            "session": "s1",
+            "callStartedAt": "2023-11-14T22:13:20Z"
+          },
+          "expect": {
+            "fired": false,
+            "neverEmits": [
+              "LLM_TOOLS_ANSWERED",
+              "RUN_NEXT"
+            ]
+          }
+        }
+      ],
+      "now": 1700000000000
     }
   ]
 }

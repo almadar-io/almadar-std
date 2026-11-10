@@ -1,0 +1,66 @@
+app agent-identity-fixture [
+  version: "1.0.0",
+  description: "Fixture for the goldens of std-agent-identity that need a real [identity] entity: Person is a runtime identity whose declared role is support, Agent is std-agent-identity composed for the subject support-agent with the public half of the test signing key, Ticket is read by the support role alone, and Who answers WHO with the session's @user so a golden can read who a session is."
+]
+uses Identity from "std/behaviors/std-agent-identity"
+
+orbital AgentIdentityFixture {
+  entity Person [runtime, identity] {
+    id : string!
+    name : string
+    email : email
+    role : string = "support"
+  }
+
+  entity Ticket [persistent: tickets] {
+    @read (= @user.role "support")
+    id : string!
+    subject : string = ""
+  }
+
+  entity WhoRow [runtime] {
+    id : string!
+    seen : string @description "The id of the last @user asked about." = ""
+  }
+
+  trait Agent = Identity.traits.AgentIdentity {
+    config {
+      subject: "support-agent"
+      signingKey: "AGENT_IDENTITY_KEY"
+      publicKeyX: "6mjXtv7fC3GHiTjVHXH4cp4Ky4wsbfiz156KS5CUnuA"
+      publicKeyY: "KidEyXLJ_OeHAUqWSo6gyE1xT-qk3oI_6FoiSk3QSPo"
+      ownOrbital: "AgentIdentityFixture"
+      ownTrait: "Agent"
+    }
+  }
+
+  trait Who -> WhoRow [optimistic] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.seen "")
+      WHO -> idle
+        (set @entity.seen @user.id)
+        (emit WHOAMI { id: @user.id, role: (default @user.role "") })
+    }
+
+    emits {
+      WHOAMI -> external {
+        id : string!
+        role : string
+      }
+        @description "The id and role of the session's @user."
+        @tier "primary"
+    }
+
+    listens {
+      WHO -> input {
+        ask : string?
+      }
+        @description "Ask who the session is."
+    }
+  }
+
+  page boot as AgentIdentityFixturePage -> Agent, Who
+}

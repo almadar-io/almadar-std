@@ -140,6 +140,8 @@ Each line below, changed in the spec (or the provider), makes `orb validate` fai
 | `[runtime, local]` in `gallery` | `ORB_S_EXPECTATION_PROVIDER_MISMATCH` |
 | `ApiKeyRecord [runtime]` in `api-keys` | `ORB_S_EXPECTATION_PROVIDER_MISMATCH` |
 | `CAPTURE -> done` in `label-capture` | `ORB_S_EXPECTATION_UNSATISFIED` |
+| `agent/agent-workflow.lolo` | `std-agent-workflow` (not built; a business process as declared steps run through `std-agent-coordinator`, with approval stops and a persisted run row) |
+| `ops/model-fit.lolo` | `std-model-fit` (not built; the first declared model option this machine's memory fits, every refused option named with the gigabytes missing, then a measured tokens-per-second probe) |
 
 ## Proof specs
 

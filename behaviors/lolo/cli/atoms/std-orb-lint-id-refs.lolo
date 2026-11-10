@@ -23,7 +23,7 @@ type IdRefsHitMap = Map string IdRefsHits
 type IdRefsPos = { id : string!, exp : string!, name : string!, hasName : boolean!, path : string! }
 type IdRefsPositions = [IdRefsPos]
 type IdRefsForm = [IdRefsExpr?]
-type IdRefsConfig = { default : IdRefsExpr }
+type IdRefsConfig = { default : IdRefsExpr, type : string, refId : string }
 type IdRefsArm = { effects : [IdRefsExpr?] }
 type IdRefsMachine = { transitions : [IdRefsArm] }
 type IdRefsTick = { effects : [IdRefsExpr?] }
@@ -149,8 +149,12 @@ orbital OrbLintIdRefsOrbital {
                           (array/concat
                             (if (object/has @tr "refId") [{ id: (object/get @tr "refId"), exp: "trt_", name: (object/get @tr "ref" ""), hasName: (object/has @tr "ref"), path: (str/concat @tp ".ref") }] [])
                             (if (object/has @tr "linkedEntityId") [{ id: (object/get @tr "linkedEntityId"), exp: "ent_", name: (object/get @tr "linkedEntity" ""), hasName: (object/has @tr "linkedEntity"), path: (str/concat @tp ".linkedEntity") }] []))))))))
+                    (cfgPos (array/flatten (array/map (array/filter @slots (fn s (validate/object (object/get (object/get @s "t") "config" null)))) (fn s
+                      (let ((cc (object/get (object/get @s "t") "config" {})) (tp (object/get @s "tp")))
+                        (array/map (array/filter (object/keys @cc) (fn key (let ((cv (object/get @cc @key null))) (and (validate/object @cv) (= (object/get @cv "type" "") "entity") (!= (object/get @cv "refId" "") "")))))
+                          (fn key { id: (object/get (object/get @cc @key) "refId"), exp: "ent_", name: "", hasName: false, path: (str/concat @tp ".config." @key ".refId") })))))))
                     (ledgerTraitRows (array/filter (object/values @ledgerEntries) (fn le (= (object/get @le "kind" "") "trait")))))
-                (let ((positions (as (array/concat @extendsPos @fieldPos @pagePos @trPositions) IdRefsPositions))
+                (let ((positions (as (array/concat @extendsPos @fieldPos @pagePos @trPositions @cfgPos) IdRefsPositions))
                       (embedSeen (array/flatten (array/map @slots (fn s
                         (let ((tr (object/get @s "t")))
                           (let ((isInline (object/has @tr "stateMachine")) (cfg (let ((c (object/get @tr "config" null))) (if (validate/object @c) (object/values @c) []))))

@@ -768,7 +768,16 @@
                 "event": "LINT_FOUND",
                 "payload": {
                   "rule": "filter-field-never-written",
-                  "findings": [],
+                  "findings": [
+                    {
+                      "code": "ORB_PERSIST_UPDATE_WITHOUT_CREATE",
+                      "path": "orbitals.TestOrbital.traits.Browse.stateMachine.transitions[1].effects",
+                      "message": "entity 'Product' is updated here but nothing in the program creates it: no persist create, upsert or batch create, and no declared instances",
+                      "suggestion": "Create the row before updating it, write it with persist upsert, or rebind the trait onto the entity that owns the rows",
+                      "severity": "error",
+                      "entity": "Product"
+                    }
+                  ],
                   "scope": ""
                 }
               }
@@ -6654,6 +6663,2489 @@
             "object/get"
           ],
           "0-1-1": [
+            "persist"
+          ]
+        }
+      }
+    },
+    {
+      "id": "update-hit-persist-update-on-a-persistent-entity-nothing-creates",
+      "steps": [
+        {
+          "trait": "OrbLintFilterFieldNeverWritten",
+          "event": "INDEX_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "heads": {
+              "0-0": [
+                "=",
+                "fetch",
+                "object/get",
+                "persist"
+              ],
+              "0-0-0": [
+                "=",
+                "fetch",
+                "object/get"
+              ],
+              "0-0-1": [
+                "persist"
+              ]
+            },
+            "roots": {
+              "0-0": [
+                "@entity"
+              ],
+              "0-0-0": [
+                "@entity"
+              ],
+              "0-0-1": []
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintFilterFieldNeverWritten",
+          "event": "EMBEDS_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "all": {},
+            "config": {},
+            "guards": {},
+            "effects": {}
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "TestApp",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "TestOrbital",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "n",
+                        "type": "number"
+                      }
+                    ],
+                    "collection": "items"
+                  },
+                  "traits": [
+                    {
+                      "name": "Writer",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "s",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "s",
+                            "to": "s",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "s",
+                            "to": "s",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "persist",
+                                "update",
+                                "Item",
+                                "a",
+                                {
+                                  "n": 1
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "Home",
+                      "path": "/",
+                      "traits": [
+                        {
+                          "ref": "Writer"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintFilterFieldNeverWritten"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "filter-field-never-written",
+                  "findings": [
+                    {
+                      "code": "ORB_PERSIST_UPDATE_WITHOUT_CREATE",
+                      "path": "orbitals.TestOrbital.traits.Writer.stateMachine.transitions[1].effects",
+                      "message": "entity 'Item' is updated here but nothing in the program creates it: no persist create, upsert or batch create, and no declared instances",
+                      "suggestion": "Create the row before updating it, write it with persist upsert, or rebind the trait onto the entity that owns the rows",
+                      "severity": "error",
+                      "entity": "Item"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintFilterFieldNeverWritten"
+        }
+      ],
+      "entity": {
+        "roots": {
+          "0-0": [
+            "@entity"
+          ],
+          "0-0-0": [
+            "@entity"
+          ],
+          "0-0-1": []
+        },
+        "heads": {
+          "0-0": [
+            "=",
+            "fetch",
+            "object/get",
+            "persist"
+          ],
+          "0-0-0": [
+            "=",
+            "fetch",
+            "object/get"
+          ],
+          "0-0-1": [
+            "persist"
+          ]
+        }
+      }
+    },
+    {
+      "id": "update-hit-literal-batch-update-and-no-create-anywhere",
+      "steps": [
+        {
+          "trait": "OrbLintFilterFieldNeverWritten",
+          "event": "INDEX_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "heads": {
+              "0-0": [
+                "=",
+                "fetch",
+                "object/get",
+                "persist"
+              ],
+              "0-0-0": [
+                "=",
+                "fetch",
+                "object/get"
+              ],
+              "0-0-1": [
+                "persist"
+              ]
+            },
+            "roots": {
+              "0-0": [
+                "@entity"
+              ],
+              "0-0-0": [
+                "@entity"
+              ],
+              "0-0-1": []
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintFilterFieldNeverWritten",
+          "event": "EMBEDS_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "all": {},
+            "config": {},
+            "guards": {},
+            "effects": {}
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "TestApp",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "TestOrbital",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "n",
+                        "type": "number"
+                      }
+                    ],
+                    "collection": "items"
+                  },
+                  "traits": [
+                    {
+                      "name": "Writer",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "s",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "s",
+                            "to": "s",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "s",
+                            "to": "s",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "persist",
+                                "batch",
+                                [
+                                  [
+                                    "update",
+                                    "Item",
+                                    "a",
+                                    {
+                                      "n": 1
+                                    }
+                                  ]
+                                ],
+                                {
+                                  "emit": {
+                                    "success": "GO",
+                                    "failure": "GO"
+                                  }
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "Home",
+                      "path": "/",
+                      "traits": [
+                        {
+                          "ref": "Writer"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintFilterFieldNeverWritten"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "filter-field-never-written",
+                  "findings": [
+                    {
+                      "code": "ORB_PERSIST_UPDATE_WITHOUT_CREATE",
+                      "path": "orbitals.TestOrbital.traits.Writer.stateMachine.transitions[1].effects",
+                      "message": "entity 'Item' is updated here but nothing in the program creates it: no persist create, upsert or batch create, and no declared instances",
+                      "suggestion": "Create the row before updating it, write it with persist upsert, or rebind the trait onto the entity that owns the rows",
+                      "severity": "error",
+                      "entity": "Item"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintFilterFieldNeverWritten"
+        }
+      ],
+      "entity": {
+        "roots": {
+          "0-0": [
+            "@entity"
+          ],
+          "0-0-0": [
+            "@entity"
+          ],
+          "0-0-1": []
+        },
+        "heads": {
+          "0-0": [
+            "=",
+            "fetch",
+            "object/get",
+            "persist"
+          ],
+          "0-0-0": [
+            "=",
+            "fetch",
+            "object/get"
+          ],
+          "0-0-1": [
+            "persist"
+          ]
+        }
+      }
+    },
+    {
+      "id": "update-hit-update-in-a-tick-effect-and-no-create",
+      "steps": [
+        {
+          "trait": "OrbLintFilterFieldNeverWritten",
+          "event": "INDEX_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "heads": {
+              "0-0": [
+                "=",
+                "fetch",
+                "object/get",
+                "persist"
+              ],
+              "0-0-0": [
+                "=",
+                "fetch",
+                "object/get"
+              ],
+              "0-0-1": [
+                "persist"
+              ]
+            },
+            "roots": {
+              "0-0": [
+                "@entity"
+              ],
+              "0-0-0": [
+                "@entity"
+              ],
+              "0-0-1": []
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintFilterFieldNeverWritten",
+          "event": "EMBEDS_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "all": {},
+            "config": {},
+            "guards": {},
+            "effects": {}
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "TestApp",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "TestOrbital",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "n",
+                        "type": "number"
+                      }
+                    ],
+                    "collection": "items"
+                  },
+                  "traits": [
+                    {
+                      "name": "Writer",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "s",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "s",
+                            "to": "s",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "s",
+                            "to": "s",
+                            "event": "GO",
+                            "effects": []
+                          }
+                        ]
+                      },
+                      "ticks": [
+                        {
+                          "name": "beat",
+                          "interval": 5000,
+                          "effects": [
+                            [
+                              "persist",
+                              "update",
+                              "Item",
+                              "a",
+                              {
+                                "n": 1
+                              }
+                            ]
+                          ]
+                        }
+                      ]
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "Home",
+                      "path": "/",
+                      "traits": [
+                        {
+                          "ref": "Writer"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintFilterFieldNeverWritten"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "filter-field-never-written",
+                  "findings": [
+                    {
+                      "code": "ORB_PERSIST_UPDATE_WITHOUT_CREATE",
+                      "path": "orbitals.TestOrbital.traits.Writer.ticks[0].effects",
+                      "message": "entity 'Item' is updated here but nothing in the program creates it: no persist create, upsert or batch create, and no declared instances",
+                      "suggestion": "Create the row before updating it, write it with persist upsert, or rebind the trait onto the entity that owns the rows",
+                      "severity": "error",
+                      "entity": "Item"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintFilterFieldNeverWritten"
+        }
+      ],
+      "entity": {
+        "roots": {
+          "0-0": [
+            "@entity"
+          ],
+          "0-0-0": [
+            "@entity"
+          ],
+          "0-0-1": []
+        },
+        "heads": {
+          "0-0": [
+            "=",
+            "fetch",
+            "object/get",
+            "persist"
+          ],
+          "0-0-0": [
+            "=",
+            "fetch",
+            "object/get"
+          ],
+          "0-0-1": [
+            "persist"
+          ]
+        }
+      }
+    },
+    {
+      "id": "update-silent-when-a-trait-of-another-orbital-persist-creates-it",
+      "steps": [
+        {
+          "trait": "OrbLintFilterFieldNeverWritten",
+          "event": "INDEX_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "heads": {
+              "0-0": [
+                "=",
+                "fetch",
+                "object/get",
+                "persist"
+              ],
+              "0-0-0": [
+                "=",
+                "fetch",
+                "object/get"
+              ],
+              "0-0-1": [
+                "persist"
+              ]
+            },
+            "roots": {
+              "0-0": [
+                "@entity"
+              ],
+              "0-0-0": [
+                "@entity"
+              ],
+              "0-0-1": []
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintFilterFieldNeverWritten",
+          "event": "EMBEDS_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "all": {},
+            "config": {},
+            "guards": {},
+            "effects": {}
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "TestApp",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "TestOrbital",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "n",
+                        "type": "number"
+                      }
+                    ],
+                    "collection": "items"
+                  },
+                  "traits": [
+                    {
+                      "name": "Writer",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "s",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "s",
+                            "to": "s",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "s",
+                            "to": "s",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "persist",
+                                "update",
+                                "Item",
+                                "a",
+                                {
+                                  "n": 1
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "Home",
+                      "path": "/",
+                      "traits": [
+                        {
+                          "ref": "Writer"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "name": "OtherOrbital",
+                  "entity": {
+                    "name": "Other",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "n",
+                        "type": "number"
+                      }
+                    ],
+                    "collection": "others"
+                  },
+                  "traits": [
+                    {
+                      "name": "Maker",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "s",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "s",
+                            "to": "s",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "s",
+                            "to": "s",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "persist",
+                                "create",
+                                "Item",
+                                {
+                                  "id": "b",
+                                  "n": 2
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "Home",
+                      "path": "/",
+                      "traits": [
+                        {
+                          "ref": "Maker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintFilterFieldNeverWritten"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "filter-field-never-written",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintFilterFieldNeverWritten"
+        }
+      ],
+      "entity": {
+        "roots": {
+          "0-0": [
+            "@entity"
+          ],
+          "0-0-0": [
+            "@entity"
+          ],
+          "0-0-1": []
+        },
+        "heads": {
+          "0-0": [
+            "=",
+            "fetch",
+            "object/get",
+            "persist"
+          ],
+          "0-0-0": [
+            "=",
+            "fetch",
+            "object/get"
+          ],
+          "0-0-1": [
+            "persist"
+          ]
+        }
+      }
+    },
+    {
+      "id": "update-silent-when-the-entity-is-also-upserted",
+      "steps": [
+        {
+          "trait": "OrbLintFilterFieldNeverWritten",
+          "event": "INDEX_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "heads": {
+              "0-0": [
+                "=",
+                "fetch",
+                "object/get",
+                "persist"
+              ],
+              "0-0-0": [
+                "=",
+                "fetch",
+                "object/get"
+              ],
+              "0-0-1": [
+                "persist"
+              ]
+            },
+            "roots": {
+              "0-0": [
+                "@entity"
+              ],
+              "0-0-0": [
+                "@entity"
+              ],
+              "0-0-1": []
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintFilterFieldNeverWritten",
+          "event": "EMBEDS_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "all": {},
+            "config": {},
+            "guards": {},
+            "effects": {}
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "TestApp",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "TestOrbital",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "n",
+                        "type": "number"
+                      }
+                    ],
+                    "collection": "items"
+                  },
+                  "traits": [
+                    {
+                      "name": "Writer",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "s",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "s",
+                            "to": "s",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "s",
+                            "to": "s",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "persist",
+                                "update",
+                                "Item",
+                                "a",
+                                {
+                                  "n": 1
+                                }
+                              ],
+                              [
+                                "persist",
+                                "upsert",
+                                "Item",
+                                "a",
+                                {
+                                  "n": 3
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "Home",
+                      "path": "/",
+                      "traits": [
+                        {
+                          "ref": "Writer"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintFilterFieldNeverWritten"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "filter-field-never-written",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintFilterFieldNeverWritten"
+        }
+      ],
+      "entity": {
+        "roots": {
+          "0-0": [
+            "@entity"
+          ],
+          "0-0-0": [
+            "@entity"
+          ],
+          "0-0-1": []
+        },
+        "heads": {
+          "0-0": [
+            "=",
+            "fetch",
+            "object/get",
+            "persist"
+          ],
+          "0-0-0": [
+            "=",
+            "fetch",
+            "object/get"
+          ],
+          "0-0-1": [
+            "persist"
+          ]
+        }
+      }
+    },
+    {
+      "id": "update-silent-when-the-entity-declares-instances",
+      "steps": [
+        {
+          "trait": "OrbLintFilterFieldNeverWritten",
+          "event": "INDEX_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "heads": {
+              "0-0": [
+                "=",
+                "fetch",
+                "object/get",
+                "persist"
+              ],
+              "0-0-0": [
+                "=",
+                "fetch",
+                "object/get"
+              ],
+              "0-0-1": [
+                "persist"
+              ]
+            },
+            "roots": {
+              "0-0": [
+                "@entity"
+              ],
+              "0-0-0": [
+                "@entity"
+              ],
+              "0-0-1": []
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintFilterFieldNeverWritten",
+          "event": "EMBEDS_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "all": {},
+            "config": {},
+            "guards": {},
+            "effects": {}
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "TestApp",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "TestOrbital",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "n",
+                        "type": "number"
+                      }
+                    ],
+                    "collection": "items",
+                    "instances": [
+                      {
+                        "id": "a",
+                        "n": 1
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Writer",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "s",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "s",
+                            "to": "s",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "s",
+                            "to": "s",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "persist",
+                                "update",
+                                "Item",
+                                "a",
+                                {
+                                  "n": 1
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "Home",
+                      "path": "/",
+                      "traits": [
+                        {
+                          "ref": "Writer"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintFilterFieldNeverWritten"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "filter-field-never-written",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintFilterFieldNeverWritten"
+        }
+      ],
+      "entity": {
+        "roots": {
+          "0-0": [
+            "@entity"
+          ],
+          "0-0-0": [
+            "@entity"
+          ],
+          "0-0-1": []
+        },
+        "heads": {
+          "0-0": [
+            "=",
+            "fetch",
+            "object/get",
+            "persist"
+          ],
+          "0-0-0": [
+            "=",
+            "fetch",
+            "object/get"
+          ],
+          "0-0-1": [
+            "persist"
+          ]
+        }
+      }
+    },
+    {
+      "id": "update-silent-on-a-runtime-entity",
+      "steps": [
+        {
+          "trait": "OrbLintFilterFieldNeverWritten",
+          "event": "INDEX_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "heads": {
+              "0-0": [
+                "=",
+                "fetch",
+                "object/get",
+                "persist"
+              ],
+              "0-0-0": [
+                "=",
+                "fetch",
+                "object/get"
+              ],
+              "0-0-1": [
+                "persist"
+              ]
+            },
+            "roots": {
+              "0-0": [
+                "@entity"
+              ],
+              "0-0-0": [
+                "@entity"
+              ],
+              "0-0-1": []
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintFilterFieldNeverWritten",
+          "event": "EMBEDS_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "all": {},
+            "config": {},
+            "guards": {},
+            "effects": {}
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "TestApp",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "TestOrbital",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "n",
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Writer",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "s",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "s",
+                            "to": "s",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "s",
+                            "to": "s",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "persist",
+                                "update",
+                                "Item",
+                                "a",
+                                {
+                                  "n": 1
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "Home",
+                      "path": "/",
+                      "traits": [
+                        {
+                          "ref": "Writer"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintFilterFieldNeverWritten"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "filter-field-never-written",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintFilterFieldNeverWritten"
+        }
+      ],
+      "entity": {
+        "roots": {
+          "0-0": [
+            "@entity"
+          ],
+          "0-0-0": [
+            "@entity"
+          ],
+          "0-0-1": []
+        },
+        "heads": {
+          "0-0": [
+            "=",
+            "fetch",
+            "object/get",
+            "persist"
+          ],
+          "0-0-0": [
+            "=",
+            "fetch",
+            "object/get"
+          ],
+          "0-0-1": [
+            "persist"
+          ]
+        }
+      }
+    },
+    {
+      "id": "update-silent-when-a-persistent-collection-mate-is-created",
+      "steps": [
+        {
+          "trait": "OrbLintFilterFieldNeverWritten",
+          "event": "INDEX_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "heads": {
+              "0-0": [
+                "=",
+                "fetch",
+                "object/get",
+                "persist"
+              ],
+              "0-0-0": [
+                "=",
+                "fetch",
+                "object/get"
+              ],
+              "0-0-1": [
+                "persist"
+              ]
+            },
+            "roots": {
+              "0-0": [
+                "@entity"
+              ],
+              "0-0-0": [
+                "@entity"
+              ],
+              "0-0-1": []
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintFilterFieldNeverWritten",
+          "event": "EMBEDS_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "all": {},
+            "config": {},
+            "guards": {},
+            "effects": {}
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "TestApp",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "TestOrbital",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "n",
+                        "type": "number"
+                      }
+                    ],
+                    "collection": "shared"
+                  },
+                  "traits": [
+                    {
+                      "name": "Writer",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "s",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "s",
+                            "to": "s",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "s",
+                            "to": "s",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "persist",
+                                "update",
+                                "Item",
+                                "a",
+                                {
+                                  "n": 1
+                                }
+                              ],
+                              [
+                                "persist",
+                                "create",
+                                "Mate",
+                                {
+                                  "id": "b",
+                                  "n": 2
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "Home",
+                      "path": "/",
+                      "traits": [
+                        {
+                          "ref": "Writer"
+                        }
+                      ]
+                    }
+                  ],
+                  "auxiliaryEntities": [
+                    {
+                      "name": "Mate",
+                      "persistence": "persistent",
+                      "fields": [
+                        {
+                          "name": "n",
+                          "type": "number"
+                        }
+                      ],
+                      "collection": "shared"
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintFilterFieldNeverWritten"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "filter-field-never-written",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintFilterFieldNeverWritten"
+        }
+      ],
+      "entity": {
+        "roots": {
+          "0-0": [
+            "@entity"
+          ],
+          "0-0-0": [
+            "@entity"
+          ],
+          "0-0-1": []
+        },
+        "heads": {
+          "0-0": [
+            "=",
+            "fetch",
+            "object/get",
+            "persist"
+          ],
+          "0-0-0": [
+            "=",
+            "fetch",
+            "object/get"
+          ],
+          "0-0-1": [
+            "persist"
+          ]
+        }
+      }
+    },
+    {
+      "id": "update-silent-when-the-program-holds-a-persist-op-with-a-non-literal-entity-target",
+      "steps": [
+        {
+          "trait": "OrbLintFilterFieldNeverWritten",
+          "event": "INDEX_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "heads": {
+              "0-0": [
+                "=",
+                "fetch",
+                "object/get",
+                "persist"
+              ],
+              "0-0-0": [
+                "=",
+                "fetch",
+                "object/get"
+              ],
+              "0-0-1": [
+                "persist"
+              ]
+            },
+            "roots": {
+              "0-0": [
+                "@entity"
+              ],
+              "0-0-0": [
+                "@entity"
+              ],
+              "0-0-1": []
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintFilterFieldNeverWritten",
+          "event": "EMBEDS_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "all": {},
+            "config": {},
+            "guards": {},
+            "effects": {}
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "TestApp",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "TestOrbital",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "n",
+                        "type": "number"
+                      }
+                    ],
+                    "collection": "items"
+                  },
+                  "traits": [
+                    {
+                      "name": "Writer",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "s",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "s",
+                            "to": "s",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "s",
+                            "to": "s",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "persist",
+                                "update",
+                                "Item",
+                                "a",
+                                {
+                                  "n": 1
+                                }
+                              ],
+                              [
+                                "persist",
+                                "create",
+                                [
+                                  "str/concat",
+                                  "I",
+                                  "tem"
+                                ],
+                                {
+                                  "id": "b",
+                                  "n": 2
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "Home",
+                      "path": "/",
+                      "traits": [
+                        {
+                          "ref": "Writer"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintFilterFieldNeverWritten"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "filter-field-never-written",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintFilterFieldNeverWritten"
+        }
+      ],
+      "entity": {
+        "roots": {
+          "0-0": [
+            "@entity"
+          ],
+          "0-0-0": [
+            "@entity"
+          ],
+          "0-0-1": []
+        },
+        "heads": {
+          "0-0": [
+            "=",
+            "fetch",
+            "object/get",
+            "persist"
+          ],
+          "0-0-0": [
+            "=",
+            "fetch",
+            "object/get"
+          ],
+          "0-0-1": [
+            "persist"
+          ]
+        }
+      }
+    },
+    {
+      "id": "update-silent-when-the-only-create-is-in-a-tick-effect",
+      "steps": [
+        {
+          "trait": "OrbLintFilterFieldNeverWritten",
+          "event": "INDEX_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "heads": {
+              "0-0": [
+                "=",
+                "fetch",
+                "object/get",
+                "persist"
+              ],
+              "0-0-0": [
+                "=",
+                "fetch",
+                "object/get"
+              ],
+              "0-0-1": [
+                "persist"
+              ]
+            },
+            "roots": {
+              "0-0": [
+                "@entity"
+              ],
+              "0-0-0": [
+                "@entity"
+              ],
+              "0-0-1": []
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintFilterFieldNeverWritten",
+          "event": "EMBEDS_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "all": {},
+            "config": {},
+            "guards": {},
+            "effects": {}
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "TestApp",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "TestOrbital",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "n",
+                        "type": "number"
+                      }
+                    ],
+                    "collection": "items"
+                  },
+                  "traits": [
+                    {
+                      "name": "Writer",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "s",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "s",
+                            "to": "s",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "s",
+                            "to": "s",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "persist",
+                                "update",
+                                "Item",
+                                "a",
+                                {
+                                  "n": 1
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "ticks": [
+                        {
+                          "name": "beat",
+                          "interval": 5000,
+                          "effects": [
+                            [
+                              "persist",
+                              "create",
+                              "Item",
+                              {
+                                "id": "b",
+                                "n": 2
+                              }
+                            ]
+                          ]
+                        }
+                      ]
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "Home",
+                      "path": "/",
+                      "traits": [
+                        {
+                          "ref": "Writer"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintFilterFieldNeverWritten"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "filter-field-never-written",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintFilterFieldNeverWritten"
+        }
+      ],
+      "entity": {
+        "roots": {
+          "0-0": [
+            "@entity"
+          ],
+          "0-0-0": [
+            "@entity"
+          ],
+          "0-0-1": []
+        },
+        "heads": {
+          "0-0": [
+            "=",
+            "fetch",
+            "object/get",
+            "persist"
+          ],
+          "0-0-0": [
+            "=",
+            "fetch",
+            "object/get"
+          ],
+          "0-0-1": [
+            "persist"
+          ]
+        }
+      }
+    },
+    {
+      "id": "update-silent-when-a-batch-op-list-is-not-statically-readable",
+      "steps": [
+        {
+          "trait": "OrbLintFilterFieldNeverWritten",
+          "event": "INDEX_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "heads": {
+              "0-0": [
+                "=",
+                "fetch",
+                "object/get",
+                "persist"
+              ],
+              "0-0-0": [
+                "=",
+                "fetch",
+                "object/get"
+              ],
+              "0-0-1": [
+                "persist"
+              ]
+            },
+            "roots": {
+              "0-0": [
+                "@entity"
+              ],
+              "0-0-0": [
+                "@entity"
+              ],
+              "0-0-1": []
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintFilterFieldNeverWritten",
+          "event": "EMBEDS_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "all": {},
+            "config": {},
+            "guards": {},
+            "effects": {}
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "TestApp",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "TestOrbital",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "n",
+                        "type": "number"
+                      }
+                    ],
+                    "collection": "items"
+                  },
+                  "traits": [
+                    {
+                      "name": "Writer",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "s",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "s",
+                            "to": "s",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "s",
+                            "to": "s",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "persist",
+                                "update",
+                                "Item",
+                                "a",
+                                {
+                                  "n": 1
+                                }
+                              ],
+                              [
+                                "persist",
+                                "batch",
+                                "@entity.ops",
+                                {
+                                  "emit": {
+                                    "success": "GO",
+                                    "failure": "GO"
+                                  }
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "Home",
+                      "path": "/",
+                      "traits": [
+                        {
+                          "ref": "Writer"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintFilterFieldNeverWritten"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "filter-field-never-written",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintFilterFieldNeverWritten"
+        }
+      ],
+      "entity": {
+        "roots": {
+          "0-0": [
+            "@entity"
+          ],
+          "0-0-0": [
+            "@entity"
+          ],
+          "0-0-1": []
+        },
+        "heads": {
+          "0-0": [
+            "=",
+            "fetch",
+            "object/get",
+            "persist"
+          ],
+          "0-0-0": [
+            "=",
+            "fetch",
+            "object/get"
+          ],
+          "0-0-1": [
+            "persist"
+          ]
+        }
+      }
+    },
+    {
+      "id": "update-silent-when-a-literal-batch-upserts-the-entity",
+      "steps": [
+        {
+          "trait": "OrbLintFilterFieldNeverWritten",
+          "event": "INDEX_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "heads": {
+              "0-0": [
+                "=",
+                "fetch",
+                "object/get",
+                "persist"
+              ],
+              "0-0-0": [
+                "=",
+                "fetch",
+                "object/get"
+              ],
+              "0-0-1": [
+                "persist"
+              ]
+            },
+            "roots": {
+              "0-0": [
+                "@entity"
+              ],
+              "0-0-0": [
+                "@entity"
+              ],
+              "0-0-1": []
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintFilterFieldNeverWritten",
+          "event": "EMBEDS_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "all": {},
+            "config": {},
+            "guards": {},
+            "effects": {}
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "TestApp",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "TestOrbital",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "n",
+                        "type": "number"
+                      }
+                    ],
+                    "collection": "items"
+                  },
+                  "traits": [
+                    {
+                      "name": "Writer",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "s",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "s",
+                            "to": "s",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "s",
+                            "to": "s",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "persist",
+                                "update",
+                                "Item",
+                                "a",
+                                {
+                                  "n": 1
+                                }
+                              ],
+                              [
+                                "persist",
+                                "batch",
+                                [
+                                  [
+                                    "upsert",
+                                    "Item",
+                                    {
+                                      "id": "b",
+                                      "n": 2
+                                    }
+                                  ]
+                                ],
+                                {
+                                  "emit": {
+                                    "success": "GO",
+                                    "failure": "GO"
+                                  }
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "Home",
+                      "path": "/",
+                      "traits": [
+                        {
+                          "ref": "Writer"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintFilterFieldNeverWritten"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "filter-field-never-written",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintFilterFieldNeverWritten"
+        }
+      ],
+      "entity": {
+        "roots": {
+          "0-0": [
+            "@entity"
+          ],
+          "0-0-0": [
+            "@entity"
+          ],
+          "0-0-1": []
+        },
+        "heads": {
+          "0-0": [
+            "=",
+            "fetch",
+            "object/get",
+            "persist"
+          ],
+          "0-0-0": [
+            "=",
+            "fetch",
+            "object/get"
+          ],
+          "0-0-1": [
             "persist"
           ]
         }

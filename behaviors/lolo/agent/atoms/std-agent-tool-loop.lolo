@@ -135,6 +135,7 @@ uses Llm from "std/behaviors/std-llm"
 uses Req from "std/behaviors/std-http-request"
 uses Http from "std/behaviors/std-http-client"
 uses Frame from "std/behaviors/std-http-frame"
+uses Identity from "std/behaviors/std-agent-identity"
 
 type JsonValue = string | number | boolean | [JsonValue] | Map string JsonValue
 type ToolArguments = Map string JsonValue
@@ -160,6 +161,7 @@ orbital AgentToolLoopOrbital {
     binding : AgentToolBinding @description "The tool the call being executed names."
     callStartedAt : instant @description "When the call being executed began."
     turnSteps : [AgentActivity] @description "Every step of the current turn so far, kept so a failed run can be audited." = []
+    pendingTools : [AgentToolData] @description "The tools the current turn names, held while the assistant's own identity signs in (caller identity)." = []
   }
 
   trait LoopLlm = Llm.traits.LlmClient {
@@ -224,6 +226,18 @@ orbital AgentToolLoopOrbital {
     }
   }
 
+  trait LoopIdentity = Identity.traits.AgentIdentity {
+    config {
+      ownOrbital: "AgentToolLoopOrbital"
+      ownTrait: "LoopIdentity"
+    }
+    listens {
+      AgentToolLoop.AGENT_IDENTITY_REQUESTED -> AGENT_IDENTITY_REQUESTED
+      AgentToolLoop.AGENT_ACT -> AGENT_ACT
+      AgentToolLoop.AGENT_LOOK -> AGENT_LOOK
+    }
+  }
+
   trait AgentToolLoop -> AgentTurn [optimistic] {
     config {
       tools : [AgentTool] = []
@@ -240,10 +254,10 @@ orbital AgentToolLoopOrbital {
         @label "Model round-trips per request"
         @description "How many model calls one request may take before it fails."
         @tier "policy"
-      caller : "user" | "process" = user
+      caller : "user" | "process" | "identity" = user
         @label "Whose tools are these?"
-        @description "user: each tool is offered only to a signed-in user whose role it lists. process: the tools are the running program's own, offered with no signed-in user and no role filter, for a command-line or headless run that its composer declares."
-        @synonyms "headless, command line, no user, unattended"
+        @description "user: each tool is offered only to a signed-in user whose role it lists, and runs as that user. process: the tools are the running program's own, offered with no signed-in user and no role filter, for a command-line or headless run that its composer declares. identity: the assistant is its own row of the app's identity entity (std-agent-identity, wired to this loop); each tool is offered only when it lists that row's role, and every call and read runs as that identity, never as the person asking. A tool is then answered with what its dispatch emitted, not awaited through TOOL_RESULT."
+        @synonyms "headless, command line, no user, unattended, service account, support agent, acts as"
         @tier "policy"
       quiet : boolean = false
         @label "Run in the background?"
@@ -256,7 +270,7 @@ orbital AgentToolLoopOrbital {
     state idle {
       INIT -> idle
         (set @entity.status idle)
-      CONVERSE -> preparing when (not (default ?ephemeral false))
+      CONVERSE -> preparing when (and (!= @config.caller "identity") (not (default ?ephemeral false)))
         (set @entity.status thinking)
         (set @entity.ephemeral false)
         (set @entity.cancelled false)
@@ -266,7 +280,7 @@ orbital AgentToolLoopOrbital {
         (set @entity.turnInstructions (if (= (default ?context "") "") @config.instructions (str/concat @config.instructions "\n\nWhat you remember that may be relevant:\n" (default ?context ""))))
         (set @entity.turnTools (let ((all : [AgentTool] @config.tools)) (array/filter @all (fn t (or (= @config.caller "process") (and (not (= @user null)) (array/includes @t.roles (default @user.role ""))))))))
         (program/inputs { select: (array/flatten (array/map @entity.turnTools (fn t (if (object/has @t scope) [] (if (object/has @t read) [] (let ((ev : AgentToolInputData @t)) [(if (object/has @ev payload) { event: @ev.event, payload: @ev.payload } { event: @ev.event })])))))) } { emit: { success: INPUTS_KNOWN, failure: INPUTS_FAILED } })
-      CONVERSE -> preparing when ?ephemeral
+      CONVERSE -> preparing when (and (!= @config.caller "identity") (default ?ephemeral false))
         (set @entity.status thinking)
         (set @entity.ephemeral true)
         (set @entity.cancelled false)
@@ -276,6 +290,28 @@ orbital AgentToolLoopOrbital {
         (set @entity.turnInstructions (if (= (default ?instructions "") "") @config.instructions ?instructions))
         (set @entity.turnTools (array/filter (object/get ? tools []) (fn t (or (= @config.caller "process") (and (not (= @user null)) (array/includes @t.roles (default @user.role "")))))))
         (program/inputs { select: (array/flatten (array/map @entity.turnTools (fn t (if (object/has @t scope) [] (if (object/has @t read) [] (let ((ev : AgentToolInputData @t)) [(if (object/has @ev payload) { event: @ev.event, payload: @ev.payload } { event: @ev.event })])))))) } { emit: { success: INPUTS_KNOWN, failure: INPUTS_FAILED } })
+      CONVERSE -> preparing when (and (= @config.caller "identity") (not (default ?ephemeral false)))
+        (set @entity.status thinking)
+        (set @entity.ephemeral false)
+        (set @entity.cancelled false)
+        (set @entity.turnSteps [])
+        (set @entity.live (object/get ? live (not @config.quiet)))
+        (set @entity.turnMessages ?messages)
+        (set @entity.turnInstructions (if (= (default ?context "") "") @config.instructions (str/concat @config.instructions "\n\nWhat you remember that may be relevant:\n" (default ?context ""))))
+        (set @entity.turnTools [])
+        (set @entity.pendingTools (let ((all : [AgentTool] @config.tools)) @all))
+        (emit AGENT_IDENTITY_REQUESTED {})
+      CONVERSE -> preparing when (and (= @config.caller "identity") (default ?ephemeral false))
+        (set @entity.status thinking)
+        (set @entity.ephemeral true)
+        (set @entity.cancelled false)
+        (set @entity.turnSteps [])
+        (set @entity.live (object/get ? live false))
+        (set @entity.turnMessages ?messages)
+        (set @entity.turnInstructions (if (= (default ?instructions "") "") @config.instructions ?instructions))
+        (set @entity.turnTools [])
+        (set @entity.pendingTools (object/get ? tools []))
+        (emit AGENT_IDENTITY_REQUESTED {})
     }
 
     state preparing {
@@ -283,6 +319,14 @@ orbital AgentToolLoopOrbital {
         (set @entity.status idle)
       CANCEL -> idle
         (set @entity.status idle)
+      AgentIdentityReady -> preparing
+        (set @entity.turnTools (array/filter @entity.pendingTools (fn t (array/includes @t.roles ?role))))
+        (program/inputs { select: (array/flatten (array/map (array/filter @entity.pendingTools (fn t (array/includes @t.roles ?role))) (fn t (if (object/has @t scope) [] (if (object/has @t read) [] (let ((ev : AgentToolInputData @t)) [(if (object/has @ev payload) { event: @ev.event, payload: @ev.payload } { event: @ev.event })])))))) } { emit: { success: INPUTS_KNOWN, failure: INPUTS_FAILED } })
+      AgentIdentityRefused -> idle
+        (set @entity.status failed)
+        (set @entity.pendingTools [])
+        (set @entity.error (str/concat "The assistant's own identity could not sign in: " ?reason))
+        (emit ASSISTANT_REPLY_FAILED { error: (str/concat "The assistant's own identity could not sign in: " ?reason), ephemeral: @entity.ephemeral })
       INPUTS_KNOWN -> thinking when (= (array/len @payload.result.selected) (array/count @entity.turnTools (fn y (object/has @y event))))
         (let ((table : [AgentToolBinding] (array/flatten (array/flatten (array/map (array/range 0 (array/len @entity.turnTools) 1) (fn i
             (array/map (array/take (array/drop @entity.turnTools @i) 1) (fn t
@@ -373,38 +417,72 @@ orbital AgentToolLoopOrbital {
         (set @entity.results (array/append @entity.results { id: @entity.current.id, tool: @entity.current.name, kind: invalid, success: false, detail: "arguments are not a JSON object", content: (json/stringify { error: (str/concat "'" (default @entity.current.name "") "' arguments are not a JSON object") }), startedAt: @entity.callStartedAt, endedAt: (time/now) }))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit RUN_NEXT {})
-      CALL_BEGIN -> running when (let ((b (array/find @entity.table (fn x (= @x.name @entity.current.name))))) (and (!= @b null) (= @b.kind "input") (not @b.contracted) @b.fireAndForget))
+      CALL_BEGIN -> running when (let ((b (array/find @entity.table (fn x (= @x.name @entity.current.name))))) (and (!= @config.caller "identity") (!= @b null) (= @b.kind "input") (not @b.contracted) @b.fireAndForget))
         (let ((b (array/find @entity.table (fn x (= @x.name @entity.current.name)))))
           (do
             (set @entity.binding @b)
             (program/dispatch @b.address @entity.current.arguments { key: (str/concat "tool-call:" @entity.current.id), emit: { success: DISPATCHED, failure: DISPATCH_FAILED } })))
-      CALL_BEGIN -> awaitingResult when (let ((b (array/find @entity.table (fn x (= @x.name @entity.current.name))))) (and (!= @b null) (= @b.kind "input") (not @b.contracted) (not @b.fireAndForget)))
+      CALL_BEGIN -> awaitingResult when (let ((b (array/find @entity.table (fn x (= @x.name @entity.current.name))))) (and (!= @config.caller "identity") (!= @b null) (= @b.kind "input") (not @b.contracted) (not @b.fireAndForget)))
         (let ((b (array/find @entity.table (fn x (= @x.name @entity.current.name)))))
           (do
             (set @entity.binding @b)
             (emit TOOL_PENDING { callId: @entity.current.id, tool: @b.label })
             (program/dispatch @b.address @entity.current.arguments { key: (str/concat "tool-call:" @entity.current.id), emit: { success: AWAIT_DISPATCHED, failure: AWAIT_DISPATCH_FAILED } })))
-      CALL_BEGIN -> running when (let ((b (array/find @entity.table (fn x (= @x.name @entity.current.name))))) (and (!= @b null) (= @b.kind "input") @b.contracted @b.fireAndForget))
+      CALL_BEGIN -> running when (let ((b (array/find @entity.table (fn x (= @x.name @entity.current.name))))) (and (!= @config.caller "identity") (!= @b null) (= @b.kind "input") @b.contracted @b.fireAndForget))
         (let ((b (array/find @entity.table (fn x (= @x.name @entity.current.name)))))
           (do
             (set @entity.binding @b)
             (program/dispatch @b.address @entity.current.arguments { schema: @b.contract } { key: (str/concat "tool-call:" @entity.current.id), emit: { success: DISPATCHED, failure: DISPATCH_FAILED } })))
-      CALL_BEGIN -> awaitingResult when (let ((b (array/find @entity.table (fn x (= @x.name @entity.current.name))))) (and (!= @b null) (= @b.kind "input") @b.contracted (not @b.fireAndForget)))
+      CALL_BEGIN -> awaitingResult when (let ((b (array/find @entity.table (fn x (= @x.name @entity.current.name))))) (and (!= @config.caller "identity") (!= @b null) (= @b.kind "input") @b.contracted (not @b.fireAndForget)))
         (let ((b (array/find @entity.table (fn x (= @x.name @entity.current.name)))))
           (do
             (set @entity.binding @b)
             (emit TOOL_PENDING { callId: @entity.current.id, tool: @b.label })
             (program/dispatch @b.address @entity.current.arguments { schema: @b.contract } { key: (str/concat "tool-call:" @entity.current.id), emit: { success: AWAIT_DISPATCHED, failure: AWAIT_DISPATCH_FAILED } })))
-      CALL_BEGIN -> running when (let ((b (array/find @entity.table (fn x (= @x.name @entity.current.name))))) (and (!= @b null) (= @b.kind "read") (not @b.readAny)))
+      CALL_BEGIN -> running when (let ((b (array/find @entity.table (fn x (= @x.name @entity.current.name))))) (and (!= @config.caller "identity") (!= @b null) (= @b.kind "read") (not @b.readAny)))
         (let ((b (array/find @entity.table (fn x (= @x.name @entity.current.name)))))
           (do
             (set @entity.binding @b)
             (persist/read-named @b.entity { emit: { success: READ_DONE, failure: READ_FAILED } })))
-      CALL_BEGIN -> running when (let ((b (array/find @entity.table (fn x (= @x.name @entity.current.name))))) (and (!= @b null) (= @b.kind "read") @b.readAny))
+      CALL_BEGIN -> running when (let ((b (array/find @entity.table (fn x (= @x.name @entity.current.name))))) (and (!= @config.caller "identity") (!= @b null) (= @b.kind "read") @b.readAny))
         (let ((b (array/find @entity.table (fn x (= @x.name @entity.current.name)))))
           (do
             (set @entity.binding @b)
             (persist/read-named (object/get (default (as @entity.current.arguments AgentReadArguments) {}) entity "") { emit: { success: READ_DONE, failure: READ_FAILED } })))
+      CALL_BEGIN -> running when (let ((b (array/find @entity.table (fn x (= @x.name @entity.current.name))))) (and (= @config.caller "identity") (!= @b null) (= @b.kind "input") (!= @entity.current.arguments null)))
+        (let ((b (array/find @entity.table (fn x (= @x.name @entity.current.name)))))
+          (do
+            (set @entity.binding @b)
+            (emit AGENT_ACT { callId: @entity.current.id, address: (default @b.address ""), arguments: (default @entity.current.arguments {}), contract: (object/get @b contract []), contracted: @b.contracted })))
+      CALL_BEGIN -> running when (let ((b (array/find @entity.table (fn x (= @x.name @entity.current.name))))) (and (= @config.caller "identity") (!= @b null) (= @b.kind "read") (or (not @b.readAny) (!= @entity.current.arguments null))))
+        (let ((b (array/find @entity.table (fn x (= @x.name @entity.current.name)))))
+          (do
+            (set @entity.binding @b)
+            (emit AGENT_LOOK { callId: @entity.current.id, entity: (if @b.readAny (object/get (default (as @entity.current.arguments AgentReadArguments) {}) entity "") @b.entity) })))
+      AgentActed -> running when (and (= ?callId @entity.current.id) ?ok)
+        (set @entity.results (array/append @entity.results { id: @entity.current.id, tool: @entity.binding.label, kind: input, success: true, content: ?content, startedAt: @entity.callStartedAt, endedAt: (time/now) }))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit RUN_NEXT {})
+      AgentActed -> running when (and (= ?callId @entity.current.id) (not ?ok))
+        (set @entity.results (array/append @entity.results { id: @entity.current.id, tool: @entity.binding.label, kind: input, success: false, detail: (if (= (default ?error "") "") "dispatch failed" ?error), content: ?content, startedAt: @entity.callStartedAt, endedAt: (time/now) }))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit RUN_NEXT {})
+      AgentActFailed -> running when (= ?callId @entity.current.id)
+        (set @entity.results (array/append @entity.results { id: @entity.current.id, tool: @entity.binding.label, kind: input, success: false, detail: ?error, content: (json/stringify { ok: false, error: ?error }), startedAt: @entity.callStartedAt, endedAt: (time/now) }))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit RUN_NEXT {})
+      AgentLooked -> running when (= ?callId @entity.current.id)
+        (set @entity.results (array/append @entity.results { id: @entity.current.id, tool: ?entity, kind: read, success: true, rows: ?count, content: ?content, startedAt: @entity.callStartedAt, endedAt: (time/now) }))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit RUN_NEXT {})
+      AgentLookFailed -> running when (and (= ?callId @entity.current.id) (default ?unknown false))
+        (set @entity.results (array/append @entity.results { id: @entity.current.id, tool: @entity.binding.label, kind: read, success: false, detail: "not a readable entity", content: (json/stringify { error: "not an entity you can read" }), startedAt: @entity.callStartedAt, endedAt: (time/now) }))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit RUN_NEXT {})
+      AgentLookFailed -> running when (and (= ?callId @entity.current.id) (not (default ?unknown false)))
+        (set @entity.results (array/append @entity.results { id: @entity.current.id, tool: @entity.binding.label, kind: read, success: false, detail: ?error, content: (json/stringify { error: ?error }), startedAt: @entity.callStartedAt, endedAt: (time/now) }))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit RUN_NEXT {})
       DISPATCHED -> running when @payload.result.ok
         (set @entity.results (array/append @entity.results { id: @entity.current.id, tool: @entity.binding.label, kind: input, success: true, content: (json/stringify ?result), startedAt: @entity.callStartedAt, endedAt: (time/now) }))
         (set @entity.cursor (+ @entity.cursor 1))
@@ -505,6 +583,25 @@ orbital AgentToolLoopOrbital {
       }
         @description "The loop dispatched a tool that waits for its outcome: this is the call id the tool answers with TOOL_RESULT or TOOL_FAILED."
         @tier "domain"
+      AGENT_IDENTITY_REQUESTED -> external {
+      }
+        @description "Ask std-agent-identity to sign the assistant's own identity in and answer its role (caller identity)."
+        @tier "internal"
+      AGENT_ACT -> external {
+        callId : string!
+        address : string!
+        arguments : Map string JsonValue
+        contract : [AgentToolField]
+        contracted : boolean!
+      }
+        @description "Ask std-agent-identity to fire a declared input as the assistant's own identity."
+        @tier "internal"
+      AGENT_LOOK -> external {
+        callId : string!
+        entity : string!
+      }
+        @description "Ask std-agent-identity to read an entity as the assistant's own identity."
+        @tier "internal"
       AWAIT_DISPATCHED {
         result : AgentDispatchAnswer!
       }
@@ -568,6 +665,40 @@ orbital AgentToolLoopOrbital {
       LoopLlm.LLM_CALL_TOOLS_RESULT -> ToolsReplied
       LoopLlm.LLM_FAILED -> ToolsFailed
       LoopLlm.LLM_CANCELLED -> ToolsCancelled
+      LoopIdentity.AGENT_IDENTITY_READY -> AgentIdentityReady
+      LoopIdentity.AGENT_IDENTITY_REFUSED -> AgentIdentityRefused
+      LoopIdentity.AGENT_ACTED -> AgentActed
+      LoopIdentity.AGENT_ACT_FAILED -> AgentActFailed
+      LoopIdentity.AGENT_LOOKED -> AgentLooked
+      LoopIdentity.AGENT_LOOK_FAILED -> AgentLookFailed
+      AgentIdentityReady {
+        subject : string!
+        role : string!
+      }
+      AgentIdentityRefused {
+        reason : string!
+      }
+      AgentActed {
+        callId : string!
+        ok : boolean!
+        error : string
+        content : string!
+      }
+      AgentActFailed {
+        callId : string!
+        error : string!
+      }
+      AgentLooked {
+        callId : string!
+        entity : string!
+        count : number!
+        content : string!
+      }
+      AgentLookFailed {
+        callId : string!
+        error : string!
+        unknown : boolean
+      }
       ToolsRequested {
         session : string!
         calls : [ToolCall]!
@@ -590,5 +721,5 @@ orbital AgentToolLoopOrbital {
     }
   }
 
-  page boot as AgentToolLoopPage -> AgentToolLoop, LoopLlm, LoopChatRequest, LoopChatRequestDelay, LoopChatRequestDeadline, LoopChatHttp, LoopChatHttpFrame
+  page boot as AgentToolLoopPage -> AgentToolLoop, LoopLlm, LoopChatRequest, LoopChatRequestDelay, LoopChatRequestDeadline, LoopChatHttp, LoopChatHttpFrame, LoopIdentity
 }

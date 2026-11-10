@@ -3406,7 +3406,15 @@
                 "payload": {
                   "rule": "config-dangling-ref",
                   "scope": "",
-                  "findings": []
+                  "findings": [
+                    {
+                      "code": "ORB_CONFIG_DANGLING_REF",
+                      "path": "orbitals[0 (O)].traits[0 (T)]",
+                      "message": "`@config.appKnob` \u2014 no trait in T's referrer chain declares config knob 'appKnob'; the forward cannot resolve and renders as the literal string",
+                      "suggestion": "Declare `appKnob` on the owning trait (or its embedder) or remove the reference",
+                      "severity": "error"
+                    }
+                  ]
                 }
               }
             ]
@@ -3593,7 +3601,15 @@
                 "payload": {
                   "rule": "config-dangling-ref",
                   "scope": "",
-                  "findings": []
+                  "findings": [
+                    {
+                      "code": "ORB_CONFIG_DANGLING_REF",
+                      "path": "orbitals[0 (O)].traits[0 (T)]",
+                      "message": "`@config.orbKnob` \u2014 no trait in T's referrer chain declares config knob 'orbKnob'; the forward cannot resolve and renders as the literal string",
+                      "suggestion": "Declare `orbKnob` on the owning trait (or its embedder) or remove the reference",
+                      "severity": "error"
+                    }
+                  ]
                 }
               }
             ]
@@ -4633,6 +4649,250 @@
                       "path": "",
                       "message": "the lint input arrived without the structural index (LINT_INDEX) and the trait embeds (LINT_EMBEDS), so this rule cannot check the program",
                       "suggestion": "std-orb-lint-input sends LINT_INDEX and LINT_EMBEDS before LINT_INPUT; this rule did not hear them",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "orbital-key-forwarded-by-sibling-only",
+      "steps": [
+        {
+          "trait": "OrbLintConfigDanglingRef",
+          "event": "LINT_PATTERNS_HEARD",
+          "from": "ready",
+          "payload": {
+            "patterns": {
+              "stat-display": {
+                "drawHost": false,
+                "props": {
+                  "label": {},
+                  "value": {}
+                }
+              },
+              "stack": {
+                "drawHost": false,
+                "props": {
+                  "children": {}
+                }
+              },
+              "typography": {
+                "drawHost": false,
+                "props": {
+                  "content": {}
+                }
+              }
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintConfigDanglingRef",
+          "event": "INDEX_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "heads": {
+              "0-0": [
+                "render-ui"
+              ],
+              "0-1": [
+                "render-ui"
+              ]
+            },
+            "roots": {
+              "0-0": [
+                "@config"
+              ],
+              "0-1": [
+                "@config"
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintConfigDanglingRef",
+          "event": "EMBEDS_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "all": {},
+            "config": {},
+            "guards": {},
+            "effects": {}
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintConfigDanglingRef",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "dr",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Item",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "A",
+                      "linkedEntity": "Item",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "typography",
+                                  "content": "@config.heading"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "config": {
+                        "heading": {
+                          "type": "string",
+                          "default": "@config.title"
+                        }
+                      }
+                    },
+                    {
+                      "name": "B",
+                      "linkedEntity": "Item",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "typography",
+                                  "content": "@config.title"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/p",
+                      "traits": [
+                        {
+                          "ref": "A"
+                        },
+                        {
+                          "ref": "B"
+                        }
+                      ]
+                    }
+                  ],
+                  "config": {
+                    "title": {
+                      "type": "string",
+                      "default": "x"
+                    }
+                  }
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintConfigDanglingRef",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "config-dangling-ref",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_CONFIG_DANGLING_REF",
+                      "path": "orbitals[0 (O)].traits[1 (B)]",
+                      "message": "`@config.title` \u2014 no trait in B's referrer chain declares config knob 'title'; the forward cannot resolve and renders as the literal string",
+                      "suggestion": "Declare `title` on the owning trait (or its embedder) or remove the reference",
                       "severity": "error"
                     }
                   ]

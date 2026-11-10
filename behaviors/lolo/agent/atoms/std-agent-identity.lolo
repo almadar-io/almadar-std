@@ -1,0 +1,358 @@
+app std-agent-identity [
+  version: "1.0.0",
+  description: "std-agent-identity — lets an assistant act as its own row of the app's [identity] entity instead of as the person asking. The app adds the agent to its identity entity like any other user (id `subject`, the role it should hold) and holds a P-256 private key as the credential `signingKey` names, with the matching public key in `publicKeyX` and `publicKeyY`. AGENT_IDENTITY_REQUESTED signs a short-lived ES256 token for `subject` (the kernel signs; the program never sees the key) and presents it, with a program/dispatch event request, to a session only this program can name (its id is a signature made with the same key). There AGENT_CREDENTIAL_PRESENTED verifies the token with jws/verify and binds it with identity/sign-in, so that session's @user is the agent's identity row and its role is the row's; the asking session's identity never changes. It answers AGENT_IDENTITY_READY { subject, role } or AGENT_IDENTITY_REFUSED { reason } (no-subject, signing-key, credential-dispatch, same-session, token-<kind>, subject, identity-<kind>). AGENT_ACT { callId, address, arguments, contract, contracted } then dispatches a declared external input in the agent's session through the ordinary input channel (its guards, grants and entity policies apply to the agent's role) and answers AGENT_ACTED { callId, ok, error, content } or AGENT_ACT_FAILED { callId, error }; AGENT_LOOK { callId, entity } reads a persisted entity there with persist/read-named, so only the rows the agent's identity may read come back, and answers AGENT_LOOKED { callId, entity, count, content } or AGENT_LOOK_FAILED { callId, error, unknown }. The token and the session id are never set on an entity or carried by an emit. A session that asked never signs in as the agent: when the trait is mounted program-wide (a boot page), the presented token arrives in the asking session; it is refused same-session, and a sign-in that still landed there is undone with identity/sign-out before anything is answered, so the asker never acts as the agent. A tool that answers later through an event is not awaited: an act is answered with what its dispatch emitted. Compose it on the page the tool loop is on (std-agent-tool-loop, `caller: identity`), with ownOrbital and ownTrait naming where it is composed."
+]
+type AgentIdentityJson = string | number | boolean | [AgentIdentityJson] | Map string AgentIdentityJson
+type AgentIdentityArguments = Map string AgentIdentityJson
+type AgentIdentityField = {
+  name : string!
+  type : string!
+  required : boolean
+  values : [string]
+  properties : [AgentIdentityField]
+  description : string
+}
+type AgentIdentityNote = {
+  subject : string
+  role : string
+  reason : string
+  entity : string
+  count : number
+  content : string
+  error : string
+  unknown : boolean
+}
+type AgentIdentityEmitted = { event : string!, payload : AgentIdentityNote }
+type AgentIdentityWire = { success : boolean, emittedEvents : [AgentIdentityEmitted], error : string }
+type AgentIdentityOutcome = { ok : boolean!, error : string }
+type AgentIdentityRows = { entity : string!, count : number! }
+type AgentIdentityIssue = { code : string!, message : string! }
+type AgentIdentityDispatchIssue = { code : string, status : number }
+type AgentIdentityVerifyFailure = { error : string!, kind : string! }
+
+orbital AgentIdentityOrbital {
+  entity AgentIdentityRecord [runtime] {
+    id : string!
+    role : string @description "The role the agent's identity row held when it last signed in." = ""
+    asking : boolean @description "This session asked for the agent's identity, so it is never the session that signs in as the agent." = false
+  }
+
+  trait AgentIdentity -> AgentIdentityRecord {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+
+      AGENT_IDENTITY_REQUESTED -> idle when (= @config.subject "")
+        (emit AGENT_IDENTITY_REFUSED { reason: "no-subject" })
+      AGENT_IDENTITY_REQUESTED -> idle when (!= @config.subject "")
+        (set @entity.asking true)
+        (emit AGENT_IDENTITY_SIGNING {})
+      AGENT_IDENTITY_SIGNING -> idle
+        (let ((room (ecdsa/p256-sign @config.signingKey (str/concat "std-agent-identity session " @config.subject)))
+              (issued (time/diff (time/now) @config.epoch "second")))
+          (let ((signingInput (str/concat (str/replaceAll (str/replaceAll (str/replaceAll (bytes/to-base64 (bytes/from-string "{\"typ\":\"JWT\",\"alg\":\"ES256\"}")) "+" "-") "/" "_") "=" "") "." (str/replaceAll (str/replaceAll (str/replaceAll (bytes/to-base64 (bytes/from-string (str/concat "{\"iss\":" (json/stringify @config.issuer) ",\"aud\":\"std-agent-identity\",\"sub\":" (json/stringify @config.subject) ",\"iat\":" @issued ",\"exp\":" (+ @issued @config.tokenSeconds) "}"))) "+" "-") "/" "_") "=" ""))))
+            (let ((signature (ecdsa/p256-sign @config.signingKey @signingInput)))
+              (if (or (= @room null) (= @signature null))
+                (emit AGENT_IDENTITY_REFUSED { reason: "signing-key" })
+                (program/dispatch (str/concat @config.ownOrbital "." @config.ownTrait ".AGENT_CREDENTIAL_PRESENTED") { token: (str/concat @signingInput "." (str/replaceAll (str/replaceAll (str/replaceAll (bytes/to-base64 (default @signature (bytes/from-string ""))) "+" "-") "/" "_") "=" "")) } { orbital: @config.ownOrbital, targetTrait: @config.ownTrait, event: "AGENT_CREDENTIAL_PRESENTED", clientId: (str/concat "agent-" (str/replaceAll (str/replaceAll (str/replaceAll (bytes/to-base64 (default @room (bytes/from-string ""))) "+" "-") "/" "_") "=" "")), input: true, wire: true } { key: "agent-identity", emit: { success: AGENT_CREDENTIAL_ANSWERED, failure: AGENT_CREDENTIAL_FAILED } })))))
+
+      AGENT_CREDENTIAL_ANSWERED -> idle when (and (= @user.id @config.subject) (array/some (default @payload.result.emittedEvents []) (fn e (= @e.event "AGENT_CREDENTIAL_BOUND"))))
+        (identity/sign-out { emit: { success: AGENT_ASKER_SIGNED_OUT } })
+        (emit AGENT_IDENTITY_REFUSED { reason: "same-session" })
+      AGENT_ASKER_SIGNED_OUT -> idle
+      AGENT_CREDENTIAL_ANSWERED -> idle when (and (!= @user.id @config.subject) (array/some (default @payload.result.emittedEvents []) (fn e (= @e.event "AGENT_CREDENTIAL_BOUND"))))
+        (let ((bound (default (array/find (default @payload.result.emittedEvents []) (fn e (= @e.event "AGENT_CREDENTIAL_BOUND"))) { event: "", payload: {} })))
+          (do
+            (set @entity.role (default @bound.payload.role ""))
+            (emit AGENT_IDENTITY_READY { subject: (default @bound.payload.subject ""), role: (default @bound.payload.role "") })))
+      AGENT_CREDENTIAL_ANSWERED -> idle when (and (not (array/some (default @payload.result.emittedEvents []) (fn e (= @e.event "AGENT_CREDENTIAL_BOUND")))) (array/some (default @payload.result.emittedEvents []) (fn e (= @e.event "AGENT_CREDENTIAL_REFUSED"))))
+        (let ((refused (default (array/find (default @payload.result.emittedEvents []) (fn e (= @e.event "AGENT_CREDENTIAL_REFUSED"))) { event: "", payload: {} })))
+          (emit AGENT_IDENTITY_REFUSED { reason: (default @refused.payload.reason "credential-refused") }))
+      AGENT_CREDENTIAL_ANSWERED -> idle when (not (array/some (default @payload.result.emittedEvents []) (fn e (array/includes ["AGENT_CREDENTIAL_BOUND", "AGENT_CREDENTIAL_REFUSED"] @e.event))))
+        (emit AGENT_IDENTITY_REFUSED { reason: "credential-dispatch" })
+      AGENT_CREDENTIAL_FAILED -> idle
+        (emit AGENT_IDENTITY_REFUSED { reason: "credential-dispatch" })
+
+      AGENT_CREDENTIAL_PRESENTED -> idle when @entity.asking
+        (emit AGENT_CREDENTIAL_REFUSED { reason: "same-session" })
+      AGENT_CREDENTIAL_PRESENTED -> idle when (not @entity.asking)
+        (let ((v (jws/verify (default @payload.token "") [{ kty: "EC", crv: "P-256", x: @config.publicKeyX, y: @config.publicKeyY }] { issuer: @config.issuer, audience: "std-agent-identity" })))
+          (if (object/has @v "kind")
+            (emit AGENT_CREDENTIAL_REFUSED { reason: (str/concat "token-" (object/get (default (as @v AgentIdentityVerifyFailure) { error: "", kind: "" }) "kind")) })
+            (emit AGENT_TOKEN_VERIFIED { verified: @v })))
+
+      AGENT_TOKEN_VERIFIED -> idle when (and (!= @config.subject "") (= @payload.verified.subject @config.subject))
+        (identity/sign-in @payload.verified { emit: { success: AGENT_SIGNED_IN, failure: AGENT_SIGN_IN_FAILED } })
+      AGENT_TOKEN_VERIFIED -> idle when (not (and (!= @config.subject "") (= @payload.verified.subject @config.subject)))
+        (emit AGENT_CREDENTIAL_REFUSED { reason: "subject" })
+      AGENT_SIGNED_IN -> idle
+        (emit AGENT_CREDENTIAL_BOUND { subject: @user.id, role: (default @user.role "") })
+      AGENT_SIGN_IN_FAILED -> idle
+        (emit AGENT_CREDENTIAL_REFUSED { reason: (str/concat "identity-" (default @payload.kind "")) })
+
+      AGENT_ACT -> idle when (= @config.subject "")
+        (emit AGENT_ACT_FAILED { callId: @payload.callId, error: "The assistant has no identity to act as." })
+      AGENT_ACT -> idle when (and (!= @config.subject "") @payload.contracted)
+        (set @entity.asking true)
+        (let ((room (ecdsa/p256-sign @config.signingKey (str/concat "std-agent-identity session " @config.subject)))
+              (parts (str/split @payload.address ".")))
+          (if (= @room null)
+            (emit AGENT_ACT_FAILED { callId: @payload.callId, error: "The assistant's signing key is not held." })
+            (program/dispatch @payload.address @payload.arguments { schema: (default @payload.contract []), orbital: (default (array/nth @parts 0) ""), targetTrait: (default (array/nth @parts 1) ""), event: (default (array/nth @parts 2) ""), clientId: (str/concat "agent-" (str/replaceAll (str/replaceAll (str/replaceAll (bytes/to-base64 (default @room (bytes/from-string ""))) "+" "-") "/" "_") "=" "")), input: true } { key: (str/concat "agent-act:" @payload.callId), emit: { success: AGENT_ACT_ANSWERED, failure: AGENT_ACT_REFUSED } })))
+      AGENT_ACT -> idle when (and (!= @config.subject "") (not @payload.contracted))
+        (set @entity.asking true)
+        (let ((room (ecdsa/p256-sign @config.signingKey (str/concat "std-agent-identity session " @config.subject)))
+              (parts (str/split @payload.address ".")))
+          (if (= @room null)
+            (emit AGENT_ACT_FAILED { callId: @payload.callId, error: "The assistant's signing key is not held." })
+            (program/dispatch @payload.address @payload.arguments { orbital: (default (array/nth @parts 0) ""), targetTrait: (default (array/nth @parts 1) ""), event: (default (array/nth @parts 2) ""), clientId: (str/concat "agent-" (str/replaceAll (str/replaceAll (str/replaceAll (bytes/to-base64 (default @room (bytes/from-string ""))) "+" "-") "/" "_") "=" "")), input: true } { key: (str/concat "agent-act:" @payload.callId), emit: { success: AGENT_ACT_ANSWERED, failure: AGENT_ACT_REFUSED } })))
+      AGENT_ACT_ANSWERED -> idle
+        (emit AGENT_ACTED { callId: (str/slice (default @payload.key "") 10 (str/len (default @payload.key ""))), ok: @payload.result.ok, error: (default @payload.result.error ""), content: (json/stringify @payload.result) })
+      AGENT_ACT_REFUSED -> idle
+        (emit AGENT_ACT_FAILED { callId: (str/slice (default @payload.key "") 10 (str/len (default @payload.key ""))), error: (default @payload.error "dispatch failed") })
+
+      AGENT_LOOK -> idle when (= @config.subject "")
+        (emit AGENT_LOOK_FAILED { callId: @payload.callId, error: "The assistant has no identity to act as.", unknown: false })
+      AGENT_LOOK -> idle when (!= @config.subject "")
+        (set @entity.asking true)
+        (let ((room (ecdsa/p256-sign @config.signingKey (str/concat "std-agent-identity session " @config.subject))))
+          (if (= @room null)
+            (emit AGENT_LOOK_FAILED { callId: @payload.callId, error: "The assistant's signing key is not held.", unknown: false })
+            (program/dispatch (str/concat @config.ownOrbital "." @config.ownTrait ".AGENT_READ") { entity: (default @payload.entity "") } { orbital: @config.ownOrbital, targetTrait: @config.ownTrait, event: "AGENT_READ", clientId: (str/concat "agent-" (str/replaceAll (str/replaceAll (str/replaceAll (bytes/to-base64 (default @room (bytes/from-string ""))) "+" "-") "/" "_") "=" "")), input: true, wire: true } { key: (str/concat "agent-look:" @payload.callId), emit: { success: AGENT_LOOK_ANSWERED, failure: AGENT_LOOK_REFUSED } })))
+      AGENT_LOOK_ANSWERED -> idle when (array/some (default @payload.result.emittedEvents []) (fn e (= @e.event "AGENT_ROWS_READ")))
+        (let ((read (default (array/find (default @payload.result.emittedEvents []) (fn e (= @e.event "AGENT_ROWS_READ"))) { event: "", payload: {} })))
+          (emit AGENT_LOOKED { callId: (str/slice (default @payload.key "") 11 (str/len (default @payload.key ""))), entity: (default @read.payload.entity ""), count: (default @read.payload.count 0), content: (default @read.payload.content "") }))
+      AGENT_LOOK_ANSWERED -> idle when (not (array/some (default @payload.result.emittedEvents []) (fn e (= @e.event "AGENT_ROWS_READ"))))
+        (let ((refused (default (array/find (default @payload.result.emittedEvents []) (fn e (= @e.event "AGENT_READ_REFUSED"))) { event: "", payload: {} })))
+          (emit AGENT_LOOK_FAILED { callId: (str/slice (default @payload.key "") 11 (str/len (default @payload.key ""))), error: (default @refused.payload.error "The read was not answered."), unknown: (default @refused.payload.unknown false) }))
+      AGENT_LOOK_REFUSED -> idle
+        (emit AGENT_LOOK_FAILED { callId: (str/slice (default @payload.key "") 11 (str/len (default @payload.key ""))), error: (default @payload.error "dispatch failed"), unknown: false })
+
+      AGENT_READ -> idle when (and (not @entity.asking) (!= @config.subject "") (= @user.id @config.subject))
+        (persist/read-named (default @payload.entity "") { emit: { success: AGENT_READ_DONE, failure: AGENT_READ_FAILED } })
+      AGENT_READ -> idle when (not (and (not @entity.asking) (!= @config.subject "") (= @user.id @config.subject)))
+        (emit AGENT_READ_REFUSED { error: "Only the agent's identity reads here.", unknown: false })
+      AGENT_READ_DONE -> idle
+        (emit AGENT_ROWS_READ { entity: @payload.result.entity, count: @payload.result.count, content: (json/stringify @payload.result) })
+      AGENT_READ_FAILED -> idle
+        (emit AGENT_READ_REFUSED { error: (default @payload.error "The read failed."), unknown: (> (array/count (default @payload.errors []) (fn e (= @e.code "unknown-entity"))) 0) })
+    }
+
+    emits {
+      AGENT_IDENTITY_READY -> external {
+        subject : string!
+        role : string!
+      }
+        @description "The agent's session is signed in as its identity row; `role` is that row's role."
+        @synonyms "agent signed in, acting as"
+        @tier "primary"
+      AGENT_IDENTITY_REFUSED -> external {
+        reason : string!
+      }
+        @description "The agent's identity could not sign in: no-subject, signing-key, credential-dispatch, same-session, token-<kind>, subject or identity-<kind>."
+        @synonyms "agent sign-in refused"
+        @tier "primary"
+      AGENT_ACTED -> external {
+        callId : string!
+        ok : boolean!
+        error : string
+        content : string!
+      }
+        @description "The input ran in the agent's session; `content` is the dispatch outcome as text for the model, `ok` whether it took effect."
+        @tier "primary"
+      AGENT_ACT_FAILED -> external {
+        callId : string!
+        error : string!
+      }
+        @description "The input could not be dispatched in the agent's session."
+        @tier "primary"
+      AGENT_LOOKED -> external {
+        callId : string!
+        entity : string!
+        count : number!
+        content : string!
+      }
+        @description "The rows of `entity` the agent's identity may read, as text for the model."
+        @tier "primary"
+      AGENT_LOOK_FAILED -> external {
+        callId : string!
+        error : string!
+        unknown : boolean
+      }
+        @description "The read was refused or failed; `unknown` when the name is not a readable entity."
+        @tier "primary"
+      AGENT_CREDENTIAL_BOUND -> external {
+        subject : string!
+        role : string!
+      }
+        @description "Agent session: identity/sign-in bound the presented token; read by the asking session from the dispatch outcome."
+        @tier "secondary"
+      AGENT_CREDENTIAL_REFUSED -> external {
+        reason : string!
+      }
+        @description "Agent session: the presented token was refused; read by the asking session from the dispatch outcome."
+        @tier "secondary"
+      AGENT_ROWS_READ -> external {
+        entity : string!
+        count : number!
+        content : string!
+      }
+        @description "Agent session: the rows read as the agent's identity; read by the asking session from the dispatch outcome."
+        @tier "secondary"
+      AGENT_READ_REFUSED -> external {
+        error : string!
+        unknown : boolean
+      }
+        @description "Agent session: the read was refused or failed; read by the asking session from the dispatch outcome."
+        @tier "secondary"
+      AGENT_ASKER_SIGNED_OUT {
+        subject : string
+      }
+        @description "Internal: the sign-in landed in the asking session (the trait is mounted program-wide) and was undone."
+        @tier "internal"
+      AGENT_IDENTITY_SIGNING {
+      }
+        @description "Internal: the asking session is marked; sign and present the token in the next step."
+        @tier "internal"
+      AGENT_TOKEN_VERIFIED {
+        verified : Verified!
+      }
+        @description "Internal: jws/verify accepted the presented token."
+        @tier "internal"
+      AGENT_SIGNED_IN {
+        subject : string
+      }
+        @description "Internal: identity/sign-in bound the agent's subject."
+        @tier "internal"
+      AGENT_SIGN_IN_FAILED {
+        error : string
+        kind : string
+      }
+        @description "Internal: identity/sign-in refused (unsealed, no-identity, store)."
+        @tier "internal"
+      AGENT_CREDENTIAL_ANSWERED {
+        result : AgentIdentityWire!
+        key : string
+      }
+        @description "Internal: the agent's session answered the presented token."
+        @tier "internal"
+      AGENT_CREDENTIAL_FAILED {
+        error : string
+        errors : [AgentIdentityDispatchIssue]
+        key : string
+      }
+        @description "Internal: the token could not be presented to the agent's session."
+        @tier "internal"
+      AGENT_ACT_ANSWERED {
+        result : AgentIdentityOutcome!
+        key : string
+      }
+        @description "Internal: the input's dispatch in the agent's session answered."
+        @tier "internal"
+      AGENT_ACT_REFUSED {
+        error : string
+        errors : [AgentIdentityDispatchIssue]
+        key : string
+      }
+        @description "Internal: the input could not be dispatched."
+        @tier "internal"
+      AGENT_LOOK_ANSWERED {
+        result : AgentIdentityWire!
+        key : string
+      }
+        @description "Internal: the agent's session answered the read."
+        @tier "internal"
+      AGENT_LOOK_REFUSED {
+        error : string
+        errors : [AgentIdentityDispatchIssue]
+        key : string
+      }
+        @description "Internal: the read could not be dispatched."
+        @tier "internal"
+      AGENT_READ_DONE {
+        result : AgentIdentityRows!
+      }
+        @description "Internal: persist/read-named answered the rows."
+        @tier "internal"
+      AGENT_READ_FAILED {
+        error : string
+        errors : [AgentIdentityIssue]
+      }
+        @description "Internal: persist/read-named refused or failed."
+        @tier "internal"
+    }
+
+    listens {
+      AGENT_IDENTITY_REQUESTED {
+      }
+        @description "Sign the agent's session in as its identity row and answer its role."
+        @synonyms "act as the agent, sign the agent in"
+      AGENT_ACT {
+        callId : string!
+        address : string!
+        arguments : AgentIdentityArguments
+        contract : [AgentIdentityField]
+        contracted : boolean!
+      }
+        @description "Dispatch the declared external input `address` (Orbital.Trait.EVENT) in the agent's session; `contract`, when `contracted`, is the payload the arguments are held to."
+      AGENT_LOOK {
+        callId : string!
+        entity : string!
+      }
+        @description "Read the rows of `entity` the agent's identity may read."
+      AGENT_CREDENTIAL_PRESENTED -> input {
+        token : string?
+      }
+        @description "Agent session: a token this program signed for the agent's subject; verified and bound here. A token signed by any other key is refused."
+        @synonyms "present agent credential"
+      AGENT_READ -> input {
+        entity : string?
+      }
+        @description "Agent session: read a persisted entity as the agent's identity. Refused for any other identity."
+    }
+
+    config {
+      subject : string = ""
+        @label "Which identity is the assistant?"
+        @description "The id of the agent's row in the app's [identity] entity. The assistant acts with that row's role. Empty: every request is refused."
+        @synonyms "agent user, service account, acts as, support agent"
+        @tier "policy"
+      signingKey : secret = "AGENT_IDENTITY_KEY"
+        @label "Agent signing key credential"
+        @description "Name of the credential holding a P-256 private key as a PKCS#8 PEM. The kernel signs the agent's token with it and the program never sees it."
+        @synonyms "private key, service key"
+        @tier "infra"
+      publicKeyX : string = ""
+        @label "Agent public key, x"
+        @description "The base64url x coordinate of the public key that matches the signing key (JWK `x`)."
+        @tier "infra"
+      publicKeyY : string = ""
+        @label "Agent public key, y"
+        @description "The base64url y coordinate of the public key that matches the signing key (JWK `y`)."
+        @tier "infra"
+      issuer : string = "std-agent-identity"
+        @label "Token issuer"
+        @description "The `iss` the agent's token carries and jws/verify requires."
+        @tier "infra"
+      tokenSeconds : number = 60
+        @label "Token lifetime, seconds"
+        @description "How long a signed token is accepted. It is presented at once, so a short life is enough."
+        @tier "infra"
+      epoch : instant = "1970-01-01T00:00:00Z"
+        @label "Epoch"
+        @description "The Unix epoch, the origin the token's iat and exp count seconds from."
+        @tier "infra"
+      ownOrbital : string = ""
+        @label "Own orbital"
+        @description "The name of the orbital this trait is composed in, which the forwarded program/dispatch names."
+        @tier "infra"
+      ownTrait : string = ""
+        @label "Own trait"
+        @description "The name this trait has in its orbital, which the forwarded program/dispatch targets."
+        @tier "infra"
+    }
+  }
+
+  page boot as AgentIdentityStart -> AgentIdentity
+}

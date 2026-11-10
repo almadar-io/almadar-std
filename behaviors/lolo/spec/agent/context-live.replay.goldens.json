@@ -219,8 +219,12 @@
                   "live": true
                 }
               }
+            ],
+            "neverEmits": [
+              "CONTEXT_NOTICE"
             ]
-          }
+          },
+          "from": "summarizing"
         }
       ],
       "defaults": [
@@ -300,9 +304,17 @@
                   "ephemeral": true,
                   "live": true
                 }
+              },
+              {
+                "event": "CONTEXT_NOTICE",
+                "payload": {
+                  "message": "down",
+                  "variant": "warning"
+                }
               }
             ]
-          }
+          },
+          "from": "summarizing"
         }
       ],
       "defaults": [
@@ -386,8 +398,12 @@
                   "ephemeral": true
                 }
               }
+            ],
+            "neverEmits": [
+              "CONTEXT_NOTICE"
             ]
-          }
+          },
+          "from": "summarizing"
         }
       ],
       "defaults": [
@@ -465,9 +481,17 @@
                   "tools": [],
                   "ephemeral": true
                 }
+              },
+              {
+                "event": "CONTEXT_NOTICE",
+                "payload": {
+                  "message": "down",
+                  "variant": "warning"
+                }
               }
             ]
-          }
+          },
+          "from": "summarizing"
         }
       ],
       "defaults": [
@@ -478,6 +502,38 @@
       "config": {
         "keepMessages": 2
       }
+    },
+    {
+      "id": "context-notice-renders-toast",
+      "note": "the view paints CONTEXT_NOTICE as a warning toast",
+      "steps": [
+        {
+          "trait": "AgentContextView",
+          "event": "CONTEXT_NOTICE",
+          "payload": {
+            "message": "down",
+            "variant": "warning"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "rendered": [
+              {
+                "slot": "toast",
+                "props": {
+                  "message": "down",
+                  "variant": "warning"
+                }
+              }
+            ]
+          },
+          "options": {
+            "render": true,
+            "renderProps": true
+          }
+        }
+      ],
+      "defaults": []
     }
   ]
 }

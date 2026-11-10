@@ -1,2985 +1,3023 @@
 {
- "atom": "agent/atoms/std-agent-coordinator.lolo",
- "trait": "AgentCoordinator",
- "note": "Fetch, persist and the composed std-llm, std-agent-context and std-agent-tool-loop answers (PlanExtracted, StepReplied, StepReplyFailed, AnswerGenerated, LlmFailed) are host answers played as steps. A failure's index is the step, or -1 when it is not a step. Each case has its own taskId so the replay store never collides.",
- "cases": [
-  {
-   "id": "fresh-task-plans-and-persists-steps",
-   "steps": [
+  "atom": "agent/atoms/std-agent-coordinator.lolo",
+  "trait": "AgentCoordinator",
+  "note": "Fetch, persist and the composed std-llm, std-agent-context and std-agent-tool-loop answers (PlanExtracted, StepReplied, StepReplyFailed, AnswerGenerated, LlmFailed) are host answers played as steps. A failure's index is the step, or -1 when it is not a step. Each case has its own taskId so the replay store never collides.",
+  "cases": [
     {
-     "event": "TASK_START",
-     "payload": {
-      "taskId": "c1",
-      "task": "do it"
-     },
-     "expect": {
-      "state": "loading",
-      "effects": [
-       {
-        "type": "fetch"
-       }
-      ]
-     }
-    },
-    {
-     "event": "StepsLoaded",
-     "payload": {
-      "data": [],
-      "totalCount": 0
-     },
-     "from": "loading",
-     "expect": {
-      "state": "planning",
-      "effects": [
-       {
-        "type": "persist"
-       }
-      ]
-     }
-    },
-    {
-     "event": "TaskCreated",
-     "payload": {
-      "id": "c1"
-     },
-     "from": "planning",
-     "expect": {
-      "state": "planning",
-      "emits": [
-       {
-        "event": "LLM_EXTRACT",
-        "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "PlanExtracted",
-     "payload": {
-      "json": "{\"steps\":[\"a\",\"b\"]}"
-     },
-     "from": "planning",
-     "expect": {
-      "state": "planning",
-      "emits": [
-       {
-        "event": "PLAN_READ",
-        "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "PLAN_READ",
-     "payload": {},
-     "from": "planning",
-     "expect": {
-      "state": "planning",
-      "neverEmits": [
-       "COMPACT"
-      ],
-      "effects": [
-       {
-        "type": "persist"
-       }
-      ]
-     }
-    },
-    {
-     "event": "StepSaved",
-     "payload": {
-      "id": "c1:0"
-     },
-     "from": "planning",
-     "expect": {
-      "state": "planning",
-      "effects": [
-       {
-        "type": "persist"
-       }
-      ]
-     }
-    },
-    {
-     "event": "StepSaved",
-     "payload": {
-      "id": "c1:1"
-     },
-     "from": "planning",
-     "expect": {
-      "state": "starting",
-      "emits": [
-       {
-        "event": "TASK_PROGRESS",
-        "payload": {
-         "taskId": "c1",
-         "index": 0,
-         "total": 2,
-         "status": "planned"
-        }
-       }
-      ],
-      "effects": [
-       {
-        "type": "persist"
-       }
-      ]
-     }
-    },
-    {
-     "event": "TaskMarked",
-     "payload": {
-      "id": "c1"
-     },
-     "from": "starting",
-     "expect": {
-      "state": "working",
-      "emits": [
-       {
-        "event": "STEP_NEXT",
-        "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "STEP_NEXT",
-     "payload": {},
-     "from": "working",
-     "expect": {
-      "state": "working",
-      "emits": [
-       {
-        "event": "TASK_PROGRESS",
-        "payload": {
-         "taskId": "c1",
-         "index": 0,
-         "total": 2,
-         "status": "running"
-        }
-       },
-       {
-        "event": "COMPACT",
-        "payload": {
-         "messages": [
-          {
-           "role": "user",
-           "content": "Step 1: a"
+      "id": "fresh-task-plans-and-persists-steps",
+      "steps": [
+        {
+          "event": "TASK_START",
+          "payload": {
+            "taskId": "c1",
+            "task": "do it"
+          },
+          "expect": {
+            "state": "loading",
+            "effects": [
+              {
+                "type": "fetch"
+              }
+            ]
           }
-         ],
-         "ephemeral": true
-        }
-       }
-      ]
-     }
-    }
-   ],
-   "defaults": [
-    "CoordLlm",
-    "CoordChatRequest",
-    "CoordChatHttp"
-   ]
-  },
-  {
-   "id": "resume-with-two-of-three-steps-done-starts-at-step-three",
-   "steps": [
-    {
-     "event": "TASK_START",
-     "payload": {
-      "taskId": "c2",
-      "task": "do it"
-     },
-     "expect": {
-      "state": "loading",
-      "effects": [
-       {
-        "type": "fetch"
-       }
-      ]
-     }
-    },
-    {
-     "event": "StepsLoaded",
-     "payload": {
-      "data": [
-       {
-        "id": "c2:0",
-        "taskId": "c2",
-        "index": 0,
-        "instruction": "a",
-        "status": "done",
-        "result": "r0",
-        "error": ""
-       },
-       {
-        "id": "c2:1",
-        "taskId": "c2",
-        "index": 1,
-        "instruction": "b",
-        "status": "done",
-        "result": "r1",
-        "error": ""
-       },
-       {
-        "id": "c2:2",
-        "taskId": "c2",
-        "index": 2,
-        "instruction": "c",
-        "status": "pending",
-        "result": "",
-        "error": ""
-       }
-      ],
-      "totalCount": 3
-     },
-     "from": "loading",
-     "expect": {
-      "state": "starting",
-      "effects": [
-       {
-        "type": "persist"
-       }
-      ]
-     }
-    },
-    {
-     "event": "TaskMarked",
-     "payload": {
-      "id": "c2"
-     },
-     "from": "starting",
-     "expect": {
-      "state": "working",
-      "emits": [
-       {
-        "event": "STEP_NEXT",
-        "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "STEP_NEXT",
-     "payload": {},
-     "from": "working",
-     "expect": {
-      "state": "working",
-      "emits": [
-       {
-        "event": "TASK_PROGRESS",
-        "payload": {
-         "taskId": "c2",
-         "index": 2,
-         "total": 3,
-         "status": "running"
-        }
-       },
-       {
-        "event": "COMPACT",
-        "payload": {
-         "messages": [
-          {
-           "role": "user",
-           "content": "Step 1: a"
+        },
+        {
+          "event": "StepsLoaded",
+          "payload": {
+            "data": [],
+            "totalCount": 0
           },
-          {
-           "role": "assistant",
-           "content": "r0"
-          },
-          {
-           "role": "user",
-           "content": "Step 2: b"
-          },
-          {
-           "role": "assistant",
-           "content": "r1"
-          },
-          {
-           "role": "user",
-           "content": "Step 3: c"
+          "from": "loading",
+          "expect": {
+            "state": "planning",
+            "effects": [
+              {
+                "type": "persist"
+              }
+            ]
           }
-         ],
-         "ephemeral": true
-        }
-       }
-      ],
-      "neverEmits": [
-       "LLM_EXTRACT"
-      ]
-     }
-    }
-   ],
-   "defaults": [
-    "CoordLlm",
-    "CoordChatRequest",
-    "CoordChatHttp"
-   ]
-  },
-  {
-   "id": "control-no-rows-plans-instead-of-running",
-   "steps": [
-    {
-     "event": "TASK_START",
-     "payload": {
-      "taskId": "c3",
-      "task": "do it"
-     },
-     "expect": {
-      "state": "loading",
-      "effects": [
-       {
-        "type": "fetch"
-       }
-      ]
-     }
-    },
-    {
-     "event": "StepsLoaded",
-     "payload": {
-      "data": [],
-      "totalCount": 0
-     },
-     "from": "loading",
-     "expect": {
-      "state": "planning",
-      "effects": [
-       {
-        "type": "persist"
-       }
-      ]
-     }
-    },
-    {
-     "event": "TaskCreated",
-     "payload": {
-      "id": "c3"
-     },
-     "from": "planning",
-     "expect": {
-      "state": "planning",
-      "emits": [
-       {
-        "event": "LLM_EXTRACT",
-        "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "TaskCreated",
-     "payload": {
-      "id": "c3"
-     },
-     "from": "planning",
-     "expect": {
-      "state": "planning",
-      "emits": [
-       {
-        "event": "LLM_EXTRACT",
-        "payload": {}
-       }
-      ],
-      "neverEmits": [
-       "COMPACT",
-       "TASK_PROGRESS"
-      ]
-     }
-    }
-   ],
-   "defaults": [
-    "CoordLlm",
-    "CoordChatRequest",
-    "CoordChatHttp"
-   ]
-  },
-  {
-   "id": "resume-after-a-failed-step-reruns-that-step",
-   "steps": [
-    {
-     "event": "TASK_START",
-     "payload": {
-      "taskId": "c4",
-      "task": "do it"
-     },
-     "expect": {
-      "state": "loading",
-      "effects": [
-       {
-        "type": "fetch"
-       }
-      ]
-     }
-    },
-    {
-     "event": "StepsLoaded",
-     "payload": {
-      "data": [
-       {
-        "id": "c4:0",
-        "taskId": "c4",
-        "index": 0,
-        "instruction": "a",
-        "status": "done",
-        "result": "r0",
-        "error": ""
-       },
-       {
-        "id": "c4:1",
-        "taskId": "c4",
-        "index": 1,
-        "instruction": "b",
-        "status": "failed",
-        "result": "",
-        "error": ""
-       }
-      ],
-      "totalCount": 2
-     },
-     "from": "loading",
-     "expect": {
-      "state": "starting",
-      "effects": [
-       {
-        "type": "persist"
-       }
-      ]
-     }
-    },
-    {
-     "event": "TaskMarked",
-     "payload": {
-      "id": "c4"
-     },
-     "from": "starting",
-     "expect": {
-      "state": "working",
-      "emits": [
-       {
-        "event": "STEP_NEXT",
-        "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "STEP_NEXT",
-     "payload": {},
-     "from": "working",
-     "expect": {
-      "state": "working",
-      "emits": [
-       {
-        "event": "TASK_PROGRESS",
-        "payload": {
-         "taskId": "c4",
-         "index": 1,
-         "total": 2,
-         "status": "running"
-        }
-       },
-       {
-        "event": "COMPACT",
-        "payload": {
-         "messages": [
-          {
-           "role": "user",
-           "content": "Step 1: a"
+        },
+        {
+          "event": "TaskCreated",
+          "payload": {
+            "id": "c1"
           },
-          {
-           "role": "assistant",
-           "content": "r0"
-          },
-          {
-           "role": "user",
-           "content": "Step 2: b"
+          "from": "planning",
+          "expect": {
+            "state": "planning",
+            "emits": [
+              {
+                "event": "LLM_EXTRACT",
+                "payload": {}
+              }
+            ]
           }
-         ],
-         "ephemeral": true
-        }
-       }
-      ]
-     }
-    }
-   ],
-   "defaults": [
-    "CoordLlm",
-    "CoordChatRequest",
-    "CoordChatHttp"
-   ]
-  },
-  {
-   "id": "control-resume-with-nothing-done-starts-at-step-one",
-   "steps": [
-    {
-     "event": "TASK_START",
-     "payload": {
-      "taskId": "c5",
-      "task": "do it"
-     },
-     "expect": {
-      "state": "loading",
-      "effects": [
-       {
-        "type": "fetch"
-       }
-      ]
-     }
-    },
-    {
-     "event": "StepsLoaded",
-     "payload": {
-      "data": [
-       {
-        "id": "c5:0",
-        "taskId": "c5",
-        "index": 0,
-        "instruction": "a",
-        "status": "pending",
-        "result": "",
-        "error": ""
-       },
-       {
-        "id": "c5:1",
-        "taskId": "c5",
-        "index": 1,
-        "instruction": "b",
-        "status": "pending",
-        "result": "",
-        "error": ""
-       }
-      ],
-      "totalCount": 2
-     },
-     "from": "loading",
-     "expect": {
-      "state": "starting",
-      "effects": [
-       {
-        "type": "persist"
-       }
-      ]
-     }
-    },
-    {
-     "event": "TaskMarked",
-     "payload": {
-      "id": "c5"
-     },
-     "from": "starting",
-     "expect": {
-      "state": "working",
-      "emits": [
-       {
-        "event": "STEP_NEXT",
-        "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "STEP_NEXT",
-     "payload": {},
-     "from": "working",
-     "expect": {
-      "state": "working",
-      "emits": [
-       {
-        "event": "TASK_PROGRESS",
-        "payload": {
-         "taskId": "c5",
-         "index": 0,
-         "total": 2,
-         "status": "running"
-        }
-       },
-       {
-        "event": "COMPACT",
-        "payload": {
-         "messages": [
-          {
-           "role": "user",
-           "content": "Step 1: a"
+        },
+        {
+          "event": "PlanExtracted",
+          "payload": {
+            "json": "{\"steps\":[\"a\",\"b\"]}"
+          },
+          "from": "planning",
+          "expect": {
+            "state": "planning",
+            "emits": [
+              {
+                "event": "PLAN_READ",
+                "payload": {}
+              }
+            ]
           }
-         ],
-         "ephemeral": true
-        }
-       }
-      ]
-     }
-    }
-   ],
-   "defaults": [
-    "CoordLlm",
-    "CoordChatRequest",
-    "CoordChatHttp"
-   ]
-  },
-  {
-   "id": "step-reply-failure-fails-the-task-with-the-step-index",
-   "steps": [
-    {
-     "event": "TASK_START",
-     "payload": {
-      "taskId": "c6",
-      "task": "do it"
-     },
-     "expect": {
-      "state": "loading",
-      "effects": [
-       {
-        "type": "fetch"
-       }
-      ]
-     }
-    },
-    {
-     "event": "StepsLoaded",
-     "payload": {
-      "data": [
-       {
-        "id": "c6:0",
-        "taskId": "c6",
-        "index": 0,
-        "instruction": "a",
-        "status": "done",
-        "result": "r0",
-        "error": ""
-       },
-       {
-        "id": "c6:1",
-        "taskId": "c6",
-        "index": 1,
-        "instruction": "b",
-        "status": "pending",
-        "result": "",
-        "error": ""
-       }
-      ],
-      "totalCount": 2
-     },
-     "from": "loading",
-     "expect": {
-      "state": "starting",
-      "effects": [
-       {
-        "type": "persist"
-       }
-      ]
-     }
-    },
-    {
-     "event": "TaskMarked",
-     "payload": {
-      "id": "c6"
-     },
-     "from": "starting",
-     "expect": {
-      "state": "working",
-      "emits": [
-       {
-        "event": "STEP_NEXT",
-        "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "STEP_NEXT",
-     "payload": {},
-     "from": "working",
-     "expect": {
-      "state": "working",
-      "emits": [
-       {
-        "event": "COMPACT",
-        "payload": {
-         "messages": [
-          {
-           "role": "user",
-           "content": "Step 1: a"
-          },
-          {
-           "role": "assistant",
-           "content": "r0"
-          },
-          {
-           "role": "user",
-           "content": "Step 2: b"
+        },
+        {
+          "event": "PLAN_READ",
+          "payload": {},
+          "from": "planning",
+          "expect": {
+            "state": "planning",
+            "neverEmits": [
+              "COMPACT"
+            ],
+            "effects": [
+              {
+                "type": "persist"
+              }
+            ]
           }
-         ],
-         "ephemeral": true
-        }
-       }
-      ]
-     }
-    },
-    {
-     "event": "StepReplyFailed",
-     "payload": {
-      "error": "model down"
-     },
-     "from": "working",
-     "expect": {
-      "state": "failing",
-      "emits": [
-       {
-        "event": "TASK_FAIL",
-        "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "TASK_FAIL",
-     "payload": {},
-     "from": "failing",
-     "expect": {
-      "state": "failing",
-      "effects": [
-       {
-        "type": "persist"
-       }
-      ]
-     }
-    },
-    {
-     "event": "StepRowFlagged",
-     "payload": {
-      "id": "c6:1"
-     },
-     "from": "failing",
-     "expect": {
-      "state": "failing",
-      "effects": [
-       {
-        "type": "persist"
-       }
-      ]
-     }
-    },
-    {
-     "event": "TaskRowFlagged",
-     "payload": {
-      "id": "c6"
-     },
-     "from": "failing",
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "TASK_FAILED",
-        "payload": {
-         "taskId": "c6",
-         "index": 1,
-         "error": "model down"
-        }
-       }
-      ]
-     }
-    }
-   ],
-   "defaults": [
-    "CoordLlm",
-    "CoordChatRequest",
-    "CoordChatHttp"
-   ]
-  },
-  {
-   "id": "first-step-failure-fails-with-index-zero",
-   "steps": [
-    {
-     "event": "TASK_START",
-     "payload": {
-      "taskId": "c7",
-      "task": "do it"
-     },
-     "expect": {
-      "state": "loading",
-      "effects": [
-       {
-        "type": "fetch"
-       }
-      ]
-     }
-    },
-    {
-     "event": "StepsLoaded",
-     "payload": {
-      "data": [
-       {
-        "id": "c7:0",
-        "taskId": "c7",
-        "index": 0,
-        "instruction": "a",
-        "status": "pending",
-        "result": "",
-        "error": ""
-       }
-      ],
-      "totalCount": 1
-     },
-     "from": "loading",
-     "expect": {
-      "state": "starting",
-      "effects": [
-       {
-        "type": "persist"
-       }
-      ]
-     }
-    },
-    {
-     "event": "TaskMarked",
-     "payload": {
-      "id": "c7"
-     },
-     "from": "starting",
-     "expect": {
-      "state": "working",
-      "emits": [
-       {
-        "event": "STEP_NEXT",
-        "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "STEP_NEXT",
-     "payload": {},
-     "from": "working",
-     "expect": {
-      "state": "working"
-     }
-    },
-    {
-     "event": "StepReplyFailed",
-     "payload": {
-      "error": "model down"
-     },
-     "from": "working",
-     "expect": {
-      "state": "failing",
-      "emits": [
-       {
-        "event": "TASK_FAIL",
-        "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "TASK_FAIL",
-     "payload": {},
-     "from": "failing",
-     "expect": {
-      "state": "failing",
-      "effects": [
-       {
-        "type": "persist"
-       }
-      ]
-     }
-    },
-    {
-     "event": "StepRowFlagged",
-     "payload": {
-      "id": "c7:0"
-     },
-     "from": "failing",
-     "expect": {
-      "state": "failing",
-      "effects": [
-       {
-        "type": "persist"
-       }
-      ]
-     }
-    },
-    {
-     "event": "TaskRowFlagged",
-     "payload": {
-      "id": "c7"
-     },
-     "from": "failing",
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "TASK_FAILED",
-        "payload": {
-         "taskId": "c7",
-         "index": 0,
-         "error": "model down"
-        }
-       }
-      ]
-     }
-    }
-   ],
-   "defaults": [
-    "CoordLlm",
-    "CoordChatRequest",
-    "CoordChatHttp"
-   ]
-  },
-  {
-   "id": "step-row-write-failure-still-reports-the-original-error",
-   "steps": [
-    {
-     "event": "TASK_START",
-     "payload": {
-      "taskId": "c8",
-      "task": "do it"
-     },
-     "expect": {
-      "state": "loading",
-      "effects": [
-       {
-        "type": "fetch"
-       }
-      ]
-     }
-    },
-    {
-     "event": "StepsLoaded",
-     "payload": {
-      "data": [
-       {
-        "id": "c8:0",
-        "taskId": "c8",
-        "index": 0,
-        "instruction": "a",
-        "status": "pending",
-        "result": "",
-        "error": ""
-       }
-      ],
-      "totalCount": 1
-     },
-     "from": "loading",
-     "expect": {
-      "state": "starting",
-      "effects": [
-       {
-        "type": "persist"
-       }
-      ]
-     }
-    },
-    {
-     "event": "TaskMarked",
-     "payload": {
-      "id": "c8"
-     },
-     "from": "starting",
-     "expect": {
-      "state": "working",
-      "emits": [
-       {
-        "event": "STEP_NEXT",
-        "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "STEP_NEXT",
-     "payload": {},
-     "from": "working",
-     "expect": {
-      "state": "working"
-     }
-    },
-    {
-     "event": "StepReplyFailed",
-     "payload": {
-      "error": "model down"
-     },
-     "from": "working",
-     "expect": {
-      "state": "failing"
-     }
-    },
-    {
-     "event": "TASK_FAIL",
-     "payload": {},
-     "from": "failing",
-     "expect": {
-      "state": "failing",
-      "effects": [
-       {
-        "type": "persist"
-       }
-      ]
-     }
-    },
-    {
-     "event": "StepFlagFailed",
-     "payload": {
-      "error": "disk",
-      "code": "io"
-     },
-     "from": "failing",
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "TASK_FAILED",
-        "payload": {
-         "taskId": "c8",
-         "index": 0,
-         "error": "model down (the step row could not be marked failed: disk)"
-        }
-       }
-      ]
-     }
-    }
-   ],
-   "defaults": [
-    "CoordLlm",
-    "CoordChatRequest",
-    "CoordChatHttp"
-   ]
-  },
-  {
-   "id": "malformed-plan-fails-the-task-before-any-step",
-   "steps": [
-    {
-     "event": "TASK_START",
-     "payload": {
-      "taskId": "c9",
-      "task": "do it"
-     },
-     "expect": {
-      "state": "loading",
-      "effects": [
-       {
-        "type": "fetch"
-       }
-      ]
-     }
-    },
-    {
-     "event": "StepsLoaded",
-     "payload": {
-      "data": [],
-      "totalCount": 0
-     },
-     "from": "loading",
-     "expect": {
-      "state": "planning",
-      "effects": [
-       {
-        "type": "persist"
-       }
-      ]
-     }
-    },
-    {
-     "event": "TaskCreated",
-     "payload": {
-      "id": "c9"
-     },
-     "from": "planning",
-     "expect": {
-      "state": "planning",
-      "emits": [
-       {
-        "event": "LLM_EXTRACT",
-        "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "PlanExtracted",
-     "payload": {
-      "json": "{\"nope\":1}"
-     },
-     "from": "planning",
-     "expect": {
-      "state": "planning",
-      "emits": [
-       {
-        "event": "PLAN_READ",
-        "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "PLAN_READ",
-     "payload": {},
-     "from": "planning",
-     "expect": {
-      "state": "failing",
-      "emits": [
-       {
-        "event": "TASK_FAIL",
-        "payload": {}
-       }
-      ],
-      "neverEmits": [
-       "COMPACT",
-       "TASK_PROGRESS"
-      ]
-     }
-    },
-    {
-     "event": "TASK_FAIL",
-     "payload": {},
-     "from": "failing",
-     "expect": {
-      "state": "failing",
-      "effects": [
-       {
-        "type": "persist"
-       }
-      ]
-     }
-    },
-    {
-     "event": "TaskRowFlagged",
-     "payload": {
-      "id": "c9"
-     },
-     "from": "failing",
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "TASK_FAILED",
-        "payload": {
-         "taskId": "c9",
-         "index": -1,
-         "error": "the plan is not a { steps: [string] } answer"
-        }
-       }
-      ]
-     }
-    }
-   ],
-   "defaults": [
-    "CoordLlm",
-    "CoordChatRequest",
-    "CoordChatHttp"
-   ]
-  },
-  {
-   "id": "plan-that-is-not-json-fails-the-task",
-   "steps": [
-    {
-     "event": "TASK_START",
-     "payload": {
-      "taskId": "c10",
-      "task": "do it"
-     },
-     "expect": {
-      "state": "loading",
-      "effects": [
-       {
-        "type": "fetch"
-       }
-      ]
-     }
-    },
-    {
-     "event": "StepsLoaded",
-     "payload": {
-      "data": [],
-      "totalCount": 0
-     },
-     "from": "loading",
-     "expect": {
-      "state": "planning",
-      "effects": [
-       {
-        "type": "persist"
-       }
-      ]
-     }
-    },
-    {
-     "event": "TaskCreated",
-     "payload": {
-      "id": "c10"
-     },
-     "from": "planning",
-     "expect": {
-      "state": "planning",
-      "emits": [
-       {
-        "event": "LLM_EXTRACT",
-        "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "PlanExtracted",
-     "payload": {
-      "json": "not json"
-     },
-     "from": "planning",
-     "expect": {
-      "state": "planning",
-      "emits": [
-       {
-        "event": "PLAN_READ",
-        "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "PLAN_READ",
-     "payload": {},
-     "from": "planning",
-     "expect": {
-      "state": "failing",
-      "emits": [
-       {
-        "event": "TASK_FAIL",
-        "payload": {}
-       }
-      ],
-      "neverEmits": [
-       "COMPACT",
-       "TASK_PROGRESS"
-      ]
-     }
-    },
-    {
-     "event": "TASK_FAIL",
-     "payload": {},
-     "from": "failing",
-     "expect": {
-      "state": "failing",
-      "effects": [
-       {
-        "type": "persist"
-       }
-      ]
-     }
-    },
-    {
-     "event": "TaskRowFlagged",
-     "payload": {
-      "id": "c10"
-     },
-     "from": "failing",
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "TASK_FAILED",
-        "payload": {
-         "taskId": "c10",
-         "index": -1,
-         "error": "the plan is not a { steps: [string] } answer"
-        }
-       }
-      ]
-     }
-    }
-   ],
-   "defaults": [
-    "CoordLlm",
-    "CoordChatRequest",
-    "CoordChatHttp"
-   ]
-  },
-  {
-   "id": "plan-with-no-steps-fails-the-task",
-   "steps": [
-    {
-     "event": "TASK_START",
-     "payload": {
-      "taskId": "c11",
-      "task": "do it"
-     },
-     "expect": {
-      "state": "loading",
-      "effects": [
-       {
-        "type": "fetch"
-       }
-      ]
-     }
-    },
-    {
-     "event": "StepsLoaded",
-     "payload": {
-      "data": [],
-      "totalCount": 0
-     },
-     "from": "loading",
-     "expect": {
-      "state": "planning",
-      "effects": [
-       {
-        "type": "persist"
-       }
-      ]
-     }
-    },
-    {
-     "event": "TaskCreated",
-     "payload": {
-      "id": "c11"
-     },
-     "from": "planning",
-     "expect": {
-      "state": "planning",
-      "emits": [
-       {
-        "event": "LLM_EXTRACT",
-        "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "PlanExtracted",
-     "payload": {
-      "json": "{\"steps\":[]}"
-     },
-     "from": "planning",
-     "expect": {
-      "state": "planning",
-      "emits": [
-       {
-        "event": "PLAN_READ",
-        "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "PLAN_READ",
-     "payload": {},
-     "from": "planning",
-     "expect": {
-      "state": "failing",
-      "emits": [
-       {
-        "event": "TASK_FAIL",
-        "payload": {}
-       }
-      ],
-      "neverEmits": [
-       "COMPACT",
-       "TASK_PROGRESS"
-      ]
-     }
-    },
-    {
-     "event": "TASK_FAIL",
-     "payload": {},
-     "from": "failing",
-     "expect": {
-      "state": "failing",
-      "effects": [
-       {
-        "type": "persist"
-       }
-      ]
-     }
-    },
-    {
-     "event": "TaskRowFlagged",
-     "payload": {
-      "id": "c11"
-     },
-     "from": "failing",
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "TASK_FAILED",
-        "payload": {
-         "taskId": "c11",
-         "index": -1,
-         "error": "the plan has no steps"
-        }
-       }
-      ]
-     }
-    }
-   ],
-   "defaults": [
-    "CoordLlm",
-    "CoordChatRequest",
-    "CoordChatHttp"
-   ]
-  },
-  {
-   "id": "plan-with-an-empty-step-fails-the-task",
-   "steps": [
-    {
-     "event": "TASK_START",
-     "payload": {
-      "taskId": "c12",
-      "task": "do it"
-     },
-     "expect": {
-      "state": "loading",
-      "effects": [
-       {
-        "type": "fetch"
-       }
-      ]
-     }
-    },
-    {
-     "event": "StepsLoaded",
-     "payload": {
-      "data": [],
-      "totalCount": 0
-     },
-     "from": "loading",
-     "expect": {
-      "state": "planning",
-      "effects": [
-       {
-        "type": "persist"
-       }
-      ]
-     }
-    },
-    {
-     "event": "TaskCreated",
-     "payload": {
-      "id": "c12"
-     },
-     "from": "planning",
-     "expect": {
-      "state": "planning",
-      "emits": [
-       {
-        "event": "LLM_EXTRACT",
-        "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "PlanExtracted",
-     "payload": {
-      "json": "{\"steps\":[\"a\",\"  \"]}"
-     },
-     "from": "planning",
-     "expect": {
-      "state": "planning",
-      "emits": [
-       {
-        "event": "PLAN_READ",
-        "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "PLAN_READ",
-     "payload": {},
-     "from": "planning",
-     "expect": {
-      "state": "failing",
-      "emits": [
-       {
-        "event": "TASK_FAIL",
-        "payload": {}
-       }
-      ],
-      "neverEmits": [
-       "COMPACT",
-       "TASK_PROGRESS"
-      ]
-     }
-    },
-    {
-     "event": "TASK_FAIL",
-     "payload": {},
-     "from": "failing",
-     "expect": {
-      "state": "failing",
-      "effects": [
-       {
-        "type": "persist"
-       }
-      ]
-     }
-    },
-    {
-     "event": "TaskRowFlagged",
-     "payload": {
-      "id": "c12"
-     },
-     "from": "failing",
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "TASK_FAILED",
-        "payload": {
-         "taskId": "c12",
-         "index": -1,
-         "error": "the plan has an empty step"
-        }
-       }
-      ]
-     }
-    }
-   ],
-   "defaults": [
-    "CoordLlm",
-    "CoordChatRequest",
-    "CoordChatHttp"
-   ]
-  },
-  {
-   "id": "plan-over-maxsteps-is-refused-not-cut",
-   "steps": [
-    {
-     "event": "TASK_START",
-     "payload": {
-      "taskId": "c13",
-      "task": "do it"
-     },
-     "expect": {
-      "state": "loading",
-      "effects": [
-       {
-        "type": "fetch"
-       }
-      ]
-     }
-    },
-    {
-     "event": "StepsLoaded",
-     "payload": {
-      "data": [],
-      "totalCount": 0
-     },
-     "from": "loading",
-     "expect": {
-      "state": "planning",
-      "effects": [
-       {
-        "type": "persist"
-       }
-      ]
-     }
-    },
-    {
-     "event": "TaskCreated",
-     "payload": {
-      "id": "c13"
-     },
-     "from": "planning",
-     "expect": {
-      "state": "planning",
-      "emits": [
-       {
-        "event": "LLM_EXTRACT",
-        "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "PlanExtracted",
-     "payload": {
-      "json": "{\"steps\": [\"a\", \"b\", \"c\", \"d\", \"e\", \"f\", \"g\"]}"
-     },
-     "from": "planning",
-     "expect": {
-      "state": "planning",
-      "emits": [
-       {
-        "event": "PLAN_READ",
-        "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "PLAN_READ",
-     "payload": {},
-     "from": "planning",
-     "expect": {
-      "state": "failing",
-      "emits": [
-       {
-        "event": "TASK_FAIL",
-        "payload": {}
-       }
-      ],
-      "neverEmits": [
-       "COMPACT",
-       "TASK_PROGRESS"
-      ]
-     }
-    },
-    {
-     "event": "TASK_FAIL",
-     "payload": {},
-     "from": "failing",
-     "expect": {
-      "state": "failing",
-      "effects": [
-       {
-        "type": "persist"
-       }
-      ]
-     }
-    },
-    {
-     "event": "TaskRowFlagged",
-     "payload": {
-      "id": "c13"
-     },
-     "from": "failing",
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "TASK_FAILED",
-        "payload": {
-         "taskId": "c13",
-         "index": -1,
-         "error": "the plan has 7 steps, over the maxSteps cap of 6: the plan is refused, not cut"
-        }
-       }
-      ]
-     }
-    }
-   ],
-   "defaults": [
-    "CoordLlm",
-    "CoordChatRequest",
-    "CoordChatHttp"
-   ]
-  },
-  {
-   "id": "control-plan-at-maxsteps-is-accepted",
-   "steps": [
-    {
-     "event": "TASK_START",
-     "payload": {
-      "taskId": "c14",
-      "task": "do it"
-     },
-     "expect": {
-      "state": "loading",
-      "effects": [
-       {
-        "type": "fetch"
-       }
-      ]
-     }
-    },
-    {
-     "event": "StepsLoaded",
-     "payload": {
-      "data": [],
-      "totalCount": 0
-     },
-     "from": "loading",
-     "expect": {
-      "state": "planning",
-      "effects": [
-       {
-        "type": "persist"
-       }
-      ]
-     }
-    },
-    {
-     "event": "TaskCreated",
-     "payload": {
-      "id": "c14"
-     },
-     "from": "planning",
-     "expect": {
-      "state": "planning",
-      "emits": [
-       {
-        "event": "LLM_EXTRACT",
-        "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "PlanExtracted",
-     "payload": {
-      "json": "{\"steps\": [\"a\", \"b\", \"c\", \"d\", \"e\", \"f\"]}"
-     },
-     "from": "planning",
-     "expect": {
-      "state": "planning",
-      "emits": [
-       {
-        "event": "PLAN_READ",
-        "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "PLAN_READ",
-     "payload": {},
-     "from": "planning",
-     "expect": {
-      "state": "planning",
-      "effects": [
-       {
-        "type": "persist"
-       }
-      ]
-     }
-    }
-   ],
-   "defaults": [
-    "CoordLlm",
-    "CoordChatRequest",
-    "CoordChatHttp"
-   ]
-  },
-  {
-   "id": "step-result-is-stored-whole-then-next-step-starts",
-   "steps": [
-    {
-     "event": "TASK_START",
-     "payload": {
-      "taskId": "c15",
-      "task": "do it"
-     },
-     "expect": {
-      "state": "loading",
-      "effects": [
-       {
-        "type": "fetch"
-       }
-      ]
-     }
-    },
-    {
-     "event": "StepsLoaded",
-     "payload": {
-      "data": [
-       {
-        "id": "c15:0",
-        "taskId": "c15",
-        "index": 0,
-        "instruction": "a",
-        "status": "pending",
-        "result": "",
-        "error": ""
-       },
-       {
-        "id": "c15:1",
-        "taskId": "c15",
-        "index": 1,
-        "instruction": "b",
-        "status": "pending",
-        "result": "",
-        "error": ""
-       }
-      ],
-      "totalCount": 2
-     },
-     "from": "loading",
-     "expect": {
-      "state": "starting",
-      "effects": [
-       {
-        "type": "persist"
-       }
-      ]
-     }
-    },
-    {
-     "event": "TaskMarked",
-     "payload": {
-      "id": "c15"
-     },
-     "from": "starting",
-     "expect": {
-      "state": "working",
-      "emits": [
-       {
-        "event": "STEP_NEXT",
-        "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "STEP_NEXT",
-     "payload": {},
-     "from": "working",
-     "expect": {
-      "state": "working"
-     }
-    },
-    {
-     "event": "StepReplied",
-     "payload": {
-      "reply": "result zero",
-      "steps": [],
-      "usage": {
-       "promptTokens": 1,
-       "completionTokens": 1,
-       "totalTokens": 2,
-       "modelCalls": 1
-      }
-     },
-     "from": "working",
-     "expect": {
-      "state": "storing",
-      "effects": [
-       {
-        "type": "persist"
-       }
-      ]
-     }
-    },
-    {
-     "event": "StepStored",
-     "payload": {
-      "id": "c15:0"
-     },
-     "from": "storing",
-     "expect": {
-      "state": "working",
-      "emits": [
-       {
-        "event": "TASK_PROGRESS",
-        "payload": {
-         "taskId": "c15",
-         "index": 0,
-         "total": 2,
-         "status": "done"
-        }
-       },
-       {
-        "event": "STEP_NEXT",
-        "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "STEP_NEXT",
-     "payload": {},
-     "from": "working",
-     "expect": {
-      "state": "working",
-      "emits": [
-       {
-        "event": "TASK_PROGRESS",
-        "payload": {
-         "taskId": "c15",
-         "index": 1,
-         "total": 2,
-         "status": "running"
-        }
-       },
-       {
-        "event": "COMPACT",
-        "payload": {
-         "messages": [
-          {
-           "role": "user",
-           "content": "Step 1: a"
+        },
+        {
+          "event": "StepSaved",
+          "payload": {
+            "id": "c1:0"
           },
-          {
-           "role": "assistant",
-           "content": "result zero"
-          },
-          {
-           "role": "user",
-           "content": "Step 2: b"
+          "from": "planning",
+          "expect": {
+            "state": "planning",
+            "effects": [
+              {
+                "type": "persist"
+              }
+            ]
           }
-         ],
-         "ephemeral": true
+        },
+        {
+          "event": "StepSaved",
+          "payload": {
+            "id": "c1:1"
+          },
+          "from": "planning",
+          "expect": {
+            "state": "starting",
+            "emits": [
+              {
+                "event": "TASK_PROGRESS",
+                "payload": {
+                  "taskId": "c1",
+                  "index": 0,
+                  "total": 2,
+                  "status": "planned"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "type": "persist"
+              }
+            ]
+          }
+        },
+        {
+          "event": "TaskMarked",
+          "payload": {
+            "id": "c1"
+          },
+          "from": "starting",
+          "expect": {
+            "state": "working",
+            "emits": [
+              {
+                "event": "STEP_NEXT",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "STEP_NEXT",
+          "payload": {},
+          "from": "working",
+          "expect": {
+            "state": "working",
+            "emits": [
+              {
+                "event": "TASK_PROGRESS",
+                "payload": {
+                  "taskId": "c1",
+                  "index": 0,
+                  "total": 2,
+                  "status": "running"
+                }
+              },
+              {
+                "event": "COMPACT",
+                "payload": {
+                  "messages": [
+                    {
+                      "role": "user",
+                      "content": "Step 1: a"
+                    }
+                  ],
+                  "ephemeral": true
+                }
+              }
+            ]
+          }
         }
-       }
-      ]
-     }
-    }
-   ],
-   "defaults": [
-    "CoordLlm",
-    "CoordChatRequest",
-    "CoordChatHttp"
-   ]
-  },
-  {
-   "id": "empty-step-reply-fails-the-step",
-   "steps": [
-    {
-     "event": "TASK_START",
-     "payload": {
-      "taskId": "c16",
-      "task": "do it"
-     },
-     "expect": {
-      "state": "loading",
-      "effects": [
-       {
-        "type": "fetch"
-       }
-      ]
-     }
-    },
-    {
-     "event": "StepsLoaded",
-     "payload": {
-      "data": [
-       {
-        "id": "c16:0",
-        "taskId": "c16",
-        "index": 0,
-        "instruction": "a",
-        "status": "pending",
-        "result": "",
-        "error": ""
-       }
       ],
-      "totalCount": 1
-     },
-     "from": "loading",
-     "expect": {
-      "state": "starting",
-      "effects": [
-       {
-        "type": "persist"
-       }
+      "defaults": [
+        "CoordLlm",
+        "CoordChatRequest",
+        "CoordChatHttp"
       ]
-     }
     },
     {
-     "event": "TaskMarked",
-     "payload": {
-      "id": "c16"
-     },
-     "from": "starting",
-     "expect": {
-      "state": "working",
-      "emits": [
-       {
-        "event": "STEP_NEXT",
-        "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "STEP_NEXT",
-     "payload": {},
-     "from": "working",
-     "expect": {
-      "state": "working"
-     }
-    },
-    {
-     "event": "StepReplied",
-     "payload": {
-      "reply": "  ",
-      "steps": [],
-      "usage": {
-       "promptTokens": 1,
-       "completionTokens": 1,
-       "totalTokens": 2,
-       "modelCalls": 1
-      }
-     },
-     "from": "working",
-     "expect": {
-      "state": "failing",
-      "emits": [
-       {
-        "event": "TASK_FAIL",
-        "payload": {}
-       }
+      "id": "resume-with-two-of-three-steps-done-starts-at-step-three",
+      "steps": [
+        {
+          "event": "TASK_START",
+          "payload": {
+            "taskId": "c2",
+            "task": "do it"
+          },
+          "expect": {
+            "state": "loading",
+            "effects": [
+              {
+                "type": "fetch"
+              }
+            ]
+          }
+        },
+        {
+          "event": "StepsLoaded",
+          "payload": {
+            "data": [
+              {
+                "id": "c2:0",
+                "taskId": "c2",
+                "index": 0,
+                "instruction": "a",
+                "status": "done",
+                "result": "r0",
+                "error": ""
+              },
+              {
+                "id": "c2:1",
+                "taskId": "c2",
+                "index": 1,
+                "instruction": "b",
+                "status": "done",
+                "result": "r1",
+                "error": ""
+              },
+              {
+                "id": "c2:2",
+                "taskId": "c2",
+                "index": 2,
+                "instruction": "c",
+                "status": "pending",
+                "result": "",
+                "error": ""
+              }
+            ],
+            "totalCount": 3
+          },
+          "from": "loading",
+          "expect": {
+            "state": "starting",
+            "effects": [
+              {
+                "type": "persist"
+              }
+            ]
+          }
+        },
+        {
+          "event": "TaskMarked",
+          "payload": {
+            "id": "c2"
+          },
+          "from": "starting",
+          "expect": {
+            "state": "working",
+            "emits": [
+              {
+                "event": "STEP_NEXT",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "STEP_NEXT",
+          "payload": {},
+          "from": "working",
+          "expect": {
+            "state": "working",
+            "emits": [
+              {
+                "event": "TASK_PROGRESS",
+                "payload": {
+                  "taskId": "c2",
+                  "index": 2,
+                  "total": 3,
+                  "status": "running"
+                }
+              },
+              {
+                "event": "COMPACT",
+                "payload": {
+                  "messages": [
+                    {
+                      "role": "user",
+                      "content": "Step 1: a"
+                    },
+                    {
+                      "role": "assistant",
+                      "content": "r0"
+                    },
+                    {
+                      "role": "user",
+                      "content": "Step 2: b"
+                    },
+                    {
+                      "role": "assistant",
+                      "content": "r1"
+                    },
+                    {
+                      "role": "user",
+                      "content": "Step 3: c"
+                    }
+                  ],
+                  "ephemeral": true
+                }
+              }
+            ],
+            "neverEmits": [
+              "LLM_EXTRACT"
+            ]
+          }
+        }
       ],
-      "neverEmits": [
-       "TASK_PROGRESS"
+      "defaults": [
+        "CoordLlm",
+        "CoordChatRequest",
+        "CoordChatHttp"
       ]
-     }
     },
     {
-     "event": "TASK_FAIL",
-     "payload": {},
-     "from": "failing",
-     "expect": {
-      "state": "failing",
-      "effects": [
-       {
-        "type": "persist"
-       }
-      ]
-     }
-    },
-    {
-     "event": "StepRowFlagged",
-     "payload": {
-      "id": "c16:0"
-     },
-     "from": "failing",
-     "expect": {
-      "state": "failing",
-      "effects": [
-       {
-        "type": "persist"
-       }
-      ]
-     }
-    },
-    {
-     "event": "TaskRowFlagged",
-     "payload": {
-      "id": "c16"
-     },
-     "from": "failing",
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "TASK_FAILED",
-        "payload": {
-         "taskId": "c16",
-         "index": 0,
-         "error": "the step produced an empty result"
+      "id": "control-no-rows-plans-instead-of-running",
+      "steps": [
+        {
+          "event": "TASK_START",
+          "payload": {
+            "taskId": "c3",
+            "task": "do it"
+          },
+          "expect": {
+            "state": "loading",
+            "effects": [
+              {
+                "type": "fetch"
+              }
+            ]
+          }
+        },
+        {
+          "event": "StepsLoaded",
+          "payload": {
+            "data": [],
+            "totalCount": 0
+          },
+          "from": "loading",
+          "expect": {
+            "state": "planning",
+            "effects": [
+              {
+                "type": "persist"
+              }
+            ]
+          }
+        },
+        {
+          "event": "TaskCreated",
+          "payload": {
+            "id": "c3"
+          },
+          "from": "planning",
+          "expect": {
+            "state": "planning",
+            "emits": [
+              {
+                "event": "LLM_EXTRACT",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "TaskCreated",
+          "payload": {
+            "id": "c3"
+          },
+          "from": "planning",
+          "expect": {
+            "state": "planning",
+            "emits": [
+              {
+                "event": "LLM_EXTRACT",
+                "payload": {}
+              }
+            ],
+            "neverEmits": [
+              "COMPACT",
+              "TASK_PROGRESS"
+            ]
+          }
         }
-       }
-      ]
-     }
-    }
-   ],
-   "defaults": [
-    "CoordLlm",
-    "CoordChatRequest",
-    "CoordChatHttp"
-   ]
-  },
-  {
-   "id": "all-steps-done-synthesizes-the-answer",
-   "steps": [
-    {
-     "event": "TASK_START",
-     "payload": {
-      "taskId": "c17",
-      "task": "do it"
-     },
-     "expect": {
-      "state": "loading",
-      "effects": [
-       {
-        "type": "fetch"
-       }
-      ]
-     }
-    },
-    {
-     "event": "StepsLoaded",
-     "payload": {
-      "data": [
-       {
-        "id": "c17:0",
-        "taskId": "c17",
-        "index": 0,
-        "instruction": "a",
-        "status": "done",
-        "result": "r0",
-        "error": ""
-       },
-       {
-        "id": "c17:1",
-        "taskId": "c17",
-        "index": 1,
-        "instruction": "b",
-        "status": "done",
-        "result": "r1",
-        "error": ""
-       }
       ],
-      "totalCount": 2
-     },
-     "from": "loading",
-     "expect": {
-      "state": "starting",
-      "effects": [
-       {
-        "type": "persist"
-       }
+      "defaults": [
+        "CoordLlm",
+        "CoordChatRequest",
+        "CoordChatHttp"
       ]
-     }
     },
     {
-     "event": "TaskMarked",
-     "payload": {
-      "id": "c17"
-     },
-     "from": "starting",
-     "expect": {
-      "state": "working",
-      "emits": [
-       {
-        "event": "STEP_NEXT",
-        "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "STEP_NEXT",
-     "payload": {},
-     "from": "working",
-     "expect": {
-      "state": "synthesizing",
-      "emits": [
-       {
-        "event": "LLM_GENERATE",
-        "payload": {
-         "userPrompt": "Task:\ndo it\n\nResults of the steps:\n\nStep 1 (a):\nr0\n\nStep 2 (b):\nr1"
+      "id": "resume-after-a-failed-step-reruns-that-step",
+      "steps": [
+        {
+          "event": "TASK_START",
+          "payload": {
+            "taskId": "c4",
+            "task": "do it"
+          },
+          "expect": {
+            "state": "loading",
+            "effects": [
+              {
+                "type": "fetch"
+              }
+            ]
+          }
+        },
+        {
+          "event": "StepsLoaded",
+          "payload": {
+            "data": [
+              {
+                "id": "c4:0",
+                "taskId": "c4",
+                "index": 0,
+                "instruction": "a",
+                "status": "done",
+                "result": "r0",
+                "error": ""
+              },
+              {
+                "id": "c4:1",
+                "taskId": "c4",
+                "index": 1,
+                "instruction": "b",
+                "status": "failed",
+                "result": "",
+                "error": ""
+              }
+            ],
+            "totalCount": 2
+          },
+          "from": "loading",
+          "expect": {
+            "state": "starting",
+            "effects": [
+              {
+                "type": "persist"
+              }
+            ]
+          }
+        },
+        {
+          "event": "TaskMarked",
+          "payload": {
+            "id": "c4"
+          },
+          "from": "starting",
+          "expect": {
+            "state": "working",
+            "emits": [
+              {
+                "event": "STEP_NEXT",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "STEP_NEXT",
+          "payload": {},
+          "from": "working",
+          "expect": {
+            "state": "working",
+            "emits": [
+              {
+                "event": "TASK_PROGRESS",
+                "payload": {
+                  "taskId": "c4",
+                  "index": 1,
+                  "total": 2,
+                  "status": "running"
+                }
+              },
+              {
+                "event": "COMPACT",
+                "payload": {
+                  "messages": [
+                    {
+                      "role": "user",
+                      "content": "Step 1: a"
+                    },
+                    {
+                      "role": "assistant",
+                      "content": "r0"
+                    },
+                    {
+                      "role": "user",
+                      "content": "Step 2: b"
+                    }
+                  ],
+                  "ephemeral": true
+                }
+              }
+            ]
+          }
         }
-       }
       ],
-      "neverEmits": [
-       "COMPACT",
-       "TASK_DONE"
+      "defaults": [
+        "CoordLlm",
+        "CoordChatRequest",
+        "CoordChatHttp"
       ]
-     }
     },
     {
-     "event": "AnswerGenerated",
-     "payload": {
-      "content": "the answer"
-     },
-     "from": "synthesizing",
-     "expect": {
-      "state": "synthesizing",
-      "effects": [
-       {
-        "type": "persist"
-       }
-      ]
-     }
-    },
-    {
-     "event": "AnswerStored",
-     "payload": {
-      "id": "c17"
-     },
-     "from": "synthesizing",
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "TASK_DONE",
-        "payload": {
-         "taskId": "c17",
-         "answer": "the answer",
-         "steps": 2
+      "id": "control-resume-with-nothing-done-starts-at-step-one",
+      "steps": [
+        {
+          "event": "TASK_START",
+          "payload": {
+            "taskId": "c5",
+            "task": "do it"
+          },
+          "expect": {
+            "state": "loading",
+            "effects": [
+              {
+                "type": "fetch"
+              }
+            ]
+          }
+        },
+        {
+          "event": "StepsLoaded",
+          "payload": {
+            "data": [
+              {
+                "id": "c5:0",
+                "taskId": "c5",
+                "index": 0,
+                "instruction": "a",
+                "status": "pending",
+                "result": "",
+                "error": ""
+              },
+              {
+                "id": "c5:1",
+                "taskId": "c5",
+                "index": 1,
+                "instruction": "b",
+                "status": "pending",
+                "result": "",
+                "error": ""
+              }
+            ],
+            "totalCount": 2
+          },
+          "from": "loading",
+          "expect": {
+            "state": "starting",
+            "effects": [
+              {
+                "type": "persist"
+              }
+            ]
+          }
+        },
+        {
+          "event": "TaskMarked",
+          "payload": {
+            "id": "c5"
+          },
+          "from": "starting",
+          "expect": {
+            "state": "working",
+            "emits": [
+              {
+                "event": "STEP_NEXT",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "STEP_NEXT",
+          "payload": {},
+          "from": "working",
+          "expect": {
+            "state": "working",
+            "emits": [
+              {
+                "event": "TASK_PROGRESS",
+                "payload": {
+                  "taskId": "c5",
+                  "index": 0,
+                  "total": 2,
+                  "status": "running"
+                }
+              },
+              {
+                "event": "COMPACT",
+                "payload": {
+                  "messages": [
+                    {
+                      "role": "user",
+                      "content": "Step 1: a"
+                    }
+                  ],
+                  "ephemeral": true
+                }
+              }
+            ]
+          }
         }
-       }
-      ]
-     }
-    }
-   ],
-   "defaults": [
-    "CoordLlm",
-    "CoordChatRequest",
-    "CoordChatHttp"
-   ]
-  },
-  {
-   "id": "control-empty-final-answer-fails-the-task",
-   "steps": [
-    {
-     "event": "TASK_START",
-     "payload": {
-      "taskId": "c18",
-      "task": "do it"
-     },
-     "expect": {
-      "state": "loading",
-      "effects": [
-       {
-        "type": "fetch"
-       }
-      ]
-     }
-    },
-    {
-     "event": "StepsLoaded",
-     "payload": {
-      "data": [
-       {
-        "id": "c18:0",
-        "taskId": "c18",
-        "index": 0,
-        "instruction": "a",
-        "status": "done",
-        "result": "r0",
-        "error": ""
-       }
       ],
-      "totalCount": 1
-     },
-     "from": "loading",
-     "expect": {
-      "state": "starting",
-      "effects": [
-       {
-        "type": "persist"
-       }
+      "defaults": [
+        "CoordLlm",
+        "CoordChatRequest",
+        "CoordChatHttp"
       ]
-     }
     },
     {
-     "event": "TaskMarked",
-     "payload": {
-      "id": "c18"
-     },
-     "from": "starting",
-     "expect": {
-      "state": "working",
-      "emits": [
-       {
-        "event": "STEP_NEXT",
-        "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "STEP_NEXT",
-     "payload": {},
-     "from": "working",
-     "expect": {
-      "state": "synthesizing"
-     }
-    },
-    {
-     "event": "AnswerGenerated",
-     "payload": {
-      "content": " "
-     },
-     "from": "synthesizing",
-     "expect": {
-      "state": "failing",
-      "emits": [
-       {
-        "event": "TASK_FAIL",
-        "payload": {}
-       }
+      "id": "step-reply-failure-fails-the-task-with-the-step-index",
+      "steps": [
+        {
+          "event": "TASK_START",
+          "payload": {
+            "taskId": "c6",
+            "task": "do it"
+          },
+          "expect": {
+            "state": "loading",
+            "effects": [
+              {
+                "type": "fetch"
+              }
+            ]
+          }
+        },
+        {
+          "event": "StepsLoaded",
+          "payload": {
+            "data": [
+              {
+                "id": "c6:0",
+                "taskId": "c6",
+                "index": 0,
+                "instruction": "a",
+                "status": "done",
+                "result": "r0",
+                "error": ""
+              },
+              {
+                "id": "c6:1",
+                "taskId": "c6",
+                "index": 1,
+                "instruction": "b",
+                "status": "pending",
+                "result": "",
+                "error": ""
+              }
+            ],
+            "totalCount": 2
+          },
+          "from": "loading",
+          "expect": {
+            "state": "starting",
+            "effects": [
+              {
+                "type": "persist"
+              }
+            ]
+          }
+        },
+        {
+          "event": "TaskMarked",
+          "payload": {
+            "id": "c6"
+          },
+          "from": "starting",
+          "expect": {
+            "state": "working",
+            "emits": [
+              {
+                "event": "STEP_NEXT",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "STEP_NEXT",
+          "payload": {},
+          "from": "working",
+          "expect": {
+            "state": "working",
+            "emits": [
+              {
+                "event": "COMPACT",
+                "payload": {
+                  "messages": [
+                    {
+                      "role": "user",
+                      "content": "Step 1: a"
+                    },
+                    {
+                      "role": "assistant",
+                      "content": "r0"
+                    },
+                    {
+                      "role": "user",
+                      "content": "Step 2: b"
+                    }
+                  ],
+                  "ephemeral": true
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "StepReplyFailed",
+          "payload": {
+            "error": "model down"
+          },
+          "from": "working",
+          "expect": {
+            "state": "failing",
+            "emits": [
+              {
+                "event": "TASK_FAIL",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "TASK_FAIL",
+          "payload": {},
+          "from": "failing",
+          "expect": {
+            "state": "failing",
+            "effects": [
+              {
+                "type": "persist"
+              }
+            ]
+          }
+        },
+        {
+          "event": "StepRowFlagged",
+          "payload": {
+            "id": "c6:1"
+          },
+          "from": "failing",
+          "expect": {
+            "state": "failing",
+            "effects": [
+              {
+                "type": "persist"
+              }
+            ]
+          }
+        },
+        {
+          "event": "TaskRowFlagged",
+          "payload": {
+            "id": "c6"
+          },
+          "from": "failing",
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "TASK_FAILED",
+                "payload": {
+                  "taskId": "c6",
+                  "index": 1,
+                  "error": "model down"
+                }
+              }
+            ]
+          }
+        }
       ],
-      "neverEmits": [
-       "TASK_DONE"
+      "defaults": [
+        "CoordLlm",
+        "CoordChatRequest",
+        "CoordChatHttp"
       ]
-     }
     },
     {
-     "event": "TASK_FAIL",
-     "payload": {},
-     "from": "failing",
-     "expect": {
-      "state": "failing",
-      "effects": [
-       {
-        "type": "persist"
-       }
-      ]
-     }
-    },
-    {
-     "event": "TaskRowFlagged",
-     "payload": {
-      "id": "c18"
-     },
-     "from": "failing",
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "TASK_FAILED",
-        "payload": {
-         "taskId": "c18",
-         "index": -1,
-         "error": "the final answer is empty"
+      "id": "first-step-failure-fails-with-index-zero",
+      "steps": [
+        {
+          "event": "TASK_START",
+          "payload": {
+            "taskId": "c7",
+            "task": "do it"
+          },
+          "expect": {
+            "state": "loading",
+            "effects": [
+              {
+                "type": "fetch"
+              }
+            ]
+          }
+        },
+        {
+          "event": "StepsLoaded",
+          "payload": {
+            "data": [
+              {
+                "id": "c7:0",
+                "taskId": "c7",
+                "index": 0,
+                "instruction": "a",
+                "status": "pending",
+                "result": "",
+                "error": ""
+              }
+            ],
+            "totalCount": 1
+          },
+          "from": "loading",
+          "expect": {
+            "state": "starting",
+            "effects": [
+              {
+                "type": "persist"
+              }
+            ]
+          }
+        },
+        {
+          "event": "TaskMarked",
+          "payload": {
+            "id": "c7"
+          },
+          "from": "starting",
+          "expect": {
+            "state": "working",
+            "emits": [
+              {
+                "event": "STEP_NEXT",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "STEP_NEXT",
+          "payload": {},
+          "from": "working",
+          "expect": {
+            "state": "working"
+          }
+        },
+        {
+          "event": "StepReplyFailed",
+          "payload": {
+            "error": "model down"
+          },
+          "from": "working",
+          "expect": {
+            "state": "failing",
+            "emits": [
+              {
+                "event": "TASK_FAIL",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "TASK_FAIL",
+          "payload": {},
+          "from": "failing",
+          "expect": {
+            "state": "failing",
+            "effects": [
+              {
+                "type": "persist"
+              }
+            ]
+          }
+        },
+        {
+          "event": "StepRowFlagged",
+          "payload": {
+            "id": "c7:0"
+          },
+          "from": "failing",
+          "expect": {
+            "state": "failing",
+            "effects": [
+              {
+                "type": "persist"
+              }
+            ]
+          }
+        },
+        {
+          "event": "TaskRowFlagged",
+          "payload": {
+            "id": "c7"
+          },
+          "from": "failing",
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "TASK_FAILED",
+                "payload": {
+                  "taskId": "c7",
+                  "index": 0,
+                  "error": "model down"
+                }
+              }
+            ]
+          }
         }
-       }
-      ]
-     }
-    }
-   ],
-   "defaults": [
-    "CoordLlm",
-    "CoordChatRequest",
-    "CoordChatHttp"
-   ]
-  },
-  {
-   "id": "final-answer-model-failure-fails-with-index-minus-one",
-   "steps": [
-    {
-     "event": "TASK_START",
-     "payload": {
-      "taskId": "c19",
-      "task": "do it"
-     },
-     "expect": {
-      "state": "loading",
-      "effects": [
-       {
-        "type": "fetch"
-       }
-      ]
-     }
-    },
-    {
-     "event": "StepsLoaded",
-     "payload": {
-      "data": [
-       {
-        "id": "c19:0",
-        "taskId": "c19",
-        "index": 0,
-        "instruction": "a",
-        "status": "done",
-        "result": "r0",
-        "error": ""
-       }
       ],
-      "totalCount": 1
-     },
-     "from": "loading",
-     "expect": {
-      "state": "starting",
-      "effects": [
-       {
-        "type": "persist"
-       }
+      "defaults": [
+        "CoordLlm",
+        "CoordChatRequest",
+        "CoordChatHttp"
       ]
-     }
     },
     {
-     "event": "TaskMarked",
-     "payload": {
-      "id": "c19"
-     },
-     "from": "starting",
-     "expect": {
-      "state": "working",
-      "emits": [
-       {
-        "event": "STEP_NEXT",
-        "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "STEP_NEXT",
-     "payload": {},
-     "from": "working",
-     "expect": {
-      "state": "synthesizing"
-     }
-    },
-    {
-     "event": "LlmFailed",
-     "payload": {
-      "message": "timeout"
-     },
-     "from": "synthesizing",
-     "expect": {
-      "state": "failing",
-      "emits": [
-       {
-        "event": "TASK_FAIL",
-        "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "TASK_FAIL",
-     "payload": {},
-     "from": "failing",
-     "expect": {
-      "state": "failing",
-      "effects": [
-       {
-        "type": "persist"
-       }
-      ]
-     }
-    },
-    {
-     "event": "TaskRowFlagged",
-     "payload": {
-      "id": "c19"
-     },
-     "from": "failing",
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "TASK_FAILED",
-        "payload": {
-         "taskId": "c19",
-         "index": -1,
-         "error": "the final answer could not be generated: timeout"
+      "id": "step-row-write-failure-still-reports-the-original-error",
+      "steps": [
+        {
+          "event": "TASK_START",
+          "payload": {
+            "taskId": "c8",
+            "task": "do it"
+          },
+          "expect": {
+            "state": "loading",
+            "effects": [
+              {
+                "type": "fetch"
+              }
+            ]
+          }
+        },
+        {
+          "event": "StepsLoaded",
+          "payload": {
+            "data": [
+              {
+                "id": "c8:0",
+                "taskId": "c8",
+                "index": 0,
+                "instruction": "a",
+                "status": "pending",
+                "result": "",
+                "error": ""
+              }
+            ],
+            "totalCount": 1
+          },
+          "from": "loading",
+          "expect": {
+            "state": "starting",
+            "effects": [
+              {
+                "type": "persist"
+              }
+            ]
+          }
+        },
+        {
+          "event": "TaskMarked",
+          "payload": {
+            "id": "c8"
+          },
+          "from": "starting",
+          "expect": {
+            "state": "working",
+            "emits": [
+              {
+                "event": "STEP_NEXT",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "STEP_NEXT",
+          "payload": {},
+          "from": "working",
+          "expect": {
+            "state": "working"
+          }
+        },
+        {
+          "event": "StepReplyFailed",
+          "payload": {
+            "error": "model down"
+          },
+          "from": "working",
+          "expect": {
+            "state": "failing"
+          }
+        },
+        {
+          "event": "TASK_FAIL",
+          "payload": {},
+          "from": "failing",
+          "expect": {
+            "state": "failing",
+            "effects": [
+              {
+                "type": "persist"
+              }
+            ]
+          }
+        },
+        {
+          "event": "StepFlagFailed",
+          "payload": {
+            "error": "disk",
+            "code": "io"
+          },
+          "from": "failing",
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "TASK_FAILED",
+                "payload": {
+                  "taskId": "c8",
+                  "index": 0,
+                  "error": "model down (the step row could not be marked failed: disk)"
+                }
+              }
+            ]
+          }
         }
-       }
-      ]
-     }
-    }
-   ],
-   "defaults": [
-    "CoordLlm",
-    "CoordChatRequest",
-    "CoordChatHttp"
-   ]
-  },
-  {
-   "id": "plan-model-failure-fails-the-task",
-   "steps": [
-    {
-     "event": "TASK_START",
-     "payload": {
-      "taskId": "c20",
-      "task": "do it"
-     },
-     "expect": {
-      "state": "loading",
-      "effects": [
-       {
-        "type": "fetch"
-       }
-      ]
-     }
-    },
-    {
-     "event": "StepsLoaded",
-     "payload": {
-      "data": [],
-      "totalCount": 0
-     },
-     "from": "loading",
-     "expect": {
-      "state": "planning",
-      "effects": [
-       {
-        "type": "persist"
-       }
-      ]
-     }
-    },
-    {
-     "event": "TaskCreated",
-     "payload": {
-      "id": "c20"
-     },
-     "from": "planning",
-     "expect": {
-      "state": "planning",
-      "emits": [
-       {
-        "event": "LLM_EXTRACT",
-        "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "LlmFailed",
-     "payload": {
-      "message": "401"
-     },
-     "from": "planning",
-     "expect": {
-      "state": "failing",
-      "emits": [
-       {
-        "event": "TASK_FAIL",
-        "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "TASK_FAIL",
-     "payload": {},
-     "from": "failing",
-     "expect": {
-      "state": "failing",
-      "effects": [
-       {
-        "type": "persist"
-       }
-      ]
-     }
-    },
-    {
-     "event": "TaskRowFlagged",
-     "payload": {
-      "id": "c20"
-     },
-     "from": "failing",
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "TASK_FAILED",
-        "payload": {
-         "taskId": "c20",
-         "index": -1,
-         "error": "the task could not be planned: 401"
-        }
-       }
-      ]
-     }
-    }
-   ],
-   "defaults": [
-    "CoordLlm",
-    "CoordChatRequest",
-    "CoordChatHttp"
-   ]
-  },
-  {
-   "id": "task-start-while-running-is-refused-for-the-new-task",
-   "steps": [
-    {
-     "event": "TASK_START",
-     "payload": {
-      "taskId": "c21",
-      "task": "do it"
-     },
-     "expect": {
-      "state": "loading",
-      "effects": [
-       {
-        "type": "fetch"
-       }
-      ]
-     }
-    },
-    {
-     "event": "StepsLoaded",
-     "payload": {
-      "data": [
-       {
-        "id": "c21:0",
-        "taskId": "c21",
-        "index": 0,
-        "instruction": "a",
-        "status": "pending",
-        "result": "",
-        "error": ""
-       }
       ],
-      "totalCount": 1
-     },
-     "from": "loading",
-     "expect": {
-      "state": "starting",
-      "effects": [
-       {
-        "type": "persist"
-       }
+      "defaults": [
+        "CoordLlm",
+        "CoordChatRequest",
+        "CoordChatHttp"
       ]
-     }
     },
     {
-     "event": "TaskMarked",
-     "payload": {
-      "id": "c21"
-     },
-     "from": "starting",
-     "expect": {
-      "state": "working",
-      "emits": [
-       {
-        "event": "STEP_NEXT",
-        "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "TASK_START",
-     "payload": {
-      "taskId": "other",
-      "task": "x"
-     },
-     "from": "working",
-     "expect": {
-      "state": "working",
-      "emits": [
-       {
-        "event": "TASK_FAILED",
-        "payload": {
-         "taskId": "other",
-         "index": -1,
-         "error": "busy with task c21"
+      "id": "malformed-plan-fails-the-task-before-any-step",
+      "steps": [
+        {
+          "event": "TASK_START",
+          "payload": {
+            "taskId": "c9",
+            "task": "do it"
+          },
+          "expect": {
+            "state": "loading",
+            "effects": [
+              {
+                "type": "fetch"
+              }
+            ]
+          }
+        },
+        {
+          "event": "StepsLoaded",
+          "payload": {
+            "data": [],
+            "totalCount": 0
+          },
+          "from": "loading",
+          "expect": {
+            "state": "planning",
+            "effects": [
+              {
+                "type": "persist"
+              }
+            ]
+          }
+        },
+        {
+          "event": "TaskCreated",
+          "payload": {
+            "id": "c9"
+          },
+          "from": "planning",
+          "expect": {
+            "state": "planning",
+            "emits": [
+              {
+                "event": "LLM_EXTRACT",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "PlanExtracted",
+          "payload": {
+            "json": "{\"nope\":1}"
+          },
+          "from": "planning",
+          "expect": {
+            "state": "planning",
+            "emits": [
+              {
+                "event": "PLAN_READ",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "PLAN_READ",
+          "payload": {},
+          "from": "planning",
+          "expect": {
+            "state": "failing",
+            "emits": [
+              {
+                "event": "TASK_FAIL",
+                "payload": {}
+              }
+            ],
+            "neverEmits": [
+              "COMPACT",
+              "TASK_PROGRESS"
+            ]
+          }
+        },
+        {
+          "event": "TASK_FAIL",
+          "payload": {},
+          "from": "failing",
+          "expect": {
+            "state": "failing",
+            "effects": [
+              {
+                "type": "persist"
+              }
+            ]
+          }
+        },
+        {
+          "event": "TaskRowFlagged",
+          "payload": {
+            "id": "c9"
+          },
+          "from": "failing",
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "TASK_FAILED",
+                "payload": {
+                  "taskId": "c9",
+                  "index": -1,
+                  "error": "the plan is not a { steps: [string] } answer"
+                }
+              }
+            ]
+          }
         }
-       }
+      ],
+      "defaults": [
+        "CoordLlm",
+        "CoordChatRequest",
+        "CoordChatHttp"
       ]
-     }
-    }
-   ],
-   "defaults": [
-    "CoordLlm",
-    "CoordChatRequest",
-    "CoordChatHttp"
-   ]
-  },
-  {
-   "id": "control-task-start-when-idle-is-not-refused",
-   "steps": [
-    {
-     "event": "TASK_START",
-     "payload": {
-      "taskId": "c22",
-      "task": "do it"
-     },
-     "expect": {
-      "state": "loading",
-      "effects": [
-       {
-        "type": "fetch"
-       }
-      ]
-     }
-    }
-   ],
-   "defaults": [
-    "CoordLlm",
-    "CoordChatRequest",
-    "CoordChatHttp"
-   ]
-  },
-  {
-   "id": "existing-task-row-without-steps-is-reused-for-planning",
-   "steps": [
-    {
-     "event": "TASK_START",
-     "payload": {
-      "taskId": "c23",
-      "task": "do it"
-     },
-     "expect": {
-      "state": "loading",
-      "effects": [
-       {
-        "type": "fetch"
-       }
-      ]
-     }
     },
     {
-     "event": "StepsLoaded",
-     "payload": {
-      "data": [],
-      "totalCount": 0
-     },
-     "from": "loading",
-     "expect": {
-      "state": "planning",
-      "effects": [
-       {
-        "type": "persist"
-       }
-      ]
-     }
-    },
-    {
-     "event": "TaskCreateFailed",
-     "payload": {
-      "error": "already exists",
-      "code": "duplicate-id"
-     },
-     "from": "planning",
-     "expect": {
-      "state": "planning",
-      "effects": [
-       {
-        "type": "persist"
-       }
-      ]
-     }
-    },
-    {
-     "event": "TaskCreated",
-     "payload": {
-      "id": "c23"
-     },
-     "from": "planning",
-     "expect": {
-      "state": "planning",
-      "emits": [
-       {
-        "event": "LLM_EXTRACT",
-        "payload": {}
-       }
-      ]
-     }
-    }
-   ],
-   "defaults": [
-    "CoordLlm",
-    "CoordChatRequest",
-    "CoordChatHttp"
-   ]
-  },
-  {
-   "id": "control-other-task-store-error-fails-the-task",
-   "steps": [
-    {
-     "event": "TASK_START",
-     "payload": {
-      "taskId": "c24",
-      "task": "do it"
-     },
-     "expect": {
-      "state": "loading",
-      "effects": [
-       {
-        "type": "fetch"
-       }
-      ]
-     }
-    },
-    {
-     "event": "StepsLoaded",
-     "payload": {
-      "data": [],
-      "totalCount": 0
-     },
-     "from": "loading",
-     "expect": {
-      "state": "planning",
-      "effects": [
-       {
-        "type": "persist"
-       }
-      ]
-     }
-    },
-    {
-     "event": "TaskCreateFailed",
-     "payload": {
-      "error": "disk",
-      "code": "io"
-     },
-     "from": "planning",
-     "expect": {
-      "state": "failing",
-      "emits": [
-       {
-        "event": "TASK_FAIL",
-        "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "TASK_FAIL",
-     "payload": {},
-     "from": "failing",
-     "expect": {
-      "state": "failing",
-      "effects": [
-       {
-        "type": "persist"
-       }
-      ]
-     }
-    },
-    {
-     "event": "TaskRowFlagged",
-     "payload": {
-      "id": "c24"
-     },
-     "from": "failing",
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "TASK_FAILED",
-        "payload": {
-         "taskId": "c24",
-         "index": -1,
-         "error": "the task could not be stored: disk"
+      "id": "plan-that-is-not-json-fails-the-task",
+      "steps": [
+        {
+          "event": "TASK_START",
+          "payload": {
+            "taskId": "c10",
+            "task": "do it"
+          },
+          "expect": {
+            "state": "loading",
+            "effects": [
+              {
+                "type": "fetch"
+              }
+            ]
+          }
+        },
+        {
+          "event": "StepsLoaded",
+          "payload": {
+            "data": [],
+            "totalCount": 0
+          },
+          "from": "loading",
+          "expect": {
+            "state": "planning",
+            "effects": [
+              {
+                "type": "persist"
+              }
+            ]
+          }
+        },
+        {
+          "event": "TaskCreated",
+          "payload": {
+            "id": "c10"
+          },
+          "from": "planning",
+          "expect": {
+            "state": "planning",
+            "emits": [
+              {
+                "event": "LLM_EXTRACT",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "PlanExtracted",
+          "payload": {
+            "json": "not json"
+          },
+          "from": "planning",
+          "expect": {
+            "state": "planning",
+            "emits": [
+              {
+                "event": "PLAN_READ",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "PLAN_READ",
+          "payload": {},
+          "from": "planning",
+          "expect": {
+            "state": "failing",
+            "emits": [
+              {
+                "event": "TASK_FAIL",
+                "payload": {}
+              }
+            ],
+            "neverEmits": [
+              "COMPACT",
+              "TASK_PROGRESS"
+            ]
+          }
+        },
+        {
+          "event": "TASK_FAIL",
+          "payload": {},
+          "from": "failing",
+          "expect": {
+            "state": "failing",
+            "effects": [
+              {
+                "type": "persist"
+              }
+            ]
+          }
+        },
+        {
+          "event": "TaskRowFlagged",
+          "payload": {
+            "id": "c10"
+          },
+          "from": "failing",
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "TASK_FAILED",
+                "payload": {
+                  "taskId": "c10",
+                  "index": -1,
+                  "error": "the plan is not a { steps: [string] } answer"
+                }
+              }
+            ]
+          }
         }
-       }
+      ],
+      "defaults": [
+        "CoordLlm",
+        "CoordChatRequest",
+        "CoordChatHttp"
       ]
-     }
-    }
-   ],
-   "defaults": [
-    "CoordLlm",
-    "CoordChatRequest",
-    "CoordChatHttp"
-   ]
-  },
-  {
-   "id": "stored-task-over-maxsteps-fails",
-   "steps": [
-    {
-     "event": "TASK_START",
-     "payload": {
-      "taskId": "c25",
-      "task": "do it"
-     },
-     "expect": {
-      "state": "loading",
-      "effects": [
-       {
-        "type": "fetch"
-       }
-      ]
-     }
     },
     {
-     "event": "StepsLoaded",
-     "payload": {
-      "data": [],
-      "totalCount": 9
-     },
-     "from": "loading",
-     "expect": {
-      "state": "failing",
-      "emits": [
-       {
-        "event": "TASK_FAIL",
-        "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "TASK_FAIL",
-     "payload": {},
-     "from": "failing",
-     "expect": {
-      "state": "failing",
-      "effects": [
-       {
-        "type": "persist"
-       }
-      ]
-     }
-    },
-    {
-     "event": "TaskRowFlagged",
-     "payload": {
-      "id": "c25"
-     },
-     "from": "failing",
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "TASK_FAILED",
-        "payload": {
-         "taskId": "c25",
-         "index": -1,
-         "error": "the task has 9 steps, over the maxSteps cap of 6"
+      "id": "plan-with-no-steps-fails-the-task",
+      "steps": [
+        {
+          "event": "TASK_START",
+          "payload": {
+            "taskId": "c11",
+            "task": "do it"
+          },
+          "expect": {
+            "state": "loading",
+            "effects": [
+              {
+                "type": "fetch"
+              }
+            ]
+          }
+        },
+        {
+          "event": "StepsLoaded",
+          "payload": {
+            "data": [],
+            "totalCount": 0
+          },
+          "from": "loading",
+          "expect": {
+            "state": "planning",
+            "effects": [
+              {
+                "type": "persist"
+              }
+            ]
+          }
+        },
+        {
+          "event": "TaskCreated",
+          "payload": {
+            "id": "c11"
+          },
+          "from": "planning",
+          "expect": {
+            "state": "planning",
+            "emits": [
+              {
+                "event": "LLM_EXTRACT",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "PlanExtracted",
+          "payload": {
+            "json": "{\"steps\":[]}"
+          },
+          "from": "planning",
+          "expect": {
+            "state": "planning",
+            "emits": [
+              {
+                "event": "PLAN_READ",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "PLAN_READ",
+          "payload": {},
+          "from": "planning",
+          "expect": {
+            "state": "failing",
+            "emits": [
+              {
+                "event": "TASK_FAIL",
+                "payload": {}
+              }
+            ],
+            "neverEmits": [
+              "COMPACT",
+              "TASK_PROGRESS"
+            ]
+          }
+        },
+        {
+          "event": "TASK_FAIL",
+          "payload": {},
+          "from": "failing",
+          "expect": {
+            "state": "failing",
+            "effects": [
+              {
+                "type": "persist"
+              }
+            ]
+          }
+        },
+        {
+          "event": "TaskRowFlagged",
+          "payload": {
+            "id": "c11"
+          },
+          "from": "failing",
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "TASK_FAILED",
+                "payload": {
+                  "taskId": "c11",
+                  "index": -1,
+                  "error": "the plan has no steps"
+                }
+              }
+            ]
+          }
         }
-       }
+      ],
+      "defaults": [
+        "CoordLlm",
+        "CoordChatRequest",
+        "CoordChatHttp"
       ]
-     }
-    }
-   ],
-   "defaults": [
-    "CoordLlm",
-    "CoordChatRequest",
-    "CoordChatHttp"
-   ]
-  },
-  {
-   "id": "step-load-failure-fails-the-task",
-   "steps": [
-    {
-     "event": "TASK_START",
-     "payload": {
-      "taskId": "c26",
-      "task": "do it"
-     },
-     "expect": {
-      "state": "loading",
-      "effects": [
-       {
-        "type": "fetch"
-       }
-      ]
-     }
     },
     {
-     "event": "StepsLoadFailed",
-     "payload": {
-      "error": "db down"
-     },
-     "from": "loading",
-     "expect": {
-      "state": "failing",
-      "emits": [
-       {
-        "event": "TASK_FAIL",
-        "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "TASK_FAIL",
-     "payload": {},
-     "from": "failing",
-     "expect": {
-      "state": "failing",
-      "effects": [
-       {
-        "type": "persist"
-       }
-      ]
-     }
-    },
-    {
-     "event": "TaskRowFlagged",
-     "payload": {
-      "id": "c26"
-     },
-     "from": "failing",
-     "expect": {
-      "state": "idle",
-      "emits": [
-       {
-        "event": "TASK_FAILED",
-        "payload": {
-         "taskId": "c26",
-         "index": -1,
-         "error": "the steps of the task could not be read: db down"
+      "id": "plan-with-an-empty-step-fails-the-task",
+      "steps": [
+        {
+          "event": "TASK_START",
+          "payload": {
+            "taskId": "c12",
+            "task": "do it"
+          },
+          "expect": {
+            "state": "loading",
+            "effects": [
+              {
+                "type": "fetch"
+              }
+            ]
+          }
+        },
+        {
+          "event": "StepsLoaded",
+          "payload": {
+            "data": [],
+            "totalCount": 0
+          },
+          "from": "loading",
+          "expect": {
+            "state": "planning",
+            "effects": [
+              {
+                "type": "persist"
+              }
+            ]
+          }
+        },
+        {
+          "event": "TaskCreated",
+          "payload": {
+            "id": "c12"
+          },
+          "from": "planning",
+          "expect": {
+            "state": "planning",
+            "emits": [
+              {
+                "event": "LLM_EXTRACT",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "PlanExtracted",
+          "payload": {
+            "json": "{\"steps\":[\"a\",\"  \"]}"
+          },
+          "from": "planning",
+          "expect": {
+            "state": "planning",
+            "emits": [
+              {
+                "event": "PLAN_READ",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "PLAN_READ",
+          "payload": {},
+          "from": "planning",
+          "expect": {
+            "state": "failing",
+            "emits": [
+              {
+                "event": "TASK_FAIL",
+                "payload": {}
+              }
+            ],
+            "neverEmits": [
+              "COMPACT",
+              "TASK_PROGRESS"
+            ]
+          }
+        },
+        {
+          "event": "TASK_FAIL",
+          "payload": {},
+          "from": "failing",
+          "expect": {
+            "state": "failing",
+            "effects": [
+              {
+                "type": "persist"
+              }
+            ]
+          }
+        },
+        {
+          "event": "TaskRowFlagged",
+          "payload": {
+            "id": "c12"
+          },
+          "from": "failing",
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "TASK_FAILED",
+                "payload": {
+                  "taskId": "c12",
+                  "index": -1,
+                  "error": "the plan has an empty step"
+                }
+              }
+            ]
+          }
         }
-       }
+      ],
+      "defaults": [
+        "CoordLlm",
+        "CoordChatRequest",
+        "CoordChatHttp"
       ]
-     }
+    },
+    {
+      "id": "plan-over-maxsteps-is-refused-not-cut",
+      "steps": [
+        {
+          "event": "TASK_START",
+          "payload": {
+            "taskId": "c13",
+            "task": "do it"
+          },
+          "expect": {
+            "state": "loading",
+            "effects": [
+              {
+                "type": "fetch"
+              }
+            ]
+          }
+        },
+        {
+          "event": "StepsLoaded",
+          "payload": {
+            "data": [],
+            "totalCount": 0
+          },
+          "from": "loading",
+          "expect": {
+            "state": "planning",
+            "effects": [
+              {
+                "type": "persist"
+              }
+            ]
+          }
+        },
+        {
+          "event": "TaskCreated",
+          "payload": {
+            "id": "c13"
+          },
+          "from": "planning",
+          "expect": {
+            "state": "planning",
+            "emits": [
+              {
+                "event": "LLM_EXTRACT",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "PlanExtracted",
+          "payload": {
+            "json": "{\"steps\": [\"a\", \"b\", \"c\", \"d\", \"e\", \"f\", \"g\"]}"
+          },
+          "from": "planning",
+          "expect": {
+            "state": "planning",
+            "emits": [
+              {
+                "event": "PLAN_READ",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "PLAN_READ",
+          "payload": {},
+          "from": "planning",
+          "expect": {
+            "state": "failing",
+            "emits": [
+              {
+                "event": "TASK_FAIL",
+                "payload": {}
+              }
+            ],
+            "neverEmits": [
+              "COMPACT",
+              "TASK_PROGRESS"
+            ]
+          }
+        },
+        {
+          "event": "TASK_FAIL",
+          "payload": {},
+          "from": "failing",
+          "expect": {
+            "state": "failing",
+            "effects": [
+              {
+                "type": "persist"
+              }
+            ]
+          }
+        },
+        {
+          "event": "TaskRowFlagged",
+          "payload": {
+            "id": "c13"
+          },
+          "from": "failing",
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "TASK_FAILED",
+                "payload": {
+                  "taskId": "c13",
+                  "index": -1,
+                  "error": "the plan has 7 steps, over the maxSteps cap of 6: the plan is refused, not cut"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "CoordLlm",
+        "CoordChatRequest",
+        "CoordChatHttp"
+      ]
+    },
+    {
+      "id": "control-plan-at-maxsteps-is-accepted",
+      "steps": [
+        {
+          "event": "TASK_START",
+          "payload": {
+            "taskId": "c14",
+            "task": "do it"
+          },
+          "expect": {
+            "state": "loading",
+            "effects": [
+              {
+                "type": "fetch"
+              }
+            ]
+          }
+        },
+        {
+          "event": "StepsLoaded",
+          "payload": {
+            "data": [],
+            "totalCount": 0
+          },
+          "from": "loading",
+          "expect": {
+            "state": "planning",
+            "effects": [
+              {
+                "type": "persist"
+              }
+            ]
+          }
+        },
+        {
+          "event": "TaskCreated",
+          "payload": {
+            "id": "c14"
+          },
+          "from": "planning",
+          "expect": {
+            "state": "planning",
+            "emits": [
+              {
+                "event": "LLM_EXTRACT",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "PlanExtracted",
+          "payload": {
+            "json": "{\"steps\": [\"a\", \"b\", \"c\", \"d\", \"e\", \"f\"]}"
+          },
+          "from": "planning",
+          "expect": {
+            "state": "planning",
+            "emits": [
+              {
+                "event": "PLAN_READ",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "PLAN_READ",
+          "payload": {},
+          "from": "planning",
+          "expect": {
+            "state": "planning",
+            "effects": [
+              {
+                "type": "persist"
+              }
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "CoordLlm",
+        "CoordChatRequest",
+        "CoordChatHttp"
+      ]
+    },
+    {
+      "id": "step-result-is-stored-whole-then-next-step-starts",
+      "steps": [
+        {
+          "event": "TASK_START",
+          "payload": {
+            "taskId": "c15",
+            "task": "do it"
+          },
+          "expect": {
+            "state": "loading",
+            "effects": [
+              {
+                "type": "fetch"
+              }
+            ]
+          }
+        },
+        {
+          "event": "StepsLoaded",
+          "payload": {
+            "data": [
+              {
+                "id": "c15:0",
+                "taskId": "c15",
+                "index": 0,
+                "instruction": "a",
+                "status": "pending",
+                "result": "",
+                "error": ""
+              },
+              {
+                "id": "c15:1",
+                "taskId": "c15",
+                "index": 1,
+                "instruction": "b",
+                "status": "pending",
+                "result": "",
+                "error": ""
+              }
+            ],
+            "totalCount": 2
+          },
+          "from": "loading",
+          "expect": {
+            "state": "starting",
+            "effects": [
+              {
+                "type": "persist"
+              }
+            ]
+          }
+        },
+        {
+          "event": "TaskMarked",
+          "payload": {
+            "id": "c15"
+          },
+          "from": "starting",
+          "expect": {
+            "state": "working",
+            "emits": [
+              {
+                "event": "STEP_NEXT",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "STEP_NEXT",
+          "payload": {},
+          "from": "working",
+          "expect": {
+            "state": "working"
+          }
+        },
+        {
+          "event": "StepReplied",
+          "payload": {
+            "reply": "result zero",
+            "steps": [],
+            "usage": {
+              "promptTokens": 1,
+              "completionTokens": 1,
+              "totalTokens": 2,
+              "modelCalls": 1
+            }
+          },
+          "from": "working",
+          "expect": {
+            "state": "storing",
+            "effects": [
+              {
+                "type": "persist"
+              }
+            ]
+          }
+        },
+        {
+          "event": "StepStored",
+          "payload": {
+            "id": "c15:0"
+          },
+          "from": "storing",
+          "expect": {
+            "state": "working",
+            "emits": [
+              {
+                "event": "TASK_PROGRESS",
+                "payload": {
+                  "taskId": "c15",
+                  "index": 0,
+                  "total": 2,
+                  "status": "done"
+                }
+              },
+              {
+                "event": "STEP_NEXT",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "STEP_NEXT",
+          "payload": {},
+          "from": "working",
+          "expect": {
+            "state": "working",
+            "emits": [
+              {
+                "event": "TASK_PROGRESS",
+                "payload": {
+                  "taskId": "c15",
+                  "index": 1,
+                  "total": 2,
+                  "status": "running"
+                }
+              },
+              {
+                "event": "COMPACT",
+                "payload": {
+                  "messages": [
+                    {
+                      "role": "user",
+                      "content": "Step 1: a"
+                    },
+                    {
+                      "role": "assistant",
+                      "content": "result zero"
+                    },
+                    {
+                      "role": "user",
+                      "content": "Step 2: b"
+                    }
+                  ],
+                  "ephemeral": true
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "CoordLlm",
+        "CoordChatRequest",
+        "CoordChatHttp"
+      ]
+    },
+    {
+      "id": "empty-step-reply-fails-the-step",
+      "steps": [
+        {
+          "event": "TASK_START",
+          "payload": {
+            "taskId": "c16",
+            "task": "do it"
+          },
+          "expect": {
+            "state": "loading",
+            "effects": [
+              {
+                "type": "fetch"
+              }
+            ]
+          }
+        },
+        {
+          "event": "StepsLoaded",
+          "payload": {
+            "data": [
+              {
+                "id": "c16:0",
+                "taskId": "c16",
+                "index": 0,
+                "instruction": "a",
+                "status": "pending",
+                "result": "",
+                "error": ""
+              }
+            ],
+            "totalCount": 1
+          },
+          "from": "loading",
+          "expect": {
+            "state": "starting",
+            "effects": [
+              {
+                "type": "persist"
+              }
+            ]
+          }
+        },
+        {
+          "event": "TaskMarked",
+          "payload": {
+            "id": "c16"
+          },
+          "from": "starting",
+          "expect": {
+            "state": "working",
+            "emits": [
+              {
+                "event": "STEP_NEXT",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "STEP_NEXT",
+          "payload": {},
+          "from": "working",
+          "expect": {
+            "state": "working"
+          }
+        },
+        {
+          "event": "StepReplied",
+          "payload": {
+            "reply": "  ",
+            "steps": [],
+            "usage": {
+              "promptTokens": 1,
+              "completionTokens": 1,
+              "totalTokens": 2,
+              "modelCalls": 1
+            }
+          },
+          "from": "working",
+          "expect": {
+            "state": "failing",
+            "emits": [
+              {
+                "event": "TASK_FAIL",
+                "payload": {}
+              }
+            ],
+            "neverEmits": [
+              "TASK_PROGRESS"
+            ]
+          }
+        },
+        {
+          "event": "TASK_FAIL",
+          "payload": {},
+          "from": "failing",
+          "expect": {
+            "state": "failing",
+            "effects": [
+              {
+                "type": "persist"
+              }
+            ]
+          }
+        },
+        {
+          "event": "StepRowFlagged",
+          "payload": {
+            "id": "c16:0"
+          },
+          "from": "failing",
+          "expect": {
+            "state": "failing",
+            "effects": [
+              {
+                "type": "persist"
+              }
+            ]
+          }
+        },
+        {
+          "event": "TaskRowFlagged",
+          "payload": {
+            "id": "c16"
+          },
+          "from": "failing",
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "TASK_FAILED",
+                "payload": {
+                  "taskId": "c16",
+                  "index": 0,
+                  "error": "the step produced an empty result"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "CoordLlm",
+        "CoordChatRequest",
+        "CoordChatHttp"
+      ]
+    },
+    {
+      "id": "all-steps-done-synthesizes-the-answer",
+      "steps": [
+        {
+          "event": "TASK_START",
+          "payload": {
+            "taskId": "c17",
+            "task": "do it"
+          },
+          "expect": {
+            "state": "loading",
+            "effects": [
+              {
+                "type": "fetch"
+              }
+            ]
+          }
+        },
+        {
+          "event": "StepsLoaded",
+          "payload": {
+            "data": [
+              {
+                "id": "c17:0",
+                "taskId": "c17",
+                "index": 0,
+                "instruction": "a",
+                "status": "done",
+                "result": "r0",
+                "error": ""
+              },
+              {
+                "id": "c17:1",
+                "taskId": "c17",
+                "index": 1,
+                "instruction": "b",
+                "status": "done",
+                "result": "r1",
+                "error": ""
+              }
+            ],
+            "totalCount": 2
+          },
+          "from": "loading",
+          "expect": {
+            "state": "starting",
+            "effects": [
+              {
+                "type": "persist"
+              }
+            ]
+          }
+        },
+        {
+          "event": "TaskMarked",
+          "payload": {
+            "id": "c17"
+          },
+          "from": "starting",
+          "expect": {
+            "state": "working",
+            "emits": [
+              {
+                "event": "STEP_NEXT",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "STEP_NEXT",
+          "payload": {},
+          "from": "working",
+          "expect": {
+            "state": "synthesizing",
+            "emits": [
+              {
+                "event": "LLM_GENERATE",
+                "payload": {
+                  "userPrompt": "Task:\ndo it\n\nResults of the steps:\n\nStep 1 (a):\nr0\n\nStep 2 (b):\nr1"
+                }
+              }
+            ],
+            "neverEmits": [
+              "COMPACT",
+              "TASK_DONE"
+            ]
+          }
+        },
+        {
+          "event": "AnswerGenerated",
+          "payload": {
+            "content": "the answer"
+          },
+          "from": "synthesizing",
+          "expect": {
+            "state": "synthesizing",
+            "effects": [
+              {
+                "type": "persist"
+              }
+            ]
+          }
+        },
+        {
+          "event": "AnswerStored",
+          "payload": {
+            "id": "c17"
+          },
+          "from": "synthesizing",
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "TASK_DONE",
+                "payload": {
+                  "taskId": "c17",
+                  "answer": "the answer",
+                  "steps": 2
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "CoordLlm",
+        "CoordChatRequest",
+        "CoordChatHttp"
+      ]
+    },
+    {
+      "id": "control-empty-final-answer-fails-the-task",
+      "steps": [
+        {
+          "event": "TASK_START",
+          "payload": {
+            "taskId": "c18",
+            "task": "do it"
+          },
+          "expect": {
+            "state": "loading",
+            "effects": [
+              {
+                "type": "fetch"
+              }
+            ]
+          }
+        },
+        {
+          "event": "StepsLoaded",
+          "payload": {
+            "data": [
+              {
+                "id": "c18:0",
+                "taskId": "c18",
+                "index": 0,
+                "instruction": "a",
+                "status": "done",
+                "result": "r0",
+                "error": ""
+              }
+            ],
+            "totalCount": 1
+          },
+          "from": "loading",
+          "expect": {
+            "state": "starting",
+            "effects": [
+              {
+                "type": "persist"
+              }
+            ]
+          }
+        },
+        {
+          "event": "TaskMarked",
+          "payload": {
+            "id": "c18"
+          },
+          "from": "starting",
+          "expect": {
+            "state": "working",
+            "emits": [
+              {
+                "event": "STEP_NEXT",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "STEP_NEXT",
+          "payload": {},
+          "from": "working",
+          "expect": {
+            "state": "synthesizing"
+          }
+        },
+        {
+          "event": "AnswerGenerated",
+          "payload": {
+            "content": " "
+          },
+          "from": "synthesizing",
+          "expect": {
+            "state": "failing",
+            "emits": [
+              {
+                "event": "TASK_FAIL",
+                "payload": {}
+              }
+            ],
+            "neverEmits": [
+              "TASK_DONE"
+            ]
+          }
+        },
+        {
+          "event": "TASK_FAIL",
+          "payload": {},
+          "from": "failing",
+          "expect": {
+            "state": "failing",
+            "effects": [
+              {
+                "type": "persist"
+              }
+            ]
+          }
+        },
+        {
+          "event": "TaskRowFlagged",
+          "payload": {
+            "id": "c18"
+          },
+          "from": "failing",
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "TASK_FAILED",
+                "payload": {
+                  "taskId": "c18",
+                  "index": -1,
+                  "error": "the final answer is empty"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "CoordLlm",
+        "CoordChatRequest",
+        "CoordChatHttp"
+      ]
+    },
+    {
+      "id": "final-answer-model-failure-fails-with-index-minus-one",
+      "steps": [
+        {
+          "event": "TASK_START",
+          "payload": {
+            "taskId": "c19",
+            "task": "do it"
+          },
+          "expect": {
+            "state": "loading",
+            "effects": [
+              {
+                "type": "fetch"
+              }
+            ]
+          }
+        },
+        {
+          "event": "StepsLoaded",
+          "payload": {
+            "data": [
+              {
+                "id": "c19:0",
+                "taskId": "c19",
+                "index": 0,
+                "instruction": "a",
+                "status": "done",
+                "result": "r0",
+                "error": ""
+              }
+            ],
+            "totalCount": 1
+          },
+          "from": "loading",
+          "expect": {
+            "state": "starting",
+            "effects": [
+              {
+                "type": "persist"
+              }
+            ]
+          }
+        },
+        {
+          "event": "TaskMarked",
+          "payload": {
+            "id": "c19"
+          },
+          "from": "starting",
+          "expect": {
+            "state": "working",
+            "emits": [
+              {
+                "event": "STEP_NEXT",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "STEP_NEXT",
+          "payload": {},
+          "from": "working",
+          "expect": {
+            "state": "synthesizing"
+          }
+        },
+        {
+          "event": "LlmFailed",
+          "payload": {
+            "message": "timeout"
+          },
+          "from": "synthesizing",
+          "expect": {
+            "state": "failing",
+            "emits": [
+              {
+                "event": "TASK_FAIL",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "TASK_FAIL",
+          "payload": {},
+          "from": "failing",
+          "expect": {
+            "state": "failing",
+            "effects": [
+              {
+                "type": "persist"
+              }
+            ]
+          }
+        },
+        {
+          "event": "TaskRowFlagged",
+          "payload": {
+            "id": "c19"
+          },
+          "from": "failing",
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "TASK_FAILED",
+                "payload": {
+                  "taskId": "c19",
+                  "index": -1,
+                  "error": "the final answer could not be generated: timeout"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "CoordLlm",
+        "CoordChatRequest",
+        "CoordChatHttp"
+      ]
+    },
+    {
+      "id": "plan-model-failure-fails-the-task",
+      "steps": [
+        {
+          "event": "TASK_START",
+          "payload": {
+            "taskId": "c20",
+            "task": "do it"
+          },
+          "expect": {
+            "state": "loading",
+            "effects": [
+              {
+                "type": "fetch"
+              }
+            ]
+          }
+        },
+        {
+          "event": "StepsLoaded",
+          "payload": {
+            "data": [],
+            "totalCount": 0
+          },
+          "from": "loading",
+          "expect": {
+            "state": "planning",
+            "effects": [
+              {
+                "type": "persist"
+              }
+            ]
+          }
+        },
+        {
+          "event": "TaskCreated",
+          "payload": {
+            "id": "c20"
+          },
+          "from": "planning",
+          "expect": {
+            "state": "planning",
+            "emits": [
+              {
+                "event": "LLM_EXTRACT",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LlmFailed",
+          "payload": {
+            "message": "401"
+          },
+          "from": "planning",
+          "expect": {
+            "state": "failing",
+            "emits": [
+              {
+                "event": "TASK_FAIL",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "TASK_FAIL",
+          "payload": {},
+          "from": "failing",
+          "expect": {
+            "state": "failing",
+            "effects": [
+              {
+                "type": "persist"
+              }
+            ]
+          }
+        },
+        {
+          "event": "TaskRowFlagged",
+          "payload": {
+            "id": "c20"
+          },
+          "from": "failing",
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "TASK_FAILED",
+                "payload": {
+                  "taskId": "c20",
+                  "index": -1,
+                  "error": "the task could not be planned: 401"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "CoordLlm",
+        "CoordChatRequest",
+        "CoordChatHttp"
+      ]
+    },
+    {
+      "id": "task-start-while-running-is-refused-for-the-new-task",
+      "steps": [
+        {
+          "event": "TASK_START",
+          "payload": {
+            "taskId": "c21",
+            "task": "do it"
+          },
+          "expect": {
+            "state": "loading",
+            "effects": [
+              {
+                "type": "fetch"
+              }
+            ]
+          }
+        },
+        {
+          "event": "StepsLoaded",
+          "payload": {
+            "data": [
+              {
+                "id": "c21:0",
+                "taskId": "c21",
+                "index": 0,
+                "instruction": "a",
+                "status": "pending",
+                "result": "",
+                "error": ""
+              }
+            ],
+            "totalCount": 1
+          },
+          "from": "loading",
+          "expect": {
+            "state": "starting",
+            "effects": [
+              {
+                "type": "persist"
+              }
+            ]
+          }
+        },
+        {
+          "event": "TaskMarked",
+          "payload": {
+            "id": "c21"
+          },
+          "from": "starting",
+          "expect": {
+            "state": "working",
+            "emits": [
+              {
+                "event": "STEP_NEXT",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "TASK_START",
+          "payload": {
+            "taskId": "other",
+            "task": "x"
+          },
+          "from": "working",
+          "expect": {
+            "state": "working",
+            "emits": [
+              {
+                "event": "TASK_FAILED",
+                "payload": {
+                  "taskId": "other",
+                  "index": -1,
+                  "error": "busy with task c21"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "CoordLlm",
+        "CoordChatRequest",
+        "CoordChatHttp"
+      ]
+    },
+    {
+      "id": "control-task-start-when-idle-is-not-refused",
+      "steps": [
+        {
+          "event": "TASK_START",
+          "payload": {
+            "taskId": "c22",
+            "task": "do it"
+          },
+          "expect": {
+            "state": "loading",
+            "effects": [
+              {
+                "type": "fetch"
+              }
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "CoordLlm",
+        "CoordChatRequest",
+        "CoordChatHttp"
+      ]
+    },
+    {
+      "id": "existing-task-row-without-steps-is-reused-for-planning",
+      "steps": [
+        {
+          "event": "TASK_START",
+          "payload": {
+            "taskId": "c23",
+            "task": "do it"
+          },
+          "expect": {
+            "state": "loading",
+            "effects": [
+              {
+                "type": "fetch"
+              }
+            ]
+          }
+        },
+        {
+          "event": "StepsLoaded",
+          "payload": {
+            "data": [],
+            "totalCount": 0
+          },
+          "from": "loading",
+          "expect": {
+            "state": "planning",
+            "effects": [
+              {
+                "type": "persist"
+              }
+            ]
+          }
+        },
+        {
+          "event": "TaskCreateFailed",
+          "payload": {
+            "error": "already exists",
+            "code": "duplicate-id"
+          },
+          "from": "planning",
+          "expect": {
+            "state": "planning",
+            "effects": [
+              {
+                "type": "persist"
+              }
+            ]
+          }
+        },
+        {
+          "event": "TaskCreated",
+          "payload": {
+            "id": "c23"
+          },
+          "from": "planning",
+          "expect": {
+            "state": "planning",
+            "emits": [
+              {
+                "event": "LLM_EXTRACT",
+                "payload": {}
+              }
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "CoordLlm",
+        "CoordChatRequest",
+        "CoordChatHttp"
+      ]
+    },
+    {
+      "id": "control-other-task-store-error-fails-the-task",
+      "steps": [
+        {
+          "event": "TASK_START",
+          "payload": {
+            "taskId": "c24",
+            "task": "do it"
+          },
+          "expect": {
+            "state": "loading",
+            "effects": [
+              {
+                "type": "fetch"
+              }
+            ]
+          }
+        },
+        {
+          "event": "StepsLoaded",
+          "payload": {
+            "data": [],
+            "totalCount": 0
+          },
+          "from": "loading",
+          "expect": {
+            "state": "planning",
+            "effects": [
+              {
+                "type": "persist"
+              }
+            ]
+          }
+        },
+        {
+          "event": "TaskCreateFailed",
+          "payload": {
+            "error": "disk",
+            "code": "io"
+          },
+          "from": "planning",
+          "expect": {
+            "state": "failing",
+            "emits": [
+              {
+                "event": "TASK_FAIL",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "TASK_FAIL",
+          "payload": {},
+          "from": "failing",
+          "expect": {
+            "state": "failing",
+            "effects": [
+              {
+                "type": "persist"
+              }
+            ]
+          }
+        },
+        {
+          "event": "TaskRowFlagged",
+          "payload": {
+            "id": "c24"
+          },
+          "from": "failing",
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "TASK_FAILED",
+                "payload": {
+                  "taskId": "c24",
+                  "index": -1,
+                  "error": "the task could not be stored: disk"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "CoordLlm",
+        "CoordChatRequest",
+        "CoordChatHttp"
+      ]
+    },
+    {
+      "id": "stored-task-over-maxsteps-fails",
+      "steps": [
+        {
+          "event": "TASK_START",
+          "payload": {
+            "taskId": "c25",
+            "task": "do it"
+          },
+          "expect": {
+            "state": "loading",
+            "effects": [
+              {
+                "type": "fetch"
+              }
+            ]
+          }
+        },
+        {
+          "event": "StepsLoaded",
+          "payload": {
+            "data": [],
+            "totalCount": 9
+          },
+          "from": "loading",
+          "expect": {
+            "state": "failing",
+            "emits": [
+              {
+                "event": "TASK_FAIL",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "TASK_FAIL",
+          "payload": {},
+          "from": "failing",
+          "expect": {
+            "state": "failing",
+            "effects": [
+              {
+                "type": "persist"
+              }
+            ]
+          }
+        },
+        {
+          "event": "TaskRowFlagged",
+          "payload": {
+            "id": "c25"
+          },
+          "from": "failing",
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "TASK_FAILED",
+                "payload": {
+                  "taskId": "c25",
+                  "index": -1,
+                  "error": "the task has 9 steps, over the maxSteps cap of 6"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "CoordLlm",
+        "CoordChatRequest",
+        "CoordChatHttp"
+      ]
+    },
+    {
+      "id": "step-load-failure-fails-the-task",
+      "steps": [
+        {
+          "event": "TASK_START",
+          "payload": {
+            "taskId": "c26",
+            "task": "do it"
+          },
+          "expect": {
+            "state": "loading",
+            "effects": [
+              {
+                "type": "fetch"
+              }
+            ]
+          }
+        },
+        {
+          "event": "StepsLoadFailed",
+          "payload": {
+            "error": "db down"
+          },
+          "from": "loading",
+          "expect": {
+            "state": "failing",
+            "emits": [
+              {
+                "event": "TASK_FAIL",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "TASK_FAIL",
+          "payload": {},
+          "from": "failing",
+          "expect": {
+            "state": "failing",
+            "effects": [
+              {
+                "type": "persist"
+              }
+            ]
+          }
+        },
+        {
+          "event": "TaskRowFlagged",
+          "payload": {
+            "id": "c26"
+          },
+          "from": "failing",
+          "expect": {
+            "state": "idle",
+            "emits": [
+              {
+                "event": "TASK_FAILED",
+                "payload": {
+                  "taskId": "c26",
+                  "index": -1,
+                  "error": "the steps of the task could not be read: db down"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "CoordLlm",
+        "CoordChatRequest",
+        "CoordChatHttp"
+      ]
+    },
+    {
+      "id": "context-notice-is-logged-while-working",
+      "note": "a failed summarizing reaches the coordinator as CONTEXT_NOTICE: it stays working and the task is untouched",
+      "steps": [
+        {
+          "event": "CONTEXT_NOTICE",
+          "payload": {
+            "message": "down",
+            "variant": "warning"
+          },
+          "from": "working",
+          "expect": {
+            "state": "working",
+            "neverEmits": [
+              "TASK_FAILED",
+              "TASK_DONE"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-context-notice-outside-working-does-nothing",
+      "steps": [
+        {
+          "event": "CONTEXT_NOTICE",
+          "payload": {
+            "message": "down",
+            "variant": "warning"
+          },
+          "from": "idle",
+          "expect": {
+            "fired": false,
+            "state": "idle"
+          }
+        }
+      ]
     }
-   ],
-   "defaults": [
-    "CoordLlm",
-    "CoordChatRequest",
-    "CoordChatHttp"
-   ]
-  }
- ]
+  ]
 }

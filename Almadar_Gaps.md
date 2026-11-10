@@ -31,7 +31,11 @@ Every open gap this repo owns lives here. This file is the source of truth; the 
 - **G-STD-250** — std-http1 reads a request body at about 250 KB/s: every 8 KB `os/recv` chunk runs six dispatches (CHUNK_READ, BODY_CHECK, WANT_MORE, CONN_ADVANCE, the timer's CANCEL/START) that rebuild the `conns` entry holding the whole buffer, so a body's cost grows with its size squared (a 5.6 MB launchpad leg took 21-23 s to read on 2026-11-03, the small requests around it 0.1 s). Repro: `orb -v launchpad --port <p>`, POST a ~5 MB body to `/api/orbitals/Launchpad/events`, count `Http1 CHUNK_READ` lines. almadar-std net (std-http1) [mechanical] — rung: (3) the verifiers (no golden or benchmark reads a large body). Root cause: one-off.
 
 
-Next code: `G-STD-344`
+Next code: `G-STD-346`
+
+- **G-STD-345** [mechanical] — A tuple-typed entity field cannot be declared: `pt : [number, number] = [1, 2]` on an entity is refused by `std-orb-lint-entity-field-type` with `ORB_E_INVALID_FIELD_TYPE … Invalid field type: 'tuple'`, while the type checker accepts the type and checks its default (`ORB_ENTITY_FIELD_DEFAULT_SHAPE_MISMATCH` reports a wrong length or element). The atom's `fieldTypes` knob is empty by default and filled from the language data it hears, so the list it receives lacks `tuple`; not yet traced to whether the list (core language data) or the atom is the owner. Found 2026-11-10 by the A3 rule-queue fact check (fixture: an entity with one `[number, number]` field, otherwise valid). Reproduce: `orb-dev validate` on that fixture. Owner: std `cli/atoms/std-orb-lint-entity-field-type.lolo` or the core field-type list it reads. Prevention rung: (1) the `.lolo` type system and the lint must read one field-type list. Root cause: one-off.
+
+- **G-STD-344** [mechanical] — `store/atoms/std-global-search.lolo` shows each module's answer as plain text: SEARCH_RESULTS carries `resultsJson`, a comma-joined string of titles, and the trait splits it and renders each as a Typography line. A hit has no id, type or link, so the user can't open what they found. Slack and Asana search open the record. Fix: a typed hit list `[{ id, title, href, kind }]` on SEARCH_RESULTS, rendered as clickable rows. Consumers (Project Friday's five responders) then pass the row id and route. Repro: compose GlobalSearch with a responder and search. Prevention rung: (1) the `.lolo` type system (a serialized string where a typed list belongs). Root cause: one-off.
 
 
 

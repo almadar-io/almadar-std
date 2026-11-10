@@ -215,7 +215,7 @@ orbital AgentCoordinatorOrbital {
     }
   }
 
-  trait CoordContext = Context.traits.AgentContextCompactor {
+  trait CoordContext = Context.traits.AgentContextCompactor [server] {
     config {
       keepMessages: @config.keepMessages
     }
@@ -455,6 +455,8 @@ orbital AgentCoordinatorOrbital {
         (persist update AgentTaskStep { id: (str/concat @entity.taskId ":" @entity.index), status: "done", result: ?reply, error: "" } {
           emit: { failure: StepStoreFailed, success: StepStored }
         })
+      CONTEXT_NOTICE -> working
+        (log (str/concat "task " @entity.taskId ": " (default ?message "context could not be summarized")) "warn")
       StepReplyFailed -> failing
         (set @entity.failIndex @entity.index)
         (set @entity.failError ?error)
@@ -586,8 +588,13 @@ orbital AgentCoordinatorOrbital {
       CoordLlm.LLM_EXTRACT_RESULT -> PlanExtracted
       CoordLlm.LLM_GENERATE_RESULT -> AnswerGenerated
       CoordLlm.LLM_FAILED -> LlmFailed
+      CoordContext.CONTEXT_NOTICE -> CONTEXT_NOTICE
       CoordLoop.ASSISTANT_REPLIED -> StepReplied
       CoordLoop.ASSISTANT_REPLY_FAILED -> StepReplyFailed
+      CONTEXT_NOTICE {
+        message : string
+        variant : "warning"
+      }
       PlanExtracted {
         json : string!
       }
@@ -664,5 +671,5 @@ orbital AgentCoordinatorOrbital {
     }
   }
 
-  page "/agent-coordinator" as AgentCoordinatorPage -> AgentCoordinator, CoordContext, CoordLoop, CoordLlm, CoordChatRequest, CoordChatRequestDelay, CoordChatRequestDeadline, CoordChatHttp, CoordChatHttpFrame
+  page boot as AgentCoordinatorPage -> AgentCoordinator, CoordContext, CoordLoop, CoordLlm, CoordChatRequest, CoordChatRequestDelay, CoordChatRequestDeadline, CoordChatHttp, CoordChatHttpFrame
 }

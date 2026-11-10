@@ -1,0 +1,214 @@
+app agent-identity-live [
+  version: "1.0.0",
+  stdio: [in, out],
+  description: "Live two-session run of std-agent-identity on the real host (orb run): the program session asks, the agent's own session acts. Drive asks the agent identity to sign in, has it fire Who.WHO and read Ticket in its session, then asks Who in the asking session, and prints each answer as one line. The asking session must stay anonymous while the agent's session answers as support-agent."
+]
+uses Identity from "std/behaviors/std-agent-identity"
+type LiveField = { name : string!, type : string! }
+type LiveOutcome = { ok : boolean!, error : string }
+
+orbital AgentIdentityLive {
+  entity Person [runtime, identity] {
+    id : string!
+    name : string
+    email : email
+    role : string = "support"
+  }
+
+  entity Ticket [persistent: tickets] {
+    @read (= @user.role "support")
+    id : string!
+    subject : string = ""
+  }
+
+  entity WhoRow [runtime] {
+    id : string!
+    seen : string @description "The id of the last @user asked about." = ""
+  }
+
+  entity DriveRow [runtime] {
+    id : string!
+    step : number @description "How many answers were printed." = 0
+  }
+
+  trait Agent = Identity.traits.AgentIdentity {
+    config {
+      subject: "support-agent"
+      signingKey: "AGENT_IDENTITY_KEY"
+      publicKeyX: "6mjXtv7fC3GHiTjVHXH4cp4Ky4wsbfiz156KS5CUnuA"
+      publicKeyY: "KidEyXLJ_OeHAUqWSo6gyE1xT-qk3oI_6FoiSk3QSPo"
+      ownOrbital: "AgentIdentityLive"
+      ownTrait: "Agent"
+    }
+    listens {
+      Drive.AGENT_IDENTITY_REQUESTED -> AGENT_IDENTITY_REQUESTED
+      Drive.AGENT_ACT -> AGENT_ACT
+      Drive.AGENT_LOOK -> AGENT_LOOK
+    }
+  }
+
+  trait Who -> WhoRow {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      WHO -> idle
+        (set @entity.seen @user.id)
+        (emit WHOAMI { id: @user.id, role: (default @user.role "") })
+    }
+
+    emits {
+      WHOAMI -> external {
+        id : string!
+        role : string
+      }
+        @description "The id and role of the session's @user."
+        @tier "primary"
+    }
+
+    listens {
+      WHO -> input {
+        ask : string?
+      }
+        @description "Ask who the session is."
+      Drive.ASK_WHO -> WHO
+    }
+  }
+
+  trait Drive -> DriveRow {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      START -> idle
+        (set @entity.step 1)
+        (os/stdout-write (bytes/from-string "start\n") { emit: { failure: DRIVE_FAILED } })
+        (emit AGENT_IDENTITY_REQUESTED {})
+      Ready -> idle
+        (os/stdout-write (bytes/from-string (str/concat "agent signed in: " (json/stringify @payload) "\n")) { emit: { failure: DRIVE_FAILED } })
+        (emit AGENT_ACT { callId: "c1", address: "AgentIdentityLive.Who.WHO", arguments: {}, contract: [], contracted: false })
+      Refused -> idle
+        (os/stdout-write (bytes/from-string (str/concat "agent refused: " (json/stringify @payload) "\n")) { emit: { failure: DRIVE_FAILED } })
+      Acted -> idle
+        (os/stdout-write (bytes/from-string (str/concat "who in the agent session: " @payload.content "\n")) { emit: { failure: DRIVE_FAILED } })
+        (emit ASK_WHO {})
+      ActFailed -> idle
+        (os/stdout-write (bytes/from-string (str/concat "act failed: " (json/stringify @payload) "\n")) { emit: { failure: DRIVE_FAILED } })
+      Asked -> idle when (= @entity.step 0)
+      Asked -> idle when (> @entity.step 0)
+        (os/stdout-write (bytes/from-string (str/concat "who in the asking session: " (json/stringify @payload) "\n")) { emit: { failure: DRIVE_FAILED } })
+        (emit AGENT_LOOK { callId: "c2", entity: "Ticket" })
+      Looked -> idle
+        (os/stdout-write (bytes/from-string (str/concat "ticket read as the agent: " @payload.content "\n")) { emit: { failure: DRIVE_FAILED } })
+      LookFailed -> idle
+        (os/stdout-write (bytes/from-string (str/concat "look failed: " (json/stringify @payload) "\n")) { emit: { failure: DRIVE_FAILED } })
+      DRIVE_FAILED -> idle
+    }
+
+    emits {
+      AGENT_IDENTITY_REQUESTED -> external {
+      }
+        @tier "internal"
+      AGENT_ACT -> external {
+        callId : string!
+        address : string!
+        arguments : Map string string
+        contract : [LiveField]
+        contracted : boolean!
+      }
+        @tier "internal"
+      AGENT_LOOK -> external {
+        callId : string!
+        entity : string!
+      }
+        @tier "internal"
+      ASK_WHO -> external {
+      }
+        @tier "internal"
+      DRIVE_FAILED {
+        error : string
+      }
+        @tier "internal"
+    }
+
+    listens {
+      START -> input {
+        ask : string?
+      }
+        @description "Begin the run in this session."
+      Agent.AGENT_IDENTITY_READY -> Ready
+      Agent.AGENT_IDENTITY_REFUSED -> Refused
+      Agent.AGENT_ACTED -> Acted
+      Agent.AGENT_ACT_FAILED -> ActFailed
+      Agent.AGENT_LOOKED -> Looked
+      Agent.AGENT_LOOK_FAILED -> LookFailed
+      Who.WHOAMI -> Asked
+      Ready {
+        subject : string!
+        role : string!
+      }
+      Refused {
+        reason : string!
+      }
+      Acted {
+        callId : string!
+        ok : boolean!
+        error : string
+        content : string!
+      }
+      ActFailed {
+        callId : string!
+        error : string!
+      }
+      Asked {
+        id : string!
+        role : string
+      }
+      Looked {
+        callId : string!
+        entity : string!
+        count : number!
+        content : string!
+      }
+      LookFailed {
+        callId : string!
+        error : string!
+        unknown : boolean
+      }
+    }
+  }
+
+  entity KickRow [runtime] {
+    id : string!
+    kicked : boolean @description "Whether the run was started." = false
+  }
+
+  trait Kick -> KickRow {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.kicked true)
+        (program/dispatch "AgentIdentityLive.Drive.START" {} { orbital: "AgentIdentityLive", targetTrait: "Drive", event: "START", clientId: "tab-a", input: true } { key: "kick", emit: { success: KICKED, failure: KICK_FAILED } })
+      KICKED -> idle
+        (os/stdout-write (bytes/from-string (str/concat "kicked: " (json/stringify @payload.result) "\n")) { emit: { failure: KICK_FAILED } })
+      KICK_FAILED -> idle
+        (os/stdout-write (bytes/from-string (str/concat "kick failed: " (default @payload.error "") "\n")) { emit: { failure: KICK_FAILED } })
+    }
+
+    emits {
+      KICKED {
+        result : LiveOutcome!
+        key : string
+      }
+        @tier "internal"
+      KICK_FAILED {
+        error : string
+      }
+        @tier "internal"
+    }
+  }
+
+  page stdio as AgentIdentityLivePage -> Agent, Who, Drive
+  page boot as AgentIdentityLiveBoot -> Kick
+}

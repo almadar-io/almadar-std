@@ -2960,6 +2960,603 @@
           }
         }
       ]
+    },
+    {
+      "id": "two-persistent-entities-on-one-collection-with-different-enum-values-are-reported",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "PmTask",
+                    "collection": "tasks",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "priority",
+                        "type": "string",
+                        "values": [
+                          "low",
+                          "medium",
+                          "high",
+                          "critical"
+                        ]
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "B",
+                  "entity": {
+                    "name": "TmTask",
+                    "collection": "tasks",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "priority",
+                        "type": "string",
+                        "values": [
+                          "low",
+                          "medium",
+                          "high",
+                          "urgent"
+                        ]
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintCrossDuplicateEntity"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "cross-duplicate-entity",
+                  "findings": [
+                    {
+                      "code": "ORB_X_COLLECTION_ENUM_MISMATCH",
+                      "path": "orbitals",
+                      "message": "entities 'PmTask' and 'TmTask' share collection 'tasks' but declare field 'priority' with different enum values: critical versus urgent",
+                      "suggestion": "Give both declarations the same value set, or keep one owner entity for the collection",
+                      "severity": "error",
+                      "validValues": [
+                        "critical",
+                        "high",
+                        "low",
+                        "medium",
+                        "urgent"
+                      ],
+                      "entity": "TmTask",
+                      "field": "priority"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintCrossDuplicateEntity"
+        }
+      ]
+    },
+    {
+      "id": "an-enum-that-is-a-subset-of-the-other-is-reported",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "PmTask",
+                    "collection": "tasks",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "priority",
+                        "type": "string",
+                        "values": [
+                          "low",
+                          "high"
+                        ]
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "B",
+                  "entity": {
+                    "name": "TmTask",
+                    "collection": "tasks",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "priority",
+                        "type": "string",
+                        "values": [
+                          "low",
+                          "medium",
+                          "high"
+                        ]
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintCrossDuplicateEntity"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "cross-duplicate-entity",
+                  "findings": [
+                    {
+                      "code": "ORB_X_COLLECTION_ENUM_MISMATCH",
+                      "path": "orbitals",
+                      "message": "entities 'PmTask' and 'TmTask' share collection 'tasks' but declare field 'priority' with different enum values: (none) versus medium",
+                      "suggestion": "Give both declarations the same value set, or keep one owner entity for the collection",
+                      "severity": "error",
+                      "validValues": [
+                        "high",
+                        "low",
+                        "medium"
+                      ],
+                      "entity": "TmTask",
+                      "field": "priority"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintCrossDuplicateEntity"
+        }
+      ]
+    },
+    {
+      "id": "control-the-same-enum-values-in-a-different-order-are-clean",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "PmTask",
+                    "collection": "tasks",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "priority",
+                        "type": "string",
+                        "values": [
+                          "low",
+                          "medium",
+                          "high"
+                        ]
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "B",
+                  "entity": {
+                    "name": "TmTask",
+                    "collection": "tasks",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "priority",
+                        "type": "string",
+                        "values": [
+                          "high",
+                          "low",
+                          "medium"
+                        ]
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintCrossDuplicateEntity"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "cross-duplicate-entity",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintCrossDuplicateEntity"
+        }
+      ]
+    },
+    {
+      "id": "control-different-enum-values-in-different-collections-are-clean",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "PmTask",
+                    "collection": "tasks",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "priority",
+                        "type": "string",
+                        "values": [
+                          "low",
+                          "medium",
+                          "high",
+                          "critical"
+                        ]
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "B",
+                  "entity": {
+                    "name": "TmTask",
+                    "collection": "jobs",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "priority",
+                        "type": "string",
+                        "values": [
+                          "low",
+                          "medium",
+                          "high",
+                          "urgent"
+                        ]
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintCrossDuplicateEntity"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "cross-duplicate-entity",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintCrossDuplicateEntity"
+        }
+      ]
+    },
+    {
+      "id": "control-an-enum-on-one-side-and-a-plain-string-on-the-other-is-clean",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "PmTask",
+                    "collection": "tasks",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "priority",
+                        "type": "string",
+                        "values": [
+                          "low",
+                          "medium",
+                          "high",
+                          "critical"
+                        ]
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "B",
+                  "entity": {
+                    "name": "TmTask",
+                    "collection": "tasks",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "priority",
+                        "type": "string"
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintCrossDuplicateEntity"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "cross-duplicate-entity",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintCrossDuplicateEntity"
+        }
+      ]
+    },
+    {
+      "id": "control-a-runtime-entity-on-the-collection-is-not-compared",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "entity": {
+                    "name": "PmTask",
+                    "collection": "tasks",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "priority",
+                        "type": "string",
+                        "values": [
+                          "low",
+                          "medium",
+                          "high",
+                          "critical"
+                        ]
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "B",
+                  "entity": {
+                    "name": "TmTask",
+                    "collection": "tasks",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "priority",
+                        "type": "string",
+                        "values": [
+                          "low",
+                          "medium",
+                          "high",
+                          "urgent"
+                        ]
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintCrossDuplicateEntity"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "cross-duplicate-entity",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintCrossDuplicateEntity"
+        }
+      ]
     }
   ]
 }

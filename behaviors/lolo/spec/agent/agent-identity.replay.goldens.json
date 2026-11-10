@@ -1,0 +1,858 @@
+{
+ "atom": "spec/agent/agent-identity.lolo",
+ "trait": "Agent",
+ "note": "std-agent-identity over a real [identity] entity: only a token this program signed for its declared subject binds a session as the agent identity row; the read input serves that identity alone; the asking half signs, presents and relays through program/dispatch and never changes the asking session.",
+ "cases": [
+  {
+   "id": "a-token-this-program-signed-binds-the-session-as-the-agent-identity-row",
+   "now": 1700000010000,
+   "steps": [
+    {
+     "trait": "Who",
+     "event": "WHO",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "WHOAMI",
+        "payload": {
+         "id": "anonymous",
+         "role": "anonymous"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "Agent",
+     "event": "AGENT_CREDENTIAL_PRESENTED",
+     "payload": {
+      "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJzdGQtYWdlbnQtaWRlbnRpdHkiLCJhdWQiOiJzdGQtYWdlbnQtaWRlbnRpdHkiLCJzdWIiOiJzdXBwb3J0LWFnZW50IiwiaWF0IjoxNzAwMDAwMDAwLCJleHAiOjE3MDAwMDAwNjB9.pTFT9ewBfBeWbS2pRvLBC1vofpqyyjT_-UZUFOdVG0Cr-KQNXxLG0OgkW_S1pzpRPlWtsyvJPgPZ5odgORPX3A"
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "AGENT_CREDENTIAL_BOUND",
+        "payload": {
+         "subject": "support-agent",
+         "role": "support"
+        }
+       }
+      ],
+      "neverEmits": [
+       "AGENT_CREDENTIAL_REFUSED"
+      ]
+     }
+    },
+    {
+     "trait": "Who",
+     "event": "WHO",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "WHOAMI",
+        "payload": {
+         "id": "support-agent",
+         "role": "support"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "attack-a-token-signed-by-another-key-is-refused-and-the-session-stays-anonymous",
+   "now": 1700000010000,
+   "steps": [
+    {
+     "trait": "Agent",
+     "event": "AGENT_CREDENTIAL_PRESENTED",
+     "payload": {
+      "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJzdGQtYWdlbnQtaWRlbnRpdHkiLCJhdWQiOiJzdGQtYWdlbnQtaWRlbnRpdHkiLCJzdWIiOiJzdXBwb3J0LWFnZW50IiwiaWF0IjoxNzAwMDAwMDAwLCJleHAiOjE3MDAwMDAwNjB9.b_YkXsLvZvfFDrx2ErGqjRwtGMpSIARQneP6sE2AahUjtjGvclTWCmCAlV0-tAn04uxVELmQqblRflQp_s1c0g"
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "AGENT_CREDENTIAL_REFUSED",
+        "payload": {
+         "reason": "token-signature"
+        }
+       }
+      ],
+      "neverEmits": [
+       "AGENT_CREDENTIAL_BOUND",
+       "AGENT_SIGNED_IN"
+      ]
+     }
+    },
+    {
+     "trait": "Who",
+     "event": "WHO",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "WHOAMI",
+        "payload": {
+         "id": "anonymous",
+         "role": "anonymous"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "attack-a-token-for-another-subject-is-refused-though-this-program-signed-it",
+   "now": 1700000010000,
+   "steps": [
+    {
+     "trait": "Agent",
+     "event": "AGENT_CREDENTIAL_PRESENTED",
+     "payload": {
+      "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJzdGQtYWdlbnQtaWRlbnRpdHkiLCJhdWQiOiJzdGQtYWdlbnQtaWRlbnRpdHkiLCJzdWIiOiJzb21lb25lLWVsc2UiLCJpYXQiOjE3MDAwMDAwMDAsImV4cCI6MTcwMDAwMDA2MH0.G3nuxA-f90xQ9T0GyQXgAe1Vf940iqNr33zDdMHYGgpTxZyCy7s_jTOjd2n2SNBchOgq4kQ6aYw0emkozxiNpw"
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "AGENT_CREDENTIAL_REFUSED",
+        "payload": {
+         "reason": "subject"
+        }
+       }
+      ],
+      "neverEmits": [
+       "AGENT_CREDENTIAL_BOUND",
+       "AGENT_SIGNED_IN"
+      ]
+     }
+    },
+    {
+     "trait": "Who",
+     "event": "WHO",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "WHOAMI",
+        "payload": {
+         "id": "anonymous",
+         "role": "anonymous"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "attack-an-expired-token-is-refused",
+   "now": 1700000010000,
+   "steps": [
+    {
+     "trait": "Agent",
+     "event": "AGENT_CREDENTIAL_PRESENTED",
+     "payload": {
+      "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJzdGQtYWdlbnQtaWRlbnRpdHkiLCJhdWQiOiJzdGQtYWdlbnQtaWRlbnRpdHkiLCJzdWIiOiJzdXBwb3J0LWFnZW50IiwiaWF0IjoxNjAwMDAwMDAwLCJleHAiOjE2MDAwMDAwNjB9.a2UBmpgA1TYD4P8noUozP-D1C0pdmrrzLveQDGpGV3Ycp27LCKIZVdIFYSiJ3I-ePSppfwNEtC0gWJw6tYnSpg"
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "AGENT_CREDENTIAL_REFUSED",
+        "payload": {
+         "reason": "token-expired"
+        }
+       }
+      ],
+      "neverEmits": [
+       "AGENT_CREDENTIAL_BOUND",
+       "AGENT_SIGNED_IN"
+      ]
+     }
+    },
+    {
+     "trait": "Who",
+     "event": "WHO",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "WHOAMI",
+        "payload": {
+         "id": "anonymous",
+         "role": "anonymous"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "attack-no-token-is-refused",
+   "now": 1700000010000,
+   "steps": [
+    {
+     "trait": "Agent",
+     "event": "AGENT_CREDENTIAL_PRESENTED",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "AGENT_CREDENTIAL_REFUSED",
+        "payload": {
+         "reason": "token-malformed"
+        }
+       }
+      ],
+      "neverEmits": [
+       "AGENT_CREDENTIAL_BOUND",
+       "AGENT_SIGNED_IN"
+      ]
+     }
+    },
+    {
+     "trait": "Who",
+     "event": "WHO",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "WHOAMI",
+        "payload": {
+         "id": "anonymous",
+         "role": "anonymous"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "attack-a-signed-in-person-who-is-not-the-agent-cannot-use-the-agent-read",
+   "steps": [
+    {
+     "trait": "Agent",
+     "event": "AGENT_READ",
+     "payload": {
+      "entity": "Ticket"
+     },
+     "expect": {
+      "fired": true,
+      "effects": [],
+      "emits": [
+       {
+        "event": "AGENT_READ_REFUSED",
+        "payload": {
+         "unknown": false
+        }
+       }
+      ],
+      "neverEmits": [
+       "AGENT_ROWS_READ"
+      ]
+     },
+     "identity": {
+      "id": "u1",
+      "role": "support"
+     }
+    }
+   ]
+  },
+  {
+   "id": "attack-an-anonymous-session-cannot-use-the-agent-read",
+   "steps": [
+    {
+     "trait": "Agent",
+     "event": "AGENT_READ",
+     "payload": {
+      "entity": "Ticket"
+     },
+     "expect": {
+      "fired": true,
+      "effects": [],
+      "emits": [
+       {
+        "event": "AGENT_READ_REFUSED",
+        "payload": {
+         "unknown": false
+        }
+       }
+      ],
+      "neverEmits": [
+       "AGENT_ROWS_READ"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-the-agent-identity-reads-through-the-entity-read-policy",
+   "steps": [
+    {
+     "trait": "Agent",
+     "event": "AGENT_READ",
+     "payload": {
+      "entity": "Ticket"
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "AGENT_ROWS_READ",
+        "payload": {
+         "entity": "Ticket",
+         "count": 0
+        }
+       }
+      ],
+      "neverEmits": [
+       "AGENT_READ_REFUSED"
+      ]
+     },
+     "identity": {
+      "id": "support-agent",
+      "role": "support"
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-agent-read-of-a-name-that-is-no-readable-entity-answers-unknown",
+   "steps": [
+    {
+     "trait": "Agent",
+     "event": "AGENT_READ",
+     "payload": {
+      "entity": "Nope"
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "AGENT_READ_REFUSED",
+        "payload": {
+         "unknown": true
+        }
+       }
+      ],
+      "neverEmits": [
+       "AGENT_ROWS_READ"
+      ]
+     },
+     "identity": {
+      "id": "support-agent",
+      "role": "support"
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-request-with-no-signing-key-held-is-refused-and-nothing-is-dispatched",
+   "now": 1700000010000,
+   "steps": [
+    {
+     "trait": "Agent",
+     "event": "AGENT_IDENTITY_REQUESTED",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "effects": [],
+      "emits": [
+       {
+        "event": "AGENT_IDENTITY_REFUSED",
+        "payload": {
+         "reason": "signing-key"
+        }
+       }
+      ],
+      "neverEmits": [
+       "AGENT_IDENTITY_READY"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-request-presents-a-signed-token-to-the-agent-session-and-answers-its-role",
+   "now": 1700000010000,
+   "credentials": {
+    "AGENT_IDENTITY_KEY": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgAAAAAAAAAAAAAAAA\nAAAAAAAAAAAAAAAAAAAAAAAAAAmhRANCAATqaNe2/t8LcYeJONUdcfhyngrLjCxt\n+LPXnopLkJSe4ConRMlyyfznhwFKlkqOoMhNcU/qpN6CP+haIkpN0Ej6\n-----END PRIVATE KEY-----\n"
+   },
+   "steps": [
+    {
+     "trait": "Agent",
+     "event": "AGENT_IDENTITY_REQUESTED",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "effects": [
+       {
+        "type": "set"
+       }
+      ]
+     }
+    },
+    {
+     "trait": "Agent",
+     "event": "AGENT_CREDENTIAL_ANSWERED",
+     "payload": {
+      "result": {
+       "success": true,
+       "emittedEvents": [
+        {
+         "event": "AGENT_CREDENTIAL_BOUND",
+         "payload": {
+          "subject": "support-agent",
+          "role": "support"
+         }
+        }
+       ]
+      },
+      "key": "agent-identity"
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "AGENT_IDENTITY_READY",
+        "payload": {
+         "subject": "support-agent",
+         "role": "support"
+        }
+       }
+      ],
+      "neverEmits": [
+       "AGENT_IDENTITY_REFUSED"
+      ]
+     }
+    },
+    {
+     "trait": "Who",
+     "event": "WHO",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "WHOAMI",
+        "payload": {
+         "id": "anonymous",
+         "role": "anonymous"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-refusal-in-the-agent-session-is-answered-with-its-reason",
+   "now": 1700000010000,
+   "credentials": {
+    "AGENT_IDENTITY_KEY": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgAAAAAAAAAAAAAAAA\nAAAAAAAAAAAAAAAAAAAAAAAAAAmhRANCAATqaNe2/t8LcYeJONUdcfhyngrLjCxt\n+LPXnopLkJSe4ConRMlyyfznhwFKlkqOoMhNcU/qpN6CP+haIkpN0Ej6\n-----END PRIVATE KEY-----\n"
+   },
+   "steps": [
+    {
+     "trait": "Agent",
+     "event": "AGENT_IDENTITY_REQUESTED",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "effects": [
+       {
+        "type": "set"
+       }
+      ]
+     }
+    },
+    {
+     "trait": "Agent",
+     "event": "AGENT_CREDENTIAL_ANSWERED",
+     "payload": {
+      "result": {
+       "success": true,
+       "emittedEvents": [
+        {
+         "event": "AGENT_CREDENTIAL_REFUSED",
+         "payload": {
+          "reason": "identity-no-identity"
+         }
+        }
+       ]
+      },
+      "key": "agent-identity"
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "AGENT_IDENTITY_REFUSED",
+        "payload": {
+         "reason": "identity-no-identity"
+        }
+       }
+      ],
+      "neverEmits": [
+       "AGENT_IDENTITY_READY"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-act-is-dispatched-in-the-agent-session-and-its-outcome-answered",
+   "credentials": {
+    "AGENT_IDENTITY_KEY": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgAAAAAAAAAAAAAAAA\nAAAAAAAAAAAAAAAAAAAAAAAAAAmhRANCAATqaNe2/t8LcYeJONUdcfhyngrLjCxt\n+LPXnopLkJSe4ConRMlyyfznhwFKlkqOoMhNcU/qpN6CP+haIkpN0Ej6\n-----END PRIVATE KEY-----\n"
+   },
+   "steps": [
+    {
+     "trait": "Agent",
+     "event": "AGENT_ACT",
+     "payload": {
+      "callId": "c1",
+      "address": "AgentIdentityFixture.Who.WHO",
+      "arguments": {},
+      "contracted": false
+     },
+     "expect": {
+      "fired": true,
+      "effects": [
+       {
+        "type": "let"
+       }
+      ]
+     }
+    },
+    {
+     "trait": "Agent",
+     "event": "AGENT_ACT_ANSWERED",
+     "payload": {
+      "result": {
+       "ok": true,
+       "emitted": [
+        {
+         "event": "WHOAMI",
+         "payload": {
+          "id": "support-agent",
+          "role": "support"
+         }
+        }
+       ]
+      },
+      "key": "agent-act:c1"
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "AGENT_ACTED",
+        "payload": {
+         "callId": "c1",
+         "ok": true
+        }
+       }
+      ],
+      "neverEmits": [
+       "AGENT_ACT_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-act-with-no-signing-key-held-fails-and-nothing-is-dispatched",
+   "steps": [
+    {
+     "trait": "Agent",
+     "event": "AGENT_ACT",
+     "payload": {
+      "callId": "c1",
+      "address": "AgentIdentityFixture.Who.WHO",
+      "arguments": {},
+      "contracted": false
+     },
+     "expect": {
+      "fired": true,
+      "effects": [],
+      "emits": [
+       {
+        "event": "AGENT_ACT_FAILED",
+        "payload": {
+         "callId": "c1"
+        }
+       }
+      ],
+      "neverEmits": [
+       "AGENT_ACTED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-look-reads-in-the-agent-session-and-answers-the-rows",
+   "credentials": {
+    "AGENT_IDENTITY_KEY": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgAAAAAAAAAAAAAAAA\nAAAAAAAAAAAAAAAAAAAAAAAAAAmhRANCAATqaNe2/t8LcYeJONUdcfhyngrLjCxt\n+LPXnopLkJSe4ConRMlyyfznhwFKlkqOoMhNcU/qpN6CP+haIkpN0Ej6\n-----END PRIVATE KEY-----\n"
+   },
+   "steps": [
+    {
+     "trait": "Agent",
+     "event": "AGENT_LOOK",
+     "payload": {
+      "callId": "c2",
+      "entity": "Ticket"
+     },
+     "expect": {
+      "fired": true,
+      "effects": [
+       {
+        "type": "let"
+       }
+      ]
+     }
+    },
+    {
+     "trait": "Agent",
+     "event": "AGENT_LOOK_ANSWERED",
+     "payload": {
+      "result": {
+       "success": true,
+       "emittedEvents": [
+        {
+         "event": "AGENT_ROWS_READ",
+         "payload": {
+          "entity": "Ticket",
+          "count": 1,
+          "content": "{\"entity\":\"Ticket\",\"count\":1,\"rows\":[{\"id\":\"t1\"}]}"
+         }
+        }
+       ]
+      },
+      "key": "agent-look:c2"
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "AGENT_LOOKED",
+        "payload": {
+         "callId": "c2",
+         "entity": "Ticket",
+         "count": 1,
+         "content": "{\"entity\":\"Ticket\",\"count\":1,\"rows\":[{\"id\":\"t1\"}]}"
+        }
+       }
+      ],
+      "neverEmits": [
+       "AGENT_LOOK_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-look-refused-in-the-agent-session-fails-with-its-reason",
+   "credentials": {
+    "AGENT_IDENTITY_KEY": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgAAAAAAAAAAAAAAAA\nAAAAAAAAAAAAAAAAAAAAAAAAAAmhRANCAATqaNe2/t8LcYeJONUdcfhyngrLjCxt\n+LPXnopLkJSe4ConRMlyyfznhwFKlkqOoMhNcU/qpN6CP+haIkpN0Ej6\n-----END PRIVATE KEY-----\n"
+   },
+   "steps": [
+    {
+     "trait": "Agent",
+     "event": "AGENT_LOOK",
+     "payload": {
+      "callId": "c2",
+      "entity": "Nope"
+     },
+     "expect": {
+      "fired": true,
+      "effects": [
+       {
+        "type": "let"
+       }
+      ]
+     }
+    },
+    {
+     "trait": "Agent",
+     "event": "AGENT_LOOK_ANSWERED",
+     "payload": {
+      "result": {
+       "success": true,
+       "emittedEvents": [
+        {
+         "event": "AGENT_READ_REFUSED",
+         "payload": {
+          "error": "x",
+          "unknown": true
+         }
+        }
+       ]
+      },
+      "key": "agent-look:c2"
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "AGENT_LOOK_FAILED",
+        "payload": {
+         "callId": "c2",
+         "unknown": true
+        }
+       }
+      ],
+      "neverEmits": [
+       "AGENT_LOOKED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "attack-a-session-that-asked-never-signs-in-as-the-agent-even-with-a-good-token",
+   "note": "Found by the live run 2026-11-10: on a boot page the presented token arrives in the asking session.",
+   "now": 1700000010000,
+   "credentials": {
+    "AGENT_IDENTITY_KEY": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgAAAAAAAAAAAAAAAA\nAAAAAAAAAAAAAAAAAAAAAAAAAAmhRANCAATqaNe2/t8LcYeJONUdcfhyngrLjCxt\n+LPXnopLkJSe4ConRMlyyfznhwFKlkqOoMhNcU/qpN6CP+haIkpN0Ej6\n-----END PRIVATE KEY-----\n"
+   },
+   "steps": [
+    {
+     "trait": "Agent",
+     "event": "AGENT_IDENTITY_REQUESTED",
+     "payload": {},
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "Agent",
+     "event": "AGENT_CREDENTIAL_PRESENTED",
+     "payload": {
+      "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJzdGQtYWdlbnQtaWRlbnRpdHkiLCJhdWQiOiJzdGQtYWdlbnQtaWRlbnRpdHkiLCJzdWIiOiJzdXBwb3J0LWFnZW50IiwiaWF0IjoxNzAwMDAwMDAwLCJleHAiOjE3MDAwMDAwNjB9.pTFT9ewBfBeWbS2pRvLBC1vofpqyyjT_-UZUFOdVG0Cr-KQNXxLG0OgkW_S1pzpRPlWtsyvJPgPZ5odgORPX3A"
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "AGENT_CREDENTIAL_REFUSED",
+        "payload": {
+         "reason": "same-session"
+        }
+       }
+      ],
+      "neverEmits": [
+       "AGENT_CREDENTIAL_BOUND",
+       "AGENT_SIGNED_IN"
+      ]
+     }
+    },
+    {
+     "trait": "Who",
+     "event": "WHO",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "WHOAMI",
+        "payload": {
+         "id": "anonymous",
+         "role": "anonymous"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "Agent",
+     "event": "AGENT_READ",
+     "payload": {
+      "entity": "Ticket"
+     },
+     "identity": {
+      "id": "support-agent",
+      "role": "support"
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "AGENT_READ_REFUSED",
+        "payload": {
+         "unknown": false
+        }
+       }
+      ],
+      "neverEmits": [
+       "AGENT_ROWS_READ"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "attack-a-sign-in-that-landed-in-the-asking-session-is-undone-and-refused",
+   "note": "Found by the live run 2026-11-10 (boot placement): the asking session reads the agent as its own @user, so it signs out and answers same-session.",
+   "steps": [
+    {
+     "trait": "Agent",
+     "event": "AGENT_CREDENTIAL_ANSWERED",
+     "payload": {
+      "result": {
+       "success": true,
+       "emittedEvents": [
+        {
+         "event": "AGENT_CREDENTIAL_BOUND",
+         "payload": {
+          "subject": "support-agent",
+          "role": "support"
+         }
+        }
+       ]
+      },
+      "key": "agent-identity"
+     },
+     "identity": {
+      "id": "support-agent",
+      "role": "support"
+     },
+     "expect": {
+      "fired": true,
+      "effects": [
+       {
+        "type": "identity/sign-out"
+       }
+      ],
+      "emits": [
+       {
+        "event": "AGENT_IDENTITY_REFUSED",
+        "payload": {
+         "reason": "same-session"
+        }
+       }
+      ],
+      "neverEmits": [
+       "AGENT_IDENTITY_READY"
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

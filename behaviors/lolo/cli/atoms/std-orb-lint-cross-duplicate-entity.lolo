@@ -9,15 +9,15 @@ app std-orb-lint-cross-duplicate-entity [
 uses Spec from "almadar-std/lint-cross-duplicate-entity"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error", validValues : [string], entity : string, field : string }
-type CrossDupField = { name : string!, type : string! }
-type CrossDupEntity = { name : string, collection : string, fields : [CrossDupField] }
+type CrossDupField = { name : string!, type : string!, values : [string] }
+type CrossDupEntity = { name : string, collection : string, persistence : string, fields : [CrossDupField] }
 type CrossDupOrbital = { name : string, entity : CrossDupEntity, auxiliaryEntities : [CrossDupEntity] }
-type CrossDupDecl = { orb : string!, owned : boolean!, name : string!, collection : string!, fields : [CrossDupField]! }
+type CrossDupDecl = { orb : string!, owned : boolean!, name : string!, collection : string!, persistence : string!, fields : [CrossDupField]! }
 type CrossDupFit = { c : CrossDupDecl!, w : CrossDupDecl! }
 type CrossDupProgram = { orbitals : [CrossDupOrbital] }
 
 type LintCodeDecl = { code : string!, category : string!, description : string! }
-type LintCrossDuplicateEntityCodes = { xDuplicateEntity : LintCodeDecl }
+type LintCrossDuplicateEntityCodes = { xDuplicateEntity : LintCodeDecl, xCollectionEnumMismatch : LintCodeDecl }
 
 orbital OrbLintCrossDuplicateEntityOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
@@ -40,8 +40,8 @@ orbital OrbLintCrossDuplicateEntityOrbital {
             (let ((dupNames (array/filter @owners (fn x (and (!= @x null) (> (array/len (array/filter @owners (fn y (= @y @x)))) 1))))))
              (let ((ents (array/flatten (array/map @orbitals (fn o
                     (array/concat
-                      (if (validate/object (object/get @o "entity" {})) [{ orb: (default @o.name ""), owned: true, name: (default @o.entity.name ""), collection: (default @o.entity.collection ""), fields: (default @o.entity.fields []) }] [])
-                      (array/map (default @o.auxiliaryEntities []) (fn a { orb: (default @o.name ""), owned: false, name: (default @a.name ""), collection: (default @a.collection ""), fields: (default @a.fields []) }))))))))
+                      (if (validate/object (object/get @o "entity" {})) [{ orb: (default @o.name ""), owned: true, name: (default @o.entity.name ""), collection: (default @o.entity.collection ""), persistence: (default @o.entity.persistence ""), fields: (default @o.entity.fields []) }] [])
+                      (array/map (default @o.auxiliaryEntities []) (fn a { orb: (default @o.name ""), owned: false, name: (default @a.name ""), collection: (default @a.collection ""), persistence: (default @a.persistence ""), fields: (default @a.fields []) }))))))))
               (array/concat
                 (let ((ownedFindings (let ((orbitals (object/get @payload.program "orbitals" [])))
           (let ((owners (array/map @orbitals (fn o (if (validate/object (object/get @o "entity" {})) (object/get (object/get @o "entity" {}) "name" "") null)))))
@@ -64,7 +64,26 @@ orbital OrbLintCrossDuplicateEntityOrbital {
                       (fn x @x.orb)))))
                       (if (or (array/includes @dupNames @nm) (= (array/len @involved) 0))
                         []
-                        [{ code: @config.codes.xDuplicateEntity.code, path: "orbitals", message: (str/concat "Entity '" @nm "' is defined in multiple orbitals with different shapes: [" (str/join (array/map @involved (fn o (str/concat "\"" @o "\""))) ", ") "]"), suggestion: "Each entity name must be unique across all orbitals", severity: "error" }]))))))))))))
+                        [{ code: @config.codes.xDuplicateEntity.code, path: "orbitals", message: (str/concat "Entity '" @nm "' is defined in multiple orbitals with different shapes: [" (str/join (array/map @involved (fn o (str/concat "\"" @o "\""))) ", ") "]"), suggestion: "Each entity name must be unique across all orbitals", severity: "error" }]))))))
+                (let ((hits (array/flatten (array/map (array/range 0 (array/len @ents)) (fn j
+                    (let ((b (array/nth @ents @j)))
+                      (if (or (!= @b.persistence "persistent") (= @b.collection ""))
+                        []
+                        (array/flatten (array/map (array/filter @b.fields (fn f (> (array/len (default @f.values [])) 0))) (fn f
+                          (let ((prior (array/filter (array/slice @ents 0 @j) (fn a (and (= @a.persistence "persistent") (= @a.collection @b.collection)
+                              (array/some @a.fields (fn g (and (= @g.name @f.name) (> (array/len (default @g.values [])) 0)
+                                (or (> (array/len (array/filter (default @g.values []) (fn v (not (array/includes (default @f.values []) @v))))) 0) (> (array/len (array/filter (default @f.values []) (fn v (not (array/includes (default @g.values []) @v))))) 0))))))))))
+                            (if (= (array/len @prior) 0)
+                              []
+                              (let ((a (array/first @prior)))
+                                (let ((ga (array/find @a.fields (fn g (= @g.name @f.name)))))
+                                  [{ an: @a.name, bn: @b.name, c: @b.collection, f: @f.name, av: (default @ga.values []), bv: (default @f.values []) }]))))))))))))))
+                  (array/flatten (array/map (array/range 0 (array/len @hits)) (fn k
+                    (let ((h (array/nth @hits @k)))
+                      (if (array/some (array/slice @hits 0 @k) (fn e (and (= @e.c @h.c) (= @e.f @h.f))))
+                        []
+                        (let ((onlyA (array/sort (array/filter (default @h.av []) (fn v (not (array/includes (default @h.bv []) @v)))))) (onlyB (array/sort (array/filter (default @h.bv []) (fn v (not (array/includes (default @h.av []) @v)))))))
+                          [{ code: @config.codes.xCollectionEnumMismatch.code, path: "orbitals", message: (str/concat "entities '" @h.an "' and '" @h.bn "' share collection '" @h.c "' but declare field '" @h.f "' with different enum values: " (if (= (array/len @onlyA) 0) "(none)" (str/join @onlyA ", ")) " versus " (if (= (array/len @onlyB) 0) "(none)" (str/join @onlyB ", "))), suggestion: "Give both declarations the same value set, or keep one owner entity for the collection", severity: "error", validValues: (array/sort (array/unique (array/concat (default @h.av []) (default @h.bv [])))), entity: @h.bn, field: @h.f }])))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "cross-duplicate-entity", scope: @entity.scope, findings: @entity.findings })
@@ -85,7 +104,7 @@ orbital OrbLintCrossDuplicateEntityOrbital {
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
     config {
-      codes : LintCrossDuplicateEntityCodes = { xDuplicateEntity: { code: "ORB_X_DUPLICATE_ENTITY", category: "cross", description: "The same entity name is defined in more than one orbital" } }
+      codes : LintCrossDuplicateEntityCodes = { xDuplicateEntity: { code: "ORB_X_DUPLICATE_ENTITY", category: "cross", description: "The same entity name is defined in more than one orbital" }, xCollectionEnumMismatch: { code: "ORB_X_COLLECTION_ENUM_MISMATCH", category: "cross", description: "Two persistent entities on one collection declare the same field as an enum with different value sets, so one entity's rows fail the other's type" } }
         @label "Emitted codes"
         @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
     }

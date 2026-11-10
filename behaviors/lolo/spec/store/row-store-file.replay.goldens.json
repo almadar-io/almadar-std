@@ -1,583 +1,1289 @@
 {
- "atom": "store/atoms/std-row-store-file.lolo",
- "trait": "RowStoreDriver",
- "cases": [
-  {
-   "id": "control-malformed-json-is-refused",
-   "steps": [
+  "atom": "store/atoms/std-row-store-file.lolo",
+  "trait": "RowStoreDriver",
+  "cases": [
     {
-     "event": "ROW_READ",
-     "payload": {
-      "key": "k",
-      "entityType": "Invoice",
-      "id": "a"
-     }
-    },
-    {
-     "event": "FILE_READ",
-     "from": "loading",
-     "payload": {
-      "data": "ew=="
-     },
-     "expect": {
-      "state": "loading",
-      "emits": [
-       {
-        "event": "FILE_UNREADABLE",
-        "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "FILE_UNREADABLE",
-     "from": "loading",
-     "payload": {},
-     "expect": {
-      "state": "ready",
-      "emits": [
-       {
-        "event": "STORE_FAILED",
-        "payload": {
-         "key": "k",
-         "message": "the rows file must be JSON of the shape { rows, changes }; a bare array (the retired format) or malformed JSON is not accepted, recreate the file"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "good-file-control-a-row-and-a-change-both-fit",
-   "steps": [
-    {
-     "event": "ROW_READ",
-     "payload": {
-      "key": "k",
-      "entityType": "Invoice",
-      "id": "a"
-     }
-    },
-    {
-     "event": "FILE_READ",
-     "from": "loading",
-     "payload": {
-      "data": "eyJyb3dzIjogW3siaWQiOiAiYSIsICJuIjogMX1dLCAiY2hhbmdlcyI6IFt7Im9wIjogImNyZWF0ZSIsICJlbnRpdHlUeXBlIjogIkludm9pY2UiLCAiaWQiOiAiYSIsICJyb3ciOiB7ImlkIjogImEiLCAibiI6IDF9LCAiYXQiOiAiMTk3MC0wMS0wMVQwMDowMDowMFoifV19"
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "ROW_FOUND",
-        "payload": {
-         "key": "k",
-         "row": {
-          "id": "a",
-          "n": 1
-         }
-        }
-       }
-      ]
-     }
-    }
-   ],
-   "note": "control: both lists fit RowFile, the row is read"
-  },
-  {
-   "id": "bad-row-a-non-object-row-is-refused",
-   "steps": [
-    {
-     "event": "ROW_READ",
-     "payload": {
-      "key": "k",
-      "entityType": "Invoice",
-      "id": "a"
-     }
-    },
-    {
-     "event": "FILE_READ",
-     "from": "loading",
-     "payload": {
-      "data": "eyJyb3dzIjogWzFdLCAiY2hhbmdlcyI6IFtdfQ=="
-     },
-     "expect": {
-      "state": "loading",
-      "emits": [
-       {
-        "event": "FILE_UNREADABLE",
-        "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "FILE_UNREADABLE",
-     "from": "loading",
-     "payload": {},
-     "expect": {
-      "state": "ready",
-      "emits": [
-       {
-        "event": "STORE_FAILED",
-        "payload": {
-         "key": "k",
-         "message": "the rows file must be JSON of the shape { rows, changes }; a bare array (the retired format) or malformed JSON is not accepted, recreate the file"
-        }
-       }
-      ]
-     }
-    }
-   ],
-   "note": "json/parse RowFile answers null for a row that is not a Row"
-  },
-  {
-   "id": "bad-change-an-op-outside-create-update-delete-is-refused",
-   "steps": [
-    {
-     "event": "ROW_READ",
-     "payload": {
-      "key": "k",
-      "entityType": "Invoice",
-      "id": "a"
-     }
-    },
-    {
-     "event": "FILE_READ",
-     "from": "loading",
-     "payload": {
-      "data": "eyJyb3dzIjogW10sICJjaGFuZ2VzIjogW3sib3AiOiAiZXhwbG9kZSIsICJlbnRpdHlUeXBlIjogIkludm9pY2UiLCAiaWQiOiAiYSIsICJhdCI6ICJ0In1dfQ=="
-     },
-     "expect": {
-      "state": "loading",
-      "emits": [
-       {
-        "event": "FILE_UNREADABLE",
-        "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "FILE_UNREADABLE",
-     "from": "loading",
-     "payload": {},
-     "expect": {
-      "state": "ready",
-      "emits": [
-       {
-        "event": "STORE_FAILED",
-        "payload": {
-         "key": "k",
-         "message": "the rows file must be JSON of the shape { rows, changes }; a bare array (the retired format) or malformed JSON is not accepted, recreate the file"
-        }
-       }
-      ]
-     }
-    }
-   ],
-   "note": "json/parse RowFile answers null for a change record whose op is not create|update|delete"
-  },
-  {
-   "id": "bad-file-a-missing-changes-list-is-refused",
-   "steps": [
-    {
-     "event": "ROW_READ",
-     "payload": {
-      "key": "k",
-      "entityType": "Invoice",
-      "id": "a"
-     }
-    },
-    {
-     "event": "FILE_READ",
-     "from": "loading",
-     "payload": {
-      "data": "eyJyb3dzIjogW3siaWQiOiAiYSIsICJuIjogMX1dfQ=="
-     },
-     "expect": {
-      "state": "loading",
-      "emits": [
-       {
-        "event": "FILE_UNREADABLE",
-        "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "FILE_UNREADABLE",
-     "from": "loading",
-     "payload": {},
-     "expect": {
-      "state": "ready",
-      "emits": [
-       {
-        "event": "STORE_FAILED",
-        "payload": {
-         "key": "k",
-         "message": "the rows file must be JSON of the shape { rows, changes }; a bare array (the retired format) or malformed JSON is not accepted, recreate the file"
-        }
-       }
-      ]
-     }
-    }
-   ],
-   "note": "changes is required in RowFile"
-  },
-  {
-   "id": "control-the-retired-bare-array-format-is-refused",
-   "steps": [
-    {
-     "event": "ROW_READ",
-     "payload": {
-      "key": "k",
-      "entityType": "Invoice",
-      "id": "a"
-     }
-    },
-    {
-     "event": "FILE_READ",
-     "from": "loading",
-     "payload": {
-      "data": "W10="
-     },
-     "expect": {
-      "state": "loading",
-      "emits": [
-       {
-        "event": "FILE_UNREADABLE",
-        "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "FILE_UNREADABLE",
-     "from": "loading",
-     "payload": {},
-     "expect": {
-      "state": "ready",
-      "emits": [
-       {
-        "event": "STORE_FAILED",
-        "payload": {
-         "key": "k",
-         "message": "the rows file must be JSON of the shape { rows, changes }; a bare array (the retired format) or malformed JSON is not accepted, recreate the file"
-        }
-       }
-      ]
-     }
-    }
-   ],
-   "note": "the retired bare-array format: refused by the null parse; passed under the old hand-written guard, red on the installed orb until the reinstall"
-  },
-  {
-   "id": "bytes-that-are-not-text-are-refused",
-   "steps": [
-    {
-     "event": "ROW_READ",
-     "payload": {
-      "key": "k",
-      "entityType": "Invoice",
-      "id": "a"
-     }
-    },
-    {
-     "event": "FILE_READ",
-     "from": "loading",
-     "payload": {
-      "data": "//4="
-     },
-     "expect": {
-      "state": "loading",
-      "emits": [
-       {
-        "event": "FILE_UNREADABLE",
-        "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "event": "FILE_UNREADABLE",
-     "from": "loading",
-     "payload": {},
-     "expect": {
-      "state": "ready",
-      "emits": [
-       {
-        "event": "STORE_FAILED",
-        "payload": {
-         "key": "k",
-         "message": "the rows file must be JSON of the shape { rows, changes }; a bare array (the retired format) or malformed JSON is not accepted, recreate the file"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "good-read-with-a-collection-addresses-that-file-not-the-entity-type",
-   "steps": [
-    {
-     "event": "ROW_READ",
-     "payload": {
-      "key": "k",
-      "entityType": "bad type!",
-      "id": "a",
-      "collection": "billing"
-     },
-     "from": "ready",
-     "expect": {
-      "emits": [
-       {
-        "event": "STORE_FAILED",
-        "payload": {
-         "key": "k",
-         "message": "os/read-file: no os host configured"
-        }
-       }
-      ]
-     }
-    }
-   ],
-   "note": "EXEC-STORE-4: the file is named by the collection. Replay answers the file read with 'no os host configured' (effect args are not evaluated), so the proof is that the ask passes the file-name guard on the collection, where the same entity type without a collection is refused (control)"
-  },
-  {
-   "id": "control-read-without-a-collection-keys-by-entity-type",
-   "steps": [
-    {
-     "event": "ROW_READ",
-     "payload": {
-      "key": "k",
-      "entityType": "bad type!",
-      "id": "a"
-     },
-     "from": "ready",
-     "expect": {
-      "state": "ready",
-      "emits": [
-       {
-        "event": "STORE_FAILED",
-        "payload": {
-         "key": "k",
-         "message": "the entity type or declared collection must be letters, digits, _ and -"
-        }
-       }
-      ]
-     }
-    }
-   ],
-   "note": "control: with no collection the entity type is the file name, and it is refused"
-  },
-  {
-   "id": "bad-read-with-an-unsafe-collection-is-refused",
-   "steps": [
-    {
-     "event": "ROW_READ",
-     "payload": {
-      "key": "k",
-      "entityType": "Invoice",
-      "id": "a",
-      "collection": "../x"
-     },
-     "from": "ready",
-     "expect": {
-      "state": "ready",
-      "emits": [
-       {
-        "event": "STORE_FAILED",
-        "payload": {
-         "key": "k",
-         "message": "the entity type or declared collection must be letters, digits, _ and -"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "good-list-with-a-collection-addresses-that-file-not-the-entity-type",
-   "steps": [
-    {
-     "event": "ROW_LIST",
-     "payload": {
-      "key": "k",
-      "entityType": "bad type!",
-      "collection": "billing"
-     },
-     "from": "ready",
-     "expect": {
-      "emits": [
-       {
-        "event": "STORE_FAILED",
-        "payload": {
-         "key": "k",
-         "message": "os/read-file: no os host configured"
-        }
-       }
-      ]
-     }
-    }
-   ],
-   "note": "EXEC-STORE-4: the file is named by the collection. Replay answers the file read with 'no os host configured' (effect args are not evaluated), so the proof is that the ask passes the file-name guard on the collection, where the same entity type without a collection is refused (control)"
-  },
-  {
-   "id": "control-list-without-a-collection-keys-by-entity-type",
-   "steps": [
-    {
-     "event": "ROW_LIST",
-     "payload": {
-      "key": "k",
-      "entityType": "bad type!"
-     },
-     "from": "ready",
-     "expect": {
-      "state": "ready",
-      "emits": [
-       {
-        "event": "STORE_FAILED",
-        "payload": {
-         "key": "k",
-         "message": "the entity type or declared collection must be letters, digits, _ and -"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "good-query-with-a-collection-addresses-that-file-not-the-entity-type",
-   "steps": [
-    {
-     "event": "ROWS_QUERY",
-     "payload": {
-      "key": "k",
-      "entityType": "bad type!",
-      "query": {},
-      "collection": "billing",
-      "project": "rows"
-     },
-     "from": "ready",
-     "expect": {
-      "emits": [
-       {
-        "event": "STORE_FAILED",
-        "payload": {
-         "key": "k",
-         "message": "os/read-file: no os host configured"
-        }
-       }
-      ]
-     }
-    }
-   ],
-   "note": "EXEC-STORE-4: the file is named by the collection. Replay answers the file read with 'no os host configured' (effect args are not evaluated), so the proof is that the ask passes the file-name guard on the collection, where the same entity type without a collection is refused (control)"
-  },
-  {
-   "id": "control-query-without-a-collection-keys-by-entity-type",
-   "steps": [
-    {
-     "event": "ROWS_QUERY",
-     "payload": {
-      "key": "k",
-      "entityType": "bad type!",
-      "query": {},
-      "project": "rows"
-     },
-     "from": "ready",
-     "expect": {
-      "state": "ready",
-      "emits": [
-       {
-        "event": "STORE_FAILED",
-        "payload": {
-         "key": "k",
-         "message": "the entity type or declared collection must be letters, digits, _ and -"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "good-write-collections-address-the-batch-file-not-the-entity-type",
-   "steps": [
-    {
-     "event": "ROWS_WRITE",
-     "payload": {
-      "key": "k",
-      "batch": {
-       "ops": [
+      "id": "control-malformed-json-is-refused",
+      "steps": [
         {
-         "kind": "create",
-         "entityType": "bad type!",
-         "data": {
-          "id": "a"
-         }
-        }
-       ],
-       "onFailure": "stop"
-      },
-      "collections": {
-       "bad type!": "billing"
-      }
-     },
-     "from": "ready",
-     "expect": {
-      "emits": [
-       {
-        "event": "STORE_FAILED",
-        "payload": {
-         "key": "k",
-         "message": "os/read-file: no os host configured"
-        }
-       }
-      ]
-     }
-    }
-   ],
-   "note": "EXEC-STORE-4: as the read case; the batch file is named by collections[entityType]"
-  },
-  {
-   "id": "control-write-without-collections-keys-by-entity-type",
-   "steps": [
-    {
-     "event": "ROWS_WRITE",
-     "payload": {
-      "key": "k",
-      "batch": {
-       "ops": [
+          "event": "ROW_READ",
+          "payload": {
+            "key": "k",
+            "entityType": "Invoice",
+            "id": "a"
+          }
+        },
         {
-         "kind": "create",
-         "entityType": "bad type!",
-         "data": {
-          "id": "a"
-         }
+          "event": "FILE_READ",
+          "from": "loading",
+          "payload": {
+            "data": "ew=="
+          },
+          "expect": {
+            "state": "loading",
+            "emits": [
+              {
+                "event": "FILE_UNREADABLE",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "FILE_UNREADABLE",
+          "from": "loading",
+          "payload": {},
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "STORE_FAILED",
+                "payload": {
+                  "key": "k",
+                  "message": "the rows file must be JSON of the shape { rows, changes }; a bare array (the retired format) or malformed JSON is not accepted, recreate the file"
+                }
+              }
+            ]
+          }
         }
-       ],
-       "onFailure": "stop"
-      }
-     },
-     "from": "ready",
-     "expect": {
-      "state": "ready",
-      "emits": [
-       {
-        "event": "STORE_FAILED",
-        "payload": {
-         "key": "k",
-         "message": "the entity type or declared collection must be letters, digits, _ and -"
-        }
-       }
       ]
-     }
+    },
+    {
+      "id": "good-file-control-a-row-and-a-change-both-fit",
+      "steps": [
+        {
+          "event": "ROW_READ",
+          "payload": {
+            "key": "k",
+            "entityType": "Invoice",
+            "id": "a"
+          }
+        },
+        {
+          "event": "FILE_READ",
+          "from": "loading",
+          "payload": {
+            "data": "eyJyb3dzIjogW3siaWQiOiAiYSIsICJuIjogMX1dLCAiY2hhbmdlcyI6IFt7Im9wIjogImNyZWF0ZSIsICJlbnRpdHlUeXBlIjogIkludm9pY2UiLCAiaWQiOiAiYSIsICJyb3ciOiB7ImlkIjogImEiLCAibiI6IDF9LCAiYXQiOiAiMTk3MC0wMS0wMVQwMDowMDowMFoifV19"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "ROW_FOUND",
+                "payload": {
+                  "key": "k",
+                  "row": {
+                    "id": "a",
+                    "n": 1
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "note": "control: both lists fit RowFile, the row is read"
+    },
+    {
+      "id": "bad-row-a-non-object-row-is-refused",
+      "steps": [
+        {
+          "event": "ROW_READ",
+          "payload": {
+            "key": "k",
+            "entityType": "Invoice",
+            "id": "a"
+          }
+        },
+        {
+          "event": "FILE_READ",
+          "from": "loading",
+          "payload": {
+            "data": "eyJyb3dzIjogWzFdLCAiY2hhbmdlcyI6IFtdfQ=="
+          },
+          "expect": {
+            "state": "loading",
+            "emits": [
+              {
+                "event": "FILE_UNREADABLE",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "FILE_UNREADABLE",
+          "from": "loading",
+          "payload": {},
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "STORE_FAILED",
+                "payload": {
+                  "key": "k",
+                  "message": "the rows file must be JSON of the shape { rows, changes }; a bare array (the retired format) or malformed JSON is not accepted, recreate the file"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "note": "json/parse RowFile answers null for a row that is not a Row"
+    },
+    {
+      "id": "bad-change-an-op-outside-create-update-delete-is-refused",
+      "steps": [
+        {
+          "event": "ROW_READ",
+          "payload": {
+            "key": "k",
+            "entityType": "Invoice",
+            "id": "a"
+          }
+        },
+        {
+          "event": "FILE_READ",
+          "from": "loading",
+          "payload": {
+            "data": "eyJyb3dzIjogW10sICJjaGFuZ2VzIjogW3sib3AiOiAiZXhwbG9kZSIsICJlbnRpdHlUeXBlIjogIkludm9pY2UiLCAiaWQiOiAiYSIsICJhdCI6ICJ0In1dfQ=="
+          },
+          "expect": {
+            "state": "loading",
+            "emits": [
+              {
+                "event": "FILE_UNREADABLE",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "FILE_UNREADABLE",
+          "from": "loading",
+          "payload": {},
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "STORE_FAILED",
+                "payload": {
+                  "key": "k",
+                  "message": "the rows file must be JSON of the shape { rows, changes }; a bare array (the retired format) or malformed JSON is not accepted, recreate the file"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "note": "json/parse RowFile answers null for a change record whose op is not create|update|delete"
+    },
+    {
+      "id": "bad-file-a-missing-changes-list-is-refused",
+      "steps": [
+        {
+          "event": "ROW_READ",
+          "payload": {
+            "key": "k",
+            "entityType": "Invoice",
+            "id": "a"
+          }
+        },
+        {
+          "event": "FILE_READ",
+          "from": "loading",
+          "payload": {
+            "data": "eyJyb3dzIjogW3siaWQiOiAiYSIsICJuIjogMX1dfQ=="
+          },
+          "expect": {
+            "state": "loading",
+            "emits": [
+              {
+                "event": "FILE_UNREADABLE",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "FILE_UNREADABLE",
+          "from": "loading",
+          "payload": {},
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "STORE_FAILED",
+                "payload": {
+                  "key": "k",
+                  "message": "the rows file must be JSON of the shape { rows, changes }; a bare array (the retired format) or malformed JSON is not accepted, recreate the file"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "note": "changes is required in RowFile"
+    },
+    {
+      "id": "control-the-retired-bare-array-format-is-refused",
+      "steps": [
+        {
+          "event": "ROW_READ",
+          "payload": {
+            "key": "k",
+            "entityType": "Invoice",
+            "id": "a"
+          }
+        },
+        {
+          "event": "FILE_READ",
+          "from": "loading",
+          "payload": {
+            "data": "W10="
+          },
+          "expect": {
+            "state": "loading",
+            "emits": [
+              {
+                "event": "FILE_UNREADABLE",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "FILE_UNREADABLE",
+          "from": "loading",
+          "payload": {},
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "STORE_FAILED",
+                "payload": {
+                  "key": "k",
+                  "message": "the rows file must be JSON of the shape { rows, changes }; a bare array (the retired format) or malformed JSON is not accepted, recreate the file"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "note": "the retired bare-array format: refused by the null parse; passed under the old hand-written guard, red on the installed orb until the reinstall"
+    },
+    {
+      "id": "bytes-that-are-not-text-are-refused",
+      "steps": [
+        {
+          "event": "ROW_READ",
+          "payload": {
+            "key": "k",
+            "entityType": "Invoice",
+            "id": "a"
+          }
+        },
+        {
+          "event": "FILE_READ",
+          "from": "loading",
+          "payload": {
+            "data": "//4="
+          },
+          "expect": {
+            "state": "loading",
+            "emits": [
+              {
+                "event": "FILE_UNREADABLE",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "FILE_UNREADABLE",
+          "from": "loading",
+          "payload": {},
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "STORE_FAILED",
+                "payload": {
+                  "key": "k",
+                  "message": "the rows file must be JSON of the shape { rows, changes }; a bare array (the retired format) or malformed JSON is not accepted, recreate the file"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "good-read-with-a-collection-addresses-that-file-not-the-entity-type",
+      "steps": [
+        {
+          "event": "ROW_READ",
+          "payload": {
+            "key": "k",
+            "entityType": "bad type!",
+            "id": "a",
+            "collection": "billing"
+          },
+          "from": "ready",
+          "expect": {
+            "emits": [
+              {
+                "event": "STORE_FAILED",
+                "payload": {
+                  "key": "k",
+                  "message": "os/read-file: no os host configured"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "note": "EXEC-STORE-4: the file is named by the collection. Replay answers the file read with 'no os host configured' (effect args are not evaluated), so the proof is that the ask passes the file-name guard on the collection, where the same entity type without a collection is refused (control)"
+    },
+    {
+      "id": "control-read-without-a-collection-keys-by-entity-type",
+      "steps": [
+        {
+          "event": "ROW_READ",
+          "payload": {
+            "key": "k",
+            "entityType": "bad type!",
+            "id": "a"
+          },
+          "from": "ready",
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "STORE_FAILED",
+                "payload": {
+                  "key": "k",
+                  "message": "the entity type or declared collection must be letters, digits, _ and -"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "note": "control: with no collection the entity type is the file name, and it is refused"
+    },
+    {
+      "id": "bad-read-with-an-unsafe-collection-is-refused",
+      "steps": [
+        {
+          "event": "ROW_READ",
+          "payload": {
+            "key": "k",
+            "entityType": "Invoice",
+            "id": "a",
+            "collection": "../x"
+          },
+          "from": "ready",
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "STORE_FAILED",
+                "payload": {
+                  "key": "k",
+                  "message": "the entity type or declared collection must be letters, digits, _ and -"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "good-list-with-a-collection-addresses-that-file-not-the-entity-type",
+      "steps": [
+        {
+          "event": "ROW_LIST",
+          "payload": {
+            "key": "k",
+            "entityType": "bad type!",
+            "collection": "billing"
+          },
+          "from": "ready",
+          "expect": {
+            "emits": [
+              {
+                "event": "STORE_FAILED",
+                "payload": {
+                  "key": "k",
+                  "message": "os/read-file: no os host configured"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "note": "EXEC-STORE-4: the file is named by the collection. Replay answers the file read with 'no os host configured' (effect args are not evaluated), so the proof is that the ask passes the file-name guard on the collection, where the same entity type without a collection is refused (control)"
+    },
+    {
+      "id": "control-list-without-a-collection-keys-by-entity-type",
+      "steps": [
+        {
+          "event": "ROW_LIST",
+          "payload": {
+            "key": "k",
+            "entityType": "bad type!"
+          },
+          "from": "ready",
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "STORE_FAILED",
+                "payload": {
+                  "key": "k",
+                  "message": "the entity type or declared collection must be letters, digits, _ and -"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "good-query-with-a-collection-addresses-that-file-not-the-entity-type",
+      "steps": [
+        {
+          "event": "ROWS_QUERY",
+          "payload": {
+            "key": "k",
+            "entityType": "bad type!",
+            "query": {},
+            "collection": "billing",
+            "project": "rows"
+          },
+          "from": "ready",
+          "expect": {
+            "emits": [
+              {
+                "event": "STORE_FAILED",
+                "payload": {
+                  "key": "k",
+                  "message": "os/read-file: no os host configured"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "note": "EXEC-STORE-4: the file is named by the collection. Replay answers the file read with 'no os host configured' (effect args are not evaluated), so the proof is that the ask passes the file-name guard on the collection, where the same entity type without a collection is refused (control)"
+    },
+    {
+      "id": "control-query-without-a-collection-keys-by-entity-type",
+      "steps": [
+        {
+          "event": "ROWS_QUERY",
+          "payload": {
+            "key": "k",
+            "entityType": "bad type!",
+            "query": {},
+            "project": "rows"
+          },
+          "from": "ready",
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "STORE_FAILED",
+                "payload": {
+                  "key": "k",
+                  "message": "the entity type or declared collection must be letters, digits, _ and -"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "good-write-collections-address-the-batch-file-not-the-entity-type",
+      "steps": [
+        {
+          "event": "ROWS_WRITE",
+          "payload": {
+            "key": "k",
+            "batch": {
+              "ops": [
+                {
+                  "kind": "create",
+                  "entityType": "bad type!",
+                  "data": {
+                    "id": "a"
+                  }
+                }
+              ],
+              "onFailure": "stop"
+            },
+            "collections": {
+              "bad type!": "billing"
+            }
+          },
+          "from": "ready",
+          "expect": {
+            "emits": [
+              {
+                "event": "STORE_FAILED",
+                "payload": {
+                  "key": "k",
+                  "message": "os/read-file: no os host configured"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "note": "EXEC-STORE-4: as the read case; the batch file is named by collections[entityType]"
+    },
+    {
+      "id": "control-write-without-collections-keys-by-entity-type",
+      "steps": [
+        {
+          "event": "ROWS_WRITE",
+          "payload": {
+            "key": "k",
+            "batch": {
+              "ops": [
+                {
+                  "kind": "create",
+                  "entityType": "bad type!",
+                  "data": {
+                    "id": "a"
+                  }
+                }
+              ],
+              "onFailure": "stop"
+            }
+          },
+          "from": "ready",
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "STORE_FAILED",
+                "payload": {
+                  "key": "k",
+                  "message": "the entity type or declared collection must be letters, digits, _ and -"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "good-create-drops-a-null-field-from-the-row-and-the-outcome",
+      "note": "a null field counts as absent on create",
+      "steps": [
+        {
+          "event": "ROWS_WRITE",
+          "payload": {
+            "key": "k",
+            "batch": {
+              "ops": [
+                {
+                  "kind": "create",
+                  "entityType": "Job",
+                  "data": {
+                    "id": "a",
+                    "n": 1,
+                    "pageCount": null
+                  }
+                }
+              ],
+              "onFailure": "stop"
+            }
+          }
+        },
+        {
+          "event": "FILE_READ",
+          "from": "loading",
+          "payload": {
+            "data": "eyJyb3dzIjogW10sICJjaGFuZ2VzIjogW119"
+          },
+          "expect": {
+            "state": "loading",
+            "emits": [
+              {
+                "event": "ROWS_LOADED",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "ROWS_LOADED",
+          "from": "loading",
+          "payload": {},
+          "expect": {
+            "entity": {
+              "run": {
+                "rows": [
+                  {
+                    "id": "a",
+                    "n": 1
+                  }
+                ],
+                "outcomes": [
+                  {
+                    "kind": "created",
+                    "row": {
+                      "id": "a",
+                      "n": 1
+                    }
+                  }
+                ],
+                "halted": false
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-create-without-nulls-is-unchanged",
+      "note": "no null: row stored as given",
+      "steps": [
+        {
+          "event": "ROWS_WRITE",
+          "payload": {
+            "key": "k",
+            "batch": {
+              "ops": [
+                {
+                  "kind": "create",
+                  "entityType": "Job",
+                  "data": {
+                    "id": "a",
+                    "n": 1
+                  }
+                }
+              ],
+              "onFailure": "stop"
+            }
+          }
+        },
+        {
+          "event": "FILE_READ",
+          "from": "loading",
+          "payload": {
+            "data": "eyJyb3dzIjogW10sICJjaGFuZ2VzIjogW119"
+          },
+          "expect": {
+            "state": "loading",
+            "emits": [
+              {
+                "event": "ROWS_LOADED",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "ROWS_LOADED",
+          "from": "loading",
+          "payload": {},
+          "expect": {
+            "entity": {
+              "run": {
+                "rows": [
+                  {
+                    "id": "a",
+                    "n": 1
+                  }
+                ],
+                "outcomes": [
+                  {
+                    "kind": "created",
+                    "row": {
+                      "id": "a",
+                      "n": 1
+                    }
+                  }
+                ],
+                "halted": false
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "good-upsert-drops-a-null-field-on-a-new-and-on-an-existing-row",
+      "note": "upsert normalizes both branches",
+      "steps": [
+        {
+          "event": "ROWS_WRITE",
+          "payload": {
+            "key": "k",
+            "batch": {
+              "ops": [
+                {
+                  "kind": "upsert",
+                  "entityType": "Job",
+                  "data": {
+                    "id": "a",
+                    "n": 2,
+                    "gone": null
+                  }
+                },
+                {
+                  "kind": "upsert",
+                  "entityType": "Job",
+                  "data": {
+                    "id": "b",
+                    "gone": null
+                  }
+                }
+              ],
+              "onFailure": "stop"
+            }
+          }
+        },
+        {
+          "event": "FILE_READ",
+          "from": "loading",
+          "payload": {
+            "data": "eyJyb3dzIjogW3siaWQiOiAiYSIsICJuIjogMSwgInQiOiAieCJ9XSwgImNoYW5nZXMiOiBbXX0="
+          },
+          "expect": {
+            "state": "loading",
+            "emits": [
+              {
+                "event": "ROWS_LOADED",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "ROWS_LOADED",
+          "from": "loading",
+          "payload": {},
+          "expect": {
+            "entity": {
+              "run": {
+                "rows": [
+                  {
+                    "id": "a",
+                    "n": 2
+                  },
+                  {
+                    "id": "b"
+                  }
+                ],
+                "outcomes": [
+                  {
+                    "kind": "updated",
+                    "row": {
+                      "id": "a",
+                      "n": 2
+                    }
+                  },
+                  {
+                    "kind": "created",
+                    "row": {
+                      "id": "b"
+                    }
+                  }
+                ],
+                "halted": false
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "good-update-with-a-null-field-removes-that-field-and-merges-the-rest",
+      "note": "a null in update data clears the stored field",
+      "steps": [
+        {
+          "event": "ROWS_WRITE",
+          "payload": {
+            "key": "k",
+            "batch": {
+              "ops": [
+                {
+                  "kind": "update",
+                  "entityType": "Job",
+                  "id": "a",
+                  "data": {
+                    "t": null,
+                    "n": 5
+                  }
+                }
+              ],
+              "onFailure": "stop"
+            }
+          }
+        },
+        {
+          "event": "FILE_READ",
+          "from": "loading",
+          "payload": {
+            "data": "eyJyb3dzIjogW3siaWQiOiAiYSIsICJuIjogMSwgInQiOiAieCJ9XSwgImNoYW5nZXMiOiBbXX0="
+          },
+          "expect": {
+            "state": "loading",
+            "emits": [
+              {
+                "event": "ROWS_LOADED",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "ROWS_LOADED",
+          "from": "loading",
+          "payload": {},
+          "expect": {
+            "entity": {
+              "run": {
+                "rows": [
+                  {
+                    "id": "a",
+                    "n": 5
+                  }
+                ],
+                "outcomes": [
+                  {
+                    "kind": "updated",
+                    "row": {
+                      "id": "a",
+                      "n": 5
+                    }
+                  }
+                ],
+                "halted": false
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-update-without-nulls-merges-as-before",
+      "note": "no null: plain merge",
+      "steps": [
+        {
+          "event": "ROWS_WRITE",
+          "payload": {
+            "key": "k",
+            "batch": {
+              "ops": [
+                {
+                  "kind": "update",
+                  "entityType": "Job",
+                  "id": "a",
+                  "data": {
+                    "n": 5
+                  }
+                }
+              ],
+              "onFailure": "stop"
+            }
+          }
+        },
+        {
+          "event": "FILE_READ",
+          "from": "loading",
+          "payload": {
+            "data": "eyJyb3dzIjogW3siaWQiOiAiYSIsICJuIjogMSwgInQiOiAieCJ9XSwgImNoYW5nZXMiOiBbXX0="
+          },
+          "expect": {
+            "state": "loading",
+            "emits": [
+              {
+                "event": "ROWS_LOADED",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "ROWS_LOADED",
+          "from": "loading",
+          "payload": {},
+          "expect": {
+            "entity": {
+              "run": {
+                "rows": [
+                  {
+                    "id": "a",
+                    "n": 5,
+                    "t": "x"
+                  }
+                ],
+                "outcomes": [
+                  {
+                    "kind": "updated",
+                    "row": {
+                      "id": "a",
+                      "n": 5,
+                      "t": "x"
+                    }
+                  }
+                ],
+                "halted": false
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "good-a-file-written-after-a-null-create-reads-back",
+      "note": "the stored shape (no null field) is readable",
+      "steps": [
+        {
+          "event": "ROW_READ",
+          "payload": {
+            "key": "k",
+            "entityType": "Job",
+            "id": "a"
+          }
+        },
+        {
+          "event": "FILE_READ",
+          "from": "loading",
+          "payload": {
+            "data": "eyJyb3dzIjogW3siaWQiOiAiYSIsICJuIjogMX1dLCAiY2hhbmdlcyI6IFtdfQ=="
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "ROW_FOUND",
+                "payload": {
+                  "key": "k",
+                  "row": {
+                    "id": "a",
+                    "n": 1
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-file-holding-a-null-field-is-unreadable",
+      "note": "why the write boundary drops nulls",
+      "steps": [
+        {
+          "event": "ROW_READ",
+          "payload": {
+            "key": "k",
+            "entityType": "Job",
+            "id": "a"
+          }
+        },
+        {
+          "event": "FILE_READ",
+          "from": "loading",
+          "payload": {
+            "data": "eyJyb3dzIjogW3siaWQiOiAiYSIsICJwYWdlQ291bnQiOiBudWxsfV0sICJjaGFuZ2VzIjogW119"
+          },
+          "expect": {
+            "state": "loading",
+            "emits": [
+              {
+                "event": "FILE_UNREADABLE",
+                "payload": {}
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "good-create-drops-a-null-nested-in-a-map",
+      "note": "a null map entry at any depth is removed",
+      "steps": [
+        {
+          "event": "ROWS_WRITE",
+          "payload": {
+            "key": "k",
+            "batch": {
+              "ops": [
+                {
+                  "kind": "create",
+                  "entityType": "Job",
+                  "data": {
+                    "id": "a",
+                    "input": {
+                      "statement": null,
+                      "kind": "x",
+                      "deep": {
+                        "z": null,
+                        "w": 2
+                      }
+                    }
+                  }
+                }
+              ],
+              "onFailure": "stop"
+            }
+          }
+        },
+        {
+          "event": "FILE_READ",
+          "from": "loading",
+          "payload": {
+            "data": "eyJyb3dzIjogW10sICJjaGFuZ2VzIjogW119"
+          },
+          "expect": {
+            "state": "loading",
+            "emits": [
+              {
+                "event": "ROWS_LOADED",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "ROWS_LOADED",
+          "from": "loading",
+          "payload": {},
+          "expect": {
+            "entity": {
+              "run": {
+                "rows": [
+                  {
+                    "id": "a",
+                    "input": {
+                      "kind": "x",
+                      "deep": {
+                        "w": 2
+                      }
+                    }
+                  }
+                ],
+                "outcomes": [
+                  {
+                    "kind": "created",
+                    "row": {
+                      "id": "a",
+                      "input": {
+                        "kind": "x",
+                        "deep": {
+                          "w": 2
+                        }
+                      }
+                    }
+                  }
+                ],
+                "halted": false
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "good-create-removes-a-null-list-element",
+      "note": "a null list element is removed and the list shrinks",
+      "steps": [
+        {
+          "event": "ROWS_WRITE",
+          "payload": {
+            "key": "k",
+            "batch": {
+              "ops": [
+                {
+                  "kind": "create",
+                  "entityType": "Job",
+                  "data": {
+                    "id": "a",
+                    "tags": [
+                      "p",
+                      null,
+                      "q"
+                    ],
+                    "grid": [
+                      [
+                        1,
+                        null
+                      ],
+                      [
+                        null
+                      ]
+                    ]
+                  }
+                }
+              ],
+              "onFailure": "stop"
+            }
+          }
+        },
+        {
+          "event": "FILE_READ",
+          "from": "loading",
+          "payload": {
+            "data": "eyJyb3dzIjogW10sICJjaGFuZ2VzIjogW119"
+          },
+          "expect": {
+            "state": "loading",
+            "emits": [
+              {
+                "event": "ROWS_LOADED",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "ROWS_LOADED",
+          "from": "loading",
+          "payload": {},
+          "expect": {
+            "entity": {
+              "run": {
+                "rows": [
+                  {
+                    "id": "a",
+                    "tags": [
+                      "p",
+                      "q"
+                    ],
+                    "grid": [
+                      [
+                        1
+                      ],
+                      []
+                    ]
+                  }
+                ],
+                "outcomes": [
+                  {
+                    "kind": "created",
+                    "row": {
+                      "id": "a",
+                      "tags": [
+                        "p",
+                        "q"
+                      ],
+                      "grid": [
+                        [
+                          1
+                        ],
+                        []
+                      ]
+                    }
+                  }
+                ],
+                "halted": false
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-create-with-nested-values-and-no-nulls-is-unchanged",
+      "note": "nested values without nulls pass through",
+      "steps": [
+        {
+          "event": "ROWS_WRITE",
+          "payload": {
+            "key": "k",
+            "batch": {
+              "ops": [
+                {
+                  "kind": "create",
+                  "entityType": "Job",
+                  "data": {
+                    "id": "a",
+                    "input": {
+                      "kind": "x",
+                      "deep": {
+                        "w": 2
+                      }
+                    },
+                    "tags": [
+                      "p",
+                      "q"
+                    ]
+                  }
+                }
+              ],
+              "onFailure": "stop"
+            }
+          }
+        },
+        {
+          "event": "FILE_READ",
+          "from": "loading",
+          "payload": {
+            "data": "eyJyb3dzIjogW10sICJjaGFuZ2VzIjogW119"
+          },
+          "expect": {
+            "state": "loading",
+            "emits": [
+              {
+                "event": "ROWS_LOADED",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "ROWS_LOADED",
+          "from": "loading",
+          "payload": {},
+          "expect": {
+            "entity": {
+              "run": {
+                "rows": [
+                  {
+                    "id": "a",
+                    "input": {
+                      "kind": "x",
+                      "deep": {
+                        "w": 2
+                      }
+                    },
+                    "tags": [
+                      "p",
+                      "q"
+                    ]
+                  }
+                ],
+                "outcomes": [
+                  {
+                    "kind": "created",
+                    "row": {
+                      "id": "a",
+                      "input": {
+                        "kind": "x",
+                        "deep": {
+                          "w": 2
+                        }
+                      },
+                      "tags": [
+                        "p",
+                        "q"
+                      ]
+                    }
+                  }
+                ],
+                "halted": false
+              }
+            }
+          }
+        }
+      ]
     }
-   ]
-  }
- ]
+  ]
 }
