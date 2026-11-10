@@ -1,14 +1,30 @@
 app std-analytics-stats [
-  version: "1.0.0",
-  description: "std-analytics-stats — the stats of stored first-party analytics events: ANALYTICS_STATS { domain?, from?, to?, limit? } reads the AnalyticsEvent rows of a site (empty or absent: every site) between from and to (epoch milliseconds, inclusive) and answers ANALYTICS_STATS_RESULT with the pageviews, unique visitors (distinct visitorId over every event) and the top pages (path and site) and referrer hosts by count, and draws them with a Refresh button. An ask without from reads the last windowDays days (0: every event). A window holding more than maxRows events is refused through ANALYTICS_STATS_FAILED rather than counted partially. It only reads: whoever stores the events (std-analytics-collector, or another program sharing the store) writes them."
+  version: "2.0.0",
+  description: "std-analytics-stats — the stats board of stored first-party analytics events. ANALYTICS_STATS { domain?, from?, to?, limit? } asks for a site (empty or absent: every site) between from and to (epoch milliseconds, inclusive); an ask without from covers the last windowDays days up to now, or every event when windowDays is 0. The board (AnalyticsStats, run in the browser too) draws at once: a page header with Refresh, a filter bar (std-date-range presets of 7, 30 and 90 days plus a custom range, and a site select listing the sites of the last read), and skeletons matching the final layout while the first read is in flight; a later read keeps the drawn stats and spins Refresh. AnalyticsStatsRead reads on the server only: one ranged fetch of the window and the equally long period before it (ts range and order pushed down to the store), narrowed to the site, with each page keyed by path (and site, when every site is shown) and each referrer by host. It hands the rows to composed std atoms, never to the browser: std-stats draws the KPI tiles (pageviews, unique visitors, sites, countries), each with its change against the previous period, and std-graphs draws pageviews per day, the top pages, the top referrers and the visitors' countries. ANALYTICS_STATS_RESULT { pageviews, visitors } answers each read; a window holding more than maxRows events is refused through ANALYTICS_STATS_FAILED rather than counted partially. It only reads: whoever stores the events (std-analytics-collector, or another program sharing the store) writes them."
 ]
 uses Spec from "almadar-std/analytics-stats"
+uses Kpi from "std/behaviors/std-stats"
+uses Graphs from "std/behaviors/std-graphs"
+uses Range from "std/behaviors/std-date-range"
 type AnalyticsProps = Map string (string | number | boolean)
-type AnalyticsCount = { key : string!, count : number! }
+type AnalyticsSite = { value : string!, label : string! }
+type AnalyticsInstant = instant
 orbital AnalyticsStatsOrbital {
   entity AnalyticsStatsRun [runtime] {
     id : string!
-    statsLimit : number @description "The row limit of the stats query in flight." = 100
+    phase : string @description "idle before the first read, loading while a read is in flight, ready once one answered, failed when the last one did not." = "idle"
+    windowDays : number @description "The preset window, in days back to now; 0 when a custom range is shown, -1 until one is picked (config.windowDays then)." = -1
+    from : number @description "The start of the shown window, epoch milliseconds; 0 reads every event." = 0
+    to : number @description "The end of the shown window, epoch milliseconds." = 0
+    domain : string @description "The site shown; blank shows every site." = ""
+    sites : [AnalyticsSite] @description "The sites the last read saw, for the site select." = []
+    events : number @description "Events in the shown window." = 0
+    fetchedAt : instant? @description "When the last read answered."
+    error : string @description "Why the last read failed; blank when it did not." = ""
+    readFrom : number @description "The start of the read in flight, the previous period included." = 0
+    readTo : number @description "The end of the read in flight." = 0
+    readStart : number @description "The start of the shown window of the read in flight." = 0
+    readDomain : string @description "The site of the read in flight." = ""
   }
 
   entity AnalyticsEvent [persistent: analyticsEvents] {
@@ -20,7 +36,28 @@ orbital AnalyticsStatsOrbital {
     referrer : string? @description "The page's referrer as the browser reported it."
     screenWidth : number? @description "The screen width in CSS pixels."
     visitorId : string! @description "SHA-256 of the day's salt, the client IP, the user agent and the site."
+    country : string? @description "The visitor's ISO country code, when the collector resolved one."
     props : AnalyticsProps? @description "The event's properties."
+  }
+
+  entity AnalyticsKpiView [runtime] {
+    id : string!
+  }
+
+  entity AnalyticsDailyView [runtime] {
+    id : string!
+  }
+
+  entity AnalyticsPagesView [runtime] {
+    id : string!
+  }
+
+  entity AnalyticsReferrersView [runtime] {
+    id : string!
+  }
+
+  entity AnalyticsCountriesView [runtime] {
+    id : string!
   }
 
   trait AnalyticsStats -> @rebindable AnalyticsStatsRun [optimistic] {
@@ -28,66 +65,59 @@ orbital AnalyticsStatsOrbital {
 
     state ready {
       INIT -> ready when (not @config.loadOnInit)
-        (render-ui main { type: typography, variant: caption, role: status, content: "No stats asked for yet." })
+        (render-ui main @config.bodyContent)
       INIT -> ready when @config.loadOnInit
-        (render-ui main { type: typography, variant: caption, role: status, content: "Reading the stats…" })
+        (render-ui main @config.bodyContent)
         (emit ANALYTICS_STATS { })
-      ANALYTICS_STATS -> ready when (and (== @payload.from null) (> @config.windowDays 0))
-        (emit ANALYTICS_STATS { domain: @payload.domain, from: (time/diff (time/subtract @now @config.windowDays "d") @config.epoch "ms"), to: @payload.to, limit: @payload.limit })
-      ANALYTICS_STATS -> ready when (not (and (== @payload.from null) (> @config.windowDays 0)))
-        (set @entity.statsLimit (if (== @payload.limit null) 100 @payload.limit))
-        (fetch AnalyticsEvent { filter: (and (or (== @payload.domain null) (= @payload.domain "") (= (object/get @entity domain) @payload.domain)) (or (== @payload.from null) (>= (object/get @entity ts) @payload.from)) (or (== @payload.to null) (<= (object/get @entity ts) @payload.to))), limit: @config.maxRows, emit: { success: STATS_LOADED, failure: STATS_UNREADABLE } })
-      STATS_LOADED -> ready when (> @payload.totalCount (array/len @payload.data))
-        (emit STATS_UNREADABLE { error: (str/concat "AnalyticsEvent has " @payload.totalCount " events in this window, over the maxRows cap of " @config.maxRows ": narrow the window with from and to"), code: "STATS_OVER_CAP" })
-      STATS_LOADED -> ready
-        (let ((views (array/filter @payload.data (fn e (= @e.name "pageview"))))
-              (pageKeys (array/map (array/filter @payload.data (fn e (= @e.name "pageview"))) (fn e (str/concat @e.path " (" @e.domain ")"))))
-              (refKeys (array/map (array/filter (array/filter @payload.data (fn e (= @e.name "pageview"))) (fn e (and (!= @e.referrer null) (!= @e.referrer "")))) (fn e (let ((ref (default @e.referrer "")) (rest (str/replace-pattern (default @e.referrer "") "^[A-Za-z][A-Za-z0-9+.\\-]*://([^/?#@]*@)?" "")))
-                (if (validate/pattern @ref "^[A-Za-z][A-Za-z0-9+.\\-]*://")
-                  (let ((h (str/lower (if (str/startsWith @rest "[") (str/concat (str/replace-pattern @rest "\\].*$" "") "]") (str/replace-pattern @rest "[:/?#].*$" "")))))
-                    (if (= @h "") @ref @h))
-                  @ref))))))
-          (let ((pagesTop (array/take (array/sort (array/map (array/unique @pageKeys) (fn k { key: @k, count: (array/count @pageKeys (fn x (= @x @k))) })) "count" "desc") @entity.statsLimit))
-                (refsTop (array/take (array/sort (array/map (array/unique @refKeys) (fn k { key: @k, count: (array/count @refKeys (fn x (= @x @k))) })) "count" "desc") @entity.statsLimit)))
-            (let ((pageRows (array/map @pagesTop (fn r { id: @r.key, page: @r.key, views: @r.count })))
-                  (refRows (array/map @refsTop (fn r { id: @r.key, referrer: @r.key, views: @r.count }))))
-            (do
-              (emit ANALYTICS_STATS_RESULT {
-                pageviews: (array/len @views),
-                visitors: (array/len (array/unique (array/map @payload.data (fn e @e.visitorId)))),
-                pages: @pagesTop,
-                countries: (array/take [{ key: "", count: 0 }] 0),
-                referrers: @refsTop
-              })
-              (render-ui main { type: stack, direction: vertical, gap: md, children: [
-                { type: stack, direction: horizontal, justify: between, align: center, children: [{ type: typography, variant: h3, content: @config.title }, { type: button, label: "Refresh", variant: secondary, action: ANALYTICS_STATS }] },
-                { type: stack, direction: horizontal, gap: md, children: [
-                  { type: stat-display, label: "Pageviews", value: (array/len @views) },
-                  { type: stat-display, label: "Unique visitors", value: (array/len (array/unique (array/map @payload.data (fn e @e.visitorId)))) }
-                ] },
-                { type: data-grid, cols: 1, gap: sm, entity: @pageRows, fields: [{ label: Page, name: page, variant: body }, { label: Views, name: "views", variant: caption }] },
-                { type: data-grid, cols: 1, gap: sm, entity: @refRows, fields: [{ label: Referrer, name: referrer, variant: body }, { label: Views, name: "views", variant: caption }] }
-              ] })))))
-      STATS_UNREADABLE -> ready
+      ANALYTICS_STATS -> ready when (and (== @payload.from null) (> (if (< @entity.windowDays 0) @config.windowDays @entity.windowDays) 0))
+        (emit ANALYTICS_STATS { domain: @payload.domain, from: (- (time/diff @now @config.epoch "ms") (* (if (< @entity.windowDays 0) @config.windowDays @entity.windowDays) 86400000)), to: (time/diff @now @config.epoch "ms"), limit: @payload.limit })
+      ANALYTICS_STATS -> ready when (not (and (== @payload.from null) (> (if (< @entity.windowDays 0) @config.windowDays @entity.windowDays) 0)))
+        (set @entity.domain (default @payload.domain ""))
+        (set @entity.from (default @payload.from 0))
+        (set @entity.to (default @payload.to (time/diff @now @config.epoch "ms")))
+        (set @entity.phase "loading")
+        (set @entity.error "")
+        (render-ui main @config.bodyContent)
+        (emit AS_READ { from: @entity.from, to: @entity.to, readFrom: (if (> @entity.from 0) (- @entity.from (- @entity.to @entity.from)) 0), domain: @entity.domain })
+      AS_RANGE -> ready when (> (default @payload.days 0) 0)
+        (set @entity.windowDays (default @payload.days 0))
+        (emit ANALYTICS_STATS { domain: @entity.domain })
+      AS_RANGE -> ready when (= (default @payload.days 0) 0)
+        (set @entity.windowDays 0)
+        (emit ANALYTICS_STATS { domain: @entity.domain, from: (time/diff (default (as (str/concat @payload.from "T00:00:00Z") AnalyticsInstant) @now) @config.epoch "ms"), to: (+ (time/diff (default (as (str/concat @payload.to "T00:00:00Z") AnalyticsInstant) @now) @config.epoch "ms") 86399999) })
+      AS_SITE -> ready
+        (emit ANALYTICS_STATS { domain: @payload.value, from: (if (> (if (< @entity.windowDays 0) @config.windowDays @entity.windowDays) 0) null @entity.from), to: (if (> (if (< @entity.windowDays 0) @config.windowDays @entity.windowDays) 0) null @entity.to) })
+      AS_REFRESH -> ready
+        (emit ANALYTICS_STATS { domain: @entity.domain, from: (if (> (if (< @entity.windowDays 0) @config.windowDays @entity.windowDays) 0) null @entity.from), to: (if (> (if (< @entity.windowDays 0) @config.windowDays @entity.windowDays) 0) null @entity.to) })
+      ANALYTICS_STATS_PENDING -> ready when (!= @entity.phase "loading")
+        (set @entity.phase "loading")
+        (render-ui main @config.bodyContent)
+      AS_READY -> ready
+        (set @entity.phase "ready")
+        (set @entity.events @payload.events)
+        (set @entity.sites @payload.sites)
+        (set @entity.fetchedAt @now)
+        (render-ui main @config.bodyContent)
+        (emit ANALYTICS_STATS_RESULT { pageviews: @payload.pageviews, visitors: @payload.visitors })
+      AS_FAILED -> ready
+        (set @entity.phase "failed")
+        (set @entity.error @payload.error)
+        (render-ui main @config.bodyContent)
         (emit ANALYTICS_STATS_FAILED { error: @payload.error })
-        (render-ui main { type: stack, direction: vertical, gap: md, children: [{ type: typography, variant: caption, role: status, content: (str/concat "Stats unavailable: " @payload.error) }, { type: button, label: "Try again", variant: secondary, action: ANALYTICS_STATS }] })
     }
 
     emits {
       ANALYTICS_STATS_RESULT -> external {
         pageviews : number!
         visitors : number!
-        pages : [AnalyticsCount]!
-        countries : [AnalyticsCount]!
-        referrers : [AnalyticsCount]!
       }
-        @description "The stats of the asked window: pageviews, unique visitors over every event, and the top pages (path and site), countries and referrer hosts by count. Countries is always empty: the collector keeps no geography."
+        @description "The asked window's pageviews and unique visitors (distinct visitorId over every event)."
         @synonyms "analytics stats, traffic, visitors, pageviews"
         @tier "primary"
       ANALYTICS_STATS_FAILED -> external {
         error : string!
       }
-        @description "The stored events could not be read."
+        @description "The stored events could not be read, or the window holds more than maxRows events."
         @tier "primary"
       ANALYTICS_STATS -> internal {
         domain : string?
@@ -95,18 +125,16 @@ orbital AnalyticsStatsOrbital {
         to : number?
         limit : number?
       }
-        @description "Internal: the stats a page opening with loadOnInit asks for, and an ask without from re-sent over the last windowDays days."
+        @description "Internal: an ask without from re-sent over the last windowDays days, a new window or site, or Refresh."
         @tier "internal"
-      STATS_LOADED {
-        data : [AnalyticsEvent]!
-        totalCount : number!
+      AS_READ {
+        from : number!
+        to : number!
+        readFrom : number!
+        domain : string!
       }
-        @description "Internal: the stored events of the window."
-      STATS_UNREADABLE {
-        error : string!
-        code : string
-      }
-        @description "Internal: the stored events could not be read."
+        @description "Internal: read the shown window and the period before it (from 0: every event, no comparison)."
+        @tier "internal"
     }
 
     listens {
@@ -116,8 +144,37 @@ orbital AnalyticsStatsOrbital {
         to : number?
         limit : number?
       }
-        @description "Ask for the stats of a site (empty or absent: every site) between from and to (epoch milliseconds, inclusive; an absent from reads the last windowDays days, or every event when windowDays is 0; an absent to is unbounded), with at most limit rows per breakdown (default 100)."
+        @description "Ask for the stats of a site (empty or absent: every site) between from and to (epoch milliseconds, inclusive; an absent from reads the last windowDays days, or every event when windowDays is 0; an absent to is now)."
         @synonyms "analytics stats, traffic report, visitor count"
+      ANALYTICS_STATS_PENDING -> input { }
+        @description "A read is about to be asked (its composer is still preparing, such as credentials): show the loading state now."
+        @synonyms "stats loading, preparing the stats"
+      AnalyticsRange.DATE_RANGE_CHANGED -> AS_RANGE
+      AS_RANGE {
+        from : string!
+        to : string!
+        days : number
+      }
+        @description "A preset or custom window was picked in the filter bar."
+      AS_SITE {
+        value : string!
+      }
+        @description "A site was picked in the filter bar (blank: every site)."
+      AS_REFRESH { }
+        @description "Read the shown window again."
+      AnalyticsStatsRead.AS_READY -> AS_READY
+      AnalyticsStatsRead.AS_FAILED -> AS_FAILED
+      AS_READY {
+        events : number!
+        pageviews : number!
+        visitors : number!
+        sites : [AnalyticsSite]!
+      }
+        @description "Internal: the read answered."
+      AS_FAILED {
+        error : string!
+      }
+        @description "Internal: the read failed."
     }
 
     config {
@@ -125,26 +182,265 @@ orbital AnalyticsStatsOrbital {
         @label "Title"
         @description "The stats board's heading."
         @tier "presentation"
-      maxRows : number = 10000
-        @label "Events per stats read"
-        @description "Most stored events one stats read may aggregate. The pageview, visitor and top-page counts are computed over every event of the window, so a partial read would report wrong totals; a window holding more events is refused through ANALYTICS_STATS_FAILED, so narrow it with from and to."
-        @synonyms "stats read limit, event cap, aggregation cap"
-        @tier "policy"
+      icon : icon = "bar-chart-3"
+        @label "Icon"
+        @description "The icon beside the heading."
+        @tier "presentation"
+      allSitesLabel : string = "All sites"
+        @label "Every-site option"
+        @description "The site select's option that shows every site."
+        @tier "presentation"
       loadOnInit : boolean = false
         @label "Load when opened"
-        @description "Read every site's stats as soon as the page opens."
+        @description "Read the stats as soon as the page opens."
         @tier "presentation"
       windowDays : number = 0
         @label "Days of history"
-        @description "A stats ask without from reads the last this many days (Refresh and Try again included); 0 reads every stored event."
+        @description "The window an ask without from covers, in days back to now (Refresh included); 0 reads every stored event."
         @synonyms "time window, last days, period"
         @tier "presentation"
       epoch : instant = "1970-01-01T00:00:00.000Z"
         @label "Epoch"
         @description "The instant an event's ts counts milliseconds from."
         @tier "infra"
+      bodyContent : render-ui = { type: stack, direction: vertical, gap: lg, children: [{
+        type: page-header
+        title: @config.title
+        icon: @config.icon
+        subtitle: (if (== @entity.fetchedAt null) "" (str/concat (str/concat "" @entity.events) " events · Updated " (time/relative @entity.fetchedAt)))
+        actions: (if (= @entity.phase "idle") [] [{ label: "Refresh", event: AS_REFRESH, icon: "refresh-cw", variant: secondary, loading: (= @entity.phase "loading") }])
+      }, {
+        type: stack
+        direction: horizontal
+        gap: md
+        align: center
+        justify: between
+        wrap: true
+        children: [@trait.AnalyticsRange, { type: select, aria-label: "Site", options: (array/concat [{ value: "", label: @config.allSitesLabel }] @entity.sites), value: @entity.domain, action: AS_SITE }]
+      }, (if (and (= @entity.phase "failed") (!= (== @entity.fetchedAt null) false)) { type: error-state, title: "The stats could not be read", message: @entity.error, retryEvent: AS_REFRESH } (if (and (= @entity.phase "failed") (== @entity.fetchedAt null) false) null (if (and (= @entity.phase "failed") (!= @entity.fetchedAt null)) { type: alert, variant: warning, title: "The last read failed; the stats shown are older", message: @entity.error } null))), (if (= @entity.phase "idle") { type: empty-state, icon: "bar-chart-3", title: "No stats read yet", description: "Read the events of the window to see the traffic.", actionLabel: "Read the stats", actionEvent: AS_REFRESH } (if (and (= @entity.phase "loading") (== @entity.fetchedAt null)) { type: stack, direction: vertical, gap: lg, children: [{ type: skeleton, variant: stats, columns: 4 }, { type: skeleton, variant: card }, { type: simple-grid, minChildWidth: "20rem", gap: lg, children: [{ type: skeleton, variant: list, rows: 6 }, { type: skeleton, variant: list, rows: 6 }, { type: skeleton, variant: list, rows: 6 }] }] } (if (== @entity.fetchedAt null) null (if (= @entity.events 0) { type: empty-state, icon: "inbox", title: "No events in this window", description: "Pick a longer window or another site." } { type: stack, direction: vertical, gap: lg, children: [@trait.AnalyticsKpis, { type: card, children: [@trait.AnalyticsDaily] }, { type: card, children: [@trait.AnalyticsTopPages] }, { type: simple-grid, minChildWidth: "22rem", gap: lg, children: [{ type: card, children: [@trait.AnalyticsReferrers] }, { type: card, children: [@trait.AnalyticsCountries] }] }] }))))] }
+        @label "Body content tree"
+        @description "The board: header, filter bar, then the idle, first-read skeleton, failed, empty or stats body; the stats body embeds the KPI tiles and the four charts."
+        @tier "internal"
     }
   }
 
-  page "/analytics-stats" -> AnalyticsStats
+  trait AnalyticsStatsRead -> AnalyticsStatsRun [server] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      AS_READ -> ready
+        (set @entity.readFrom @payload.readFrom)
+        (set @entity.readTo @payload.to)
+        (set @entity.readStart @payload.from)
+        (set @entity.readDomain @payload.domain)
+        (fetch AnalyticsEvent { filter: (and (>= (object/get @entity ts) @payload.readFrom) (<= (object/get @entity ts) @payload.to)), orderBy: "ts", limit: @config.maxRows, emit: { success: AS_LOADED, failure: AS_UNREADABLE } })
+      AS_LOADED -> ready when (> @payload.totalCount (array/len @payload.data))
+        (emit AS_FAILED { error: (str/concat "AnalyticsEvent has " @payload.totalCount " events in this window and the one before it, over the maxRows cap of " @config.maxRows ": pick a shorter window") })
+      AS_LOADED -> ready when (<= @payload.totalCount (array/len @payload.data))
+        (let ((site (if (= @entity.readDomain "") @payload.data (array/filter @payload.data (fn e (= @e.domain @entity.readDomain))))))
+          (let ((keyed (array/map @site (fn e (let ((paged (object/set @e "path" (if (= @entity.readDomain "") (str/concat @e.path " · " @e.domain) @e.path)))) (if (or (== @e.referrer null) (= @e.referrer "")) @paged (object/set @paged "referrer" (let ((ref (default @e.referrer "")) (rest (str/replace-pattern (default @e.referrer "") "^[A-Za-z][A-Za-z0-9+.\\-]*://([^/?#@]*@)?" "")))
+                (if (validate/pattern @ref "^[A-Za-z][A-Za-z0-9+.\\-]*://")
+                  (let ((h (str/lower (if (str/startsWith @rest "[") (str/concat (str/replace-pattern @rest "\\].*$" "") "]") (str/replace-pattern @rest "[:/?#].*$" "")))))
+                    (if (= @h "") @ref @h))
+                  @ref)))))))))
+            (let ((current (array/filter @keyed (fn e (>= @e.ts @entity.readStart))))
+                  (previous (array/filter @keyed (fn e (< @e.ts @entity.readStart)))))
+              (do
+                (if (> @entity.readStart 0) (emit AS_ITEMS { data: @current, totalCount: (array/len @current), baseline: @previous }) (emit AS_ITEMS { data: @current, totalCount: (array/len @current) }))
+                (emit AS_READY {
+                  events: (array/len @current),
+                  pageviews: (array/count @current (fn e (= @e.name "pageview"))),
+                  visitors: (array/len (array/unique (array/map @current (fn e @e.visitorId)))),
+                  sites: (array/sort (array/map (array/unique (array/map @payload.data (fn e @e.domain))) (fn d { value: @d, label: @d })) "label" "asc")
+                })))))
+      AS_UNREADABLE -> ready
+        (emit AS_FAILED { error: @payload.error })
+    }
+
+    emits {
+      AS_ITEMS {
+        data : [AnalyticsEvent]!
+        totalCount : number!
+        baseline : [AnalyticsEvent]
+      }
+        @description "Internal: the shown window's events of the site (pages keyed, referrers by host) and the previous period's, for the composed KPI tiles and charts."
+        @tier "internal"
+      AS_READY {
+        events : number!
+        pageviews : number!
+        visitors : number!
+        sites : [AnalyticsSite]!
+      }
+        @description "Internal: the read answered."
+        @tier "internal"
+      AS_FAILED {
+        error : string!
+      }
+        @description "Internal: the read failed or holds more events than maxRows."
+        @tier "internal"
+    }
+
+    listens {
+      AnalyticsStats.AS_READ -> AS_READ
+      AS_READ {
+        from : number!
+        to : number!
+        readFrom : number!
+        domain : string!
+      }
+        @description "Internal: read the window and the period before it."
+      AS_LOADED {
+        data : [AnalyticsEvent]!
+        totalCount : number!
+      }
+        @description "Internal: the stored events of the read."
+      AS_UNREADABLE {
+        error : string!
+        code : string
+      }
+        @description "Internal: the stored events could not be read."
+    }
+
+    config {
+      maxRows : number = 10000
+        @label "Events per stats read"
+        @description "Most stored events one read (the window and the period before it) may aggregate. Every count is computed over every event of the window, so a partial read would report wrong totals; a larger read is refused through ANALYTICS_STATS_FAILED."
+        @synonyms "stats read limit, event cap, aggregation cap"
+        @tier "policy"
+    }
+  }
+
+  trait AnalyticsKpis = Kpi.traits.StatsItemStats -> AnalyticsKpiView [server] {
+    config {
+      rowEntity: AnalyticsEvent
+      statsLook: kpi-tiles
+      metrics: [{
+        aggregation: count
+        label: "Pageviews"
+        icon: "eye"
+        format: number
+        trendFormat: percent
+        where: [{ op: "=", field: name, value: "pageview" }]
+      }, {
+        aggregation: distinct
+        distinctField: visitorId
+        label: "Unique visitors"
+        icon: "users"
+        format: number
+        trendFormat: percent
+      }, {
+        aggregation: distinct
+        distinctField: domain
+        label: "Sites"
+        icon: "globe"
+        format: number
+        trendFormat: percent
+      }, {
+        aggregation: distinct
+        distinctField: country
+        label: "Countries"
+        icon: "map"
+        format: number
+        trendFormat: percent
+      }]
+    }
+    listens {
+      AnalyticsStatsRead.AS_ITEMS -> ITEMS_LOADED
+    }
+  }
+
+  trait AnalyticsDaily = Graphs.traits.GraphItemGraph -> AnalyticsDailyView [server] {
+    config {
+      rowEntity: AnalyticsEvent
+      title: "Pageviews per day"
+      subtitle: ""
+      chartType: area
+      timeAxis: true
+      timeField: ts
+      dateEncoding: epochMs
+      period: day
+      filterField: name
+      filterValue: "pageview"
+      showLegend: false
+      height: 240
+    }
+    listens {
+      AnalyticsStatsRead.AS_ITEMS -> ITEMS_LOADED with { data: ?data, totalCount: ?totalCount }
+    }
+  }
+
+  trait AnalyticsTopPages = Graphs.traits.GraphItemGraph -> AnalyticsPagesView [server] {
+    config {
+      rowEntity: AnalyticsEvent
+      title: "Top pages"
+      subtitle: "Pageviews"
+      chartType: bar
+      look: bar-horizontal
+      categoryField: path
+      filterField: name
+      filterValue: "pageview"
+      sortField: value
+      sortDir: desc
+      limit: 10
+      showLegend: false
+      showValues: true
+      height: 320
+    }
+    listens {
+      AnalyticsStatsRead.AS_ITEMS -> ITEMS_LOADED with { data: ?data, totalCount: ?totalCount }
+    }
+  }
+
+  trait AnalyticsReferrers = Graphs.traits.GraphItemGraph -> AnalyticsReferrersView [server] {
+    config {
+      rowEntity: AnalyticsEvent
+      title: "Top referrers"
+      subtitle: "Pageviews from another site"
+      chartType: bar
+      look: bar-horizontal
+      categoryField: referrer
+      filterField: name
+      filterValue: "pageview"
+      sortField: value
+      sortDir: desc
+      limit: 10
+      showLegend: false
+      showValues: true
+      height: 320
+    }
+    listens {
+      AnalyticsStatsRead.AS_ITEMS -> ITEMS_LOADED with { data: ?data, totalCount: ?totalCount }
+    }
+  }
+
+  trait AnalyticsCountries = Graphs.traits.GraphItemGraph -> AnalyticsCountriesView [server] {
+    config {
+      rowEntity: AnalyticsEvent
+      title: "Countries"
+      subtitle: "Pageviews by visitor country"
+      chartType: donut
+      categoryField: country
+      filterField: name
+      filterValue: "pageview"
+      sortField: value
+      sortDir: desc
+      limit: 8
+      showLegend: true
+      height: 280
+    }
+    listens {
+      AnalyticsStatsRead.AS_ITEMS -> ITEMS_LOADED with { data: ?data, totalCount: ?totalCount }
+    }
+  }
+
+  trait AnalyticsRange = Range.traits.DateRangeFilter {
+    config {
+      presets: [{ label: "7 days", days: 7 }, { label: "30 days", days: 30 }, { label: "90 days", days: 90 }]
+      initialDays: 30
+      buttonLabel: "Custom"
+    }
+  }
+
+  page "/analytics-stats" -> AnalyticsStats, AnalyticsStatsRead, AnalyticsKpis, AnalyticsDaily, AnalyticsTopPages, AnalyticsReferrers, AnalyticsCountries, AnalyticsRange
 }

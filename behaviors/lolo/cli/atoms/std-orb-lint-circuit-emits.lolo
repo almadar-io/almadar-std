@@ -33,7 +33,6 @@ orbital OrbLintCircuitEmitsOrbital {
   entity OrbLintCircuitEmitsRun [runtime] {
     id : string!
     scope : string = ""
-    program : CeProgram = {}
     byPattern : [CeRow] = []
     busExcluded : [string] = []
     findings : [OrbFinding] = []
@@ -45,7 +44,6 @@ orbital OrbLintCircuitEmitsOrbital {
     state ready {
       INIT -> ready
       LINT_INPUT -> ready
-        (set @entity.program @payload.program)
         (set @entity.scope @payload.scope)
         (set @entity.findings (let ((nos : [string] [])
                 (nof : [OrbFinding] [])
@@ -53,8 +51,9 @@ orbital OrbLintCircuitEmitsOrbital {
                 (nohit : [CeHit] [])
                 (nr : CeR { s: [], c: 0, m: false, p: false, en: false, h: [] })
                 (busSet (default (object/fromEntries (array/map @entity.busExcluded (fn x [@x, true]))) {}))
-                (rows : [CeRow] @entity.byPattern))
-            (array/flatten (array/map (object/get @entity.program "orbitals" []) (fn (o oi)
+                (norow : [CeRow] [])
+                (rowsBy : Map string [CeRow] (array/groupBy @entity.byPattern "pattern")))
+            (array/flatten (array/map (object/get @payload.program "orbitals" []) (fn (o oi)
               (array/flatten (array/map (object/get @o "traits" []) (fn (t ti)
                 (if (not (object/has @t "stateMachine")) @nof
                   (let ((on (object/get @o "name" "")) (tn (object/get @t "name" "")))
@@ -94,7 +93,7 @@ orbital OrbLintCircuitEmitsOrbital {
                                                               (kids (array/flatten (array/map (object/values @k) (fn q (object/get (if (= @q null) @nr @q) "h"))))))
                                                           { s: @nos, c: 0, m: false, p: false, en: false,
                                                             h: (array/concat
-                                                                 (array/flatten (array/map (array/filter @rows (fn r (= (object/get @r "pattern") @ty)))
+                                                                 (array/flatten (array/map (object/get @rowsBy @ty @norow)
                                                                    (fn r (let ((v (object/get @n (object/get @r "prop") null)))
                                                                      (if (= (object/get @r "field") "")
                                                                        (if (and (validate/string @v) (object/has @busSet @v)) [{ key: (object/get @r "prop"), ev: @v, ty: @ty }] @nohit)

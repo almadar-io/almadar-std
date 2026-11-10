@@ -31,7 +31,6 @@ orbital OrbLintCircuitGraphOrbital {
   entity OrbLintCircuitGraphRun [runtime] {
     id : string!
     scope : string = ""
-    program : CgProgram = {}
     findings : [OrbFinding] = []
   }
 
@@ -41,7 +40,6 @@ orbital OrbLintCircuitGraphOrbital {
     state ready {
       INIT -> ready
       LINT_INPUT -> ready
-        (set @entity.program @payload.program)
         (set @entity.scope @payload.scope)
         (set @entity.findings (let ((nos : [string] [])
                 (nof : [OrbFinding] [])
@@ -50,7 +48,7 @@ orbital OrbLintCircuitGraphOrbital {
                 (nost : [CgState] [])
                 (ov @config.overlaySlots)
                 (ovSet (default (object/fromEntries (array/map @config.overlaySlots (fn x [@x, true]))) {})))
-            (array/flatten (array/map (object/get @entity.program "orbitals" []) (fn (o oi)
+            (array/flatten (array/map (object/get @payload.program "orbitals" []) (fn (o oi)
               (array/flatten (array/map (object/get @o "traits" []) (fn (t ti)
                 (if (not (object/has @t "stateMachine")) @nof
                   (let ((tp (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @t "name" "") ")]"))

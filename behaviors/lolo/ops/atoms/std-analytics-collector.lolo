@@ -27,6 +27,7 @@ orbital AnalyticsCollectorOrbital {
     referrer : string? @description "The page's referrer as the browser reported it."
     screenWidth : number? @description "The screen width in CSS pixels."
     visitorId : string! @description "SHA-256 of the day's salt, the client IP, the user agent and the site."
+    country : string? @description "The visitor's ISO country code, when the collector resolved one."
     props : AnalyticsProps? @description "The event's properties."
   }
 
@@ -47,7 +48,6 @@ orbital AnalyticsCollectorOrbital {
     saltDay : string @description "The UTC day of the salt held in memory." = ""
     salt : string @description "That day's salt." = ""
     pending : AnalyticsDraft? @description "The beacon waiting for the day's salt; its IP is held in memory only."
-    statsLimit : number @description "The row limit of the stats query in flight." = 100
   }
 
   trait AnalyticsIntake -> AnalyticsCollector [optimistic] {
@@ -207,7 +207,7 @@ orbital AnalyticsCollectorOrbital {
     }
   }
 
-  trait AnalyticsStats = Stats.traits.AnalyticsStats -> AnalyticsCollector {}
+  trait AnalyticsStats = Stats.traits.AnalyticsStats {}
 
   trait AnalyticsRetention = Lifecycle.traits.LifecycleRetention -> AnalyticsRetentionLog {
     config {

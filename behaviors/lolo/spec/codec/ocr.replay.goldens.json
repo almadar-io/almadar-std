@@ -348,7 +348,7 @@
       },
       "emits": [
        {
-        "event": "OCR_EXEC",
+        "event": "OCR_RENDER_EXEC",
         "payload": {
          "stage": "Doc 1",
          "argv": [
@@ -360,6 +360,9 @@
          ]
         }
        }
+      ],
+      "neverEmits": [
+       "OCR_EXEC"
       ]
      }
     }
@@ -393,7 +396,7 @@
       "state": "rendering",
       "emits": [
        {
-        "event": "OCR_EXEC",
+        "event": "OCR_RENDER_EXEC",
         "payload": {
          "stage": "k1",
          "argv": [
@@ -405,6 +408,9 @@
          ]
         }
        }
+      ],
+      "neverEmits": [
+       "OCR_EXEC"
       ]
      }
     }
@@ -460,7 +466,7 @@
    "steps": [
     {
      "trait": "OcrReader",
-     "event": "OCR_RAN",
+     "event": "OCR_RENDER_RAN",
      "from": "rendering",
      "payload": {
       "stage": "k1",
@@ -503,7 +509,7 @@
    "steps": [
     {
      "trait": "OcrReader",
-     "event": "OCR_RAN",
+     "event": "OCR_RENDER_RAN",
      "from": "rendering",
      "payload": {
       "stage": "k1",
@@ -551,7 +557,7 @@
    "steps": [
     {
      "trait": "OcrReader",
-     "event": "OCR_CLI_FAILED",
+     "event": "OCR_RENDER_CLI_FAILED",
      "from": "rendering",
      "payload": {
       "stage": "k1",
@@ -1629,6 +1635,124 @@
       ],
       "neverEmits": [
        "OCR_EXEC"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the pdftoppm run goes to the render runner, whose only command is pdftoppm",
+   "note": "std-cli spawns commands[cmdCursor] and tries the next only when the spawn fails, so each program needs its own runner",
+   "steps": [
+    {
+     "trait": "OcrRenderCli",
+     "event": "CLI_ENV_NEXT",
+     "from": "running",
+     "payload": {},
+     "entity": {
+      "id": "c",
+      "stage": "k",
+      "pid": 0,
+      "cancelRequested": false,
+      "hasStdin": false,
+      "stdin": "",
+      "inFd": 0,
+      "argv": [
+       "-r",
+       "300",
+       "-png",
+       "/s/a.pdf",
+       "/w/k"
+      ],
+      "baseEnv": {},
+      "passed": {},
+      "cmdCursor": 0,
+      "envCursor": 0
+     },
+     "expect": {
+      "fired": true,
+      "state": "running",
+      "effects": [
+       {
+        "type": "os/spawn",
+        "arg0": [
+         "array/nth",
+         [
+          "let",
+          [
+           [
+            "knob_commands",
+            [
+             "list",
+             "pdftoppm"
+            ],
+            "{\"version\":1,\"type\":{\"kind\":\"array\",\"inner\":{\"kind\":\"union\",\"variants\":[{\"name\":\"string\",\"fieldType\":{\"kind\":\"string\"},\"required\":true,\"constraints\":[],\"declared\":{\"nullable\":false,\"name\":\"string\",\"type\":\"string\"}},{\"name\":\"AnchoredEnv\",\"fieldType\":{\"kind\":\"struct\",\"fields\":[{\"name\":\"anchor\",\"fieldType\":{\"kind\":\"struct\",\"fields\":[{\"name\":\"env\",\"fieldType\":{\"kind\":\"string\"},\"required\":true,\"constraints\":[],\"declared\":{\"nullable\":false,\"name\":\"env\",\"type\":\"string\",\"required\":true}}]},\"required\":true,\"constraints\":[],\"declared\":{\"nullable\":false,\"name\":\"anchor\",\"type\":\"object\",\"required\":true,\"properties\":{\"env\":{\"nullable\":false,\"name\":\"env\",\"type\":\"string\",\"required\":true}}}}]},\"required\":true,\"constraints\":[],\"declared\":{\"nullable\":false,\"name\":\"AnchoredEnv\",\"type\":\"object\",\"properties\":{\"anchor\":{\"nullable\":false,\"name\":\"anchor\",\"type\":\"object\",\"required\":true,\"properties\":{\"env\":{\"nullable\":false,\"name\":\"env\",\"type\":\"string\",\"required\":true}}}}}},{\"name\":\"AnchoredPath\",\"fieldType\":{\"kind\":\"struct\",\"fields\":[{\"name\":\"anchor\",\"fieldType\":{\"kind\":\"string\"},\"required\":true,\"constraints\":[],\"declared\":{\"nullable\":false,\"name\":\"anchor\",\"type\":\"string\",\"required\":true}},{\"name\":\"path\",\"fieldType\":{\"kind\":\"string\"},\"required\":true,\"constraints\":[],\"declared\":{\"nullable\":false,\"name\":\"path\",\"type\":\"string\",\"required\":true}}]},\"required\":true,\"constraints\":[],\"declared\":{\"nullable\":false,\"name\":\"AnchoredPath\",\"type\":\"object\",\"properties\":{\"anchor\":{\"nullable\":false,\"name\":\"anchor\",\"type\":\"string\",\"required\":true},\"path\":{\"nullable\":false,\"name\":\"path\",\"type\":\"string\",\"required\":true}}}}]}}}"
+           ]
+          ],
+          "@knob_commands"
+         ],
+         "@entity.cmdCursor"
+        ]
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the tesseract run goes to the tesseract runner, whose only command is tesseract",
+   "note": "std-cli spawns commands[cmdCursor] and tries the next only when the spawn fails, so each program needs its own runner",
+   "steps": [
+    {
+     "trait": "OcrCli",
+     "event": "CLI_ENV_NEXT",
+     "from": "running",
+     "payload": {},
+     "entity": {
+      "id": "c",
+      "stage": "k",
+      "pid": 0,
+      "cancelRequested": false,
+      "hasStdin": false,
+      "stdin": "",
+      "inFd": 0,
+      "argv": [
+       "-r",
+       "300",
+       "-png",
+       "/s/a.pdf",
+       "/w/k"
+      ],
+      "baseEnv": {},
+      "passed": {},
+      "cmdCursor": 0,
+      "envCursor": 0
+     },
+     "expect": {
+      "fired": true,
+      "state": "running",
+      "effects": [
+       {
+        "type": "os/spawn",
+        "arg0": [
+         "array/nth",
+         [
+          "let",
+          [
+           [
+            "knob_commands",
+            [
+             "list",
+             "tesseract"
+            ],
+            "{\"version\":1,\"type\":{\"kind\":\"array\",\"inner\":{\"kind\":\"union\",\"variants\":[{\"name\":\"string\",\"fieldType\":{\"kind\":\"string\"},\"required\":true,\"constraints\":[],\"declared\":{\"nullable\":false,\"name\":\"string\",\"type\":\"string\"}},{\"name\":\"AnchoredEnv\",\"fieldType\":{\"kind\":\"struct\",\"fields\":[{\"name\":\"anchor\",\"fieldType\":{\"kind\":\"struct\",\"fields\":[{\"name\":\"env\",\"fieldType\":{\"kind\":\"string\"},\"required\":true,\"constraints\":[],\"declared\":{\"nullable\":false,\"name\":\"env\",\"type\":\"string\",\"required\":true}}]},\"required\":true,\"constraints\":[],\"declared\":{\"nullable\":false,\"name\":\"anchor\",\"type\":\"object\",\"required\":true,\"properties\":{\"env\":{\"nullable\":false,\"name\":\"env\",\"type\":\"string\",\"required\":true}}}}]},\"required\":true,\"constraints\":[],\"declared\":{\"nullable\":false,\"name\":\"AnchoredEnv\",\"type\":\"object\",\"properties\":{\"anchor\":{\"nullable\":false,\"name\":\"anchor\",\"type\":\"object\",\"required\":true,\"properties\":{\"env\":{\"nullable\":false,\"name\":\"env\",\"type\":\"string\",\"required\":true}}}}}},{\"name\":\"AnchoredPath\",\"fieldType\":{\"kind\":\"struct\",\"fields\":[{\"name\":\"anchor\",\"fieldType\":{\"kind\":\"string\"},\"required\":true,\"constraints\":[],\"declared\":{\"nullable\":false,\"name\":\"anchor\",\"type\":\"string\",\"required\":true}},{\"name\":\"path\",\"fieldType\":{\"kind\":\"string\"},\"required\":true,\"constraints\":[],\"declared\":{\"nullable\":false,\"name\":\"path\",\"type\":\"string\",\"required\":true}}]},\"required\":true,\"constraints\":[],\"declared\":{\"nullable\":false,\"name\":\"AnchoredPath\",\"type\":\"object\",\"properties\":{\"anchor\":{\"nullable\":false,\"name\":\"anchor\",\"type\":\"string\",\"required\":true},\"path\":{\"nullable\":false,\"name\":\"path\",\"type\":\"string\",\"required\":true}}}}]}}}"
+           ]
+          ],
+          "@knob_commands"
+         ],
+         "@entity.cmdCursor"
+        ]
+       }
       ]
      }
     }

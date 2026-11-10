@@ -1,0 +1,530 @@
+{
+  "atom": "ops/atoms/std-analytics-stats.lolo",
+  "trait": "AnalyticsStats",
+  "cases": [
+    {
+      "id": "an-ask-with-a-window-reads-it-and-the-period-before",
+      "note": "from 200..300 reads 100..300 so the previous period is the same length",
+      "steps": [
+        {
+          "trait": "AnalyticsStats",
+          "from": "ready",
+          "event": "ANALYTICS_STATS",
+          "entity": {
+            "id": "r",
+            "phase": "idle",
+            "windowDays": 30,
+            "from": 0,
+            "to": 0,
+            "domain": "",
+            "sites": [],
+            "events": 0,
+            "error": "",
+            "readFrom": 0,
+            "readTo": 0,
+            "readStart": 0,
+            "readDomain": ""
+          },
+          "payload": {
+            "from": 200,
+            "to": 300
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "entity": {
+              "from": 200,
+              "to": 300
+            },
+            "emits": [
+              {
+                "event": "AS_READ",
+                "payload": {
+                  "from": 200,
+                  "to": 300,
+                  "readFrom": 100,
+                  "domain": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-an-all-time-ask-reads-no-previous-period",
+      "note": "from 0 reads every event and compares with nothing",
+      "steps": [
+        {
+          "trait": "AnalyticsStats",
+          "from": "ready",
+          "event": "ANALYTICS_STATS",
+          "entity": {
+            "id": "r",
+            "phase": "idle",
+            "windowDays": 0,
+            "from": 0,
+            "to": 0,
+            "domain": "",
+            "sites": [],
+            "events": 0,
+            "error": "",
+            "readFrom": 0,
+            "readTo": 0,
+            "readStart": 0,
+            "readDomain": ""
+          },
+          "payload": {
+            "from": 0,
+            "to": 300
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "AS_READ",
+                "payload": {
+                  "readFrom": 0
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-read-hands-the-window-and-the-previous-period-to-the-atoms",
+      "note": "rows before readStart are the baseline; referrers become hosts; pages carry the site when every site is shown",
+      "steps": [
+        {
+          "trait": "AnalyticsStatsRead",
+          "from": "ready",
+          "event": "AS_LOADED",
+          "entity": {
+            "id": "r",
+            "phase": "idle",
+            "windowDays": 30,
+            "from": 0,
+            "to": 0,
+            "domain": "",
+            "sites": [],
+            "events": 0,
+            "error": "",
+            "readFrom": 100,
+            "readTo": 300,
+            "readStart": 200,
+            "readDomain": ""
+          },
+          "payload": {
+            "data": [
+              {
+                "id": "p1",
+                "ts": 100,
+                "name": "pageview",
+                "domain": "almadar.io",
+                "path": "/",
+                "visitorId": "v1"
+              },
+              {
+                "id": "p2",
+                "ts": 150,
+                "name": "pageview",
+                "domain": "orb.almadar.io",
+                "path": "/",
+                "visitorId": "v2"
+              },
+              {
+                "id": "c1",
+                "ts": 250,
+                "name": "pageview",
+                "domain": "almadar.io",
+                "path": "/",
+                "visitorId": "v1",
+                "referrer": "https://duckduckgo.com/search?q=x"
+              },
+              {
+                "id": "c2",
+                "ts": 300,
+                "name": "pageview",
+                "domain": "almadar.io",
+                "path": "/",
+                "visitorId": "v3"
+              }
+            ],
+            "totalCount": 4
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "AS_ITEMS",
+                "payload": {
+                  "totalCount": 2,
+                  "data": [
+                    {
+                      "id": "c1",
+                      "ts": 250,
+                      "name": "pageview",
+                      "domain": "almadar.io",
+                      "path": "/ \u00b7 almadar.io",
+                      "visitorId": "v1",
+                      "referrer": "duckduckgo.com"
+                    },
+                    {
+                      "id": "c2",
+                      "ts": 300,
+                      "name": "pageview",
+                      "domain": "almadar.io",
+                      "path": "/ \u00b7 almadar.io",
+                      "visitorId": "v3"
+                    }
+                  ],
+                  "baseline": [
+                    {
+                      "id": "p1",
+                      "ts": 100,
+                      "name": "pageview",
+                      "domain": "almadar.io",
+                      "path": "/ \u00b7 almadar.io",
+                      "visitorId": "v1"
+                    },
+                    {
+                      "id": "p2",
+                      "ts": 150,
+                      "name": "pageview",
+                      "domain": "orb.almadar.io",
+                      "path": "/ \u00b7 orb.almadar.io",
+                      "visitorId": "v2"
+                    }
+                  ]
+                }
+              },
+              {
+                "event": "AS_READY",
+                "payload": {
+                  "events": 2,
+                  "pageviews": 2,
+                  "visitors": 2,
+                  "sites": [
+                    {
+                      "value": "almadar.io",
+                      "label": "almadar.io"
+                    },
+                    {
+                      "value": "orb.almadar.io",
+                      "label": "orb.almadar.io"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-site-read-keeps-only-that-site",
+      "note": "readDomain narrows every row and the page key drops the site",
+      "steps": [
+        {
+          "trait": "AnalyticsStatsRead",
+          "from": "ready",
+          "event": "AS_LOADED",
+          "entity": {
+            "id": "r",
+            "phase": "idle",
+            "windowDays": 30,
+            "from": 0,
+            "to": 0,
+            "domain": "",
+            "sites": [],
+            "events": 0,
+            "error": "",
+            "readFrom": 100,
+            "readTo": 300,
+            "readStart": 200,
+            "readDomain": "almadar.io"
+          },
+          "payload": {
+            "data": [
+              {
+                "id": "p1",
+                "ts": 100,
+                "name": "pageview",
+                "domain": "almadar.io",
+                "path": "/",
+                "visitorId": "v1"
+              },
+              {
+                "id": "p2",
+                "ts": 150,
+                "name": "pageview",
+                "domain": "orb.almadar.io",
+                "path": "/",
+                "visitorId": "v2"
+              },
+              {
+                "id": "c1",
+                "ts": 250,
+                "name": "pageview",
+                "domain": "almadar.io",
+                "path": "/",
+                "visitorId": "v1",
+                "referrer": "https://duckduckgo.com/search?q=x"
+              },
+              {
+                "id": "c2",
+                "ts": 300,
+                "name": "pageview",
+                "domain": "almadar.io",
+                "path": "/",
+                "visitorId": "v3"
+              }
+            ],
+            "totalCount": 4
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "AS_ITEMS",
+                "payload": {
+                  "totalCount": 2,
+                  "data": [
+                    {
+                      "id": "c1",
+                      "ts": 250,
+                      "name": "pageview",
+                      "domain": "almadar.io",
+                      "path": "/",
+                      "visitorId": "v1",
+                      "referrer": "duckduckgo.com"
+                    },
+                    {
+                      "id": "c2",
+                      "ts": 300,
+                      "name": "pageview",
+                      "domain": "almadar.io",
+                      "path": "/",
+                      "visitorId": "v3"
+                    }
+                  ],
+                  "baseline": [
+                    {
+                      "id": "p1",
+                      "ts": 100,
+                      "name": "pageview",
+                      "domain": "almadar.io",
+                      "path": "/",
+                      "visitorId": "v1"
+                    }
+                  ]
+                }
+              },
+              {
+                "event": "AS_READY",
+                "payload": {
+                  "events": 2,
+                  "sites": [
+                    {
+                      "value": "almadar.io",
+                      "label": "almadar.io"
+                    },
+                    {
+                      "value": "orb.almadar.io",
+                      "label": "orb.almadar.io"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-an-all-time-read-sends-no-baseline",
+      "note": "with readStart 0 nothing is compared",
+      "steps": [
+        {
+          "trait": "AnalyticsStatsRead",
+          "from": "ready",
+          "event": "AS_LOADED",
+          "entity": {
+            "id": "r",
+            "phase": "idle",
+            "windowDays": 30,
+            "from": 0,
+            "to": 0,
+            "domain": "",
+            "sites": [],
+            "events": 0,
+            "error": "",
+            "readFrom": 0,
+            "readTo": 300,
+            "readStart": 0,
+            "readDomain": ""
+          },
+          "payload": {
+            "data": [
+              {
+                "id": "p1",
+                "ts": 100,
+                "name": "pageview",
+                "domain": "almadar.io",
+                "path": "/",
+                "visitorId": "v1"
+              },
+              {
+                "id": "p2",
+                "ts": 150,
+                "name": "pageview",
+                "domain": "orb.almadar.io",
+                "path": "/",
+                "visitorId": "v2"
+              },
+              {
+                "id": "c1",
+                "ts": 250,
+                "name": "pageview",
+                "domain": "almadar.io",
+                "path": "/",
+                "visitorId": "v1",
+                "referrer": "https://duckduckgo.com/search?q=x"
+              },
+              {
+                "id": "c2",
+                "ts": 300,
+                "name": "pageview",
+                "domain": "almadar.io",
+                "path": "/",
+                "visitorId": "v3"
+              }
+            ],
+            "totalCount": 4
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "AS_ITEMS",
+                "payload": {
+                  "totalCount": 4
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-read-over-the-cap-is-refused",
+      "note": "a partial read would count wrong totals",
+      "steps": [
+        {
+          "trait": "AnalyticsStatsRead",
+          "from": "ready",
+          "event": "AS_LOADED",
+          "entity": {
+            "id": "r",
+            "phase": "idle",
+            "windowDays": 30,
+            "from": 0,
+            "to": 0,
+            "domain": "",
+            "sites": [],
+            "events": 0,
+            "error": "",
+            "readFrom": 0,
+            "readTo": 0,
+            "readStart": 200,
+            "readDomain": ""
+          },
+          "payload": {
+            "data": [
+              {
+                "id": "p1",
+                "ts": 100,
+                "name": "pageview",
+                "domain": "almadar.io",
+                "path": "/",
+                "visitorId": "v1"
+              }
+            ],
+            "totalCount": 4
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "AS_FAILED"
+              }
+            ],
+            "neverEmits": [
+              "AS_ITEMS"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-ready-read-answers-the-result",
+      "note": "the board records the read and answers ANALYTICS_STATS_RESULT",
+      "steps": [
+        {
+          "trait": "AnalyticsStats",
+          "from": "ready",
+          "event": "AS_READY",
+          "entity": {
+            "id": "r",
+            "phase": "loading",
+            "windowDays": 30,
+            "from": 0,
+            "to": 0,
+            "domain": "",
+            "sites": [],
+            "events": 0,
+            "error": "",
+            "readFrom": 0,
+            "readTo": 0,
+            "readStart": 0,
+            "readDomain": ""
+          },
+          "payload": {
+            "events": 2,
+            "pageviews": 2,
+            "visitors": 2,
+            "sites": [
+              {
+                "value": "almadar.io",
+                "label": "almadar.io"
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "entity": {
+              "phase": "ready",
+              "events": 2
+            },
+            "emits": [
+              {
+                "event": "ANALYTICS_STATS_RESULT",
+                "payload": {
+                  "pageviews": 2,
+                  "visitors": 2
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

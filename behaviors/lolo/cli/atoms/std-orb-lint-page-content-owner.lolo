@@ -46,7 +46,6 @@ orbital OrbLintPageContentOwnerOrbital {
   entity OrbLintPageContentOwnerRun [runtime] {
     id : string!
     scope : string = ""
-    program : PoProgram = {}
     roots : Map string [string] = {}
     indexed : boolean = false
     indexScope : string = ""
@@ -81,7 +80,6 @@ orbital OrbLintPageContentOwnerOrbital {
       PATTERNS_HEARD -> ready
         (set @entity.patterns @payload.patterns)
       LINT_INPUT -> ready
-        (set @entity.program @payload.program)
         (set @entity.scope @payload.scope)
         (set @entity.rows (if (and @entity.indexed @entity.embedded (= @entity.indexScope @payload.scope) (= @entity.embedsScope @payload.scope)) (let ((norows : [PoRow] []) (nos : [string] []) (rootsM @entity.roots) (embC @entity.embConfig) (embG @entity.embGuards) (embE @entity.embEffects)
                 (rendRows : [PoRender] (array/filter @entity.embRenders (fn r (and (object/get @r "plain") (validate/string (object/get @r "slot" null))))))
@@ -100,7 +98,7 @@ orbital OrbLintPageContentOwnerOrbital {
                 (contentSet (default (object/fromEntries (array/map (array/filter (object/keys @entity.patterns) (fn pn (array/some (object/values (object/get (object/get @entity.patterns @pn {}) "props" {})) (fn pr (= (object/get (default @pr {}) "kind" "") "entity"))))) (fn pn [@pn, true]))) {}))
                 (tmplSet (default (object/fromEntries (array/map (array/filter (object/keys @entity.patterns) (fn pn (= (object/get (object/get @entity.patterns @pn {}) "category" "") "template"))) (fn pn [@pn, true]))) {}))
                 (ctlMap (default (object/fromEntries (array/map (object/keys @entity.patterns) (fn pn [@pn, (array/filter (object/keys (object/get (object/get @entity.patterns @pn {}) "props" {})) (fn pr (array/includes ["event" "event-ref"] (object/get (default (object/get (object/get (object/get @entity.patterns @pn {}) "props" {}) @pr) {}) "kind" ""))))]))) {})))
-  (array/flatten (array/map (object/get @entity.program "orbitals" []) (fn (o oi)
+  (array/flatten (array/map (object/get @payload.program "orbitals" []) (fn (o oi)
     (let ((trs0 : [PoTrait] (object/get @o "traits" @notd)) (pgs (object/get @o "pages" @nopg)))
       (if (= (array/len @pgs) 0) @norows
         (let ((recs : [PoRec] (array/flatten (array/map @trs0 (fn (t ti)
@@ -187,7 +185,7 @@ orbital OrbLintPageContentOwnerOrbital {
     }
 
     listens {
-      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : PoProgram  scope : string! }
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : PoProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
       INDEX_HEARD { scope : string!  heads : Map string [string]!  roots : Map string [string]! }

@@ -3,7 +3,7 @@ app std-guest-session [
   description: "std-guest-session — runs a program picked at run time as a guest session on the kernel, and paints it. GuestSession (server) resolves std-mock-page-seed as it mounts, and takes GUEST_OPEN { program } (a resolved program value, closing any guest already open), resolves std-mock-page-seed once, composes it with the program (program/compose, unless the program already declares the mock_seed_marks store) and opens the composed program with program/open, so the guest seeds each routed page's entities on its first visit inside its own kernel (EXEC-SEED-7), keeps the latest paint of every trait per slot (embedded children included) and emits GUEST_PAINTS { guest, paints } and GUEST_MOVED { guest, moves } (the transitions its traits took); a failed open is GUEST_ERROR { message }, a failed step is GUEST_NOTICE { message }, and GUEST_FAIL { message } lets the host that could not obtain a program say so the same way. GUEST_NAVIGATE { guest, route } opens that route in the guest with program/navigate. GUEST_SEND { guest, address, event, payload } steps the guest with program/dispatch when guest is the open one and is ignored for any other; GUEST_RESET closes it. GUEST_CLEARED tells the painter the guest is gone. GuestStage (client) keeps the paint, shows one guest-view for the configured slot holding the paint of every page-root trait in paint order (never an embedded child's; its source is the first root), and hands it every paint of the guest so an embedded @trait.X resolves to the guest's trait (a skeleton until the guest has painted, an alert when it failed) and turns a control of the guest it shows into GUEST_SEND. The host composes both traits under these names, supplies the program value, and embeds GuestStage inside its own chrome with @trait.GuestStage.",
   egress: [],
   kernel: { "guest": [spawn, declared] },
-  env: ["FIREBASE_AUTH_EMULATOR_HOST", "FIREBASE_PROJECT_ID", "ALMADAR_PERSONA_OWNS", "ORB_LAUNCHPAD_HOST"],
+  env: ["FIREBASE_AUTH_EMULATOR_HOST", "FIREBASE_PROJECT_ID", "AUTH_PROVIDER", "ALMADAR_PERSONA_OWNS", "ORB_LAUNCHPAD_HOST"],
   fs: { "~/.almadar/launchpad/live/**": [read, write, create, remove, meta], cwd: "node_modules": [read] }
 ]
 ;; @capabilities "run a program chosen at run time as a live guest, paint it, forward its controls, close it"
@@ -51,6 +51,7 @@ orbital GuestSessionOrbital {
     guestRoute : string @description "The route the guest shows, as program/open or program/navigate resolved it; empty when no page matched." = ""
     guestPage : [string] @description "The traits of the page the guest shows: its page-root paints are the ones drawn." = []
     guestError : string = ""
+    guestSigningIn : boolean @description "A credential was handed to the guest and its CREDENTIAL_BOUND or CREDENTIAL_REFUSED has not arrived yet." = false
     guestReturnTo : string @description "The page a denied guest asked for, opened again once it has signed in." = ""
     guestProgram : GuestProgram? @description "The program value being opened, held only until program/compose or program/open takes it: the entity rides every request a stateless host's client posts."
     guestSeed : behavior?
@@ -116,6 +117,9 @@ orbital GuestSessionOrbital {
       mockAuthHost : string = "127.0.0.1:9099"
         @label "Auth emulator a mocked guest signs its personas in through"
         @tier "policy"
+      liveAuthProvider : string = "firebase"
+        @label "Sign-in provider a live guest verifies its viewers against (AUTH_PROVIDER)"
+        @tier "policy"
       mockAuthProject : string = "demo-almadar"
         @label "Auth project of a mocked guest"
         @tier "policy"
@@ -128,11 +132,6 @@ orbital GuestSessionOrbital {
       signInReason : string = "Reason:"
         @label "Prefix of the reason a guest gives for refusing a credential"
         @tier "policy"
-      signInUnanswered : string = "It answered with:"
-        @label "Prefix of the events a guest answered when it neither bound nor refused a credential"
-        @tier "policy"
-        @label "Notice when a signed-in token is refused"
-        @tier "domain"
       liveRoot : string = "~/.almadar/launchpad/live"
         @label "Live guest folders"
         @description "The directory holding one folder per program opened with real integrations; that folder is the guest's working directory, so its relative file stores never meet another program's."
@@ -247,11 +246,11 @@ orbital GuestSessionOrbital {
         (os/symlink @payload.path (str/concat @config.liveRoot "/" (object/get (default @entity.guestProgram { name: "guest", orbitals: [] }) "name" "guest") "/node_modules") { key: "guest-live-link", emit: { success: GUEST_LIVE_LINKED, failure: GUEST_FAILED } })
       GUEST_LIVE_CHECKED -> opening when @payload.ok
         (set @entity.guestSeeded false)
-        (program/open @entity.guestProgram { declared: true, integrations: "live", cwd: (str/concat @config.liveRoot "/" (object/get (default @entity.guestProgram { name: "guest", orbitals: [] }) "name" "guest")) } { emit: { success: GUEST_OPENED, failure: GUEST_FAILED } })
+        (program/open @entity.guestProgram { declared: true, integrations: "live", env: { AUTH_PROVIDER: @config.liveAuthProvider }, cwd: (str/concat @config.liveRoot "/" (object/get (default @entity.guestProgram { name: "guest", orbitals: [] }) "name" "guest")) } { emit: { success: GUEST_OPENED, failure: GUEST_FAILED } })
         (set @entity.guestProgram null)
       GUEST_LIVE_LINKED -> opening
         (set @entity.guestSeeded false)
-        (program/open @entity.guestProgram { declared: true, integrations: "live", cwd: (str/concat @config.liveRoot "/" (object/get (default @entity.guestProgram { name: "guest", orbitals: [] }) "name" "guest")) } { emit: { success: GUEST_OPENED, failure: GUEST_FAILED } })
+        (program/open @entity.guestProgram { declared: true, integrations: "live", env: { AUTH_PROVIDER: @config.liveAuthProvider }, cwd: (str/concat @config.liveRoot "/" (object/get (default @entity.guestProgram { name: "guest", orbitals: [] }) "name" "guest")) } { emit: { success: GUEST_OPENED, failure: GUEST_FAILED } })
         (set @entity.guestProgram null)
       GUEST_PREPARE -> opening when (and (= @entity.guestIntegrations "mock") (= @entity.guestSeed null))
         (behavior/resolve { behavior: "std/behaviors/std-mock-page-seed" } {} { emit: { success: GUEST_SEED_RESOLVED, failure: GUEST_FAILED } })
@@ -448,6 +447,8 @@ orbital GuestSessionOrbital {
         (set @entity.guestPaints (array/reduce ?rendered (array/filter @entity.guestPaints (fn q (!= @q.slot "toast"))) (fn acc p (array/concat (array/filter @acc (fn q (or (!= @q.trait @p.trait) (!= @q.slot @p.slot)))) (array/filter [@p] (fn x (!= @x.content null)))))))
         (set @entity.guestPaintSeq (+ @entity.guestPaintSeq 1))
         (emit GUEST_PAINTS { guest: @entity.guestHandle, route: @entity.guestRoute, page: @entity.guestPage, paints: @entity.guestPaints, seq: @entity.guestPaintSeq })
+        (when (and @entity.guestSigningIn (array/some (default ?emitted []) (fn e (= @e.event "CREDENTIAL_BOUND")))) (do (set @entity.guestSigningIn false) (program/navigate { guest: @entity.guestHandle, route: @entity.guestReturnTo, remount: true } { emit: { success: GUEST_NAVIGATED, failure: GUEST_NAVIGATE_FAILED } })))
+        (when (and @entity.guestSigningIn (not (array/some (default ?emitted []) (fn e (= @e.event "CREDENTIAL_BOUND")))) (array/some (default ?emitted []) (fn e (= @e.event "CREDENTIAL_REFUSED")))) (do (set @entity.guestSigningIn false) (emit GUEST_NOTICE { message: (str/concat @config.signInRefused " " @config.signInReason " " (default (object/get (default (array/find (default ?emitted []) (fn e (= @e.event "CREDENTIAL_REFUSED"))) { event: "", payload: { reason: "" } }) "payload.reason") "")) })))
       GUEST_TICKED -> live when (!= ?guest @entity.guestHandle)
       GUEST_TICKS_FAILED -> live
         (emit GUEST_NOTICE { message: ?error })
@@ -460,12 +461,16 @@ orbital GuestSessionOrbital {
       GUEST_NAVIGATED -> live when (and (= (default ?result.access.verdict "") "denied") (= @entity.guestIntegrations "mock"))
         (emit GUEST_NOTICE { message: @config.signInNeeded })
       GUEST_CREDENTIAL -> live when (= ?guest @entity.guestHandle)
+        (set @entity.guestSigningIn true)
         (program/dispatch "CREDENTIAL_PRESENTED" { requestId: 0, authorization: (str/concat "Bearer " ?token) } { guest: ?guest, emit: { success: GUEST_CREDENTIAL_ANSWERED, failure: GUEST_CREDENTIAL_FAILED } })
       GUEST_CREDENTIAL -> live when (!= ?guest @entity.guestHandle)
       GUEST_CREDENTIAL_ANSWERED -> live when (array/some (default ?result.emitted []) (fn e (= @e.event "CREDENTIAL_BOUND")))
+        (set @entity.guestSigningIn false)
         (program/navigate { guest: @entity.guestHandle, route: @entity.guestReturnTo, remount: true } { emit: { success: GUEST_NAVIGATED, failure: GUEST_NAVIGATE_FAILED } })
-      GUEST_CREDENTIAL_ANSWERED -> live when (not (array/some (default ?result.emitted []) (fn e (= @e.event "CREDENTIAL_BOUND"))))
-        (emit GUEST_NOTICE { message: (let ((refused (array/find (default ?result.emitted []) (fn e (= @e.event "CREDENTIAL_REFUSED"))))) (if (= @refused null) (str/concat @config.signInRefused " " @config.signInUnanswered " " (str/join (array/map (default ?result.emitted []) (fn e @e.event)) ", ")) (str/concat @config.signInRefused " " @config.signInReason " " (default @refused.payload.reason "")))) })
+      GUEST_CREDENTIAL_ANSWERED -> live when (and (not (array/some (default ?result.emitted []) (fn e (= @e.event "CREDENTIAL_BOUND")))) (array/some (default ?result.emitted []) (fn e (= @e.event "CREDENTIAL_REFUSED"))))
+        (set @entity.guestSigningIn false)
+        (emit GUEST_NOTICE { message: (str/concat @config.signInRefused " " @config.signInReason " " (default (object/get (default (array/find (default ?result.emitted []) (fn e (= @e.event "CREDENTIAL_REFUSED"))) { event: "", payload: { reason: "" } }) "payload.reason") "")) })
+      GUEST_CREDENTIAL_ANSWERED -> live when (and (not (array/some (default ?result.emitted []) (fn e (= @e.event "CREDENTIAL_BOUND")))) (not (array/some (default ?result.emitted []) (fn e (= @e.event "CREDENTIAL_REFUSED")))))
       GUEST_CREDENTIAL_FAILED -> live
         (emit GUEST_NOTICE { message: ?error })
       GUEST_NAVIGATED -> live when (!= (default ?result.access.verdict "") "denied")
@@ -566,6 +571,7 @@ orbital GuestSessionOrbital {
       GUEST_TICKED {
         guest : string!
         rendered : [GuestPaint]!
+        emitted : [GuestEmitted]
         key : string
       }
         @description "One pass of the open guest's own tick clock that painted something (program/live { kind: guest }): its page traits' ticks, [client] ones included, since a guest has no browser."

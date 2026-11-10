@@ -49,7 +49,6 @@ orbital OrbLintCircuitClientBoundOrbital {
   entity OrbLintCircuitClientBoundRun [runtime] {
     id : string!
     scope : string = ""
-    program : CbProgram = {}
     embeds : CbEmbeds = {}
     embedsScope : string = ""
     embedded : boolean = false
@@ -74,7 +73,6 @@ orbital OrbLintCircuitClientBoundOrbital {
         (set @entity.findings [{ code: @config.codes.lintIndexMissing.code, path: "", message: "the lint input arrived without the trait embeds (LINT_EMBEDS), so this rule cannot check the program", suggestion: "std-orb-lint-input sends LINT_EMBEDS before LINT_INPUT; this rule did not hear it", severity: "error" }])
         (emit LINT_FINISH { })
       LINT_INPUT -> ready when (and @entity.embedded (= @entity.embedsScope @payload.scope))
-        (set @entity.program @payload.program)
         (set @entity.scope @payload.scope)
         (set @entity.embedded false)
         (set @entity.findings (let ((nos : [string] [])
@@ -92,7 +90,7 @@ orbital OrbLintCircuitClientBoundOrbital {
                 (ovSet (default (object/fromEntries (array/map @config.overlaySlots (fn x [@x, true]))) {}))
                 (mainSet (default (object/fromEntries (array/map @config.mainSlots (fn x [@x, true]))) {}))
                 (opSet (default (object/fromEntries (array/map @config.failureOps (fn x [(str/replaceAll @x "/" "~s"), true]))) {})))
-            (array/flatten (array/map (object/get @entity.program "orbitals" []) (fn (o oi)
+            (array/flatten (array/map (object/get @payload.program "orbitals" []) (fn (o oi)
               (let ((trs0 : [CbTrait] (object/get @o "traits" @notd)))
                 (let ((inlK (array/filter (array/range 0 (array/len @trs0)) (fn i (object/has (default (array/nth @trs0 @i) {}) "stateMachine")))))
                   (let ((kids : [CbKid] (array/map @inlK (fn ti
@@ -101,8 +99,8 @@ orbital OrbLintCircuitClientBoundOrbital {
                               ch: (array/unique (array/filter (object/get @entity.embeds (str/concat @oi "-" @ti) @nos) (fn c (and (!= @c "") (!= @c (object/get @t "name" "")))))) }))))
                         (seeds (array/flatten (array/map (array/filter (object/get @o "pages" @nopg) (fn p (= (object/get @p "protocol" "") ""))) (fn p (array/map (object/get @p "traits" @nor) (fn r (if (!= (object/get @r "ref" "") "") (object/get @r "ref" "") (object/get @r "name" "")))))))))
                     (let ((bound (array/reduce (array/range 0 (+ (array/len @kids) 1)) (array/unique @seeds) (fn (acc i) (array/unique (array/concat @acc (array/flatten (array/map (array/filter @kids (fn k0 (array/includes @acc (object/get @k0 "n")))) (fn k0 (object/get @k0 "ch")))))))))
-                          (mounted (array/reduce (array/range 0 (+ (array/len @kids) 1)) (array/unique (array/flatten (array/map (object/get @entity.program "orbitals" []) (fn o2 (array/flatten (array/map (object/get @o2 "pages" @nopg) (fn p (array/map (object/get @p "traits" @nor) (fn r (if (!= (object/get @r "ref" "") "") (object/get @r "ref" "") (object/get @r "name" ""))))))))))) (fn (acc i) (array/unique (array/concat @acc (array/flatten (array/map (array/filter @kids (fn k0 (array/includes @acc (object/get @k0 "n")))) (fn k0 (object/get @k0 "ch")))))))))
-                          (isprog (or (> (array/len (object/get @o "pages" @nopg)) 0) (> (array/len (array/filter (object/get @entity.program "orbitals" []) (fn x (not (object/get @x "spec" false))))) 1))))
+                          (mounted (array/reduce (array/range 0 (+ (array/len @kids) 1)) (array/unique (array/flatten (array/map (object/get @payload.program "orbitals" []) (fn o2 (array/flatten (array/map (object/get @o2 "pages" @nopg) (fn p (array/map (object/get @p "traits" @nor) (fn r (if (!= (object/get @r "ref" "") "") (object/get @r "ref" "") (object/get @r "name" ""))))))))))) (fn (acc i) (array/unique (array/concat @acc (array/flatten (array/map (array/filter @kids (fn k0 (array/includes @acc (object/get @k0 "n")))) (fn k0 (object/get @k0 "ch")))))))))
+                          (isprog (or (> (array/len (object/get @o "pages" @nopg)) 0) (> (array/len (array/filter (object/get @payload.program "orbitals" []) (fn x (not (object/get @x "spec" false))))) 1))))
                       (array/flatten (array/map @inlK (fn ti
                         (let ((t (default (array/nth @trs0 @ti) {})))
                           (if (not (array/includes @bound (object/get @t "name" ""))) (let ((tn (object/get @t "name" "")) (on (object/get @o "name" "")) (nt (array/len (object/get @t "stateMachine.transitions" @notr))))

@@ -2,7 +2,7 @@ app std-ocr [
   version: "1.0.0",
   exec: ["pdftoppm", "tesseract"],
   fs: { "~/.almadar/ocr/**": [read, write, create, remove], "~/.almadar/ocr": [read, create] },
-  description: "std-ocr — reads the text of a scanned document or an image by optical character recognition, page by page, through the poppler pdftoppm and the tesseract commands, both run by std-cli. OCR_READ { key, path } answers OCR_TEXT { key, pages } with one { page, text } per page, numbered from 1 in document order and split at the form feed tesseract writes between pages, nothing truncated. A path whose extension (compared case-insensitively) is in the pdfExtensions knob is rendered by `pdftoppm -r <dpi> -png <path> <workDir>/<key>`; the produced <key>-<n>.png files are ordered by the page number n parsed from their names, written one per line to <workDir>/<key>.list and read by `tesseract <list> - -l <languages>`; a path whose extension is in imageExtensions is read directly by `tesseract <path> - -l <languages>` as one page. The page images and the list file are removed afterwards, on failure too. Pages that carry no text at all answer OCR_NO_TEXT { key, pageCount }. A path that starts with a dash, a missing file or a document the commands refuse answers OCR_FAILED { key, error, code } with code ocr_unreadable; a command that could not be run or a work directory that could not be prepared answers ocr_command_failed; an extension in neither list answers ocr_unsupported; a read while another is in flight answers ocr_busy. The key must be a name the caller makes unique per document: every character outside letters, digits, underscore and dash becomes an underscore in the file names. The work directory and the pdftoppm and tesseract exec grants are this atom's own; the path is opened by the child, so the composer decides which files it can name."
+  description: "std-ocr — reads the text of a scanned document or an image by optical character recognition, page by page, through the poppler pdftoppm and the tesseract commands, each run by its own std-cli runner, since a runner's commands are fallbacks for one program. OCR_READ { key, path } answers OCR_TEXT { key, pages } with one { page, text } per page, numbered from 1 in document order and split at the form feed tesseract writes between pages, nothing truncated. A path whose extension (compared case-insensitively) is in the pdfExtensions knob is rendered by `pdftoppm -r <dpi> -png <path> <workDir>/<key>`; the produced <key>-<n>.png files are ordered by the page number n parsed from their names, written one per line to <workDir>/<key>.list and read by `tesseract <list> - -l <languages>`; a path whose extension is in imageExtensions is read directly by `tesseract <path> - -l <languages>` as one page. The page images and the list file are removed afterwards, on failure too. Pages that carry no text at all answer OCR_NO_TEXT { key, pageCount }. A path that starts with a dash, a missing file or a document the commands refuse answers OCR_FAILED { key, error, code } with code ocr_unreadable; a command that could not be run or a work directory that could not be prepared answers ocr_command_failed; an extension in neither list answers ocr_unsupported; a read while another is in flight answers ocr_busy. The key must be a name the caller makes unique per document: every character outside letters, digits, underscore and dash becomes an underscore in the file names. The work directory and the pdftoppm and tesseract exec grants are this atom's own; the path is opened by the child, so the composer decides which files it can name."
 ]
 ;; @capabilities "read the text of a scanned PDF or an image by OCR, page by page"
 uses Spec from "almadar-std/ocr"
@@ -26,12 +26,21 @@ orbital OcrOrbital {
     recognized : string @description "The text tesseract wrote for the read in flight." = ""
   }
 
+  trait OcrRenderCli = Cli.traits.CliRunner {
+    listens {
+      OcrReader.OCR_RENDER_EXEC -> CLI_RUN
+    }
+    config {
+      commands: ["pdftoppm"]
+    }
+  }
+
   trait OcrCli = Cli.traits.CliRunner {
     listens {
       OcrReader.OCR_EXEC -> CLI_RUN
     }
     config {
-      commands: ["pdftoppm", "tesseract"]
+      commands: ["tesseract"]
     }
   }
 
@@ -105,18 +114,18 @@ orbital OcrOrbital {
         (os/realpath @config.workDir { key: "realpath", emit: { success: OCR_DIR_REAL, failure: OCR_HOST_FAILED } })
       OCR_DIR_REAL -> rendering
         (set @entity.realDir @payload.path)
-        (emit OCR_EXEC { stage: @entity.key, argv: ["-r" (str/concat "" @config.dpi) "-png" @entity.path (str/concat @payload.path "/" @entity.prefix)] })
+        (emit OCR_RENDER_EXEC { stage: @entity.key, argv: ["-r" (str/concat "" @config.dpi) "-png" @entity.path (str/concat @payload.path "/" @entity.prefix)] })
       OCR_HOST_FAILED -> ready
         (emit OCR_FAILED { key: @entity.key, error: (str/concat "the work directory could not be prepared: " (default @payload.error "unknown")), code: "ocr_command_failed" })
         (set @entity.key "")
-      OCR_RAN -> listing when (!= @payload.exitCode 0)
+      OCR_RENDER_RAN -> listing when (!= @payload.exitCode 0)
         (set @entity.failed true)
         (set @entity.error (str/concat "pdftoppm exited " @payload.exitCode ": " (str/trim @payload.stderr)))
         (set @entity.code "ocr_unreadable")
         (os/list-dir @config.workDir { key: "list", emit: { success: OCR_LISTED, failure: OCR_HOST_FAILED } })
-      OCR_RAN -> listing when (== @payload.exitCode 0)
+      OCR_RENDER_RAN -> listing when (== @payload.exitCode 0)
         (os/list-dir @config.workDir { key: "list", emit: { success: OCR_LISTED, failure: OCR_HOST_FAILED } })
-      OCR_CLI_FAILED -> listing
+      OCR_RENDER_CLI_FAILED -> listing
         (set @entity.failed true)
         (set @entity.error @payload.error)
         (set @entity.code "ocr_command_failed")
@@ -226,11 +235,17 @@ orbital OcrOrbital {
         @description "The read failed: ocr_unreadable (a command exited non-zero, or the path starts with a dash), ocr_command_failed (a command could not be run or the work directory could not be prepared), ocr_unsupported (the extension is in neither list) or ocr_busy (another read is in flight)."
         @synonyms "ocr error, unreadable scan"
         @tier "domain"
+      OCR_RENDER_EXEC -> external {
+        stage : string!
+        argv : [string]!
+      }
+        @description "A pdftoppm run, handed to the std-cli runner of the pdftoppm command."
+        @tier "internal"
       OCR_EXEC -> external {
         stage : string!
         argv : [string]!
       }
-        @description "A pdftoppm or tesseract run, handed to std-cli."
+        @description "A tesseract run, handed to the std-cli runner of the tesseract command."
         @tier "internal"
       OCR_LISTED_NEXT -> internal {
       }
@@ -249,8 +264,25 @@ orbital OcrOrbital {
       }
         @description "Read the text of the scanned PDF or image at path by OCR, page by page; key names the read in the answer and in its scratch file names."
         @synonyms "ocr, read scan, scanned pdf to text, image to text"
+      OcrRenderCli.CLI_DONE -> OCR_RENDER_RAN
+      OcrRenderCli.CLI_FAILED -> OCR_RENDER_CLI_FAILED
       OcrCli.CLI_DONE -> OCR_RAN
       OcrCli.CLI_FAILED -> OCR_CLI_FAILED
+      OCR_RENDER_RAN {
+        stage : string!
+        exitCode : number!
+        signal : number!
+        stdout : string!
+        stdoutBytes : bytes!
+        stderr : string!
+      }
+        @description "std-cli's CLI_DONE for the pdftoppm run: the command exited, with its code and both streams."
+      OCR_RENDER_CLI_FAILED {
+        stage : string!
+        error : string!
+        code : string!
+      }
+        @description "std-cli's CLI_FAILED for the pdftoppm run: the command could not be run."
       OCR_RAN {
         stage : string!
         exitCode : number!
@@ -259,13 +291,13 @@ orbital OcrOrbital {
         stdoutBytes : bytes!
         stderr : string!
       }
-        @description "std-cli's CLI_DONE: a command exited, with its code and both streams."
+        @description "std-cli's CLI_DONE for the tesseract run: the command exited, with its code and both streams."
       OCR_CLI_FAILED {
         stage : string!
         error : string!
         code : string!
       }
-        @description "std-cli's CLI_FAILED: a command could not be run."
+        @description "std-cli's CLI_FAILED for the tesseract run: the command could not be run."
       OCR_DIR_MADE {
         key : string!
       }
@@ -295,5 +327,5 @@ orbital OcrOrbital {
     }
   }
 
-  page boot as OcrOrbitalStart -> OcrReader, OcrCli
+  page boot as OcrOrbitalStart -> OcrReader, OcrRenderCli, OcrCli
 }

@@ -1,0 +1,107 @@
+{
+  "atom": "../ui/core/atoms/std-date-range.lolo",
+  "trait": "DateRangeFilter",
+  "cases": [
+    {
+      "id": "a-preset-emits-the-range-with-its-days",
+      "note": "DATE_RANGE_PRESET { days } asks for the last N days and names the preset",
+      "config": {
+        "presets": [
+          {
+            "label": "7 days",
+            "days": 7
+          }
+        ]
+      },
+      "steps": [
+        {
+          "trait": "DateRangeFilter",
+          "from": "idle",
+          "event": "DATE_RANGE_PRESET",
+          "entity": {
+            "id": "r",
+            "from": "",
+            "to": "",
+            "days": 0
+          },
+          "payload": {
+            "days": 7
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "DATE_RANGE_CHANGED",
+                "payload": {
+                  "days": 7
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-preset-range-keeps-its-days",
+      "note": "the range a preset produced is remembered with its preset",
+      "steps": [
+        {
+          "trait": "DateRangeFilter",
+          "from": "idle",
+          "event": "DATE_RANGE_CHANGED",
+          "entity": {
+            "id": "r",
+            "from": "",
+            "to": "",
+            "days": 0
+          },
+          "payload": {
+            "from": "2026-10-11",
+            "to": "2026-11-10",
+            "days": 30
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "entity": {
+              "from": "2026-10-11",
+              "to": "2026-11-10",
+              "days": 30
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-custom-range-has-no-preset",
+      "note": "the picker's own range carries no days, so no preset stays selected",
+      "steps": [
+        {
+          "trait": "DateRangeFilter",
+          "from": "idle",
+          "event": "DATE_RANGE_CHANGED",
+          "entity": {
+            "id": "r",
+            "from": "",
+            "to": "",
+            "days": 30
+          },
+          "payload": {
+            "from": "2026-10-01",
+            "to": "2026-10-05"
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "entity": {
+              "from": "2026-10-01",
+              "to": "2026-10-05",
+              "days": 0
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

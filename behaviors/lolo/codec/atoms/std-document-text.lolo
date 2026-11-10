@@ -49,6 +49,12 @@ orbital DocumentTextOrbital {
     }
   }
 
+  trait OcrRenderCli = Ocr.traits.OcrRenderCli {
+    listens {
+      OcrReader.OCR_RENDER_EXEC -> CLI_RUN
+    }
+  }
+
   trait OcrCli = Ocr.traits.OcrCli {
     listens {
       OcrReader.OCR_EXEC -> CLI_RUN
@@ -58,11 +64,26 @@ orbital DocumentTextOrbital {
   trait OcrReader = Ocr.traits.OcrReader {
     listens {
       DocumentText.DOC_OCR_REQUEST -> OCR_READ
+      OcrRenderCli.CLI_DONE -> OCR_RENDER_RAN
+      OcrRenderCli.CLI_FAILED -> OCR_RENDER_CLI_FAILED
       OcrCli.CLI_DONE -> OCR_RAN
       OcrCli.CLI_FAILED -> OCR_CLI_FAILED
       OCR_READ {
         key : string!
         path : string!
+      }
+      OCR_RENDER_RAN {
+        stage : string!
+        exitCode : number!
+        signal : number!
+        stdout : string!
+        stdoutBytes : bytes!
+        stderr : string!
+      }
+      OCR_RENDER_CLI_FAILED {
+        stage : string!
+        error : string!
+        code : string!
       }
       OCR_RAN {
         stage : string!
@@ -254,5 +275,5 @@ orbital DocumentTextOrbital {
     }
   }
 
-  page boot as DocumentTextOrbitalStart -> DocumentText, PdfText, PdfCli, OcrReader, OcrCli
+  page boot as DocumentTextOrbitalStart -> DocumentText, PdfText, PdfCli, OcrReader, OcrRenderCli, OcrCli
 }

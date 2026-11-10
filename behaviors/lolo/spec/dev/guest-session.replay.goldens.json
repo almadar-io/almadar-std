@@ -11830,7 +11830,140 @@
    "now": 1760531445678
   },
   {
-   "id": "control-a-token-the-guest-neither-binds-nor-refuses-names-what-it-answered",
+   "id": "a-bound-credential-arriving-on-the-live-stream-reopens-the-asked-page",
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "event": "GUEST_TICKED",
+     "payload": {
+      "guest": "guest-1",
+      "rendered": [],
+      "emitted": [
+       {
+        "event": "CREDENTIAL_BOUND"
+       }
+      ]
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "guest-1",
+      "guestPaints": [],
+      "guestError": "",
+      "guestIntegrations": "live",
+      "guestSigningIn": true,
+      "guestReturnTo": "/home",
+      "guestPaintSeq": 0,
+      "guestRoute": "/",
+      "guestPage": []
+     },
+     "from": "live",
+     "expect": {
+      "fired": true,
+      "state": "live",
+      "emits": [
+       {
+        "event": "GUEST_NAVIGATE_FAILED",
+        "payload": {
+         "error": "program/navigate: no open guest 'guest-1' (it was never opened or is closed)"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "a-refusal-arriving-on-the-live-stream-is-a-notice",
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "event": "GUEST_TICKED",
+     "payload": {
+      "guest": "guest-1",
+      "rendered": [],
+      "emitted": [
+       {
+        "event": "CREDENTIAL_REFUSED",
+        "payload": {
+         "reason": "signature"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "guest-1",
+      "guestPaints": [],
+      "guestError": "",
+      "guestIntegrations": "live",
+      "guestSigningIn": true,
+      "guestReturnTo": "/home",
+      "guestPaintSeq": 0,
+      "guestRoute": "/",
+      "guestPage": []
+     },
+     "from": "live",
+     "expect": {
+      "fired": true,
+      "state": "live",
+      "emits": [
+       {
+        "event": "GUEST_NOTICE",
+        "payload": {
+         "message": "That sign-in was not accepted by this behavior. Reason: signature"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "control-a-refusal-on-the-stream-when-no-sign-in-is-pending-is-ignored",
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "event": "GUEST_TICKED",
+     "payload": {
+      "guest": "guest-1",
+      "rendered": [],
+      "emitted": [
+       {
+        "event": "CREDENTIAL_REFUSED",
+        "payload": {
+         "reason": "signature"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "guest-1",
+      "guestPaints": [],
+      "guestError": "",
+      "guestIntegrations": "live",
+      "guestSigningIn": false,
+      "guestReturnTo": "/home",
+      "guestPaintSeq": 0,
+      "guestRoute": "/",
+      "guestPage": []
+     },
+     "from": "live",
+     "expect": {
+      "fired": true,
+      "state": "live",
+      "neverEmits": [
+       "GUEST_NOTICE"
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "control-a-token-the-guest-has-not-answered-yet-keeps-waiting",
    "steps": [
     {
      "trait": "GuestSession",
@@ -11849,19 +11982,15 @@
       "guestHandle": "guest-1",
       "guestPaints": [],
       "guestError": "",
-      "guestIntegrations": "live"
+      "guestIntegrations": "live",
+      "guestSigningIn": true
      },
      "from": "live",
      "expect": {
       "fired": true,
       "state": "live",
-      "emits": [
-       {
-        "event": "GUEST_NOTICE",
-        "payload": {
-         "message": "That sign-in was not accepted by this behavior. It answered with: BEARER_VERIFY"
-        }
-       }
+      "neverEmits": [
+       "GUEST_NOTICE"
       ]
      }
     }

@@ -1,13 +1,16 @@
 app std-date-range [
   version: "2.0.0",
-  description: "std-date-range — compact calendar button (Looker / Tableau shape) that opens a popover containing the date-range-picker. Owns a DateRange runtime entity; DATE_RANGE_CHANGED persists @payload.from + @payload.to so cross-trait listeners can route the range into data atoms (Browse REFETCH_FILTER, Stats / Graphs requery)."
+  description: "std-date-range — compact calendar button (Looker / Tableau shape) that opens a popover containing the date-range-picker, after optional preset buttons (config.presets: label + days) that pick the last N days up to today. Owns a DateRange runtime entity; DATE_RANGE_CHANGED { from, to, days? } persists the range and the preset it came from (days, 0 for custom) so cross-trait listeners can route the range into data atoms (Browse REFETCH_FILTER, Stats / Graphs requery)."
 ]
 orbital DateRangeOrbital {
+  type DateRangePreset = { label : string!, days : number! }
+
   entity DateRange [runtime] {
     id : string!
     ;; no range chosen yet: both ends are empty until DATE_RANGE_CHANGED carries them
     from : string @description "The start date of the date range." @synonyms "start, beginning, initial" = ""
     to : string @description "The end date of a date range." @synonyms "end date, finish date, end, final date" = ""
+    days : number @description "The preset the range came from, in days back to today; 0 for a custom range." = 0
   }
 
   trait DateRangeFilter -> DateRange [client] {
@@ -15,48 +18,82 @@ orbital DateRangeOrbital {
 
     state idle {
       INIT -> idle
+        (set @entity.days @config.initialDays)
+        (set @entity.from (if (> @config.initialDays 0) (time/format (time/subtract @now @config.initialDays "d") "YYYY-MM-DD") ""))
+        (set @entity.to (if (> @config.initialDays 0) (time/format @now "YYYY-MM-DD") ""))
         (render-ui main {
-          children: [{
-            action: OPEN_DATE_RANGE
-            icon: calendar
-            label: @config.buttonLabel
-            size: sm
+          type: stack
+          direction: horizontal
+          gap: xs
+          align: center
+          wrap: true
+          children: (array/concat (array/map @config.presets (fn p {
             type: button
-            variant: secondary
-          }]
-          content: {
-            event: @config.event
-            fromLabel: @config.fromLabel
-            toLabel: @config.toLabel
-            type: date-range-picker
-          }
-          position: bottom
-          type: popover
+            size: sm
+            label: @p.label
+            variant: (if (= @entity.days @p.days) primary ghost)
+            action: DATE_RANGE_PRESET
+            actionPayload: { days: @p.days }
+          })) [{
+            children: [{
+              action: OPEN_DATE_RANGE
+              icon: calendar
+              label: @config.buttonLabel
+              size: sm
+              type: button
+              variant: (if (= @entity.days 0) secondary ghost)
+            }]
+            content: {
+              event: @config.event
+              fromLabel: @config.fromLabel
+              toLabel: @config.toLabel
+              type: date-range-picker
+            }
+            position: bottom
+            type: popover
+          }])
         })
       OPEN_DATE_RANGE -> idle
         (set @entity.from @entity.from)
+      DATE_RANGE_PRESET -> idle
+        (emit DATE_RANGE_CHANGED { from: (time/format (time/subtract @now ?days "d") "YYYY-MM-DD"), to: (time/format @now "YYYY-MM-DD"), days: ?days })
       DATE_RANGE_CHANGED -> idle
         (set @entity.from ?from)
         (set @entity.to ?to)
+        (set @entity.days (default ?days 0))
         (render-ui main {
-          children: [{
-            action: OPEN_DATE_RANGE
-            icon: calendar
-            label: @config.buttonLabel
-            size: sm
+          type: stack
+          direction: horizontal
+          gap: xs
+          align: center
+          wrap: true
+          children: (array/concat (array/map @config.presets (fn p {
             type: button
-            variant: secondary
-          }]
-          content: {
-            event: @config.event
-            from: @entity.from
-            fromLabel: @config.fromLabel
-            to: @entity.to
-            toLabel: @config.toLabel
-            type: date-range-picker
-          }
-          position: bottom
-          type: popover
+            size: sm
+            label: @p.label
+            variant: (if (= @entity.days @p.days) primary ghost)
+            action: DATE_RANGE_PRESET
+            actionPayload: { days: @p.days }
+          })) [{
+            children: [{
+              action: OPEN_DATE_RANGE
+              icon: calendar
+              label: @config.buttonLabel
+              size: sm
+              type: button
+              variant: (if (= @entity.days 0) secondary ghost)
+            }]
+            content: {
+              event: @config.event
+              from: @entity.from
+              fromLabel: @config.fromLabel
+              to: @entity.to
+              toLabel: @config.toLabel
+              type: date-range-picker
+            }
+            position: bottom
+            type: popover
+          }])
         })
     }
 
@@ -64,6 +101,7 @@ orbital DateRangeOrbital {
       DATE_RANGE_CHANGED {
         from : string!
         to : string!
+        days : number
       }
         @description "Signals a change in the selected date range."
         @synonyms "range-updated, date-selection, filter-change"
@@ -74,9 +112,16 @@ orbital DateRangeOrbital {
       DATE_RANGE_CHANGED {
         from : string!
         to : string!
+        days : number
       }
-        @description "A date range has been selected and updated."
+        @description "A date range has been selected and updated; days names the preset it came from (absent for a custom range)."
         @synonyms "range-change, date-update, selection-complete"
+        @tier "domain"
+      DATE_RANGE_PRESET {
+        days : number!
+      }
+        @description "A preset was picked: the range from that many days ago to today."
+        @synonyms "last 7 days, last 30 days, quick range"
         @tier "domain"
     }
 
@@ -92,6 +137,15 @@ orbital DateRangeOrbital {
       toLabel : string = To
         @label "End-date label"
         @description "Caption shown above the end-date input"
+        @tier "presentation"
+      presets : [DateRangePreset] = []
+        @label "Preset ranges"
+        @description "Quick ranges shown as buttons before the custom range, each the last `days` days up to today (empty: custom range only)."
+        @synonyms "last 7 days, last 30 days, quick picks, shortcuts"
+        @tier "presentation"
+      initialDays : number = 0
+        @label "Initial preset"
+        @description "The preset (days) the range starts on, shown as selected; 0 starts with no range. Nothing is emitted for it: the composer reads the same window on its own."
         @tier "presentation"
       buttonLabel : string = "Date range"
         @label "Trigger button"
