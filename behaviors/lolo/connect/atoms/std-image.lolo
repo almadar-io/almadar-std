@@ -4,6 +4,7 @@ app std-image [
   net: { "openrouter.ai:443": [tcp], "api.openai.com:443": [tcp], "127.0.0.1:8180": [tcp] }
 ]
 uses Http from "std/behaviors/std-http-client"
+uses Frame from "std/behaviors/std-http-frame"
 uses Timeout from "std/behaviors/std-timeout"
 uses Delay from "std/behaviors/std-delay"
 type HttpHeader = { name : string!, value : string! }
@@ -20,6 +21,12 @@ orbital ImageOrbital {
 
   entity ImageCall [runtime] {
     id : string!
+  }
+
+  trait ImageOrHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      ImageOrHttp.HC_FRAME -> FRAME_RUN
+    }
   }
 
   trait ImageOrHttp = Http.traits.HttpClient {
@@ -40,6 +47,15 @@ orbital ImageOrbital {
     listens {
       ImageClient.IMAGE_OR_SEND -> HTTP_SEND
       ImageTimeout.TIMED_OUT -> IMG_OR_HTTP_CANCEL with { key: ?key }
+      ImageOrHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      ImageOrHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      ImageOrHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
+    }
+  }
+
+  trait ImageOaHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      ImageOaHttp.HC_FRAME -> FRAME_RUN
     }
   }
 
@@ -61,6 +77,15 @@ orbital ImageOrbital {
     listens {
       ImageClient.IMAGE_OA_SEND -> HTTP_SEND
       ImageTimeout.TIMED_OUT -> IMG_OA_HTTP_CANCEL with { key: ?key }
+      ImageOaHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      ImageOaHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      ImageOaHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
+    }
+  }
+
+  trait ImageLocalHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      ImageLocalHttp.HC_FRAME -> FRAME_RUN
     }
   }
 
@@ -79,6 +104,9 @@ orbital ImageOrbital {
     listens {
       ImageClient.IMAGE_LOCAL_SEND -> HTTP_SEND
       ImageTimeout.TIMED_OUT -> IMG_LOCAL_HTTP_CANCEL with { key: ?key }
+      ImageLocalHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      ImageLocalHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      ImageLocalHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
     }
   }
 
@@ -435,5 +463,5 @@ orbital ImageOrbital {
     }
   }
 
-  page boot as ImagePage -> ImageClient, ImageOrHttp, ImageOaHttp, ImageLocalHttp, ImageTimeout, ImageDelay
+  page boot as ImagePage -> ImageClient, ImageOrHttp, ImageOrHttpFrame, ImageOaHttp, ImageOaHttpFrame, ImageLocalHttp, ImageLocalHttpFrame, ImageTimeout, ImageDelay
 }

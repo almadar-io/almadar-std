@@ -4,6 +4,7 @@ app std-youtube [
   net: { "youtube.googleapis.com:443": [tcp] }
 ]
 uses Http from "std/behaviors/std-http-client"
+uses Frame from "std/behaviors/std-http-frame"
 uses Timeout from "std/behaviors/std-timeout"
 type HttpHeader = { name : string!, value : string! }
 type YoutubeJob = { kind : string!, attempt : number!, query : string!, maxResults : number!, type : string!, id : string! }
@@ -28,6 +29,12 @@ orbital YoutubeOrbital {
     seq : number = 0
   }
 
+  trait YoutubeHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      YoutubeHttp.HC_FRAME -> FRAME_RUN
+    }
+  }
+
   trait YoutubeHttp = Http.traits.HttpClient {
     config {
       host: "youtube.googleapis.com"
@@ -41,6 +48,9 @@ orbital YoutubeOrbital {
     listens {
       YoutubeClient.YOUTUBE_HTTP_SEND -> HTTP_SEND
       YoutubeTimeout.TIMED_OUT -> HTTP_CANCEL with { key: ?key }
+      YoutubeHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      YoutubeHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      YoutubeHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
     }
   }
 
@@ -378,5 +388,5 @@ orbital YoutubeOrbital {
 
   }
 
-  page boot as YoutubePage -> YoutubeClient, YoutubeHttp, YoutubeTimeout
+  page boot as YoutubePage -> YoutubeClient, YoutubeHttp, YoutubeHttpFrame, YoutubeTimeout
 }

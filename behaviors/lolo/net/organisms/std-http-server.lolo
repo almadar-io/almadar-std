@@ -23,6 +23,7 @@ uses Brotli from "std/behaviors/std-brotli"
 uses Ticket from "std/behaviors/std-stream-ticket"
 uses Bearer from "std/behaviors/std-bearer-verify"
 uses Http from "std/behaviors/std-http-client"
+uses Frame from "std/behaviors/std-http-frame"
 uses KeyVerifier from "std/behaviors/std-api-key-verifier"
 uses X509 from "std/behaviors/std-x509"
 uses Binding from "std/behaviors/std-identity-binding"
@@ -296,6 +297,12 @@ orbital HttpServerOrbital {
     }
   }
 
+  trait BearerHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      BearerHttp.HC_FRAME -> FRAME_RUN
+    }
+  }
+
   trait BearerHttp = Http.traits.HttpClient {
     config {
       host: "www.googleapis.com"
@@ -305,6 +312,9 @@ orbital HttpServerOrbital {
     }
     listens {
       ServerBearer.BV_GET -> HTTP_SEND
+      BearerHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      BearerHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      BearerHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
     }
   }
 
@@ -347,5 +357,5 @@ orbital HttpServerOrbital {
     }
   }
 
-  page http { host: @config.host, port: @config.port, path: "/" } as Api -> BootGuard, BootCreds, BootCheck, Http1, Http1Timer, ServerPolicy, ServerRateLimiter, ServerRouter, ServerDispatch, ServerStatic, ServerCompress, CompressPolicy, CompressGzip, CompressBrotli, StreamTicketer, ServerSse, ServerLiveFeed, ServerBearer, ServerBinding, ApiKeys, BearerX509, BearerHttp
+  page http { host: @config.host, port: @config.port, path: "/" } as Api -> BootGuard, BootCreds, BootCheck, Http1, Http1Timer, ServerPolicy, ServerRateLimiter, ServerRouter, ServerDispatch, ServerStatic, ServerCompress, CompressPolicy, CompressGzip, CompressBrotli, StreamTicketer, ServerSse, ServerLiveFeed, ServerBearer, ServerBinding, ApiKeys, BearerX509, BearerHttp, BearerHttpFrame
 }

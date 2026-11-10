@@ -5,6 +5,7 @@ app std-banking [
   net: { "bankaccountdata.gocardless.com:443": [tcp] }
 ]
 uses Http from "std/behaviors/std-http-client"
+uses Frame from "std/behaviors/std-http-frame"
 uses Timeout from "std/behaviors/std-timeout"
 type HttpHeader = { name : string!, value : string! }
 type BankingRequisition = { id : string, link : string }
@@ -28,6 +29,12 @@ orbital BankingOrbital {
     mintTried : boolean @description "True once this call minted a token after the store reported none held, so a second not-held answer fails instead of looping." = false
   }
 
+  trait BankingHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      BankingHttp.HC_FRAME -> FRAME_RUN
+    }
+  }
+
   trait BankingHttp = Http.traits.HttpClient {
     config {
       host: "bankaccountdata.gocardless.com"
@@ -41,6 +48,9 @@ orbital BankingOrbital {
     listens {
       BankingClient.BANKING_HTTP_SEND -> HTTP_SEND
       BankingTimeout.TIMED_OUT -> HTTP_CANCEL with { key: ?key }
+      BankingHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      BankingHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      BankingHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
     }
   }
 
@@ -341,5 +351,5 @@ orbital BankingOrbital {
     }
   }
 
-  page boot as BankingPage -> BankingClient, BankingHttp, BankingTimeout
+  page boot as BankingPage -> BankingClient, BankingHttp, BankingHttpFrame, BankingTimeout
 }

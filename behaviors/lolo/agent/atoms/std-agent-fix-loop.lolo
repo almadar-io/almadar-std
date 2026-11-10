@@ -18,6 +18,7 @@ uses Llm from "std/behaviors/std-llm"
 uses Req from "std/behaviors/std-http-request"
 
 uses Http from "std/behaviors/std-http-client"
+uses Frame from "std/behaviors/std-http-frame"
 
 orbital AgentFixLoopOrbital {
 
@@ -40,10 +41,32 @@ orbital AgentFixLoopOrbital {
 
   trait FixLoopChatRequest = Req.traits.HttpRequest {
     listens {
+      FixLoopChatRequestDelay.ELAPSED -> RETRY_ELAPSED
+      FixLoopChatRequestDeadline.ELAPSED -> TIMEOUT_ELAPSED
       FixLoopLlm.LLM_CHAT_WIRE -> HTTP_REQUEST
       FixLoopLlm.LLM_CHAT_WIRE_CANCEL -> HTTP_REQUEST_CANCEL
       FixLoopChatHttp.HTTP_REPLIED -> HTTP_REPLIED
       FixLoopChatHttp.HTTP_FAILED -> HTTP_FAILED
+    }
+  }
+
+  trait FixLoopChatRequestDelay = Req.traits.RequestDelay {
+    listens {
+      FixLoopChatRequest.RETRY_WAIT -> START
+      FixLoopChatRequest.RETRY_STOP -> CANCEL
+    }
+  }
+
+  trait FixLoopChatRequestDeadline = Req.traits.RequestDeadline {
+    listens {
+      FixLoopChatRequest.TIMEOUT_START -> START
+      FixLoopChatRequest.TIMEOUT_STOP -> CANCEL
+    }
+  }
+
+  trait FixLoopChatHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      FixLoopChatHttp.HC_FRAME -> FRAME_RUN
     }
   }
 
@@ -60,6 +83,9 @@ orbital AgentFixLoopOrbital {
     listens {
       FixLoopChatRequest.HTTP_SEND -> HTTP_SEND
       FixLoopChatRequest.HTTP_CANCEL -> HTTP_CANCEL
+      FixLoopChatHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      FixLoopChatHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      FixLoopChatHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
     }
   }
 
@@ -169,5 +195,5 @@ orbital AgentFixLoopOrbital {
     }
   }
 
-  page "/agent-fix-loop" as AgentFixLoopPage -> FixLoopExecution, FixLoopLlm, FixLoopChatRequest, FixLoopChatHttp
+  page "/agent-fix-loop" as AgentFixLoopPage -> FixLoopExecution, FixLoopLlm, FixLoopChatRequest, FixLoopChatRequestDelay, FixLoopChatRequestDeadline, FixLoopChatHttp, FixLoopChatHttpFrame
 }

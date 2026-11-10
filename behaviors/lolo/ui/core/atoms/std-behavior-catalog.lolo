@@ -62,6 +62,7 @@ uses Llm from "std/behaviors/std-llm"
 uses Req from "std/behaviors/std-http-request"
 
 uses Http from "std/behaviors/std-http-client"
+uses Frame from "std/behaviors/std-http-frame"
 
 uses Delay from "std/behaviors/std-delay"
 
@@ -107,10 +108,32 @@ orbital BehaviorCatalogOrbital {
 
   trait CatEmbedRequest = Req.traits.HttpRequest {
     listens {
+      CatEmbedRequestDelay.ELAPSED -> RETRY_ELAPSED
+      CatEmbedRequestDeadline.ELAPSED -> TIMEOUT_ELAPSED
       BehaviorCatalogLlm.LLM_EMBED_WIRE -> HTTP_REQUEST
       BehaviorCatalogLlm.LLM_EMBED_WIRE_CANCEL -> HTTP_REQUEST_CANCEL
       CatEmbedHttp.HTTP_REPLIED -> HTTP_REPLIED
       CatEmbedHttp.HTTP_FAILED -> HTTP_FAILED
+    }
+  }
+
+  trait CatEmbedRequestDelay = Req.traits.RequestDelay {
+    listens {
+      CatEmbedRequest.RETRY_WAIT -> START
+      CatEmbedRequest.RETRY_STOP -> CANCEL
+    }
+  }
+
+  trait CatEmbedRequestDeadline = Req.traits.RequestDeadline {
+    listens {
+      CatEmbedRequest.TIMEOUT_START -> START
+      CatEmbedRequest.TIMEOUT_STOP -> CANCEL
+    }
+  }
+
+  trait CatEmbedHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      CatEmbedHttp.HC_FRAME -> FRAME_RUN
     }
   }
 
@@ -127,6 +150,9 @@ orbital BehaviorCatalogOrbital {
     listens {
       CatEmbedRequest.HTTP_SEND -> HTTP_SEND
       CatEmbedRequest.HTTP_CANCEL -> HTTP_CANCEL
+      CatEmbedHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      CatEmbedHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      CatEmbedHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
     }
   }
 
@@ -742,5 +768,5 @@ orbital BehaviorCatalogOrbital {
     }
   }
 
-  page "/behavior-catalog" as BehaviorCatalogPage -> BehaviorCatalogData, BehaviorCatalog, BehaviorCatalogLlm, CatEmbedWait, CatEmbedRequest, CatEmbedHttp
+  page "/behavior-catalog" as BehaviorCatalogPage -> BehaviorCatalogData, BehaviorCatalog, BehaviorCatalogLlm, CatEmbedWait, CatEmbedRequest, CatEmbedRequestDelay, CatEmbedRequestDeadline, CatEmbedHttp, CatEmbedHttpFrame
 }

@@ -9,6 +9,7 @@ uses Llm from "std/behaviors/std-llm"
 uses Req from "std/behaviors/std-http-request"
 
 uses Http from "std/behaviors/std-http-client"
+uses Frame from "std/behaviors/std-http-frame"
 
 orbital GroundedAnswerOrbital {
 
@@ -64,6 +65,12 @@ orbital GroundedAnswerOrbital {
     }
   }
 
+  trait GroundedChatHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      GroundedChatHttp.HC_FRAME -> FRAME_RUN
+    }
+  }
+
   trait GroundedChatHttp = Http.traits.HttpClient {
     config {
       host: "api.openai.com"
@@ -77,6 +84,9 @@ orbital GroundedAnswerOrbital {
     listens {
       GroundedChatRequest.HTTP_SEND -> HTTP_SEND
       GroundedChatRequest.HTTP_CANCEL -> HTTP_CANCEL
+      GroundedChatHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      GroundedChatHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      GroundedChatHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
     }
   }
 
@@ -242,5 +252,5 @@ orbital GroundedAnswerOrbital {
     }
   }
 
-  page boot as GroundedAnswerPage -> GroundedRun, GroundedLlm, GroundedChatRequest, GroundedChatRequestDelay, GroundedChatRequestDeadline, GroundedChatHttp
+  page boot as GroundedAnswerPage -> GroundedRun, GroundedLlm, GroundedChatRequest, GroundedChatRequestDelay, GroundedChatRequestDeadline, GroundedChatHttp, GroundedChatHttpFrame
 }

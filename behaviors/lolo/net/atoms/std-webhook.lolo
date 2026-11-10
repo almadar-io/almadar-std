@@ -3,6 +3,7 @@ app std-webhook [
   description: "std-webhook — a signed outbound webhook POST to the declared destination, or to a destination the delivery names. WEBHOOK_SEND carries the event name and the payload; the atom posts {event, payload, timestamp} as JSON to the `path` of the destination its sibling WebhookHttp trait declares (host, port, tls, serverName: literal knobs, so the net grant is static) with X-Almadar-Event, and when `signed` is on the signingSecret credential signs the exact body as X-Almadar-Signature: sha256=<hex HMAC-SHA256>, computed in .lolo over the credential slot (the signature is not the secret; the secret never enters program data). A signing secret is never a send value: only the credential's name is configured. A delivery may carry its own destination { host, path } (the callback address an external caller passes with a run): with the allowDynamicDestination knob on it goes to that host and path, with the knob off (the default) it is refused with WEBHOOK_FAILED code destination-not-allowed; a host that does not match the hostPattern knob (a DNS host name) or a path that does not match the pathPattern knob (a slash first, no space or control character) is refused with code destination-invalid before anything is sent. A delivery without a destination goes to the configured one. Per-delivery destinations need the composer to set dynamicHost: true on the sibling WebhookHttp trait and to grant a pattern net entry covering the hosts (a net entry such as *.example.test:443 with tcp, EXEC-GRANTS-1), and to set destinationHost to the host WebhookHttp declares, which a delivery without a destination is sent to as the call host. Signing, retries, the timeout and the body are the same for both kinds, and a retry goes to the destination its delivery named. Several fixed destinations still compose one webhook instance each. A reply below 500 answers WEBHOOK_RESULT {status, ok, durationMs} (a 4xx is a result, not a failure); a 5xx reply, an attempt past the sibling WebhookTimeout deadline or an unreachable endpoint is retried with exponential backoff by std-retry and, once the attempts are spent, answers WEBHOOK_FAILED. An empty event name answers WEBHOOK_FAILED before any attempt.",
 ]
 uses Http from "std/behaviors/std-http-client"
+uses Frame from "std/behaviors/std-http-frame"
 uses Timeout from "std/behaviors/std-timeout"
 type HttpHeader = { name : string!, value : string! }
 orbital WebhookOrbital {
@@ -21,6 +22,12 @@ orbital WebhookOrbital {
     startedAt : instant @description "The instant at which the latest attempt was sent." = "1970-01-01T00:00:00Z"
   }
 
+  trait WebhookHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      WebhookHttp.HC_FRAME -> FRAME_RUN
+    }
+  }
+
   trait WebhookHttp = Http.traits.HttpClient {
     config {
       host: "hooks.example.test"
@@ -31,6 +38,9 @@ orbital WebhookOrbital {
     listens {
       WebhookClient.WEBHOOK_HTTP_SEND -> HTTP_SEND
       WebhookTimeout.TIMED_OUT -> HTTP_CANCEL with { key: ?key }
+      WebhookHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      WebhookHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      WebhookHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
     }
   }
 
@@ -255,5 +265,5 @@ orbital WebhookOrbital {
     }
   }
 
-  page boot as WebhookPage -> WebhookClient, WebhookHttp, WebhookTimeout, WebhookRetry
+  page boot as WebhookPage -> WebhookClient, WebhookHttp, WebhookHttpFrame, WebhookTimeout, WebhookRetry
 }

@@ -134,6 +134,7 @@ uses Spec from "almadar-std/tool-loop"
 uses Llm from "std/behaviors/std-llm"
 uses Req from "std/behaviors/std-http-request"
 uses Http from "std/behaviors/std-http-client"
+uses Frame from "std/behaviors/std-http-frame"
 
 type JsonValue = string | number | boolean | [JsonValue] | Map string JsonValue
 type ToolArguments = Map string JsonValue
@@ -198,6 +199,12 @@ orbital AgentToolLoopOrbital {
     }
   }
 
+  trait LoopChatHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      LoopChatHttp.HC_FRAME -> FRAME_RUN
+    }
+  }
+
   trait LoopChatHttp = Http.traits.HttpClient {
     config {
       host: "api.openai.com"
@@ -211,6 +218,9 @@ orbital AgentToolLoopOrbital {
     listens {
       LoopChatRequest.HTTP_SEND -> HTTP_SEND
       LoopChatRequest.HTTP_CANCEL -> HTTP_CANCEL
+      LoopChatHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      LoopChatHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      LoopChatHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
     }
   }
 
@@ -580,5 +590,5 @@ orbital AgentToolLoopOrbital {
     }
   }
 
-  page boot as AgentToolLoopPage -> AgentToolLoop, LoopLlm, LoopChatRequest, LoopChatRequestDelay, LoopChatRequestDeadline, LoopChatHttp
+  page boot as AgentToolLoopPage -> AgentToolLoop, LoopLlm, LoopChatRequest, LoopChatRequestDelay, LoopChatRequestDeadline, LoopChatHttp, LoopChatHttpFrame
 }

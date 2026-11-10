@@ -5,6 +5,7 @@ app std-npm-lookup [
 ]
 uses Spec from "almadar-std/npm-lookup"
 uses Http from "std/behaviors/std-http-client"
+uses Frame from "std/behaviors/std-http-frame"
 uses Timeout from "std/behaviors/std-timeout"
 type HttpHeader = { name : string!, value : string! }
 type LookupDist = { tarball : string? }
@@ -19,6 +20,12 @@ orbital NpmLookupOrbital {
     tag : string @description "The dist-tag whose version the ask wants; latest when empty." = ""
   }
 
+  trait LookupHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      LookupHttp.HC_FRAME -> FRAME_RUN
+    }
+  }
+
   trait LookupHttp = Http.traits.HttpClient {
     config {
       host: "registry.npmjs.org"
@@ -31,6 +38,9 @@ orbital NpmLookupOrbital {
     listens {
       NpmLookup.NPM_LOOKUP_HTTP_SEND -> HTTP_SEND
       LookupTimeout.TIMED_OUT -> HTTP_CANCEL with { key: ?key }
+      LookupHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      LookupHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      LookupHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
     }
   }
 
@@ -125,5 +135,5 @@ orbital NpmLookupOrbital {
     }
   }
 
-  page boot as NpmLookupPage -> NpmLookup, LookupHttp, LookupTimeout
+  page boot as NpmLookupPage -> NpmLookup, LookupHttp, LookupHttpFrame, LookupTimeout
 }

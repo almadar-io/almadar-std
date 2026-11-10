@@ -6,6 +6,7 @@ app std-oauth [
 ]
 uses Spec from "almadar-std/oauth"
 uses Http from "std/behaviors/std-http-client"
+uses Frame from "std/behaviors/std-http-frame"
 uses Timeout from "std/behaviors/std-timeout"
 type HttpHeader = { name : string!, value : string! }
 type OAuthDiscoveryDoc = { issuer : string?, authorization_endpoint : string?, token_endpoint : string?, userinfo_endpoint : string?, revocation_endpoint : string? }
@@ -61,6 +62,12 @@ orbital OAuthOrbital {
     revocationEndpoint : string = ""
   }
 
+  trait OAuthDiscoveryHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      OAuthDiscoveryHttp.HC_FRAME -> FRAME_RUN
+    }
+  }
+
   trait OAuthDiscoveryHttp = Http.traits.HttpClient {
     config {
       host: "accounts.google.com"
@@ -71,6 +78,15 @@ orbital OAuthOrbital {
     listens {
       OAuthClient.OAUTH_HTTP_SEND -> HTTP_SEND when (= ?key "discovery")
       OAuthTimeout.TIMED_OUT -> HTTP_CANCEL with { key: ?key } when (= ?key "discovery")
+      OAuthDiscoveryHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      OAuthDiscoveryHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      OAuthDiscoveryHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
+    }
+  }
+
+  trait OAuthUserinfoHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      OAuthUserinfoHttp.HC_FRAME -> FRAME_RUN
     }
   }
 
@@ -88,6 +104,15 @@ orbital OAuthOrbital {
     listens {
       OAuthClient.OAUTH_HTTP_SEND -> HTTP_SEND when (= ?key "userinfo")
       OAuthTimeout.TIMED_OUT -> HTTP_CANCEL with { key: ?key } when (= ?key "userinfo")
+      OAuthUserinfoHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      OAuthUserinfoHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      OAuthUserinfoHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
+    }
+  }
+
+  trait OAuthRevokeHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      OAuthRevokeHttp.HC_FRAME -> FRAME_RUN
     }
   }
 
@@ -105,6 +130,9 @@ orbital OAuthOrbital {
     listens {
       OAuthClient.OAUTH_HTTP_SEND -> HTTP_SEND when (= ?key "revoke")
       OAuthTimeout.TIMED_OUT -> HTTP_CANCEL with { key: ?key } when (= ?key "revoke")
+      OAuthRevokeHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      OAuthRevokeHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      OAuthRevokeHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
     }
   }
 
@@ -697,5 +725,5 @@ orbital OAuthOrbital {
     }
   }
 
-  page boot as OAuthPage -> OAuthClient, OAuthDiscoveryHttp, OAuthUserinfoHttp, OAuthRevokeHttp, OAuthTimeout
+  page boot as OAuthPage -> OAuthClient, OAuthDiscoveryHttp, OAuthDiscoveryHttpFrame, OAuthUserinfoHttp, OAuthUserinfoHttpFrame, OAuthRevokeHttp, OAuthRevokeHttpFrame, OAuthTimeout
 }

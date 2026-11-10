@@ -4,6 +4,7 @@ app std-stripe [
   net: { "api.stripe.com:443": [tcp] }
 ]
 uses Http from "std/behaviors/std-http-client"
+uses Frame from "std/behaviors/std-http-frame"
 uses Timeout from "std/behaviors/std-timeout"
 type HttpHeader = { name : string!, value : string! }
 type StripeField = { k : string!, v : string! }
@@ -560,6 +561,12 @@ orbital StripeOrbital {
     }
   }
 
+  trait StripeHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      StripeHttp.HC_FRAME -> FRAME_RUN
+    }
+  }
+
   trait StripeHttp = Http.traits.HttpClient {
     config {
       host: "api.stripe.com"
@@ -573,6 +580,9 @@ orbital StripeOrbital {
     listens {
       StripeClient.STRIPE_HTTP_SEND -> HTTP_SEND
       StripeTimeout.TIMED_OUT -> HTTP_CANCEL with { key: ?key }
+      StripeHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      StripeHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      StripeHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
     }
   }
 
@@ -588,5 +598,5 @@ orbital StripeOrbital {
     }
   }
 
-  page boot as StripePage -> StripeClient, StripeHttp, StripeTimeout
+  page boot as StripePage -> StripeClient, StripeHttp, StripeHttpFrame, StripeTimeout
 }

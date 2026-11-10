@@ -98,6 +98,7 @@ orbital AgentProposalOrbital {
   uses Llm from "std/behaviors/std-llm"
   uses Req from "std/behaviors/std-http-request"
   uses Http from "std/behaviors/std-http-client"
+  uses Frame from "std/behaviors/std-http-frame"
 
   config {
     instructions : string = "You turn what the person hands over into one structured proposal. Look things up with the tools if you need to, then call the proposal tool exactly once with a short summary and the list of items. Do not call it again unless asked to revise."
@@ -756,10 +757,32 @@ orbital AgentProposalOrbital {
 
   trait ProposalChatRequest = Req.traits.HttpRequest {
     listens {
+      ProposalChatRequestDelay.ELAPSED -> RETRY_ELAPSED
+      ProposalChatRequestDeadline.ELAPSED -> TIMEOUT_ELAPSED
       AgentProposalLlm.LLM_CHAT_WIRE -> HTTP_REQUEST
       AgentProposalLlm.LLM_CHAT_WIRE_CANCEL -> HTTP_REQUEST_CANCEL
       ProposalChatHttp.HTTP_REPLIED -> HTTP_REPLIED
       ProposalChatHttp.HTTP_FAILED -> HTTP_FAILED
+    }
+  }
+
+  trait ProposalChatRequestDelay = Req.traits.RequestDelay {
+    listens {
+      ProposalChatRequest.RETRY_WAIT -> START
+      ProposalChatRequest.RETRY_STOP -> CANCEL
+    }
+  }
+
+  trait ProposalChatRequestDeadline = Req.traits.RequestDeadline {
+    listens {
+      ProposalChatRequest.TIMEOUT_START -> START
+      ProposalChatRequest.TIMEOUT_STOP -> CANCEL
+    }
+  }
+
+  trait ProposalChatHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      ProposalChatHttp.HC_FRAME -> FRAME_RUN
     }
   }
 
@@ -776,8 +799,11 @@ orbital AgentProposalOrbital {
     listens {
       ProposalChatRequest.HTTP_SEND -> HTTP_SEND
       ProposalChatRequest.HTTP_CANCEL -> HTTP_CANCEL
+      ProposalChatHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      ProposalChatHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      ProposalChatHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
     }
   }
 
-  page "/agent-proposal" as AgentProposalPage -> AgentProposalWorkflow, AgentProposalLoop, AgentProposalLlm, ProposalChatRequest, ProposalChatHttp
+  page "/agent-proposal" as AgentProposalPage -> AgentProposalWorkflow, AgentProposalLoop, AgentProposalLlm, ProposalChatRequest, ProposalChatRequestDelay, ProposalChatRequestDeadline, ProposalChatHttp, ProposalChatHttpFrame
 }

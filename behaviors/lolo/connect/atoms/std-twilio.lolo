@@ -4,6 +4,7 @@ app std-twilio [
   net: { "api.twilio.com:443": [tcp] }
 ]
 uses Http from "std/behaviors/std-http-client"
+uses Frame from "std/behaviors/std-http-frame"
 uses Timeout from "std/behaviors/std-timeout"
 type HttpHeader = { name : string!, value : string! }
 type TwilioMessage = { sid : string, status : string }
@@ -11,6 +12,12 @@ type TwilioError = { type : string, title : string, status : number, code : numb
 orbital TwilioOrbital {
   entity TwilioMessageRequest [runtime] {
     id : string!
+  }
+
+  trait TwilioHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      TwilioHttp.HC_FRAME -> FRAME_RUN
+    }
   }
 
   trait TwilioHttp = Http.traits.HttpClient {
@@ -27,6 +34,9 @@ orbital TwilioOrbital {
     listens {
       TwilioClient.TWILIO_HTTP_SEND -> HTTP_SEND
       TwilioTimeout.TIMED_OUT -> HTTP_CANCEL with { key: ?key }
+      TwilioHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      TwilioHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      TwilioHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
     }
   }
 
@@ -198,5 +208,5 @@ orbital TwilioOrbital {
     }
   }
 
-  page boot as TwilioPage -> TwilioClient, TwilioHttp, TwilioTimeout
+  page boot as TwilioPage -> TwilioClient, TwilioHttp, TwilioHttpFrame, TwilioTimeout
 }

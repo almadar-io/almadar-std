@@ -153,6 +153,7 @@ uses Llm from "std/behaviors/std-llm"
 uses Req from "std/behaviors/std-http-request"
 
 uses Http from "std/behaviors/std-http-client"
+uses Frame from "std/behaviors/std-http-frame"
 
 uses Delay from "std/behaviors/std-delay"
 
@@ -688,10 +689,32 @@ orbital AgentBuilderOrbital {
 
   trait BldEmbedRequest = Req.traits.HttpRequest {
     listens {
+      BldEmbedRequestDelay.ELAPSED -> RETRY_ELAPSED
+      BldEmbedRequestDeadline.ELAPSED -> TIMEOUT_ELAPSED
       BuilderLlm.LLM_EMBED_WIRE -> HTTP_REQUEST
       BuilderLlm.LLM_EMBED_WIRE_CANCEL -> HTTP_REQUEST_CANCEL
       BldEmbedHttp.HTTP_REPLIED -> HTTP_REPLIED
       BldEmbedHttp.HTTP_FAILED -> HTTP_FAILED
+    }
+  }
+
+  trait BldEmbedRequestDelay = Req.traits.RequestDelay {
+    listens {
+      BldEmbedRequest.RETRY_WAIT -> START
+      BldEmbedRequest.RETRY_STOP -> CANCEL
+    }
+  }
+
+  trait BldEmbedRequestDeadline = Req.traits.RequestDeadline {
+    listens {
+      BldEmbedRequest.TIMEOUT_START -> START
+      BldEmbedRequest.TIMEOUT_STOP -> CANCEL
+    }
+  }
+
+  trait BldEmbedHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      BldEmbedHttp.HC_FRAME -> FRAME_RUN
     }
   }
 
@@ -708,15 +731,40 @@ orbital AgentBuilderOrbital {
     listens {
       BldEmbedRequest.HTTP_SEND -> HTTP_SEND
       BldEmbedRequest.HTTP_CANCEL -> HTTP_CANCEL
+      BldEmbedHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      BldEmbedHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      BldEmbedHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
     }
   }
 
   trait BldChatRequest = Req.traits.HttpRequest {
     listens {
+      BldChatRequestDelay.ELAPSED -> RETRY_ELAPSED
+      BldChatRequestDeadline.ELAPSED -> TIMEOUT_ELAPSED
       BuilderLlm.LLM_CHAT_WIRE -> HTTP_REQUEST
       BuilderLlm.LLM_CHAT_WIRE_CANCEL -> HTTP_REQUEST_CANCEL
       BldChatHttp.HTTP_REPLIED -> HTTP_REPLIED
       BldChatHttp.HTTP_FAILED -> HTTP_FAILED
+    }
+  }
+
+  trait BldChatRequestDelay = Req.traits.RequestDelay {
+    listens {
+      BldChatRequest.RETRY_WAIT -> START
+      BldChatRequest.RETRY_STOP -> CANCEL
+    }
+  }
+
+  trait BldChatRequestDeadline = Req.traits.RequestDeadline {
+    listens {
+      BldChatRequest.TIMEOUT_START -> START
+      BldChatRequest.TIMEOUT_STOP -> CANCEL
+    }
+  }
+
+  trait BldChatHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      BldChatHttp.HC_FRAME -> FRAME_RUN
     }
   }
 
@@ -733,14 +781,39 @@ orbital AgentBuilderOrbital {
     listens {
       BldChatRequest.HTTP_SEND -> HTTP_SEND
       BldChatRequest.HTTP_CANCEL -> HTTP_CANCEL
+      BldChatHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      BldChatHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      BldChatHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
     }
   }
 
   trait BldJevRequest = Req.traits.HttpRequest {
     listens {
+      BldJevRequestDelay.ELAPSED -> RETRY_ELAPSED
+      BldJevRequestDeadline.ELAPSED -> TIMEOUT_ELAPSED
       BuilderLlm.LLM_JEV_WIRE -> HTTP_REQUEST
       BldJevHttp.HTTP_REPLIED -> HTTP_REPLIED
       BldJevHttp.HTTP_FAILED -> HTTP_FAILED
+    }
+  }
+
+  trait BldJevRequestDelay = Req.traits.RequestDelay {
+    listens {
+      BldJevRequest.RETRY_WAIT -> START
+      BldJevRequest.RETRY_STOP -> CANCEL
+    }
+  }
+
+  trait BldJevRequestDeadline = Req.traits.RequestDeadline {
+    listens {
+      BldJevRequest.TIMEOUT_START -> START
+      BldJevRequest.TIMEOUT_STOP -> CANCEL
+    }
+  }
+
+  trait BldJevHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      BldJevHttp.HC_FRAME -> FRAME_RUN
     }
   }
 
@@ -757,6 +830,9 @@ orbital AgentBuilderOrbital {
     listens {
       BldJevRequest.HTTP_SEND -> HTTP_SEND
       BldJevRequest.HTTP_CANCEL -> HTTP_CANCEL
+      BldJevHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      BldJevHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      BldJevHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
     }
   }
 
@@ -794,5 +870,5 @@ orbital AgentBuilderOrbital {
     }
   }
 
-  page boot as AgentBuilderPage -> BuilderPipeline, BuilderTools, BuilderLlm, BldEmbedWait, BldEmbedRequest, BldEmbedHttp, BldChatRequest, BldChatHttp, BldJevRequest, BldJevHttp
+  page boot as AgentBuilderPage -> BuilderPipeline, BuilderTools, BuilderLlm, BldEmbedWait, BldEmbedRequest, BldEmbedRequestDelay, BldEmbedRequestDeadline, BldEmbedHttp, BldEmbedHttpFrame, BldChatRequest, BldChatRequestDelay, BldChatRequestDeadline, BldChatHttp, BldChatHttpFrame, BldJevRequest, BldJevRequestDelay, BldJevRequestDeadline, BldJevHttp, BldJevHttpFrame
 }

@@ -9,6 +9,7 @@ orbital ConceptPersonaOrbital {
   uses Llm from "std/behaviors/std-llm"
   uses Req from "std/behaviors/std-http-request"
   uses Http from "std/behaviors/std-http-client"
+  uses Frame from "std/behaviors/std-http-frame"
   uses WikiApi from "std/behaviors/std-wikimedia"
 
   entity ConceptPersonaLookup [runtime] {
@@ -280,10 +281,32 @@ orbital ConceptPersonaOrbital {
 
   trait PersonaChatRequest = Req.traits.HttpRequest {
     listens {
+      PersonaChatRequestDelay.ELAPSED -> RETRY_ELAPSED
+      PersonaChatRequestDeadline.ELAPSED -> TIMEOUT_ELAPSED
       PersonaLlmApi.LLM_CHAT_WIRE -> HTTP_REQUEST
       PersonaLlmApi.LLM_CHAT_WIRE_CANCEL -> HTTP_REQUEST_CANCEL
       PersonaChatHttp.HTTP_REPLIED -> HTTP_REPLIED
       PersonaChatHttp.HTTP_FAILED -> HTTP_FAILED
+    }
+  }
+
+  trait PersonaChatRequestDelay = Req.traits.RequestDelay {
+    listens {
+      PersonaChatRequest.RETRY_WAIT -> START
+      PersonaChatRequest.RETRY_STOP -> CANCEL
+    }
+  }
+
+  trait PersonaChatRequestDeadline = Req.traits.RequestDeadline {
+    listens {
+      PersonaChatRequest.TIMEOUT_START -> START
+      PersonaChatRequest.TIMEOUT_STOP -> CANCEL
+    }
+  }
+
+  trait PersonaChatHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      PersonaChatHttp.HC_FRAME -> FRAME_RUN
     }
   }
 
@@ -300,6 +323,9 @@ orbital ConceptPersonaOrbital {
     listens {
       PersonaChatRequest.HTTP_SEND -> HTTP_SEND
       PersonaChatRequest.HTTP_CANCEL -> HTTP_CANCEL
+      PersonaChatHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      PersonaChatHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      PersonaChatHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
     }
   }
 
@@ -332,5 +358,5 @@ orbital ConceptPersonaOrbital {
     }
   }
 
-  page boot as ConceptPersonaPage -> ConceptPersonaResolver, PersonaLlmApi, PersonaChatRequest, PersonaChatHttp, PersonaWikiApi, PersonaWikiFetch
+  page boot as ConceptPersonaPage -> ConceptPersonaResolver, PersonaLlmApi, PersonaChatRequest, PersonaChatRequestDelay, PersonaChatRequestDeadline, PersonaChatHttp, PersonaChatHttpFrame, PersonaWikiApi, PersonaWikiFetch
 }

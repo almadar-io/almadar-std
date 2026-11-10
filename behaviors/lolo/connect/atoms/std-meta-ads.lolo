@@ -4,6 +4,7 @@ app std-meta-ads [
   net: { "graph.facebook.com:443": [tcp] }
 ]
 uses Http from "std/behaviors/std-http-client"
+uses Frame from "std/behaviors/std-http-frame"
 uses Timeout from "std/behaviors/std-timeout"
 type HttpHeader = { name : string!, value : string! }
 type MetaInsightRow = { spend : string, impressions : string, clicks : string, account_currency : string }
@@ -19,6 +20,12 @@ orbital MetaAdsOrbital {
     id : string!
   }
 
+  trait MetaAdsHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      MetaAdsHttp.HC_FRAME -> FRAME_RUN
+    }
+  }
+
   trait MetaAdsHttp = Http.traits.HttpClient {
     config {
       host: "graph.facebook.com"
@@ -32,6 +39,9 @@ orbital MetaAdsOrbital {
     listens {
       MetaAdsClient.META_ADS_HTTP_SEND -> HTTP_SEND
       MetaAdsTimeout.TIMED_OUT -> HTTP_CANCEL with { key: ?key }
+      MetaAdsHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      MetaAdsHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      MetaAdsHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
     }
   }
 
@@ -208,5 +218,5 @@ orbital MetaAdsOrbital {
     }
   }
 
-  page boot as MetaAdsPage -> MetaAdsClient, MetaAdsHttp, MetaAdsTimeout
+  page boot as MetaAdsPage -> MetaAdsClient, MetaAdsHttp, MetaAdsHttpFrame, MetaAdsTimeout
 }

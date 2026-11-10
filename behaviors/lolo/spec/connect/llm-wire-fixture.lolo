@@ -6,6 +6,7 @@ app llm-wire-fixture [
 uses Llm from "std/behaviors/std-llm"
 uses Req from "std/behaviors/std-http-request"
 uses Http from "std/behaviors/std-http-client"
+uses Frame from "std/behaviors/std-http-frame"
 
 orbital LlmWireFixtureOrbital {
   entity WireCall [runtime] {
@@ -126,10 +127,32 @@ orbital LlmWireFixtureOrbital {
 
   trait AnthropicRequest = Req.traits.HttpRequest {
     listens {
+      AnthropicRequestDelay.ELAPSED -> RETRY_ELAPSED
+      AnthropicRequestDeadline.ELAPSED -> TIMEOUT_ELAPSED
       AnthropicLlm.LLM_CHAT_WIRE -> HTTP_REQUEST
       AnthropicLlm.LLM_CHAT_WIRE_CANCEL -> HTTP_REQUEST_CANCEL
       AnthropicHttp.HTTP_REPLIED -> HTTP_REPLIED
       AnthropicHttp.HTTP_FAILED -> HTTP_FAILED
+    }
+  }
+
+  trait AnthropicRequestDelay = Req.traits.RequestDelay {
+    listens {
+      AnthropicRequest.RETRY_WAIT -> START
+      AnthropicRequest.RETRY_STOP -> CANCEL
+    }
+  }
+
+  trait AnthropicRequestDeadline = Req.traits.RequestDeadline {
+    listens {
+      AnthropicRequest.TIMEOUT_START -> START
+      AnthropicRequest.TIMEOUT_STOP -> CANCEL
+    }
+  }
+
+  trait AnthropicHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      AnthropicHttp.HC_FRAME -> FRAME_RUN
     }
   }
 
@@ -145,6 +168,9 @@ orbital LlmWireFixtureOrbital {
     listens {
       AnthropicRequest.HTTP_SEND -> HTTP_SEND
       AnthropicRequest.HTTP_CANCEL -> HTTP_CANCEL
+      AnthropicHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      AnthropicHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      AnthropicHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
     }
   }
 
@@ -168,10 +194,32 @@ orbital LlmWireFixtureOrbital {
 
   trait LocalRequest = Req.traits.HttpRequest {
     listens {
+      LocalRequestDelay.ELAPSED -> RETRY_ELAPSED
+      LocalRequestDeadline.ELAPSED -> TIMEOUT_ELAPSED
       LocalLlm.LLM_CHAT_WIRE -> HTTP_REQUEST
       LocalLlm.LLM_CHAT_WIRE_CANCEL -> HTTP_REQUEST_CANCEL
       LocalHttp.HTTP_REPLIED -> HTTP_REPLIED
       LocalHttp.HTTP_FAILED -> HTTP_FAILED
+    }
+  }
+
+  trait LocalRequestDelay = Req.traits.RequestDelay {
+    listens {
+      LocalRequest.RETRY_WAIT -> START
+      LocalRequest.RETRY_STOP -> CANCEL
+    }
+  }
+
+  trait LocalRequestDeadline = Req.traits.RequestDeadline {
+    listens {
+      LocalRequest.TIMEOUT_START -> START
+      LocalRequest.TIMEOUT_STOP -> CANCEL
+    }
+  }
+
+  trait LocalHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      LocalHttp.HC_FRAME -> FRAME_RUN
     }
   }
 
@@ -185,6 +233,9 @@ orbital LlmWireFixtureOrbital {
     listens {
       LocalRequest.HTTP_SEND -> HTTP_SEND
       LocalRequest.HTTP_CANCEL -> HTTP_CANCEL
+      LocalHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      LocalHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      LocalHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
     }
   }
 
@@ -209,10 +260,32 @@ orbital LlmWireFixtureOrbital {
 
   trait LocalQuietRequest = Req.traits.HttpRequest {
     listens {
+      LocalQuietRequestDelay.ELAPSED -> RETRY_ELAPSED
+      LocalQuietRequestDeadline.ELAPSED -> TIMEOUT_ELAPSED
       LocalQuietLlm.LLM_CHAT_WIRE -> HTTP_REQUEST
       LocalQuietLlm.LLM_CHAT_WIRE_CANCEL -> HTTP_REQUEST_CANCEL
       LocalQuietHttp.HTTP_REPLIED -> HTTP_REPLIED
       LocalQuietHttp.HTTP_FAILED -> HTTP_FAILED
+    }
+  }
+
+  trait LocalQuietRequestDelay = Req.traits.RequestDelay {
+    listens {
+      LocalQuietRequest.RETRY_WAIT -> START
+      LocalQuietRequest.RETRY_STOP -> CANCEL
+    }
+  }
+
+  trait LocalQuietRequestDeadline = Req.traits.RequestDeadline {
+    listens {
+      LocalQuietRequest.TIMEOUT_START -> START
+      LocalQuietRequest.TIMEOUT_STOP -> CANCEL
+    }
+  }
+
+  trait LocalQuietHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      LocalQuietHttp.HC_FRAME -> FRAME_RUN
     }
   }
 
@@ -226,8 +299,11 @@ orbital LlmWireFixtureOrbital {
     listens {
       LocalQuietRequest.HTTP_SEND -> HTTP_SEND
       LocalQuietRequest.HTTP_CANCEL -> HTTP_CANCEL
+      LocalQuietHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      LocalQuietHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      LocalQuietHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
     }
   }
 
-  page boot as LlmWireFixturePage -> WireDriver, AnthropicLlm, AnthropicRequest, AnthropicHttp, LocalLlm, LocalRequest, LocalHttp, LocalQuietLlm, LocalQuietRequest, LocalQuietHttp
+  page boot as LlmWireFixturePage -> WireDriver, AnthropicLlm, AnthropicRequest, AnthropicRequestDelay, AnthropicRequestDeadline, AnthropicHttp, AnthropicHttpFrame, LocalLlm, LocalRequest, LocalRequestDelay, LocalRequestDeadline, LocalHttp, LocalHttpFrame, LocalQuietLlm, LocalQuietRequest, LocalQuietRequestDelay, LocalQuietRequestDeadline, LocalQuietHttp, LocalQuietHttpFrame
 }

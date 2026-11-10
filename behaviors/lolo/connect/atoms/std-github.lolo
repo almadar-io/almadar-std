@@ -5,6 +5,7 @@ app std-github [
 ]
 uses Spec from "almadar-std/github"
 uses Http from "std/behaviors/std-http-client"
+uses Frame from "std/behaviors/std-http-frame"
 uses Timeout from "std/behaviors/std-timeout"
 type HttpHeader = { name : string!, value : string! }
 type GithubError = { message : string }
@@ -40,6 +41,12 @@ orbital GithubOrbital {
     id : string!
   }
 
+  trait GithubHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      GithubHttp.HC_FRAME -> FRAME_RUN
+    }
+  }
+
   trait GithubHttp = Http.traits.HttpClient {
     config {
       host: "api.github.com"
@@ -53,6 +60,9 @@ orbital GithubOrbital {
     listens {
       GithubClient.GITHUB_HTTP_SEND -> HTTP_SEND
       GithubTimeout.TIMED_OUT -> HTTP_CANCEL with { key: ?key }
+      GithubHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      GithubHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      GithubHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
     }
   }
 
@@ -847,5 +857,5 @@ orbital GithubOrbital {
     }
   }
 
-  page boot as GithubPage -> GithubClient, GithubHttp, GithubTimeout
+  page boot as GithubPage -> GithubClient, GithubHttp, GithubHttpFrame, GithubTimeout
 }

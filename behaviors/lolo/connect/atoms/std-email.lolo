@@ -3,6 +3,7 @@ app std-email [
   description: "std-email — transactional email through SendGrid or Resend over the composed std-http-client. EMAIL_SEND sends one message through the vendor the `vendor` knob names and answers EMAIL_SENT { id?, status } or EMAIL_SEND_FAILED { code?, message }. Credentials are the SENDGRID_API_KEY / RESEND_API_KEY names, resolved by the host.",
 ]
 uses Http from "std/behaviors/std-http-client"
+uses Frame from "std/behaviors/std-http-frame"
 uses Timeout from "std/behaviors/std-timeout"
 type HttpHeader = { name : string!, value : string! }
 type ResendReply = { id : string, message : string }
@@ -185,6 +186,12 @@ orbital EmailOrbital {
     }
   }
 
+  trait EmailSendgridHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      EmailSendgridHttp.HC_FRAME -> FRAME_RUN
+    }
+  }
+
   trait EmailSendgridHttp = Http.traits.HttpClient {
     config {
       host: "api.sendgrid.com"
@@ -198,6 +205,15 @@ orbital EmailOrbital {
     listens {
       EmailSender.EMAIL_HTTP_SEND -> HTTP_SEND with { key: ?key, method: ?method, target: ?target, headers: ?headers, body: ?body, stream: ?stream, host: ?host } when (= ?host "api.sendgrid.com")
       EmailTimeout.TIMED_OUT -> HTTP_CANCEL with { key: ?key } when (= ?key "sendgrid")
+      EmailSendgridHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      EmailSendgridHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      EmailSendgridHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
+    }
+  }
+
+  trait EmailResendHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      EmailResendHttp.HC_FRAME -> FRAME_RUN
     }
   }
 
@@ -214,6 +230,9 @@ orbital EmailOrbital {
     listens {
       EmailSender.EMAIL_HTTP_SEND -> HTTP_SEND with { key: ?key, method: ?method, target: ?target, headers: ?headers, body: ?body, stream: ?stream, host: ?host } when (= ?host "api.resend.com")
       EmailTimeout.TIMED_OUT -> HTTP_CANCEL with { key: ?key } when (= ?key "resend")
+      EmailResendHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      EmailResendHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      EmailResendHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
     }
   }
 
@@ -231,5 +250,5 @@ orbital EmailOrbital {
     }
   }
 
-  page boot as EmailPage -> EmailSender, EmailSendgridHttp, EmailResendHttp, EmailTimeout
+  page boot as EmailPage -> EmailSender, EmailSendgridHttp, EmailSendgridHttpFrame, EmailResendHttp, EmailResendHttpFrame, EmailTimeout
 }

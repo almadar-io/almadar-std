@@ -6,6 +6,7 @@ app std-sidecar-fetch [
 ]
 uses Spec from "almadar-std/sidecar-fetch"
 uses Http from "std/behaviors/std-http-client"
+uses Frame from "std/behaviors/std-http-frame"
 type HttpHeader = { name : string!, value : string! }
 
 orbital SidecarFetchOrbital {
@@ -28,6 +29,12 @@ orbital SidecarFetchOrbital {
     }
   }
 
+  trait SidecarHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      SidecarHttp.HC_FRAME -> FRAME_RUN
+    }
+  }
+
   trait SidecarHttp = Http.traits.HttpClient {
     config {
       host: "storage.googleapis.com"
@@ -37,6 +44,9 @@ orbital SidecarFetchOrbital {
     }
     listens {
       SidecarFetch.SC_GET -> HTTP_SEND
+      SidecarHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      SidecarHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      SidecarHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
     }
   }
 
@@ -178,5 +188,5 @@ orbital SidecarFetchOrbital {
     }
   }
 
-  page boot as SidecarFetchPage -> SidecarFetch, SidecarHttp, Digest
+  page boot as SidecarFetchPage -> SidecarFetch, SidecarHttp, SidecarHttpFrame, Digest
 }

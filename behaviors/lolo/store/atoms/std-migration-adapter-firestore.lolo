@@ -4,6 +4,7 @@ app std-migration-adapter-firestore [
   net: { "firestore.googleapis.com:443": [tcp], "*.googleapis.com:443": [tcp] }
 ]
 uses Http from "std/behaviors/std-http-client"
+uses Frame from "std/behaviors/std-http-frame"
 uses Timeout from "std/behaviors/std-timeout"
 type HttpHeader = { name : string!, value : string! }
 orbital MigrationAdapterFirestoreOrbital {
@@ -353,6 +354,12 @@ orbital MigrationAdapterFirestoreOrbital {
     }
   }
 
+  trait MigrationAdapterFirestoreHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      MigrationAdapterFirestoreHttp.HC_FRAME -> FRAME_RUN
+    }
+  }
+
   trait MigrationAdapterFirestoreHttp = Http.traits.HttpClient {
     config {
       host: "firestore.googleapis.com"
@@ -367,6 +374,9 @@ orbital MigrationAdapterFirestoreOrbital {
     listens {
       MigrationAdapterFirestore.FIRESTORE_HTTP_SEND -> HTTP_SEND
       MigrationAdapterFirestoreTimeout.TIMED_OUT -> HTTP_CANCEL with { key: ?key }
+      MigrationAdapterFirestoreHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      MigrationAdapterFirestoreHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      MigrationAdapterFirestoreHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
     }
   }
 
@@ -382,5 +392,5 @@ orbital MigrationAdapterFirestoreOrbital {
     }
   }
 
-  page "/migration-adapter-firestore" as MigrationAdapterFirestorePage -> MigrationAdapterFirestore, MigrationAdapterFirestoreHttp, MigrationAdapterFirestoreTimeout
+  page "/migration-adapter-firestore" as MigrationAdapterFirestorePage -> MigrationAdapterFirestore, MigrationAdapterFirestoreHttp, MigrationAdapterFirestoreHttpFrame, MigrationAdapterFirestoreTimeout
 }

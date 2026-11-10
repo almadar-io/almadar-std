@@ -9,6 +9,7 @@ uses Llm from "std/behaviors/std-llm"
 uses Req from "std/behaviors/std-http-request"
 
 uses Http from "std/behaviors/std-http-client"
+uses Frame from "std/behaviors/std-http-frame"
 
 orbital MlClassifyOrbital {
 
@@ -43,10 +44,32 @@ orbital MlClassifyOrbital {
 
   trait ClassifyChatRequest = Req.traits.HttpRequest {
     listens {
+      ClassifyChatRequestDelay.ELAPSED -> RETRY_ELAPSED
+      ClassifyChatRequestDeadline.ELAPSED -> TIMEOUT_ELAPSED
       ClassifyLlm.LLM_CHAT_WIRE -> HTTP_REQUEST
       ClassifyLlm.LLM_CHAT_WIRE_CANCEL -> HTTP_REQUEST_CANCEL
       ClassifyChatHttp.HTTP_REPLIED -> HTTP_REPLIED
       ClassifyChatHttp.HTTP_FAILED -> HTTP_FAILED
+    }
+  }
+
+  trait ClassifyChatRequestDelay = Req.traits.RequestDelay {
+    listens {
+      ClassifyChatRequest.RETRY_WAIT -> START
+      ClassifyChatRequest.RETRY_STOP -> CANCEL
+    }
+  }
+
+  trait ClassifyChatRequestDeadline = Req.traits.RequestDeadline {
+    listens {
+      ClassifyChatRequest.TIMEOUT_START -> START
+      ClassifyChatRequest.TIMEOUT_STOP -> CANCEL
+    }
+  }
+
+  trait ClassifyChatHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      ClassifyChatHttp.HC_FRAME -> FRAME_RUN
     }
   }
 
@@ -63,6 +86,9 @@ orbital MlClassifyOrbital {
     listens {
       ClassifyChatRequest.HTTP_SEND -> HTTP_SEND
       ClassifyChatRequest.HTTP_CANCEL -> HTTP_CANCEL
+      ClassifyChatHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      ClassifyChatHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      ClassifyChatHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
     }
   }
 
@@ -179,5 +205,5 @@ orbital MlClassifyOrbital {
     }
   }
 
-  page "/ml-classify" as MlClassifyPage -> ClassifyRun, ClassifyLlm, ClassifyChatRequest, ClassifyChatHttp
+  page "/ml-classify" as MlClassifyPage -> ClassifyRun, ClassifyLlm, ClassifyChatRequest, ClassifyChatRequestDelay, ClassifyChatRequestDeadline, ClassifyChatHttp, ClassifyChatHttpFrame
 }

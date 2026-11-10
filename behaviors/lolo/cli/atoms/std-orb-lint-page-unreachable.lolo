@@ -8,7 +8,7 @@ app std-orb-lint-page-unreachable [
 ]
 uses Spec from "almadar-std/lint-page-unreachable"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
-type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error", validValues : [string], entity : string, field : string }
 type ReachEntry = { loc : string, path : string, labelled : boolean }
 type ReachVal = string | number | boolean | [ReachVal?] | Map string ReachVal?
 type ReachPageTrait = { ref : string?, name : string? }
@@ -84,7 +84,7 @@ orbital OrbLintPageUnreachableOrbital {
                                     (if (and (validate/object @n) (not (validate/array @n)))
                                       (array/flatten (array/map ["href" "navigatesTo"] (fn k
                                         (let ((hv (object/get @n @k null)))
-                                          (let ((hvs (if (and (validate/array @hv) (= (array/len @hv) 4) (= (array/first @hv) "if")) [(array/nth @hv 2) (array/nth @hv 3)] [@hv])))
+                                          (let ((hvs (if (and (validate/array @hv) (= (array/len @hv) 4) (= (array/first @hv) "if")) (let ((cs (if (validate/array (array/nth @hv 1)) (default (as (array/nth @hv 1) ReachStrings) []) []))) (if (and (= (array/len @cs) 3) (array/includes ["==", "=", "!="] (array/first @cs)) (validate/string (array/nth @cs 1)) (validate/string (array/nth @cs 2)) (not (str/startsWith (default (array/nth @cs 1) "") (quote "@"))) (not (str/startsWith (default (array/nth @cs 2) "") (quote "@")))) [(if (= (= (array/first @cs) "!=") (= (array/nth @cs 1) (array/nth @cs 2))) (array/nth @hv 3) (array/nth @hv 2))] [(array/nth @hv 2) (array/nth @hv 3)])) [@hv])))
                                             (array/flatten (array/map @hvs (fn c
                                               (if (and (validate/string @c) (!= @c "") (not (str/startsWith @c (quote "@"))))
                                                 [@c]
@@ -106,12 +106,14 @@ orbital OrbLintPageUnreachableOrbital {
                                 (array/flatten (array/map (object/get (default (as (tree/index @v ["navigate"]) ReachIndex) {}) "navigate" []) (fn c
                                   (let ((n (default (as (object/get @c "node") ReachEffect) [])))
                                     (if (> (array/len @n) 1)
-                                      (let ((tg (array/nth @n 1)))
+                                      (let ((tg0 (array/nth @n 1)))
+                                       (let ((tcs (if (and (validate/array @tg0) (= (array/len @tg0) 4) (= (array/first @tg0) "if") (validate/array (array/nth @tg0 1))) (default (as (array/nth @tg0 1) ReachStrings) []) [])))
+                                       (let ((tg (if (and (= (array/len @tcs) 3) (array/includes ["==", "=", "!="] (array/first @tcs)) (validate/string (array/nth @tcs 1)) (validate/string (array/nth @tcs 2)) (not (str/startsWith (default (array/nth @tcs 1) "") (quote "@"))) (not (str/startsWith (default (array/nth @tcs 2) "") (quote "@")))) (if (= (= (array/first @tcs) "!=") (= (array/nth @tcs 1) (array/nth @tcs 2))) (array/nth (default (as @tg0 ReachEffect) []) 3) (array/nth (default (as @tg0 ReachEffect) []) 2)) @tg0)))
                                         (if (validate/string @tg)
                                           [@tg]
                                           (if (and (validate/array @tg) (> (array/len @tg) 1) (= (array/first @tg) "str/concat") (validate/string (array/nth @tg 1)))
                                             [(array/nth @tg 1)]
-                                            [])))
+                                            [])))))
                                       []))))))))))
                       (sigil (= (tree/fold { app: @appCfgDefaults, orb: @orbCfg, tr: @trCfg, eff: @transEffects } (fn (n kids)
                                       (if (validate/string @n)

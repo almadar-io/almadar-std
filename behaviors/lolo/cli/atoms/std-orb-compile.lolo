@@ -12,7 +12,7 @@ uses Validate from "std/behaviors/std-orb-validate"
 uses LintEngine from "std/behaviors/std-orb-lint-engine"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type ArgFlag = { name : string!, aliases : [string]!, takesValue : boolean!, repeatable : boolean! }
-type ReportFinding = { code : string!, path : string, message : string!, suggestion : string, fixGuidance : string, expectedShape : string, validValues : [string], line : number, column : number, endLine : number, endColumn : number, approximate : boolean, needsInstall : boolean }
+type ReportFinding = { code : string!, path : string, message : string!, suggestion : string, fixGuidance : string, expectedShape : string, validValues : [string], entity : string, field : string, line : number, column : number, endLine : number, endColumn : number, approximate : boolean, needsInstall : boolean }
 type ReportStats = { orbitals : number!, entities : number!, traits : number!, pages : number! }
 type ValidationReport = { success : boolean!, valid : boolean!, errors : [ReportFinding], warnings : [ReportFinding], stats : ReportStats }
 type RuleFound = { rule : string!, findings : [OrbFinding]! }
@@ -47,6 +47,7 @@ orbital OrbCompileOrbital {
         json : boolean!
         denyWarnings : boolean!
         finalProgram : boolean!
+        workers : boolean!
         hasPatterns : boolean!
         patterns : string!
         hasServices : boolean!
@@ -91,7 +92,7 @@ orbital OrbCompileOrbital {
         (set @entity.file (default (array/first @payload.positionals) ""))
         (set @entity.path (if (os/path-is-absolute @entity.file) @entity.file (os/path-join @entity.cwd @entity.file)))
         (set @entity.generate (object/merge { path: @entity.path, output: (if (os/path-is-absolute (if (object/has @entity.flags "output") (default (array/first (object/get @entity.flags "output")) "") "./output")) (if (object/has @entity.flags "output") (default (array/first (object/get @entity.flags "output")) "") "./output") (os/path-join @entity.cwd (if (object/has @entity.flags "output") (default (array/first (object/get @entity.flags "output")) "") "./output"))), shell: (if (object/has @entity.flags "shell") (default (array/first (object/get @entity.flags "shell")) "") "typescript") } (if (object/has @entity.flags "mode") { mode: (default (array/first (object/get @entity.flags "mode")) "") } {}) (if (object/has @entity.flags "frontend") { frontend: (default (array/first (object/get @entity.flags "frontend")) "") } {}) (if (object/has @entity.flags "backend") { backend: (default (array/first (object/get @entity.flags "backend")) "") } {}) (if (object/has @entity.flags "backend-url") { backendUrl: (default (array/first (object/get @entity.flags "backend-url")) "") } {}) (if (object/has @entity.flags "renderer") { renderer: (default (array/first (object/get @entity.flags "renderer")) "") } {}) (if (object/has @entity.flags "patterns") { patterns: (if (os/path-is-absolute (default (array/first (object/get @entity.flags "patterns")) "")) (default (array/first (object/get @entity.flags "patterns")) "") (os/path-join @entity.cwd (default (array/first (object/get @entity.flags "patterns")) ""))) } {}) (if (object/has @entity.flags "dev-logs") { devLogs: true } {}) (if (object/has @entity.flags "web-client") { webClient: true } {}) (if (object/has @entity.flags "host") { host: (default (array/first (object/get @entity.flags "host")) "") } {}) (if (object/has @entity.flags "emit-orb") { emitOrb: (if (os/path-is-absolute (default (array/first (object/get @entity.flags "emit-orb")) "")) (default (array/first (object/get @entity.flags "emit-orb")) "") (os/path-join @entity.cwd (default (array/first (object/get @entity.flags "emit-orb")) ""))) } {})))
-        (emit VALIDATE_START { file: @entity.file, path: @entity.path, cwd: @entity.cwd, json: true, denyWarnings: false, finalProgram: false, hasPatterns: false, patterns: "", hasServices: false, services: "" })
+        (emit VALIDATE_START { file: @entity.file, path: @entity.path, cwd: @entity.cwd, json: true, denyWarnings: false, finalProgram: false, workers: false, hasPatterns: false, patterns: "", hasServices: false, services: "" })
       ;; --skip-lint: the host still refuses a program that fails the core checks
       COMPILE_ARGS_DONE -> generating when (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 1) (object/has @payload.flags "skip-lint"))
         (set @entity.positionals @payload.positionals)
@@ -147,6 +148,7 @@ orbital OrbCompileOrbital {
         json : boolean!
         denyWarnings : boolean!
         finalProgram : boolean!
+        workers : boolean!
         hasPatterns : boolean!
         patterns : string!
         hasServices : boolean!

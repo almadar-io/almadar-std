@@ -43,6 +43,7 @@ uses Llm from "std/behaviors/std-llm"
 uses Req from "std/behaviors/std-http-request"
 
 uses Http from "std/behaviors/std-http-client"
+uses Frame from "std/behaviors/std-http-frame"
 
 uses Delay from "std/behaviors/std-delay"
 
@@ -89,10 +90,32 @@ orbital AgentMemoryOrbital {
 
   trait MemEmbedRequest = Req.traits.HttpRequest {
     listens {
+      MemEmbedRequestDelay.ELAPSED -> RETRY_ELAPSED
+      MemEmbedRequestDeadline.ELAPSED -> TIMEOUT_ELAPSED
       AgentMemoryLlm.LLM_EMBED_WIRE -> HTTP_REQUEST
       AgentMemoryLlm.LLM_EMBED_WIRE_CANCEL -> HTTP_REQUEST_CANCEL
       MemEmbedHttp.HTTP_REPLIED -> HTTP_REPLIED
       MemEmbedHttp.HTTP_FAILED -> HTTP_FAILED
+    }
+  }
+
+  trait MemEmbedRequestDelay = Req.traits.RequestDelay {
+    listens {
+      MemEmbedRequest.RETRY_WAIT -> START
+      MemEmbedRequest.RETRY_STOP -> CANCEL
+    }
+  }
+
+  trait MemEmbedRequestDeadline = Req.traits.RequestDeadline {
+    listens {
+      MemEmbedRequest.TIMEOUT_START -> START
+      MemEmbedRequest.TIMEOUT_STOP -> CANCEL
+    }
+  }
+
+  trait MemEmbedHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      MemEmbedHttp.HC_FRAME -> FRAME_RUN
     }
   }
 
@@ -109,6 +132,9 @@ orbital AgentMemoryOrbital {
     listens {
       MemEmbedRequest.HTTP_SEND -> HTTP_SEND
       MemEmbedRequest.HTTP_CANCEL -> HTTP_CANCEL
+      MemEmbedHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      MemEmbedHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      MemEmbedHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
     }
   }
 
@@ -472,5 +498,5 @@ orbital AgentMemoryOrbital {
     }
   }
 
-  page "/agent-memory" as AgentMemoryPage -> AgentMemoryBrowse, AgentMemoryRecall, AgentMemoryStore, AgentMemoryView, AgentMemoryLlm, MemEmbedWait, MemEmbedRequest, MemEmbedHttp
+  page "/agent-memory" as AgentMemoryPage -> AgentMemoryBrowse, AgentMemoryRecall, AgentMemoryStore, AgentMemoryView, AgentMemoryLlm, MemEmbedWait, MemEmbedRequest, MemEmbedRequestDelay, MemEmbedRequestDeadline, MemEmbedHttp, MemEmbedHttpFrame
 }

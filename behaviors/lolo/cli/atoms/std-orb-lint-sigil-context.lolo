@@ -8,7 +8,7 @@ app std-orb-lint-sigil-context [
 ]
 uses Spec from "almadar-std/lint-sigil-context"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
-type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error", validValues : [string], entity : string, field : string }
 type SgShape = string | number | boolean | [SgShape?] | Map string SgShape?
 type SgTransition = { guard : SgShape?, effects : [SgShape], ensures : [SgShape]? }
 type SgTick = { effects : [SgShape] }
@@ -58,6 +58,7 @@ orbital OrbLintSigilContextOrbital {
     tickAllowed : [string] = []
     shapesUnread : boolean = false
     factsUnread : boolean = false
+    deliveryRoots : [string] = []
   }
 
   trait OrbLintSigilContext -> OrbLintSigilContextRun [optimistic] {
@@ -77,6 +78,8 @@ orbital OrbLintSigilContextOrbital {
         (set @entity.tickAllowed @payload.tickSigils)
       FACTS_UNREAD -> ready
         (set @entity.factsUnread true)
+      UI_VOCAB_HEARD -> ready
+        (set @entity.deliveryRoots @payload.deliveryRoots)
       INDEX_HEARD -> ready
         (set @entity.iRoots @payload.roots)
         (set @entity.indexHeard true)
@@ -93,7 +96,7 @@ orbital OrbLintSigilContextOrbital {
       LINT_INPUT -> ready
         (set @entity.scope @payload.scope)
         (set @entity.findings (if (and @entity.indexHeard (= @entity.indexScope @payload.scope) @entity.sitesGuardHeard (= @entity.sitesGuardScope @payload.scope) @entity.unitsHeard (= @entity.unitsScope @payload.scope))
-(let ((nohits : [SgHit] []) (noroots : [SgRoot] []) (nostr : [string] []) (nohits0 : [SgAtHit] [])  (nof : [OrbFinding] []) (collSet : Map string boolean (default (object/fromEntries (array/map @entity.collOps (fn c [@c true]))) {})) (orbitals : [SgOrbital] (object/get @payload.program "orbitals" [])) (eAt : [string] (array/map @entity.effectAllowed (fn a (str/concat (quote "@") @a)))) (gAt : [string] (array/map @entity.guardAllowed (fn a (str/concat (quote "@") @a)))))
+(let ((nohits : [SgHit] []) (noroots : [SgRoot] []) (nostr : [string] []) (nohits0 : [SgAtHit] [])  (nof : [OrbFinding] []) (collSet : Map string boolean (default (object/fromEntries (array/map @entity.collOps (fn c [@c true]))) {})) (orbitals : [SgOrbital] (object/get @payload.program "orbitals" [])) (dRoots : [string] @entity.deliveryRoots) (eAt : [string] (array/map @entity.effectAllowed (fn a (str/concat (quote "@") @a)))) (gAt : [string] (array/map @entity.guardAllowed (fn a (str/concat (quote "@") @a)))))
   (if (or @entity.shapesUnread @entity.factsUnread)
     (array/concat
       (if @entity.shapesUnread [{ code: @config.codes.lintOperatorShapesUnread.code, path: "operators", message: "the installed @almadar/std operator table does not match the operator shape type, so the collection callback operators are unknown", suggestion: "Reinstall @almadar/std so its operator table declares the params of every operator", severity: "error" }] @nof)
@@ -154,7 +157,7 @@ orbital OrbLintSigilContextOrbital {
             (let ((nd : string (array/nth @en 0)) (rt (str/replace-pattern (str/replaceAll (str/slice @nd 1) "[" ".") "\..*$" "")) (hits : [SgAtNode] (array/nth @en 1)))
               (if (or (< (str/len @nd) 2) (= @rt "") (validate/pattern @rt "^[A-Z]"))
                 @nohits0
-                (array/map (if (or (= @rt "item") (= @rt "index")) @hits (array/filter @hits (fn a (not (array/includes (object/get @aMap (default (array/nth @cs (default (str/to-int (str/slice (default (array/first (str/split (object/get @a "path" "") "]")) "") 1)) 0)) "") @nostr) @rt)))))
+                (array/map (if (or (= @rt "item") (= @rt "index")) @hits (array/filter @hits (fn a (and (not (array/includes (object/get @aMap (default (array/nth @cs (default (str/to-int (str/slice (default (array/first (str/split (object/get @a "path" "") "]")) "") 1)) 0)) "") @nostr) @rt)) (not (and (= (default (array/nth @cs (default (str/to-int (str/slice (default (array/first (str/split (object/get @a "path" "") "]")) "") 1)) 0)) "") "tick") (array/includes @dRoots @rt)))))))
                   (fn a { ip: (str/slice (default (array/first (str/split (object/get @a "path" "") "]")) "") 1), path: (object/get @a "path" ""), r: @rt, at: (object/get @a "at" 0) }))))))) "at")))
       (if (= (array/len @ats) 0)
         @nof
@@ -235,11 +238,14 @@ orbital OrbLintSigilContextOrbital {
         @description "std-orb-lint-input's LINT_OPERATOR_SHAPES_UNREAD: the operator table does not match the shape type."
       FACTS_HEARD { programTypes : Map string SgProgType!  guardSigils : [string]!  effectSigils : [string]!  tickSigils : [string]!  fieldTypes : [string]! }
         @description "std-orb-lint-input's LINT_LANGUAGE_FACTS: the sigils the installed binding rules allow in a guard, an effect and a tick."
+      UI_VOCAB_HEARD { slots : [string]!  itemActionBaseProps : [string]!  lucideIcons : [string]!  themeKeys : [string]!  deliveryRoots : [string]!  eventSourceKeys : [string]! }
+        @description "std-orb-lint-input's LINT_UI_VOCAB: its deliveryRoots are the dispatch-only roots; one read in a tick is std-orb-lint-binding-roots' ORB_BINDING_DISPATCH_ROOT_IN_TICK, so this rule leaves it out."
       FACTS_UNREAD { error : string! }
         @description "std-orb-lint-input's LINT_LANGUAGE_FACTS_UNREAD: the installed language facts could not be read."
       OrbLintInput.LINT_OPERATOR_SHAPES -> SHAPES_HEARD
       OrbLintInput.LINT_OPERATOR_SHAPES_UNREAD -> SHAPES_UNREAD
       OrbLintInput.LINT_LANGUAGE_FACTS -> FACTS_HEARD
+      OrbLintInput.LINT_UI_VOCAB -> UI_VOCAB_HEARD
       OrbLintInput.LINT_LANGUAGE_FACTS_UNREAD -> FACTS_UNREAD
     }
     config {

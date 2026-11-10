@@ -8,6 +8,7 @@ uses Spec from "almadar-std/planner"
 uses Llm from "std/behaviors/std-llm"
 uses Req from "std/behaviors/std-http-request"
 uses Http from "std/behaviors/std-http-client"
+uses Frame from "std/behaviors/std-http-frame"
 uses Delay from "std/behaviors/std-delay"
 uses Memory from "std/behaviors/std-agent-memory"
 
@@ -61,10 +62,32 @@ orbital AgentPlannerOrbital {
 
   trait PlannerEmbedRequest = Req.traits.HttpRequest {
     listens {
+      PlannerEmbedRequestDelay.ELAPSED -> RETRY_ELAPSED
+      PlannerEmbedRequestDeadline.ELAPSED -> TIMEOUT_ELAPSED
       PlannerLlm.LLM_EMBED_WIRE -> HTTP_REQUEST
       PlannerLlm.LLM_EMBED_WIRE_CANCEL -> HTTP_REQUEST_CANCEL
       PlannerEmbedHttp.HTTP_REPLIED -> HTTP_REPLIED
       PlannerEmbedHttp.HTTP_FAILED -> HTTP_FAILED
+    }
+  }
+
+  trait PlannerEmbedRequestDelay = Req.traits.RequestDelay {
+    listens {
+      PlannerEmbedRequest.RETRY_WAIT -> START
+      PlannerEmbedRequest.RETRY_STOP -> CANCEL
+    }
+  }
+
+  trait PlannerEmbedRequestDeadline = Req.traits.RequestDeadline {
+    listens {
+      PlannerEmbedRequest.TIMEOUT_START -> START
+      PlannerEmbedRequest.TIMEOUT_STOP -> CANCEL
+    }
+  }
+
+  trait PlannerEmbedHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      PlannerEmbedHttp.HC_FRAME -> FRAME_RUN
     }
   }
 
@@ -81,6 +104,9 @@ orbital AgentPlannerOrbital {
     listens {
       PlannerEmbedRequest.HTTP_SEND -> HTTP_SEND
       PlannerEmbedRequest.HTTP_CANCEL -> HTTP_CANCEL
+      PlannerEmbedHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      PlannerEmbedHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      PlannerEmbedHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
     }
   }
 
@@ -103,10 +129,32 @@ orbital AgentPlannerOrbital {
 
   trait PlannerChatRequest = Req.traits.HttpRequest {
     listens {
+      PlannerChatRequestDelay.ELAPSED -> RETRY_ELAPSED
+      PlannerChatRequestDeadline.ELAPSED -> TIMEOUT_ELAPSED
       PlannerLlm.LLM_CHAT_WIRE -> HTTP_REQUEST
       PlannerLlm.LLM_CHAT_WIRE_CANCEL -> HTTP_REQUEST_CANCEL
       PlannerChatHttp.HTTP_REPLIED -> HTTP_REPLIED
       PlannerChatHttp.HTTP_FAILED -> HTTP_FAILED
+    }
+  }
+
+  trait PlannerChatRequestDelay = Req.traits.RequestDelay {
+    listens {
+      PlannerChatRequest.RETRY_WAIT -> START
+      PlannerChatRequest.RETRY_STOP -> CANCEL
+    }
+  }
+
+  trait PlannerChatRequestDeadline = Req.traits.RequestDeadline {
+    listens {
+      PlannerChatRequest.TIMEOUT_START -> START
+      PlannerChatRequest.TIMEOUT_STOP -> CANCEL
+    }
+  }
+
+  trait PlannerChatHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      PlannerChatHttp.HC_FRAME -> FRAME_RUN
     }
   }
 
@@ -123,6 +171,9 @@ orbital AgentPlannerOrbital {
     listens {
       PlannerChatRequest.HTTP_SEND -> HTTP_SEND
       PlannerChatRequest.HTTP_CANCEL -> HTTP_CANCEL
+      PlannerChatHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      PlannerChatHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      PlannerChatHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
     }
   }
 
@@ -238,5 +289,5 @@ orbital AgentPlannerOrbital {
     }
   }
 
-  page boot as AgentPlannerPage -> PlannerExecution, PlannerListener, PlannerLlm, PlannerChatRequest, PlannerChatHttp, PlannerEmbedWait, PlannerEmbedRequest, PlannerEmbedHttp, PlannerMemory
+  page boot as AgentPlannerPage -> PlannerExecution, PlannerListener, PlannerLlm, PlannerChatRequest, PlannerChatRequestDelay, PlannerChatRequestDeadline, PlannerChatHttp, PlannerChatHttpFrame, PlannerEmbedWait, PlannerEmbedRequest, PlannerEmbedRequestDelay, PlannerEmbedRequestDeadline, PlannerEmbedHttp, PlannerEmbedHttpFrame, PlannerMemory
 }

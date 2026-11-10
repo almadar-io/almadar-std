@@ -9,6 +9,7 @@ uses Llm from "std/behaviors/std-llm"
 uses Req from "std/behaviors/std-http-request"
 
 uses Http from "std/behaviors/std-http-client"
+uses Frame from "std/behaviors/std-http-frame"
 
 orbital EvalHarnessOrbital {
 
@@ -117,10 +118,32 @@ orbital EvalHarnessOrbital {
 
   trait EvalChatRequest = Req.traits.HttpRequest {
     listens {
+      EvalChatRequestDelay.ELAPSED -> RETRY_ELAPSED
+      EvalChatRequestDeadline.ELAPSED -> TIMEOUT_ELAPSED
       EvalLlm.LLM_CHAT_WIRE -> HTTP_REQUEST
       EvalLlm.LLM_CHAT_WIRE_CANCEL -> HTTP_REQUEST_CANCEL
       EvalChatHttp.HTTP_REPLIED -> HTTP_REPLIED
       EvalChatHttp.HTTP_FAILED -> HTTP_FAILED
+    }
+  }
+
+  trait EvalChatRequestDelay = Req.traits.RequestDelay {
+    listens {
+      EvalChatRequest.RETRY_WAIT -> START
+      EvalChatRequest.RETRY_STOP -> CANCEL
+    }
+  }
+
+  trait EvalChatRequestDeadline = Req.traits.RequestDeadline {
+    listens {
+      EvalChatRequest.TIMEOUT_START -> START
+      EvalChatRequest.TIMEOUT_STOP -> CANCEL
+    }
+  }
+
+  trait EvalChatHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      EvalChatHttp.HC_FRAME -> FRAME_RUN
     }
   }
 
@@ -137,6 +160,9 @@ orbital EvalHarnessOrbital {
     listens {
       EvalChatRequest.HTTP_SEND -> HTTP_SEND
       EvalChatRequest.HTTP_CANCEL -> HTTP_CANCEL
+      EvalChatHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      EvalChatHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      EvalChatHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
     }
   }
 
@@ -462,5 +488,5 @@ orbital EvalHarnessOrbital {
     }
   }
 
-  page "/eval-harness" as EvalHarnessPage -> EvalRun, EvalLlm, EvalChatRequest, EvalChatHttp
+  page "/eval-harness" as EvalHarnessPage -> EvalRun, EvalLlm, EvalChatRequest, EvalChatRequestDelay, EvalChatRequestDeadline, EvalChatHttp, EvalChatHttpFrame
 }

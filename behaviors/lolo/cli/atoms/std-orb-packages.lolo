@@ -10,6 +10,7 @@ app std-orb-packages [
 ]
 uses Spec from "almadar-std/orb-packages"
 uses Http from "std/behaviors/std-http-client"
+uses Frame from "std/behaviors/std-http-frame"
 type HttpHeader = { name : string!, value : string! }
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type ArgFlag = { name : string!, aliases : [string]!, takesValue : boolean!, repeatable : boolean! }
@@ -112,6 +113,12 @@ orbital OrbPackagesOrbital {
     placeError : string = ""
   }
 
+  trait RegistryHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      RegistryHttp.HC_FRAME -> FRAME_RUN
+    }
+  }
+
   trait RegistryHttp = Http.traits.HttpClient {
     config {
       host: "registry.npmjs.org"
@@ -121,6 +128,15 @@ orbital OrbPackagesOrbital {
     }
     listens {
       OrbPackages.PK_GET -> HTTP_SEND
+      RegistryHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      RegistryHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      RegistryHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
+    }
+  }
+
+  trait SourceHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      SourceHttp.HC_FRAME -> FRAME_RUN
     }
   }
 
@@ -133,6 +149,9 @@ orbital OrbPackagesOrbital {
     }
     listens {
       OrbPackages.PK_SRC_GET -> HTTP_SEND
+      SourceHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      SourceHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      SourceHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
     }
   }
 
@@ -1151,5 +1170,5 @@ orbital OrbPackagesOrbital {
     }
   }
 
-  page boot as OrbPackagesOrbitalStart -> OrbPackages, ArgsCli, Versions, RegistryHttp, SourceHttp
+  page boot as OrbPackagesOrbitalStart -> OrbPackages, ArgsCli, Versions, RegistryHttp, RegistryHttpFrame, SourceHttp, SourceHttpFrame
 }

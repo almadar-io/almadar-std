@@ -121,6 +121,7 @@ orbital AgentSuggestionsOrbital {
   uses Llm from "std/behaviors/std-llm"
   uses Req from "std/behaviors/std-http-request"
   uses Http from "std/behaviors/std-http-client"
+  uses Frame from "std/behaviors/std-http-frame"
 
   type SuggestionsLoaded = Event { data : [SuggestionRow]!, totalCount : number! } "Fired when the person's suggestions finish loading"
   type SuggestionsLoadFailed = Event { error : string, code : string } "Fired when the suggestions fail to load"
@@ -962,10 +963,32 @@ orbital AgentSuggestionsOrbital {
 
   trait SuggestChatRequest = Req.traits.HttpRequest {
     listens {
+      SuggestChatRequestDelay.ELAPSED -> RETRY_ELAPSED
+      SuggestChatRequestDeadline.ELAPSED -> TIMEOUT_ELAPSED
       AgentSuggestionLlm.LLM_CHAT_WIRE -> HTTP_REQUEST
       AgentSuggestionLlm.LLM_CHAT_WIRE_CANCEL -> HTTP_REQUEST_CANCEL
       SuggestChatHttp.HTTP_REPLIED -> HTTP_REPLIED
       SuggestChatHttp.HTTP_FAILED -> HTTP_FAILED
+    }
+  }
+
+  trait SuggestChatRequestDelay = Req.traits.RequestDelay {
+    listens {
+      SuggestChatRequest.RETRY_WAIT -> START
+      SuggestChatRequest.RETRY_STOP -> CANCEL
+    }
+  }
+
+  trait SuggestChatRequestDeadline = Req.traits.RequestDeadline {
+    listens {
+      SuggestChatRequest.TIMEOUT_START -> START
+      SuggestChatRequest.TIMEOUT_STOP -> CANCEL
+    }
+  }
+
+  trait SuggestChatHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      SuggestChatHttp.HC_FRAME -> FRAME_RUN
     }
   }
 
@@ -982,10 +1005,13 @@ orbital AgentSuggestionsOrbital {
     listens {
       SuggestChatRequest.HTTP_SEND -> HTTP_SEND
       SuggestChatRequest.HTTP_CANCEL -> HTTP_CANCEL
+      SuggestChatHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      SuggestChatHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      SuggestChatHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
     }
   }
 
-  page "/agent-suggestions" as AgentSuggestionsPage -> AgentSuggestionInbox, AgentSuggestionProposer, AgentSuggestionTrigger, AgentSuggestionRunner, AgentSuggestionLoop, AgentSuggestionLlm, SuggestChatRequest, SuggestChatHttp
+  page "/agent-suggestions" as AgentSuggestionsPage -> AgentSuggestionInbox, AgentSuggestionProposer, AgentSuggestionTrigger, AgentSuggestionRunner, AgentSuggestionLoop, AgentSuggestionLlm, SuggestChatRequest, SuggestChatRequestDelay, SuggestChatRequestDeadline, SuggestChatHttp, SuggestChatHttpFrame
 }
 
 ;; The suggestions and run records live outside AgentSuggestionsOrbital, so a consumer

@@ -5,6 +5,7 @@ app std-a11y-wave [
 ]
 uses Spec from "almadar-std/a11y-wave"
 uses Http from "std/behaviors/std-http-client"
+uses Frame from "std/behaviors/std-http-frame"
 uses Timeout from "std/behaviors/std-timeout"
 
 type WcagRef = { criterion : string!, level : "A" | "AA" | "AAA"!, version : "2.0" | "2.1" | "2.2"! }
@@ -26,6 +27,12 @@ orbital WaveOrbital {
     keyLen : number @description "The byte length of the held WAVE credential, negative when the host holds none." = -1
   }
 
+  trait WaveHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      WaveHttp.HC_FRAME -> FRAME_RUN
+    }
+  }
+
   trait WaveHttp = Http.traits.HttpClient {
     config {
       host: "wave.webaim.org"
@@ -39,6 +46,9 @@ orbital WaveOrbital {
     listens {
       WaveScan.WAVE_HTTP_SEND -> HTTP_SEND
       WaveTimeout.TIMED_OUT -> HTTP_CANCEL with { key: ?key }
+      WaveHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      WaveHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      WaveHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
     }
   }
 
@@ -171,5 +181,5 @@ orbital WaveOrbital {
     }
   }
 
-  page boot as WaveScanPage -> WaveScan, WaveHttp, WaveTimeout
+  page boot as WaveScanPage -> WaveScan, WaveHttp, WaveHttpFrame, WaveTimeout
 }

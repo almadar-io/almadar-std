@@ -35,6 +35,7 @@ uses Llm from "std/behaviors/std-llm"
 uses Req from "std/behaviors/std-http-request"
 
 uses Http from "std/behaviors/std-http-client"
+uses Frame from "std/behaviors/std-http-frame"
 
 uses Delay from "std/behaviors/std-delay"
 uses Storage from "std/behaviors/std-storage"
@@ -126,10 +127,32 @@ orbital AgentPoolOrbital {
 
   trait PoolEmbedRequest = Req.traits.HttpRequest {
     listens {
+      PoolEmbedRequestDelay.ELAPSED -> RETRY_ELAPSED
+      PoolEmbedRequestDeadline.ELAPSED -> TIMEOUT_ELAPSED
       AgentPoolLlm.LLM_EMBED_WIRE -> HTTP_REQUEST
       AgentPoolLlm.LLM_EMBED_WIRE_CANCEL -> HTTP_REQUEST_CANCEL
       PoolEmbedHttp.HTTP_REPLIED -> HTTP_REPLIED
       PoolEmbedHttp.HTTP_FAILED -> HTTP_FAILED
+    }
+  }
+
+  trait PoolEmbedRequestDelay = Req.traits.RequestDelay {
+    listens {
+      PoolEmbedRequest.RETRY_WAIT -> START
+      PoolEmbedRequest.RETRY_STOP -> CANCEL
+    }
+  }
+
+  trait PoolEmbedRequestDeadline = Req.traits.RequestDeadline {
+    listens {
+      PoolEmbedRequest.TIMEOUT_START -> START
+      PoolEmbedRequest.TIMEOUT_STOP -> CANCEL
+    }
+  }
+
+  trait PoolEmbedHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      PoolEmbedHttp.HC_FRAME -> FRAME_RUN
     }
   }
 
@@ -146,6 +169,9 @@ orbital AgentPoolOrbital {
     listens {
       PoolEmbedRequest.HTTP_SEND -> HTTP_SEND
       PoolEmbedRequest.HTTP_CANCEL -> HTTP_CANCEL
+      PoolEmbedHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      PoolEmbedHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      PoolEmbedHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
     }
   }
 
@@ -707,7 +733,7 @@ orbital AgentPoolOrbital {
     }
   }
 
-  page "/agent-pool" as AgentPoolPage -> AgentPoolWriter, AgentPoolSearch, AgentPoolSignal, AgentPoolLlm, PoolEmbedWait, PoolEmbedRequest, PoolEmbedHttp, AgentPoolStorage
+  page "/agent-pool" as AgentPoolPage -> AgentPoolWriter, AgentPoolSearch, AgentPoolSignal, AgentPoolLlm, PoolEmbedWait, PoolEmbedRequest, PoolEmbedRequestDelay, PoolEmbedRequestDeadline, PoolEmbedHttp, PoolEmbedHttpFrame, AgentPoolStorage
 
   page boot as AgentPoolStorageBoot -> AgentPoolGate, AgentPoolCall, AgentPoolKeyed, AgentPoolHttp, AgentPoolTimeout, AgentPoolRetry
 }

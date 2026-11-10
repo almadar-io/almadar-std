@@ -14,6 +14,7 @@ uses F32 from "std/behaviors/std-f32"
 uses Delay from "std/behaviors/std-delay"
 uses Req from "std/behaviors/std-http-request"
 uses Http from "std/behaviors/std-http-client"
+uses Frame from "std/behaviors/std-http-frame"
 uses Sig6 from "std/behaviors/std-sig6"
 uses BigCmp from "std/behaviors/std-bigcmp"
 
@@ -207,10 +208,32 @@ orbital VectorResolveOrbital {
 
   trait ResolveOrSharedRequest = Req.traits.HttpRequest {
     listens {
+      ResolveOrSharedRequestDelay.ELAPSED -> RETRY_ELAPSED
+      ResolveOrSharedRequestDeadline.ELAPSED -> TIMEOUT_ELAPSED
       ResolveLlmOrShared.LLM_EMBED_WIRE -> HTTP_REQUEST
       ResolveLlmOrShared.LLM_EMBED_WIRE_CANCEL -> HTTP_REQUEST_CANCEL
       ResolveOrSharedHttp.HTTP_REPLIED -> HTTP_REPLIED
       ResolveOrSharedHttp.HTTP_FAILED -> HTTP_FAILED
+    }
+  }
+
+  trait ResolveOrSharedRequestDelay = Req.traits.RequestDelay {
+    listens {
+      ResolveOrSharedRequest.RETRY_WAIT -> START
+      ResolveOrSharedRequest.RETRY_STOP -> CANCEL
+    }
+  }
+
+  trait ResolveOrSharedRequestDeadline = Req.traits.RequestDeadline {
+    listens {
+      ResolveOrSharedRequest.TIMEOUT_START -> START
+      ResolveOrSharedRequest.TIMEOUT_STOP -> CANCEL
+    }
+  }
+
+  trait ResolveOrSharedHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      ResolveOrSharedHttp.HC_FRAME -> FRAME_RUN
     }
   }
 
@@ -227,6 +250,9 @@ orbital VectorResolveOrbital {
     listens {
       ResolveOrSharedRequest.HTTP_SEND -> HTTP_SEND
       ResolveOrSharedRequest.HTTP_CANCEL -> HTTP_CANCEL
+      ResolveOrSharedHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      ResolveOrSharedHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      ResolveOrSharedHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
     }
   }
 
@@ -241,10 +267,32 @@ orbital VectorResolveOrbital {
 
   trait ResolveOrOwnRequest = Req.traits.HttpRequest {
     listens {
+      ResolveOrOwnRequestDelay.ELAPSED -> RETRY_ELAPSED
+      ResolveOrOwnRequestDeadline.ELAPSED -> TIMEOUT_ELAPSED
       ResolveLlmOrOwn.LLM_EMBED_WIRE -> HTTP_REQUEST
       ResolveLlmOrOwn.LLM_EMBED_WIRE_CANCEL -> HTTP_REQUEST_CANCEL
       ResolveOrOwnHttp.HTTP_REPLIED -> HTTP_REPLIED
       ResolveOrOwnHttp.HTTP_FAILED -> HTTP_FAILED
+    }
+  }
+
+  trait ResolveOrOwnRequestDelay = Req.traits.RequestDelay {
+    listens {
+      ResolveOrOwnRequest.RETRY_WAIT -> START
+      ResolveOrOwnRequest.RETRY_STOP -> CANCEL
+    }
+  }
+
+  trait ResolveOrOwnRequestDeadline = Req.traits.RequestDeadline {
+    listens {
+      ResolveOrOwnRequest.TIMEOUT_START -> START
+      ResolveOrOwnRequest.TIMEOUT_STOP -> CANCEL
+    }
+  }
+
+  trait ResolveOrOwnHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      ResolveOrOwnHttp.HC_FRAME -> FRAME_RUN
     }
   }
 
@@ -261,6 +309,9 @@ orbital VectorResolveOrbital {
     listens {
       ResolveOrOwnRequest.HTTP_SEND -> HTTP_SEND
       ResolveOrOwnRequest.HTTP_CANCEL -> HTTP_CANCEL
+      ResolveOrOwnHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      ResolveOrOwnHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      ResolveOrOwnHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
     }
   }
 
@@ -275,10 +326,32 @@ orbital VectorResolveOrbital {
 
   trait ResolveOaSharedRequest = Req.traits.HttpRequest {
     listens {
+      ResolveOaSharedRequestDelay.ELAPSED -> RETRY_ELAPSED
+      ResolveOaSharedRequestDeadline.ELAPSED -> TIMEOUT_ELAPSED
       ResolveLlmOaShared.LLM_EMBED_WIRE -> HTTP_REQUEST
       ResolveLlmOaShared.LLM_EMBED_WIRE_CANCEL -> HTTP_REQUEST_CANCEL
       ResolveOaSharedHttp.HTTP_REPLIED -> HTTP_REPLIED
       ResolveOaSharedHttp.HTTP_FAILED -> HTTP_FAILED
+    }
+  }
+
+  trait ResolveOaSharedRequestDelay = Req.traits.RequestDelay {
+    listens {
+      ResolveOaSharedRequest.RETRY_WAIT -> START
+      ResolveOaSharedRequest.RETRY_STOP -> CANCEL
+    }
+  }
+
+  trait ResolveOaSharedRequestDeadline = Req.traits.RequestDeadline {
+    listens {
+      ResolveOaSharedRequest.TIMEOUT_START -> START
+      ResolveOaSharedRequest.TIMEOUT_STOP -> CANCEL
+    }
+  }
+
+  trait ResolveOaSharedHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      ResolveOaSharedHttp.HC_FRAME -> FRAME_RUN
     }
   }
 
@@ -295,6 +368,9 @@ orbital VectorResolveOrbital {
     listens {
       ResolveOaSharedRequest.HTTP_SEND -> HTTP_SEND
       ResolveOaSharedRequest.HTTP_CANCEL -> HTTP_CANCEL
+      ResolveOaSharedHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      ResolveOaSharedHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      ResolveOaSharedHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
     }
   }
 
@@ -309,10 +385,32 @@ orbital VectorResolveOrbital {
 
   trait ResolveOaOwnRequest = Req.traits.HttpRequest {
     listens {
+      ResolveOaOwnRequestDelay.ELAPSED -> RETRY_ELAPSED
+      ResolveOaOwnRequestDeadline.ELAPSED -> TIMEOUT_ELAPSED
       ResolveLlmOaOwn.LLM_EMBED_WIRE -> HTTP_REQUEST
       ResolveLlmOaOwn.LLM_EMBED_WIRE_CANCEL -> HTTP_REQUEST_CANCEL
       ResolveOaOwnHttp.HTTP_REPLIED -> HTTP_REPLIED
       ResolveOaOwnHttp.HTTP_FAILED -> HTTP_FAILED
+    }
+  }
+
+  trait ResolveOaOwnRequestDelay = Req.traits.RequestDelay {
+    listens {
+      ResolveOaOwnRequest.RETRY_WAIT -> START
+      ResolveOaOwnRequest.RETRY_STOP -> CANCEL
+    }
+  }
+
+  trait ResolveOaOwnRequestDeadline = Req.traits.RequestDeadline {
+    listens {
+      ResolveOaOwnRequest.TIMEOUT_START -> START
+      ResolveOaOwnRequest.TIMEOUT_STOP -> CANCEL
+    }
+  }
+
+  trait ResolveOaOwnHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      ResolveOaOwnHttp.HC_FRAME -> FRAME_RUN
     }
   }
 
@@ -329,6 +427,9 @@ orbital VectorResolveOrbital {
     listens {
       ResolveOaOwnRequest.HTTP_SEND -> HTTP_SEND
       ResolveOaOwnRequest.HTTP_CANCEL -> HTTP_CANCEL
+      ResolveOaOwnHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      ResolveOaOwnHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      ResolveOaOwnHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
     }
   }
 
@@ -343,10 +444,32 @@ orbital VectorResolveOrbital {
 
   trait ResolveLmRequest = Req.traits.HttpRequest {
     listens {
+      ResolveLmRequestDelay.ELAPSED -> RETRY_ELAPSED
+      ResolveLmRequestDeadline.ELAPSED -> TIMEOUT_ELAPSED
       ResolveLlmLm.LLM_EMBED_WIRE -> HTTP_REQUEST
       ResolveLlmLm.LLM_EMBED_WIRE_CANCEL -> HTTP_REQUEST_CANCEL
       ResolveLmHttp.HTTP_REPLIED -> HTTP_REPLIED
       ResolveLmHttp.HTTP_FAILED -> HTTP_FAILED
+    }
+  }
+
+  trait ResolveLmRequestDelay = Req.traits.RequestDelay {
+    listens {
+      ResolveLmRequest.RETRY_WAIT -> START
+      ResolveLmRequest.RETRY_STOP -> CANCEL
+    }
+  }
+
+  trait ResolveLmRequestDeadline = Req.traits.RequestDeadline {
+    listens {
+      ResolveLmRequest.TIMEOUT_START -> START
+      ResolveLmRequest.TIMEOUT_STOP -> CANCEL
+    }
+  }
+
+  trait ResolveLmHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      ResolveLmHttp.HC_FRAME -> FRAME_RUN
     }
   }
 
@@ -364,6 +487,9 @@ orbital VectorResolveOrbital {
     listens {
       ResolveLmRequest.HTTP_SEND -> HTTP_SEND
       ResolveLmRequest.HTTP_CANCEL -> HTTP_CANCEL
+      ResolveLmHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      ResolveLmHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      ResolveLmHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
     }
   }
 
@@ -593,5 +719,5 @@ orbital VectorResolveOrbital {
     }
   }
 
-  page boot as VectorResolvePage -> VectorResolve, ResolveStore, ResolveWrite, ResolveQuantize, ResolveF32, ResolveSig6, ResolveBigCmp, ResolveDelay, ResolveLlmOrShared, ResolveLlmOrOwn, ResolveLlmOaShared, ResolveLlmOaOwn, ResolveLlmLm, ResolveOrSharedWait, ResolveOrSharedRequest, ResolveOrSharedHttp, ResolveOrOwnWait, ResolveOrOwnRequest, ResolveOrOwnHttp, ResolveOaSharedWait, ResolveOaSharedRequest, ResolveOaSharedHttp, ResolveOaOwnWait, ResolveOaOwnRequest, ResolveOaOwnHttp, ResolveLmWait, ResolveLmRequest, ResolveLmHttp
+  page boot as VectorResolvePage -> VectorResolve, ResolveStore, ResolveWrite, ResolveQuantize, ResolveF32, ResolveSig6, ResolveBigCmp, ResolveDelay, ResolveLlmOrShared, ResolveLlmOrOwn, ResolveLlmOaShared, ResolveLlmOaOwn, ResolveLlmLm, ResolveOrSharedWait, ResolveOrSharedRequest, ResolveOrSharedRequestDelay, ResolveOrSharedRequestDeadline, ResolveOrSharedHttp, ResolveOrSharedHttpFrame, ResolveOrOwnWait, ResolveOrOwnRequest, ResolveOrOwnRequestDelay, ResolveOrOwnRequestDeadline, ResolveOrOwnHttp, ResolveOrOwnHttpFrame, ResolveOaSharedWait, ResolveOaSharedRequest, ResolveOaSharedRequestDelay, ResolveOaSharedRequestDeadline, ResolveOaSharedHttp, ResolveOaSharedHttpFrame, ResolveOaOwnWait, ResolveOaOwnRequest, ResolveOaOwnRequestDelay, ResolveOaOwnRequestDeadline, ResolveOaOwnHttp, ResolveOaOwnHttpFrame, ResolveLmWait, ResolveLmRequest, ResolveLmRequestDelay, ResolveLmRequestDeadline, ResolveLmHttp, ResolveLmHttpFrame
 }

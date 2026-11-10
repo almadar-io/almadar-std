@@ -7,6 +7,7 @@ app std-cloud-run-board [
   net: { "monitoring.googleapis.com:443": [tcp] }
 ]
 uses Http from "std/behaviors/std-http-client"
+uses Frame from "std/behaviors/std-http-frame"
 uses Token from "std/behaviors/std-gcloud-token"
 type HttpHeader = { name : string!, value : string! }
 uses Spec from "almadar-std/cloud-run-board"
@@ -90,6 +91,12 @@ orbital CloudRunBoardOrbital {
     }
   }
 
+  trait CrMonitoringFrame = Frame.traits.HttpFrame {
+    listens {
+      CrMonitoring.HC_FRAME -> FRAME_RUN
+    }
+  }
+
   trait CrMonitoring = Http.traits.HttpClient {
     events {
       HTTP_REPLIED: CR_HTTP_REPLIED
@@ -106,6 +113,9 @@ orbital CloudRunBoardOrbital {
     }
     listens {
       CloudRunStatus.CR_HTTP_SEND -> HTTP_SEND
+      CrMonitoringFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      CrMonitoringFrame.FRAME_DRAINED -> HC_DRAINED
+      CrMonitoringFrame.FRAME_FAILED -> HC_FRAME_FAILED
     }
   }
 
@@ -544,5 +554,5 @@ orbital CloudRunBoardOrbital {
     }
   }
 
-  page "/cloud-run-board" as CloudRunBoardPage -> CloudRunStatus, CloudRunView, CrMonitoring, CrToken, CrGcloud, CrBq
+  page "/cloud-run-board" as CloudRunBoardPage -> CloudRunStatus, CloudRunView, CrMonitoring, CrMonitoringFrame, CrToken, CrGcloud, CrBq
 }

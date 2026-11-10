@@ -4,11 +4,13 @@ app std-orb-validate [
   env: ["PATH"],
   exec: [exe],
   fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
-  description: "std-orb-validate — the `orb validate <file> [--json] [--deny-warnings] [--final] [--patterns <path>] [--services <path>]` command (spec/cli/orb-validate.lolo; port of orbital-cli commands/validate.rs validate_schema). The core checks are the host op `(program/validate null { report: true path final denyWarnings patterns services })`, which answers exactly the report `orb validate --json` printed: { success, valid, errors?, warnings?, stats? }. The path is the working directory joined to the file when relative. --json prints that report as 2-space pretty JSON (status 200, as Rust exited 0 for an invalid program). The text form prints `Validating schema: <file>` on stdout, then on errors `Schema validation errors:` and one `  ❌ [CODE] path: message @ line:col 💡 suggestion` line per error on stderr followed by `Error: Schema validation failed with N error(s)` (status 500); on warnings alone `Schema validation warnings:` and `  ⚠️  …` lines on stdout, and under --deny-warnings `Error: Schema validation failed: N warning(s) under --deny-warnings` on stderr (status 500). A file the host could not read (FILE_READ_ERROR) prints `Error: <reason>` on stderr (status 500). Under --final the host is never asked for the retired `final` check: the final-only rules of the composed std-orb-lint-engine (expectation-final, not-found, control-unhandled; their findings arrive in LINT_COLLECTED.final over the same lint input) join the policy findings in the same host call; without --final they are dropped. Policy lints (the std-orb-lint-engine orbital, composed here; it answers LINT_COLLECTED) merge into the report: an error-severity lint finding joins errors, a warning joins warnings. Usage error: status 400 (exit 2). Known differences from the Rust bytes: a finding the host reports without a line prints no ` @ line:col`; lint findings carry no source position."
+  kernel: { "guest": [spawn, program] },
+  description: "std-orb-validate — the `orb validate <file> [--json] [--deny-warnings] [--final] [--workers] [--patterns <path>] [--services <path>]` command (spec/cli/orb-validate.lolo; port of orbital-cli commands/validate.rs validate_schema). The core checks are the host op `(program/validate null { report: true path final denyWarnings patterns services })`, which answers exactly the report `orb validate --json` printed: { success, valid, errors?, warnings?, stats? }. The path is the working directory joined to the file when relative. --json prints that report as 2-space pretty JSON (status 200, as Rust exited 0 for an invalid program). The text form prints `Validating schema: <file>` on stdout, then on errors `Schema validation errors:` and one `  ❌ [CODE] path: message @ line:col 💡 suggestion` line per error on stderr followed by `Error: Schema validation failed with N error(s)` (status 500); on warnings alone `Schema validation warnings:` and `  ⚠️  …` lines on stdout, and under --deny-warnings `Error: Schema validation failed: N warning(s) under --deny-warnings` on stderr (status 500). A file the host could not read (FILE_READ_ERROR) prints `Error: <reason>` on stderr (status 500). Under --final the host is never asked for the retired `final` check: the final-only rules of the composed std-orb-lint-engine (expectation-final, not-found, control-unhandled; their findings arrive in LINT_COLLECTED.final over the same lint input) join the policy findings in the same host call; without --final they are dropped. Policy lints (the std-orb-lint-engine orbital, composed here; it answers LINT_COLLECTED) merge into the report: an error-severity lint finding joins errors, a warning joins warnings. Usage error: status 400 (exit 2). Known differences from the Rust bytes: a finding the host reports without a line prints no ` @ line:col`; lint findings carry no source position."
 ]
 uses Spec from "almadar-std/orb-validate"
 uses Args from "std/behaviors/std-args"
 uses LintEngine from "std/behaviors/std-orb-lint-engine"
+uses LintWorkers from "std/behaviors/std-orb-lint-workers"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type ArgFlag = { name : string!, aliases : [string]!, takesValue : boolean!, repeatable : boolean! }
 type RuleFound = { rule : string!, findings : [OrbFinding]! }
@@ -23,6 +25,12 @@ type ValidationReport = { success : boolean!, valid : boolean!, errors : [Report
 orbital Lint = LintEngine.orbitals.OrbLintEngineOrbital {
   listens {
     OrbValidateOrbital.ValidateEngine.LINT_RUN -> OrbLintEngine.LINT_RUN
+  }
+}
+
+orbital Workers = LintWorkers.orbitals.OrbLintWorkersOrbital {
+  listens {
+    OrbValidateOrbital.ValidateEngine.LINT_RUN_WORKERS -> OrbLintWorkers.LINT_RUN
   }
 }
 
@@ -61,16 +69,16 @@ orbital OrbValidateOrbital {
         (emit VALIDATE_ANSWERED { status: 500, body: "", stderr: "Error: orb validate: the command arguments could not be read" })
       VALIDATE_CALLED -> parsing when (!= (json/parse @payload.rawBody OrbCommandArgs) null)
         (set @entity.cwd (object/get (json/parse @payload.rawBody OrbCommandArgs) "cwd"))
-        (emit VALIDATE_ARGS_PARSE { stage: "validate" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "json" aliases: [] takesValue: false repeatable: false }, { name: "deny-warnings" aliases: [] takesValue: false repeatable: false }, { name: "final" aliases: [] takesValue: false repeatable: false }, { name: "patterns" aliases: [] takesValue: true repeatable: false }, { name: "services" aliases: [] takesValue: true repeatable: false }] })
+        (emit VALIDATE_ARGS_PARSE { stage: "validate" argv: (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") flags: [{ name: "json" aliases: [] takesValue: false repeatable: false }, { name: "deny-warnings" aliases: [] takesValue: false repeatable: false }, { name: "final" aliases: [] takesValue: false repeatable: false }, { name: "workers" aliases: [] takesValue: false repeatable: false }, { name: "patterns" aliases: [] takesValue: true repeatable: false }, { name: "services" aliases: [] takesValue: true repeatable: false }] })
     }
 
     state parsing {
       INIT -> parsing
       VALIDATE_ARGS_DONE -> ready when (or (> (array/len @payload.errors) 0) (!= (array/len @payload.positionals) 1))
-        (emit VALIDATE_ANSWERED { status: 400, body: "", stderr: "usage: orb validate <FILE> [--json] [--patterns <PATH>] [--services <PATH>] [--deny-warnings] [--final]" })
+        (emit VALIDATE_ANSWERED { status: 400, body: "", stderr: "usage: orb validate <FILE> [--json] [--patterns <PATH>] [--services <PATH>] [--deny-warnings] [--final] [--workers]" })
       ;; the positional default never fires: this arm requires exactly one positional
       VALIDATE_ARGS_DONE -> working when (and (= (array/len @payload.errors) 0) (= (array/len @payload.positionals) 1))
-        (emit VALIDATE_START { file: (default (array/first @payload.positionals) ""), path: (if (os/path-is-absolute (default (array/first @payload.positionals) "")) (default (array/first @payload.positionals) "") (os/path-join @entity.cwd (default (array/first @payload.positionals) ""))), cwd: @entity.cwd, json: (object/has @payload.flags "json"), denyWarnings: (object/has @payload.flags "deny-warnings"), finalProgram: (object/has @payload.flags "final"), hasPatterns: (object/has @payload.flags "patterns"), patterns: (default (array/first (default (object/get @payload.flags "patterns") [""])) ""), hasServices: (object/has @payload.flags "services"), services: (default (array/first (default (object/get @payload.flags "services") [""])) "") })
+        (emit VALIDATE_START { file: (default (array/first @payload.positionals) ""), path: (if (os/path-is-absolute (default (array/first @payload.positionals) "")) (default (array/first @payload.positionals) "") (os/path-join @entity.cwd (default (array/first @payload.positionals) ""))), cwd: @entity.cwd, json: (object/has @payload.flags "json"), denyWarnings: (object/has @payload.flags "deny-warnings"), finalProgram: (object/has @payload.flags "final"), workers: (object/has @payload.flags "workers"), hasPatterns: (object/has @payload.flags "patterns"), patterns: (default (array/first (default (object/get @payload.flags "patterns") [""])) ""), hasServices: (object/has @payload.flags "services"), services: (default (array/first (default (object/get @payload.flags "services") [""])) "") })
     }
 
     state working {
@@ -100,7 +108,7 @@ orbital OrbValidateOrbital {
         cwd : string!
         json : boolean!
         denyWarnings : boolean!
-        finalProgram : boolean!
+        finalProgram : boolean!  workers : boolean!
         hasPatterns : boolean!
         patterns : string!
         hasServices : boolean!
@@ -138,7 +146,7 @@ orbital OrbValidateOrbital {
 
     state idle {
       INIT -> idle
-      VALIDATE_START -> linting
+      VALIDATE_START -> linting when (not @payload.workers)
         (set @entity.cwd @payload.cwd)
         (set @entity.file @payload.file)
         (set @entity.json @payload.json)
@@ -146,6 +154,14 @@ orbital OrbValidateOrbital {
         (set @entity.finalProgram @payload.finalProgram)
         (set @entity.options (object/merge (object/merge { report: true path: @payload.path denyWarnings: @payload.denyWarnings } (if @payload.hasPatterns { patterns: @payload.patterns } {})) (if @payload.hasServices { services: @payload.services } {})))
         (emit LINT_RUN { file: @payload.file })
+      VALIDATE_START -> linting when @payload.workers
+        (set @entity.cwd @payload.cwd)
+        (set @entity.file @payload.file)
+        (set @entity.json @payload.json)
+        (set @entity.denyWarnings @payload.denyWarnings)
+        (set @entity.finalProgram @payload.finalProgram)
+        (set @entity.options (object/merge (object/merge { report: true path: @payload.path denyWarnings: @payload.denyWarnings } (if @payload.hasPatterns { patterns: @payload.patterns } {})) (if @payload.hasServices { services: @payload.services } {})))
+        (emit LINT_RUN_WORKERS { file: @payload.file })
     }
 
     state linting {
@@ -207,6 +223,9 @@ orbital OrbValidateOrbital {
       LINT_RUN -> external { file : string! }
         @description "Ask the composed std-orb-lint-engine to lint the file; it answers LINT_COLLECTED."
         @tier "internal"
+      LINT_RUN_WORKERS -> external { file : string! }
+        @description "Ask the composed std-orb-lint-workers to lint the file in guest workers (--workers); it answers LINT_COLLECTED."
+        @tier "internal"
       VALIDATE_RENDER { }
         @description "Internal: the report holds the core and lint findings, print it."
         @tier "internal"
@@ -219,7 +238,7 @@ orbital OrbValidateOrbital {
         cwd : string!
         json : boolean!
         denyWarnings : boolean!
-        finalProgram : boolean!
+        finalProgram : boolean!  workers : boolean!
         hasPatterns : boolean!
         patterns : string!
         hasServices : boolean!
@@ -233,6 +252,8 @@ orbital OrbValidateOrbital {
         @description "std-orb-lint-input's LINT_INPUT_UNREAD: the file could not be read or lowered."
       Lint.OrbLintEngine.LINT_COLLECTED -> LINT_COLLECTED
       Lint.OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+      Workers.OrbLintWorkers.LINT_COLLECTED -> LINT_COLLECTED
+      Workers.OrbLintWorkers.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
     }
     config {
       cascadeRule : string = "orbital-ref-closure"

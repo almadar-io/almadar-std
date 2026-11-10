@@ -10,6 +10,7 @@ type StatusBoardRow = { id : string!, section : string!, title : string!, subtit
 type StatusBoardDetailItem = { label : string!, tone : "neutral" | "success" | "warning" | "danger" | "info"!, statusLabel : string!, meta : string! }
 type StatusBoardDetail = { rowId : string!, phase : "loading" | "ready" | "failed"!, items : [StatusBoardDetailItem]!, code : string!, codeTitle : string!, errorLines : [number]!, error : string! }
 uses Http from "std/behaviors/std-http-client"
+uses Frame from "std/behaviors/std-http-frame"
 uses Timeout from "std/behaviors/std-timeout"
 type HttpHeader = { name : string!, value : string! }
 type LsProvider = { available : boolean!, balance : number?, usage : number?, limit : number?, actualSpend : number?, currency : string!, error : string? }
@@ -65,6 +66,12 @@ orbital LlmSpendBoardOrbital {
     pendingSpendFor : string @description "The provider whose snapshots are being read." = ""
   }
 
+  trait LsOrHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      LsOrHttp.HC_FRAME -> FRAME_RUN
+    }
+  }
+
   trait LsOrHttp = Http.traits.HttpClient {
     events {
       HTTP_REPLIED: LS_OR_HTTP_REPLIED
@@ -83,6 +90,15 @@ orbital LlmSpendBoardOrbital {
     listens {
       LlmSpend.LS_OR_SEND -> HTTP_SEND
       LsTimeout.TIMED_OUT -> LS_OR_HTTP_CANCEL with { key: ?key } when (= ?key "or")
+      LsOrHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      LsOrHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      LsOrHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
+    }
+  }
+
+  trait LsDsHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      LsDsHttp.HC_FRAME -> FRAME_RUN
     }
   }
 
@@ -104,6 +120,15 @@ orbital LlmSpendBoardOrbital {
     listens {
       LlmSpend.LS_DS_SEND -> HTTP_SEND
       LsTimeout.TIMED_OUT -> LS_DS_HTTP_CANCEL with { key: ?key } when (= ?key "ds")
+      LsDsHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      LsDsHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      LsDsHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
+    }
+  }
+
+  trait LsKmHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      LsKmHttp.HC_FRAME -> FRAME_RUN
     }
   }
 
@@ -125,6 +150,15 @@ orbital LlmSpendBoardOrbital {
     listens {
       LlmSpend.LS_KM_SEND -> HTTP_SEND
       LsTimeout.TIMED_OUT -> LS_KM_HTTP_CANCEL with { key: ?key } when (= ?key "km")
+      LsKmHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      LsKmHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      LsKmHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
+    }
+  }
+
+  trait LsTraceHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      LsTraceHttp.HC_FRAME -> FRAME_RUN
     }
   }
 
@@ -142,6 +176,9 @@ orbital LlmSpendBoardOrbital {
     listens {
       LlmSpend.LS_TRACE_SEND -> HTTP_SEND
       LsTimeout.TIMED_OUT -> LS_TRACE_HTTP_CANCEL with { key: ?key } when (= ?key "trace")
+      LsTraceHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      LsTraceHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      LsTraceHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
     }
   }
 
@@ -573,5 +610,5 @@ orbital LlmSpendBoardOrbital {
     }
   }
 
-  page "/llm-spend-board" as LlmSpendBoardPage -> LlmSpend, LlmSpendView, LsOrHttp, LsDsHttp, LsKmHttp, LsTraceHttp, LsTimeout
+  page "/llm-spend-board" as LlmSpendBoardPage -> LlmSpend, LlmSpendView, LsOrHttp, LsOrHttpFrame, LsDsHttp, LsDsHttpFrame, LsKmHttp, LsKmHttpFrame, LsTraceHttp, LsTraceHttpFrame, LsTimeout
 }

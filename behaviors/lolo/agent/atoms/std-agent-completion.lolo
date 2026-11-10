@@ -8,6 +8,7 @@ uses Spec from "almadar-std/completion"
 uses Llm from "std/behaviors/std-llm"
 uses Req from "std/behaviors/std-http-request"
 uses Http from "std/behaviors/std-http-client"
+uses Frame from "std/behaviors/std-http-frame"
 
 orbital AgentCompletionOrbital {
 
@@ -29,10 +30,32 @@ orbital AgentCompletionOrbital {
 
   trait CompletionChatRequest = Req.traits.HttpRequest {
     listens {
+      CompletionChatRequestDelay.ELAPSED -> RETRY_ELAPSED
+      CompletionChatRequestDeadline.ELAPSED -> TIMEOUT_ELAPSED
       CompletionLlm.LLM_CHAT_WIRE -> HTTP_REQUEST
       CompletionLlm.LLM_CHAT_WIRE_CANCEL -> HTTP_REQUEST_CANCEL
       CompletionChatHttp.HTTP_REPLIED -> HTTP_REPLIED
       CompletionChatHttp.HTTP_FAILED -> HTTP_FAILED
+    }
+  }
+
+  trait CompletionChatRequestDelay = Req.traits.RequestDelay {
+    listens {
+      CompletionChatRequest.RETRY_WAIT -> START
+      CompletionChatRequest.RETRY_STOP -> CANCEL
+    }
+  }
+
+  trait CompletionChatRequestDeadline = Req.traits.RequestDeadline {
+    listens {
+      CompletionChatRequest.TIMEOUT_START -> START
+      CompletionChatRequest.TIMEOUT_STOP -> CANCEL
+    }
+  }
+
+  trait CompletionChatHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      CompletionChatHttp.HC_FRAME -> FRAME_RUN
     }
   }
 
@@ -49,6 +72,9 @@ orbital AgentCompletionOrbital {
     listens {
       CompletionChatRequest.HTTP_SEND -> HTTP_SEND
       CompletionChatRequest.HTTP_CANCEL -> HTTP_CANCEL
+      CompletionChatHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      CompletionChatHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      CompletionChatHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
     }
   }
 
@@ -138,5 +164,5 @@ orbital AgentCompletionOrbital {
     }
   }
 
-  page boot as AgentCompletionPage -> CompletionGeneration, CompletionReady, CompletionLlm, CompletionChatRequest, CompletionChatHttp
+  page boot as AgentCompletionPage -> CompletionGeneration, CompletionReady, CompletionLlm, CompletionChatRequest, CompletionChatRequestDelay, CompletionChatRequestDeadline, CompletionChatHttp, CompletionChatHttpFrame
 }

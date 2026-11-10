@@ -22,6 +22,7 @@ uses Llm from "std/behaviors/std-llm"
 uses Delay from "std/behaviors/std-delay"
 uses Req from "std/behaviors/std-http-request"
 uses Http from "std/behaviors/std-http-client"
+uses Frame from "std/behaviors/std-http-frame"
 
 orbital SemanticIndexOrbital {
   config {
@@ -138,6 +139,12 @@ orbital SemanticIndexOrbital {
     }
   }
 
+  trait SemIdxEmbedHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      SemIdxEmbedHttp.HC_FRAME -> FRAME_RUN
+    }
+  }
+
   trait SemIdxEmbedHttp = Http.traits.HttpClient {
     config {
       host: "127.0.0.1"
@@ -152,6 +159,9 @@ orbital SemanticIndexOrbital {
     listens {
       SemIdxEmbedRequest.HTTP_SEND -> HTTP_SEND
       SemIdxEmbedRequest.HTTP_CANCEL -> HTTP_CANCEL
+      SemIdxEmbedHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      SemIdxEmbedHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      SemIdxEmbedHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
     }
   }
 
@@ -583,5 +593,5 @@ orbital SemanticIndexOrbital {
     }
   }
 
-  page boot as SemanticIndexStart -> SemanticIndex, SemanticIndexLlm, SemIdxEmbedWait, SemIdxEmbedRequest, SemIdxEmbedRequestDelay, SemIdxEmbedRequestDeadline, SemIdxEmbedHttp
+  page boot as SemanticIndexStart -> SemanticIndex, SemanticIndexLlm, SemIdxEmbedWait, SemIdxEmbedRequest, SemIdxEmbedRequestDelay, SemIdxEmbedRequestDeadline, SemIdxEmbedHttp, SemIdxEmbedHttpFrame
 }

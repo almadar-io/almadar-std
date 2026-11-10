@@ -45,6 +45,7 @@ uses Llm from "std/behaviors/std-llm"
 uses Req from "std/behaviors/std-http-request"
 
 uses Http from "std/behaviors/std-http-client"
+uses Frame from "std/behaviors/std-http-frame"
 
 orbital AgentContextOrbital {
 
@@ -71,10 +72,32 @@ orbital AgentContextOrbital {
 
   trait CtxChatRequest = Req.traits.HttpRequest {
     listens {
+      CtxChatRequestDelay.ELAPSED -> RETRY_ELAPSED
+      CtxChatRequestDeadline.ELAPSED -> TIMEOUT_ELAPSED
       ContextSummarizerLlm.LLM_CHAT_WIRE -> HTTP_REQUEST
       ContextSummarizerLlm.LLM_CHAT_WIRE_CANCEL -> HTTP_REQUEST_CANCEL
       CtxChatHttp.HTTP_REPLIED -> HTTP_REPLIED
       CtxChatHttp.HTTP_FAILED -> HTTP_FAILED
+    }
+  }
+
+  trait CtxChatRequestDelay = Req.traits.RequestDelay {
+    listens {
+      CtxChatRequest.RETRY_WAIT -> START
+      CtxChatRequest.RETRY_STOP -> CANCEL
+    }
+  }
+
+  trait CtxChatRequestDeadline = Req.traits.RequestDeadline {
+    listens {
+      CtxChatRequest.TIMEOUT_START -> START
+      CtxChatRequest.TIMEOUT_STOP -> CANCEL
+    }
+  }
+
+  trait CtxChatHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      CtxChatHttp.HC_FRAME -> FRAME_RUN
     }
   }
 
@@ -91,6 +114,9 @@ orbital AgentContextOrbital {
     listens {
       CtxChatRequest.HTTP_SEND -> HTTP_SEND
       CtxChatRequest.HTTP_CANCEL -> HTTP_CANCEL
+      CtxChatHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      CtxChatHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      CtxChatHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
     }
   }
 
@@ -200,5 +226,5 @@ orbital AgentContextOrbital {
     }
   }
 
-  page "/agent-context" as AgentContextPage -> AgentContextCompactor, ContextSummarizerLlm, CtxChatRequest, CtxChatHttp
+  page "/agent-context" as AgentContextPage -> AgentContextCompactor, ContextSummarizerLlm, CtxChatRequest, CtxChatRequestDelay, CtxChatRequestDeadline, CtxChatHttp, CtxChatHttpFrame
 }

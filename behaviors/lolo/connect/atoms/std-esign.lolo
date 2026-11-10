@@ -4,12 +4,19 @@ app std-esign [
   net: { "demo.docusign.net:443": [tcp], "na1.docusign.net:443": [tcp], "na2.docusign.net:443": [tcp], "na3.docusign.net:443": [tcp], "na4.docusign.net:443": [tcp], "eu.docusign.net:443": [tcp], "au.docusign.net:443": [tcp], "ca.docusign.net:443": [tcp], "*.docusign.net:443": [tcp] }
 ]
 uses Http from "std/behaviors/std-http-client"
+uses Frame from "std/behaviors/std-http-frame"
 uses Timeout from "std/behaviors/std-timeout"
 type HttpHeader = { name : string!, value : string! }
 type DocusignEnvelopeReply = { envelopeId : string, status : string, completedDateTime : string }
 orbital EsignOrbital {
   entity EsignEnvelope [runtime] {
     id : string!
+  }
+
+  trait EsignHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      EsignHttp.HC_FRAME -> FRAME_RUN
+    }
   }
 
   trait EsignHttp = Http.traits.HttpClient {
@@ -26,6 +33,9 @@ orbital EsignOrbital {
     listens {
       EsignClient.ESIGN_HTTP_SEND -> HTTP_SEND
       EsignTimeout.TIMED_OUT -> HTTP_CANCEL with { key: ?key }
+      EsignHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      EsignHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      EsignHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
     }
   }
 
@@ -257,5 +267,5 @@ orbital EsignOrbital {
     }
   }
 
-  page boot as EsignPage -> EsignClient, EsignHttp, EsignTimeout
+  page boot as EsignPage -> EsignClient, EsignHttp, EsignHttpFrame, EsignTimeout
 }

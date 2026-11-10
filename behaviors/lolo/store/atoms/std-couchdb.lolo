@@ -5,6 +5,7 @@ app std-couchdb [
 ]
 uses Spec from "almadar-std/couchdb"
 uses Http from "std/behaviors/std-http-client"
+uses Frame from "std/behaviors/std-http-frame"
 uses Timeout from "std/behaviors/std-timeout"
 type HttpHeader = { name : string!, value : string! }
 type RowCell = string | number | boolean | [RowCell?] | Map string RowCell?
@@ -98,6 +99,12 @@ orbital CouchdbOrbital {
     count : number = 0
   }
 
+  trait CouchHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      CouchHttp.HC_FRAME -> FRAME_RUN
+    }
+  }
+
   trait CouchHttp = Http.traits.HttpClient {
     config {
       host: "couchdb.example.test"
@@ -112,6 +119,9 @@ orbital CouchdbOrbital {
     listens {
       RowStoreDriver.COUCH_HTTP_SEND -> HTTP_SEND
       CouchTimeout.TIMED_OUT -> HTTP_CANCEL with { key: ?key }
+      CouchHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      CouchHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      CouchHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
     }
   }
 
@@ -961,5 +971,5 @@ orbital CouchdbOrbital {
     }
   }
 
-  page boot as CouchPage -> RowStoreDriver, CouchHttp, CouchTimeout
+  page boot as CouchPage -> RowStoreDriver, CouchHttp, CouchHttpFrame, CouchTimeout
 }

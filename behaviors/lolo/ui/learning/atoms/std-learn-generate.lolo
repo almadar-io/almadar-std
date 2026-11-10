@@ -102,6 +102,7 @@ uses ToolLoop from "std/behaviors/std-agent-tool-loop"
 uses Llm from "std/behaviors/std-llm"
 uses Req from "std/behaviors/std-http-request"
 uses Http from "std/behaviors/std-http-client"
+uses Frame from "std/behaviors/std-http-frame"
 
 type JsonValue = string | number | boolean | [JsonValue] | Map string JsonValue
 type ToolArguments = Map string JsonValue
@@ -431,10 +432,32 @@ orbital LearnGenerateOrbital {
 
   trait LearnChatRequest = Req.traits.HttpRequest {
     listens {
+      LearnChatRequestDelay.ELAPSED -> RETRY_ELAPSED
+      LearnChatRequestDeadline.ELAPSED -> TIMEOUT_ELAPSED
       LearnGenerateLlm.LLM_CHAT_WIRE -> HTTP_REQUEST
       LearnGenerateLlm.LLM_CHAT_WIRE_CANCEL -> HTTP_REQUEST_CANCEL
       LearnChatHttp.HTTP_REPLIED -> HTTP_REPLIED
       LearnChatHttp.HTTP_FAILED -> HTTP_FAILED
+    }
+  }
+
+  trait LearnChatRequestDelay = Req.traits.RequestDelay {
+    listens {
+      LearnChatRequest.RETRY_WAIT -> START
+      LearnChatRequest.RETRY_STOP -> CANCEL
+    }
+  }
+
+  trait LearnChatRequestDeadline = Req.traits.RequestDeadline {
+    listens {
+      LearnChatRequest.TIMEOUT_START -> START
+      LearnChatRequest.TIMEOUT_STOP -> CANCEL
+    }
+  }
+
+  trait LearnChatHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      LearnChatHttp.HC_FRAME -> FRAME_RUN
     }
   }
 
@@ -451,8 +474,11 @@ orbital LearnGenerateOrbital {
     listens {
       LearnChatRequest.HTTP_SEND -> HTTP_SEND
       LearnChatRequest.HTTP_CANCEL -> HTTP_CANCEL
+      LearnChatHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      LearnChatHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      LearnChatHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
     }
   }
 
-  page boot as LearnGeneratePage -> LearnGenerate, LearnGenerateTools, LearnGenerateLlm, LearnChatRequest, LearnChatHttp
+  page boot as LearnGeneratePage -> LearnGenerate, LearnGenerateTools, LearnGenerateLlm, LearnChatRequest, LearnChatRequestDelay, LearnChatRequestDeadline, LearnChatHttp, LearnChatHttpFrame
 }

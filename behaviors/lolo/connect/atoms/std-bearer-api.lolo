@@ -4,11 +4,18 @@ app std-bearer-api [
   net: { "api.example.com:443": [tcp], "*.example.com:443": [tcp] }
 ]
 uses Http from "std/behaviors/std-http-client"
+uses Frame from "std/behaviors/std-http-frame"
 uses Timeout from "std/behaviors/std-timeout"
 type HttpHeader = { name : string!, value : string! }
 orbital BearerApiOrbital {
   entity BearerApiCall [runtime] {
     id : string!
+  }
+
+  trait BearerApiHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      BearerApiHttp.HC_FRAME -> FRAME_RUN
+    }
   }
 
   trait BearerApiHttp = Http.traits.HttpClient {
@@ -25,6 +32,9 @@ orbital BearerApiOrbital {
     listens {
       BearerApiClient.BEARER_API_HTTP_SEND -> HTTP_SEND
       BearerApiTimeout.TIMED_OUT -> HTTP_CANCEL with { key: ?key }
+      BearerApiHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      BearerApiHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      BearerApiHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
     }
   }
 
@@ -168,5 +178,5 @@ orbital BearerApiOrbital {
     }
   }
 
-  page boot as BearerApiPage -> BearerApiClient, BearerApiHttp, BearerApiTimeout
+  page boot as BearerApiPage -> BearerApiClient, BearerApiHttp, BearerApiHttpFrame, BearerApiTimeout
 }

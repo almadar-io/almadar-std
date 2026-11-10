@@ -6,6 +6,7 @@ app std-dev-personas [
 ]
 uses Spec from "almadar-std/dev-personas"
 uses Http from "std/behaviors/std-http-client"
+uses Frame from "std/behaviors/std-http-frame"
 type HttpHeader = { name : string!, value : string! }
 type PersonaSignInBody = { id : string }
 type EmulatorError = { message : string }
@@ -17,6 +18,12 @@ orbital DevPersonasOrbital {
     name : string @description "Shown on the persona switcher and set as the emulator user's display name."
     email : email @description "Kept off the token claims."
     role : string @description "What a guard on the viewer's role reads; travels as a custom claim so the persona is the same viewer after sign-in."
+  }
+
+  trait PersonaHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      PersonaHttp.HC_FRAME -> FRAME_RUN
+    }
   }
 
   trait PersonaHttp = Http.traits.HttpClient {
@@ -31,6 +38,9 @@ orbital DevPersonasOrbital {
     }
     listens {
       DevPersonas.DP_POST -> HTTP_SEND
+      PersonaHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      PersonaHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      PersonaHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
     }
   }
 
@@ -396,5 +406,5 @@ orbital DevPersonasOrbital {
     }
   }
 
-  page boot as DevPersonasOrbitalStart -> DevPersonas, PersonaHttp
+  page boot as DevPersonasOrbitalStart -> DevPersonas, PersonaHttp, PersonaHttpFrame
 }

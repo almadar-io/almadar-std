@@ -8,6 +8,7 @@ uses Spec from "almadar-std/similarity"
 uses Llm from "std/behaviors/std-llm"
 uses Req from "std/behaviors/std-http-request"
 uses Http from "std/behaviors/std-http-client"
+uses Frame from "std/behaviors/std-http-frame"
 uses Delay from "std/behaviors/std-delay"
 
 orbital MlSimilarityOrbital {
@@ -56,10 +57,32 @@ orbital MlSimilarityOrbital {
 
   trait SimEmbedRequest = Req.traits.HttpRequest {
     listens {
+      SimEmbedRequestDelay.ELAPSED -> RETRY_ELAPSED
+      SimEmbedRequestDeadline.ELAPSED -> TIMEOUT_ELAPSED
       SimilarityLlm.LLM_EMBED_WIRE -> HTTP_REQUEST
       SimilarityLlm.LLM_EMBED_WIRE_CANCEL -> HTTP_REQUEST_CANCEL
       SimEmbedHttp.HTTP_REPLIED -> HTTP_REPLIED
       SimEmbedHttp.HTTP_FAILED -> HTTP_FAILED
+    }
+  }
+
+  trait SimEmbedRequestDelay = Req.traits.RequestDelay {
+    listens {
+      SimEmbedRequest.RETRY_WAIT -> START
+      SimEmbedRequest.RETRY_STOP -> CANCEL
+    }
+  }
+
+  trait SimEmbedRequestDeadline = Req.traits.RequestDeadline {
+    listens {
+      SimEmbedRequest.TIMEOUT_START -> START
+      SimEmbedRequest.TIMEOUT_STOP -> CANCEL
+    }
+  }
+
+  trait SimEmbedHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      SimEmbedHttp.HC_FRAME -> FRAME_RUN
     }
   }
 
@@ -76,6 +99,9 @@ orbital MlSimilarityOrbital {
     listens {
       SimEmbedRequest.HTTP_SEND -> HTTP_SEND
       SimEmbedRequest.HTTP_CANCEL -> HTTP_CANCEL
+      SimEmbedHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      SimEmbedHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      SimEmbedHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
     }
   }
 
@@ -340,5 +366,5 @@ orbital MlSimilarityOrbital {
     }
   }
 
-  page boot as MlSimilarityPage -> SimilarityRun, SimilarityGate, SimilarityLlm, SimEmbedWait, SimEmbedRequest, SimEmbedHttp
+  page boot as MlSimilarityPage -> SimilarityRun, SimilarityGate, SimilarityLlm, SimEmbedWait, SimEmbedRequest, SimEmbedRequestDelay, SimEmbedRequestDeadline, SimEmbedHttp, SimEmbedHttpFrame
 }

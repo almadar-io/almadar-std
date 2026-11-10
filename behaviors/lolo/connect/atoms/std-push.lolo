@@ -5,6 +5,7 @@ app std-push [
 ]
 uses Spec from "almadar-std/push"
 uses Http from "std/behaviors/std-http-client"
+uses Frame from "std/behaviors/std-http-frame"
 
 type HttpHeader = { name : string!, value : string! }
 type PushKeys = { p256dh : string, auth : string }
@@ -21,6 +22,12 @@ orbital PushOrbital {
     authSecret : bytes = ""
   }
 
+  trait PushFcmHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      PushFcmHttp.HC_FRAME -> FRAME_RUN
+    }
+  }
+
   trait PushFcmHttp = Http.traits.HttpClient {
     config {
       host: "fcm.googleapis.com"
@@ -31,6 +38,15 @@ orbital PushOrbital {
     }
     listens {
       PushClient.PUSH_HTTP_SEND -> HTTP_SEND with { key: ?key, method: ?method, target: ?target, headers: ?headers, body: ?body, stream: ?stream, host: ?host } when (= ?host "fcm.googleapis.com")
+      PushFcmHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      PushFcmHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      PushFcmHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
+    }
+  }
+
+  trait PushAndroidHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      PushAndroidHttp.HC_FRAME -> FRAME_RUN
     }
   }
 
@@ -44,6 +60,15 @@ orbital PushOrbital {
     }
     listens {
       PushClient.PUSH_HTTP_SEND -> HTTP_SEND with { key: ?key, method: ?method, target: ?target, headers: ?headers, body: ?body, stream: ?stream, host: ?host } when (= ?host "android.googleapis.com")
+      PushAndroidHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      PushAndroidHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      PushAndroidHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
+    }
+  }
+
+  trait PushMozillaHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      PushMozillaHttp.HC_FRAME -> FRAME_RUN
     }
   }
 
@@ -57,6 +82,15 @@ orbital PushOrbital {
     }
     listens {
       PushClient.PUSH_HTTP_SEND -> HTTP_SEND with { key: ?key, method: ?method, target: ?target, headers: ?headers, body: ?body, stream: ?stream, host: ?host } when (= ?host "updates.push.services.mozilla.com")
+      PushMozillaHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      PushMozillaHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      PushMozillaHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
+    }
+  }
+
+  trait PushAppleHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      PushAppleHttp.HC_FRAME -> FRAME_RUN
     }
   }
 
@@ -70,6 +104,15 @@ orbital PushOrbital {
     }
     listens {
       PushClient.PUSH_HTTP_SEND -> HTTP_SEND with { key: ?key, method: ?method, target: ?target, headers: ?headers, body: ?body, stream: ?stream, host: ?host } when (= ?host "web.push.apple.com")
+      PushAppleHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      PushAppleHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      PushAppleHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
+    }
+  }
+
+  trait PushWnsHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      PushWnsHttp.HC_FRAME -> FRAME_RUN
     }
   }
 
@@ -83,6 +126,9 @@ orbital PushOrbital {
     }
     listens {
       PushClient.PUSH_HTTP_SEND -> HTTP_SEND with { key: ?key, method: ?method, target: ?target, headers: ?headers, body: ?body, stream: ?stream, host: ?host } when (validate/pattern ?host "^[A-Za-z0-9-]+[.]notify[.]windows[.]com$")
+      PushWnsHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      PushWnsHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      PushWnsHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
     }
   }
 
@@ -302,5 +348,5 @@ orbital PushOrbital {
     }
   }
 
-  page boot as PushPage -> PushClient, PushFcmHttp, PushAndroidHttp, PushMozillaHttp, PushAppleHttp, PushWnsHttp
+  page boot as PushPage -> PushClient, PushFcmHttp, PushFcmHttpFrame, PushAndroidHttp, PushAndroidHttpFrame, PushMozillaHttp, PushMozillaHttpFrame, PushAppleHttp, PushAppleHttpFrame, PushWnsHttp, PushWnsHttpFrame
 }

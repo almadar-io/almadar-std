@@ -14,6 +14,7 @@ type OtelMetricView = { name : string!, metricType : string!, value : number!, v
 type OtelSendKey = { signal : string, spanIds : [string], eventIds : [string], metricId : string }
 uses Lifecycle from "std/behaviors/std-lifecycle"
 uses Http from "std/behaviors/std-http-client"
+uses Frame from "std/behaviors/std-http-frame"
 uses Timeout from "std/behaviors/std-timeout"
 orbital OtelOrbital {
   config {
@@ -84,6 +85,12 @@ orbital OtelOrbital {
     batchLimit : number = 0
   }
 
+  trait OtelHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      OtelHttp.HC_FRAME -> FRAME_RUN
+    }
+  }
+
   trait OtelHttp = Http.traits.HttpClient {
     config {
       host: "localhost"
@@ -94,6 +101,9 @@ orbital OtelOrbital {
     listens {
       OtelExporter.OTEL_HTTP_SEND -> HTTP_SEND
       OtelTimeout.TIMED_OUT -> HTTP_CANCEL with { key: ?key }
+      OtelHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      OtelHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      OtelHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
     }
   }
 
@@ -215,7 +225,7 @@ orbital OtelOrbital {
         (let ((idHash (hash/sha 256 (str/concat @payload.value "metric") "hex")))
           (if (== @idHash null)
             (emit OTEL_EXPORT_FAILED { signal: "metrics", kind: "random", error: "the drawn random bytes could not be hashed" })
-            (let ((d (default (json/parse @payload.key OtelMetricDraw) {})) (id (str/slice @idHash 0 32)) (now (time/now)))
+            (let ((d (default (json/parse @payload.key OtelMetricDraw) {})) (id (str/slice @idHash 0 32)) (stampedAt (time/now)))
           (do (persist create OtelMetric {
             id: @id,
             name: (object/get @d name ""),
@@ -223,7 +233,7 @@ orbital OtelOrbital {
             value: (object/get @d value 0),
             unit: (object/get @d unit ""),
             labels: (object/get @d labels {}),
-            timestamp: @now,
+            timestamp: @stampedAt,
             exported: false
           } { emit: { success: OTEL_METRIC_STORED, failure: OTEL_METRIC_NOT_STORED } })
           (emit OTEL_SEND {
@@ -727,7 +737,7 @@ orbital OtelOrbital {
     }
   }
 
-  page boot as OtelPage -> OtelExporter, OtelHttp, OtelTimeout
+  page boot as OtelPage -> OtelExporter, OtelHttp, OtelHttpFrame, OtelTimeout
 
   page "/otel/retention" as OtelRetentionPage -> OtelMetricRetention, OtelSpanRetention, OtelSpanEventRetention
 }

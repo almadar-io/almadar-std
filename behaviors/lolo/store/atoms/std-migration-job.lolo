@@ -4,6 +4,7 @@ app std-migration-job [
   net: { "api.example.com:443": [tcp], "*.example.com:443": [tcp] }
 ]
 uses Http from "std/behaviors/std-http-client"
+uses Frame from "std/behaviors/std-http-frame"
 uses Timeout from "std/behaviors/std-timeout"
 type HttpHeader = { name : string!, value : string! }
 orbital MigrationJobOrbital {
@@ -1129,6 +1130,12 @@ orbital MigrationJobOrbital {
     }
   }
 
+  trait MigrationJobHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      MigrationJobHttp.HC_FRAME -> FRAME_RUN
+    }
+  }
+
   trait MigrationJobHttp = Http.traits.HttpClient {
     config {
       host: "api.example.com"
@@ -1143,6 +1150,9 @@ orbital MigrationJobOrbital {
     listens {
       MigrationJobLifecycle.MIGRATION_HTTP_SEND -> HTTP_SEND
       MigrationJobTimeout.TIMED_OUT -> HTTP_CANCEL with { key: ?key }
+      MigrationJobHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      MigrationJobHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      MigrationJobHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
     }
   }
 
@@ -1158,5 +1168,5 @@ orbital MigrationJobOrbital {
     }
   }
 
-  page "/migration-job" as MigrationJobPage -> MigrationJobLifecycle, MigrationJobHttp, MigrationJobTimeout
+  page "/migration-job" as MigrationJobPage -> MigrationJobLifecycle, MigrationJobHttp, MigrationJobHttpFrame, MigrationJobTimeout
 }

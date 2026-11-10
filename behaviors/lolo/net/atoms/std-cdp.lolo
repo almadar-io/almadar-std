@@ -4,6 +4,7 @@ app std-cdp [
 ]
 uses Spec from "almadar-std/cdp"
 uses Http from "std/behaviors/std-http-client"
+uses Frame from "std/behaviors/std-http-frame"
 uses Ws from "std/behaviors/std-ws-client"
 uses Delay from "std/behaviors/std-delay"
 type HttpHeader = { name : string!, value : string! }
@@ -23,6 +24,12 @@ orbital CdpOrbital {
     reason : string @description "Why the connection that ended is gone, kept for CDP_DISCONNECTED once the pending commands are answered." = ""
   }
 
+  trait CdpHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      CdpHttp.HC_FRAME -> FRAME_RUN
+    }
+  }
+
   trait CdpHttp = Http.traits.HttpClient {
     config {
       host: "127.0.0.1"
@@ -32,6 +39,9 @@ orbital CdpOrbital {
     }
     listens {
       Cdp.CDP_HTTP_SEND -> HTTP_SEND
+      CdpHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      CdpHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      CdpHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
     }
   }
 
@@ -341,5 +351,5 @@ orbital CdpOrbital {
     }
   }
 
-  page boot as CdpPage -> Cdp, CdpHttp, CdpWs, CdpDelay
+  page boot as CdpPage -> Cdp, CdpHttp, CdpHttpFrame, CdpWs, CdpDelay
 }

@@ -18,6 +18,7 @@ orbital EscalatingDecisionOrbital {
   uses Delay from "std/behaviors/std-delay"
   uses Req from "std/behaviors/std-http-request"
   uses Http from "std/behaviors/std-http-client"
+  uses Frame from "std/behaviors/std-http-frame"
 
   ;; The whole DECIDE payload, echoed untouched down the chain so each rung
   ;; can project its own inputs out of it (object/get "accepted"/"categories"/"candidate").
@@ -235,10 +236,32 @@ orbital EscalatingDecisionOrbital {
 
   trait EscEmbedRequest = Req.traits.HttpRequest {
     listens {
+      EscEmbedRequestDelay.ELAPSED -> RETRY_ELAPSED
+      EscEmbedRequestDeadline.ELAPSED -> TIMEOUT_ELAPSED
       ClassifyLlm.LLM_EMBED_WIRE -> HTTP_REQUEST
       ClassifyLlm.LLM_EMBED_WIRE_CANCEL -> HTTP_REQUEST_CANCEL
       EscEmbedHttp.HTTP_REPLIED -> HTTP_REPLIED
       EscEmbedHttp.HTTP_FAILED -> HTTP_FAILED
+    }
+  }
+
+  trait EscEmbedRequestDelay = Req.traits.RequestDelay {
+    listens {
+      EscEmbedRequest.RETRY_WAIT -> START
+      EscEmbedRequest.RETRY_STOP -> CANCEL
+    }
+  }
+
+  trait EscEmbedRequestDeadline = Req.traits.RequestDeadline {
+    listens {
+      EscEmbedRequest.TIMEOUT_START -> START
+      EscEmbedRequest.TIMEOUT_STOP -> CANCEL
+    }
+  }
+
+  trait EscEmbedHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      EscEmbedHttp.HC_FRAME -> FRAME_RUN
     }
   }
 
@@ -255,6 +278,9 @@ orbital EscalatingDecisionOrbital {
     listens {
       EscEmbedRequest.HTTP_SEND -> HTTP_SEND
       EscEmbedRequest.HTTP_CANCEL -> HTTP_CANCEL
+      EscEmbedHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      EscEmbedHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      EscEmbedHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
     }
   }
   trait ClassifyChatRequest = Rung5.traits.ClassifyChatRequest {}
@@ -287,7 +313,7 @@ orbital EscalatingDecisionOrbital {
     }
   }
 
-  page "/ladder/decide" as LadderDecidePage -> LadderEntry, ExactRung, LookupRung, SimilarityRung, SimilarityGateRung, InferRung, InferMl, ClassifyRung, ClassifyLlm, EscEmbedWait, EscEmbedRequest, EscEmbedHttp, ClassifyChatRequest, ClassifyChatHttp, LadderVerdictSink
+  page "/ladder/decide" as LadderDecidePage -> LadderEntry, ExactRung, LookupRung, SimilarityRung, SimilarityGateRung, InferRung, InferMl, ClassifyRung, ClassifyLlm, EscEmbedWait, EscEmbedRequest, EscEmbedRequestDelay, EscEmbedRequestDeadline, EscEmbedHttp, EscEmbedHttpFrame, ClassifyChatRequest, ClassifyChatHttp, LadderVerdictSink
 }
 
 orbital NotFound = NotFound.orbitals.NotFoundOrbital {

@@ -4,6 +4,7 @@ app mini-reply [
   description: "walk fixture with an http failure route"
 ]
 uses Http from "std/behaviors/std-http-client"
+uses Frame from "std/behaviors/std-http-frame"
 uses Timeout from "std/behaviors/std-timeout"
 type HttpHeader = { name : string!, value : string! }
 orbital MiniReply {
@@ -11,6 +12,12 @@ orbital MiniReply {
     id : string!
     title : string!
   }
+  trait MiniHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      MiniHttp.HC_FRAME -> FRAME_RUN
+    }
+  }
+
   trait MiniHttp = Http.traits.HttpClient {
     config {
       host: "example.test"
@@ -21,6 +28,9 @@ orbital MiniReply {
     listens {
       Caller.CALL_HTTP_SEND -> HTTP_SEND
       MiniTimeout.TIMED_OUT -> HTTP_CANCEL with { key: ?key }
+      MiniHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      MiniHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      MiniHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
     }
   }
   trait MiniTimeout = Timeout.traits.Timeout {
@@ -71,5 +81,5 @@ orbital MiniReply {
       MiniTimeout.TIMED_OUT -> CALL_FAILED with { error: (str/concat "timeout of " ?timeoutMs "ms exceeded"), kind: "timeout" }
     }
   }
-  page "/mini-reply" as MiniReplyPage -> Caller, MiniHttp, MiniTimeout
+  page "/mini-reply" as MiniReplyPage -> Caller, MiniHttp, MiniHttpFrame, MiniTimeout
 }

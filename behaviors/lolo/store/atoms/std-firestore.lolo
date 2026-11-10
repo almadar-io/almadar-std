@@ -6,6 +6,7 @@ app std-firestore [
 ]
 uses Spec from "almadar-std/firestore"
 uses Http from "std/behaviors/std-http-client"
+uses Frame from "std/behaviors/std-http-frame"
 uses Timeout from "std/behaviors/std-timeout"
 type HttpHeader = { name : string!, value : string! }
 
@@ -125,6 +126,12 @@ orbital FirestoreOrbital {
     mintTried : boolean @description "True once this request minted the service-account access token after the store reported none held, so a second not-held answer fails instead of looping." = false
   }
 
+  trait FirestoreHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      FirestoreHttp.HC_FRAME -> FRAME_RUN
+    }
+  }
+
   trait FirestoreHttp = Http.traits.HttpClient {
     config {
       host: "firestore.googleapis.com"
@@ -138,6 +145,15 @@ orbital FirestoreOrbital {
     listens {
       RowStoreDriver.FS_HTTP_SEND -> HTTP_SEND
       FirestoreTimeout.TIMED_OUT -> HTTP_CANCEL with { key: ?key }
+      FirestoreHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      FirestoreHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      FirestoreHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
+    }
+  }
+
+  trait FirestoreEmulatorHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      FirestoreEmulatorHttp.HC_FRAME -> FRAME_RUN
     }
   }
 
@@ -157,6 +173,15 @@ orbital FirestoreOrbital {
     listens {
       RowStoreDriver.FS_EMU_SEND -> HTTP_SEND
       FirestoreTimeout.TIMED_OUT -> FS_EMU_HTTP_CANCEL with { key: ?key }
+      FirestoreEmulatorHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      FirestoreEmulatorHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      FirestoreEmulatorHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
+    }
+  }
+
+  trait FirestoreTokenHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      FirestoreTokenHttp.HC_FRAME -> FRAME_RUN
     }
   }
 
@@ -178,6 +203,9 @@ orbital FirestoreOrbital {
     listens {
       RowStoreDriver.FS_TOKEN_SEND -> HTTP_SEND
       FirestoreTimeout.TIMED_OUT -> FS_TOKEN_HTTP_CANCEL with { key: ?key }
+      FirestoreTokenHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      FirestoreTokenHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      FirestoreTokenHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
     }
   }
 
@@ -683,5 +711,5 @@ orbital FirestoreOrbital {
     }
   }
 
-  page boot as FirestoreStart -> RowStoreDriver, FirestoreHttp, FirestoreEmulatorHttp, FirestoreTokenHttp, FirestoreTimeout
+  page boot as FirestoreStart -> RowStoreDriver, FirestoreHttp, FirestoreHttpFrame, FirestoreEmulatorHttp, FirestoreEmulatorHttpFrame, FirestoreTokenHttp, FirestoreTokenHttpFrame, FirestoreTimeout
 }
