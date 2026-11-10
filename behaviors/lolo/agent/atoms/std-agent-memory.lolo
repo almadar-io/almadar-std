@@ -54,6 +54,7 @@ orbital AgentMemoryOrbital {
   type MemoryEmbedFailed = Event { code : string, message : string!, key : string } "Fired when embedding fails"
 
   entity AgentMemory [persistent: agentMemories] {
+    @read none "Rows are keyed by ownerId and every fetch and write in this atom is scoped to the signed-in owner; the atom declares no identity entity, so the app that binds its own entity here states the @read policy."
     id : string!
     ownerId : string! @description "Whose memory this is (the real @user). The binding organism scopes @read to it." @synonyms "user, owner, account"
     content : string! @description "What is remembered." @synonyms "memory, note, fact"
@@ -162,6 +163,7 @@ orbital AgentMemoryOrbital {
         (set @entity.pendingQuery "")
       LIST -> ready
         (fetch AgentMemory {
+          filter: (= (object/get @entity ownerId) @user.id)
           emit: { failure: MemoryListFailed, success: MemoriesForList }
           limit: @config.pageSize
           offset: 0
@@ -176,7 +178,11 @@ orbital AgentMemoryOrbital {
         (emit RECALLED { messages: ?messages, context: "", instructions: (default ?instructions ""), tools: (object/get ? tools []), ephemeral: true })
       RECALL -> ready when (and (default ?ephemeral false) (object/has ? live))
         (emit RECALLED { messages: ?messages, context: "", instructions: (default ?instructions ""), tools: (object/get ? tools []), ephemeral: true, live: ?live })
-      RECALL -> recalling when (not (default ?ephemeral false))
+      RECALL -> ready when (and (not (default ?ephemeral false)) (= @user.role "anonymous") (not (object/has ? live)))
+        (emit RECALLED { messages: ?messages, context: "" })
+      RECALL -> ready when (and (not (default ?ephemeral false)) (= @user.role "anonymous") (object/has ? live))
+        (emit RECALLED { messages: ?messages, context: "", live: ?live })
+      RECALL -> recalling when (and (not (default ?ephemeral false)) (!= @user.role "anonymous"))
         (set @entity.pendingMessages ?messages)
         (set @entity.pendingHasLive (object/has ? live))
         (set @entity.pendingLive (default ?live false))
@@ -193,6 +199,7 @@ orbital AgentMemoryOrbital {
       MemoryEmbedded -> recalling when (= (default ?key "") "recall")
         (set @entity.queryVector (default (array/first ?embeddings) []))
         (fetch AgentMemory {
+          filter: (= (object/get @entity ownerId) @user.id)
           emit: { failure: AgentMemoriesLoadFailed, success: MemoriesForRecall }
           limit: @config.maxRows
         })
@@ -309,8 +316,8 @@ orbital AgentMemoryOrbital {
       INIT -> ready
       MEMORY_STORED -> ready
         (set @entity.pendingContent "")
-      REMEMBER -> ready when (default ?ephemeral false)
-      REMEMBER -> remembering when (not (default ?ephemeral false))
+      REMEMBER -> ready when (or (default ?ephemeral false) (= @user.role "anonymous"))
+      REMEMBER -> remembering when (and (not (default ?ephemeral false)) (!= @user.role "anonymous"))
         (set @entity.pendingContent (str/concat "Asked: " @entity.pendingQuery " | Answered: " ?reply))
         (emit LLM_EMBED {
           texts: (array/prepend [] (str/concat "Asked: " @entity.pendingQuery " | Answered: " ?reply)),
@@ -420,6 +427,7 @@ orbital AgentMemoryOrbital {
       INIT -> browsing
         (set @entity.page 1)
         (fetch AgentMemory {
+          filter: (= (object/get @entity ownerId) @user.id)
           emit: { failure: AgentMemoriesLoadFailed, success: AgentMemoriesLoaded }
           limit: @config.pageSize
           offset: 0
@@ -459,6 +467,7 @@ orbital AgentMemoryOrbital {
       MEMORY_STORED -> browsing
         (set @entity.page 1)
         (fetch AgentMemory {
+          filter: (= (object/get @entity ownerId) @user.id)
           emit: { failure: AgentMemoriesLoadFailed, success: AgentMemoriesLoaded }
           limit: @config.pageSize
           offset: 0
@@ -467,6 +476,7 @@ orbital AgentMemoryOrbital {
       REFETCH_PAGE -> browsing
         (set @entity.page ?page)
         (fetch AgentMemory {
+          filter: (= (object/get @entity ownerId) @user.id)
           emit: { failure: AgentMemoriesLoadFailed, success: AgentMemoriesLoaded }
           limit: @config.pageSize
           offset: (* (- ?page 1) @config.pageSize)

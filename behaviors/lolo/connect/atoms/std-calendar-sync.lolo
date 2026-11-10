@@ -12,6 +12,7 @@ orbital CalendarSyncOrbital [ net: { "www.googleapis.com:443": [tcp] } ] {
     type CAL_REMOTE_CHANGED = Event { channelId : string, resourceId : string, resourceState : string } "Google watch-channel push notification, delivered by the google-calendar inbound hook (/api/hooks/google-calendar)."
 
   entity CalendarSyncRun [persistent: calendarSyncState] {
+    @read none "This program declares no identity entity, so it has no signed-in viewer to scope reads to: every visitor may read these rows."
     id : string!
     syncToken : string @intrinsic @description "Scratch: Google incremental-sync token from the last listEvents; in-memory per instance — a restart falls back to a full list." @synonyms "sync cursor, next token" = ""
     lastSyncedAt : instant? @intrinsic @description "When the last full push+pull cycle completed; null = never." @synonyms "last sync time"
@@ -21,6 +22,7 @@ orbital CalendarSyncOrbital [ net: { "www.googleapis.com:443": [tcp] } ] {
   }
 
   entity CalendarEvent [persistent: calendarEvents] {
+    @read none "This program declares no identity entity, so it has no signed-in viewer to scope reads to: every visitor may read these rows."
     id : string!
     title : string @description "Event title/summary." @synonyms "summary, name, subject" = ""
     startsAt : string @description "ISO start (dateTime, or YYYY-MM-DD for all-day)." @synonyms "start, begins, from" = ""

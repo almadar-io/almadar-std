@@ -567,6 +567,143 @@
         }
       ],
       "defaults": []
+    },
+    {
+      "id": "an-unsigned-session-cannot-keep-a-conversation",
+      "note": "G-CROSS-405: SEND, NEW_CHAT and SEND_IN_CHAT from the anonymous role are refused with AUTH_ERROR and write no row",
+      "steps": [
+        {
+          "trait": "AgentChatKeeper",
+          "event": "SEND",
+          "payload": {
+            "message": "hi"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "AgentChatsLoadFailed",
+                "payload": {
+                  "code": "AUTH_ERROR"
+                }
+              }
+            ],
+            "neverEmits": [
+              "ChatsForSend",
+              "ChatReadyForSend",
+              "ASSISTANT_SEND_IN_CHAT"
+            ]
+          }
+        },
+        {
+          "trait": "AgentChatKeeper",
+          "event": "NEW_CHAT",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "AgentChatsLoadFailed",
+                "payload": {
+                  "code": "AUTH_ERROR"
+                }
+              }
+            ],
+            "neverEmits": [
+              "NewChatStarted",
+              "ASSISTANT_CHAT_OPENED"
+            ]
+          }
+        },
+        {
+          "trait": "AgentThread",
+          "event": "SEND_IN_CHAT",
+          "payload": {
+            "chatId": "c1",
+            "message": "hi"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "AgentMessageSaveFailed",
+                "payload": {
+                  "code": "AUTH_ERROR"
+                }
+              }
+            ],
+            "neverEmits": [
+              "AgentMessageSaved",
+              "CONVERSE"
+            ]
+          }
+        },
+        {
+          "trait": "AgentThread",
+          "event": "REPLY_IN_CHAT",
+          "payload": {
+            "chatId": "c1",
+            "reply": "yo"
+          },
+          "expect": {
+            "fired": false
+          }
+        }
+      ],
+      "defaults": []
+    },
+    {
+      "id": "control-a-signed-in-person-keeps-a-conversation",
+      "note": "the same events with a viewer write the chat and the message",
+      "steps": [
+        {
+          "trait": "AgentChatKeeper",
+          "event": "SEND",
+          "identity": {
+            "id": "u1",
+            "role": "member"
+          },
+          "payload": {
+            "message": "hi"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "ChatReadyForSend",
+                "payload": {
+                  "ownerId": "u1"
+                }
+              }
+            ],
+            "neverEmits": [
+              "AgentChatsLoadFailed"
+            ]
+          }
+        },
+        {
+          "trait": "AgentThread",
+          "event": "SEND_IN_CHAT",
+          "identity": {
+            "id": "u1",
+            "role": "member"
+          },
+          "payload": {
+            "chatId": "c1",
+            "message": "hi"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "AgentMessageSaved",
+                "payload": {
+                  "ownerId": "u1"
+                }
+              }
+            ],
+            "neverEmits": [
+              "AgentMessageSaveFailed"
+            ]
+          }
+        }
+      ],
+      "defaults": []
     }
   ]
 }

@@ -33,12 +33,14 @@ orbital HttpServerOrbital {
   }
 
   entity StreamTicket [persistent: stream_tickets] {
+    @read none "Read by the HTTP server program's own traits to resolve a request's viewer before any viewer exists, so no viewer predicate can scope it; no trait here sends these rows to a client."
     id : string! @description "The ticket: 32 CSPRNG bytes, base64url."
     clientId : string! @description "The client session the ticket was minted for; its identity is the stream's."
     expiresAt : instant! @description "When the ticket stops working."
   }
 
   entity ViewerRow [persistent: viewer_rows] {
+    @read none "Read by the HTTP server program's own traits to resolve a request's viewer before any viewer exists, so no viewer predicate can scope it; no trait here sends these rows to a client."
     id : string! @description "The identity row's key: the verified subject."
     email : string @description "The person's email." = ""
     role : string @description "What the person may do in the app." = ""
@@ -46,6 +48,7 @@ orbital HttpServerOrbital {
   }
 
   entity ApiKeyRecord [persistent: api_keys] {
+    @read none "Read by the HTTP server program's own traits to resolve a request's viewer before any viewer exists, so no viewer predicate can scope it; no trait here sends these rows to a client."
     id : string! @description "The key's scrypt hash: what a presented bearer is looked up by."
     lastFour : string @description "The key's last four characters." = ""
     label : string @description "A name the owner gave the key." = ""

@@ -1,6 +1,6 @@
 app std-daemon [
   version: "1.0.0",
-  description: "std-daemon — keeps one long-running child process (a browser, an emulator suite, a local server) alive for the program. DAEMON_START carries the arguments and an optional environment: the atom first connects to the readyHost and readyPort knobs, and a port that already accepts a connection answers DAEMON_READY { pid: 0, reused: true } without starting anything. Otherwise it spawns the first of the commands knob that exists, detached (its own session, no piped stream, so it outlives the program), and probes the ready port every pollMs milliseconds until it accepts a connection (DAEMON_READY { pid, reused: false }) or readyTimeoutMs has passed (DAEMON_FAILED daemon_timeout; the child is left running). The child runs in the cwd knob's directory (the host's working directory when it is empty) with exactly the environment the run's env names, with the inheritEnv knob's host variables passed through. DAEMON_STOP sends TERM to the process this atom started and answers DAEMON_STOPPED; a reused process is never stopped, and a stop with nothing started answers daemon_idle. DAEMON_FAILED codes: daemon_busy (a start while one is starting or running), daemon_spawn_failed (no command could start), daemon_timeout, daemon_host_failed (a connect, close or kill failed) and daemon_idle. The commands knob is matched exactly against the exec grant, and the ready host and port against the net grant, of the program that composes this atom."
+  description: "std-daemon — keeps one long-running child process (a browser, an emulator suite, a local server) alive for the program. DAEMON_START carries the arguments and an optional environment: the atom first connects to the readyHost and readyPort knobs, and a port that already accepts a connection answers DAEMON_READY { pid: 0, reused: true } without starting anything. Otherwise it spawns the first of the commands knob that exists, detached (its own session, no piped stream, so it outlives the program), and probes the ready port every pollMs milliseconds until it accepts a connection (DAEMON_READY { pid, reused: false }) or readyTimeoutMs has passed (DAEMON_FAILED daemon_timeout; the child is left running). The child runs in the cwd knob's directory (the host's working directory when it is empty) with exactly the environment the run's env names, with the inheritEnv knob's host variables passed through. The priority knob sets the child's CPU scheduling priority (normal, or low to run it below the program). DAEMON_STOP sends TERM to the process this atom started and answers DAEMON_STOPPED; a reused process is never stopped, and a stop with nothing started answers daemon_idle. DAEMON_FAILED codes: daemon_busy (a start while one is starting or running), daemon_spawn_failed (no command could start), daemon_timeout, daemon_host_failed (a connect, close or kill failed) and daemon_idle. The commands knob is matched exactly against the exec grant, and the ready host and port against the net grant, of the program that composes this atom."
 ]
 uses Spec from "almadar-std/daemon"
 type AnchoredEnv = { anchor : { env : string! }! }
@@ -64,9 +64,9 @@ orbital DaemonOrbital {
         (set @entity.pollDueAt null)
         (emit DAEMON_FAILED { code: "daemon_timeout" message: (str/concat "the daemon did not listen on " @config.readyHost ":" @config.readyPort " in time") })
       DAEMON_SPAWN_NEXT -> starting when (and (>= @entity.cmdCursor 0) (!= (array/nth @config.commands @entity.cmdCursor) null) (= @config.cwd ""))
-        (os/spawn (array/nth @config.commands @entity.cmdCursor) @entity.argv { cwd: null env: (object/merge (object/fromEntries (array/map @config.inheritEnv (fn n [@n null]))) @entity.env) stdin: "null" stdout: "null" stderr: "null" detached: true } { emit: { success: DAEMON_SPAWNED failure: DAEMON_SPAWN_FAILED } })
+        (os/spawn (array/nth @config.commands @entity.cmdCursor) @entity.argv { cwd: null env: (object/merge (object/fromEntries (array/map @config.inheritEnv (fn n [@n null]))) @entity.env) stdin: "null" stdout: "null" stderr: "null" detached: true priority: @config.priority } { emit: { success: DAEMON_SPAWNED failure: DAEMON_SPAWN_FAILED } })
       DAEMON_SPAWN_NEXT -> starting when (and (>= @entity.cmdCursor 0) (!= (array/nth @config.commands @entity.cmdCursor) null) (!= @config.cwd ""))
-        (os/spawn (array/nth @config.commands @entity.cmdCursor) @entity.argv { cwd: @config.cwd env: (object/merge (object/fromEntries (array/map @config.inheritEnv (fn n [@n null]))) @entity.env) stdin: "null" stdout: "null" stderr: "null" detached: true } { emit: { success: DAEMON_SPAWNED failure: DAEMON_SPAWN_FAILED } })
+        (os/spawn (array/nth @config.commands @entity.cmdCursor) @entity.argv { cwd: @config.cwd env: (object/merge (object/fromEntries (array/map @config.inheritEnv (fn n [@n null]))) @entity.env) stdin: "null" stdout: "null" stderr: "null" detached: true priority: @config.priority } { emit: { success: DAEMON_SPAWNED failure: DAEMON_SPAWN_FAILED } })
       DAEMON_SPAWN_NEXT -> idle when (== (if (>= @entity.cmdCursor 0) (array/nth @config.commands @entity.cmdCursor) null) null)
         (emit DAEMON_FAILED { code: "daemon_spawn_failed" message: "no command to start" })
       DAEMON_SPAWNED -> starting
@@ -208,6 +208,11 @@ orbital DaemonOrbital {
         @description "Names of environment variables the child inherits from the host (for example HOME); each must be in the composing program's env grant. The start's env names every other variable."
         @synonyms "inherit env, pass through variables"
         @tier "domain"
+      priority : "normal" | "low" = "normal"
+        @label "Scheduling priority"
+        @description "The child's CPU scheduling priority. low runs it ten nice steps below the program (below-normal class on Windows), so the program's own work is served first when the child competes for CPU; normal keeps the program's priority."
+        @synonyms "nice, cpu priority, background priority"
+        @tier "infra"
     }
 
     listens {

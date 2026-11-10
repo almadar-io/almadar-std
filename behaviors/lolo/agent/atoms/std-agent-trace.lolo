@@ -55,6 +55,7 @@ orbital AgentTraceOrbital {
   type AgentRunsLoadFailed = Event { error : string, code : string } "Fired when the run record fails to load"
 
   entity AgentRun [persistent: agentRuns] {
+    @read none "Rows are keyed by ownerId and every fetch and write in this atom is scoped to the signed-in owner; the atom declares no identity entity, so the app that binds its own entity here states the @read policy."
     id : string!
     ownerId : string! @description "Whose request this run answered (the real @user). The binding organism scopes @read to it." @synonyms "user, owner, account"
     outcome : "answered" | "failed" @description "Whether the assistant answered." @synonyms "result, status" = answered
@@ -75,7 +76,7 @@ orbital AgentTraceOrbital {
     state recording {
       INIT -> recording
         (set @entity.outcome answered)
-      REPLIED -> recording
+      REPLIED -> recording when (!= @user.role "anonymous")
         (persist create AgentRun {
           ownerId: @user.id
           outcome: answered
@@ -89,7 +90,7 @@ orbital AgentTraceOrbital {
         } {
           emit: { success: RUN_RECORDED }
         })
-      REPLY_FAILED -> recording
+      REPLY_FAILED -> recording when (!= @user.role "anonymous")
         (persist create AgentRun {
           ownerId: @user.id
           outcome: failed
@@ -132,6 +133,7 @@ orbital AgentTraceOrbital {
       INIT -> browsing
         (set @entity.page 1)
         (fetch AgentRun {
+          filter: (= (object/get @entity ownerId) @user.id)
           emit: { failure: AgentRunsLoadFailed, success: AgentRunsLoaded }
           limit: @config.pageSize
           offset: 0
@@ -189,6 +191,7 @@ orbital AgentTraceOrbital {
       RUN_RECORDED -> browsing
         (set @entity.page 1)
         (fetch AgentRun {
+          filter: (= (object/get @entity ownerId) @user.id)
           emit: { failure: AgentRunsLoadFailed, success: AgentRunsLoaded }
           limit: @config.pageSize
           offset: 0
@@ -197,6 +200,7 @@ orbital AgentTraceOrbital {
       REFETCH_PAGE -> browsing
         (set @entity.page ?page)
         (fetch AgentRun {
+          filter: (= (object/get @entity ownerId) @user.id)
           emit: { failure: AgentRunsLoadFailed, success: AgentRunsLoaded }
           limit: @config.pageSize
           offset: (* (- ?page 1) @config.pageSize)

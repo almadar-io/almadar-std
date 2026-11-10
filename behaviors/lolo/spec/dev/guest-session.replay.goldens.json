@@ -12176,6 +12176,117 @@
     }
    ],
    "now": 1760531445678
+  },
+  {
+   "id": "stage-a-guest-painting-only-a-modal-mounts-its-view-under-the-notice",
+   "steps": [
+    {
+     "trait": "GuestStage",
+     "event": "GUEST_SHOWN",
+     "entity": {
+      "id": "g",
+      "guestHandle": "guest-1",
+      "guestPaints": [
+       {
+        "slot": "modal",
+        "trait": "M.Review",
+        "embedded": false,
+        "content": {
+         "type": "box"
+        }
+       }
+      ],
+      "guestError": "",
+      "guestPage": [],
+      "guestRoute": "/"
+     },
+     "from": "idle",
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "rendered": [
+       {
+        "slot": "main",
+        "props": {
+         "type": "box",
+         "className": "",
+         "children": [
+          {
+           "type": "stack",
+           "direction": "horizontal",
+           "justify": "end",
+           "align": "center",
+           "gap": "md",
+           "className": "px-4 py-2 border-b border-border",
+           "children": [
+            {
+             "type": "button",
+             "icon": "activity",
+             "variant": "ghost",
+             "size": "sm",
+             "action": "GUEST_TRACE_TOGGLED",
+             "aria-label": "Trace"
+            },
+            {
+             "type": "switch",
+             "label": "Real integrations",
+             "checked": false,
+             "action": "GUEST_INTEGRATIONS_CHOSEN"
+            }
+           ]
+          },
+          {
+           "type": "stack",
+           "direction": "vertical",
+           "gap": "none",
+           "children": [
+            {
+             "type": "container",
+             "size": "md",
+             "padding": "lg",
+             "children": [
+              {
+               "type": "alert",
+               "variant": "info",
+               "title": "Nothing to show here on its own",
+               "message": "It paints only into these slots, which a host page opens: modal"
+              }
+             ]
+            },
+            {
+             "type": "guest-view",
+             "guest": "guest-1",
+             "source": "M.Review",
+             "deliver": "GUEST_CONTROL",
+             "navigate": "GUEST_ROUTE",
+             "route": "/",
+             "paints": [
+              {
+               "slot": "modal",
+               "trait": "M.Review",
+               "embedded": false,
+               "content": {
+                "type": "box"
+               }
+              }
+             ],
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "options": {
+      "render": true,
+      "renderProps": true
+     }
+    }
+   ],
+   "now": 1760531445678,
+   "note": "a guest whose paints are all outside the stage slot (a review in its modal) still gets its view, which renders every slot it paints; control: control-an-embedded-paint-is-never-shown-as-a-root (no root paint, no view)"
   }
  ]
 }

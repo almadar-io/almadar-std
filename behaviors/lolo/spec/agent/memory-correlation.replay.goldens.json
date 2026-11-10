@@ -26,6 +26,10 @@
                 }
               }
             ]
+          },
+          "identity": {
+            "id": "u1",
+            "role": "member"
           }
         },
         {
@@ -43,6 +47,10 @@
                 }
               }
             ]
+          },
+          "identity": {
+            "id": "u1",
+            "role": "member"
           }
         },
         {
@@ -62,6 +70,10 @@
               "RECALLED",
               "LLM_EMBED"
             ]
+          },
+          "identity": {
+            "id": "u1",
+            "role": "member"
           }
         },
         {
@@ -78,6 +90,10 @@
           },
           "expect": {
             "state": "ready"
+          },
+          "identity": {
+            "id": "u1",
+            "role": "member"
           }
         },
         {
@@ -96,6 +112,10 @@
             "neverEmits": [
               "MEMORY_STORED"
             ]
+          },
+          "identity": {
+            "id": "u1",
+            "role": "member"
           }
         },
         {
@@ -119,6 +139,10 @@
                 }
               }
             ]
+          },
+          "identity": {
+            "id": "u1",
+            "role": "member"
           }
         }
       ],
@@ -154,6 +178,10 @@
                 }
               }
             ]
+          },
+          "identity": {
+            "id": "u1",
+            "role": "member"
           }
         },
         {
@@ -171,6 +199,10 @@
                 }
               }
             ]
+          },
+          "identity": {
+            "id": "u1",
+            "role": "member"
           }
         },
         {
@@ -189,6 +221,10 @@
             "neverEmits": [
               "MEMORY_STORED"
             ]
+          },
+          "identity": {
+            "id": "u1",
+            "role": "member"
           }
         },
         {
@@ -212,6 +248,10 @@
                 }
               }
             ]
+          },
+          "identity": {
+            "id": "u1",
+            "role": "member"
           }
         },
         {
@@ -230,6 +270,10 @@
             "neverEmits": [
               "RECALLED"
             ]
+          },
+          "identity": {
+            "id": "u1",
+            "role": "member"
           }
         },
         {
@@ -246,6 +290,488 @@
           },
           "expect": {
             "state": "ready"
+          },
+          "identity": {
+            "id": "u1",
+            "role": "member"
+          }
+        }
+      ],
+      "defaults": [
+        "AgentMemoryLlm",
+        "MemEmbedWait",
+        "MemEmbedRequest",
+        "MemEmbedHttp",
+        "AgentMemoryBrowse",
+        "AgentMemoryView"
+      ]
+    },
+    {
+      "id": "an unsigned session recalls nothing: no embedding is asked for and the context is empty",
+      "steps": [
+        {
+          "trait": "AgentMemoryRecall",
+          "event": "RECALL",
+          "payload": {
+            "messages": [
+              {
+                "role": "user",
+                "content": "what colour"
+              }
+            ]
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RECALLED",
+                "payload": {
+                  "messages": [
+                    {
+                      "role": "user",
+                      "content": "what colour"
+                    }
+                  ],
+                  "context": ""
+                }
+              }
+            ],
+            "neverEmits": [
+              "LLM_EMBED"
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "AgentMemoryLlm",
+        "MemEmbedWait",
+        "MemEmbedRequest",
+        "MemEmbedHttp",
+        "AgentMemoryBrowse",
+        "AgentMemoryView"
+      ]
+    },
+    {
+      "id": "an unsigned live session recalls nothing and keeps its live flag",
+      "steps": [
+        {
+          "trait": "AgentMemoryRecall",
+          "event": "RECALL",
+          "payload": {
+            "messages": [
+              {
+                "role": "user",
+                "content": "what colour"
+              }
+            ],
+            "live": true
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RECALLED",
+                "payload": {
+                  "context": "",
+                  "live": true
+                }
+              }
+            ],
+            "neverEmits": [
+              "LLM_EMBED"
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "AgentMemoryLlm",
+        "MemEmbedWait",
+        "MemEmbedRequest",
+        "MemEmbedHttp",
+        "AgentMemoryBrowse",
+        "AgentMemoryView"
+      ]
+    },
+    {
+      "id": "an unsigned session's exchange is not remembered: nothing is embedded or stored",
+      "steps": [
+        {
+          "trait": "AgentMemoryStore",
+          "event": "REMEMBER",
+          "payload": {
+            "reply": "blue"
+          },
+          "expect": {
+            "state": "ready",
+            "neverEmits": [
+              "LLM_EMBED",
+              "MEMORY_STORED"
+            ]
+          }
+        },
+        {
+          "trait": "AgentMemoryStore",
+          "event": "MemoryEmbedded",
+          "payload": {
+            "embeddings": [
+              [
+                1,
+                0
+              ]
+            ],
+            "key": "store"
+          },
+          "expect": {
+            "fired": false,
+            "neverEmits": [
+              "MEMORY_STORED"
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "AgentMemoryLlm",
+        "MemEmbedWait",
+        "MemEmbedRequest",
+        "MemEmbedHttp",
+        "AgentMemoryBrowse",
+        "AgentMemoryView"
+      ]
+    },
+    {
+      "id": "what a signed-in person stored is not recalled for an unsigned session",
+      "steps": [
+        {
+          "trait": "AgentMemoryRecall",
+          "event": "RECALL",
+          "identity": {
+            "id": "u1",
+            "role": "member"
+          },
+          "payload": {
+            "messages": [
+              {
+                "role": "user",
+                "content": "what colour"
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LLM_EMBED",
+                "payload": {
+                  "key": "recall"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "AgentMemoryRecall",
+          "event": "MemoryEmbedded",
+          "identity": {
+            "id": "u1",
+            "role": "member"
+          },
+          "payload": {
+            "embeddings": [
+              [
+                1,
+                0
+              ]
+            ],
+            "key": "recall"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "RECALLED",
+                "payload": {
+                  "context": ""
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "AgentMemoryStore",
+          "event": "REMEMBER",
+          "identity": {
+            "id": "u1",
+            "role": "member"
+          },
+          "payload": {
+            "reply": "blue"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LLM_EMBED",
+                "payload": {
+                  "key": "store"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "AgentMemoryStore",
+          "event": "MemoryEmbedded",
+          "identity": {
+            "id": "u1",
+            "role": "member"
+          },
+          "payload": {
+            "embeddings": [
+              [
+                1,
+                0
+              ]
+            ],
+            "key": "store"
+          },
+          "expect": {
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "AgentMemoryRecall",
+          "event": "RECALL",
+          "payload": {
+            "messages": [
+              {
+                "role": "user",
+                "content": "what colour"
+              }
+            ]
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "RECALLED",
+                "payload": {
+                  "context": ""
+                }
+              }
+            ],
+            "neverEmits": [
+              "LLM_EMBED"
+            ]
+          }
+        },
+        {
+          "trait": "AgentMemoryRecall",
+          "event": "RECALL",
+          "identity": {
+            "id": "u1",
+            "role": "member"
+          },
+          "payload": {
+            "messages": [
+              {
+                "role": "user",
+                "content": "what colour"
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LLM_EMBED",
+                "payload": {
+                  "key": "recall"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "AgentMemoryRecall",
+          "event": "MemoryEmbedded",
+          "identity": {
+            "id": "u1",
+            "role": "member"
+          },
+          "payload": {
+            "embeddings": [
+              [
+                1,
+                0
+              ]
+            ],
+            "key": "recall"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "RECALLED",
+                "payload": {
+                  "context": "Asked:  | Answered: blue"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "AgentMemoryLlm",
+        "MemEmbedWait",
+        "MemEmbedRequest",
+        "MemEmbedHttp",
+        "AgentMemoryBrowse",
+        "AgentMemoryView"
+      ]
+    },
+    {
+      "id": "one person's memory is never recalled for another person",
+      "steps": [
+        {
+          "trait": "AgentMemoryStore",
+          "event": "REMEMBER",
+          "identity": {
+            "id": "u1",
+            "role": "member"
+          },
+          "payload": {
+            "reply": "blue"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LLM_EMBED",
+                "payload": {
+                  "key": "store"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "AgentMemoryStore",
+          "event": "MemoryEmbedded",
+          "identity": {
+            "id": "u1",
+            "role": "member"
+          },
+          "payload": {
+            "embeddings": [
+              [
+                1,
+                0
+              ]
+            ],
+            "key": "store"
+          },
+          "expect": {
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "AgentMemoryRecall",
+          "event": "RECALL",
+          "identity": {
+            "id": "u2",
+            "role": "member"
+          },
+          "payload": {
+            "messages": [
+              {
+                "role": "user",
+                "content": "what colour"
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LLM_EMBED",
+                "payload": {
+                  "key": "recall"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "AgentMemoryRecall",
+          "event": "MemoryEmbedded",
+          "identity": {
+            "id": "u2",
+            "role": "member"
+          },
+          "payload": {
+            "embeddings": [
+              [
+                1,
+                0
+              ]
+            ],
+            "key": "recall"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "RECALLED",
+                "payload": {
+                  "context": ""
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "AgentMemoryRecall",
+          "event": "RECALL",
+          "identity": {
+            "id": "u1",
+            "role": "member"
+          },
+          "payload": {
+            "messages": [
+              {
+                "role": "user",
+                "content": "what colour"
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LLM_EMBED",
+                "payload": {
+                  "key": "recall"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "AgentMemoryRecall",
+          "event": "MemoryEmbedded",
+          "identity": {
+            "id": "u1",
+            "role": "member"
+          },
+          "payload": {
+            "embeddings": [
+              [
+                1,
+                0
+              ]
+            ],
+            "key": "recall"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "RECALLED",
+                "payload": {
+                  "context": "Asked:  | Answered: blue"
+                }
+              }
+            ]
           }
         }
       ],

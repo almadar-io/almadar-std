@@ -22,6 +22,7 @@ orbital GlobalSearchOrbital {
     type FAN_OUT_STEP = Event { remaining : number! } "Internal sentinel: drains pendingModules, one MODULE_SEARCH_REQUESTED per pass. Carries the post-seed/post-drop queue length so the loop guard reads the payload (walker-provable), not the config-seeded entity field."
 
   entity SearchQuery [persistent: search_queries] {
+    @read none "This program declares no identity entity, so it has no signed-in viewer to scope reads to: every visitor may read these rows."
     id : string!
     personId : string @description "Owner of this query — the user who ran it." @synonyms "user, owner, searcher, account" = ""
     queryText : string @description "The search text the user typed." @synonyms "query, search term, keywords, search string" = ""

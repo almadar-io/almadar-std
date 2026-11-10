@@ -101,7 +101,7 @@ orbital OrbLintUserIdentityOrbital {
                           (if (array/every @mem (fn m (validate/string @m))) @mem []))
                          [@lit0]))
                        @args)))
-           (array/map (array/filter @lits (fn a (and (validate/string @a) (not (str/startsWith @a (quote "@"))) (not (array/includes @vocab @a))))) (fn a { rel: "", kind: "role", a: (if (validate/string @a) @a ""), b: @sn, vv: @vocab }))))))))))))
+           (array/map (array/filter @lits (fn a (and (validate/string @a) (not (str/startsWith @a (quote "@"))) (not (array/includes @vocab @a)) (not (and (= @sn "role") (= @a @config.anonymousRole)))))) (fn a { rel: "", kind: "role", a: (if (validate/string @a) @a ""), b: @sn, vv: @vocab }))))))))))))
  [])
     (array/flatten (array/map (array/range 0 (array/len @n)) (fn i (let ((r (array/nth @k @i))) (if (validate/array @r) (array/map @r (fn h { rel: (str/concat "[" @i "]" (let ((s15 (object/get @h "rel" ""))) (if (validate/string @s15) @s15 ""))), kind: (let ((s16 (object/get @h "kind" ""))) (if (validate/string @s16) @s16 "")), a: (let ((s17 (object/get @h "a" ""))) (if (validate/string @s17) @s17 "")), b: (let ((s18 (object/get @h "b" ""))) (if (validate/string @s18) @s18 "")), vv: (let ((v0 (object/get @h "vv" @nov))) (if (validate/array @v0) (array/map @v0 (fn x (if (validate/string @x) @x ""))) @nov)) })) [])))))))
   (if (validate/object @n)
@@ -156,6 +156,9 @@ orbital OrbLintUserIdentityOrbital {
       OrbLintInput.LINT_ENTITIES -> ENTITIES_HEARD
     }
     config {
+      anonymousRole : string = "anonymous"
+        @label "Anonymous role"
+        @description "The role the kernel gives a session with no identity (EXEC-IDENTITY-1). It is a value of @user.role in every program, whatever roles the identity entity declares."
       codes : LintUserIdentityCodes = { lintIndexMissing: { code: "ORB_LINT_INDEX_MISSING", category: "lint", description: "The lint input arrived without a shared program fact the rule reads (the structural index, sites, units, embeds or entities), so the rule cannot check the program" }, sRoleLiteralNotMember: { code: "ORB_S_ROLE_LITERAL_NOT_MEMBER", category: "schema", description: "A literal compared against an @user field with a closed vocabulary is not a member of that vocabulary, so the branch can never be taken" } }
         @label "Emitted codes"
         @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."

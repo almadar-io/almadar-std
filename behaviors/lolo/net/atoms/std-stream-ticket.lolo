@@ -9,6 +9,7 @@ orbital StreamTicketOrbital {
   type TAKE_TICKET = Event { ticket : string! } "Spend one ticket."
 
   entity StreamTicket [persistent: stream_tickets] {
+    @read none "This program declares no identity entity, so it has no signed-in viewer to scope reads to: every visitor may read these rows."
     id : string! @description "The ticket: 32 CSPRNG bytes, base64url."
     clientId : string! @description "The client session of the request that minted the ticket."
     expiresAt : instant! @description "When the ticket stops working."

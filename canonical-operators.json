@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "Canonical operator registry for Almadar. Generated from @almadar/std/modules. Consumed by orbital-compiler via include_str!.",
-  "generated": "2026-11-10T04:32:28.140Z",
+  "generated": "2026-11-10T10:09:09.380Z",
   "categories": {
     "arithmetic": {
       "description": "Numeric operations",
@@ -22698,7 +22698,7 @@
       "minArity": 3,
       "maxArity": 4,
       "returnType": "void",
-      "description": "Start a child process (grant exec; the command is matched against the grant by exact string and never run through a shell). Success payload: { pid, stdin?, stdout?, stderr? }; a piped stream is an fd read or written with os/read and os/write. A detached child runs in its own session and process group and outlives the program that started it; it takes no piped stream.",
+      "description": "Start a child process (grant exec; the command is matched against the grant by exact string and never run through a shell). Success payload: { pid, stdin?, stdout?, stderr? }; a piped stream is an fd read or written with os/read and os/write. A detached child runs in its own session and process group and outlives the program that started it; it takes no piped stream. A low-priority child runs ten nice steps below the program (below-normal class on Windows), so the scheduler serves the program first when they compete for CPU; normal (the default) keeps the program's priority.",
       "module": "os",
       "visual": {
         "form": "actuator"
@@ -22906,10 +22906,26 @@
                   }
                 ]
               },
-              "detached": "boolean"
-            }
+              "detached": "boolean",
+              "priority": {
+                "kind": "union",
+                "of": [
+                  {
+                    "kind": "literal",
+                    "value": "normal"
+                  },
+                  {
+                    "kind": "literal",
+                    "value": "low"
+                  }
+                ]
+              }
+            },
+            "optional": [
+              "priority"
+            ]
           },
-          "description": "Working directory, environment, stdio modes (inherit, pipe or null) and whether the child is detached"
+          "description": "Working directory, environment, stdio modes (inherit, pipe or null), whether the child is detached, and its optional scheduling priority (normal or low)"
         },
         {
           "name": "options",

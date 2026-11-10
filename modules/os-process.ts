@@ -1,5 +1,5 @@
 import type { StdOperatorMeta } from '../types.js';
-import { BOOLEAN, NUMBER, STRING, list, mapOf, nullable, shape } from '../signature.js';
+import { BOOLEAN, NUMBER, STRING, lit, list, mapOf, nullable, shape, union } from '../signature.js';
 import { OS_COMMAND, OS_HANDLE, OS_PATH, OS_SIGNAL, OS_STREAM_MODE, OS_STRING_LIST, arg, osEffect } from './os-common.js';
 
 const SPAWN_CONFIG = shape({
@@ -9,14 +9,15 @@ const SPAWN_CONFIG = shape({
   stdout: OS_STREAM_MODE,
   stderr: OS_STREAM_MODE,
   detached: BOOLEAN,
-});
+  priority: union(lit('normal'), lit('low')),
+}, ['priority']);
 
 export const OS_PROCESS_OPERATORS: Record<string, StdOperatorMeta> = {
   'os/spawn': osEffect({
     answer: shape({ pid: NUMBER, stdin: NUMBER, stdout: NUMBER, stderr: NUMBER }, ['stdin', 'stdout', 'stderr']),
     grant: [{ kind: 'exec', command: 0, options: 2 }],
-    description: 'Start a child process (grant exec; the command is matched against the grant by exact string and never run through a shell). Success payload: { pid, stdin?, stdout?, stderr? }; a piped stream is an fd read or written with os/read and os/write. A detached child runs in its own session and process group and outlives the program that started it; it takes no piped stream.',
-    params: [arg('command', OS_COMMAND, 'Command, matched exactly against the exec grant; an anchored record { anchor, path } or { anchor: { env } } is matched against an anchored grant'), arg('args', OS_STRING_LIST, 'Arguments'), arg('config', SPAWN_CONFIG, 'Working directory, environment, stdio modes (inherit, pipe or null) and whether the child is detached')],
+    description: 'Start a child process (grant exec; the command is matched against the grant by exact string and never run through a shell). Success payload: { pid, stdin?, stdout?, stderr? }; a piped stream is an fd read or written with os/read and os/write. A detached child runs in its own session and process group and outlives the program that started it; it takes no piped stream. A low-priority child runs ten nice steps below the program (below-normal class on Windows), so the scheduler serves the program first when they compete for CPU; normal (the default) keeps the program\'s priority.',
+    params: [arg('command', OS_COMMAND, 'Command, matched exactly against the exec grant; an anchored record { anchor, path } or { anchor: { env } } is matched against an anchored grant'), arg('args', OS_STRING_LIST, 'Arguments'), arg('config', SPAWN_CONFIG, 'Working directory, environment, stdio modes (inherit, pipe or null), whether the child is detached, and its optional scheduling priority (normal or low)')],
     example: '["os/spawn", "git", ["status"], { "cwd": null, "env": null, "stdin": "null", "stdout": "pipe", "stderr": "inherit", "detached": false }, { "emit": { "success": "PROC_STARTED", "failure": "PROC_FAILED" } }]',
   }),
   'os/wait': osEffect({

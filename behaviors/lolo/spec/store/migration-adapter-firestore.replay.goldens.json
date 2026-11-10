@@ -58,6 +58,72 @@
    ]
   },
   {
+   "id": "a-document-with-null-values-is-read-and-the-nulls-are-left-out",
+   "config": {
+    "recipes": [
+     {
+      "adapterId": "fs1",
+      "documentUnit": true,
+      "documentKind": "root",
+      "documentSlots": [],
+      "nodesField": "nodes",
+      "nodeKinds": [],
+      "edgesField": "edges",
+      "edgeKind": "folder",
+      "edgeSlots": []
+     }
+    ]
+   },
+   "steps": [
+    {
+     "from": "reading",
+     "event": "FIRESTORE_REPLIED",
+     "payload": {
+      "status": 200,
+      "body": "{\"name\": \"projects/p/databases/(default)/documents/c/d1\", \"fields\": {\"title\": {\"stringValue\": \"T\"}, \"gone\": {\"nullValue\": null}, \"meta\": {\"mapValue\": {\"fields\": {\"inner\": {\"nullValue\": null}}}}, \"tags\": {\"arrayValue\": {\"values\": [{\"nullValue\": null}, {\"stringValue\": \"a\"}]}}}}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MIGRATION_EXTRACTED",
+        "payload": {
+         "skipped": []
+        }
+       }
+      ]
+     },
+     "entity": {
+      "adapter": "fs1",
+      "refs": [
+       {
+        "ref": "a",
+        "raw": "projects/p/databases/(default)/documents/c/d1"
+       }
+      ],
+      "cursor": 0,
+      "docs": [],
+      "unreadable": [],
+      "recipe": {
+       "adapterId": "fs1",
+       "documentUnit": true,
+       "documentKind": "root",
+       "documentSlots": [],
+       "nodesField": "nodes",
+       "nodeKinds": [],
+       "edgesField": "edges",
+       "edgeKind": "folder",
+       "edgeSlots": []
+      }
+     }
+    }
+   ],
+   "note": "Firestore REST encodes a stored null as \"nullValue\": null, at the top level and inside maps and arrays; the control is a-reply-that-is-valid-json-but-not-a-document-is-unreadable",
+   "defaults": [
+    "MigrationAdapterFirestoreHttp",
+    "MigrationAdapterFirestoreTimeout"
+   ]
+  },
+  {
    "id": "a-reply-that-is-not-json-is-unreadable",
    "config": {
     "recipes": [
@@ -282,6 +348,629 @@
       ]
      }
     }
+   ]
+  },
+  {
+   "id": "a-node-with-none-of-its-required-slots-is-not-a-unit",
+   "config": {
+    "recipes": [
+     {
+      "adapterId": "fs1",
+      "documentUnit": true,
+      "documentKind": "root",
+      "documentSlots": [],
+      "nodesField": "nodes",
+      "nodeKinds": [],
+      "edgesField": "edges",
+      "edgeKind": "folder",
+      "edgeSlots": []
+     }
+    ]
+   },
+   "steps": [
+    {
+     "from": "reading",
+     "event": "FIRESTORE_NEXT",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "MIGRATION_EXTRACTED",
+        "payload": {
+         "units": [],
+         "skipped": []
+        }
+       }
+      ]
+     },
+     "entity": {
+      "adapter": "fs1",
+      "recipe": {
+       "adapterId": "fs1",
+       "documentUnit": false,
+       "documentKind": "root",
+       "documentSlots": [],
+       "nodesField": "nodes",
+       "nodeKinds": [
+        {
+         "nodeType": "Concept",
+         "kind": "section",
+         "slots": [
+          "card",
+          "layerNumber"
+         ],
+         "requires": [
+          "card"
+         ]
+        }
+       ],
+       "edgesField": "relationships",
+       "edgeKind": "folder",
+       "edgeSlots": []
+      },
+      "refs": [
+       {
+        "ref": "a",
+        "raw": "projects/p/databases/(default)/documents/c/d1"
+       }
+      ],
+      "cursor": 1,
+      "docs": [
+       {
+        "name": "projects/p/databases/(default)/documents/c/d1",
+        "fields": {
+         "nodes": {
+          "mapValue": {
+           "fields": {
+            "a": {
+             "mapValue": {
+              "fields": {
+               "type": {
+                "stringValue": "Concept"
+               },
+               "properties": {
+                "mapValue": {
+                 "fields": {
+                  "layerNumber": {
+                   "integerValue": "1"
+                  }
+                 }
+                }
+               }
+              }
+             }
+            }
+           }
+          }
+         }
+        }
+       }
+      ],
+      "unreadable": []
+     }
+    }
+   ],
+   "note": "requires names the slots a node must carry at least one of; layerNumber alone is not enough; control: a-node-with-a-required-slot-is-a-unit",
+   "defaults": [
+    "MigrationAdapterFirestoreHttp",
+    "MigrationAdapterFirestoreTimeout"
+   ]
+  },
+  {
+   "id": "a-node-with-a-required-slot-is-a-unit",
+   "config": {
+    "recipes": [
+     {
+      "adapterId": "fs1",
+      "documentUnit": true,
+      "documentKind": "root",
+      "documentSlots": [],
+      "nodesField": "nodes",
+      "nodeKinds": [],
+      "edgesField": "edges",
+      "edgeKind": "folder",
+      "edgeSlots": []
+     }
+    ]
+   },
+   "steps": [
+    {
+     "from": "reading",
+     "event": "FIRESTORE_NEXT",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "MIGRATION_EXTRACTED",
+        "payload": {
+         "units": [
+          {
+           "ref": "fs:c/d1#node:a",
+           "kind": "section",
+           "title": null,
+           "content": null,
+           "parentRef": null,
+           "source": "firestore",
+           "span": "c/d1#a",
+           "metadata": {
+            "documentId": "d1",
+            "documentPath": "c/d1",
+            "nodeId": "a",
+            "nodeType": "Concept",
+            "card": "x",
+            "layerNumber": 1,
+            "composite": "[]"
+           }
+          }
+         ],
+         "skipped": []
+        }
+       }
+      ]
+     },
+     "entity": {
+      "adapter": "fs1",
+      "recipe": {
+       "adapterId": "fs1",
+       "documentUnit": false,
+       "documentKind": "root",
+       "documentSlots": [],
+       "nodesField": "nodes",
+       "nodeKinds": [
+        {
+         "nodeType": "Concept",
+         "kind": "section",
+         "slots": [
+          "card",
+          "layerNumber"
+         ],
+         "requires": [
+          "card"
+         ]
+        }
+       ],
+       "edgesField": "relationships",
+       "edgeKind": "folder",
+       "edgeSlots": []
+      },
+      "refs": [
+       {
+        "ref": "a",
+        "raw": "projects/p/databases/(default)/documents/c/d1"
+       }
+      ],
+      "cursor": 1,
+      "docs": [
+       {
+        "name": "projects/p/databases/(default)/documents/c/d1",
+        "fields": {
+         "nodes": {
+          "mapValue": {
+           "fields": {
+            "a": {
+             "mapValue": {
+              "fields": {
+               "type": {
+                "stringValue": "Concept"
+               },
+               "properties": {
+                "mapValue": {
+                 "fields": {
+                  "card": {
+                   "stringValue": "x"
+                  },
+                  "layerNumber": {
+                   "integerValue": "1"
+                  }
+                 }
+                }
+               }
+              }
+             }
+            }
+           }
+          }
+         }
+        }
+       }
+      ],
+      "unreadable": []
+     }
+    }
+   ],
+   "note": "control of a-node-with-none-of-its-required-slots-is-not-a-unit",
+   "defaults": [
+    "MigrationAdapterFirestoreHttp",
+    "MigrationAdapterFirestoreTimeout"
+   ]
+  },
+  {
+   "id": "a-null-required-slot-counts-as-absent",
+   "config": {
+    "recipes": [
+     {
+      "adapterId": "fs1",
+      "documentUnit": true,
+      "documentKind": "root",
+      "documentSlots": [],
+      "nodesField": "nodes",
+      "nodeKinds": [],
+      "edgesField": "edges",
+      "edgeKind": "folder",
+      "edgeSlots": []
+     }
+    ]
+   },
+   "steps": [
+    {
+     "from": "reading",
+     "event": "FIRESTORE_NEXT",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "MIGRATION_EXTRACTED",
+        "payload": {
+         "units": [],
+         "skipped": []
+        }
+       }
+      ]
+     },
+     "entity": {
+      "adapter": "fs1",
+      "recipe": {
+       "adapterId": "fs1",
+       "documentUnit": false,
+       "documentKind": "root",
+       "documentSlots": [],
+       "nodesField": "nodes",
+       "nodeKinds": [
+        {
+         "nodeType": "Concept",
+         "kind": "section",
+         "slots": [
+          "card",
+          "layerNumber"
+         ],
+         "requires": [
+          "card"
+         ]
+        }
+       ],
+       "edgesField": "relationships",
+       "edgeKind": "folder",
+       "edgeSlots": []
+      },
+      "refs": [
+       {
+        "ref": "a",
+        "raw": "projects/p/databases/(default)/documents/c/d1"
+       }
+      ],
+      "cursor": 1,
+      "docs": [
+       {
+        "name": "projects/p/databases/(default)/documents/c/d1",
+        "fields": {
+         "nodes": {
+          "mapValue": {
+           "fields": {
+            "a": {
+             "mapValue": {
+              "fields": {
+               "type": {
+                "stringValue": "Concept"
+               },
+               "properties": {
+                "mapValue": {
+                 "fields": {
+                  "card": {
+                   "nullValue": null
+                  }
+                 }
+                }
+               }
+              }
+             }
+            }
+           }
+          }
+         }
+        }
+       }
+      ],
+      "unreadable": []
+     }
+    }
+   ],
+   "note": "a Firestore null carries no value",
+   "defaults": [
+    "MigrationAdapterFirestoreHttp",
+    "MigrationAdapterFirestoreTimeout"
+   ]
+  },
+  {
+   "id": "a-node-kind-without-requires-makes-every-node-a-unit",
+   "config": {
+    "recipes": [
+     {
+      "adapterId": "fs1",
+      "documentUnit": true,
+      "documentKind": "root",
+      "documentSlots": [],
+      "nodesField": "nodes",
+      "nodeKinds": [],
+      "edgesField": "edges",
+      "edgeKind": "folder",
+      "edgeSlots": []
+     }
+    ]
+   },
+   "steps": [
+    {
+     "from": "reading",
+     "event": "FIRESTORE_NEXT",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "MIGRATION_EXTRACTED",
+        "payload": {
+         "units": [
+          {
+           "ref": "fs:c/d1#node:a",
+           "kind": "section",
+           "title": null,
+           "content": null,
+           "parentRef": null,
+           "source": "firestore",
+           "span": "c/d1#a",
+           "metadata": {
+            "documentId": "d1",
+            "documentPath": "c/d1",
+            "nodeId": "a",
+            "nodeType": "Concept",
+            "composite": "[]"
+           }
+          }
+         ],
+         "skipped": []
+        }
+       }
+      ]
+     },
+     "entity": {
+      "adapter": "fs1",
+      "recipe": {
+       "adapterId": "fs1",
+       "documentUnit": false,
+       "documentKind": "root",
+       "documentSlots": [],
+       "nodesField": "nodes",
+       "nodeKinds": [
+        {
+         "nodeType": "Concept",
+         "kind": "section",
+         "slots": [
+          "card"
+         ]
+        }
+       ],
+       "edgesField": "relationships",
+       "edgeKind": "folder",
+       "edgeSlots": []
+      },
+      "refs": [
+       {
+        "ref": "a",
+        "raw": "projects/p/databases/(default)/documents/c/d1"
+       }
+      ],
+      "cursor": 1,
+      "docs": [
+       {
+        "name": "projects/p/databases/(default)/documents/c/d1",
+        "fields": {
+         "nodes": {
+          "mapValue": {
+           "fields": {
+            "a": {
+             "mapValue": {
+              "fields": {
+               "type": {
+                "stringValue": "Concept"
+               },
+               "properties": {
+                "mapValue": {
+                 "fields": {
+                  "name": {
+                   "stringValue": "A"
+                  }
+                 }
+                }
+               }
+              }
+             }
+            }
+           }
+          }
+         }
+        }
+       }
+      ],
+      "unreadable": []
+     }
+    }
+   ],
+   "note": "no requires keeps every node of the kind",
+   "defaults": [
+    "MigrationAdapterFirestoreHttp",
+    "MigrationAdapterFirestoreTimeout"
+   ]
+  },
+  {
+   "id": "a-relationship-to-a-skipped-node-is-ledgered",
+   "config": {
+    "recipes": [
+     {
+      "adapterId": "fs1",
+      "documentUnit": true,
+      "documentKind": "root",
+      "documentSlots": [],
+      "nodesField": "nodes",
+      "nodeKinds": [],
+      "edgesField": "edges",
+      "edgeKind": "folder",
+      "edgeSlots": []
+     }
+    ]
+   },
+   "steps": [
+    {
+     "from": "reading",
+     "event": "FIRESTORE_NEXT",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "MIGRATION_EXTRACTED",
+        "payload": {
+         "units": [
+          {
+           "ref": "fs:c/d1#node:a",
+           "kind": "section",
+           "title": null,
+           "content": null,
+           "parentRef": null,
+           "source": "firestore",
+           "span": "c/d1#a",
+           "metadata": {
+            "documentId": "d1",
+            "documentPath": "c/d1",
+            "nodeId": "a",
+            "nodeType": "Concept",
+            "card": "x",
+            "composite": "[]"
+           }
+          }
+         ],
+         "skipped": [
+          {
+           "ref": "fs:c/d1#edge:r1",
+           "reason": "relationship from 'a' to 'b' has an endpoint that is not an emitted node of its document"
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "entity": {
+      "adapter": "fs1",
+      "recipe": {
+       "adapterId": "fs1",
+       "documentUnit": false,
+       "documentKind": "root",
+       "documentSlots": [],
+       "nodesField": "nodes",
+       "nodeKinds": [
+        {
+         "nodeType": "Concept",
+         "kind": "section",
+         "slots": [
+          "card",
+          "layerNumber"
+         ],
+         "requires": [
+          "card"
+         ]
+        }
+       ],
+       "edgesField": "relationships",
+       "edgeKind": "folder",
+       "edgeSlots": []
+      },
+      "refs": [
+       {
+        "ref": "a",
+        "raw": "projects/p/databases/(default)/documents/c/d1"
+       }
+      ],
+      "cursor": 1,
+      "docs": [
+       {
+        "name": "projects/p/databases/(default)/documents/c/d1",
+        "fields": {
+         "nodes": {
+          "mapValue": {
+           "fields": {
+            "a": {
+             "mapValue": {
+              "fields": {
+               "type": {
+                "stringValue": "Concept"
+               },
+               "properties": {
+                "mapValue": {
+                 "fields": {
+                  "card": {
+                   "stringValue": "x"
+                  }
+                 }
+                }
+               }
+              }
+             }
+            },
+            "b": {
+             "mapValue": {
+              "fields": {
+               "type": {
+                "stringValue": "Concept"
+               },
+               "properties": {
+                "mapValue": {
+                 "fields": {}
+                }
+               }
+              }
+             }
+            }
+           }
+          }
+         },
+         "relationships": {
+          "arrayValue": {
+           "values": [
+            {
+             "mapValue": {
+              "fields": {
+               "id": {
+                "stringValue": "r1"
+               },
+               "source": {
+                "stringValue": "a"
+               },
+               "target": {
+                "stringValue": "b"
+               }
+              }
+             }
+            }
+           ]
+          }
+         }
+        }
+       }
+      ],
+      "unreadable": []
+     }
+    }
+   ],
+   "note": "a skipped node is not emitted, so its relationships are ledgered",
+   "defaults": [
+    "MigrationAdapterFirestoreHttp",
+    "MigrationAdapterFirestoreTimeout"
    ]
   }
  ],

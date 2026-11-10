@@ -31,7 +31,8 @@ Every open gap this repo owns lives here. This file is the source of truth; the 
 - **G-STD-250** — std-http1 reads a request body at about 250 KB/s: every 8 KB `os/recv` chunk runs six dispatches (CHUNK_READ, BODY_CHECK, WANT_MORE, CONN_ADVANCE, the timer's CANCEL/START) that rebuild the `conns` entry holding the whole buffer, so a body's cost grows with its size squared (a 5.6 MB launchpad leg took 21-23 s to read on 2026-11-03, the small requests around it 0.1 s). Repro: `orb -v launchpad --port <p>`, POST a ~5 MB body to `/api/orbitals/Launchpad/events`, count `Http1 CHUNK_READ` lines. almadar-std net (std-http1) [mechanical] — rung: (3) the verifiers (no golden or benchmark reads a large body). Root cause: one-off.
 
 
-Next code: `G-STD-343`
+Next code: `G-STD-344`
+
 
 
 - **G-STD-334** [mechanical] — Badge display fields carry `labels` and `colorMap` but no icon per value, so a status shown as a badge is colour plus text only, against UI guideline §4 (status is colour + icon + text). `table-view` columns now take `iconMap` (2026-11-09, shell-web `TableView`, registry regenerated); `DisplayField` (`renderers/web/src/core/atoms/types.ts`, used by DataList, DataGrid and DetailPanel) still has none. Prevention rung: (2) a validate check for badge fields without an icon map. Root cause: one-off.

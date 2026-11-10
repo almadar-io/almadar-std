@@ -84,6 +84,7 @@ orbital QueueOrbital {
     type InspectFailed = Event { error : string, code : string } "Internal: an inspect step failed."
 
   entity QueueJob [persistent: queue_jobs] {
+    @read none "This program declares no identity entity, so it has no signed-in viewer to scope reads to: every visitor may read these rows."
     id : string!
     queue : string @description "Name of the queue the job belongs to." = ""
     payload : string @description "Default job body; an app binds its own job entity with typed payload fields." = ""
@@ -98,6 +99,7 @@ orbital QueueOrbital {
   }
 
   entity QueueClaim [persistent: queue_claims] {
+    @read none "This program declares no identity entity, so it has no signed-in viewer to scope reads to: every visitor may read these rows."
     id : string!
     jobId : string = ""
     attempt : number = 0

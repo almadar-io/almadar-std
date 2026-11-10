@@ -1,0 +1,132 @@
+{
+  "atom": "agent/atoms/std-agent-suggestions.lolo",
+  "trait": "AgentSuggestionProposer",
+  "note": "G-CROSS-405: suggestions and proactive runs belong to a signed-in person; the anonymous role owns nothing",
+  "cases": [
+    {
+      "id": "an unsigned session is proposed nothing and starts no run",
+      "steps": [
+        {
+          "trait": "AgentSuggestionProposer",
+          "event": "PROPOSE_SUGGESTION",
+          "payload": {
+            "kind": "tip",
+            "title": "t",
+            "subject": "s"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "SUGGESTION_REJECTED"
+              }
+            ],
+            "neverEmits": [
+              "SuggestionsForPropose",
+              "SUGGESTION_PROPOSED"
+            ]
+          }
+        },
+        {
+          "trait": "AgentSuggestionTrigger",
+          "event": "TRIGGERED",
+          "payload": {},
+          "expect": {
+            "fired": false,
+            "neverEmits": [
+              "SUGGESTION_RUN_ALLOWED"
+            ]
+          }
+        },
+        {
+          "trait": "AgentSuggestionRunner",
+          "event": "START",
+          "payload": {},
+          "expect": {
+            "fired": false,
+            "neverEmits": [
+              "RunRecorded",
+              "SUGGESTION_RUN_STARTED"
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "AgentSuggestionLoop",
+        "AgentSuggestionLlm",
+        "SuggestChatRequest",
+        "SuggestChatHttp"
+      ]
+    },
+    {
+      "id": "control: a signed-in person's trigger and run go through under their id",
+      "steps": [
+        {
+          "trait": "AgentSuggestionTrigger",
+          "event": "TRIGGERED",
+          "identity": {
+            "id": "u1",
+            "role": "member"
+          },
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "SUGGESTION_RUN_ALLOWED"
+              }
+            ]
+          }
+        },
+        {
+          "trait": "AgentSuggestionRunner",
+          "event": "START",
+          "identity": {
+            "id": "u1",
+            "role": "member"
+          },
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "RunRecorded",
+                "payload": {
+                  "ownerId": "u1"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "trait": "AgentSuggestionProposer",
+          "event": "PROPOSE_SUGGESTION",
+          "identity": {
+            "id": "u1",
+            "role": "member"
+          },
+          "payload": {
+            "kind": "tip",
+            "title": "t",
+            "subject": "s"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "SuggestionsForPropose"
+              }
+            ],
+            "neverEmits": [
+              "SUGGESTION_REJECTED"
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "AgentSuggestionLoop",
+        "AgentSuggestionLlm",
+        "SuggestChatRequest",
+        "SuggestChatHttp"
+      ]
+    }
+  ]
+}

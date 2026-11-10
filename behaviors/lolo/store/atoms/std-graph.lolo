@@ -13,6 +13,7 @@ type GraphNodeRow = { id : string!, graphId : string, nodeId : string, nodeType 
 type GraphEdgeRow = { id : string!, graphId : string, relId : string, source : string, target : string, edgeType : string, direction : string, strength : number, sourceGraphId : string, targetGraphId : string, metadata : Map string string, createdAt : string }
 orbital GraphOrbital {
   entity GraphNode [persistent: graph_nodes] {
+    @read none "This program declares no identity entity, so it has no signed-in viewer to scope reads to: every visitor may read these rows."
     id : string!
     graphId : string @description "The graph this node belongs to." @synonyms "graph, owner graph" = ""
     nodeId : string @description "The node's own id inside its graph; the row id is graphId:nodeId." @synonyms "node key, local id" = ""
@@ -51,6 +52,7 @@ orbital GraphOrbital {
   }
 
   entity GraphEdge [persistent: graph_edges] {
+    @read none "This program declares no identity entity, so it has no signed-in viewer to scope reads to: every visitor may read these rows."
     id : string!
     graphId : string @description "The graph this edge belongs to." @synonyms "graph" = ""
     relId : string @description "The edge's own id, rel-{source}-{type}-{target}; the row id is graphId:relId." @synonyms "relationship id" = ""

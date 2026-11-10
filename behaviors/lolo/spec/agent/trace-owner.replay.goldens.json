@@ -1,0 +1,82 @@
+{
+  "atom": "agent/atoms/std-agent-trace.lolo",
+  "trait": "AgentTraceRecorder",
+  "note": "G-CROSS-405: a run is recorded for its owner only; the anonymous role owns nothing",
+  "cases": [
+    {
+      "id": "an unsigned session's run is not recorded",
+      "steps": [
+        {
+          "trait": "AgentTraceRecorder",
+          "event": "REPLIED",
+          "payload": {
+            "reply": "ok",
+            "steps": [],
+            "usage": {
+              "promptTokens": 1,
+              "completionTokens": 1,
+              "totalTokens": 2,
+              "modelCalls": 1
+            }
+          },
+          "expect": {
+            "fired": false,
+            "neverEmits": [
+              "RUN_RECORDED"
+            ]
+          }
+        },
+        {
+          "trait": "AgentTraceRecorder",
+          "event": "REPLY_FAILED",
+          "payload": {
+            "error": "boom",
+            "steps": []
+          },
+          "expect": {
+            "fired": false,
+            "neverEmits": [
+              "RUN_RECORDED"
+            ]
+          }
+        }
+      ],
+      "defaults": []
+    },
+    {
+      "id": "control: a signed-in person's run is recorded under their id",
+      "steps": [
+        {
+          "trait": "AgentTraceRecorder",
+          "event": "REPLIED",
+          "identity": {
+            "id": "u1",
+            "role": "member"
+          },
+          "payload": {
+            "reply": "ok",
+            "steps": [],
+            "usage": {
+              "promptTokens": 1,
+              "completionTokens": 1,
+              "totalTokens": 2,
+              "modelCalls": 1
+            }
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "RUN_RECORDED",
+                "payload": {
+                  "ownerId": "u1"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "defaults": []
+    }
+  ]
+}

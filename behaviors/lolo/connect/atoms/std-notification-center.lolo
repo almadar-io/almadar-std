@@ -12,6 +12,7 @@ orbital NotificationCenterOrbital {
     type PUSH_SUBSCRIBED = Event { endpoint : string, p256dh : string, auth : string } "browser/push-subscribe resolved — the credentials arrive FLAT on the payload (?endpoint, ?p256dh, ?auth), not wrapped in a `result` field."
 
   entity NotificationPreference [persistent: notificationPreferences] {
+    @read none "This program declares no identity entity, so it has no signed-in viewer to scope reads to: every visitor may read these rows."
     id : string!
     personId : string! @description "Owner of this preference row — rows are meant to be private to their owner. Access predicates need an [identity] roster, so the binding organism (which declares one) owns the @read/@update scoping; the generic atom cannot." @synonyms "user, owner, account"
     eventKey : string @description "Event key this preference applies to (matches a listener's eventKey); blank = all events." @synonyms "event, trigger, subscription, topic" = ""
@@ -23,6 +24,7 @@ orbital NotificationCenterOrbital {
   }
 
   entity PushSubscription [persistent: pushSubscriptions] {
+    @read none "This program declares no identity entity, so it has no signed-in viewer to scope reads to: every visitor may read these rows."
     id : string!
     userId : string @description "Owner of this browser push subscription. Owner-scoped access predicates belong to the binding organism's [identity] roster, as with NotificationPreference." @synonyms "user, owner, account" = ""
     endpoint : string @description "Push service endpoint URL for this subscription." @synonyms "push url, subscription endpoint" = ""
@@ -33,6 +35,7 @@ orbital NotificationCenterOrbital {
   }
 
   entity NotificationRecord [persistent: notifications] {
+    @read none "This program declares no identity entity, so it has no signed-in viewer to scope reads to: every visitor may read these rows."
     id : string!
     recipient : string @description "The identifier of the entity receiving the notification." @synonyms "user, target, receiver, destination" = ""
     channel : string @description "The delivery method for the notification (e.g., email, SMS, in-app)." @synonyms "delivery, medium, type" = in-app

@@ -35,6 +35,7 @@ orbital MigrationJobOrbital {
   type SourceEnvelope = Map string SourceRecords
 
   entity MigrationJob [persistent: migration_jobs] {
+    @read none "This program declares no identity entity, so it has no signed-in viewer to scope reads to: every visitor may read these rows."
     id : string!
     source : ImportSourceOption @description "ImportSource descriptor of the run (kind + options), supplied by the host; its id names the stored MigrationSourceProfile." = {}
     files : [MigrationFile] @description "Client-side file metadata for upload sources (name/size/type/lastModified)." = []
@@ -55,6 +56,7 @@ orbital MigrationJobOrbital {
   }
 
   entity MigrationSourceProfile [persistent: migration_source_profiles] {
+    @read none "This program declares no identity entity, so it has no signed-in viewer to scope reads to: every visitor may read these rows."
     id : string! @description "The source id the profile belongs to (an ImportSourceOption id)."
     adapter : string @description "Adapter that parses the source documents: asana, clockify, slack, markdown or paste." = ""
     accessKind : "http" | "database" @description "How the documents are read; database is a seam: std-postgres reads rows, but a database profile declares no queries yet and the job has no database fetch state." = http

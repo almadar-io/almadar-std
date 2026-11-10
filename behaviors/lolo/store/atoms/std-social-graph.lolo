@@ -14,6 +14,7 @@ type SocialViewMessage = { id : string!, fromViewer : boolean, content : string,
 type SocialConnectionRow = { id : string!, callerId : string, peerId : string, participants : [string], originKind : string, originId : string, badges : [SocialBadge], activeBadgeId : string, status : "active" | "archived", lastActivityAt : instant, archivedAt : instant }
 orbital SocialGraphOrbital {
   entity NodePresence [persistent: node_presence] {
+    @read none "This program declares no identity entity, so it has no signed-in viewer to scope reads to: every visitor may read these rows."
     id : string!
     nodeKey : string @description "The node the member was on, as kind:id." @synonyms "topic key, node" = ""
     memberId : string @description "The member who was there." @synonyms "learner, user" = ""
@@ -26,6 +27,7 @@ orbital SocialGraphOrbital {
   }
 
   entity PeerToken [persistent: peer_tokens] {
+    @read none "This program declares no identity entity, so it has no signed-in viewer to scope reads to: every visitor may read these rows."
     id : string!
     peerId : string @description "The member the token stands for." @synonyms "peer, target" = ""
     issuedTo : string @description "The member the token was issued to." @synonyms "holder, caller" = ""
@@ -34,6 +36,7 @@ orbital SocialGraphOrbital {
   }
 
   entity SocialConnection [persistent: social_connections] {
+    @read none "This program declares no identity entity, so it has no signed-in viewer to scope reads to: every visitor may read these rows."
     id : string!
     callerId : string @description "The member who opened the connection." @synonyms "opener, caller" = ""
     peerId : string @description "The member on the other side." @synonyms "peer, other member" = ""
@@ -76,6 +79,7 @@ orbital SocialGraphOrbital {
   }
 
   entity SocialMessage [persistent: social_messages] {
+    @read none "This program declares no identity entity, so it has no signed-in viewer to scope reads to: every visitor may read these rows."
     id : string!
     connectionId : string @description "The connection the message belongs to." @synonyms "conversation" = ""
     senderId : string @description "The member who sent it." @synonyms "from, author" = ""

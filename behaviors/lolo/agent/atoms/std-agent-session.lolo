@@ -1468,6 +1468,7 @@ orbital AgentSessionOrbital {
   }
 
   entity AgentMessage [persistent: agentMessages] {
+    @read none "Rows are keyed by ownerId and every fetch and write in this atom is scoped to the signed-in owner; the atom declares no identity entity, so the app that binds its own entity here states the @read policy."
     id : string!
     ownerId : string! @description "Whose conversation this message belongs to (the real @user). The binding organism scopes @read to it." @synonyms "user, owner, account"
     role : "user" | "assistant" @description "Who said it." @synonyms "speaker, author" = user
@@ -1493,14 +1494,16 @@ orbital AgentSessionOrbital {
       OPEN_CHAT -> ready when (not (= (default ?chatId "") ""))
         (fetch AgentMessage {
           emit: { failure: AgentMessagesLoadFailed, success: AgentThreadOpened }
-          filter: (= (object/get @entity chatId) ?chatId)
+          filter: (and (= (object/get @entity chatId) ?chatId) (= (object/get @entity ownerId) @user.id))
           limit: @config.maxRows
         })
       AgentThreadOpened -> ready when (> ?totalCount (array/len (default ?data [])))
         (emit AgentMessagesLoadFailed { error: (str/concat "AgentMessage has " ?totalCount " messages in one conversation, over the maxRows cap of " @config.maxRows), code: "THREAD_OVER_CAP" })
       AgentThreadOpened -> ready
         (emit AgentMessagesLoaded { data: ?data })
-      SEND_IN_CHAT -> ready when (not (= (default ?message "") ""))
+      SEND_IN_CHAT -> ready when (and (not (= (default ?message "") "")) (= @user.role "anonymous"))
+        (emit AgentMessageSaveFailed { error: "Sign in to keep a conversation.", code: "AUTH_ERROR" })
+      SEND_IN_CHAT -> ready when (and (not (= (default ?message "") "")) (!= @user.role "anonymous"))
         (persist create AgentMessage {
           ownerId: @user.id
           chatId: ?chatId
@@ -1513,7 +1516,7 @@ orbital AgentSessionOrbital {
       AgentMessageSaved -> ready
         (fetch AgentMessage {
           emit: { failure: AgentMessagesLoadFailed, success: AgentConversationLoaded }
-          filter: (= (object/get @entity chatId) ?chatId)
+          filter: (and (= (object/get @entity chatId) ?chatId) (= (object/get @entity ownerId) @user.id))
           limit: @config.maxRows
         })
       AgentConversationLoaded -> ready when (> ?totalCount (array/len (default ?data [])))
@@ -1522,7 +1525,7 @@ orbital AgentSessionOrbital {
         (emit CONVERSE {
           messages: (array/map (array/sort ?data createdAt asc) (fn item { role: @item.role, content: @item.content }))
         })
-      REPLY_IN_CHAT -> ready
+      REPLY_IN_CHAT -> ready when (!= @user.role "anonymous")
         (persist create AgentMessage {
           ownerId: @user.id
           chatId: ?chatId
@@ -1684,6 +1687,7 @@ orbital AgentChatsOrbital {
   }
 
   entity AgentChat [persistent: agentChats] {
+    @read none "Rows are keyed by ownerId and every fetch and write in this atom is scoped to the signed-in owner; the atom declares no identity entity, so the app that binds its own entity here states the @read policy."
     id : string!
     ownerId : string! @description "Whose conversation this is (the real @user). The binding organism scopes @read to it." @synonyms "user, owner, account"
     title : string @description "The conversation's first request, shown in the conversation list; empty until the first message." @synonyms "name, subject, topic" = ""
@@ -1724,15 +1728,19 @@ orbital AgentChatsOrbital {
       INIT -> ready
       LOAD_HISTORY -> ready
         (fetch AgentChat {
+          filter: (= (object/get @entity ownerId) @user.id)
           emit: { failure: AgentChatsLoadFailed, success: ChatsForHistory }
           limit: 1
           orderBy: "lastActiveAt:desc"
         })
       ChatsForHistory -> ready
         (emit ASSISTANT_CHAT_OPENED { chatId: (if (> (array/len (default ?data [])) 0) (object/get (default (array/first (array/sort (default ?data []) lastActiveAt desc)) {}) id) "") })
-      SEND -> ready when (not (= (default ?message "") ""))
+      SEND -> ready when (and (not (= (default ?message "") "")) (= @user.role "anonymous"))
+        (emit AgentChatsLoadFailed { error: "Sign in to keep a conversation.", code: "AUTH_ERROR" })
+      SEND -> ready when (and (not (= (default ?message "") "")) (!= @user.role "anonymous"))
         (set @entity.pendingMessage ?message)
         (fetch AgentChat {
+          filter: (= (object/get @entity ownerId) @user.id)
           emit: { failure: AgentChatsLoadFailed, success: ChatsForSend }
           limit: 1
           orderBy: "lastActiveAt:desc"
@@ -1759,16 +1767,19 @@ orbital AgentChatsOrbital {
       ChatReadyForSend -> ready
         (emit ASSISTANT_SEND_IN_CHAT { chatId: ?id, message: @entity.pendingMessage })
         (emit ASSISTANT_CHATS_CHANGED {})
-      REPLIED -> ready when (not (default ?ephemeral false))
+      REPLIED -> ready when (and (not (default ?ephemeral false)) (!= @user.role "anonymous"))
         (set @entity.pendingReply ?reply)
         (fetch AgentChat {
+          filter: (= (object/get @entity ownerId) @user.id)
           emit: { failure: AgentChatsLoadFailed, success: ChatsForReply }
           limit: 1
           orderBy: "lastActiveAt:desc"
         })
       ChatsForReply -> ready
         (emit ASSISTANT_REPLY_IN_CHAT { chatId: (if (> (array/len (default ?data [])) 0) (object/get (default (array/first (array/sort (default ?data []) lastActiveAt desc)) {}) id) ""), reply: @entity.pendingReply })
-      NEW_CHAT -> ready
+      NEW_CHAT -> ready when (= @user.role "anonymous")
+        (emit AgentChatsLoadFailed { error: "Sign in to keep a conversation.", code: "AUTH_ERROR" })
+      NEW_CHAT -> ready when (!= @user.role "anonymous")
         (persist create AgentChat {
           ownerId: @user.id
           title: ""
@@ -1783,7 +1794,7 @@ orbital AgentChatsOrbital {
       SELECT_CHAT -> ready
         (fetch AgentChat {
           emit: { failure: AgentChatsLoadFailed, success: ChatsForSelect }
-          filter: (= (object/get @entity id) ?chatId)
+          filter: (and (= (object/get @entity id) ?chatId) (= (object/get @entity ownerId) @user.id))
           limit: @config.maxRows
         })
       ChatsForSelect -> ready when (> ?totalCount (array/len (default ?data [])))
@@ -1804,6 +1815,7 @@ orbital AgentChatsOrbital {
       LIST_CHATS -> ready
         (set @entity.page 1)
         (fetch AgentChat {
+          filter: (= (object/get @entity ownerId) @user.id)
           emit: { failure: AgentChatsLoadFailed, success: ChatsForList }
           limit: @config.pageSize
           offset: 0
@@ -1812,6 +1824,7 @@ orbital AgentChatsOrbital {
       REFETCH_PAGE -> ready
         (set @entity.page ?page)
         (fetch AgentChat {
+          filter: (= (object/get @entity ownerId) @user.id)
           emit: { failure: AgentChatsLoadFailed, success: ChatsForList }
           limit: @config.pageSize
           offset: (* (- ?page 1) @config.pageSize)
@@ -1958,6 +1971,7 @@ orbital AgentChatsOrbital {
       INIT -> loading
         (set @entity.page 1)
         (fetch AgentChat {
+          filter: (= (object/get @entity ownerId) @user.id)
           emit: { failure: AgentChatsLoadFailed, success: AgentChatsLoaded }
           limit: @config.pageSize
           offset: 0
@@ -2013,6 +2027,7 @@ orbital AgentChatsOrbital {
       INIT -> loading
         (set @entity.page 1)
         (fetch AgentChat {
+          filter: (= (object/get @entity ownerId) @user.id)
           emit: { failure: AgentChatsLoadFailed, success: AgentChatsLoaded }
           limit: @config.pageSize
           offset: 0
@@ -2022,6 +2037,7 @@ orbital AgentChatsOrbital {
       CHATS_CHANGED -> browsing
         (set @entity.page 1)
         (fetch AgentChat {
+          filter: (= (object/get @entity ownerId) @user.id)
           emit: { failure: AgentChatsLoadFailed, success: AgentChatsLoaded }
           limit: @config.pageSize
           offset: 0
@@ -2071,6 +2087,7 @@ orbital AgentChatsOrbital {
       REFETCH_PAGE -> browsing
         (set @entity.page ?page)
         (fetch AgentChat {
+          filter: (= (object/get @entity ownerId) @user.id)
           emit: { failure: AgentChatsLoadFailed, success: AgentChatsLoaded }
           limit: @config.pageSize
           offset: (* (- ?page 1) @config.pageSize)

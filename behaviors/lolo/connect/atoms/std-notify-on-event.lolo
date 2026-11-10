@@ -20,6 +20,7 @@ orbital NotifyOnEventOrbital {
     type NotificationDispatched = Event { recipient : string, channel : string, message : string, severity : string } "Re-emitted after dispatch; rename to wire downstream observers (e.g. NotificationLogAppended)."
 
   entity NotificationRecord [persistent: notifications] {
+    @read none "This program declares no identity entity, so it has no signed-in viewer to scope reads to: every visitor may read these rows."
     id : string!
     recipient : string @description "The identifier of the entity receiving the notification." @synonyms "user, target, receiver, destination" = ""
     channel : string @description "The delivery method for the notification (e.g., email, SMS, in-app)." @synonyms "delivery, medium, type" = in-app
@@ -37,6 +38,7 @@ orbital NotifyOnEventOrbital {
   }
 
   entity NotificationPreference [persistent: notificationPreferences] {
+    @read none "This program declares no identity entity, so it has no signed-in viewer to scope reads to: every visitor may read these rows."
     id : string!
     personId : string! @description "Owner of this preference row." @synonyms "user, owner, account"
     eventKey : string @description "Event key this preference applies to (matches the listener's eventKey); blank = all events." @synonyms "event, trigger, subscription" = ""
@@ -48,6 +50,7 @@ orbital NotifyOnEventOrbital {
   }
 
   entity PushSubscription [persistent: pushSubscriptions] {
+    @read none "This program declares no identity entity, so it has no signed-in viewer to scope reads to: every visitor may read these rows."
     id : string!
     userId : string @description "Owner of this browser push subscription." @synonyms "user, owner, account" = ""
     endpoint : string @description "Push service endpoint URL for this subscription." @synonyms "push url, subscription endpoint" = ""

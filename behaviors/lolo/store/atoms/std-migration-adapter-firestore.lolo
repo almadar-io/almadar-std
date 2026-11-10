@@ -1,6 +1,6 @@
 app std-migration-adapter-firestore [
   version: "1.0.0",
-  description: "std-migration-adapter-firestore — the Firestore REST source adapter of a migration run. Each fetched document of the job carries a Firestore document resource name (projects/p/databases/(default)/documents/users/u/knowledgeGraphs/g); the adapter reads every document with a bearer-authenticated GET on sourceOrigin and decodes the typed values. A recipe, chosen by the profile's adapter id, names what the documents yield: the document itself as one unit (documentUnit, kind documentKind), each entry of a nodes map as one unit of the kind its node type names (nodeKinds), and each entry of a relationships list as one unit of edgeKind. A scalar field becomes a metadata slot of the same name; a map or list field becomes the slot of the same name holding the Firestore value as JSON text, and the slot composite lists those names as JSON text. A node adds nodeId, nodeType and its own scalar fields as node_<field>; every unit carries documentId and documentPath. A relationship whose source or target is not an emitted node of its document is ledgered in skipped. A document that cannot be read is ledgered in skipped, or fails the run with MIGRATION_SOURCE_UNREADABLE when it is the only one. Answers std-migration-job's MIGRATION_EXTRACT when a recipe carries the profile's adapter.",
+  description: "std-migration-adapter-firestore — the Firestore REST source adapter of a migration run. Each fetched document of the job carries a Firestore document resource name (projects/p/databases/(default)/documents/users/u/knowledgeGraphs/g); the adapter reads every document with a bearer-authenticated GET on sourceOrigin and decodes the typed values. A recipe, chosen by the profile's adapter id, names what the documents yield: the document itself as one unit (documentUnit, kind documentKind), each entry of a nodes map as one unit of the kind its node type names (nodeKinds; a node kind with requires makes a unit only of a node carrying a non-null value in at least one of those slots), and each entry of a relationships list as one unit of edgeKind. A scalar field becomes a metadata slot of the same name; a map or list field becomes the slot of the same name holding the Firestore value as JSON text, and the slot composite lists those names as JSON text. A node adds nodeId, nodeType and its own scalar fields as node_<field>; every unit carries documentId and documentPath. A relationship whose source or target is not an emitted node of its document is ledgered in skipped. A document that cannot be read is ledgered in skipped, or fails the run with MIGRATION_SOURCE_UNREADABLE when it is the only one. Answers std-migration-job's MIGRATION_EXTRACT when a recipe carries the profile's adapter.",
   net: { "firestore.googleapis.com:443": [tcp], "*.googleapis.com:443": [tcp] }
 ]
 uses Http from "std/behaviors/std-http-client"
@@ -18,10 +18,10 @@ orbital MigrationAdapterFirestoreOrbital {
   type FirestoreFields = Map string FirestoreValue
   type FirestoreMap = { fields : FirestoreFields }
   type FirestoreArray = { values : [FirestoreValue] }
-  type FirestoreValue = { stringValue : string, integerValue : string, doubleValue : number, booleanValue : boolean, nullValue : string, timestampValue : string, mapValue : FirestoreMap, arrayValue : FirestoreArray }
+  type FirestoreValue = { stringValue : string, integerValue : string, doubleValue : number, booleanValue : boolean, nullValue : string?, timestampValue : string, mapValue : FirestoreMap, arrayValue : FirestoreArray }
   type FirestoreDocument = { name : string!, fields : FirestoreFields, createTime : string, updateTime : string }
   type FirestoreDocuments = [FirestoreDocument]
-  type FirestoreNodeKind = { nodeType : string!, kind : "root" | "folder" | "section" | "qa"!, slots : [string] }
+  type FirestoreNodeKind = { nodeType : string!, kind : "root" | "folder" | "section" | "qa"!, slots : [string], requires : [string] }
   type FirestoreRecipe = { adapterId : string!, documentUnit : boolean!, documentKind : "root" | "folder" | "section" | "qa"!, documentSlots : [string], nodesField : string!, nodeKinds : [FirestoreNodeKind], edgesField : string!, edgeKind : "root" | "folder" | "section" | "qa"!, edgeSlots : [string] }
   type FirestoreUnitSet = { ref : string!, kind : "root" | "folder" | "section" | "qa"!, title : string, span : string, extra : Map string ImportFieldValue!, fields : FirestoreFields!, hidden : [string]! }
   type FirestoreStrings = [string]
@@ -134,7 +134,7 @@ orbital MigrationAdapterFirestoreOrbital {
                     @nodes
                     (fn e
                       (let ((nk (array/find (object/get @entity.recipe "nodeKinds" []) (fn k (= (object/get @k "nodeType") (object/get (object/get @e "1") "mapValue.fields.type.stringValue" ""))))))
-                       (if (validate/required @nk)
+                       (if (and (validate/required @nk) (or (= (array/len (object/get (default @nk { nodeType: "", kind: "root" }) "requires" [])) 0) (array/some (object/get (default @nk { nodeType: "", kind: "root" }) "requires" []) (fn s (let ((v (if (str/startsWith @s "node_") (object/get (object/get (object/get @e "1") "mapValue.fields" {}) (str/slice @s 5 (str/len @s))) (object/get (object/get (object/get @e "1") "mapValue.fields.properties.mapValue.fields" {}) @s)))) (and (validate/required @v) (not (object/has @v "nullValue"))))))))
                       [{
                         ref: (str/concat "fs:" @path "#node:" (object/get @e "0")),
                         unit: (let ((keyed (object/mapKeys
@@ -170,7 +170,7 @@ orbital MigrationAdapterFirestoreOrbital {
               (fn d
                 (let ((path (default (array/nth (str/split (object/get @d "name") "/documents/") 1) ""))
                       (nodeIds (object/keys (object/get (object/get (object/get @d "fields" {}) (object/get @entity.recipe "nodesField") {}) "mapValue.fields" {})))
-                      (emitted (array/map (array/filter (object/entries (object/get (object/get (object/get @d "fields" {}) (object/get @entity.recipe "nodesField") {}) "mapValue.fields" {})) (fn e (array/some (object/get @entity.recipe "nodeKinds" []) (fn k (= (object/get @k "nodeType") (object/get (object/get @e "1") "mapValue.fields.type.stringValue" "")))))) (fn e (object/get @e "0")))))
+                      (emitted (array/map (array/filter @entity.nodeBuilds (fn b (and (!= @b.unit null) (str/startsWith @b.ref (str/concat "fs:" @path "#node:"))))) (fn b (str/slice @b.ref (str/len (str/concat "fs:" @path "#node:")) (str/len @b.ref))))))
                   (array/map
                     (array/filter
                       (object/get (object/get (object/get @d "fields" {}) (object/get @entity.recipe "edgesField") {}) "arrayValue.values" [])
@@ -196,7 +196,7 @@ orbital MigrationAdapterFirestoreOrbital {
               @entity.docs
               (fn d
                 (let ((path (default (array/nth (str/split (object/get @d "name") "/documents/") 1) ""))
-                      (emitted (array/map (array/filter (object/entries (object/get (object/get (object/get @d "fields" {}) (object/get @entity.recipe "nodesField") {}) "mapValue.fields" {})) (fn e (array/some (object/get @entity.recipe "nodeKinds" []) (fn k (= (object/get @k "nodeType") (object/get (object/get @e "1") "mapValue.fields.type.stringValue" "")))))) (fn e (object/get @e "0")))))
+                      (emitted (array/map (array/filter @entity.nodeBuilds (fn b (and (!= @b.unit null) (str/startsWith @b.ref (str/concat "fs:" @path "#node:"))))) (fn b (str/slice @b.ref (str/len (str/concat "fs:" @path "#node:")) (str/len @b.ref))))))
                   (array/map
                     (array/filter
                       (object/get (object/get (object/get @d "fields" {}) (object/get @entity.recipe "edgesField") {}) "arrayValue.values" [])
