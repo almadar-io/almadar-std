@@ -12287,6 +12287,166 @@
    ],
    "now": 1760531445678,
    "note": "a guest whose paints are all outside the stage slot (a review in its modal) still gets its view, which renders every slot it paints; control: control-an-embedded-paint-is-never-shown-as-a-root (no root paint, no view)"
+  },
+  {
+   "id": "stage-a-sign-in-request-shows-a-sign-in-button",
+   "steps": [
+    {
+     "trait": "GuestStage",
+     "event": "GUEST_SHOWN",
+     "entity": {
+      "id": "g",
+      "guestHandle": "guest-1",
+      "guestPaints": [
+       {
+        "slot": "main",
+        "trait": "A.Child",
+        "embedded": true,
+        "content": {
+         "type": "box"
+        }
+       }
+      ],
+      "guestError": "",
+      "guestPage": [],
+      "guestSignInAsked": true
+     },
+     "from": "idle",
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "rendered": [
+       {
+        "slot": "main",
+        "props": {
+         "type": "box",
+         "className": "",
+         "children": [
+          {
+           "type": "stack",
+           "direction": "horizontal",
+           "justify": "end",
+           "align": "center",
+           "gap": "md",
+           "className": "px-4 py-2 border-b border-border",
+           "children": [
+            {
+             "type": "button",
+             "icon": "activity",
+             "variant": "ghost",
+             "size": "sm",
+             "action": "GUEST_TRACE_TOGGLED",
+             "aria-label": "Trace"
+            },
+            {
+             "type": "switch",
+             "label": "Real integrations",
+             "checked": false,
+             "action": "GUEST_INTEGRATIONS_CHOSEN"
+            },
+            {
+             "type": "button",
+             "icon": "log-in",
+             "variant": "primary",
+             "size": "sm",
+             "label": "Sign in with Google",
+             "action": "GUEST_SIGN_IN_CHOSEN"
+            }
+           ]
+          },
+          {
+           "type": "container",
+           "size": "md",
+           "padding": "lg",
+           "children": [
+            {
+             "type": "alert",
+             "variant": "info",
+             "title": "Nothing to show here on its own",
+             "message": "The behavior painted nothing when it opened; it draws in answer to an event a host sends it."
+            }
+           ]
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "options": {
+      "render": true,
+      "renderProps": true
+     }
+    }
+   ],
+   "now": 1760531445678,
+   "note": "the guest asked to sign in: the stage shows a button, and the Google sign-in runs on its click so the browser does not block the popup; control: control-an-embedded-paint-is-never-shown-as-a-root (no request, no button)"
+  },
+  {
+   "id": "stage-a-sign-in-request-asks-before-signing-in",
+   "steps": [
+    {
+     "trait": "GuestStage",
+     "event": "GUEST_SIGN_IN",
+     "payload": {
+      "guest": "guest-1"
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "guest-1",
+      "guestSignInAsked": false
+     },
+     "from": "idle",
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "effects": [
+       {
+        "type": "set",
+        "arg0": "@entity.guestSignInAsked"
+       },
+       {
+        "type": "emit",
+        "arg0": "GUEST_SHOWN"
+       }
+      ]
+     }
+    }
+   ],
+   "note": "no auth/sign-in effect until the button is clicked"
+  },
+  {
+   "id": "stage-the-sign-in-button-runs-the-google-sign-in",
+   "steps": [
+    {
+     "trait": "GuestStage",
+     "event": "GUEST_SIGN_IN_CHOSEN",
+     "payload": {},
+     "entity": {
+      "id": "g",
+      "guestHandle": "guest-1",
+      "guestSignInAsked": true
+     },
+     "from": "idle",
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "effects": [
+       {
+        "type": "set",
+        "arg0": "@entity.guestSignInAsked"
+       },
+       {
+        "type": "auth/sign-in"
+       },
+       {
+        "type": "emit",
+        "arg0": "GUEST_SHOWN"
+       }
+      ]
+     }
+    }
+   ],
+   "note": "the click is the user gesture the popup needs"
   }
  ]
 }

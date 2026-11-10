@@ -1,0 +1,301 @@
+{
+ "atom": "flow/atoms/std-queue.lolo",
+ "trait": "QueueRenewer",
+ "note": "RENEW extends only the caller's live attempt; the fetch and persist answers are host answers played as steps",
+ "cases": [
+  {
+   "id": "renew-within-lease-extends-and-answers-lease-renewed",
+   "now": 1700000000000,
+   "steps": [
+    {
+     "event": "RENEW",
+     "payload": {
+      "jobId": "j1",
+      "attempt": 1
+     }
+    },
+    {
+     "event": "RenewJobLoaded",
+     "payload": {
+      "data": [
+       {
+        "id": "j1",
+        "queue": "q",
+        "priority": 0,
+        "status": "processing",
+        "enqueuedAt": "2023-11-14T22:13:19Z",
+        "availableAt": "2023-11-14T22:13:19Z",
+        "attempts": 1,
+        "leaseExpiresAt": "2023-11-14T22:14:20Z"
+       }
+      ]
+     },
+     "from": "idle",
+     "expect": {
+      "effects": [
+       {
+        "type": "persist"
+       }
+      ],
+      "neverEmits": [
+       "LEASE_LOST"
+      ]
+     }
+    },
+    {
+     "event": "RenewMarked",
+     "payload": {
+      "id": "j1",
+      "leaseExpiresAt": "2023-11-14T22:13:50Z"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LEASE_RENEWED",
+        "payload": {
+         "jobId": "j1",
+         "attempt": 1,
+         "leaseExpiresAt": "2023-11-14T22:13:50Z"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-renew-after-expiry-is-lease-lost-renew",
+   "now": 1700000000000,
+   "steps": [
+    {
+     "event": "RENEW",
+     "payload": {
+      "jobId": "j1",
+      "attempt": 1
+     }
+    },
+    {
+     "event": "RenewJobLoaded",
+     "payload": {
+      "data": [
+       {
+        "id": "j1",
+        "queue": "q",
+        "priority": 0,
+        "status": "processing",
+        "enqueuedAt": "2023-11-14T22:13:19Z",
+        "availableAt": "2023-11-14T22:13:19Z",
+        "attempts": 1,
+        "leaseExpiresAt": "2023-11-14T22:13:19Z"
+       }
+      ]
+     },
+     "from": "idle",
+     "expect": {
+      "emits": [
+       {
+        "event": "LEASE_LOST",
+        "payload": {
+         "jobId": "j1",
+         "attempt": 1,
+         "op": "renew"
+        }
+       }
+      ],
+      "neverEmits": [
+       "LEASE_RENEWED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-renew-with-stale-attempt-is-lease-lost-renew",
+   "now": 1700000000000,
+   "steps": [
+    {
+     "event": "RENEW",
+     "payload": {
+      "jobId": "j1",
+      "attempt": 1
+     }
+    },
+    {
+     "event": "RenewJobLoaded",
+     "payload": {
+      "data": [
+       {
+        "id": "j1",
+        "queue": "q",
+        "priority": 0,
+        "status": "processing",
+        "enqueuedAt": "2023-11-14T22:13:19Z",
+        "availableAt": "2023-11-14T22:13:19Z",
+        "attempts": 2,
+        "leaseExpiresAt": "2023-11-14T22:14:20Z"
+       }
+      ]
+     },
+     "from": "idle",
+     "expect": {
+      "emits": [
+       {
+        "event": "LEASE_LOST",
+        "payload": {
+         "jobId": "j1",
+         "attempt": 1,
+         "op": "renew"
+        }
+       }
+      ],
+      "neverEmits": [
+       "LEASE_RENEWED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-renew-of-a-settled-job-is-lease-lost-renew",
+   "now": 1700000000000,
+   "steps": [
+    {
+     "event": "RENEW",
+     "payload": {
+      "jobId": "j1",
+      "attempt": 1
+     }
+    },
+    {
+     "event": "RenewJobLoaded",
+     "payload": {
+      "data": [
+       {
+        "id": "j1",
+        "queue": "q",
+        "priority": 0,
+        "status": "completed",
+        "enqueuedAt": "2023-11-14T22:13:19Z",
+        "availableAt": "2023-11-14T22:13:19Z",
+        "attempts": 1,
+        "leaseExpiresAt": "2023-11-14T22:14:20Z"
+       }
+      ]
+     },
+     "from": "idle",
+     "expect": {
+      "emits": [
+       {
+        "event": "LEASE_LOST",
+        "payload": {
+         "jobId": "j1",
+         "attempt": 1,
+         "op": "renew"
+        }
+       }
+      ],
+      "neverEmits": [
+       "LEASE_RENEWED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-renew-of-a-missing-job-is-lease-lost-renew",
+   "now": 1700000000000,
+   "steps": [
+    {
+     "event": "RENEW",
+     "payload": {
+      "jobId": "j1",
+      "attempt": 1
+     }
+    },
+    {
+     "event": "RenewJobLoaded",
+     "payload": {
+      "data": []
+     },
+     "from": "idle",
+     "expect": {
+      "emits": [
+       {
+        "event": "LEASE_LOST",
+        "payload": {
+         "jobId": "j1",
+         "attempt": 1,
+         "op": "renew"
+        }
+       }
+      ],
+      "neverEmits": [
+       "LEASE_RENEWED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "renew-persists-the-explicit-leaseMs",
+   "now": 1700000000000,
+   "steps": [
+    {
+     "event": "RENEW",
+     "payload": {
+      "jobId": "j1",
+      "attempt": 1,
+      "leaseMs": 5000
+     }
+    },
+    {
+     "event": "RenewJobLoaded",
+     "payload": {
+      "data": [
+       {
+        "id": "j1",
+        "queue": "q",
+        "priority": 0,
+        "status": "processing",
+        "enqueuedAt": "2023-11-14T22:13:19Z",
+        "availableAt": "2023-11-14T22:13:19Z",
+        "attempts": 1,
+        "leaseExpiresAt": "2023-11-14T22:14:20Z"
+       }
+      ]
+     },
+     "from": "idle",
+     "expect": {
+      "effects": [
+       {
+        "type": "persist"
+       }
+      ],
+      "neverEmits": [
+       "LEASE_LOST"
+      ]
+     }
+    },
+    {
+     "event": "RenewMarked",
+     "payload": {
+      "id": "j1",
+      "leaseExpiresAt": "2023-11-14T22:13:50Z"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LEASE_RENEWED",
+        "payload": {
+         "jobId": "j1",
+         "attempt": 1,
+         "leaseExpiresAt": "2023-11-14T22:13:50Z"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

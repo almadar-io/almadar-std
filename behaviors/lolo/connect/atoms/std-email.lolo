@@ -1,11 +1,12 @@
 app std-email [
   version: "1.0.0",
-  description: "std-email — transactional email through SendGrid or Resend over the composed std-http-client. EMAIL_SEND sends one message through the vendor the `vendor` knob names and answers EMAIL_SENT { id?, status } or EMAIL_SEND_FAILED { code?, message }. Credentials are the SENDGRID_API_KEY / RESEND_API_KEY names, resolved by the host.",
+  description: "std-email — transactional email through SendGrid or Resend over the composed std-http-client. EMAIL_SEND sends one message through the vendor the `vendor` knob names and answers EMAIL_SENT { id?, status } or EMAIL_SEND_FAILED { code?, message }. Optional attachments (filename, contentType, bytes content) ride the vendor request as base64. Credentials are the SENDGRID_API_KEY / RESEND_API_KEY names, resolved by the host.",
 ]
 uses Http from "std/behaviors/std-http-client"
 uses Frame from "std/behaviors/std-http-frame"
 uses Timeout from "std/behaviors/std-timeout"
 type HttpHeader = { name : string!, value : string! }
+type EmailAttachment = { filename : string!, contentType : string!, content : bytes! }
 type ResendReply = { id : string, message : string }
 orbital EmailOrbital {
   entity EmailDelivery [runtime] {
@@ -50,7 +51,10 @@ orbital EmailOrbital {
                     (if (!= (str/trim (default (array/nth (str/split @payload.replyTo "<") 0) "")) "") { name: (str/trim (default (array/nth (str/split @payload.replyTo "<") 0) "")) } {}))
                   { email: @payload.replyTo }) }
                 {})
-              (if (validate/required @payload.templateId) { template_id: @payload.templateId } {})))),
+              (if (validate/required @payload.templateId) { template_id: @payload.templateId } {})
+              (if (> (array/len (default @payload.attachments [])) 0)
+                { attachments: (array/map (default @payload.attachments []) (fn (a) { filename: @a.filename, type: @a.contentType, content: (bytes/to-base64 @a.content), disposition: "attachment" })) }
+                {})))),
             stream: "none"
           }))
       EMAIL_SEND -> idle when (and (= @config.vendor resend) (validate/required @payload.templateId))
@@ -67,6 +71,9 @@ orbital EmailOrbital {
               from: (if (validate/required @payload.from) @payload.from @config.fromEmail),
               html: (if (validate/required @payload.htmlBody) @payload.htmlBody @payload.body)
             }
+            (if (> (array/len (default @payload.attachments [])) 0)
+              { attachments: (array/map (default @payload.attachments []) (fn (a) { filename: @a.filename, content: (bytes/to-base64 @a.content), content_type: @a.contentType })) }
+              {})
             (if (validate/required @payload.replyTo) { reply_to: @payload.replyTo } {})
             { subject: @payload.subject }
             (if (validate/required @payload.htmlBody) { text: @payload.body } {})
@@ -138,8 +145,9 @@ orbital EmailOrbital {
         htmlBody : string?
         replyTo : string?
         templateId : string?
+        attachments : [EmailAttachment]?
       }
-        @description "Send one transactional email. to/from/replyTo accept `Name <address>`; htmlBody adds an HTML part beside the plain body; templateId is SendGrid only; from defaults to the fromEmail knob."
+        @description "Send one transactional email. attachments adds files (filename, contentType, bytes content) sent as base64 on either vendor. to/from/replyTo accept `Name <address>`; htmlBody adds an HTML part beside the plain body; templateId is SendGrid only; from defaults to the fromEmail knob."
         @synonyms "send email, mail, notify by email, transactional email"
       EMAIL_SENDGRID_REPLIED {
         status : number!

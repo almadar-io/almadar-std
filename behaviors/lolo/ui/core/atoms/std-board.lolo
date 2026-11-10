@@ -42,6 +42,7 @@ orbital BoardOrbital {
     currentNotes : string @intrinsic = ""
     currentRow : BoardView @intrinsic
     errorMessage : string @intrinsic = ""
+    boardParentId : string @intrinsic @description "The detail page's :id the list is scoped to when parentField is set." = ""
   }
 
   trait BoardItemBoard -> @rebindable BoardView {
@@ -49,10 +50,12 @@ orbital BoardOrbital {
 
     state loading {
       INIT -> loading
+        (set @entity.boardParentId (default ?id ""))
         (fetch BoardView {
           emit: { failure: BoardItemsLoadFailed, success: BoardItemsLoaded }
           include: @config.include
           limit: @config.maxRows
+          filter: (or (not (validate/required @config.parentField)) (= (object/get @entity @config.parentField) (default ?id "")))
         })
         (render-ui main { type: skeleton, variant: card })
       BoardItemsLoaded -> loading when (> ?totalCount (array/len ?data))
@@ -84,6 +87,7 @@ orbital BoardOrbital {
           emit: { failure: BoardItemsLoadFailed, success: BoardItemsLoaded }
           include: @config.include
           limit: @config.maxRows
+          filter: (or (not (validate/required @config.parentField)) (= (object/get @entity @config.parentField) @entity.boardParentId))
         })
         (render-ui main { type: skeleton, variant: card })
       ;; Same refresh, different contract: a delete emits { id, deleted }, not
@@ -93,6 +97,7 @@ orbital BoardOrbital {
           emit: { failure: BoardItemsLoadFailed, success: BoardItemsLoaded }
           include: @config.include
           limit: @config.maxRows
+          filter: (or (not (validate/required @config.parentField)) (= (object/get @entity @config.parentField) @entity.boardParentId))
         })
       BoardItemsSaveFailed -> error
         (set @entity.errorMessage ?error)
@@ -105,10 +110,12 @@ orbital BoardOrbital {
 
     state viewing_board {
       INIT -> loading
+        (set @entity.boardParentId (default ?id ""))
         (fetch BoardView {
           emit: { failure: BoardItemsLoadFailed, success: BoardItemsLoaded }
           include: @config.include
           limit: @config.maxRows
+          filter: (or (not (validate/required @config.parentField)) (= (object/get @entity @config.parentField) (default ?id "")))
         })
         (render-ui main { type: skeleton, variant: card })
       OPEN_CARD -> viewing_card
@@ -237,6 +244,7 @@ orbital BoardOrbital {
           emit: { failure: BoardItemsLoadFailed, success: BoardItemsLoaded }
           include: @config.include
           limit: @config.maxRows
+          filter: (or (not (validate/required @config.parentField)) (= (object/get @entity @config.parentField) @entity.boardParentId))
         })
       REORDER_POSITION -> viewing_board
         (persist update BoardView { id: ?id, position: ?position } {
@@ -247,6 +255,7 @@ orbital BoardOrbital {
           emit: { failure: BoardItemsLoadFailed, success: BoardItemsLoaded }
           include: @config.include
           limit: @config.maxRows
+          filter: (or (not (validate/required @config.parentField)) (= (object/get @entity @config.parentField) @entity.boardParentId))
         })
       ;; REFETCH_* stay in viewing_board and issue no render-ui, matching
       ;; std-browse's REFETCH_QUERY/REFETCH_FILTER/REFETCH_PAGE: a render here
@@ -260,7 +269,7 @@ orbital BoardOrbital {
           include: @config.include
           limit: @config.maxRows
           ;; no search field means nothing matches the term
-          filter: (or (= ?searchTerm "") (if (= @config.searchField null) false (str/includes (default (object/get @entity @config.searchField) "") ?searchTerm)))
+          filter: (and (or (not (validate/required @config.parentField)) (= (object/get @entity @config.parentField) @entity.boardParentId)) (or (= ?searchTerm "") (if (= @config.searchField null) false (str/includes (default (object/get @entity @config.searchField) "") ?searchTerm))))
         })
       REFETCH_QUERY -> viewing_board when (and (validate/required @config.searchRelation) (!= ?searchTerm ""))
         (fetch @config.relatedEntity {
@@ -275,14 +284,14 @@ orbital BoardOrbital {
           emit: { failure: BoardItemsLoadFailed, success: BoardItemsLoaded }
           include: @config.include
           limit: @config.maxRows
-          filter: (if (not (validate/required @config.searchRelation)) false (array/includes (array/map ?data (fn r (object/get @r id))) (object/get @entity @config.searchRelation)))
+          filter: (and (or (not (validate/required @config.parentField)) (= (object/get @entity @config.parentField) @entity.boardParentId)) (if (not (validate/required @config.searchRelation)) false (array/includes (array/map ?data (fn r (object/get @r id))) (object/get @entity @config.searchRelation))))
         })
       REFETCH_FILTER -> viewing_board
         (fetch BoardView {
           emit: { failure: BoardItemsLoadFailed, success: BoardItemsLoaded }
           include: @config.include
           limit: @config.maxRows
-          filter: (or (= ?value "") (= (object/get @entity ?field) ?value))
+          filter: (and (or (not (validate/required @config.parentField)) (= (object/get @entity @config.parentField) @entity.boardParentId)) (or (= ?value "") (= (object/get @entity ?field) ?value)))
         })
       ;; A board's columns are not a paged list — paging the underlying fetch
       ;; would show only one page's worth of items spread across all columns,
@@ -295,6 +304,7 @@ orbital BoardOrbital {
           include: @config.include
           limit: @config.pageSize
           offset: (* (- ?page 1) @config.pageSize)
+          filter: (or (not (validate/required @config.parentField)) (= (object/get @entity @config.parentField) @entity.boardParentId))
         })
       BoardItemsLoaded -> viewing_board when (> ?totalCount (array/len ?data))
         (emit BoardItemsLoadFailed { error: (str/concat "BoardView has " ?totalCount " cards, over the maxRows cap of " @config.maxRows), code: "BOARD_OVER_CAP" })
@@ -326,10 +336,12 @@ orbital BoardOrbital {
 
     state viewing_card {
       INIT -> loading
+        (set @entity.boardParentId (default ?id ""))
         (fetch BoardView {
           emit: { failure: BoardItemsLoadFailed, success: BoardItemsLoaded }
           include: @config.include
           limit: @config.maxRows
+          filter: (or (not (validate/required @config.parentField)) (= (object/get @entity @config.parentField) (default ?id "")))
         })
         (render-ui main { type: skeleton, variant: card })
       CLOSE_CARD -> loading
@@ -337,6 +349,7 @@ orbital BoardOrbital {
           emit: { failure: BoardItemsLoadFailed, success: BoardItemsLoaded }
           include: @config.include
           limit: @config.maxRows
+          filter: (or (not (validate/required @config.parentField)) (= (object/get @entity @config.parentField) @entity.boardParentId))
         })
         (render-ui main { type: skeleton, variant: card })
       MOVE_CARD -> loading
@@ -355,10 +368,12 @@ orbital BoardOrbital {
 
     state adding {
       INIT -> loading
+        (set @entity.boardParentId (default ?id ""))
         (fetch BoardView {
           emit: { failure: BoardItemsLoadFailed, success: BoardItemsLoaded }
           include: @config.include
           limit: @config.maxRows
+          filter: (or (not (validate/required @config.parentField)) (= (object/get @entity @config.parentField) (default ?id "")))
         })
         (render-ui main { type: skeleton, variant: card })
       SAVE_CARD -> loading
@@ -479,6 +494,11 @@ orbital BoardOrbital {
     }
 
     listens {
+      INIT {
+        id : string
+      }
+        @description "The page mounted; on a detail page the route's :id arrives here."
+        @tier "internal"
       OPEN_CARD {
         id : string!
         row : BoardView!
@@ -601,6 +621,11 @@ orbital BoardOrbital {
     }
 
     config {
+      parentField : field @entity
+        @label "Which field ties these rows to the page's record?"
+        @description "For a related view on a detail page (a project's tasks, a client's events): name the field that holds the parent record's id. The view then loads and refetches only rows whose that field equals the page's :id. Left blank it is not scoped, which is the default. A scoped view refreshes through REFETCH_PAGE, which keeps the page's id; re-sending INIT would re-scope it to whatever id that payload carries."
+        @synonyms "parent field, related list, child records, belongs to, scope to page record, detail tab view"
+        @tier "policy"
       showHeader : boolean = true
         @label "Show the board's own title row?"
         @description "Off when the page already carries a page header naming the same thing, so the page shows one title."

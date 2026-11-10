@@ -32,6 +32,7 @@ orbital BrowseItemOrbital {
     createdAt : string
     browsePage : number @intrinsic @description "The page the list shows." = 1
     browseTotalCount : number @intrinsic @description "Rows the list's filter matches, across every page." = 0
+    browseParentId : string @intrinsic @description "The detail page's :id the list is scoped to when parentField is set." = ""
   }
 
   uses Typography from "std/behaviors/ui-typography"
@@ -72,9 +73,10 @@ orbital BrowseItemOrbital {
     state loading {
       INIT -> loading
         (set @entity.browsePage 1)
+        (set @entity.browseParentId (default ?id ""))
         (fetch BrowseItem {
           emit: { failure: BrowseItemLoadFailed, success: BrowseItemLoaded }
-          filter: (and (or (not (validate/required @config.scopeField)) (= (object/get @entity @config.scopeField) @user.id)) (or (not (validate/required @config.initialFilterField)) (= (object/get @entity @config.initialFilterField) @config.initialFilterValue)))
+          filter: (and (or (not (validate/required @config.parentField)) (= (object/get @entity @config.parentField) (default ?id ""))) (and (or (not (validate/required @config.scopeField)) (= (object/get @entity @config.scopeField) @user.id)) (or (not (validate/required @config.initialFilterField)) (= (object/get @entity @config.initialFilterField) @config.initialFilterValue))))
           include: @config.include
           limit: @config.pageSize
           orderBy: @config.orderBy
@@ -120,9 +122,10 @@ orbital BrowseItemOrbital {
       ;; paint it; `browsing` is only reachable after a successful load.
       INIT -> loading
         (set @entity.browsePage 1)
+        (set @entity.browseParentId (default ?id ""))
         (fetch BrowseItem {
           emit: { failure: BrowseItemLoadFailed, success: BrowseItemLoaded }
-          filter: (and (or (not (validate/required @config.scopeField)) (= (object/get @entity @config.scopeField) @user.id)) (or (not (validate/required @config.initialFilterField)) (= (object/get @entity @config.initialFilterField) @config.initialFilterValue)))
+          filter: (and (or (not (validate/required @config.parentField)) (= (object/get @entity @config.parentField) (default ?id ""))) (and (or (not (validate/required @config.scopeField)) (= (object/get @entity @config.scopeField) @user.id)) (or (not (validate/required @config.initialFilterField)) (= (object/get @entity @config.initialFilterField) @config.initialFilterValue))))
           include: @config.include
           limit: @config.pageSize
           orderBy: @config.orderBy
@@ -139,7 +142,7 @@ orbital BrowseItemOrbital {
         (fetch BrowseItem {
           emit: { failure: BrowseItemLoadFailed, success: BrowseItemLoaded }
           ;; no search field means nothing matches the term
-          filter: (and (or (not (validate/required @config.scopeField)) (= (object/get @entity @config.scopeField) @user.id)) (or (= ?searchTerm "") (if (= @config.searchField null) false (str/includes (default (object/get @entity @config.searchField) "") ?searchTerm))))
+          filter: (and (or (not (validate/required @config.parentField)) (= (object/get @entity @config.parentField) @entity.browseParentId)) (and (or (not (validate/required @config.scopeField)) (= (object/get @entity @config.scopeField) @user.id)) (or (= ?searchTerm "") (if (= @config.searchField null) false (str/includes (default (object/get @entity @config.searchField) "") ?searchTerm)))))
           include: @config.include
           limit: @config.pageSize
           orderBy: @config.orderBy
@@ -154,7 +157,7 @@ orbital BrowseItemOrbital {
         (set @entity.browsePage 1)
         (fetch BrowseItem {
           emit: { failure: BrowseItemLoadFailed, success: BrowseItemLoaded }
-          filter: (and (or (not (validate/required @config.scopeField)) (= (object/get @entity @config.scopeField) @user.id)) (if (not (validate/required @config.searchRelation)) false (array/includes (array/map ?data (fn r (object/get @r id))) (object/get @entity @config.searchRelation))))
+          filter: (and (or (not (validate/required @config.parentField)) (= (object/get @entity @config.parentField) @entity.browseParentId)) (and (or (not (validate/required @config.scopeField)) (= (object/get @entity @config.scopeField) @user.id)) (if (not (validate/required @config.searchRelation)) false (array/includes (array/map ?data (fn r (object/get @r id))) (object/get @entity @config.searchRelation)))))
           include: @config.include
           limit: @config.pageSize
           orderBy: @config.orderBy
@@ -164,7 +167,7 @@ orbital BrowseItemOrbital {
         (set @entity.browsePage 1)
         (fetch BrowseItem {
           emit: { failure: BrowseItemLoadFailed, success: BrowseItemLoaded }
-          filter: (and (or (not (validate/required @config.scopeField)) (= (object/get @entity @config.scopeField) @user.id)) (or (= ?value "") (= (object/get @entity ?field) ?value)))
+          filter: (and (or (not (validate/required @config.parentField)) (= (object/get @entity @config.parentField) @entity.browseParentId)) (and (or (not (validate/required @config.scopeField)) (= (object/get @entity @config.scopeField) @user.id)) (or (= ?value "") (= (object/get @entity ?field) ?value))))
           include: @config.include
           limit: @config.pageSize
           orderBy: @config.orderBy
@@ -174,7 +177,7 @@ orbital BrowseItemOrbital {
         (set @entity.browsePage ?page)
         (fetch BrowseItem {
           emit: { failure: BrowseItemLoadFailed, success: BrowseItemLoaded }
-          filter: (or (not (validate/required @config.scopeField)) (= (object/get @entity @config.scopeField) @user.id))
+          filter: (and (or (not (validate/required @config.parentField)) (= (object/get @entity @config.parentField) @entity.browseParentId)) (or (not (validate/required @config.scopeField)) (= (object/get @entity @config.scopeField) @user.id)))
           include: @config.include
           limit: @config.pageSize
           orderBy: @config.orderBy
@@ -232,9 +235,10 @@ orbital BrowseItemOrbital {
     state error {
       INIT -> loading
         (set @entity.browsePage 1)
+        (set @entity.browseParentId (default ?id ""))
         (fetch BrowseItem {
           emit: { failure: BrowseItemLoadFailed, success: BrowseItemLoaded }
-          filter: (and (or (not (validate/required @config.scopeField)) (= (object/get @entity @config.scopeField) @user.id)) (or (not (validate/required @config.initialFilterField)) (= (object/get @entity @config.initialFilterField) @config.initialFilterValue)))
+          filter: (and (or (not (validate/required @config.parentField)) (= (object/get @entity @config.parentField) (default ?id ""))) (and (or (not (validate/required @config.scopeField)) (= (object/get @entity @config.scopeField) @user.id)) (or (not (validate/required @config.initialFilterField)) (= (object/get @entity @config.initialFilterField) @config.initialFilterValue))))
           include: @config.include
           limit: @config.pageSize
           orderBy: @config.orderBy
@@ -284,6 +288,11 @@ orbital BrowseItemOrbital {
     }
 
     listens {
+      INIT {
+        id : string
+      }
+        @description "The page mounted; on a detail page the route's :id arrives here."
+        @tier "internal"
       REFETCH_QUERY {
         searchTerm : string!
       }
@@ -407,6 +416,11 @@ orbital BrowseItemOrbital {
         @label "What value does the first load filter for?"
         @description "The value initialFilterField must equal on the first load. Blank is meaningful: it matches only records whose field is itself blank, which for a detail pane is normally none — that is how a thread stays empty until its parent is selected."
         @synonyms "initial filter value, first load value, default selection"
+        @tier "policy"
+      parentField : field @entity
+        @label "Which field ties these rows to the page's record?"
+        @description "For a related list on a detail page (a project's tasks, a client's invoices): name the field that holds the parent record's id. The list then loads, searches, filters and pages only rows whose that field equals the page's :id. Left blank the list is not scoped, which is the default. A scoped view refreshes through REFETCH_PAGE, which keeps the page's id; re-sending INIT would re-scope it to whatever id that payload carries."
+        @synonyms "parent field, related list, child records, belongs to, scope to page record, detail tab list"
         @tier "policy"
       selectable : boolean = false
         @label "Show row selection checkboxes?"

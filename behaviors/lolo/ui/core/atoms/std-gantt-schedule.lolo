@@ -5,27 +5,30 @@ app std-gantt-schedule [
 type GanttLinkSpec = { from : string!, to : string! }
 orbital GanttScheduleOrbital {
   type BarColor = "default" | "primary" | "secondary" | "success" | "warning" | "danger" | "error" | "info" | "neutral" | "destructive"
-    type TaskLoaded = Event { data : [Task] } "Fired when Task finishes loading; payload.data holds the tasks"
+    type TaskLoaded = Event { data : [GanttItem] } "Fired when GanttItem finishes loading; payload.data holds the tasks"
 
-    type TaskLoadFailed = Event { error : string, code : string } "Fired when Task fails to load"
+    type TaskLoadFailed = Event { error : string, code : string } "Fired when GanttItem fails to load"
 
-  entity Task [runtime] {
+  entity GanttItem [runtime] {
     id : string!
     title : string @description "task label shown on the bar" @synonyms "name, label, summary, subject" = ""
     start : datetime @description "task start timestamp the bar is placed from" @synonyms "starts, begins, start date, from"
     end : datetime @description "task end timestamp the bar is placed to; when absent, duration days are used" @synonyms "finish, due, end date, until"
     status : "pending" | "active" | "complete" | "blocked" @description "task lifecycle status, drives bar colour" @synonyms "state, stage, phase" = pending
     group : string @description "group/section the task renders under a header row for" @synonyms "team, swimlane, section, project" = ""
+    ganttParentId : string @intrinsic @description "The detail page's :id the list is scoped to when parentField is set." = ""
   }
 
-  trait TaskGanttSchedule -> @rebindable Task [optimistic] {
+  trait TaskGanttSchedule -> @rebindable GanttItem [optimistic] {
     initial: loading
 
     state loading {
       INIT -> loading
-        (fetch Task {
+        (set @entity.ganttParentId (default ?id ""))
+        (fetch GanttItem {
           emit: { failure: TaskLoadFailed, success: TaskLoaded }
           include: @config.include
+          filter: (or (not (validate/required @config.parentField)) (= (object/get @entity @config.parentField) (default ?id "")))
         })
         (render-ui main {
           type: stack
@@ -99,23 +102,11 @@ orbital GanttScheduleOrbital {
 
     state chart {
       INIT -> loading
-        (fetch Task {
+        (set @entity.ganttParentId (default ?id ""))
+        (fetch GanttItem {
           emit: { failure: TaskLoadFailed, success: TaskLoaded }
           include: @config.include
-        })
-        (render-ui main {
-          type: stack
-          direction: vertical
-          gap: lg
-          children: [{ type: skeleton, variant: header }, { type: skeleton, variant: card }]
-        })
-    }
-
-    state error {
-      INIT -> loading
-        (fetch Task {
-          emit: { failure: TaskLoadFailed, success: TaskLoaded }
-          include: @config.include
+          filter: (or (not (validate/required @config.parentField)) (= (object/get @entity @config.parentField) (default ?id "")))
         })
         (render-ui main {
           type: stack
@@ -124,9 +115,32 @@ orbital GanttScheduleOrbital {
           children: [{ type: skeleton, variant: header }, { type: skeleton, variant: card }]
         })
       RETRY -> loading
-        (fetch Task {
+        (fetch GanttItem {
           emit: { failure: TaskLoadFailed, success: TaskLoaded }
           include: @config.include
+          filter: (or (not (validate/required @config.parentField)) (= (object/get @entity @config.parentField) @entity.ganttParentId))
+        })
+    }
+
+    state error {
+      INIT -> loading
+        (set @entity.ganttParentId (default ?id ""))
+        (fetch GanttItem {
+          emit: { failure: TaskLoadFailed, success: TaskLoaded }
+          include: @config.include
+          filter: (or (not (validate/required @config.parentField)) (= (object/get @entity @config.parentField) (default ?id "")))
+        })
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: lg
+          children: [{ type: skeleton, variant: header }, { type: skeleton, variant: card }]
+        })
+      RETRY -> loading
+        (fetch GanttItem {
+          emit: { failure: TaskLoadFailed, success: TaskLoaded }
+          include: @config.include
+          filter: (or (not (validate/required @config.parentField)) (= (object/get @entity @config.parentField) @entity.ganttParentId))
         })
         (render-ui main {
           type: stack
@@ -152,7 +166,20 @@ orbital GanttScheduleOrbital {
         @tier "presentation"
     }
 
+    listens {
+      INIT {
+        id : string
+      }
+        @description "The page mounted; on a detail page the route's :id arrives here."
+        @tier "internal"
+    }
+
     config {
+      parentField : field @entity
+        @label "Which field ties these rows to the page's record?"
+        @description "For a related view on a detail page (a project's tasks, a client's events): name the field that holds the parent record's id. The view then loads and refetches only rows whose that field equals the page's :id. Left blank it is not scoped, which is the default. A scoped view refreshes through RETRY, which keeps the page's id; re-sending INIT would re-scope it to whatever id that payload carries."
+        @synonyms "parent field, related list, child records, belongs to, scope to page record, detail tab view"
+        @tier "policy"
       title : string = "Schedule"
         @label "Title"
         @description "Header text shown above the gantt chart."
@@ -162,12 +189,12 @@ orbital GanttScheduleOrbital {
         @description "Row column holding the bar label. Rebound hosts point this at their own column (e.g. name, summary)."
         @synonyms "title field, label column, name field"
         @tier "presentation"
-      startField : field @entity datetime = start
+      startField : field @entity date | datetime = start
         @label "Start field"
         @description "Row column holding the start timestamp each bar is placed from (e.g. startTime, startsAt, beginsAt)."
         @synonyms "start column, from field, begin field"
         @tier "presentation"
-      endField : field @entity datetime = end
+      endField : field @entity date | datetime = end
         @label "End field"
         @description "Row column holding the end timestamp each bar is placed to. When a row has no end, durationField (days) is used instead."
         @synonyms "end column, due field, finish field"

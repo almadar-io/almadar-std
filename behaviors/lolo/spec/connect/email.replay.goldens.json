@@ -357,6 +357,271 @@
    "config": {
     "vendor": "resend"
    }
+  },
+  {
+   "id": "resend-one-pdf-attachment-rides-the-body-as-base64",
+   "defaults": [
+    "EmailSender",
+    "EmailSendgridHttp",
+    "EmailResendHttp",
+    "EmailTimeout"
+   ],
+   "steps": [
+    {
+     "event": "EMAIL_SEND",
+     "payload": {
+      "to": "ada@example.com",
+      "subject": "Hi",
+      "body": "Hello",
+      "attachments": [
+       {
+        "filename": "a.pdf",
+        "contentType": "application/pdf",
+        "content": "JVBERi0xLjQ="
+       }
+      ]
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "EMAIL_HTTP_SEND",
+        "payload": {
+         "key": "resend",
+         "body": "eyJmcm9tIjoibm9yZXBseUBleGFtcGxlLmNvbSIsImh0bWwiOiJIZWxsbyIsImF0dGFjaG1lbnRzIjpbeyJmaWxlbmFtZSI6ImEucGRmIiwiY29udGVudCI6IkpWQkVSaTB4TGpRPSIsImNvbnRlbnRfdHlwZSI6ImFwcGxpY2F0aW9uL3BkZiJ9XSwic3ViamVjdCI6IkhpIiwidG8iOiJhZGFAZXhhbXBsZS5jb20ifQ=="
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "vendor": "resend"
+   }
+  },
+  {
+   "id": "resend-without-attachments-body-is-unchanged",
+   "defaults": [
+    "EmailSender",
+    "EmailSendgridHttp",
+    "EmailResendHttp",
+    "EmailTimeout"
+   ],
+   "steps": [
+    {
+     "event": "EMAIL_SEND",
+     "payload": {
+      "to": "ada@example.com",
+      "subject": "Hi",
+      "body": "Hello"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "EMAIL_HTTP_SEND",
+        "payload": {
+         "key": "resend",
+         "body": "eyJmcm9tIjoibm9yZXBseUBleGFtcGxlLmNvbSIsImh0bWwiOiJIZWxsbyIsInN1YmplY3QiOiJIaSIsInRvIjoiYWRhQGV4YW1wbGUuY29tIn0="
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "vendor": "resend"
+   }
+  },
+  {
+   "id": "resend-two-attachments-keep-order",
+   "defaults": [
+    "EmailSender",
+    "EmailSendgridHttp",
+    "EmailResendHttp",
+    "EmailTimeout"
+   ],
+   "steps": [
+    {
+     "event": "EMAIL_SEND",
+     "payload": {
+      "to": "ada@example.com",
+      "subject": "Hi",
+      "body": "Hello",
+      "attachments": [
+       {
+        "filename": "a.pdf",
+        "contentType": "application/pdf",
+        "content": "JVBERi0xLjQ="
+       },
+       {
+        "filename": "b.txt",
+        "contentType": "text/plain",
+        "content": "aGVsbG8="
+       }
+      ]
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "EMAIL_HTTP_SEND",
+        "payload": {
+         "key": "resend",
+         "body": "eyJmcm9tIjoibm9yZXBseUBleGFtcGxlLmNvbSIsImh0bWwiOiJIZWxsbyIsImF0dGFjaG1lbnRzIjpbeyJmaWxlbmFtZSI6ImEucGRmIiwiY29udGVudCI6IkpWQkVSaTB4TGpRPSIsImNvbnRlbnRfdHlwZSI6ImFwcGxpY2F0aW9uL3BkZiJ9LHsiZmlsZW5hbWUiOiJiLnR4dCIsImNvbnRlbnQiOiJhR1ZzYkc4PSIsImNvbnRlbnRfdHlwZSI6InRleHQvcGxhaW4ifV0sInN1YmplY3QiOiJIaSIsInRvIjoiYWRhQGV4YW1wbGUuY29tIn0="
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "vendor": "resend"
+   }
+  },
+  {
+   "id": "sendgrid-one-attachment-carries-type-and-disposition",
+   "defaults": [
+    "EmailSender",
+    "EmailSendgridHttp",
+    "EmailResendHttp",
+    "EmailTimeout"
+   ],
+   "steps": [
+    {
+     "event": "EMAIL_SEND",
+     "payload": {
+      "to": "ada@example.com",
+      "subject": "Hi",
+      "body": "Hello",
+      "attachments": [
+       {
+        "filename": "a.pdf",
+        "contentType": "application/pdf",
+        "content": "JVBERi0xLjQ="
+       }
+      ]
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "EMAIL_HTTP_SEND",
+        "payload": {
+         "key": "sendgrid",
+         "body": "eyJmcm9tIjp7ImVtYWlsIjoibm9yZXBseUBleGFtcGxlLmNvbSJ9LCJzdWJqZWN0IjoiSGkiLCJwZXJzb25hbGl6YXRpb25zIjpbeyJ0byI6W3siZW1haWwiOiJhZGFAZXhhbXBsZS5jb20ifV19XSwiY29udGVudCI6W3sidmFsdWUiOiJIZWxsbyIsInR5cGUiOiJ0ZXh0L2h0bWwifV0sImF0dGFjaG1lbnRzIjpbeyJmaWxlbmFtZSI6ImEucGRmIiwidHlwZSI6ImFwcGxpY2F0aW9uL3BkZiIsImNvbnRlbnQiOiJKVkJFUmkweExqUT0iLCJkaXNwb3NpdGlvbiI6ImF0dGFjaG1lbnQifV19"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "sendgrid-without-attachments-body-is-unchanged",
+   "defaults": [
+    "EmailSender",
+    "EmailSendgridHttp",
+    "EmailResendHttp",
+    "EmailTimeout"
+   ],
+   "steps": [
+    {
+     "event": "EMAIL_SEND",
+     "payload": {
+      "to": "ada@example.com",
+      "subject": "Hi",
+      "body": "Hello"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "EMAIL_HTTP_SEND",
+        "payload": {
+         "key": "sendgrid",
+         "body": "eyJmcm9tIjp7ImVtYWlsIjoibm9yZXBseUBleGFtcGxlLmNvbSJ9LCJzdWJqZWN0IjoiSGkiLCJwZXJzb25hbGl6YXRpb25zIjpbeyJ0byI6W3siZW1haWwiOiJhZGFAZXhhbXBsZS5jb20ifV19XSwiY29udGVudCI6W3sidmFsdWUiOiJIZWxsbyIsInR5cGUiOiJ0ZXh0L2h0bWwifV19"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "sendgrid-empty-attachments-body-is-unchanged",
+   "defaults": [
+    "EmailSender",
+    "EmailSendgridHttp",
+    "EmailResendHttp",
+    "EmailTimeout"
+   ],
+   "steps": [
+    {
+     "event": "EMAIL_SEND",
+     "payload": {
+      "to": "ada@example.com",
+      "subject": "Hi",
+      "body": "Hello",
+      "attachments": []
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "EMAIL_HTTP_SEND",
+        "payload": {
+         "key": "sendgrid",
+         "body": "eyJmcm9tIjp7ImVtYWlsIjoibm9yZXBseUBleGFtcGxlLmNvbSJ9LCJzdWJqZWN0IjoiSGkiLCJwZXJzb25hbGl6YXRpb25zIjpbeyJ0byI6W3siZW1haWwiOiJhZGFAZXhhbXBsZS5jb20ifV19XSwiY29udGVudCI6W3sidmFsdWUiOiJIZWxsbyIsInR5cGUiOiJ0ZXh0L2h0bWwifV19"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "sendgrid-two-attachments-keep-order",
+   "defaults": [
+    "EmailSender",
+    "EmailSendgridHttp",
+    "EmailResendHttp",
+    "EmailTimeout"
+   ],
+   "steps": [
+    {
+     "event": "EMAIL_SEND",
+     "payload": {
+      "to": "ada@example.com",
+      "subject": "Hi",
+      "body": "Hello",
+      "attachments": [
+       {
+        "filename": "a.pdf",
+        "contentType": "application/pdf",
+        "content": "JVBERi0xLjQ="
+       },
+       {
+        "filename": "b.txt",
+        "contentType": "text/plain",
+        "content": "aGVsbG8="
+       }
+      ]
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "EMAIL_HTTP_SEND",
+        "payload": {
+         "key": "sendgrid",
+         "body": "eyJmcm9tIjp7ImVtYWlsIjoibm9yZXBseUBleGFtcGxlLmNvbSJ9LCJzdWJqZWN0IjoiSGkiLCJwZXJzb25hbGl6YXRpb25zIjpbeyJ0byI6W3siZW1haWwiOiJhZGFAZXhhbXBsZS5jb20ifV19XSwiY29udGVudCI6W3sidmFsdWUiOiJIZWxsbyIsInR5cGUiOiJ0ZXh0L2h0bWwifV0sImF0dGFjaG1lbnRzIjpbeyJmaWxlbmFtZSI6ImEucGRmIiwidHlwZSI6ImFwcGxpY2F0aW9uL3BkZiIsImNvbnRlbnQiOiJKVkJFUmkweExqUT0iLCJkaXNwb3NpdGlvbiI6ImF0dGFjaG1lbnQifSx7ImZpbGVuYW1lIjoiYi50eHQiLCJ0eXBlIjoidGV4dC9wbGFpbiIsImNvbnRlbnQiOiJhR1ZzYkc4PSIsImRpc3Bvc2l0aW9uIjoiYXR0YWNobWVudCJ9XX0="
+        }
+       }
+      ]
+     }
+    }
+   ]
   }
  ]
 }

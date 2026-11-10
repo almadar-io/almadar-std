@@ -1,0 +1,689 @@
+{
+ "atom": "flow/atoms/std-queue.lolo",
+ "trait": "QueueConsumer",
+ "note": "maxAttempts bounds takeovers; the fetch and persist answers are host answers played as steps",
+ "cases": [
+  {
+   "id": "takeover-beyond-max-attempts-gives-up-then-queue-empty",
+   "now": 1700000000000,
+   "config": {
+    "maxAttempts": 3
+   },
+   "steps": [
+    {
+     "event": "DEQUEUE",
+     "payload": {
+      "queue": "q"
+     }
+    },
+    {
+     "event": "DeqTopLoaded",
+     "payload": {
+      "data": [
+       {
+        "id": "j1",
+        "queue": "q",
+        "priority": 0,
+        "status": "processing",
+        "enqueuedAt": "2023-11-14T22:13:19Z",
+        "availableAt": "2023-11-14T22:13:19Z",
+        "attempts": 3,
+        "leaseExpiresAt": "2023-11-14T22:13:19Z"
+       }
+      ]
+     }
+    },
+    {
+     "event": "DeqCandLoaded",
+     "payload": {
+      "data": [
+       {
+        "id": "j1",
+        "queue": "q",
+        "priority": 0,
+        "status": "processing",
+        "enqueuedAt": "2023-11-14T22:13:19Z",
+        "availableAt": "2023-11-14T22:13:19Z",
+        "attempts": 3,
+        "leaseExpiresAt": "2023-11-14T22:13:19Z"
+       }
+      ]
+     },
+     "expect": {
+      "effects": [
+       {
+        "type": "persist"
+       }
+      ],
+      "neverEmits": [
+       "JOB_DEQUEUED"
+      ]
+     }
+    },
+    {
+     "event": "DeqGaveUpClaimed",
+     "payload": {
+      "id": "j1:4"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "JOB_GAVE_UP",
+        "payload": {
+         "jobId": "j1",
+         "attempts": 3
+        }
+       },
+       {
+        "event": "QUEUE_EMPTY",
+        "payload": {
+         "queue": "q"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "give-up-continues-to-the-next-eligible-job",
+   "now": 1700000000000,
+   "config": {
+    "maxAttempts": 3
+   },
+   "steps": [
+    {
+     "event": "DEQUEUE",
+     "payload": {
+      "queue": "q"
+     }
+    },
+    {
+     "event": "DeqTopLoaded",
+     "payload": {
+      "data": [
+       {
+        "id": "j1",
+        "queue": "q",
+        "priority": 0,
+        "status": "processing",
+        "enqueuedAt": "2023-11-14T22:13:19Z",
+        "availableAt": "2023-11-14T22:13:19Z",
+        "attempts": 3,
+        "leaseExpiresAt": "2023-11-14T22:13:19Z"
+       }
+      ]
+     }
+    },
+    {
+     "event": "DeqCandLoaded",
+     "payload": {
+      "data": [
+       {
+        "id": "j1",
+        "queue": "q",
+        "priority": 0,
+        "status": "processing",
+        "enqueuedAt": "2023-11-14T22:13:19Z",
+        "availableAt": "2023-11-14T22:13:19Z",
+        "attempts": 3,
+        "leaseExpiresAt": "2023-11-14T22:13:19Z"
+       }
+      ]
+     },
+     "expect": {
+      "effects": [
+       {
+        "type": "persist"
+       }
+      ]
+     }
+    },
+    {
+     "event": "DeqGaveUpClaimed",
+     "payload": {
+      "id": "j1:4"
+     }
+    },
+    {
+     "event": "DeqGaveUp",
+     "payload": {
+      "id": "j1",
+      "attempts": 3
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "JOB_GAVE_UP",
+        "payload": {
+         "jobId": "j1",
+         "attempts": 3
+        }
+       }
+      ],
+      "effects": [
+       {
+        "type": "fetch"
+       }
+      ]
+     }
+    },
+    {
+     "event": "DeqTopLoaded",
+     "payload": {
+      "data": [
+       {
+        "id": "j2",
+        "queue": "q",
+        "priority": 0,
+        "status": "pending",
+        "enqueuedAt": "2023-11-14T22:13:19Z",
+        "availableAt": "2023-11-14T22:13:19Z",
+        "attempts": 0,
+        "leaseExpiresAt": "2023-11-14T22:13:19Z"
+       }
+      ]
+     },
+     "expect": {
+      "effects": [
+       {
+        "type": "fetch"
+       }
+      ]
+     }
+    },
+    {
+     "event": "DeqCandLoaded",
+     "payload": {
+      "data": [
+       {
+        "id": "j2",
+        "queue": "q",
+        "priority": 0,
+        "status": "pending",
+        "enqueuedAt": "2023-11-14T22:13:19Z",
+        "availableAt": "2023-11-14T22:13:19Z",
+        "attempts": 0,
+        "leaseExpiresAt": "2023-11-14T22:13:19Z"
+       }
+      ]
+     },
+     "expect": {
+      "effects": [
+       {
+        "type": "persist"
+       }
+      ],
+      "neverEmits": [
+       "JOB_GAVE_UP"
+      ]
+     }
+    },
+    {
+     "event": "DeqClaimed",
+     "payload": {
+      "id": "j2"
+     }
+    },
+    {
+     "event": "DeqMarked",
+     "payload": {
+      "id": "j2",
+      "attempts": 1,
+      "leaseExpiresAt": "2023-11-14T22:14:20Z"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "JOB_DEQUEUED",
+        "payload": {
+         "attempt": 1
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "give-up-slot-lost-to-a-late-settle-is-not-reported",
+   "now": 1700000000000,
+   "config": {
+    "maxAttempts": 3
+   },
+   "steps": [
+    {
+     "event": "DEQUEUE",
+     "payload": {
+      "queue": "q"
+     }
+    },
+    {
+     "event": "DeqTopLoaded",
+     "payload": {
+      "data": [
+       {
+        "id": "j1",
+        "queue": "q",
+        "priority": 0,
+        "status": "processing",
+        "enqueuedAt": "2023-11-14T22:13:19Z",
+        "availableAt": "2023-11-14T22:13:19Z",
+        "attempts": 3,
+        "leaseExpiresAt": "2023-11-14T22:13:19Z"
+       }
+      ]
+     }
+    },
+    {
+     "event": "DeqCandLoaded",
+     "payload": {
+      "data": [
+       {
+        "id": "j1",
+        "queue": "q",
+        "priority": 0,
+        "status": "processing",
+        "enqueuedAt": "2023-11-14T22:13:19Z",
+        "availableAt": "2023-11-14T22:13:19Z",
+        "attempts": 3,
+        "leaseExpiresAt": "2023-11-14T22:13:19Z"
+       }
+      ]
+     },
+     "expect": {
+      "effects": [
+       {
+        "type": "persist"
+       }
+      ]
+     }
+    },
+    {
+     "event": "DeqFailed",
+     "payload": {
+      "code": "duplicate-id",
+      "error": "taken"
+     },
+     "expect": {
+      "effects": [
+       {
+        "type": "fetch"
+       }
+      ]
+     }
+    },
+    {
+     "event": "DeqSlotLoaded",
+     "payload": {
+      "data": [
+       {
+        "id": "j1:4",
+        "jobId": "j1",
+        "attempt": 4,
+        "kind": "completed",
+        "text": "done"
+       }
+      ]
+     },
+     "expect": {
+      "effects": [
+       {
+        "type": "persist"
+       }
+      ],
+      "neverEmits": [
+       "JOB_GAVE_UP"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-max-attempts-0-still-takes-over",
+   "now": 1700000000000,
+   "config": {
+    "maxAttempts": 0
+   },
+   "steps": [
+    {
+     "event": "DEQUEUE",
+     "payload": {
+      "queue": "q"
+     }
+    },
+    {
+     "event": "DeqTopLoaded",
+     "payload": {
+      "data": [
+       {
+        "id": "j1",
+        "queue": "q",
+        "priority": 0,
+        "status": "processing",
+        "enqueuedAt": "2023-11-14T22:13:19Z",
+        "availableAt": "2023-11-14T22:13:19Z",
+        "attempts": 3,
+        "leaseExpiresAt": "2023-11-14T22:13:19Z"
+       }
+      ]
+     }
+    },
+    {
+     "event": "DeqCandLoaded",
+     "payload": {
+      "data": [
+       {
+        "id": "j1",
+        "queue": "q",
+        "priority": 0,
+        "status": "processing",
+        "enqueuedAt": "2023-11-14T22:13:19Z",
+        "availableAt": "2023-11-14T22:13:19Z",
+        "attempts": 3,
+        "leaseExpiresAt": "2023-11-14T22:13:19Z"
+       }
+      ]
+     },
+     "expect": {
+      "effects": [
+       {
+        "type": "persist"
+       }
+      ],
+      "neverEmits": [
+       "JOB_GAVE_UP"
+      ]
+     }
+    },
+    {
+     "event": "DeqClaimed",
+     "payload": {
+      "id": "j1"
+     }
+    },
+    {
+     "event": "DeqMarked",
+     "payload": {
+      "id": "j1",
+      "attempts": 4,
+      "leaseExpiresAt": "2023-11-14T22:14:20Z"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "JOB_DEQUEUED",
+        "payload": {
+         "attempt": 4
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-takeover-below-max-attempts-still-leases",
+   "now": 1700000000000,
+   "config": {
+    "maxAttempts": 3
+   },
+   "steps": [
+    {
+     "event": "DEQUEUE",
+     "payload": {
+      "queue": "q"
+     }
+    },
+    {
+     "event": "DeqTopLoaded",
+     "payload": {
+      "data": [
+       {
+        "id": "j1",
+        "queue": "q",
+        "priority": 0,
+        "status": "processing",
+        "enqueuedAt": "2023-11-14T22:13:19Z",
+        "availableAt": "2023-11-14T22:13:19Z",
+        "attempts": 2,
+        "leaseExpiresAt": "2023-11-14T22:13:19Z"
+       }
+      ]
+     }
+    },
+    {
+     "event": "DeqCandLoaded",
+     "payload": {
+      "data": [
+       {
+        "id": "j1",
+        "queue": "q",
+        "priority": 0,
+        "status": "processing",
+        "enqueuedAt": "2023-11-14T22:13:19Z",
+        "availableAt": "2023-11-14T22:13:19Z",
+        "attempts": 2,
+        "leaseExpiresAt": "2023-11-14T22:13:19Z"
+       }
+      ]
+     },
+     "expect": {
+      "effects": [
+       {
+        "type": "persist"
+       }
+      ],
+      "neverEmits": [
+       "JOB_GAVE_UP"
+      ]
+     }
+    },
+    {
+     "event": "DeqClaimed",
+     "payload": {
+      "id": "j1"
+     }
+    },
+    {
+     "event": "DeqMarked",
+     "payload": {
+      "id": "j1",
+      "attempts": 3,
+      "leaseExpiresAt": "2023-11-14T22:14:20Z"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "JOB_DEQUEUED",
+        "payload": {
+         "attempt": 3
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-fresh-pending-job-leases-even-when-max-attempts-is-1",
+   "now": 1700000000000,
+   "config": {
+    "maxAttempts": 1
+   },
+   "steps": [
+    {
+     "event": "DEQUEUE",
+     "payload": {
+      "queue": "q"
+     }
+    },
+    {
+     "event": "DeqTopLoaded",
+     "payload": {
+      "data": [
+       {
+        "id": "j1",
+        "queue": "q",
+        "priority": 0,
+        "status": "pending",
+        "enqueuedAt": "2023-11-14T22:13:19Z",
+        "availableAt": "2023-11-14T22:13:19Z",
+        "attempts": 0,
+        "leaseExpiresAt": "2023-11-14T22:13:19Z"
+       }
+      ]
+     }
+    },
+    {
+     "event": "DeqCandLoaded",
+     "payload": {
+      "data": [
+       {
+        "id": "j1",
+        "queue": "q",
+        "priority": 0,
+        "status": "pending",
+        "enqueuedAt": "2023-11-14T22:13:19Z",
+        "availableAt": "2023-11-14T22:13:19Z",
+        "attempts": 0,
+        "leaseExpiresAt": "2023-11-14T22:13:19Z"
+       }
+      ]
+     },
+     "expect": {
+      "effects": [
+       {
+        "type": "persist"
+       }
+      ],
+      "neverEmits": [
+       "JOB_GAVE_UP"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "slot-takeover-beyond-max-attempts-writes-failed-claim",
+   "now": 1700000000000,
+   "config": {
+    "maxAttempts": 2
+   },
+   "steps": [
+    {
+     "event": "DEQUEUE",
+     "payload": {
+      "queue": "q"
+     }
+    },
+    {
+     "event": "DeqTopLoaded",
+     "payload": {
+      "data": [
+       {
+        "id": "j1",
+        "queue": "q",
+        "priority": 0,
+        "status": "pending",
+        "enqueuedAt": "2023-11-14T22:13:19Z",
+        "availableAt": "2023-11-14T22:13:19Z",
+        "attempts": 0,
+        "leaseExpiresAt": "2023-11-14T22:13:19Z"
+       }
+      ]
+     }
+    },
+    {
+     "event": "DeqCandLoaded",
+     "payload": {
+      "data": [
+       {
+        "id": "j1",
+        "queue": "q",
+        "priority": 0,
+        "status": "pending",
+        "enqueuedAt": "2023-11-14T22:13:19Z",
+        "availableAt": "2023-11-14T22:13:19Z",
+        "attempts": 0,
+        "leaseExpiresAt": "2023-11-14T22:13:19Z"
+       }
+      ]
+     },
+     "expect": {
+      "effects": [
+       {
+        "type": "persist"
+       }
+      ]
+     }
+    },
+    {
+     "event": "DeqFailed",
+     "payload": {
+      "code": "duplicate-id",
+      "error": "taken"
+     }
+    },
+    {
+     "event": "DeqSlotLoaded",
+     "payload": {
+      "data": [
+       {
+        "id": "j1:1",
+        "jobId": "j1",
+        "attempt": 1,
+        "kind": "worker",
+        "leaseExpiresAt": "2023-11-14T22:13:19Z"
+       }
+      ]
+     },
+     "expect": {
+      "effects": [
+       {
+        "type": "persist"
+       }
+      ],
+      "neverEmits": [
+       "JOB_GAVE_UP"
+      ]
+     }
+    },
+    {
+     "event": "DeqFailed",
+     "payload": {
+      "code": "duplicate-id",
+      "error": "taken"
+     }
+    },
+    {
+     "event": "DeqSlotLoaded",
+     "payload": {
+      "data": [
+       {
+        "id": "j1:2",
+        "jobId": "j1",
+        "attempt": 2,
+        "kind": "worker",
+        "leaseExpiresAt": "2023-11-14T22:13:19Z"
+       }
+      ]
+     },
+     "expect": {
+      "effects": [
+       {
+        "type": "persist"
+       }
+      ]
+     }
+    },
+    {
+     "event": "DeqGaveUpClaimed",
+     "payload": {
+      "id": "j1:3"
+     }
+    }
+   ]
+  }
+ ]
+}

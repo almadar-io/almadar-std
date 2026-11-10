@@ -76,6 +76,7 @@ orbital GuestSessionOrbital {
 
   entity GuestStageRun [runtime] {
     id : string!
+    guestSignInAsked : boolean @description "The guest asked its viewer to sign in and the stage's sign-in button has not been pressed since." = false
     guestHandle : string = ""
     guestPaints : [GuestPaint] = []
     guestRoute : string @description "The route the guest shows, as program/open or program/navigate resolved it; empty when no page matched." = ""
@@ -799,6 +800,9 @@ orbital GuestSessionOrbital {
         @label "Integrations label"
         @description "The label of the switch beside the persona picker that opens the guest again with live integrations (on) or mocked ones (off)."
         @tier "presentation"
+      signInLabel : string = "Sign in with Google"
+        @label "Sign-in button"
+        @description "The button the stage shows when the guest asks its viewer to sign in; the Google sign-in runs on its click."
       traceLabel : string = "Trace"
         @label "Trace label"
         @description "The accessible name of the button beside the integrations switch that opens the trace sidebar."
@@ -836,7 +840,12 @@ orbital GuestSessionOrbital {
         (set @entity.guestError ?message)
         (emit GUEST_SHOWN {})
       GUEST_SIGN_IN -> idle
+        (set @entity.guestSignInAsked true)
+        (emit GUEST_SHOWN {})
+      GUEST_SIGN_IN_CHOSEN -> idle
+        (set @entity.guestSignInAsked false)
         (auth/sign-in { method: "google", viewer: false } { emit: { success: GUEST_GOOGLE_IN, failure: GUEST_GOOGLE_FAILED } })
+        (emit GUEST_SHOWN {})
       GUEST_GOOGLE_IN -> idle
         (emit GUEST_CREDENTIAL { guest: @entity.guestHandle, token: (default ?idToken "") })
       GUEST_GOOGLE_FAILED -> idle
@@ -930,7 +939,7 @@ orbital GuestSessionOrbital {
         (render-ui main { type: box, className: @config.className, children: (array/concat (array/concat (if (and (= @entity.guestError "") (!= @entity.guestHandle "")) (let ((current (default (array/find @entity.guestPersonas (fn p (= @p.id @entity.guestPersona))) (default (array/first @entity.guestPersonas) { id: "", name: "", role: "" }))) (currentRole (default @current.role "")) (currentName (default @current.name ""))) [{ type: stack, direction: horizontal, justify: end, align: center, gap: md, className: "px-4 py-2 border-b border-border", children: (array/concat [
             { type: button, icon: activity, variant: (if @entity.guestTraceOpen primary ghost), size: sm, action: GUEST_TRACE_TOGGLED, aria-label: @config.traceLabel },
             { type: switch, label: @config.integrationsLabel, checked: (= @entity.guestIntegrations live), action: GUEST_INTEGRATIONS_CHOSEN }
-          ] (if (= (array/len @entity.guestPersonas) 0) [] [
+          ] (if @entity.guestSignInAsked [{ type: button, icon: log-in, variant: primary, size: sm, label: @config.signInLabel, action: GUEST_SIGN_IN_CHOSEN }] []) (if (= (array/len @entity.guestPersonas) 0) [] [
             { type: menu, position: bottom-end, trigger: { type: button, variant: ghost, size: sm, rightIcon: chevron-down, children: [{ type: stack, direction: horizontal, align: center, gap: sm, children: [
               { type: icon, name: user-round, size: sm },
               { type: stack, direction: vertical, gap: none, align: start, children: [
@@ -1040,6 +1049,8 @@ orbital GuestSessionOrbital {
       }
       GUEST_TRACE_TOGGLED { }
         @description "The trace button was pressed: the sidebar opens or closes."
+      GUEST_SIGN_IN_CHOSEN { }
+        @description "The sign-in button was pressed: the Google sign-in runs."
       GUEST_TRACE_CLOSED { }
         @description "The sidebar's close control was used."
       GUEST_TRACE_REVEAL_CHOSEN {
