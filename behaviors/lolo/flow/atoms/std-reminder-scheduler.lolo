@@ -1,6 +1,6 @@
 app std-reminder-scheduler [
-  version: "1.1.0",
-  description: "std-reminder-scheduler — deadline reminders for a target entity. A periodic tick scans the target for records whose `dateField` deadline (an instant) is within `offsetHours` of now and that have not been reminded yet, and emits `ReminderDue` for each — every matching record, via a self-driving scan loop. `direction` picks which side of now the scan matches: 'future' (default) fires for deadlines up to `offsetHours` ahead; 'past' fires once a record's date is at least `offsetHours` behind now. Marks each record `remindedAt` so it isn't reminded twice — and only when the record actually matched the scan, so records outside the window stay eligible for later passes. Compose alongside std-notify-on-event to deliver the reminder."
+  version: "1.2.0",
+  description: "std-reminder-scheduler — deadline reminders for a target entity. A periodic tick scans the target for records whose `dateField` deadline (an instant) is within `offsetHours` of now and that have not been reminded yet, and emits `ReminderDue` for each — every matching record, via a self-driving scan loop. `direction` picks which side of now the scan matches: 'future' (default) fires for deadlines up to `offsetHours` ahead; 'past' fires once a record's date is at least `offsetHours` behind now. `matches` restricts the scan to records whose named fields equal the given values. Marks each record `remindedAt` so it isn't reminded twice — and only when the record actually matched the scan, so records outside the window stay eligible for later passes. A failed scan or dedup write answers ReminderScanFailed { message }. Compose alongside std-notify-on-event to deliver the reminder."
 ]
 orbital ReminderSchedulerOrbital {
     type ScanRecordsLoaded = Event { data : [@entity @config.targetEntity]! } "Internal: target records due for a reminder."
@@ -8,6 +8,8 @@ orbital ReminderSchedulerOrbital {
     type ScanFailed = Event { error : string, code : string } "Internal: scan fetch / persist failed."
 
     type ReminderStepped = Event { id : string } "Internal: one record reminded; drives the next loop pass."
+
+    type ReminderMatch = { field : string!, value : string! }
 
     type ReminderDue = Event { entityId : string, severity : string, template : string } "Re-emitted per record whose deadline is approaching; wire to std-notify-on-event."
 
@@ -43,7 +45,7 @@ orbital ReminderSchedulerOrbital {
       ;; the dedup write fires only for a record that actually matched.
       ScanRecordsLoaded -> idle when (= @config.enabled false)
       ScanFailed -> idle
-        (notify error (if (validate/required ?error) (str/concat "Couldn't scan for reminders — " ?error) "Couldn't scan for reminders"))
+        (emit ReminderScanFailed { message: (if (validate/required ?error) (str/concat "Couldn't scan for reminders — " ?error) "Couldn't scan for reminders") })
     }
 
     state scanning {
@@ -51,7 +53,7 @@ orbital ReminderSchedulerOrbital {
       ReminderStepped -> scanning
         (fetch @config.targetEntity {
           emit: { failure: ScanFailed, success: ScanRecordsLoaded }
-          filter: (and (validate/required (object/get @entity @config.dateField)) (== (object/get @entity remindedAt) null) (or (and (= @config.direction "future") (time/isAfter (object/get @entity @config.dateField) @now) (time/isBefore (object/get @entity @config.dateField) (time/add @now @config.offsetHours "hour"))) (and (= @config.direction "past") (time/isBefore (object/get @entity @config.dateField) (time/subtract @now @config.offsetHours "hour")))))
+          filter: (and (validate/required (object/get @entity @config.dateField)) (== (object/get @entity remindedAt) null) (array/every @config.matches (fn m (= (object/get @entity @m.field) @m.value))) (or (and (= @config.direction "future") (time/isAfter (object/get @entity @config.dateField) @now) (time/isBefore (object/get @entity @config.dateField) (time/add @now @config.offsetHours "hour"))) (and (= @config.direction "past") (time/isBefore (object/get @entity @config.dateField) (time/subtract @now @config.offsetHours "hour")))))
           limit: 1
         })
       ScanRecordsLoaded -> scanning when (> (array/len ?data) 0)
@@ -66,7 +68,7 @@ orbital ReminderSchedulerOrbital {
         })
       ScanRecordsLoaded -> idle when (= (array/len ?data) 0)
       ScanFailed -> idle
-        (notify error (if (validate/required ?error) (str/concat "Couldn't scan for reminders — " ?error) "Couldn't scan for reminders"))
+        (emit ReminderScanFailed { message: (if (validate/required ?error) (str/concat "Couldn't scan for reminders — " ?error) "Couldn't scan for reminders") })
     }
 
     emits {
@@ -75,6 +77,10 @@ orbital ReminderSchedulerOrbital {
         severity : string
         template : string
       }
+      ReminderScanFailed -> external {
+        message : string!
+      }
+        @description "The scan or its dedup write failed; the scan runs in the background with no viewer, so route this to whoever should hear it."
       ScanRecordsLoaded {
         data : [@entity @config.targetEntity]!
       }
@@ -104,7 +110,7 @@ orbital ReminderSchedulerOrbital {
       scanCycle every "*/15 * * * *" [background]
         (fetch @config.targetEntity {
           emit: { failure: ScanFailed, success: ScanRecordsLoaded }
-          filter: (and (validate/required (object/get @entity @config.dateField)) (== (object/get @entity remindedAt) null) (or (and (= @config.direction "future") (time/isAfter (object/get @entity @config.dateField) @now) (time/isBefore (object/get @entity @config.dateField) (time/add @now @config.offsetHours "hour"))) (and (= @config.direction "past") (time/isBefore (object/get @entity @config.dateField) (time/subtract @now @config.offsetHours "hour")))))
+          filter: (and (validate/required (object/get @entity @config.dateField)) (== (object/get @entity remindedAt) null) (array/every @config.matches (fn m (= (object/get @entity @m.field) @m.value))) (or (and (= @config.direction "future") (time/isAfter (object/get @entity @config.dateField) @now) (time/isBefore (object/get @entity @config.dateField) (time/add @now @config.offsetHours "hour"))) (and (= @config.direction "past") (time/isBefore (object/get @entity @config.dateField) (time/subtract @now @config.offsetHours "hour")))))
           limit: 1
         })
       
@@ -136,6 +142,11 @@ orbital ReminderSchedulerOrbital {
         @description "'future' (default) matches records whose dateField is still ahead, up to offsetHours out — upcoming-deadline reminders. 'past' matches records whose dateField is at least offsetHours behind now — act-after-the-fact policies. The emitted event and the dedup marker are identical either way."
         @synonyms "direction, past due, overdue, after the deadline, look back, backward scan, past-window"
         @tier "infra"
+      matches : [ReminderMatch] = []
+        @label "Only records where"
+        @description "Field/value pairs a record must equal to be scanned at all (empty = every record), e.g. channel = linkedin and status = published. A record that does not match is never reminded nor marked."
+        @synonyms "only when, where, filter, restrict to, only records with"
+        @tier "infra"
       severity : string = info
         @label "How urgent are the reminders?"
         @description "Severity passed to the notifier: info / warning / error."
@@ -149,5 +160,5 @@ orbital ReminderSchedulerOrbital {
     }
   }
 
-  page "/reminders/scheduler" as ReminderSchedulerPage -> ReminderScheduler
+  page boot as ReminderSchedulerStart -> ReminderScheduler
 }

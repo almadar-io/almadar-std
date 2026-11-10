@@ -7527,6 +7527,435 @@
      }
     }
    ]
+  },
+  {
+   "id": "good-read-a-row-id-with-a-slash-escapes-it-in-the-document-name",
+   "steps": [
+    {
+     "event": "ROW_READ",
+     "payload": {
+      "key": "k",
+      "entityType": "Task",
+      "id": "a/b"
+     },
+     "from": "ready",
+     "expect": {
+      "emits": [
+       {
+        "event": "FS_WIRE",
+        "payload": {
+         "phase": "read",
+         "path": ":batchGet",
+         "body": {
+          "documents": [
+           "projects/demo-almadar/databases/(default)/documents/Task/a%2Fb"
+          ]
+         }
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "FS_REPLIED",
+     "payload": {
+      "status": 200,
+      "headers": {},
+      "body": "[{\"found\":{\"name\":\"projects/demo-almadar/databases/(default)/documents/Task/a%2Fb\",\"fields\":{\"title\":{\"stringValue\":\"A\"}}}}]",
+      "key": "k"
+     },
+     "from": "busy",
+     "expect": {
+      "emits": [
+       {
+        "event": "ROW_FOUND",
+        "payload": {
+         "key": "k",
+         "row": {
+          "title": "A",
+          "id": "a/b"
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "edge-read-a-row-id-with-a-percent-escapes-the-percent-first",
+   "steps": [
+    {
+     "event": "ROW_READ",
+     "payload": {
+      "key": "k",
+      "entityType": "Task",
+      "id": "50%"
+     },
+     "from": "ready",
+     "expect": {
+      "emits": [
+       {
+        "event": "FS_WIRE",
+        "payload": {
+         "phase": "read",
+         "path": ":batchGet",
+         "body": {
+          "documents": [
+           "projects/demo-almadar/databases/(default)/documents/Task/50%25"
+          ]
+         }
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "FS_REPLIED",
+     "payload": {
+      "status": 200,
+      "headers": {},
+      "body": "[{\"found\":{\"name\":\"projects/demo-almadar/databases/(default)/documents/Task/50%25\",\"fields\":{\"title\":{\"stringValue\":\"A\"}}}}]",
+      "key": "k"
+     },
+     "from": "busy",
+     "expect": {
+      "emits": [
+       {
+        "event": "ROW_FOUND",
+        "payload": {
+         "key": "k",
+         "row": {
+          "title": "A",
+          "id": "50%"
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "edge-read-a-row-id-that-already-looks-escaped-round-trips-unchanged",
+   "steps": [
+    {
+     "event": "ROW_READ",
+     "payload": {
+      "key": "k",
+      "entityType": "Task",
+      "id": "p%2Fq"
+     },
+     "from": "ready",
+     "expect": {
+      "emits": [
+       {
+        "event": "FS_WIRE",
+        "payload": {
+         "phase": "read",
+         "path": ":batchGet",
+         "body": {
+          "documents": [
+           "projects/demo-almadar/databases/(default)/documents/Task/p%252Fq"
+          ]
+         }
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "FS_REPLIED",
+     "payload": {
+      "status": 200,
+      "headers": {},
+      "body": "[{\"found\":{\"name\":\"projects/demo-almadar/databases/(default)/documents/Task/p%252Fq\",\"fields\":{\"title\":{\"stringValue\":\"A\"}}}}]",
+      "key": "k"
+     },
+     "from": "busy",
+     "expect": {
+      "emits": [
+       {
+        "event": "ROW_FOUND",
+        "payload": {
+         "key": "k",
+         "row": {
+          "title": "A",
+          "id": "p%2Fq"
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "good-list-decodes-escaped-document-names-back-to-row-ids",
+   "steps": [
+    {
+     "event": "ROW_LIST",
+     "payload": {
+      "key": "k",
+      "entityType": "Task"
+     },
+     "from": "ready",
+     "expect": {
+      "emits": [
+       {
+        "event": "FS_WIRE",
+        "payload": {
+         "phase": "list",
+         "path": ":runQuery"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "FS_REPLIED",
+     "payload": {
+      "status": 200,
+      "headers": {},
+      "body": "[{\"document\":{\"name\":\"projects/demo-almadar/databases/(default)/documents/Task/a%2Fb\",\"fields\":{}}},{\"document\":{\"name\":\"projects/demo-almadar/databases/(default)/documents/Task/x%25y\",\"fields\":{}}},{\"document\":{\"name\":\"projects/demo-almadar/databases/(default)/documents/Task/p%252Fq\",\"fields\":{}}},{\"document\":{\"name\":\"projects/demo-almadar/databases/(default)/documents/Task/plain\",\"fields\":{}}}]",
+      "key": "k"
+     },
+     "from": "busy",
+     "expect": {
+      "emits": [
+       {
+        "event": "ROWS_LISTED",
+        "payload": {
+         "key": "k",
+         "rows": [
+          {
+           "id": "a/b"
+          },
+          {
+           "id": "x%y"
+          },
+          {
+           "id": "p%2Fq"
+          },
+          {
+           "id": "plain"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "good-query-on-a-row-id-with-a-slash-sends-the-escaped-reference-and-decodes-the-ids",
+   "steps": [
+    {
+     "event": "ROWS_QUERY",
+     "payload": {
+      "key": "k",
+      "entityType": "Task",
+      "query": {
+       "filter": {
+        "kind": "compare",
+        "field": "id",
+        "op": ">=",
+        "value": "a/b"
+       },
+       "order": {
+        "field": "id",
+        "direction": "asc"
+       }
+      },
+      "project": "ids"
+     },
+     "from": "ready",
+     "expect": {
+      "emits": [
+       {
+        "event": "FS_WIRE",
+        "payload": {
+         "phase": "query",
+         "path": ":runQuery",
+         "body": {
+          "structuredQuery": {
+           "from": [
+            {
+             "collectionId": "Task"
+            }
+           ],
+           "where": {
+            "fieldFilter": {
+             "field": {
+              "fieldPath": "__name__"
+             },
+             "op": "GREATER_THAN_OR_EQUAL",
+             "value": {
+              "referenceValue": "projects/demo-almadar/databases/(default)/documents/Task/a%2Fb"
+             }
+            }
+           },
+           "orderBy": [
+            {
+             "field": {
+              "fieldPath": "__name__"
+             },
+             "direction": "ASCENDING"
+            }
+           ],
+           "select": {
+            "fields": [
+             {
+              "fieldPath": "__name__"
+             }
+            ]
+           }
+          }
+         }
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "FS_REPLIED",
+     "payload": {
+      "status": 200,
+      "headers": {},
+      "body": "[{\"document\":{\"name\":\"projects/demo-almadar/databases/(default)/documents/Task/a%2Fb\",\"fields\":{}}},{\"document\":{\"name\":\"projects/demo-almadar/databases/(default)/documents/Task/a%2Fc\",\"fields\":{}}}]",
+      "key": "k"
+     },
+     "from": "busy",
+     "expect": {
+      "emits": [
+       {
+        "event": "ROWS_IDS",
+        "payload": {
+         "key": "k",
+         "ids": [
+          "a/b",
+          "a/c"
+         ],
+         "total": 2
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "good-write-upsert-of-a-row-id-with-a-slash-reads-and-commits-the-escaped-name",
+   "steps": [
+    {
+     "event": "ROWS_WRITE",
+     "payload": {
+      "key": "k",
+      "batch": {
+       "onFailure": "stop",
+       "ops": [
+        {
+         "kind": "upsert",
+         "entityType": "Task",
+         "data": {
+          "id": "a/b",
+          "title": "New"
+         }
+        }
+       ]
+      }
+     },
+     "from": "ready",
+     "expect": {
+      "emits": [
+       {
+        "event": "FS_WIRE",
+        "payload": {
+         "phase": "txread",
+         "path": ":batchGet",
+         "body": {
+          "documents": [
+           "projects/demo-almadar/databases/(default)/documents/Task/a%2Fb"
+          ],
+          "newTransaction": {
+           "readWrite": {}
+          }
+         }
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "FS_REPLIED",
+     "payload": {
+      "status": 200,
+      "headers": {},
+      "body": "[{\"transaction\":\"tx1\"},{\"missing\":\"projects/demo-almadar/databases/(default)/documents/Task/a%2Fb\"}]",
+      "key": "k"
+     },
+     "from": "busy",
+     "expect": {
+      "emits": [
+       {
+        "event": "FS_WIRE",
+        "payload": {
+         "phase": "commit",
+         "path": ":commit",
+         "body": {
+          "writes": [
+           {
+            "update": {
+             "fields": {
+              "id": {
+               "stringValue": "a/b"
+              },
+              "title": {
+               "stringValue": "New"
+              }
+             },
+             "name": "projects/demo-almadar/databases/(default)/documents/Task/a%2Fb"
+            }
+           }
+          ],
+          "transaction": "tx1"
+         }
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "FS_REPLIED",
+     "payload": {
+      "status": 200,
+      "headers": {},
+      "body": "{}",
+      "key": "k"
+     },
+     "from": "busy",
+     "expect": {
+      "emits": [
+       {
+        "event": "ROWS_WRITTEN",
+        "payload": {
+         "key": "k",
+         "outcomes": [
+          {
+           "kind": "created",
+           "row": {
+            "id": "a/b",
+            "title": "New"
+           }
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
   }
  ],
  "note": " The service-account mode runs over the composed std-http-client with a jwt-bearer credential-connect; emulator, token and metadata modes are unchanged."

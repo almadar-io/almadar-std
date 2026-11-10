@@ -1,0 +1,317 @@
+app std-share-link-review [
+  version: "1.0.0",
+  locales: [en, ar, sl],
+  description: "std-share-link-review — approval by shared link, for a reviewer with no account (a client signing off a design, a draft or a video). A signed-in person issues a link for one item: ISSUE_LINK { targetId, title, mediaUrl, mediaType, days } draws a random token, stores only its SHA-256 as the link's id and answers LINK_ISSUED { targetId, url } once. Opening `/review-link/:token` (a public route) runs the guest trait on the server: it hashes the token from the route, reads exactly that link (the entity is `@read server`, so no visitor can list links), shows the item with its title, and lets the reviewer approve it or request changes with their name and a note; an expired, revoked or already-decided link says so and takes no decision. The decision is stored on the link and announced as LINK_DECIDED { targetId, decision, reviewerName, note }, for the host app to act on (mark the asset approved, notify its owner)."
+]
+type ReviewLinkRow = { id : string!, targetId : string!, title : string, mediaUrl : string, mediaType : string, status : string!, expiresAt : instant, reviewerName : string, decisionNote : string }
+
+orbital ShareLinkReviewOrbital {
+  uses Typography from "std/behaviors/ui-typography"
+  uses Button from "std/behaviors/ui-button"
+
+  expects entity Viewer [identity] {
+    id : string!
+  }
+
+  entity ReviewLink [persistent: review_links] {
+    @read server "A link is found only by the hash of its unguessable token, on the server; no visitor lists links."
+    @create (!= @user.role "anonymous")
+    @update none "Only the link's server trait writes it, addressed by the hash of a token only the link's holder has."
+    id : string!
+    targetId : string! @description "The item under review (an asset, a draft)." @synonyms "asset, item, document"
+    title : string @description "What the reviewer is asked to approve." @synonyms "name, subject" = ""
+    mediaUrl : string @description "Where the item's image or video is served from; blank for a text-only item." @synonyms "file url, preview" = ""
+    mediaType : "image" | "video" | "none" @description "What mediaUrl is." @synonyms "kind" = none
+    status : "open" | "approved" | "changes-requested" | "revoked" @description "Where the review stands." @synonyms "state, decision" = open
+    expiresAt : instant @description "When the link stops working." @synonyms "expiry, valid until"
+    issuedBy : string @description "Who issued the link." @synonyms "owner, sender" = ""
+    reviewerName : string @description "The name the reviewer gave." @synonyms "approver, client contact" = ""
+    decisionNote : string @description "The reviewer's note." @synonyms "comment, feedback" = ""
+    decidedAt : instant @description "When the reviewer decided." @synonyms "approved at, answered at"
+    pendingTargetId : string @intrinsic = ""
+    pendingTitle : string @intrinsic = ""
+    pendingMediaUrl : string @intrinsic = ""
+    pendingMediaType : string @intrinsic = "none"
+    pendingDays : number @intrinsic = 14
+    draftName : string @intrinsic = ""
+    draftNote : string @intrinsic = ""
+    openHash : string @intrinsic = ""
+  }
+
+  ;; Issues one link per request; the plain token leaves only in LINK_ISSUED.
+  trait ReviewLinkIssuer -> ReviewLink {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      ISSUE_LINK -> drawing when (validate/required ?targetId)
+        (set @entity.pendingTargetId ?targetId)
+        (set @entity.pendingTitle (default ?title ""))
+        (set @entity.pendingMediaUrl (default ?mediaUrl ""))
+        (set @entity.pendingMediaType (default ?mediaType "none"))
+        (set @entity.pendingDays (default ?days @config.defaultDays))
+        (random-bytes 32 { emit: { success: TOKEN_DRAWN, failure: TOKEN_FAILED } })
+      REVOKE_LINK -> idle
+        (persist update ReviewLink { id: ?id, status: "revoked" })
+        (emit LINK_REVOKED { id: ?id })
+    }
+
+    state drawing {
+      INIT -> idle
+      TOKEN_DRAWN -> idle
+        (let ((token (hash/sha 256 ?value "hex")))
+          (if (= @token null)
+            (emit LINK_FAILED { message: "The drawn token could not be encoded" })
+            (let ((id (hash/sha 256 @token "hex")))
+              (if (= @id null)
+                (emit LINK_FAILED { message: "The token could not be hashed" })
+                (do
+                  (persist create ReviewLink {
+                    id: @id
+                    targetId: @entity.pendingTargetId
+                    title: @entity.pendingTitle
+                    mediaUrl: @entity.pendingMediaUrl
+                    mediaType: (if (= @entity.pendingMediaType "image") "image" (if (= @entity.pendingMediaType "video") "video" "none"))
+                    status: "open"
+                    issuedBy: @user.id
+                    expiresAt: (time/add @now @entity.pendingDays "d")
+                  })
+                  (emit LINK_ISSUED { targetId: @entity.pendingTargetId, url: (str/concat @config.baseUrl "/review-link/" @token) }))))))
+      TOKEN_FAILED -> idle
+        (emit LINK_FAILED { message: (default ?error "") })
+    }
+
+    emits {
+      LINK_ISSUED -> external {
+        targetId : string!
+        url : string!
+      }
+        @description "A review link was issued; url is the only place the token appears, so show or send it now."
+        @tier "domain"
+      LINK_REVOKED -> external {
+        id : string!
+      }
+        @description "A review link was revoked and stops working."
+        @tier "secondary"
+      LINK_FAILED -> external {
+        message : string
+      }
+        @description "The link could not be issued."
+        @tier "secondary"
+      TOKEN_DRAWN {
+        value : string!
+      }
+        @tier "internal"
+      TOKEN_FAILED {
+        error : string
+      }
+        @tier "internal"
+    }
+
+    listens {
+      ISSUE_LINK -> input {
+        targetId : string!
+        title : string
+        mediaUrl : string
+        mediaType : string
+        days : number
+      }
+        @description "Issue a link that lets someone without an account approve one item."
+        @synonyms "share for approval, client approval link, send for sign-off"
+        @tier "domain"
+      REVOKE_LINK {
+        id : string!
+      }
+        @description "Stop a review link working."
+        @tier "domain"
+      TOKEN_DRAWN {
+        value : string!
+      }
+        @tier "internal"
+      TOKEN_FAILED {
+        error : string
+      }
+        @tier "internal"
+    }
+
+    config {
+      baseUrl : string = ""
+        @label "Address of the app"
+        @description "Prefix of the link sent to reviewers, e.g. https://app.example.com; blank gives a path."
+        @tier "infra"
+      defaultDays : number = 14
+        @label "Days a review link works"
+        @description "How long a link stays usable when the request names no duration."
+        @tier "policy"
+    }
+  }
+
+  ;; The reviewer's page: runs on the server, reads exactly the link its token
+  ;; hashes to, and records one decision.
+  trait ReviewLinkGuest -> ReviewLink [server] {
+    initial: opening
+
+    state opening {
+      INIT -> opening
+        (set @entity.openHash (default (hash/sha 256 (default ?token "") "hex") ""))
+        (fetch ReviewLink {
+          id: (default (hash/sha 256 (default ?token "") "hex") "")
+          emit: { failure: LinkMissing, success: LinkFound }
+        })
+      LinkFound -> open when (and (!= ?data.mediaType "none") (= ?data.status "open") (or (= ?data.expiresAt null) (time/isAfter ?data.expiresAt @now)))
+        (render-ui main <Stack direction={vertical} gap={lg}>
+          <Typography.traits.TypographyRender content={(default ?data.title "")} variant={h2} />
+          <AnnotatedMedia src={(default ?data.mediaUrl "")} mediaType={(if (= ?data.mediaType "video") "video" "image")} title={(default ?data.title "")} pins={[]} placing={false} />
+          <Input label={(i18n/t "yourName")} value={@entity.draftName} onChange={NAME_TYPED} />
+          <Input inputType={textarea} rows={4} label={(i18n/t "note")} value={@entity.draftNote} onChange={NOTE_TYPED} />
+          <Stack direction={horizontal} gap={sm}>
+            <Button.traits.ButtonRender action={APPROVE} icon={check} label={(i18n/t "approve")} variant={primary} />
+            <Button.traits.ButtonRender action={REQUEST_CHANGES} icon={message-square} label={(i18n/t "requestChanges")} variant={secondary} />
+          </Stack>
+        </Stack>)
+      LinkFound -> open when (and (= ?data.status "open") (or (= ?data.expiresAt null) (time/isAfter ?data.expiresAt @now)))
+        (render-ui main <Stack direction={vertical} gap={lg}>
+          <Typography.traits.TypographyRender content={(default ?data.title "")} variant={h2} />
+          <Input label={(i18n/t "yourName")} value={@entity.draftName} onChange={NAME_TYPED} />
+          <Input inputType={textarea} rows={4} label={(i18n/t "note")} value={@entity.draftNote} onChange={NOTE_TYPED} />
+          <Stack direction={horizontal} gap={sm}>
+            <Button.traits.ButtonRender action={APPROVE} icon={check} label={(i18n/t "approve")} variant={primary} />
+            <Button.traits.ButtonRender action={REQUEST_CHANGES} icon={message-square} label={(i18n/t "requestChanges")} variant={secondary} />
+          </Stack>
+        </Stack>)
+      LinkFound -> closed
+        (render-ui main <Stack direction={vertical} gap={sm}>
+          <Typography.traits.TypographyRender content={(default ?data.title "")} variant={h2} />
+          <Typography.traits.TypographyRender content={(if (= ?data.status "open") (i18n/t "expired") (if (= ?data.status "revoked") (i18n/t "revoked") (i18n/t "alreadyDecided")))} variant={body} />
+        </Stack>)
+      LinkMissing -> closed
+        (render-ui main <Stack direction={vertical} gap={sm}>
+          <Typography.traits.TypographyRender content={(i18n/t "notFound")} variant={h3} />
+        </Stack>)
+    }
+
+    state open {
+      INIT -> opening
+        (set @entity.openHash (default (hash/sha 256 (default ?token "") "hex") ""))
+        (fetch ReviewLink {
+          id: (default (hash/sha 256 (default ?token "") "hex") "")
+          emit: { failure: LinkMissing, success: LinkFound }
+        })
+      NAME_TYPED -> open
+        (set @entity.draftName (default ?value ""))
+      NOTE_TYPED -> open
+        (set @entity.draftNote (default ?value ""))
+      APPROVE -> deciding when (validate/required @entity.draftName)
+        (persist update ReviewLink { id: @entity.openHash, status: "approved", reviewerName: @entity.draftName, decisionNote: @entity.draftNote, decidedAt: @now } {
+          emit: { failure: DecisionFailed, success: DecisionSaved }
+        })
+      REQUEST_CHANGES -> deciding when (and (validate/required @entity.draftName) (validate/required @entity.draftNote))
+        (persist update ReviewLink { id: @entity.openHash, status: "changes-requested", reviewerName: @entity.draftName, decisionNote: @entity.draftNote, decidedAt: @now } {
+          emit: { failure: DecisionFailed, success: DecisionSaved }
+        })
+      APPROVE -> open
+        (notify warning (i18n/t "nameRequired"))
+      REQUEST_CHANGES -> open
+        (notify warning (i18n/t "noteRequired"))
+    }
+
+    state deciding {
+      INIT -> opening
+        (set @entity.openHash (default (hash/sha 256 (default ?token "") "hex") ""))
+        (fetch ReviewLink {
+          id: (default (hash/sha 256 (default ?token "") "hex") "")
+          emit: { failure: LinkMissing, success: LinkFound }
+        })
+      DecisionSaved -> closed
+        (emit LINK_DECIDED { targetId: (default ?targetId ""), decision: (default ?status ""), reviewerName: @entity.draftName, note: @entity.draftNote })
+        (render-ui main <Stack direction={vertical} gap={sm}>
+          <Typography.traits.TypographyRender content={(i18n/t "thanks")} variant={h3} />
+        </Stack>)
+      DecisionFailed -> open
+        (notify error (i18n/t "saveFailed"))
+    }
+
+    state closed {
+      INIT -> opening
+        (set @entity.openHash (default (hash/sha 256 (default ?token "") "hex") ""))
+        (fetch ReviewLink {
+          id: (default (hash/sha 256 (default ?token "") "hex") "")
+          emit: { failure: LinkMissing, success: LinkFound }
+        })
+    }
+
+    emits {
+      LINK_DECIDED -> external {
+        targetId : string!
+        decision : string!
+        reviewerName : string!
+        note : string
+      }
+        @description "A reviewer with a link approved the item or asked for changes."
+        @synonyms "client approved, sign-off received, changes requested"
+        @tier "primary"
+      LinkFound {
+        data : ReviewLinkRow!
+      }
+        @tier "internal"
+      LinkMissing {
+        error : string
+        code : string
+      }
+        @tier "internal"
+      DecisionSaved {
+        targetId : string
+        status : string
+      }
+        @tier "internal"
+      DecisionFailed {
+        error : string
+        code : string
+      }
+        @tier "internal"
+    }
+
+    listens {
+      INIT {
+        token : string
+      }
+        @description "Open the review behind a link (route param)."
+        @tier "presentation"
+      NAME_TYPED {
+        value : string
+      }
+        @tier "presentation"
+      NOTE_TYPED {
+        value : string
+      }
+        @tier "presentation"
+      APPROVE
+        @description "Approve the item."
+        @tier "presentation"
+      REQUEST_CHANGES
+        @description "Ask for changes, with a note."
+        @tier "presentation"
+      LinkFound {
+        data : ReviewLinkRow!
+      }
+        @tier "internal"
+      LinkMissing {
+        error : string
+        code : string
+      }
+        @tier "internal"
+      DecisionSaved {
+        targetId : string
+        status : string
+      }
+        @tier "internal"
+      DecisionFailed {
+        error : string
+        code : string
+      }
+        @tier "internal"
+    }
+  }
+
+  page "/review-link/:token" as ReviewLinkPage -> ReviewLinkGuest, ReviewLinkIssuer [access: public]
+}

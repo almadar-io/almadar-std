@@ -1,0 +1,505 @@
+app std-gmail [
+  version: "1.0.0",
+  description: "std-gmail — the morning inbox connector over the Gmail REST API (gmail.googleapis.com/gmail/v1): read recent inbox messages and create reply drafts, never send. The access token is minted by the host credential store (a refresh_token grant for the user, scopes gmail.readonly and gmail.compose granted with the refresh token) and carried by one keyed HTTP client, never by an event. Every call runs on its own row under its own key, so concurrent calls never share state; an inbox listing reads its messages one at a time. A failure answers GMAIL_FAILED with the provider's message.",
+  egress: ["https://gmail.googleapis.com", "https://oauth2.googleapis.com"],
+  net: { "gmail.googleapis.com:443": [tcp] }
+]
+uses Keyed from "std/behaviors/std-http-keyed"
+uses Retry from "std/behaviors/std-retry"
+type HttpHeader = { name : string!, value : string! }
+type GmailMessage = { id : string, threadId : string, from : string, to : string, subject : string, date : string, messageId : string, snippet : string, body : string }
+type GmailListItem = { id : string, threadId : string }
+type GmailListReply = { messages : [GmailListItem], resultSizeEstimate : number }
+type GmailHeader = { name : string, value : string }
+type GmailBodyData = { data : string, size : number }
+type GmailLeafPart = { mimeType : string, body : GmailBodyData }
+type GmailPart = { mimeType : string, body : GmailBodyData, parts : [GmailLeafPart] }
+type GmailPayload = { mimeType : string, headers : [GmailHeader], body : GmailBodyData, parts : [GmailPart] }
+type GmailMessageReply = { id : string, threadId : string, snippet : string, payload : GmailPayload }
+type GmailDraftMessage = { id : string, threadId : string }
+type GmailDraftReply = { id : string, message : GmailDraftMessage }
+type GmailApiErrorItem = { message : string }
+type GmailApiError = { code : number, message : string, errors : [GmailApiErrorItem] }
+type GmailErrorReply = { error : GmailApiError }
+type GmailErrorStringReply = { error : string }
+orbital GmailOrbital {
+  entity GmailRequest [runtime] {
+    id : string!
+    seq : number @description "The front trait's call counter: each call takes the next number, so its key is distinct from every other call's." = 0
+    op : string @description "The call in flight: list, get or draft; empty while the row is free." = ""
+    method : string = ""
+    target : string = ""
+    contentType : string @description "The content type of the request body; empty for none." = ""
+    body : bytes @description "The body of the request in flight." = ""
+    mintTried : boolean @description "True once the credential minted its access token after the store reported none held, so a second not-held answer probes the refresh token instead of looping." = false
+    attempt : number @description "The std-retry attempt in flight for an inbox read; 0 for the draft call, which is not retried." = 0
+    retrying : boolean @description "True while the request in flight runs under std-retry." = false
+    pending : [string] @description "The message ids of the listing still to read, the head being the one in flight." = []
+    collected : [GmailMessage] @description "The messages of the listing read so far." = []
+    stepReady : boolean @description "True once a reply was read and the next message read waits for std-retry to finish the run of the one before." = false
+  }
+
+  trait GmailKeyed = Keyed.traits.HttpKeyed {
+    listens {
+      GmailCall.GMAIL_HTTP_SEND -> HTTP_SEND
+      GmailKeyed.DELIVERY_REJECTED -> KEY_REFUSED
+    }
+  }
+
+  trait GmailHttp = Keyed.traits.KeyedHttp {
+    config {
+      host: "gmail.googleapis.com"
+      port: 443
+      tls: true
+      serverName: "gmail.googleapis.com"
+      credential: "GOOGLE_GMAIL_USER_TOKEN"
+      credentialHeader: "authorization"
+      credentialPrefix: "Bearer "
+    }
+    listens {
+      GmailKeyed.KEYED_SEND -> HTTP_SEND per @payload.key
+      GmailKeyed.KEYED_CANCEL -> HTTP_CANCEL per @payload.key
+    }
+  }
+
+  ;; inbox reads retry on 1xx, 408, 429, 5xx (three retries: 100, 500 then 1500 ms) and on a timeout or transport failure (two retries, the call stops them); the draft POST is never retried so a draft is not created twice
+  trait GmailRetry = Retry.traits.Retry {
+    config {
+      maxAttempts: 4
+      baseDelayMs: 100
+      multiplier: 5
+      maxDelayMs: 1500
+    }
+    listens {
+      GmailCall.GMAIL_RETRY_START -> START per @payload.key
+      GmailCall.GMAIL_RETRY_FAILED -> FAILED per @payload.key
+      GmailCall.GMAIL_RETRY_CANCEL -> CANCEL per @payload.key
+      GmailHttp.HTTP_REPLIED -> SUCCEEDED per @payload.key with { key: (as ?key CallKey) } when (and (str/startsWith ?key "inbox:") (not (or (and (>= ?status 100) (< ?status 200)) (= ?status 408) (= ?status 429) (and (>= ?status 500) (< ?status 600)))))
+    }
+  }
+
+  trait GmailClient -> GmailRequest [optimistic] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+
+      LIST_INBOX -> idle
+        (set @entity.seq (+ @entity.seq 1))
+        (let ((q (if (!= (default @payload.query "") "") (default @payload.query "") "in:inbox newer_than:1d")) (n (if (= (default @payload.maxResults 0) 0) 20 @payload.maxResults)))
+          (emit GMAIL_READY { key: (str/concat "inbox:" @q "|" @n "#" @entity.seq), op: "list", method: "GET", target: (str/concat "/gmail/v1/users/me/messages?q=" (str/encode-uri-component @q) "&maxResults=" @n), contentType: "", body: (bytes/from-string ""), retry: true }))
+      CREATE_DRAFT -> idle when (not (and (validate/pattern @payload.to "^[^\\r\\n]*$") (validate/pattern @payload.subject "^[^\\r\\n]*$") (validate/pattern (default @payload.inReplyTo "") "^[^\\r\\n]*$")))
+        (emit GMAIL_FAILED { message: "A draft header value must be a single line" })
+      CREATE_DRAFT -> idle when (and (validate/pattern @payload.to "^[^\\r\\n]*$") (validate/pattern @payload.subject "^[^\\r\\n]*$") (validate/pattern (default @payload.inReplyTo "") "^[^\\r\\n]*$"))
+        (set @entity.seq (+ @entity.seq 1))
+        (let ((raw (str/replaceAll (str/replaceAll (base64/encode (str/concat "To: " @payload.to "\r\nSubject: =?UTF-8?B?" (base64/encode @payload.subject) "?=\r\n" (if (!= (default @payload.inReplyTo "") "") (str/concat "In-Reply-To: " @payload.inReplyTo "\r\nReferences: " @payload.inReplyTo "\r\n") "") "Content-Type: text/plain; charset=UTF-8\r\n\r\n" @payload.body)) "+" "-") "/" "_")))
+          (emit GMAIL_READY { key: (str/concat "draft:" @payload.to "#" @entity.seq), op: "draft", method: "POST", target: "/gmail/v1/users/me/drafts", contentType: "application/json", body: (bytes/from-string (json/stringify (if (!= (default @payload.threadId "") "") { message: { raw: @raw, threadId: @payload.threadId } } { message: { raw: @raw } }))), retry: false }))
+    }
+
+    emits {
+      GMAIL_FAILED -> external {
+        code : string
+        message : string!
+      }
+        @description "A Gmail action failed: the provider's error message, NOT_CONFIGURED when no credential is set."
+        @synonyms "gmail error, gmail failure"
+        @tier "primary"
+      GMAIL_READY {
+        key : string!
+        op : string!
+        method : string!
+        target : string!
+        contentType : string!
+        body : bytes!
+        retry : boolean!
+      }
+        @description "Internal: a built request, handed to the row of its key in GmailCall."
+        @tier "secondary"
+    }
+
+    listens {
+      LIST_INBOX -> input {
+        query : string?
+        maxResults : number?
+      }
+        @description "Read the recent inbox messages: query is a Gmail search (default in:inbox newer_than:1d), maxResults defaults to 20; each message is read in full, one at a time."
+        @synonyms "read inbox, recent mail, list emails"
+      CREATE_DRAFT -> input {
+        to : string!
+        subject : string!
+        body : string!
+        threadId : string?
+        inReplyTo : string?
+      }
+        @description "Create a plain-text draft, never send it; threadId places it in a thread and inReplyTo (the Message-ID of the mail answered) makes it a reply."
+        @synonyms "draft reply, write draft, save draft"
+    }
+  }
+
+  trait GmailCall -> GmailRequest [optimistic] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+
+      CALL_READY -> idle when (= @payload.retry false)
+        (set @entity.op @payload.op)
+        (set @entity.method @payload.method)
+        (set @entity.target @payload.target)
+        (set @entity.contentType @payload.contentType)
+        (set @entity.body @payload.body)
+        (set @entity.mintTried false)
+        (set @entity.attempt 0)
+        (set @entity.retrying false)
+        (set @entity.stepReady false)
+        (emit GMAIL_DISPATCH {})
+      CALL_READY -> idle when (= @payload.retry true)
+        (set @entity.op @payload.op)
+        (set @entity.method @payload.method)
+        (set @entity.target @payload.target)
+        (set @entity.contentType @payload.contentType)
+        (set @entity.body @payload.body)
+        (set @entity.mintTried false)
+        (set @entity.attempt 0)
+        (set @entity.retrying true)
+        (set @entity.stepReady false)
+        (emit GMAIL_RETRY_START { key: (as @payload.key CallKey) })
+      GMAIL_ATTEMPT -> idle
+        (set @entity.attempt @payload.attempt)
+        (emit GMAIL_DISPATCH {})
+      GMAIL_DISPATCH -> idle
+        (emit GMAIL_HTTP_SEND { key: @entity.id, method: @entity.method, target: @entity.target, headers: (if (= @entity.contentType "") [{ name: "accept", value: "*/*" }] [{ name: "accept", value: "*/*" }, { name: "content-type", value: @entity.contentType }]), body: @entity.body, stream: "none" })
+
+      GMAIL_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= @entity.op "list") (= (json/parse @payload.body GmailListReply) null))
+        (emit GMAIL_FAIL { message: "The Gmail answer could not be read" })
+      GMAIL_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= @entity.op "list") (!= (json/parse @payload.body GmailListReply) null) (= (array/len (object/get (json/parse @payload.body GmailListReply) messages [])) 0))
+        (emit INBOX_LISTED { messages: [] })
+        (emit GMAIL_CLEAR {})
+      GMAIL_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= @entity.op "list") (!= (json/parse @payload.body GmailListReply) null) (> (array/len (object/get (json/parse @payload.body GmailListReply) messages [])) 0))
+        (set @entity.pending (array/map (object/get (json/parse @payload.body GmailListReply) messages []) (fn m (default (object/get @m id "") ""))))
+        (set @entity.collected [])
+        (set @entity.stepReady true)
+      GMAIL_RETRY_DONE -> idle when @entity.stepReady
+        (set @entity.op "get")
+        (set @entity.target (str/concat "/gmail/v1/users/me/messages/" (str/encode-uri-component (default (array/first @entity.pending) "")) "?format=full"))
+        (set @entity.mintTried false)
+        (set @entity.attempt 0)
+        (set @entity.stepReady false)
+        (emit GMAIL_RETRY_START { key: (as @entity.id CallKey) })
+      GMAIL_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= @entity.op "get") (= (json/parse @payload.body GmailMessageReply) null))
+        (emit GMAIL_FAIL { message: "The Gmail answer could not be read" })
+      GMAIL_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= @entity.op "get") (!= (json/parse @payload.body GmailMessageReply) null))
+        (let ((m (json/parse @payload.body GmailMessageReply)))
+          (let ((hs (object/get @m "payload.headers" [])) (level1 (object/get @m "payload.parts" [])))
+            (let ((all (array/concat @level1 (array/flatten (array/map @level1 (fn p (object/get @p parts [])))))))
+              (let ((plain (default (array/first (array/map (array/filter @all (fn p (= (object/get @p mimeType "") "text/plain"))) (fn p (object/get @p "body.data" "")))) "")))
+                (let ((d (str/replaceAll (str/replaceAll (if (> (array/len @level1) 0) @plain (default (object/get @m "payload.body.data" "") "")) "-" "+") "_" "/")))
+                  (emit GMAIL_MESSAGE_READ { id: (default (object/get @m id "") ""), threadId: (default (object/get @m threadId "") ""), from: (default (array/first (array/map (array/filter @hs (fn h (= (str/lower (object/get @h name "")) "from"))) (fn h (object/get @h value "")))) ""), to: (default (array/first (array/map (array/filter @hs (fn h (= (str/lower (object/get @h name "")) "to"))) (fn h (object/get @h value "")))) ""), subject: (default (array/first (array/map (array/filter @hs (fn h (= (str/lower (object/get @h name "")) "subject"))) (fn h (object/get @h value "")))) ""), date: (default (array/first (array/map (array/filter @hs (fn h (= (str/lower (object/get @h name "")) "date"))) (fn h (object/get @h value "")))) ""), messageId: (default (array/first (array/map (array/filter @hs (fn h (= (str/lower (object/get @h name "")) "message-id"))) (fn h (object/get @h value "")))) ""), snippet: (default (object/get @m snippet "") ""), data: (str/concat @d (str/repeat "=" (math/mod (- 4 (math/mod (str/len @d) 4)) 4))) }))))))
+      GMAIL_MESSAGE_READ -> idle when (not (base64/valid @payload.data))
+        (emit GMAIL_FAIL { message: "The Gmail message body could not be decoded" })
+      GMAIL_MESSAGE_READ -> idle when (and (base64/valid @payload.data) (> (array/len @entity.pending) 1))
+        (set @entity.collected (array/append @entity.collected { id: @payload.id, threadId: @payload.threadId, from: @payload.from, to: @payload.to, subject: @payload.subject, date: @payload.date, messageId: @payload.messageId, snippet: @payload.snippet, body: (base64/decode @payload.data) }))
+        (set @entity.pending (array/drop @entity.pending 1))
+        (set @entity.stepReady true)
+      GMAIL_MESSAGE_READ -> idle when (and (base64/valid @payload.data) (<= (array/len @entity.pending) 1))
+        (emit INBOX_LISTED { messages: (array/append @entity.collected { id: @payload.id, threadId: @payload.threadId, from: @payload.from, to: @payload.to, subject: @payload.subject, date: @payload.date, messageId: @payload.messageId, snippet: @payload.snippet, body: (base64/decode @payload.data) }) })
+        (emit GMAIL_CLEAR {})
+      GMAIL_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= @entity.op "draft") (= (json/parse @payload.body GmailDraftReply) null))
+        (emit GMAIL_FAIL { message: "The Gmail answer could not be read" })
+      GMAIL_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= @entity.op "draft") (!= (json/parse @payload.body GmailDraftReply) null))
+        (let ((r (json/parse @payload.body GmailDraftReply)))
+          (emit DRAFT_CREATED { draftId: (default (object/get @r id "") ""), messageId: (default (object/get @r "message.id" "") ""), threadId: (default (object/get @r "message.threadId" "") "") }))
+        (emit GMAIL_CLEAR {})
+      GMAIL_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
+        (emit GMAIL_REPLY_ERROR { status: @payload.status, message: (let ((eo (json/parse @payload.body GmailErrorReply)) (es (json/parse @payload.body GmailErrorStringReply))) (let ((m (if (!= @eo null) (if (object/has @eo "error.errors") (str/join (array/map (object/get @eo "error.errors" []) (fn e (default (object/get @e message "") ""))) "\n") (default (object/get @eo "error.message" "") "")) (if (!= @es null) (object/get @es error "") "")))) (if (!= @m "") @m (if (>= @payload.status 400) (if (str/startsWith @payload.body "{") "[object Object]" @payload.body) (str/concat "Request failed with status code " @payload.status))))) })
+      GMAIL_REPLY_ERROR -> idle when (and @entity.retrying (or (and (>= @payload.status 100) (< @payload.status 200)) (= @payload.status 408) (= @payload.status 429) (and (>= @payload.status 500) (< @payload.status 600))))
+        (emit GMAIL_RETRY_FAILED { key: (as @entity.id CallKey), error: @payload.message })
+      GMAIL_REPLY_ERROR -> idle when (not (and @entity.retrying (or (and (>= @payload.status 100) (< @payload.status 200)) (= @payload.status 408) (= @payload.status 429) (and (>= @payload.status 500) (< @payload.status 600)))))
+        (emit GMAIL_FAIL { message: @payload.message })
+      GMAIL_GAVE_UP -> idle
+        (emit GMAIL_FAIL { message: (default @payload.error "") })
+
+      GMAIL_REQUEST_FAILED -> idle when (and (= @payload.kind "unconfigured") (= @entity.mintTried false))
+        (set @entity.mintTried true)
+        (credential-connect { credential: @config.userToken, scope: app, tokenEndpoint: @config.userTokenUrl, grant: "refresh_token", refreshCredential: @config.refreshToken, clientId: @config.clientId, clientSecret: @config.clientSecret, clientAuth: body } { emit: { success: GMAIL_CONNECTED, failure: GMAIL_CONNECT_FAILED } })
+      GMAIL_REQUEST_FAILED -> idle when (and (= @payload.kind "unconfigured") (= @entity.mintTried true))
+        (emit GMAIL_UNCONFIGURED {})
+      GMAIL_REQUEST_FAILED -> idle when (and (!= @payload.kind "unconfigured") @entity.retrying (< @entity.attempt 3))
+        (emit GMAIL_RETRY_FAILED { key: (as @payload.key CallKey), error: (if (= @payload.kind "timeout") "network timeout" @payload.error) })
+      GMAIL_REQUEST_FAILED -> idle when (and (!= @payload.kind "unconfigured") (not (and @entity.retrying (< @entity.attempt 3))))
+        (emit GMAIL_FAIL { message: (if (= @payload.kind "timeout") "network timeout" @payload.error) })
+
+      GMAIL_CONNECTED -> idle when (= @payload.connected true)
+        (emit GMAIL_DISPATCH {})
+      GMAIL_CONNECTED -> idle when (= @payload.connected false)
+        (emit GMAIL_UNCONFIGURED {})
+      GMAIL_CONNECT_FAILED -> idle when (= @payload.kind "unavailable")
+        (emit GMAIL_NOT_CONFIGURED {})
+      GMAIL_CONNECT_FAILED -> idle when (!= @payload.kind "unavailable")
+        (emit GMAIL_FAIL { message: (str/concat "Google token request failed: " @payload.error) })
+
+      GMAIL_UNCONFIGURED -> idle
+        (credential-status { credential: @config.refreshToken, scope: app } { emit: { success: GMAIL_REFRESH_PROBED, failure: GMAIL_PROBE_FAILED } })
+      GMAIL_REFRESH_PROBED -> idle when @payload.connected
+        (emit GMAIL_FAIL { message: (str/concat "Gmail not configured — the Google token request found no usable credential; check GOOGLE_GMAIL_REFRESH_TOKEN, OAUTH_CLIENT_ID and OAUTH_CLIENT_SECRET, and that the refresh token was granted " @config.scope) })
+      GMAIL_REFRESH_PROBED -> idle when (not @payload.connected)
+        (emit GMAIL_NOT_CONFIGURED {})
+      GMAIL_PROBE_FAILED -> idle
+        (emit GMAIL_NOT_CONFIGURED {})
+      GMAIL_NOT_CONFIGURED -> idle
+        (emit GMAIL_FAIL { code: "NOT_CONFIGURED", message: "Integration not configured: gmail. Set GOOGLE_GMAIL_REFRESH_TOKEN, OAUTH_CLIENT_ID and OAUTH_CLIENT_SECRET." })
+
+      GMAIL_FAIL -> idle when (and @entity.retrying (= (default @payload.code "") ""))
+        (emit GMAIL_RETRY_CANCEL { key: (as @entity.id CallKey) })
+        (emit GMAIL_FAILED { message: @payload.message })
+        (emit GMAIL_CLEAR {})
+      GMAIL_FAIL -> idle when (and @entity.retrying (!= (default @payload.code "") ""))
+        (emit GMAIL_RETRY_CANCEL { key: (as @entity.id CallKey) })
+        (emit GMAIL_FAILED { code: @payload.code, message: @payload.message })
+        (emit GMAIL_CLEAR {})
+      GMAIL_FAIL -> idle when (and (not @entity.retrying) (= (default @payload.code "") ""))
+        (emit GMAIL_FAILED { message: @payload.message })
+        (emit GMAIL_CLEAR {})
+      GMAIL_FAIL -> idle when (and (not @entity.retrying) (!= (default @payload.code "") ""))
+        (emit GMAIL_FAILED { code: @payload.code, message: @payload.message })
+        (emit GMAIL_CLEAR {})
+
+      GMAIL_CLEAR -> idle
+        (set @entity.op "")
+        (set @entity.method "")
+        (set @entity.target "")
+        (set @entity.contentType "")
+        (set @entity.body (bytes/from-string ""))
+        (set @entity.mintTried false)
+        (set @entity.attempt 0)
+        (set @entity.retrying false)
+        (set @entity.pending [])
+        (set @entity.collected [])
+        (set @entity.stepReady false)
+    }
+
+    emits {
+      INBOX_LISTED -> external {
+        messages : [GmailMessage]!
+      }
+        @description "The recent inbox messages, each with its decoded text/plain body, headers From, To, Subject, Date and Message-ID, snippet and thread id; empty text fields when Gmail returned none."
+        @synonyms "inbox messages, recent mail"
+        @tier "primary"
+      DRAFT_CREATED -> external {
+        draftId : string!
+        messageId : string!
+        threadId : string!
+      }
+        @description "The created draft's id, its message id and its thread id; the draft is never sent."
+        @synonyms "draft saved, reply drafted"
+        @tier "primary"
+      GMAIL_FAILED -> external {
+        code : string
+        message : string!
+      }
+        @description "A Gmail action failed: the provider's error message, NOT_CONFIGURED when no credential is set."
+        @synonyms "gmail error, gmail failure"
+        @tier "primary"
+      GMAIL_HTTP_SEND {
+        key : string!
+        method : string!
+        target : string!
+        headers : [HttpHeader]!
+        body : bytes!
+        stream : string!
+      }
+        @description "Internal: the Gmail request under the user token, for its keyed HTTP client."
+        @tier "secondary"
+      GMAIL_RETRY_START { key : CallKey! }
+        @description "Internal: hand an inbox read to std-retry."
+        @tier "secondary"
+      GMAIL_RETRY_FAILED { key : CallKey!  error : string }
+        @description "Internal: tell std-retry the attempt failed with a retryable outcome."
+        @tier "secondary"
+      GMAIL_RETRY_CANCEL { key : CallKey! }
+        @description "Internal: end std-retry's run for this key without another attempt."
+        @tier "secondary"
+      GMAIL_DISPATCH -> internal { }
+        @description "Internal: send the request in flight, again after a retry attempt or a minted token."
+        @tier "secondary"
+      GMAIL_MESSAGE_READ -> internal {
+        id : string!
+        threadId : string!
+        from : string!
+        to : string!
+        subject : string!
+        date : string!
+        messageId : string!
+        snippet : string!
+        data : string!
+      }
+        @description "Internal: one message read in full, its text part as padded base64 awaiting decoding."
+        @tier "secondary"
+      GMAIL_REPLY_ERROR -> internal {
+        status : number!
+        message : string!
+      }
+        @description "Internal: a non-2xx Gmail reply with the provider's message."
+        @tier "secondary"
+      GMAIL_UNCONFIGURED -> internal { }
+        @description "Internal: the user token is not held after a mint; probe the refresh token."
+        @tier "secondary"
+      GMAIL_NOT_CONFIGURED -> internal { }
+        @description "Internal: no Gmail credential is configured."
+        @tier "secondary"
+      GMAIL_FAIL -> internal {
+        code : string
+        message : string!
+      }
+        @description "Internal: end the request in flight with a failure, cancelling its std-retry run."
+        @tier "secondary"
+      GMAIL_CONNECTED -> internal {
+        connected : boolean!
+        label : string
+      }
+        @description "Internal: the credential store minted the access token."
+        @tier "secondary"
+      GMAIL_CONNECT_FAILED -> internal {
+        error : string!
+        kind : string!
+      }
+        @description "Internal: the credential store could not mint the access token."
+        @tier "secondary"
+      GMAIL_REFRESH_PROBED -> internal {
+        connected : boolean!
+        label : string
+      }
+        @description "Internal: whether the user refresh token is configured."
+        @tier "secondary"
+      GMAIL_PROBE_FAILED -> internal {
+        error : string!
+      }
+        @description "Internal: the credential store could not tell whether the user refresh token is configured."
+        @tier "secondary"
+      GMAIL_CLEAR -> internal { }
+        @description "Internal: return the row of a finished call to its defaults so the kernel drops it."
+        @tier "secondary"
+    }
+
+    listens {
+      CALL_READY {
+        key : string!
+        op : string!
+        method : string!
+        target : string!
+        contentType : string!
+        body : bytes!
+        retry : boolean!
+      }
+        @description "A built request from the front trait, taken by the row of its key."
+      GMAIL_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+        key : string!
+      }
+        @description "The keyed HTTP client answered the request in flight."
+      GMAIL_REQUEST_FAILED {
+        error : string!
+        kind : string!
+        key : string!
+      }
+        @description "The keyed HTTP client could not answer: unconfigured token, timeout or transport failure."
+      GMAIL_DISPATCH
+      GMAIL_MESSAGE_READ {
+        id : string!
+        threadId : string!
+        from : string!
+        to : string!
+        subject : string!
+        date : string!
+        messageId : string!
+        snippet : string!
+        data : string!
+      }
+      GMAIL_REPLY_ERROR {
+        status : number!
+        message : string!
+      }
+      GMAIL_UNCONFIGURED
+      GMAIL_NOT_CONFIGURED
+      GMAIL_FAIL {
+        code : string
+        message : string!
+      }
+      GMAIL_CONNECTED {
+        connected : boolean!
+        label : string
+      }
+      GMAIL_CONNECT_FAILED {
+        error : string!
+        kind : string!
+      }
+      GMAIL_REFRESH_PROBED {
+        connected : boolean!
+        label : string
+      }
+      GMAIL_PROBE_FAILED {
+        error : string!
+      }
+      GMAIL_CLEAR
+      GMAIL_ATTEMPT {
+        key : string!
+        attempt : number!
+      }
+        @description "std-retry starts another attempt of the request in flight."
+      GMAIL_GAVE_UP {
+        key : string!
+        attempts : number!
+        error : string
+      }
+        @description "std-retry spent its attempts on retryable outcomes."
+      GMAIL_RETRY_DONE {
+        key : string!
+        attempts : number!
+      }
+        @description "std-retry finished the run of one inbox read, so the next message read may start."
+      GmailClient.GMAIL_READY -> CALL_READY per @payload.key
+      GmailHttp.HTTP_REPLIED -> GMAIL_REPLIED per @payload.key with { status: ?status, headers: ?headers, body: (default (bytes/to-string ?body) ""), key: ?key }
+      GmailHttp.HTTP_FAILED -> GMAIL_REQUEST_FAILED per @payload.key with { error: ?error, kind: ?kind, key: ?key }
+      GmailRetry.ATTEMPT -> GMAIL_ATTEMPT per @payload.key
+      GmailRetry.GAVE_UP -> GMAIL_GAVE_UP per @payload.key
+      GmailRetry.COMPLETED -> GMAIL_RETRY_DONE per @payload.key
+    }
+
+    config {
+      scope : string = "https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.compose"
+        @label "OAuth scopes"
+        @description "The scopes the user's refresh token must have been granted (gmail.readonly to read, gmail.compose to draft); a refresh_token grant carries them from the consent, so this names what the credential has to hold."
+        @synonyms "gmail scopes, oauth scope"
+        @tier "infra"
+      refreshToken : secret = "GOOGLE_GMAIL_REFRESH_TOKEN"
+        @label "User refresh-token credential"
+        @description "Name of the credential holding the user's OAuth refresh token; the credential store builds the user access token from it."
+        @synonyms "refresh token, user token"
+        @tier "infra"
+      clientId : secret = "OAUTH_CLIENT_ID"
+        @label "OAuth client id credential"
+        @description "Name of the credential holding the OAuth client id used with the refresh token."
+        @synonyms "client id"
+        @tier "infra"
+      clientSecret : secret = "OAUTH_CLIENT_SECRET"
+        @label "OAuth client secret credential"
+        @description "Name of the credential holding the OAuth client secret used with the refresh token."
+        @synonyms "client secret"
+        @tier "infra"
+      userToken : secret = "GOOGLE_GMAIL_USER_TOKEN"
+        @label "User token credential"
+        @description "Host credential name the minted user access token lives under; the composed GmailHttp trait carries the same name, restate it there when this knob changes."
+        @synonyms "user token name, access token name"
+        @tier "infra"
+      userTokenUrl : url = "https://oauth2.googleapis.com/token"
+        @label "User token endpoint"
+        @description "The Google OAuth token endpoint the credential store exchanges the refresh token at. Must be declared in the app egress list."
+        @synonyms "refresh endpoint, user token url"
+        @tier "infra"
+    }
+  }
+
+  page boot as GmailPage -> GmailClient, GmailCall, GmailKeyed, GmailHttp, GmailRetry
+}

@@ -689,6 +689,1168 @@
      }
     }
    ]
+  },
+  {
+   "id": "vision: an image path is read as bytes with its declared media type",
+   "steps": [
+    {
+     "trait": "DocumentText",
+     "event": "DOC_TEXT_READ",
+     "from": "ready",
+     "payload": {
+      "key": "k1",
+      "path": "/s/scan.PNG"
+     },
+     "entity": {
+      "id": "d",
+      "key": "",
+      "path": "",
+      "mediaType": "",
+      "pagePaths": [],
+      "rendered": false,
+      "cursor": 0,
+      "pages": [],
+      "failed": false,
+      "error": "",
+      "code": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "visionOpen",
+      "entity": {
+       "key": "k1",
+       "mediaType": "image/png",
+       "rendered": false
+      },
+      "effects": [
+       {
+        "type": "os/read-file"
+       }
+      ],
+      "neverEmits": [
+       "DOC_OCR_REQUEST",
+       "DOC_TEXT_FAILED"
+      ]
+     }
+    }
+   ],
+   "config": {
+    "reader": "vision"
+   }
+  },
+  {
+   "id": "control: reader ocr sends the same image to OCR",
+   "steps": [
+    {
+     "trait": "DocumentText",
+     "event": "DOC_TEXT_READ",
+     "from": "ready",
+     "payload": {
+      "key": "k1",
+      "path": "/s/scan.PNG"
+     },
+     "entity": {
+      "id": "d",
+      "key": "",
+      "path": "",
+      "mediaType": "",
+      "pagePaths": [],
+      "rendered": false,
+      "cursor": 0,
+      "pages": [],
+      "failed": false,
+      "error": "",
+      "code": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ocr",
+      "emits": [
+       {
+        "event": "DOC_OCR_REQUEST",
+        "payload": {
+         "key": "k1",
+         "path": "/s/scan.PNG"
+        }
+       }
+      ],
+      "neverEmits": [
+       "LLM_GENERATE"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "vision: the image bytes go to the model at temperature 0 with the media type and base64",
+   "steps": [
+    {
+     "trait": "DocumentText",
+     "event": "DOC_FILE_READ",
+     "from": "visionOpen",
+     "payload": {
+      "data": "aGVsbG8=",
+      "key": "image"
+     },
+     "entity": {
+      "id": "d",
+      "key": "k1",
+      "path": "",
+      "mediaType": "image/jpeg",
+      "pagePaths": [],
+      "rendered": false,
+      "cursor": 0,
+      "pages": [],
+      "failed": false,
+      "error": "",
+      "code": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "describing",
+      "emits": [
+       {
+        "event": "LLM_GENERATE",
+        "payload": {
+         "userPrompt": "Transcribe all the text in the image exactly as written, in its original language. Output only the text.",
+         "temperature": 0,
+         "maxTokens": 0,
+         "images": [
+          {
+           "mediaType": "image/jpeg",
+           "data": "aGVsbG8="
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "reader": "vision"
+   }
+  },
+  {
+   "id": "vision: the model's text answers one page with method vision",
+   "steps": [
+    {
+     "trait": "DocumentText",
+     "event": "DOC_VISION_TEXT",
+     "from": "describing",
+     "payload": {
+      "content": "Hello\nSvet",
+      "usage": {
+       "promptTokens": 1,
+       "completionTokens": 1,
+       "totalTokens": 2
+      }
+     },
+     "entity": {
+      "id": "d",
+      "key": "k1",
+      "path": "",
+      "mediaType": "image/png",
+      "pagePaths": [],
+      "rendered": false,
+      "cursor": 0,
+      "pages": [],
+      "failed": false,
+      "error": "",
+      "code": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "DOC_TEXT",
+        "payload": {
+         "key": "k1",
+         "pages": [
+          {
+           "page": 1,
+           "text": "Hello\nSvet"
+          }
+         ],
+         "method": "vision"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DOC_TEXT_FAILED"
+      ]
+     }
+    }
+   ],
+   "config": {
+    "reader": "vision"
+   }
+  },
+  {
+   "id": "vision: a model failure on an image answers doc_vision_failed with the model's error",
+   "steps": [
+    {
+     "trait": "DocumentText",
+     "event": "DOC_VISION_FAILED",
+     "from": "describing",
+     "payload": {
+      "code": "SERVICE_ERROR",
+      "message": "model offline"
+     },
+     "entity": {
+      "id": "d",
+      "key": "k1",
+      "path": "",
+      "mediaType": "image/png",
+      "pagePaths": [],
+      "rendered": false,
+      "cursor": 0,
+      "pages": [],
+      "failed": false,
+      "error": "",
+      "code": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "DOC_TEXT_FAILED",
+        "payload": {
+         "key": "k1",
+         "error": "model offline",
+         "code": "doc_vision_failed"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DOC_TEXT"
+      ]
+     }
+    }
+   ],
+   "config": {
+    "reader": "vision"
+   }
+  },
+  {
+   "id": "vision: an image extension with no declared media type is doc_unsupported",
+   "steps": [
+    {
+     "trait": "DocumentText",
+     "event": "DOC_TEXT_READ",
+     "from": "ready",
+     "payload": {
+      "key": "k1",
+      "path": "/s/a.bmp"
+     },
+     "entity": {
+      "id": "d",
+      "key": "",
+      "path": "",
+      "mediaType": "",
+      "pagePaths": [],
+      "rendered": false,
+      "cursor": 0,
+      "pages": [],
+      "failed": false,
+      "error": "",
+      "code": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "DOC_TEXT_FAILED",
+        "payload": {
+         "key": "k1",
+         "error": "the image extension has no declared media type",
+         "code": "doc_unsupported"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DOC_OCR_REQUEST",
+       "LLM_GENERATE"
+      ]
+     }
+    }
+   ],
+   "config": {
+    "reader": "vision"
+   }
+  },
+  {
+   "id": "control: reader ocr still reads that bmp by OCR",
+   "steps": [
+    {
+     "trait": "DocumentText",
+     "event": "DOC_TEXT_READ",
+     "from": "ready",
+     "payload": {
+      "key": "k1",
+      "path": "/s/a.bmp"
+     },
+     "entity": {
+      "id": "d",
+      "key": "",
+      "path": "",
+      "mediaType": "",
+      "pagePaths": [],
+      "rendered": false,
+      "cursor": 0,
+      "pages": [],
+      "failed": false,
+      "error": "",
+      "code": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ocr",
+      "emits": [
+       {
+        "event": "DOC_OCR_REQUEST",
+        "payload": {
+         "key": "k1",
+         "path": "/s/a.bmp"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a declared media type is used for an extension added to the list",
+   "steps": [
+    {
+     "trait": "DocumentText",
+     "event": "DOC_TEXT_READ",
+     "from": "ready",
+     "payload": {
+      "key": "k1",
+      "path": "/s/a.bmp"
+     },
+     "entity": {
+      "id": "d",
+      "key": "",
+      "path": "",
+      "mediaType": "",
+      "pagePaths": [],
+      "rendered": false,
+      "cursor": 0,
+      "pages": [],
+      "failed": false,
+      "error": "",
+      "code": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "visionOpen",
+      "entity": {
+       "mediaType": "image/bmp"
+      },
+      "effects": [
+       {
+        "type": "os/read-file"
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "reader": "vision",
+    "imageMediaTypes": [
+     {
+      "ext": ".bmp",
+      "mediaType": "image/bmp"
+     }
+    ]
+   }
+  },
+  {
+   "id": "vision: a text PDF is still read by pdftotext",
+   "steps": [
+    {
+     "trait": "DocumentText",
+     "event": "DOC_TEXT_READ",
+     "from": "ready",
+     "payload": {
+      "key": "k1",
+      "path": "/s/A.pdf"
+     },
+     "entity": {
+      "id": "d",
+      "key": "",
+      "path": "",
+      "mediaType": "",
+      "pagePaths": [],
+      "rendered": false,
+      "cursor": 0,
+      "pages": [],
+      "failed": false,
+      "error": "",
+      "code": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "pdf",
+      "emits": [
+       {
+        "event": "DOC_PDF_REQUEST",
+        "payload": {
+         "key": "k1",
+         "path": "/s/A.pdf"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DOC_RENDER_REQUEST"
+      ]
+     }
+    }
+   ],
+   "config": {
+    "reader": "vision"
+   }
+  },
+  {
+   "id": "vision: a text layer answers method pdftotext, no model call",
+   "steps": [
+    {
+     "trait": "DocumentText",
+     "event": "DOC_PDF_TEXT",
+     "from": "pdf",
+     "payload": {
+      "key": "k1",
+      "pages": [
+       {
+        "page": 1,
+        "text": "x"
+       }
+      ]
+     },
+     "entity": {
+      "id": "d",
+      "key": "k1",
+      "path": "/s/A.pdf",
+      "mediaType": "",
+      "pagePaths": [],
+      "rendered": false,
+      "cursor": 0,
+      "pages": [],
+      "failed": false,
+      "error": "",
+      "code": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "DOC_TEXT",
+        "payload": {
+         "key": "k1",
+         "pages": [
+          {
+           "page": 1,
+           "text": "x"
+          }
+         ],
+         "method": "pdftotext"
+        }
+       }
+      ],
+      "neverEmits": [
+       "LLM_GENERATE",
+       "DOC_RENDER_REQUEST"
+      ]
+     }
+    }
+   ],
+   "config": {
+    "reader": "vision"
+   }
+  },
+  {
+   "id": "vision: a PDF with no text layer is rendered, not sent to OCR",
+   "steps": [
+    {
+     "trait": "DocumentText",
+     "event": "DOC_PDF_NO_TEXT",
+     "from": "pdf",
+     "payload": {
+      "key": "k1",
+      "pageCount": 2
+     },
+     "entity": {
+      "id": "d",
+      "key": "k1",
+      "path": "/s/A.pdf",
+      "mediaType": "",
+      "pagePaths": [],
+      "rendered": false,
+      "cursor": 0,
+      "pages": [],
+      "failed": false,
+      "error": "",
+      "code": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "rendering",
+      "entity": {
+       "rendered": true
+      },
+      "emits": [
+       {
+        "event": "DOC_RENDER_REQUEST",
+        "payload": {
+         "key": "k1",
+         "path": "/s/A.pdf"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DOC_OCR_REQUEST"
+      ]
+     }
+    }
+   ],
+   "config": {
+    "reader": "vision"
+   }
+  },
+  {
+   "id": "control: reader ocr sends the no-text PDF to OCR",
+   "steps": [
+    {
+     "trait": "DocumentText",
+     "event": "DOC_PDF_NO_TEXT",
+     "from": "pdf",
+     "payload": {
+      "key": "k1",
+      "pageCount": 2
+     },
+     "entity": {
+      "id": "d",
+      "key": "k1",
+      "path": "/s/A.pdf",
+      "mediaType": "",
+      "pagePaths": [],
+      "rendered": false,
+      "cursor": 0,
+      "pages": [],
+      "failed": false,
+      "error": "",
+      "code": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ocr",
+      "emits": [
+       {
+        "event": "DOC_OCR_REQUEST",
+        "payload": {
+         "key": "k1",
+         "path": "/s/A.pdf"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DOC_RENDER_REQUEST"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "vision: rendered pages arrive and the first page image is read",
+   "steps": [
+    {
+     "trait": "DocumentText",
+     "event": "DOC_RENDER_PAGES",
+     "from": "rendering",
+     "payload": {
+      "key": "k1",
+      "pages": [
+       {
+        "page": 1,
+        "name": "K-1.png",
+        "path": "/w/K-1.png"
+       },
+       {
+        "page": 2,
+        "name": "K-2.png",
+        "path": "/w/K-2.png"
+       }
+      ]
+     },
+     "entity": {
+      "id": "d",
+      "key": "k1",
+      "path": "/s/A.pdf",
+      "mediaType": "",
+      "pagePaths": [],
+      "rendered": true,
+      "cursor": 0,
+      "pages": [],
+      "failed": false,
+      "error": "",
+      "code": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "visionOpen",
+      "entity": {
+       "mediaType": "image/png",
+       "cursor": 0
+      },
+      "effects": [
+       {
+        "type": "os/read-file"
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "reader": "vision"
+   }
+  },
+  {
+   "id": "vision: the first page image goes to the model as image/png",
+   "steps": [
+    {
+     "trait": "DocumentText",
+     "event": "DOC_FILE_READ",
+     "from": "visionOpen",
+     "payload": {
+      "data": "UE5H",
+      "key": "page"
+     },
+     "entity": {
+      "id": "d",
+      "key": "k1",
+      "path": "",
+      "mediaType": "image/png",
+      "pagePaths": [
+       {
+        "page": 1,
+        "name": "K-1.png",
+        "path": "/w/K-1.png"
+       },
+       {
+        "page": 2,
+        "name": "K-2.png",
+        "path": "/w/K-2.png"
+       }
+      ],
+      "rendered": true,
+      "cursor": 0,
+      "pages": [],
+      "failed": false,
+      "error": "",
+      "code": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "describing",
+      "emits": [
+       {
+        "event": "LLM_GENERATE",
+        "payload": {
+         "userPrompt": "Transcribe all the text in the image exactly as written, in its original language. Output only the text.",
+         "temperature": 0,
+         "maxTokens": 0,
+         "images": [
+          {
+           "mediaType": "image/png",
+           "data": "UE5H"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "reader": "vision"
+   }
+  },
+  {
+   "id": "vision: page one transcribed, page two is read next",
+   "steps": [
+    {
+     "trait": "DocumentText",
+     "event": "DOC_VISION_TEXT",
+     "from": "describing",
+     "payload": {
+      "content": "One",
+      "usage": {
+       "promptTokens": 1,
+       "completionTokens": 1,
+       "totalTokens": 2
+      }
+     },
+     "entity": {
+      "id": "d",
+      "key": "k1",
+      "path": "",
+      "mediaType": "image/png",
+      "pagePaths": [
+       {
+        "page": 1,
+        "name": "K-1.png",
+        "path": "/w/K-1.png"
+       },
+       {
+        "page": 2,
+        "name": "K-2.png",
+        "path": "/w/K-2.png"
+       }
+      ],
+      "rendered": true,
+      "cursor": 0,
+      "pages": [],
+      "failed": false,
+      "error": "",
+      "code": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "visionOpen",
+      "entity": {
+       "cursor": 1,
+       "pages": [
+        {
+         "page": 1,
+         "text": "One"
+        }
+       ]
+      },
+      "effects": [
+       {
+        "type": "os/read-file"
+       }
+      ],
+      "neverEmits": [
+       "DOC_RENDER_RELEASE",
+       "DOC_TEXT"
+      ]
+     }
+    }
+   ],
+   "config": {
+    "reader": "vision"
+   }
+  },
+  {
+   "id": "vision: the last page transcribed releases the rendered pages before answering",
+   "steps": [
+    {
+     "trait": "DocumentText",
+     "event": "DOC_VISION_TEXT",
+     "from": "describing",
+     "payload": {
+      "content": "Two",
+      "usage": {
+       "promptTokens": 1,
+       "completionTokens": 1,
+       "totalTokens": 2
+      }
+     },
+     "entity": {
+      "id": "d",
+      "key": "k1",
+      "path": "",
+      "mediaType": "image/png",
+      "pagePaths": [
+       {
+        "page": 1,
+        "name": "K-1.png",
+        "path": "/w/K-1.png"
+       },
+       {
+        "page": 2,
+        "name": "K-2.png",
+        "path": "/w/K-2.png"
+       }
+      ],
+      "rendered": true,
+      "cursor": 1,
+      "pages": [
+       {
+        "page": 1,
+        "text": "One"
+       }
+      ],
+      "failed": false,
+      "error": "",
+      "code": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "releasing",
+      "entity": {
+       "pages": [
+        {
+         "page": 1,
+         "text": "One"
+        },
+        {
+         "page": 2,
+         "text": "Two"
+        }
+       ]
+      },
+      "emits": [
+       {
+        "event": "DOC_RENDER_RELEASE",
+        "payload": {
+         "key": "k1"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DOC_TEXT"
+      ]
+     }
+    }
+   ],
+   "config": {
+    "reader": "vision"
+   }
+  },
+  {
+   "id": "vision: released, the pages answer in order with method vision",
+   "steps": [
+    {
+     "trait": "DocumentText",
+     "event": "DOC_RENDER_RELEASED",
+     "from": "releasing",
+     "payload": {
+      "key": "k1"
+     },
+     "entity": {
+      "id": "d",
+      "key": "k1",
+      "path": "",
+      "mediaType": "",
+      "pagePaths": [
+       {
+        "page": 1,
+        "name": "K-1.png",
+        "path": "/w/K-1.png"
+       },
+       {
+        "page": 2,
+        "name": "K-2.png",
+        "path": "/w/K-2.png"
+       }
+      ],
+      "rendered": true,
+      "cursor": 1,
+      "pages": [
+       {
+        "page": 1,
+        "text": "One"
+       },
+       {
+        "page": 2,
+        "text": "Two"
+       }
+      ],
+      "failed": false,
+      "error": "",
+      "code": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "DOC_TEXT",
+        "payload": {
+         "key": "k1",
+         "pages": [
+          {
+           "page": 1,
+           "text": "One"
+          },
+          {
+           "page": 2,
+           "text": "Two"
+          }
+         ],
+         "method": "vision"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DOC_TEXT_FAILED"
+      ]
+     }
+    }
+   ],
+   "config": {
+    "reader": "vision"
+   }
+  },
+  {
+   "id": "vision: a model failure on a page releases the pages and records doc_vision_failed",
+   "steps": [
+    {
+     "trait": "DocumentText",
+     "event": "DOC_VISION_FAILED",
+     "from": "describing",
+     "payload": {
+      "message": "model offline"
+     },
+     "entity": {
+      "id": "d",
+      "key": "k1",
+      "path": "",
+      "mediaType": "",
+      "pagePaths": [
+       {
+        "page": 1,
+        "name": "K-1.png",
+        "path": "/w/K-1.png"
+       },
+       {
+        "page": 2,
+        "name": "K-2.png",
+        "path": "/w/K-2.png"
+       }
+      ],
+      "rendered": true,
+      "cursor": 0,
+      "pages": [],
+      "failed": false,
+      "error": "",
+      "code": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "releasing",
+      "entity": {
+       "failed": true,
+       "error": "model offline",
+       "code": "doc_vision_failed"
+      },
+      "emits": [
+       {
+        "event": "DOC_RENDER_RELEASE",
+        "payload": {
+         "key": "k1"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DOC_TEXT_FAILED"
+      ]
+     }
+    }
+   ],
+   "config": {
+    "reader": "vision"
+   }
+  },
+  {
+   "id": "vision: released after a failure, the recorded failure is answered",
+   "steps": [
+    {
+     "trait": "DocumentText",
+     "event": "DOC_RENDER_RELEASED",
+     "from": "releasing",
+     "payload": {
+      "key": "k1"
+     },
+     "entity": {
+      "id": "d",
+      "key": "k1",
+      "path": "",
+      "mediaType": "",
+      "pagePaths": [],
+      "rendered": true,
+      "cursor": 0,
+      "pages": [],
+      "failed": true,
+      "error": "model offline",
+      "code": "doc_vision_failed"
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "DOC_TEXT_FAILED",
+        "payload": {
+         "key": "k1",
+         "error": "model offline",
+         "code": "doc_vision_failed"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DOC_TEXT"
+      ]
+     }
+    }
+   ],
+   "config": {
+    "reader": "vision"
+   }
+  },
+  {
+   "id": "vision: a page image that cannot be read releases the pages and records doc_unreadable",
+   "steps": [
+    {
+     "trait": "DocumentText",
+     "event": "DOC_FILE_FAILED",
+     "from": "visionOpen",
+     "payload": {
+      "error": "gone",
+      "key": "page"
+     },
+     "entity": {
+      "id": "d",
+      "key": "k1",
+      "path": "",
+      "mediaType": "",
+      "pagePaths": [
+       {
+        "page": 1,
+        "name": "K-1.png",
+        "path": "/w/K-1.png"
+       },
+       {
+        "page": 2,
+        "name": "K-2.png",
+        "path": "/w/K-2.png"
+       }
+      ],
+      "rendered": true,
+      "cursor": 0,
+      "pages": [],
+      "failed": false,
+      "error": "",
+      "code": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "releasing",
+      "entity": {
+       "failed": true,
+       "code": "doc_unreadable"
+      },
+      "emits": [
+       {
+        "event": "DOC_RENDER_RELEASE",
+        "payload": {
+         "key": "k1"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "reader": "vision"
+   }
+  },
+  {
+   "id": "vision: a render failure passes through with the renderer's code",
+   "steps": [
+    {
+     "trait": "DocumentText",
+     "event": "DOC_RENDER_FAILED",
+     "from": "rendering",
+     "payload": {
+      "key": "k1",
+      "error": "pdftoppm exited 1",
+      "code": "ocr_unreadable"
+     },
+     "entity": {
+      "id": "d",
+      "key": "k1",
+      "path": "",
+      "mediaType": "",
+      "pagePaths": [],
+      "rendered": true,
+      "cursor": 0,
+      "pages": [],
+      "failed": false,
+      "error": "",
+      "code": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "DOC_TEXT_FAILED",
+        "payload": {
+         "key": "k1",
+         "error": "pdftoppm exited 1",
+         "code": "ocr_unreadable"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "reader": "vision"
+   }
+  },
+  {
+   "id": "vision: a read while the model is transcribing answers doc_busy",
+   "steps": [
+    {
+     "trait": "DocumentText",
+     "event": "DOC_TEXT_READ",
+     "from": "describing",
+     "payload": {
+      "key": "k2",
+      "path": "/s/b.png"
+     },
+     "entity": {
+      "id": "d",
+      "key": "k1",
+      "path": "",
+      "mediaType": "",
+      "pagePaths": [],
+      "rendered": false,
+      "cursor": 0,
+      "pages": [],
+      "failed": false,
+      "error": "",
+      "code": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "describing",
+      "emits": [
+       {
+        "event": "DOC_TEXT_FAILED",
+        "payload": {
+         "key": "k2",
+         "error": "another document is being read",
+         "code": "doc_busy"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "reader": "vision"
+   }
   }
  ]
 }

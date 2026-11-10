@@ -1,0 +1,28 @@
+app behavior-stage-spec [
+  version: "1.0.0",
+  description: "Design contract for showing a behavior value on a stage: the one wiring every host of a run-time program repeats today (the catalog playground, the Studio builder workspace, the Studio preview page), stated once. STAGE_OPEN { key, behavior, integrations, dataDir } resolves the behavior value into a program (behavior/resolve) and hands it to std-guest-session (GUEST_OPEN), which opens it as a guest session in its own kernel and paints it with the guest-view pattern; a stage that already shows a guest closes it first, so one stage holds one guest. integrations is the composer's choice per open and never a default here: mock opens the guest with no credentials, no store driver and seeded rows; live opens it with its declared grants narrowed to what the opener holds, and with dataDir as its own folder so its rows are its own and survive the session. STAGE_OPENED { key, guest } answers with the guest session id, which the composer passes to program/inputs and program/dispatch to operate the guest. STAGE_CLOSE closes the guest and answers STAGE_CLOSED. A behavior that does not resolve, or a guest the kernel refuses to open (the missing grants named), answers STAGE_FAILED { key, code, error } with code resolve or open and leaves the stage empty. The stage owns no rows: what is kept, for whom and with what reach is the composer's."
+]
+
+orbital BehaviorStageSpec {
+  expects entity StageRun [runtime] {
+    id : string!
+    key : string
+    guest : string
+  }
+  expects trait BehaviorStage {
+    state empty {
+      STAGE_OPEN -> opening
+    }
+    state opening
+    state open {
+      STAGE_OPEN -> opening
+      STAGE_CLOSE -> empty
+    }
+    emits {
+      STAGE_OPENED { key : string!  guest : string! }
+      STAGE_CLOSED { key : string! }
+      STAGE_FAILED { key : string!  code : "resolve" | "open"!  error : string! }
+    }
+  }
+  expects page boot -> BehaviorStage
+}

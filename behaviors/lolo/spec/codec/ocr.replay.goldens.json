@@ -1757,6 +1757,421 @@
      }
     }
    ]
+  },
+  {
+   "id": "render mode: listed pages are answered with their ordered absolute paths and kept on disk",
+   "steps": [
+    {
+     "trait": "OcrReader",
+     "event": "OCR_LISTED_NEXT",
+     "from": "listing",
+     "payload": {},
+     "entity": {
+      "id": "r",
+      "key": "Doc",
+      "path": "/s/a.pdf",
+      "prefix": "Doc",
+      "realDir": "/w",
+      "cleanup": [
+       "Doc-1.png",
+       "Doc-2.png",
+       "Doc.list"
+      ],
+      "cursor": 0,
+      "failed": false,
+      "error": "",
+      "code": "",
+      "recognized": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "rendered",
+      "emits": [
+       {
+        "event": "OCR_PAGES",
+        "payload": {
+         "key": "Doc",
+         "pages": [
+          {
+           "page": 1,
+           "name": "Doc-1.png",
+           "path": "/w/Doc-1.png"
+          },
+          {
+           "page": 2,
+           "name": "Doc-2.png",
+           "path": "/w/Doc-2.png"
+          }
+         ]
+        }
+       }
+      ],
+      "neverEmits": [
+       "OCR_CLEAN_NEXT",
+       "OCR_FAILED"
+      ],
+      "entity": {
+       "cursor": 0
+      }
+     }
+    }
+   ],
+   "config": {
+    "mode": "render"
+   }
+  },
+  {
+   "id": "control: recognize mode writes the list file and emits no pages",
+   "steps": [
+    {
+     "trait": "OcrReader",
+     "event": "OCR_LISTED_NEXT",
+     "from": "listing",
+     "payload": {},
+     "entity": {
+      "id": "r",
+      "key": "Doc",
+      "path": "/s/a.pdf",
+      "prefix": "Doc",
+      "realDir": "/w",
+      "cleanup": [
+       "Doc-1.png",
+       "Doc-2.png",
+       "Doc.list"
+      ],
+      "cursor": 0,
+      "failed": false,
+      "error": "",
+      "code": "",
+      "recognized": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "writing",
+      "effects": [
+       {
+        "type": "os/write-file"
+       }
+      ],
+      "neverEmits": [
+       "OCR_PAGES"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "render mode: a failed render still cleans up and does not answer pages",
+   "steps": [
+    {
+     "trait": "OcrReader",
+     "event": "OCR_LISTED_NEXT",
+     "from": "listing",
+     "payload": {},
+     "entity": {
+      "id": "r",
+      "key": "Doc",
+      "path": "/s/a.pdf",
+      "prefix": "Doc",
+      "realDir": "/w",
+      "cleanup": [
+       "Doc.list"
+      ],
+      "cursor": 0,
+      "failed": true,
+      "error": "pdftoppm exited 1: x",
+      "code": "ocr_unreadable",
+      "recognized": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "cleaning",
+      "neverEmits": [
+       "OCR_PAGES"
+      ],
+      "emits": [
+       {
+        "event": "OCR_CLEAN_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "mode": "render"
+   }
+  },
+  {
+   "id": "render mode: release removes the held pages from the first",
+   "steps": [
+    {
+     "trait": "OcrReader",
+     "event": "OCR_RELEASE",
+     "from": "rendered",
+     "payload": {
+      "key": "Doc"
+     },
+     "entity": {
+      "id": "r",
+      "key": "Doc",
+      "path": "/s/a.pdf",
+      "prefix": "Doc",
+      "realDir": "/w",
+      "cleanup": [
+       "Doc-1.png",
+       "Doc-2.png",
+       "Doc.list"
+      ],
+      "cursor": 3,
+      "failed": false,
+      "error": "",
+      "code": "",
+      "recognized": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "cleaning",
+      "entity": {
+       "cursor": 0
+      },
+      "emits": [
+       {
+        "event": "OCR_CLEAN_NEXT",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "mode": "render"
+   }
+  },
+  {
+   "id": "render mode: a release for another key is ignored while pages are held",
+   "steps": [
+    {
+     "trait": "OcrReader",
+     "event": "OCR_RELEASE",
+     "from": "rendered",
+     "payload": {
+      "key": "Other"
+     },
+     "entity": {
+      "id": "r",
+      "key": "Doc",
+      "path": "/s/a.pdf",
+      "prefix": "Doc",
+      "realDir": "/w",
+      "cleanup": [
+       "Doc-1.png",
+       "Doc.list"
+      ],
+      "cursor": 0,
+      "failed": false,
+      "error": "",
+      "code": "",
+      "recognized": ""
+     },
+     "expect": {
+      "fired": false
+     }
+    }
+   ],
+   "config": {
+    "mode": "render"
+   }
+  },
+  {
+   "id": "render mode: cleaned up after a release answers released, not text",
+   "steps": [
+    {
+     "trait": "OcrReader",
+     "event": "OCR_CLEAN_NEXT",
+     "from": "cleaning",
+     "payload": {},
+     "entity": {
+      "id": "r",
+      "key": "Doc",
+      "path": "/s/a.pdf",
+      "prefix": "Doc",
+      "realDir": "/w",
+      "cleanup": [
+       "Doc-1.png",
+       "Doc-2.png",
+       "Doc.list"
+      ],
+      "cursor": 3,
+      "failed": false,
+      "error": "",
+      "code": "",
+      "recognized": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "OCR_RELEASED",
+        "payload": {
+         "key": "Doc"
+        }
+       }
+      ],
+      "neverEmits": [
+       "OCR_TEXT",
+       "OCR_NO_TEXT",
+       "OCR_FAILED"
+      ]
+     }
+    }
+   ],
+   "config": {
+    "mode": "render"
+   }
+  },
+  {
+   "id": "render mode: an image path is unsupported",
+   "steps": [
+    {
+     "trait": "OcrReader",
+     "event": "OCR_READ",
+     "from": "ready",
+     "payload": {
+      "key": "k1",
+      "path": "/s/a.png"
+     },
+     "entity": {
+      "id": "r",
+      "key": "",
+      "path": "",
+      "prefix": "",
+      "realDir": "",
+      "cleanup": [],
+      "cursor": 0,
+      "failed": false,
+      "error": "",
+      "code": "",
+      "recognized": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "OCR_FAILED",
+        "payload": {
+         "key": "k1",
+         "error": "the file is neither a PDF nor an image the OCR reads",
+         "code": "ocr_unsupported"
+        }
+       }
+      ],
+      "neverEmits": [
+       "OCR_EXEC"
+      ]
+     }
+    }
+   ],
+   "config": {
+    "mode": "render"
+   }
+  },
+  {
+   "id": "render mode: a read while pages are held answers ocr_busy",
+   "steps": [
+    {
+     "trait": "OcrReader",
+     "event": "OCR_READ",
+     "from": "rendered",
+     "payload": {
+      "key": "k2",
+      "path": "/s/b.pdf"
+     },
+     "entity": {
+      "id": "r",
+      "key": "Doc",
+      "path": "/s/a.pdf",
+      "prefix": "Doc",
+      "realDir": "/w",
+      "cleanup": [
+       "Doc-1.png",
+       "Doc.list"
+      ],
+      "cursor": 0,
+      "failed": false,
+      "error": "",
+      "code": "",
+      "recognized": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "rendered",
+      "emits": [
+       {
+        "event": "OCR_FAILED",
+        "payload": {
+         "key": "k2",
+         "error": "another document is being read",
+         "code": "ocr_busy"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "mode": "render"
+   }
+  },
+  {
+   "id": "control: recognize mode cleaned up still answers text and not released",
+   "steps": [
+    {
+     "trait": "OcrReader",
+     "event": "OCR_CLEAN_NEXT",
+     "from": "cleaning",
+     "payload": {},
+     "entity": {
+      "id": "r",
+      "key": "Doc",
+      "path": "/s/a.pdf",
+      "prefix": "Doc",
+      "realDir": "/w",
+      "cleanup": [
+       "Doc-1.png",
+       "Doc.list"
+      ],
+      "cursor": 2,
+      "failed": false,
+      "error": "",
+      "code": "",
+      "recognized": "Hi\n"
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "OCR_TEXT",
+        "payload": {
+         "key": "Doc",
+         "pages": [
+          {
+           "page": 1,
+           "text": "Hi\n"
+          }
+         ]
+        }
+       }
+      ],
+      "neverEmits": [
+       "OCR_RELEASED"
+      ]
+     }
+    }
+   ]
   }
  ]
 }

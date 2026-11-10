@@ -1,0 +1,220 @@
+app std-transcribe [
+  version: "1.0.0",
+  description: "std-transcribe — speech to text through the Whisper transcription API of OpenAI or Groq over the composed std-http-client. TRANSCRIBE sends one audio file as a multipart/form-data POST to <base>/audio/transcriptions (fields file, model, language when one is given, response_format verbose_json) and answers TRANSCRIBED { key?, text, language, durationSeconds } or TRANSCRIBE_FAILED { key?, code?, message }; an optional key is echoed on its answer (it rides the wire key as <vendor>:<key>). The language is an ISO-639-1 code (sl, en, ar, ...): the request's language wins over the language knob, and an empty or absent one sends no language field so the provider detects it. The multipart body is built in .lolo as bytes, so the text of the reply (Slovenian č, š, ž included) is kept exactly as returned. A file over 25 MB is refused with TOO_LARGE before any request. The credential is OPENAI_API_KEY or GROQ_API_KEY, resolved by the host.",
+  egress: ["https://api.openai.com", "https://api.groq.com"],
+  net: { "api.openai.com:443": [tcp], "api.groq.com:443": [tcp] }
+]
+uses Http from "std/behaviors/std-http-client"
+uses Frame from "std/behaviors/std-http-frame"
+uses Timeout from "std/behaviors/std-timeout"
+type HttpHeader = { name : string!, value : string! }
+type TranscribeField = { name : string!, value : string! }
+type TranscribeReply = { text : string, language : string, duration : number }
+type TranscribeApiErrorBody = { message : string, code : string }
+type TranscribeApiError = { error : TranscribeApiErrorBody }
+orbital TranscribeOrbital {
+  entity Transcription [runtime] {
+    id : string!
+  }
+
+  trait Transcriber -> Transcription [optimistic] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+
+      TRANSCRIBE -> idle when (> (bytes/length @payload.audio) @config.maxBytes)
+        (emit TRANSCRIBE_FAILED { key: @payload.key, code: "TOO_LARGE", message: (str/concat "The audio is " (bytes/length @payload.audio) " bytes; the limit is " @config.maxBytes " bytes") })
+      TRANSCRIBE -> idle when (and (<= (bytes/length @payload.audio) @config.maxBytes) (>= (bytes/index-of @payload.audio (bytes/from-string @config.boundary)) 0))
+        (emit TRANSCRIBE_FAILED { key: @payload.key, code: "BOUNDARY_COLLISION", message: "The audio contains the multipart boundary; change the boundary knob" })
+      TRANSCRIBE -> idle when (and (<= (bytes/length @payload.audio) @config.maxBytes) (< (bytes/index-of @payload.audio (bytes/from-string @config.boundary)) 0))
+        (let ((lang (str/lower (str/trim (if (!= @payload.language null) @payload.language @config.language))))
+              (model (if (!= @config.model "") @config.model (if (= @config.vendor groq) "whisper-large-v3" "whisper-1"))))
+          (let ((fields (array/concat
+                  [{ name: "model", value: @model }]
+                  (if (!= @lang "") [{ name: "language", value: @lang }] [])
+                  [{ name: "response_format", value: "verbose_json" }])))
+            (emit TRANSCRIBE_HTTP_SEND {
+              key: (str/concat (if (= @config.vendor groq) "groq" "openai") (if (validate/required @payload.key) (str/concat ":" @payload.key) "")),
+              host: (if (= @config.vendor groq) "api.groq.com" "api.openai.com"),
+              method: "POST",
+              target: (if (= @config.vendor groq) "/openai/v1/audio/transcriptions" "/v1/audio/transcriptions"),
+              headers: [{ name: "accept", value: "application/json" }, { name: "content-type", value: (str/concat "multipart/form-data; boundary=" @config.boundary) }],
+              body: (bytes/concat (array/concat
+                [(bytes/from-string (str/concat "--" @config.boundary "\r\nContent-Disposition: form-data; name=\"file\"; filename=\"" (str/replaceAll (str/replaceAll (str/replaceAll @payload.filename "\"" "%22") "\r" "") "\n" "") "\"\r\nContent-Type: " (str/replaceAll (str/replaceAll @payload.mimeType "\r" "") "\n" "") "\r\n\r\n")) @payload.audio (bytes/from-string "\r\n")]
+                (array/map @fields (fn f (bytes/from-string (str/concat "--" @config.boundary "\r\nContent-Disposition: form-data; name=\"" @f.name "\"\r\n\r\n" @f.value "\r\n"))))
+                [(bytes/from-string (str/concat "--" @config.boundary "--\r\n"))])),
+              stream: "none"
+            })))
+
+      TRANSCRIBE_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (= (json/parse @payload.body TranscribeReply) null))
+        (emit TRANSCRIBE_FAILED { key: @payload.key, code: "BAD_REPLY", message: "The transcription answer could not be read" })
+      TRANSCRIBE_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (!= (json/parse @payload.body TranscribeReply) null))
+        (let ((r (json/parse @payload.body TranscribeReply)))
+          (emit TRANSCRIBED { key: @payload.key, text: (default (object/get @r text "") ""), language: (default (object/get @r language "") ""), durationSeconds: (default (object/get @r duration 0) 0) }))
+      TRANSCRIBE_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
+        (let ((e (json/parse @payload.body TranscribeApiError)))
+          (emit TRANSCRIBE_FAILED { key: @payload.key, code: (str/concat "HTTP_" @payload.status), message: (if (and (!= @e null) (!= (default (object/get @e "error.message" "") "") "")) (object/get @e "error.message" "") (str/concat "The transcription request failed with status " @payload.status)) }))
+
+      TRANSCRIBE_REQUEST_FAILED -> idle when (= @payload.kind "unconfigured")
+        (emit TRANSCRIBE_FAILED { key: @payload.key, code: "NOT_CONFIGURED", message: "Integration not configured: transcribe. Set OPENAI_API_KEY or GROQ_API_KEY." })
+      TRANSCRIBE_REQUEST_FAILED -> idle when (!= @payload.kind "unconfigured")
+        (emit TRANSCRIBE_FAILED { key: @payload.key, code: (str/upper @payload.kind), message: @payload.error })
+    }
+
+    emits {
+      TRANSCRIBED -> external {
+        key : string?
+        text : string!
+        language : string!
+        durationSeconds : number!
+      }
+        @description "The audio was transcribed: text exactly as the provider returned it, the language the provider reports (detected or the one asked for) and the audio duration in seconds."
+        @synonyms "transcription, speech to text result, transcript"
+        @tier "primary"
+      TRANSCRIBE_FAILED -> external {
+        key : string?
+        code : string
+        message : string!
+      }
+        @description "The audio was not transcribed: TOO_LARGE before any request, NOT_CONFIGURED when no credential is set, HTTP_<status> for a provider error, BAD_REPLY for an unreadable answer, or the transport failure kind."
+        @synonyms "transcription failed, speech to text error"
+        @tier "primary"
+      TRANSCRIBE_HTTP_SEND {
+        key : string!
+        host : string!
+        method : string!
+        target : string!
+        headers : [HttpHeader]!
+        body : bytes!
+        stream : string!
+      }
+        @description "Internal: the multipart transcription request, for the HTTP client of its host."
+        @tier "secondary"
+    }
+
+    listens {
+      TRANSCRIBE -> input {
+        key : string?
+        audio : bytes!
+        filename : string!
+        mimeType : string!
+        language : string?
+      }
+        @description "Transcribe one audio file. language is an ISO-639-1 code (sl, en, ar, ...) and wins over the language knob; empty or absent means auto-detect. A file over 25 MB is refused with TOO_LARGE."
+        @synonyms "transcribe audio, speech to text, whisper, dictation"
+      TRANSCRIBE_REPLIED {
+        key : string?
+        status : number!
+        headers : Map string string
+        body : string!
+      }
+        @description "Internal: a provider reply, status and body, with the caller's key restored."
+      TRANSCRIBE_REQUEST_FAILED {
+        key : string?
+        error : string!
+        kind : string!
+      }
+        @description "Internal: the call never completed (unconfigured credential, transport failure or timeout), with the caller's key restored."
+      TranscribeOpenaiHttp.HTTP_REPLIED -> TRANSCRIBE_REPLIED with { key: (if (> (str/len ?key) 6) (str/slice ?key 7) null), status: ?status, headers: ?headers, body: (default (bytes/to-string ?body) "") }
+      TranscribeOpenaiHttp.HTTP_FAILED -> TRANSCRIBE_REQUEST_FAILED with { key: (if (> (str/len ?key) 6) (str/slice ?key 7) null), error: ?error, kind: ?kind }
+      TranscribeGroqHttp.HTTP_REPLIED -> TRANSCRIBE_REPLIED with { key: (if (> (str/len ?key) 4) (str/slice ?key 5) null), status: ?status, headers: ?headers, body: (default (bytes/to-string ?body) "") }
+      TranscribeGroqHttp.HTTP_FAILED -> TRANSCRIBE_REQUEST_FAILED with { key: (if (> (str/len ?key) 4) (str/slice ?key 5) null), error: ?error, kind: ?kind }
+      TranscribeTimeout.TIMED_OUT -> TRANSCRIBE_REQUEST_FAILED with { key: (if (str/startsWith ?key "groq") (if (> (str/len ?key) 4) (str/slice ?key 5) null) (if (> (str/len ?key) 6) (str/slice ?key 7) null)), error: (str/concat "timeout of " ?timeoutMs "ms exceeded"), kind: "timeout" }
+    }
+
+    config {
+      vendor : "openai" | "groq" = openai
+        @label "Transcription vendor"
+        @description "The vendor that transcribes: openai (api.openai.com/v1, OPENAI_API_KEY) or groq (api.groq.com/openai/v1, GROQ_API_KEY). Same API shape, Bearer auth."
+        @synonyms "speech provider, whisper host, openai or groq"
+        @tier "infra"
+      model : string = ""
+        @label "Model"
+        @description "The Whisper model; empty uses the vendor default (whisper-1 on openai, whisper-large-v3 on groq)."
+        @synonyms "whisper model, speech model"
+        @tier "infra"
+      language : string = ""
+        @label "Default language"
+        @description "ISO-639-1 language sent when a request names none; empty means auto-detect (no language field)."
+        @synonyms "spoken language, default language, slovenian sl"
+        @tier "infra"
+      maxBytes : number = 26214400
+        @label "Largest file"
+        @description "The largest audio file in bytes (25 MB); a larger file is refused with TOO_LARGE before any request."
+        @synonyms "file size limit, max audio size"
+        @tier "infra"
+      boundary : string = "almadar-transcribe-multipart"
+        @label "Multipart boundary"
+        @description "The boundary of the multipart/form-data body; a file that contains it is refused with BOUNDARY_COLLISION."
+        @synonyms "multipart boundary"
+        @tier "infra"
+    }
+  }
+
+  trait TranscribeOpenaiHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      TranscribeOpenaiHttp.HC_FRAME -> FRAME_RUN
+    }
+  }
+
+  trait TranscribeOpenaiHttp = Http.traits.HttpClient {
+    config {
+      host: "api.openai.com"
+      port: 443
+      tls: true
+      serverName: "api.openai.com"
+      credential: "OPENAI_API_KEY"
+      credentialHeader: "authorization"
+      credentialPrefix: "Bearer "
+    }
+    listens {
+      Transcriber.TRANSCRIBE_HTTP_SEND -> HTTP_SEND with { key: ?key, method: ?method, target: ?target, headers: ?headers, body: ?body, stream: ?stream, host: ?host } when (= ?host "api.openai.com")
+      TranscribeTimeout.TIMED_OUT -> HTTP_CANCEL with { key: ?key } when (str/startsWith ?key "openai")
+      TranscribeOpenaiHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      TranscribeOpenaiHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      TranscribeOpenaiHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
+    }
+  }
+
+  trait TranscribeGroqHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      TranscribeGroqHttp.HC_FRAME -> FRAME_RUN
+    }
+  }
+
+  trait TranscribeGroqHttp = Http.traits.HttpClient {
+    config {
+      host: "api.groq.com"
+      port: 443
+      tls: true
+      serverName: "api.groq.com"
+      credential: "GROQ_API_KEY"
+      credentialHeader: "authorization"
+      credentialPrefix: "Bearer "
+    }
+    listens {
+      Transcriber.TRANSCRIBE_HTTP_SEND -> HTTP_SEND with { key: ?key, method: ?method, target: ?target, headers: ?headers, body: ?body, stream: ?stream, host: ?host } when (= ?host "api.groq.com")
+      TranscribeTimeout.TIMED_OUT -> HTTP_CANCEL with { key: ?key } when (str/startsWith ?key "groq")
+      TranscribeGroqHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      TranscribeGroqHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      TranscribeGroqHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
+    }
+  }
+
+  trait TranscribeTimeout = Timeout.traits.Timeout {
+    config {
+      timeoutMs: 300000
+      cancelOnDeadline: false
+    }
+    listens {
+      Transcriber.TRANSCRIBE_HTTP_SEND -> START with { key: (as ?key CallKey) }
+      TranscribeOpenaiHttp.HTTP_REPLIED -> SUCCEEDED with { key: (as ?key CallKey) }
+      TranscribeOpenaiHttp.HTTP_FAILED -> FAILED with { key: (as ?key CallKey), error: ?error }
+      TranscribeGroqHttp.HTTP_REPLIED -> SUCCEEDED with { key: (as ?key CallKey) }
+      TranscribeGroqHttp.HTTP_FAILED -> FAILED with { key: (as ?key CallKey), error: ?error }
+    }
+  }
+
+  page boot as TranscribePage -> Transcriber, TranscribeOpenaiHttp, TranscribeOpenaiHttpFrame, TranscribeGroqHttp, TranscribeGroqHttpFrame, TranscribeTimeout
+}

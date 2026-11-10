@@ -4,7 +4,7 @@ app std-orb-lint-rui-effects [
   env: ["PATH"],
   exec: [exe],
   fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
-  description: "std-orb-lint-rui-effects — the `orb lint rui-effects <file>` command, the port of three render_ui/mod.rs checks over every inline trait: ORB_RUI_INVALID_SLOT (a render-ui effect whose slot is not one of the closed slot list; a slot named by a `@config.<knob>` binding is read through the trait's declared default, as the compiler sees it after inlining, and one with no declared default is not judged), ORB_EFF_MISSING_FETCH_FOR_ENTITY (a top-level render-ui whose pattern names a literal entity that no top-level fetch in the same transition, or in any transition leading into its state, fetches; an entity bound through an `@` reference is skipped) and ORB_BINDING_TRAIT_INVALID_POSITION (an `@trait.X` string in a render-ui pattern outside a `children` array and outside a prop the installed pattern registry types as `node`). Only the top-level effects of a transition are read, array and object render-ui forms alike, exactly as the compiler does. ORB_EFF_SLOT_CONFLICT is not ported: the compiler collects the slots of a transition in a set before counting them, so no count is ever above one and the code never fires. Findings carry the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint rui-effects: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+  description: "std-orb-lint-rui-effects — the `orb lint rui-effects <file>` command, the port of three render_ui/mod.rs checks over every inline trait: ORB_RUI_INVALID_SLOT (a render-ui effect whose slot is not one of the closed slot list; a slot named by a `@config.<knob>` binding is read through the trait's declared default, as the compiler sees it after inlining, and one with no declared default is not judged), ORB_EFF_MISSING_FETCH_FOR_ENTITY (a top-level render-ui whose pattern names a literal entity, where the installed pattern registry gives that pattern's `entity` prop the kind `entity` (it binds entity data; a pattern whose `entity` is only a name, like filter-group, is not judged), that no top-level fetch in the same transition, or in any transition leading into its state, fetches; an entity bound through an `@` reference is skipped) and ORB_BINDING_TRAIT_INVALID_POSITION (an `@trait.X` string in a render-ui pattern outside a `children` array and outside a prop the installed pattern registry types as `node`). Only the top-level effects of a transition are read, array and object render-ui forms alike, exactly as the compiler does. ORB_EFF_SLOT_CONFLICT is not ported: the compiler collects the slots of a transition in a set before counting them, so no count is ever above one and the code never fires. Findings carry the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint rui-effects: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
 ]
 uses Spec from "almadar-std/lint-rui-effects"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
@@ -35,6 +35,7 @@ orbital OrbLintRuiEffectsOrbital {
     scope : string = ""
     findings : [OrbFinding] = []
     nodeProps : Map string [string] = {}
+    dataPatterns : [string] = []
     validSlots : [string] = []
     roots : Map string [string] = {}
     indexed : boolean = false
@@ -53,6 +54,7 @@ orbital OrbLintRuiEffectsOrbital {
         (set @entity.indexScope @payload.scope)
       LINT_PATTERNS_HEARD -> ready
         (set @entity.nodeProps (object/mapValues @payload.patterns (fn e (let ((ps (object/get @e "props" {}))) (array/filter (object/keys @ps) (fn pn (array/includes (object/get (object/get @ps @pn {}) "types" []) "node")))))))
+        (set @entity.dataPatterns (array/filter (object/keys @payload.patterns) (fn pt (= (object/get (object/get (object/get (object/get @payload.patterns @pt {}) "props" {}) "entity" {}) "kind" "") "entity"))))
       UI_VOCAB_HEARD -> ready
         (set @entity.vocabUnread false)
         (set @entity.validSlots @payload.slots)
@@ -66,7 +68,7 @@ orbital OrbLintRuiEffectsOrbital {
       LINT_INPUT -> ready when (not @entity.vocabUnread)
         (set @entity.scope @payload.scope)
         (set @entity.findings (if (and @entity.indexed (= @entity.indexScope @payload.scope))
-(let ((orbitals : [EfOrbitalRE] (object/get @payload.program "orbitals" [])) (np @entity.nodeProps) (roots @entity.roots) (validSlots @entity.validSlots))
+(let ((orbitals : [EfOrbitalRE] (object/get @payload.program "orbitals" [])) (np @entity.nodeProps) (dp @entity.dataPatterns) (roots @entity.roots) (validSlots @entity.validSlots))
             (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
               (let ((orb (array/nth @orbitals @oi)))
                 (let ((trs (object/get @orb "traits" [])))
@@ -90,7 +92,7 @@ orbital OrbLintRuiEffectsOrbital {
                                                           (let ((sres (if (validate/string @slot0) (if (str/startsWith @slot0 (quote "@config.")) (let ((dv (let ((nkr : EfKnobRE { default: null })) (object/get (default (as (object/get @cfg (str/slice @slot0 8 (str/len @slot0)) null) EfKnobRE) @nkr) "default" null)))) (if (validate/string @dv) @dv @slot0)) @slot0) null))
                                                                 (patO (if (validate/object @pat) @pat {})))
                                                             (let ((en (object/get @patO "entity" null)))
-                                                              (let ((ent (if (and @aRui (validate/string @en) (not (str/startsWith @en (quote "@")))) @en ""))
+                                                              (let ((ent (if (and @aRui (validate/string @en) (not (str/startsWith @en (quote "@"))) (array/includes @dp (object/get @patO "type" ""))) @en ""))
                                                                     (slotF (if (and (validate/string @sres) (not (array/includes @validSlots @sres)) (not (str/startsWith @sres (quote "@config."))))
                                                                       [{ code: @config.codes.ruiInvalidSlot.code, path: @ep, message: (str/concat "Invalid slot: '" @sres "'"), suggestion: "", severity: "error" }]
                                                                       []))

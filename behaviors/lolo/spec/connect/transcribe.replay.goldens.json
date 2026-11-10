@@ -1,0 +1,913 @@
+{
+ "atom": "connect/atoms/std-transcribe.lolo",
+ "trait": "Transcriber",
+ "note": "std-transcribe over the composed std-http-client: one TRANSCRIBE is one TRANSCRIBE_HTTP_SEND whose multipart/form-data body (file, model, language when given, response_format verbose_json) is built in .lolo as bytes; the Bearer key rides the client credential, never the event; replies and failures return by vendor with the caller's key restored. The size limit is exercised through the maxBytes knob.",
+ "cases": [
+  {
+   "id": "openai-with-language-sl-sends-a-multipart-body-carrying-language-sl",
+   "defaults": [
+    "Transcriber",
+    "TranscribeOpenaiHttp",
+    "TranscribeGroqHttp",
+    "TranscribeTimeout"
+   ],
+   "steps": [
+    {
+     "event": "TRANSCRIBE",
+     "payload": {
+      "audio": "UklGRgAB/1dBVkVkYXRh",
+      "filename": "a.wav",
+      "mimeType": "audio/wav",
+      "language": "sl"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "TRANSCRIBE_HTTP_SEND",
+        "payload": {
+         "key": "openai",
+         "host": "api.openai.com",
+         "method": "POST",
+         "target": "/v1/audio/transcriptions",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "application/json"
+          },
+          {
+           "name": "content-type",
+           "value": "multipart/form-data; boundary=almadar-transcribe-multipart"
+          }
+         ],
+         "body": "LS1hbG1hZGFyLXRyYW5zY3JpYmUtbXVsdGlwYXJ0DQpDb250ZW50LURpc3Bvc2l0aW9uOiBmb3JtLWRhdGE7IG5hbWU9ImZpbGUiOyBmaWxlbmFtZT0iYS53YXYiDQpDb250ZW50LVR5cGU6IGF1ZGlvL3dhdg0KDQpSSUZGAAH/V0FWRWRhdGENCi0tYWxtYWRhci10cmFuc2NyaWJlLW11bHRpcGFydA0KQ29udGVudC1EaXNwb3NpdGlvbjogZm9ybS1kYXRhOyBuYW1lPSJtb2RlbCINCg0Kd2hpc3Blci0xDQotLWFsbWFkYXItdHJhbnNjcmliZS1tdWx0aXBhcnQNCkNvbnRlbnQtRGlzcG9zaXRpb246IGZvcm0tZGF0YTsgbmFtZT0ibGFuZ3VhZ2UiDQoNCnNsDQotLWFsbWFkYXItdHJhbnNjcmliZS1tdWx0aXBhcnQNCkNvbnRlbnQtRGlzcG9zaXRpb246IGZvcm0tZGF0YTsgbmFtZT0icmVzcG9uc2VfZm9ybWF0Ig0KDQp2ZXJib3NlX2pzb24NCi0tYWxtYWRhci10cmFuc2NyaWJlLW11bHRpcGFydC0tDQo=",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-auto-detect-sends-no-language-field",
+   "defaults": [
+    "Transcriber",
+    "TranscribeOpenaiHttp",
+    "TranscribeGroqHttp",
+    "TranscribeTimeout"
+   ],
+   "steps": [
+    {
+     "event": "TRANSCRIBE",
+     "payload": {
+      "audio": "UklGRgAB/1dBVkVkYXRh",
+      "filename": "a.wav",
+      "mimeType": "audio/wav"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "TRANSCRIBE_HTTP_SEND",
+        "payload": {
+         "key": "openai",
+         "host": "api.openai.com",
+         "method": "POST",
+         "target": "/v1/audio/transcriptions",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "application/json"
+          },
+          {
+           "name": "content-type",
+           "value": "multipart/form-data; boundary=almadar-transcribe-multipart"
+          }
+         ],
+         "body": "LS1hbG1hZGFyLXRyYW5zY3JpYmUtbXVsdGlwYXJ0DQpDb250ZW50LURpc3Bvc2l0aW9uOiBmb3JtLWRhdGE7IG5hbWU9ImZpbGUiOyBmaWxlbmFtZT0iYS53YXYiDQpDb250ZW50LVR5cGU6IGF1ZGlvL3dhdg0KDQpSSUZGAAH/V0FWRWRhdGENCi0tYWxtYWRhci10cmFuc2NyaWJlLW11bHRpcGFydA0KQ29udGVudC1EaXNwb3NpdGlvbjogZm9ybS1kYXRhOyBuYW1lPSJtb2RlbCINCg0Kd2hpc3Blci0xDQotLWFsbWFkYXItdHJhbnNjcmliZS1tdWx0aXBhcnQNCkNvbnRlbnQtRGlzcG9zaXRpb246IGZvcm0tZGF0YTsgbmFtZT0icmVzcG9uc2VfZm9ybWF0Ig0KDQp2ZXJib3NlX2pzb24NCi0tYWxtYWRhci10cmFuc2NyaWJlLW11bHRpcGFydC0tDQo=",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-an-empty-language-is-auto-detect-too",
+   "defaults": [
+    "Transcriber",
+    "TranscribeOpenaiHttp",
+    "TranscribeGroqHttp",
+    "TranscribeTimeout"
+   ],
+   "steps": [
+    {
+     "event": "TRANSCRIBE",
+     "payload": {
+      "audio": "UklGRgAB/1dBVkVkYXRh",
+      "filename": "a.wav",
+      "mimeType": "audio/wav",
+      "language": ""
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "TRANSCRIBE_HTTP_SEND",
+        "payload": {
+         "key": "openai",
+         "host": "api.openai.com",
+         "method": "POST",
+         "target": "/v1/audio/transcriptions",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "application/json"
+          },
+          {
+           "name": "content-type",
+           "value": "multipart/form-data; boundary=almadar-transcribe-multipart"
+          }
+         ],
+         "body": "LS1hbG1hZGFyLXRyYW5zY3JpYmUtbXVsdGlwYXJ0DQpDb250ZW50LURpc3Bvc2l0aW9uOiBmb3JtLWRhdGE7IG5hbWU9ImZpbGUiOyBmaWxlbmFtZT0iYS53YXYiDQpDb250ZW50LVR5cGU6IGF1ZGlvL3dhdg0KDQpSSUZGAAH/V0FWRWRhdGENCi0tYWxtYWRhci10cmFuc2NyaWJlLW11bHRpcGFydA0KQ29udGVudC1EaXNwb3NpdGlvbjogZm9ybS1kYXRhOyBuYW1lPSJtb2RlbCINCg0Kd2hpc3Blci0xDQotLWFsbWFkYXItdHJhbnNjcmliZS1tdWx0aXBhcnQNCkNvbnRlbnQtRGlzcG9zaXRpb246IGZvcm0tZGF0YTsgbmFtZT0icmVzcG9uc2VfZm9ybWF0Ig0KDQp2ZXJib3NlX2pzb24NCi0tYWxtYWRhci10cmFuc2NyaWJlLW11bHRpcGFydC0tDQo=",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-request-language-wins-over-the-language-knob",
+   "defaults": [
+    "Transcriber",
+    "TranscribeOpenaiHttp",
+    "TranscribeGroqHttp",
+    "TranscribeTimeout"
+   ],
+   "steps": [
+    {
+     "event": "TRANSCRIBE",
+     "payload": {
+      "audio": "UklGRgAB/1dBVkVkYXRh",
+      "filename": "a.wav",
+      "mimeType": "audio/wav",
+      "language": "en"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "TRANSCRIBE_HTTP_SEND",
+        "payload": {
+         "key": "openai",
+         "host": "api.openai.com",
+         "method": "POST",
+         "target": "/v1/audio/transcriptions",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "application/json"
+          },
+          {
+           "name": "content-type",
+           "value": "multipart/form-data; boundary=almadar-transcribe-multipart"
+          }
+         ],
+         "body": "LS1hbG1hZGFyLXRyYW5zY3JpYmUtbXVsdGlwYXJ0DQpDb250ZW50LURpc3Bvc2l0aW9uOiBmb3JtLWRhdGE7IG5hbWU9ImZpbGUiOyBmaWxlbmFtZT0iYS53YXYiDQpDb250ZW50LVR5cGU6IGF1ZGlvL3dhdg0KDQpSSUZGAAH/V0FWRWRhdGENCi0tYWxtYWRhci10cmFuc2NyaWJlLW11bHRpcGFydA0KQ29udGVudC1EaXNwb3NpdGlvbjogZm9ybS1kYXRhOyBuYW1lPSJtb2RlbCINCg0Kd2hpc3Blci0xDQotLWFsbWFkYXItdHJhbnNjcmliZS1tdWx0aXBhcnQNCkNvbnRlbnQtRGlzcG9zaXRpb246IGZvcm0tZGF0YTsgbmFtZT0ibGFuZ3VhZ2UiDQoNCmVuDQotLWFsbWFkYXItdHJhbnNjcmliZS1tdWx0aXBhcnQNCkNvbnRlbnQtRGlzcG9zaXRpb246IGZvcm0tZGF0YTsgbmFtZT0icmVzcG9uc2VfZm9ybWF0Ig0KDQp2ZXJib3NlX2pzb24NCi0tYWxtYWRhci10cmFuc2NyaWJlLW11bHRpcGFydC0tDQo=",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "language": "sl"
+   }
+  },
+  {
+   "id": "control-the-language-knob-applies-when-the-request-names-none",
+   "defaults": [
+    "Transcriber",
+    "TranscribeOpenaiHttp",
+    "TranscribeGroqHttp",
+    "TranscribeTimeout"
+   ],
+   "steps": [
+    {
+     "event": "TRANSCRIBE",
+     "payload": {
+      "audio": "UklGRgAB/1dBVkVkYXRh",
+      "filename": "a.wav",
+      "mimeType": "audio/wav"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "TRANSCRIBE_HTTP_SEND",
+        "payload": {
+         "key": "openai",
+         "host": "api.openai.com",
+         "method": "POST",
+         "target": "/v1/audio/transcriptions",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "application/json"
+          },
+          {
+           "name": "content-type",
+           "value": "multipart/form-data; boundary=almadar-transcribe-multipart"
+          }
+         ],
+         "body": "LS1hbG1hZGFyLXRyYW5zY3JpYmUtbXVsdGlwYXJ0DQpDb250ZW50LURpc3Bvc2l0aW9uOiBmb3JtLWRhdGE7IG5hbWU9ImZpbGUiOyBmaWxlbmFtZT0iYS53YXYiDQpDb250ZW50LVR5cGU6IGF1ZGlvL3dhdg0KDQpSSUZGAAH/V0FWRWRhdGENCi0tYWxtYWRhci10cmFuc2NyaWJlLW11bHRpcGFydA0KQ29udGVudC1EaXNwb3NpdGlvbjogZm9ybS1kYXRhOyBuYW1lPSJtb2RlbCINCg0Kd2hpc3Blci0xDQotLWFsbWFkYXItdHJhbnNjcmliZS1tdWx0aXBhcnQNCkNvbnRlbnQtRGlzcG9zaXRpb246IGZvcm0tZGF0YTsgbmFtZT0ibGFuZ3VhZ2UiDQoNCnNsDQotLWFsbWFkYXItdHJhbnNjcmliZS1tdWx0aXBhcnQNCkNvbnRlbnQtRGlzcG9zaXRpb246IGZvcm0tZGF0YTsgbmFtZT0icmVzcG9uc2VfZm9ybWF0Ig0KDQp2ZXJib3NlX2pzb24NCi0tYWxtYWRhci10cmFuc2NyaWJlLW11bHRpcGFydC0tDQo=",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "language": "sl"
+   }
+  },
+  {
+   "id": "a-language-is-lowercased-and-trimmed",
+   "defaults": [
+    "Transcriber",
+    "TranscribeOpenaiHttp",
+    "TranscribeGroqHttp",
+    "TranscribeTimeout"
+   ],
+   "steps": [
+    {
+     "event": "TRANSCRIBE",
+     "payload": {
+      "audio": "UklGRgAB/1dBVkVkYXRh",
+      "filename": "a.wav",
+      "mimeType": "audio/wav",
+      "language": " SL "
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "TRANSCRIBE_HTTP_SEND",
+        "payload": {
+         "key": "openai",
+         "host": "api.openai.com",
+         "method": "POST",
+         "target": "/v1/audio/transcriptions",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "application/json"
+          },
+          {
+           "name": "content-type",
+           "value": "multipart/form-data; boundary=almadar-transcribe-multipart"
+          }
+         ],
+         "body": "LS1hbG1hZGFyLXRyYW5zY3JpYmUtbXVsdGlwYXJ0DQpDb250ZW50LURpc3Bvc2l0aW9uOiBmb3JtLWRhdGE7IG5hbWU9ImZpbGUiOyBmaWxlbmFtZT0iYS53YXYiDQpDb250ZW50LVR5cGU6IGF1ZGlvL3dhdg0KDQpSSUZGAAH/V0FWRWRhdGENCi0tYWxtYWRhci10cmFuc2NyaWJlLW11bHRpcGFydA0KQ29udGVudC1EaXNwb3NpdGlvbjogZm9ybS1kYXRhOyBuYW1lPSJtb2RlbCINCg0Kd2hpc3Blci0xDQotLWFsbWFkYXItdHJhbnNjcmliZS1tdWx0aXBhcnQNCkNvbnRlbnQtRGlzcG9zaXRpb246IGZvcm0tZGF0YTsgbmFtZT0ibGFuZ3VhZ2UiDQoNCnNsDQotLWFsbWFkYXItdHJhbnNjcmliZS1tdWx0aXBhcnQNCkNvbnRlbnQtRGlzcG9zaXRpb246IGZvcm0tZGF0YTsgbmFtZT0icmVzcG9uc2VfZm9ybWF0Ig0KDQp2ZXJib3NlX2pzb24NCi0tYWxtYWRhci10cmFuc2NyaWJlLW11bHRpcGFydC0tDQo=",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "groq-vendor-posts-to-its-own-host-with-its-default-model",
+   "defaults": [
+    "Transcriber",
+    "TranscribeOpenaiHttp",
+    "TranscribeGroqHttp",
+    "TranscribeTimeout"
+   ],
+   "steps": [
+    {
+     "event": "TRANSCRIBE",
+     "payload": {
+      "audio": "UklGRgAB/1dBVkVkYXRh",
+      "filename": "a.wav",
+      "mimeType": "audio/wav",
+      "language": "sl"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "TRANSCRIBE_HTTP_SEND",
+        "payload": {
+         "key": "groq",
+         "host": "api.groq.com",
+         "method": "POST",
+         "target": "/openai/v1/audio/transcriptions",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "application/json"
+          },
+          {
+           "name": "content-type",
+           "value": "multipart/form-data; boundary=almadar-transcribe-multipart"
+          }
+         ],
+         "body": "LS1hbG1hZGFyLXRyYW5zY3JpYmUtbXVsdGlwYXJ0DQpDb250ZW50LURpc3Bvc2l0aW9uOiBmb3JtLWRhdGE7IG5hbWU9ImZpbGUiOyBmaWxlbmFtZT0iYS53YXYiDQpDb250ZW50LVR5cGU6IGF1ZGlvL3dhdg0KDQpSSUZGAAH/V0FWRWRhdGENCi0tYWxtYWRhci10cmFuc2NyaWJlLW11bHRpcGFydA0KQ29udGVudC1EaXNwb3NpdGlvbjogZm9ybS1kYXRhOyBuYW1lPSJtb2RlbCINCg0Kd2hpc3Blci1sYXJnZS12Mw0KLS1hbG1hZGFyLXRyYW5zY3JpYmUtbXVsdGlwYXJ0DQpDb250ZW50LURpc3Bvc2l0aW9uOiBmb3JtLWRhdGE7IG5hbWU9Imxhbmd1YWdlIg0KDQpzbA0KLS1hbG1hZGFyLXRyYW5zY3JpYmUtbXVsdGlwYXJ0DQpDb250ZW50LURpc3Bvc2l0aW9uOiBmb3JtLWRhdGE7IG5hbWU9InJlc3BvbnNlX2Zvcm1hdCINCg0KdmVyYm9zZV9qc29uDQotLWFsbWFkYXItdHJhbnNjcmliZS1tdWx0aXBhcnQtLQ0K",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "vendor": "groq"
+   }
+  },
+  {
+   "id": "control-openai-vendor-never-asks-the-groq-host",
+   "defaults": [
+    "Transcriber",
+    "TranscribeOpenaiHttp",
+    "TranscribeGroqHttp",
+    "TranscribeTimeout"
+   ],
+   "steps": [
+    {
+     "event": "TRANSCRIBE",
+     "payload": {
+      "audio": "UklGRgAB/1dBVkVkYXRh",
+      "filename": "a.wav",
+      "mimeType": "audio/wav"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "TRANSCRIBE_HTTP_SEND",
+        "payload": {
+         "host": "api.openai.com"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-model-knob-overrides-the-vendor-default",
+   "defaults": [
+    "Transcriber",
+    "TranscribeOpenaiHttp",
+    "TranscribeGroqHttp",
+    "TranscribeTimeout"
+   ],
+   "steps": [
+    {
+     "event": "TRANSCRIBE",
+     "payload": {
+      "audio": "UklGRgAB/1dBVkVkYXRh",
+      "filename": "a.wav",
+      "mimeType": "audio/wav"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "TRANSCRIBE_HTTP_SEND",
+        "payload": {
+         "key": "openai",
+         "host": "api.openai.com",
+         "method": "POST",
+         "target": "/v1/audio/transcriptions",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "application/json"
+          },
+          {
+           "name": "content-type",
+           "value": "multipart/form-data; boundary=almadar-transcribe-multipart"
+          }
+         ],
+         "body": "LS1hbG1hZGFyLXRyYW5zY3JpYmUtbXVsdGlwYXJ0DQpDb250ZW50LURpc3Bvc2l0aW9uOiBmb3JtLWRhdGE7IG5hbWU9ImZpbGUiOyBmaWxlbmFtZT0iYS53YXYiDQpDb250ZW50LVR5cGU6IGF1ZGlvL3dhdg0KDQpSSUZGAAH/V0FWRWRhdGENCi0tYWxtYWRhci10cmFuc2NyaWJlLW11bHRpcGFydA0KQ29udGVudC1EaXNwb3NpdGlvbjogZm9ybS1kYXRhOyBuYW1lPSJtb2RlbCINCg0Kd2hpc3Blci1jdXN0b20NCi0tYWxtYWRhci10cmFuc2NyaWJlLW11bHRpcGFydA0KQ29udGVudC1EaXNwb3NpdGlvbjogZm9ybS1kYXRhOyBuYW1lPSJyZXNwb25zZV9mb3JtYXQiDQoNCnZlcmJvc2VfanNvbg0KLS1hbG1hZGFyLXRyYW5zY3JpYmUtbXVsdGlwYXJ0LS0NCg==",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "model": "whisper-custom"
+   }
+  },
+  {
+   "id": "an-optional-key-rides-the-wire-key-as-vendor-colon-key",
+   "defaults": [
+    "Transcriber",
+    "TranscribeOpenaiHttp",
+    "TranscribeGroqHttp",
+    "TranscribeTimeout"
+   ],
+   "steps": [
+    {
+     "event": "TRANSCRIBE",
+     "payload": {
+      "audio": "UklGRgAB/1dBVkVkYXRh",
+      "filename": "a.wav",
+      "mimeType": "audio/wav",
+      "key": "k1"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "TRANSCRIBE_HTTP_SEND",
+        "payload": {
+         "key": "openai:k1",
+         "host": "api.openai.com",
+         "method": "POST",
+         "target": "/v1/audio/transcriptions",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "application/json"
+          },
+          {
+           "name": "content-type",
+           "value": "multipart/form-data; boundary=almadar-transcribe-multipart"
+          }
+         ],
+         "body": "LS1hbG1hZGFyLXRyYW5zY3JpYmUtbXVsdGlwYXJ0DQpDb250ZW50LURpc3Bvc2l0aW9uOiBmb3JtLWRhdGE7IG5hbWU9ImZpbGUiOyBmaWxlbmFtZT0iYS53YXYiDQpDb250ZW50LVR5cGU6IGF1ZGlvL3dhdg0KDQpSSUZGAAH/V0FWRWRhdGENCi0tYWxtYWRhci10cmFuc2NyaWJlLW11bHRpcGFydA0KQ29udGVudC1EaXNwb3NpdGlvbjogZm9ybS1kYXRhOyBuYW1lPSJtb2RlbCINCg0Kd2hpc3Blci0xDQotLWFsbWFkYXItdHJhbnNjcmliZS1tdWx0aXBhcnQNCkNvbnRlbnQtRGlzcG9zaXRpb246IGZvcm0tZGF0YTsgbmFtZT0icmVzcG9uc2VfZm9ybWF0Ig0KDQp2ZXJib3NlX2pzb24NCi0tYWxtYWRhci10cmFuc2NyaWJlLW11bHRpcGFydC0tDQo=",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-filename-with-a-quote-and-a-line-break-cannot-break-the-part-header",
+   "defaults": [
+    "Transcriber",
+    "TranscribeOpenaiHttp",
+    "TranscribeGroqHttp",
+    "TranscribeTimeout"
+   ],
+   "steps": [
+    {
+     "event": "TRANSCRIBE",
+     "payload": {
+      "audio": "UklGRgAB/1dBVkVkYXRh",
+      "filename": "a\"b\r\n.wav",
+      "mimeType": "audio/wav"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "TRANSCRIBE_HTTP_SEND",
+        "payload": {
+         "key": "openai",
+         "host": "api.openai.com",
+         "method": "POST",
+         "target": "/v1/audio/transcriptions",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "application/json"
+          },
+          {
+           "name": "content-type",
+           "value": "multipart/form-data; boundary=almadar-transcribe-multipart"
+          }
+         ],
+         "body": "LS1hbG1hZGFyLXRyYW5zY3JpYmUtbXVsdGlwYXJ0DQpDb250ZW50LURpc3Bvc2l0aW9uOiBmb3JtLWRhdGE7IG5hbWU9ImZpbGUiOyBmaWxlbmFtZT0iYSUyMmIud2F2Ig0KQ29udGVudC1UeXBlOiBhdWRpby93YXYNCg0KUklGRgAB/1dBVkVkYXRhDQotLWFsbWFkYXItdHJhbnNjcmliZS1tdWx0aXBhcnQNCkNvbnRlbnQtRGlzcG9zaXRpb246IGZvcm0tZGF0YTsgbmFtZT0ibW9kZWwiDQoNCndoaXNwZXItMQ0KLS1hbG1hZGFyLXRyYW5zY3JpYmUtbXVsdGlwYXJ0DQpDb250ZW50LURpc3Bvc2l0aW9uOiBmb3JtLWRhdGE7IG5hbWU9InJlc3BvbnNlX2Zvcm1hdCINCg0KdmVyYm9zZV9qc29uDQotLWFsbWFkYXItdHJhbnNjcmliZS1tdWx0aXBhcnQtLQ0K",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-audio-that-contains-the-boundary-is-refused",
+   "defaults": [
+    "Transcriber",
+    "TranscribeOpenaiHttp",
+    "TranscribeGroqHttp",
+    "TranscribeTimeout"
+   ],
+   "steps": [
+    {
+     "event": "TRANSCRIBE",
+     "payload": {
+      "audio": "eHgtLWFsbWFkYXItdHJhbnNjcmliZS1tdWx0aXBhcnR5eQ==",
+      "filename": "a.wav",
+      "mimeType": "audio/wav"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "TRANSCRIBE_FAILED",
+        "payload": {
+         "code": "BOUNDARY_COLLISION"
+        }
+       }
+      ],
+      "neverEmits": [
+       "TRANSCRIBE_HTTP_SEND"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-file-over-the-limit-is-refused-with-too-large-before-any-request",
+   "defaults": [
+    "Transcriber",
+    "TranscribeOpenaiHttp",
+    "TranscribeGroqHttp",
+    "TranscribeTimeout"
+   ],
+   "steps": [
+    {
+     "event": "TRANSCRIBE",
+     "payload": {
+      "audio": "MTIzNDU=",
+      "filename": "a.wav",
+      "mimeType": "audio/wav",
+      "key": "k9"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "TRANSCRIBE_FAILED",
+        "payload": {
+         "key": "k9",
+         "code": "TOO_LARGE",
+         "message": "The audio is 5 bytes; the limit is 4 bytes"
+        }
+       }
+      ],
+      "neverEmits": [
+       "TRANSCRIBE_HTTP_SEND"
+      ]
+     }
+    }
+   ],
+   "config": {
+    "maxBytes": 4
+   }
+  },
+  {
+   "id": "control-a-file-at-the-limit-is-sent",
+   "defaults": [
+    "Transcriber",
+    "TranscribeOpenaiHttp",
+    "TranscribeGroqHttp",
+    "TranscribeTimeout"
+   ],
+   "steps": [
+    {
+     "event": "TRANSCRIBE",
+     "payload": {
+      "audio": "MTIzNA==",
+      "filename": "a.wav",
+      "mimeType": "audio/wav"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "TRANSCRIBE_HTTP_SEND",
+        "payload": {
+         "key": "openai",
+         "host": "api.openai.com",
+         "method": "POST",
+         "target": "/v1/audio/transcriptions",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "application/json"
+          },
+          {
+           "name": "content-type",
+           "value": "multipart/form-data; boundary=almadar-transcribe-multipart"
+          }
+         ],
+         "body": "LS1hbG1hZGFyLXRyYW5zY3JpYmUtbXVsdGlwYXJ0DQpDb250ZW50LURpc3Bvc2l0aW9uOiBmb3JtLWRhdGE7IG5hbWU9ImZpbGUiOyBmaWxlbmFtZT0iYS53YXYiDQpDb250ZW50LVR5cGU6IGF1ZGlvL3dhdg0KDQoxMjM0DQotLWFsbWFkYXItdHJhbnNjcmliZS1tdWx0aXBhcnQNCkNvbnRlbnQtRGlzcG9zaXRpb246IGZvcm0tZGF0YTsgbmFtZT0ibW9kZWwiDQoNCndoaXNwZXItMQ0KLS1hbG1hZGFyLXRyYW5zY3JpYmUtbXVsdGlwYXJ0DQpDb250ZW50LURpc3Bvc2l0aW9uOiBmb3JtLWRhdGE7IG5hbWU9InJlc3BvbnNlX2Zvcm1hdCINCg0KdmVyYm9zZV9qc29uDQotLWFsbWFkYXItdHJhbnNjcmliZS1tdWx0aXBhcnQtLQ0K",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "maxBytes": 4
+   }
+  },
+  {
+   "id": "a-slovenian-reply-arrives-unchanged-with-its-language-and-duration",
+   "defaults": [
+    "Transcriber",
+    "TranscribeOpenaiHttp",
+    "TranscribeGroqHttp",
+    "TranscribeTimeout"
+   ],
+   "steps": [
+    {
+     "event": "TRANSCRIBE_REPLIED",
+     "payload": {
+      "status": 200,
+      "headers": {},
+      "body": "{\"text\": \"Dober dan, to je preizkus: čas, šola, žoga. ČŠŽ\", \"language\": \"slovenian\", \"duration\": 3.5, \"segments\": []}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "TRANSCRIBED",
+        "payload": {
+         "text": "Dober dan, to je preizkus: čas, šola, žoga. ČŠŽ",
+         "language": "slovenian",
+         "durationSeconds": 3.5
+        }
+       }
+      ],
+      "neverEmits": [
+       "TRANSCRIBE_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-an-english-reply-answers-its-own-text",
+   "defaults": [
+    "Transcriber",
+    "TranscribeOpenaiHttp",
+    "TranscribeGroqHttp",
+    "TranscribeTimeout"
+   ],
+   "steps": [
+    {
+     "event": "TRANSCRIBE_REPLIED",
+     "payload": {
+      "status": 200,
+      "headers": {},
+      "body": "{\"text\": \"Hello there.\", \"language\": \"english\", \"duration\": 1.25}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "TRANSCRIBED",
+        "payload": {
+         "text": "Hello there.",
+         "language": "english",
+         "durationSeconds": 1.25
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-long-text-is-never-truncated",
+   "defaults": [
+    "Transcriber",
+    "TranscribeOpenaiHttp",
+    "TranscribeGroqHttp",
+    "TranscribeTimeout"
+   ],
+   "steps": [
+    {
+     "event": "TRANSCRIBE_REPLIED",
+     "payload": {
+      "status": 200,
+      "headers": {},
+      "body": "{\"text\": \"Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž\", \"language\": \"slovenian\", \"duration\": 600}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "TRANSCRIBED",
+        "payload": {
+         "text": "Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž Lorem čšž"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-key-is-echoed-on-the-answer",
+   "defaults": [
+    "Transcriber",
+    "TranscribeOpenaiHttp",
+    "TranscribeGroqHttp",
+    "TranscribeTimeout"
+   ],
+   "steps": [
+    {
+     "event": "TRANSCRIBE_REPLIED",
+     "payload": {
+      "status": 200,
+      "headers": {},
+      "body": "{\"text\": \"Hello there.\", \"language\": \"english\", \"duration\": 1.25}",
+      "key": "k1"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "TRANSCRIBED",
+        "payload": {
+         "key": "k1",
+         "text": "Hello there."
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-401-from-the-provider-fails-with-its-message",
+   "defaults": [
+    "Transcriber",
+    "TranscribeOpenaiHttp",
+    "TranscribeGroqHttp",
+    "TranscribeTimeout"
+   ],
+   "steps": [
+    {
+     "event": "TRANSCRIBE_REPLIED",
+     "payload": {
+      "status": 401,
+      "headers": {},
+      "body": "{\"error\": {\"message\": \"Incorrect API key provided\", \"type\": \"invalid_request_error\", \"code\": \"invalid_api_key\"}}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "TRANSCRIBE_FAILED",
+        "payload": {
+         "code": "HTTP_401",
+         "message": "Incorrect API key provided"
+        }
+       }
+      ],
+      "neverEmits": [
+       "TRANSCRIBED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-provider-error-without-a-readable-body-names-the-status",
+   "defaults": [
+    "Transcriber",
+    "TranscribeOpenaiHttp",
+    "TranscribeGroqHttp",
+    "TranscribeTimeout"
+   ],
+   "steps": [
+    {
+     "event": "TRANSCRIBE_REPLIED",
+     "payload": {
+      "status": 413,
+      "headers": {},
+      "body": "<html>too big</html>"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "TRANSCRIBE_FAILED",
+        "payload": {
+         "code": "HTTP_413",
+         "message": "The transcription request failed with status 413"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-2xx-reply-that-is-not-json-fails",
+   "defaults": [
+    "Transcriber",
+    "TranscribeOpenaiHttp",
+    "TranscribeGroqHttp",
+    "TranscribeTimeout"
+   ],
+   "steps": [
+    {
+     "event": "TRANSCRIBE_REPLIED",
+     "payload": {
+      "status": 200,
+      "headers": {},
+      "body": "not json"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "TRANSCRIBE_FAILED",
+        "payload": {
+         "code": "BAD_REPLY"
+        }
+       }
+      ],
+      "neverEmits": [
+       "TRANSCRIBED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-call-that-never-answered-fails-with-its-kind",
+   "defaults": [
+    "Transcriber",
+    "TranscribeOpenaiHttp",
+    "TranscribeGroqHttp",
+    "TranscribeTimeout"
+   ],
+   "steps": [
+    {
+     "event": "TRANSCRIBE_REQUEST_FAILED",
+     "payload": {
+      "key": "k2",
+      "error": "connect timeout",
+      "kind": "timeout"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "TRANSCRIBE_FAILED",
+        "payload": {
+         "key": "k2",
+         "code": "TIMEOUT",
+         "message": "connect timeout"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "no-credential-answers-not-configured",
+   "defaults": [
+    "Transcriber",
+    "TranscribeOpenaiHttp",
+    "TranscribeGroqHttp",
+    "TranscribeTimeout"
+   ],
+   "steps": [
+    {
+     "event": "TRANSCRIBE_REQUEST_FAILED",
+     "payload": {
+      "error": "",
+      "kind": "unconfigured"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "TRANSCRIBE_FAILED",
+        "payload": {
+         "code": "NOT_CONFIGURED"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

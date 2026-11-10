@@ -1,0 +1,2092 @@
+{
+ "atom": "connect/atoms/std-gmail.lolo",
+ "trait": "GmailClient",
+ "note": "std-gmail over one keyed std-http-client trait (std-http-keyed): the user token is a refresh_token grant (credential-connect) the host credential store mints and renews, carried by the GmailHttp credential, never by an event; every call is a row of GmailCall under its own key; a not-held token mints once and sends again, a second not-held answer asks credential-status about the refresh token and answers NOT_CONFIGURED when none is held; inbox reads retry under keyed std-retry (4 attempts, 100 x 5^(n-1) ms capped at 1500) and each message read starts when std-retry completes the run of the one before; the draft POST is never retried; the raw RFC 2822 message is built and base64url-encoded in .lolo. Self-handled internal events (declared -> internal) are consumed by the trait and not listed.",
+ "cases": [
+  {
+   "id": "list-inbox-defaults-to-in-inbox-newer-than-1d-and-20-results",
+   "steps": [
+    {
+     "event": "LIST_INBOX",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "GMAIL_RETRY_START",
+        "payload": {
+         "key": "inbox:in:inbox newer_than:1d|20#1"
+        }
+       },
+       {
+        "event": "GMAIL_HTTP_SEND",
+        "payload": {
+         "key": "inbox:in:inbox newer_than:1d|20#1",
+         "method": "GET",
+         "target": "/gmail/v1/users/me/messages?q=in%3Ainbox%20newer_than%3A1d&maxResults=20",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "*/*"
+          }
+         ],
+         "body": "",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "GmailClient",
+    "GmailCall",
+    "GmailKeyed",
+    "GmailHttp",
+    "GmailRetry"
+   ]
+  },
+  {
+   "id": "control-list-inbox-with-a-query-and-a-limit-sends-them",
+   "steps": [
+    {
+     "event": "LIST_INBOX",
+     "payload": {
+      "query": "from:ann is:unread",
+      "maxResults": 5
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GMAIL_RETRY_START",
+        "payload": {
+         "key": "inbox:from:ann is:unread|5#1"
+        }
+       },
+       {
+        "event": "GMAIL_HTTP_SEND",
+        "payload": {
+         "key": "inbox:from:ann is:unread|5#1",
+         "method": "GET",
+         "target": "/gmail/v1/users/me/messages?q=from%3Aann%20is%3Aunread&maxResults=5",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "*/*"
+          }
+         ],
+         "body": "",
+         "stream": "none"
+        }
+       }
+      ],
+      "neverEmits": [
+       "GMAIL_HTTP_SEND_X"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "GmailClient",
+    "GmailCall",
+    "GmailKeyed",
+    "GmailHttp",
+    "GmailRetry"
+   ]
+  },
+  {
+   "id": "inbox-list-with-one-message-answers-decoded-subject-from-and-body",
+   "steps": [
+    {
+     "event": "GMAIL_REPLIED",
+     "payload": {
+      "key": "inbox:in:inbox newer_than:1d|20#1",
+      "status": 200,
+      "headers": {},
+      "body": "{\"messages\":[{\"id\":\"m1\",\"threadId\":\"t1\"}],\"resultSizeEstimate\":1}"
+     },
+     "expect": {
+      "emits": [],
+      "neverEmits": [
+       "INBOX_LISTED",
+       "GMAIL_FAILED"
+      ]
+     },
+     "trait": "GmailCall",
+     "entity": {
+      "id": "inbox:in:inbox newer_than:1d|20#1",
+      "op": "list",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "mintTried": false,
+      "attempt": 0,
+      "retrying": true
+     }
+    },
+    {
+     "event": "GMAIL_RETRY_DONE",
+     "payload": {
+      "key": "inbox:in:inbox newer_than:1d|20#1",
+      "attempts": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GMAIL_RETRY_START",
+        "payload": {
+         "key": "inbox:in:inbox newer_than:1d|20#1"
+        }
+       }
+      ]
+     },
+     "trait": "GmailCall"
+    },
+    {
+     "event": "GMAIL_ATTEMPT",
+     "payload": {
+      "key": "inbox:in:inbox newer_than:1d|20#1",
+      "attempt": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GMAIL_HTTP_SEND",
+        "payload": {
+         "key": "inbox:in:inbox newer_than:1d|20#1",
+         "method": "GET",
+         "target": "/gmail/v1/users/me/messages/m1?format=full",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "*/*"
+          }
+         ],
+         "body": "",
+         "stream": "none"
+        }
+       }
+      ]
+     },
+     "trait": "GmailCall"
+    },
+    {
+     "event": "GMAIL_REPLIED",
+     "payload": {
+      "key": "inbox:in:inbox newer_than:1d|20#1",
+      "status": 200,
+      "headers": {},
+      "body": "{\"id\":\"m1\",\"threadId\":\"t1\",\"snippet\":\"Hello team,\",\"payload\":{\"mimeType\":\"multipart/alternative\",\"headers\":[{\"name\":\"From\",\"value\":\"Ann <ann@x.io>\"},{\"name\":\"To\",\"value\":\"me@x.io\"},{\"name\":\"Subject\",\"value\":\"Quarterly plan\"},{\"name\":\"Date\",\"value\":\"Mon, 9 Nov 2026 08:00:00 +0000\"},{\"name\":\"Message-ID\",\"value\":\"<m1@x.io>\"}],\"body\":{\"size\":0},\"parts\":[{\"mimeType\":\"text/html\",\"body\":{\"size\":9,\"data\":\"PHA-SGVsbG88L3A-\"}},{\"mimeType\":\"text/plain\",\"body\":{\"size\":38,\"data\":\"SGVsbG8gdGVhbSwKcGxhbiBhdHRhY2hlZC4gw5xuw69jb2RlIG9rLg\"}}]}}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "INBOX_LISTED",
+        "payload": {
+         "messages": [
+          {
+           "id": "m1",
+           "threadId": "t1",
+           "from": "Ann <ann@x.io>",
+           "to": "me@x.io",
+           "subject": "Quarterly plan",
+           "date": "Mon, 9 Nov 2026 08:00:00 +0000",
+           "messageId": "<m1@x.io>",
+           "snippet": "Hello team,",
+           "body": "Hello team,\nplan attached. \u00dcn\u00efcode ok."
+          }
+         ]
+        }
+       }
+      ],
+      "neverEmits": [
+       "GMAIL_FAILED"
+      ]
+     },
+     "trait": "GmailCall"
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "GmailClient",
+    "GmailCall",
+    "GmailKeyed",
+    "GmailHttp",
+    "GmailRetry"
+   ]
+  },
+  {
+   "id": "control-an-empty-inbox-answers-no-messages-and-reads-none",
+   "steps": [
+    {
+     "event": "GMAIL_REPLIED",
+     "payload": {
+      "key": "inbox:in:inbox newer_than:1d|20#1",
+      "status": 200,
+      "headers": {},
+      "body": "{\"resultSizeEstimate\":0}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "INBOX_LISTED",
+        "payload": {
+         "messages": []
+        }
+       }
+      ],
+      "neverEmits": [
+       "GMAIL_RETRY_START",
+       "GMAIL_HTTP_SEND"
+      ]
+     },
+     "trait": "GmailCall",
+     "entity": {
+      "id": "inbox:in:inbox newer_than:1d|20#1",
+      "op": "list",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "mintTried": false,
+      "attempt": 0,
+      "retrying": true
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "GmailClient",
+    "GmailCall",
+    "GmailKeyed",
+    "GmailHttp",
+    "GmailRetry"
+   ]
+  },
+  {
+   "id": "inbox-list-walks-two-messages-one-at-a-time",
+   "steps": [
+    {
+     "event": "GMAIL_REPLIED",
+     "payload": {
+      "key": "inbox:in:inbox newer_than:1d|20#1",
+      "status": 200,
+      "headers": {},
+      "body": "{\"messages\":[{\"id\":\"m1\",\"threadId\":\"t1\"},{\"id\":\"m2\",\"threadId\":\"t2\"}],\"resultSizeEstimate\":2}"
+     },
+     "expect": {
+      "emits": [],
+      "neverEmits": [
+       "INBOX_LISTED",
+       "GMAIL_FAILED"
+      ]
+     },
+     "trait": "GmailCall",
+     "entity": {
+      "id": "inbox:in:inbox newer_than:1d|20#1",
+      "op": "list",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "mintTried": false,
+      "attempt": 0,
+      "retrying": true
+     }
+    },
+    {
+     "event": "GMAIL_RETRY_DONE",
+     "payload": {
+      "key": "inbox:in:inbox newer_than:1d|20#1",
+      "attempts": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GMAIL_RETRY_START",
+        "payload": {
+         "key": "inbox:in:inbox newer_than:1d|20#1"
+        }
+       }
+      ]
+     },
+     "trait": "GmailCall"
+    },
+    {
+     "event": "GMAIL_ATTEMPT",
+     "payload": {
+      "key": "inbox:in:inbox newer_than:1d|20#1",
+      "attempt": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GMAIL_HTTP_SEND",
+        "payload": {
+         "key": "inbox:in:inbox newer_than:1d|20#1",
+         "method": "GET",
+         "target": "/gmail/v1/users/me/messages/m1?format=full",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "*/*"
+          }
+         ],
+         "body": "",
+         "stream": "none"
+        }
+       }
+      ]
+     },
+     "trait": "GmailCall"
+    },
+    {
+     "event": "GMAIL_REPLIED",
+     "payload": {
+      "key": "inbox:in:inbox newer_than:1d|20#1",
+      "status": 200,
+      "headers": {},
+      "body": "{\"id\":\"m1\",\"threadId\":\"t1\",\"snippet\":\"Hello team,\",\"payload\":{\"mimeType\":\"multipart/alternative\",\"headers\":[{\"name\":\"From\",\"value\":\"Ann <ann@x.io>\"},{\"name\":\"To\",\"value\":\"me@x.io\"},{\"name\":\"Subject\",\"value\":\"Quarterly plan\"},{\"name\":\"Date\",\"value\":\"Mon, 9 Nov 2026 08:00:00 +0000\"},{\"name\":\"Message-ID\",\"value\":\"<m1@x.io>\"}],\"body\":{\"size\":0},\"parts\":[{\"mimeType\":\"text/html\",\"body\":{\"size\":9,\"data\":\"PHA-SGVsbG88L3A-\"}},{\"mimeType\":\"text/plain\",\"body\":{\"size\":38,\"data\":\"SGVsbG8gdGVhbSwKcGxhbiBhdHRhY2hlZC4gw5xuw69jb2RlIG9rLg\"}}]}}"
+     },
+     "expect": {
+      "emits": [],
+      "neverEmits": [
+       "INBOX_LISTED",
+       "GMAIL_FAILED"
+      ]
+     },
+     "trait": "GmailCall"
+    },
+    {
+     "event": "GMAIL_RETRY_DONE",
+     "payload": {
+      "key": "inbox:in:inbox newer_than:1d|20#1",
+      "attempts": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GMAIL_RETRY_START",
+        "payload": {
+         "key": "inbox:in:inbox newer_than:1d|20#1"
+        }
+       }
+      ]
+     },
+     "trait": "GmailCall"
+    },
+    {
+     "event": "GMAIL_ATTEMPT",
+     "payload": {
+      "key": "inbox:in:inbox newer_than:1d|20#1",
+      "attempt": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GMAIL_HTTP_SEND",
+        "payload": {
+         "key": "inbox:in:inbox newer_than:1d|20#1",
+         "method": "GET",
+         "target": "/gmail/v1/users/me/messages/m2?format=full",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "*/*"
+          }
+         ],
+         "body": "",
+         "stream": "none"
+        }
+       }
+      ]
+     },
+     "trait": "GmailCall"
+    },
+    {
+     "event": "GMAIL_REPLIED",
+     "payload": {
+      "key": "inbox:in:inbox newer_than:1d|20#1",
+      "status": 200,
+      "headers": {},
+      "body": "{\"id\":\"m2\",\"threadId\":\"t2\",\"snippet\":\"lunch\",\"payload\":{\"mimeType\":\"text/plain\",\"headers\":[{\"name\":\"from\",\"value\":\"Bob <bob@x.io>\"},{\"name\":\"to\",\"value\":\"me@x.io\"},{\"name\":\"subject\",\"value\":\"Lunch\"},{\"name\":\"date\",\"value\":\"Mon, 9 Nov 2026 09:00:00 +0000\"},{\"name\":\"Message-Id\",\"value\":\"<m2@x.io>\"}],\"body\":{\"size\":5,\"data\":\"bHVuY2g\"}}}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "INBOX_LISTED",
+        "payload": {
+         "messages": [
+          {
+           "id": "m1",
+           "threadId": "t1",
+           "from": "Ann <ann@x.io>",
+           "to": "me@x.io",
+           "subject": "Quarterly plan",
+           "date": "Mon, 9 Nov 2026 08:00:00 +0000",
+           "messageId": "<m1@x.io>",
+           "snippet": "Hello team,",
+           "body": "Hello team,\nplan attached. \u00dcn\u00efcode ok."
+          },
+          {
+           "id": "m2",
+           "threadId": "t2",
+           "from": "Bob <bob@x.io>",
+           "to": "me@x.io",
+           "subject": "Lunch",
+           "date": "Mon, 9 Nov 2026 09:00:00 +0000",
+           "messageId": "<m2@x.io>",
+           "snippet": "lunch",
+           "body": "lunch"
+          }
+         ]
+        }
+       }
+      ],
+      "neverEmits": [
+       "GMAIL_FAILED"
+      ]
+     },
+     "trait": "GmailCall"
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "GmailClient",
+    "GmailCall",
+    "GmailKeyed",
+    "GmailHttp",
+    "GmailRetry"
+   ]
+  },
+  {
+   "id": "control-a-single-part-message-reads-the-body-data-with-lowercase-headers",
+   "steps": [
+    {
+     "event": "GMAIL_REPLIED",
+     "payload": {
+      "key": "inbox:in:inbox newer_than:1d|20#1",
+      "status": 200,
+      "headers": {},
+      "body": "{\"messages\":[{\"id\":\"m2\",\"threadId\":\"t2\"}]}"
+     },
+     "expect": {
+      "emits": [],
+      "neverEmits": [
+       "INBOX_LISTED",
+       "GMAIL_FAILED"
+      ]
+     },
+     "trait": "GmailCall",
+     "entity": {
+      "id": "inbox:in:inbox newer_than:1d|20#1",
+      "op": "list",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "mintTried": false,
+      "attempt": 0,
+      "retrying": true
+     }
+    },
+    {
+     "event": "GMAIL_RETRY_DONE",
+     "payload": {
+      "key": "inbox:in:inbox newer_than:1d|20#1",
+      "attempts": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GMAIL_RETRY_START",
+        "payload": {
+         "key": "inbox:in:inbox newer_than:1d|20#1"
+        }
+       }
+      ]
+     },
+     "trait": "GmailCall"
+    },
+    {
+     "event": "GMAIL_ATTEMPT",
+     "payload": {
+      "key": "inbox:in:inbox newer_than:1d|20#1",
+      "attempt": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GMAIL_HTTP_SEND",
+        "payload": {
+         "key": "inbox:in:inbox newer_than:1d|20#1",
+         "method": "GET",
+         "target": "/gmail/v1/users/me/messages/m2?format=full",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "*/*"
+          }
+         ],
+         "body": "",
+         "stream": "none"
+        }
+       }
+      ]
+     },
+     "trait": "GmailCall"
+    },
+    {
+     "event": "GMAIL_REPLIED",
+     "payload": {
+      "key": "inbox:in:inbox newer_than:1d|20#1",
+      "status": 200,
+      "headers": {},
+      "body": "{\"id\":\"m2\",\"threadId\":\"t2\",\"snippet\":\"lunch\",\"payload\":{\"mimeType\":\"text/plain\",\"headers\":[{\"name\":\"from\",\"value\":\"Bob <bob@x.io>\"},{\"name\":\"to\",\"value\":\"me@x.io\"},{\"name\":\"subject\",\"value\":\"Lunch\"},{\"name\":\"date\",\"value\":\"Mon, 9 Nov 2026 09:00:00 +0000\"},{\"name\":\"Message-Id\",\"value\":\"<m2@x.io>\"}],\"body\":{\"size\":5,\"data\":\"bHVuY2g\"}}}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "INBOX_LISTED",
+        "payload": {
+         "messages": [
+          {
+           "id": "m2",
+           "threadId": "t2",
+           "from": "Bob <bob@x.io>",
+           "to": "me@x.io",
+           "subject": "Lunch",
+           "date": "Mon, 9 Nov 2026 09:00:00 +0000",
+           "messageId": "<m2@x.io>",
+           "snippet": "lunch",
+           "body": "lunch"
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "trait": "GmailCall"
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "GmailClient",
+    "GmailCall",
+    "GmailKeyed",
+    "GmailHttp",
+    "GmailRetry"
+   ]
+  },
+  {
+   "id": "control-a-text-part-nested-in-multipart-alternative-is-found",
+   "steps": [
+    {
+     "event": "GMAIL_REPLIED",
+     "payload": {
+      "key": "inbox:in:inbox newer_than:1d|20#1",
+      "status": 200,
+      "headers": {},
+      "body": "{\"messages\":[{\"id\":\"m3\",\"threadId\":\"t3\"}]}"
+     },
+     "expect": {
+      "emits": [],
+      "neverEmits": [
+       "INBOX_LISTED",
+       "GMAIL_FAILED"
+      ]
+     },
+     "trait": "GmailCall",
+     "entity": {
+      "id": "inbox:in:inbox newer_than:1d|20#1",
+      "op": "list",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "mintTried": false,
+      "attempt": 0,
+      "retrying": true
+     }
+    },
+    {
+     "event": "GMAIL_RETRY_DONE",
+     "payload": {
+      "key": "inbox:in:inbox newer_than:1d|20#1",
+      "attempts": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GMAIL_RETRY_START",
+        "payload": {
+         "key": "inbox:in:inbox newer_than:1d|20#1"
+        }
+       }
+      ]
+     },
+     "trait": "GmailCall"
+    },
+    {
+     "event": "GMAIL_ATTEMPT",
+     "payload": {
+      "key": "inbox:in:inbox newer_than:1d|20#1",
+      "attempt": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GMAIL_HTTP_SEND",
+        "payload": {
+         "key": "inbox:in:inbox newer_than:1d|20#1",
+         "method": "GET",
+         "target": "/gmail/v1/users/me/messages/m3?format=full",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "*/*"
+          }
+         ],
+         "body": "",
+         "stream": "none"
+        }
+       }
+      ]
+     },
+     "trait": "GmailCall"
+    },
+    {
+     "event": "GMAIL_REPLIED",
+     "payload": {
+      "key": "inbox:in:inbox newer_than:1d|20#1",
+      "status": 200,
+      "headers": {},
+      "body": "{\"id\":\"m3\",\"threadId\":\"t3\",\"snippet\":\"deep\",\"payload\":{\"mimeType\":\"multipart/alternative\",\"headers\":[{\"name\":\"From\",\"value\":\"Ann <ann@x.io>\"},{\"name\":\"To\",\"value\":\"me@x.io\"},{\"name\":\"Subject\",\"value\":\"Quarterly plan\"},{\"name\":\"Date\",\"value\":\"Mon, 9 Nov 2026 08:00:00 +0000\"},{\"name\":\"Message-ID\",\"value\":\"<m1@x.io>\"}],\"body\":{\"size\":0},\"parts\":[{\"mimeType\":\"multipart/alternative\",\"body\":{\"size\":0},\"parts\":[{\"mimeType\":\"text/plain\",\"body\":{\"size\":4,\"data\":\"ZGVlcA\"}},{\"mimeType\":\"text/html\",\"body\":{\"size\":4,\"data\":\"PGI-ZDwvYj4\"}}]}]}}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "INBOX_LISTED",
+        "payload": {
+         "messages": [
+          {
+           "id": "m3",
+           "threadId": "t3",
+           "from": "Ann <ann@x.io>",
+           "to": "me@x.io",
+           "subject": "Quarterly plan",
+           "date": "Mon, 9 Nov 2026 08:00:00 +0000",
+           "messageId": "<m1@x.io>",
+           "snippet": "deep",
+           "body": "deep"
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "trait": "GmailCall"
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "GmailClient",
+    "GmailCall",
+    "GmailKeyed",
+    "GmailHttp",
+    "GmailRetry"
+   ]
+  },
+  {
+   "id": "a-message-body-that-is_not-base64-fails",
+   "steps": [
+    {
+     "event": "GMAIL_REPLIED",
+     "payload": {
+      "key": "inbox:in:inbox newer_than:1d|20#1",
+      "status": 200,
+      "headers": {},
+      "body": "{\"messages\":[{\"id\":\"m1\",\"threadId\":\"t1\"}]}"
+     },
+     "expect": {
+      "emits": [],
+      "neverEmits": [
+       "INBOX_LISTED",
+       "GMAIL_FAILED"
+      ]
+     },
+     "trait": "GmailCall",
+     "entity": {
+      "id": "inbox:in:inbox newer_than:1d|20#1",
+      "op": "list",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "mintTried": false,
+      "attempt": 0,
+      "retrying": true
+     }
+    },
+    {
+     "event": "GMAIL_RETRY_DONE",
+     "payload": {
+      "key": "inbox:in:inbox newer_than:1d|20#1",
+      "attempts": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GMAIL_RETRY_START",
+        "payload": {
+         "key": "inbox:in:inbox newer_than:1d|20#1"
+        }
+       }
+      ]
+     },
+     "trait": "GmailCall"
+    },
+    {
+     "event": "GMAIL_ATTEMPT",
+     "payload": {
+      "key": "inbox:in:inbox newer_than:1d|20#1",
+      "attempt": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GMAIL_HTTP_SEND",
+        "payload": {
+         "key": "inbox:in:inbox newer_than:1d|20#1",
+         "method": "GET",
+         "target": "/gmail/v1/users/me/messages/m1?format=full",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "*/*"
+          }
+         ],
+         "body": "",
+         "stream": "none"
+        }
+       }
+      ]
+     },
+     "trait": "GmailCall"
+    },
+    {
+     "event": "GMAIL_REPLIED",
+     "payload": {
+      "key": "inbox:in:inbox newer_than:1d|20#1",
+      "status": 200,
+      "headers": {},
+      "body": "{\"id\":\"m1\",\"threadId\":\"t1\",\"snippet\":\"x\",\"payload\":{\"mimeType\":\"multipart/alternative\",\"headers\":[{\"name\":\"From\",\"value\":\"Ann <ann@x.io>\"},{\"name\":\"To\",\"value\":\"me@x.io\"},{\"name\":\"Subject\",\"value\":\"Quarterly plan\"},{\"name\":\"Date\",\"value\":\"Mon, 9 Nov 2026 08:00:00 +0000\"},{\"name\":\"Message-ID\",\"value\":\"<m1@x.io>\"}],\"body\":{\"size\":0},\"parts\":[{\"mimeType\":\"text/plain\",\"body\":{\"size\":3,\"data\":\"!!!\"}}]}}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GMAIL_FAILED",
+        "payload": {
+         "message": "The Gmail message body could not be decoded"
+        }
+       }
+      ],
+      "neverEmits": [
+       "INBOX_LISTED"
+      ]
+     },
+     "trait": "GmailCall"
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "GmailClient",
+    "GmailCall",
+    "GmailKeyed",
+    "GmailHttp",
+    "GmailRetry"
+   ]
+  },
+  {
+   "id": "a-2xx-list-reply-that-is-not-json-fails",
+   "steps": [
+    {
+     "event": "GMAIL_REPLIED",
+     "payload": {
+      "key": "inbox:in:inbox newer_than:1d|20#1",
+      "status": 200,
+      "headers": {},
+      "body": "nope"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GMAIL_FAILED",
+        "payload": {
+         "message": "The Gmail answer could not be read"
+        }
+       }
+      ]
+     },
+     "trait": "GmailCall",
+     "entity": {
+      "id": "inbox:in:inbox newer_than:1d|20#1",
+      "op": "list",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "mintTried": false,
+      "attempt": 0,
+      "retrying": true
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "GmailClient",
+    "GmailCall",
+    "GmailKeyed",
+    "GmailHttp",
+    "GmailRetry"
+   ]
+  },
+  {
+   "id": "a-2xx-message-reply-that-is-not-json-fails",
+   "steps": [
+    {
+     "event": "GMAIL_REPLIED",
+     "payload": {
+      "key": "inbox:in:inbox newer_than:1d|20#1",
+      "status": 200,
+      "headers": {},
+      "body": "nope"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GMAIL_FAILED",
+        "payload": {
+         "message": "The Gmail answer could not be read"
+        }
+       }
+      ]
+     },
+     "trait": "GmailCall",
+     "entity": {
+      "id": "inbox:in:inbox newer_than:1d|20#1",
+      "op": "get",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "mintTried": false,
+      "attempt": 0,
+      "retrying": true,
+      "pending": [
+       "m1"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "GmailClient",
+    "GmailCall",
+    "GmailKeyed",
+    "GmailHttp",
+    "GmailRetry"
+   ]
+  },
+  {
+   "id": "draft-as-a-reply-carries-in-reply-to-references-and-the-thread-id",
+   "steps": [
+    {
+     "event": "CREATE_DRAFT",
+     "payload": {
+      "to": "ann@x.io",
+      "subject": "Re: Quarterly plan",
+      "body": "Thanks, Tuesday works.",
+      "threadId": "t1",
+      "inReplyTo": "<m1@x.io>"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GMAIL_HTTP_SEND",
+        "payload": {
+         "key": "draft:ann@x.io#1",
+         "method": "POST",
+         "target": "/gmail/v1/users/me/drafts",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "*/*"
+          },
+          {
+           "name": "content-type",
+           "value": "application/json"
+          }
+         ],
+         "body": "eyJtZXNzYWdlIjp7InJhdyI6IlZHODZJR0Z1YmtCNExtbHZEUXBUZFdKcVpXTjBPaUE5UDFWVVJpMDRQMElfVlcxVk5rbEdSakZaV0Vvd1dsaEtjMlZUUW5kaVIwWjFQejBOQ2tsdUxWSmxjR3g1TFZSdk9pQThiVEZBZUM1cGJ6NE5DbEpsWm1WeVpXNWpaWE02SUR4dE1VQjRMbWx2UGcwS1EyOXVkR1Z1ZEMxVWVYQmxPaUIwWlhoMEwzQnNZV2x1T3lCamFHRnljMlYwUFZWVVJpMDREUW9OQ2xSb1lXNXJjeXdnVkhWbGMyUmhlU0IzYjNKcmN5ND0iLCJ0aHJlYWRJZCI6InQxIn19",
+         "stream": "none"
+        }
+       }
+      ],
+      "neverEmits": [
+       "GMAIL_RETRY_START"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "GmailClient",
+    "GmailCall",
+    "GmailKeyed",
+    "GmailHttp",
+    "GmailRetry"
+   ]
+  },
+  {
+   "id": "control-a-draft-with-no-thread-has-no-in-reply-to-and-no-thread-id",
+   "steps": [
+    {
+     "event": "CREATE_DRAFT",
+     "payload": {
+      "to": "ann@x.io",
+      "subject": "Re: Quarterly plan",
+      "body": "Thanks, Tuesday works."
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GMAIL_HTTP_SEND",
+        "payload": {
+         "key": "draft:ann@x.io#1",
+         "method": "POST",
+         "target": "/gmail/v1/users/me/drafts",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "*/*"
+          },
+          {
+           "name": "content-type",
+           "value": "application/json"
+          }
+         ],
+         "body": "eyJtZXNzYWdlIjp7InJhdyI6IlZHODZJR0Z1YmtCNExtbHZEUXBUZFdKcVpXTjBPaUE5UDFWVVJpMDRQMElfVlcxVk5rbEdSakZaV0Vvd1dsaEtjMlZUUW5kaVIwWjFQejBOQ2tOdmJuUmxiblF0Vkhsd1pUb2dkR1Y0ZEM5d2JHRnBianNnWTJoaGNuTmxkRDFWVkVZdE9BMEtEUXBVYUdGdWEzTXNJRlIxWlhOa1lYa2dkMjl5YTNNdSJ9fQ==",
+         "stream": "none"
+        }
+       }
+      ],
+      "neverEmits": [
+       "GMAIL_RETRY_START"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "GmailClient",
+    "GmailCall",
+    "GmailKeyed",
+    "GmailHttp",
+    "GmailRetry"
+   ]
+  },
+  {
+   "id": "a-slovenian-subject-is-sent-as-an-rfc-2047-encoded-word",
+   "steps": [
+    {
+     "event": "CREATE_DRAFT",
+     "payload": {
+      "to": "ann@x.io",
+      "subject": "Ponudba za ogla\u0161evanje \u2014 \u010drke \u010d\u0161\u017e",
+      "body": "Thanks, Tuesday works."
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GMAIL_HTTP_SEND",
+        "payload": {
+         "key": "draft:ann@x.io#1",
+         "method": "POST",
+         "target": "/gmail/v1/users/me/drafts",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "*/*"
+          },
+          {
+           "name": "content-type",
+           "value": "application/json"
+          }
+         ],
+         "body": "eyJtZXNzYWdlIjp7InJhdyI6IlZHODZJR0Z1YmtCNExtbHZEUXBUZFdKcVpXTjBPaUE5UDFWVVJpMDRQMElfVlVjNWRXUlhVbWxaVTBJMldWTkNkbG95ZUdoNFlVWnNaRzFHZFdGdFZXYzBiME5WU1UxVFRtTnRkR3hKVFZOT2VHRklSblpuUFQwX1BRMEtRMjl1ZEdWdWRDMVVlWEJsT2lCMFpYaDBMM0JzWVdsdU95QmphR0Z5YzJWMFBWVlVSaTA0RFFvTkNsUm9ZVzVyY3l3Z1ZIVmxjMlJoZVNCM2IzSnJjeTQ9In19",
+         "stream": "none"
+        }
+       }
+      ],
+      "neverEmits": [
+       "GMAIL_RETRY_START"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "GmailClient",
+    "GmailCall",
+    "GmailKeyed",
+    "GmailHttp",
+    "GmailRetry"
+   ]
+  },
+  {
+   "id": "control-an-ascii-subject-is-also-encoded-and-never-sent-raw",
+   "steps": [
+    {
+     "event": "CREATE_DRAFT",
+     "payload": {
+      "to": "ann@x.io",
+      "subject": "Hi",
+      "body": "Thanks, Tuesday works."
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GMAIL_HTTP_SEND",
+        "payload": {
+         "key": "draft:ann@x.io#1",
+         "method": "POST",
+         "target": "/gmail/v1/users/me/drafts",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "*/*"
+          },
+          {
+           "name": "content-type",
+           "value": "application/json"
+          }
+         ],
+         "body": "eyJtZXNzYWdlIjp7InJhdyI6IlZHODZJR0Z1YmtCNExtbHZEUXBUZFdKcVpXTjBPaUE5UDFWVVJpMDRQMElfVTBkclBUODlEUXBEYjI1MFpXNTBMVlI1Y0dVNklIUmxlSFF2Y0d4aGFXNDdJR05vWVhKelpYUTlWVlJHTFRnTkNnMEtWR2hoYm10ekxDQlVkV1Z6WkdGNUlIZHZjbXR6TGc9PSJ9fQ==",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "GmailClient",
+    "GmailCall",
+    "GmailKeyed",
+    "GmailHttp",
+    "GmailRetry"
+   ]
+  },
+  {
+   "id": "a-draft-header-with-a-line-break-is-refused",
+   "steps": [
+    {
+     "event": "CREATE_DRAFT",
+     "payload": {
+      "to": "ann@x.io\r\nBcc: evil@x.io",
+      "subject": "Re: Quarterly plan",
+      "body": "Thanks, Tuesday works."
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GMAIL_FAILED",
+        "payload": {
+         "message": "A draft header value must be a single line"
+        }
+       }
+      ],
+      "neverEmits": [
+       "GMAIL_HTTP_SEND"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "GmailClient",
+    "GmailCall",
+    "GmailKeyed",
+    "GmailHttp",
+    "GmailRetry"
+   ]
+  },
+  {
+   "id": "control-a-single-line-draft-header-is-sent",
+   "steps": [
+    {
+     "event": "CREATE_DRAFT",
+     "payload": {
+      "to": "ann@x.io",
+      "subject": "Re: Quarterly plan",
+      "body": "two\r\nlines"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GMAIL_HTTP_SEND",
+        "payload": {
+         "key": "draft:ann@x.io#1"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "GmailClient",
+    "GmailCall",
+    "GmailKeyed",
+    "GmailHttp",
+    "GmailRetry"
+   ]
+  },
+  {
+   "id": "a-2xx-draft-reply-answers-the-draft-ids",
+   "steps": [
+    {
+     "event": "GMAIL_REPLIED",
+     "payload": {
+      "key": "draft:ann@x.io#1",
+      "status": 200,
+      "headers": {},
+      "body": "{\"id\":\"d1\",\"message\":{\"id\":\"dm1\",\"threadId\":\"t1\"}}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "DRAFT_CREATED",
+        "payload": {
+         "draftId": "d1",
+         "messageId": "dm1",
+         "threadId": "t1"
+        }
+       }
+      ],
+      "neverEmits": [
+       "GMAIL_FAILED"
+      ]
+     },
+     "trait": "GmailCall",
+     "entity": {
+      "id": "draft:ann@x.io#1",
+      "op": "draft",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "mintTried": false,
+      "attempt": 0,
+      "retrying": false
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "GmailClient",
+    "GmailCall",
+    "GmailKeyed",
+    "GmailHttp",
+    "GmailRetry"
+   ]
+  },
+  {
+   "id": "a-2xx-draft-reply-that-is-not-json-fails",
+   "steps": [
+    {
+     "event": "GMAIL_REPLIED",
+     "payload": {
+      "key": "draft:ann@x.io#1",
+      "status": 200,
+      "headers": {},
+      "body": "nope"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GMAIL_FAILED",
+        "payload": {
+         "message": "The Gmail answer could not be read"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DRAFT_CREATED"
+      ]
+     },
+     "trait": "GmailCall",
+     "entity": {
+      "id": "draft:ann@x.io#1",
+      "op": "draft",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "mintTried": false,
+      "attempt": 0,
+      "retrying": false
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "GmailClient",
+    "GmailCall",
+    "GmailKeyed",
+    "GmailHttp",
+    "GmailRetry"
+   ]
+  },
+  {
+   "id": "a-401-draft-reply-fails-with-the-provider-message",
+   "steps": [
+    {
+     "event": "GMAIL_REPLIED",
+     "payload": {
+      "key": "draft:ann@x.io#1",
+      "status": 401,
+      "headers": {},
+      "body": "{\"error\":{\"code\":401,\"message\":\"Request had invalid authentication credentials.\",\"errors\":[{\"message\":\"Invalid Credentials\",\"domain\":\"global\",\"reason\":\"authError\"}],\"status\":\"UNAUTHENTICATED\"}}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GMAIL_FAILED",
+        "payload": {
+         "message": "Invalid Credentials"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DRAFT_CREATED",
+       "GMAIL_RETRY_FAILED"
+      ]
+     },
+     "trait": "GmailCall",
+     "entity": {
+      "id": "draft:ann@x.io#1",
+      "op": "draft",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "mintTried": false,
+      "attempt": 0,
+      "retrying": false
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "GmailClient",
+    "GmailCall",
+    "GmailKeyed",
+    "GmailHttp",
+    "GmailRetry"
+   ]
+  },
+  {
+   "id": "a-403-list-reply-fails-with-the-provider-message-and-is-not-retried",
+   "steps": [
+    {
+     "event": "GMAIL_REPLIED",
+     "payload": {
+      "key": "inbox:in:inbox newer_than:1d|20#1",
+      "status": 403,
+      "headers": {},
+      "body": "{\"error\":{\"code\":403,\"message\":\"Insufficient Permission\",\"errors\":[{\"message\":\"Insufficient Permission\",\"domain\":\"global\",\"reason\":\"insufficientPermissions\"}],\"status\":\"PERMISSION_DENIED\"}}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GMAIL_FAILED",
+        "payload": {
+         "message": "Insufficient Permission"
+        }
+       }
+      ],
+      "neverEmits": [
+       "GMAIL_RETRY_FAILED",
+       "INBOX_LISTED"
+      ]
+     },
+     "trait": "GmailCall",
+     "entity": {
+      "id": "inbox:in:inbox newer_than:1d|20#1",
+      "op": "list",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "mintTried": false,
+      "attempt": 0,
+      "retrying": true
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "GmailClient",
+    "GmailCall",
+    "GmailKeyed",
+    "GmailHttp",
+    "GmailRetry"
+   ]
+  },
+  {
+   "id": "a-403-message-reply-fails-with-the-provider-message",
+   "steps": [
+    {
+     "event": "GMAIL_REPLIED",
+     "payload": {
+      "key": "inbox:in:inbox newer_than:1d|20#1",
+      "status": 403,
+      "headers": {},
+      "body": "{\"error\":{\"code\":403,\"message\":\"Insufficient Permission\",\"errors\":[{\"message\":\"Insufficient Permission\",\"domain\":\"global\",\"reason\":\"insufficientPermissions\"}],\"status\":\"PERMISSION_DENIED\"}}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GMAIL_FAILED",
+        "payload": {
+         "message": "Insufficient Permission"
+        }
+       }
+      ],
+      "neverEmits": [
+       "GMAIL_RETRY_FAILED",
+       "INBOX_LISTED"
+      ]
+     },
+     "trait": "GmailCall",
+     "entity": {
+      "id": "inbox:in:inbox newer_than:1d|20#1",
+      "op": "get",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "mintTried": false,
+      "attempt": 0,
+      "retrying": true,
+      "pending": [
+       "m1"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "GmailClient",
+    "GmailCall",
+    "GmailKeyed",
+    "GmailHttp",
+    "GmailRetry"
+   ]
+  },
+  {
+   "id": "control-a-503-list-reply-is-handed-back-to-std-retry",
+   "steps": [
+    {
+     "event": "GMAIL_REPLIED",
+     "payload": {
+      "key": "inbox:in:inbox newer_than:1d|20#1",
+      "status": 503,
+      "headers": {},
+      "body": "{\"error\":{\"code\":503,\"message\":\"Backend Error\",\"errors\":[{\"message\":\"Backend Error\"}]}}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GMAIL_RETRY_FAILED",
+        "payload": {
+         "key": "inbox:in:inbox newer_than:1d|20#1",
+         "error": "Backend Error"
+        }
+       }
+      ],
+      "neverEmits": [
+       "GMAIL_FAILED"
+      ]
+     },
+     "trait": "GmailCall",
+     "entity": {
+      "id": "inbox:in:inbox newer_than:1d|20#1",
+      "op": "list",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "mintTried": false,
+      "attempt": 0,
+      "retrying": true
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "GmailClient",
+    "GmailCall",
+    "GmailKeyed",
+    "GmailHttp",
+    "GmailRetry"
+   ]
+  },
+  {
+   "id": "the-keyed-client-403-reaches-the-list-row",
+   "steps": [
+    {
+     "event": "LIST_INBOX",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "GMAIL_RETRY_START",
+        "payload": {
+         "key": "inbox:in:inbox newer_than:1d|20#1"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "inbox:in:inbox newer_than:1d|20#1",
+      "status": 403,
+      "headers": {},
+      "body": "eyJlcnJvciI6eyJjb2RlIjo0MDMsIm1lc3NhZ2UiOiJJbnN1ZmZpY2llbnQgUGVybWlzc2lvbiIsImVycm9ycyI6W3sibWVzc2FnZSI6Ikluc3VmZmljaWVudCBQZXJtaXNzaW9uIiwiZG9tYWluIjoiZ2xvYmFsIiwicmVhc29uIjoiaW5zdWZmaWNpZW50UGVybWlzc2lvbnMifV0sInN0YXR1cyI6IlBFUk1JU1NJT05fREVOSUVEIn19"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GMAIL_FAILED",
+        "payload": {
+         "message": "Insufficient Permission"
+        }
+       }
+      ],
+      "neverEmits": [
+       "GMAIL_RETRY_FAILED"
+      ]
+     },
+     "trait": "GmailHttp"
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "GmailClient",
+    "GmailCall",
+    "GmailKeyed",
+    "GmailHttp",
+    "GmailRetry"
+   ]
+  },
+  {
+   "id": "a-keyed-client-503-on-a-list-is-handed-back-to-std-retry",
+   "steps": [
+    {
+     "event": "LIST_INBOX",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "GMAIL_RETRY_START",
+        "payload": {
+         "key": "inbox:in:inbox newer_than:1d|20#1"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "inbox:in:inbox newer_than:1d|20#1",
+      "status": 503,
+      "headers": {},
+      "body": "eyJlcnJvciI6eyJjb2RlIjo1MDMsIm1lc3NhZ2UiOiJCYWNrZW5kIEVycm9yIn19"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GMAIL_RETRY_FAILED",
+        "payload": {
+         "key": "inbox:in:inbox newer_than:1d|20#1",
+         "error": "Backend Error"
+        }
+       }
+      ],
+      "neverEmits": [
+       "GMAIL_FAILED"
+      ]
+     },
+     "trait": "GmailHttp"
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "GmailClient",
+    "GmailCall",
+    "GmailKeyed",
+    "GmailHttp",
+    "GmailRetry"
+   ]
+  },
+  {
+   "id": "a-not-held-user-token-mints-once-through-the-refresh-token-grant",
+   "steps": [
+    {
+     "event": "GMAIL_REQUEST_FAILED",
+     "payload": {
+      "key": "draft:ann@x.io#1",
+      "kind": "unconfigured",
+      "error": ""
+     },
+     "expect": {
+      "effects": [
+       {
+        "type": "credential-connect",
+        "arg0": {
+         "credential": "@config.userToken",
+         "scope": "app",
+         "tokenEndpoint": "https://oauth2.googleapis.com/token",
+         "grant": "refresh_token",
+         "refreshCredential": "@config.refreshToken",
+         "clientId": "@config.clientId",
+         "clientSecret": "@config.clientSecret",
+         "clientAuth": "body"
+        }
+       }
+      ]
+     },
+     "trait": "GmailCall",
+     "entity": {
+      "id": "draft:ann@x.io#1",
+      "op": "draft",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "mintTried": false,
+      "attempt": 0,
+      "retrying": false
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "GmailClient",
+    "GmailCall",
+    "GmailKeyed",
+    "GmailHttp",
+    "GmailRetry"
+   ]
+  },
+  {
+   "id": "control-a-second-not-held-answer-probes-the-refresh-token-instead-of-minting-again",
+   "steps": [
+    {
+     "event": "GMAIL_REQUEST_FAILED",
+     "payload": {
+      "key": "draft:ann@x.io#1",
+      "kind": "unconfigured",
+      "error": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GMAIL_UNCONFIGURED",
+        "payload": {}
+       }
+      ],
+      "neverEmits": [
+       "GMAIL_CONNECTED"
+      ]
+     },
+     "trait": "GmailCall",
+     "entity": {
+      "id": "draft:ann@x.io#1",
+      "op": "draft",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "mintTried": true,
+      "attempt": 0,
+      "retrying": false
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "GmailClient",
+    "GmailCall",
+    "GmailKeyed",
+    "GmailHttp",
+    "GmailRetry"
+   ]
+  },
+  {
+   "id": "a-connected-answer-sends-the-held-request-again",
+   "steps": [
+    {
+     "event": "GMAIL_CONNECTED",
+     "payload": {
+      "connected": true,
+      "label": "me"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GMAIL_HTTP_SEND",
+        "payload": {
+         "key": "draft:ann@x.io#1",
+         "method": "GET",
+         "target": "/gmail/v1/users/me/drafts",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "*/*"
+          }
+         ],
+         "body": "",
+         "stream": "none"
+        }
+       }
+      ]
+     },
+     "trait": "GmailCall",
+     "entity": {
+      "id": "draft:ann@x.io#1",
+      "op": "draft",
+      "method": "GET",
+      "target": "/gmail/v1/users/me/drafts",
+      "contentType": "",
+      "body": "",
+      "mintTried": true,
+      "attempt": 0,
+      "retrying": false
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "GmailClient",
+    "GmailCall",
+    "GmailKeyed",
+    "GmailHttp",
+    "GmailRetry"
+   ]
+  },
+  {
+   "id": "an-unconfigured-refresh-token-fails-not-configured",
+   "steps": [
+    {
+     "event": "GMAIL_REFRESH_PROBED",
+     "payload": {
+      "connected": false
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GMAIL_FAILED",
+        "payload": {
+         "message": "Integration not configured: gmail. Set GOOGLE_GMAIL_REFRESH_TOKEN, OAUTH_CLIENT_ID and OAUTH_CLIENT_SECRET.",
+         "code": "NOT_CONFIGURED"
+        }
+       }
+      ]
+     },
+     "trait": "GmailCall",
+     "entity": {
+      "id": "draft:ann@x.io#1",
+      "op": "draft",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "mintTried": true,
+      "attempt": 0,
+      "retrying": false
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "GmailClient",
+    "GmailCall",
+    "GmailKeyed",
+    "GmailHttp",
+    "GmailRetry"
+   ]
+  },
+  {
+   "id": "control-a-held-refresh-token-that-still-fails-answers-no-not-configured-code",
+   "steps": [
+    {
+     "event": "GMAIL_REFRESH_PROBED",
+     "payload": {
+      "connected": true
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GMAIL_FAILED",
+        "payload": {
+         "message": "Gmail not configured \u2014 the Google token request found no usable credential; check GOOGLE_GMAIL_REFRESH_TOKEN, OAUTH_CLIENT_ID and OAUTH_CLIENT_SECRET, and that the refresh token was granted https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.compose"
+        }
+       }
+      ]
+     },
+     "trait": "GmailCall",
+     "entity": {
+      "id": "draft:ann@x.io#1",
+      "op": "draft",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "mintTried": true,
+      "attempt": 0,
+      "retrying": false
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "GmailClient",
+    "GmailCall",
+    "GmailKeyed",
+    "GmailHttp",
+    "GmailRetry"
+   ]
+  },
+  {
+   "id": "a-store-without-credentials-fails-not-configured",
+   "steps": [
+    {
+     "event": "GMAIL_CONNECT_FAILED",
+     "payload": {
+      "error": "no store",
+      "kind": "unavailable"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GMAIL_FAILED",
+        "payload": {
+         "message": "Integration not configured: gmail. Set GOOGLE_GMAIL_REFRESH_TOKEN, OAUTH_CLIENT_ID and OAUTH_CLIENT_SECRET.",
+         "code": "NOT_CONFIGURED"
+        }
+       }
+      ]
+     },
+     "trait": "GmailCall",
+     "entity": {
+      "id": "draft:ann@x.io#1",
+      "op": "draft",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "mintTried": true,
+      "attempt": 0,
+      "retrying": false
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "GmailClient",
+    "GmailCall",
+    "GmailKeyed",
+    "GmailHttp",
+    "GmailRetry"
+   ]
+  },
+  {
+   "id": "a-failed-probe-fails-not-configured",
+   "steps": [
+    {
+     "event": "GMAIL_PROBE_FAILED",
+     "payload": {
+      "error": "no store"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GMAIL_FAILED",
+        "payload": {
+         "message": "Integration not configured: gmail. Set GOOGLE_GMAIL_REFRESH_TOKEN, OAUTH_CLIENT_ID and OAUTH_CLIENT_SECRET.",
+         "code": "NOT_CONFIGURED"
+        }
+       }
+      ]
+     },
+     "trait": "GmailCall",
+     "entity": {
+      "id": "draft:ann@x.io#1",
+      "op": "draft",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "mintTried": true,
+      "attempt": 0,
+      "retrying": false
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "GmailClient",
+    "GmailCall",
+    "GmailKeyed",
+    "GmailHttp",
+    "GmailRetry"
+   ]
+  },
+  {
+   "id": "control-an-invalid-grant-fails-with-its-text-not-not-configured",
+   "steps": [
+    {
+     "event": "GMAIL_CONNECT_FAILED",
+     "payload": {
+      "error": "invalid_grant",
+      "kind": "invalid_grant"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GMAIL_FAILED",
+        "payload": {
+         "message": "Google token request failed: invalid_grant"
+        }
+       }
+      ]
+     },
+     "trait": "GmailCall",
+     "entity": {
+      "id": "draft:ann@x.io#1",
+      "op": "draft",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "mintTried": true,
+      "attempt": 0,
+      "retrying": false
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "GmailClient",
+    "GmailCall",
+    "GmailKeyed",
+    "GmailHttp",
+    "GmailRetry"
+   ]
+  },
+  {
+   "id": "a-failed-mint-on-an-inbox-read-cancels-the-retry",
+   "steps": [
+    {
+     "event": "GMAIL_CONNECT_FAILED",
+     "payload": {
+      "error": "invalid_grant",
+      "kind": "invalid_grant"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GMAIL_RETRY_CANCEL",
+        "payload": {
+         "key": "inbox:in:inbox newer_than:1d|20#1"
+        }
+       },
+       {
+        "event": "GMAIL_FAILED",
+        "payload": {
+         "message": "Google token request failed: invalid_grant"
+        }
+       }
+      ]
+     },
+     "trait": "GmailCall",
+     "entity": {
+      "id": "inbox:in:inbox newer_than:1d|20#1",
+      "op": "list",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "mintTried": true,
+      "attempt": 0,
+      "retrying": true
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "GmailClient",
+    "GmailCall",
+    "GmailKeyed",
+    "GmailHttp",
+    "GmailRetry"
+   ]
+  },
+  {
+   "id": "a-timeout-on-the-draft-call-fails-without-retry",
+   "steps": [
+    {
+     "event": "GMAIL_REQUEST_FAILED",
+     "payload": {
+      "key": "draft:ann@x.io#1",
+      "kind": "timeout",
+      "error": "x"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GMAIL_FAILED",
+        "payload": {
+         "message": "network timeout"
+        }
+       }
+      ],
+      "neverEmits": [
+       "GMAIL_RETRY_FAILED"
+      ]
+     },
+     "trait": "GmailCall",
+     "entity": {
+      "id": "draft:ann@x.io#1",
+      "op": "draft",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "mintTried": false,
+      "attempt": 0,
+      "retrying": false
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "GmailClient",
+    "GmailCall",
+    "GmailKeyed",
+    "GmailHttp",
+    "GmailRetry"
+   ]
+  },
+  {
+   "id": "control-a-timeout-on-an-inbox-read-is-handed-to-std-retry",
+   "steps": [
+    {
+     "event": "GMAIL_REQUEST_FAILED",
+     "payload": {
+      "key": "inbox:in:inbox newer_than:1d|20#1",
+      "kind": "timeout",
+      "error": "x"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GMAIL_RETRY_FAILED",
+        "payload": {
+         "key": "inbox:in:inbox newer_than:1d|20#1",
+         "error": "network timeout"
+        }
+       }
+      ],
+      "neverEmits": [
+       "GMAIL_FAILED"
+      ]
+     },
+     "trait": "GmailCall",
+     "entity": {
+      "id": "inbox:in:inbox newer_than:1d|20#1",
+      "op": "list",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "mintTried": false,
+      "attempt": 0,
+      "retrying": true
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "GmailClient",
+    "GmailCall",
+    "GmailKeyed",
+    "GmailHttp",
+    "GmailRetry"
+   ]
+  },
+  {
+   "id": "std-retry-giving-up-fails-with-the-last-error",
+   "steps": [
+    {
+     "event": "GMAIL_GAVE_UP",
+     "payload": {
+      "key": "inbox:in:inbox newer_than:1d|20#1",
+      "attempts": 4,
+      "error": "Backend Error"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "GMAIL_FAILED",
+        "payload": {
+         "message": "Backend Error"
+        }
+       }
+      ]
+     },
+     "trait": "GmailCall",
+     "entity": {
+      "id": "inbox:in:inbox newer_than:1d|20#1",
+      "op": "list",
+      "method": "GET",
+      "target": "/x",
+      "contentType": "",
+      "body": "",
+      "mintTried": false,
+      "attempt": 0,
+      "retrying": true
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "GmailClient",
+    "GmailCall",
+    "GmailKeyed",
+    "GmailHttp",
+    "GmailRetry"
+   ]
+  }
+ ]
+}

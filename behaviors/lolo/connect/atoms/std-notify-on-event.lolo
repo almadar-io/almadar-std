@@ -13,6 +13,7 @@ uses Email from "std/behaviors/std-email"
 uses Twilio from "std/behaviors/std-twilio"
 uses Push from "std/behaviors/std-push"
 uses Webhook from "std/behaviors/std-webhook"
+uses Browse from "std/behaviors/std-browse"
 
 orbital NotifyOnEventOrbital {
     type EventOccurred = Event { data : @entity @config.sourceEntity, status : string, id : string } "Rename via traitOverrides.events to the upstream event (e.g. ContactSaved). The atom listens on this sentinel and dispatches a notification. The optional `status` field lets `triggerStatus` gate dispatch to a single status-change value."
@@ -29,6 +30,12 @@ orbital NotifyOnEventOrbital {
     dispatched : boolean @description "Indicates whether the notification has been successfully sent." @synonyms "sent, delivered, status" = false
     error : string @description "Failure detail from the delivery service when dispatched is false, or the suppression reason (quiet-hours / digest-deferred / muted-by-preference / frequency-cap / no-push-subscription)." @synonyms "error message, failure reason, dispatch error" = ""
     recordedAt : instant! @description "When the notification record was created (ISO-8601 instant)." @synonyms "creation time, timestamp, date, when"
+    read : boolean @description "Whether the recipient has read this notification in their inbox." @synonyms "seen, opened, unread" = false
+    link : string @description "Where opening the notification takes the recipient; blank = nowhere." @synonyms "url, target, href" = ""
+    eventKey : string @description "The event key the notification was raised for (matches preference rows)." @synonyms "event, topic" = ""
+    browsePage : number @intrinsic = 1
+    browseTotalCount : number @intrinsic = 0
+    browseParentId : string @intrinsic = ""
     prefMode : string @description "Scratch: effective preference mode resolved for the current dispatch (instant/digest/off)." @synonyms "resolved mode" = ""
     prefChannel : string @description "Scratch: channel override from the matched preference row; blank = no override." @synonyms "channel override" = ""
     prefQuietHours : string @description "Scratch: per-user quiet-hours window \"HH:MM-HH:MM\" from the matched preference row; blank = none." @synonyms "user quiet hours" = ""
@@ -690,5 +697,181 @@ orbital NotifyOnEventOrbital {
     }
   }
 
-  page "/notify-on-event" as NotifyOnEventPage -> NotifyOnEventListener, NotifyEmailApi, NotifyEmailApiSendgridHttp, NotifyEmailApiResendHttp, NotifyEmailApiTimeout, NotifySmsApi, NotifySmsApiHttp, NotifySmsApiTimeout, NotifyPushApi, NotifyPushFcmHttp, NotifyPushAndroidHttp, NotifyPushMozillaHttp, NotifyPushAppleHttp, NotifyPushWnsHttp, NotifyWebhookApi, NotifyWebhookApiHttp, NotifyWebhookApiTimeout, NotifyWebhookRetry
+  ;; In-app delivery with no UI: one inbox row per request, for the recipient
+  ;; the request names. Runs on the boot page, so it delivers whichever pages
+  ;; are open; map a domain event onto INBOX_DELIVER at the call site.
+  trait InboxDelivery -> NotificationRecord {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      INBOX_DELIVER -> idle when (validate/required ?recipient)
+        (persist create NotificationRecord {
+          recipient: ?recipient
+          channel: "in-app"
+          message: ?message
+          severity: (default ?severity "info")
+          link: (default ?link "")
+          eventKey: (default ?eventKey "")
+          dispatched: true
+          read: false
+          recordedAt: @now
+        } {
+          emit: { failure: INBOX_DELIVERY_FAILED, success: INBOX_DELIVERED }
+        })
+      INBOX_DELIVER -> idle when (not (validate/required ?recipient))
+        (emit INBOX_DELIVERY_FAILED { error: "the notification names no recipient", code: "NO_RECIPIENT" })
+      INBOX_DELIVER_MANY -> idle when (> (array/len (array/filter ?recipients (fn r (validate/required @r)))) 0)
+        (persist batch (array/map (array/filter ?recipients (fn r (validate/required @r))) (fn r ["create" "NotificationRecord" { recipient: @r, channel: "in-app", message: ?message, severity: (default ?severity "info"), link: (default ?link ""), eventKey: (default ?eventKey ""), dispatched: true, read: false, recordedAt: @now }])) {
+          emit: { failure: INBOX_DELIVERY_FAILED, success: INBOX_BATCH_DELIVERED }
+        })
+      INBOX_DELIVER_MANY -> idle
+        (emit INBOX_DELIVERY_FAILED { error: "the notification names no recipient", code: "NO_RECIPIENT" })
+    }
+
+    emits {
+      INBOX_DELIVERED -> external {
+        id : string
+        recipient : string
+      }
+        @description "An inbox row was written for the recipient."
+        @tier "domain"
+      INBOX_BATCH_DELIVERED -> external {
+        completedCount : number
+        totalCount : number
+      }
+        @description "Inbox rows were written for everyone a request named."
+        @tier "domain"
+      INBOX_DELIVERY_FAILED -> external {
+        error : string
+        code : string
+      }
+        @description "The inbox row could not be written."
+        @tier "domain"
+    }
+
+    listens {
+      INBOX_DELIVER {
+        recipient : string
+        message : string!
+        severity : string
+        link : string
+        eventKey : string
+      }
+        @description "Deliver an in-app notification to one person's inbox."
+        @synonyms "notify, inbox, alert someone"
+        @tier "domain"
+      INBOX_DELIVER_MANY {
+        recipients : [string]!
+        message : string!
+        severity : string
+        link : string
+        eventKey : string
+      }
+        @description "Deliver the same in-app notification to several people's inboxes."
+        @synonyms "notify everyone mentioned, fan out"
+        @tier "domain"
+    }
+  }
+
+  ;; The viewer's inbox: rows delivered to them, newest first; open one to go
+  ;; where it points, or mark it read.
+  trait InboxList = Browse.traits.BrowseItemBrowse -> NotificationRecord {
+    config {
+      scopeField: recipient
+      browseLook: dense
+      searchField: message
+      emptyTitle: "You're all caught up"
+      emptyDescription: "Notifications meant for you land here."
+      emptyIcon: inbox
+      columns: [{
+        align: left
+        field: message
+        header: Notification
+        key: message
+        weight: medium
+        width: "minmax(16rem,3fr)"
+      }, {
+        align: center
+        field: severity
+        format: badge
+        header: Kind
+        key: severity
+        width: "7rem"
+      }, {
+        align: center
+        field: read
+        format: boolean
+        header: Read
+        key: read
+        width: "5rem"
+      }, {
+        align: left
+        field: recordedAt
+        format: date
+        header: When
+        key: recordedAt
+        width: "8rem"
+      }]
+      itemActions: [{
+        event: OPEN_NOTIFICATION
+        label: Open
+        variant: ghost
+        when: (fn row (!= (object/get @row link) ""))
+      }, {
+        event: MARK_READ
+        label: "Mark read"
+        variant: ghost
+        when: (fn row (= (object/get @row read) false))
+      }]
+    }
+
+    listens {
+      InboxActions.NOTIFICATION_READ -> INIT
+      InboxDelivery.INBOX_DELIVERED -> INIT
+      InboxDelivery.INBOX_BATCH_DELIVERED -> INIT
+    }
+  }
+
+  trait InboxActions -> NotificationRecord {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      MARK_READ -> idle
+        (persist update NotificationRecord { id: ?id, read: true })
+        (emit NOTIFICATION_READ { notificationId: ?id })
+      OPEN_NOTIFICATION -> idle when (validate/required ?row.link)
+        (persist update NotificationRecord { id: ?id, read: true })
+        (navigate ?row.link)
+    }
+
+    emits {
+      NOTIFICATION_READ -> external {
+        notificationId : string!
+      }
+        @description "The viewer read a notification."
+        @tier "secondary"
+    }
+
+    listens {
+      MARK_READ {
+        id : string!
+        row : @entity
+      }
+        @description "Mark a notification read."
+        @tier "presentation"
+      OPEN_NOTIFICATION {
+        id : string!
+        row : @entity!
+      }
+        @description "Open what a notification is about."
+        @tier "presentation"
+      InboxList.MARK_READ -> MARK_READ
+      InboxList.OPEN_NOTIFICATION -> OPEN_NOTIFICATION
+    }
+  }
+
+  page boot as InboxDeliveryStart -> InboxDelivery
+  page "/notify-on-event" as NotifyOnEventPage -> InboxList, InboxActions, NotifyOnEventListener, NotifyEmailApi, NotifyEmailApiSendgridHttp, NotifyEmailApiResendHttp, NotifyEmailApiTimeout, NotifySmsApi, NotifySmsApiHttp, NotifySmsApiTimeout, NotifyPushApi, NotifyPushFcmHttp, NotifyPushAndroidHttp, NotifyPushMozillaHttp, NotifyPushAppleHttp, NotifyPushWnsHttp, NotifyWebhookApi, NotifyWebhookApiHttp, NotifyWebhookApiTimeout, NotifyWebhookRetry
 }

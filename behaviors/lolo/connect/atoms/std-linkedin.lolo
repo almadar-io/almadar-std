@@ -1,0 +1,289 @@
+app std-linkedin [
+  version: "1.0.0",
+  description: "std-linkedin — publish a post as an organization page or a member through the LinkedIn Posts API (POST https://api.linkedin.com/rest/posts). PUBLISH_POST { key?, author, text, linkUrl?, linkTitle? } answers POST_PUBLISHED { key?, postUrn } (the URN is the x-restli-id header of the 201 reply) or POST_FAILED { key?, code?, message }; an optional key is echoed on its answer. The text is escaped for LinkedIn's little-text format (| { } @ [ ] ( ) < > # \\ * _ ~ are backslash-escaped) so the post is neither rejected nor mangled. The member or organization OAuth access token is minted and renewed by the host credential store (a refresh_token grant at www.linkedin.com/oauth/v2/accessToken over credential-connect) and carried by the keyed HTTP client, never by an event. LinkedIn has no scheduling API: a caller schedules by sending PUBLISH_POST at the right time. Every call runs on its own row under its own key, so concurrent posts never share state.",
+  egress: ["https://api.linkedin.com", "https://www.linkedin.com"],
+  net: { "api.linkedin.com:443": [tcp], "www.linkedin.com:443": [tcp] }
+]
+uses Keyed from "std/behaviors/std-http-keyed"
+type HttpHeader = { name : string!, value : string! }
+type LinkedinApiError = { message : string, code : string }
+orbital LinkedinOrbital {
+  entity LinkedinRequest [runtime] {
+    id : string!
+    seq : number @description "The front trait's call counter: each post takes the next number, so its key is distinct from every other post's." = 0
+    callerKey : string @description "The key the caller sent, echoed on the answer; empty when none was sent." = ""
+    hasKey : boolean @description "True when the caller sent a key." = false
+    version : string @description "The LinkedIn-Version header value of the request in flight." = ""
+    body : bytes @description "The JSON body of the request in flight, held to send again after a token is minted." = ""
+    mintTried : boolean @description "True once the access token was minted after the store reported none held, so a second not-held answer fails instead of looping." = false
+  }
+
+  trait LinkedinKeyed = Keyed.traits.HttpKeyed {
+    listens {
+      LinkedinCall.LINKEDIN_HTTP_SEND -> HTTP_SEND
+      LinkedinKeyed.DELIVERY_REJECTED -> KEY_REFUSED
+    }
+  }
+
+  trait LinkedinHttp = Keyed.traits.KeyedHttp {
+    config {
+      host: "api.linkedin.com"
+      port: 443
+      tls: true
+      serverName: "api.linkedin.com"
+      credential: "LINKEDIN_ACCESS_TOKEN"
+      credentialHeader: "authorization"
+      credentialPrefix: "Bearer "
+    }
+    listens {
+      LinkedinKeyed.KEYED_SEND -> HTTP_SEND per @payload.key
+      LinkedinKeyed.KEYED_CANCEL -> HTTP_CANCEL per @payload.key
+    }
+  }
+
+  trait LinkedinPublisher -> LinkedinRequest [optimistic] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+
+      PUBLISH_POST -> idle when (not (or (str/startsWith @payload.author "urn:li:organization:") (str/startsWith @payload.author "urn:li:person:")))
+        (emit POST_FAILED { key: @payload.key, code: "INVALID_AUTHOR", message: "author must be a urn:li:organization:<id> or urn:li:person:<id>" })
+      PUBLISH_POST -> idle when (and (or (str/startsWith @payload.author "urn:li:organization:") (str/startsWith @payload.author "urn:li:person:")) (= (str/trim @payload.text) ""))
+        (emit POST_FAILED { key: @payload.key, code: "EMPTY_TEXT", message: "the post text is empty" })
+      PUBLISH_POST -> idle when (and (or (str/startsWith @payload.author "urn:li:organization:") (str/startsWith @payload.author "urn:li:person:")) (!= (str/trim @payload.text) ""))
+        (set @entity.seq (+ @entity.seq 1))
+        (emit LINKEDIN_READY {
+          key: (str/concat "post#" @entity.seq),
+          callerKey: (default @payload.key ""),
+          hasKey: (validate/required @payload.key),
+          version: @config.version,
+          body: (bytes/from-string (json/stringify (object/merge
+            {
+              author: @payload.author,
+              commentary: (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll (str/replaceAll @payload.text
+                "\\" "\\\\") "|" "\\|") "{" "\\{") "}" "\\}") (quote "@") "\\@") "[" "\\[") "]" "\\]") "(" "\\(") ")" "\\)") "<" "\\<") ">" "\\>") "#" "\\#") "*" "\\*") "_" "\\_") "~" "\\~"),
+              visibility: "PUBLIC",
+              distribution: { feedDistribution: "MAIN_FEED", targetEntities: [], thirdPartyDistributionChannels: [] },
+              lifecycleState: "PUBLISHED",
+              isReshareDisabledByAuthor: false
+            }
+            (if (validate/required @payload.linkUrl)
+              { content: { article: { source: @payload.linkUrl, title: (if (validate/required @payload.linkTitle) @payload.linkTitle @payload.linkUrl) } } }
+              {}))))
+        })
+    }
+
+    emits {
+      POST_PUBLISHED -> external {
+        key : string?
+        postUrn : string!
+      }
+        @description "The post was published; postUrn is the new post's URN, read from the x-restli-id header of the 201 reply."
+        @synonyms "linkedin post published, post live, share published"
+        @tier "primary"
+      POST_FAILED -> external {
+        key : string?
+        code : string
+        message : string!
+      }
+        @description "The post was not published: INVALID_AUTHOR or EMPTY_TEXT before any request, NOT_CONFIGURED when no credential is set, HTTP_<status> for a provider error, NO_POST_ID for a reply without the post URN, or the transport failure kind."
+        @synonyms "linkedin post failed, share error, post rejected"
+        @tier "primary"
+      LINKEDIN_READY {
+        key : string!
+        callerKey : string!
+        hasKey : boolean!
+        version : string!
+        body : bytes!
+      }
+        @description "Internal: a built post request, handed to the row of its key in LinkedinCall."
+        @tier "secondary"
+    }
+
+    listens {
+      PUBLISH_POST -> input {
+        key : string?
+        author : string!
+        text : string!
+        linkUrl : string?
+        linkTitle : string?
+      }
+        @description "Publish one post as the organization or member named by author (urn:li:organization:<id> or urn:li:person:<id>). text is escaped for LinkedIn's little-text format; linkUrl adds an article card titled linkTitle (default the URL). LinkedIn offers no scheduling: send this at the time the post should go out."
+        @synonyms "post to linkedin, publish linkedin post, share on linkedin, company page post"
+    }
+
+    config {
+      version : string = "202405"
+        @label "LinkedIn API version"
+        @description "The LinkedIn-Version header, a YYYYMM version of the versioned API."
+        @synonyms "api version, linkedin version"
+        @tier "infra"
+    }
+  }
+
+  trait LinkedinCall -> LinkedinRequest [optimistic] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+
+      CALL_READY -> idle
+        (set @entity.callerKey @payload.callerKey)
+        (set @entity.hasKey @payload.hasKey)
+        (set @entity.version @payload.version)
+        (set @entity.body @payload.body)
+        (set @entity.mintTried false)
+        (emit LINKEDIN_DISPATCH {})
+
+      LINKEDIN_DISPATCH -> idle
+        (emit LINKEDIN_HTTP_SEND { key: @entity.id, method: "POST", target: "/rest/posts", headers: [{ name: "LinkedIn-Version", value: @entity.version }, { name: "X-Restli-Protocol-Version", value: "2.0.0" }, { name: "content-type", value: "application/json" }], body: @entity.body, stream: "none" })
+
+      LINKEDIN_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (!= (object/get (default @payload.headers {}) "x-restli-id" "") ""))
+        (emit POST_PUBLISHED { key: (if @entity.hasKey @entity.callerKey null), postUrn: (object/get (default @payload.headers {}) "x-restli-id" "") })
+        (emit LINKEDIN_CLEAR {})
+      LINKEDIN_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (= (object/get (default @payload.headers {}) "x-restli-id" "") ""))
+        (emit POST_FAILED { key: (if @entity.hasKey @entity.callerKey null), code: "NO_POST_ID", message: "LinkedIn accepted the post but returned no post URN" })
+        (emit LINKEDIN_CLEAR {})
+      LINKEDIN_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
+        (let ((e (json/parse @payload.body LinkedinApiError)))
+          (emit POST_FAILED { key: (if @entity.hasKey @entity.callerKey null), code: (str/concat "HTTP_" @payload.status), message: (if (and (!= @e null) (!= (default (object/get @e message "") "") "")) (object/get @e message "") (str/concat "The LinkedIn request failed with status " @payload.status)) }))
+        (emit LINKEDIN_CLEAR {})
+
+      LINKEDIN_REQUEST_FAILED -> idle when (and (= @payload.kind "unconfigured") (= @entity.mintTried false))
+        (set @entity.mintTried true)
+        (credential-connect { credential: @config.accessToken, scope: app, tokenEndpoint: @config.tokenUrl, grant: "refresh_token", refreshCredential: @config.refreshToken, clientId: @config.clientId, clientSecret: @config.clientSecret, clientAuth: body } { emit: { success: LINKEDIN_CONNECTED, failure: LINKEDIN_CONNECT_FAILED } })
+      LINKEDIN_REQUEST_FAILED -> idle when (and (= @payload.kind "unconfigured") (= @entity.mintTried true))
+        (emit LINKEDIN_NOT_CONFIGURED {})
+      LINKEDIN_REQUEST_FAILED -> idle when (!= @payload.kind "unconfigured")
+        (emit POST_FAILED { key: (if @entity.hasKey @entity.callerKey null), code: (str/upper @payload.kind), message: @payload.error })
+        (emit LINKEDIN_CLEAR {})
+
+      LINKEDIN_CONNECTED -> idle when (= @payload.connected true)
+        (emit LINKEDIN_DISPATCH {})
+      LINKEDIN_CONNECTED -> idle when (= @payload.connected false)
+        (emit LINKEDIN_NOT_CONFIGURED {})
+      LINKEDIN_CONNECT_FAILED -> idle when (= @payload.kind "unavailable")
+        (emit LINKEDIN_NOT_CONFIGURED {})
+      LINKEDIN_CONNECT_FAILED -> idle when (!= @payload.kind "unavailable")
+        (emit POST_FAILED { key: (if @entity.hasKey @entity.callerKey null), code: "TOKEN_FAILED", message: (str/concat "LinkedIn token request failed: " @payload.error) })
+        (emit LINKEDIN_CLEAR {})
+      LINKEDIN_NOT_CONFIGURED -> idle
+        (emit POST_FAILED { key: (if @entity.hasKey @entity.callerKey null), code: "NOT_CONFIGURED", message: "Integration not configured: linkedin. Set LINKEDIN_REFRESH_TOKEN, LINKEDIN_CLIENT_ID and LINKEDIN_CLIENT_SECRET." })
+        (emit LINKEDIN_CLEAR {})
+
+      LINKEDIN_CLEAR -> idle
+        (set @entity.callerKey "")
+        (set @entity.hasKey false)
+        (set @entity.version "")
+        (set @entity.body (bytes/from-string ""))
+        (set @entity.mintTried false)
+    }
+
+    emits {
+      POST_PUBLISHED -> external {
+        key : string?
+        postUrn : string!
+      }
+        @description "The post was published; postUrn is the new post's URN, read from the x-restli-id header of the 201 reply."
+        @synonyms "linkedin post published, post live, share published"
+        @tier "primary"
+      POST_FAILED -> external {
+        key : string?
+        code : string
+        message : string!
+      }
+        @description "The post was not published: NOT_CONFIGURED when no credential is set, HTTP_<status> for a provider error, NO_POST_ID for a reply without the post URN, TOKEN_FAILED when the token could not be minted, or the transport failure kind."
+        @synonyms "linkedin post failed, share error, post rejected"
+        @tier "primary"
+      LINKEDIN_HTTP_SEND {
+        key : string!
+        method : string!
+        target : string!
+        headers : [HttpHeader]!
+        body : bytes!
+        stream : string!
+      }
+        @description "Internal: the post request, for the keyed HTTP client."
+        @tier "secondary"
+      LINKEDIN_DISPATCH -> internal { }
+        @description "Internal: send the request in flight, again after a minted token."
+        @tier "secondary"
+      LINKEDIN_NOT_CONFIGURED -> internal { }
+        @description "Internal: no LinkedIn credential is configured."
+        @tier "secondary"
+      LINKEDIN_CONNECTED -> internal {
+        connected : boolean!
+        label : string
+      }
+        @description "Internal: the credential store minted the access token."
+        @tier "secondary"
+      LINKEDIN_CONNECT_FAILED -> internal {
+        error : string!
+        kind : string!
+      }
+        @description "Internal: the credential store could not mint the access token."
+        @tier "secondary"
+      LINKEDIN_CLEAR -> internal { }
+        @description "Internal: return the row of a finished call to its defaults so the kernel drops it."
+        @tier "secondary"
+    }
+
+    listens {
+      CALL_READY {
+        key : string!
+        callerKey : string!
+        hasKey : boolean!
+        version : string!
+        body : bytes!
+      }
+        @description "Internal: a built post request for the row of its key."
+      LINKEDIN_REPLIED {
+        key : string!
+        status : number!
+        headers : Map string string
+        body : string!
+      }
+        @description "Internal: the reply of the post request, status, headers and body."
+      LINKEDIN_REQUEST_FAILED {
+        key : string!
+        error : string!
+        kind : string!
+      }
+        @description "Internal: the call never completed (unconfigured credential, transport failure or timeout)."
+      LinkedinPublisher.LINKEDIN_READY -> CALL_READY per @payload.key
+      LinkedinHttp.HTTP_REPLIED -> LINKEDIN_REPLIED per @payload.key with { key: ?key, status: ?status, headers: ?headers, body: (default (bytes/to-string ?body) "") }
+      LinkedinHttp.HTTP_FAILED -> LINKEDIN_REQUEST_FAILED per @payload.key with { key: ?key, error: ?error, kind: ?kind }
+    }
+
+    config {
+      accessToken : secret = "LINKEDIN_ACCESS_TOKEN"
+        @label "Access token credential"
+        @description "Host credential name the minted access token lives under; the composed LinkedinHttp trait carries the same name, restate it there when this knob changes."
+        @synonyms "access token name, token name"
+        @tier "infra"
+      refreshToken : secret = "LINKEDIN_REFRESH_TOKEN"
+        @label "Refresh-token credential"
+        @description "Name of the credential holding the OAuth refresh token the access token is built from."
+        @synonyms "refresh token"
+        @tier "infra"
+      clientId : secret = "LINKEDIN_CLIENT_ID"
+        @label "OAuth client id credential"
+        @description "Name of the credential holding the LinkedIn app client id used with the refresh token."
+        @synonyms "client id"
+        @tier "infra"
+      clientSecret : secret = "LINKEDIN_CLIENT_SECRET"
+        @label "OAuth client secret credential"
+        @description "Name of the credential holding the LinkedIn app client secret used with the refresh token."
+        @synonyms "client secret"
+        @tier "infra"
+      tokenUrl : url = "https://www.linkedin.com/oauth/v2/accessToken"
+        @label "Token endpoint"
+        @description "The LinkedIn OAuth token endpoint the credential store exchanges the refresh token at. Must be declared in the app egress list."
+        @synonyms "refresh endpoint, token url"
+        @tier "infra"
+    }
+  }
+
+  page boot as LinkedinPage -> LinkedinPublisher, LinkedinCall, LinkedinKeyed, LinkedinHttp
+}

@@ -1,0 +1,478 @@
+app std-google-meet [
+  version: "1.0.0",
+  description: "std-google-meet — Google Meet transcripts through the Meet REST API v2 (meet.googleapis.com). LIST_CONFERENCES answers the conference records that started at or after a time, following nextPageToken; MEET_FETCH_TRANSCRIPT takes the first generated transcript of a conference, reads its entries page by page until nextPageToken runs out, resolves each distinct participant's display name once, and answers Name: text lines in startTime order with the first entry's language code. Transcript text passes through byte for byte: no translation, no truncation. The access token is minted by the host credential store (a refresh_token grant for the user) and carried by a keyed HTTP client, never by an event; every call runs on its own row under its own key, and each step retries under std-retry. A failure answers MEET_FAILED with the provider's message, NO_TRANSCRIPT when the conference has none, NOT_CONFIGURED when no credential is set.",
+  egress: ["https://meet.googleapis.com", "https://oauth2.googleapis.com"],
+  net: { "meet.googleapis.com:443": [tcp] }
+]
+uses Keyed from "std/behaviors/std-http-keyed"
+uses Retry from "std/behaviors/std-retry"
+type HttpHeader = { name : string!, value : string! }
+type MeetConferenceReply = { name : string, startTime : string, endTime : string, space : string }
+type MeetListReply = { conferenceRecords : [MeetConferenceReply], nextPageToken : string }
+type MeetTranscriptReply = { name : string, state : string }
+type MeetTranscriptsReply = { transcripts : [MeetTranscriptReply] }
+type MeetEntryReply = { participant : string, text : string, languageCode : string, startTime : string }
+type MeetEntriesReply = { transcriptEntries : [MeetEntryReply], nextPageToken : string }
+type MeetUser = { displayName : string }
+type MeetParticipantReply = { name : string, signedinUser : MeetUser, anonymousUser : MeetUser, phoneUser : MeetUser }
+type MeetConferenceRow = { name : string, startTime : string, endTime : string, space : string }
+type MeetEntryRow = { participant : string, text : string, languageCode : string, startTime : string }
+type MeetNameRow = { id : string, name : string }
+type MeetApiError = { code : number, message : string }
+type MeetErrorReply = { error : MeetApiError }
+type MeetErrorStringReply = { error : string }
+orbital MeetOrbital {
+  entity MeetRequest [runtime] {
+    id : string!
+    seq : number @description "The front trait's call counter: each call takes the next number, so its key is distinct from every other call's." = 0
+    kind : string @description "The call in flight: list or transcript; empty while the row is free." = ""
+    step : string @description "The step in flight: list, transcripts, entries or participant." = ""
+    firstTarget : string @description "The request target of the first page of the paged step in flight." = ""
+    target : string @description "The request target of the step in flight." = ""
+    conference : string @description "The conference record a transcript call was asked for." = ""
+    transcript : string @description "The transcript resource name chosen for the conference." = ""
+    mintTried : boolean @description "True once this call minted its access token after the store reported none held, so a second not-held answer fails instead of looping." = false
+    attempt : number @description "The std-retry attempt in flight." = 0
+    stepReady : boolean @description "True once the reply of the step in flight was read and std-retry's completion of its run starts the next step." = false
+    pageToken : string @description "The nextPageToken of the last page; empty when the paged step is complete." = ""
+    conferences : [MeetConferenceRow] @description "The conference records gathered over the pages read so far." = []
+    entries : [MeetEntryRow] @description "The transcript entries gathered over the pages read so far." = []
+    pending : [string] @description "The distinct participant resource names whose display name is not yet read." = []
+    current : string @description "The participant whose display name is being read." = ""
+    names : [MeetNameRow] @description "The display names read so far, by participant resource name." = []
+  }
+
+  trait MeetKeyed = Keyed.traits.HttpKeyed {
+    listens {
+      MeetCall.MEET_HTTP_SEND -> HTTP_SEND
+      MeetKeyed.DELIVERY_REJECTED -> KEY_REFUSED
+    }
+  }
+
+  trait MeetHttp = Keyed.traits.KeyedHttp {
+    config {
+      host: "meet.googleapis.com"
+      port: 443
+      tls: true
+      serverName: "meet.googleapis.com"
+      credential: "GOOGLE_MEET_TOKEN"
+      credentialHeader: "authorization"
+      credentialPrefix: "Bearer "
+    }
+    listens {
+      MeetKeyed.KEYED_SEND -> HTTP_SEND per @payload.key
+      MeetKeyed.KEYED_CANCEL -> HTTP_CANCEL per @payload.key
+    }
+  }
+
+  ;; every step retries on 1xx, 408, 429, 5xx (three retries: 100, 500 then 1500 ms) and on a timeout or transport failure (two retries); 100 x 5^(n-1) capped at 1500 reproduces the schedule
+  trait MeetRetry = Retry.traits.Retry {
+    config {
+      maxAttempts: 4
+      baseDelayMs: 100
+      multiplier: 5
+      maxDelayMs: 1500
+    }
+    listens {
+      MeetCall.MEET_RETRY_START -> START per @payload.key
+      MeetCall.MEET_RETRY_FAILED -> FAILED per @payload.key
+      MeetCall.MEET_RETRY_CANCEL -> CANCEL per @payload.key
+      MeetHttp.HTTP_REPLIED -> SUCCEEDED per @payload.key with { key: (as ?key CallKey) } when (not (or (and (>= ?status 100) (< ?status 200)) (= ?status 408) (= ?status 429) (and (>= ?status 500) (< ?status 600))))
+    }
+  }
+
+  trait MeetClient -> MeetRequest [optimistic] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+
+      LIST_CONFERENCES -> idle
+        (set @entity.seq (+ @entity.seq 1))
+        (emit MEET_READY { key: (str/concat "list:" @payload.from "#" @entity.seq), kind: "list", target: (str/concat "/v2/conferenceRecords?filter=" (str/encode-uri-component (str/concat "start_time>=\"" @payload.from "\""))), conference: "" })
+      MEET_FETCH_TRANSCRIPT -> idle when (validate/pattern @payload.conference "^conferenceRecords/[^/?#\\s]+$")
+        (set @entity.seq (+ @entity.seq 1))
+        (emit MEET_READY { key: (str/concat "transcript:" @payload.conference "#" @entity.seq), kind: "transcript", target: (str/concat "/v2/" @payload.conference "/transcripts"), conference: @payload.conference })
+      MEET_FETCH_TRANSCRIPT -> idle when (not (validate/pattern @payload.conference "^conferenceRecords/[^/?#\\s]+$"))
+        (emit MEET_FAILED { message: "The conference must be a conferenceRecords/<id> resource name" })
+    }
+
+    emits {
+      MEET_READY {
+        key : string!
+        kind : string!
+        target : string!
+        conference : string!
+      }
+        @description "Internal: a built request, handed to the row of its key in MeetCall."
+        @tier "secondary"
+      MEET_FAILED -> external {
+        code : string
+        message : string!
+      }
+        @description "A Meet action failed: the provider's error message, NO_TRANSCRIPT when the conference has no transcript, NOT_CONFIGURED when no credential is set."
+        @synonyms "meet error, meet failure"
+        @tier "primary"
+    }
+
+    listens {
+      LIST_CONFERENCES -> input {
+        from : string!
+      }
+        @description "List the conference records that started at or after from (RFC 3339), following every page."
+        @synonyms "list meet conferences, google meet meetings"
+      MEET_FETCH_TRANSCRIPT -> input {
+        conference : string!
+      }
+        @description "Fetch one conference's transcript as Name: text lines in startTime order; conference is a conferenceRecords/<id> name as CONFERENCES_LISTED answers it."
+        @synonyms "meet transcript, meeting transcript"
+    }
+  }
+
+  trait MeetCall -> MeetRequest [optimistic] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+
+      CALL_READY -> idle
+        (set @entity.kind @payload.kind)
+        (set @entity.step (if (= @payload.kind "list") "list" "transcripts"))
+        (set @entity.firstTarget @payload.target)
+        (set @entity.target @payload.target)
+        (set @entity.conference @payload.conference)
+        (set @entity.transcript "")
+        (set @entity.mintTried false)
+        (set @entity.attempt 0)
+        (set @entity.stepReady false)
+        (set @entity.pageToken "")
+        (set @entity.conferences [])
+        (set @entity.entries [])
+        (set @entity.pending [])
+        (set @entity.current "")
+        (set @entity.names [])
+        (emit MEET_RETRY_START { key: (as @payload.key CallKey) })
+      MEET_ATTEMPT -> idle
+        (set @entity.attempt @payload.attempt)
+        (emit MEET_DISPATCH {})
+      MEET_DISPATCH -> idle
+        (emit MEET_HTTP_SEND { key: @entity.id, method: "GET", target: @entity.target, headers: [{ name: "accept", value: "application/json" }], body: (bytes/from-string ""), stream: "none" })
+
+      MEET_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= @entity.step "list") (= (json/parse @payload.body MeetListReply) null))
+        (emit MEET_FAILED { message: "The Meet answer could not be read" })
+        (emit MEET_CLEAR {})
+      MEET_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= @entity.step "list") (!= (json/parse @payload.body MeetListReply) null))
+        (set @entity.conferences (array/concat @entity.conferences (array/map (object/get (json/parse @payload.body MeetListReply) conferenceRecords []) (fn c { name: (default (object/get @c name "") ""), startTime: (default (object/get @c startTime "") ""), endTime: (default (object/get @c endTime "") ""), space: (default (object/get @c space "") "") }))))
+        (set @entity.pageToken (default (object/get (json/parse @payload.body MeetListReply) nextPageToken "") ""))
+        (set @entity.stepReady true)
+
+      MEET_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= @entity.step "transcripts") (= (json/parse @payload.body MeetTranscriptsReply) null))
+        (emit MEET_FAILED { message: "The Meet answer could not be read" })
+        (emit MEET_CLEAR {})
+      MEET_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= @entity.step "transcripts") (!= (json/parse @payload.body MeetTranscriptsReply) null) (not (array/some (object/get (json/parse @payload.body MeetTranscriptsReply) transcripts []) (fn t (or (= (default (object/get @t state "") "") "FILE_GENERATED") (= (default (object/get @t state "") "") "ENDED"))))))
+        (emit MEET_FAILED { code: "NO_TRANSCRIPT", message: "This conference has no transcript" })
+        (emit MEET_CLEAR {})
+      MEET_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= @entity.step "transcripts") (!= (json/parse @payload.body MeetTranscriptsReply) null) (array/some (object/get (json/parse @payload.body MeetTranscriptsReply) transcripts []) (fn t (or (= (default (object/get @t state "") "") "FILE_GENERATED") (= (default (object/get @t state "") "") "ENDED")))))
+        (set @entity.transcript (default (array/first (array/map (array/filter (object/get (json/parse @payload.body MeetTranscriptsReply) transcripts []) (fn t (or (= (default (object/get @t state "") "") "FILE_GENERATED") (= (default (object/get @t state "") "") "ENDED")))) (fn t (default (object/get @t name "") "")))) ""))
+        (set @entity.stepReady true)
+
+      MEET_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= @entity.step "entries") (= (json/parse @payload.body MeetEntriesReply) null))
+        (emit MEET_FAILED { message: "The Meet answer could not be read" })
+        (emit MEET_CLEAR {})
+      MEET_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= @entity.step "entries") (!= (json/parse @payload.body MeetEntriesReply) null))
+        (set @entity.entries (array/concat @entity.entries (array/map (object/get (json/parse @payload.body MeetEntriesReply) transcriptEntries []) (fn e { participant: (default (object/get @e participant "") ""), text: (default (object/get @e text "") ""), languageCode: (default (object/get @e languageCode "") ""), startTime: (default (object/get @e startTime "") "") }))))
+        (set @entity.pending (array/filter (array/unique (array/map @entity.entries (fn e (object/get @e participant "")))) (fn p (!= @p ""))))
+        (set @entity.pageToken (default (object/get (json/parse @payload.body MeetEntriesReply) nextPageToken "") ""))
+        (set @entity.stepReady true)
+
+      MEET_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= @entity.step "participant") (= (json/parse @payload.body MeetParticipantReply) null))
+        (emit MEET_FAILED { message: "The Meet answer could not be read" })
+        (emit MEET_CLEAR {})
+      MEET_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= @entity.step "participant") (!= (json/parse @payload.body MeetParticipantReply) null))
+        (set @entity.names (array/append @entity.names { id: @entity.current, name: (let ((r (json/parse @payload.body MeetParticipantReply))) (if (!= (default (object/get @r "signedinUser.displayName" "") "") "") (default (object/get @r "signedinUser.displayName" "") "") (if (!= (default (object/get @r "anonymousUser.displayName" "") "") "") (default (object/get @r "anonymousUser.displayName" "") "") (if (!= (default (object/get @r "phoneUser.displayName" "") "") "") (default (object/get @r "phoneUser.displayName" "") "") @entity.current)))) }))
+        (set @entity.stepReady true)
+
+      MEET_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
+        (emit MEET_REPLY_ERROR { status: @payload.status, message: (let ((eo (json/parse @payload.body MeetErrorReply)) (es (json/parse @payload.body MeetErrorStringReply))) (let ((m (if (!= @eo null) (default (object/get @eo "error.message" "") "") (if (!= @es null) (object/get @es error "") "")))) (if (!= @m "") @m (if (!= @payload.body "") @payload.body (str/concat "Request failed with status code " @payload.status))))) })
+      MEET_REPLY_ERROR -> idle when (or (and (>= @payload.status 100) (< @payload.status 200)) (= @payload.status 408) (= @payload.status 429) (and (>= @payload.status 500) (< @payload.status 600)))
+        (emit MEET_RETRY_FAILED { key: (as @entity.id CallKey), error: @payload.message })
+      MEET_REPLY_ERROR -> idle when (not (or (and (>= @payload.status 100) (< @payload.status 200)) (= @payload.status 408) (= @payload.status 429) (and (>= @payload.status 500) (< @payload.status 600))))
+        (emit MEET_FAILED { message: @payload.message })
+        (emit MEET_CLEAR {})
+      MEET_GAVE_UP -> idle
+        (emit MEET_FAILED { message: (default @payload.error "") })
+        (emit MEET_CLEAR {})
+
+      MEET_REQUEST_FAILED -> idle when (and (= @payload.kind "unconfigured") (= @entity.mintTried false))
+        (set @entity.mintTried true)
+        (credential-connect { credential: @config.userToken, scope: app, tokenEndpoint: @config.userTokenUrl, grant: "refresh_token", refreshCredential: @config.refreshToken, clientId: @config.clientId, clientSecret: @config.clientSecret, clientAuth: body } { emit: { success: MEET_CONNECTED, failure: MEET_CONNECT_FAILED } })
+      MEET_REQUEST_FAILED -> idle when (and (= @payload.kind "unconfigured") (= @entity.mintTried true))
+        (emit MEET_NOT_CONFIGURED {})
+      MEET_REQUEST_FAILED -> idle when (and (!= @payload.kind "unconfigured") (< @entity.attempt 3))
+        (emit MEET_RETRY_FAILED { key: (as @payload.key CallKey), error: (if (= @payload.kind "timeout") "network timeout" @payload.error) })
+      MEET_REQUEST_FAILED -> idle when (and (!= @payload.kind "unconfigured") (>= @entity.attempt 3))
+        (emit MEET_FAIL { message: (if (= @payload.kind "timeout") "network timeout" @payload.error) })
+
+      MEET_CONNECTED -> idle when (= @payload.connected true)
+        (emit MEET_DISPATCH {})
+      MEET_CONNECTED -> idle when (= @payload.connected false)
+        (emit MEET_NOT_CONFIGURED {})
+      MEET_CONNECT_FAILED -> idle when (= @payload.kind "unavailable")
+        (emit MEET_NOT_CONFIGURED {})
+      MEET_CONNECT_FAILED -> idle when (!= @payload.kind "unavailable")
+        (emit MEET_FAIL { message: (str/concat "Google token request failed: " @payload.error) })
+      MEET_NOT_CONFIGURED -> idle
+        (emit MEET_FAIL { code: "NOT_CONFIGURED", message: "Integration not configured: google-meet. Set GOOGLE_MEET_REFRESH_TOKEN + OAUTH_CLIENT_ID/SECRET." })
+
+      MEET_FAIL -> idle when (= (default @payload.code "") "")
+        (emit MEET_RETRY_CANCEL { key: (as @entity.id CallKey) })
+        (emit MEET_FAILED { message: @payload.message })
+        (emit MEET_CLEAR {})
+      MEET_FAIL -> idle when (!= (default @payload.code "") "")
+        (emit MEET_RETRY_CANCEL { key: (as @entity.id CallKey) })
+        (emit MEET_FAILED { code: @payload.code, message: @payload.message })
+        (emit MEET_CLEAR {})
+
+      MEET_RETRY_DONE -> idle when (and (= @entity.step "list") @entity.stepReady (!= @entity.pageToken ""))
+        (set @entity.target (str/concat @entity.firstTarget "&pageToken=" (str/encode-uri-component @entity.pageToken)))
+        (set @entity.pageToken "")
+        (set @entity.attempt 0)
+        (set @entity.stepReady false)
+        (emit MEET_RETRY_START { key: (as @entity.id CallKey) })
+      MEET_RETRY_DONE -> idle when (and (= @entity.step "list") @entity.stepReady (= @entity.pageToken ""))
+        (emit CONFERENCES_LISTED { conferences: @entity.conferences })
+        (emit MEET_CLEAR {})
+      MEET_RETRY_DONE -> idle when (and (= @entity.step "transcripts") @entity.stepReady)
+        (set @entity.step "entries")
+        (set @entity.firstTarget (str/concat "/v2/" @entity.transcript "/entries?pageSize=100"))
+        (set @entity.target (str/concat "/v2/" @entity.transcript "/entries?pageSize=100"))
+        (set @entity.attempt 0)
+        (set @entity.stepReady false)
+        (emit MEET_RETRY_START { key: (as @entity.id CallKey) })
+      MEET_RETRY_DONE -> idle when (and (= @entity.step "entries") @entity.stepReady (!= @entity.pageToken ""))
+        (set @entity.target (str/concat @entity.firstTarget "&pageToken=" (str/encode-uri-component @entity.pageToken)))
+        (set @entity.pageToken "")
+        (set @entity.attempt 0)
+        (set @entity.stepReady false)
+        (emit MEET_RETRY_START { key: (as @entity.id CallKey) })
+      MEET_RETRY_DONE -> idle when (and (= @entity.step "entries") @entity.stepReady (= @entity.pageToken "") (= (array/len @entity.entries) 0))
+        (emit MEET_FAILED { code: "NO_TRANSCRIPT", message: "This conference has no transcript entries" })
+        (emit MEET_CLEAR {})
+      MEET_RETRY_DONE -> idle when (and (= @entity.step "entries") @entity.stepReady (= @entity.pageToken "") (> (array/len @entity.entries) 0) (= (array/len @entity.pending) 0))
+        (emit MEET_FINISH {})
+      MEET_RETRY_DONE -> idle when (and (= @entity.step "entries") @entity.stepReady (= @entity.pageToken "") (> (array/len @entity.entries) 0) (> (array/len @entity.pending) 0))
+        (set @entity.step "participant")
+        (set @entity.current (default (array/first @entity.pending) ""))
+        (set @entity.pending (array/drop @entity.pending 1))
+        (set @entity.target (str/concat "/v2/" @entity.current))
+        (set @entity.attempt 0)
+        (set @entity.stepReady false)
+        (emit MEET_RETRY_START { key: (as @entity.id CallKey) })
+      MEET_RETRY_DONE -> idle when (and (= @entity.step "participant") @entity.stepReady (> (array/len @entity.pending) 0))
+        (set @entity.current (default (array/first @entity.pending) ""))
+        (set @entity.pending (array/drop @entity.pending 1))
+        (set @entity.target (str/concat "/v2/" @entity.current))
+        (set @entity.attempt 0)
+        (set @entity.stepReady false)
+        (emit MEET_RETRY_START { key: (as @entity.id CallKey) })
+      MEET_RETRY_DONE -> idle when (and (= @entity.step "participant") @entity.stepReady (= (array/len @entity.pending) 0))
+        (emit MEET_FINISH {})
+
+      MEET_FINISH -> idle
+        (let ((sorted (array/sort @entity.entries "startTime" "asc")))
+          (emit MEET_TRANSCRIPT_FETCHED { conference: @entity.conference, languageCode: (default (array/first (array/map @sorted (fn e (object/get @e languageCode "")))) ""), text: (str/join (array/map @sorted (fn e (let ((n (default (array/first (array/map (array/filter @entity.names (fn x (= (object/get @x id "") (object/get @e participant "")))) (fn x (object/get @x name "")))) ""))) (if (!= @n "") (str/concat @n ": " (object/get @e text "")) (object/get @e text ""))))) "\n") }))
+        (emit MEET_CLEAR {})
+
+      MEET_CLEAR -> idle
+        (set @entity.kind "")
+        (set @entity.step "")
+        (set @entity.firstTarget "")
+        (set @entity.target "")
+        (set @entity.conference "")
+        (set @entity.transcript "")
+        (set @entity.mintTried false)
+        (set @entity.attempt 0)
+        (set @entity.stepReady false)
+        (set @entity.pageToken "")
+        (set @entity.conferences [])
+        (set @entity.entries [])
+        (set @entity.pending [])
+        (set @entity.current "")
+        (set @entity.names [])
+    }
+
+    emits {
+      CONFERENCES_LISTED -> external {
+        conferences : [MeetConferenceRow]!
+      }
+        @description "Every conference record that started at or after the asked time, over all pages: name is the conferenceRecords/<id> resource name, space the meeting space, empty text where Meet sent none."
+        @synonyms "conferences listed, meet conferences"
+        @tier "primary"
+      MEET_TRANSCRIPT_FETCHED -> external {
+        conference : string!
+        languageCode : string!
+        text : string!
+      }
+        @description "The conference's transcript as Name: text lines in startTime order, every entry of every page, untranslated and unshortened; languageCode is the first entry's."
+        @synonyms "transcript fetched, meeting transcript"
+        @tier "primary"
+      MEET_FAILED -> external {
+        code : string
+        message : string!
+      }
+        @description "A Meet action failed: the provider's error message, NO_TRANSCRIPT when the conference has no transcript, NOT_CONFIGURED when no credential is set."
+        @synonyms "meet error, meet failure"
+        @tier "primary"
+      MEET_HTTP_SEND {
+        key : string!
+        method : string!
+        target : string!
+        headers : [HttpHeader]!
+        body : bytes!
+        stream : string!
+      }
+        @description "Internal: the Meet request under the user token, for its keyed HTTP client."
+        @tier "secondary"
+      MEET_RETRY_START { key : CallKey! }
+        @description "Internal: hand a step to std-retry."
+        @tier "secondary"
+      MEET_RETRY_FAILED { key : CallKey!  error : string }
+        @description "Internal: tell std-retry the attempt failed with a retryable outcome."
+        @tier "secondary"
+      MEET_RETRY_CANCEL { key : CallKey! }
+        @description "Internal: end std-retry's run for this key without another attempt."
+        @tier "secondary"
+      MEET_DISPATCH -> internal { }
+        @description "Internal: send the step in flight, again after a retry attempt or a minted token."
+        @tier "secondary"
+      MEET_REPLY_ERROR -> internal {
+        status : number!
+        message : string!
+      }
+        @description "Internal: a non-2xx Meet reply with the provider's message."
+        @tier "secondary"
+      MEET_NOT_CONFIGURED -> internal { }
+        @description "Internal: no Meet credential is configured."
+        @tier "secondary"
+      MEET_FAIL -> internal {
+        code : string
+        message : string!
+      }
+        @description "Internal: end the call with a failure, cancelling its std-retry run."
+        @tier "secondary"
+      MEET_CONNECTED -> internal {
+        connected : boolean!
+        label : string
+      }
+        @description "Internal: the credential store minted the access token."
+        @tier "secondary"
+      MEET_CONNECT_FAILED -> internal {
+        error : string!
+        kind : string!
+      }
+        @description "Internal: the credential store could not mint the access token."
+        @tier "secondary"
+      MEET_FINISH -> internal { }
+        @description "Internal: every entry and display name is read; answer the transcript."
+        @tier "secondary"
+      MEET_CLEAR -> internal { }
+        @description "Internal: return the row of a finished call to its defaults so the kernel drops it."
+        @tier "secondary"
+    }
+
+    listens {
+      CALL_READY {
+        key : string!
+        kind : string!
+        target : string!
+        conference : string!
+      }
+        @description "A built request for this key's row."
+      MEET_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+        key : string!
+      }
+        @description "The keyed HTTP client's reply for this key's row, the body read as UTF-8 text."
+      MEET_REQUEST_FAILED {
+        error : string!
+        kind : string!
+        key : string!
+      }
+        @description "The keyed HTTP client's failure for this key's row."
+      MEET_DISPATCH
+      MEET_REPLY_ERROR {
+        status : number!
+        message : string!
+      }
+      MEET_NOT_CONFIGURED
+      MEET_FAIL {
+        code : string
+        message : string!
+      }
+      MEET_CONNECTED {
+        connected : boolean!
+        label : string
+      }
+      MEET_CONNECT_FAILED {
+        error : string!
+        kind : string!
+      }
+      MEET_FINISH
+      MEET_CLEAR
+      MEET_ATTEMPT {
+        key : string!
+        attempt : number!
+      }
+        @description "std-retry starts an attempt of this key's step."
+      MEET_GAVE_UP {
+        key : string!
+        attempts : number!
+        error : string
+      }
+        @description "std-retry spent every attempt of this key's step."
+      MEET_RETRY_DONE {
+        key : string!
+        attempts : number!
+      }
+        @description "std-retry completed this key's step run; the next step starts."
+      MeetClient.MEET_READY -> CALL_READY per @payload.key
+      MeetHttp.HTTP_REPLIED -> MEET_REPLIED per @payload.key with { status: ?status, headers: ?headers, body: (default (bytes/to-string ?body) ""), key: ?key }
+      MeetHttp.HTTP_FAILED -> MEET_REQUEST_FAILED per @payload.key with { error: ?error, kind: ?kind, key: ?key }
+      MeetRetry.ATTEMPT -> MEET_ATTEMPT per @payload.key
+      MeetRetry.GAVE_UP -> MEET_GAVE_UP per @payload.key
+      MeetRetry.COMPLETED -> MEET_RETRY_DONE per @payload.key
+    }
+
+    config {
+      refreshToken : secret = "GOOGLE_MEET_REFRESH_TOKEN"
+        @label "User refresh-token credential"
+        @description "Name of the credential holding the user's OAuth refresh token; the credential store builds the user access token from it. The token must carry the meetings.space.readonly scope."
+        @synonyms "refresh token, user token"
+        @tier "infra"
+      clientId : secret = "OAUTH_CLIENT_ID"
+        @label "OAuth client id credential"
+        @description "Name of the credential holding the OAuth client id used with the refresh token."
+        @synonyms "client id"
+        @tier "infra"
+      clientSecret : secret = "OAUTH_CLIENT_SECRET"
+        @label "OAuth client secret credential"
+        @description "Name of the credential holding the OAuth client secret used with the refresh token."
+        @synonyms "client secret"
+        @tier "infra"
+      userToken : secret = "GOOGLE_MEET_TOKEN"
+        @label "User token credential"
+        @description "Host credential name the minted user access token lives under; the composed MeetHttp trait carries the same name, restate it there when this knob changes."
+        @synonyms "user token name, access token name"
+        @tier "infra"
+      userTokenUrl : url = "https://oauth2.googleapis.com/token"
+        @label "User token endpoint"
+        @description "The Google OAuth token endpoint the credential store exchanges the refresh token at. Must be declared in the app egress list."
+        @synonyms "refresh endpoint, user token url"
+        @tier "infra"
+    }
+  }
+
+  page boot as MeetPage -> MeetClient, MeetCall, MeetKeyed, MeetHttp, MeetRetry
+}

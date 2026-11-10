@@ -1,0 +1,97 @@
+app ui-annotated-media [
+  version: "1.0.0",
+  locales: [en, ar, sl],
+  description: "An image or video reviewers comment on in place: numbered pins sit where each comment was left, and a click on the media asks for a new one at that spot (and, for video, at that second). — UI factory (1:1 with the @almadar/ui annotated-media pattern)."
+]
+;; @capabilities "review an image, comment on a design, pin feedback, markup, annotate a video at a timestamp, proofing"
+;; @pattern "annotated-media"
+orbital AnnotatedMediaOrbital {
+  type AnnotatedMediaPin = {
+    id : string!
+    x : number
+    y : number
+    time : number
+    label : string
+    resolved : boolean
+  }
+
+  entity AnnotatedMediaItem [runtime] {
+    id : string!
+  }
+
+  trait AnnotatedMediaRender -> @rebindable AnnotatedMediaItem {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          src: @config.src
+          mediaType: @config.mediaType
+          title: @config.title
+          pins: @config.pins
+          activePinId: @config.activePinId
+          placing: @config.placing
+          placeEvent: @config.placeEvent
+          pinSelectEvent: @config.pinSelectEvent
+          className: @config.className
+          type: annotated-media
+        })
+    }
+
+    emits {
+      @config.placeEvent -> external {
+        x : number!
+        y : number!
+        time : number!
+      }
+        @description "Event fired when the media is clicked to place a pin; the payload carries x and y as percentages and the playback second (0 for an image)"
+        @tier "essential"
+      @config.pinSelectEvent -> external {
+        id : string!
+      }
+        @description "Event fired when a pin is clicked; the payload names the pin's id"
+        @tier "essential"
+    }
+
+    config {
+      src : string = ""
+        @label "Media URL"
+        @description "Image or video URL"
+        @tier "presentation"
+      mediaType : "image" | "video" = image
+        @label "Media type"
+        @description "What the URL is"
+        @tier "presentation"
+      title : string = ""
+        @label "Title"
+        @description "Accessible name of the media"
+        @tier "presentation"
+      pins : [AnnotatedMediaPin] = []
+        @label "Pins"
+        @description "Comments to draw as numbered pins, in order"
+        @tier "presentation"
+      activePinId : string = ""
+        @label "Active pin"
+        @description "The pin to highlight"
+        @tier "presentation"
+      placing : boolean = true
+        @label "Place pins on click"
+        @description "Whether a click on the media places a new pin"
+        @tier "presentation"
+      placeEvent : event = ""
+        @label "Place event"
+        @description "Event fired when the media is clicked to place a pin"
+        @tier "presentation"
+      pinSelectEvent : event = ""
+        @label "Pin select event"
+        @description "Event fired when a pin is clicked"
+        @tier "presentation"
+      className : string = ""
+        @label "Class name"
+        @description "Additional class names"
+        @tier "presentation"
+    }
+  }
+
+  page "/annotated-media" as AnnotatedMediaPage -> AnnotatedMediaRender
+}

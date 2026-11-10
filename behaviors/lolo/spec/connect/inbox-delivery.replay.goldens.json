@@ -1,0 +1,117 @@
+{
+  "atom": "connect/atoms/std-notify-on-event.lolo",
+  "trait": "InboxDelivery",
+  "note": "InboxDelivery writes one in-app inbox row for the recipient a request names, with no UI; a request with no recipient writes nothing and reports why.",
+  "cases": [
+    {
+      "id": "a-request-with-a-recipient-writes-an-inbox-row",
+      "now": 1700000000000,
+      "steps": [
+        {
+          "event": "INBOX_DELIVER",
+          "payload": {
+            "recipient": "person-1",
+            "message": "A retainer has used 75% of its contracted hours",
+            "severity": "info",
+            "link": "/budgets",
+            "eventKey": "BudgetThreshold"
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "INBOX_DELIVERED",
+                "payload": {
+                  "recipient": "person-1"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-request-with-no-recipient-writes-nothing",
+      "steps": [
+        {
+          "event": "INBOX_DELIVER",
+          "payload": {
+            "recipient": "",
+            "message": "A retainer has used 75% of its contracted hours"
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "INBOX_DELIVERY_FAILED",
+                "payload": {
+                  "error": "the notification names no recipient",
+                  "code": "NO_RECIPIENT"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-many-request-writes-one-row-per-named-person",
+      "now": 1700000000000,
+      "steps": [
+        {
+          "event": "INBOX_DELIVER_MANY",
+          "payload": {
+            "recipients": [
+              "person-1",
+              "",
+              "person-2"
+            ],
+            "message": "Ana mentioned you: can you check the brief?",
+            "link": "/chat",
+            "eventKey": "chat.mention"
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "INBOX_BATCH_DELIVERED",
+                "payload": {
+                  "completedCount": 2
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-many-request-naming-nobody-writes-nothing",
+      "steps": [
+        {
+          "event": "INBOX_DELIVER_MANY",
+          "payload": {
+            "recipients": [
+              ""
+            ],
+            "message": "x"
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "INBOX_DELIVERY_FAILED",
+                "payload": {
+                  "code": "NO_RECIPIENT"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

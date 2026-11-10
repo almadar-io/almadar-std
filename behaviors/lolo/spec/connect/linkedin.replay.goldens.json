@@ -1,0 +1,1018 @@
+{
+ "atom": "connect/atoms/std-linkedin.lolo",
+ "trait": "LinkedinPublisher",
+ "note": "std-linkedin over one keyed std-http-client (std-http-keyed): every post is a row of LinkedinCall under its own key; the access token is a refresh_token grant (credential-connect) the host credential store mints and renews, carried by the LinkedinHttp credential, never by an event; a not-held token mints once and sends again, a second not-held answer fails NOT_CONFIGURED. The post URN is read from the x-restli-id reply header. LinkedIn has no scheduling API, so none is exercised.",
+ "cases": [
+  {
+   "id": "a-plain-post-builds-the-posts-api-body-for-its-row",
+   "steps": [
+    {
+     "event": "PUBLISH_POST",
+     "payload": {
+      "author": "urn:li:organization:123",
+      "text": "Hello LinkedIn"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINKEDIN_READY",
+        "payload": {
+         "key": "post#1",
+         "callerKey": "",
+         "hasKey": false,
+         "version": "202405",
+         "body": "eyJhdXRob3IiOiJ1cm46bGk6b3JnYW5pemF0aW9uOjEyMyIsImNvbW1lbnRhcnkiOiJIZWxsbyBMaW5rZWRJbiIsInZpc2liaWxpdHkiOiJQVUJMSUMiLCJkaXN0cmlidXRpb24iOnsiZmVlZERpc3RyaWJ1dGlvbiI6Ik1BSU5fRkVFRCIsInRhcmdldEVudGl0aWVzIjpbXSwidGhpcmRQYXJ0eURpc3RyaWJ1dGlvbkNoYW5uZWxzIjpbXX0sImxpZmVjeWNsZVN0YXRlIjoiUFVCTElTSEVEIiwiaXNSZXNoYXJlRGlzYWJsZWRCeUF1dGhvciI6ZmFsc2V9"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "defaults": [
+    "LinkedinPublisher",
+    "LinkedinCall",
+    "LinkedinKeyed",
+    "LinkedinHttp"
+   ]
+  },
+  {
+   "id": "control-a-member-author-is-accepted-too",
+   "steps": [
+    {
+     "event": "PUBLISH_POST",
+     "payload": {
+      "author": "urn:li:person:abc",
+      "text": "Hi"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINKEDIN_READY",
+        "payload": {
+         "key": "post#1",
+         "callerKey": "",
+         "hasKey": false,
+         "version": "202405",
+         "body": "eyJhdXRob3IiOiJ1cm46bGk6cGVyc29uOmFiYyIsImNvbW1lbnRhcnkiOiJIaSIsInZpc2liaWxpdHkiOiJQVUJMSUMiLCJkaXN0cmlidXRpb24iOnsiZmVlZERpc3RyaWJ1dGlvbiI6Ik1BSU5fRkVFRCIsInRhcmdldEVudGl0aWVzIjpbXSwidGhpcmRQYXJ0eURpc3RyaWJ1dGlvbkNoYW5uZWxzIjpbXX0sImxpZmVjeWNsZVN0YXRlIjoiUFVCTElTSEVEIiwiaXNSZXNoYXJlRGlzYWJsZWRCeUF1dGhvciI6ZmFsc2V9"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "defaults": [
+    "LinkedinPublisher",
+    "LinkedinCall",
+    "LinkedinKeyed",
+    "LinkedinHttp"
+   ]
+  },
+  {
+   "id": "the-key-is-held-on-the-row-to-echo-on-the-answer",
+   "steps": [
+    {
+     "event": "PUBLISH_POST",
+     "payload": {
+      "author": "urn:li:organization:123",
+      "text": "Hi",
+      "key": "k1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINKEDIN_READY",
+        "payload": {
+         "key": "post#1",
+         "callerKey": "k1",
+         "hasKey": true,
+         "version": "202405",
+         "body": "eyJhdXRob3IiOiJ1cm46bGk6b3JnYW5pemF0aW9uOjEyMyIsImNvbW1lbnRhcnkiOiJIaSIsInZpc2liaWxpdHkiOiJQVUJMSUMiLCJkaXN0cmlidXRpb24iOnsiZmVlZERpc3RyaWJ1dGlvbiI6Ik1BSU5fRkVFRCIsInRhcmdldEVudGl0aWVzIjpbXSwidGhpcmRQYXJ0eURpc3RyaWJ1dGlvbkNoYW5uZWxzIjpbXX0sImxpZmVjeWNsZVN0YXRlIjoiUFVCTElTSEVEIiwiaXNSZXNoYXJlRGlzYWJsZWRCeUF1dGhvciI6ZmFsc2V9"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "defaults": [
+    "LinkedinPublisher",
+    "LinkedinCall",
+    "LinkedinKeyed",
+    "LinkedinHttp"
+   ]
+  },
+  {
+   "id": "a-second-post-takes-the-next-row-key",
+   "steps": [
+    {
+     "event": "PUBLISH_POST",
+     "payload": {
+      "author": "urn:li:organization:123",
+      "text": "a"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINKEDIN_READY",
+        "payload": {
+         "key": "post#1",
+         "callerKey": "",
+         "hasKey": false,
+         "version": "202405",
+         "body": "eyJhdXRob3IiOiJ1cm46bGk6b3JnYW5pemF0aW9uOjEyMyIsImNvbW1lbnRhcnkiOiJhIiwidmlzaWJpbGl0eSI6IlBVQkxJQyIsImRpc3RyaWJ1dGlvbiI6eyJmZWVkRGlzdHJpYnV0aW9uIjoiTUFJTl9GRUVEIiwidGFyZ2V0RW50aXRpZXMiOltdLCJ0aGlyZFBhcnR5RGlzdHJpYnV0aW9uQ2hhbm5lbHMiOltdfSwibGlmZWN5Y2xlU3RhdGUiOiJQVUJMSVNIRUQiLCJpc1Jlc2hhcmVEaXNhYmxlZEJ5QXV0aG9yIjpmYWxzZX0="
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "PUBLISH_POST",
+     "payload": {
+      "author": "urn:li:organization:123",
+      "text": "b"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINKEDIN_READY",
+        "payload": {
+         "key": "post#2",
+         "callerKey": "",
+         "hasKey": false,
+         "version": "202405",
+         "body": "eyJhdXRob3IiOiJ1cm46bGk6b3JnYW5pemF0aW9uOjEyMyIsImNvbW1lbnRhcnkiOiJiIiwidmlzaWJpbGl0eSI6IlBVQkxJQyIsImRpc3RyaWJ1dGlvbiI6eyJmZWVkRGlzdHJpYnV0aW9uIjoiTUFJTl9GRUVEIiwidGFyZ2V0RW50aXRpZXMiOltdLCJ0aGlyZFBhcnR5RGlzdHJpYnV0aW9uQ2hhbm5lbHMiOltdfSwibGlmZWN5Y2xlU3RhdGUiOiJQVUJMSVNIRUQiLCJpc1Jlc2hhcmVEaXNhYmxlZEJ5QXV0aG9yIjpmYWxzZX0="
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "defaults": [
+    "LinkedinPublisher",
+    "LinkedinCall",
+    "LinkedinKeyed",
+    "LinkedinHttp"
+   ]
+  },
+  {
+   "id": "a-plain-post-is-sent-with-the-version-and-restli-headers",
+   "steps": [
+    {
+     "event": "LINKEDIN_DISPATCH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINKEDIN_HTTP_SEND",
+        "payload": {
+         "key": "post#1",
+         "method": "POST",
+         "target": "/rest/posts",
+         "headers": [
+          {
+           "name": "LinkedIn-Version",
+           "value": "202405"
+          },
+          {
+           "name": "X-Restli-Protocol-Version",
+           "value": "2.0.0"
+          },
+          {
+           "name": "content-type",
+           "value": "application/json"
+          }
+         ],
+         "body": "eyJhdXRob3IiOiJ1cm46bGk6b3JnYW5pemF0aW9uOjEyMyIsImNvbW1lbnRhcnkiOiJIZWxsbyBMaW5rZWRJbiIsInZpc2liaWxpdHkiOiJQVUJMSUMiLCJkaXN0cmlidXRpb24iOnsiZmVlZERpc3RyaWJ1dGlvbiI6Ik1BSU5fRkVFRCIsInRhcmdldEVudGl0aWVzIjpbXSwidGhpcmRQYXJ0eURpc3RyaWJ1dGlvbkNoYW5uZWxzIjpbXX0sImxpZmVjeWNsZVN0YXRlIjoiUFVCTElTSEVEIiwiaXNSZXNoYXJlRGlzYWJsZWRCeUF1dGhvciI6ZmFsc2V9",
+         "stream": "none"
+        }
+       }
+      ]
+     },
+     "trait": "LinkedinCall",
+     "entity": {
+      "version": "202405",
+      "id": "post#1",
+      "callerKey": "",
+      "hasKey": false,
+      "body": "eyJhdXRob3IiOiJ1cm46bGk6b3JnYW5pemF0aW9uOjEyMyIsImNvbW1lbnRhcnkiOiJIZWxsbyBMaW5rZWRJbiIsInZpc2liaWxpdHkiOiJQVUJMSUMiLCJkaXN0cmlidXRpb24iOnsiZmVlZERpc3RyaWJ1dGlvbiI6Ik1BSU5fRkVFRCIsInRhcmdldEVudGl0aWVzIjpbXSwidGhpcmRQYXJ0eURpc3RyaWJ1dGlvbkNoYW5uZWxzIjpbXX0sImxpZmVjeWNsZVN0YXRlIjoiUFVCTElTSEVEIiwiaXNSZXNoYXJlRGlzYWJsZWRCeUF1dGhvciI6ZmFsc2V9",
+      "mintTried": false
+     }
+    }
+   ],
+   "defaults": [
+    "LinkedinPublisher",
+    "LinkedinCall",
+    "LinkedinKeyed",
+    "LinkedinHttp"
+   ]
+  },
+  {
+   "id": "the-version-knob-rides-the-row-into-the-linkedin-version-header",
+   "steps": [
+    {
+     "event": "PUBLISH_POST",
+     "payload": {
+      "author": "urn:li:organization:123",
+      "text": "Hello LinkedIn"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINKEDIN_READY",
+        "payload": {
+         "key": "post#1",
+         "callerKey": "",
+         "hasKey": false,
+         "version": "202411",
+         "body": "eyJhdXRob3IiOiJ1cm46bGk6b3JnYW5pemF0aW9uOjEyMyIsImNvbW1lbnRhcnkiOiJIZWxsbyBMaW5rZWRJbiIsInZpc2liaWxpdHkiOiJQVUJMSUMiLCJkaXN0cmlidXRpb24iOnsiZmVlZERpc3RyaWJ1dGlvbiI6Ik1BSU5fRkVFRCIsInRhcmdldEVudGl0aWVzIjpbXSwidGhpcmRQYXJ0eURpc3RyaWJ1dGlvbkNoYW5uZWxzIjpbXX0sImxpZmVjeWNsZVN0YXRlIjoiUFVCTElTSEVEIiwiaXNSZXNoYXJlRGlzYWJsZWRCeUF1dGhvciI6ZmFsc2V9"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "LINKEDIN_DISPATCH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINKEDIN_HTTP_SEND",
+        "payload": {
+         "key": "post#1",
+         "headers": [
+          {
+           "name": "LinkedIn-Version",
+           "value": "202411"
+          },
+          {
+           "name": "X-Restli-Protocol-Version",
+           "value": "2.0.0"
+          },
+          {
+           "name": "content-type",
+           "value": "application/json"
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "trait": "LinkedinCall",
+     "entity": {
+      "version": "202411",
+      "id": "post#1",
+      "callerKey": "",
+      "hasKey": false,
+      "body": "eyJhdXRob3IiOiJ1cm46bGk6b3JnYW5pemF0aW9uOjEyMyIsImNvbW1lbnRhcnkiOiJIZWxsbyBMaW5rZWRJbiIsInZpc2liaWxpdHkiOiJQVUJMSUMiLCJkaXN0cmlidXRpb24iOnsiZmVlZERpc3RyaWJ1dGlvbiI6Ik1BSU5fRkVFRCIsInRhcmdldEVudGl0aWVzIjpbXSwidGhpcmRQYXJ0eURpc3RyaWJ1dGlvbkNoYW5uZWxzIjpbXX0sImxpZmVjeWNsZVN0YXRlIjoiUFVCTElTSEVEIiwiaXNSZXNoYXJlRGlzYWJsZWRCeUF1dGhvciI6ZmFsc2V9",
+      "mintTried": false
+     }
+    }
+   ],
+   "defaults": [
+    "LinkedinPublisher",
+    "LinkedinCall",
+    "LinkedinKeyed",
+    "LinkedinHttp"
+   ],
+   "config": {
+    "version": "202411"
+   }
+  },
+  {
+   "id": "a-post-with-a-link-adds-an-article-titled-by-linktitle",
+   "steps": [
+    {
+     "event": "PUBLISH_POST",
+     "payload": {
+      "author": "urn:li:organization:123",
+      "text": "Read this",
+      "linkUrl": "https://example.com/a",
+      "linkTitle": "Our article"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINKEDIN_READY",
+        "payload": {
+         "key": "post#1",
+         "callerKey": "",
+         "hasKey": false,
+         "version": "202405",
+         "body": "eyJhdXRob3IiOiJ1cm46bGk6b3JnYW5pemF0aW9uOjEyMyIsImNvbW1lbnRhcnkiOiJSZWFkIHRoaXMiLCJ2aXNpYmlsaXR5IjoiUFVCTElDIiwiZGlzdHJpYnV0aW9uIjp7ImZlZWREaXN0cmlidXRpb24iOiJNQUlOX0ZFRUQiLCJ0YXJnZXRFbnRpdGllcyI6W10sInRoaXJkUGFydHlEaXN0cmlidXRpb25DaGFubmVscyI6W119LCJsaWZlY3ljbGVTdGF0ZSI6IlBVQkxJU0hFRCIsImlzUmVzaGFyZURpc2FibGVkQnlBdXRob3IiOmZhbHNlLCJjb250ZW50Ijp7ImFydGljbGUiOnsic291cmNlIjoiaHR0cHM6Ly9leGFtcGxlLmNvbS9hIiwidGl0bGUiOiJPdXIgYXJ0aWNsZSJ9fX0="
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "defaults": [
+    "LinkedinPublisher",
+    "LinkedinCall",
+    "LinkedinKeyed",
+    "LinkedinHttp"
+   ]
+  },
+  {
+   "id": "a-link-without-a-title-uses-the-url-as-its-title",
+   "steps": [
+    {
+     "event": "PUBLISH_POST",
+     "payload": {
+      "author": "urn:li:organization:123",
+      "text": "Read this",
+      "linkUrl": "https://example.com/a"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINKEDIN_READY",
+        "payload": {
+         "key": "post#1",
+         "callerKey": "",
+         "hasKey": false,
+         "version": "202405",
+         "body": "eyJhdXRob3IiOiJ1cm46bGk6b3JnYW5pemF0aW9uOjEyMyIsImNvbW1lbnRhcnkiOiJSZWFkIHRoaXMiLCJ2aXNpYmlsaXR5IjoiUFVCTElDIiwiZGlzdHJpYnV0aW9uIjp7ImZlZWREaXN0cmlidXRpb24iOiJNQUlOX0ZFRUQiLCJ0YXJnZXRFbnRpdGllcyI6W10sInRoaXJkUGFydHlEaXN0cmlidXRpb25DaGFubmVscyI6W119LCJsaWZlY3ljbGVTdGF0ZSI6IlBVQkxJU0hFRCIsImlzUmVzaGFyZURpc2FibGVkQnlBdXRob3IiOmZhbHNlLCJjb250ZW50Ijp7ImFydGljbGUiOnsic291cmNlIjoiaHR0cHM6Ly9leGFtcGxlLmNvbS9hIiwidGl0bGUiOiJodHRwczovL2V4YW1wbGUuY29tL2EifX19"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "defaults": [
+    "LinkedinPublisher",
+    "LinkedinCall",
+    "LinkedinKeyed",
+    "LinkedinHttp"
+   ]
+  },
+  {
+   "id": "text-needing-escaping-has-each-reserved-character-backslash-escaped",
+   "steps": [
+    {
+     "event": "PUBLISH_POST",
+     "payload": {
+      "author": "urn:li:organization:123",
+      "text": "a|b{c}d@e[f]g(h)i<j>k#l\\m*n_o~p"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINKEDIN_READY",
+        "payload": {
+         "key": "post#1",
+         "callerKey": "",
+         "hasKey": false,
+         "version": "202405",
+         "body": "eyJhdXRob3IiOiJ1cm46bGk6b3JnYW5pemF0aW9uOjEyMyIsImNvbW1lbnRhcnkiOiJhXFx8Ylxce2NcXH1kXFxAZVxcW2ZcXF1nXFwoaFxcKWlcXDxqXFw+a1xcI2xcXFxcbVxcKm5cXF9vXFx+cCIsInZpc2liaWxpdHkiOiJQVUJMSUMiLCJkaXN0cmlidXRpb24iOnsiZmVlZERpc3RyaWJ1dGlvbiI6Ik1BSU5fRkVFRCIsInRhcmdldEVudGl0aWVzIjpbXSwidGhpcmRQYXJ0eURpc3RyaWJ1dGlvbkNoYW5uZWxzIjpbXX0sImxpZmVjeWNsZVN0YXRlIjoiUFVCTElTSEVEIiwiaXNSZXNoYXJlRGlzYWJsZWRCeUF1dGhvciI6ZmFsc2V9"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "defaults": [
+    "LinkedinPublisher",
+    "LinkedinCall",
+    "LinkedinKeyed",
+    "LinkedinHttp"
+   ]
+  },
+  {
+   "id": "control-text-without-reserved-characters-keeps-its-slovenian-letters",
+   "steps": [
+    {
+     "event": "PUBLISH_POST",
+     "payload": {
+      "author": "urn:li:organization:123",
+      "text": "Čestitke, šola in žoga: 100% nič, hvala."
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINKEDIN_READY",
+        "payload": {
+         "key": "post#1",
+         "callerKey": "",
+         "hasKey": false,
+         "version": "202405",
+         "body": "eyJhdXRob3IiOiJ1cm46bGk6b3JnYW5pemF0aW9uOjEyMyIsImNvbW1lbnRhcnkiOiLEjGVzdGl0a2UsIMWhb2xhIGluIMW+b2dhOiAxMDAlIG5pxI0sIGh2YWxhLiIsInZpc2liaWxpdHkiOiJQVUJMSUMiLCJkaXN0cmlidXRpb24iOnsiZmVlZERpc3RyaWJ1dGlvbiI6Ik1BSU5fRkVFRCIsInRhcmdldEVudGl0aWVzIjpbXSwidGhpcmRQYXJ0eURpc3RyaWJ1dGlvbkNoYW5uZWxzIjpbXX0sImxpZmVjeWNsZVN0YXRlIjoiUFVCTElTSEVEIiwiaXNSZXNoYXJlRGlzYWJsZWRCeUF1dGhvciI6ZmFsc2V9"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "defaults": [
+    "LinkedinPublisher",
+    "LinkedinCall",
+    "LinkedinKeyed",
+    "LinkedinHttp"
+   ]
+  },
+  {
+   "id": "a-hashtag-and-a-mention-are-escaped-not-interpreted",
+   "steps": [
+    {
+     "event": "PUBLISH_POST",
+     "payload": {
+      "author": "urn:li:organization:123",
+      "text": "Čestitke, šola in žoga: 100% (nič) #novice"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINKEDIN_READY",
+        "payload": {
+         "key": "post#1",
+         "callerKey": "",
+         "hasKey": false,
+         "version": "202405",
+         "body": "eyJhdXRob3IiOiJ1cm46bGk6b3JnYW5pemF0aW9uOjEyMyIsImNvbW1lbnRhcnkiOiLEjGVzdGl0a2UsIMWhb2xhIGluIMW+b2dhOiAxMDAlIFxcKG5pxI1cXCkgXFwjbm92aWNlIiwidmlzaWJpbGl0eSI6IlBVQkxJQyIsImRpc3RyaWJ1dGlvbiI6eyJmZWVkRGlzdHJpYnV0aW9uIjoiTUFJTl9GRUVEIiwidGFyZ2V0RW50aXRpZXMiOltdLCJ0aGlyZFBhcnR5RGlzdHJpYnV0aW9uQ2hhbm5lbHMiOltdfSwibGlmZWN5Y2xlU3RhdGUiOiJQVUJMSVNIRUQiLCJpc1Jlc2hhcmVEaXNhYmxlZEJ5QXV0aG9yIjpmYWxzZX0="
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "defaults": [
+    "LinkedinPublisher",
+    "LinkedinCall",
+    "LinkedinKeyed",
+    "LinkedinHttp"
+   ]
+  },
+  {
+   "id": "an-author-that-is-not-a-urn-is-refused-before-any-request",
+   "steps": [
+    {
+     "event": "PUBLISH_POST",
+     "payload": {
+      "author": "123",
+      "text": "x",
+      "key": "k"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "POST_FAILED",
+        "payload": {
+         "key": "k",
+         "code": "INVALID_AUTHOR"
+        }
+       }
+      ],
+      "neverEmits": [
+       "LINKEDIN_READY"
+      ]
+     }
+    }
+   ],
+   "defaults": [
+    "LinkedinPublisher",
+    "LinkedinCall",
+    "LinkedinKeyed",
+    "LinkedinHttp"
+   ]
+  },
+  {
+   "id": "an-empty-text-is-refused-before-any-request",
+   "steps": [
+    {
+     "event": "PUBLISH_POST",
+     "payload": {
+      "author": "urn:li:organization:123",
+      "text": "  "
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "POST_FAILED",
+        "payload": {
+         "code": "EMPTY_TEXT"
+        }
+       }
+      ],
+      "neverEmits": [
+       "LINKEDIN_READY"
+      ]
+     }
+    }
+   ],
+   "defaults": [
+    "LinkedinPublisher",
+    "LinkedinCall",
+    "LinkedinKeyed",
+    "LinkedinHttp"
+   ]
+  },
+  {
+   "id": "a-201-reply-answers-the-post-urn-from-the-x-restli-id-header",
+   "steps": [
+    {
+     "event": "LINKEDIN_REPLIED",
+     "payload": {
+      "key": "post#1",
+      "status": 201,
+      "headers": {
+       "x-restli-id": "urn:li:share:7000000000000000001"
+      },
+      "body": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "POST_PUBLISHED",
+        "payload": {
+         "postUrn": "urn:li:share:7000000000000000001"
+        }
+       }
+      ],
+      "neverEmits": [
+       "POST_FAILED"
+      ]
+     },
+     "trait": "LinkedinCall",
+     "entity": {
+      "version": "202405",
+      "id": "post#1",
+      "callerKey": "",
+      "hasKey": false,
+      "body": "e30=",
+      "mintTried": false
+     }
+    }
+   ],
+   "defaults": [
+    "LinkedinPublisher",
+    "LinkedinCall",
+    "LinkedinKeyed",
+    "LinkedinHttp"
+   ]
+  },
+  {
+   "id": "the-callers-key-is-echoed-on-the-published-answer",
+   "steps": [
+    {
+     "event": "LINKEDIN_REPLIED",
+     "payload": {
+      "key": "post#1",
+      "status": 201,
+      "headers": {
+       "x-restli-id": "urn:li:ugcPost:7"
+      },
+      "body": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "POST_PUBLISHED",
+        "payload": {
+         "key": "k1",
+         "postUrn": "urn:li:ugcPost:7"
+        }
+       }
+      ]
+     },
+     "trait": "LinkedinCall",
+     "entity": {
+      "version": "202405",
+      "id": "post#1",
+      "callerKey": "k1",
+      "hasKey": true,
+      "body": "e30=",
+      "mintTried": false
+     }
+    }
+   ],
+   "defaults": [
+    "LinkedinPublisher",
+    "LinkedinCall",
+    "LinkedinKeyed",
+    "LinkedinHttp"
+   ]
+  },
+  {
+   "id": "control-a-201-reply-without-the-header-fails-with-no-post-id",
+   "steps": [
+    {
+     "event": "LINKEDIN_REPLIED",
+     "payload": {
+      "key": "post#1",
+      "status": 201,
+      "headers": {},
+      "body": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "POST_FAILED",
+        "payload": {
+         "code": "NO_POST_ID"
+        }
+       }
+      ],
+      "neverEmits": [
+       "POST_PUBLISHED"
+      ]
+     },
+     "trait": "LinkedinCall",
+     "entity": {
+      "version": "202405",
+      "id": "post#1",
+      "callerKey": "",
+      "hasKey": false,
+      "body": "e30=",
+      "mintTried": false
+     }
+    }
+   ],
+   "defaults": [
+    "LinkedinPublisher",
+    "LinkedinCall",
+    "LinkedinKeyed",
+    "LinkedinHttp"
+   ]
+  },
+  {
+   "id": "a-401-answers-the-providers-message",
+   "steps": [
+    {
+     "event": "LINKEDIN_REPLIED",
+     "payload": {
+      "key": "post#1",
+      "status": 401,
+      "headers": {},
+      "body": "{\"status\": 401, \"serviceErrorCode\": 65601, \"code\": \"REVOKED_ACCESS_TOKEN\", \"message\": \"The token used in the request has been revoked by the user\"}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "POST_FAILED",
+        "payload": {
+         "key": "k1",
+         "code": "HTTP_401",
+         "message": "The token used in the request has been revoked by the user"
+        }
+       }
+      ],
+      "neverEmits": [
+       "POST_PUBLISHED"
+      ]
+     },
+     "trait": "LinkedinCall",
+     "entity": {
+      "version": "202405",
+      "id": "post#1",
+      "callerKey": "k1",
+      "hasKey": true,
+      "body": "e30=",
+      "mintTried": false
+     }
+    }
+   ],
+   "defaults": [
+    "LinkedinPublisher",
+    "LinkedinCall",
+    "LinkedinKeyed",
+    "LinkedinHttp"
+   ]
+  },
+  {
+   "id": "a-non-2xx-without-a-readable-body-names-the-status",
+   "steps": [
+    {
+     "event": "LINKEDIN_REPLIED",
+     "payload": {
+      "key": "post#1",
+      "status": 502,
+      "headers": {},
+      "body": "bad gateway"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "POST_FAILED",
+        "payload": {
+         "code": "HTTP_502",
+         "message": "The LinkedIn request failed with status 502"
+        }
+       }
+      ]
+     },
+     "trait": "LinkedinCall",
+     "entity": {
+      "version": "202405",
+      "id": "post#1",
+      "callerKey": "",
+      "hasKey": false,
+      "body": "e30=",
+      "mintTried": false
+     }
+    }
+   ],
+   "defaults": [
+    "LinkedinPublisher",
+    "LinkedinCall",
+    "LinkedinKeyed",
+    "LinkedinHttp"
+   ]
+  },
+  {
+   "id": "a-call-that-never-answered-fails-with-its-kind",
+   "steps": [
+    {
+     "event": "LINKEDIN_REQUEST_FAILED",
+     "payload": {
+      "key": "post#1",
+      "error": "connect timeout",
+      "kind": "timeout"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "POST_FAILED",
+        "payload": {
+         "code": "TIMEOUT",
+         "message": "connect timeout"
+        }
+       }
+      ]
+     },
+     "trait": "LinkedinCall",
+     "entity": {
+      "version": "202405",
+      "id": "post#1",
+      "callerKey": "",
+      "hasKey": false,
+      "body": "e30=",
+      "mintTried": false
+     }
+    }
+   ],
+   "defaults": [
+    "LinkedinPublisher",
+    "LinkedinCall",
+    "LinkedinKeyed",
+    "LinkedinHttp"
+   ]
+  },
+  {
+   "id": "a-not-held-token-mints-once-through-the-refresh-token-grant",
+   "steps": [
+    {
+     "event": "LINKEDIN_REQUEST_FAILED",
+     "payload": {
+      "key": "post#1",
+      "error": "",
+      "kind": "unconfigured"
+     },
+     "expect": {
+      "effects": [
+       {
+        "type": "credential-connect",
+        "arg0": {
+         "credential": "@config.accessToken",
+         "scope": "app",
+         "tokenEndpoint": "https://www.linkedin.com/oauth/v2/accessToken",
+         "grant": "refresh_token",
+         "refreshCredential": "@config.refreshToken",
+         "clientId": "@config.clientId",
+         "clientSecret": "@config.clientSecret",
+         "clientAuth": "body"
+        }
+       }
+      ]
+     },
+     "trait": "LinkedinCall",
+     "entity": {
+      "version": "202405",
+      "id": "post#1",
+      "callerKey": "",
+      "hasKey": false,
+      "body": "e30=",
+      "mintTried": false
+     }
+    }
+   ],
+   "defaults": [
+    "LinkedinPublisher",
+    "LinkedinCall",
+    "LinkedinKeyed",
+    "LinkedinHttp"
+   ]
+  },
+  {
+   "id": "a-connected-answer-sends-the-held-request-again",
+   "steps": [
+    {
+     "event": "LINKEDIN_CONNECTED",
+     "payload": {
+      "connected": true,
+      "label": "li"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINKEDIN_HTTP_SEND",
+        "payload": {
+         "key": "post#1",
+         "method": "POST",
+         "target": "/rest/posts",
+         "headers": [
+          {
+           "name": "LinkedIn-Version",
+           "value": "202405"
+          },
+          {
+           "name": "X-Restli-Protocol-Version",
+           "value": "2.0.0"
+          },
+          {
+           "name": "content-type",
+           "value": "application/json"
+          }
+         ],
+         "body": "eyJhdXRob3IiOiJ1cm46bGk6b3JnYW5pemF0aW9uOjEyMyIsImNvbW1lbnRhcnkiOiJIZWxsbyBMaW5rZWRJbiIsInZpc2liaWxpdHkiOiJQVUJMSUMiLCJkaXN0cmlidXRpb24iOnsiZmVlZERpc3RyaWJ1dGlvbiI6Ik1BSU5fRkVFRCIsInRhcmdldEVudGl0aWVzIjpbXSwidGhpcmRQYXJ0eURpc3RyaWJ1dGlvbkNoYW5uZWxzIjpbXX0sImxpZmVjeWNsZVN0YXRlIjoiUFVCTElTSEVEIiwiaXNSZXNoYXJlRGlzYWJsZWRCeUF1dGhvciI6ZmFsc2V9"
+        }
+       }
+      ]
+     },
+     "trait": "LinkedinCall",
+     "entity": {
+      "version": "202405",
+      "id": "post#1",
+      "callerKey": "",
+      "hasKey": false,
+      "body": "eyJhdXRob3IiOiJ1cm46bGk6b3JnYW5pemF0aW9uOjEyMyIsImNvbW1lbnRhcnkiOiJIZWxsbyBMaW5rZWRJbiIsInZpc2liaWxpdHkiOiJQVUJMSUMiLCJkaXN0cmlidXRpb24iOnsiZmVlZERpc3RyaWJ1dGlvbiI6Ik1BSU5fRkVFRCIsInRhcmdldEVudGl0aWVzIjpbXSwidGhpcmRQYXJ0eURpc3RyaWJ1dGlvbkNoYW5uZWxzIjpbXX0sImxpZmVjeWNsZVN0YXRlIjoiUFVCTElTSEVEIiwiaXNSZXNoYXJlRGlzYWJsZWRCeUF1dGhvciI6ZmFsc2V9",
+      "mintTried": true
+     }
+    }
+   ],
+   "defaults": [
+    "LinkedinPublisher",
+    "LinkedinCall",
+    "LinkedinKeyed",
+    "LinkedinHttp"
+   ]
+  },
+  {
+   "id": "no-credential-a-second-not-held-answer-fails-not-configured",
+   "steps": [
+    {
+     "event": "LINKEDIN_REQUEST_FAILED",
+     "payload": {
+      "key": "post#1",
+      "error": "",
+      "kind": "unconfigured"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "POST_FAILED",
+        "payload": {
+         "code": "NOT_CONFIGURED"
+        }
+       }
+      ],
+      "neverEmits": [
+       "POST_PUBLISHED"
+      ]
+     },
+     "trait": "LinkedinCall",
+     "entity": {
+      "version": "202405",
+      "id": "post#1",
+      "callerKey": "",
+      "hasKey": false,
+      "body": "e30=",
+      "mintTried": true
+     }
+    }
+   ],
+   "defaults": [
+    "LinkedinPublisher",
+    "LinkedinCall",
+    "LinkedinKeyed",
+    "LinkedinHttp"
+   ]
+  },
+  {
+   "id": "no-credential-a-store-that-cannot-mint-fails-not-configured",
+   "steps": [
+    {
+     "event": "LINKEDIN_CONNECT_FAILED",
+     "payload": {
+      "error": "no refresh token",
+      "kind": "unavailable"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "POST_FAILED",
+        "payload": {
+         "code": "NOT_CONFIGURED"
+        }
+       }
+      ]
+     },
+     "trait": "LinkedinCall",
+     "entity": {
+      "version": "202405",
+      "id": "post#1",
+      "callerKey": "",
+      "hasKey": false,
+      "body": "e30=",
+      "mintTried": true
+     }
+    }
+   ],
+   "defaults": [
+    "LinkedinPublisher",
+    "LinkedinCall",
+    "LinkedinKeyed",
+    "LinkedinHttp"
+   ]
+  },
+  {
+   "id": "a-token-request-the-provider-refused-fails-with-token-failed",
+   "steps": [
+    {
+     "event": "LINKEDIN_CONNECT_FAILED",
+     "payload": {
+      "error": "invalid_grant",
+      "kind": "http"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "POST_FAILED",
+        "payload": {
+         "code": "TOKEN_FAILED",
+         "message": "LinkedIn token request failed: invalid_grant"
+        }
+       }
+      ],
+      "neverEmits": [
+       "POST_PUBLISHED"
+      ]
+     },
+     "trait": "LinkedinCall",
+     "entity": {
+      "version": "202405",
+      "id": "post#1",
+      "callerKey": "",
+      "hasKey": false,
+      "body": "e30=",
+      "mintTried": true
+     }
+    }
+   ],
+   "defaults": [
+    "LinkedinPublisher",
+    "LinkedinCall",
+    "LinkedinKeyed",
+    "LinkedinHttp"
+   ]
+  },
+  {
+   "id": "control-a-held-token-never-asks-the-store",
+   "steps": [
+    {
+     "event": "LINKEDIN_REPLIED",
+     "payload": {
+      "key": "post#1",
+      "status": 201,
+      "headers": {
+       "x-restli-id": "urn:li:share:1"
+      },
+      "body": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "POST_PUBLISHED",
+        "payload": {
+         "postUrn": "urn:li:share:1"
+        }
+       }
+      ]
+     },
+     "trait": "LinkedinCall",
+     "entity": {
+      "version": "202405",
+      "id": "post#1",
+      "callerKey": "",
+      "hasKey": false,
+      "body": "e30=",
+      "mintTried": false
+     }
+    }
+   ],
+   "defaults": [
+    "LinkedinPublisher",
+    "LinkedinCall",
+    "LinkedinKeyed",
+    "LinkedinHttp"
+   ]
+  }
+ ]
+}

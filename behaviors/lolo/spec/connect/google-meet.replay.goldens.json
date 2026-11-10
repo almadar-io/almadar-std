@@ -1,0 +1,2987 @@
+{
+ "atom": "connect/atoms/std-google-meet.lolo",
+ "trait": "MeetClient",
+ "note": "std-google-meet over one keyed std-http-client trait: the user access token is a refresh_token grant (credential-connect) the host credential store mints and renews, carried by the MeetHttp credential, never by an event; every call is a row of MeetCall under its own key; each step (list pages, transcripts, entries pages, one display name per distinct participant) retries under keyed std-retry (4 attempts, 100 x 5^(n-1) ms capped at 1500) and the next step starts when std-retry completes the previous run; a not-held token mints once and sends again, a second not-held answer fails NOT_CONFIGURED. Self-handled internal events (declared -> internal) are consumed by the trait and not listed.",
+ "cases": [
+  {
+   "id": "list-sends-the-start-time-filter-under-its-own-key",
+   "steps": [
+    {
+     "event": "LIST_CONFERENCES",
+     "payload": {
+      "from": "2026-10-01T00:00:00Z"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MEET_READY",
+        "payload": {
+         "key": "list:2026-10-01T00:00:00Z#1",
+         "kind": "list",
+         "target": "/v2/conferenceRecords?filter=start_time%3E%3D%222026-10-01T00%3A00%3A00Z%22",
+         "conference": ""
+        }
+       },
+       {
+        "event": "MEET_RETRY_START",
+        "payload": {
+         "key": "list:2026-10-01T00:00:00Z#1"
+        }
+       },
+       {
+        "event": "MEET_HTTP_SEND",
+        "payload": {
+         "key": "list:2026-10-01T00:00:00Z#1",
+         "method": "GET",
+         "target": "/v2/conferenceRecords?filter=start_time%3E%3D%222026-10-01T00%3A00%3A00Z%22",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "application/json"
+          }
+         ],
+         "body": "",
+         "stream": "none"
+        }
+       }
+      ],
+      "neverEmits": [
+       "MEET_FAILED"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "MeetClient",
+    "MeetCall",
+    "MeetKeyed",
+    "MeetHttp",
+    "MeetRetry"
+   ]
+  },
+  {
+   "id": "control-two-lists-take-distinct-keys",
+   "steps": [
+    {
+     "event": "LIST_CONFERENCES",
+     "payload": {
+      "from": "a"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MEET_HTTP_SEND",
+        "payload": {
+         "key": "list:a#1"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "LIST_CONFERENCES",
+     "payload": {
+      "from": "a"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MEET_HTTP_SEND",
+        "payload": {
+         "key": "list:a#2"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "MeetClient",
+    "MeetCall",
+    "MeetKeyed",
+    "MeetHttp",
+    "MeetRetry"
+   ]
+  },
+  {
+   "id": "a-list-reply-answers-the-conferences",
+   "steps": [
+    {
+     "trait": "MeetCall",
+     "event": "MEET_REPLIED",
+     "payload": {
+      "key": "list:2026-10-01T00:00:00Z#1",
+      "status": 200,
+      "headers": {},
+      "body": "{\"conferenceRecords\": [{\"name\": \"conferenceRecords/abc\", \"startTime\": \"2026-10-02T08:00:00Z\", \"endTime\": \"2026-10-02T09:00:00Z\", \"space\": \"spaces/s1\"}, {\"name\": \"conferenceRecords/def\", \"startTime\": \"2026-10-03T08:00:00Z\", \"space\": \"spaces/s2\"}]}"
+     },
+     "expect": {
+      "emits": [],
+      "neverEmits": [
+       "MEET_FAILED",
+       "CONFERENCES_LISTED"
+      ]
+     },
+     "entity": {
+      "id": "list:2026-10-01T00:00:00Z#1",
+      "kind": "list",
+      "step": "list",
+      "firstTarget": "/v2/conferenceRecords?filter=start_time%3E%3D%222026-10-01T00%3A00%3A00Z%22",
+      "target": "/v2/conferenceRecords?filter=start_time%3E%3D%222026-10-01T00%3A00%3A00Z%22",
+      "conference": "",
+      "transcript": "",
+      "mintTried": false,
+      "attempt": 1,
+      "stepReady": false,
+      "pageToken": "",
+      "conferences": [],
+      "entries": [],
+      "pending": [],
+      "current": "",
+      "names": []
+     }
+    },
+    {
+     "trait": "MeetCall",
+     "event": "MEET_RETRY_DONE",
+     "payload": {
+      "key": "list:2026-10-01T00:00:00Z#1",
+      "attempts": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CONFERENCES_LISTED",
+        "payload": {
+         "conferences": [
+          {
+           "name": "conferenceRecords/abc",
+           "startTime": "2026-10-02T08:00:00Z",
+           "endTime": "2026-10-02T09:00:00Z",
+           "space": "spaces/s1"
+          },
+          {
+           "name": "conferenceRecords/def",
+           "startTime": "2026-10-03T08:00:00Z",
+           "endTime": "",
+           "space": "spaces/s2"
+          }
+         ]
+        }
+       }
+      ],
+      "neverEmits": [
+       "MEET_RETRY_START"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "MeetClient",
+    "MeetCall",
+    "MeetKeyed",
+    "MeetHttp",
+    "MeetRetry"
+   ]
+  },
+  {
+   "id": "control-an-empty-list-reply-answers-no-conferences",
+   "steps": [
+    {
+     "trait": "MeetCall",
+     "event": "MEET_REPLIED",
+     "payload": {
+      "key": "list:2026-10-01T00:00:00Z#1",
+      "status": 200,
+      "headers": {},
+      "body": "{}"
+     },
+     "expect": {
+      "emits": [],
+      "neverEmits": [
+       "MEET_FAILED"
+      ]
+     },
+     "entity": {
+      "id": "list:2026-10-01T00:00:00Z#1",
+      "kind": "list",
+      "step": "list",
+      "firstTarget": "/v2/conferenceRecords?filter=start_time%3E%3D%222026-10-01T00%3A00%3A00Z%22",
+      "target": "/v2/conferenceRecords?filter=start_time%3E%3D%222026-10-01T00%3A00%3A00Z%22",
+      "conference": "",
+      "transcript": "",
+      "mintTried": false,
+      "attempt": 1,
+      "stepReady": false,
+      "pageToken": "",
+      "conferences": [],
+      "entries": [],
+      "pending": [],
+      "current": "",
+      "names": []
+     }
+    },
+    {
+     "trait": "MeetCall",
+     "event": "MEET_RETRY_DONE",
+     "payload": {
+      "key": "list:2026-10-01T00:00:00Z#1",
+      "attempts": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CONFERENCES_LISTED",
+        "payload": {
+         "conferences": []
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "MeetClient",
+    "MeetCall",
+    "MeetKeyed",
+    "MeetHttp",
+    "MeetRetry"
+   ]
+  },
+  {
+   "id": "a-list-reply-with-a-next-page-token-reads-the-next-page-first",
+   "steps": [
+    {
+     "trait": "MeetCall",
+     "event": "MEET_REPLIED",
+     "payload": {
+      "key": "list:2026-10-01T00:00:00Z#1",
+      "status": 200,
+      "headers": {},
+      "body": "{\"conferenceRecords\": [{\"name\": \"conferenceRecords/abc\", \"startTime\": \"2026-10-02T08:00:00Z\", \"endTime\": \"2026-10-02T09:00:00Z\", \"space\": \"spaces/s1\"}], \"nextPageToken\": \"p2/+\"}"
+     },
+     "expect": {
+      "emits": []
+     },
+     "entity": {
+      "id": "list:2026-10-01T00:00:00Z#1",
+      "kind": "list",
+      "step": "list",
+      "firstTarget": "/v2/conferenceRecords?filter=start_time%3E%3D%222026-10-01T00%3A00%3A00Z%22",
+      "target": "/v2/conferenceRecords?filter=start_time%3E%3D%222026-10-01T00%3A00%3A00Z%22",
+      "conference": "",
+      "transcript": "",
+      "mintTried": false,
+      "attempt": 1,
+      "stepReady": false,
+      "pageToken": "",
+      "conferences": [],
+      "entries": [],
+      "pending": [],
+      "current": "",
+      "names": []
+     }
+    },
+    {
+     "trait": "MeetCall",
+     "event": "MEET_RETRY_DONE",
+     "payload": {
+      "key": "list:2026-10-01T00:00:00Z#1",
+      "attempts": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MEET_RETRY_START",
+        "payload": {
+         "key": "list:2026-10-01T00:00:00Z#1"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CONFERENCES_LISTED"
+      ]
+     }
+    },
+    {
+     "trait": "MeetCall",
+     "event": "MEET_ATTEMPT",
+     "payload": {
+      "key": "list:2026-10-01T00:00:00Z#1",
+      "attempt": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MEET_HTTP_SEND",
+        "payload": {
+         "key": "list:2026-10-01T00:00:00Z#1",
+         "target": "/v2/conferenceRecords?filter=start_time%3E%3D%222026-10-01T00%3A00%3A00Z%22&pageToken=p2%2F%2B"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "MeetCall",
+     "event": "MEET_REPLIED",
+     "payload": {
+      "key": "list:2026-10-01T00:00:00Z#1",
+      "status": 200,
+      "headers": {},
+      "body": "{\"conferenceRecords\": [{\"name\": \"conferenceRecords/def\", \"startTime\": \"2026-10-03T08:00:00Z\", \"space\": \"spaces/s2\"}]}"
+     },
+     "expect": {
+      "emits": []
+     }
+    },
+    {
+     "trait": "MeetCall",
+     "event": "MEET_RETRY_DONE",
+     "payload": {
+      "key": "list:2026-10-01T00:00:00Z#1",
+      "attempts": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "CONFERENCES_LISTED",
+        "payload": {
+         "conferences": [
+          {
+           "name": "conferenceRecords/abc",
+           "startTime": "2026-10-02T08:00:00Z",
+           "endTime": "2026-10-02T09:00:00Z",
+           "space": "spaces/s1"
+          },
+          {
+           "name": "conferenceRecords/def",
+           "startTime": "2026-10-03T08:00:00Z",
+           "endTime": "",
+           "space": "spaces/s2"
+          }
+         ]
+        }
+       }
+      ],
+      "neverEmits": [
+       "MEET_RETRY_START"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "MeetClient",
+    "MeetCall",
+    "MeetKeyed",
+    "MeetHttp",
+    "MeetRetry"
+   ]
+  },
+  {
+   "id": "a-list-reply-that-is-not-json-fails",
+   "steps": [
+    {
+     "trait": "MeetCall",
+     "event": "MEET_REPLIED",
+     "payload": {
+      "key": "list:2026-10-01T00:00:00Z#1",
+      "status": 200,
+      "headers": {},
+      "body": "<html>"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MEET_FAILED",
+        "payload": {
+         "message": "The Meet answer could not be read"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "list:2026-10-01T00:00:00Z#1",
+      "kind": "list",
+      "step": "list",
+      "firstTarget": "/v2/conferenceRecords?filter=start_time%3E%3D%222026-10-01T00%3A00%3A00Z%22",
+      "target": "/v2/conferenceRecords?filter=start_time%3E%3D%222026-10-01T00%3A00%3A00Z%22",
+      "conference": "",
+      "transcript": "",
+      "mintTried": false,
+      "attempt": 1,
+      "stepReady": false,
+      "pageToken": "",
+      "conferences": [],
+      "entries": [],
+      "pending": [],
+      "current": "",
+      "names": []
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "MeetClient",
+    "MeetCall",
+    "MeetKeyed",
+    "MeetHttp",
+    "MeetRetry"
+   ]
+  },
+  {
+   "id": "fetch-transcript-lists-the-conference-transcripts",
+   "steps": [
+    {
+     "event": "MEET_FETCH_TRANSCRIPT",
+     "payload": {
+      "conference": "conferenceRecords/c1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MEET_READY",
+        "payload": {
+         "key": "transcript:conferenceRecords/c1#1",
+         "kind": "transcript",
+         "target": "/v2/conferenceRecords/c1/transcripts",
+         "conference": "conferenceRecords/c1"
+        }
+       },
+       {
+        "event": "MEET_HTTP_SEND",
+        "payload": {
+         "key": "transcript:conferenceRecords/c1#1",
+         "method": "GET",
+         "target": "/v2/conferenceRecords/c1/transcripts",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "application/json"
+          }
+         ]
+        }
+       }
+      ],
+      "neverEmits": [
+       "MEET_FAILED"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "MeetClient",
+    "MeetCall",
+    "MeetKeyed",
+    "MeetHttp",
+    "MeetRetry"
+   ]
+  },
+  {
+   "id": "control-a-conference-that-is-not-a-record-name-is-refused-without-a-call",
+   "steps": [
+    {
+     "event": "MEET_FETCH_TRANSCRIPT",
+     "payload": {
+      "conference": "conferenceRecords/c1/../x?y"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MEET_FAILED",
+        "payload": {
+         "message": "The conference must be a conferenceRecords/<id> resource name"
+        }
+       }
+      ],
+      "neverEmits": [
+       "MEET_READY",
+       "MEET_HTTP_SEND"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "MeetClient",
+    "MeetCall",
+    "MeetKeyed",
+    "MeetHttp",
+    "MeetRetry"
+   ]
+  },
+  {
+   "id": "a-bare-id-is-refused-too",
+   "steps": [
+    {
+     "event": "MEET_FETCH_TRANSCRIPT",
+     "payload": {
+      "conference": "c1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MEET_FAILED",
+        "payload": {
+         "message": "The conference must be a conferenceRecords/<id> resource name"
+        }
+       }
+      ],
+      "neverEmits": [
+       "MEET_HTTP_SEND"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "MeetClient",
+    "MeetCall",
+    "MeetKeyed",
+    "MeetHttp",
+    "MeetRetry"
+   ]
+  },
+  {
+   "id": "the-first-generated-transcript-is-chosen-and-its-entries-are-asked-for",
+   "steps": [
+    {
+     "trait": "MeetCall",
+     "event": "MEET_REPLIED",
+     "payload": {
+      "key": "transcript:conferenceRecords/c1#1",
+      "status": 200,
+      "headers": {},
+      "body": "{\"transcripts\": [{\"name\": \"conferenceRecords/c1/transcripts/t0\", \"state\": \"STARTED\"}, {\"name\": \"conferenceRecords/c1/transcripts/t1\", \"state\": \"FILE_GENERATED\"}, {\"name\": \"conferenceRecords/c1/transcripts/t2\", \"state\": \"FILE_GENERATED\"}]}"
+     },
+     "expect": {
+      "emits": [],
+      "neverEmits": [
+       "MEET_FAILED"
+      ]
+     },
+     "entity": {
+      "id": "transcript:conferenceRecords/c1#1",
+      "kind": "transcript",
+      "step": "transcripts",
+      "firstTarget": "/x",
+      "target": "/x",
+      "conference": "conferenceRecords/c1",
+      "transcript": "",
+      "mintTried": false,
+      "attempt": 1,
+      "stepReady": false,
+      "pageToken": "",
+      "conferences": [],
+      "entries": [],
+      "pending": [],
+      "current": "",
+      "names": []
+     }
+    },
+    {
+     "trait": "MeetCall",
+     "event": "MEET_RETRY_DONE",
+     "payload": {
+      "key": "transcript:conferenceRecords/c1#1",
+      "attempts": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MEET_RETRY_START",
+        "payload": {
+         "key": "transcript:conferenceRecords/c1#1"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "MeetCall",
+     "event": "MEET_ATTEMPT",
+     "payload": {
+      "key": "transcript:conferenceRecords/c1#1",
+      "attempt": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MEET_HTTP_SEND",
+        "payload": {
+         "key": "transcript:conferenceRecords/c1#1",
+         "target": "/v2/conferenceRecords/c1/transcripts/t1/entries?pageSize=100"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "MeetClient",
+    "MeetCall",
+    "MeetKeyed",
+    "MeetHttp",
+    "MeetRetry"
+   ]
+  },
+  {
+   "id": "control-an-ended-transcript-is-accepted-too",
+   "steps": [
+    {
+     "trait": "MeetCall",
+     "event": "MEET_REPLIED",
+     "payload": {
+      "key": "transcript:conferenceRecords/c1#1",
+      "status": 200,
+      "headers": {},
+      "body": "{\"transcripts\": [{\"name\": \"conferenceRecords/c1/transcripts/t9\", \"state\": \"ENDED\"}]}"
+     },
+     "expect": {
+      "emits": [],
+      "neverEmits": [
+       "MEET_FAILED"
+      ]
+     },
+     "entity": {
+      "id": "transcript:conferenceRecords/c1#1",
+      "kind": "transcript",
+      "step": "transcripts",
+      "firstTarget": "/x",
+      "target": "/x",
+      "conference": "conferenceRecords/c1",
+      "transcript": "",
+      "mintTried": false,
+      "attempt": 1,
+      "stepReady": false,
+      "pageToken": "",
+      "conferences": [],
+      "entries": [],
+      "pending": [],
+      "current": "",
+      "names": []
+     }
+    },
+    {
+     "trait": "MeetCall",
+     "event": "MEET_RETRY_DONE",
+     "payload": {
+      "key": "transcript:conferenceRecords/c1#1",
+      "attempts": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MEET_RETRY_START",
+        "payload": {
+         "key": "transcript:conferenceRecords/c1#1"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "MeetCall",
+     "event": "MEET_ATTEMPT",
+     "payload": {
+      "key": "transcript:conferenceRecords/c1#1",
+      "attempt": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MEET_HTTP_SEND",
+        "payload": {
+         "key": "transcript:conferenceRecords/c1#1",
+         "target": "/v2/conferenceRecords/c1/transcripts/t9/entries?pageSize=100"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "MeetClient",
+    "MeetCall",
+    "MeetKeyed",
+    "MeetHttp",
+    "MeetRetry"
+   ]
+  },
+  {
+   "id": "no-transcript-answers-no-transcript",
+   "steps": [
+    {
+     "trait": "MeetCall",
+     "event": "MEET_REPLIED",
+     "payload": {
+      "key": "transcript:conferenceRecords/c1#1",
+      "status": 200,
+      "headers": {},
+      "body": "{}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MEET_FAILED",
+        "payload": {
+         "code": "NO_TRANSCRIPT",
+         "message": "This conference has no transcript"
+        }
+       }
+      ],
+      "neverEmits": [
+       "MEET_RETRY_START",
+       "MEET_TRANSCRIPT_FETCHED"
+      ]
+     },
+     "entity": {
+      "id": "transcript:conferenceRecords/c1#1",
+      "kind": "transcript",
+      "step": "transcripts",
+      "firstTarget": "/x",
+      "target": "/x",
+      "conference": "conferenceRecords/c1",
+      "transcript": "",
+      "mintTried": false,
+      "attempt": 1,
+      "stepReady": false,
+      "pageToken": "",
+      "conferences": [],
+      "entries": [],
+      "pending": [],
+      "current": "",
+      "names": []
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "MeetClient",
+    "MeetCall",
+    "MeetKeyed",
+    "MeetHttp",
+    "MeetRetry"
+   ]
+  },
+  {
+   "id": "control-only-started-transcripts-answer-no-transcript-too",
+   "steps": [
+    {
+     "trait": "MeetCall",
+     "event": "MEET_REPLIED",
+     "payload": {
+      "key": "transcript:conferenceRecords/c1#1",
+      "status": 200,
+      "headers": {},
+      "body": "{\"transcripts\": [{\"name\": \"conferenceRecords/c1/transcripts/t0\", \"state\": \"STARTED\"}]}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MEET_FAILED",
+        "payload": {
+         "code": "NO_TRANSCRIPT"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "transcript:conferenceRecords/c1#1",
+      "kind": "transcript",
+      "step": "transcripts",
+      "firstTarget": "/x",
+      "target": "/x",
+      "conference": "conferenceRecords/c1",
+      "transcript": "",
+      "mintTried": false,
+      "attempt": 1,
+      "stepReady": false,
+      "pageToken": "",
+      "conferences": [],
+      "entries": [],
+      "pending": [],
+      "current": "",
+      "names": []
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "MeetClient",
+    "MeetCall",
+    "MeetKeyed",
+    "MeetHttp",
+    "MeetRetry"
+   ]
+  },
+  {
+   "id": "an-entries-reply-without-any-entry-answers-no-transcript",
+   "steps": [
+    {
+     "trait": "MeetCall",
+     "event": "MEET_REPLIED",
+     "payload": {
+      "key": "transcript:conferenceRecords/c1#1",
+      "status": 200,
+      "headers": {},
+      "body": "{}"
+     },
+     "expect": {
+      "emits": [],
+      "neverEmits": [
+       "MEET_FAILED"
+      ]
+     },
+     "entity": {
+      "id": "transcript:conferenceRecords/c1#1",
+      "kind": "transcript",
+      "step": "entries",
+      "firstTarget": "/x",
+      "target": "/x",
+      "conference": "conferenceRecords/c1",
+      "transcript": "conferenceRecords/c1/transcripts/t1",
+      "mintTried": false,
+      "attempt": 1,
+      "stepReady": false,
+      "pageToken": "",
+      "conferences": [],
+      "entries": [],
+      "pending": [],
+      "current": "",
+      "names": []
+     }
+    },
+    {
+     "trait": "MeetCall",
+     "event": "MEET_RETRY_DONE",
+     "payload": {
+      "key": "transcript:conferenceRecords/c1#1",
+      "attempts": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MEET_FAILED",
+        "payload": {
+         "code": "NO_TRANSCRIPT",
+         "message": "This conference has no transcript entries"
+        }
+       }
+      ],
+      "neverEmits": [
+       "MEET_TRANSCRIPT_FETCHED"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "MeetClient",
+    "MeetCall",
+    "MeetKeyed",
+    "MeetHttp",
+    "MeetRetry"
+   ]
+  },
+  {
+   "id": "a-transcripts-reply-that-is-not-json-fails",
+   "steps": [
+    {
+     "trait": "MeetCall",
+     "event": "MEET_REPLIED",
+     "payload": {
+      "key": "transcript:conferenceRecords/c1#1",
+      "status": 200,
+      "headers": {},
+      "body": "x"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MEET_FAILED",
+        "payload": {
+         "message": "The Meet answer could not be read"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "transcript:conferenceRecords/c1#1",
+      "kind": "transcript",
+      "step": "transcripts",
+      "firstTarget": "/x",
+      "target": "/x",
+      "conference": "conferenceRecords/c1",
+      "transcript": "",
+      "mintTried": false,
+      "attempt": 1,
+      "stepReady": false,
+      "pageToken": "",
+      "conferences": [],
+      "entries": [],
+      "pending": [],
+      "current": "",
+      "names": []
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "MeetClient",
+    "MeetCall",
+    "MeetKeyed",
+    "MeetHttp",
+    "MeetRetry"
+   ]
+  },
+  {
+   "id": "a-slovenian-transcript-over-two-pages-with-names-arrives-unchanged",
+   "steps": [
+    {
+     "event": "MEET_FETCH_TRANSCRIPT",
+     "payload": {
+      "conference": "conferenceRecords/c1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MEET_HTTP_SEND",
+        "payload": {
+         "key": "transcript:conferenceRecords/c1#1",
+         "target": "/v2/conferenceRecords/c1/transcripts"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "MeetHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "transcript:conferenceRecords/c1#1",
+      "status": 200,
+      "headers": {},
+      "body": "eyJ0cmFuc2NyaXB0cyI6IFt7Im5hbWUiOiAiY29uZmVyZW5jZVJlY29yZHMvYzEvdHJhbnNjcmlwdHMvdDEiLCAic3RhdGUiOiAiRklMRV9HRU5FUkFURUQifV19"
+     },
+     "expect": {
+      "emits": []
+     }
+    },
+    {
+     "trait": "MeetRetry",
+     "event": "SUCCEEDED",
+     "payload": {
+      "key": "transcript:conferenceRecords/c1#1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MEET_RETRY_START",
+        "payload": {
+         "key": "transcript:conferenceRecords/c1#1"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "transcript:conferenceRecords/c1#1",
+      "key": "transcript:conferenceRecords/c1#1",
+      "attempt": 1
+     },
+     "from": "running"
+    },
+    {
+     "trait": "MeetRetry",
+     "event": "START",
+     "payload": {
+      "key": "transcript:conferenceRecords/c1#1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ATTEMPT",
+        "payload": {
+         "key": "transcript:conferenceRecords/c1#1",
+         "attempt": 1
+        }
+       },
+       {
+        "event": "MEET_HTTP_SEND",
+        "payload": {
+         "key": "transcript:conferenceRecords/c1#1",
+         "method": "GET",
+         "target": "/v2/conferenceRecords/c1/transcripts/t1/entries?pageSize=100",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "application/json"
+          }
+         ],
+         "body": "",
+         "stream": "none"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "transcript:conferenceRecords/c1#1",
+      "key": "transcript:conferenceRecords/c1#1",
+      "attempt": 0
+     },
+     "from": "idle"
+    },
+    {
+     "trait": "MeetHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "transcript:conferenceRecords/c1#1",
+      "status": 200,
+      "headers": {},
+      "body": "eyJ0cmFuc2NyaXB0RW50cmllcyI6IFt7Im5hbWUiOiAiY29uZmVyZW5jZVJlY29yZHMvYzEvdHJhbnNjcmlwdHMvdDEvZW50cmllcy9lMSIsICJwYXJ0aWNpcGFudCI6ICJjb25mZXJlbmNlUmVjb3Jkcy9jMS9wYXJ0aWNpcGFudHMvcDEiLCAidGV4dCI6ICJEb2JlciBkYW4sIHphXHUwMTBkbmltbyBzZXN0YW5lay4iLCAibGFuZ3VhZ2VDb2RlIjogInNsLVNJIiwgInN0YXJ0VGltZSI6ICIyMDI2LTEwLTAyVDA4OjAwOjAxWiJ9LCB7Im5hbWUiOiAiY29uZmVyZW5jZVJlY29yZHMvYzEvdHJhbnNjcmlwdHMvdDEvZW50cmllcy9lMiIsICJwYXJ0aWNpcGFudCI6ICJjb25mZXJlbmNlUmVjb3Jkcy9jMS9wYXJ0aWNpcGFudHMvcDIiLCAidGV4dCI6ICJcdTAxMGNleiB0ZWRlbiBkbmkgbW9yYW1vIFx1MDE3ZWlyaWpvIFx1MDE2MWUgZW5rcmF0IHByZWdsZWRhdGkuIiwgImxhbmd1YWdlQ29kZSI6ICJzbC1TSSIsICJzdGFydFRpbWUiOiAiMjAyNi0xMC0wMlQwODowMDowNVoifV0sICJuZXh0UGFnZVRva2VuIjogInBnMiJ9"
+     },
+     "expect": {
+      "emits": []
+     }
+    },
+    {
+     "trait": "MeetRetry",
+     "event": "SUCCEEDED",
+     "payload": {
+      "key": "transcript:conferenceRecords/c1#1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MEET_RETRY_START",
+        "payload": {
+         "key": "transcript:conferenceRecords/c1#1"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "transcript:conferenceRecords/c1#1",
+      "key": "transcript:conferenceRecords/c1#1",
+      "attempt": 1
+     },
+     "from": "running"
+    },
+    {
+     "trait": "MeetRetry",
+     "event": "START",
+     "payload": {
+      "key": "transcript:conferenceRecords/c1#1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ATTEMPT",
+        "payload": {
+         "key": "transcript:conferenceRecords/c1#1",
+         "attempt": 1
+        }
+       },
+       {
+        "event": "MEET_HTTP_SEND",
+        "payload": {
+         "key": "transcript:conferenceRecords/c1#1",
+         "method": "GET",
+         "target": "/v2/conferenceRecords/c1/transcripts/t1/entries?pageSize=100&pageToken=pg2",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "application/json"
+          }
+         ],
+         "body": "",
+         "stream": "none"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "transcript:conferenceRecords/c1#1",
+      "key": "transcript:conferenceRecords/c1#1",
+      "attempt": 0
+     },
+     "from": "idle"
+    },
+    {
+     "trait": "MeetHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "transcript:conferenceRecords/c1#1",
+      "status": 200,
+      "headers": {},
+      "body": "eyJ0cmFuc2NyaXB0RW50cmllcyI6IFt7Im5hbWUiOiAiY29uZmVyZW5jZVJlY29yZHMvYzEvdHJhbnNjcmlwdHMvdDEvZW50cmllcy9lMyIsICJwYXJ0aWNpcGFudCI6ICJjb25mZXJlbmNlUmVjb3Jkcy9jMS9wYXJ0aWNpcGFudHMvcDEiLCAidGV4dCI6ICJIdmFsYSwgXHUwMTYxXHUwMTBkIFx1MDE3ZS4iLCAibGFuZ3VhZ2VDb2RlIjogInNsLVNJIiwgInN0YXJ0VGltZSI6ICIyMDI2LTEwLTAyVDA4OjAwOjA5WiJ9XX0="
+     },
+     "expect": {
+      "emits": []
+     }
+    },
+    {
+     "trait": "MeetRetry",
+     "event": "SUCCEEDED",
+     "payload": {
+      "key": "transcript:conferenceRecords/c1#1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MEET_RETRY_START",
+        "payload": {
+         "key": "transcript:conferenceRecords/c1#1"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "transcript:conferenceRecords/c1#1",
+      "key": "transcript:conferenceRecords/c1#1",
+      "attempt": 1
+     },
+     "from": "running"
+    },
+    {
+     "trait": "MeetRetry",
+     "event": "START",
+     "payload": {
+      "key": "transcript:conferenceRecords/c1#1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ATTEMPT",
+        "payload": {
+         "key": "transcript:conferenceRecords/c1#1",
+         "attempt": 1
+        }
+       },
+       {
+        "event": "MEET_HTTP_SEND",
+        "payload": {
+         "key": "transcript:conferenceRecords/c1#1",
+         "method": "GET",
+         "target": "/v2/conferenceRecords/c1/participants/p1",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "application/json"
+          }
+         ],
+         "body": "",
+         "stream": "none"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "transcript:conferenceRecords/c1#1",
+      "key": "transcript:conferenceRecords/c1#1",
+      "attempt": 0
+     },
+     "from": "idle"
+    },
+    {
+     "trait": "MeetHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "transcript:conferenceRecords/c1#1",
+      "status": 200,
+      "headers": {},
+      "body": "eyJuYW1lIjogImNvbmZlcmVuY2VSZWNvcmRzL2MxL3BhcnRpY2lwYW50cy9wMSIsICJzaWduZWRpblVzZXIiOiB7InVzZXIiOiAidXNlcnMvMSIsICJkaXNwbGF5TmFtZSI6ICJKYW5hIE5vdmFrIn19"
+     },
+     "expect": {
+      "emits": []
+     }
+    },
+    {
+     "trait": "MeetRetry",
+     "event": "SUCCEEDED",
+     "payload": {
+      "key": "transcript:conferenceRecords/c1#1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MEET_RETRY_START",
+        "payload": {
+         "key": "transcript:conferenceRecords/c1#1"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "transcript:conferenceRecords/c1#1",
+      "key": "transcript:conferenceRecords/c1#1",
+      "attempt": 1
+     },
+     "from": "running"
+    },
+    {
+     "trait": "MeetRetry",
+     "event": "START",
+     "payload": {
+      "key": "transcript:conferenceRecords/c1#1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ATTEMPT",
+        "payload": {
+         "key": "transcript:conferenceRecords/c1#1",
+         "attempt": 1
+        }
+       },
+       {
+        "event": "MEET_HTTP_SEND",
+        "payload": {
+         "key": "transcript:conferenceRecords/c1#1",
+         "method": "GET",
+         "target": "/v2/conferenceRecords/c1/participants/p2",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "application/json"
+          }
+         ],
+         "body": "",
+         "stream": "none"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "transcript:conferenceRecords/c1#1",
+      "key": "transcript:conferenceRecords/c1#1",
+      "attempt": 0
+     },
+     "from": "idle"
+    },
+    {
+     "trait": "MeetHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "transcript:conferenceRecords/c1#1",
+      "status": 200,
+      "headers": {},
+      "body": "eyJuYW1lIjogImNvbmZlcmVuY2VSZWNvcmRzL2MxL3BhcnRpY2lwYW50cy9wMiIsICJhbm9ueW1vdXNVc2VyIjogeyJkaXNwbGF5TmFtZSI6ICJNYXJrbyBcdTAxNjBrb2YgKGdvc3QpIn19"
+     },
+     "expect": {
+      "emits": []
+     }
+    },
+    {
+     "trait": "MeetRetry",
+     "event": "SUCCEEDED",
+     "payload": {
+      "key": "transcript:conferenceRecords/c1#1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MEET_TRANSCRIPT_FETCHED",
+        "payload": {
+         "conference": "conferenceRecords/c1",
+         "languageCode": "sl-SI",
+         "text": "Jana Novak: Dober dan, začnimo sestanek.\nMarko Škof (gost): Čez teden dni moramo žirijo še enkrat pregledati.\nJana Novak: Hvala, šč ž."
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "transcript:conferenceRecords/c1#1",
+      "key": "transcript:conferenceRecords/c1#1",
+      "attempt": 1
+     },
+     "from": "running"
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "MeetClient",
+    "MeetCall",
+    "MeetKeyed",
+    "MeetHttp",
+    "MeetRetry"
+   ],
+   "note": "two entry pages, then one display-name read per distinct participant (p1 once although it spoke twice)"
+  },
+  {
+   "id": "control-the-same-chain-with-one-page-reads-no-second-entries-page",
+   "steps": [
+    {
+     "event": "MEET_FETCH_TRANSCRIPT",
+     "payload": {
+      "conference": "conferenceRecords/c1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MEET_HTTP_SEND",
+        "payload": {
+         "key": "transcript:conferenceRecords/c1#1"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "MeetHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "transcript:conferenceRecords/c1#1",
+      "status": 200,
+      "headers": {},
+      "body": "eyJ0cmFuc2NyaXB0cyI6IFt7Im5hbWUiOiAiY29uZmVyZW5jZVJlY29yZHMvYzEvdHJhbnNjcmlwdHMvdDEiLCAic3RhdGUiOiAiRklMRV9HRU5FUkFURUQifV19"
+     },
+     "expect": {
+      "emits": []
+     }
+    },
+    {
+     "trait": "MeetRetry",
+     "event": "SUCCEEDED",
+     "payload": {
+      "key": "transcript:conferenceRecords/c1#1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MEET_RETRY_START",
+        "payload": {
+         "key": "transcript:conferenceRecords/c1#1"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "transcript:conferenceRecords/c1#1",
+      "key": "transcript:conferenceRecords/c1#1",
+      "attempt": 1
+     },
+     "from": "running"
+    },
+    {
+     "trait": "MeetRetry",
+     "event": "START",
+     "payload": {
+      "key": "transcript:conferenceRecords/c1#1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ATTEMPT",
+        "payload": {
+         "key": "transcript:conferenceRecords/c1#1",
+         "attempt": 1
+        }
+       },
+       {
+        "event": "MEET_HTTP_SEND",
+        "payload": {
+         "key": "transcript:conferenceRecords/c1#1",
+         "method": "GET",
+         "target": "/v2/conferenceRecords/c1/transcripts/t1/entries?pageSize=100",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "application/json"
+          }
+         ],
+         "body": "",
+         "stream": "none"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "transcript:conferenceRecords/c1#1",
+      "key": "transcript:conferenceRecords/c1#1",
+      "attempt": 0
+     },
+     "from": "idle"
+    },
+    {
+     "trait": "MeetHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "transcript:conferenceRecords/c1#1",
+      "status": 200,
+      "headers": {},
+      "body": "eyJ0cmFuc2NyaXB0RW50cmllcyI6IFt7Im5hbWUiOiAiY29uZmVyZW5jZVJlY29yZHMvYzEvdHJhbnNjcmlwdHMvdDEvZW50cmllcy9lMyIsICJwYXJ0aWNpcGFudCI6ICJjb25mZXJlbmNlUmVjb3Jkcy9jMS9wYXJ0aWNpcGFudHMvcDEiLCAidGV4dCI6ICJIdmFsYSwgXHUwMTYxXHUwMTBkIFx1MDE3ZS4iLCAibGFuZ3VhZ2VDb2RlIjogInNsLVNJIiwgInN0YXJ0VGltZSI6ICIyMDI2LTEwLTAyVDA4OjAwOjA5WiJ9XSwgIm5leHRQYWdlVG9rZW4iOiAiIn0="
+     },
+     "expect": {
+      "emits": []
+     }
+    },
+    {
+     "trait": "MeetRetry",
+     "event": "SUCCEEDED",
+     "payload": {
+      "key": "transcript:conferenceRecords/c1#1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MEET_RETRY_START",
+        "payload": {
+         "key": "transcript:conferenceRecords/c1#1"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "transcript:conferenceRecords/c1#1",
+      "key": "transcript:conferenceRecords/c1#1",
+      "attempt": 1
+     },
+     "from": "running"
+    },
+    {
+     "trait": "MeetRetry",
+     "event": "START",
+     "payload": {
+      "key": "transcript:conferenceRecords/c1#1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ATTEMPT",
+        "payload": {
+         "key": "transcript:conferenceRecords/c1#1",
+         "attempt": 1
+        }
+       },
+       {
+        "event": "MEET_HTTP_SEND",
+        "payload": {
+         "key": "transcript:conferenceRecords/c1#1",
+         "method": "GET",
+         "target": "/v2/conferenceRecords/c1/participants/p1",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "application/json"
+          }
+         ],
+         "body": "",
+         "stream": "none"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "transcript:conferenceRecords/c1#1",
+      "key": "transcript:conferenceRecords/c1#1",
+      "attempt": 0
+     },
+     "from": "idle"
+    },
+    {
+     "trait": "MeetHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "transcript:conferenceRecords/c1#1",
+      "status": 200,
+      "headers": {},
+      "body": "eyJuYW1lIjogImNvbmZlcmVuY2VSZWNvcmRzL2MxL3BhcnRpY2lwYW50cy9wMSIsICJzaWduZWRpblVzZXIiOiB7ImRpc3BsYXlOYW1lIjogIkphbmEgTm92YWsifX0="
+     },
+     "expect": {
+      "emits": []
+     }
+    },
+    {
+     "trait": "MeetRetry",
+     "event": "SUCCEEDED",
+     "payload": {
+      "key": "transcript:conferenceRecords/c1#1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MEET_TRANSCRIPT_FETCHED",
+        "payload": {
+         "conference": "conferenceRecords/c1",
+         "languageCode": "sl-SI",
+         "text": "Jana Novak: Hvala, šč ž."
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "transcript:conferenceRecords/c1#1",
+      "key": "transcript:conferenceRecords/c1#1",
+      "attempt": 1
+     },
+     "from": "running"
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "MeetClient",
+    "MeetCall",
+    "MeetKeyed",
+    "MeetHttp",
+    "MeetRetry"
+   ]
+  },
+  {
+   "id": "participant-name-signed-in-user",
+   "steps": [
+    {
+     "trait": "MeetCall",
+     "event": "MEET_REPLIED",
+     "payload": {
+      "key": "transcript:conferenceRecords/c1#1",
+      "status": 200,
+      "headers": {},
+      "body": "{\"name\": \"conferenceRecords/c1/participants/p1\", \"signedinUser\": {\"displayName\": \"\\u010crt\"}}"
+     },
+     "expect": {
+      "emits": [],
+      "neverEmits": [
+       "MEET_FAILED"
+      ]
+     },
+     "entity": {
+      "id": "transcript:conferenceRecords/c1#1",
+      "kind": "transcript",
+      "step": "participant",
+      "firstTarget": "/x",
+      "target": "/x",
+      "conference": "conferenceRecords/c1",
+      "transcript": "conferenceRecords/c1/transcripts/t1",
+      "mintTried": false,
+      "attempt": 1,
+      "stepReady": false,
+      "pageToken": "",
+      "conferences": [],
+      "entries": [
+       {
+        "participant": "conferenceRecords/c1/participants/p1",
+        "text": "Živjo",
+        "languageCode": "sl",
+        "startTime": "2026-10-02T08:00:01Z"
+       }
+      ],
+      "pending": [],
+      "current": "conferenceRecords/c1/participants/p1",
+      "names": []
+     }
+    },
+    {
+     "trait": "MeetCall",
+     "event": "MEET_RETRY_DONE",
+     "payload": {
+      "key": "transcript:conferenceRecords/c1#1",
+      "attempts": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MEET_TRANSCRIPT_FETCHED",
+        "payload": {
+         "conference": "conferenceRecords/c1",
+         "languageCode": "sl",
+         "text": "Črt: Živjo"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "MeetClient",
+    "MeetCall",
+    "MeetKeyed",
+    "MeetHttp",
+    "MeetRetry"
+   ]
+  },
+  {
+   "id": "participant-name-anonymous-user",
+   "steps": [
+    {
+     "trait": "MeetCall",
+     "event": "MEET_REPLIED",
+     "payload": {
+      "key": "transcript:conferenceRecords/c1#1",
+      "status": 200,
+      "headers": {},
+      "body": "{\"name\": \"conferenceRecords/c1/participants/p1\", \"anonymousUser\": {\"displayName\": \"\\u017dan\"}}"
+     },
+     "expect": {
+      "emits": [],
+      "neverEmits": [
+       "MEET_FAILED"
+      ]
+     },
+     "entity": {
+      "id": "transcript:conferenceRecords/c1#1",
+      "kind": "transcript",
+      "step": "participant",
+      "firstTarget": "/x",
+      "target": "/x",
+      "conference": "conferenceRecords/c1",
+      "transcript": "conferenceRecords/c1/transcripts/t1",
+      "mintTried": false,
+      "attempt": 1,
+      "stepReady": false,
+      "pageToken": "",
+      "conferences": [],
+      "entries": [
+       {
+        "participant": "conferenceRecords/c1/participants/p1",
+        "text": "Živjo",
+        "languageCode": "sl",
+        "startTime": "2026-10-02T08:00:01Z"
+       }
+      ],
+      "pending": [],
+      "current": "conferenceRecords/c1/participants/p1",
+      "names": []
+     }
+    },
+    {
+     "trait": "MeetCall",
+     "event": "MEET_RETRY_DONE",
+     "payload": {
+      "key": "transcript:conferenceRecords/c1#1",
+      "attempts": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MEET_TRANSCRIPT_FETCHED",
+        "payload": {
+         "conference": "conferenceRecords/c1",
+         "languageCode": "sl",
+         "text": "Žan: Živjo"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "MeetClient",
+    "MeetCall",
+    "MeetKeyed",
+    "MeetHttp",
+    "MeetRetry"
+   ]
+  },
+  {
+   "id": "participant-name-phone-user",
+   "steps": [
+    {
+     "trait": "MeetCall",
+     "event": "MEET_REPLIED",
+     "payload": {
+      "key": "transcript:conferenceRecords/c1#1",
+      "status": 200,
+      "headers": {},
+      "body": "{\"name\": \"conferenceRecords/c1/participants/p1\", \"phoneUser\": {\"displayName\": \"+386 1\"}}"
+     },
+     "expect": {
+      "emits": [],
+      "neverEmits": [
+       "MEET_FAILED"
+      ]
+     },
+     "entity": {
+      "id": "transcript:conferenceRecords/c1#1",
+      "kind": "transcript",
+      "step": "participant",
+      "firstTarget": "/x",
+      "target": "/x",
+      "conference": "conferenceRecords/c1",
+      "transcript": "conferenceRecords/c1/transcripts/t1",
+      "mintTried": false,
+      "attempt": 1,
+      "stepReady": false,
+      "pageToken": "",
+      "conferences": [],
+      "entries": [
+       {
+        "participant": "conferenceRecords/c1/participants/p1",
+        "text": "Živjo",
+        "languageCode": "sl",
+        "startTime": "2026-10-02T08:00:01Z"
+       }
+      ],
+      "pending": [],
+      "current": "conferenceRecords/c1/participants/p1",
+      "names": []
+     }
+    },
+    {
+     "trait": "MeetCall",
+     "event": "MEET_RETRY_DONE",
+     "payload": {
+      "key": "transcript:conferenceRecords/c1#1",
+      "attempts": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MEET_TRANSCRIPT_FETCHED",
+        "payload": {
+         "conference": "conferenceRecords/c1",
+         "languageCode": "sl",
+         "text": "+386 1: Živjo"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "MeetClient",
+    "MeetCall",
+    "MeetKeyed",
+    "MeetHttp",
+    "MeetRetry"
+   ]
+  },
+  {
+   "id": "participant-name-none-uses-the-resource-name",
+   "steps": [
+    {
+     "trait": "MeetCall",
+     "event": "MEET_REPLIED",
+     "payload": {
+      "key": "transcript:conferenceRecords/c1#1",
+      "status": 200,
+      "headers": {},
+      "body": "{\"name\": \"conferenceRecords/c1/participants/p1\"}"
+     },
+     "expect": {
+      "emits": [],
+      "neverEmits": [
+       "MEET_FAILED"
+      ]
+     },
+     "entity": {
+      "id": "transcript:conferenceRecords/c1#1",
+      "kind": "transcript",
+      "step": "participant",
+      "firstTarget": "/x",
+      "target": "/x",
+      "conference": "conferenceRecords/c1",
+      "transcript": "conferenceRecords/c1/transcripts/t1",
+      "mintTried": false,
+      "attempt": 1,
+      "stepReady": false,
+      "pageToken": "",
+      "conferences": [],
+      "entries": [
+       {
+        "participant": "conferenceRecords/c1/participants/p1",
+        "text": "Živjo",
+        "languageCode": "sl",
+        "startTime": "2026-10-02T08:00:01Z"
+       }
+      ],
+      "pending": [],
+      "current": "conferenceRecords/c1/participants/p1",
+      "names": []
+     }
+    },
+    {
+     "trait": "MeetCall",
+     "event": "MEET_RETRY_DONE",
+     "payload": {
+      "key": "transcript:conferenceRecords/c1#1",
+      "attempts": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MEET_TRANSCRIPT_FETCHED",
+        "payload": {
+         "conference": "conferenceRecords/c1",
+         "languageCode": "sl",
+         "text": "conferenceRecords/c1/participants/p1: Živjo"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "MeetClient",
+    "MeetCall",
+    "MeetKeyed",
+    "MeetHttp",
+    "MeetRetry"
+   ]
+  },
+  {
+   "id": "control-an-entry-without-a-participant-is-written-as-its-text-alone",
+   "steps": [
+    {
+     "trait": "MeetCall",
+     "event": "MEET_REPLIED",
+     "payload": {
+      "key": "transcript:conferenceRecords/c1#1",
+      "status": 200,
+      "headers": {},
+      "body": "{\"transcriptEntries\": [{\"text\": \"Brez imena\", \"languageCode\": \"sl\", \"startTime\": \"2026-10-02T08:00:01Z\"}]}"
+     },
+     "expect": {
+      "emits": []
+     },
+     "entity": {
+      "id": "transcript:conferenceRecords/c1#1",
+      "kind": "transcript",
+      "step": "entries",
+      "firstTarget": "/x",
+      "target": "/x",
+      "conference": "conferenceRecords/c1",
+      "transcript": "conferenceRecords/c1/transcripts/t1",
+      "mintTried": false,
+      "attempt": 1,
+      "stepReady": false,
+      "pageToken": "",
+      "conferences": [],
+      "entries": [],
+      "pending": [],
+      "current": "",
+      "names": []
+     }
+    },
+    {
+     "trait": "MeetCall",
+     "event": "MEET_RETRY_DONE",
+     "payload": {
+      "key": "transcript:conferenceRecords/c1#1",
+      "attempts": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MEET_TRANSCRIPT_FETCHED",
+        "payload": {
+         "conference": "conferenceRecords/c1",
+         "languageCode": "sl",
+         "text": "Brez imena"
+        }
+       }
+      ],
+      "neverEmits": [
+       "MEET_HTTP_SEND",
+       "MEET_RETRY_START"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "MeetClient",
+    "MeetCall",
+    "MeetKeyed",
+    "MeetHttp",
+    "MeetRetry"
+   ]
+  },
+  {
+   "id": "entries-are-written-in-start-time-order-and-the-first-entry-sets-the-language",
+   "steps": [
+    {
+     "trait": "MeetCall",
+     "event": "MEET_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "MEET_TRANSCRIPT_FETCHED",
+        "payload": {
+         "conference": "conferenceRecords/c1",
+         "languageCode": "sl",
+         "text": "A: prvi\nB: drugi\nA: tretji"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "transcript:conferenceRecords/c1#1",
+      "kind": "transcript",
+      "step": "entries",
+      "firstTarget": "/x",
+      "target": "/x",
+      "conference": "conferenceRecords/c1",
+      "transcript": "conferenceRecords/c1/transcripts/t1",
+      "mintTried": false,
+      "attempt": 1,
+      "stepReady": false,
+      "pageToken": "",
+      "conferences": [],
+      "entries": [
+       {
+        "participant": "conferenceRecords/c1/participants/p1",
+        "text": "tretji",
+        "languageCode": "en",
+        "startTime": "2026-10-02T08:00:09Z"
+       },
+       {
+        "participant": "conferenceRecords/c1/participants/p2",
+        "text": "drugi",
+        "languageCode": "sl",
+        "startTime": "2026-10-02T08:00:05Z"
+       },
+       {
+        "participant": "conferenceRecords/c1/participants/p1",
+        "text": "prvi",
+        "languageCode": "sl",
+        "startTime": "2026-10-02T08:00:01Z"
+       }
+      ],
+      "pending": [],
+      "current": "",
+      "names": [
+       {
+        "id": "conferenceRecords/c1/participants/p1",
+        "name": "A"
+       },
+       {
+        "id": "conferenceRecords/c1/participants/p2",
+        "name": "B"
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "MeetClient",
+    "MeetCall",
+    "MeetKeyed",
+    "MeetHttp",
+    "MeetRetry"
+   ]
+  },
+  {
+   "id": "control-entries-already-in-order-keep-their-order",
+   "steps": [
+    {
+     "trait": "MeetCall",
+     "event": "MEET_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "MEET_TRANSCRIPT_FETCHED",
+        "payload": {
+         "conference": "conferenceRecords/c1",
+         "languageCode": "sl",
+         "text": "A: prvi\nB: drugi"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "transcript:conferenceRecords/c1#1",
+      "kind": "transcript",
+      "step": "entries",
+      "firstTarget": "/x",
+      "target": "/x",
+      "conference": "conferenceRecords/c1",
+      "transcript": "conferenceRecords/c1/transcripts/t1",
+      "mintTried": false,
+      "attempt": 1,
+      "stepReady": false,
+      "pageToken": "",
+      "conferences": [],
+      "entries": [
+       {
+        "participant": "conferenceRecords/c1/participants/p1",
+        "text": "prvi",
+        "languageCode": "sl",
+        "startTime": "2026-10-02T08:00:01Z"
+       },
+       {
+        "participant": "conferenceRecords/c1/participants/p2",
+        "text": "drugi",
+        "languageCode": "sl",
+        "startTime": "2026-10-02T08:00:05Z"
+       }
+      ],
+      "pending": [],
+      "current": "",
+      "names": [
+       {
+        "id": "conferenceRecords/c1/participants/p1",
+        "name": "A"
+       },
+       {
+        "id": "conferenceRecords/c1/participants/p2",
+        "name": "B"
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "MeetClient",
+    "MeetCall",
+    "MeetKeyed",
+    "MeetHttp",
+    "MeetRetry"
+   ]
+  },
+  {
+   "id": "a-participant-reply-that-is-not-json-fails",
+   "steps": [
+    {
+     "trait": "MeetCall",
+     "event": "MEET_REPLIED",
+     "payload": {
+      "key": "transcript:conferenceRecords/c1#1",
+      "status": 200,
+      "headers": {},
+      "body": "x"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MEET_FAILED",
+        "payload": {
+         "message": "The Meet answer could not be read"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "transcript:conferenceRecords/c1#1",
+      "kind": "transcript",
+      "step": "participant",
+      "firstTarget": "/x",
+      "target": "/x",
+      "conference": "conferenceRecords/c1",
+      "transcript": "conferenceRecords/c1/transcripts/t1",
+      "mintTried": false,
+      "attempt": 1,
+      "stepReady": false,
+      "pageToken": "",
+      "conferences": [],
+      "entries": [],
+      "pending": [],
+      "current": "conferenceRecords/c1/participants/p1",
+      "names": []
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "MeetClient",
+    "MeetCall",
+    "MeetKeyed",
+    "MeetHttp",
+    "MeetRetry"
+   ]
+  },
+  {
+   "id": "a-401-reply-fails-with-the-provider-message",
+   "steps": [
+    {
+     "trait": "MeetCall",
+     "event": "MEET_REPLIED",
+     "payload": {
+      "key": "transcript:conferenceRecords/c1#1",
+      "status": 401,
+      "headers": {},
+      "body": "{\"error\": {\"code\": 401, \"message\": \"Request had invalid authentication credentials.\", \"status\": \"UNAUTHENTICATED\"}}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MEET_FAILED",
+        "payload": {
+         "message": "Request had invalid authentication credentials."
+        }
+       }
+      ],
+      "neverEmits": [
+       "MEET_RETRY_FAILED"
+      ]
+     },
+     "entity": {
+      "id": "transcript:conferenceRecords/c1#1",
+      "kind": "transcript",
+      "step": "transcripts",
+      "firstTarget": "/x",
+      "target": "/x",
+      "conference": "conferenceRecords/c1",
+      "transcript": "conferenceRecords/c1/transcripts/t1",
+      "mintTried": false,
+      "attempt": 1,
+      "stepReady": false,
+      "pageToken": "",
+      "conferences": [],
+      "entries": [],
+      "pending": [],
+      "current": "",
+      "names": []
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "MeetClient",
+    "MeetCall",
+    "MeetKeyed",
+    "MeetHttp",
+    "MeetRetry"
+   ]
+  },
+  {
+   "id": "control-a-2xx-reply-never-fails",
+   "steps": [
+    {
+     "trait": "MeetCall",
+     "event": "MEET_REPLIED",
+     "payload": {
+      "key": "transcript:conferenceRecords/c1#1",
+      "status": 200,
+      "headers": {},
+      "body": "{\"transcripts\": [{\"name\": \"conferenceRecords/c1/transcripts/t1\", \"state\": \"ENDED\"}]}"
+     },
+     "expect": {
+      "emits": [],
+      "neverEmits": [
+       "MEET_FAILED"
+      ]
+     },
+     "entity": {
+      "id": "transcript:conferenceRecords/c1#1",
+      "kind": "transcript",
+      "step": "transcripts",
+      "firstTarget": "/x",
+      "target": "/x",
+      "conference": "conferenceRecords/c1",
+      "transcript": "conferenceRecords/c1/transcripts/t1",
+      "mintTried": false,
+      "attempt": 1,
+      "stepReady": false,
+      "pageToken": "",
+      "conferences": [],
+      "entries": [],
+      "pending": [],
+      "current": "",
+      "names": []
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "MeetClient",
+    "MeetCall",
+    "MeetKeyed",
+    "MeetHttp",
+    "MeetRetry"
+   ]
+  },
+  {
+   "id": "a-string-error-reply-fails-with-it",
+   "steps": [
+    {
+     "trait": "MeetCall",
+     "event": "MEET_REPLIED",
+     "payload": {
+      "key": "transcript:conferenceRecords/c1#1",
+      "status": 400,
+      "headers": {},
+      "body": "{\"error\": \"invalid_grant\"}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MEET_FAILED",
+        "payload": {
+         "message": "invalid_grant"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "transcript:conferenceRecords/c1#1",
+      "kind": "transcript",
+      "step": "entries",
+      "firstTarget": "/x",
+      "target": "/x",
+      "conference": "conferenceRecords/c1",
+      "transcript": "conferenceRecords/c1/transcripts/t1",
+      "mintTried": false,
+      "attempt": 1,
+      "stepReady": false,
+      "pageToken": "",
+      "conferences": [],
+      "entries": [],
+      "pending": [],
+      "current": "",
+      "names": []
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "MeetClient",
+    "MeetCall",
+    "MeetKeyed",
+    "MeetHttp",
+    "MeetRetry"
+   ]
+  },
+  {
+   "id": "a-text-error-reply-fails-with-its-body",
+   "steps": [
+    {
+     "trait": "MeetCall",
+     "event": "MEET_REPLIED",
+     "payload": {
+      "key": "transcript:conferenceRecords/c1#1",
+      "status": 403,
+      "headers": {},
+      "body": "Forbidden"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MEET_FAILED",
+        "payload": {
+         "message": "Forbidden"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "transcript:conferenceRecords/c1#1",
+      "kind": "transcript",
+      "step": "entries",
+      "firstTarget": "/x",
+      "target": "/x",
+      "conference": "conferenceRecords/c1",
+      "transcript": "conferenceRecords/c1/transcripts/t1",
+      "mintTried": false,
+      "attempt": 1,
+      "stepReady": false,
+      "pageToken": "",
+      "conferences": [],
+      "entries": [],
+      "pending": [],
+      "current": "",
+      "names": []
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "MeetClient",
+    "MeetCall",
+    "MeetKeyed",
+    "MeetHttp",
+    "MeetRetry"
+   ]
+  },
+  {
+   "id": "a-503-reply-is-handed-back-to-std-retry",
+   "steps": [
+    {
+     "trait": "MeetCall",
+     "event": "MEET_REPLIED",
+     "payload": {
+      "key": "transcript:conferenceRecords/c1#1",
+      "status": 503,
+      "headers": {},
+      "body": "{\"error\": {\"code\": 503, \"message\": \"Unavailable\"}}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MEET_RETRY_FAILED",
+        "payload": {
+         "key": "transcript:conferenceRecords/c1#1",
+         "error": "Unavailable"
+        }
+       }
+      ],
+      "neverEmits": [
+       "MEET_FAILED"
+      ]
+     },
+     "entity": {
+      "id": "transcript:conferenceRecords/c1#1",
+      "kind": "transcript",
+      "step": "entries",
+      "firstTarget": "/x",
+      "target": "/x",
+      "conference": "conferenceRecords/c1",
+      "transcript": "conferenceRecords/c1/transcripts/t1",
+      "mintTried": false,
+      "attempt": 1,
+      "stepReady": false,
+      "pageToken": "",
+      "conferences": [],
+      "entries": [],
+      "pending": [],
+      "current": "",
+      "names": []
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "MeetClient",
+    "MeetCall",
+    "MeetKeyed",
+    "MeetHttp",
+    "MeetRetry"
+   ]
+  },
+  {
+   "id": "control-a-404-reply-is-not-retried",
+   "steps": [
+    {
+     "trait": "MeetCall",
+     "event": "MEET_REPLIED",
+     "payload": {
+      "key": "transcript:conferenceRecords/c1#1",
+      "status": 404,
+      "headers": {},
+      "body": "{\"error\": {\"code\": 404, \"message\": \"Not found\"}}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MEET_FAILED",
+        "payload": {
+         "message": "Not found"
+        }
+       }
+      ],
+      "neverEmits": [
+       "MEET_RETRY_FAILED"
+      ]
+     },
+     "entity": {
+      "id": "transcript:conferenceRecords/c1#1",
+      "kind": "transcript",
+      "step": "entries",
+      "firstTarget": "/x",
+      "target": "/x",
+      "conference": "conferenceRecords/c1",
+      "transcript": "conferenceRecords/c1/transcripts/t1",
+      "mintTried": false,
+      "attempt": 1,
+      "stepReady": false,
+      "pageToken": "",
+      "conferences": [],
+      "entries": [],
+      "pending": [],
+      "current": "",
+      "names": []
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "MeetClient",
+    "MeetCall",
+    "MeetKeyed",
+    "MeetHttp",
+    "MeetRetry"
+   ]
+  },
+  {
+   "id": "std-retry-giving-up-fails-with-the-last-message",
+   "steps": [
+    {
+     "trait": "MeetCall",
+     "event": "MEET_GAVE_UP",
+     "payload": {
+      "key": "transcript:conferenceRecords/c1#1",
+      "attempts": 4,
+      "error": "Unavailable"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MEET_FAILED",
+        "payload": {
+         "message": "Unavailable"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "transcript:conferenceRecords/c1#1",
+      "kind": "transcript",
+      "step": "entries",
+      "firstTarget": "/x",
+      "target": "/x",
+      "conference": "conferenceRecords/c1",
+      "transcript": "conferenceRecords/c1/transcripts/t1",
+      "mintTried": false,
+      "attempt": 1,
+      "stepReady": false,
+      "pageToken": "",
+      "conferences": [],
+      "entries": [],
+      "pending": [],
+      "current": "",
+      "names": []
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "MeetClient",
+    "MeetCall",
+    "MeetKeyed",
+    "MeetHttp",
+    "MeetRetry"
+   ]
+  },
+  {
+   "id": "a-timeout-on-an-early-attempt-is-retried",
+   "steps": [
+    {
+     "trait": "MeetCall",
+     "event": "MEET_REQUEST_FAILED",
+     "payload": {
+      "key": "transcript:conferenceRecords/c1#1",
+      "error": "x",
+      "kind": "timeout"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MEET_RETRY_FAILED",
+        "payload": {
+         "key": "transcript:conferenceRecords/c1#1",
+         "error": "network timeout"
+        }
+       }
+      ],
+      "neverEmits": [
+       "MEET_FAILED"
+      ]
+     },
+     "entity": {
+      "id": "transcript:conferenceRecords/c1#1",
+      "kind": "transcript",
+      "step": "entries",
+      "firstTarget": "/x",
+      "target": "/x",
+      "conference": "conferenceRecords/c1",
+      "transcript": "conferenceRecords/c1/transcripts/t1",
+      "mintTried": false,
+      "attempt": 1,
+      "stepReady": false,
+      "pageToken": "",
+      "conferences": [],
+      "entries": [],
+      "pending": [],
+      "current": "",
+      "names": []
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "MeetClient",
+    "MeetCall",
+    "MeetKeyed",
+    "MeetHttp",
+    "MeetRetry"
+   ]
+  },
+  {
+   "id": "a-timeout-on-the-third-attempt-stops-retrying-and-fails",
+   "steps": [
+    {
+     "trait": "MeetCall",
+     "event": "MEET_REQUEST_FAILED",
+     "payload": {
+      "key": "transcript:conferenceRecords/c1#1",
+      "error": "x",
+      "kind": "timeout"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MEET_RETRY_CANCEL",
+        "payload": {
+         "key": "transcript:conferenceRecords/c1#1"
+        }
+       },
+       {
+        "event": "MEET_FAILED",
+        "payload": {
+         "message": "network timeout"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "transcript:conferenceRecords/c1#1",
+      "kind": "transcript",
+      "step": "entries",
+      "firstTarget": "/x",
+      "target": "/x",
+      "conference": "conferenceRecords/c1",
+      "transcript": "conferenceRecords/c1/transcripts/t1",
+      "mintTried": false,
+      "attempt": 3,
+      "stepReady": false,
+      "pageToken": "",
+      "conferences": [],
+      "entries": [],
+      "pending": [],
+      "current": "",
+      "names": []
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "MeetClient",
+    "MeetCall",
+    "MeetKeyed",
+    "MeetHttp",
+    "MeetRetry"
+   ]
+  },
+  {
+   "id": "a-not-held-token-mints-once-through-the-refresh-token-grant",
+   "steps": [
+    {
+     "trait": "MeetCall",
+     "event": "MEET_REQUEST_FAILED",
+     "payload": {
+      "key": "transcript:conferenceRecords/c1#1",
+      "kind": "unconfigured",
+      "error": ""
+     },
+     "expect": {
+      "effects": [
+       {
+        "type": "credential-connect",
+        "arg0": {
+         "credential": "@config.userToken",
+         "scope": "app",
+         "tokenEndpoint": "https://oauth2.googleapis.com/token",
+         "grant": "refresh_token",
+         "refreshCredential": "@config.refreshToken",
+         "clientId": "@config.clientId",
+         "clientSecret": "@config.clientSecret",
+         "clientAuth": "body"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "transcript:conferenceRecords/c1#1",
+      "kind": "transcript",
+      "step": "transcripts",
+      "firstTarget": "/x",
+      "target": "/x",
+      "conference": "conferenceRecords/c1",
+      "transcript": "conferenceRecords/c1/transcripts/t1",
+      "mintTried": false,
+      "attempt": 1,
+      "stepReady": false,
+      "pageToken": "",
+      "conferences": [],
+      "entries": [],
+      "pending": [],
+      "current": "",
+      "names": []
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "MeetClient",
+    "MeetCall",
+    "MeetKeyed",
+    "MeetHttp",
+    "MeetRetry"
+   ]
+  },
+  {
+   "id": "control-a-held-token-never-asks-the-store",
+   "steps": [
+    {
+     "trait": "MeetCall",
+     "event": "MEET_REQUEST_FAILED",
+     "payload": {
+      "key": "transcript:conferenceRecords/c1#1",
+      "kind": "io",
+      "error": "reset"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MEET_RETRY_FAILED",
+        "payload": {
+         "key": "transcript:conferenceRecords/c1#1"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "transcript:conferenceRecords/c1#1",
+      "kind": "transcript",
+      "step": "transcripts",
+      "firstTarget": "/x",
+      "target": "/x",
+      "conference": "conferenceRecords/c1",
+      "transcript": "conferenceRecords/c1/transcripts/t1",
+      "mintTried": false,
+      "attempt": 1,
+      "stepReady": false,
+      "pageToken": "",
+      "conferences": [],
+      "entries": [],
+      "pending": [],
+      "current": "",
+      "names": []
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "MeetClient",
+    "MeetCall",
+    "MeetKeyed",
+    "MeetHttp",
+    "MeetRetry"
+   ]
+  },
+  {
+   "id": "a-connected-answer-sends-the-held-request-again",
+   "steps": [
+    {
+     "trait": "MeetCall",
+     "event": "MEET_CONNECTED",
+     "payload": {
+      "connected": true,
+      "label": "u"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MEET_HTTP_SEND",
+        "payload": {
+         "key": "transcript:conferenceRecords/c1#1",
+         "method": "GET",
+         "target": "/x",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "application/json"
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "transcript:conferenceRecords/c1#1",
+      "kind": "transcript",
+      "step": "transcripts",
+      "firstTarget": "/x",
+      "target": "/x",
+      "conference": "conferenceRecords/c1",
+      "transcript": "conferenceRecords/c1/transcripts/t1",
+      "mintTried": true,
+      "attempt": 1,
+      "stepReady": false,
+      "pageToken": "",
+      "conferences": [],
+      "entries": [],
+      "pending": [],
+      "current": "",
+      "names": []
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "MeetClient",
+    "MeetCall",
+    "MeetKeyed",
+    "MeetHttp",
+    "MeetRetry"
+   ]
+  },
+  {
+   "id": "a-second-not-held-answer-answers-not-configured",
+   "steps": [
+    {
+     "trait": "MeetCall",
+     "event": "MEET_REQUEST_FAILED",
+     "payload": {
+      "key": "transcript:conferenceRecords/c1#1",
+      "kind": "unconfigured",
+      "error": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MEET_RETRY_CANCEL",
+        "payload": {
+         "key": "transcript:conferenceRecords/c1#1"
+        }
+       },
+       {
+        "event": "MEET_FAILED",
+        "payload": {
+         "code": "NOT_CONFIGURED",
+         "message": "Integration not configured: google-meet. Set GOOGLE_MEET_REFRESH_TOKEN + OAUTH_CLIENT_ID/SECRET."
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "transcript:conferenceRecords/c1#1",
+      "kind": "transcript",
+      "step": "entries",
+      "firstTarget": "/x",
+      "target": "/x",
+      "conference": "conferenceRecords/c1",
+      "transcript": "conferenceRecords/c1/transcripts/t1",
+      "mintTried": true,
+      "attempt": 1,
+      "stepReady": false,
+      "pageToken": "",
+      "conferences": [],
+      "entries": [],
+      "pending": [],
+      "current": "",
+      "names": []
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "MeetClient",
+    "MeetCall",
+    "MeetKeyed",
+    "MeetHttp",
+    "MeetRetry"
+   ]
+  },
+  {
+   "id": "a-not-connected-answer-answers-not-configured",
+   "steps": [
+    {
+     "trait": "MeetCall",
+     "event": "MEET_CONNECTED",
+     "payload": {
+      "connected": false,
+      "label": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MEET_FAILED",
+        "payload": {
+         "code": "NOT_CONFIGURED",
+         "message": "Integration not configured: google-meet. Set GOOGLE_MEET_REFRESH_TOKEN + OAUTH_CLIENT_ID/SECRET."
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "transcript:conferenceRecords/c1#1",
+      "kind": "transcript",
+      "step": "entries",
+      "firstTarget": "/x",
+      "target": "/x",
+      "conference": "conferenceRecords/c1",
+      "transcript": "conferenceRecords/c1/transcripts/t1",
+      "mintTried": true,
+      "attempt": 1,
+      "stepReady": false,
+      "pageToken": "",
+      "conferences": [],
+      "entries": [],
+      "pending": [],
+      "current": "",
+      "names": []
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "MeetClient",
+    "MeetCall",
+    "MeetKeyed",
+    "MeetHttp",
+    "MeetRetry"
+   ]
+  },
+  {
+   "id": "an-unavailable-store-answers-not-configured",
+   "steps": [
+    {
+     "trait": "MeetCall",
+     "event": "MEET_CONNECT_FAILED",
+     "payload": {
+      "error": "no store",
+      "kind": "unavailable"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MEET_FAILED",
+        "payload": {
+         "code": "NOT_CONFIGURED",
+         "message": "Integration not configured: google-meet. Set GOOGLE_MEET_REFRESH_TOKEN + OAUTH_CLIENT_ID/SECRET."
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "transcript:conferenceRecords/c1#1",
+      "kind": "transcript",
+      "step": "entries",
+      "firstTarget": "/x",
+      "target": "/x",
+      "conference": "conferenceRecords/c1",
+      "transcript": "conferenceRecords/c1/transcripts/t1",
+      "mintTried": true,
+      "attempt": 1,
+      "stepReady": false,
+      "pageToken": "",
+      "conferences": [],
+      "entries": [],
+      "pending": [],
+      "current": "",
+      "names": []
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "MeetClient",
+    "MeetCall",
+    "MeetKeyed",
+    "MeetHttp",
+    "MeetRetry"
+   ]
+  },
+  {
+   "id": "control-an-invalid-grant-fails-with-its-text-not-as-not-configured",
+   "steps": [
+    {
+     "trait": "MeetCall",
+     "event": "MEET_CONNECT_FAILED",
+     "payload": {
+      "error": "bad",
+      "kind": "invalid_grant"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MEET_FAILED",
+        "payload": {
+         "message": "Google token request failed: bad"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "transcript:conferenceRecords/c1#1",
+      "kind": "transcript",
+      "step": "entries",
+      "firstTarget": "/x",
+      "target": "/x",
+      "conference": "conferenceRecords/c1",
+      "transcript": "conferenceRecords/c1/transcripts/t1",
+      "mintTried": true,
+      "attempt": 1,
+      "stepReady": false,
+      "pageToken": "",
+      "conferences": [],
+      "entries": [],
+      "pending": [],
+      "current": "",
+      "names": []
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "MeetClient",
+    "MeetCall",
+    "MeetKeyed",
+    "MeetHttp",
+    "MeetRetry"
+   ]
+  },
+  {
+   "id": "two-rows-mint-for-their-own-key",
+   "steps": [
+    {
+     "event": "LIST_CONFERENCES",
+     "payload": {
+      "from": "a"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MEET_HTTP_SEND",
+        "payload": {
+         "key": "list:a#1"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "MEET_FETCH_TRANSCRIPT",
+     "payload": {
+      "conference": "conferenceRecords/c1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "MEET_HTTP_SEND",
+        "payload": {
+         "key": "transcript:conferenceRecords/c1#2"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "MeetClient",
+    "MeetCall",
+    "MeetKeyed",
+    "MeetHttp",
+    "MeetRetry"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,420 @@
+app std-zoom [
+  version: "1.0.0",
+  description: "std-zoom — Zoom cloud-recording transcripts through the REST API (api.zoom.us/v2) for a Server-to-Server OAuth app. LIST_RECORDINGS answers the cloud recordings of a date range, following next_page_token, and whether each has a transcript; ZOOM_FETCH_TRANSCRIPT reads one meeting's recording files, downloads its TRANSCRIPT file (WebVTT) and answers the raw file and its plain Speaker: line text. The text passes through byte for byte: no translation, no truncation. Every call runs on its own row under its own key and mints its own access token with the account_credentials grant over a keyed HTTP client whose Basic credential the host fills at the boundary, then calls the API under that token; each step retries under std-retry. A failure answers ZOOM_FAILED with the provider's message, NO_TRANSCRIPT when the meeting has no transcript file, NOT_CONFIGURED when no credential or account is set.",
+  egress: ["https://api.zoom.us", "https://zoom.us"],
+  net: { "api.zoom.us:443": [tcp], "zoom.us:443": [tcp] }
+]
+uses Keyed from "std/behaviors/std-http-keyed"
+uses Retry from "std/behaviors/std-retry"
+type HttpHeader = { name : string!, value : string! }
+type ZoomFile = { file_type : string, download_url : string }
+type ZoomMeetingReply = { uuid : string, topic : string, start_time : string, recording_files : [ZoomFile] }
+type ZoomListReply = { meetings : [ZoomMeetingReply], next_page_token : string }
+type ZoomTokenReply = { access_token : string }
+type ZoomErrorReply = { message : string, reason : string, error : string }
+type ZoomMeetingRow = { meetingId : string, topic : string, startTime : string, hasTranscript : boolean }
+orbital ZoomOrbital {
+  entity ZoomRequest [runtime] {
+    id : string!
+    seq : number @description "The front trait's call counter: each call takes the next number, so its key is distinct from every other call's." = 0
+    kind : string @description "The call in flight: list or transcript; empty while the row is free." = ""
+    step : string @description "The step in flight: token, list, meeting or download." = ""
+    firstTarget : string @description "The API request target of the call's first API step." = ""
+    target : string @description "The request target of the step in flight." = ""
+    host : string @description "The host of the API step in flight; empty for the token step." = ""
+    token : string @description "The access token this call minted, held by this row alone until the call ends." = ""
+    meetingId : string @description "The meeting uuid a transcript call was asked for." = ""
+    topic : string = ""
+    startTime : string = ""
+    downloadUrl : string @description "The download_url of the meeting's TRANSCRIPT file." = ""
+    pageToken : string @description "The next_page_token of the last list page; empty when the list is complete." = ""
+    meetings : [ZoomMeetingRow] @description "The recordings gathered over the pages read so far." = []
+    attempt : number @description "The std-retry attempt in flight." = 0
+    stepReady : boolean @description "True once the reply of the step in flight was read and std-retry's completion of its run starts the next step." = false
+  }
+
+  trait ZoomTokenKeyed = Keyed.traits.HttpKeyed {
+    listens {
+      ZoomCall.ZOOM_TOKEN_HTTP_SEND -> HTTP_SEND
+      ZoomTokenKeyed.DELIVERY_REJECTED -> KEY_REFUSED
+    }
+  }
+
+  trait ZoomTokenHttp = Keyed.traits.KeyedHttp {
+    config {
+      host: "zoom.us"
+      port: 443
+      tls: true
+      serverName: "zoom.us"
+      credential: "ZOOM_BASIC_AUTH"
+      credentialHeader: "authorization"
+      credentialPrefix: "Basic "
+      credentialEncode: "base64"
+    }
+    listens {
+      ZoomTokenKeyed.KEYED_SEND -> HTTP_SEND per @payload.key
+      ZoomTokenKeyed.KEYED_CANCEL -> HTTP_CANCEL per @payload.key
+    }
+  }
+
+  trait ZoomApiKeyed = Keyed.traits.HttpKeyed {
+    listens {
+      ZoomCall.ZOOM_API_HTTP_SEND -> HTTP_SEND
+      ZoomApiKeyed.DELIVERY_REJECTED -> KEY_REFUSED
+    }
+  }
+
+  trait ZoomApiHttp = Keyed.traits.KeyedHttp {
+    config {
+      host: "api.zoom.us"
+      port: 443
+      tls: true
+      serverName: "api.zoom.us"
+      dynamicHost: true
+      signatureHeaders: ["authorization"]
+    }
+    listens {
+      ZoomApiKeyed.KEYED_SEND -> HTTP_SEND per @payload.key
+      ZoomApiKeyed.KEYED_CANCEL -> HTTP_CANCEL per @payload.key
+    }
+  }
+
+  ;; every step retries on 1xx, 408, 429, 5xx (three retries: 100, 500 then 1500 ms) and on a timeout or transport failure (two retries); 100 x 5^(n-1) capped at 1500 reproduces the schedule
+  trait ZoomRetry = Retry.traits.Retry {
+    config {
+      maxAttempts: 4
+      baseDelayMs: 100
+      multiplier: 5
+      maxDelayMs: 1500
+    }
+    listens {
+      ZoomCall.ZOOM_RETRY_START -> START per @payload.key
+      ZoomCall.ZOOM_RETRY_FAILED -> FAILED per @payload.key
+      ZoomCall.ZOOM_RETRY_CANCEL -> CANCEL per @payload.key
+      ZoomTokenHttp.HTTP_REPLIED -> SUCCEEDED per @payload.key with { key: (as ?key CallKey) } when (not (or (and (>= ?status 100) (< ?status 200)) (= ?status 408) (= ?status 429) (and (>= ?status 500) (< ?status 600))))
+      ZoomApiHttp.HTTP_REPLIED -> SUCCEEDED per @payload.key with { key: (as ?key CallKey) } when (not (or (and (>= ?status 100) (< ?status 200)) (= ?status 408) (= ?status 429) (and (>= ?status 500) (< ?status 600))))
+    }
+  }
+
+  trait ZoomClient -> ZoomRequest [optimistic] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+
+      LIST_RECORDINGS -> idle
+        (set @entity.seq (+ @entity.seq 1))
+        (emit ZOOM_READY { key: (str/concat "list:" @payload.from "|" @payload.to "#" @entity.seq), kind: "list", target: (str/concat "/v2/users/me/recordings?from=" (str/encode-uri-component @payload.from) "&to=" (str/encode-uri-component @payload.to) "&page_size=30"), meetingId: "", accountId: @config.accountId })
+      ZOOM_FETCH_TRANSCRIPT -> idle
+        (set @entity.seq (+ @entity.seq 1))
+        (emit ZOOM_READY { key: (str/concat "transcript:" @payload.meetingId "#" @entity.seq), kind: "transcript", target: (str/concat "/v2/meetings/" (if (or (str/startsWith @payload.meetingId "/") (str/includes @payload.meetingId "//")) (str/encode-uri-component (str/encode-uri-component @payload.meetingId)) (str/encode-uri-component @payload.meetingId)) "/recordings"), meetingId: @payload.meetingId, accountId: @config.accountId })
+    }
+
+    emits {
+      ZOOM_READY {
+        key : string!
+        kind : string!
+        target : string!
+        meetingId : string!
+        accountId : string!
+      }
+        @description "Internal: a built request, handed to the row of its key in ZoomCall."
+        @tier "secondary"
+    }
+
+    listens {
+      LIST_RECORDINGS -> input {
+        from : string!
+        to : string!
+      }
+        @description "List the account's cloud recordings between two dates (YYYY-MM-DD), following every page, with whether each meeting has a transcript."
+        @synonyms "list zoom recordings, zoom meetings"
+      ZOOM_FETCH_TRANSCRIPT -> input {
+        meetingId : string!
+      }
+        @description "Fetch one meeting's transcript: the raw WebVTT file and its plain Speaker: line text; meetingId is the meeting uuid as RECORDINGS_LISTED answers it."
+        @synonyms "zoom transcript, meeting transcript"
+    }
+
+    config {
+      accountId : string = ""
+        @label "Zoom account id"
+        @description "The account id of the Server-to-Server OAuth app, sent as account_id of the account_credentials grant; empty answers NOT_CONFIGURED."
+        @synonyms "account id, zoom account"
+        @tier "infra"
+    }
+  }
+
+  trait ZoomCall -> ZoomRequest [optimistic] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+
+      CALL_READY -> idle when (= @payload.accountId "")
+        (emit ZOOM_FAILED { code: "NOT_CONFIGURED", message: "Integration not configured: zoom. Set the accountId knob, ZOOM_BASIC_AUTH (the client id and secret as id:secret)." })
+        (emit ZOOM_CLEAR {})
+      CALL_READY -> idle when (!= @payload.accountId "")
+        (set @entity.kind @payload.kind)
+        (set @entity.step "token")
+        (set @entity.firstTarget @payload.target)
+        (set @entity.target (str/concat "/oauth/token?grant_type=account_credentials&account_id=" (str/encode-uri-component @payload.accountId)))
+        (set @entity.host "")
+        (set @entity.token "")
+        (set @entity.meetingId @payload.meetingId)
+        (set @entity.pageToken "")
+        (set @entity.meetings [])
+        (set @entity.attempt 0)
+        (set @entity.stepReady false)
+        (emit ZOOM_RETRY_START { key: (as @payload.key CallKey) })
+      ZOOM_ATTEMPT -> idle
+        (set @entity.attempt @payload.attempt)
+        (emit ZOOM_DISPATCH {})
+      ZOOM_DISPATCH -> idle when (= @entity.step "token")
+        (emit ZOOM_TOKEN_HTTP_SEND { key: @entity.id, method: "POST", target: @entity.target, headers: [{ name: "accept", value: "*/*" }], body: (bytes/from-string ""), stream: "none" })
+      ZOOM_DISPATCH -> idle when (!= @entity.step "token")
+        (emit ZOOM_API_HTTP_SEND { key: @entity.id, method: "GET", target: @entity.target, headers: [{ name: "accept", value: "*/*" }, { name: "authorization", value: (str/concat "Bearer " @entity.token) }], body: (bytes/from-string ""), stream: "none", host: @entity.host })
+
+      ZOOM_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= @entity.step "token") (= (json/parse @payload.body ZoomTokenReply) null))
+        (emit ZOOM_FAILED { message: "The Zoom token answer could not be read" })
+        (emit ZOOM_CLEAR {})
+      ZOOM_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= @entity.step "token") (!= (json/parse @payload.body ZoomTokenReply) null) (= (default (object/get (json/parse @payload.body ZoomTokenReply) access_token "") "") ""))
+        (emit ZOOM_FAILED { message: "The Zoom token answer held no access token" })
+        (emit ZOOM_CLEAR {})
+      ZOOM_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= @entity.step "token") (!= (json/parse @payload.body ZoomTokenReply) null) (!= (default (object/get (json/parse @payload.body ZoomTokenReply) access_token "") "") ""))
+        (set @entity.token (default (object/get (json/parse @payload.body ZoomTokenReply) access_token "") ""))
+        (set @entity.stepReady true)
+
+      ZOOM_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= @entity.step "list") (= (json/parse @payload.body ZoomListReply) null))
+        (emit ZOOM_FAILED { message: "The Zoom answer could not be read" })
+        (emit ZOOM_CLEAR {})
+      ZOOM_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= @entity.step "list") (!= (json/parse @payload.body ZoomListReply) null))
+        (set @entity.meetings (array/concat @entity.meetings (array/map (object/get (json/parse @payload.body ZoomListReply) meetings []) (fn m { meetingId: (default (object/get @m uuid "") ""), topic: (default (object/get @m topic "") ""), startTime: (default (object/get @m start_time "") ""), hasTranscript: (array/some (object/get @m recording_files []) (fn f (= (default (object/get @f file_type "") "") "TRANSCRIPT"))) }))))
+        (set @entity.pageToken (default (object/get (json/parse @payload.body ZoomListReply) next_page_token "") ""))
+        (set @entity.stepReady true)
+
+      ZOOM_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= @entity.step "meeting") (= (json/parse @payload.body ZoomMeetingReply) null))
+        (emit ZOOM_FAILED { message: "The Zoom answer could not be read" })
+        (emit ZOOM_CLEAR {})
+      ZOOM_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= @entity.step "meeting") (!= (json/parse @payload.body ZoomMeetingReply) null) (not (array/some (object/get (json/parse @payload.body ZoomMeetingReply) recording_files []) (fn f (and (= (default (object/get @f file_type "") "") "TRANSCRIPT") (!= (default (object/get @f download_url "") "") ""))))))
+        (emit ZOOM_FAILED { code: "NO_TRANSCRIPT", message: "This meeting has no transcript file" })
+        (emit ZOOM_CLEAR {})
+      ZOOM_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= @entity.step "meeting") (!= (json/parse @payload.body ZoomMeetingReply) null) (array/some (object/get (json/parse @payload.body ZoomMeetingReply) recording_files []) (fn f (and (= (default (object/get @f file_type "") "") "TRANSCRIPT") (!= (default (object/get @f download_url "") "") "")))))
+        (set @entity.topic (default (object/get (json/parse @payload.body ZoomMeetingReply) topic "") ""))
+        (set @entity.startTime (default (object/get (json/parse @payload.body ZoomMeetingReply) start_time "") ""))
+        (set @entity.downloadUrl (default (array/first (array/map (array/filter (object/get (json/parse @payload.body ZoomMeetingReply) recording_files []) (fn f (and (= (default (object/get @f file_type "") "") "TRANSCRIPT") (!= (default (object/get @f download_url "") "") "")))) (fn f (default (object/get @f download_url "") "")))) ""))
+        (set @entity.stepReady true)
+
+      ZOOM_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= @entity.step "download"))
+        (let ((lines (str/split @payload.body "\n")))
+          (let ((pairs (array/zip @lines (array/append (array/drop @lines 1) ""))))
+            (emit ZOOM_TRANSCRIPT_FETCHED { meetingId: @entity.meetingId, topic: @entity.topic, startTime: @entity.startTime, vtt: @payload.body, text: (str/join (array/map (array/filter @pairs (fn p (let ((l (str/trim (array/nth @p 0)))) (and (!= @l "") (not (str/startsWith @l "WEBVTT")) (not (str/includes @l "-->")) (not (and (validate/pattern @l "^[0-9]+$") (str/includes (array/nth @p 1) "-->"))))))) (fn p (str/trim (array/nth @p 0)))) "\n") })))
+        (emit ZOOM_CLEAR {})
+
+      ZOOM_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
+        (emit ZOOM_REPLY_ERROR { status: @payload.status, message: (let ((eo (json/parse @payload.body ZoomErrorReply))) (let ((m (if (!= @eo null) (if (!= (default (object/get @eo message "") "") "") (default (object/get @eo message "") "") (if (!= (default (object/get @eo reason "") "") "") (default (object/get @eo reason "") "") (default (object/get @eo error "") ""))) ""))) (if (!= @m "") @m (if (!= @payload.body "") @payload.body (str/concat "Request failed with status code " @payload.status))))) })
+      ZOOM_REPLY_ERROR -> idle when (or (and (>= @payload.status 100) (< @payload.status 200)) (= @payload.status 408) (= @payload.status 429) (and (>= @payload.status 500) (< @payload.status 600)))
+        (emit ZOOM_RETRY_FAILED { key: (as @entity.id CallKey), error: @payload.message })
+      ZOOM_REPLY_ERROR -> idle when (not (or (and (>= @payload.status 100) (< @payload.status 200)) (= @payload.status 408) (= @payload.status 429) (and (>= @payload.status 500) (< @payload.status 600))))
+        (emit ZOOM_FAILED { message: @payload.message })
+        (emit ZOOM_CLEAR {})
+      ZOOM_GAVE_UP -> idle
+        (emit ZOOM_FAILED { message: (default @payload.error "") })
+        (emit ZOOM_CLEAR {})
+
+      ZOOM_REQUEST_FAILED -> idle when (= @payload.kind "unconfigured")
+        (emit ZOOM_FAIL { code: "NOT_CONFIGURED", message: "Integration not configured: zoom. Set the accountId knob, ZOOM_BASIC_AUTH (the client id and secret as id:secret)." })
+      ZOOM_REQUEST_FAILED -> idle when (and (!= @payload.kind "unconfigured") (< @entity.attempt 3))
+        (emit ZOOM_RETRY_FAILED { key: (as @payload.key CallKey), error: (if (= @payload.kind "timeout") "network timeout" @payload.error) })
+      ZOOM_REQUEST_FAILED -> idle when (and (!= @payload.kind "unconfigured") (>= @entity.attempt 3))
+        (emit ZOOM_FAIL { message: (if (= @payload.kind "timeout") "network timeout" @payload.error) })
+
+      ZOOM_FAIL -> idle when (= (default @payload.code "") "")
+        (emit ZOOM_RETRY_CANCEL { key: (as @entity.id CallKey) })
+        (emit ZOOM_FAILED { message: @payload.message })
+        (emit ZOOM_CLEAR {})
+      ZOOM_FAIL -> idle when (!= (default @payload.code "") "")
+        (emit ZOOM_RETRY_CANCEL { key: (as @entity.id CallKey) })
+        (emit ZOOM_FAILED { code: @payload.code, message: @payload.message })
+        (emit ZOOM_CLEAR {})
+
+      ZOOM_RETRY_DONE -> idle when (and (= @entity.step "token") @entity.stepReady)
+        (set @entity.step (if (= @entity.kind "list") "list" "meeting"))
+        (set @entity.target @entity.firstTarget)
+        (set @entity.host "api.zoom.us")
+        (set @entity.attempt 0)
+        (set @entity.stepReady false)
+        (emit ZOOM_RETRY_START { key: (as @entity.id CallKey) })
+      ZOOM_RETRY_DONE -> idle when (and (= @entity.step "list") @entity.stepReady (!= @entity.pageToken ""))
+        (set @entity.target (str/concat @entity.firstTarget "&next_page_token=" (str/encode-uri-component @entity.pageToken)))
+        (set @entity.pageToken "")
+        (set @entity.attempt 0)
+        (set @entity.stepReady false)
+        (emit ZOOM_RETRY_START { key: (as @entity.id CallKey) })
+      ZOOM_RETRY_DONE -> idle when (and (= @entity.step "list") @entity.stepReady (= @entity.pageToken ""))
+        (emit RECORDINGS_LISTED { meetings: @entity.meetings })
+        (emit ZOOM_CLEAR {})
+      ZOOM_RETRY_DONE -> idle when (and (= @entity.step "meeting") @entity.stepReady (not (str/startsWith @entity.downloadUrl "https://")))
+        (emit ZOOM_FAILED { message: "The transcript download_url is not an https URL" })
+        (emit ZOOM_CLEAR {})
+      ZOOM_RETRY_DONE -> idle when (and (= @entity.step "meeting") @entity.stepReady (str/startsWith @entity.downloadUrl "https://"))
+        (set @entity.step "download")
+        (set @entity.host (default (array/first (str/split (str/slice @entity.downloadUrl 8) "/")) ""))
+        (set @entity.target (str/concat "/" (str/join (array/drop (str/split (str/slice @entity.downloadUrl 8) "/") 1) "/")))
+        (set @entity.attempt 0)
+        (set @entity.stepReady false)
+        (emit ZOOM_RETRY_START { key: (as @entity.id CallKey) })
+
+      ZOOM_CLEAR -> idle
+        (set @entity.kind "")
+        (set @entity.step "")
+        (set @entity.firstTarget "")
+        (set @entity.target "")
+        (set @entity.host "")
+        (set @entity.token "")
+        (set @entity.meetingId "")
+        (set @entity.topic "")
+        (set @entity.startTime "")
+        (set @entity.downloadUrl "")
+        (set @entity.pageToken "")
+        (set @entity.meetings [])
+        (set @entity.attempt 0)
+        (set @entity.stepReady false)
+    }
+
+    emits {
+      RECORDINGS_LISTED -> external {
+        meetings : [ZoomMeetingRow]!
+      }
+        @description "Every cloud recording of the date range, one per meeting: meetingId is the meeting uuid, hasTranscript is true when its recording files hold a TRANSCRIPT file."
+        @synonyms "recordings listed, zoom meetings listed"
+        @tier "primary"
+      ZOOM_TRANSCRIPT_FETCHED -> external {
+        meetingId : string!
+        topic : string!
+        startTime : string!
+        vtt : string!
+        text : string!
+      }
+        @description "The meeting's transcript: vtt is the WebVTT file as Zoom sent it, text the same cues as plain Speaker: line text; neither is translated or shortened."
+        @synonyms "transcript fetched, meeting transcript"
+        @tier "primary"
+      ZOOM_FAILED -> external {
+        code : string
+        message : string!
+      }
+        @description "A Zoom action failed: the provider's error message, NO_TRANSCRIPT when the meeting has no transcript file, NOT_CONFIGURED when no credential or account is set."
+        @synonyms "zoom error, zoom failure"
+        @tier "primary"
+      ZOOM_TOKEN_HTTP_SEND {
+        key : string!
+        method : string!
+        target : string!
+        headers : [HttpHeader]!
+        body : bytes!
+        stream : string!
+      }
+        @description "Internal: the token request under the Basic credential, for its keyed HTTP client."
+        @tier "secondary"
+      ZOOM_API_HTTP_SEND {
+        key : string!
+        method : string!
+        target : string!
+        headers : [HttpHeader]!
+        body : bytes!
+        stream : string!
+        host : string
+      }
+        @description "Internal: the API or download request under the minted access token, for its keyed HTTP client."
+        @tier "secondary"
+      ZOOM_RETRY_START { key : CallKey! }
+        @description "Internal: hand a step to std-retry."
+        @tier "secondary"
+      ZOOM_RETRY_FAILED { key : CallKey!  error : string }
+        @description "Internal: tell std-retry the attempt failed with a retryable outcome."
+        @tier "secondary"
+      ZOOM_RETRY_CANCEL { key : CallKey! }
+        @description "Internal: end std-retry's run for this key without another attempt."
+        @tier "secondary"
+      ZOOM_DISPATCH -> internal { }
+        @description "Internal: send the step in flight, again after a retry attempt."
+        @tier "secondary"
+      ZOOM_REPLY_ERROR -> internal {
+        status : number!
+        message : string!
+      }
+        @description "Internal: a non-2xx Zoom reply with the provider's message."
+        @tier "secondary"
+      ZOOM_FAIL -> internal {
+        code : string
+        message : string!
+      }
+        @description "Internal: end the call with a failure, cancelling its std-retry run."
+        @tier "secondary"
+      ZOOM_CLEAR -> internal { }
+        @description "Internal: return the row of a finished call to its defaults so the kernel drops it."
+        @tier "secondary"
+    }
+
+    listens {
+      CALL_READY {
+        key : string!
+        kind : string!
+        target : string!
+        meetingId : string!
+        accountId : string!
+      }
+        @description "A built request for this key's row."
+      ZOOM_REPLIED {
+        status : number!
+        headers : Map string string
+        body : string!
+        key : string!
+      }
+        @description "A keyed HTTP client's reply for this key's row, the body read as UTF-8 text."
+      ZOOM_REQUEST_FAILED {
+        error : string!
+        kind : string!
+        key : string!
+      }
+        @description "A keyed HTTP client's failure for this key's row."
+      ZOOM_DISPATCH
+      ZOOM_REPLY_ERROR {
+        status : number!
+        message : string!
+      }
+      ZOOM_FAIL {
+        code : string
+        message : string!
+      }
+      ZOOM_CLEAR
+      ZOOM_ATTEMPT {
+        key : string!
+        attempt : number!
+      }
+        @description "std-retry starts an attempt of this key's step."
+      ZOOM_GAVE_UP {
+        key : string!
+        attempts : number!
+        error : string
+      }
+        @description "std-retry spent every attempt of this key's step."
+      ZOOM_RETRY_DONE {
+        key : string!
+        attempts : number!
+      }
+        @description "std-retry completed this key's step run; the next step starts."
+      ZoomClient.ZOOM_READY -> CALL_READY per @payload.key
+      ZoomTokenHttp.HTTP_REPLIED -> ZOOM_REPLIED per @payload.key with { status: ?status, headers: ?headers, body: (default (bytes/to-string ?body) ""), key: ?key }
+      ZoomApiHttp.HTTP_REPLIED -> ZOOM_REPLIED per @payload.key with { status: ?status, headers: ?headers, body: (default (bytes/to-string ?body) ""), key: ?key }
+      ZoomTokenHttp.HTTP_FAILED -> ZOOM_REQUEST_FAILED per @payload.key with { error: ?error, kind: ?kind, key: ?key }
+      ZoomApiHttp.HTTP_FAILED -> ZOOM_REQUEST_FAILED per @payload.key with { error: ?error, kind: ?kind, key: ?key }
+      ZoomRetry.ATTEMPT -> ZOOM_ATTEMPT per @payload.key
+      ZoomRetry.GAVE_UP -> ZOOM_GAVE_UP per @payload.key
+      ZoomRetry.COMPLETED -> ZOOM_RETRY_DONE per @payload.key
+    }
+
+  }
+
+  page boot as ZoomPage -> ZoomClient, ZoomCall, ZoomTokenKeyed, ZoomTokenHttp, ZoomApiKeyed, ZoomApiHttp, ZoomRetry
+}

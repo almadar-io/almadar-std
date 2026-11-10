@@ -1,0 +1,2397 @@
+{
+ "atom": "connect/atoms/std-zoom.lolo",
+ "trait": "ZoomClient",
+ "note": "std-zoom over two keyed std-http-client traits: the Server-to-Server account_credentials grant is a keyed POST under a Basic credential the host fills at the boundary (credential-connect cannot express it: the account id rides the query and the client id and secret ride a Basic header, not a JSON body), and the minted access token is held by the one call's row, sent as a bearer header by the API client and cleared with the row; every call is a row of ZoomCall under its own key; each step (token, list pages, meeting, download) retries under keyed std-retry (4 attempts, 100 x 5^(n-1) ms capped at 1500) and the next step starts when std-retry completes the previous run; a download_url is requested on the host it names; a 2xx download answers the raw WebVTT and its plain Speaker: line text. Self-handled internal events (declared -> internal) are consumed by the trait and not listed.",
+ "cases": [
+  {
+   "id": "list-asks-the-token-endpoint-first-under-its-own-key",
+   "steps": [
+    {
+     "event": "LIST_RECORDINGS",
+     "payload": {
+      "from": "2026-10-01",
+      "to": "2026-10-31"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ZOOM_READY",
+        "payload": {
+         "key": "list:2026-10-01|2026-10-31#1",
+         "kind": "list",
+         "target": "/v2/users/me/recordings?from=2026-10-01&to=2026-10-31&page_size=30",
+         "meetingId": "",
+         "accountId": "acc"
+        }
+       },
+       {
+        "event": "ZOOM_RETRY_START",
+        "payload": {
+         "key": "list:2026-10-01|2026-10-31#1"
+        }
+       },
+       {
+        "event": "ZOOM_TOKEN_HTTP_SEND",
+        "payload": {
+         "key": "list:2026-10-01|2026-10-31#1",
+         "method": "POST",
+         "target": "/oauth/token?grant_type=account_credentials&account_id=acc",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "*/*"
+          }
+         ],
+         "body": "",
+         "stream": "none"
+        }
+       }
+      ],
+      "neverEmits": [
+       "ZOOM_API_HTTP_SEND",
+       "ZOOM_FAILED"
+      ]
+     }
+    }
+   ],
+   "config": {
+    "accountId": "acc"
+   },
+   "defaults": [
+    "ZoomClient",
+    "ZoomCall",
+    "ZoomTokenKeyed",
+    "ZoomTokenHttp",
+    "ZoomApiKeyed",
+    "ZoomApiHttp",
+    "ZoomRetry"
+   ]
+  },
+  {
+   "id": "control-an-account-id-with-a-special-character-is-percent-encoded",
+   "steps": [
+    {
+     "event": "LIST_RECORDINGS",
+     "payload": {
+      "from": "2026-10-01",
+      "to": "2026-10-31"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ZOOM_TOKEN_HTTP_SEND",
+        "payload": {
+         "key": "list:2026-10-01|2026-10-31#1",
+         "target": "/oauth/token?grant_type=account_credentials&account_id=a%26b%3D"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "accountId": "a&b="
+   },
+   "defaults": [
+    "ZoomClient",
+    "ZoomCall",
+    "ZoomTokenKeyed",
+    "ZoomTokenHttp",
+    "ZoomApiKeyed",
+    "ZoomApiHttp",
+    "ZoomRetry"
+   ]
+  },
+  {
+   "id": "unconfigured-without-an-account-id-answers-not-configured",
+   "steps": [
+    {
+     "event": "LIST_RECORDINGS",
+     "payload": {
+      "from": "2026-10-01",
+      "to": "2026-10-31"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ZOOM_FAILED",
+        "payload": {
+         "code": "NOT_CONFIGURED",
+         "message": "Integration not configured: zoom. Set the accountId knob, ZOOM_BASIC_AUTH (the client id and secret as id:secret)."
+        }
+       }
+      ],
+      "neverEmits": [
+       "ZOOM_RETRY_START",
+       "ZOOM_TOKEN_HTTP_SEND"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "ZoomClient",
+    "ZoomCall",
+    "ZoomTokenKeyed",
+    "ZoomTokenHttp",
+    "ZoomApiKeyed",
+    "ZoomApiHttp",
+    "ZoomRetry"
+   ]
+  },
+  {
+   "id": "control-a-configured-account-never-answers-not-configured",
+   "steps": [
+    {
+     "event": "LIST_RECORDINGS",
+     "payload": {
+      "from": "2026-10-01",
+      "to": "2026-10-31"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ZOOM_TOKEN_HTTP_SEND",
+        "payload": {
+         "key": "list:2026-10-01|2026-10-31#1"
+        }
+       }
+      ],
+      "neverEmits": [
+       "ZOOM_FAILED"
+      ]
+     }
+    }
+   ],
+   "config": {
+    "accountId": "acc"
+   },
+   "defaults": [
+    "ZoomClient",
+    "ZoomCall",
+    "ZoomTokenKeyed",
+    "ZoomTokenHttp",
+    "ZoomApiKeyed",
+    "ZoomApiHttp",
+    "ZoomRetry"
+   ]
+  },
+  {
+   "id": "a-credential-not-held-on-the-token-call-answers-not-configured",
+   "steps": [
+    {
+     "trait": "ZoomCall",
+     "event": "ZOOM_REQUEST_FAILED",
+     "payload": {
+      "key": "list:2026-10-01|2026-10-31#1",
+      "error": "credential not held",
+      "kind": "unconfigured"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ZOOM_RETRY_CANCEL",
+        "payload": {
+         "key": "list:2026-10-01|2026-10-31#1"
+        }
+       },
+       {
+        "event": "ZOOM_FAILED",
+        "payload": {
+         "code": "NOT_CONFIGURED",
+         "message": "Integration not configured: zoom. Set the accountId knob, ZOOM_BASIC_AUTH (the client id and secret as id:secret)."
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "list:2026-10-01|2026-10-31#1",
+      "kind": "list",
+      "step": "token",
+      "firstTarget": "/v2/users/me/recordings?from=2026-10-01&to=2026-10-31&page_size=30",
+      "target": "/x",
+      "host": "",
+      "token": "tk",
+      "meetingId": "",
+      "topic": "",
+      "startTime": "",
+      "downloadUrl": "",
+      "pageToken": "",
+      "meetings": [],
+      "attempt": 1,
+      "stepReady": false
+     }
+    }
+   ],
+   "config": {
+    "accountId": "acc"
+   },
+   "defaults": [
+    "ZoomClient",
+    "ZoomCall",
+    "ZoomTokenKeyed",
+    "ZoomTokenHttp",
+    "ZoomApiKeyed",
+    "ZoomApiHttp",
+    "ZoomRetry"
+   ]
+  },
+  {
+   "id": "control-a-timeout-on-the-token-call-is-retried-not-failed",
+   "steps": [
+    {
+     "trait": "ZoomCall",
+     "event": "ZOOM_REQUEST_FAILED",
+     "payload": {
+      "key": "list:2026-10-01|2026-10-31#1",
+      "error": "x",
+      "kind": "timeout"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ZOOM_RETRY_FAILED",
+        "payload": {
+         "key": "list:2026-10-01|2026-10-31#1",
+         "error": "network timeout"
+        }
+       }
+      ],
+      "neverEmits": [
+       "ZOOM_FAILED"
+      ]
+     },
+     "entity": {
+      "id": "list:2026-10-01|2026-10-31#1",
+      "kind": "list",
+      "step": "token",
+      "firstTarget": "/v2/users/me/recordings?from=2026-10-01&to=2026-10-31&page_size=30",
+      "target": "/x",
+      "host": "",
+      "token": "tk",
+      "meetingId": "",
+      "topic": "",
+      "startTime": "",
+      "downloadUrl": "",
+      "pageToken": "",
+      "meetings": [],
+      "attempt": 1,
+      "stepReady": false
+     }
+    }
+   ],
+   "config": {
+    "accountId": "acc"
+   },
+   "defaults": [
+    "ZoomClient",
+    "ZoomCall",
+    "ZoomTokenKeyed",
+    "ZoomTokenHttp",
+    "ZoomApiKeyed",
+    "ZoomApiHttp",
+    "ZoomRetry"
+   ]
+  },
+  {
+   "id": "a-token-reply-holds-the-token-on-the-row-then-the-list-step-sends-it-as-bearer",
+   "steps": [
+    {
+     "event": "LIST_RECORDINGS",
+     "payload": {
+      "from": "2026-10-01",
+      "to": "2026-10-31"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ZOOM_TOKEN_HTTP_SEND",
+        "payload": {
+         "key": "list:2026-10-01|2026-10-31#1"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "ZoomTokenHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "list:2026-10-01|2026-10-31#1",
+      "status": 200,
+      "headers": {},
+      "body": "eyJhY2Nlc3NfdG9rZW4iOiAidGsiLCAidG9rZW5fdHlwZSI6ICJiZWFyZXIiLCAiZXhwaXJlc19pbiI6IDM2MDB9"
+     },
+     "expect": {
+      "emits": [],
+      "neverEmits": [
+       "ZOOM_FAILED",
+       "ZOOM_API_HTTP_SEND"
+      ]
+     }
+    },
+    {
+     "trait": "ZoomRetry",
+     "event": "SUCCEEDED",
+     "payload": {
+      "key": "list:2026-10-01|2026-10-31#1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "COMPLETED",
+        "payload": {
+         "key": "list:2026-10-01|2026-10-31#1",
+         "attempts": 1
+        }
+       },
+       {
+        "event": "ZOOM_RETRY_START",
+        "payload": {
+         "key": "list:2026-10-01|2026-10-31#1"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "list:2026-10-01|2026-10-31#1",
+      "key": "list:2026-10-01|2026-10-31#1",
+      "attempt": 1
+     },
+     "from": "running"
+    },
+    {
+     "trait": "ZoomRetry",
+     "event": "START",
+     "payload": {
+      "key": "list:2026-10-01|2026-10-31#1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ATTEMPT",
+        "payload": {
+         "key": "list:2026-10-01|2026-10-31#1",
+         "attempt": 1
+        }
+       },
+       {
+        "event": "ZOOM_API_HTTP_SEND",
+        "payload": {
+         "key": "list:2026-10-01|2026-10-31#1",
+         "method": "GET",
+         "target": "/v2/users/me/recordings?from=2026-10-01&to=2026-10-31&page_size=30",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "*/*"
+          },
+          {
+           "name": "authorization",
+           "value": "Bearer tk"
+          }
+         ],
+         "body": "",
+         "stream": "none",
+         "host": "api.zoom.us"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "list:2026-10-01|2026-10-31#1",
+      "key": "list:2026-10-01|2026-10-31#1",
+      "attempt": 0
+     },
+     "from": "idle"
+    }
+   ],
+   "config": {
+    "accountId": "acc"
+   },
+   "defaults": [
+    "ZoomClient",
+    "ZoomCall",
+    "ZoomTokenKeyed",
+    "ZoomTokenHttp",
+    "ZoomApiKeyed",
+    "ZoomApiHttp",
+    "ZoomRetry"
+   ]
+  },
+  {
+   "id": "control-a-token-reply-without-an-access-token-fails",
+   "steps": [
+    {
+     "trait": "ZoomCall",
+     "event": "ZOOM_REPLIED",
+     "payload": {
+      "key": "list:2026-10-01|2026-10-31#1",
+      "status": 200,
+      "headers": {},
+      "body": "{\"expires_in\": 3600}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ZOOM_FAILED",
+        "payload": {
+         "message": "The Zoom token answer held no access token"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "list:2026-10-01|2026-10-31#1",
+      "kind": "list",
+      "step": "token",
+      "firstTarget": "/v2/users/me/recordings?from=2026-10-01&to=2026-10-31&page_size=30",
+      "target": "/x",
+      "host": "",
+      "token": "",
+      "meetingId": "",
+      "topic": "",
+      "startTime": "",
+      "downloadUrl": "",
+      "pageToken": "",
+      "meetings": [],
+      "attempt": 1,
+      "stepReady": false
+     }
+    }
+   ],
+   "config": {
+    "accountId": "acc"
+   },
+   "defaults": [
+    "ZoomClient",
+    "ZoomCall",
+    "ZoomTokenKeyed",
+    "ZoomTokenHttp",
+    "ZoomApiKeyed",
+    "ZoomApiHttp",
+    "ZoomRetry"
+   ]
+  },
+  {
+   "id": "a-token-reply-that-is-not-json-fails",
+   "steps": [
+    {
+     "trait": "ZoomCall",
+     "event": "ZOOM_REPLIED",
+     "payload": {
+      "key": "list:2026-10-01|2026-10-31#1",
+      "status": 200,
+      "headers": {},
+      "body": "nope"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ZOOM_FAILED",
+        "payload": {
+         "message": "The Zoom token answer could not be read"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "list:2026-10-01|2026-10-31#1",
+      "kind": "list",
+      "step": "token",
+      "firstTarget": "/v2/users/me/recordings?from=2026-10-01&to=2026-10-31&page_size=30",
+      "target": "/x",
+      "host": "",
+      "token": "",
+      "meetingId": "",
+      "topic": "",
+      "startTime": "",
+      "downloadUrl": "",
+      "pageToken": "",
+      "meetings": [],
+      "attempt": 1,
+      "stepReady": false
+     }
+    }
+   ],
+   "config": {
+    "accountId": "acc"
+   },
+   "defaults": [
+    "ZoomClient",
+    "ZoomCall",
+    "ZoomTokenKeyed",
+    "ZoomTokenHttp",
+    "ZoomApiKeyed",
+    "ZoomApiHttp",
+    "ZoomRetry"
+   ]
+  },
+  {
+   "id": "a-401-token-reply-fails-with-the-provider-reason",
+   "steps": [
+    {
+     "trait": "ZoomCall",
+     "event": "ZOOM_REPLIED",
+     "payload": {
+      "key": "list:2026-10-01|2026-10-31#1",
+      "status": 401,
+      "headers": {},
+      "body": "{\"reason\": \"Invalid client_id or client_secret\", \"error\": \"invalid_client\"}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ZOOM_FAILED",
+        "payload": {
+         "message": "Invalid client_id or client_secret"
+        }
+       }
+      ],
+      "neverEmits": [
+       "ZOOM_RETRY_FAILED"
+      ]
+     },
+     "entity": {
+      "id": "list:2026-10-01|2026-10-31#1",
+      "kind": "list",
+      "step": "token",
+      "firstTarget": "/v2/users/me/recordings?from=2026-10-01&to=2026-10-31&page_size=30",
+      "target": "/x",
+      "host": "",
+      "token": "",
+      "meetingId": "",
+      "topic": "",
+      "startTime": "",
+      "downloadUrl": "",
+      "pageToken": "",
+      "meetings": [],
+      "attempt": 1,
+      "stepReady": false
+     }
+    }
+   ],
+   "config": {
+    "accountId": "acc"
+   },
+   "defaults": [
+    "ZoomClient",
+    "ZoomCall",
+    "ZoomTokenKeyed",
+    "ZoomTokenHttp",
+    "ZoomApiKeyed",
+    "ZoomApiHttp",
+    "ZoomRetry"
+   ]
+  },
+  {
+   "id": "a-list-reply-answers-the-meetings-with-their-transcript-flag",
+   "steps": [
+    {
+     "trait": "ZoomCall",
+     "event": "ZOOM_REPLIED",
+     "payload": {
+      "key": "list:2026-10-01|2026-10-31#1",
+      "status": 200,
+      "headers": {},
+      "body": "{\"meetings\": [{\"uuid\": \"u1==\", \"topic\": \"Sestanek\", \"start_time\": \"2026-10-02T08:00:00Z\", \"recording_files\": [{\"file_type\": \"MP4\", \"download_url\": \"https://zoom.us/rec/download/v\"}, {\"file_type\": \"TRANSCRIPT\", \"download_url\": \"https://zoom.us/rec/download/t\"}]}, {\"uuid\": \"u2\", \"topic\": \"Brez prepisa\", \"start_time\": \"2026-10-03T08:00:00Z\", \"recording_files\": [{\"file_type\": \"MP4\", \"download_url\": \"https://zoom.us/rec/download/v2\"}]}], \"next_page_token\": \"\"}"
+     },
+     "expect": {
+      "emits": [],
+      "neverEmits": [
+       "ZOOM_FAILED",
+       "RECORDINGS_LISTED"
+      ]
+     },
+     "entity": {
+      "id": "list:2026-10-01|2026-10-31#1",
+      "kind": "list",
+      "step": "list",
+      "firstTarget": "/v2/users/me/recordings?from=2026-10-01&to=2026-10-31&page_size=30",
+      "target": "/x",
+      "host": "api.zoom.us",
+      "token": "tk",
+      "meetingId": "",
+      "topic": "",
+      "startTime": "",
+      "downloadUrl": "",
+      "pageToken": "",
+      "meetings": [],
+      "attempt": 1,
+      "stepReady": false
+     }
+    },
+    {
+     "trait": "ZoomCall",
+     "event": "ZOOM_RETRY_DONE",
+     "payload": {
+      "key": "list:2026-10-01|2026-10-31#1",
+      "attempts": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RECORDINGS_LISTED",
+        "payload": {
+         "meetings": [
+          {
+           "meetingId": "u1==",
+           "topic": "Sestanek",
+           "startTime": "2026-10-02T08:00:00Z",
+           "hasTranscript": true
+          },
+          {
+           "meetingId": "u2",
+           "topic": "Brez prepisa",
+           "startTime": "2026-10-03T08:00:00Z",
+           "hasTranscript": false
+          }
+         ]
+        }
+       }
+      ],
+      "neverEmits": [
+       "ZOOM_RETRY_START",
+       "ZOOM_FAILED"
+      ]
+     }
+    }
+   ],
+   "config": {
+    "accountId": "acc"
+   },
+   "defaults": [
+    "ZoomClient",
+    "ZoomCall",
+    "ZoomTokenKeyed",
+    "ZoomTokenHttp",
+    "ZoomApiKeyed",
+    "ZoomApiHttp",
+    "ZoomRetry"
+   ]
+  },
+  {
+   "id": "control-a-list-reply-with-no-meetings-answers-an-empty-list",
+   "steps": [
+    {
+     "trait": "ZoomCall",
+     "event": "ZOOM_REPLIED",
+     "payload": {
+      "key": "list:2026-10-01|2026-10-31#1",
+      "status": 200,
+      "headers": {},
+      "body": "{\"meetings\": []}"
+     },
+     "expect": {
+      "emits": [],
+      "neverEmits": [
+       "ZOOM_FAILED"
+      ]
+     },
+     "entity": {
+      "id": "list:2026-10-01|2026-10-31#1",
+      "kind": "list",
+      "step": "list",
+      "firstTarget": "/v2/users/me/recordings?from=2026-10-01&to=2026-10-31&page_size=30",
+      "target": "/x",
+      "host": "api.zoom.us",
+      "token": "tk",
+      "meetingId": "",
+      "topic": "",
+      "startTime": "",
+      "downloadUrl": "",
+      "pageToken": "",
+      "meetings": [],
+      "attempt": 1,
+      "stepReady": false
+     }
+    },
+    {
+     "trait": "ZoomCall",
+     "event": "ZOOM_RETRY_DONE",
+     "payload": {
+      "key": "list:2026-10-01|2026-10-31#1",
+      "attempts": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RECORDINGS_LISTED",
+        "payload": {
+         "meetings": []
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "accountId": "acc"
+   },
+   "defaults": [
+    "ZoomClient",
+    "ZoomCall",
+    "ZoomTokenKeyed",
+    "ZoomTokenHttp",
+    "ZoomApiKeyed",
+    "ZoomApiHttp",
+    "ZoomRetry"
+   ]
+  },
+  {
+   "id": "a-list-reply-with-a-next-page-token-asks-for-the-next-page-before-answering",
+   "steps": [
+    {
+     "trait": "ZoomCall",
+     "event": "ZOOM_REPLIED",
+     "payload": {
+      "key": "list:2026-10-01|2026-10-31#1",
+      "status": 200,
+      "headers": {},
+      "body": "{\"meetings\": [{\"uuid\": \"u1==\", \"topic\": \"Sestanek\", \"start_time\": \"2026-10-02T08:00:00Z\", \"recording_files\": [{\"file_type\": \"MP4\", \"download_url\": \"https://zoom.us/rec/download/v\"}, {\"file_type\": \"TRANSCRIPT\", \"download_url\": \"https://zoom.us/rec/download/t\"}]}], \"next_page_token\": \"tok+/=\"}"
+     },
+     "expect": {
+      "emits": []
+     },
+     "entity": {
+      "id": "list:2026-10-01|2026-10-31#1",
+      "kind": "list",
+      "step": "list",
+      "firstTarget": "/v2/users/me/recordings?from=2026-10-01&to=2026-10-31&page_size=30",
+      "target": "/x",
+      "host": "api.zoom.us",
+      "token": "tk",
+      "meetingId": "",
+      "topic": "",
+      "startTime": "",
+      "downloadUrl": "",
+      "pageToken": "",
+      "meetings": [],
+      "attempt": 1,
+      "stepReady": false
+     }
+    },
+    {
+     "trait": "ZoomCall",
+     "event": "ZOOM_RETRY_DONE",
+     "payload": {
+      "key": "list:2026-10-01|2026-10-31#1",
+      "attempts": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ZOOM_RETRY_START",
+        "payload": {
+         "key": "list:2026-10-01|2026-10-31#1"
+        }
+       }
+      ],
+      "neverEmits": [
+       "RECORDINGS_LISTED"
+      ]
+     }
+    },
+    {
+     "trait": "ZoomCall",
+     "event": "ZOOM_ATTEMPT",
+     "payload": {
+      "key": "list:2026-10-01|2026-10-31#1",
+      "attempt": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ZOOM_API_HTTP_SEND",
+        "payload": {
+         "key": "list:2026-10-01|2026-10-31#1",
+         "target": "/v2/users/me/recordings?from=2026-10-01&to=2026-10-31&page_size=30&next_page_token=tok%2B%2F%3D",
+         "host": "api.zoom.us"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "ZoomCall",
+     "event": "ZOOM_REPLIED",
+     "payload": {
+      "key": "list:2026-10-01|2026-10-31#1",
+      "status": 200,
+      "headers": {},
+      "body": "{\"meetings\": [{\"uuid\": \"u2\", \"topic\": \"Brez prepisa\", \"start_time\": \"2026-10-03T08:00:00Z\", \"recording_files\": [{\"file_type\": \"MP4\", \"download_url\": \"https://zoom.us/rec/download/v2\"}]}], \"next_page_token\": \"\"}"
+     },
+     "expect": {
+      "emits": [],
+      "neverEmits": [
+       "ZOOM_FAILED"
+      ]
+     }
+    },
+    {
+     "trait": "ZoomCall",
+     "event": "ZOOM_RETRY_DONE",
+     "payload": {
+      "key": "list:2026-10-01|2026-10-31#1",
+      "attempts": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RECORDINGS_LISTED",
+        "payload": {
+         "meetings": [
+          {
+           "meetingId": "u1==",
+           "topic": "Sestanek",
+           "startTime": "2026-10-02T08:00:00Z",
+           "hasTranscript": true
+          },
+          {
+           "meetingId": "u2",
+           "topic": "Brez prepisa",
+           "startTime": "2026-10-03T08:00:00Z",
+           "hasTranscript": false
+          }
+         ]
+        }
+       }
+      ],
+      "neverEmits": [
+       "ZOOM_RETRY_START"
+      ]
+     }
+    }
+   ],
+   "config": {
+    "accountId": "acc"
+   },
+   "defaults": [
+    "ZoomClient",
+    "ZoomCall",
+    "ZoomTokenKeyed",
+    "ZoomTokenHttp",
+    "ZoomApiKeyed",
+    "ZoomApiHttp",
+    "ZoomRetry"
+   ]
+  },
+  {
+   "id": "a-list-reply-that-is-not-json-fails",
+   "steps": [
+    {
+     "trait": "ZoomCall",
+     "event": "ZOOM_REPLIED",
+     "payload": {
+      "key": "list:2026-10-01|2026-10-31#1",
+      "status": 200,
+      "headers": {},
+      "body": "<html>"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ZOOM_FAILED",
+        "payload": {
+         "message": "The Zoom answer could not be read"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "list:2026-10-01|2026-10-31#1",
+      "kind": "list",
+      "step": "list",
+      "firstTarget": "/v2/users/me/recordings?from=2026-10-01&to=2026-10-31&page_size=30",
+      "target": "/x",
+      "host": "api.zoom.us",
+      "token": "tk",
+      "meetingId": "",
+      "topic": "",
+      "startTime": "",
+      "downloadUrl": "",
+      "pageToken": "",
+      "meetings": [],
+      "attempt": 1,
+      "stepReady": false
+     }
+    }
+   ],
+   "config": {
+    "accountId": "acc"
+   },
+   "defaults": [
+    "ZoomClient",
+    "ZoomCall",
+    "ZoomTokenKeyed",
+    "ZoomTokenHttp",
+    "ZoomApiKeyed",
+    "ZoomApiHttp",
+    "ZoomRetry"
+   ]
+  },
+  {
+   "id": "a-401-api-reply-fails-with-the-provider-message",
+   "steps": [
+    {
+     "trait": "ZoomCall",
+     "event": "ZOOM_REPLIED",
+     "payload": {
+      "key": "list:2026-10-01|2026-10-31#1",
+      "status": 401,
+      "headers": {},
+      "body": "{\"code\": 124, \"message\": \"Invalid access token.\"}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ZOOM_FAILED",
+        "payload": {
+         "message": "Invalid access token."
+        }
+       }
+      ],
+      "neverEmits": [
+       "ZOOM_RETRY_FAILED",
+       "RECORDINGS_LISTED"
+      ]
+     },
+     "entity": {
+      "id": "list:2026-10-01|2026-10-31#1",
+      "kind": "list",
+      "step": "list",
+      "firstTarget": "/v2/users/me/recordings?from=2026-10-01&to=2026-10-31&page_size=30",
+      "target": "/x",
+      "host": "api.zoom.us",
+      "token": "tk",
+      "meetingId": "",
+      "topic": "",
+      "startTime": "",
+      "downloadUrl": "",
+      "pageToken": "",
+      "meetings": [],
+      "attempt": 1,
+      "stepReady": false
+     }
+    }
+   ],
+   "config": {
+    "accountId": "acc"
+   },
+   "defaults": [
+    "ZoomClient",
+    "ZoomCall",
+    "ZoomTokenKeyed",
+    "ZoomTokenHttp",
+    "ZoomApiKeyed",
+    "ZoomApiHttp",
+    "ZoomRetry"
+   ]
+  },
+  {
+   "id": "control-a-2xx-api-reply-never-fails",
+   "steps": [
+    {
+     "trait": "ZoomCall",
+     "event": "ZOOM_REPLIED",
+     "payload": {
+      "key": "list:2026-10-01|2026-10-31#1",
+      "status": 200,
+      "headers": {},
+      "body": "{\"meetings\": []}"
+     },
+     "expect": {
+      "emits": [],
+      "neverEmits": [
+       "ZOOM_FAILED"
+      ]
+     },
+     "entity": {
+      "id": "list:2026-10-01|2026-10-31#1",
+      "kind": "list",
+      "step": "list",
+      "firstTarget": "/v2/users/me/recordings?from=2026-10-01&to=2026-10-31&page_size=30",
+      "target": "/x",
+      "host": "api.zoom.us",
+      "token": "tk",
+      "meetingId": "",
+      "topic": "",
+      "startTime": "",
+      "downloadUrl": "",
+      "pageToken": "",
+      "meetings": [],
+      "attempt": 1,
+      "stepReady": false
+     }
+    }
+   ],
+   "config": {
+    "accountId": "acc"
+   },
+   "defaults": [
+    "ZoomClient",
+    "ZoomCall",
+    "ZoomTokenKeyed",
+    "ZoomTokenHttp",
+    "ZoomApiKeyed",
+    "ZoomApiHttp",
+    "ZoomRetry"
+   ]
+  },
+  {
+   "id": "a-503-api-reply-is-handed-back-to-std-retry",
+   "steps": [
+    {
+     "trait": "ZoomCall",
+     "event": "ZOOM_REPLIED",
+     "payload": {
+      "key": "list:2026-10-01|2026-10-31#1",
+      "status": 503,
+      "headers": {},
+      "body": "{\"code\": 500, \"message\": \"down\"}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ZOOM_RETRY_FAILED",
+        "payload": {
+         "key": "list:2026-10-01|2026-10-31#1",
+         "error": "down"
+        }
+       }
+      ],
+      "neverEmits": [
+       "ZOOM_FAILED"
+      ]
+     },
+     "entity": {
+      "id": "list:2026-10-01|2026-10-31#1",
+      "kind": "list",
+      "step": "list",
+      "firstTarget": "/v2/users/me/recordings?from=2026-10-01&to=2026-10-31&page_size=30",
+      "target": "/x",
+      "host": "api.zoom.us",
+      "token": "tk",
+      "meetingId": "",
+      "topic": "",
+      "startTime": "",
+      "downloadUrl": "",
+      "pageToken": "",
+      "meetings": [],
+      "attempt": 1,
+      "stepReady": false
+     }
+    }
+   ],
+   "config": {
+    "accountId": "acc"
+   },
+   "defaults": [
+    "ZoomClient",
+    "ZoomCall",
+    "ZoomTokenKeyed",
+    "ZoomTokenHttp",
+    "ZoomApiKeyed",
+    "ZoomApiHttp",
+    "ZoomRetry"
+   ]
+  },
+  {
+   "id": "control-a-404-api-reply-is-not-retried",
+   "steps": [
+    {
+     "trait": "ZoomCall",
+     "event": "ZOOM_REPLIED",
+     "payload": {
+      "key": "list:2026-10-01|2026-10-31#1",
+      "status": 404,
+      "headers": {},
+      "body": "{\"code\": 3001, \"message\": \"Meeting does not exist\"}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ZOOM_FAILED",
+        "payload": {
+         "message": "Meeting does not exist"
+        }
+       }
+      ],
+      "neverEmits": [
+       "ZOOM_RETRY_FAILED"
+      ]
+     },
+     "entity": {
+      "id": "list:2026-10-01|2026-10-31#1",
+      "kind": "list",
+      "step": "list",
+      "firstTarget": "/v2/users/me/recordings?from=2026-10-01&to=2026-10-31&page_size=30",
+      "target": "/x",
+      "host": "api.zoom.us",
+      "token": "tk",
+      "meetingId": "",
+      "topic": "",
+      "startTime": "",
+      "downloadUrl": "",
+      "pageToken": "",
+      "meetings": [],
+      "attempt": 1,
+      "stepReady": false
+     }
+    }
+   ],
+   "config": {
+    "accountId": "acc"
+   },
+   "defaults": [
+    "ZoomClient",
+    "ZoomCall",
+    "ZoomTokenKeyed",
+    "ZoomTokenHttp",
+    "ZoomApiKeyed",
+    "ZoomApiHttp",
+    "ZoomRetry"
+   ]
+  },
+  {
+   "id": "std-retry-giving-up-fails-with-the-last-message",
+   "steps": [
+    {
+     "trait": "ZoomCall",
+     "event": "ZOOM_GAVE_UP",
+     "payload": {
+      "key": "list:2026-10-01|2026-10-31#1",
+      "attempts": 4,
+      "error": "down"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ZOOM_FAILED",
+        "payload": {
+         "message": "down"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "list:2026-10-01|2026-10-31#1",
+      "kind": "list",
+      "step": "list",
+      "firstTarget": "/v2/users/me/recordings?from=2026-10-01&to=2026-10-31&page_size=30",
+      "target": "/x",
+      "host": "api.zoom.us",
+      "token": "tk",
+      "meetingId": "",
+      "topic": "",
+      "startTime": "",
+      "downloadUrl": "",
+      "pageToken": "",
+      "meetings": [],
+      "attempt": 1,
+      "stepReady": false
+     }
+    }
+   ],
+   "config": {
+    "accountId": "acc"
+   },
+   "defaults": [
+    "ZoomClient",
+    "ZoomCall",
+    "ZoomTokenKeyed",
+    "ZoomTokenHttp",
+    "ZoomApiKeyed",
+    "ZoomApiHttp",
+    "ZoomRetry"
+   ]
+  },
+  {
+   "id": "fetch-transcript-single-encodes-an-ordinary-uuid",
+   "steps": [
+    {
+     "event": "ZOOM_FETCH_TRANSCRIPT",
+     "payload": {
+      "meetingId": "u1=="
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ZOOM_READY",
+        "payload": {
+         "key": "transcript:u1==#1",
+         "kind": "transcript",
+         "target": "/v2/meetings/u1%3D%3D/recordings",
+         "meetingId": "u1==",
+         "accountId": "acc"
+        }
+       },
+       {
+        "event": "ZOOM_TOKEN_HTTP_SEND",
+        "payload": {
+         "key": "transcript:u1==#1",
+         "method": "POST",
+         "target": "/oauth/token?grant_type=account_credentials&account_id=acc"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "accountId": "acc"
+   },
+   "defaults": [
+    "ZoomClient",
+    "ZoomCall",
+    "ZoomTokenKeyed",
+    "ZoomTokenHttp",
+    "ZoomApiKeyed",
+    "ZoomApiHttp",
+    "ZoomRetry"
+   ]
+  },
+  {
+   "id": "fetch-transcript-double-encodes-a-uuid-that-starts-with-a-slash",
+   "steps": [
+    {
+     "event": "ZOOM_FETCH_TRANSCRIPT",
+     "payload": {
+      "meetingId": "/ab+c=="
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ZOOM_READY",
+        "payload": {
+         "key": "transcript:/ab+c==#1",
+         "target": "/v2/meetings/%252Fab%252Bc%253D%253D/recordings"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "accountId": "acc"
+   },
+   "defaults": [
+    "ZoomClient",
+    "ZoomCall",
+    "ZoomTokenKeyed",
+    "ZoomTokenHttp",
+    "ZoomApiKeyed",
+    "ZoomApiHttp",
+    "ZoomRetry"
+   ]
+  },
+  {
+   "id": "fetch-transcript-double-encodes-a-uuid-with-a-double-slash",
+   "steps": [
+    {
+     "event": "ZOOM_FETCH_TRANSCRIPT",
+     "payload": {
+      "meetingId": "ab//c"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ZOOM_READY",
+        "payload": {
+         "key": "transcript:ab//c#1",
+         "target": "/v2/meetings/ab%252F%252Fc/recordings"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "accountId": "acc"
+   },
+   "defaults": [
+    "ZoomClient",
+    "ZoomCall",
+    "ZoomTokenKeyed",
+    "ZoomTokenHttp",
+    "ZoomApiKeyed",
+    "ZoomApiHttp",
+    "ZoomRetry"
+   ]
+  },
+  {
+   "id": "control-a-uuid-with-one-slash-inside-is-only-single-encoded",
+   "steps": [
+    {
+     "event": "ZOOM_FETCH_TRANSCRIPT",
+     "payload": {
+      "meetingId": "ab/c"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ZOOM_READY",
+        "payload": {
+         "key": "transcript:ab/c#1",
+         "target": "/v2/meetings/ab%2Fc/recordings"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "accountId": "acc"
+   },
+   "defaults": [
+    "ZoomClient",
+    "ZoomCall",
+    "ZoomTokenKeyed",
+    "ZoomTokenHttp",
+    "ZoomApiKeyed",
+    "ZoomApiHttp",
+    "ZoomRetry"
+   ]
+  },
+  {
+   "id": "a-meeting-reply-with-a-transcript-file-downloads-it-from-its-url",
+   "steps": [
+    {
+     "trait": "ZoomCall",
+     "event": "ZOOM_REPLIED",
+     "payload": {
+      "key": "transcript:u1==#1",
+      "status": 200,
+      "headers": {},
+      "body": "{\"uuid\": \"u1==\", \"topic\": \"Sestanek\", \"start_time\": \"2026-10-02T08:00:00Z\", \"recording_files\": [{\"file_type\": \"MP4\", \"download_url\": \"https://zoom.us/rec/download/v\"}, {\"file_type\": \"TRANSCRIPT\", \"download_url\": \"https://zoom.us/rec/download/tr1?access=a%20b&x=1\"}]}"
+     },
+     "expect": {
+      "emits": [],
+      "neverEmits": [
+       "ZOOM_FAILED"
+      ]
+     },
+     "entity": {
+      "id": "transcript:u1==#1",
+      "kind": "transcript",
+      "step": "meeting",
+      "firstTarget": "/v2/meetings/u1%3D%3D/recordings",
+      "target": "/x",
+      "host": "api.zoom.us",
+      "token": "tk",
+      "meetingId": "u1==",
+      "topic": "",
+      "startTime": "",
+      "downloadUrl": "",
+      "pageToken": "",
+      "meetings": [],
+      "attempt": 1,
+      "stepReady": false
+     }
+    },
+    {
+     "trait": "ZoomCall",
+     "event": "ZOOM_RETRY_DONE",
+     "payload": {
+      "key": "transcript:u1==#1",
+      "attempts": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ZOOM_RETRY_START",
+        "payload": {
+         "key": "transcript:u1==#1"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "ZoomCall",
+     "event": "ZOOM_ATTEMPT",
+     "payload": {
+      "key": "transcript:u1==#1",
+      "attempt": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ZOOM_API_HTTP_SEND",
+        "payload": {
+         "key": "transcript:u1==#1",
+         "method": "GET",
+         "target": "/rec/download/tr1?access=a%20b&x=1",
+         "host": "zoom.us",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "*/*"
+          },
+          {
+           "name": "authorization",
+           "value": "Bearer tk"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "accountId": "acc"
+   },
+   "defaults": [
+    "ZoomClient",
+    "ZoomCall",
+    "ZoomTokenKeyed",
+    "ZoomTokenHttp",
+    "ZoomApiKeyed",
+    "ZoomApiHttp",
+    "ZoomRetry"
+   ]
+  },
+  {
+   "id": "control-a-meeting-reply-with-only-a-video-file-answers-no-transcript",
+   "steps": [
+    {
+     "trait": "ZoomCall",
+     "event": "ZOOM_REPLIED",
+     "payload": {
+      "key": "transcript:u1==#1",
+      "status": 200,
+      "headers": {},
+      "body": "{\"uuid\": \"u2\", \"topic\": \"Brez prepisa\", \"start_time\": \"2026-10-03T08:00:00Z\", \"recording_files\": [{\"file_type\": \"MP4\", \"download_url\": \"https://zoom.us/rec/download/v2\"}]}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ZOOM_FAILED",
+        "payload": {
+         "code": "NO_TRANSCRIPT",
+         "message": "This meeting has no transcript file"
+        }
+       }
+      ],
+      "neverEmits": [
+       "ZOOM_TRANSCRIPT_FETCHED",
+       "ZOOM_RETRY_START"
+      ]
+     },
+     "entity": {
+      "id": "transcript:u1==#1",
+      "kind": "transcript",
+      "step": "meeting",
+      "firstTarget": "/v2/meetings/u1%3D%3D/recordings",
+      "target": "/x",
+      "host": "api.zoom.us",
+      "token": "tk",
+      "meetingId": "u1==",
+      "topic": "",
+      "startTime": "",
+      "downloadUrl": "",
+      "pageToken": "",
+      "meetings": [],
+      "attempt": 1,
+      "stepReady": false
+     }
+    }
+   ],
+   "config": {
+    "accountId": "acc"
+   },
+   "defaults": [
+    "ZoomClient",
+    "ZoomCall",
+    "ZoomTokenKeyed",
+    "ZoomTokenHttp",
+    "ZoomApiKeyed",
+    "ZoomApiHttp",
+    "ZoomRetry"
+   ]
+  },
+  {
+   "id": "a-meeting-reply-with-a-transcript-entry-but-no-download-url-answers-no-transcript",
+   "steps": [
+    {
+     "trait": "ZoomCall",
+     "event": "ZOOM_REPLIED",
+     "payload": {
+      "key": "transcript:u1==#1",
+      "status": 200,
+      "headers": {},
+      "body": "{\"uuid\": \"u1==\", \"topic\": \"t\", \"start_time\": \"s\", \"recording_files\": [{\"file_type\": \"TRANSCRIPT\"}]}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ZOOM_FAILED",
+        "payload": {
+         "code": "NO_TRANSCRIPT"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "transcript:u1==#1",
+      "kind": "transcript",
+      "step": "meeting",
+      "firstTarget": "/v2/meetings/u1%3D%3D/recordings",
+      "target": "/x",
+      "host": "api.zoom.us",
+      "token": "tk",
+      "meetingId": "u1==",
+      "topic": "",
+      "startTime": "",
+      "downloadUrl": "",
+      "pageToken": "",
+      "meetings": [],
+      "attempt": 1,
+      "stepReady": false
+     }
+    }
+   ],
+   "config": {
+    "accountId": "acc"
+   },
+   "defaults": [
+    "ZoomClient",
+    "ZoomCall",
+    "ZoomTokenKeyed",
+    "ZoomTokenHttp",
+    "ZoomApiKeyed",
+    "ZoomApiHttp",
+    "ZoomRetry"
+   ]
+  },
+  {
+   "id": "a-meeting-reply-without-recording-files-answers-no-transcript",
+   "steps": [
+    {
+     "trait": "ZoomCall",
+     "event": "ZOOM_REPLIED",
+     "payload": {
+      "key": "transcript:u1==#1",
+      "status": 200,
+      "headers": {},
+      "body": "{\"uuid\": \"u1==\"}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ZOOM_FAILED",
+        "payload": {
+         "code": "NO_TRANSCRIPT"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "transcript:u1==#1",
+      "kind": "transcript",
+      "step": "meeting",
+      "firstTarget": "/v2/meetings/u1%3D%3D/recordings",
+      "target": "/x",
+      "host": "api.zoom.us",
+      "token": "tk",
+      "meetingId": "u1==",
+      "topic": "",
+      "startTime": "",
+      "downloadUrl": "",
+      "pageToken": "",
+      "meetings": [],
+      "attempt": 1,
+      "stepReady": false
+     }
+    }
+   ],
+   "config": {
+    "accountId": "acc"
+   },
+   "defaults": [
+    "ZoomClient",
+    "ZoomCall",
+    "ZoomTokenKeyed",
+    "ZoomTokenHttp",
+    "ZoomApiKeyed",
+    "ZoomApiHttp",
+    "ZoomRetry"
+   ]
+  },
+  {
+   "id": "a-meeting-reply-that-is-not-json-fails",
+   "steps": [
+    {
+     "trait": "ZoomCall",
+     "event": "ZOOM_REPLIED",
+     "payload": {
+      "key": "transcript:u1==#1",
+      "status": 200,
+      "headers": {},
+      "body": "x"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ZOOM_FAILED",
+        "payload": {
+         "message": "The Zoom answer could not be read"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "transcript:u1==#1",
+      "kind": "transcript",
+      "step": "meeting",
+      "firstTarget": "/v2/meetings/u1%3D%3D/recordings",
+      "target": "/x",
+      "host": "api.zoom.us",
+      "token": "tk",
+      "meetingId": "u1==",
+      "topic": "",
+      "startTime": "",
+      "downloadUrl": "",
+      "pageToken": "",
+      "meetings": [],
+      "attempt": 1,
+      "stepReady": false
+     }
+    }
+   ],
+   "config": {
+    "accountId": "acc"
+   },
+   "defaults": [
+    "ZoomClient",
+    "ZoomCall",
+    "ZoomTokenKeyed",
+    "ZoomTokenHttp",
+    "ZoomApiKeyed",
+    "ZoomApiHttp",
+    "ZoomRetry"
+   ]
+  },
+  {
+   "id": "a-401-meeting-reply-fails-with-the-provider-message",
+   "steps": [
+    {
+     "trait": "ZoomCall",
+     "event": "ZOOM_REPLIED",
+     "payload": {
+      "key": "transcript:u1==#1",
+      "status": 401,
+      "headers": {},
+      "body": "{\"code\": 124, \"message\": \"Invalid access token.\"}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ZOOM_FAILED",
+        "payload": {
+         "message": "Invalid access token."
+        }
+       }
+      ],
+      "neverEmits": [
+       "ZOOM_TRANSCRIPT_FETCHED"
+      ]
+     },
+     "entity": {
+      "id": "transcript:u1==#1",
+      "kind": "transcript",
+      "step": "meeting",
+      "firstTarget": "/v2/meetings/u1%3D%3D/recordings",
+      "target": "/x",
+      "host": "api.zoom.us",
+      "token": "tk",
+      "meetingId": "u1==",
+      "topic": "",
+      "startTime": "",
+      "downloadUrl": "",
+      "pageToken": "",
+      "meetings": [],
+      "attempt": 1,
+      "stepReady": false
+     }
+    }
+   ],
+   "config": {
+    "accountId": "acc"
+   },
+   "defaults": [
+    "ZoomClient",
+    "ZoomCall",
+    "ZoomTokenKeyed",
+    "ZoomTokenHttp",
+    "ZoomApiKeyed",
+    "ZoomApiHttp",
+    "ZoomRetry"
+   ]
+  },
+  {
+   "id": "a-download-url-that-is-not-https-fails",
+   "steps": [
+    {
+     "trait": "ZoomCall",
+     "event": "ZOOM_REPLIED",
+     "payload": {
+      "key": "transcript:u1==#1",
+      "status": 200,
+      "headers": {},
+      "body": "{\"uuid\": \"u\", \"topic\": \"t\", \"start_time\": \"s\", \"recording_files\": [{\"file_type\": \"TRANSCRIPT\", \"download_url\": \"http://zoom.us/rec/download/x\"}]}"
+     },
+     "expect": {
+      "emits": []
+     },
+     "entity": {
+      "id": "transcript:u1==#1",
+      "kind": "transcript",
+      "step": "meeting",
+      "firstTarget": "/v2/meetings/u1%3D%3D/recordings",
+      "target": "/x",
+      "host": "api.zoom.us",
+      "token": "tk",
+      "meetingId": "u1==",
+      "topic": "",
+      "startTime": "",
+      "downloadUrl": "",
+      "pageToken": "",
+      "meetings": [],
+      "attempt": 1,
+      "stepReady": false
+     }
+    },
+    {
+     "trait": "ZoomCall",
+     "event": "ZOOM_RETRY_DONE",
+     "payload": {
+      "key": "transcript:u1==#1",
+      "attempts": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ZOOM_FAILED",
+        "payload": {
+         "message": "The transcript download_url is not an https URL"
+        }
+       }
+      ],
+      "neverEmits": [
+       "ZOOM_RETRY_START"
+      ]
+     }
+    }
+   ],
+   "config": {
+    "accountId": "acc"
+   },
+   "defaults": [
+    "ZoomClient",
+    "ZoomCall",
+    "ZoomTokenKeyed",
+    "ZoomTokenHttp",
+    "ZoomApiKeyed",
+    "ZoomApiHttp",
+    "ZoomRetry"
+   ]
+  },
+  {
+   "id": "a-slovenian-vtt-arrives-unchanged-and-its-text-keeps-every-letter",
+   "steps": [
+    {
+     "trait": "ZoomCall",
+     "event": "ZOOM_REPLIED",
+     "payload": {
+      "key": "transcript:u1==#1",
+      "status": 200,
+      "headers": {},
+      "body": "WEBVTT\r\n\r\n1\r\n00:00:01.000 --> 00:00:04.000\r\nJana Novak: Dober dan, začnimo sestanek.\r\n\r\n2\r\n00:00:04.500 --> 00:00:08.000\r\nMarko Škof: Čez teden dni moramo žirijo še enkrat pregledati.\r\n\r\n3\r\n00:00:08.500 --> 00:00:09.000\r\nŽiga Čuček: Hvala, šč ž.\r\n"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ZOOM_TRANSCRIPT_FETCHED",
+        "payload": {
+         "meetingId": "u1==",
+         "topic": "Sestanek",
+         "startTime": "2026-10-02T08:00:00Z",
+         "vtt": "WEBVTT\r\n\r\n1\r\n00:00:01.000 --> 00:00:04.000\r\nJana Novak: Dober dan, začnimo sestanek.\r\n\r\n2\r\n00:00:04.500 --> 00:00:08.000\r\nMarko Škof: Čez teden dni moramo žirijo še enkrat pregledati.\r\n\r\n3\r\n00:00:08.500 --> 00:00:09.000\r\nŽiga Čuček: Hvala, šč ž.\r\n",
+         "text": "Jana Novak: Dober dan, začnimo sestanek.\nMarko Škof: Čez teden dni moramo žirijo še enkrat pregledati.\nŽiga Čuček: Hvala, šč ž."
+        }
+       }
+      ],
+      "neverEmits": [
+       "ZOOM_FAILED"
+      ]
+     },
+     "entity": {
+      "id": "transcript:u1==#1",
+      "kind": "transcript",
+      "step": "download",
+      "firstTarget": "/v2/users/me/recordings?from=2026-10-01&to=2026-10-31&page_size=30",
+      "target": "/x",
+      "host": "zoom.us",
+      "token": "tk",
+      "meetingId": "u1==",
+      "topic": "Sestanek",
+      "startTime": "2026-10-02T08:00:00Z",
+      "downloadUrl": "",
+      "pageToken": "",
+      "meetings": [],
+      "attempt": 1,
+      "stepReady": false
+     }
+    }
+   ],
+   "config": {
+    "accountId": "acc"
+   },
+   "defaults": [
+    "ZoomClient",
+    "ZoomCall",
+    "ZoomTokenKeyed",
+    "ZoomTokenHttp",
+    "ZoomApiKeyed",
+    "ZoomApiHttp",
+    "ZoomRetry"
+   ]
+  },
+  {
+   "id": "a-slovenian-transcript-travels-the-whole-chain-through-the-keyed-clients-unchanged",
+   "steps": [
+    {
+     "event": "ZOOM_FETCH_TRANSCRIPT",
+     "payload": {
+      "meetingId": "u1=="
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ZOOM_TOKEN_HTTP_SEND",
+        "payload": {
+         "key": "transcript:u1==#1"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "ZoomTokenHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "transcript:u1==#1",
+      "status": 200,
+      "headers": {},
+      "body": "eyJhY2Nlc3NfdG9rZW4iOiAidGsiLCAiZXhwaXJlc19pbiI6IDM2MDB9"
+     },
+     "expect": {
+      "emits": []
+     }
+    },
+    {
+     "trait": "ZoomRetry",
+     "event": "SUCCEEDED",
+     "payload": {
+      "key": "transcript:u1==#1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ZOOM_RETRY_START",
+        "payload": {
+         "key": "transcript:u1==#1"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "transcript:u1==#1",
+      "key": "transcript:u1==#1",
+      "attempt": 1
+     },
+     "from": "running"
+    },
+    {
+     "trait": "ZoomRetry",
+     "event": "START",
+     "payload": {
+      "key": "transcript:u1==#1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ZOOM_API_HTTP_SEND",
+        "payload": {
+         "key": "transcript:u1==#1",
+         "target": "/v2/meetings/u1%3D%3D/recordings",
+         "host": "api.zoom.us",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "*/*"
+          },
+          {
+           "name": "authorization",
+           "value": "Bearer tk"
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "transcript:u1==#1",
+      "key": "transcript:u1==#1",
+      "attempt": 0
+     },
+     "from": "idle"
+    },
+    {
+     "trait": "ZoomApiHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "transcript:u1==#1",
+      "status": 200,
+      "headers": {},
+      "body": "eyJ1dWlkIjogInUxPT0iLCAidG9waWMiOiAiU2VzdGFuZWsiLCAic3RhcnRfdGltZSI6ICIyMDI2LTEwLTAyVDA4OjAwOjAwWiIsICJyZWNvcmRpbmdfZmlsZXMiOiBbeyJmaWxlX3R5cGUiOiAiTVA0IiwgImRvd25sb2FkX3VybCI6ICJodHRwczovL3pvb20udXMvcmVjL2Rvd25sb2FkL3YifSwgeyJmaWxlX3R5cGUiOiAiVFJBTlNDUklQVCIsICJkb3dubG9hZF91cmwiOiAiaHR0cHM6Ly96b29tLnVzL3JlYy9kb3dubG9hZC90cjE/YWNjZXNzPWElMjBiJng9MSJ9XX0="
+     },
+     "expect": {
+      "emits": [],
+      "neverEmits": [
+       "ZOOM_FAILED"
+      ]
+     }
+    },
+    {
+     "trait": "ZoomRetry",
+     "event": "SUCCEEDED",
+     "payload": {
+      "key": "transcript:u1==#1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ZOOM_RETRY_START",
+        "payload": {
+         "key": "transcript:u1==#1"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "transcript:u1==#1",
+      "key": "transcript:u1==#1",
+      "attempt": 1
+     },
+     "from": "running"
+    },
+    {
+     "trait": "ZoomRetry",
+     "event": "START",
+     "payload": {
+      "key": "transcript:u1==#1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ZOOM_API_HTTP_SEND",
+        "payload": {
+         "key": "transcript:u1==#1",
+         "target": "/rec/download/tr1?access=a%20b&x=1",
+         "host": "zoom.us",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "*/*"
+          },
+          {
+           "name": "authorization",
+           "value": "Bearer tk"
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "transcript:u1==#1",
+      "key": "transcript:u1==#1",
+      "attempt": 0
+     },
+     "from": "idle"
+    },
+    {
+     "trait": "ZoomApiHttp",
+     "event": "HTTP_REPLIED",
+     "payload": {
+      "key": "transcript:u1==#1",
+      "status": 200,
+      "headers": {},
+      "body": "V0VCVlRUDQoNCjENCjAwOjAwOjAxLjAwMCAtLT4gMDA6MDA6MDQuMDAwDQpKYW5hIE5vdmFrOiBEb2JlciBkYW4sIHphxI1uaW1vIHNlc3RhbmVrLg0KDQoyDQowMDowMDowNC41MDAgLS0+IDAwOjAwOjA4LjAwMA0KTWFya28gxaBrb2Y6IMSMZXogdGVkZW4gZG5pIG1vcmFtbyDFvmlyaWpvIMWhZSBlbmtyYXQgcHJlZ2xlZGF0aS4NCg0KMw0KMDA6MDA6MDguNTAwIC0tPiAwMDowMDowOS4wMDANCsW9aWdhIMSMdcSNZWs6IEh2YWxhLCDFocSNIMW+Lg0K"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ZOOM_TRANSCRIPT_FETCHED",
+        "payload": {
+         "meetingId": "u1==",
+         "topic": "Sestanek",
+         "startTime": "2026-10-02T08:00:00Z",
+         "vtt": "WEBVTT\r\n\r\n1\r\n00:00:01.000 --> 00:00:04.000\r\nJana Novak: Dober dan, začnimo sestanek.\r\n\r\n2\r\n00:00:04.500 --> 00:00:08.000\r\nMarko Škof: Čez teden dni moramo žirijo še enkrat pregledati.\r\n\r\n3\r\n00:00:08.500 --> 00:00:09.000\r\nŽiga Čuček: Hvala, šč ž.\r\n",
+         "text": "Jana Novak: Dober dan, začnimo sestanek.\nMarko Škof: Čez teden dni moramo žirijo še enkrat pregledati.\nŽiga Čuček: Hvala, šč ž."
+        }
+       }
+      ],
+      "neverEmits": [
+       "ZOOM_FAILED"
+      ]
+     }
+    }
+   ],
+   "config": {
+    "accountId": "acc"
+   },
+   "defaults": [
+    "ZoomClient",
+    "ZoomCall",
+    "ZoomTokenKeyed",
+    "ZoomTokenHttp",
+    "ZoomApiKeyed",
+    "ZoomApiHttp",
+    "ZoomRetry"
+   ]
+  },
+  {
+   "id": "control-an-ascii-vtt-with-lf-line-ends-yields-the-same-text-shape",
+   "steps": [
+    {
+     "trait": "ZoomCall",
+     "event": "ZOOM_REPLIED",
+     "payload": {
+      "key": "transcript:u1==#1",
+      "status": 200,
+      "headers": {},
+      "body": "WEBVTT\n\n1\n00:00:01.000 --> 00:00:02.000\nAna: Hello.\n\n2\n00:00:02.000 --> 00:00:03.000\nBen: Bye.\n"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ZOOM_TRANSCRIPT_FETCHED",
+        "payload": {
+         "text": "Ana: Hello.\nBen: Bye."
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "transcript:u1==#1",
+      "kind": "transcript",
+      "step": "download",
+      "firstTarget": "/v2/users/me/recordings?from=2026-10-01&to=2026-10-31&page_size=30",
+      "target": "/x",
+      "host": "zoom.us",
+      "token": "tk",
+      "meetingId": "u1==",
+      "topic": "Sestanek",
+      "startTime": "2026-10-02T08:00:00Z",
+      "downloadUrl": "",
+      "pageToken": "",
+      "meetings": [],
+      "attempt": 1,
+      "stepReady": false
+     }
+    }
+   ],
+   "config": {
+    "accountId": "acc"
+   },
+   "defaults": [
+    "ZoomClient",
+    "ZoomCall",
+    "ZoomTokenKeyed",
+    "ZoomTokenHttp",
+    "ZoomApiKeyed",
+    "ZoomApiHttp",
+    "ZoomRetry"
+   ]
+  },
+  {
+   "id": "a-spoken-line-of-digits-is-kept-while-a-cue-number-is-dropped",
+   "steps": [
+    {
+     "trait": "ZoomCall",
+     "event": "ZOOM_REPLIED",
+     "payload": {
+      "key": "transcript:u1==#1",
+      "status": 200,
+      "headers": {},
+      "body": "WEBVTT\n\n1\n00:00:01.000 --> 00:00:02.000\nAna: Koliko?\n42\n\n2\n00:00:02.000 --> 00:00:03.000\nBen: Štirideset dve.\n"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ZOOM_TRANSCRIPT_FETCHED",
+        "payload": {
+         "text": "Ana: Koliko?\n42\nBen: Štirideset dve."
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "transcript:u1==#1",
+      "kind": "transcript",
+      "step": "download",
+      "firstTarget": "/v2/users/me/recordings?from=2026-10-01&to=2026-10-31&page_size=30",
+      "target": "/x",
+      "host": "zoom.us",
+      "token": "tk",
+      "meetingId": "u1==",
+      "topic": "Sestanek",
+      "startTime": "2026-10-02T08:00:00Z",
+      "downloadUrl": "",
+      "pageToken": "",
+      "meetings": [],
+      "attempt": 1,
+      "stepReady": false
+     }
+    }
+   ],
+   "config": {
+    "accountId": "acc"
+   },
+   "defaults": [
+    "ZoomClient",
+    "ZoomCall",
+    "ZoomTokenKeyed",
+    "ZoomTokenHttp",
+    "ZoomApiKeyed",
+    "ZoomApiHttp",
+    "ZoomRetry"
+   ]
+  },
+  {
+   "id": "an-empty-vtt-answers-an-empty-text-and-the-empty-file",
+   "steps": [
+    {
+     "trait": "ZoomCall",
+     "event": "ZOOM_REPLIED",
+     "payload": {
+      "key": "transcript:u1==#1",
+      "status": 200,
+      "headers": {},
+      "body": "WEBVTT\n"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ZOOM_TRANSCRIPT_FETCHED",
+        "payload": {
+         "vtt": "WEBVTT\n",
+         "text": ""
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "transcript:u1==#1",
+      "kind": "transcript",
+      "step": "download",
+      "firstTarget": "/v2/users/me/recordings?from=2026-10-01&to=2026-10-31&page_size=30",
+      "target": "/x",
+      "host": "zoom.us",
+      "token": "tk",
+      "meetingId": "u1==",
+      "topic": "Sestanek",
+      "startTime": "2026-10-02T08:00:00Z",
+      "downloadUrl": "",
+      "pageToken": "",
+      "meetings": [],
+      "attempt": 1,
+      "stepReady": false
+     }
+    }
+   ],
+   "config": {
+    "accountId": "acc"
+   },
+   "defaults": [
+    "ZoomClient",
+    "ZoomCall",
+    "ZoomTokenKeyed",
+    "ZoomTokenHttp",
+    "ZoomApiKeyed",
+    "ZoomApiHttp",
+    "ZoomRetry"
+   ]
+  },
+  {
+   "id": "a-404-download-fails-with-its-body-text",
+   "steps": [
+    {
+     "trait": "ZoomCall",
+     "event": "ZOOM_REPLIED",
+     "payload": {
+      "key": "transcript:u1==#1",
+      "status": 404,
+      "headers": {},
+      "body": "Not Found"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ZOOM_FAILED",
+        "payload": {
+         "message": "Not Found"
+        }
+       }
+      ],
+      "neverEmits": [
+       "ZOOM_TRANSCRIPT_FETCHED"
+      ]
+     },
+     "entity": {
+      "id": "transcript:u1==#1",
+      "kind": "transcript",
+      "step": "download",
+      "firstTarget": "/v2/users/me/recordings?from=2026-10-01&to=2026-10-31&page_size=30",
+      "target": "/x",
+      "host": "zoom.us",
+      "token": "tk",
+      "meetingId": "u1==",
+      "topic": "Sestanek",
+      "startTime": "2026-10-02T08:00:00Z",
+      "downloadUrl": "",
+      "pageToken": "",
+      "meetings": [],
+      "attempt": 1,
+      "stepReady": false
+     }
+    }
+   ],
+   "config": {
+    "accountId": "acc"
+   },
+   "defaults": [
+    "ZoomClient",
+    "ZoomCall",
+    "ZoomTokenKeyed",
+    "ZoomTokenHttp",
+    "ZoomApiKeyed",
+    "ZoomApiHttp",
+    "ZoomRetry"
+   ]
+  },
+  {
+   "id": "a-timeout-on-the-third-attempt-stops-retrying-and-fails",
+   "steps": [
+    {
+     "trait": "ZoomCall",
+     "event": "ZOOM_REQUEST_FAILED",
+     "payload": {
+      "key": "transcript:u1==#1",
+      "error": "x",
+      "kind": "timeout"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ZOOM_RETRY_CANCEL",
+        "payload": {
+         "key": "transcript:u1==#1"
+        }
+       },
+       {
+        "event": "ZOOM_FAILED",
+        "payload": {
+         "message": "network timeout"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "transcript:u1==#1",
+      "kind": "transcript",
+      "step": "download",
+      "firstTarget": "/v2/users/me/recordings?from=2026-10-01&to=2026-10-31&page_size=30",
+      "target": "/x",
+      "host": "zoom.us",
+      "token": "tk",
+      "meetingId": "u1==",
+      "topic": "Sestanek",
+      "startTime": "2026-10-02T08:00:00Z",
+      "downloadUrl": "",
+      "pageToken": "",
+      "meetings": [],
+      "attempt": 3,
+      "stepReady": false
+     }
+    }
+   ],
+   "config": {
+    "accountId": "acc"
+   },
+   "defaults": [
+    "ZoomClient",
+    "ZoomCall",
+    "ZoomTokenKeyed",
+    "ZoomTokenHttp",
+    "ZoomApiKeyed",
+    "ZoomApiHttp",
+    "ZoomRetry"
+   ]
+  },
+  {
+   "id": "two-calls-keep-their-own-rows-and-tokens",
+   "steps": [
+    {
+     "event": "LIST_RECORDINGS",
+     "payload": {
+      "from": "a",
+      "to": "b"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ZOOM_TOKEN_HTTP_SEND",
+        "payload": {
+         "key": "list:a|b#1"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "ZOOM_FETCH_TRANSCRIPT",
+     "payload": {
+      "meetingId": "m"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ZOOM_TOKEN_HTTP_SEND",
+        "payload": {
+         "key": "transcript:m#2"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "accountId": "acc"
+   },
+   "defaults": [
+    "ZoomClient",
+    "ZoomCall",
+    "ZoomTokenKeyed",
+    "ZoomTokenHttp",
+    "ZoomApiKeyed",
+    "ZoomApiHttp",
+    "ZoomRetry"
+   ]
+  }
+ ]
+}

@@ -2,13 +2,14 @@ app std-ocr [
   version: "1.0.0",
   exec: ["pdftoppm", "tesseract"],
   fs: { "~/.almadar/ocr/**": [read, write, create, remove], "~/.almadar/ocr": [read, create] },
-  description: "std-ocr — reads the text of a scanned document or an image by optical character recognition, page by page, through the poppler pdftoppm and the tesseract commands, each run by its own std-cli runner, since a runner's commands are fallbacks for one program. OCR_READ { key, path } answers OCR_TEXT { key, pages } with one { page, text } per page, numbered from 1 in document order and split at the form feed tesseract writes between pages, nothing truncated. A path whose extension (compared case-insensitively) is in the pdfExtensions knob is rendered by `pdftoppm -r <dpi> -png <path> <workDir>/<key>`; the produced <key>-<n>.png files are ordered by the page number n parsed from their names, written one per line to <workDir>/<key>.list and read by `tesseract <list> - -l <languages>`; a path whose extension is in imageExtensions is read directly by `tesseract <path> - -l <languages>` as one page. The page images and the list file are removed afterwards, on failure too. Pages that carry no text at all answer OCR_NO_TEXT { key, pageCount }. A path that starts with a dash, a missing file or a document the commands refuse answers OCR_FAILED { key, error, code } with code ocr_unreadable; a command that could not be run or a work directory that could not be prepared answers ocr_command_failed; an extension in neither list answers ocr_unsupported; a read while another is in flight answers ocr_busy. The key must be a name the caller makes unique per document: every character outside letters, digits, underscore and dash becomes an underscore in the file names. The work directory and the pdftoppm and tesseract exec grants are this atom's own; the path is opened by the child, so the composer decides which files it can name."
+  description: "std-ocr — reads the text of a scanned document or an image by optical character recognition, page by page, through the poppler pdftoppm and the tesseract commands, each run by its own std-cli runner, since a runner's commands are fallbacks for one program. OCR_READ { key, path } answers OCR_TEXT { key, pages } with one { page, text } per page, numbered from 1 in document order and split at the form feed tesseract writes between pages, nothing truncated. A path whose extension (compared case-insensitively) is in the pdfExtensions knob is rendered by `pdftoppm -r <dpi> -png <path> <workDir>/<key>`; the produced <key>-<n>.png files are ordered by the page number n parsed from their names, written one per line to <workDir>/<key>.list and read by `tesseract <list> - -l <languages>`; a path whose extension is in imageExtensions is read directly by `tesseract <path> - -l <languages>` as one page. The page images and the list file are removed afterwards, on failure too. With the mode knob set to render, a PDF is only rendered: the ordered page image paths are answered as OCR_PAGES { key, pages : [{ page, name, path }] } with the files kept on disk, and OCR_RELEASE { key } removes them and answers OCR_RELEASED { key }; render failures still answer OCR_FAILED after the cleanup, and an image path is ocr_unsupported in that mode. Pages that carry no text at all answer OCR_NO_TEXT { key, pageCount }. A path that starts with a dash, a missing file or a document the commands refuse answers OCR_FAILED { key, error, code } with code ocr_unreadable; a command that could not be run or a work directory that could not be prepared answers ocr_command_failed; an extension in neither list answers ocr_unsupported; a read while another is in flight answers ocr_busy. The key must be a name the caller makes unique per document: every character outside letters, digits, underscore and dash becomes an underscore in the file names. The work directory and the pdftoppm and tesseract exec grants are this atom's own; the path is opened by the child, so the composer decides which files it can name."
 ]
 ;; @capabilities "read the text of a scanned PDF or an image by OCR, page by page"
 uses Spec from "almadar-std/ocr"
 uses Cli from "std/behaviors/std-cli"
 
 type OcrPage = { page : number!, text : string! }
+type OcrPageFile = { page : number!, name : string!, path : string! }
 type OcrDirEntry = { name : string!, kind : string! }
 
 orbital OcrOrbital {
@@ -68,6 +69,11 @@ orbital OcrOrbital {
         @description "The tesseract -l value: language codes joined with a plus. Each must be installed as tesseract data."
         @synonyms "language, tessdata"
         @tier "domain"
+      mode : "recognize" | "render" = "recognize"
+        @label "Mode"
+        @description "recognize reads the text by tesseract and answers OCR_TEXT. render only renders a PDF to page images and answers OCR_PAGES with their paths, keeping the files until OCR_RELEASE; an image path is then ocr_unsupported, since it is already an image."
+        @synonyms "render only, page images"
+        @tier "domain"
       workDir : string = "~/.almadar/ocr"
         @label "Work directory"
         @description "The directory the page images and the list file are written to and removed from, created when missing. The composing program's fs grant must cover it."
@@ -78,6 +84,7 @@ orbital OcrOrbital {
     state ready {
       INIT -> ready
         (set @entity.key "")
+      OCR_RELEASE -> ready
       OCR_READ -> ready when (str/startsWith @payload.path "-")
         (emit OCR_FAILED { key: @payload.key, error: "a path may not start with a dash", code: "ocr_unreadable" })
       OCR_READ -> rendering when (and (not (str/startsWith @payload.path "-")) (array/some @config.pdfExtensions (fn e (str/endsWith (str/lower @payload.path) (str/lower @e)))))
@@ -92,7 +99,7 @@ orbital OcrOrbital {
         (set @entity.recognized "")
         (set @entity.realDir "")
         (os/mkdir @config.workDir true { key: "mkdir", emit: { success: OCR_DIR_MADE, failure: OCR_HOST_FAILED } })
-      OCR_READ -> recognizing when (and (not (str/startsWith @payload.path "-")) (not (array/some @config.pdfExtensions (fn e (str/endsWith (str/lower @payload.path) (str/lower @e))))) (array/some @config.imageExtensions (fn e (str/endsWith (str/lower @payload.path) (str/lower @e)))))
+      OCR_READ -> recognizing when (and (== @config.mode "recognize") (not (str/startsWith @payload.path "-")) (not (array/some @config.pdfExtensions (fn e (str/endsWith (str/lower @payload.path) (str/lower @e))))) (array/some @config.imageExtensions (fn e (str/endsWith (str/lower @payload.path) (str/lower @e)))))
         (set @entity.key @payload.key)
         (set @entity.path @payload.path)
         (set @entity.cleanup [])
@@ -102,7 +109,7 @@ orbital OcrOrbital {
         (set @entity.code "")
         (set @entity.recognized "")
         (emit OCR_EXEC { stage: @payload.key, argv: [@payload.path "-" "-l" @config.languages] })
-      OCR_READ -> ready when (and (not (str/startsWith @payload.path "-")) (not (array/some @config.pdfExtensions (fn e (str/endsWith (str/lower @payload.path) (str/lower @e))))) (not (array/some @config.imageExtensions (fn e (str/endsWith (str/lower @payload.path) (str/lower @e))))))
+      OCR_READ -> ready when (and (not (str/startsWith @payload.path "-")) (not (array/some @config.pdfExtensions (fn e (str/endsWith (str/lower @payload.path) (str/lower @e))))) (or (== @config.mode "render") (not (array/some @config.imageExtensions (fn e (str/endsWith (str/lower @payload.path) (str/lower @e)))))))
         (emit OCR_FAILED { key: @payload.key, error: "the file is neither a PDF nor an image the OCR reads", code: "ocr_unsupported" })
     }
 
@@ -149,13 +156,24 @@ orbital OcrOrbital {
         (set @entity.error "pdftoppm produced no page images")
         (set @entity.code "ocr_unreadable")
         (emit OCR_CLEAN_NEXT { })
-      OCR_LISTED_NEXT -> writing when (and (not @entity.failed) (> (array/len @entity.cleanup) 1))
+      OCR_LISTED_NEXT -> rendered when (and (not @entity.failed) (> (array/len @entity.cleanup) 1) (== @config.mode "render"))
+        (emit OCR_PAGES { key: @entity.key, pages: (array/map (array/range 0 (- (array/len @entity.cleanup) 1) 1) (fn n { page: (+ @n 1), name: (default (array/nth @entity.cleanup @n) ""), path: (str/concat @entity.realDir "/" (default (array/nth @entity.cleanup @n) "")) })) })
+      OCR_LISTED_NEXT -> writing when (and (not @entity.failed) (> (array/len @entity.cleanup) 1) (== @config.mode "recognize"))
         (os/write-file (str/concat @config.workDir "/" @entity.prefix ".list") (bytes/from-string (str/join (array/map (array/dropLast @entity.cleanup 1) (fn nm (str/concat @entity.realDir "/" @nm))) "\n")) { key: "listfile", emit: { success: OCR_LIST_WRITTEN, failure: OCR_HOST_FAILED } })
       OCR_HOST_FAILED -> cleaning
         (set @entity.failed true)
         (set @entity.error (str/concat "the work directory could not be listed: " (default @payload.error "unknown")))
         (set @entity.code "ocr_command_failed")
         (set @entity.cleanup [])
+        (emit OCR_CLEAN_NEXT { })
+    }
+
+    state rendered {
+      INIT -> rendered
+      OCR_READ -> rendered
+        (emit OCR_FAILED { key: @payload.key, error: "another document is being read", code: "ocr_busy" })
+      OCR_RELEASE -> cleaning when (== @payload.key @entity.key)
+        (set @entity.cursor 0)
         (emit OCR_CLEAN_NEXT { })
     }
 
@@ -203,7 +221,10 @@ orbital OcrOrbital {
       OCR_CLEAN_NEXT -> ready when (and (>= @entity.cursor (array/len @entity.cleanup)) @entity.failed)
         (emit OCR_FAILED { key: @entity.key, error: @entity.error, code: @entity.code })
         (set @entity.key "")
-      OCR_CLEAN_NEXT -> ready when (and (>= @entity.cursor (array/len @entity.cleanup)) (not @entity.failed))
+      OCR_CLEAN_NEXT -> ready when (and (>= @entity.cursor (array/len @entity.cleanup)) (not @entity.failed) (== @config.mode "render"))
+        (emit OCR_RELEASED { key: @entity.key })
+        (set @entity.key "")
+      OCR_CLEAN_NEXT -> ready when (and (>= @entity.cursor (array/len @entity.cleanup)) (not @entity.failed) (== @config.mode "recognize"))
         (let ((pieces (str/split @entity.recognized "\u{c}")))
           (let ((leaves (if (and (> (array/len @pieces) 0) (== (array/last @pieces) "")) (array/dropLast @pieces 1) @pieces)))
             (if (array/every @leaves (fn leaf (== (str/trim @leaf) "")))
@@ -226,6 +247,18 @@ orbital OcrOrbital {
       }
         @description "The document has pageCount pages and OCR found no text on any of them."
         @synonyms "blank scan, no text recognized"
+        @tier "domain"
+      OCR_PAGES -> external {
+        key : string!
+        pages : [OcrPageFile]!
+      }
+        @description "Render mode: the PDF was rendered; one entry per page, numbered from 1 in document order, with its PNG file name and absolute path. The files stay on disk until OCR_RELEASE."
+        @synonyms "page images, rendered pages"
+        @tier "domain"
+      OCR_RELEASED -> external {
+        key : string!
+      }
+        @description "Render mode: the page images of the read named by key and the list name are removed, and the reader is ready again."
         @tier "domain"
       OCR_FAILED -> external {
         key : string!
@@ -264,6 +297,10 @@ orbital OcrOrbital {
       }
         @description "Read the text of the scanned PDF or image at path by OCR, page by page; key names the read in the answer and in its scratch file names."
         @synonyms "ocr, read scan, scanned pdf to text, image to text"
+      OCR_RELEASE -> input {
+        key : string!
+      }
+        @description "Render mode: remove the page images of the read named by key; answers OCR_RELEASED. Ignored when no render is held under that key."
       OcrRenderCli.CLI_DONE -> OCR_RENDER_RAN
       OcrRenderCli.CLI_FAILED -> OCR_RENDER_CLI_FAILED
       OcrCli.CLI_DONE -> OCR_RAN

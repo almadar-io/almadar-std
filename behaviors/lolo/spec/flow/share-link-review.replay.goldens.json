@@ -1,0 +1,264 @@
+{
+  "atom": "flow/atoms/std-share-link-review.lolo",
+  "trait": "ReviewLinkGuest",
+  "note": "A reviewer with a link decides once, only while the link is open and unexpired, and must give a name (and a note to request changes).",
+  "cases": [
+    {
+      "id": "an-open-link-takes-an-approval-with-a-name",
+      "now": 1700000000000,
+      "steps": [
+        {
+          "event": "INIT",
+          "payload": {
+            "token": "tok"
+          },
+          "expect": {
+            "fired": true,
+            "state": "opening"
+          }
+        },
+        {
+          "event": "LinkFound",
+          "from": "opening",
+          "payload": {
+            "data": {
+              "id": "h1",
+              "targetId": "asset-1",
+              "title": "Homepage hero",
+              "mediaUrl": "https://cdn.example/hero.png",
+              "mediaType": "image",
+              "status": "open",
+              "expiresAt": "2030-01-01T00:00:00Z",
+              "reviewerName": "",
+              "decisionNote": ""
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "open"
+          }
+        },
+        {
+          "event": "NAME_TYPED",
+          "from": "open",
+          "payload": {
+            "value": "Ana Novak"
+          },
+          "expect": {
+            "fired": true,
+            "state": "open"
+          }
+        },
+        {
+          "event": "APPROVE",
+          "from": "open",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "deciding"
+          }
+        },
+        {
+          "event": "DecisionSaved",
+          "from": "deciding",
+          "payload": {
+            "targetId": "asset-1",
+            "status": "approved"
+          },
+          "expect": {
+            "fired": true,
+            "state": "closed",
+            "emits": [
+              {
+                "event": "LINK_DECIDED",
+                "payload": {
+                  "targetId": "asset-1",
+                  "decision": "approved",
+                  "reviewerName": "Ana Novak",
+                  "note": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-an-approval-with-no-name-is-not-taken",
+      "now": 1700000000000,
+      "steps": [
+        {
+          "event": "INIT",
+          "payload": {
+            "token": "tok"
+          },
+          "expect": {
+            "fired": true,
+            "state": "opening"
+          }
+        },
+        {
+          "event": "LinkFound",
+          "from": "opening",
+          "payload": {
+            "data": {
+              "id": "h1",
+              "targetId": "asset-1",
+              "title": "Homepage hero",
+              "mediaUrl": "https://cdn.example/hero.png",
+              "mediaType": "image",
+              "status": "open",
+              "expiresAt": "2030-01-01T00:00:00Z",
+              "reviewerName": "",
+              "decisionNote": ""
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "open"
+          }
+        },
+        {
+          "event": "APPROVE",
+          "from": "open",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "open"
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-changes-need-a-note",
+      "now": 1700000000000,
+      "steps": [
+        {
+          "event": "INIT",
+          "payload": {
+            "token": "tok"
+          },
+          "expect": {
+            "fired": true,
+            "state": "opening"
+          }
+        },
+        {
+          "event": "LinkFound",
+          "from": "opening",
+          "payload": {
+            "data": {
+              "id": "h1",
+              "targetId": "asset-1",
+              "title": "Homepage hero",
+              "mediaUrl": "https://cdn.example/hero.png",
+              "mediaType": "image",
+              "status": "open",
+              "expiresAt": "2030-01-01T00:00:00Z",
+              "reviewerName": "",
+              "decisionNote": ""
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "open"
+          }
+        },
+        {
+          "event": "NAME_TYPED",
+          "from": "open",
+          "payload": {
+            "value": "Ana Novak"
+          },
+          "expect": {
+            "fired": true,
+            "state": "open"
+          }
+        },
+        {
+          "event": "REQUEST_CHANGES",
+          "from": "open",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "open"
+          }
+        }
+      ]
+    },
+    {
+      "id": "an-expired-link-takes-no-decision",
+      "now": 1900000000000,
+      "steps": [
+        {
+          "event": "INIT",
+          "payload": {
+            "token": "tok"
+          },
+          "expect": {
+            "fired": true,
+            "state": "opening"
+          }
+        },
+        {
+          "event": "LinkFound",
+          "from": "opening",
+          "payload": {
+            "data": {
+              "id": "h1",
+              "targetId": "asset-1",
+              "title": "Homepage hero",
+              "mediaUrl": "https://cdn.example/hero.png",
+              "mediaType": "image",
+              "status": "open",
+              "expiresAt": "2025-01-01T00:00:00Z",
+              "reviewerName": "",
+              "decisionNote": ""
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "closed"
+          }
+        }
+      ]
+    },
+    {
+      "id": "an-already-decided-link-takes-no-decision",
+      "now": 1700000000000,
+      "steps": [
+        {
+          "event": "INIT",
+          "payload": {
+            "token": "tok"
+          },
+          "expect": {
+            "fired": true,
+            "state": "opening"
+          }
+        },
+        {
+          "event": "LinkFound",
+          "from": "opening",
+          "payload": {
+            "data": {
+              "id": "h1",
+              "targetId": "asset-1",
+              "title": "Homepage hero",
+              "mediaUrl": "https://cdn.example/hero.png",
+              "mediaType": "image",
+              "status": "approved",
+              "expiresAt": "2030-01-01T00:00:00Z",
+              "reviewerName": "",
+              "decisionNote": ""
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "closed"
+          }
+        }
+      ]
+    }
+  ]
+}

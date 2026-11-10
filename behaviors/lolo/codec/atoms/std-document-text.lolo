@@ -8,14 +8,28 @@ app std-document-text [
 uses Spec from "almadar-std/document-text"
 uses Pdf from "std/behaviors/std-pdf-text"
 uses Ocr from "std/behaviors/std-ocr"
+uses Llm from "std/behaviors/std-llm"
+uses Req from "std/behaviors/std-http-request"
+uses Http from "std/behaviors/std-http-client"
+uses Frame from "std/behaviors/std-http-frame"
 
 type DocPage = { page : number!, text : string! }
+type DocPageFile = { page : number!, name : string!, path : string! }
+type DocImageType = { ext : string!, mediaType : string! }
 
 orbital DocumentTextOrbital {
   entity DocRead [runtime] {
     id : string!
     key : string @description "The caller's name for the read in flight; blank when idle." = ""
     path : string @description "The file being read." = ""
+    mediaType : string @description "The media type of the image being transcribed by the model." = ""
+    pagePaths : [DocPageFile] @description "The rendered page images of a scanned PDF read by the model, in page order." = []
+    rendered : boolean @description "The vision read is of a scanned PDF rendered to page images, which must be released at the end." = false
+    cursor : number @description "Index of the page the model is transcribing." = 0
+    pages : [DocPage] @description "The pages the model has transcribed so far." = []
+    failed : boolean @description "The vision read has failed; the rendered pages are released, then the failure is answered." = false
+    error : string @description "The failure message of the vision read." = ""
+    code : string @description "The failure code of the vision read." = ""
   }
 
   trait PdfCli = Pdf.traits.PdfCli {
@@ -101,6 +115,96 @@ orbital DocumentTextOrbital {
     }
   }
 
+  trait PageRenderCli = Ocr.traits.OcrRenderCli {
+    listens {
+      PageRenderer.OCR_RENDER_EXEC -> CLI_RUN
+    }
+  }
+
+  trait PageRenderer = Ocr.traits.OcrReader {
+    config {
+      mode: "render"
+      workDir: "~/.almadar/ocr"
+    }
+    listens {
+      DocumentText.DOC_RENDER_REQUEST -> OCR_READ
+      DocumentText.DOC_RENDER_RELEASE -> OCR_RELEASE
+      PageRenderCli.CLI_DONE -> OCR_RENDER_RAN
+      PageRenderCli.CLI_FAILED -> OCR_RENDER_CLI_FAILED
+      OCR_READ {
+        key : string!
+        path : string!
+      }
+      OCR_RELEASE {
+        key : string!
+      }
+      OCR_RENDER_RAN {
+        stage : string!
+        exitCode : number!
+        signal : number!
+        stdout : string!
+        stdoutBytes : bytes!
+        stderr : string!
+      }
+      OCR_RENDER_CLI_FAILED {
+        stage : string!
+        error : string!
+        code : string!
+      }
+    }
+  }
+
+  trait VisionLlm = Llm.traits.LlmClient {
+    listens {
+      DocumentText.LLM_GENERATE -> LLM_GENERATE
+      VisionRequest.HTTP_RESULT -> LLM_CHAT_WIRE_RESULT
+      VisionRequest.HTTP_REQUEST_FAILED -> LLM_CHAT_WIRE_FAILED
+      VisionRequest.HTTP_REQUEST_REFUSED -> LLM_CHAT_WIRE_REFUSED
+      VisionHttp.HTTP_STREAM_EVENT -> LLM_CHAT_WIRE_STREAM
+    }
+  }
+
+  trait VisionRequest = Req.traits.HttpRequest {
+    listens {
+      VisionRequestDelay.ELAPSED -> RETRY_ELAPSED
+      VisionRequestDeadline.ELAPSED -> TIMEOUT_ELAPSED
+      VisionLlm.LLM_CHAT_WIRE -> HTTP_REQUEST
+      VisionLlm.LLM_CHAT_WIRE_CANCEL -> HTTP_REQUEST_CANCEL
+      VisionHttp.HTTP_REPLIED -> HTTP_REPLIED
+      VisionHttp.HTTP_FAILED -> HTTP_FAILED
+    }
+  }
+
+  trait VisionRequestDelay = Req.traits.RequestDelay {
+    listens {
+      VisionRequest.RETRY_WAIT -> START
+      VisionRequest.RETRY_STOP -> CANCEL
+    }
+  }
+
+  trait VisionRequestDeadline = Req.traits.RequestDeadline {
+    listens {
+      VisionRequest.TIMEOUT_START -> START
+      VisionRequest.TIMEOUT_STOP -> CANCEL
+    }
+  }
+
+  trait VisionHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      VisionHttp.HC_FRAME -> FRAME_RUN
+    }
+  }
+
+  trait VisionHttp = Http.traits.HttpClient {
+    listens {
+      VisionRequest.HTTP_SEND -> HTTP_SEND
+      VisionRequest.HTTP_CANCEL -> HTTP_CANCEL
+      VisionHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      VisionHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      VisionHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
+    }
+  }
+
   trait DocumentText -> DocRead [optimistic] {
     initial: ready
 
@@ -114,6 +218,26 @@ orbital DocumentTextOrbital {
         @label "Image extensions"
         @description "Path extensions, lower case with the dot, read as one image page by OCR. Compared case-insensitively against the end of the path."
         @synonyms "picture extensions, photo, scan"
+        @tier "domain"
+      workDir : string = "~/.almadar/ocr"
+        @label "Work directory"
+        @description "The directory the vision reader reads the rendered page images from: it must equal the PageRenderer work directory, which std-ocr writes them to, and the composing program's fs grant must cover it."
+        @synonyms "scratch directory, temp directory"
+        @tier "policy"
+      reader : "ocr" | "vision" = "ocr"
+        @label "Reader"
+        @description "How an image, and a PDF with no text layer, is turned into text: ocr recognizes it by tesseract through std-ocr; vision sends each image, or each rendered PDF page in order, to the composed std-llm model with the visionPrompt and answers method vision. A PDF with a text layer is always read by pdftotext and a text file as text."
+        @synonyms "ocr or vision, model transcription"
+        @tier "domain"
+      visionPrompt : string = "Transcribe all the text in the image exactly as written, in its original language. Output only the text."
+        @label "Vision prompt"
+        @description "The user prompt sent with each image when the reader is vision."
+        @synonyms "transcription prompt"
+        @tier "domain"
+      imageMediaTypes : [DocImageType] = [{ ext: ".png", mediaType: "image/png" }, { ext: ".jpg", mediaType: "image/jpeg" }, { ext: ".jpeg", mediaType: "image/jpeg" }, { ext: ".webp", mediaType: "image/webp" }, { ext: ".tif", mediaType: "image/tiff" }, { ext: ".tiff", mediaType: "image/tiff" }]
+        @label "Image media types"
+        @description "The declared media type sent to the model for each image extension (lower case with the dot, compared case-insensitively against the end of the path) when the reader is vision. An image extension with no entry fails doc_unsupported; nothing is guessed."
+        @synonyms "mime types, image formats"
         @tier "domain"
       textExtensions : [string] = [".txt", ".eml", ".md", ".csv"]
         @label "Text extensions"
@@ -129,10 +253,24 @@ orbital DocumentTextOrbital {
         (set @entity.key @payload.key)
         (set @entity.path @payload.path)
         (emit DOC_PDF_REQUEST { key: @payload.key, path: @payload.path })
-      DOC_TEXT_READ -> ocr when (and (not (array/some @config.pdfExtensions (fn e (str/endsWith (str/lower @payload.path) (str/lower @e))))) (array/some @config.imageExtensions (fn e (str/endsWith (str/lower @payload.path) (str/lower @e)))))
+      DOC_TEXT_READ -> ocr when (and (== @config.reader "ocr") (not (array/some @config.pdfExtensions (fn e (str/endsWith (str/lower @payload.path) (str/lower @e))))) (array/some @config.imageExtensions (fn e (str/endsWith (str/lower @payload.path) (str/lower @e)))))
         (set @entity.key @payload.key)
         (set @entity.path @payload.path)
         (emit DOC_OCR_REQUEST { key: @payload.key, path: @payload.path })
+      DOC_TEXT_READ -> visionOpen when (and (== @config.reader "vision") (not (array/some @config.pdfExtensions (fn e (str/endsWith (str/lower @payload.path) (str/lower @e))))) (array/some @config.imageExtensions (fn e (str/endsWith (str/lower @payload.path) (str/lower @e)))) (!= (array/find @config.imageMediaTypes (fn m (str/endsWith (str/lower @payload.path) (str/lower @m.ext)))) null))
+        (set @entity.key @payload.key)
+        (set @entity.path @payload.path)
+        (set @entity.mediaType (default (object/get (array/find @config.imageMediaTypes (fn m (str/endsWith (str/lower @payload.path) (str/lower @m.ext)))) mediaType "") ""))
+        (set @entity.pagePaths [])
+        (set @entity.rendered false)
+        (set @entity.cursor 0)
+        (set @entity.pages [])
+        (set @entity.failed false)
+        (set @entity.error "")
+        (set @entity.code "")
+        (os/read-file { anchor: "cwd", path: @payload.path } { key: "image", emit: { success: DOC_FILE_READ, failure: DOC_FILE_FAILED } })
+      DOC_TEXT_READ -> ready when (and (== @config.reader "vision") (not (array/some @config.pdfExtensions (fn e (str/endsWith (str/lower @payload.path) (str/lower @e))))) (array/some @config.imageExtensions (fn e (str/endsWith (str/lower @payload.path) (str/lower @e)))) (== (array/find @config.imageMediaTypes (fn m (str/endsWith (str/lower @payload.path) (str/lower @m.ext)))) null))
+        (emit DOC_TEXT_FAILED { key: @payload.key, error: "the image extension has no declared media type", code: "doc_unsupported" })
       DOC_TEXT_READ -> reading when (and (not (array/some @config.pdfExtensions (fn e (str/endsWith (str/lower @payload.path) (str/lower @e))))) (not (array/some @config.imageExtensions (fn e (str/endsWith (str/lower @payload.path) (str/lower @e))))) (array/some @config.textExtensions (fn e (str/endsWith (str/lower @payload.path) (str/lower @e)))))
         (set @entity.key @payload.key)
         (set @entity.path @payload.path)
@@ -148,8 +286,18 @@ orbital DocumentTextOrbital {
       DOC_PDF_TEXT -> ready
         (emit DOC_TEXT { key: @entity.key, pages: @payload.pages, method: "pdftotext" })
         (set @entity.key "")
-      DOC_PDF_NO_TEXT -> ocr
+      DOC_PDF_NO_TEXT -> ocr when (== @config.reader "ocr")
         (emit DOC_OCR_REQUEST { key: @entity.key, path: @entity.path })
+      DOC_PDF_NO_TEXT -> rendering when (== @config.reader "vision")
+        (set @entity.pagePaths [])
+        (set @entity.rendered true)
+        (set @entity.mediaType "")
+        (set @entity.cursor 0)
+        (set @entity.pages [])
+        (set @entity.failed false)
+        (set @entity.error "")
+        (set @entity.code "")
+        (emit DOC_RENDER_REQUEST { key: @entity.key, path: @entity.path })
       DOC_PDF_FAILED -> ready
         (emit DOC_TEXT_FAILED { key: @entity.key, error: @payload.error, code: @payload.code })
         (set @entity.key "")
@@ -167,6 +315,72 @@ orbital DocumentTextOrbital {
         (set @entity.key "")
       DOC_OCR_FAILED -> ready
         (emit DOC_TEXT_FAILED { key: @entity.key, error: @payload.error, code: @payload.code })
+        (set @entity.key "")
+    }
+
+    state rendering {
+      INIT -> rendering
+      DOC_TEXT_READ -> rendering
+        (emit DOC_TEXT_FAILED { key: @payload.key, error: "another document is being read", code: "doc_busy" })
+      DOC_RENDER_PAGES -> visionOpen
+        (set @entity.pagePaths @payload.pages)
+        (set @entity.mediaType "image/png")
+        (set @entity.cursor 0)
+        (os/read-file (str/concat @config.workDir "/" (default (array/first (array/map @payload.pages (fn pf @pf.name))) "")) { key: "page", emit: { success: DOC_FILE_READ, failure: DOC_FILE_FAILED } })
+      DOC_RENDER_FAILED -> ready
+        (emit DOC_TEXT_FAILED { key: @entity.key, error: @payload.error, code: @payload.code })
+        (set @entity.key "")
+    }
+
+    state visionOpen {
+      INIT -> visionOpen
+      DOC_TEXT_READ -> visionOpen
+        (emit DOC_TEXT_FAILED { key: @payload.key, error: "another document is being read", code: "doc_busy" })
+      DOC_FILE_READ -> describing
+        (emit LLM_GENERATE { userPrompt: @config.visionPrompt, temperature: 0, maxTokens: 0, images: [{ mediaType: @entity.mediaType, data: (bytes/to-base64 @payload.data) }] })
+      DOC_FILE_FAILED -> releasing when @entity.rendered
+        (set @entity.failed true)
+        (set @entity.error (str/concat "a page image could not be read: " (default @payload.error "unknown")))
+        (set @entity.code "doc_unreadable")
+        (emit DOC_RENDER_RELEASE { key: @entity.key })
+      DOC_FILE_FAILED -> ready when (not @entity.rendered)
+        (emit DOC_TEXT_FAILED { key: @entity.key, error: (str/concat "the file could not be read: " (default @payload.error "unknown")), code: "doc_unreadable" })
+        (set @entity.key "")
+    }
+
+    state describing {
+      INIT -> describing
+      DOC_TEXT_READ -> describing
+        (emit DOC_TEXT_FAILED { key: @payload.key, error: "another document is being read", code: "doc_busy" })
+      DOC_VISION_TEXT -> ready when (not @entity.rendered)
+        (emit DOC_TEXT { key: @entity.key, pages: [{ page: 1, text: @payload.content }], method: "vision" })
+        (set @entity.key "")
+      DOC_VISION_TEXT -> visionOpen when (and @entity.rendered (< (+ @entity.cursor 1) (array/len @entity.pagePaths)))
+        (os/read-file (str/concat @config.workDir "/" (default (array/nth (array/map @entity.pagePaths (fn pf @pf.name)) (+ @entity.cursor 1)) "")) { key: "page", emit: { success: DOC_FILE_READ, failure: DOC_FILE_FAILED } })
+        (set @entity.pages (array/append @entity.pages { page: (+ @entity.cursor 1), text: @payload.content }))
+        (set @entity.cursor (+ @entity.cursor 1))
+      DOC_VISION_TEXT -> releasing when (and @entity.rendered (>= (+ @entity.cursor 1) (array/len @entity.pagePaths)))
+        (set @entity.pages (array/append @entity.pages { page: (+ @entity.cursor 1), text: @payload.content }))
+        (emit DOC_RENDER_RELEASE { key: @entity.key })
+      DOC_VISION_FAILED -> releasing when @entity.rendered
+        (set @entity.failed true)
+        (set @entity.error @payload.message)
+        (set @entity.code "doc_vision_failed")
+        (emit DOC_RENDER_RELEASE { key: @entity.key })
+      DOC_VISION_FAILED -> ready when (not @entity.rendered)
+        (emit DOC_TEXT_FAILED { key: @entity.key, error: @payload.message, code: "doc_vision_failed" })
+        (set @entity.key "")
+    }
+
+    state releasing {
+      INIT -> releasing
+      DOC_TEXT_READ -> releasing
+        (emit DOC_TEXT_FAILED { key: @payload.key, error: "another document is being read", code: "doc_busy" })
+      DOC_RENDER_RELEASED -> ready when @entity.failed
+        (emit DOC_TEXT_FAILED { key: @entity.key, error: @entity.error, code: @entity.code })
+        (set @entity.key "")
+      DOC_RENDER_RELEASED -> ready when (not @entity.failed)
+        (emit DOC_TEXT { key: @entity.key, pages: @entity.pages, method: "vision" })
         (set @entity.key "")
     }
 
@@ -214,6 +428,25 @@ orbital DocumentTextOrbital {
       }
         @description "The OCR read, handed to std-ocr."
         @tier "internal"
+      DOC_RENDER_REQUEST -> external {
+        key : string!
+        path : string!
+      }
+        @description "The page rendering of a scanned PDF for the vision reader, handed to std-ocr in render mode."
+        @tier "internal"
+      DOC_RENDER_RELEASE -> external {
+        key : string!
+      }
+        @description "The rendered page images are no longer needed; std-ocr removes them."
+        @tier "internal"
+      LLM_GENERATE -> external {
+        userPrompt : string!
+        temperature : number
+        maxTokens : number
+        images : [{ mediaType : string!, data : string! }]
+      }
+        @description "One transcription call to std-llm: the vision prompt with one image, temperature 0 and no token cap."
+        @tier "internal"
     }
 
     listens {
@@ -229,6 +462,11 @@ orbital DocumentTextOrbital {
       OcrReader.OCR_TEXT -> DOC_OCR_TEXT
       OcrReader.OCR_NO_TEXT -> DOC_OCR_NO_TEXT
       OcrReader.OCR_FAILED -> DOC_OCR_FAILED
+      PageRenderer.OCR_PAGES -> DOC_RENDER_PAGES
+      PageRenderer.OCR_RELEASED -> DOC_RENDER_RELEASED
+      PageRenderer.OCR_FAILED -> DOC_RENDER_FAILED
+      VisionLlm.LLM_GENERATE_RESULT -> DOC_VISION_TEXT
+      VisionLlm.LLM_FAILED -> DOC_VISION_FAILED
       DOC_PDF_TEXT {
         key : string!
         pages : [DocPage]!
@@ -261,6 +499,32 @@ orbital DocumentTextOrbital {
         code : string!
       }
         @description "std-ocr's OCR_FAILED."
+      DOC_RENDER_PAGES {
+        key : string!
+        pages : [DocPageFile]!
+      }
+        @description "std-ocr's OCR_PAGES in render mode."
+      DOC_RENDER_RELEASED {
+        key : string!
+      }
+        @description "std-ocr's OCR_RELEASED."
+      DOC_RENDER_FAILED {
+        key : string!
+        error : string!
+        code : string!
+      }
+        @description "std-ocr's OCR_FAILED in render mode."
+      DOC_VISION_TEXT {
+        content : string!
+        usage : { promptTokens : number!, completionTokens : number!, totalTokens : number! }!
+      }
+        @description "std-llm's LLM_GENERATE_RESULT: the model's transcription of one image."
+      DOC_VISION_FAILED {
+        code : string
+        message : string!
+        key : string
+      }
+        @description "std-llm's LLM_FAILED."
       DOC_FILE_READ {
         data : bytes!
         key : string
@@ -275,5 +539,5 @@ orbital DocumentTextOrbital {
     }
   }
 
-  page boot as DocumentTextOrbitalStart -> DocumentText, PdfText, PdfCli, OcrReader, OcrRenderCli, OcrCli
+  page boot as DocumentTextOrbitalStart -> DocumentText, PdfText, PdfCli, OcrReader, OcrRenderCli, OcrCli, PageRenderer, PageRenderCli, VisionLlm, VisionRequest, VisionRequestDelay, VisionRequestDeadline, VisionHttpFrame, VisionHttp
 }

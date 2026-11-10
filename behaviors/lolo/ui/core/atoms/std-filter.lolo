@@ -17,7 +17,7 @@ orbital FilterTargetOrbital {
       INIT -> idle
         (fetch FilterTarget {})
         (render-ui main {
-          entity: FilterTarget
+          entity: @config.filteredEntity
           event: @config.event
           filters: @config.filters
           look: @config.filterBarLook
@@ -27,7 +27,7 @@ orbital FilterTargetOrbital {
         (set @entity.field ?field)
         (set @entity.value ?value)
         (render-ui main {
-          entity: FilterTarget
+          entity: @config.filteredEntity
           event: @config.event
           filters: @config.filters
           look: @config.filterBarLook
@@ -37,12 +37,12 @@ orbital FilterTargetOrbital {
         (set @entity.field "")
         (set @entity.value "")
         (emit FILTER {
-          entity: FilterTarget
+          entity: @config.filteredEntity
           field: ""
           value: ""
         })
         (render-ui main {
-          entity: FilterTarget
+          entity: @config.filteredEntity
           event: @config.event
           filters: @config.filters
           look: @config.filterBarLook
@@ -79,16 +79,16 @@ orbital FilterTargetOrbital {
     }
 
     config {
-      filters : [FilterBarSpec] = [{
-        field: status
-        filterType: select
-        label: Status
-        options: (active inactive pending)
-      }]
+      filters : [FilterBarSpec] = []
         @label "Filter controls"
         @description "Field, label, control type, and options for each filter input. numberrange renders a min/max slider pair (bounded by min/max/step) and emits one FILTER per side as `<field>_min` / `<field>_max`, mirroring daterange's `<field>_from` / `<field>_to` convention."
         @synonyms "numeric range, price range, min max, slider filter, range filter, threshold filter"
         @tier "presentation"
+      filteredEntity : entity = FilterTarget
+        @label "Filtered entity"
+        @description "The entity whose fields the filter controls name. A composer passes the entity its data trait is bound to."
+        @synonyms "data entity, target entity, filtered collection"
+        @tier "internal"
       event : event = FILTER
         @label "Filter event"
         @description "Event emitted when the user changes a filter selection"
