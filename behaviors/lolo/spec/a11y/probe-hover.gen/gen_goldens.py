@@ -23,6 +23,8 @@ try:
         c.key("Escape")
         after = c.evaluate(f"({js('after')})({q(f['revealed'])})")
         live[name] = {"find": found, "focus": focus, "hover": hover, "after": after}
+        if name == "hover-content-fail":
+            live["missing"] = {"focus": c.evaluate(f"({js('focus')})({q('#no-such-trigger')})")}
 finally:
     c.close(); site.close()
 json.dump(live, open(os.path.join(here, "recorded.json"), "w"), indent=1)
@@ -58,6 +60,9 @@ cases = [
     case("a held trigger list focuses the first trigger", [st("finding", "HOVER_FOUND", {}, "focusing", fail, entity={"triggers": [T(fail)]}, emits=[emit("PAGE_MEASURE", {"key": "k1:focus", "expression": focus_expr(fail)})])]),
     case("control: a page with no trigger answers no findings and touches nothing", [st("finding", "HOVER_FOUND", {}, "idle", fail, entity={"triggers": []}, emits=[emit("PROBE_DONE", {"key": "k1", "probe": "hover", "findings": []})])]),
     case("hover-content-fail: focusing the trigger reveals the bubble, held with its gap to the trigger", [st("focusing", "PAGE_MEASURED", {"key": "k1:focus", "json": live[fail]["focus"]}, "focusing", fail, entity={"triggers": [T(fail)], "at": 0}, focused=F(fail)["focused"], revealed=F(fail)["revealed"], content=F(fail)["content"], gap=F(fail)["gap"])]),
+    case("a trigger the page no longer has is measured as missing, not focused, with nothing revealed, and the page is restored", [
+        st("focusing", "PAGE_MEASURED", {"key": "k1:focus", "json": live["missing"]["focus"]}, "focusing", fail, entity={"triggers": [T(fail)], "at": 0}, focused=False, revealed=[], content="", gap=0),
+        st("focusing", "HOVER_FOCUSED", {}, "restoring", fail, entity={"triggers": [T(fail)], "at": 0, "focused": False, "revealed": []}, emits=[emit("PAGE_NAVIGATE", {"key": "k1:restore", "url": P(fail)})])]),
     case("hover-content-pass: the bubble touches its trigger so the gap is zero", [st("focusing", "PAGE_MEASURED", {"key": "k1:focus", "json": live[ok]["focus"]}, "focusing", ok, entity={"triggers": [T(ok)], "at": 0}, gap=F(ok)["gap"])]),
     case("revealed content sends mouseover to the trigger and the content", [st("focusing", "HOVER_FOCUSED", {}, "hovering", fail, entity={"triggers": [T(fail)], "at": 0, "focused": True, "revealed": F(fail)["revealed"], "content": F(fail)["content"]}, emits=[emit("PAGE_MEASURE", {"key": "k1:hover", "expression": "(" + js("hover") + ")(" + q(T(fail)["selector"]) + "," + q(F(fail)["content"]) + ")"})])]),
     case("control: a trigger that did not take focus is skipped and the page restored", [st("focusing", "HOVER_FOCUSED", {}, "restoring", fail, entity={"triggers": [T(fail)], "at": 0, "focused": False, "revealed": []}, emits=[emit("PAGE_NAVIGATE", {"key": "k1:restore", "url": P(fail)})])]),

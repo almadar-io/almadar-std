@@ -787,6 +787,42 @@
      }
     }
    ]
+  },
+  {
+   "id": "preload on: a measure that throws on a later page answers PROBE_FAILED with the exception message",
+   "steps": [
+    {
+     "from": "measuring",
+     "event": "PAGE_FAILED",
+     "entity": {
+      "runKey": "k2",
+      "pageUrl": "http://127.0.0.1:24680/",
+      "preloaded": true
+     },
+     "payload": {
+      "key": "k2:measure",
+      "error": "ReferenceError: axe is not defined\n    at <anonymous>:1:1",
+      "code": "script-error"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "PROBE_FAILED",
+        "payload": {
+         "key": "k2",
+         "probe": "axe",
+         "error": "ReferenceError: axe is not defined\n    at <anonymous>:1:1",
+         "code": "script-error"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "preload": true
+   }
   }
  ]
 }

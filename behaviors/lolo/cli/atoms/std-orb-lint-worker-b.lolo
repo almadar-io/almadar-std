@@ -1,0 +1,264 @@
+app std-orb-lint-worker-b [
+  version: "1.0.0",
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-worker-b — one lint worker: the lint engine's collecting trait and producers over a subset of its rule traits, composed from std-orb-lint-engine. A host opens it as a guest session, hands it the file and the language packs it scanned (LintWorker.WORKER_GO) and hears WORKER_DONE { ok, error, found, final }. The rule traits listed here are this worker's share of the partition: every rule trait of the engine is in exactly one worker, with the rules it listens to."
+]
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error", validValues : [string], entity : string, field : string }
+type RuleFound = { rule : string!, findings : [OrbFinding]! }
+type FiredNode = string | number | boolean | [FiredNode?] | Map string FiredNode?
+type LeafTrait = { name : string }
+type LeafOrbital = { name : string, traits : [LeafTrait] }
+type LeafNode = { k : string!, ks : [number]!, hd : string!, nms : [string]!, rt : string!, nm : string!, pa : [string]!, bd : number!, wh : string!, tx : string!, pv : boolean!, hs : boolean!, sl : [number]!, lb : [number]!, lv : [string]? }
+type HcParam = { name : string!, optional : boolean?, type : HcType }
+type HcByLiteral = { key : string!, required : Map string [string]! }
+type HcClosed = { request : boolean?, intRange : HcIntRange?, requestKeysByLiteral : HcByLiteral? }
+type HcGrantNeed = Map string HcVal
+type HcVal = string | number | boolean | [HcVal?] | Map string HcVal?
+type HcIntRange = { arg : number!, min : number!, max : number! }
+type HcType = string | HcTypeNode
+type HcTypeNode = { kind : string!, fields : Map string HcType?, optional : [string]? }
+type HcOrbital = { name : string, traits : [HcVal] }
+type SrService = { actions : Map string SrAction! }
+type SrAction = { params : [SrParam]!, hasKey : boolean! }
+type SrParam = { name : string!, type : string!, required : boolean!, kind : string! }
+type HcShape = { category : string?, minArity : number?, maxArity : number?, runsOn : string?, host : string?, hasSideEffects : boolean!, params : [HcParam]! }
+type HcExtras = { closedCall : HcClosed?, grant : [HcGrantNeed]?, defaultPorts : Map string number?, family : string?, emitKeys : [string]? }
+type CiNode = string | number | boolean | [CiNode?] | Map string CiNode?
+type WalkSlot = { kind : string!, args : [number] }
+type WalkProj = { sourceArg : number!, keyArg : number!, defaultArg : number }
+type ExprAskItem = { e : FiredNode?, eff : boolean! }
+type WorkerPack = { name : string!, text : string! }
+
+orbital OrbLintWorkerBOrbital {
+  uses Engine from "std/behaviors/std-orb-lint-engine"
+  uses Worker0 from "std/behaviors/std-orb-lint-worker"
+
+  entity OrbLintWorkerBRun [runtime] {
+    id : string!
+  }
+
+  trait OrbLintEngine = Engine.traits.OrbLintEngine {
+    config {
+      rules: ["entity-empty-enum", "entity-field-type", "entity-mock-member", "literal-default", "client-entity-server-only", "listen-per", "payload-field-name", "relation-targets", "duplicate-use-alias", "reserved-component-name", "trait-ref-config", "keyed-call", "page-unreachable", "navigate", "external-emit-payload", "listen-source-unresolved", "type-param-sweep", "user-identity", "expectation-unsatisfied", "expected-field-not-provided", "query-index", "keyed-call-keys", "cross-emitter", "cross-registry", "user-field-exists", "binding-setters", "config-knob", "control-unhandled", "finding-codes", "merged-fields", "orbital-ref-config", "os-grants", "os-grants-final", "control-value-discarded", "control-value-discarded-final", "pattern-props", "placement", "rui-effects", "service-def", "theme-ref"]
+      finalRules: ["control-unhandled", "os-grants-final", "control-value-discarded-final"]
+      programOnlyRules: ["orbital-ref-config", "os-grants", "os-grants-final", "trait-ref-config"]
+    }
+    listens {
+      LINT_RUN { file : string! }
+        @description "Run every lint rule over this file; the cli hook and std-orb-validate emit it."
+      LINT_INPUT_UNREAD { file : string!  error : string! }
+        @description "The lint input could not read or lower the file."
+      LINT_FOUND { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "One rule atom's findings for the file or the lazy child being linted."
+      LINT_LAZY_HEARD { orbitals : [string]! }
+        @description "std-orb-lint-input's LINT_LAZY: the lazy children to lint after the program."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+      CallSiteInput.LINT_CALL_SITES_UNREAD -> LINT_INPUT_UNREAD
+      OrbLintInput.LINT_LAZY -> LINT_LAZY_HEARD
+      OrbLintEntityEmptyEnum.LINT_FOUND -> LINT_FOUND
+      OrbLintEntityFieldType.LINT_FOUND -> LINT_FOUND
+      OrbLintEntityMockMember.LINT_FOUND -> LINT_FOUND
+      OrbLintLiteralDefault.LINT_FOUND -> LINT_FOUND
+      OrbLintClientEntityServerOnly.LINT_FOUND -> LINT_FOUND
+      OrbLintListenPer.LINT_FOUND -> LINT_FOUND
+      OrbLintPayloadFieldName.LINT_FOUND -> LINT_FOUND
+      OrbLintRelationTargets.LINT_FOUND -> LINT_FOUND
+      OrbLintDuplicateUseAlias.LINT_FOUND -> LINT_FOUND
+      OrbLintReservedComponentName.LINT_FOUND -> LINT_FOUND
+      OrbLintTraitRefConfig.LINT_FOUND -> LINT_FOUND
+      OrbLintKeyedCall.LINT_FOUND -> LINT_FOUND
+      OrbLintPageUnreachable.LINT_FOUND -> LINT_FOUND
+      OrbLintNavigate.LINT_FOUND -> LINT_FOUND
+      OrbLintExternalEmitPayload.LINT_FOUND -> LINT_FOUND
+      OrbLintListenSourceUnresolved.LINT_FOUND -> LINT_FOUND
+      OrbLintTypeParamSweep.LINT_FOUND -> LINT_FOUND
+      OrbLintUserIdentity.LINT_FOUND -> LINT_FOUND
+      OrbLintExpectationUnsatisfied.LINT_FOUND -> LINT_FOUND
+      OrbLintExpectedFieldNotProvided.LINT_FOUND -> LINT_FOUND
+      OrbLintQueryIndex.LINT_FOUND -> LINT_FOUND
+      OrbLintKeyedCallKeys.LINT_FOUND -> LINT_FOUND
+      OrbLintCrossEmitter.LINT_FOUND -> LINT_FOUND
+      OrbLintCrossRegistry.LINT_FOUND -> LINT_FOUND
+      OrbLintUserFieldExists.LINT_FOUND -> LINT_FOUND
+      OrbLintBindingSetters.LINT_FOUND -> LINT_FOUND
+      OrbLintConfigKnob.LINT_FOUND -> LINT_FOUND
+      OrbLintControlUnhandled.LINT_FOUND -> LINT_FOUND
+      OrbLintFindingCodes.LINT_FOUND -> LINT_FOUND
+      OrbLintMergedFields.LINT_FOUND -> LINT_FOUND
+      OrbLintOrbitalRefConfig.LINT_FOUND -> LINT_FOUND
+      OrbLintOsGrants.LINT_FOUND -> LINT_FOUND
+      OrbLintControlValueDiscarded.LINT_FOUND -> LINT_FOUND
+      OrbLintPatternProps.LINT_FOUND -> LINT_FOUND
+      OrbLintPlacement.LINT_FOUND -> LINT_FOUND
+      OrbLintRuiEffects.LINT_FOUND -> LINT_FOUND
+      OrbLintServiceDef.LINT_FOUND -> LINT_FOUND
+      OrbLintThemeRef.LINT_FOUND -> LINT_FOUND
+      Worker.LINT_RUN -> LINT_RUN
+    }
+  }
+  trait Packs = Worker0.traits.PacksGiven {
+    listens {
+      PACKS_GIVEN { packs : [WorkerPack]!  coreRoot : string!  stdRoot : string! }
+      LANG_SCAN { cwd : string! }
+      OrbLintInput.LINT_PACKS_RUN -> LANG_SCAN
+      Worker.PACKS_GIVEN -> PACKS_GIVEN
+    }
+  }
+  trait Worker = Worker0.traits.LintWorker {
+    listens {
+      WORKER_GO -> input { file : string!  packs : [WorkerPack]!  coreRoot : string!  stdRoot : string! }
+      WORKER_UNREAD { file : string!  error : string! }
+      WORKER_COLLECTED { findings : [OrbFinding]!  found : [RuleFound]!  final : [OrbFinding]! }
+      OrbLintEngine.LINT_COLLECTED -> WORKER_COLLECTED
+      OrbLintInput.LINT_INPUT_UNREAD -> WORKER_UNREAD
+    }
+  }
+  trait OrbLintControlUnhandled = Engine.traits.OrbLintControlUnhandled {
+  }
+  trait OrbLintFindingCodes = Engine.traits.OrbLintFindingCodes {
+  }
+  trait OrbLintInput = Engine.traits.OrbLintInput {
+  }
+  trait OrbLintEntityEmptyEnum = Engine.traits.OrbLintEntityEmptyEnum {
+  }
+  trait OrbLintEntityFieldType = Engine.traits.OrbLintEntityFieldType {
+  }
+  trait OrbLintEntityMockMember = Engine.traits.OrbLintEntityMockMember {
+  }
+  trait OrbLintLiteralDefault = Engine.traits.OrbLintLiteralDefault {
+  }
+  trait OrbLintClientEntityServerOnly = Engine.traits.OrbLintClientEntityServerOnly {
+  }
+  trait OrbLintListenPer = Engine.traits.OrbLintListenPer {
+  }
+  trait OrbFiredEvents = Engine.traits.OrbFiredEvents {
+  }
+  trait OrbLintPayloadFieldName = Engine.traits.OrbLintPayloadFieldName {
+  }
+  trait OrbLintRelationTargets = Engine.traits.OrbLintRelationTargets {
+  }
+  trait OrbLintDuplicateUseAlias = Engine.traits.OrbLintDuplicateUseAlias {
+  }
+  trait OrbLintReservedComponentName = Engine.traits.OrbLintReservedComponentName {
+  }
+  trait OrbLintTraitRefConfig = Engine.traits.OrbLintTraitRefConfig {
+  }
+  trait OrbLintKeyedCall = Engine.traits.OrbLintKeyedCall {
+  }
+  trait OrbLintPageUnreachable = Engine.traits.OrbLintPageUnreachable {
+  }
+  trait OrbLintNavigate = Engine.traits.OrbLintNavigate {
+  }
+  trait OrbLintExternalEmitPayload = Engine.traits.OrbLintExternalEmitPayload {
+  }
+  trait OrbLintListenSourceUnresolved = Engine.traits.OrbLintListenSourceUnresolved {
+  }
+  trait OrbLintTypeParamSweep = Engine.traits.OrbLintTypeParamSweep {
+  }
+  trait OrbLintUserIdentity = Engine.traits.OrbLintUserIdentity {
+  }
+  trait OrbLintExpectationUnsatisfied = Engine.traits.OrbLintExpectationUnsatisfied {
+  }
+  trait OrbLintExpectedFieldNotProvided = Engine.traits.OrbLintExpectedFieldNotProvided {
+  }
+  trait OrbLintQueryIndex = Engine.traits.OrbLintQueryIndex {
+  }
+  trait OrbLintKeyedCallKeys = Engine.traits.OrbLintKeyedCallKeys {
+  }
+  trait OrbLintCrossEmitter = Engine.traits.OrbLintCrossEmitter {
+  }
+  trait OrbLintCrossRegistry = Engine.traits.OrbLintCrossRegistry {
+  }
+  trait OrbLintUserFieldExists = Engine.traits.OrbLintUserFieldExists {
+  }
+  trait OrbEmbedChain = Engine.traits.OrbEmbedChain {
+  }
+  trait OrbEffectLeaves = Engine.traits.OrbEffectLeaves {
+    listens {
+      EFFECT_LEAVES_EXPAND { requestId : string!  orbitals : [LeafOrbital]!  heads : [string]! }
+        @description "The effect-sequencing rules' asks: flatten the effects of every inline trait whose head is asked."
+      LINT_EXPR_NODES { requestId : string!  nodes : [[LeafNode]]! }
+        @description "std-orb-lint-input's LINT_EXPR_NODES: the flat typed nodes of each asked effect."
+      OrbLintNavigate.EFFECT_LEAVES_EXPAND -> EFFECT_LEAVES_EXPAND
+      OrbLintExprNodes.LINT_EXPR_NODES -> LINT_EXPR_NODES
+    }
+  }
+  trait OrbProducedProgram = Engine.traits.OrbProducedProgram {
+  }
+  trait OrbLintBindingSetters = Engine.traits.OrbLintBindingSetters {
+  }
+  trait OrbLintConfigKnob = Engine.traits.OrbLintConfigKnob {
+  }
+  trait OrbLintExprNodes = Engine.traits.OrbLintExprNodes {
+    listens {
+      LINT_OPERATOR_NAMES { names : [string]! }
+        @description "std-orb-lint-input's LINT_OPERATOR_NAMES: every installed operator name, the recognized call heads."
+      LINT_OPERATOR_SEMANTICS { functions : [string]!  busExcluded : [string]!  targetOptions : [string]!  emitSlots : [string]! }
+        @description "std-orb-lint-input's LINT_OPERATOR_SEMANTICS: the operators whose result is a function (a lambda form)."
+      LINT_OPERATOR_WALK { slots : Map string WalkSlot!  projections : Map string WalkProj! }
+        @description "std-orb-lint-input's LINT_OPERATOR_WALK: each operator's value-source slots and field projections."
+      LINT_EXPR_ASK { requestId : string!  items : [ExprAskItem]! }
+        @description "A rule offers the expressions whose nodes it needs."
+      OrbLintInput.LINT_OPERATOR_NAMES -> LINT_OPERATOR_NAMES
+      OrbLintInput.LINT_OPERATOR_SEMANTICS -> LINT_OPERATOR_SEMANTICS
+      OrbLintInput.LINT_OPERATOR_WALK -> LINT_OPERATOR_WALK
+      OrbLintBindingSetters.LINT_EXPR_ASK -> LINT_EXPR_ASK
+      OrbEffectLeaves.LINT_EXPR_ASK -> LINT_EXPR_ASK
+    }
+  }
+  trait OrbLintMergedFields = Engine.traits.OrbLintMergedFields {
+  }
+  trait OrbLintOrbitalRefConfig = Engine.traits.OrbLintOrbitalRefConfig {
+  }
+  trait OrbLintOsGrants = Engine.traits.OrbLintOsGrants {
+  }
+  trait OrbLintControlValueDiscarded = Engine.traits.OrbLintControlValueDiscarded {
+  }
+  trait OrbLintPatternProps = Engine.traits.OrbLintPatternProps {
+  }
+  trait OrbLintPlacement = Engine.traits.OrbLintPlacement {
+  }
+  trait OrbLintRuiEffects = Engine.traits.OrbLintRuiEffects {
+  }
+  trait OrbLintServiceDef = Engine.traits.OrbLintServiceDef {
+  }
+  trait OrbLintThemeRef = Engine.traits.OrbLintThemeRef {
+  }
+  trait HostCalls = Engine.traits.HostCalls {
+    listens {
+      HOST_CALLS_COLLECT { requestId : string!  orbitals : [HcOrbital]!  heads : [string]!  operators : [string]!  fields : [string]! }
+      LINT_OPERATOR_SHAPES_HEARD { operators : Map string HcShape! }
+      LINT_OPERATOR_SHAPES_UNREAD_HEARD { error : string! }
+      LINT_HOST_FACTS_HEARD { operators : Map string HcExtras! }
+      LINT_HOST_FACTS_UNREAD_HEARD { error : string! }
+      OrbLintInput.LINT_OPERATOR_SHAPES -> LINT_OPERATOR_SHAPES_HEARD
+      OrbLintInput.LINT_OPERATOR_SHAPES_UNREAD -> LINT_OPERATOR_SHAPES_UNREAD_HEARD
+      OrbLintInput.LINT_HOST_FACTS -> LINT_HOST_FACTS_HEARD
+      OrbLintInput.LINT_HOST_FACTS_UNREAD -> LINT_HOST_FACTS_UNREAD_HEARD
+    }
+  }
+  trait ServiceRegistry = Engine.traits.ServiceRegistry {
+    listens {
+      LINT_SERVICES_HEARD { services : Map string SrService! }
+      LINT_SERVICES_UNREAD_HEARD { error : string! }
+      OrbLintInput.LINT_SERVICES -> LINT_SERVICES_HEARD
+      OrbLintInput.LINT_SERVICES_UNREAD -> LINT_SERVICES_UNREAD_HEARD
+    }
+  }
+  trait OrbValueLeaves = Engine.traits.OrbValueLeaves {
+    listens {
+      VALUE_SEMANTICS_HEARD { functions : [string]! }
+      VALUE_LEAVES_ASK { requestId : string!  values : [CiNode?]! }
+      VALUE_WALK_HEARD { slots : Map string WalkSlot! }
+        @description "std-orb-lint-input's LINT_OPERATOR_WALK: each operator's value-source slots."
+      OrbLintInput.LINT_OPERATOR_SEMANTICS -> VALUE_SEMANTICS_HEARD
+      OrbLintInput.LINT_OPERATOR_WALK -> VALUE_WALK_HEARD
+    }
+  }
+  trait CallSiteInput = Engine.traits.CallSiteInput {
+  }
+  trait OrbProducedEvents = Engine.traits.OrbProducedEvents {
+  }
+
+  page boot as OrbLintWorkerBOrbitalStart -> OrbLintEngine, Packs, Worker, OrbLintControlUnhandled, OrbLintFindingCodes, OrbLintInput, OrbLintEntityEmptyEnum, OrbLintEntityFieldType, OrbLintEntityMockMember, OrbLintLiteralDefault, OrbLintClientEntityServerOnly, OrbLintListenPer, OrbFiredEvents, OrbLintPayloadFieldName, OrbLintRelationTargets, OrbLintDuplicateUseAlias, OrbLintReservedComponentName, OrbLintTraitRefConfig, OrbLintKeyedCall, OrbLintPageUnreachable, OrbLintNavigate, OrbLintExternalEmitPayload, OrbLintListenSourceUnresolved, OrbLintTypeParamSweep, OrbLintUserIdentity, OrbLintExpectationUnsatisfied, OrbLintExpectedFieldNotProvided, OrbLintQueryIndex, OrbLintKeyedCallKeys, OrbLintCrossEmitter, OrbLintCrossRegistry, OrbLintUserFieldExists, OrbEmbedChain, OrbEffectLeaves, OrbProducedProgram, OrbLintBindingSetters, OrbLintConfigKnob, OrbLintExprNodes, OrbLintMergedFields, OrbLintOrbitalRefConfig, OrbLintOsGrants, OrbLintControlValueDiscarded, OrbLintPatternProps, OrbLintPlacement, OrbLintRuiEffects, OrbLintServiceDef, OrbLintThemeRef, HostCalls, ServiceRegistry, OrbValueLeaves, CallSiteInput, OrbProducedEvents
+}

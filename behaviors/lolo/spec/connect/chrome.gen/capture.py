@@ -171,6 +171,8 @@ try:
 
     cap["measureOk"] = c.call("Runtime.evaluate", {"expression": "Promise.resolve(JSON.stringify({a:1}))", "returnByValue": True, "awaitPromise": True})
     cap["measureThrow"] = c.call("Runtime.evaluate", {"expression": "(()=>{throw new Error('boom')})()", "returnByValue": True, "awaitPromise": True})
+    cap["measureUndefinedGlobal"] = c.call("Runtime.evaluate", {"expression": "axe.run(document).then(function (r) { return JSON.stringify(r); })", "returnByValue": True, "awaitPromise": True})
+    cap["measureRejectText"] = c.call("Runtime.evaluate", {"expression": "Promise.reject('plain')", "returnByValue": True, "awaitPromise": True})
     cap["measureNumber"] = c.call("Runtime.evaluate", {"expression": "42", "returnByValue": True, "awaitPromise": True})
     cap["measureObject"] = c.call("Runtime.evaluate", {"expression": "({a:1})", "returnByValue": True, "awaitPromise": True})
     cap["injectThrow"] = c.call("Runtime.evaluate", {"expression": "nope.nothing()"})

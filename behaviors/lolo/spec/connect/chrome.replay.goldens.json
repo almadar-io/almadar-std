@@ -4992,7 +4992,8 @@
         "event": "PAGE_FAILED",
         "payload": {
          "key": "k1",
-         "code": "script-error"
+         "code": "script-error",
+         "error": "ReferenceError: nope is not defined\n    at <anonymous>:1:1"
         }
        }
       ],
@@ -5182,7 +5183,130 @@
         "event": "PAGE_FAILED",
         "payload": {
          "key": "k1",
-         "code": "script-error"
+         "code": "script-error",
+         "error": "Error: boom\n    at <anonymous>:1:13\n    at <anonymous>:1:32"
+        }
+       }
+      ],
+      "neverEmits": [
+       "PAGE_MEASURED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "measure-a-missing-global-answers-the-exception-message-not-the-bare-uncaught",
+   "note": "the exception reply is captured from real headless Chrome: exceptionDetails.text is only Uncaught, the message is exception.description",
+   "config": {
+    "scriptDir": "node_modules/",
+    "profileDir": {
+     "anchor": "cwd",
+     "path": "profile"
+    },
+    "downloadDir": {
+     "anchor": "cwd",
+     "path": "downloads"
+    },
+    "preferencesDir": {
+     "anchor": "cwd",
+     "path": "profile/Default"
+    },
+    "preferencesFile": {
+     "anchor": "cwd",
+     "path": "profile/Default/Preferences"
+    }
+   },
+   "defaults": [],
+   "steps": [
+    {
+     "event": "CHROME_REPLY",
+     "payload": {
+      "key": "measure",
+      "method": "Runtime.evaluate",
+      "frame": "{\"id\":100,\"result\":{\"result\":{\"type\":\"object\",\"subtype\":\"error\",\"className\":\"ReferenceError\",\"description\":\"ReferenceError: axe is not defined\\n    at <anonymous>:1:1\",\"objectId\":\"1.1.1\"},\"exceptionDetails\":{\"exceptionId\":3,\"text\":\"Uncaught\",\"lineNumber\":0,\"columnNumber\":0,\"scriptId\":\"14\",\"stackTrace\":{\"callFrames\":[{\"functionName\":\"\",\"scriptId\":\"14\",\"url\":\"\",\"lineNumber\":0,\"columnNumber\":0}]},\"exception\":{\"type\":\"object\",\"subtype\":\"error\",\"className\":\"ReferenceError\",\"description\":\"ReferenceError: axe is not defined\\n    at <anonymous>:1:1\",\"objectId\":\"1.1.2\"}}},\"sessionId\":\"DFDA41ED83A525C0D0EE03D01D740968\"}"
+     },
+     "from": "busy",
+     "entity": {
+      "id": "t",
+      "sessionId": "DFDA41ED83A525C0D0EE03D01D740968",
+      "targetId": "F0FA88D58EEA3C0C49F9A7330DCEDF9D",
+      "url": "",
+      "downloadPath": "/work/downloads",
+      "op": "measure",
+      "stage": "measure",
+      "callerKey": "k1"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "PAGE_FAILED",
+        "payload": {
+         "key": "k1",
+         "code": "script-error",
+         "error": "ReferenceError: axe is not defined\n    at <anonymous>:1:1"
+        }
+       }
+      ],
+      "neverEmits": [
+       "PAGE_MEASURED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "measure-a-rejected-non-error-value-answers-its-value",
+   "note": "the exception reply is captured from real headless Chrome: a thrown string has no description, its value is the message",
+   "config": {
+    "scriptDir": "node_modules/",
+    "profileDir": {
+     "anchor": "cwd",
+     "path": "profile"
+    },
+    "downloadDir": {
+     "anchor": "cwd",
+     "path": "downloads"
+    },
+    "preferencesDir": {
+     "anchor": "cwd",
+     "path": "profile/Default"
+    },
+    "preferencesFile": {
+     "anchor": "cwd",
+     "path": "profile/Default/Preferences"
+    }
+   },
+   "defaults": [],
+   "steps": [
+    {
+     "event": "CHROME_REPLY",
+     "payload": {
+      "key": "measure",
+      "method": "Runtime.evaluate",
+      "frame": "{\"id\":101,\"result\":{\"result\":{\"type\":\"string\",\"value\":\"plain\"},\"exceptionDetails\":{\"exceptionId\":4,\"text\":\"Uncaught (in promise)\",\"lineNumber\":0,\"columnNumber\":0,\"exception\":{\"type\":\"string\",\"value\":\"plain\"}}},\"sessionId\":\"DFDA41ED83A525C0D0EE03D01D740968\"}"
+     },
+     "from": "busy",
+     "entity": {
+      "id": "t",
+      "sessionId": "DFDA41ED83A525C0D0EE03D01D740968",
+      "targetId": "F0FA88D58EEA3C0C49F9A7330DCEDF9D",
+      "url": "",
+      "downloadPath": "/work/downloads",
+      "op": "measure",
+      "stage": "measure",
+      "callerKey": "k1"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "PAGE_FAILED",
+        "payload": {
+         "key": "k1",
+         "code": "script-error",
+         "error": "plain"
         }
        }
       ],
@@ -7971,7 +8095,8 @@
    ]
   },
   {
-   "id": "preload-registers-the-script-for-new-documents-and-answers-the-identifier",
+   "id": "preload-reads-the-script-file-then-registers-its-text-for-new-documents",
+   "note": "the registered source is the file text, never the path",
    "config": {
     "scriptDir": "node_modules/",
     "profileDir": {
@@ -7997,7 +8122,7 @@
      "event": "PAGE_PRELOAD",
      "payload": {
       "key": "k1",
-      "script": "window.__axe = 1"
+      "script": "axe-core/axe.min.js"
      },
      "from": "ready",
      "entity": {
@@ -8010,6 +8135,23 @@
      },
      "expect": {
       "state": "busy",
+      "effects": [
+       {
+        "type": "os/read-file"
+       }
+      ],
+      "neverEmits": [
+       "CDP_COMMAND"
+      ]
+     }
+    },
+    {
+     "event": "CHROME_FILE_READ",
+     "payload": {
+      "data": "eD0x"
+     },
+     "expect": {
+      "state": "busy",
       "emits": [
        {
         "event": "CDP_COMMAND",
@@ -8017,11 +8159,12 @@
          "key": "preload",
          "method": "Page.addScriptToEvaluateOnNewDocument",
          "sessionId": "DFDA41ED83A525C0D0EE03D01D740968",
-         "paramsJson": "{\"source\":\"window.__axe = 1\"}"
+         "paramsJson": "{\"source\":\"x=1\"}"
         }
        }
       ]
-     }
+     },
+     "from": "busy"
     },
     {
      "event": "CHROME_REPLY",
@@ -8043,6 +8186,174 @@
       ]
      },
      "from": "busy"
+    }
+   ]
+  },
+  {
+   "id": "preload-an-absolute-script-path-answers-bad-script",
+   "config": {
+    "scriptDir": "node_modules/",
+    "profileDir": {
+     "anchor": "cwd",
+     "path": "profile"
+    },
+    "downloadDir": {
+     "anchor": "cwd",
+     "path": "downloads"
+    },
+    "preferencesDir": {
+     "anchor": "cwd",
+     "path": "profile/Default"
+    },
+    "preferencesFile": {
+     "anchor": "cwd",
+     "path": "profile/Default/Preferences"
+    }
+   },
+   "defaults": [],
+   "steps": [
+    {
+     "event": "PAGE_PRELOAD",
+     "payload": {
+      "key": "k1",
+      "script": "/etc/passwd"
+     },
+     "from": "ready",
+     "entity": {
+      "id": "t",
+      "sessionId": "DFDA41ED83A525C0D0EE03D01D740968",
+      "targetId": "F0FA88D58EEA3C0C49F9A7330DCEDF9D",
+      "url": "",
+      "downloadPath": "/work/downloads",
+      "browser": "Chrome/156"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "PAGE_FAILED",
+        "payload": {
+         "key": "k1",
+         "code": "bad-script"
+        }
+       }
+      ],
+      "effects": [],
+      "neverEmits": [
+       "CDP_COMMAND"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "preload-a-script-path-that-climbs-out-answers-bad-script",
+   "config": {
+    "scriptDir": "node_modules/",
+    "profileDir": {
+     "anchor": "cwd",
+     "path": "profile"
+    },
+    "downloadDir": {
+     "anchor": "cwd",
+     "path": "downloads"
+    },
+    "preferencesDir": {
+     "anchor": "cwd",
+     "path": "profile/Default"
+    },
+    "preferencesFile": {
+     "anchor": "cwd",
+     "path": "profile/Default/Preferences"
+    }
+   },
+   "defaults": [],
+   "steps": [
+    {
+     "event": "PAGE_PRELOAD",
+     "payload": {
+      "key": "k1",
+      "script": "../secret.js"
+     },
+     "from": "ready",
+     "entity": {
+      "id": "t",
+      "sessionId": "DFDA41ED83A525C0D0EE03D01D740968",
+      "targetId": "F0FA88D58EEA3C0C49F9A7330DCEDF9D",
+      "url": "",
+      "downloadPath": "/work/downloads",
+      "browser": "Chrome/156"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "PAGE_FAILED",
+        "payload": {
+         "key": "k1",
+         "code": "bad-script"
+        }
+       }
+      ],
+      "effects": [],
+      "neverEmits": [
+       "CDP_COMMAND"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "preload-an-unreadable-file-answers-read-failed",
+   "config": {
+    "scriptDir": "node_modules/",
+    "profileDir": {
+     "anchor": "cwd",
+     "path": "profile"
+    },
+    "downloadDir": {
+     "anchor": "cwd",
+     "path": "downloads"
+    },
+    "preferencesDir": {
+     "anchor": "cwd",
+     "path": "profile/Default"
+    },
+    "preferencesFile": {
+     "anchor": "cwd",
+     "path": "profile/Default/Preferences"
+    }
+   },
+   "defaults": [],
+   "steps": [
+    {
+     "event": "CHROME_HOST_FAILED",
+     "payload": {
+      "error": "no such file"
+     },
+     "from": "busy",
+     "entity": {
+      "id": "t",
+      "sessionId": "DFDA41ED83A525C0D0EE03D01D740968",
+      "targetId": "F0FA88D58EEA3C0C49F9A7330DCEDF9D",
+      "url": "",
+      "downloadPath": "/work/downloads",
+      "op": "preload",
+      "stage": "preload-read",
+      "callerKey": "k1"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "PAGE_FAILED",
+        "payload": {
+         "key": "k1",
+         "code": "read-failed"
+        }
+       }
+      ]
+     }
     }
    ]
   },

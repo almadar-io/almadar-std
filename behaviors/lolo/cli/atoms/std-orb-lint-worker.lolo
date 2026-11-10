@@ -1,0 +1,82 @@
+app std-orb-lint-worker [
+  version: "1.0.0",
+  description: "std-orb-lint-worker — the two traits every lint worker (std-orb-lint-worker-a to -d) composes. LintWorker takes WORKER_GO { file, packs, coreRoot, stdRoot } from the host, gives the packs to PacksGiven, asks the engine to run (LINT_RUN) and answers WORKER_DONE { ok, error, found, final }. PacksGiven replays the language packs the host scanned as std-orb-language's OrbLanguageEngine answers a scan: LANGUAGE_PACK_VOCAB per pack, then LANGUAGE_PACKS_DONE and SCAN_ANSWERED."
+]
+type WorkerPack = { name : string!, text : string! }
+type WorkerFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error", validValues : [string], entity : string, field : string }
+type WorkerRuleFound = { rule : string!, findings : [WorkerFinding]! }
+
+orbital LintWorkerOrbital {
+  entity PacksHeld [runtime] {
+    id : string!
+    packs : [WorkerPack] = []
+    coreRoot : string = ""
+    stdRoot : string = ""
+  }
+
+  entity WorkerRun [runtime] {
+    id : string!
+  }
+
+  trait PacksGiven -> PacksHeld {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      PACKS_GIVEN -> idle
+        (set @entity.packs @payload.packs)
+        (set @entity.coreRoot @payload.coreRoot)
+        (set @entity.stdRoot @payload.stdRoot)
+      LANG_SCAN -> idle
+        (emit PACK_STEP { i: 0 })
+      PACK_STEP -> idle when (< @payload.i (array/len @entity.packs))
+        (emit LANGUAGE_PACK_VOCAB { name: (object/get (default (array/nth @entity.packs @payload.i) { name: "", text: "" }) "name"), text: (object/get (default (array/nth @entity.packs @payload.i) { name: "", text: "" }) "text") })
+        (emit PACK_STEP { i: (+ @payload.i 1) })
+      PACK_STEP -> idle when (>= @payload.i (array/len @entity.packs))
+        (emit LANGUAGE_PACKS_DONE { problem: "", coreRoot: @entity.coreRoot, stdRoot: @entity.stdRoot })
+        (emit SCAN_ANSWERED { status: 200, body: "", stderr: "" })
+    }
+
+    emits {
+      PACK_STEP { i : number! }
+      SCAN_ANSWERED -> external { status : number!  body : string!  stderr : string! }
+      LANGUAGE_PACK_VOCAB -> external { name : string!  text : string! }
+      LANGUAGE_PACKS_DONE -> external { problem : string!  coreRoot : string!  stdRoot : string! }
+    }
+
+    listens {
+      PACKS_GIVEN { packs : [WorkerPack]!  coreRoot : string!  stdRoot : string! }
+      LANG_SCAN { cwd : string! }
+      LintWorker.PACKS_GIVEN -> PACKS_GIVEN
+    }
+  }
+
+  trait LintWorker -> WorkerRun {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      WORKER_GO -> ready
+        (emit PACKS_GIVEN { packs: @payload.packs, coreRoot: @payload.coreRoot, stdRoot: @payload.stdRoot })
+        (emit LINT_RUN { file: @payload.file })
+      WORKER_UNREAD -> ready
+        (emit WORKER_DONE { ok: false, error: @payload.error, found: [], final: [] })
+      WORKER_COLLECTED -> ready
+        (emit WORKER_DONE { ok: true, error: "", found: @payload.found, final: @payload.final })
+    }
+
+    emits {
+      PACKS_GIVEN -> external { packs : [WorkerPack]!  coreRoot : string!  stdRoot : string! }
+      LINT_RUN -> external { file : string! }
+      WORKER_DONE -> external { ok : boolean!  error : string!  found : [WorkerRuleFound]!  final : [WorkerFinding]! }
+    }
+
+    listens {
+      WORKER_GO -> input { file : string!  packs : [WorkerPack]!  coreRoot : string!  stdRoot : string! }
+      WORKER_UNREAD { file : string!  error : string! }
+      WORKER_COLLECTED { findings : [WorkerFinding]!  found : [WorkerRuleFound]!  final : [WorkerFinding]! }
+    }
+  }
+
+  page boot as LintWorkerStart -> LintWorker, PacksGiven
+}

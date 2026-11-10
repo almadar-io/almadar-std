@@ -1,0 +1,196 @@
+app std-orb-lint-workers [
+  version: "1.0.0",
+  env: ["PATH"],
+  exec: [exe],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  kernel: { "guest": [spawn, program] },
+  description: "std-orb-lint-workers — the lint engine run as four guest sessions, with the surface of std-orb-lint-engine: LINT_RUN { file } in, LINT_COLLECTED { findings, found, final } or LINT_INPUT_UNREAD { file, error } out. It scans the language packs once (std-orb-language), resolves each worker the workers knob names (std-orb-lint-worker-a to -d, the partition of the engine's rule traits), opens it as a guest session with the fs and env grants of the grants knob and the program port (program: true), subscribes to its events (program/live { kind: guest }) and hands it the file and the packs (LintWorker.WORKER_GO). A worker lowers the file and runs its own rules; its WORKER_DONE { ok, error, found, final } arrives on the guest stream. When every worker has answered, the engine answers first and then closes each guest session and its stream, one completion at a time; the answers are merged in the order the workers knob lists them: found is each worker's found in turn, findings its flattened findings, final each worker's final in turn. One worker that could not read or lower the file answers LINT_INPUT_UNREAD with its error. A caller composes this orbital beside std-orb-lint-engine and chooses which one to ask; nothing here runs unless it is asked."
+]
+type LwFsGrant = { glob : string!, modes : [string]! }
+type LwGrants = { fs : [LwFsGrant]?, env : [string]? }
+type LwOpened = { guest : string! }
+type LwPack = { name : string!, text : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error", validValues : [string], entity : string, field : string }
+type RuleFound = { rule : string!, findings : [OrbFinding]! }
+type LwDone = { ok : boolean, error : string, found : [RuleFound], final : [OrbFinding] }
+type LwEmitted = { event : string!, payload : LwDone }
+type LwAnswer = { guest : string!, ok : boolean!, error : string!, found : [RuleFound]!, final : [OrbFinding]! }
+
+orbital OrbLintWorkersOrbital {
+  uses Language from "std/behaviors/std-orb-language"
+  uses Semver from "std/behaviors/std-semver"
+
+  entity OrbLintWorkersRun [runtime] {
+    id : string!
+    file : string = ""
+    packs : [LwPack] = []
+    coreRoot : string = ""
+    stdRoot : string = ""
+    guests : [string] = []
+    answers : [LwAnswer] = []
+    closed : number = 0
+  }
+
+  trait Versions = Semver.traits.Semver {
+    listens {
+      Packs.LANG_SEMVER -> SEMVER_SATISFIES
+    }
+  }
+
+  trait Packs = Language.traits.OrbLanguageEngine {
+    listens {
+      OrbLintWorkers.LW_SCAN -> LANG_SCAN
+      LANG_SAT { requestId : string!  value : boolean! }
+        @description "std-semver's SEMVER_SATISFIED: the range check answered."
+      LANG_SAT_REFUSED { requestId : string!  operation : string!  reason : string! }
+        @description "std-semver's SEMVER_REFUSED: the range check refused."
+      Versions.SEMVER_SATISFIED -> LANG_SAT
+      Versions.SEMVER_REFUSED -> LANG_SAT_REFUSED
+    }
+  }
+
+  trait OrbLintWorkers -> OrbLintWorkersRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_RUN -> locating
+        (set @entity.file @payload.file)
+        (set @entity.packs [])
+        (set @entity.guests [])
+        (set @entity.answers [])
+        (os/realpath { anchor: "cwd" path: "." } { key: "lint-workers-cwd" emit: { success: LW_CWD, failure: LW_FAILED } })
+    }
+
+    state locating {
+      INIT -> locating
+      LW_CWD -> scanning
+        (emit LW_SCAN { cwd: @payload.path })
+      LW_FAILED -> ready
+        (emit LINT_INPUT_UNREAD { file: @entity.file, error: (default @payload.error "the working directory could not be read") })
+    }
+
+    state scanning {
+      INIT -> scanning
+      LW_PACK -> scanning
+        (set @entity.packs (array/append @entity.packs { name: @payload.name, text: @payload.text }))
+      LW_SCAN_ANSWERED -> ready when (!= @payload.status 200)
+        (emit LINT_INPUT_UNREAD { file: @entity.file, error: (str/concat "the language pack scan failed: " @payload.stderr) })
+      LW_SCAN_ANSWERED -> scanning when (= @payload.status 200)
+      LW_PACKS_DONE -> ready when (!= @payload.problem "")
+        (emit LINT_INPUT_UNREAD { file: @entity.file, error: @payload.problem })
+      LW_PACKS_DONE -> running when (= @payload.problem "")
+        (set @entity.coreRoot @payload.coreRoot)
+        (set @entity.stdRoot @payload.stdRoot)
+        (emit LW_OPEN_NEXT { i: 0 })
+    }
+
+    state running {
+      INIT -> running
+      LW_SCAN_ANSWERED -> running
+      LW_OPEN_NEXT -> running when (< @payload.i (array/len @config.workers))
+        (behavior/resolve { behavior: (default (array/nth @config.workers @payload.i) "") } {} { key: (str/concat "lint-worker-" @payload.i) emit: { success: LW_RESOLVED, failure: LW_FAILED } })
+        (emit LW_OPEN_NEXT { i: (+ @payload.i 1) })
+      LW_OPEN_NEXT -> running when (>= @payload.i (array/len @config.workers))
+      LW_RESOLVED -> running
+        (program/open @payload.result { grants: @config.grants, program: true } { key: (str/concat "open-" (default @payload.key "")) emit: { success: LW_OPENED, failure: LW_FAILED } })
+      LW_OPENED -> running
+        (set @entity.guests (array/append @entity.guests @payload.result.guest))
+        (program/live { kind: "guest", guest: @payload.result.guest } { key: (str/concat "lint-worker-live-" @payload.result.guest) emit: { onMessage: LW_GUEST_EVENT, failure: LW_FAILED } })
+        (program/dispatch "Worker.WORKER_GO" { file: @entity.file, packs: @entity.packs, coreRoot: @entity.coreRoot, stdRoot: @entity.stdRoot } { guest: @payload.result.guest key: (str/concat "lint-worker-go-" @payload.result.guest) emit: { success: LW_DISPATCHED, failure: LW_FAILED } })
+      LW_DISPATCHED -> running
+      LW_GUEST_EVENT -> running when (not (array/some (default @payload.emitted []) (fn e (= (object/get @e "event" "") "WORKER_DONE"))))
+      LW_GUEST_EVENT -> running when (array/some (default @payload.emitted []) (fn e (= (object/get @e "event" "") "WORKER_DONE")))
+        (set @entity.answers (array/concat @entity.answers (array/map (array/filter (default @payload.emitted []) (fn e (= (object/get @e "event" "") "WORKER_DONE"))) (fn e (let ((p : LwDone (default (object/get @e "payload") {}))) { guest: @payload.guest, ok: (default (object/get @p "ok") false), error: (default (object/get @p "error") ""), found: (default (object/get @p "found") []), final: (default (object/get @p "final") []) })))))
+        (emit LW_SETTLE { })
+      LW_SETTLE -> running when (< (array/len @entity.answers) (array/len @config.workers))
+      LW_SETTLE -> closing when (and (>= (array/len @entity.answers) (array/len @config.workers)) (array/some @entity.answers (fn a (not (object/get @a "ok")))))
+        (emit LINT_INPUT_UNREAD { file: @entity.file, error: (default (object/get (default (array/find @entity.answers (fn a (not (object/get @a "ok")))) { guest: "", ok: false, error: "", found: [], final: [] }) "error") "") })
+        (set @entity.closed 0)
+        (program/close (default (array/first @entity.guests) "") { key: "lint-worker-close-0" emit: { success: LW_CLOSED, failure: LW_CLOSED } })
+      LW_SETTLE -> closing when (and (>= (array/len @entity.answers) (array/len @config.workers)) (not (array/some @entity.answers (fn a (not (object/get @a "ok"))))))
+        (emit LINT_COLLECTED { findings: (array/flatten (array/map (array/flatten (array/map @entity.guests (fn g (array/flatten (array/map (array/filter @entity.answers (fn a (= (object/get @a "guest") @g))) (fn a (object/get @a "found"))))))) (fn r (object/get @r "findings")))), found: (array/flatten (array/map @entity.guests (fn g (array/flatten (array/map (array/filter @entity.answers (fn a (= (object/get @a "guest") @g))) (fn a (object/get @a "found"))))))), final: (array/flatten (array/map @entity.guests (fn g (array/flatten (array/map (array/filter @entity.answers (fn a (= (object/get @a "guest") @g))) (fn a (object/get @a "final"))))))) })
+        (set @entity.closed 0)
+        (program/close (default (array/first @entity.guests) "") { key: "lint-worker-close-0" emit: { success: LW_CLOSED, failure: LW_CLOSED } })
+      LW_FAILED -> ready
+        (emit LINT_INPUT_UNREAD { file: @entity.file, error: (str/concat "a lint worker could not be run: " (default @payload.error "")) })
+    }
+
+    state closing {
+      INIT -> closing
+      LW_GUEST_EVENT -> closing
+      LW_DISPATCHED -> closing
+      LW_FAILED -> closing
+      LW_CLOSED -> closing when (< (+ @entity.closed 1) (array/len @entity.guests))
+        (cancel-call (str/concat "lint-worker-live-" (default (array/nth @entity.guests @entity.closed) "")))
+        (program/close (default (array/nth @entity.guests (+ @entity.closed 1)) "") { key: (str/concat "lint-worker-close-" (+ @entity.closed 1)) emit: { success: LW_CLOSED, failure: LW_CLOSED } })
+        (set @entity.closed (+ @entity.closed 1))
+      LW_CLOSED -> ready when (>= (+ @entity.closed 1) (array/len @entity.guests))
+        (cancel-call (str/concat "lint-worker-live-" (default (array/nth @entity.guests @entity.closed) "")))
+    }
+
+    emits {
+      LINT_COLLECTED -> external { findings : [OrbFinding]!  found : [RuleFound]!  final : [OrbFinding]! }
+        @description "Every worker's findings for the file, merged in worker order: flattened, by rule, and the final-only ones."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string!  error : string! }
+        @description "The file could not be read or lowered, or a worker could not be run."
+        @tier "internal"
+      LW_SCAN -> external { cwd : string! }
+        @description "Ask the language pack scan to run once for every worker."
+        @tier "internal"
+      LW_OPEN_NEXT { i : number! }
+        @description "Internal: resolve the next worker of the workers knob."
+        @tier "internal"
+      LW_SETTLE { }
+        @description "Internal: a worker answered; settle when all have."
+        @tier "internal"
+      LW_CWD { path : string! }
+        @description "Internal: the working directory, resolved."
+        @tier "internal"
+      LW_RESOLVED { result : SExpr!, key : string }
+        @description "Internal: a worker program, resolved."
+        @tier "internal"
+      LW_OPENED { result : LwOpened! }
+        @description "Internal: a worker's guest session is open."
+        @tier "internal"
+      LW_DISPATCHED { key : string }
+        @description "Internal: a worker took the file."
+        @tier "internal"
+      LW_CLOSED { key : string }
+        @description "Internal: a worker's guest session is closed."
+        @tier "internal"
+      LW_FAILED { key : string, error : string }
+        @description "Internal: a worker could not be resolved, opened or asked."
+        @tier "internal"
+      LW_GUEST_EVENT { guest : string!, emitted : [LwEmitted], key : string }
+        @description "Internal: one pass of a worker's guest session, with the events it emitted."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_RUN { file : string! }
+        @description "Run every lint rule over this file in the workers."
+      LW_PACK { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LW_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: the scan's answer; 500 when it failed."
+      LW_PACKS_DONE { problem : string!  coreRoot : string!  stdRoot : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.LANGUAGE_PACK_VOCAB -> LW_PACK
+      Packs.SCAN_ANSWERED -> LW_SCAN_ANSWERED
+      Packs.LANGUAGE_PACKS_DONE -> LW_PACKS_DONE
+    }
+
+    config {
+      workers : [string] = ["std/behaviors/std-orb-lint-worker-a", "std/behaviors/std-orb-lint-worker-b", "std/behaviors/std-orb-lint-worker-c", "std/behaviors/std-orb-lint-worker-d"]
+        @label "Workers"
+        @description "The worker programs, in merge order. Together they hold every rule trait of std-orb-lint-engine once."
+      grants : LwGrants = { fs: [{ glob: "/**", modes: ["read"] }], env: ["PATH"] }
+        @label "Worker grants"
+        @description "The grants each worker's guest session is opened with: reading files and PATH. A worker never gets exec; the language packs are scanned here and handed over."
+    }
+  }
+
+  page boot as OrbLintWorkersOrbitalStart -> OrbLintWorkers, Packs, Versions
+}

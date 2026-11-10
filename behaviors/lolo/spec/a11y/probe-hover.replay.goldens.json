@@ -195,7 +195,7 @@
         "event": "PAGE_MEASURE",
         "payload": {
          "key": "k1:focus",
-         "expression": "((selector) => { const sel = (e) => { const p = []; for (let n = e; n && n.nodeType === 1; n = n.parentElement) { if (n.id) { p.unshift('#' + CSS.escape(n.id)); break; } let i = 1; for (let s = n.previousElementSibling; s; s = s.previousElementSibling) { if (s.tagName === n.tagName) i++; } p.unshift(n.tagName.toLowerCase() + ':nth-of-type(' + i + ')'); } return p.join('>'); }; const vis = (e) => { const s = getComputedStyle(e); const r = e.getBoundingClientRect(); return s.display !== 'none' && s.visibility !== 'hidden' && Number(s.opacity) > 0 && r.width > 0 && r.height > 0; }; const t = document.querySelector(selector); const all = Array.from(document.body.querySelectorAll('*')); const before = all.map(vis); t.focus(); const revealed = all.filter((e, i) => !before[i] && vis(e)); const roots = revealed.filter((e) => !revealed.includes(e.parentElement)); let gap = 0; if (roots.length > 0) { const a = t.getBoundingClientRect(); const b = roots[0].getBoundingClientRect(); gap = Math.hypot(Math.max(b.left - a.right, a.left - b.right, 0), Math.max(b.top - a.bottom, a.top - b.bottom, 0)); } return JSON.stringify({ focused: document.activeElement === t, revealed: revealed.map(sel), content: roots.length > 0 ? sel(roots[0]) : '', gap: gap }); })(\"#main>span:nth-of-type(1)>button:nth-of-type(1)\")"
+         "expression": "((selector) => { const sel = (e) => { const p = []; for (let n = e; n && n.nodeType === 1; n = n.parentElement) { if (n.id) { p.unshift('#' + CSS.escape(n.id)); break; } let i = 1; for (let s = n.previousElementSibling; s; s = s.previousElementSibling) { if (s.tagName === n.tagName) i++; } p.unshift(n.tagName.toLowerCase() + ':nth-of-type(' + i + ')'); } return p.join('>'); }; const vis = (e) => { const s = getComputedStyle(e); const r = e.getBoundingClientRect(); return s.display !== 'none' && s.visibility !== 'hidden' && Number(s.opacity) > 0 && r.width > 0 && r.height > 0; }; const t = document.querySelector(selector); if (t === null) { return JSON.stringify({ focused: false, missing: true, revealed: [], content: '', gap: 0 }); } const all = Array.from(document.body.querySelectorAll('*')); const before = all.map(vis); t.focus(); const revealed = all.filter((e, i) => !before[i] && vis(e)); const roots = revealed.filter((e) => !revealed.includes(e.parentElement)); let gap = 0; if (roots.length > 0) { const a = t.getBoundingClientRect(); const b = roots[0].getBoundingClientRect(); gap = Math.hypot(Math.max(b.left - a.right, a.left - b.right, 0), Math.max(b.top - a.bottom, a.top - b.bottom, 0)); } return JSON.stringify({ focused: document.activeElement === t, missing: false, revealed: revealed.map(sel), content: roots.length > 0 ? sel(roots[0]) : '', gap: gap }); })(\"#main>span:nth-of-type(1)>button:nth-of-type(1)\")"
         }
        }
       ]
@@ -250,7 +250,7 @@
      },
      "payload": {
       "key": "k1:focus",
-      "json": "{\"focused\":true,\"revealed\":[\"#b1\"],\"content\":\"#b1\",\"gap\":26}"
+      "json": "{\"focused\":true,\"missing\":false,\"revealed\":[\"#b1\"],\"content\":\"#b1\",\"gap\":26}"
      },
      "expect": {
       "state": "focusing",
@@ -262,6 +262,69 @@
        "content": "#b1",
        "gap": 26
       }
+     }
+    }
+   ]
+  },
+  {
+   "id": "a trigger the page no longer has is measured as missing, not focused, with nothing revealed, and the page is restored",
+   "steps": [
+    {
+     "from": "focusing",
+     "event": "PAGE_MEASURED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/hover-content-fail.html",
+      "triggers": [
+       {
+        "selector": "#main>span:nth-of-type(1)>button:nth-of-type(1)",
+        "snippet": "<button type=\"button\" class=\"help\" aria-describedby=\"b1\"></button>"
+       }
+      ],
+      "at": 0
+     },
+     "payload": {
+      "key": "k1:focus",
+      "json": "{\"focused\":false,\"missing\":true,\"revealed\":[],\"content\":\"\",\"gap\":0}"
+     },
+     "expect": {
+      "state": "focusing",
+      "entity": {
+       "focused": false,
+       "revealed": [],
+       "content": "",
+       "gap": 0
+      }
+     }
+    },
+    {
+     "from": "focusing",
+     "event": "HOVER_FOCUSED",
+     "entity": {
+      "runKey": "k1",
+      "pageUrl": "http://127.0.0.1:24680/hover-content-fail.html",
+      "triggers": [
+       {
+        "selector": "#main>span:nth-of-type(1)>button:nth-of-type(1)",
+        "snippet": "<button type=\"button\" class=\"help\" aria-describedby=\"b1\"></button>"
+       }
+      ],
+      "at": 0,
+      "focused": false,
+      "revealed": []
+     },
+     "payload": {},
+     "expect": {
+      "state": "restoring",
+      "emits": [
+       {
+        "event": "PAGE_NAVIGATE",
+        "payload": {
+         "key": "k1:restore",
+         "url": "http://127.0.0.1:24680/hover-content-fail.html"
+        }
+       }
+      ]
      }
     }
    ]
@@ -285,7 +348,7 @@
      },
      "payload": {
       "key": "k1:focus",
-      "json": "{\"focused\":true,\"revealed\":[\"#b1\"],\"content\":\"#b1\",\"gap\":0.390625}"
+      "json": "{\"focused\":true,\"missing\":false,\"revealed\":[\"#b1\"],\"content\":\"#b1\",\"gap\":0.390625}"
      },
      "expect": {
       "state": "focusing",
@@ -755,7 +818,7 @@
         "event": "PAGE_MEASURE",
         "payload": {
          "key": "k1:focus",
-         "expression": "((selector) => { const sel = (e) => { const p = []; for (let n = e; n && n.nodeType === 1; n = n.parentElement) { if (n.id) { p.unshift('#' + CSS.escape(n.id)); break; } let i = 1; for (let s = n.previousElementSibling; s; s = s.previousElementSibling) { if (s.tagName === n.tagName) i++; } p.unshift(n.tagName.toLowerCase() + ':nth-of-type(' + i + ')'); } return p.join('>'); }; const vis = (e) => { const s = getComputedStyle(e); const r = e.getBoundingClientRect(); return s.display !== 'none' && s.visibility !== 'hidden' && Number(s.opacity) > 0 && r.width > 0 && r.height > 0; }; const t = document.querySelector(selector); const all = Array.from(document.body.querySelectorAll('*')); const before = all.map(vis); t.focus(); const revealed = all.filter((e, i) => !before[i] && vis(e)); const roots = revealed.filter((e) => !revealed.includes(e.parentElement)); let gap = 0; if (roots.length > 0) { const a = t.getBoundingClientRect(); const b = roots[0].getBoundingClientRect(); gap = Math.hypot(Math.max(b.left - a.right, a.left - b.right, 0), Math.max(b.top - a.bottom, a.top - b.bottom, 0)); } return JSON.stringify({ focused: document.activeElement === t, revealed: revealed.map(sel), content: roots.length > 0 ? sel(roots[0]) : '', gap: gap }); })(\"#second\")"
+         "expression": "((selector) => { const sel = (e) => { const p = []; for (let n = e; n && n.nodeType === 1; n = n.parentElement) { if (n.id) { p.unshift('#' + CSS.escape(n.id)); break; } let i = 1; for (let s = n.previousElementSibling; s; s = s.previousElementSibling) { if (s.tagName === n.tagName) i++; } p.unshift(n.tagName.toLowerCase() + ':nth-of-type(' + i + ')'); } return p.join('>'); }; const vis = (e) => { const s = getComputedStyle(e); const r = e.getBoundingClientRect(); return s.display !== 'none' && s.visibility !== 'hidden' && Number(s.opacity) > 0 && r.width > 0 && r.height > 0; }; const t = document.querySelector(selector); if (t === null) { return JSON.stringify({ focused: false, missing: true, revealed: [], content: '', gap: 0 }); } const all = Array.from(document.body.querySelectorAll('*')); const before = all.map(vis); t.focus(); const revealed = all.filter((e, i) => !before[i] && vis(e)); const roots = revealed.filter((e) => !revealed.includes(e.parentElement)); let gap = 0; if (roots.length > 0) { const a = t.getBoundingClientRect(); const b = roots[0].getBoundingClientRect(); gap = Math.hypot(Math.max(b.left - a.right, a.left - b.right, 0), Math.max(b.top - a.bottom, a.top - b.bottom, 0)); } return JSON.stringify({ focused: document.activeElement === t, missing: false, revealed: revealed.map(sel), content: roots.length > 0 ? sel(roots[0]) : '', gap: gap }); })(\"#second\")"
         }
        }
       ],

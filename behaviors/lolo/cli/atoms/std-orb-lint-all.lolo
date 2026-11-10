@@ -4,10 +4,12 @@ app std-orb-lint-all [
   env: ["PATH"],
   exec: [exe],
   fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
-  description: "std-orb-lint-all — the `orb lint all <file> [--json]` hook, the only declarer of cli-lint-all. It holds no rule logic: it composes the std-orb-lint-engine orbital (every file-taking std-orb-lint-* rule trait, collected into one answer), asks it LINT_RUN { file } and hears LINT_COLLECTED { findings, found }. Each rule answers its findings as { code, path, message, suggestion, severity } records, which the engine collects as they are (ORB_AUTH_GUARD_CLIENT_ONLY, ORB_O_EXTEND_FIELD_UNREAD, ORB_LISTEN_WILDCARD_UNKEYED, ORB_OS_GRANT_UNUSED and ORB_EMIT_REPEATS_IDENTICALLY are the warnings). It prints the rules with findings grouped and a total, or with --json a { findings } object of the structured findings, and exits 1 when any error-severity finding exists."
+  kernel: { "guest": [spawn, program] },
+  description: "std-orb-lint-all — the `orb lint all <file> [--json] [--workers]` hook, the only declarer of cli-lint-all. It holds no rule logic: it composes the std-orb-lint-engine orbital (every file-taking std-orb-lint-* rule trait, collected into one answer), asks it LINT_RUN { file } and hears LINT_COLLECTED { findings, found }. Each rule answers its findings as { code, path, message, suggestion, severity } records, which the engine collects as they are (ORB_AUTH_GUARD_CLIENT_ONLY, ORB_O_EXTEND_FIELD_UNREAD, ORB_LISTEN_WILDCARD_UNKEYED, ORB_OS_GRANT_UNUSED and ORB_EMIT_REPEATS_IDENTICALLY are the warnings). It prints the rules with findings grouped and a total, or with --json a { findings } object of the structured findings, and exits 1 when any error-severity finding exists."
 ]
 uses Spec from "almadar-std/lint-all"
 uses LintEngine from "std/behaviors/std-orb-lint-engine"
+uses LintWorkers from "std/behaviors/std-orb-lint-workers"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error", validValues : [string], entity : string, field : string }
 type RuleFound = { rule : string!, findings : [OrbFinding]! }
@@ -27,14 +29,14 @@ orbital OrbLintAllOrbital {
       INIT -> ready
       LINT_CALLED -> ready when (= (json/parse @payload.rawBody OrbCommandArgs) null)
         (emit LINT_ANSWERED { status: 500, body: "Error: orb lint all: the command arguments could not be read" })
-      LINT_CALLED -> ready when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (not (or (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1) (and (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 2) (= (array/nth (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") 1) "--json")))))
-        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint all <file> [--json]" })
-      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
-        (set @entity.asJson false)
-        (emit LINT_RUN { file: (default (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) "") })
-      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 2) (= (array/nth (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv") 1) "--json"))
-        (set @entity.asJson true)
-        (emit LINT_RUN { file: (default (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) "") })
+      LINT_CALLED -> ready when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (not (and (>= (array/len (object/get (default (json/parse @payload.rawBody OrbCommandArgs) { argv: [], cwd: "" }) "argv")) 1) (array/every (array/slice (object/get (default (json/parse @payload.rawBody OrbCommandArgs) { argv: [], cwd: "" }) "argv") 1) (fn a (array/includes ["--json", "--workers"] @a))))))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint all <file> [--json] [--workers]" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (and (>= (array/len (object/get (default (json/parse @payload.rawBody OrbCommandArgs) { argv: [], cwd: "" }) "argv")) 1) (array/every (array/slice (object/get (default (json/parse @payload.rawBody OrbCommandArgs) { argv: [], cwd: "" }) "argv") 1) (fn a (array/includes ["--json", "--workers"] @a)))) (not (array/includes (object/get (default (json/parse @payload.rawBody OrbCommandArgs) { argv: [], cwd: "" }) "argv") "--workers")))
+        (set @entity.asJson (array/includes (object/get (default (json/parse @payload.rawBody OrbCommandArgs) { argv: [], cwd: "" }) "argv") "--json"))
+        (emit LINT_RUN { file: (default (array/first (object/get (default (json/parse @payload.rawBody OrbCommandArgs) { argv: [], cwd: "" }) "argv")) "") })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (and (>= (array/len (object/get (default (json/parse @payload.rawBody OrbCommandArgs) { argv: [], cwd: "" }) "argv")) 1) (array/every (array/slice (object/get (default (json/parse @payload.rawBody OrbCommandArgs) { argv: [], cwd: "" }) "argv") 1) (fn a (array/includes ["--json", "--workers"] @a)))) (array/includes (object/get (default (json/parse @payload.rawBody OrbCommandArgs) { argv: [], cwd: "" }) "argv") "--workers"))
+        (set @entity.asJson (array/includes (object/get (default (json/parse @payload.rawBody OrbCommandArgs) { argv: [], cwd: "" }) "argv") "--json"))
+        (emit LINT_RUN_WORKERS { file: (default (array/first (object/get (default (json/parse @payload.rawBody OrbCommandArgs) { argv: [], cwd: "" }) "argv")) "") })
     }
 
     state waiting {
@@ -63,6 +65,9 @@ orbital OrbLintAllOrbital {
       LINT_RUN -> external { file : string! }
         @description "Ask the lint engine to run every rule over this file."
         @tier "internal"
+      LINT_RUN_WORKERS -> external { file : string! }
+        @description "Ask the lint workers to run every rule over this file (--workers)."
+        @tier "internal"
       LINT_REPORT { }
         @description "Internal: the engine answered, print the run."
         @tier "internal"
@@ -81,6 +86,8 @@ orbital OrbLintAllOrbital {
         @description "The engine's answer: every rule's findings for the file, flattened, and the findings by rule."
       Rules.OrbLintEngine.LINT_COLLECTED -> LINT_COLLECTED
       Rules.OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+      Workers.OrbLintWorkers.LINT_COLLECTED -> LINT_COLLECTED
+      Workers.OrbLintWorkers.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
     }
   }
 
@@ -90,5 +97,11 @@ orbital OrbLintAllOrbital {
 orbital Rules = LintEngine.orbitals.OrbLintEngineOrbital {
   listens {
     OrbLintAllOrbital.OrbLintAll.LINT_RUN -> OrbLintEngine.LINT_RUN
+  }
+}
+
+orbital Workers = LintWorkers.orbitals.OrbLintWorkersOrbital {
+  listens {
+    OrbLintAllOrbital.OrbLintAll.LINT_RUN_WORKERS -> OrbLintWorkers.LINT_RUN
   }
 }

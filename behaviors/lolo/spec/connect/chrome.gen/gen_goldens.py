@@ -414,7 +414,7 @@ case("inject-control-a-nested-relative-path-is-read", [
     step("PAGE_INJECT", {"key": "k1", "script": "a/../axe-core/axe.min.js"}, {"state": "busy", "effects": [{"type": "os/read-file"}]}, **ready()),
 ])
 case("inject-a-throwing-script-answers-script-error", [
-    step("CHROME_REPLY", reply("inject", "Runtime.evaluate", R("injectThrow")), {"state": "ready", "emits": [failed("k1", "script-error")], "neverEmits": ["PAGE_INJECTED"]}, **busy("inject", "inject")),
+    step("CHROME_REPLY", reply("inject", "Runtime.evaluate", R("injectThrow")), {"state": "ready", "emits": [failed("k1", "script-error", {"error": "ReferenceError: nope is not defined\n    at <anonymous>:1:1"})], "neverEmits": ["PAGE_INJECTED"]}, **busy("inject", "inject")),
 ], note="the exception reply is captured from real headless Chrome")
 case("inject-an-unreadable-file-answers-read-failed", [
     step("CHROME_HOST_FAILED", {"error": "no such file"}, {"state": "ready", "emits": [failed("k1", "read-failed")]}, **busy("inject", "inject-read")),
@@ -424,8 +424,14 @@ case("measure-returns-the-json-text-the-expression-produced", [
     step("CHROME_REPLY", reply("measure", "Runtime.evaluate", R("measureOk")), {"state": "ready", "emits": [emit("PAGE_MEASURED", {"key": "k1", "json": '{"a":1}'})]}),
 ], note="the reply is captured from real headless Chrome with awaitPromise and returnByValue")
 case("measure-an-exception-answers-script-error", [
-    step("CHROME_REPLY", reply("measure", "Runtime.evaluate", R("measureThrow")), {"state": "ready", "emits": [failed("k1", "script-error")], "neverEmits": ["PAGE_MEASURED"]}, **busy("measure", "measure")),
+    step("CHROME_REPLY", reply("measure", "Runtime.evaluate", R("measureThrow")), {"state": "ready", "emits": [failed("k1", "script-error", {"error": "Error: boom\n    at <anonymous>:1:13\n    at <anonymous>:1:32"})], "neverEmits": ["PAGE_MEASURED"]}, **busy("measure", "measure")),
 ])
+case("measure-a-missing-global-answers-the-exception-message-not-the-bare-uncaught", [
+    step("CHROME_REPLY", reply("measure", "Runtime.evaluate", R("measureUndefinedGlobal")), {"state": "ready", "emits": [failed("k1", "script-error", {"error": "ReferenceError: axe is not defined\n    at <anonymous>:1:1"})], "neverEmits": ["PAGE_MEASURED"]}, **busy("measure", "measure")),
+], note="the exception reply is captured from real headless Chrome: exceptionDetails.text is only Uncaught, the message is exception.description")
+case("measure-a-rejected-non-error-value-answers-its-value", [
+    step("CHROME_REPLY", reply("measure", "Runtime.evaluate", R("measureRejectText")), {"state": "ready", "emits": [failed("k1", "script-error", {"error": "plain"})], "neverEmits": ["PAGE_MEASURED"]}, **busy("measure", "measure")),
+], note="the exception reply is captured from real headless Chrome: a thrown string has no description, its value is the message")
 case("measure-a-number-or-an-object-answers-not-json", [
     step("CHROME_REPLY", reply("measure", "Runtime.evaluate", R("measureNumber")), {"state": "ready", "emits": [failed("k1", "not-json")], "neverEmits": ["PAGE_MEASURED"]}, **busy("measure", "measure")),
     step("CHROME_REPLY", reply("measure", "Runtime.evaluate", R("measureObject")), {"state": "ready", "emits": [failed("k1", "not-json")]}, **busy("measure", "measure")),
@@ -554,9 +560,19 @@ case("element-shot-control-another-protocol-error-keeps-its-code", [
 ])
 
 # preload
-case("preload-registers-the-script-for-new-documents-and-answers-the-identifier", [
-    step("PAGE_PRELOAD", {"key": "k1", "script": "window.__axe = 1"}, {"state": "busy", "emits": [cmd("preload", "Page.addScriptToEvaluateOnNewDocument", '{"source":"window.__axe = 1"}')]}, **ready()),
+case("preload-reads-the-script-file-then-registers-its-text-for-new-documents", [
+    step("PAGE_PRELOAD", {"key": "k1", "script": "axe-core/axe.min.js"}, {"state": "busy", "effects": [{"type": "os/read-file"}], "neverEmits": ["CDP_COMMAND"]}, **ready()),
+    step("CHROME_FILE_READ", {"data": "eD0x"}, {"state": "busy", "emits": [cmd("preload", "Page.addScriptToEvaluateOnNewDocument", '{"source":"x=1"}')]}),
     step("CHROME_REPLY", reply("preload", "Page.addScriptToEvaluateOnNewDocument", OK(identifier="3")), {"state": "ready", "emits": [emit("PAGE_PRELOADED", {"key": "k1", "identifier": "3"})]}),
+], note="the registered source is the file text, never the path")
+case("preload-an-absolute-script-path-answers-bad-script", [
+    step("PAGE_PRELOAD", {"key": "k1", "script": "/etc/passwd"}, {"state": "ready", "emits": [failed("k1", "bad-script")], "effects": [], "neverEmits": ["CDP_COMMAND"]}, **ready()),
+])
+case("preload-a-script-path-that-climbs-out-answers-bad-script", [
+    step("PAGE_PRELOAD", {"key": "k1", "script": "../secret.js"}, {"state": "ready", "emits": [failed("k1", "bad-script")], "effects": [], "neverEmits": ["CDP_COMMAND"]}, **ready()),
+])
+case("preload-an-unreadable-file-answers-read-failed", [
+    step("CHROME_HOST_FAILED", {"error": "no such file"}, {"state": "ready", "emits": [failed("k1", "read-failed")]}, **busy("preload", "preload-read")),
 ])
 case("preload-a-protocol-error-answers-page-failed", [
     step("CHROME_ERROR", {"key": "preload", "method": "Page.addScriptToEvaluateOnNewDocument", "code": "-32000", "message": "bad"}, {"state": "ready", "emits": [failed("k1", "-32000")]}, **busy("preload", "preload")),
