@@ -1,0 +1,707 @@
+app std-job-runner [
+  version: "1.0.0",
+  description: "std-job-runner — a generic one-at-a-time job runner over a composed std-queue; it knows nothing about what a job does. SCHEDULE { job, when: \"now\" | \"tonight\", nightly? } enqueues the job on nowQueue or nightQueue (nightly also stores a template row in templateQueue, never dequeued, and copies its id onto the job as templateId) and answers SCHEDULED { jobId, when, position, templateId }; a \"now\" job starts at once when the runner is idle. A \"tonight\" job starts only on WINDOW_TICK, which the app sends from its own literal cron tick (a tick interval cannot be a knob): when idle it first re-queues every template whose lastRunAt is older than refillAfterHours into nightQueue (setting the template's lastRunAt to now), then leases a night job, else a now job. A leased job emits JOB_RUN { job, attempt } (attempt above 1 means a resumed job: the handler must resume, not restart, and skip work already persisted for job.id) and the runner waits: RUN_DONE completes it on the queue, RUN_FAILED fails it, and either ends with JOB_FINISHED { jobId, kind, label, ownerEmail, status completed | failed | dead, result, resultUrl, attempts, error, stage } (dead = the queue's JOB_GAVE_UP after maxAttempts takeovers); resultUrl and finishedAt are written onto the job row. Two literal [background] ticks run on the server with no client open: while running, every 60 s the runner first checks runTimeoutMs (above 0 and the job has run that long: FAIL on the queue with error run_timeout, then JOB_FINISHED status failed, stage timeout, error run_timeout; a later RUN_DONE or RUN_FAILED is stale and ignored) and otherwise RENEWs the job's lease (LEASE_LOST on a renew or a settle means a takeover owns the job now, so the runner goes idle and emits nothing for it); while idle, every 15 s it leases the now queue, so an expired now lease is taken over after a crash. The 60 s renew interval is a literal and must stay below leaseMs. CANCEL_JOB { jobId } cancels an unclaimed job (JOB_CANCELLED passes through); STOP_NIGHTLY { templateId } deletes the template row (NIGHTLY_STOPPED). Any storage failure answers RUNNER_FAILED { op, error }. Everything is rows, so a restarted server resumes at the next tick. SCHEDULE, CANCEL_JOB and STOP_NIGHTLY run one at a time: one that arrives while another is in flight answers RUNNER_FAILED op schedule/cancel/stop-nightly. The queue's cursor entity is shared by its four traits, so the app should not drive another queue op on the same instance."
+]
+uses Queue from "std/behaviors/std-queue"
+
+orbital JobRunnerOrbital {
+  entity RunnerJob [persistent: runner_jobs] {
+    @read none "This program declares no identity entity, so it has no signed-in viewer to scope reads to: every visitor may read these rows."
+    id : string!
+    queue : string @description "Name of the queue the job belongs to." = ""
+    payload : string @description "The job body the handler reads." = ""
+    priority : number @description "Higher values dequeue first." = 0
+    status : "pending" | "processing" | "completed" | "failed" = pending
+    enqueuedAt : instant @description "Enqueue time." = "1970-01-01T00:00:00Z"
+    availableAt : instant @description "Earliest dequeue time." = "1970-01-01T00:00:00Z"
+    attempts : number @description "Claims taken so far." = 0
+    leaseExpiresAt : instant @description "When the current lease ends." = "1970-01-01T00:00:00Z"
+    result : string @description "Result text set on completion." = ""
+    error : string @description "Failure reason set on failure." = ""
+    kind : string @description "What the job is; the handler picks its work by it." = ""
+    label : string @description "A short name of the job for people." = ""
+    ownerEmail : string @description "Who asked for the job." = ""
+    templateId : string @description "The nightly template row this job was copied from; blank when the job is not nightly." = ""
+    lastRunAt : instant @description "Templates only: when the template was last queued." = "1970-01-01T00:00:00Z"
+    resultUrl : string @description "Where the job's output lives, set when the handler reports one." = ""
+    finishedAt : instant @description "When the job ended." = "1970-01-01T00:00:00Z"
+  }
+
+  entity SchedulerState [runtime] {
+    id : string!
+    jobId : string @description "The job being scheduled, cancelled or the template being stopped." = ""
+    when : string @description "The queue choice of the SCHEDULE in flight." = "now"
+    nightly : boolean @description "True when the SCHEDULE in flight also stores a template." = false
+    tid : string @description "The template row id of the SCHEDULE in flight; blank when not nightly." = ""
+    position : number @description "The queue position answered for the job." = 0
+  }
+
+  entity RunnerState [runtime] {
+    id : string!
+    jobId : string @description "The job being run; blank when idle." = ""
+    attempt : number @description "The attempt the queue leased it as." = 0
+    kind : string = ""
+    label : string = ""
+    ownerEmail : string = ""
+    result : string = ""
+    resultUrl : string = ""
+    error : string = ""
+    stage : string = ""
+    status : string @description "The end the job reached: completed or failed." = ""
+    refillTplId : string @description "The template being re-queued." = ""
+    refillJobId : string @description "The job copied from that template." = ""
+    cutoff : instant @description "A template whose lastRunAt is before this instant is due." = "1970-01-01T00:00:00Z"
+    runDeadline : instant @description "When the running job is ended as run_timeout; only read when runTimeoutMs is above 0." = "1970-01-01T00:00:00Z"
+  }
+
+  trait JobRunnerProducer = Queue.traits.QueueProducer {
+    config {
+      jobEntity: RunnerJob
+    }
+    listens {
+      JobScheduler.SCHED_ENQUEUE -> ENQUEUE
+      JobScheduler.SCHED_CANCEL -> CANCEL
+      JobRunner.REFILL_ENQUEUE -> ENQUEUE
+    }
+  }
+
+  trait JobRunnerConsumer = Queue.traits.QueueConsumer {
+    config {
+      jobEntity: RunnerJob
+      leaseMs: 300000
+      maxAttempts: 3
+    }
+    listens {
+      JobRunner.RQ_DEQUEUE -> DEQUEUE
+    }
+  }
+
+  trait JobRunnerFinisher = Queue.traits.QueueFinisher {
+    config {
+      jobEntity: RunnerJob
+    }
+    listens {
+      JobRunner.RQ_COMPLETE -> COMPLETE
+      JobRunner.RQ_FAIL -> FAIL
+    }
+  }
+
+  trait JobRunnerRenewer = Queue.traits.QueueRenewer {
+    config {
+      jobEntity: RunnerJob
+      leaseMs: 300000
+    }
+    listens {
+      JobRunner.RQ_RENEW -> RENEW
+    }
+  }
+
+  trait JobScheduler -> SchedulerState [server] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      SCHEDULE -> enqueuing
+        (set @entity.jobId ?job.id)
+        (set @entity.when ?when)
+        (set @entity.nightly (default ?nightly false))
+        (set @entity.tid (if (default ?nightly false) (str/concat ?job.id ":tpl") ""))
+        (emit SCHED_ENQUEUE { queue: (if (= ?when "now") @config.nowQueue @config.nightQueue), job: (object/merge ?job { templateId: (if (default ?nightly false) (str/concat ?job.id ":tpl") "") }) })
+      CANCEL_JOB -> cancelling
+        (set @entity.jobId ?jobId)
+        (emit SCHED_CANCEL { jobId: ?jobId })
+      STOP_NIGHTLY -> stopping
+        (set @entity.tid ?templateId)
+        (persist delete @config.jobEntity ?templateId {
+          emit: { failure: SchedStepFailed, success: TemplateDeleted }
+        })
+    }
+
+    state enqueuing {
+      INIT -> idle
+      SCHEDULE -> enqueuing
+        (emit RUNNER_FAILED { op: "schedule", error: "another schedule is in flight" })
+      CANCEL_JOB -> enqueuing
+        (emit RUNNER_FAILED { op: "cancel", error: "a schedule is in flight" })
+      STOP_NIGHTLY -> enqueuing
+        (emit RUNNER_FAILED { op: "stop-nightly", error: "a schedule is in flight" })
+      SchedEnqueued -> idle when (and (= ?jobId @entity.jobId) (not @entity.nightly))
+        (emit SCHEDULED { jobId: ?jobId, when: @entity.when, position: ?position, templateId: "" })
+        (when (= @entity.when "now") (emit RUN_KICK { }))
+      SchedEnqueued -> storing when (and (= ?jobId @entity.jobId) @entity.nightly)
+        (set @entity.position ?position)
+        (fetch @config.jobEntity {
+          emit: { failure: SchedStepFailed, success: SchedJobLoaded }
+          filter: (= (object/get @entity id) @entity.jobId)
+          limit: 1
+        })
+      SchedQueueFailed -> idle
+        (emit RUNNER_FAILED { op: ?op, error: ?error })
+    }
+
+    state storing {
+      INIT -> idle
+      SCHEDULE -> storing
+        (emit RUNNER_FAILED { op: "schedule", error: "another schedule is in flight" })
+      CANCEL_JOB -> storing
+        (emit RUNNER_FAILED { op: "cancel", error: "a schedule is in flight" })
+      STOP_NIGHTLY -> storing
+        (emit RUNNER_FAILED { op: "stop-nightly", error: "a schedule is in flight" })
+      SchedJobLoaded -> idle when (= (array/len ?data) 0)
+        (emit RUNNER_FAILED { op: "template", error: "the scheduled job row is missing, so no nightly template was stored" })
+      SchedJobLoaded -> storing when (> (array/len ?data) 0)
+        (persist create @config.jobEntity (object/merge (array/first ?data) { id: @entity.tid, queue: @config.templateQueue, status: "pending", lastRunAt: @now }) {
+          emit: { failure: SchedStepFailed, success: TemplateStored }
+        })
+      TemplateStored -> idle
+        (emit SCHEDULED { jobId: @entity.jobId, when: @entity.when, position: @entity.position, templateId: @entity.tid })
+        (when (= @entity.when "now") (emit RUN_KICK { }))
+      SchedStepFailed -> idle
+        (emit RUNNER_FAILED { op: "template", error: ?error })
+    }
+
+    state cancelling {
+      INIT -> idle
+      SCHEDULE -> cancelling
+        (emit RUNNER_FAILED { op: "schedule", error: "a cancel is in flight" })
+      CANCEL_JOB -> cancelling
+        (emit RUNNER_FAILED { op: "cancel", error: "another cancel is in flight" })
+      STOP_NIGHTLY -> cancelling
+        (emit RUNNER_FAILED { op: "stop-nightly", error: "a cancel is in flight" })
+      SchedCancelled -> idle when (= ?jobId @entity.jobId)
+        (emit JOB_CANCELLED { jobId: ?jobId, cancelled: ?cancelled })
+      SchedQueueFailed -> idle
+        (emit RUNNER_FAILED { op: ?op, error: ?error })
+    }
+
+    state stopping {
+      INIT -> idle
+      SCHEDULE -> stopping
+        (emit RUNNER_FAILED { op: "schedule", error: "a stop is in flight" })
+      CANCEL_JOB -> stopping
+        (emit RUNNER_FAILED { op: "cancel", error: "a stop is in flight" })
+      STOP_NIGHTLY -> stopping
+        (emit RUNNER_FAILED { op: "stop-nightly", error: "another stop is in flight" })
+      TemplateDeleted -> idle
+        (emit NIGHTLY_STOPPED { templateId: @entity.tid })
+      SchedStepFailed -> idle
+        (emit RUNNER_FAILED { op: "stop-nightly", error: ?error })
+    }
+
+    emits {
+      SCHEDULED -> external {
+        jobId : string!
+        when : "now" | "tonight"!
+        position : number!
+        templateId : string
+      }
+        @description "A job was scheduled; templateId is the nightly template row, blank when the job is not nightly."
+        @tier "domain"
+      JOB_CANCELLED -> external {
+        jobId : string!
+        cancelled : boolean!
+      }
+        @description "A cancel request was answered; cancelled is false when the job was missing or already claimed."
+        @tier "domain"
+      NIGHTLY_STOPPED -> external {
+        templateId : string!
+      }
+        @description "A nightly template was removed; no further copies are queued."
+        @tier "domain"
+      RUNNER_FAILED -> external {
+        op : string!
+        error : string!
+      }
+        @description "A storage step failed or a request was refused because another one is in flight."
+        @tier "domain"
+      SCHED_ENQUEUE -> external {
+        queue : string!
+        job : @entity @config.jobEntity!
+      }
+        @description "Add the scheduled job to its queue."
+        @tier "internal"
+      SCHED_CANCEL -> external {
+        jobId : string!
+      }
+        @description "Cancel an unclaimed job on the queue."
+        @tier "internal"
+      RUN_KICK -> internal { }
+        @description "A now job was queued; the runner leases it when idle."
+        @tier "internal"
+      SchedJobLoaded {
+        data : [@entity @config.jobEntity]!
+      }
+      TemplateStored {
+        id : string!
+      }
+      TemplateDeleted {
+        id : string
+        deleted : boolean
+      }
+      SchedStepFailed {
+        error : string
+        code : string
+      }
+    }
+
+    listens {
+      SCHEDULE -> input {
+        job : @entity @config.jobEntity!
+        when : "now" | "tonight"!
+        nightly : boolean?
+      }
+        @description "Queue a job to run now or tonight; nightly also stores a template that is re-queued every night."
+        @synonyms "schedule job, queue job, run tonight, run nightly"
+        @tier "domain"
+      CANCEL_JOB -> input {
+        jobId : string!
+      }
+        @description "Cancel a job that has not started."
+        @tier "domain"
+      STOP_NIGHTLY -> input {
+        templateId : string!
+      }
+        @description "Stop a nightly job from being queued again."
+        @tier "domain"
+      JobRunnerProducer.JOB_ENQUEUED -> SchedEnqueued
+      JobRunnerProducer.JOB_CANCELLED -> SchedCancelled
+      JobRunnerProducer.QUEUE_FAILED -> SchedQueueFailed
+      SchedEnqueued {
+        jobId : string!
+        position : number!
+      }
+        @tier "internal"
+      SchedCancelled {
+        jobId : string!
+        cancelled : boolean!
+      }
+        @tier "internal"
+      SchedQueueFailed {
+        op : string!
+        error : string!
+      }
+        @tier "internal"
+      SchedJobLoaded {
+        data : [@entity @config.jobEntity]!
+      }
+      TemplateStored {
+        id : string!
+      }
+      TemplateDeleted {
+        id : string
+        deleted : boolean
+      }
+      SchedStepFailed {
+        error : string
+        code : string
+      }
+    }
+
+    config {
+      jobEntity : entity = RunnerJob
+        @label "Job entity"
+        @description "The persisted job record. It must supply the queue's fields (queue, priority, status, enqueuedAt, availableAt, attempts, leaseExpiresAt, result, error) and kind, label, ownerEmail, templateId, lastRunAt, resultUrl and finishedAt; its own payload fields are the app's."
+        @synonyms "job record, task entity"
+        @tier "domain"
+      nowQueue : string = "now"
+        @label "Now queue"
+        @description "The queue of jobs that start at once."
+        @tier "policy"
+      nightQueue : string = "night"
+        @label "Night queue"
+        @description "The queue of jobs that start on a window tick."
+        @tier "policy"
+      templateQueue : string = "nightly"
+        @label "Template queue"
+        @description "The queue name of nightly template rows; they are never dequeued."
+        @tier "policy"
+    }
+  }
+
+  trait JobRunner -> RunnerState [server] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      WINDOW_TICK -> refilling
+        (set @entity.cutoff (time/add @now (- 0 (* @config.refillAfterHours 3600000)) "ms"))
+        (fetch @config.jobEntity {
+          emit: { failure: RefillFailed, success: DueLoaded }
+          filter: (and (= (object/get @entity queue) @config.templateQueue) (< (object/get @entity lastRunAt) @entity.cutoff))
+          limit: 1
+        })
+      RUN_KICK -> dequeuingNow
+        (emit RQ_DEQUEUE { queue: @config.nowQueue })
+      POLL_DUE -> dequeuingNow
+        (emit RQ_DEQUEUE { queue: @config.nowQueue })
+      RUN_DONE -> idle
+      RUN_FAILED -> idle
+    }
+
+    state refilling {
+      INIT -> idle
+      DueLoaded -> dequeuingNight when (= (array/len ?data) 0)
+        (emit RQ_DEQUEUE { queue: @config.nightQueue })
+      DueLoaded -> refilling when (> (array/len ?data) 0)
+        (set @entity.refillTplId (object/get (array/first ?data) id))
+        (set @entity.refillJobId (str/concat (object/get (array/first ?data) id) ":" @now))
+        (emit REFILL_ENQUEUE { queue: @config.nightQueue, job: (object/merge (array/first ?data) { id: (str/concat (object/get (array/first ?data) id) ":" @now), templateId: (object/get (array/first ?data) id) }) })
+      RefillEnqueued -> refilling when (= ?jobId @entity.refillJobId)
+        (persist update @config.jobEntity { id: @entity.refillTplId, lastRunAt: @now } {
+          emit: { failure: RefillFailed, success: TemplateTouched }
+        })
+      TemplateTouched -> refilling
+        (fetch @config.jobEntity {
+          emit: { failure: RefillFailed, success: DueLoaded }
+          filter: (and (= (object/get @entity queue) @config.templateQueue) (< (object/get @entity lastRunAt) @entity.cutoff))
+          limit: 1
+        })
+      RefillFailed -> idle
+        (emit RUNNER_FAILED { op: "refill", error: ?error })
+      RefillQueueFailed -> idle
+        (emit RUNNER_FAILED { op: ?op, error: ?error })
+    }
+
+    state dequeuingNight {
+      INIT -> idle
+      JobLeased -> running
+        (set @entity.jobId ?job.id)
+        (set @entity.attempt ?attempt)
+        (set @entity.kind ?job.kind)
+        (set @entity.label ?job.label)
+        (set @entity.ownerEmail ?job.ownerEmail)
+        (set @entity.runDeadline (time/add @now @config.runTimeoutMs "ms"))
+        (emit JOB_RUN { job: ?job, attempt: ?attempt })
+      QueueEmpty -> dequeuingNow
+        (emit RQ_DEQUEUE { queue: @config.nowQueue })
+      JobGaveUp -> dequeuingNight
+        (emit JOB_FINISHED { jobId: ?jobId, kind: ?job.kind, label: ?job.label, ownerEmail: ?job.ownerEmail, status: "dead", result: "", resultUrl: "", attempts: ?attempts, error: "max_attempts", stage: "" })
+        (persist update @config.jobEntity { id: ?jobId, finishedAt: @now } {
+          emit: { failure: RefillFailed, success: DeadMarked }
+        })
+      DeadMarked -> dequeuingNight
+      RefillFailed -> dequeuingNight
+        (emit RUNNER_FAILED { op: "finish", error: ?error })
+      ConsumerFailed -> idle
+        (emit RUNNER_FAILED { op: ?op, error: ?error })
+    }
+
+    state dequeuingNow {
+      INIT -> idle
+      JobLeased -> running
+        (set @entity.jobId ?job.id)
+        (set @entity.attempt ?attempt)
+        (set @entity.kind ?job.kind)
+        (set @entity.label ?job.label)
+        (set @entity.ownerEmail ?job.ownerEmail)
+        (set @entity.runDeadline (time/add @now @config.runTimeoutMs "ms"))
+        (emit JOB_RUN { job: ?job, attempt: ?attempt })
+      QueueEmpty -> idle
+      JobGaveUp -> dequeuingNow
+        (emit JOB_FINISHED { jobId: ?jobId, kind: ?job.kind, label: ?job.label, ownerEmail: ?job.ownerEmail, status: "dead", result: "", resultUrl: "", attempts: ?attempts, error: "max_attempts", stage: "" })
+        (persist update @config.jobEntity { id: ?jobId, finishedAt: @now } {
+          emit: { failure: RefillFailed, success: DeadMarked }
+        })
+      DeadMarked -> dequeuingNow
+      RefillFailed -> dequeuingNow
+        (emit RUNNER_FAILED { op: "finish", error: ?error })
+      ConsumerFailed -> idle
+        (emit RUNNER_FAILED { op: ?op, error: ?error })
+    }
+
+    state running {
+      INIT -> idle
+      RUN_DONE -> settling when (and (= ?jobId @entity.jobId) (= ?attempt @entity.attempt))
+        (set @entity.result ?result)
+        (set @entity.resultUrl (default ?resultUrl ""))
+        (set @entity.status "completed")
+        (emit RQ_COMPLETE { jobId: ?jobId, attempt: ?attempt, result: ?result })
+      RUN_FAILED -> settling when (and (= ?jobId @entity.jobId) (= ?attempt @entity.attempt))
+        (set @entity.error ?error)
+        (set @entity.stage ?stage)
+        (set @entity.status "failed")
+        (emit RQ_FAIL { jobId: ?jobId, attempt: ?attempt, error: ?error })
+      RENEW_DUE -> settling when (and (> @config.runTimeoutMs 0) (>= @now @entity.runDeadline))
+        (set @entity.error "run_timeout")
+        (set @entity.stage "timeout")
+        (set @entity.status "failed")
+        (emit RQ_FAIL { jobId: @entity.jobId, attempt: @entity.attempt, error: "run_timeout" })
+      RENEW_DUE -> running when (or (<= @config.runTimeoutMs 0) (< @now @entity.runDeadline))
+        (emit RQ_RENEW { jobId: @entity.jobId, attempt: @entity.attempt })
+      LeaseLost -> idle when (and (= ?jobId @entity.jobId) (= ?op "renew"))
+        (set @entity.jobId "")
+        (set @entity.attempt 0)
+      RenewerFailed -> running
+        (emit RUNNER_FAILED { op: ?op, error: ?error })
+    }
+
+    state settling {
+      INIT -> idle
+      JobCompleted -> finalizing when (and (= ?jobId @entity.jobId) ?completed)
+        (persist update @config.jobEntity { id: @entity.jobId, resultUrl: @entity.resultUrl, finishedAt: @now } {
+          emit: { failure: FinalizeFailed, success: Finalized }
+        })
+      JobFailed -> finalizing when (and (= ?jobId @entity.jobId) ?failed)
+        (persist update @config.jobEntity { id: @entity.jobId, finishedAt: @now } {
+          emit: { failure: FinalizeFailed, success: Finalized }
+        })
+      JobCompleted -> idle when (and (= ?jobId @entity.jobId) (not ?completed))
+        (emit RUNNER_FAILED { op: "complete", error: "the job was not processing when it was completed" })
+        (set @entity.jobId "")
+      JobFailed -> idle when (and (= ?jobId @entity.jobId) (not ?failed))
+        (emit RUNNER_FAILED { op: "fail", error: "the job was not processing when it was failed" })
+        (set @entity.jobId "")
+      LeaseLost -> idle when (= ?jobId @entity.jobId)
+        (set @entity.jobId "")
+        (set @entity.attempt 0)
+      FinisherFailed -> idle
+        (emit RUNNER_FAILED { op: ?op, error: ?error })
+        (set @entity.jobId "")
+    }
+
+    state finalizing {
+      INIT -> idle
+      Finalized -> idle
+        (emit JOB_FINISHED { jobId: @entity.jobId, kind: @entity.kind, label: @entity.label, ownerEmail: @entity.ownerEmail, status: @entity.status, result: @entity.result, resultUrl: @entity.resultUrl, attempts: @entity.attempt, error: @entity.error, stage: @entity.stage })
+        (set @entity.jobId "")
+        (set @entity.attempt 0)
+        (set @entity.result "")
+        (set @entity.resultUrl "")
+        (set @entity.error "")
+        (set @entity.stage "")
+      FinalizeFailed -> idle
+        (emit RUNNER_FAILED { op: "finalize", error: ?error })
+        (emit JOB_FINISHED { jobId: @entity.jobId, kind: @entity.kind, label: @entity.label, ownerEmail: @entity.ownerEmail, status: @entity.status, result: @entity.result, resultUrl: @entity.resultUrl, attempts: @entity.attempt, error: @entity.error, stage: @entity.stage })
+        (set @entity.jobId "")
+        (set @entity.attempt 0)
+        (set @entity.result "")
+        (set @entity.resultUrl "")
+        (set @entity.error "")
+        (set @entity.stage "")
+    }
+
+    ticks {
+      renewTick every 60s in running [background]
+        (emit RENEW_DUE { })
+      pollTick every 15s in idle [background]
+        (emit POLL_DUE { })
+    }
+
+    emits {
+      JOB_RUN -> external {
+        job : @entity @config.jobEntity!
+        attempt : number!
+      }
+        @description "Run this job. attempt above 1 means a resumed job: the handler resumes and skips work already persisted for job.id. Answer with RUN_DONE or RUN_FAILED."
+        @tier "domain"
+      JOB_FINISHED -> external {
+        jobId : string!
+        kind : string!
+        label : string!
+        ownerEmail : string!
+        status : "completed" | "failed" | "dead"!
+        result : string!
+        resultUrl : string!
+        attempts : number!
+        error : string!
+        stage : string!
+      }
+        @description "A job ended, once per job: completed, failed, or dead (the queue gave up after maxAttempts)."
+        @tier "domain"
+      RUNNER_FAILED -> external {
+        op : string!
+        error : string!
+      }
+        @description "A storage step of the runner failed."
+        @tier "domain"
+      RQ_DEQUEUE -> external { queue : string! }
+        @description "Lease the next job of a queue."
+        @tier "internal"
+      RQ_COMPLETE -> external { jobId : string!  attempt : number!  result : string }
+        @description "Settle the leased job as completed."
+        @tier "internal"
+      RQ_FAIL -> external { jobId : string!  attempt : number!  error : string }
+        @description "Settle the leased job as failed."
+        @tier "internal"
+      RQ_RENEW -> external { jobId : string!  attempt : number! }
+        @description "Extend the lease of the running job."
+        @tier "internal"
+      REFILL_ENQUEUE -> external {
+        queue : string!
+        job : @entity @config.jobEntity!
+      }
+        @description "Copy a due nightly template onto the night queue."
+        @tier "internal"
+      RENEW_DUE -> internal { }
+        @tier "internal"
+      POLL_DUE -> internal { }
+        @tier "internal"
+      DueLoaded {
+        data : [@entity @config.jobEntity]!
+      }
+      TemplateTouched {
+        id : string!
+      }
+      DeadMarked {
+        id : string!
+      }
+      Finalized {
+        id : string!
+      }
+      RefillFailed {
+        error : string
+        code : string
+      }
+      FinalizeFailed {
+        error : string
+        code : string
+      }
+    }
+
+    listens {
+      WINDOW_TICK -> input { }
+        @description "The window opened: re-queue due nightly templates, then start a tonight job, else a now job, when idle."
+        @synonyms "start window, night window, nightly tick"
+        @tier "domain"
+      RUN_DONE -> input {
+        jobId : string!
+        attempt : number!
+        result : string!
+        resultUrl : string?
+      }
+        @description "The handler finished the job."
+        @tier "domain"
+      RUN_FAILED -> input {
+        jobId : string!
+        attempt : number!
+        stage : string!
+        error : string!
+      }
+        @description "The handler could not finish the job."
+        @tier "domain"
+      JobScheduler.RUN_KICK -> RUN_KICK
+      JobRunnerProducer.JOB_ENQUEUED -> RefillEnqueued
+      JobRunnerProducer.QUEUE_FAILED -> RefillQueueFailed
+      JobRunnerConsumer.JOB_DEQUEUED -> JobLeased
+      JobRunnerConsumer.QUEUE_EMPTY -> QueueEmpty
+      JobRunnerConsumer.JOB_GAVE_UP -> JobGaveUp
+      JobRunnerConsumer.QUEUE_FAILED -> ConsumerFailed
+      JobRunnerFinisher.JOB_COMPLETED -> JobCompleted
+      JobRunnerFinisher.JOB_FAILED -> JobFailed
+      JobRunnerFinisher.LEASE_LOST -> LeaseLost
+      JobRunnerFinisher.QUEUE_FAILED -> FinisherFailed
+      JobRunnerRenewer.LEASE_LOST -> LeaseLost
+      JobRunnerRenewer.QUEUE_FAILED -> RenewerFailed
+      RUN_KICK { }
+        @tier "internal"
+      RefillEnqueued {
+        jobId : string!
+        position : number!
+      }
+        @tier "internal"
+      RefillQueueFailed {
+        op : string!
+        error : string!
+      }
+        @tier "internal"
+      JobLeased {
+        job : @entity @config.jobEntity!
+        attempt : number!
+      }
+        @tier "internal"
+      QueueEmpty {
+        queue : string!
+      }
+        @tier "internal"
+      JobGaveUp {
+        jobId : string!
+        attempts : number!
+        job : @entity @config.jobEntity!
+      }
+        @tier "internal"
+      ConsumerFailed {
+        op : string!
+        error : string!
+      }
+        @tier "internal"
+      JobCompleted {
+        jobId : string!
+        completed : boolean!
+      }
+        @tier "internal"
+      JobFailed {
+        jobId : string!
+        failed : boolean!
+      }
+        @tier "internal"
+      LeaseLost {
+        jobId : string!
+        attempt : number!
+        op : "complete" | "fail" | "renew"
+      }
+        @tier "internal"
+      FinisherFailed {
+        op : string!
+        error : string!
+      }
+        @tier "internal"
+      RenewerFailed {
+        op : string!
+        error : string!
+      }
+        @tier "internal"
+      DueLoaded {
+        data : [@entity @config.jobEntity]!
+      }
+      TemplateTouched {
+        id : string!
+      }
+      DeadMarked {
+        id : string!
+      }
+      Finalized {
+        id : string!
+      }
+      RefillFailed {
+        error : string
+        code : string
+      }
+      FinalizeFailed {
+        error : string
+        code : string
+      }
+    }
+
+    config {
+      jobEntity : entity = RunnerJob
+        @label "Job entity"
+        @description "The persisted job record; see the scheduler's description of the fields it must supply."
+        @synonyms "job record, task entity"
+        @tier "domain"
+      nowQueue : string = "now"
+        @label "Now queue"
+        @description "The queue of jobs that start at once."
+        @tier "policy"
+      nightQueue : string = "night"
+        @label "Night queue"
+        @description "The queue of jobs that start on a window tick."
+        @tier "policy"
+      templateQueue : string = "nightly"
+        @label "Template queue"
+        @description "The queue name of nightly template rows; they are never dequeued."
+        @tier "policy"
+      refillAfterHours : number = 12
+        @label "Refill after (hours)"
+        @description "A nightly template is copied onto the night queue on a window tick when its lastRunAt is older than this."
+        @synonyms "nightly period, repeat interval"
+        @tier "policy"
+      runTimeoutMs : number = 0
+        @label "Run timeout (ms)"
+        @description "A job that has run longer than this without RUN_DONE or RUN_FAILED is failed by the runner on the next 60 s renew tick (so the deadline is checked to the minute). 0 means no deadline."
+        @synonyms "job deadline, max run time, stuck job timeout"
+        @tier "policy"
+    }
+  }
+
+  page boot as JobRunnerPage -> JobRunnerProducer, JobRunnerConsumer, JobRunnerFinisher, JobRunnerRenewer, JobScheduler, JobRunner
+}

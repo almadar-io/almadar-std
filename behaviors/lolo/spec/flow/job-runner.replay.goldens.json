@@ -1,0 +1,2219 @@
+{
+ "atom": "flow/atoms/std-job-runner.lolo",
+ "trait": "JobRunner",
+ "note": "The queue's answers (JOB_DEQUEUED as JobLeased, QUEUE_EMPTY, JOB_GAVE_UP, JOB_COMPLETED, LEASE_LOST, QUEUE_FAILED) and the host's fetch/persist answers are played as steps; the literal ticks are played as their RENEW_DUE and POLL_DUE events.",
+ "cases": [
+  {
+   "id": "schedule-now-when-idle-leases-runs-and-finishes-completed",
+   "now": 1700000000000,
+   "steps": [
+    {
+     "event": "SCHEDULE",
+     "payload": {
+      "job": {
+       "id": "j1",
+       "queue": "x",
+       "priority": 0,
+       "status": "pending",
+       "enqueuedAt": "2023-11-14T22:13:19Z",
+       "availableAt": "2023-11-14T22:13:19Z",
+       "attempts": 0,
+       "leaseExpiresAt": "2023-11-14T22:13:19Z",
+       "result": "",
+       "error": "",
+       "payload": "",
+       "kind": "report",
+       "label": "Scan shops",
+       "ownerEmail": "a@b.co",
+       "templateId": "",
+       "lastRunAt": "1970-01-01T00:00:00Z",
+       "resultUrl": "",
+       "finishedAt": "1970-01-01T00:00:00Z"
+      },
+      "when": "now"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SCHEDULED",
+        "payload": {
+         "jobId": "j1"
+        }
+       },
+       {
+        "event": "RUN_KICK"
+       },
+       {
+        "event": "RQ_DEQUEUE",
+        "payload": {
+         "queue": "now"
+        }
+       },
+       {
+        "event": "JOB_RUN",
+        "payload": {
+         "attempt": 1
+        }
+       }
+      ]
+     },
+     "trait": "JobScheduler"
+    },
+    {
+     "event": "RUN_DONE",
+     "from": "running",
+     "payload": {
+      "jobId": "j1",
+      "attempt": 1,
+      "result": "ok",
+      "resultUrl": "https://x/r.pdf"
+     },
+     "expect": {
+      "state": "settling",
+      "emits": [
+       {
+        "event": "RQ_COMPLETE",
+        "payload": {
+         "jobId": "j1",
+         "attempt": 1,
+         "result": "ok"
+        }
+       },
+       {
+        "event": "JOB_COMPLETED",
+        "payload": {
+         "jobId": "j1",
+         "completed": true
+        }
+       },
+       {
+        "event": "JOB_FINISHED",
+        "payload": {
+         "jobId": "j1",
+         "kind": "report",
+         "label": "Scan shops",
+         "ownerEmail": "a@b.co",
+         "status": "completed",
+         "result": "ok",
+         "resultUrl": "https://x/r.pdf",
+         "attempts": 1,
+         "error": "",
+         "stage": ""
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "runDeadline": "1970-01-01T00:00:00Z",
+    "jobId": "j1",
+    "attempt": 1,
+    "kind": "report",
+    "label": "Scan shops",
+    "ownerEmail": "a@b.co",
+    "result": "ok",
+    "resultUrl": "https://x/r.pdf",
+    "error": "boom",
+    "stage": "report",
+    "status": "completed",
+    "refillTplId": "t1",
+    "refillJobId": "t1:1700000000000"
+   },
+   "defaults": [
+    "JobRunnerProducer",
+    "JobRunnerConsumer",
+    "JobRunnerFinisher",
+    "JobRunnerRenewer",
+    "JobScheduler",
+    "JobRunner"
+   ]
+  },
+  {
+   "id": "run-failed-fails-on-the-queue-then-finishes-failed-with-stage",
+   "now": 1700000000000,
+   "steps": [
+    {
+     "event": "SCHEDULE",
+     "payload": {
+      "job": {
+       "id": "j1",
+       "queue": "x",
+       "priority": 0,
+       "status": "pending",
+       "enqueuedAt": "2023-11-14T22:13:19Z",
+       "availableAt": "2023-11-14T22:13:19Z",
+       "attempts": 0,
+       "leaseExpiresAt": "2023-11-14T22:13:19Z",
+       "result": "",
+       "error": "",
+       "payload": "",
+       "kind": "report",
+       "label": "Scan shops",
+       "ownerEmail": "a@b.co",
+       "templateId": "",
+       "lastRunAt": "1970-01-01T00:00:00Z",
+       "resultUrl": "",
+       "finishedAt": "1970-01-01T00:00:00Z"
+      },
+      "when": "now"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "JOB_RUN",
+        "payload": {
+         "attempt": 1
+        }
+       }
+      ]
+     },
+     "trait": "JobScheduler"
+    },
+    {
+     "event": "RUN_FAILED",
+     "from": "running",
+     "payload": {
+      "jobId": "j1",
+      "attempt": 1,
+      "stage": "report",
+      "error": "boom"
+     },
+     "expect": {
+      "state": "settling",
+      "emits": [
+       {
+        "event": "RQ_FAIL",
+        "payload": {
+         "jobId": "j1",
+         "attempt": 1,
+         "error": "boom"
+        }
+       },
+       {
+        "event": "JOB_FAILED",
+        "payload": {
+         "jobId": "j1",
+         "failed": true
+        }
+       },
+       {
+        "event": "JOB_FINISHED",
+        "payload": {
+         "jobId": "j1",
+         "status": "failed",
+         "error": "boom",
+         "stage": "report",
+         "attempts": 1
+        }
+       }
+      ],
+      "neverEmits": [
+       "RUNNER_FAILED"
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "runDeadline": "1970-01-01T00:00:00Z",
+    "jobId": "j1",
+    "attempt": 1,
+    "kind": "report",
+    "label": "Scan shops",
+    "ownerEmail": "a@b.co",
+    "result": "ok",
+    "resultUrl": "https://x/r.pdf",
+    "error": "boom",
+    "stage": "report",
+    "status": "completed",
+    "refillTplId": "t1",
+    "refillJobId": "t1:1700000000000"
+   },
+   "defaults": [
+    "JobRunnerProducer",
+    "JobRunnerConsumer",
+    "JobRunnerFinisher",
+    "JobRunnerRenewer",
+    "JobScheduler",
+    "JobRunner"
+   ]
+  },
+  {
+   "id": "control-run-kick-while-running-starts-nothing",
+   "now": 1700000000000,
+   "steps": [
+    {
+     "event": "RUN_KICK",
+     "from": "running",
+     "expect": {
+      "state": "running",
+      "neverEmits": [
+       "RQ_DEQUEUE",
+       "JOB_RUN"
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "runDeadline": "1970-01-01T00:00:00Z",
+    "jobId": "j1",
+    "attempt": 1,
+    "kind": "report",
+    "label": "Scan shops",
+    "ownerEmail": "a@b.co",
+    "result": "ok",
+    "resultUrl": "https://x/r.pdf",
+    "error": "boom",
+    "stage": "report",
+    "status": "completed",
+    "refillTplId": "t1",
+    "refillJobId": "t1:1700000000000"
+   },
+   "defaults": [
+    "JobRunnerProducer",
+    "JobRunnerConsumer",
+    "JobRunnerFinisher",
+    "JobRunnerRenewer",
+    "JobScheduler"
+   ]
+  },
+  {
+   "id": "window-tick-refills-a-due-template-then-leases-the-night-queue",
+   "now": 1700000000000,
+   "steps": [
+    {
+     "event": "SCHEDULE",
+     "payload": {
+      "job": {
+       "id": "j1",
+       "queue": "x",
+       "priority": 0,
+       "status": "pending",
+       "enqueuedAt": "2023-11-14T22:13:19Z",
+       "availableAt": "2023-11-14T22:13:19Z",
+       "attempts": 0,
+       "leaseExpiresAt": "2023-11-14T22:13:19Z",
+       "result": "",
+       "error": "",
+       "payload": "",
+       "kind": "report",
+       "label": "Scan shops",
+       "ownerEmail": "a@b.co",
+       "templateId": "",
+       "lastRunAt": "1970-01-01T00:00:00Z",
+       "resultUrl": "",
+       "finishedAt": "1970-01-01T00:00:00Z"
+      },
+      "when": "tonight",
+      "nightly": true
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SCHEDULED",
+        "payload": {
+         "templateId": "j1:tpl"
+        }
+       }
+      ],
+      "neverEmits": [
+       "JOB_RUN"
+      ]
+     },
+     "trait": "JobScheduler"
+    },
+    {
+     "event": "WINDOW_TICK",
+     "from": "idle",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "REFILL_ENQUEUE",
+        "payload": {
+         "queue": "night"
+        }
+       },
+       {
+        "event": "RQ_DEQUEUE",
+        "payload": {
+         "queue": "night"
+        }
+       },
+       {
+        "event": "JOB_RUN",
+        "payload": {
+         "attempt": 1
+        }
+       }
+      ],
+      "neverEmits": [
+       "RUNNER_FAILED"
+      ]
+     },
+     "now": 1700046800000
+    }
+   ],
+   "entity": {
+    "runDeadline": "1970-01-01T00:00:00Z",
+    "jobId": "j1",
+    "attempt": 1,
+    "kind": "report",
+    "label": "Scan shops",
+    "ownerEmail": "a@b.co",
+    "result": "ok",
+    "resultUrl": "https://x/r.pdf",
+    "error": "boom",
+    "stage": "report",
+    "status": "completed",
+    "refillTplId": "t1",
+    "refillJobId": "t1:1700000000000"
+   },
+   "defaults": [
+    "JobRunnerProducer",
+    "JobRunnerConsumer",
+    "JobRunnerFinisher",
+    "JobRunnerRenewer",
+    "JobScheduler",
+    "JobRunner"
+   ]
+  },
+  {
+   "id": "control-window-tick-with-a-template-not_due-does-not-refill",
+   "now": 1700000000000,
+   "steps": [
+    {
+     "event": "SCHEDULE",
+     "payload": {
+      "job": {
+       "id": "j1",
+       "queue": "x",
+       "priority": 0,
+       "status": "pending",
+       "enqueuedAt": "2023-11-14T22:13:19Z",
+       "availableAt": "2023-11-14T22:13:19Z",
+       "attempts": 0,
+       "leaseExpiresAt": "2023-11-14T22:13:19Z",
+       "result": "",
+       "error": "",
+       "payload": "",
+       "kind": "report",
+       "label": "Scan shops",
+       "ownerEmail": "a@b.co",
+       "templateId": "",
+       "lastRunAt": "1970-01-01T00:00:00Z",
+       "resultUrl": "",
+       "finishedAt": "1970-01-01T00:00:00Z"
+      },
+      "when": "tonight",
+      "nightly": true
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SCHEDULED",
+        "payload": {
+         "templateId": "j1:tpl"
+        }
+       }
+      ]
+     },
+     "trait": "JobScheduler"
+    },
+    {
+     "event": "WINDOW_TICK",
+     "from": "idle",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "RQ_DEQUEUE",
+        "payload": {
+         "queue": "night"
+        }
+       },
+       {
+        "event": "JOB_RUN",
+        "payload": {
+         "attempt": 1
+        }
+       }
+      ],
+      "neverEmits": [
+       "REFILL_ENQUEUE",
+       "RUNNER_FAILED"
+      ]
+     },
+     "now": 1700003600000
+    }
+   ],
+   "entity": {
+    "runDeadline": "1970-01-01T00:00:00Z",
+    "jobId": "j1",
+    "attempt": 1,
+    "kind": "report",
+    "label": "Scan shops",
+    "ownerEmail": "a@b.co",
+    "result": "ok",
+    "resultUrl": "https://x/r.pdf",
+    "error": "boom",
+    "stage": "report",
+    "status": "completed",
+    "refillTplId": "t1",
+    "refillJobId": "t1:1700000000000"
+   },
+   "defaults": [
+    "JobRunnerProducer",
+    "JobRunnerConsumer",
+    "JobRunnerFinisher",
+    "JobRunnerRenewer",
+    "JobScheduler",
+    "JobRunner"
+   ]
+  },
+  {
+   "id": "control-window-tick-with-nothing-queued-falls-through-night-to-now",
+   "now": 1700000000000,
+   "steps": [
+    {
+     "event": "WINDOW_TICK",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "RQ_DEQUEUE",
+        "payload": {
+         "queue": "night"
+        }
+       },
+       {
+        "event": "QUEUE_EMPTY",
+        "payload": {
+         "queue": "night"
+        }
+       },
+       {
+        "event": "RQ_DEQUEUE",
+        "payload": {
+         "queue": "now"
+        }
+       },
+       {
+        "event": "QUEUE_EMPTY",
+        "payload": {
+         "queue": "now"
+        }
+       }
+      ],
+      "neverEmits": [
+       "REFILL_ENQUEUE",
+       "JOB_RUN"
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "runDeadline": "1970-01-01T00:00:00Z",
+    "jobId": "j1",
+    "attempt": 1,
+    "kind": "report",
+    "label": "Scan shops",
+    "ownerEmail": "a@b.co",
+    "result": "ok",
+    "resultUrl": "https://x/r.pdf",
+    "error": "boom",
+    "stage": "report",
+    "status": "completed",
+    "refillTplId": "t1",
+    "refillJobId": "t1:1700000000000"
+   },
+   "defaults": [
+    "JobRunnerProducer",
+    "JobRunnerConsumer",
+    "JobRunnerFinisher",
+    "JobRunnerRenewer",
+    "JobScheduler"
+   ]
+  },
+  {
+   "id": "control-window-tick-while-running-does-nothing",
+   "now": 1700000000000,
+   "steps": [
+    {
+     "event": "WINDOW_TICK",
+     "from": "running",
+     "payload": {},
+     "expect": {
+      "state": "running",
+      "neverEmits": [
+       "RQ_DEQUEUE",
+       "REFILL_ENQUEUE"
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "runDeadline": "1970-01-01T00:00:00Z",
+    "jobId": "j1",
+    "attempt": 1,
+    "kind": "report",
+    "label": "Scan shops",
+    "ownerEmail": "a@b.co",
+    "result": "ok",
+    "resultUrl": "https://x/r.pdf",
+    "error": "boom",
+    "stage": "report",
+    "status": "completed",
+    "refillTplId": "t1",
+    "refillJobId": "t1:1700000000000"
+   },
+   "defaults": [
+    "JobRunnerProducer",
+    "JobRunnerConsumer",
+    "JobRunnerFinisher",
+    "JobRunnerRenewer",
+    "JobScheduler"
+   ]
+  },
+  {
+   "id": "night-queue-empty-falls-through-to-the-now-queue",
+   "now": 1700000000000,
+   "steps": [
+    {
+     "event": "QueueEmpty",
+     "from": "dequeuingNight",
+     "payload": {
+      "queue": "night"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RQ_DEQUEUE",
+        "payload": {
+         "queue": "now"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "runDeadline": "1970-01-01T00:00:00Z",
+    "jobId": "j1",
+    "attempt": 1,
+    "kind": "report",
+    "label": "Scan shops",
+    "ownerEmail": "a@b.co",
+    "result": "ok",
+    "resultUrl": "https://x/r.pdf",
+    "error": "boom",
+    "stage": "report",
+    "status": "completed",
+    "refillTplId": "t1",
+    "refillJobId": "t1:1700000000000"
+   },
+   "defaults": [
+    "JobRunnerProducer",
+    "JobRunnerConsumer",
+    "JobRunnerFinisher",
+    "JobRunnerRenewer",
+    "JobScheduler"
+   ]
+  },
+  {
+   "id": "control-now-queue-empty-goes-idle-without-another-dequeue",
+   "now": 1700000000000,
+   "steps": [
+    {
+     "event": "QueueEmpty",
+     "from": "dequeuingNow",
+     "payload": {
+      "queue": "now"
+     },
+     "expect": {
+      "state": "idle",
+      "neverEmits": [
+       "RQ_DEQUEUE",
+       "JOB_RUN"
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "runDeadline": "1970-01-01T00:00:00Z",
+    "jobId": "j1",
+    "attempt": 1,
+    "kind": "report",
+    "label": "Scan shops",
+    "ownerEmail": "a@b.co",
+    "result": "ok",
+    "resultUrl": "https://x/r.pdf",
+    "error": "boom",
+    "stage": "report",
+    "status": "completed",
+    "refillTplId": "t1",
+    "refillJobId": "t1:1700000000000"
+   },
+   "defaults": [
+    "JobRunnerProducer",
+    "JobRunnerConsumer",
+    "JobRunnerFinisher",
+    "JobRunnerRenewer",
+    "JobScheduler"
+   ]
+  },
+  {
+   "id": "job-dequeued-emits-job-run-with-its-attempt-and-waits",
+   "now": 1700000000000,
+   "steps": [
+    {
+     "event": "JobLeased",
+     "from": "dequeuingNow",
+     "payload": {
+      "job": {
+       "id": "j1",
+       "queue": "now",
+       "priority": 0,
+       "status": "processing",
+       "enqueuedAt": "2023-11-14T22:13:19Z",
+       "availableAt": "2023-11-14T22:13:19Z",
+       "attempts": 2,
+       "leaseExpiresAt": "2023-11-14T22:13:19Z",
+       "result": "",
+       "error": "",
+       "payload": "",
+       "kind": "report",
+       "label": "Scan shops",
+       "ownerEmail": "a@b.co",
+       "templateId": "",
+       "lastRunAt": "1970-01-01T00:00:00Z",
+       "resultUrl": "",
+       "finishedAt": "1970-01-01T00:00:00Z"
+      },
+      "attempt": 2
+     },
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "JOB_RUN",
+        "payload": {
+         "attempt": 2,
+         "job": {
+          "id": "j1",
+          "queue": "now",
+          "priority": 0,
+          "status": "processing",
+          "enqueuedAt": "2023-11-14T22:13:19Z",
+          "availableAt": "2023-11-14T22:13:19Z",
+          "attempts": 2,
+          "leaseExpiresAt": "2023-11-14T22:13:19Z",
+          "result": "",
+          "error": "",
+          "payload": "",
+          "kind": "report",
+          "label": "Scan shops",
+          "ownerEmail": "a@b.co",
+          "templateId": "",
+          "lastRunAt": "1970-01-01T00:00:00Z",
+          "resultUrl": "",
+          "finishedAt": "1970-01-01T00:00:00Z"
+         }
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "runDeadline": "1970-01-01T00:00:00Z",
+    "jobId": "j1",
+    "attempt": 1,
+    "kind": "report",
+    "label": "Scan shops",
+    "ownerEmail": "a@b.co",
+    "result": "ok",
+    "resultUrl": "https://x/r.pdf",
+    "error": "boom",
+    "stage": "report",
+    "status": "completed",
+    "refillTplId": "t1",
+    "refillJobId": "t1:1700000000000"
+   },
+   "defaults": [
+    "JobRunnerProducer",
+    "JobRunnerConsumer",
+    "JobRunnerFinisher",
+    "JobRunnerRenewer",
+    "JobScheduler"
+   ]
+  },
+  {
+   "id": "job-completed-writes-the-result-url-row-update",
+   "now": 1700000000000,
+   "steps": [
+    {
+     "event": "JobCompleted",
+     "from": "settling",
+     "payload": {
+      "jobId": "j1",
+      "completed": true
+     },
+     "expect": {
+      "state": "finalizing",
+      "effects": [
+       {
+        "type": "persist"
+       }
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "runDeadline": "1970-01-01T00:00:00Z",
+    "jobId": "j1",
+    "attempt": 1,
+    "kind": "report",
+    "label": "Scan shops",
+    "ownerEmail": "a@b.co",
+    "result": "ok",
+    "resultUrl": "https://x/r.pdf",
+    "error": "boom",
+    "stage": "report",
+    "status": "completed",
+    "refillTplId": "t1",
+    "refillJobId": "t1:1700000000000"
+   },
+   "defaults": [
+    "JobRunnerProducer",
+    "JobRunnerConsumer",
+    "JobRunnerFinisher",
+    "JobRunnerRenewer",
+    "JobScheduler"
+   ]
+  },
+  {
+   "id": "finalized-emits-job-finished-with-the-held-fields",
+   "now": 1700000000000,
+   "steps": [
+    {
+     "event": "Finalized",
+     "from": "finalizing",
+     "payload": {
+      "id": "j1"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "JOB_FINISHED",
+        "payload": {
+         "jobId": "j1",
+         "kind": "report",
+         "label": "Scan shops",
+         "ownerEmail": "a@b.co",
+         "status": "completed",
+         "result": "ok",
+         "resultUrl": "https://x/r.pdf",
+         "attempts": 1,
+         "error": "boom",
+         "stage": "report"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "runDeadline": "1970-01-01T00:00:00Z",
+    "jobId": "j1",
+    "attempt": 1,
+    "kind": "report",
+    "label": "Scan shops",
+    "ownerEmail": "a@b.co",
+    "result": "ok",
+    "resultUrl": "https://x/r.pdf",
+    "error": "boom",
+    "stage": "report",
+    "status": "completed",
+    "refillTplId": "t1",
+    "refillJobId": "t1:1700000000000"
+   },
+   "defaults": [
+    "JobRunnerProducer",
+    "JobRunnerConsumer",
+    "JobRunnerFinisher",
+    "JobRunnerRenewer",
+    "JobScheduler"
+   ]
+  },
+  {
+   "id": "gave-up-on-the-night-queue-finishes-dead-and-keeps-dequeuing",
+   "now": 1700000000000,
+   "steps": [
+    {
+     "event": "JobGaveUp",
+     "from": "dequeuingNight",
+     "payload": {
+      "jobId": "j1",
+      "attempts": 3,
+      "job": {
+       "id": "j1",
+       "queue": "night",
+       "priority": 0,
+       "status": "failed",
+       "enqueuedAt": "2023-11-14T22:13:19Z",
+       "availableAt": "2023-11-14T22:13:19Z",
+       "attempts": 3,
+       "leaseExpiresAt": "2023-11-14T22:13:19Z",
+       "result": "",
+       "error": "",
+       "payload": "",
+       "kind": "report",
+       "label": "Scan shops",
+       "ownerEmail": "a@b.co",
+       "templateId": "",
+       "lastRunAt": "1970-01-01T00:00:00Z",
+       "resultUrl": "",
+       "finishedAt": "1970-01-01T00:00:00Z"
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "JOB_FINISHED",
+        "payload": {
+         "jobId": "j1",
+         "kind": "report",
+         "label": "Scan shops",
+         "ownerEmail": "a@b.co",
+         "status": "dead",
+         "result": "",
+         "resultUrl": "",
+         "attempts": 3,
+         "error": "max_attempts",
+         "stage": ""
+        }
+       }
+      ],
+      "effects": [
+       {
+        "type": "persist"
+       }
+      ]
+     }
+    },
+    {
+     "event": "DeadMarked",
+     "from": "dequeuingNight",
+     "payload": {
+      "id": "j1"
+     },
+     "expect": {
+      "state": "dequeuingNight",
+      "neverEmits": [
+       "RUNNER_FAILED",
+       "JOB_FINISHED"
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "runDeadline": "1970-01-01T00:00:00Z",
+    "jobId": "j1",
+    "attempt": 1,
+    "kind": "report",
+    "label": "Scan shops",
+    "ownerEmail": "a@b.co",
+    "result": "ok",
+    "resultUrl": "https://x/r.pdf",
+    "error": "boom",
+    "stage": "report",
+    "status": "completed",
+    "refillTplId": "t1",
+    "refillJobId": "t1:1700000000000"
+   },
+   "defaults": [
+    "JobRunnerProducer",
+    "JobRunnerConsumer",
+    "JobRunnerFinisher",
+    "JobRunnerRenewer",
+    "JobScheduler"
+   ]
+  },
+  {
+   "id": "gave-up-on-the-now-queue-finishes-dead",
+   "now": 1700000000000,
+   "steps": [
+    {
+     "event": "JobGaveUp",
+     "from": "dequeuingNow",
+     "payload": {
+      "jobId": "j1",
+      "attempts": 3,
+      "job": {
+       "id": "j1",
+       "queue": "now",
+       "priority": 0,
+       "status": "failed",
+       "enqueuedAt": "2023-11-14T22:13:19Z",
+       "availableAt": "2023-11-14T22:13:19Z",
+       "attempts": 3,
+       "leaseExpiresAt": "2023-11-14T22:13:19Z",
+       "result": "",
+       "error": "",
+       "payload": "",
+       "kind": "report",
+       "label": "Scan shops",
+       "ownerEmail": "a@b.co",
+       "templateId": "",
+       "lastRunAt": "1970-01-01T00:00:00Z",
+       "resultUrl": "",
+       "finishedAt": "1970-01-01T00:00:00Z"
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "JOB_FINISHED",
+        "payload": {
+         "jobId": "j1",
+         "status": "dead",
+         "attempts": 3
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "runDeadline": "1970-01-01T00:00:00Z",
+    "jobId": "j1",
+    "attempt": 1,
+    "kind": "report",
+    "label": "Scan shops",
+    "ownerEmail": "a@b.co",
+    "result": "ok",
+    "resultUrl": "https://x/r.pdf",
+    "error": "boom",
+    "stage": "report",
+    "status": "completed",
+    "refillTplId": "t1",
+    "refillJobId": "t1:1700000000000"
+   },
+   "defaults": [
+    "JobRunnerProducer",
+    "JobRunnerConsumer",
+    "JobRunnerFinisher",
+    "JobRunnerRenewer",
+    "JobScheduler"
+   ]
+  },
+  {
+   "id": "renew-tick-while-running-renews-the-lease",
+   "now": 1700000000000,
+   "steps": [
+    {
+     "event": "SCHEDULE",
+     "payload": {
+      "job": {
+       "id": "j1",
+       "queue": "x",
+       "priority": 0,
+       "status": "pending",
+       "enqueuedAt": "2023-11-14T22:13:19Z",
+       "availableAt": "2023-11-14T22:13:19Z",
+       "attempts": 0,
+       "leaseExpiresAt": "2023-11-14T22:13:19Z",
+       "result": "",
+       "error": "",
+       "payload": "",
+       "kind": "report",
+       "label": "Scan shops",
+       "ownerEmail": "a@b.co",
+       "templateId": "",
+       "lastRunAt": "1970-01-01T00:00:00Z",
+       "resultUrl": "",
+       "finishedAt": "1970-01-01T00:00:00Z"
+      },
+      "when": "now"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "JOB_RUN",
+        "payload": {
+         "attempt": 1
+        }
+       }
+      ]
+     },
+     "trait": "JobScheduler"
+    },
+    {
+     "event": "RENEW_DUE",
+     "from": "running",
+     "payload": {},
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "RQ_RENEW",
+        "payload": {
+         "jobId": "j1",
+         "attempt": 1
+        }
+       },
+       {
+        "event": "LEASE_RENEWED",
+        "payload": {
+         "jobId": "j1",
+         "attempt": 1
+        }
+       }
+      ],
+      "neverEmits": [
+       "LEASE_LOST",
+       "RUNNER_FAILED"
+      ]
+     },
+     "now": 1700000060000
+    }
+   ],
+   "entity": {
+    "runDeadline": "1970-01-01T00:00:00Z",
+    "jobId": "j1",
+    "attempt": 1,
+    "kind": "report",
+    "label": "Scan shops",
+    "ownerEmail": "a@b.co",
+    "result": "ok",
+    "resultUrl": "https://x/r.pdf",
+    "error": "boom",
+    "stage": "report",
+    "status": "completed",
+    "refillTplId": "t1",
+    "refillJobId": "t1:1700000000000"
+   },
+   "defaults": [
+    "JobRunnerProducer",
+    "JobRunnerConsumer",
+    "JobRunnerFinisher",
+    "JobRunnerRenewer",
+    "JobScheduler",
+    "JobRunner"
+   ]
+  },
+  {
+   "id": "lease-expired-before-the-renew-goes-idle-and-emits-nothing-for-the-job",
+   "now": 1700000000000,
+   "steps": [
+    {
+     "event": "SCHEDULE",
+     "payload": {
+      "job": {
+       "id": "j1",
+       "queue": "x",
+       "priority": 0,
+       "status": "pending",
+       "enqueuedAt": "2023-11-14T22:13:19Z",
+       "availableAt": "2023-11-14T22:13:19Z",
+       "attempts": 0,
+       "leaseExpiresAt": "2023-11-14T22:13:19Z",
+       "result": "",
+       "error": "",
+       "payload": "",
+       "kind": "report",
+       "label": "Scan shops",
+       "ownerEmail": "a@b.co",
+       "templateId": "",
+       "lastRunAt": "1970-01-01T00:00:00Z",
+       "resultUrl": "",
+       "finishedAt": "1970-01-01T00:00:00Z"
+      },
+      "when": "now"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "JOB_RUN",
+        "payload": {
+         "attempt": 1
+        }
+       }
+      ]
+     },
+     "trait": "JobScheduler"
+    },
+    {
+     "event": "RENEW_DUE",
+     "from": "running",
+     "payload": {},
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "RQ_RENEW",
+        "payload": {
+         "jobId": "j1",
+         "attempt": 1
+        }
+       },
+       {
+        "event": "LEASE_LOST",
+        "payload": {
+         "jobId": "j1",
+         "attempt": 1,
+         "op": "renew"
+        }
+       }
+      ],
+      "neverEmits": [
+       "JOB_FINISHED",
+       "RUNNER_FAILED"
+      ]
+     },
+     "now": 1700000400000
+    }
+   ],
+   "entity": {
+    "runDeadline": "1970-01-01T00:00:00Z",
+    "jobId": "j1",
+    "attempt": 1,
+    "kind": "report",
+    "label": "Scan shops",
+    "ownerEmail": "a@b.co",
+    "result": "ok",
+    "resultUrl": "https://x/r.pdf",
+    "error": "boom",
+    "stage": "report",
+    "status": "completed",
+    "refillTplId": "t1",
+    "refillJobId": "t1:1700000000000"
+   },
+   "defaults": [
+    "JobRunnerProducer",
+    "JobRunnerConsumer",
+    "JobRunnerFinisher",
+    "JobRunnerRenewer",
+    "JobScheduler",
+    "JobRunner"
+   ]
+  },
+  {
+   "id": "control-renew-tick-while-idle-renews-nothing",
+   "now": 1700000000000,
+   "steps": [
+    {
+     "event": "RENEW_DUE",
+     "from": "idle",
+     "payload": {},
+     "expect": {
+      "state": "idle",
+      "neverEmits": [
+       "RQ_RENEW"
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "runDeadline": "1970-01-01T00:00:00Z",
+    "jobId": "j1",
+    "attempt": 1,
+    "kind": "report",
+    "label": "Scan shops",
+    "ownerEmail": "a@b.co",
+    "result": "ok",
+    "resultUrl": "https://x/r.pdf",
+    "error": "boom",
+    "stage": "report",
+    "status": "completed",
+    "refillTplId": "t1",
+    "refillJobId": "t1:1700000000000"
+   },
+   "defaults": [
+    "JobRunnerProducer",
+    "JobRunnerConsumer",
+    "JobRunnerFinisher",
+    "JobRunnerRenewer",
+    "JobScheduler"
+   ]
+  },
+  {
+   "id": "lease-lost-on-renew-goes-idle-and-emits-nothing",
+   "now": 1700000000000,
+   "steps": [
+    {
+     "event": "LeaseLost",
+     "from": "running",
+     "payload": {
+      "jobId": "j1",
+      "attempt": 1,
+      "op": "renew"
+     },
+     "expect": {
+      "state": "idle",
+      "neverEmits": [
+       "JOB_FINISHED",
+       "RUNNER_FAILED",
+       "JOB_RUN"
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "runDeadline": "1970-01-01T00:00:00Z",
+    "jobId": "j1",
+    "attempt": 1,
+    "kind": "report",
+    "label": "Scan shops",
+    "ownerEmail": "a@b.co",
+    "result": "ok",
+    "resultUrl": "https://x/r.pdf",
+    "error": "boom",
+    "stage": "report",
+    "status": "completed",
+    "refillTplId": "t1",
+    "refillJobId": "t1:1700000000000"
+   },
+   "defaults": [
+    "JobRunnerProducer",
+    "JobRunnerConsumer",
+    "JobRunnerFinisher",
+    "JobRunnerRenewer",
+    "JobScheduler"
+   ]
+  },
+  {
+   "id": "lease-lost-on-settle-goes-idle-and-emits-nothing",
+   "now": 1700000000000,
+   "steps": [
+    {
+     "event": "LeaseLost",
+     "from": "settling",
+     "payload": {
+      "jobId": "j1",
+      "attempt": 1,
+      "op": "complete"
+     },
+     "expect": {
+      "state": "idle",
+      "neverEmits": [
+       "JOB_FINISHED",
+       "RUNNER_FAILED"
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "runDeadline": "1970-01-01T00:00:00Z",
+    "jobId": "j1",
+    "attempt": 1,
+    "kind": "report",
+    "label": "Scan shops",
+    "ownerEmail": "a@b.co",
+    "result": "ok",
+    "resultUrl": "https://x/r.pdf",
+    "error": "boom",
+    "stage": "report",
+    "status": "completed",
+    "refillTplId": "t1",
+    "refillJobId": "t1:1700000000000"
+   },
+   "defaults": [
+    "JobRunnerProducer",
+    "JobRunnerConsumer",
+    "JobRunnerFinisher",
+    "JobRunnerRenewer",
+    "JobScheduler"
+   ]
+  },
+  {
+   "id": "control-lease-lost-for-another-job-keeps-running",
+   "now": 1700000000000,
+   "steps": [
+    {
+     "event": "LeaseLost",
+     "from": "running",
+     "payload": {
+      "jobId": "other",
+      "attempt": 1,
+      "op": "renew"
+     },
+     "expect": {
+      "state": "running",
+      "neverEmits": [
+       "JOB_FINISHED"
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "runDeadline": "1970-01-01T00:00:00Z",
+    "jobId": "j1",
+    "attempt": 1,
+    "kind": "report",
+    "label": "Scan shops",
+    "ownerEmail": "a@b.co",
+    "result": "ok",
+    "resultUrl": "https://x/r.pdf",
+    "error": "boom",
+    "stage": "report",
+    "status": "completed",
+    "refillTplId": "t1",
+    "refillJobId": "t1:1700000000000"
+   },
+   "defaults": [
+    "JobRunnerProducer",
+    "JobRunnerConsumer",
+    "JobRunnerFinisher",
+    "JobRunnerRenewer",
+    "JobScheduler"
+   ]
+  },
+  {
+   "id": "poll-tick-while-idle-leases-the-now-queue-for-crash-takeover",
+   "now": 1700000000000,
+   "steps": [
+    {
+     "event": "POLL_DUE",
+     "from": "idle",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "RQ_DEQUEUE",
+        "payload": {
+         "queue": "now"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "runDeadline": "1970-01-01T00:00:00Z",
+    "jobId": "j1",
+    "attempt": 1,
+    "kind": "report",
+    "label": "Scan shops",
+    "ownerEmail": "a@b.co",
+    "result": "ok",
+    "resultUrl": "https://x/r.pdf",
+    "error": "boom",
+    "stage": "report",
+    "status": "completed",
+    "refillTplId": "t1",
+    "refillJobId": "t1:1700000000000"
+   },
+   "defaults": [
+    "JobRunnerProducer",
+    "JobRunnerConsumer",
+    "JobRunnerFinisher",
+    "JobRunnerRenewer",
+    "JobScheduler"
+   ]
+  },
+  {
+   "id": "control-poll-tick-while-running-leases-nothing",
+   "now": 1700000000000,
+   "steps": [
+    {
+     "event": "POLL_DUE",
+     "from": "running",
+     "payload": {},
+     "expect": {
+      "state": "running",
+      "neverEmits": [
+       "RQ_DEQUEUE"
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "runDeadline": "1970-01-01T00:00:00Z",
+    "jobId": "j1",
+    "attempt": 1,
+    "kind": "report",
+    "label": "Scan shops",
+    "ownerEmail": "a@b.co",
+    "result": "ok",
+    "resultUrl": "https://x/r.pdf",
+    "error": "boom",
+    "stage": "report",
+    "status": "completed",
+    "refillTplId": "t1",
+    "refillJobId": "t1:1700000000000"
+   },
+   "defaults": [
+    "JobRunnerProducer",
+    "JobRunnerConsumer",
+    "JobRunnerFinisher",
+    "JobRunnerRenewer",
+    "JobScheduler"
+   ]
+  },
+  {
+   "id": "control-run-done-for-a-stale-attempt-is-ignored",
+   "now": 1700000000000,
+   "steps": [
+    {
+     "event": "RUN_DONE",
+     "from": "running",
+     "payload": {
+      "jobId": "j1",
+      "attempt": 9,
+      "result": "ok"
+     },
+     "expect": {
+      "state": "running",
+      "neverEmits": [
+       "RQ_COMPLETE",
+       "JOB_FINISHED"
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "runDeadline": "1970-01-01T00:00:00Z",
+    "jobId": "j1",
+    "attempt": 1,
+    "kind": "report",
+    "label": "Scan shops",
+    "ownerEmail": "a@b.co",
+    "result": "ok",
+    "resultUrl": "https://x/r.pdf",
+    "error": "boom",
+    "stage": "report",
+    "status": "completed",
+    "refillTplId": "t1",
+    "refillJobId": "t1:1700000000000"
+   },
+   "defaults": [
+    "JobRunnerProducer",
+    "JobRunnerConsumer",
+    "JobRunnerFinisher",
+    "JobRunnerRenewer",
+    "JobScheduler"
+   ]
+  },
+  {
+   "id": "control-run-done-while-idle-is-ignored",
+   "now": 1700000000000,
+   "steps": [
+    {
+     "event": "RUN_DONE",
+     "from": "idle",
+     "payload": {
+      "jobId": "j1",
+      "attempt": 1,
+      "result": "ok"
+     },
+     "expect": {
+      "state": "idle",
+      "neverEmits": [
+       "RQ_COMPLETE",
+       "JOB_FINISHED"
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "runDeadline": "1970-01-01T00:00:00Z",
+    "jobId": "j1",
+    "attempt": 1,
+    "kind": "report",
+    "label": "Scan shops",
+    "ownerEmail": "a@b.co",
+    "result": "ok",
+    "resultUrl": "https://x/r.pdf",
+    "error": "boom",
+    "stage": "report",
+    "status": "completed",
+    "refillTplId": "t1",
+    "refillJobId": "t1:1700000000000"
+   },
+   "defaults": [
+    "JobRunnerProducer",
+    "JobRunnerConsumer",
+    "JobRunnerFinisher",
+    "JobRunnerRenewer",
+    "JobScheduler"
+   ]
+  },
+  {
+   "id": "queue-failure-while-leasing-answers-runner-failed",
+   "now": 1700000000000,
+   "steps": [
+    {
+     "event": "ConsumerFailed",
+     "from": "dequeuingNow",
+     "payload": {
+      "op": "dequeue",
+      "error": "db down"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "RUNNER_FAILED",
+        "payload": {
+         "op": "dequeue",
+         "error": "db down"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "runDeadline": "1970-01-01T00:00:00Z",
+    "jobId": "j1",
+    "attempt": 1,
+    "kind": "report",
+    "label": "Scan shops",
+    "ownerEmail": "a@b.co",
+    "result": "ok",
+    "resultUrl": "https://x/r.pdf",
+    "error": "boom",
+    "stage": "report",
+    "status": "completed",
+    "refillTplId": "t1",
+    "refillJobId": "t1:1700000000000"
+   },
+   "defaults": [
+    "JobRunnerProducer",
+    "JobRunnerConsumer",
+    "JobRunnerFinisher",
+    "JobRunnerRenewer",
+    "JobScheduler"
+   ]
+  },
+  {
+   "id": "queue-failure-while-renewing-reports-and-keeps-running",
+   "now": 1700000000000,
+   "steps": [
+    {
+     "event": "RenewerFailed",
+     "from": "running",
+     "payload": {
+      "op": "renew",
+      "error": "db down"
+     },
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "RUNNER_FAILED",
+        "payload": {
+         "op": "renew",
+         "error": "db down"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "runDeadline": "1970-01-01T00:00:00Z",
+    "jobId": "j1",
+    "attempt": 1,
+    "kind": "report",
+    "label": "Scan shops",
+    "ownerEmail": "a@b.co",
+    "result": "ok",
+    "resultUrl": "https://x/r.pdf",
+    "error": "boom",
+    "stage": "report",
+    "status": "completed",
+    "refillTplId": "t1",
+    "refillJobId": "t1:1700000000000"
+   },
+   "defaults": [
+    "JobRunnerProducer",
+    "JobRunnerConsumer",
+    "JobRunnerFinisher",
+    "JobRunnerRenewer",
+    "JobScheduler"
+   ]
+  },
+  {
+   "id": "queue-failure-while-settling-reports-and-goes-idle",
+   "now": 1700000000000,
+   "steps": [
+    {
+     "event": "FinisherFailed",
+     "from": "settling",
+     "payload": {
+      "op": "complete",
+      "error": "db down"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "RUNNER_FAILED",
+        "payload": {
+         "op": "complete",
+         "error": "db down"
+        }
+       }
+      ],
+      "neverEmits": [
+       "JOB_FINISHED"
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "runDeadline": "1970-01-01T00:00:00Z",
+    "jobId": "j1",
+    "attempt": 1,
+    "kind": "report",
+    "label": "Scan shops",
+    "ownerEmail": "a@b.co",
+    "result": "ok",
+    "resultUrl": "https://x/r.pdf",
+    "error": "boom",
+    "stage": "report",
+    "status": "completed",
+    "refillTplId": "t1",
+    "refillJobId": "t1:1700000000000"
+   },
+   "defaults": [
+    "JobRunnerProducer",
+    "JobRunnerConsumer",
+    "JobRunnerFinisher",
+    "JobRunnerRenewer",
+    "JobScheduler"
+   ]
+  },
+  {
+   "id": "complete-on-a-job-not-processing-answers-runner-failed",
+   "now": 1700000000000,
+   "steps": [
+    {
+     "event": "JobCompleted",
+     "from": "settling",
+     "payload": {
+      "jobId": "j1",
+      "completed": false
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "RUNNER_FAILED",
+        "payload": {
+         "op": "complete"
+        }
+       }
+      ],
+      "neverEmits": [
+       "JOB_FINISHED"
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "runDeadline": "1970-01-01T00:00:00Z",
+    "jobId": "j1",
+    "attempt": 1,
+    "kind": "report",
+    "label": "Scan shops",
+    "ownerEmail": "a@b.co",
+    "result": "ok",
+    "resultUrl": "https://x/r.pdf",
+    "error": "boom",
+    "stage": "report",
+    "status": "completed",
+    "refillTplId": "t1",
+    "refillJobId": "t1:1700000000000"
+   },
+   "defaults": [
+    "JobRunnerProducer",
+    "JobRunnerConsumer",
+    "JobRunnerFinisher",
+    "JobRunnerRenewer",
+    "JobScheduler"
+   ]
+  },
+  {
+   "id": "finalize-failure-reports-and-still-finishes-the-job-once",
+   "now": 1700000000000,
+   "steps": [
+    {
+     "event": "FinalizeFailed",
+     "from": "finalizing",
+     "payload": {
+      "error": "db down"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "RUNNER_FAILED",
+        "payload": {
+         "op": "finalize",
+         "error": "db down"
+        }
+       },
+       {
+        "event": "JOB_FINISHED",
+        "payload": {
+         "jobId": "j1",
+         "status": "completed"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "runDeadline": "1970-01-01T00:00:00Z",
+    "jobId": "j1",
+    "attempt": 1,
+    "kind": "report",
+    "label": "Scan shops",
+    "ownerEmail": "a@b.co",
+    "result": "ok",
+    "resultUrl": "https://x/r.pdf",
+    "error": "boom",
+    "stage": "report",
+    "status": "completed",
+    "refillTplId": "t1",
+    "refillJobId": "t1:1700000000000"
+   },
+   "defaults": [
+    "JobRunnerProducer",
+    "JobRunnerConsumer",
+    "JobRunnerFinisher",
+    "JobRunnerRenewer",
+    "JobScheduler"
+   ]
+  },
+  {
+   "id": "refill-fetch-failure-answers-runner-failed",
+   "now": 1700000000000,
+   "steps": [
+    {
+     "event": "RefillFailed",
+     "from": "refilling",
+     "payload": {
+      "error": "db down"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "RUNNER_FAILED",
+        "payload": {
+         "op": "refill",
+         "error": "db down"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "runDeadline": "1970-01-01T00:00:00Z",
+    "jobId": "j1",
+    "attempt": 1,
+    "kind": "report",
+    "label": "Scan shops",
+    "ownerEmail": "a@b.co",
+    "result": "ok",
+    "resultUrl": "https://x/r.pdf",
+    "error": "boom",
+    "stage": "report",
+    "status": "completed",
+    "refillTplId": "t1",
+    "refillJobId": "t1:1700000000000"
+   },
+   "defaults": [
+    "JobRunnerProducer",
+    "JobRunnerConsumer",
+    "JobRunnerFinisher",
+    "JobRunnerRenewer",
+    "JobScheduler"
+   ]
+  },
+  {
+   "id": "refill-enqueue-queue-failure-answers-runner-failed",
+   "now": 1700000000000,
+   "steps": [
+    {
+     "event": "RefillQueueFailed",
+     "from": "refilling",
+     "payload": {
+      "op": "enqueue",
+      "error": "full"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "RUNNER_FAILED",
+        "payload": {
+         "op": "enqueue",
+         "error": "full"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "runDeadline": "1970-01-01T00:00:00Z",
+    "jobId": "j1",
+    "attempt": 1,
+    "kind": "report",
+    "label": "Scan shops",
+    "ownerEmail": "a@b.co",
+    "result": "ok",
+    "resultUrl": "https://x/r.pdf",
+    "error": "boom",
+    "stage": "report",
+    "status": "completed",
+    "refillTplId": "t1",
+    "refillJobId": "t1:1700000000000"
+   },
+   "defaults": [
+    "JobRunnerProducer",
+    "JobRunnerConsumer",
+    "JobRunnerFinisher",
+    "JobRunnerRenewer",
+    "JobScheduler"
+   ]
+  },
+  {
+   "id": "control-refill-enqueue-answer-for-another-job-is-ignored",
+   "now": 1700000000000,
+   "steps": [
+    {
+     "event": "RefillEnqueued",
+     "from": "refilling",
+     "payload": {
+      "jobId": "someone-else",
+      "position": 0
+     },
+     "expect": {
+      "state": "refilling",
+      "neverEmits": [
+       "RQ_DEQUEUE"
+      ],
+      "effects": []
+     }
+    }
+   ],
+   "entity": {
+    "runDeadline": "1970-01-01T00:00:00Z",
+    "jobId": "j1",
+    "attempt": 1,
+    "kind": "report",
+    "label": "Scan shops",
+    "ownerEmail": "a@b.co",
+    "result": "ok",
+    "resultUrl": "https://x/r.pdf",
+    "error": "boom",
+    "stage": "report",
+    "status": "completed",
+    "refillTplId": "t1",
+    "refillJobId": "t1:1700000000000"
+   },
+   "defaults": [
+    "JobRunnerProducer",
+    "JobRunnerConsumer",
+    "JobRunnerFinisher",
+    "JobRunnerRenewer",
+    "JobScheduler"
+   ]
+  },
+  {
+   "id": "run-past-its-deadline-is-failed-by-the-runner-with-stage-timeout",
+   "now": 1700000000000,
+   "steps": [
+    {
+     "event": "SCHEDULE",
+     "payload": {
+      "job": {
+       "id": "j1",
+       "queue": "x",
+       "priority": 0,
+       "status": "pending",
+       "enqueuedAt": "2023-11-14T22:13:19Z",
+       "availableAt": "2023-11-14T22:13:19Z",
+       "attempts": 0,
+       "leaseExpiresAt": "2023-11-14T22:13:19Z",
+       "result": "",
+       "error": "",
+       "payload": "",
+       "kind": "report",
+       "label": "Scan shops",
+       "ownerEmail": "a@b.co",
+       "templateId": "",
+       "lastRunAt": "1970-01-01T00:00:00Z",
+       "resultUrl": "",
+       "finishedAt": "1970-01-01T00:00:00Z"
+      },
+      "when": "now"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "JOB_RUN",
+        "payload": {
+         "attempt": 1
+        }
+       }
+      ]
+     },
+     "trait": "JobScheduler"
+    },
+    {
+     "event": "RENEW_DUE",
+     "from": "running",
+     "payload": {},
+     "expect": {
+      "state": "settling",
+      "emits": [
+       {
+        "event": "RQ_FAIL",
+        "payload": {
+         "jobId": "j1",
+         "attempt": 1,
+         "error": "run_timeout"
+        }
+       },
+       {
+        "event": "JOB_FAILED",
+        "payload": {
+         "jobId": "j1",
+         "failed": true
+        }
+       },
+       {
+        "event": "JOB_FINISHED",
+        "payload": {
+         "jobId": "j1",
+         "kind": "report",
+         "label": "Scan shops",
+         "ownerEmail": "a@b.co",
+         "status": "failed",
+         "attempts": 1,
+         "error": "run_timeout",
+         "stage": "timeout"
+        }
+       }
+      ],
+      "neverEmits": [
+       "RQ_RENEW",
+       "LEASE_RENEWED",
+       "RUNNER_FAILED"
+      ]
+     },
+     "now": 1700000180000
+    }
+   ],
+   "entity": {
+    "runDeadline": "1970-01-01T00:00:00Z",
+    "jobId": "j1",
+    "attempt": 1,
+    "kind": "report",
+    "label": "Scan shops",
+    "ownerEmail": "a@b.co",
+    "result": "",
+    "resultUrl": "",
+    "error": "boom",
+    "stage": "report",
+    "status": "completed",
+    "refillTplId": "t1",
+    "refillJobId": "t1:1700000000000"
+   },
+   "defaults": [
+    "JobRunnerProducer",
+    "JobRunnerConsumer",
+    "JobRunnerFinisher",
+    "JobRunnerRenewer",
+    "JobScheduler",
+    "JobRunner"
+   ],
+   "config": {
+    "runTimeoutMs": 120000
+   }
+  },
+  {
+   "id": "control-run-inside-its-deadline-is-renewed",
+   "now": 1700000000000,
+   "steps": [
+    {
+     "event": "RENEW_DUE",
+     "from": "running",
+     "payload": {},
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "RQ_RENEW",
+        "payload": {
+         "jobId": "j1",
+         "attempt": 1
+        }
+       }
+      ],
+      "neverEmits": [
+       "RQ_FAIL",
+       "JOB_FINISHED",
+       "RUNNER_FAILED"
+      ]
+     },
+     "now": 1700000060000
+    }
+   ],
+   "entity": {
+    "runDeadline": "2023-11-14T22:15:20Z",
+    "jobId": "j1",
+    "attempt": 1,
+    "kind": "report",
+    "label": "Scan shops",
+    "ownerEmail": "a@b.co",
+    "result": "ok",
+    "resultUrl": "https://x/r.pdf",
+    "error": "boom",
+    "stage": "report",
+    "status": "completed",
+    "refillTplId": "t1",
+    "refillJobId": "t1:1700000000000"
+   },
+   "defaults": [
+    "JobRunnerProducer",
+    "JobRunnerConsumer",
+    "JobRunnerFinisher",
+    "JobRunnerRenewer",
+    "JobScheduler"
+   ],
+   "config": {
+    "runTimeoutMs": 120000
+   }
+  },
+  {
+   "id": "control-run-timeout-zero-never-times-out",
+   "now": 1700000000000,
+   "steps": [
+    {
+     "event": "RENEW_DUE",
+     "from": "running",
+     "payload": {},
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "RQ_RENEW",
+        "payload": {
+         "jobId": "j1",
+         "attempt": 1
+        }
+       }
+      ],
+      "neverEmits": [
+       "RQ_FAIL",
+       "JOB_FINISHED"
+      ]
+     },
+     "now": 1700864000000
+    }
+   ],
+   "entity": {
+    "runDeadline": "1970-01-01T00:00:00Z",
+    "jobId": "j1",
+    "attempt": 1,
+    "kind": "report",
+    "label": "Scan shops",
+    "ownerEmail": "a@b.co",
+    "result": "ok",
+    "resultUrl": "https://x/r.pdf",
+    "error": "boom",
+    "stage": "report",
+    "status": "completed",
+    "refillTplId": "t1",
+    "refillJobId": "t1:1700000000000"
+   },
+   "defaults": [
+    "JobRunnerProducer",
+    "JobRunnerConsumer",
+    "JobRunnerFinisher",
+    "JobRunnerRenewer",
+    "JobScheduler"
+   ],
+   "config": {
+    "runTimeoutMs": 0
+   }
+  },
+  {
+   "id": "late-run-done-after-a-timeout-ended-the-job-emits-nothing",
+   "now": 1700000000000,
+   "steps": [
+    {
+     "event": "RUN_DONE",
+     "from": "idle",
+     "payload": {
+      "jobId": "j1",
+      "attempt": 1,
+      "result": "late"
+     },
+     "expect": {
+      "state": "idle",
+      "neverEmits": [
+       "RQ_COMPLETE",
+       "JOB_FINISHED",
+       "JOB_RUN"
+      ]
+     }
+    },
+    {
+     "event": "RUN_FAILED",
+     "from": "idle",
+     "payload": {
+      "jobId": "j1",
+      "attempt": 1,
+      "stage": "x",
+      "error": "late"
+     },
+     "expect": {
+      "state": "idle",
+      "neverEmits": [
+       "RQ_FAIL",
+       "JOB_FINISHED"
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "runDeadline": "2023-11-14T22:13:20Z",
+    "jobId": "",
+    "attempt": 0,
+    "kind": "report",
+    "label": "Scan shops",
+    "ownerEmail": "a@b.co",
+    "result": "ok",
+    "resultUrl": "https://x/r.pdf",
+    "error": "boom",
+    "stage": "report",
+    "status": "completed",
+    "refillTplId": "t1",
+    "refillJobId": "t1:1700000000000"
+   },
+   "defaults": [
+    "JobRunnerProducer",
+    "JobRunnerConsumer",
+    "JobRunnerFinisher",
+    "JobRunnerRenewer",
+    "JobScheduler"
+   ],
+   "config": {
+    "runTimeoutMs": 120000
+   }
+  }
+ ]
+}

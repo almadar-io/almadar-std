@@ -1,6 +1,6 @@
 app std-email [
   version: "1.0.0",
-  description: "std-email — transactional email through SendGrid or Resend over the composed std-http-client. EMAIL_SEND sends one message through the vendor the `vendor` knob names and answers EMAIL_SENT { id?, status } or EMAIL_SEND_FAILED { code?, message }. Optional attachments (filename, contentType, bytes content) ride the vendor request as base64. Credentials are the SENDGRID_API_KEY / RESEND_API_KEY names, resolved by the host.",
+  description: "std-email — transactional email through SendGrid or Resend over the composed std-http-client. EMAIL_SEND sends one message through the vendor the `vendor` knob names and answers EMAIL_SENT { key?, id?, status } or EMAIL_SEND_FAILED { key?, code?, message }; an optional key on EMAIL_SEND is echoed on its answer so a caller with several sends can tell them apart (it rides the vendor request's wire key as <vendor>:<key>; absent, the answers carry no key). Optional attachments (filename, contentType, bytes content) ride the vendor request as base64. Credentials are the SENDGRID_API_KEY / RESEND_API_KEY names, resolved by the host.",
 ]
 uses Http from "std/behaviors/std-http-client"
 uses Frame from "std/behaviors/std-http-frame"
@@ -22,7 +22,7 @@ orbital EmailOrbital {
       EMAIL_SEND -> idle when (= @config.vendor sendgrid)
         (let ((from (if (validate/required @payload.from) @payload.from @config.fromEmail)))
           (emit EMAIL_HTTP_SEND {
-            key: "sendgrid",
+            key: (if (validate/required @payload.key) (str/concat "sendgrid:" @payload.key) "sendgrid"),
             host: "api.sendgrid.com",
             method: "POST",
             target: "/v3/mail/send",
@@ -58,10 +58,10 @@ orbital EmailOrbital {
             stream: "none"
           }))
       EMAIL_SEND -> idle when (and (= @config.vendor resend) (validate/required @payload.templateId))
-        (emit EMAIL_SEND_FAILED { message: "templateId is not supported by the resend provider — use sendgrid or drop templateId" })
+        (emit EMAIL_SEND_FAILED { key: @payload.key, message: "templateId is not supported by the resend provider — use sendgrid or drop templateId" })
       EMAIL_SEND -> idle when (and (= @config.vendor resend) (not (validate/required @payload.templateId)))
         (emit EMAIL_HTTP_SEND {
-          key: "resend",
+          key: (if (validate/required @payload.key) (str/concat "resend:" @payload.key) "resend"),
           host: "api.resend.com",
           method: "POST",
           target: "/emails",
@@ -82,34 +82,35 @@ orbital EmailOrbital {
         })
 
       EMAIL_SENDGRID_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (!= (object/get (default @payload.headers {}) "x-message-id" "") ""))
-        (emit EMAIL_SENT { id: (object/get (default @payload.headers {}) "x-message-id" ""), status: "sent" })
+        (emit EMAIL_SENT { key: @payload.key, id: (object/get (default @payload.headers {}) "x-message-id" ""), status: "sent" })
       EMAIL_SENDGRID_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (= (object/get (default @payload.headers {}) "x-message-id" "") ""))
-        (emit EMAIL_SENT { status: "sent" })
+        (emit EMAIL_SENT { key: @payload.key, status: "sent" })
       EMAIL_SENDGRID_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
-        (emit EMAIL_SEND_FAILED { message: (object/get @config.statusText (str/concat @payload.status) "") })
+        (emit EMAIL_SEND_FAILED { key: @payload.key, message: (object/get @config.statusText (str/concat @payload.status) "") })
       EMAIL_SENDGRID_FAILED -> idle
-        (emit EMAIL_SEND_FAILED { message: @payload.error })
+        (emit EMAIL_SEND_FAILED { key: @payload.key, message: @payload.error })
 
       EMAIL_RESEND_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (!= (json/parse @payload.body ResendReply) null) (!= (object/get (json/parse @payload.body ResendReply) id "") ""))
-        (emit EMAIL_SENT { id: (object/get (json/parse @payload.body ResendReply) id ""), status: "sent" })
+        (emit EMAIL_SENT { key: @payload.key, id: (object/get (json/parse @payload.body ResendReply) id ""), status: "sent" })
       EMAIL_RESEND_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (!= (json/parse @payload.body ResendReply) null) (= (object/get (json/parse @payload.body ResendReply) id "") ""))
-        (emit EMAIL_SENT { status: "sent" })
+        (emit EMAIL_SENT { key: @payload.key, status: "sent" })
       EMAIL_RESEND_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (= (json/parse @payload.body ResendReply) null) (= (str/trim @payload.body) "null"))
-        (emit EMAIL_SEND_FAILED { message: "Resend rejected the email: no message id returned" })
+        (emit EMAIL_SEND_FAILED { key: @payload.key, message: "Resend rejected the email: no message id returned" })
       EMAIL_RESEND_REPLIED -> idle when (and (>= @payload.status 200) (< @payload.status 300) (= (json/parse @payload.body ResendReply) null) (!= (str/trim @payload.body) "null"))
-        (emit EMAIL_SEND_FAILED { message: "Resend rejected the email: Unable to fetch data. The request could not be resolved." })
+        (emit EMAIL_SEND_FAILED { key: @payload.key, message: "Resend rejected the email: Unable to fetch data. The request could not be resolved." })
       EMAIL_RESEND_REPLIED -> idle when (and (or (< @payload.status 200) (>= @payload.status 300)) (!= (json/parse @payload.body ResendReply) null))
-        (emit EMAIL_SEND_FAILED { message: (str/concat "Resend rejected the email: " (if (validate/required (object/get (json/parse @payload.body ResendReply) message "")) (object/get (json/parse @payload.body ResendReply) message "") "no message id returned")) })
+        (emit EMAIL_SEND_FAILED { key: @payload.key, message: (str/concat "Resend rejected the email: " (if (validate/required (object/get (json/parse @payload.body ResendReply) message "")) (object/get (json/parse @payload.body ResendReply) message "") "no message id returned")) })
       EMAIL_RESEND_REPLIED -> idle when (and (or (< @payload.status 200) (>= @payload.status 300)) (= (json/parse @payload.body ResendReply) null) (= (str/trim @payload.body) "null"))
-        (emit EMAIL_SEND_FAILED { message: "Resend rejected the email: no message id returned" })
+        (emit EMAIL_SEND_FAILED { key: @payload.key, message: "Resend rejected the email: no message id returned" })
       EMAIL_RESEND_REPLIED -> idle when (and (or (< @payload.status 200) (>= @payload.status 300)) (= (json/parse @payload.body ResendReply) null) (!= (str/trim @payload.body) "null"))
-        (emit EMAIL_SEND_FAILED { message: "Resend rejected the email: Internal server error. We are unable to process your request right now, please try again later." })
+        (emit EMAIL_SEND_FAILED { key: @payload.key, message: "Resend rejected the email: Internal server error. We are unable to process your request right now, please try again later." })
       EMAIL_RESEND_FAILED -> idle
-        (emit EMAIL_SEND_FAILED { message: "Resend rejected the email: Unable to fetch data. The request could not be resolved." })
+        (emit EMAIL_SEND_FAILED { key: @payload.key, message: "Resend rejected the email: Unable to fetch data. The request could not be resolved." })
     }
 
     emits {
       EMAIL_SENT -> external {
+        key : string?
         id : string
         status : string!
       }
@@ -117,6 +118,7 @@ orbital EmailOrbital {
         @synonyms "email sent, message accepted, delivery queued"
         @tier "primary"
       EMAIL_SEND_FAILED -> external {
+        key : string?
         code : string
         message : string!
       }
@@ -146,33 +148,38 @@ orbital EmailOrbital {
         replyTo : string?
         templateId : string?
         attachments : [EmailAttachment]?
+        key : string?
       }
         @description "Send one transactional email. attachments adds files (filename, contentType, bytes content) sent as base64 on either vendor. to/from/replyTo accept `Name <address>`; htmlBody adds an HTML part beside the plain body; templateId is SendGrid only; from defaults to the fromEmail knob."
         @synonyms "send email, mail, notify by email, transactional email"
       EMAIL_SENDGRID_REPLIED {
+        key : string?
         status : number!
         headers : Map string string
         body : string!
       }
       EMAIL_SENDGRID_FAILED {
+        key : string?
         error : string!
         kind : string!
       }
       EMAIL_RESEND_REPLIED {
+        key : string?
         status : number!
         headers : Map string string
         body : string!
       }
       EMAIL_RESEND_FAILED {
+        key : string?
         error : string!
         kind : string!
       }
-      EmailSendgridHttp.HTTP_REPLIED -> EMAIL_SENDGRID_REPLIED with { status: ?status, headers: ?headers, body: (default (bytes/to-string ?body) "") }
-      EmailSendgridHttp.HTTP_FAILED -> EMAIL_SENDGRID_FAILED with { error: ?error, kind: ?kind }
-      EmailResendHttp.HTTP_REPLIED -> EMAIL_RESEND_REPLIED with { status: ?status, headers: ?headers, body: (default (bytes/to-string ?body) "") }
-      EmailResendHttp.HTTP_FAILED -> EMAIL_RESEND_FAILED with { error: ?error, kind: ?kind }
-      EmailTimeout.TIMED_OUT -> EMAIL_SENDGRID_FAILED with { error: (str/concat "timeout of " ?timeoutMs "ms exceeded"), kind: "timeout" } when (= ?key "sendgrid")
-      EmailTimeout.TIMED_OUT -> EMAIL_RESEND_FAILED with { error: (str/concat "timeout of " ?timeoutMs "ms exceeded"), kind: "timeout" } when (= ?key "resend")
+      EmailSendgridHttp.HTTP_REPLIED -> EMAIL_SENDGRID_REPLIED with { key: (if (> (str/len ?key) 8) (str/slice ?key 9) null), status: ?status, headers: ?headers, body: (default (bytes/to-string ?body) "") }
+      EmailSendgridHttp.HTTP_FAILED -> EMAIL_SENDGRID_FAILED with { key: (if (> (str/len ?key) 8) (str/slice ?key 9) null), error: ?error, kind: ?kind }
+      EmailResendHttp.HTTP_REPLIED -> EMAIL_RESEND_REPLIED with { key: (if (> (str/len ?key) 6) (str/slice ?key 7) null), status: ?status, headers: ?headers, body: (default (bytes/to-string ?body) "") }
+      EmailResendHttp.HTTP_FAILED -> EMAIL_RESEND_FAILED with { key: (if (> (str/len ?key) 6) (str/slice ?key 7) null), error: ?error, kind: ?kind }
+      EmailTimeout.TIMED_OUT -> EMAIL_SENDGRID_FAILED with { key: (if (> (str/len ?key) 8) (str/slice ?key 9) null), error: (str/concat "timeout of " ?timeoutMs "ms exceeded"), kind: "timeout" } when (str/startsWith ?key "sendgrid")
+      EmailTimeout.TIMED_OUT -> EMAIL_RESEND_FAILED with { key: (if (> (str/len ?key) 6) (str/slice ?key 7) null), error: (str/concat "timeout of " ?timeoutMs "ms exceeded"), kind: "timeout" } when (str/startsWith ?key "resend")
     }
 
     config {
@@ -212,7 +219,7 @@ orbital EmailOrbital {
     }
     listens {
       EmailSender.EMAIL_HTTP_SEND -> HTTP_SEND with { key: ?key, method: ?method, target: ?target, headers: ?headers, body: ?body, stream: ?stream, host: ?host } when (= ?host "api.sendgrid.com")
-      EmailTimeout.TIMED_OUT -> HTTP_CANCEL with { key: ?key } when (= ?key "sendgrid")
+      EmailTimeout.TIMED_OUT -> HTTP_CANCEL with { key: ?key } when (str/startsWith ?key "sendgrid")
       EmailSendgridHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
       EmailSendgridHttpFrame.FRAME_DRAINED -> HC_DRAINED
       EmailSendgridHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
@@ -237,7 +244,7 @@ orbital EmailOrbital {
     }
     listens {
       EmailSender.EMAIL_HTTP_SEND -> HTTP_SEND with { key: ?key, method: ?method, target: ?target, headers: ?headers, body: ?body, stream: ?stream, host: ?host } when (= ?host "api.resend.com")
-      EmailTimeout.TIMED_OUT -> HTTP_CANCEL with { key: ?key } when (= ?key "resend")
+      EmailTimeout.TIMED_OUT -> HTTP_CANCEL with { key: ?key } when (str/startsWith ?key "resend")
       EmailResendHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
       EmailResendHttpFrame.FRAME_DRAINED -> HC_DRAINED
       EmailResendHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED

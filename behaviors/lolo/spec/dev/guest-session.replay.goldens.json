@@ -12447,6 +12447,64 @@
     }
    ],
    "note": "the click is the user gesture the popup needs"
+  },
+  {
+   "id": "a-credential-answer-reports-the-guests-moves",
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "event": "GUEST_CREDENTIAL_ANSWERED",
+     "payload": {
+      "result": {
+       "emitted": [
+        {
+         "event": "BEARER_VERIFY"
+        }
+       ],
+       "outcomes": [
+        {
+         "trait": "ApiServerBinding",
+         "event": "CREDENTIAL_PRESENTED",
+         "from": "idle",
+         "to": "idle",
+         "fired": true
+        }
+       ]
+      }
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "guest-1",
+      "guestPaints": [],
+      "guestError": "",
+      "guestIntegrations": "live",
+      "guestSigningIn": true
+     },
+     "from": "live",
+     "expect": {
+      "fired": true,
+      "state": "live",
+      "emits": [
+       {
+        "event": "GUEST_MOVED",
+        "payload": {
+         "moves": [
+          {
+           "trait": "ApiServerBinding",
+           "event": "CREDENTIAL_PRESENTED",
+           "from": "idle",
+           "to": "idle",
+           "fired": true
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678,
+   "note": "the sign-in shows in the trace like any other step: the moves of the credential dispatch go out as GUEST_MOVED"
   }
  ]
 }

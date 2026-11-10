@@ -156,12 +156,12 @@ orbital RevisionOrbital {
             (set @entity.documentId (object/get @rev documentId))
             (set @entity.documentType (object/get @rev documentType))
             (set @entity.versionNumber (object/get @rev versionNumber))
-            ;; every revision create sets authorId (the signed-in viewer id) and the store stamps createdAt, so both are required; authorName, content and summary can be absent on a create, and an absent one is shown as empty text
-            (set @entity.authorId (object/get @rev authorId))
+            ;; a consumer entity may leave any of these optional; an absent one is shown as empty text
+            (set @entity.authorId (default (object/get @rev authorId) ""))
             (set @entity.authorName (default (object/get @rev authorName) ""))
             (set @entity.content (default (object/get @rev content) ""))
             (set @entity.summary (default (object/get @rev summary) ""))
-            (set @entity.createdAt (object/get @rev createdAt)))
+            (set @entity.createdAt (default (object/get @rev createdAt) "")))
             null))
         (render-ui main {
           children: [{

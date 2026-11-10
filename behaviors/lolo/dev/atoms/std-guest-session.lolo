@@ -44,7 +44,7 @@ type GuestPersonasReply = { success : boolean, personas : [GuestPersonaOption] }
 type GuestEmittedPayload = { reason : string }
 type GuestTextPayload = { body : string, subject : string, error : string }
 type GuestEmitted = { event : string!, payload : GuestEmittedPayload? }
-type GuestAnswered = { emitted : [GuestEmitted]? }
+type GuestAnswered = { emitted : [GuestEmitted]?, outcomes : [GuestMove]? }
 
 orbital GuestSessionOrbital {
   entity GuestRun [runtime] {
@@ -458,6 +458,7 @@ orbital GuestSessionOrbital {
       GUEST_STEP_FAILED -> live
         (emit GUEST_NOTICE { message: ?error })
       GUEST_TICKED -> live when (= ?guest @entity.guestHandle)
+        (emit GUEST_MOVED { guest: @entity.guestHandle, moves: (default ?outcomes []) })
         (set @entity.guestPaints (array/reduce ?rendered (array/filter @entity.guestPaints (fn q (!= @q.slot "toast"))) (fn acc p (array/concat (array/filter @acc (fn q (or (!= @q.trait @p.trait) (!= @q.slot @p.slot)))) (array/filter [@p] (fn x (!= @x.content null)))))))
         (set @entity.guestPaintSeq (+ @entity.guestPaintSeq 1))
         (emit GUEST_PAINTS { guest: @entity.guestHandle, route: @entity.guestRoute, page: @entity.guestPage, paints: @entity.guestPaints, seq: @entity.guestPaintSeq })
@@ -479,12 +480,15 @@ orbital GuestSessionOrbital {
         (program/dispatch "CREDENTIAL_PRESENTED" { requestId: 0, authorization: (str/concat "Bearer " ?token) } { guest: ?guest, emit: { success: GUEST_CREDENTIAL_ANSWERED, failure: GUEST_CREDENTIAL_FAILED } })
       GUEST_CREDENTIAL -> live when (!= ?guest @entity.guestHandle)
       GUEST_CREDENTIAL_ANSWERED -> live when (array/some (default ?result.emitted []) (fn e (= @e.event "CREDENTIAL_BOUND")))
+        (emit GUEST_MOVED { guest: @entity.guestHandle, moves: (default ?result.outcomes []) })
         (set @entity.guestSigningIn false)
         (program/navigate { guest: @entity.guestHandle, route: @entity.guestReturnTo, remount: true } { emit: { success: GUEST_NAVIGATED, failure: GUEST_NAVIGATE_FAILED } })
       GUEST_CREDENTIAL_ANSWERED -> live when (and (not (array/some (default ?result.emitted []) (fn e (= @e.event "CREDENTIAL_BOUND")))) (array/some (default ?result.emitted []) (fn e (= @e.event "CREDENTIAL_REFUSED"))))
+        (emit GUEST_MOVED { guest: @entity.guestHandle, moves: (default ?result.outcomes []) })
         (set @entity.guestSigningIn false)
         (emit GUEST_NOTICE { message: (str/concat @config.signInRefused " " @config.signInReason " " (default (object/get (default (array/find (default ?result.emitted []) (fn e (= @e.event "CREDENTIAL_REFUSED"))) { event: "", payload: { reason: "" } }) "payload.reason") "")) })
       GUEST_CREDENTIAL_ANSWERED -> live when (and (not (array/some (default ?result.emitted []) (fn e (= @e.event "CREDENTIAL_BOUND")))) (not (array/some (default ?result.emitted []) (fn e (= @e.event "CREDENTIAL_REFUSED")))))
+        (emit GUEST_MOVED { guest: @entity.guestHandle, moves: (default ?result.outcomes []) })
       GUEST_CREDENTIAL_FAILED -> live
         (emit GUEST_NOTICE { message: ?error })
       GUEST_NAVIGATED -> live when (!= (default ?result.access.verdict "") "denied")
@@ -587,6 +591,7 @@ orbital GuestSessionOrbital {
         guest : string!
         rendered : [GuestPaint]!
         emitted : [GuestEmitted]
+        outcomes : [GuestMove]
         key : string
       }
         @description "One pass of the open guest's own tick clock that painted something (program/live { kind: guest }): its page traits' ticks, [client] ones included, since a guest has no browser."

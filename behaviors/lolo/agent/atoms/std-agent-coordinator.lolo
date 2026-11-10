@@ -1,0 +1,668 @@
+app std-agent-coordinator [
+  version: "1.0.0",
+  description: "std-agent-coordinator — runs a long assistant task on a model with a small context window, crash-safely. TASK_START { taskId, task } plans the task with std-llm (LLM_EXTRACT, answer { steps: [string] }, at most `maxSteps`; a longer plan is refused, never cut), persists one AgentTaskStep row per step, then runs each step as a fresh conversation through std-agent-tool-loop (quiet, ephemeral: no earlier transcript). A step sees only the task, `stepInstructions` and the stored results of the finished steps, bounded by std-agent-context (COMPACT keeps the last `keepMessages` turns and summarizes older ones) so the prompt fits `contextTokens`. Each step's reply is stored whole on its row. A last std-llm LLM_GENERATE over the task and the step results is the answer. TASK_START is idempotent: when step rows already exist for the taskId the run resumes at the first step that is not done (a crashed job resumes this way after its runner retries it); finished steps are never run again. Outputs: TASK_PROGRESS { taskId, index, total, status }, TASK_DONE { taskId, answer, steps }, TASK_FAILED { taskId, index, error }; index is -1 when the failure is not a step (planning, storage, the final answer). A failed step marks its row failed and fails the task; a retry resumes at that step. One task at a time: a TASK_START while another runs is answered with TASK_FAILED for the new taskId. Headless; the rows are written as the program, so a background job needs no signed-in user.",
+  net: { "api.openai.com:443": [tcp] },
+]
+
+type AgentChatMessage = {
+  role : "user" | "assistant"!
+  content : string!
+}
+type AgentChatMessages = [AgentChatMessage]
+type AgentToolScope = {
+  scope : "declared"!
+  roles : [string]!
+  fireAndForget : boolean
+}
+type AgentToolField = {
+  name : string!
+  type : string!
+  required : boolean
+  values : [string]
+  properties : [AgentToolField]
+  description : string
+}
+type AgentToolInput = {
+  event : EventAddress!
+  roles : [string]!
+  payload : [AgentToolField]
+  fireAndForget : boolean
+}
+type AgentToolRead = {
+  read : string!
+  roles : [string]!
+}
+type AgentTool = AgentToolScope | AgentToolInput | AgentToolRead
+type AgentToolInputData = {
+  event : string!
+  roles : [string]!
+  payload : [AgentToolField]
+  fireAndForget : boolean
+}
+type AgentToolData = AgentToolScope | AgentToolInputData | AgentToolRead
+type AgentToolKind = "input" | "read" | "invalid"
+type AgentToolCallActivity = {
+  type : "tool_call"!
+  tool : string!
+  kind : AgentToolKind
+  argsText : string!
+  timestamp : instant!
+  isExecuting : boolean
+}
+type AgentToolResultActivity = {
+  type : "tool_result"!
+  tool : string!
+  kind : AgentToolKind
+  success : boolean!
+  detail : string
+  rows : number
+  resultText : string!
+  timestamp : instant!
+}
+type AgentLlmCall = {
+  service : string!
+  provider : string!
+  model : string!
+  systemPrompt : string!
+  userPrompt : string!
+  toolCallsJson : string
+  attempt : number
+  durationMs : number!
+  promptTokens : number
+  completionTokens : number
+  cachedPromptTokens : number
+  costUSD : number
+}
+type AgentLlmResponseActivity = {
+  type : "llm_response"!
+  content : string!
+  llm : AgentLlmCall
+  timestamp : instant!
+}
+type AgentActivity = AgentToolCallActivity | AgentToolResultActivity | AgentLlmResponseActivity
+type AgentUsage = {
+  promptTokens : number!
+  completionTokens : number!
+  totalTokens : number!
+  modelCalls : number!
+}
+type CoordinatorPlan = {
+  steps : [string]!
+}
+
+type JsonValue = string | number | boolean | [JsonValue] | Map string JsonValue
+type ToolArguments = Map string JsonValue
+type ToolCall = { id : string!, name : string!, arguments : ToolArguments }
+
+uses Llm from "std/behaviors/std-llm"
+uses Req from "std/behaviors/std-http-request"
+uses Http from "std/behaviors/std-http-client"
+uses Frame from "std/behaviors/std-http-frame"
+uses Context from "std/behaviors/std-agent-context"
+uses Loop from "std/behaviors/std-agent-tool-loop"
+
+orbital AgentCoordinatorOrbital {
+  config {
+    keepMessages : number = 12
+      @label "Turns of earlier steps kept verbatim"
+      @description "Forwarded to std-agent-context: each finished step is two turns (its instruction and its result); the most recent keepMessages turns reach a step word for word and older ones as one summary."
+      @synonyms "window, history length, context size"
+      @tier "policy"
+    caller : "user" | "process" = user
+      @label "Whose tools are these?"
+      @description "Forwarded to std-agent-tool-loop. A background job has no signed-in user, so a composer that gives steps `tools` states `process`."
+      @synonyms "headless, unattended, no user"
+      @tier "policy"
+  }
+
+  entity AgentTask [persistent: agentTasks] {
+    @read none "A binding stub: the app that binds its own entity here states the @read policy; this atom is headless and reads and writes these rows as the program, because a background job has no signed-in viewer."
+    id : string! @description "The task id the caller chose (TASK_START taskId)." @synonyms "task id, job id"
+    task : string @description "What was asked." @synonyms "prompt, request" = ""
+    status : "planning" | "working" | "done" | "failed" @description "Where the task is." = planning
+    answer : string @description "The final answer, set when the task is done." = ""
+    error : string @description "Why the task failed." = ""
+  }
+
+  entity AgentTaskStep [persistent: agentTaskSteps] {
+    @read none "A binding stub: the app that binds its own entity here states the @read policy; this atom is headless and reads and writes these rows as the program, because a background job has no signed-in viewer."
+    id : string! @description "The task id, a colon and the step's index." @synonyms "step id"
+    taskId : string @description "The task this step belongs to." = ""
+    index : number @description "The step's place in the plan, from 0." = 0
+    instruction : string @description "What the step is told to do." = ""
+    status : "pending" | "done" | "failed" @description "Where the step is." = pending
+    result : string @description "The step's reply, stored whole, set when it is done." = ""
+    error : string @description "Why the step failed." = ""
+  }
+
+  entity AgentCoordinatorRun [runtime] {
+    id : string!
+    taskId : string @description "The task being run." = ""
+    task : string @description "What the task asks." = ""
+    instructions : [string] @description "The plan's steps, in order." = []
+    results : [string] @description "The results of the finished steps, in order." = []
+    index : number @description "The step being run." = 0
+    total : number @description "How many steps the plan has." = 0
+    saveCursor : number @description "The step row being written while a plan is stored." = 0
+    planParsed : boolean @description "The planner's answer read as { steps: [string] }." = false
+    pendingResult : string @description "The reply of the step being stored." = ""
+    failIndex : number @description "The step a failure belongs to; -1 when it is not a step." = -1
+    failError : string @description "Why the task failed." = ""
+  }
+
+  trait CoordLlm = Llm.traits.LlmClient {
+    listens {
+      AgentCoordinator.LLM_EXTRACT -> LLM_EXTRACT
+      AgentCoordinator.LLM_GENERATE -> LLM_GENERATE
+      CoordContext.LLM_SUMMARIZE -> LLM_SUMMARIZE
+      CoordLoop.LLM_CALL_TOOLS -> LLM_CALL_TOOLS
+      CoordLoop.LLM_TOOLS_ANSWERED -> LLM_TOOLS_ANSWERED
+      CoordLoop.LLM_CANCEL -> LLM_CANCEL
+      CoordChatRequest.HTTP_RESULT -> LLM_CHAT_WIRE_RESULT
+      CoordChatRequest.HTTP_REQUEST_FAILED -> LLM_CHAT_WIRE_FAILED
+      CoordChatRequest.HTTP_REQUEST_REFUSED -> LLM_CHAT_WIRE_REFUSED
+      CoordChatHttp.HTTP_STREAM_EVENT -> LLM_CHAT_WIRE_STREAM
+    }
+  }
+
+  trait CoordChatRequest = Req.traits.HttpRequest {
+    listens {
+      CoordChatRequestDelay.ELAPSED -> RETRY_ELAPSED
+      CoordChatRequestDeadline.ELAPSED -> TIMEOUT_ELAPSED
+      CoordLlm.LLM_CHAT_WIRE -> HTTP_REQUEST
+      CoordLlm.LLM_CHAT_WIRE_CANCEL -> HTTP_REQUEST_CANCEL
+      CoordChatHttp.HTTP_REPLIED -> HTTP_REPLIED
+      CoordChatHttp.HTTP_FAILED -> HTTP_FAILED
+    }
+  }
+
+  trait CoordChatRequestDelay = Req.traits.RequestDelay {
+    listens {
+      CoordChatRequest.RETRY_WAIT -> START
+      CoordChatRequest.RETRY_STOP -> CANCEL
+    }
+  }
+
+  trait CoordChatRequestDeadline = Req.traits.RequestDeadline {
+    listens {
+      CoordChatRequest.TIMEOUT_START -> START
+      CoordChatRequest.TIMEOUT_STOP -> CANCEL
+    }
+  }
+
+  trait CoordChatHttpFrame = Frame.traits.HttpFrame {
+    listens {
+      CoordChatHttp.HC_FRAME -> FRAME_RUN
+    }
+  }
+
+  trait CoordChatHttp = Http.traits.HttpClient {
+    config {
+      host: "api.openai.com"
+      port: 443
+      tls: true
+      serverName: "api.openai.com"
+      credential: "OPENAI_API_KEY"
+      credentialHeader: "authorization"
+      credentialPrefix: "Bearer "
+    }
+    listens {
+      CoordChatRequest.HTTP_SEND -> HTTP_SEND
+      CoordChatRequest.HTTP_CANCEL -> HTTP_CANCEL
+      CoordChatHttpFrame.FRAME_EVENT -> HC_FRAME_EVENT
+      CoordChatHttpFrame.FRAME_DRAINED -> HC_DRAINED
+      CoordChatHttpFrame.FRAME_FAILED -> HC_FRAME_FAILED
+    }
+  }
+
+  trait CoordContext = Context.traits.AgentContextCompactor {
+    config {
+      keepMessages: @config.keepMessages
+    }
+    listens {
+      AgentCoordinator.COMPACT -> COMPACT
+      CoordLlm.LLM_SUMMARIZE_RESULT -> ContextSummarized
+      CoordLlm.LLM_FAILED -> ContextSummarizeFailed
+      ContextSummarized {
+        summary : string!
+        keyPoints : [string]!
+      }
+      ContextSummarizeFailed {
+        code : string
+        message : string!
+      }
+    }
+  }
+
+  trait CoordLoop = Loop.traits.AgentToolLoop {
+    config {
+      quiet: true
+      caller: @config.caller
+    }
+    listens {
+      CoordContext.COMPACTED -> CONVERSE
+      CoordLlm.LLM_TOOLS_REQUESTED -> ToolsRequested
+      CoordLlm.LLM_TOOLS_STEP -> ToolsStep
+      CoordLlm.LLM_CALL_TOOLS_RESULT -> ToolsReplied
+      CoordLlm.LLM_FAILED -> ToolsFailed
+      CoordLlm.LLM_CANCELLED -> ToolsCancelled
+      ToolsRequested {
+        session : string!
+        calls : [ToolCall]!
+      }
+      ToolsStep {
+        activity : AgentActivity!
+      }
+      ToolsReplied {
+        reply : string!
+        steps : [AgentActivity]!
+        usage : AgentUsage!
+      }
+      ToolsFailed {
+        code : string
+        message : string!
+      }
+      ToolsCancelled {
+        key : string!
+      }
+    }
+  }
+
+  trait AgentCoordinator -> AgentCoordinatorRun [optimistic] {
+    config {
+      maxSteps : number = 6
+        @label "Most steps one plan may have"
+        @description "A plan with more steps is refused with a TASK_FAILED, never cut to fit. A stored task with more rows than this fails the same way."
+        @synonyms "step limit, plan size, step cap"
+        @tier "policy"
+      stepInstructions : string = "You carry out one step of a larger task. Do only this step. When you finish, report a concise, self-contained result: the facts and conclusions a later step needs, with no preamble and no account of how you worked."
+        @label "How should each step behave?"
+        @description "The standing instructions every step's fresh conversation starts from; the overall task follows them."
+        @synonyms "worker prompt, step prompt, subagent instructions"
+        @tier "domain"
+      planInstructions : string = "Break this task into a short ordered list of steps. Each step is one self-contained instruction that a worker who has not seen the other steps can carry out, given only the results of the earlier steps."
+        @label "How should the task be planned?"
+        @description "What the planner is told before the task."
+        @synonyms "planner prompt, decomposition prompt"
+        @tier "domain"
+      synthesisInstructions : string = "You are given a task and the results of the steps that were run for it. Answer the task using those results."
+        @label "How should the final answer be written?"
+        @description "The system prompt of the last model call, which turns the step results into the answer."
+        @synonyms "final prompt, answer prompt, summary prompt"
+        @tier "domain"
+      contextTokens : number = 8192
+        @label "The local model's context window, in tokens"
+        @description "The window the plan, the step prompts and keepMessages are sized for. It is told to each step so it keeps its result short; it does not cut anything, so set keepMessages to fit it."
+        @synonyms "context size, window size, token budget"
+        @tier "infra"
+      tools : [AgentTool] = []
+        @label "What may a step do?"
+        @description "The declared inputs a step may fire and the entities it may read, as std-agent-tool-loop reads them. Empty: a step only reasons over the instructions and earlier results."
+        @synonyms "allowlist, abilities, actions, permissions"
+        @tier "domain"
+    }
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      TASK_START -> loading
+        (set @entity.taskId ?taskId)
+        (set @entity.task ?task)
+        (set @entity.instructions [])
+        (set @entity.results [])
+        (set @entity.index 0)
+        (set @entity.total 0)
+        (set @entity.saveCursor 0)
+        (fetch AgentTaskStep {
+          emit: { failure: StepsLoadFailed, success: StepsLoaded }
+          filter: (= (object/get @entity taskId) @entity.taskId)
+          orderBy: "index:asc"
+          limit: @config.maxSteps
+        })
+    }
+
+    state loading {
+      INIT -> idle
+      TASK_START -> loading
+        (emit TASK_FAILED { taskId: ?taskId, index: -1, error: (str/concat "busy with task " @entity.taskId) })
+      StepsLoadFailed -> failing
+        (set @entity.failIndex -1)
+        (set @entity.failError (str/concat "the steps of the task could not be read: " ?error))
+        (emit TASK_FAIL {})
+      StepsLoaded -> failing when (> ?totalCount (array/len ?data))
+        (set @entity.failIndex -1)
+        (set @entity.failError (str/concat "the task has " ?totalCount " steps, over the maxSteps cap of " @config.maxSteps))
+        (emit TASK_FAIL {})
+      StepsLoaded -> planning when (and (= ?totalCount (array/len ?data)) (= (array/len ?data) 0))
+        (persist create AgentTask { id: @entity.taskId, task: @entity.task, status: "planning", answer: "", error: "" } {
+          emit: { failure: TaskCreateFailed, success: TaskCreated }
+        })
+      StepsLoaded -> starting when (and (= ?totalCount (array/len ?data)) (> (array/len ?data) 0))
+        (let ((open (array/findIndex ?data (fn s (!= @s.status "done")))))
+          (do
+            (set @entity.total (array/len ?data))
+            (set @entity.instructions (array/map ?data (fn s @s.instruction)))
+            (set @entity.index (if (< @open 0) (array/len ?data) @open))
+            (set @entity.results (array/map (array/take ?data (if (< @open 0) (array/len ?data) @open)) (fn s @s.result)))))
+        (persist update AgentTask { id: @entity.taskId, status: "working", error: "" } {
+          emit: { failure: TaskMarkFailed, success: TaskMarked }
+        })
+    }
+
+    state planning {
+      INIT -> idle
+      TASK_START -> planning
+        (emit TASK_FAILED { taskId: ?taskId, index: -1, error: (str/concat "busy with task " @entity.taskId) })
+      TaskCreateFailed -> planning when (= ?code "duplicate-id")
+        (persist update AgentTask { id: @entity.taskId, task: @entity.task, status: "planning", answer: "", error: "" } {
+          emit: { failure: TaskMarkFailed, success: TaskCreated }
+        })
+      TaskCreateFailed -> failing when (!= ?code "duplicate-id")
+        (set @entity.failIndex -1)
+        (set @entity.failError (str/concat "the task could not be stored: " ?error))
+        (emit TASK_FAIL {})
+      TaskMarkFailed -> failing
+        (set @entity.failIndex -1)
+        (set @entity.failError (str/concat "the task could not be stored: " ?error))
+        (emit TASK_FAIL {})
+      TaskCreated -> planning
+        (emit LLM_EXTRACT {
+          text: (str/concat @config.planInstructions "\n\nAt most " @config.maxSteps " steps.\n\nTask:\n" @entity.task)
+          schema: "{\"type\":\"object\",\"properties\":{\"steps\":{\"type\":\"array\",\"items\":{\"type\":\"string\"}}},\"required\":[\"steps\"],\"additionalProperties\":false}"
+        })
+      LlmFailed -> failing
+        (set @entity.failIndex -1)
+        (set @entity.failError (str/concat "the task could not be planned: " ?message))
+        (emit TASK_FAIL {})
+      PlanExtracted -> planning
+        (set @entity.planParsed (!= (json/parse ?json CoordinatorPlan) null))
+        (set @entity.instructions (default (object/get (default (json/parse ?json CoordinatorPlan) {}) steps) []))
+        (emit PLAN_READ {})
+      PLAN_READ -> failing when (not @entity.planParsed)
+        (set @entity.failIndex -1)
+        (set @entity.failError "the plan is not a { steps: [string] } answer")
+        (emit TASK_FAIL {})
+      PLAN_READ -> failing when (and @entity.planParsed (= (array/len @entity.instructions) 0))
+        (set @entity.failIndex -1)
+        (set @entity.failError "the plan has no steps")
+        (emit TASK_FAIL {})
+      PLAN_READ -> failing when (and @entity.planParsed (> (array/len @entity.instructions) @config.maxSteps))
+        (set @entity.failIndex -1)
+        (set @entity.failError (str/concat "the plan has " (array/len @entity.instructions) " steps, over the maxSteps cap of " @config.maxSteps ": the plan is refused, not cut"))
+        (emit TASK_FAIL {})
+      PLAN_READ -> failing when (and @entity.planParsed (> (array/len @entity.instructions) 0) (<= (array/len @entity.instructions) @config.maxSteps) (> (array/count @entity.instructions (fn s (= (str/trim @s) ""))) 0))
+        (set @entity.failIndex -1)
+        (set @entity.failError "the plan has an empty step")
+        (emit TASK_FAIL {})
+      PLAN_READ -> planning when (and @entity.planParsed (> (array/len @entity.instructions) 0) (<= (array/len @entity.instructions) @config.maxSteps) (= (array/count @entity.instructions (fn s (= (str/trim @s) ""))) 0))
+        (set @entity.total (array/len @entity.instructions))
+        (set @entity.saveCursor 0)
+        (persist create AgentTaskStep { id: (str/concat @entity.taskId ":0"), taskId: @entity.taskId, index: 0, instruction: (array/nth @entity.instructions 0), status: "pending", result: "", error: "" } {
+          emit: { failure: StepSaveFailed, success: StepSaved }
+        })
+      StepSaveFailed -> failing
+        (set @entity.failIndex -1)
+        (set @entity.failError (str/concat "a step of the plan could not be stored: " ?error))
+        (emit TASK_FAIL {})
+      StepSaved -> planning when (< (+ @entity.saveCursor 1) @entity.total)
+        (set @entity.saveCursor (+ @entity.saveCursor 1))
+        (persist create AgentTaskStep { id: (str/concat @entity.taskId ":" @entity.saveCursor), taskId: @entity.taskId, index: @entity.saveCursor, instruction: (array/nth @entity.instructions @entity.saveCursor), status: "pending", result: "", error: "" } {
+          emit: { failure: StepSaveFailed, success: StepSaved }
+        })
+      StepSaved -> starting when (>= (+ @entity.saveCursor 1) @entity.total)
+        (set @entity.index 0)
+        (emit TASK_PROGRESS { taskId: @entity.taskId, index: 0, total: @entity.total, status: "planned" })
+        (persist update AgentTask { id: @entity.taskId, status: "working", error: "" } {
+          emit: { failure: TaskMarkFailed, success: TaskMarked }
+        })
+    }
+
+    state starting {
+      INIT -> idle
+      TASK_START -> starting
+        (emit TASK_FAILED { taskId: ?taskId, index: -1, error: (str/concat "busy with task " @entity.taskId) })
+      TaskMarkFailed -> failing
+        (set @entity.failIndex -1)
+        (set @entity.failError (str/concat "the task could not be stored: " ?error))
+        (emit TASK_FAIL {})
+      TaskMarked -> working
+        (emit STEP_NEXT {})
+    }
+
+    state working {
+      INIT -> idle
+      TASK_START -> working
+        (emit TASK_FAILED { taskId: ?taskId, index: -1, error: (str/concat "busy with task " @entity.taskId) })
+      STEP_NEXT -> synthesizing when (>= @entity.index @entity.total)
+        (emit LLM_GENERATE {
+          systemPrompt: @config.synthesisInstructions
+          userPrompt: (str/concat "Task:\n" @entity.task "\n\nResults of the steps:\n\n" (str/join (array/map (array/range 0 (array/len @entity.results) 1) (fn j (str/concat "Step " (+ @j 1) " (" (default (array/nth @entity.instructions @j) "") "):\n" (default (array/nth @entity.results @j) "")))) "\n\n"))
+        })
+      STEP_NEXT -> working when (< @entity.index @entity.total)
+        (emit TASK_PROGRESS { taskId: @entity.taskId, index: @entity.index, total: @entity.total, status: "running" })
+        (emit COMPACT {
+          messages: (let ((history (as (array/append (array/flatten (array/map (array/range 0 @entity.index 1) (fn j [{ role: "user", content: (str/concat "Step " (+ @j 1) ": " (default (array/nth @entity.instructions @j) "")) }, { role: "assistant", content: (default (array/nth @entity.results @j) "") }]))) { role: "user", content: (str/concat "Step " (+ @entity.index 1) ": " (default (array/nth @entity.instructions @entity.index) "")) }) AgentChatMessages))) (default @history []))
+          instructions: (str/concat @config.stepInstructions "\n\nYour whole context holds about " @config.contextTokens " tokens, so keep the result short enough for a later step to carry.\n\nThe overall task: " @entity.task)
+          tools: (let ((stepTools : [AgentToolData] @config.tools)) @stepTools)
+          ephemeral: true
+        })
+      StepReplied -> failing when (= (str/trim ?reply) "")
+        (set @entity.failIndex @entity.index)
+        (set @entity.failError "the step produced an empty result")
+        (emit TASK_FAIL {})
+      StepReplied -> storing when (!= (str/trim ?reply) "")
+        (set @entity.pendingResult ?reply)
+        (persist update AgentTaskStep { id: (str/concat @entity.taskId ":" @entity.index), status: "done", result: ?reply, error: "" } {
+          emit: { failure: StepStoreFailed, success: StepStored }
+        })
+      StepReplyFailed -> failing
+        (set @entity.failIndex @entity.index)
+        (set @entity.failError ?error)
+        (emit TASK_FAIL {})
+    }
+
+    state storing {
+      INIT -> idle
+      TASK_START -> storing
+        (emit TASK_FAILED { taskId: ?taskId, index: -1, error: (str/concat "busy with task " @entity.taskId) })
+      StepStoreFailed -> failing
+        (set @entity.failIndex @entity.index)
+        (set @entity.failError (str/concat "the step's result could not be stored: " ?error))
+        (emit TASK_FAIL {})
+      StepStored -> working
+        (emit TASK_PROGRESS { taskId: @entity.taskId, index: @entity.index, total: @entity.total, status: "done" })
+        (set @entity.results (array/append @entity.results @entity.pendingResult))
+        (set @entity.index (+ @entity.index 1))
+        (emit STEP_NEXT {})
+    }
+
+    state synthesizing {
+      INIT -> idle
+      TASK_START -> synthesizing
+        (emit TASK_FAILED { taskId: ?taskId, index: -1, error: (str/concat "busy with task " @entity.taskId) })
+      AnswerGenerated -> failing when (= (str/trim ?content) "")
+        (set @entity.failIndex -1)
+        (set @entity.failError "the final answer is empty")
+        (emit TASK_FAIL {})
+      AnswerGenerated -> synthesizing when (!= (str/trim ?content) "")
+        (set @entity.pendingResult ?content)
+        (persist update AgentTask { id: @entity.taskId, status: "done", answer: ?content, error: "" } {
+          emit: { failure: AnswerStoreFailed, success: AnswerStored }
+        })
+      AnswerStored -> idle
+        (emit TASK_DONE { taskId: @entity.taskId, answer: @entity.pendingResult, steps: @entity.total })
+      AnswerStoreFailed -> failing
+        (set @entity.failIndex -1)
+        (set @entity.failError (str/concat "the answer could not be stored: " ?error))
+        (emit TASK_FAIL {})
+      LlmFailed -> failing
+        (set @entity.failIndex -1)
+        (set @entity.failError (str/concat "the final answer could not be generated: " ?message))
+        (emit TASK_FAIL {})
+    }
+
+    state failing {
+      INIT -> idle
+      TASK_START -> failing
+        (emit TASK_FAILED { taskId: ?taskId, index: -1, error: (str/concat "busy with task " @entity.taskId) })
+      TASK_FAIL -> failing when (>= @entity.failIndex 0)
+        (persist update AgentTaskStep { id: (str/concat @entity.taskId ":" @entity.failIndex), status: "failed", error: @entity.failError } {
+          emit: { failure: StepFlagFailed, success: StepRowFlagged }
+        })
+      TASK_FAIL -> failing when (< @entity.failIndex 0)
+        (persist update AgentTask { id: @entity.taskId, status: "failed", error: @entity.failError } {
+          emit: { failure: TaskFlagFailed, success: TaskRowFlagged }
+        })
+      StepRowFlagged -> failing
+        (persist update AgentTask { id: @entity.taskId, status: "failed", error: @entity.failError } {
+          emit: { failure: TaskFlagFailed, success: TaskRowFlagged }
+        })
+      TaskRowFlagged -> idle
+        (emit TASK_FAILED { taskId: @entity.taskId, index: @entity.failIndex, error: @entity.failError })
+      StepFlagFailed -> idle
+        (emit TASK_FAILED { taskId: @entity.taskId, index: @entity.failIndex, error: (str/concat @entity.failError " (the step row could not be marked failed: " ?error ")") })
+      TaskFlagFailed -> idle
+        (emit TASK_FAILED { taskId: @entity.taskId, index: @entity.failIndex, error: (str/concat @entity.failError " (the task row could not be marked failed: " ?error ")") })
+    }
+
+    emits {
+      TASK_PROGRESS -> external {
+        taskId : string!
+        index : number!
+        total : number!
+        status : "planned" | "running" | "done"!
+      }
+        @description "The task moved: `planned` once the plan is stored (index 0), `running` as step `index` starts, `done` once that step's result is stored."
+        @synonyms "progress, step started, step finished"
+        @tier "domain"
+      TASK_DONE -> external {
+        taskId : string!
+        answer : string!
+        steps : number!
+      }
+        @description "Every step is done and the final answer is stored; `steps` is how many steps the plan had."
+        @synonyms "task finished, answer ready, completed"
+        @tier "domain"
+      TASK_FAILED -> external {
+        taskId : string!
+        index : number!
+        error : string!
+      }
+        @description "The task stopped: `index` is the step that failed, or -1 when the failure is not a step (planning, storage, the final answer, a task already running). Run TASK_START again with the same taskId to resume at that step."
+        @synonyms "task error, gave up, step failed"
+        @tier "domain"
+      LLM_EXTRACT -> external {
+        text : string!
+        schema : string!
+      }
+        @description "Ask std-llm for the plan as { steps: [string] }."
+        @tier "internal"
+      LLM_GENERATE -> external {
+        systemPrompt : string
+        userPrompt : string!
+      }
+        @description "Ask std-llm for the final answer from the task and the step results."
+        @tier "internal"
+      COMPACT -> external {
+        messages : [AgentChatMessage]!
+        instructions : string
+        tools : [AgentToolData]
+        ephemeral : boolean
+      }
+        @description "Bound a step's conversation through std-agent-context; its COMPACTED starts the step in std-agent-tool-loop."
+        @tier "internal"
+      STEP_NEXT
+      PLAN_READ
+      TASK_FAIL
+    }
+
+    listens {
+      TASK_START {
+        taskId : string!
+        task : string!
+      }
+        @description "Run a long task: plan it, run each step in a fresh conversation, answer it. When step rows already exist for `taskId` the run resumes at the first step that is not done."
+        @synonyms "start task, run job, long task, resume task"
+      CoordLlm.LLM_EXTRACT_RESULT -> PlanExtracted
+      CoordLlm.LLM_GENERATE_RESULT -> AnswerGenerated
+      CoordLlm.LLM_FAILED -> LlmFailed
+      CoordLoop.ASSISTANT_REPLIED -> StepReplied
+      CoordLoop.ASSISTANT_REPLY_FAILED -> StepReplyFailed
+      PlanExtracted {
+        json : string!
+      }
+      AnswerGenerated {
+        content : string!
+      }
+      LlmFailed {
+        code : string
+        message : string!
+      }
+      StepReplied {
+        reply : string!
+      }
+      StepReplyFailed {
+        error : string!
+      }
+      StepsLoaded {
+        data : [AgentTaskStep]!
+        totalCount : number!
+      }
+      StepsLoadFailed {
+        error : string
+        code : string
+      }
+      TaskCreated {
+        id : string
+      }
+      TaskCreateFailed {
+        error : string
+        code : string
+      }
+      TaskMarkFailed {
+        error : string
+        code : string
+      }
+      TaskMarked {
+        id : string
+      }
+      StepSaved {
+        id : string
+      }
+      StepSaveFailed {
+        error : string
+        code : string
+      }
+      StepStored {
+        id : string
+      }
+      StepStoreFailed {
+        error : string
+        code : string
+      }
+      AnswerStored {
+        id : string
+      }
+      AnswerStoreFailed {
+        error : string
+        code : string
+      }
+      StepRowFlagged {
+        id : string
+      }
+      TaskRowFlagged {
+        id : string
+      }
+      StepFlagFailed {
+        error : string
+        code : string
+      }
+      TaskFlagFailed {
+        error : string
+        code : string
+      }
+    }
+  }
+
+  page "/agent-coordinator" as AgentCoordinatorPage -> AgentCoordinator, CoordContext, CoordLoop, CoordLlm, CoordChatRequest, CoordChatRequestDelay, CoordChatRequestDeadline, CoordChatHttp, CoordChatHttpFrame
+}

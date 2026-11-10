@@ -1,0 +1,842 @@
+{
+ "atom": "flow/atoms/std-job-runner.lolo",
+ "trait": "JobScheduler",
+ "note": "The queue's answers (JOB_ENQUEUED, JOB_CANCELLED, QUEUE_FAILED) and the host's fetch/persist answers are played as steps.",
+ "cases": [
+  {
+   "id": "schedule-now-enqueues-on-now-queue-then-kicks-the-runner",
+   "now": 1700000000000,
+   "steps": [
+    {
+     "event": "SCHEDULE",
+     "payload": {
+      "job": {
+       "id": "j1",
+       "queue": "now",
+       "priority": 0,
+       "status": "pending",
+       "enqueuedAt": "2023-11-14T22:13:19Z",
+       "availableAt": "2023-11-14T22:13:19Z",
+       "attempts": 0,
+       "leaseExpiresAt": "2023-11-14T22:13:19Z",
+       "result": "",
+       "error": "",
+       "payload": "",
+       "kind": "report",
+       "label": "Scan shops",
+       "ownerEmail": "a@b.co",
+       "templateId": "",
+       "lastRunAt": "1970-01-01T00:00:00Z",
+       "resultUrl": "",
+       "finishedAt": "1970-01-01T00:00:00Z"
+      },
+      "when": "now"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SCHED_ENQUEUE",
+        "payload": {
+         "queue": "now"
+        }
+       },
+       {
+        "event": "SCHEDULED",
+        "payload": {
+         "jobId": "j1",
+         "when": "now",
+         "position": 0,
+         "templateId": ""
+        }
+       },
+       {
+        "event": "RUN_KICK"
+       }
+      ]
+     }
+    },
+    {
+     "event": "SchedEnqueued",
+     "from": "enqueuing",
+     "payload": {
+      "jobId": "j1",
+      "position": 0
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "SCHEDULED",
+        "payload": {
+         "jobId": "j1",
+         "when": "now",
+         "position": 0,
+         "templateId": ""
+        }
+       },
+       {
+        "event": "RUN_KICK"
+       }
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "jobId": "j1",
+    "when": "now",
+    "nightly": false,
+    "tid": "",
+    "position": 0
+   },
+   "defaults": [
+    "JobRunnerProducer",
+    "JobRunnerConsumer",
+    "JobRunnerFinisher",
+    "JobRunnerRenewer",
+    "JobRunner"
+   ]
+  },
+  {
+   "id": "control-schedule-tonight-enqueues-on-night-queue-and-does-not-kick",
+   "now": 1700000000000,
+   "steps": [
+    {
+     "event": "SCHEDULE",
+     "payload": {
+      "job": {
+       "id": "j1",
+       "queue": "now",
+       "priority": 0,
+       "status": "pending",
+       "enqueuedAt": "2023-11-14T22:13:19Z",
+       "availableAt": "2023-11-14T22:13:19Z",
+       "attempts": 0,
+       "leaseExpiresAt": "2023-11-14T22:13:19Z",
+       "result": "",
+       "error": "",
+       "payload": "",
+       "kind": "report",
+       "label": "Scan shops",
+       "ownerEmail": "a@b.co",
+       "templateId": "",
+       "lastRunAt": "1970-01-01T00:00:00Z",
+       "resultUrl": "",
+       "finishedAt": "1970-01-01T00:00:00Z"
+      },
+      "when": "tonight"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SCHED_ENQUEUE",
+        "payload": {
+         "queue": "night"
+        }
+       },
+       {
+        "event": "SCHEDULED",
+        "payload": {
+         "jobId": "j1",
+         "when": "tonight",
+         "position": 0,
+         "templateId": ""
+        }
+       }
+      ],
+      "neverEmits": [
+       "RUN_KICK"
+      ]
+     }
+    },
+    {
+     "event": "SchedEnqueued",
+     "from": "enqueuing",
+     "payload": {
+      "jobId": "j1",
+      "position": 2
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "SCHEDULED",
+        "payload": {
+         "jobId": "j1",
+         "when": "tonight",
+         "position": 2,
+         "templateId": ""
+        }
+       }
+      ],
+      "neverEmits": [
+       "RUN_KICK"
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "jobId": "j1",
+    "when": "now",
+    "nightly": false,
+    "tid": "",
+    "position": 0
+   },
+   "defaults": [
+    "JobRunnerProducer",
+    "JobRunnerConsumer",
+    "JobRunnerFinisher",
+    "JobRunnerRenewer",
+    "JobRunner"
+   ]
+  },
+  {
+   "id": "nightly-stores-a-template-and-copies-its-id-onto-the-job",
+   "now": 1700000000000,
+   "steps": [
+    {
+     "event": "SCHEDULE",
+     "payload": {
+      "job": {
+       "id": "j1",
+       "queue": "now",
+       "priority": 0,
+       "status": "pending",
+       "enqueuedAt": "2023-11-14T22:13:19Z",
+       "availableAt": "2023-11-14T22:13:19Z",
+       "attempts": 0,
+       "leaseExpiresAt": "2023-11-14T22:13:19Z",
+       "result": "",
+       "error": "",
+       "payload": "",
+       "kind": "report",
+       "label": "Scan shops",
+       "ownerEmail": "a@b.co",
+       "templateId": "",
+       "lastRunAt": "1970-01-01T00:00:00Z",
+       "resultUrl": "",
+       "finishedAt": "1970-01-01T00:00:00Z"
+      },
+      "when": "tonight",
+      "nightly": true
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SCHED_ENQUEUE",
+        "payload": {
+         "queue": "night",
+         "job": {
+          "id": "j1",
+          "queue": "now",
+          "priority": 0,
+          "status": "pending",
+          "enqueuedAt": "2023-11-14T22:13:19Z",
+          "availableAt": "2023-11-14T22:13:19Z",
+          "attempts": 0,
+          "leaseExpiresAt": "2023-11-14T22:13:19Z",
+          "result": "",
+          "error": "",
+          "payload": "",
+          "kind": "report",
+          "label": "Scan shops",
+          "ownerEmail": "a@b.co",
+          "templateId": "j1:tpl",
+          "lastRunAt": "1970-01-01T00:00:00Z",
+          "resultUrl": "",
+          "finishedAt": "1970-01-01T00:00:00Z"
+         }
+        }
+       },
+       {
+        "event": "SCHEDULED",
+        "payload": {
+         "jobId": "j1",
+         "when": "tonight",
+         "position": 0,
+         "templateId": "j1:tpl"
+        }
+       }
+      ],
+      "neverEmits": [
+       "RUN_KICK",
+       "RUNNER_FAILED"
+      ]
+     }
+    },
+    {
+     "event": "SchedEnqueued",
+     "from": "enqueuing",
+     "payload": {
+      "jobId": "j1",
+      "position": 0
+     },
+     "expect": {
+      "state": "storing",
+      "effects": [
+       {
+        "type": "fetch"
+       }
+      ],
+      "neverEmits": [
+       "SCHEDULED"
+      ]
+     }
+    },
+    {
+     "event": "SchedJobLoaded",
+     "from": "storing",
+     "payload": {
+      "data": [
+       {
+        "id": "j1",
+        "queue": "night",
+        "priority": 0,
+        "status": "pending",
+        "enqueuedAt": "2023-11-14T22:13:19Z",
+        "availableAt": "2023-11-14T22:13:19Z",
+        "attempts": 0,
+        "leaseExpiresAt": "2023-11-14T22:13:19Z",
+        "result": "",
+        "error": "",
+        "payload": "",
+        "kind": "report",
+        "label": "Scan shops",
+        "ownerEmail": "a@b.co",
+        "templateId": "j1:tpl",
+        "lastRunAt": "1970-01-01T00:00:00Z",
+        "resultUrl": "",
+        "finishedAt": "1970-01-01T00:00:00Z"
+       }
+      ]
+     },
+     "expect": {
+      "effects": [
+       {
+        "type": "persist"
+       }
+      ],
+      "neverEmits": [
+       "SCHEDULED"
+      ]
+     }
+    },
+    {
+     "event": "TemplateStored",
+     "from": "storing",
+     "payload": {
+      "id": "j1:tpl"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "SCHEDULED",
+        "payload": {
+         "jobId": "j1",
+         "when": "tonight",
+         "position": 0,
+         "templateId": "j1:tpl"
+        }
+       }
+      ],
+      "neverEmits": [
+       "RUN_KICK"
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "jobId": "j1",
+    "when": "tonight",
+    "nightly": true,
+    "tid": "j1:tpl",
+    "position": 0
+   },
+   "defaults": [
+    "JobRunnerProducer",
+    "JobRunnerConsumer",
+    "JobRunnerFinisher",
+    "JobRunnerRenewer",
+    "JobRunner"
+   ]
+  },
+  {
+   "id": "nightly-now-job-stores-the-template-then-kicks",
+   "now": 1700000000000,
+   "steps": [
+    {
+     "event": "SCHEDULE",
+     "payload": {
+      "job": {
+       "id": "j1",
+       "queue": "now",
+       "priority": 0,
+       "status": "pending",
+       "enqueuedAt": "2023-11-14T22:13:19Z",
+       "availableAt": "2023-11-14T22:13:19Z",
+       "attempts": 0,
+       "leaseExpiresAt": "2023-11-14T22:13:19Z",
+       "result": "",
+       "error": "",
+       "payload": "",
+       "kind": "report",
+       "label": "Scan shops",
+       "ownerEmail": "a@b.co",
+       "templateId": "",
+       "lastRunAt": "1970-01-01T00:00:00Z",
+       "resultUrl": "",
+       "finishedAt": "1970-01-01T00:00:00Z"
+      },
+      "when": "now",
+      "nightly": true
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SCHEDULED",
+        "payload": {
+         "jobId": "j1",
+         "when": "now",
+         "templateId": "j1:tpl"
+        }
+       },
+       {
+        "event": "RUN_KICK"
+       }
+      ],
+      "neverEmits": [
+       "RUNNER_FAILED"
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "jobId": "j1",
+    "when": "now",
+    "nightly": false,
+    "tid": "",
+    "position": 0
+   },
+   "defaults": [
+    "JobRunnerProducer",
+    "JobRunnerConsumer",
+    "JobRunnerFinisher",
+    "JobRunnerRenewer",
+    "JobRunner"
+   ]
+  },
+  {
+   "id": "control-schedule-while-another-is-in-flight-answers-runner-failed",
+   "now": 1700000000000,
+   "steps": [
+    {
+     "event": "SCHEDULE",
+     "from": "enqueuing",
+     "payload": {
+      "job": {
+       "id": "j2",
+       "queue": "now",
+       "priority": 0,
+       "status": "pending",
+       "enqueuedAt": "2023-11-14T22:13:19Z",
+       "availableAt": "2023-11-14T22:13:19Z",
+       "attempts": 0,
+       "leaseExpiresAt": "2023-11-14T22:13:19Z",
+       "result": "",
+       "error": "",
+       "payload": "",
+       "kind": "report",
+       "label": "Scan shops",
+       "ownerEmail": "a@b.co",
+       "templateId": "",
+       "lastRunAt": "1970-01-01T00:00:00Z",
+       "resultUrl": "",
+       "finishedAt": "1970-01-01T00:00:00Z"
+      },
+      "when": "now"
+     },
+     "expect": {
+      "state": "enqueuing",
+      "emits": [
+       {
+        "event": "RUNNER_FAILED",
+        "payload": {
+         "op": "schedule"
+        }
+       }
+      ],
+      "neverEmits": [
+       "SCHED_ENQUEUE"
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "jobId": "j1",
+    "when": "now",
+    "nightly": false,
+    "tid": "",
+    "position": 0
+   },
+   "defaults": [
+    "JobRunnerProducer",
+    "JobRunnerConsumer",
+    "JobRunnerFinisher",
+    "JobRunnerRenewer",
+    "JobRunner"
+   ]
+  },
+  {
+   "id": "control-an-enqueue-answer-for-another-job-is-ignored",
+   "now": 1700000000000,
+   "steps": [
+    {
+     "event": "SchedEnqueued",
+     "from": "enqueuing",
+     "payload": {
+      "jobId": "other",
+      "position": 0
+     },
+     "expect": {
+      "state": "enqueuing",
+      "neverEmits": [
+       "SCHEDULED",
+       "RUN_KICK"
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "jobId": "j1",
+    "when": "now",
+    "nightly": false,
+    "tid": "",
+    "position": 0
+   },
+   "defaults": [
+    "JobRunnerProducer",
+    "JobRunnerConsumer",
+    "JobRunnerFinisher",
+    "JobRunnerRenewer",
+    "JobRunner"
+   ]
+  },
+  {
+   "id": "enqueue-queue-failure-answers-runner-failed",
+   "now": 1700000000000,
+   "steps": [
+    {
+     "event": "SchedQueueFailed",
+     "from": "enqueuing",
+     "payload": {
+      "op": "enqueue",
+      "error": "disk full"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "RUNNER_FAILED",
+        "payload": {
+         "op": "enqueue",
+         "error": "disk full"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "jobId": "j1",
+    "when": "now",
+    "nightly": false,
+    "tid": "",
+    "position": 0
+   },
+   "defaults": [
+    "JobRunnerProducer",
+    "JobRunnerConsumer",
+    "JobRunnerFinisher",
+    "JobRunnerRenewer",
+    "JobRunner"
+   ]
+  },
+  {
+   "id": "nightly-job-row-missing-answers-runner-failed-not-silence",
+   "now": 1700000000000,
+   "steps": [
+    {
+     "event": "SchedJobLoaded",
+     "from": "storing",
+     "payload": {
+      "data": []
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "RUNNER_FAILED",
+        "payload": {
+         "op": "template"
+        }
+       }
+      ],
+      "neverEmits": [
+       "SCHEDULED"
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "jobId": "j1",
+    "when": "now",
+    "nightly": true,
+    "tid": "j1:tpl",
+    "position": 0
+   },
+   "defaults": [
+    "JobRunnerProducer",
+    "JobRunnerConsumer",
+    "JobRunnerFinisher",
+    "JobRunnerRenewer",
+    "JobRunner"
+   ]
+  },
+  {
+   "id": "template-write-failure-answers-runner-failed",
+   "now": 1700000000000,
+   "steps": [
+    {
+     "event": "SchedStepFailed",
+     "from": "storing",
+     "payload": {
+      "error": "write refused"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "RUNNER_FAILED",
+        "payload": {
+         "op": "template",
+         "error": "write refused"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "jobId": "j1",
+    "when": "now",
+    "nightly": true,
+    "tid": "j1:tpl",
+    "position": 0
+   },
+   "defaults": [
+    "JobRunnerProducer",
+    "JobRunnerConsumer",
+    "JobRunnerFinisher",
+    "JobRunnerRenewer",
+    "JobRunner"
+   ]
+  },
+  {
+   "id": "cancel-job-asks-the-queue-and-passes-the-answer-through",
+   "now": 1700000000000,
+   "steps": [
+    {
+     "event": "CANCEL_JOB",
+     "payload": {
+      "jobId": "j1"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SCHED_CANCEL",
+        "payload": {
+         "jobId": "j1"
+        }
+       },
+       {
+        "event": "JOB_CANCELLED",
+        "payload": {
+         "jobId": "j1"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "SchedCancelled",
+     "from": "cancelling",
+     "payload": {
+      "jobId": "j1",
+      "cancelled": true
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "JOB_CANCELLED",
+        "payload": {
+         "jobId": "j1",
+         "cancelled": true
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "jobId": "j1",
+    "when": "now",
+    "nightly": false,
+    "tid": "",
+    "position": 0
+   },
+   "defaults": [
+    "JobRunnerProducer",
+    "JobRunnerConsumer",
+    "JobRunnerFinisher",
+    "JobRunnerRenewer",
+    "JobRunner"
+   ]
+  },
+  {
+   "id": "control-cancel-of-a-claimed-job-passes-cancelled-false",
+   "now": 1700000000000,
+   "steps": [
+    {
+     "event": "SchedCancelled",
+     "from": "cancelling",
+     "payload": {
+      "jobId": "j1",
+      "cancelled": false
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "JOB_CANCELLED",
+        "payload": {
+         "jobId": "j1",
+         "cancelled": false
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "jobId": "j1",
+    "when": "now",
+    "nightly": false,
+    "tid": "",
+    "position": 0
+   },
+   "defaults": [
+    "JobRunnerProducer",
+    "JobRunnerConsumer",
+    "JobRunnerFinisher",
+    "JobRunnerRenewer",
+    "JobRunner"
+   ]
+  },
+  {
+   "id": "stop-nightly-deletes-the-template-row",
+   "now": 1700000000000,
+   "steps": [
+    {
+     "event": "STOP_NIGHTLY",
+     "payload": {
+      "templateId": "j1:tpl"
+     },
+     "expect": {
+      "state": "stopping",
+      "effects": [
+       {
+        "type": "persist"
+       }
+      ]
+     }
+    },
+    {
+     "event": "TemplateDeleted",
+     "from": "stopping",
+     "payload": {
+      "id": "j1:tpl",
+      "deleted": true
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "NIGHTLY_STOPPED",
+        "payload": {
+         "templateId": "j1:tpl"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "jobId": "j1",
+    "when": "now",
+    "nightly": false,
+    "tid": "j1:tpl",
+    "position": 0
+   },
+   "defaults": [
+    "JobRunnerProducer",
+    "JobRunnerConsumer",
+    "JobRunnerFinisher",
+    "JobRunnerRenewer",
+    "JobRunner"
+   ]
+  },
+  {
+   "id": "stop-nightly-storage-failure-answers-runner-failed",
+   "now": 1700000000000,
+   "steps": [
+    {
+     "event": "SchedStepFailed",
+     "from": "stopping",
+     "payload": {
+      "error": "gone"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "RUNNER_FAILED",
+        "payload": {
+         "op": "stop-nightly",
+         "error": "gone"
+        }
+       }
+      ],
+      "neverEmits": [
+       "NIGHTLY_STOPPED"
+      ]
+     }
+    }
+   ],
+   "entity": {
+    "jobId": "j1",
+    "when": "now",
+    "nightly": false,
+    "tid": "",
+    "position": 0
+   },
+   "defaults": [
+    "JobRunnerProducer",
+    "JobRunnerConsumer",
+    "JobRunnerFinisher",
+    "JobRunnerRenewer",
+    "JobRunner"
+   ]
+  }
+ ]
+}

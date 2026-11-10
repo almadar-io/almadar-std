@@ -1,0 +1,79 @@
+{
+ "atom": "flow/atoms/std-queue.lolo",
+ "trait": "QueueConsumer",
+ "note": "each operation kind has its own cursor: an ENQUEUE arriving between a DEQUEUE's steps leaves the dequeue on its own queue",
+ "cases": [
+  {
+   "id": "enqueue-between-dequeue-steps-leaves-dequeue-on-its-own-queue",
+   "now": 1700000000000,
+   "steps": [
+    {
+     "event": "DEQUEUE",
+     "payload": {
+      "queue": "qa"
+     }
+    },
+    {
+     "event": "ENQUEUE",
+     "payload": {
+      "queue": "qb",
+      "job": {
+       "id": "jb"
+      },
+      "priority": 5
+     },
+     "from": "idle"
+    },
+    {
+     "event": "DeqTopLoaded",
+     "payload": {
+      "data": []
+     },
+     "from": "idle",
+     "expect": {
+      "emits": [
+       {
+        "event": "QUEUE_EMPTY",
+        "payload": {
+         "queue": "qa"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "defaults": [
+    "QueueProducer"
+   ]
+  },
+  {
+   "id": "control-dequeue-without-interleaving-answers-its-own-queue",
+   "now": 1700000000000,
+   "steps": [
+    {
+     "event": "DEQUEUE",
+     "payload": {
+      "queue": "qa"
+     }
+    },
+    {
+     "event": "DeqTopLoaded",
+     "payload": {
+      "data": []
+     },
+     "from": "idle",
+     "expect": {
+      "emits": [
+       {
+        "event": "QUEUE_EMPTY",
+        "payload": {
+         "queue": "qa"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

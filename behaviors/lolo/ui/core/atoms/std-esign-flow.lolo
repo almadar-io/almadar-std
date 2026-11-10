@@ -444,7 +444,7 @@ orbital SignatureSessionOrbital {
       INIT -> closed
       REQUEST_SEND -> open
         (render-ui modal <Stack direction={vertical} gap={md}>
-          <Typography content={(str/concat "Send " (object/get ?row documentName) " for signature")} variant={h3} />
+          <Typography content={(str/concat "Send " (default (object/get ?row documentName) "") " for signature")} variant={h3} />
           <Typography color={muted} content={(str/concat "The signer " (object/get ?row recipientName) " receives it by email.")} variant={body} />
           <upload-drop-zone action={SEND_ENVELOPE} actionPayload={{ id: ?id, row: ?row }} accept={".pdf"} maxFiles={1} label={"Drop the document to send"} description={"PDF, one file"} icon={file-up} />
           <Button action={CLOSE} label={"Cancel"} variant={ghost} />
@@ -502,15 +502,15 @@ orbital SignatureSessionOrbital {
         (set @entity.id ?id)
         (emit ESIGN_SEND_ENVELOPE {
           documentContent: (let ((doc (array/first ?files))) (if (= @doc null) "" (object/get @doc content)))
-          documentName: (object/get ?row documentName)
-          emailSubject: (str/concat "Signature requested: " (object/get ?row documentName))
+          documentName: (default (object/get ?row documentName) "")
+          emailSubject: (str/concat "Signature requested: " (default (object/get ?row documentName) ""))
           recipientEmail: (str/concat "" (object/get ?row recipientEmail))
           recipientName: (object/get ?row recipientName)
         })
       CHECK_ENVELOPE_STATUS -> polling when (!= (object/get ?row envelopeId) "")
         (set @entity.id ?id)
         (emit ESIGN_GET_ENVELOPE_STATUS {
-          envelopeId: (object/get ?row envelopeId)
+          envelopeId: (default (object/get ?row envelopeId) "")
         })
       CHECK_ENVELOPE_STATUS -> idle
         (notify info "This request was never dispatched to the e-sign provider — send it first")

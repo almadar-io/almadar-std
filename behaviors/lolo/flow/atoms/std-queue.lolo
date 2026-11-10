@@ -1,6 +1,6 @@
 app std-queue [
   version: "2.0.0",
-  description: "std-queue — a durable job queue over a persisted job entity named by the jobEntity knob (the app's storage backend is the queue; the job's payload fields are the app's own, typed by that entity). Input events: ENQUEUE, DEQUEUE, JOB_STATUS, COMPLETE, FAIL, RENEW, CANCEL, QUEUE_SIZE; each answers with a typed result event or QUEUE_FAILED. Jobs dequeue by highest priority, then oldest enqueuedAt, once availableAt (enqueuedAt plus delay) has passed. Every claim is a conditional write: a create of QueueClaim row '<jobId>:<n>' (n = attempts + 1) fails duplicate-id on a taken id on every store, so exactly one consumer wins attempt n. A dequeued job is leased for leaseMs; after that DEQUEUE may take it over as attempt n + 1. The maxAttempts knob (0 = unlimited) bounds takeovers: when a DEQUEUE would take over an expired lease and the job already has attempts >= maxAttempts, it settles the job failed with error 'max_attempts' through the same claim-slot write as FAIL (so it races a late settle for one winner), emits JOB_GAVE_UP { jobId, attempts, job } and continues with the next eligible job or QUEUE_EMPTY. RENEW { jobId, attempt, leaseMs? } extends the lease of the caller's attempt to now + leaseMs (default the leaseMs knob) and answers LEASE_RENEWED { jobId, attempt, leaseExpiresAt }; it applies only while the job is processing, its attempts equal attempt and the lease has not yet expired, otherwise it answers LEASE_LOST with op 'renew'. COMPLETE and FAIL take the same next slot, so they race a takeover for one winner, and a settle that loses answers LEASE_LOST. A claim whose job update never landed (crash between the two writes) is recovered by the next DEQUEUE: it reads the claim row that holds the slot and, when that worker lease has expired, takes the next slot, or finishes the settle the claim row recorded."
+  description: "std-queue — a durable job queue over a persisted job entity named by the jobEntity knob (the app's storage backend is the queue; the job's payload fields are the app's own, typed by that entity). Input events: ENQUEUE, DEQUEUE, JOB_STATUS, COMPLETE, FAIL, RENEW, CANCEL, QUEUE_SIZE; each answers with a typed result event or QUEUE_FAILED. Jobs dequeue by highest priority, then oldest enqueuedAt, once availableAt (enqueuedAt plus delay) has passed. Every claim is a conditional write: a create of QueueClaim row '<jobId>:<n>' (n = attempts + 1) fails duplicate-id on a taken id on every store, so exactly one consumer wins attempt n. A dequeued job is leased for leaseMs; after that DEQUEUE may take it over as attempt n + 1. The maxAttempts knob (0 = unlimited) bounds takeovers: when a DEQUEUE would take over an expired lease and the job already has attempts >= maxAttempts, it settles the job failed with error 'max_attempts' through the same claim-slot write as FAIL (so it races a late settle for one winner), emits JOB_GAVE_UP { jobId, attempts, job } and continues with the next eligible job or QUEUE_EMPTY. RENEW { jobId, attempt, leaseMs? } extends the lease of the caller's attempt to now + leaseMs (default the leaseMs knob) and answers LEASE_RENEWED { jobId, attempt, leaseExpiresAt }; it applies only while the job is processing, its attempts equal attempt and the lease has not yet expired, otherwise it answers LEASE_LOST with op 'renew'. COMPLETE and FAIL take the same next slot, so they race a takeover for one winner, and a settle that loses answers LEASE_LOST. A claim whose job update never landed (crash between the two writes) is recovered by the next DEQUEUE: it reads the claim row that holds the slot and, when that worker lease has expired, takes the next slot, or finishes the settle the claim row recorded (a give-up claim row, kind gave-up, is finished as the max_attempts failure and emits JOB_GAVE_UP)). Each operation kind (enqueue and cancel, dequeue, complete and fail, renew, inspect) keeps its own runtime cursor entity, so one operation of each kind may be in flight at once without disturbing another kind; two overlapping operations of the SAME kind still share that kind's cursor."
 ]
 orbital QueueOrbital {
     type ENQUEUE = Event { queue : string!, job : @entity @config.jobEntity!, delay : number, priority : number } "Add a job to a queue; job carries the app's payload fields."
@@ -119,27 +119,52 @@ orbital QueueOrbital {
     id : string!
     jobId : string = ""
     attempt : number = 0
-    kind : "worker" | "cancel" | "completed" | "failed" = worker
+    kind : "worker" | "cancel" | "completed" | "failed" | "gave-up" = worker
     claimedAt : instant = "1970-01-01T00:00:00Z"
     leaseExpiresAt : instant @description "For a worker claim, when its lease ends." = "1970-01-01T00:00:00Z"
     text : string @description "For a settle claim, the result or error text, so a half-written settle can be finished." = ""
   }
 
-  entity QueueCursor [runtime] {
+  entity QueueProducerCursor [runtime] {
     id : string!
     wantQueue : string = ""
     wantId : string = ""
     wantPriority : number = 0
     wantEnqueuedAt : instant = "1970-01-01T00:00:00Z"
+  }
+
+  entity QueueConsumerCursor [runtime] {
+    id : string!
+    wantQueue : string = ""
+    wantId : string = ""
+    wantPriority : number = 0
     wantAttempt : number = 0
-    wantOutcome : "completed" | "failed" = completed
-    wantText : string = ""
-    wantLeaseMs : number = 0
-    wantPending : number = 0
     skipIds : [string] = []
   }
 
-  trait QueueProducer -> QueueCursor [optimistic] {
+  entity QueueFinisherCursor [runtime] {
+    id : string!
+    wantId : string = ""
+    wantAttempt : number = 0
+    wantOutcome : "completed" | "failed" = completed
+    wantText : string = ""
+  }
+
+  entity QueueRenewerCursor [runtime] {
+    id : string!
+    wantId : string = ""
+    wantAttempt : number = 0
+    wantLeaseMs : number = 0
+  }
+
+  entity QueueInspectorCursor [runtime] {
+    id : string!
+    wantId : string = ""
+    wantQueue : string = ""
+    wantPending : number = 0
+  }
+
+  trait QueueProducer -> QueueProducerCursor [optimistic] {
     initial: idle
 
     state idle {
@@ -286,7 +311,7 @@ orbital QueueOrbital {
     }
   }
 
-  trait QueueConsumer -> QueueCursor [optimistic] {
+  trait QueueConsumer -> QueueConsumerCursor [optimistic] {
     initial: idle
 
     state idle {
@@ -326,7 +351,7 @@ orbital QueueOrbital {
       DeqCandLoaded -> idle when (and (> (array/len ?data) 0) (and (> @config.maxAttempts 0) (= (object/get (array/first ?data) status) "processing") (>= (object/get (array/first ?data) attempts) @config.maxAttempts)))
         (set @entity.wantId (object/get (array/first ?data) id))
         (set @entity.wantAttempt (+ (object/get (array/first ?data) attempts) 1))
-        (persist create QueueClaim { id: (str/concat @entity.wantId ":" @entity.wantAttempt), jobId: @entity.wantId, attempt: @entity.wantAttempt, kind: "failed", claimedAt: @now, text: "max_attempts" } {
+        (persist create QueueClaim { id: (str/concat @entity.wantId ":" @entity.wantAttempt), jobId: @entity.wantId, attempt: @entity.wantAttempt, kind: "gave-up", claimedAt: @now } {
           emit: { failure: DeqFailed, success: DeqGaveUpClaimed }
         })
       DeqGaveUpClaimed -> idle
@@ -377,7 +402,7 @@ orbital QueueOrbital {
         })
       DeqSlotLoaded -> idle when (and (> (array/len ?data) 0) (= (object/get (array/first ?data) kind) "worker") (<= (object/get (array/first ?data) leaseExpiresAt) @now) (and (> @config.maxAttempts 0) (>= @entity.wantAttempt @config.maxAttempts)))
         (set @entity.wantAttempt (+ @entity.wantAttempt 1))
-        (persist create QueueClaim { id: (str/concat @entity.wantId ":" @entity.wantAttempt), jobId: @entity.wantId, attempt: @entity.wantAttempt, kind: "failed", claimedAt: @now, text: "max_attempts" } {
+        (persist create QueueClaim { id: (str/concat @entity.wantId ":" @entity.wantAttempt), jobId: @entity.wantId, attempt: @entity.wantAttempt, kind: "gave-up", claimedAt: @now } {
           emit: { failure: DeqFailed, success: DeqGaveUpClaimed }
         })
       DeqSlotLoaded -> idle when (and (> (array/len ?data) 0) (= (object/get (array/first ?data) kind) "completed"))
@@ -387,6 +412,10 @@ orbital QueueOrbital {
       DeqSlotLoaded -> idle when (and (> (array/len ?data) 0) (= (object/get (array/first ?data) kind) "failed"))
         (persist update @config.jobEntity { id: @entity.wantId, status: "failed", error: (object/get (array/first ?data) text) } {
           emit: { failure: DeqFailed, success: DeqHealed }
+        })
+      DeqSlotLoaded -> idle when (and (> (array/len ?data) 0) (= (object/get (array/first ?data) kind) "gave-up"))
+        (persist update @config.jobEntity { id: @entity.wantId, status: "failed", attempts: (- @entity.wantAttempt 1), error: "max_attempts" } {
+          emit: { failure: DeqFailed, success: DeqGaveUp }
         })
       DeqHealed -> idle
         (set @entity.skipIds (array/append @entity.skipIds @entity.wantId))
@@ -518,7 +547,7 @@ orbital QueueOrbital {
     }
   }
 
-  trait QueueFinisher -> QueueCursor [optimistic] {
+  trait QueueFinisher -> QueueFinisherCursor [optimistic] {
     initial: idle
 
     state idle {
@@ -656,7 +685,7 @@ orbital QueueOrbital {
     }
   }
 
-  trait QueueRenewer -> QueueCursor [optimistic] {
+  trait QueueRenewer -> QueueRenewerCursor [optimistic] {
     initial: idle
 
     state idle {
@@ -752,7 +781,7 @@ orbital QueueOrbital {
     }
   }
 
-  trait QueueInspector -> QueueCursor [optimistic] {
+  trait QueueInspector -> QueueInspectorCursor [optimistic] {
     initial: idle
 
     state idle {

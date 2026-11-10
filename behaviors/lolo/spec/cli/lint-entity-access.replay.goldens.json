@@ -4123,6 +4123,80 @@
         }
       ],
       "note": "the kernel gives an undeclared entity its collection's declared policy (resolve_collection_inheritance), so the read is stated once"
+    },
+    {
+      "id": "read-undeclared-goes-quiet-once-read-server-states-a-reason",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "fixture",
+              "orbitals": [
+                {
+                  "name": "TicketOrbital",
+                  "entity": {
+                    "name": "Ticket",
+                    "persistence": "persistent",
+                    "collection": "tickets",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "assignee",
+                        "type": "relation",
+                        "relation": {
+                          "entity": "Person"
+                        }
+                      }
+                    ],
+                    "access_waivers": {
+                      "read_server": "looked up before a viewer exists"
+                    }
+                  },
+                  "traits": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "entity-access",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        }
+      ],
+      "note": "G-STD-218: `@read server \"<reason>\"` is a declared read"
     }
   ]
 }

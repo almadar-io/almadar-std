@@ -1929,7 +1929,7 @@
                       "code": "ORB_O_TRAITS_OMITTED_TRAIT",
                       "path": "orbitals[0].traits(Other)",
                       "message": "`traits {}` overrides 'Other', but `omit {}` / `only {}` drops that trait from the import.",
-                      "suggestion": "Remove the `traits { Other { \u2026 } }` entry, or keep 'Other' in the import.",
+                      "suggestion": "Remove the `traits { Other { … } }` entry, or keep 'Other' in the import.",
                       "severity": "error"
                     }
                   ]
@@ -2222,7 +2222,7 @@
                       "code": "ORB_O_TRAITS_OMITTED_TRAIT",
                       "path": "orbitals[0].traits(Other)",
                       "message": "`traits {}` overrides 'Other', but `omit {}` / `only {}` drops that trait from the import.",
-                      "suggestion": "Remove the `traits { Other { \u2026 } }` entry, or keep 'Other' in the import.",
+                      "suggestion": "Remove the `traits { Other { … } }` entry, or keep 'Other' in the import.",
                       "severity": "error"
                     }
                   ]
@@ -7657,6 +7657,572 @@
                         "title": {
                           "type": "string",
                           "default": "Hi"
+                        }
+                      }
+                    },
+                    {
+                      "name": "Side",
+                      "linkedEntity": "Person",
+                      "category": "interaction",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "typography",
+                                  "content": "@entity.name"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "config": {
+                        "side": {
+                          "type": "string",
+                          "default": "s"
+                        }
+                      }
+                    },
+                    {
+                      "name": "Other",
+                      "linkedEntity": "Person",
+                      "category": "interaction",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "typography",
+                                  "content": "@entity.name"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "config": {
+                        "o": {
+                          "type": "string",
+                          "default": "x"
+                        }
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "AccountPage",
+                      "path": "/account",
+                      "traits": [
+                        {
+                          "ref": "MyAccount"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "OtherPage",
+                      "path": "/other",
+                      "traits": [
+                        {
+                          "ref": "Other"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintOrbitalRefConfig",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "orbital-ref-config",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "omit-embedded-trait-via-knob-default",
+      "steps": [
+        {
+          "trait": "OrbLintOrbitalRefConfig",
+          "event": "LINT_CALL_SITES",
+          "from": "ready",
+          "payload": {
+            "file": "c.orb",
+            "program": {
+              "name": "consumer",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "Acct",
+                  "entity": "Up.orbitals.AccountOrbital.entity",
+                  "reference": {
+                    "ref": "Up.orbitals.AccountOrbital",
+                    "entity": "Customer",
+                    "omit": [
+                      "Side"
+                    ]
+                  },
+                  "traits": [],
+                  "uses": [
+                    {
+                      "as": "Up",
+                      "from": "./upstream.orb"
+                    }
+                  ]
+                }
+              ],
+              "schemaVersion": 1
+            },
+            "kept": [
+              {
+                "orbital": 0,
+                "traits": [
+                  "MyAccount",
+                  "Other"
+                ]
+              }
+            ],
+            "references": [
+              {
+                "kind": "orbital",
+                "alias": "Up",
+                "name": "AccountOrbital",
+                "path": "orbitals[0]",
+                "callSite": {
+                  "ref": "Up.orbitals.AccountOrbital",
+                  "entity": "Customer",
+                  "omit": [
+                    "Side"
+                  ]
+                },
+                "declaration": {
+                  "name": "AccountOrbital",
+                  "config": {
+                    "limit": {
+                      "type": "number",
+                      "default": 5
+                    }
+                  },
+                  "entity": {
+                    "name": "Person",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "name",
+                        "type": "string"
+                      },
+                      {
+                        "name": "role",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "MyAccount",
+                      "linkedEntity": "Person",
+                      "category": "interaction",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stack",
+                                  "children": [
+                                    "@config.slot"
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "config": {
+                        "title": {
+                          "type": "string",
+                          "default": "Hi"
+                        },
+                        "slot": {
+                          "type": "trait",
+                          "default": "@trait.Side"
+                        }
+                      }
+                    },
+                    {
+                      "name": "Side",
+                      "linkedEntity": "Person",
+                      "category": "interaction",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "typography",
+                                  "content": "@entity.name"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "config": {
+                        "side": {
+                          "type": "string",
+                          "default": "s"
+                        }
+                      }
+                    },
+                    {
+                      "name": "Other",
+                      "linkedEntity": "Person",
+                      "category": "interaction",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "typography",
+                                  "content": "@entity.name"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "config": {
+                        "o": {
+                          "type": "string",
+                          "default": "x"
+                        }
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "AccountPage",
+                      "path": "/account",
+                      "traits": [
+                        {
+                          "ref": "MyAccount"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "OtherPage",
+                      "path": "/other",
+                      "traits": [
+                        {
+                          "ref": "Other"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintOrbitalRefConfig",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "orbital-ref-config",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_O_OMIT_EMBEDDED_TRAIT",
+                      "path": "orbitals[0].omit(Side)",
+                      "message": "Orbital reference 'Up.orbitals.AccountOrbital' omits trait 'Side', but trait 'MyAccount' still embeds it via '@trait.Side'. The embed has nothing left to render.",
+                      "suggestion": "Keep 'Side' (drop it from omit, or add it to only), or remove the '@trait.Side' embed from 'MyAccount'.",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "omit-embedded-trait-knob-overridden-at-call-site",
+      "steps": [
+        {
+          "trait": "OrbLintOrbitalRefConfig",
+          "event": "LINT_CALL_SITES",
+          "from": "ready",
+          "payload": {
+            "file": "c.orb",
+            "program": {
+              "name": "consumer",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "Acct",
+                  "entity": "Up.orbitals.AccountOrbital.entity",
+                  "reference": {
+                    "ref": "Up.orbitals.AccountOrbital",
+                    "entity": "Customer",
+                    "omit": [
+                      "Side"
+                    ],
+                    "traits": {
+                      "MyAccount": {
+                        "config": {
+                          "slot": {
+                            "type": "unknown",
+                            "default": "@trait.Other"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "traits": [],
+                  "uses": [
+                    {
+                      "as": "Up",
+                      "from": "./upstream.orb"
+                    }
+                  ]
+                }
+              ],
+              "schemaVersion": 1
+            },
+            "kept": [
+              {
+                "orbital": 0,
+                "traits": [
+                  "MyAccount",
+                  "Other"
+                ]
+              }
+            ],
+            "references": [
+              {
+                "kind": "orbital",
+                "alias": "Up",
+                "name": "AccountOrbital",
+                "path": "orbitals[0]",
+                "callSite": {
+                  "ref": "Up.orbitals.AccountOrbital",
+                  "entity": "Customer",
+                  "omit": [
+                    "Side"
+                  ],
+                  "traits": {
+                    "MyAccount": {
+                      "config": {
+                        "slot": {
+                          "type": "unknown",
+                          "default": "@trait.Other"
+                        }
+                      }
+                    }
+                  }
+                },
+                "declaration": {
+                  "name": "AccountOrbital",
+                  "config": {
+                    "limit": {
+                      "type": "number",
+                      "default": 5
+                    }
+                  },
+                  "entity": {
+                    "name": "Person",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "name",
+                        "type": "string"
+                      },
+                      {
+                        "name": "role",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "MyAccount",
+                      "linkedEntity": "Person",
+                      "category": "interaction",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stack",
+                                  "children": [
+                                    "@config.slot"
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "config": {
+                        "title": {
+                          "type": "string",
+                          "default": "Hi"
+                        },
+                        "slot": {
+                          "type": "trait",
+                          "default": "@trait.Side"
                         }
                       }
                     },

@@ -64,6 +64,16 @@
      "event": "DeqGaveUpClaimed",
      "payload": {
       "id": "j1:4"
+     }
+    },
+    {
+     "event": "DeqGaveUp",
+     "payload": {
+      "id": "j1",
+      "attempts": 3,
+      "queue": "q",
+      "status": "failed",
+      "error": "max_attempts"
      },
      "expect": {
       "emits": [
@@ -681,6 +691,214 @@
      "event": "DeqGaveUpClaimed",
      "payload": {
       "id": "j1:3"
+     }
+    }
+   ]
+  },
+  {
+   "id": "heal-of-a-gave-up-claim-settles-max-attempts-and-emits-job-gave-up",
+   "now": 1700000000000,
+   "config": {
+    "maxAttempts": 0
+   },
+   "steps": [
+    {
+     "event": "DEQUEUE",
+     "payload": {
+      "queue": "q"
+     }
+    },
+    {
+     "event": "DeqTopLoaded",
+     "payload": {
+      "data": [
+       {
+        "id": "j1",
+        "queue": "q",
+        "priority": 0,
+        "status": "processing",
+        "enqueuedAt": "2023-11-14T22:13:19Z",
+        "availableAt": "2023-11-14T22:13:19Z",
+        "attempts": 2,
+        "leaseExpiresAt": "2023-11-14T22:13:19Z"
+       }
+      ]
+     }
+    },
+    {
+     "event": "DeqCandLoaded",
+     "payload": {
+      "data": [
+       {
+        "id": "j1",
+        "queue": "q",
+        "priority": 0,
+        "status": "processing",
+        "enqueuedAt": "2023-11-14T22:13:19Z",
+        "availableAt": "2023-11-14T22:13:19Z",
+        "attempts": 2,
+        "leaseExpiresAt": "2023-11-14T22:13:19Z"
+       }
+      ]
+     }
+    },
+    {
+     "event": "DeqFailed",
+     "payload": {
+      "code": "duplicate-id",
+      "error": "taken"
+     },
+     "expect": {
+      "effects": [
+       {
+        "type": "fetch"
+       }
+      ]
+     }
+    },
+    {
+     "event": "DeqSlotLoaded",
+     "payload": {
+      "data": [
+       {
+        "id": "j1:3",
+        "jobId": "j1",
+        "attempt": 3,
+        "kind": "gave-up",
+        "text": ""
+       }
+      ]
+     },
+     "expect": {
+      "effects": [
+       {
+        "type": "persist"
+       }
+      ],
+      "neverEmits": [
+       "JOB_GAVE_UP",
+       "JOB_DEQUEUED"
+      ]
+     }
+    },
+    {
+     "event": "DeqGaveUp",
+     "payload": {
+      "id": "j1",
+      "attempts": 2,
+      "queue": "q",
+      "status": "failed",
+      "error": "max_attempts"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "JOB_GAVE_UP",
+        "payload": {
+         "jobId": "j1",
+         "attempts": 2
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-heal-of-an-ordinary-failed-claim-does-not-emit-job-gave-up",
+   "now": 1700000000000,
+   "config": {
+    "maxAttempts": 0
+   },
+   "steps": [
+    {
+     "event": "DEQUEUE",
+     "payload": {
+      "queue": "q"
+     }
+    },
+    {
+     "event": "DeqTopLoaded",
+     "payload": {
+      "data": [
+       {
+        "id": "j1",
+        "queue": "q",
+        "priority": 0,
+        "status": "processing",
+        "enqueuedAt": "2023-11-14T22:13:19Z",
+        "availableAt": "2023-11-14T22:13:19Z",
+        "attempts": 2,
+        "leaseExpiresAt": "2023-11-14T22:13:19Z"
+       }
+      ]
+     }
+    },
+    {
+     "event": "DeqCandLoaded",
+     "payload": {
+      "data": [
+       {
+        "id": "j1",
+        "queue": "q",
+        "priority": 0,
+        "status": "processing",
+        "enqueuedAt": "2023-11-14T22:13:19Z",
+        "availableAt": "2023-11-14T22:13:19Z",
+        "attempts": 2,
+        "leaseExpiresAt": "2023-11-14T22:13:19Z"
+       }
+      ]
+     }
+    },
+    {
+     "event": "DeqFailed",
+     "payload": {
+      "code": "duplicate-id",
+      "error": "taken"
+     },
+     "expect": {
+      "effects": [
+       {
+        "type": "fetch"
+       }
+      ]
+     }
+    },
+    {
+     "event": "DeqSlotLoaded",
+     "payload": {
+      "data": [
+       {
+        "id": "j1:3",
+        "jobId": "j1",
+        "attempt": 3,
+        "kind": "failed",
+        "text": "boom"
+       }
+      ]
+     },
+     "expect": {
+      "effects": [
+       {
+        "type": "persist"
+       }
+      ],
+      "neverEmits": [
+       "JOB_GAVE_UP",
+       "JOB_DEQUEUED"
+      ]
+     }
+    },
+    {
+     "event": "DeqHealed",
+     "payload": {
+      "id": "j1"
+     },
+     "expect": {
+      "neverEmits": [
+       "JOB_GAVE_UP"
+      ]
      }
     }
    ]
