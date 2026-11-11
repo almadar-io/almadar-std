@@ -40,6 +40,7 @@ orbital StepFlowOrbital {
     state loading {
       INIT -> loading
         (fetch StepFlowView {
+          limit: @config.maxRows
           emit: { failure: StepItemsLoadFailed, success: StepItemsLoaded }
         })
         (render-ui main { type: skeleton, variant: card })
@@ -98,6 +99,7 @@ orbital StepFlowOrbital {
       ;; No render — the current step body stays on screen until refetch resolves.
       INIT -> loading
         (fetch StepFlowView {
+          limit: @config.maxRows
           emit: { failure: StepItemsLoadFailed, success: StepItemsLoaded }
         })
       ;; Role guard idiom: a step that declares no allowedRoles permits everyone; one that does
@@ -323,6 +325,7 @@ orbital StepFlowOrbital {
     state approved {
       INIT -> loading
         (fetch StepFlowView {
+          limit: @config.maxRows
           emit: { failure: StepItemsLoadFailed, success: StepItemsLoaded }
         })
         (render-ui main { type: skeleton, variant: card })
@@ -330,6 +333,7 @@ orbital StepFlowOrbital {
         (set @entity.finalStatus "")
         (set @entity.currentStepIndex 0)
         (fetch StepFlowView {
+          limit: @config.maxRows
           emit: { failure: StepItemsLoadFailed, success: StepItemsLoaded }
         })
         (render-ui main { type: skeleton, variant: card })
@@ -338,6 +342,7 @@ orbital StepFlowOrbital {
     state rejected {
       INIT -> loading
         (fetch StepFlowView {
+          limit: @config.maxRows
           emit: { failure: StepItemsLoadFailed, success: StepItemsLoaded }
         })
         (render-ui main { type: skeleton, variant: card })
@@ -346,6 +351,7 @@ orbital StepFlowOrbital {
         (set @entity.currentStepIndex 0)
         (set @entity.rejectionReason "")
         (fetch StepFlowView {
+          limit: @config.maxRows
           emit: { failure: StepItemsLoadFailed, success: StepItemsLoaded }
         })
         (render-ui main { type: skeleton, variant: card })
@@ -354,6 +360,7 @@ orbital StepFlowOrbital {
     state escalated {
       INIT -> loading
         (fetch StepFlowView {
+          limit: @config.maxRows
           emit: { failure: StepItemsLoadFailed, success: StepItemsLoaded }
         })
         (render-ui main { type: skeleton, variant: card })
@@ -361,6 +368,7 @@ orbital StepFlowOrbital {
         (set @entity.finalStatus "")
         (set @entity.currentStepIndex 0)
         (fetch StepFlowView {
+          limit: @config.maxRows
           emit: { failure: StepItemsLoadFailed, success: StepItemsLoaded }
         })
         (render-ui main { type: skeleton, variant: card })
@@ -641,6 +649,10 @@ orbital StepFlowOrbital {
         @label "Body content tree"
         @description "Render-ui SExpr rendered while the step chain is active (loading-success, running, BACK). Default is the canonical wizard-progress + step-card + action-row tree. Layer 3 variants override this with their own tree (horizontal stepper, sidebar progress, card carousel, etc.) to deliver entirely different step UX while inheriting the same trait, state machine, emits, and listens."
         @tier "internal"
+      maxRows : number = 500
+        @label "Most rows per load"
+        @description "Most rows one load reads."
+        @tier "policy"
     }
   }
 

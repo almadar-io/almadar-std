@@ -15,7 +15,7 @@ orbital FilterTargetOrbital {
 
     state idle {
       INIT -> idle
-        (fetch FilterTarget { emit: { failure: FilterTargetLoadFailed } })
+        (fetch FilterTarget { limit: @config.maxRows, emit: { failure: FilterTargetLoadFailed } })
         (render-ui main {
           entity: @config.filteredEntity
           event: @config.event
@@ -106,6 +106,10 @@ orbital FilterTargetOrbital {
         @label "Filter bar look"
         @description "Layer 2 visual treatment for the filter bar."
         @tier "presentation"
+      maxRows : number = 500
+        @label "Most rows per load"
+        @description "Most rows one load reads."
+        @tier "policy"
     }
   }
 

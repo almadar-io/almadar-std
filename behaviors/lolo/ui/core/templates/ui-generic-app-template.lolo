@@ -13,7 +13,7 @@ orbital GenericAppTemplateOrbital {
 
     state idle {
       INIT -> idle
-        (fetch GenericAppTemplateItem { emit: { failure: GenericAppTemplateLoadFailed } })
+        (fetch GenericAppTemplateItem { limit: @config.maxRows, emit: { failure: GenericAppTemplateLoadFailed } })
         (render-ui main {
           entity: @entity
           className: @config.className
@@ -158,6 +158,10 @@ orbital GenericAppTemplateOrbital {
         @label "Tab Index"
         @description "0 puts the element in the Tab order; -1 makes it focusable only programmatically."
         @tier "presentation"
+      maxRows : number = 500
+        @label "Most rows per load"
+        @description "Most rows one load reads."
+        @tier "policy"
     }
   }
 

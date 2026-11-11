@@ -26,7 +26,7 @@ orbital FilterGroupOrbital {
 
     state idle {
       INIT -> idle
-        (fetch FilterGroupItem { emit: { failure: FilterGroupLoadFailed } })
+        (fetch FilterGroupItem { limit: @config.maxRows, emit: { failure: FilterGroupLoadFailed } })
         (set @entity.query @config.query)
         (render-ui main {
           entity: FilterGroupItem
@@ -301,6 +301,10 @@ orbital FilterGroupOrbital {
         @label "Tab Index"
         @description "0 puts the element in the Tab order; -1 makes it focusable only programmatically."
         @tier "presentation"
+      maxRows : number = 500
+        @label "Most rows per load"
+        @description "Most rows one load reads."
+        @tier "policy"
     }
   }
 

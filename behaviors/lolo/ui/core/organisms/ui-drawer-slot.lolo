@@ -22,7 +22,7 @@ orbital DrawerSlotOrbital {
 
     state idle {
       INIT -> idle
-        (fetch DrawerSlotItem { emit: { failure: DrawerSlotLoadFailed } })
+        (fetch DrawerSlotItem { limit: @config.maxRows, emit: { failure: DrawerSlotLoadFailed } })
         (render-ui main {
           children: @config.children
           title: @config.title
@@ -97,6 +97,10 @@ orbital DrawerSlotOrbital {
         @label "Skeleton"
         @description "Skeleton shown while this element's server render is in flight: a shape (`table`, `list`, …), `{ variant, rows?, columns?, fields? }`, or `none`."
         @tier "presentation"
+      maxRows : number = 500
+        @label "Most rows per load"
+        @description "Most rows one load reads."
+        @tier "policy"
     }
   }
 

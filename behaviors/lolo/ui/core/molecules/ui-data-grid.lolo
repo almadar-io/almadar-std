@@ -62,7 +62,7 @@ orbital DataGridOrbital {
 
     state idle {
       INIT -> idle when @config.selfFetch
-        (fetch DataGridItem { emit: { failure: DataGridLoadFailed, success: DataGridLoaded } })
+        (fetch DataGridItem { limit: @config.maxRows, emit: { failure: DataGridLoadFailed, success: DataGridLoaded } })
         (render-ui main {
           dragGroup: @config.dragGroup
           accepts: @config.accepts
@@ -498,6 +498,10 @@ orbital DataGridOrbital {
         @label "Fetch its own rows on mount?"
         @description "true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper's own un-hydrated fetch so it cannot race the composer's."
         @tier "internal"
+      maxRows : number = 500
+        @label "Most rows per load"
+        @description "Most rows one load reads."
+        @tier "policy"
     }
   }
 

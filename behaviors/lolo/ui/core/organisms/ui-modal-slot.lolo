@@ -22,7 +22,7 @@ orbital ModalSlotOrbital {
 
     state idle {
       INIT -> idle
-        (fetch ModalSlotItem { emit: { failure: ModalSlotLoadFailed } })
+        (fetch ModalSlotItem { limit: @config.maxRows, emit: { failure: ModalSlotLoadFailed } })
         (render-ui main {
           children: @config.children
           title: @config.title
@@ -92,6 +92,10 @@ orbital ModalSlotOrbital {
         @label "Skeleton"
         @description "Skeleton shown while this element's server render is in flight: a shape (`table`, `list`, …), `{ variant, rows?, columns?, fields? }`, or `none`."
         @tier "presentation"
+      maxRows : number = 500
+        @label "Most rows per load"
+        @description "Most rows one load reads."
+        @tier "policy"
     }
   }
 

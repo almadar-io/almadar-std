@@ -19,7 +19,7 @@ orbital CounterTemplateOrbital {
 
     state idle {
       INIT -> idle
-        (fetch CounterTemplateItem { emit: { failure: CounterTemplateLoadFailed } })
+        (fetch CounterTemplateItem { limit: @config.maxRows, emit: { failure: CounterTemplateLoadFailed } })
         (render-ui main {
           entity: @entity
           className: @config.className
@@ -198,6 +198,10 @@ orbital CounterTemplateOrbital {
         @label "Tab Index"
         @description "0 puts the element in the Tab order; -1 makes it focusable only programmatically."
         @tier "presentation"
+      maxRows : number = 500
+        @label "Most rows per load"
+        @description "Most rows one load reads."
+        @tier "policy"
     }
   }
 

@@ -75,7 +75,7 @@ orbital TableViewOrbital {
 
     state idle {
       INIT -> idle when @config.selfFetch
-        (fetch TableViewItem { emit: { failure: TableViewLoadFailed, success: TableViewLoaded } })
+        (fetch TableViewItem { limit: @config.maxRows, emit: { failure: TableViewLoadFailed, success: TableViewLoaded } })
         (render-ui main {
           dragGroup: @config.dragGroup
           accepts: @config.accepts
@@ -493,6 +493,10 @@ orbital TableViewOrbital {
         @label "Fetch its own rows on mount?"
         @description "true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper's own un-hydrated fetch so it cannot race the composer's."
         @tier "internal"
+      maxRows : number = 500
+        @label "Most rows per load"
+        @description "Most rows one load reads."
+        @tier "policy"
     }
   }
 

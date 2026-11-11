@@ -15,6 +15,7 @@ orbital CollectionItemOrbital {
     state idle {
       INIT -> idle
         (fetch CollectionItem {
+          limit: @config.maxRows
           emit: { failure: CollectionItemLoadFailed, success: CollectionItemLoaded }
         })
       CollectionItemLoadFailed -> idle
@@ -47,6 +48,10 @@ orbital CollectionItemOrbital {
         @label "Failure message"
         @description "Shown in the error toast when the fetch fails; the error text follows it."
         @tier "presentation"
+      maxRows : number = 10000
+        @label "Most rows per load"
+        @description "A sibling computes counts and sums from these rows, so the load reads the whole collection up to this many rows; figures over a larger collection are computed from the first rows only until the store computes them."
+        @tier "policy"
     }
   }
 

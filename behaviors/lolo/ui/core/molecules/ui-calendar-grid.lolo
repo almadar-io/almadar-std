@@ -19,7 +19,7 @@ orbital CalendarGridOrbital {
 
     state idle {
       INIT -> idle when @config.selfFetch
-        (fetch CalendarGridItem { emit: { failure: CalendarGridLoadFailed, success: CalendarGridLoaded } })
+        (fetch CalendarGridItem { limit: @config.maxRows, emit: { failure: CalendarGridLoadFailed, success: CalendarGridLoaded } })
         (render-ui main {
           weekStart: @config.weekStart
           timeSlots: @config.timeSlots
@@ -326,6 +326,10 @@ orbital CalendarGridOrbital {
         @label "Fetch its own rows on mount?"
         @description "true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper's own un-hydrated fetch so it cannot race the composer's."
         @tier "internal"
+      maxRows : number = 500
+        @label "Most rows per load"
+        @description "Most rows one load reads."
+        @tier "policy"
     }
   }
 

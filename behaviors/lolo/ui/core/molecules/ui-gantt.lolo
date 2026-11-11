@@ -27,7 +27,7 @@ orbital GanttOrbital {
 
     state idle {
       INIT -> idle when @config.selfFetch
-        (fetch GanttItem { emit: { failure: GanttLoadFailed, success: GanttLoaded } })
+        (fetch GanttItem { limit: @config.maxRows, emit: { failure: GanttLoadFailed, success: GanttLoaded } })
         (render-ui main {
           tasks: @entity
           links: @config.links
@@ -318,6 +318,10 @@ orbital GanttOrbital {
         @label "Fetch its own rows on mount?"
         @description "true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper's own un-hydrated fetch so it cannot race the composer's."
         @tier "internal"
+      maxRows : number = 500
+        @label "Most rows per load"
+        @description "Most rows one load reads."
+        @tier "policy"
     }
   }
 

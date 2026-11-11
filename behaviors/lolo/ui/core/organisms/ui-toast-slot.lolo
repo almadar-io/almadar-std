@@ -22,7 +22,7 @@ orbital ToastSlotOrbital {
 
     state idle {
       INIT -> idle
-        (fetch ToastSlotItem { emit: { failure: ToastSlotLoadFailed } })
+        (fetch ToastSlotItem { limit: @config.maxRows, emit: { failure: ToastSlotLoadFailed } })
         (render-ui main {
           children: @config.children
           variant: @config.variant
@@ -177,6 +177,10 @@ orbital ToastSlotOrbital {
         @label "Tab Index"
         @description "0 puts the element in the Tab order; -1 makes it focusable only programmatically."
         @tier "presentation"
+      maxRows : number = 500
+        @label "Most rows per load"
+        @description "Most rows one load reads."
+        @tier "policy"
     }
   }
 
