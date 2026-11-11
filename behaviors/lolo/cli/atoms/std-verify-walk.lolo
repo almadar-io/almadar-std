@@ -73,7 +73,7 @@ orbital VerifyWalkOrbital {
     path : string = ""
     source : string = ""
     l1 : [WalkL1Finding] = []
-    viewer : (Map string WalkJson)?
+    viewer : (Map string WalkJson?)?
     owners : Map string [string] = {}
   }
 
@@ -131,7 +131,7 @@ orbital VerifyWalkOrbital {
       VERIFY_WALK_ANSWERED -> external { status : number!  body : string! }
         @description "Internal: the command's answer, which the cli hook prints."
         @tier "internal"
-      VERIFY_WALK_START { file : string!, cwd : string!, viewer : (Map string WalkJson)?, owners : Map string [string], render : boolean, strict : boolean }
+      VERIFY_WALK_START { file : string!, cwd : string!, viewer : (Map string WalkJson?)?, owners : Map string [string], render : boolean, strict : boolean }
         @description "Internal: walk the program file."
         @tier "internal"
     }
@@ -215,6 +215,7 @@ orbital VerifyWalkOrbital {
       WALK_PLAN_ANSWERED -> planning when (!= (array/len @payload.steps) (array/len @entity.machineRows))
         (emit WALK_FAILED { error: "the plan answered a different number of steps than the program has transitions" })
       WALK_PLAN_ANSWERED -> stepping when (= (array/len @payload.steps) (array/len @entity.machineRows))
+        (set @entity.viewer (default @payload.viewer @entity.viewer))
         (set @entity.planned (array/reduce @entity.machineRows [] (fn acc r
           (let ((s (array/nth @payload.steps (array/len @acc))))
             (if (= @s null) @acc (array/concat @acc [{ orbital: (object/get @r "orbital"), trait: (object/get @r "trait"), from: (object/get @r "from"), event: (object/get @r "event"), to: (object/get @r "to"), guarded: (object/get @r "guarded"),
@@ -316,7 +317,7 @@ orbital VerifyWalkOrbital {
       WALK_MACHINE_READ -> external { program : SExpr! }
         @description "Ask std-machine for the program's transition rows."
         @tier "internal"
-      WALK_PLAN_REQUEST -> external { program : SExpr!, rows : [WalkMachineRow]!, viewer : (Map string WalkJson)?, owners : Map string [string] }
+      WALK_PLAN_REQUEST -> external { program : SExpr!, rows : [WalkMachineRow]!, viewer : (Map string WalkJson?)?, owners : Map string [string] }
         @description "Ask std-verify-plan for one planned step per row."
         @tier "internal"
       WALK_JUDGE_REQUEST -> external { items : [WalkJudgeItem]!, program : SExpr! }
@@ -352,7 +353,7 @@ orbital VerifyWalkOrbital {
     }
 
     listens {
-      VERIFY_WALK_START { file : string!, cwd : string!, viewer : (Map string WalkJson)?, owners : Map string [string], render : boolean, strict : boolean }
+      VERIFY_WALK_START { file : string!, cwd : string!, viewer : (Map string WalkJson?)?, owners : Map string [string], render : boolean, strict : boolean }
         @description "Walk the program file."
       VerifyWalkCli.VERIFY_WALK_START -> VERIFY_WALK_START
       WalkMachine.MACHINE_ANSWERED -> WALK_MACHINE_ANSWERED
@@ -365,7 +366,7 @@ orbital VerifyWalkOrbital {
         @description "std-verify-credit's CREDIT_ANSWERED."
       WALK_JUDGE_ANSWERED { results : [WalkJudgeResult]! }
         @description "std-verify-judge's JUDGE_ANSWERED."
-      WALK_PLAN_ANSWERED { steps : [WalkPlanStep]! }
+      WALK_PLAN_ANSWERED { steps : [WalkPlanStep]!, viewer : (Map string WalkJson?)? }
         @description "std-verify-plan's PLAN_ANSWERED."
       WALK_PLAN_REFUSED { error : string! }
         @description "std-verify-plan's PLAN_REFUSED: the program cannot be planned."

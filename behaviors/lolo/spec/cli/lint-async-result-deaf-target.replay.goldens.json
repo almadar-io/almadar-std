@@ -1067,6 +1067,3752 @@
           "trait": "OrbLintAsyncResultDeafTarget"
         }
       ]
+    },
+    {
+      "id": "deaf-waiting-direct-target-lacks-arm-for-failure",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "typeContractVersion": 1,
+              "name": "f1pos",
+              "version": "1.0.0",
+              "description": "t",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "id": "orb_JQR45K0K789KM9G70XJ9QM9NAC",
+                  "entity": {
+                    "name": "Run",
+                    "id": "ent_WRPVER51XTGYX5ZCBRXY9CNV5R",
+                    "collection": "runs",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "nullable": false,
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "nullable": false,
+                        "name": "n",
+                        "type": "number",
+                        "default": 0
+                      }
+                    ],
+                    "access_waivers": {
+                      "read": "test",
+                      "create": "test",
+                      "update": "test",
+                      "delete": "test"
+                    }
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "id": "trt_PS45K06TFED7Q8T4WW958NQBJC",
+                      "effectRow": [
+                        {
+                          "kind": "call-service",
+                          "resource": "registry.handles"
+                        },
+                        {
+                          "kind": "fetch",
+                          "resource": "Run"
+                        },
+                        {
+                          "kind": "render-ui",
+                          "resource": "main"
+                        },
+                        {
+                          "kind": "render-ui",
+                          "resource": "toast"
+                        }
+                      ],
+                      "linkedEntity": "Run",
+                      "linkedEntityId": "ent_WRPVER51XTGYX5ZCBRXY9CNV5R",
+                      "entityRefIds": {
+                        "Run": "ent_WRPVER51XTGYX5ZCBRXY9CNV5R"
+                      },
+                      "emits": [
+                        {
+                          "event": "LOAD_FAILED",
+                          "eventId": "evt_VNZQY57855M2JKMX9FJYZ1MX7W",
+                          "payloadSchema": [
+                            {
+                              "nullable": false,
+                              "name": "error",
+                              "type": "string"
+                            }
+                          ]
+                        },
+                        {
+                          "event": "DONE",
+                          "eventId": "evt_TB8YRWNV23XH1YDPTPVS5711RA"
+                        },
+                        {
+                          "event": "FAILED",
+                          "eventId": "evt_9N1WWM8G8E847C8S6RC172567E",
+                          "payloadSchema": [
+                            {
+                              "nullable": false,
+                              "name": "error",
+                              "type": "string"
+                            }
+                          ]
+                        }
+                      ],
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "sending"
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "LOAD_FAILED",
+                            "id": "evt_VNZQY57855M2JKMX9FJYZ1MX7W",
+                            "name": "Load Failed",
+                            "payloadSchema": [
+                              {
+                                "nullable": false,
+                                "name": "error",
+                                "type": "string"
+                              }
+                            ]
+                          },
+                          {
+                            "key": "INIT",
+                            "id": "evt_QX62XS9G7AR3N2Z9AYK2W1Y65Y",
+                            "name": "Initialize"
+                          },
+                          {
+                            "key": "GO",
+                            "id": "evt_1H42H1ABFF5QQS1SYYXG6JE8A9",
+                            "name": "Go"
+                          },
+                          {
+                            "key": "DONE",
+                            "id": "evt_TB8YRWNV23XH1YDPTPVS5711RA",
+                            "name": "Done"
+                          },
+                          {
+                            "key": "FAILED",
+                            "id": "evt_9N1WWM8G8E847C8S6RC172567E",
+                            "name": "Failed",
+                            "payloadSchema": [
+                              {
+                                "nullable": false,
+                                "name": "error",
+                                "type": "string"
+                              }
+                            ]
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "LOAD_FAILED",
+                            "eventId": "evt_VNZQY57855M2JKMX9FJYZ1MX7W",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "toast",
+                                {
+                                  "type": "alert",
+                                  "variant": "error",
+                                  "message": "failed",
+                                  "dismissible": true
+                                }
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "eventId": "evt_QX62XS9G7AR3N2Z9AYK2W1Y65Y",
+                            "effects": [
+                              [
+                                "fetch",
+                                "Run",
+                                {
+                                  "limit": 10,
+                                  "emit": {
+                                    "failure": "LOAD_FAILED"
+                                  }
+                                }
+                              ],
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "button",
+                                  "label": "go",
+                                  "action": "GO"
+                                }
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "idle",
+                            "to": "sending",
+                            "event": "GO",
+                            "eventId": "evt_1H42H1ABFF5QQS1SYYXG6JE8A9",
+                            "effects": [
+                              [
+                                "call-service",
+                                "registry",
+                                "handles",
+                                {},
+                                {
+                                  "key": "k1",
+                                  "emit": {
+                                    "success": "DONE",
+                                    "failure": "FAILED"
+                                  }
+                                }
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "sending",
+                            "to": "sending",
+                            "event": "INIT",
+                            "eventId": "evt_QX62XS9G7AR3N2Z9AYK2W1Y65Y"
+                          },
+                          {
+                            "from": "sending",
+                            "to": "idle",
+                            "event": "DONE",
+                            "eventId": "evt_TB8YRWNV23XH1YDPTPVS5711RA",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "button",
+                                  "label": "go",
+                                  "action": "GO"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "dispatch": "server",
+                      "sourceDeclaration": {
+                        "traitId": "trt_PS45K06TFED7Q8T4WW958NQBJC",
+                        "fingerprint": "788c3ae21c4cebf16559c6b6d785832242176b927bb26d64b45983a5d001fc9e"
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "OPage",
+                      "id": "pag_528YVSM9MA4T59EJ78XB2X1ADC",
+                      "path": "/t",
+                      "traits": [
+                        {
+                          "ref": "T",
+                          "refId": "trt_PS45K06TFED7Q8T4WW958NQBJC"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "schemaVersion": 1,
+              "ledger": {
+                "schemaVersion": 1,
+                "entries": {
+                  "ent_WRPVER51XTGYX5ZCBRXY9CNV5R": {
+                    "id": "ent_WRPVER51XTGYX5ZCBRXY9CNV5R",
+                    "kind": "entity",
+                    "bakedName": "Run",
+                    "curName": "Run",
+                    "renames": [],
+                    "owner": "workspace"
+                  },
+                  "evt_1H42H1ABFF5QQS1SYYXG6JE8A9": {
+                    "id": "evt_1H42H1ABFF5QQS1SYYXG6JE8A9",
+                    "kind": "event",
+                    "bakedName": "GO",
+                    "curName": "GO",
+                    "renames": [],
+                    "owner": "workspace",
+                    "parent": "trt_PS45K06TFED7Q8T4WW958NQBJC"
+                  },
+                  "evt_9N1WWM8G8E847C8S6RC172567E": {
+                    "id": "evt_9N1WWM8G8E847C8S6RC172567E",
+                    "kind": "event",
+                    "bakedName": "FAILED",
+                    "curName": "FAILED",
+                    "renames": [],
+                    "owner": "workspace",
+                    "parent": "trt_PS45K06TFED7Q8T4WW958NQBJC"
+                  },
+                  "evt_QX62XS9G7AR3N2Z9AYK2W1Y65Y": {
+                    "id": "evt_QX62XS9G7AR3N2Z9AYK2W1Y65Y",
+                    "kind": "event",
+                    "bakedName": "INIT",
+                    "curName": "INIT",
+                    "renames": [],
+                    "owner": "workspace",
+                    "parent": "trt_PS45K06TFED7Q8T4WW958NQBJC"
+                  },
+                  "evt_TB8YRWNV23XH1YDPTPVS5711RA": {
+                    "id": "evt_TB8YRWNV23XH1YDPTPVS5711RA",
+                    "kind": "event",
+                    "bakedName": "DONE",
+                    "curName": "DONE",
+                    "renames": [],
+                    "owner": "workspace",
+                    "parent": "trt_PS45K06TFED7Q8T4WW958NQBJC"
+                  },
+                  "evt_VNZQY57855M2JKMX9FJYZ1MX7W": {
+                    "id": "evt_VNZQY57855M2JKMX9FJYZ1MX7W",
+                    "kind": "event",
+                    "bakedName": "LOAD_FAILED",
+                    "curName": "LOAD_FAILED",
+                    "renames": [],
+                    "owner": "workspace",
+                    "parent": "trt_PS45K06TFED7Q8T4WW958NQBJC"
+                  },
+                  "orb_JQR45K0K789KM9G70XJ9QM9NAC": {
+                    "id": "orb_JQR45K0K789KM9G70XJ9QM9NAC",
+                    "kind": "orbital",
+                    "bakedName": "O",
+                    "curName": "O",
+                    "renames": [],
+                    "owner": "workspace"
+                  },
+                  "pag_528YVSM9MA4T59EJ78XB2X1ADC": {
+                    "id": "pag_528YVSM9MA4T59EJ78XB2X1ADC",
+                    "kind": "page",
+                    "bakedName": "OPage",
+                    "curName": "OPage",
+                    "renames": [],
+                    "owner": "workspace"
+                  },
+                  "trt_PS45K06TFED7Q8T4WW958NQBJC": {
+                    "id": "trt_PS45K06TFED7Q8T4WW958NQBJC",
+                    "kind": "trait",
+                    "bakedName": "T",
+                    "curName": "T",
+                    "renames": [],
+                    "owner": "workspace"
+                  }
+                }
+              }
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintAsyncResultDeafTarget"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "async-result-deaf-target",
+                  "findings": [
+                    {
+                      "code": "ORB_CIRCUIT_ASYNC_RESULT_DEAF_WAITING",
+                      "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[2].effects",
+                      "message": "transition idle--[GO]-->sending starts a call-service whose outcome event(s) [\"FAILED\"] can arrive while the trait waits in state 'sending', which only async results leave and which has no arm for it, so the outcome is dropped there",
+                      "suggestion": "Add a transition from 'sending' handling each of [\"FAILED\"], or cancel the call (cancel-call) on the way into 'sending'.",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintAsyncResultDeafTarget"
+        }
+      ]
+    },
+    {
+      "id": "deaf-waiting-silent-when-direct-target-handles-both-outcomes",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "typeContractVersion": 1,
+              "name": "f2ctl",
+              "version": "1.0.0",
+              "description": "t",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "id": "orb_4AM1HDA1ZH0ZRV6Y57E8YKBPCF",
+                  "entity": {
+                    "name": "Run",
+                    "id": "ent_SZB8S2HA1FN0QJ0QP7RF1RD08F",
+                    "collection": "runs",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "nullable": false,
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "nullable": false,
+                        "name": "n",
+                        "type": "number",
+                        "default": 0
+                      }
+                    ],
+                    "access_waivers": {
+                      "read": "test",
+                      "create": "test",
+                      "update": "test",
+                      "delete": "test"
+                    }
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "id": "trt_PTFNFB7P5SV2WVWTRF3CVAPYCP",
+                      "effectRow": [
+                        {
+                          "kind": "call-service",
+                          "resource": "registry.handles"
+                        },
+                        {
+                          "kind": "fetch",
+                          "resource": "Run"
+                        },
+                        {
+                          "kind": "render-ui",
+                          "resource": "main"
+                        },
+                        {
+                          "kind": "render-ui",
+                          "resource": "toast"
+                        }
+                      ],
+                      "linkedEntity": "Run",
+                      "linkedEntityId": "ent_SZB8S2HA1FN0QJ0QP7RF1RD08F",
+                      "entityRefIds": {
+                        "Run": "ent_SZB8S2HA1FN0QJ0QP7RF1RD08F"
+                      },
+                      "emits": [
+                        {
+                          "event": "LOAD_FAILED",
+                          "eventId": "evt_YS6XR4AGNN8ATGAW19DBFCJBRZ",
+                          "payloadSchema": [
+                            {
+                              "nullable": false,
+                              "name": "error",
+                              "type": "string"
+                            }
+                          ]
+                        },
+                        {
+                          "event": "DONE",
+                          "eventId": "evt_TMNW0NFG8TR4D3M7VYYB7XW2MR"
+                        },
+                        {
+                          "event": "FAILED",
+                          "eventId": "evt_CXQ6WE01PZ0VFKJGVZ08X0Y591",
+                          "payloadSchema": [
+                            {
+                              "nullable": false,
+                              "name": "error",
+                              "type": "string"
+                            }
+                          ]
+                        }
+                      ],
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "sending"
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "LOAD_FAILED",
+                            "id": "evt_YS6XR4AGNN8ATGAW19DBFCJBRZ",
+                            "name": "Load Failed",
+                            "payloadSchema": [
+                              {
+                                "nullable": false,
+                                "name": "error",
+                                "type": "string"
+                              }
+                            ]
+                          },
+                          {
+                            "key": "INIT",
+                            "id": "evt_80YB81HV69XK4X91T0TS711NA0",
+                            "name": "Initialize"
+                          },
+                          {
+                            "key": "GO",
+                            "id": "evt_MV5HYVFVB5XNJVDDY73ZZJEMX6",
+                            "name": "Go"
+                          },
+                          {
+                            "key": "DONE",
+                            "id": "evt_TMNW0NFG8TR4D3M7VYYB7XW2MR",
+                            "name": "Done"
+                          },
+                          {
+                            "key": "FAILED",
+                            "id": "evt_CXQ6WE01PZ0VFKJGVZ08X0Y591",
+                            "name": "Failed",
+                            "payloadSchema": [
+                              {
+                                "nullable": false,
+                                "name": "error",
+                                "type": "string"
+                              }
+                            ]
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "LOAD_FAILED",
+                            "eventId": "evt_YS6XR4AGNN8ATGAW19DBFCJBRZ",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "toast",
+                                {
+                                  "type": "alert",
+                                  "variant": "error",
+                                  "message": "failed",
+                                  "dismissible": true
+                                }
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "eventId": "evt_80YB81HV69XK4X91T0TS711NA0",
+                            "effects": [
+                              [
+                                "fetch",
+                                "Run",
+                                {
+                                  "limit": 10,
+                                  "emit": {
+                                    "failure": "LOAD_FAILED"
+                                  }
+                                }
+                              ],
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "button",
+                                  "label": "go",
+                                  "action": "GO"
+                                }
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "idle",
+                            "to": "sending",
+                            "event": "GO",
+                            "eventId": "evt_MV5HYVFVB5XNJVDDY73ZZJEMX6",
+                            "effects": [
+                              [
+                                "call-service",
+                                "registry",
+                                "handles",
+                                {},
+                                {
+                                  "key": "k1",
+                                  "emit": {
+                                    "success": "DONE",
+                                    "failure": "FAILED"
+                                  }
+                                }
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "sending",
+                            "to": "sending",
+                            "event": "INIT",
+                            "eventId": "evt_80YB81HV69XK4X91T0TS711NA0"
+                          },
+                          {
+                            "from": "sending",
+                            "to": "idle",
+                            "event": "DONE",
+                            "eventId": "evt_TMNW0NFG8TR4D3M7VYYB7XW2MR",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "button",
+                                  "label": "go",
+                                  "action": "GO"
+                                }
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "sending",
+                            "to": "idle",
+                            "event": "FAILED",
+                            "eventId": "evt_CXQ6WE01PZ0VFKJGVZ08X0Y591",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "button",
+                                  "label": "go",
+                                  "action": "GO"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "dispatch": "server",
+                      "sourceDeclaration": {
+                        "traitId": "trt_PTFNFB7P5SV2WVWTRF3CVAPYCP",
+                        "fingerprint": "7fc7bd7f62bdf52f5482a0e8e6a8b94f04e199a42673b9821e2d1d590c87a094"
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "OPage",
+                      "id": "pag_2VDKB51E9KQ4SR3KC67CSB0S3G",
+                      "path": "/t",
+                      "traits": [
+                        {
+                          "ref": "T",
+                          "refId": "trt_PTFNFB7P5SV2WVWTRF3CVAPYCP"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "schemaVersion": 1,
+              "ledger": {
+                "schemaVersion": 1,
+                "entries": {
+                  "ent_SZB8S2HA1FN0QJ0QP7RF1RD08F": {
+                    "id": "ent_SZB8S2HA1FN0QJ0QP7RF1RD08F",
+                    "kind": "entity",
+                    "bakedName": "Run",
+                    "curName": "Run",
+                    "renames": [],
+                    "owner": "workspace"
+                  },
+                  "evt_80YB81HV69XK4X91T0TS711NA0": {
+                    "id": "evt_80YB81HV69XK4X91T0TS711NA0",
+                    "kind": "event",
+                    "bakedName": "INIT",
+                    "curName": "INIT",
+                    "renames": [],
+                    "owner": "workspace",
+                    "parent": "trt_PTFNFB7P5SV2WVWTRF3CVAPYCP"
+                  },
+                  "evt_CXQ6WE01PZ0VFKJGVZ08X0Y591": {
+                    "id": "evt_CXQ6WE01PZ0VFKJGVZ08X0Y591",
+                    "kind": "event",
+                    "bakedName": "FAILED",
+                    "curName": "FAILED",
+                    "renames": [],
+                    "owner": "workspace",
+                    "parent": "trt_PTFNFB7P5SV2WVWTRF3CVAPYCP"
+                  },
+                  "evt_MV5HYVFVB5XNJVDDY73ZZJEMX6": {
+                    "id": "evt_MV5HYVFVB5XNJVDDY73ZZJEMX6",
+                    "kind": "event",
+                    "bakedName": "GO",
+                    "curName": "GO",
+                    "renames": [],
+                    "owner": "workspace",
+                    "parent": "trt_PTFNFB7P5SV2WVWTRF3CVAPYCP"
+                  },
+                  "evt_TMNW0NFG8TR4D3M7VYYB7XW2MR": {
+                    "id": "evt_TMNW0NFG8TR4D3M7VYYB7XW2MR",
+                    "kind": "event",
+                    "bakedName": "DONE",
+                    "curName": "DONE",
+                    "renames": [],
+                    "owner": "workspace",
+                    "parent": "trt_PTFNFB7P5SV2WVWTRF3CVAPYCP"
+                  },
+                  "evt_YS6XR4AGNN8ATGAW19DBFCJBRZ": {
+                    "id": "evt_YS6XR4AGNN8ATGAW19DBFCJBRZ",
+                    "kind": "event",
+                    "bakedName": "LOAD_FAILED",
+                    "curName": "LOAD_FAILED",
+                    "renames": [],
+                    "owner": "workspace",
+                    "parent": "trt_PTFNFB7P5SV2WVWTRF3CVAPYCP"
+                  },
+                  "orb_4AM1HDA1ZH0ZRV6Y57E8YKBPCF": {
+                    "id": "orb_4AM1HDA1ZH0ZRV6Y57E8YKBPCF",
+                    "kind": "orbital",
+                    "bakedName": "O",
+                    "curName": "O",
+                    "renames": [],
+                    "owner": "workspace"
+                  },
+                  "pag_2VDKB51E9KQ4SR3KC67CSB0S3G": {
+                    "id": "pag_2VDKB51E9KQ4SR3KC67CSB0S3G",
+                    "kind": "page",
+                    "bakedName": "OPage",
+                    "curName": "OPage",
+                    "renames": [],
+                    "owner": "workspace"
+                  },
+                  "trt_PTFNFB7P5SV2WVWTRF3CVAPYCP": {
+                    "id": "trt_PTFNFB7P5SV2WVWTRF3CVAPYCP",
+                    "kind": "trait",
+                    "bakedName": "T",
+                    "curName": "T",
+                    "renames": [],
+                    "owner": "workspace"
+                  }
+                }
+              }
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintAsyncResultDeafTarget"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "async-result-deaf-target",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintAsyncResultDeafTarget"
+        }
+      ]
+    },
+    {
+      "id": "deaf-waiting-two-hops-reaches-a-state-only-results-leave",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "typeContractVersion": 1,
+              "name": "f3pos",
+              "version": "1.0.0",
+              "description": "t",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "id": "orb_ENF9ZNZYQWZBYA7ZN34FJVMZJD",
+                  "entity": {
+                    "name": "Run",
+                    "id": "ent_5D2HYSE8XH4ERYHPVFKJK71NVB",
+                    "collection": "runs",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "nullable": false,
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "nullable": false,
+                        "name": "n",
+                        "type": "number",
+                        "default": 0
+                      }
+                    ],
+                    "access_waivers": {
+                      "read": "test",
+                      "create": "test",
+                      "update": "test",
+                      "delete": "test"
+                    }
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "id": "trt_3J49E8PJMG9A8FPXW4XS9S867N",
+                      "effectRow": [
+                        {
+                          "kind": "call-service",
+                          "resource": "registry.handles"
+                        },
+                        {
+                          "kind": "fetch",
+                          "resource": "Run"
+                        },
+                        {
+                          "kind": "persist",
+                          "resource": "Run"
+                        },
+                        {
+                          "kind": "render-ui",
+                          "resource": "main"
+                        },
+                        {
+                          "kind": "render-ui",
+                          "resource": "toast"
+                        }
+                      ],
+                      "linkedEntity": "Run",
+                      "linkedEntityId": "ent_5D2HYSE8XH4ERYHPVFKJK71NVB",
+                      "entityRefIds": {
+                        "Run": "ent_5D2HYSE8XH4ERYHPVFKJK71NVB"
+                      },
+                      "emits": [
+                        {
+                          "event": "LOAD_FAILED",
+                          "eventId": "evt_33NB4VAGKX89YMF1DRPNP20J6K",
+                          "payloadSchema": [
+                            {
+                              "nullable": false,
+                              "name": "error",
+                              "type": "string"
+                            }
+                          ]
+                        },
+                        {
+                          "event": "DONE",
+                          "eventId": "evt_MN17MFD1KYGSZB4PXK3GBBNT8V"
+                        },
+                        {
+                          "event": "FAILED",
+                          "eventId": "evt_1PXQ8BH7T5KX2P8YHNPGM63PN2",
+                          "payloadSchema": [
+                            {
+                              "nullable": false,
+                              "name": "error",
+                              "type": "string"
+                            }
+                          ]
+                        },
+                        {
+                          "event": "SAVED",
+                          "eventId": "evt_RBPDCFJFPM7VA2X8CJ9XP59A0S"
+                        },
+                        {
+                          "event": "SAVE_FAILED",
+                          "eventId": "evt_H34T40E52X2HENX33D2NZTTJ1B",
+                          "payloadSchema": [
+                            {
+                              "nullable": false,
+                              "name": "error",
+                              "type": "string"
+                            }
+                          ]
+                        }
+                      ],
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "sending"
+                          },
+                          {
+                            "name": "saving"
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "LOAD_FAILED",
+                            "id": "evt_33NB4VAGKX89YMF1DRPNP20J6K",
+                            "name": "Load Failed",
+                            "payloadSchema": [
+                              {
+                                "nullable": false,
+                                "name": "error",
+                                "type": "string"
+                              }
+                            ]
+                          },
+                          {
+                            "key": "INIT",
+                            "id": "evt_CP1ARJ0TWHDE8NWY85QAEBFXQR",
+                            "name": "Initialize"
+                          },
+                          {
+                            "key": "GO",
+                            "id": "evt_2NN4G0E7JJ3S90Y8HG0GJ34DY8",
+                            "name": "Go"
+                          },
+                          {
+                            "key": "DONE",
+                            "id": "evt_MN17MFD1KYGSZB4PXK3GBBNT8V",
+                            "name": "Done"
+                          },
+                          {
+                            "key": "FAILED",
+                            "id": "evt_1PXQ8BH7T5KX2P8YHNPGM63PN2",
+                            "name": "Failed",
+                            "payloadSchema": [
+                              {
+                                "nullable": false,
+                                "name": "error",
+                                "type": "string"
+                              }
+                            ]
+                          },
+                          {
+                            "key": "NEXT",
+                            "id": "evt_RCHN9P01130GHRJPSX3AVHN01J",
+                            "name": "Next"
+                          },
+                          {
+                            "key": "SAVED",
+                            "id": "evt_RBPDCFJFPM7VA2X8CJ9XP59A0S",
+                            "name": "Saved"
+                          },
+                          {
+                            "key": "SAVE_FAILED",
+                            "id": "evt_H34T40E52X2HENX33D2NZTTJ1B",
+                            "name": "Save Failed",
+                            "payloadSchema": [
+                              {
+                                "nullable": false,
+                                "name": "error",
+                                "type": "string"
+                              }
+                            ]
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "LOAD_FAILED",
+                            "eventId": "evt_33NB4VAGKX89YMF1DRPNP20J6K",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "toast",
+                                {
+                                  "type": "alert",
+                                  "variant": "error",
+                                  "message": "failed",
+                                  "dismissible": true
+                                }
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "eventId": "evt_CP1ARJ0TWHDE8NWY85QAEBFXQR",
+                            "effects": [
+                              [
+                                "fetch",
+                                "Run",
+                                {
+                                  "limit": 10,
+                                  "emit": {
+                                    "failure": "LOAD_FAILED"
+                                  }
+                                }
+                              ],
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "button",
+                                  "label": "go",
+                                  "action": "GO"
+                                }
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "idle",
+                            "to": "sending",
+                            "event": "GO",
+                            "eventId": "evt_2NN4G0E7JJ3S90Y8HG0GJ34DY8",
+                            "effects": [
+                              [
+                                "call-service",
+                                "registry",
+                                "handles",
+                                {},
+                                {
+                                  "key": "k1",
+                                  "emit": {
+                                    "success": "DONE",
+                                    "failure": "FAILED"
+                                  }
+                                }
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "sending",
+                            "to": "sending",
+                            "event": "INIT",
+                            "eventId": "evt_CP1ARJ0TWHDE8NWY85QAEBFXQR"
+                          },
+                          {
+                            "from": "sending",
+                            "to": "idle",
+                            "event": "DONE",
+                            "eventId": "evt_MN17MFD1KYGSZB4PXK3GBBNT8V",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "button",
+                                  "label": "go",
+                                  "action": "GO"
+                                }
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "sending",
+                            "to": "idle",
+                            "event": "FAILED",
+                            "eventId": "evt_1PXQ8BH7T5KX2P8YHNPGM63PN2",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "button",
+                                  "label": "go",
+                                  "action": "GO"
+                                }
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "sending",
+                            "to": "saving",
+                            "event": "NEXT",
+                            "eventId": "evt_RCHN9P01130GHRJPSX3AVHN01J",
+                            "effects": [
+                              [
+                                "persist",
+                                "create",
+                                "Run",
+                                {
+                                  "n": 1
+                                },
+                                {
+                                  "emit": {
+                                    "success": "SAVED",
+                                    "failure": "SAVE_FAILED"
+                                  }
+                                }
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "saving",
+                            "to": "saving",
+                            "event": "INIT",
+                            "eventId": "evt_CP1ARJ0TWHDE8NWY85QAEBFXQR"
+                          },
+                          {
+                            "from": "saving",
+                            "to": "idle",
+                            "event": "SAVED",
+                            "eventId": "evt_RBPDCFJFPM7VA2X8CJ9XP59A0S",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "button",
+                                  "label": "go",
+                                  "action": "GO"
+                                }
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "saving",
+                            "to": "idle",
+                            "event": "SAVE_FAILED",
+                            "eventId": "evt_H34T40E52X2HENX33D2NZTTJ1B",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "button",
+                                  "label": "go",
+                                  "action": "GO"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "dispatch": "server",
+                      "sourceDeclaration": {
+                        "traitId": "trt_3J49E8PJMG9A8FPXW4XS9S867N",
+                        "fingerprint": "b9ee61be36f35c5165cf19ebbfb9f86070120591303937e42ff606fa999bb6dc"
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "OPage",
+                      "id": "pag_C2VVWGY1YG0Z846XNQ0BB12VCP",
+                      "path": "/t",
+                      "traits": [
+                        {
+                          "ref": "T",
+                          "refId": "trt_3J49E8PJMG9A8FPXW4XS9S867N"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "schemaVersion": 1,
+              "ledger": {
+                "schemaVersion": 1,
+                "entries": {
+                  "ent_5D2HYSE8XH4ERYHPVFKJK71NVB": {
+                    "id": "ent_5D2HYSE8XH4ERYHPVFKJK71NVB",
+                    "kind": "entity",
+                    "bakedName": "Run",
+                    "curName": "Run",
+                    "renames": [],
+                    "owner": "workspace"
+                  },
+                  "evt_1PXQ8BH7T5KX2P8YHNPGM63PN2": {
+                    "id": "evt_1PXQ8BH7T5KX2P8YHNPGM63PN2",
+                    "kind": "event",
+                    "bakedName": "FAILED",
+                    "curName": "FAILED",
+                    "renames": [],
+                    "owner": "workspace",
+                    "parent": "trt_3J49E8PJMG9A8FPXW4XS9S867N"
+                  },
+                  "evt_2NN4G0E7JJ3S90Y8HG0GJ34DY8": {
+                    "id": "evt_2NN4G0E7JJ3S90Y8HG0GJ34DY8",
+                    "kind": "event",
+                    "bakedName": "GO",
+                    "curName": "GO",
+                    "renames": [],
+                    "owner": "workspace",
+                    "parent": "trt_3J49E8PJMG9A8FPXW4XS9S867N"
+                  },
+                  "evt_33NB4VAGKX89YMF1DRPNP20J6K": {
+                    "id": "evt_33NB4VAGKX89YMF1DRPNP20J6K",
+                    "kind": "event",
+                    "bakedName": "LOAD_FAILED",
+                    "curName": "LOAD_FAILED",
+                    "renames": [],
+                    "owner": "workspace",
+                    "parent": "trt_3J49E8PJMG9A8FPXW4XS9S867N"
+                  },
+                  "evt_CP1ARJ0TWHDE8NWY85QAEBFXQR": {
+                    "id": "evt_CP1ARJ0TWHDE8NWY85QAEBFXQR",
+                    "kind": "event",
+                    "bakedName": "INIT",
+                    "curName": "INIT",
+                    "renames": [],
+                    "owner": "workspace",
+                    "parent": "trt_3J49E8PJMG9A8FPXW4XS9S867N"
+                  },
+                  "evt_H34T40E52X2HENX33D2NZTTJ1B": {
+                    "id": "evt_H34T40E52X2HENX33D2NZTTJ1B",
+                    "kind": "event",
+                    "bakedName": "SAVE_FAILED",
+                    "curName": "SAVE_FAILED",
+                    "renames": [],
+                    "owner": "workspace",
+                    "parent": "trt_3J49E8PJMG9A8FPXW4XS9S867N"
+                  },
+                  "evt_MN17MFD1KYGSZB4PXK3GBBNT8V": {
+                    "id": "evt_MN17MFD1KYGSZB4PXK3GBBNT8V",
+                    "kind": "event",
+                    "bakedName": "DONE",
+                    "curName": "DONE",
+                    "renames": [],
+                    "owner": "workspace",
+                    "parent": "trt_3J49E8PJMG9A8FPXW4XS9S867N"
+                  },
+                  "evt_RBPDCFJFPM7VA2X8CJ9XP59A0S": {
+                    "id": "evt_RBPDCFJFPM7VA2X8CJ9XP59A0S",
+                    "kind": "event",
+                    "bakedName": "SAVED",
+                    "curName": "SAVED",
+                    "renames": [],
+                    "owner": "workspace",
+                    "parent": "trt_3J49E8PJMG9A8FPXW4XS9S867N"
+                  },
+                  "evt_RCHN9P01130GHRJPSX3AVHN01J": {
+                    "id": "evt_RCHN9P01130GHRJPSX3AVHN01J",
+                    "kind": "event",
+                    "bakedName": "NEXT",
+                    "curName": "NEXT",
+                    "renames": [],
+                    "owner": "workspace",
+                    "parent": "trt_3J49E8PJMG9A8FPXW4XS9S867N"
+                  },
+                  "orb_ENF9ZNZYQWZBYA7ZN34FJVMZJD": {
+                    "id": "orb_ENF9ZNZYQWZBYA7ZN34FJVMZJD",
+                    "kind": "orbital",
+                    "bakedName": "O",
+                    "curName": "O",
+                    "renames": [],
+                    "owner": "workspace"
+                  },
+                  "pag_C2VVWGY1YG0Z846XNQ0BB12VCP": {
+                    "id": "pag_C2VVWGY1YG0Z846XNQ0BB12VCP",
+                    "kind": "page",
+                    "bakedName": "OPage",
+                    "curName": "OPage",
+                    "renames": [],
+                    "owner": "workspace"
+                  },
+                  "trt_3J49E8PJMG9A8FPXW4XS9S867N": {
+                    "id": "trt_3J49E8PJMG9A8FPXW4XS9S867N",
+                    "kind": "trait",
+                    "bakedName": "T",
+                    "curName": "T",
+                    "renames": [],
+                    "owner": "workspace"
+                  }
+                }
+              }
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintAsyncResultDeafTarget"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "async-result-deaf-target",
+                  "findings": [
+                    {
+                      "code": "ORB_CIRCUIT_ASYNC_RESULT_DEAF_WAITING",
+                      "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[2].effects",
+                      "message": "transition idle--[GO]-->sending starts a call-service whose outcome event(s) [\"DONE\", \"FAILED\"] can arrive while the trait waits in state 'saving', which only async results leave and which has no arm for them, so the outcome is dropped there",
+                      "suggestion": "Add a transition from 'saving' handling each of [\"DONE\", \"FAILED\"], or cancel the call (cancel-call) on the way into 'saving'.",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintAsyncResultDeafTarget"
+        }
+      ]
+    },
+    {
+      "id": "deaf-waiting-silent-when-the-reached-state-has-a-control-exit",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "typeContractVersion": 1,
+              "name": "f4ctl",
+              "version": "1.0.0",
+              "description": "t",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "id": "orb_SP677FF1VRGXW4CRZJDMZJ1CXB",
+                  "entity": {
+                    "name": "Run",
+                    "id": "ent_0FWV9QPH3H8HRG6REF8FZG3RTV",
+                    "collection": "runs",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "nullable": false,
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "nullable": false,
+                        "name": "n",
+                        "type": "number",
+                        "default": 0
+                      }
+                    ],
+                    "access_waivers": {
+                      "read": "test",
+                      "create": "test",
+                      "update": "test",
+                      "delete": "test"
+                    }
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "id": "trt_WGFDQBJCFJ67S8FVH05EJGPYNS",
+                      "effectRow": [
+                        {
+                          "kind": "call-service",
+                          "resource": "registry.handles"
+                        },
+                        {
+                          "kind": "fetch",
+                          "resource": "Run"
+                        },
+                        {
+                          "kind": "persist",
+                          "resource": "Run"
+                        },
+                        {
+                          "kind": "render-ui",
+                          "resource": "main"
+                        },
+                        {
+                          "kind": "render-ui",
+                          "resource": "toast"
+                        }
+                      ],
+                      "linkedEntity": "Run",
+                      "linkedEntityId": "ent_0FWV9QPH3H8HRG6REF8FZG3RTV",
+                      "entityRefIds": {
+                        "Run": "ent_0FWV9QPH3H8HRG6REF8FZG3RTV"
+                      },
+                      "emits": [
+                        {
+                          "event": "LOAD_FAILED",
+                          "eventId": "evt_Z5876NMKDN9PTJY6NTDAK5WT0Z",
+                          "payloadSchema": [
+                            {
+                              "nullable": false,
+                              "name": "error",
+                              "type": "string"
+                            }
+                          ]
+                        },
+                        {
+                          "event": "DONE",
+                          "eventId": "evt_3FDQCTZ9Y3MZ1HCTK7A4YP0AAE"
+                        },
+                        {
+                          "event": "FAILED",
+                          "eventId": "evt_KZ0E9HS9XYMYZBR4QCH2CBEMM2",
+                          "payloadSchema": [
+                            {
+                              "nullable": false,
+                              "name": "error",
+                              "type": "string"
+                            }
+                          ]
+                        },
+                        {
+                          "event": "SAVED",
+                          "eventId": "evt_THK40ANGHVR8XJTCAY60PTSMC0"
+                        },
+                        {
+                          "event": "SAVE_FAILED",
+                          "eventId": "evt_38JAWSETCHD68M4P9B1Q5NX120",
+                          "payloadSchema": [
+                            {
+                              "nullable": false,
+                              "name": "error",
+                              "type": "string"
+                            }
+                          ]
+                        }
+                      ],
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "sending"
+                          },
+                          {
+                            "name": "saving"
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "LOAD_FAILED",
+                            "id": "evt_Z5876NMKDN9PTJY6NTDAK5WT0Z",
+                            "name": "Load Failed",
+                            "payloadSchema": [
+                              {
+                                "nullable": false,
+                                "name": "error",
+                                "type": "string"
+                              }
+                            ]
+                          },
+                          {
+                            "key": "INIT",
+                            "id": "evt_N0GV78BZDTZPX20XCX1EE8GR5Z",
+                            "name": "Initialize"
+                          },
+                          {
+                            "key": "GO",
+                            "id": "evt_VFFBZFHD8VPMDSZYTWPM0AW3T3",
+                            "name": "Go"
+                          },
+                          {
+                            "key": "DONE",
+                            "id": "evt_3FDQCTZ9Y3MZ1HCTK7A4YP0AAE",
+                            "name": "Done"
+                          },
+                          {
+                            "key": "FAILED",
+                            "id": "evt_KZ0E9HS9XYMYZBR4QCH2CBEMM2",
+                            "name": "Failed",
+                            "payloadSchema": [
+                              {
+                                "nullable": false,
+                                "name": "error",
+                                "type": "string"
+                              }
+                            ]
+                          },
+                          {
+                            "key": "NEXT",
+                            "id": "evt_FVWFDS5BK1NSGYGNBX67MSPB1H",
+                            "name": "Next"
+                          },
+                          {
+                            "key": "SAVED",
+                            "id": "evt_THK40ANGHVR8XJTCAY60PTSMC0",
+                            "name": "Saved"
+                          },
+                          {
+                            "key": "SAVE_FAILED",
+                            "id": "evt_38JAWSETCHD68M4P9B1Q5NX120",
+                            "name": "Save Failed",
+                            "payloadSchema": [
+                              {
+                                "nullable": false,
+                                "name": "error",
+                                "type": "string"
+                              }
+                            ]
+                          },
+                          {
+                            "key": "CANCEL",
+                            "id": "evt_2RSZHDA3QC1VP419HPGFA3SP5T",
+                            "name": "Cancel"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "LOAD_FAILED",
+                            "eventId": "evt_Z5876NMKDN9PTJY6NTDAK5WT0Z",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "toast",
+                                {
+                                  "type": "alert",
+                                  "variant": "error",
+                                  "message": "failed",
+                                  "dismissible": true
+                                }
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "eventId": "evt_N0GV78BZDTZPX20XCX1EE8GR5Z",
+                            "effects": [
+                              [
+                                "fetch",
+                                "Run",
+                                {
+                                  "limit": 10,
+                                  "emit": {
+                                    "failure": "LOAD_FAILED"
+                                  }
+                                }
+                              ],
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "button",
+                                  "label": "go",
+                                  "action": "GO"
+                                }
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "idle",
+                            "to": "sending",
+                            "event": "GO",
+                            "eventId": "evt_VFFBZFHD8VPMDSZYTWPM0AW3T3",
+                            "effects": [
+                              [
+                                "call-service",
+                                "registry",
+                                "handles",
+                                {},
+                                {
+                                  "key": "k1",
+                                  "emit": {
+                                    "success": "DONE",
+                                    "failure": "FAILED"
+                                  }
+                                }
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "sending",
+                            "to": "sending",
+                            "event": "INIT",
+                            "eventId": "evt_N0GV78BZDTZPX20XCX1EE8GR5Z"
+                          },
+                          {
+                            "from": "sending",
+                            "to": "idle",
+                            "event": "DONE",
+                            "eventId": "evt_3FDQCTZ9Y3MZ1HCTK7A4YP0AAE",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "button",
+                                  "label": "go",
+                                  "action": "GO"
+                                }
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "sending",
+                            "to": "idle",
+                            "event": "FAILED",
+                            "eventId": "evt_KZ0E9HS9XYMYZBR4QCH2CBEMM2",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "button",
+                                  "label": "go",
+                                  "action": "GO"
+                                }
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "sending",
+                            "to": "saving",
+                            "event": "NEXT",
+                            "eventId": "evt_FVWFDS5BK1NSGYGNBX67MSPB1H",
+                            "effects": [
+                              [
+                                "persist",
+                                "create",
+                                "Run",
+                                {
+                                  "n": 1
+                                },
+                                {
+                                  "emit": {
+                                    "success": "SAVED",
+                                    "failure": "SAVE_FAILED"
+                                  }
+                                }
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "saving",
+                            "to": "saving",
+                            "event": "INIT",
+                            "eventId": "evt_N0GV78BZDTZPX20XCX1EE8GR5Z"
+                          },
+                          {
+                            "from": "saving",
+                            "to": "idle",
+                            "event": "SAVED",
+                            "eventId": "evt_THK40ANGHVR8XJTCAY60PTSMC0",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "button",
+                                  "label": "go",
+                                  "action": "GO"
+                                }
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "saving",
+                            "to": "idle",
+                            "event": "SAVE_FAILED",
+                            "eventId": "evt_38JAWSETCHD68M4P9B1Q5NX120",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "button",
+                                  "label": "go",
+                                  "action": "GO"
+                                }
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "saving",
+                            "to": "idle",
+                            "event": "CANCEL",
+                            "eventId": "evt_2RSZHDA3QC1VP419HPGFA3SP5T",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "button",
+                                  "label": "go",
+                                  "action": "GO"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "dispatch": "server",
+                      "sourceDeclaration": {
+                        "traitId": "trt_WGFDQBJCFJ67S8FVH05EJGPYNS",
+                        "fingerprint": "1f3c8e5b029b3b5fce239c77041d7bbda327d26a6da6dd4eb44ae718d3a1974e"
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "OPage",
+                      "id": "pag_ABPM6JHY2CZ163DDXMACH6N6BM",
+                      "path": "/t",
+                      "traits": [
+                        {
+                          "ref": "T",
+                          "refId": "trt_WGFDQBJCFJ67S8FVH05EJGPYNS"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "schemaVersion": 1,
+              "ledger": {
+                "schemaVersion": 1,
+                "entries": {
+                  "ent_0FWV9QPH3H8HRG6REF8FZG3RTV": {
+                    "id": "ent_0FWV9QPH3H8HRG6REF8FZG3RTV",
+                    "kind": "entity",
+                    "bakedName": "Run",
+                    "curName": "Run",
+                    "renames": [],
+                    "owner": "workspace"
+                  },
+                  "evt_2RSZHDA3QC1VP419HPGFA3SP5T": {
+                    "id": "evt_2RSZHDA3QC1VP419HPGFA3SP5T",
+                    "kind": "event",
+                    "bakedName": "CANCEL",
+                    "curName": "CANCEL",
+                    "renames": [],
+                    "owner": "workspace",
+                    "parent": "trt_WGFDQBJCFJ67S8FVH05EJGPYNS"
+                  },
+                  "evt_38JAWSETCHD68M4P9B1Q5NX120": {
+                    "id": "evt_38JAWSETCHD68M4P9B1Q5NX120",
+                    "kind": "event",
+                    "bakedName": "SAVE_FAILED",
+                    "curName": "SAVE_FAILED",
+                    "renames": [],
+                    "owner": "workspace",
+                    "parent": "trt_WGFDQBJCFJ67S8FVH05EJGPYNS"
+                  },
+                  "evt_3FDQCTZ9Y3MZ1HCTK7A4YP0AAE": {
+                    "id": "evt_3FDQCTZ9Y3MZ1HCTK7A4YP0AAE",
+                    "kind": "event",
+                    "bakedName": "DONE",
+                    "curName": "DONE",
+                    "renames": [],
+                    "owner": "workspace",
+                    "parent": "trt_WGFDQBJCFJ67S8FVH05EJGPYNS"
+                  },
+                  "evt_FVWFDS5BK1NSGYGNBX67MSPB1H": {
+                    "id": "evt_FVWFDS5BK1NSGYGNBX67MSPB1H",
+                    "kind": "event",
+                    "bakedName": "NEXT",
+                    "curName": "NEXT",
+                    "renames": [],
+                    "owner": "workspace",
+                    "parent": "trt_WGFDQBJCFJ67S8FVH05EJGPYNS"
+                  },
+                  "evt_KZ0E9HS9XYMYZBR4QCH2CBEMM2": {
+                    "id": "evt_KZ0E9HS9XYMYZBR4QCH2CBEMM2",
+                    "kind": "event",
+                    "bakedName": "FAILED",
+                    "curName": "FAILED",
+                    "renames": [],
+                    "owner": "workspace",
+                    "parent": "trt_WGFDQBJCFJ67S8FVH05EJGPYNS"
+                  },
+                  "evt_N0GV78BZDTZPX20XCX1EE8GR5Z": {
+                    "id": "evt_N0GV78BZDTZPX20XCX1EE8GR5Z",
+                    "kind": "event",
+                    "bakedName": "INIT",
+                    "curName": "INIT",
+                    "renames": [],
+                    "owner": "workspace",
+                    "parent": "trt_WGFDQBJCFJ67S8FVH05EJGPYNS"
+                  },
+                  "evt_THK40ANGHVR8XJTCAY60PTSMC0": {
+                    "id": "evt_THK40ANGHVR8XJTCAY60PTSMC0",
+                    "kind": "event",
+                    "bakedName": "SAVED",
+                    "curName": "SAVED",
+                    "renames": [],
+                    "owner": "workspace",
+                    "parent": "trt_WGFDQBJCFJ67S8FVH05EJGPYNS"
+                  },
+                  "evt_VFFBZFHD8VPMDSZYTWPM0AW3T3": {
+                    "id": "evt_VFFBZFHD8VPMDSZYTWPM0AW3T3",
+                    "kind": "event",
+                    "bakedName": "GO",
+                    "curName": "GO",
+                    "renames": [],
+                    "owner": "workspace",
+                    "parent": "trt_WGFDQBJCFJ67S8FVH05EJGPYNS"
+                  },
+                  "evt_Z5876NMKDN9PTJY6NTDAK5WT0Z": {
+                    "id": "evt_Z5876NMKDN9PTJY6NTDAK5WT0Z",
+                    "kind": "event",
+                    "bakedName": "LOAD_FAILED",
+                    "curName": "LOAD_FAILED",
+                    "renames": [],
+                    "owner": "workspace",
+                    "parent": "trt_WGFDQBJCFJ67S8FVH05EJGPYNS"
+                  },
+                  "orb_SP677FF1VRGXW4CRZJDMZJ1CXB": {
+                    "id": "orb_SP677FF1VRGXW4CRZJDMZJ1CXB",
+                    "kind": "orbital",
+                    "bakedName": "O",
+                    "curName": "O",
+                    "renames": [],
+                    "owner": "workspace"
+                  },
+                  "pag_ABPM6JHY2CZ163DDXMACH6N6BM": {
+                    "id": "pag_ABPM6JHY2CZ163DDXMACH6N6BM",
+                    "kind": "page",
+                    "bakedName": "OPage",
+                    "curName": "OPage",
+                    "renames": [],
+                    "owner": "workspace"
+                  },
+                  "trt_WGFDQBJCFJ67S8FVH05EJGPYNS": {
+                    "id": "trt_WGFDQBJCFJ67S8FVH05EJGPYNS",
+                    "kind": "trait",
+                    "bakedName": "T",
+                    "curName": "T",
+                    "renames": [],
+                    "owner": "workspace"
+                  }
+                }
+              }
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintAsyncResultDeafTarget"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "async-result-deaf-target",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintAsyncResultDeafTarget"
+        }
+      ]
+    },
+    {
+      "id": "deaf-waiting-silent-for-a-rest-state-reached-back-through-a-control",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "typeContractVersion": 1,
+              "name": "f5ctl",
+              "version": "1.0.0",
+              "description": "t",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "id": "orb_MD3FDH7ZABZN5TQ6RJKG47S8YV",
+                  "entity": {
+                    "name": "Run",
+                    "id": "ent_H2NFNAW3EF1Q7Z36C3CH2GSDED",
+                    "collection": "runs",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "nullable": false,
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "nullable": false,
+                        "name": "n",
+                        "type": "number",
+                        "default": 0
+                      }
+                    ],
+                    "access_waivers": {
+                      "read": "test",
+                      "create": "test",
+                      "update": "test",
+                      "delete": "test"
+                    }
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "id": "trt_ZW6MV4JN53AJHS72TWM48FQNRQ",
+                      "effectRow": [
+                        {
+                          "kind": "call-service",
+                          "resource": "registry.handles"
+                        },
+                        {
+                          "kind": "fetch",
+                          "resource": "Run"
+                        },
+                        {
+                          "kind": "render-ui",
+                          "resource": "main"
+                        },
+                        {
+                          "kind": "render-ui",
+                          "resource": "toast"
+                        }
+                      ],
+                      "linkedEntity": "Run",
+                      "linkedEntityId": "ent_H2NFNAW3EF1Q7Z36C3CH2GSDED",
+                      "entityRefIds": {
+                        "Run": "ent_H2NFNAW3EF1Q7Z36C3CH2GSDED"
+                      },
+                      "emits": [
+                        {
+                          "event": "LOAD_FAILED",
+                          "eventId": "evt_ZMS0ZDQWHGY8RFKPR8DXRTZVDQ",
+                          "payloadSchema": [
+                            {
+                              "nullable": false,
+                              "name": "error",
+                              "type": "string"
+                            }
+                          ]
+                        },
+                        {
+                          "event": "DONE",
+                          "eventId": "evt_8XYS1EJ2R91C4RVMY7Y1CTBYWK"
+                        },
+                        {
+                          "event": "FAILED",
+                          "eventId": "evt_9EZTX2J02M01A92N6CKCP3V3J9",
+                          "payloadSchema": [
+                            {
+                              "nullable": false,
+                              "name": "error",
+                              "type": "string"
+                            }
+                          ]
+                        }
+                      ],
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "sending"
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "LOAD_FAILED",
+                            "id": "evt_ZMS0ZDQWHGY8RFKPR8DXRTZVDQ",
+                            "name": "Load Failed",
+                            "payloadSchema": [
+                              {
+                                "nullable": false,
+                                "name": "error",
+                                "type": "string"
+                              }
+                            ]
+                          },
+                          {
+                            "key": "INIT",
+                            "id": "evt_WXTFC5HNHFTRQY8FEKHRX9G0F4",
+                            "name": "Initialize"
+                          },
+                          {
+                            "key": "GO",
+                            "id": "evt_K7VN3EGPNBBANRY44RH8FVBNKC",
+                            "name": "Go"
+                          },
+                          {
+                            "key": "DONE",
+                            "id": "evt_8XYS1EJ2R91C4RVMY7Y1CTBYWK",
+                            "name": "Done"
+                          },
+                          {
+                            "key": "FAILED",
+                            "id": "evt_9EZTX2J02M01A92N6CKCP3V3J9",
+                            "name": "Failed",
+                            "payloadSchema": [
+                              {
+                                "nullable": false,
+                                "name": "error",
+                                "type": "string"
+                              }
+                            ]
+                          },
+                          {
+                            "key": "CANCEL",
+                            "id": "evt_NM4T868JKB99NJS057DHTH796M",
+                            "name": "Cancel"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "LOAD_FAILED",
+                            "eventId": "evt_ZMS0ZDQWHGY8RFKPR8DXRTZVDQ",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "toast",
+                                {
+                                  "type": "alert",
+                                  "variant": "error",
+                                  "message": "failed",
+                                  "dismissible": true
+                                }
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "eventId": "evt_WXTFC5HNHFTRQY8FEKHRX9G0F4",
+                            "effects": [
+                              [
+                                "fetch",
+                                "Run",
+                                {
+                                  "limit": 10,
+                                  "emit": {
+                                    "failure": "LOAD_FAILED"
+                                  }
+                                }
+                              ],
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "button",
+                                  "label": "go",
+                                  "action": "GO"
+                                }
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "idle",
+                            "to": "sending",
+                            "event": "GO",
+                            "eventId": "evt_K7VN3EGPNBBANRY44RH8FVBNKC",
+                            "effects": [
+                              [
+                                "call-service",
+                                "registry",
+                                "handles",
+                                {},
+                                {
+                                  "key": "k1",
+                                  "emit": {
+                                    "success": "DONE",
+                                    "failure": "FAILED"
+                                  }
+                                }
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "sending",
+                            "to": "sending",
+                            "event": "INIT",
+                            "eventId": "evt_WXTFC5HNHFTRQY8FEKHRX9G0F4"
+                          },
+                          {
+                            "from": "sending",
+                            "to": "idle",
+                            "event": "DONE",
+                            "eventId": "evt_8XYS1EJ2R91C4RVMY7Y1CTBYWK",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "button",
+                                  "label": "go",
+                                  "action": "GO"
+                                }
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "sending",
+                            "to": "idle",
+                            "event": "FAILED",
+                            "eventId": "evt_9EZTX2J02M01A92N6CKCP3V3J9",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "button",
+                                  "label": "go",
+                                  "action": "GO"
+                                }
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "sending",
+                            "to": "idle",
+                            "event": "CANCEL",
+                            "eventId": "evt_NM4T868JKB99NJS057DHTH796M",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "button",
+                                  "label": "go",
+                                  "action": "GO"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "dispatch": "server",
+                      "sourceDeclaration": {
+                        "traitId": "trt_ZW6MV4JN53AJHS72TWM48FQNRQ",
+                        "fingerprint": "78f68bada435b3423e14c4649f07e508ca8e9731b483c7c91c64d794abdb64e9"
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "OPage",
+                      "id": "pag_DKYEZH79F9MQMYCSF0KVNMN3WN",
+                      "path": "/t",
+                      "traits": [
+                        {
+                          "ref": "T",
+                          "refId": "trt_ZW6MV4JN53AJHS72TWM48FQNRQ"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "schemaVersion": 1,
+              "ledger": {
+                "schemaVersion": 1,
+                "entries": {
+                  "ent_H2NFNAW3EF1Q7Z36C3CH2GSDED": {
+                    "id": "ent_H2NFNAW3EF1Q7Z36C3CH2GSDED",
+                    "kind": "entity",
+                    "bakedName": "Run",
+                    "curName": "Run",
+                    "renames": [],
+                    "owner": "workspace"
+                  },
+                  "evt_8XYS1EJ2R91C4RVMY7Y1CTBYWK": {
+                    "id": "evt_8XYS1EJ2R91C4RVMY7Y1CTBYWK",
+                    "kind": "event",
+                    "bakedName": "DONE",
+                    "curName": "DONE",
+                    "renames": [],
+                    "owner": "workspace",
+                    "parent": "trt_ZW6MV4JN53AJHS72TWM48FQNRQ"
+                  },
+                  "evt_9EZTX2J02M01A92N6CKCP3V3J9": {
+                    "id": "evt_9EZTX2J02M01A92N6CKCP3V3J9",
+                    "kind": "event",
+                    "bakedName": "FAILED",
+                    "curName": "FAILED",
+                    "renames": [],
+                    "owner": "workspace",
+                    "parent": "trt_ZW6MV4JN53AJHS72TWM48FQNRQ"
+                  },
+                  "evt_K7VN3EGPNBBANRY44RH8FVBNKC": {
+                    "id": "evt_K7VN3EGPNBBANRY44RH8FVBNKC",
+                    "kind": "event",
+                    "bakedName": "GO",
+                    "curName": "GO",
+                    "renames": [],
+                    "owner": "workspace",
+                    "parent": "trt_ZW6MV4JN53AJHS72TWM48FQNRQ"
+                  },
+                  "evt_NM4T868JKB99NJS057DHTH796M": {
+                    "id": "evt_NM4T868JKB99NJS057DHTH796M",
+                    "kind": "event",
+                    "bakedName": "CANCEL",
+                    "curName": "CANCEL",
+                    "renames": [],
+                    "owner": "workspace",
+                    "parent": "trt_ZW6MV4JN53AJHS72TWM48FQNRQ"
+                  },
+                  "evt_WXTFC5HNHFTRQY8FEKHRX9G0F4": {
+                    "id": "evt_WXTFC5HNHFTRQY8FEKHRX9G0F4",
+                    "kind": "event",
+                    "bakedName": "INIT",
+                    "curName": "INIT",
+                    "renames": [],
+                    "owner": "workspace",
+                    "parent": "trt_ZW6MV4JN53AJHS72TWM48FQNRQ"
+                  },
+                  "evt_ZMS0ZDQWHGY8RFKPR8DXRTZVDQ": {
+                    "id": "evt_ZMS0ZDQWHGY8RFKPR8DXRTZVDQ",
+                    "kind": "event",
+                    "bakedName": "LOAD_FAILED",
+                    "curName": "LOAD_FAILED",
+                    "renames": [],
+                    "owner": "workspace",
+                    "parent": "trt_ZW6MV4JN53AJHS72TWM48FQNRQ"
+                  },
+                  "orb_MD3FDH7ZABZN5TQ6RJKG47S8YV": {
+                    "id": "orb_MD3FDH7ZABZN5TQ6RJKG47S8YV",
+                    "kind": "orbital",
+                    "bakedName": "O",
+                    "curName": "O",
+                    "renames": [],
+                    "owner": "workspace"
+                  },
+                  "pag_DKYEZH79F9MQMYCSF0KVNMN3WN": {
+                    "id": "pag_DKYEZH79F9MQMYCSF0KVNMN3WN",
+                    "kind": "page",
+                    "bakedName": "OPage",
+                    "curName": "OPage",
+                    "renames": [],
+                    "owner": "workspace"
+                  },
+                  "trt_ZW6MV4JN53AJHS72TWM48FQNRQ": {
+                    "id": "trt_ZW6MV4JN53AJHS72TWM48FQNRQ",
+                    "kind": "trait",
+                    "bakedName": "T",
+                    "curName": "T",
+                    "renames": [],
+                    "owner": "workspace"
+                  }
+                }
+              }
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintAsyncResultDeafTarget"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "async-result-deaf-target",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintAsyncResultDeafTarget"
+        }
+      ]
+    },
+    {
+      "id": "deaf-waiting-silent-when-reached-only-through-a-result-event",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "typeContractVersion": 1,
+              "name": "f6ctl",
+              "version": "1.0.0",
+              "description": "t",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "id": "orb_J7QZFBW0WF0E7YJQR73NQQP5QA",
+                  "entity": {
+                    "name": "Run",
+                    "id": "ent_J7KBJ8KM5BT2NZ0HRQZ3E0ZC2J",
+                    "collection": "runs",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "nullable": false,
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "nullable": false,
+                        "name": "n",
+                        "type": "number",
+                        "default": 0
+                      }
+                    ],
+                    "access_waivers": {
+                      "read": "test",
+                      "create": "test",
+                      "update": "test",
+                      "delete": "test"
+                    }
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "id": "trt_1704HKKG32R1H1HB7XZ8VMKNDJ",
+                      "effectRow": [
+                        {
+                          "kind": "call-service",
+                          "resource": "registry.handles"
+                        },
+                        {
+                          "kind": "fetch",
+                          "resource": "Run"
+                        },
+                        {
+                          "kind": "persist",
+                          "resource": "Run"
+                        },
+                        {
+                          "kind": "render-ui",
+                          "resource": "main"
+                        },
+                        {
+                          "kind": "render-ui",
+                          "resource": "toast"
+                        }
+                      ],
+                      "linkedEntity": "Run",
+                      "linkedEntityId": "ent_J7KBJ8KM5BT2NZ0HRQZ3E0ZC2J",
+                      "entityRefIds": {
+                        "Run": "ent_J7KBJ8KM5BT2NZ0HRQZ3E0ZC2J"
+                      },
+                      "emits": [
+                        {
+                          "event": "LOAD_FAILED",
+                          "eventId": "evt_RQQSB8YDW06Y0DR6KYCGXR9612",
+                          "payloadSchema": [
+                            {
+                              "nullable": false,
+                              "name": "error",
+                              "type": "string"
+                            }
+                          ]
+                        },
+                        {
+                          "event": "DONE",
+                          "eventId": "evt_4GAPGXYAHQ58VNX4HT8M69HS4J"
+                        },
+                        {
+                          "event": "FAILED",
+                          "eventId": "evt_5AY7MEC1PH0V8X8QXNZS4TE8E8",
+                          "payloadSchema": [
+                            {
+                              "nullable": false,
+                              "name": "error",
+                              "type": "string"
+                            }
+                          ]
+                        },
+                        {
+                          "event": "SAVED",
+                          "eventId": "evt_M0ZJM4FQG5VR2MM1PB4TEF5N1Y"
+                        },
+                        {
+                          "event": "SAVE_FAILED",
+                          "eventId": "evt_PD53XQXJJ8S948P6RR5VPGNE3B",
+                          "payloadSchema": [
+                            {
+                              "nullable": false,
+                              "name": "error",
+                              "type": "string"
+                            }
+                          ]
+                        }
+                      ],
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "sending"
+                          },
+                          {
+                            "name": "done"
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "LOAD_FAILED",
+                            "id": "evt_RQQSB8YDW06Y0DR6KYCGXR9612",
+                            "name": "Load Failed",
+                            "payloadSchema": [
+                              {
+                                "nullable": false,
+                                "name": "error",
+                                "type": "string"
+                              }
+                            ]
+                          },
+                          {
+                            "key": "INIT",
+                            "id": "evt_N6VMZVRQEVBQDS7RB84FNTN6SA",
+                            "name": "Initialize"
+                          },
+                          {
+                            "key": "GO",
+                            "id": "evt_WY4C752R5GC2R1FTSTY524WNWK",
+                            "name": "Go"
+                          },
+                          {
+                            "key": "DONE",
+                            "id": "evt_4GAPGXYAHQ58VNX4HT8M69HS4J",
+                            "name": "Done"
+                          },
+                          {
+                            "key": "FAILED",
+                            "id": "evt_5AY7MEC1PH0V8X8QXNZS4TE8E8",
+                            "name": "Failed",
+                            "payloadSchema": [
+                              {
+                                "nullable": false,
+                                "name": "error",
+                                "type": "string"
+                              }
+                            ]
+                          },
+                          {
+                            "key": "SAVED",
+                            "id": "evt_M0ZJM4FQG5VR2MM1PB4TEF5N1Y",
+                            "name": "Saved"
+                          },
+                          {
+                            "key": "SAVE_FAILED",
+                            "id": "evt_PD53XQXJJ8S948P6RR5VPGNE3B",
+                            "name": "Save Failed",
+                            "payloadSchema": [
+                              {
+                                "nullable": false,
+                                "name": "error",
+                                "type": "string"
+                              }
+                            ]
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "LOAD_FAILED",
+                            "eventId": "evt_RQQSB8YDW06Y0DR6KYCGXR9612",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "toast",
+                                {
+                                  "type": "alert",
+                                  "variant": "error",
+                                  "message": "failed",
+                                  "dismissible": true
+                                }
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "eventId": "evt_N6VMZVRQEVBQDS7RB84FNTN6SA",
+                            "effects": [
+                              [
+                                "fetch",
+                                "Run",
+                                {
+                                  "limit": 10,
+                                  "emit": {
+                                    "failure": "LOAD_FAILED"
+                                  }
+                                }
+                              ],
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "button",
+                                  "label": "go",
+                                  "action": "GO"
+                                }
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "idle",
+                            "to": "sending",
+                            "event": "GO",
+                            "eventId": "evt_WY4C752R5GC2R1FTSTY524WNWK",
+                            "effects": [
+                              [
+                                "call-service",
+                                "registry",
+                                "handles",
+                                {},
+                                {
+                                  "key": "k1",
+                                  "emit": {
+                                    "success": "DONE",
+                                    "failure": "FAILED"
+                                  }
+                                }
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "sending",
+                            "to": "sending",
+                            "event": "INIT",
+                            "eventId": "evt_N6VMZVRQEVBQDS7RB84FNTN6SA"
+                          },
+                          {
+                            "from": "sending",
+                            "to": "done",
+                            "event": "DONE",
+                            "eventId": "evt_4GAPGXYAHQ58VNX4HT8M69HS4J",
+                            "effects": [
+                              [
+                                "persist",
+                                "create",
+                                "Run",
+                                {
+                                  "n": 1
+                                },
+                                {
+                                  "emit": {
+                                    "success": "SAVED",
+                                    "failure": "SAVE_FAILED"
+                                  }
+                                }
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "sending",
+                            "to": "idle",
+                            "event": "FAILED",
+                            "eventId": "evt_5AY7MEC1PH0V8X8QXNZS4TE8E8",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "button",
+                                  "label": "go",
+                                  "action": "GO"
+                                }
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "done",
+                            "to": "done",
+                            "event": "INIT",
+                            "eventId": "evt_N6VMZVRQEVBQDS7RB84FNTN6SA"
+                          },
+                          {
+                            "from": "done",
+                            "to": "idle",
+                            "event": "SAVED",
+                            "eventId": "evt_M0ZJM4FQG5VR2MM1PB4TEF5N1Y",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "button",
+                                  "label": "go",
+                                  "action": "GO"
+                                }
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "done",
+                            "to": "idle",
+                            "event": "SAVE_FAILED",
+                            "eventId": "evt_PD53XQXJJ8S948P6RR5VPGNE3B",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "button",
+                                  "label": "go",
+                                  "action": "GO"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "dispatch": "server",
+                      "sourceDeclaration": {
+                        "traitId": "trt_1704HKKG32R1H1HB7XZ8VMKNDJ",
+                        "fingerprint": "0687793383c548022e3b62a6337f7b0c6d3f77ff6b87649160af5806473a0833"
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "OPage",
+                      "id": "pag_N9D4K0ME8J7491RW09WB0S4CHP",
+                      "path": "/t",
+                      "traits": [
+                        {
+                          "ref": "T",
+                          "refId": "trt_1704HKKG32R1H1HB7XZ8VMKNDJ"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "schemaVersion": 1,
+              "ledger": {
+                "schemaVersion": 1,
+                "entries": {
+                  "ent_J7KBJ8KM5BT2NZ0HRQZ3E0ZC2J": {
+                    "id": "ent_J7KBJ8KM5BT2NZ0HRQZ3E0ZC2J",
+                    "kind": "entity",
+                    "bakedName": "Run",
+                    "curName": "Run",
+                    "renames": [],
+                    "owner": "workspace"
+                  },
+                  "evt_4GAPGXYAHQ58VNX4HT8M69HS4J": {
+                    "id": "evt_4GAPGXYAHQ58VNX4HT8M69HS4J",
+                    "kind": "event",
+                    "bakedName": "DONE",
+                    "curName": "DONE",
+                    "renames": [],
+                    "owner": "workspace",
+                    "parent": "trt_1704HKKG32R1H1HB7XZ8VMKNDJ"
+                  },
+                  "evt_5AY7MEC1PH0V8X8QXNZS4TE8E8": {
+                    "id": "evt_5AY7MEC1PH0V8X8QXNZS4TE8E8",
+                    "kind": "event",
+                    "bakedName": "FAILED",
+                    "curName": "FAILED",
+                    "renames": [],
+                    "owner": "workspace",
+                    "parent": "trt_1704HKKG32R1H1HB7XZ8VMKNDJ"
+                  },
+                  "evt_M0ZJM4FQG5VR2MM1PB4TEF5N1Y": {
+                    "id": "evt_M0ZJM4FQG5VR2MM1PB4TEF5N1Y",
+                    "kind": "event",
+                    "bakedName": "SAVED",
+                    "curName": "SAVED",
+                    "renames": [],
+                    "owner": "workspace",
+                    "parent": "trt_1704HKKG32R1H1HB7XZ8VMKNDJ"
+                  },
+                  "evt_N6VMZVRQEVBQDS7RB84FNTN6SA": {
+                    "id": "evt_N6VMZVRQEVBQDS7RB84FNTN6SA",
+                    "kind": "event",
+                    "bakedName": "INIT",
+                    "curName": "INIT",
+                    "renames": [],
+                    "owner": "workspace",
+                    "parent": "trt_1704HKKG32R1H1HB7XZ8VMKNDJ"
+                  },
+                  "evt_PD53XQXJJ8S948P6RR5VPGNE3B": {
+                    "id": "evt_PD53XQXJJ8S948P6RR5VPGNE3B",
+                    "kind": "event",
+                    "bakedName": "SAVE_FAILED",
+                    "curName": "SAVE_FAILED",
+                    "renames": [],
+                    "owner": "workspace",
+                    "parent": "trt_1704HKKG32R1H1HB7XZ8VMKNDJ"
+                  },
+                  "evt_RQQSB8YDW06Y0DR6KYCGXR9612": {
+                    "id": "evt_RQQSB8YDW06Y0DR6KYCGXR9612",
+                    "kind": "event",
+                    "bakedName": "LOAD_FAILED",
+                    "curName": "LOAD_FAILED",
+                    "renames": [],
+                    "owner": "workspace",
+                    "parent": "trt_1704HKKG32R1H1HB7XZ8VMKNDJ"
+                  },
+                  "evt_WY4C752R5GC2R1FTSTY524WNWK": {
+                    "id": "evt_WY4C752R5GC2R1FTSTY524WNWK",
+                    "kind": "event",
+                    "bakedName": "GO",
+                    "curName": "GO",
+                    "renames": [],
+                    "owner": "workspace",
+                    "parent": "trt_1704HKKG32R1H1HB7XZ8VMKNDJ"
+                  },
+                  "orb_J7QZFBW0WF0E7YJQR73NQQP5QA": {
+                    "id": "orb_J7QZFBW0WF0E7YJQR73NQQP5QA",
+                    "kind": "orbital",
+                    "bakedName": "O",
+                    "curName": "O",
+                    "renames": [],
+                    "owner": "workspace"
+                  },
+                  "pag_N9D4K0ME8J7491RW09WB0S4CHP": {
+                    "id": "pag_N9D4K0ME8J7491RW09WB0S4CHP",
+                    "kind": "page",
+                    "bakedName": "OPage",
+                    "curName": "OPage",
+                    "renames": [],
+                    "owner": "workspace"
+                  },
+                  "trt_1704HKKG32R1H1HB7XZ8VMKNDJ": {
+                    "id": "trt_1704HKKG32R1H1HB7XZ8VMKNDJ",
+                    "kind": "trait",
+                    "bakedName": "T",
+                    "curName": "T",
+                    "renames": [],
+                    "owner": "workspace"
+                  }
+                }
+              }
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintAsyncResultDeafTarget"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "async-result-deaf-target",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintAsyncResultDeafTarget"
+        }
+      ]
+    },
+    {
+      "id": "deaf-waiting-silent-when-the-way-in-cancels-the-call",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "typeContractVersion": 1,
+              "name": "f7ctl",
+              "version": "1.0.0",
+              "description": "t",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "id": "orb_SB48EKCWYREFCCQ9BHD64G9M0R",
+                  "entity": {
+                    "name": "Run",
+                    "id": "ent_89MC88NY8WZ4E66EYXV8H225VA",
+                    "collection": "runs",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "nullable": false,
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "nullable": false,
+                        "name": "n",
+                        "type": "number",
+                        "default": 0
+                      }
+                    ],
+                    "access_waivers": {
+                      "read": "test",
+                      "create": "test",
+                      "update": "test",
+                      "delete": "test"
+                    }
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "id": "trt_SWTT6QAA0P50B93FNAMWP7N4WM",
+                      "effectRow": [
+                        {
+                          "kind": "call-service",
+                          "resource": "registry.handles"
+                        },
+                        {
+                          "kind": "cancel-call"
+                        },
+                        {
+                          "kind": "fetch",
+                          "resource": "Run"
+                        },
+                        {
+                          "kind": "persist",
+                          "resource": "Run"
+                        },
+                        {
+                          "kind": "render-ui",
+                          "resource": "main"
+                        },
+                        {
+                          "kind": "render-ui",
+                          "resource": "toast"
+                        }
+                      ],
+                      "linkedEntity": "Run",
+                      "linkedEntityId": "ent_89MC88NY8WZ4E66EYXV8H225VA",
+                      "entityRefIds": {
+                        "Run": "ent_89MC88NY8WZ4E66EYXV8H225VA"
+                      },
+                      "emits": [
+                        {
+                          "event": "LOAD_FAILED",
+                          "eventId": "evt_024HY9QE6RQ3C87ENTXXG8TF2A",
+                          "payloadSchema": [
+                            {
+                              "nullable": false,
+                              "name": "error",
+                              "type": "string"
+                            }
+                          ]
+                        },
+                        {
+                          "event": "DONE",
+                          "eventId": "evt_YFN0EVXX66YK38Y21CFJB3768B"
+                        },
+                        {
+                          "event": "FAILED",
+                          "eventId": "evt_T1N4RG43N11TGRFMJ4W5RERHDN",
+                          "payloadSchema": [
+                            {
+                              "nullable": false,
+                              "name": "error",
+                              "type": "string"
+                            }
+                          ]
+                        },
+                        {
+                          "event": "SAVED",
+                          "eventId": "evt_Y65Y0YQGFAR7N61HSYC4SVGVSB"
+                        },
+                        {
+                          "event": "SAVE_FAILED",
+                          "eventId": "evt_WFRE0S4V98DMM0H74KS0GEK0ES",
+                          "payloadSchema": [
+                            {
+                              "nullable": false,
+                              "name": "error",
+                              "type": "string"
+                            }
+                          ]
+                        }
+                      ],
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "sending"
+                          },
+                          {
+                            "name": "saving"
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "LOAD_FAILED",
+                            "id": "evt_024HY9QE6RQ3C87ENTXXG8TF2A",
+                            "name": "Load Failed",
+                            "payloadSchema": [
+                              {
+                                "nullable": false,
+                                "name": "error",
+                                "type": "string"
+                              }
+                            ]
+                          },
+                          {
+                            "key": "INIT",
+                            "id": "evt_YFRT1FCW4HE28Y7WMFHR3ADKGW",
+                            "name": "Initialize"
+                          },
+                          {
+                            "key": "GO",
+                            "id": "evt_VN23FMQF3QQHVXS0K67QP0YYCG",
+                            "name": "Go"
+                          },
+                          {
+                            "key": "DONE",
+                            "id": "evt_YFN0EVXX66YK38Y21CFJB3768B",
+                            "name": "Done"
+                          },
+                          {
+                            "key": "FAILED",
+                            "id": "evt_T1N4RG43N11TGRFMJ4W5RERHDN",
+                            "name": "Failed",
+                            "payloadSchema": [
+                              {
+                                "nullable": false,
+                                "name": "error",
+                                "type": "string"
+                              }
+                            ]
+                          },
+                          {
+                            "key": "NEXT",
+                            "id": "evt_19ZWMPN1V0GXG4JX4BWQMK24DE",
+                            "name": "Next"
+                          },
+                          {
+                            "key": "SAVED",
+                            "id": "evt_Y65Y0YQGFAR7N61HSYC4SVGVSB",
+                            "name": "Saved"
+                          },
+                          {
+                            "key": "SAVE_FAILED",
+                            "id": "evt_WFRE0S4V98DMM0H74KS0GEK0ES",
+                            "name": "Save Failed",
+                            "payloadSchema": [
+                              {
+                                "nullable": false,
+                                "name": "error",
+                                "type": "string"
+                              }
+                            ]
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "LOAD_FAILED",
+                            "eventId": "evt_024HY9QE6RQ3C87ENTXXG8TF2A",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "toast",
+                                {
+                                  "type": "alert",
+                                  "variant": "error",
+                                  "message": "failed",
+                                  "dismissible": true
+                                }
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "eventId": "evt_YFRT1FCW4HE28Y7WMFHR3ADKGW",
+                            "effects": [
+                              [
+                                "fetch",
+                                "Run",
+                                {
+                                  "limit": 10,
+                                  "emit": {
+                                    "failure": "LOAD_FAILED"
+                                  }
+                                }
+                              ],
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "button",
+                                  "label": "go",
+                                  "action": "GO"
+                                }
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "idle",
+                            "to": "sending",
+                            "event": "GO",
+                            "eventId": "evt_VN23FMQF3QQHVXS0K67QP0YYCG",
+                            "effects": [
+                              [
+                                "call-service",
+                                "registry",
+                                "handles",
+                                {},
+                                {
+                                  "key": "k1",
+                                  "emit": {
+                                    "success": "DONE",
+                                    "failure": "FAILED"
+                                  }
+                                }
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "sending",
+                            "to": "sending",
+                            "event": "INIT",
+                            "eventId": "evt_YFRT1FCW4HE28Y7WMFHR3ADKGW"
+                          },
+                          {
+                            "from": "sending",
+                            "to": "idle",
+                            "event": "DONE",
+                            "eventId": "evt_YFN0EVXX66YK38Y21CFJB3768B",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "button",
+                                  "label": "go",
+                                  "action": "GO"
+                                }
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "sending",
+                            "to": "idle",
+                            "event": "FAILED",
+                            "eventId": "evt_T1N4RG43N11TGRFMJ4W5RERHDN",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "button",
+                                  "label": "go",
+                                  "action": "GO"
+                                }
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "sending",
+                            "to": "saving",
+                            "event": "NEXT",
+                            "eventId": "evt_19ZWMPN1V0GXG4JX4BWQMK24DE",
+                            "effects": [
+                              [
+                                "persist",
+                                "create",
+                                "Run",
+                                {
+                                  "n": 1
+                                },
+                                {
+                                  "emit": {
+                                    "success": "SAVED",
+                                    "failure": "SAVE_FAILED"
+                                  }
+                                }
+                              ],
+                              [
+                                "cancel-call",
+                                "k1"
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "saving",
+                            "to": "saving",
+                            "event": "INIT",
+                            "eventId": "evt_YFRT1FCW4HE28Y7WMFHR3ADKGW"
+                          },
+                          {
+                            "from": "saving",
+                            "to": "idle",
+                            "event": "SAVED",
+                            "eventId": "evt_Y65Y0YQGFAR7N61HSYC4SVGVSB",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "button",
+                                  "label": "go",
+                                  "action": "GO"
+                                }
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "saving",
+                            "to": "idle",
+                            "event": "SAVE_FAILED",
+                            "eventId": "evt_WFRE0S4V98DMM0H74KS0GEK0ES",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "button",
+                                  "label": "go",
+                                  "action": "GO"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "dispatch": "server",
+                      "sourceDeclaration": {
+                        "traitId": "trt_SWTT6QAA0P50B93FNAMWP7N4WM",
+                        "fingerprint": "549630fcd6fcc6655536c8f8ce47ec6f371d813f89f8d8b144da0bcad9cb173e"
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "OPage",
+                      "id": "pag_QA0VBSF4Q5JBJR3HKPDTPZ2A5V",
+                      "path": "/t",
+                      "traits": [
+                        {
+                          "ref": "T",
+                          "refId": "trt_SWTT6QAA0P50B93FNAMWP7N4WM"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "schemaVersion": 1,
+              "ledger": {
+                "schemaVersion": 1,
+                "entries": {
+                  "ent_89MC88NY8WZ4E66EYXV8H225VA": {
+                    "id": "ent_89MC88NY8WZ4E66EYXV8H225VA",
+                    "kind": "entity",
+                    "bakedName": "Run",
+                    "curName": "Run",
+                    "renames": [],
+                    "owner": "workspace"
+                  },
+                  "evt_024HY9QE6RQ3C87ENTXXG8TF2A": {
+                    "id": "evt_024HY9QE6RQ3C87ENTXXG8TF2A",
+                    "kind": "event",
+                    "bakedName": "LOAD_FAILED",
+                    "curName": "LOAD_FAILED",
+                    "renames": [],
+                    "owner": "workspace",
+                    "parent": "trt_SWTT6QAA0P50B93FNAMWP7N4WM"
+                  },
+                  "evt_19ZWMPN1V0GXG4JX4BWQMK24DE": {
+                    "id": "evt_19ZWMPN1V0GXG4JX4BWQMK24DE",
+                    "kind": "event",
+                    "bakedName": "NEXT",
+                    "curName": "NEXT",
+                    "renames": [],
+                    "owner": "workspace",
+                    "parent": "trt_SWTT6QAA0P50B93FNAMWP7N4WM"
+                  },
+                  "evt_T1N4RG43N11TGRFMJ4W5RERHDN": {
+                    "id": "evt_T1N4RG43N11TGRFMJ4W5RERHDN",
+                    "kind": "event",
+                    "bakedName": "FAILED",
+                    "curName": "FAILED",
+                    "renames": [],
+                    "owner": "workspace",
+                    "parent": "trt_SWTT6QAA0P50B93FNAMWP7N4WM"
+                  },
+                  "evt_VN23FMQF3QQHVXS0K67QP0YYCG": {
+                    "id": "evt_VN23FMQF3QQHVXS0K67QP0YYCG",
+                    "kind": "event",
+                    "bakedName": "GO",
+                    "curName": "GO",
+                    "renames": [],
+                    "owner": "workspace",
+                    "parent": "trt_SWTT6QAA0P50B93FNAMWP7N4WM"
+                  },
+                  "evt_WFRE0S4V98DMM0H74KS0GEK0ES": {
+                    "id": "evt_WFRE0S4V98DMM0H74KS0GEK0ES",
+                    "kind": "event",
+                    "bakedName": "SAVE_FAILED",
+                    "curName": "SAVE_FAILED",
+                    "renames": [],
+                    "owner": "workspace",
+                    "parent": "trt_SWTT6QAA0P50B93FNAMWP7N4WM"
+                  },
+                  "evt_Y65Y0YQGFAR7N61HSYC4SVGVSB": {
+                    "id": "evt_Y65Y0YQGFAR7N61HSYC4SVGVSB",
+                    "kind": "event",
+                    "bakedName": "SAVED",
+                    "curName": "SAVED",
+                    "renames": [],
+                    "owner": "workspace",
+                    "parent": "trt_SWTT6QAA0P50B93FNAMWP7N4WM"
+                  },
+                  "evt_YFN0EVXX66YK38Y21CFJB3768B": {
+                    "id": "evt_YFN0EVXX66YK38Y21CFJB3768B",
+                    "kind": "event",
+                    "bakedName": "DONE",
+                    "curName": "DONE",
+                    "renames": [],
+                    "owner": "workspace",
+                    "parent": "trt_SWTT6QAA0P50B93FNAMWP7N4WM"
+                  },
+                  "evt_YFRT1FCW4HE28Y7WMFHR3ADKGW": {
+                    "id": "evt_YFRT1FCW4HE28Y7WMFHR3ADKGW",
+                    "kind": "event",
+                    "bakedName": "INIT",
+                    "curName": "INIT",
+                    "renames": [],
+                    "owner": "workspace",
+                    "parent": "trt_SWTT6QAA0P50B93FNAMWP7N4WM"
+                  },
+                  "orb_SB48EKCWYREFCCQ9BHD64G9M0R": {
+                    "id": "orb_SB48EKCWYREFCCQ9BHD64G9M0R",
+                    "kind": "orbital",
+                    "bakedName": "O",
+                    "curName": "O",
+                    "renames": [],
+                    "owner": "workspace"
+                  },
+                  "pag_QA0VBSF4Q5JBJR3HKPDTPZ2A5V": {
+                    "id": "pag_QA0VBSF4Q5JBJR3HKPDTPZ2A5V",
+                    "kind": "page",
+                    "bakedName": "OPage",
+                    "curName": "OPage",
+                    "renames": [],
+                    "owner": "workspace"
+                  },
+                  "trt_SWTT6QAA0P50B93FNAMWP7N4WM": {
+                    "id": "trt_SWTT6QAA0P50B93FNAMWP7N4WM",
+                    "kind": "trait",
+                    "bakedName": "T",
+                    "curName": "T",
+                    "renames": [],
+                    "owner": "workspace"
+                  }
+                }
+              }
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintAsyncResultDeafTarget"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "async-result-deaf-target",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintAsyncResultDeafTarget"
+        }
+      ]
+    },
+    {
+      "id": "deaf-waiting-silent-for-a-fetch-only-transition-existing-code-only",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "typeContractVersion": 1,
+              "name": "f8fetch",
+              "version": "1.0.0",
+              "description": "t",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "id": "orb_YEC9YYKGQJRBS6E5F25624Y4EC",
+                  "entity": {
+                    "name": "Run",
+                    "id": "ent_Z4Q38ZX5F0JQGC3W75T9SCQ1ZC",
+                    "collection": "runs",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "nullable": false,
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "nullable": false,
+                        "name": "n",
+                        "type": "number",
+                        "default": 0
+                      }
+                    ],
+                    "access_waivers": {
+                      "read": "test",
+                      "create": "test",
+                      "update": "test",
+                      "delete": "test"
+                    }
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "id": "trt_ZP8GMZY3TA1X57D0M41EJYCWD6",
+                      "effectRow": [
+                        {
+                          "kind": "fetch",
+                          "resource": "Run"
+                        },
+                        {
+                          "kind": "render-ui",
+                          "resource": "main"
+                        },
+                        {
+                          "kind": "render-ui",
+                          "resource": "toast"
+                        }
+                      ],
+                      "linkedEntity": "Run",
+                      "linkedEntityId": "ent_Z4Q38ZX5F0JQGC3W75T9SCQ1ZC",
+                      "entityRefIds": {
+                        "Run": "ent_Z4Q38ZX5F0JQGC3W75T9SCQ1ZC"
+                      },
+                      "emits": [
+                        {
+                          "event": "LOAD_FAILED",
+                          "eventId": "evt_2PWTRAJFPJ7V99CY01M33Z2BN2",
+                          "payloadSchema": [
+                            {
+                              "nullable": false,
+                              "name": "error",
+                              "type": "string"
+                            }
+                          ]
+                        },
+                        {
+                          "event": "DONE",
+                          "eventId": "evt_N0M09Z0AJ45928R1Y65MVV4YG4"
+                        },
+                        {
+                          "event": "FAILED",
+                          "eventId": "evt_ZMC3XABASVNCXQ41HZ134DF7SW",
+                          "payloadSchema": [
+                            {
+                              "nullable": false,
+                              "name": "error",
+                              "type": "string"
+                            }
+                          ]
+                        }
+                      ],
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          },
+                          {
+                            "name": "sending"
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "LOAD_FAILED",
+                            "id": "evt_2PWTRAJFPJ7V99CY01M33Z2BN2",
+                            "name": "Load Failed",
+                            "payloadSchema": [
+                              {
+                                "nullable": false,
+                                "name": "error",
+                                "type": "string"
+                              }
+                            ]
+                          },
+                          {
+                            "key": "INIT",
+                            "id": "evt_N7TWW7659Z2MZXEMXD4A0PPVBB",
+                            "name": "Initialize"
+                          },
+                          {
+                            "key": "GO",
+                            "id": "evt_139BE0W2WF1E7R3N75PJB2BPFN",
+                            "name": "Go"
+                          },
+                          {
+                            "key": "DONE",
+                            "id": "evt_N0M09Z0AJ45928R1Y65MVV4YG4",
+                            "name": "Done"
+                          },
+                          {
+                            "key": "FAILED",
+                            "id": "evt_ZMC3XABASVNCXQ41HZ134DF7SW",
+                            "name": "Failed",
+                            "payloadSchema": [
+                              {
+                                "nullable": false,
+                                "name": "error",
+                                "type": "string"
+                              }
+                            ]
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "LOAD_FAILED",
+                            "eventId": "evt_2PWTRAJFPJ7V99CY01M33Z2BN2",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "toast",
+                                {
+                                  "type": "alert",
+                                  "variant": "error",
+                                  "message": "failed",
+                                  "dismissible": true
+                                }
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "eventId": "evt_N7TWW7659Z2MZXEMXD4A0PPVBB",
+                            "effects": [
+                              [
+                                "fetch",
+                                "Run",
+                                {
+                                  "limit": 10,
+                                  "emit": {
+                                    "failure": "LOAD_FAILED"
+                                  }
+                                }
+                              ],
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "button",
+                                  "label": "go",
+                                  "action": "GO"
+                                }
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "idle",
+                            "to": "sending",
+                            "event": "GO",
+                            "eventId": "evt_139BE0W2WF1E7R3N75PJB2BPFN",
+                            "effects": [
+                              [
+                                "fetch",
+                                "Run",
+                                {
+                                  "limit": 10,
+                                  "emit": {
+                                    "success": "DONE",
+                                    "failure": "FAILED"
+                                  }
+                                }
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "sending",
+                            "to": "sending",
+                            "event": "INIT",
+                            "eventId": "evt_N7TWW7659Z2MZXEMXD4A0PPVBB"
+                          },
+                          {
+                            "from": "sending",
+                            "to": "idle",
+                            "event": "DONE",
+                            "eventId": "evt_N0M09Z0AJ45928R1Y65MVV4YG4",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "button",
+                                  "label": "go",
+                                  "action": "GO"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "dispatch": "server",
+                      "sourceDeclaration": {
+                        "traitId": "trt_ZP8GMZY3TA1X57D0M41EJYCWD6",
+                        "fingerprint": "1e95d9e6b3cf046b74f13baa91b6509926ab7927ea8b3729fbf9a3166f851f9d"
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "OPage",
+                      "id": "pag_Z4KZXP7M8TT4D4YEQZXVG6CKX8",
+                      "path": "/t",
+                      "traits": [
+                        {
+                          "ref": "T",
+                          "refId": "trt_ZP8GMZY3TA1X57D0M41EJYCWD6"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "schemaVersion": 1,
+              "ledger": {
+                "schemaVersion": 1,
+                "entries": {
+                  "ent_Z4Q38ZX5F0JQGC3W75T9SCQ1ZC": {
+                    "id": "ent_Z4Q38ZX5F0JQGC3W75T9SCQ1ZC",
+                    "kind": "entity",
+                    "bakedName": "Run",
+                    "curName": "Run",
+                    "renames": [],
+                    "owner": "workspace"
+                  },
+                  "evt_139BE0W2WF1E7R3N75PJB2BPFN": {
+                    "id": "evt_139BE0W2WF1E7R3N75PJB2BPFN",
+                    "kind": "event",
+                    "bakedName": "GO",
+                    "curName": "GO",
+                    "renames": [],
+                    "owner": "workspace",
+                    "parent": "trt_ZP8GMZY3TA1X57D0M41EJYCWD6"
+                  },
+                  "evt_2PWTRAJFPJ7V99CY01M33Z2BN2": {
+                    "id": "evt_2PWTRAJFPJ7V99CY01M33Z2BN2",
+                    "kind": "event",
+                    "bakedName": "LOAD_FAILED",
+                    "curName": "LOAD_FAILED",
+                    "renames": [],
+                    "owner": "workspace",
+                    "parent": "trt_ZP8GMZY3TA1X57D0M41EJYCWD6"
+                  },
+                  "evt_N0M09Z0AJ45928R1Y65MVV4YG4": {
+                    "id": "evt_N0M09Z0AJ45928R1Y65MVV4YG4",
+                    "kind": "event",
+                    "bakedName": "DONE",
+                    "curName": "DONE",
+                    "renames": [],
+                    "owner": "workspace",
+                    "parent": "trt_ZP8GMZY3TA1X57D0M41EJYCWD6"
+                  },
+                  "evt_N7TWW7659Z2MZXEMXD4A0PPVBB": {
+                    "id": "evt_N7TWW7659Z2MZXEMXD4A0PPVBB",
+                    "kind": "event",
+                    "bakedName": "INIT",
+                    "curName": "INIT",
+                    "renames": [],
+                    "owner": "workspace",
+                    "parent": "trt_ZP8GMZY3TA1X57D0M41EJYCWD6"
+                  },
+                  "evt_ZMC3XABASVNCXQ41HZ134DF7SW": {
+                    "id": "evt_ZMC3XABASVNCXQ41HZ134DF7SW",
+                    "kind": "event",
+                    "bakedName": "FAILED",
+                    "curName": "FAILED",
+                    "renames": [],
+                    "owner": "workspace",
+                    "parent": "trt_ZP8GMZY3TA1X57D0M41EJYCWD6"
+                  },
+                  "orb_YEC9YYKGQJRBS6E5F25624Y4EC": {
+                    "id": "orb_YEC9YYKGQJRBS6E5F25624Y4EC",
+                    "kind": "orbital",
+                    "bakedName": "O",
+                    "curName": "O",
+                    "renames": [],
+                    "owner": "workspace"
+                  },
+                  "pag_Z4KZXP7M8TT4D4YEQZXVG6CKX8": {
+                    "id": "pag_Z4KZXP7M8TT4D4YEQZXVG6CKX8",
+                    "kind": "page",
+                    "bakedName": "OPage",
+                    "curName": "OPage",
+                    "renames": [],
+                    "owner": "workspace"
+                  },
+                  "trt_ZP8GMZY3TA1X57D0M41EJYCWD6": {
+                    "id": "trt_ZP8GMZY3TA1X57D0M41EJYCWD6",
+                    "kind": "trait",
+                    "bakedName": "T",
+                    "curName": "T",
+                    "renames": [],
+                    "owner": "workspace"
+                  }
+                }
+              }
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintAsyncResultDeafTarget"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "async-result-deaf-target",
+                  "findings": [
+                    {
+                      "code": "ORB_CIRCUIT_ASYNC_RESULT_DEAF_TARGET",
+                      "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[2].effects",
+                      "message": "transition idle--[GO]-->sending declares async result event(s) [\"FAILED\"] but state 'sending' has no arm handling it — the requester departs before it can hear its own operation's result",
+                      "suggestion": "Add a transition `from: 'sending'` handling each of [\"FAILED\"] in state 'sending' (or route the result to a state that already does).",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintAsyncResultDeafTarget"
+        }
+      ]
     }
   ]
 }

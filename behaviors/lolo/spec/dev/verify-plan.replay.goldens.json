@@ -5356,6 +5356,399 @@
     }
    ],
    "note": "A transition played alone runs on a row no earlier transition filled: the planner seeds it with its seed id and a std-mock-seed sample (owner 2026-11-11)."
+  },
+  {
+   "id": "with-no-viewer-the-plan-samples-one-identity-row-as-the-viewer",
+   "steps": [
+    {
+     "event": "PLAN_REQUEST",
+     "payload": {
+      "program": {
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Item",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "name",
+            "type": "string",
+            "required": true
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Item",
+           "stateMachine": {
+            "transitions": [
+             {
+              "from": "a",
+              "to": "b",
+              "event": "GO",
+              "effects": []
+             }
+            ],
+            "states": [
+             {
+              "name": "start",
+              "isInitial": true
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "name": "PersonOrbital",
+         "entity": {
+          "name": "Person",
+          "identity": true,
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "name",
+            "type": "string",
+            "required": true
+           }
+          ]
+         },
+         "traits": []
+        }
+       ]
+      },
+      "rows": [
+       {
+        "orbital": "O",
+        "trait": "T",
+        "from": "a",
+        "event": "GO",
+        "to": "b",
+        "guarded": false,
+        "payload": []
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PLAN_COMPUTED",
+        "payload": {
+         "count": 1
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "PLAN_COMPUTED",
+     "payload": {
+      "count": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PLAN_ANSWERED",
+        "payload": {
+         "steps": [
+          {
+           "trait": "T",
+           "linkedEntity": "Item",
+           "from": "a",
+           "event": "GO",
+           "to": "b",
+           "toStates": [
+            "b"
+           ],
+           "variant": "success",
+           "guarded": false,
+           "solved": true,
+           "payloadCase": "success",
+           "payload": {},
+           "entity": {
+            "id": "Item-verify-seed-1",
+            "name": "Name 1"
+           }
+          }
+         ],
+         "viewer": {
+          "id": "Person-verify-seed-1",
+          "name": "Name 1"
+         }
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "note": "A walk with no viewer plays as a sample row of the program's one identity entity, so signed-in pages run as a signed-in viewer (owner 2026-11-11)."
+  },
+  {
+   "id": "a-passed-viewer-is-kept-and-no-identity-row-is-sampled",
+   "steps": [
+    {
+     "event": "PLAN_REQUEST",
+     "payload": {
+      "program": {
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Item",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "name",
+            "type": "string",
+            "required": true
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Item",
+           "stateMachine": {
+            "transitions": [
+             {
+              "from": "a",
+              "to": "b",
+              "event": "GO",
+              "effects": []
+             }
+            ],
+            "states": [
+             {
+              "name": "start",
+              "isInitial": true
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "name": "PersonOrbital",
+         "entity": {
+          "name": "Person",
+          "identity": true,
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "name",
+            "type": "string",
+            "required": true
+           }
+          ]
+         },
+         "traits": []
+        }
+       ]
+      },
+      "rows": [
+       {
+        "orbital": "O",
+        "trait": "T",
+        "from": "a",
+        "event": "GO",
+        "to": "b",
+        "guarded": false,
+        "payload": []
+       }
+      ],
+      "viewer": {
+       "id": "u-1",
+       "name": "Ada",
+       "role": "owner"
+      }
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PLAN_COMPUTED",
+        "payload": {
+         "count": 1
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "PLAN_COMPUTED",
+     "payload": {
+      "count": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PLAN_ANSWERED",
+        "payload": {
+         "steps": [
+          {
+           "trait": "T",
+           "linkedEntity": "Item",
+           "from": "a",
+           "event": "GO",
+           "to": "b",
+           "toStates": [
+            "b"
+           ],
+           "variant": "success",
+           "guarded": false,
+           "solved": true,
+           "payloadCase": "success",
+           "payload": {},
+           "entity": {
+            "id": "Item-verify-seed-1",
+            "name": "Name 1"
+           }
+          }
+         ],
+         "viewer": {
+          "id": "u-1",
+          "name": "Ada",
+          "role": "owner"
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "two-identity-entities-and-no-viewer-is-refused",
+   "steps": [
+    {
+     "event": "PLAN_REQUEST",
+     "payload": {
+      "program": {
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Item",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "name",
+            "type": "string",
+            "required": true
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Item",
+           "stateMachine": {
+            "transitions": [
+             {
+              "from": "a",
+              "to": "b",
+              "event": "GO",
+              "effects": []
+             }
+            ],
+            "states": [
+             {
+              "name": "start",
+              "isInitial": true
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "name": "PersonOrbital",
+         "entity": {
+          "name": "Person",
+          "identity": true,
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "name",
+            "type": "string",
+            "required": true
+           }
+          ]
+         },
+         "traits": []
+        },
+        {
+         "name": "MemberOrbital",
+         "entity": {
+          "name": "Member",
+          "identity": true,
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "name",
+            "type": "string",
+            "required": true
+           }
+          ]
+         },
+         "traits": []
+        }
+       ]
+      },
+      "rows": [
+       {
+        "orbital": "O",
+        "trait": "T",
+        "from": "a",
+        "event": "GO",
+        "to": "b",
+        "guarded": false,
+        "payload": []
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PLAN_REFUSED",
+        "payload": {
+         "error": "verify-plan: the program declares several identity entities (Person, Member); pass the viewer to walk as"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "note": "Which roster is the viewer is never picked by order."
   }
  ]
 }
