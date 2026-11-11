@@ -3432,159 +3432,6 @@
    ]
   },
   {
-   "id": "control-trait-without-source-behavior-is-not-checked",
-   "steps": [
-    {
-     "trait": "OrbLintComposedWiring",
-     "event": "SEMANTICS_HEARD",
-     "from": "ready",
-     "payload": {
-      "busExcluded": [
-       "INIT",
-       "LOAD"
-      ]
-     },
-     "expect": {
-      "fired": true
-     }
-    },
-    {
-     "trait": "OrbLintComposedWiring",
-     "event": "LINT_INPUT",
-     "from": "ready",
-     "payload": {
-      "file": "a.orb",
-      "raw": "",
-      "latin": true,
-      "program": {
-       "name": "Fx",
-       "version": "1.0.0",
-       "orbitals": [
-        {
-         "name": "O",
-         "entity": {
-          "name": "Task",
-          "persistence": "runtime",
-          "fields": [
-           {
-            "name": "id",
-            "type": "string",
-            "required": true,
-            "nullable": false
-           }
-          ]
-         },
-         "traits": [
-          {
-           "name": "T",
-           "linkedEntity": "Task",
-           "stateMachine": {
-            "states": [
-             {
-              "name": "idle",
-              "isInitial": true
-             },
-             {
-              "name": "a"
-             },
-             {
-              "name": "b"
-             }
-            ],
-            "transitions": [
-             {
-              "from": "idle",
-              "to": "idle",
-              "event": "INIT"
-             },
-             {
-              "from": "idle",
-              "to": "a",
-              "event": "GO"
-             }
-            ]
-           },
-           "dispatch": "client"
-          }
-         ],
-         "pages": [
-          {
-           "name": "OStart",
-           "path": "",
-           "protocol": "boot",
-           "traits": [
-            {
-             "ref": "T"
-            }
-           ]
-          }
-         ]
-        }
-       ],
-       "schemaVersion": 1
-      },
-      "scope": ""
-     },
-     "expect": {
-      "fired": true
-     }
-    },
-    {
-     "trait": "OrbLintComposedWiring",
-     "event": "FIRED_HEARD",
-     "from": "ready",
-     "payload": {
-      "scope": "",
-      "byControl": {
-       "T": []
-      },
-      "byEffect": {
-       "T": []
-      }
-     },
-     "expect": {
-      "fired": true,
-      "emits": [
-       {
-        "event": "LINT_TRY",
-        "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "trait": "OrbLintComposedWiring",
-     "event": "LINT_TRY",
-     "payload": {},
-     "expect": {
-      "emits": [
-       {
-        "event": "LINT_FINISH",
-        "payload": {}
-       }
-      ]
-     }
-    },
-    {
-     "trait": "OrbLintComposedWiring",
-     "event": "LINT_FINISH",
-     "payload": {},
-     "expect": {
-      "emits": [
-       {
-        "event": "LINT_FOUND",
-        "payload": {
-         "rule": "composed-wiring",
-         "scope": "",
-         "findings": []
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
    "id": "several-dead-states-and-events-are-sorted",
    "steps": [
     {
@@ -5688,6 +5535,2593 @@
          "rule": "composed-wiring",
          "scope": "",
          "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "trapped-an-authored-trait-whose-state-waits-on-an-event-nothing-sends",
+   "steps": [
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "busExcluded": [
+       "INIT",
+       "LOAD"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Flow",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "failed"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "failed",
+              "event": "GO"
+             },
+             {
+              "from": "failed",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "failed",
+              "to": "idle",
+              "event": "RESET"
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "Flow"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "Flow": [
+        "GO"
+       ]
+      },
+      "byEffect": {
+       "Flow": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_TRY",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "LINT_TRY",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "composed-wiring",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_STATE_TRAPPED",
+           "path": "orbitals[0].traits[0].stateMachine.states[1]",
+           "message": "'Flow' can never leave state 'failed' once it is there: every exit waits on RESET, which nothing in the program sends (a lifecycle arm such as INIT fires on a mount and is an exit only from the initial state)",
+           "suggestion": "fire RESET from a control the state paints or from an effect, or route it in: `listens { <Trait>.<EVENT> -> RESET }` on 'Flow'",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-trapped-the-exit-event-is-fired-by-a-control",
+   "steps": [
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "busExcluded": [
+       "INIT",
+       "LOAD"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Flow",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "failed"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "failed",
+              "event": "GO"
+             },
+             {
+              "from": "failed",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "failed",
+              "to": "idle",
+              "event": "RESET"
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "Flow"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "Flow": [
+        "GO",
+        "RESET"
+       ]
+      },
+      "byEffect": {
+       "Flow": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_TRY",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "LINT_TRY",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "composed-wiring",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "trapped-an-authored-trait-parked-on-a-reply-nothing-routes",
+   "steps": [
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "busExcluded": [
+       "INIT",
+       "LOAD"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Asker",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "waiting"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "waiting",
+              "event": "GO"
+             },
+             {
+              "from": "waiting",
+              "to": "waiting",
+              "event": "INIT"
+             },
+             {
+              "from": "waiting",
+              "to": "idle",
+              "event": "ANSWER"
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "Asker"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "Asker": [
+        "GO"
+       ]
+      },
+      "byEffect": {
+       "Asker": [
+        "ASK"
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_TRY",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "LINT_TRY",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "composed-wiring",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_STATE_TRAPPED",
+           "path": "orbitals[0].traits[0].stateMachine.states[1]",
+           "message": "'Asker' can never leave state 'waiting' once it is there: every exit waits on ANSWER, which nothing in the program sends (a lifecycle arm such as INIT fires on a mount and is an exit only from the initial state)",
+           "suggestion": "fire ANSWER from a control the state paints or from an effect, or route it in: `listens { <Trait>.<EVENT> -> ANSWER }` on 'Asker'",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-trapped-the-reply-is-routed-by-a-listen",
+   "steps": [
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "busExcluded": [
+       "INIT",
+       "LOAD"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Asker",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "waiting"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "waiting",
+              "event": "GO"
+             },
+             {
+              "from": "waiting",
+              "to": "waiting",
+              "event": "INIT"
+             },
+             {
+              "from": "waiting",
+              "to": "idle",
+              "event": "ANSWER"
+             }
+            ]
+           },
+           "dispatch": "client",
+           "listens": [
+            {
+             "event": "ANSWER",
+             "triggers": "ANSWER"
+            }
+           ]
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "Asker"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "Asker": [
+        "GO"
+       ]
+      },
+      "byEffect": {
+       "Asker": [
+        "ASK"
+       ]
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_TRY",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "LINT_TRY",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "composed-wiring",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-trapped-a-rest-state-whose-only-exit-is-a-lifecycle-arm",
+   "steps": [
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "busExcluded": [
+       "INIT",
+       "LOAD"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Flow",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "done"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "done",
+              "event": "GO"
+             },
+             {
+              "from": "done",
+              "to": "idle",
+              "event": "INIT"
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "Flow"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "Flow": [
+        "GO"
+       ]
+      },
+      "byEffect": {
+       "Flow": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_TRY",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "LINT_TRY",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "composed-wiring",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-trapped-init-leaves-the-initial-state",
+   "steps": [
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "busExcluded": [
+       "INIT",
+       "LOAD"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Flow",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "booting",
+              "isInitial": true
+             },
+             {
+              "name": "ready"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "booting",
+              "to": "ready",
+              "event": "INIT"
+             },
+             {
+              "from": "ready",
+              "to": "ready",
+              "event": "INIT"
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "Flow"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "Flow": []
+      },
+      "byEffect": {
+       "Flow": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_TRY",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "LINT_TRY",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "composed-wiring",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-trapped-a-terminal-state-is-not-judged",
+   "steps": [
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "busExcluded": [
+       "INIT",
+       "LOAD"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Flow",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "failed",
+              "isTerminal": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "failed",
+              "event": "GO"
+             },
+             {
+              "from": "failed",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "failed",
+              "to": "idle",
+              "event": "RESET"
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "Flow"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "Flow": [
+        "GO"
+       ]
+      },
+      "byEffect": {
+       "Flow": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_TRY",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "LINT_TRY",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "composed-wiring",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-trapped-an-exit-switched-off-by-config-is-not-an-exit",
+   "steps": [
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "busExcluded": [
+       "INIT",
+       "LOAD"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Flow",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "failed"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "failed",
+              "event": "GO"
+             },
+             {
+              "from": "failed",
+              "to": "failed",
+              "event": "INIT"
+             },
+             {
+              "from": "failed",
+              "to": "idle",
+              "event": "RESET",
+              "guard": "@config.canReset"
+             }
+            ]
+           },
+           "dispatch": "client",
+           "config": {
+            "canReset": {
+             "type": "boolean",
+             "default": false
+            }
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "Flow"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "Flow": [
+        "GO"
+       ]
+      },
+      "byEffect": {
+       "Flow": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_TRY",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "LINT_TRY",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "composed-wiring",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "trapped-an-authored-trait-in-its-initial-state-with-no-fireable-exit",
+   "steps": [
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "busExcluded": [
+       "INIT",
+       "LOAD"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "a"
+             },
+             {
+              "name": "b"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT"
+             },
+             {
+              "from": "idle",
+              "to": "a",
+              "event": "GO"
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "T": []
+      },
+      "byEffect": {
+       "T": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_TRY",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "LINT_TRY",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "composed-wiring",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_STATE_TRAPPED",
+           "path": "orbitals[0].traits[0].stateMachine.states[0]",
+           "message": "'T' can never leave state 'idle' once it is there: every exit waits on GO, which nothing in the program sends (a lifecycle arm such as INIT fires on a mount and is an exit only from the initial state)",
+           "suggestion": "fire GO from a control the state paints or from an effect, or route it in: `listens { <Trait>.<EVENT> -> GO }` on 'T'",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "init-arm-never-fires-when-its-only-guard-is-a-false-knob",
+   "steps": [
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "busExcluded": [
+       "INIT",
+       "LOAD"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Flow",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "guard": "@config.enabled"
+             }
+            ]
+           },
+           "dispatch": "client",
+           "config": {
+            "enabled": {
+             "type": "boolean",
+             "default": false
+            }
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "Flow"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "Flow": []
+      },
+      "byEffect": {
+       "Flow": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_TRY",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "LINT_TRY",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "composed-wiring",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_CIRCUIT_INIT_ARM_NEVER_FIRES",
+           "path": "orbitals[0].traits[0]",
+           "message": "'Flow' never runs an INIT arm: every INIT arm of its initial state 'idle' is guarded by a condition that is false for this composition's config, and no other arm of that state waits on an event the program sends, so the trait never starts",
+           "suggestion": "set the config value the guard reads, give 'idle' an INIT arm for the other case or an arm on an event that is sent, or do not compose 'Flow' here",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-init-arm-fires-when-the-knob-is-true",
+   "steps": [
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "busExcluded": [
+       "INIT",
+       "LOAD"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Flow",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "guard": "@config.enabled"
+             }
+            ]
+           },
+           "dispatch": "client",
+           "config": {
+            "enabled": {
+             "type": "boolean",
+             "default": true
+            }
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "Flow"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "Flow": []
+      },
+      "byEffect": {
+       "Flow": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_TRY",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "LINT_TRY",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "composed-wiring",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-init-arm-with-a-complementary-arm-is-silent",
+   "steps": [
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "busExcluded": [
+       "INIT",
+       "LOAD"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Flow",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "guard": "@config.enabled"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "guard": [
+               "not",
+               "@config.enabled"
+              ]
+             }
+            ]
+           },
+           "dispatch": "client",
+           "config": {
+            "enabled": {
+             "type": "boolean",
+             "default": false
+            }
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "Flow"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "Flow": []
+      },
+      "byEffect": {
+       "Flow": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_TRY",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "LINT_TRY",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "composed-wiring",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "init-arm-never-fires-on-a-composed-trait",
+   "steps": [
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "busExcluded": [
+       "INIT",
+       "LOAD"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Flow",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "guard": "@config.enabled"
+             }
+            ]
+           },
+           "dispatch": "client",
+           "config": {
+            "enabled": {
+             "type": "boolean",
+             "default": false
+            }
+           },
+           "sourceBehavior": {
+            "behavior": "std/behaviors/std-x",
+            "alias": "X",
+            "originalName": "XT"
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "Flow"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "Flow": []
+      },
+      "byEffect": {
+       "Flow": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_TRY",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "LINT_TRY",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "composed-wiring",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_CIRCUIT_INIT_ARM_NEVER_FIRES",
+           "path": "orbitals[0].traits[0]",
+           "message": "'Flow' never runs an INIT arm: every INIT arm of its initial state 'idle' is guarded by a condition that is false for this composition's config, and no other arm of that state waits on an event the program sends, so the trait never starts",
+           "suggestion": "set the config value the guard reads, give 'idle' an INIT arm for the other case or an arm on an event that is sent, or do not compose 'Flow' here",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-init-arm-off-but-the-trait-starts-on-a-routed-event",
+   "steps": [
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "busExcluded": [
+       "INIT",
+       "LOAD"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Flow",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "shown"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "guard": "@config.enabled"
+             },
+             {
+              "from": "idle",
+              "to": "shown",
+              "event": "ROSTER"
+             },
+             {
+              "from": "shown",
+              "to": "shown",
+              "event": "INIT"
+             }
+            ]
+           },
+           "dispatch": "client",
+           "config": {
+            "enabled": {
+             "type": "boolean",
+             "default": false
+            }
+           },
+           "listens": [
+            {
+             "event": "ROSTER",
+             "triggers": "ROSTER"
+            }
+           ]
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "Flow"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "Flow": []
+      },
+      "byEffect": {
+       "Flow": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_TRY",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "LINT_TRY",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "composed-wiring",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-init-arm-off-but-a-control-fires-another-arm",
+   "steps": [
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "busExcluded": [
+       "INIT",
+       "LOAD"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Flow",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "guard": "@config.enabled"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO"
+             }
+            ]
+           },
+           "dispatch": "client",
+           "config": {
+            "enabled": {
+             "type": "boolean",
+             "default": false
+            }
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "Flow"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "Flow": [
+        "GO"
+       ]
+      },
+      "byEffect": {
+       "Flow": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_TRY",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "LINT_TRY",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "composed-wiring",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "init-arm-never-fires-when-the-other-arm-waits-on-an-unsent-event",
+   "steps": [
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "SEMANTICS_HEARD",
+     "from": "ready",
+     "payload": {
+      "busExcluded": [
+       "INIT",
+       "LOAD"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Flow",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "guard": "@config.enabled"
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "GO"
+             }
+            ]
+           },
+           "dispatch": "client",
+           "config": {
+            "enabled": {
+             "type": "boolean",
+             "default": false
+            }
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "Flow"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "FIRED_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "byControl": {
+       "Flow": []
+      },
+      "byEffect": {
+       "Flow": []
+      }
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_TRY",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "LINT_TRY",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintComposedWiring",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "composed-wiring",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_CIRCUIT_INIT_ARM_NEVER_FIRES",
+           "path": "orbitals[0].traits[0]",
+           "message": "'Flow' never runs an INIT arm: every INIT arm of its initial state 'idle' is guarded by a condition that is false for this composition's config, and no other arm of that state waits on an event the program sends, so the trait never starts",
+           "suggestion": "set the config value the guard reads, give 'idle' an INIT arm for the other case or an arm on an event that is sent, or do not compose 'Flow' here",
+           "severity": "error"
+          }
+         ]
         }
        }
       ]

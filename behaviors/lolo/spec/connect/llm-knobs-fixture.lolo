@@ -146,5 +146,14 @@ orbital LlmKnobsFixtureOrbital {
     }
   }
 
-  page boot as LlmKnobsFixturePage -> KnobDriver, KnobLlm, KnobDelay, CacheLlm, PlainLlm, OnLlm
+  trait CapLlm = Llm.traits.LlmClient {
+    config {
+      provider: openrouter
+      basePath: "/api/v1"
+      model: "vendor/model"
+      toolMaxTokens: 512
+    }
+  }
+
+  page boot as LlmKnobsFixturePage -> KnobDriver, KnobLlm, KnobDelay, CacheLlm, PlainLlm, OnLlm, CapLlm
 }

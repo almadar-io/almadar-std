@@ -69,6 +69,7 @@ orbital VerifyPlanOrbital {
     rowJobs : [PlanRowJob] = []
     createdOnly : [[string]] = []
     viewer : (Map string PlanMockValue?)?
+    role : string?
     owners : Map string [string] = {}
     seedIds : Map string string = {}
     newIds : Map string string = {}
@@ -98,7 +99,8 @@ orbital VerifyPlanOrbital {
         (set @entity.program (as @payload.program PlanProgram))
         (set @entity.seedProgram (as @payload.program PlanSeedProgram))
         (set @entity.fullProgram (as @payload.program PlanFull))
-        (set @entity.viewer (object/get @payload "viewer" null))
+        (set @entity.role (object/get @payload "role" null))
+        (set @entity.viewer (let ((v (object/get @payload "viewer" null)) (r (object/get @payload "role" null))) (if (or (= @v null) (= @r null)) @v (object/set @v "role" @r))))
         (set @entity.owners (object/get @payload "owners" {}))
         (set @entity.rows @payload.rows)
         (emit PLAN_READ {})
@@ -115,10 +117,17 @@ orbital VerifyPlanOrbital {
           (if (> (array/len @noInitial) 0)
             (do (set @entity.steps [])
               (emit PLAN_REFUSED { error: (str/concat "verify-plan: no initial state declared for trait " (str/join @noInitial ", ")) }))
+            (let ((roles (let ((idDef (array/find (array/reduce (object/get @entity.seedProgram "orbitals" []) [] (fn (acc o) (array/concat (array/concat @acc [(object/get @o "entity")]) (object/get @o "auxiliaryEntities" [])))) (fn e (and (!= @e null) (object/get @e "identity" false)))))) (if (= @idDef null) [] (let ((rf (array/find (object/get @idDef "fields" []) (fn f (= (object/get @f "name") "role"))))) (if (= @rf null) [] (object/get @rf "values" [])))))))
             (if (and (= @entity.viewer null) (> (array/len @idents) 1))
               (do (set @entity.steps [])
                 (emit PLAN_REFUSED { error: (str/concat "verify-plan: the program declares several identity entities (" (str/join @idents ", ") "); pass the viewer to walk as") }))
-              (emit PLAN_ROWS {}))))
+            (if (and (!= @entity.role null) (= @entity.viewer null) (= (array/len @idents) 0))
+              (do (set @entity.steps [])
+                (emit PLAN_REFUSED { error: (str/concat "verify-plan: role " (default @entity.role "") " needs an identity entity or a viewer to walk as") }))
+            (if (and (!= @entity.role null) (= (array/len @idents) 1) (> (array/len @roles) 0) (not (array/includes @roles (default @entity.role ""))))
+              (do (set @entity.steps [])
+                (emit PLAN_REFUSED { error: (str/concat "verify-plan: role " (default @entity.role "") " is not a declared role of " (default (array/first @idents) "") " (" (str/join @roles ", ") ")") }))
+              (emit PLAN_ROWS {})))))))
       PLAN_ROWS -> ready
         (let ((noForm : PlanForm []) (noGraph : PlanGraph {}) (noPay : PlanPayload {})
               (named (let ((pg (default @entity.program { orbitals: [] }))) (array/concat (object/keys (default (object/get @pg "types") {})) (array/flatten (array/map (object/get @pg "orbitals") (fn o (object/keys (default (object/get @o "types") {})))))))))
@@ -250,7 +259,7 @@ orbital VerifyPlanOrbital {
                 (let ((hit (array/find @only (fn e (= (object/get @acc2 @k) (object/get @entity.seedIds @e (str/concat @e "-verify-seed-1")))))))
                   (if (or (= @hit null) (= @hit "")) @acc2 (object/set @acc2 @k (object/get @entity.newIds @hit (str/concat @hit "-verify-new-1")))))))))])))))
         (set @entity.rowJobs (let ((ents (array/reduce (object/get @entity.seedProgram "orbitals" []) [] (fn (acc o) (array/concat (array/concat @acc [(object/get @o "entity")]) (object/get @o "auxiliaryEntities" []))))))
-          (array/reduce (let ((idents (array/unique (array/map (array/filter (array/reduce (object/get @entity.seedProgram "orbitals" []) [] (fn (acc o) (array/concat (array/concat @acc [(object/get @o "entity")]) (object/get @o "auxiliaryEntities" [])))) (fn e (and (!= @e null) (object/get @e "identity" false)))) (fn e (if (== @e null) "" (object/get @e "name" ""))))))) (array/concat (if (and (= @entity.viewer null) (= (array/len @idents) 1)) [{ name: (default (array/first @idents) ""), viewer: true }] []) (array/map (array/unique (array/map @entity.rowRefs (fn rf (object/get @rf "entity")))) (fn n { name: @n, viewer: false })))) [] (fn (acc jb)
+          (array/reduce (let ((idents (array/unique (array/map (array/filter (array/reduce (object/get @entity.seedProgram "orbitals" []) [] (fn (acc o) (array/concat (array/concat @acc [(object/get @o "entity")]) (object/get @o "auxiliaryEntities" [])))) (fn e (and (!= @e null) (object/get @e "identity" false)))) (fn e (if (== @e null) "" (object/get @e "name" ""))))))) (let ((asViewer (if (and (= @entity.viewer null) (= (array/len @idents) 1)) (default (array/first @idents) "") ""))) (array/map (array/unique (array/concat (if (= @asViewer "") [] [@asViewer]) (array/map @entity.rowRefs (fn rf (object/get @rf "entity"))))) (fn n { name: @n, viewer: (= @n @asViewer) })))) [] (fn (acc jb)
             (let ((name (object/get @jb "name")) (def (array/find @ents (fn e (and (!= @e null) (= (object/get @e "name" "") @name))))))
              (if (= @def null) @acc (if (= (object/get @def "name" "") "") @acc
                 (array/concat @acc [{ entity: @name, runtime: (= (object/get @def "persistence" "") "runtime"), identity: (object/get @def "identity" false), viewer: (object/get @jb "viewer"),
@@ -270,15 +279,15 @@ orbital VerifyPlanOrbital {
           (if (= @row null) (emit PLAN_FAILED { error: "verify-plan: the sample row is empty" })
           (let ((job (object/get @jobRec "entity")) (asViewer (object/get @jobRec "viewer" false)))
           (do
-            (set @entity.viewer (if @asViewer (object/set @row "id" (object/get @entity.seedIds @job (str/concat @job "-verify-seed-1"))) @entity.viewer))
-            (set @entity.steps (if @asViewer @entity.steps (array/reduce @entity.steps [] (fn (acc0 st0)
+            (set @entity.viewer (if @asViewer (let ((v (object/set @row "id" (object/get @entity.seedIds @job (str/concat @job "-verify-seed-1"))))) (if (= @entity.role null) @v (object/set @v "role" @entity.role))) @entity.viewer))
+            (set @entity.steps (array/reduce @entity.steps [] (fn (acc0 st0)
               (let ((i (array/len @acc0))) (array/concat @acc0 [(array/reduce (array/filter @entity.rowRefs (fn rf (and (= (object/get @rf "idx") @i) (= (object/get @rf "entity") @job)))) @st0 (fn (st rf)
                 (let ((seeded (object/set @row "id" (object/get @rf "seed"))))
                   (if (= @seeded null) @st
                     (let ((full (array/reduce (if (and (!= @entity.viewer null) (object/has @entity.viewer "id")) (object/get @entity.owners (str/lower @job) []) []) @seeded (fn (acc field) (object/set @acc @field @vid)))))
                       (if (object/get @rf "row" false) (object/set @st "entity" @full)
                       (let ((pay (if (object/get @rf "array") (object/set (object/get @st "payload") (object/get @rf "key") [@full]) (object/set (object/get @st "payload") (object/get @rf "key") @full))))
-                        (if (= @pay null) @st (object/set @st "payload" @pay)))))))))]))))))
+                        (if (= @pay null) @st (object/set @st "payload" @pay)))))))))])))))
             (set @entity.rowJobs (array/drop @entity.rowJobs 1))
             (emit PLAN_COMPUTED { count: (array/len @entity.steps) }))))))
       PLAN_COMPUTED -> ready when (and (= (array/len @entity.rowJobs) 0) (= (array/len @entity.probes) 0))
@@ -357,7 +366,7 @@ orbital VerifyPlanOrbital {
       ROWS_DONE { rows : [Map string PlanMockValue?]! }
         @description "Internal: the composed mock seed answered the sample row."
         @tier "internal"
-      PLAN_REQUEST -> input { program : SExpr!, rows : [PlanRow]!, viewer : (Map string PlanMockValue?)?, owners : (Map string [string])? }
+      PLAN_REQUEST -> input { program : SExpr!, rows : [PlanRow]!, viewer : (Map string PlanMockValue?)?, role : string?, owners : (Map string [string])? }
         @description "Plan a payload for each machine row of a resolved program."
         @synonyms "verify plan, plan transitions, synthesize payloads, seed row id"
     }

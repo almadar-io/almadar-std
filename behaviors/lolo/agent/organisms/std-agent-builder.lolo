@@ -1,7 +1,9 @@
 app std-agent-builder [
   version: "3.0.0",
-  description: "Agent builder — turns a request into a behavior by walking a ladder of caching tiers, cheapest first. START { request, orbitalName, context } embeds the request with std-llm (LLM_EMBED) and walks `ladder`: each step ranks its source by cosine similarity — installed behaviors under its registry folders (`behavior/catalog`), or a pool (POOL_SEARCH, answered by POOL_FOUND from std-agent-pool) — and when the best match reaches the step's threshold runs the step's action, otherwise goes to the next step. Actions: `mount` builds the best match's own orbital, with its traits and pages, as a program of its own (`program/eval`); `adopt` serves the best match as it is, no model call; `fill` describes the best match (`behavior/describe`), asks the model once to set its knobs and the extra `fillFields`, applies them (`behavior/apply`) and evaluates the result (`program/eval`, final), feeding validator issues back for up to `maxRepairs` repair turns. BUILD_PROGRESS streams each step; BUILD_COMPLETE { orbitalName, behavior, value, tier, fields } carries the behavior and the step that served it; BUILD_REJECTED { error, errors } follows an exhausted ladder or a failed build. The default ladder mounts the closest UI molecule, as earlier versions did. A ladder step out of range, a missing fill target, or a fill tool that cannot be built from the knobs ends in BUILD_REJECTED with a named error.",
+  description: "Agent builder — turns a request into a behavior by walking a ladder of caching tiers, cheapest first. START { request, orbitalName, context } embeds the request with std-llm (LLM_EMBED) and walks `ladder`: each step ranks its source by cosine similarity — installed behaviors under its registry folders (`behavior/catalog`), or a pool (POOL_SEARCH, answered by POOL_FOUND from std-agent-pool) — and when the best match reaches the step's threshold runs the step's action, otherwise goes to the next step. Actions: `mount` builds the best match's own orbital, with its traits and pages, as a program of its own (`program/eval`); `adopt` serves the best match as it is, no model call; `fill` describes the best match (`behavior/describe`), asks the model once to set its knobs and the extra `fillFields`, applies them (`behavior/apply`) and evaluates the result (`program/eval`), then checks the written program with the std lints (`orb validate <file> --final --deny-warnings --json` through std-cli; the binary ORB_BIN names when it is set, else the `orb` on PATH), feeding validator and lint issues back for up to `maxRepairs` repair turns. BUILD_PROGRESS streams each step; BUILD_COMPLETE { orbitalName, behavior, value, tier, fields } carries the behavior and the step that served it; BUILD_REJECTED { error, errors } follows an exhausted ladder or a failed build. The default ladder mounts the closest UI molecule, as earlier versions did. A ladder step out of range, a missing fill target, or a fill tool that cannot be built from the knobs ends in BUILD_REJECTED with a named error.",
   net: { "api.openai.com:443": [tcp], "openrouter.ai:443": [tcp] },
+  exec: [env ORB_BIN, "orb"],
+  env: ["PATH", "HOME", "ORB_BIN"]
 ]
 ;; @capabilities "build a behavior from a request, caching tiers, retrieve before generating, adopt an existing behavior, fill a behavior's knobs, pick a behavior by meaning, program evaluation"
 
@@ -41,6 +43,16 @@ type BuilderStep = {
 type Built = {
   behavior : string!
   value : behavior!
+}
+type LintIssue = {
+  code : string
+  path : string
+  message : string
+}
+type LintReport = {
+  valid : boolean!
+  errors : [LintIssue]
+  warnings : [LintIssue]
 }
 type BuildIssue = {
   code : string!
@@ -156,6 +168,7 @@ uses Http from "std/behaviors/std-http-client"
 uses Frame from "std/behaviors/std-http-frame"
 
 uses Delay from "std/behaviors/std-delay"
+uses Cli from "std/behaviors/std-cli"
 
 type JsonValue = string | number | boolean | [JsonValue] | Map string JsonValue
 type ToolArguments = Map string JsonValue
@@ -180,6 +193,7 @@ orbital AgentBuilderOrbital {
     tool : [AgentToolField] = []
     repairs : number = 0
     behavior : string = ""
+    stamped : Built?
     error : string = ""
     status : "idle" | "searching" | "choosing" | "describing" | "filling" | "building" | "done" | "failed" = idle
   }
@@ -233,6 +247,14 @@ orbital AgentBuilderOrbital {
         @label "Repair turns"
         @description "How many times validator issues go back to the model before the build fails."
         @tier "policy"
+      lintCommand : [string] = ["validate"]
+        @label "Lint command"
+        @description "The `orb` subcommand that checks a stamped program with the std lints; the program's file follows it."
+        @tier "internal"
+      lintFlags : [string] = ["--final", "--deny-warnings", "--json"]
+        @label "Lint flags"
+        @description "The flags of the lint run: the finished-app rules, warnings refused, the report as JSON."
+        @tier "internal"
     }
     initial: idle
 
@@ -457,8 +479,8 @@ orbital AgentBuilderOrbital {
       ASSISTANT_REPLIED -> building when (and (validate/required (array/nth @config.ladder @entity.step)) (and (validate/required @entity.target) (or (array/every @config.fieldWordLimits (fn l (<= (array/len (str/split (str/trim (object/get @entity.filledFields @l.name "")) " ")) @l.words))) (>= @entity.repairs @config.maxRepairs))))
         (set @entity.status building)
         (emit BUILD_PROGRESS { status: "building", tier: (object/get (array/nth @config.ladder @entity.step) name) })
-        (program/eval (quasiquote { name: (unquote @entity.orbitalName), orbitals: [(unquote (behavior/apply @entity.target { config: @entity.filledConfig, traits: @entity.filledTraits }))] }) { final: true } {
-          emit: { failure: BUILD_FAILED, success: BUILT }
+        (program/eval (quasiquote { name: (unquote @entity.orbitalName), orbitals: [(unquote (behavior/apply @entity.target { config: @entity.filledConfig, traits: @entity.filledTraits }))] }) {} {
+          emit: { failure: BUILD_FAILED, success: BUILD_STAMPED }
         })
       ASSISTANT_REPLIED -> failed when (not (validate/required (array/nth @config.ladder @entity.step)))
         (set @entity.error "The ladder step is out of range")
@@ -477,6 +499,22 @@ orbital AgentBuilderOrbital {
     state building {
       INIT -> building
         (set @entity.status building)
+      BUILD_STAMPED -> building
+        (set @entity.stamped ?result)
+        (emit LINT_RUN { stage: "lint", argv: (array/concat (array/concat @config.lintCommand [(str/concat (object/get ?result behavior) ".orb")]) @config.lintFlags), env: {} })
+      LintCliDone -> building when (and (!= @entity.stamped null) (= (json/parse ?stdout LintReport) null))
+        (emit LINT_UNAVAILABLE { error: (str/concat "The built program could not be checked: `orb validate` answered no report (exit " ?exitCode "): " ?stderr) })
+      LintCliDone -> building when (and (!= @entity.stamped null) (!= (json/parse ?stdout LintReport) null) (object/get (json/parse ?stdout LintReport) valid false))
+        (emit BUILD_LINTED { result: @entity.stamped })
+      LintCliDone -> building when (and (!= @entity.stamped null) (!= (json/parse ?stdout LintReport) null) (not (object/get (json/parse ?stdout LintReport) valid false)))
+        (let ((report : LintReport (default (json/parse ?stdout LintReport) { valid: false })) (issues (array/concat (object/get @report errors []) (object/get @report warnings []))))
+          (emit BUILD_LINT_REFUSED { error: (str/concat (array/len @issues) " validation issue(s): " (str/join (array/map @issues (fn x (str/concat "[" (object/get @x code "") "] " (object/get @x path "") ": " (object/get @x message "")))) "; ")), errors: (array/map @issues (fn x { code: (object/get @x code ""), message: (object/get @x message "") })) }))
+      LintCliFailed -> building
+        (emit LINT_UNAVAILABLE { error: (str/concat "The built program could not be checked: " ?error) })
+      LINT_UNAVAILABLE -> failed
+        (set @entity.error ?error)
+        (set @entity.status failed)
+        (emit BUILD_REJECTED { error: ?error, errors: [] })
       BUILT -> done when (validate/required (array/nth @config.ladder @entity.step))
         (set @entity.behavior (object/get ?result behavior))
         (set @entity.status done)
@@ -538,6 +576,33 @@ orbital AgentBuilderOrbital {
     }
 
     emits {
+      LINT_RUN -> external {
+        stage : string!
+        argv : [string]!
+        env : Map string string
+      }
+        @description "Run `orb validate <file> --final --deny-warnings --json` over the program a fill just stamped (std-cli): the std lints, the finished-app rules among them."
+        @tier "internal"
+      BUILD_STAMPED {
+        result : Built!
+      }
+        @tier "internal"
+      BUILD_LINTED -> internal {
+        result : Built!
+      }
+        @description "Internal: the filled program passed the std lints."
+        @tier "internal"
+      BUILD_LINT_REFUSED -> internal {
+        error : string!
+        errors : [BuildIssue]
+      }
+        @description "Internal: the std lints found issues in the filled program."
+        @tier "internal"
+      LINT_UNAVAILABLE -> internal {
+        error : string!
+      }
+        @description "Internal: the lint run could not be made or answered no report."
+        @tier "internal"
       BUILD_COMPLETE -> external {
         orbitalName : string!
         behavior : string!
@@ -610,6 +675,23 @@ orbital AgentBuilderOrbital {
     }
 
     listens {
+      BuilderPipeline.BUILD_LINTED -> BUILT
+      BuilderPipeline.BUILD_LINT_REFUSED -> BUILD_FAILED
+      BuilderLintCli.CLI_DONE -> LintCliDone
+      BuilderLintCli.CLI_FAILED -> LintCliFailed
+      LintCliDone {
+        stage : string!
+        exitCode : number!
+        stdout : string!
+        stderr : string!
+      }
+        @description "The lint run ended (std-cli's CLI_DONE): the validate report on stdout."
+      LintCliFailed {
+        stage : string!
+        error : string!
+        code : string!
+      }
+        @description "The lint run could not be made (std-cli's CLI_FAILED)."
       START -> input {
         request : string!
         orbitalName : string!
@@ -654,6 +736,16 @@ orbital AgentBuilderOrbital {
       TOOLS_FAILED {
         error : string!
       }
+    }
+  }
+
+  trait BuilderLintCli = Cli.traits.CliRunner {
+    config {
+      commands: [{ anchor: { env: "ORB_BIN" } }, "orb"]
+      passEnv: ["PATH", "HOME"]
+    }
+    listens {
+      BuilderPipeline.LINT_RUN -> CLI_RUN
     }
   }
 
@@ -870,5 +962,5 @@ orbital AgentBuilderOrbital {
     }
   }
 
-  page boot as AgentBuilderPage -> BuilderPipeline, BuilderTools, BuilderLlm, BldEmbedWait, BldEmbedRequest, BldEmbedRequestDelay, BldEmbedRequestDeadline, BldEmbedHttp, BldEmbedHttpFrame, BldChatRequest, BldChatRequestDelay, BldChatRequestDeadline, BldChatHttp, BldChatHttpFrame, BldJevRequest, BldJevRequestDelay, BldJevRequestDeadline, BldJevHttp, BldJevHttpFrame
+  page boot as AgentBuilderPage -> BuilderPipeline, BuilderLintCli, BuilderTools, BuilderLlm, BldEmbedWait, BldEmbedRequest, BldEmbedRequestDelay, BldEmbedRequestDeadline, BldEmbedHttp, BldEmbedHttpFrame, BldChatRequest, BldChatRequestDelay, BldChatRequestDeadline, BldChatHttp, BldChatHttpFrame, BldJevRequest, BldJevRequestDelay, BldJevRequestDeadline, BldJevHttp, BldJevHttpFrame
 }

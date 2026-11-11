@@ -1,94 +1,327 @@
 {
- "atom": "agent/organisms/std-agent-builder.lolo",
- "trait": "BuilderPipeline",
- "cases": [
-  {
-   "id": "a-catalog-tier-over-rows-without-vectors-fails-the-build-naming-the-row",
-   "steps": [
+  "atom": "agent/organisms/std-agent-builder.lolo",
+  "trait": "BuilderPipeline",
+  "cases": [
     {
-     "from": "searching",
-     "entity": {
-      "id": "b",
-      "queryVector": [
-       1,
-       0
-      ],
-      "step": 0
-     },
-     "event": "CATALOG_LISTED",
-     "payload": {
-      "result": [
-       {
-        "behavior": "std/a",
-        "description": "d",
-        "traits": [],
-        "value": {
-         "behavior": "std/a"
-        },
-        "vectors": {}
-       }
-      ]
-     },
-     "expect": {
-      "state": "failed",
-      "emits": [
-       {
-        "event": "BUILD_REJECTED",
-        "payload": {
-         "error": "candidate std/a has no embedding vector: a plain behavior/catalog listing carries none, and a tier ranks by meaning only over rows from std-catalog-vectors",
-         "errors": []
+      "id": "a-catalog-tier-over-rows-without-vectors-fails-the-build-naming-the-row",
+      "steps": [
+        {
+          "from": "searching",
+          "entity": {
+            "id": "b",
+            "queryVector": [
+              1,
+              0
+            ],
+            "step": 0
+          },
+          "event": "CATALOG_LISTED",
+          "payload": {
+            "result": [
+              {
+                "behavior": "std/a",
+                "description": "d",
+                "traits": [],
+                "value": {
+                  "behavior": "std/a"
+                },
+                "vectors": {}
+              }
+            ]
+          },
+          "expect": {
+            "state": "failed",
+            "emits": [
+              {
+                "event": "BUILD_REJECTED",
+                "payload": {
+                  "error": "candidate std/a has no embedding vector: a plain behavior/catalog listing carries none, and a tier ranks by meaning only over rows from std-catalog-vectors",
+                  "errors": []
+                }
+              }
+            ],
+            "neverEmits": [
+              "RANKED"
+            ]
+          }
         }
-       }
-      ],
-      "neverEmits": [
-       "RANKED"
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "control-a-catalog-tier-over-rows-with-vectors-ranks-them",
-   "steps": [
+    },
     {
-     "from": "searching",
-     "entity": {
-      "id": "b",
-      "queryVector": [
-       1,
-       0
-      ],
-      "step": 0
-     },
-     "event": "CATALOG_LISTED",
-     "payload": {
-      "result": [
-       {
-        "behavior": "std/a",
-        "description": "d",
-        "traits": [],
-        "value": {
-         "behavior": "std/a"
-        },
-        "vectors": {
-         "description": [
-          1,
-          0
-         ]
+      "id": "control-a-catalog-tier-over-rows-with-vectors-ranks-them",
+      "steps": [
+        {
+          "from": "searching",
+          "entity": {
+            "id": "b",
+            "queryVector": [
+              1,
+              0
+            ],
+            "step": 0
+          },
+          "event": "CATALOG_LISTED",
+          "payload": {
+            "result": [
+              {
+                "behavior": "std/a",
+                "description": "d",
+                "traits": [],
+                "value": {
+                  "behavior": "std/a"
+                },
+                "vectors": {
+                  "description": [
+                    1,
+                    0
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "RANKED",
+                "payload": {}
+              }
+            ]
+          }
         }
-       }
       ]
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "RANKED",
-        "payload": {}
-       }
+    },
+    {
+      "id": "a-filled-program-is-linted-before-it-counts-as-built",
+      "defaults": [
+        "BuilderLintCli"
+      ],
+      "steps": [
+        {
+          "from": "building",
+          "entity": {
+            "id": "b",
+            "step": 0
+          },
+          "event": "BUILD_STAMPED",
+          "payload": {
+            "result": {
+              "behavior": "./orbitals/card",
+              "value": {
+                "behavior": "./orbitals/card"
+              }
+            }
+          },
+          "expect": {
+            "state": "building",
+            "emits": [
+              {
+                "event": "LINT_RUN",
+                "payload": {
+                  "stage": "lint",
+                  "argv": [
+                    "validate",
+                    "./orbitals/card.orb",
+                    "--final",
+                    "--deny-warnings",
+                    "--json"
+                  ],
+                  "env": {}
+                }
+              }
+            ],
+            "neverEmits": [
+              "BUILD_COMPLETE"
+            ]
+          }
+        },
+        {
+          "from": "building",
+          "event": "LintCliDone",
+          "payload": {
+            "stage": "lint",
+            "exitCode": 0,
+            "signal": 0,
+            "stdout": "{\"success\": true, \"valid\": true}",
+            "stdoutBytes": "",
+            "stderr": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "BUILD_LINTED",
+                "payload": {
+                  "result": {
+                    "behavior": "./orbitals/card",
+                    "value": {
+                      "behavior": "./orbitals/card"
+                    }
+                  }
+                }
+              },
+              {
+                "event": "BUILD_COMPLETE"
+              }
+            ],
+            "neverEmits": [
+              "BUILD_REJECTED"
+            ]
+          }
+        }
       ]
-     }
+    },
+    {
+      "id": "lint-findings-fail-the-filled-program",
+      "defaults": [
+        "BuilderLintCli"
+      ],
+      "steps": [
+        {
+          "from": "building",
+          "entity": {
+            "id": "b",
+            "step": 0
+          },
+          "event": "BUILD_STAMPED",
+          "payload": {
+            "result": {
+              "behavior": "./orbitals/card",
+              "value": {
+                "behavior": "./orbitals/card"
+              }
+            }
+          },
+          "expect": {
+            "state": "building",
+            "emits": [
+              {
+                "event": "LINT_RUN",
+                "payload": {
+                  "stage": "lint",
+                  "argv": [
+                    "validate",
+                    "./orbitals/card.orb",
+                    "--final",
+                    "--deny-warnings",
+                    "--json"
+                  ],
+                  "env": {}
+                }
+              }
+            ],
+            "neverEmits": [
+              "BUILD_COMPLETE"
+            ]
+          }
+        },
+        {
+          "from": "building",
+          "event": "LintCliDone",
+          "payload": {
+            "stage": "lint",
+            "exitCode": 0,
+            "signal": 0,
+            "stdout": "{\"success\": true, \"valid\": false, \"errors\": [{\"code\": \"ORB_X\", \"path\": \"orbitals[0]\", \"message\": \"broken\"}]}",
+            "stdoutBytes": "",
+            "stderr": ""
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "BUILD_LINT_REFUSED",
+                "payload": {
+                  "error": "1 validation issue(s): [ORB_X] orbitals[0]: broken",
+                  "errors": [
+                    {
+                      "code": "ORB_X",
+                      "message": "broken"
+                    }
+                  ]
+                }
+              }
+            ],
+            "neverEmits": [
+              "BUILD_LINTED",
+              "BUILD_COMPLETE"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-lint-run-with-no-report-rejects-the-build-without-a-repair-turn",
+      "defaults": [
+        "BuilderLintCli"
+      ],
+      "steps": [
+        {
+          "from": "building",
+          "entity": {
+            "id": "b",
+            "step": 0
+          },
+          "event": "BUILD_STAMPED",
+          "payload": {
+            "result": {
+              "behavior": "./orbitals/card",
+              "value": {
+                "behavior": "./orbitals/card"
+              }
+            }
+          },
+          "expect": {
+            "state": "building",
+            "emits": [
+              {
+                "event": "LINT_RUN",
+                "payload": {
+                  "stage": "lint",
+                  "argv": [
+                    "validate",
+                    "./orbitals/card.orb",
+                    "--final",
+                    "--deny-warnings",
+                    "--json"
+                  ],
+                  "env": {}
+                }
+              }
+            ],
+            "neverEmits": [
+              "BUILD_COMPLETE"
+            ]
+          }
+        },
+        {
+          "from": "building",
+          "event": "LintCliDone",
+          "payload": {
+            "stage": "lint",
+            "exitCode": 2,
+            "signal": 0,
+            "stdout": "",
+            "stdoutBytes": "",
+            "stderr": "orb: no such file"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_UNAVAILABLE"
+              },
+              {
+                "event": "BUILD_REJECTED",
+                "payload": {
+                  "error": "The built program could not be checked: `orb validate` answered no report (exit 2): orb: no such file",
+                  "errors": []
+                }
+              }
+            ],
+            "neverEmits": [
+              "BUILD_LINTED",
+              "CONVERSE"
+            ]
+          }
+        }
+      ]
     }
-   ]
-  }
- ]
+  ]
 }

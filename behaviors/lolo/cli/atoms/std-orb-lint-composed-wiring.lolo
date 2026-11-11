@@ -12,7 +12,7 @@ type OrbFinding = { code : string!, path : string!, message : string!, suggestio
 type CwNode = string | number | boolean | [CwNode?] | Map string CwNode?
 type CwLit = string | number | boolean
 type CwFrom = string | [string]
-type CwState = { name : string, isInitial : boolean }
+type CwState = { name : string, isInitial : boolean, isTerminal : boolean }
 type CwListen = { event : string, triggers : string }
 type CwEvent = { key : string, input : boolean, listened : boolean }
 type CwTransition = { from : CwFrom, to : string, event : string, guard : CwNode?, effects : [CwNode?] }
@@ -30,7 +30,7 @@ type CwTr = { f : [string]!, e : string!, to : string!, live : boolean! }
 type CwStrs = Map string [string]
 
 type LintCodeDecl = { code : string!, category : string!, description : string! }
-type LintComposedWiringCodes = { composedStateUnreachable : LintCodeDecl , composedTransitionUnreachable : LintCodeDecl }
+type LintComposedWiringCodes = { composedStateUnreachable : LintCodeDecl , composedTransitionUnreachable : LintCodeDecl , stateTrapped : LintCodeDecl , initArmNeverFires : LintCodeDecl }
 
 type WalkSlot = { kind : string!, args : [number] }
 orbital OrbLintComposedWiringOrbital {
@@ -95,8 +95,8 @@ orbital OrbLintComposedWiringOrbital {
                 (prodSet (default (object/fromEntries (array/map @prodList (fn e [@e, true]))) {})))
             (array/flatten (array/map @orbitals (fn (o oi)
               (array/flatten (array/map (object/get @o "traits" @notd) (fn (t ti)
-                (if (or (not (object/has @t "stateMachine")) (not (object/has @t "sourceBehavior"))) @nof
-                  (let ((tn (object/get @t "name" ""))
+                (if (not (object/has @t "stateMachine")) @nof
+                  (let ((composed (object/has @t "sourceBehavior")) (tn (object/get @t "name" ""))
                         (tp (str/concat "orbitals[" @oi "].traits[" @ti "]"))
                         (sts : [CwState] (object/get @t "stateMachine.states" @nost))
                         (trs : [CwTransition] (object/get @t "stateMachine.transitions" @notr))
@@ -139,13 +139,27 @@ orbital OrbLintComposedWiringOrbital {
                             (let ((live (array/filter @tl (fn x (object/get @x "live")))))
                               (let ((reached (array/reduce (array/range 0 (array/len @sts)) (array/append @nos @initial) (fn (acc i) (array/unique (array/concat @acc (array/map (array/filter @live (fn x (and (or (array/includes (object/get @x "f") "*") (array/some (object/get @x "f") (fn s (array/includes @acc @s)))) (or (object/has @prodSet (object/get @x "e")) (array/includes @locIn (object/get @x "e")))))) (fn x (object/get @x "to")))))))))
                                 (let ((dead (array/filter (array/unique (array/map @sts (fn s (object/get @s "name" "")))) (fn s (and (not (array/includes @reached @s)) (array/some @live (fn x (and (= (object/get @x "to") @s) (not (object/has @prodSet (object/get @x "e"))) (not (array/includes @locIn (object/get @x "e")))))))))))
-                                  (array/concat
-                                    (if (= (array/len @dead) 0) @nof
+                                  (array/concat (array/concat
+                                    (if (or (not @composed) (= (array/len @dead) 0)) @nof
                                       (let ((missing (array/sort (array/unique (array/map (array/filter @live (fn x (and (array/includes @dead (object/get @x "to")) (not (object/has @prodSet (object/get @x "e"))) (not (array/includes @locIn (object/get @x "e")))))) (fn x (object/get @x "e")))))))
                                         [{ code: @config.codes.composedStateUnreachable.code, path: @tp, message: (str/concat "'" @tn "' can never enter " (str/join (array/map @dead (fn s (str/concat "'" @s "'"))) ", ") " — it is entered only on " (str/join @missing ", ") ", which nothing in the program sends: no listens route, no control or effect fires it, and it is not a declared input"), suggestion: (str/concat "route a control's event to it: `listens { <Trait>.<EVENT> -> " (let ((m0 (array/first @missing))) (if (= @m0 null) "<EVENT>" @m0)) " }` on '" @tn "'"), severity: "error" }]))
                                     (let ((deadEv (array/sort (array/unique (array/map (array/filter @live (fn x (and (not (object/has @prodSet (object/get @x "e"))) (not (array/includes @locIn (object/get @x "e"))) (not (array/includes @declared (object/get @x "e"))) (array/includes @reached (object/get @x "to")) (or (array/includes (object/get @x "f") "*") (array/some (object/get @x "f") (fn s (array/includes @reached @s))))))) (fn x (object/get @x "e")))))))
-                                      (if (= (array/len @deadEv) 0) @nof
-                                        [{ code: @config.codes.composedTransitionUnreachable.code, path: @tp, message: (str/concat "'" @tn "' handles " (str/join @deadEv ", ") " but nothing in the program sends " (if (= (array/len @deadEv) 1) "it" "them") ": no listens route, no control or effect fires it under this composition's config, it is not a lifecycle event and the trait does not declare it in `listens`"), suggestion: (str/concat "route a control's event to it: `listens { <Trait>.<EVENT> -> " (let ((d0 (array/first @deadEv))) (if (= @d0 null) "<EVENT>" @d0)) " }` on '" @tn "'"), severity: "error" }])))))))))))))))))))))
+                                      (if (or (not @composed) (= (array/len @deadEv) 0)) @nof
+                                        [{ code: @config.codes.composedTransitionUnreachable.code, path: @tp, message: (str/concat "'" @tn "' handles " (str/join @deadEv ", ") " but nothing in the program sends " (if (= (array/len @deadEv) 1) "it" "them") ": no listens route, no control or effect fires it under this composition's config, it is not a lifecycle event and the trait does not declare it in `listens`"), suggestion: (str/concat "route a control's event to it: `listens { <Trait>.<EVENT> -> " (let ((d0 (array/first @deadEv))) (if (= @d0 null) "<EVENT>" @d0)) " }` on '" @tn "'"), severity: "error" }])))
+                                    (array/concat (let ((ia (array/filter @tl (fn x (and (= (object/get @x "e") "INIT") (or (array/includes (object/get @x "f") "*") (array/includes (object/get @x "f") @initial)))))))
+                                      (if (or (= (array/len @ia) 0) (array/some @ia (fn x (object/get @x "live"))) (array/some @tl (fn x (and (object/get @x "live") (!= (object/get @x "e") "INIT") (or (array/includes (object/get @x "f") "*") (array/includes (object/get @x "f") @initial)) (or (object/has @prodSet (object/get @x "e")) (array/includes @locIn (object/get @x "e")) (array/includes @declared (object/get @x "e"))))))) @nof
+                                        [{ code: @config.codes.initArmNeverFires.code, path: @tp, message: (str/concat "'" @tn "' never runs an INIT arm: every INIT arm of its initial state '" @initial "' is guarded by a condition that is false for this composition's config, and no other arm of that state waits on an event the program sends, so the trait never starts"), suggestion: (str/concat "set the config value the guard reads, give '" @initial "' an INIT arm for the other case or an arm on an event that is sent, or do not compose '" @tn "' here"), severity: "error" }]))
+                                    (array/flatten (array/map @sts (fn (srow si)
+                                      (let ((sn (object/get @srow "name" "")))
+                                        (if (or (not (array/includes @reached @sn)) (= (object/get @srow "isTerminal" false) true)) @nof
+                                          (let ((ex (array/filter @tl (fn x (and (object/get @x "live") (!= (object/get @x "to") @sn) (or (array/includes (object/get @x "f") "*") (array/includes (object/get @x "f") @sn)))))))
+                                            (if (or (= (array/len @ex) 0)
+                                                    (array/every @ex (fn x (array/includes @entity.busExcluded (object/get @x "e"))))
+                                                    (array/some @ex (fn x (and (or (= @sn @initial) (not (array/includes @entity.busExcluded (object/get @x "e")))) (or (object/has @prodSet (object/get @x "e")) (array/includes @locIn (object/get @x "e")) (array/includes @declared (object/get @x "e"))))))
+                                                    (and @composed (array/some @ex (fn x (and (not (object/has @prodSet (object/get @x "e"))) (not (array/includes @locIn (object/get @x "e"))) (not (array/includes @declared (object/get @x "e"))))))))
+                                              @nof
+                                              (let ((evs (array/sort (array/unique (array/map (array/filter @ex (fn x (not (array/includes @entity.busExcluded (object/get @x "e"))))) (fn x (object/get @x "e")))))))
+                                                [{ code: @config.codes.stateTrapped.code, path: (str/concat @tp ".stateMachine.states[" @si "]"), message: (str/concat "'" @tn "' can never leave state '" @sn "' once it is there: " "every exit waits on " (str/join @evs ", ") ", which nothing in the program sends (a lifecycle arm such as INIT fires on a mount and is an exit only from the initial state)"), suggestion: (str/concat "fire " (let ((e0 (array/first @evs))) (if (= @e0 null) "an event that leaves the state" @e0)) " from a control the state paints or from an effect, or route it in: `listens { <Trait>.<EVENT> -> " (let ((e0 (array/first @evs))) (if (= @e0 null) "<EVENT>" @e0)) " }` on '" @tn "'"), severity: "error" }]))))))))))))))))))))))))))))
         (emit LINT_FINISH { })
       LINT_TRY -> ready when (not (and (= @entity.progScope @entity.firedScope) @entity.haveBus))
       LINT_FINISH -> ready
@@ -177,7 +191,7 @@ orbital OrbLintComposedWiringOrbital {
     }
 
     config {
-      codes : LintComposedWiringCodes = { composedStateUnreachable: { code: "ORB_COMPOSED_STATE_UNREACHABLE", category: "circuit", description: "A composed trait can never enter some states because nothing in the program sends the events that enter them" }, composedTransitionUnreachable: { code: "ORB_COMPOSED_TRANSITION_UNREACHABLE", category: "composed", description: "A composed trait handles events that nothing in the program ever sends" } }
+      codes : LintComposedWiringCodes = { composedStateUnreachable: { code: "ORB_COMPOSED_STATE_UNREACHABLE", category: "circuit", description: "A composed trait can never enter some states because nothing in the program sends the events that enter them" }, initArmNeverFires: { code: "ORB_CIRCUIT_INIT_ARM_NEVER_FIRES", category: "circuit", description: "Every INIT arm of a trait's initial state is guarded by a condition that is false for the composition's config and no other arm of that state can fire, so the trait never starts" }, stateTrapped: { code: "ORB_STATE_TRAPPED", category: "composed", description: "A trait can reach a state that no event the program sends can take it out of" }, composedTransitionUnreachable: { code: "ORB_COMPOSED_TRANSITION_UNREACHABLE", category: "composed", description: "A composed trait handles events that nothing in the program ever sends" } }
         @label "Emitted codes"
         @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
       overlaySlots : [string] = ["modal", "drawer", "dock", "overlay"]

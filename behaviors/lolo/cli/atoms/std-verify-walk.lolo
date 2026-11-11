@@ -74,6 +74,7 @@ orbital VerifyWalkOrbital {
     source : string = ""
     l1 : [WalkL1Finding] = []
     viewer : (Map string WalkJson?)?
+    role : string?
     owners : Map string [string] = {}
   }
 
@@ -119,10 +120,18 @@ orbital VerifyWalkOrbital {
       INIT -> ready
       VERIFY_WALK_CALLED -> ready when (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
         (emit VERIFY_WALK_ANSWERED { status: 500, body: "Error: the call's arguments could not be read" })
-      VERIFY_WALK_CALLED -> ready when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (!= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
-        (emit VERIFY_WALK_ANSWERED { status: 400, body: "usage: orb verify-walk <program.lolo>" })
-      VERIFY_WALK_CALLED -> ready when (and (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null) (= (array/len (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) 1))
-        (emit VERIFY_WALK_START { file: (default (array/first (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "argv")) ""), cwd: (object/get (json/parse (default @payload.rawBody "") OrbCommandArgs) "cwd") })
+      VERIFY_WALK_CALLED -> ready when (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
+        (let ((args (json/parse (default @payload.rawBody "") OrbCommandArgs)))
+          (let ((argv (object/get @args "argv")) (asAt (array/indexOf (object/get @args "argv") "--as")))
+            (let ((roleAt (if (>= @asAt 0) (+ @asAt 1) (- 0 1))))
+              (let ((role (if (>= @roleAt 0) (array/nth @argv @roleAt) null))
+                    (pos (array/filter (array/range 0 (array/len @argv)) (fn i (and (!= @i @asAt) (!= @i @roleAt) (!= (array/nth @argv @i) "--render"))))))
+                (if (and (= (array/len @pos) 1)
+                         (not (str/startsWith (default (array/nth @argv (default (array/first @pos) 0)) "") "--"))
+                         (<= (array/len (array/filter @argv (fn a (= @a "--as")))) 1)
+                         (or (< @asAt 0) (and (!= @role null) (not (str/startsWith (default @role "") "--")))))
+                  (emit VERIFY_WALK_START { file: (default (array/nth @argv (default (array/first @pos) 0)) ""), cwd: (object/get @args "cwd"), role: @role, render: (array/includes @argv "--render") })
+                  (emit VERIFY_WALK_ANSWERED { status: 400, body: "usage: orb verify-walk <program.lolo> [--as <role>] [--render]" }))))))
       WALK_ANSWERED -> ready
         (emit VERIFY_WALK_ANSWERED { status: @payload.status, body: @payload.body })
     }
@@ -131,7 +140,7 @@ orbital VerifyWalkOrbital {
       VERIFY_WALK_ANSWERED -> external { status : number!  body : string! }
         @description "Internal: the command's answer, which the cli hook prints."
         @tier "internal"
-      VERIFY_WALK_START { file : string!, cwd : string!, viewer : (Map string WalkJson?)?, owners : Map string [string], render : boolean, strict : boolean }
+      VERIFY_WALK_START { file : string!, cwd : string!, viewer : (Map string WalkJson?)?, role : string?, owners : Map string [string], render : boolean, strict : boolean }
         @description "Internal: walk the program file."
         @tier "internal"
     }
@@ -158,6 +167,7 @@ orbital VerifyWalkOrbital {
       VERIFY_WALK_START -> reading
         (set @entity.path (if (os/path-is-absolute @payload.file) @payload.file (os/path-join (default (as @payload.cwd string) "") @payload.file)))
         (set @entity.viewer (object/get @payload "viewer" null))
+        (set @entity.role (object/get @payload "role" null))
         (set @entity.owners (object/get @payload "owners" {}))
         (set @entity.render (object/get @payload "render" false))
         (set @entity.strict (object/get @payload "strict" false))
@@ -201,7 +211,7 @@ orbital VerifyWalkOrbital {
         (emit VERIFY_WALK_ANSWERED { status: 500, body: "verify-walk: the program has no transitions" })
       WALK_MACHINE_ANSWERED -> planning when (and (> (array/len @payload.rows) 0) (!= @entity.program null))
         (set @entity.machineRows @payload.rows)
-        (emit WALK_PLAN_REQUEST { program: @entity.program, rows: @payload.rows, viewer: @entity.viewer, owners: @entity.owners })
+        (emit WALK_PLAN_REQUEST { program: @entity.program, rows: @payload.rows, viewer: @entity.viewer, role: @entity.role, owners: @entity.owners })
       WALK_MACHINE_ANSWERED -> planning when (and (> (array/len @payload.rows) 0) (= @entity.program null))
         (emit WALK_FAILED { error: "the program could not be read back" })
       WALK_FAILED -> ready
@@ -317,7 +327,7 @@ orbital VerifyWalkOrbital {
       WALK_MACHINE_READ -> external { program : SExpr! }
         @description "Ask std-machine for the program's transition rows."
         @tier "internal"
-      WALK_PLAN_REQUEST -> external { program : SExpr!, rows : [WalkMachineRow]!, viewer : (Map string WalkJson?)?, owners : Map string [string] }
+      WALK_PLAN_REQUEST -> external { program : SExpr!, rows : [WalkMachineRow]!, viewer : (Map string WalkJson?)?, role : string?, owners : Map string [string] }
         @description "Ask std-verify-plan for one planned step per row."
         @tier "internal"
       WALK_JUDGE_REQUEST -> external { items : [WalkJudgeItem]!, program : SExpr! }
@@ -353,7 +363,7 @@ orbital VerifyWalkOrbital {
     }
 
     listens {
-      VERIFY_WALK_START { file : string!, cwd : string!, viewer : (Map string WalkJson?)?, owners : Map string [string], render : boolean, strict : boolean }
+      VERIFY_WALK_START { file : string!, cwd : string!, viewer : (Map string WalkJson?)?, role : string?, owners : Map string [string], render : boolean, strict : boolean }
         @description "Walk the program file."
       VerifyWalkCli.VERIFY_WALK_START -> VERIFY_WALK_START
       WalkMachine.MACHINE_ANSWERED -> WALK_MACHINE_ANSWERED

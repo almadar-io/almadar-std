@@ -17,7 +17,7 @@
         "event": "VERIFY_WALK_ANSWERED",
         "payload": {
          "status": 400,
-         "body": "usage: orb verify-walk <program.lolo>"
+         "body": "usage: orb verify-walk <program.lolo> [--as <role>] [--render]"
         }
        }
       ]
@@ -1156,6 +1156,151 @@
       }
      }
     }
+   ]
+  },
+  {
+   "id": "the-as-flag-names-the-role-to-walk-as",
+   "steps": [
+    {
+     "trait": "VerifyWalkCli",
+     "from": "ready",
+     "event": "VERIFY_WALK_CALLED",
+     "payload": {
+      "headers": {},
+      "rawBody": "{\"argv\":[\"f.lolo\",\"--as\",\"team_member\"],\"cwd\":\".\"}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VERIFY_WALK_START",
+        "payload": {
+         "file": "f.lolo",
+         "role": "team_member",
+         "render": false
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "note": "orb verify-walk --as walks a program as one role (owner 2026-11-11: render walk per role)."
+  },
+  {
+   "id": "the-render-flag-turns-the-render-probe-on",
+   "steps": [
+    {
+     "trait": "VerifyWalkCli",
+     "from": "ready",
+     "event": "VERIFY_WALK_CALLED",
+     "payload": {
+      "headers": {},
+      "rawBody": "{\"argv\":[\"--render\",\"f.lolo\",\"--as\",\"owner\"],\"cwd\":\".\"}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VERIFY_WALK_START",
+        "payload": {
+         "file": "f.lolo",
+         "role": "owner",
+         "render": true
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-as-without-a-role-is-a-usage-error",
+   "steps": [
+    {
+     "trait": "VerifyWalkCli",
+     "from": "ready",
+     "event": "VERIFY_WALK_CALLED",
+     "payload": {
+      "headers": {},
+      "rawBody": "{\"argv\":[\"f.lolo\",\"--as\"],\"cwd\":\".\"}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VERIFY_WALK_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "usage: orb verify-walk <program.lolo> [--as <role>] [--render]"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-an-unknown-flag-is-a-usage-error",
+   "steps": [
+    {
+     "trait": "VerifyWalkCli",
+     "from": "ready",
+     "event": "VERIFY_WALK_CALLED",
+     "payload": {
+      "headers": {},
+      "rawBody": "{\"argv\":[\"f.lolo\",\"--bogus\"],\"cwd\":\".\"}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VERIFY_WALK_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "usage: orb verify-walk <program.lolo> [--as <role>] [--render]"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-role-is-forwarded-to-the-planner",
+   "entity": {
+    "program": {
+     "orbitals": []
+    },
+    "role": "owner"
+   },
+   "steps": [
+    {
+     "from": "machine",
+     "event": "WALK_MACHINE_ANSWERED",
+     "payload": {
+      "rows": [
+       {
+        "orbital": "O",
+        "trait": "T",
+        "from": "a",
+        "event": "GO",
+        "to": "b",
+        "guarded": false,
+        "payload": []
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "WALK_PLAN_REQUEST",
+        "payload": {
+         "role": "owner"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "defaults": [
+    "WalkPlan",
+    "VerifyWalkCli"
    ]
   }
  ]

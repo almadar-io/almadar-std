@@ -130,6 +130,8 @@ orbital StatusBoardOrbital {
     }
 
     listens {
+      StatusBoardSampleOwner.SAMPLE_SHOW -> BOARD_SHOW
+      StatusBoardSampleOwner.SAMPLE_DETAIL -> BOARD_DETAIL
       BOARD_OPEN -> input { }
         @description "The board was brought into view: it asks for its first read when it has none yet, and only redraws otherwise."
         @synonyms "board shown, open board"
@@ -393,5 +395,57 @@ orbital StatusBoardOrbital {
     }
   }
 
-  page "/status-board" as StatusBoardPage -> StatusBoard
+  entity StatusBoardSample [runtime] {
+    id : string!
+  }
+
+  ;; The standalone page's owner: it answers the board's reads with fixed sample rows, so the atom shows its content when it runs alone. A composer mounts its own owner and never this trait.
+  trait StatusBoardSampleOwner -> StatusBoardSample [client] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      SAMPLE_LOAD -> idle
+        (emit SAMPLE_SHOW {
+          note: "Sample rows: the board's owner answers BOARD_SHOW with its own."
+          tiles: [{ label: "Healthy", value: "2", tone: "success", icon: "check-circle" }, { label: "Failing", value: "1", tone: "danger", icon: "x-circle" }]
+          sections: [{ key: "services", label: "Services" }, { key: "jobs", label: "Jobs" }]
+          rows: [
+            { id: "api", section: "services", title: "API", subtitle: "Public endpoint", tone: "success", statusLabel: "Healthy", icon: "check-circle", meta: ["v1.4.2", "eu-west"], at: @now, url: "" },
+            { id: "worker", section: "services", title: "Worker", subtitle: "Background queue", tone: "success", statusLabel: "Healthy", icon: "check-circle", meta: ["3 instances"], at: @now, url: "" },
+            { id: "nightly", section: "jobs", title: "Nightly export", subtitle: "Runs at 02:00", tone: "danger", statusLabel: "Failed", icon: "x-circle", meta: ["exit 1"], at: @now, url: "" }
+          ]
+          fetchedAt: @now
+          error: ""
+        })
+      SAMPLE_ROW -> idle
+        (emit SAMPLE_DETAIL { detail: { rowId: @payload.rowId, phase: "ready", items: [{ label: "Last check", tone: "info", statusLabel: "Answered", meta: "sample detail" }], code: "", codeTitle: "", errorLines: [], error: "" } })
+    }
+
+    emits {
+      SAMPLE_SHOW {
+        note : string!
+        tiles : [StatusBoardTile]!
+        sections : [StatusBoardSection]!
+        rows : [StatusBoardRow]!
+        fetchedAt : instant!
+        error : string!
+      }
+      SAMPLE_DETAIL {
+        detail : StatusBoardDetail!
+      }
+    }
+
+    listens {
+      StatusBoard.BOARD_LOAD -> SAMPLE_LOAD
+      StatusBoard.BOARD_REFRESH -> SAMPLE_LOAD
+      StatusBoard.BOARD_ROW_OPENED -> SAMPLE_ROW
+      SAMPLE_LOAD { }
+      SAMPLE_ROW {
+        rowId : string!
+      }
+    }
+  }
+
+  page "/status-board" as StatusBoardPage -> StatusBoard, StatusBoardSampleOwner
 }
