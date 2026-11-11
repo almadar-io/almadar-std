@@ -188,12 +188,12 @@ orbital BankingOrbital {
 
       BANKING_HTTP_FAILED -> idle when (= @payload.kind "timeout")
         (emit BANKING_FAILED { message: "The operation was aborted due to timeout" })
-      BANKING_HTTP_FAILED -> idle when (and (= @payload.kind "unconfigured") (not @entity.mintTried))
+      BANKING_HTTP_FAILED -> idle when (and (= @payload.kind "denied") (not @entity.mintTried))
         (set @entity.mintTried true)
         (credential-connect { credential: @config.accessCredential, scope: app, tokenEndpoint: @config.tokenUrl, grant: "json-token", clientId: @config.secretIdCredential, clientSecret: @config.secretKeyCredential, clientIdField: "secret_id", clientSecretField: "secret_key", accessField: "access", refreshField: "refresh", expiresInField: "access_expires", refreshEndpoint: @config.refreshUrl, refreshBodyField: "refresh" } { emit: { success: BANKING_CONNECTED, failure: BANKING_CONNECT_FAILED } })
-      BANKING_HTTP_FAILED -> idle when (and (= @payload.kind "unconfigured") @entity.mintTried)
+      BANKING_HTTP_FAILED -> idle when (and (= @payload.kind "denied") @entity.mintTried)
         (emit BANKING_FAILED { code: "NOT_CONFIGURED", message: "Integration not configured: banking. Set GOCARDLESS_SECRET_ID / GOCARDLESS_SECRET_KEY." })
-      BANKING_HTTP_FAILED -> idle when (and (!= @payload.kind "unconfigured") (!= @payload.kind "timeout"))
+      BANKING_HTTP_FAILED -> idle when (and (!= @payload.kind "denied") (!= @payload.kind "timeout"))
         (emit BANKING_FAILED { message: @payload.error })
 
       BANKING_CONNECTED -> idle when @payload.connected

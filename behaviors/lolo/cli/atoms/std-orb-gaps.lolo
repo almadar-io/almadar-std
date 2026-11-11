@@ -20,7 +20,7 @@ type GapDirEntry = { name : string!, kind : string! }
 type GapSortKey = { sort : string!, path : string! }
 type GapSig = { code : string!, side : string!, repo : string!, heading : string!, body : string! }
 type GapRow = { code : string!, side : string!, m : string!, l : string!, p : string!, pRepo : string!, eRepo : string!, eHeading : string!, eBody : string! }
-type GapTag = { code : string!, tags : [string]! }
+type GapTag = { code : string!, tags : [string]!, sev : [string]! }
 type GapCause = { id : string!, name : string!, closed : boolean!, codes : [string]! }
 type GapBaseline = { version : number!, entries : [[string, { repo : string!, heading : string!, body : string! }]]! }
 
@@ -613,7 +613,8 @@ orbital OrbGapsOrbital {
             (if (< @n 0) (array/len @entity.pLines) (+ @entity.pSec 1 @n)))))
         (set @entity.pTags (array/map (array/flatten (array/map @entity.scans (fn s (object/get @s "entries")))) (fn e
           { code: (object/get @e "code"),
-            tags: (array/map (array/drop (str/split (object/get @e "body") "Root cause: ") 1) (fn p (str/trim (default (array/first (str/split @p ".")) "")))) })))
+            tags: (array/map (array/drop (str/split (object/get @e "body") "Root cause: ") 1) (fn p (str/trim (default (array/first (str/split @p ".")) "")))),
+            sev: (array/map (array/drop (str/split (object/get @e "body") "Severity: ") 1) (fn p (str/trim (default (array/first (str/split @p ".")) "")))) })))
         (set @entity.pCauses (if (< @entity.pSec 0) (array/take [{ id: "", name: "", closed: false, codes: [""] }] 0)
           (let ((sec (array/slice @entity.pLines @entity.pSec @entity.pEndSec)))
             (let ((flags (array/reduce @sec (array/take [true] 0) (fn acc l
@@ -643,7 +644,9 @@ orbital OrbGapsOrbital {
         (set @entity.pSummary (str/concat (array/len @entity.pTags) " open: "
           (str/join (array/concat
             (array/map (array/filter @entity.pCauses (fn c (> (array/len (object/get @c "codes")) 0))) (fn c (str/concat (default (array/first (str/split (object/get @c "name") " ")) "") " " (array/len (object/get @c "codes")))))
-            (array/map (array/filter @config.freeTags (fn f (> (array/len (array/filter @entity.pTags (fn t (and (= (array/len (object/get @t "tags")) 1) (= (array/first (object/get @t "tags")) @f))))) 0))) (fn f (str/concat @f " " (array/len (array/filter @entity.pTags (fn t (and (= (array/len (object/get @t "tags")) 1) (= (array/first (object/get @t "tags")) @f))))))))) ", ")))
+            (array/map (array/filter @config.freeTags (fn f (> (array/len (array/filter @entity.pTags (fn t (and (= (array/len (object/get @t "tags")) 1) (= (array/first (object/get @t "tags")) @f))))) 0))) (fn f (str/concat @f " " (array/len (array/filter @entity.pTags (fn t (and (= (array/len (object/get @t "tags")) 1) (= (array/first (object/get @t "tags")) @f))))))))) ", ")
+          "; severity: "
+          (str/join (array/map @config.severities (fn s (str/concat @s " " (array/len (array/filter @entity.pTags (fn t (and (= (array/len (object/get @t "sev")) 1) (= (array/first (object/get @t "sev")) @s)))))))) ", ")))
         (set @entity.errs (if (< @entity.pSec 0) (array/append (array/take ["x"] 0) "docs/Almadar_Plans.md has no P-017 section")
           (array/concat
             (if (= (array/len @entity.pCauses) 0) (array/append (array/take ["x"] 0) "docs/Almadar_Plans.md P-017 lists no causes under its cause subsections") (array/take ["x"] 0))
@@ -652,6 +655,9 @@ orbital OrbGapsOrbital {
             (array/map (array/filter (array/map @entity.pTags (fn t (object/get @t "code"))) (fn c (< (array/indexOf (array/map @entity.pTags (fn t (object/get @t "code"))) @c) @index))) (fn c (str/concat "duplicate gap code: " @c)))
             (array/map (array/filter @entity.pTags (fn t (= (array/len (object/get @t "tags")) 0))) (fn t (str/concat "untagged: " (object/get @t "code") " has no Root cause tag")))
             (array/map (array/filter @entity.pTags (fn t (> (array/len (object/get @t "tags")) 1))) (fn t (str/concat "double-tagged: " (object/get @t "code") " (" (str/join (object/get @t "tags") ", ") ")")))
+            (array/map (array/filter @entity.pTags (fn t (= (array/len (object/get @t "sev")) 0))) (fn t (str/concat "unrated: " (object/get @t "code") " has no Severity")))
+            (array/map (array/filter @entity.pTags (fn t (> (array/len (object/get @t "sev")) 1))) (fn t (str/concat "double-rated: " (object/get @t "code") " (" (str/join (object/get @t "sev") ", ") ")")))
+            (array/map (array/filter @entity.pTags (fn t (and (= (array/len (object/get @t "sev")) 1) (not (array/includes @config.severities (array/first (object/get @t "sev"))))))) (fn t (str/concat "unknown severity: " (object/get @t "code") " is rated " (default (array/first (object/get @t "sev")) ""))))
             (array/map (array/filter @entity.pTags (fn t (and (= (array/len (object/get @t "tags")) 1) (not (array/includes (array/concat (array/map @entity.pCauses (fn c (object/get @c "id"))) @config.freeTags) (array/first (object/get @t "tags"))))))) (fn t (str/concat "unknown tag: " (object/get @t "code") " is tagged " (default (array/first (object/get @t "tags")) ""))))
             (array/map (array/filter @entity.pCauses (fn c (and (= (array/len (object/get @c "codes")) 0) (not (object/get @c "closed"))))) (fn c (str/concat "cause " (object/get @c "id") " has no open gaps and is not marked [closed]")))
             (array/map (array/filter @entity.pCauses (fn c (and (> (array/len (object/get @c "codes")) 0) (object/get @c "closed")))) (fn c (str/concat "cause " (object/get @c "id") " is marked [closed] but has open gaps: " (str/join (object/get @c "codes") ", ")))))))
@@ -940,6 +946,9 @@ orbital OrbGapsOrbital {
       freeTags : [string] = ["one-off", "periphery"]
         @label "Free tags"
         @description "Root-cause tags that name no cause."
+      severities : [string] = ["critical", "high", "medium", "low"]
+        @label "Severities"
+        @description "The severity levels an entry's Severity sentence may name, worst first; every entry names exactly one."
       markerBegin : string = "<!-- p017-gaps:begin -->"
         @label "Table begin marker"
         @description "The line that opens the generated gap table in the Plans section."

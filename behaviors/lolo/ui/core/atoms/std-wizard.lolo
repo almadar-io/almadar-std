@@ -44,6 +44,7 @@ orbital WizardOrbital {
     state loading {
       INIT -> loading
         (fetch WizardView {
+          limit: @config.maxRows
           emit: { failure: WizardLoadFailed, success: WizardLoaded }
         })
         (render-ui main {
@@ -165,6 +166,7 @@ orbital WizardOrbital {
         })
       WizardSaved -> loading
         (fetch WizardView {
+          limit: @config.maxRows
           emit: { failure: WizardLoadFailed, success: WizardLoaded }
         })
         (render-ui main {
@@ -185,6 +187,7 @@ orbital WizardOrbital {
     state running {
       INIT -> loading
         (fetch WizardView {
+          limit: @config.maxRows
           emit: { failure: WizardLoadFailed, success: WizardLoaded }
         })
         (render-ui main {
@@ -462,6 +465,7 @@ orbital WizardOrbital {
     state completed {
       INIT -> loading
         (fetch WizardView {
+          limit: @config.maxRows
           emit: { failure: WizardLoadFailed, success: WizardLoaded }
         })
         (render-ui main {
@@ -510,6 +514,7 @@ orbital WizardOrbital {
         (set @entity.currentStepIndex 0)
         (set @entity.completionMessage "")
         (fetch WizardView {
+          limit: @config.maxRows
           emit: { failure: WizardLoadFailed, success: WizardLoaded }
         })
         (render-ui main {
@@ -523,6 +528,7 @@ orbital WizardOrbital {
     state cancelled {
       INIT -> loading
         (fetch WizardView {
+          limit: @config.maxRows
           emit: { failure: WizardLoadFailed, success: WizardLoaded }
         })
         (render-ui main {
@@ -535,6 +541,7 @@ orbital WizardOrbital {
         (set @entity.currentStepIndex 0)
         (set @entity.cancelReason "")
         (fetch WizardView {
+          limit: @config.maxRows
           emit: { failure: WizardLoadFailed, success: WizardLoaded }
         })
         (render-ui main {
@@ -717,6 +724,10 @@ orbital WizardOrbital {
         @label "Card look"
         @description "Layer 2 visual treatment for cards rendered by this atom."
         @tier "presentation"
+      maxRows : number = 500
+        @label "Most rows per load"
+        @description "Most rows one load reads."
+        @tier "policy"
     }
   }
 

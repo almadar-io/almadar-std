@@ -2851,6 +2851,347 @@
         "LoopChatRequest",
         "LoopChatHttp"
       ]
+    },
+    {
+      "id": "tool-name-over-64-characters-is-shortened",
+      "note": "An event address whose '.'-to-'__' text exceeds 64 characters is offered under its last 54 characters, '_' and 8 hex of md5(base64(address)); label keeps the full address.",
+      "steps": [
+        {
+          "event": "CONVERSE",
+          "from": "idle",
+          "payload": {
+            "messages": [
+              {
+                "role": "user",
+                "content": "go"
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "preparing"
+          },
+          "identity": {
+            "id": "u1",
+            "role": "staff"
+          }
+        },
+        {
+          "event": "INPUTS_KNOWN",
+          "from": "preparing",
+          "payload": {
+            "result": {
+              "inputs": [
+                {
+                  "orbital": "ClaimsIntakeAndAdjudication",
+                  "trait": "ClaimAdjudicationWorkflowBoard",
+                  "event": "DO_REQUEST_SUPERVISOR_REVIEW",
+                  "address": "ClaimsIntakeAndAdjudication.ClaimAdjudicationWorkflowBoard.DO_REQUEST_SUPERVISOR_REVIEW",
+                  "description": "Do it",
+                  "parameters": {
+                    "type": "object",
+                    "properties": {}
+                  }
+                }
+              ],
+              "entities": [],
+              "selected": [
+                {
+                  "orbital": "ClaimsIntakeAndAdjudication",
+                  "trait": "ClaimAdjudicationWorkflowBoard",
+                  "event": "DO_REQUEST_SUPERVISOR_REVIEW",
+                  "address": "ClaimsIntakeAndAdjudication.ClaimAdjudicationWorkflowBoard.DO_REQUEST_SUPERVISOR_REVIEW",
+                  "description": "Do it",
+                  "parameters": {
+                    "type": "object",
+                    "properties": {}
+                  }
+                }
+              ]
+            },
+            "text": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "thinking",
+            "emits": [
+              {
+                "event": "LLM_CALL_TOOLS",
+                "payload": {
+                  "tools": [
+                    {
+                      "name": "djudicationWorkflowBoard__DO_REQUEST_SUPERVISOR_REVIEW_4d0e360b",
+                      "description": "Do it",
+                      "parameters": {
+                        "type": "object",
+                        "properties": {}
+                      }
+                    }
+                  ]
+                }
+              }
+            ],
+            "entity": {
+              "table": [
+                {
+                  "name": "djudicationWorkflowBoard__DO_REQUEST_SUPERVISOR_REVIEW_4d0e360b",
+                  "description": "Do it",
+                  "parameters": {
+                    "type": "object",
+                    "properties": {}
+                  },
+                  "label": "ClaimsIntakeAndAdjudication.ClaimAdjudicationWorkflowBoard.DO_REQUEST_SUPERVISOR_REVIEW",
+                  "kind": "input",
+                  "address": "ClaimsIntakeAndAdjudication.ClaimAdjudicationWorkflowBoard.DO_REQUEST_SUPERVISOR_REVIEW",
+                  "contract": [],
+                  "readAny": false,
+                  "contracted": false,
+                  "fireAndForget": false
+                }
+              ]
+            }
+          },
+          "identity": {
+            "id": "u1",
+            "role": "staff"
+          }
+        }
+      ],
+      "config": {
+        "tools": [
+          {
+            "event": "ClaimsIntakeAndAdjudication.ClaimAdjudicationWorkflowBoard.DO_REQUEST_SUPERVISOR_REVIEW",
+            "roles": [
+              "staff"
+            ]
+          }
+        ]
+      },
+      "defaults": [
+        "LoopLlm",
+        "LoopChatRequest",
+        "LoopChatHttp",
+        "LoopChatRequestDeadline",
+        "LoopChatRequestDelay"
+      ]
+    },
+    {
+      "id": "tool-name-over-64-characters-dispatches-the-original-event",
+      "note": "The model calls the shortened name; the loop pends and dispatches the original event address, never the shortened name.",
+      "config": {
+        "tools": [
+          {
+            "read": "Ticket",
+            "roles": [
+              "support"
+            ]
+          }
+        ]
+      },
+      "defaults": [
+        "LoopLlm",
+        "LoopChatRequest",
+        "LoopChatHttp"
+      ],
+      "steps": [
+        {
+          "event": "CALL_BEGIN",
+          "from": "running",
+          "payload": {},
+          "entity": {
+            "table": [
+              {
+                "name": "djudicationWorkflowBoard__DO_REQUEST_SUPERVISOR_REVIEW_4d0e360b",
+                "description": "Do it",
+                "parameters": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "label": "ClaimsIntakeAndAdjudication.ClaimAdjudicationWorkflowBoard.DO_REQUEST_SUPERVISOR_REVIEW",
+                "kind": "input",
+                "address": "ClaimsIntakeAndAdjudication.ClaimAdjudicationWorkflowBoard.DO_REQUEST_SUPERVISOR_REVIEW",
+                "readAny": false,
+                "contracted": false,
+                "fireAndForget": false
+              }
+            ],
+            "calls": [
+              {
+                "id": "c1",
+                "name": "djudicationWorkflowBoard__DO_REQUEST_SUPERVISOR_REVIEW_4d0e360b",
+                "arguments": {}
+              }
+            ],
+            "current": {
+              "id": "c1",
+              "name": "djudicationWorkflowBoard__DO_REQUEST_SUPERVISOR_REVIEW_4d0e360b",
+              "arguments": {}
+            },
+            "binding": {
+              "name": "djudicationWorkflowBoard__DO_REQUEST_SUPERVISOR_REVIEW_4d0e360b",
+              "description": "Do it",
+              "parameters": {
+                "type": "object",
+                "properties": {}
+              },
+              "label": "ClaimsIntakeAndAdjudication.ClaimAdjudicationWorkflowBoard.DO_REQUEST_SUPERVISOR_REVIEW",
+              "kind": "input",
+              "address": "ClaimsIntakeAndAdjudication.ClaimAdjudicationWorkflowBoard.DO_REQUEST_SUPERVISOR_REVIEW",
+              "readAny": false,
+              "contracted": false,
+              "fireAndForget": false
+            },
+            "cursor": 0,
+            "results": [],
+            "session": "s1",
+            "callStartedAt": "2023-11-14T22:13:20Z"
+          },
+          "identity": {
+            "id": "u1",
+            "role": "admin"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "TOOL_PENDING",
+                "payload": {
+                  "callId": "c1",
+                  "tool": "ClaimsIntakeAndAdjudication.ClaimAdjudicationWorkflowBoard.DO_REQUEST_SUPERVISOR_REVIEW"
+                }
+              }
+            ],
+            "neverEmits": [
+              "AGENT_ACT",
+              "AGENT_LOOK"
+            ]
+          }
+        }
+      ],
+      "now": 1700000000000
+    },
+    {
+      "id": "tool-name-of-64-characters-or-fewer-is-unchanged",
+      "note": "At most 64 characters: the name is the address with '.' replaced by '__', unchanged.",
+      "steps": [
+        {
+          "event": "CONVERSE",
+          "from": "idle",
+          "payload": {
+            "messages": [
+              {
+                "role": "user",
+                "content": "go"
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "preparing"
+          },
+          "identity": {
+            "id": "u1",
+            "role": "staff"
+          }
+        },
+        {
+          "event": "INPUTS_KNOWN",
+          "from": "preparing",
+          "payload": {
+            "result": {
+              "inputs": [
+                {
+                  "orbital": "Board",
+                  "trait": "Board",
+                  "event": "CLOSE",
+                  "address": "Board.CLOSE",
+                  "description": "Do it",
+                  "parameters": {
+                    "type": "object",
+                    "properties": {}
+                  }
+                }
+              ],
+              "entities": [],
+              "selected": [
+                {
+                  "orbital": "Board",
+                  "trait": "Board",
+                  "event": "CLOSE",
+                  "address": "Board.CLOSE",
+                  "description": "Do it",
+                  "parameters": {
+                    "type": "object",
+                    "properties": {}
+                  }
+                }
+              ]
+            },
+            "text": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "thinking",
+            "emits": [
+              {
+                "event": "LLM_CALL_TOOLS",
+                "payload": {
+                  "tools": [
+                    {
+                      "name": "Board__CLOSE",
+                      "description": "Do it",
+                      "parameters": {
+                        "type": "object",
+                        "properties": {}
+                      }
+                    }
+                  ]
+                }
+              }
+            ],
+            "entity": {
+              "table": [
+                {
+                  "name": "Board__CLOSE",
+                  "description": "Do it",
+                  "parameters": {
+                    "type": "object",
+                    "properties": {}
+                  },
+                  "label": "Board.CLOSE",
+                  "kind": "input",
+                  "address": "Board.CLOSE",
+                  "contract": [],
+                  "readAny": false,
+                  "contracted": false,
+                  "fireAndForget": false
+                }
+              ]
+            }
+          },
+          "identity": {
+            "id": "u1",
+            "role": "staff"
+          }
+        }
+      ],
+      "config": {
+        "tools": [
+          {
+            "event": "Board.CLOSE",
+            "roles": [
+              "staff"
+            ]
+          }
+        ]
+      },
+      "defaults": [
+        "LoopLlm",
+        "LoopChatRequest",
+        "LoopChatHttp",
+        "LoopChatRequestDeadline",
+        "LoopChatRequestDelay"
+      ]
     }
   ]
 }

@@ -5,6 +5,7 @@ import { arg, osEffect, OS_PATH } from './os-common.js';
 const SYSTEM_READINGS: Record<string, { grant: Extract<OsGrantNeed, { kind: 'sys' }>['access']; reading: string }> = {
   'os/cpu-usage': { grant: 'cpu', reading: 'CPU usage, sampled across two asks without blocking' },
   'os/memory-info': { grant: 'memory', reading: 'memory totals and usage' },
+  'os/process-list': { grant: 'processes', reading: 'every process of the machine: its parent, name, executable, arguments, owner, resident memory, CPU time used and start time (memory and CPU time are null for a process the host will not measure for the asker)' },
   'os/uptime': { grant: 'cpu', reading: 'system uptime' },
   'os/load-avg': { grant: 'cpu', reading: 'load averages' },
   'os/hostname': { grant: 'identity', reading: 'the host name' },
@@ -25,6 +26,7 @@ const NET_COUNTERS = shape({ rxBytes: NUMBER, txBytes: NUMBER, rxPackets: NUMBER
 export const OS_SYS_PAYLOADS: Record<string, OperatorTypeRef> = {
   'os/cpu-usage': shape({ percent: NUMBER }),
   'os/memory-info': shape({ total: NUMBER, available: NUMBER, used: NUMBER, usedPercent: NUMBER }),
+  'os/process-list': shape({ processes: list(shape({ pid: NUMBER, ppid: NUMBER, name: STRING, command: STRING, args: list(STRING), user: NUMBER, rssBytes: nullable(NUMBER), cpuSeconds: nullable(NUMBER), startedAt: NUMBER })) }),
   'os/uptime': shape({ seconds: NUMBER }),
   'os/load-avg': shape({ one: NUMBER, five: NUMBER, fifteen: NUMBER }),
   'os/hostname': shape({ hostname: STRING }),

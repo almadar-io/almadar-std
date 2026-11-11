@@ -353,7 +353,7 @@ orbital AgentToolLoopOrbital {
                 (if (object/has @t read)
                   (let ((rd : AgentToolRead @t)) [{ name: (str/concat "read__" @rd.read), description: (str/concat "Read the " @rd.read " rows you may see"), parameters: { type: "object", properties: {} }, label: @rd.read, kind: read, entity: @rd.read, readAny: false, contracted: false, fireAndForget: false }])
                   (let ((ev : AgentToolInputData @t)) (array/map (array/take (array/drop @payload.result.selected (array/count (array/take @entity.turnTools @i) (fn y (object/has @y event)))) 1) (fn s
-                    { name: (str/replaceAll @ev.event "." "__"), description: (default @s.description @ev.event), parameters: @s.parameters, label: @ev.event, kind: input, address: @s.address, contract: (object/get @ev payload []), readAny: false, contracted: (object/has @ev payload), fireAndForget: (object/get @ev fireAndForget false) }))))))) @r)))))))))
+                    { name: (let ((n : string (str/replaceAll @ev.event "." "__"))) (if (<= (str/len @n) 64) @n (str/concat (str/slice @n (- (str/len @n) 54)) "_" (str/slice (default (hash/md5 (base64/encode @ev.event) "hex") "") 0 8)))), description: (default @s.description @ev.event), parameters: @s.parameters, label: @ev.event, kind: input, address: @s.address, contract: (object/get @ev payload []), readAny: false, contracted: (object/has @ev payload), fireAndForget: (object/get @ev fireAndForget false) }))))))) @r)))))))))
           (do
             (set @entity.table @table)
             (set @entity.turnGuest @entity.guest)

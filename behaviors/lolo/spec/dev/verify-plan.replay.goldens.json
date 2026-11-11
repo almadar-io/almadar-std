@@ -3677,11 +3677,14 @@
      "expect": {
       "emits": [
        {
-        "event": "PLAN_ANSWERED",
+        "event": "PLAN_REFUSED",
         "payload": {
-         "steps": []
+         "error": "verify-plan: the program to plan is not a program"
         }
        }
+      ],
+      "neverEmits": [
+       "PLAN_ANSWERED"
       ]
      }
     }
@@ -4499,6 +4502,378 @@
       "emits": [
        {
         "event": "PLAN_FAILED"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-optional-slot-of-a-declared-record-type-is-left-out",
+   "steps": [
+    {
+     "event": "PLAN_REQUEST",
+     "payload": {
+      "program": {
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Item",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Item",
+           "stateMachine": {
+            "transitions": [
+             {
+              "from": "a",
+              "to": "b",
+              "event": "GO",
+              "effects": []
+             }
+            ],
+            "states": [
+             {
+              "name": "start",
+              "isInitial": true
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ],
+       "types": {
+        "Pick": [
+         {
+          "name": "id",
+          "type": "string",
+          "required": true
+         }
+        ]
+       }
+      },
+      "rows": [
+       {
+        "orbital": "O",
+        "trait": "T",
+        "from": "a",
+        "event": "GO",
+        "to": "b",
+        "guarded": false,
+        "payload": [
+         {
+          "name": "title",
+          "type": "string",
+          "required": true
+         },
+         {
+          "name": "row",
+          "type": "Pick",
+          "required": false
+         }
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PLAN_COMPUTED",
+        "payload": {
+         "count": 1
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "PLAN_COMPUTED",
+     "payload": {
+      "count": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PLAN_ANSWERED",
+        "payload": {
+         "steps": [
+          {
+           "trait": "T",
+           "linkedEntity": "Item",
+           "from": "a",
+           "event": "GO",
+           "to": "b",
+           "toStates": [
+            "b"
+           ],
+           "variant": "success",
+           "guarded": false,
+           "solved": true,
+           "payloadCase": "success",
+           "payload": {
+            "title": "verify"
+           }
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "note": "The row slot is absent from the planned payload (a string there is refused by the kernel's payload check); the runner cannot assert an absent key, so only the planned keys are matched."
+  },
+  {
+   "id": "a-required-slot-of-a-declared-record-type-is-unplanned",
+   "steps": [
+    {
+     "event": "PLAN_REQUEST",
+     "payload": {
+      "program": {
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Item",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Item",
+           "stateMachine": {
+            "transitions": [
+             {
+              "from": "a",
+              "to": "b",
+              "event": "GO",
+              "effects": []
+             }
+            ],
+            "states": [
+             {
+              "name": "start",
+              "isInitial": true
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ],
+       "types": {
+        "Pick": [
+         {
+          "name": "id",
+          "type": "string",
+          "required": true
+         }
+        ]
+       }
+      },
+      "rows": [
+       {
+        "orbital": "O",
+        "trait": "T",
+        "from": "a",
+        "event": "GO",
+        "to": "b",
+        "guarded": false,
+        "payload": [
+         {
+          "name": "title",
+          "type": "string",
+          "required": true
+         },
+         {
+          "name": "row",
+          "type": "Pick",
+          "required": true
+         }
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PLAN_COMPUTED",
+        "payload": {
+         "count": 1
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "PLAN_COMPUTED",
+     "payload": {
+      "count": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PLAN_ANSWERED",
+        "payload": {
+         "steps": [
+          {
+           "trait": "T",
+           "linkedEntity": "Item",
+           "from": "a",
+           "event": "GO",
+           "to": "b",
+           "toStates": [
+            "b"
+           ],
+           "variant": "success",
+           "guarded": false,
+           "solved": false,
+           "payloadCase": "success",
+           "payload": {
+            "title": "verify"
+           },
+           "unplanned": "object-slot-unplanned"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-list-of-a-declared-record-type-is-an-empty-list",
+   "steps": [
+    {
+     "event": "PLAN_REQUEST",
+     "payload": {
+      "program": {
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Item",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Item",
+           "stateMachine": {
+            "transitions": [
+             {
+              "from": "a",
+              "to": "b",
+              "event": "GO",
+              "effects": []
+             }
+            ],
+            "states": [
+             {
+              "name": "start",
+              "isInitial": true
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ],
+       "types": {
+        "Pick": [
+         {
+          "name": "id",
+          "type": "string",
+          "required": true
+         }
+        ]
+       }
+      },
+      "rows": [
+       {
+        "orbital": "O",
+        "trait": "T",
+        "from": "a",
+        "event": "GO",
+        "to": "b",
+        "guarded": false,
+        "payload": [
+         {
+          "name": "title",
+          "type": "string",
+          "required": true
+         },
+         {
+          "name": "rows",
+          "type": "[Pick]",
+          "required": true
+         }
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PLAN_COMPUTED",
+        "payload": {
+         "count": 1
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "PLAN_COMPUTED",
+     "payload": {
+      "count": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PLAN_ANSWERED",
+        "payload": {
+         "steps": [
+          {
+           "trait": "T",
+           "linkedEntity": "Item",
+           "from": "a",
+           "event": "GO",
+           "to": "b",
+           "toStates": [
+            "b"
+           ],
+           "variant": "success",
+           "guarded": false,
+           "solved": true,
+           "payloadCase": "success",
+           "payload": {
+            "title": "verify",
+            "rows": []
+           }
+          }
+         ]
+        }
        }
       ]
      }

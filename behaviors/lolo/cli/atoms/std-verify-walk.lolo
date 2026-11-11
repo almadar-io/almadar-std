@@ -3,10 +3,12 @@ app std-verify-walk [
   env: ["ALMADAR_PERSONA_OWNS"],
   inbound: ["cli-verify-walk"],
   fs: { cwd: "**/*.lolo": [read] },
-  description: "std-verify-walk — the `orb verify-walk <program.lolo>` command, the L1 walk as a std program. It reads the program (os/read-file, program/read), asks std-machine for the transition rows (MACHINE_READ), then plays the plannable rows in ONE program/step call (each from its own state), so there is no per-row cascade. A payload is built only from declared values (the first listed value of each slot); a row with a required slot that declares none is `unplanned` and lists the missing slots. Verdicts: pass (fired and landed in its target or a sibling target of the same group), fail, guard-blocked (a guard blocked the payload; not passed), unplanned. One line per row, then `N passed, M failed, U unplanned, G guard-blocked`; status 200 (exit 0) when none failed, else 500 (exit 1); usage status 400 (exit 2); every failed read, parse or step answers 500 with its error. Transitions only: no render probe, no wiring checks, imports unresolved. A reply route (an event an http or postgres effect emits, or a listener it triggers) is never driven: it is reported as a gap (counted apart, appended to the totals only when present) unless std-verify-credit credits it from a hop another step fired. PENDING PS1: the walk records only each step's own hop; credit becomes decisive once program/step outcomes[] carry the event and arm of every cascaded hop, so a failure route fired by its request can be credited."
+  description: "std-verify-walk — the `orb verify-walk <program.lolo>` command, the L1 walk as a std program. It reads the program (os/read-file, program/read), asks std-machine for the transition rows (MACHINE_READ), then plays the plannable rows in ONE program/step call (each from its own state), so there is no per-row cascade. A payload is built only from declared values (the first listed value of each slot); a row with a required slot that declares none is `unplanned` and lists the missing slots. Verdicts: pass (fired and landed in its target or a sibling target of the same group), fail, guard-blocked (a guard blocked the payload; not passed), unplanned. One line per row, then `N passed, M failed, U unplanned, G guard-blocked`; status 200 (exit 0) when none failed, else 500 (exit 1); usage status 400 (exit 2); every failed read, parse or step answers 500 with its error. The program is read resolved, as `orb resolve` prints it, so a composed organism's imported traits and entities are walked. Transitions only: no render probe, no wiring checks. A reply route (an event an http or postgres effect emits, or a listener it triggers) is never driven: it is reported as a gap (counted apart, appended to the totals only when present) unless std-verify-credit credits it from a hop another step fired. PENDING PS1: the walk records only each step's own hop; credit becomes decisive once program/step outcomes[] carry the event and arm of every cascaded hop, so a failure route fired by its request can be credited."
 ]
 uses Spec from "almadar-std/verify-walk"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type WalkLazy = { orbital : string!, program : SExpr! }
+type WalkResolved = { program : SExpr!, lazy : [WalkLazy] }
 type VerifyRow = { trait : string!, from : string!, event : string!, to : string!, verdict : string!, detail : string }
 type WalkJson = string | number | boolean | [WalkJson?] | Map string WalkJson?
 type WalkPlanPayload = Map string WalkJson
@@ -167,9 +169,9 @@ orbital VerifyWalkOrbital {
         (program/read (bytes/to-string @payload.data) { findings: true } { key: "l1" emit: { success: WALK_L1, failure: WALK_FAILED } })
       WALK_L1 -> reading
         (set @entity.l1 @payload.result)
-        (program/read @entity.source { key: "program" emit: { success: WALK_PROGRAM, failure: WALK_FAILED } })
+        (program/read "" { resolve: true text: false path: @entity.path } { key: "program" emit: { success: WALK_PROGRAM, failure: WALK_FAILED } })
       WALK_PROGRAM -> validating
-        (set @entity.program (as @payload.result WalkFull))
+        (set @entity.program (as @payload.result.program WalkFull))
         (program/validate null { report: true, path: @entity.path, findings: @entity.l1 } { emit: { success: WALK_VALIDATED, failure: WALK_FAILED } })
       WALK_FAILED -> ready
         (emit VERIFY_WALK_ANSWERED { status: 500, body: (str/concat "verify-walk: " (default @payload.error "")) })
@@ -331,8 +333,8 @@ orbital VerifyWalkOrbital {
       WALK_L1 { result : [WalkL1Finding]! }
         @description "The L1 (parse and lower) findings of the program text."
         @tier "internal"
-      WALK_PROGRAM { result : SExpr! }
-        @description "The program parsed."
+      WALK_PROGRAM { result : WalkResolved! }
+        @description "The program read resolved: { program, lazy }."
         @tier "internal"
       WALK_PLAY { rows : [WalkPlanned]! }
         @description "Plan done: the rows to play."

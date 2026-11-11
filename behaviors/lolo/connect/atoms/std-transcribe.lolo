@@ -56,9 +56,9 @@ orbital TranscribeOrbital {
         (let ((e (json/parse @payload.body TranscribeApiError)))
           (emit TRANSCRIBE_FAILED { key: @payload.key, code: (str/concat "HTTP_" @payload.status), message: (if (and (!= @e null) (!= (default (object/get @e "error.message" "") "") "")) (object/get @e "error.message" "") (str/concat "The transcription request failed with status " @payload.status)) }))
 
-      TRANSCRIBE_REQUEST_FAILED -> idle when (= @payload.kind "unconfigured")
+      TRANSCRIBE_REQUEST_FAILED -> idle when (= @payload.kind "denied")
         (emit TRANSCRIBE_FAILED { key: @payload.key, code: "NOT_CONFIGURED", message: "Integration not configured: transcribe. Set OPENAI_API_KEY or GROQ_API_KEY." })
-      TRANSCRIBE_REQUEST_FAILED -> idle when (!= @payload.kind "unconfigured")
+      TRANSCRIBE_REQUEST_FAILED -> idle when (!= @payload.kind "denied")
         (emit TRANSCRIBE_FAILED { key: @payload.key, code: (str/upper @payload.kind), message: @payload.error })
     }
 

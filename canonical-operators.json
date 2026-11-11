@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "Canonical operator registry for Almadar. Generated from @almadar/std/modules. Consumed by orbital-compiler via include_str!.",
-  "generated": "2026-11-10T19:56:12.047Z",
+  "generated": "2026-11-11T07:52:36.852Z",
   "categories": {
     "arithmetic": {
       "description": "Numeric operations",
@@ -15656,6 +15656,7 @@
         "kind": "navigate"
       },
       "runsOn": "client",
+      "forwardedToClient": true,
       "title": "Navigate",
       "params": [
         {
@@ -15708,6 +15709,7 @@
         "kind": "navigate-back"
       },
       "runsOn": "client",
+      "forwardedToClient": true,
       "title": "Navigate Back",
       "examples": [
         "(navigate-back)"
@@ -21381,6 +21383,59 @@
       ],
       "examples": [
         "(os/ppid {\"emit\":{\"success\":\"PPID_READ\",\"failure\":\"PROC_FAILED\"}})"
+      ],
+      "docsSource": "generated"
+    },
+    "os/process-list": {
+      "category": "std-os",
+      "minArity": 0,
+      "maxArity": 1,
+      "returnType": "void",
+      "description": "Read every process of the machine: its parent, name, executable, arguments, owner, resident memory, CPU time used and start time (memory and CPU time are null for a process the host will not measure for the asker) (grant sys: processes). Success payload: { processes: [{ pid: number, ppid: number, name: string, command: string, args: [string], user: number, rssBytes: number | null, cpuSeconds: number | null, startedAt: number }] }; unavailable data fails unsupported.",
+      "module": "os",
+      "visual": {
+        "form": "actuator"
+      },
+      "hasSideEffects": true,
+      "grant": [
+        {
+          "kind": "sys",
+          "access": "processes"
+        }
+      ],
+      "runsOn": "server",
+      "host": "os",
+      "params": [
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "key": "string",
+              "emit": {
+                "kind": "object",
+                "fields": {
+                  "success": {
+                    "kind": "eventKey"
+                  },
+                  "failure": {
+                    "kind": "eventKey"
+                  },
+                  "cancelled": {
+                    "kind": "eventKey"
+                  }
+                },
+                "open": true
+              }
+            },
+            "open": true
+          },
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(os/process-list {\"emit\":{\"success\":\"SYSTEM_READ\",\"failure\":\"SYSTEM_FAILED\"}})"
       ],
       "docsSource": "generated"
     },
@@ -28721,7 +28776,7 @@
           "open": true
         }
       },
-      "description": "Play transitions of a program in one run of the kernel, each from the state it names, and return each request played: the request with its `result` circuit step — whether it fired, the arm that fired, every guard tried, each effect of the fired arm (`routed` when its failure went to its declared `emit.failure`), the events it emitted, and each `@ensures` of the arm judged by the kernel (`held`, `broken` with its counterexample bindings, or `inconclusive` with the reason). It also carries `outcomes`: every trait the dispatch cascade moved, in dispatch order, each `{ orbital, trait, event, from, to, arm, fired, effects, emitted }` (`event` is the event that trait handled, `arm` the arm that fired or null, `effects` that arm's effects as the top-level `effects` report them; the first is the requested trait, equal to the top-level fields). A request may seed its trait's entity row (`entity`: fields merged over the row before the event), override its trait's knobs (`config`: values over the declared config defaults, for that trait and the whole call, since `@config` folds into the program; two requests giving one knob different values are refused), run as an identity (`identity`: an identity row, `id` the subject, bound to the replay kernel's session for that step only; null or absent is the anonymous viewer) and pin the clock (`now`: the ms-epoch `@now` its dispatch reads); without them the request plays as before. Each result also carries `entityAfter`: the requested trait's entity row after the request. A keyed os/* or http ask a step makes is left pending, reported among the effects and neither run nor failed, so no completion route fires; a later request plays its answer event (an unkeyed one fails, as with no host). With `options.live: true` the requests run on the native program host instead: their os/* and http asks are answered by this machine, and each request waits for its open calls to end; a request's `settleMs` cancels a call still open after that many milliseconds (live only), and without it the request waits with no cutoff. With `options.render`, each result also carries `rendered`: the slots its trait filled, walked by the kernel's render probe as typed node facts (pattern, renderer coverage, entity binding, `@trait` references) With `options.renderProps: true` (needs `render: true`) each rendered slot also carries `props`, the slot's content exactly as the kernel resolved it for a host to paint (`@entity` read after the step's `set`s, `let` bindings in scope, calls evaluated), and `fault` (`{ code, error }`) when the slot's repaint failed and it keeps its last paint.",
+      "description": "Play transitions of a program in one run of the kernel, each from the state it names, and return each request played: the request with its `result` circuit step — whether it fired, the arm that fired, every guard tried, each effect of the fired arm (`routed` when its failure went to its declared `emit.failure`), the events it emitted, and each `@ensures` of the arm judged by the kernel (`held`, `broken` with its counterexample bindings, or `inconclusive` with the reason). It also carries `outcomes`: every trait the dispatch cascade moved, in dispatch order, each `{ orbital, trait, event, from, to, arm, fired, effects, emitted }` (`event` is the event that trait handled, `arm` the arm that fired or null, `effects` that arm's effects as the top-level `effects` report them; the first is the requested trait, equal to the top-level fields). A request may seed its trait's entity row (`entity`: fields merged over the row before the event), override its trait's knobs (`config`: values over the declared config defaults, for that trait and the whole call, since `@config` folds into the program; two requests giving one knob different values are refused), run as an identity (`identity`: an identity row, `id` the subject, bound to the replay kernel's session for that step only; null or absent is the anonymous viewer) and pin the clock (`now`: the ms-epoch `@now` its dispatch reads); without them the request plays as before. Each result also carries `entityAfter`: the requested trait's entity row after the request. A request the kernel refuses to dispatch (its payload fails the declared input, a `per` key is invalid, and the like) is that request's result: `transitionFired` false, no effects or emits, the state it started from, and `failure` carrying the refusal; the later requests still play. A keyed os/* or http ask a step makes is left pending, reported among the effects and neither run nor failed, so no completion route fires; a later request plays its answer event (an unkeyed one fails, as with no host). With `options.live: true` the requests run on the native program host instead: their os/* and http asks are answered by this machine, and each request waits for its open calls to end; a request's `settleMs` cancels a call still open after that many milliseconds (live only), and without it the request waits with no cutoff. With `options.render`, each result also carries `rendered`: the slots its trait filled, walked by the kernel's render probe as typed node facts (pattern, renderer coverage, entity binding, `@trait` references) With `options.renderProps: true` (needs `render: true`) each rendered slot also carries `props`, the slot's content exactly as the kernel resolved it for a host to paint (`@entity` read after the step's `set`s, `let` bindings in scope, calls evaluated), and `fault` (`{ code, error }`) when the slot's repaint failed and it keeps its last paint.",
       "module": "program",
       "visual": {
         "form": "actuator"
@@ -29582,6 +29637,7 @@
         "kind": "render-ui"
       },
       "runsOn": "client",
+      "forwardedToClient": true,
       "title": "Render UI",
       "params": [
         {

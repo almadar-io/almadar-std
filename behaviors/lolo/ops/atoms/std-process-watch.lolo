@@ -1,0 +1,200 @@
+app std-process-watch [
+  version: "1.0.0",
+  description: "std-process-watch — watches the machine's processes and flags the ones that match a declared pattern; it holds no knowledge of any program. PROCESS_WATCH_START begins and PROCESS_WATCH_STOP ends; a reading is taken as soon as intervalMs has passed since the last one ended (checked once a second), so two readings never overlap. A reading asks os/process-list for every process and keeps, for each process the host measures for this user (memory and CPU time not null), its last keepReadings readings under the key pid:startedAt (a pid is reused, a start time is not). The CPU share of an interval is the CPU seconds used between two readings over the seconds between them, as a percent of one core. Each kept process is tested against the patterns knob, a list of { id, kind, names, minAgeSeconds, minRssBytes, cpuPercent, growthBytes, readings }: names is the exact process names the pattern applies to (empty applies to every process); orphaned matches a process whose parent is process 1, at least minAgeSeconds old and holding at least minRssBytes; growing matches one whose memory rose in each of its last `readings` intervals, by at least growthBytes in all; busy matches one whose CPU share was at or above cpuPercent in each of its last `readings` intervals; idle matches one at least minAgeSeconds old, holding at least minRssBytes, whose CPU share was at or below cpuPercent in each of its last `readings` intervals. A pattern that needs intervals does not match before the process has that many. Every reading answers PROCESSES_SAMPLED { count, measured, rssBytes, flags, at } with every current match; a match not announced before (the same process and pattern) is also announced once as PROCESS_FLAGGED { flag }, the flag carrying the pid, name, executable, arguments, the exact command line as signature, the pattern id and kind, the age in seconds, the memory in bytes, the CPU share of the last interval and the memory growth over the pattern's readings. PROCESS_VERDICT { signature, verdict } (expected or unwanted) keeps the person's answer as a row whose id is the signature; a process whose signature is expected is never flagged. A host that refuses the table, or a store that cannot be read or written, answers PROCESS_WATCH_FAILED { code, error } (denied, unsupported, io, store) and the watch keeps running. The watch never stops or signals a process.",
+  sys: [processes]
+]
+;; @capabilities "watch the processes of this machine, flag a process that is orphaned, growing, busy or idle by a declared pattern, remember which commands are expected"
+
+uses Spec from "almadar-std/process-watch"
+
+type ProcessRow = { pid : number!, ppid : number!, name : string!, command : string!, args : [string]!, user : number!, rssBytes : number?, cpuSeconds : number?, startedAt : number! }
+type ProcessReading = { at : number!, rssBytes : number!, cpuSeconds : number! }
+type ProcessTrack = { key : string!, pid : number!, ppid : number!, name : string!, command : string!, args : [string]!, startedAt : number!, readings : [ProcessReading]! }
+type ProcessPatternKind = "orphaned" | "growing" | "busy" | "idle"
+type ProcessPattern = { id : string!, kind : ProcessPatternKind!, names : [string]!, minAgeSeconds : number!, minRssBytes : number!, cpuPercent : number!, growthBytes : number!, readings : number! }
+type ProcessFlag = { key : string!, pid : number!, name : string!, command : string!, args : [string]!, signature : string!, pattern : string!, kind : ProcessPatternKind!, ageSeconds : number!, rssBytes : number!, cpuPercent : number!, growthBytes : number! }
+type ProcessVerdictKind = "expected" | "unwanted"
+type WatchInstant = instant
+
+orbital ProcessWatchOrbital {
+  entity ProcessVerdict [persistent: processVerdicts] {
+    @read server "A verdict is a fact about this machine, read by the watch on the server before any viewer exists."
+    id : string! @description "The exact command line the verdict is about."
+    verdict : ProcessVerdictKind! @description "What the person said about it."
+    decidedAt : instant! @description "When they said it."
+  }
+
+  entity ProcessWatchRun [runtime] {
+    id : string!
+    active : boolean = false
+    reading : boolean = false
+    dueAt : instant? = null
+    tracks : [ProcessTrack] = []
+    flagged : [string] = []
+    flags : [ProcessFlag] = []
+    expected : [string] = []
+    count : number = 0
+    pendingSignature : string = ""
+    pendingVerdict : ProcessVerdictKind = expected
+  }
+
+  trait ProcessWatch -> ProcessWatchRun {
+    config {
+      patterns : [ProcessPattern] = []
+        @label "Patterns"
+        @description "What counts as a process worth flagging: each pattern is one kind with its thresholds and the exact process names it applies to (none applies to all)."
+        @tier "policy"
+      intervalMs : number = 10000
+        @label "Reading interval"
+        @description "Milliseconds between the end of one reading and the start of the next; it is checked once a second."
+        @tier "policy"
+      maxVerdicts : number = 500
+        @label "Verdicts read"
+        @description "The most expected commands the watch reads from its rows when it starts."
+        @tier "policy"
+      keepReadings : number = 6
+        @label "Readings kept"
+        @description "How many readings of each process are kept; a pattern can look back over one fewer interval than this."
+        @tier "policy"
+    }
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      PROCESS_WATCH_START -> ready
+        (set @entity.active true)
+        (set @entity.dueAt null)
+        (fetch ProcessVerdict { filter: (= (object/get @entity verdict) "expected"), limit: @config.maxVerdicts, emit: { success: VERDICTS_READ, failure: VERDICTS_FAILED } })
+      PROCESS_WATCH_STOP -> ready
+        (set @entity.active false)
+      VERDICTS_READ -> ready
+        (set @entity.expected (array/map (default ?data []) (fn row @row.id)))
+      VERDICTS_FAILED -> ready
+        (emit PROCESS_WATCH_FAILED { code: "store", error: ?error })
+      PROCESS_VERDICT -> ready
+        (set @entity.expected (if (= ?verdict "expected") (array/unique (array/append @entity.expected ?signature)) (array/filter @entity.expected (fn s (!= @s ?signature)))))
+        (set @entity.pendingSignature ?signature)
+        (set @entity.pendingVerdict ?verdict)
+        (persist create ProcessVerdict { id: ?signature, verdict: ?verdict, decidedAt: @now } { emit: { success: VERDICT_KEPT, failure: VERDICT_CREATE_REFUSED } })
+      VERDICT_CREATE_REFUSED -> ready
+        (persist update ProcessVerdict { id: @entity.pendingSignature, verdict: @entity.pendingVerdict, decidedAt: @now } { emit: { success: VERDICT_KEPT, failure: VERDICT_FAILED } })
+      VERDICT_KEPT -> ready
+      VERDICT_FAILED -> ready
+        (emit PROCESS_WATCH_FAILED { code: "store", error: ?error })
+      PROCESS_READ -> ready when (not @entity.reading)
+        (set @entity.reading true)
+        (os/process-list { emit: { success: PROCESSES_LISTED, failure: PROCESSES_REFUSED } })
+      PROCESSES_REFUSED -> ready
+        (set @entity.reading false)
+        (set @entity.dueAt (time/add @now @config.intervalMs "ms"))
+        (emit PROCESS_WATCH_FAILED { code: (default ?kind "io"), error: ?error })
+      PROCESSES_LISTED -> ready
+        (set @entity.count (array/len ?processes))
+        (set @entity.tracks (let ((at (time/diff @now (default (as "1970-01-01T00:00:00Z" WatchInstant) @now) "s")) (prior @entity.tracks) (rows : [ProcessRow] ?processes))
+          (array/flatten (array/map @rows (fn p
+            (if (or (== @p.rssBytes null) (== @p.cpuSeconds null)) []
+              (let ((key (str/concat @p.pid ":" @p.startedAt)))
+                (let ((before (array/find @prior (fn t (= @t.key @key)))))
+                  [{ key: @key, pid: @p.pid, ppid: @p.ppid, name: @p.name, command: @p.command, args: @p.args, startedAt: @p.startedAt,
+                     readings: (let ((all (let ((taken : ProcessReading { at: @at, rssBytes: (default @p.rssBytes 0), cpuSeconds: (default @p.cpuSeconds 0) }) (earlier : [ProcessReading] (if (== @before null) [] @before.readings))) (array/append @earlier @taken))))
+                       (array/drop @all (math/max 0 (- (array/len @all) @config.keepReadings)))) }]))))))))
+        (emit PROCESSES_JUDGE {})
+      PROCESSES_JUDGE -> ready
+        (set @entity.flags (let ((at (time/diff @now (default (as "1970-01-01T00:00:00Z" WatchInstant) @now) "s")) (patterns : [ProcessPattern] @config.patterns))
+          (array/flatten (array/map @entity.tracks (fn t
+          (let ((signature (str/join (array/prepend @t.args @t.command) " ")) (n (array/len @t.readings)) (last (array/last @t.readings)))
+            (if (or (== @last null) (array/includes @entity.expected @signature))
+              []
+              (let ((shares (array/map (array/range (math/max 0 (- @n 1))) (fn i (let ((a (array/nth @t.readings @i)) (b (array/nth @t.readings (+ @i 1)))) (if (or (== @a null) (== @b null) (<= (- @b.at @a.at) 0)) 0 (* 100 (default (/ (- @b.cpuSeconds @a.cpuSeconds) (- @b.at @a.at)) 0))))))) (rises (array/map (array/range (math/max 0 (- @n 1))) (fn i (let ((a (array/nth @t.readings @i)) (b (array/nth @t.readings (+ @i 1)))) (if (or (== @a null) (== @b null)) 0 (- @b.rssBytes @a.rssBytes)))))))
+                (array/flatten (array/map @patterns (fn rule
+              (let ((window (array/drop @shares (math/max 0 (- (array/len @shares) @rule.readings)))) (climb (array/drop @rises (math/max 0 (- (array/len @rises) @rule.readings)))) (age (- @at @t.startedAt)))
+                (if (and (or (= (array/len @rule.names) 0) (array/includes @rule.names @t.name))
+                  (or (and (= @rule.kind "orphaned") (= @t.ppid 1) (>= @age @rule.minAgeSeconds) (>= @last.rssBytes @rule.minRssBytes))
+                      (and (= @rule.kind "growing") (> @rule.readings 0) (= (array/len @climb) @rule.readings) (array/every @climb (fn d (> @d 0))) (>= (array/sum @climb) @rule.growthBytes))
+                      (and (= @rule.kind "busy") (> @rule.readings 0) (= (array/len @window) @rule.readings) (array/every @window (fn s (>= @s @rule.cpuPercent))))
+                      (and (= @rule.kind "idle") (> @rule.readings 0) (= (array/len @window) @rule.readings) (array/every @window (fn s (<= @s @rule.cpuPercent))) (>= @age @rule.minAgeSeconds) (>= @last.rssBytes @rule.minRssBytes))))
+                  [{ key: @t.key, pid: @t.pid, name: @t.name, command: @t.command, args: @t.args, signature: @signature, pattern: @rule.id, kind: @rule.kind, ageSeconds: @age, rssBytes: @last.rssBytes, cpuPercent: (default (array/last @shares) 0), growthBytes: (array/sum @climb) }]
+                  [])))))))))))))
+        (emit PROCESSES_REPORT {})
+      PROCESSES_REPORT -> ready
+        (set @entity.reading false)
+        (set @entity.dueAt (time/add @now @config.intervalMs "ms"))
+        (emit PROCESSES_SAMPLED { count: @entity.count, measured: (array/len @entity.tracks), rssBytes: (array/sum (array/map @entity.tracks (fn t (let ((last (array/last @t.readings))) (if (== @last null) 0 @last.rssBytes))))), flags: @entity.flags, at: @now })
+        (emit FLAGS_ANNOUNCE { flags: (array/filter @entity.flags (fn f (not (array/includes @entity.flagged (str/concat @f.key "/" @f.pattern))))) })
+        (set @entity.flagged (array/map @entity.flags (fn f (str/concat @f.key "/" @f.pattern))))
+      FLAGS_ANNOUNCE -> ready when (> (array/len ?flags) 0)
+        (emit PROCESS_FLAGGED { flag: (array/first ?flags) })
+        (emit FLAGS_ANNOUNCE { flags: (array/drop ?flags 1) })
+      FLAGS_ANNOUNCE -> ready when (= (array/len ?flags) 0)
+    }
+
+    ticks {
+      readingDue every 1s [background]
+        when (and @entity.active (not @entity.reading) (or (== @entity.dueAt null) (>= (time/diff @now @entity.dueAt "ms") 0)))
+        (emit PROCESS_READ {})
+    }
+
+    emits {
+      PROCESSES_SAMPLED -> external {
+        count : number!
+        measured : number!
+        rssBytes : number!
+        flags : [ProcessFlag]!
+        at : instant!
+      }
+        @description "One finished reading: how many processes exist, how many the host measures for this user, the memory those hold in bytes, and every process that matches a pattern now."
+        @tier "primary"
+      PROCESS_FLAGGED -> external {
+        flag : ProcessFlag!
+      }
+        @description "A process matched a pattern for the first time since it last stopped matching."
+        @tier "primary"
+      PROCESS_WATCH_FAILED -> external {
+        code : string!
+        error : string!
+      }
+        @description "A reading or a verdict could not be made: the host's failure kind (denied, unsupported, io) or store."
+        @tier "primary"
+      PROCESS_READ -> internal { }
+      PROCESSES_JUDGE -> internal { }
+      PROCESSES_REPORT -> internal { }
+      FLAGS_ANNOUNCE -> internal {
+        flags : [ProcessFlag]!
+      }
+      PROCESSES_LISTED {
+        processes : [ProcessRow]!
+      }
+      PROCESSES_REFUSED {
+        error : string!
+        kind : string
+      }
+      VERDICTS_READ {
+        data : [ProcessVerdict]
+      }
+      VERDICTS_FAILED {
+        error : string!
+      }
+      VERDICT_KEPT { }
+      VERDICT_CREATE_REFUSED {
+        error : string!
+      }
+      VERDICT_FAILED {
+        error : string!
+      }
+    }
+
+    listens {
+      PROCESS_WATCH_START -> input { }
+        @description "Begin reading the process table on the interval."
+      PROCESS_WATCH_STOP -> input { }
+        @description "Stop reading."
+      PROCESS_VERDICT -> input {
+        signature : string!
+        verdict : ProcessVerdictKind!
+      }
+        @description "The person's answer about a command: expected (never flag it) or unwanted."
+    }
+  }
+
+  page boot as ProcessWatchBoot -> ProcessWatch
+}

@@ -9,7 +9,7 @@ const OS_EFFECTS = [
   'os/ac-power', 'os/access', 'os/append-file', 'os/battery-status', 'os/brightness-get', 'os/brightness-set', 'os/chdir', 'os/chmod', 'os/chown', 'os/clock-monotonic', 'os/copy',
   'os/cpu-usage', 'os/current-exe', 'os/cwd', 'os/default-gateway', 'os/disk-io', 'os/disk-usage', 'os/dns-resolve', 'os/environ', 'os/exists', 'os/fsync', 'os/getenv', 'os/gid', 'os/glob', 'os/group-of',
   'os/hibernate', 'os/hostname', 'os/irq-ack', 'os/irq-wait', 'os/isatty', 'os/kill', 'os/link', 'os/list-dir', 'os/load-avg', 'os/lstat', 'os/memory-info', 'os/mkdir', 'os/mktemp', 'os/mmio-read', 'os/mmio-write', 'os/mounts', 'os/network-connected',
-  'os/network-interfaces', 'os/network-stats', 'os/notify', 'os/open', 'os/pid', 'os/ppid', 'os/read', 'os/read-file', 'os/readlink', 'os/realpath', 'os/recvfrom', 'os/remove',
+  'os/network-interfaces', 'os/network-stats', 'os/notify', 'os/open', 'os/pid', 'os/ppid', 'os/process-list', 'os/read', 'os/read-file', 'os/readlink', 'os/realpath', 'os/recvfrom', 'os/remove',
   'os/rename', 'os/rmdir', 'os/seek', 'os/send', 'os/sendto', 'os/setenv', 'os/shutdown', 'os/spawn', 'os/speak', 'os/stat', 'os/stderr-write', 'os/stdin-read', 'os/stdout-write',
   'os/suspend', 'os/symlink', 'os/tcp-connect', 'os/tcp-listen', 'os/tls-upgrade', 'os/thermal-zones', 'os/truncate', 'os/tty-size', 'os/udp-bind', 'os/uid', 'os/uname', 'os/unsetenv', 'os/uptime',
   'os/username', 'os/utimes', 'os/volume-get', 'os/volume-mute', 'os/volume-set', 'os/wait', 'os/watch-cron', 'os/watch-env', 'os/watch-files', 'os/watch-port',

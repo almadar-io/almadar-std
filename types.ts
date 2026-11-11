@@ -163,7 +163,7 @@ export type OsGrantNeed =
   | { kind: 'stdio'; access: 'in' | 'out' | 'err' }
   /** A host at `host` and a port at `port` (absent: port 0, any), covered by a net grant of one of the `access` kinds. */
   | { kind: 'net'; access: ('tcp' | 'udp' | 'listen')[]; host: number; port?: number }
-  | { kind: 'sys'; access: 'cpu' | 'memory' | 'disk' | 'network' | 'power-state' | 'identity' }
+  | { kind: 'sys'; access: 'cpu' | 'memory' | 'disk' | 'network' | 'power-state' | 'identity' | 'processes' }
   /** A signal sent to the process id at `pid`. The program's own process needs `sys: [self-signal]` (EXEC-CONC-6); a spawned child needs no grant. Never a requirement: the grant analysis counts `sys self-signal` possibly used by any call whose `pid` is not a literal number. */
   | { kind: 'self-signal'; pid: number }
   | { kind: 'desktop'; access: 'notify' | 'speak' | 'brightness' | 'volume' | 'power' }
@@ -236,6 +236,8 @@ export interface OperatorMeta {
   family?: EffectFamily;
   /** Execution site of an effect operator; set on every `hasSideEffects` operator, absent on pure ones. */
   runsOn?: RunsOn;
+  /** A `runsOn: client` effect a server kernel ships to the client to carry out instead of running it (`render-ui`, `navigate`, `navigate-back`); every other client effect has no one to run it in a server-run trait. Twin of orbital-core `FORWARDED_TO_CLIENT`. */
+  forwardedToClient?: boolean;
   /** The host that executes this effect: `program` = the shared program host (`@almadar/runtime` `host/program` `runProgramEffect`), on both execution paths. `os` = the `os/` family, executed by the OS host under a declared grant. `substrate` = the substrate services (llm, memory, trace, session, workspace), answered by the substrate and lowered as Custom effects. Absent for effects the runtime executes itself. */
   host?: EffectHost;
 }

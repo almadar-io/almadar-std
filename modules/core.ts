@@ -618,6 +618,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
       'Navigate to a route: (navigate path payload? options?) — options carries { crumb } labelling the navigation-stack entry for the target page',
     hasSideEffects: true,
     runsOn: 'client',
+    forwardedToClient: true,
     returnType: 'void',
     params: [
       { name: 'path', type: STRING, description: 'Route path (supports :param placeholders)' },
@@ -645,6 +646,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     description: 'Pop the orbital-scoped navigation stack and return to the previous entry',
     hasSideEffects: true,
     runsOn: 'client',
+    forwardedToClient: true,
     returnType: 'void',
     effect: { kind: 'navigate-back' },
   },
@@ -1362,6 +1364,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     description: 'Render a pattern into a UI slot',
     hasSideEffects: true,
     runsOn: 'client',
+    forwardedToClient: true,
     returnType: 'void',
     params: [
       { name: 'slot', type: UI_SLOT, description: 'Target UI slot (main, sidebar, modal, hud, ...)' },

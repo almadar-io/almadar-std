@@ -118,6 +118,7 @@ interface CanonicalOperatorEntry {
     emitKeys?: string[];
     family?: EffectFamily;
     runsOn?: RunsOn;
+    forwardedToClient?: boolean;
     host?: EffectHost;
     /** 0-indexed argument naming a data effect's target entity; the effect runs where that entity lives. */
     entityArgPosition?: number;
@@ -198,6 +199,7 @@ function toCanonicalEntry(
     if (meta.emitKeys) entry.emitKeys = meta.emitKeys;
     if (meta.family) entry.family = meta.family;
     if (meta.runsOn) entry.runsOn = meta.runsOn;
+    if (meta.forwardedToClient) entry.forwardedToClient = true;
     if (meta.host) entry.host = meta.host;
     if (meta.entityArgPosition != null) entry.entityArgPosition = meta.entityArgPosition;
     if (meta.pattern) entry.pattern = meta.pattern;

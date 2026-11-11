@@ -219,14 +219,14 @@ orbital GmailOrbital {
       GMAIL_GAVE_UP -> idle
         (emit GMAIL_FAIL { message: (default @payload.error "") })
 
-      GMAIL_REQUEST_FAILED -> idle when (and (= @payload.kind "unconfigured") (= @entity.mintTried false))
+      GMAIL_REQUEST_FAILED -> idle when (and (= @payload.kind "denied") (= @entity.mintTried false))
         (set @entity.mintTried true)
         (credential-connect { credential: @config.userToken, scope: app, tokenEndpoint: @config.userTokenUrl, grant: "refresh_token", refreshCredential: @config.refreshToken, clientId: @config.clientId, clientSecret: @config.clientSecret, clientAuth: body } { emit: { success: GMAIL_CONNECTED, failure: GMAIL_CONNECT_FAILED } })
-      GMAIL_REQUEST_FAILED -> idle when (and (= @payload.kind "unconfigured") (= @entity.mintTried true))
+      GMAIL_REQUEST_FAILED -> idle when (and (= @payload.kind "denied") (= @entity.mintTried true))
         (emit GMAIL_UNCONFIGURED {})
-      GMAIL_REQUEST_FAILED -> idle when (and (!= @payload.kind "unconfigured") @entity.retrying (< @entity.attempt 3))
+      GMAIL_REQUEST_FAILED -> idle when (and (!= @payload.kind "denied") @entity.retrying (< @entity.attempt 3))
         (emit GMAIL_RETRY_FAILED { key: (as @payload.key CallKey), error: (if (= @payload.kind "timeout") "network timeout" @payload.error) })
-      GMAIL_REQUEST_FAILED -> idle when (and (!= @payload.kind "unconfigured") (not (and @entity.retrying (< @entity.attempt 3))))
+      GMAIL_REQUEST_FAILED -> idle when (and (!= @payload.kind "denied") (not (and @entity.retrying (< @entity.attempt 3))))
         (emit GMAIL_FAIL { message: (if (= @payload.kind "timeout") "network timeout" @payload.error) })
 
       GMAIL_CONNECTED -> idle when (= @payload.connected true)
