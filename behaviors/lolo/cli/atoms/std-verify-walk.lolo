@@ -12,7 +12,7 @@ type WalkResolved = { program : SExpr!, lazy : [WalkLazy] }
 type VerifyRow = { trait : string!, from : string!, event : string!, to : string!, verdict : string!, detail : string }
 type WalkJson = string | number | boolean | [WalkJson?] | Map string WalkJson?
 type WalkPlanPayload = Map string WalkJson
-type WalkPlanStep = { trait : string!, linkedEntity : string, from : string!, event : string!, to : string!, toStates : [string]!, variant : string!, payload : WalkPlanPayload, guarded : boolean!, arm : number, solved : boolean!, payloadCase : string!, guardCase : string, unplanned : string, reply : string }
+type WalkPlanStep = { trait : string!, linkedEntity : string, from : string!, event : string!, to : string!, toStates : [string]!, variant : string!, payload : WalkPlanPayload, guarded : boolean!, arm : number, solved : boolean!, payloadCase : string!, guardCase : string, unplanned : string, reply : string, entity : (Map string WalkJson?)? }
 type WalkVerdict = { name : string!, passed : boolean!, detail : string! }
 type WalkUnported = { name : string!, reason : string! }
 type WalkJudged = { verdicts : [WalkVerdict]! }
@@ -23,7 +23,7 @@ type WalkPayload = Map string WalkJson
 type WalkIssue = { code : string!, message : string }
 type WalkL1Finding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error" }
 type WalkValidation = { valid : boolean!, errors : [WalkIssue], warnings : [WalkIssue] }
-type WalkPlanned = { orbital : string!, trait : string!, from : string!, event : string!, to : string!, guarded : boolean!, payload : WalkPayload!, unplanned : string!, reply : string! }
+type WalkPlanned = { orbital : string!, trait : string!, from : string!, event : string!, to : string!, guarded : boolean!, payload : WalkPayload!, unplanned : string!, reply : string!, entity : (Map string WalkJson?)? }
 type WalkEffect = { type : string!, args : [WalkJson?]!, status : string!, error : string }
 type WalkRun = { trait : string!, event : string!, transitionFired : boolean!, guard : string!, firedArm : number, effects : [WalkEffect]!, emitted : [SExpr]!, guards : [SExpr]!, state : Map string WalkJson }
 type WalkSlot = { name : string!, type : string!, required : boolean!, values : [string], entity : string }
@@ -218,7 +218,7 @@ orbital VerifyWalkOrbital {
         (set @entity.planned (array/reduce @entity.machineRows [] (fn acc r
           (let ((s (array/nth @payload.steps (array/len @acc))))
             (if (= @s null) @acc (array/concat @acc [{ orbital: (object/get @r "orbital"), trait: (object/get @r "trait"), from: (object/get @r "from"), event: (object/get @r "event"), to: (object/get @r "to"), guarded: (object/get @r "guarded"),
-              payload: (object/get @s "payload" {}), unplanned: (object/get @s "unplanned" ""), reply: (object/get @s "reply" "") }]))))))
+              payload: (object/get @s "payload" {}), unplanned: (object/get @s "unplanned" ""), reply: (object/get @s "reply" ""), entity: @s.entity }]))))))
         (set @entity.judgeSteps (array/filter @payload.steps (fn s (and (= (object/get @s "unplanned" "") "") (= (object/get @s "reply" "") "")))))
         (set @entity.creditSteps (array/map (array/filter @payload.steps (fn s (= (object/get @s "unplanned" "") ""))) (fn s { trait: (object/get @s "trait"), from: (object/get @s "from"), event: (object/get @s "event"), reply: (object/get @s "reply" "") })))
         (set @entity.notes (array/map (array/filter @entity.planned (fn r (!= (object/get @r "unplanned") "")))
@@ -239,7 +239,7 @@ orbital VerifyWalkOrbital {
         (set @entity.sent (array/map @payload.rows (fn r { trait: (object/get @r "trait"), from: (object/get @r "from"), event: (object/get @r "event"), to: (object/get @r "to"), guarded: (object/get @r "guarded"), targets: (array/map (array/filter @entity.machineRows (fn g (and (= (object/get @g "trait") (object/get @r "trait")) (= (object/get @g "from") (object/get @r "from")) (= (object/get @g "event") (object/get @r "event"))))) (fn g (object/get @g "to"))) })))
         (program/step @entity.program (array/map @payload.rows (fn r
           { orbital: (object/get @r "orbital"), trait: (object/get @r "trait"), from: (object/get @r "from"), event: (object/get @r "event"),
-            payload: (object/get @r "payload"), identity: @entity.viewer
+            payload: (object/get @r "payload"), entity: (object/get @r "entity" null), identity: @entity.viewer
           })) { render: @entity.render, renderProps: @entity.render } { key: "steps" emit: { success: WALK_STEPPED, failure: WALK_FAILED } })
       WALK_STEPPED -> stepping when (!= (array/len @payload.result) (array/len @entity.sent))
         (emit WALK_FAILED { error: "the step answer does not match the rows sent" })

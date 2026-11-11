@@ -1,7 +1,7 @@
 app std-verify-plan [
   version: "1.0.0",
   env: ["ALMADAR_PERSONA_OWNS"],
-  description: "std-verify-plan — the kernel's verify planner (orbital-core planner.rs plan_trait) as data. PLAN_REQUEST carries a resolved program (.orb IR) and std-machine rows; PLAN_ANSWERED returns one PlannedStep per row in row order. Planned: the payload of every unguarded row from its declared slots (row-key slot and id slot = the seed row id, values slot = first declared value, entity slot or bound @entity slot = a full sample row of that entity from the composed std-mock-seed (SAMPLE_ROWS) carrying the seed id (a one-row array for an array slot), number and money 1, date 2026-01-01, datetime, timestamp and instant 2026-01-01T00:00:00Z, a Map slot {}, boolean true, email, url, image, phone, uuid, array [], other string 'verify', a slot of a declared record type (a key of the program's or an orbital's types) is left out when optional; a required one makes the row object-slot-unplanned). Unplanned with the Rust reason code: guard-unsolved (guarded row, the symbolic guard solver is not ported) and object-slot-unplanned (object or [object] slot, its properties are not on the row). The walk is bounded array maps in one event, no cascade."
+  description: "std-verify-plan — the kernel's verify planner (orbital-core planner.rs plan_trait) as data. PLAN_REQUEST carries a resolved program (.orb IR) and std-machine rows; PLAN_ANSWERED returns one PlannedStep per row in row order. Planned: the payload of every unguarded row from its declared slots (row-key slot and id slot = the seed row id, values slot = first declared value, entity slot or bound @entity slot = a full sample row of that entity from the composed std-mock-seed (SAMPLE_ROWS) carrying the seed id (a one-row array for an array slot), number and money 1, date 2026-01-01, datetime, timestamp and instant 2026-01-01T00:00:00Z, a Map slot {}, boolean true, email, url, image, phone, uuid, array [], other string 'verify', a slot of a declared record type (a key of the program's or an orbital's types) is left out when optional; a required one makes the row object-slot-unplanned). Unplanned with the Rust reason code: guard-unsolved (guarded row, the symbolic guard solver is not ported) and object-slot-unplanned (object or [object] slot, its properties are not on the row). Each planned step also carries `entity`: its linked row seeded with the seed id and a full std-mock-seed sample, so a transition played alone runs on a row with the fields an earlier transition would have set. The walk is bounded array maps in one event, no cascade."
 ]
 ;; @capabilities "verify planner, payload synthesis, seed row id, plan a transition, guard payload"
 uses Spec from "almadar-std/verify-plan"
@@ -47,12 +47,12 @@ type PlanSeedEntity = { name : string, persistence : string, identity : boolean,
 type PlanSeedOrbital = { entity : PlanSeedEntity, auxiliaryEntities : [PlanSeedEntity] }
 type PlanSeedProgram = { orbitals : [PlanSeedOrbital] }
 type PlanMockField = { name : string, type : string!, values : [string], default : PlanMockValue?, intrinsic : boolean, required : boolean, relation : PlanRelation }
-type PlanRowRef = { idx : number!, key : string!, entity : string!, array : boolean!, seed : string! }
+type PlanRowRef = { idx : number!, key : string!, entity : string!, array : boolean!, seed : string!, row : boolean }
 type PlanRowJob = { entity : string!, fields : [PlanMockField]!, runtime : boolean!, identity : boolean! }
 type PlanRowRefs = [PlanRowRef]
 type PlanRowJobs = [PlanRowJob]
 type PlanSeedEntities = [PlanSeedEntity]
-type VerifyPlanPlannedStep = { trait : string!, linkedEntity : string, from : string!, event : string!, to : string!, toStates : [string]!, variant : string!, payload : PlanPayload!, guarded : boolean!, arm : number, solved : boolean!, payloadCase : string!, guardCase : string, unplanned : string, precondition : PlanPrecondition, reply : string }
+type VerifyPlanPlannedStep = { trait : string!, linkedEntity : string, from : string!, event : string!, to : string!, toStates : [string]!, variant : string!, payload : PlanPayload!, guarded : boolean!, arm : number, solved : boolean!, payloadCase : string!, guardCase : string, unplanned : string, precondition : PlanPrecondition, reply : string, entity : (Map string PlanMockValue?)? }
 
 orbital VerifyPlanOrbital {
   entity PlanRun [runtime] {
@@ -138,7 +138,7 @@ orbital VerifyPlanOrbital {
                                        (if (array/includes ["number" "int" "integer" "float" "money"] (object/get @s "type")) (as 1 JsonValue)
                                        (if (= (object/get @s "type") "date") (as "2026-01-01" JsonValue)
                                        (if (array/includes ["datetime" "timestamp" "instant"] (object/get @s "type")) (as "2026-01-01T00:00:00Z" JsonValue)
-                                       (if (str/startsWith (object/get @s "type") "Map ") (as {} JsonValue)
+                                       (if (str/startsWith (object/get @s "type") "Map<") (as {} JsonValue)
                                        (if (array/includes ["boolean" "bool"] (object/get @s "type")) (as true JsonValue)
                                        (if (= (object/get @s "type") "email") (as "verify@example.com" JsonValue)
                                        (if (array/includes ["url" "image"] (object/get @s "type")) (as "https://example.com/verify" JsonValue)
@@ -236,10 +236,10 @@ orbital VerifyPlanOrbital {
           (let ((r (if (>= @i 0) (array/nth @entity.rows @i) null)) (st (if (>= @i 0) (array/nth @entity.steps @i) null)))
  (if (= @r null) @acc (if (= @st null) @acc
             (let ((seed (object/get @entity.seedIds (object/get @st "linkedEntity" "") (str/concat (object/get @st "linkedEntity" "") "-verify-seed-1"))))
-              (array/concat @acc (array/map (array/filter (object/get @r "payload")
+              (array/concat (array/concat @acc (if (= (object/get @st "linkedEntity" "") "") [] [{ idx: @i, key: "", entity: (object/get @st "linkedEntity" ""), array: false, seed: @seed, row: true }])) (array/map (array/filter (object/get @r "payload")
                   (fn sl (and (!= (object/get @st "linkedEntity" "") "") (not (object/has @sl "values")) (or (object/has @sl "entity") (= (object/get @sl "type") (quote "@entity")) (= (object/get @sl "type") "[@entity]"))
                     (or (= (object/get (object/get @st "payload") (object/get @sl "name")) { id: @seed }) (= (object/get (object/get @st "payload") (object/get @sl "name")) [{ id: @seed }])))))
-                (fn sl { idx: @i, key: (object/get @sl "name"), entity: (object/get @sl "entity" (object/get @st "linkedEntity" "")), array: (str/startsWith (object/get @sl "type") "["), seed: (let ((name (object/get @sl "entity" (object/get @st "linkedEntity" "")))) (if (array/includes (default (if (>= @i 0) (array/nth @entity.createdOnly @i) null) []) @name) (object/get @entity.newIds @name (str/concat @name "-verify-new-1")) (object/get @entity.seedIds @name (str/concat @name "-verify-seed-1")))) }))))))))))
+                (fn sl { idx: @i, key: (object/get @sl "name"), entity: (object/get @sl "entity" (object/get @st "linkedEntity" "")), array: (str/startsWith (object/get @sl "type") "["), seed: (let ((name (object/get @sl "entity" (object/get @st "linkedEntity" "")))) (if (array/includes (default (if (>= @i 0) (array/nth @entity.createdOnly @i) null) []) @name) (object/get @entity.newIds @name (str/concat @name "-verify-new-1")) (object/get @entity.seedIds @name (str/concat @name "-verify-seed-1")))), row: false }))))))))))
         (set @entity.steps (array/reduce @entity.steps [] (fn (acc st)
           (let ((only (default (array/nth @entity.createdOnly (array/len @acc)) [])))
             (array/concat @acc [(if (= (array/len @only) 0) @st
@@ -272,8 +272,9 @@ orbital VerifyPlanOrbital {
                 (let ((seeded (object/set @row "id" (object/get @rf "seed"))))
                   (if (= @seeded null) @st
                     (let ((full (array/reduce (if (and (!= @entity.viewer null) (object/has @entity.viewer "id")) (object/get @entity.owners (str/lower @job) []) []) @seeded (fn (acc field) (object/set @acc @field @vid)))))
+                      (if (object/get @rf "row" false) (object/set @st "entity" @full)
                       (let ((pay (if (object/get @rf "array") (object/set (object/get @st "payload") (object/get @rf "key") [@full]) (object/set (object/get @st "payload") (object/get @rf "key") @full))))
-                        (if (= @pay null) @st (object/set @st "payload" @pay))))))))])))))
+                        (if (= @pay null) @st (object/set @st "payload" @pay)))))))))])))))
             (set @entity.rowJobs (array/drop @entity.rowJobs 1))
             (emit PLAN_COMPUTED { count: (array/len @entity.steps) }))))))
       PLAN_COMPUTED -> ready when (and (= (array/len @entity.rowJobs) 0) (= (array/len @entity.probes) 0))

@@ -94,9 +94,9 @@ type ControlProp = { pattern : string!, prop : string!, kind : string!, notifica
 type OperatorTypeRef = string | OperatorTypeNode
 type OperatorTypeNode = { kind : string!, of : OperatorTypeRef | [OperatorTypeRef], value : OperatorTypeRef | number | boolean?, items : [OperatorTypeRef]?, key : OperatorTypeRef?, fields : Map string OperatorTypeRef?, open : boolean?, optional : [string]?, collection : string?, scope : string?, shape : OperatorTypeRef?, name : string?, bound : OperatorTypeRef?, each : boolean?, params : [OperatorTypeRef]?, returns : OperatorTypeRef?, result : string? }
 type OperatorShapeParam = { name : string, optional : boolean, type : OperatorTypeRef }
-type OperatorShapeEntry = { category : string, minArity : number, maxArity : number?, runsOn : string, host : string, hasSideEffects : boolean, params : [OperatorShapeParam] }
+type OperatorShapeEntry = { category : string, minArity : number, maxArity : number?, runsOn : string, host : string, forwardedToClient : boolean, hasSideEffects : boolean, params : [OperatorShapeParam] }
 type OperatorShapeFile = { operators : Map string OperatorShapeEntry! }
-type OperatorShapeOut = { category : string?, minArity : number?, maxArity : number?, runsOn : string?, host : string?, hasSideEffects : boolean!, params : [OperatorShapeParam]! }
+type OperatorShapeOut = { category : string?, minArity : number?, maxArity : number?, runsOn : string?, host : string?, forwardedToClient : boolean?, hasSideEffects : boolean!, params : [OperatorShapeParam]! }
 type OperatorTable = { operators : Map string OperatorEntry! }
 type PatternProp = { kind : string, eventField : string, notification : boolean }
 type PatternEntry = { propsSchema : Map string PatternProp }
@@ -455,7 +455,8 @@ orbital OrbLintInputOrbital {
                 (if (object/has @o "minArity") { minArity: (object/get @o "minArity") } {})
                 (if (object/has @o "maxArity") { maxArity: (object/get @o "maxArity") } {})
                 (if (object/has @o "runsOn") { runsOn: (object/get @o "runsOn") } {})
-                (if (object/has @o "host") { host: (object/get @o "host") } {})))) })))))
+                (if (object/has @o "host") { host: (object/get @o "host") } {})
+                (if (= (object/get @o "forwardedToClient" false) true) { forwardedToClient: true } {})))) })))))
         (let ((text (bytes/to-string @payload.data)))
           (if (= @text null)
             (emit LINT_INPUT_UNREAD { file: @entity.file, error: "the installed @almadar/std operator table is not valid text" })
@@ -607,7 +608,7 @@ orbital OrbLintInputOrbital {
         @description "Every installed operator name, namespaced ones included (`array/concat`): a children list headed by one is an expression, not a list of patterns; sent before LINT_INPUT."
         @tier "internal"
       LINT_OPERATOR_SHAPES -> external { operators : Map string OperatorShapeOut! }
-        @description "Every operator of the installed @almadar/std operator table with its shape: minArity, maxArity (absent when unbounded), runsOn and host (absent when the table declares none), hasSideEffects, and its params in position order, each with its name, whether it is optional and its type as the table's recursive type reference; sent before LINT_INPUT."
+        @description "Every operator of the installed @almadar/std operator table with its shape: minArity, maxArity (absent when unbounded), runsOn and host (absent when the table declares none), forwardedToClient (true on a client effect the kernel forwards from a server step to the client, absent otherwise), hasSideEffects, and its params in position order, each with its name, whether it is optional and its type as the table's recursive type reference; sent before LINT_INPUT."
         @tier "internal"
       LINT_OPERATOR_SHAPES_UNREAD -> external { error : string! }
         @description "The installed @almadar/std operator table does not match the operator shape type, so LINT_OPERATOR_SHAPES is not sent; LINT_INPUT and every other event are unaffected. A rule that needs the shapes answers its own unread finding."

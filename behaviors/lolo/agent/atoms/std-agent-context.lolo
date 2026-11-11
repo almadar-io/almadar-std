@@ -1,6 +1,6 @@
 app std-agent-context [
   version: "2.0.0",
-  description: "std-agent-context — keeps what an in-app assistant sends the model bounded. COMPACT { messages } passes a conversation of at most `keepMessages` turns straight through as COMPACTED; a longer one has its older turns summarized with std-llm (LLM_SUMMARIZE) into one leading note and keeps the last `keepMessages` turns verbatim. If summarizing fails, the older turns are dropped and the recent ones still go through, and CONTEXT_NOTICE { message, variant } reports it — a summarizer outage never blocks the assistant. AgentContextCompactor is a headless data trait (server by default, so a boot-mounted composer runs it with no UI); AgentContextView renders CONTEXT_NOTICE as a toast, so a composer that wants the warning composes it. Headless data. Nothing is persisted: the conversation itself lives in std-agent-session.",
+  description: "std-agent-context — keeps what an in-app assistant sends the model bounded. COMPACT { messages } passes a conversation of at most `keepMessages` turns straight through as COMPACTED; a longer one has its older turns summarized with std-llm (LLM_SUMMARIZE) into one leading note (sent in the user's role: a chat template may refuse a conversation whose first turn is the assistant's) and keeps the last `keepMessages` turns verbatim. If summarizing fails, the older turns are dropped and the recent ones still go through, and CONTEXT_NOTICE { message, variant } reports it — a summarizer outage never blocks the assistant. AgentContextCompactor is a headless data trait (server by default, so a boot-mounted composer runs it with no UI); AgentContextView renders CONTEXT_NOTICE as a toast, so a composer that wants the warning composes it. Headless data. Nothing is persisted: the conversation itself lives in std-agent-session.",
   net: { "api.openai.com:443": [tcp] },
 ]
 
@@ -190,14 +190,14 @@ orbital AgentContextOrbital {
       UsageReported -> summarizing
       ContextSummarized -> ready when (not @entity.pendingHasLive)
         (emit COMPACTED {
-          messages: (array/prepend (array/takeLast @entity.pendingMessages @entity.pendingKeep) { role: assistant, content: (str/concat "Earlier in this conversation: " ?summary) })
+          messages: (array/prepend (array/takeLast @entity.pendingMessages @entity.pendingKeep) { role: user, content: (str/concat "Earlier in this conversation: " ?summary) })
           instructions: @entity.pendingInstructions
           tools: @entity.pendingTools
           ephemeral: @entity.pendingEphemeral
         })
       ContextSummarized -> ready when @entity.pendingHasLive
         (emit COMPACTED {
-          messages: (array/prepend (array/takeLast @entity.pendingMessages @entity.pendingKeep) { role: assistant, content: (str/concat "Earlier in this conversation: " ?summary) })
+          messages: (array/prepend (array/takeLast @entity.pendingMessages @entity.pendingKeep) { role: user, content: (str/concat "Earlier in this conversation: " ?summary) })
           instructions: @entity.pendingInstructions
           tools: @entity.pendingTools
           ephemeral: @entity.pendingEphemeral
