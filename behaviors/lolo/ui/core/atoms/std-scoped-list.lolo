@@ -23,12 +23,14 @@ orbital ScopedListOrbital {
     state listing {
       INIT -> listing
         (fetch ScopedListItem {
+          limit: @config.maxRows
           emit: { failure: ScopedListLoadFailed, success: ScopedListLoaded }
           filter: (or (and (= (default @entity.scopeValue "") "") (= @config.whenUnscoped "everything")) (and (!= (default @entity.scopeValue "") "") (= (object/get @entity @config.scopeField) @entity.scopeValue)))
         })
       SET_SCOPE -> listing
         (set @entity.scopeValue ?value)
         (fetch ScopedListItem {
+          limit: @config.maxRows
           emit: { failure: ScopedListLoadFailed, success: ScopedListLoaded }
           filter: (or (and (= ?value "") (= @config.whenUnscoped "everything")) (and (!= ?value "") (= (object/get @entity @config.scopeField) ?value)))
         })
@@ -138,6 +140,10 @@ orbital ScopedListOrbital {
       gap : "none" | "sm" | "md" | "lg" = sm
         @label "Gap between rows"
         @tier "presentation"
+      maxRows : number = 500
+        @label "Most rows per load"
+        @description "Most rows one load reads."
+        @tier "policy"
     }
   }
 

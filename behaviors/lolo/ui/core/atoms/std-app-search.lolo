@@ -45,6 +45,7 @@ orbital AppSearchOrbital {
       INIT -> idle
         (fetch AppSearchTarget {
           limit: 1
+          emit: { failure: AppSearchLoadFailed }
         })
         (render-ui main {
           type: stack
@@ -52,6 +53,8 @@ orbital AppSearchOrbital {
           gap: md
           children: [@config.idleContent]
         })
+      AppSearchLoadFailed -> idle
+        (notify error (str/concat "Couldn't load the search — " (default ?error "")))
       APP_SEARCH -> searching when (not (validate/required @config.searchRelation))
         (set @entity.searchTerm ?value)
         (set @entity.appSearchPage 1)
@@ -103,6 +106,7 @@ orbital AppSearchOrbital {
         (set @entity.searchTerm "")
         (fetch AppSearchTarget {
           limit: 1
+          emit: { failure: AppSearchLoadFailed }
         })
         (render-ui main {
           type: stack
@@ -223,6 +227,7 @@ orbital AppSearchOrbital {
         (set @entity.searchTerm "")
         (fetch AppSearchTarget {
           limit: 1
+          emit: { failure: AppSearchLoadFailed }
         })
         (render-ui main {
           type: stack
@@ -301,6 +306,13 @@ orbital AppSearchOrbital {
     }
 
     emits {
+      AppSearchLoadFailed {
+        error : string
+        code : string
+      }
+        @description "Search results could not be loaded."
+        @synonyms "error, failure, rejected"
+        @tier "internal"
       AppSearchLoaded
       AppSearchFailed
       AppSearchRelatedLoaded

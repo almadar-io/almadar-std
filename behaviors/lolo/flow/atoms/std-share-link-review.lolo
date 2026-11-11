@@ -53,8 +53,10 @@ orbital ShareLinkReviewOrbital {
           ttlMs: (* (default ?days @config.defaultDays) 86400000)
         })
       REVOKE_LINK -> idle
-        (persist update ReviewLink { id: ?id, status: "revoked" })
+        (persist update ReviewLink { id: ?id, status: "revoked" } { emit: { failure: LINK_WRITE_FAILED } })
         (emit LINK_REVOKED { id: ?id })
+      LINK_WRITE_FAILED -> idle
+        (notify error (str/concat "Couldn't revoke the link — " (default ?error "")))
     }
 
     state issuing {
@@ -88,6 +90,13 @@ orbital ShareLinkReviewOrbital {
         ttlMs : number!
       }
         @description "Internal: asks LinkMint to mint the link's token."
+        @tier "internal"
+      LINK_WRITE_FAILED {
+        error : string
+        code : string
+      }
+        @description "A review link could not be revoked."
+        @synonyms "error, failure, rejected"
         @tier "internal"
     }
 

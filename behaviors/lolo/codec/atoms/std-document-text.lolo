@@ -1,13 +1,14 @@
 app std-document-text [
   version: "1.0.0",
-  exec: ["pdftotext", "pdftoppm", "tesseract"],
+  exec: ["pdftotext", "pdftoppm", "tesseract", "pandoc"],
   fs: { cwd: "**": [read], "~/.almadar/ocr/**": [read, write, create, remove], "~/.almadar/ocr": [read, create] },
-  description: "std-document-text — the one owner for turning a file into text by pages, composing std-pdf-text, std-ocr and the file read. DOC_TEXT_READ { key, path } chooses by the path's extension, compared case-insensitively against three declared lists: a path in pdfExtensions is read by pdftotext through std-pdf-text and answers DOC_TEXT with method pdftotext, and when the PDF carries no text layer it is read by OCR through std-ocr and answers method ocr; a path in imageExtensions is read by OCR and answers method ocr; a path in textExtensions is read as UTF-8 text and answers one page with method text. DOC_TEXT { key, pages, method } numbers the pages from 1 in document order, nothing truncated. DOC_TEXT_FAILED { key, error, code } answers doc_unsupported (the extension is in no list), doc_not_text (a text file that is not valid UTF-8), doc_unreadable (a text file that could not be read), doc_no_text (OCR found no text on any page) and doc_busy (a read while another is in flight); a failure of the composed readers passes through with its own pdf_unreadable, pdf_command_failed, ocr_unreadable, ocr_command_failed or ocr_unsupported code. The pdftotext, pdftoppm and tesseract exec grants and the OCR work directory grant are this atom's own; the path is opened by the child or by the host relative to the working directory, so the composer decides which files it can name and may narrow the cwd read grant."
+  description: "std-document-text — the one owner for turning a file into text by pages, composing std-pdf-text, std-ocr and the file read. DOC_TEXT_READ { key, path } chooses by the path's extension, compared case-insensitively against three declared lists: a path in pdfExtensions is read by pdftotext through std-pdf-text and answers DOC_TEXT with method pdftotext, and when the PDF carries no text layer it is read by OCR through std-ocr and answers method ocr; a path in imageExtensions is read by OCR and answers method ocr; a path in textExtensions is read as UTF-8 text and answers one page with method text; a path in docxExtensions (Word documents) is read by the pandoc command through std-cli as `pandoc --to plain --wrap none <path>` and answers one page, the command's stdout, with method docx. DOC_TEXT { key, pages, method } numbers the pages from 1 in document order, nothing truncated. DOC_TEXT_FAILED { key, error, code } answers doc_unsupported (the extension is in no list), doc_not_text (a text file that is not valid UTF-8), doc_unreadable (a text file that could not be read), doc_no_text (OCR found no text on any page) and doc_busy (a read while another is in flight); a Word document pandoc could not read (it exited non-zero, could not be run, or the path starts with a dash) answers doc_unreadable with the command error; a failure of the composed readers passes through with its own pdf_unreadable, pdf_command_failed, ocr_unreadable, ocr_command_failed or ocr_unsupported code. The pdftotext, pdftoppm, tesseract and pandoc exec grants and the OCR work directory grant are this atom's own; the path is opened by the child or by the host relative to the working directory, so the composer decides which files it can name and may narrow the cwd read grant."
 ]
 ;; @capabilities "turn a PDF, a scanned PDF, an image or a text file into text, page by page, with OCR as the fallback for pages without a text layer"
 uses Spec from "almadar-std/document-text"
 uses Pdf from "std/behaviors/std-pdf-text"
 uses Ocr from "std/behaviors/std-ocr"
+uses Cli from "std/behaviors/std-cli"
 uses Llm from "std/behaviors/std-llm"
 uses Req from "std/behaviors/std-http-request"
 uses Http from "std/behaviors/std-http-client"
@@ -205,6 +206,15 @@ orbital DocumentTextOrbital {
     }
   }
 
+  trait DocxCli = Cli.traits.CliRunner {
+    listens {
+      DocumentText.DOCX_EXEC -> CLI_RUN
+    }
+    config {
+      commands: ["pandoc"]
+    }
+  }
+
   trait DocumentText -> DocRead [optimistic] {
     initial: ready
 
@@ -218,6 +228,11 @@ orbital DocumentTextOrbital {
         @label "Image extensions"
         @description "Path extensions, lower case with the dot, read as one image page by OCR. Compared case-insensitively against the end of the path."
         @synonyms "picture extensions, photo, scan"
+        @tier "domain"
+      docxExtensions : [string] = [".docx"]
+        @label "Word extensions"
+        @description "Path extensions, lower case with the dot, read as Word documents by the pandoc command and answered as one page. Compared case-insensitively against the end of the path."
+        @synonyms "word documents, docx files, letters"
         @tier "domain"
       workDir : string = "~/.almadar/ocr"
         @label "Work directory"
@@ -275,8 +290,29 @@ orbital DocumentTextOrbital {
         (set @entity.key @payload.key)
         (set @entity.path @payload.path)
         (os/read-file { anchor: "cwd", path: @payload.path } { key: "text", emit: { success: DOC_FILE_READ, failure: DOC_FILE_FAILED } })
-      DOC_TEXT_READ -> ready when (and (not (array/some @config.pdfExtensions (fn e (str/endsWith (str/lower @payload.path) (str/lower @e))))) (not (array/some @config.imageExtensions (fn e (str/endsWith (str/lower @payload.path) (str/lower @e))))) (not (array/some @config.textExtensions (fn e (str/endsWith (str/lower @payload.path) (str/lower @e))))))
-        (emit DOC_TEXT_FAILED { key: @payload.key, error: "the file extension is in none of the pdf, image or text lists", code: "doc_unsupported" })
+      DOC_TEXT_READ -> ready when (and (not (array/some @config.pdfExtensions (fn e (str/endsWith (str/lower @payload.path) (str/lower @e))))) (not (array/some @config.imageExtensions (fn e (str/endsWith (str/lower @payload.path) (str/lower @e))))) (not (array/some @config.textExtensions (fn e (str/endsWith (str/lower @payload.path) (str/lower @e))))) (array/some @config.docxExtensions (fn e (str/endsWith (str/lower @payload.path) (str/lower @e)))) (str/startsWith @payload.path "-"))
+        (emit DOC_TEXT_FAILED { key: @payload.key, error: "a path may not start with a dash", code: "doc_unreadable" })
+      DOC_TEXT_READ -> docx when (and (not (array/some @config.pdfExtensions (fn e (str/endsWith (str/lower @payload.path) (str/lower @e))))) (not (array/some @config.imageExtensions (fn e (str/endsWith (str/lower @payload.path) (str/lower @e))))) (not (array/some @config.textExtensions (fn e (str/endsWith (str/lower @payload.path) (str/lower @e))))) (array/some @config.docxExtensions (fn e (str/endsWith (str/lower @payload.path) (str/lower @e)))) (not (str/startsWith @payload.path "-")))
+        (set @entity.key @payload.key)
+        (set @entity.path @payload.path)
+        (emit DOCX_EXEC { stage: @payload.key, argv: ["--to" "plain" "--wrap" "none" @payload.path] })
+      DOC_TEXT_READ -> ready when (and (not (array/some @config.pdfExtensions (fn e (str/endsWith (str/lower @payload.path) (str/lower @e))))) (not (array/some @config.imageExtensions (fn e (str/endsWith (str/lower @payload.path) (str/lower @e))))) (not (array/some @config.textExtensions (fn e (str/endsWith (str/lower @payload.path) (str/lower @e))))) (not (array/some @config.docxExtensions (fn e (str/endsWith (str/lower @payload.path) (str/lower @e))))))
+        (emit DOC_TEXT_FAILED { key: @payload.key, error: "the file extension is in none of the pdf, image, text or Word lists", code: "doc_unsupported" })
+    }
+
+    state docx {
+      INIT -> docx
+      DOC_TEXT_READ -> docx
+        (emit DOC_TEXT_FAILED { key: @payload.key, error: "another document is being read", code: "doc_busy" })
+      DOC_DOCX_RAN -> ready when (!= @payload.exitCode 0)
+        (emit DOC_TEXT_FAILED { key: @entity.key, error: (str/concat "pandoc exited " @payload.exitCode ": " (str/trim @payload.stderr)), code: "doc_unreadable" })
+        (set @entity.key "")
+      DOC_DOCX_RAN -> ready when (== @payload.exitCode 0)
+        (emit DOC_TEXT { key: @entity.key, pages: [{ page: 1, text: @payload.stdout }], method: "docx" })
+        (set @entity.key "")
+      DOC_DOCX_CLI_FAILED -> ready
+        (emit DOC_TEXT_FAILED { key: @entity.key, error: (str/concat "pandoc could not be run: " @payload.error), code: "doc_unreadable" })
+        (set @entity.key "")
     }
 
     state pdf {
@@ -405,7 +441,7 @@ orbital DocumentTextOrbital {
         pages : [DocPage]!
         method : string!
       }
-        @description "The file was read: one entry per page, numbered from 1 in document order, and the method that produced the text: text (a plain text file), pdftotext (the PDF's text layer) or ocr (recognized from page images)."
+        @description "The file was read: one entry per page, numbered from 1 in document order, and the method that produced the text: text (a plain text file), docx (a Word document read by pandoc), pdftotext (the PDF's text layer) or ocr (recognized from page images)."
         @synonyms "document pages, extracted text, file text"
         @tier "domain"
       DOC_TEXT_FAILED -> external {
@@ -413,7 +449,7 @@ orbital DocumentTextOrbital {
         error : string!
         code : string!
       }
-        @description "The read failed: doc_unsupported, doc_not_text, doc_unreadable, doc_no_text, doc_busy, or the pdf_* / ocr_* code of the composed reader that failed."
+        @description "The read failed: doc_unsupported, doc_not_text, doc_unreadable (also a Word document pandoc could not read), doc_no_text, doc_busy, or the pdf_* / ocr_* code of the composed reader that failed."
         @synonyms "document error, unreadable file"
         @tier "domain"
       DOC_PDF_REQUEST -> external {
@@ -439,6 +475,12 @@ orbital DocumentTextOrbital {
       }
         @description "The rendered page images are no longer needed; std-ocr removes them."
         @tier "internal"
+      DOCX_EXEC -> external {
+        stage : string!
+        argv : [string]!
+      }
+        @description "The pandoc run for a Word document, handed to std-cli."
+        @tier "internal"
       LLM_GENERATE -> external {
         userPrompt : string!
         temperature : number
@@ -456,6 +498,8 @@ orbital DocumentTextOrbital {
       }
         @description "Read the text of the file at path, page by page, choosing the reader by the path's extension; key names the read in the answer."
         @synonyms "read document, file to text, extract text, ocr or pdf text"
+      DocxCli.CLI_DONE -> DOC_DOCX_RAN
+      DocxCli.CLI_FAILED -> DOC_DOCX_CLI_FAILED
       PdfText.PDF_TEXT -> DOC_PDF_TEXT
       PdfText.PDF_NO_TEXT -> DOC_PDF_NO_TEXT
       PdfText.PDF_FAILED -> DOC_PDF_FAILED
@@ -467,6 +511,21 @@ orbital DocumentTextOrbital {
       PageRenderer.OCR_FAILED -> DOC_RENDER_FAILED
       VisionLlm.LLM_GENERATE_RESULT -> DOC_VISION_TEXT
       VisionLlm.LLM_FAILED -> DOC_VISION_FAILED
+      DOC_DOCX_RAN {
+        stage : string!
+        exitCode : number!
+        signal : number!
+        stdout : string!
+        stdoutBytes : bytes!
+        stderr : string!
+      }
+        @description "std-cli's CLI_DONE: pandoc exited, with its code and both streams."
+      DOC_DOCX_CLI_FAILED {
+        stage : string!
+        error : string!
+        code : string!
+      }
+        @description "std-cli's CLI_FAILED: pandoc could not be run."
       DOC_PDF_TEXT {
         key : string!
         pages : [DocPage]!
@@ -539,5 +598,5 @@ orbital DocumentTextOrbital {
     }
   }
 
-  page boot as DocumentTextOrbitalStart -> DocumentText, PdfText, PdfCli, OcrReader, OcrRenderCli, OcrCli, PageRenderer, PageRenderCli, VisionLlm, VisionRequest, VisionRequestDelay, VisionRequestDeadline, VisionHttpFrame, VisionHttp
+  page boot as DocumentTextOrbitalStart -> DocumentText, PdfText, PdfCli, DocxCli, OcrReader, OcrRenderCli, OcrCli, PageRenderer, PageRenderCli, VisionLlm, VisionRequest, VisionRequestDelay, VisionRequestDeadline, VisionHttpFrame, VisionHttp
 }

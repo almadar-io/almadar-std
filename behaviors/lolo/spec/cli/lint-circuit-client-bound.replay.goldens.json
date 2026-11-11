@@ -73599,6 +73599,2282 @@
           }
         }
       ]
+    },
+    {
+      "id": "no-failure-route-persist-create-without-options",
+      "steps": [
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "PATTERNS_HEARD",
+          "from": "ready",
+          "payload": {
+            "patterns": {}
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "EMBEDS_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "all": {},
+            "config": {},
+            "guards": {},
+            "effects": {}
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "Fx",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Task",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true,
+                        "nullable": false
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "Task",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "persist",
+                                "create",
+                                "Task",
+                                {
+                                  "id": "1"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "dispatch": "client"
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/p",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "schemaVersion": 1
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "circuit-client-bound",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_EFF_SERVER_EFFECT_NO_FAILURE_ROUTE",
+                      "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[1].effects",
+                      "message": "trait 'T' on 'GO': persist create 'Task' declares no failure route",
+                      "suggestion": "Add emit: { failure: <EVENT> } to the effect's options and handle that event in the state the transition ends in.",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "no-failure-route-control-persist-create-with-failure",
+      "steps": [
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "PATTERNS_HEARD",
+          "from": "ready",
+          "payload": {
+            "patterns": {}
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "EMBEDS_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "all": {},
+            "config": {},
+            "guards": {},
+            "effects": {}
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "Fx",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Task",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true,
+                        "nullable": false
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "Task",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "persist",
+                                "create",
+                                "Task",
+                                {
+                                  "id": "1"
+                                },
+                                {
+                                  "emit": {
+                                    "failure": "PF"
+                                  }
+                                }
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "PF",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stack"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "dispatch": "client"
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/p",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "schemaVersion": 1
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "circuit-client-bound",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "no-failure-route-persist-update-with-success-only",
+      "steps": [
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "PATTERNS_HEARD",
+          "from": "ready",
+          "payload": {
+            "patterns": {}
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "EMBEDS_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "all": {},
+            "config": {},
+            "guards": {},
+            "effects": {}
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "Fx",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Task",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true,
+                        "nullable": false
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "Task",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "persist",
+                                "update",
+                                "Task",
+                                {
+                                  "id": "1"
+                                },
+                                {
+                                  "emit": {
+                                    "success": "OK"
+                                  }
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "dispatch": "client"
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/p",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "schemaVersion": 1
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "circuit-client-bound",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_EFF_SERVER_EFFECT_NO_FAILURE_ROUTE",
+                      "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[1].effects",
+                      "message": "trait 'T' on 'GO': persist update 'Task' declares no failure route",
+                      "suggestion": "Add emit: { failure: <EVENT> } to the effect's options and handle that event in the state the transition ends in.",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "no-failure-route-fetch-without-options",
+      "steps": [
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "PATTERNS_HEARD",
+          "from": "ready",
+          "payload": {
+            "patterns": {}
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "EMBEDS_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "all": {},
+            "config": {},
+            "guards": {},
+            "effects": {}
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "Fx",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Task",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true,
+                        "nullable": false
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "Task",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "fetch",
+                                "Task"
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "dispatch": "client"
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/p",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "schemaVersion": 1
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "circuit-client-bound",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_EFF_SERVER_EFFECT_NO_FAILURE_ROUTE",
+                      "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[1].effects",
+                      "message": "trait 'T' on 'GO': fetch 'Task' declares no failure route",
+                      "suggestion": "Add emit: { failure: <EVENT> } to the effect's options and handle that event in the state the transition ends in.",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "no-failure-route-control-fetch-with-failure",
+      "steps": [
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "PATTERNS_HEARD",
+          "from": "ready",
+          "payload": {
+            "patterns": {}
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "EMBEDS_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "all": {},
+            "config": {},
+            "guards": {},
+            "effects": {}
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "Fx",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Task",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true,
+                        "nullable": false
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "Task",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "fetch",
+                                "Task",
+                                {
+                                  "emit": {
+                                    "failure": "FF"
+                                  }
+                                }
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "FF",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stack"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "dispatch": "client"
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/p",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "schemaVersion": 1
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "circuit-client-bound",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "no-failure-route-call-service-without-failure",
+      "steps": [
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "PATTERNS_HEARD",
+          "from": "ready",
+          "payload": {
+            "patterns": {}
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "EMBEDS_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "all": {},
+            "config": {},
+            "guards": {},
+            "effects": {}
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "Fx",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Task",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true,
+                        "nullable": false
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "Task",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "call-service",
+                                "svc",
+                                "x",
+                                {
+                                  "emit": {
+                                    "success": "OK"
+                                  }
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "dispatch": "client"
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/p",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "schemaVersion": 1
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "circuit-client-bound",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_EFF_SERVER_EFFECT_NO_FAILURE_ROUTE",
+                      "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[1].effects",
+                      "message": "trait 'T' on 'GO': call-service 'svc.x' declares no failure route",
+                      "suggestion": "Add emit: { failure: <EVENT> } to the effect's options and handle that event in the state the transition ends in.",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "no-failure-route-control-call-service-with-failure",
+      "steps": [
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "PATTERNS_HEARD",
+          "from": "ready",
+          "payload": {
+            "patterns": {}
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "EMBEDS_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "all": {},
+            "config": {},
+            "guards": {},
+            "effects": {}
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "Fx",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Task",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true,
+                        "nullable": false
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "Task",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "call-service",
+                                "svc",
+                                "x",
+                                {
+                                  "emit": {
+                                    "failure": "CF"
+                                  }
+                                }
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "CF",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stack"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "dispatch": "client"
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/p",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "schemaVersion": 1
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "circuit-client-bound",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "no-failure-route-persist-batch-without-failure",
+      "steps": [
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "PATTERNS_HEARD",
+          "from": "ready",
+          "payload": {
+            "patterns": {}
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "EMBEDS_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "all": {},
+            "config": {},
+            "guards": {},
+            "effects": {}
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "Fx",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Task",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true,
+                        "nullable": false
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "Task",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "persist",
+                                "batch",
+                                "Task",
+                                {
+                                  "emit": {
+                                    "success": "OK"
+                                  }
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "dispatch": "client"
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/p",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "schemaVersion": 1
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "circuit-client-bound",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_EFF_SERVER_EFFECT_NO_FAILURE_ROUTE",
+                      "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[1].effects",
+                      "message": "trait 'T' on 'GO': persist batch 'Task' declares no failure route",
+                      "suggestion": "Add emit: { failure: <EVENT> } to the effect's options and handle that event in the state the transition ends in.",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "no-failure-route-control-persist-batch-with-failure",
+      "steps": [
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "PATTERNS_HEARD",
+          "from": "ready",
+          "payload": {
+            "patterns": {}
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "EMBEDS_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "all": {},
+            "config": {},
+            "guards": {},
+            "effects": {}
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "Fx",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Task",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true,
+                        "nullable": false
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "Task",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "persist",
+                                "batch",
+                                "Task",
+                                {
+                                  "emit": {
+                                    "failure": "BF"
+                                  }
+                                }
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "BF",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stack"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "dispatch": "client"
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/p",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "schemaVersion": 1
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "circuit-client-bound",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "no-failure-route-effect-nested-in-do",
+      "steps": [
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "PATTERNS_HEARD",
+          "from": "ready",
+          "payload": {
+            "patterns": {}
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "EMBEDS_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "all": {},
+            "config": {},
+            "guards": {},
+            "effects": {}
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "Fx",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Task",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true,
+                        "nullable": false
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "Task",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "do",
+                                [
+                                  "persist",
+                                  "create",
+                                  "Task",
+                                  {
+                                    "id": "1"
+                                  }
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "dispatch": "client"
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/p",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "schemaVersion": 1
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "circuit-client-bound",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_EFF_SERVER_EFFECT_NO_FAILURE_ROUTE",
+                      "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[1].effects",
+                      "message": "trait 'T' on 'GO': persist create 'Task' declares no failure route",
+                      "suggestion": "Add emit: { failure: <EVENT> } to the effect's options and handle that event in the state the transition ends in.",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "no-failure-route-effect-nested-in-if",
+      "steps": [
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "PATTERNS_HEARD",
+          "from": "ready",
+          "payload": {
+            "patterns": {}
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "EMBEDS_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "all": {},
+            "config": {},
+            "guards": {},
+            "effects": {}
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "Fx",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Task",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true,
+                        "nullable": false
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "Task",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "if",
+                                true,
+                                [
+                                  "fetch",
+                                  "Task"
+                                ],
+                                [
+                                  "call-service",
+                                  "svc",
+                                  "x"
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "dispatch": "client"
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/p",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "schemaVersion": 1
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "circuit-client-bound",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_EFF_SERVER_EFFECT_NO_FAILURE_ROUTE",
+                      "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[1].effects",
+                      "message": "trait 'T' on 'GO': fetch 'Task' declares no failure route",
+                      "suggestion": "Add emit: { failure: <EVENT> } to the effect's options and handle that event in the state the transition ends in.",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_EFF_SERVER_EFFECT_NO_FAILURE_ROUTE",
+                      "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[1].effects",
+                      "message": "trait 'T' on 'GO': call-service 'svc.x' declares no failure route",
+                      "suggestion": "Add emit: { failure: <EVENT> } to the effect's options and handle that event in the state the transition ends in.",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "no-failure-route-control-fetch-and-persist-on-a-runtime-entity",
+      "steps": [
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "PATTERNS_HEARD",
+          "from": "ready",
+          "payload": {
+            "patterns": {}
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "EMBEDS_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "all": {},
+            "config": {},
+            "guards": {},
+            "effects": {}
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "Fx",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Task",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true,
+                        "nullable": false
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "Task",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "fetch",
+                                "Task"
+                              ],
+                              [
+                                "persist",
+                                "create",
+                                "Task",
+                                {
+                                  "id": "1"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "dispatch": "client"
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/p",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "schemaVersion": 1
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "circuit-client-bound",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "no-failure-route-persist-on-a-binding-entity",
+      "steps": [
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "PATTERNS_HEARD",
+          "from": "ready",
+          "payload": {
+            "patterns": {}
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "EMBEDS_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "all": {},
+            "config": {},
+            "guards": {},
+            "effects": {}
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "Fx",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Task",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true,
+                        "nullable": false
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "Task",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "persist",
+                                "create",
+                                "@config.x",
+                                {
+                                  "id": "1"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "dispatch": "client"
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/p",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "schemaVersion": 1
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "circuit-client-bound",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_EFF_SERVER_EFFECT_NO_FAILURE_ROUTE",
+                      "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[1].effects",
+                      "message": "trait 'T' on 'GO': persist create '@config.x' declares no failure route",
+                      "suggestion": "Add emit: { failure: <EVENT> } to the effect's options and handle that event in the state the transition ends in.",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "no-failure-route-tick-persist-without-failure",
+      "steps": [
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "PATTERNS_HEARD",
+          "from": "ready",
+          "payload": {
+            "patterns": {}
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "EMBEDS_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "all": {},
+            "config": {},
+            "guards": {},
+            "effects": {}
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "Fx",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Task",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true,
+                        "nullable": false
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "Task",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": []
+                          }
+                        ]
+                      },
+                      "dispatch": "client",
+                      "ticks": [
+                        {
+                          "effects": [
+                            [
+                              "persist",
+                              "create",
+                              "Task",
+                              {
+                                "id": "1"
+                              }
+                            ]
+                          ]
+                        }
+                      ]
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/p",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "schemaVersion": 1
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "circuit-client-bound",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_EFF_SERVER_EFFECT_NO_FAILURE_ROUTE",
+                      "path": "orbitals[0 (O)].traits[0 (T)].ticks[0].effects",
+                      "message": "trait 'T' tick 0: persist create 'Task' declares no failure route",
+                      "suggestion": "Add emit: { failure: <EVENT> } to the effect's options and handle that event in the state the transition ends in.",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "no-failure-route-control-tick-persist-with-failure",
+      "steps": [
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "PATTERNS_HEARD",
+          "from": "ready",
+          "payload": {
+            "patterns": {}
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "EMBEDS_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "all": {},
+            "config": {},
+            "guards": {},
+            "effects": {}
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "Fx",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Task",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true,
+                        "nullable": false
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "Task",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": []
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "TF",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "stack"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "dispatch": "client",
+                      "ticks": [
+                        {
+                          "effects": [
+                            [
+                              "persist",
+                              "create",
+                              "Task",
+                              {
+                                "id": "1"
+                              },
+                              {
+                                "emit": {
+                                  "failure": "TF"
+                                }
+                              }
+                            ]
+                          ]
+                        }
+                      ]
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/p",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "schemaVersion": 1
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "circuit-client-bound",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
     }
   ]
 }

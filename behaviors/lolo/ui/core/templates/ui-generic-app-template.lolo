@@ -13,7 +13,7 @@ orbital GenericAppTemplateOrbital {
 
     state idle {
       INIT -> idle
-        (fetch GenericAppTemplateItem {})
+        (fetch GenericAppTemplateItem { emit: { failure: GenericAppTemplateLoadFailed } })
         (render-ui main {
           entity: @entity
           className: @config.className
@@ -41,6 +41,18 @@ orbital GenericAppTemplateOrbital {
           tabIndex: @config.tabIndex
           type: generic-app-template
         })
+      GenericAppTemplateLoadFailed -> idle
+        (notify error (str/concat "Couldn't load the app — " (default ?error "")))
+    }
+
+    emits {
+      GenericAppTemplateLoadFailed {
+        error : string
+        code : string
+      }
+        @description "App could not be loaded."
+        @synonyms "error, failure, rejected"
+        @tier "internal"
     }
 
     config {

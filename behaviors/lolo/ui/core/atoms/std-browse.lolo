@@ -150,6 +150,7 @@ orbital BrowseItemOrbital {
         })
       REFETCH_QUERY -> browsing when (and (validate/required @config.searchRelation) (!= ?searchTerm ""))
         (fetch @config.relatedEntity {
+          limit: @config.maxRows
           emit: { failure: BrowseItemLoadFailed, success: BrowseItemRelatedLoaded }
           filter: (if (= @config.relatedSearchField null) false (str/includes (default (object/get @entity @config.relatedSearchField) "") ?searchTerm))
         })
@@ -918,6 +919,10 @@ orbital BrowseItemOrbital {
         @label "Master-detail look body (record open)"
         @description "Render-ui SExpr rendered by the VIEW transition when browseLook = master-detail: the same split view with the clicked record's detail panel on the right, fed by the VIEW payload row and detailFields."
         @tier "internal"
+      maxRows : number = 500
+        @label "Most rows per load"
+        @description "Most rows one load reads."
+        @tier "policy"
     }
   }
 

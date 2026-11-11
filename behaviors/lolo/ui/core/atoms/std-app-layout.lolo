@@ -22,6 +22,7 @@ orbital AppLayoutOrbital {
       ;; a nav item, top-bar action or user-menu item with no roles is visible to every viewer (declared); with roles it shows only when viewerRole is one of them
       INIT -> composing when (or (= (array/len @config.allowedRoles) 0) (array/includes @config.allowedRoles @config.viewerRole))
         (fetch AppLayoutData {
+          limit: @config.maxRows
           emit: { failure: AppLayoutStateLoadFailed, success: AppLayoutStateLoaded }
         })
         (render-ui main {
@@ -57,6 +58,7 @@ orbital AppLayoutOrbital {
         })
       INIT -> composing when (not (or (= (array/len @config.allowedRoles) 0) (array/includes @config.allowedRoles @config.viewerRole)))
         (fetch AppLayoutData {
+          limit: @config.maxRows
           emit: { failure: AppLayoutStateLoadFailed, success: AppLayoutStateLoaded }
         })
         (render-ui main {
@@ -272,6 +274,10 @@ orbital AppLayoutOrbital {
         @label "Theme"
         @description "Data-theme attribute applied to the layout root (e.g. almadar-website-dark)."
         @tier "presentation"
+      maxRows : number = 500
+        @label "Most rows per load"
+        @description "Most rows one load reads."
+        @tier "policy"
     }
   }
 

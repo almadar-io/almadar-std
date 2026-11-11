@@ -91,10 +91,11 @@ def fixture_state(page, extra_verdicts=None):
     return dom, stops, dict(E(page), dom=dom, stops=stops, presses=len(stops) + 1, firstIdx=stops[0]["domIndex"], firstSel=stops[0]["selector"], lastSel=stops[-1]["selector"], verdicts=extra_verdicts or [])
 
 
-def ind_verdicts(stops):
+def ind_verdicts(stops, min_stops=3):
     bad = [s for s in stops if not s["visible"]]
-    if stops and len(bad) == len(stops):
-        return [verdict("focus-not-visible", "confirmed", stops[0]["selector"], stops[0]["snippet"], len(stops))]
+    checked = [s for s in stops if not (s["visible"] and s["href"].startswith("#") and s["domIndex"] == stops[0]["domIndex"])]
+    if len(checked) >= min_stops and all(not s["visible"] for s in checked):
+        return [verdict("focus-not-visible", "confirmed", checked[0]["selector"], checked[0]["snippet"], len(checked))]
     return [verdict("focus-not-visible-element", "needs-verification", s["selector"], s["snippet"]) for s in bad]
 
 
@@ -244,13 +245,23 @@ cases.append(fixture_case("skip-link-broken-fail.html: the first stop links to #
 cases.append(fixture_case("skip-inert.html: the link and its target exist but Enter moves neither focus nor scroll nor :target, so skip-broken", "skip-inert", [], "test",
                           "probe-focus-walk.gen/skip-inert.html: the link click handler calls preventDefault"))
 fvs = walk("focus-visible-fail")
-cases.append(fixture_case("focus-visible-fail.html: four of five stops show no focus change; the skip link does change background, so each is focus-not-visible-element", "focus-visible-fail", ind_verdicts(fvs), "test"))
+skip_fv = sk("focus-visible-fail", 0)
+cases.append(fixture_case("focus-visible-fail.html: the four non-skip stops show no focus change and the skip link only reveals itself, so one confirmed site-wide focus-not-visible (N26)", "focus-visible-fail", ind_verdicts(fvs), "test"))
 cases.append(fixture_case("control: focus-visible-pass.html: every stop shows a 3px outline, no findings", "focus-visible-pass", [], "test"))
 nav_only = fvs[1:]
 nv = ind_verdicts(nav_only)
 assert nv[0]["rule"] == "focus-not-visible"
-cases.append(fixture_case("when every stop has no indicator the finding is one confirmed focus-not-visible", "focus-visible-fail", nv + [verdict("skip-not-first", "needs-verification", sk("focus-visible-fail", 0)["selector"], sk("focus-visible-fail", 0)["snippet"])], "none",
+cases.append(fixture_case("when every stop has no indicator the finding is one confirmed focus-not-visible", "focus-visible-fail", nv + [verdict("skip-not-first", "needs-verification", skip_fv["selector"], skip_fv["snippet"])], "none",
                           "the stops are the four non-skip stops recorded on focus-visible-fail.html; the skip link is left out because it changes background when focused", stops_override=nav_only))
+one_bad = [dict(s, visible=True) for s in nav_only[:3]] + nav_only[3:]
+ov = ind_verdicts(one_bad)
+assert [v["rule"] for v in ov] == ["focus-not-visible-element"]
+cases.append(fixture_case("control: one stop without an indicator among four is a per-element focus-not-visible-element (N25), not site-wide", "focus-visible-fail", ov + [verdict("skip-not-first", "needs-verification", skip_fv["selector"], skip_fv["snippet"])], "none",
+                          "the first three recorded non-skip stops are given a visible indicator; only the button lacks one", stops_override=one_bad))
+few = nav_only[:2]
+fv = ind_verdicts(few)
+assert [v["rule"] for v in fv] == ["focus-not-visible-element"] * 2
+cases.append(fixture_case("control: two checked stops, both without an indicator, are below siteWideMinStops (3) so they stay per-element", "focus-visible-fail", fv + [verdict("skip-not-first", "needs-verification", skip_fv["selector"], skip_fv["snippet"])], "none", stops_override=few))
 cases.append(fixture_case("keyboard-trap-fail.html: #trap holds focus for five Tabs and Shift+Tab, one confirmed keyboard-trap", "keyboard-trap-fail", [trap_v], "test"))
 cases.append(fixture_case("control: keyboard-trap-pass.html: Tab leaves the field, no findings", "keyboard-trap-pass", [], "test"))
 fo = walk("focus-order")

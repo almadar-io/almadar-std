@@ -75,7 +75,7 @@ orbital TableViewOrbital {
 
     state idle {
       INIT -> idle when @config.selfFetch
-        (fetch TableViewItem { emit: { success: TableViewLoaded } })
+        (fetch TableViewItem { emit: { failure: TableViewLoadFailed, success: TableViewLoaded } })
         (render-ui main {
           dragGroup: @config.dragGroup
           accepts: @config.accepts
@@ -183,6 +183,8 @@ orbital TableViewOrbital {
           tabIndex: @config.tabIndex
           type: table-view
         })
+      TableViewLoadFailed -> idle
+        (notify error (str/concat "Couldn't load the table — " (default ?error "")))
       TableViewLoaded -> idle
         (render-ui main {
           dragGroup: @config.dragGroup
@@ -263,6 +265,13 @@ orbital TableViewOrbital {
       }
         @description "User opened a record from the list."
         @tier "essential"
+      TableViewLoadFailed {
+        error : string
+        code : string
+      }
+        @description "TableView rows could not be loaded."
+        @synonyms "error, failure, rejected"
+        @tier "internal"
       TableViewLoaded
         @description "TableView rows finished loading; payload.data holds the collection."
         @synonyms "loaded, fetched, retrieved"

@@ -93,18 +93,20 @@ orbital EvalRunOrbital {
       CASES_READ -> idle
       CASES_FAILED -> idle
         (render-ui toast { message: ?error, type: alert, variant: warning })
+      CASE_WRITE_FAILED -> idle
+        (notify error (str/concat "Couldn't record the case — " (default ?error "")))
     }
 
     state running {
       INIT -> idle
       ;; fields is absent when the pool answered; an empty hint then fails the case
       BUILD_DONE -> idle when (= ?tier "pool")
-        (persist create EvalCase { caseId: @entity.current.id, request: @entity.current.request, expectTier: @entity.current.expectTier, tier: ?tier, behavior: ?behavior, hint: (object/get (default ?fields {}) howToPlay ""), latencyMs: (time/diff @now @entity.startedAt), verdict: (if (and (= ?tier @entity.current.expectTier) (!= (object/get (default ?fields {}) howToPlay "") "")) pass fail) })
+        (persist create EvalCase { caseId: @entity.current.id, request: @entity.current.request, expectTier: @entity.current.expectTier, tier: ?tier, behavior: ?behavior, hint: (object/get (default ?fields {}) howToPlay ""), latencyMs: (time/diff @now @entity.startedAt), verdict: (if (and (= ?tier @entity.current.expectTier) (!= (object/get (default ?fields {}) howToPlay "") "")) pass fail) } { emit: { failure: CASE_WRITE_FAILED } })
       BUILD_DONE -> idle when (!= ?tier "pool")
-        (persist create EvalCase { caseId: @entity.current.id, request: @entity.current.request, expectTier: @entity.current.expectTier, tier: ?tier, behavior: ?behavior, hint: (object/get (default ?fields {}) howToPlay ""), latencyMs: (time/diff @now @entity.startedAt), verdict: (if (and (= ?tier @entity.current.expectTier) (!= (object/get (default ?fields {}) howToPlay "") "")) pass fail) })
+        (persist create EvalCase { caseId: @entity.current.id, request: @entity.current.request, expectTier: @entity.current.expectTier, tier: ?tier, behavior: ?behavior, hint: (object/get (default ?fields {}) howToPlay ""), latencyMs: (time/diff @now @entity.startedAt), verdict: (if (and (= ?tier @entity.current.expectTier) (!= (object/get (default ?fields {}) howToPlay "") "")) pass fail) } { emit: { failure: CASE_WRITE_FAILED } })
         (emit POOL_WRITE { value: ?value, name: ?orbitalName, kind: "instrument", topic: "", fields: ?fields, description: @entity.current.request })
       BUILD_FAILED_CASE -> idle
-        (persist create EvalCase { caseId: @entity.current.id, request: @entity.current.request, expectTier: @entity.current.expectTier, latencyMs: (time/diff @now @entity.startedAt), verdict: fail, error: ?error })
+        (persist create EvalCase { caseId: @entity.current.id, request: @entity.current.request, expectTier: @entity.current.expectTier, latencyMs: (time/diff @now @entity.startedAt), verdict: fail, error: ?error } { emit: { failure: CASE_WRITE_FAILED } })
     }
 
     config {
@@ -139,6 +141,13 @@ orbital EvalRunOrbital {
       CASES_FAILED {
         error : string!
       }
+        @tier "internal"
+      CASE_WRITE_FAILED {
+        error : string
+        code : string
+      }
+        @description "Recording an eval case failed."
+        @synonyms "error, failure, rejected"
         @tier "internal"
       START_BUILD -> external {
         request : string!

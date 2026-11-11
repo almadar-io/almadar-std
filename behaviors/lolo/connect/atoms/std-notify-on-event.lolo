@@ -249,7 +249,7 @@ orbital NotifyOnEventOrbital {
           recipient: @entity.recipient
           recordedAt: @now
           severity: @entity.severity
-        }) (fetch NotificationPreference { limit: @config.maxPreferenceRows, emit: { failure: NOTIFY_LOOKUP_FAILED, success: NOTIFY_PREFS_LOADED } })))
+        } { emit: { failure: NOTIFY_WRITE_FAILED } }) (fetch NotificationPreference { limit: @config.maxPreferenceRows, emit: { failure: NOTIFY_LOOKUP_FAILED, success: NOTIFY_PREFS_LOADED } })))
         (emit NotificationDispatched {
           channel: @entity.channel
           message: @entity.message
@@ -269,7 +269,7 @@ orbital NotifyOnEventOrbital {
           recipient: @entity.recipient
           recordedAt: @now
           severity: @entity.severity
-        }) (if (= @entity.prefMode "digest") (persist create NotificationRecord {
+        } { emit: { failure: NOTIFY_WRITE_FAILED } }) (if (= @entity.prefMode "digest") (persist create NotificationRecord {
           channel: @entity.channel
           dispatched: false
           error: "digest-deferred"
@@ -277,7 +277,7 @@ orbital NotifyOnEventOrbital {
           recipient: @entity.recipient
           recordedAt: @now
           severity: @entity.severity
-        }) (if (and (str/includes @entity.prefQuietHours "-") (!= (str/slice (default (array/first (str/split @entity.prefQuietHours "-")) "") 0 2) (str/slice (default (array/nth (str/split @entity.prefQuietHours "-") 1) "") 0 2)) (if (< (str/slice (default (array/first (str/split @entity.prefQuietHours "-")) "") 0 2) (str/slice (default (array/nth (str/split @entity.prefQuietHours "-") 1) "") 0 2)) (and (>= (str/padStart (str/concat "" (time/hour @now)) 2 "0") (str/slice (default (array/first (str/split @entity.prefQuietHours "-")) "") 0 2)) (< (str/padStart (str/concat "" (time/hour @now)) 2 "0") (str/slice (default (array/nth (str/split @entity.prefQuietHours "-") 1) "") 0 2))) (or (>= (str/padStart (str/concat "" (time/hour @now)) 2 "0") (str/slice (default (array/first (str/split @entity.prefQuietHours "-")) "") 0 2)) (< (str/padStart (str/concat "" (time/hour @now)) 2 "0") (str/slice (default (array/nth (str/split @entity.prefQuietHours "-") 1) "") 0 2))))) (persist create NotificationRecord {
+        } { emit: { failure: NOTIFY_WRITE_FAILED } }) (if (and (str/includes @entity.prefQuietHours "-") (!= (str/slice (default (array/first (str/split @entity.prefQuietHours "-")) "") 0 2) (str/slice (default (array/nth (str/split @entity.prefQuietHours "-") 1) "") 0 2)) (if (< (str/slice (default (array/first (str/split @entity.prefQuietHours "-")) "") 0 2) (str/slice (default (array/nth (str/split @entity.prefQuietHours "-") 1) "") 0 2)) (and (>= (str/padStart (str/concat "" (time/hour @now)) 2 "0") (str/slice (default (array/first (str/split @entity.prefQuietHours "-")) "") 0 2)) (< (str/padStart (str/concat "" (time/hour @now)) 2 "0") (str/slice (default (array/nth (str/split @entity.prefQuietHours "-") 1) "") 0 2))) (or (>= (str/padStart (str/concat "" (time/hour @now)) 2 "0") (str/slice (default (array/first (str/split @entity.prefQuietHours "-")) "") 0 2)) (< (str/padStart (str/concat "" (time/hour @now)) 2 "0") (str/slice (default (array/nth (str/split @entity.prefQuietHours "-") 1) "") 0 2))))) (persist create NotificationRecord {
           channel: @entity.channel
           dispatched: false
           error: "quiet-hours"
@@ -285,7 +285,7 @@ orbital NotifyOnEventOrbital {
           recipient: @entity.recipient
           recordedAt: @now
           severity: @entity.severity
-        }) (if (or (= @entity.channel in-app) (= @entity.channel in_app)) (do (set @entity.dispatched true) (notify @config.severity @config.template)) (fetch NotificationRecord {
+        } { emit: { failure: NOTIFY_WRITE_FAILED } }) (if (or (= @entity.channel in-app) (= @entity.channel in_app)) (do (set @entity.dispatched true) (notify @config.severity @config.template)) (fetch NotificationRecord {
           emit: { failure: NOTIFY_LOOKUP_FAILED, success: NOTIFY_CAP_LOADED }
           limit: @config.maxRecordRows
           filter: (> (object/get @entity recordedAt) (time/subtract @now 604800000 "ms"))
@@ -301,7 +301,7 @@ orbital NotifyOnEventOrbital {
           recipient: @entity.recipient
           recordedAt: @now
           severity: @entity.severity
-        }) (if (= @entity.channel email) (emit EMAIL_SEND {
+        } { emit: { failure: NOTIFY_WRITE_FAILED } }) (if (= @entity.channel email) (emit EMAIL_SEND {
           body: @entity.message
           subject: (if (= @config.emailSubject "") @entity.message @config.emailSubject)
           to: @entity.recipient
@@ -315,7 +315,7 @@ orbital NotifyOnEventOrbital {
           recipient: @entity.recipient
           recordedAt: @now
           severity: @entity.severity
-        }) (emit WEBHOOK_SEND {
+        } { emit: { failure: NOTIFY_WRITE_FAILED } }) (emit WEBHOOK_SEND {
           event: @entity.message
           payload: { message: @entity.message, recipient: @entity.recipient, severity: @entity.severity }
         }))))))
@@ -331,7 +331,7 @@ orbital NotifyOnEventOrbital {
           recipient: @entity.recipient
           recordedAt: @now
           severity: @entity.severity
-        }) (emit PUSH_SEND {
+        } { emit: { failure: NOTIFY_WRITE_FAILED } }) (emit PUSH_SEND {
           subscription: { endpoint: @entity.pushEndpoint, keys: { auth: @entity.pushAuth, p256dh: @entity.pushP256dh } }
           title: (if (= @config.pushTitle "") @entity.message @config.pushTitle)
           body: @entity.message
@@ -347,7 +347,7 @@ orbital NotifyOnEventOrbital {
           recipient: @entity.recipient
           recordedAt: @now
           severity: @entity.severity
-        })
+        } { emit: { failure: NOTIFY_WRITE_FAILED } })
       NOTIFY_EMAIL_FAILED -> idle
         (set @entity.dispatched false)
         (set @entity.error ?message)
@@ -359,7 +359,7 @@ orbital NotifyOnEventOrbital {
           recipient: @entity.recipient
           recordedAt: @now
           severity: @entity.severity
-        })
+        } { emit: { failure: NOTIFY_WRITE_FAILED } })
         (notify error (str/concat "Couldn't send the email notification — " ?message))
       NOTIFY_SMS_SENT -> idle
         (set @entity.dispatched true)
@@ -370,7 +370,7 @@ orbital NotifyOnEventOrbital {
           recipient: @entity.recipient
           recordedAt: @now
           severity: @entity.severity
-        })
+        } { emit: { failure: NOTIFY_WRITE_FAILED } })
       NOTIFY_SMS_FAILED -> idle
         (set @entity.dispatched false)
         (set @entity.error ?message)
@@ -382,7 +382,7 @@ orbital NotifyOnEventOrbital {
           recipient: @entity.recipient
           recordedAt: @now
           severity: @entity.severity
-        })
+        } { emit: { failure: NOTIFY_WRITE_FAILED } })
         (notify error (str/concat "Couldn't send the text message — " ?message))
       NOTIFY_WEBHOOK_SENT -> idle
         (set @entity.dispatched true)
@@ -393,7 +393,7 @@ orbital NotifyOnEventOrbital {
           recipient: @entity.recipient
           recordedAt: @now
           severity: @entity.severity
-        })
+        } { emit: { failure: NOTIFY_WRITE_FAILED } })
       NOTIFY_WEBHOOK_FAILED -> idle
         (set @entity.dispatched false)
         (set @entity.error ?message)
@@ -405,7 +405,7 @@ orbital NotifyOnEventOrbital {
           recipient: @entity.recipient
           recordedAt: @now
           severity: @entity.severity
-        })
+        } { emit: { failure: NOTIFY_WRITE_FAILED } })
         (notify error (str/concat "Couldn't send the webhook notification — " ?message))
       NOTIFY_PUSH_SENT -> idle
         (set @entity.dispatched true)
@@ -416,7 +416,7 @@ orbital NotifyOnEventOrbital {
           recipient: @entity.recipient
           recordedAt: @now
           severity: @entity.severity
-        })
+        } { emit: { failure: NOTIFY_WRITE_FAILED } })
       NOTIFY_PUSH_FAILED -> idle
         (set @entity.dispatched false)
         (set @entity.error ?message)
@@ -428,7 +428,7 @@ orbital NotifyOnEventOrbital {
           recipient: @entity.recipient
           recordedAt: @now
           severity: @entity.severity
-        })
+        } { emit: { failure: NOTIFY_WRITE_FAILED } })
         (notify error (str/concat "Couldn't send the push notification — " ?message))
       NOTIFY_LOOKUP_FAILED -> idle
         (set @entity.dispatched false)
@@ -441,8 +441,10 @@ orbital NotifyOnEventOrbital {
           recipient: @entity.recipient
           recordedAt: @now
           severity: @entity.severity
-        })
+        } { emit: { failure: NOTIFY_WRITE_FAILED } })
         (notify error (if (validate/required ?error) (str/concat "Couldn't look up notification preferences — " ?error) "Couldn't look up notification preferences"))
+      NOTIFY_WRITE_FAILED -> idle
+        (notify error (str/concat "Couldn't record the notification — " (default ?error "")))
     }
 
     emits {
@@ -503,6 +505,13 @@ orbital NotifyOnEventOrbital {
       }
         @description "A preference / cap-window / subscription fetch failed — dispatched lands false with the fetch error"
         @tier "secondary"
+      NOTIFY_WRITE_FAILED {
+        error : string
+        code : string
+      }
+        @description "A NotificationRecord audit row could not be written."
+        @synonyms "error, failure, rejected"
+        @tier "internal"
     }
 
     listens {
@@ -839,11 +848,13 @@ orbital NotifyOnEventOrbital {
     state idle {
       INIT -> idle
       MARK_READ -> idle
-        (persist update NotificationRecord { id: ?id, read: true })
+        (persist update NotificationRecord { id: ?id, read: true } { emit: { failure: INBOX_WRITE_FAILED } })
         (emit NOTIFICATION_READ { notificationId: ?id })
       OPEN_NOTIFICATION -> idle when (validate/required ?row.link)
-        (persist update NotificationRecord { id: ?id, read: true })
+        (persist update NotificationRecord { id: ?id, read: true } { emit: { failure: INBOX_WRITE_FAILED } })
         (navigate ?row.link)
+      INBOX_WRITE_FAILED -> idle
+        (notify error (str/concat "Couldn't update the notification — " (default ?error "")))
     }
 
     emits {
@@ -852,6 +863,13 @@ orbital NotifyOnEventOrbital {
       }
         @description "The viewer read a notification."
         @tier "secondary"
+      INBOX_WRITE_FAILED {
+        error : string
+        code : string
+      }
+        @description "A notification could not be marked read."
+        @synonyms "error, failure, rejected"
+        @tier "internal"
     }
 
     listens {

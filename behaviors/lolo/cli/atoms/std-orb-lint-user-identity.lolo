@@ -26,7 +26,7 @@ type UidProgram = { orbitals : [UidOrbital] }
 type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error", validValues : [string], entity : string, field : string }
 
 type LintCodeDecl = { code : string!, category : string!, description : string! }
-type LintUserIdentityCodes = { lintIndexMissing : LintCodeDecl , sRoleLiteralNotMember : LintCodeDecl }
+type LintUserIdentityCodes = { lintIndexMissing : LintCodeDecl , sRoleLiteralNotMember : LintCodeDecl , sUserIdEmptyComparison : LintCodeDecl }
 
 orbital OrbLintUserIdentityOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
@@ -82,6 +82,12 @@ orbital OrbLintUserIdentityOrbital {
  (if (validate/array @n)
   (let ((len (array/len @n)) (op (let ((o0 (if (> (array/len @n) 0) (array/nth @n 0) ""))) (if (validate/string @o0) @o0 ""))))
    (array/concat
+    (array/concat (if (and (= @len 3) (not (object/has @td "sourceBehavior")) (or (= @op "=") (= @op "==") (= @op "!=")))
+ (let ((ua (array/nth @n 1)) (ub (array/nth @n 2)))
+  (if (or (and (= @ua (quote "@user.id")) (= @ub "")) (and (= @ua "") (= @ub (quote "@user.id"))))
+   [{ rel: "", kind: "uid-empty", a: @op, b: "", vv: @nov }]
+   []))
+ [])
     (if (and (>= @len 3) (or (= @op "=") (= @op "==") (= @op "!=") (= @op "!==") (= @op "eq") (= @op "neq") (= @op "array/includes")))
  (let ((args (array/slice @n 1)) (incl (= @op "array/includes")))
   (let ((a0 (array/nth @args 0)) (a1 (array/nth @args 1)))
@@ -102,16 +108,18 @@ orbital OrbLintUserIdentityOrbital {
                          [@lit0]))
                        @args)))
            (array/map (array/filter @lits (fn a (and (validate/string @a) (not (str/startsWith @a (quote "@"))) (not (array/includes @vocab @a)) (not (and (= @sn "role") (= @a @config.anonymousRole)))))) (fn a { rel: "", kind: "role", a: (if (validate/string @a) @a ""), b: @sn, vv: @vocab }))))))))))))
- [])
+ []))
     (array/flatten (array/map (array/range 0 (array/len @n)) (fn i (let ((r (array/nth @k @i))) (if (validate/array @r) (array/map @r (fn h { rel: (str/concat "[" @i "]" (let ((s15 (object/get @h "rel" ""))) (if (validate/string @s15) @s15 ""))), kind: (let ((s16 (object/get @h "kind" ""))) (if (validate/string @s16) @s16 "")), a: (let ((s17 (object/get @h "a" ""))) (if (validate/string @s17) @s17 "")), b: (let ((s18 (object/get @h "b" ""))) (if (validate/string @s18) @s18 "")), vv: (let ((v0 (object/get @h "vv" @nov))) (if (validate/array @v0) (array/map @v0 (fn x (if (validate/string @x) @x ""))) @nov)) })) [])))))))
   (if (validate/object @n)
    (array/flatten (array/map (array/filter (object/keys @k) (fn key (not (= @key "sourceEntityDefinition")))) (fn key (let ((r (object/get @k @key))) (if (validate/array @r) (array/map @r (fn h { rel: (str/concat "." @key (let ((s19 (object/get @h "rel" ""))) (if (validate/string @s19) @s19 ""))), kind: (let ((s20 (object/get @h "kind" ""))) (if (validate/string @s20) @s20 "")), a: (let ((s21 (object/get @h "a" ""))) (if (validate/string @s21) @s21 "")), b: (let ((s22 (object/get @h "b" ""))) (if (validate/string @s22) @s22 "")), vv: (let ((v0 (object/get @h "vv" @nov))) (if (validate/array @v0) (array/map @v0 (fn x (if (validate/string @x) @x ""))) @nov)) })) [])))))
    [])) [])) UidShape)))
               (if (validate/array @hs)
                (array/flatten (array/map @hs (fn h (let ((kind (let ((s27 (object/get @h "kind" ""))) (if (validate/string @s27) @s27 ""))) (a (let ((s28 (object/get @h "a" ""))) (if (validate/string @s28) @s28 ""))) (b (let ((s29 (object/get @h "b" ""))) (if (validate/string @s29) @s29 ""))) (vv (let ((v0 (object/get @h "vv" @nov))) (if (validate/array @v0) (array/map @v0 (fn x (if (validate/string @x) @x ""))) @nov))))
+ (if (= @kind "uid-empty")
+  [{ code: @config.codes.sUserIdEmptyComparison.code, path: (str/concat @tp (let ((s26 (object/get @h "rel" ""))) (if (validate/string @s26) @s26 ""))), message: (str/concat "'@user.id' is never empty: the anonymous viewer's id is \"anonymous\" (EXEC-IDENTITY-1), so this comparison is always " (if (= @a "!=") "true" "false")), suggestion: "Test the role instead: (!= @user.role \"anonymous\") for a signed-in viewer", severity: "error" }]
  (if (= @kind "role")
-  [{ code: @config.codes.sRoleLiteralNotMember.code, path: (str/concat @tp (let ((s26 (object/get @h "rel" ""))) (if (validate/string @s26) @s26 ""))), message: (str/concat "\"" @a "\" is not a declared value of `@user." @b "` on the [identity] entity `" @idNm "`. This comparison can never be true — the branch is dead."), suggestion: (if (= @a "") "An empty string is not a role: to test that someone is signed in, compare the identity id instead, `(!= @user.id \"\")`." (str/concat "Use one of: " (str/join @vv ", ") ", or add \"" @a "\" to `" @idNm "." @b "`.")), severity: "error", validValues: @vv }]
-  [])))))
+  [{ code: @config.codes.sRoleLiteralNotMember.code, path: (str/concat @tp (let ((s26 (object/get @h "rel" ""))) (if (validate/string @s26) @s26 ""))), message: (str/concat "\"" @a "\" is not a declared value of `@user." @b "` on the [identity] entity `" @idNm "`. This comparison can never be true — the branch is dead."), suggestion: (if (= @a "") "An empty string is not a role: to test that someone is signed in, compare the role instead, `(!= @user.role \"anonymous\")`." (str/concat "Use one of: " (str/join @vv ", ") ", or add \"" @a "\" to `" @idNm "." @b "`.")), severity: "error", validValues: @vv }]
+  []))))))
                @nof))
              @nof)))))))))))))))))  (array/flatten (array/map @declList (fn declared
  (let ((idF (object/get @declared "fields" [])) (idnm (object/get @declared "name" "")))
@@ -159,7 +167,7 @@ orbital OrbLintUserIdentityOrbital {
       anonymousRole : string = "anonymous"
         @label "Anonymous role"
         @description "The role the kernel gives a session with no identity (EXEC-IDENTITY-1). It is a value of @user.role in every program, whatever roles the identity entity declares."
-      codes : LintUserIdentityCodes = { lintIndexMissing: { code: "ORB_LINT_INDEX_MISSING", category: "lint", description: "The lint input arrived without a shared program fact the rule reads (the structural index, sites, units, embeds or entities), so the rule cannot check the program" }, sRoleLiteralNotMember: { code: "ORB_S_ROLE_LITERAL_NOT_MEMBER", category: "schema", description: "A literal compared against an @user field with a closed vocabulary is not a member of that vocabulary, so the branch can never be taken" } }
+      codes : LintUserIdentityCodes = { lintIndexMissing: { code: "ORB_LINT_INDEX_MISSING", category: "lint", description: "The lint input arrived without a shared program fact the rule reads (the structural index, sites, units, embeds or entities), so the rule cannot check the program" }, sRoleLiteralNotMember: { code: "ORB_S_ROLE_LITERAL_NOT_MEMBER", category: "schema", description: "A literal compared against an @user field with a closed vocabulary is not a member of that vocabulary, so the branch can never be taken" }, sUserIdEmptyComparison: { code: "ORB_S_USER_ID_EMPTY_COMPARISON", category: "schema", description: "A comparison of @user.id with the empty string, which is never true of a viewer: the anonymous viewer's id is \"anonymous\", so the comparison is constant" } }
         @label "Emitted codes"
         @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
     }

@@ -21,7 +21,7 @@ type AccProgram = { orbitals : [AccOrbital] }
 type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error", validValues : [string], entity : string, field : string }
 
 type LintCodeDecl = { code : string!, category : string!, description : string! }
-type LintEntityAccessCodes = { entityOwnerColumnUnscoped : LintCodeDecl , entityReadUndeclared : LintCodeDecl , lintNodeUnchecked : LintCodeDecl , guardOnFrameFieldAuthorizes : LintCodeDecl , sAccessPolicyUnknownEntityField : LintCodeDecl , sAccessPolicyInvalidBinding : LintCodeDecl , sOwnerFieldNotIdentityTyped : LintCodeDecl , sRoleLiteralNotMember : LintCodeDecl , sAccessPolicyRequiresIdentity : LintCodeDecl }
+type LintEntityAccessCodes = { entityOwnerColumnUnscoped : LintCodeDecl , entityReadUndeclared : LintCodeDecl , lintNodeUnchecked : LintCodeDecl , guardOnFrameFieldAuthorizes : LintCodeDecl , sAccessPolicyUnknownEntityField : LintCodeDecl , sAccessPolicyInvalidBinding : LintCodeDecl , sOwnerFieldNotIdentityTyped : LintCodeDecl , sRoleLiteralNotMember : LintCodeDecl , sAccessPolicyRequiresIdentity : LintCodeDecl , sUserIdEmptyComparison : LintCodeDecl }
 
 orbital OrbLintEntityAccessOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
@@ -145,7 +145,13 @@ orbital OrbLintEntityAccessOrbital {
  (if (validate/array @n)
   (let ((len (array/len @n)) (op (let ((o0 (if (> (array/len @n) 0) (array/nth @n 0) ""))) (if (validate/string @o0) @o0 ""))))
    (array/concat
-    (array/concat (array/concat (if (and (>= @len 3) (or (= @op "=") (= @op "==") (= @op "!=") (= @op "!==") (= @op "eq") (= @op "neq") (= @op "array/includes")))
+    (array/concat (array/concat (array/concat (if (and (= @len 3) (or (= @op "=") (= @op "==") (= @op "!=")))
+ (let ((ua (array/nth @n 1)) (ub (array/nth @n 2)))
+  (if (or (and (= @ua (quote "@user.id")) (= @ub "")) (and (= @ua "") (= @ub (quote "@user.id"))))
+   [{ rel: "", kind: "uid-empty", a: @op, b: "", vv: @nov }]
+   []))
+ [])
+    (if (and (>= @len 3) (or (= @op "=") (= @op "==") (= @op "!=") (= @op "!==") (= @op "eq") (= @op "neq") (= @op "array/includes")))
  (let ((args (array/slice @n 1)) (incl (= @op "array/includes")))
   (let ((a0 (array/nth @args 0)) (a1 (array/nth @args 1)))
    (let ((first0 (not (= (if (and (validate/string @a0) (str/startsWith @a0 (quote "@user.")) (> (str/len @a0) 6) (not (str/includes (str/slice @a0 6) ".")) (not (str/includes (str/slice @a0 6) "["))) (str/slice @a0 6) "") ""))))
@@ -168,7 +174,7 @@ orbital OrbLintEntityAccessOrbital {
                          [@lit0]))
                        @args)))
            (array/map (array/filter @lits (fn a (and (validate/string @a) (not (str/startsWith @a (quote "@"))) (not (array/includes @vocab @a)) (not (and (= @sn "role") (= @a @config.anonymousRole)))))) (fn a { rel: "", kind: "role", a: (if (validate/string @a) @a ""), b: @sn, vv: @vocab }))))))))))))
- []) (if (and (= @op "object/get") (>= @len 3))
+ [])) (if (and (= @op "object/get") (>= @len 3))
  (let ((r1 (if (> (array/len @n) 1) (array/nth @n 1) "")) (r2 (if (> (array/len @n) 2) (array/nth @n 2) "")))
   (if (and (validate/string @r1) (validate/string @r2))
    (if (= @r1 (quote "@entity")) (let ((fm (array/filter @ofields (fn fd (= (object/get @fd "name" "") @r2)))))
@@ -216,10 +222,12 @@ orbital OrbLintEntityAccessOrbital {
     (if (= @kind "owner-typed")
      (let ((idn (default (array/first @idNames) "")))
       [{ code: @config.codes.sOwnerFieldNotIdentityTyped.code, path: @path, message: (str/concat "`" @enn "." @a "` is compared to `@user.id` but is not a relation to the [identity] entity `" @idn "` — it is " @b ". Viewer ids are only ever stamped onto declared relations, so this predicate matches no row and the directive denies everyone."), entity: @enn, field: @a, suggestion: (str/concat "Type `" @a "` as a relation to " @idn " (`" @a " : " @idn "`), or compare against the field the viewer value actually lives in"), severity: "error" }])
+     (if (= @kind "uid-empty")
+      [{ code: @config.codes.sUserIdEmptyComparison.code, path: @path, message: (str/concat "'@user.id' is never empty: the anonymous viewer's id is \"anonymous\" (EXEC-IDENTITY-1), so this comparison is always " (if (= @a "!=") "true" "false")), suggestion: "Test the role instead: (!= @user.role \"anonymous\") for a signed-in viewer", severity: "error" }]
      (if (= @kind "role")
       (let ((vv (let ((v0 (object/get @h "vv" @nov))) (if (validate/array @v0) (array/map @v0 (fn x (if (validate/string @x) @x ""))) @nov))))
        [{ code: @config.codes.sRoleLiteralNotMember.code, path: @path, message: (str/concat "\"" @a "\" is not a declared value of `@user." @b "` on the [identity] entity `" @idNm "`. This comparison can never be true — the branch is dead."), entity: @idNm, field: @b, suggestion: (str/concat "Use one of: " (str/join @vv ", ") ", or add \"" @a "\" to `" @idNm "." @b "`."), severity: "error", validValues: @vv }])
-      [])))))))))
+      []))))))))))
      (if (and (array/some @hs (fn h (= (let ((s14 (object/get @h "kind" ""))) (if (validate/string @s14) @s14 "")) "user"))) (not @idDecl)) [{ code: @config.codes.sAccessPolicyRequiresIdentity.code, path: @bp, message: (str/concat "`@" @sig "` on entity `" @enn "` reads `@user`, but this program declares no [identity] entity. An access directive needs a real roster to resolve against — declare `[identity]` on the entity that models your app's viewer."), suggestion: "Tag your user-directory entity `[persistent: <collection>, identity]`.", severity: "error" }] [])))))))) ))))))))))))))))))))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
@@ -244,7 +252,7 @@ orbital OrbLintEntityAccessOrbital {
       anonymousRole : string = "anonymous"
         @label "Anonymous role"
         @description "The role the kernel gives a session with no identity (EXEC-IDENTITY-1). It is a value of @user.role in every program, whatever roles the identity entity declares."
-      codes : LintEntityAccessCodes = { entityOwnerColumnUnscoped: { code: "ORB_ENTITY_OWNER_COLUMN_UNSCOPED", category: "entity", description: "An entity declares owner columns but has no access policy scoping rows to the owner" }, entityReadUndeclared: { code: "ORB_ENTITY_READ_UNDECLARED", category: "entity", description: "A persistent entity declares neither an @read policy nor an @read none waiver, so who reads its rows is unstated" }, lintNodeUnchecked: { code: "LINT_NODE_UNCHECKED", category: "lint", description: "A lint rule met a schema node of an unexpected shape and could not check it" }, guardOnFrameFieldAuthorizes: { code: "ORB_GUARD_ON_FRAME_FIELD_AUTHORIZES", category: "guard", description: "A guard reads an intrinsic frame field of an entity to authorize, but intrinsic fields are not trustworthy for access" }, sAccessPolicyUnknownEntityField: { code: "ORB_S_ACCESS_POLICY_UNKNOWN_ENTITY_FIELD", category: "schema", description: "An access policy references a name that is not a field of its entity, so it resolves to null and denies everyone" }, sAccessPolicyInvalidBinding: { code: "ORB_S_ACCESS_POLICY_INVALID_BINDING", category: "schema", description: "An access directive uses a binding other than the ones legal there" }, sOwnerFieldNotIdentityTyped: { code: "ORB_S_OWNER_FIELD_NOT_IDENTITY_TYPED", category: "schema", description: "An access directive compares a field to @user.id but the field is not a relation to the identity entity" }, sRoleLiteralNotMember: { code: "ORB_S_ROLE_LITERAL_NOT_MEMBER", category: "schema", description: "A literal compared against an @user field with a closed vocabulary is not a member of that vocabulary, so the branch can never be taken" }, sAccessPolicyRequiresIdentity: { code: "ORB_S_ACCESS_POLICY_REQUIRES_IDENTITY", category: "schema", description: "An access directive reads @user but the program declares no identity entity" } }
+      codes : LintEntityAccessCodes = { entityOwnerColumnUnscoped: { code: "ORB_ENTITY_OWNER_COLUMN_UNSCOPED", category: "entity", description: "An entity declares owner columns but has no access policy scoping rows to the owner" }, entityReadUndeclared: { code: "ORB_ENTITY_READ_UNDECLARED", category: "entity", description: "A persistent entity declares neither an @read policy nor an @read none waiver, so who reads its rows is unstated" }, lintNodeUnchecked: { code: "LINT_NODE_UNCHECKED", category: "lint", description: "A lint rule met a schema node of an unexpected shape and could not check it" }, guardOnFrameFieldAuthorizes: { code: "ORB_GUARD_ON_FRAME_FIELD_AUTHORIZES", category: "guard", description: "A guard reads an intrinsic frame field of an entity to authorize, but intrinsic fields are not trustworthy for access" }, sAccessPolicyUnknownEntityField: { code: "ORB_S_ACCESS_POLICY_UNKNOWN_ENTITY_FIELD", category: "schema", description: "An access policy references a name that is not a field of its entity, so it resolves to null and denies everyone" }, sAccessPolicyInvalidBinding: { code: "ORB_S_ACCESS_POLICY_INVALID_BINDING", category: "schema", description: "An access directive uses a binding other than the ones legal there" }, sOwnerFieldNotIdentityTyped: { code: "ORB_S_OWNER_FIELD_NOT_IDENTITY_TYPED", category: "schema", description: "An access directive compares a field to @user.id but the field is not a relation to the identity entity" }, sRoleLiteralNotMember: { code: "ORB_S_ROLE_LITERAL_NOT_MEMBER", category: "schema", description: "A literal compared against an @user field with a closed vocabulary is not a member of that vocabulary, so the branch can never be taken" }, sAccessPolicyRequiresIdentity: { code: "ORB_S_ACCESS_POLICY_REQUIRES_IDENTITY", category: "schema", description: "An access directive reads @user but the program declares no identity entity" }, sUserIdEmptyComparison: { code: "ORB_S_USER_ID_EMPTY_COMPARISON", category: "schema", description: "A comparison of @user.id with the empty string, which is never true of a viewer: the anonymous viewer's id is \"anonymous\", so the comparison is constant" } }
         @label "Emitted codes"
         @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
     }

@@ -43,7 +43,7 @@ orbital AuditCaptureOrbital {
           sourceTrait: (default @event.source.trait "")
           sourceOrbital: (default @event.source.orbital "")
           sourceTick: (default @event.source.tick "")
-        }) (emit AuditRecorded {
+        } { emit: { failure: AUDIT_WRITE_FAILED } }) (emit AuditRecorded {
           action: @entity.action
           actor: @user.id
           entityId: @entity.entityId
@@ -54,6 +54,8 @@ orbital AuditCaptureOrbital {
           sourceOrbital: (default @event.source.orbital "")
           sourceTick: (default @event.source.tick "")
         })))
+      AUDIT_WRITE_FAILED -> idle
+        (emit AUDIT_WRITE_REJECTED { error: (default ?error "") })
     }
 
     emits {
@@ -68,6 +70,18 @@ orbital AuditCaptureOrbital {
         sourceOrbital : string
         sourceTick : string
       }
+      AUDIT_WRITE_REJECTED -> external {
+        error : string
+      }
+        @description "An audit entry could not be written, so the change it records is missing from the trail."
+        @tier "primary"
+      AUDIT_WRITE_FAILED {
+        error : string
+        code : string
+      }
+        @description "The audit row's write failed; routed to AUDIT_WRITE_REJECTED."
+        @synonyms "error, failure, rejected"
+        @tier "internal"
     }
 
     listens {

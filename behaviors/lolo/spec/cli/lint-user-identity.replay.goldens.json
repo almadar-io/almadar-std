@@ -5213,7 +5213,7 @@
            "code": "ORB_S_ROLE_LITERAL_NOT_MEMBER",
            "path": "orbitals[1 (DocOrbital)].traits[0 (DocView)].stateMachine.transitions[0].guard",
            "message": "\"\" is not a declared value of `@user.role` on the [identity] entity `Person`. This comparison can never be true — the branch is dead.",
-           "suggestion": "An empty string is not a role: to test that someone is signed in, compare the identity id instead, `(!= @user.id \"\")`.",
+           "suggestion": "An empty string is not a role: to test that someone is signed in, compare the role instead, `(!= @user.role \"anonymous\")`.",
            "severity": "error",
            "validValues": [
             "manager",
@@ -5237,6 +5237,1569 @@
      "1-0-0": []
     }
    }
+  },
+  {
+   "id": "user-id-empty-equality-guard-is-an-error",
+   "steps": [
+    {
+     "trait": "OrbLintUserIdentity",
+     "from": "ready",
+     "event": "INDEX_HEARD",
+     "payload": {
+      "scope": "",
+      "heads": {
+       "1-0": [
+        "="
+       ],
+       "1-0-0": [],
+       "1-0-c": []
+      },
+      "roots": {
+       "1-0": [
+        "@user"
+       ],
+       "1-0-0": [],
+       "1-0-c": []
+      }
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintUserIdentity",
+     "event": "ENTITIES_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "list": [
+       {
+        "name": "Person",
+        "identity": true,
+        "persistence": "persistent",
+        "collection": "people",
+        "fields": [
+         {
+          "name": "id",
+          "type": "string",
+          "required": true
+         },
+         {
+          "name": "role",
+          "type": "enum",
+          "values": [
+           "manager",
+           "cto"
+          ]
+         }
+        ],
+        "oi": 0,
+        "orbital": "PeopleOrbital",
+        "auxiliary": false
+       },
+       {
+        "persistence": "persistent",
+        "name": "Doc",
+        "oi": 1,
+        "orbital": "DocOrbital",
+        "auxiliary": false,
+        "fields": [
+         {
+          "name": "id",
+          "type": "string",
+          "required": true
+         }
+        ]
+       }
+      ],
+      "primaryDuplicates": []
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "App",
+       "orbitals": [
+        {
+         "name": "PeopleOrbital",
+         "entity": {
+          "name": "Person",
+          "identity": true,
+          "persistence": "persistent",
+          "collection": "people",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "role",
+            "type": "enum",
+            "values": [
+             "manager",
+             "cto"
+            ]
+           }
+          ]
+         },
+         "traits": [],
+         "pages": []
+        },
+        {
+         "name": "DocOrbital",
+         "entity": {
+          "name": "Doc",
+          "persistence": "persistent",
+          "collection": "docs",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "DocView",
+           "linkedEntity": "Doc",
+           "stateMachine": {
+            "events": [],
+            "states": [],
+            "transitions": [
+             {
+              "from": "idle",
+              "event": "OPEN",
+              "to": "idle",
+              "guard": [
+               "=",
+               "@user.id",
+               ""
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": []
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     },
+     "trait": "OrbLintUserIdentity"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "user-identity",
+         "findings": [
+          {
+           "code": "ORB_S_USER_ID_EMPTY_COMPARISON",
+           "path": "orbitals[1 (DocOrbital)].traits[0 (DocView)].stateMachine.transitions[0].guard",
+           "message": "'@user.id' is never empty: the anonymous viewer's id is \"anonymous\" (EXEC-IDENTITY-1), so this comparison is always false",
+           "suggestion": "Test the role instead: (!= @user.role \"anonymous\") for a signed-in viewer",
+           "severity": "error"
+          }
+         ],
+         "scope": ""
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintUserIdentity"
+    }
+   ],
+   "note": "G-CROSS-405: `(= @user.id \"\")` is always false, the anonymous viewer's id is \"anonymous\""
+  },
+  {
+   "id": "user-id-empty-inequality-guard-is-an-error",
+   "steps": [
+    {
+     "trait": "OrbLintUserIdentity",
+     "from": "ready",
+     "event": "INDEX_HEARD",
+     "payload": {
+      "scope": "",
+      "heads": {
+       "1-0": [
+        "="
+       ],
+       "1-0-0": [],
+       "1-0-c": []
+      },
+      "roots": {
+       "1-0": [
+        "@user"
+       ],
+       "1-0-0": [],
+       "1-0-c": []
+      }
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintUserIdentity",
+     "event": "ENTITIES_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "list": [
+       {
+        "name": "Person",
+        "identity": true,
+        "persistence": "persistent",
+        "collection": "people",
+        "fields": [
+         {
+          "name": "id",
+          "type": "string",
+          "required": true
+         },
+         {
+          "name": "role",
+          "type": "enum",
+          "values": [
+           "manager",
+           "cto"
+          ]
+         }
+        ],
+        "oi": 0,
+        "orbital": "PeopleOrbital",
+        "auxiliary": false
+       },
+       {
+        "persistence": "persistent",
+        "name": "Doc",
+        "oi": 1,
+        "orbital": "DocOrbital",
+        "auxiliary": false,
+        "fields": [
+         {
+          "name": "id",
+          "type": "string",
+          "required": true
+         }
+        ]
+       }
+      ],
+      "primaryDuplicates": []
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "App",
+       "orbitals": [
+        {
+         "name": "PeopleOrbital",
+         "entity": {
+          "name": "Person",
+          "identity": true,
+          "persistence": "persistent",
+          "collection": "people",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "role",
+            "type": "enum",
+            "values": [
+             "manager",
+             "cto"
+            ]
+           }
+          ]
+         },
+         "traits": [],
+         "pages": []
+        },
+        {
+         "name": "DocOrbital",
+         "entity": {
+          "name": "Doc",
+          "persistence": "persistent",
+          "collection": "docs",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "DocView",
+           "linkedEntity": "Doc",
+           "stateMachine": {
+            "events": [],
+            "states": [],
+            "transitions": [
+             {
+              "from": "idle",
+              "event": "OPEN",
+              "to": "idle",
+              "guard": [
+               "!=",
+               "@user.id",
+               ""
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": []
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     },
+     "trait": "OrbLintUserIdentity"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "user-identity",
+         "findings": [
+          {
+           "code": "ORB_S_USER_ID_EMPTY_COMPARISON",
+           "path": "orbitals[1 (DocOrbital)].traits[0 (DocView)].stateMachine.transitions[0].guard",
+           "message": "'@user.id' is never empty: the anonymous viewer's id is \"anonymous\" (EXEC-IDENTITY-1), so this comparison is always true",
+           "suggestion": "Test the role instead: (!= @user.role \"anonymous\") for a signed-in viewer",
+           "severity": "error"
+          }
+         ],
+         "scope": ""
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintUserIdentity"
+    }
+   ],
+   "note": "G-CROSS-405: `(!= @user.id \"\")` is always true"
+  },
+  {
+   "id": "user-id-empty-reversed-operands-is-an-error",
+   "steps": [
+    {
+     "trait": "OrbLintUserIdentity",
+     "from": "ready",
+     "event": "INDEX_HEARD",
+     "payload": {
+      "scope": "",
+      "heads": {
+       "1-0": [
+        "="
+       ],
+       "1-0-0": [],
+       "1-0-c": []
+      },
+      "roots": {
+       "1-0": [
+        "@user"
+       ],
+       "1-0-0": [],
+       "1-0-c": []
+      }
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintUserIdentity",
+     "event": "ENTITIES_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "list": [
+       {
+        "name": "Person",
+        "identity": true,
+        "persistence": "persistent",
+        "collection": "people",
+        "fields": [
+         {
+          "name": "id",
+          "type": "string",
+          "required": true
+         },
+         {
+          "name": "role",
+          "type": "enum",
+          "values": [
+           "manager",
+           "cto"
+          ]
+         }
+        ],
+        "oi": 0,
+        "orbital": "PeopleOrbital",
+        "auxiliary": false
+       },
+       {
+        "persistence": "persistent",
+        "name": "Doc",
+        "oi": 1,
+        "orbital": "DocOrbital",
+        "auxiliary": false,
+        "fields": [
+         {
+          "name": "id",
+          "type": "string",
+          "required": true
+         }
+        ]
+       }
+      ],
+      "primaryDuplicates": []
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "App",
+       "orbitals": [
+        {
+         "name": "PeopleOrbital",
+         "entity": {
+          "name": "Person",
+          "identity": true,
+          "persistence": "persistent",
+          "collection": "people",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "role",
+            "type": "enum",
+            "values": [
+             "manager",
+             "cto"
+            ]
+           }
+          ]
+         },
+         "traits": [],
+         "pages": []
+        },
+        {
+         "name": "DocOrbital",
+         "entity": {
+          "name": "Doc",
+          "persistence": "persistent",
+          "collection": "docs",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "DocView",
+           "linkedEntity": "Doc",
+           "stateMachine": {
+            "events": [],
+            "states": [],
+            "transitions": [
+             {
+              "from": "idle",
+              "event": "OPEN",
+              "to": "idle",
+              "guard": [
+               "!=",
+               "",
+               "@user.id"
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": []
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     },
+     "trait": "OrbLintUserIdentity"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "user-identity",
+         "findings": [
+          {
+           "code": "ORB_S_USER_ID_EMPTY_COMPARISON",
+           "path": "orbitals[1 (DocOrbital)].traits[0 (DocView)].stateMachine.transitions[0].guard",
+           "message": "'@user.id' is never empty: the anonymous viewer's id is \"anonymous\" (EXEC-IDENTITY-1), so this comparison is always true",
+           "suggestion": "Test the role instead: (!= @user.role \"anonymous\") for a signed-in viewer",
+           "severity": "error"
+          }
+         ],
+         "scope": ""
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintUserIdentity"
+    }
+   ],
+   "note": "G-CROSS-405: the empty string on the left"
+  },
+  {
+   "id": "user-id-empty-nested-in-and-is-an-error",
+   "steps": [
+    {
+     "trait": "OrbLintUserIdentity",
+     "from": "ready",
+     "event": "INDEX_HEARD",
+     "payload": {
+      "scope": "",
+      "heads": {
+       "1-0": [
+        "="
+       ],
+       "1-0-0": [],
+       "1-0-c": []
+      },
+      "roots": {
+       "1-0": [
+        "@user"
+       ],
+       "1-0-0": [],
+       "1-0-c": []
+      }
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintUserIdentity",
+     "event": "ENTITIES_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "list": [
+       {
+        "name": "Person",
+        "identity": true,
+        "persistence": "persistent",
+        "collection": "people",
+        "fields": [
+         {
+          "name": "id",
+          "type": "string",
+          "required": true
+         },
+         {
+          "name": "role",
+          "type": "enum",
+          "values": [
+           "manager",
+           "cto"
+          ]
+         }
+        ],
+        "oi": 0,
+        "orbital": "PeopleOrbital",
+        "auxiliary": false
+       },
+       {
+        "persistence": "persistent",
+        "name": "Doc",
+        "oi": 1,
+        "orbital": "DocOrbital",
+        "auxiliary": false,
+        "fields": [
+         {
+          "name": "id",
+          "type": "string",
+          "required": true
+         }
+        ]
+       }
+      ],
+      "primaryDuplicates": []
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "App",
+       "orbitals": [
+        {
+         "name": "PeopleOrbital",
+         "entity": {
+          "name": "Person",
+          "identity": true,
+          "persistence": "persistent",
+          "collection": "people",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "role",
+            "type": "enum",
+            "values": [
+             "manager",
+             "cto"
+            ]
+           }
+          ]
+         },
+         "traits": [],
+         "pages": []
+        },
+        {
+         "name": "DocOrbital",
+         "entity": {
+          "name": "Doc",
+          "persistence": "persistent",
+          "collection": "docs",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "DocView",
+           "linkedEntity": "Doc",
+           "stateMachine": {
+            "events": [],
+            "states": [],
+            "transitions": [
+             {
+              "from": "idle",
+              "event": "OPEN",
+              "to": "idle",
+              "guard": [
+               "and",
+               [
+                "=",
+                "@user.role",
+                "manager"
+               ],
+               [
+                "=",
+                "@user.id",
+                ""
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": []
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     },
+     "trait": "OrbLintUserIdentity"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "user-identity",
+         "findings": [
+          {
+           "code": "ORB_S_USER_ID_EMPTY_COMPARISON",
+           "path": "orbitals[1 (DocOrbital)].traits[0 (DocView)].stateMachine.transitions[0].guard[2]",
+           "message": "'@user.id' is never empty: the anonymous viewer's id is \"anonymous\" (EXEC-IDENTITY-1), so this comparison is always false",
+           "suggestion": "Test the role instead: (!= @user.role \"anonymous\") for a signed-in viewer",
+           "severity": "error"
+          }
+         ],
+         "scope": ""
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintUserIdentity"
+    }
+   ],
+   "note": "G-CROSS-405: nested inside `and`"
+  },
+  {
+   "id": "user-id-compared-to-an-entity-column-is-silent",
+   "steps": [
+    {
+     "trait": "OrbLintUserIdentity",
+     "from": "ready",
+     "event": "INDEX_HEARD",
+     "payload": {
+      "scope": "",
+      "heads": {
+       "1-0": [
+        "="
+       ],
+       "1-0-0": [],
+       "1-0-c": []
+      },
+      "roots": {
+       "1-0": [
+        "@user"
+       ],
+       "1-0-0": [],
+       "1-0-c": []
+      }
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintUserIdentity",
+     "event": "ENTITIES_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "list": [
+       {
+        "name": "Person",
+        "identity": true,
+        "persistence": "persistent",
+        "collection": "people",
+        "fields": [
+         {
+          "name": "id",
+          "type": "string",
+          "required": true
+         },
+         {
+          "name": "role",
+          "type": "enum",
+          "values": [
+           "manager",
+           "cto"
+          ]
+         }
+        ],
+        "oi": 0,
+        "orbital": "PeopleOrbital",
+        "auxiliary": false
+       },
+       {
+        "persistence": "persistent",
+        "name": "Doc",
+        "oi": 1,
+        "orbital": "DocOrbital",
+        "auxiliary": false,
+        "fields": [
+         {
+          "name": "id",
+          "type": "string",
+          "required": true
+         }
+        ]
+       }
+      ],
+      "primaryDuplicates": []
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "App",
+       "orbitals": [
+        {
+         "name": "PeopleOrbital",
+         "entity": {
+          "name": "Person",
+          "identity": true,
+          "persistence": "persistent",
+          "collection": "people",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "role",
+            "type": "enum",
+            "values": [
+             "manager",
+             "cto"
+            ]
+           }
+          ]
+         },
+         "traits": [],
+         "pages": []
+        },
+        {
+         "name": "DocOrbital",
+         "entity": {
+          "name": "Doc",
+          "persistence": "persistent",
+          "collection": "docs",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "DocView",
+           "linkedEntity": "Doc",
+           "stateMachine": {
+            "events": [],
+            "states": [],
+            "transitions": [
+             {
+              "from": "idle",
+              "event": "OPEN",
+              "to": "idle",
+              "guard": [
+               "=",
+               "@user.id",
+               "@entity.ownerId"
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": []
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     },
+     "trait": "OrbLintUserIdentity"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "user-identity",
+         "findings": [],
+         "scope": ""
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintUserIdentity"
+    }
+   ],
+   "note": "control: `(= @user.id @entity.ownerId)`"
+  },
+  {
+   "id": "role-anonymous-test-is-silent",
+   "steps": [
+    {
+     "trait": "OrbLintUserIdentity",
+     "from": "ready",
+     "event": "INDEX_HEARD",
+     "payload": {
+      "scope": "",
+      "heads": {
+       "1-0": [
+        "="
+       ],
+       "1-0-0": [],
+       "1-0-c": []
+      },
+      "roots": {
+       "1-0": [
+        "@user"
+       ],
+       "1-0-0": [],
+       "1-0-c": []
+      }
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintUserIdentity",
+     "event": "ENTITIES_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "list": [
+       {
+        "name": "Person",
+        "identity": true,
+        "persistence": "persistent",
+        "collection": "people",
+        "fields": [
+         {
+          "name": "id",
+          "type": "string",
+          "required": true
+         },
+         {
+          "name": "role",
+          "type": "enum",
+          "values": [
+           "manager",
+           "cto"
+          ]
+         }
+        ],
+        "oi": 0,
+        "orbital": "PeopleOrbital",
+        "auxiliary": false
+       },
+       {
+        "persistence": "persistent",
+        "name": "Doc",
+        "oi": 1,
+        "orbital": "DocOrbital",
+        "auxiliary": false,
+        "fields": [
+         {
+          "name": "id",
+          "type": "string",
+          "required": true
+         }
+        ]
+       }
+      ],
+      "primaryDuplicates": []
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "App",
+       "orbitals": [
+        {
+         "name": "PeopleOrbital",
+         "entity": {
+          "name": "Person",
+          "identity": true,
+          "persistence": "persistent",
+          "collection": "people",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "role",
+            "type": "enum",
+            "values": [
+             "manager",
+             "cto"
+            ]
+           }
+          ]
+         },
+         "traits": [],
+         "pages": []
+        },
+        {
+         "name": "DocOrbital",
+         "entity": {
+          "name": "Doc",
+          "persistence": "persistent",
+          "collection": "docs",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "DocView",
+           "linkedEntity": "Doc",
+           "stateMachine": {
+            "events": [],
+            "states": [],
+            "transitions": [
+             {
+              "from": "idle",
+              "event": "OPEN",
+              "to": "idle",
+              "guard": [
+               "!=",
+               "@user.role",
+               "anonymous"
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": []
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     },
+     "trait": "OrbLintUserIdentity"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "user-identity",
+         "findings": [],
+         "scope": ""
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintUserIdentity"
+    }
+   ],
+   "note": "control: `(!= @user.role \"anonymous\")` is the signed-in test"
+  },
+  {
+   "id": "user-id-compared-to-anonymous-is-silent",
+   "steps": [
+    {
+     "trait": "OrbLintUserIdentity",
+     "from": "ready",
+     "event": "INDEX_HEARD",
+     "payload": {
+      "scope": "",
+      "heads": {
+       "1-0": [
+        "="
+       ],
+       "1-0-0": [],
+       "1-0-c": []
+      },
+      "roots": {
+       "1-0": [
+        "@user"
+       ],
+       "1-0-0": [],
+       "1-0-c": []
+      }
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintUserIdentity",
+     "event": "ENTITIES_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "list": [
+       {
+        "name": "Person",
+        "identity": true,
+        "persistence": "persistent",
+        "collection": "people",
+        "fields": [
+         {
+          "name": "id",
+          "type": "string",
+          "required": true
+         },
+         {
+          "name": "role",
+          "type": "enum",
+          "values": [
+           "manager",
+           "cto"
+          ]
+         }
+        ],
+        "oi": 0,
+        "orbital": "PeopleOrbital",
+        "auxiliary": false
+       },
+       {
+        "persistence": "persistent",
+        "name": "Doc",
+        "oi": 1,
+        "orbital": "DocOrbital",
+        "auxiliary": false,
+        "fields": [
+         {
+          "name": "id",
+          "type": "string",
+          "required": true
+         }
+        ]
+       }
+      ],
+      "primaryDuplicates": []
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "App",
+       "orbitals": [
+        {
+         "name": "PeopleOrbital",
+         "entity": {
+          "name": "Person",
+          "identity": true,
+          "persistence": "persistent",
+          "collection": "people",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "role",
+            "type": "enum",
+            "values": [
+             "manager",
+             "cto"
+            ]
+           }
+          ]
+         },
+         "traits": [],
+         "pages": []
+        },
+        {
+         "name": "DocOrbital",
+         "entity": {
+          "name": "Doc",
+          "persistence": "persistent",
+          "collection": "docs",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "DocView",
+           "linkedEntity": "Doc",
+           "stateMachine": {
+            "events": [],
+            "states": [],
+            "transitions": [
+             {
+              "from": "idle",
+              "event": "OPEN",
+              "to": "idle",
+              "guard": [
+               "=",
+               "@user.id",
+               "anonymous"
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": []
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     },
+     "trait": "OrbLintUserIdentity"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "user-identity",
+         "findings": [],
+         "scope": ""
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintUserIdentity"
+    }
+   ],
+   "note": "control: `(= @user.id \"anonymous\")`"
+  },
+  {
+   "id": "user-id-empty-in-a-composed-trait-is-silent",
+   "steps": [
+    {
+     "trait": "OrbLintUserIdentity",
+     "from": "ready",
+     "event": "INDEX_HEARD",
+     "payload": {
+      "scope": "",
+      "heads": {
+       "1-0": [
+        "="
+       ],
+       "1-0-0": [],
+       "1-0-c": []
+      },
+      "roots": {
+       "1-0": [
+        "@user"
+       ],
+       "1-0-0": [],
+       "1-0-c": []
+      }
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "trait": "OrbLintUserIdentity",
+     "event": "ENTITIES_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "list": [
+       {
+        "name": "Person",
+        "identity": true,
+        "persistence": "persistent",
+        "collection": "people",
+        "fields": [
+         {
+          "name": "id",
+          "type": "string",
+          "required": true
+         },
+         {
+          "name": "role",
+          "type": "enum",
+          "values": [
+           "manager",
+           "cto"
+          ]
+         }
+        ],
+        "oi": 0,
+        "orbital": "PeopleOrbital",
+        "auxiliary": false
+       },
+       {
+        "persistence": "persistent",
+        "name": "Doc",
+        "oi": 1,
+        "orbital": "DocOrbital",
+        "auxiliary": false,
+        "fields": [
+         {
+          "name": "id",
+          "type": "string",
+          "required": true
+         }
+        ]
+       }
+      ],
+      "primaryDuplicates": []
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "App",
+       "orbitals": [
+        {
+         "name": "PeopleOrbital",
+         "entity": {
+          "name": "Person",
+          "identity": true,
+          "persistence": "persistent",
+          "collection": "people",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "role",
+            "type": "enum",
+            "values": [
+             "manager",
+             "cto"
+            ]
+           }
+          ]
+         },
+         "traits": [],
+         "pages": []
+        },
+        {
+         "name": "DocOrbital",
+         "entity": {
+          "name": "Doc",
+          "persistence": "persistent",
+          "collection": "docs",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "DocView",
+           "linkedEntity": "Doc",
+           "sourceBehavior": {
+            "name": "std-doc-view"
+           },
+           "stateMachine": {
+            "events": [],
+            "states": [],
+            "transitions": [
+             {
+              "from": "idle",
+              "event": "OPEN",
+              "to": "idle",
+              "guard": [
+               "=",
+               "@user.id",
+               ""
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": []
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     },
+     "trait": "OrbLintUserIdentity"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "user-identity",
+         "findings": [],
+         "scope": ""
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintUserIdentity"
+    }
+   ],
+   "note": "control: the same `(= @user.id \"\")` guard on a trait cloned from a `uses` import (it carries sourceBehavior) is not judged: the empty string there is a folded config knob default, not an authored literal"
   }
  ]
 }

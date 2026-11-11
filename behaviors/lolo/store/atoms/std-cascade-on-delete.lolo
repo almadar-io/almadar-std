@@ -29,6 +29,8 @@ orbital CascadeOnDeleteOrbital {
 
     state idle {
       INIT -> idle
+      CascadeFailed -> idle
+        (notify error (if (validate/required ?error) (str/concat "Couldn't cascade the delete — " ?error) "Couldn't cascade the delete"))
       ParentDeleted -> scanning when @config.enabled
         (set @entity.parentId ?data.id)
         (set @entity.parentEntity @config.parentEntity)
@@ -52,6 +54,8 @@ orbital CascadeOnDeleteOrbital {
           parentId: @entity.parentId
           parentEntity: @entity.parentEntity
           rowCount: @entity.rowCount
+        } {
+          emit: { failure: CascadeFailed }
         })
       CascadeStepped -> scanning
         (set @entity.rowCount (+ @entity.rowCount 1))

@@ -22,7 +22,7 @@ orbital ModalSlotOrbital {
 
     state idle {
       INIT -> idle
-        (fetch ModalSlotItem {})
+        (fetch ModalSlotItem { emit: { failure: ModalSlotLoadFailed } })
         (render-ui main {
           children: @config.children
           title: @config.title
@@ -37,6 +37,18 @@ orbital ModalSlotOrbital {
           skeleton: @config.skeleton
           type: modal-slot
         })
+      ModalSlotLoadFailed -> idle
+        (notify error (str/concat "Couldn't load the modal slot — " (default ?error "")))
+    }
+
+    emits {
+      ModalSlotLoadFailed {
+        error : string
+        code : string
+      }
+        @description "Modal slot could not be loaded."
+        @synonyms "error, failure, rejected"
+        @tier "internal"
     }
 
     config {

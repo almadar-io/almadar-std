@@ -15,7 +15,7 @@ orbital FilterTargetOrbital {
 
     state idle {
       INIT -> idle
-        (fetch FilterTarget {})
+        (fetch FilterTarget { emit: { failure: FilterTargetLoadFailed } })
         (render-ui main {
           entity: @config.filteredEntity
           event: @config.event
@@ -23,6 +23,8 @@ orbital FilterTargetOrbital {
           look: @config.filterBarLook
           type: filter-group
         })
+      FilterTargetLoadFailed -> idle
+        (notify error (str/concat "Couldn't load the filter — " (default ?error "")))
       FILTER -> idle
         (set @entity.field ?field)
         (set @entity.value ?value)
@@ -51,6 +53,13 @@ orbital FilterTargetOrbital {
     }
 
     emits {
+      FilterTargetLoadFailed {
+        error : string
+        code : string
+      }
+        @description "Filter state could not be loaded."
+        @synonyms "error, failure, rejected"
+        @tier "internal"
       FILTER {
         entity : string!
         field : string!

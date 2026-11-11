@@ -1,6 +1,6 @@
 app std-a11y-probe-focus-walk [
   version: "1.0.0",
-  description: "std-a11y-probe-focus-walk — keyboard navigation of one page, WCAG 2.1.2, 2.4.1, 2.4.3 and 2.4.7. PROBE_RUN { key, pageUrl } on a tab already at pageUrl lists the focusable elements in DOM order and the same-page links (PAGE_MEASURE), then presses Tab (PAGE_KEY) and reads the focused element (PAGE_FOCUSED) until focus returns to the first element, nothing is focused, or the maxTabs knob is reached (the cap ends the walk with a focus-walk-capped finding). At each new stop PAGE_MEASURE reads the focused element's outline, box-shadow, border and background colour, blurs it, reads them again and refocuses it. An element whose outline is none or 0 and whose box-shadow, border and background do not change is a focus-not-visible-element finding (needs-verification); when every stop is, one confirmed focus-not-visible finding. The same element focused for trapRepeat consecutive Tabs with Shift+Tab not leaving it is a confirmed keyboard-trap. A tab order that has a positive tabindex, goes back in DOM order or jumps up the page by more than backJumpPx is a needs-verification focus-order finding. The first stop decides the skip link: a same-page link whose target is missing is a confirmed skip-broken; one whose target follows it is activated with Enter and, when neither focus nor scroll nor the :target element moves to the target, is a confirmed skip-broken; a first stop that is not such a link with an in-page link elsewhere whose target follows it is skip-not-first, and with none skip-missing (both needs-verification). The page is navigated to pageUrl again before PROBE_DONE { key, probe, findings } or PROBE_FAILED { key, probe, error, code }. Page requests are PAGE_MEASURE, PAGE_KEY, PAGE_FOCUSED and PAGE_NAVIGATE; the composer wires them to a std-chrome instance."
+  description: "std-a11y-probe-focus-walk — keyboard navigation of one page, WCAG 2.1.2, 2.4.1, 2.4.3 and 2.4.7. PROBE_RUN { key, pageUrl } on a tab already at pageUrl lists the focusable elements in DOM order and the same-page links (PAGE_MEASURE), then presses Tab (PAGE_KEY) and reads the focused element (PAGE_FOCUSED) until focus returns to the first element, nothing is focused, or the maxTabs knob is reached (the cap ends the walk with a focus-walk-capped finding). At each new stop PAGE_MEASURE reads the focused element's outline, box-shadow, border and background colour, blurs it, reads them again and refocuses it. An element whose outline is none or 0 and whose box-shadow, border and background do not change is a focus-not-visible-element finding (needs-verification); when at least siteWideMinStops stops were checked and every one is (a first-stop skip link that is an in-page link and changes on focus is not counted), one confirmed focus-not-visible finding. The same element focused for trapRepeat consecutive Tabs with Shift+Tab not leaving it is a confirmed keyboard-trap. A tab order that has a positive tabindex, goes back in DOM order or jumps up the page by more than backJumpPx is a needs-verification focus-order finding. The first stop decides the skip link: a same-page link whose target is missing is a confirmed skip-broken; one whose target follows it is activated with Enter and, when neither focus nor scroll nor the :target element moves to the target, is a confirmed skip-broken; a first stop that is not such a link with an in-page link elsewhere whose target follows it is skip-not-first, and with none skip-missing (both needs-verification). The page is navigated to pageUrl again before PROBE_DONE { key, probe, findings } or PROBE_FAILED { key, probe, error, code }. Page requests are PAGE_MEASURE, PAGE_KEY, PAGE_FOCUSED and PAGE_NAVIGATE; the composer wires them to a std-chrome instance."
 ]
 uses Spec from "almadar-std/probe-focus-walk"
 
@@ -169,9 +169,10 @@ orbital FocusWalkOrbital {
           (if (= @payload.reason "capped")
             [{ rule: "focus-walk-capped", confidence: "needs-verification", selector: "html", snippet: (str/concat "no return to the first element within " @config.maxTabs " Tab presses"), count: @entity.presses }]
             [])
-          (if (and (> (array/len @entity.stops) 0) (= (array/len (array/filter @entity.stops (fn s (= @s.visible false)))) (array/len @entity.stops)))
-            (let ((f (array/first @entity.stops))) [{ rule: "focus-not-visible", confidence: "confirmed", selector: @f.selector, snippet: @f.snippet, count: (array/len @entity.stops) }])
-            (array/map (array/filter @entity.stops (fn s (= @s.visible false))) (fn s { rule: "focus-not-visible-element", confidence: "needs-verification", selector: @s.selector, snippet: @s.snippet, count: 1 })))
+          (let ((checked (array/filter @entity.stops (fn s (not (and (= @s.visible true) (str/startsWith @s.href "#") (= @s.domIndex @entity.firstIdx)))))))
+            (if (and (>= (array/len @checked) @config.siteWideMinStops) (= (array/len (array/filter @checked (fn s (= @s.visible false)))) (array/len @checked)))
+              (let ((f (array/first @checked))) [{ rule: "focus-not-visible", confidence: "confirmed", selector: @f.selector, snippet: @f.snippet, count: (array/len @checked) }])
+              (array/map (array/filter @entity.stops (fn s (= @s.visible false))) (fn s { rule: "focus-not-visible-element", confidence: "needs-verification", selector: @s.selector, snippet: @s.snippet, count: 1 }))))
           (let ((pos (array/find @entity.dom.focusables (fn f (> @f.tabindex 0))))
                 (back (array/find (array/zip @entity.stops (array/drop @entity.stops 1)) (fn p (let ((a (array/nth @p 0)) (b (array/nth @p 1))) (or (< @b.domIndex @a.domIndex) (< @b.rect.y (- @a.rect.y @config.backJumpPx))))))))
             (if (!= @pos null)
@@ -318,6 +319,10 @@ orbital FocusWalkOrbital {
       maxTabs : number = 200
         @label "Tab cap"
         @description "The most Tab presses the walk sends; reaching it ends the walk with a focus-walk-capped finding."
+        @tier "domain"
+      siteWideMinStops : number = 3
+        @label "Site-wide minimum"
+        @description "The fewest checked stops, not counting a first-stop skip link that reveals itself on focus, for which every one lacking an indicator is one site-wide focus-not-visible finding; fewer stops, or any stop with an indicator, give per-element findings."
         @tier "domain"
       trapRepeat : number = 5
         @label "Trap repeat"

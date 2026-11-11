@@ -19,7 +19,7 @@ orbital CalendarGridOrbital {
 
     state idle {
       INIT -> idle when @config.selfFetch
-        (fetch CalendarGridItem { emit: { success: CalendarGridLoaded } })
+        (fetch CalendarGridItem { emit: { failure: CalendarGridLoadFailed, success: CalendarGridLoaded } })
         (render-ui main {
           weekStart: @config.weekStart
           timeSlots: @config.timeSlots
@@ -95,6 +95,8 @@ orbital CalendarGridOrbital {
           tabIndex: @config.tabIndex
           type: calendar-grid
         })
+      CalendarGridLoadFailed -> idle
+        (notify error (str/concat "Couldn't load the calendar — " (default ?error "")))
       CalendarGridLoaded -> idle
         (render-ui main {
           weekStart: @config.weekStart
@@ -164,6 +166,13 @@ orbital CalendarGridOrbital {
       @config.swipeRightEvent -> external { }
         @description "Event emitted on swipe right (prev week): UI:{swipeRightEvent}"
         @tier "essential"
+      CalendarGridLoadFailed {
+        error : string
+        code : string
+      }
+        @description "CalendarGrid rows could not be loaded."
+        @synonyms "error, failure, rejected"
+        @tier "internal"
       CalendarGridLoaded
         @description "CalendarGrid rows finished loading; payload.data holds the collection."
         @synonyms "loaded, fetched, retrieved"

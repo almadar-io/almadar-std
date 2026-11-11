@@ -19,7 +19,7 @@ orbital CounterTemplateOrbital {
 
     state idle {
       INIT -> idle
-        (fetch CounterTemplateItem {})
+        (fetch CounterTemplateItem { emit: { failure: CounterTemplateLoadFailed } })
         (render-ui main {
           entity: @entity
           className: @config.className
@@ -52,9 +52,18 @@ orbital CounterTemplateOrbital {
           tabIndex: @config.tabIndex
           type: counter-template
         })
+      CounterTemplateLoadFailed -> idle
+        (notify error (str/concat "Couldn't load the counter — " (default ?error "")))
     }
 
     emits {
+      CounterTemplateLoadFailed {
+        error : string
+        code : string
+      }
+        @description "Counter could not be loaded."
+        @synonyms "error, failure, rejected"
+        @tier "internal"
       @config.onIncrement -> external { }
         @description "Called when increment is clicked"
         @tier "essential"

@@ -39,7 +39,7 @@ orbital TimelineOrbital {
 
     state idle {
       INIT -> idle when @config.selfFetch
-        (fetch TimelineItem { emit: { success: TimelineLoaded } })
+        (fetch TimelineItem { emit: { failure: TimelineLoadFailed, success: TimelineLoaded } })
         (render-ui main {
           surface: @config.surface
           className: @config.className
@@ -109,6 +109,8 @@ orbital TimelineOrbital {
           tabIndex: @config.tabIndex
           type: timeline
         })
+      TimelineLoadFailed -> idle
+        (notify error (str/concat "Couldn't load the timeline — " (default ?error "")))
       TimelineLoaded -> idle
         (render-ui main {
           surface: @config.surface
@@ -153,6 +155,13 @@ orbital TimelineOrbital {
       }
         @description "User opened a record from the list."
         @tier "essential"
+      TimelineLoadFailed {
+        error : string
+        code : string
+      }
+        @description "Timeline could not be loaded."
+        @synonyms "error, failure, rejected"
+        @tier "internal"
       TimelineLoaded
         @description "Timeline rows finished loading; payload.data holds the collection."
         @synonyms "loaded, fetched, retrieved"

@@ -4,7 +4,7 @@ app std-orb-lint-slot [
   env: ["PATH"],
   exec: [exe],
   fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
-  description: "std-orb-lint-slot — the `orb lint slot <file>` command, the port of the page slot checks ORB_SLOT_MAIN_NOT_COVERED (a page passes when any trait on it paints a non-null render-ui on any slot in any transition), ORB_SLOT_CONTENTION, ORB_SLOT_CONTENTION_RUNTIME (slot.rs validate_page_slots) and ORB_SLOT_INVALID_NESTING, which by owner ruling (2026-10-24) flags real nesting only: a trait, in a state an arm entered by painting overlay A, takes a live arm that paints a different overlay B without clearing A, or one arm paints two overlays; two traits each owning one overlay never nest (slot.rs validate_slot_nesting flagged any two overlay slots on a page). It lowers the file with program/read and walks the traits of every route page (an endpoint or boot page is not checked), resolving by-ref page traits to their declarations (wider than Rust by owner ruling), leaving out a trait a sibling embeds with `@trait.X` (it paints inside that sibling, so it owns no page slot), reading a render-ui anywhere in an arm's effects (inside `if` and `do` too), counting a trait once per slot and never reporting contention on the shared overlay slots modal and toast, and reports each slot finding (a slot named by a `@config.<knob>` binding is read through the trait's declared default, as the compiler sees it after inlining) with the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint slot: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+  description: "std-orb-lint-slot — the `orb lint slot <file>` command, the port of the page slot checks ORB_SLOT_MAIN_NOT_COVERED (a page passes when any trait on it paints a non-null render-ui on any slot in any transition), ORB_SLOT_CONTENTION, ORB_SLOT_CONTENTION_RUNTIME (slot.rs validate_page_slots) and ORB_SLOT_INVALID_NESTING, which by owner ruling (2026-10-24) flags real nesting only: a trait, in a state an arm entered by painting overlay A, takes a live arm that paints a different overlay B without clearing A, or one arm paints two overlays; two traits each owning one overlay never nest (slot.rs validate_slot_nesting flagged any two overlay slots on a page). It lowers the file with program/read and walks the traits of every route page (an endpoint or boot page is not checked), resolving by-ref page traits to their declarations (wider than Rust by owner ruling), leaving out a trait a sibling embeds with `@trait.X` (it paints inside that sibling, so it owns no page slot), reading a render-ui anywhere in an arm's effects (inside `if` and `do` too), counting a trait once per slot and never reporting contention on the shared overlay slots modal and toast, and reports each slot finding (a slot named by a `@config.<knob>` binding is read through the trait's declared default, as the compiler sees it after inlining) with the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint slot: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500. ORB_SLOT_MAIN_ONLY_CONTAINERS reports a page whose traits paint main only as layout-only patterns (per the pattern registry) holding no content, so nothing is shown."
 ]
 uses Spec from "almadar-std/lint-slot"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
@@ -26,11 +26,19 @@ type SlotPage = { protocol : string, traits : [SlotTrait] }
 type SlotDomainContext = { category : string }
 type SlotOrbital = { domainContext : SlotDomainContext, pages : [SlotPage], traits : [SlotTrait] }
 type SlotProgram = { orbitals : [SlotOrbital] }
+type SlotPatItems = { types : [string] }
+type SlotPatProp = { types : [string], items : SlotPatItems? }
+type SlotPatShape = { layoutOnly : boolean?, props : Map string SlotPatProp? }
+type SlotContent = { c : boolean }
+type SlotObj = Map string SlotExpr?
+type SlotNodeList = [SlotExpr?]
+type SlotContentList = [SlotContent?]
+type SlotContentMap = Map string SlotContent?
 
 type SlotEmbeds = Map string [string]
 type SlotEnt = { t : SlotTrait!, key : string! }
 type LintCodeDecl = { code : string!, category : string!, description : string! }
-type LintSlotCodes = { lintIndexMissing : LintCodeDecl , slotMainNotCovered : LintCodeDecl , slotContention : LintCodeDecl , slotContentionRuntime : LintCodeDecl , slotInvalidNesting : LintCodeDecl }
+type LintSlotCodes = { lintIndexMissing : LintCodeDecl , slotMainNotCovered : LintCodeDecl , slotContention : LintCodeDecl , slotContentionRuntime : LintCodeDecl , slotInvalidNesting : LintCodeDecl , slotMainOnlyContainers : LintCodeDecl }
 
 orbital OrbLintSlotOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
@@ -46,6 +54,9 @@ orbital OrbLintSlotOrbital {
     embPageEffects : SlotEmbeds = {}
     embedsScope : string = ""
     embedded : boolean = false
+    patternNames : [string] = []
+    layoutNodeProps : Map string [string] = {}
+    patternsHeard : boolean = false
     findings : [OrbFinding] = []
   }
 
@@ -63,9 +74,13 @@ orbital OrbLintSlotOrbital {
         (set @entity.embPageEffects @payload.pageEffects)
         (set @entity.embedsScope @payload.scope)
         (set @entity.embedded true)
+      LINT_PATTERNS_HEARD -> ready
+        (set @entity.patternNames (object/keys @payload.patterns))
+        (set @entity.layoutNodeProps (object/fromEntries (array/map (array/filter (object/keys @payload.patterns) (fn pn (= (object/get (object/get @payload.patterns @pn {}) "layoutOnly" false) true))) (fn pn (let ((ps (object/get (object/get @payload.patterns @pn {}) "props" {}))) [@pn, (array/filter (object/keys @ps) (fn pk (let ((pr (object/get @ps @pk {}))) (or (array/includes (object/get @pr "types" []) "node") (array/includes (object/get (object/get @pr "items" {}) "types" []) "node")))))])))))
+        (set @entity.patternsHeard true)
       LINT_INPUT -> ready
         (set @entity.scope @payload.scope)
-        (set @entity.findings (if (and @entity.embedded (= @entity.embedsScope @payload.scope)) (let ((orbitals : [SlotOrbital] (object/get @payload.program "orbitals" [])) (embC @entity.embConfig) (embG @entity.embGuards) (embE @entity.embEffects) (embPC @entity.embPageConfig) (embPG @entity.embPageGuards) (embPE @entity.embPageEffects))
+        (set @entity.findings (if (and @entity.embedded (= @entity.embedsScope @payload.scope)) (if (not @entity.patternsHeard) [{ code: @config.codes.lintIndexMissing.code, path: "", message: "the lint input arrived without the pattern registry (LINT_PATTERNS), so this rule cannot tell a layout-only pattern from a content one", suggestion: "std-orb-lint-input sends LINT_PATTERNS before LINT_INPUT; this rule did not hear it", severity: "error" }] (let ((patNames @entity.patternNames) (layoutNP @entity.layoutNodeProps) (orbitals : [SlotOrbital] (object/get @payload.program "orbitals" [])) (embC @entity.embConfig) (embG @entity.embGuards) (embE @entity.embEffects) (embPC @entity.embPageConfig) (embPG @entity.embPageGuards) (embPE @entity.embPageEffects))
           
           (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
             (let ((pgList (object/get (array/nth @orbitals @oi) "pages" [])) (orbTraits (object/get (array/nth @orbitals @oi) "traits" [])))
@@ -102,8 +117,8 @@ orbital OrbLintSlotOrbital {
                                                     (if (= (str/slice @sv 0 8) (quote "@config."))
                                                       (let ((kb (object/get (object/get @t "config" {}) (str/slice @sv 8 (str/len @sv)) {})))
                                                         (if (and (object/has @kb "default") (= (object/get @kb "default" @sv) null)) []
-                                                        [{ s: (let ((dv (object/get @kb "default" @sv))) (if (validate/string @dv) @dv @sv)), p: (!= (array/nth @f 2) null) }]))
-                                                      [{ s: @sv, p: (!= (array/nth @f 2) null) }])
+                                                        [{ s: (let ((dv (object/get @kb "default" @sv))) (if (validate/string @dv) @dv @sv)), p: (!= (array/nth @f 2) null), n: (array/nth @f 2) }]))
+                                                      [{ s: @sv, p: (!= (array/nth @f 2) null), n: (array/nth @f 2) }])
                                                     []))
                                                 [])
                                               []))
@@ -125,10 +140,23 @@ orbital OrbLintSlotOrbital {
                                     (array/flatten (array/map (object/get @a "froms") (fn fr
                                       (let ((states (if (= @fr "*") (array/filter (object/get @f "reach") (fn st (!= @st (object/get @f "init")))) (if (and (!= @fr (object/get @f "init")) (array/includes (object/get @f "reach") @fr)) [@fr] []))))
                                         (array/flatten (array/map @states (fn st (array/map (array/map (array/filter (object/get @a "rend") (fn r (object/get @r "p"))) (fn r (object/get @r "s"))) (fn s { state: @st, slot: @s, tn: (object/get @f "tn") }))))))))))))))))))
-                          (let ((keys (array/sort (array/unique (array/map @runR (fn r (str/concat (object/get @r "state") "|" (object/get @r "slot"))))))))
+                          (let ((keys (array/sort (array/unique (array/map @runR (fn r (str/concat (object/get @r "state") "|" (object/get @r "slot"))))))) (mainTrees (array/flatten (array/map @facts (fn f (array/flatten (array/map (object/get @f "arms") (fn a (array/map (array/filter (object/get @a "rend") (fn r (and (object/get @r "p") (= (object/get @r "s") "main")))) (fn r (object/get @r "n")))))))))) (nm : SlotContent { c: true }))
                             (array/flatten [
                               (if (and (= (array/len @anyPaint) 0) (> (array/len @trs) 0))
                                 [{ code: @config.codes.slotMainNotCovered.code, path: @where, message: "No trait on this page renders anything", suggestion: "Give a trait on this page a render-ui, or move its traits to a boot/protocol page", severity: "error" }] [])
+                                                              (if (and (> (array/len @mainTrees) 0) (not (array/some @mainTrees (fn t (let ((fr (tree/fold @t (fn (n k)
+                                    (let ((na (default (as @n SlotNodeList) [])) (no (default (as @n SlotObj) {})) (ka (default (as @k SlotContentList) [])) (ko (default (as @k SlotContentMap) {})))
+                                    (if (validate/array @n)
+                                      { c: (array/some (array/range 0 (array/len @na)) (fn i (let ((e (array/nth @na @i))) (if (or (validate/object @e) (validate/array @e)) (object/get (default (array/nth @ka @i) @nm) "c" true) (!= @e null))))) }
+                                      (if (validate/object @n)
+                                        (let ((ty (object/get @no "type" null)))
+                                          (if (not (validate/string @ty)) @nm
+                                            (if (not (array/includes @patNames @ty)) @nm
+                                              (let ((lp (object/get @layoutNP @ty null)))
+                                                (if (= @lp null) @nm
+                                                  { c: (array/some @lp (fn pk (let ((v (object/get @no @pk null))) (if (or (validate/object @v) (validate/array @v)) (if (and (validate/array @v) (= (array/len (default (as @v SlotNodeList) [])) 0)) false (object/get (default (object/get @ko @pk null) @nm) "c" true)) (!= @v null))))) })))))
+                                        @nm)))) SlotExpr))) (if (= @fr null) true (object/get @fr "c" true)))))))
+                                  [{ code: @config.codes.slotMainOnlyContainers.code, path: @where, message: (str/concat "page '" (object/get (array/nth @pgList @pj) "path" "") "' paints only empty layout containers into 'main': nothing is shown"), suggestion: "Render at least one content pattern, or mount a trait that does", severity: "error" }] [])
                               (array/flatten (array/map @initSlots (fn sl
                                 (let ((names (array/unique (array/map (array/filter @initR (fn r (= (object/get @r "slot") @sl))) (fn r (object/get @r "tn"))))))
                                   (if (and (> (array/len @names) 1) (not (array/includes @config.sharedSlots @sl)))
@@ -156,8 +184,9 @@ orbital OrbLintSlotOrbital {
                                                 (array/map (array/filter @paints (fn o (and (!= @o @b) (= (array/nth (array/sort [@o, @b]) 0) @o)))) (fn o
                                                   (str/concat "Overlays '" @o "' and '" @b "' open together in trait '" (object/get @f "tn") "' from state '" @st "'. Consider if nesting is intended."))))))))))))))))))))
                                 (fn m { code: @config.codes.slotInvalidNesting.code, path: @where, message: @m, suggestion: "Avoid nesting modals within modals", severity: "error" }))
-                            ])))))))))))))))))) [{ code: @config.codes.lintIndexMissing.code, path: "", message: "the lint input arrived without the trait embeds (LINT_EMBEDS), so this rule cannot check the program", suggestion: "std-orb-lint-input sends LINT_EMBEDS before LINT_INPUT; this rule did not hear it", severity: "error" }]))
+                            ]))))))))))))))))))) [{ code: @config.codes.lintIndexMissing.code, path: "", message: "the lint input arrived without the trait embeds (LINT_EMBEDS), so this rule cannot check the program", suggestion: "std-orb-lint-input sends LINT_EMBEDS before LINT_INPUT; this rule did not hear it", severity: "error" }]))
         (set @entity.embedded false)
+        (set @entity.patternsHeard false)
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "slot", scope: @entity.scope, findings: @entity.findings })
@@ -174,7 +203,7 @@ orbital OrbLintSlotOrbital {
 
 
     config {
-      codes : LintSlotCodes = { lintIndexMissing: { code: "ORB_LINT_INDEX_MISSING", category: "lint", description: "The lint input arrived without a shared program fact the rule reads (the structural index, sites, units, embeds or entities), so the rule cannot check the program" }, slotMainNotCovered: { code: "ORB_SLOT_MAIN_NOT_COVERED", category: "slot", description: "No trait on a page renders anything into the main slot" }, slotContention: { code: "ORB_SLOT_CONTENTION", category: "slot", description: "Multiple traits on a page render into the same slot" }, slotContentionRuntime: { code: "ORB_SLOT_CONTENTION_RUNTIME", category: "slot", description: "Several traits render to the same slot in the same state, so they contend for it" }, slotInvalidNesting: { code: "ORB_SLOT_INVALID_NESTING", category: "slot", description: "A slot is nested in an invalid way" } }
+      codes : LintSlotCodes = { lintIndexMissing: { code: "ORB_LINT_INDEX_MISSING", category: "lint", description: "The lint input arrived without a shared program fact the rule reads (the structural index, sites, units, embeds or entities), so the rule cannot check the program" }, slotMainNotCovered: { code: "ORB_SLOT_MAIN_NOT_COVERED", category: "slot", description: "No trait on a page renders anything into the main slot" }, slotContention: { code: "ORB_SLOT_CONTENTION", category: "slot", description: "Multiple traits on a page render into the same slot" }, slotContentionRuntime: { code: "ORB_SLOT_CONTENTION_RUNTIME", category: "slot", description: "Several traits render to the same slot in the same state, so they contend for it" }, slotInvalidNesting: { code: "ORB_SLOT_INVALID_NESTING", category: "slot", description: "A slot is nested in an invalid way" }, slotMainOnlyContainers: { code: "ORB_SLOT_MAIN_ONLY_CONTAINERS", category: "slot", description: "Every trait render into the main slot of a page paints only empty layout-only containers, so nothing is shown" } }
         @label "Emitted codes"
         @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
       overlaySlots : [string] = ["modal", "drawer", "overlay"]
@@ -195,6 +224,9 @@ orbital OrbLintSlotOrbital {
       EMBEDS_HEARD { scope : string!  config : SlotEmbeds!  guards : SlotEmbeds!  effects : SlotEmbeds!  pageConfig : SlotEmbeds!  pageGuards : SlotEmbeds!  pageEffects : SlotEmbeds! }
         @description "std-orb-lint-input's LINT_EMBEDS: the child trait names each orbital trait (`<orbital>-<trait>`) and each page-inline trait (`<orbital>-p<page>-<trait>`) embeds through config defaults, guards and effects."
       OrbLintInput.LINT_EMBEDS -> EMBEDS_HEARD
+      LINT_PATTERNS_HEARD { patterns : Map string SlotPatShape! }
+        @description "std-orb-lint-input's LINT_PATTERNS: the installed pattern registry; the layout-only patterns and their node-typed props are judged."
+      OrbLintInput.LINT_PATTERNS -> LINT_PATTERNS_HEARD
     }
   }
 

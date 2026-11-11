@@ -36,6 +36,7 @@ orbital ModalRecordOrbital {
     state closed {
       INIT -> closed
         (fetch ModalRecord {
+          limit: @config.maxRows
           emit: { failure: ModalRecordLoadFailed, success: ModalRecordLoaded }
         })
       ModalRecordLoadFailed -> closed
@@ -174,6 +175,10 @@ orbital ModalRecordOrbital {
         @label "Layout pattern"
         @description "Pattern used to arrange the form body"
         @tier "internal"
+      maxRows : number = 500
+        @label "Most rows per load"
+        @description "Most rows one load reads."
+        @tier "policy"
     }
   }
 

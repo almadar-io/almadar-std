@@ -4,7 +4,7 @@ app std-orb-lint-query-index [
   env: ["PATH"],
   exec: [exe],
   fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
-  description: "std-orb-lint-query-index — the `orb lint query-index <file>` command, the check of declared `@index` access paths against the fetches that use them. It lowers the file with program/read. A path naming a field the entity does not declare (id, createdAt and updatedAt always are) or a non-scalar field (array, object, file) is [ORB_INDEX_PATH_INVALID]; a path repeating an earlier one (field and field:asc are one order) is [ORB_INDEX_PATH_DUPLICATE]. A conjunctive fetch of a persistent entity whose store driver creates no index at runtime (a driver config with an orderableFields knob) and that needs a composite index (two or more equality fields, or an equality with a range or an order on another field) is [ORB_FETCH_NEEDS_COMPOSITE_INDEX] unless a path covers it. A fetch with an equality or a range that a bound driver declines (no compare leaf, or an order outside a listed orderableFields) and that no path covers is the warning [ORB_FETCH_UNINDEXED]. A path covers a fetch when its leading fields are the fetch's equality fields in any order, a range is on the next field, and its orderBy is the fetch's orderBy. Clean answers `lint query-index: clean` (status 200, exit 0); findings answer status 500 (exit 1). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+  description: "std-orb-lint-query-index — the `orb lint query-index <file>` command, the check of declared `@index` access paths against the fetches that use them. It lowers the file with program/read. A path naming a field the entity does not declare (id, createdAt and updatedAt always are) or a non-scalar field (array, object, file) is [ORB_INDEX_PATH_INVALID]; a path repeating an earlier one (field and field:asc are one order) is [ORB_INDEX_PATH_DUPLICATE]. A conjunctive fetch of a persistent entity whose store driver creates no index at runtime (a driver config with an orderableFields knob) and that needs a composite index (two or more equality fields, or an equality with a range or an order on another field) is [ORB_FETCH_NEEDS_COMPOSITE_INDEX] unless a path covers it. A fetch with an equality or a range that a bound driver declines (no compare leaf, or an order outside a listed orderableFields) and that no path covers is the warning [ORB_FETCH_UNINDEXED]. A path covers a fetch when its leading fields are the fetch's equality fields in any order, a range is on the next field, and its orderBy is the fetch's orderBy. A fetch effect (in a transition or a tick, nested or not) of a literal persistent entity whose options carry none of limit, id or nearest reads every row and is [ORB_FETCH_UNBOUNDED]. Clean answers `lint query-index: clean` (status 200, exit 0); findings answer status 500 (exit 1). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
 ]
 uses Spec from "almadar-std/lint-query-index"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
@@ -23,7 +23,7 @@ type IxPath = { fields : [string], orderBy : string }
 type IxEntity = { name : string, persistence : string, browser : boolean, store : string, fields : [IxField], indexes : [IxPath] }
 type IxArm = { effects : [IxVal] }
 type IxMachine = { transitions : [IxArm] }
-type IxTrait = { name : string, linkedEntity : string, stateMachine : IxMachine }
+type IxTrait = { name : string, linkedEntity : string, stateMachine : IxMachine, ticks : [IxArm] }
 type IxCaps = { indexes : string }
 type IxKnob = { default : IxCaps }
 type IxConfig = { queryCapabilities : IxKnob }
@@ -31,7 +31,7 @@ type IxOrbital = { name : string, config : IxConfig, entity : IxEntity, auxiliar
 type IxProgram = { store : string, orbitals : [IxOrbital]! }
 
 type LintCodeDecl = { code : string!, category : string!, description : string! }
-type LintQueryIndexCodes = { indexPathInvalid : LintCodeDecl , indexPathDuplicate : LintCodeDecl , fetchNeedsCompositeIndex : LintCodeDecl , fetchUnindexed : LintCodeDecl }
+type LintQueryIndexCodes = { indexPathInvalid : LintCodeDecl , indexPathDuplicate : LintCodeDecl , fetchNeedsCompositeIndex : LintCodeDecl , fetchUnindexed : LintCodeDecl , fetchUnbounded : LintCodeDecl }
 
 orbital OrbLintQueryIndexOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
@@ -80,6 +80,25 @@ orbital OrbLintQueryIndexOrbital {
                    (fn bf { code: @config.codes.indexPathInvalid.code, path: @base, message: (str/concat "index path names field " @nm ", an " (object/get @bf "type" "") " field; only scalar fields can be indexed"), suggestion: "Index a scalar field (string, number, boolean, date, enum)", severity: "error" })))))
                  (if (= @dupOf null) []
                   [{ code: @config.codes.indexPathDuplicate.code, path: @base, message: (str/concat "index path [" (str/join @xf ", ") "]" (if (= @ord "") "" (str/concat " ordered by " @ord)) " repeats indexes[" @dupOf "] of entity " (object/get @e "name" "")), suggestion: "Remove the repeated @index", severity: "error" }]))))))))))))))))))))
+    (array/flatten (array/map (array/range 0 (array/len @orbs)) (fn oi
+     (let ((o (array/nth @orbs @oi)))
+      (let ((trs (object/get @o "traits" [])))
+       (array/flatten (array/map (array/range 0 (array/len @trs)) (fn ti
+        (let ((t (array/nth @trs @ti)))
+         (let ((trans (object/get (object/get @t "stateMachine" {}) "transitions" []))
+               (tks (object/get @t "ticks" [])))
+          (let ((arms (array/concat
+                 (array/map (array/range 0 (array/len @trans)) (fn ni { p: (str/concat "stateMachine.transitions[" @ni "].effects"), fx: (object/get (array/nth @trans @ni) "effects" []) }))
+                 (array/map (array/range 0 (array/len @tks)) (fn ki { p: (str/concat "ticks[" @ki "].effects"), fx: (object/get (array/nth @tks @ki) "effects" []) })))))
+           (array/flatten (array/map @arms (fn a
+            (let ((found (default (as (array/flatten (array/map (object/get (default (as (tree/index (object/get @a "fx" []) ["fetch"]) IxIdx) {}) "fetch" []) (fn c (let ((n (object/get @c "node" null))) (if (and (> (array/len @n) 1) (validate/string (array/nth @n 1)) (or (= (array/len @n) 2) (validate/object (array/nth @n 2)))) [{ e: (array/nth @n 1), o: (if (= (array/len @n) 2) {} (array/nth @n 2)) }] []))))) IxFounds) [])))
+             (array/flatten (array/map @found (fn fx
+              (let ((ename (object/get @fx "e" ""))
+                    (opts (object/get @fx "o" {})))
+               (let ((ent (object/get @defs @ename null)))
+                (if (or (= @ent null) (!= (object/get @ent "persistence" "") "persistent") (object/has @opts "limit") (object/has @opts "id") (object/has @opts "nearest"))
+                 []
+                 [{ code: @config.codes.fetchUnbounded.code, path: (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @t "name" "") ")]." (object/get @a "p" "")), message: (str/concat "'" (object/get @t "name" "") "' fetches every row of '" @ename "': the fetch has no limit, id or nearest"), suggestion: "Add limit: <n> (or a knob), fetch by id, or use nearest", severity: "error" }])))))))))))))))))))))
     (if (not @anyDrv) []
     (array/flatten (array/map (array/range 0 (array/len @orbs)) (fn oi
      (let ((o (array/nth @orbs @oi)))
@@ -169,7 +188,7 @@ orbital OrbLintQueryIndexOrbital {
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
     config {
-      codes : LintQueryIndexCodes = { indexPathInvalid: { code: "ORB_INDEX_PATH_INVALID", category: "entity", description: "An index path names a field that the entity does not declare" }, indexPathDuplicate: { code: "ORB_INDEX_PATH_DUPLICATE", category: "index", description: "The same index path, with the same ordering, is declared more than once on an entity" }, fetchNeedsCompositeIndex: { code: "ORB_FETCH_NEEDS_COMPOSITE_INDEX", category: "effect", description: "A fetch query needs a composite index that the store driver does not create and no index declaration covers" }, fetchUnindexed: { code: "ORB_FETCH_UNINDEXED", category: "query", description: "A fetch filter cannot be pushed down by the store driver and no @index covers it, so the kernel scans every row" } }
+      codes : LintQueryIndexCodes = { indexPathInvalid: { code: "ORB_INDEX_PATH_INVALID", category: "entity", description: "An index path names a field that the entity does not declare" }, indexPathDuplicate: { code: "ORB_INDEX_PATH_DUPLICATE", category: "index", description: "The same index path, with the same ordering, is declared more than once on an entity" }, fetchNeedsCompositeIndex: { code: "ORB_FETCH_NEEDS_COMPOSITE_INDEX", category: "effect", description: "A fetch query needs a composite index that the store driver does not create and no index declaration covers" }, fetchUnindexed: { code: "ORB_FETCH_UNINDEXED", category: "query", description: "A fetch filter cannot be pushed down by the store driver and no @index covers it, so the kernel scans every row" }, fetchUnbounded: { code: "ORB_FETCH_UNBOUNDED", category: "query", description: "A fetch of a persistent entity has no limit, id or nearest, so it reads every row" } }
         @label "Emitted codes"
         @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
     }

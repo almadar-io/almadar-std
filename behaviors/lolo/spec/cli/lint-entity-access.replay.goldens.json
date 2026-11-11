@@ -4197,6 +4197,487 @@
         }
       ],
       "note": "G-STD-218: `@read server \"<reason>\"` is a declared read"
+    },
+    {
+      "id": "user-id-empty-in-read-is-an-error",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "fixture",
+              "orbitals": [
+                {
+                  "name": "O0",
+                  "entity": {
+                    "name": "Person",
+                    "identity": true,
+                    "persistence": "persistent",
+                    "collection": "people",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "role",
+                        "type": "enum",
+                        "values": [
+                          "manager",
+                          "member"
+                        ]
+                      }
+                    ],
+                    "read_policy": [
+                      "!=",
+                      "@user.id",
+                      ""
+                    ],
+                    "instances": [
+                      {
+                        "id": "root",
+                        "role": "manager"
+                      }
+                    ]
+                  },
+                  "traits": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "entity-access",
+                  "findings": [
+                    {
+                      "code": "ORB_S_USER_ID_EMPTY_COMPARISON",
+                      "path": "Person.@read",
+                      "message": "'@user.id' is never empty: the anonymous viewer's id is \"anonymous\" (EXEC-IDENTITY-1), so this comparison is always true",
+                      "suggestion": "Test the role instead: (!= @user.role \"anonymous\") for a signed-in viewer",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        }
+      ],
+      "note": "G-CROSS-405: `(!= @user.id \"\")` in @read is always true, the anonymous viewer's id is \"anonymous\""
+    },
+    {
+      "id": "user-id-empty-in-create-reversed-nested-is-an-error",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "fixture",
+              "orbitals": [
+                {
+                  "name": "O0",
+                  "entity": {
+                    "name": "Person",
+                    "identity": true,
+                    "persistence": "persistent",
+                    "collection": "people",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "role",
+                        "type": "enum",
+                        "values": [
+                          "manager",
+                          "member"
+                        ]
+                      }
+                    ],
+                    "read_policy": [
+                      "!=",
+                      "@user.role",
+                      "anonymous"
+                    ],
+                    "instances": [
+                      {
+                        "id": "root",
+                        "role": "manager"
+                      }
+                    ],
+                    "create_policy": [
+                      "and",
+                      [
+                        "=",
+                        "@user.role",
+                        "manager"
+                      ],
+                      [
+                        "=",
+                        "",
+                        "@user.id"
+                      ]
+                    ]
+                  },
+                  "traits": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "entity-access",
+                  "findings": [
+                    {
+                      "code": "ORB_S_USER_ID_EMPTY_COMPARISON",
+                      "path": "Person.@create[2]",
+                      "message": "'@user.id' is never empty: the anonymous viewer's id is \"anonymous\" (EXEC-IDENTITY-1), so this comparison is always false",
+                      "suggestion": "Test the role instead: (!= @user.role \"anonymous\") for a signed-in viewer",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        }
+      ],
+      "note": "G-CROSS-405: the empty string on the left, nested in `and`, in @create"
+    },
+    {
+      "id": "user-id-compared-to-an-owner-column-is-silent",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "fixture",
+              "orbitals": [
+                {
+                  "name": "O0",
+                  "entity": {
+                    "name": "Person",
+                    "identity": true,
+                    "persistence": "persistent",
+                    "collection": "people",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "role",
+                        "type": "enum",
+                        "values": [
+                          "manager",
+                          "member"
+                        ]
+                      }
+                    ],
+                    "read_policy": [
+                      "!=",
+                      "@user.role",
+                      "anonymous"
+                    ],
+                    "instances": [
+                      {
+                        "id": "root",
+                        "role": "manager"
+                      }
+                    ]
+                  },
+                  "traits": []
+                },
+                {
+                  "name": "O1",
+                  "entity": {
+                    "name": "Note",
+                    "persistence": "persistent",
+                    "collection": "notes",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "ownerId",
+                        "type": "relation",
+                        "relation": {
+                          "entity": "Person"
+                        }
+                      }
+                    ],
+                    "read_policy": [
+                      "=",
+                      "@user.id",
+                      "@entity.ownerId"
+                    ]
+                  },
+                  "traits": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "entity-access",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        }
+      ],
+      "note": "control: `(= @user.id @entity.ownerId)` is the owner scope"
+    },
+    {
+      "id": "role-anonymous-test-is-silent",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "fixture",
+              "orbitals": [
+                {
+                  "name": "O0",
+                  "entity": {
+                    "name": "Person",
+                    "identity": true,
+                    "persistence": "persistent",
+                    "collection": "people",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "role",
+                        "type": "enum",
+                        "values": [
+                          "manager",
+                          "member"
+                        ]
+                      }
+                    ],
+                    "read_policy": [
+                      "!=",
+                      "@user.role",
+                      "anonymous"
+                    ],
+                    "instances": [
+                      {
+                        "id": "root",
+                        "role": "manager"
+                      }
+                    ]
+                  },
+                  "traits": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "entity-access",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        }
+      ],
+      "note": "control: `(!= @user.role \"anonymous\")` is the signed-in test"
+    },
+    {
+      "id": "user-id-compared-to-anonymous-is-silent",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "fixture",
+              "orbitals": [
+                {
+                  "name": "O0",
+                  "entity": {
+                    "name": "Person",
+                    "identity": true,
+                    "persistence": "persistent",
+                    "collection": "people",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "role",
+                        "type": "enum",
+                        "values": [
+                          "manager",
+                          "member"
+                        ]
+                      }
+                    ],
+                    "read_policy": [
+                      "=",
+                      "@user.id",
+                      "anonymous"
+                    ],
+                    "instances": [
+                      {
+                        "id": "root",
+                        "role": "manager"
+                      }
+                    ]
+                  },
+                  "traits": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "entity-access",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintEntityAccess"
+        }
+      ],
+      "note": "control: `(= @user.id \"anonymous\")` is a legal comparison"
     }
   ]
 }

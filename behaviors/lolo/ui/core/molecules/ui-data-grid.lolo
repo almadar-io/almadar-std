@@ -62,7 +62,7 @@ orbital DataGridOrbital {
 
     state idle {
       INIT -> idle when @config.selfFetch
-        (fetch DataGridItem { emit: { success: DataGridLoaded } })
+        (fetch DataGridItem { emit: { failure: DataGridLoadFailed, success: DataGridLoaded } })
         (render-ui main {
           dragGroup: @config.dragGroup
           accepts: @config.accepts
@@ -176,6 +176,8 @@ orbital DataGridOrbital {
           tabIndex: @config.tabIndex
           type: data-grid
         })
+      DataGridLoadFailed -> idle
+        (notify error (str/concat "Couldn't load the grid — " (default ?error "")))
       DataGridLoaded -> idle
         (render-ui main {
           dragGroup: @config.dragGroup
@@ -256,6 +258,13 @@ orbital DataGridOrbital {
       }
         @description "User opened a record from the list."
         @tier "essential"
+      DataGridLoadFailed {
+        error : string
+        code : string
+      }
+        @description "DataGrid rows could not be loaded."
+        @synonyms "error, failure, rejected"
+        @tier "internal"
       DataGridLoaded
         @description "DataGrid rows finished loading; payload.data holds the collection."
         @synonyms "loaded, fetched, retrieved"

@@ -316,6 +316,8 @@ orbital AgentMemoryOrbital {
       INIT -> ready
       MEMORY_STORED -> ready
         (set @entity.pendingContent "")
+      MEMORY_WRITE_FAILED -> ready
+        (notify error (str/concat "Couldn't store the memory — " (default ?error "")))
       REMEMBER -> ready when (or (default ?ephemeral false) (= @user.role "anonymous"))
       REMEMBER -> remembering when (and (not (default ?ephemeral false)) (!= @user.role "anonymous"))
         (set @entity.pendingContent (str/concat "Asked: " @entity.pendingQuery " | Answered: " ?reply))
@@ -335,7 +337,7 @@ orbital AgentMemoryOrbital {
           embedding: (default (array/first ?embeddings) [])
           createdAt: @now
         } {
-          emit: { success: MEMORY_STORED }
+          emit: { failure: MEMORY_WRITE_FAILED, success: MEMORY_STORED }
         })
       MemoryEmbedFailed -> ready when (= (default ?key "") "store")
         (emit MEMORY_STORE_NOTICE { message: ?message, variant: "warning" })
@@ -356,6 +358,13 @@ orbital AgentMemoryOrbital {
         message : string
         variant : "error" | "warning"
       }
+        @tier "internal"
+      MEMORY_WRITE_FAILED {
+        error : string
+        code : string
+      }
+        @description "The memory could not be stored."
+        @synonyms "error, failure, rejected"
         @tier "internal"
     }
 

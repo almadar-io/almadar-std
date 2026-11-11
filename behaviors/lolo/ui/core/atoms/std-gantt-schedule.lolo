@@ -26,6 +26,7 @@ orbital GanttScheduleOrbital {
       INIT -> loading
         (set @entity.ganttParentId (default ?id ""))
         (fetch GanttItem {
+          limit: @config.maxRows
           emit: { failure: TaskLoadFailed, success: TaskLoaded }
           include: @config.include
           filter: (or (not (validate/required @config.parentField)) (= (object/get @entity @config.parentField) (default ?id "")))
@@ -104,6 +105,7 @@ orbital GanttScheduleOrbital {
       INIT -> loading
         (set @entity.ganttParentId (default ?id ""))
         (fetch GanttItem {
+          limit: @config.maxRows
           emit: { failure: TaskLoadFailed, success: TaskLoaded }
           include: @config.include
           filter: (or (not (validate/required @config.parentField)) (= (object/get @entity @config.parentField) (default ?id "")))
@@ -116,6 +118,7 @@ orbital GanttScheduleOrbital {
         })
       RETRY -> loading
         (fetch GanttItem {
+          limit: @config.maxRows
           emit: { failure: TaskLoadFailed, success: TaskLoaded }
           include: @config.include
           filter: (or (not (validate/required @config.parentField)) (= (object/get @entity @config.parentField) @entity.ganttParentId))
@@ -126,6 +129,7 @@ orbital GanttScheduleOrbital {
       INIT -> loading
         (set @entity.ganttParentId (default ?id ""))
         (fetch GanttItem {
+          limit: @config.maxRows
           emit: { failure: TaskLoadFailed, success: TaskLoaded }
           include: @config.include
           filter: (or (not (validate/required @config.parentField)) (= (object/get @entity @config.parentField) (default ?id "")))
@@ -138,6 +142,7 @@ orbital GanttScheduleOrbital {
         })
       RETRY -> loading
         (fetch GanttItem {
+          limit: @config.maxRows
           emit: { failure: TaskLoadFailed, success: TaskLoaded }
           include: @config.include
           filter: (or (not (validate/required @config.parentField)) (= (object/get @entity @config.parentField) @entity.ganttParentId))
@@ -252,6 +257,10 @@ orbital GanttScheduleOrbital {
         @description "Event emitted when a bar is clicked: UI:{onBarClick} with { id } carrying the clicked row's id. Empty means bars are not clickable."
         @synonyms "bar click, task click, select task, open task"
         @tier "presentation"
+      maxRows : number = 500
+        @label "Most rows per load"
+        @description "Most rows one load reads."
+        @tier "policy"
     }
   }
 

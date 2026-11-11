@@ -158,6 +158,8 @@ orbital OpaqueTokenOrbital {
           id: (default (hash/sha 256 ?token "hex") "")
           emit: { success: TOKEN_ROW_FOUND, failure: TOKEN_ROW_ABSENT }
         })
+      TOKEN_WRITE_FAILED -> idle
+        (emit TOKEN_REVOKE_FAILED { error: (default ?error "") })
     }
 
     state reading {
@@ -184,7 +186,7 @@ orbital OpaqueTokenOrbital {
       RESOLVE_TOKEN -> spending
         (emit TOKEN_REFUSED { key: (default ?key ""), code: "busy", message: "a token request is already in flight" })
       TOKEN_SPENT -> idle when @entity.expired
-        (persist delete @config.tokenEntity @entity.tokenId)
+        (persist delete @config.tokenEntity @entity.tokenId { emit: { failure: TOKEN_WRITE_FAILED } })
         (emit TOKEN_REFUSED { key: @entity.key, code: "expired", message: "the token has expired", token: @entity.token })
       TOKEN_SPENT -> rereading
         (fetch @config.tokenEntity {
@@ -201,7 +203,7 @@ orbital OpaqueTokenOrbital {
         (emit TOKEN_REFUSED { key: (default ?key ""), code: "busy", message: "a token request is already in flight" })
       TOKEN_ROW_CLAIMED -> idle
         (emit TOKEN_RESOLVED { key: @entity.key, id: @entity.tokenId, row: ?data })
-        (persist delete @config.tokenEntity @entity.tokenId)
+        (persist delete @config.tokenEntity @entity.tokenId { emit: { failure: TOKEN_WRITE_FAILED } })
       TOKEN_NOT_SPENT -> idle
         (emit TOKEN_REFUSED { key: @entity.key, code: "used", message: "the token was already spent", token: @entity.token })
     }
@@ -224,6 +226,18 @@ orbital OpaqueTokenOrbital {
         @description "The presented token names no row: never minted or forged (unknown), past its expiry (expired), already spent (used), another resolve in flight (busy), or the read failed (store)."
         @synonyms "token refused, token rejected"
         @tier "primary"
+      TOKEN_REVOKE_FAILED -> external {
+        error : string
+      }
+        @description "A spent or expired token's row could not be deleted, so it is still stored."
+        @tier "primary"
+      TOKEN_WRITE_FAILED {
+        error : string
+        code : string
+      }
+        @description "The token row's delete failed; routed to TOKEN_REVOKE_FAILED."
+        @synonyms "error, failure, rejected"
+        @tier "internal"
       TOKEN_ROW_FOUND {
         data : @entity @config.tokenEntity!
       }

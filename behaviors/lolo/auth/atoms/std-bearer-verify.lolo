@@ -30,56 +30,105 @@ orbital BearerVerifyOrbital {
     certQueue : [BearerCert] @description "Certificates of the fetched document still to be read for their keys, in document order." = []
     certKeys : [BearerJwk] @description "Keys read so far from the fetched certificates." = []
     unsigned : boolean @description "Whether the token in hand is an unsigned emulator token, verified against the emulator issuer with no key." = false
+    reading : boolean @description "Whether this instance has asked the environment for its settings." = false
+    ready : boolean @description "Whether this instance holds its settings: every environment read it asked for has answered. A bearer that arrives before then is held, never judged against defaults." = false
+    pendingReads : number @description "Environment reads still to answer." = 0
+    held : [BearerJob] @description "Bearers that arrived before the settings were read, oldest first." = []
   }
 
   trait BearerVerifier -> BearerCheck [optimistic] {
     initial: idle
 
     state idle {
-      KEY_SALT_READ -> idle
-        (set @entity.keysEnabled (!= (default @payload.value "") ""))
-      KEY_SALT_UNREAD -> idle
-        (set @entity.keysEnabled false)
-      EMULATOR_READ -> idle
-        (set @entity.emulator (!= (default @payload.value "") ""))
-      EMULATOR_UNREAD -> idle
-        (set @entity.emulator false)
-      INIT -> idle
+      SETTINGS_READ -> idle when (not @entity.reading)
+        (set @entity.reading true)
+        (set @entity.pendingReads (if @config.issuerFromEnv 3 2))
         (set @entity.issuer @config.issuer)
         (set @entity.audience @config.audience)
         (os/getenv "ALMADAR_API_KEY_SALT" { emit: { success: KEY_SALT_READ failure: KEY_SALT_UNREAD } })
         (os/getenv "FIREBASE_AUTH_EMULATOR_HOST" { emit: { success: EMULATOR_READ failure: EMULATOR_UNREAD } })
         (when @config.issuerFromEnv (os/getenv "AUTH_PROVIDER" { emit: { success: PROVIDER_READ failure: ISSUER_UNREAD } }))
+      SETTINGS_READ -> idle when @entity.reading
+      SETTINGS_CHECK -> idle when (and (<= @entity.pendingReads 0) (not @entity.ready))
+        (set @entity.ready true)
+        (emit HELD_DRAIN {})
+      SETTINGS_CHECK -> idle when (not (and (<= @entity.pendingReads 0) (not @entity.ready)))
+      HELD_DRAIN -> idle when (> (array/len @entity.held) 0)
+        (let ((job (default (array/first @entity.held) { requestId: 0, authorization: "" })))
+          (do
+            (set @entity.held (array/slice @entity.held 1))
+            (emit BEARER_VERIFY { requestId: (default @job.requestId 0), authorization: (default @job.authorization "") })
+            (emit HELD_NEXT {})))
+      HELD_DRAIN -> idle when (= (array/len @entity.held) 0)
+      HELD_NEXT -> idle
+        (emit HELD_DRAIN {})
+      BEARER_VERIFY -> idle when (and (not @entity.ready) (< (array/len @entity.held) @config.maxQueue))
+        (set @entity.held (array/append @entity.held { requestId: (default @payload.requestId 0), authorization: (default @payload.authorization "") }))
+        (emit SETTINGS_READ {})
+      BEARER_VERIFY -> idle when (and (not @entity.ready) (>= (array/len @entity.held) @config.maxQueue))
+        (emit BEARER_REFUSED { requestId: (default @payload.requestId 0), reason: "busy" })
+      KEY_SALT_READ -> idle
+        (set @entity.keysEnabled (!= (default @payload.value "") ""))
+        (set @entity.pendingReads (- @entity.pendingReads 1))
+        (emit SETTINGS_CHECK {})
+      KEY_SALT_UNREAD -> idle
+        (set @entity.keysEnabled false)
+        (set @entity.pendingReads (- @entity.pendingReads 1))
+        (emit SETTINGS_CHECK {})
+      EMULATOR_READ -> idle
+        (set @entity.emulator (!= (default @payload.value "") ""))
+        (set @entity.pendingReads (- @entity.pendingReads 1))
+        (emit SETTINGS_CHECK {})
+      EMULATOR_UNREAD -> idle
+        (set @entity.emulator false)
+        (set @entity.pendingReads (- @entity.pendingReads 1))
+        (emit SETTINGS_CHECK {})
+      INIT -> idle
+        (emit SETTINGS_READ {})
       PROVIDER_READ -> idle when (= (default @payload.value "") "firebase")
         (os/getenv "FIREBASE_PROJECT_ID" { emit: { success: PROJECT_READ failure: ISSUER_UNREAD } })
       PROVIDER_READ -> idle when (= (default @payload.value "") "oidc")
         (os/getenv "OIDC_ISSUER_URL" { emit: { success: OIDC_ISSUER_READ failure: ISSUER_UNREAD } })
       PROVIDER_READ -> idle when (and (!= (default @payload.value "") "firebase") (!= (default @payload.value "") "oidc"))
+        (set @entity.pendingReads (- @entity.pendingReads 1))
+        (emit SETTINGS_CHECK {})
       PROJECT_READ -> idle when (!= (default @payload.value "") "")
         (set @entity.issuer (str/concat "https://securetoken.google.com/" (default @payload.value "")))
         (set @entity.audience @payload.value)
+        (set @entity.pendingReads (- @entity.pendingReads 1))
+        (emit SETTINGS_CHECK {})
       PROJECT_READ -> idle when (= (default @payload.value "") "")
+        (set @entity.pendingReads (- @entity.pendingReads 1))
+        (emit SETTINGS_CHECK {})
       OIDC_ISSUER_READ -> idle when (!= (default @payload.value "") "")
         (set @entity.issuer @payload.value)
         (os/getenv "OIDC_AUDIENCE" { emit: { success: OIDC_AUDIENCE_READ failure: ISSUER_UNREAD } })
       OIDC_ISSUER_READ -> idle when (= (default @payload.value "") "")
+        (set @entity.pendingReads (- @entity.pendingReads 1))
+        (emit SETTINGS_CHECK {})
       OIDC_AUDIENCE_READ -> idle when (!= (default @payload.value "") "")
         (set @entity.audience @payload.value)
+        (set @entity.pendingReads (- @entity.pendingReads 1))
+        (emit SETTINGS_CHECK {})
       OIDC_AUDIENCE_READ -> idle when (= (default @payload.value "") "")
+        (set @entity.pendingReads (- @entity.pendingReads 1))
+        (emit SETTINGS_CHECK {})
       ISSUER_UNREAD -> idle
+        (set @entity.pendingReads (- @entity.pendingReads 1))
+        (emit SETTINGS_CHECK {})
 
-      BEARER_VERIFY -> idle when (and (and (str/startsWith (default @payload.authorization "") "Bearer ") (str/startsWith (str/slice (default @payload.authorization "") 7 (str/len (default @payload.authorization ""))) @config.keyPrefix)) @entity.keysEnabled)
+      BEARER_VERIFY -> idle when (and @entity.ready (and (and (str/startsWith (default @payload.authorization "") "Bearer ") (str/startsWith (str/slice (default @payload.authorization "") 7 (str/len (default @payload.authorization ""))) @config.keyPrefix)) @entity.keysEnabled))
         (emit VERIFY_KEY { requestId: (default @payload.requestId 0), token: (str/slice (default @payload.authorization "") 7 (str/len (default @payload.authorization ""))) })
-      BEARER_VERIFY -> idle when (and (and (str/startsWith (default @payload.authorization "") "Bearer ") (str/startsWith (str/slice (default @payload.authorization "") 7 (str/len (default @payload.authorization ""))) @config.keyPrefix)) (not @entity.keysEnabled))
+      BEARER_VERIFY -> idle when (and @entity.ready (and (and (str/startsWith (default @payload.authorization "") "Bearer ") (str/startsWith (str/slice (default @payload.authorization "") 7 (str/len (default @payload.authorization ""))) @config.keyPrefix)) (not @entity.keysEnabled)))
         (emit BEARER_REFUSED { requestId: (default @payload.requestId 0), reason: "keys-disabled" })
       API_KEY_VERIFIED -> idle
         (emit BEARER_KEY_VERIFIED { requestId: (default @payload.requestId 0), owner: @payload.owner, claims: @payload.claims })
       API_KEY_REFUSED -> idle
         (emit BEARER_REFUSED { requestId: (default @payload.requestId 0), reason: (str/concat "api-key-" @payload.reason) })
-      BEARER_VERIFY -> idle when (and (not (and (str/startsWith (default @payload.authorization "") "Bearer ") (str/startsWith (str/slice (default @payload.authorization "") 7 (str/len (default @payload.authorization ""))) @config.keyPrefix))) (< (array/len @entity.queue) @config.maxQueue))
+      BEARER_VERIFY -> idle when (and @entity.ready (and (not (and (str/startsWith (default @payload.authorization "") "Bearer ") (str/startsWith (str/slice (default @payload.authorization "") 7 (str/len (default @payload.authorization ""))) @config.keyPrefix))) (< (array/len @entity.queue) @config.maxQueue)))
         (set @entity.queue (array/append @entity.queue { requestId: (default @payload.requestId 0), authorization: (default @payload.authorization "") }))
         (emit BEARER_PUMP {})
-      BEARER_VERIFY -> idle when (and (not (and (str/startsWith (default @payload.authorization "") "Bearer ") (str/startsWith (str/slice (default @payload.authorization "") 7 (str/len (default @payload.authorization ""))) @config.keyPrefix))) (>= (array/len @entity.queue) @config.maxQueue))
+      BEARER_VERIFY -> idle when (and @entity.ready (and (not (and (str/startsWith (default @payload.authorization "") "Bearer ") (str/startsWith (str/slice (default @payload.authorization "") 7 (str/len (default @payload.authorization ""))) @config.keyPrefix))) (>= (array/len @entity.queue) @config.maxQueue)))
         (emit BEARER_REFUSED { requestId: (default @payload.requestId 0), reason: "busy" })
       BEARER_PUMP -> idle when (= (array/len @entity.queue) 0)
       BEARER_PUMP -> idle when (and (> (array/len @entity.queue) 0) (= (default (object/get (array/first @entity.queue) "authorization") "") ""))
@@ -368,6 +417,15 @@ orbital BearerVerifyOrbital {
         @description "Internal: the os/getenv for ALMADAR_API_KEY_SALT failed."
         @tier "internal"
       BEARER_NEXT {}
+      SETTINGS_READ {}
+      SETTINGS_CHECK {}
+      HELD_DRAIN {}
+      HELD_NEXT {}
+      BEARER_VERIFY -> internal {
+        requestId : number
+        authorization : string
+      }
+        @description "Internal: a held bearer is handed back to this trait once its settings are read."
         @description "Internal: an answer that needed no key work is done; start the next queued request."
         @tier "secondary"
       BEARER_PUMP {}

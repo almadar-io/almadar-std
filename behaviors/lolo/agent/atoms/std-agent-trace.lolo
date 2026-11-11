@@ -88,7 +88,7 @@ orbital AgentTraceOrbital {
           modelCalls: ?usage.modelCalls
           recordedAt: @now
         } {
-          emit: { success: RUN_RECORDED }
+          emit: { failure: RUN_RECORD_FAILED, success: RUN_RECORDED }
         })
       REPLY_FAILED -> recording when (!= @user.role "anonymous")
         (persist create AgentRun {
@@ -98,10 +98,12 @@ orbital AgentTraceOrbital {
           steps: (default ?steps [])
           recordedAt: @now
         } {
-          emit: { success: RUN_RECORDED }
+          emit: { failure: RUN_RECORD_FAILED, success: RUN_RECORDED }
         })
       RUN_RECORDED -> recording
         (set @entity.outcome answered)
+      RUN_RECORD_FAILED -> recording
+        (notify error (str/concat "Couldn't record the run — " (default ?error "")))
     }
 
     emits {
@@ -109,6 +111,13 @@ orbital AgentTraceOrbital {
         @description "A run was recorded — payload is the created AgentRun row itself."
         @synonyms "recorded, logged, traced"
         @tier "domain"
+      RUN_RECORD_FAILED {
+        error : string
+        code : string
+      }
+        @description "Recording a run was rejected."
+        @synonyms "error, failure, rejected"
+        @tier "internal"
     }
 
     listens {

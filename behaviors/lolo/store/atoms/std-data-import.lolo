@@ -157,7 +157,7 @@ orbital DataImportOrbital {
           id: @entity.id
           rowCount: @entity.rowCount
           status: staged
-        })
+        } { emit: { failure: IMPORT_STATUS_WRITE_FAILED } })
         (render-ui main {
           children: [{
             content: (str/concat "Review staged import — " @entity.sourceName)
@@ -195,7 +195,7 @@ orbital DataImportOrbital {
       ;; IMPORT_FAILED rather than staging a count no parser can produce.
       STAGE_ROWS -> failed when (and (> (array/len ?rows) 0) (< (default ?errorCount 0) 0))
         (set @entity.status failed)
-        (persist update ImportBatch { id: @entity.id, status: failed })
+        (persist update ImportBatch { id: @entity.id, status: failed } { emit: { failure: IMPORT_STATUS_WRITE_FAILED } })
         (emit IMPORT_FAILED { batchId: @entity.id, error: "The staged error count is negative, nothing was staged." })
         (render-ui main {
           message: "The staged error count is negative, nothing was staged."
@@ -206,7 +206,7 @@ orbital DataImportOrbital {
       ;; `= 0`) so guard-payload synthesis can steer both arms.
       STAGE_ROWS -> failed when (< (array/len ?rows) 1)
         (set @entity.status failed)
-        (persist update ImportBatch { id: @entity.id, status: failed })
+        (persist update ImportBatch { id: @entity.id, status: failed } { emit: { failure: IMPORT_STATUS_WRITE_FAILED } })
         (emit IMPORT_FAILED { batchId: @entity.id, error: "The file parsed to zero rows — nothing to stage." })
         (render-ui main {
           message: "The file parsed to zero rows — nothing to stage."
@@ -221,13 +221,15 @@ orbital DataImportOrbital {
       IMPORT_PERSIST_FAILED -> uploaded
         (set @entity.status failed)
         (set @entity.errorCount 1)
-        (persist update ImportBatch { errorCount: 1, id: @entity.id, status: failed })
+        (persist update ImportBatch { errorCount: 1, id: @entity.id, status: failed } { emit: { failure: IMPORT_STATUS_WRITE_FAILED } })
         (emit IMPORT_FAILED { batchId: @entity.id, error: ?error })
         (render-ui main {
           message: ?error
           type: alert
           variant: error
         })
+      IMPORT_STATUS_WRITE_FAILED -> uploaded
+        (notify error (str/concat "Couldn't update the import status — " (default ?error "")))
       DISCARD_IMPORT -> idle
         (set @entity.status uploaded)
         (set @entity.rowCount 0)
@@ -266,7 +268,7 @@ orbital DataImportOrbital {
       ROWS_STAGED -> staged
       CONFIRM_IMPORT -> confirmed
         (set @entity.status confirmed)
-        (persist update ImportBatch { id: @entity.id, status: confirmed })
+        (persist update ImportBatch { id: @entity.id, status: confirmed } { emit: { failure: IMPORT_STATUS_WRITE_FAILED } })
         (render-ui main {
           message: "Import confirmed — staged rows are ready for mapping."
           type: alert
@@ -282,13 +284,15 @@ orbital DataImportOrbital {
       IMPORT_PERSIST_FAILED -> staged
         (set @entity.status failed)
         (set @entity.errorCount 1)
-        (persist update ImportBatch { errorCount: 1, id: @entity.id, status: failed })
+        (persist update ImportBatch { errorCount: 1, id: @entity.id, status: failed } { emit: { failure: IMPORT_STATUS_WRITE_FAILED } })
         (emit IMPORT_FAILED { batchId: @entity.id, error: ?error })
         (render-ui main {
           message: ?error
           type: alert
           variant: error
         })
+      IMPORT_STATUS_WRITE_FAILED -> staged
+        (notify error (str/concat "Couldn't update the import status — " (default ?error "")))
       ;; The batch row stays (status staged) for provenance; staged rows are
       ;; left in import_rows for the host to clean up or re-run.
       DISCARD_IMPORT -> idle
@@ -355,13 +359,15 @@ orbital DataImportOrbital {
       IMPORT_PERSIST_FAILED -> confirmed
         (set @entity.status failed)
         (set @entity.errorCount 1)
-        (persist update ImportBatch { errorCount: 1, id: @entity.id, status: failed })
+        (persist update ImportBatch { errorCount: 1, id: @entity.id, status: failed } { emit: { failure: IMPORT_STATUS_WRITE_FAILED } })
         (emit IMPORT_FAILED { batchId: @entity.id, error: ?error })
         (render-ui main {
           message: ?error
           type: alert
           variant: error
         })
+      IMPORT_STATUS_WRITE_FAILED -> confirmed
+        (notify error (str/concat "Couldn't update the import status — " (default ?error "")))
       RESET -> idle
         (set @entity.status uploaded)
         (set @entity.rowCount 0)
@@ -400,6 +406,8 @@ orbital DataImportOrbital {
           gap: md
           type: stack
         })
+      IMPORT_STATUS_WRITE_FAILED -> failed
+        (notify error (str/concat "Couldn't update the import status — " (default ?error "")))
       RESET -> idle
         (set @entity.status uploaded)
         (set @entity.rowCount 0)
@@ -427,6 +435,13 @@ orbital DataImportOrbital {
       }
         @description "Any import_batches / import_rows persist failure — the batch row is updated to failed and IMPORT_FAILED emitted, never a silent swallow; the trait stays put so the user can retry or discard"
         @tier "secondary"
+      IMPORT_STATUS_WRITE_FAILED {
+        error : string
+        code : string
+      }
+        @description "Updating the import batch's status row failed."
+        @synonyms "error, failure, rejected"
+        @tier "internal"
       IMPORT_CONFIRMED -> external {
         batchId : string!
         sourceName : string

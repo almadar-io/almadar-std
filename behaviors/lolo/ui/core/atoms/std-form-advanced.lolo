@@ -32,9 +32,11 @@ orbital FormEntryOrbital {
     state editing {
       INIT -> editing
         (fetch FormEntry {
+          limit: @config.maxRows
           emit: { failure: FormEntryLoadFailed, success: FormEntryLoaded }
         })
         (fetch FormEntry {
+          limit: @config.maxRows
           emit: { failure: FormEntryLoadFailed, success: FormEntryLoaded }
         })
         (render-ui main {
@@ -64,6 +66,7 @@ orbital FormEntryOrbital {
         })
       CANCEL -> editing
         (fetch FormEntry {
+          limit: @config.maxRows
           emit: { failure: FormEntryLoadFailed, success: FormEntryLoaded }
         })
         (render-ui main {
@@ -126,9 +129,11 @@ orbital FormEntryOrbital {
     state submitted {
       INIT -> editing
         (fetch FormEntry {
+          limit: @config.maxRows
           emit: { failure: FormEntryLoadFailed, success: FormEntryLoaded }
         })
         (fetch FormEntry {
+          limit: @config.maxRows
           emit: { failure: FormEntryLoadFailed, success: FormEntryLoaded }
         })
         (render-ui main {
@@ -158,9 +163,11 @@ orbital FormEntryOrbital {
         })
       RESET -> editing
         (fetch FormEntry {
+          limit: @config.maxRows
           emit: { failure: FormEntryLoadFailed, success: FormEntryLoaded }
         })
         (fetch FormEntry {
+          limit: @config.maxRows
           emit: { failure: FormEntryLoadFailed, success: FormEntryLoaded }
         })
         (render-ui main {
@@ -308,6 +315,10 @@ orbital FormEntryOrbital {
         @label "New entry button"
         @description "Label on the button that starts another entry after a submit"
         @tier "presentation"
+      maxRows : number = 500
+        @label "Most rows per load"
+        @description "Most rows one load reads."
+        @tier "policy"
     }
   }
 

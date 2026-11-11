@@ -23,7 +23,7 @@ orbital PositionedCanvasOrbital {
 
     state idle {
       INIT -> idle when @config.selfFetch
-        (fetch PositionedCanvasItem { emit: { success: PositionedCanvasLoaded } })
+        (fetch PositionedCanvasItem { emit: { failure: PositionedCanvasLoadFailed, success: PositionedCanvasLoaded } })
         (render-ui main {
           items: @entity
           width: @config.width
@@ -85,6 +85,8 @@ orbital PositionedCanvasOrbital {
           tabIndex: @config.tabIndex
           type: positioned-canvas
         })
+      PositionedCanvasLoadFailed -> idle
+        (notify error (str/concat "Couldn't load the canvas — " (default ?error "")))
       PositionedCanvasLoaded -> idle
         (render-ui main {
           items: @payload.data
@@ -131,6 +133,13 @@ orbital PositionedCanvasOrbital {
       }
         @description "onMove prop"
         @tier "essential"
+      PositionedCanvasLoadFailed {
+        error : string
+        code : string
+      }
+        @description "PositionedCanvas rows could not be loaded."
+        @synonyms "error, failure, rejected"
+        @tier "internal"
       PositionedCanvasLoaded
         @description "PositionedCanvas rows finished loading; payload.data holds the collection."
         @synonyms "loaded, fetched, retrieved"

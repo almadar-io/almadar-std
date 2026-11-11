@@ -132,7 +132,7 @@ orbital MigrationJobOrbital {
           stats: @entity.stats
           status: @entity.status
           target: @entity.target
-        })
+        } { emit: { failure: MIGRATION_WRITE_FAILED } })
         (emit MIGRATION_FAILED { error: @entity.error })
         (notify error "Couldn't list the source documents: database sources are not wired yet.")
       MIGRATION_PROFILE_LOADED -> failed when (and (and (validate/string (object/get ?data "id")) (= (object/get ?data "id") (object/get @entity.source "id"))) (= ?data.accessKind "http") (not (array/includes @config.supportedAdapters (object/get ?data "adapter"))))
@@ -145,7 +145,7 @@ orbital MigrationJobOrbital {
           stats: @entity.stats
           status: @entity.status
           target: @entity.target
-        })
+        } { emit: { failure: MIGRATION_WRITE_FAILED } })
         (emit MIGRATION_FAILED { error: @entity.error })
         (notify error "Couldn't list the source documents: the profile names an adapter this app has not composed.")
       MIGRATION_PROFILE_LOADED -> failed when (not (and (validate/string (object/get ?data "id")) (= (object/get ?data "id") (object/get @entity.source "id"))))
@@ -158,7 +158,7 @@ orbital MigrationJobOrbital {
           stats: @entity.stats
           status: @entity.status
           target: @entity.target
-        })
+        } { emit: { failure: MIGRATION_WRITE_FAILED } })
         (emit MIGRATION_FAILED { error: @entity.error })
         (notify error "Couldn't list the source documents: no migration profile is stored for this source.")
       MIGRATION_SOURCE_NEXT -> fetching when (and (< ?index (array/len (object/get @entity.profile "endpoints" []))) (= (object/get (default (if (>= ?index 0) (array/nth (object/get @entity.profile "endpoints" []) ?index) null) { name: "", method: "GET", path: "", params: {}, headers: {}, recordsPath: "" }) "method") "GET") (or (str/startsWith @config.sourceOrigin "https://") (str/startsWith @config.sourceOrigin "http://")))
@@ -243,7 +243,7 @@ orbital MigrationJobOrbital {
           stats: @entity.stats
           status: @entity.status
           target: @entity.target
-        })
+        } { emit: { failure: MIGRATION_WRITE_FAILED } })
         (emit MIGRATION_FAILED { error: @entity.error })
         (notify error (str/concat "Couldn't read the source — " @entity.error))
       MIGRATION_SOURCE_REPLIED -> failed when (or (< ?status 200) (>= ?status 300) (not (json/valid ?body)))
@@ -256,7 +256,7 @@ orbital MigrationJobOrbital {
           stats: @entity.stats
           status: @entity.status
           target: @entity.target
-        })
+        } { emit: { failure: MIGRATION_WRITE_FAILED } })
         (emit MIGRATION_FAILED { error: @entity.error })
         (notify error (str/concat "Couldn't read the source — " @entity.error))
       MIGRATION_SOURCE_NEXT -> mapping when (>= ?index (array/len (object/get @entity.profile "endpoints" [])))
@@ -280,7 +280,7 @@ orbital MigrationJobOrbital {
           stats: @entity.stats
           status: @entity.status
           target: @entity.target
-        })
+        } { emit: { failure: MIGRATION_WRITE_FAILED } })
         (emit MIGRATION_FAILED { error: @entity.error })
         (notify error (if (validate/required ?error) (str/concat "Couldn't list the source documents — " ?error) "Couldn't list the source documents"))
       MIGRATION_CALL_FAILED -> failed
@@ -293,7 +293,7 @@ orbital MigrationJobOrbital {
           stats: @entity.stats
           status: @entity.status
           target: @entity.target
-        })
+        } { emit: { failure: MIGRATION_WRITE_FAILED } })
         (emit MIGRATION_FAILED { error: @entity.error })
         (notify error (if (validate/required ?error) (str/concat "Couldn't list the source documents — " ?error) "Couldn't list the source documents"))
     }
@@ -780,7 +780,7 @@ orbital MigrationJobOrbital {
           stats: @entity.stats
           status: @entity.status
           target: @entity.target
-        })
+        } { emit: { failure: MIGRATION_WRITE_FAILED } })
         (emit MIGRATION_FAILED { error: @entity.error })
         (notify error (if (validate/required ?error) (str/concat "Couldn't stage the documents — " ?error) "Couldn't stage the documents"))
       MIGRATION_SOURCE_UNREADABLE -> failed
@@ -793,7 +793,7 @@ orbital MigrationJobOrbital {
           stats: @entity.stats
           status: @entity.status
           target: @entity.target
-        })
+        } { emit: { failure: MIGRATION_WRITE_FAILED } })
         (emit MIGRATION_FAILED { error: @entity.error })
         (notify error (if (validate/required ?error) (str/concat "Couldn't read the source documents — " ?error) "Couldn't read the source documents"))
       MIGRATION_CALL_FAILED -> failed
@@ -806,7 +806,7 @@ orbital MigrationJobOrbital {
           stats: @entity.stats
           status: @entity.status
           target: @entity.target
-        })
+        } { emit: { failure: MIGRATION_WRITE_FAILED } })
         (emit MIGRATION_FAILED { error: @entity.error })
         (notify error (if (validate/required ?error) (str/concat "Couldn't stage the documents — " ?error) "Couldn't stage the documents"))
     }
@@ -877,7 +877,7 @@ orbital MigrationJobOrbital {
           stats: @entity.stats
           status: @entity.status
           target: @entity.target
-        })
+        } { emit: { failure: MIGRATION_WRITE_FAILED } })
         (emit MIGRATION_COMPLETED { stats: @entity.stats })
       MIGRATION_CALL_FAILED -> failed
         (set @entity.error ?error)
@@ -889,7 +889,7 @@ orbital MigrationJobOrbital {
           stats: @entity.stats
           status: @entity.status
           target: @entity.target
-        })
+        } { emit: { failure: MIGRATION_WRITE_FAILED } })
         (emit MIGRATION_FAILED { error: @entity.error })
         (notify error (if (validate/required ?error) (str/concat "Couldn't commit the import — " ?error) "Couldn't commit the import"))
     }
@@ -920,6 +920,8 @@ orbital MigrationJobOrbital {
       ;; Self-loop so the validator sees an in-atom listener for the
       ;; externally-consumed completion event.
       MIGRATION_COMPLETED -> done
+      MIGRATION_WRITE_FAILED -> done
+        (notify error (str/concat "Couldn't save the import job — " (default ?error "")))
     }
 
     state failed {
@@ -952,6 +954,8 @@ orbital MigrationJobOrbital {
       ;; Mirrors the done self-loop: MIGRATION_FAILED is emitted for
       ;; downstream consumers and listened to here for the validator.
       MIGRATION_FAILED -> failed
+      MIGRATION_WRITE_FAILED -> failed
+        (notify error (str/concat "Couldn't save the import job — " (default ?error "")))
     }
 
     emits {
@@ -987,6 +991,13 @@ orbital MigrationJobOrbital {
       }
         @description "Internal: the profile could not be read — lands the run in failed, never a silent swallow"
         @tier "secondary"
+      MIGRATION_WRITE_FAILED {
+        error : string
+        code : string
+      }
+        @description "Internal: the terminal job row could not be saved."
+        @synonyms "error, failure, rejected"
+        @tier "internal"
       MIGRATION_EXTRACT -> external {
         adapter : string!
         documents : [ImportRawDocument]!

@@ -8,6 +8,7 @@ def wc(c, lvl, ver): return {"criterion": c, "level": lvl, "version": ver}
 W = {
     "button": [wc("4.1.2", "A", "2.0")],
     "link": [wc("2.4.4", "A", "2.0"), wc("4.1.2", "A", "2.0")],
+    "imglink": [wc("1.1.1", "A", "2.0"), wc("2.4.4", "A", "2.0"), wc("4.1.2", "A", "2.0")],
     "img": [wc("1.1.1", "A", "2.0")],
     "mismatch": [wc("2.5.3", "A", "2.1")],
     "dup": [wc("2.4.4", "A", "2.0")],
@@ -16,7 +17,7 @@ def finding(page, rule, wcag, impact, conf, sel, snippet, count=1):
     return {"id": f"{page}#{rule}#{sel}", "pageUrl": page, "rule": rule, "wcag": wcag, "method": "probe", "engines": ["probe"], "impact": impact, "confidence": conf, "selector": sel, "snippet": snippet, "evidence": "", "count": count}
 
 def item(selector, tag, **kw):
-    base = {"selector": selector, "snippet": f"<{tag}>", "tag": tag, "type": "", "roleAttr": "", "visible": "", "ariaLabel": "", "labelledby": "", "content": "", "alt": "", "altPresent": False, "title": "", "value": "", "href": "", "hidden": False}
+    base = {"selector": selector, "snippet": f"<{tag}>", "tag": tag, "type": "", "roleAttr": "", "visible": "", "ariaLabel": "", "labelledby": "", "content": "", "alt": "", "altPresent": False, "title": "", "value": "", "href": "", "hidden": False, "containsImage": False}
     base.update(kw)
     return base
 def measure(*items): return json.dumps({"items": list(items)}, ensure_ascii=False, separators=(",", ":"))
@@ -51,14 +52,24 @@ cases = [
        R("label-in-name-pass")["url"], R("label-in-name-pass")["nodes"], R("label-in-name-pass")["json"], lib_lines + ["gumb: Išči izdelke"], []),
 ]
 
+il_head = ["dokument: img-link-alt"] + lib_lines[1:5] + ["glavna vsebina: ", "naslov: img-link-alt"]
+cases += [
+ chain("img-link-alt-fail: the link holds only an img with no alt, so the link has no name and contains an image (name-missing-image-link, N4), and the img is a name-missing; both confirmed by the tree",
+       R("img-link-alt-fail")["url"], R("img-link-alt-fail")["nodes"], R("img-link-alt-fail")["json"], il_head + ["povezava: ", "slika: "],
+       [finding(R("img-link-alt-fail")["url"], "name-missing-image-link", W["imglink"], "serious", "confirmed", "#main > a", '<a class="home" href="index.html">'),
+        finding(R("img-link-alt-fail")["url"], "name-missing", W["img"], "serious", "confirmed", "#main > a > img", '<img src="img/lonec.svg" width="120" height="80">')]),
+ chain("control: img-link-alt-pass gives the img alt Domov, so the link is named and there is no finding",
+       R("img-link-alt-pass")["url"], R("img-link-alt-pass")["nodes"], R("img-link-alt-pass")["json"], il_head + ["povezava: Domov", "slika: Domov"], []),
+]
+
 tiny = [ax("1", "RootWebArea", "T"), ax("2", "main", "", "1")]
 def tiny_chain(id, items, findings, extra=(), lines=None, nodes=None):
     return chain(id, SYN, nodes or (tiny + list(extra)), measure(*items), lines if lines is not None else ["dokument: T", "glavna vsebina: "] + [], findings)
 
 cases += [
  tiny_chain("a link with only an image with no alt has no name (needs-verification when the tree holds no nameless link); the image is a name-missing too",
-   [item("a.home", "a", href="https://a.test/", snippet="<a class=\"home\">"), item("a.home img", "img", snippet="<img>")],
-   [finding(SYN, "name-missing", W["link"], "serious", "needs-verification", "a.home", '<a class="home">'), finding(SYN, "name-missing", W["img"], "serious", "needs-verification", "a.home img", "<img>")]),
+   [item("a.home", "a", href="https://a.test/", snippet="<a class=\"home\">", containsImage=True), item("a.home img", "img", snippet="<img>")],
+   [finding(SYN, "name-missing-image-link", W["imglink"], "serious", "needs-verification", "a.home", '<a class="home">'), finding(SYN, "name-missing", W["img"], "serious", "needs-verification", "a.home img", "<img>")]),
  tiny_chain("control: an img with alt attribute and empty text is decorative and is not a name-missing",
    [item("img.deco", "img", altPresent=True, alt="")], []),
  tiny_chain("an img with no alt attribute is a name-missing, confirmed when the tree has a nameless image node",

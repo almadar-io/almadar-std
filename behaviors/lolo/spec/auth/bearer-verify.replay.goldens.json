@@ -852,6 +852,107 @@
      }
     }
    ]
+  },
+  {
+   "id": "G-STD-351: an instance that never read its settings reads them before it judges a bearer",
+   "note": "A client session's instance never ran INIT (EXEC-DIST-9): the first bearer is held, the settings are read, and only then is it pumped.",
+   "entity": {},
+   "steps": [
+    {
+     "from": "idle",
+     "event": "BEARER_VERIFY",
+     "payload": {
+      "requestId": 7,
+      "authorization": "Bearer eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJpc3MiOiJmaXJlYmFzZS1hdXRoLWVtdWxhdG9yQGV4YW1wbGUuY29tIiwiYXVkIjoiZGVtbyIsInN1YiI6InUxIiwiZXhwIjo0MTAyNDQ0ODAwfQ."
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "SETTINGS_READ"
+       },
+       {
+        "event": "HELD_DRAIN"
+       },
+       {
+        "event": "BEARER_PUMP"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "CONTROL G-STD-351: an instance that has read its settings pumps the bearer at once",
+   "entity": {
+    "ready": true,
+    "reading": true,
+    "emulator": true,
+    "issuer": "firebase-auth-emulator@example.com",
+    "audience": "demo"
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "BEARER_VERIFY",
+     "payload": {
+      "requestId": 7,
+      "authorization": "Bearer eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJpc3MiOiJmaXJlYmFzZS1hdXRoLWVtdWxhdG9yQGV4YW1wbGUuY29tIiwiYXVkIjoiZGVtbyIsInN1YiI6InUxIiwiZXhwIjo0MTAyNDQ0ODAwfQ."
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "BEARER_PUMP"
+       }
+      ],
+      "neverEmits": [
+       "SETTINGS_READ"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "G-STD-351: a second bearer that arrives while the settings are being read is held, not refused",
+   "entity": {
+    "reading": true,
+    "pendingReads": 2,
+    "held": [
+     {
+      "requestId": 7,
+      "authorization": "Bearer eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJpc3MiOiJmaXJlYmFzZS1hdXRoLWVtdWxhdG9yQGV4YW1wbGUuY29tIiwiYXVkIjoiZGVtbyIsInN1YiI6InUxIiwiZXhwIjo0MTAyNDQ0ODAwfQ."
+     }
+    ]
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "BEARER_VERIFY",
+     "payload": {
+      "requestId": 8,
+      "authorization": "Bearer eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJpc3MiOiJmaXJlYmFzZS1hdXRoLWVtdWxhdG9yQGV4YW1wbGUuY29tIiwiYXVkIjoiZGVtbyIsInN1YiI6InUxIiwiZXhwIjo0MTAyNDQ0ODAwfQ."
+     },
+     "expect": {
+      "neverEmits": [
+       "BEARER_REFUSED",
+       "BEARER_PUMP",
+       "HELD_DRAIN"
+      ],
+      "entity": {
+       "held": [
+        {
+         "requestId": 7,
+         "authorization": "Bearer eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJpc3MiOiJmaXJlYmFzZS1hdXRoLWVtdWxhdG9yQGV4YW1wbGUuY29tIiwiYXVkIjoiZGVtbyIsInN1YiI6InUxIiwiZXhwIjo0MTAyNDQ0ODAwfQ."
+        },
+        {
+         "requestId": 8,
+         "authorization": "Bearer eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJpc3MiOiJmaXJlYmFzZS1hdXRoLWVtdWxhdG9yQGV4YW1wbGUuY29tIiwiYXVkIjoiZGVtbyIsInN1YiI6InUxIiwiZXhwIjo0MTAyNDQ0ODAwfQ."
+        }
+       ],
+       "pendingReads": 2
+      }
+     }
+    }
+   ]
   }
  ]
 }

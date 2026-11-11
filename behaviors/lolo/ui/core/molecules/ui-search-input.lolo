@@ -14,7 +14,7 @@ orbital SearchInputOrbital {
 
     state idle {
       INIT -> idle
-        (fetch SearchInputItem {})
+        (fetch SearchInputItem { emit: { failure: SearchInputLoadFailed }, limit: @config.maxRows })
         (set @entity.value @config.value)
         (render-ui main {
           value: @entity.value
@@ -46,6 +46,8 @@ orbital SearchInputOrbital {
           tabIndex: @config.tabIndex
           type: search-input
         })
+      SearchInputLoadFailed -> idle
+        (notify error (str/concat "Couldn't load the search — " (default ?error "")))
       SEARCH -> idle
         (set @entity.value ?value)
         (render-ui main {
@@ -92,6 +94,13 @@ orbital SearchInputOrbital {
       }
         @description "Declarative search event — emits UI:{event} via eventBus on query submit (alongside canonical UI:SEARCH)"
         @tier "essential"
+      SearchInputLoadFailed {
+        error : string
+        code : string
+      }
+        @description "Search data could not be loaded."
+        @synonyms "error, failure, rejected"
+        @tier "internal"
     }
 
     listens {
@@ -215,6 +224,10 @@ orbital SearchInputOrbital {
         @label "Tab Index"
         @description "0 puts the element in the Tab order; -1 makes it focusable only programmatically."
         @tier "presentation"
+      maxRows : number = 500
+        @label "Most rows per load"
+        @description "Most rows one load reads."
+        @tier "policy"
     }
   }
 

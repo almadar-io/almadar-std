@@ -26,7 +26,7 @@ orbital FilterGroupOrbital {
 
     state idle {
       INIT -> idle
-        (fetch FilterGroupItem {})
+        (fetch FilterGroupItem { emit: { failure: FilterGroupLoadFailed } })
         (set @entity.query @config.query)
         (render-ui main {
           entity: FilterGroupItem
@@ -60,6 +60,8 @@ orbital FilterGroupOrbital {
           tabIndex: @config.tabIndex
           type: filter-group
         })
+      FilterGroupLoadFailed -> idle
+        (notify error (str/concat "Couldn't load the filters — " (default ?error "")))
       EVENT -> idle
         (set @entity.query ?query)
         (render-ui main {
@@ -154,6 +156,13 @@ orbital FilterGroupOrbital {
       }
         @description "Declarative clear event — emits UI:{clearEvent} via eventBus on clear-all (alongside canonical UI:CLEAR_FILTERS)"
         @tier "essential"
+      FilterGroupLoadFailed {
+        error : string
+        code : string
+      }
+        @description "Filter group data could not be loaded."
+        @synonyms "error, failure, rejected"
+        @tier "internal"
     }
 
     listens {

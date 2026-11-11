@@ -42,15 +42,24 @@ orbital MlLabelCaptureOrbital {
                 outcome: @entity.outcome
                 sink: @entity.sink
                 recordedAt: @entity.recordedAt
-              })
+              } { emit: { failure: LABEL_WRITE_FAILED } })
               (emit LABEL_CAPTURED { source: @entity.source, sink: @entity.sink }))
             null)
+      LABEL_WRITE_FAILED -> idle
+        (emit LABEL_CAPTURE_REJECTED { error: (default ?error "") })
     }
 
     emits {
       LABEL_CAPTURED -> external { source : string!, sink : string! }
         @description "Fired after a labeled example is persisted."
         @tier "primary"
+      LABEL_CAPTURE_REJECTED -> external { error : string }
+        @description "A labeled example could not be written to the label store."
+        @tier "primary"
+      LABEL_WRITE_FAILED { error : string, code : string }
+        @description "The labeled example's write failed; routed to LABEL_CAPTURE_REJECTED."
+        @synonyms "error, failure, rejected"
+        @tier "internal"
     }
 
     listens {

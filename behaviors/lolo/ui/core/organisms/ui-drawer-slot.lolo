@@ -22,7 +22,7 @@ orbital DrawerSlotOrbital {
 
     state idle {
       INIT -> idle
-        (fetch DrawerSlotItem {})
+        (fetch DrawerSlotItem { emit: { failure: DrawerSlotLoadFailed } })
         (render-ui main {
           children: @config.children
           title: @config.title
@@ -38,6 +38,18 @@ orbital DrawerSlotOrbital {
           skeleton: @config.skeleton
           type: drawer-slot
         })
+      DrawerSlotLoadFailed -> idle
+        (notify error (str/concat "Couldn't load the drawer slot — " (default ?error "")))
+    }
+
+    emits {
+      DrawerSlotLoadFailed {
+        error : string
+        code : string
+      }
+        @description "Drawer slot could not be loaded."
+        @synonyms "error, failure, rejected"
+        @tier "internal"
     }
 
     config {

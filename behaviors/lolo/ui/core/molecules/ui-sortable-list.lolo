@@ -16,7 +16,7 @@ orbital SortableListOrbital {
 
     state idle {
       INIT -> idle when @config.selfFetch
-        (fetch SortableListItem { emit: { success: SortableListLoaded } })
+        (fetch SortableListItem { emit: { failure: SortableListLoadFailed, success: SortableListLoaded }, limit: @config.maxRows })
         (render-ui main {
           items: @entity
           renderItem: (fn item { content: (object/get @item @config.itemLabelField ""), type: typography })
@@ -70,6 +70,8 @@ orbital SortableListOrbital {
           tabIndex: @config.tabIndex
           type: sortable-list
         })
+      SortableListLoadFailed -> idle
+        (notify error (str/concat "Couldn't load the list — " (default ?error "")))
       SortableListLoaded -> idle
         (render-ui main {
           items: @payload.data
@@ -107,6 +109,13 @@ orbital SortableListOrbital {
       }
         @description "reorderEvent prop"
         @tier "essential"
+      SortableListLoadFailed {
+        error : string
+        code : string
+      }
+        @description "SortableList rows could not be loaded."
+        @synonyms "error, failure, rejected"
+        @tier "internal"
       SortableListLoaded
         @description "SortableList rows finished loading; payload.data holds the collection."
         @synonyms "loaded, fetched, retrieved"
@@ -216,6 +225,10 @@ orbital SortableListOrbital {
         @label "Fetch its own rows on mount?"
         @description "true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper's own un-hydrated fetch so it cannot race the composer's."
         @tier "internal"
+      maxRows : number = 500
+        @label "Most rows per load"
+        @description "Most rows one load reads."
+        @tier "policy"
     }
   }
 

@@ -71,7 +71,7 @@ orbital DataListOrbital {
 
     state idle {
       INIT -> idle when @config.selfFetch
-        (fetch DataListItem { emit: { success: DataListLoaded } })
+        (fetch DataListItem { emit: { failure: DataListLoadFailed, success: DataListLoaded }, limit: @config.maxRows })
         (render-ui main {
           dragGroup: @config.dragGroup
           accepts: @config.accepts
@@ -203,6 +203,8 @@ orbital DataListOrbital {
           tabIndex: @config.tabIndex
           type: data-list
         })
+      DataListLoadFailed -> idle
+        (notify error (str/concat "Couldn't load the list — " (default ?error "")))
       DataListLoaded -> idle
         (render-ui main {
           dragGroup: @config.dragGroup
@@ -299,6 +301,13 @@ orbital DataListOrbital {
       }
         @description "User opened a record from the list."
         @tier "essential"
+      DataListLoadFailed {
+        error : string
+        code : string
+      }
+        @description "DataList rows could not be loaded."
+        @synonyms "error, failure, rejected"
+        @tier "internal"
       DataListLoaded
         @description "DataList rows finished loading; payload.data holds the collection."
         @synonyms "loaded, fetched, retrieved"
@@ -568,6 +577,10 @@ orbital DataListOrbital {
         @label "Fetch its own rows on mount?"
         @description "true (default) = standalone mount self-populates on INIT. false = a composing atom owns the fetch and routes its loaded event here — suppresses the wrapper's own un-hydrated fetch so it cannot race the composer's."
         @tier "internal"
+      maxRows : number = 500
+        @label "Most rows per load"
+        @description "Most rows one load reads."
+        @tier "policy"
     }
   }
 

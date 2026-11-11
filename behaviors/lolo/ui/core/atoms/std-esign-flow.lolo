@@ -371,16 +371,18 @@ orbital SignatureSessionOrbital {
       INIT -> idle
       DO_CREATE -> idle
         (persist create SignatureSession ?data {
-          emit: { success: SESSION_CREATED }
+          emit: { failure: SESSION_WRITE_FAILED, success: SESSION_CREATED }
         })
       DO_RESEND -> idle
         (persist update SignatureSession ?id {
-          emit: { success: SESSION_RESENT }
+          emit: { failure: SESSION_WRITE_FAILED, success: SESSION_RESENT }
         })
       DO_DELETE -> idle
         (persist delete SignatureSession ?id {
-          emit: { success: SESSION_DELETED }
+          emit: { failure: SESSION_WRITE_FAILED, success: SESSION_DELETED }
         })
+      SESSION_WRITE_FAILED -> idle
+        (notify error (str/concat "Couldn't save the signature session — " (default ?error "")))
     }
 
     emits {
@@ -401,6 +403,13 @@ orbital SignatureSessionOrbital {
       }
         @description "Indicates a signature session has been removed or invalidated."
         @synonyms "removed, cleared, expired, terminated"
+        @tier "internal"
+      SESSION_WRITE_FAILED {
+        error : string
+        code : string
+      }
+        @description "A signature session write was rejected."
+        @synonyms "error, failure, rejected"
         @tier "internal"
     }
 

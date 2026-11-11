@@ -41,7 +41,7 @@ orbital StatCardOrbital {
 
     state idle {
       INIT -> idle when @config.selfFetch
-        (fetch StatCardItem { emit: { success: StatCardLoaded } })
+        (fetch StatCardItem { emit: { failure: StatCardLoadFailed, success: StatCardLoaded } })
         (render-ui main {
           className: @config.className
           isLoading: @config.isLoading
@@ -141,6 +141,8 @@ orbital StatCardOrbital {
           tabIndex: @config.tabIndex
           type: stat-card
         })
+      StatCardLoadFailed -> idle
+        (notify error (str/concat "Couldn't load the stat card — " (default ?error "")))
       StatCardLoaded -> idle
         (render-ui main {
           className: @config.className
@@ -194,6 +196,13 @@ orbital StatCardOrbital {
     }
 
     emits {
+      StatCardLoadFailed {
+        error : string
+        code : string
+      }
+        @description "Stat card could not be loaded."
+        @synonyms "error, failure, rejected"
+        @tier "internal"
       StatCardLoaded
         @description "StatCard rows finished loading; payload.data holds the collection."
         @synonyms "loaded, fetched, retrieved"

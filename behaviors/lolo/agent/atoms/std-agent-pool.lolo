@@ -676,6 +676,8 @@ orbital AgentPoolOrbital {
         })
       SIGNAL -> ready when (not (array/includes ["play", "like", "hide", "right", "wrong"] ?signal))
         (emit SIGNAL_REFUSED { reason: (str/concat "Unknown signal \"" ?signal "\"") })
+      SIGNAL_WRITE_FAILED -> ready
+        (notify error (str/concat "Couldn't count the signal — " (default ?error "")))
     }
 
     state counting {
@@ -691,7 +693,7 @@ orbital AgentPoolOrbital {
               right: (+ @e.right (if (= @entity.signalOf "right") 1 0))
               wrong: (+ @e.wrong (if (= @entity.signalOf "wrong") 1 0))
               retired: (and (>= @plays @config.minPlays) (>= (default (/ @bad (math/max @plays 1)) 0) @config.ratio))
-            })))
+            } { emit: { failure: SIGNAL_WRITE_FAILED } })))
       ENTRY_LOADED -> ready when (== ?data null)
         (emit SIGNAL_REFUSED { reason: "No such pool entry" })
       SIGNAL_FAILED -> ready
@@ -721,6 +723,13 @@ orbital AgentPoolOrbital {
       SIGNAL_FAILED {
         error : string!
       }
+        @tier "internal"
+      SIGNAL_WRITE_FAILED {
+        error : string
+        code : string
+      }
+        @description "The signal could not be written to the pool entry."
+        @synonyms "error, failure, rejected"
         @tier "internal"
     }
 

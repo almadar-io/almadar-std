@@ -121,7 +121,7 @@
      "from": "ready",
      "payload": {
       "key": "k1",
-      "path": "/s/a.docx"
+      "path": "/s/a.xyz"
      },
      "entity": {
       "id": "d",
@@ -136,7 +136,7 @@
         "event": "DOC_TEXT_FAILED",
         "payload": {
          "key": "k1",
-         "error": "the file extension is in none of the pdf, image or text lists",
+         "error": "the file extension is in none of the pdf, image, text or Word lists",
          "code": "doc_unsupported"
         }
        }
@@ -1851,6 +1851,405 @@
    "config": {
     "reader": "vision"
    }
+  },
+  {
+   "id": "a Word path runs pandoc with the plain-text argv, matched case-insensitively",
+   "steps": [
+    {
+     "trait": "DocumentText",
+     "event": "DOC_TEXT_READ",
+     "from": "ready",
+     "payload": {
+      "key": "k1",
+      "path": "/s/Letter.DOCX"
+     },
+     "entity": {
+      "id": "d",
+      "key": "",
+      "path": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "docx",
+      "entity": {
+       "key": "k1",
+       "path": "/s/Letter.DOCX"
+      },
+      "emits": [
+       {
+        "event": "DOCX_EXEC",
+        "payload": {
+         "stage": "k1",
+         "argv": [
+          "--to",
+          "plain",
+          "--wrap",
+          "none",
+          "/s/Letter.DOCX"
+         ]
+        }
+       }
+      ],
+      "neverEmits": [
+       "DOC_PDF_REQUEST",
+       "DOC_OCR_REQUEST",
+       "DOC_TEXT_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a lower case .docx path runs pandoc",
+   "steps": [
+    {
+     "trait": "DocumentText",
+     "event": "DOC_TEXT_READ",
+     "from": "ready",
+     "payload": {
+      "key": "k1",
+      "path": "a/b.docx"
+     },
+     "entity": {
+      "id": "d",
+      "key": "",
+      "path": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "docx",
+      "emits": [
+       {
+        "event": "DOCX_EXEC",
+        "payload": {
+         "stage": "k1",
+         "argv": [
+          "--to",
+          "plain",
+          "--wrap",
+          "none",
+          "a/b.docx"
+         ]
+        }
+       }
+      ],
+      "neverEmits": [
+       "DOC_TEXT_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "pandoc exiting 0 answers one docx page of its stdout",
+   "steps": [
+    {
+     "trait": "DocumentText",
+     "event": "DOC_DOCX_RAN",
+     "from": "docx",
+     "payload": {
+      "stage": "k1",
+      "exitCode": 0,
+      "signal": 0,
+      "stdout": "Dear sir\n\nthe letter",
+      "stdoutBytes": "",
+      "stderr": ""
+     },
+     "entity": {
+      "id": "d",
+      "key": "k1",
+      "path": "/s/l.docx"
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "DOC_TEXT",
+        "payload": {
+         "key": "k1",
+         "pages": [
+          {
+           "page": 1,
+           "text": "Dear sir\n\nthe letter"
+          }
+         ],
+         "method": "docx"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DOC_TEXT_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "pandoc exiting non-zero answers doc_unreadable with its stderr",
+   "steps": [
+    {
+     "trait": "DocumentText",
+     "event": "DOC_DOCX_RAN",
+     "from": "docx",
+     "payload": {
+      "stage": "k1",
+      "exitCode": 64,
+      "signal": 0,
+      "stdout": "",
+      "stdoutBytes": "",
+      "stderr": "pandoc: l.docx: openBinaryFile: does not exist\n"
+     },
+     "entity": {
+      "id": "d",
+      "key": "k1",
+      "path": "/s/l.docx"
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "DOC_TEXT_FAILED",
+        "payload": {
+         "key": "k1",
+         "error": "pandoc exited 64: pandoc: l.docx: openBinaryFile: does not exist",
+         "code": "doc_unreadable"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DOC_TEXT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a missing pandoc binary answers doc_unreadable",
+   "steps": [
+    {
+     "trait": "DocumentText",
+     "event": "DOC_DOCX_CLI_FAILED",
+     "from": "docx",
+     "payload": {
+      "stage": "k1",
+      "error": "command not found: pandoc",
+      "code": "cli_spawn_failed"
+     },
+     "entity": {
+      "id": "d",
+      "key": "k1",
+      "path": "/s/l.docx"
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "DOC_TEXT_FAILED",
+        "payload": {
+         "key": "k1",
+         "error": "pandoc could not be run: command not found: pandoc",
+         "code": "doc_unreadable"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DOC_TEXT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a Word path that starts with a dash is refused, pandoc is not run",
+   "steps": [
+    {
+     "trait": "DocumentText",
+     "event": "DOC_TEXT_READ",
+     "from": "ready",
+     "payload": {
+      "key": "k1",
+      "path": "-x.docx"
+     },
+     "entity": {
+      "id": "d",
+      "key": "",
+      "path": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "DOC_TEXT_FAILED",
+        "payload": {
+         "key": "k1",
+         "error": "a path may not start with a dash",
+         "code": "doc_unreadable"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DOCX_EXEC"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a read while pandoc is running answers doc_busy",
+   "steps": [
+    {
+     "trait": "DocumentText",
+     "event": "DOC_TEXT_READ",
+     "from": "docx",
+     "payload": {
+      "key": "k2",
+      "path": "/s/o.docx"
+     },
+     "entity": {
+      "id": "d",
+      "key": "k1",
+      "path": "/s/l.docx"
+     },
+     "expect": {
+      "fired": true,
+      "state": "docx",
+      "emits": [
+       {
+        "event": "DOC_TEXT_FAILED",
+        "payload": {
+         "key": "k2",
+         "error": "another document is being read",
+         "code": "doc_busy"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DOCX_EXEC"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a pdf path never runs pandoc",
+   "steps": [
+    {
+     "trait": "DocumentText",
+     "event": "DOC_TEXT_READ",
+     "from": "ready",
+     "payload": {
+      "key": "k1",
+      "path": "/s/a.pdf"
+     },
+     "entity": {
+      "id": "d",
+      "key": "",
+      "path": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "pdf",
+      "neverEmits": [
+       "DOCX_EXEC",
+       "DOC_TEXT_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: an image path never runs pandoc",
+   "steps": [
+    {
+     "trait": "DocumentText",
+     "event": "DOC_TEXT_READ",
+     "from": "ready",
+     "payload": {
+      "key": "k1",
+      "path": "/s/a.png"
+     },
+     "entity": {
+      "id": "d",
+      "key": "",
+      "path": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ocr",
+      "neverEmits": [
+       "DOCX_EXEC",
+       "DOC_TEXT_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a text path never runs pandoc",
+   "steps": [
+    {
+     "trait": "DocumentText",
+     "event": "DOC_TEXT_READ",
+     "from": "ready",
+     "payload": {
+      "key": "k1",
+      "path": "a/m.txt"
+     },
+     "entity": {
+      "id": "d",
+      "key": "",
+      "path": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "reading",
+      "neverEmits": [
+       "DOCX_EXEC",
+       "DOC_TEXT_FAILED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: an old .doc path is still unsupported",
+   "steps": [
+    {
+     "trait": "DocumentText",
+     "event": "DOC_TEXT_READ",
+     "from": "ready",
+     "payload": {
+      "key": "k1",
+      "path": "/s/old.doc"
+     },
+     "entity": {
+      "id": "d",
+      "key": "",
+      "path": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "DOC_TEXT_FAILED",
+        "payload": {
+         "key": "k1",
+         "error": "the file extension is in none of the pdf, image, text or Word lists",
+         "code": "doc_unsupported"
+        }
+       }
+      ],
+      "neverEmits": [
+       "DOCX_EXEC"
+      ]
+     }
+    }
+   ]
   }
  ]
 }

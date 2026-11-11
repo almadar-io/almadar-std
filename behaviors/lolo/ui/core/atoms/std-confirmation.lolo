@@ -28,6 +28,7 @@ orbital ConfirmActionOrbital {
     state idle {
       INIT -> idle
         (fetch ConfirmAction {
+          limit: @config.maxRows
           emit: { failure: ConfirmActionLoadFailed, success: ConfirmActionLoaded }
         })
       ConfirmActionLoadFailed -> idle
@@ -162,6 +163,10 @@ orbital ConfirmActionOrbital {
         @label "Confirm button"
         @description "Label on the primary confirm action button"
         @tier "presentation"
+      maxRows : number = 500
+        @label "Most rows per load"
+        @description "Most rows one load reads."
+        @tier "policy"
     }
   }
 

@@ -148,7 +148,7 @@ orbital FormOrbital {
 
     state resolving {
       INIT -> idle when (and @config.selfFetch (!= (default ?id "") "") (!= @config.mode "create"))
-        (fetch FormItem { id: ?id, emit: { success: FormLoaded } })
+        (fetch FormItem { id: ?id, emit: { failure: FormLoadFailed, success: FormLoaded } })
         (render-ui main {
           surface: @config.surface
           skeleton: @config.skeleton
@@ -307,6 +307,8 @@ orbital FormOrbital {
           tabIndex: @config.tabIndex
           type: form
         })
+      FormLoadFailed -> idle
+        (notify error (str/concat "Couldn't load the form — " (default ?error "")))
       FormLoaded -> idle
         (render-ui main {
           surface: @config.surface
@@ -375,6 +377,13 @@ orbital FormOrbital {
       }
         @description "Callback when any field value changes"
         @tier "essential"
+      FormLoadFailed {
+        error : string
+        code : string
+      }
+        @description "Form could not be loaded."
+        @synonyms "error, failure, rejected"
+        @tier "internal"
       FormLoaded
         @description "Form row finished loading; payload.data holds the single row."
         @synonyms "loaded, fetched, retrieved"

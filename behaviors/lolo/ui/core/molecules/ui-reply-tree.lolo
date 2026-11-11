@@ -33,7 +33,7 @@ orbital ReplyTreeOrbital {
 
     state idle {
       INIT -> idle when @config.selfFetch
-        (fetch ReplyTreeItem { emit: { success: ReplyTreeLoaded } })
+        (fetch ReplyTreeItem { emit: { failure: ReplyTreeLoadFailed, success: ReplyTreeLoaded } })
         (render-ui main {
           nodes: @entity
           maxDepth: @config.maxDepth
@@ -99,6 +99,8 @@ orbital ReplyTreeOrbital {
           tabIndex: @config.tabIndex
           type: reply-tree
         })
+      ReplyTreeLoadFailed -> idle
+        (notify error (str/concat "Couldn't load the replies — " (default ?error "")))
       ReplyTreeLoaded -> idle
         (render-ui main {
           nodes: @payload.data
@@ -157,6 +159,13 @@ orbital ReplyTreeOrbital {
       }
         @description "onContinueThread prop"
         @tier "essential"
+      ReplyTreeLoadFailed {
+        error : string
+        code : string
+      }
+        @description "ReplyTree rows could not be loaded."
+        @synonyms "error, failure, rejected"
+        @tier "internal"
       ReplyTreeLoaded
         @description "ReplyTree rows finished loading; payload.data holds the collection."
         @synonyms "loaded, fetched, retrieved"

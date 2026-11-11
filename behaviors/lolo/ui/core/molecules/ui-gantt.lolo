@@ -27,7 +27,7 @@ orbital GanttOrbital {
 
     state idle {
       INIT -> idle when @config.selfFetch
-        (fetch GanttItem { emit: { success: GanttLoaded } })
+        (fetch GanttItem { emit: { failure: GanttLoadFailed, success: GanttLoaded } })
         (render-ui main {
           tasks: @entity
           links: @config.links
@@ -105,6 +105,8 @@ orbital GanttOrbital {
           tabIndex: @config.tabIndex
           type: gantt
         })
+      GanttLoadFailed -> idle
+        (notify error (str/concat "Couldn't load the chart — " (default ?error "")))
       GanttLoaded -> idle
         (render-ui main {
           tasks: @payload.data
@@ -152,6 +154,13 @@ orbital GanttOrbital {
       }
         @description "Event emitted when a bar is clicked: UI:{barClickEvent} with { id }"
         @tier "essential"
+      GanttLoadFailed {
+        error : string
+        code : string
+      }
+        @description "Gantt rows could not be loaded."
+        @synonyms "error, failure, rejected"
+        @tier "internal"
       GanttLoaded
         @description "Gantt rows finished loading; payload.data holds the collection."
         @synonyms "loaded, fetched, retrieved"
