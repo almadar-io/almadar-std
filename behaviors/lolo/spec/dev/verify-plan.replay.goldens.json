@@ -4879,6 +4879,151 @@
      }
     }
    ]
+  },
+  {
+   "id": "date-time-money-and-map-slots-get-values-of-their-type",
+   "steps": [
+    {
+     "event": "PLAN_REQUEST",
+     "payload": {
+      "program": {
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Item",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Item",
+           "stateMachine": {
+            "transitions": [
+             {
+              "from": "a",
+              "to": "b",
+              "event": "GO",
+              "effects": []
+             }
+            ],
+            "states": [
+             {
+              "name": "start",
+              "isInitial": true
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "rows": [
+       {
+        "orbital": "O",
+        "trait": "T",
+        "from": "a",
+        "event": "GO",
+        "to": "b",
+        "guarded": false,
+        "payload": [
+         {
+          "name": "title",
+          "type": "string",
+          "required": true
+         },
+         {
+          "name": "due",
+          "type": "date",
+          "required": true
+         },
+         {
+          "name": "at",
+          "type": "datetime",
+          "required": true
+         },
+         {
+          "name": "when",
+          "type": "instant",
+          "required": true
+         },
+         {
+          "name": "stamp",
+          "type": "timestamp",
+          "required": true
+         },
+         {
+          "name": "rate",
+          "type": "money",
+          "required": true
+         },
+         {
+          "name": "headers",
+          "type": "Map string string",
+          "required": true
+         }
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PLAN_COMPUTED",
+        "payload": {
+         "count": 1
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "PLAN_COMPUTED",
+     "payload": {
+      "count": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "PLAN_ANSWERED",
+        "payload": {
+         "steps": [
+          {
+           "trait": "T",
+           "linkedEntity": "Item",
+           "from": "a",
+           "event": "GO",
+           "to": "b",
+           "toStates": [
+            "b"
+           ],
+           "variant": "success",
+           "guarded": false,
+           "solved": true,
+           "payloadCase": "success",
+           "payload": {
+            "title": "verify",
+            "due": "2026-01-01",
+            "at": "2026-01-01T00:00:00Z",
+            "when": "2026-01-01T00:00:00Z",
+            "stamp": "2026-01-01T00:00:00Z",
+            "rate": 1,
+            "headers": {}
+           }
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
   }
  ]
 }

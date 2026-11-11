@@ -58,6 +58,8 @@ orbital AgentContextOrbital {
     pendingEphemeral : boolean @description "The conversation being compacted is ephemeral." = false
     pendingHasLive : boolean @description "The conversation being compacted carried a `live` flag, so it is forwarded; absent stays absent." = false
     pendingLive : boolean @description "The `live` flag of the conversation being compacted, carried through a summarizing." = false
+    lastTokens : number @description "The tokens the last conversation reply reported (prompt plus reply): the size of the context now; 0 when unknown." = 0
+    pendingKeep : number @description "How many recent turns the running summarizing keeps word for word." = 12
   }
 
   trait ContextSummarizerLlm = Llm.traits.LlmClient {
@@ -127,20 +129,37 @@ orbital AgentContextOrbital {
         @description "The most recent turns sent to the model word for word; older turns are summarized."
         @synonyms "window, history length, context size"
         @tier "policy"
+      tokenLimit : number = 0
+        @label "Token limit"
+        @description "The context size, in tokens, at which the model in use starts to degrade: when the last conversation reply reported at least this many tokens (prompt plus reply), the next conversation is summarized down to `keepMessagesOverLimit` turns even if it has few turns. 0 declares no limit."
+        @synonyms "context limit, max tokens, context window"
+        @tier "policy"
+      keepMessagesOverLimit : number = 4
+        @label "Turns kept over the limit"
+        @description "The most recent turns kept word for word when the token limit, not the turn count, causes the summary."
+        @tier "policy"
+      usageActions : [string] = ["call-tools"]
+        @label "Replies that count"
+        @description "The std-llm actions whose reported usage is the conversation's size; an embedding or a summary call is not the conversation."
+        @tier "policy"
     }
     initial: ready
 
     state ready {
       INIT -> ready
         (set @entity.lastSize 0)
-      COMPACT -> ready when (and (<= (array/len ?messages) @config.keepMessages) (not (object/has ? live)))
+      UsageReported -> ready when (and (array/includes @config.usageActions ?action) (or (object/has ? inputTokens) (object/has ? outputTokens)))
+        (set @entity.lastTokens (+ (default ?inputTokens 0) (default ?outputTokens 0)))
+      UsageReported -> ready when (not (and (array/includes @config.usageActions ?action) (or (object/has ? inputTokens) (object/has ? outputTokens))))
+      COMPACT -> ready when (and (not (and (> @config.tokenLimit 0) (>= @entity.lastTokens @config.tokenLimit) (> (array/len ?messages) @config.keepMessagesOverLimit))) (<= (array/len ?messages) @config.keepMessages) (not (object/has ? live)))
         (set @entity.lastSize (array/len ?messages))
         (emit COMPACTED { messages: ?messages, instructions: (default ?instructions ""), tools: (object/get ? tools []), ephemeral: (default ?ephemeral false) })
-      COMPACT -> ready when (and (<= (array/len ?messages) @config.keepMessages) (object/has ? live))
+      COMPACT -> ready when (and (not (and (> @config.tokenLimit 0) (>= @entity.lastTokens @config.tokenLimit) (> (array/len ?messages) @config.keepMessagesOverLimit))) (<= (array/len ?messages) @config.keepMessages) (object/has ? live))
         (set @entity.lastSize (array/len ?messages))
         (emit COMPACTED { messages: ?messages, instructions: (default ?instructions ""), tools: (object/get ? tools []), ephemeral: (default ?ephemeral false), live: ?live })
-      COMPACT -> summarizing when (> (array/len ?messages) @config.keepMessages)
+      COMPACT -> summarizing when (and (not (and (> @config.tokenLimit 0) (>= @entity.lastTokens @config.tokenLimit) (> (array/len ?messages) @config.keepMessagesOverLimit))) (> (array/len ?messages) @config.keepMessages))
         (set @entity.lastSize (array/len ?messages))
+        (set @entity.pendingKeep @config.keepMessages)
         (set @entity.pendingMessages ?messages)
         (set @entity.pendingInstructions (default ?instructions ""))
         (set @entity.pendingTools (object/get ? tools []))
@@ -150,31 +169,45 @@ orbital AgentContextOrbital {
         (emit LLM_SUMMARIZE {
           text: (str/join (array/map (array/dropLast ?messages @config.keepMessages) (fn item (str/concat @item.role ": " @item.content))) "\n")
         })
+      COMPACT -> summarizing when (and (> @config.tokenLimit 0) (>= @entity.lastTokens @config.tokenLimit) (> (array/len ?messages) @config.keepMessagesOverLimit))
+        (set @entity.lastSize (array/len ?messages))
+        (set @entity.pendingKeep @config.keepMessagesOverLimit)
+        (set @entity.lastTokens 0)
+        (set @entity.pendingMessages ?messages)
+        (set @entity.pendingInstructions (default ?instructions ""))
+        (set @entity.pendingTools (object/get ? tools []))
+        (set @entity.pendingEphemeral (default ?ephemeral false))
+        (set @entity.pendingHasLive (object/has ? live))
+        (set @entity.pendingLive (default ?live false))
+        (emit LLM_SUMMARIZE {
+          text: (str/join (array/map (array/dropLast ?messages @config.keepMessagesOverLimit) (fn item (str/concat @item.role ": " @item.content))) "\n")
+        })
     }
 
     state summarizing {
       INIT -> ready
         (set @entity.lastSize 0)
+      UsageReported -> summarizing
       ContextSummarized -> ready when (not @entity.pendingHasLive)
         (emit COMPACTED {
-          messages: (array/prepend (array/takeLast @entity.pendingMessages @config.keepMessages) { role: assistant, content: (str/concat "Earlier in this conversation: " ?summary) })
+          messages: (array/prepend (array/takeLast @entity.pendingMessages @entity.pendingKeep) { role: assistant, content: (str/concat "Earlier in this conversation: " ?summary) })
           instructions: @entity.pendingInstructions
           tools: @entity.pendingTools
           ephemeral: @entity.pendingEphemeral
         })
       ContextSummarized -> ready when @entity.pendingHasLive
         (emit COMPACTED {
-          messages: (array/prepend (array/takeLast @entity.pendingMessages @config.keepMessages) { role: assistant, content: (str/concat "Earlier in this conversation: " ?summary) })
+          messages: (array/prepend (array/takeLast @entity.pendingMessages @entity.pendingKeep) { role: assistant, content: (str/concat "Earlier in this conversation: " ?summary) })
           instructions: @entity.pendingInstructions
           tools: @entity.pendingTools
           ephemeral: @entity.pendingEphemeral
           live: @entity.pendingLive
         })
       ContextSummarizeFailed -> ready when (not @entity.pendingHasLive)
-        (emit COMPACTED { messages: (array/takeLast @entity.pendingMessages @config.keepMessages), instructions: @entity.pendingInstructions, tools: @entity.pendingTools, ephemeral: @entity.pendingEphemeral })
+        (emit COMPACTED { messages: (array/takeLast @entity.pendingMessages @entity.pendingKeep), instructions: @entity.pendingInstructions, tools: @entity.pendingTools, ephemeral: @entity.pendingEphemeral })
         (emit CONTEXT_NOTICE { message: ?message, variant: "warning" })
       ContextSummarizeFailed -> ready when @entity.pendingHasLive
-        (emit COMPACTED { messages: (array/takeLast @entity.pendingMessages @config.keepMessages), instructions: @entity.pendingInstructions, tools: @entity.pendingTools, ephemeral: @entity.pendingEphemeral, live: @entity.pendingLive })
+        (emit COMPACTED { messages: (array/takeLast @entity.pendingMessages @entity.pendingKeep), instructions: @entity.pendingInstructions, tools: @entity.pendingTools, ephemeral: @entity.pendingEphemeral, live: @entity.pendingLive })
         (emit CONTEXT_NOTICE { message: ?message, variant: "warning" })
     }
 
@@ -205,6 +238,7 @@ orbital AgentContextOrbital {
     listens {
       ContextSummarizerLlm.LLM_SUMMARIZE_RESULT -> ContextSummarized
       ContextSummarizerLlm.LLM_FAILED -> ContextSummarizeFailed
+      ContextSummarizerLlm.LLM_USAGE_REPORTED -> UsageReported
       ContextSummarized {
         summary : string!
         keyPoints : [string]!
@@ -220,6 +254,14 @@ orbital AgentContextOrbital {
         ephemeral : boolean
         live : boolean
       }
+      UsageReported {
+        provider : string!
+        model : string!
+        action : string!
+        inputTokens : number
+        outputTokens : number
+      }
+        @description "The composer's std-llm client reported a reply's token counts (its LLM_USAGE_REPORTED)."
         @description "Bound this conversation for the model. An ephemeral conversation's own `instructions`, `tools`, `ephemeral` flag and, when given, `live` flag ride along."
     }
   }

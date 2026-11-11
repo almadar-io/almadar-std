@@ -118,6 +118,10 @@ orbital AgentAssistantOrbital {
     keepMessages : number = 12
       @label "Turns kept verbatim"
       @tier "policy"
+    contextTokenLimit : number = 0
+      @label "Context token limit"
+      @description "The context size, in tokens, at which the model in use starts to degrade; a reply that reports at least this many tokens makes the next request summarize the conversation. 0 declares no limit."
+      @tier "policy"
     recallLimit : number = 3
       @label "Memories recalled per request"
       @tier "policy"
@@ -220,12 +224,14 @@ orbital AgentAssistantOrbital {
   trait AssistantContext = Context.traits.AgentContextCompactor {
     config {
       keepMessages: @config.keepMessages
+      tokenLimit: @config.contextTokenLimit
     }
     listens {
       AssistantThread.REQUEST_CONTEXT -> COMPACT
       *.ASSISTANT_EPHEMERAL_SEND -> COMPACT
       AssistantLlm.LLM_SUMMARIZE_RESULT -> ContextSummarized
       AssistantLlm.LLM_FAILED -> ContextSummarizeFailed
+      AssistantLlm.LLM_USAGE_REPORTED -> UsageReported
       ContextSummarized {
         summary : string!
         keyPoints : [string]!

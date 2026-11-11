@@ -1,6 +1,6 @@
 app process-watch-spec [
   version: "1.0.0",
-  description: "Design contract for watching the machine's processes and flagging the ones that match a declared pattern. The watch reads the whole process table on an interval, keeps the last few readings of each process it can measure (keyed by pid and start time, since a pid is reused), and tests each against the patterns knob: orphaned (its parent is gone), growing (its memory rose in every one of the last readings by at least a declared amount), busy (its CPU share stayed at or above a level) and idle (it holds at least a declared amount of memory while its CPU share stayed at or below a level, for at least a declared age). A pattern names the process names it applies to, or none for every process; nothing is matched by similarity. A match is announced once per process and pattern as PROCESS_FLAGGED with the measured evidence. The person's verdict on a command (expected or unwanted) is kept as a row found by the exact command line; an expected command is not flagged again. The watch never stops a process."
+  description: "Design contract for watching the machine's processes and flagging the ones that match a declared pattern. The watch reads the whole process table on an interval, keeps the last few readings of each process it can measure (keyed by pid and start time, since a pid is reused), and tests each against the patterns knob: orphaned (its parent ended while it was watched), growing (its memory rose in every one of the last readings by at least a declared amount), busy (its CPU share stayed at or above a level) and idle (it holds at least a declared amount of memory while its CPU share stayed at or below a level, for at least a declared age). A pattern names the process names it applies to, or none for every process; nothing is matched by similarity. A match is announced once per process and pattern as PROCESS_FLAGGED with the measured evidence. The person's verdict on a command (expected or unwanted) is kept as a row found by the exact command line; an expected command is not flagged again. The person may confirm that one flagged process be stopped: the watch checks that the same process (pid and start time) is still running and sends it TERM, answering PROCESS_STOPPED or PROCESS_STOP_FAILED. The watch never stops a process on its own."
 ]
 
 type ProcessPatternKind = "orphaned" | "growing" | "busy" | "idle"
@@ -8,7 +8,7 @@ type ProcessPattern = { id : string!, kind : ProcessPatternKind!, names : [strin
 type ProcessFlag = { key : string!, pid : number!, name : string!, command : string!, args : [string]!, signature : string!, pattern : string!, kind : ProcessPatternKind!, ageSeconds : number!, rssBytes : number!, cpuPercent : number!, growthBytes : number! }
 
 orbital ProcessWatchSpec {
-  expects config { patterns : [ProcessPattern] = []  intervalMs : number = 10000  keepReadings : number = 6 }
+  expects config { intervalMs : number  keepReadings : number }
   expects entity ProcessWatchRun [runtime] {
     id : string!
     active : boolean
@@ -19,11 +19,14 @@ orbital ProcessWatchSpec {
       PROCESS_WATCH_START -> ready
       PROCESS_WATCH_STOP -> ready
       PROCESS_VERDICT -> ready
+      PROCESS_STOP -> ready
     }
     emits {
       PROCESSES_SAMPLED { count : number!  measured : number!  rssBytes : number!  flags : [ProcessFlag]!  at : instant! }
       PROCESS_FLAGGED { flag : ProcessFlag! }
       PROCESS_WATCH_FAILED { code : string!  error : string! }
+      PROCESS_STOPPED { key : string!  pid : number! }
+      PROCESS_STOP_FAILED { key : string!  code : string!  error : string! }
     }
   }
   expects page boot -> ProcessWatch

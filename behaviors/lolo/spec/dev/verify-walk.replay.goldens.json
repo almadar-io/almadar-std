@@ -697,6 +697,354 @@
      }
     }
    ]
+  },
+  {
+   "id": "every-played-row-is-judged-in-one-request",
+   "steps": [
+    {
+     "trait": "VerifyWalk",
+     "from": "judging",
+     "event": "WALK_JUDGE_NEXT",
+     "payload": {},
+     "entity": {
+      "id": "r",
+      "program": {
+       "orbitals": []
+      },
+      "judgeSteps": [
+       {
+        "trait": "T",
+        "linkedEntity": "Item",
+        "from": "a",
+        "event": "GO",
+        "to": "b",
+        "toStates": [
+         "b"
+        ],
+        "variant": "success",
+        "payload": {},
+        "guarded": false,
+        "solved": true,
+        "payloadCase": "success"
+       },
+       {
+        "trait": "T",
+        "linkedEntity": "Item",
+        "from": "a",
+        "event": "GO",
+        "to": "b",
+        "toStates": [
+         "b"
+        ],
+        "variant": "success",
+        "payload": {},
+        "guarded": false,
+        "solved": true,
+        "payloadCase": "success"
+       }
+      ],
+      "played": [
+       {
+        "trait": "T",
+        "from": "a",
+        "event": "GO",
+        "to": "b",
+        "guarded": false,
+        "targets": [
+         "b"
+        ],
+        "result": {
+         "trait": "T",
+         "event": "GO",
+         "transitionFired": true,
+         "guard": "none",
+         "effects": [],
+         "emitted": [],
+         "guards": [],
+         "state": {
+          "before": "a",
+          "after": "b"
+         }
+        }
+       },
+       {
+        "trait": "T",
+        "from": "a",
+        "event": "GO",
+        "to": "b",
+        "guarded": false,
+        "targets": [
+         "b"
+        ],
+        "result": {
+         "trait": "T",
+         "event": "GO",
+         "transitionFired": true,
+         "guard": "none",
+         "effects": [],
+         "emitted": [],
+         "guards": [],
+         "state": {
+          "before": "a",
+          "after": "b"
+         }
+        }
+       }
+      ],
+      "creditSteps": []
+     },
+     "expect": {
+      "emitCounts": {
+       "WALK_JUDGE_REQUEST": 1,
+       "WALK_JUDGE_ANSWERED": 0
+      }
+     }
+    }
+   ],
+   "defaults": [
+    "WalkJudge",
+    "WalkCreditor",
+    "VerifyWalkCli"
+   ],
+   "note": "Two played rows go to the judge as one request (no per-row event chain), so a walk of any size stays within the dispatch cap."
+  },
+  {
+   "id": "a-judge-answer-with-another-row-count-fails-the-walk",
+   "steps": [
+    {
+     "trait": "VerifyWalk",
+     "from": "judging",
+     "event": "WALK_JUDGE_ANSWERED",
+     "payload": {
+      "results": [
+       {
+        "verdicts": [],
+        "unported": []
+       }
+      ]
+     },
+     "entity": {
+      "id": "r",
+      "program": {
+       "orbitals": []
+      },
+      "judgeSteps": [
+       {
+        "trait": "T",
+        "linkedEntity": "Item",
+        "from": "a",
+        "event": "GO",
+        "to": "b",
+        "toStates": [
+         "b"
+        ],
+        "variant": "success",
+        "payload": {},
+        "guarded": false,
+        "solved": true,
+        "payloadCase": "success"
+       },
+       {
+        "trait": "T",
+        "linkedEntity": "Item",
+        "from": "a",
+        "event": "GO",
+        "to": "b",
+        "toStates": [
+         "b"
+        ],
+        "variant": "success",
+        "payload": {},
+        "guarded": false,
+        "solved": true,
+        "payloadCase": "success"
+       }
+      ],
+      "played": [
+       {
+        "trait": "T",
+        "from": "a",
+        "event": "GO",
+        "to": "b",
+        "guarded": false,
+        "targets": [
+         "b"
+        ],
+        "result": {
+         "trait": "T",
+         "event": "GO",
+         "transitionFired": true,
+         "guard": "none",
+         "effects": [],
+         "emitted": [],
+         "guards": [],
+         "state": {
+          "before": "a",
+          "after": "b"
+         }
+        }
+       },
+       {
+        "trait": "T",
+        "from": "a",
+        "event": "GO",
+        "to": "b",
+        "guarded": false,
+        "targets": [
+         "b"
+        ],
+        "result": {
+         "trait": "T",
+         "event": "GO",
+         "transitionFired": true,
+         "guard": "none",
+         "effects": [],
+         "emitted": [],
+         "guards": [],
+         "state": {
+          "before": "a",
+          "after": "b"
+         }
+        }
+       }
+      ],
+      "creditSteps": []
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "WALK_FAILED",
+        "payload": {
+         "error": "the judge answer does not match the played rows"
+        }
+       }
+      ],
+      "neverEmits": [
+       "WALK_CREDIT_REQUEST"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-judge-answer-per-played-row-moves-to-crediting",
+   "steps": [
+    {
+     "trait": "VerifyWalk",
+     "from": "judging",
+     "event": "WALK_JUDGE_ANSWERED",
+     "payload": {
+      "results": [
+       {
+        "verdicts": [],
+        "unported": []
+       },
+       {
+        "verdicts": [],
+        "unported": []
+       }
+      ]
+     },
+     "entity": {
+      "id": "r",
+      "program": {
+       "orbitals": []
+      },
+      "judgeSteps": [
+       {
+        "trait": "T",
+        "linkedEntity": "Item",
+        "from": "a",
+        "event": "GO",
+        "to": "b",
+        "toStates": [
+         "b"
+        ],
+        "variant": "success",
+        "payload": {},
+        "guarded": false,
+        "solved": true,
+        "payloadCase": "success"
+       },
+       {
+        "trait": "T",
+        "linkedEntity": "Item",
+        "from": "a",
+        "event": "GO",
+        "to": "b",
+        "toStates": [
+         "b"
+        ],
+        "variant": "success",
+        "payload": {},
+        "guarded": false,
+        "solved": true,
+        "payloadCase": "success"
+       }
+      ],
+      "played": [
+       {
+        "trait": "T",
+        "from": "a",
+        "event": "GO",
+        "to": "b",
+        "guarded": false,
+        "targets": [
+         "b"
+        ],
+        "result": {
+         "trait": "T",
+         "event": "GO",
+         "transitionFired": true,
+         "guard": "none",
+         "effects": [],
+         "emitted": [],
+         "guards": [],
+         "state": {
+          "before": "a",
+          "after": "b"
+         }
+        }
+       },
+       {
+        "trait": "T",
+        "from": "a",
+        "event": "GO",
+        "to": "b",
+        "guarded": false,
+        "targets": [
+         "b"
+        ],
+        "result": {
+         "trait": "T",
+         "event": "GO",
+         "transitionFired": true,
+         "guard": "none",
+         "effects": [],
+         "emitted": [],
+         "guards": [],
+         "state": {
+          "before": "a",
+          "after": "b"
+         }
+        }
+       }
+      ],
+      "creditSteps": []
+     },
+     "expect": {
+      "state": "crediting",
+      "emits": [
+       {
+        "event": "WALK_CREDIT_REQUEST"
+       }
+      ],
+      "neverEmits": [
+       "WALK_FAILED"
+      ]
+     }
+    }
+   ]
   }
  ]
 }

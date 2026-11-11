@@ -10,12 +10,12 @@ uses Spec from "almadar-std/lint-sign-in-route"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type SignInPage = { path : string, access : string }
 type SignInOrbital = { pages : [SignInPage] }
-type SignInSite = { signIn : string }
+type SignInSite = { signIn : string, entries : [string] }
 type SignInProgram = { site : SignInSite, orbitals : [SignInOrbital], lazyPages : [SignInPage] }
 type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error", validValues : [string], entity : string, field : string }
 
 type LintCodeDecl = { code : string!, category : string!, description : string! }
-type LintSignInRouteCodes = { pHostReservedRoute : LintCodeDecl , pSignInUnknownRoute : LintCodeDecl }
+type LintSignInRouteCodes = { pHostReservedRoute : LintCodeDecl , pSignInUnknownRoute : LintCodeDecl , pEntryUnknownRoute : LintCodeDecl }
 
 orbital OrbLintSignInRouteOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
@@ -33,7 +33,7 @@ orbital OrbLintSignInRouteOrbital {
       INIT -> ready
       LINT_INPUT -> ready
         (set @entity.scope @payload.scope)
-        (set @entity.findings (let ((sgi (let ((st (object/get @payload.program "site"))) (if (= @st null) "" (object/get @st "signIn" "")))) (allp (array/flatten (array/map (object/get @payload.program "orbitals" []) (fn orb (object/get @orb "pages" [])))))
+        (set @entity.findings (let ((sgi (let ((st (object/get @payload.program "site"))) (if (= @st null) "" (object/get @st "signIn" "")))) (ents (let ((st (object/get @payload.program "site"))) (if (= @st null) [] (object/get @st "entries" [])))) (allp (array/flatten (array/map (object/get @payload.program "orbitals" []) (fn orb (object/get @orb "pages" [])))))
         (lazyp (object/get @payload.program "lazyPages" [])))
           (array/flatten [
             (array/flatten (array/map (array/filter (array/concat @allp @lazyp) (fn pg (or (= (object/get @pg "path" "") "/login") (= (object/get @pg "path" "") "/login/")))) (fn pg
@@ -46,7 +46,15 @@ orbital OrbLintSignInRouteOrbital {
                     [{ code: @config.codes.pSignInUnknownRoute.code, path: "site.signIn", message: (str/concat "the `signIn` route '" @sgi "' is no page of this app"), suggestion: "point `signIn:` at a page anonymous viewers can open", severity: "error" }]
                     (if (and (> (array/len @hits) 0) (= (object/get (array/first @hits) "access" "") "authenticated"))
                       [{ code: @config.codes.pSignInUnknownRoute.code, path: "site.signIn", message: (str/concat "the `signIn` route '" @sgi "' is itself `access: authenticated`"), suggestion: "point `signIn:` at a page anonymous viewers can open", severity: "error" }]
-                      [])))))])))
+                      [])))))
+            (array/flatten (array/map (array/range 0 (array/len @ents)) (fn ei
+              (let ((en (array/nth @ents @ei)))
+                (if (or (= @en "/login") (= @en "/login/"))
+                  []
+                  (let ((tgt (str/join (array/map (str/split @en "/") (fn seg (if (str/startsWith @seg ":") ":" @seg))) "/")))
+                    (if (and (= (array/len (array/filter @allp (fn pg (= (str/join (array/map (str/split (object/get @pg "path" "") "/") (fn seg (if (str/startsWith @seg ":") ":" @seg))) "/") @tgt)))) 0) (= (array/len (array/filter @lazyp (fn pg (= (str/join (array/map (str/split (object/get @pg "path" "") "/") (fn seg (if (str/startsWith @seg ":") ":" @seg))) "/") @tgt)))) 0))
+                      [{ code: @config.codes.pEntryUnknownRoute.code, path: (str/concat "site.entries[" @ei "]"), message: (str/concat "the `entries` route '" @en "' is no page of this app"), suggestion: "list in `entries:` only routes of this app's pages, or remove the entry", severity: "error" }]
+                      [])))))))])))
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "sign-in-route", scope: @entity.scope, findings: @entity.findings })
@@ -67,7 +75,7 @@ orbital OrbLintSignInRouteOrbital {
       OrbLintInput.LINT_INPUT -> LINT_INPUT
     }
     config {
-      codes : LintSignInRouteCodes = { pHostReservedRoute: { code: "ORB_P_HOST_RESERVED_ROUTE", category: "page", description: "A page is declared on the host's reserved sign-in route" }, pSignInUnknownRoute: { code: "ORB_P_SIGN_IN_UNKNOWN_ROUTE", category: "page", description: "The app's signIn route names a path that is no page of the app" } }
+      codes : LintSignInRouteCodes = { pHostReservedRoute: { code: "ORB_P_HOST_RESERVED_ROUTE", category: "page", description: "A page is declared on the host's reserved sign-in route" }, pSignInUnknownRoute: { code: "ORB_P_SIGN_IN_UNKNOWN_ROUTE", category: "page", description: "The app's signIn route names a path that is no page of the app" }, pEntryUnknownRoute: { code: "ORB_P_ENTRY_UNKNOWN_ROUTE", category: "page", description: "An entry route of the app names a path that is no page of the app" } }
         @label "Emitted codes"
         @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
     }

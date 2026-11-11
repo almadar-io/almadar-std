@@ -142,6 +142,7 @@ Each line below, changed in the spec (or the provider), makes `orb validate` fai
 | `CAPTURE -> done` in `label-capture` | `ORB_S_EXPECTATION_UNSATISFIED` |
 | `agent/agent-workflow.lolo` | `std-agent-workflow` (not built; a business process as declared steps, each limited to named inputs of the composing program, run through `std-agent-coordinator`, with approval stops and a persisted run row) |
 | `ops/model-fit.lolo` | `std-model-fit` (the first declared model option this machine's memory and disk fit, every refused option named with the gigabytes missing, then a measured tokens-per-second probe through the composer's `std-llm`; goldens `ops/model-fit.replay.goldens.json`) |
+| `ops/process-watch.lolo` | `std-process-watch` (the whole process table read on an interval through `os/process-list`; a process flagged once when it matches a declared pattern: orphaned, growing, busy or idle, with the measured evidence; an expected command remembered as a row and never flagged; the watch never stops a process) |
 | `dev/behavior-stage.lolo` | `std-guest-session` (its `GuestOpener` trait: a behavior value or a resolved program opened as the guest with the composer's choice of reach, and `GUEST_READY` with the guest id; the one opener the catalog playground, the launchpad and both Studio stages compose; goldens `dev/guest-opener.replay.goldens.json`) |
 
 ## Proof specs

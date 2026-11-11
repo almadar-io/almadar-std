@@ -23,7 +23,7 @@ type ReachEffects = { effects : [ReachVal?] }
 type ReachMachine = { transitions : [ReachEffects] }
 type ReachTrait = { stateMachine : ReachMachine, ticks : [ReachEffects], config : Map string ReachField }
 type ReachOrbital = { traits : [ReachTrait], config : Map string ReachField, pages : [ReachPage] }
-type ReachSite = { signIn : string }
+type ReachSite = { signIn : string, entries : [string] }
 type ReachLazy = { path : string, links : [string]? }
 type ReachProgram = { site : ReachSite, config : Map string ReachField, orbitals : [ReachOrbital], lazyPages : [ReachLazy]? }
 
@@ -75,7 +75,7 @@ orbital OrbLintPageUnreachableOrbital {
                       (appCfgDefaults (array/filter (array/map (object/values @appCfg) (fn f (object/get @f "default" null))) (fn v (!= @v null))))
                       (trLinks (array/map @trx (fn x (let ((tr (object/get @x "t")))
                         (let ((cfgDefs : Map string string (object/fromEntries (array/flatten (array/map [@appCfg, (object/get (default (array/nth @orbitals (object/get @x "oi")) {}) "config" {}), (object/get @tr "config" {})] (fn cm (array/flatten (array/map (object/keys @cm) (fn ck (let ((dv (object/get (object/get @cm @ck) "default" null))) (if (validate/string @dv) [[@ck, @dv]] [])))))))))))
-                        (let ((cfgs (array/filter (array/map (object/values (object/get @tr "config" {})) (fn f (object/get @f "default" null))) (fn v (!= @v null))))
+                        (let ((cfgs (array/concat (array/filter (array/map (object/values (object/get @tr "config" {})) (fn f (object/get @f "default" null))) (fn v (!= @v null))) @appCfgDefaults (default (array/nth @orbCfg (object/get @x "oi")) [])))
                               (pays (array/filter (array/map (array/filter (array/map (array/filter (array/concat
                                         (array/flatten (array/map (object/get (object/get @tr "stateMachine" {}) "transitions" []) (fn t (object/get @t "effects" []))))
                                         (array/flatten (array/map (object/get @tr "ticks" []) (fn k (object/get @k "effects" []))))) (fn r (not (validate/object @r)))) (fn x (if (validate/array @x) (default (as @x ReachEffect) []) []))) (fn e (and (validate/array @e) (> (array/len @e) 2) (validate/string (array/first @e)) (= (array/first @e) "render-ui")))) (fn e (array/nth @e 2))) (fn v (!= @v null)))))
@@ -102,6 +102,7 @@ orbital OrbLintPageUnreachableOrbital {
                                     (if (validate/array @n) (array/flatten (array/filter @kids (fn r (!= @r null)))) (if (validate/object @n) (array/flatten (array/filter (object/values @kids) (fn r (!= @r null)))) [])))) ReachVal) [])))))))
                       (navs (array/concat
                               (if (= @signIn "") [] [@signIn])
+                              (object/get (object/get @payload.program "site" {}) "entries" [])
                               (array/flatten (array/map @effects (fn v
                                 (array/flatten (array/map (object/get (default (as (tree/index @v ["navigate"]) ReachIndex) {}) "navigate" []) (fn c
                                   (let ((n (default (as (object/get @c "node") ReachEffect) [])))

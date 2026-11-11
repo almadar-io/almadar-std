@@ -109,8 +109,13 @@ orbital HttpServerOrbital {
       @tier "policy"
     createIdentity : boolean = false
       @label "Create the first identity row"
-      @description "A verified subject with no row in identityEntity gets one (id the subject, email and name from the claims, every other field its declared default) and the request signs in again; off, such a request is refused identity-no-identity."
+      @description "A verified subject with no row in identityEntity gets one (id the subject, email and name from the claims, and the role createRole names when it names one) and the request signs in again; off, such a request is refused identity-no-identity."
       @synonyms "auto-register, first sign-in row"
+      @tier "policy"
+    createRole : string = ""
+      @label "Role of a first identity row"
+      @description "The role written on the row createIdentity makes; empty writes none. A role named here is held by everyone who signs in for the first time."
+      @synonyms "default role, first role"
       @tier "policy"
   }
 
@@ -271,6 +276,7 @@ orbital HttpServerOrbital {
     config {
       identityEntity: @config.identityEntity
       createIdentity: @config.createIdentity
+      createRole: @config.createRole
       ownOrbital: @config.ownOrbital
       ownTrait: @config.ownTrait
     }

@@ -1,20 +1,21 @@
 app std-process-watch [
   version: "1.0.0",
-  description: "std-process-watch — watches the machine's processes and flags the ones that match a declared pattern; it holds no knowledge of any program. PROCESS_WATCH_START begins and PROCESS_WATCH_STOP ends; a reading is taken as soon as intervalMs has passed since the last one ended (checked once a second), so two readings never overlap. A reading asks os/process-list for every process and keeps, for each process the host measures for this user (memory and CPU time not null), its last keepReadings readings under the key pid:startedAt (a pid is reused, a start time is not). The CPU share of an interval is the CPU seconds used between two readings over the seconds between them, as a percent of one core. Each kept process is tested against the patterns knob, a list of { id, kind, names, minAgeSeconds, minRssBytes, cpuPercent, growthBytes, readings }: names is the exact process names the pattern applies to (empty applies to every process); orphaned matches a process whose parent is process 1, at least minAgeSeconds old and holding at least minRssBytes; growing matches one whose memory rose in each of its last `readings` intervals, by at least growthBytes in all; busy matches one whose CPU share was at or above cpuPercent in each of its last `readings` intervals; idle matches one at least minAgeSeconds old, holding at least minRssBytes, whose CPU share was at or below cpuPercent in each of its last `readings` intervals. A pattern that needs intervals does not match before the process has that many. Every reading answers PROCESSES_SAMPLED { count, measured, rssBytes, flags, at } with every current match; a match not announced before (the same process and pattern) is also announced once as PROCESS_FLAGGED { flag }, the flag carrying the pid, name, executable, arguments, the exact command line as signature, the pattern id and kind, the age in seconds, the memory in bytes, the CPU share of the last interval and the memory growth over the pattern's readings. PROCESS_VERDICT { signature, verdict } (expected or unwanted) keeps the person's answer as a row whose id is the signature; a process whose signature is expected is never flagged. A host that refuses the table, or a store that cannot be read or written, answers PROCESS_WATCH_FAILED { code, error } (denied, unsupported, io, store) and the watch keeps running. The watch never stops or signals a process.",
-  sys: [processes]
+  description: "std-process-watch — watches the machine's processes and flags the ones that match a declared pattern; it holds no knowledge of any program. PROCESS_WATCH_START begins (asked again while running, it answers the last reading at once, so a page that opens late is not empty) and PROCESS_WATCH_STOP ends; the first reading is taken as soon as the expected commands have been read from the rows, and each later one as soon as intervalMs has passed since the last one ended (checked once a second), so two readings never overlap. A reading asks os/process-list for every process and keeps, for each process the host measures for this user (memory, CPU time and start time not null), its last keepReadings readings under the key pid:startedAt (a pid is reused, a start time is not). The CPU share of an interval is the CPU seconds used between two readings over the seconds between them, as a percent of one core. Each kept process is tested against the patterns knob, a list of { id, kind, names, minAgeSeconds, minRssBytes, cpuPercent, growthBytes, readings }: names is the exact process names the pattern applies to (empty applies to every process); orphaned matches a process the watch first saw under another parent and now sees under process 1 (its parent ended while it was watched; a process that always ran under process 1, as every desktop application and service does, is not orphaned, and neither is one orphaned before the watch began), at least minAgeSeconds old and holding at least minRssBytes; growing matches one whose memory rose in each of its last `readings` intervals, by at least growthBytes in all; busy matches one whose CPU share was at or above cpuPercent in each of its last `readings` intervals; idle matches one at least minAgeSeconds old, holding at least minRssBytes, whose CPU share was at or below cpuPercent in each of its last `readings` intervals. A pattern that needs intervals does not match before the process has that many. Every reading answers PROCESSES_SAMPLED { count, measured, rssBytes, flags, at } with every current match; a match not announced before (the same process and pattern) is also announced once as PROCESS_FLAGGED { flag }, the flag carrying the pid, name, executable, arguments, the exact command line as signature, the pattern id and kind, the age in seconds, the memory in bytes, the CPU share of the last interval and the memory growth over the pattern's readings. Each announced flag is also kept as a ProcessFlagRecord row (id the pid, start time and pattern; the evidence; raisedAt), and the row gets clearedAt when the process no longer matches, so what was flagged and when can be read later by any signed-in person and by an assistant acting for one. PROCESS_VERDICT { signature, verdict } (expected or unwanted) keeps the person's answer as a row whose id is the signature; a process whose signature is expected is never flagged. A host that refuses the table, or a store that cannot be read or written, answers PROCESS_WATCH_FAILED { code, error } (denied, unsupported, io, store) and the watch keeps running. PROCESS_STOP { key } is the person's confirmed answer to stop one process: the watch reads the table again, and only when a process with that pid and that start time is still there (a pid is reused) does it send it TERM with os/kill, which the host allows for a process of the user the program runs as and refuses for any other; it answers PROCESS_STOPPED { key, pid }, or PROCESS_STOP_FAILED { key, code, error } with code gone (no such process any more), busy (another stop is running) or the host's failure kind. The watch never stops a process on its own. ProcessFlags is the page trait for it: it starts the watch when it opens, lists every flagged process with its evidence (the pattern, how long it has run, the memory it holds, its CPU share, its command line), and offers two answers per process, This is expected (the verdict) and Stop it, which asks once more before the stop is sent; a stop's outcome and a failed reading are shown on the page.",
+  sys: [processes, process-signal]
 ]
 ;; @capabilities "watch the processes of this machine, flag a process that is orphaned, growing, busy or idle by a declared pattern, remember which commands are expected"
 
 uses Spec from "almadar-std/process-watch"
 
-type ProcessRow = { pid : number!, ppid : number!, name : string!, command : string!, args : [string]!, user : number!, rssBytes : number?, cpuSeconds : number?, startedAt : number! }
+type ProcessRow = { pid : number!, ppid : number!, name : string!, command : string!, args : [string]!, user : string!, own : boolean!, rssBytes : number?, cpuSeconds : number?, startedAt : number? }
 type ProcessReading = { at : number!, rssBytes : number!, cpuSeconds : number! }
-type ProcessTrack = { key : string!, pid : number!, ppid : number!, name : string!, command : string!, args : [string]!, startedAt : number!, readings : [ProcessReading]! }
+type ProcessTrack = { key : string!, pid : number!, ppid : number!, firstPpid : number!, name : string!, command : string!, args : [string]!, startedAt : number!, readings : [ProcessReading]! }
 type ProcessPatternKind = "orphaned" | "growing" | "busy" | "idle"
 type ProcessPattern = { id : string!, kind : ProcessPatternKind!, names : [string]!, minAgeSeconds : number!, minRssBytes : number!, cpuPercent : number!, growthBytes : number!, readings : number! }
 type ProcessFlag = { key : string!, pid : number!, name : string!, command : string!, args : [string]!, signature : string!, pattern : string!, kind : ProcessPatternKind!, ageSeconds : number!, rssBytes : number!, cpuPercent : number!, growthBytes : number! }
 type ProcessVerdictKind = "expected" | "unwanted"
 type WatchInstant = instant
+type ProcessNoticeKind = "info" | "success" | "warning" | "error"
 
 orbital ProcessWatchOrbital {
   entity ProcessVerdict [persistent: processVerdicts] {
@@ -22,6 +23,22 @@ orbital ProcessWatchOrbital {
     id : string! @description "The exact command line the verdict is about."
     verdict : ProcessVerdictKind! @description "What the person said about it."
     decidedAt : instant! @description "When they said it."
+  }
+
+  entity ProcessFlagRecord [persistent: processFlags] {
+    @read none "The atom declares no identity entity, so it cannot name who may read; a flag row carries a command line, and the app that binds its own entity here states who reads it."
+    id : string! @description "The process (pid and start time) and the pattern it matched."
+    pid : number! @description "The process id."
+    name : string! @description "The process name."
+    signature : string! @description "The exact command line."
+    pattern : string! @description "The id of the pattern that matched."
+    kind : ProcessPatternKind! @description "What kind of trouble the pattern describes."
+    ageSeconds : number! @description "How long the process had run when it was flagged."
+    rssBytes : number! @description "The memory it held when it was flagged."
+    cpuPercent : number! @description "Its share of one processor core in the last interval before the flag."
+    growthBytes : number! @description "How much its memory rose over the pattern's readings."
+    raisedAt : instant! @description "When it was flagged."
+    clearedAt : instant? @description "When it stopped matching (it ended, or went back to normal); absent while it still matches." = null
   }
 
   entity ProcessWatchRun [runtime] {
@@ -36,6 +53,9 @@ orbital ProcessWatchOrbital {
     count : number = 0
     pendingSignature : string = ""
     pendingVerdict : ProcessVerdictKind = expected
+    stopping : string = ""
+    announcing : [ProcessFlag] = []
+    stopPid : number = 0
   }
 
   trait ProcessWatch -> ProcessWatchRun {
@@ -61,16 +81,20 @@ orbital ProcessWatchOrbital {
 
     state ready {
       INIT -> ready
-      PROCESS_WATCH_START -> ready
+      PROCESS_WATCH_START -> ready when @entity.active
+        (emit PROCESSES_SAMPLED { count: @entity.count, measured: (array/len @entity.tracks), rssBytes: (array/sum (array/map @entity.tracks (fn t (let ((last (array/last @t.readings))) (if (== @last null) 0 @last.rssBytes))))), flags: @entity.flags, at: @now })
+      PROCESS_WATCH_START -> ready when (not @entity.active)
         (set @entity.active true)
-        (set @entity.dueAt null)
+        (set @entity.dueAt (time/add @now @config.intervalMs "ms"))
         (fetch ProcessVerdict { filter: (= (object/get @entity verdict) "expected"), limit: @config.maxVerdicts, emit: { success: VERDICTS_READ, failure: VERDICTS_FAILED } })
       PROCESS_WATCH_STOP -> ready
         (set @entity.active false)
       VERDICTS_READ -> ready
         (set @entity.expected (array/map (default ?data []) (fn row @row.id)))
+        (emit PROCESS_READ {})
       VERDICTS_FAILED -> ready
         (emit PROCESS_WATCH_FAILED { code: "store", error: ?error })
+        (emit PROCESS_READ {})
       PROCESS_VERDICT -> ready
         (set @entity.expected (if (= ?verdict "expected") (array/unique (array/append @entity.expected ?signature)) (array/filter @entity.expected (fn s (!= @s ?signature)))))
         (set @entity.pendingSignature ?signature)
@@ -81,6 +105,25 @@ orbital ProcessWatchOrbital {
       VERDICT_KEPT -> ready
       VERDICT_FAILED -> ready
         (emit PROCESS_WATCH_FAILED { code: "store", error: ?error })
+      PROCESS_STOP -> ready when (= @entity.stopping "")
+        (set @entity.stopping ?key)
+        (os/process-list { emit: { success: STOP_LISTED, failure: STOP_REFUSED } })
+      PROCESS_STOP -> ready when (!= @entity.stopping "")
+        (emit PROCESS_STOP_FAILED { key: ?key, code: "busy", error: "another stop is running" })
+      STOP_LISTED -> ready when (let ((rows : [ProcessRow] ?processes)) (array/some @rows (fn p (= (str/concat @p.pid ":" (default @p.startedAt 0)) @entity.stopping))))
+        (set @entity.stopPid (let ((rows : [ProcessRow] ?processes)) (let ((found (array/find @rows (fn p (= (str/concat @p.pid ":" (default @p.startedAt 0)) @entity.stopping))))) (if (== @found null) 0 @found.pid))))
+        (emit STOP_SIGNAL {})
+      STOP_LISTED -> ready when (not (let ((rows : [ProcessRow] ?processes)) (array/some @rows (fn p (= (str/concat @p.pid ":" (default @p.startedAt 0)) @entity.stopping)))))
+        (emit PROCESS_STOP_FAILED { key: @entity.stopping, code: "gone", error: "the process is no longer running" })
+        (set @entity.stopping "")
+      STOP_SIGNAL -> ready
+        (os/kill @entity.stopPid "TERM" { emit: { success: STOP_SENT, failure: STOP_REFUSED } })
+      STOP_SENT -> ready
+        (emit PROCESS_STOPPED { key: @entity.stopping, pid: @entity.stopPid })
+        (set @entity.stopping "")
+      STOP_REFUSED -> ready
+        (emit PROCESS_STOP_FAILED { key: @entity.stopping, code: (default ?kind "io"), error: ?error })
+        (set @entity.stopping "")
       PROCESS_READ -> ready when (not @entity.reading)
         (set @entity.reading true)
         (os/process-list { emit: { success: PROCESSES_LISTED, failure: PROCESSES_REFUSED } })
@@ -92,10 +135,10 @@ orbital ProcessWatchOrbital {
         (set @entity.count (array/len ?processes))
         (set @entity.tracks (let ((at (time/diff @now (default (as "1970-01-01T00:00:00Z" WatchInstant) @now) "s")) (prior @entity.tracks) (rows : [ProcessRow] ?processes))
           (array/flatten (array/map @rows (fn p
-            (if (or (== @p.rssBytes null) (== @p.cpuSeconds null)) []
-              (let ((key (str/concat @p.pid ":" @p.startedAt)))
+            (if (or (== @p.rssBytes null) (== @p.cpuSeconds null) (== @p.startedAt null)) []
+              (let ((key (str/concat @p.pid ":" (default @p.startedAt 0))))
                 (let ((before (array/find @prior (fn t (= @t.key @key)))))
-                  [{ key: @key, pid: @p.pid, ppid: @p.ppid, name: @p.name, command: @p.command, args: @p.args, startedAt: @p.startedAt,
+                  [{ key: @key, pid: @p.pid, ppid: @p.ppid, firstPpid: (if (== @before null) @p.ppid @before.firstPpid), name: @p.name, command: @p.command, args: @p.args, startedAt: (default @p.startedAt 0),
                      readings: (let ((all (let ((taken : ProcessReading { at: @at, rssBytes: (default @p.rssBytes 0), cpuSeconds: (default @p.cpuSeconds 0) }) (earlier : [ProcessReading] (if (== @before null) [] @before.readings))) (array/append @earlier @taken))))
                        (array/drop @all (math/max 0 (- (array/len @all) @config.keepReadings)))) }]))))))))
         (emit PROCESSES_JUDGE {})
@@ -109,7 +152,7 @@ orbital ProcessWatchOrbital {
                 (array/flatten (array/map @patterns (fn rule
               (let ((window (array/drop @shares (math/max 0 (- (array/len @shares) @rule.readings)))) (climb (array/drop @rises (math/max 0 (- (array/len @rises) @rule.readings)))) (age (- @at @t.startedAt)))
                 (if (and (or (= (array/len @rule.names) 0) (array/includes @rule.names @t.name))
-                  (or (and (= @rule.kind "orphaned") (= @t.ppid 1) (>= @age @rule.minAgeSeconds) (>= @last.rssBytes @rule.minRssBytes))
+                  (or (and (= @rule.kind "orphaned") (= @t.ppid 1) (!= @t.firstPpid 1) (>= @age @rule.minAgeSeconds) (>= @last.rssBytes @rule.minRssBytes))
                       (and (= @rule.kind "growing") (> @rule.readings 0) (= (array/len @climb) @rule.readings) (array/every @climb (fn d (> @d 0))) (>= (array/sum @climb) @rule.growthBytes))
                       (and (= @rule.kind "busy") (> @rule.readings 0) (= (array/len @window) @rule.readings) (array/every @window (fn s (>= @s @rule.cpuPercent))))
                       (and (= @rule.kind "idle") (> @rule.readings 0) (= (array/len @window) @rule.readings) (array/every @window (fn s (<= @s @rule.cpuPercent))) (>= @age @rule.minAgeSeconds) (>= @last.rssBytes @rule.minRssBytes))))
@@ -120,12 +163,37 @@ orbital ProcessWatchOrbital {
         (set @entity.reading false)
         (set @entity.dueAt (time/add @now @config.intervalMs "ms"))
         (emit PROCESSES_SAMPLED { count: @entity.count, measured: (array/len @entity.tracks), rssBytes: (array/sum (array/map @entity.tracks (fn t (let ((last (array/last @t.readings))) (if (== @last null) 0 @last.rssBytes))))), flags: @entity.flags, at: @now })
+        (emit FLAGS_CLEAR { ids: (let ((current (array/map @entity.flags (fn f (str/concat @f.key "/" @f.pattern))))) (array/filter @entity.flagged (fn id (not (array/includes @current @id))))) })
         (emit FLAGS_ANNOUNCE { flags: (array/filter @entity.flags (fn f (not (array/includes @entity.flagged (str/concat @f.key "/" @f.pattern))))) })
         (set @entity.flagged (array/map @entity.flags (fn f (str/concat @f.key "/" @f.pattern))))
-      FLAGS_ANNOUNCE -> ready when (> (array/len ?flags) 0)
-        (emit PROCESS_FLAGGED { flag: (array/first ?flags) })
-        (emit FLAGS_ANNOUNCE { flags: (array/drop ?flags 1) })
-      FLAGS_ANNOUNCE -> ready when (= (array/len ?flags) 0)
+      FLAGS_ANNOUNCE -> ready
+        (set @entity.announcing ?flags)
+        (emit FLAG_NEXT {})
+      FLAG_NEXT -> ready when (> (array/len @entity.announcing) 0)
+        (let ((f (array/first @entity.announcing)))
+          (if (== @f null) (set @entity.announcing [])
+            (do
+              (emit PROCESS_FLAGGED { flag: @f })
+              (persist create ProcessFlagRecord { id: (str/replaceAll (str/replaceAll (str/concat @f.key "/" @f.pattern) ":" "-") "/" "-"), pid: @f.pid, name: @f.name, signature: @f.signature, pattern: @f.pattern, kind: @f.kind, ageSeconds: @f.ageSeconds, rssBytes: @f.rssBytes, cpuPercent: @f.cpuPercent, growthBytes: @f.growthBytes, raisedAt: @now } { emit: { success: FLAG_KEPT, failure: FLAG_CREATE_REFUSED } }))))
+      FLAG_NEXT -> ready when (= (array/len @entity.announcing) 0)
+      FLAG_CREATE_REFUSED -> ready
+        (let ((f (array/first @entity.announcing)))
+          (if (== @f null) (emit FLAG_KEPT {})
+            (persist update ProcessFlagRecord { id: (str/replaceAll (str/replaceAll (str/concat @f.key "/" @f.pattern) ":" "-") "/" "-"), ageSeconds: @f.ageSeconds, rssBytes: @f.rssBytes, cpuPercent: @f.cpuPercent, growthBytes: @f.growthBytes, raisedAt: @now, clearedAt: null } { emit: { success: FLAG_KEPT, failure: FLAG_KEEP_FAILED } })))
+      FLAG_KEPT -> ready
+        (set @entity.announcing (array/drop @entity.announcing 1))
+        (emit FLAG_NEXT {})
+      FLAG_KEEP_FAILED -> ready
+        (emit PROCESS_WATCH_FAILED { code: "store", error: ?error })
+        (set @entity.announcing (array/drop @entity.announcing 1))
+        (emit FLAG_NEXT {})
+      FLAGS_CLEAR -> ready when (> (array/len ?ids) 0)
+        (persist update ProcessFlagRecord { id: (str/replaceAll (str/replaceAll (default (array/first ?ids) "") ":" "-") "/" "-"), clearedAt: @now } { emit: { success: FLAG_CLEARED, failure: FLAG_CLEAR_FAILED } })
+        (emit FLAGS_CLEAR { ids: (array/drop ?ids 1) })
+      FLAGS_CLEAR -> ready when (= (array/len ?ids) 0)
+      FLAG_CLEARED -> ready
+      FLAG_CLEAR_FAILED -> ready
+        (emit PROCESS_WATCH_FAILED { code: "store", error: ?error })
     }
 
     ticks {
@@ -155,11 +223,48 @@ orbital ProcessWatchOrbital {
       }
         @description "A reading or a verdict could not be made: the host's failure kind (denied, unsupported, io) or store."
         @tier "primary"
+      PROCESS_STOPPED -> external {
+        key : string!
+        pid : number!
+      }
+        @description "The process the person confirmed was sent TERM."
+        @tier "primary"
+      PROCESS_STOP_FAILED -> external {
+        key : string!
+        code : string!
+        error : string!
+      }
+        @description "The stop was not carried out: gone, busy, or the host's failure kind (denied for another user's process)."
+        @tier "primary"
+      STOP_SIGNAL -> internal { }
+      STOP_LISTED {
+        processes : [ProcessRow]!
+      }
+      STOP_SENT { }
+      STOP_REFUSED {
+        error : string!
+        kind : string
+      }
       PROCESS_READ -> internal { }
       PROCESSES_JUDGE -> internal { }
       PROCESSES_REPORT -> internal { }
       FLAGS_ANNOUNCE -> internal {
         flags : [ProcessFlag]!
+      }
+      FLAGS_CLEAR -> internal {
+        ids : [string]!
+      }
+      FLAG_NEXT -> internal { }
+      FLAG_KEPT { }
+      FLAG_CREATE_REFUSED {
+        error : string!
+      }
+      FLAG_KEEP_FAILED {
+        error : string!
+      }
+      FLAG_CLEARED { }
+      FLAG_CLEAR_FAILED {
+        error : string!
       }
       PROCESSES_LISTED {
         processes : [ProcessRow]!
@@ -184,10 +289,17 @@ orbital ProcessWatchOrbital {
     }
 
     listens {
+      ProcessFlags.FLAGS_OPENED -> PROCESS_WATCH_START
+      ProcessFlags.FLAG_VERDICT -> PROCESS_VERDICT
+      ProcessFlags.FLAG_STOP -> PROCESS_STOP
       PROCESS_WATCH_START -> input { }
         @description "Begin reading the process table on the interval."
       PROCESS_WATCH_STOP -> input { }
         @description "Stop reading."
+      PROCESS_STOP -> input {
+        key : string!
+      }
+        @description "The person's confirmed answer to stop one flagged process, named by the flag's key."
       PROCESS_VERDICT -> input {
         signature : string!
         verdict : ProcessVerdictKind!
@@ -196,5 +308,297 @@ orbital ProcessWatchOrbital {
     }
   }
 
+  entity ProcessFlagsRun [runtime] {
+    id : string!
+    read : boolean = false
+    count : number = 0
+    measured : number = 0
+    rssBytes : number = 0
+    flags : [ProcessFlag] = []
+    confirming : string = ""
+    notice : string = ""
+    noticeKind : ProcessNoticeKind = info
+  }
+
+  trait ProcessFlags -> ProcessFlagsRun {
+    initial: showing
+
+    state showing {
+      INIT -> showing
+        (emit FLAGS_OPENED {})
+        (render-ui main { type: container, size: md, padding: lg, children: [{ type: stack, direction: vertical, gap: md, children: (array/concat
+          [{ type: typography, variant: h2, content: "Processes" },
+           { type: typography, variant: body, color: muted, content: (if @entity.read (str/concat @entity.count " processes are running; the " @entity.measured " that are yours hold " (/ (math/round (/ @entity.rssBytes 107374182.4)) 10) " GB of memory.") "Reading the processes of this computer.") }]
+          (if (= @entity.notice "") [] [{ type: alert, variant: @entity.noticeKind, message: @entity.notice }])
+          (if (and @entity.read (= (array/len @entity.flags) 0)) [{ type: typography, variant: body, content: "Nothing looks stuck, forgotten or out of control." }] [])
+          (array/map @entity.flags (fn f { type: card, padding: md, children: [{ type: stack, direction: vertical, gap: sm, children: [
+              { type: stack, direction: horizontal, gap: sm, align: center, children: [{ type: typography, variant: h4, content: @f.name }, { type: badge, label: @f.kind, variant: warning }] },
+              { type: typography, variant: body, content: (if (= @f.kind "orphaned") "The program that started it is gone." (if (= @f.kind "growing") (str/concat "Its memory keeps rising, by " (/ (math/round (/ @f.growthBytes 107374182.4)) 10) " GB over the last readings.") (if (= @f.kind "busy") (str/concat "It has held " (math/round @f.cpuPercent) "% of a processor core.") "It holds memory and has been doing nothing."))) },
+              { type: typography, variant: caption, color: muted, content: (str/concat "Running for " (if (>= @f.ageSeconds 172800) (str/concat (math/floor (/ @f.ageSeconds 86400)) " days") (if (>= @f.ageSeconds 7200) (str/concat (math/floor (/ @f.ageSeconds 3600)) " hours") (str/concat (math/floor (/ @f.ageSeconds 60)) " minutes"))) ", holding " (str/concat (/ (math/round (/ @f.rssBytes 107374182.4)) 10) " GB") ". Process " @f.pid ".") },
+              { type: typography, variant: caption, color: muted, content: @f.signature },
+              (if (= @entity.confirming @f.key)
+                { type: stack, direction: horizontal, gap: sm, children: [
+                  { type: typography, variant: body, content: "Stop this process now?" },
+                  { type: button, label: "Yes, stop it", variant: danger, size: sm, action: FLAG_STOP_CONFIRMED, actionPayload: { key: @f.key } },
+                  { type: button, label: "No", variant: ghost, size: sm, action: FLAG_STOP_CANCELLED }
+                ] }
+                { type: stack, direction: horizontal, gap: sm, children: [
+                  { type: button, label: "This is expected", variant: secondary, size: sm, action: FLAG_EXPECTED, actionPayload: { signature: @f.signature, key: @f.key } },
+                  { type: button, label: "Stop it", variant: ghost, size: sm, action: FLAG_STOP_ASKED, actionPayload: { key: @f.key } }
+                ] })
+            ] }] }))) }] })
+      FlagsSampled -> showing
+        (set @entity.read true)
+        (set @entity.count ?count)
+        (set @entity.measured ?measured)
+        (set @entity.rssBytes ?rssBytes)
+        (set @entity.flags ?flags)
+        (render-ui main { type: container, size: md, padding: lg, children: [{ type: stack, direction: vertical, gap: md, children: (array/concat
+          [{ type: typography, variant: h2, content: "Processes" },
+           { type: typography, variant: body, color: muted, content: (if @entity.read (str/concat @entity.count " processes are running; the " @entity.measured " that are yours hold " (/ (math/round (/ @entity.rssBytes 107374182.4)) 10) " GB of memory.") "Reading the processes of this computer.") }]
+          (if (= @entity.notice "") [] [{ type: alert, variant: @entity.noticeKind, message: @entity.notice }])
+          (if (and @entity.read (= (array/len @entity.flags) 0)) [{ type: typography, variant: body, content: "Nothing looks stuck, forgotten or out of control." }] [])
+          (array/map @entity.flags (fn f { type: card, padding: md, children: [{ type: stack, direction: vertical, gap: sm, children: [
+              { type: stack, direction: horizontal, gap: sm, align: center, children: [{ type: typography, variant: h4, content: @f.name }, { type: badge, label: @f.kind, variant: warning }] },
+              { type: typography, variant: body, content: (if (= @f.kind "orphaned") "The program that started it is gone." (if (= @f.kind "growing") (str/concat "Its memory keeps rising, by " (/ (math/round (/ @f.growthBytes 107374182.4)) 10) " GB over the last readings.") (if (= @f.kind "busy") (str/concat "It has held " (math/round @f.cpuPercent) "% of a processor core.") "It holds memory and has been doing nothing."))) },
+              { type: typography, variant: caption, color: muted, content: (str/concat "Running for " (if (>= @f.ageSeconds 172800) (str/concat (math/floor (/ @f.ageSeconds 86400)) " days") (if (>= @f.ageSeconds 7200) (str/concat (math/floor (/ @f.ageSeconds 3600)) " hours") (str/concat (math/floor (/ @f.ageSeconds 60)) " minutes"))) ", holding " (str/concat (/ (math/round (/ @f.rssBytes 107374182.4)) 10) " GB") ". Process " @f.pid ".") },
+              { type: typography, variant: caption, color: muted, content: @f.signature },
+              (if (= @entity.confirming @f.key)
+                { type: stack, direction: horizontal, gap: sm, children: [
+                  { type: typography, variant: body, content: "Stop this process now?" },
+                  { type: button, label: "Yes, stop it", variant: danger, size: sm, action: FLAG_STOP_CONFIRMED, actionPayload: { key: @f.key } },
+                  { type: button, label: "No", variant: ghost, size: sm, action: FLAG_STOP_CANCELLED }
+                ] }
+                { type: stack, direction: horizontal, gap: sm, children: [
+                  { type: button, label: "This is expected", variant: secondary, size: sm, action: FLAG_EXPECTED, actionPayload: { signature: @f.signature, key: @f.key } },
+                  { type: button, label: "Stop it", variant: ghost, size: sm, action: FLAG_STOP_ASKED, actionPayload: { key: @f.key } }
+                ] })
+            ] }] }))) }] })
+      FLAG_EXPECTED -> showing
+        (set @entity.flags (array/filter @entity.flags (fn f (!= @f.key ?key))))
+        (set @entity.confirming "")
+        (emit FLAG_VERDICT { signature: ?signature, verdict: "expected" })
+        (render-ui main { type: container, size: md, padding: lg, children: [{ type: stack, direction: vertical, gap: md, children: (array/concat
+          [{ type: typography, variant: h2, content: "Processes" },
+           { type: typography, variant: body, color: muted, content: (if @entity.read (str/concat @entity.count " processes are running; the " @entity.measured " that are yours hold " (/ (math/round (/ @entity.rssBytes 107374182.4)) 10) " GB of memory.") "Reading the processes of this computer.") }]
+          (if (= @entity.notice "") [] [{ type: alert, variant: @entity.noticeKind, message: @entity.notice }])
+          (if (and @entity.read (= (array/len @entity.flags) 0)) [{ type: typography, variant: body, content: "Nothing looks stuck, forgotten or out of control." }] [])
+          (array/map @entity.flags (fn f { type: card, padding: md, children: [{ type: stack, direction: vertical, gap: sm, children: [
+              { type: stack, direction: horizontal, gap: sm, align: center, children: [{ type: typography, variant: h4, content: @f.name }, { type: badge, label: @f.kind, variant: warning }] },
+              { type: typography, variant: body, content: (if (= @f.kind "orphaned") "The program that started it is gone." (if (= @f.kind "growing") (str/concat "Its memory keeps rising, by " (/ (math/round (/ @f.growthBytes 107374182.4)) 10) " GB over the last readings.") (if (= @f.kind "busy") (str/concat "It has held " (math/round @f.cpuPercent) "% of a processor core.") "It holds memory and has been doing nothing."))) },
+              { type: typography, variant: caption, color: muted, content: (str/concat "Running for " (if (>= @f.ageSeconds 172800) (str/concat (math/floor (/ @f.ageSeconds 86400)) " days") (if (>= @f.ageSeconds 7200) (str/concat (math/floor (/ @f.ageSeconds 3600)) " hours") (str/concat (math/floor (/ @f.ageSeconds 60)) " minutes"))) ", holding " (str/concat (/ (math/round (/ @f.rssBytes 107374182.4)) 10) " GB") ". Process " @f.pid ".") },
+              { type: typography, variant: caption, color: muted, content: @f.signature },
+              (if (= @entity.confirming @f.key)
+                { type: stack, direction: horizontal, gap: sm, children: [
+                  { type: typography, variant: body, content: "Stop this process now?" },
+                  { type: button, label: "Yes, stop it", variant: danger, size: sm, action: FLAG_STOP_CONFIRMED, actionPayload: { key: @f.key } },
+                  { type: button, label: "No", variant: ghost, size: sm, action: FLAG_STOP_CANCELLED }
+                ] }
+                { type: stack, direction: horizontal, gap: sm, children: [
+                  { type: button, label: "This is expected", variant: secondary, size: sm, action: FLAG_EXPECTED, actionPayload: { signature: @f.signature, key: @f.key } },
+                  { type: button, label: "Stop it", variant: ghost, size: sm, action: FLAG_STOP_ASKED, actionPayload: { key: @f.key } }
+                ] })
+            ] }] }))) }] })
+      FLAG_STOP_ASKED -> showing
+        (set @entity.confirming ?key)
+        (render-ui main { type: container, size: md, padding: lg, children: [{ type: stack, direction: vertical, gap: md, children: (array/concat
+          [{ type: typography, variant: h2, content: "Processes" },
+           { type: typography, variant: body, color: muted, content: (if @entity.read (str/concat @entity.count " processes are running; the " @entity.measured " that are yours hold " (/ (math/round (/ @entity.rssBytes 107374182.4)) 10) " GB of memory.") "Reading the processes of this computer.") }]
+          (if (= @entity.notice "") [] [{ type: alert, variant: @entity.noticeKind, message: @entity.notice }])
+          (if (and @entity.read (= (array/len @entity.flags) 0)) [{ type: typography, variant: body, content: "Nothing looks stuck, forgotten or out of control." }] [])
+          (array/map @entity.flags (fn f { type: card, padding: md, children: [{ type: stack, direction: vertical, gap: sm, children: [
+              { type: stack, direction: horizontal, gap: sm, align: center, children: [{ type: typography, variant: h4, content: @f.name }, { type: badge, label: @f.kind, variant: warning }] },
+              { type: typography, variant: body, content: (if (= @f.kind "orphaned") "The program that started it is gone." (if (= @f.kind "growing") (str/concat "Its memory keeps rising, by " (/ (math/round (/ @f.growthBytes 107374182.4)) 10) " GB over the last readings.") (if (= @f.kind "busy") (str/concat "It has held " (math/round @f.cpuPercent) "% of a processor core.") "It holds memory and has been doing nothing."))) },
+              { type: typography, variant: caption, color: muted, content: (str/concat "Running for " (if (>= @f.ageSeconds 172800) (str/concat (math/floor (/ @f.ageSeconds 86400)) " days") (if (>= @f.ageSeconds 7200) (str/concat (math/floor (/ @f.ageSeconds 3600)) " hours") (str/concat (math/floor (/ @f.ageSeconds 60)) " minutes"))) ", holding " (str/concat (/ (math/round (/ @f.rssBytes 107374182.4)) 10) " GB") ". Process " @f.pid ".") },
+              { type: typography, variant: caption, color: muted, content: @f.signature },
+              (if (= @entity.confirming @f.key)
+                { type: stack, direction: horizontal, gap: sm, children: [
+                  { type: typography, variant: body, content: "Stop this process now?" },
+                  { type: button, label: "Yes, stop it", variant: danger, size: sm, action: FLAG_STOP_CONFIRMED, actionPayload: { key: @f.key } },
+                  { type: button, label: "No", variant: ghost, size: sm, action: FLAG_STOP_CANCELLED }
+                ] }
+                { type: stack, direction: horizontal, gap: sm, children: [
+                  { type: button, label: "This is expected", variant: secondary, size: sm, action: FLAG_EXPECTED, actionPayload: { signature: @f.signature, key: @f.key } },
+                  { type: button, label: "Stop it", variant: ghost, size: sm, action: FLAG_STOP_ASKED, actionPayload: { key: @f.key } }
+                ] })
+            ] }] }))) }] })
+      FLAG_STOP_CANCELLED -> showing
+        (set @entity.confirming "")
+        (render-ui main { type: container, size: md, padding: lg, children: [{ type: stack, direction: vertical, gap: md, children: (array/concat
+          [{ type: typography, variant: h2, content: "Processes" },
+           { type: typography, variant: body, color: muted, content: (if @entity.read (str/concat @entity.count " processes are running; the " @entity.measured " that are yours hold " (/ (math/round (/ @entity.rssBytes 107374182.4)) 10) " GB of memory.") "Reading the processes of this computer.") }]
+          (if (= @entity.notice "") [] [{ type: alert, variant: @entity.noticeKind, message: @entity.notice }])
+          (if (and @entity.read (= (array/len @entity.flags) 0)) [{ type: typography, variant: body, content: "Nothing looks stuck, forgotten or out of control." }] [])
+          (array/map @entity.flags (fn f { type: card, padding: md, children: [{ type: stack, direction: vertical, gap: sm, children: [
+              { type: stack, direction: horizontal, gap: sm, align: center, children: [{ type: typography, variant: h4, content: @f.name }, { type: badge, label: @f.kind, variant: warning }] },
+              { type: typography, variant: body, content: (if (= @f.kind "orphaned") "The program that started it is gone." (if (= @f.kind "growing") (str/concat "Its memory keeps rising, by " (/ (math/round (/ @f.growthBytes 107374182.4)) 10) " GB over the last readings.") (if (= @f.kind "busy") (str/concat "It has held " (math/round @f.cpuPercent) "% of a processor core.") "It holds memory and has been doing nothing."))) },
+              { type: typography, variant: caption, color: muted, content: (str/concat "Running for " (if (>= @f.ageSeconds 172800) (str/concat (math/floor (/ @f.ageSeconds 86400)) " days") (if (>= @f.ageSeconds 7200) (str/concat (math/floor (/ @f.ageSeconds 3600)) " hours") (str/concat (math/floor (/ @f.ageSeconds 60)) " minutes"))) ", holding " (str/concat (/ (math/round (/ @f.rssBytes 107374182.4)) 10) " GB") ". Process " @f.pid ".") },
+              { type: typography, variant: caption, color: muted, content: @f.signature },
+              (if (= @entity.confirming @f.key)
+                { type: stack, direction: horizontal, gap: sm, children: [
+                  { type: typography, variant: body, content: "Stop this process now?" },
+                  { type: button, label: "Yes, stop it", variant: danger, size: sm, action: FLAG_STOP_CONFIRMED, actionPayload: { key: @f.key } },
+                  { type: button, label: "No", variant: ghost, size: sm, action: FLAG_STOP_CANCELLED }
+                ] }
+                { type: stack, direction: horizontal, gap: sm, children: [
+                  { type: button, label: "This is expected", variant: secondary, size: sm, action: FLAG_EXPECTED, actionPayload: { signature: @f.signature, key: @f.key } },
+                  { type: button, label: "Stop it", variant: ghost, size: sm, action: FLAG_STOP_ASKED, actionPayload: { key: @f.key } }
+                ] })
+            ] }] }))) }] })
+      FLAG_STOP_CONFIRMED -> showing
+        (set @entity.confirming "")
+        (set @entity.notice "Stopping the process.")
+        (set @entity.noticeKind info)
+        (emit FLAG_STOP { key: ?key })
+        (render-ui main { type: container, size: md, padding: lg, children: [{ type: stack, direction: vertical, gap: md, children: (array/concat
+          [{ type: typography, variant: h2, content: "Processes" },
+           { type: typography, variant: body, color: muted, content: (if @entity.read (str/concat @entity.count " processes are running; the " @entity.measured " that are yours hold " (/ (math/round (/ @entity.rssBytes 107374182.4)) 10) " GB of memory.") "Reading the processes of this computer.") }]
+          (if (= @entity.notice "") [] [{ type: alert, variant: @entity.noticeKind, message: @entity.notice }])
+          (if (and @entity.read (= (array/len @entity.flags) 0)) [{ type: typography, variant: body, content: "Nothing looks stuck, forgotten or out of control." }] [])
+          (array/map @entity.flags (fn f { type: card, padding: md, children: [{ type: stack, direction: vertical, gap: sm, children: [
+              { type: stack, direction: horizontal, gap: sm, align: center, children: [{ type: typography, variant: h4, content: @f.name }, { type: badge, label: @f.kind, variant: warning }] },
+              { type: typography, variant: body, content: (if (= @f.kind "orphaned") "The program that started it is gone." (if (= @f.kind "growing") (str/concat "Its memory keeps rising, by " (/ (math/round (/ @f.growthBytes 107374182.4)) 10) " GB over the last readings.") (if (= @f.kind "busy") (str/concat "It has held " (math/round @f.cpuPercent) "% of a processor core.") "It holds memory and has been doing nothing."))) },
+              { type: typography, variant: caption, color: muted, content: (str/concat "Running for " (if (>= @f.ageSeconds 172800) (str/concat (math/floor (/ @f.ageSeconds 86400)) " days") (if (>= @f.ageSeconds 7200) (str/concat (math/floor (/ @f.ageSeconds 3600)) " hours") (str/concat (math/floor (/ @f.ageSeconds 60)) " minutes"))) ", holding " (str/concat (/ (math/round (/ @f.rssBytes 107374182.4)) 10) " GB") ". Process " @f.pid ".") },
+              { type: typography, variant: caption, color: muted, content: @f.signature },
+              (if (= @entity.confirming @f.key)
+                { type: stack, direction: horizontal, gap: sm, children: [
+                  { type: typography, variant: body, content: "Stop this process now?" },
+                  { type: button, label: "Yes, stop it", variant: danger, size: sm, action: FLAG_STOP_CONFIRMED, actionPayload: { key: @f.key } },
+                  { type: button, label: "No", variant: ghost, size: sm, action: FLAG_STOP_CANCELLED }
+                ] }
+                { type: stack, direction: horizontal, gap: sm, children: [
+                  { type: button, label: "This is expected", variant: secondary, size: sm, action: FLAG_EXPECTED, actionPayload: { signature: @f.signature, key: @f.key } },
+                  { type: button, label: "Stop it", variant: ghost, size: sm, action: FLAG_STOP_ASKED, actionPayload: { key: @f.key } }
+                ] })
+            ] }] }))) }] })
+      FlagStopped -> showing
+        (set @entity.flags (array/filter @entity.flags (fn f (!= @f.key ?key))))
+        (set @entity.notice (str/concat "Process " ?pid " was asked to stop."))
+        (set @entity.noticeKind success)
+        (render-ui main { type: container, size: md, padding: lg, children: [{ type: stack, direction: vertical, gap: md, children: (array/concat
+          [{ type: typography, variant: h2, content: "Processes" },
+           { type: typography, variant: body, color: muted, content: (if @entity.read (str/concat @entity.count " processes are running; the " @entity.measured " that are yours hold " (/ (math/round (/ @entity.rssBytes 107374182.4)) 10) " GB of memory.") "Reading the processes of this computer.") }]
+          (if (= @entity.notice "") [] [{ type: alert, variant: @entity.noticeKind, message: @entity.notice }])
+          (if (and @entity.read (= (array/len @entity.flags) 0)) [{ type: typography, variant: body, content: "Nothing looks stuck, forgotten or out of control." }] [])
+          (array/map @entity.flags (fn f { type: card, padding: md, children: [{ type: stack, direction: vertical, gap: sm, children: [
+              { type: stack, direction: horizontal, gap: sm, align: center, children: [{ type: typography, variant: h4, content: @f.name }, { type: badge, label: @f.kind, variant: warning }] },
+              { type: typography, variant: body, content: (if (= @f.kind "orphaned") "The program that started it is gone." (if (= @f.kind "growing") (str/concat "Its memory keeps rising, by " (/ (math/round (/ @f.growthBytes 107374182.4)) 10) " GB over the last readings.") (if (= @f.kind "busy") (str/concat "It has held " (math/round @f.cpuPercent) "% of a processor core.") "It holds memory and has been doing nothing."))) },
+              { type: typography, variant: caption, color: muted, content: (str/concat "Running for " (if (>= @f.ageSeconds 172800) (str/concat (math/floor (/ @f.ageSeconds 86400)) " days") (if (>= @f.ageSeconds 7200) (str/concat (math/floor (/ @f.ageSeconds 3600)) " hours") (str/concat (math/floor (/ @f.ageSeconds 60)) " minutes"))) ", holding " (str/concat (/ (math/round (/ @f.rssBytes 107374182.4)) 10) " GB") ". Process " @f.pid ".") },
+              { type: typography, variant: caption, color: muted, content: @f.signature },
+              (if (= @entity.confirming @f.key)
+                { type: stack, direction: horizontal, gap: sm, children: [
+                  { type: typography, variant: body, content: "Stop this process now?" },
+                  { type: button, label: "Yes, stop it", variant: danger, size: sm, action: FLAG_STOP_CONFIRMED, actionPayload: { key: @f.key } },
+                  { type: button, label: "No", variant: ghost, size: sm, action: FLAG_STOP_CANCELLED }
+                ] }
+                { type: stack, direction: horizontal, gap: sm, children: [
+                  { type: button, label: "This is expected", variant: secondary, size: sm, action: FLAG_EXPECTED, actionPayload: { signature: @f.signature, key: @f.key } },
+                  { type: button, label: "Stop it", variant: ghost, size: sm, action: FLAG_STOP_ASKED, actionPayload: { key: @f.key } }
+                ] })
+            ] }] }))) }] })
+      FlagStopFailed -> showing
+        (set @entity.notice (if (= ?code "gone") "That process had already ended." (str/concat "The process could not be stopped: " ?error)))
+        (set @entity.noticeKind warning)
+        (render-ui main { type: container, size: md, padding: lg, children: [{ type: stack, direction: vertical, gap: md, children: (array/concat
+          [{ type: typography, variant: h2, content: "Processes" },
+           { type: typography, variant: body, color: muted, content: (if @entity.read (str/concat @entity.count " processes are running; the " @entity.measured " that are yours hold " (/ (math/round (/ @entity.rssBytes 107374182.4)) 10) " GB of memory.") "Reading the processes of this computer.") }]
+          (if (= @entity.notice "") [] [{ type: alert, variant: @entity.noticeKind, message: @entity.notice }])
+          (if (and @entity.read (= (array/len @entity.flags) 0)) [{ type: typography, variant: body, content: "Nothing looks stuck, forgotten or out of control." }] [])
+          (array/map @entity.flags (fn f { type: card, padding: md, children: [{ type: stack, direction: vertical, gap: sm, children: [
+              { type: stack, direction: horizontal, gap: sm, align: center, children: [{ type: typography, variant: h4, content: @f.name }, { type: badge, label: @f.kind, variant: warning }] },
+              { type: typography, variant: body, content: (if (= @f.kind "orphaned") "The program that started it is gone." (if (= @f.kind "growing") (str/concat "Its memory keeps rising, by " (/ (math/round (/ @f.growthBytes 107374182.4)) 10) " GB over the last readings.") (if (= @f.kind "busy") (str/concat "It has held " (math/round @f.cpuPercent) "% of a processor core.") "It holds memory and has been doing nothing."))) },
+              { type: typography, variant: caption, color: muted, content: (str/concat "Running for " (if (>= @f.ageSeconds 172800) (str/concat (math/floor (/ @f.ageSeconds 86400)) " days") (if (>= @f.ageSeconds 7200) (str/concat (math/floor (/ @f.ageSeconds 3600)) " hours") (str/concat (math/floor (/ @f.ageSeconds 60)) " minutes"))) ", holding " (str/concat (/ (math/round (/ @f.rssBytes 107374182.4)) 10) " GB") ". Process " @f.pid ".") },
+              { type: typography, variant: caption, color: muted, content: @f.signature },
+              (if (= @entity.confirming @f.key)
+                { type: stack, direction: horizontal, gap: sm, children: [
+                  { type: typography, variant: body, content: "Stop this process now?" },
+                  { type: button, label: "Yes, stop it", variant: danger, size: sm, action: FLAG_STOP_CONFIRMED, actionPayload: { key: @f.key } },
+                  { type: button, label: "No", variant: ghost, size: sm, action: FLAG_STOP_CANCELLED }
+                ] }
+                { type: stack, direction: horizontal, gap: sm, children: [
+                  { type: button, label: "This is expected", variant: secondary, size: sm, action: FLAG_EXPECTED, actionPayload: { signature: @f.signature, key: @f.key } },
+                  { type: button, label: "Stop it", variant: ghost, size: sm, action: FLAG_STOP_ASKED, actionPayload: { key: @f.key } }
+                ] })
+            ] }] }))) }] })
+      FlagsFailed -> showing
+        (set @entity.notice (str/concat "The processes could not be read: " ?error))
+        (set @entity.noticeKind error)
+        (render-ui main { type: container, size: md, padding: lg, children: [{ type: stack, direction: vertical, gap: md, children: (array/concat
+          [{ type: typography, variant: h2, content: "Processes" },
+           { type: typography, variant: body, color: muted, content: (if @entity.read (str/concat @entity.count " processes are running; the " @entity.measured " that are yours hold " (/ (math/round (/ @entity.rssBytes 107374182.4)) 10) " GB of memory.") "Reading the processes of this computer.") }]
+          (if (= @entity.notice "") [] [{ type: alert, variant: @entity.noticeKind, message: @entity.notice }])
+          (if (and @entity.read (= (array/len @entity.flags) 0)) [{ type: typography, variant: body, content: "Nothing looks stuck, forgotten or out of control." }] [])
+          (array/map @entity.flags (fn f { type: card, padding: md, children: [{ type: stack, direction: vertical, gap: sm, children: [
+              { type: stack, direction: horizontal, gap: sm, align: center, children: [{ type: typography, variant: h4, content: @f.name }, { type: badge, label: @f.kind, variant: warning }] },
+              { type: typography, variant: body, content: (if (= @f.kind "orphaned") "The program that started it is gone." (if (= @f.kind "growing") (str/concat "Its memory keeps rising, by " (/ (math/round (/ @f.growthBytes 107374182.4)) 10) " GB over the last readings.") (if (= @f.kind "busy") (str/concat "It has held " (math/round @f.cpuPercent) "% of a processor core.") "It holds memory and has been doing nothing."))) },
+              { type: typography, variant: caption, color: muted, content: (str/concat "Running for " (if (>= @f.ageSeconds 172800) (str/concat (math/floor (/ @f.ageSeconds 86400)) " days") (if (>= @f.ageSeconds 7200) (str/concat (math/floor (/ @f.ageSeconds 3600)) " hours") (str/concat (math/floor (/ @f.ageSeconds 60)) " minutes"))) ", holding " (str/concat (/ (math/round (/ @f.rssBytes 107374182.4)) 10) " GB") ". Process " @f.pid ".") },
+              { type: typography, variant: caption, color: muted, content: @f.signature },
+              (if (= @entity.confirming @f.key)
+                { type: stack, direction: horizontal, gap: sm, children: [
+                  { type: typography, variant: body, content: "Stop this process now?" },
+                  { type: button, label: "Yes, stop it", variant: danger, size: sm, action: FLAG_STOP_CONFIRMED, actionPayload: { key: @f.key } },
+                  { type: button, label: "No", variant: ghost, size: sm, action: FLAG_STOP_CANCELLED }
+                ] }
+                { type: stack, direction: horizontal, gap: sm, children: [
+                  { type: button, label: "This is expected", variant: secondary, size: sm, action: FLAG_EXPECTED, actionPayload: { signature: @f.signature, key: @f.key } },
+                  { type: button, label: "Stop it", variant: ghost, size: sm, action: FLAG_STOP_ASKED, actionPayload: { key: @f.key } }
+                ] })
+            ] }] }))) }] })
+    }
+
+    emits {
+      FLAGS_OPENED -> external { }
+        @description "The page opened: start the watch, or answer its last reading."
+      FLAG_VERDICT -> external {
+        signature : string!
+        verdict : "expected" | "unwanted"
+      }
+        @description "The person's answer about a command."
+      FLAG_STOP -> external {
+        key : string!
+      }
+        @description "The person confirmed that this process be stopped."
+    }
+
+    listens {
+      ProcessWatch.PROCESSES_SAMPLED -> FlagsSampled
+      ProcessWatch.PROCESS_STOPPED -> FlagStopped
+      ProcessWatch.PROCESS_STOP_FAILED -> FlagStopFailed
+      ProcessWatch.PROCESS_WATCH_FAILED -> FlagsFailed
+      FlagsSampled {
+        count : number!
+        measured : number!
+        rssBytes : number!
+        flags : [ProcessFlag]!
+        at : instant!
+      }
+      FlagStopped {
+        key : string!
+        pid : number!
+      }
+      FlagStopFailed {
+        key : string!
+        code : string!
+        error : string!
+      }
+      FlagsFailed {
+        code : string!
+        error : string!
+      }
+      FLAG_EXPECTED {
+        signature : string!
+        key : string!
+      }
+      FLAG_STOP_ASKED {
+        key : string!
+      }
+      FLAG_STOP_CANCELLED { }
+      FLAG_STOP_CONFIRMED {
+        key : string!
+      }
+    }
+  }
+
   page boot as ProcessWatchBoot -> ProcessWatch
+  page "/processes" as ProcessFlagsPage -> ProcessFlags
 }

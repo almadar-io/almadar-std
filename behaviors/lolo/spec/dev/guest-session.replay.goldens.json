@@ -1906,6 +1906,7 @@
              }
             }
            ],
+           "theme": null,
            "children": [
             {
              "type": "stack"
@@ -2350,6 +2351,7 @@
              }
             }
            ],
+           "theme": null,
            "children": [
             {
              "type": "grid"
@@ -2484,6 +2486,7 @@
              }
             }
            ],
+           "theme": null,
            "children": [
             {
              "type": "grid"
@@ -12270,6 +12273,7 @@
                }
               }
              ],
+             "theme": null,
              "children": []
             }
            ]
@@ -12505,6 +12509,370 @@
    ],
    "now": 1760531445678,
    "note": "the sign-in shows in the trace like any other step: the moves of the credential dispatch go out as GUEST_MOVED"
+  },
+  {
+   "id": "open-of-a-program-declaring-a-theme-key-hands-the-theme-on",
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "event": "GUEST_OPEN",
+     "payload": {
+      "program": {
+       "name": "x",
+       "theme": "arabesque-light",
+       "orbitals": []
+      }
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "",
+      "guestPaints": [],
+      "guestError": ""
+     },
+     "from": "idle",
+     "expect": {
+      "fired": true,
+      "state": "opening",
+      "emits": [
+       {
+        "event": "GUEST_CLEARED",
+        "payload": {}
+       },
+       {
+        "event": "GUEST_THEME",
+        "payload": {
+         "theme": "arabesque-light"
+        }
+       },
+       {
+        "event": "GUEST_PREPARE"
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "open-of-a-program-declaring-an-inline-theme-hands-the-definition-on",
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "event": "GUEST_OPEN",
+     "payload": {
+      "program": {
+       "name": "x",
+       "theme": {
+        "name": "taif",
+        "tokens": {
+         "colors": {
+          "primary": "#0e7c7b"
+         }
+        },
+        "variants": {
+         "dark": {
+          "colors": {
+           "primary": "#4fd1c5"
+          }
+         }
+        }
+       },
+       "orbitals": []
+      }
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "",
+      "guestPaints": [],
+      "guestError": ""
+     },
+     "from": "idle",
+     "expect": {
+      "fired": true,
+      "state": "opening",
+      "emits": [
+       {
+        "event": "GUEST_CLEARED",
+        "payload": {}
+       },
+       {
+        "event": "GUEST_THEME",
+        "payload": {
+         "theme": {
+          "name": "taif",
+          "tokens": {
+           "colors": {
+            "primary": "#0e7c7b"
+           }
+          },
+          "variants": {
+           "dark": {
+            "colors": {
+             "primary": "#4fd1c5"
+            }
+           }
+          }
+         }
+        }
+       },
+       {
+        "event": "GUEST_PREPARE"
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "control-open-of-a-program-declaring-no-theme-sends-no-theme",
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "event": "GUEST_OPEN",
+     "payload": {
+      "program": {
+       "name": "x",
+       "orbitals": []
+      }
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "",
+      "guestPaints": [],
+      "guestError": ""
+     },
+     "from": "idle",
+     "expect": {
+      "fired": true,
+      "state": "opening",
+      "neverEmits": [
+       "GUEST_THEME"
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "reopen-while-live-hands-the-new-program-s-theme-on",
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "event": "GUEST_OPEN",
+     "payload": {
+      "program": {
+       "name": "y",
+       "theme": "gazette-light",
+       "orbitals": []
+      }
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "guest-1",
+      "guestPaints": [],
+      "guestError": ""
+     },
+     "from": "live",
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "GUEST_THEME",
+        "payload": {
+         "theme": "gazette-light"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "the-stage-keeps-the-theme-the-session-hands-on",
+   "steps": [
+    {
+     "trait": "GuestStage",
+     "event": "GUEST_THEME",
+     "payload": {
+      "theme": {
+       "name": "taif",
+       "tokens": {
+        "colors": {
+         "primary": "#0e7c7b"
+        }
+       },
+       "variants": {
+        "dark": {
+         "colors": {
+          "primary": "#4fd1c5"
+         }
+        }
+       }
+      }
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "",
+      "guestPaints": [],
+      "guestError": ""
+     },
+     "from": "idle",
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "entity": {
+       "guestTheme": {
+        "name": "taif",
+        "tokens": {
+         "colors": {
+          "primary": "#0e7c7b"
+         }
+        },
+        "variants": {
+         "dark": {
+          "colors": {
+           "primary": "#4fd1c5"
+          }
+         }
+        }
+       }
+      },
+      "emits": [
+       {
+        "event": "GUEST_SHOWN"
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "the-stage-drops-the-theme-when-the-guest-is-gone",
+   "steps": [
+    {
+     "trait": "GuestStage",
+     "event": "GUEST_CLEARED",
+     "payload": {},
+     "entity": {
+      "id": "g",
+      "guestHandle": "guest-1",
+      "guestPaints": [],
+      "guestError": "",
+      "guestTheme": "arabesque-light"
+     },
+     "from": "idle",
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "entity": {
+       "guestTheme": null,
+       "guestHandle": ""
+      }
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "the-stage-hands-the-guest-view-the-guest-s-theme",
+   "steps": [
+    {
+     "trait": "GuestStage",
+     "event": "GUEST_SHOWN",
+     "entity": {
+      "id": "g",
+      "guestHandle": "guest-1",
+      "guestPaints": [
+       {
+        "slot": "main",
+        "trait": "A.Two",
+        "embedded": false,
+        "content": {
+         "type": "grid"
+        }
+       }
+      ],
+      "guestError": "",
+      "guestPage": [
+       "A.Two"
+      ],
+      "guestRoute": "/people",
+      "guestTheme": "arabesque-light"
+     },
+     "from": "idle",
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "rendered": [
+       {
+        "slot": "main",
+        "props": {
+         "type": "box",
+         "className": "",
+         "children": [
+          {
+           "type": "stack",
+           "direction": "horizontal",
+           "justify": "end",
+           "align": "center",
+           "gap": "md",
+           "className": "px-4 py-2 border-b border-border",
+           "children": [
+            {
+             "type": "button",
+             "icon": "activity",
+             "variant": "ghost",
+             "size": "sm",
+             "action": "GUEST_TRACE_TOGGLED",
+             "aria-label": "Trace"
+            },
+            {
+             "type": "switch",
+             "label": "Real integrations",
+             "checked": false,
+             "action": "GUEST_INTEGRATIONS_CHOSEN"
+            }
+           ]
+          },
+          {
+           "type": "guest-view",
+           "guest": "guest-1",
+           "source": "A.Two",
+           "deliver": "GUEST_CONTROL",
+           "navigate": "GUEST_ROUTE",
+           "route": "/people",
+           "paints": [
+            {
+             "slot": "main",
+             "trait": "A.Two",
+             "embedded": false,
+             "content": {
+              "type": "grid"
+             }
+            }
+           ],
+           "theme": "arabesque-light",
+           "children": [
+            {
+             "type": "grid"
+            }
+           ]
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "options": {
+      "render": true,
+      "renderProps": true
+     }
+    }
+   ],
+   "now": 1760531445678
   }
  ]
 }

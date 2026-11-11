@@ -18842,6 +18842,209 @@
           }
         }
       ]
+    },
+    {
+      "id": "registry-heard-once-serves-a-second-input",
+      "steps": [
+        {
+          "event": "EMBEDS_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "config": {},
+            "guards": {},
+            "effects": {},
+            "pageConfig": {},
+            "pageGuards": {},
+            "pageEffects": {}
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "event": "LINT_PATTERNS_HEARD",
+          "from": "ready",
+          "payload": {
+            "patterns": {}
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "pages": [
+                    {
+                      "path": "/x",
+                      "traits": [
+                        {
+                          "name": "T",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "INIT",
+                                "effects": [
+                                  [
+                                    "render-ui",
+                                    "main",
+                                    {
+                                      "type": "card"
+                                    }
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "slot",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "EMBEDS_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "b",
+            "config": {},
+            "guards": {},
+            "effects": {},
+            "pageConfig": {},
+            "pageGuards": {},
+            "pageEffects": {}
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "b.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "A",
+                  "pages": [
+                    {
+                      "path": "/x",
+                      "traits": [
+                        {
+                          "name": "T",
+                          "stateMachine": {
+                            "states": [
+                              {
+                                "name": "idle",
+                                "isInitial": true
+                              }
+                            ],
+                            "transitions": [
+                              {
+                                "from": "idle",
+                                "to": "idle",
+                                "event": "INIT",
+                                "effects": [
+                                  [
+                                    "render-ui",
+                                    "main",
+                                    {
+                                      "type": "card"
+                                    }
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": "b"
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "slot",
+                  "findings": [],
+                  "scope": "b"
+                }
+              }
+            ]
+          }
+        }
+      ]
     }
   ],
   "note": "Slots follow validate_page_slots over the traits of ROUTE pages only: an endpoint or boot page (a page with a protocol) is not checked. A trait some sibling embeds with `@trait.X` (in a render payload, a config default, a transition guard or effect, or a tick, inside an `if` or not) paints inside that sibling's frame and owns no page slot, and the embed set is read from every page trait, so mutually embedding traits leave none. A page is covered when any trait on it paints (a non-null render-ui) on any slot in any transition; a clear (render-ui slot null) is not a paint and owns no slot for contention, but still counts for nesting. A trait counts once per slot, a render-ui inside `if` or `do` counts, and modal and toast are shared overlays that never contend. Only a render-ui array is a render (an object-shaped effect is not). The real-program-shape cases feed a lowered std atom to the rule: the rule must reach LINT_FINISH (a runtime type error in the findings expression leaves the transition without it). A `@config.<knob>` slot is read through the trait's declared default, what the compiler sees after inlining."

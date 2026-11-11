@@ -7,9 +7,17 @@ app std-catalog-vectors [
 uses Texts from "std/behaviors/std-behavior-texts"
 uses Sources from "std/behaviors/std-vector-sources"
 uses ResolveAtom from "std/behaviors/std-vector-resolve"
+uses Store from "std/behaviors/std-vector-store"
+uses Write from "std/behaviors/std-vector-write"
+uses Quantize from "std/behaviors/std-vector-quantize"
+uses F32 from "std/behaviors/std-f32"
+uses Sig6 from "std/behaviors/std-sig6"
+uses BigCmp from "std/behaviors/std-bigcmp"
+uses Delay from "std/behaviors/std-delay"
 
 type WantedText = { key : string!, text : string! }
 type KeyedVector = { key : string!, vector : [number]! }
+type StoreEntry = { found : boolean!, dims : number!, scale : number!, record : bytes!, vector : [number]! }
 type CatalogFactsRow = {
   behavior : string!
   package : string!
@@ -64,8 +72,178 @@ orbital CatalogVectorsOrbital {
   trait CvSources = Sources.traits.VectorSources {
     listens {
       CatalogVectors.CV_SOURCES -> SOURCES
+      CvResolve.USER_STORE_NEEDED -> USER_STORE_NEEDED
     }
   }
+
+  trait CvResolve = ResolveAtom.traits.VectorResolve {
+    listens {
+      CatalogVectors.CV_RESOLVE -> RESOLVE
+      CvSources.USER_STORE_READ -> USER_STORE_READ
+      CvStore.VECTOR_RESOLVED -> VECTOR_RESOLVED
+      CvStore.VECTOR_REFUSED -> VECTOR_REFUSED
+      ResolveLlmOrShared.LLM_EMBED_RESULT -> LLM_EMBED_RESULT
+      ResolveLlmOrShared.LLM_FAILED -> LLM_FAILED
+      ResolveLlmOrOwn.LLM_EMBED_RESULT -> LLM_EMBED_RESULT
+      ResolveLlmOrOwn.LLM_FAILED -> LLM_FAILED
+      ResolveLlmOaShared.LLM_EMBED_RESULT -> LLM_EMBED_RESULT
+      ResolveLlmOaShared.LLM_FAILED -> LLM_FAILED
+      ResolveLlmOaOwn.LLM_EMBED_RESULT -> LLM_EMBED_RESULT
+      ResolveLlmOaOwn.LLM_FAILED -> LLM_FAILED
+      ResolveLlmLm.LLM_EMBED_RESULT -> LLM_EMBED_RESULT
+      ResolveLlmLm.LLM_FAILED -> LLM_FAILED
+      CvWrite.VECTOR_WRITTEN -> VECTOR_WRITTEN
+      CvWrite.VECTOR_WRITE_REFUSED -> VECTOR_WRITE_REFUSED
+      RESOLVE {
+        wanted : [WantedText]!
+        snapshots : [bytes]!
+        snapshotPaths : [string]
+        userDir : string!
+        userAnchor : string!
+        providerModel : string!
+        providerKind : string
+        embedModel : string
+      }
+      USER_STORE_READ {
+        data : bytes!
+      }
+      VECTOR_RESOLVED {
+        model : string!
+        entries : [StoreEntry]!
+      }
+      VECTOR_REFUSED {
+        code : string!
+        detail : string!
+      }
+      LLM_EMBED_RESULT {
+        embeddings : [[number]]!
+      }
+      LLM_FAILED {
+        code : string
+        message : string!
+      }
+      VECTOR_WRITTEN {
+        path : string!
+        count : number!
+      }
+      VECTOR_WRITE_REFUSED {
+        code : string!
+        detail : string!
+      }
+    }
+  }
+  trait CvStore = Store.traits.VectorLookup {
+    listens {
+      CvResolve.VECTOR_LOOKUP_MANY -> VECTOR_LOOKUP_MANY
+      CvWrite.VECTOR_LOOKUP_MANY -> VECTOR_LOOKUP_MANY
+      CvSig6.SIG6_DONE -> SIG6_DONE
+      CvSig6.SIG6_REFUSED -> SIG6_REFUSED
+    }
+  }
+  trait CvWrite = Write.traits.VectorWrite {
+    listens {
+      CvResolve.VECTOR_WRITE -> VECTOR_WRITE
+      CvQuantize.QUANTIZED -> QUANTIZED
+      CvQuantize.QUANTIZE_REFUSED -> QUANTIZE_REFUSED
+      CvStore.VECTOR_RESOLVED -> VECTOR_RESOLVED
+      CvStore.VECTOR_REFUSED -> VECTOR_REFUSED
+      CvDelay.ELAPSED -> ELAPSED
+    }
+  }
+  trait CvQuantize = Quantize.traits.VectorQuantize {
+    listens {
+      CvWrite.QUANTIZE -> QUANTIZE
+      CvF32.F32_ENCODED -> F32_ENCODED
+      CvF32.F32_REFUSED -> F32_REFUSED
+      CvSig6.SIG6_DONE -> SIG6_DONE
+      CvSig6.SIG6_REFUSED -> SIG6_REFUSED
+    }
+  }
+  trait CvF32 = F32.traits.F32Encode {
+    listens {
+      CvQuantize.F32_ENCODE -> F32_ENCODE
+      CvSig6.F32_ENCODE -> F32_ENCODE
+    }
+  }
+  trait CvSig6 = Sig6.traits.Sig6 {
+    listens {
+      CvQuantize.SIG6 -> SIG6
+      CvStore.SIG6 -> SIG6
+      CvBigCmp.BIGCMP_ANSWERED -> BIGCMP_ANSWERED
+      CvF32.F32_ENCODED -> F32_ENCODED
+      CvF32.F32_REFUSED -> F32_REFUSED
+    }
+  }
+  trait CvBigCmp = BigCmp.traits.BigCmp {
+    listens {
+      CvSig6.BIGCMP_BATCH -> BIGCMP_BATCH
+    }
+  }
+  trait CvDelay = Delay.traits.Delay {
+    listens {
+      CvWrite.LOCK_WAIT -> START
+    }
+  }
+  trait ResolveLlmOrShared = ResolveAtom.traits.ResolveLlmOrShared {
+    listens {
+      CvResolve.LLM_EMBED_ORS -> LLM_EMBED_ORS
+      ResolveOrSharedWait.WAITED_ORS -> LLM_EMBED_WAITED
+      ResolveOrSharedRequest.HTTP_RESULT -> LLM_EMBED_WIRE_RESULT
+      ResolveOrSharedRequest.HTTP_REQUEST_FAILED -> LLM_EMBED_WIRE_FAILED
+      ResolveOrSharedRequest.HTTP_REQUEST_REFUSED -> LLM_EMBED_WIRE_REFUSED
+    }
+  }
+  trait ResolveLlmOrOwn = ResolveAtom.traits.ResolveLlmOrOwn {
+    listens {
+      CvResolve.LLM_EMBED_ORO -> LLM_EMBED_ORO
+      ResolveOrOwnWait.WAITED_ORO -> LLM_EMBED_WAITED
+      ResolveOrOwnRequest.HTTP_RESULT -> LLM_EMBED_WIRE_RESULT
+      ResolveOrOwnRequest.HTTP_REQUEST_FAILED -> LLM_EMBED_WIRE_FAILED
+      ResolveOrOwnRequest.HTTP_REQUEST_REFUSED -> LLM_EMBED_WIRE_REFUSED
+    }
+  }
+  trait ResolveLlmOaShared = ResolveAtom.traits.ResolveLlmOaShared {
+    listens {
+      CvResolve.LLM_EMBED_OAS -> LLM_EMBED_OAS
+      ResolveOaSharedWait.WAITED_OAS -> LLM_EMBED_WAITED
+      ResolveOaSharedRequest.HTTP_RESULT -> LLM_EMBED_WIRE_RESULT
+      ResolveOaSharedRequest.HTTP_REQUEST_FAILED -> LLM_EMBED_WIRE_FAILED
+      ResolveOaSharedRequest.HTTP_REQUEST_REFUSED -> LLM_EMBED_WIRE_REFUSED
+    }
+  }
+  trait ResolveLlmOaOwn = ResolveAtom.traits.ResolveLlmOaOwn {
+    listens {
+      CvResolve.LLM_EMBED_OAO -> LLM_EMBED_OAO
+      ResolveOaOwnWait.WAITED_OAO -> LLM_EMBED_WAITED
+      ResolveOaOwnRequest.HTTP_RESULT -> LLM_EMBED_WIRE_RESULT
+      ResolveOaOwnRequest.HTTP_REQUEST_FAILED -> LLM_EMBED_WIRE_FAILED
+      ResolveOaOwnRequest.HTTP_REQUEST_REFUSED -> LLM_EMBED_WIRE_REFUSED
+    }
+  }
+  trait ResolveLlmLm = ResolveAtom.traits.ResolveLlmLm {
+    listens {
+      CvResolve.LLM_EMBED_LM -> LLM_EMBED_LM
+      ResolveLmWait.WAITED_LM -> LLM_EMBED_WAITED
+      ResolveLmRequest.HTTP_RESULT -> LLM_EMBED_WIRE_RESULT
+      ResolveLmRequest.HTTP_REQUEST_FAILED -> LLM_EMBED_WIRE_FAILED
+      ResolveLmRequest.HTTP_REQUEST_REFUSED -> LLM_EMBED_WIRE_REFUSED
+    }
+  }
+  trait ResolveOrSharedWait = ResolveAtom.traits.ResolveOrSharedWait {}
+  trait ResolveOrSharedRequest = ResolveAtom.traits.ResolveOrSharedRequest {}
+  trait ResolveOrSharedHttp = ResolveAtom.traits.ResolveOrSharedHttp {}
+  trait ResolveOrOwnWait = ResolveAtom.traits.ResolveOrOwnWait {}
+  trait ResolveOrOwnRequest = ResolveAtom.traits.ResolveOrOwnRequest {}
+  trait ResolveOrOwnHttp = ResolveAtom.traits.ResolveOrOwnHttp {}
+  trait ResolveOaSharedWait = ResolveAtom.traits.ResolveOaSharedWait {}
+  trait ResolveOaSharedRequest = ResolveAtom.traits.ResolveOaSharedRequest {}
+  trait ResolveOaSharedHttp = ResolveAtom.traits.ResolveOaSharedHttp {}
+  trait ResolveOaOwnWait = ResolveAtom.traits.ResolveOaOwnWait {}
+  trait ResolveOaOwnRequest = ResolveAtom.traits.ResolveOaOwnRequest {}
+  trait ResolveOaOwnHttp = ResolveAtom.traits.ResolveOaOwnHttp {}
+  trait ResolveLmWait = ResolveAtom.traits.ResolveLmWait {}
+  trait ResolveLmRequest = ResolveAtom.traits.ResolveLmRequest {}
+  trait ResolveLmHttp = ResolveAtom.traits.ResolveLmHttp {}
 
   trait CatalogVectors -> CatalogVectorsRun [optimistic] {
     initial: idle
@@ -206,6 +384,8 @@ orbital CatalogVectorsOrbital {
         code : string!
         detail : string!
       }
+      CvResolve.VECTORS_ANSWERED -> VECTORS_ANSWERED
+      CvResolve.VECTORS_REFUSED -> VECTORS_REFUSED
       VECTORS_ANSWERED {
         model : string!
         vectors : [KeyedVector]!
@@ -217,5 +397,5 @@ orbital CatalogVectorsOrbital {
     }
   }
 
-  page boot as CatalogVectorsPage -> CatalogVectors, CvTexts, CvSources
+  page boot as CatalogVectorsPage -> CatalogVectors, CvTexts, CvSources, CvResolve, CvStore, CvWrite, CvQuantize, CvF32, CvSig6, CvBigCmp, CvDelay, ResolveLlmOrShared, ResolveLlmOrOwn, ResolveLlmOaShared, ResolveLlmOaOwn, ResolveLlmLm, ResolveOrSharedWait, ResolveOrSharedRequest, ResolveOrSharedHttp, ResolveOrOwnWait, ResolveOrOwnRequest, ResolveOrOwnHttp, ResolveOaSharedWait, ResolveOaSharedRequest, ResolveOaSharedHttp, ResolveOaOwnWait, ResolveOaOwnRequest, ResolveOaOwnHttp, ResolveLmWait, ResolveLmRequest, ResolveLmHttp
 }

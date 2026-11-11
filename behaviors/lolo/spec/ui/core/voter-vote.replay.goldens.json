@@ -1,0 +1,524 @@
+{
+ "atom": "../ui/core/atoms/std-voter-vote.lolo",
+ "trait": "VoterVote",
+ "note": "One row per voter and target, id = voter id, colon, target id. A vote updates the row; an update that answers not-found creates it; any other failure ends in error and writes nothing. The first case runs the whole chain against the replay kernel's store; the rest feed one store answer per step, and expect.state is that step's first transition.",
+ "cases": [
+  {
+   "id": "first-vote-creates-the-row-and-later-votes-update-it",
+   "note": "Played against the replay kernel's own store: the first update answers not-found and the create follows; the next votes update the stored row and never create.",
+   "entity": {
+    "id": "v",
+    "targetId": "t1",
+    "voterId": "",
+    "direction": "none"
+   },
+   "steps": [
+    {
+     "trait": "VoterVote",
+     "from": "idle",
+     "event": "VOTE",
+     "payload": {
+      "next": "up"
+     },
+     "expect": {
+      "fired": true,
+      "state": "voting",
+      "effects": [
+       {
+        "type": "persist",
+        "arg0": "update",
+        "arg1": "VoterVoteRow"
+       }
+      ],
+      "exactEmits": [
+       {
+        "event": "VoterVoteRowMissed",
+        "payload": {
+         "code": "not-found"
+        }
+       },
+       {
+        "event": "VoteCasted"
+       }
+      ],
+      "entity": {
+       "direction": "up"
+      }
+     }
+    },
+    {
+     "trait": "VoterVote",
+     "from": "idle",
+     "event": "VOTE",
+     "payload": {
+      "next": "down"
+     },
+     "expect": {
+      "fired": true,
+      "state": "voting",
+      "effects": [
+       {
+        "type": "persist",
+        "arg0": "update",
+        "arg1": "VoterVoteRow"
+       }
+      ],
+      "emitCounts": {
+       "VoterVoteRowMissed": 0,
+       "VoteCastFailed": 0,
+       "VoteCasted": 1
+      },
+      "entity": {
+       "direction": "down"
+      }
+     }
+    },
+    {
+     "trait": "VoterVote",
+     "from": "idle",
+     "event": "VOTE",
+     "payload": {
+      "next": "down"
+     },
+     "expect": {
+      "fired": true,
+      "state": "voting",
+      "effects": [
+       {
+        "type": "persist",
+        "arg0": "update",
+        "arg1": "VoterVoteRow"
+       }
+      ],
+      "emitCounts": {
+       "VoterVoteRowMissed": 0,
+       "VoteCastFailed": 0,
+       "VoteCasted": 1
+      },
+      "entity": {
+       "direction": "none"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-missed-update-with-not-found-creates-the-row",
+   "steps": [
+    {
+     "trait": "VoterVote",
+     "from": "voting",
+     "entity": {
+      "id": "v",
+      "targetId": "t1",
+      "voterId": "",
+      "direction": "up"
+     },
+     "event": "VoterVoteRowMissed",
+     "payload": {
+      "error": "no row",
+      "code": "not-found"
+     },
+     "expect": {
+      "fired": true,
+      "state": "voting",
+      "effects": [
+       {
+        "type": "persist",
+        "arg0": "create",
+        "arg1": "VoterVoteRow"
+       }
+      ],
+      "entity": {
+       "direction": "up"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-vote-on-a-different-direction-writes-an-update",
+   "steps": [
+    {
+     "trait": "VoterVote",
+     "from": "idle",
+     "entity": {
+      "id": "v",
+      "targetId": "t1",
+      "voterId": "",
+      "direction": "up"
+     },
+     "event": "VOTE",
+     "payload": {
+      "next": "down"
+     },
+     "expect": {
+      "fired": true,
+      "state": "voting",
+      "effects": [
+       {
+        "type": "persist",
+        "arg0": "update",
+        "arg1": "VoterVoteRow"
+       }
+      ],
+      "entity": {
+       "direction": "down"
+      }
+     }
+    },
+    {
+     "trait": "VoterVote",
+     "from": "voting",
+     "entity": {
+      "id": "v",
+      "targetId": "t1",
+      "voterId": "",
+      "direction": "down"
+     },
+     "event": "VoteCasted",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "effects": [
+       {
+        "type": "render-ui"
+       }
+      ],
+      "entity": {
+       "direction": "down"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "clicking-the-active-direction-clears-it",
+   "steps": [
+    {
+     "trait": "VoterVote",
+     "from": "idle",
+     "entity": {
+      "id": "v",
+      "targetId": "t1",
+      "voterId": "",
+      "direction": "up"
+     },
+     "event": "VOTE",
+     "payload": {
+      "next": "up"
+     },
+     "expect": {
+      "fired": true,
+      "state": "voting",
+      "effects": [
+       {
+        "type": "persist",
+        "arg0": "update",
+        "arg1": "VoterVoteRow"
+       }
+      ],
+      "entity": {
+       "direction": "none"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-cleared-press-with-no-direction-clears-it",
+   "steps": [
+    {
+     "trait": "VoterVote",
+     "from": "idle",
+     "entity": {
+      "id": "v",
+      "targetId": "t1",
+      "voterId": "",
+      "direction": "down"
+     },
+     "event": "VOTE",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "state": "voting",
+      "effects": [
+       {
+        "type": "persist",
+        "arg0": "update",
+        "arg1": "VoterVoteRow"
+       }
+      ],
+      "entity": {
+       "direction": "none"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "update-failure-other-than-not-found-shows-the-error-and-creates-nothing",
+   "steps": [
+    {
+     "trait": "VoterVote",
+     "from": "voting",
+     "entity": {
+      "id": "v",
+      "targetId": "t1",
+      "voterId": "",
+      "direction": "up"
+     },
+     "event": "VoterVoteRowMissed",
+     "payload": {
+      "error": "refused",
+      "code": "denied"
+     },
+     "expect": {
+      "fired": true,
+      "state": "error",
+      "effects": [
+       {
+        "type": "render-ui"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "create-failure-shows-the-error",
+   "steps": [
+    {
+     "trait": "VoterVote",
+     "from": "voting",
+     "entity": {
+      "id": "v",
+      "targetId": "t1",
+      "voterId": "",
+      "direction": "up"
+     },
+     "event": "VoteCastFailed",
+     "payload": {
+      "error": "taken",
+      "code": "duplicate-id"
+     },
+     "expect": {
+      "fired": true,
+      "state": "error",
+      "effects": [
+       {
+        "type": "render-ui"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "retarget-reads-this-voters-row-and-a-miss-shows-the-neutral-stack",
+   "steps": [
+    {
+     "trait": "VoterVote",
+     "from": "idle",
+     "entity": {
+      "id": "v",
+      "targetId": "t1",
+      "voterId": "",
+      "direction": "up"
+     },
+     "event": "SET_VOTE_TARGET",
+     "payload": {
+      "targetId": "t2"
+     },
+     "expect": {
+      "fired": true,
+      "state": "loading",
+      "effects": [
+       {
+        "type": "fetch",
+        "arg0": "VoterVoteRow"
+       }
+      ],
+      "entity": {
+       "targetId": "t2"
+      }
+     }
+    },
+    {
+     "trait": "VoterVote",
+     "from": "loading",
+     "entity": {
+      "id": "v",
+      "targetId": "t2",
+      "voterId": "",
+      "direction": "up"
+     },
+     "event": "VoterVoteLoadFailed",
+     "payload": {
+      "error": "no row",
+      "code": "not-found"
+     },
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "effects": [
+       {
+        "type": "render-ui"
+       }
+      ],
+      "entity": {
+       "direction": "none",
+       "targetId": "t2"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "retarget-to-a-stored-row-shows-its-direction",
+   "steps": [
+    {
+     "trait": "VoterVote",
+     "from": "loading",
+     "entity": {
+      "id": "v",
+      "targetId": "t2",
+      "voterId": "",
+      "direction": "none"
+     },
+     "event": "VoterVoteLoaded",
+     "payload": {
+      "data": {
+       "id": "u:t2",
+       "targetId": "t2",
+       "voterId": "u",
+       "direction": "down"
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "effects": [
+       {
+        "type": "render-ui"
+       }
+      ],
+      "entity": {
+       "direction": "down"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "read-failure-other-than-not-found-shows-the-error",
+   "steps": [
+    {
+     "trait": "VoterVote",
+     "from": "loading",
+     "entity": {
+      "id": "v",
+      "targetId": "t2",
+      "voterId": "",
+      "direction": "up"
+     },
+     "event": "VoterVoteLoadFailed",
+     "payload": {
+      "error": "store down"
+     },
+     "expect": {
+      "fired": true,
+      "state": "error",
+      "effects": [
+       {
+        "type": "render-ui"
+       }
+      ],
+      "entity": {
+       "direction": "up"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-vote-with-no-target-writes-nothing",
+   "steps": [
+    {
+     "trait": "VoterVote",
+     "from": "idle",
+     "entity": {
+      "id": "v",
+      "targetId": "",
+      "voterId": "",
+      "direction": "none"
+     },
+     "event": "VOTE",
+     "payload": {
+      "next": "up"
+     },
+     "expect": {
+      "fired": false
+     }
+    }
+   ]
+  },
+  {
+   "id": "init-with-no-target-shows-the-stack-without-a-read",
+   "steps": [
+    {
+     "trait": "VoterVote",
+     "from": "loading",
+     "entity": {
+      "id": "v",
+      "targetId": "",
+      "voterId": "",
+      "direction": "none"
+     },
+     "event": "INIT",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "effects": [
+       {
+        "type": "render-ui"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "init-with-a-target-reads-this-voters-row",
+   "steps": [
+    {
+     "trait": "VoterVote",
+     "from": "idle",
+     "entity": {
+      "id": "v",
+      "targetId": "t1",
+      "voterId": "",
+      "direction": "none"
+     },
+     "event": "INIT",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "state": "loading",
+      "effects": [
+       {
+        "type": "fetch",
+        "arg0": "VoterVoteRow"
+       },
+       {
+        "type": "render-ui"
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

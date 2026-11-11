@@ -82,7 +82,7 @@ orbital IdentityBindingOrbital {
 
       SIGN_IN_FAILED -> idle when (and (= (default @payload.kind "") "no-identity") @config.createIdentity (not @entity.created))
         (set @entity.created true)
-        (persist create @config.identityEntity { id: @entity.subject, email: @entity.email, name: @entity.name } { emit: { success: IDENTITY_CREATED, failure: IDENTITY_CREATE_FAILED } })
+        (persist create @config.identityEntity (if (= @config.createRole "") { id: @entity.subject, email: @entity.email, name: @entity.name } { id: @entity.subject, email: @entity.email, name: @entity.name, role: @config.createRole }) { emit: { success: IDENTITY_CREATED, failure: IDENTITY_CREATE_FAILED } })
       SIGN_IN_FAILED -> idle when (not (and (= (default @payload.kind "") "no-identity") @config.createIdentity (not @entity.created)))
         (emit CREDENTIAL_REFUSED { requestId: @entity.requestId, reason: (str/concat "identity-" (default @payload.kind "")) })
         (set @entity.awaiting false)
@@ -252,8 +252,13 @@ orbital IdentityBindingOrbital {
         @tier "infra"
       createIdentity : boolean = false
         @label "Create the first identity row"
-        @description "A verified subject with no row in identityEntity gets one (id the subject, email and name from the claims, every other field its declared default), then the request signs in again. Off, such a request is refused identity-no-identity."
+        @description "A verified subject with no row in identityEntity gets one (id the subject, email and name from the claims, and the role createRole names when it names one; no other field is written), then the request signs in again. Off, such a request is refused identity-no-identity."
         @synonyms "auto-register, first sign-in row"
+        @tier "policy"
+      createRole : string = ""
+        @label "Role of a first identity row"
+        @description "The role written on the row createIdentity makes. Empty writes no role, so the new person holds none until someone gives them one; a role named here is held by everyone who signs in for the first time."
+        @synonyms "default role, first role"
         @tier "policy"
     }
   }

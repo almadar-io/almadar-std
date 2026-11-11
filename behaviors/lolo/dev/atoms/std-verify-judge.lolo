@@ -1,6 +1,6 @@
 app std-verify-judge [
   version: "1.0.0",
-  description: "std-verify-judge — the kernel's verdict logic (orbital-core verify/observers.rs) as data. JUDGE_REQUEST carries one PlannedStep (std-verify-plan), the PlayedResult program/step answered for it, and the resolved program; JUDGE_ANSWERED returns the verdicts as the Rust Verdict {name, passed, detail} plus the classes not yet ported with their Rust reason. effects_fired mirrors the Rust rule: every effect of the played arm that failed is an offender, detail 'N offender(s): trait:event type(target) failed: error', and a step the planner left unplanned is not evidence. The routed-http exemption: a failed effect carrying a routed event (the declared emit.failure the program routed it to) is handled, not an offender. proposition_held reads the @ensures the kernel judged on the played arm (PlayedResult.ensures, each held, broken with counterexample bindings, or inconclusive with its reason): broken ones are offenders (detail trait:from--event-->to @ensures <json>), inconclusive is never a failure; the answer's proposition is broken, else the first inconclusive, else held. entity_data_bound (optional rendered nodes) is the render-probe binding verdict, with read-gated empty lists in accessScopedEmpty. renderer_supported fails a dynamic, unsupported or stubbed node using the same render-probe flags. Ported-not-yet, listed in unported and never passed: proposition_held when the played result carries no ensures, and rendered checks when no nodes are supplied."
+  description: "std-verify-judge — the kernel's verdict logic (orbital-core verify/observers.rs) as data. JUDGE_REQUEST carries the items to judge, each a PlannedStep (std-verify-plan), the PlayedResult program/step answered for it and its rendered nodes, plus the resolved program, and is judged in one event (array/map), so a walk of any size is one hop; JUDGE_ANSWERED returns one result per item in request order: step_completed (failed with the played result's failure, such as a dispatch the kernel refused), then the verdicts as the Rust Verdict {name, passed, detail} plus the classes not yet ported with their Rust reason. effects_fired mirrors the Rust rule: every effect of the played arm that failed is an offender, detail 'N offender(s): trait:event type(target) failed: error', and a step the planner left unplanned is not evidence. The routed-http exemption: a failed effect carrying a routed event (the declared emit.failure the program routed it to) is handled, not an offender. proposition_held reads the @ensures the kernel judged on the played arm (PlayedResult.ensures, each held, broken with counterexample bindings, or inconclusive with its reason): broken ones are offenders (detail trait:from--event-->to @ensures <json>), inconclusive is never a failure; the answer's proposition is broken, else the first inconclusive, else held. entity_data_bound (optional rendered nodes) is the render-probe binding verdict, with read-gated empty lists in accessScopedEmpty. renderer_supported fails a dynamic, unsupported or stubbed node using the same render-probe flags. Ported-not-yet, listed in unported and never passed: proposition_held when the played result carries no ensures, and rendered checks when no nodes are supplied."
 ]
 ;; @capabilities "verify judge, verdicts, effects fired, proposition held, verifier verdict"
 uses Spec from "almadar-std/verify-judge"
@@ -12,19 +12,18 @@ type PlayedEnsures = { proposition : SExpr!, verdict : string!, reason : string,
 type PropositionVerdict = { verdict : string!, proposition : string, reason : string }
 type NodeBinding = { kind : string!, entity : string, rows : number, readGated : boolean }
 type RenderedNode = { pattern : string!, dynamic : boolean!, supported : boolean!, stub : boolean!, binding : NodeBinding! }
-type PlayedResult = { trait : string!, event : string!, transitionFired : boolean!, guard : string!, firedArm : number, effects : [PlayedEffect]!, emitted : [SExpr]!, guards : [SExpr]!, ensures : [PlayedEnsures], state : Map string JsonValue }
+type PlayedResult = { trait : string!, event : string!, failure : string?, transitionFired : boolean!, guard : string!, firedArm : number, effects : [PlayedEffect]!, emitted : [SExpr]!, guards : [SExpr]!, ensures : [PlayedEnsures], state : Map string JsonValue }
 type Verdict = { name : string!, passed : boolean!, detail : string! }
 type Unported = { name : string!, reason : string! }
 type VerdictList = [Verdict]
 type UnportedList = [Unported]
+type JudgeItem = { step : PlannedStep!, played : PlayedResult!, rendered : [RenderedNode]? }
+type JudgeOutcome = { verdicts : [Verdict]!, unported : [Unported]!, proposition : PropositionVerdict, accessScopedEmpty : [string]! }
 
 orbital VerifyJudgeOrbital {
   entity JudgeRun [runtime] {
     id : string!
-    verdicts : [Verdict]! = []
-    unported : [Unported]! = []
-    proposition : PropositionVerdict
-    accessScopedEmpty : [string]! = []
+    results : [JudgeOutcome]! = []
   }
 
   trait Judge -> JudgeRun [client] {
@@ -33,11 +32,12 @@ orbital VerifyJudgeOrbital {
     state ready {
       INIT -> ready
       JUDGE_REQUEST -> ready
-        (let ((evidence (not (object/has @payload.step "unplanned")))
-              (failed (array/filter (object/get @payload.played "effects" []) (fn e (and (= (object/get @e "status") "failed") (not (object/has @e "routed")))))))
-          (let ((offenders (array/map (array/filter @failed (fn e @evidence)) (fn e (str/concat (object/get @payload.played "trait") ":" (object/get @payload.played "event") " " (object/get @e "type") "(" (let ((a (let ((nxi (if (= (object/get @e "type") "persist") 1 0))) (if (>= @nxi 0) (array/nth (object/get @e "args" []) @nxi) null)))) (if (validate/string @a) @a (json/stringify @a))) ") failed: " (object/get @e "error" "?")))))
-                (ens (object/get @payload.played "ensures" []))
-                (nodes (default @payload.rendered [])))
+        (set @entity.results (array/map @payload.items (fn it
+        (let ((evidence (not (object/has @it.step "unplanned")))
+              (failed (array/filter (object/get @it.played "effects" []) (fn e (and (= (object/get @e "status") "failed") (not (object/has @e "routed")))))))
+          (let ((offenders (array/map (array/filter @failed (fn e @evidence)) (fn e (str/concat (object/get @it.played "trait") ":" (object/get @it.played "event") " " (object/get @e "type") "(" (let ((a (let ((nxi (if (= (object/get @e "type") "persist") 1 0))) (if (>= @nxi 0) (array/nth (object/get @e "args" []) @nxi) null)))) (if (validate/string @a) @a (json/stringify @a))) ") failed: " (object/get @e "error" "?")))))
+                (ens (object/get @it.played "ensures" []))
+                (nodes (default @it.rendered [])))
             (let ((brokenEns (array/filter @ens (fn x (= (object/get @x "verdict") "broken"))))
                   (inconclusiveEns (array/find @ens (fn x (= (object/get @x "verdict") "inconclusive"))))
                   (unbound (array/filter @nodes (fn n (or (and (or (= (object/get (object/get @n "binding") "kind") "inline") (= (object/get (object/get @n "binding") "kind") "named")) (= (object/get (object/get @n "binding") "rows" 0) 0) (not (object/get (object/get @n "binding") "readGated" false))) (= (object/get (object/get @n "binding") "kind") "payload-unresolved")))))
@@ -45,36 +45,33 @@ orbital VerifyJudgeOrbital {
               (let ((pv (if (> (array/len @brokenEns) 0) { verdict: "broken", proposition: (json/stringify (object/get (array/first @brokenEns) "proposition")) }
                         (if (!= @inconclusiveEns null) { verdict: "inconclusive", reason: (object/get @inconclusiveEns "reason" "") }
                           { verdict: "held" })))
-                    (brokenText (array/map @brokenEns (fn x (str/concat (object/get @payload.step "trait") ":" (object/get @payload.step "from") "--" (object/get @payload.step "event") "-->" (object/get @payload.step "to") " @ensures " (json/stringify (object/get @x "proposition"))))))
+                    (brokenText (array/map @brokenEns (fn x (str/concat (object/get @it.step "trait") ":" (object/get @it.step "from") "--" (object/get @it.step "event") "-->" (object/get @it.step "to") " @ensures " (json/stringify (object/get @x "proposition"))))))
                     (unboundText (array/map @unbound (fn n (str/concat (object/get @n "pattern") (if (= (object/get (object/get @n "binding") "kind") "payload-unresolved") (str/concat "[unresolved=" (object/get (object/get @n "binding") "entity" "") "]") (if (= (object/get (object/get @n "binding") "kind") "inline") "[entity=<empty-array>]" (str/concat "[entity=" (object/get (object/get @n "binding") "entity" "") "]")))))))
                     (unsupportedText (array/map @unsupported (fn n (str/concat (object/get @n "pattern") (if (object/get @n "dynamic") "[dynamic]" (if (object/get @n "stub") "[stub]" "[unsupported]"))))))
                     (scoped (array/map (array/filter @nodes (fn n (and (or (= (object/get (object/get @n "binding") "kind") "inline") (= (object/get (object/get @n "binding") "kind") "named")) (= (object/get (object/get @n "binding") "rows" 0) 0) (object/get (object/get @n "binding") "readGated" false)))) (fn n (str/concat (object/get @n "pattern") "[" (object/get (object/get @n "binding") "entity" "") ": @read]")))))
-                (do (set @entity.verdicts (array/concat
+                { verdicts: (array/concat [{ name: "step_completed", passed: (= (object/get @it.played "failure" null) null), detail: (default (object/get @it.played "failure" null) "") }] (array/concat
                       [{ name: "effects_fired", passed: (= (array/len @offenders) 0), detail: (if (= (array/len @offenders) 0) "" (str/concat (array/len @offenders) " offender(s): " (str/join @offenders "; "))) }]
                       (array/concat
-                        (if (object/has @payload.played "ensures") [{ name: "proposition_held", passed: (= (array/len @brokenEns) 0), detail: (if (= (array/len @brokenEns) 0) "" (str/concat (array/len @brokenEns) " offender(s): " (str/join @brokenText "; "))) }] (json/parse "[]" VerdictList))
+                        (if (object/has @it.played "ensures") [{ name: "proposition_held", passed: (= (array/len @brokenEns) 0), detail: (if (= (array/len @brokenEns) 0) "" (str/concat (array/len @brokenEns) " offender(s): " (str/join @brokenText "; "))) }] (json/parse "[]" VerdictList))
                         (array/concat
-                          (if (!= @payload.rendered null) [{ name: "entity_data_bound", passed: (= (array/len @unboundText) 0), detail: (if (= (array/len @unboundText) 0) "" (str/concat (array/len @unboundText) " offender(s): " (str/join @unboundText "; "))) }] (json/parse "[]" VerdictList))
-                          (if (!= @payload.rendered null) [{ name: "renderer_supported", passed: (= (array/len @unsupportedText) 0), detail: (if (= (array/len @unsupportedText) 0) "" (str/concat (array/len @unsupportedText) " offender(s): " (str/join @unsupportedText "; "))) }] (json/parse "[]" VerdictList))))))
-                    (set @entity.unported (array/concat
+                          (if (!= @it.rendered null) [{ name: "entity_data_bound", passed: (= (array/len @unboundText) 0), detail: (if (= (array/len @unboundText) 0) "" (str/concat (array/len @unboundText) " offender(s): " (str/join @unboundText "; "))) }] (json/parse "[]" VerdictList))
+                          (if (!= @it.rendered null) [{ name: "renderer_supported", passed: (= (array/len @unsupportedText) 0), detail: (if (= (array/len @unsupportedText) 0) "" (str/concat (array/len @unsupportedText) " offender(s): " (str/join @unsupportedText "; "))) }] (json/parse "[]" VerdictList)))))), unported: (array/concat
                       []
                       (array/concat
-                        (if (object/has @payload.played "ensures") [] [{ name: "proposition_held", reason: "the played result carries no ensures: the installed orb predates the kernel-judged @ensures" }])
-                        (if (!= @payload.rendered null) [] [{ name: "entity_data_bound", reason: "no rendered input: the Layer 2 render_probe nodes were not supplied" }, { name: "renderer_supported", reason: "no rendered input: renderer pattern support was not probed" }]))))
-                    (set @entity.accessScopedEmpty @scoped)
-                    (set @entity.proposition @pv)
-                    (emit JUDGE_ANSWERED { verdicts: @entity.verdicts, unported: @entity.unported, proposition: @pv, accessScopedEmpty: @entity.accessScopedEmpty }))))))
+                        (if (object/has @it.played "ensures") [] [{ name: "proposition_held", reason: "the played result carries no ensures: the installed orb predates the kernel-judged @ensures" }])
+                        (if (!= @it.rendered null) [] [{ name: "entity_data_bound", reason: "no rendered input: the Layer 2 render_probe nodes were not supplied" }, { name: "renderer_supported", reason: "no rendered input: renderer pattern support was not probed" }]))), proposition: @pv, accessScopedEmpty: @scoped })))))))
+        (emit JUDGE_ANSWERED { results: @entity.results })
     }
 
     emits {
-      JUDGE_ANSWERED -> external { verdicts : [Verdict]!, unported : [Unported]!, proposition : PropositionVerdict, accessScopedEmpty : [string]! }
-        @description "The verdicts for one played step, and the classes not yet ported."
+      JUDGE_ANSWERED -> external { results : [JudgeOutcome]! }
+        @description "The verdicts of each played step, in request order, and the classes not yet ported."
         @tier "domain"
     }
 
     listens {
-      JUDGE_REQUEST -> input { step : PlannedStep!, played : PlayedResult!, program : SExpr?, rendered : [RenderedNode]? }
-        @description "Judge one played step against its planned step."
+      JUDGE_REQUEST -> input { items : [JudgeItem]!, program : SExpr? }
+        @description "Judge each played step against its planned step, in one event."
         @synonyms "verify judge, step verdict, effects fired, proposition held"
     }
   }

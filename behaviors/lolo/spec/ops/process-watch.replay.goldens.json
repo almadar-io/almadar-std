@@ -1,0 +1,2828 @@
+{
+ "atom": "ops/atoms/std-process-watch.lolo",
+ "trait": "ProcessWatch",
+ "cases": [
+  {
+   "id": "a-reading-keeps-only-the-processes-the-host-measures",
+   "config": {
+    "patterns": []
+   },
+   "steps": [
+    {
+     "trait": "ProcessWatch",
+     "event": "PROCESSES_LISTED",
+     "from": "ready",
+     "payload": {
+      "processes": [
+       {
+        "pid": 10,
+        "ppid": 1,
+        "name": "orb",
+        "command": "/usr/bin/orb",
+        "args": [
+         "orb",
+         "serve"
+        ],
+        "user": "501",
+        "rssBytes": 2147483648,
+        "cpuSeconds": 4,
+        "startedAt": 1000,
+        "own": true
+       },
+       {
+        "pid": 11,
+        "ppid": 1,
+        "name": "launchd",
+        "command": "/sbin/launchd",
+        "args": [],
+        "user": "0",
+        "rssBytes": null,
+        "cpuSeconds": null,
+        "startedAt": 5,
+        "own": false
+       }
+      ]
+     },
+     "entity": {
+      "id": "w",
+      "active": true,
+      "reading": true,
+      "dueAt": null,
+      "tracks": [],
+      "flagged": [],
+      "flags": [],
+      "expected": [],
+      "count": 0,
+      "pendingSignature": "",
+      "pendingVerdict": "expected",
+      "stopping": "",
+      "stopPid": 0,
+      "announcing": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "PROCESSES_JUDGE"
+       }
+      ],
+      "entity": {
+       "count": 2
+      }
+     }
+    }
+   ],
+   "now": 6000000
+  },
+  {
+   "id": "a-refused-table-answers-the-failure-and-the-watch-goes-on",
+   "config": {
+    "patterns": []
+   },
+   "steps": [
+    {
+     "trait": "ProcessWatch",
+     "event": "PROCESSES_REFUSED",
+     "from": "ready",
+     "payload": {
+      "error": "the sys grant processes is missing",
+      "kind": "denied"
+     },
+     "entity": {
+      "id": "w",
+      "active": true,
+      "reading": true,
+      "dueAt": null,
+      "tracks": [],
+      "flagged": [],
+      "flags": [],
+      "expected": [],
+      "count": 0,
+      "pendingSignature": "",
+      "pendingVerdict": "expected",
+      "stopping": "",
+      "stopPid": 0,
+      "announcing": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "PROCESS_WATCH_FAILED",
+        "payload": {
+         "code": "denied",
+         "error": "the sys grant processes is missing"
+        }
+       }
+      ],
+      "entity": {
+       "reading": false
+      }
+     }
+    }
+   ],
+   "now": 6000000
+  },
+  {
+   "id": "an-old-heavy-process-whose-parent-is-gone-is-flagged-orphaned",
+   "config": {
+    "patterns": [
+     {
+      "id": "orphan",
+      "kind": "orphaned",
+      "names": [],
+      "minAgeSeconds": 3600,
+      "minRssBytes": 1073741824,
+      "cpuPercent": 0,
+      "growthBytes": 0,
+      "readings": 0
+     }
+    ]
+   },
+   "steps": [
+    {
+     "trait": "ProcessWatch",
+     "event": "PROCESSES_JUDGE",
+     "from": "ready",
+     "payload": {},
+     "entity": {
+      "id": "w",
+      "active": true,
+      "reading": true,
+      "dueAt": null,
+      "tracks": [
+       {
+        "key": "10:1000",
+        "pid": 10,
+        "ppid": 1,
+        "name": "orb",
+        "command": "/usr/bin/orb",
+        "args": [
+         "orb",
+         "serve"
+        ],
+        "startedAt": 1000,
+        "readings": [
+         {
+          "at": 2000,
+          "rssBytes": 2147483648,
+          "cpuSeconds": 4
+         }
+        ],
+        "firstPpid": 77
+       }
+      ],
+      "flagged": [],
+      "flags": [],
+      "expected": [],
+      "count": 0,
+      "pendingSignature": "",
+      "pendingVerdict": "expected",
+      "stopping": "",
+      "stopPid": 0,
+      "announcing": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "PROCESSES_REPORT"
+       },
+       {
+        "event": "PROCESSES_SAMPLED"
+       },
+       {
+        "event": "FLAGS_CLEAR",
+        "payload": {
+         "ids": []
+        }
+       },
+       {
+        "event": "FLAGS_ANNOUNCE",
+        "payload": {
+         "flags": [
+          {
+           "key": "10:1000",
+           "pid": 10,
+           "name": "orb",
+           "command": "/usr/bin/orb",
+           "args": [
+            "orb",
+            "serve"
+           ],
+           "signature": "/usr/bin/orb orb serve",
+           "pattern": "orphan",
+           "kind": "orphaned",
+           "ageSeconds": 5000,
+           "rssBytes": 2147483648,
+           "cpuPercent": 0,
+           "growthBytes": 0
+          }
+         ]
+        }
+       },
+       {
+        "event": "FLAG_NEXT"
+       },
+       {
+        "event": "PROCESS_FLAGGED",
+        "payload": {
+         "flag": {
+          "key": "10:1000",
+          "pid": 10,
+          "name": "orb",
+          "command": "/usr/bin/orb",
+          "args": [
+           "orb",
+           "serve"
+          ],
+          "signature": "/usr/bin/orb orb serve",
+          "pattern": "orphan",
+          "kind": "orphaned",
+          "ageSeconds": 5000,
+          "rssBytes": 2147483648,
+          "cpuPercent": 0,
+          "growthBytes": 0
+         }
+        }
+       },
+       {
+        "event": "FLAG_KEPT"
+       },
+       {
+        "event": "FLAG_NEXT"
+       }
+      ],
+      "entity": {
+       "flags": [
+        {
+         "key": "10:1000",
+         "pid": 10,
+         "name": "orb",
+         "command": "/usr/bin/orb",
+         "args": [
+          "orb",
+          "serve"
+         ],
+         "signature": "/usr/bin/orb orb serve",
+         "pattern": "orphan",
+         "kind": "orphaned",
+         "ageSeconds": 5000,
+         "rssBytes": 2147483648,
+         "cpuPercent": 0,
+         "growthBytes": 0
+        }
+       ],
+       "flagged": [
+        "10:1000/orphan"
+       ],
+       "reading": false,
+       "announcing": []
+      }
+     }
+    }
+   ],
+   "now": 6000000,
+   "defaults": [
+    "ProcessFlags"
+   ]
+  },
+  {
+   "id": "control-a-process-with-a-living-parent-is-not-orphaned",
+   "config": {
+    "patterns": [
+     {
+      "id": "orphan",
+      "kind": "orphaned",
+      "names": [],
+      "minAgeSeconds": 3600,
+      "minRssBytes": 1073741824,
+      "cpuPercent": 0,
+      "growthBytes": 0,
+      "readings": 0
+     }
+    ]
+   },
+   "steps": [
+    {
+     "trait": "ProcessWatch",
+     "event": "PROCESSES_JUDGE",
+     "from": "ready",
+     "payload": {},
+     "entity": {
+      "id": "w",
+      "active": true,
+      "reading": true,
+      "dueAt": null,
+      "tracks": [
+       {
+        "key": "10:1000",
+        "pid": 10,
+        "ppid": 77,
+        "name": "orb",
+        "command": "/usr/bin/orb",
+        "args": [
+         "orb",
+         "serve"
+        ],
+        "startedAt": 1000,
+        "readings": [
+         {
+          "at": 2000,
+          "rssBytes": 2147483648,
+          "cpuSeconds": 4
+         }
+        ],
+        "firstPpid": 77
+       }
+      ],
+      "flagged": [],
+      "flags": [],
+      "expected": [],
+      "count": 0,
+      "pendingSignature": "",
+      "pendingVerdict": "expected",
+      "stopping": "",
+      "stopPid": 0,
+      "announcing": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "PROCESSES_REPORT"
+       },
+       {
+        "event": "PROCESSES_SAMPLED"
+       },
+       {
+        "event": "FLAGS_CLEAR",
+        "payload": {
+         "ids": []
+        }
+       },
+       {
+        "event": "FLAGS_ANNOUNCE",
+        "payload": {
+         "flags": []
+        }
+       },
+       {
+        "event": "FLAG_NEXT"
+       }
+      ],
+      "neverEmits": [
+       "PROCESS_FLAGGED"
+      ],
+      "entity": {
+       "flags": [],
+       "flagged": [],
+       "reading": false
+      }
+     }
+    }
+   ],
+   "now": 6000000,
+   "defaults": [
+    "ProcessFlags"
+   ]
+  },
+  {
+   "id": "control-a-light-orphan-is-below-the-memory-floor",
+   "config": {
+    "patterns": [
+     {
+      "id": "orphan",
+      "kind": "orphaned",
+      "names": [],
+      "minAgeSeconds": 3600,
+      "minRssBytes": 1073741824,
+      "cpuPercent": 0,
+      "growthBytes": 0,
+      "readings": 0
+     }
+    ]
+   },
+   "steps": [
+    {
+     "trait": "ProcessWatch",
+     "event": "PROCESSES_JUDGE",
+     "from": "ready",
+     "payload": {},
+     "entity": {
+      "id": "w",
+      "active": true,
+      "reading": true,
+      "dueAt": null,
+      "tracks": [
+       {
+        "key": "10:1000",
+        "pid": 10,
+        "ppid": 1,
+        "name": "orb",
+        "command": "/usr/bin/orb",
+        "args": [
+         "orb",
+         "serve"
+        ],
+        "startedAt": 1000,
+        "readings": [
+         {
+          "at": 2000,
+          "rssBytes": 536870912,
+          "cpuSeconds": 4
+         }
+        ],
+        "firstPpid": 77
+       }
+      ],
+      "flagged": [],
+      "flags": [],
+      "expected": [],
+      "count": 0,
+      "pendingSignature": "",
+      "pendingVerdict": "expected",
+      "stopping": "",
+      "stopPid": 0,
+      "announcing": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "PROCESSES_REPORT"
+       },
+       {
+        "event": "PROCESSES_SAMPLED"
+       },
+       {
+        "event": "FLAGS_CLEAR",
+        "payload": {
+         "ids": []
+        }
+       },
+       {
+        "event": "FLAGS_ANNOUNCE",
+        "payload": {
+         "flags": []
+        }
+       },
+       {
+        "event": "FLAG_NEXT"
+       }
+      ],
+      "neverEmits": [
+       "PROCESS_FLAGGED"
+      ],
+      "entity": {
+       "flags": [],
+       "flagged": [],
+       "reading": false
+      }
+     }
+    }
+   ],
+   "now": 6000000,
+   "defaults": [
+    "ProcessFlags"
+   ]
+  },
+  {
+   "id": "an-expected-command-is-never-flagged",
+   "config": {
+    "patterns": [
+     {
+      "id": "orphan",
+      "kind": "orphaned",
+      "names": [],
+      "minAgeSeconds": 3600,
+      "minRssBytes": 1073741824,
+      "cpuPercent": 0,
+      "growthBytes": 0,
+      "readings": 0
+     }
+    ]
+   },
+   "steps": [
+    {
+     "trait": "ProcessWatch",
+     "event": "PROCESSES_JUDGE",
+     "from": "ready",
+     "payload": {},
+     "entity": {
+      "id": "w",
+      "active": true,
+      "reading": true,
+      "dueAt": null,
+      "tracks": [
+       {
+        "key": "10:1000",
+        "pid": 10,
+        "ppid": 1,
+        "name": "orb",
+        "command": "/usr/bin/orb",
+        "args": [
+         "orb",
+         "serve"
+        ],
+        "startedAt": 1000,
+        "readings": [
+         {
+          "at": 2000,
+          "rssBytes": 2147483648,
+          "cpuSeconds": 4
+         }
+        ],
+        "firstPpid": 77
+       }
+      ],
+      "flagged": [],
+      "flags": [],
+      "expected": [
+       "/usr/bin/orb orb serve"
+      ],
+      "count": 0,
+      "pendingSignature": "",
+      "pendingVerdict": "expected",
+      "stopping": "",
+      "stopPid": 0,
+      "announcing": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "PROCESSES_REPORT"
+       },
+       {
+        "event": "PROCESSES_SAMPLED"
+       },
+       {
+        "event": "FLAGS_CLEAR",
+        "payload": {
+         "ids": []
+        }
+       },
+       {
+        "event": "FLAGS_ANNOUNCE",
+        "payload": {
+         "flags": []
+        }
+       },
+       {
+        "event": "FLAG_NEXT"
+       }
+      ],
+      "neverEmits": [
+       "PROCESS_FLAGGED"
+      ],
+      "entity": {
+       "flags": [],
+       "flagged": [],
+       "reading": false
+      }
+     }
+    }
+   ],
+   "now": 6000000,
+   "defaults": [
+    "ProcessFlags"
+   ]
+  },
+  {
+   "id": "a-pattern-that-names-other-processes-does-not-apply",
+   "config": {
+    "patterns": [
+     {
+      "id": "orphan",
+      "kind": "orphaned",
+      "names": [
+       "node"
+      ],
+      "minAgeSeconds": 0,
+      "minRssBytes": 1073741824,
+      "cpuPercent": 0,
+      "growthBytes": 0,
+      "readings": 0
+     }
+    ]
+   },
+   "steps": [
+    {
+     "trait": "ProcessWatch",
+     "event": "PROCESSES_JUDGE",
+     "from": "ready",
+     "payload": {},
+     "entity": {
+      "id": "w",
+      "active": true,
+      "reading": true,
+      "dueAt": null,
+      "tracks": [
+       {
+        "key": "10:1000",
+        "pid": 10,
+        "ppid": 1,
+        "name": "orb",
+        "command": "/usr/bin/orb",
+        "args": [
+         "orb",
+         "serve"
+        ],
+        "startedAt": 1000,
+        "readings": [
+         {
+          "at": 2000,
+          "rssBytes": 2147483648,
+          "cpuSeconds": 4
+         }
+        ],
+        "firstPpid": 77
+       }
+      ],
+      "flagged": [],
+      "flags": [],
+      "expected": [],
+      "count": 0,
+      "pendingSignature": "",
+      "pendingVerdict": "expected",
+      "stopping": "",
+      "stopPid": 0,
+      "announcing": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "PROCESSES_REPORT"
+       },
+       {
+        "event": "PROCESSES_SAMPLED"
+       },
+       {
+        "event": "FLAGS_CLEAR",
+        "payload": {
+         "ids": []
+        }
+       },
+       {
+        "event": "FLAGS_ANNOUNCE",
+        "payload": {
+         "flags": []
+        }
+       },
+       {
+        "event": "FLAG_NEXT"
+       }
+      ],
+      "neverEmits": [
+       "PROCESS_FLAGGED"
+      ],
+      "entity": {
+       "flags": [],
+       "flagged": [],
+       "reading": false
+      }
+     }
+    }
+   ],
+   "now": 6000000,
+   "defaults": [
+    "ProcessFlags"
+   ]
+  },
+  {
+   "id": "memory-that-rose-in-every-one-of-the-last-readings-is-flagged-growing",
+   "config": {
+    "patterns": [
+     {
+      "id": "leak",
+      "kind": "growing",
+      "names": [],
+      "minAgeSeconds": 0,
+      "minRssBytes": 0,
+      "cpuPercent": 0,
+      "growthBytes": 1073741824,
+      "readings": 2
+     }
+    ]
+   },
+   "steps": [
+    {
+     "trait": "ProcessWatch",
+     "event": "PROCESSES_JUDGE",
+     "from": "ready",
+     "payload": {},
+     "entity": {
+      "id": "w",
+      "active": true,
+      "reading": true,
+      "dueAt": null,
+      "tracks": [
+       {
+        "key": "10:1000",
+        "pid": 10,
+        "ppid": 77,
+        "name": "orb",
+        "command": "/usr/bin/orb",
+        "args": [
+         "orb",
+         "serve"
+        ],
+        "startedAt": 1000,
+        "readings": [
+         {
+          "at": 100,
+          "rssBytes": 1073741824,
+          "cpuSeconds": 1
+         },
+         {
+          "at": 110,
+          "rssBytes": 1610612736,
+          "cpuSeconds": 1
+         },
+         {
+          "at": 120,
+          "rssBytes": 2147483649,
+          "cpuSeconds": 1
+         }
+        ],
+        "firstPpid": 77
+       }
+      ],
+      "flagged": [],
+      "flags": [],
+      "expected": [],
+      "count": 0,
+      "pendingSignature": "",
+      "pendingVerdict": "expected",
+      "stopping": "",
+      "stopPid": 0,
+      "announcing": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "PROCESSES_REPORT"
+       },
+       {
+        "event": "PROCESSES_SAMPLED"
+       },
+       {
+        "event": "FLAGS_CLEAR",
+        "payload": {
+         "ids": []
+        }
+       },
+       {
+        "event": "FLAGS_ANNOUNCE",
+        "payload": {
+         "flags": [
+          {
+           "key": "10:1000",
+           "pid": 10,
+           "name": "orb",
+           "command": "/usr/bin/orb",
+           "args": [
+            "orb",
+            "serve"
+           ],
+           "signature": "/usr/bin/orb orb serve",
+           "pattern": "leak",
+           "kind": "growing",
+           "ageSeconds": 5000,
+           "rssBytes": 2147483649,
+           "cpuPercent": 0,
+           "growthBytes": 1073741825
+          }
+         ]
+        }
+       },
+       {
+        "event": "FLAG_NEXT"
+       },
+       {
+        "event": "PROCESS_FLAGGED",
+        "payload": {
+         "flag": {
+          "key": "10:1000",
+          "pid": 10,
+          "name": "orb",
+          "command": "/usr/bin/orb",
+          "args": [
+           "orb",
+           "serve"
+          ],
+          "signature": "/usr/bin/orb orb serve",
+          "pattern": "leak",
+          "kind": "growing",
+          "ageSeconds": 5000,
+          "rssBytes": 2147483649,
+          "cpuPercent": 0,
+          "growthBytes": 1073741825
+         }
+        }
+       },
+       {
+        "event": "FLAG_KEPT"
+       },
+       {
+        "event": "FLAG_NEXT"
+       }
+      ],
+      "entity": {
+       "flags": [
+        {
+         "key": "10:1000",
+         "pid": 10,
+         "name": "orb",
+         "command": "/usr/bin/orb",
+         "args": [
+          "orb",
+          "serve"
+         ],
+         "signature": "/usr/bin/orb orb serve",
+         "pattern": "leak",
+         "kind": "growing",
+         "ageSeconds": 5000,
+         "rssBytes": 2147483649,
+         "cpuPercent": 0,
+         "growthBytes": 1073741825
+        }
+       ],
+       "flagged": [
+        "10:1000/leak"
+       ],
+       "reading": false,
+       "announcing": []
+      }
+     }
+    }
+   ],
+   "now": 6000000,
+   "defaults": [
+    "ProcessFlags"
+   ]
+  },
+  {
+   "id": "control-memory-that-fell-once-is-not-growing",
+   "config": {
+    "patterns": [
+     {
+      "id": "leak",
+      "kind": "growing",
+      "names": [],
+      "minAgeSeconds": 0,
+      "minRssBytes": 0,
+      "cpuPercent": 0,
+      "growthBytes": 1073741824,
+      "readings": 2
+     }
+    ]
+   },
+   "steps": [
+    {
+     "trait": "ProcessWatch",
+     "event": "PROCESSES_JUDGE",
+     "from": "ready",
+     "payload": {},
+     "entity": {
+      "id": "w",
+      "active": true,
+      "reading": true,
+      "dueAt": null,
+      "tracks": [
+       {
+        "key": "10:1000",
+        "pid": 10,
+        "ppid": 77,
+        "name": "orb",
+        "command": "/usr/bin/orb",
+        "args": [
+         "orb",
+         "serve"
+        ],
+        "startedAt": 1000,
+        "readings": [
+         {
+          "at": 100,
+          "rssBytes": 2147483648,
+          "cpuSeconds": 1
+         },
+         {
+          "at": 110,
+          "rssBytes": 1073741824,
+          "cpuSeconds": 1
+         },
+         {
+          "at": 120,
+          "rssBytes": 4294967296,
+          "cpuSeconds": 1
+         }
+        ],
+        "firstPpid": 77
+       }
+      ],
+      "flagged": [],
+      "flags": [],
+      "expected": [],
+      "count": 0,
+      "pendingSignature": "",
+      "pendingVerdict": "expected",
+      "stopping": "",
+      "stopPid": 0,
+      "announcing": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "PROCESSES_REPORT"
+       },
+       {
+        "event": "PROCESSES_SAMPLED"
+       },
+       {
+        "event": "FLAGS_CLEAR",
+        "payload": {
+         "ids": []
+        }
+       },
+       {
+        "event": "FLAGS_ANNOUNCE",
+        "payload": {
+         "flags": []
+        }
+       },
+       {
+        "event": "FLAG_NEXT"
+       }
+      ],
+      "neverEmits": [
+       "PROCESS_FLAGGED"
+      ],
+      "entity": {
+       "flags": [],
+       "flagged": [],
+       "reading": false
+      }
+     }
+    }
+   ],
+   "now": 6000000,
+   "defaults": [
+    "ProcessFlags"
+   ]
+  },
+  {
+   "id": "control-a-rise-below-the-declared-amount-is-not-growing",
+   "config": {
+    "patterns": [
+     {
+      "id": "leak",
+      "kind": "growing",
+      "names": [],
+      "minAgeSeconds": 0,
+      "minRssBytes": 0,
+      "cpuPercent": 0,
+      "growthBytes": 1073741824,
+      "readings": 2
+     }
+    ]
+   },
+   "steps": [
+    {
+     "trait": "ProcessWatch",
+     "event": "PROCESSES_JUDGE",
+     "from": "ready",
+     "payload": {},
+     "entity": {
+      "id": "w",
+      "active": true,
+      "reading": true,
+      "dueAt": null,
+      "tracks": [
+       {
+        "key": "10:1000",
+        "pid": 10,
+        "ppid": 77,
+        "name": "orb",
+        "command": "/usr/bin/orb",
+        "args": [
+         "orb",
+         "serve"
+        ],
+        "startedAt": 1000,
+        "readings": [
+         {
+          "at": 100,
+          "rssBytes": 1073741824,
+          "cpuSeconds": 1
+         },
+         {
+          "at": 110,
+          "rssBytes": 1073741834,
+          "cpuSeconds": 1
+         },
+         {
+          "at": 120,
+          "rssBytes": 1073741844,
+          "cpuSeconds": 1
+         }
+        ],
+        "firstPpid": 77
+       }
+      ],
+      "flagged": [],
+      "flags": [],
+      "expected": [],
+      "count": 0,
+      "pendingSignature": "",
+      "pendingVerdict": "expected",
+      "stopping": "",
+      "stopPid": 0,
+      "announcing": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "PROCESSES_REPORT"
+       },
+       {
+        "event": "PROCESSES_SAMPLED"
+       },
+       {
+        "event": "FLAGS_CLEAR",
+        "payload": {
+         "ids": []
+        }
+       },
+       {
+        "event": "FLAGS_ANNOUNCE",
+        "payload": {
+         "flags": []
+        }
+       },
+       {
+        "event": "FLAG_NEXT"
+       }
+      ],
+      "neverEmits": [
+       "PROCESS_FLAGGED"
+      ],
+      "entity": {
+       "flags": [],
+       "flagged": [],
+       "reading": false
+      }
+     }
+    }
+   ],
+   "now": 6000000,
+   "defaults": [
+    "ProcessFlags"
+   ]
+  },
+  {
+   "id": "edge-too-few-readings-match-no-interval-pattern",
+   "config": {
+    "patterns": [
+     {
+      "id": "leak",
+      "kind": "growing",
+      "names": [],
+      "minAgeSeconds": 0,
+      "minRssBytes": 0,
+      "cpuPercent": 0,
+      "growthBytes": 1073741824,
+      "readings": 2
+     }
+    ]
+   },
+   "steps": [
+    {
+     "trait": "ProcessWatch",
+     "event": "PROCESSES_JUDGE",
+     "from": "ready",
+     "payload": {},
+     "entity": {
+      "id": "w",
+      "active": true,
+      "reading": true,
+      "dueAt": null,
+      "tracks": [
+       {
+        "key": "10:1000",
+        "pid": 10,
+        "ppid": 77,
+        "name": "orb",
+        "command": "/usr/bin/orb",
+        "args": [
+         "orb",
+         "serve"
+        ],
+        "startedAt": 1000,
+        "readings": [
+         {
+          "at": 100,
+          "rssBytes": 1073741824,
+          "cpuSeconds": 1
+         },
+         {
+          "at": 110,
+          "rssBytes": 3221225472,
+          "cpuSeconds": 1
+         }
+        ],
+        "firstPpid": 77
+       }
+      ],
+      "flagged": [],
+      "flags": [],
+      "expected": [],
+      "count": 0,
+      "pendingSignature": "",
+      "pendingVerdict": "expected",
+      "stopping": "",
+      "stopPid": 0,
+      "announcing": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "PROCESSES_REPORT"
+       },
+       {
+        "event": "PROCESSES_SAMPLED"
+       },
+       {
+        "event": "FLAGS_CLEAR",
+        "payload": {
+         "ids": []
+        }
+       },
+       {
+        "event": "FLAGS_ANNOUNCE",
+        "payload": {
+         "flags": []
+        }
+       },
+       {
+        "event": "FLAG_NEXT"
+       }
+      ],
+      "neverEmits": [
+       "PROCESS_FLAGGED"
+      ],
+      "entity": {
+       "flags": [],
+       "flagged": [],
+       "reading": false
+      }
+     }
+    }
+   ],
+   "now": 6000000,
+   "defaults": [
+    "ProcessFlags"
+   ]
+  },
+  {
+   "id": "a-cpu-share-held-above-the-level-is-flagged-busy",
+   "config": {
+    "patterns": [
+     {
+      "id": "spin",
+      "kind": "busy",
+      "names": [],
+      "minAgeSeconds": 0,
+      "minRssBytes": 0,
+      "cpuPercent": 90,
+      "growthBytes": 0,
+      "readings": 2
+     }
+    ]
+   },
+   "steps": [
+    {
+     "trait": "ProcessWatch",
+     "event": "PROCESSES_JUDGE",
+     "from": "ready",
+     "payload": {},
+     "entity": {
+      "id": "w",
+      "active": true,
+      "reading": true,
+      "dueAt": null,
+      "tracks": [
+       {
+        "key": "10:1000",
+        "pid": 10,
+        "ppid": 77,
+        "name": "orb",
+        "command": "/usr/bin/orb",
+        "args": [
+         "orb",
+         "serve"
+        ],
+        "startedAt": 1000,
+        "readings": [
+         {
+          "at": 100,
+          "rssBytes": 1073741824,
+          "cpuSeconds": 0
+         },
+         {
+          "at": 110,
+          "rssBytes": 1073741824,
+          "cpuSeconds": 10
+         },
+         {
+          "at": 120,
+          "rssBytes": 1073741824,
+          "cpuSeconds": 19.5
+         }
+        ],
+        "firstPpid": 77
+       }
+      ],
+      "flagged": [],
+      "flags": [],
+      "expected": [],
+      "count": 0,
+      "pendingSignature": "",
+      "pendingVerdict": "expected",
+      "stopping": "",
+      "stopPid": 0,
+      "announcing": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "PROCESSES_REPORT"
+       },
+       {
+        "event": "PROCESSES_SAMPLED"
+       },
+       {
+        "event": "FLAGS_CLEAR",
+        "payload": {
+         "ids": []
+        }
+       },
+       {
+        "event": "FLAGS_ANNOUNCE",
+        "payload": {
+         "flags": [
+          {
+           "key": "10:1000",
+           "pid": 10,
+           "name": "orb",
+           "command": "/usr/bin/orb",
+           "args": [
+            "orb",
+            "serve"
+           ],
+           "signature": "/usr/bin/orb orb serve",
+           "pattern": "spin",
+           "kind": "busy",
+           "ageSeconds": 5000,
+           "rssBytes": 1073741824,
+           "cpuPercent": 95,
+           "growthBytes": 0
+          }
+         ]
+        }
+       },
+       {
+        "event": "FLAG_NEXT"
+       },
+       {
+        "event": "PROCESS_FLAGGED",
+        "payload": {
+         "flag": {
+          "key": "10:1000",
+          "pid": 10,
+          "name": "orb",
+          "command": "/usr/bin/orb",
+          "args": [
+           "orb",
+           "serve"
+          ],
+          "signature": "/usr/bin/orb orb serve",
+          "pattern": "spin",
+          "kind": "busy",
+          "ageSeconds": 5000,
+          "rssBytes": 1073741824,
+          "cpuPercent": 95,
+          "growthBytes": 0
+         }
+        }
+       },
+       {
+        "event": "FLAG_KEPT"
+       },
+       {
+        "event": "FLAG_NEXT"
+       }
+      ],
+      "entity": {
+       "flags": [
+        {
+         "key": "10:1000",
+         "pid": 10,
+         "name": "orb",
+         "command": "/usr/bin/orb",
+         "args": [
+          "orb",
+          "serve"
+         ],
+         "signature": "/usr/bin/orb orb serve",
+         "pattern": "spin",
+         "kind": "busy",
+         "ageSeconds": 5000,
+         "rssBytes": 1073741824,
+         "cpuPercent": 95,
+         "growthBytes": 0
+        }
+       ],
+       "flagged": [
+        "10:1000/spin"
+       ],
+       "reading": false,
+       "announcing": []
+      }
+     }
+    }
+   ],
+   "now": 6000000,
+   "defaults": [
+    "ProcessFlags"
+   ]
+  },
+  {
+   "id": "control-one-quiet-interval-is-not-busy",
+   "config": {
+    "patterns": [
+     {
+      "id": "spin",
+      "kind": "busy",
+      "names": [],
+      "minAgeSeconds": 0,
+      "minRssBytes": 0,
+      "cpuPercent": 90,
+      "growthBytes": 0,
+      "readings": 2
+     }
+    ]
+   },
+   "steps": [
+    {
+     "trait": "ProcessWatch",
+     "event": "PROCESSES_JUDGE",
+     "from": "ready",
+     "payload": {},
+     "entity": {
+      "id": "w",
+      "active": true,
+      "reading": true,
+      "dueAt": null,
+      "tracks": [
+       {
+        "key": "10:1000",
+        "pid": 10,
+        "ppid": 77,
+        "name": "orb",
+        "command": "/usr/bin/orb",
+        "args": [
+         "orb",
+         "serve"
+        ],
+        "startedAt": 1000,
+        "readings": [
+         {
+          "at": 100,
+          "rssBytes": 1073741824,
+          "cpuSeconds": 0
+         },
+         {
+          "at": 110,
+          "rssBytes": 1073741824,
+          "cpuSeconds": 2
+         },
+         {
+          "at": 120,
+          "rssBytes": 1073741824,
+          "cpuSeconds": 12
+         }
+        ],
+        "firstPpid": 77
+       }
+      ],
+      "flagged": [],
+      "flags": [],
+      "expected": [],
+      "count": 0,
+      "pendingSignature": "",
+      "pendingVerdict": "expected",
+      "stopping": "",
+      "stopPid": 0,
+      "announcing": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "PROCESSES_REPORT"
+       },
+       {
+        "event": "PROCESSES_SAMPLED"
+       },
+       {
+        "event": "FLAGS_CLEAR",
+        "payload": {
+         "ids": []
+        }
+       },
+       {
+        "event": "FLAGS_ANNOUNCE",
+        "payload": {
+         "flags": []
+        }
+       },
+       {
+        "event": "FLAG_NEXT"
+       }
+      ],
+      "neverEmits": [
+       "PROCESS_FLAGGED"
+      ],
+      "entity": {
+       "flags": [],
+       "flagged": [],
+       "reading": false
+      }
+     }
+    }
+   ],
+   "now": 6000000,
+   "defaults": [
+    "ProcessFlags"
+   ]
+  },
+  {
+   "id": "an-old-process-holding-memory-and-doing-nothing-is-flagged-idle",
+   "config": {
+    "patterns": [
+     {
+      "id": "stale",
+      "kind": "idle",
+      "names": [],
+      "minAgeSeconds": 3600,
+      "minRssBytes": 1073741824,
+      "cpuPercent": 1,
+      "growthBytes": 0,
+      "readings": 2
+     }
+    ]
+   },
+   "steps": [
+    {
+     "trait": "ProcessWatch",
+     "event": "PROCESSES_JUDGE",
+     "from": "ready",
+     "payload": {},
+     "entity": {
+      "id": "w",
+      "active": true,
+      "reading": true,
+      "dueAt": null,
+      "tracks": [
+       {
+        "key": "10:1000",
+        "pid": 10,
+        "ppid": 77,
+        "name": "orb",
+        "command": "/usr/bin/orb",
+        "args": [
+         "orb",
+         "serve"
+        ],
+        "startedAt": 1000,
+        "readings": [
+         {
+          "at": 100,
+          "rssBytes": 2147483648,
+          "cpuSeconds": 5
+         },
+         {
+          "at": 110,
+          "rssBytes": 2147483648,
+          "cpuSeconds": 5
+         },
+         {
+          "at": 120,
+          "rssBytes": 2147483648,
+          "cpuSeconds": 5
+         }
+        ],
+        "firstPpid": 77
+       }
+      ],
+      "flagged": [],
+      "flags": [],
+      "expected": [],
+      "count": 0,
+      "pendingSignature": "",
+      "pendingVerdict": "expected",
+      "stopping": "",
+      "stopPid": 0,
+      "announcing": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "PROCESSES_REPORT"
+       },
+       {
+        "event": "PROCESSES_SAMPLED"
+       },
+       {
+        "event": "FLAGS_CLEAR",
+        "payload": {
+         "ids": []
+        }
+       },
+       {
+        "event": "FLAGS_ANNOUNCE",
+        "payload": {
+         "flags": [
+          {
+           "key": "10:1000",
+           "pid": 10,
+           "name": "orb",
+           "command": "/usr/bin/orb",
+           "args": [
+            "orb",
+            "serve"
+           ],
+           "signature": "/usr/bin/orb orb serve",
+           "pattern": "stale",
+           "kind": "idle",
+           "ageSeconds": 5000,
+           "rssBytes": 2147483648,
+           "cpuPercent": 0,
+           "growthBytes": 0
+          }
+         ]
+        }
+       },
+       {
+        "event": "FLAG_NEXT"
+       },
+       {
+        "event": "PROCESS_FLAGGED",
+        "payload": {
+         "flag": {
+          "key": "10:1000",
+          "pid": 10,
+          "name": "orb",
+          "command": "/usr/bin/orb",
+          "args": [
+           "orb",
+           "serve"
+          ],
+          "signature": "/usr/bin/orb orb serve",
+          "pattern": "stale",
+          "kind": "idle",
+          "ageSeconds": 5000,
+          "rssBytes": 2147483648,
+          "cpuPercent": 0,
+          "growthBytes": 0
+         }
+        }
+       },
+       {
+        "event": "FLAG_KEPT"
+       },
+       {
+        "event": "FLAG_NEXT"
+       }
+      ],
+      "entity": {
+       "flags": [
+        {
+         "key": "10:1000",
+         "pid": 10,
+         "name": "orb",
+         "command": "/usr/bin/orb",
+         "args": [
+          "orb",
+          "serve"
+         ],
+         "signature": "/usr/bin/orb orb serve",
+         "pattern": "stale",
+         "kind": "idle",
+         "ageSeconds": 5000,
+         "rssBytes": 2147483648,
+         "cpuPercent": 0,
+         "growthBytes": 0
+        }
+       ],
+       "flagged": [
+        "10:1000/stale"
+       ],
+       "reading": false,
+       "announcing": []
+      }
+     }
+    }
+   ],
+   "now": 6000000,
+   "defaults": [
+    "ProcessFlags"
+   ]
+  },
+  {
+   "id": "control-a-working-process-is-not-idle",
+   "config": {
+    "patterns": [
+     {
+      "id": "stale",
+      "kind": "idle",
+      "names": [],
+      "minAgeSeconds": 3600,
+      "minRssBytes": 1073741824,
+      "cpuPercent": 1,
+      "growthBytes": 0,
+      "readings": 2
+     }
+    ]
+   },
+   "steps": [
+    {
+     "trait": "ProcessWatch",
+     "event": "PROCESSES_JUDGE",
+     "from": "ready",
+     "payload": {},
+     "entity": {
+      "id": "w",
+      "active": true,
+      "reading": true,
+      "dueAt": null,
+      "tracks": [
+       {
+        "key": "10:1000",
+        "pid": 10,
+        "ppid": 77,
+        "name": "orb",
+        "command": "/usr/bin/orb",
+        "args": [
+         "orb",
+         "serve"
+        ],
+        "startedAt": 1000,
+        "readings": [
+         {
+          "at": 100,
+          "rssBytes": 2147483648,
+          "cpuSeconds": 5
+         },
+         {
+          "at": 110,
+          "rssBytes": 2147483648,
+          "cpuSeconds": 5
+         },
+         {
+          "at": 120,
+          "rssBytes": 2147483648,
+          "cpuSeconds": 8
+         }
+        ],
+        "firstPpid": 77
+       }
+      ],
+      "flagged": [],
+      "flags": [],
+      "expected": [],
+      "count": 0,
+      "pendingSignature": "",
+      "pendingVerdict": "expected",
+      "stopping": "",
+      "stopPid": 0,
+      "announcing": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "PROCESSES_REPORT"
+       },
+       {
+        "event": "PROCESSES_SAMPLED"
+       },
+       {
+        "event": "FLAGS_CLEAR",
+        "payload": {
+         "ids": []
+        }
+       },
+       {
+        "event": "FLAGS_ANNOUNCE",
+        "payload": {
+         "flags": []
+        }
+       },
+       {
+        "event": "FLAG_NEXT"
+       }
+      ],
+      "neverEmits": [
+       "PROCESS_FLAGGED"
+      ],
+      "entity": {
+       "flags": [],
+       "flagged": [],
+       "reading": false
+      }
+     }
+    }
+   ],
+   "now": 6000000,
+   "defaults": [
+    "ProcessFlags"
+   ]
+  },
+  {
+   "id": "a-new-flag-is-announced-once",
+   "config": {
+    "patterns": [
+     {
+      "id": "orphan",
+      "kind": "orphaned",
+      "names": [],
+      "minAgeSeconds": 3600,
+      "minRssBytes": 1073741824,
+      "cpuPercent": 0,
+      "growthBytes": 0,
+      "readings": 0
+     }
+    ]
+   },
+   "steps": [
+    {
+     "trait": "ProcessWatch",
+     "event": "FLAGS_ANNOUNCE",
+     "from": "ready",
+     "payload": {
+      "flags": [
+       {
+        "key": "10:1000",
+        "pid": 10,
+        "name": "orb",
+        "command": "/usr/bin/orb",
+        "args": [
+         "orb",
+         "serve"
+        ],
+        "signature": "/usr/bin/orb orb serve",
+        "pattern": "orphan",
+        "kind": "orphaned",
+        "ageSeconds": 5000,
+        "rssBytes": 2147483648,
+        "cpuPercent": 0,
+        "growthBytes": 0
+       }
+      ]
+     },
+     "entity": {
+      "id": "w",
+      "active": true,
+      "reading": false,
+      "dueAt": null,
+      "tracks": [],
+      "flagged": [],
+      "flags": [],
+      "expected": [],
+      "count": 0,
+      "pendingSignature": "",
+      "pendingVerdict": "expected",
+      "stopping": "",
+      "stopPid": 0,
+      "announcing": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "FLAG_NEXT"
+       },
+       {
+        "event": "PROCESS_FLAGGED",
+        "payload": {
+         "flag": {
+          "key": "10:1000",
+          "pid": 10,
+          "name": "orb",
+          "command": "/usr/bin/orb",
+          "args": [
+           "orb",
+           "serve"
+          ],
+          "signature": "/usr/bin/orb orb serve",
+          "pattern": "orphan",
+          "kind": "orphaned",
+          "ageSeconds": 5000,
+          "rssBytes": 2147483648,
+          "cpuPercent": 0,
+          "growthBytes": 0
+         }
+        }
+       },
+       {
+        "event": "FLAG_KEPT"
+       },
+       {
+        "event": "FLAG_NEXT"
+       }
+      ],
+      "entity": {
+       "announcing": []
+      }
+     }
+    }
+   ],
+   "now": 6000000
+  },
+  {
+   "id": "a-report-announces-only-the-flags-not-announced-before",
+   "config": {
+    "patterns": [
+     {
+      "id": "orphan",
+      "kind": "orphaned",
+      "names": [],
+      "minAgeSeconds": 3600,
+      "minRssBytes": 1073741824,
+      "cpuPercent": 0,
+      "growthBytes": 0,
+      "readings": 0
+     }
+    ]
+   },
+   "steps": [
+    {
+     "trait": "ProcessWatch",
+     "event": "PROCESSES_REPORT",
+     "from": "ready",
+     "payload": {},
+     "entity": {
+      "id": "w",
+      "active": true,
+      "reading": true,
+      "dueAt": null,
+      "tracks": [
+       {
+        "key": "10:1000",
+        "pid": 10,
+        "ppid": 1,
+        "name": "orb",
+        "command": "/usr/bin/orb",
+        "args": [
+         "orb",
+         "serve"
+        ],
+        "startedAt": 1000,
+        "readings": [
+         {
+          "at": 2000,
+          "rssBytes": 2147483648,
+          "cpuSeconds": 4
+         }
+        ],
+        "firstPpid": 77
+       }
+      ],
+      "flagged": [
+       "10:1000/orphan"
+      ],
+      "flags": [
+       {
+        "key": "10:1000",
+        "pid": 10,
+        "name": "orb",
+        "command": "/usr/bin/orb",
+        "args": [
+         "orb",
+         "serve"
+        ],
+        "signature": "/usr/bin/orb orb serve",
+        "pattern": "orphan",
+        "kind": "orphaned",
+        "ageSeconds": 5000,
+        "rssBytes": 2147483648,
+        "cpuPercent": 0,
+        "growthBytes": 0
+       }
+      ],
+      "expected": [],
+      "count": 1,
+      "pendingSignature": "",
+      "pendingVerdict": "expected",
+      "stopping": "",
+      "stopPid": 0,
+      "announcing": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "PROCESSES_SAMPLED"
+       },
+       {
+        "event": "FLAGS_CLEAR",
+        "payload": {
+         "ids": []
+        }
+       },
+       {
+        "event": "FLAGS_ANNOUNCE",
+        "payload": {
+         "flags": []
+        }
+       },
+       {
+        "event": "FLAG_NEXT"
+       }
+      ],
+      "neverEmits": [
+       "PROCESS_FLAGGED"
+      ],
+      "entity": {
+       "reading": false,
+       "flagged": [
+        "10:1000/orphan"
+       ]
+      }
+     }
+    }
+   ],
+   "now": 6000000,
+   "defaults": [
+    "ProcessFlags"
+   ]
+  },
+  {
+   "id": "a-verdict-of-expected-is-remembered-for-the-next-reading",
+   "config": {
+    "patterns": [
+     {
+      "id": "orphan",
+      "kind": "orphaned",
+      "names": [],
+      "minAgeSeconds": 3600,
+      "minRssBytes": 1073741824,
+      "cpuPercent": 0,
+      "growthBytes": 0,
+      "readings": 0
+     }
+    ]
+   },
+   "steps": [
+    {
+     "trait": "ProcessWatch",
+     "event": "PROCESS_VERDICT",
+     "from": "ready",
+     "payload": {
+      "signature": "/usr/bin/orb orb serve",
+      "verdict": "expected"
+     },
+     "entity": {
+      "id": "w",
+      "active": true,
+      "reading": false,
+      "dueAt": null,
+      "tracks": [],
+      "flagged": [],
+      "flags": [],
+      "expected": [],
+      "count": 0,
+      "pendingSignature": "",
+      "pendingVerdict": "expected",
+      "stopping": "",
+      "stopPid": 0,
+      "announcing": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "entity": {
+       "expected": [
+        "/usr/bin/orb orb serve"
+       ],
+       "pendingSignature": "/usr/bin/orb orb serve"
+      }
+     }
+    }
+   ],
+   "now": 6000000
+  },
+  {
+   "id": "a-verdict-of-unwanted-forgets-an-earlier-expected",
+   "config": {
+    "patterns": [
+     {
+      "id": "orphan",
+      "kind": "orphaned",
+      "names": [],
+      "minAgeSeconds": 3600,
+      "minRssBytes": 1073741824,
+      "cpuPercent": 0,
+      "growthBytes": 0,
+      "readings": 0
+     }
+    ]
+   },
+   "steps": [
+    {
+     "trait": "ProcessWatch",
+     "event": "PROCESS_VERDICT",
+     "from": "ready",
+     "payload": {
+      "signature": "/usr/bin/orb orb serve",
+      "verdict": "unwanted"
+     },
+     "entity": {
+      "id": "w",
+      "active": true,
+      "reading": false,
+      "dueAt": null,
+      "tracks": [],
+      "flagged": [],
+      "flags": [],
+      "expected": [
+       "/usr/bin/orb orb serve",
+       "/bin/x"
+      ],
+      "count": 0,
+      "pendingSignature": "",
+      "pendingVerdict": "expected",
+      "stopping": "",
+      "stopPid": 0,
+      "announcing": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "entity": {
+       "expected": [
+        "/bin/x"
+       ]
+      }
+     }
+    }
+   ],
+   "now": 6000000
+  },
+  {
+   "id": "a-stop-of-a-process-that-is-gone-answers-gone-and-signals-nothing",
+   "now": 6000000,
+   "config": {
+    "patterns": []
+   },
+   "steps": [
+    {
+     "trait": "ProcessWatch",
+     "event": "STOP_LISTED",
+     "from": "ready",
+     "payload": {
+      "processes": [
+       {
+        "pid": 11,
+        "ppid": 1,
+        "name": "orb",
+        "command": "/usr/bin/orb",
+        "args": [
+         "orb",
+         "serve"
+        ],
+        "user": "501",
+        "rssBytes": 1073741824,
+        "cpuSeconds": 1,
+        "startedAt": 1000,
+        "own": true
+       }
+      ]
+     },
+     "entity": {
+      "id": "w",
+      "active": true,
+      "reading": false,
+      "dueAt": null,
+      "tracks": [],
+      "flagged": [],
+      "flags": [],
+      "expected": [],
+      "count": 0,
+      "pendingSignature": "",
+      "pendingVerdict": "expected",
+      "stopping": "99999990:1000",
+      "stopPid": 0,
+      "announcing": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "PROCESS_STOP_FAILED",
+        "payload": {
+         "key": "99999990:1000",
+         "code": "gone",
+         "error": "the process is no longer running"
+        }
+       }
+      ],
+      "neverEmits": [
+       "STOP_SIGNAL",
+       "PROCESS_STOPPED"
+      ],
+      "entity": {
+       "stopping": "",
+       "stopPid": 0,
+       "announcing": []
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-stop-does-not-reach-a-new-process-that-reused-the-pid",
+   "now": 6000000,
+   "config": {
+    "patterns": []
+   },
+   "steps": [
+    {
+     "trait": "ProcessWatch",
+     "event": "STOP_LISTED",
+     "from": "ready",
+     "payload": {
+      "processes": [
+       {
+        "pid": 99999990,
+        "ppid": 1,
+        "name": "orb",
+        "command": "/usr/bin/orb",
+        "args": [
+         "orb",
+         "serve"
+        ],
+        "user": "501",
+        "rssBytes": 1073741824,
+        "cpuSeconds": 1,
+        "startedAt": 2000,
+        "own": true
+       }
+      ]
+     },
+     "entity": {
+      "id": "w",
+      "active": true,
+      "reading": false,
+      "dueAt": null,
+      "tracks": [],
+      "flagged": [],
+      "flags": [],
+      "expected": [],
+      "count": 0,
+      "pendingSignature": "",
+      "pendingVerdict": "expected",
+      "stopping": "99999990:1000",
+      "stopPid": 0,
+      "announcing": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "PROCESS_STOP_FAILED",
+        "payload": {
+         "key": "99999990:1000",
+         "code": "gone",
+         "error": "the process is no longer running"
+        }
+       }
+      ],
+      "neverEmits": [
+       "STOP_SIGNAL",
+       "PROCESS_STOPPED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-stop-of-the-same-process-still-running-goes-on-to-signal-it",
+   "now": 6000000,
+   "config": {
+    "patterns": []
+   },
+   "steps": [
+    {
+     "trait": "ProcessWatch",
+     "event": "STOP_LISTED",
+     "from": "ready",
+     "payload": {
+      "processes": [
+       {
+        "pid": 11,
+        "ppid": 1,
+        "name": "orb",
+        "command": "/usr/bin/orb",
+        "args": [
+         "orb",
+         "serve"
+        ],
+        "user": "501",
+        "rssBytes": 1073741824,
+        "cpuSeconds": 1,
+        "startedAt": 1000,
+        "own": true
+       },
+       {
+        "pid": 99999990,
+        "ppid": 1,
+        "name": "orb",
+        "command": "/usr/bin/orb",
+        "args": [
+         "orb",
+         "serve"
+        ],
+        "user": "501",
+        "rssBytes": 1073741824,
+        "cpuSeconds": 1,
+        "startedAt": 1000,
+        "own": true
+       }
+      ]
+     },
+     "entity": {
+      "id": "w",
+      "active": true,
+      "reading": false,
+      "dueAt": null,
+      "tracks": [],
+      "flagged": [],
+      "flags": [],
+      "expected": [],
+      "count": 0,
+      "pendingSignature": "",
+      "pendingVerdict": "expected",
+      "stopping": "99999990:1000",
+      "stopPid": 0,
+      "announcing": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "STOP_SIGNAL"
+       },
+       {
+        "event": "PROCESS_STOP_FAILED"
+       }
+      ],
+      "neverEmits": [
+       "PROCESS_STOPPED"
+      ],
+      "entity": {
+       "stopPid": 99999990,
+       "stopping": "",
+       "announcing": []
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-second-stop-while-one-is-running-is-refused-busy",
+   "now": 6000000,
+   "config": {
+    "patterns": []
+   },
+   "steps": [
+    {
+     "trait": "ProcessWatch",
+     "event": "PROCESS_STOP",
+     "from": "ready",
+     "payload": {
+      "key": "12:1000"
+     },
+     "entity": {
+      "id": "w",
+      "active": true,
+      "reading": false,
+      "dueAt": null,
+      "tracks": [],
+      "flagged": [],
+      "flags": [],
+      "expected": [],
+      "count": 0,
+      "pendingSignature": "",
+      "pendingVerdict": "expected",
+      "stopping": "11:1000",
+      "stopPid": 0,
+      "announcing": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "PROCESS_STOP_FAILED",
+        "payload": {
+         "key": "12:1000",
+         "code": "busy",
+         "error": "another stop is running"
+        }
+       }
+      ],
+      "entity": {
+       "stopping": "11:1000",
+       "announcing": []
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-stop-the-host-carried-out-is-answered-stopped",
+   "now": 6000000,
+   "config": {
+    "patterns": []
+   },
+   "steps": [
+    {
+     "trait": "ProcessWatch",
+     "event": "STOP_SENT",
+     "from": "ready",
+     "payload": {},
+     "entity": {
+      "id": "w",
+      "active": true,
+      "reading": false,
+      "dueAt": null,
+      "tracks": [],
+      "flagged": [],
+      "flags": [],
+      "expected": [],
+      "count": 0,
+      "pendingSignature": "",
+      "pendingVerdict": "expected",
+      "stopping": "11:1000",
+      "stopPid": 11,
+      "announcing": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "PROCESS_STOPPED",
+        "payload": {
+         "key": "11:1000",
+         "pid": 11
+        }
+       }
+      ],
+      "entity": {
+       "stopping": "",
+       "announcing": []
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-process-that-always-ran-under-process-one-is-not-orphaned",
+   "config": {
+    "patterns": [
+     {
+      "id": "orphan",
+      "kind": "orphaned",
+      "names": [],
+      "minAgeSeconds": 3600,
+      "minRssBytes": 1073741824,
+      "cpuPercent": 0,
+      "growthBytes": 0,
+      "readings": 0
+     }
+    ]
+   },
+   "steps": [
+    {
+     "trait": "ProcessWatch",
+     "event": "PROCESSES_JUDGE",
+     "from": "ready",
+     "payload": {},
+     "entity": {
+      "id": "w",
+      "active": true,
+      "reading": true,
+      "dueAt": null,
+      "tracks": [
+       {
+        "key": "10:1000",
+        "pid": 10,
+        "ppid": 1,
+        "name": "orb",
+        "command": "/usr/bin/orb",
+        "args": [
+         "orb",
+         "serve"
+        ],
+        "startedAt": 1000,
+        "readings": [
+         {
+          "at": 2000,
+          "rssBytes": 2147483648,
+          "cpuSeconds": 4
+         }
+        ],
+        "firstPpid": 1
+       }
+      ],
+      "flagged": [],
+      "flags": [],
+      "expected": [],
+      "count": 0,
+      "pendingSignature": "",
+      "pendingVerdict": "expected",
+      "stopping": "",
+      "stopPid": 0,
+      "announcing": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "PROCESSES_REPORT"
+       },
+       {
+        "event": "PROCESSES_SAMPLED"
+       },
+       {
+        "event": "FLAGS_CLEAR",
+        "payload": {
+         "ids": []
+        }
+       },
+       {
+        "event": "FLAGS_ANNOUNCE",
+        "payload": {
+         "flags": []
+        }
+       },
+       {
+        "event": "FLAG_NEXT"
+       }
+      ],
+      "entity": {
+       "flags": [],
+       "flagged": [],
+       "reading": false
+      },
+      "neverEmits": [
+       "PROCESS_FLAGGED"
+      ]
+     }
+    }
+   ],
+   "now": 6000000,
+   "defaults": [
+    "ProcessFlags"
+   ]
+  },
+  {
+   "id": "a-later-reading-keeps-the-parent-the-process-was-first-seen-under",
+   "now": 6000000,
+   "config": {
+    "patterns": []
+   },
+   "steps": [
+    {
+     "trait": "ProcessWatch",
+     "event": "PROCESSES_LISTED",
+     "from": "ready",
+     "payload": {
+      "processes": [
+       {
+        "pid": 10,
+        "ppid": 1,
+        "name": "orb",
+        "command": "/usr/bin/orb",
+        "args": [
+         "orb",
+         "serve"
+        ],
+        "user": "501",
+        "own": true,
+        "rssBytes": 2147483648,
+        "cpuSeconds": 5,
+        "startedAt": 1000
+       }
+      ]
+     },
+     "entity": {
+      "id": "w",
+      "active": true,
+      "reading": true,
+      "dueAt": null,
+      "flagged": [],
+      "flags": [],
+      "expected": [],
+      "count": 0,
+      "pendingSignature": "",
+      "pendingVerdict": "expected",
+      "stopping": "",
+      "stopPid": 0,
+      "tracks": [
+       {
+        "key": "10:1000",
+        "pid": 10,
+        "ppid": 77,
+        "firstPpid": 77,
+        "name": "orb",
+        "command": "/usr/bin/orb",
+        "args": [
+         "orb",
+         "serve"
+        ],
+        "startedAt": 1000,
+        "readings": [
+         {
+          "at": 5990,
+          "rssBytes": 2147483648,
+          "cpuSeconds": 4
+         }
+        ]
+       }
+      ],
+      "announcing": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "entity": {
+       "tracks": [
+        {
+         "key": "10:1000",
+         "pid": 10,
+         "ppid": 1,
+         "firstPpid": 77,
+         "name": "orb",
+         "command": "/usr/bin/orb",
+         "args": [
+          "orb",
+          "serve"
+         ],
+         "startedAt": 1000,
+         "readings": [
+          {
+           "at": 5990,
+           "rssBytes": 2147483648,
+           "cpuSeconds": 4
+          },
+          {
+           "at": 6000,
+           "rssBytes": 2147483648,
+           "cpuSeconds": 5
+          }
+         ]
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-flag-that-no-longer-matches-is-marked-cleared",
+   "config": {
+    "patterns": [
+     {
+      "id": "orphan",
+      "kind": "orphaned",
+      "names": [],
+      "minAgeSeconds": 3600,
+      "minRssBytes": 1073741824,
+      "cpuPercent": 0,
+      "growthBytes": 0,
+      "readings": 0
+     }
+    ]
+   },
+   "steps": [
+    {
+     "trait": "ProcessWatch",
+     "event": "FLAGS_ANNOUNCE",
+     "from": "ready",
+     "payload": {
+      "flags": [
+       {
+        "key": "10:1000",
+        "pid": 10,
+        "name": "orb",
+        "command": "/usr/bin/orb",
+        "args": [
+         "orb",
+         "serve"
+        ],
+        "signature": "/usr/bin/orb orb serve",
+        "pattern": "orphan",
+        "kind": "orphaned",
+        "ageSeconds": 5000,
+        "rssBytes": 2147483648,
+        "cpuPercent": 0,
+        "growthBytes": 0
+       }
+      ]
+     },
+     "entity": {
+      "id": "w",
+      "active": true,
+      "reading": false,
+      "dueAt": null,
+      "tracks": [],
+      "flagged": [],
+      "flags": [],
+      "expected": [],
+      "count": 0,
+      "pendingSignature": "",
+      "pendingVerdict": "expected",
+      "stopping": "",
+      "stopPid": 0,
+      "announcing": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "FLAG_NEXT"
+       },
+       {
+        "event": "PROCESS_FLAGGED",
+        "payload": {
+         "flag": {
+          "key": "10:1000",
+          "pid": 10,
+          "name": "orb",
+          "command": "/usr/bin/orb",
+          "args": [
+           "orb",
+           "serve"
+          ],
+          "signature": "/usr/bin/orb orb serve",
+          "pattern": "orphan",
+          "kind": "orphaned",
+          "ageSeconds": 5000,
+          "rssBytes": 2147483648,
+          "cpuPercent": 0,
+          "growthBytes": 0
+         }
+        }
+       },
+       {
+        "event": "FLAG_KEPT"
+       },
+       {
+        "event": "FLAG_NEXT"
+       }
+      ],
+      "entity": {
+       "announcing": []
+      }
+     }
+    },
+    {
+     "trait": "ProcessWatch",
+     "event": "PROCESSES_REPORT",
+     "from": "ready",
+     "payload": {},
+     "entity": {
+      "id": "w",
+      "active": true,
+      "reading": true,
+      "dueAt": null,
+      "tracks": [
+       {
+        "key": "10:1000",
+        "pid": 10,
+        "ppid": 1,
+        "name": "orb",
+        "command": "/usr/bin/orb",
+        "args": [
+         "orb",
+         "serve"
+        ],
+        "startedAt": 1000,
+        "readings": [
+         {
+          "at": 2000,
+          "rssBytes": 2147483648,
+          "cpuSeconds": 4
+         }
+        ],
+        "firstPpid": 77
+       }
+      ],
+      "flagged": [
+       "10:1000/orphan"
+      ],
+      "flags": [],
+      "expected": [],
+      "count": 1,
+      "pendingSignature": "",
+      "pendingVerdict": "expected",
+      "stopping": "",
+      "stopPid": 0,
+      "announcing": []
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "PROCESSES_SAMPLED"
+       },
+       {
+        "event": "FLAGS_CLEAR",
+        "payload": {
+         "ids": [
+          "10:1000/orphan"
+         ]
+        }
+       },
+       {
+        "event": "FLAGS_ANNOUNCE",
+        "payload": {
+         "flags": []
+        }
+       },
+       {
+        "event": "FLAG_CLEARED"
+       },
+       {
+        "event": "FLAGS_CLEAR",
+        "payload": {
+         "ids": []
+        }
+       },
+       {
+        "event": "FLAG_NEXT"
+       }
+      ],
+      "entity": {
+       "reading": false,
+       "flagged": []
+      },
+      "neverEmits": [
+       "PROCESS_WATCH_FAILED"
+      ]
+     }
+    }
+   ],
+   "now": 6000000,
+   "defaults": [
+    "ProcessFlags"
+   ]
+  }
+ ]
+}

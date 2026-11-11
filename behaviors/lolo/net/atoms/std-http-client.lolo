@@ -833,9 +833,9 @@ orbital HttpClientOrbital {
       HTTP_FAILED -> external {
         key : string!
         error : string!
-        kind : "refused" | "denied" | "unsupported" | "timeout" | "tls" | "io"
+        kind : "refused" | "denied" | "unsupported" | "timeout" | "tls" | "io" | "encoding"
       }
-        @description "The call produced no response: kind refused (nothing opened), denied, unsupported (the host cannot open sockets), timeout, tls or io."
+        @description "The call produced no response: kind refused (nothing opened), denied (also a credential that is not held), unsupported (the host cannot open sockets), timeout, tls, io, or encoding (a streamed frame that is not valid UTF-8)."
         @tier "primary"
       HC_BUILT -> internal {
         head : bytes!
@@ -954,7 +954,7 @@ orbital HttpClientOrbital {
       HC_FRAME_FAILED {
         key : string!
         error : string!
-        kind : string!
+        kind : "encoding"
       }
       ClientFrame.FRAME_EVENT -> HC_FRAME_EVENT
       ClientFrame.FRAME_DRAINED -> HC_DRAINED

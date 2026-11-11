@@ -9,9 +9,9 @@ orbital GeoSearchResultOrbital {
   uses UiStack from "std/behaviors/ui-stack"
   entity GeoSearchResult [runtime] {
     id : string!
-    searchTerm : string @description "The user's search query string." @synonyms "query, text, input"
-    centerLat : number @description "Latitude coordinate of the search center." @synonyms "lat, y, north"
-    centerLng : number @description "The longitude coordinate of the search center." @synonyms "longitude, lng"
+    searchTerm : string @description "The user's search query string." @synonyms "query, text, input" = ""
+    centerLat : number @description "Latitude coordinate of the search center." @synonyms "lat, y, north" = 0
+    centerLng : number @description "The longitude coordinate of the search center." @synonyms "longitude, lng" = 0
     radiusKm : number @description "The search radius in kilometers." @synonyms "range, distance, extent" = 10
     boundsNorth : number @description "Northern boundary coordinate of the search area." @synonyms "north, upper, top"
     boundsSouth : number @description "Southern boundary coordinate of the search area." @synonyms "south, bottom, lowerBoundary"
@@ -25,9 +25,12 @@ orbital GeoSearchResultOrbital {
     state idle {
       INIT -> idle
         (set @entity.radiusKm @config.defaultRadiusKm)
+        (set @entity.searchTerm "")
+        (set @entity.centerLat @config.defaultCenterLat)
+        (set @entity.centerLng @config.defaultCenterLng)
         (render-ui main {
           children: [{
-            event: @config.event
+            event: GEO_TERM
             placeholder: @config.placeholder
             type: search-input
           }, {
@@ -38,7 +41,7 @@ orbital GeoSearchResultOrbital {
             type: map-view
             zoom: 12
           }, {
-            action: GEO_SEARCH
+            action: GEO_RADIUS
             max: 100
             min: 1
             showTooltip: true
@@ -50,14 +53,12 @@ orbital GeoSearchResultOrbital {
           gap: md
           type: stack
         })
-      GEO_SEARCH -> idle
+      GEO_TERM -> idle
         (set @entity.searchTerm ?searchTerm)
-        (set @entity.centerLat ?lat)
-        (set @entity.centerLng ?lng)
-        (set @entity.radiusKm ?radiusKm)
+        (emit GEO_SEARCH { searchTerm: @entity.searchTerm, lat: @entity.centerLat, lng: @entity.centerLng, radiusKm: @entity.radiusKm })
         (render-ui main {
           children: [{
-            event: @config.event
+            event: GEO_TERM
             placeholder: @config.placeholder
             type: search-input
           }, {
@@ -68,7 +69,35 @@ orbital GeoSearchResultOrbital {
             type: map-view
             zoom: 12
           }, {
-            action: GEO_SEARCH
+            action: GEO_RADIUS
+            max: 100
+            min: 1
+            showTooltip: true
+            step: 1
+            type: range-slider
+            value: @entity.radiusKm
+          }]
+          direction: vertical
+          gap: md
+          type: stack
+        })
+      GEO_RADIUS -> idle
+        (set @entity.radiusKm ?value)
+        (emit GEO_SEARCH { searchTerm: @entity.searchTerm, lat: @entity.centerLat, lng: @entity.centerLng, radiusKm: @entity.radiusKm })
+        (render-ui main {
+          children: [{
+            event: GEO_TERM
+            placeholder: @config.placeholder
+            type: search-input
+          }, {
+            centerLat: @entity.centerLat
+            centerLng: @entity.centerLng
+            height: "240px"
+            markers: []
+            type: map-view
+            zoom: 12
+          }, {
+            action: GEO_RADIUS
             max: 100
             min: 1
             showTooltip: true
@@ -83,29 +112,28 @@ orbital GeoSearchResultOrbital {
     }
 
     emits {
-      GEO_SEARCH {
+      GEO_SEARCH -> external {
         searchTerm : string!
         lat : number!
         lng : number!
         radiusKm : number!
-        value : number
       }
-        @description "Indicates a search request with location parameters."
+        @description "A search request: the term, the center and the radius the person has set."
         @synonyms "search, locate, find, query"
         @tier "domain"
     }
 
     listens {
-      GEO_SEARCH {
+      GEO_TERM {
         searchTerm : string!
-        lat : number!
-        lng : number!
-        radiusKm : number!
-        value : number
       }
-        @description "A search request with location and radius parameters."
-        @synonyms "search, query, locate, find"
-        @tier "domain"
+        @description "The person entered a search term."
+        @tier "internal"
+      GEO_RADIUS {
+        value : number!
+      }
+        @description "The person moved the radius slider."
+        @tier "internal"
     }
 
     config {
@@ -117,10 +145,14 @@ orbital GeoSearchResultOrbital {
         @label "Default radius (km)"
         @description "Initial search radius around the chosen center"
         @tier "presentation"
-      event : event = GEO_SEARCH
-        @label "Search event"
-        @description "Event emitted when the user runs a geo search"
-        @tier "internal"
+      defaultCenterLat : number = 0
+        @label "Default center latitude"
+        @description "Latitude the map and the search start centered on"
+        @tier "presentation"
+      defaultCenterLng : number = 0
+        @label "Default center longitude"
+        @description "Longitude the map and the search start centered on"
+        @tier "presentation"
     }
   }
 

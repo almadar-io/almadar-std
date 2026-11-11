@@ -1,0 +1,574 @@
+{
+ "atom": "agent/atoms/std-agent-context.lolo",
+ "trait": "AgentContextCompactor",
+ "note": "compaction by reported token usage: a declared token limit summarizes a conversation the turn count would pass through",
+ "cases": [
+  {
+   "id": "a-conversation-reply's-usage-is-kept-as-the-context-size",
+   "config": {
+    "keepMessages": 12,
+    "tokenLimit": 1000,
+    "keepMessagesOverLimit": 2
+   },
+   "steps": [
+    {
+     "trait": "AgentContextCompactor",
+     "event": "UsageReported",
+     "from": "ready",
+     "payload": {
+      "provider": "lmstudio",
+      "model": "m",
+      "action": "call-tools",
+      "inputTokens": 900,
+      "outputTokens": 150
+     },
+     "entity": {
+      "id": "c",
+      "pendingMessages": [],
+      "lastSize": 0,
+      "pendingInstructions": "",
+      "pendingTools": [],
+      "pendingEphemeral": false,
+      "pendingHasLive": false,
+      "pendingLive": false,
+      "lastTokens": 0,
+      "pendingKeep": 12
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "entity": {
+       "lastTokens": 1050
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-an-embedding's-usage-is-not-the-conversation's",
+   "config": {
+    "keepMessages": 12,
+    "tokenLimit": 1000,
+    "keepMessagesOverLimit": 2
+   },
+   "steps": [
+    {
+     "trait": "AgentContextCompactor",
+     "event": "UsageReported",
+     "from": "ready",
+     "payload": {
+      "provider": "lmstudio",
+      "model": "m",
+      "action": "embed",
+      "inputTokens": 5000
+     },
+     "entity": {
+      "id": "c",
+      "pendingMessages": [],
+      "lastSize": 0,
+      "pendingInstructions": "",
+      "pendingTools": [],
+      "pendingEphemeral": false,
+      "pendingHasLive": false,
+      "pendingLive": false,
+      "lastTokens": 40,
+      "pendingKeep": 12
+     },
+     "expect": {
+      "entity": {
+       "lastTokens": 40
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "edge-a-reply-that-reports-no-counts-leaves-the-size-as-it-was",
+   "config": {
+    "keepMessages": 12,
+    "tokenLimit": 1000,
+    "keepMessagesOverLimit": 2
+   },
+   "steps": [
+    {
+     "trait": "AgentContextCompactor",
+     "event": "UsageReported",
+     "from": "ready",
+     "payload": {
+      "provider": "lmstudio",
+      "model": "m",
+      "action": "call-tools"
+     },
+     "entity": {
+      "id": "c",
+      "pendingMessages": [],
+      "lastSize": 0,
+      "pendingInstructions": "",
+      "pendingTools": [],
+      "pendingEphemeral": false,
+      "pendingHasLive": false,
+      "pendingLive": false,
+      "lastTokens": 40,
+      "pendingKeep": 12
+     },
+     "expect": {
+      "entity": {
+       "lastTokens": 40
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-short-conversation-over-the-token-limit-is-summarized",
+   "config": {
+    "keepMessages": 12,
+    "tokenLimit": 1000,
+    "keepMessagesOverLimit": 2
+   },
+   "steps": [
+    {
+     "trait": "AgentContextCompactor",
+     "event": "COMPACT",
+     "from": "ready",
+     "payload": {
+      "messages": [
+       {
+        "role": "user",
+        "content": "m0"
+       },
+       {
+        "role": "assistant",
+        "content": "m1"
+       },
+       {
+        "role": "user",
+        "content": "m2"
+       },
+       {
+        "role": "assistant",
+        "content": "m3"
+       },
+       {
+        "role": "user",
+        "content": "m4"
+       },
+       {
+        "role": "assistant",
+        "content": "m5"
+       }
+      ]
+     },
+     "entity": {
+      "id": "c",
+      "pendingMessages": [],
+      "lastSize": 0,
+      "pendingInstructions": "",
+      "pendingTools": [],
+      "pendingEphemeral": false,
+      "pendingHasLive": false,
+      "pendingLive": false,
+      "lastTokens": 1050,
+      "pendingKeep": 12
+     },
+     "expect": {
+      "fired": true,
+      "state": "summarizing",
+      "emits": [
+       {
+        "event": "LLM_SUMMARIZE",
+        "payload": {
+         "text": "user: m0\nassistant: m1\nuser: m2\nassistant: m3"
+        }
+       }
+      ],
+      "entity": {
+       "pendingKeep": 2,
+       "lastTokens": 0
+      }
+     }
+    }
+   ],
+   "defaults": [
+    "ContextSummarizerLlm",
+    "CtxChatRequest",
+    "CtxChatHttp"
+   ]
+  },
+  {
+   "id": "control-a-short-conversation-under-the-token-limit-passes-through",
+   "config": {
+    "keepMessages": 12,
+    "tokenLimit": 1000,
+    "keepMessagesOverLimit": 2
+   },
+   "steps": [
+    {
+     "trait": "AgentContextCompactor",
+     "event": "COMPACT",
+     "from": "ready",
+     "payload": {
+      "messages": [
+       {
+        "role": "user",
+        "content": "m0"
+       },
+       {
+        "role": "assistant",
+        "content": "m1"
+       },
+       {
+        "role": "user",
+        "content": "m2"
+       },
+       {
+        "role": "assistant",
+        "content": "m3"
+       },
+       {
+        "role": "user",
+        "content": "m4"
+       },
+       {
+        "role": "assistant",
+        "content": "m5"
+       }
+      ]
+     },
+     "entity": {
+      "id": "c",
+      "pendingMessages": [],
+      "lastSize": 0,
+      "pendingInstructions": "",
+      "pendingTools": [],
+      "pendingEphemeral": false,
+      "pendingHasLive": false,
+      "pendingLive": false,
+      "lastTokens": 999,
+      "pendingKeep": 12
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "COMPACTED",
+        "payload": {
+         "messages": [
+          {
+           "role": "user",
+           "content": "m0"
+          },
+          {
+           "role": "assistant",
+           "content": "m1"
+          },
+          {
+           "role": "user",
+           "content": "m2"
+          },
+          {
+           "role": "assistant",
+           "content": "m3"
+          },
+          {
+           "role": "user",
+           "content": "m4"
+          },
+          {
+           "role": "assistant",
+           "content": "m5"
+          }
+         ],
+         "instructions": "",
+         "tools": [],
+         "ephemeral": false
+        }
+       }
+      ],
+      "neverEmits": [
+       "LLM_SUMMARIZE"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-no-token-limit-declared-never-compacts-by-size",
+   "config": {
+    "keepMessages": 12,
+    "tokenLimit": 0,
+    "keepMessagesOverLimit": 2
+   },
+   "steps": [
+    {
+     "trait": "AgentContextCompactor",
+     "event": "COMPACT",
+     "from": "ready",
+     "payload": {
+      "messages": [
+       {
+        "role": "user",
+        "content": "m0"
+       },
+       {
+        "role": "assistant",
+        "content": "m1"
+       },
+       {
+        "role": "user",
+        "content": "m2"
+       },
+       {
+        "role": "assistant",
+        "content": "m3"
+       },
+       {
+        "role": "user",
+        "content": "m4"
+       },
+       {
+        "role": "assistant",
+        "content": "m5"
+       }
+      ]
+     },
+     "entity": {
+      "id": "c",
+      "pendingMessages": [],
+      "lastSize": 0,
+      "pendingInstructions": "",
+      "pendingTools": [],
+      "pendingEphemeral": false,
+      "pendingHasLive": false,
+      "pendingLive": false,
+      "lastTokens": 999999,
+      "pendingKeep": 12
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "COMPACTED"
+       }
+      ],
+      "neverEmits": [
+       "LLM_SUMMARIZE"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "edge-over-the-limit-with-nothing-older-than-the-kept-turns-passes-through",
+   "config": {
+    "keepMessages": 12,
+    "tokenLimit": 1000,
+    "keepMessagesOverLimit": 2
+   },
+   "steps": [
+    {
+     "trait": "AgentContextCompactor",
+     "event": "COMPACT",
+     "from": "ready",
+     "payload": {
+      "messages": [
+       {
+        "role": "user",
+        "content": "m0"
+       },
+       {
+        "role": "assistant",
+        "content": "m1"
+       }
+      ]
+     },
+     "entity": {
+      "id": "c",
+      "pendingMessages": [],
+      "lastSize": 0,
+      "pendingInstructions": "",
+      "pendingTools": [],
+      "pendingEphemeral": false,
+      "pendingHasLive": false,
+      "pendingLive": false,
+      "lastTokens": 5000,
+      "pendingKeep": 12
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "COMPACTED"
+       }
+      ],
+      "neverEmits": [
+       "LLM_SUMMARIZE"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-long-conversation-under-the-limit-keeps-the-declared-turn-count",
+   "config": {
+    "keepMessages": 4,
+    "tokenLimit": 1000,
+    "keepMessagesOverLimit": 2
+   },
+   "steps": [
+    {
+     "trait": "AgentContextCompactor",
+     "event": "COMPACT",
+     "from": "ready",
+     "payload": {
+      "messages": [
+       {
+        "role": "user",
+        "content": "m0"
+       },
+       {
+        "role": "assistant",
+        "content": "m1"
+       },
+       {
+        "role": "user",
+        "content": "m2"
+       },
+       {
+        "role": "assistant",
+        "content": "m3"
+       },
+       {
+        "role": "user",
+        "content": "m4"
+       },
+       {
+        "role": "assistant",
+        "content": "m5"
+       }
+      ]
+     },
+     "entity": {
+      "id": "c",
+      "pendingMessages": [],
+      "lastSize": 0,
+      "pendingInstructions": "",
+      "pendingTools": [],
+      "pendingEphemeral": false,
+      "pendingHasLive": false,
+      "pendingLive": false,
+      "lastTokens": 10,
+      "pendingKeep": 12
+     },
+     "expect": {
+      "fired": true,
+      "state": "summarizing",
+      "emits": [
+       {
+        "event": "LLM_SUMMARIZE",
+        "payload": {
+         "text": "user: m0\nassistant: m1"
+        }
+       }
+      ],
+      "entity": {
+       "pendingKeep": 4
+      }
+     }
+    }
+   ],
+   "defaults": [
+    "ContextSummarizerLlm",
+    "CtxChatRequest",
+    "CtxChatHttp"
+   ]
+  },
+  {
+   "id": "the-summary-of-a-size-compaction-keeps-only-the-turns-kept-over-the-limit",
+   "config": {
+    "keepMessages": 12,
+    "tokenLimit": 1000,
+    "keepMessagesOverLimit": 2
+   },
+   "steps": [
+    {
+     "trait": "AgentContextCompactor",
+     "event": "ContextSummarized",
+     "from": "summarizing",
+     "payload": {
+      "summary": "S",
+      "keyPoints": []
+     },
+     "entity": {
+      "id": "c",
+      "pendingMessages": [
+       {
+        "role": "user",
+        "content": "m0"
+       },
+       {
+        "role": "assistant",
+        "content": "m1"
+       },
+       {
+        "role": "user",
+        "content": "m2"
+       },
+       {
+        "role": "assistant",
+        "content": "m3"
+       },
+       {
+        "role": "user",
+        "content": "m4"
+       },
+       {
+        "role": "assistant",
+        "content": "m5"
+       }
+      ],
+      "lastSize": 0,
+      "pendingInstructions": "",
+      "pendingTools": [],
+      "pendingEphemeral": false,
+      "pendingHasLive": false,
+      "pendingLive": false,
+      "lastTokens": 0,
+      "pendingKeep": 2
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "COMPACTED",
+        "payload": {
+         "messages": [
+          {
+           "role": "assistant",
+           "content": "Earlier in this conversation: S"
+          },
+          {
+           "role": "user",
+           "content": "m4"
+          },
+          {
+           "role": "assistant",
+           "content": "m5"
+          }
+         ],
+         "instructions": "",
+         "tools": [],
+         "ephemeral": false
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

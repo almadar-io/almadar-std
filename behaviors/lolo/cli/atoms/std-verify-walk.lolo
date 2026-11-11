@@ -16,6 +16,8 @@ type WalkPlanStep = { trait : string!, linkedEntity : string, from : string!, ev
 type WalkVerdict = { name : string!, passed : boolean!, detail : string! }
 type WalkUnported = { name : string!, reason : string! }
 type WalkJudged = { verdicts : [WalkVerdict]! }
+type WalkJudgeItem = { step : WalkPlanStep!, played : WalkResult!, rendered : [WalkRenderedNode]? }
+type WalkJudgeResult = { verdicts : [WalkVerdict]!, unported : [WalkUnported]! }
 type WalkFull = { orbitals : [orbital] }
 type WalkPayload = Map string WalkJson
 type WalkIssue = { code : string!, message : string }
@@ -31,7 +33,7 @@ type WalkPlayed = { trait : string!, from : string!, event : string!, to : strin
 type WalkNodeBinding = { kind : string!, entity : string, rows : number, readGated : boolean }
 type WalkRenderedNode = { pattern : string!, dynamic : boolean!, supported : boolean!, stub : boolean!, binding : WalkNodeBinding! }
 type WalkRenderedSlot = { slot : string!, sourceTrait : string!, ownerEntity : string!, nodes : [WalkRenderedNode]! }
-type WalkResult = { trait : string!, event : string!, transitionFired : boolean!, guard : string!, firedArm : number, effects : [WalkEffect]!, emitted : [SExpr]!, guards : [SExpr]!, state : Map string string, rendered : [WalkRenderedSlot]? }
+type WalkResult = { trait : string!, event : string!, failure : string?, transitionFired : boolean!, guard : string!, firedArm : number, effects : [WalkEffect]!, emitted : [SExpr]!, guards : [SExpr]!, state : Map string string, rendered : [WalkRenderedSlot]? }
 type WalkHop = { trait : string!, from : string!, event : string!, to : string!, arm : number }
 type WalkCreditStep = { trait : string!, from : string!, event : string!, arm : number, reply : string, fired : [WalkHop] }
 type WalkCredit = { index : number!, stateBefore : string!, stateAfter : string! }
@@ -253,17 +255,19 @@ orbital VerifyWalkOrbital {
 
     state judging {
       INIT -> judging
-      WALK_JUDGE_NEXT -> judging when (and (< (array/len @entity.judged) (array/len @entity.played)) (!= @entity.program null) (!= (array/nth @entity.judgeSteps (array/len @entity.judged)) null))
-        (let ((rendered (object/get (object/get (array/nth @entity.played (array/len @entity.judged)) "result") "rendered" null)))
-          (emit WALK_JUDGE_REQUEST { step: (array/nth @entity.judgeSteps (array/len @entity.judged)), played: (object/get (array/nth @entity.played (array/len @entity.judged)) "result"), program: @entity.program, rendered: (if (= @rendered null) null (array/reduce @rendered [] (fn (acc slot) (array/concat @acc (object/get @slot "nodes" []))))) }))
-      WALK_JUDGE_NEXT -> judging when (and (< (array/len @entity.judged) (array/len @entity.played)) (= @entity.program null))
+      WALK_JUDGE_NEXT -> judging when (= @entity.program null)
         (emit WALK_FAILED { error: "the program could not be read back" })
-      WALK_JUDGE_NEXT -> judging when (and (< (array/len @entity.judged) (array/len @entity.played)) (!= @entity.program null) (= (array/nth @entity.judgeSteps (array/len @entity.judged)) null))
-        (emit WALK_FAILED { error: "the judged step has no planned or played row" })
-      WALK_JUDGE_ANSWERED -> judging
-        (set @entity.judged (array/concat @entity.judged [{ verdicts: @payload.verdicts }]))
-        (emit WALK_JUDGE_NEXT {})
-      WALK_JUDGE_NEXT -> crediting when (= (array/len @entity.judged) (array/len @entity.played))
+      WALK_JUDGE_NEXT -> judging when (and (!= @entity.program null) (!= (array/len @entity.judgeSteps) (array/len @entity.played)))
+        (emit WALK_FAILED { error: "the judged steps do not match the played rows" })
+      WALK_JUDGE_NEXT -> judging when (and (!= @entity.program null) (= (array/len @entity.judgeSteps) (array/len @entity.played)))
+        (emit WALK_JUDGE_REQUEST { program: @entity.program, items: (array/map (array/zip @entity.judgeSteps @entity.played) (fn z
+          (let ((pl (array/nth @z 1)))
+            (let ((rendered (object/get (object/get @pl "result") "rendered" null)))
+              { step: (array/nth @z 0), played: (object/get @pl "result"), rendered: (if (= @rendered null) null (array/reduce @rendered [] (fn (acc slot) (array/concat @acc (object/get @slot "nodes" []))))) })))) })
+      WALK_JUDGE_ANSWERED -> judging when (!= (array/len @payload.results) (array/len @entity.played))
+        (emit WALK_FAILED { error: "the judge answer does not match the played rows" })
+      WALK_JUDGE_ANSWERED -> crediting when (= (array/len @payload.results) (array/len @entity.played))
+        (set @entity.judged (array/map @payload.results (fn r { verdicts: (object/get @r "verdicts") })))
         (let ((credit : [WalkCreditStep] (array/map @entity.creditSteps (fn s { trait: (object/get @s "trait"), from: (object/get @s "from"), event: (object/get @s "event"), reply: (object/get @s "reply" ""), fired: @entity.hops }))))
           (emit WALK_CREDIT_REQUEST { steps: @credit }))
       WALK_FAILED -> ready
@@ -315,7 +319,7 @@ orbital VerifyWalkOrbital {
       WALK_PLAN_REQUEST -> external { program : SExpr!, rows : [WalkMachineRow]!, viewer : (Map string WalkJson)?, owners : Map string [string] }
         @description "Ask std-verify-plan for one planned step per row."
         @tier "internal"
-      WALK_JUDGE_REQUEST -> external { step : WalkPlanStep!, played : WalkResult!, program : SExpr!, rendered : [WalkRenderedNode]? }
+      WALK_JUDGE_REQUEST -> external { items : [WalkJudgeItem]!, program : SExpr! }
         @description "Ask std-verify-judge for the verdicts of one played step."
         @tier "internal"
       WALK_CREDIT_REQUEST -> external { steps : [WalkCreditStep]! }
@@ -359,7 +363,7 @@ orbital VerifyWalkOrbital {
       WalkCreditor.CREDIT_ANSWERED -> WALK_CREDIT_ANSWERED
       WALK_CREDIT_ANSWERED { credits : [WalkCredit]! }
         @description "std-verify-credit's CREDIT_ANSWERED."
-      WALK_JUDGE_ANSWERED { verdicts : [WalkVerdict]!, unported : [WalkUnported]! }
+      WALK_JUDGE_ANSWERED { results : [WalkJudgeResult]! }
         @description "std-verify-judge's JUDGE_ANSWERED."
       WALK_PLAN_ANSWERED { steps : [WalkPlanStep]! }
         @description "std-verify-plan's PLAN_ANSWERED."

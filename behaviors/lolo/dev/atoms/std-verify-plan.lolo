@@ -1,7 +1,7 @@
 app std-verify-plan [
   version: "1.0.0",
   env: ["ALMADAR_PERSONA_OWNS"],
-  description: "std-verify-plan — the kernel's verify planner (orbital-core planner.rs plan_trait) as data. PLAN_REQUEST carries a resolved program (.orb IR) and std-machine rows; PLAN_ANSWERED returns one PlannedStep per row in row order. Planned: the payload of every unguarded row from its declared slots (row-key slot and id slot = the seed row id, values slot = first declared value, entity slot or bound @entity slot = a full sample row of that entity from the composed std-mock-seed (SAMPLE_ROWS) carrying the seed id (a one-row array for an array slot), number 1, boolean true, email, url, image, phone, uuid, array [], other string 'verify', a slot of a declared record type (a key of the program's or an orbital's types) is left out when optional; a required one makes the row object-slot-unplanned). Unplanned with the Rust reason code: guard-unsolved (guarded row, the symbolic guard solver is not ported) and object-slot-unplanned (object or [object] slot, its properties are not on the row). The walk is bounded array maps in one event, no cascade."
+  description: "std-verify-plan — the kernel's verify planner (orbital-core planner.rs plan_trait) as data. PLAN_REQUEST carries a resolved program (.orb IR) and std-machine rows; PLAN_ANSWERED returns one PlannedStep per row in row order. Planned: the payload of every unguarded row from its declared slots (row-key slot and id slot = the seed row id, values slot = first declared value, entity slot or bound @entity slot = a full sample row of that entity from the composed std-mock-seed (SAMPLE_ROWS) carrying the seed id (a one-row array for an array slot), number and money 1, date 2026-01-01, datetime, timestamp and instant 2026-01-01T00:00:00Z, a Map slot {}, boolean true, email, url, image, phone, uuid, array [], other string 'verify', a slot of a declared record type (a key of the program's or an orbital's types) is left out when optional; a required one makes the row object-slot-unplanned). Unplanned with the Rust reason code: guard-unsolved (guarded row, the symbolic guard solver is not ported) and object-slot-unplanned (object or [object] slot, its properties are not on the row). The walk is bounded array maps in one event, no cascade."
 ]
 ;; @capabilities "verify planner, payload synthesis, seed row id, plan a transition, guard payload"
 uses Spec from "almadar-std/verify-plan"
@@ -135,14 +135,17 @@ orbital VerifyPlanOrbital {
                                        (if (object/has @s "values") (as (array/nth (object/get @s "values" []) 0) JsonValue)
                                        (if (or (object/has @s "entity") (= (object/get @s "type") (quote "@entity")) (= (object/get @s "type") "[@entity]")) (if (str/startsWith (object/get @s "type") "[") (as [{ id: @seed }] JsonValue) (as { id: @seed } JsonValue))
                                        (if (array/includes @named (object/get @s "type")) null
-                                       (if (array/includes ["number" "int" "integer" "float"] (object/get @s "type")) (as 1 JsonValue)
+                                       (if (array/includes ["number" "int" "integer" "float" "money"] (object/get @s "type")) (as 1 JsonValue)
+                                       (if (= (object/get @s "type") "date") (as "2026-01-01" JsonValue)
+                                       (if (array/includes ["datetime" "timestamp" "instant"] (object/get @s "type")) (as "2026-01-01T00:00:00Z" JsonValue)
+                                       (if (str/startsWith (object/get @s "type") "Map ") (as {} JsonValue)
                                        (if (array/includes ["boolean" "bool"] (object/get @s "type")) (as true JsonValue)
                                        (if (= (object/get @s "type") "email") (as "verify@example.com" JsonValue)
                                        (if (array/includes ["url" "image"] (object/get @s "type")) (as "https://example.com/verify" JsonValue)
                                        (if (= (object/get @s "type") "phone") (as "+1-555-0100" JsonValue)
                                        (if (= (object/get @s "type") "uuid") (as "00000000-0000-4000-8000-000000000001" JsonValue)
                                        (if (= (object/get @s "type") "bytes") (as "dmVyaWZ5" JsonValue)
-                                       (if (str/startsWith (object/get @s "type") "[") (as @noArr JsonValue) (as "verify" JsonValue))))))))))))))) (if (= @pv null) @acc (object/set @acc (object/get @s "name") @pv))))))
+                                       (if (str/startsWith (object/get @s "type") "[") (as @noArr JsonValue) (as "verify" JsonValue)))))))))))))))))) (if (= @pv null) @acc (object/set @acc (object/get @s "name") @pv))))))
                         (objectSlot (array/some (object/get @r "payload") (fn s (or (array/includes ["object" "[object]"] (object/get @s "type")) (and (object/get @s "required") (array/includes @named (object/get @s "type"))))))))
                     (let ((arms (object/get (object/get @tr "stateMachine" @noGraph) "transitions" []))
                           (guarded (object/get @r "guarded")))

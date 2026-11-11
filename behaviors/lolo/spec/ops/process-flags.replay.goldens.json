@@ -1,0 +1,432 @@
+{
+ "atom": "ops/atoms/std-process-watch.lolo",
+ "trait": "ProcessFlags",
+ "cases": [
+  {
+   "id": "a-reading-fills-the-page",
+   "steps": [
+    {
+     "trait": "ProcessFlags",
+     "event": "FlagsSampled",
+     "from": "showing",
+     "payload": {
+      "count": 600,
+      "measured": 400,
+      "rssBytes": 32212254720,
+      "flags": [
+       {
+        "key": "99999990:1000",
+        "pid": 99999990,
+        "name": "orb",
+        "command": "/usr/bin/orb",
+        "args": [
+         "orb",
+         "serve"
+        ],
+        "signature": "/usr/bin/orb orb serve",
+        "pattern": "orphan",
+        "kind": "orphaned",
+        "ageSeconds": 5000,
+        "rssBytes": 2147483648,
+        "cpuPercent": 0,
+        "growthBytes": 0
+       }
+      ],
+      "at": "2026-11-11T10:00:00.000Z"
+     },
+     "entity": {
+      "id": "v",
+      "read": false,
+      "count": 0,
+      "measured": 0,
+      "rssBytes": 0,
+      "flags": [],
+      "confirming": "",
+      "notice": "",
+      "noticeKind": "info"
+     },
+     "expect": {
+      "fired": true,
+      "state": "showing",
+      "entity": {
+       "read": true,
+       "count": 600,
+       "measured": 400,
+       "flags": [
+        {
+         "key": "99999990:1000",
+         "pid": 99999990,
+         "name": "orb",
+         "command": "/usr/bin/orb",
+         "args": [
+          "orb",
+          "serve"
+         ],
+         "signature": "/usr/bin/orb orb serve",
+         "pattern": "orphan",
+         "kind": "orphaned",
+         "ageSeconds": 5000,
+         "rssBytes": 2147483648,
+         "cpuPercent": 0,
+         "growthBytes": 0
+        }
+       ]
+      },
+      "effects": [
+       {
+        "type": "render-ui"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "stop-asks-once-more-and-sends-nothing-yet",
+   "steps": [
+    {
+     "trait": "ProcessFlags",
+     "event": "FLAG_STOP_ASKED",
+     "from": "showing",
+     "payload": {
+      "key": "99999990:1000"
+     },
+     "entity": {
+      "id": "v",
+      "read": true,
+      "count": 0,
+      "measured": 0,
+      "rssBytes": 0,
+      "flags": [
+       {
+        "key": "99999990:1000",
+        "pid": 99999990,
+        "name": "orb",
+        "command": "/usr/bin/orb",
+        "args": [
+         "orb",
+         "serve"
+        ],
+        "signature": "/usr/bin/orb orb serve",
+        "pattern": "orphan",
+        "kind": "orphaned",
+        "ageSeconds": 5000,
+        "rssBytes": 2147483648,
+        "cpuPercent": 0,
+        "growthBytes": 0
+       }
+      ],
+      "confirming": "",
+      "notice": "",
+      "noticeKind": "info"
+     },
+     "expect": {
+      "fired": true,
+      "state": "showing",
+      "neverEmits": [
+       "FLAG_STOP"
+      ],
+      "entity": {
+       "confirming": "99999990:1000"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-saying-no-clears-the-question-and-sends-nothing",
+   "steps": [
+    {
+     "trait": "ProcessFlags",
+     "event": "FLAG_STOP_CANCELLED",
+     "from": "showing",
+     "payload": {},
+     "entity": {
+      "id": "v",
+      "read": true,
+      "count": 0,
+      "measured": 0,
+      "rssBytes": 0,
+      "flags": [
+       {
+        "key": "99999990:1000",
+        "pid": 99999990,
+        "name": "orb",
+        "command": "/usr/bin/orb",
+        "args": [
+         "orb",
+         "serve"
+        ],
+        "signature": "/usr/bin/orb orb serve",
+        "pattern": "orphan",
+        "kind": "orphaned",
+        "ageSeconds": 5000,
+        "rssBytes": 2147483648,
+        "cpuPercent": 0,
+        "growthBytes": 0
+       }
+      ],
+      "confirming": "99999990:1000",
+      "notice": "",
+      "noticeKind": "info"
+     },
+     "expect": {
+      "fired": true,
+      "state": "showing",
+      "neverEmits": [
+       "FLAG_STOP"
+      ],
+      "entity": {
+       "confirming": "",
+       "flags": [
+        {
+         "key": "99999990:1000",
+         "pid": 99999990,
+         "name": "orb",
+         "command": "/usr/bin/orb",
+         "args": [
+          "orb",
+          "serve"
+         ],
+         "signature": "/usr/bin/orb orb serve",
+         "pattern": "orphan",
+         "kind": "orphaned",
+         "ageSeconds": 5000,
+         "rssBytes": 2147483648,
+         "cpuPercent": 0,
+         "growthBytes": 0
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-confirmed-stop-is-sent-to-the-watch",
+   "defaults": [
+    "ProcessWatch"
+   ],
+   "steps": [
+    {
+     "trait": "ProcessFlags",
+     "event": "FLAG_STOP_CONFIRMED",
+     "from": "showing",
+     "payload": {
+      "key": "99999990:1000"
+     },
+     "entity": {
+      "id": "v",
+      "read": true,
+      "count": 0,
+      "measured": 0,
+      "rssBytes": 0,
+      "flags": [
+       {
+        "key": "99999990:1000",
+        "pid": 99999990,
+        "name": "orb",
+        "command": "/usr/bin/orb",
+        "args": [
+         "orb",
+         "serve"
+        ],
+        "signature": "/usr/bin/orb orb serve",
+        "pattern": "orphan",
+        "kind": "orphaned",
+        "ageSeconds": 5000,
+        "rssBytes": 2147483648,
+        "cpuPercent": 0,
+        "growthBytes": 0
+       }
+      ],
+      "confirming": "99999990:1000",
+      "notice": "",
+      "noticeKind": "info"
+     },
+     "expect": {
+      "fired": true,
+      "state": "showing",
+      "emits": [
+       {
+        "event": "FLAG_STOP",
+        "payload": {
+         "key": "99999990:1000"
+        }
+       }
+      ],
+      "entity": {
+       "confirming": ""
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "expected-sends-the-verdict-and-drops-the-flag-from-the-page",
+   "defaults": [
+    "ProcessWatch"
+   ],
+   "steps": [
+    {
+     "trait": "ProcessFlags",
+     "event": "FLAG_EXPECTED",
+     "from": "showing",
+     "payload": {
+      "signature": "/usr/bin/orb orb serve",
+      "key": "99999990:1000"
+     },
+     "entity": {
+      "id": "v",
+      "read": true,
+      "count": 0,
+      "measured": 0,
+      "rssBytes": 0,
+      "flags": [
+       {
+        "key": "99999990:1000",
+        "pid": 99999990,
+        "name": "orb",
+        "command": "/usr/bin/orb",
+        "args": [
+         "orb",
+         "serve"
+        ],
+        "signature": "/usr/bin/orb orb serve",
+        "pattern": "orphan",
+        "kind": "orphaned",
+        "ageSeconds": 5000,
+        "rssBytes": 2147483648,
+        "cpuPercent": 0,
+        "growthBytes": 0
+       }
+      ],
+      "confirming": "",
+      "notice": "",
+      "noticeKind": "info"
+     },
+     "expect": {
+      "fired": true,
+      "state": "showing",
+      "emits": [
+       {
+        "event": "FLAG_VERDICT",
+        "payload": {
+         "signature": "/usr/bin/orb orb serve",
+         "verdict": "expected"
+        }
+       }
+      ],
+      "entity": {
+       "flags": []
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-stop-that-found-the-process-gone-says-so",
+   "steps": [
+    {
+     "trait": "ProcessFlags",
+     "event": "FlagStopFailed",
+     "from": "showing",
+     "payload": {
+      "key": "99999990:1000",
+      "code": "gone",
+      "error": "the process is no longer running"
+     },
+     "entity": {
+      "id": "v",
+      "read": true,
+      "count": 0,
+      "measured": 0,
+      "rssBytes": 0,
+      "flags": [
+       {
+        "key": "99999990:1000",
+        "pid": 99999990,
+        "name": "orb",
+        "command": "/usr/bin/orb",
+        "args": [
+         "orb",
+         "serve"
+        ],
+        "signature": "/usr/bin/orb orb serve",
+        "pattern": "orphan",
+        "kind": "orphaned",
+        "ageSeconds": 5000,
+        "rssBytes": 2147483648,
+        "cpuPercent": 0,
+        "growthBytes": 0
+       }
+      ],
+      "confirming": "",
+      "notice": "",
+      "noticeKind": "info"
+     },
+     "expect": {
+      "fired": true,
+      "state": "showing",
+      "entity": {
+       "notice": "That process had already ended.",
+       "noticeKind": "warning"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-carried-out-stop-drops-the-flag-and-says-so",
+   "steps": [
+    {
+     "trait": "ProcessFlags",
+     "event": "FlagStopped",
+     "from": "showing",
+     "payload": {
+      "key": "99999990:1000",
+      "pid": 99999990
+     },
+     "entity": {
+      "id": "v",
+      "read": true,
+      "count": 0,
+      "measured": 0,
+      "rssBytes": 0,
+      "flags": [
+       {
+        "key": "99999990:1000",
+        "pid": 99999990,
+        "name": "orb",
+        "command": "/usr/bin/orb",
+        "args": [
+         "orb",
+         "serve"
+        ],
+        "signature": "/usr/bin/orb orb serve",
+        "pattern": "orphan",
+        "kind": "orphaned",
+        "ageSeconds": 5000,
+        "rssBytes": 2147483648,
+        "cpuPercent": 0,
+        "growthBytes": 0
+       }
+      ],
+      "confirming": "",
+      "notice": "",
+      "noticeKind": "info"
+     },
+     "expect": {
+      "fired": true,
+      "state": "showing",
+      "entity": {
+       "flags": [],
+       "notice": "Process 99999990 was asked to stop.",
+       "noticeKind": "success"
+      }
+     }
+    }
+   ]
+  }
+ ]
+}

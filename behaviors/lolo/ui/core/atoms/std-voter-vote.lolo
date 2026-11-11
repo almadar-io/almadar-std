@@ -1,0 +1,278 @@
+app std-voter-vote [
+  version: "1.0.0",
+  description: "std-voter-vote — an up/down vote stack that stores one row per voter and target. The row id is the voter's id, a colon, then the target id, so a voter holds at most one vote per target. SET_VOTE_TARGET names the target and reads this voter's own row by id: a stored row shows its direction, and no row yet shows the neutral stack. VOTE toggles (clicking the active direction clears it to none) and writes with an update; when the update answers not-found the first vote creates the row, and any other failure shows the error and writes nothing. VoteCasted -> external fires after either write so sibling traits can react. Voters who are not signed in all share the id prefix `anonymous`, so they share one row per target; compose it behind sign-in when each visitor needs a vote of their own. For a vote kept on the voted item itself, use std-vote."
+]
+;; @capabilities "one vote per voter and target, upvote, downvote, clear a vote, change a vote, per-user voting"
+;; @synonyms "upvote, downvote, vote, voting, thumbs up, thumbs down, my vote"
+;; @exposure both
+orbital VoterVoteOrbital {
+    type VoterVoteLoaded = Event { data : VoterVoteRow! } "Fired when this voter's row for the target is read"
+
+    type VoterVoteLoadFailed = Event { error : string, code : string } "Fired when this voter's row cannot be read; code not-found means the voter has not voted on the target yet"
+
+    type VoteCasted = Event @entity "Fired after a vote persists successfully"
+
+    type VoterVoteRowMissed = Event { error : string, code : string } "Fired when updating this voter's row fails; code not-found means the row does not exist yet"
+
+    type VoteCastFailed = Event { error : string, code : string } "Fired when creating this voter's row fails"
+
+  entity VoterVoteRow [persistent: voter_votes] {
+    @read none "This program declares no identity entity, so it has no signed-in viewer to scope reads to: every visitor may read these rows."
+    id : string!
+    targetId : string! @description "Identifier for the item being voted on." @synonyms "reference, item, subject"
+    voterId : string! @description "Unique identifier of the user casting the vote." @synonyms "user, author, participant"
+    direction : "up" | "down" | "none" @description "Indicates the vote's direction." @synonyms "vote, sentiment, choice" = none
+  }
+
+  trait VoterVote -> VoterVoteRow {
+    initial: loading
+
+    state loading {
+      INIT -> idle when (= (default @entity.targetId "") "")
+        (set @entity.direction none)
+        (render-ui main {
+          count: 0
+          disabled: true
+          label: @config.label
+          type: vote-stack
+          userVote: none
+          variant: vertical
+        })
+      INIT -> loading when (!= (default @entity.targetId "") "")
+        (fetch VoterVoteRow {
+          emit: { failure: VoterVoteLoadFailed, success: VoterVoteLoaded }
+          id: (str/concat @user.id ":" @entity.targetId)
+        })
+        (render-ui main { type: skeleton, variant: card })
+      SET_VOTE_TARGET -> loading
+        (set @entity.targetId ?targetId)
+        (fetch VoterVoteRow {
+          emit: { failure: VoterVoteLoadFailed, success: VoterVoteLoaded }
+          id: (str/concat @user.id ":" ?targetId)
+        })
+        (render-ui main { type: skeleton, variant: card })
+      VoterVoteLoaded -> idle
+        (set @entity.direction ?data.direction)
+        (render-ui main {
+          count: 0
+          label: @config.label
+          onVote: VOTE
+          type: vote-stack
+          userVote: @entity.direction
+          variant: vertical
+        })
+      VoterVoteLoadFailed -> idle when (= ?code "not-found")
+        (set @entity.direction none)
+        (render-ui main {
+          count: 0
+          label: @config.label
+          onVote: VOTE
+          type: vote-stack
+          userVote: none
+          variant: vertical
+        })
+      VoterVoteLoadFailed -> error when (!= ?code "not-found")
+        (render-ui main {
+          message: ?error
+          type: alert
+          variant: error
+        })
+    }
+
+    state idle {
+      INIT -> idle when (= (default @entity.targetId "") "")
+        (set @entity.direction none)
+        (render-ui main {
+          count: 0
+          disabled: true
+          label: @config.label
+          type: vote-stack
+          userVote: none
+          variant: vertical
+        })
+      INIT -> loading when (!= (default @entity.targetId "") "")
+        (fetch VoterVoteRow {
+          emit: { failure: VoterVoteLoadFailed, success: VoterVoteLoaded }
+          id: (str/concat @user.id ":" @entity.targetId)
+        })
+        (render-ui main { type: skeleton, variant: card })
+      SET_VOTE_TARGET -> loading
+        (set @entity.targetId ?targetId)
+        (fetch VoterVoteRow {
+          emit: { failure: VoterVoteLoadFailed, success: VoterVoteLoaded }
+          id: (str/concat @user.id ":" ?targetId)
+        })
+      VOTE -> voting when (!= (default @entity.targetId "") "")
+        (set @entity.direction (if (= (default ?next none) @entity.direction) none (default ?next none)))
+        (persist update VoterVoteRow { id: (str/concat @user.id ":" @entity.targetId), direction: @entity.direction } {
+          emit: { failure: VoterVoteRowMissed, success: VoteCasted }
+        })
+    }
+
+    state voting {
+      INIT -> idle when (= (default @entity.targetId "") "")
+        (set @entity.direction none)
+        (render-ui main {
+          count: 0
+          disabled: true
+          label: @config.label
+          type: vote-stack
+          userVote: none
+          variant: vertical
+        })
+      INIT -> loading when (!= (default @entity.targetId "") "")
+        (fetch VoterVoteRow {
+          emit: { failure: VoterVoteLoadFailed, success: VoterVoteLoaded }
+          id: (str/concat @user.id ":" @entity.targetId)
+        })
+        (render-ui main { type: skeleton, variant: card })
+      VoteCasted -> idle
+        (render-ui main {
+          count: 0
+          label: @config.label
+          onVote: VOTE
+          type: vote-stack
+          userVote: @entity.direction
+          variant: vertical
+        })
+      VoterVoteRowMissed -> voting when (= ?code "not-found")
+        (persist create VoterVoteRow { id: (str/concat @user.id ":" @entity.targetId), targetId: @entity.targetId, voterId: @user.id, direction: @entity.direction } {
+          emit: { failure: VoteCastFailed, success: VoteCasted }
+        })
+      VoterVoteRowMissed -> error when (!= ?code "not-found")
+        (render-ui main {
+          message: ?error
+          type: alert
+          variant: error
+        })
+      VoteCastFailed -> error
+        (render-ui main {
+          message: ?error
+          type: alert
+          variant: error
+        })
+    }
+
+    state error {
+      INIT -> idle when (= (default @entity.targetId "") "")
+        (set @entity.direction none)
+        (render-ui main {
+          count: 0
+          disabled: true
+          label: @config.label
+          type: vote-stack
+          userVote: none
+          variant: vertical
+        })
+      INIT -> loading when (!= (default @entity.targetId "") "")
+        (fetch VoterVoteRow {
+          emit: { failure: VoterVoteLoadFailed, success: VoterVoteLoaded }
+          id: (str/concat @user.id ":" @entity.targetId)
+        })
+        (render-ui main { type: skeleton, variant: card })
+      SET_VOTE_TARGET -> loading
+        (set @entity.targetId ?targetId)
+        (fetch VoterVoteRow {
+          emit: { failure: VoterVoteLoadFailed, success: VoterVoteLoaded }
+          id: (str/concat @user.id ":" ?targetId)
+        })
+        (render-ui main { type: skeleton, variant: card })
+    }
+
+    emits {
+      VOTE {
+        next : "up" | "down" | "none"
+      }
+        @description "The voter pressed an arrow on the stack."
+        @synonyms "voted, pressed, chose"
+        @tier "domain"
+      VoterVoteLoaded {
+        data : VoterVoteRow!
+      }
+        @description "This voter's stored vote for the target was read."
+        @synonyms "loaded, fetched, retrieved"
+        @tier "internal"
+      VoterVoteLoadFailed {
+        error : string
+        code : string
+      }
+        @description "This voter's vote for the target could not be read; not-found means no vote yet."
+        @synonyms "load error, no vote yet, fetch failure"
+        @tier "internal"
+      VoteCasted -> external
+        @description "Indicates a vote has been successfully recorded."
+        @synonyms "voted, vote-submitted, vote-changed"
+        @tier "domain"
+      VoterVoteRowMissed {
+        error : string
+        code : string
+      }
+        @description "The voter's row for this target could not be updated; when it does not exist yet, the first vote creates it."
+        @synonyms "no vote yet, first vote, update missed"
+        @tier "internal"
+      VoteCastFailed {
+        error : string
+        code : string
+      }
+        @description "Creating the voter's first vote row failed."
+        @synonyms "failed, rejected, error"
+        @tier "presentation"
+    }
+
+    listens {
+      VOTE {
+        next : "up" | "down" | "none"
+      }
+        @description "A voter has cast, changed or cleared their vote on the current target."
+        @synonyms "voted, submitted, updated"
+        @tier "domain"
+      SET_VOTE_TARGET {
+        targetId : string!
+      }
+        @description "Names the item being voted on and reads this voter's stored vote for it."
+        @synonyms "retarget, scope to item, set target, change target"
+        @tier "domain"
+      VoterVoteLoaded {
+        data : VoterVoteRow!
+      }
+        @description "This voter's stored vote for the target was read."
+        @synonyms "loaded, fetched, retrieved"
+        @tier "internal"
+      VoterVoteLoadFailed {
+        error : string
+        code : string
+      }
+        @description "This voter's vote for the target could not be read."
+        @synonyms "error, failed, no vote yet"
+        @tier "internal"
+      VoteCasted
+        @description "A vote has been successfully recorded."
+        @synonyms "voted, tallied, updated"
+        @tier "domain"
+      VoterVoteRowMissed {
+        error : string
+        code : string
+      }
+        @description "The update of this voter's row failed."
+        @synonyms "update missed, first vote, no row"
+        @tier "internal"
+      VoteCastFailed {
+        error : string
+        code : string
+      }
+        @description "Creating the voter's first vote row failed."
+        @synonyms "error, rejected, failed, invalid"
+        @tier "internal"
+    }
+
+    config {
+      label : string = "Vote"
+        @label "Stack label"
+        @description "Accessible name of the vote stack."
+        @synonyms "name, caption, aria label"
+        @tier "presentation"
+    }
+  }
+
+  page "/votes/mine" as VoterVotePage -> VoterVote
+}
