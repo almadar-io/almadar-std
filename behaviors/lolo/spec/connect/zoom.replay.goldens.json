@@ -1,10 +1,10 @@
 {
  "atom": "connect/atoms/std-zoom.lolo",
  "trait": "ZoomClient",
- "note": "std-zoom over two keyed std-http-client traits: the Server-to-Server account_credentials grant is a keyed POST under a Basic credential the host fills at the boundary (credential-connect cannot express it: the account id rides the query and the client id and secret ride a Basic header, not a JSON body), and the minted access token is held by the one call's row, sent as a bearer header by the API client and cleared with the row; every call is a row of ZoomCall under its own key; each step (token, list pages, meeting, download) retries under keyed std-retry (4 attempts, 100 x 5^(n-1) ms capped at 1500) and the next step starts when std-retry completes the previous run; a download_url is requested on the host it names; a 2xx download answers the raw WebVTT and its plain Speaker: line text. Self-handled internal events (declared -> internal) are consumed by the trait and not listed.",
+ "note": "std-zoom over two keyed std-http-client traits: the Server-to-Server account_credentials grant is a keyed POST under a Basic credential the host fills at the boundary (credential-connect cannot express it: the account id rides the query and the client id and secret ride a Basic header, not a JSON body), and the minted access token is held by the one call's row, sent as a bearer header by the API client and cleared with the row; every call is a row of ZoomCall under its own key; each step (token, list pages, meeting, download) retries under keyed std-retry (4 attempts, 100 x 5^(n-1) ms capped at 1500) and the next step starts when std-retry completes the previous run; a download_url is requested on the host it names; a 2xx download answers the raw WebVTT and its plain Speaker: line text. Self-handled internal events (declared -> internal) are consumed by the trait and not listed. The access token is minted and held by the credential store (client-credentials grant); the replay host answers credential-connect as unavailable, so a minted token is fed as ZOOM_CONNECTED.",
  "cases": [
   {
-   "id": "list-asks-the-token-endpoint-first-under-its-own-key",
+   "id": "list-sends-the-api-request-under-its-own-key-with-no-token-in-the-event",
    "steps": [
     {
      "event": "LIST_RECORDINGS",
@@ -31,11 +31,11 @@
         }
        },
        {
-        "event": "ZOOM_TOKEN_HTTP_SEND",
+        "event": "ZOOM_API_HTTP_SEND",
         "payload": {
          "key": "list:2026-10-01|2026-10-31#1",
-         "method": "POST",
-         "target": "/oauth/token?grant_type=account_credentials&account_id=acc",
+         "method": "GET",
+         "target": "/v2/users/me/recordings?from=2026-10-01&to=2026-10-31&page_size=30",
          "headers": [
           {
            "name": "accept",
@@ -43,12 +43,12 @@
           }
          ],
          "body": "",
-         "stream": "none"
+         "stream": "none",
+         "host": "api.zoom.us"
         }
        }
       ],
       "neverEmits": [
-       "ZOOM_API_HTTP_SEND",
        "ZOOM_FAILED"
       ]
      }
@@ -60,29 +60,56 @@
    "defaults": [
     "ZoomClient",
     "ZoomCall",
-    "ZoomTokenKeyed",
-    "ZoomTokenHttp",
     "ZoomApiKeyed",
     "ZoomApiHttp",
     "ZoomRetry"
    ]
   },
   {
-   "id": "control-an-account-id-with-a-special-character-is-percent-encoded",
+   "id": "a-token-not-held-asks-the-store-for-the-declared-account-credentials-grant",
    "steps": [
     {
-     "event": "LIST_RECORDINGS",
+     "trait": "ZoomCall",
+     "event": "ZOOM_REQUEST_FAILED",
      "payload": {
-      "from": "2026-10-01",
-      "to": "2026-10-31"
+      "key": "list:2026-10-01|2026-10-31#1",
+      "error": "credential not held",
+      "kind": "unconfigured"
+     },
+     "entity": {
+      "id": "list:2026-10-01|2026-10-31#1",
+      "kind": "list",
+      "step": "list",
+      "firstTarget": "/v2/users/me/recordings?from=2026-10-01&to=2026-10-31&page_size=30",
+      "target": "/v2/users/me/recordings?from=2026-10-01&to=2026-10-31&page_size=30",
+      "host": "api.zoom.us",
+      "accountId": "a&b=",
+      "mintTried": false,
+      "attempt": 1
      },
      "expect": {
-      "emits": [
+      "effects": [
        {
-        "event": "ZOOM_TOKEN_HTTP_SEND",
-        "payload": {
-         "key": "list:2026-10-01|2026-10-31#1",
-         "target": "/oauth/token?grant_type=account_credentials&account_id=a%26b%3D"
+        "type": "set"
+       },
+       {
+        "type": "credential-connect",
+        "arg0": {
+         "credential": "@config.accessToken",
+         "scope": "app",
+         "tokenEndpoint": "https://zoom.us/oauth/token",
+         "grant": "client-credentials",
+         "clientId": "@config.clientId",
+         "clientSecret": "@config.clientSecret",
+         "clientAuth": "basic",
+         "grantType": "account_credentials",
+         "params": [
+          {
+           "name": "account_id",
+           "value": "@entity.accountId"
+          }
+         ],
+         "paramsIn": "query"
         }
        }
       ]
@@ -95,8 +122,6 @@
    "defaults": [
     "ZoomClient",
     "ZoomCall",
-    "ZoomTokenKeyed",
-    "ZoomTokenHttp",
     "ZoomApiKeyed",
     "ZoomApiHttp",
     "ZoomRetry"
@@ -117,13 +142,13 @@
         "event": "ZOOM_FAILED",
         "payload": {
          "code": "NOT_CONFIGURED",
-         "message": "Integration not configured: zoom. Set the accountId knob, ZOOM_BASIC_AUTH (the client id and secret as id:secret)."
+         "message": "Integration not configured: zoom. Set the accountId knob and the ZOOM_CLIENT_ID and ZOOM_CLIENT_SECRET credentials of the Server-to-Server OAuth app."
         }
        }
       ],
       "neverEmits": [
        "ZOOM_RETRY_START",
-       "ZOOM_TOKEN_HTTP_SEND"
+       "ZOOM_API_HTTP_SEND"
       ]
      }
     }
@@ -132,8 +157,6 @@
    "defaults": [
     "ZoomClient",
     "ZoomCall",
-    "ZoomTokenKeyed",
-    "ZoomTokenHttp",
     "ZoomApiKeyed",
     "ZoomApiHttp",
     "ZoomRetry"
@@ -151,7 +174,7 @@
      "expect": {
       "emits": [
        {
-        "event": "ZOOM_TOKEN_HTTP_SEND",
+        "event": "ZOOM_API_HTTP_SEND",
         "payload": {
          "key": "list:2026-10-01|2026-10-31#1"
         }
@@ -169,15 +192,83 @@
    "defaults": [
     "ZoomClient",
     "ZoomCall",
-    "ZoomTokenKeyed",
-    "ZoomTokenHttp",
     "ZoomApiKeyed",
     "ZoomApiHttp",
     "ZoomRetry"
    ]
   },
   {
-   "id": "a-credential-not-held-on-the-token-call-answers-not-configured",
+   "id": "a-token-not-held-asks-the-store-to-mint-it-once-and-an-unavailable-store-answers-not-configured",
+   "steps": [
+    {
+     "trait": "ZoomCall",
+     "event": "ZOOM_REQUEST_FAILED",
+     "payload": {
+      "key": "list:2026-10-01|2026-10-31#1",
+      "error": "credential not held",
+      "kind": "unconfigured"
+     },
+     "expect": {
+      "effects": [
+       {
+        "type": "credential-connect"
+       }
+      ],
+      "emits": [
+       {
+        "event": "ZOOM_CONNECT_FAILED",
+        "payload": {
+         "kind": "unavailable"
+        }
+       },
+       {
+        "event": "ZOOM_RETRY_CANCEL",
+        "payload": {
+         "key": "list:2026-10-01|2026-10-31#1"
+        }
+       },
+       {
+        "event": "ZOOM_FAILED",
+        "payload": {
+         "code": "NOT_CONFIGURED",
+         "message": "Integration not configured: zoom. Set the accountId knob and the ZOOM_CLIENT_ID and ZOOM_CLIENT_SECRET credentials of the Server-to-Server OAuth app."
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "list:2026-10-01|2026-10-31#1",
+      "kind": "list",
+      "step": "list",
+      "firstTarget": "/v2/users/me/recordings?from=2026-10-01&to=2026-10-31&page_size=30",
+      "target": "/v2/users/me/recordings?from=2026-10-01&to=2026-10-31&page_size=30",
+      "host": "api.zoom.us",
+      "meetingId": "",
+      "topic": "",
+      "startTime": "",
+      "downloadUrl": "",
+      "pageToken": "",
+      "meetings": [],
+      "attempt": 1,
+      "stepReady": false,
+      "accountId": "acc",
+      "mintTried": false
+     }
+    }
+   ],
+   "config": {
+    "accountId": "acc"
+   },
+   "defaults": [
+    "ZoomClient",
+    "ZoomCall",
+    "ZoomApiKeyed",
+    "ZoomApiHttp",
+    "ZoomRetry"
+   ]
+  },
+  {
+   "id": "control-a-second-not-held-answer-reports-not-configured-without-asking-the-store-again",
    "steps": [
     {
      "trait": "ZoomCall",
@@ -199,19 +290,22 @@
         "event": "ZOOM_FAILED",
         "payload": {
          "code": "NOT_CONFIGURED",
-         "message": "Integration not configured: zoom. Set the accountId knob, ZOOM_BASIC_AUTH (the client id and secret as id:secret)."
+         "message": "Integration not configured: zoom. Set the accountId knob and the ZOOM_CLIENT_ID and ZOOM_CLIENT_SECRET credentials of the Server-to-Server OAuth app."
         }
        }
+      ],
+      "neverEmits": [
+       "ZOOM_CONNECT_FAILED",
+       "ZOOM_CONNECTED"
       ]
      },
      "entity": {
       "id": "list:2026-10-01|2026-10-31#1",
       "kind": "list",
-      "step": "token",
+      "step": "list",
       "firstTarget": "/v2/users/me/recordings?from=2026-10-01&to=2026-10-31&page_size=30",
-      "target": "/x",
-      "host": "",
-      "token": "tk",
+      "target": "/v2/users/me/recordings?from=2026-10-01&to=2026-10-31&page_size=30",
+      "host": "api.zoom.us",
       "meetingId": "",
       "topic": "",
       "startTime": "",
@@ -219,7 +313,9 @@
       "pageToken": "",
       "meetings": [],
       "attempt": 1,
-      "stepReady": false
+      "stepReady": false,
+      "accountId": "acc",
+      "mintTried": true
      }
     }
    ],
@@ -229,15 +325,13 @@
    "defaults": [
     "ZoomClient",
     "ZoomCall",
-    "ZoomTokenKeyed",
-    "ZoomTokenHttp",
     "ZoomApiKeyed",
     "ZoomApiHttp",
     "ZoomRetry"
    ]
   },
   {
-   "id": "control-a-timeout-on-the-token-call-is-retried-not-failed",
+   "id": "control-a-timeout-on-the-api-call-is-retried-not-failed",
    "steps": [
     {
      "trait": "ZoomCall",
@@ -264,11 +358,10 @@
      "entity": {
       "id": "list:2026-10-01|2026-10-31#1",
       "kind": "list",
-      "step": "token",
+      "step": "list",
       "firstTarget": "/v2/users/me/recordings?from=2026-10-01&to=2026-10-31&page_size=30",
       "target": "/x",
       "host": "",
-      "token": "tk",
       "meetingId": "",
       "topic": "",
       "startTime": "",
@@ -286,94 +379,37 @@
    "defaults": [
     "ZoomClient",
     "ZoomCall",
-    "ZoomTokenKeyed",
-    "ZoomTokenHttp",
     "ZoomApiKeyed",
     "ZoomApiHttp",
     "ZoomRetry"
    ]
   },
   {
-   "id": "a-token-reply-holds-the-token-on-the-row-then-the-list-step-sends-it-as-bearer",
+   "id": "a-token-the-store-minted-re-sends-the-step-that-found-none",
    "steps": [
     {
-     "event": "LIST_RECORDINGS",
+     "trait": "ZoomCall",
+     "event": "ZOOM_CONNECTED",
      "payload": {
-      "from": "2026-10-01",
-      "to": "2026-10-31"
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "ZOOM_TOKEN_HTTP_SEND",
-        "payload": {
-         "key": "list:2026-10-01|2026-10-31#1"
-        }
-       }
-      ]
-     }
-    },
-    {
-     "trait": "ZoomTokenHttp",
-     "event": "HTTP_REPLIED",
-     "payload": {
-      "key": "list:2026-10-01|2026-10-31#1",
-      "status": 200,
-      "headers": {},
-      "body": "eyJhY2Nlc3NfdG9rZW4iOiAidGsiLCAidG9rZW5fdHlwZSI6ICJiZWFyZXIiLCAiZXhwaXJlc19pbiI6IDM2MDB9"
-     },
-     "expect": {
-      "emits": [],
-      "neverEmits": [
-       "ZOOM_FAILED",
-       "ZOOM_API_HTTP_SEND"
-      ]
-     }
-    },
-    {
-     "trait": "ZoomRetry",
-     "event": "SUCCEEDED",
-     "payload": {
-      "key": "list:2026-10-01|2026-10-31#1"
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "COMPLETED",
-        "payload": {
-         "key": "list:2026-10-01|2026-10-31#1",
-         "attempts": 1
-        }
-       },
-       {
-        "event": "ZOOM_RETRY_START",
-        "payload": {
-         "key": "list:2026-10-01|2026-10-31#1"
-        }
-       }
-      ]
+      "connected": true,
+      "label": ""
      },
      "entity": {
       "id": "list:2026-10-01|2026-10-31#1",
-      "key": "list:2026-10-01|2026-10-31#1",
+      "kind": "list",
+      "step": "list",
+      "firstTarget": "/v2/users/me/recordings?from=2026-10-01&to=2026-10-31&page_size=30",
+      "target": "/v2/users/me/recordings?from=2026-10-01&to=2026-10-31&page_size=30",
+      "host": "api.zoom.us",
+      "accountId": "acc",
+      "mintTried": true,
       "attempt": 1
-     },
-     "from": "running"
-    },
-    {
-     "trait": "ZoomRetry",
-     "event": "START",
-     "payload": {
-      "key": "list:2026-10-01|2026-10-31#1"
      },
      "expect": {
       "emits": [
        {
-        "event": "ATTEMPT",
-        "payload": {
-         "key": "list:2026-10-01|2026-10-31#1",
-         "attempt": 1
-        }
+        "event": "ZOOM_DISPATCH",
+        "payload": {}
        },
        {
         "event": "ZOOM_API_HTTP_SEND",
@@ -385,78 +421,15 @@
           {
            "name": "accept",
            "value": "*/*"
-          },
-          {
-           "name": "authorization",
-           "value": "Bearer tk"
           }
          ],
-         "body": "",
-         "stream": "none",
          "host": "api.zoom.us"
         }
        }
+      ],
+      "neverEmits": [
+       "ZOOM_FAILED"
       ]
-     },
-     "entity": {
-      "id": "list:2026-10-01|2026-10-31#1",
-      "key": "list:2026-10-01|2026-10-31#1",
-      "attempt": 0
-     },
-     "from": "idle"
-    }
-   ],
-   "config": {
-    "accountId": "acc"
-   },
-   "defaults": [
-    "ZoomClient",
-    "ZoomCall",
-    "ZoomTokenKeyed",
-    "ZoomTokenHttp",
-    "ZoomApiKeyed",
-    "ZoomApiHttp",
-    "ZoomRetry"
-   ]
-  },
-  {
-   "id": "control-a-token-reply-without-an-access-token-fails",
-   "steps": [
-    {
-     "trait": "ZoomCall",
-     "event": "ZOOM_REPLIED",
-     "payload": {
-      "key": "list:2026-10-01|2026-10-31#1",
-      "status": 200,
-      "headers": {},
-      "body": "{\"expires_in\": 3600}"
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "ZOOM_FAILED",
-        "payload": {
-         "message": "The Zoom token answer held no access token"
-        }
-       }
-      ]
-     },
-     "entity": {
-      "id": "list:2026-10-01|2026-10-31#1",
-      "kind": "list",
-      "step": "token",
-      "firstTarget": "/v2/users/me/recordings?from=2026-10-01&to=2026-10-31&page_size=30",
-      "target": "/x",
-      "host": "",
-      "token": "",
-      "meetingId": "",
-      "topic": "",
-      "startTime": "",
-      "downloadUrl": "",
-      "pageToken": "",
-      "meetings": [],
-      "attempt": 1,
-      "stepReady": false
      }
     }
    ],
@@ -466,69 +439,61 @@
    "defaults": [
     "ZoomClient",
     "ZoomCall",
-    "ZoomTokenKeyed",
-    "ZoomTokenHttp",
     "ZoomApiKeyed",
     "ZoomApiHttp",
     "ZoomRetry"
    ]
   },
   {
-   "id": "a-token-reply-that-is-not-json-fails",
-   "steps": [
-    {
-     "trait": "ZoomCall",
-     "event": "ZOOM_REPLIED",
-     "payload": {
-      "key": "list:2026-10-01|2026-10-31#1",
-      "status": 200,
-      "headers": {},
-      "body": "nope"
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "ZOOM_FAILED",
-        "payload": {
-         "message": "The Zoom token answer could not be read"
-        }
-       }
-      ]
-     },
-     "entity": {
-      "id": "list:2026-10-01|2026-10-31#1",
-      "kind": "list",
-      "step": "token",
-      "firstTarget": "/v2/users/me/recordings?from=2026-10-01&to=2026-10-31&page_size=30",
-      "target": "/x",
-      "host": "",
-      "token": "",
-      "meetingId": "",
-      "topic": "",
-      "startTime": "",
-      "downloadUrl": "",
-      "pageToken": "",
-      "meetings": [],
-      "attempt": 1,
-      "stepReady": false
-     }
-    }
-   ],
+   "id": "control-a-store-that-minted-nothing-answers-not-configured",
    "config": {
     "accountId": "acc"
    },
    "defaults": [
     "ZoomClient",
     "ZoomCall",
-    "ZoomTokenKeyed",
-    "ZoomTokenHttp",
     "ZoomApiKeyed",
     "ZoomApiHttp",
     "ZoomRetry"
+   ],
+   "steps": [
+    {
+     "trait": "ZoomCall",
+     "event": "ZOOM_CONNECTED",
+     "payload": {
+      "connected": false,
+      "label": ""
+     },
+     "entity": {
+      "id": "list:2026-10-01|2026-10-31#1",
+      "kind": "list",
+      "step": "list",
+      "firstTarget": "/v2/users/me/recordings?from=2026-10-01&to=2026-10-31&page_size=30",
+      "target": "/v2/users/me/recordings?from=2026-10-01&to=2026-10-31&page_size=30",
+      "host": "api.zoom.us",
+      "accountId": "acc",
+      "mintTried": true,
+      "attempt": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "ZOOM_FAILED",
+        "payload": {
+         "code": "NOT_CONFIGURED",
+         "message": "Integration not configured: zoom. Set the accountId knob and the ZOOM_CLIENT_ID and ZOOM_CLIENT_SECRET credentials of the Server-to-Server OAuth app."
+        }
+       }
+      ],
+      "neverEmits": [
+       "ZOOM_API_HTTP_SEND"
+      ]
+     }
+    }
    ]
   },
   {
-   "id": "a-401-token-reply-fails-with-the-provider-reason",
+   "id": "a-401-api-reply-on-the-first-step-fails-with-the-provider-reason",
    "steps": [
     {
      "trait": "ZoomCall",
@@ -555,11 +520,10 @@
      "entity": {
       "id": "list:2026-10-01|2026-10-31#1",
       "kind": "list",
-      "step": "token",
+      "step": "list",
       "firstTarget": "/v2/users/me/recordings?from=2026-10-01&to=2026-10-31&page_size=30",
       "target": "/x",
       "host": "",
-      "token": "",
       "meetingId": "",
       "topic": "",
       "startTime": "",
@@ -577,8 +541,6 @@
    "defaults": [
     "ZoomClient",
     "ZoomCall",
-    "ZoomTokenKeyed",
-    "ZoomTokenHttp",
     "ZoomApiKeyed",
     "ZoomApiHttp",
     "ZoomRetry"
@@ -610,7 +572,6 @@
       "firstTarget": "/v2/users/me/recordings?from=2026-10-01&to=2026-10-31&page_size=30",
       "target": "/x",
       "host": "api.zoom.us",
-      "token": "tk",
       "meetingId": "",
       "topic": "",
       "startTime": "",
@@ -663,8 +624,6 @@
    "defaults": [
     "ZoomClient",
     "ZoomCall",
-    "ZoomTokenKeyed",
-    "ZoomTokenHttp",
     "ZoomApiKeyed",
     "ZoomApiHttp",
     "ZoomRetry"
@@ -695,7 +654,6 @@
       "firstTarget": "/v2/users/me/recordings?from=2026-10-01&to=2026-10-31&page_size=30",
       "target": "/x",
       "host": "api.zoom.us",
-      "token": "tk",
       "meetingId": "",
       "topic": "",
       "startTime": "",
@@ -731,8 +689,6 @@
    "defaults": [
     "ZoomClient",
     "ZoomCall",
-    "ZoomTokenKeyed",
-    "ZoomTokenHttp",
     "ZoomApiKeyed",
     "ZoomApiHttp",
     "ZoomRetry"
@@ -760,7 +716,6 @@
       "firstTarget": "/v2/users/me/recordings?from=2026-10-01&to=2026-10-31&page_size=30",
       "target": "/x",
       "host": "api.zoom.us",
-      "token": "tk",
       "meetingId": "",
       "topic": "",
       "startTime": "",
@@ -869,8 +824,6 @@
    "defaults": [
     "ZoomClient",
     "ZoomCall",
-    "ZoomTokenKeyed",
-    "ZoomTokenHttp",
     "ZoomApiKeyed",
     "ZoomApiHttp",
     "ZoomRetry"
@@ -905,7 +858,6 @@
       "firstTarget": "/v2/users/me/recordings?from=2026-10-01&to=2026-10-31&page_size=30",
       "target": "/x",
       "host": "api.zoom.us",
-      "token": "tk",
       "meetingId": "",
       "topic": "",
       "startTime": "",
@@ -923,8 +875,6 @@
    "defaults": [
     "ZoomClient",
     "ZoomCall",
-    "ZoomTokenKeyed",
-    "ZoomTokenHttp",
     "ZoomApiKeyed",
     "ZoomApiHttp",
     "ZoomRetry"
@@ -963,7 +913,6 @@
       "firstTarget": "/v2/users/me/recordings?from=2026-10-01&to=2026-10-31&page_size=30",
       "target": "/x",
       "host": "api.zoom.us",
-      "token": "tk",
       "meetingId": "",
       "topic": "",
       "startTime": "",
@@ -981,8 +930,6 @@
    "defaults": [
     "ZoomClient",
     "ZoomCall",
-    "ZoomTokenKeyed",
-    "ZoomTokenHttp",
     "ZoomApiKeyed",
     "ZoomApiHttp",
     "ZoomRetry"
@@ -1013,7 +960,6 @@
       "firstTarget": "/v2/users/me/recordings?from=2026-10-01&to=2026-10-31&page_size=30",
       "target": "/x",
       "host": "api.zoom.us",
-      "token": "tk",
       "meetingId": "",
       "topic": "",
       "startTime": "",
@@ -1031,8 +977,6 @@
    "defaults": [
     "ZoomClient",
     "ZoomCall",
-    "ZoomTokenKeyed",
-    "ZoomTokenHttp",
     "ZoomApiKeyed",
     "ZoomApiHttp",
     "ZoomRetry"
@@ -1071,7 +1015,6 @@
       "firstTarget": "/v2/users/me/recordings?from=2026-10-01&to=2026-10-31&page_size=30",
       "target": "/x",
       "host": "api.zoom.us",
-      "token": "tk",
       "meetingId": "",
       "topic": "",
       "startTime": "",
@@ -1089,8 +1032,6 @@
    "defaults": [
     "ZoomClient",
     "ZoomCall",
-    "ZoomTokenKeyed",
-    "ZoomTokenHttp",
     "ZoomApiKeyed",
     "ZoomApiHttp",
     "ZoomRetry"
@@ -1128,7 +1069,6 @@
       "firstTarget": "/v2/users/me/recordings?from=2026-10-01&to=2026-10-31&page_size=30",
       "target": "/x",
       "host": "api.zoom.us",
-      "token": "tk",
       "meetingId": "",
       "topic": "",
       "startTime": "",
@@ -1146,8 +1086,6 @@
    "defaults": [
     "ZoomClient",
     "ZoomCall",
-    "ZoomTokenKeyed",
-    "ZoomTokenHttp",
     "ZoomApiKeyed",
     "ZoomApiHttp",
     "ZoomRetry"
@@ -1181,7 +1119,6 @@
       "firstTarget": "/v2/users/me/recordings?from=2026-10-01&to=2026-10-31&page_size=30",
       "target": "/x",
       "host": "api.zoom.us",
-      "token": "tk",
       "meetingId": "",
       "topic": "",
       "startTime": "",
@@ -1199,8 +1136,6 @@
    "defaults": [
     "ZoomClient",
     "ZoomCall",
-    "ZoomTokenKeyed",
-    "ZoomTokenHttp",
     "ZoomApiKeyed",
     "ZoomApiHttp",
     "ZoomRetry"
@@ -1227,11 +1162,11 @@
         }
        },
        {
-        "event": "ZOOM_TOKEN_HTTP_SEND",
+        "event": "ZOOM_API_HTTP_SEND",
         "payload": {
          "key": "transcript:u1==#1",
-         "method": "POST",
-         "target": "/oauth/token?grant_type=account_credentials&account_id=acc"
+         "method": "GET",
+         "target": "/v2/meetings/u1%3D%3D/recordings"
         }
        }
       ]
@@ -1244,8 +1179,6 @@
    "defaults": [
     "ZoomClient",
     "ZoomCall",
-    "ZoomTokenKeyed",
-    "ZoomTokenHttp",
     "ZoomApiKeyed",
     "ZoomApiHttp",
     "ZoomRetry"
@@ -1278,8 +1211,6 @@
    "defaults": [
     "ZoomClient",
     "ZoomCall",
-    "ZoomTokenKeyed",
-    "ZoomTokenHttp",
     "ZoomApiKeyed",
     "ZoomApiHttp",
     "ZoomRetry"
@@ -1312,8 +1243,6 @@
    "defaults": [
     "ZoomClient",
     "ZoomCall",
-    "ZoomTokenKeyed",
-    "ZoomTokenHttp",
     "ZoomApiKeyed",
     "ZoomApiHttp",
     "ZoomRetry"
@@ -1346,8 +1275,6 @@
    "defaults": [
     "ZoomClient",
     "ZoomCall",
-    "ZoomTokenKeyed",
-    "ZoomTokenHttp",
     "ZoomApiKeyed",
     "ZoomApiHttp",
     "ZoomRetry"
@@ -1378,7 +1305,6 @@
       "firstTarget": "/v2/meetings/u1%3D%3D/recordings",
       "target": "/x",
       "host": "api.zoom.us",
-      "token": "tk",
       "meetingId": "u1==",
       "topic": "",
       "startTime": "",
@@ -1427,10 +1353,6 @@
           {
            "name": "accept",
            "value": "*/*"
-          },
-          {
-           "name": "authorization",
-           "value": "Bearer tk"
           }
          ]
         }
@@ -1445,8 +1367,6 @@
    "defaults": [
     "ZoomClient",
     "ZoomCall",
-    "ZoomTokenKeyed",
-    "ZoomTokenHttp",
     "ZoomApiKeyed",
     "ZoomApiHttp",
     "ZoomRetry"
@@ -1486,7 +1406,6 @@
       "firstTarget": "/v2/meetings/u1%3D%3D/recordings",
       "target": "/x",
       "host": "api.zoom.us",
-      "token": "tk",
       "meetingId": "u1==",
       "topic": "",
       "startTime": "",
@@ -1504,8 +1423,6 @@
    "defaults": [
     "ZoomClient",
     "ZoomCall",
-    "ZoomTokenKeyed",
-    "ZoomTokenHttp",
     "ZoomApiKeyed",
     "ZoomApiHttp",
     "ZoomRetry"
@@ -1540,7 +1457,6 @@
       "firstTarget": "/v2/meetings/u1%3D%3D/recordings",
       "target": "/x",
       "host": "api.zoom.us",
-      "token": "tk",
       "meetingId": "u1==",
       "topic": "",
       "startTime": "",
@@ -1558,8 +1474,6 @@
    "defaults": [
     "ZoomClient",
     "ZoomCall",
-    "ZoomTokenKeyed",
-    "ZoomTokenHttp",
     "ZoomApiKeyed",
     "ZoomApiHttp",
     "ZoomRetry"
@@ -1594,7 +1508,6 @@
       "firstTarget": "/v2/meetings/u1%3D%3D/recordings",
       "target": "/x",
       "host": "api.zoom.us",
-      "token": "tk",
       "meetingId": "u1==",
       "topic": "",
       "startTime": "",
@@ -1612,8 +1525,6 @@
    "defaults": [
     "ZoomClient",
     "ZoomCall",
-    "ZoomTokenKeyed",
-    "ZoomTokenHttp",
     "ZoomApiKeyed",
     "ZoomApiHttp",
     "ZoomRetry"
@@ -1648,7 +1559,6 @@
       "firstTarget": "/v2/meetings/u1%3D%3D/recordings",
       "target": "/x",
       "host": "api.zoom.us",
-      "token": "tk",
       "meetingId": "u1==",
       "topic": "",
       "startTime": "",
@@ -1666,8 +1576,6 @@
    "defaults": [
     "ZoomClient",
     "ZoomCall",
-    "ZoomTokenKeyed",
-    "ZoomTokenHttp",
     "ZoomApiKeyed",
     "ZoomApiHttp",
     "ZoomRetry"
@@ -1705,7 +1613,6 @@
       "firstTarget": "/v2/meetings/u1%3D%3D/recordings",
       "target": "/x",
       "host": "api.zoom.us",
-      "token": "tk",
       "meetingId": "u1==",
       "topic": "",
       "startTime": "",
@@ -1723,8 +1630,6 @@
    "defaults": [
     "ZoomClient",
     "ZoomCall",
-    "ZoomTokenKeyed",
-    "ZoomTokenHttp",
     "ZoomApiKeyed",
     "ZoomApiHttp",
     "ZoomRetry"
@@ -1752,7 +1657,6 @@
       "firstTarget": "/v2/meetings/u1%3D%3D/recordings",
       "target": "/x",
       "host": "api.zoom.us",
-      "token": "tk",
       "meetingId": "u1==",
       "topic": "",
       "startTime": "",
@@ -1791,8 +1695,6 @@
    "defaults": [
     "ZoomClient",
     "ZoomCall",
-    "ZoomTokenKeyed",
-    "ZoomTokenHttp",
     "ZoomApiKeyed",
     "ZoomApiHttp",
     "ZoomRetry"
@@ -1834,7 +1736,6 @@
       "firstTarget": "/v2/users/me/recordings?from=2026-10-01&to=2026-10-31&page_size=30",
       "target": "/x",
       "host": "zoom.us",
-      "token": "tk",
       "meetingId": "u1==",
       "topic": "Sestanek",
       "startTime": "2026-10-02T08:00:00Z",
@@ -1852,8 +1753,6 @@
    "defaults": [
     "ZoomClient",
     "ZoomCall",
-    "ZoomTokenKeyed",
-    "ZoomTokenHttp",
     "ZoomApiKeyed",
     "ZoomApiHttp",
     "ZoomRetry"
@@ -1870,59 +1769,6 @@
      "expect": {
       "emits": [
        {
-        "event": "ZOOM_TOKEN_HTTP_SEND",
-        "payload": {
-         "key": "transcript:u1==#1"
-        }
-       }
-      ]
-     }
-    },
-    {
-     "trait": "ZoomTokenHttp",
-     "event": "HTTP_REPLIED",
-     "payload": {
-      "key": "transcript:u1==#1",
-      "status": 200,
-      "headers": {},
-      "body": "eyJhY2Nlc3NfdG9rZW4iOiAidGsiLCAiZXhwaXJlc19pbiI6IDM2MDB9"
-     },
-     "expect": {
-      "emits": []
-     }
-    },
-    {
-     "trait": "ZoomRetry",
-     "event": "SUCCEEDED",
-     "payload": {
-      "key": "transcript:u1==#1"
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "ZOOM_RETRY_START",
-        "payload": {
-         "key": "transcript:u1==#1"
-        }
-       }
-      ]
-     },
-     "entity": {
-      "id": "transcript:u1==#1",
-      "key": "transcript:u1==#1",
-      "attempt": 1
-     },
-     "from": "running"
-    },
-    {
-     "trait": "ZoomRetry",
-     "event": "START",
-     "payload": {
-      "key": "transcript:u1==#1"
-     },
-     "expect": {
-      "emits": [
-       {
         "event": "ZOOM_API_HTTP_SEND",
         "payload": {
          "key": "transcript:u1==#1",
@@ -1932,22 +1778,12 @@
           {
            "name": "accept",
            "value": "*/*"
-          },
-          {
-           "name": "authorization",
-           "value": "Bearer tk"
           }
          ]
         }
        }
       ]
-     },
-     "entity": {
-      "id": "transcript:u1==#1",
-      "key": "transcript:u1==#1",
-      "attempt": 0
-     },
-     "from": "idle"
+     }
     },
     {
      "trait": "ZoomApiHttp",
@@ -2006,10 +1842,6 @@
           {
            "name": "accept",
            "value": "*/*"
-          },
-          {
-           "name": "authorization",
-           "value": "Bearer tk"
           }
          ]
         }
@@ -2057,8 +1889,6 @@
    "defaults": [
     "ZoomClient",
     "ZoomCall",
-    "ZoomTokenKeyed",
-    "ZoomTokenHttp",
     "ZoomApiKeyed",
     "ZoomApiHttp",
     "ZoomRetry"
@@ -2093,7 +1923,6 @@
       "firstTarget": "/v2/users/me/recordings?from=2026-10-01&to=2026-10-31&page_size=30",
       "target": "/x",
       "host": "zoom.us",
-      "token": "tk",
       "meetingId": "u1==",
       "topic": "Sestanek",
       "startTime": "2026-10-02T08:00:00Z",
@@ -2111,8 +1940,6 @@
    "defaults": [
     "ZoomClient",
     "ZoomCall",
-    "ZoomTokenKeyed",
-    "ZoomTokenHttp",
     "ZoomApiKeyed",
     "ZoomApiHttp",
     "ZoomRetry"
@@ -2147,7 +1974,6 @@
       "firstTarget": "/v2/users/me/recordings?from=2026-10-01&to=2026-10-31&page_size=30",
       "target": "/x",
       "host": "zoom.us",
-      "token": "tk",
       "meetingId": "u1==",
       "topic": "Sestanek",
       "startTime": "2026-10-02T08:00:00Z",
@@ -2165,8 +1991,6 @@
    "defaults": [
     "ZoomClient",
     "ZoomCall",
-    "ZoomTokenKeyed",
-    "ZoomTokenHttp",
     "ZoomApiKeyed",
     "ZoomApiHttp",
     "ZoomRetry"
@@ -2202,7 +2026,6 @@
       "firstTarget": "/v2/users/me/recordings?from=2026-10-01&to=2026-10-31&page_size=30",
       "target": "/x",
       "host": "zoom.us",
-      "token": "tk",
       "meetingId": "u1==",
       "topic": "Sestanek",
       "startTime": "2026-10-02T08:00:00Z",
@@ -2220,8 +2043,6 @@
    "defaults": [
     "ZoomClient",
     "ZoomCall",
-    "ZoomTokenKeyed",
-    "ZoomTokenHttp",
     "ZoomApiKeyed",
     "ZoomApiHttp",
     "ZoomRetry"
@@ -2259,7 +2080,6 @@
       "firstTarget": "/v2/users/me/recordings?from=2026-10-01&to=2026-10-31&page_size=30",
       "target": "/x",
       "host": "zoom.us",
-      "token": "tk",
       "meetingId": "u1==",
       "topic": "Sestanek",
       "startTime": "2026-10-02T08:00:00Z",
@@ -2277,8 +2097,6 @@
    "defaults": [
     "ZoomClient",
     "ZoomCall",
-    "ZoomTokenKeyed",
-    "ZoomTokenHttp",
     "ZoomApiKeyed",
     "ZoomApiHttp",
     "ZoomRetry"
@@ -2318,7 +2136,6 @@
       "firstTarget": "/v2/users/me/recordings?from=2026-10-01&to=2026-10-31&page_size=30",
       "target": "/x",
       "host": "zoom.us",
-      "token": "tk",
       "meetingId": "u1==",
       "topic": "Sestanek",
       "startTime": "2026-10-02T08:00:00Z",
@@ -2336,15 +2153,13 @@
    "defaults": [
     "ZoomClient",
     "ZoomCall",
-    "ZoomTokenKeyed",
-    "ZoomTokenHttp",
     "ZoomApiKeyed",
     "ZoomApiHttp",
     "ZoomRetry"
    ]
   },
   {
-   "id": "two-calls-keep-their-own-rows-and-tokens",
+   "id": "two-calls-keep-their-own-rows",
    "steps": [
     {
      "event": "LIST_RECORDINGS",
@@ -2355,7 +2170,7 @@
      "expect": {
       "emits": [
        {
-        "event": "ZOOM_TOKEN_HTTP_SEND",
+        "event": "ZOOM_API_HTTP_SEND",
         "payload": {
          "key": "list:a|b#1"
         }
@@ -2371,7 +2186,7 @@
      "expect": {
       "emits": [
        {
-        "event": "ZOOM_TOKEN_HTTP_SEND",
+        "event": "ZOOM_API_HTTP_SEND",
         "payload": {
          "key": "transcript:m#2"
         }
@@ -2386,8 +2201,6 @@
    "defaults": [
     "ZoomClient",
     "ZoomCall",
-    "ZoomTokenKeyed",
-    "ZoomTokenHttp",
     "ZoomApiKeyed",
     "ZoomApiHttp",
     "ZoomRetry"

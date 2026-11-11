@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "Canonical operator registry for Almadar. Generated from @almadar/std/modules. Consumed by orbital-compiler via include_str!.",
-  "generated": "2026-11-10T10:09:09.380Z",
+  "generated": "2026-11-10T19:56:12.047Z",
   "categories": {
     "arithmetic": {
       "description": "Numeric operations",
@@ -7571,7 +7571,7 @@
       "minArity": 1,
       "maxArity": 2,
       "returnType": "void",
-      "description": "Ask the host's credential store to make an OAuth grant at a declared https token endpoint (origin in egress) and keep the result under the credential a secret knob names, for the app or the signed-in viewer. grant is authorization_code, refresh_token (the credential's own refresh token, or the stored refresh-token credential refreshCredential names), jwt-bearer (RFC 7523: the store signs an RS256 assertion with the stored Google service-account JSON signingKey names, signing with its private_key, iss its client_email, sub the declared subject or else that email, header kid its private_key_id; subject, audience, scopes and ttlSeconds are declared) or json-token (a JSON-body endpoint declared by clientIdField, clientSecretField, accessField, refreshField, expiresInField, refreshEndpoint and refreshBodyField). credential, clientId, clientSecret, signingKey and refreshCredential are secret knobs; code and verifier are the single-use values, redacted in the journal. When a refresh answers a new refresh token for a credential made from refreshCredential, the store writes it back into that stored credential. A jwt-bearer credential is re-signed by the store when it expires; a json-token credential renews through its declared refresh endpoint. The program never holds a token. The success payload is { connected, label }; the failure payload is { error, kind } with kind one of unavailable, unsigned, denied, invalid_grant, invalid_client, transport, malformed, refused. A host with no credential store that can connect answers unavailable.",
+      "description": "Ask the host's credential store to make an OAuth grant at a declared https token endpoint (origin in egress) and keep the result under the credential a secret knob names, for the app or the signed-in viewer. grant is authorization_code, refresh_token (the credential's own refresh token, or the stored refresh-token credential refreshCredential names), jwt-bearer (RFC 7523: the store signs an RS256 assertion with the stored Google service-account JSON signingKey names, signing with its private_key, iss its client_email, sub the declared subject or else that email, header kid its private_key_id; subject, audience, scopes and ttlSeconds are declared) json-token (a JSON-body endpoint declared by clientIdField, clientSecretField, accessField, refreshField, expiresInField, refreshEndpoint and refreshBodyField) or client-credentials (RFC 6749 4.4: the client authenticates with clientId and clientSecret in the body or as basic; grantType names the grant_type it sends, client_credentials unless a provider names another, and params the extra non-secret { name, value } parameters, sent in the body or, with paramsIn query, in the token endpoint's query). credential, clientId, clientSecret, signingKey and refreshCredential are secret knobs; code and verifier are the single-use values, redacted in the journal. When a refresh answers a new refresh token for a credential made from refreshCredential, the store writes it back into that stored credential. A jwt-bearer credential is re-signed and a client-credentials credential re-minted by the store when it expires; a json-token credential renews through its declared refresh endpoint. The program never holds a token. The success payload is { connected, label }; the failure payload is { error, kind } with kind one of unavailable, unsigned, denied, invalid_grant, invalid_client, transport, malformed, refused. A host with no credential store that can connect answers unavailable.",
       "module": "core",
       "visual": {
         "form": "actuator"
@@ -7611,6 +7611,11 @@
               "clientIdField",
               "clientSecretField",
               "accessField"
+            ],
+            "client-credentials": [
+              "clientId",
+              "clientSecret",
+              "clientAuth"
             ]
           }
         }
@@ -7655,6 +7660,10 @@
                   {
                     "kind": "literal",
                     "value": "json-token"
+                  },
+                  {
+                    "kind": "literal",
+                    "value": "client-credentials"
                   }
                 ]
               },
@@ -7695,7 +7704,31 @@
               "refreshField": "string",
               "expiresInField": "string",
               "refreshEndpoint": "string",
-              "refreshBodyField": "string"
+              "refreshBodyField": "string",
+              "grantType": "string",
+              "params": {
+                "kind": "array",
+                "of": {
+                  "kind": "object",
+                  "fields": {
+                    "name": "string",
+                    "value": "string"
+                  }
+                }
+              },
+              "paramsIn": {
+                "kind": "union",
+                "of": [
+                  {
+                    "kind": "literal",
+                    "value": "body"
+                  },
+                  {
+                    "kind": "literal",
+                    "value": "query"
+                  }
+                ]
+              }
             },
             "optional": [
               "scope",
@@ -7717,10 +7750,13 @@
               "refreshField",
               "expiresInField",
               "refreshEndpoint",
-              "refreshBodyField"
+              "refreshBodyField",
+              "grantType",
+              "params",
+              "paramsIn"
             ]
           },
-          "description": "authorization_code: { credential, scope?, tokenEndpoint, grant, code, redirectUri, verifier?, clientId, clientSecret?, clientAuth, scopes? } | refresh_token: { credential, scope?, tokenEndpoint, grant, clientId, clientSecret?, clientAuth, refreshCredential? } | jwt-bearer: { credential, scope?, tokenEndpoint, grant, signingKey, subject?, audience, ttlSeconds, scopes? } | json-token: { credential, scope?, tokenEndpoint, grant, clientId, clientSecret, clientIdField, clientSecretField, accessField, refreshField?, expiresInField?, refreshEndpoint?, refreshBodyField? }"
+          "description": "authorization_code: { credential, scope?, tokenEndpoint, grant, code, redirectUri, verifier?, clientId, clientSecret?, clientAuth, scopes? } | refresh_token: { credential, scope?, tokenEndpoint, grant, clientId, clientSecret?, clientAuth, refreshCredential? } | jwt-bearer: { credential, scope?, tokenEndpoint, grant, signingKey, subject?, audience, ttlSeconds, scopes? } | json-token: { credential, scope?, tokenEndpoint, grant, clientId, clientSecret, clientIdField, clientSecretField, accessField, refreshField?, expiresInField?, refreshEndpoint?, refreshBodyField? } | client-credentials: { credential, scope?, tokenEndpoint, grant, clientId, clientSecret, clientAuth, scopes?, grantType?, params?, paramsIn? }"
         },
         {
           "name": "options",

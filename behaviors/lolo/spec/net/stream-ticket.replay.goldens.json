@@ -1,458 +1,275 @@
 {
  "atom": "net/atoms/std-stream-ticket.lolo",
  "trait": "StreamTicketer",
- "note": "from the stream-ticket scenarios; the host answers (random draw, store fetch/persist) are played as steps; the mint-with-bearer 401s are router verdicts, not atom events",
+ "spec": "spec/net/stream-ticket.lolo",
+ "note": "StreamTicketer over std-opaque-token: a mint and a forged take run the real token chain; the store's take answers are fed from the taking state, since the drawn ticket is random.",
  "cases": [
   {
-   "id": "a-minted-ticket-opens-the-stream-once",
-   "note": "keep t binds the minted ticket; $t is spent once, the second spend finds the row gone",
+   "id": "a-mint-answers-one-ticket-for-the-client-valid-sixty-seconds",
+   "now": 1700000000000,
+   "defaults": [
+    "TicketMint", "TicketTake"
+   ],
    "steps": [
     {
      "event": "MINT_TICKET",
      "payload": {
-      "requestId": 1,
-      "clientId": "client-alice"
-     }
-    },
-    {
-     "event": "TICKET_PUMP",
-     "payload": {}
-    },
-    {
-     "event": "SEED_DRAWN",
-     "payload": {
-      "value": "tk1"
+      "clientId": "c1",
+      "requestId": 7
      },
-     "from": "drawing"
-    },
-    {
-     "event": "TICKET_SAVED",
-     "payload": {
-      "id": "tk1"
-     },
-     "from": "saving",
-     "keep": "t",
-     "keepField": "ticket",
      "expect": {
+      "fired": true,
+      "state": "idle",
       "emits": [
+       {
+        "event": "TICKET_TOKEN_MINT",
+        "payload": {
+         "key": "stream-ticket",
+         "fields": [
+          {
+           "name": "clientId",
+           "value": "c1"
+          }
+         ],
+         "ttlMs": 60000
+        }
+       },
        {
         "event": "TICKET_MINTED",
         "payload": {
-         "ticket": "tk1",
-         "requestId": 1
+         "expiresAt": "2023-11-14T22:14:20.000Z",
+         "requestId": 7
         }
        }
-      ]
-     }
-    },
-    {
-     "event": "TAKE_TICKET",
-     "payload": {
-      "ticket": "$t"
-     }
-    },
-    {
-     "event": "TICKET_PUMP",
-     "payload": {}
-    },
-    {
-     "event": "TICKET_LOADED",
-     "payload": {
-      "data": {
-       "id": "tk1",
-       "expiresAt": "5138-11-16T09:46:39.999Z",
-       "clientId": "client-alice"
-      }
-     },
-     "from": "taking"
-    },
-    {
-     "event": "TICKET_SPENT",
-     "payload": {
-      "id": "tk1"
-     },
-     "from": "spending",
-     "expect": {
-      "emits": [
-       {
-        "event": "TICKET_TAKEN",
-        "payload": {
-         "ticket": "tk1",
-         "clientId": "client-alice"
-        }
-       }
-      ]
-     }
-    },
-    {
-     "event": "TAKE_TICKET",
-     "payload": {
-      "ticket": "$t"
-     }
-    },
-    {
-     "event": "TICKET_PUMP",
-     "payload": {}
-    },
-    {
-     "event": "TICKET_LOADED",
-     "payload": {
-      "data": {
-       "id": "tk1",
-       "expiresAt": "5138-11-16T09:46:39.999Z",
-       "clientId": "client-alice"
-      }
-     },
-     "from": "taking"
-    },
-    {
-     "event": "TICKET_NOT_SPENT",
-     "payload": {
-      "error": "gone"
-     },
-     "from": "spending",
-     "expect": {
-      "emits": [
-       {
-        "event": "TICKET_REFUSED",
-        "payload": {
-         "code": "used",
-         "ticket": "tk1"
-        }
-       }
+      ],
+      "emitCounts": {
+       "TICKET_MINTED": 1
+      },
+      "neverEmits": [
+       "TICKET_REFUSED"
       ]
      }
     }
    ]
   },
   {
-   "id": "a-forged-ticket-is-refused",
+   "id": "a-forged-ticket-is-refused-unknown",
+   "now": 1700000000000,
+   "defaults": [
+    "TicketMint", "TicketTake"
+   ],
    "steps": [
     {
      "event": "TAKE_TICKET",
      "payload": {
       "ticket": "forged"
-     }
-    },
-    {
-     "event": "TICKET_PUMP",
-     "payload": {}
-    },
-    {
-     "event": "TICKET_ABSENT",
-     "payload": {
-      "code": "not-found"
      },
-     "from": "taking",
      "expect": {
+      "fired": true,
+      "state": "idle",
       "emits": [
+       {
+        "event": "TICKET_TOKEN_TAKE",
+        "payload": {
+         "key": "stream-ticket",
+         "token": "forged"
+        }
+       },
        {
         "event": "TICKET_REFUSED",
         "payload": {
          "code": "unknown",
+         "message": "no such token",
          "ticket": "forged"
         }
        }
+      ],
+      "neverEmits": [
+       "TICKET_TAKEN"
       ]
      }
     }
    ]
   },
   {
-   "id": "an-expired-ticket-is-refused",
+   "id": "a-resolved-ticket-names-the-client-that-minted-it",
+   "now": 1700000000000,
    "steps": [
     {
-     "event": "MINT_TICKET",
-     "payload": {
-      "requestId": 1,
-      "clientId": "client-alice"
-     }
-    },
-    {
-     "event": "TICKET_PUMP",
-     "payload": {}
-    },
-    {
-     "event": "SEED_DRAWN",
-     "payload": {
-      "value": "tk1"
+     "event": "TOKEN_RESOLVED",
+     "from": "taking",
+     "entity": {
+      "ticket": "tk",
+      "queue": []
      },
-     "from": "drawing"
-    },
-    {
-     "event": "TICKET_SAVED",
      "payload": {
-      "id": "tk1"
-     },
-     "from": "saving",
-     "keep": "t",
-     "keepField": "ticket",
-     "expect": {
-      "emits": [
-       {
-        "event": "TICKET_MINTED",
-        "payload": {
-         "ticket": "tk1",
-         "requestId": 1
-        }
-       }
-      ]
-     }
-    },
-    {
-     "event": "TAKE_TICKET",
-     "payload": {
-      "ticket": "$t"
-     }
-    },
-    {
-     "event": "TICKET_PUMP",
-     "payload": {}
-    },
-    {
-     "event": "TICKET_LOADED",
-     "payload": {
-      "data": {
-       "id": "tk1",
-       "expiresAt": "1970-01-01T00:00:00.001Z",
-       "clientId": "client-alice"
+      "key": "stream-ticket",
+      "id": "h",
+      "row": {
+       "id": "h",
+       "clientId": "c1",
+       "expiresAt": "2023-11-14T22:14:20Z"
       }
      },
-     "from": "taking"
-    },
-    {
-     "event": "TICKET_SPENT",
-     "payload": {
-      "id": "tk1"
-     },
-     "from": "spending",
      "expect": {
+      "fired": true,
+      "state": "idle",
       "emits": [
        {
-        "event": "TICKET_REFUSED",
+        "event": "TICKET_TAKEN",
         "payload": {
-         "code": "expired",
-         "ticket": "tk1"
+         "ticket": "tk",
+         "clientId": "c1"
         }
        }
+      ],
+      "neverEmits": [
+       "TICKET_REFUSED"
       ]
      }
     }
    ]
   },
   {
-   "id": "two-viewers-hold-two-tickets-each-opens-once",
-   "note": "two tickets held at once; each spends on its own and a second take of the first is refused",
+   "id": "a-spent-ticket-is-refused-used",
+   "now": 1700000000000,
    "steps": [
     {
-     "event": "MINT_TICKET",
-     "payload": {
-      "requestId": 1,
-      "clientId": "client-alice"
-     }
-    },
-    {
-     "event": "TICKET_PUMP",
-     "payload": {}
-    },
-    {
-     "event": "SEED_DRAWN",
-     "payload": {
-      "value": "tk1"
+     "event": "TOKEN_REFUSED",
+     "from": "taking",
+     "entity": {
+      "ticket": "tk",
+      "queue": []
      },
-     "from": "drawing"
-    },
-    {
-     "event": "TICKET_SAVED",
      "payload": {
-      "id": "tk1"
+      "key": "stream-ticket",
+      "code": "used",
+      "message": "the token was already spent",
+      "token": "tk"
      },
-     "from": "saving",
-     "keep": "a",
-     "keepField": "ticket",
      "expect": {
-      "emits": [
-       {
-        "event": "TICKET_MINTED",
-        "payload": {
-         "ticket": "tk1",
-         "requestId": 1
-        }
-       }
-      ]
-     }
-    },
-    {
-     "event": "MINT_TICKET",
-     "payload": {
-      "requestId": 2,
-      "clientId": "client-bob"
-     }
-    },
-    {
-     "event": "TICKET_PUMP",
-     "payload": {}
-    },
-    {
-     "event": "SEED_DRAWN",
-     "payload": {
-      "value": "tk2"
-     },
-     "from": "drawing"
-    },
-    {
-     "event": "TICKET_SAVED",
-     "payload": {
-      "id": "tk2"
-     },
-     "from": "saving",
-     "keep": "b",
-     "keepField": "ticket",
-     "expect": {
-      "emits": [
-       {
-        "event": "TICKET_MINTED",
-        "payload": {
-         "ticket": "tk2",
-         "requestId": 2
-        }
-       }
-      ]
-     }
-    },
-    {
-     "event": "TAKE_TICKET",
-     "payload": {
-      "ticket": "$b"
-     }
-    },
-    {
-     "event": "TICKET_PUMP",
-     "payload": {}
-    },
-    {
-     "event": "TICKET_LOADED",
-     "payload": {
-      "data": {
-       "id": "tk2",
-       "expiresAt": "5138-11-16T09:46:39.999Z",
-       "clientId": "client-bob"
-      }
-     },
-     "from": "taking"
-    },
-    {
-     "event": "TICKET_SPENT",
-     "payload": {
-      "id": "tk2"
-     },
-     "from": "spending",
-     "expect": {
-      "emits": [
-       {
-        "event": "TICKET_TAKEN",
-        "payload": {
-         "ticket": "tk2"
-        }
-       }
-      ]
-     }
-    },
-    {
-     "event": "TAKE_TICKET",
-     "payload": {
-      "ticket": "$a"
-     }
-    },
-    {
-     "event": "TICKET_PUMP",
-     "payload": {}
-    },
-    {
-     "event": "TICKET_LOADED",
-     "payload": {
-      "data": {
-       "id": "tk1",
-       "expiresAt": "5138-11-16T09:46:39.999Z",
-       "clientId": "client-alice"
-      }
-     },
-     "from": "taking"
-    },
-    {
-     "event": "TICKET_SPENT",
-     "payload": {
-      "id": "tk1"
-     },
-     "from": "spending",
-     "expect": {
-      "emits": [
-       {
-        "event": "TICKET_TAKEN",
-        "payload": {
-         "ticket": "tk1"
-        }
-       }
-      ]
-     }
-    },
-    {
-     "event": "TAKE_TICKET",
-     "payload": {
-      "ticket": "$a"
-     }
-    },
-    {
-     "event": "TICKET_PUMP",
-     "payload": {}
-    },
-    {
-     "event": "TICKET_LOADED",
-     "payload": {
-      "data": {
-       "id": "tk1",
-       "expiresAt": "5138-11-16T09:46:39.999Z",
-       "clientId": "client-alice"
-      }
-     },
-     "from": "taking"
-    },
-    {
-     "event": "TICKET_NOT_SPENT",
-     "payload": {
-      "error": "gone"
-     },
-     "from": "spending",
-     "expect": {
+      "fired": true,
+      "state": "idle",
       "emits": [
        {
         "event": "TICKET_REFUSED",
         "payload": {
          "code": "used",
-         "ticket": "tk1"
+         "message": "the token was already spent",
+         "ticket": "tk"
         }
        }
+      ],
+      "neverEmits": [
+       "TICKET_TAKEN"
       ]
      }
     }
    ]
   },
   {
-   "id": "a-saved-ticket-with-no-expiry-is-refused-not-minted",
-   "note": "TICKET_SAVED arrives with no mint in flight, so expiresAt was never set: the mint is refused as a store failure",
+   "id": "an-expired-ticket-is-refused-expired",
+   "now": 1700000000000,
    "steps": [
     {
-     "event": "TICKET_SAVED",
-     "payload": {
-      "id": "tk9"
+     "event": "TOKEN_REFUSED",
+     "from": "taking",
+     "entity": {
+      "ticket": "tk",
+      "queue": []
      },
-     "from": "saving",
+     "payload": {
+      "key": "stream-ticket",
+      "code": "expired",
+      "message": "the token has expired",
+      "token": "tk"
+     },
      "expect": {
+      "fired": true,
+      "state": "idle",
       "emits": [
        {
         "event": "TICKET_REFUSED",
         "payload": {
-         "code": "store"
+         "code": "expired",
+         "message": "the token has expired",
+         "ticket": "tk"
+        }
+       }
+      ],
+      "neverEmits": [
+       "TICKET_TAKEN"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-resolved-row-with-no-client-is-refused-not-taken",
+   "now": 1700000000000,
+   "steps": [
+    {
+     "event": "TOKEN_RESOLVED",
+     "from": "taking",
+     "entity": {
+      "ticket": "tk",
+      "queue": []
+     },
+     "payload": {
+      "key": "stream-ticket",
+      "id": "h",
+      "row": {
+       "id": "h",
+       "clientId": "",
+       "expiresAt": "2023-11-14T22:14:20Z"
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "emits": [
+       {
+        "event": "TICKET_REFUSED",
+        "payload": {
+         "code": "unknown",
+         "message": "the stream ticket names no client",
+         "ticket": "tk"
+        }
+       }
+      ],
+      "neverEmits": [
+       "TICKET_TAKEN"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-minted-ticket-with-no-expiry-is-refused-not-minted",
+   "now": 1700000000000,
+   "steps": [
+    {
+     "event": "TOKEN_MINTED",
+     "from": "minting",
+     "entity": {
+      "mintRequest": 3,
+      "queue": []
+     },
+     "payload": {
+      "key": "stream-ticket",
+      "token": "tk",
+      "id": "h"
+     },
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "emits": [
+       {
+        "event": "TICKET_REFUSED",
+        "payload": {
+         "code": "store",
+         "message": "the minted ticket has no expiry",
+         "requestId": 3
         }
        }
       ],
@@ -464,26 +281,109 @@
    ]
   },
   {
-   "id": "a-spent-ticket-with-no-holder-is-refused-not-taken",
-   "note": "TICKET_SPENT arrives with no stored ticket read, so holder was never set: the take is refused",
+   "id": "a-mint-arriving-mid-mint-waits-its-turn-and-is-answered-once",
+   "now": 1700000000000,
+   "defaults": [
+    "TicketMint", "TicketTake"
+   ],
    "steps": [
     {
-     "event": "TICKET_SPENT",
-     "payload": {
-      "id": "tk9"
+     "event": "MINT_TICKET",
+     "from": "minting",
+     "entity": {
+      "mintRequest": 1,
+      "queue": []
      },
-     "from": "spending",
+     "payload": {
+      "clientId": "c2",
+      "requestId": 2
+     },
      "expect": {
+      "fired": true,
+      "state": "minting",
+      "neverEmits": [
+       "TICKET_TOKEN_MINT",
+       "TICKET_MINTED",
+       "TICKET_REFUSED"
+      ]
+     }
+    },
+    {
+     "event": "TOKEN_MINTED",
+     "from": "minting",
+     "payload": {
+      "key": "stream-ticket",
+      "token": "t1",
+      "id": "h1",
+      "expiresAt": "2023-11-14T22:14:20.000Z"
+     },
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "emits": [
+       {
+        "event": "TICKET_MINTED",
+        "payload": {
+         "ticket": "t1",
+         "requestId": 1
+        }
+       },
+       {
+        "event": "TICKET_TOKEN_MINT",
+        "payload": {
+         "fields": [
+          {
+           "name": "clientId",
+           "value": "c2"
+          }
+         ]
+        }
+       },
+       {
+        "event": "TICKET_MINTED",
+        "payload": {
+         "requestId": 2
+        }
+       }
+      ],
+      "emitCounts": {
+       "TICKET_MINTED": 2
+      },
+      "neverEmits": [
+       "TICKET_REFUSED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-request-beyond-the-queue-bound-is-refused-busy",
+   "now": 1700000000000,
+   "config": {
+    "maxQueue": 0
+   },
+   "steps": [
+    {
+     "event": "MINT_TICKET",
+     "payload": {
+      "clientId": "c1",
+      "requestId": 9
+     },
+     "expect": {
+      "fired": true,
+      "state": "idle",
       "emits": [
        {
         "event": "TICKET_REFUSED",
         "payload": {
-         "code": "unknown"
+         "code": "busy",
+         "message": "the stream ticket queue is full",
+         "requestId": 9
         }
        }
       ],
       "neverEmits": [
-       "TICKET_TAKEN"
+       "TICKET_TOKEN_MINT"
       ]
      }
     }

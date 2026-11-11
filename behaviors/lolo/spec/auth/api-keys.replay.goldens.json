@@ -1,0 +1,71 @@
+{
+  "atom": "auth/atoms/std-api-keys.lolo",
+  "trait": "ApiKeyMinter",
+  "note": "A minted key's plaintext reaches its owner exactly once, in API_KEY_MINTED.",
+  "cases": [
+    {
+      "id": "a-saved-key-answers-its-plaintext-once",
+      "now": 1700000000000,
+      "steps": [
+        {
+          "event": "KEY_SAVED",
+          "from": "saving",
+          "entity": {
+            "plaintext": "ak_0123abcd",
+            "keyHash": "h1",
+            "lastFour": "abcd"
+          },
+          "payload": {
+            "id": "h1"
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "API_KEY_MINTED",
+                "payload": {
+                  "plaintext": "ak_0123abcd",
+                  "keyHash": "h1",
+                  "lastFour": "abcd"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-failed-save-answers-no-plaintext",
+      "now": 1700000000000,
+      "steps": [
+        {
+          "event": "KEY_NOT_SAVED",
+          "from": "saving",
+          "entity": {
+            "plaintext": "ak_0123abcd",
+            "keyHash": "h1",
+            "lastFour": "abcd"
+          },
+          "payload": {
+            "error": "disk full",
+            "code": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "API_KEY_FAILED",
+                "payload": {
+                  "code": "",
+                  "message": "disk full"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

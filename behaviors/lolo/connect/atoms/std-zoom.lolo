@@ -1,6 +1,6 @@
 app std-zoom [
-  version: "1.0.0",
-  description: "std-zoom — Zoom cloud-recording transcripts through the REST API (api.zoom.us/v2) for a Server-to-Server OAuth app. LIST_RECORDINGS answers the cloud recordings of a date range, following next_page_token, and whether each has a transcript; ZOOM_FETCH_TRANSCRIPT reads one meeting's recording files, downloads its TRANSCRIPT file (WebVTT) and answers the raw file and its plain Speaker: line text. The text passes through byte for byte: no translation, no truncation. Every call runs on its own row under its own key and mints its own access token with the account_credentials grant over a keyed HTTP client whose Basic credential the host fills at the boundary, then calls the API under that token; each step retries under std-retry. A failure answers ZOOM_FAILED with the provider's message, NO_TRANSCRIPT when the meeting has no transcript file, NOT_CONFIGURED when no credential or account is set.",
+  version: "2.0.0",
+  description: "std-zoom — Zoom cloud-recording transcripts through the REST API (api.zoom.us/v2) for a Server-to-Server OAuth app. LIST_RECORDINGS answers the cloud recordings of a date range, following next_page_token, and whether each has a transcript; ZOOM_FETCH_TRANSCRIPT reads one meeting's recording files, downloads its TRANSCRIPT file (WebVTT) and answers the raw file and its plain Speaker: line text. The text passes through byte for byte: no translation, no truncation. The access token is minted and held by the host credential store (a client-credentials grant with Zoom's account_credentials grant type and the account id, the client id and secret as HTTP Basic), re-minted by the store when it expires, and carried by one keyed HTTP client, never by an event or a row. Every call runs on its own row under its own key; each step retries under std-retry. A failure answers ZOOM_FAILED with the provider's message, NO_TRANSCRIPT when the meeting has no transcript file, NOT_CONFIGURED when no credential or account is set.",
   egress: ["https://api.zoom.us", "https://zoom.us"],
   net: { "api.zoom.us:443": [tcp], "zoom.us:443": [tcp] }
 ]
@@ -10,7 +10,6 @@ type HttpHeader = { name : string!, value : string! }
 type ZoomFile = { file_type : string, download_url : string }
 type ZoomMeetingReply = { uuid : string, topic : string, start_time : string, recording_files : [ZoomFile] }
 type ZoomListReply = { meetings : [ZoomMeetingReply], next_page_token : string }
-type ZoomTokenReply = { access_token : string }
 type ZoomErrorReply = { message : string, reason : string, error : string }
 type ZoomMeetingRow = { meetingId : string, topic : string, startTime : string, hasTranscript : boolean }
 orbital ZoomOrbital {
@@ -18,11 +17,12 @@ orbital ZoomOrbital {
     id : string!
     seq : number @description "The front trait's call counter: each call takes the next number, so its key is distinct from every other call's." = 0
     kind : string @description "The call in flight: list or transcript; empty while the row is free." = ""
-    step : string @description "The step in flight: token, list, meeting or download." = ""
+    step : string @description "The step in flight: list, meeting or download." = ""
     firstTarget : string @description "The API request target of the call's first API step." = ""
     target : string @description "The request target of the step in flight." = ""
-    host : string @description "The host of the API step in flight; empty for the token step." = ""
-    token : string @description "The access token this call minted, held by this row alone until the call ends." = ""
+    host : string @description "The host of the step in flight." = ""
+    accountId : string @description "The Zoom account id of the call in flight, for the credential store's account_credentials grant." = ""
+    mintTried : boolean @description "True once the credential store was asked to mint the access token after it reported none held, so a second not-held answer reports NOT_CONFIGURED instead of looping." = false
     meetingId : string @description "The meeting uuid a transcript call was asked for." = ""
     topic : string = ""
     startTime : string = ""
@@ -31,30 +31,6 @@ orbital ZoomOrbital {
     meetings : [ZoomMeetingRow] @description "The recordings gathered over the pages read so far." = []
     attempt : number @description "The std-retry attempt in flight." = 0
     stepReady : boolean @description "True once the reply of the step in flight was read and std-retry's completion of its run starts the next step." = false
-  }
-
-  trait ZoomTokenKeyed = Keyed.traits.HttpKeyed {
-    listens {
-      ZoomCall.ZOOM_TOKEN_HTTP_SEND -> HTTP_SEND
-      ZoomTokenKeyed.DELIVERY_REJECTED -> KEY_REFUSED
-    }
-  }
-
-  trait ZoomTokenHttp = Keyed.traits.KeyedHttp {
-    config {
-      host: "zoom.us"
-      port: 443
-      tls: true
-      serverName: "zoom.us"
-      credential: "ZOOM_BASIC_AUTH"
-      credentialHeader: "authorization"
-      credentialPrefix: "Basic "
-      credentialEncode: "base64"
-    }
-    listens {
-      ZoomTokenKeyed.KEYED_SEND -> HTTP_SEND per @payload.key
-      ZoomTokenKeyed.KEYED_CANCEL -> HTTP_CANCEL per @payload.key
-    }
   }
 
   trait ZoomApiKeyed = Keyed.traits.HttpKeyed {
@@ -72,6 +48,9 @@ orbital ZoomOrbital {
       serverName: "api.zoom.us"
       dynamicHost: true
       signatureHeaders: ["authorization"]
+      credential: "ZOOM_ACCESS_TOKEN"
+      credentialHeader: "authorization"
+      credentialPrefix: "Bearer "
     }
     listens {
       ZoomApiKeyed.KEYED_SEND -> HTTP_SEND per @payload.key
@@ -91,7 +70,6 @@ orbital ZoomOrbital {
       ZoomCall.ZOOM_RETRY_START -> START per @payload.key
       ZoomCall.ZOOM_RETRY_FAILED -> FAILED per @payload.key
       ZoomCall.ZOOM_RETRY_CANCEL -> CANCEL per @payload.key
-      ZoomTokenHttp.HTTP_REPLIED -> SUCCEEDED per @payload.key with { key: (as ?key CallKey) } when (not (or (and (>= ?status 100) (< ?status 200)) (= ?status 408) (= ?status 429) (and (>= ?status 500) (< ?status 600))))
       ZoomApiHttp.HTTP_REPLIED -> SUCCEEDED per @payload.key with { key: (as ?key CallKey) } when (not (or (and (>= ?status 100) (< ?status 200)) (= ?status 408) (= ?status 429) (and (>= ?status 500) (< ?status 600))))
     }
   }
@@ -139,7 +117,7 @@ orbital ZoomOrbital {
     config {
       accountId : string = ""
         @label "Zoom account id"
-        @description "The account id of the Server-to-Server OAuth app, sent as account_id of the account_credentials grant; empty answers NOT_CONFIGURED."
+        @description "The account id of the Server-to-Server OAuth app, which the credential store sends as account_id of the account_credentials grant; empty answers NOT_CONFIGURED."
         @synonyms "account id, zoom account"
         @tier "infra"
     }
@@ -152,15 +130,16 @@ orbital ZoomOrbital {
       INIT -> idle
 
       CALL_READY -> idle when (= @payload.accountId "")
-        (emit ZOOM_FAILED { code: "NOT_CONFIGURED", message: "Integration not configured: zoom. Set the accountId knob, ZOOM_BASIC_AUTH (the client id and secret as id:secret)." })
+        (emit ZOOM_FAILED { code: "NOT_CONFIGURED", message: "Integration not configured: zoom. Set the accountId knob and the ZOOM_CLIENT_ID and ZOOM_CLIENT_SECRET credentials of the Server-to-Server OAuth app." })
         (emit ZOOM_CLEAR {})
       CALL_READY -> idle when (!= @payload.accountId "")
         (set @entity.kind @payload.kind)
-        (set @entity.step "token")
+        (set @entity.step (if (= @payload.kind "list") "list" "meeting"))
         (set @entity.firstTarget @payload.target)
-        (set @entity.target (str/concat "/oauth/token?grant_type=account_credentials&account_id=" (str/encode-uri-component @payload.accountId)))
-        (set @entity.host "")
-        (set @entity.token "")
+        (set @entity.target @payload.target)
+        (set @entity.host "api.zoom.us")
+        (set @entity.mintTried false)
+        (set @entity.accountId @payload.accountId)
         (set @entity.meetingId @payload.meetingId)
         (set @entity.pageToken "")
         (set @entity.meetings [])
@@ -170,20 +149,8 @@ orbital ZoomOrbital {
       ZOOM_ATTEMPT -> idle
         (set @entity.attempt @payload.attempt)
         (emit ZOOM_DISPATCH {})
-      ZOOM_DISPATCH -> idle when (= @entity.step "token")
-        (emit ZOOM_TOKEN_HTTP_SEND { key: @entity.id, method: "POST", target: @entity.target, headers: [{ name: "accept", value: "*/*" }], body: (bytes/from-string ""), stream: "none" })
-      ZOOM_DISPATCH -> idle when (!= @entity.step "token")
-        (emit ZOOM_API_HTTP_SEND { key: @entity.id, method: "GET", target: @entity.target, headers: [{ name: "accept", value: "*/*" }, { name: "authorization", value: (str/concat "Bearer " @entity.token) }], body: (bytes/from-string ""), stream: "none", host: @entity.host })
-
-      ZOOM_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= @entity.step "token") (= (json/parse @payload.body ZoomTokenReply) null))
-        (emit ZOOM_FAILED { message: "The Zoom token answer could not be read" })
-        (emit ZOOM_CLEAR {})
-      ZOOM_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= @entity.step "token") (!= (json/parse @payload.body ZoomTokenReply) null) (= (default (object/get (json/parse @payload.body ZoomTokenReply) access_token "") "") ""))
-        (emit ZOOM_FAILED { message: "The Zoom token answer held no access token" })
-        (emit ZOOM_CLEAR {})
-      ZOOM_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= @entity.step "token") (!= (json/parse @payload.body ZoomTokenReply) null) (!= (default (object/get (json/parse @payload.body ZoomTokenReply) access_token "") "") ""))
-        (set @entity.token (default (object/get (json/parse @payload.body ZoomTokenReply) access_token "") ""))
-        (set @entity.stepReady true)
+      ZOOM_DISPATCH -> idle
+        (emit ZOOM_API_HTTP_SEND { key: @entity.id, method: "GET", target: @entity.target, headers: [{ name: "accept", value: "*/*" }], body: (bytes/from-string ""), stream: "none", host: @entity.host })
 
       ZOOM_REPLIED -> idle when (and (and (>= @payload.status 200) (< @payload.status 300)) (= @entity.step "list") (= (json/parse @payload.body ZoomListReply) null))
         (emit ZOOM_FAILED { message: "The Zoom answer could not be read" })
@@ -222,8 +189,19 @@ orbital ZoomOrbital {
         (emit ZOOM_FAILED { message: (default @payload.error "") })
         (emit ZOOM_CLEAR {})
 
-      ZOOM_REQUEST_FAILED -> idle when (= @payload.kind "unconfigured")
-        (emit ZOOM_FAIL { code: "NOT_CONFIGURED", message: "Integration not configured: zoom. Set the accountId knob, ZOOM_BASIC_AUTH (the client id and secret as id:secret)." })
+      ZOOM_REQUEST_FAILED -> idle when (and (= @payload.kind "unconfigured") (= @entity.mintTried false))
+        (set @entity.mintTried true)
+        (credential-connect { credential: @config.accessToken, scope: app, tokenEndpoint: @config.tokenUrl, grant: "client-credentials", clientId: @config.clientId, clientSecret: @config.clientSecret, clientAuth: basic, grantType: "account_credentials", params: [{ name: "account_id", value: @entity.accountId }], paramsIn: query } { emit: { success: ZOOM_CONNECTED, failure: ZOOM_CONNECT_FAILED } })
+      ZOOM_REQUEST_FAILED -> idle when (and (= @payload.kind "unconfigured") (= @entity.mintTried true))
+        (emit ZOOM_FAIL { code: "NOT_CONFIGURED", message: "Integration not configured: zoom. Set the accountId knob and the ZOOM_CLIENT_ID and ZOOM_CLIENT_SECRET credentials of the Server-to-Server OAuth app." })
+      ZOOM_CONNECTED -> idle when (= @payload.connected true)
+        (emit ZOOM_DISPATCH {})
+      ZOOM_CONNECTED -> idle when (= @payload.connected false)
+        (emit ZOOM_FAIL { code: "NOT_CONFIGURED", message: "Integration not configured: zoom. Set the accountId knob and the ZOOM_CLIENT_ID and ZOOM_CLIENT_SECRET credentials of the Server-to-Server OAuth app." })
+      ZOOM_CONNECT_FAILED -> idle when (= @payload.kind "unavailable")
+        (emit ZOOM_FAIL { code: "NOT_CONFIGURED", message: "Integration not configured: zoom. Set the accountId knob and the ZOOM_CLIENT_ID and ZOOM_CLIENT_SECRET credentials of the Server-to-Server OAuth app." })
+      ZOOM_CONNECT_FAILED -> idle when (!= @payload.kind "unavailable")
+        (emit ZOOM_FAIL { message: (str/concat "Zoom token request failed: " @payload.error) })
       ZOOM_REQUEST_FAILED -> idle when (and (!= @payload.kind "unconfigured") (< @entity.attempt 3))
         (emit ZOOM_RETRY_FAILED { key: (as @payload.key CallKey), error: (if (= @payload.kind "timeout") "network timeout" @payload.error) })
       ZOOM_REQUEST_FAILED -> idle when (and (!= @payload.kind "unconfigured") (>= @entity.attempt 3))
@@ -238,13 +216,6 @@ orbital ZoomOrbital {
         (emit ZOOM_FAILED { code: @payload.code, message: @payload.message })
         (emit ZOOM_CLEAR {})
 
-      ZOOM_RETRY_DONE -> idle when (and (= @entity.step "token") @entity.stepReady)
-        (set @entity.step (if (= @entity.kind "list") "list" "meeting"))
-        (set @entity.target @entity.firstTarget)
-        (set @entity.host "api.zoom.us")
-        (set @entity.attempt 0)
-        (set @entity.stepReady false)
-        (emit ZOOM_RETRY_START { key: (as @entity.id CallKey) })
       ZOOM_RETRY_DONE -> idle when (and (= @entity.step "list") @entity.stepReady (!= @entity.pageToken ""))
         (set @entity.target (str/concat @entity.firstTarget "&next_page_token=" (str/encode-uri-component @entity.pageToken)))
         (set @entity.pageToken "")
@@ -271,7 +242,8 @@ orbital ZoomOrbital {
         (set @entity.firstTarget "")
         (set @entity.target "")
         (set @entity.host "")
-        (set @entity.token "")
+        (set @entity.mintTried false)
+        (set @entity.accountId "")
         (set @entity.meetingId "")
         (set @entity.topic "")
         (set @entity.startTime "")
@@ -306,16 +278,6 @@ orbital ZoomOrbital {
         @description "A Zoom action failed: the provider's error message, NO_TRANSCRIPT when the meeting has no transcript file, NOT_CONFIGURED when no credential or account is set."
         @synonyms "zoom error, zoom failure"
         @tier "primary"
-      ZOOM_TOKEN_HTTP_SEND {
-        key : string!
-        method : string!
-        target : string!
-        headers : [HttpHeader]!
-        body : bytes!
-        stream : string!
-      }
-        @description "Internal: the token request under the Basic credential, for its keyed HTTP client."
-        @tier "secondary"
       ZOOM_API_HTTP_SEND {
         key : string!
         method : string!
@@ -325,7 +287,19 @@ orbital ZoomOrbital {
         stream : string!
         host : string
       }
-        @description "Internal: the API or download request under the minted access token, for its keyed HTTP client."
+        @description "Internal: the API or download request, for the keyed HTTP client that carries the stored access token."
+        @tier "secondary"
+      ZOOM_CONNECTED -> internal {
+        connected : boolean!
+        label : string
+      }
+        @description "Internal: the credential store minted the access token."
+        @tier "secondary"
+      ZOOM_CONNECT_FAILED -> internal {
+        error : string!
+        kind : string!
+      }
+        @description "Internal: the credential store could not mint the access token."
         @tier "secondary"
       ZOOM_RETRY_START { key : CallKey! }
         @description "Internal: hand a step to std-retry."
@@ -404,17 +378,42 @@ orbital ZoomOrbital {
         attempts : number!
       }
         @description "std-retry completed this key's step run; the next step starts."
+      ZOOM_CONNECTED {
+        connected : boolean!
+        label : string
+      }
+      ZOOM_CONNECT_FAILED {
+        error : string!
+        kind : string!
+      }
       ZoomClient.ZOOM_READY -> CALL_READY per @payload.key
-      ZoomTokenHttp.HTTP_REPLIED -> ZOOM_REPLIED per @payload.key with { status: ?status, headers: ?headers, body: (default (bytes/to-string ?body) ""), key: ?key }
       ZoomApiHttp.HTTP_REPLIED -> ZOOM_REPLIED per @payload.key with { status: ?status, headers: ?headers, body: (default (bytes/to-string ?body) ""), key: ?key }
-      ZoomTokenHttp.HTTP_FAILED -> ZOOM_REQUEST_FAILED per @payload.key with { error: ?error, kind: ?kind, key: ?key }
       ZoomApiHttp.HTTP_FAILED -> ZOOM_REQUEST_FAILED per @payload.key with { error: ?error, kind: ?kind, key: ?key }
       ZoomRetry.ATTEMPT -> ZOOM_ATTEMPT per @payload.key
       ZoomRetry.GAVE_UP -> ZOOM_GAVE_UP per @payload.key
       ZoomRetry.COMPLETED -> ZOOM_RETRY_DONE per @payload.key
     }
 
+    config {
+      clientId : secret = "ZOOM_CLIENT_ID"
+        @label "Zoom client id credential"
+        @description "Name of the credential holding the Server-to-Server OAuth app's client id."
+        @tier "infra"
+      clientSecret : secret = "ZOOM_CLIENT_SECRET"
+        @label "Zoom client secret credential"
+        @description "Name of the credential holding the Server-to-Server OAuth app's client secret."
+        @synonyms "client secret"
+        @tier "infra"
+      accessToken : secret = "ZOOM_ACCESS_TOKEN"
+        @label "Zoom access token credential"
+        @description "Host credential name the minted access token lives under; the composed ZoomApiHttp trait carries the same name, restate it there when this knob changes."
+        @tier "infra"
+      tokenUrl : url = "https://zoom.us/oauth/token"
+        @label "Zoom token endpoint"
+        @description "The token endpoint the credential store mints the access token at. Must be declared in the app egress list."
+        @tier "infra"
+    }
   }
 
-  page boot as ZoomPage -> ZoomClient, ZoomCall, ZoomTokenKeyed, ZoomTokenHttp, ZoomApiKeyed, ZoomApiHttp, ZoomRetry
+  page boot as ZoomPage -> ZoomClient, ZoomCall, ZoomApiKeyed, ZoomApiHttp, ZoomRetry
 }

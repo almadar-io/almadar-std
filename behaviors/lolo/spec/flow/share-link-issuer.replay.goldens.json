@@ -1,0 +1,169 @@
+{
+  "atom": "flow/atoms/std-share-link-review.lolo",
+  "trait": "ReviewLinkIssuer",
+  "note": "A link is issued through LinkMint; the url is the only place the token appears.",
+  "cases": [
+    {
+      "id": "issuing-a-link-mints-a-token-for-the-item-and-answers-its-url",
+      "now": 1700000000000,
+      "defaults": [
+        "LinkMint"
+      ],
+      "steps": [
+        {
+          "event": "ISSUE_LINK",
+          "payload": {
+            "targetId": "asset-1",
+            "title": "Homepage hero",
+            "mediaUrl": "https://cdn.example/hero.png",
+            "mediaType": "image",
+            "days": 14
+          },
+          "identity": {
+            "id": "u1",
+            "role": "member"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LINK_TOKEN_MINT",
+                "payload": {
+                  "key": "asset-1",
+                  "fields": [
+                    {
+                      "name": "targetId",
+                      "value": "asset-1"
+                    },
+                    {
+                      "name": "title",
+                      "value": "Homepage hero"
+                    },
+                    {
+                      "name": "mediaUrl",
+                      "value": "https://cdn.example/hero.png"
+                    },
+                    {
+                      "name": "mediaType",
+                      "value": "image"
+                    },
+                    {
+                      "name": "status",
+                      "value": "open"
+                    },
+                    {
+                      "name": "issuedBy",
+                      "value": "u1"
+                    }
+                  ],
+                  "ttlMs": 1209600000
+                }
+              },
+              {
+                "event": "LINK_ISSUED",
+                "payload": {
+                  "targetId": "asset-1"
+                }
+              }
+            ],
+            "neverEmits": [
+              "LINK_FAILED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-an-unknown-media-type-is-stored-as-none",
+      "now": 1700000000000,
+      "defaults": [
+        "LinkMint"
+      ],
+      "steps": [
+        {
+          "event": "ISSUE_LINK",
+          "payload": {
+            "targetId": "asset-2",
+            "mediaType": "pdf",
+            "title": "",
+            "mediaUrl": "",
+            "days": 14
+          },
+          "identity": {
+            "id": "u1",
+            "role": "member"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LINK_TOKEN_MINT",
+                "payload": {
+                  "fields": [
+                    {
+                      "name": "targetId",
+                      "value": "asset-2"
+                    },
+                    {
+                      "name": "title",
+                      "value": ""
+                    },
+                    {
+                      "name": "mediaUrl",
+                      "value": ""
+                    },
+                    {
+                      "name": "mediaType",
+                      "value": "none"
+                    },
+                    {
+                      "name": "status",
+                      "value": "open"
+                    },
+                    {
+                      "name": "issuedBy",
+                      "value": "u1"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-refused-mint-answers-link-failed",
+      "now": 1700000000000,
+      "steps": [
+        {
+          "event": "LINK_TOKEN_REFUSED",
+          "from": "issuing",
+          "entity": {
+            "pendingTargetId": "asset-1"
+          },
+          "payload": {
+            "key": "asset-1",
+            "code": "store",
+            "message": "disk full"
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "LINK_FAILED",
+                "payload": {
+                  "message": "disk full"
+                }
+              }
+            ],
+            "neverEmits": [
+              "LINK_ISSUED"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

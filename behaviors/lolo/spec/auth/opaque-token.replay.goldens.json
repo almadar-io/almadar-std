@@ -1,0 +1,221 @@
+{
+  "atom": "auth/atoms/std-opaque-token.lolo",
+  "trait": "OpaqueTokenMint",
+  "note": "A minted token leaves once, in TOKEN_MINTED; only its SHA-256 is stored.",
+  "cases": [
+    {
+      "id": "a-mint-with-a-lifetime-answers-the-token-its-hash-and-expiry-once",
+      "now": 1700000000000,
+      "steps": [
+        {
+          "event": "MINT_TOKEN",
+          "payload": {
+            "key": "m1",
+            "fields": [
+              {
+                "name": "clientId",
+                "value": "c1"
+              }
+            ],
+            "ttlMs": 60000
+          },
+          "expect": {
+            "fired": true,
+            "state": "drawing"
+          }
+        },
+        {
+          "event": "TOKEN_DRAWN",
+          "from": "drawing",
+          "payload": {
+            "value": "tok"
+          },
+          "expect": {
+            "fired": true,
+            "state": "saving",
+            "emits": [
+              {
+                "event": "TOKEN_MINTED",
+                "payload": {
+                  "key": "m1",
+                  "token": "tok",
+                  "id": "1a7674eb4ee78df7e1ac439a93c3fa8e3c945784d4dec9fd8e3011738b2f1d62",
+                  "expiresAt": "2023-11-14T22:14:20.000Z"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-mint-with-no-lifetime-has-no-expiry",
+      "now": 1700000000000,
+      "steps": [
+        {
+          "event": "MINT_TOKEN",
+          "payload": {
+            "key": "m1",
+            "fields": [
+              {
+                "name": "clientId",
+                "value": "c1"
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "drawing"
+          }
+        },
+        {
+          "event": "TOKEN_DRAWN",
+          "from": "drawing",
+          "payload": {
+            "value": "tok"
+          },
+          "expect": {
+            "fired": true,
+            "state": "saving",
+            "emits": [
+              {
+                "event": "TOKEN_MINTED",
+                "payload": {
+                  "key": "m1",
+                  "token": "tok",
+                  "id": "1a7674eb4ee78df7e1ac439a93c3fa8e3c945784d4dec9fd8e3011738b2f1d62"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-failed-draw-answers-seed",
+      "now": 1700000000000,
+      "steps": [
+        {
+          "event": "MINT_TOKEN",
+          "payload": {
+            "key": "m1",
+            "fields": [
+              {
+                "name": "clientId",
+                "value": "c1"
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "drawing"
+          }
+        },
+        {
+          "event": "TOKEN_DRAW_FAILED",
+          "from": "drawing",
+          "payload": {
+            "error": "no entropy"
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "TOKEN_REFUSED",
+                "payload": {
+                  "key": "m1",
+                  "code": "seed",
+                  "message": "no entropy"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-failed-save-answers-store",
+      "now": 1700000000000,
+      "steps": [
+        {
+          "event": "MINT_TOKEN",
+          "payload": {
+            "key": "m1",
+            "fields": [
+              {
+                "name": "clientId",
+                "value": "c1"
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "drawing"
+          }
+        },
+        {
+          "event": "TOKEN_DRAWN",
+          "from": "drawing",
+          "payload": {
+            "value": "tok"
+          },
+          "expect": {
+            "fired": true,
+            "state": "saving"
+          }
+        },
+        {
+          "event": "TOKEN_NOT_SAVED",
+          "from": "saving",
+          "payload": {
+            "error": "disk full",
+            "code": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "TOKEN_REFUSED",
+                "payload": {
+                  "key": "m1",
+                  "code": "store",
+                  "message": "disk full"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-mint-while-one-is-in-flight-is-refused-busy",
+      "now": 1700000000000,
+      "steps": [
+        {
+          "event": "MINT_TOKEN",
+          "from": "drawing",
+          "payload": {
+            "key": "m2",
+            "fields": []
+          },
+          "expect": {
+            "fired": true,
+            "state": "drawing",
+            "emits": [
+              {
+                "event": "TOKEN_REFUSED",
+                "payload": {
+                  "key": "m2",
+                  "code": "busy",
+                  "message": "a token request is already in flight"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

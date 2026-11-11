@@ -1,0 +1,303 @@
+app std-opaque-token [
+  version: "1.0.0",
+  description: "std-opaque-token — unguessable opaque tokens kept as rows of the caller's entity, for a holder with no account (a stream ticket, a share link, an invite). MINT_TOKEN { key, fields, ttlMs } draws 32 bytes from the host CSPRNG and keeps the base64url draw as the token; it stores only the token's SHA-256 (hex) as the row's id, with the caller's own fields (name/value pairs, as text) and, when ttlMs is above 0, the expiry field set ttlMs from now, then answers TOKEN_MINTED { key, token, id, expiresAt } once: the token is never stored. RESOLVE_TOKEN { key, token } reads exactly the row the token hashes to and answers TOKEN_RESOLVED { key, id, row }; with singleUse on, the row is first claimed (its expiry set to now), then answered and deleted, so it works once. A token that hashes to no row answers TOKEN_REFUSED unknown, one past its expiry expired (an expired single-use row is still deleted), one already spent used; a failed draw answers seed, a failed write or read store. Minting (OpaqueTokenMint) and resolving (OpaqueTokenResolve) are two traits, so a caller composes only what it does; each answers TOKEN_REFUSED busy to a request while one of its own is in flight, and a caller that needs a queue keeps its own. The row entity should declare `@read server` so no visitor lists tokens."
+]
+type TokenField = { name : string!, value : string! }
+
+orbital OpaqueTokenOrbital {
+  entity OpaqueTokenRecord [persistent: opaque_tokens] {
+    @read server "A token row is found only by the hash of its token, on the server."
+    id : string! @description "SHA-256 (hex) of the token."
+    expiresAt : instant @description "When the token stops working; absent = never."
+  }
+
+  entity OpaqueMintRun [runtime] {
+    id : string!
+    key : string @description "The caller's key of the mint in flight, echoed on its answer." = ""
+    fields : [TokenField] @description "The row fields of the mint in flight." = []
+    ttlMs : number @description "The lifetime of the mint in flight; 0 = no expiry." = 0
+    token : string @description "The token of the mint in flight, held only until it is answered." = ""
+    tokenId : string @description "The row id the token hashes to." = ""
+  }
+
+  entity OpaqueResolveRun [runtime] {
+    id : string!
+    key : string @description "The caller's key of the resolve in flight, echoed on its answer." = ""
+    token : string @description "The token being resolved." = ""
+    tokenId : string @description "The row id the token hashes to." = ""
+    expired : boolean @description "Whether the single-use row being spent had already expired." = false
+  }
+
+  trait OpaqueTokenMint -> OpaqueMintRun {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      MINT_TOKEN -> drawing
+        (set @entity.key (default ?key ""))
+        (set @entity.fields ?fields)
+        (set @entity.ttlMs (default ?ttlMs 0))
+        (random-bytes 32 { emit: { success: TOKEN_DRAWN, failure: TOKEN_DRAW_FAILED } })
+    }
+
+    state drawing {
+      INIT -> idle
+      MINT_TOKEN -> drawing
+        (emit TOKEN_REFUSED { key: (default ?key ""), code: "busy", message: "a token request is already in flight" })
+      TOKEN_DRAWN -> saving
+        (set @entity.token ?value)
+        (set @entity.tokenId (default (hash/sha 256 ?value "hex") ""))
+        (persist create @config.tokenEntity (array/reduce @entity.fields (if (> @entity.ttlMs 0) (object/set { id: (default (hash/sha 256 ?value "hex") "") } @config.expiresAtField (time/add @now @entity.ttlMs "ms")) { id: (default (hash/sha 256 ?value "hex") "") }) (fn (row field) (object/set @row (object/get @field name) (object/get @field value)))) {
+          emit: { success: TOKEN_SAVED, failure: TOKEN_NOT_SAVED }
+        })
+      TOKEN_DRAW_FAILED -> idle
+        (emit TOKEN_REFUSED { key: @entity.key, code: "seed", message: (default ?error "") })
+    }
+
+    state saving {
+      INIT -> idle
+      MINT_TOKEN -> saving
+        (emit TOKEN_REFUSED { key: (default ?key ""), code: "busy", message: "a token request is already in flight" })
+      TOKEN_SAVED -> idle when (> @entity.ttlMs 0)
+        (emit TOKEN_MINTED { key: @entity.key, token: @entity.token, id: @entity.tokenId, expiresAt: (time/add @now @entity.ttlMs "ms") })
+        (set @entity.token "")
+      TOKEN_SAVED -> idle
+        (emit TOKEN_MINTED { key: @entity.key, token: @entity.token, id: @entity.tokenId })
+        (set @entity.token "")
+      TOKEN_NOT_SAVED -> idle
+        (set @entity.token "")
+        (emit TOKEN_REFUSED { key: @entity.key, code: "store", message: (default ?error "") })
+    }
+
+    emits {
+      TOKEN_MINTED -> external {
+        key : string!
+        token : string!
+        id : string!
+        expiresAt : instant
+      }
+        @description "A token was minted and its row stored; hand the token to its holder now, it is never stored."
+        @synonyms "token issued, link issued, ticket minted"
+        @tier "primary"
+      TOKEN_REFUSED -> external {
+        key : string!
+        code : "seed" | "store" | "busy"
+        message : string!
+      }
+        @description "No token was minted: the draw failed (seed), the row could not be written (store), or another mint is in flight (busy)."
+        @tier "primary"
+      TOKEN_DRAWN {
+        value : string!
+      }
+        @tier "internal"
+      TOKEN_DRAW_FAILED {
+        error : string!
+      }
+        @tier "internal"
+      TOKEN_SAVED {
+        id : string!
+      }
+        @tier "internal"
+      TOKEN_NOT_SAVED {
+        error : string!
+        code : string
+      }
+        @tier "internal"
+    }
+
+    listens {
+      MINT_TOKEN {
+        key : string
+        fields : [TokenField]!
+        ttlMs : number
+      }
+        @description "Mint one token; fields hold the row's own fields as name/value pairs."
+        @synonyms "mint token, issue link, mint ticket"
+        @tier "domain"
+      TOKEN_DRAWN {
+        value : string!
+      }
+        @tier "internal"
+      TOKEN_DRAW_FAILED {
+        error : string!
+      }
+        @tier "internal"
+      TOKEN_SAVED {
+        id : string!
+      }
+        @tier "internal"
+      TOKEN_NOT_SAVED {
+        error : string!
+        code : string
+      }
+        @tier "internal"
+    }
+
+    config {
+      tokenEntity : entity = OpaqueTokenRecord
+        @label "Token rows"
+        @description "The persisted entity a token's row lives in; its id is the token's SHA-256 (hex)."
+        @tier "internal"
+      expiresAtField : string = expiresAt
+        @label "Expiry field"
+        @description "The instant field holding when a token stops working."
+        @tier "internal"
+    }
+  }
+
+  trait OpaqueTokenResolve -> OpaqueResolveRun {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      RESOLVE_TOKEN -> reading
+        (set @entity.key (default ?key ""))
+        (set @entity.token ?token)
+        (set @entity.tokenId (default (hash/sha 256 ?token "hex") ""))
+        (fetch @config.tokenEntity {
+          id: (default (hash/sha 256 ?token "hex") "")
+          emit: { success: TOKEN_ROW_FOUND, failure: TOKEN_ROW_ABSENT }
+        })
+    }
+
+    state reading {
+      INIT -> idle
+      RESOLVE_TOKEN -> reading
+        (emit TOKEN_REFUSED { key: (default ?key ""), code: "busy", message: "a token request is already in flight" })
+      TOKEN_ROW_ABSENT -> idle when (= ?code "not-found")
+        (emit TOKEN_REFUSED { key: @entity.key, code: "unknown", message: "no such token", token: @entity.token })
+      TOKEN_ROW_ABSENT -> idle
+        (emit TOKEN_REFUSED { key: @entity.key, code: "store", message: (default ?error ""), token: @entity.token })
+      TOKEN_ROW_FOUND -> spending when @config.singleUse
+        (set @entity.expired (and (validate/required (object/get ?data @config.expiresAtField)) (>= (time/diff @now (object/get ?data @config.expiresAtField) "ms") 0)))
+        (persist update @config.tokenEntity (object/set { id: @entity.tokenId } @config.expiresAtField @now) {
+          emit: { success: TOKEN_SPENT, failure: TOKEN_NOT_SPENT }
+        })
+      TOKEN_ROW_FOUND -> idle when (and (validate/required (object/get ?data @config.expiresAtField)) (>= (time/diff @now (object/get ?data @config.expiresAtField) "ms") 0))
+        (emit TOKEN_REFUSED { key: @entity.key, code: "expired", message: "the token has expired", token: @entity.token })
+      TOKEN_ROW_FOUND -> idle
+        (emit TOKEN_RESOLVED { key: @entity.key, id: @entity.tokenId, row: ?data })
+    }
+
+    state spending {
+      INIT -> idle
+      RESOLVE_TOKEN -> spending
+        (emit TOKEN_REFUSED { key: (default ?key ""), code: "busy", message: "a token request is already in flight" })
+      TOKEN_SPENT -> idle when @entity.expired
+        (persist delete @config.tokenEntity @entity.tokenId)
+        (emit TOKEN_REFUSED { key: @entity.key, code: "expired", message: "the token has expired", token: @entity.token })
+      TOKEN_SPENT -> rereading
+        (fetch @config.tokenEntity {
+          id: @entity.tokenId
+          emit: { success: TOKEN_ROW_CLAIMED, failure: TOKEN_NOT_SPENT }
+        })
+      TOKEN_NOT_SPENT -> idle
+        (emit TOKEN_REFUSED { key: @entity.key, code: "used", message: "the token was already spent", token: @entity.token })
+    }
+
+    state rereading {
+      INIT -> idle
+      RESOLVE_TOKEN -> rereading
+        (emit TOKEN_REFUSED { key: (default ?key ""), code: "busy", message: "a token request is already in flight" })
+      TOKEN_ROW_CLAIMED -> idle
+        (emit TOKEN_RESOLVED { key: @entity.key, id: @entity.tokenId, row: ?data })
+        (persist delete @config.tokenEntity @entity.tokenId)
+      TOKEN_NOT_SPENT -> idle
+        (emit TOKEN_REFUSED { key: @entity.key, code: "used", message: "the token was already spent", token: @entity.token })
+    }
+
+    emits {
+      TOKEN_RESOLVED -> external {
+        key : string!
+        id : string!
+        row : @entity @config.tokenEntity
+      }
+        @description "The presented token names this row (and, single use, is now spent)."
+        @synonyms "token accepted, ticket taken, link opened"
+        @tier "primary"
+      TOKEN_REFUSED -> external {
+        key : string!
+        code : "store" | "unknown" | "expired" | "used" | "busy"
+        message : string!
+        token : string
+      }
+        @description "The presented token names no row: never minted or forged (unknown), past its expiry (expired), already spent (used), another resolve in flight (busy), or the read failed (store)."
+        @synonyms "token refused, token rejected"
+        @tier "primary"
+      TOKEN_ROW_FOUND {
+        data : @entity @config.tokenEntity!
+      }
+        @tier "internal"
+      TOKEN_ROW_ABSENT {
+        error : string
+        code : string
+      }
+        @tier "internal"
+      TOKEN_SPENT {
+        id : string!
+        expiresAt : instant
+      }
+        @tier "internal"
+      TOKEN_ROW_CLAIMED {
+        data : @entity @config.tokenEntity!
+      }
+        @tier "internal"
+      TOKEN_NOT_SPENT {
+        error : string
+        code : string
+      }
+        @tier "internal"
+    }
+
+    listens {
+      RESOLVE_TOKEN {
+        key : string
+        token : string!
+      }
+        @description "Find the row a presented token names."
+        @synonyms "redeem token, open link, take ticket"
+        @tier "domain"
+      TOKEN_ROW_FOUND {
+        data : @entity @config.tokenEntity!
+      }
+        @tier "internal"
+      TOKEN_ROW_ABSENT {
+        error : string
+        code : string
+      }
+        @tier "internal"
+      TOKEN_SPENT {
+        id : string!
+        expiresAt : instant
+      }
+        @tier "internal"
+      TOKEN_ROW_CLAIMED {
+        data : @entity @config.tokenEntity!
+      }
+        @tier "internal"
+      TOKEN_NOT_SPENT {
+        error : string
+        code : string
+      }
+        @tier "internal"
+    }
+
+    config {
+      tokenEntity : entity = OpaqueTokenRecord
+        @label "Token rows"
+        @description "The persisted entity a token's row lives in; its id is the token's SHA-256 (hex)."
+        @tier "internal"
+      expiresAtField : string = expiresAt
+        @label "Expiry field"
+        @description "The instant field holding when a token stops working."
+        @tier "internal"
+      singleUse : boolean = false
+        @label "Single use"
+        @description "Whether resolving a token spends it (deletes its row), so it works once."
+        @synonyms "one-time, spend on use, consume"
+        @tier "policy"
+    }
+  }
+
+  page boot as OpaqueTokenStart -> OpaqueTokenMint, OpaqueTokenResolve
+}

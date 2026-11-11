@@ -1,0 +1,440 @@
+{
+  "atom": "auth/atoms/std-opaque-token.lolo",
+  "trait": "OpaqueTokenResolve",
+  "note": "A live token resolves to its row; an expired, forged or spent one is refused by name, and single use claims the row before answering it.",
+  "cases": [
+    {
+      "id": "a-live-token-resolves-to-its-row",
+      "now": 1700000000000,
+      "steps": [
+        {
+          "event": "RESOLVE_TOKEN",
+          "payload": {
+            "key": "r1",
+            "token": "tok"
+          },
+          "expect": {
+            "fired": true,
+            "state": "reading"
+          }
+        },
+        {
+          "event": "TOKEN_ROW_FOUND",
+          "from": "reading",
+          "payload": {
+            "data": {
+              "id": "1a7674eb4ee78df7e1ac439a93c3fa8e3c945784d4dec9fd8e3011738b2f1d62",
+              "expiresAt": "2030-01-01T00:00:00Z"
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "TOKEN_RESOLVED",
+                "payload": {
+                  "key": "r1",
+                  "id": "1a7674eb4ee78df7e1ac439a93c3fa8e3c945784d4dec9fd8e3011738b2f1d62",
+                  "row": {
+                    "id": "1a7674eb4ee78df7e1ac439a93c3fa8e3c945784d4dec9fd8e3011738b2f1d62",
+                    "expiresAt": "2030-01-01T00:00:00Z"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-token-with-no-expiry-never-expires",
+      "now": 1700000000000,
+      "steps": [
+        {
+          "event": "RESOLVE_TOKEN",
+          "payload": {
+            "key": "r1",
+            "token": "tok"
+          },
+          "expect": {
+            "fired": true,
+            "state": "reading"
+          }
+        },
+        {
+          "event": "TOKEN_ROW_FOUND",
+          "from": "reading",
+          "payload": {
+            "data": {
+              "id": "1a7674eb4ee78df7e1ac439a93c3fa8e3c945784d4dec9fd8e3011738b2f1d62"
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "TOKEN_RESOLVED",
+                "payload": {
+                  "key": "r1",
+                  "id": "1a7674eb4ee78df7e1ac439a93c3fa8e3c945784d4dec9fd8e3011738b2f1d62",
+                  "row": {
+                    "id": "1a7674eb4ee78df7e1ac439a93c3fa8e3c945784d4dec9fd8e3011738b2f1d62"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "an-expired-token-is-refused-expired",
+      "now": 1700000000000,
+      "steps": [
+        {
+          "event": "RESOLVE_TOKEN",
+          "payload": {
+            "key": "r1",
+            "token": "tok"
+          },
+          "expect": {
+            "fired": true,
+            "state": "reading"
+          }
+        },
+        {
+          "event": "TOKEN_ROW_FOUND",
+          "from": "reading",
+          "payload": {
+            "data": {
+              "id": "1a7674eb4ee78df7e1ac439a93c3fa8e3c945784d4dec9fd8e3011738b2f1d62",
+              "expiresAt": "2020-01-01T00:00:00Z"
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "TOKEN_REFUSED",
+                "payload": {
+                  "key": "r1",
+                  "code": "expired",
+                  "message": "the token has expired",
+                  "token": "tok"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-forged-token-is-refused-unknown",
+      "now": 1700000000000,
+      "steps": [
+        {
+          "event": "RESOLVE_TOKEN",
+          "payload": {
+            "key": "r1",
+            "token": "tok"
+          },
+          "expect": {
+            "fired": true,
+            "state": "reading"
+          }
+        },
+        {
+          "event": "TOKEN_ROW_ABSENT",
+          "from": "reading",
+          "payload": {
+            "error": "missing",
+            "code": "not-found"
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "TOKEN_REFUSED",
+                "payload": {
+                  "key": "r1",
+                  "code": "unknown",
+                  "message": "no such token",
+                  "token": "tok"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-store-failure-on-read-is-store-not-unknown",
+      "now": 1700000000000,
+      "steps": [
+        {
+          "event": "RESOLVE_TOKEN",
+          "payload": {
+            "key": "r1",
+            "token": "tok"
+          },
+          "expect": {
+            "fired": true,
+            "state": "reading"
+          }
+        },
+        {
+          "event": "TOKEN_ROW_ABSENT",
+          "from": "reading",
+          "payload": {
+            "error": "down",
+            "code": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "TOKEN_REFUSED",
+                "payload": {
+                  "key": "r1",
+                  "code": "store",
+                  "message": "down",
+                  "token": "tok"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "single-use-claims-rereads-answers-the-row",
+      "now": 1700000000000,
+      "config": {
+        "singleUse": true
+      },
+      "steps": [
+        {
+          "event": "RESOLVE_TOKEN",
+          "payload": {
+            "key": "r1",
+            "token": "tok"
+          },
+          "expect": {
+            "fired": true,
+            "state": "reading"
+          }
+        },
+        {
+          "event": "TOKEN_ROW_FOUND",
+          "from": "reading",
+          "payload": {
+            "data": {
+              "id": "1a7674eb4ee78df7e1ac439a93c3fa8e3c945784d4dec9fd8e3011738b2f1d62",
+              "expiresAt": "2030-01-01T00:00:00Z"
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "spending"
+          }
+        },
+        {
+          "event": "TOKEN_SPENT",
+          "from": "spending",
+          "payload": {
+            "id": "1a7674eb4ee78df7e1ac439a93c3fa8e3c945784d4dec9fd8e3011738b2f1d62",
+            "expiresAt": "2023-11-14T22:13:20Z"
+          },
+          "expect": {
+            "fired": true,
+            "state": "rereading"
+          }
+        },
+        {
+          "event": "TOKEN_ROW_CLAIMED",
+          "from": "rereading",
+          "payload": {
+            "data": {
+              "id": "1a7674eb4ee78df7e1ac439a93c3fa8e3c945784d4dec9fd8e3011738b2f1d62",
+              "expiresAt": "2023-11-14T22:13:20Z"
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "TOKEN_RESOLVED",
+                "payload": {
+                  "key": "r1",
+                  "id": "1a7674eb4ee78df7e1ac439a93c3fa8e3c945784d4dec9fd8e3011738b2f1d62",
+                  "row": {
+                    "id": "1a7674eb4ee78df7e1ac439a93c3fa8e3c945784d4dec9fd8e3011738b2f1d62",
+                    "expiresAt": "2023-11-14T22:13:20Z"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "single-use-a-row-gone-before-the-claim-is-used",
+      "now": 1700000000000,
+      "config": {
+        "singleUse": true
+      },
+      "steps": [
+        {
+          "event": "RESOLVE_TOKEN",
+          "payload": {
+            "key": "r1",
+            "token": "tok"
+          },
+          "expect": {
+            "fired": true,
+            "state": "reading"
+          }
+        },
+        {
+          "event": "TOKEN_ROW_FOUND",
+          "from": "reading",
+          "payload": {
+            "data": {
+              "id": "1a7674eb4ee78df7e1ac439a93c3fa8e3c945784d4dec9fd8e3011738b2f1d62",
+              "expiresAt": "2030-01-01T00:00:00Z"
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "spending"
+          }
+        },
+        {
+          "event": "TOKEN_NOT_SPENT",
+          "from": "spending",
+          "payload": {
+            "error": "gone",
+            "code": "not-found"
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "TOKEN_REFUSED",
+                "payload": {
+                  "key": "r1",
+                  "code": "used",
+                  "message": "the token was already spent",
+                  "token": "tok"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "single-use-an-expired-ticket-is-spent-and-refused-expired",
+      "now": 1700000000000,
+      "config": {
+        "singleUse": true
+      },
+      "steps": [
+        {
+          "event": "RESOLVE_TOKEN",
+          "payload": {
+            "key": "r1",
+            "token": "tok"
+          },
+          "expect": {
+            "fired": true,
+            "state": "reading"
+          }
+        },
+        {
+          "event": "TOKEN_ROW_FOUND",
+          "from": "reading",
+          "payload": {
+            "data": {
+              "id": "1a7674eb4ee78df7e1ac439a93c3fa8e3c945784d4dec9fd8e3011738b2f1d62",
+              "expiresAt": "2020-01-01T00:00:00Z"
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "spending"
+          }
+        },
+        {
+          "event": "TOKEN_SPENT",
+          "from": "spending",
+          "payload": {
+            "id": "1a7674eb4ee78df7e1ac439a93c3fa8e3c945784d4dec9fd8e3011738b2f1d62"
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "TOKEN_REFUSED",
+                "payload": {
+                  "key": "r1",
+                  "code": "expired",
+                  "message": "the token has expired",
+                  "token": "tok"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-request-while-one-is-in-flight-is-refused-busy",
+      "now": 1700000000000,
+      "steps": [
+        {
+          "event": "RESOLVE_TOKEN",
+          "payload": {
+            "key": "r1",
+            "token": "tok"
+          },
+          "expect": {
+            "fired": true,
+            "state": "reading"
+          }
+        },
+        {
+          "event": "RESOLVE_TOKEN",
+          "from": "reading",
+          "payload": {
+            "key": "r2",
+            "token": "other"
+          },
+          "expect": {
+            "fired": true,
+            "state": "reading",
+            "emits": [
+              {
+                "event": "TOKEN_REFUSED",
+                "payload": {
+                  "key": "r2",
+                  "code": "busy",
+                  "message": "a token request is already in flight"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

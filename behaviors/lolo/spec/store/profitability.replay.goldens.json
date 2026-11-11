@@ -1,0 +1,627 @@
+{
+  "atom": "store/atoms/std-profitability.lolo",
+  "trait": "ProfitabilityCompute",
+  "note": "Profit and loss per group and in total; cost with no revenue is -100%, neither is 0%; a read over the cap or a second request fails by name.",
+  "cases": [
+    {
+      "id": "groups-revenue-labour-and-costs-into-per-group-and-total-p-and-l",
+      "now": 1700000000000,
+      "config": {
+        "revenueGroupField": "group",
+        "laborGroupField": "group",
+        "laborBillRateField": "billRate",
+        "laborBillableField": "billable",
+        "includeOtherCosts": true
+      },
+      "steps": [
+        {
+          "event": "COMPUTE_PROFITABILITY",
+          "payload": {
+            "key": "k1",
+            "scope": "c1",
+            "periodStart": "2026-01-01",
+            "periodEnd": "2026-01-31"
+          },
+          "expect": {
+            "fired": true,
+            "state": "revenue"
+          }
+        },
+        {
+          "event": "ProfitRevenueRead",
+          "from": "revenue",
+          "payload": {
+            "data": [
+              {
+                "id": "i1",
+                "amount": 600,
+                "status": "paid",
+                "group": "a",
+                "scope": "c1",
+                "date": "2026-01-05"
+              },
+              {
+                "id": "i2",
+                "amount": 400,
+                "status": "paid",
+                "group": "a",
+                "scope": "c1",
+                "date": "2026-01-20"
+              }
+            ],
+            "totalCount": 2
+          },
+          "expect": {
+            "fired": true,
+            "state": "labor"
+          }
+        },
+        {
+          "event": "ProfitLaborRead",
+          "from": "labor",
+          "payload": {
+            "data": [
+              {
+                "id": "t1",
+                "hours": 8,
+                "costRate": 50,
+                "billRate": 150,
+                "billable": true,
+                "group": "a",
+                "scope": "c1",
+                "date": "2026-01-02"
+              },
+              {
+                "id": "t2",
+                "hours": 2,
+                "costRate": 100,
+                "billRate": 150,
+                "billable": false,
+                "group": "a",
+                "scope": "c1",
+                "date": "2026-01-03"
+              },
+              {
+                "id": "t3",
+                "hours": 5,
+                "costRate": 60,
+                "billRate": 0,
+                "billable": false,
+                "group": "b",
+                "scope": "c1",
+                "date": "2026-01-04"
+              }
+            ],
+            "totalCount": 3
+          },
+          "expect": {
+            "fired": true,
+            "state": "closing",
+            "emits": [
+              {
+                "event": "PROFITABILITY_LABOR_STAGED",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "PROFITABILITY_LABOR_STAGED",
+          "from": "closing",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "closing",
+            "emits": [
+              {
+                "event": "PROFITABILITY_COSTS_WANTED",
+                "payload": {
+                  "key": "k1",
+                  "scope": "c1",
+                  "periodStart": "2026-01-01",
+                  "periodEnd": "2026-01-31"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "PROFITABILITY_COSTS_READ",
+          "from": "closing",
+          "payload": {
+            "key": "k1",
+            "groups": [
+              {
+                "group": "a",
+                "amount": 100
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "closing",
+            "emits": [
+              {
+                "event": "PROFITABILITY_SETTLE",
+                "payload": {
+                  "rows": [
+                    {
+                      "group": "a",
+                      "revenue": 1000,
+                      "laborCost": 600,
+                      "otherCost": 100,
+                      "profit": 0,
+                      "marginPercent": 0,
+                      "workedHours": 10,
+                      "billableHours": 8,
+                      "standardValue": 1200,
+                      "realizationRate": 0,
+                      "utilization": 0
+                    },
+                    {
+                      "group": "b",
+                      "revenue": 0,
+                      "laborCost": 300,
+                      "otherCost": 0,
+                      "profit": 0,
+                      "marginPercent": 0,
+                      "workedHours": 5,
+                      "billableHours": 0,
+                      "standardValue": 0,
+                      "realizationRate": 0,
+                      "utilization": 0
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "PROFITABILITY_SETTLE",
+          "from": "closing",
+          "payload": {
+            "rows": [
+              {
+                "group": "a",
+                "revenue": 1000,
+                "laborCost": 600,
+                "otherCost": 100,
+                "profit": 0,
+                "marginPercent": 0,
+                "workedHours": 10,
+                "billableHours": 8,
+                "standardValue": 1200,
+                "realizationRate": 0,
+                "utilization": 0
+              },
+              {
+                "group": "b",
+                "revenue": 0,
+                "laborCost": 300,
+                "otherCost": 0,
+                "profit": 0,
+                "marginPercent": 0,
+                "workedHours": 5,
+                "billableHours": 0,
+                "standardValue": 0,
+                "realizationRate": 0,
+                "utilization": 0
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "PROFITABILITY_COMPUTED",
+                "payload": {
+                  "key": "k1",
+                  "rows": [
+                    {
+                      "group": "a",
+                      "revenue": 1000,
+                      "laborCost": 600,
+                      "otherCost": 100,
+                      "profit": 300,
+                      "marginPercent": 30,
+                      "workedHours": 10,
+                      "billableHours": 8,
+                      "standardValue": 1200,
+                      "realizationRate": 0.8333333333333334,
+                      "utilization": 0.8
+                    },
+                    {
+                      "group": "b",
+                      "revenue": 0,
+                      "laborCost": 300,
+                      "otherCost": 0,
+                      "profit": -300,
+                      "marginPercent": -100,
+                      "workedHours": 5,
+                      "billableHours": 0,
+                      "standardValue": 0,
+                      "realizationRate": 0,
+                      "utilization": 0
+                    }
+                  ],
+                  "total": {
+                    "group": "",
+                    "revenue": 1000,
+                    "laborCost": 900,
+                    "otherCost": 100,
+                    "profit": 0,
+                    "marginPercent": 0,
+                    "workedHours": 15,
+                    "billableHours": 8,
+                    "standardValue": 1200,
+                    "realizationRate": 0.8333333333333334,
+                    "utilization": 0.5333333333333333
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-no-revenue-and-no-cost-is-zero-margin-and-no-cost-read",
+      "now": 1700000000000,
+      "steps": [
+        {
+          "event": "COMPUTE_PROFITABILITY",
+          "payload": {
+            "key": "k1",
+            "scope": "c1",
+            "periodStart": "2026-01-01",
+            "periodEnd": "2026-01-31"
+          },
+          "expect": {
+            "fired": true,
+            "state": "revenue"
+          }
+        },
+        {
+          "event": "ProfitRevenueRead",
+          "from": "revenue",
+          "payload": {
+            "data": [],
+            "totalCount": 0
+          },
+          "expect": {
+            "fired": true,
+            "state": "labor"
+          }
+        },
+        {
+          "event": "ProfitLaborRead",
+          "from": "labor",
+          "payload": {
+            "data": [],
+            "totalCount": 0
+          },
+          "expect": {
+            "fired": true,
+            "state": "closing"
+          }
+        },
+        {
+          "event": "PROFITABILITY_LABOR_STAGED",
+          "from": "closing",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "closing",
+            "emits": [
+              {
+                "event": "PROFITABILITY_SETTLE",
+                "payload": {
+                  "rows": []
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "PROFITABILITY_SETTLE",
+          "from": "closing",
+          "payload": {
+            "rows": []
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "PROFITABILITY_COMPUTED",
+                "payload": {
+                  "key": "k1",
+                  "rows": [],
+                  "total": {
+                    "group": "",
+                    "revenue": 0,
+                    "laborCost": 0,
+                    "otherCost": 0,
+                    "profit": 0,
+                    "marginPercent": 0,
+                    "workedHours": 0,
+                    "billableHours": 0,
+                    "standardValue": 0,
+                    "realizationRate": 0,
+                    "utilization": 0
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-read-over-the-cap-fails-by-name-instead-of-computing-part",
+      "now": 1700000000000,
+      "config": {
+        "maxRows": 1
+      },
+      "steps": [
+        {
+          "event": "COMPUTE_PROFITABILITY",
+          "payload": {
+            "key": "k1",
+            "scope": "c1",
+            "periodStart": "2026-01-01",
+            "periodEnd": "2026-01-31"
+          },
+          "expect": {
+            "fired": true,
+            "state": "revenue"
+          }
+        },
+        {
+          "event": "ProfitRevenueRead",
+          "from": "revenue",
+          "payload": {
+            "data": [
+              {
+                "id": "i1",
+                "amount": 5,
+                "status": "paid",
+                "group": "",
+                "scope": "c1",
+                "date": "2026-01-05"
+              }
+            ],
+            "totalCount": 2
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "PROFITABILITY_FAILED",
+                "payload": {
+                  "key": "k1",
+                  "code": "over-cap",
+                  "error": "The revenue read has 2 rows, over the read cap of 1"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-second-request-while-one-runs-is-refused-busy",
+      "now": 1700000000000,
+      "steps": [
+        {
+          "event": "COMPUTE_PROFITABILITY",
+          "payload": {
+            "key": "k1",
+            "scope": "c1",
+            "periodStart": "2026-01-01",
+            "periodEnd": "2026-01-31"
+          },
+          "expect": {
+            "fired": true,
+            "state": "revenue"
+          }
+        },
+        {
+          "event": "COMPUTE_PROFITABILITY",
+          "from": "revenue",
+          "payload": {
+            "key": "k2",
+            "scope": "",
+            "periodStart": "",
+            "periodEnd": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "revenue",
+            "emits": [
+              {
+                "event": "PROFITABILITY_FAILED",
+                "payload": {
+                  "key": "k2",
+                  "code": "busy",
+                  "error": "A profitability computation is already running"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-failed-read-answers-the-store-message",
+      "now": 1700000000000,
+      "steps": [
+        {
+          "event": "COMPUTE_PROFITABILITY",
+          "payload": {
+            "key": "k1",
+            "scope": "c1",
+            "periodStart": "2026-01-01",
+            "periodEnd": "2026-01-31"
+          },
+          "expect": {
+            "fired": true,
+            "state": "revenue"
+          }
+        },
+        {
+          "event": "ProfitReadFailed",
+          "from": "revenue",
+          "payload": {
+            "error": "store down",
+            "code": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "PROFITABILITY_FAILED",
+                "payload": {
+                  "key": "k1",
+                  "code": "read",
+                  "error": "store down"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-failed-cost-read-fails-the-computation",
+      "now": 1700000000000,
+      "config": {
+        "includeOtherCosts": true
+      },
+      "steps": [
+        {
+          "event": "COMPUTE_PROFITABILITY",
+          "payload": {
+            "key": "k1",
+            "scope": "",
+            "periodStart": "",
+            "periodEnd": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "revenue"
+          }
+        },
+        {
+          "event": "ProfitRevenueRead",
+          "from": "revenue",
+          "payload": {
+            "data": [],
+            "totalCount": 0
+          },
+          "expect": {
+            "fired": true,
+            "state": "labor"
+          }
+        },
+        {
+          "event": "ProfitLaborRead",
+          "from": "labor",
+          "payload": {
+            "data": [],
+            "totalCount": 0
+          },
+          "expect": {
+            "fired": true,
+            "state": "closing"
+          }
+        },
+        {
+          "event": "PROFITABILITY_COSTS_FAILED",
+          "from": "closing",
+          "payload": {
+            "key": "k1",
+            "code": "over-cap",
+            "error": "too many"
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "PROFITABILITY_FAILED",
+                "payload": {
+                  "key": "k1",
+                  "code": "over-cap",
+                  "error": "too many"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-cost-answer-for-another-key-is-ignored",
+      "now": 1700000000000,
+      "config": {
+        "includeOtherCosts": true
+      },
+      "steps": [
+        {
+          "event": "COMPUTE_PROFITABILITY",
+          "payload": {
+            "key": "k1",
+            "scope": "",
+            "periodStart": "",
+            "periodEnd": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "revenue"
+          }
+        },
+        {
+          "event": "ProfitRevenueRead",
+          "from": "revenue",
+          "payload": {
+            "data": [],
+            "totalCount": 0
+          },
+          "expect": {
+            "fired": true,
+            "state": "labor"
+          }
+        },
+        {
+          "event": "ProfitLaborRead",
+          "from": "labor",
+          "payload": {
+            "data": [],
+            "totalCount": 0
+          },
+          "expect": {
+            "fired": true,
+            "state": "closing"
+          }
+        },
+        {
+          "event": "PROFITABILITY_COSTS_READ",
+          "from": "closing",
+          "payload": {
+            "key": "other",
+            "groups": []
+          },
+          "expect": {
+            "fired": false,
+            "state": "closing"
+          }
+        }
+      ]
+    }
+  ]
+}

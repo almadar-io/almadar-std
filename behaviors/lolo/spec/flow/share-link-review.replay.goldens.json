@@ -1,27 +1,19 @@
 {
   "atom": "flow/atoms/std-share-link-review.lolo",
   "trait": "ReviewLinkGuest",
-  "note": "A reviewer with a link decides once, only while the link is open and unexpired, and must give a name (and a note to request changes).",
+  "note": "A reviewer with a link decides once, only while the link is open; the link is found through LinkResolve (std-opaque-token), whose answers are fed from the opening state.",
   "cases": [
     {
       "id": "an-open-link-takes-an-approval-with-a-name",
       "now": 1700000000000,
       "steps": [
         {
-          "event": "INIT",
-          "payload": {
-            "token": "tok"
-          },
-          "expect": {
-            "fired": true,
-            "state": "opening"
-          }
-        },
-        {
-          "event": "LinkFound",
+          "event": "LINK_FOUND",
           "from": "opening",
           "payload": {
-            "data": {
+            "key": "review",
+            "id": "h1",
+            "row": {
               "id": "h1",
               "targetId": "asset-1",
               "title": "Homepage hero",
@@ -62,7 +54,7 @@
           "event": "DecisionSaved",
           "from": "deciding",
           "payload": {
-            "targetId": "asset-1",
+            "id": "h1",
             "status": "approved"
           },
           "expect": {
@@ -88,20 +80,12 @@
       "now": 1700000000000,
       "steps": [
         {
-          "event": "INIT",
-          "payload": {
-            "token": "tok"
-          },
-          "expect": {
-            "fired": true,
-            "state": "opening"
-          }
-        },
-        {
-          "event": "LinkFound",
+          "event": "LINK_FOUND",
           "from": "opening",
           "payload": {
-            "data": {
+            "key": "review",
+            "id": "h1",
+            "row": {
               "id": "h1",
               "targetId": "asset-1",
               "title": "Homepage hero",
@@ -124,7 +108,10 @@
           "payload": {},
           "expect": {
             "fired": true,
-            "state": "open"
+            "state": "open",
+            "neverEmits": [
+              "LINK_DECIDED"
+            ]
           }
         }
       ]
@@ -134,20 +121,12 @@
       "now": 1700000000000,
       "steps": [
         {
-          "event": "INIT",
-          "payload": {
-            "token": "tok"
-          },
-          "expect": {
-            "fired": true,
-            "state": "opening"
-          }
-        },
-        {
-          "event": "LinkFound",
+          "event": "LINK_FOUND",
           "from": "opening",
           "payload": {
-            "data": {
+            "key": "review",
+            "id": "h1",
+            "row": {
               "id": "h1",
               "targetId": "asset-1",
               "title": "Homepage hero",
@@ -181,44 +160,39 @@
           "payload": {},
           "expect": {
             "fired": true,
-            "state": "open"
+            "state": "open",
+            "neverEmits": [
+              "LINK_DECIDED"
+            ]
           }
         }
       ]
     },
     {
-      "id": "an-expired-link-takes-no-decision",
-      "now": 1900000000000,
+      "id": "a-text-only-item-opens-for-a-decision-too",
+      "now": 1700000000000,
       "steps": [
         {
-          "event": "INIT",
-          "payload": {
-            "token": "tok"
-          },
-          "expect": {
-            "fired": true,
-            "state": "opening"
-          }
-        },
-        {
-          "event": "LinkFound",
+          "event": "LINK_FOUND",
           "from": "opening",
           "payload": {
-            "data": {
+            "key": "review",
+            "id": "h1",
+            "row": {
               "id": "h1",
               "targetId": "asset-1",
               "title": "Homepage hero",
               "mediaUrl": "https://cdn.example/hero.png",
-              "mediaType": "image",
+              "mediaType": "none",
               "status": "open",
-              "expiresAt": "2025-01-01T00:00:00Z",
+              "expiresAt": "2030-01-01T00:00:00Z",
               "reviewerName": "",
               "decisionNote": ""
             }
           },
           "expect": {
             "fired": true,
-            "state": "closed"
+            "state": "open"
           }
         }
       ]
@@ -228,20 +202,12 @@
       "now": 1700000000000,
       "steps": [
         {
-          "event": "INIT",
-          "payload": {
-            "token": "tok"
-          },
-          "expect": {
-            "fired": true,
-            "state": "opening"
-          }
-        },
-        {
-          "event": "LinkFound",
+          "event": "LINK_FOUND",
           "from": "opening",
           "payload": {
-            "data": {
+            "key": "review",
+            "id": "h1",
+            "row": {
               "id": "h1",
               "targetId": "asset-1",
               "title": "Homepage hero",
@@ -256,6 +222,92 @@
           "expect": {
             "fired": true,
             "state": "closed"
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-revoked-link-takes-no-decision",
+      "now": 1700000000000,
+      "steps": [
+        {
+          "event": "LINK_FOUND",
+          "from": "opening",
+          "payload": {
+            "key": "review",
+            "id": "h1",
+            "row": {
+              "id": "h1",
+              "targetId": "asset-1",
+              "title": "Homepage hero",
+              "mediaUrl": "https://cdn.example/hero.png",
+              "mediaType": "image",
+              "status": "revoked",
+              "expiresAt": "2030-01-01T00:00:00Z",
+              "reviewerName": "",
+              "decisionNote": ""
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "closed"
+          }
+        }
+      ]
+    },
+    {
+      "id": "an-expired-link-takes-no-decision",
+      "now": 1700000000000,
+      "steps": [
+        {
+          "event": "LINK_REFUSED",
+          "from": "opening",
+          "payload": {
+            "key": "review",
+            "code": "expired",
+            "message": "the token has expired",
+            "token": "t"
+          },
+          "expect": {
+            "fired": true,
+            "state": "closed"
+          }
+        }
+      ]
+    },
+    {
+      "id": "an-unknown-token-reads-no-link-and-takes-no-decision",
+      "now": 1700000000000,
+      "defaults": [
+        "LinkResolve"
+      ],
+      "steps": [
+        {
+          "event": "INIT",
+          "payload": {
+            "token": "forged"
+          },
+          "expect": {
+            "fired": true,
+            "state": "opening",
+            "emits": [
+              {
+                "event": "LINK_TOKEN_RESOLVE",
+                "payload": {
+                  "key": "review",
+                  "token": "forged"
+                }
+              },
+              {
+                "event": "TOKEN_REFUSED",
+                "payload": {
+                  "code": "unknown"
+                }
+              }
+            ],
+            "neverEmits": [
+              "LINK_DECIDED"
+            ]
           }
         }
       ]

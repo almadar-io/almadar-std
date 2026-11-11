@@ -1,0 +1,459 @@
+app std-profitability [
+  version: "1.0.0",
+  description: "std-profitability — profit and loss over the caller's own records: revenue rows (an amount, optionally only those whose status field holds the paid value), labour rows (hours at an internal cost rate, optionally billable hours at a bill rate) and, optionally, other-cost rows (an amount). COMPUTE_PROFITABILITY { key, scope, periodStart, periodEnd } reads the three entities the knobs name, keeps the rows whose scope field equals `scope` (blank = every row) and whose date falls in the period (blank bound = open), groups them by each entity's group field (blank = one total group) and answers PROFITABILITY_COMPUTED { key, rows, total }, every row and the total carrying revenue, laborCost, otherCost, profit, marginPercent, workedHours, billableHours, standardValue, realizationRate and utilization. marginPercent is profit over revenue, rounded; a group with cost and no revenue is -100, with neither 0. realizationRate is revenue over the billable hours' value at rate, utilization billable over worked hours (0 when the divisor is 0). A read over maxRows answers PROFITABILITY_FAILED naming the entity and the cap instead of computing over part of the rows; a read failure answers PROFITABILITY_FAILED with the store's message. A request while one is in flight answers PROFITABILITY_FAILED { code: busy }; route the request `per` its key to run several at once."
+]
+type ProfitCostGroup = { group : string!, amount : number! }
+type ProfitRow = { group : string!, revenue : number!, laborCost : number!, otherCost : number!, profit : number!, marginPercent : number!, workedHours : number!, billableHours : number!, standardValue : number!, realizationRate : number!, utilization : number! }
+
+orbital ProfitabilityOrbital {
+  entity ProfitRevenueRecord [persistent: profit_revenue_records] {
+    @read none "The standalone placeholder for the revenue entity a caller binds; its rows are the caller's."
+    id : string!
+    amount : number @description "The revenue amount." = 0
+    status : string @description "Whether the revenue is collected." = ""
+    group : string @description "What the revenue is grouped by." = ""
+    scope : string @description "What the revenue is scoped to." = ""
+    date : date @description "When the revenue counts."
+  }
+
+  entity ProfitLaborRecord [persistent: profit_labor_records] {
+    @read none "The standalone placeholder for the labour entity a caller binds; its rows are the caller's."
+    id : string!
+    hours : number @description "Hours worked." = 0
+    costRate : number @description "Internal cost per hour." = 0
+    billRate : number @description "Bill rate per hour." = 0
+    billable : boolean @description "Whether the hours are billable." = true
+    group : string @description "What the hours are grouped by." = ""
+    scope : string @description "What the hours are scoped to." = ""
+    date : date @description "When the hours were worked."
+  }
+
+  entity ProfitCostRecord [persistent: profit_cost_records] {
+    @read none "The standalone placeholder for the other-cost entity a caller binds; its rows are the caller's."
+    id : string!
+    amount : number @description "The cost amount." = 0
+    group : string @description "What the cost is grouped by." = ""
+    scope : string @description "What the cost is scoped to." = ""
+    date : date @description "When the cost was incurred."
+  }
+
+  entity ProfitabilityRun [runtime] {
+    id : string!
+    key : string @description "The caller's key of the request in flight, echoed on its answer." = ""
+    scope : string @description "The scope value of the request in flight; blank = every row." = ""
+    periodStart : string @description "First date the request counts; blank = open." = ""
+    periodEnd : string @description "Last date the request counts; blank = open." = ""
+    periodEndBound : string @description "The last instant of periodEnd, so a date and an instant on that day both count." = ""
+    rows : [ProfitRow] @description "The groups computed so far." = []
+  }
+
+  entity ProfitCostRun [runtime] {
+    id : string!
+    key : string @description "The key of the cost read in flight." = ""
+    scope : string @description "The scope value of the cost read in flight." = ""
+    periodStart : string @description "First date the cost read counts; blank = open." = ""
+    periodEnd : string @description "Last date the cost read counts; blank = open." = ""
+    periodEndBound : string @description "The last instant of periodEnd." = ""
+  }
+
+  trait ProfitabilityCompute -> ProfitabilityRun {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      COMPUTE_PROFITABILITY -> revenue
+        (set @entity.key (default ?key ""))
+        (set @entity.scope (default ?scope ""))
+        (set @entity.periodStart (default ?periodStart ""))
+        (set @entity.periodEnd (default ?periodEnd ""))
+        (set @entity.periodEndBound (str/concat (default ?periodEnd "") "T23:59:59.999Z"))
+        (set @entity.rows [])
+        (fetch @config.revenueEntity {
+          filter: (and (or (= @config.revenueStatusField "") (= (object/get @entity @config.revenueStatusField) @config.revenuePaidValue)) (or (= @entity.scope "") (= (object/get @entity @config.revenueScopeField) @entity.scope)) (or (= @entity.periodStart "") (and (validate/required (object/get @entity @config.revenueDateField)) (>= (object/get @entity @config.revenueDateField) @entity.periodStart))) (or (= @entity.periodEnd "") (and (validate/required (object/get @entity @config.revenueDateField)) (<= (object/get @entity @config.revenueDateField) @entity.periodEndBound))))
+          limit: @config.maxRows
+          emit: { failure: ProfitReadFailed, success: ProfitRevenueRead }
+        })
+    }
+
+    state revenue {
+      INIT -> idle
+      COMPUTE_PROFITABILITY -> revenue
+        (emit PROFITABILITY_FAILED { key: (default ?key ""), code: "busy", error: "A profitability computation is already running" })
+      ProfitRevenueRead -> idle when (> ?totalCount (array/len ?data))
+        (emit PROFITABILITY_FAILED { key: @entity.key, code: "over-cap", error: (str/concat "The revenue read has " ?totalCount " rows, over the read cap of " @config.maxRows) })
+      ProfitRevenueRead -> labor
+        (set @entity.rows (array/map
+          (array/sort (array/unique (array/map ?data (fn r (if (= @config.revenueGroupField "") "" (str/concat "" (object/get @r @config.revenueGroupField)))))))
+          (fn g {
+            group: @g
+            revenue: (array/reduce (array/filter ?data (fn r (= (if (= @config.revenueGroupField "") "" (str/concat "" (object/get @r @config.revenueGroupField))) @g))) 0 (fn (acc r) (+ @acc (default (object/get @r @config.revenueAmountField) 0))))
+            laborCost: 0
+            otherCost: 0
+            profit: 0
+            marginPercent: 0
+            workedHours: 0
+            billableHours: 0
+            standardValue: 0
+            realizationRate: 0
+            utilization: 0
+          })))
+        (fetch @config.laborEntity {
+          filter: (and (or (= @entity.scope "") (= (object/get @entity @config.laborScopeField) @entity.scope)) (or (= @entity.periodStart "") (and (validate/required (object/get @entity @config.laborDateField)) (>= (object/get @entity @config.laborDateField) @entity.periodStart))) (or (= @entity.periodEnd "") (and (validate/required (object/get @entity @config.laborDateField)) (<= (object/get @entity @config.laborDateField) @entity.periodEndBound))))
+          limit: @config.maxRows
+          emit: { failure: ProfitReadFailed, success: ProfitLaborRead }
+        })
+      ProfitReadFailed -> idle
+        (emit PROFITABILITY_FAILED { key: @entity.key, code: "read", error: (default ?error "") })
+    }
+
+    state labor {
+      INIT -> idle
+      COMPUTE_PROFITABILITY -> labor
+        (emit PROFITABILITY_FAILED { key: (default ?key ""), code: "busy", error: "A profitability computation is already running" })
+      ProfitLaborRead -> idle when (> ?totalCount (array/len ?data))
+        (emit PROFITABILITY_FAILED { key: @entity.key, code: "over-cap", error: (str/concat "The labour read has " ?totalCount " rows, over the read cap of " @config.maxRows) })
+      ProfitLaborRead -> closing
+        (set @entity.rows (array/map
+            (array/sort (array/unique (array/concat (array/map @entity.rows (fn x @x.group)) (array/map ?data (fn r (if (= @config.laborGroupField "") "" (str/concat "" (object/get @r @config.laborGroupField))))))))
+            (fn g (let ((mine (array/filter ?data (fn r (= (if (= @config.laborGroupField "") "" (str/concat "" (object/get @r @config.laborGroupField))) @g))))
+                        (prior (array/find @entity.rows (fn x (= @x.group @g)))))
+              {
+                group: @g
+                revenue: (if (= @prior null) 0 @prior.revenue)
+                laborCost: (array/reduce @mine 0 (fn (acc r) (+ @acc (* (default (object/get @r @config.laborHoursField) 0) (default (object/get @r @config.laborCostRateField) 0)))))
+                otherCost: 0
+                profit: 0
+                marginPercent: 0
+                workedHours: (array/reduce @mine 0 (fn (acc r) (+ @acc (default (object/get @r @config.laborHoursField) 0))))
+                billableHours: (array/reduce (array/filter @mine (fn r (if (= @config.laborBillableField "") true (= (object/get @r @config.laborBillableField) true)))) 0 (fn (acc r) (+ @acc (default (object/get @r @config.laborHoursField) 0))))
+                standardValue: (if (= @config.laborBillRateField "") 0 (array/reduce (array/filter @mine (fn r (if (= @config.laborBillableField "") true (= (object/get @r @config.laborBillableField) true)))) 0 (fn (acc r) (+ @acc (* (default (object/get @r @config.laborHoursField) 0) (default (object/get @r @config.laborBillRateField) 0))))))
+                realizationRate: 0
+                utilization: 0
+              }))))
+        (emit PROFITABILITY_LABOR_STAGED {})
+      ProfitReadFailed -> idle
+        (emit PROFITABILITY_FAILED { key: @entity.key, code: "read", error: (default ?error "") })
+    }
+
+    state closing {
+      INIT -> idle
+      COMPUTE_PROFITABILITY -> closing
+        (emit PROFITABILITY_FAILED { key: (default ?key ""), code: "busy", error: "A profitability computation is already running" })
+      PROFITABILITY_LABOR_STAGED -> closing when @config.includeOtherCosts
+        (emit PROFITABILITY_COSTS_WANTED { key: @entity.key, scope: @entity.scope, periodStart: @entity.periodStart, periodEnd: @entity.periodEnd })
+      PROFITABILITY_LABOR_STAGED -> closing
+        (emit PROFITABILITY_SETTLE { rows: @entity.rows })
+      PROFITABILITY_COSTS_READ -> closing when (= ?key @entity.key)
+        (emit PROFITABILITY_SETTLE { rows: (array/map
+            (array/sort (array/unique (array/concat (array/map @entity.rows (fn x @x.group)) (array/map ?groups (fn c @c.group)))))
+            (fn g (let ((prior (array/find @entity.rows (fn x (= @x.group @g)))))
+              {
+                group: @g
+                revenue: (if (= @prior null) 0 @prior.revenue)
+                laborCost: (if (= @prior null) 0 @prior.laborCost)
+                otherCost: (array/reduce (array/filter ?groups (fn c (= @c.group @g))) 0 (fn (acc c) (+ @acc @c.amount)))
+                profit: 0
+                marginPercent: 0
+                workedHours: (if (= @prior null) 0 @prior.workedHours)
+                billableHours: (if (= @prior null) 0 @prior.billableHours)
+                standardValue: (if (= @prior null) 0 @prior.standardValue)
+                realizationRate: 0
+                utilization: 0
+              }))) })
+      PROFITABILITY_COSTS_FAILED -> idle when (= ?key @entity.key)
+        (emit PROFITABILITY_FAILED { key: @entity.key, code: ?code, error: ?error })
+      PROFITABILITY_SETTLE -> idle
+        (emit PROFITABILITY_COMPUTED {
+          key: @entity.key
+          rows: (array/map ?rows (fn r {
+              group: @r.group
+              revenue: @r.revenue
+              laborCost: @r.laborCost
+              otherCost: @r.otherCost
+              profit: (- @r.revenue (+ @r.laborCost @r.otherCost))
+              marginPercent: (if (> @r.revenue 0) (math/round (* (/ (- @r.revenue (+ @r.laborCost @r.otherCost)) @r.revenue) 100)) (if (> (+ @r.laborCost @r.otherCost) 0) -100 0))
+              workedHours: @r.workedHours
+              billableHours: @r.billableHours
+              standardValue: @r.standardValue
+              realizationRate: (if (> @r.standardValue 0) (/ @r.revenue @r.standardValue) 0)
+              utilization: (if (> @r.workedHours 0) (/ @r.billableHours @r.workedHours) 0)
+            }))
+          total: {
+              group: ""
+              revenue: (array/sum ?rows "revenue")
+              laborCost: (array/sum ?rows "laborCost")
+              otherCost: (array/sum ?rows "otherCost")
+              profit: (- (array/sum ?rows "revenue") (+ (array/sum ?rows "laborCost") (array/sum ?rows "otherCost")))
+              marginPercent: (if (> (array/sum ?rows "revenue") 0) (math/round (* (/ (- (array/sum ?rows "revenue") (+ (array/sum ?rows "laborCost") (array/sum ?rows "otherCost"))) (array/sum ?rows "revenue")) 100)) (if (> (+ (array/sum ?rows "laborCost") (array/sum ?rows "otherCost")) 0) -100 0))
+              workedHours: (array/sum ?rows "workedHours")
+              billableHours: (array/sum ?rows "billableHours")
+              standardValue: (array/sum ?rows "standardValue")
+              realizationRate: (if (> (array/sum ?rows "standardValue") 0) (/ (array/sum ?rows "revenue") (array/sum ?rows "standardValue")) 0)
+              utilization: (if (> (array/sum ?rows "workedHours") 0) (/ (array/sum ?rows "billableHours") (array/sum ?rows "workedHours")) 0)
+            }
+        })
+      ProfitReadFailed -> idle
+        (emit PROFITABILITY_FAILED { key: @entity.key, code: "read", error: (default ?error "") })
+    }
+
+    emits {
+      PROFITABILITY_COMPUTED -> external {
+        key : string!
+        rows : [ProfitRow]!
+        total : ProfitRow!
+      }
+        @description "The profit and loss of every group, and of all of them together."
+        @synonyms "p&l computed, margin computed, profit computed"
+        @tier "primary"
+      PROFITABILITY_FAILED -> external {
+        key : string!
+        code : "busy" | "over-cap" | "read"
+        error : string!
+      }
+        @description "No profit and loss was computed: another computation is running (busy), a read had more rows than the cap (over-cap), or a read failed (read)."
+        @tier "primary"
+      PROFITABILITY_LABOR_STAGED {}
+        @tier "internal"
+      PROFITABILITY_SETTLE {
+        rows : [ProfitRow]!
+      }
+        @tier "internal"
+      PROFITABILITY_COSTS_WANTED -> external {
+        key : string!
+        scope : string!
+        periodStart : string!
+        periodEnd : string!
+      }
+        @description "Asks the other-cost reader for the period's non-labour costs."
+        @tier "internal"
+      ProfitRevenueRead {
+        data : [@entity @config.revenueEntity]!
+        totalCount : number!
+      }
+        @tier "internal"
+      ProfitLaborRead {
+        data : [@entity @config.laborEntity]!
+        totalCount : number!
+      }
+        @tier "internal"
+      ProfitReadFailed {
+        error : string
+        code : string
+      }
+        @tier "internal"
+    }
+
+    listens {
+      COMPUTE_PROFITABILITY {
+        key : string
+        scope : string
+        periodStart : string
+        periodEnd : string
+      }
+        @description "Compute profit and loss for one scope and period (blank scope = every row, blank bound = open)."
+        @synonyms "compute margin, compute p&l, profitability, profit and loss"
+        @tier "domain"
+      PROFITABILITY_LABOR_STAGED {}
+        @tier "internal"
+      PROFITABILITY_SETTLE {
+        rows : [ProfitRow]!
+      }
+        @tier "internal"
+      PROFITABILITY_COSTS_READ {
+        key : string!
+        groups : [ProfitCostGroup]!
+      }
+        @tier "internal"
+      PROFITABILITY_COSTS_FAILED {
+        key : string!
+        code : "over-cap" | "read"
+        error : string!
+      }
+        @tier "internal"
+      ProfitCostReader.PROFITABILITY_COSTS_READ -> PROFITABILITY_COSTS_READ
+      ProfitCostReader.PROFITABILITY_COSTS_FAILED -> PROFITABILITY_COSTS_FAILED
+      ProfitRevenueRead {
+        data : [@entity @config.revenueEntity]!
+        totalCount : number!
+      }
+        @tier "internal"
+      ProfitLaborRead {
+        data : [@entity @config.laborEntity]!
+        totalCount : number!
+      }
+        @tier "internal"
+      ProfitReadFailed {
+        error : string
+        code : string
+      }
+        @tier "internal"
+    }
+
+    config {
+      revenueEntity : entity = ProfitRevenueRecord
+        @label "Revenue records"
+        @description "The entity whose rows are revenue (invoices, payments)."
+        @tier "internal"
+      revenueAmountField : string = amount
+        @label "Revenue amount field"
+        @tier "internal"
+      revenueStatusField : string = status
+        @label "Revenue status field"
+        @description "Field that says whether the revenue counts; blank = every row counts."
+        @tier "internal"
+      revenuePaidValue : string = paid
+        @label "Counted status"
+        @description "The status value a revenue row needs to count, e.g. paid."
+        @synonyms "paid, collected, settled"
+        @tier "policy"
+      revenueGroupField : string = ""
+        @label "Revenue group field"
+        @description "Field revenue is grouped by; blank = one total group."
+        @tier "internal"
+      revenueScopeField : string = scope
+        @label "Revenue scope field"
+        @description "Field compared with the request's scope."
+        @tier "internal"
+      revenueDateField : string = date
+        @label "Revenue date field"
+        @tier "internal"
+      laborEntity : entity = ProfitLaborRecord
+        @label "Labour records"
+        @description "The entity whose rows are hours worked (time entries)."
+        @tier "internal"
+      laborHoursField : string = hours
+        @label "Hours field"
+        @tier "internal"
+      laborCostRateField : string = costRate
+        @label "Cost rate field"
+        @tier "internal"
+      laborBillRateField : string = ""
+        @label "Bill rate field"
+        @description "Field holding the bill rate; blank = no standard value or realization."
+        @tier "internal"
+      laborBillableField : string = ""
+        @label "Billable field"
+        @description "Boolean field marking billable hours; blank = every hour is billable."
+        @tier "internal"
+      laborGroupField : string = ""
+        @label "Labour group field"
+        @tier "internal"
+      laborScopeField : string = scope
+        @label "Labour scope field"
+        @tier "internal"
+      laborDateField : string = date
+        @label "Labour date field"
+        @tier "internal"
+      includeOtherCosts : boolean = false
+        @label "Count other costs"
+        @description "Whether costs beyond labour (rent, tooling, travel) are subtracted; they are read by ProfitCostReader, which the caller composes beside this trait."
+        @synonyms "overheads, expenses, non-staff costs"
+        @tier "policy"
+      maxRows : number = 5000
+        @label "Most rows read per entity"
+        @description "A read with more rows than this fails by name instead of computing over part of them."
+        @tier "infra"
+    }
+  }
+
+  ;; Reads non-labour costs for ProfitabilityCompute; compose it only where
+  ;; includeOtherCosts is on.
+  trait ProfitCostReader -> ProfitCostRun {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      COSTS_WANTED -> reading
+        (set @entity.key ?key)
+        (set @entity.scope ?scope)
+        (set @entity.periodStart ?periodStart)
+        (set @entity.periodEnd ?periodEnd)
+        (set @entity.periodEndBound (str/concat ?periodEnd "T23:59:59.999Z"))
+        (fetch @config.costEntity {
+          filter: (and (or (= @entity.scope "") (= (object/get @entity @config.costScopeField) @entity.scope)) (or (= @entity.periodStart "") (and (validate/required (object/get @entity @config.costDateField)) (>= (object/get @entity @config.costDateField) @entity.periodStart))) (or (= @entity.periodEnd "") (and (validate/required (object/get @entity @config.costDateField)) (<= (object/get @entity @config.costDateField) @entity.periodEndBound))))
+          limit: @config.maxRows
+          emit: { failure: ProfitCostReadFailed, success: ProfitCostRead }
+        })
+    }
+
+    state reading {
+      INIT -> idle
+      ProfitCostRead -> idle when (> ?totalCount (array/len ?data))
+        (emit PROFITABILITY_COSTS_FAILED { key: @entity.key, code: "over-cap", error: (str/concat "The other-cost read has " ?totalCount " rows, over the read cap of " @config.maxRows) })
+      ProfitCostRead -> idle
+        (emit PROFITABILITY_COSTS_READ { key: @entity.key, groups: (array/map ?data (fn r { group: (if (= @config.costGroupField "") "" (str/concat "" (object/get @r @config.costGroupField))), amount: (default (object/get @r @config.costAmountField) 0) })) })
+      ProfitCostReadFailed -> idle
+        (emit PROFITABILITY_COSTS_FAILED { key: @entity.key, code: "read", error: (default ?error "") })
+    }
+
+    emits {
+      PROFITABILITY_COSTS_READ -> external {
+        key : string!
+        groups : [ProfitCostGroup]!
+      }
+        @description "The period's non-labour costs, one entry per cost row with its group."
+        @tier "internal"
+      PROFITABILITY_COSTS_FAILED -> external {
+        key : string!
+        code : "over-cap" | "read"
+        error : string!
+      }
+        @tier "internal"
+      ProfitCostRead {
+        data : [@entity @config.costEntity]!
+        totalCount : number!
+      }
+        @tier "internal"
+      ProfitCostReadFailed {
+        error : string
+        code : string
+      }
+        @tier "internal"
+    }
+
+    listens {
+      COSTS_WANTED {
+        key : string!
+        scope : string!
+        periodStart : string!
+        periodEnd : string!
+      }
+        @tier "internal"
+      ProfitabilityCompute.PROFITABILITY_COSTS_WANTED -> COSTS_WANTED
+      ProfitCostRead {
+        data : [@entity @config.costEntity]!
+        totalCount : number!
+      }
+        @tier "internal"
+      ProfitCostReadFailed {
+        error : string
+        code : string
+      }
+        @tier "internal"
+    }
+
+    config {
+      costEntity : entity = ProfitCostRecord
+        @label "Other-cost records"
+        @tier "internal"
+      costAmountField : string = amount
+        @label "Cost amount field"
+        @tier "internal"
+      costGroupField : string = ""
+        @label "Cost group field"
+        @tier "internal"
+      costScopeField : string = scope
+        @label "Cost scope field"
+        @tier "internal"
+      costDateField : string = date
+        @label "Cost date field"
+        @tier "internal"
+      maxRows : number = 5000
+        @label "Most cost rows read"
+        @description "A read with more rows than this fails by name instead of computing over part of them."
+        @tier "infra"
+    }
+  }
+
+  page boot as ProfitabilityStart -> ProfitabilityCompute, ProfitCostReader
+}

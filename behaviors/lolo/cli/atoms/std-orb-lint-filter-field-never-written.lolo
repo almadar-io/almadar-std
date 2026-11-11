@@ -19,10 +19,10 @@ type FfEntity = { name : string, collection : string, identity : boolean, persis
 type FfTransition = { guard : LNode?, effects : [LNode?] }
 type FfMachine = { transitions : [FfTransition] }
 type FfKnob = { default : LNode? }
-type FfTrait = { name : string, stateMachine : FfMachine, ticks : [FfTransition], config : Map string FfKnob? }
+type FfTrait = { name : string, stateMachine : FfMachine, ticks : [FfTransition], config : Map string FfKnob?, entityRebindable : boolean, linkedEntity : string, sourceBehavior : LObj }
 type FfPageTrait = { ref : string, name : string }
 type FfPage = { protocol : string, traits : [FfPageTrait] }
-type FfOrbital = { name : string, entity : FfEntity, auxiliaryEntities : [FfEntity], traits : [FfTrait], pages : [FfPage] }
+type FfOrbital = { name : string, expects : [LObj], entity : FfEntity, auxiliaryEntities : [FfEntity], traits : [FfTrait], pages : [FfPage] }
 type FfEff = { eff : LNode?, p : string }
 type FfW = { a : string!, e : string!, has : boolean!, d : LObj?, p : string!, x : boolean! }
 type FfRow = { i : number!, t : FfTrait! }
@@ -157,7 +157,8 @@ orbital OrbLintFilterFieldNeverWrittenOrbital {
                             []
                             [{ code: @config.codes.xFilterFieldNeverWritten.code, path: (str/concat "orbitals." (object/get @o "name" "") ".traits." @tn ".stateMachine.transitions[" @ti "].effects"), message: (str/concat @tn " fetches " @fent " filtered on `" @field "`, but no `persist create`/`update` of " @fent " anywhere in the schema supplies `" @field "`" (if (= @declared null) " (not even a declared field)" "") " — the filter can never match a real row, so the fetch always returns empty"), suggestion: (str/concat "Supply `" @field "` in the `persist create`/`update " @fent "` data that produces the rows this filter targets, or drop `" @field "` from the filter if it is dead."), severity: "error" }])))))))))))))))))))))))))))))))))) (if (array/some @wsAll (fn w (object/get @w "x" false))) []
  (array/flatten (array/map (array/unique (array/map (array/filter @ents (fn e (and (or (= (object/get @e "persistence" "") "") (= (object/get @e "persistence" "") "persistent")) (!= (object/get @e "collection" "") "") (not (object/get @e "identity" false))))) (fn e (object/get @e "name" ""))))
-  (fn en (let ((ups (array/filter @ws (fn w (and (object/get @w "u") (= (object/get @w "e") @en))))))
+  (fn en (let ((ups (array/filter @ws (fn w (and (object/get @w "u") (= (object/get @w "e") @en) (not (array/some @orbs (fn o (and (array/some (object/get @o "traits" []) (fn t (and (not (object/has @t "sourceBehavior")) (str/startsWith (object/get @w "p" "") (str/concat "orbitals." (object/get @o "name" "") ".traits." (object/get @t "name" "") "."))))) (array/some (object/get @o "expects" []) (fn x (and (= (object/get @x "kind" "") "entity") (= (object/get @x "name" "") @en))))))))
+   (not (array/some @orbs (fn o (array/some (object/get @o "traits" []) (fn t (and (object/get @t "entityRebindable" false) (not (object/has @t "sourceBehavior")) (= (object/get @t "linkedEntity" "") @en) (str/startsWith (object/get @w "p" "") (str/concat "orbitals." (object/get @o "name" "") ".traits." (object/get @t "name" "") ".")))))))))))))
    (let ((fam (array/concat [@en] (array/filter (object/get @mates (object/get @colOf @en "") []) (fn m (!= @m @en))))))
     (if (or (= (array/len @ups) 0) (> (array/len (object/get (object/get @defs @en {}) "instances" [])) 0) (array/some @ws (fn w (and (object/get @w "c") (array/includes @fam (object/get @w "e"))))))
      []
@@ -188,7 +189,7 @@ orbital OrbLintFilterFieldNeverWrittenOrbital {
       OrbLintInput.LINT_EMBEDS -> EMBEDS_HEARD
     }
     config {
-      codes : LintFilterFieldNeverWrittenCodes = { xFilterFieldNeverWritten: { code: "ORB_X_FILTER_FIELD_NEVER_WRITTEN", category: "cross", description: "A fetch filters on a field that no persist create or update of that entity supplies, so it always returns empty" }, persistUpdateWithoutCreate: { code: "ORB_PERSIST_UPDATE_WITHOUT_CREATE", category: "cross", description: "A persistent entity the program updates but never creates, upserts or batch-creates, and that declares no instances: the update can never find a row" }, lintIndexMissing: { code: "ORB_LINT_INDEX_MISSING", category: "lint", description: "The lint input arrived without a shared program fact the rule reads (the structural index, sites, units, embeds or entities), so the rule cannot check the program" } }
+      codes : LintFilterFieldNeverWrittenCodes = { xFilterFieldNeverWritten: { code: "ORB_X_FILTER_FIELD_NEVER_WRITTEN", category: "cross", description: "A fetch filters on a field that no persist create or update of that entity supplies, so it always returns empty" }, persistUpdateWithoutCreate: { code: "ORB_PERSIST_UPDATE_WITHOUT_CREATE", category: "cross", description: "A persistent entity the program updates but never creates, upserts or batch-creates, and that declares no instances: the update can never find a row. An update made by a trait authored in this program that binds the entity as its `@rebindable` placeholder is not judged, since the program that composes the trait owns the rows; nor is an update by a trait authored in an orbital that declares `expects entity` for that entity (a composed copy of the trait is still judged), which states that another part of the program supplies the rows" }, lintIndexMissing: { code: "ORB_LINT_INDEX_MISSING", category: "lint", description: "The lint input arrived without a shared program fact the rule reads (the structural index, sites, units, embeds or entities), so the rule cannot check the program" } }
         @label "Emitted codes"
         @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
     }

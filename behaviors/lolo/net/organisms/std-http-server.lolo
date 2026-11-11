@@ -34,7 +34,7 @@ orbital HttpServerOrbital {
 
   entity StreamTicket [persistent: stream_tickets] {
     @read server "Looked up by the HTTP server program's own traits to resolve a request's viewer, before any viewer exists."
-    id : string! @description "The ticket: 32 CSPRNG bytes, base64url."
+    id : string! @description "SHA-256 (hex) of the ticket; the ticket itself is never stored."
     clientId : string! @description "The client session the ticket was minted for; its identity is the stream's."
     expiresAt : instant! @description "When the ticket stops working."
   }
@@ -337,8 +337,16 @@ orbital HttpServerOrbital {
     listens {
       ServerRouter.STREAM_OPEN_REQUESTED -> TAKE_TICKET
       ServerRouter.MINT_REQUESTED -> MINT_TICKET
+      TicketMint.TOKEN_MINTED -> TOKEN_MINTED
+      TicketMint.TOKEN_REFUSED -> TOKEN_REFUSED
+      TicketTake.TOKEN_RESOLVED -> TOKEN_RESOLVED
+      TicketTake.TOKEN_REFUSED -> TOKEN_REFUSED
     }
   }
+
+  trait TicketMint = Ticket.traits.TicketMint { }
+
+  trait TicketTake = Ticket.traits.TicketTake { }
 
   trait ServerSse = Sse.traits.Sse {
     listens {
@@ -360,5 +368,5 @@ orbital HttpServerOrbital {
     }
   }
 
-  page http { host: @config.host, port: @config.port, path: "/" } as Api -> BootGuard, BootCreds, BootCheck, Http1, Http1Timer, ServerPolicy, ServerRateLimiter, ServerRouter, ServerDispatch, ServerStatic, ServerCompress, CompressPolicy, CompressGzip, CompressBrotli, StreamTicketer, ServerSse, ServerLiveFeed, ServerBearer, ServerBinding, ApiKeys, BearerX509, BearerHttp, BearerHttpFrame
+  page http { host: @config.host, port: @config.port, path: "/" } as Api -> BootGuard, BootCreds, BootCheck, Http1, Http1Timer, ServerPolicy, ServerRateLimiter, ServerRouter, ServerDispatch, ServerStatic, ServerCompress, CompressPolicy, CompressGzip, CompressBrotli, StreamTicketer, TicketMint, TicketTake, ServerSse, ServerLiveFeed, ServerBearer, ServerBinding, ApiKeys, BearerX509, BearerHttp, BearerHttpFrame
 }

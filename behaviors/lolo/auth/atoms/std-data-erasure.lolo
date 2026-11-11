@@ -96,6 +96,13 @@ orbital DataErasureOrbital {
     initial: idle
 
     state idle {
+      ERASURE_REQUESTED -> idle
+        (persist create ErasureRequest { subjectId: ?subjectId, targetEntity: ?targetEntity, notes: ?notes, requestedAt: (time/now) } {
+          emit: { failure: ErasureSaveFailed, success: ErasureSaved }
+        })
+      ErasureSaved -> idle
+      ErasureSaveFailed -> idle
+        (notify error (if (validate/required ?error) (str/concat "Couldn't record the erasure request — " ?error) "Couldn't record the erasure request"))
       INIT -> idle
         (set @entity.page 1)
         (fetch ErasureRequest {
@@ -222,6 +229,10 @@ orbital DataErasureOrbital {
     }
 
     state browsing {
+      ERASURE_REQUESTED -> browsing
+        (persist create ErasureRequest { subjectId: ?subjectId, targetEntity: ?targetEntity, notes: ?notes, requestedAt: (time/now) } {
+          emit: { failure: ErasureSaveFailed, success: ErasureSaved }
+        })
       ;; Stays in `browsing`: this persist's result arms (ErasureSaved /
       ;; ErasureSaveFailed) are declared here. Leaving for `loading` landed the
       ;; save on a deaf state and wedged the panel on its spinner — the
@@ -338,6 +349,14 @@ orbital DataErasureOrbital {
     }
 
     listens {
+      ERASURE_REQUESTED {
+        subjectId : string
+        targetEntity : string
+        notes : string
+      }
+        @description "A data subject has requested erasure of their data."
+        @synonyms "right to be forgotten, deletion requested, gdpr erasure"
+        @tier "domain"
       ExecScanLoaded {
         data : [ErasureRequest]!
       }

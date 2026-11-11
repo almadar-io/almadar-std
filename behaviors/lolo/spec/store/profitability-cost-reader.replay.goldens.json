@@ -1,0 +1,164 @@
+{
+  "atom": "store/atoms/std-profitability.lolo",
+  "trait": "ProfitCostReader",
+  "note": "The other-cost reader answers one entry per cost row with its group, or fails by name over the cap.",
+  "cases": [
+    {
+      "id": "cost-rows-become-grouped-amounts",
+      "now": 1700000000000,
+      "config": {
+        "costGroupField": "group"
+      },
+      "steps": [
+        {
+          "event": "COSTS_WANTED",
+          "payload": {
+            "key": "k1",
+            "scope": "",
+            "periodStart": "",
+            "periodEnd": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "reading"
+          }
+        },
+        {
+          "event": "ProfitCostRead",
+          "from": "reading",
+          "payload": {
+            "data": [
+              {
+                "id": "x1",
+                "amount": 100,
+                "group": "ops",
+                "scope": ""
+              },
+              {
+                "id": "x2",
+                "amount": 40,
+                "group": "",
+                "scope": ""
+              }
+            ],
+            "totalCount": 2
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "PROFITABILITY_COSTS_READ",
+                "payload": {
+                  "key": "k1",
+                  "groups": [
+                    {
+                      "group": "ops",
+                      "amount": 100
+                    },
+                    {
+                      "group": "",
+                      "amount": 40
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-cost-read-over-the-cap-fails-by-name",
+      "now": 1700000000000,
+      "config": {
+        "maxRows": 1
+      },
+      "steps": [
+        {
+          "event": "COSTS_WANTED",
+          "payload": {
+            "key": "k1",
+            "scope": "",
+            "periodStart": "",
+            "periodEnd": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "reading"
+          }
+        },
+        {
+          "event": "ProfitCostRead",
+          "from": "reading",
+          "payload": {
+            "data": [
+              {
+                "id": "x1",
+                "amount": 1,
+                "group": "",
+                "scope": ""
+              }
+            ],
+            "totalCount": 3
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "PROFITABILITY_COSTS_FAILED",
+                "payload": {
+                  "key": "k1",
+                  "code": "over-cap",
+                  "error": "The other-cost read has 3 rows, over the read cap of 1"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-failed-cost-read-answers-the-store-message",
+      "now": 1700000000000,
+      "steps": [
+        {
+          "event": "COSTS_WANTED",
+          "payload": {
+            "key": "k1",
+            "scope": "",
+            "periodStart": "",
+            "periodEnd": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "reading"
+          }
+        },
+        {
+          "event": "ProfitCostReadFailed",
+          "from": "reading",
+          "payload": {
+            "error": "store down",
+            "code": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "PROFITABILITY_COSTS_FAILED",
+                "payload": {
+                  "key": "k1",
+                  "code": "read",
+                  "error": "store down"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

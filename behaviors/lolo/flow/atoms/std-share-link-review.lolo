@@ -1,13 +1,14 @@
 app std-share-link-review [
   version: "1.0.0",
   locales: [en, ar, sl],
-  description: "std-share-link-review — approval by shared link, for a reviewer with no account (a client signing off a design, a draft or a video). A signed-in person issues a link for one item: ISSUE_LINK { targetId, title, mediaUrl, mediaType, days } draws a random token, stores only its SHA-256 as the link's id and answers LINK_ISSUED { targetId, url } once. Opening `/review-link/:token` (a public route) runs the guest trait on the server: it hashes the token from the route, reads exactly that link (the entity is `@read server`, so no visitor can list links), shows the item with its title, and lets the reviewer approve it or request changes with their name and a note; an expired, revoked or already-decided link says so and takes no decision. The decision is stored on the link and announced as LINK_DECIDED { targetId, decision, reviewerName, note }, for the host app to act on (mark the asset approved, notify its owner)."
+  description: "std-share-link-review — approval by shared link, for a reviewer with no account (a client signing off a design, a draft or a video). The link's token is a std-opaque-token (LinkMint mints it, LinkResolve finds its link): a signed-in person issues a link for one item with ISSUE_LINK { targetId, title, mediaUrl, mediaType, days }, which mints a token, stores only its SHA-256 as the link's id with the item and an expiry `days` from now, and answers LINK_ISSUED { targetId, url } once. Opening `/review-link/:token` (a public route) runs the guest trait on the server: LinkResolve reads exactly the link the token hashes to (the entity is `@read server`, so no visitor can list links), and the guest shows the item with its title, and lets the reviewer approve it or request changes with their name and a note; an expired, revoked or already-decided link says so and takes no decision. The decision is stored on the link and announced as LINK_DECIDED { targetId, decision, reviewerName, note }, for the host app to act on (mark the asset approved, notify its owner)."
 ]
-type ReviewLinkRow = { id : string!, targetId : string!, title : string, mediaUrl : string, mediaType : string, status : string!, expiresAt : instant, reviewerName : string, decisionNote : string }
+type ReviewLinkField = { name : string!, value : string! }
 
 orbital ShareLinkReviewOrbital {
   uses Typography from "std/behaviors/ui-typography"
   uses Button from "std/behaviors/ui-button"
+  uses Opaque from "std/behaviors/std-opaque-token"
 
   expects entity Viewer [identity] {
     id : string!
@@ -28,57 +29,40 @@ orbital ShareLinkReviewOrbital {
     reviewerName : string @description "The name the reviewer gave." @synonyms "approver, client contact" = ""
     decisionNote : string @description "The reviewer's note." @synonyms "comment, feedback" = ""
     decidedAt : instant @description "When the reviewer decided." @synonyms "approved at, answered at"
-    pendingTargetId : string @intrinsic = ""
-    pendingTitle : string @intrinsic = ""
-    pendingMediaUrl : string @intrinsic = ""
-    pendingMediaType : string @intrinsic = "none"
-    pendingDays : number @intrinsic = 14
-    draftName : string @intrinsic = ""
-    draftNote : string @intrinsic = ""
-    openHash : string @intrinsic = ""
+  }
+
+  entity ReviewLinkDraft [runtime] {
+    id : string!
+    pendingTargetId : string @description "The item the link in hand is for." = ""
+    draftName : string @description "The name the reviewer is typing." = ""
+    draftNote : string @description "The note the reviewer is typing." = ""
+    openHash : string @description "The id of the link the reviewer opened." = ""
   }
 
   ;; Issues one link per request; the plain token leaves only in LINK_ISSUED.
-  trait ReviewLinkIssuer -> ReviewLink {
+  trait ReviewLinkIssuer -> ReviewLinkDraft {
     initial: idle
 
     state idle {
       INIT -> idle
-      ISSUE_LINK -> drawing when (validate/required ?targetId)
+      ISSUE_LINK -> issuing when (validate/required ?targetId)
         (set @entity.pendingTargetId ?targetId)
-        (set @entity.pendingTitle (default ?title ""))
-        (set @entity.pendingMediaUrl (default ?mediaUrl ""))
-        (set @entity.pendingMediaType (default ?mediaType "none"))
-        (set @entity.pendingDays (default ?days @config.defaultDays))
-        (random-bytes 32 { emit: { success: TOKEN_DRAWN, failure: TOKEN_FAILED } })
+        (emit LINK_TOKEN_MINT {
+          key: ?targetId
+          fields: [{ name: "targetId", value: ?targetId }, { name: "title", value: (default ?title "") }, { name: "mediaUrl", value: (default ?mediaUrl "") }, { name: "mediaType", value: (if (= ?mediaType "image") "image" (if (= ?mediaType "video") "video" "none")) }, { name: "status", value: "open" }, { name: "issuedBy", value: (default @user.id "") }]
+          ttlMs: (* (default ?days @config.defaultDays) 86400000)
+        })
       REVOKE_LINK -> idle
         (persist update ReviewLink { id: ?id, status: "revoked" })
         (emit LINK_REVOKED { id: ?id })
     }
 
-    state drawing {
+    state issuing {
       INIT -> idle
-      TOKEN_DRAWN -> idle
-        (let ((token (hash/sha 256 ?value "hex")))
-          (if (= @token null)
-            (emit LINK_FAILED { message: "The drawn token could not be encoded" })
-            (let ((id (hash/sha 256 @token "hex")))
-              (if (= @id null)
-                (emit LINK_FAILED { message: "The token could not be hashed" })
-                (do
-                  (persist create ReviewLink {
-                    id: @id
-                    targetId: @entity.pendingTargetId
-                    title: @entity.pendingTitle
-                    mediaUrl: @entity.pendingMediaUrl
-                    mediaType: (if (= @entity.pendingMediaType "image") "image" (if (= @entity.pendingMediaType "video") "video" "none"))
-                    status: "open"
-                    issuedBy: @user.id
-                    expiresAt: (time/add @now @entity.pendingDays "d")
-                  })
-                  (emit LINK_ISSUED { targetId: @entity.pendingTargetId, url: (str/concat @config.baseUrl "/review-link/" @token) }))))))
-      TOKEN_FAILED -> idle
-        (emit LINK_FAILED { message: (default ?error "") })
+      LINK_TOKEN_MINTED -> idle
+        (emit LINK_ISSUED { targetId: @entity.pendingTargetId, url: (str/concat @config.baseUrl "/review-link/" ?token) })
+      LINK_TOKEN_REFUSED -> idle
+        (emit LINK_FAILED { message: (default ?message "") })
     }
 
     emits {
@@ -98,13 +82,12 @@ orbital ShareLinkReviewOrbital {
       }
         @description "The link could not be issued."
         @tier "secondary"
-      TOKEN_DRAWN {
-        value : string!
+      LINK_TOKEN_MINT -> external {
+        key : string!
+        fields : [ReviewLinkField]!
+        ttlMs : number!
       }
-        @tier "internal"
-      TOKEN_FAILED {
-        error : string
-      }
+        @description "Internal: asks LinkMint to mint the link's token."
         @tier "internal"
     }
 
@@ -124,14 +107,22 @@ orbital ShareLinkReviewOrbital {
       }
         @description "Stop a review link working."
         @tier "domain"
-      TOKEN_DRAWN {
-        value : string!
+      LINK_TOKEN_MINTED {
+        key : string!
+        token : string!
+        id : string!
+        expiresAt : instant
       }
         @tier "internal"
-      TOKEN_FAILED {
-        error : string
+      LINK_TOKEN_REFUSED {
+        key : string!
+        code : string!
+        message : string!
+        token : string
       }
         @tier "internal"
+      LinkMint.TOKEN_MINTED -> LINK_TOKEN_MINTED
+      LinkMint.TOKEN_REFUSED -> LINK_TOKEN_REFUSED
     }
 
     config {
@@ -147,21 +138,19 @@ orbital ShareLinkReviewOrbital {
   }
 
   ;; The reviewer's page: runs on the server, reads exactly the link its token
-  ;; hashes to, and records one decision.
-  trait ReviewLinkGuest -> ReviewLink [server] {
+  ;; names (through LinkResolve), and records one decision.
+  trait ReviewLinkGuest -> ReviewLinkDraft [server] {
     initial: opening
 
     state opening {
       INIT -> opening
-        (set @entity.openHash (default (hash/sha 256 (default ?token "") "hex") ""))
-        (fetch ReviewLink {
-          id: (default (hash/sha 256 (default ?token "") "hex") "")
-          emit: { failure: LinkMissing, success: LinkFound }
-        })
-      LinkFound -> open when (and (!= ?data.mediaType "none") (= ?data.status "open") (or (= ?data.expiresAt null) (time/isAfter ?data.expiresAt @now)))
+        (emit LINK_TOKEN_RESOLVE { key: "review", token: (default ?token "") })
+      LINK_FOUND -> open when (and (= ?row.status "open") (!= ?row.mediaType "none"))
+        (set @entity.openHash ?id)
+        (set @entity.pendingTargetId ?row.targetId)
         (render-ui main <Stack direction={vertical} gap={lg}>
-          <Typography.traits.TypographyRender content={(default ?data.title "")} variant={h2} />
-          <AnnotatedMedia src={(default ?data.mediaUrl "")} mediaType={(if (= ?data.mediaType "video") "video" "image")} title={(default ?data.title "")} pins={[]} placing={false} />
+          <Typography.traits.TypographyRender content={(default ?row.title "")} variant={h2} />
+          <AnnotatedMedia src={(default ?row.mediaUrl "")} mediaType={(if (= ?row.mediaType "video") "video" "image")} title={(default ?row.title "")} pins={[]} placing={false} />
           <Input label={(i18n/t "yourName")} value={@entity.draftName} onChange={NAME_TYPED} />
           <Input inputType={textarea} rows={4} label={(i18n/t "note")} value={@entity.draftNote} onChange={NOTE_TYPED} />
           <Stack direction={horizontal} gap={sm}>
@@ -169,9 +158,11 @@ orbital ShareLinkReviewOrbital {
             <Button.traits.ButtonRender action={REQUEST_CHANGES} icon={message-square} label={(i18n/t "requestChanges")} variant={secondary} />
           </Stack>
         </Stack>)
-      LinkFound -> open when (and (= ?data.status "open") (or (= ?data.expiresAt null) (time/isAfter ?data.expiresAt @now)))
+      LINK_FOUND -> open when (= ?row.status "open")
+        (set @entity.openHash ?id)
+        (set @entity.pendingTargetId ?row.targetId)
         (render-ui main <Stack direction={vertical} gap={lg}>
-          <Typography.traits.TypographyRender content={(default ?data.title "")} variant={h2} />
+          <Typography.traits.TypographyRender content={(default ?row.title "")} variant={h2} />
           <Input label={(i18n/t "yourName")} value={@entity.draftName} onChange={NAME_TYPED} />
           <Input inputType={textarea} rows={4} label={(i18n/t "note")} value={@entity.draftNote} onChange={NOTE_TYPED} />
           <Stack direction={horizontal} gap={sm}>
@@ -179,12 +170,16 @@ orbital ShareLinkReviewOrbital {
             <Button.traits.ButtonRender action={REQUEST_CHANGES} icon={message-square} label={(i18n/t "requestChanges")} variant={secondary} />
           </Stack>
         </Stack>)
-      LinkFound -> closed
+      LINK_FOUND -> closed
         (render-ui main <Stack direction={vertical} gap={sm}>
-          <Typography.traits.TypographyRender content={(default ?data.title "")} variant={h2} />
-          <Typography.traits.TypographyRender content={(if (= ?data.status "open") (i18n/t "expired") (if (= ?data.status "revoked") (i18n/t "revoked") (i18n/t "alreadyDecided")))} variant={body} />
+          <Typography.traits.TypographyRender content={(default ?row.title "")} variant={h2} />
+          <Typography.traits.TypographyRender content={(if (= ?row.status "revoked") (i18n/t "revoked") (i18n/t "alreadyDecided"))} variant={body} />
         </Stack>)
-      LinkMissing -> closed
+      LINK_REFUSED -> closed when (= ?code "expired")
+        (render-ui main <Stack direction={vertical} gap={sm}>
+          <Typography.traits.TypographyRender content={(i18n/t "expired")} variant={body} />
+        </Stack>)
+      LINK_REFUSED -> closed
         (render-ui main <Stack direction={vertical} gap={sm}>
           <Typography.traits.TypographyRender content={(i18n/t "notFound")} variant={h3} />
         </Stack>)
@@ -192,11 +187,7 @@ orbital ShareLinkReviewOrbital {
 
     state open {
       INIT -> opening
-        (set @entity.openHash (default (hash/sha 256 (default ?token "") "hex") ""))
-        (fetch ReviewLink {
-          id: (default (hash/sha 256 (default ?token "") "hex") "")
-          emit: { failure: LinkMissing, success: LinkFound }
-        })
+        (emit LINK_TOKEN_RESOLVE { key: "review", token: (default ?token "") })
       NAME_TYPED -> open
         (set @entity.draftName (default ?value ""))
       NOTE_TYPED -> open
@@ -217,13 +208,9 @@ orbital ShareLinkReviewOrbital {
 
     state deciding {
       INIT -> opening
-        (set @entity.openHash (default (hash/sha 256 (default ?token "") "hex") ""))
-        (fetch ReviewLink {
-          id: (default (hash/sha 256 (default ?token "") "hex") "")
-          emit: { failure: LinkMissing, success: LinkFound }
-        })
+        (emit LINK_TOKEN_RESOLVE { key: "review", token: (default ?token "") })
       DecisionSaved -> closed
-        (emit LINK_DECIDED { targetId: (default ?targetId ""), decision: (default ?status ""), reviewerName: @entity.draftName, note: @entity.draftNote })
+        (emit LINK_DECIDED { targetId: @entity.pendingTargetId, decision: (default ?status ""), reviewerName: @entity.draftName, note: @entity.draftNote })
         (render-ui main <Stack direction={vertical} gap={sm}>
           <Typography.traits.TypographyRender content={(i18n/t "thanks")} variant={h3} />
         </Stack>)
@@ -233,11 +220,7 @@ orbital ShareLinkReviewOrbital {
 
     state closed {
       INIT -> opening
-        (set @entity.openHash (default (hash/sha 256 (default ?token "") "hex") ""))
-        (fetch ReviewLink {
-          id: (default (hash/sha 256 (default ?token "") "hex") "")
-          emit: { failure: LinkMissing, success: LinkFound }
-        })
+        (emit LINK_TOKEN_RESOLVE { key: "review", token: (default ?token "") })
     }
 
     emits {
@@ -250,17 +233,14 @@ orbital ShareLinkReviewOrbital {
         @description "A reviewer with a link approved the item or asked for changes."
         @synonyms "client approved, sign-off received, changes requested"
         @tier "primary"
-      LinkFound {
-        data : ReviewLinkRow!
+      LINK_TOKEN_RESOLVE -> external {
+        key : string!
+        token : string!
       }
-        @tier "internal"
-      LinkMissing {
-        error : string
-        code : string
-      }
+        @description "Internal: asks LinkResolve for the link the route token names."
         @tier "internal"
       DecisionSaved {
-        targetId : string
+        id : string
         status : string
       }
         @tier "internal"
@@ -291,17 +271,23 @@ orbital ShareLinkReviewOrbital {
       REQUEST_CHANGES
         @description "Ask for changes, with a note."
         @tier "presentation"
-      LinkFound {
-        data : ReviewLinkRow!
+      LINK_FOUND {
+        key : string!
+        id : string!
+        row : ReviewLink
       }
         @tier "internal"
-      LinkMissing {
-        error : string
-        code : string
+      LINK_REFUSED {
+        key : string!
+        code : string!
+        message : string!
+        token : string
       }
         @tier "internal"
+      LinkResolve.TOKEN_RESOLVED -> LINK_FOUND
+      LinkResolve.TOKEN_REFUSED -> LINK_REFUSED
       DecisionSaved {
-        targetId : string
+        id : string
         status : string
       }
         @tier "internal"
@@ -313,5 +299,67 @@ orbital ShareLinkReviewOrbital {
     }
   }
 
-  page "/review-link/:token" as ReviewLinkPage -> ReviewLinkGuest, ReviewLinkIssuer [access: public]
+  ;; The link's token: minted for the issuer, resolved for the guest, never stored.
+  trait LinkMint = Opaque.traits.OpaqueTokenMint {
+    config {
+      tokenEntity: ReviewLink
+      expiresAtField: expiresAt
+    }
+    listens {
+      MINT_TOKEN {
+        key : string
+        fields : [ReviewLinkField]!
+        ttlMs : number
+      }
+      ReviewLinkIssuer.LINK_TOKEN_MINT -> MINT_TOKEN
+      TOKEN_DRAWN {
+        value : string!
+      }
+      TOKEN_DRAW_FAILED {
+        error : string!
+      }
+      TOKEN_SAVED {
+        id : string!
+      }
+      TOKEN_NOT_SAVED {
+        error : string!
+        code : string
+      }
+    }
+  }
+
+  trait LinkResolve = Opaque.traits.OpaqueTokenResolve {
+    config {
+      tokenEntity: ReviewLink
+      expiresAtField: expiresAt
+      singleUse: false
+    }
+    listens {
+      RESOLVE_TOKEN {
+        key : string
+        token : string!
+      }
+      ReviewLinkGuest.LINK_TOKEN_RESOLVE -> RESOLVE_TOKEN
+      TOKEN_ROW_FOUND {
+        data : ReviewLink!
+      }
+      TOKEN_ROW_ABSENT {
+        error : string
+        code : string
+      }
+      TOKEN_SPENT {
+        id : string!
+        expiresAt : instant
+      }
+      TOKEN_ROW_CLAIMED {
+        data : ReviewLink!
+      }
+      TOKEN_NOT_SPENT {
+        error : string
+        code : string
+      }
+    }
+  }
+
+  page "/review-link/:token" as ReviewLinkPage -> ReviewLinkGuest, ReviewLinkIssuer, LinkMint, LinkResolve [access: public]
 }

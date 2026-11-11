@@ -1,6 +1,6 @@
 app stream-ticket-spec [
   version: "1.0.0",
-  description: "Design contract for single-use stream tickets: a ticket is 32 CSPRNG bytes in base64url, minted for the client of an authenticated request, valid for a bounded time (60 seconds unless a knob names another) and spent by its first take. A request arriving while one is in flight is queued in arrival order and answered exactly once; beyond the queue bound it is refused busy. A forged, expired or already spent ticket names nobody. The Rust values it replaces: a minted ticket names its viewer once; a second take, a forged ticket and a short draw are refused."
+  description: "Design contract for single-use stream tickets: a ticket is a std-opaque-token (32 CSPRNG bytes in base64url, stored only as its SHA-256), minted for the client of an authenticated request, valid for a bounded time (60 seconds unless a knob names another) and spent by its first take. A request arriving while one is in flight is queued in arrival order and answered exactly once; beyond the queue bound it is refused busy. A forged, expired or already spent ticket names nobody. The Rust values it replaces: a minted ticket names its viewer once; a second take, a forged ticket and a short draw are refused."
 ]
 
 type StreamTicketJob = { kind : "mint" | "take", requestId : number, ticket : string, clientId : string }
@@ -19,26 +19,19 @@ orbital StreamTicketSpec {
     state idle {
       MINT_TICKET -> idle
       TAKE_TICKET -> idle
-      TICKET_PUMP -> drawing
+      TICKET_PUMP -> minting
     }
-    state drawing {
-      MINT_TICKET -> drawing
-      TAKE_TICKET -> drawing
-      SEED_DRAWN -> saving @ensures (= @entity.expiresAt (time/add @now 60000 "ms"))
-    }
-    state saving {
-      MINT_TICKET -> saving
-      TAKE_TICKET -> saving
+    state minting {
+      MINT_TICKET -> minting
+      TAKE_TICKET -> minting
+      TOKEN_MINTED -> idle
+      TOKEN_REFUSED -> idle
     }
     state taking {
       MINT_TICKET -> taking
       TAKE_TICKET -> taking
-    }
-    state spending {
-      MINT_TICKET -> spending
-      TAKE_TICKET -> spending
-      TICKET_SPENT -> idle
-      TICKET_NOT_SPENT -> idle
+      TOKEN_RESOLVED -> idle
+      TOKEN_REFUSED -> idle
     }
     emits {
       TICKET_MINTED { ticket : string!  expiresAt : instant!  requestId : number }
