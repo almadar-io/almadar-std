@@ -1,6 +1,6 @@
 app agent-tool-loop-spec [
   version: "1.0.0",
-  description: "Design contract for a tool loop that hands each tool's outcome back to the model. A tool call the loop dispatches stays pending in awaitingResult until the tool answers on a declared result event: TOOL_RESULT { callId, result } is appended as that call id's tool message, TOOL_FAILED { callId, error } as its failure, and the loop then moves to the next call or the next model turn. TOOL_PENDING { callId, tool } tells the tool which call it is answering. A tool declares `fireAndForget: true` in its tool config to be acknowledged as dispatched without waiting; nothing is inferred."
+  description: "Design contract for a tool loop that hands each tool's outcome back to the model. A tool call the loop dispatches stays pending in awaitingResult until the tool answers on a declared result event: TOOL_RESULT { callId, result } is appended as that call id's tool message, TOOL_FAILED { callId, error } as its failure, and the loop then moves to the next call or the next model turn. TOOL_PENDING { callId, tool } tells the tool which call it is answering. A tool declares `fireAndForget: true` in its tool config to be acknowledged as dispatched without waiting; nothing is inferred. While a guest session is attached (GuestAttached { guest }, GuestDetached), every turn also operates that guest: after the running program's tools are bound, the loop reflects the guest and, on GUEST_INPUTS_KNOWN, offers each input the guest declares as a tool; a call to one is dispatched into the guest and its dispatch answer is the tool result. Only what the guest reflected is offered or accepted."
 ]
 
 orbital AgentToolLoopSpec {
@@ -11,9 +11,14 @@ orbital AgentToolLoopSpec {
     cursor : number
   }
   expects trait AgentToolLoop {
-    state idle
+    state idle {
+      GuestAttached -> idle
+      GuestDetached -> idle
+    }
     state preparing @holds (array/every @config.tools (fn t (if (object/has @t "read") (validate/pattern (str/concat "read__" (object/get @t "read")) "^[a-zA-Z0-9_-]{1,64}$") (if (object/has @t "event") (validate/pattern (str/replaceAll (object/get @t "event") "." "__") "^[a-zA-Z0-9_-]{1,64}$") true))))
-    state thinking
+    state thinking {
+      GUEST_INPUTS_KNOWN -> thinking
+    }
     state running
     state awaitingResult {
       TOOL_RESULT -> running

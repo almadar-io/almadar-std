@@ -4,7 +4,7 @@ app std-orb-lint-icon-exists [
   env: ["PATH"],
   exec: [exe],
   fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
-  description: "std-orb-lint-icon-exists — the `orb lint icon-exists <file>` command, the port of the ORB_UI_ICON_NOT_FOUND check of icon.rs (validate_icon_value). It walks the same icon positions as icon-format (the `icon` prop, `actions[i].icon` and `itemActions[i].icon` of every object inside the pattern of a `render-ui` effect, recursing as the compiler does) and reports a well-formed icon name (kebab-case or PascalCase, not a binding, not blank) whose kebab-case form (PascalCase lowers each capital to -x, kebab-case lowercases) is not in the installed Lucide set, which comes from std-orb-lint-input's LINT_UI_VOCAB (orbLanguage.uiVocabulary.lucideIcons). The suggestion lists up to three installed icons whose distinct-character overlap with the name (shared distinct characters over the larger distinct-character count) is above 0.3, best first, ties in vocabulary order. An unreadable vocabulary answers ORB_LINT_UI_VOCAB_UNREAD. Clean answers `lint icon-exists: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+  description: "std-orb-lint-icon-exists — the `orb lint icon-exists <file>` command, the port of the ORB_UI_ICON_NOT_FOUND check of icon.rs (validate_icon_value). It walks the icon positions of every object inside the pattern of a `render-ui` effect, recursing as the compiler does: the `icon` prop, `actions[i].icon`, `itemActions[i].icon`, and every prop the installed pattern registry (std-orb-lint-input's LINT_PATTERNS) types as an icon for that object's `type`, only when its types hold no node (a node-or-icon prop is not judged); the registry not having arrived answers ORB_LINT_INDEX_MISSING and reports a well-formed icon name (kebab-case or PascalCase, not a binding, not blank) whose kebab-case form (PascalCase lowers each capital to -x, kebab-case lowercases) is not in the installed Lucide set, which comes from std-orb-lint-input's LINT_UI_VOCAB (orbLanguage.uiVocabulary.lucideIcons). The suggestion lists up to three installed icons whose distinct-character overlap with the name (shared distinct characters over the larger distinct-character count) is above 0.3, best first, ties in vocabulary order. An unreadable vocabulary answers ORB_LINT_UI_VOCAB_UNREAD. Clean answers `lint icon-exists: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
 ]
 uses Spec from "almadar-std/lint-icon-exists"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
@@ -18,6 +18,9 @@ type IcMachine = { transitions : [IcTransition] }
 type IcTrait = { name : string, stateMachine : IcMachine }
 type IcOrbital = { name : string, traits : [IcTrait] }
 type IcProgram = { orbitals : [IcOrbital] }
+
+type IcPropShape = { types : [string] }
+type IcPatternShape = { props : Map string IcPropShape }
 
 type LintCodeDecl = { code : string!, category : string!, description : string! }
 type LintIconExistsCodes = { lintIndexMissing : LintCodeDecl , lintUiVocabUnread : LintCodeDecl , uiIconNotFound : LintCodeDecl }
@@ -35,6 +38,9 @@ orbital OrbLintIconExistsOrbital {
     icons : [string] = []
     iconSet : Map string boolean = {}
     vocabUnread : boolean = false
+    iconProps : Map string [string] = {}
+    iconNames : [string] = []
+    patternsHeard : boolean = false
   }
 
   trait OrbLintIconExists -> OrbLintIconExistsRun [optimistic] {
@@ -48,6 +54,10 @@ orbital OrbLintIconExistsOrbital {
         (set @entity.iconSet (object/fromEntries (array/map @payload.lucideIcons (fn x [@x, true]))))
       UI_VOCAB_UNREAD -> ready
         (set @entity.vocabUnread true)
+      LINT_PATTERNS_HEARD -> ready
+        (set @entity.iconProps (object/mapValues @payload.patterns (fn e (let ((ps (object/get @e "props" {}))) (array/filter (object/keys @ps) (fn pk (let ((ty (object/get (object/get @ps @pk {}) "types" []))) (and (array/includes @ty "icon") (not (array/includes @ty "node"))))))))))
+        (set @entity.iconNames (array/unique (array/flatten (array/map (object/keys @payload.patterns) (fn pn (let ((ps (object/get (object/get @payload.patterns @pn {}) "props" {}))) (array/filter (object/keys @ps) (fn pk (let ((ty (object/get (object/get @ps @pk {}) "types" []))) (and (array/includes @ty "icon") (not (array/includes @ty "node"))))))))))))
+        (set @entity.patternsHeard true)
       UNITS_HEARD -> ready
         (set @entity.uKeys @payload.keys)
         (set @entity.unitsHeard true)
@@ -58,8 +68,8 @@ orbital OrbLintIconExistsOrbital {
         (emit LINT_FINISH { })
       LINT_INPUT -> ready when (not @entity.vocabUnread)
         (set @entity.scope @payload.scope)
-        (set @entity.findings (if (and @entity.unitsHeard (= @entity.unitsScope @payload.scope))
-(let ((orbitals (object/get @payload.program "orbitals" [])) (icons : [string] @entity.icons) (iconSet @entity.iconSet))
+        (set @entity.findings (if (and @entity.unitsHeard @entity.patternsHeard (= @entity.unitsScope @payload.scope))
+(let ((orbitals (object/get @payload.program "orbitals" [])) (icons : [string] @entity.icons) (iconSet @entity.iconSet) (iconProps @entity.iconProps) (gateKeys (array/concat ["icon", "actions", "itemActions"] @entity.iconNames)))
           (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
             (let ((orb (array/nth @orbitals @oi)))
               (let ((trs (object/get @orb "traits" [])))
@@ -67,7 +77,7 @@ orbital OrbLintIconExistsOrbital {
                   (let ((td (array/nth @trs @tj)))
                     (let ((trans (object/get (object/get @td "stateMachine" {}) "transitions" [])))
                       (array/flatten (array/map (array/range 0 (array/len @trans)) (fn ti
-                        (let ((effs (if (array/some ["icon", "actions", "itemActions"] (fn kk (array/includes (object/get @entity.uKeys (str/concat @oi "-" @tj "-" @ti) (array/take @icons 0)) @kk))) (object/get (array/nth @trans @ti) "effects" []) (array/take (object/get (array/nth @trans @ti) "effects" []) 0))))
+                        (let ((effs (if (array/some @gateKeys (fn kk (array/includes (object/get @entity.uKeys (str/concat @oi "-" @tj "-" @ti) (array/take @icons 0)) @kk))) (object/get (array/nth @trans @ti) "effects" []) (array/take (object/get (array/nth @trans @ti) "effects" []) 0))))
                           (array/flatten (array/map (array/range 0 (array/len @effs)) (fn ej
                             (let ((e (array/nth @effs @ej)))
                               (if (and (validate/array @e) (> (array/len @e) 2) (let ((hd (array/nth @e 0))) (and (validate/string @hd) (= @hd "render-ui"))) (validate/object (array/nth @e 2)))
@@ -76,8 +86,9 @@ orbital OrbLintIconExistsOrbital {
                                         (if (validate/array @n)
                                           { f: (array/flatten (array/map (array/range 0 (array/len @n)) (fn i (if (validate/object (array/nth @n @i)) (array/map (object/get (let ((r0 (array/nth @k @i))) (if (= @r0 null) @nr @r0)) "f") (fn h { p: (str/concat "[" @i "]" (object/get @h "p")), code: (object/get @h "code"), msg: (object/get @h "msg"), sug: (object/get @h "sug") })) []))))  }
                                           (if (validate/object @n)
-                                            (let ((noc : [IcCand] [])) (let ((cs (array/concat
+                                            (let ((noc : [IcCand] []) (noh : [string] [])) (let ((cs (array/concat
                                                         (if (object/has @n "icon") [{ p: ".icon", v: (object/get @n "icon") }] @noc)
+                                                        (let ((nt (object/get @n "type" null))) (if (validate/string @nt) (array/flatten (array/map (array/filter (object/get @iconProps @nt @noh) (fn pk (and (!= @pk "icon") (object/has @n @pk)))) (fn pk [{ p: (str/concat "." @pk), v: (object/get @n @pk) }]))) @noc))
                                                         (let ((lst (object/get @n "actions" null))) (if (validate/array @lst) (array/flatten (array/map (array/range 0 (array/len @lst)) (fn i (let ((a (array/nth @lst @i))) (if (and (validate/object @a) (object/has @a "icon")) [{ p: (str/concat ".actions[" @i "].icon"), v: (object/get @a "icon") }] []))))) @noc))
                                                         (let ((lst (object/get @n "itemActions" null))) (if (validate/array @lst) (array/flatten (array/map (array/range 0 (array/len @lst)) (fn i (let ((a (array/nth @lst @i))) (if (and (validate/object @a) (object/has @a "icon")) [{ p: (str/concat ".itemActions[" @i "].icon"), v: (object/get @a "icon") }] []))))) @noc)))))
                                               { f: (array/concat
@@ -99,7 +110,7 @@ orbital OrbLintIconExistsOrbital {
                                   (if (= @fr null) []
                                     (array/map (object/get @fr "f") (fn h { code: (object/get @h "code"), path: (str/concat "orbitals[" @oi " (" (object/get @orb "name" "") ")].traits[" @tj " (" (object/get @td "name" "") ")].stateMachine.transitions[" @ti "].effects[" @ej "].pattern" (object/get @h "p")), message: (object/get @h "msg"), suggestion: (object/get @h "sug"), severity: "error" }))))
                                 []))))))))))))))))))))
-[{ code: @config.codes.lintIndexMissing.code, path: "", message: "the lint input arrived without LINT_UNITS, so this rule cannot check the program", suggestion: "std-orb-lint-input sends LINT_UNITS before LINT_INPUT; this rule did not hear it", severity: "error" }]))
+[{ code: @config.codes.lintIndexMissing.code, path: "", message: "the lint input arrived without LINT_UNITS or LINT_PATTERNS, so this rule cannot check the program", suggestion: "std-orb-lint-input sends LINT_UNITS and LINT_PATTERNS before LINT_INPUT; this rule did not hear both", severity: "error" }]))
         (set @entity.unitsHeard false)
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
@@ -122,6 +133,9 @@ orbital OrbLintIconExistsOrbital {
       UNITS_HEARD { scope : string!  keys : Map string [string]!  guardKeys : Map string [string]!  emitStr : [string]!  guardEmitStr : [string]!  itemRoots : Map string [string]!  guardItemRoots : Map string [string]! }
         @description "std-orb-lint-input's LINT_UNITS: the object keys, string emits and @item/@index roots of every transition, tick and config unit."
       OrbLintInput.LINT_UNITS -> UNITS_HEARD
+      LINT_PATTERNS_HEARD { patterns : Map string IcPatternShape! }
+        @description "std-orb-lint-input's LINT_PATTERNS: the installed pattern registry; the props it types as an icon are judged."
+      OrbLintInput.LINT_PATTERNS -> LINT_PATTERNS_HEARD
       UI_VOCAB_HEARD { slots : [string]!  itemActionBaseProps : [string]!  lucideIcons : [string]!  themeKeys : [string]!  deliveryRoots : [string]!  eventSourceKeys : [string]! }
         @description "std-orb-lint-input's LINT_UI_VOCAB: the installed UI vocabulary; its lucideIcons are the known icons."
       UI_VOCAB_UNREAD { error : string! }

@@ -4,7 +4,7 @@ app std-orb-lint-circuit-graph [
   env: ["PATH"],
   exec: [exe],
   fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
-  description: "std-orb-lint-circuit-graph - the `orb lint circuit-graph <file>` command, the port of the state-graph and overlay-exit checks of validate_closed_circuit (circuit/closed_circuit.rs). For every inline trait it reports CIRCUIT_UNREACHABLE_STATE (a non-initial state no transition enters), CIRCUIT_DEAD_END_STATE (a state no transition leaves by name that is not marked isTerminal), CIRCUIT_NO_OVERLAY_EXIT (a state that paints a pattern into an overlay slot and has no transition that closes the slot or lands in a state that does not paint it) and CIRCUIT_MODAL_EXIT_INCOMPLETE (a transition from an overlay state into a main-painting state that closes the overlay without repainting main, and a transition that leaves a state mounting an overlay slot without a `(render-ui <slot> null)` for it). The overlay slot names are the rule's overlaySlots knob and the exit events of the suggestion its exitEvents knob. Each finding carries the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint circuit-graph: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+  description: "std-orb-lint-circuit-graph - the `orb lint circuit-graph <file>` command, the port of the state-graph and overlay-exit checks of validate_closed_circuit (circuit/closed_circuit.rs). For every inline trait it reports CIRCUIT_UNREACHABLE_STATE (a non-initial state no transition enters), CIRCUIT_DEAD_END_STATE (a state no transition leaves by name that is not marked isTerminal), CIRCUIT_NO_OVERLAY_EXIT (a state that paints a pattern into an overlay slot and has no transition that closes the slot or lands in a state that does not paint it) and CIRCUIT_MODAL_EXIT_INCOMPLETE (a transition from an overlay state into a main-painting state that closes the overlay without repainting main (unless the transition also declares a success result event whose arm in the target state repaints main and any declared failure event has an arm there too), and a transition that leaves a state mounting an overlay slot without a `(render-ui <slot> null)` for it). The overlay slot names are the rule's overlaySlots knob and the exit events of the suggestion its exitEvents knob. Each finding carries the Rust path, message and suggestion (status 500, exit 1). Clean answers `lint circuit-graph: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
 ]
 uses Spec from "almadar-std/lint-circuit-graph"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
@@ -18,7 +18,7 @@ type CgTrait = { name : string, stateMachine : CgMachine }
 type CgOrbital = { name : string, traits : [CgTrait] }
 type CgProgram = { orbitals : [CgOrbital] }
 type CgRu = { s : string!, p : boolean!, ej : number! }
-type CgTr = { f : [string]!, e : string!, to : string!, fs : string!, cls : [string]!, hm : boolean!, ru : [CgRu]! }
+type CgTr = { f : [string]!, e : string!, to : string!, fs : string!, cls : [string]!, hm : boolean!, sc : [string]!, fl : [string]!, ru : [CgRu]! }
 type CgRl = { s : string!, p : boolean!, to : string!, path : string! }
 
 type LintCodeDecl = { code : string!, category : string!, description : string! }
@@ -63,6 +63,8 @@ orbital OrbLintCircuitGraphOrbital {
                                   fs: (if (validate/string @fr) @fr (str/concat "[" (str/join @fr ", ") "]")),
                                   cls: (array/flatten (array/map @effs (fn e (if (and (validate/array @e) (>= (array/len @e) 3) (let ((h0 (array/nth @e 0))) (if (validate/string @h0) (= @h0 "render-ui") false)) (= (array/nth @e 2) null)) (let ((sl (array/nth @e 1))) (if (validate/string @sl) (array/append @nos @sl) @nos)) @nos)))),
                                   hm: (array/some @effs (fn e (and (validate/array @e) (>= (array/len @e) 3) (let ((h0 (array/nth @e 0))) (if (validate/string @h0) (= @h0 "render-ui") false)) (let ((h1 (array/nth @e 1))) (if (validate/string @h1) (= @h1 "main") false)) (!= (array/nth @e 2) null)))),
+                                  sc: (array/flatten (array/map @effs (fn e (if (and (validate/array @e) (let ((h0 (array/nth @e 0))) (if (validate/string @h0) (array/includes ["persist" "fetch" "call-service"] @h0) false))) (array/flatten (array/map (array/slice @e 1 (array/len @e)) (fn a (if (validate/object @a) (let ((em (object/get @a "emit" null))) (if (validate/object @em) (let ((v (object/get @em "success" null))) (if (validate/string @v) (if (!= @v "") [@v] @nos) @nos)) @nos)) @nos)))) @nos)))),
+                                  fl: (array/flatten (array/map @effs (fn e (if (and (validate/array @e) (let ((h0 (array/nth @e 0))) (if (validate/string @h0) (array/includes ["persist" "fetch" "call-service"] @h0) false))) (array/flatten (array/map (array/slice @e 1 (array/len @e)) (fn a (if (validate/object @a) (let ((em (object/get @a "emit" null))) (if (validate/object @em) (let ((v (object/get @em "failure" null))) (if (validate/string @v) (if (!= @v "") [@v] @nos) @nos)) @nos)) @nos)))) @nos)))),
                                   ru: (array/flatten (array/map (array/range 0 (array/len @effs)) (fn ej
                                         (let ((e (array/nth @effs @ej)))
                                           (if (and (validate/array @e) (> (array/len @e) 1) (let ((h0 (array/nth @e 0))) (if (validate/string @h0) (= @h0 "render-ui") false)))
@@ -99,7 +101,11 @@ orbital OrbLintCircuitGraphOrbital {
                                   (if (= (array/len @ovStates) 0) @nof
                                     (array/flatten (array/map (array/range 0 (array/len @tl)) (fn tj
                                       (let ((x (default (array/nth @tl @tj) {})))
-                                        (if (and (array/some @ovStates (fn s (array/includes (object/get @x "f") @s))) (array/includes @inlStates (object/get @x "to")) (array/some (object/get @x "cls") (fn c (object/has @ovSet @c))) (not (object/get @x "hm")))
+                                        (if (and (array/some @ovStates (fn s (array/includes (object/get @x "f") @s))) (array/includes @inlStates (object/get @x "to")) (array/some (object/get @x "cls") (fn c (object/has @ovSet @c))) (not (object/get @x "hm"))
+                                                 (not (let ((sc (object/get @x "sc")) (fl (object/get @x "fl")) (arms (array/filter @tl (fn y (array/includes (object/get @y "f") (object/get @x "to"))))))
+                                                   (and (> (array/len @sc) 0)
+                                                        (array/every @sc (fn v (array/some @arms (fn y (and (= (object/get @y "e") @v) (object/get @y "hm"))))))
+                                                        (array/every @fl (fn v (array/some @arms (fn y (= (object/get @y "e") @v)))))))))
                                           [{ code: @config.codes.circuitModalExitIncomplete.code, path: (str/concat @tp ".transitions[" (object/get @x "fs") "->" (object/get @x "e") "->" (object/get @x "to") "]"), message: (str/concat "Transition " (object/get @x "fs") "--[" (object/get @x "e") "]-->" (object/get @x "to") " closes modal but doesn't re-render main slot. Main view will show stale content."), suggestion: "Add render-ui(\"main\", {...}) alongside render-ui(\"modal\", null) to refresh the main view after closing the modal", severity: "error" }]
                                           @nof)))))))
                                 (array/concat

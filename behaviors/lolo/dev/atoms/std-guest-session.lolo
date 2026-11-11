@@ -8,6 +8,7 @@ app std-guest-session [
 ]
 ;; @capabilities "run a program chosen at run time as a live guest, paint it, forward its controls, close it"
 
+uses Spec from "almadar-std/behavior-stage"
 uses Marks from "std/behaviors/std-mock-seed-marks"
 
 type GuestFsGrant = { glob : string!, modes : [string]! }
@@ -26,6 +27,7 @@ type GuestEnvValue = { name : string!, value : string? }
 type GuestCredentialStatus = { name : string!, set : boolean!, tail : string! }
 type GuestDenial = { message : string!, count : number! }
 type GuestRevealSource = "environment" | "credentials"
+type GuestReach = "mock" | "live"
 type GuestGrantRow = { kind : string!, declared : [string]!, effective : [string]!, missing : [string]! }
 type GuestRevealed = { name : string!, via : GuestRevealSource!, value : string? }
 type GuestTraceInputs = { environment : [GuestEnvStatus]!, grants : GuestGrants?, credentials : [GuestCredentialStatus]?, computedCredentials : [string]?, denials : [GuestDenial]?, inputs : [GuestInput]? }
@@ -166,6 +168,8 @@ orbital GuestSessionOrbital {
         (emit GUEST_ERROR { message: ?message })
       GUEST_RESET -> idle
         (emit GUEST_CLEARED {})
+      GUEST_REACH -> idle
+        (set @entity.guestIntegrations ?integrations)
       GUEST_OPENED -> idle
         (program/close ?result.guest { emit: { success: GUEST_CLOSED, failure: GUEST_CLOSE_FAILED } })
       GUEST_FAILED -> idle
@@ -242,6 +246,7 @@ orbital GuestSessionOrbital {
         (emit GUEST_MOVED { guest: @entity.guestHandle, moves: ?result.outcomes })
         (emit GUEST_PERSONAS_ASK {})
         (emit GUEST_INTEGRATIONS { guest: @entity.guestHandle, integrations: @entity.guestIntegrations })
+        (emit GUEST_READY { guest: @entity.guestHandle, integrations: @entity.guestIntegrations })
         (program/live { kind: "guest", guest: ?result.guest } { key: (str/concat "guest-ticks-" ?result.guest), emit: { onMessage: GUEST_TICKED, failure: GUEST_TICKS_FAILED } })
       GUEST_FAILED -> idle
         (emit GUEST_ERROR { message: ?error })
@@ -296,6 +301,8 @@ orbital GuestSessionOrbital {
         (emit GUEST_ERROR { message: ?message })
       GUEST_RESET -> idle
         (emit GUEST_CLEARED {})
+      GUEST_REACH -> opening
+        (set @entity.guestIntegrations ?integrations)
       GUEST_TICKED -> opening
       GUEST_TICKS_FAILED -> opening
       GUEST_CLOSED -> opening
@@ -364,6 +371,7 @@ orbital GuestSessionOrbital {
         (emit GUEST_MOVED { guest: @entity.guestHandle, moves: ?result.outcomes })
         (emit GUEST_PERSONAS_ASK {})
         (emit GUEST_INTEGRATIONS { guest: @entity.guestHandle, integrations: @entity.guestIntegrations })
+        (emit GUEST_READY { guest: @entity.guestHandle, integrations: @entity.guestIntegrations })
         (program/live { kind: "guest", guest: ?result.guest } { key: (str/concat "guest-ticks-" ?result.guest), emit: { onMessage: GUEST_TICKED, failure: GUEST_TICKS_FAILED } })
       GUEST_FAILED -> live
         (emit GUEST_NOTICE { message: ?error })
@@ -512,6 +520,8 @@ orbital GuestSessionOrbital {
         (set @entity.guestHandle "")
         (set @entity.guestPaints [])
         (emit GUEST_CLEARED {})
+      GUEST_REACH -> live
+        (set @entity.guestIntegrations ?integrations)
       GUEST_CLOSED -> live
       GUEST_CLOSE_FAILED -> live
     }
@@ -529,6 +539,11 @@ orbital GuestSessionOrbital {
         message : string!
       }
         @description "The guest could not be opened, or the host could not supply its program."
+      GUEST_READY -> external {
+        guest : string!
+        integrations : "mock" | "live"!
+      }
+        @description "A guest opened: its session id, the `guest` option program/inputs and program/dispatch take to operate it, and the reach it opened with."
       GUEST_MOVED -> external {
         guest : string!
         moves : [GuestMove]!
@@ -697,6 +712,14 @@ orbital GuestSessionOrbital {
     }
 
     listens {
+      GuestOpener.GUEST_OPEN -> GUEST_OPEN
+      GuestOpener.GUEST_FAIL -> GUEST_FAIL
+      GuestOpener.GUEST_RESET -> GUEST_RESET
+      GuestOpener.GUEST_REACH -> GUEST_REACH
+      GUEST_REACH {
+        integrations : "mock" | "live"!
+      }
+        @description "The composer chose how the next guest reaches real services; the guest already open is not reopened."
       GuestMarks.MARKS_CHECKED -> GUEST_SEED_MARKED
       GUEST_SEED_MARKED {
         marked : boolean!
@@ -761,6 +784,63 @@ orbital GuestSessionOrbital {
       }
       GUEST_RESET { }
         @description "Close the open guest and clear the paint."
+    }
+  }
+
+  trait GuestOpener -> GuestRun {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      STAGE_OPEN -> idle
+        (emit GUEST_RESET {})
+        (when (!= ?integrations null) (emit GUEST_REACH { integrations: ?integrations }))
+        (behavior/resolve ?behavior { emit: { success: STAGE_RESOLVED, failure: STAGE_RESOLVE_FAILED } })
+      STAGE_SHOW -> idle
+        (when (!= ?integrations null) (emit GUEST_REACH { integrations: ?integrations }))
+        (emit GUEST_OPEN { program: ?program })
+      STAGE_CLOSE -> idle
+        (emit GUEST_RESET {})
+      STAGE_RESOLVED -> idle
+        (emit GUEST_OPEN { program: ?result })
+      STAGE_RESOLVE_FAILED -> idle
+        (emit GUEST_FAIL { message: ?error })
+    }
+
+    emits {
+      GUEST_OPEN -> internal {
+        program : GuestProgram!
+      }
+        @description "The program to open, for the guest session; internal, so the program stays on the server."
+      GUEST_FAIL -> internal {
+        message : string!
+      }
+        @description "The behavior did not resolve into a program."
+      GUEST_RESET -> internal { }
+      GUEST_REACH -> internal {
+        integrations : "mock" | "live"!
+      }
+      STAGE_RESOLVED {
+        result : GuestProgram!
+      }
+      STAGE_RESOLVE_FAILED {
+        error : string!
+      }
+    }
+
+    listens {
+      STAGE_OPEN {
+        behavior : behavior!
+        integrations : GuestReach?
+      }
+        @description "Open a behavior value on the stage: it the stage is cleared at once (the guest already open is closed), then the value is resolved into a program and opened as the guest. `integrations` is the composer's choice of reach for this open; absent keeps the session's."
+      STAGE_SHOW {
+        program : GuestProgram!
+        integrations : GuestReach?
+      }
+        @description "Open an already resolved program on the stage."
+      STAGE_CLOSE { }
+        @description "Close the open guest and clear the stage."
     }
   }
 
@@ -1118,5 +1198,5 @@ orbital GuestSessionOrbital {
     }
   }
 
-  page "/" as GuestSessionPage -> GuestSession, GuestMarks, GuestStage
+  page "/" as GuestSessionPage -> GuestSession, GuestOpener, GuestMarks, GuestStage
 }

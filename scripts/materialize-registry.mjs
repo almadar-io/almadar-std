@@ -6,17 +6,32 @@
 // (ORB_BIN, ~/bin/orb-dev, or the devDependency on PATH via `pnpm exec`).
 // `--stage <dir>` materializes a copy of what the package publishes into <dir>
 // and leaves this checkout untouched, so a workspace that reads it live keeps
-// reading the .lolo; `orb release` publishes <dir>.
+// reading the .lolo; `orb release` publishes <dir>. `--link <package>=<dir>`
+// installs a dependency the staged copy resolves (the same release's staged std)
+// into its node_modules, which npm leaves out of the published tarball.
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { materializeRegistry, readBehaviorPackage } from '@almadar/core/behavior-package';
 
-function stageFlag(argv) {
-  if (argv.length === 0) return undefined;
-  if (argv.length !== 2 || argv[0] !== '--stage') throw new Error('usage: materialize-registry.mjs [--stage <dir>]');
-  return resolve(argv[1]);
+const USAGE = 'usage: materialize-registry.mjs [--stage <dir> [--link <package>=<dir>]...]';
+
+/** `--stage <dir>` and each `--link <package>=<dir>`: a dependency the staged copy resolves from <dir>. */
+function parseFlags(argv) {
+  let stage;
+  const links = [];
+  for (let i = 0; i < argv.length; i += 2) {
+    const value = argv[i + 1];
+    if (value === undefined) throw new Error(USAGE);
+    if (argv[i] === '--stage') stage = resolve(value);
+    else if (argv[i] === '--link' && value.includes('=')) {
+      const at = value.indexOf('=');
+      links.push({ name: value.slice(0, at), dir: resolve(value.slice(at + 1)) });
+    } else throw new Error(USAGE);
+  }
+  if (links.length > 0 && stage === undefined) throw new Error(USAGE);
+  return { stage, links };
 }
 
 /** Unpacks what `npm pack` would publish from `source` into `dir`. */
@@ -32,9 +47,14 @@ function stagePackage(source, dir) {
   }
 }
 
-const stage = stageFlag(process.argv.slice(2));
+const { stage, links } = parseFlags(process.argv.slice(2));
 const root = stage ?? process.cwd();
 if (stage) stagePackage(process.cwd(), stage);
+for (const link of links) {
+  const at = join(root, 'node_modules', ...link.name.split('/'));
+  mkdirSync(dirname(at), { recursive: true });
+  symlinkSync(link.dir, at, 'dir');
+}
 const manifestPath = join(root, 'package.json');
 const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
 // `orb` resolves behavior packages node-style; a standalone checkout of this

@@ -1,28 +1,34 @@
 app behavior-stage-spec [
-  version: "1.0.0",
-  description: "Design contract for showing a behavior value on a stage: the one wiring every host of a run-time program repeats today (the catalog playground, the Studio builder workspace, the Studio preview page), stated once. STAGE_OPEN { key, behavior, integrations, dataDir } resolves the behavior value into a program (behavior/resolve) and hands it to std-guest-session (GUEST_OPEN), which opens it as a guest session in its own kernel and paints it with the guest-view pattern; a stage that already shows a guest closes it first, so one stage holds one guest. integrations is the composer's choice per open and never a default here: mock opens the guest with no credentials, no store driver and seeded rows; live opens it with its declared grants narrowed to what the opener holds, and with dataDir as its own folder so its rows are its own and survive the session. STAGE_OPENED { key, guest } answers with the guest session id, which the composer passes to program/inputs and program/dispatch to operate the guest. STAGE_CLOSE closes the guest and answers STAGE_CLOSED. A behavior that does not resolve, or a guest the kernel refuses to open (the missing grants named), answers STAGE_FAILED { key, code, error } with code resolve or open and leaves the stage empty. The stage owns no rows: what is kept, for whom and with what reach is the composer's."
+  version: "1.1.0",
+  description: "Design contract for showing a behavior value on a stage, stated once in std-guest-session so no host of a run-time program writes its own opener or restates the guest's listen block. GuestOpener takes STAGE_OPEN { behavior, integrations? } (a behavior value: resolved with behavior/resolve, then handed to GuestSession as GUEST_OPEN), STAGE_SHOW { program, integrations? } (an already resolved program) and STAGE_CLOSE (GUEST_RESET). A stage holds one guest: an open closes the one already there. integrations is the composer's choice of reach for that open and is stated to the session (GUEST_REACH) before the program; absent keeps the session's current reach. A behavior that does not resolve is the guest's error (GUEST_FAIL, shown as GUEST_ERROR). GuestSession answers GUEST_READY { guest, integrations } once the guest is open: guest is the session id program/inputs and program/dispatch take as their guest option, so the composer can operate what it opened. GuestSession hears the opener inside the atom, so a composer rebinds only GuestOpener's listens. The stage owns no rows: what is kept, for whom and with what reach is the composer's."
 ]
 
 orbital BehaviorStageSpec {
-  expects entity StageRun [runtime] {
-    id : string!
-    key : string
-    guest : string
-  }
-  expects trait BehaviorStage {
-    state empty {
-      STAGE_OPEN -> opening
-    }
-    state opening
-    state open {
-      STAGE_OPEN -> opening
-      STAGE_CLOSE -> empty
+  expects trait GuestOpener {
+    state idle {
+      STAGE_OPEN -> idle
+      STAGE_SHOW -> idle
+      STAGE_CLOSE -> idle
     }
     emits {
-      STAGE_OPENED { key : string!  guest : string! }
-      STAGE_CLOSED { key : string! }
-      STAGE_FAILED { key : string!  code : "resolve" | "open"!  error : string! }
+      GUEST_OPEN
+      GUEST_FAIL { message : string! }
+      GUEST_REACH { integrations : "mock" | "live"! }
+      GUEST_RESET
     }
   }
-  expects page boot -> BehaviorStage
+  expects trait GuestSession {
+    state idle {
+      GUEST_REACH -> idle
+    }
+    state opening {
+      GUEST_REACH -> opening
+    }
+    state live {
+      GUEST_REACH -> live
+    }
+    emits {
+      GUEST_READY { guest : string!  integrations : "mock" | "live"! }
+    }
+  }
 }

@@ -10563,6 +10563,1125 @@
           ]
         }
       }
+    },
+    {
+      "id": "record-filter-hit-when-the-key-is-not-a-declared-field",
+      "steps": [
+        {
+          "trait": "OrbLintFilterFieldNeverWritten",
+          "event": "INDEX_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "heads": {
+              "0-0": [
+                "fetch"
+              ],
+              "0-0-0": [
+                "fetch"
+              ]
+            },
+            "roots": {
+              "0-0": [],
+              "0-0-0": []
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintFilterFieldNeverWritten",
+          "event": "EMBEDS_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "all": {},
+            "config": {},
+            "guards": {},
+            "effects": {}
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "TestApp",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "TestOrbital",
+                  "entity": {
+                    "name": "Product",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "title",
+                        "type": "string"
+                      }
+                    ],
+                    "collection": "products"
+                  },
+                  "traits": [
+                    {
+                      "name": "Browse",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "loading",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "loading",
+                            "to": "loading",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "fetch",
+                                "Product",
+                                {
+                                  "filter": {
+                                    "ownerId": "@user.id"
+                                  }
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "Home",
+                      "path": "/",
+                      "traits": [
+                        {
+                          "ref": "Browse"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintFilterFieldNeverWritten"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "filter-field-never-written",
+                  "findings": [
+                    {
+                      "code": "ORB_X_FILTER_FIELD_NEVER_WRITTEN",
+                      "path": "orbitals.TestOrbital.traits.Browse.stateMachine.transitions[0].effects",
+                      "message": "Browse fetches Product filtered on `ownerId`, but no `persist create`/`update` of Product anywhere in the schema supplies `ownerId` (not even a declared field) — the filter can never match a real row, so the fetch always returns empty",
+                      "suggestion": "Supply `ownerId` in the `persist create`/`update Product` data that produces the rows this filter targets, or drop `ownerId` from the filter if it is dead.",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintFilterFieldNeverWritten"
+        }
+      ],
+      "entity": {
+        "roots": {
+          "0-0": [],
+          "0-0-0": []
+        },
+        "heads": {
+          "0-0": [
+            "fetch"
+          ],
+          "0-0-0": [
+            "fetch"
+          ]
+        }
+      }
+    },
+    {
+      "id": "record-filter-hit-when-the-key-is-declared-but-no-creator-supplies-it",
+      "steps": [
+        {
+          "trait": "OrbLintFilterFieldNeverWritten",
+          "event": "INDEX_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "heads": {
+              "0-0": [
+                "fetch",
+                "persist"
+              ],
+              "0-0-0": [
+                "fetch"
+              ],
+              "0-0-1": [
+                "persist"
+              ]
+            },
+            "roots": {
+              "0-0": [],
+              "0-0-0": [],
+              "0-0-1": []
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintFilterFieldNeverWritten",
+          "event": "EMBEDS_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "all": {},
+            "config": {},
+            "guards": {},
+            "effects": {}
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "TestApp",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "TestOrbital",
+                  "entity": {
+                    "name": "Product",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "title",
+                        "type": "string"
+                      },
+                      {
+                        "name": "owner",
+                        "type": "string"
+                      }
+                    ],
+                    "collection": "products"
+                  },
+                  "traits": [
+                    {
+                      "name": "Browse",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "loading",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "loading",
+                            "to": "loading",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "fetch",
+                                "Product",
+                                {
+                                  "filter": {
+                                    "owner": "@user.id"
+                                  }
+                                }
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "loading",
+                            "to": "loading",
+                            "event": "CREATE",
+                            "effects": [
+                              [
+                                "persist",
+                                "create",
+                                "Product",
+                                {
+                                  "title": "A-1"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "Home",
+                      "path": "/",
+                      "traits": [
+                        {
+                          "ref": "Browse"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintFilterFieldNeverWritten"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "filter-field-never-written",
+                  "findings": [
+                    {
+                      "code": "ORB_X_FILTER_FIELD_NEVER_WRITTEN",
+                      "path": "orbitals.TestOrbital.traits.Browse.stateMachine.transitions[0].effects",
+                      "message": "Browse fetches Product filtered on `owner`, but no `persist create`/`update` of Product anywhere in the schema supplies `owner` — the filter can never match a real row, so the fetch always returns empty",
+                      "suggestion": "Supply `owner` in the `persist create`/`update Product` data that produces the rows this filter targets, or drop `owner` from the filter if it is dead.",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintFilterFieldNeverWritten"
+        }
+      ],
+      "entity": {
+        "roots": {
+          "0-0": [],
+          "0-0-0": [],
+          "0-0-1": []
+        },
+        "heads": {
+          "0-0": [
+            "fetch",
+            "persist"
+          ],
+          "0-0-0": [
+            "fetch"
+          ],
+          "0-0-1": [
+            "persist"
+          ]
+        }
+      }
+    },
+    {
+      "id": "record-filter-control-silent-when-a-creator-supplies-the-declared-key",
+      "steps": [
+        {
+          "trait": "OrbLintFilterFieldNeverWritten",
+          "event": "INDEX_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "heads": {
+              "0-0": [
+                "fetch",
+                "persist"
+              ],
+              "0-0-0": [
+                "fetch"
+              ],
+              "0-0-1": [
+                "persist"
+              ]
+            },
+            "roots": {
+              "0-0": [],
+              "0-0-0": [],
+              "0-0-1": []
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintFilterFieldNeverWritten",
+          "event": "EMBEDS_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "all": {},
+            "config": {},
+            "guards": {},
+            "effects": {}
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "TestApp",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "TestOrbital",
+                  "entity": {
+                    "name": "Product",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "title",
+                        "type": "string"
+                      },
+                      {
+                        "name": "owner",
+                        "type": "string"
+                      }
+                    ],
+                    "collection": "products"
+                  },
+                  "traits": [
+                    {
+                      "name": "Browse",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "loading",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "loading",
+                            "to": "loading",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "fetch",
+                                "Product",
+                                {
+                                  "filter": {
+                                    "owner": "@user.id"
+                                  }
+                                }
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "loading",
+                            "to": "loading",
+                            "event": "CREATE",
+                            "effects": [
+                              [
+                                "persist",
+                                "create",
+                                "Product",
+                                {
+                                  "owner": "A-1"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "Home",
+                      "path": "/",
+                      "traits": [
+                        {
+                          "ref": "Browse"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintFilterFieldNeverWritten"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "filter-field-never-written",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintFilterFieldNeverWritten"
+        }
+      ],
+      "entity": {
+        "roots": {
+          "0-0": [],
+          "0-0-0": [],
+          "0-0-1": []
+        },
+        "heads": {
+          "0-0": [
+            "fetch",
+            "persist"
+          ],
+          "0-0-0": [
+            "fetch"
+          ],
+          "0-0-1": [
+            "persist"
+          ]
+        }
+      }
+    },
+    {
+      "id": "record-filter-control-silent-when-the-key-is-an-intrinsic-field",
+      "steps": [
+        {
+          "trait": "OrbLintFilterFieldNeverWritten",
+          "event": "INDEX_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "heads": {
+              "0-0": [
+                "fetch",
+                "persist"
+              ],
+              "0-0-0": [
+                "fetch"
+              ],
+              "0-0-1": [
+                "persist"
+              ]
+            },
+            "roots": {
+              "0-0": [],
+              "0-0-0": [],
+              "0-0-1": []
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintFilterFieldNeverWritten",
+          "event": "EMBEDS_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "all": {},
+            "config": {},
+            "guards": {},
+            "effects": {}
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "TestApp",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "TestOrbital",
+                  "entity": {
+                    "name": "Product",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "intrinsic": true
+                      },
+                      {
+                        "name": "title",
+                        "type": "string"
+                      }
+                    ],
+                    "collection": "products"
+                  },
+                  "traits": [
+                    {
+                      "name": "Browse",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "loading",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "loading",
+                            "to": "loading",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "fetch",
+                                "Product",
+                                {
+                                  "filter": {
+                                    "id": "@payload.id"
+                                  }
+                                }
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "loading",
+                            "to": "loading",
+                            "event": "CREATE",
+                            "effects": [
+                              [
+                                "persist",
+                                "create",
+                                "Product",
+                                {
+                                  "title": "A-1"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "Home",
+                      "path": "/",
+                      "traits": [
+                        {
+                          "ref": "Browse"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintFilterFieldNeverWritten"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "filter-field-never-written",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintFilterFieldNeverWritten"
+        }
+      ],
+      "entity": {
+        "roots": {
+          "0-0": [],
+          "0-0-0": [],
+          "0-0-1": []
+        },
+        "heads": {
+          "0-0": [
+            "fetch",
+            "persist"
+          ],
+          "0-0-0": [
+            "fetch"
+          ],
+          "0-0-1": [
+            "persist"
+          ]
+        }
+      }
+    },
+    {
+      "id": "record-filter-hit-once-for-the-one-bad-key-of-two",
+      "steps": [
+        {
+          "trait": "OrbLintFilterFieldNeverWritten",
+          "event": "INDEX_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "heads": {
+              "0-0": [
+                "fetch",
+                "persist"
+              ],
+              "0-0-0": [
+                "fetch"
+              ],
+              "0-0-1": [
+                "persist"
+              ]
+            },
+            "roots": {
+              "0-0": [],
+              "0-0-0": [],
+              "0-0-1": []
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintFilterFieldNeverWritten",
+          "event": "EMBEDS_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "all": {},
+            "config": {},
+            "guards": {},
+            "effects": {}
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "TestApp",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "TestOrbital",
+                  "entity": {
+                    "name": "Product",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "title",
+                        "type": "string"
+                      },
+                      {
+                        "name": "owner",
+                        "type": "string"
+                      }
+                    ],
+                    "collection": "products"
+                  },
+                  "traits": [
+                    {
+                      "name": "Browse",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "loading",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "loading",
+                            "to": "loading",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "fetch",
+                                "Product",
+                                {
+                                  "filter": {
+                                    "title": "x",
+                                    "ownerId": "@user.id"
+                                  }
+                                }
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "loading",
+                            "to": "loading",
+                            "event": "CREATE",
+                            "effects": [
+                              [
+                                "persist",
+                                "create",
+                                "Product",
+                                {
+                                  "title": "A-1"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "Home",
+                      "path": "/",
+                      "traits": [
+                        {
+                          "ref": "Browse"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintFilterFieldNeverWritten"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "filter-field-never-written",
+                  "findings": [
+                    {
+                      "code": "ORB_X_FILTER_FIELD_NEVER_WRITTEN",
+                      "path": "orbitals.TestOrbital.traits.Browse.stateMachine.transitions[0].effects",
+                      "message": "Browse fetches Product filtered on `ownerId`, but no `persist create`/`update` of Product anywhere in the schema supplies `ownerId` (not even a declared field) — the filter can never match a real row, so the fetch always returns empty",
+                      "suggestion": "Supply `ownerId` in the `persist create`/`update Product` data that produces the rows this filter targets, or drop `ownerId` from the filter if it is dead.",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintFilterFieldNeverWritten"
+        }
+      ],
+      "entity": {
+        "roots": {
+          "0-0": [],
+          "0-0-0": [],
+          "0-0-1": []
+        },
+        "heads": {
+          "0-0": [
+            "fetch",
+            "persist"
+          ],
+          "0-0-0": [
+            "fetch"
+          ],
+          "0-0-1": [
+            "persist"
+          ]
+        }
+      }
+    },
+    {
+      "id": "record-filter-control-silent-when-the-filter-is-a-config-knob-not-a-literal-record",
+      "steps": [
+        {
+          "trait": "OrbLintFilterFieldNeverWritten",
+          "event": "INDEX_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "heads": {
+              "0-0": [
+                "fetch",
+                "persist"
+              ],
+              "0-0-0": [
+                "fetch"
+              ],
+              "0-0-1": [
+                "persist"
+              ]
+            },
+            "roots": {
+              "0-0": [],
+              "0-0-0": [],
+              "0-0-1": []
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintFilterFieldNeverWritten",
+          "event": "EMBEDS_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "all": {},
+            "config": {},
+            "guards": {},
+            "effects": {}
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "TestApp",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "TestOrbital",
+                  "entity": {
+                    "name": "Product",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "title",
+                        "type": "string"
+                      }
+                    ],
+                    "collection": "products"
+                  },
+                  "traits": [
+                    {
+                      "name": "Browse",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "loading",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "loading",
+                            "to": "loading",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "fetch",
+                                "Product",
+                                {
+                                  "filter": "@config.where"
+                                }
+                              ]
+                            ]
+                          },
+                          {
+                            "from": "loading",
+                            "to": "loading",
+                            "event": "CREATE",
+                            "effects": [
+                              [
+                                "persist",
+                                "create",
+                                "Product",
+                                {
+                                  "title": "A-1"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "Home",
+                      "path": "/",
+                      "traits": [
+                        {
+                          "ref": "Browse"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintFilterFieldNeverWritten"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "filter-field-never-written",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintFilterFieldNeverWritten"
+        }
+      ],
+      "entity": {
+        "roots": {
+          "0-0": [],
+          "0-0-0": [],
+          "0-0-1": []
+        },
+        "heads": {
+          "0-0": [
+            "fetch",
+            "persist"
+          ],
+          "0-0-0": [
+            "fetch"
+          ],
+          "0-0-1": [
+            "persist"
+          ]
+        }
+      }
     }
   ]
 }

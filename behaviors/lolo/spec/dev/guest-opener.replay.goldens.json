@@ -1,0 +1,311 @@
+{
+ "atom": "dev/atoms/std-guest-session.lolo",
+ "trait": "GuestOpener",
+ "cases": [
+  {
+   "id": "opener-a-resolved-program-is-handed-to-the-session",
+   "steps": [
+    {
+     "trait": "GuestOpener",
+     "event": "STAGE_SHOW",
+     "payload": {
+      "program": {
+       "name": "demo",
+       "orbitals": []
+      }
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "",
+      "guestPaints": [],
+      "guestError": "",
+      "guestIntegrations": "mock"
+     },
+     "from": "idle",
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "emits": [
+       {
+        "event": "GUEST_OPEN",
+        "payload": {
+         "program": {
+          "name": "demo",
+          "orbitals": []
+         }
+        }
+       }
+      ],
+      "neverEmits": [
+       "GUEST_REACH"
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "opener-a-chosen-reach-is-stated-before-the-open",
+   "steps": [
+    {
+     "trait": "GuestOpener",
+     "event": "STAGE_SHOW",
+     "payload": {
+      "program": {
+       "name": "demo",
+       "orbitals": []
+      },
+      "integrations": "live"
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "",
+      "guestPaints": [],
+      "guestError": "",
+      "guestIntegrations": "mock"
+     },
+     "from": "idle",
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "emits": [
+       {
+        "event": "GUEST_REACH",
+        "payload": {
+         "integrations": "live"
+        }
+       },
+       {
+        "event": "GUEST_OPEN",
+        "payload": {
+         "program": {
+          "name": "demo",
+          "orbitals": []
+         }
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "opener-a-behavior-value-clears-the-stage-and-is-resolved",
+   "steps": [
+    {
+     "trait": "GuestOpener",
+     "event": "STAGE_OPEN",
+     "payload": {
+      "behavior": {
+       "behavior": "std/behaviors/std-counter"
+      }
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "",
+      "guestPaints": [],
+      "guestError": "",
+      "guestIntegrations": "mock"
+     },
+     "from": "idle",
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "emits": [
+       {
+        "event": "GUEST_RESET"
+       }
+      ],
+      "effects": [
+       {
+        "type": "behavior/resolve"
+       }
+      ],
+      "neverEmits": [
+       "GUEST_OPEN",
+       "GUEST_REACH"
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "opener-the-resolved-behavior-opens",
+   "steps": [
+    {
+     "trait": "GuestOpener",
+     "event": "STAGE_RESOLVED",
+     "payload": {
+      "result": {
+       "name": "demo",
+       "orbitals": []
+      }
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "",
+      "guestPaints": [],
+      "guestError": "",
+      "guestIntegrations": "mock"
+     },
+     "from": "idle",
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "emits": [
+       {
+        "event": "GUEST_OPEN",
+        "payload": {
+         "program": {
+          "name": "demo",
+          "orbitals": []
+         }
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "opener-a-behavior-that-does-not-resolve-is-the-guests-error",
+   "steps": [
+    {
+     "trait": "GuestOpener",
+     "event": "STAGE_RESOLVE_FAILED",
+     "payload": {
+      "error": "no such behavior"
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "",
+      "guestPaints": [],
+      "guestError": "",
+      "guestIntegrations": "mock"
+     },
+     "from": "idle",
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "emits": [
+       {
+        "event": "GUEST_FAIL",
+        "payload": {
+         "message": "no such behavior"
+        }
+       }
+      ],
+      "neverEmits": [
+       "GUEST_OPEN"
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "opener-close-clears-the-stage",
+   "steps": [
+    {
+     "trait": "GuestOpener",
+     "event": "STAGE_CLOSE",
+     "payload": {},
+     "entity": {
+      "id": "g",
+      "guestHandle": "",
+      "guestPaints": [],
+      "guestError": "",
+      "guestIntegrations": "mock"
+     },
+     "from": "idle",
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "emits": [
+       {
+        "event": "GUEST_RESET"
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "session-a-stated-reach-is-kept-for-the-next-open",
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "event": "GUEST_REACH",
+     "payload": {
+      "integrations": "live"
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "",
+      "guestPaints": [],
+      "guestError": "",
+      "guestIntegrations": "mock"
+     },
+     "from": "idle",
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "entity": {
+       "guestIntegrations": "live"
+      },
+      "neverEmits": [
+       "GUEST_PREPARE",
+       "GUEST_INTEGRATIONS"
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "session-an-opened-guest-answers-ready-with-its-handle",
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "event": "GUEST_OPENED",
+     "payload": {
+      "result": {
+       "guest": "guest-7",
+       "rendered": [],
+       "outcomes": [],
+       "page": [
+        "A.T"
+       ]
+      }
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "",
+      "guestPaints": [],
+      "guestError": "",
+      "guestIntegrations": "mock"
+     },
+     "from": "opening",
+     "expect": {
+      "fired": true,
+      "state": "live",
+      "emits": [
+       {
+        "event": "GUEST_READY",
+        "payload": {
+         "guest": "guest-7",
+         "integrations": "mock"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  }
+ ]
+}

@@ -7,6 +7,13 @@ uses Frame from "std/behaviors/std-http-frame"
 uses Timeout from "std/behaviors/std-timeout"
 type HttpHeader = { name : string!, value : string! }
 orbital WebhookOrbital {
+  config {
+    dynamicDestination : boolean = false
+      @label "Allow per-delivery destination"
+      @description "A delivery may name its own destination { host, path }. False refuses such a delivery with WEBHOOK_FAILED code destination-not-allowed. True sends it to that host and path, and also turns on dynamicHost on the sibling WebhookHttp client so it follows the delivery's destination; the composer grants a pattern net entry covering the hosts (net: { \"*.example.test:443\": [tcp] }, EXEC-GRANTS-1)."
+      @synonyms "callback url, dynamic destination, per-request destination"
+  }
+
   uses Retry from "std/behaviors/std-retry"
 
   entity WebhookCall [runtime] {
@@ -34,6 +41,7 @@ orbital WebhookOrbital {
       port: 443
       tls: true
       serverName: "hooks.example.test"
+      dynamicHost: @config.dynamicDestination
     }
     listens {
       WebhookClient.WEBHOOK_HTTP_SEND -> HTTP_SEND
@@ -244,9 +252,9 @@ orbital WebhookOrbital {
         @description "The request target on the destination the sibling WebhookHttp trait declares (host, port, tls, serverName)."
         @synonyms "webhook path, endpoint path, url path"
         @tier "infra"
-      allowDynamicDestination : boolean = false
+      allowDynamicDestination : boolean = @config.dynamicDestination
         @label "Allow per-delivery destination"
-        @description "A delivery may name its own destination { host, path }. False refuses such a delivery with WEBHOOK_FAILED code destination-not-allowed. True sends it to that host and path through the sibling client, so the composer sets dynamicHost: true on WebhookHttp and grants a pattern net entry covering the hosts (net: { \"*.example.test:443\": [tcp] }, EXEC-GRANTS-1)."
+        @description "A delivery may name its own destination { host, path }. False refuses such a delivery with WEBHOOK_FAILED code destination-not-allowed. True sends it to that host and path, and the orbital dynamicDestination knob that defaults it also turns on dynamicHost on the sibling WebhookHttp client so it follows the delivery's destination; the composer grants a pattern net entry covering the hosts (net: { \"*.example.test:443\": [tcp] }, EXEC-GRANTS-1)."
         @synonyms "callback url, dynamic destination, per-request destination"
         @tier "infra"
       destinationHost : string = "hooks.example.test"

@@ -1,0 +1,1009 @@
+{
+ "atom": "ops/atoms/std-model-fit.lolo",
+ "trait": "ModelFit",
+ "cases": [
+  {
+   "id": "a-fit-request-samples-the-machine",
+   "steps": [
+    {
+     "trait": "ModelFit",
+     "event": "MODEL_FIT",
+     "from": "idle",
+     "payload": {
+      "requestId": "r1"
+     },
+     "entity": {
+      "id": "m",
+      "requestId": "",
+      "allowRemote": false,
+      "memoryTotalGb": 0,
+      "chosen": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "measuring",
+      "emits": [
+       {
+        "event": "STATS_START"
+       }
+      ],
+      "entity": {
+       "requestId": "r1",
+       "allowRemote": false
+      }
+     }
+    }
+   ],
+   "config": {
+    "options": [
+     {
+      "id": "qwen",
+      "provider": "lmstudio",
+      "model": "qwen3.8-27b",
+      "placement": "local",
+      "memoryGb": 18,
+      "diskGb": 18
+     },
+     {
+      "id": "bonsai",
+      "provider": "lmstudio",
+      "model": "ternary-bonsai-2-27b",
+      "placement": "local",
+      "memoryGb": 8,
+      "diskGb": 8
+     },
+     {
+      "id": "cloud",
+      "provider": "openrouter",
+      "model": "remote-model",
+      "placement": "remote",
+      "memoryGb": 0,
+      "diskGb": 0
+     }
+    ]
+   },
+   "defaults": [
+    "ModelFitStats"
+   ]
+  },
+  {
+   "id": "the-memory-sample-stops-sampling-and-reads-the-disk",
+   "steps": [
+    {
+     "trait": "ModelFit",
+     "event": "StatsRead",
+     "from": "measuring",
+     "payload": {
+      "memoryTotal": 51539607552,
+      "unavailable": []
+     },
+     "entity": {
+      "id": "m",
+      "requestId": "r1",
+      "allowRemote": false,
+      "memoryTotalGb": 0,
+      "chosen": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "STATS_STOP"
+       }
+      ],
+      "effects": [
+       {
+        "type": "os/disk-usage"
+       }
+      ],
+      "entity": {
+       "memoryTotalGb": 48
+      }
+     }
+    }
+   ],
+   "config": {
+    "options": [
+     {
+      "id": "qwen",
+      "provider": "lmstudio",
+      "model": "qwen3.8-27b",
+      "placement": "local",
+      "memoryGb": 18,
+      "diskGb": 18
+     },
+     {
+      "id": "bonsai",
+      "provider": "lmstudio",
+      "model": "ternary-bonsai-2-27b",
+      "placement": "local",
+      "memoryGb": 8,
+      "diskGb": 8
+     },
+     {
+      "id": "cloud",
+      "provider": "openrouter",
+      "model": "remote-model",
+      "placement": "remote",
+      "memoryGb": 0,
+      "diskGb": 0
+     }
+    ]
+   },
+   "defaults": [
+    "ModelFitStats"
+   ]
+  },
+  {
+   "id": "a-host-that-reports-no-memory-fails-the-fit",
+   "steps": [
+    {
+     "trait": "ModelFit",
+     "event": "StatsRead",
+     "from": "measuring",
+     "payload": {
+      "memoryTotal": 0,
+      "unavailable": [
+       "memory"
+      ]
+     },
+     "entity": {
+      "id": "m",
+      "requestId": "r1",
+      "allowRemote": false,
+      "memoryTotalGb": 0,
+      "chosen": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "emits": [
+       {
+        "event": "STATS_STOP"
+       },
+       {
+        "event": "MODEL_FIT_FAILED",
+        "payload": {
+         "requestId": "r1",
+         "code": "stats_unavailable"
+        }
+       }
+      ],
+      "neverEmits": [
+       "MODEL_FIT_DECIDED"
+      ]
+     }
+    }
+   ],
+   "config": {
+    "options": [
+     {
+      "id": "qwen",
+      "provider": "lmstudio",
+      "model": "qwen3.8-27b",
+      "placement": "local",
+      "memoryGb": 18,
+      "diskGb": 18
+     },
+     {
+      "id": "bonsai",
+      "provider": "lmstudio",
+      "model": "ternary-bonsai-2-27b",
+      "placement": "local",
+      "memoryGb": 8,
+      "diskGb": 8
+     },
+     {
+      "id": "cloud",
+      "provider": "openrouter",
+      "model": "remote-model",
+      "placement": "remote",
+      "memoryGb": 0,
+      "diskGb": 0
+     }
+    ]
+   },
+   "defaults": [
+    "ModelFitStats"
+   ]
+  },
+  {
+   "id": "a-large-machine-takes-the-first-option",
+   "steps": [
+    {
+     "trait": "ModelFit",
+     "event": "DISK_READ",
+     "from": "measuring",
+     "payload": {
+      "available": 214748364800
+     },
+     "entity": {
+      "id": "m",
+      "requestId": "r1",
+      "allowRemote": false,
+      "memoryTotalGb": 48,
+      "chosen": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "emits": [
+       {
+        "event": "MODEL_FIT_DECIDED",
+        "payload": {
+         "requestId": "r1",
+         "fits": true,
+         "option": {
+          "id": "qwen",
+          "provider": "lmstudio",
+          "model": "qwen3.8-27b",
+          "placement": "local",
+          "memoryGb": 18,
+          "diskGb": 18
+         },
+         "memoryTotalGb": 48,
+         "diskFreeGb": 200,
+         "refused": []
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "options": [
+     {
+      "id": "qwen",
+      "provider": "lmstudio",
+      "model": "qwen3.8-27b",
+      "placement": "local",
+      "memoryGb": 18,
+      "diskGb": 18
+     },
+     {
+      "id": "bonsai",
+      "provider": "lmstudio",
+      "model": "ternary-bonsai-2-27b",
+      "placement": "local",
+      "memoryGb": 8,
+      "diskGb": 8
+     },
+     {
+      "id": "cloud",
+      "provider": "openrouter",
+      "model": "remote-model",
+      "placement": "remote",
+      "memoryGb": 0,
+      "diskGb": 0
+     }
+    ]
+   }
+  },
+  {
+   "id": "a-16-gb-machine-passes-over-the-large-model-and-says-what-it-lacks",
+   "steps": [
+    {
+     "trait": "ModelFit",
+     "event": "DISK_READ",
+     "from": "measuring",
+     "payload": {
+      "available": 214748364800
+     },
+     "entity": {
+      "id": "m",
+      "requestId": "r1",
+      "allowRemote": false,
+      "memoryTotalGb": 16,
+      "chosen": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "emits": [
+       {
+        "event": "MODEL_FIT_DECIDED",
+        "payload": {
+         "requestId": "r1",
+         "fits": true,
+         "option": {
+          "id": "bonsai",
+          "provider": "lmstudio",
+          "model": "ternary-bonsai-2-27b",
+          "placement": "local",
+          "memoryGb": 8,
+          "diskGb": 8
+         },
+         "memoryTotalGb": 16,
+         "diskFreeGb": 200,
+         "refused": [
+          {
+           "id": "qwen",
+           "reason": "memory",
+           "missingGb": 8
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "options": [
+     {
+      "id": "qwen",
+      "provider": "lmstudio",
+      "model": "qwen3.8-27b",
+      "placement": "local",
+      "memoryGb": 18,
+      "diskGb": 18
+     },
+     {
+      "id": "bonsai",
+      "provider": "lmstudio",
+      "model": "ternary-bonsai-2-27b",
+      "placement": "local",
+      "memoryGb": 8,
+      "diskGb": 8
+     },
+     {
+      "id": "cloud",
+      "provider": "openrouter",
+      "model": "remote-model",
+      "placement": "remote",
+      "memoryGb": 0,
+      "diskGb": 0
+     }
+    ]
+   }
+  },
+  {
+   "id": "a-full-disk-refuses-a-model-the-memory-would-fit",
+   "steps": [
+    {
+     "trait": "ModelFit",
+     "event": "DISK_READ",
+     "from": "measuring",
+     "payload": {
+      "available": 10737418240
+     },
+     "entity": {
+      "id": "m",
+      "requestId": "r1",
+      "allowRemote": false,
+      "memoryTotalGb": 48,
+      "chosen": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "emits": [
+       {
+        "event": "MODEL_FIT_DECIDED",
+        "payload": {
+         "requestId": "r1",
+         "fits": true,
+         "option": {
+          "id": "bonsai",
+          "provider": "lmstudio",
+          "model": "ternary-bonsai-2-27b",
+          "placement": "local",
+          "memoryGb": 8,
+          "diskGb": 8
+         },
+         "memoryTotalGb": 48,
+         "diskFreeGb": 10,
+         "refused": [
+          {
+           "id": "qwen",
+           "reason": "disk",
+           "missingGb": 8
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "options": [
+     {
+      "id": "qwen",
+      "provider": "lmstudio",
+      "model": "qwen3.8-27b",
+      "placement": "local",
+      "memoryGb": 18,
+      "diskGb": 18
+     },
+     {
+      "id": "bonsai",
+      "provider": "lmstudio",
+      "model": "ternary-bonsai-2-27b",
+      "placement": "local",
+      "memoryGb": 8,
+      "diskGb": 8
+     },
+     {
+      "id": "cloud",
+      "provider": "openrouter",
+      "model": "remote-model",
+      "placement": "remote",
+      "memoryGb": 0,
+      "diskGb": 0
+     }
+    ]
+   }
+  },
+  {
+   "id": "a-machine-nothing-fits-is-answered-with-every-refusal-and-no-choice",
+   "steps": [
+    {
+     "trait": "ModelFit",
+     "event": "DISK_READ",
+     "from": "measuring",
+     "payload": {
+      "available": 214748364800
+     },
+     "entity": {
+      "id": "m",
+      "requestId": "r1",
+      "allowRemote": false,
+      "memoryTotalGb": 8,
+      "chosen": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "emits": [
+       {
+        "event": "MODEL_FIT_DECIDED",
+        "payload": {
+         "requestId": "r1",
+         "fits": false,
+         "memoryTotalGb": 8,
+         "diskFreeGb": 200,
+         "refused": [
+          {
+           "id": "qwen",
+           "reason": "memory",
+           "missingGb": 16
+          },
+          {
+           "id": "bonsai",
+           "reason": "memory",
+           "missingGb": 6
+          },
+          {
+           "id": "cloud",
+           "reason": "remote-not-allowed",
+           "missingGb": 0
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "options": [
+     {
+      "id": "qwen",
+      "provider": "lmstudio",
+      "model": "qwen3.8-27b",
+      "placement": "local",
+      "memoryGb": 18,
+      "diskGb": 18
+     },
+     {
+      "id": "bonsai",
+      "provider": "lmstudio",
+      "model": "ternary-bonsai-2-27b",
+      "placement": "local",
+      "memoryGb": 8,
+      "diskGb": 8
+     },
+     {
+      "id": "cloud",
+      "provider": "openrouter",
+      "model": "remote-model",
+      "placement": "remote",
+      "memoryGb": 0,
+      "diskGb": 0
+     }
+    ]
+   }
+  },
+  {
+   "id": "control-the-remote-option-fits-only-when-allowed",
+   "steps": [
+    {
+     "trait": "ModelFit",
+     "event": "DISK_READ",
+     "from": "measuring",
+     "payload": {
+      "available": 214748364800
+     },
+     "entity": {
+      "id": "m",
+      "requestId": "r1",
+      "allowRemote": true,
+      "memoryTotalGb": 8,
+      "chosen": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "emits": [
+       {
+        "event": "MODEL_FIT_DECIDED",
+        "payload": {
+         "requestId": "r1",
+         "fits": true,
+         "option": {
+          "id": "cloud",
+          "provider": "openrouter",
+          "model": "remote-model",
+          "placement": "remote",
+          "memoryGb": 0,
+          "diskGb": 0
+         },
+         "memoryTotalGb": 8,
+         "diskFreeGb": 200,
+         "refused": [
+          {
+           "id": "qwen",
+           "reason": "memory",
+           "missingGb": 16
+          },
+          {
+           "id": "bonsai",
+           "reason": "memory",
+           "missingGb": 6
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "options": [
+     {
+      "id": "qwen",
+      "provider": "lmstudio",
+      "model": "qwen3.8-27b",
+      "placement": "local",
+      "memoryGb": 18,
+      "diskGb": 18
+     },
+     {
+      "id": "bonsai",
+      "provider": "lmstudio",
+      "model": "ternary-bonsai-2-27b",
+      "placement": "local",
+      "memoryGb": 8,
+      "diskGb": 8
+     },
+     {
+      "id": "cloud",
+      "provider": "openrouter",
+      "model": "remote-model",
+      "placement": "remote",
+      "memoryGb": 0,
+      "diskGb": 0
+     }
+    ]
+   }
+  },
+  {
+   "id": "control-declared-order-decides-not-size",
+   "steps": [
+    {
+     "trait": "ModelFit",
+     "event": "DISK_READ",
+     "from": "measuring",
+     "payload": {
+      "available": 214748364800
+     },
+     "entity": {
+      "id": "m",
+      "requestId": "r1",
+      "allowRemote": false,
+      "memoryTotalGb": 48,
+      "chosen": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "emits": [
+       {
+        "event": "MODEL_FIT_DECIDED",
+        "payload": {
+         "requestId": "r1",
+         "fits": true,
+         "option": {
+          "id": "bonsai",
+          "provider": "lmstudio",
+          "model": "ternary-bonsai-2-27b",
+          "placement": "local",
+          "memoryGb": 8,
+          "diskGb": 8
+         },
+         "memoryTotalGb": 48,
+         "diskFreeGb": 200,
+         "refused": []
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "options": [
+     {
+      "id": "bonsai",
+      "provider": "lmstudio",
+      "model": "ternary-bonsai-2-27b",
+      "placement": "local",
+      "memoryGb": 8,
+      "diskGb": 8
+     },
+     {
+      "id": "qwen",
+      "provider": "lmstudio",
+      "model": "qwen3.8-27b",
+      "placement": "local",
+      "memoryGb": 18,
+      "diskGb": 18
+     }
+    ]
+   }
+  },
+  {
+   "id": "a-probe-sends-the-fixed-prompt-to-the-chosen-model",
+   "steps": [
+    {
+     "trait": "ModelFit",
+     "event": "MODEL_PROBE",
+     "from": "idle",
+     "payload": {
+      "requestId": "r2",
+      "option": {
+       "id": "bonsai",
+       "provider": "lmstudio",
+       "model": "ternary-bonsai-2-27b",
+       "placement": "local",
+       "memoryGb": 8,
+       "diskGb": 8
+      }
+     },
+     "entity": {
+      "id": "m",
+      "requestId": "r1",
+      "allowRemote": false,
+      "memoryTotalGb": 0,
+      "chosen": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "probing",
+      "emits": [
+       {
+        "event": "LLM_GENERATE",
+        "payload": {
+         "userPrompt": "Count from 1 to 60, one number per line.",
+         "model": "ternary-bonsai-2-27b",
+         "maxTokens": 160,
+         "key": "model-fit-probe"
+        }
+       }
+      ],
+      "entity": {
+       "chosen": "bonsai",
+       "requestId": "r2"
+      }
+     }
+    }
+   ],
+   "config": {
+    "options": [
+     {
+      "id": "qwen",
+      "provider": "lmstudio",
+      "model": "qwen3.8-27b",
+      "placement": "local",
+      "memoryGb": 18,
+      "diskGb": 18
+     },
+     {
+      "id": "bonsai",
+      "provider": "lmstudio",
+      "model": "ternary-bonsai-2-27b",
+      "placement": "local",
+      "memoryGb": 8,
+      "diskGb": 8
+     },
+     {
+      "id": "cloud",
+      "provider": "openrouter",
+      "model": "remote-model",
+      "placement": "remote",
+      "memoryGb": 0,
+      "diskGb": 0
+     }
+    ]
+   }
+  },
+  {
+   "id": "a-probe-answer-is-timed-in-tokens-per-second",
+   "steps": [
+    {
+     "trait": "ModelFit",
+     "event": "ProbeAnswered",
+     "from": "probing",
+     "payload": {
+      "usage": {
+       "promptTokens": 12,
+       "completionTokens": 150,
+       "totalTokens": 162
+      }
+     },
+     "entity": {
+      "id": "m",
+      "requestId": "r1",
+      "allowRemote": false,
+      "memoryTotalGb": 0,
+      "chosen": "bonsai",
+      "probeStartedAt": "2023-11-14T22:13:10.000Z"
+     },
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "emits": [
+       {
+        "event": "MODEL_PROBED",
+        "payload": {
+         "requestId": "r1",
+         "tokensPerSecond": 15,
+         "ok": true
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "options": [
+     {
+      "id": "qwen",
+      "provider": "lmstudio",
+      "model": "qwen3.8-27b",
+      "placement": "local",
+      "memoryGb": 18,
+      "diskGb": 18
+     },
+     {
+      "id": "bonsai",
+      "provider": "lmstudio",
+      "model": "ternary-bonsai-2-27b",
+      "placement": "local",
+      "memoryGb": 8,
+      "diskGb": 8
+     },
+     {
+      "id": "cloud",
+      "provider": "openrouter",
+      "model": "remote-model",
+      "placement": "remote",
+      "memoryGb": 0,
+      "diskGb": 0
+     }
+    ]
+   },
+   "now": 1700000000000
+  },
+  {
+   "id": "control-a-slow-probe-is-not-ok",
+   "steps": [
+    {
+     "trait": "ModelFit",
+     "event": "ProbeAnswered",
+     "from": "probing",
+     "payload": {
+      "usage": {
+       "promptTokens": 12,
+       "completionTokens": 50,
+       "totalTokens": 62
+      }
+     },
+     "entity": {
+      "id": "m",
+      "requestId": "r1",
+      "allowRemote": false,
+      "memoryTotalGb": 0,
+      "chosen": "bonsai",
+      "probeStartedAt": "2023-11-14T22:13:10.000Z"
+     },
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "emits": [
+       {
+        "event": "MODEL_PROBED",
+        "payload": {
+         "requestId": "r1",
+         "tokensPerSecond": 5,
+         "ok": false
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "options": [
+     {
+      "id": "qwen",
+      "provider": "lmstudio",
+      "model": "qwen3.8-27b",
+      "placement": "local",
+      "memoryGb": 18,
+      "diskGb": 18
+     },
+     {
+      "id": "bonsai",
+      "provider": "lmstudio",
+      "model": "ternary-bonsai-2-27b",
+      "placement": "local",
+      "memoryGb": 8,
+      "diskGb": 8
+     },
+     {
+      "id": "cloud",
+      "provider": "openrouter",
+      "model": "remote-model",
+      "placement": "remote",
+      "memoryGb": 0,
+      "diskGb": 0
+     }
+    ]
+   },
+   "now": 1700000000000
+  },
+  {
+   "id": "a-failed-probe-is-reported",
+   "steps": [
+    {
+     "trait": "ModelFit",
+     "event": "ProbeFailed",
+     "from": "probing",
+     "payload": {
+      "message": "model not loaded"
+     },
+     "entity": {
+      "id": "m",
+      "requestId": "r1",
+      "allowRemote": false,
+      "memoryTotalGb": 0,
+      "chosen": "bonsai"
+     },
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "emits": [
+       {
+        "event": "MODEL_FIT_FAILED",
+        "payload": {
+         "requestId": "r1",
+         "code": "probe_failed",
+         "error": "model not loaded"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "options": [
+     {
+      "id": "qwen",
+      "provider": "lmstudio",
+      "model": "qwen3.8-27b",
+      "placement": "local",
+      "memoryGb": 18,
+      "diskGb": 18
+     },
+     {
+      "id": "bonsai",
+      "provider": "lmstudio",
+      "model": "ternary-bonsai-2-27b",
+      "placement": "local",
+      "memoryGb": 8,
+      "diskGb": 8
+     },
+     {
+      "id": "cloud",
+      "provider": "openrouter",
+      "model": "remote-model",
+      "placement": "remote",
+      "memoryGb": 0,
+      "diskGb": 0
+     }
+    ]
+   }
+  },
+  {
+   "id": "a-second-request-while-measuring-is-busy",
+   "steps": [
+    {
+     "trait": "ModelFit",
+     "event": "MODEL_FIT",
+     "from": "measuring",
+     "payload": {
+      "requestId": "r9"
+     },
+     "entity": {
+      "id": "m",
+      "requestId": "r1",
+      "allowRemote": false,
+      "memoryTotalGb": 0,
+      "chosen": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "measuring",
+      "emits": [
+       {
+        "event": "MODEL_FIT_FAILED",
+        "payload": {
+         "requestId": "r9",
+         "code": "busy"
+        }
+       }
+      ],
+      "neverEmits": [
+       "STATS_START"
+      ],
+      "entity": {
+       "requestId": "r1"
+      }
+     }
+    }
+   ],
+   "config": {
+    "options": [
+     {
+      "id": "qwen",
+      "provider": "lmstudio",
+      "model": "qwen3.8-27b",
+      "placement": "local",
+      "memoryGb": 18,
+      "diskGb": 18
+     },
+     {
+      "id": "bonsai",
+      "provider": "lmstudio",
+      "model": "ternary-bonsai-2-27b",
+      "placement": "local",
+      "memoryGb": 8,
+      "diskGb": 8
+     },
+     {
+      "id": "cloud",
+      "provider": "openrouter",
+      "model": "remote-model",
+      "placement": "remote",
+      "memoryGb": 0,
+      "diskGb": 0
+     }
+    ]
+   },
+   "defaults": [
+    "ModelFitStats"
+   ]
+  }
+ ]
+}

@@ -17,10 +17,11 @@ type InboundMachine = { events : [InboundEvent] }
 type InboundEmit = { event : string }
 type InboundTrait = { name : string, emits : [InboundEmit], stateMachine : InboundMachine }
 type InboundOrbital = { name : string, traits : [InboundTrait] }
+type InboundProgType = { properties : Map string InboundProgType? }
 type InboundProgram = { inbound : [string], orbitals : [InboundOrbital]! }
 
 type LintCodeDecl = { code : string!, category : string!, description : string! }
-type LintInboundCodes = { inboundEntryInvalid : LintCodeDecl , inboundUndeclared : LintCodeDecl , inboundDuplicate : LintCodeDecl , inboundVerifyInvalid : LintCodeDecl , inboundAnswerUndeclared : LintCodeDecl }
+type LintInboundCodes = { inboundEntryInvalid : LintCodeDecl , inboundUndeclared : LintCodeDecl , inboundDuplicate : LintCodeDecl , inboundVerifyInvalid : LintCodeDecl , inboundAnswerUndeclared : LintCodeDecl , inboundCliReserved : LintCodeDecl , inboundCliDashWord : LintCodeDecl , inboundCliShadowed : LintCodeDecl , lintLanguageFactsUnread : LintCodeDecl }
 
 orbital OrbLintInboundOrbital {
   uses Input from "std/behaviors/std-orb-lint-input"
@@ -29,6 +30,8 @@ orbital OrbLintInboundOrbital {
     id : string!
     scope : string = ""
     findings : [OrbFinding] = []
+    reservedCliWords : [string] = []
+    factsUnread : boolean = true
   }
 
   trait OrbLintInbound -> OrbLintInboundRun [optimistic] {
@@ -36,9 +39,14 @@ orbital OrbLintInboundOrbital {
 
     state ready {
       INIT -> ready
+      FACTS_HEARD -> ready
+        (set @entity.reservedCliWords @payload.reservedCliWords)
+        (set @entity.factsUnread false)
+      FACTS_UNREAD -> ready
+        (set @entity.factsUnread true)
       LINT_INPUT -> ready
         (set @entity.scope @payload.scope)
-        (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])) (entries (object/get @payload.program "inbound" [])))
+        (set @entity.findings (if @entity.factsUnread [{ code: @config.codes.lintLanguageFactsUnread.code, path: "reservedCliWords", message: "the installed language facts could not be read, so the reserved command words are unknown", suggestion: "Reinstall @almadar/core so its orbLanguage declares programTypes, bindingRules and vocabulary", severity: "error" }] (let ((orbitals (object/get @payload.program "orbitals" [])) (entries (object/get @payload.program "inbound" [])))
           (let ((handlers (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
                   (let ((orb (array/nth @orbitals @oi)))
                     (let ((trs (object/get @orb "traits" [])))
@@ -60,6 +68,17 @@ orbital OrbLintInboundOrbital {
                     (if (array/includes (array/slice @entries 0 @i) @en)
                       [{ code: @config.codes.inboundEntryInvalid.code, path: (str/concat "inbound[" @i "]"), message: (str/concat "inbound entry '" @en "' is listed twice"), suggestion: "", severity: "error" }]
                       []))))))
+              (array/flatten (array/map (array/range 0 (array/len @entries)) (fn i
+                (let ((en (array/nth @entries @i)))
+                  (if (str/startsWith @en "cli-")
+                    (let ((cmd (str/slice @en 4 (str/len @en))))
+                      (let ((rw (array/find @entity.reservedCliWords (fn w (or (= @cmd @w) (str/startsWith @cmd (str/concat @w "-"))))))
+                            (lg (array/find @entries (fn x (str/startsWith @x (str/concat @en "-"))))))
+                        (array/flatten [
+                          (if (= @rw null) [] [{ code: @config.codes.inboundCliReserved.code, path: (str/concat "inbound[" @i "]"), message: (str/concat "inbound hook '" @en "' takes the reserved command word '" @rw "'"), suggestion: (str/concat "Name the command something else; '" @rw "' belongs to the orb bootloader"), severity: "error" }])
+                          (if (array/some (str/split @cmd "-") (fn p (= @p ""))) [{ code: @config.codes.inboundCliDashWord.code, path: (str/concat "inbound[" @i "]"), message: (str/concat "inbound hook '" @en "' has an empty command word"), suggestion: "Write each '-' separated word of the command with at least one character", severity: "error" }] [])
+                          (if (= @lg null) [] [{ code: @config.codes.inboundCliShadowed.code, path: (str/concat "inbound[" @i "]"), message: (str/concat "inbound hook '" @en "' is shadowed by the longer hook '" @lg "': arguments beginning '" (default (array/first (str/split (str/slice @lg (+ (str/len @en) 1) (str/len @lg)) "-")) "") "' route to '" @lg "'"), suggestion: "Rename one of the two hooks so neither is a prefix of the other", severity: "warning" }])])))
+                    [])))))
               (array/flatten (array/map (array/range 0 (array/len @handlers)) (fn k
                 (let ((h (array/nth @handlers @k)))
                   (array/flatten [
@@ -68,7 +87,7 @@ orbital OrbLintInboundOrbital {
                     (if (and (object/get @h "hasV") (or (not (validate/pattern (object/get @h "hdr") "^[a-z0-9][a-z0-9-]*$")) (not (validate/pattern (object/get @h "cred") "^[A-Za-z0-9_]+$"))))
                       [{ code: @config.codes.inboundVerifyInvalid.code, path: (object/get @h "at"), message: (str/concat "inbound hook '" (object/get @h "name") "' verifies header '" (object/get @h "hdr") "' against credential '" (object/get @h "cred") "', which are not a lower-case header name and a credential name"), suggestion: (str/concat "Write `verifies " "\"x-signature-token\"" " " "\"PROVIDER_TOKEN\"" "`: a lower-case header, then a credential name of letters, digits and '_'"), severity: "error" }]
                       [])
-                    (if (array/includes (object/get @h "emitted") (object/get @h "ans")) [] [{ code: @config.codes.inboundAnswerUndeclared.code, path: (object/get @h "at"), message: (str/concat "event '" (object/get @h "key") "' answers with '" (object/get @h "ans") "', which the trait does not declare in `emits`"), suggestion: "Declare the answer event in the trait's `emits { … }` with a `status : number!` and a `body : string!` payload", severity: "error" }])])))))))))
+                    (if (array/includes (object/get @h "emitted") (object/get @h "ans")) [] [{ code: @config.codes.inboundAnswerUndeclared.code, path: (object/get @h "at"), message: (str/concat "event '" (object/get @h "key") "' answers with '" (object/get @h "ans") "', which the trait does not declare in `emits`"), suggestion: "Declare the answer event in the trait's `emits { … }` with a `status : number!` and a `body : string!` payload", severity: "error" }])]))))))))) )
         (emit LINT_FINISH { })
       LINT_FINISH -> ready
         (emit LINT_FOUND { rule: "inbound", scope: @entity.scope, findings: @entity.findings })
@@ -87,9 +106,15 @@ orbital OrbLintInboundOrbital {
       LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : InboundProgram!  scope : string! }
         @description "The lint input: the file read, its language decided and the program lowered."
       OrbLintInput.LINT_INPUT -> LINT_INPUT
+      FACTS_HEARD { programTypes : Map string InboundProgType!  guardSigils : [string]!  effectSigils : [string]!  tickSigils : [string]!  fieldTypes : [string]!  reservedCliWords : [string]! }
+        @description "std-orb-lint-input's LINT_LANGUAGE_FACTS: the command words the installed language reserves for the orb bootloader."
+      FACTS_UNREAD { error : string! }
+        @description "std-orb-lint-input's LINT_LANGUAGE_FACTS_UNREAD: the installed language facts could not be read."
+      OrbLintInput.LINT_LANGUAGE_FACTS -> FACTS_HEARD
+      OrbLintInput.LINT_LANGUAGE_FACTS_UNREAD -> FACTS_UNREAD
     }
     config {
-      codes : LintInboundCodes = { inboundEntryInvalid: { code: "ORB_INBOUND_ENTRY_INVALID", category: "inbound", description: "An inbound entry is not a valid hook name" }, inboundUndeclared: { code: "ORB_INBOUND_UNDECLARED", category: "inbound", description: "An event handles an inbound hook that the program's inbound block does not declare" }, inboundDuplicate: { code: "ORB_INBOUND_DUPLICATE", category: "inbound", description: "An inbound hook has more than one handler" }, inboundVerifyInvalid: { code: "ORB_INBOUND_VERIFY_INVALID", category: "inbound", description: "An inbound hook verifies a header against a credential, but the header is not a lower-case header name or the credential is not a credential name" }, inboundAnswerUndeclared: { code: "ORB_INBOUND_ANSWER_UNDECLARED", category: "inbound", description: "An inbound hook event answers with an event the trait does not declare in emits" } }
+      codes : LintInboundCodes = { inboundEntryInvalid: { code: "ORB_INBOUND_ENTRY_INVALID", category: "inbound", description: "An inbound entry is not a valid hook name" }, inboundUndeclared: { code: "ORB_INBOUND_UNDECLARED", category: "inbound", description: "An event handles an inbound hook that the program's inbound block does not declare" }, inboundDuplicate: { code: "ORB_INBOUND_DUPLICATE", category: "inbound", description: "An inbound hook has more than one handler" }, inboundVerifyInvalid: { code: "ORB_INBOUND_VERIFY_INVALID", category: "inbound", description: "An inbound hook verifies a header against a credential, but the header is not a lower-case header name or the credential is not a credential name" }, inboundAnswerUndeclared: { code: "ORB_INBOUND_ANSWER_UNDECLARED", category: "inbound", description: "An inbound hook event answers with an event the trait does not declare in emits" }, inboundCliReserved: { code: "ORB_INBOUND_CLI_RESERVED", category: "inbound", description: "A cli- inbound hook takes a command word the orb bootloader reserves" }, inboundCliDashWord: { code: "ORB_INBOUND_CLI_DASH_WORD", category: "inbound", description: "A cli- inbound hook has an empty command word, so a word would start with a dash" }, inboundCliShadowed: { code: "ORB_INBOUND_CLI_SHADOWED", category: "inbound", description: "A cli- inbound hook is a prefix of a longer cli- hook, so the longer hook takes the arguments that begin with its next word" }, lintLanguageFactsUnread: { code: "ORB_LINT_LANGUAGE_FACTS_UNREAD", category: "lint", description: "The installed language facts could not be read, so the lint rule could not check what it needs" } }
         @label "Emitted codes"
         @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
     }

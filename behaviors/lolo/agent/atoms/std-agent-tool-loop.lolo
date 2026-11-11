@@ -1,6 +1,6 @@
 app std-agent-tool-loop [
   version: "3.0.0",
-  description: "std-agent-tool-loop — answers a conversation by operating the running app as the caller, through std-llm's tool loop. Its `tools` are `{ scope: declared }` (every declared external input plus a read over every persisted entity that declares who reads it (`@read`, or an `@read none` waiver)), or named declared inputs (addressed like a listens source: `Trait.EVENT`, `Orbital.Trait.EVENT`, optionally with the `payload` the model is shown and held to) and entities to read. The program reflects its own inputs (`program/inputs`); each tool call the model makes fires as the signed-in user through the ordinary dispatch (`program/dispatch`: guards, grants and entity policies apply) and each read returns only the rows the caller may read (`persist/read-named`); a refused or unknown tool is answered to the model as an explicit refusal. Headless: the conversation UI (std-agent-session) shows the reply; a failure is emitted as ASSISTANT_REPLY_FAILED for the embedder to present (`quiet` is for a background run nobody is watching: no live steps; an ephemeral turn runs under its own instructions and tools and streams no steps unless its CONVERSE carries `live`, which decides for any turn). CONVERSE carries the conversation (and optionally what std-agent-memory recalled); ASSISTANT_STEP carries each step live while it works (a model call, a tool it used, what the app answered) to the asking tab; ASSISTANT_REPLIED carries the reply, every step and the token usage; ASSISTANT_REPLY_FAILED carries the error. These names are the assistant contract std-agent-session's conversation hears from any orbital. The model side is a std-llm LlmClient trait that listens to the loop's LLM_CALL_TOOLS and LLM_TOOLS_ANSWERED and is heard through LLM_TOOLS_REQUESTED, LLM_TOOLS_STEP, LLM_CALL_TOOLS_RESULT and LLM_FAILED; a composer wires its own. CANCEL aborts the model call at its provider (std-llm's LLM_CANCEL, under the key `agent-tool-loop`) and stops any tool call not yet started; nothing is replied and no failure is reported, and a new CONVERSE is refused until std-llm confirms the cancel (LLM_CANCELLED). Compose with std-agent-session (the conversation) and std-agent-trace (the step record).",
+  description: "std-agent-tool-loop — answers a conversation by operating the running app as the caller, through std-llm's tool loop. Its `tools` are `{ scope: declared }` (every declared external input plus a read over every persisted entity that declares who reads it (`@read`, or an `@read none` waiver)), or named declared inputs (addressed like a listens source: `Trait.EVENT`, `Orbital.Trait.EVENT`, optionally with the `payload` the model is shown and held to) and entities to read. The program reflects its own inputs (`program/inputs`); each tool call the model makes fires as the signed-in user through the ordinary dispatch (`program/dispatch`: guards, grants and entity policies apply) and each read returns only the rows the caller may read (`persist/read-named`); a refused or unknown tool is answered to the model as an explicit refusal. Headless: the conversation UI (std-agent-session) shows the reply; a failure is emitted as ASSISTANT_REPLY_FAILED for the embedder to present (`quiet` is for a background run nobody is watching: no live steps; an ephemeral turn runs under its own instructions and tools and streams no steps unless its CONVERSE carries `live`, which decides for any turn). CONVERSE carries the conversation (and optionally what std-agent-memory recalled); ASSISTANT_STEP carries each step live while it works (a model call, a tool it used, what the app answered) to the asking tab; ASSISTANT_REPLIED carries the reply, every step and the token usage; ASSISTANT_REPLY_FAILED carries the error. These names are the assistant contract std-agent-session's conversation hears from any orbital. The model side is a std-llm LlmClient trait that listens to the loop's LLM_CALL_TOOLS and LLM_TOOLS_ANSWERED and is heard through LLM_TOOLS_REQUESTED, LLM_TOOLS_STEP, LLM_CALL_TOOLS_RESULT and LLM_FAILED; a composer wires its own. CANCEL aborts the model call at its provider (std-llm's LLM_CANCEL, under the key `agent-tool-loop`) and stops any tool call not yet started; nothing is replied and no failure is reported, and a new CONVERSE is refused until std-llm confirms the cancel (LLM_CANCELLED). While a guest session is attached (GuestAttached { guest }, wired by the composer from the stage that opened it; GuestDetached ends it) every turn also operates that guest: the turn reflects the guest (`program/inputs { guest }`) and offers every input it declares as a tool named `guest__<EVENT>_<n>`; a call to one is dispatched into the guest (`program/dispatch` with the guest option) and the tool's result is the guest's own dispatch answer, never waited for on TOOL_RESULT. Only what the guest reflected is offered or accepted, and a guest that cannot be reflected fails the turn. Compose with std-agent-session (the conversation) and std-agent-trace (the step record).",
   net: { "api.openai.com:443": [tcp] },
 ]
 
@@ -93,7 +93,7 @@ type AgentToolBinding = {
   description : string!
   parameters : LlmSchema!
   label : string!
-  kind : "input" | "read"!
+  kind : "input" | "read" | "guest"!
   address : string
   entity : string
   readAny : boolean!
@@ -113,6 +113,9 @@ type AgentReflection = {
   inputs : [AgentReflectedInput]!
   entities : [string]!
   selected : [AgentReflectedInput]!
+}
+type AgentGuestReflection = {
+  inputs : [AgentReflectedInput]!
 }
 type AgentDispatchAnswer = {
   ok : boolean!
@@ -162,6 +165,8 @@ orbital AgentToolLoopOrbital {
     callStartedAt : instant @description "When the call being executed began."
     turnSteps : [AgentActivity] @description "Every step of the current turn so far, kept so a failed run can be audited." = []
     pendingTools : [AgentToolData] @description "The tools the current turn names, held while the assistant's own identity signs in (caller identity)." = []
+    guest : string @description "The guest session attached to the assistant (program/open's id): every turn that starts while it is attached also operates it; empty when none is." = ""
+    turnGuest : string @description "The guest the current turn operates, fixed when the turn's tools are bound." = ""
   }
 
   trait LoopLlm = Llm.traits.LlmClient {
@@ -268,6 +273,10 @@ orbital AgentToolLoopOrbital {
     initial: idle
 
     state idle {
+      GuestAttached -> idle
+        (set @entity.guest ?guest)
+      GuestDetached -> idle
+        (set @entity.guest "")
       INIT -> idle
         (set @entity.status idle)
       CONVERSE -> preparing when (and (!= @config.caller "identity") (not (default ?ephemeral false)))
@@ -315,6 +324,10 @@ orbital AgentToolLoopOrbital {
     }
 
     state preparing {
+      GuestAttached -> preparing
+        (set @entity.guest ?guest)
+      GuestDetached -> preparing
+        (set @entity.guest "")
       INIT -> idle
         (set @entity.status idle)
       CANCEL -> idle
@@ -343,13 +356,16 @@ orbital AgentToolLoopOrbital {
                     { name: (str/replaceAll @ev.event "." "__"), description: (default @s.description @ev.event), parameters: @s.parameters, label: @ev.event, kind: input, address: @s.address, contract: (object/get @ev payload []), readAny: false, contracted: (object/has @ev payload), fireAndForget: (object/get @ev fireAndForget false) }))))))) @r)))))))))
           (do
             (set @entity.table @table)
-            (emit LLM_CALL_TOOLS {
-              messages: @entity.turnMessages
-              tools: (array/map @table (fn b { name: @b.name, description: @b.description, parameters: @b.parameters }))
-              instructions: @entity.turnInstructions
-              maxSteps: @config.maxSteps
-              key: "agent-tool-loop"
-            })))
+            (set @entity.turnGuest @entity.guest)
+            (if (= @entity.guest "")
+              (emit LLM_CALL_TOOLS {
+                messages: @entity.turnMessages
+                tools: (array/map @table (fn b { name: @b.name, description: @b.description, parameters: @b.parameters }))
+                instructions: @entity.turnInstructions
+                maxSteps: @config.maxSteps
+                key: "agent-tool-loop"
+              })
+              (program/inputs { guest: @entity.guest } { emit: { success: GUEST_INPUTS_KNOWN, failure: GUEST_INPUTS_FAILED } }))))
       INPUTS_KNOWN -> idle when (!= (array/len @payload.result.selected) (array/count @entity.turnTools (fn y (object/has @y event))))
         (set @entity.status failed)
         (set @entity.error "The app reflected a different number of inputs than the assistant's tools name.")
@@ -361,6 +377,10 @@ orbital AgentToolLoopOrbital {
     }
 
     state thinking {
+      GuestAttached -> thinking
+        (set @entity.guest ?guest)
+      GuestDetached -> thinking
+        (set @entity.guest "")
       INIT -> idle
         (set @entity.status idle)
       CANCEL -> thinking
@@ -368,6 +388,26 @@ orbital AgentToolLoopOrbital {
         (set @entity.status idle)
         (emit LLM_CANCEL { key: "agent-tool-loop" })
       ToolsCancelled -> idle when (and @entity.cancelled (= ?key "agent-tool-loop"))
+        (set @entity.cancelled false)
+      GUEST_INPUTS_KNOWN -> thinking when (not @entity.cancelled)
+        (let ((table : [AgentToolBinding] (array/concat @entity.table (array/map @payload.result.inputs (fn x
+            { name: (str/concat "guest__" @x.event "_" (+ (array/findIndex @payload.result.inputs (fn z (= @z.address @x.address))) 1)), description: (str/concat (default @x.description @x.event) " (in the open program: " @x.orbital " → " @x.trait ")"), parameters: @x.parameters, label: @x.address, kind: guest, address: @x.address, readAny: false, contracted: false, fireAndForget: true })))))
+          (do
+            (set @entity.table @table)
+            (emit LLM_CALL_TOOLS {
+              messages: @entity.turnMessages
+              tools: (array/map @table (fn b { name: @b.name, description: @b.description, parameters: @b.parameters }))
+              instructions: @entity.turnInstructions
+              maxSteps: @config.maxSteps
+              key: "agent-tool-loop"
+            })))
+      GUEST_INPUTS_KNOWN -> idle when @entity.cancelled
+        (set @entity.cancelled false)
+      GUEST_INPUTS_FAILED -> idle when (not @entity.cancelled)
+        (set @entity.status failed)
+        (set @entity.error ?error)
+        (emit ASSISTANT_REPLY_FAILED { error: ?error, ephemeral: @entity.ephemeral })
+      GUEST_INPUTS_FAILED -> idle when @entity.cancelled
         (set @entity.cancelled false)
       CONVERSE -> thinking when @entity.cancelled
         (emit ASSISTANT_REPLY_FAILED { error: "The previous request is still being cancelled; ask again in a moment.", ephemeral: (default ?ephemeral false) })
@@ -399,6 +439,10 @@ orbital AgentToolLoopOrbital {
     }
 
     state running {
+      GuestAttached -> running
+        (set @entity.guest ?guest)
+      GuestDetached -> running
+        (set @entity.guest "")
       INIT -> idle
         (set @entity.status idle)
       CANCEL -> idle
@@ -413,10 +457,15 @@ orbital AgentToolLoopOrbital {
         (set @entity.results (array/append @entity.results { id: @entity.current.id, tool: @entity.current.name, kind: invalid, success: false, detail: "not an allowed tool", content: (json/stringify { error: (str/concat "'" (default @entity.current.name "") "' is not one of your tools"), tools: (array/map @entity.table (fn x @x.name)) }), startedAt: @entity.callStartedAt, endedAt: (time/now) }))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit RUN_NEXT {})
-      CALL_BEGIN -> running when (let ((b (array/find @entity.table (fn x (= @x.name @entity.current.name))))) (and (!= @b null) (or (= @b.kind "input") @b.readAny) (= @entity.current.arguments null)))
+      CALL_BEGIN -> running when (let ((b (array/find @entity.table (fn x (= @x.name @entity.current.name))))) (and (!= @b null) (or (= @b.kind "input") (= @b.kind "guest") @b.readAny) (= @entity.current.arguments null)))
         (set @entity.results (array/append @entity.results { id: @entity.current.id, tool: @entity.current.name, kind: invalid, success: false, detail: "arguments are not a JSON object", content: (json/stringify { error: (str/concat "'" (default @entity.current.name "") "' arguments are not a JSON object") }), startedAt: @entity.callStartedAt, endedAt: (time/now) }))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit RUN_NEXT {})
+      CALL_BEGIN -> running when (let ((b (array/find @entity.table (fn x (= @x.name @entity.current.name))))) (and (!= @b null) (= @b.kind "guest") (!= @entity.current.arguments null)))
+        (let ((b (array/find @entity.table (fn x (= @x.name @entity.current.name)))))
+          (do
+            (set @entity.binding @b)
+            (program/dispatch @b.address @entity.current.arguments { guest: @entity.turnGuest, key: (str/concat "tool-call:" @entity.current.id), emit: { success: DISPATCHED, failure: DISPATCH_FAILED } })))
       CALL_BEGIN -> running when (let ((b (array/find @entity.table (fn x (= @x.name @entity.current.name))))) (and (!= @config.caller "identity") (!= @b null) (= @b.kind "input") (not @b.contracted) @b.fireAndForget))
         (let ((b (array/find @entity.table (fn x (= @x.name @entity.current.name)))))
           (do
@@ -510,6 +559,10 @@ orbital AgentToolLoopOrbital {
     }
 
     state awaitingResult {
+      GuestAttached -> awaitingResult
+        (set @entity.guest ?guest)
+      GuestDetached -> awaitingResult
+        (set @entity.guest "")
       INIT -> idle
         (set @entity.status idle)
       CANCEL -> idle
@@ -615,6 +668,12 @@ orbital AgentToolLoopOrbital {
       INPUTS_FAILED {
         error : string!
       }
+      GUEST_INPUTS_KNOWN {
+        result : AgentGuestReflection!
+      }
+      GUEST_INPUTS_FAILED {
+        error : string!
+      }
       RUN_NEXT
       CALL_BEGIN
       DISPATCHED {
@@ -650,6 +709,12 @@ orbital AgentToolLoopOrbital {
       }
         @description "Abort the request in flight; nothing is replied and no failure is reported."
         @synonyms "stop, abort, cancel"
+      GuestAttached {
+        guest : string!
+      }
+        @description "A guest session opened beside the assistant (the composer wires the stage's GUEST_READY here; never a client input, since a guest id is not checked against who opened it): every turn that starts from now also operates it."
+      GuestDetached { }
+        @description "The attached guest closed: later turns operate only the running program."
       CONVERSE {
         messages : [AgentChatMessage]!
         context : string

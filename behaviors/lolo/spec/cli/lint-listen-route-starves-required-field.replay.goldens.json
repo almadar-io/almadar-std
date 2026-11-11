@@ -2510,6 +2510,1220 @@
      }
     }
    ]
+  },
+  {
+   "id": "projection-name-into-id-mismatch-fires",
+   "steps": [
+    {
+     "trait": "OrbLintListenRouteStarvesRequiredField",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "NoteOrbital",
+         "entity": {
+          "name": "NoteOrbitalE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Browse",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           },
+           "emits": [
+            {
+             "event": "PICK",
+             "payloadSchema": [
+              {
+               "name": "tagName",
+               "type": "string",
+               "required": true,
+               "projectedFrom": {
+                "type": "Tag",
+                "field": "name"
+               }
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "name": "Overlay",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [],
+            "events": [
+             {
+              "key": "SHOW",
+              "payloadSchema": [
+               {
+                "name": "tagId",
+                "type": "string",
+                "required": true,
+                "projectedFrom": {
+                 "type": "Tag",
+                 "field": "id"
+                }
+               }
+              ]
+             }
+            ]
+           },
+           "listens": [
+            {
+             "event": "PICK",
+             "triggers": "SHOW",
+             "source": {
+              "kind": "trait",
+              "trait": "Browse"
+             },
+             "payloadMapping": {
+              "tagId": "@payload.tagName"
+             }
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintListenRouteStarvesRequiredField",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "listen-route-starves-required-field",
+         "findings": [
+          {
+           "code": "ORB_LISTEN_ROUTE_PROJECTION_MISMATCH",
+           "path": "orbitals.NoteOrbital.traits.Overlay.listens.tagId",
+           "message": "route `Browse.PICK -> SHOW` maps `tagName` (a Tag.name) into `tagId` (a Tag.id)",
+           "suggestion": "Map a field that carries Tag.id, or change what `tagId` is projected from",
+           "severity": "error"
+          }
+         ],
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "projection-status-into-title-mismatch-fires",
+   "steps": [
+    {
+     "trait": "OrbLintListenRouteStarvesRequiredField",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "NoteOrbital",
+         "entity": {
+          "name": "NoteOrbitalE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Browse",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           },
+           "emits": [
+            {
+             "event": "PICK",
+             "payloadSchema": [
+              {
+               "name": "noteStatus",
+               "type": "string",
+               "required": true,
+               "projectedFrom": {
+                "type": "Note",
+                "field": "status"
+               }
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "name": "Overlay",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [],
+            "events": [
+             {
+              "key": "SHOW",
+              "payloadSchema": [
+               {
+                "name": "noteTitle",
+                "type": "string",
+                "required": true,
+                "projectedFrom": {
+                 "type": "Note",
+                 "field": "title"
+                }
+               }
+              ]
+             }
+            ]
+           },
+           "listens": [
+            {
+             "event": "PICK",
+             "triggers": "SHOW",
+             "source": {
+              "kind": "trait",
+              "trait": "Browse"
+             },
+             "payloadMapping": {
+              "noteTitle": "@payload.noteStatus"
+             }
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintListenRouteStarvesRequiredField",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "listen-route-starves-required-field",
+         "findings": [
+          {
+           "code": "ORB_LISTEN_ROUTE_PROJECTION_MISMATCH",
+           "path": "orbitals.NoteOrbital.traits.Overlay.listens.noteTitle",
+           "message": "route `Browse.PICK -> SHOW` maps `noteStatus` (a Note.status) into `noteTitle` (a Note.title)",
+           "suggestion": "Map a field that carries Note.title, or change what `noteTitle` is projected from",
+           "severity": "error"
+          }
+         ],
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-projection-id-into-id-is-silent",
+   "steps": [
+    {
+     "trait": "OrbLintListenRouteStarvesRequiredField",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "NoteOrbital",
+         "entity": {
+          "name": "NoteOrbitalE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Browse",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           },
+           "emits": [
+            {
+             "event": "PICK",
+             "payloadSchema": [
+              {
+               "name": "tagId",
+               "type": "string",
+               "required": true,
+               "projectedFrom": {
+                "type": "Tag",
+                "field": "id"
+               }
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "name": "Overlay",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [],
+            "events": [
+             {
+              "key": "SHOW",
+              "payloadSchema": [
+               {
+                "name": "tagId",
+                "type": "string",
+                "required": true,
+                "projectedFrom": {
+                 "type": "Tag",
+                 "field": "id"
+                }
+               }
+              ]
+             }
+            ]
+           },
+           "listens": [
+            {
+             "event": "PICK",
+             "triggers": "SHOW",
+             "source": {
+              "kind": "trait",
+              "trait": "Browse"
+             },
+             "payloadMapping": {
+              "tagId": "@payload.tagId"
+             }
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintListenRouteStarvesRequiredField",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "listen-route-starves-required-field",
+         "findings": [],
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-projection-on-one-side-only-is-silent",
+   "steps": [
+    {
+     "trait": "OrbLintListenRouteStarvesRequiredField",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "NoteOrbital",
+         "entity": {
+          "name": "NoteOrbitalE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Browse",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           },
+           "emits": [
+            {
+             "event": "PICK",
+             "payloadSchema": [
+              {
+               "name": "tagName",
+               "type": "string",
+               "required": true,
+               "projectedFrom": {
+                "type": "Tag",
+                "field": "name"
+               }
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "name": "Overlay",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [],
+            "events": [
+             {
+              "key": "SHOW",
+              "payloadSchema": [
+               {
+                "name": "tagId",
+                "type": "string",
+                "required": true
+               }
+              ]
+             }
+            ]
+           },
+           "listens": [
+            {
+             "event": "PICK",
+             "triggers": "SHOW",
+             "source": {
+              "kind": "trait",
+              "trait": "Browse"
+             },
+             "payloadMapping": {
+              "tagId": "@payload.tagName"
+             }
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintListenRouteStarvesRequiredField",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "listen-route-starves-required-field",
+         "findings": [],
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-projection-on-the-other-side-only-is-silent",
+   "steps": [
+    {
+     "trait": "OrbLintListenRouteStarvesRequiredField",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "NoteOrbital",
+         "entity": {
+          "name": "NoteOrbitalE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Browse",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           },
+           "emits": [
+            {
+             "event": "PICK",
+             "payloadSchema": [
+              {
+               "name": "tagName",
+               "type": "string",
+               "required": true
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "name": "Overlay",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [],
+            "events": [
+             {
+              "key": "SHOW",
+              "payloadSchema": [
+               {
+                "name": "tagId",
+                "type": "string",
+                "required": true,
+                "projectedFrom": {
+                 "type": "Tag",
+                 "field": "id"
+                }
+               }
+              ]
+             }
+            ]
+           },
+           "listens": [
+            {
+             "event": "PICK",
+             "triggers": "SHOW",
+             "source": {
+              "kind": "trait",
+              "trait": "Browse"
+             },
+             "payloadMapping": {
+              "tagId": "@payload.tagName"
+             }
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintListenRouteStarvesRequiredField",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "listen-route-starves-required-field",
+         "findings": [],
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-projections-of-different-types-are-silent",
+   "steps": [
+    {
+     "trait": "OrbLintListenRouteStarvesRequiredField",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "NoteOrbital",
+         "entity": {
+          "name": "NoteOrbitalE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Browse",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           },
+           "emits": [
+            {
+             "event": "PICK",
+             "payloadSchema": [
+              {
+               "name": "tagName",
+               "type": "string",
+               "required": true,
+               "projectedFrom": {
+                "type": "Tag",
+                "field": "name"
+               }
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "name": "Overlay",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [],
+            "events": [
+             {
+              "key": "SHOW",
+              "payloadSchema": [
+               {
+                "name": "noteId",
+                "type": "string",
+                "required": true,
+                "projectedFrom": {
+                 "type": "Note",
+                 "field": "id"
+                }
+               }
+              ]
+             }
+            ]
+           },
+           "listens": [
+            {
+             "event": "PICK",
+             "triggers": "SHOW",
+             "source": {
+              "kind": "trait",
+              "trait": "Browse"
+             },
+             "payloadMapping": {
+              "noteId": "@payload.tagName"
+             }
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintListenRouteStarvesRequiredField",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "listen-route-starves-required-field",
+         "findings": [],
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-computed-mapping-value-is-silent",
+   "steps": [
+    {
+     "trait": "OrbLintListenRouteStarvesRequiredField",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "NoteOrbital",
+         "entity": {
+          "name": "NoteOrbitalE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Browse",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           },
+           "emits": [
+            {
+             "event": "PICK",
+             "payloadSchema": [
+              {
+               "name": "tagName",
+               "type": "string",
+               "required": true,
+               "projectedFrom": {
+                "type": "Tag",
+                "field": "name"
+               }
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "name": "Overlay",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [],
+            "events": [
+             {
+              "key": "SHOW",
+              "payloadSchema": [
+               {
+                "name": "tagId",
+                "type": "string",
+                "required": true,
+                "projectedFrom": {
+                 "type": "Tag",
+                 "field": "id"
+                }
+               }
+              ]
+             }
+            ]
+           },
+           "listens": [
+            {
+             "event": "PICK",
+             "triggers": "SHOW",
+             "source": {
+              "kind": "trait",
+              "trait": "Browse"
+             },
+             "payloadMapping": {
+              "tagId": [
+               "str/lower",
+               "@payload.tagName"
+              ]
+             }
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintListenRouteStarvesRequiredField",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "listen-route-starves-required-field",
+         "findings": [],
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-nested-payload-path-value-is-silent",
+   "steps": [
+    {
+     "trait": "OrbLintListenRouteStarvesRequiredField",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "NoteOrbital",
+         "entity": {
+          "name": "NoteOrbitalE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Browse",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           },
+           "emits": [
+            {
+             "event": "PICK",
+             "payloadSchema": [
+              {
+               "name": "tagName",
+               "type": "string",
+               "required": true,
+               "projectedFrom": {
+                "type": "Tag",
+                "field": "name"
+               }
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "name": "Overlay",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [],
+            "events": [
+             {
+              "key": "SHOW",
+              "payloadSchema": [
+               {
+                "name": "tagId",
+                "type": "string",
+                "required": true,
+                "projectedFrom": {
+                 "type": "Tag",
+                 "field": "id"
+                }
+               }
+              ]
+             }
+            ]
+           },
+           "listens": [
+            {
+             "event": "PICK",
+             "triggers": "SHOW",
+             "source": {
+              "kind": "trait",
+              "trait": "Browse"
+             },
+             "payloadMapping": {
+              "tagId": "@payload.tag.name"
+             }
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintListenRouteStarvesRequiredField",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "listen-route-starves-required-field",
+         "findings": [],
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-route-without-mapping-is-silent",
+   "steps": [
+    {
+     "trait": "OrbLintListenRouteStarvesRequiredField",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "p",
+       "orbitals": [
+        {
+         "name": "NoteOrbital",
+         "entity": {
+          "name": "NoteOrbitalE",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "Browse",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": []
+           },
+           "emits": [
+            {
+             "event": "PICK",
+             "payloadSchema": [
+              {
+               "name": "tagId",
+               "type": "string",
+               "required": true,
+               "projectedFrom": {
+                "type": "Tag",
+                "field": "name"
+               }
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "name": "Overlay",
+           "linkedEntity": "E",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "transitions": [],
+            "events": [
+             {
+              "key": "SHOW",
+              "payloadSchema": [
+               {
+                "name": "tagId",
+                "type": "string",
+                "required": true,
+                "projectedFrom": {
+                 "type": "Tag",
+                 "field": "id"
+                }
+               }
+              ]
+             }
+            ]
+           },
+           "listens": [
+            {
+             "event": "PICK",
+             "triggers": "SHOW",
+             "source": {
+              "kind": "trait",
+              "trait": "Browse"
+             }
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintListenRouteStarvesRequiredField",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "listen-route-starves-required-field",
+         "findings": [],
+         "scope": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
   }
  ]
 }

@@ -2211,6 +2211,646 @@
         }
       ],
       "now": 1700000000000
+    },
+    {
+      "id": "guest-a-turn-with-an-attached-guest-reflects-it-before-calling-the-model",
+      "note": "P-030: while a guest is attached, a turn also offers the guest's declared inputs; the model is not called until the guest answered what it declares.",
+      "steps": [
+        {
+          "event": "GuestAttached",
+          "from": "idle",
+          "payload": {
+            "guest": "guest-3"
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "entity": {
+              "guest": "guest-3"
+            }
+          },
+          "identity": {
+            "id": "u1",
+            "role": "staff"
+          }
+        },
+        {
+          "event": "CONVERSE",
+          "from": "idle",
+          "payload": {
+            "messages": [
+              {
+                "role": "user",
+                "content": "add a claim for Novak"
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "preparing"
+          },
+          "identity": {
+            "id": "u1",
+            "role": "staff"
+          }
+        },
+        {
+          "event": "INPUTS_KNOWN",
+          "from": "preparing",
+          "payload": {
+            "result": {
+              "inputs": [],
+              "entities": [],
+              "selected": []
+            },
+            "text": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "thinking",
+            "effects": [
+              {
+                "type": "let"
+              }
+            ],
+            "neverEmits": [
+              "LLM_CALL_TOOLS"
+            ]
+          },
+          "identity": {
+            "id": "u1",
+            "role": "staff"
+          }
+        },
+        {
+          "event": "GUEST_INPUTS_KNOWN",
+          "from": "thinking",
+          "payload": {
+            "result": {
+              "inputs": [
+                {
+                  "orbital": "Claims",
+                  "trait": "ClaimBoard",
+                  "event": "DO_CREATE",
+                  "address": "Claims.ClaimBoard.DO_CREATE",
+                  "description": "Add a claim",
+                  "parameters": {
+                    "type": "object",
+                    "properties": {
+                      "holder": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "holder"
+                    ]
+                  }
+                }
+              ]
+            },
+            "text": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "thinking",
+            "emits": [
+              {
+                "event": "LLM_CALL_TOOLS",
+                "payload": {
+                  "tools": [
+                    {
+                      "name": "read__Note",
+                      "description": "Read the Note rows you may see",
+                      "parameters": {
+                        "type": "object",
+                        "properties": {}
+                      }
+                    },
+                    {
+                      "name": "guest__DO_CREATE_1",
+                      "description": "Add a claim (in the open program: Claims → ClaimBoard)",
+                      "parameters": {
+                        "type": "object",
+                        "properties": {
+                          "holder": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "holder"
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "identity": {
+            "id": "u1",
+            "role": "staff"
+          }
+        }
+      ],
+      "config": {
+        "tools": [
+          {
+            "read": "Note",
+            "roles": [
+              "staff"
+            ]
+          }
+        ]
+      },
+      "defaults": [
+        "LoopLlm",
+        "LoopChatRequest",
+        "LoopChatHttp",
+        "LoopChatRequestDeadline",
+        "LoopChatRequestDelay"
+      ]
+    },
+    {
+      "id": "control-a-turn-without-a-guest-calls-the-model-at-once",
+      "steps": [
+        {
+          "event": "CONVERSE",
+          "from": "idle",
+          "payload": {
+            "messages": [
+              {
+                "role": "user",
+                "content": "add a claim for Novak"
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "preparing"
+          },
+          "identity": {
+            "id": "u1",
+            "role": "staff"
+          }
+        },
+        {
+          "event": "INPUTS_KNOWN",
+          "from": "preparing",
+          "payload": {
+            "result": {
+              "inputs": [],
+              "entities": [],
+              "selected": []
+            },
+            "text": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "thinking",
+            "emits": [
+              {
+                "event": "LLM_CALL_TOOLS"
+              }
+            ],
+            "neverEmits": [
+              "GUEST_INPUTS_KNOWN"
+            ]
+          },
+          "identity": {
+            "id": "u1",
+            "role": "staff"
+          }
+        }
+      ],
+      "config": {
+        "tools": [
+          {
+            "read": "Note",
+            "roles": [
+              "staff"
+            ]
+          }
+        ]
+      },
+      "defaults": [
+        "LoopLlm",
+        "LoopChatRequest",
+        "LoopChatHttp"
+      ]
+    },
+    {
+      "id": "guest-a-guest-that-cannot-be-reflected-fails-the-turn",
+      "steps": [
+        {
+          "event": "GUEST_INPUTS_FAILED",
+          "from": "thinking",
+          "payload": {
+            "error": "no guest session guest-3"
+          },
+          "entity": {
+            "guest": "guest-3"
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "ASSISTANT_REPLY_FAILED",
+                "payload": {
+                  "error": "no guest session guest-3"
+                }
+              }
+            ],
+            "neverEmits": [
+              "LLM_CALL_TOOLS"
+            ]
+          },
+          "identity": {
+            "id": "u1",
+            "role": "staff"
+          }
+        }
+      ],
+      "config": {},
+      "defaults": [
+        "LoopLlm",
+        "LoopChatRequest",
+        "LoopChatHttp"
+      ]
+    },
+    {
+      "id": "guest-a-guest-tool-call-is-dispatched-into-the-guest-and-a-closed-guest-is-a-failed-result",
+      "note": "The call goes through program/dispatch with the guest option (the replay has no such guest open, so the kernel's refusal names it) and never waits for TOOL_RESULT.",
+      "steps": [
+        {
+          "event": "CALL_BEGIN",
+          "from": "running",
+          "payload": {},
+          "entity": {
+            "guest": "guest-3",
+            "table": [
+              {
+                "name": "guest__DO_CREATE_1",
+                "description": "Add a claim (in the open program: Claims → ClaimBoard)",
+                "parameters": {
+                  "type": "object",
+                  "properties": {
+                    "holder": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "holder"
+                  ]
+                },
+                "label": "Claims.ClaimBoard.DO_CREATE",
+                "kind": "guest",
+                "address": "Claims.ClaimBoard.DO_CREATE",
+                "readAny": false,
+                "contracted": false,
+                "fireAndForget": true
+              }
+            ],
+            "calls": [
+              {
+                "id": "c1",
+                "name": "guest__DO_CREATE_1",
+                "arguments": {
+                  "holder": "Novak"
+                }
+              }
+            ],
+            "current": {
+              "id": "c1",
+              "name": "guest__DO_CREATE_1",
+              "arguments": {
+                "holder": "Novak"
+              }
+            },
+            "cursor": 0,
+            "results": [],
+            "session": "s1",
+            "callStartedAt": "2023-11-14T22:13:20Z",
+            "turnGuest": "guest-3"
+          },
+          "identity": {
+            "id": "u1",
+            "role": "staff"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LLM_TOOLS_ANSWERED",
+                "payload": {
+                  "session": "s1",
+                  "results": [
+                    {
+                      "id": "c1",
+                      "tool": "Claims.ClaimBoard.DO_CREATE",
+                      "kind": "input",
+                      "success": false,
+                      "detail": "program/dispatch: no open guest 'guest-3' (it was never opened or is closed)",
+                      "content": "{\"ok\":false,\"error\":\"program/dispatch: no open guest 'guest-3' (it was never opened or is closed)\"}",
+                      "startedAt": "2023-11-14T22:13:20Z",
+                      "endedAt": "2023-11-14T22:13:20.000Z"
+                    }
+                  ]
+                }
+              }
+            ],
+            "neverEmits": [
+              "TOOL_PENDING",
+              "AGENT_ACT",
+              "AWAIT_DISPATCHED"
+            ]
+          }
+        }
+      ],
+      "config": {},
+      "defaults": [
+        "LoopLlm",
+        "LoopChatRequest",
+        "LoopChatHttp"
+      ],
+      "now": 1700000000000
+    },
+    {
+      "id": "guest-the-guests-dispatch-answer-is-the-tool-result",
+      "steps": [
+        {
+          "event": "DISPATCHED",
+          "from": "running",
+          "payload": {
+            "result": {
+              "ok": true,
+              "emitted": [
+                {
+                  "event": "CLAIM_CREATED"
+                }
+              ]
+            }
+          },
+          "entity": {
+            "guest": "guest-3",
+            "table": [
+              {
+                "name": "guest__DO_CREATE_1",
+                "description": "Add a claim (in the open program: Claims → ClaimBoard)",
+                "parameters": {
+                  "type": "object",
+                  "properties": {
+                    "holder": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "holder"
+                  ]
+                },
+                "label": "Claims.ClaimBoard.DO_CREATE",
+                "kind": "guest",
+                "address": "Claims.ClaimBoard.DO_CREATE",
+                "readAny": false,
+                "contracted": false,
+                "fireAndForget": true
+              }
+            ],
+            "calls": [
+              {
+                "id": "c1",
+                "name": "guest__DO_CREATE_1",
+                "arguments": {
+                  "holder": "Novak"
+                }
+              }
+            ],
+            "current": {
+              "id": "c1",
+              "name": "guest__DO_CREATE_1",
+              "arguments": {
+                "holder": "Novak"
+              }
+            },
+            "cursor": 0,
+            "results": [],
+            "session": "s1",
+            "callStartedAt": "2023-11-14T22:13:20Z",
+            "binding": {
+              "name": "guest__DO_CREATE_1",
+              "description": "Add a claim (in the open program: Claims → ClaimBoard)",
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "holder": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "holder"
+                ]
+              },
+              "label": "Claims.ClaimBoard.DO_CREATE",
+              "kind": "guest",
+              "address": "Claims.ClaimBoard.DO_CREATE",
+              "readAny": false,
+              "contracted": false,
+              "fireAndForget": true
+            },
+            "turnGuest": "guest-3"
+          },
+          "identity": {
+            "id": "u1",
+            "role": "staff"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LLM_TOOLS_ANSWERED",
+                "payload": {
+                  "session": "s1",
+                  "results": [
+                    {
+                      "id": "c1",
+                      "tool": "Claims.ClaimBoard.DO_CREATE",
+                      "kind": "input",
+                      "success": true,
+                      "content": "{\"ok\":true,\"emitted\":[{\"event\":\"CLAIM_CREATED\"}]}",
+                      "startedAt": "2023-11-14T22:13:20Z",
+                      "endedAt": "2023-11-14T22:13:20.000Z"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "config": {},
+      "defaults": [
+        "LoopLlm",
+        "LoopChatRequest",
+        "LoopChatHttp"
+      ],
+      "now": 1700000000000
+    },
+    {
+      "id": "attack-an-input-the-guest-does-not-declare-is-refused-undispatched",
+      "note": "Only what the guest reflected is in the table; any other name is answered as a refusal and nothing is dispatched.",
+      "steps": [
+        {
+          "event": "CALL_BEGIN",
+          "from": "running",
+          "payload": {},
+          "entity": {
+            "guest": "guest-3",
+            "table": [
+              {
+                "name": "guest__DO_CREATE_1",
+                "description": "Add a claim (in the open program: Claims → ClaimBoard)",
+                "parameters": {
+                  "type": "object",
+                  "properties": {
+                    "holder": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "holder"
+                  ]
+                },
+                "label": "Claims.ClaimBoard.DO_CREATE",
+                "kind": "guest",
+                "address": "Claims.ClaimBoard.DO_CREATE",
+                "readAny": false,
+                "contracted": false,
+                "fireAndForget": true
+              }
+            ],
+            "calls": [
+              {
+                "id": "c1",
+                "name": "guest__DO_DELETE_2",
+                "arguments": {}
+              }
+            ],
+            "current": {
+              "id": "c1",
+              "name": "guest__DO_DELETE_2",
+              "arguments": {}
+            },
+            "cursor": 0,
+            "results": [],
+            "session": "s1",
+            "callStartedAt": "2023-11-14T22:13:20Z",
+            "turnGuest": "guest-3"
+          },
+          "identity": {
+            "id": "u1",
+            "role": "staff"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LLM_TOOLS_ANSWERED",
+                "payload": {
+                  "session": "s1",
+                  "results": [
+                    {
+                      "id": "c1",
+                      "tool": "guest__DO_DELETE_2",
+                      "kind": "invalid",
+                      "success": false,
+                      "detail": "not an allowed tool",
+                      "content": "{\"error\":\"'guest__DO_DELETE_2' is not one of your tools\",\"tools\":[\"guest__DO_CREATE_1\"]}",
+                      "startedAt": "2023-11-14T22:13:20Z",
+                      "endedAt": "2023-11-14T22:13:20.000Z"
+                    }
+                  ]
+                }
+              }
+            ],
+            "neverEmits": [
+              "DISPATCHED",
+              "DISPATCH_FAILED"
+            ]
+          }
+        }
+      ],
+      "config": {},
+      "defaults": [
+        "LoopLlm",
+        "LoopChatRequest",
+        "LoopChatHttp"
+      ],
+      "now": 1700000000000
+    },
+    {
+      "id": "guest-a-detached-guest-is-no-longer-operated",
+      "steps": [
+        {
+          "event": "GuestDetached",
+          "from": "idle",
+          "payload": {},
+          "entity": {
+            "guest": "guest-3"
+          },
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "entity": {
+              "guest": ""
+            }
+          },
+          "identity": {
+            "id": "u1",
+            "role": "staff"
+          }
+        }
+      ],
+      "config": {},
+      "defaults": [
+        "LoopLlm",
+        "LoopChatRequest",
+        "LoopChatHttp"
+      ]
+    },
+    {
+      "id": "guest-a-guest-attached-mid-turn-waits-for-the-next-turn",
+      "note": "The BUILD tool opens a guest while its own turn is still running: the running turn keeps the tools it bound.",
+      "steps": [
+        {
+          "event": "GuestAttached",
+          "from": "awaitingResult",
+          "payload": {
+            "guest": "guest-9"
+          },
+          "entity": {
+            "guest": "",
+            "turnGuest": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "awaitingResult",
+            "entity": {
+              "guest": "guest-9",
+              "turnGuest": ""
+            }
+          },
+          "identity": {
+            "id": "u1",
+            "role": "staff"
+          }
+        }
+      ],
+      "config": {},
+      "defaults": [
+        "LoopLlm",
+        "LoopChatRequest",
+        "LoopChatHttp"
+      ]
     }
   ]
 }

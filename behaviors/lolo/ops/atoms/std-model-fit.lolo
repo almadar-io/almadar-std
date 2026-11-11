@@ -1,0 +1,200 @@
+app std-model-fit [
+  version: "1.0.0",
+  description: "std-model-fit — decides which model this machine runs, from a declared table and what the host measures; it holds no model knowledge. The options knob is an ordered list ({ id, provider, model, placement: local | remote, memoryGb, diskGb }). MODEL_FIT { requestId, allowRemote } reads the machine's total memory once through std-system-stats (STATS_START, the first STATS_READ, STATS_STOP) and the space free at the modelsPath knob (os/disk-usage), and answers MODEL_FIT_DECIDED { requestId, fits, option, memoryTotalGb, diskFreeGb, refused } with the first option in declared order that fits: a local option fits when memoryGb plus the reserveGb knob is at most the total memory and diskGb is at most the free space; a remote option fits only when allowRemote is true. Every option passed over is in refused with its reason (memory or disk and the gigabytes missing, or remote-not-allowed). When nothing fits, fits is false, option is absent and every option is in refused: nothing is chosen for the person. MODEL_PROBE { requestId, option } times one fixed prompt (the probePrompt and probeMaxTokens knobs) on the chosen option: it emits LLM_GENERATE for the composer's std-llm client and hears that client's result as ProbeAnswered and its failure as ProbeFailed (the composer wires both; this atom carries no model endpoint), then answers MODEL_PROBED { requestId, tokensPerSecond, ok }, ok being tokensPerSecond >= the minTokensPerSecond knob. A stat the host cannot read is MODEL_FIT_FAILED stats_unavailable, a failed probe probe_failed, a request while another is running busy. Gigabytes are 1024^3 bytes. Headless.",
+  exec: ["ps"],
+  env: ["PATH"],
+  sys: [memory, cpu, disk]
+]
+;; @capabilities "pick the model a machine can run from a declared table, say what each refused option lacks, time the chosen model"
+
+uses Spec from "almadar-std/model-fit"
+uses Stats from "std/behaviors/std-system-stats"
+
+type ModelOption = { id : string!, provider : string!, model : string!, placement : "local" | "remote"!, memoryGb : number!, diskGb : number! }
+type ModelRefusal = { id : string!, reason : "memory" | "disk" | "remote-not-allowed"!, missingGb : number! }
+type ModelProbeUsage = { promptTokens : number!, completionTokens : number!, totalTokens : number! }
+
+orbital ModelFitOrbital {
+  entity ModelFitRun [runtime] {
+    id : string!
+    requestId : string = ""
+    allowRemote : boolean = false
+    memoryTotalGb : number = 0
+    chosen : string @description "The option being probed." = ""
+    probeStartedAt : instant? @description "When the probe prompt was sent."
+  }
+
+  trait ModelFitStats = Stats.traits.SystemStatsMeter {
+    listens {
+      ModelFit.STATS_START -> STATS_START
+      ModelFit.STATS_STOP -> STATS_STOP
+    }
+  }
+
+  trait ModelFit -> ModelFitRun {
+    config {
+      options : [ModelOption] = []
+        @label "Which models may this machine run, best first?"
+        @description "The ordered table the decision walks: the first option that fits is chosen. memoryGb and diskGb are what a local option needs; a remote option needs neither."
+        @synonyms "model table, model choices, tiers"
+        @tier "domain"
+      reserveGb : number = 6
+        @label "Memory kept free for everything else"
+        @description "Gigabytes added to a local option's memoryGb before it is compared with the machine's total memory."
+        @tier "policy"
+      minTokensPerSecond : number = 10
+        @label "Slowest acceptable speed"
+        @description "A probe at or above this many generated tokens per second is ok."
+        @tier "policy"
+      modelsPath : string = "/"
+        @label "Where models are stored"
+        @description "The path whose free space a local option's diskGb is compared with."
+        @tier "policy"
+      probePrompt : string = "Count from 1 to 60, one number per line."
+        @label "Probe prompt"
+        @description "The fixed prompt a probe times."
+        @tier "internal"
+      probeMaxTokens : number = 160
+        @label "Probe length"
+        @description "The most tokens the probe may generate."
+        @tier "internal"
+    }
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      MODEL_FIT -> measuring
+        (set @entity.requestId ?requestId)
+        (set @entity.allowRemote (default ?allowRemote false))
+        (emit STATS_START {})
+      MODEL_PROBE -> probing
+        (set @entity.requestId ?requestId)
+        (set @entity.chosen ?option.id)
+        (set @entity.probeStartedAt (time/now))
+        (emit LLM_GENERATE { userPrompt: @config.probePrompt, model: ?option.model, maxTokens: @config.probeMaxTokens, key: "model-fit-probe" })
+      StatsRead -> idle
+      ProbeAnswered -> idle
+      ProbeFailed -> idle
+    }
+
+    state measuring {
+      INIT -> idle
+        (emit STATS_STOP {})
+      MODEL_FIT -> measuring
+        (emit MODEL_FIT_FAILED { requestId: ?requestId, code: "busy", error: "A model fit is already being decided." })
+      MODEL_PROBE -> measuring
+        (emit MODEL_FIT_FAILED { requestId: ?requestId, code: "busy", error: "A model fit is already being decided." })
+      StatsRead -> measuring when (not (array/includes ?unavailable "memory"))
+        (set @entity.memoryTotalGb (/ ?memoryTotal 1073741824))
+        (emit STATS_STOP {})
+        (os/disk-usage @config.modelsPath { emit: { success: DISK_READ, failure: DISK_FAILED } })
+      StatsRead -> idle when (array/includes ?unavailable "memory")
+        (emit STATS_STOP {})
+        (emit MODEL_FIT_FAILED { requestId: @entity.requestId, code: "stats_unavailable", error: "This host does not report its memory." })
+      DISK_READ -> idle
+        (let ((total @entity.memoryTotalGb)
+              (free (/ ?available 1073741824))
+              (options : [ModelOption] @config.options))
+          (let ((at (array/findIndex @options (fn o (if (= @o.placement "local") (and (<= (+ @o.memoryGb @config.reserveGb) @total) (<= @o.diskGb @free)) @entity.allowRemote)))))
+            (let ((passed : [ModelOption] (if (< @at 0) @options (array/take @options @at))))
+              (let ((refused : [ModelRefusal] (array/map @passed (fn o
+                      (if (= @o.placement "remote")
+                        { id: @o.id, reason: "remote-not-allowed", missingGb: 0 }
+                        (if (> (+ @o.memoryGb @config.reserveGb) @total)
+                          { id: @o.id, reason: "memory", missingGb: (- (+ @o.memoryGb @config.reserveGb) @total) }
+                          { id: @o.id, reason: "disk", missingGb: (- @o.diskGb @free) }))))))
+                (if (< @at 0)
+                  (emit MODEL_FIT_DECIDED { requestId: @entity.requestId, fits: false, memoryTotalGb: @total, diskFreeGb: @free, refused: @refused })
+                  (emit MODEL_FIT_DECIDED { requestId: @entity.requestId, fits: true, option: (array/nth @options @at), memoryTotalGb: @total, diskFreeGb: @free, refused: @refused }))))))
+      DISK_FAILED -> idle
+        (emit MODEL_FIT_FAILED { requestId: @entity.requestId, code: "stats_unavailable", error: ?error })
+    }
+
+    state probing {
+      INIT -> idle
+      MODEL_FIT -> probing
+        (emit MODEL_FIT_FAILED { requestId: ?requestId, code: "busy", error: "A model is being timed." })
+      MODEL_PROBE -> probing
+        (emit MODEL_FIT_FAILED { requestId: ?requestId, code: "busy", error: "A model is being timed." })
+      ProbeAnswered -> idle
+        (let ((ms (time/diff (time/now) (default @entity.probeStartedAt (time/now)) "ms")))
+          (let ((rate (if (> @ms 0) (/ (* ?usage.completionTokens 1000) @ms) 0)))
+            (emit MODEL_PROBED { requestId: @entity.requestId, tokensPerSecond: @rate, ok: (>= @rate @config.minTokensPerSecond) })))
+      ProbeFailed -> idle
+        (emit MODEL_FIT_FAILED { requestId: @entity.requestId, code: "probe_failed", error: ?message })
+      StatsRead -> probing
+    }
+
+    emits {
+      STATS_START -> internal { }
+      STATS_STOP -> internal { }
+      LLM_GENERATE -> external {
+        userPrompt : string!
+        model : string
+        maxTokens : number
+        key : string
+      }
+        @description "The probe prompt, for the composer's std-llm client (LLM_GENERATE)."
+      MODEL_FIT_DECIDED -> external {
+        requestId : string!
+        fits : boolean!
+        option : ModelOption?
+        memoryTotalGb : number!
+        diskFreeGb : number!
+        refused : [ModelRefusal]!
+      }
+        @description "The first declared option this machine fits, or fits false with none; every option passed over, with what it lacks."
+        @tier "primary"
+      MODEL_PROBED -> external {
+        requestId : string!
+        tokensPerSecond : number!
+        ok : boolean!
+      }
+        @description "How fast the chosen option generated the probe on this machine."
+        @tier "primary"
+      MODEL_FIT_FAILED -> external {
+        requestId : string!
+        code : string!
+        error : string!
+      }
+        @description "The decision or the probe could not be made: stats_unavailable, probe_failed or busy."
+        @tier "primary"
+      DISK_READ {
+        available : number!
+      }
+      DISK_FAILED {
+        error : string!
+      }
+    }
+
+    listens {
+      MODEL_FIT -> input {
+        requestId : string!
+        allowRemote : boolean?
+      }
+        @description "Decide which declared model option this machine runs."
+        @synonyms "which model fits, can this computer run the model, pick a model"
+      MODEL_PROBE -> input {
+        requestId : string!
+        option : ModelOption!
+      }
+        @description "Time the fixed probe prompt on one option."
+        @synonyms "benchmark the model, how fast is the model here"
+      ModelFitStats.STATS_READ -> StatsRead
+      StatsRead {
+        memoryTotal : number!
+        unavailable : [string]!
+      }
+      ProbeAnswered {
+        usage : ModelProbeUsage!
+      }
+        @description "The composer's std-llm client answered the probe (its LLM_GENERATE_RESULT)."
+      ProbeFailed {
+        message : string!
+      }
+        @description "The composer's std-llm client failed the probe (its LLM_FAILED)."
+    }
+  }
+
+  page boot as ModelFitBoot -> ModelFit, ModelFitStats
+}

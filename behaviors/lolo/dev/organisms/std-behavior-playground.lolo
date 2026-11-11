@@ -16,7 +16,6 @@ uses Live from "std/behaviors/std-live-machine"
 uses Loader from "std/behaviors/std-behavior-loader"
 uses Guest from "std/behaviors/std-guest-session"
 
-type PlaygroundProgram = { name : string, orbitals : [orbital] }
 type PlaygroundTopic = { package : string!, topic : string!, count : number! }
 type PlaygroundPackageLabel = { package : string!, label : string! }
 type PlaygroundLeaf = { package : string!, topic : string!, behavior : string!, kind : string!, value : behavior! }
@@ -599,46 +598,14 @@ orbital BehaviorPlayground {
     }
   }
 
-  trait PlaygroundOpen -> PlaygroundView {
-    initial: idle
-
-    state idle {
-      INIT -> idle
-      BEHAVIOR_PROGRAM -> idle
-        (emit GUEST_OPEN { program: ?program })
-    }
-
-    emits {
-      GUEST_OPEN -> internal {
-        program : PlaygroundProgram!
-      }
-        @description "The opened behavior's resolved program, for the guest session to run; internal, so the program stays on the server."
-    }
-
+  trait GuestOpener = Guest.traits.GuestOpener {
     listens {
-      PlaygroundLoader.BEHAVIOR_PROGRAM -> BEHAVIOR_PROGRAM
-      BEHAVIOR_PROGRAM {
-        behavior : string!
-        program : PlaygroundProgram!
-      }
+      PlaygroundLoader.BEHAVIOR_PROGRAM -> STAGE_SHOW
+      PlaygroundStage.GUEST_RESET -> STAGE_CLOSE
     }
   }
 
-  trait GuestSession = Guest.traits.GuestSession {
-    listens {
-      PlaygroundOpen.GUEST_OPEN -> GUEST_OPEN
-      PlaygroundStage.GUEST_RESET -> GUEST_RESET
-      GuestStage.GUEST_SEND -> GUEST_SEND
-      GuestStage.GUEST_NAVIGATE -> GUEST_NAVIGATE
-      GuestStage.GUEST_PERSONA_PICK -> GUEST_PERSONA_PICK
-      GuestStage.GUEST_INTEGRATIONS_PICK -> GUEST_INTEGRATIONS_PICK
-      GuestStage.GUEST_TRACE_ASK -> GUEST_TRACE_ASK
-      GuestStage.GUEST_TRACE_REVEAL -> GUEST_TRACE_REVEAL
-      GuestStage.GUEST_CREDENTIAL -> GUEST_CREDENTIAL
-      GuestStage.GUEST_INPUT_SEND -> GUEST_INPUT_SEND
-      GuestMarks.MARKS_CHECKED -> GUEST_SEED_MARKED
-    }
-  }
+  trait GuestSession = Guest.traits.GuestSession {}
 
   trait GuestMarks = Guest.traits.GuestMarks {}
   trait GuestStage = Guest.traits.GuestStage {
@@ -678,8 +645,8 @@ orbital BehaviorPlayground {
     }
   }
 
-  page "/" as PlaygroundPage -> PlaygroundFrame, PlaygroundTopics, PlaygroundStage, PlaygroundLoader, PlaygroundOpen, GuestSession, GuestMarks, BehaviorCatalogData, BehaviorCatalogLlm, CatEmbedWait, CatEmbedRequest, CatEmbedHttp, PlaygroundMachine, PlaygroundOrbit, PlaygroundSource, PlaygroundStatus
-  page "/:package/:name" as PlaygroundBehaviorPage -> PlaygroundFrame, PlaygroundTopics, PlaygroundStage, PlaygroundLoader, PlaygroundOpen, GuestSession, GuestMarks, BehaviorCatalogData, BehaviorCatalogLlm, CatEmbedWait, CatEmbedRequest, CatEmbedHttp, PlaygroundMachine, PlaygroundOrbit, PlaygroundSource, PlaygroundStatus, PlaygroundRoute
+  page "/" as PlaygroundPage -> PlaygroundFrame, PlaygroundTopics, PlaygroundStage, PlaygroundLoader, GuestOpener, GuestSession, GuestMarks, BehaviorCatalogData, BehaviorCatalogLlm, CatEmbedWait, CatEmbedRequest, CatEmbedHttp, PlaygroundMachine, PlaygroundOrbit, PlaygroundSource, PlaygroundStatus
+  page "/:package/:name" as PlaygroundBehaviorPage -> PlaygroundFrame, PlaygroundTopics, PlaygroundStage, PlaygroundLoader, GuestOpener, GuestSession, GuestMarks, BehaviorCatalogData, BehaviorCatalogLlm, CatEmbedWait, CatEmbedRequest, CatEmbedHttp, PlaygroundMachine, PlaygroundOrbit, PlaygroundSource, PlaygroundStatus, PlaygroundRoute
 }
 
 orbital NotFound = NotFound.orbitals.NotFoundOrbital {

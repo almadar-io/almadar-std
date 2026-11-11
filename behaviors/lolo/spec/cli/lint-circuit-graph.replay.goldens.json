@@ -2997,6 +2997,1216 @@
      }
     }
    ]
+  },
+  {
+   "id": "control-save-closes-modal-and-success-arm-repaints-main",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitGraph",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "open"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "title": "list"
+                }
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "open",
+              "event": "OPEN",
+              "effects": [
+               [
+                "render-ui",
+                "modal",
+                {
+                 "type": "modal-x",
+                 "title": "x"
+                }
+               ]
+              ]
+             },
+             {
+              "from": "open",
+              "to": "idle",
+              "event": "SAVE",
+              "effects": [
+               [
+                "render-ui",
+                "modal",
+                null
+               ],
+               [
+                "persist",
+                "create",
+                "Note",
+                {
+                 "title": "x"
+                },
+                {
+                 "emit": {
+                  "success": "Created",
+                  "failure": "Failed"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "Created",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "title": "r"
+                }
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "Failed",
+              "effects": []
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitGraph",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-graph",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-save-with-success-only-and-repainting-arm",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitGraph",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "open"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "title": "list"
+                }
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "open",
+              "event": "OPEN",
+              "effects": [
+               [
+                "render-ui",
+                "modal",
+                {
+                 "type": "modal-x",
+                 "title": "x"
+                }
+               ]
+              ]
+             },
+             {
+              "from": "open",
+              "to": "idle",
+              "event": "SAVE",
+              "effects": [
+               [
+                "render-ui",
+                "modal",
+                null
+               ],
+               [
+                "persist",
+                "create",
+                "Note",
+                {
+                 "title": "x"
+                },
+                {
+                 "emit": {
+                  "success": "Created"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "Created",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "title": "r"
+                }
+               ]
+              ]
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitGraph",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-graph",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "modal-closed-by-persist-whose-success-arm-paints-nothing",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitGraph",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "open"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "title": "list"
+                }
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "open",
+              "event": "OPEN",
+              "effects": [
+               [
+                "render-ui",
+                "modal",
+                {
+                 "type": "modal-x",
+                 "title": "x"
+                }
+               ]
+              ]
+             },
+             {
+              "from": "open",
+              "to": "idle",
+              "event": "SAVE",
+              "effects": [
+               [
+                "render-ui",
+                "modal",
+                null
+               ],
+               [
+                "persist",
+                "create",
+                "Note",
+                {
+                 "title": "x"
+                },
+                {
+                 "emit": {
+                  "success": "Created",
+                  "failure": "Failed"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "Created",
+              "effects": []
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "Failed",
+              "effects": []
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitGraph",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-graph",
+         "scope": "",
+         "findings": [
+          {
+           "code": "CIRCUIT_MODAL_EXIT_INCOMPLETE",
+           "path": "orbitals[0 (O)].traits[0 (T)].transitions[open->SAVE->idle]",
+           "message": "Transition open--[SAVE]-->idle closes modal but doesn't re-render main slot. Main view will show stale content.",
+           "suggestion": "Add render-ui(\"main\", {...}) alongside render-ui(\"modal\", null) to refresh the main view after closing the modal",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "modal-closed-by-persist-whose-target-state-has-no-success-arm",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitGraph",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "open"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "title": "list"
+                }
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "open",
+              "event": "OPEN",
+              "effects": [
+               [
+                "render-ui",
+                "modal",
+                {
+                 "type": "modal-x",
+                 "title": "x"
+                }
+               ]
+              ]
+             },
+             {
+              "from": "open",
+              "to": "idle",
+              "event": "SAVE",
+              "effects": [
+               [
+                "render-ui",
+                "modal",
+                null
+               ],
+               [
+                "persist",
+                "create",
+                "Note",
+                {
+                 "title": "x"
+                },
+                {
+                 "emit": {
+                  "success": "Created",
+                  "failure": "Failed"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "Failed",
+              "effects": []
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitGraph",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-graph",
+         "scope": "",
+         "findings": [
+          {
+           "code": "CIRCUIT_MODAL_EXIT_INCOMPLETE",
+           "path": "orbitals[0 (O)].traits[0 (T)].transitions[open->SAVE->idle]",
+           "message": "Transition open--[SAVE]-->idle closes modal but doesn't re-render main slot. Main view will show stale content.",
+           "suggestion": "Add render-ui(\"main\", {...}) alongside render-ui(\"modal\", null) to refresh the main view after closing the modal",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "modal-closed-by-persist-with-failure-declared-but-no-failure-arm",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitGraph",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "open"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "title": "list"
+                }
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "open",
+              "event": "OPEN",
+              "effects": [
+               [
+                "render-ui",
+                "modal",
+                {
+                 "type": "modal-x",
+                 "title": "x"
+                }
+               ]
+              ]
+             },
+             {
+              "from": "open",
+              "to": "idle",
+              "event": "SAVE",
+              "effects": [
+               [
+                "render-ui",
+                "modal",
+                null
+               ],
+               [
+                "persist",
+                "create",
+                "Note",
+                {
+                 "title": "x"
+                },
+                {
+                 "emit": {
+                  "success": "Created",
+                  "failure": "Failed"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "Created",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "title": "r"
+                }
+               ]
+              ]
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitGraph",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-graph",
+         "scope": "",
+         "findings": [
+          {
+           "code": "CIRCUIT_MODAL_EXIT_INCOMPLETE",
+           "path": "orbitals[0 (O)].traits[0 (T)].transitions[open->SAVE->idle]",
+           "message": "Transition open--[SAVE]-->idle closes modal but doesn't re-render main slot. Main view will show stale content.",
+           "suggestion": "Add render-ui(\"main\", {...}) alongside render-ui(\"modal\", null) to refresh the main view after closing the modal",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "modal-closed-by-persist-without-result-events",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitGraph",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "open"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "title": "list"
+                }
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "open",
+              "event": "OPEN",
+              "effects": [
+               [
+                "render-ui",
+                "modal",
+                {
+                 "type": "modal-x",
+                 "title": "x"
+                }
+               ]
+              ]
+             },
+             {
+              "from": "open",
+              "to": "idle",
+              "event": "SAVE",
+              "effects": [
+               [
+                "render-ui",
+                "modal",
+                null
+               ],
+               [
+                "persist",
+                "create",
+                "Note",
+                {
+                 "title": "x"
+                }
+               ]
+              ]
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitGraph",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-graph",
+         "scope": "",
+         "findings": [
+          {
+           "code": "CIRCUIT_MODAL_EXIT_INCOMPLETE",
+           "path": "orbitals[0 (O)].traits[0 (T)].transitions[open->SAVE->idle]",
+           "message": "Transition open--[SAVE]-->idle closes modal but doesn't re-render main slot. Main view will show stale content.",
+           "suggestion": "Add render-ui(\"main\", {...}) alongside render-ui(\"modal\", null) to refresh the main view after closing the modal",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "modal-closed-by-persist-whose-success-arm-repaints-main-in-another-state",
+   "steps": [
+    {
+     "trait": "OrbLintCircuitGraph",
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "Fx",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "runtime",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true,
+            "nullable": false
+           }
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             },
+             {
+              "name": "open"
+             },
+             {
+              "name": "other"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "INIT",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "title": "list"
+                }
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "open",
+              "event": "OPEN",
+              "effects": [
+               [
+                "render-ui",
+                "modal",
+                {
+                 "type": "modal-x",
+                 "title": "x"
+                }
+               ]
+              ]
+             },
+             {
+              "from": "open",
+              "to": "idle",
+              "event": "SAVE",
+              "effects": [
+               [
+                "render-ui",
+                "modal",
+                null
+               ],
+               [
+                "persist",
+                "create",
+                "Note",
+                {
+                 "title": "x"
+                },
+                {
+                 "emit": {
+                  "success": "Created",
+                  "failure": "Failed"
+                 }
+                }
+               ]
+              ]
+             },
+             {
+              "from": "other",
+              "to": "idle",
+              "event": "Created",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "title": "r"
+                }
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "Failed",
+              "effects": []
+             },
+             {
+              "from": "idle",
+              "to": "other",
+              "event": "GO"
+             },
+             {
+              "from": "other",
+              "to": "idle",
+              "event": "BACK",
+              "effects": [
+               [
+                "render-ui",
+                "main",
+                {
+                 "type": "stack",
+                 "title": "back"
+                }
+               ]
+              ]
+             }
+            ]
+           },
+           "dispatch": "client"
+          }
+         ],
+         "pages": [
+          {
+           "name": "OStart",
+           "path": "",
+           "protocol": "boot",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "schemaVersion": 1
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintCircuitGraph",
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "circuit-graph",
+         "scope": "",
+         "findings": [
+          {
+           "code": "CIRCUIT_MODAL_EXIT_INCOMPLETE",
+           "path": "orbitals[0 (O)].traits[0 (T)].transitions[open->SAVE->idle]",
+           "message": "Transition open--[SAVE]-->idle closes modal but doesn't re-render main slot. Main view will show stale content.",
+           "suggestion": "Add render-ui(\"main\", {...}) alongside render-ui(\"modal\", null) to refresh the main view after closing the modal",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
   }
  ]
 }
