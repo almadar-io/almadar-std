@@ -8,6 +8,8 @@ orbital AuditCaptureOrbital {
     type AuditRecorded = Event { actor : string, action : string, entityType : string, entityId : string, recordedAt : number, sourceEvent : string, sourceTrait : string, sourceOrbital : string, sourceTick : string } "Re-emitted after the audit row persists; rename to wire downstream listeners (e.g. AuditDashboardAppended)."
 
   entity AuditEntry [persistent: audit_entries] {
+
+    @create none "A substrate atom: the composing program decides who reaches the trait that writes these rows, so this atom states no creator of its own."
     @read none "This program declares no identity entity, so it has no signed-in viewer to scope reads to: every visitor may read these rows."
     id : string!
     browsePage : number @intrinsic @description "The page the list shows." = 1

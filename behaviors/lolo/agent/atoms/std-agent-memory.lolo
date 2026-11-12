@@ -54,6 +54,7 @@ orbital AgentMemoryOrbital {
   type MemoryEmbedFailed = Event { code : string, message : string!, key : string } "Fired when embedding fails"
 
   entity AgentMemory [persistent: agentMemories] {
+    @create none "A substrate atom: the composing program decides who reaches the trait that writes these rows, so this atom states no creator of its own."
     @read none "Rows are keyed by ownerId and every fetch and write in this atom is scoped to the signed-in owner; the atom declares no identity entity, so the app that binds its own entity here states the @read policy."
     id : string!
     ownerId : string! @description "Whose memory this is (the real @user). The binding organism scopes @read to it." @synonyms "user, owner, account"

@@ -34,6 +34,7 @@ orbital HttpServerOrbital {
 
   entity StreamTicket [persistent: stream_tickets] {
     @read server "Looked up by the HTTP server program's own traits to resolve a request's viewer, before any viewer exists."
+    @create none "The ticket endpoint mints tickets for any caller that opens a stream, server side; the ticket itself is the credential."
     id : string! @description "SHA-256 (hex) of the ticket; the ticket itself is never stored."
     clientId : string! @description "The client session the ticket was minted for; its identity is the stream's."
     expiresAt : instant! @description "When the ticket stops working."
@@ -41,6 +42,7 @@ orbital HttpServerOrbital {
 
   entity ViewerRow [persistent: viewer_rows] {
     @read server "Looked up by the HTTP server program's own traits to resolve a request's viewer, before any viewer exists."
+    @create none "The HTTP server program's own traits record a request's viewer, server side, before any viewer exists."
     id : string! @description "The identity row's key: the verified subject."
     email : string @description "The person's email." = ""
     role : string @description "What the person may do in the app." = ""
@@ -49,6 +51,7 @@ orbital HttpServerOrbital {
 
   entity ApiKeyRecord [persistent: api_keys] {
     @read server "Looked up by the HTTP server program's own traits to resolve a request's viewer, before any viewer exists."
+    @create none "The API key store writes its records as the program, server side; no viewer creates them."
     id : string! @description "The key's scrypt hash: what a presented bearer is looked up by."
     lastFour : string @description "The key's last four characters." = ""
     label : string @description "A name the owner gave the key." = ""

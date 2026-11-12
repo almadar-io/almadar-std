@@ -21,6 +21,8 @@ orbital NotifyOnEventOrbital {
     type NotificationDispatched = Event { recipient : string, channel : string, message : string, severity : string } "Re-emitted after dispatch; rename to wire downstream observers (e.g. NotificationLogAppended)."
 
   entity NotificationRecord [persistent: notifications] {
+
+    @create none "A substrate atom: the composing program decides who reaches the trait that writes these rows, so this atom states no creator of its own."
     @read none "This program declares no identity entity, so it has no signed-in viewer to scope reads to: every visitor may read these rows."
     id : string!
     recipient : string @description "The identifier of the entity receiving the notification." @synonyms "user, target, receiver, destination" = ""
@@ -45,6 +47,8 @@ orbital NotifyOnEventOrbital {
   }
 
   entity NotificationPreference [persistent: notificationPreferences] {
+
+    @create none "A substrate atom: the composing program decides who reaches the trait that writes these rows, so this atom states no creator of its own."
     @read none "This program declares no identity entity, so it has no signed-in viewer to scope reads to: every visitor may read these rows."
     id : string!
     personId : string! @description "Owner of this preference row." @synonyms "user, owner, account"
@@ -57,6 +61,8 @@ orbital NotifyOnEventOrbital {
   }
 
   entity PushSubscription [persistent: pushSubscriptions] {
+
+    @create none "A substrate atom: the composing program decides who reaches the trait that writes these rows, so this atom states no creator of its own."
     @read none "This program declares no identity entity, so it has no signed-in viewer to scope reads to: every visitor may read these rows."
     id : string!
     userId : string @description "Owner of this browser push subscription." @synonyms "user, owner, account" = ""

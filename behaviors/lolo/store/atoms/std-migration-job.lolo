@@ -35,6 +35,7 @@ orbital MigrationJobOrbital {
   type SourceEnvelope = Map string SourceRecords
 
   entity MigrationJob [persistent: migration_jobs] {
+    @create none "A substrate atom: the composing program decides who reaches the trait that writes these rows, so this atom states no creator of its own."
     @read none "This program declares no identity entity, so it has no signed-in viewer to scope reads to: every visitor may read these rows."
     id : string!
     source : ImportSourceOption @description "ImportSource descriptor of the run (kind + options), supplied by the host; its id names the stored MigrationSourceProfile." = {}
@@ -56,6 +57,7 @@ orbital MigrationJobOrbital {
   }
 
   entity MigrationSourceProfile [persistent: migration_source_profiles] {
+    @create none "A substrate atom: the composing program decides who reaches the trait that writes these rows, so this atom states no creator of its own."
     @read none "This program declares no identity entity, so it has no signed-in viewer to scope reads to: every visitor may read these rows."
     id : string! @description "The source id the profile belongs to (an ImportSourceOption id)."
     adapter : string @description "Adapter that parses the source documents: asana, clockify, slack, markdown or paste." = ""

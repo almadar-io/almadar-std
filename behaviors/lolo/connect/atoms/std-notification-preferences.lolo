@@ -11,6 +11,8 @@ orbital NotificationPreferencesOrbital {
     type PREFERENCE_RESOLVED = Event { personId : string, eventKey : string, channel : string, mode : string, suppressed : boolean } "The gate's verdict. Fail-open defaults: no matching row or a failed lookup resolves { channel: in_app, mode: instant, suppressed: false } — absence of a preference never silences a notification."
 
   entity NotificationPreference [persistent: notificationPreferences] {
+
+    @create none "A substrate atom: the composing program decides who reaches the trait that writes these rows, so this atom states no creator of its own."
     @read none "This program declares no identity entity, so it has no signed-in viewer to scope reads to: every visitor may read these rows."
     id : string!
     personId : string! @description "The person this preference row belongs to." @synonyms "user, recipient, owner, account"

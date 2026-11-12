@@ -19,14 +19,14 @@ orbital HttpRequestOrbital {
     page : number @description "The page in flight, from 1." = 1
   }
 
-  trait RequestDelay = Delay.traits.Delay {
+  trait RequestDelay = Delay.traits.Delay [server] {
     listens {
       HttpRequest.RETRY_WAIT -> START
       HttpRequest.RETRY_STOP -> CANCEL
     }
   }
 
-  trait RequestDeadline = Delay.traits.Delay {
+  trait RequestDeadline = Delay.traits.Delay [server] {
     listens {
       HttpRequest.TIMEOUT_START -> START
       HttpRequest.TIMEOUT_STOP -> CANCEL

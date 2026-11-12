@@ -18,6 +18,7 @@ orbital ReviewCycleOrbital {
     type ReviewDecided = Event { itemId : string, decision : string, round : number } "Emitted when a reviewer decides; `decision` is the state the record moved to (changes_requested or approved)."
 
   entity ReviewItem [persistent: review_items] {
+    @create none "A substrate atom: the composing program decides who reaches the trait that writes these rows, so this atom states no creator of its own."
     @read none "This program declares no identity entity, so it has no signed-in viewer to scope reads to: every visitor may read these rows."
     id : string!
     round : number @description "Review round the record is on; 1 for the first review, incremented on each resubmission." @synonyms "iteration, revision round, review count" = 0
@@ -26,6 +27,7 @@ orbital ReviewCycleOrbital {
   }
 
   entity ReviewEvent [persistent: review_events] {
+    @create none "A substrate atom: the composing program decides who reaches the trait that writes these rows, so this atom states no creator of its own."
     @read none "This program declares no identity entity, so it has no signed-in viewer to scope reads to: every visitor may read these rows."
     id : string!
     itemId : string @description "The record this history entry belongs to." @synonyms "record id, document id, item" = ""

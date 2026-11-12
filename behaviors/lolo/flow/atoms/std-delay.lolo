@@ -96,10 +96,10 @@ orbital DelayOrbital {
     }
 
     ticks {
-      deadlineCheck every 100ms
+      deadlineCheck every 100ms in waiting [background]
         when (and (!= @entity.deadline null) (not (time/isBefore @now (default @entity.deadline @now))))
         (emit TIMER_DUE { })
-      keyedCheck every 100ms
+      keyedCheck every 100ms [background]
         when (array/some @entity.keyed (fn d (not (time/isBefore @now @d.deadline))))
         (emit KEYED_DUE { left: (array/len @entity.keyed) })
     }

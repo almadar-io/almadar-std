@@ -55,6 +55,7 @@ orbital AgentTraceOrbital {
   type AgentRunsLoadFailed = Event { error : string, code : string } "Fired when the run record fails to load"
 
   entity AgentRun [persistent: agentRuns] {
+    @create none "A substrate atom: the composing program decides who reaches the trait that writes these rows, so this atom states no creator of its own."
     @read none "Rows are keyed by ownerId and every fetch and write in this atom is scoped to the signed-in owner; the atom declares no identity entity, so the app that binds its own entity here states the @read policy."
     id : string!
     ownerId : string! @description "Whose request this run answered (the real @user). The binding organism scopes @read to it." @synonyms "user, owner, account"

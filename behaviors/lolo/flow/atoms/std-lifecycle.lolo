@@ -16,6 +16,7 @@ orbital LifecycleOrbital {
     type LifecycleTransitioned = Event { entityId : string, status : string } "Re-emitted per record as it transitions; rename to wire downstream listeners."
 
   entity LifecycleRunLog [persistent: lifecycle_runs] {
+    @create none "A substrate atom: the composing program decides who reaches the trait that writes these rows, so this atom states no creator of its own."
     @read none "This program declares no identity entity, so it has no signed-in viewer to scope reads to: every visitor may read these rows."
     id : string!
     targetEntity : string @description "The entity to which lifecycle rules apply." @synonyms "subject, reference, target" = ""

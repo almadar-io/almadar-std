@@ -101,6 +101,7 @@ orbital QueueOrbital {
 
   entity QueueJob [persistent: queue_jobs] {
     @read none "This program declares no identity entity, so it has no signed-in viewer to scope reads to: every visitor may read these rows."
+    @create none "The queue's own traits write job rows as the program, server side; an app that binds its own job entity states its policy there."
     id : string!
     queue : string @description "Name of the queue the job belongs to." = ""
     payload : string @description "Default job body; an app binds its own job entity with typed payload fields." = ""
@@ -116,6 +117,7 @@ orbital QueueOrbital {
 
   entity QueueClaim [persistent: queue_claims] {
     @read none "This program declares no identity entity, so it has no signed-in viewer to scope reads to: every visitor may read these rows."
+    @create none "The queue writes its own claim rows, server side, as the program; no viewer creates them."
     id : string!
     jobId : string = ""
     attempt : number = 0
