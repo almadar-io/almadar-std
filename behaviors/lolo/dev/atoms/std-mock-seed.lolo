@@ -68,6 +68,7 @@ orbital MockSeedOrbital {
     rows : [Map string MockValue?] @description "The sampled rows so far." = []
     rowIdx : number @description "The row ordinal being sampled, from 1." = 1
     rowCount : number @description "How many rows to sample." = 0
+    rowCall : number @description "The asker's per-call key of the sample in flight." = 0
     rowFields : [MockFieldSpec] @description "The entity declared fields." = []
     rowName : string @description "The entity name, which prefixes the row ids." = ""
     inRows : boolean @description "Whether a multi-row sample is in progress." = false
@@ -247,9 +248,10 @@ orbital MockSeedOrbital {
         (set @entity.seeded false)
         (set @entity.rowCount (if ?runtime 1 ?count))
         (set @entity.rowIdx 1)
+        (set @entity.rowCall (default ?call 0))
         (set @entity.rows [])
         (set @entity.inRows true)
-        (emit ROWS_NEXT { at: 1 })
+        (emit ROWS_NEXT { at: 1, call: @entity.rowCall })
       ROWS_NEXT -> ready when (<= @entity.rowIdx @entity.rowCount)
         (emit WALK_ROW { fields: @entity.rowFields, entityName: @entity.rowName, index: @entity.rowIdx, seeded: false, identity: @entity.identity, runtime: @entity.runtime, nowMs: (time/add @config.base 0 "ms") })
       ROWS_NEXT -> ready when (> @entity.rowIdx @entity.rowCount)
@@ -258,7 +260,7 @@ orbital MockSeedOrbital {
       ROW_WALKED -> ready when @entity.inRows
         (set @entity.rows (array/append @entity.rows (let ((rs { id: (str/concat @entity.rowName "-" @entity.rowIdx) })) (default (object/merge @payload.row @rs) @rs))))
         (set @entity.rowIdx (+ @entity.rowIdx 1))
-        (emit ROWS_NEXT { at: @entity.rowIdx })
+        (emit ROWS_NEXT { at: @entity.rowIdx, call: @entity.rowCall })
       RESTAMP_INPUT -> ready when (not (or (= ?firstOwner true) @config.restampOnPersona))
         (emit RESTAMP_DONE { journal: ?journal, changes: [] })
       RESTAMP_INPUT -> ready when (or (= ?firstOwner true) @config.restampOnPersona)
@@ -486,7 +488,7 @@ orbital MockSeedOrbital {
       AC_ANSWER -> ready when (!= @entity.dsMode "failed")
         (set @entity.dsWork (+ @entity.dsWork 2))
         (set @entity.acAnswers (array/append @entity.acAnswers ?allowed))
-        (set @entity.acQueue (if (and (= @entity.acPurpose "writer") ?allowed) [] (array/drop @entity.acQueue 1)))
+        (set @entity.acQueue (array/drop @entity.acQueue 1))
         (emit AC_ASK { at: (array/len @entity.acQueue) })
       AC_FAILED -> ready when (!= @entity.dsMode "failed")
         (set @entity.dsWork (+ @entity.dsWork 2))
@@ -519,11 +521,6 @@ orbital MockSeedOrbital {
         (set @entity.dsOlinks (array/drop @entity.dsOlinks 1))
         (set @entity.dsWork (+ @entity.dsWork 3))
         (if (>= @entity.dsWork @config.stepsPerDispatch) (do (set @entity.dsNext "olink") (program/dispatch (str/concat @config.seedOrbital "." @config.seedTrait ".DS_RESUME") { } { orbital: @config.seedOrbital, targetTrait: @config.seedTrait, event: "DS_RESUME", clientId: (str/concat "seed-resume-" @entity.dsResumes), wire: true } { key: "mock-seed-resume", emit: { success: DS_RESUMED, failure: DS_WRITE_FAILED } })) (emit DS_OLINK { at: (array/len @entity.dsOlinks) }))
-      AC_DONE -> ready when (and (!= @entity.dsMode "failed") (= @entity.acPurpose "writer"))
-        (set @entity.dsWriters (array/append @entity.dsWriters (let ((k (array/findIndex @entity.acAnswers (fn a @a)))) (if (>= @k 0) (array/nth @entity.acIds @k) ""))))
-        (set @entity.dsWriteAt (+ @entity.dsWriteAt 1))
-        (set @entity.dsWork (+ @entity.dsWork 3))
-        (if (>= @entity.dsWork @config.stepsPerDispatch) (do (set @entity.dsNext "writer") (program/dispatch (str/concat @config.seedOrbital "." @config.seedTrait ".DS_RESUME") { } { orbital: @config.seedOrbital, targetTrait: @config.seedTrait, event: "DS_RESUME", clientId: (str/concat "seed-resume-" @entity.dsResumes), wire: true } { key: "mock-seed-resume", emit: { success: DS_RESUMED, failure: DS_WRITE_FAILED } })) (emit DS_WRITER { at: @entity.dsWriteAt }))
       DS_PROJS -> ready when (and (!= @entity.dsMode "failed") (= @entity.dsMode "plan"))
         (set @entity.dsStores (array/reduce @entity.dsProjs @entity.dsStores (fn sm pj (let ((rows (object/get @sm (object/get @pj "store") [])) (trows (object/get @sm (object/get @pj "target") []))) (if (= (array/len @trows) 0) @sm (object/set @sm (object/get @pj "store") (let ((noRows : [Map string MockValue?] [])) (array/reduce @rows @noRows (fn done row (let ((i (array/len @done)) (f (object/get @pj "field"))) (array/append @done (if (not (or (not (object/has @row @f)) (= (object/get @row @f "") "") (and (validate/array (object/get @row @f "")) (= (array/len (object/get @row @f "")) 0)))) @row (let ((tr (let ((nxi (default (math/mod @i (array/len @trows)) 0))) (if (>= @nxi 0) (array/nth @trows @nxi) null)))) (if (= @tr null) @row (let ((picked (object/get @tr (object/get @pj "targetField") null))) (default (object/set @row @f (if (object/get @pj "isArray") [@picked] @picked)) @row))))))))))))))))
         (set @entity.dsStores (if (= (array/len @entity.dsMarked) 0) @entity.dsStores (object/filter @entity.dsStores (fn (k v) (and (not (array/includes @entity.dsMarked (str/concat "store:" @k))) (array/some @entity.dsRegsAll (fn r (and (= (object/get @r "store") @k) (not (array/includes @entity.dsMarked (object/get @r "label")))))))))))
@@ -552,24 +549,12 @@ orbital MockSeedOrbital {
       DS_WRITER -> ready when (and (!= @entity.dsMode "failed") (>= @entity.dsWriteAt (array/len @entity.dsWriteAll)))
         (set @entity.dsWrites (let ((idrows @entity.dsIdRows)) (array/map (let ((noGroups : [SeedGroup] [])) (array/reduce (array/map (array/range (array/len @entity.dsWriteAll)) (fn k (let ((wr (default (if (>= @k 0) (array/nth @entity.dsWriteAll @k) null) { store: "", i: 0, label: "", entity: "", owner: "", checked: false, runtime: false }))) { owner: (default (if (>= @k 0) (array/nth @entity.dsWriters @k) null) ""), runtime: (object/get @wr "runtime"), op: ["create" (object/get @wr "label") (let ((nxi (object/get @wr "i"))) (if (>= @nxi 0) (array/nth (object/get @entity.dsStores (object/get @wr "store") []) @nxi) null))] }))) @noGroups (fn gs p (let ((n (array/len @gs)) (lg (array/last @gs))) (if (and (!= @lg null) (= (object/get @lg "owner") (object/get @p "owner")) (= (object/get @lg "runtime") (object/get @p "runtime")) (< (array/len (object/get @lg "ops")) @config.writeChunk)) (array/append (array/take @gs (- @n 1)) (default (object/set @lg "ops" (array/append (object/get @lg "ops") (object/get @p "op"))) @lg)) (array/append @gs { owner: (object/get @p "owner"), runtime: (object/get @p "runtime"), ops: [(object/get @p "op")] })))))) (fn g { owner: (object/get @g "owner"), ops: (object/get @g "ops") }))))
         (emit DS_WRITE_NEXT { at: (array/len @entity.dsWrites) })
-      DS_WRITER -> ready when (and (!= @entity.dsMode "failed") (and (< @entity.dsWriteAt (array/len @entity.dsWriteAll)) (not (object/get (default (if (>= @entity.dsWriteAt 0) (array/nth @entity.dsWriteAll @entity.dsWriteAt) null) { store: "", i: 0, label: "", entity: "", owner: "", checked: false, runtime: false }) "checked"))))
-        (let ((open (array/findIndex (array/drop @entity.dsWriteAll @entity.dsWriteAt) (fn w (object/get @w "checked")))))
-          (let ((n (if (< @open 0) (- (array/len @entity.dsWriteAll) @entity.dsWriteAt) @open)))
-            (do
+      DS_WRITER -> ready when (and (!= @entity.dsMode "failed") (< @entity.dsWriteAt (array/len @entity.dsWriteAll)))
+        (let ((n (- (array/len @entity.dsWriteAll) @entity.dsWriteAt)))
+          (do
             (set @entity.dsWriters (array/concat @entity.dsWriters (array/map (array/range @n) (fn k ""))))
             (set @entity.dsWriteAt (+ @entity.dsWriteAt @n))
-            (emit DS_WRITER { at: @entity.dsWriteAt }))))
-      DS_WRITER -> ready when (and (!= @entity.dsMode "failed") (and (< @entity.dsWriteAt (array/len @entity.dsWriteAll)) (object/get (default (if (>= @entity.dsWriteAt 0) (array/nth @entity.dsWriteAll @entity.dsWriteAt) null) { store: "", i: 0, label: "", entity: "", owner: "", checked: false, runtime: false }) "checked")))
-        (set @entity.acPlan (let ((wr (default (if (>= @entity.dsWriteAt 0) (array/nth @entity.dsWriteAll @entity.dsWriteAt) null) { store: "", i: 0, label: "", entity: "", owner: "", checked: false, runtime: false }))) (let ((row (default (let ((nxi (object/get @wr "i"))) (if (>= @nxi 0) (array/nth (object/get @entity.dsStores (object/get @wr "store") []) @nxi) null)) { })) (idrows @entity.dsIdRows) (own (object/get @wr "owner"))) (let ((cands (array/concat (if (= @own "") [""] [@own, ""]) (array/filter (array/map @idrows (fn t (str/template "{{id}}" { id: (object/get @t "id") }))) (fn x (!= @x @own)))))) { queue: (array/map @cands (fn c { entity: (object/get @wr "entity"), action: "create", row: @row, identity: (if (= @c "") null (array/find @idrows (fn t (= (str/template "{{id}}" { id: (object/get @t "id") }) @c)))) })), n: (array/len @cands), read: false, rel: false, ids: @cands, viewer: false }))))
-        (set @entity.acQueue (object/get @entity.acPlan "queue"))
-        (set @entity.acN (object/get @entity.acPlan "n"))
-        (set @entity.acRead false)
-        (set @entity.acRel false)
-        (set @entity.acIds (object/get @entity.acPlan "ids"))
-        (set @entity.acViewer false)
-        (set @entity.acAnswers [])
-        (set @entity.acPurpose "writer")
-        (emit AC_ASK { at: (array/len @entity.acQueue) })
+            (emit DS_WRITER { at: @entity.dsWriteAt })))
       DS_WRITE_NEXT -> ready when (and (!= @entity.dsMode "failed") (= (array/len @entity.dsWrites) 0))
         (emit DS_WRITTEN { })
       DS_WRITE_NEXT -> ready when (and (!= @entity.dsMode "failed") (and (> (array/len @entity.dsWrites) 0) (= (object/get (default (array/first @entity.dsWrites) { owner: "", ops: [] }) "owner") "")))
@@ -622,9 +607,6 @@ orbital MockSeedOrbital {
       DS_RESUMED -> ready when (and (!= @entity.dsMode "failed") (= @entity.dsNext "olink"))
         (set @entity.dsWork 0)
         (emit DS_OLINK { at: (array/len @entity.dsOlinks) })
-      DS_RESUMED -> ready when (and (!= @entity.dsMode "failed") (= @entity.dsNext "writer"))
-        (set @entity.dsWork 0)
-        (emit DS_WRITER { at: @entity.dsWriteAt })
       DS_WRITE_FAILED -> ready
         (emit DATASET_FAILED { error: (str/concat "Seeding the mock store failed: " (default ?error "")) })
       DS_WRITTEN -> ready when (!= @entity.dsMode "failed")
@@ -781,7 +763,7 @@ orbital MockSeedOrbital {
       CORPUS_ASK { }
         @description "Internal: ask the stream for its word corpus."
         @tier "internal"
-      ROWS_NEXT { at : number }
+      ROWS_NEXT { at : number  call : number }
         @description "Internal: sample the next row."
         @tier "internal"
       DS_STORE { at : number }
@@ -814,10 +796,10 @@ orbital MockSeedOrbital {
       WALK_ROW { fields : [MockFieldSpec]!  entityName : string  index : number  seeded : boolean  identity : boolean  runtime : boolean  nowMs : instant! }
         @description "Sample one row of an entity fields: reserved keys skipped, optional undefaulted fields left unset on even seeded rows."
         @synonyms "sample row"
-      SAMPLE_ROWS { fields : [MockFieldSpec]!  name : string!  count : number!  runtime : boolean!  identity : boolean! }
+      SAMPLE_ROWS { fields : [MockFieldSpec]!  name : string!  count : number!  runtime : boolean!  identity : boolean!  call : number }
         @description "Sample an entity rows by the index strategy: one row for a runtime singleton, else count rows, each with its Name-n id."
         @synonyms "sample rows, mock rows"
-      ROWS_NEXT { at : number }
+      ROWS_NEXT { at : number  call : number }
         @description "Sample the next row."
         @synonyms "next row"
       ROW_WALKED { row : (Map string MockValue?)! }

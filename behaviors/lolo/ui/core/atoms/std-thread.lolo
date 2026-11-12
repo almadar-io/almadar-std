@@ -46,6 +46,7 @@ orbital ThreadPostOrbital {
     id : string!
     parentId : string @description "Identifier of the parent ThreadPost in a nested thread." @synonyms "parent, ancestor, source"
     threadRootId : string! @description "Identifier of the top-level thread this post belongs to." @synonyms "rootId, topLevelId, parentThreadId"
+    taskId : string @description "Identifier of the task this post is a comment on; blank when the thread root is not a task." @synonyms "task, commented task, task link" = ""
     authorId : string! @description "Unique identifier for the post's author." @synonyms "user id, creator id, author"
     authorName : string! @description "The name of the post's author." @synonyms "author, username, poster"
     content : string! @description "The main text content of the post." @synonyms "text, message, body"
@@ -135,6 +136,7 @@ orbital ThreadPostOrbital {
           content: ?content
           parentId: (default ?parentNodeId ?parentId)
           threadRootId: (default @entity.replyRootId (default @config.threadRootId root))
+          taskId: (if @config.rootIsTask (default @entity.replyRootId "") "")
         } {
           emit: { failure: ThreadPostCreateFailed, success: ThreadPostCreated }
         })
@@ -253,6 +255,7 @@ orbital ThreadPostOrbital {
           content: @entity.replyDraft
           parentId: (default @entity.replyParentId "")
           threadRootId: (default @entity.replyRootId (default @config.threadRootId root))
+          taskId: (if @config.rootIsTask (default @entity.replyRootId "") "")
         } {
           emit: { failure: ThreadPostCreateFailed, success: ThreadPostCreated }
         })
@@ -309,6 +312,7 @@ orbital ThreadPostOrbital {
           content: @entity.replyDraft
           parentId: (default @entity.replyParentId "")
           threadRootId: (default @entity.replyRootId (default @config.threadRootId root))
+          taskId: (if @config.rootIsTask (default @entity.replyRootId "") "")
         } {
           emit: { failure: ThreadPostCreateFailed, success: ThreadPostCreated }
         })
@@ -535,6 +539,11 @@ orbital ThreadPostOrbital {
         @label "Root post id"
         @description "Top-level post whose descendants are loaded, filters every fetch and defaults new top-level replies' threadRootId (blank = all roots, unfiltered)"
         @synonyms "rootId, topLevelId, scope, threadScope"
+        @tier "domain"
+      rootIsTask : boolean = false
+        @label "Thread root is a task"
+        @description "When on, every post created in this thread also stores its thread root as the task it comments on, so a search hit on the post can open that task."
+        @synonyms "task comments, comment on task, task thread"
         @tier "domain"
       tableLook : "dense" | "spacious" | "striped" | "borderless" | "card-rows" = dense
         @label "Table look"

@@ -291,6 +291,10 @@ orbital AgentToolLoopOrbital {
         (set @entity.guest "")
       INIT -> idle
         (set @entity.status idle)
+      CONVERSE -> idle when (and (!= @config.caller "process") (not (default ?ephemeral false)) (array/some @config.tools (fn t (not (object/has @t roles)))))
+        (set @entity.status failed)
+        (set @entity.error "An assistant tool declares no roles, so no role can be checked against it: give every tool a roles list.")
+        (emit ASSISTANT_REPLY_FAILED { error: @entity.error, ephemeral: false })
       CONVERSE -> preparing when (and (!= @config.caller "identity") (not (default ?ephemeral false)))
         (set @entity.status thinking)
         (set @entity.ephemeral false)

@@ -73,6 +73,7 @@ orbital VerifyPlanOrbital {
     owners : Map string [string] = {}
     seedIds : Map string string = {}
     newIds : Map string string = {}
+    callSeq : number = 0
   }
 
   uses Seed from "std/behaviors/std-mock-seed"
@@ -272,7 +273,7 @@ orbital VerifyPlanOrbital {
       PLAN_COMPUTED -> ready when (> (array/len @entity.rowJobs) 0)
         (let ((job (array/first @entity.rowJobs)))
           (if (= @job null) (emit PLAN_FAILED { error: "verify-plan: no entity is pending a sample row" })
-            (emit SAMPLE_ROWS { fields: (object/get @job "fields"), name: (object/get @job "entity"), count: 1, runtime: (object/get @job "runtime"), identity: (object/get @job "identity") })))
+            (do (set @entity.callSeq (+ @entity.callSeq 1)) (emit SAMPLE_ROWS { fields: (object/get @job "fields"), name: (object/get @job "entity"), count: 1, runtime: (object/get @job "runtime"), identity: (object/get @job "identity"), call: @entity.callSeq }))))
       ROWS_DONE -> ready
         (let ((jobRec (array/first @entity.rowJobs)) (row (array/first @payload.rows)) (vid (if (= @entity.viewer null) "" (object/get @entity.viewer "id" ""))))
          (if (= @jobRec null) (emit PLAN_FAILED { error: "verify-plan: a sample row arrived with no entity pending" })
@@ -350,7 +351,7 @@ orbital VerifyPlanOrbital {
       PLAN_FAILED -> internal { error : string }
         @description "Internal: the baseline probe failed; the computed plan stands."
         @tier "internal"
-      SAMPLE_ROWS -> external { fields : [PlanMockField]!, name : string!, count : number!, runtime : boolean!, identity : boolean! }
+      SAMPLE_ROWS -> external { fields : [PlanMockField]!, name : string!, count : number!, runtime : boolean!, identity : boolean!, call : number! }
         @description "Internal: ask the composed mock seed for one sample row of an entity slot's entity."
         @tier "internal"
       PLAN_REFUSED -> external { error : string! }

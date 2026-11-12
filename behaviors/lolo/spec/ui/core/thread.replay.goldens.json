@@ -1,0 +1,95 @@
+{
+ "atom": "../ui/core/atoms/std-thread.lolo",
+ "trait": "ThreadPostBrowse",
+ "cases": [
+  {
+   "id": "a-reply-stamps-the-task-id-when-the-thread-root-is-a-task",
+   "config": {
+    "rootIsTask": true
+   },
+   "steps": [
+    {
+     "event": "REPLY",
+     "payload": {
+      "content": "Looks good"
+     },
+     "entity": {
+      "id": "p",
+      "replyDraft": "",
+      "replyParentId": "",
+      "replyRootId": "task-7",
+      "lastReplyId": "",
+      "threadPage": 1
+     },
+     "from": "browsing",
+     "expect": {
+      "fired": true,
+      "state": "browsing",
+      "effects": [
+       {
+        "type": "persist",
+        "arg0": "create",
+        "arg1": "ThreadPost",
+        "arg2": {
+         "authorId": "@user.id",
+         "authorName": "@user.name",
+         "createdAt": "@now",
+         "content": "@payload.content",
+         "parentId": [
+          "default",
+          "@payload.parentNodeId",
+          "@payload.parentId"
+         ],
+         "threadRootId": [
+          "default",
+          "@entity.replyRootId",
+          [
+           "default",
+           "",
+           "root"
+          ]
+         ],
+         "taskId": [
+          "if",
+          true,
+          [
+           "default",
+           "@entity.replyRootId",
+           ""
+          ],
+          ""
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-reply-without-text-opens-the-composer-and-writes-no-post",
+   "config": {
+    "rootIsTask": true
+   },
+   "steps": [
+    {
+     "event": "REPLY",
+     "payload": {},
+     "entity": {
+      "id": "p",
+      "replyDraft": "",
+      "replyParentId": "",
+      "replyRootId": "task-7",
+      "lastReplyId": "",
+      "threadPage": 1
+     },
+     "from": "browsing",
+     "expect": {
+      "fired": true,
+      "state": "replying"
+     }
+    }
+   ]
+  }
+ ]
+}

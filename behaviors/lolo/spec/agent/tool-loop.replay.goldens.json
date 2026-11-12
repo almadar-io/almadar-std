@@ -3756,6 +3756,152 @@
    ],
    "now": 1700000000000,
    "note": "control: no `fields`, today's behaviour"
+  },
+  {
+   "id": "a-tool-with-no-roles-fails-the-turn-instead-of-hanging",
+   "note": "G-STD-360: a tool missing its required roles must answer the turn with a failure, not leave it waiting",
+   "steps": [
+    {
+     "event": "CONVERSE",
+     "from": "idle",
+     "payload": {
+      "messages": [
+       {
+        "role": "user",
+        "content": "show my notes"
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "emits": [
+       {
+        "event": "ASSISTANT_REPLY_FAILED",
+        "payload": {
+         "error": "An assistant tool declares no roles, so no role can be checked against it: give every tool a roles list.",
+         "ephemeral": false
+        }
+       }
+      ],
+      "neverEmits": [
+       "LLM_CALL_TOOLS"
+      ]
+     },
+     "identity": {
+      "id": "u1",
+      "role": "staff"
+     }
+    }
+   ],
+   "config": {
+    "tools": [
+     {
+      "read": "Note"
+     }
+    ]
+   },
+   "defaults": [
+    "LoopLlm",
+    "LoopChatRequest",
+    "LoopChatHttp"
+   ]
+  },
+  {
+   "id": "an-ephemeral-conversation-carrying-a-roleless-tool-is-refused-at-the-event",
+   "note": "G-STD-360: CONVERSE declares tools as [AgentToolData], so the event boundary refuses a tool without roles; nothing is left waiting",
+   "steps": [
+    {
+     "event": "CONVERSE",
+     "from": "idle",
+     "payload": {
+      "messages": [
+       {
+        "role": "user",
+        "content": "show my notes"
+       }
+      ],
+      "ephemeral": true,
+      "tools": [
+       {
+        "read": "Note",
+        "roles": [
+         "staff"
+        ]
+       },
+       {
+        "read": "Payroll"
+       }
+      ]
+     },
+     "expect": {
+      "fired": false,
+      "state": "idle",
+      "neverEmits": [
+       "LLM_CALL_TOOLS"
+      ]
+     },
+     "identity": {
+      "id": "u1",
+      "role": "staff"
+     }
+    }
+   ],
+   "config": {
+    "tools": []
+   },
+   "defaults": [
+    "LoopLlm",
+    "LoopChatRequest",
+    "LoopChatHttp"
+   ]
+  },
+  {
+   "id": "control-every-tool-declaring-roles-still-starts-the-turn",
+   "note": "G-STD-360 control",
+   "steps": [
+    {
+     "event": "CONVERSE",
+     "from": "idle",
+     "payload": {
+      "messages": [
+       {
+        "role": "user",
+        "content": "show my notes"
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "preparing"
+     },
+     "identity": {
+      "id": "u1",
+      "role": "staff"
+     }
+    }
+   ],
+   "config": {
+    "tools": [
+     {
+      "read": "Note",
+      "roles": [
+       "staff"
+      ]
+     },
+     {
+      "read": "Payroll",
+      "roles": [
+       "admin"
+      ]
+     }
+    ]
+   },
+   "defaults": [
+    "LoopLlm",
+    "LoopChatRequest",
+    "LoopChatHttp"
+   ]
   }
  ]
 }
