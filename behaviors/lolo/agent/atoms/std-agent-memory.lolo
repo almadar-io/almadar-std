@@ -1,6 +1,6 @@
 app std-agent-memory [
   version: "2.0.0",
-  description: "std-agent-memory — what an in-app assistant remembers across conversations. Owns AgentMemory rows (content + its embedding, ownerId = the real @user). RECALL { messages } embeds the last turn with std-llm (LLM_EMBED), ranks the stored memories whose embedding is comparable (same length as the query's) by cosine similarity and emits RECALLED { messages, context } with the closest `recallLimit` memories joined into one context string (empty when nothing is stored); if embedding fails it emits RECALLED with an empty context, so a memory outage never blocks the assistant. REMEMBER { reply } stores the exchange it just recalled for (asked + answered) with its embedding. AgentMemoryRecall (RECALL) and AgentMemoryStore (REMEMBER) are headless data traits that report failures as MEMORY_RECALL_NOTICE / MEMORY_STORE_NOTICE; AgentMemoryView renders those notices as toasts, so a composer that wants them composes it; AgentMemoryBrowse is the list view. Rows are meant to be private to their owner: the binding organism declares the @read scoping.",
+  description: "std-agent-memory — what an in-app assistant remembers across conversations. Owns AgentMemory rows (content + its embedding, ownerId = the real @user). RECALL { messages } embeds the last turn with std-llm (LLM_EMBED), ranks the stored memories whose embedding is comparable (same length as the query's) by cosine similarity and emits RECALLED { messages, context } with the closest `recallLimit` memories at or above `minSimilarity` joined into one context string (empty when nothing is stored or close enough); if embedding fails it emits RECALLED with an empty context, so a memory outage never blocks the assistant. REMEMBER { reply } stores the exchange it just recalled for (asked + answered) with its embedding; AgentMemoryStore learns the turn from AgentMemoryRecall's RECALLED, so a composer that binds both wires that listen. AgentMemoryRecall (RECALL) and AgentMemoryStore (REMEMBER) are headless data traits that report failures as MEMORY_RECALL_NOTICE / MEMORY_STORE_NOTICE; AgentMemoryView renders those notices as toasts, so a composer that wants them composes it; AgentMemoryBrowse is the list view. Rows are meant to be private to their owner: the binding organism declares the @read scoping.",
   net: { "openrouter.ai:443": [tcp] },
 ]
 
@@ -145,6 +145,11 @@ orbital AgentMemoryOrbital {
         @label "Memories recalled per request"
         @description "How many of the closest memories go to the model with each request."
         @tier "policy"
+      minSimilarity : number = -1
+        @label "Lowest similarity recalled"
+        @description "A memory whose cosine similarity to the request is below this is left out of the context, so a request nothing stored is close to recalls nothing. Similarity runs from -1 to 1 and its useful range depends on the embedding model, so the value is measured for the model in use. -1 (the default) leaves nothing out."
+        @synonyms "similarity floor, relevance threshold, recall cutoff"
+        @tier "policy"
       maxRows : number = 5000
         @label "Memories ranked per recall"
         @description "Most stored memories one recall may read to rank by similarity. Each row holds an embedding, so the cap bounds the scan; a store holding more is refused through AgentMemoriesLoadFailed and the assistant answers with an empty context instead of a ranking over a partial set."
@@ -208,12 +213,12 @@ orbital AgentMemoryOrbital {
       MemoriesForRecall -> ready when (not @entity.pendingHasLive)
         (emit RECALLED {
           messages: @entity.pendingMessages
-          context: (str/join (array/map (array/take (array/sort (array/map (array/filter (default ?data []) (fn item (and (> (array/len @entity.queryVector) 0) (= (array/len @item.embedding) (array/len @entity.queryVector))))) (fn item { content: @item.content, score: (array/cosine @item.embedding @entity.queryVector) })) score desc) @config.recallLimit) (fn item @item.content)) "\n")
+          context: (str/join (array/map (array/take (array/sort (array/filter (array/map (array/filter (default ?data []) (fn item (and (> (array/len @entity.queryVector) 0) (= (array/len @item.embedding) (array/len @entity.queryVector))))) (fn item { content: @item.content, score: (array/cosine @item.embedding @entity.queryVector) })) (fn item (or (<= @config.minSimilarity -1) (and (validate/required @item.score) (>= @item.score @config.minSimilarity))))) score desc) @config.recallLimit) (fn item @item.content)) "\n")
         })
       MemoriesForRecall -> ready when @entity.pendingHasLive
         (emit RECALLED {
           messages: @entity.pendingMessages
-          context: (str/join (array/map (array/take (array/sort (array/map (array/filter (default ?data []) (fn item (and (> (array/len @entity.queryVector) 0) (= (array/len @item.embedding) (array/len @entity.queryVector))))) (fn item { content: @item.content, score: (array/cosine @item.embedding @entity.queryVector) })) score desc) @config.recallLimit) (fn item @item.content)) "\n")
+          context: (str/join (array/map (array/take (array/sort (array/filter (array/map (array/filter (default ?data []) (fn item (and (> (array/len @entity.queryVector) 0) (= (array/len @item.embedding) (array/len @entity.queryVector))))) (fn item { content: @item.content, score: (array/cosine @item.embedding @entity.queryVector) })) (fn item (or (<= @config.minSimilarity -1) (and (validate/required @item.score) (>= @item.score @config.minSimilarity))))) score desc) @config.recallLimit) (fn item @item.content)) "\n")
           live: @entity.pendingLive
         })
       MemoryEmbedFailed -> ready when (and (= (default ?key "") "recall") (not @entity.pendingHasLive))
@@ -318,6 +323,9 @@ orbital AgentMemoryOrbital {
         (set @entity.pendingContent "")
       MEMORY_WRITE_FAILED -> ready
         (notify error (str/concat "Couldn't store the memory — " (default ?error "")))
+      ExchangeRecalled -> ready when (or (default ?ephemeral false) (= @user.role "anonymous"))
+      ExchangeRecalled -> ready when (and (not (default ?ephemeral false)) (!= @user.role "anonymous"))
+        (set @entity.pendingQuery (object/get (default (array/last ?messages) {}) content ""))
       REMEMBER -> ready when (or (default ?ephemeral false) (= @user.role "anonymous"))
       REMEMBER -> remembering when (and (not (default ?ephemeral false)) (!= @user.role "anonymous"))
         (set @entity.pendingContent (str/concat "Asked: " @entity.pendingQuery " | Answered: " ?reply))
@@ -330,6 +338,9 @@ orbital AgentMemoryOrbital {
     state remembering {
       INIT -> ready
         (set @entity.pendingQuery "")
+      ExchangeRecalled -> remembering when (or (default ?ephemeral false) (= @user.role "anonymous"))
+      ExchangeRecalled -> remembering when (and (not (default ?ephemeral false)) (!= @user.role "anonymous"))
+        (set @entity.pendingQuery (object/get (default (array/last ?messages) {}) content ""))
       MemoryEmbedded -> ready when (= (default ?key "") "store")
         (persist create AgentMemory {
           ownerId: @user.id
@@ -369,8 +380,13 @@ orbital AgentMemoryOrbital {
     }
 
     listens {
+      AgentMemoryRecall.RECALLED -> ExchangeRecalled
       AgentMemoryLlm.LLM_EMBED_RESULT -> MemoryEmbedded
       AgentMemoryLlm.LLM_FAILED -> MemoryEmbedFailed
+      ExchangeRecalled {
+        messages : [AgentChatMessage]!
+        ephemeral : boolean
+      }
       MemoryEmbedded {
         embeddings : [[number]]!
         key : string

@@ -1,0 +1,516 @@
+{
+ "atom": "audio/atoms/std-audio-timeline.lolo",
+ "trait": "AudioTimelinePlayback",
+ "cases": [
+  {
+   "id": "play reads the host clock first",
+   "steps": [
+    {
+     "from": "idle",
+     "event": "TIMELINE_PLAY",
+     "payload": {
+      "clips": [
+       {
+        "key": "a",
+        "source": "/tracks/a.wav",
+        "at": 0,
+        "offset": 0,
+        "duration": 8,
+        "rate": 1,
+        "gain": 1,
+        "fadeIn": 1,
+        "fadeOut": 1
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "starting",
+      "effects": [
+       {
+        "type": "audio/clock"
+       }
+      ],
+      "emits": [
+       {
+        "event": "TIMELINE_CLOCK_STARTED",
+        "payload": {
+         "audio": 10,
+         "wall": 1000
+        }
+       },
+       {
+        "event": "TIMELINE_STARTED",
+        "payload": {
+         "origin": 10.5
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "t",
+      "clips": [],
+      "pending": [],
+      "origin": 0,
+      "position": 0,
+      "wall": 0,
+      "playing": false
+     },
+     "answers": [
+      {
+       "operator": "audio/clock",
+       "ok": {
+        "audio": 10,
+        "wall": 1000
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "the clock read places timeline zero leadSeconds after it and schedules the clips",
+   "steps": [
+    {
+     "from": "starting",
+     "event": "TIMELINE_CLOCK_STARTED",
+     "payload": {
+      "audio": 10,
+      "wall": 1000
+     },
+     "entity": {
+      "id": "t",
+      "clips": [],
+      "pending": [
+       {
+        "key": "a",
+        "source": "/tracks/a.wav",
+        "at": 0,
+        "offset": 0,
+        "duration": 8,
+        "rate": 1,
+        "gain": 1,
+        "fadeIn": 1,
+        "fadeOut": 1
+       }
+      ],
+      "origin": 0,
+      "position": 0,
+      "wall": 0,
+      "playing": false
+     },
+     "expect": {
+      "fired": true,
+      "state": "playing",
+      "effects": [
+       {
+        "type": "audio/schedule"
+       }
+      ],
+      "emits": [
+       {
+        "event": "TIMELINE_STARTED",
+        "payload": {
+         "origin": 10.5
+        }
+       }
+      ]
+     },
+     "answers": [
+      {
+       "operator": "audio/schedule",
+       "ok": {}
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "a clip far enough ahead of the playhead is scheduled",
+   "steps": [
+    {
+     "from": "playing",
+     "event": "TIMELINE_APPEND",
+     "payload": {
+      "clips": [
+       {
+        "key": "b",
+        "source": "/tracks/a.wav",
+        "at": 4,
+        "offset": 0,
+        "duration": 8,
+        "rate": 1,
+        "gain": 1,
+        "fadeIn": 1,
+        "fadeOut": 1
+       }
+      ]
+     },
+     "entity": {
+      "id": "t",
+      "clips": [
+       {
+        "key": "a",
+        "source": "/tracks/a.wav",
+        "at": 0,
+        "offset": 0,
+        "duration": 8,
+        "rate": 1,
+        "gain": 1,
+        "fadeIn": 1,
+        "fadeOut": 1
+       }
+      ],
+      "pending": [],
+      "origin": 10.5,
+      "position": 1,
+      "wall": 0,
+      "playing": true
+     },
+     "expect": {
+      "fired": true,
+      "state": "playing",
+      "effects": [
+       {
+        "type": "audio/schedule"
+       }
+      ],
+      "neverEmits": [
+       "TIMELINE_ERROR"
+      ]
+     },
+     "answers": [
+      {
+       "operator": "audio/schedule",
+       "ok": {}
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "control: a clip sooner than leadSeconds after the playhead is refused late",
+   "steps": [
+    {
+     "from": "playing",
+     "event": "TIMELINE_APPEND",
+     "payload": {
+      "clips": [
+       {
+        "key": "b",
+        "source": "/tracks/a.wav",
+        "at": 1.2,
+        "offset": 0,
+        "duration": 8,
+        "rate": 1,
+        "gain": 1,
+        "fadeIn": 1,
+        "fadeOut": 1
+       }
+      ]
+     },
+     "entity": {
+      "id": "t",
+      "clips": [
+       {
+        "key": "a",
+        "source": "/tracks/a.wav",
+        "at": 0,
+        "offset": 0,
+        "duration": 8,
+        "rate": 1,
+        "gain": 1,
+        "fadeIn": 1,
+        "fadeOut": 1
+       }
+      ],
+      "pending": [],
+      "origin": 10.5,
+      "position": 1,
+      "wall": 0,
+      "playing": true
+     },
+     "expect": {
+      "fired": true,
+      "state": "playing",
+      "emits": [
+       {
+        "event": "TIMELINE_ERROR",
+        "payload": {
+         "kind": "late"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "replace after a span ahead schedules the new clips",
+   "steps": [
+    {
+     "from": "playing",
+     "event": "TIMELINE_REPLACE",
+     "payload": {
+      "after": 4,
+      "clips": [
+       {
+        "key": "c",
+        "source": "/tracks/a.wav",
+        "at": 4,
+        "offset": 0,
+        "duration": 8,
+        "rate": 1,
+        "gain": 1,
+        "fadeIn": 1,
+        "fadeOut": 1
+       }
+      ]
+     },
+     "entity": {
+      "id": "t",
+      "clips": [
+       {
+        "key": "a",
+        "source": "/tracks/a.wav",
+        "at": 0,
+        "offset": 0,
+        "duration": 8,
+        "rate": 1,
+        "gain": 1,
+        "fadeIn": 1,
+        "fadeOut": 1
+       }
+      ],
+      "pending": [],
+      "origin": 10.5,
+      "position": 1,
+      "wall": 0,
+      "playing": true
+     },
+     "expect": {
+      "fired": true,
+      "state": "playing",
+      "effects": [
+       {
+        "type": "audio/schedule"
+       }
+      ],
+      "neverEmits": [
+       "TIMELINE_ERROR"
+      ]
+     },
+     "answers": [
+      {
+       "operator": "audio/schedule",
+       "ok": {}
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "control: replace of a span already due is refused late",
+   "steps": [
+    {
+     "from": "playing",
+     "event": "TIMELINE_REPLACE",
+     "payload": {
+      "after": 1.1,
+      "clips": [
+       {
+        "key": "c",
+        "source": "/tracks/a.wav",
+        "at": 2,
+        "offset": 0,
+        "duration": 8,
+        "rate": 1,
+        "gain": 1,
+        "fadeIn": 1,
+        "fadeOut": 1
+       }
+      ]
+     },
+     "entity": {
+      "id": "t",
+      "clips": [
+       {
+        "key": "a",
+        "source": "/tracks/a.wav",
+        "at": 0,
+        "offset": 0,
+        "duration": 8,
+        "rate": 1,
+        "gain": 1,
+        "fadeIn": 1,
+        "fadeOut": 1
+       }
+      ],
+      "pending": [],
+      "origin": 10.5,
+      "position": 1,
+      "wall": 0,
+      "playing": true
+     },
+     "expect": {
+      "fired": true,
+      "state": "playing",
+      "emits": [
+       {
+        "event": "TIMELINE_ERROR",
+        "payload": {
+         "kind": "late"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a clock read reports the playhead in timeline seconds",
+   "steps": [
+    {
+     "from": "playing",
+     "event": "TIMELINE_CLOCK",
+     "payload": {
+      "audio": 13,
+      "wall": 5000
+     },
+     "entity": {
+      "id": "t",
+      "clips": [
+       {
+        "key": "a",
+        "source": "/tracks/a.wav",
+        "at": 0,
+        "offset": 0,
+        "duration": 8,
+        "rate": 1,
+        "gain": 1,
+        "fadeIn": 1,
+        "fadeOut": 1
+       }
+      ],
+      "pending": [],
+      "origin": 10.5,
+      "position": 1,
+      "wall": 0,
+      "playing": true
+     },
+     "expect": {
+      "fired": true,
+      "state": "playing",
+      "emits": [
+       {
+        "event": "TIMELINE_POSITION",
+        "payload": {
+         "position": 2.5,
+         "audio": 13,
+         "wall": 5000
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "stop stops every clip and returns to idle",
+   "steps": [
+    {
+     "from": "playing",
+     "event": "TIMELINE_STOP",
+     "payload": {},
+     "entity": {
+      "id": "t",
+      "clips": [
+       {
+        "key": "a",
+        "source": "/tracks/a.wav",
+        "at": 0,
+        "offset": 0,
+        "duration": 8,
+        "rate": 1,
+        "gain": 1,
+        "fadeIn": 1,
+        "fadeOut": 1
+       }
+      ],
+      "pending": [],
+      "origin": 10.5,
+      "position": 1,
+      "wall": 0,
+      "playing": true
+     },
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "effects": [
+       {
+        "type": "audio/schedule"
+       }
+      ],
+      "emits": [
+       {
+        "event": "TIMELINE_STOPPED"
+       }
+      ]
+     },
+     "answers": [
+      {
+       "operator": "audio/schedule",
+       "ok": {}
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "a host refusal of the starting clock returns to idle with its kind",
+   "steps": [
+    {
+     "from": "starting",
+     "event": "TIMELINE_FAILED",
+     "payload": {
+      "error": "no AudioContext",
+      "kind": "unsupported"
+     },
+     "entity": {
+      "id": "t",
+      "clips": [],
+      "pending": [
+       {
+        "key": "a",
+        "source": "/tracks/a.wav",
+        "at": 0,
+        "offset": 0,
+        "duration": 8,
+        "rate": 1,
+        "gain": 1,
+        "fadeIn": 1,
+        "fadeOut": 1
+       }
+      ],
+      "origin": 0,
+      "position": 0,
+      "wall": 0,
+      "playing": false
+     },
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "emits": [
+       {
+        "event": "TIMELINE_ERROR",
+        "payload": {
+         "kind": "unsupported"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

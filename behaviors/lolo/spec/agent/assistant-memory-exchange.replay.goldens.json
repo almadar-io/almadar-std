@@ -1,0 +1,159 @@
+{
+ "atom": "agent/organisms/std-agent-assistant.lolo",
+ "trait": "AssistantMemory",
+ "note": "the assistant binds both memory traits: the store learns the turn from the recall's RECALLED, so the stored exchange carries what was asked",
+ "cases": [
+  {
+   "id": "the exchange the assistant remembers carries the turn it recalled for",
+   "steps": [
+    {
+     "trait": "AssistantMemory",
+     "event": "RECALL",
+     "identity": {
+      "id": "u1",
+      "role": "member"
+     },
+     "payload": {
+      "messages": [
+       {
+        "role": "user",
+        "content": "what colour"
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_EMBED",
+        "payload": {
+         "key": "recall"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "AssistantMemory",
+     "event": "MemoryEmbedded",
+     "identity": {
+      "id": "u1",
+      "role": "member"
+     },
+     "payload": {
+      "embeddings": [
+       [
+        1,
+        0
+       ]
+      ],
+      "key": "recall"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RECALLED",
+        "payload": {
+         "context": ""
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "AssistantMemoryStore",
+     "event": "REMEMBER",
+     "identity": {
+      "id": "u1",
+      "role": "member"
+     },
+     "payload": {
+      "reply": "blue"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_EMBED",
+        "payload": {
+         "key": "store"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "AssistantMemoryStore",
+     "event": "MemoryEmbedded",
+     "identity": {
+      "id": "u1",
+      "role": "member"
+     },
+     "payload": {
+      "embeddings": [
+       [
+        1,
+        0
+       ]
+      ],
+      "key": "store"
+     },
+     "expect": {
+      "state": "ready"
+     }
+    },
+    {
+     "trait": "AssistantMemory",
+     "event": "RECALL",
+     "identity": {
+      "id": "u1",
+      "role": "member"
+     },
+     "payload": {
+      "messages": [
+       {
+        "role": "user",
+        "content": "again"
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LLM_EMBED",
+        "payload": {
+         "key": "recall"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "AssistantMemory",
+     "event": "MemoryEmbedded",
+     "identity": {
+      "id": "u1",
+      "role": "member"
+     },
+     "payload": {
+      "embeddings": [
+       [
+        1,
+        0
+       ]
+      ],
+      "key": "recall"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RECALLED",
+        "payload": {
+         "context": "Asked: what colour | Answered: blue"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}
