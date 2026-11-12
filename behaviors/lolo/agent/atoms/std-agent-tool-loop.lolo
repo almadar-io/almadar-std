@@ -22,10 +22,12 @@ type AgentToolInput = {
   roles : [string]!
   payload : [AgentToolField]
   fireAndForget : boolean
+  reports : [string]
 }
 type AgentToolRead = {
   read : string!
   roles : [string]!
+  fields : [string]
 }
 type AgentTool = AgentToolScope | AgentToolInput | AgentToolRead
 type AgentToolInputData = {
@@ -33,6 +35,7 @@ type AgentToolInputData = {
   roles : [string]!
   payload : [AgentToolField]
   fireAndForget : boolean
+  reports : [string]
 }
 type AgentToolData = AgentToolScope | AgentToolInputData | AgentToolRead
 type AgentChatMessage = {
@@ -100,6 +103,10 @@ type AgentToolBinding = {
   contract : [AgentToolField]
   contracted : boolean!
   fireAndForget : boolean!
+  fields : [string]
+  projected : boolean
+  reports : [string]
+  reporting : boolean
 }
 type AgentReflectedInput = {
   orbital : string!
@@ -117,13 +124,16 @@ type AgentReflection = {
 type AgentGuestReflection = {
   inputs : [AgentReflectedInput]!
 }
+type AgentJson = string | number | boolean | [AgentJson] | Map string AgentJson
 type AgentDispatchAnswer = {
   ok : boolean!
   error : string
+  emitted : [Map string AgentJson]
 }
 type AgentReadAnswer = {
   entity : string!
   count : number!
+  rows : [Map string AgentJson]
 }
 type AgentPortIssue = {
   code : string!
@@ -155,6 +165,8 @@ orbital AgentToolLoopOrbital {
     turnMessages : [AgentChatMessage] @description "The conversation being answered." = []
     turnInstructions : string @description "The instructions sent with the current turn." = ""
     turnTools : [AgentToolData] @description "The tools the current turn may use." = []
+    offered : number @description "How many tools the current turn was offered before the role filter." = 0
+    turnRole : string @description "The role the current turn's tools were filtered by." = ""
     table : [AgentToolBinding] @description "The tools offered to the model, by name." = []
     session : string @description "The model's tool run the calls being executed belong to." = ""
     calls : [ToolCall] @description "The tool calls the model asked for." = []
@@ -287,6 +299,8 @@ orbital AgentToolLoopOrbital {
         (set @entity.live (object/get ? live (not @config.quiet)))
         (set @entity.turnMessages ?messages)
         (set @entity.turnInstructions (if (= (default ?context "") "") @config.instructions (str/concat @config.instructions "\n\nWhat you remember that may be relevant:\n" (default ?context ""))))
+        (set @entity.offered (array/len @config.tools))
+        (set @entity.turnRole (if (= @user null) "" (default @user.role "")))
         (set @entity.turnTools (let ((all : [AgentTool] @config.tools)) (array/filter @all (fn t (or (= @config.caller "process") (and (not (= @user null)) (array/includes @t.roles (default @user.role ""))))))))
         (program/inputs { select: (array/flatten (array/map @entity.turnTools (fn t (if (object/has @t scope) [] (if (object/has @t read) [] (let ((ev : AgentToolInputData @t)) [(if (object/has @ev payload) { event: @ev.event, payload: @ev.payload } { event: @ev.event })])))))) } { emit: { success: INPUTS_KNOWN, failure: INPUTS_FAILED } })
       CONVERSE -> preparing when (and (!= @config.caller "identity") (default ?ephemeral false))
@@ -297,6 +311,8 @@ orbital AgentToolLoopOrbital {
         (set @entity.live (object/get ? live false))
         (set @entity.turnMessages ?messages)
         (set @entity.turnInstructions (if (= (default ?instructions "") "") @config.instructions ?instructions))
+        (set @entity.offered (array/len (object/get ? tools [])))
+        (set @entity.turnRole (if (= @user null) "" (default @user.role "")))
         (set @entity.turnTools (array/filter (object/get ? tools []) (fn t (or (= @config.caller "process") (and (not (= @user null)) (array/includes @t.roles (default @user.role "")))))))
         (program/inputs { select: (array/flatten (array/map @entity.turnTools (fn t (if (object/has @t scope) [] (if (object/has @t read) [] (let ((ev : AgentToolInputData @t)) [(if (object/has @ev payload) { event: @ev.event, payload: @ev.payload } { event: @ev.event })])))))) } { emit: { success: INPUTS_KNOWN, failure: INPUTS_FAILED } })
       CONVERSE -> preparing when (and (= @config.caller "identity") (not (default ?ephemeral false)))
@@ -333,6 +349,8 @@ orbital AgentToolLoopOrbital {
       CANCEL -> idle
         (set @entity.status idle)
       AgentIdentityReady -> preparing
+        (set @entity.offered (array/len @entity.pendingTools))
+        (set @entity.turnRole ?role)
         (set @entity.turnTools (array/filter @entity.pendingTools (fn t (array/includes @t.roles ?role))))
         (program/inputs { select: (array/flatten (array/map (array/filter @entity.pendingTools (fn t (array/includes @t.roles ?role))) (fn t (if (object/has @t scope) [] (if (object/has @t read) [] (let ((ev : AgentToolInputData @t)) [(if (object/has @ev payload) { event: @ev.event, payload: @ev.payload } { event: @ev.event })])))))) } { emit: { success: INPUTS_KNOWN, failure: INPUTS_FAILED } })
       AgentIdentityRefused -> idle
@@ -340,7 +358,11 @@ orbital AgentToolLoopOrbital {
         (set @entity.pendingTools [])
         (set @entity.error (str/concat "The assistant's own identity could not sign in: " ?reason))
         (emit ASSISTANT_REPLY_FAILED { error: (str/concat "The assistant's own identity could not sign in: " ?reason), ephemeral: @entity.ephemeral })
-      INPUTS_KNOWN -> thinking when (= (array/len @payload.result.selected) (array/count @entity.turnTools (fn y (object/has @y event))))
+      INPUTS_KNOWN -> idle when (and (!= @config.caller "process") (> @entity.offered 0) (= (array/len @entity.turnTools) 0))
+        (set @entity.status failed)
+        (set @entity.error (str/concat "None of the assistant's " @entity.offered " tools is granted to the role '" @entity.turnRole "': add the role to a tool's roles, or offer it no tools."))
+        (emit ASSISTANT_REPLY_FAILED { error: @entity.error, ephemeral: @entity.ephemeral })
+      INPUTS_KNOWN -> thinking when (and (not (and (!= @config.caller "process") (> @entity.offered 0) (= (array/len @entity.turnTools) 0))) (= (array/len @payload.result.selected) (array/count @entity.turnTools (fn y (object/has @y event)))))
         (let ((table : [AgentToolBinding] (array/flatten (array/flatten (array/map (array/range 0 (array/len @entity.turnTools) 1) (fn i
             (array/map (array/take (array/drop @entity.turnTools @i) 1) (fn t
               (let ((r : [AgentToolBinding] (if (object/has @t scope)
@@ -351,9 +373,9 @@ orbital AgentToolLoopOrbital {
                     [{ name: "read", description: "Read the rows of an entity that you may see", parameters: { type: "object", properties: { entity: { type: "string", enum: @payload.result.entities } }, required: ["entity"] }, label: "read", kind: read, readAny: true, contracted: false, fireAndForget: false }]
                     []))
                 (if (object/has @t read)
-                  (let ((rd : AgentToolRead @t)) [{ name: (str/concat "read__" @rd.read), description: (str/concat "Read the " @rd.read " rows you may see"), parameters: { type: "object", properties: {} }, label: @rd.read, kind: read, entity: @rd.read, readAny: false, contracted: false, fireAndForget: false }])
+                  (let ((rd : AgentToolRead @t)) [{ name: (str/concat "read__" @rd.read), description: (str/concat "Read the " @rd.read " rows you may see"), parameters: { type: "object", properties: {} }, label: @rd.read, kind: read, entity: @rd.read, readAny: false, contracted: false, fireAndForget: false, fields: (object/get @rd fields []), projected: (object/has @rd fields) }])
                   (let ((ev : AgentToolInputData @t)) (array/map (array/take (array/drop @payload.result.selected (array/count (array/take @entity.turnTools @i) (fn y (object/has @y event)))) 1) (fn s
-                    { name: (let ((n : string (str/replaceAll @ev.event "." "__"))) (if (<= (str/len @n) 64) @n (str/concat (str/slice @n (- (str/len @n) 54)) "_" (str/slice (default (hash/md5 (base64/encode @ev.event) "hex") "") 0 8)))), description: (default @s.description @ev.event), parameters: @s.parameters, label: @ev.event, kind: input, address: @s.address, contract: (object/get @ev payload []), readAny: false, contracted: (object/has @ev payload), fireAndForget: (object/get @ev fireAndForget false) }))))))) @r)))))))))
+                    { name: (let ((n : string (str/replaceAll @ev.event "." "__"))) (if (<= (str/len @n) 64) @n (str/concat (str/slice @n (- (str/len @n) 54)) "_" (str/slice (default (hash/md5 (base64/encode @ev.event) "hex") "") 0 8)))), description: (default @s.description @ev.event), parameters: @s.parameters, label: @ev.event, kind: input, address: @s.address, contract: (object/get @ev payload []), readAny: false, contracted: (object/has @ev payload), fireAndForget: (object/get @ev fireAndForget false), reports: (object/get @ev reports []), reporting: (object/has @ev reports) }))))))) @r)))))))))
           (do
             (set @entity.table @table)
             (set @entity.turnGuest @entity.guest)
@@ -533,7 +555,7 @@ orbital AgentToolLoopOrbital {
         (set @entity.cursor (+ @entity.cursor 1))
         (emit RUN_NEXT {})
       DISPATCHED -> running when @payload.result.ok
-        (set @entity.results (array/append @entity.results { id: @entity.current.id, tool: @entity.binding.label, kind: input, success: true, content: (json/stringify ?result), startedAt: @entity.callStartedAt, endedAt: (time/now) }))
+        (set @entity.results (array/append @entity.results { id: @entity.current.id, tool: @entity.binding.label, kind: input, success: true, content: (if (default @entity.binding.reporting false) (json/stringify { ok: true, emitted: (array/filter (object/get ?result emitted []) (fn e (array/includes (default @entity.binding.reports []) (object/get @e "event" "")))) }) (json/stringify ?result)), startedAt: @entity.callStartedAt, endedAt: (time/now) }))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit RUN_NEXT {})
       DISPATCHED -> running when (not @payload.result.ok)
@@ -545,7 +567,7 @@ orbital AgentToolLoopOrbital {
         (set @entity.cursor (+ @entity.cursor 1))
         (emit RUN_NEXT {})
       READ_DONE -> running
-        (set @entity.results (array/append @entity.results { id: @entity.current.id, tool: @payload.result.entity, kind: read, success: true, rows: @payload.result.count, content: (json/stringify ?result), startedAt: @entity.callStartedAt, endedAt: (time/now) }))
+        (set @entity.results (array/append @entity.results { id: @entity.current.id, tool: @payload.result.entity, kind: read, success: true, rows: @payload.result.count, content: (if (default @entity.binding.projected false) (json/stringify { entity: @payload.result.entity, count: @payload.result.count, rows: (array/map (object/get ?result rows []) (fn r (object/pick @r (default @entity.binding.fields [])))) }) (json/stringify ?result)), startedAt: @entity.callStartedAt, endedAt: (time/now) }))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit RUN_NEXT {})
       READ_FAILED -> running when (> (array/count (default ?errors []) (fn e (= @e.code "unknown-entity"))) 0)

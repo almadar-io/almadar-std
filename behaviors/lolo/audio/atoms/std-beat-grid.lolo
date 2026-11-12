@@ -1,0 +1,265 @@
+app std-beat-grid [
+  version: "1.0.0",
+  mem: { "arena:268435456": [create, free] },
+  description: "The beat grid of one encoded audio file. GRID_ANALYZE { data } creates a bump arena, decodes the file to mono PCM in it (audio/decode), borrows the block and reads two signals from it: the RMS envelope (signal/envelope) and band magnitudes per frame (signal/frames, bands from config). The onset curve is the spectral flux (the sum over bands of each band's rise since the previous frame). The beat period is the strongest autocorrelation lag of the onset curve between maxBpm and minBpm, refined to a fraction of a frame at refineBeats periods (the parabolic peak of the autocorrelation around that many periods). The phase is the frame offset within one period whose beats sum the most onset. Beats are every period from that phase to the end, each timed at the centre of its analysis window (frame start plus half a window), and bars every beatsPerBar beats from the first beat (the first beat is taken as a downbeat). The block is freed and the arena dropped before GRID_READY carries the grid in seconds with the envelope, bands and onset curve (one value per hop). Every failure drops the arena and emits GRID_ERROR with the kernel's kind. The grant caps the arena at 256 MiB, about 22 minutes of mono 48 kHz audio; a call site that needs more grants its own cap."
+]
+
+orbital BeatGridOrbital {
+  entity BeatGrid [runtime] {
+    id : string!
+    arena : Arena?
+    block : Block?
+    borrow : Borrow?
+    pendingData : bytes?
+    sampleRate : int = 0
+    frames : int = 0
+    hopSeconds : number = 0
+    envelope : [number] = []
+    bands : [[number]] = []
+    onset : [number] = []
+    coarseLag : int = 0
+    lagFrames : number = 0
+    tempo : number = 0
+    beats : [number] = []
+    bars : [number] = []
+    errorText : string = ""
+    errorKind : string = ""
+  }
+
+  trait BeatGridAnalysis -> @rebindable BeatGrid {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      GRID_ANALYZE -> opening
+        (set @entity.pendingData @payload.data)
+        (mem/arena-new "bump" @config.arenaBytes { emit: { success: GRID_ARENA, failure: GRID_FAILED } })
+    }
+
+    state opening {
+      INIT -> opening
+      GRID_ARENA -> decoding
+        (set @entity.arena @payload.arena)
+        (audio/decode @payload.arena (default @entity.pendingData (bytes/from-string "")) { mono: true } { emit: { success: GRID_DECODED, failure: GRID_FAILED } })
+        (set @entity.pendingData null)
+      GRID_FAILED -> idle
+        (set @entity.pendingData null)
+        (emit GRID_ERROR { error: @payload.error, kind: @payload.kind })
+    }
+
+    state decoding {
+      INIT -> decoding
+      GRID_DECODED -> borrowing
+        (set @entity.block @payload.block)
+        (set @entity.sampleRate @payload.sampleRate)
+        (set @entity.frames @payload.frames)
+        (set @entity.hopSeconds (default (/ @config.hop @payload.sampleRate) 0))
+        (mem/borrow @payload.block "shared" { emit: { success: GRID_BORROWED, failure: GRID_FAILED } })
+      GRID_FAILED -> failing when (not (= @entity.arena null))
+        (set @entity.errorText @payload.error)
+        (set @entity.errorKind @payload.kind)
+        (mem/arena-drop @entity.arena { emit: { success: GRID_DROPPED, failure: GRID_DROP_FAILED } })
+    }
+
+    state borrowing {
+      INIT -> borrowing
+      GRID_BORROWED -> releasing
+        (set @entity.borrow @payload.borrow)
+        (set @entity.envelope (signal/envelope @payload.borrow { channels: 1, channel: 0, window: @config.window, hop: @config.hop }))
+        (set @entity.bands (signal/frames @payload.borrow { sampleRate: @entity.sampleRate, channels: 1, channel: 0, window: @config.window, hop: @config.hop, bands: @config.bands }))
+        (mem/release @payload.borrow { emit: { success: GRID_RELEASED, failure: GRID_FAILED } })
+      GRID_FAILED -> failing when (not (= @entity.arena null))
+        (set @entity.errorText @payload.error)
+        (set @entity.errorKind @payload.kind)
+        (mem/arena-drop @entity.arena { emit: { success: GRID_DROPPED, failure: GRID_DROP_FAILED } })
+    }
+
+    state releasing {
+      INIT -> releasing
+      GRID_RELEASED -> tempo
+        (set @entity.borrow null)
+        (set @entity.onset (array/map (array/range (array/len @entity.bands)) (fn f (if (= @f 0) 0 (let ((cur (default (array/nth @entity.bands @f) [])) (prev (default (array/nth @entity.bands (- @f 1)) []))) (array/sum (array/map (array/range (array/len @cur)) (fn b (math/max 0 (- (default (array/nth @cur @b) 0) (default (array/nth @prev @b) 0)))))))))))
+        (emit GRID_ONSET_READY {})
+      GRID_FAILED -> broken
+        (set @entity.errorText @payload.error)
+        (set @entity.errorKind @payload.kind)
+        (emit GRID_ERROR { error: @payload.error, kind: @payload.kind })
+    }
+
+    state tempo {
+      INIT -> tempo
+      GRID_ONSET_READY -> phase when (> @entity.hopSeconds 0)
+        (let ((hopSec @entity.hopSeconds))
+          (let ((minLag (math/max 1 (math/floor (default (/ 60 (* @config.maxBpm @hopSec)) 1)))) (maxLag (math/max 2 (math/ceil (default (/ 60 (* @config.minBpm @hopSec)) 2)))))
+            (let ((ac (signal/autocorrelate @entity.onset @minLag @maxLag)))
+              (let ((lag0 (math/floor (+ @minLag (array/reduce (array/range (array/len @ac)) 0 (fn best i (if (> (default (array/nth @ac @i) 0) (default (array/nth @ac @best) 0)) @i @best)))))))
+                (let ((ac4 (signal/autocorrelate @entity.onset (math/floor (- (* @config.refineBeats @lag0) @config.refineBeats)) (math/floor (+ (* @config.refineBeats @lag0) @config.refineBeats)))))
+                  (let ((p4 (array/reduce (array/range (array/len @ac4)) 0 (fn best i (if (> (default (array/nth @ac4 @i) 0) (default (array/nth @ac4 @best) 0)) @i @best)))))
+                    (let ((y0 (default (array/nth @ac4 (math/max 0 (- @p4 1))) 0)) (y1 (default (array/nth @ac4 @p4) 0)) (y2 (default (array/nth @ac4 (+ @p4 1)) 0)))
+                      (let ((denom (+ (- @y0 (* 2 @y1)) @y2)))
+                        (let ((delta (if (or (= @p4 0) (= @p4 (* 2 @config.refineBeats)) (= @denom 0)) 0 (default (/ (* 0.5 (- @y0 @y2)) @denom) 0))))
+                          (let ((lagF (default (/ (+ (- (* @config.refineBeats @lag0) @config.refineBeats) @p4 @delta) @config.refineBeats) @lag0)))
+                            (do
+                              (set @entity.coarseLag @lag0)
+                              (set @entity.lagFrames @lagF)
+                              (set @entity.tempo (default (/ 60 (* @lagF @hopSec)) 0)))))))))))))
+        (emit GRID_TEMPO_READY {})
+    }
+
+    state phase {
+      INIT -> phase
+      GRID_TEMPO_READY -> freeing when (and (not (= @entity.block null)) (> @entity.lagFrames 0))
+        (let ((hopSec @entity.hopSeconds) (n (array/len @entity.onset)) (lagF @entity.lagFrames))
+          (let ((offset (array/reduce (array/range (math/max 1 (math/round @lagF))) 0 (fn best o (if (> (array/sum (array/map (array/range (+ 1 (math/floor (default (/ (- (- @n 1) @o) @lagF) 0)))) (fn k (default (array/nth @entity.onset (math/round (+ @o (* @k @lagF)))) 0)))) (array/sum (array/map (array/range (+ 1 (math/floor (default (/ (- (- @n 1) @best) @lagF) 0)))) (fn k (default (array/nth @entity.onset (math/round (+ @best (* @k @lagF)))) 0))))) @o @best)))))
+            (let ((beats (array/map (array/range (+ 1 (math/floor (default (/ (- (- @n 1) @offset) @lagF) 0)))) (fn k (+ (* (+ @offset (* @k @lagF)) @hopSec) (* 0.5 (* @config.window (default (/ 1 @entity.sampleRate) 0))))))))
+              (do
+                (set @entity.beats @beats)
+                (set @entity.bars (array/map (array/range 0 (array/len @beats) @config.beatsPerBar) (fn i (default (array/nth @beats @i) 0))))))))
+        (mem/free @entity.block { emit: { success: GRID_FREED, failure: GRID_FAILED } })
+    }
+
+    state freeing {
+      INIT -> freeing
+      GRID_FREED -> dropping when (not (= @entity.arena null))
+        (set @entity.block null)
+        (mem/arena-drop @entity.arena { emit: { success: GRID_DROPPED, failure: GRID_DROP_FAILED } })
+      GRID_FAILED -> failing when (not (= @entity.arena null))
+        (set @entity.errorText @payload.error)
+        (set @entity.errorKind @payload.kind)
+        (mem/arena-drop @entity.arena { emit: { success: GRID_DROPPED, failure: GRID_DROP_FAILED } })
+    }
+
+    state dropping {
+      INIT -> dropping
+      GRID_DROPPED -> idle
+        (set @entity.arena null)
+        (set @entity.block null)
+        (emit GRID_READY { sampleRate: @entity.sampleRate, frames: @entity.frames, duration: (* @entity.frames (default (/ 1 @entity.sampleRate) 0)), hopSeconds: @entity.hopSeconds, tempo: @entity.tempo, beatSeconds: (* @entity.lagFrames @entity.hopSeconds), beats: @entity.beats, bars: @entity.bars, envelope: @entity.envelope, bands: @entity.bands, onset: @entity.onset })
+      GRID_DROP_FAILED -> idle
+        (set @entity.arena null)
+        (set @entity.block null)
+        (emit GRID_ERROR { error: @payload.error, kind: @payload.kind })
+    }
+
+    state failing {
+      INIT -> failing
+      GRID_DROPPED -> idle
+        (set @entity.arena null)
+        (set @entity.block null)
+        (emit GRID_ERROR { error: @entity.errorText, kind: @entity.errorKind })
+      GRID_DROP_FAILED -> idle
+        (set @entity.arena null)
+        (set @entity.block null)
+        (emit GRID_ERROR { error: @payload.error, kind: @payload.kind })
+    }
+
+    state broken {
+      INIT -> broken
+      GRID_RESET -> failing when (not (= @entity.arena null))
+        (mem/arena-drop @entity.arena { emit: { success: GRID_DROPPED, failure: GRID_DROP_FAILED } })
+    }
+
+    emits {
+      GRID_READY -> external {
+        sampleRate : int!
+        frames : int!
+        duration : number!
+        hopSeconds : number!
+        tempo : number!
+        beatSeconds : number!
+        beats : [number]!
+        bars : [number]!
+        envelope : [number]!
+        bands : [[number]]!
+        onset : [number]!
+      }
+        @description "The grid of the analyzed file: tempo in beats per minute, beat and bar times in seconds from the start, and the envelope, bands and onset curves with one value per hopSeconds."
+      GRID_ERROR -> external { error : string! kind : string! }
+        @description "Decoding or reading the signal failed; kind is the kernel's answer (invalid, closed, unsupported, denied)."
+      GRID_ARENA { arena : Arena! }
+        @description "Internal: the arena was created."
+        @tier "internal"
+      GRID_DECODED { block : Block! sampleRate : int! channels : int! frames : int! }
+        @description "Internal: the file was decoded into a block."
+        @tier "internal"
+      GRID_BORROWED { borrow : Borrow! }
+        @description "Internal: the block is borrowed for reading."
+        @tier "internal"
+      GRID_RELEASED {}
+        @description "Internal: the borrow was released."
+        @tier "internal"
+      GRID_ONSET_READY {}
+        @description "Internal: the onset curve is computed."
+        @tier "internal"
+      GRID_TEMPO_READY {}
+        @description "Internal: the beat period is computed."
+        @tier "internal"
+      GRID_FREED {}
+        @description "Internal: the block was freed."
+        @tier "internal"
+      GRID_DROPPED {}
+        @description "Internal: the arena was dropped."
+        @tier "internal"
+      GRID_DROP_FAILED { error : string! kind : string! }
+        @description "Internal: dropping the arena failed."
+        @tier "internal"
+      GRID_FAILED { error : string! kind : string! }
+        @description "Internal: a memory or decode call failed."
+        @tier "internal"
+    }
+
+    listens {
+      GRID_ANALYZE { data : bytes! }
+        @description "Analyze this encoded audio file (wav, flac, mp3, ogg, m4a)."
+        @synonyms "detect tempo, find beats, beat detection, bpm, analyze track"
+      GRID_RESET {}
+        @description "Drop a grid that failed while its borrow was held."
+      GRID_ARENA { arena : Arena! }
+      GRID_DECODED { block : Block! sampleRate : int! channels : int! frames : int! }
+      GRID_BORROWED { borrow : Borrow! }
+      GRID_RELEASED {}
+      GRID_ONSET_READY {}
+      GRID_TEMPO_READY {}
+      GRID_FREED {}
+      GRID_DROPPED {}
+      GRID_DROP_FAILED { error : string! kind : string! }
+      GRID_FAILED { error : string! kind : string! }
+    }
+
+    config {
+      arenaBytes : int = 268435456
+        @label "Arena size (bytes)"
+        @description "Bytes of kernel memory the decoded PCM may take: 4 bytes per mono sample. Must fit the mem grant."
+        @tier "infra"
+      window : int = 2048
+        @label "Analysis window (samples)"
+        @description "Samples per analysis frame; a power of two."
+        @tier "infra"
+      hop : int = 512
+        @label "Hop (samples)"
+        @description "Samples between frames; one envelope, band and onset value per hop."
+        @tier "infra"
+      bands : [[number]] = [[20, 150], [150, 2000], [2000, 16000]]
+        @label "Frequency bands (Hz)"
+        @description "Each band is [lowHz, highHz]; the onset curve sums every band's rise."
+        @tier "domain"
+      minBpm : number = 70
+        @label "Slowest tempo (BPM)"
+        @description "The longest beat period searched."
+        @tier "domain"
+      maxBpm : number = 180
+        @label "Fastest tempo (BPM)"
+        @description "The shortest beat period searched."
+        @tier "domain"
+      refineBeats : int = 8
+        @label "Refinement span (beats)"
+        @description "The beat period is refined on the autocorrelation peak this many periods out, so its error shrinks by this factor; it must be shorter than the file."
+        @tier "infra"
+      beatsPerBar : int = 4
+        @label "Beats per bar"
+        @description "Bars are every this many beats from the first beat."
+        @synonyms "time signature, meter"
+        @tier "domain"
+    }
+  }
+}

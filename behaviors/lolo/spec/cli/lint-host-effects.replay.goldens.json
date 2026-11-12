@@ -22444,6 +22444,833 @@
      }
     }
    ]
+  },
+  {
+   "id": "he-grant-metadata-names-no-endpoint",
+   "steps": [
+    {
+     "trait": "OrbLintHostEffects",
+     "event": "HOST_CALLS_HEARD",
+     "from": "ready",
+     "payload": {
+      "requestId": "host-effects:",
+      "unread": false,
+      "calls": [
+       {
+        "head": "credential-connect",
+        "path": "orbitals[0 (FxOrbital)].traits[0 (Fx)].stateMachine.transitions[1].effects[0]",
+        "call": [
+         "credential-connect",
+         {
+          "credential": "@config.cred",
+          "grant": "metadata",
+          "scopes": [
+           "https://www.googleapis.com/auth/datastore"
+          ]
+         },
+         {
+          "emit": {
+           "success": "DONE",
+           "failure": "FAILED"
+          }
+         }
+        ],
+        "tname": "Fx",
+        "tick": "",
+        "bg": false,
+        "declared": [
+         "DONE",
+         "FAILED"
+        ],
+        "config": {},
+        "inGuard": false
+       }
+      ],
+      "facts": {
+       "credential-connect": {
+        "minArity": 1,
+        "params": [
+         {
+          "name": "request",
+          "type": {
+           "kind": "object",
+           "fields": {
+            "credential": "string",
+            "scope": {
+             "kind": "union",
+             "of": [
+              {
+               "kind": "literal",
+               "value": "app"
+              },
+              {
+               "kind": "literal",
+               "value": "user"
+              }
+             ]
+            },
+            "tokenEndpoint": "string",
+            "grant": {
+             "kind": "union",
+             "of": [
+              {
+               "kind": "literal",
+               "value": "authorization_code"
+              },
+              {
+               "kind": "literal",
+               "value": "refresh_token"
+              },
+              {
+               "kind": "literal",
+               "value": "jwt-bearer"
+              },
+              {
+               "kind": "literal",
+               "value": "json-token"
+              }
+             ]
+            },
+            "code": "string",
+            "redirectUri": "string",
+            "verifier": "string",
+            "clientId": "string",
+            "clientSecret": "string",
+            "clientAuth": {
+             "kind": "union",
+             "of": [
+              {
+               "kind": "literal",
+               "value": "body"
+              },
+              {
+               "kind": "literal",
+               "value": "basic"
+              },
+              {
+               "kind": "literal",
+               "value": "none"
+              }
+             ]
+            },
+            "scopes": {
+             "kind": "array",
+             "of": "string"
+            },
+            "refreshCredential": "string",
+            "signingKey": "string",
+            "subject": "string",
+            "audience": "string",
+            "ttlSeconds": "number",
+            "clientIdField": "string",
+            "clientSecretField": "string",
+            "accessField": "string",
+            "refreshField": "string",
+            "expiresInField": "string",
+            "refreshEndpoint": "string",
+            "refreshBodyField": "string"
+           },
+           "optional": [
+            "scope",
+            "code",
+            "redirectUri",
+            "verifier",
+            "clientId",
+            "clientSecret",
+            "clientAuth",
+            "scopes",
+            "refreshCredential",
+            "signingKey",
+            "subject",
+            "audience",
+            "ttlSeconds",
+            "clientIdField",
+            "clientSecretField",
+            "accessField",
+            "refreshField",
+            "expiresInField",
+            "refreshEndpoint",
+            "refreshBodyField"
+           ]
+          }
+         },
+         {
+          "name": "options",
+          "type": {
+           "kind": "object",
+           "fields": {
+            "emit": {
+             "kind": "object",
+             "fields": {
+              "success": {
+               "kind": "eventKey"
+              },
+              "failure": {
+               "kind": "eventKey"
+              }
+             },
+             "open": true
+            }
+           },
+           "open": true
+          },
+          "description": "Optional trailing options: { emit: { success, failure } } routes the { connected, label } payload and the { error, kind } failure",
+          "optional": true
+         }
+        ],
+        "maxArity": 2,
+        "runsOn": "server",
+        "closedCall": {
+         "request": true,
+         "requestKeysByLiteral": {
+          "key": "grant",
+          "required": {
+           "authorization_code": [
+            "tokenEndpoint",
+            "code",
+            "redirectUri",
+            "clientAuth"
+           ],
+           "refresh_token": [
+            "tokenEndpoint",
+            "clientAuth"
+           ],
+           "jwt-bearer": [
+            "tokenEndpoint",
+            "signingKey",
+            "audience",
+            "ttlSeconds"
+           ],
+           "json-token": [
+            "tokenEndpoint",
+            "clientId",
+            "clientSecret",
+            "clientIdField",
+            "clientSecretField",
+            "accessField"
+           ],
+           "metadata": []
+          }
+         }
+        },
+        "hasOptions": true,
+        "optionKeys": [
+         "emit"
+        ],
+        "emitKeys": [
+         "failure",
+         "success"
+        ],
+        "hasRequest": true,
+        "requestFields": [
+         "accessField",
+         "audience",
+         "clientAuth",
+         "clientId",
+         "clientIdField",
+         "clientSecret",
+         "clientSecretField",
+         "code",
+         "credential",
+         "expiresInField",
+         "grant",
+         "redirectUri",
+         "refreshBodyField",
+         "refreshCredential",
+         "refreshEndpoint",
+         "refreshField",
+         "scope",
+         "scopes",
+         "signingKey",
+         "subject",
+         "tokenEndpoint",
+         "ttlSeconds",
+         "verifier"
+        ],
+        "requestRequired": [
+         "credential",
+         "grant"
+        ],
+        "words": {
+         "request/scope": [
+          "app",
+          "user"
+         ],
+         "request/grant": [
+          "authorization_code",
+          "refresh_token",
+          "jwt-bearer",
+          "json-token",
+          "metadata"
+         ],
+         "request/clientAuth": [
+          "body",
+          "basic",
+          "none"
+         ]
+        },
+        "keys": {
+         "request": [
+          "accessField",
+          "audience",
+          "clientAuth",
+          "clientId",
+          "clientIdField",
+          "clientSecret",
+          "clientSecretField",
+          "code",
+          "credential",
+          "expiresInField",
+          "grant",
+          "redirectUri",
+          "refreshBodyField",
+          "refreshCredential",
+          "refreshEndpoint",
+          "refreshField",
+          "scope",
+          "scopes",
+          "signingKey",
+          "subject",
+          "tokenEndpoint",
+          "ttlSeconds",
+          "verifier"
+         ],
+         "options": [
+          "emit"
+         ],
+         "options/emit": [
+          "failure",
+          "success"
+         ]
+        }
+       }
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_PLANNED",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintHostEffects",
+     "event": "LINT_PLANNED",
+     "from": "ready",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "EMIT_CONFIG_CHECK",
+        "payload": {
+         "requestId": "emit",
+         "items": [
+          {
+           "id": "e0",
+           "path": "orbitals[0 (FxOrbital)].traits[0 (Fx)].stateMachine.transitions[1].effects[0]",
+           "emit": {
+            "failure": "FAILED",
+            "success": "DONE"
+           },
+           "allowedKeys": [
+            "failure",
+            "success"
+           ],
+           "checkDeclared": true,
+           "declared": [
+            "DONE",
+            "FAILED"
+           ]
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintHostEffects",
+     "event": "EMIT_HEARD",
+     "from": "ready",
+     "payload": {
+      "requestId": "emit",
+      "results": [
+       {
+        "id": "e0",
+        "findings": []
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_ASSEMBLE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintHostEffects",
+     "event": "LINT_ASSEMBLE",
+     "from": "ready",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintHostEffects",
+     "event": "LINT_FINISH",
+     "from": "ready",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "host-effects",
+         "scope": "",
+         "findings": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "he-grant-code-without-endpoint",
+   "steps": [
+    {
+     "trait": "OrbLintHostEffects",
+     "event": "HOST_CALLS_HEARD",
+     "from": "ready",
+     "payload": {
+      "requestId": "host-effects:",
+      "unread": false,
+      "calls": [
+       {
+        "head": "credential-connect",
+        "path": "orbitals[0 (FxOrbital)].traits[0 (Fx)].stateMachine.transitions[1].effects[0]",
+        "call": [
+         "credential-connect",
+         {
+          "credential": "@config.cred",
+          "grant": "authorization_code",
+          "code": "@payload.code",
+          "redirectUri": "https://app.example/cb",
+          "clientId": "@config.cid",
+          "clientAuth": "body"
+         },
+         {
+          "emit": {
+           "success": "DONE",
+           "failure": "FAILED"
+          }
+         }
+        ],
+        "tname": "Fx",
+        "tick": "",
+        "bg": false,
+        "declared": [
+         "DONE",
+         "FAILED"
+        ],
+        "config": {},
+        "inGuard": false
+       }
+      ],
+      "facts": {
+       "credential-connect": {
+        "minArity": 1,
+        "params": [
+         {
+          "name": "request",
+          "type": {
+           "kind": "object",
+           "fields": {
+            "credential": "string",
+            "scope": {
+             "kind": "union",
+             "of": [
+              {
+               "kind": "literal",
+               "value": "app"
+              },
+              {
+               "kind": "literal",
+               "value": "user"
+              }
+             ]
+            },
+            "tokenEndpoint": "string",
+            "grant": {
+             "kind": "union",
+             "of": [
+              {
+               "kind": "literal",
+               "value": "authorization_code"
+              },
+              {
+               "kind": "literal",
+               "value": "refresh_token"
+              },
+              {
+               "kind": "literal",
+               "value": "jwt-bearer"
+              },
+              {
+               "kind": "literal",
+               "value": "json-token"
+              }
+             ]
+            },
+            "code": "string",
+            "redirectUri": "string",
+            "verifier": "string",
+            "clientId": "string",
+            "clientSecret": "string",
+            "clientAuth": {
+             "kind": "union",
+             "of": [
+              {
+               "kind": "literal",
+               "value": "body"
+              },
+              {
+               "kind": "literal",
+               "value": "basic"
+              },
+              {
+               "kind": "literal",
+               "value": "none"
+              }
+             ]
+            },
+            "scopes": {
+             "kind": "array",
+             "of": "string"
+            },
+            "refreshCredential": "string",
+            "signingKey": "string",
+            "subject": "string",
+            "audience": "string",
+            "ttlSeconds": "number",
+            "clientIdField": "string",
+            "clientSecretField": "string",
+            "accessField": "string",
+            "refreshField": "string",
+            "expiresInField": "string",
+            "refreshEndpoint": "string",
+            "refreshBodyField": "string"
+           },
+           "optional": [
+            "scope",
+            "code",
+            "redirectUri",
+            "verifier",
+            "clientId",
+            "clientSecret",
+            "clientAuth",
+            "scopes",
+            "refreshCredential",
+            "signingKey",
+            "subject",
+            "audience",
+            "ttlSeconds",
+            "clientIdField",
+            "clientSecretField",
+            "accessField",
+            "refreshField",
+            "expiresInField",
+            "refreshEndpoint",
+            "refreshBodyField"
+           ]
+          }
+         },
+         {
+          "name": "options",
+          "type": {
+           "kind": "object",
+           "fields": {
+            "emit": {
+             "kind": "object",
+             "fields": {
+              "success": {
+               "kind": "eventKey"
+              },
+              "failure": {
+               "kind": "eventKey"
+              }
+             },
+             "open": true
+            }
+           },
+           "open": true
+          },
+          "description": "Optional trailing options: { emit: { success, failure } } routes the { connected, label } payload and the { error, kind } failure",
+          "optional": true
+         }
+        ],
+        "maxArity": 2,
+        "runsOn": "server",
+        "closedCall": {
+         "request": true,
+         "requestKeysByLiteral": {
+          "key": "grant",
+          "required": {
+           "authorization_code": [
+            "tokenEndpoint",
+            "code",
+            "redirectUri",
+            "clientAuth"
+           ],
+           "refresh_token": [
+            "tokenEndpoint",
+            "clientAuth"
+           ],
+           "jwt-bearer": [
+            "tokenEndpoint",
+            "signingKey",
+            "audience",
+            "ttlSeconds"
+           ],
+           "json-token": [
+            "tokenEndpoint",
+            "clientId",
+            "clientSecret",
+            "clientIdField",
+            "clientSecretField",
+            "accessField"
+           ],
+           "metadata": []
+          }
+         }
+        },
+        "hasOptions": true,
+        "optionKeys": [
+         "emit"
+        ],
+        "emitKeys": [
+         "failure",
+         "success"
+        ],
+        "hasRequest": true,
+        "requestFields": [
+         "accessField",
+         "audience",
+         "clientAuth",
+         "clientId",
+         "clientIdField",
+         "clientSecret",
+         "clientSecretField",
+         "code",
+         "credential",
+         "expiresInField",
+         "grant",
+         "redirectUri",
+         "refreshBodyField",
+         "refreshCredential",
+         "refreshEndpoint",
+         "refreshField",
+         "scope",
+         "scopes",
+         "signingKey",
+         "subject",
+         "tokenEndpoint",
+         "ttlSeconds",
+         "verifier"
+        ],
+        "requestRequired": [
+         "credential",
+         "grant"
+        ],
+        "words": {
+         "request/scope": [
+          "app",
+          "user"
+         ],
+         "request/grant": [
+          "authorization_code",
+          "refresh_token",
+          "jwt-bearer",
+          "json-token",
+          "metadata"
+         ],
+         "request/clientAuth": [
+          "body",
+          "basic",
+          "none"
+         ]
+        },
+        "keys": {
+         "request": [
+          "accessField",
+          "audience",
+          "clientAuth",
+          "clientId",
+          "clientIdField",
+          "clientSecret",
+          "clientSecretField",
+          "code",
+          "credential",
+          "expiresInField",
+          "grant",
+          "redirectUri",
+          "refreshBodyField",
+          "refreshCredential",
+          "refreshEndpoint",
+          "refreshField",
+          "scope",
+          "scopes",
+          "signingKey",
+          "subject",
+          "tokenEndpoint",
+          "ttlSeconds",
+          "verifier"
+         ],
+         "options": [
+          "emit"
+         ],
+         "options/emit": [
+          "failure",
+          "success"
+         ]
+        }
+       }
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_PLANNED",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintHostEffects",
+     "event": "LINT_PLANNED",
+     "from": "ready",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "EMIT_CONFIG_CHECK",
+        "payload": {
+         "requestId": "emit",
+         "items": [
+          {
+           "id": "e0",
+           "path": "orbitals[0 (FxOrbital)].traits[0 (Fx)].stateMachine.transitions[1].effects[0]",
+           "emit": {
+            "failure": "FAILED",
+            "success": "DONE"
+           },
+           "allowedKeys": [
+            "failure",
+            "success"
+           ],
+           "checkDeclared": true,
+           "declared": [
+            "DONE",
+            "FAILED"
+           ]
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintHostEffects",
+     "event": "EMIT_HEARD",
+     "from": "ready",
+     "payload": {
+      "requestId": "emit",
+      "results": [
+       {
+        "id": "e0",
+        "findings": []
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_ASSEMBLE",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintHostEffects",
+     "event": "LINT_ASSEMBLE",
+     "from": "ready",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "trait": "OrbLintHostEffects",
+     "event": "LINT_FINISH",
+     "from": "ready",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "host-effects",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_CREDENTIAL_REQUEST_INVALID",
+           "path": "orbitals[0 (FxOrbital)].traits[0 (Fx)].stateMachine.transitions[1].effects[0]",
+           "message": "`credential-connect` with grant `authorization_code` needs `tokenEndpoint` in its request",
+           "suggestion": "",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
   }
  ]
 }

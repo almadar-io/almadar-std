@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "Canonical operator registry for Almadar. Generated from @almadar/std/modules. Consumed by orbital-compiler via include_str!.",
-  "generated": "2026-11-11T09:10:23.141Z",
+  "generated": "2026-11-12T09:47:06.972Z",
   "categories": {
     "arithmetic": {
       "description": "Numeric operations",
@@ -136,6 +136,13 @@
     "std-mem-read": {
       "description": "Pure reads of borrowed kernel memory (EXEC-METAL-3)",
       "target": [
+        "rust"
+      ]
+    },
+    "std-signal": {
+      "description": "Domain-free numeric signal primitives over PCM and number lists",
+      "target": [
+        "ts",
         "rust"
       ]
     },
@@ -3281,6 +3288,128 @@
       ],
       "docsSource": "generated"
     },
+    "audio/clock": {
+      "category": "std-audio",
+      "minArity": 0,
+      "maxArity": 0,
+      "returnType": "void",
+      "description": "Read the host's audio clock: audio is seconds on the clock audio/schedule times use, wall is epoch milliseconds read at the same moment. Resolves via the trailing { emit } envelope. Success payload: { audio, wall }. Failure kind: unsupported (a host with no audio output).",
+      "module": "audio",
+      "visual": {
+        "form": "actuator"
+      },
+      "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "audio": "number",
+            "wall": "number"
+          }
+        }
+      },
+      "runsOn": "client",
+      "host": "substrate",
+      "examples": [
+        "(audio/clock {\"emit\":{\"success\":\"AUDIO_CLOCK\",\"failure\":\"AUDIO_UNAVAILABLE\"}})"
+      ],
+      "docsSource": "generated"
+    },
+    "audio/decode": {
+      "category": "std-audio",
+      "minArity": 2,
+      "maxArity": 4,
+      "returnType": "void",
+      "description": "Decode an encoded audio file (wav, flac, mp3, ogg/vorbis, aac/m4a) into a new block of the arena: f32 little-endian samples interleaved by channel; mono averages the channels. Success payload: { block, sampleRate, channels, frames }. Failure kind: closed (the arena is not live), invalid (undecodable data, no room left in the arena), unsupported (a kernel built without the decoder).",
+      "module": "audio",
+      "visual": {
+        "form": "actuator"
+      },
+      "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "block": "Block",
+            "sampleRate": "int",
+            "channels": "int",
+            "frames": "int",
+            "key": "string"
+          },
+          "optional": [
+            "key"
+          ]
+        }
+      },
+      "grant": [],
+      "runsOn": "any",
+      "host": "kernel",
+      "params": [
+        {
+          "name": "arena",
+          "type": "Arena",
+          "description": "The arena that receives the decoded block"
+        },
+        {
+          "name": "data",
+          "type": {
+            "kind": "union",
+            "of": [
+              "bytes",
+              "Borrow"
+            ]
+          },
+          "description": "The encoded file, as bytes or a live Borrow of the block holding it"
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "mono": "boolean"
+            },
+            "optional": [
+              "mono"
+            ]
+          },
+          "description": "Optional: { mono } averages the channels into one",
+          "optional": true
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "key": "string",
+              "emit": {
+                "kind": "object",
+                "fields": {
+                  "success": {
+                    "kind": "eventKey"
+                  },
+                  "failure": {
+                    "kind": "eventKey"
+                  },
+                  "cancelled": {
+                    "kind": "eventKey"
+                  }
+                },
+                "open": true
+              }
+            },
+            "open": true
+          },
+          "description": "Optional trailing options: { emit: { success, failure, key? } } routes the success payload and the { error, kind } failure; kind is one of denied, not-found, exists, invalid, io, timeout, unsupported, closed, borrowed",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(audio/decode @entity.arena @payload.data {\"mono\":true} {\"emit\":{\"success\":\"AUDIO_DECODED\",\"failure\":\"AUDIO_FAILED\"}})"
+      ],
+      "docsSource": "generated"
+    },
     "audio/play-sound": {
       "category": "std-audio",
       "minArity": 1,
@@ -3303,6 +3432,110 @@
       ],
       "examples": [
         "(audio/play-sound \"footstep\")"
+      ],
+      "docsSource": "generated"
+    },
+    "audio/schedule": {
+      "category": "std-audio",
+      "minArity": 1,
+      "maxArity": 1,
+      "returnType": "void",
+      "description": "Schedule voices on the host's audio clock, all times in seconds of audio/clock: start plays source from offset (seconds into the source) at time at, for duration (absent: to the end), at playback rate rate and gain gain; stop ends the voice key at at; ramp moves the voice's gain or playback rate from its value at at to value at endAt along curve. The host plays exactly what is declared and picks nothing; a stop or ramp for a key with no voice fails the ask (invalid).",
+      "module": "audio",
+      "visual": {
+        "form": "actuator"
+      },
+      "hasSideEffects": true,
+      "runsOn": "client",
+      "host": "substrate",
+      "params": [
+        {
+          "name": "commands",
+          "type": {
+            "kind": "array",
+            "of": {
+              "kind": "union",
+              "of": [
+                {
+                  "kind": "object",
+                  "fields": {
+                    "start": {
+                      "kind": "object",
+                      "fields": {
+                        "key": "string",
+                        "source": "string",
+                        "at": "number",
+                        "offset": "number",
+                        "duration": "number",
+                        "rate": "number",
+                        "gain": "number"
+                      },
+                      "optional": [
+                        "duration"
+                      ]
+                    }
+                  }
+                },
+                {
+                  "kind": "object",
+                  "fields": {
+                    "stop": {
+                      "kind": "object",
+                      "fields": {
+                        "key": "string",
+                        "at": "number"
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "object",
+                  "fields": {
+                    "ramp": {
+                      "kind": "object",
+                      "fields": {
+                        "key": "string",
+                        "param": {
+                          "kind": "union",
+                          "of": [
+                            {
+                              "kind": "literal",
+                              "value": "gain"
+                            },
+                            {
+                              "kind": "literal",
+                              "value": "rate"
+                            }
+                          ]
+                        },
+                        "value": "number",
+                        "at": "number",
+                        "endAt": "number",
+                        "curve": {
+                          "kind": "union",
+                          "of": [
+                            {
+                              "kind": "literal",
+                              "value": "linear"
+                            },
+                            {
+                              "kind": "literal",
+                              "value": "exponential"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "description": "The commands, applied in list order: start, stop or ramp records with exactly one key each"
+        }
+      ],
+      "examples": [
+        "(audio/schedule [{\"start\":{\"key\":\"kick\",\"source\":\"/sfx/kick.ogg\",\"at\":1.5,\"offset\":0,\"rate\":1,\"gain\":0.9}},{\"ramp\":{\"key\":\"kick\",\"param\":\"gain\",\"value\":0,\"at\":1.5,\"endAt\":2,\"curve\":\"linear\"}}])"
       ],
       "docsSource": "generated"
     },
@@ -7571,7 +7804,7 @@
       "minArity": 1,
       "maxArity": 2,
       "returnType": "void",
-      "description": "Ask the host's credential store to make an OAuth grant at a declared https token endpoint (origin in egress) and keep the result under the credential a secret knob names, for the app or the signed-in viewer. grant is authorization_code, refresh_token (the credential's own refresh token, or the stored refresh-token credential refreshCredential names), jwt-bearer (RFC 7523: the store signs an RS256 assertion with the stored Google service-account JSON signingKey names, signing with its private_key, iss its client_email, sub the declared subject or else that email, header kid its private_key_id; subject, audience, scopes and ttlSeconds are declared) json-token (a JSON-body endpoint declared by clientIdField, clientSecretField, accessField, refreshField, expiresInField, refreshEndpoint and refreshBodyField) or client-credentials (RFC 6749 4.4: the client authenticates with clientId and clientSecret in the body or as basic; grantType names the grant_type it sends, client_credentials unless a provider names another, and params the extra non-secret { name, value } parameters, sent in the body or, with paramsIn query, in the token endpoint's query). credential, clientId, clientSecret, signingKey and refreshCredential are secret knobs; code and verifier are the single-use values, redacted in the journal. When a refresh answers a new refresh token for a credential made from refreshCredential, the store writes it back into that stored credential. A jwt-bearer credential is re-signed and a client-credentials credential re-minted by the store when it expires; a json-token credential renews through its declared refresh endpoint. The program never holds a token. The success payload is { connected, label }; the failure payload is { error, kind } with kind one of unavailable, unsigned, denied, invalid_grant, invalid_client, transport, malformed, refused. A host with no credential store that can connect answers unavailable.",
+      "description": "Ask the host's credential store to make an OAuth grant at a declared https token endpoint (origin in egress) and keep the result under the credential a secret knob names, for the app or the signed-in viewer. grant is authorization_code, refresh_token (the credential's own refresh token, or the stored refresh-token credential refreshCredential names), jwt-bearer (RFC 7523: the store signs an RS256 assertion with the stored Google service-account JSON signingKey names, signing with its private_key, iss its client_email, sub the declared subject or else that email, header kid its private_key_id; subject, audience, scopes and ttlSeconds are declared) json-token (a JSON-body endpoint declared by clientIdField, clientSecretField, accessField, refreshField, expiresInField, refreshEndpoint and refreshBodyField) or client-credentials (RFC 6749 4.4: the client authenticates with clientId and clientSecret in the body or as basic; grantType names the grant_type it sends, client_credentials unless a provider names another, and params the extra non-secret { name, value } parameters, sent in the body or, with paramsIn query, in the token endpoint's query), or metadata (the access token of the account the process runs as, from the Google metadata server; the request names no tokenEndpoint, because the kernel owns that one address, only credential, scope and scopes). credential, clientId, clientSecret, signingKey and refreshCredential are secret knobs; code and verifier are the single-use values, redacted in the journal. When a refresh answers a new refresh token for a credential made from refreshCredential, the store writes it back into that stored credential. A jwt-bearer credential is re-signed, and a client-credentials or metadata credential re-minted, by the store when it expires; a json-token credential renews through its declared refresh endpoint. The program never holds a token. The success payload is { connected, label }; the failure payload is { error, kind } with kind one of unavailable, unsigned, denied, invalid_grant, invalid_client, transport, malformed, refused. A host with no credential store that can connect answers unavailable.",
       "module": "core",
       "visual": {
         "form": "actuator"
@@ -7593,19 +7826,23 @@
           "key": "grant",
           "required": {
             "authorization_code": [
+              "tokenEndpoint",
               "code",
               "redirectUri",
               "clientAuth"
             ],
             "refresh_token": [
+              "tokenEndpoint",
               "clientAuth"
             ],
             "jwt-bearer": [
+              "tokenEndpoint",
               "signingKey",
               "audience",
               "ttlSeconds"
             ],
             "json-token": [
+              "tokenEndpoint",
               "clientId",
               "clientSecret",
               "clientIdField",
@@ -7613,10 +7850,12 @@
               "accessField"
             ],
             "client-credentials": [
+              "tokenEndpoint",
               "clientId",
               "clientSecret",
               "clientAuth"
-            ]
+            ],
+            "metadata": []
           }
         }
       },
@@ -7664,6 +7903,10 @@
                   {
                     "kind": "literal",
                     "value": "client-credentials"
+                  },
+                  {
+                    "kind": "literal",
+                    "value": "metadata"
                   }
                 ]
               },
@@ -7732,6 +7975,7 @@
             },
             "optional": [
               "scope",
+              "tokenEndpoint",
               "code",
               "redirectUri",
               "verifier",
@@ -7756,7 +8000,7 @@
               "paramsIn"
             ]
           },
-          "description": "authorization_code: { credential, scope?, tokenEndpoint, grant, code, redirectUri, verifier?, clientId, clientSecret?, clientAuth, scopes? } | refresh_token: { credential, scope?, tokenEndpoint, grant, clientId, clientSecret?, clientAuth, refreshCredential? } | jwt-bearer: { credential, scope?, tokenEndpoint, grant, signingKey, subject?, audience, ttlSeconds, scopes? } | json-token: { credential, scope?, tokenEndpoint, grant, clientId, clientSecret, clientIdField, clientSecretField, accessField, refreshField?, expiresInField?, refreshEndpoint?, refreshBodyField? } | client-credentials: { credential, scope?, tokenEndpoint, grant, clientId, clientSecret, clientAuth, scopes?, grantType?, params?, paramsIn? }"
+          "description": "authorization_code: { credential, scope?, tokenEndpoint, grant, code, redirectUri, verifier?, clientId, clientSecret?, clientAuth, scopes? } | refresh_token: { credential, scope?, tokenEndpoint, grant, clientId, clientSecret?, clientAuth, refreshCredential? } | jwt-bearer: { credential, scope?, tokenEndpoint, grant, signingKey, subject?, audience, ttlSeconds, scopes? } | json-token: { credential, scope?, tokenEndpoint, grant, clientId, clientSecret, clientIdField, clientSecretField, accessField, refreshField?, expiresInField?, refreshEndpoint?, refreshBodyField? } | client-credentials: { credential, scope?, tokenEndpoint, grant, clientId, clientSecret, clientAuth, scopes?, grantType?, params?, paramsIn? } | metadata: { credential, scope?, grant, scopes? }"
         },
         {
           "name": "options",
@@ -28525,6 +28769,31 @@
                         ]
                       },
                       "error": "string",
+                      "code": {
+                        "kind": "union",
+                        "of": [
+                          {
+                            "kind": "literal",
+                            "value": "not-found"
+                          },
+                          {
+                            "kind": "literal",
+                            "value": "no-row-key"
+                          },
+                          {
+                            "kind": "literal",
+                            "value": "duplicate-id"
+                          },
+                          {
+                            "kind": "literal",
+                            "value": "denied"
+                          },
+                          {
+                            "kind": "literal",
+                            "value": "derived-failed"
+                          }
+                        ]
+                      },
                       "routed": "boolean",
                       "nested": {
                         "kind": "array",
@@ -28535,6 +28804,7 @@
                     },
                     "optional": [
                       "error",
+                      "code",
                       "nested"
                     ]
                   }
@@ -28729,6 +28999,31 @@
                               ]
                             },
                             "error": "string",
+                            "code": {
+                              "kind": "union",
+                              "of": [
+                                {
+                                  "kind": "literal",
+                                  "value": "not-found"
+                                },
+                                {
+                                  "kind": "literal",
+                                  "value": "no-row-key"
+                                },
+                                {
+                                  "kind": "literal",
+                                  "value": "duplicate-id"
+                                },
+                                {
+                                  "kind": "literal",
+                                  "value": "denied"
+                                },
+                                {
+                                  "kind": "literal",
+                                  "value": "derived-failed"
+                                }
+                              ]
+                            },
                             "routed": "boolean",
                             "nested": {
                               "kind": "array",
@@ -28739,6 +29034,7 @@
                           },
                           "optional": [
                             "error",
+                            "code",
                             "nested"
                           ]
                         }
@@ -28885,6 +29181,31 @@
                                   ]
                                 },
                                 "error": "string",
+                                "code": {
+                                  "kind": "union",
+                                  "of": [
+                                    {
+                                      "kind": "literal",
+                                      "value": "not-found"
+                                    },
+                                    {
+                                      "kind": "literal",
+                                      "value": "no-row-key"
+                                    },
+                                    {
+                                      "kind": "literal",
+                                      "value": "duplicate-id"
+                                    },
+                                    {
+                                      "kind": "literal",
+                                      "value": "denied"
+                                    },
+                                    {
+                                      "kind": "literal",
+                                      "value": "derived-failed"
+                                    }
+                                  ]
+                                },
                                 "routed": "boolean",
                                 "nested": {
                                   "kind": "array",
@@ -28895,6 +29216,7 @@
                               },
                               "optional": [
                                 "error",
+                                "code",
                                 "nested"
                               ]
                             }
@@ -29085,6 +29407,31 @@
                             ]
                           },
                           "error": "string",
+                          "code": {
+                            "kind": "union",
+                            "of": [
+                              {
+                                "kind": "literal",
+                                "value": "not-found"
+                              },
+                              {
+                                "kind": "literal",
+                                "value": "no-row-key"
+                              },
+                              {
+                                "kind": "literal",
+                                "value": "duplicate-id"
+                              },
+                              {
+                                "kind": "literal",
+                                "value": "denied"
+                              },
+                              {
+                                "kind": "literal",
+                                "value": "derived-failed"
+                              }
+                            ]
+                          },
                           "routed": "boolean",
                           "nested": {
                             "kind": "array",
@@ -29095,6 +29442,7 @@
                         },
                         "optional": [
                           "error",
+                          "code",
                           "nested"
                         ]
                       }
@@ -30231,6 +30579,143 @@
       ],
       "examples": [
         "(set \"count\" 42)"
+      ],
+      "docsSource": "generated"
+    },
+    "signal/autocorrelate": {
+      "category": "std-signal",
+      "minArity": 3,
+      "maxArity": 3,
+      "returnType": {
+        "kind": "array",
+        "of": "number"
+      },
+      "description": "r[lag] = (1/(n-lag)) * sum of xs[i]*xs[i+lag], for lag minLag..maxLag; a lag at or beyond the length is 0. Answers one number per lag, minLag first. A negative minLag or a maxLag below minLag is an evaluation error.",
+      "module": "signal",
+      "visual": {
+        "form": "block"
+      },
+      "params": [
+        {
+          "name": "xs",
+          "type": {
+            "kind": "array",
+            "of": "number"
+          },
+          "description": "The samples"
+        },
+        {
+          "name": "minLag",
+          "type": "int",
+          "description": "First lag; not negative"
+        },
+        {
+          "name": "maxLag",
+          "type": "int",
+          "description": "Last lag, inclusive; not below minLag"
+        }
+      ],
+      "examples": [
+        "(signal/autocorrelate [1,0,1,0] 0 2) // => [0.5, 0, 1]"
+      ],
+      "docsSource": "generated"
+    },
+    "signal/envelope": {
+      "category": "std-signal",
+      "minArity": 2,
+      "maxArity": 2,
+      "returnType": {
+        "kind": "array",
+        "of": "number"
+      },
+      "description": "RMS of each frame of mono samples (zero-padded past the end, divided by window): frame f covers mono samples [f*hop, f*hop+window); channel is a channel index, or -1 for the mean of all channels. start/count select frames (default all). A closed borrow, a non-positive channels, window or hop, a channel outside -1..channels-1, or a negative start or count is an evaluation error.",
+      "module": "signal",
+      "visual": {
+        "form": "block"
+      },
+      "params": [
+        {
+          "name": "borrow",
+          "type": "Borrow",
+          "description": "A live borrow of the block holding f32 little-endian interleaved PCM"
+        },
+        {
+          "name": "spec",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "channels": "int",
+              "channel": "int",
+              "window": "int",
+              "hop": "int",
+              "start": "int",
+              "count": "int"
+            },
+            "optional": [
+              "start",
+              "count"
+            ]
+          },
+          "description": "The framing: channels, channel, window, hop, optional start and count"
+        }
+      ],
+      "examples": [
+        "(signal/envelope @entity.borrow {\"channels\":1,\"channel\":0,\"window\":1024,\"hop\":512}) // => [0.2, 0.31, ...]"
+      ],
+      "docsSource": "generated"
+    },
+    "signal/frames": {
+      "category": "std-signal",
+      "minArity": 2,
+      "maxArity": 2,
+      "returnType": {
+        "kind": "array",
+        "of": {
+          "kind": "array",
+          "of": "number"
+        }
+      },
+      "description": "Band magnitudes per frame of the PCM a live borrow lends: frame f covers mono samples [f*hop, f*hop+window) under a Hann window, zero-padded past the end; each band [lowHz, highHz) is the mean FFT magnitude (divided by window) of the bins whose frequency falls in it, 0 when none does. channel is a channel index, or -1 for the mean of all channels. window is a power of two. start/count select frames (default all). A closed borrow, a window that is not a power of two, a non-positive sampleRate, channels, window or hop, a channel outside -1..channels-1, a band that is not a [lowHz, highHz) pair, or a negative start or count is an evaluation error.",
+      "module": "signal",
+      "visual": {
+        "form": "block"
+      },
+      "params": [
+        {
+          "name": "borrow",
+          "type": "Borrow",
+          "description": "A live borrow of the block holding f32 little-endian interleaved PCM"
+        },
+        {
+          "name": "spec",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "sampleRate": "int",
+              "channels": "int",
+              "channel": "int",
+              "window": "int",
+              "hop": "int",
+              "bands": {
+                "kind": "array",
+                "of": {
+                  "kind": "array",
+                  "of": "number"
+                }
+              },
+              "start": "int",
+              "count": "int"
+            },
+            "optional": [
+              "start",
+              "count"
+            ]
+          },
+          "description": "The framing: sampleRate, channels, channel, window, hop, bands, optional start and count"
+        }
+      ],
+      "examples": [
+        "(signal/frames @entity.borrow {\"sampleRate\":44100,\"channels\":2,\"channel\":-1,\"window\":2048,\"hop\":512,\"bands\":[[20,150],[150,2000],[2000,16000]]}) // => [[0.12, 0.03, 0.001], ...]"
       ],
       "docsSource": "generated"
     },
@@ -31752,24 +32237,32 @@
         {
           "name": "a",
           "type": {
-            "kind": "union",
-            "of": [
-              "date",
-              "datetime",
-              "instant"
-            ]
+            "kind": "var",
+            "name": "T",
+            "bound": {
+              "kind": "union",
+              "of": [
+                "date",
+                "datetime",
+                "instant"
+              ]
+            }
           },
           "description": "First date or datetime"
         },
         {
           "name": "b",
           "type": {
-            "kind": "union",
-            "of": [
-              "date",
-              "datetime",
-              "instant"
-            ]
+            "kind": "var",
+            "name": "T",
+            "bound": {
+              "kind": "union",
+              "of": [
+                "date",
+                "datetime",
+                "instant"
+              ]
+            }
           },
           "description": "Second date or datetime"
         },
@@ -32138,24 +32631,32 @@
         {
           "name": "a",
           "type": {
-            "kind": "union",
-            "of": [
-              "date",
-              "datetime",
-              "instant"
-            ]
+            "kind": "var",
+            "name": "T",
+            "bound": {
+              "kind": "union",
+              "of": [
+                "date",
+                "datetime",
+                "instant"
+              ]
+            }
           },
           "description": "First date or datetime"
         },
         {
           "name": "b",
           "type": {
-            "kind": "union",
-            "of": [
-              "date",
-              "datetime",
-              "instant"
-            ]
+            "kind": "var",
+            "name": "T",
+            "bound": {
+              "kind": "union",
+              "of": [
+                "date",
+                "datetime",
+                "instant"
+              ]
+            }
           },
           "description": "Second date or datetime"
         }
@@ -32180,24 +32681,32 @@
         {
           "name": "a",
           "type": {
-            "kind": "union",
-            "of": [
-              "date",
-              "datetime",
-              "instant"
-            ]
+            "kind": "var",
+            "name": "T",
+            "bound": {
+              "kind": "union",
+              "of": [
+                "date",
+                "datetime",
+                "instant"
+              ]
+            }
           },
           "description": "First date or datetime"
         },
         {
           "name": "b",
           "type": {
-            "kind": "union",
-            "of": [
-              "date",
-              "datetime",
-              "instant"
-            ]
+            "kind": "var",
+            "name": "T",
+            "bound": {
+              "kind": "union",
+              "of": [
+                "date",
+                "datetime",
+                "instant"
+              ]
+            }
           },
           "description": "Second date or datetime"
         }
@@ -32222,36 +32731,48 @@
         {
           "name": "date",
           "type": {
-            "kind": "union",
-            "of": [
-              "date",
-              "datetime",
-              "instant"
-            ]
+            "kind": "var",
+            "name": "T",
+            "bound": {
+              "kind": "union",
+              "of": [
+                "date",
+                "datetime",
+                "instant"
+              ]
+            }
           },
           "description": "Date or datetime to check"
         },
         {
           "name": "start",
           "type": {
-            "kind": "union",
-            "of": [
-              "date",
-              "datetime",
-              "instant"
-            ]
+            "kind": "var",
+            "name": "T",
+            "bound": {
+              "kind": "union",
+              "of": [
+                "date",
+                "datetime",
+                "instant"
+              ]
+            }
           },
           "description": "Range start"
         },
         {
           "name": "end",
           "type": {
-            "kind": "union",
-            "of": [
-              "date",
-              "datetime",
-              "instant"
-            ]
+            "kind": "var",
+            "name": "T",
+            "bound": {
+              "kind": "union",
+              "of": [
+                "date",
+                "datetime",
+                "instant"
+              ]
+            }
           },
           "description": "Range end"
         }
@@ -32334,24 +32855,32 @@
         {
           "name": "a",
           "type": {
-            "kind": "union",
-            "of": [
-              "date",
-              "datetime",
-              "instant"
-            ]
+            "kind": "var",
+            "name": "T",
+            "bound": {
+              "kind": "union",
+              "of": [
+                "date",
+                "datetime",
+                "instant"
+              ]
+            }
           },
           "description": "First date or datetime"
         },
         {
           "name": "b",
           "type": {
-            "kind": "union",
-            "of": [
-              "date",
-              "datetime",
-              "instant"
-            ]
+            "kind": "var",
+            "name": "T",
+            "bound": {
+              "kind": "union",
+              "of": [
+                "date",
+                "datetime",
+                "instant"
+              ]
+            }
           },
           "description": "Second date or datetime"
         },
@@ -32980,6 +33509,64 @@
         "(time/subtract (time/now) 1 \"hour\")"
       ],
       "docsSource": "reference-docs"
+    },
+    "time/toDate": {
+      "category": "std-time",
+      "minArity": 1,
+      "maxArity": 1,
+      "returnType": "date",
+      "description": "The UTC calendar day of a moment, as a date (YYYY-MM-DD); a date answers itself. Compare a date field with now through it",
+      "module": "time",
+      "visual": {
+        "form": "block"
+      },
+      "params": [
+        {
+          "name": "moment",
+          "type": {
+            "kind": "union",
+            "of": [
+              "date",
+              "datetime",
+              "instant"
+            ]
+          },
+          "description": "Date, datetime or instant"
+        }
+      ],
+      "examples": [
+        "(time/toDate \"2026-11-12T23:30:00Z\") // => \"2026-11-12\""
+      ],
+      "docsSource": "generated"
+    },
+    "time/toInstant": {
+      "category": "std-time",
+      "minArity": 1,
+      "maxArity": 1,
+      "returnType": "instant",
+      "description": "A moment as a UTC instant; a date is its midnight UTC. Compare a field that may be a date or a datetime with now through it",
+      "module": "time",
+      "visual": {
+        "form": "block"
+      },
+      "params": [
+        {
+          "name": "moment",
+          "type": {
+            "kind": "union",
+            "of": [
+              "date",
+              "datetime",
+              "instant"
+            ]
+          },
+          "description": "Date, datetime or instant"
+        }
+      ],
+      "examples": [
+        "(time/toInstant \"2026-11-12\") // => \"2026-11-12T00:00:00.000Z\""
+      ],
+      "docsSource": "generated"
     },
     "time/today": {
       "category": "std-time",

@@ -170,6 +170,15 @@ orbital AgentConversationOrbital {
       backLabel : string = "Back"
         @label "Back to the conversation"
         @tier "presentation"
+      entryPoints : "toolbar" | "none" = toolbar
+        @label "Where do the past-conversations, memory and link buttons show?"
+        @description "toolbar (default) shows them above the conversation beside the new-conversation button. none leaves them out, for an app that offers them from its own menu: it opens the two views by sending SHOW_CHATS and SHOW_MEMORY and places its links itself."
+        @synonyms "hide history buttons, move links to a menu, settings menu, toolbar buttons"
+        @tier "presentation"
+      aboveInput : [node] = []
+        @label "Content above the message input"
+        @description "Shown between the conversation and the message input: a question the assistant is waiting on, a notice, suggested prompts. Empty shows nothing."
+        @tier "presentation"
       ephemeral : boolean = false
         @label "Ephemeral conversation?"
         @description "A self-contained conversation: it runs under the instructions, tools, greeting and header the app starts it with (ASSISTANT_CHAT_START), is never stored among the person's conversations or remembered, shows no conversation, past-chat or memory buttons, and ignores the assistant's own replies."
@@ -182,7 +191,7 @@ orbital AgentConversationOrbital {
       INIT -> idle when (not @config.ephemeral)
         (emit ASSISTANT_HISTORY_REQUESTED {})
         (render-ui main {
-          children: [(if @config.ephemeral { type: stack, direction: horizontal, align: center, gap: sm, className: shrink-0, children: [{ type: avatar, src: (object/get @entity chatAvatar ""), name: @entity.chatTitle, size: md, className: (if (= @entity.chatAvatar "") hidden "") }, { type: stack, direction: vertical, gap: none, children: [{ type: typography, variant: h4, content: @entity.chatTitle }, { type: typography, variant: caption, content: @entity.chatSubtitle }] }] } {
+          children: (array/concat (array/concat [(if @config.ephemeral { type: stack, direction: horizontal, align: center, gap: sm, className: shrink-0, children: [{ type: avatar, src: (object/get @entity chatAvatar ""), name: @entity.chatTitle, size: md, className: (if (= @entity.chatAvatar "") hidden "") }, { type: stack, direction: vertical, gap: none, children: [{ type: typography, variant: h4, content: @entity.chatTitle }, { type: typography, variant: caption, content: @entity.chatSubtitle }] }] } {
             children: [{
               action: NEW_CHAT_CLICKED
               aria-label: @config.newChatLabel
@@ -191,7 +200,7 @@ orbital AgentConversationOrbital {
               size: sm
               type: button
               variant: secondary
-            }, {
+            }, (if (= @config.entryPoints none) null {
               children: [{
                 action: OPEN_CHATS_CLICKED
                 aria-label: @config.chatsLabel
@@ -216,14 +225,16 @@ orbital AgentConversationOrbital {
                 }))
                 direction: horizontal
                 gap: xs
+                wrap: true
                 type: stack
               }]
               align: center
-              className: shrink-0
+              className: min-w-0
               direction: horizontal
               gap: none
+              wrap: true
               type: stack
-            }]
+            })]
             align: center
             className: shrink-0
             direction: horizontal
@@ -240,12 +251,12 @@ orbital AgentConversationOrbital {
             rawLlmPreferenceKey: agent-conversation-raw-llm
             type: agent-chat-feed
             working: @entity.working
-          }, {
+          }] @config.aboveInput) [{
             focusRequest: (if (= @entity.draft "") null { id: @entity.draftNo, text: @entity.draft })
             placeholder: @config.placeholder
             sendEvent: ASK
             type: chat-bar
-          }]
+          }])
           className: "h-full min-h-0 flex-1"
           direction: vertical
           gap: sm
@@ -253,7 +264,7 @@ orbital AgentConversationOrbital {
         })
       INIT -> idle when @config.ephemeral
         (render-ui main {
-          children: [(if @config.ephemeral { type: stack, direction: horizontal, align: center, gap: sm, className: shrink-0, children: [{ type: avatar, src: (object/get @entity chatAvatar ""), name: @entity.chatTitle, size: md, className: (if (= @entity.chatAvatar "") hidden "") }, { type: stack, direction: vertical, gap: none, children: [{ type: typography, variant: h4, content: @entity.chatTitle }, { type: typography, variant: caption, content: @entity.chatSubtitle }] }] } {
+          children: (array/concat (array/concat [(if @config.ephemeral { type: stack, direction: horizontal, align: center, gap: sm, className: shrink-0, children: [{ type: avatar, src: (object/get @entity chatAvatar ""), name: @entity.chatTitle, size: md, className: (if (= @entity.chatAvatar "") hidden "") }, { type: stack, direction: vertical, gap: none, children: [{ type: typography, variant: h4, content: @entity.chatTitle }, { type: typography, variant: caption, content: @entity.chatSubtitle }] }] } {
             children: [{
               action: NEW_CHAT_CLICKED
               aria-label: @config.newChatLabel
@@ -262,7 +273,7 @@ orbital AgentConversationOrbital {
               size: sm
               type: button
               variant: secondary
-            }, {
+            }, (if (= @config.entryPoints none) null {
               children: [{
                 action: OPEN_CHATS_CLICKED
                 aria-label: @config.chatsLabel
@@ -287,14 +298,16 @@ orbital AgentConversationOrbital {
                 }))
                 direction: horizontal
                 gap: xs
+                wrap: true
                 type: stack
               }]
               align: center
-              className: shrink-0
+              className: min-w-0
               direction: horizontal
               gap: none
+              wrap: true
               type: stack
-            }]
+            })]
             align: center
             className: shrink-0
             direction: horizontal
@@ -311,12 +324,12 @@ orbital AgentConversationOrbital {
             rawLlmPreferenceKey: agent-conversation-raw-llm
             type: agent-chat-feed
             working: @entity.working
-          }, {
+          }] @config.aboveInput) [{
             focusRequest: (if (= @entity.draft "") null { id: @entity.draftNo, text: @entity.draft })
             placeholder: @config.placeholder
             sendEvent: ASK
             type: chat-bar
-          }]
+          }])
           className: "h-full min-h-0 flex-1"
           direction: vertical
           gap: sm
@@ -325,7 +338,7 @@ orbital AgentConversationOrbital {
       THREAD_LOADED -> idle when (not @config.ephemeral)
         (set @entity.entries (array/map (array/sort ?data createdAt asc) (fn item { type: message, role: @item.role, content: @item.content, timestamp: @item.createdAt })))
         (render-ui main {
-          children: [(if @config.ephemeral { type: stack, direction: horizontal, align: center, gap: sm, className: shrink-0, children: [{ type: avatar, src: (object/get @entity chatAvatar ""), name: @entity.chatTitle, size: md, className: (if (= @entity.chatAvatar "") hidden "") }, { type: stack, direction: vertical, gap: none, children: [{ type: typography, variant: h4, content: @entity.chatTitle }, { type: typography, variant: caption, content: @entity.chatSubtitle }] }] } {
+          children: (array/concat (array/concat [(if @config.ephemeral { type: stack, direction: horizontal, align: center, gap: sm, className: shrink-0, children: [{ type: avatar, src: (object/get @entity chatAvatar ""), name: @entity.chatTitle, size: md, className: (if (= @entity.chatAvatar "") hidden "") }, { type: stack, direction: vertical, gap: none, children: [{ type: typography, variant: h4, content: @entity.chatTitle }, { type: typography, variant: caption, content: @entity.chatSubtitle }] }] } {
             children: [{
               action: NEW_CHAT_CLICKED
               aria-label: @config.newChatLabel
@@ -334,7 +347,7 @@ orbital AgentConversationOrbital {
               size: sm
               type: button
               variant: secondary
-            }, {
+            }, (if (= @config.entryPoints none) null {
               children: [{
                 action: OPEN_CHATS_CLICKED
                 aria-label: @config.chatsLabel
@@ -359,14 +372,16 @@ orbital AgentConversationOrbital {
                 }))
                 direction: horizontal
                 gap: xs
+                wrap: true
                 type: stack
               }]
               align: center
-              className: shrink-0
+              className: min-w-0
               direction: horizontal
               gap: none
+              wrap: true
               type: stack
-            }]
+            })]
             align: center
             className: shrink-0
             direction: horizontal
@@ -383,12 +398,12 @@ orbital AgentConversationOrbital {
             rawLlmPreferenceKey: agent-conversation-raw-llm
             type: agent-chat-feed
             working: @entity.working
-          }, {
+          }] @config.aboveInput) [{
             focusRequest: (if (= @entity.draft "") null { id: @entity.draftNo, text: @entity.draft })
             placeholder: @config.placeholder
             sendEvent: ASK
             type: chat-bar
-          }]
+          }])
           className: "h-full min-h-0 flex-1"
           direction: vertical
           gap: sm
@@ -400,7 +415,7 @@ orbital AgentConversationOrbital {
         (set @entity.working true)
         (emit ASSISTANT_SEND { message: ?message })
         (render-ui main {
-          children: [(if @config.ephemeral { type: stack, direction: horizontal, align: center, gap: sm, className: shrink-0, children: [{ type: avatar, src: (object/get @entity chatAvatar ""), name: @entity.chatTitle, size: md, className: (if (= @entity.chatAvatar "") hidden "") }, { type: stack, direction: vertical, gap: none, children: [{ type: typography, variant: h4, content: @entity.chatTitle }, { type: typography, variant: caption, content: @entity.chatSubtitle }] }] } {
+          children: (array/concat (array/concat [(if @config.ephemeral { type: stack, direction: horizontal, align: center, gap: sm, className: shrink-0, children: [{ type: avatar, src: (object/get @entity chatAvatar ""), name: @entity.chatTitle, size: md, className: (if (= @entity.chatAvatar "") hidden "") }, { type: stack, direction: vertical, gap: none, children: [{ type: typography, variant: h4, content: @entity.chatTitle }, { type: typography, variant: caption, content: @entity.chatSubtitle }] }] } {
             children: [{
               action: NEW_CHAT_CLICKED
               aria-label: @config.newChatLabel
@@ -409,7 +424,7 @@ orbital AgentConversationOrbital {
               size: sm
               type: button
               variant: secondary
-            }, {
+            }, (if (= @config.entryPoints none) null {
               children: [{
                 action: OPEN_CHATS_CLICKED
                 aria-label: @config.chatsLabel
@@ -434,14 +449,16 @@ orbital AgentConversationOrbital {
                 }))
                 direction: horizontal
                 gap: xs
+                wrap: true
                 type: stack
               }]
               align: center
-              className: shrink-0
+              className: min-w-0
               direction: horizontal
               gap: none
+              wrap: true
               type: stack
-            }]
+            })]
             align: center
             className: shrink-0
             direction: horizontal
@@ -458,12 +475,12 @@ orbital AgentConversationOrbital {
             rawLlmPreferenceKey: agent-conversation-raw-llm
             type: agent-chat-feed
             working: @entity.working
-          }, {
+          }] @config.aboveInput) [{
             focusRequest: (if (= @entity.draft "") null { id: @entity.draftNo, text: @entity.draft })
             placeholder: @config.placeholder
             sendEvent: ASK
             type: chat-bar
-          }]
+          }])
           className: "h-full min-h-0 flex-1"
           direction: vertical
           gap: sm
@@ -480,7 +497,7 @@ orbital AgentConversationOrbital {
           ephemeral: true
         })
         (render-ui main {
-          children: [(if @config.ephemeral { type: stack, direction: horizontal, align: center, gap: sm, className: shrink-0, children: [{ type: avatar, src: (object/get @entity chatAvatar ""), name: @entity.chatTitle, size: md, className: (if (= @entity.chatAvatar "") hidden "") }, { type: stack, direction: vertical, gap: none, children: [{ type: typography, variant: h4, content: @entity.chatTitle }, { type: typography, variant: caption, content: @entity.chatSubtitle }] }] } {
+          children: (array/concat (array/concat [(if @config.ephemeral { type: stack, direction: horizontal, align: center, gap: sm, className: shrink-0, children: [{ type: avatar, src: (object/get @entity chatAvatar ""), name: @entity.chatTitle, size: md, className: (if (= @entity.chatAvatar "") hidden "") }, { type: stack, direction: vertical, gap: none, children: [{ type: typography, variant: h4, content: @entity.chatTitle }, { type: typography, variant: caption, content: @entity.chatSubtitle }] }] } {
             children: [{
               action: NEW_CHAT_CLICKED
               aria-label: @config.newChatLabel
@@ -489,7 +506,7 @@ orbital AgentConversationOrbital {
               size: sm
               type: button
               variant: secondary
-            }, {
+            }, (if (= @config.entryPoints none) null {
               children: [{
                 action: OPEN_CHATS_CLICKED
                 aria-label: @config.chatsLabel
@@ -514,14 +531,16 @@ orbital AgentConversationOrbital {
                 }))
                 direction: horizontal
                 gap: xs
+                wrap: true
                 type: stack
               }]
               align: center
-              className: shrink-0
+              className: min-w-0
               direction: horizontal
               gap: none
+              wrap: true
               type: stack
-            }]
+            })]
             align: center
             className: shrink-0
             direction: horizontal
@@ -538,12 +557,12 @@ orbital AgentConversationOrbital {
             rawLlmPreferenceKey: agent-conversation-raw-llm
             type: agent-chat-feed
             working: @entity.working
-          }, {
+          }] @config.aboveInput) [{
             focusRequest: (if (= @entity.draft "") null { id: @entity.draftNo, text: @entity.draft })
             placeholder: @config.placeholder
             sendEvent: ASK
             type: chat-bar
-          }]
+          }])
           className: "h-full min-h-0 flex-1"
           direction: vertical
           gap: sm
@@ -561,7 +580,7 @@ orbital AgentConversationOrbital {
           live: @entity.chatLive
         })
         (render-ui main {
-          children: [(if @config.ephemeral { type: stack, direction: horizontal, align: center, gap: sm, className: shrink-0, children: [{ type: avatar, src: (object/get @entity chatAvatar ""), name: @entity.chatTitle, size: md, className: (if (= @entity.chatAvatar "") hidden "") }, { type: stack, direction: vertical, gap: none, children: [{ type: typography, variant: h4, content: @entity.chatTitle }, { type: typography, variant: caption, content: @entity.chatSubtitle }] }] } {
+          children: (array/concat (array/concat [(if @config.ephemeral { type: stack, direction: horizontal, align: center, gap: sm, className: shrink-0, children: [{ type: avatar, src: (object/get @entity chatAvatar ""), name: @entity.chatTitle, size: md, className: (if (= @entity.chatAvatar "") hidden "") }, { type: stack, direction: vertical, gap: none, children: [{ type: typography, variant: h4, content: @entity.chatTitle }, { type: typography, variant: caption, content: @entity.chatSubtitle }] }] } {
             children: [{
               action: NEW_CHAT_CLICKED
               aria-label: @config.newChatLabel
@@ -570,7 +589,7 @@ orbital AgentConversationOrbital {
               size: sm
               type: button
               variant: secondary
-            }, {
+            }, (if (= @config.entryPoints none) null {
               children: [{
                 action: OPEN_CHATS_CLICKED
                 aria-label: @config.chatsLabel
@@ -595,14 +614,16 @@ orbital AgentConversationOrbital {
                 }))
                 direction: horizontal
                 gap: xs
+                wrap: true
                 type: stack
               }]
               align: center
-              className: shrink-0
+              className: min-w-0
               direction: horizontal
               gap: none
+              wrap: true
               type: stack
-            }]
+            })]
             align: center
             className: shrink-0
             direction: horizontal
@@ -619,12 +640,12 @@ orbital AgentConversationOrbital {
             rawLlmPreferenceKey: agent-conversation-raw-llm
             type: agent-chat-feed
             working: @entity.working
-          }, {
+          }] @config.aboveInput) [{
             focusRequest: (if (= @entity.draft "") null { id: @entity.draftNo, text: @entity.draft })
             placeholder: @config.placeholder
             sendEvent: ASK
             type: chat-bar
-          }]
+          }])
           className: "h-full min-h-0 flex-1"
           direction: vertical
           gap: sm
@@ -640,7 +661,7 @@ orbital AgentConversationOrbital {
         (set @entity.chatSubtitle (default ?subtitle ""))
         (set @entity.chatAvatar (default ?avatar ""))
         (render-ui main {
-          children: [(if @config.ephemeral { type: stack, direction: horizontal, align: center, gap: sm, className: shrink-0, children: [{ type: avatar, src: (object/get @entity chatAvatar ""), name: @entity.chatTitle, size: md, className: (if (= @entity.chatAvatar "") hidden "") }, { type: stack, direction: vertical, gap: none, children: [{ type: typography, variant: h4, content: @entity.chatTitle }, { type: typography, variant: caption, content: @entity.chatSubtitle }] }] } {
+          children: (array/concat (array/concat [(if @config.ephemeral { type: stack, direction: horizontal, align: center, gap: sm, className: shrink-0, children: [{ type: avatar, src: (object/get @entity chatAvatar ""), name: @entity.chatTitle, size: md, className: (if (= @entity.chatAvatar "") hidden "") }, { type: stack, direction: vertical, gap: none, children: [{ type: typography, variant: h4, content: @entity.chatTitle }, { type: typography, variant: caption, content: @entity.chatSubtitle }] }] } {
             children: [{
               action: NEW_CHAT_CLICKED
               aria-label: @config.newChatLabel
@@ -649,7 +670,7 @@ orbital AgentConversationOrbital {
               size: sm
               type: button
               variant: secondary
-            }, {
+            }, (if (= @config.entryPoints none) null {
               children: [{
                 action: OPEN_CHATS_CLICKED
                 aria-label: @config.chatsLabel
@@ -674,14 +695,16 @@ orbital AgentConversationOrbital {
                 }))
                 direction: horizontal
                 gap: xs
+                wrap: true
                 type: stack
               }]
               align: center
-              className: shrink-0
+              className: min-w-0
               direction: horizontal
               gap: none
+              wrap: true
               type: stack
-            }]
+            })]
             align: center
             className: shrink-0
             direction: horizontal
@@ -698,12 +721,12 @@ orbital AgentConversationOrbital {
             rawLlmPreferenceKey: agent-conversation-raw-llm
             type: agent-chat-feed
             working: @entity.working
-          }, {
+          }] @config.aboveInput) [{
             focusRequest: (if (= @entity.draft "") null { id: @entity.draftNo, text: @entity.draft })
             placeholder: @config.placeholder
             sendEvent: ASK
             type: chat-bar
-          }]
+          }])
           className: "h-full min-h-0 flex-1"
           direction: vertical
           gap: sm
@@ -712,7 +735,7 @@ orbital AgentConversationOrbital {
       STEP -> idle when (or (not @config.ephemeral) @entity.chatLive)
         (set @entity.entries (array/append @entity.entries ?activity))
         (render-ui main {
-          children: [(if @config.ephemeral { type: stack, direction: horizontal, align: center, gap: sm, className: shrink-0, children: [{ type: avatar, src: (object/get @entity chatAvatar ""), name: @entity.chatTitle, size: md, className: (if (= @entity.chatAvatar "") hidden "") }, { type: stack, direction: vertical, gap: none, children: [{ type: typography, variant: h4, content: @entity.chatTitle }, { type: typography, variant: caption, content: @entity.chatSubtitle }] }] } {
+          children: (array/concat (array/concat [(if @config.ephemeral { type: stack, direction: horizontal, align: center, gap: sm, className: shrink-0, children: [{ type: avatar, src: (object/get @entity chatAvatar ""), name: @entity.chatTitle, size: md, className: (if (= @entity.chatAvatar "") hidden "") }, { type: stack, direction: vertical, gap: none, children: [{ type: typography, variant: h4, content: @entity.chatTitle }, { type: typography, variant: caption, content: @entity.chatSubtitle }] }] } {
             children: [{
               action: NEW_CHAT_CLICKED
               aria-label: @config.newChatLabel
@@ -721,7 +744,7 @@ orbital AgentConversationOrbital {
               size: sm
               type: button
               variant: secondary
-            }, {
+            }, (if (= @config.entryPoints none) null {
               children: [{
                 action: OPEN_CHATS_CLICKED
                 aria-label: @config.chatsLabel
@@ -746,14 +769,16 @@ orbital AgentConversationOrbital {
                 }))
                 direction: horizontal
                 gap: xs
+                wrap: true
                 type: stack
               }]
               align: center
-              className: shrink-0
+              className: min-w-0
               direction: horizontal
               gap: none
+              wrap: true
               type: stack
-            }]
+            })]
             align: center
             className: shrink-0
             direction: horizontal
@@ -770,12 +795,12 @@ orbital AgentConversationOrbital {
             rawLlmPreferenceKey: agent-conversation-raw-llm
             type: agent-chat-feed
             working: @entity.working
-          }, {
+          }] @config.aboveInput) [{
             focusRequest: (if (= @entity.draft "") null { id: @entity.draftNo, text: @entity.draft })
             placeholder: @config.placeholder
             sendEvent: ASK
             type: chat-bar
-          }]
+          }])
           className: "h-full min-h-0 flex-1"
           direction: vertical
           gap: sm
@@ -785,7 +810,7 @@ orbital AgentConversationOrbital {
         (set @entity.draft ?message)
         (set @entity.draftNo (+ @entity.draftNo 1))
         (render-ui main {
-          children: [(if @config.ephemeral { type: stack, direction: horizontal, align: center, gap: sm, className: shrink-0, children: [{ type: avatar, src: (object/get @entity chatAvatar ""), name: @entity.chatTitle, size: md, className: (if (= @entity.chatAvatar "") hidden "") }, { type: stack, direction: vertical, gap: none, children: [{ type: typography, variant: h4, content: @entity.chatTitle }, { type: typography, variant: caption, content: @entity.chatSubtitle }] }] } {
+          children: (array/concat (array/concat [(if @config.ephemeral { type: stack, direction: horizontal, align: center, gap: sm, className: shrink-0, children: [{ type: avatar, src: (object/get @entity chatAvatar ""), name: @entity.chatTitle, size: md, className: (if (= @entity.chatAvatar "") hidden "") }, { type: stack, direction: vertical, gap: none, children: [{ type: typography, variant: h4, content: @entity.chatTitle }, { type: typography, variant: caption, content: @entity.chatSubtitle }] }] } {
             children: [{
               action: NEW_CHAT_CLICKED
               aria-label: @config.newChatLabel
@@ -794,7 +819,7 @@ orbital AgentConversationOrbital {
               size: sm
               type: button
               variant: secondary
-            }, {
+            }, (if (= @config.entryPoints none) null {
               children: [{
                 action: OPEN_CHATS_CLICKED
                 aria-label: @config.chatsLabel
@@ -819,14 +844,16 @@ orbital AgentConversationOrbital {
                 }))
                 direction: horizontal
                 gap: xs
+                wrap: true
                 type: stack
               }]
               align: center
-              className: shrink-0
+              className: min-w-0
               direction: horizontal
               gap: none
+              wrap: true
               type: stack
-            }]
+            })]
             align: center
             className: shrink-0
             direction: horizontal
@@ -843,12 +870,12 @@ orbital AgentConversationOrbital {
             rawLlmPreferenceKey: agent-conversation-raw-llm
             type: agent-chat-feed
             working: @entity.working
-          }, {
+          }] @config.aboveInput) [{
             focusRequest: (if (= @entity.draft "") null { id: @entity.draftNo, text: @entity.draft })
             placeholder: @config.placeholder
             sendEvent: ASK
             type: chat-bar
-          }]
+          }])
           className: "h-full min-h-0 flex-1"
           direction: vertical
           gap: sm
@@ -858,7 +885,7 @@ orbital AgentConversationOrbital {
         (set @entity.entries (array/append @entity.entries { type: message, role: assistant, content: ?reply, timestamp: @now }))
         (set @entity.working false)
         (render-ui main {
-          children: [(if @config.ephemeral { type: stack, direction: horizontal, align: center, gap: sm, className: shrink-0, children: [{ type: avatar, src: (object/get @entity chatAvatar ""), name: @entity.chatTitle, size: md, className: (if (= @entity.chatAvatar "") hidden "") }, { type: stack, direction: vertical, gap: none, children: [{ type: typography, variant: h4, content: @entity.chatTitle }, { type: typography, variant: caption, content: @entity.chatSubtitle }] }] } {
+          children: (array/concat (array/concat [(if @config.ephemeral { type: stack, direction: horizontal, align: center, gap: sm, className: shrink-0, children: [{ type: avatar, src: (object/get @entity chatAvatar ""), name: @entity.chatTitle, size: md, className: (if (= @entity.chatAvatar "") hidden "") }, { type: stack, direction: vertical, gap: none, children: [{ type: typography, variant: h4, content: @entity.chatTitle }, { type: typography, variant: caption, content: @entity.chatSubtitle }] }] } {
             children: [{
               action: NEW_CHAT_CLICKED
               aria-label: @config.newChatLabel
@@ -867,7 +894,7 @@ orbital AgentConversationOrbital {
               size: sm
               type: button
               variant: secondary
-            }, {
+            }, (if (= @config.entryPoints none) null {
               children: [{
                 action: OPEN_CHATS_CLICKED
                 aria-label: @config.chatsLabel
@@ -892,14 +919,16 @@ orbital AgentConversationOrbital {
                 }))
                 direction: horizontal
                 gap: xs
+                wrap: true
                 type: stack
               }]
               align: center
-              className: shrink-0
+              className: min-w-0
               direction: horizontal
               gap: none
+              wrap: true
               type: stack
-            }]
+            })]
             align: center
             className: shrink-0
             direction: horizontal
@@ -916,12 +945,12 @@ orbital AgentConversationOrbital {
             rawLlmPreferenceKey: agent-conversation-raw-llm
             type: agent-chat-feed
             working: @entity.working
-          }, {
+          }] @config.aboveInput) [{
             focusRequest: (if (= @entity.draft "") null { id: @entity.draftNo, text: @entity.draft })
             placeholder: @config.placeholder
             sendEvent: ASK
             type: chat-bar
-          }]
+          }])
           className: "h-full min-h-0 flex-1"
           direction: vertical
           gap: sm
@@ -931,7 +960,7 @@ orbital AgentConversationOrbital {
         (set @entity.entries [])
         (emit ASSISTANT_NEW_CHAT {})
         (render-ui main {
-          children: [(if @config.ephemeral { type: stack, direction: horizontal, align: center, gap: sm, className: shrink-0, children: [{ type: avatar, src: (object/get @entity chatAvatar ""), name: @entity.chatTitle, size: md, className: (if (= @entity.chatAvatar "") hidden "") }, { type: stack, direction: vertical, gap: none, children: [{ type: typography, variant: h4, content: @entity.chatTitle }, { type: typography, variant: caption, content: @entity.chatSubtitle }] }] } {
+          children: (array/concat (array/concat [(if @config.ephemeral { type: stack, direction: horizontal, align: center, gap: sm, className: shrink-0, children: [{ type: avatar, src: (object/get @entity chatAvatar ""), name: @entity.chatTitle, size: md, className: (if (= @entity.chatAvatar "") hidden "") }, { type: stack, direction: vertical, gap: none, children: [{ type: typography, variant: h4, content: @entity.chatTitle }, { type: typography, variant: caption, content: @entity.chatSubtitle }] }] } {
             children: [{
               action: NEW_CHAT_CLICKED
               aria-label: @config.newChatLabel
@@ -940,7 +969,7 @@ orbital AgentConversationOrbital {
               size: sm
               type: button
               variant: secondary
-            }, {
+            }, (if (= @config.entryPoints none) null {
               children: [{
                 action: OPEN_CHATS_CLICKED
                 aria-label: @config.chatsLabel
@@ -965,14 +994,16 @@ orbital AgentConversationOrbital {
                 }))
                 direction: horizontal
                 gap: xs
+                wrap: true
                 type: stack
               }]
               align: center
-              className: shrink-0
+              className: min-w-0
               direction: horizontal
               gap: none
+              wrap: true
               type: stack
-            }]
+            })]
             align: center
             className: shrink-0
             direction: horizontal
@@ -989,18 +1020,20 @@ orbital AgentConversationOrbital {
             rawLlmPreferenceKey: agent-conversation-raw-llm
             type: agent-chat-feed
             working: @entity.working
-          }, {
+          }] @config.aboveInput) [{
             focusRequest: (if (= @entity.draft "") null { id: @entity.draftNo, text: @entity.draft })
             placeholder: @config.placeholder
             sendEvent: ASK
             type: chat-bar
-          }]
+          }])
           className: "h-full min-h-0 flex-1"
           direction: vertical
           gap: sm
           type: stack
         })
       OPEN_CHATS_CLICKED -> idle
+        (emit ASSISTANT_CHATS_REQUESTED {})
+      SHOW_CHATS -> idle when (not @config.ephemeral)
         (emit ASSISTANT_CHATS_REQUESTED {})
       CHATS_LISTED -> idle when (not @config.ephemeral)
         (render-ui main {
@@ -1057,7 +1090,7 @@ orbital AgentConversationOrbital {
       CHAT_PICKED -> idle when (not @entity.working)
         (emit ASSISTANT_CHAT_SELECTED { chatId: ?id })
         (render-ui main {
-          children: [(if @config.ephemeral { type: stack, direction: horizontal, align: center, gap: sm, className: shrink-0, children: [{ type: avatar, src: (object/get @entity chatAvatar ""), name: @entity.chatTitle, size: md, className: (if (= @entity.chatAvatar "") hidden "") }, { type: stack, direction: vertical, gap: none, children: [{ type: typography, variant: h4, content: @entity.chatTitle }, { type: typography, variant: caption, content: @entity.chatSubtitle }] }] } {
+          children: (array/concat (array/concat [(if @config.ephemeral { type: stack, direction: horizontal, align: center, gap: sm, className: shrink-0, children: [{ type: avatar, src: (object/get @entity chatAvatar ""), name: @entity.chatTitle, size: md, className: (if (= @entity.chatAvatar "") hidden "") }, { type: stack, direction: vertical, gap: none, children: [{ type: typography, variant: h4, content: @entity.chatTitle }, { type: typography, variant: caption, content: @entity.chatSubtitle }] }] } {
             children: [{
               action: NEW_CHAT_CLICKED
               aria-label: @config.newChatLabel
@@ -1066,7 +1099,7 @@ orbital AgentConversationOrbital {
               size: sm
               type: button
               variant: secondary
-            }, {
+            }, (if (= @config.entryPoints none) null {
               children: [{
                 action: OPEN_CHATS_CLICKED
                 aria-label: @config.chatsLabel
@@ -1091,14 +1124,16 @@ orbital AgentConversationOrbital {
                 }))
                 direction: horizontal
                 gap: xs
+                wrap: true
                 type: stack
               }]
               align: center
-              className: shrink-0
+              className: min-w-0
               direction: horizontal
               gap: none
+              wrap: true
               type: stack
-            }]
+            })]
             align: center
             className: shrink-0
             direction: horizontal
@@ -1115,18 +1150,20 @@ orbital AgentConversationOrbital {
             rawLlmPreferenceKey: agent-conversation-raw-llm
             type: agent-chat-feed
             working: @entity.working
-          }, {
+          }] @config.aboveInput) [{
             focusRequest: (if (= @entity.draft "") null { id: @entity.draftNo, text: @entity.draft })
             placeholder: @config.placeholder
             sendEvent: ASK
             type: chat-bar
-          }]
+          }])
           className: "h-full min-h-0 flex-1"
           direction: vertical
           gap: sm
           type: stack
         })
       OPEN_MEMORY_CLICKED -> idle
+        (emit ASSISTANT_MEMORIES_REQUESTED {})
+      SHOW_MEMORY -> idle when (not @config.ephemeral)
         (emit ASSISTANT_MEMORIES_REQUESTED {})
       MEMORIES_LISTED -> idle when (not @config.ephemeral)
         (render-ui main {
@@ -1179,7 +1216,7 @@ orbital AgentConversationOrbital {
         })
       BACK_TO_CHAT -> idle
         (render-ui main {
-          children: [(if @config.ephemeral { type: stack, direction: horizontal, align: center, gap: sm, className: shrink-0, children: [{ type: avatar, src: (object/get @entity chatAvatar ""), name: @entity.chatTitle, size: md, className: (if (= @entity.chatAvatar "") hidden "") }, { type: stack, direction: vertical, gap: none, children: [{ type: typography, variant: h4, content: @entity.chatTitle }, { type: typography, variant: caption, content: @entity.chatSubtitle }] }] } {
+          children: (array/concat (array/concat [(if @config.ephemeral { type: stack, direction: horizontal, align: center, gap: sm, className: shrink-0, children: [{ type: avatar, src: (object/get @entity chatAvatar ""), name: @entity.chatTitle, size: md, className: (if (= @entity.chatAvatar "") hidden "") }, { type: stack, direction: vertical, gap: none, children: [{ type: typography, variant: h4, content: @entity.chatTitle }, { type: typography, variant: caption, content: @entity.chatSubtitle }] }] } {
             children: [{
               action: NEW_CHAT_CLICKED
               aria-label: @config.newChatLabel
@@ -1188,7 +1225,7 @@ orbital AgentConversationOrbital {
               size: sm
               type: button
               variant: secondary
-            }, {
+            }, (if (= @config.entryPoints none) null {
               children: [{
                 action: OPEN_CHATS_CLICKED
                 aria-label: @config.chatsLabel
@@ -1213,14 +1250,16 @@ orbital AgentConversationOrbital {
                 }))
                 direction: horizontal
                 gap: xs
+                wrap: true
                 type: stack
               }]
               align: center
-              className: shrink-0
+              className: min-w-0
               direction: horizontal
               gap: none
+              wrap: true
               type: stack
-            }]
+            })]
             align: center
             className: shrink-0
             direction: horizontal
@@ -1237,12 +1276,12 @@ orbital AgentConversationOrbital {
             rawLlmPreferenceKey: agent-conversation-raw-llm
             type: agent-chat-feed
             working: @entity.working
-          }, {
+          }] @config.aboveInput) [{
             focusRequest: (if (= @entity.draft "") null { id: @entity.draftNo, text: @entity.draft })
             placeholder: @config.placeholder
             sendEvent: ASK
             type: chat-bar
-          }]
+          }])
           className: "h-full min-h-0 flex-1"
           direction: vertical
           gap: sm
@@ -1252,7 +1291,7 @@ orbital AgentConversationOrbital {
         (set @entity.entries (array/append @entity.entries { type: error, message: ?error, timestamp: @now }))
         (set @entity.working false)
         (render-ui main {
-          children: [(if @config.ephemeral { type: stack, direction: horizontal, align: center, gap: sm, className: shrink-0, children: [{ type: avatar, src: (object/get @entity chatAvatar ""), name: @entity.chatTitle, size: md, className: (if (= @entity.chatAvatar "") hidden "") }, { type: stack, direction: vertical, gap: none, children: [{ type: typography, variant: h4, content: @entity.chatTitle }, { type: typography, variant: caption, content: @entity.chatSubtitle }] }] } {
+          children: (array/concat (array/concat [(if @config.ephemeral { type: stack, direction: horizontal, align: center, gap: sm, className: shrink-0, children: [{ type: avatar, src: (object/get @entity chatAvatar ""), name: @entity.chatTitle, size: md, className: (if (= @entity.chatAvatar "") hidden "") }, { type: stack, direction: vertical, gap: none, children: [{ type: typography, variant: h4, content: @entity.chatTitle }, { type: typography, variant: caption, content: @entity.chatSubtitle }] }] } {
             children: [{
               action: NEW_CHAT_CLICKED
               aria-label: @config.newChatLabel
@@ -1261,7 +1300,7 @@ orbital AgentConversationOrbital {
               size: sm
               type: button
               variant: secondary
-            }, {
+            }, (if (= @config.entryPoints none) null {
               children: [{
                 action: OPEN_CHATS_CLICKED
                 aria-label: @config.chatsLabel
@@ -1286,14 +1325,16 @@ orbital AgentConversationOrbital {
                 }))
                 direction: horizontal
                 gap: xs
+                wrap: true
                 type: stack
               }]
               align: center
-              className: shrink-0
+              className: min-w-0
               direction: horizontal
               gap: none
+              wrap: true
               type: stack
-            }]
+            })]
             align: center
             className: shrink-0
             direction: horizontal
@@ -1310,12 +1351,12 @@ orbital AgentConversationOrbital {
             rawLlmPreferenceKey: agent-conversation-raw-llm
             type: agent-chat-feed
             working: @entity.working
-          }, {
+          }] @config.aboveInput) [{
             focusRequest: (if (= @entity.draft "") null { id: @entity.draftNo, text: @entity.draft })
             placeholder: @config.placeholder
             sendEvent: ASK
             type: chat-bar
-          }]
+          }])
           className: "h-full min-h-0 flex-1"
           direction: vertical
           gap: sm
@@ -1424,6 +1465,14 @@ orbital AgentConversationOrbital {
       BACK_TO_CHAT {
       }
         @description "Back to the conversation."
+      SHOW_CHATS {
+      }
+        @description "Show the person's past conversations in place of the chat, as the past-conversations button does; for an app whose own menu holds that entry (entryPoints none)."
+        @synonyms "open conversations, history, past chats"
+      SHOW_MEMORY {
+      }
+        @description "Show what the assistant remembers in place of the chat, as the memory button does; for an app whose own menu holds that entry (entryPoints none)."
+        @synonyms "open memory, what I remember"
       THREAD_LOADED {
         data : [AgentThreadRow]!
       }
@@ -1762,7 +1811,7 @@ orbital AgentChatsOrbital {
           id: (object/get (default (array/first (array/sort (default ?data []) lastActiveAt desc)) {}) id)
           ownerId: (object/get (default (array/first (array/sort (default ?data []) lastActiveAt desc)) {}) ownerId)
           title: (if (= (default (object/get (default (array/first (array/sort (default ?data []) lastActiveAt desc)) {}) title) "") "") @entity.pendingMessage (object/get (default (array/first (array/sort (default ?data []) lastActiveAt desc)) {}) title))
-          startedAt: (object/get (default (array/first (array/sort (default ?data []) lastActiveAt desc)) {}) startedAt)
+          startedAt: (default (object/get (default (array/first (array/sort (default ?data []) lastActiveAt desc)) {}) startedAt) @now)
           lastActiveAt: @now
         } {
           emit: { failure: AgentChatsLoadFailed, success: ChatReadyForSend }
@@ -1807,7 +1856,7 @@ orbital AgentChatsOrbital {
           id: (object/get (default (array/first (default ?data [])) {}) id)
           ownerId: (object/get (default (array/first (default ?data [])) {}) ownerId)
           title: (object/get (default (array/first (default ?data [])) {}) title)
-          startedAt: (object/get (default (array/first (default ?data [])) {}) startedAt)
+          startedAt: (default (object/get (default (array/first (default ?data [])) {}) startedAt) @now)
           lastActiveAt: @now
         } {
           emit: { failure: AgentChatsLoadFailed, success: ChatSelected }

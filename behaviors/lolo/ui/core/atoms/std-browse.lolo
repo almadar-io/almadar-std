@@ -101,13 +101,13 @@ orbital BrowseItemOrbital {
                 @config.masterDetailBodyContent
                 (if (= @config.browseLook triage)
                   @config.triageBodyContent
-                  @config.bodyContent))))), {
+                  @config.bodyContent))))), (if (and (= @config.singlePagePager hide) (<= (math/ceil (/ @entity.browseTotalCount @config.pageSize)) 1)) null {
             currentPage: @entity.browsePage
             pageChangeEvent: REFETCH_PAGE
             showPageSize: false
             totalPages: (math/max 1 (math/ceil (/ @entity.browseTotalCount @config.pageSize)))
             type: pagination
-          }]
+          })]
           direction: vertical
           gap: md
           type: stack
@@ -193,13 +193,13 @@ orbital BrowseItemOrbital {
         (render-ui main @config.masterDetailRecordBodyContent)
       CLOSE -> browsing when (= @config.browseLook "master-detail")
         (render-ui main {
-          children: [@config.masterDetailBodyContent, {
+          children: [@config.masterDetailBodyContent, (if (and (= @config.singlePagePager hide) (<= (math/ceil (/ @entity.browseTotalCount @config.pageSize)) 1)) null {
             currentPage: @entity.browsePage
             pageChangeEvent: REFETCH_PAGE
             showPageSize: false
             totalPages: (math/max 1 (math/ceil (/ @entity.browseTotalCount @config.pageSize)))
             type: pagination
-          }]
+          })]
           direction: vertical
           gap: md
           type: stack
@@ -217,13 +217,13 @@ orbital BrowseItemOrbital {
                 @config.masterDetailBodyContent
                 (if (= @config.browseLook triage)
                   @config.triageBodyContent
-                  @config.bodyContent))))), {
+                  @config.bodyContent))))), (if (and (= @config.singlePagePager hide) (<= (math/ceil (/ @entity.browseTotalCount @config.pageSize)) 1)) null {
             currentPage: @entity.browsePage
             pageChangeEvent: REFETCH_PAGE
             showPageSize: false
             totalPages: (math/max 1 (math/ceil (/ @entity.browseTotalCount @config.pageSize)))
             type: pagination
-          }]
+          })]
           direction: vertical
           gap: md
           type: stack
@@ -369,6 +369,11 @@ orbital BrowseItemOrbital {
         @label "How many rows to fetch per page?"
         @description "Records fetched from the server per page request."
         @synonyms "fetch limit, records per page, batch size, page limit"
+        @tier "presentation"
+      singlePagePager : "show" | "hide" = show
+        @label "Show the pager when there is only one page?"
+        @description "show (default) keeps the pager under the list even when every row fits on one page; hide leaves it out until the filter matches more rows than one page holds (a short list in a rail or a card)."
+        @synonyms "hide pagination, no pager, single page, short list"
         @tier "presentation"
       orderBy : string = ""
         @label "Which field orders the list?"

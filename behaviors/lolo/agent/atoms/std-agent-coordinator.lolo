@@ -406,7 +406,7 @@ orbital AgentCoordinatorOrbital {
         (emit TASK_FAIL {})
       StepSaved -> planning when (< (+ @entity.saveCursor 1) @entity.total)
         (set @entity.saveCursor (+ @entity.saveCursor 1))
-        (persist create AgentTaskStep { id: (str/concat @entity.taskId ":" @entity.saveCursor), taskId: @entity.taskId, index: @entity.saveCursor, instruction: (array/nth @entity.instructions @entity.saveCursor), status: "pending", result: "", error: "" } {
+        (persist create AgentTaskStep { id: (str/concat @entity.taskId ":" @entity.saveCursor), taskId: @entity.taskId, index: @entity.saveCursor, instruction: (default (array/nth @entity.instructions @entity.saveCursor) ""), status: "pending", result: "", error: "" } {
           emit: { failure: StepSaveFailed, success: StepSaved }
         })
       StepSaved -> starting when (>= (+ @entity.saveCursor 1) @entity.total)

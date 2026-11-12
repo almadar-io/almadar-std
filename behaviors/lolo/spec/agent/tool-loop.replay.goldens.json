@@ -1,3197 +1,3761 @@
 {
-  "atom": "agent/atoms/std-agent-tool-loop.lolo",
-  "trait": "AgentToolLoop",
-  "orbital": "AgentToolLoopOrbital",
-  "note": "S1 deny by default (owner decision 5, 2026-10-27): a tool is offered to the model only when its `roles` include the signed-in viewer's role; empty or absent roles, and no viewer, offer nothing. caller identity (2026-11-10): the assistant is its own identity row (std-agent-identity); tools are offered by that row's role and every call and read goes through it, never the asking session.",
-  "cases": [
+ "atom": "agent/atoms/std-agent-tool-loop.lolo",
+ "trait": "AgentToolLoop",
+ "orbital": "AgentToolLoopOrbital",
+ "note": "S1 deny by default (owner decision 5, 2026-10-27): a tool is offered to the model only when its `roles` include the signed-in viewer's role; empty or absent roles, and no viewer, offer nothing. caller identity (2026-11-10): the assistant is its own identity row (std-agent-identity); tools are offered by that row's role and every call and read goes through it, never the asking session.",
+ "cases": [
+  {
+   "id": "a-tool-granted-to-the-viewers-role-is-offered",
+   "note": "S1: the read tool lists staff, and the viewer is staff.",
+   "steps": [
     {
-      "id": "a-tool-granted-to-the-viewers-role-is-offered",
-      "note": "S1: the read tool lists staff, and the viewer is staff.",
-      "steps": [
-        {
-          "event": "CONVERSE",
-          "from": "idle",
-          "payload": {
-            "messages": [
-              {
-                "role": "user",
-                "content": "show my notes"
-              }
-            ]
-          },
-          "expect": {
-            "fired": true,
-            "state": "preparing"
-          },
-          "identity": {
-            "id": "u1",
-            "role": "staff"
-          }
-        },
-        {
-          "event": "INPUTS_KNOWN",
-          "from": "preparing",
-          "payload": {
-            "result": {
-              "inputs": [],
-              "entities": [],
-              "selected": []
-            },
-            "text": ""
-          },
-          "expect": {
-            "fired": true,
-            "state": "thinking",
-            "emits": [
-              {
-                "event": "LLM_CALL_TOOLS",
-                "payload": {
-                  "tools": [
-                    {
-                      "name": "read__Note",
-                      "description": "Read the Note rows you may see",
-                      "parameters": {
-                        "type": "object",
-                        "properties": {}
-                      }
-                    }
-                  ]
-                }
-              }
-            ]
-          },
-          "identity": {
-            "id": "u1",
-            "role": "staff"
-          }
-        }
-      ],
-      "config": {
-        "tools": [
-          {
-            "read": "Note",
-            "roles": [
-              "staff"
-            ]
-          }
-        ]
-      },
-      "defaults": [
-        "LoopLlm",
-        "LoopChatRequest",
-        "LoopChatHttp"
+     "event": "CONVERSE",
+     "from": "idle",
+     "payload": {
+      "messages": [
+       {
+        "role": "user",
+        "content": "show my notes"
+       }
       ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "preparing"
+     },
+     "identity": {
+      "id": "u1",
+      "role": "staff"
+     }
     },
     {
-      "id": "a-tool-not-granted-to-the-viewers-role-is-not-offered",
-      "note": "S1: the viewer is a guest, and the tool grants only staff.",
-      "steps": [
-        {
-          "event": "CONVERSE",
-          "from": "idle",
-          "payload": {
-            "messages": [
-              {
-                "role": "user",
-                "content": "show my notes"
-              }
-            ]
-          },
-          "expect": {
-            "fired": true,
-            "state": "preparing"
-          },
-          "identity": {
-            "id": "u2",
-            "role": "guest"
-          }
-        },
-        {
-          "event": "INPUTS_KNOWN",
-          "from": "preparing",
-          "payload": {
-            "result": {
-              "inputs": [],
-              "entities": [],
-              "selected": []
-            },
-            "text": ""
-          },
-          "expect": {
-            "fired": true,
-            "state": "thinking",
-            "emits": [
-              {
-                "event": "LLM_CALL_TOOLS",
-                "payload": {
-                  "tools": []
-                }
-              }
-            ]
-          },
-          "identity": {
-            "id": "u2",
-            "role": "guest"
-          }
-        }
-      ],
-      "config": {
-        "tools": [
-          {
-            "read": "Note",
-            "roles": [
-              "staff"
-            ]
-          }
-        ]
+     "event": "INPUTS_KNOWN",
+     "from": "preparing",
+     "payload": {
+      "result": {
+       "inputs": [],
+       "entities": [],
+       "selected": []
       },
-      "defaults": [
-        "LoopLlm",
-        "LoopChatRequest",
-        "LoopChatHttp"
+      "text": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "thinking",
+      "emits": [
+       {
+        "event": "LLM_CALL_TOOLS",
+        "payload": {
+         "tools": [
+          {
+           "name": "read__Note",
+           "description": "Read the Note rows you may see",
+           "parameters": {
+            "type": "object",
+            "properties": {}
+           }
+          }
+         ]
+        }
+       }
       ]
-    },
-    {
-      "id": "a-tool-with-empty-roles-is-refused",
-      "note": "S1: empty roles grants nobody.",
-      "steps": [
-        {
-          "event": "CONVERSE",
-          "from": "idle",
-          "payload": {
-            "messages": [
-              {
-                "role": "user",
-                "content": "show my notes"
-              }
-            ]
-          },
-          "expect": {
-            "fired": true,
-            "state": "preparing"
-          },
-          "identity": {
-            "id": "u1",
-            "role": "staff"
-          }
-        },
-        {
-          "event": "INPUTS_KNOWN",
-          "from": "preparing",
-          "payload": {
-            "result": {
-              "inputs": [],
-              "entities": [],
-              "selected": []
-            },
-            "text": ""
-          },
-          "expect": {
-            "fired": true,
-            "state": "thinking",
-            "emits": [
-              {
-                "event": "LLM_CALL_TOOLS",
-                "payload": {
-                  "tools": []
-                }
-              }
-            ]
-          },
-          "identity": {
-            "id": "u1",
-            "role": "staff"
-          }
-        }
-      ],
-      "config": {
-        "tools": [
-          {
-            "read": "Note",
-            "roles": []
-          }
-        ]
-      },
-      "defaults": [
-        "LoopLlm",
-        "LoopChatRequest",
-        "LoopChatHttp"
-      ]
-    },
-    {
-      "id": "no-viewer-is-offered-nothing",
-      "note": "S1: an anonymous turn is offered no tool.",
-      "steps": [
-        {
-          "event": "CONVERSE",
-          "from": "idle",
-          "payload": {
-            "messages": [
-              {
-                "role": "user",
-                "content": "show my notes"
-              }
-            ]
-          },
-          "expect": {
-            "fired": true,
-            "state": "preparing"
-          }
-        },
-        {
-          "event": "INPUTS_KNOWN",
-          "from": "preparing",
-          "payload": {
-            "result": {
-              "inputs": [],
-              "entities": [],
-              "selected": []
-            },
-            "text": ""
-          },
-          "expect": {
-            "fired": true,
-            "state": "thinking",
-            "emits": [
-              {
-                "event": "LLM_CALL_TOOLS",
-                "payload": {
-                  "tools": []
-                }
-              }
-            ]
-          }
-        }
-      ],
-      "config": {
-        "tools": [
-          {
-            "read": "Note",
-            "roles": [
-              "staff"
-            ]
-          }
-        ]
-      },
-      "defaults": [
-        "LoopLlm",
-        "LoopChatRequest",
-        "LoopChatHttp"
-      ]
-    },
-    {
-      "id": "control-only-the-granted-tool-of-two-is-offered",
-      "note": "S1 control: the grant is per tool.",
-      "steps": [
-        {
-          "event": "CONVERSE",
-          "from": "idle",
-          "payload": {
-            "messages": [
-              {
-                "role": "user",
-                "content": "show my notes"
-              }
-            ]
-          },
-          "expect": {
-            "fired": true,
-            "state": "preparing"
-          },
-          "identity": {
-            "id": "u1",
-            "role": "staff"
-          }
-        },
-        {
-          "event": "INPUTS_KNOWN",
-          "from": "preparing",
-          "payload": {
-            "result": {
-              "inputs": [],
-              "entities": [],
-              "selected": []
-            },
-            "text": ""
-          },
-          "expect": {
-            "fired": true,
-            "state": "thinking",
-            "emits": [
-              {
-                "event": "LLM_CALL_TOOLS",
-                "payload": {
-                  "tools": [
-                    {
-                      "name": "read__Note",
-                      "description": "Read the Note rows you may see",
-                      "parameters": {
-                        "type": "object",
-                        "properties": {}
-                      }
-                    }
-                  ]
-                }
-              }
-            ]
-          },
-          "identity": {
-            "id": "u1",
-            "role": "staff"
-          }
-        }
-      ],
-      "config": {
-        "tools": [
-          {
-            "read": "Note",
-            "roles": [
-              "staff"
-            ]
-          },
-          {
-            "read": "Payroll",
-            "roles": [
-              "admin"
-            ]
-          }
-        ]
-      },
-      "defaults": [
-        "LoopLlm",
-        "LoopChatRequest",
-        "LoopChatHttp"
-      ]
-    },
-    {
-      "id": "an-ephemeral-conversations-tools-are-gated-the-same-way",
-      "note": "S1: tools carried on CONVERSE (ephemeral) obey the same grant.",
-      "steps": [
-        {
-          "event": "CONVERSE",
-          "from": "idle",
-          "payload": {
-            "messages": [
-              {
-                "role": "user",
-                "content": "show my notes"
-              }
-            ],
-            "ephemeral": true,
-            "tools": [
-              {
-                "read": "Note",
-                "roles": [
-                  "staff"
-                ]
-              },
-              {
-                "read": "Payroll",
-                "roles": [
-                  "admin"
-                ]
-              }
-            ]
-          },
-          "expect": {
-            "fired": true,
-            "state": "preparing"
-          },
-          "identity": {
-            "id": "u1",
-            "role": "staff"
-          }
-        },
-        {
-          "event": "INPUTS_KNOWN",
-          "from": "preparing",
-          "payload": {
-            "result": {
-              "inputs": [],
-              "entities": [],
-              "selected": []
-            },
-            "text": ""
-          },
-          "expect": {
-            "fired": true,
-            "state": "thinking",
-            "emits": [
-              {
-                "event": "LLM_CALL_TOOLS",
-                "payload": {
-                  "tools": [
-                    {
-                      "name": "read__Note",
-                      "description": "Read the Note rows you may see",
-                      "parameters": {
-                        "type": "object",
-                        "properties": {}
-                      }
-                    }
-                  ]
-                }
-              }
-            ]
-          },
-          "identity": {
-            "id": "u1",
-            "role": "staff"
-          }
-        }
-      ],
-      "defaults": [
-        "LoopLlm",
-        "LoopChatRequest",
-        "LoopChatHttp"
-      ]
-    },
-    {
-      "id": "a-process-caller-is-offered-its-tools-with-no-viewer",
-      "note": "caller: process (a headless command such as orb agent): the tools are the program's own, offered with no signed-in viewer.",
-      "steps": [
-        {
-          "event": "CONVERSE",
-          "from": "idle",
-          "payload": {
-            "messages": [
-              {
-                "role": "user",
-                "content": "show my notes"
-              }
-            ]
-          },
-          "expect": {
-            "fired": true,
-            "state": "preparing"
-          }
-        },
-        {
-          "event": "INPUTS_KNOWN",
-          "from": "preparing",
-          "payload": {
-            "result": {
-              "inputs": [],
-              "entities": [],
-              "selected": []
-            },
-            "text": ""
-          },
-          "expect": {
-            "fired": true,
-            "state": "thinking",
-            "emits": [
-              {
-                "event": "LLM_CALL_TOOLS",
-                "payload": {
-                  "tools": [
-                    {
-                      "name": "read__Note",
-                      "description": "Read the Note rows you may see",
-                      "parameters": {
-                        "type": "object",
-                        "properties": {}
-                      }
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        }
-      ],
-      "config": {
-        "caller": "process",
-        "tools": [
-          {
-            "read": "Note",
-            "roles": [
-              "staff"
-            ]
-          }
-        ]
-      },
-      "defaults": [
-        "LoopLlm",
-        "LoopChatRequest",
-        "LoopChatHttp"
-      ]
-    },
-    {
-      "id": "a-process-caller-ignores-roles-even-when-empty",
-      "note": "caller: process control: no role filter applies, so a tool with empty roles is still the program's own.",
-      "steps": [
-        {
-          "event": "CONVERSE",
-          "from": "idle",
-          "payload": {
-            "messages": [
-              {
-                "role": "user",
-                "content": "show my notes"
-              }
-            ]
-          },
-          "expect": {
-            "fired": true,
-            "state": "preparing"
-          }
-        },
-        {
-          "event": "INPUTS_KNOWN",
-          "from": "preparing",
-          "payload": {
-            "result": {
-              "inputs": [],
-              "entities": [],
-              "selected": []
-            },
-            "text": ""
-          },
-          "expect": {
-            "fired": true,
-            "state": "thinking",
-            "emits": [
-              {
-                "event": "LLM_CALL_TOOLS",
-                "payload": {
-                  "tools": [
-                    {
-                      "name": "read__Note",
-                      "description": "Read the Note rows you may see",
-                      "parameters": {
-                        "type": "object",
-                        "properties": {}
-                      }
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        }
-      ],
-      "config": {
-        "caller": "process",
-        "tools": [
-          {
-            "read": "Note",
-            "roles": []
-          }
-        ]
-      },
-      "defaults": [
-        "LoopLlm",
-        "LoopChatRequest",
-        "LoopChatHttp"
-      ]
-    },
-    {
-      "id": "a-failed-run-carries-the-steps-it-took",
-      "note": "G-STD-042: the failure keeps what the run did before it failed.",
-      "steps": [
-        {
-          "event": "CONVERSE",
-          "from": "idle",
-          "payload": {
-            "messages": [
-              {
-                "role": "user",
-                "content": "show my notes"
-              }
-            ]
-          },
-          "expect": {
-            "fired": true,
-            "state": "preparing"
-          },
-          "identity": {
-            "id": "u1",
-            "role": "staff"
-          }
-        },
-        {
-          "event": "INPUTS_KNOWN",
-          "from": "preparing",
-          "payload": {
-            "result": {
-              "inputs": [],
-              "entities": [],
-              "selected": []
-            },
-            "text": ""
-          },
-          "expect": {
-            "fired": true,
-            "state": "thinking"
-          },
-          "identity": {
-            "id": "u1",
-            "role": "staff"
-          }
-        },
-        {
-          "event": "ToolsStep",
-          "from": "thinking",
-          "payload": {
-            "activity": {
-              "type": "tool_call",
-              "tool": "read__Note",
-              "kind": "read",
-              "argsText": "{}",
-              "timestamp": "2026-11-07T00:00:00.000Z",
-              "isExecuting": false
-            }
-          },
-          "expect": {
-            "fired": true,
-            "state": "thinking"
-          },
-          "identity": {
-            "id": "u1",
-            "role": "staff"
-          }
-        },
-        {
-          "event": "ToolsFailed",
-          "from": "thinking",
-          "payload": {
-            "message": "model unavailable"
-          },
-          "expect": {
-            "fired": true,
-            "state": "idle",
-            "emits": [
-              {
-                "event": "ASSISTANT_REPLY_FAILED",
-                "payload": {
-                  "error": "model unavailable",
-                  "steps": [
-                    {
-                      "type": "tool_call",
-                      "tool": "read__Note",
-                      "kind": "read",
-                      "argsText": "{}",
-                      "timestamp": "2026-11-07T00:00:00.000Z",
-                      "isExecuting": false
-                    }
-                  ]
-                }
-              }
-            ]
-          },
-          "identity": {
-            "id": "u1",
-            "role": "staff"
-          }
-        }
-      ],
-      "config": {
-        "tools": [
-          {
-            "read": "Note",
-            "roles": [
-              "staff"
-            ]
-          }
-        ]
-      },
-      "defaults": [
-        "LoopLlm",
-        "LoopChatRequest",
-        "LoopChatHttp"
-      ]
-    },
-    {
-      "id": "control-a-failed-run-with-no-steps-carries-none",
-      "note": "G-STD-042 control.",
-      "steps": [
-        {
-          "event": "CONVERSE",
-          "from": "idle",
-          "payload": {
-            "messages": [
-              {
-                "role": "user",
-                "content": "show my notes"
-              }
-            ]
-          },
-          "expect": {
-            "fired": true,
-            "state": "preparing"
-          },
-          "identity": {
-            "id": "u1",
-            "role": "staff"
-          }
-        },
-        {
-          "event": "INPUTS_KNOWN",
-          "from": "preparing",
-          "payload": {
-            "result": {
-              "inputs": [],
-              "entities": [],
-              "selected": []
-            },
-            "text": ""
-          },
-          "expect": {
-            "fired": true,
-            "state": "thinking"
-          },
-          "identity": {
-            "id": "u1",
-            "role": "staff"
-          }
-        },
-        {
-          "event": "ToolsFailed",
-          "from": "thinking",
-          "payload": {
-            "message": "model unavailable"
-          },
-          "expect": {
-            "fired": true,
-            "state": "idle",
-            "emits": [
-              {
-                "event": "ASSISTANT_REPLY_FAILED",
-                "payload": {
-                  "error": "model unavailable",
-                  "steps": []
-                }
-              }
-            ]
-          },
-          "identity": {
-            "id": "u1",
-            "role": "staff"
-          }
-        }
-      ],
-      "config": {
-        "tools": [
-          {
-            "read": "Note",
-            "roles": [
-              "staff"
-            ]
-          }
-        ]
-      },
-      "defaults": [
-        "LoopLlm",
-        "LoopChatRequest",
-        "LoopChatHttp"
-      ]
-    },
-    {
-      "id": "an-ephemeral-turn-with-live-streams-its-steps",
-      "note": "Owner 2026-11-08: `live` decides, whatever `ephemeral` is.",
-      "steps": [
-        {
-          "event": "CONVERSE",
-          "from": "idle",
-          "payload": {
-            "ephemeral": true,
-            "tools": [
-              {
-                "read": "Note",
-                "roles": [
-                  "staff"
-                ]
-              }
-            ],
-            "live": true,
-            "messages": [
-              {
-                "role": "user",
-                "content": "show my notes"
-              }
-            ]
-          },
-          "expect": {
-            "fired": true,
-            "state": "preparing"
-          },
-          "identity": {
-            "id": "u1",
-            "role": "staff"
-          }
-        },
-        {
-          "event": "INPUTS_KNOWN",
-          "from": "preparing",
-          "payload": {
-            "result": {
-              "inputs": [],
-              "entities": [],
-              "selected": []
-            },
-            "text": ""
-          },
-          "expect": {
-            "fired": true,
-            "state": "thinking"
-          },
-          "identity": {
-            "id": "u1",
-            "role": "staff"
-          }
-        },
-        {
-          "event": "ToolsStep",
-          "from": "thinking",
-          "payload": {
-            "activity": {
-              "type": "tool_call",
-              "tool": "read__Note",
-              "kind": "read",
-              "argsText": "{}",
-              "timestamp": "2026-11-07T00:00:00.000Z",
-              "isExecuting": false
-            }
-          },
-          "identity": {
-            "id": "u1",
-            "role": "staff"
-          },
-          "expect": {
-            "fired": true,
-            "state": "thinking",
-            "emits": [
-              {
-                "event": "ASSISTANT_STEP",
-                "payload": {
-                  "activity": {
-                    "type": "tool_call",
-                    "tool": "read__Note",
-                    "kind": "read",
-                    "argsText": "{}",
-                    "timestamp": "2026-11-07T00:00:00.000Z",
-                    "isExecuting": false
-                  }
-                }
-              }
-            ]
-          }
-        }
-      ],
-      "config": {},
-      "defaults": [
-        "LoopLlm",
-        "LoopChatRequest",
-        "LoopChatHttp"
-      ]
-    },
-    {
-      "id": "control-an-ephemeral-turn-without-live-streams-nothing",
-      "note": "Absent `live`, an ephemeral turn streams no steps.",
-      "steps": [
-        {
-          "event": "CONVERSE",
-          "from": "idle",
-          "payload": {
-            "ephemeral": true,
-            "tools": [
-              {
-                "read": "Note",
-                "roles": [
-                  "staff"
-                ]
-              }
-            ],
-            "messages": [
-              {
-                "role": "user",
-                "content": "show my notes"
-              }
-            ]
-          },
-          "expect": {
-            "fired": true,
-            "state": "preparing"
-          },
-          "identity": {
-            "id": "u1",
-            "role": "staff"
-          }
-        },
-        {
-          "event": "INPUTS_KNOWN",
-          "from": "preparing",
-          "payload": {
-            "result": {
-              "inputs": [],
-              "entities": [],
-              "selected": []
-            },
-            "text": ""
-          },
-          "expect": {
-            "fired": true,
-            "state": "thinking"
-          },
-          "identity": {
-            "id": "u1",
-            "role": "staff"
-          }
-        },
-        {
-          "event": "ToolsStep",
-          "from": "thinking",
-          "payload": {
-            "activity": {
-              "type": "tool_call",
-              "tool": "read__Note",
-              "kind": "read",
-              "argsText": "{}",
-              "timestamp": "2026-11-07T00:00:00.000Z",
-              "isExecuting": false
-            }
-          },
-          "identity": {
-            "id": "u1",
-            "role": "staff"
-          },
-          "expect": {
-            "fired": true,
-            "state": "thinking",
-            "emits": []
-          }
-        }
-      ],
-      "config": {},
-      "defaults": [
-        "LoopLlm",
-        "LoopChatRequest",
-        "LoopChatHttp"
-      ]
-    },
-    {
-      "id": "a-non-ephemeral-turn-with-live-false-streams-nothing",
-      "note": "`live: false` silences a turn that `quiet` would let stream.",
-      "steps": [
-        {
-          "event": "CONVERSE",
-          "from": "idle",
-          "payload": {
-            "live": false,
-            "messages": [
-              {
-                "role": "user",
-                "content": "show my notes"
-              }
-            ]
-          },
-          "expect": {
-            "fired": true,
-            "state": "preparing"
-          },
-          "identity": {
-            "id": "u1",
-            "role": "staff"
-          }
-        },
-        {
-          "event": "INPUTS_KNOWN",
-          "from": "preparing",
-          "payload": {
-            "result": {
-              "inputs": [],
-              "entities": [],
-              "selected": []
-            },
-            "text": ""
-          },
-          "expect": {
-            "fired": true,
-            "state": "thinking"
-          },
-          "identity": {
-            "id": "u1",
-            "role": "staff"
-          }
-        },
-        {
-          "event": "ToolsStep",
-          "from": "thinking",
-          "payload": {
-            "activity": {
-              "type": "tool_call",
-              "tool": "read__Note",
-              "kind": "read",
-              "argsText": "{}",
-              "timestamp": "2026-11-07T00:00:00.000Z",
-              "isExecuting": false
-            }
-          },
-          "identity": {
-            "id": "u1",
-            "role": "staff"
-          },
-          "expect": {
-            "fired": true,
-            "state": "thinking",
-            "emits": []
-          }
-        }
-      ],
-      "config": {
-        "tools": [
-          {
-            "read": "Note",
-            "roles": [
-              "staff"
-            ]
-          }
-        ]
-      },
-      "defaults": [
-        "LoopLlm",
-        "LoopChatRequest",
-        "LoopChatHttp"
-      ]
-    },
-    {
-      "id": "control-a-non-ephemeral-turn-without-live-follows-quiet",
-      "note": "Absent `live`, the turn streams unless `quiet`.",
-      "steps": [
-        {
-          "event": "CONVERSE",
-          "from": "idle",
-          "payload": {
-            "messages": [
-              {
-                "role": "user",
-                "content": "show my notes"
-              }
-            ]
-          },
-          "expect": {
-            "fired": true,
-            "state": "preparing"
-          },
-          "identity": {
-            "id": "u1",
-            "role": "staff"
-          }
-        },
-        {
-          "event": "INPUTS_KNOWN",
-          "from": "preparing",
-          "payload": {
-            "result": {
-              "inputs": [],
-              "entities": [],
-              "selected": []
-            },
-            "text": ""
-          },
-          "expect": {
-            "fired": true,
-            "state": "thinking"
-          },
-          "identity": {
-            "id": "u1",
-            "role": "staff"
-          }
-        },
-        {
-          "event": "ToolsStep",
-          "from": "thinking",
-          "payload": {
-            "activity": {
-              "type": "tool_call",
-              "tool": "read__Note",
-              "kind": "read",
-              "argsText": "{}",
-              "timestamp": "2026-11-07T00:00:00.000Z",
-              "isExecuting": false
-            }
-          },
-          "identity": {
-            "id": "u1",
-            "role": "staff"
-          },
-          "expect": {
-            "fired": true,
-            "state": "thinking",
-            "emits": [
-              {
-                "event": "ASSISTANT_STEP",
-                "payload": {
-                  "activity": {
-                    "type": "tool_call",
-                    "tool": "read__Note",
-                    "kind": "read",
-                    "argsText": "{}",
-                    "timestamp": "2026-11-07T00:00:00.000Z",
-                    "isExecuting": false
-                  }
-                }
-              }
-            ]
-          }
-        }
-      ],
-      "config": {
-        "tools": [
-          {
-            "read": "Note",
-            "roles": [
-              "staff"
-            ]
-          }
-        ]
-      },
-      "defaults": [
-        "LoopLlm",
-        "LoopChatRequest",
-        "LoopChatHttp"
-      ]
-    },
-    {
-      "id": "identity-caller-with-no-identity-wired-fails-the-turn-and-offers-nothing",
-      "note": "caller identity: the composed std-agent-identity has no subject, so the turn fails; it never falls back to the asking user's role.",
-      "config": {
-        "caller": "identity",
-        "tools": [
-          {
-            "read": "Ticket",
-            "roles": [
-              "support"
-            ]
-          },
-          {
-            "read": "Payroll",
-            "roles": [
-              "admin"
-            ]
-          }
-        ]
-      },
-      "defaults": [
-        "LoopLlm",
-        "LoopChatRequest",
-        "LoopChatHttp",
-        "LoopIdentity"
-      ],
-      "steps": [
-        {
-          "event": "CONVERSE",
-          "from": "idle",
-          "payload": {
-            "messages": [
-              {
-                "role": "user",
-                "content": "close my ticket"
-              }
-            ]
-          },
-          "identity": {
-            "id": "u1",
-            "role": "admin"
-          },
-          "expect": {
-            "fired": true,
-            "effects": [],
-            "emits": [
-              {
-                "event": "AGENT_IDENTITY_REQUESTED"
-              },
-              {
-                "event": "ASSISTANT_REPLY_FAILED",
-                "payload": {
-                  "error": "The assistant's own identity could not sign in: no-subject"
-                }
-              }
-            ],
-            "neverEmits": [
-              "LLM_CALL_TOOLS",
-              "INPUTS_KNOWN"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "attack-identity-caller-offers-by-the-agents-role-never-the-asking-admins",
-      "note": "The person asking is an admin and Payroll lists admin; the agent's identity row is support, so only Ticket is offered.",
-      "config": {
-        "caller": "identity",
-        "tools": [
-          {
-            "read": "Ticket",
-            "roles": [
-              "support"
-            ]
-          },
-          {
-            "read": "Payroll",
-            "roles": [
-              "admin"
-            ]
-          }
-        ]
-      },
-      "defaults": [
-        "LoopLlm",
-        "LoopChatRequest",
-        "LoopChatHttp",
-        "LoopIdentity"
-      ],
-      "steps": [
-        {
-          "event": "AgentIdentityReady",
-          "from": "preparing",
-          "payload": {
-            "subject": "support-agent",
-            "role": "support"
-          },
-          "entity": {
-            "pendingTools": [
-              {
-                "read": "Ticket",
-                "roles": [
-                  "support"
-                ]
-              },
-              {
-                "read": "Payroll",
-                "roles": [
-                  "admin"
-                ]
-              }
-            ]
-          },
-          "expect": {
-            "fired": true,
-            "state": "preparing"
-          },
-          "identity": {
-            "id": "u1",
-            "role": "admin"
-          }
-        },
-        {
-          "event": "INPUTS_KNOWN",
-          "from": "preparing",
-          "payload": {
-            "result": {
-              "inputs": [],
-              "entities": [],
-              "selected": []
-            },
-            "text": ""
-          },
-          "expect": {
-            "fired": true,
-            "state": "thinking",
-            "emits": [
-              {
-                "event": "LLM_CALL_TOOLS",
-                "payload": {
-                  "tools": [
-                    {
-                      "name": "read__Ticket",
-                      "description": "Read the Ticket rows you may see",
-                      "parameters": {
-                        "type": "object",
-                        "properties": {}
-                      }
-                    }
-                  ]
-                }
-              }
-            ]
-          },
-          "identity": {
-            "id": "u1",
-            "role": "admin"
-          }
-        }
-      ]
-    },
-    {
-      "id": "control-identity-caller-offers-the-agents-tools-to-an-anonymous-asker",
-      "note": "Who asks does not decide: the agent's role does.",
-      "config": {
-        "caller": "identity",
-        "tools": [
-          {
-            "read": "Ticket",
-            "roles": [
-              "support"
-            ]
-          },
-          {
-            "read": "Payroll",
-            "roles": [
-              "admin"
-            ]
-          }
-        ]
-      },
-      "defaults": [
-        "LoopLlm",
-        "LoopChatRequest",
-        "LoopChatHttp",
-        "LoopIdentity"
-      ],
-      "steps": [
-        {
-          "event": "AgentIdentityReady",
-          "from": "preparing",
-          "payload": {
-            "subject": "support-agent",
-            "role": "support"
-          },
-          "entity": {
-            "pendingTools": [
-              {
-                "read": "Ticket",
-                "roles": [
-                  "support"
-                ]
-              },
-              {
-                "read": "Payroll",
-                "roles": [
-                  "admin"
-                ]
-              }
-            ]
-          },
-          "expect": {
-            "fired": true,
-            "state": "preparing"
-          }
-        },
-        {
-          "event": "INPUTS_KNOWN",
-          "from": "preparing",
-          "payload": {
-            "result": {
-              "inputs": [],
-              "entities": [],
-              "selected": []
-            },
-            "text": ""
-          },
-          "expect": {
-            "fired": true,
-            "state": "thinking",
-            "emits": [
-              {
-                "event": "LLM_CALL_TOOLS",
-                "payload": {
-                  "tools": [
-                    {
-                      "name": "read__Ticket",
-                      "description": "Read the Ticket rows you may see",
-                      "parameters": {
-                        "type": "object",
-                        "properties": {}
-                      }
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "control-an-agent-whose-role-no-tool-lists-is-offered-nothing",
-      "config": {
-        "caller": "identity",
-        "tools": [
-          {
-            "read": "Ticket",
-            "roles": [
-              "support"
-            ]
-          },
-          {
-            "read": "Payroll",
-            "roles": [
-              "admin"
-            ]
-          }
-        ]
-      },
-      "defaults": [
-        "LoopLlm",
-        "LoopChatRequest",
-        "LoopChatHttp",
-        "LoopIdentity"
-      ],
-      "steps": [
-        {
-          "event": "AgentIdentityReady",
-          "from": "preparing",
-          "payload": {
-            "subject": "support-agent",
-            "role": "guest"
-          },
-          "entity": {
-            "pendingTools": [
-              {
-                "read": "Ticket",
-                "roles": [
-                  "support"
-                ]
-              },
-              {
-                "read": "Payroll",
-                "roles": [
-                  "admin"
-                ]
-              }
-            ]
-          },
-          "expect": {
-            "fired": true,
-            "state": "preparing"
-          }
-        },
-        {
-          "event": "INPUTS_KNOWN",
-          "from": "preparing",
-          "payload": {
-            "result": {
-              "inputs": [],
-              "entities": [],
-              "selected": []
-            },
-            "text": ""
-          },
-          "expect": {
-            "fired": true,
-            "state": "thinking",
-            "emits": [
-              {
-                "event": "LLM_CALL_TOOLS",
-                "payload": {
-                  "tools": []
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "attack-identity-caller-never-dispatches-a-tool-as-the-asking-user",
-      "note": "With no identity wired the call fails; it is not dispatched in the asking session.",
-      "config": {
-        "caller": "identity",
-        "tools": [
-          {
-            "read": "Ticket",
-            "roles": [
-              "support"
-            ]
-          }
-        ]
-      },
-      "defaults": [
-        "LoopLlm",
-        "LoopChatRequest",
-        "LoopChatHttp",
-        "LoopIdentity"
-      ],
-      "steps": [
-        {
-          "event": "CALL_BEGIN",
-          "from": "running",
-          "payload": {},
-          "entity": {
-            "table": [
-              {
-                "name": "Board__CLOSE",
-                "description": "Close",
-                "parameters": {
-                  "type": "object",
-                  "properties": {}
-                },
-                "label": "Board.CLOSE",
-                "kind": "input",
-                "address": "App.Board.CLOSE",
-                "readAny": false,
-                "contracted": false,
-                "fireAndForget": false
-              }
-            ],
-            "calls": [
-              {
-                "id": "c1",
-                "name": "Board__CLOSE",
-                "arguments": {}
-              }
-            ],
-            "current": {
-              "id": "c1",
-              "name": "Board__CLOSE",
-              "arguments": {}
-            },
-            "binding": {
-              "name": "Board__CLOSE",
-              "description": "Close",
-              "parameters": {
-                "type": "object",
-                "properties": {}
-              },
-              "label": "Board.CLOSE",
-              "kind": "input",
-              "address": "App.Board.CLOSE",
-              "readAny": false,
-              "contracted": false,
-              "fireAndForget": false
-            },
-            "cursor": 0,
-            "results": [],
-            "session": "s1",
-            "callStartedAt": "2023-11-14T22:13:20Z"
-          },
-          "identity": {
-            "id": "u1",
-            "role": "admin"
-          },
-          "expect": {
-            "fired": true,
-            "emits": [
-              {
-                "event": "AGENT_ACT",
-                "payload": {
-                  "callId": "c1",
-                  "address": "App.Board.CLOSE",
-                  "contracted": false
-                }
-              },
-              {
-                "event": "LLM_TOOLS_ANSWERED",
-                "payload": {
-                  "session": "s1",
-                  "results": [
-                    {
-                      "id": "c1",
-                      "tool": "Board.CLOSE",
-                      "kind": "input",
-                      "success": false,
-                      "detail": "The assistant has no identity to act as.",
-                      "content": "{\"ok\":false,\"error\":\"The assistant has no identity to act as.\"}",
-                      "startedAt": "2023-11-14T22:13:20Z",
-                      "endedAt": "2023-11-14T22:13:20.000Z"
-                    }
-                  ]
-                }
-              }
-            ],
-            "neverEmits": [
-              "DISPATCHED",
-              "AWAIT_DISPATCHED",
-              "DISPATCH_FAILED",
-              "AWAIT_DISPATCH_FAILED",
-              "TOOL_PENDING"
-            ]
-          }
-        }
-      ],
-      "now": 1700000000000
-    },
-    {
-      "id": "attack-identity-caller-never-reads-as-the-asking-user",
-      "config": {
-        "caller": "identity",
-        "tools": [
-          {
-            "read": "Ticket",
-            "roles": [
-              "support"
-            ]
-          }
-        ]
-      },
-      "defaults": [
-        "LoopLlm",
-        "LoopChatRequest",
-        "LoopChatHttp",
-        "LoopIdentity"
-      ],
-      "steps": [
-        {
-          "event": "CALL_BEGIN",
-          "from": "running",
-          "payload": {},
-          "entity": {
-            "table": [
-              {
-                "name": "read__Ticket",
-                "description": "Read",
-                "parameters": {
-                  "type": "object",
-                  "properties": {}
-                },
-                "label": "Ticket",
-                "kind": "read",
-                "entity": "Ticket",
-                "readAny": false,
-                "contracted": false,
-                "fireAndForget": false
-              }
-            ],
-            "calls": [
-              {
-                "id": "c1",
-                "name": "read__Ticket",
-                "arguments": {}
-              }
-            ],
-            "current": {
-              "id": "c1",
-              "name": "read__Ticket",
-              "arguments": {}
-            },
-            "binding": {
-              "name": "read__Ticket",
-              "description": "Read",
-              "parameters": {
-                "type": "object",
-                "properties": {}
-              },
-              "label": "Ticket",
-              "kind": "read",
-              "entity": "Ticket",
-              "readAny": false,
-              "contracted": false,
-              "fireAndForget": false
-            },
-            "cursor": 0,
-            "results": [],
-            "session": "s1",
-            "callStartedAt": "2023-11-14T22:13:20Z"
-          },
-          "identity": {
-            "id": "u1",
-            "role": "admin"
-          },
-          "expect": {
-            "fired": true,
-            "emits": [
-              {
-                "event": "AGENT_LOOK",
-                "payload": {
-                  "callId": "c1",
-                  "entity": "Ticket"
-                }
-              },
-              {
-                "event": "LLM_TOOLS_ANSWERED",
-                "payload": {
-                  "session": "s1",
-                  "results": [
-                    {
-                      "id": "c1",
-                      "tool": "Ticket",
-                      "kind": "read",
-                      "success": false,
-                      "detail": "The assistant has no identity to act as.",
-                      "content": "{\"error\":\"The assistant has no identity to act as.\"}",
-                      "startedAt": "2023-11-14T22:13:20Z",
-                      "endedAt": "2023-11-14T22:13:20.000Z"
-                    }
-                  ]
-                }
-              }
-            ],
-            "neverEmits": [
-              "READ_DONE",
-              "READ_FAILED"
-            ]
-          }
-        }
-      ],
-      "now": 1700000000000
-    },
-    {
-      "id": "control-a-user-caller-still-dispatches-the-tool-itself",
-      "config": {
-        "tools": [
-          {
-            "read": "Ticket",
-            "roles": [
-              "support"
-            ]
-          }
-        ]
-      },
-      "defaults": [
-        "LoopLlm",
-        "LoopChatRequest",
-        "LoopChatHttp",
-        "LoopIdentity"
-      ],
-      "steps": [
-        {
-          "event": "CALL_BEGIN",
-          "from": "running",
-          "payload": {},
-          "entity": {
-            "table": [
-              {
-                "name": "Board__CLOSE",
-                "description": "Close",
-                "parameters": {
-                  "type": "object",
-                  "properties": {}
-                },
-                "label": "Board.CLOSE",
-                "kind": "input",
-                "address": "App.Board.CLOSE",
-                "readAny": false,
-                "contracted": false,
-                "fireAndForget": false
-              }
-            ],
-            "calls": [
-              {
-                "id": "c1",
-                "name": "Board__CLOSE",
-                "arguments": {}
-              }
-            ],
-            "current": {
-              "id": "c1",
-              "name": "Board__CLOSE",
-              "arguments": {}
-            },
-            "binding": {
-              "name": "Board__CLOSE",
-              "description": "Close",
-              "parameters": {
-                "type": "object",
-                "properties": {}
-              },
-              "label": "Board.CLOSE",
-              "kind": "input",
-              "address": "App.Board.CLOSE",
-              "readAny": false,
-              "contracted": false,
-              "fireAndForget": false
-            },
-            "cursor": 0,
-            "results": [],
-            "session": "s1",
-            "callStartedAt": "2023-11-14T22:13:20Z"
-          },
-          "identity": {
-            "id": "u1",
-            "role": "admin"
-          },
-          "expect": {
-            "fired": true,
-            "emits": [
-              {
-                "event": "TOOL_PENDING",
-                "payload": {
-                  "callId": "c1",
-                  "tool": "Board.CLOSE"
-                }
-              }
-            ],
-            "neverEmits": [
-              "AGENT_ACT",
-              "AGENT_LOOK"
-            ]
-          }
-        }
-      ],
-      "now": 1700000000000
-    },
-    {
-      "id": "an-act-answered-by-the-agent-identity-is-the-tool-result",
-      "config": {
-        "caller": "identity",
-        "tools": [
-          {
-            "read": "Ticket",
-            "roles": [
-              "support"
-            ]
-          }
-        ]
-      },
-      "defaults": [
-        "LoopLlm",
-        "LoopChatRequest",
-        "LoopChatHttp",
-        "LoopIdentity"
-      ],
-      "steps": [
-        {
-          "event": "AgentActed",
-          "from": "running",
-          "payload": {
-            "callId": "c1",
-            "ok": true,
-            "error": "",
-            "content": "{\"ok\":true,\"emitted\":[]}"
-          },
-          "entity": {
-            "table": [
-              {
-                "name": "Board__CLOSE",
-                "description": "Close",
-                "parameters": {
-                  "type": "object",
-                  "properties": {}
-                },
-                "label": "Board.CLOSE",
-                "kind": "input",
-                "address": "App.Board.CLOSE",
-                "readAny": false,
-                "contracted": false,
-                "fireAndForget": false
-              }
-            ],
-            "calls": [
-              {
-                "id": "c1",
-                "name": "Board__CLOSE",
-                "arguments": {}
-              }
-            ],
-            "current": {
-              "id": "c1",
-              "name": "Board__CLOSE",
-              "arguments": {}
-            },
-            "binding": {
-              "name": "Board__CLOSE",
-              "description": "Close",
-              "parameters": {
-                "type": "object",
-                "properties": {}
-              },
-              "label": "Board.CLOSE",
-              "kind": "input",
-              "address": "App.Board.CLOSE",
-              "readAny": false,
-              "contracted": false,
-              "fireAndForget": false
-            },
-            "cursor": 0,
-            "results": [],
-            "session": "s1",
-            "callStartedAt": "2023-11-14T22:13:20Z"
-          },
-          "expect": {
-            "fired": true,
-            "emits": [
-              {
-                "event": "LLM_TOOLS_ANSWERED",
-                "payload": {
-                  "session": "s1",
-                  "results": [
-                    {
-                      "id": "c1",
-                      "tool": "Board.CLOSE",
-                      "kind": "input",
-                      "success": true,
-                      "content": "{\"ok\":true,\"emitted\":[]}",
-                      "startedAt": "2023-11-14T22:13:20Z",
-                      "endedAt": "2023-11-14T22:13:20.000Z"
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        }
-      ],
-      "now": 1700000000000
-    },
-    {
-      "id": "an-act-refused-for-the-agents-role-is-a-failed-tool-result",
-      "config": {
-        "caller": "identity",
-        "tools": [
-          {
-            "read": "Ticket",
-            "roles": [
-              "support"
-            ]
-          }
-        ]
-      },
-      "defaults": [
-        "LoopLlm",
-        "LoopChatRequest",
-        "LoopChatHttp",
-        "LoopIdentity"
-      ],
-      "steps": [
-        {
-          "event": "AgentActed",
-          "from": "running",
-          "payload": {
-            "callId": "c1",
-            "ok": false,
-            "error": "guard failed: Board.CLOSE",
-            "content": "{\"ok\":false,\"error\":\"guard failed: Board.CLOSE\"}"
-          },
-          "entity": {
-            "table": [
-              {
-                "name": "Board__CLOSE",
-                "description": "Close",
-                "parameters": {
-                  "type": "object",
-                  "properties": {}
-                },
-                "label": "Board.CLOSE",
-                "kind": "input",
-                "address": "App.Board.CLOSE",
-                "readAny": false,
-                "contracted": false,
-                "fireAndForget": false
-              }
-            ],
-            "calls": [
-              {
-                "id": "c1",
-                "name": "Board__CLOSE",
-                "arguments": {}
-              }
-            ],
-            "current": {
-              "id": "c1",
-              "name": "Board__CLOSE",
-              "arguments": {}
-            },
-            "binding": {
-              "name": "Board__CLOSE",
-              "description": "Close",
-              "parameters": {
-                "type": "object",
-                "properties": {}
-              },
-              "label": "Board.CLOSE",
-              "kind": "input",
-              "address": "App.Board.CLOSE",
-              "readAny": false,
-              "contracted": false,
-              "fireAndForget": false
-            },
-            "cursor": 0,
-            "results": [],
-            "session": "s1",
-            "callStartedAt": "2023-11-14T22:13:20Z"
-          },
-          "expect": {
-            "fired": true,
-            "emits": [
-              {
-                "event": "LLM_TOOLS_ANSWERED",
-                "payload": {
-                  "session": "s1",
-                  "results": [
-                    {
-                      "id": "c1",
-                      "tool": "Board.CLOSE",
-                      "kind": "input",
-                      "success": false,
-                      "detail": "guard failed: Board.CLOSE",
-                      "content": "{\"ok\":false,\"error\":\"guard failed: Board.CLOSE\"}",
-                      "startedAt": "2023-11-14T22:13:20Z",
-                      "endedAt": "2023-11-14T22:13:20.000Z"
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        }
-      ],
-      "now": 1700000000000
-    },
-    {
-      "id": "a-look-answered-by-the-agent-identity-is-the-read-result",
-      "config": {
-        "caller": "identity",
-        "tools": [
-          {
-            "read": "Ticket",
-            "roles": [
-              "support"
-            ]
-          }
-        ]
-      },
-      "defaults": [
-        "LoopLlm",
-        "LoopChatRequest",
-        "LoopChatHttp",
-        "LoopIdentity"
-      ],
-      "steps": [
-        {
-          "event": "AgentLooked",
-          "from": "running",
-          "payload": {
-            "callId": "c1",
-            "entity": "Ticket",
-            "count": 2,
-            "content": "{\"entity\":\"Ticket\",\"count\":2,\"rows\":[]}"
-          },
-          "entity": {
-            "table": [
-              {
-                "name": "read__Ticket",
-                "description": "Read",
-                "parameters": {
-                  "type": "object",
-                  "properties": {}
-                },
-                "label": "Ticket",
-                "kind": "read",
-                "entity": "Ticket",
-                "readAny": false,
-                "contracted": false,
-                "fireAndForget": false
-              }
-            ],
-            "calls": [
-              {
-                "id": "c1",
-                "name": "read__Ticket",
-                "arguments": {}
-              }
-            ],
-            "current": {
-              "id": "c1",
-              "name": "read__Ticket",
-              "arguments": {}
-            },
-            "binding": {
-              "name": "read__Ticket",
-              "description": "Read",
-              "parameters": {
-                "type": "object",
-                "properties": {}
-              },
-              "label": "Ticket",
-              "kind": "read",
-              "entity": "Ticket",
-              "readAny": false,
-              "contracted": false,
-              "fireAndForget": false
-            },
-            "cursor": 0,
-            "results": [],
-            "session": "s1",
-            "callStartedAt": "2023-11-14T22:13:20Z"
-          },
-          "expect": {
-            "fired": true,
-            "emits": [
-              {
-                "event": "LLM_TOOLS_ANSWERED",
-                "payload": {
-                  "session": "s1",
-                  "results": [
-                    {
-                      "id": "c1",
-                      "tool": "Ticket",
-                      "kind": "read",
-                      "success": true,
-                      "rows": 2,
-                      "content": "{\"entity\":\"Ticket\",\"count\":2,\"rows\":[]}",
-                      "startedAt": "2023-11-14T22:13:20Z",
-                      "endedAt": "2023-11-14T22:13:20.000Z"
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        }
-      ],
-      "now": 1700000000000
-    },
-    {
-      "id": "control-an-answer-for-another-call-is-ignored",
-      "config": {
-        "caller": "identity",
-        "tools": [
-          {
-            "read": "Ticket",
-            "roles": [
-              "support"
-            ]
-          }
-        ]
-      },
-      "defaults": [
-        "LoopLlm",
-        "LoopChatRequest",
-        "LoopChatHttp",
-        "LoopIdentity"
-      ],
-      "steps": [
-        {
-          "event": "AgentActed",
-          "from": "running",
-          "payload": {
-            "callId": "other",
-            "ok": true,
-            "error": "",
-            "content": "{}"
-          },
-          "entity": {
-            "table": [
-              {
-                "name": "Board__CLOSE",
-                "description": "Close",
-                "parameters": {
-                  "type": "object",
-                  "properties": {}
-                },
-                "label": "Board.CLOSE",
-                "kind": "input",
-                "address": "App.Board.CLOSE",
-                "readAny": false,
-                "contracted": false,
-                "fireAndForget": false
-              }
-            ],
-            "calls": [
-              {
-                "id": "c1",
-                "name": "Board__CLOSE",
-                "arguments": {}
-              }
-            ],
-            "current": {
-              "id": "c1",
-              "name": "Board__CLOSE",
-              "arguments": {}
-            },
-            "binding": {
-              "name": "Board__CLOSE",
-              "description": "Close",
-              "parameters": {
-                "type": "object",
-                "properties": {}
-              },
-              "label": "Board.CLOSE",
-              "kind": "input",
-              "address": "App.Board.CLOSE",
-              "readAny": false,
-              "contracted": false,
-              "fireAndForget": false
-            },
-            "cursor": 0,
-            "results": [],
-            "session": "s1",
-            "callStartedAt": "2023-11-14T22:13:20Z"
-          },
-          "expect": {
-            "fired": false,
-            "neverEmits": [
-              "LLM_TOOLS_ANSWERED",
-              "RUN_NEXT"
-            ]
-          }
-        }
-      ],
-      "now": 1700000000000
-    },
-    {
-      "id": "guest-a-turn-with-an-attached-guest-reflects-it-before-calling-the-model",
-      "note": "P-030: while a guest is attached, a turn also offers the guest's declared inputs; the model is not called until the guest answered what it declares.",
-      "steps": [
-        {
-          "event": "GuestAttached",
-          "from": "idle",
-          "payload": {
-            "guest": "guest-3"
-          },
-          "expect": {
-            "fired": true,
-            "state": "idle",
-            "entity": {
-              "guest": "guest-3"
-            }
-          },
-          "identity": {
-            "id": "u1",
-            "role": "staff"
-          }
-        },
-        {
-          "event": "CONVERSE",
-          "from": "idle",
-          "payload": {
-            "messages": [
-              {
-                "role": "user",
-                "content": "add a claim for Novak"
-              }
-            ]
-          },
-          "expect": {
-            "fired": true,
-            "state": "preparing"
-          },
-          "identity": {
-            "id": "u1",
-            "role": "staff"
-          }
-        },
-        {
-          "event": "INPUTS_KNOWN",
-          "from": "preparing",
-          "payload": {
-            "result": {
-              "inputs": [],
-              "entities": [],
-              "selected": []
-            },
-            "text": ""
-          },
-          "expect": {
-            "fired": true,
-            "state": "thinking",
-            "effects": [
-              {
-                "type": "let"
-              }
-            ],
-            "neverEmits": [
-              "LLM_CALL_TOOLS"
-            ]
-          },
-          "identity": {
-            "id": "u1",
-            "role": "staff"
-          }
-        },
-        {
-          "event": "GUEST_INPUTS_KNOWN",
-          "from": "thinking",
-          "payload": {
-            "result": {
-              "inputs": [
-                {
-                  "orbital": "Claims",
-                  "trait": "ClaimBoard",
-                  "event": "DO_CREATE",
-                  "address": "Claims.ClaimBoard.DO_CREATE",
-                  "description": "Add a claim",
-                  "parameters": {
-                    "type": "object",
-                    "properties": {
-                      "holder": {
-                        "type": "string"
-                      }
-                    },
-                    "required": [
-                      "holder"
-                    ]
-                  }
-                }
-              ]
-            },
-            "text": ""
-          },
-          "expect": {
-            "fired": true,
-            "state": "thinking",
-            "emits": [
-              {
-                "event": "LLM_CALL_TOOLS",
-                "payload": {
-                  "tools": [
-                    {
-                      "name": "read__Note",
-                      "description": "Read the Note rows you may see",
-                      "parameters": {
-                        "type": "object",
-                        "properties": {}
-                      }
-                    },
-                    {
-                      "name": "guest__DO_CREATE_1",
-                      "description": "Add a claim (in the open program: Claims → ClaimBoard)",
-                      "parameters": {
-                        "type": "object",
-                        "properties": {
-                          "holder": {
-                            "type": "string"
-                          }
-                        },
-                        "required": [
-                          "holder"
-                        ]
-                      }
-                    }
-                  ]
-                }
-              }
-            ]
-          },
-          "identity": {
-            "id": "u1",
-            "role": "staff"
-          }
-        }
-      ],
-      "config": {
-        "tools": [
-          {
-            "read": "Note",
-            "roles": [
-              "staff"
-            ]
-          }
-        ]
-      },
-      "defaults": [
-        "LoopLlm",
-        "LoopChatRequest",
-        "LoopChatHttp",
-        "LoopChatRequestDeadline",
-        "LoopChatRequestDelay"
-      ]
-    },
-    {
-      "id": "control-a-turn-without-a-guest-calls-the-model-at-once",
-      "steps": [
-        {
-          "event": "CONVERSE",
-          "from": "idle",
-          "payload": {
-            "messages": [
-              {
-                "role": "user",
-                "content": "add a claim for Novak"
-              }
-            ]
-          },
-          "expect": {
-            "fired": true,
-            "state": "preparing"
-          },
-          "identity": {
-            "id": "u1",
-            "role": "staff"
-          }
-        },
-        {
-          "event": "INPUTS_KNOWN",
-          "from": "preparing",
-          "payload": {
-            "result": {
-              "inputs": [],
-              "entities": [],
-              "selected": []
-            },
-            "text": ""
-          },
-          "expect": {
-            "fired": true,
-            "state": "thinking",
-            "emits": [
-              {
-                "event": "LLM_CALL_TOOLS"
-              }
-            ],
-            "neverEmits": [
-              "GUEST_INPUTS_KNOWN"
-            ]
-          },
-          "identity": {
-            "id": "u1",
-            "role": "staff"
-          }
-        }
-      ],
-      "config": {
-        "tools": [
-          {
-            "read": "Note",
-            "roles": [
-              "staff"
-            ]
-          }
-        ]
-      },
-      "defaults": [
-        "LoopLlm",
-        "LoopChatRequest",
-        "LoopChatHttp"
-      ]
-    },
-    {
-      "id": "guest-a-guest-that-cannot-be-reflected-fails-the-turn",
-      "steps": [
-        {
-          "event": "GUEST_INPUTS_FAILED",
-          "from": "thinking",
-          "payload": {
-            "error": "no guest session guest-3"
-          },
-          "entity": {
-            "guest": "guest-3"
-          },
-          "expect": {
-            "fired": true,
-            "state": "idle",
-            "emits": [
-              {
-                "event": "ASSISTANT_REPLY_FAILED",
-                "payload": {
-                  "error": "no guest session guest-3"
-                }
-              }
-            ],
-            "neverEmits": [
-              "LLM_CALL_TOOLS"
-            ]
-          },
-          "identity": {
-            "id": "u1",
-            "role": "staff"
-          }
-        }
-      ],
-      "config": {},
-      "defaults": [
-        "LoopLlm",
-        "LoopChatRequest",
-        "LoopChatHttp"
-      ]
-    },
-    {
-      "id": "guest-a-guest-tool-call-is-dispatched-into-the-guest-and-a-closed-guest-is-a-failed-result",
-      "note": "The call goes through program/dispatch with the guest option (the replay has no such guest open, so the kernel's refusal names it) and never waits for TOOL_RESULT.",
-      "steps": [
-        {
-          "event": "CALL_BEGIN",
-          "from": "running",
-          "payload": {},
-          "entity": {
-            "guest": "guest-3",
-            "table": [
-              {
-                "name": "guest__DO_CREATE_1",
-                "description": "Add a claim (in the open program: Claims → ClaimBoard)",
-                "parameters": {
-                  "type": "object",
-                  "properties": {
-                    "holder": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "holder"
-                  ]
-                },
-                "label": "Claims.ClaimBoard.DO_CREATE",
-                "kind": "guest",
-                "address": "Claims.ClaimBoard.DO_CREATE",
-                "readAny": false,
-                "contracted": false,
-                "fireAndForget": true
-              }
-            ],
-            "calls": [
-              {
-                "id": "c1",
-                "name": "guest__DO_CREATE_1",
-                "arguments": {
-                  "holder": "Novak"
-                }
-              }
-            ],
-            "current": {
-              "id": "c1",
-              "name": "guest__DO_CREATE_1",
-              "arguments": {
-                "holder": "Novak"
-              }
-            },
-            "cursor": 0,
-            "results": [],
-            "session": "s1",
-            "callStartedAt": "2023-11-14T22:13:20Z",
-            "turnGuest": "guest-3"
-          },
-          "identity": {
-            "id": "u1",
-            "role": "staff"
-          },
-          "expect": {
-            "fired": true,
-            "emits": [
-              {
-                "event": "LLM_TOOLS_ANSWERED",
-                "payload": {
-                  "session": "s1",
-                  "results": [
-                    {
-                      "id": "c1",
-                      "tool": "Claims.ClaimBoard.DO_CREATE",
-                      "kind": "input",
-                      "success": false,
-                      "detail": "program/dispatch: no open guest 'guest-3' (it was never opened or is closed)",
-                      "content": "{\"ok\":false,\"error\":\"program/dispatch: no open guest 'guest-3' (it was never opened or is closed)\"}",
-                      "startedAt": "2023-11-14T22:13:20Z",
-                      "endedAt": "2023-11-14T22:13:20.000Z"
-                    }
-                  ]
-                }
-              }
-            ],
-            "neverEmits": [
-              "TOOL_PENDING",
-              "AGENT_ACT",
-              "AWAIT_DISPATCHED"
-            ]
-          }
-        }
-      ],
-      "config": {},
-      "defaults": [
-        "LoopLlm",
-        "LoopChatRequest",
-        "LoopChatHttp"
-      ],
-      "now": 1700000000000
-    },
-    {
-      "id": "guest-the-guests-dispatch-answer-is-the-tool-result",
-      "steps": [
-        {
-          "event": "DISPATCHED",
-          "from": "running",
-          "payload": {
-            "result": {
-              "ok": true,
-              "emitted": [
-                {
-                  "event": "CLAIM_CREATED"
-                }
-              ]
-            }
-          },
-          "entity": {
-            "guest": "guest-3",
-            "table": [
-              {
-                "name": "guest__DO_CREATE_1",
-                "description": "Add a claim (in the open program: Claims → ClaimBoard)",
-                "parameters": {
-                  "type": "object",
-                  "properties": {
-                    "holder": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "holder"
-                  ]
-                },
-                "label": "Claims.ClaimBoard.DO_CREATE",
-                "kind": "guest",
-                "address": "Claims.ClaimBoard.DO_CREATE",
-                "readAny": false,
-                "contracted": false,
-                "fireAndForget": true
-              }
-            ],
-            "calls": [
-              {
-                "id": "c1",
-                "name": "guest__DO_CREATE_1",
-                "arguments": {
-                  "holder": "Novak"
-                }
-              }
-            ],
-            "current": {
-              "id": "c1",
-              "name": "guest__DO_CREATE_1",
-              "arguments": {
-                "holder": "Novak"
-              }
-            },
-            "cursor": 0,
-            "results": [],
-            "session": "s1",
-            "callStartedAt": "2023-11-14T22:13:20Z",
-            "binding": {
-              "name": "guest__DO_CREATE_1",
-              "description": "Add a claim (in the open program: Claims → ClaimBoard)",
-              "parameters": {
-                "type": "object",
-                "properties": {
-                  "holder": {
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "holder"
-                ]
-              },
-              "label": "Claims.ClaimBoard.DO_CREATE",
-              "kind": "guest",
-              "address": "Claims.ClaimBoard.DO_CREATE",
-              "readAny": false,
-              "contracted": false,
-              "fireAndForget": true
-            },
-            "turnGuest": "guest-3"
-          },
-          "identity": {
-            "id": "u1",
-            "role": "staff"
-          },
-          "expect": {
-            "fired": true,
-            "emits": [
-              {
-                "event": "LLM_TOOLS_ANSWERED",
-                "payload": {
-                  "session": "s1",
-                  "results": [
-                    {
-                      "id": "c1",
-                      "tool": "Claims.ClaimBoard.DO_CREATE",
-                      "kind": "input",
-                      "success": true,
-                      "content": "{\"ok\":true,\"emitted\":[{\"event\":\"CLAIM_CREATED\"}]}",
-                      "startedAt": "2023-11-14T22:13:20Z",
-                      "endedAt": "2023-11-14T22:13:20.000Z"
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        }
-      ],
-      "config": {},
-      "defaults": [
-        "LoopLlm",
-        "LoopChatRequest",
-        "LoopChatHttp"
-      ],
-      "now": 1700000000000
-    },
-    {
-      "id": "attack-an-input-the-guest-does-not-declare-is-refused-undispatched",
-      "note": "Only what the guest reflected is in the table; any other name is answered as a refusal and nothing is dispatched.",
-      "steps": [
-        {
-          "event": "CALL_BEGIN",
-          "from": "running",
-          "payload": {},
-          "entity": {
-            "guest": "guest-3",
-            "table": [
-              {
-                "name": "guest__DO_CREATE_1",
-                "description": "Add a claim (in the open program: Claims → ClaimBoard)",
-                "parameters": {
-                  "type": "object",
-                  "properties": {
-                    "holder": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "holder"
-                  ]
-                },
-                "label": "Claims.ClaimBoard.DO_CREATE",
-                "kind": "guest",
-                "address": "Claims.ClaimBoard.DO_CREATE",
-                "readAny": false,
-                "contracted": false,
-                "fireAndForget": true
-              }
-            ],
-            "calls": [
-              {
-                "id": "c1",
-                "name": "guest__DO_DELETE_2",
-                "arguments": {}
-              }
-            ],
-            "current": {
-              "id": "c1",
-              "name": "guest__DO_DELETE_2",
-              "arguments": {}
-            },
-            "cursor": 0,
-            "results": [],
-            "session": "s1",
-            "callStartedAt": "2023-11-14T22:13:20Z",
-            "turnGuest": "guest-3"
-          },
-          "identity": {
-            "id": "u1",
-            "role": "staff"
-          },
-          "expect": {
-            "fired": true,
-            "emits": [
-              {
-                "event": "LLM_TOOLS_ANSWERED",
-                "payload": {
-                  "session": "s1",
-                  "results": [
-                    {
-                      "id": "c1",
-                      "tool": "guest__DO_DELETE_2",
-                      "kind": "invalid",
-                      "success": false,
-                      "detail": "not an allowed tool",
-                      "content": "{\"error\":\"'guest__DO_DELETE_2' is not one of your tools\",\"tools\":[\"guest__DO_CREATE_1\"]}",
-                      "startedAt": "2023-11-14T22:13:20Z",
-                      "endedAt": "2023-11-14T22:13:20.000Z"
-                    }
-                  ]
-                }
-              }
-            ],
-            "neverEmits": [
-              "DISPATCHED",
-              "DISPATCH_FAILED"
-            ]
-          }
-        }
-      ],
-      "config": {},
-      "defaults": [
-        "LoopLlm",
-        "LoopChatRequest",
-        "LoopChatHttp"
-      ],
-      "now": 1700000000000
-    },
-    {
-      "id": "guest-a-detached-guest-is-no-longer-operated",
-      "steps": [
-        {
-          "event": "GuestDetached",
-          "from": "idle",
-          "payload": {},
-          "entity": {
-            "guest": "guest-3"
-          },
-          "expect": {
-            "fired": true,
-            "state": "idle",
-            "entity": {
-              "guest": ""
-            }
-          },
-          "identity": {
-            "id": "u1",
-            "role": "staff"
-          }
-        }
-      ],
-      "config": {},
-      "defaults": [
-        "LoopLlm",
-        "LoopChatRequest",
-        "LoopChatHttp"
-      ]
-    },
-    {
-      "id": "guest-a-guest-attached-mid-turn-waits-for-the-next-turn",
-      "note": "The BUILD tool opens a guest while its own turn is still running: the running turn keeps the tools it bound.",
-      "steps": [
-        {
-          "event": "GuestAttached",
-          "from": "awaitingResult",
-          "payload": {
-            "guest": "guest-9"
-          },
-          "entity": {
-            "guest": "",
-            "turnGuest": ""
-          },
-          "expect": {
-            "fired": true,
-            "state": "awaitingResult",
-            "entity": {
-              "guest": "guest-9",
-              "turnGuest": ""
-            }
-          },
-          "identity": {
-            "id": "u1",
-            "role": "staff"
-          }
-        }
-      ],
-      "config": {},
-      "defaults": [
-        "LoopLlm",
-        "LoopChatRequest",
-        "LoopChatHttp"
-      ]
-    },
-    {
-      "id": "tool-name-over-64-characters-is-shortened",
-      "note": "An event address whose '.'-to-'__' text exceeds 64 characters is offered under its last 54 characters, '_' and 8 hex of md5(base64(address)); label keeps the full address.",
-      "steps": [
-        {
-          "event": "CONVERSE",
-          "from": "idle",
-          "payload": {
-            "messages": [
-              {
-                "role": "user",
-                "content": "go"
-              }
-            ]
-          },
-          "expect": {
-            "fired": true,
-            "state": "preparing"
-          },
-          "identity": {
-            "id": "u1",
-            "role": "staff"
-          }
-        },
-        {
-          "event": "INPUTS_KNOWN",
-          "from": "preparing",
-          "payload": {
-            "result": {
-              "inputs": [
-                {
-                  "orbital": "ClaimsIntakeAndAdjudication",
-                  "trait": "ClaimAdjudicationWorkflowBoard",
-                  "event": "DO_REQUEST_SUPERVISOR_REVIEW",
-                  "address": "ClaimsIntakeAndAdjudication.ClaimAdjudicationWorkflowBoard.DO_REQUEST_SUPERVISOR_REVIEW",
-                  "description": "Do it",
-                  "parameters": {
-                    "type": "object",
-                    "properties": {}
-                  }
-                }
-              ],
-              "entities": [],
-              "selected": [
-                {
-                  "orbital": "ClaimsIntakeAndAdjudication",
-                  "trait": "ClaimAdjudicationWorkflowBoard",
-                  "event": "DO_REQUEST_SUPERVISOR_REVIEW",
-                  "address": "ClaimsIntakeAndAdjudication.ClaimAdjudicationWorkflowBoard.DO_REQUEST_SUPERVISOR_REVIEW",
-                  "description": "Do it",
-                  "parameters": {
-                    "type": "object",
-                    "properties": {}
-                  }
-                }
-              ]
-            },
-            "text": ""
-          },
-          "expect": {
-            "fired": true,
-            "state": "thinking",
-            "emits": [
-              {
-                "event": "LLM_CALL_TOOLS",
-                "payload": {
-                  "tools": [
-                    {
-                      "name": "djudicationWorkflowBoard__DO_REQUEST_SUPERVISOR_REVIEW_4d0e360b",
-                      "description": "Do it",
-                      "parameters": {
-                        "type": "object",
-                        "properties": {}
-                      }
-                    }
-                  ]
-                }
-              }
-            ],
-            "entity": {
-              "table": [
-                {
-                  "name": "djudicationWorkflowBoard__DO_REQUEST_SUPERVISOR_REVIEW_4d0e360b",
-                  "description": "Do it",
-                  "parameters": {
-                    "type": "object",
-                    "properties": {}
-                  },
-                  "label": "ClaimsIntakeAndAdjudication.ClaimAdjudicationWorkflowBoard.DO_REQUEST_SUPERVISOR_REVIEW",
-                  "kind": "input",
-                  "address": "ClaimsIntakeAndAdjudication.ClaimAdjudicationWorkflowBoard.DO_REQUEST_SUPERVISOR_REVIEW",
-                  "contract": [],
-                  "readAny": false,
-                  "contracted": false,
-                  "fireAndForget": false
-                }
-              ]
-            }
-          },
-          "identity": {
-            "id": "u1",
-            "role": "staff"
-          }
-        }
-      ],
-      "config": {
-        "tools": [
-          {
-            "event": "ClaimsIntakeAndAdjudication.ClaimAdjudicationWorkflowBoard.DO_REQUEST_SUPERVISOR_REVIEW",
-            "roles": [
-              "staff"
-            ]
-          }
-        ]
-      },
-      "defaults": [
-        "LoopLlm",
-        "LoopChatRequest",
-        "LoopChatHttp",
-        "LoopChatRequestDeadline",
-        "LoopChatRequestDelay"
-      ]
-    },
-    {
-      "id": "tool-name-over-64-characters-dispatches-the-original-event",
-      "note": "The model calls the shortened name; the loop pends and dispatches the original event address, never the shortened name.",
-      "config": {
-        "tools": [
-          {
-            "read": "Ticket",
-            "roles": [
-              "support"
-            ]
-          }
-        ]
-      },
-      "defaults": [
-        "LoopLlm",
-        "LoopChatRequest",
-        "LoopChatHttp"
-      ],
-      "steps": [
-        {
-          "event": "CALL_BEGIN",
-          "from": "running",
-          "payload": {},
-          "entity": {
-            "table": [
-              {
-                "name": "djudicationWorkflowBoard__DO_REQUEST_SUPERVISOR_REVIEW_4d0e360b",
-                "description": "Do it",
-                "parameters": {
-                  "type": "object",
-                  "properties": {}
-                },
-                "label": "ClaimsIntakeAndAdjudication.ClaimAdjudicationWorkflowBoard.DO_REQUEST_SUPERVISOR_REVIEW",
-                "kind": "input",
-                "address": "ClaimsIntakeAndAdjudication.ClaimAdjudicationWorkflowBoard.DO_REQUEST_SUPERVISOR_REVIEW",
-                "readAny": false,
-                "contracted": false,
-                "fireAndForget": false
-              }
-            ],
-            "calls": [
-              {
-                "id": "c1",
-                "name": "djudicationWorkflowBoard__DO_REQUEST_SUPERVISOR_REVIEW_4d0e360b",
-                "arguments": {}
-              }
-            ],
-            "current": {
-              "id": "c1",
-              "name": "djudicationWorkflowBoard__DO_REQUEST_SUPERVISOR_REVIEW_4d0e360b",
-              "arguments": {}
-            },
-            "binding": {
-              "name": "djudicationWorkflowBoard__DO_REQUEST_SUPERVISOR_REVIEW_4d0e360b",
-              "description": "Do it",
-              "parameters": {
-                "type": "object",
-                "properties": {}
-              },
-              "label": "ClaimsIntakeAndAdjudication.ClaimAdjudicationWorkflowBoard.DO_REQUEST_SUPERVISOR_REVIEW",
-              "kind": "input",
-              "address": "ClaimsIntakeAndAdjudication.ClaimAdjudicationWorkflowBoard.DO_REQUEST_SUPERVISOR_REVIEW",
-              "readAny": false,
-              "contracted": false,
-              "fireAndForget": false
-            },
-            "cursor": 0,
-            "results": [],
-            "session": "s1",
-            "callStartedAt": "2023-11-14T22:13:20Z"
-          },
-          "identity": {
-            "id": "u1",
-            "role": "admin"
-          },
-          "expect": {
-            "fired": true,
-            "emits": [
-              {
-                "event": "TOOL_PENDING",
-                "payload": {
-                  "callId": "c1",
-                  "tool": "ClaimsIntakeAndAdjudication.ClaimAdjudicationWorkflowBoard.DO_REQUEST_SUPERVISOR_REVIEW"
-                }
-              }
-            ],
-            "neverEmits": [
-              "AGENT_ACT",
-              "AGENT_LOOK"
-            ]
-          }
-        }
-      ],
-      "now": 1700000000000
-    },
-    {
-      "id": "tool-name-of-64-characters-or-fewer-is-unchanged",
-      "note": "At most 64 characters: the name is the address with '.' replaced by '__', unchanged.",
-      "steps": [
-        {
-          "event": "CONVERSE",
-          "from": "idle",
-          "payload": {
-            "messages": [
-              {
-                "role": "user",
-                "content": "go"
-              }
-            ]
-          },
-          "expect": {
-            "fired": true,
-            "state": "preparing"
-          },
-          "identity": {
-            "id": "u1",
-            "role": "staff"
-          }
-        },
-        {
-          "event": "INPUTS_KNOWN",
-          "from": "preparing",
-          "payload": {
-            "result": {
-              "inputs": [
-                {
-                  "orbital": "Board",
-                  "trait": "Board",
-                  "event": "CLOSE",
-                  "address": "Board.CLOSE",
-                  "description": "Do it",
-                  "parameters": {
-                    "type": "object",
-                    "properties": {}
-                  }
-                }
-              ],
-              "entities": [],
-              "selected": [
-                {
-                  "orbital": "Board",
-                  "trait": "Board",
-                  "event": "CLOSE",
-                  "address": "Board.CLOSE",
-                  "description": "Do it",
-                  "parameters": {
-                    "type": "object",
-                    "properties": {}
-                  }
-                }
-              ]
-            },
-            "text": ""
-          },
-          "expect": {
-            "fired": true,
-            "state": "thinking",
-            "emits": [
-              {
-                "event": "LLM_CALL_TOOLS",
-                "payload": {
-                  "tools": [
-                    {
-                      "name": "Board__CLOSE",
-                      "description": "Do it",
-                      "parameters": {
-                        "type": "object",
-                        "properties": {}
-                      }
-                    }
-                  ]
-                }
-              }
-            ],
-            "entity": {
-              "table": [
-                {
-                  "name": "Board__CLOSE",
-                  "description": "Do it",
-                  "parameters": {
-                    "type": "object",
-                    "properties": {}
-                  },
-                  "label": "Board.CLOSE",
-                  "kind": "input",
-                  "address": "Board.CLOSE",
-                  "contract": [],
-                  "readAny": false,
-                  "contracted": false,
-                  "fireAndForget": false
-                }
-              ]
-            }
-          },
-          "identity": {
-            "id": "u1",
-            "role": "staff"
-          }
-        }
-      ],
-      "config": {
-        "tools": [
-          {
-            "event": "Board.CLOSE",
-            "roles": [
-              "staff"
-            ]
-          }
-        ]
-      },
-      "defaults": [
-        "LoopLlm",
-        "LoopChatRequest",
-        "LoopChatHttp",
-        "LoopChatRequestDeadline",
-        "LoopChatRequestDelay"
-      ]
+     },
+     "identity": {
+      "id": "u1",
+      "role": "staff"
+     }
     }
-  ]
+   ],
+   "config": {
+    "tools": [
+     {
+      "read": "Note",
+      "roles": [
+       "staff"
+      ]
+     }
+    ]
+   },
+   "defaults": [
+    "LoopLlm",
+    "LoopChatRequest",
+    "LoopChatHttp"
+   ]
+  },
+  {
+   "id": "a-tool-not-granted-to-the-viewers-role-is-not-offered",
+   "note": "S1: the viewer is a guest, and the tool grants only staff. Owner 2026-11-12 (G-STD-353): a turn whose role is granted none of the offered tools fails instead of answering tool-less.",
+   "steps": [
+    {
+     "event": "CONVERSE",
+     "from": "idle",
+     "payload": {
+      "messages": [
+       {
+        "role": "user",
+        "content": "show my notes"
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "preparing"
+     },
+     "identity": {
+      "id": "u2",
+      "role": "guest"
+     }
+    },
+    {
+     "event": "INPUTS_KNOWN",
+     "from": "preparing",
+     "payload": {
+      "result": {
+       "inputs": [],
+       "entities": [],
+       "selected": []
+      },
+      "text": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "emits": [
+       {
+        "event": "ASSISTANT_REPLY_FAILED"
+       }
+      ],
+      "neverEmits": [
+       "LLM_CALL_TOOLS"
+      ]
+     },
+     "identity": {
+      "id": "u2",
+      "role": "guest"
+     }
+    }
+   ],
+   "config": {
+    "tools": [
+     {
+      "read": "Note",
+      "roles": [
+       "staff"
+      ]
+     }
+    ]
+   },
+   "defaults": [
+    "LoopLlm",
+    "LoopChatRequest",
+    "LoopChatHttp"
+   ]
+  },
+  {
+   "id": "a-tool-with-empty-roles-is-refused",
+   "note": "S1: empty roles grants nobody. Owner 2026-11-12 (G-STD-353): a turn whose role is granted none of the offered tools fails instead of answering tool-less.",
+   "steps": [
+    {
+     "event": "CONVERSE",
+     "from": "idle",
+     "payload": {
+      "messages": [
+       {
+        "role": "user",
+        "content": "show my notes"
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "preparing"
+     },
+     "identity": {
+      "id": "u1",
+      "role": "staff"
+     }
+    },
+    {
+     "event": "INPUTS_KNOWN",
+     "from": "preparing",
+     "payload": {
+      "result": {
+       "inputs": [],
+       "entities": [],
+       "selected": []
+      },
+      "text": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "emits": [
+       {
+        "event": "ASSISTANT_REPLY_FAILED"
+       }
+      ],
+      "neverEmits": [
+       "LLM_CALL_TOOLS"
+      ]
+     },
+     "identity": {
+      "id": "u1",
+      "role": "staff"
+     }
+    }
+   ],
+   "config": {
+    "tools": [
+     {
+      "read": "Note",
+      "roles": []
+     }
+    ]
+   },
+   "defaults": [
+    "LoopLlm",
+    "LoopChatRequest",
+    "LoopChatHttp"
+   ]
+  },
+  {
+   "id": "no-viewer-is-offered-nothing",
+   "note": "S1: an anonymous turn is offered no tool. Owner 2026-11-12 (G-STD-353): a turn whose role is granted none of the offered tools fails instead of answering tool-less.",
+   "steps": [
+    {
+     "event": "CONVERSE",
+     "from": "idle",
+     "payload": {
+      "messages": [
+       {
+        "role": "user",
+        "content": "show my notes"
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "preparing"
+     }
+    },
+    {
+     "event": "INPUTS_KNOWN",
+     "from": "preparing",
+     "payload": {
+      "result": {
+       "inputs": [],
+       "entities": [],
+       "selected": []
+      },
+      "text": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "emits": [
+       {
+        "event": "ASSISTANT_REPLY_FAILED"
+       }
+      ],
+      "neverEmits": [
+       "LLM_CALL_TOOLS"
+      ]
+     }
+    }
+   ],
+   "config": {
+    "tools": [
+     {
+      "read": "Note",
+      "roles": [
+       "staff"
+      ]
+     }
+    ]
+   },
+   "defaults": [
+    "LoopLlm",
+    "LoopChatRequest",
+    "LoopChatHttp"
+   ]
+  },
+  {
+   "id": "control-only-the-granted-tool-of-two-is-offered",
+   "note": "S1 control: the grant is per tool.",
+   "steps": [
+    {
+     "event": "CONVERSE",
+     "from": "idle",
+     "payload": {
+      "messages": [
+       {
+        "role": "user",
+        "content": "show my notes"
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "preparing"
+     },
+     "identity": {
+      "id": "u1",
+      "role": "staff"
+     }
+    },
+    {
+     "event": "INPUTS_KNOWN",
+     "from": "preparing",
+     "payload": {
+      "result": {
+       "inputs": [],
+       "entities": [],
+       "selected": []
+      },
+      "text": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "thinking",
+      "emits": [
+       {
+        "event": "LLM_CALL_TOOLS",
+        "payload": {
+         "tools": [
+          {
+           "name": "read__Note",
+           "description": "Read the Note rows you may see",
+           "parameters": {
+            "type": "object",
+            "properties": {}
+           }
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "identity": {
+      "id": "u1",
+      "role": "staff"
+     }
+    }
+   ],
+   "config": {
+    "tools": [
+     {
+      "read": "Note",
+      "roles": [
+       "staff"
+      ]
+     },
+     {
+      "read": "Payroll",
+      "roles": [
+       "admin"
+      ]
+     }
+    ]
+   },
+   "defaults": [
+    "LoopLlm",
+    "LoopChatRequest",
+    "LoopChatHttp"
+   ]
+  },
+  {
+   "id": "an-ephemeral-conversations-tools-are-gated-the-same-way",
+   "note": "S1: tools carried on CONVERSE (ephemeral) obey the same grant.",
+   "steps": [
+    {
+     "event": "CONVERSE",
+     "from": "idle",
+     "payload": {
+      "messages": [
+       {
+        "role": "user",
+        "content": "show my notes"
+       }
+      ],
+      "ephemeral": true,
+      "tools": [
+       {
+        "read": "Note",
+        "roles": [
+         "staff"
+        ]
+       },
+       {
+        "read": "Payroll",
+        "roles": [
+         "admin"
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "preparing"
+     },
+     "identity": {
+      "id": "u1",
+      "role": "staff"
+     }
+    },
+    {
+     "event": "INPUTS_KNOWN",
+     "from": "preparing",
+     "payload": {
+      "result": {
+       "inputs": [],
+       "entities": [],
+       "selected": []
+      },
+      "text": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "thinking",
+      "emits": [
+       {
+        "event": "LLM_CALL_TOOLS",
+        "payload": {
+         "tools": [
+          {
+           "name": "read__Note",
+           "description": "Read the Note rows you may see",
+           "parameters": {
+            "type": "object",
+            "properties": {}
+           }
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "identity": {
+      "id": "u1",
+      "role": "staff"
+     }
+    }
+   ],
+   "defaults": [
+    "LoopLlm",
+    "LoopChatRequest",
+    "LoopChatHttp"
+   ]
+  },
+  {
+   "id": "a-process-caller-is-offered-its-tools-with-no-viewer",
+   "note": "caller: process (a headless command such as orb agent): the tools are the program's own, offered with no signed-in viewer.",
+   "steps": [
+    {
+     "event": "CONVERSE",
+     "from": "idle",
+     "payload": {
+      "messages": [
+       {
+        "role": "user",
+        "content": "show my notes"
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "preparing"
+     }
+    },
+    {
+     "event": "INPUTS_KNOWN",
+     "from": "preparing",
+     "payload": {
+      "result": {
+       "inputs": [],
+       "entities": [],
+       "selected": []
+      },
+      "text": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "thinking",
+      "emits": [
+       {
+        "event": "LLM_CALL_TOOLS",
+        "payload": {
+         "tools": [
+          {
+           "name": "read__Note",
+           "description": "Read the Note rows you may see",
+           "parameters": {
+            "type": "object",
+            "properties": {}
+           }
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "caller": "process",
+    "tools": [
+     {
+      "read": "Note",
+      "roles": [
+       "staff"
+      ]
+     }
+    ]
+   },
+   "defaults": [
+    "LoopLlm",
+    "LoopChatRequest",
+    "LoopChatHttp"
+   ]
+  },
+  {
+   "id": "a-process-caller-ignores-roles-even-when-empty",
+   "note": "caller: process control: no role filter applies, so a tool with empty roles is still the program's own.",
+   "steps": [
+    {
+     "event": "CONVERSE",
+     "from": "idle",
+     "payload": {
+      "messages": [
+       {
+        "role": "user",
+        "content": "show my notes"
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "preparing"
+     }
+    },
+    {
+     "event": "INPUTS_KNOWN",
+     "from": "preparing",
+     "payload": {
+      "result": {
+       "inputs": [],
+       "entities": [],
+       "selected": []
+      },
+      "text": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "thinking",
+      "emits": [
+       {
+        "event": "LLM_CALL_TOOLS",
+        "payload": {
+         "tools": [
+          {
+           "name": "read__Note",
+           "description": "Read the Note rows you may see",
+           "parameters": {
+            "type": "object",
+            "properties": {}
+           }
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "caller": "process",
+    "tools": [
+     {
+      "read": "Note",
+      "roles": []
+     }
+    ]
+   },
+   "defaults": [
+    "LoopLlm",
+    "LoopChatRequest",
+    "LoopChatHttp"
+   ]
+  },
+  {
+   "id": "a-failed-run-carries-the-steps-it-took",
+   "note": "G-STD-042: the failure keeps what the run did before it failed.",
+   "steps": [
+    {
+     "event": "CONVERSE",
+     "from": "idle",
+     "payload": {
+      "messages": [
+       {
+        "role": "user",
+        "content": "show my notes"
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "preparing"
+     },
+     "identity": {
+      "id": "u1",
+      "role": "staff"
+     }
+    },
+    {
+     "event": "INPUTS_KNOWN",
+     "from": "preparing",
+     "payload": {
+      "result": {
+       "inputs": [],
+       "entities": [],
+       "selected": []
+      },
+      "text": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "thinking"
+     },
+     "identity": {
+      "id": "u1",
+      "role": "staff"
+     }
+    },
+    {
+     "event": "ToolsStep",
+     "from": "thinking",
+     "payload": {
+      "activity": {
+       "type": "tool_call",
+       "tool": "read__Note",
+       "kind": "read",
+       "argsText": "{}",
+       "timestamp": "2026-11-07T00:00:00.000Z",
+       "isExecuting": false
+      }
+     },
+     "expect": {
+      "fired": true,
+      "state": "thinking"
+     },
+     "identity": {
+      "id": "u1",
+      "role": "staff"
+     }
+    },
+    {
+     "event": "ToolsFailed",
+     "from": "thinking",
+     "payload": {
+      "message": "model unavailable"
+     },
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "emits": [
+       {
+        "event": "ASSISTANT_REPLY_FAILED",
+        "payload": {
+         "error": "model unavailable",
+         "steps": [
+          {
+           "type": "tool_call",
+           "tool": "read__Note",
+           "kind": "read",
+           "argsText": "{}",
+           "timestamp": "2026-11-07T00:00:00.000Z",
+           "isExecuting": false
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "identity": {
+      "id": "u1",
+      "role": "staff"
+     }
+    }
+   ],
+   "config": {
+    "tools": [
+     {
+      "read": "Note",
+      "roles": [
+       "staff"
+      ]
+     }
+    ]
+   },
+   "defaults": [
+    "LoopLlm",
+    "LoopChatRequest",
+    "LoopChatHttp"
+   ]
+  },
+  {
+   "id": "control-a-failed-run-with-no-steps-carries-none",
+   "note": "G-STD-042 control.",
+   "steps": [
+    {
+     "event": "CONVERSE",
+     "from": "idle",
+     "payload": {
+      "messages": [
+       {
+        "role": "user",
+        "content": "show my notes"
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "preparing"
+     },
+     "identity": {
+      "id": "u1",
+      "role": "staff"
+     }
+    },
+    {
+     "event": "INPUTS_KNOWN",
+     "from": "preparing",
+     "payload": {
+      "result": {
+       "inputs": [],
+       "entities": [],
+       "selected": []
+      },
+      "text": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "thinking"
+     },
+     "identity": {
+      "id": "u1",
+      "role": "staff"
+     }
+    },
+    {
+     "event": "ToolsFailed",
+     "from": "thinking",
+     "payload": {
+      "message": "model unavailable"
+     },
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "emits": [
+       {
+        "event": "ASSISTANT_REPLY_FAILED",
+        "payload": {
+         "error": "model unavailable",
+         "steps": []
+        }
+       }
+      ]
+     },
+     "identity": {
+      "id": "u1",
+      "role": "staff"
+     }
+    }
+   ],
+   "config": {
+    "tools": [
+     {
+      "read": "Note",
+      "roles": [
+       "staff"
+      ]
+     }
+    ]
+   },
+   "defaults": [
+    "LoopLlm",
+    "LoopChatRequest",
+    "LoopChatHttp"
+   ]
+  },
+  {
+   "id": "an-ephemeral-turn-with-live-streams-its-steps",
+   "note": "Owner 2026-11-08: `live` decides, whatever `ephemeral` is.",
+   "steps": [
+    {
+     "event": "CONVERSE",
+     "from": "idle",
+     "payload": {
+      "ephemeral": true,
+      "tools": [
+       {
+        "read": "Note",
+        "roles": [
+         "staff"
+        ]
+       }
+      ],
+      "live": true,
+      "messages": [
+       {
+        "role": "user",
+        "content": "show my notes"
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "preparing"
+     },
+     "identity": {
+      "id": "u1",
+      "role": "staff"
+     }
+    },
+    {
+     "event": "INPUTS_KNOWN",
+     "from": "preparing",
+     "payload": {
+      "result": {
+       "inputs": [],
+       "entities": [],
+       "selected": []
+      },
+      "text": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "thinking"
+     },
+     "identity": {
+      "id": "u1",
+      "role": "staff"
+     }
+    },
+    {
+     "event": "ToolsStep",
+     "from": "thinking",
+     "payload": {
+      "activity": {
+       "type": "tool_call",
+       "tool": "read__Note",
+       "kind": "read",
+       "argsText": "{}",
+       "timestamp": "2026-11-07T00:00:00.000Z",
+       "isExecuting": false
+      }
+     },
+     "identity": {
+      "id": "u1",
+      "role": "staff"
+     },
+     "expect": {
+      "fired": true,
+      "state": "thinking",
+      "emits": [
+       {
+        "event": "ASSISTANT_STEP",
+        "payload": {
+         "activity": {
+          "type": "tool_call",
+          "tool": "read__Note",
+          "kind": "read",
+          "argsText": "{}",
+          "timestamp": "2026-11-07T00:00:00.000Z",
+          "isExecuting": false
+         }
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "LoopLlm",
+    "LoopChatRequest",
+    "LoopChatHttp"
+   ]
+  },
+  {
+   "id": "control-an-ephemeral-turn-without-live-streams-nothing",
+   "note": "Absent `live`, an ephemeral turn streams no steps.",
+   "steps": [
+    {
+     "event": "CONVERSE",
+     "from": "idle",
+     "payload": {
+      "ephemeral": true,
+      "tools": [
+       {
+        "read": "Note",
+        "roles": [
+         "staff"
+        ]
+       }
+      ],
+      "messages": [
+       {
+        "role": "user",
+        "content": "show my notes"
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "preparing"
+     },
+     "identity": {
+      "id": "u1",
+      "role": "staff"
+     }
+    },
+    {
+     "event": "INPUTS_KNOWN",
+     "from": "preparing",
+     "payload": {
+      "result": {
+       "inputs": [],
+       "entities": [],
+       "selected": []
+      },
+      "text": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "thinking"
+     },
+     "identity": {
+      "id": "u1",
+      "role": "staff"
+     }
+    },
+    {
+     "event": "ToolsStep",
+     "from": "thinking",
+     "payload": {
+      "activity": {
+       "type": "tool_call",
+       "tool": "read__Note",
+       "kind": "read",
+       "argsText": "{}",
+       "timestamp": "2026-11-07T00:00:00.000Z",
+       "isExecuting": false
+      }
+     },
+     "identity": {
+      "id": "u1",
+      "role": "staff"
+     },
+     "expect": {
+      "fired": true,
+      "state": "thinking",
+      "emits": []
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "LoopLlm",
+    "LoopChatRequest",
+    "LoopChatHttp"
+   ]
+  },
+  {
+   "id": "a-non-ephemeral-turn-with-live-false-streams-nothing",
+   "note": "`live: false` silences a turn that `quiet` would let stream.",
+   "steps": [
+    {
+     "event": "CONVERSE",
+     "from": "idle",
+     "payload": {
+      "live": false,
+      "messages": [
+       {
+        "role": "user",
+        "content": "show my notes"
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "preparing"
+     },
+     "identity": {
+      "id": "u1",
+      "role": "staff"
+     }
+    },
+    {
+     "event": "INPUTS_KNOWN",
+     "from": "preparing",
+     "payload": {
+      "result": {
+       "inputs": [],
+       "entities": [],
+       "selected": []
+      },
+      "text": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "thinking"
+     },
+     "identity": {
+      "id": "u1",
+      "role": "staff"
+     }
+    },
+    {
+     "event": "ToolsStep",
+     "from": "thinking",
+     "payload": {
+      "activity": {
+       "type": "tool_call",
+       "tool": "read__Note",
+       "kind": "read",
+       "argsText": "{}",
+       "timestamp": "2026-11-07T00:00:00.000Z",
+       "isExecuting": false
+      }
+     },
+     "identity": {
+      "id": "u1",
+      "role": "staff"
+     },
+     "expect": {
+      "fired": true,
+      "state": "thinking",
+      "emits": []
+     }
+    }
+   ],
+   "config": {
+    "tools": [
+     {
+      "read": "Note",
+      "roles": [
+       "staff"
+      ]
+     }
+    ]
+   },
+   "defaults": [
+    "LoopLlm",
+    "LoopChatRequest",
+    "LoopChatHttp"
+   ]
+  },
+  {
+   "id": "control-a-non-ephemeral-turn-without-live-follows-quiet",
+   "note": "Absent `live`, the turn streams unless `quiet`.",
+   "steps": [
+    {
+     "event": "CONVERSE",
+     "from": "idle",
+     "payload": {
+      "messages": [
+       {
+        "role": "user",
+        "content": "show my notes"
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "preparing"
+     },
+     "identity": {
+      "id": "u1",
+      "role": "staff"
+     }
+    },
+    {
+     "event": "INPUTS_KNOWN",
+     "from": "preparing",
+     "payload": {
+      "result": {
+       "inputs": [],
+       "entities": [],
+       "selected": []
+      },
+      "text": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "thinking"
+     },
+     "identity": {
+      "id": "u1",
+      "role": "staff"
+     }
+    },
+    {
+     "event": "ToolsStep",
+     "from": "thinking",
+     "payload": {
+      "activity": {
+       "type": "tool_call",
+       "tool": "read__Note",
+       "kind": "read",
+       "argsText": "{}",
+       "timestamp": "2026-11-07T00:00:00.000Z",
+       "isExecuting": false
+      }
+     },
+     "identity": {
+      "id": "u1",
+      "role": "staff"
+     },
+     "expect": {
+      "fired": true,
+      "state": "thinking",
+      "emits": [
+       {
+        "event": "ASSISTANT_STEP",
+        "payload": {
+         "activity": {
+          "type": "tool_call",
+          "tool": "read__Note",
+          "kind": "read",
+          "argsText": "{}",
+          "timestamp": "2026-11-07T00:00:00.000Z",
+          "isExecuting": false
+         }
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "tools": [
+     {
+      "read": "Note",
+      "roles": [
+       "staff"
+      ]
+     }
+    ]
+   },
+   "defaults": [
+    "LoopLlm",
+    "LoopChatRequest",
+    "LoopChatHttp"
+   ]
+  },
+  {
+   "id": "identity-caller-with-no-identity-wired-fails-the-turn-and-offers-nothing",
+   "note": "caller identity: the composed std-agent-identity has no subject, so the turn fails; it never falls back to the asking user's role.",
+   "config": {
+    "caller": "identity",
+    "tools": [
+     {
+      "read": "Ticket",
+      "roles": [
+       "support"
+      ]
+     },
+     {
+      "read": "Payroll",
+      "roles": [
+       "admin"
+      ]
+     }
+    ]
+   },
+   "defaults": [
+    "LoopLlm",
+    "LoopChatRequest",
+    "LoopChatHttp",
+    "LoopIdentity"
+   ],
+   "steps": [
+    {
+     "event": "CONVERSE",
+     "from": "idle",
+     "payload": {
+      "messages": [
+       {
+        "role": "user",
+        "content": "close my ticket"
+       }
+      ]
+     },
+     "identity": {
+      "id": "u1",
+      "role": "admin"
+     },
+     "expect": {
+      "fired": true,
+      "effects": [],
+      "emits": [
+       {
+        "event": "AGENT_IDENTITY_REQUESTED"
+       },
+       {
+        "event": "ASSISTANT_REPLY_FAILED",
+        "payload": {
+         "error": "The assistant's own identity could not sign in: no-subject"
+        }
+       }
+      ],
+      "neverEmits": [
+       "LLM_CALL_TOOLS",
+       "INPUTS_KNOWN"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "attack-identity-caller-offers-by-the-agents-role-never-the-asking-admins",
+   "note": "The person asking is an admin and Payroll lists admin; the agent's identity row is support, so only Ticket is offered.",
+   "config": {
+    "caller": "identity",
+    "tools": [
+     {
+      "read": "Ticket",
+      "roles": [
+       "support"
+      ]
+     },
+     {
+      "read": "Payroll",
+      "roles": [
+       "admin"
+      ]
+     }
+    ]
+   },
+   "defaults": [
+    "LoopLlm",
+    "LoopChatRequest",
+    "LoopChatHttp",
+    "LoopIdentity"
+   ],
+   "steps": [
+    {
+     "event": "AgentIdentityReady",
+     "from": "preparing",
+     "payload": {
+      "subject": "support-agent",
+      "role": "support"
+     },
+     "entity": {
+      "pendingTools": [
+       {
+        "read": "Ticket",
+        "roles": [
+         "support"
+        ]
+       },
+       {
+        "read": "Payroll",
+        "roles": [
+         "admin"
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "preparing"
+     },
+     "identity": {
+      "id": "u1",
+      "role": "admin"
+     }
+    },
+    {
+     "event": "INPUTS_KNOWN",
+     "from": "preparing",
+     "payload": {
+      "result": {
+       "inputs": [],
+       "entities": [],
+       "selected": []
+      },
+      "text": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "thinking",
+      "emits": [
+       {
+        "event": "LLM_CALL_TOOLS",
+        "payload": {
+         "tools": [
+          {
+           "name": "read__Ticket",
+           "description": "Read the Ticket rows you may see",
+           "parameters": {
+            "type": "object",
+            "properties": {}
+           }
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "identity": {
+      "id": "u1",
+      "role": "admin"
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-identity-caller-offers-the-agents-tools-to-an-anonymous-asker",
+   "note": "Who asks does not decide: the agent's role does.",
+   "config": {
+    "caller": "identity",
+    "tools": [
+     {
+      "read": "Ticket",
+      "roles": [
+       "support"
+      ]
+     },
+     {
+      "read": "Payroll",
+      "roles": [
+       "admin"
+      ]
+     }
+    ]
+   },
+   "defaults": [
+    "LoopLlm",
+    "LoopChatRequest",
+    "LoopChatHttp",
+    "LoopIdentity"
+   ],
+   "steps": [
+    {
+     "event": "AgentIdentityReady",
+     "from": "preparing",
+     "payload": {
+      "subject": "support-agent",
+      "role": "support"
+     },
+     "entity": {
+      "pendingTools": [
+       {
+        "read": "Ticket",
+        "roles": [
+         "support"
+        ]
+       },
+       {
+        "read": "Payroll",
+        "roles": [
+         "admin"
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "preparing"
+     }
+    },
+    {
+     "event": "INPUTS_KNOWN",
+     "from": "preparing",
+     "payload": {
+      "result": {
+       "inputs": [],
+       "entities": [],
+       "selected": []
+      },
+      "text": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "thinking",
+      "emits": [
+       {
+        "event": "LLM_CALL_TOOLS",
+        "payload": {
+         "tools": [
+          {
+           "name": "read__Ticket",
+           "description": "Read the Ticket rows you may see",
+           "parameters": {
+            "type": "object",
+            "properties": {}
+           }
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-an-agent-whose-role-no-tool-lists-is-offered-nothing",
+   "config": {
+    "caller": "identity",
+    "tools": [
+     {
+      "read": "Ticket",
+      "roles": [
+       "support"
+      ]
+     },
+     {
+      "read": "Payroll",
+      "roles": [
+       "admin"
+      ]
+     }
+    ]
+   },
+   "defaults": [
+    "LoopLlm",
+    "LoopChatRequest",
+    "LoopChatHttp",
+    "LoopIdentity"
+   ],
+   "steps": [
+    {
+     "event": "AgentIdentityReady",
+     "from": "preparing",
+     "payload": {
+      "subject": "support-agent",
+      "role": "guest"
+     },
+     "entity": {
+      "pendingTools": [
+       {
+        "read": "Ticket",
+        "roles": [
+         "support"
+        ]
+       },
+       {
+        "read": "Payroll",
+        "roles": [
+         "admin"
+        ]
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "preparing"
+     }
+    },
+    {
+     "event": "INPUTS_KNOWN",
+     "from": "preparing",
+     "payload": {
+      "result": {
+       "inputs": [],
+       "entities": [],
+       "selected": []
+      },
+      "text": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "emits": [
+       {
+        "event": "ASSISTANT_REPLY_FAILED"
+       }
+      ],
+      "neverEmits": [
+       "LLM_CALL_TOOLS"
+      ]
+     }
+    }
+   ],
+   "note": "Owner 2026-11-12 (G-STD-353): a turn whose role is granted none of the offered tools fails instead of answering tool-less."
+  },
+  {
+   "id": "attack-identity-caller-never-dispatches-a-tool-as-the-asking-user",
+   "note": "With no identity wired the call fails; it is not dispatched in the asking session.",
+   "config": {
+    "caller": "identity",
+    "tools": [
+     {
+      "read": "Ticket",
+      "roles": [
+       "support"
+      ]
+     }
+    ]
+   },
+   "defaults": [
+    "LoopLlm",
+    "LoopChatRequest",
+    "LoopChatHttp",
+    "LoopIdentity"
+   ],
+   "steps": [
+    {
+     "event": "CALL_BEGIN",
+     "from": "running",
+     "payload": {},
+     "entity": {
+      "table": [
+       {
+        "name": "Board__CLOSE",
+        "description": "Close",
+        "parameters": {
+         "type": "object",
+         "properties": {}
+        },
+        "label": "Board.CLOSE",
+        "kind": "input",
+        "address": "App.Board.CLOSE",
+        "readAny": false,
+        "contracted": false,
+        "fireAndForget": false
+       }
+      ],
+      "calls": [
+       {
+        "id": "c1",
+        "name": "Board__CLOSE",
+        "arguments": {}
+       }
+      ],
+      "current": {
+       "id": "c1",
+       "name": "Board__CLOSE",
+       "arguments": {}
+      },
+      "binding": {
+       "name": "Board__CLOSE",
+       "description": "Close",
+       "parameters": {
+        "type": "object",
+        "properties": {}
+       },
+       "label": "Board.CLOSE",
+       "kind": "input",
+       "address": "App.Board.CLOSE",
+       "readAny": false,
+       "contracted": false,
+       "fireAndForget": false
+      },
+      "cursor": 0,
+      "results": [],
+      "session": "s1",
+      "callStartedAt": "2023-11-14T22:13:20Z"
+     },
+     "identity": {
+      "id": "u1",
+      "role": "admin"
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "AGENT_ACT",
+        "payload": {
+         "callId": "c1",
+         "address": "App.Board.CLOSE",
+         "contracted": false
+        }
+       },
+       {
+        "event": "LLM_TOOLS_ANSWERED",
+        "payload": {
+         "session": "s1",
+         "results": [
+          {
+           "id": "c1",
+           "tool": "Board.CLOSE",
+           "kind": "input",
+           "success": false,
+           "detail": "The assistant has no identity to act as.",
+           "content": "{\"ok\":false,\"error\":\"The assistant has no identity to act as.\"}",
+           "startedAt": "2023-11-14T22:13:20Z",
+           "endedAt": "2023-11-14T22:13:20.000Z"
+          }
+         ]
+        }
+       }
+      ],
+      "neverEmits": [
+       "DISPATCHED",
+       "AWAIT_DISPATCHED",
+       "DISPATCH_FAILED",
+       "AWAIT_DISPATCH_FAILED",
+       "TOOL_PENDING"
+      ]
+     }
+    }
+   ],
+   "now": 1700000000000
+  },
+  {
+   "id": "attack-identity-caller-never-reads-as-the-asking-user",
+   "config": {
+    "caller": "identity",
+    "tools": [
+     {
+      "read": "Ticket",
+      "roles": [
+       "support"
+      ]
+     }
+    ]
+   },
+   "defaults": [
+    "LoopLlm",
+    "LoopChatRequest",
+    "LoopChatHttp",
+    "LoopIdentity"
+   ],
+   "steps": [
+    {
+     "event": "CALL_BEGIN",
+     "from": "running",
+     "payload": {},
+     "entity": {
+      "table": [
+       {
+        "name": "read__Ticket",
+        "description": "Read",
+        "parameters": {
+         "type": "object",
+         "properties": {}
+        },
+        "label": "Ticket",
+        "kind": "read",
+        "entity": "Ticket",
+        "readAny": false,
+        "contracted": false,
+        "fireAndForget": false
+       }
+      ],
+      "calls": [
+       {
+        "id": "c1",
+        "name": "read__Ticket",
+        "arguments": {}
+       }
+      ],
+      "current": {
+       "id": "c1",
+       "name": "read__Ticket",
+       "arguments": {}
+      },
+      "binding": {
+       "name": "read__Ticket",
+       "description": "Read",
+       "parameters": {
+        "type": "object",
+        "properties": {}
+       },
+       "label": "Ticket",
+       "kind": "read",
+       "entity": "Ticket",
+       "readAny": false,
+       "contracted": false,
+       "fireAndForget": false
+      },
+      "cursor": 0,
+      "results": [],
+      "session": "s1",
+      "callStartedAt": "2023-11-14T22:13:20Z"
+     },
+     "identity": {
+      "id": "u1",
+      "role": "admin"
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "AGENT_LOOK",
+        "payload": {
+         "callId": "c1",
+         "entity": "Ticket"
+        }
+       },
+       {
+        "event": "LLM_TOOLS_ANSWERED",
+        "payload": {
+         "session": "s1",
+         "results": [
+          {
+           "id": "c1",
+           "tool": "Ticket",
+           "kind": "read",
+           "success": false,
+           "detail": "The assistant has no identity to act as.",
+           "content": "{\"error\":\"The assistant has no identity to act as.\"}",
+           "startedAt": "2023-11-14T22:13:20Z",
+           "endedAt": "2023-11-14T22:13:20.000Z"
+          }
+         ]
+        }
+       }
+      ],
+      "neverEmits": [
+       "READ_DONE",
+       "READ_FAILED"
+      ]
+     }
+    }
+   ],
+   "now": 1700000000000
+  },
+  {
+   "id": "control-a-user-caller-still-dispatches-the-tool-itself",
+   "config": {
+    "tools": [
+     {
+      "read": "Ticket",
+      "roles": [
+       "support"
+      ]
+     }
+    ]
+   },
+   "defaults": [
+    "LoopLlm",
+    "LoopChatRequest",
+    "LoopChatHttp",
+    "LoopIdentity"
+   ],
+   "steps": [
+    {
+     "event": "CALL_BEGIN",
+     "from": "running",
+     "payload": {},
+     "entity": {
+      "table": [
+       {
+        "name": "Board__CLOSE",
+        "description": "Close",
+        "parameters": {
+         "type": "object",
+         "properties": {}
+        },
+        "label": "Board.CLOSE",
+        "kind": "input",
+        "address": "App.Board.CLOSE",
+        "readAny": false,
+        "contracted": false,
+        "fireAndForget": false
+       }
+      ],
+      "calls": [
+       {
+        "id": "c1",
+        "name": "Board__CLOSE",
+        "arguments": {}
+       }
+      ],
+      "current": {
+       "id": "c1",
+       "name": "Board__CLOSE",
+       "arguments": {}
+      },
+      "binding": {
+       "name": "Board__CLOSE",
+       "description": "Close",
+       "parameters": {
+        "type": "object",
+        "properties": {}
+       },
+       "label": "Board.CLOSE",
+       "kind": "input",
+       "address": "App.Board.CLOSE",
+       "readAny": false,
+       "contracted": false,
+       "fireAndForget": false
+      },
+      "cursor": 0,
+      "results": [],
+      "session": "s1",
+      "callStartedAt": "2023-11-14T22:13:20Z"
+     },
+     "identity": {
+      "id": "u1",
+      "role": "admin"
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "TOOL_PENDING",
+        "payload": {
+         "callId": "c1",
+         "tool": "Board.CLOSE"
+        }
+       }
+      ],
+      "neverEmits": [
+       "AGENT_ACT",
+       "AGENT_LOOK"
+      ]
+     }
+    }
+   ],
+   "now": 1700000000000
+  },
+  {
+   "id": "an-act-answered-by-the-agent-identity-is-the-tool-result",
+   "config": {
+    "caller": "identity",
+    "tools": [
+     {
+      "read": "Ticket",
+      "roles": [
+       "support"
+      ]
+     }
+    ]
+   },
+   "defaults": [
+    "LoopLlm",
+    "LoopChatRequest",
+    "LoopChatHttp",
+    "LoopIdentity"
+   ],
+   "steps": [
+    {
+     "event": "AgentActed",
+     "from": "running",
+     "payload": {
+      "callId": "c1",
+      "ok": true,
+      "error": "",
+      "content": "{\"ok\":true,\"emitted\":[]}"
+     },
+     "entity": {
+      "table": [
+       {
+        "name": "Board__CLOSE",
+        "description": "Close",
+        "parameters": {
+         "type": "object",
+         "properties": {}
+        },
+        "label": "Board.CLOSE",
+        "kind": "input",
+        "address": "App.Board.CLOSE",
+        "readAny": false,
+        "contracted": false,
+        "fireAndForget": false
+       }
+      ],
+      "calls": [
+       {
+        "id": "c1",
+        "name": "Board__CLOSE",
+        "arguments": {}
+       }
+      ],
+      "current": {
+       "id": "c1",
+       "name": "Board__CLOSE",
+       "arguments": {}
+      },
+      "binding": {
+       "name": "Board__CLOSE",
+       "description": "Close",
+       "parameters": {
+        "type": "object",
+        "properties": {}
+       },
+       "label": "Board.CLOSE",
+       "kind": "input",
+       "address": "App.Board.CLOSE",
+       "readAny": false,
+       "contracted": false,
+       "fireAndForget": false
+      },
+      "cursor": 0,
+      "results": [],
+      "session": "s1",
+      "callStartedAt": "2023-11-14T22:13:20Z"
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LLM_TOOLS_ANSWERED",
+        "payload": {
+         "session": "s1",
+         "results": [
+          {
+           "id": "c1",
+           "tool": "Board.CLOSE",
+           "kind": "input",
+           "success": true,
+           "content": "{\"ok\":true,\"emitted\":[]}",
+           "startedAt": "2023-11-14T22:13:20Z",
+           "endedAt": "2023-11-14T22:13:20.000Z"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1700000000000
+  },
+  {
+   "id": "an-act-refused-for-the-agents-role-is-a-failed-tool-result",
+   "config": {
+    "caller": "identity",
+    "tools": [
+     {
+      "read": "Ticket",
+      "roles": [
+       "support"
+      ]
+     }
+    ]
+   },
+   "defaults": [
+    "LoopLlm",
+    "LoopChatRequest",
+    "LoopChatHttp",
+    "LoopIdentity"
+   ],
+   "steps": [
+    {
+     "event": "AgentActed",
+     "from": "running",
+     "payload": {
+      "callId": "c1",
+      "ok": false,
+      "error": "guard failed: Board.CLOSE",
+      "content": "{\"ok\":false,\"error\":\"guard failed: Board.CLOSE\"}"
+     },
+     "entity": {
+      "table": [
+       {
+        "name": "Board__CLOSE",
+        "description": "Close",
+        "parameters": {
+         "type": "object",
+         "properties": {}
+        },
+        "label": "Board.CLOSE",
+        "kind": "input",
+        "address": "App.Board.CLOSE",
+        "readAny": false,
+        "contracted": false,
+        "fireAndForget": false
+       }
+      ],
+      "calls": [
+       {
+        "id": "c1",
+        "name": "Board__CLOSE",
+        "arguments": {}
+       }
+      ],
+      "current": {
+       "id": "c1",
+       "name": "Board__CLOSE",
+       "arguments": {}
+      },
+      "binding": {
+       "name": "Board__CLOSE",
+       "description": "Close",
+       "parameters": {
+        "type": "object",
+        "properties": {}
+       },
+       "label": "Board.CLOSE",
+       "kind": "input",
+       "address": "App.Board.CLOSE",
+       "readAny": false,
+       "contracted": false,
+       "fireAndForget": false
+      },
+      "cursor": 0,
+      "results": [],
+      "session": "s1",
+      "callStartedAt": "2023-11-14T22:13:20Z"
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LLM_TOOLS_ANSWERED",
+        "payload": {
+         "session": "s1",
+         "results": [
+          {
+           "id": "c1",
+           "tool": "Board.CLOSE",
+           "kind": "input",
+           "success": false,
+           "detail": "guard failed: Board.CLOSE",
+           "content": "{\"ok\":false,\"error\":\"guard failed: Board.CLOSE\"}",
+           "startedAt": "2023-11-14T22:13:20Z",
+           "endedAt": "2023-11-14T22:13:20.000Z"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1700000000000
+  },
+  {
+   "id": "a-look-answered-by-the-agent-identity-is-the-read-result",
+   "config": {
+    "caller": "identity",
+    "tools": [
+     {
+      "read": "Ticket",
+      "roles": [
+       "support"
+      ]
+     }
+    ]
+   },
+   "defaults": [
+    "LoopLlm",
+    "LoopChatRequest",
+    "LoopChatHttp",
+    "LoopIdentity"
+   ],
+   "steps": [
+    {
+     "event": "AgentLooked",
+     "from": "running",
+     "payload": {
+      "callId": "c1",
+      "entity": "Ticket",
+      "count": 2,
+      "content": "{\"entity\":\"Ticket\",\"count\":2,\"rows\":[]}"
+     },
+     "entity": {
+      "table": [
+       {
+        "name": "read__Ticket",
+        "description": "Read",
+        "parameters": {
+         "type": "object",
+         "properties": {}
+        },
+        "label": "Ticket",
+        "kind": "read",
+        "entity": "Ticket",
+        "readAny": false,
+        "contracted": false,
+        "fireAndForget": false
+       }
+      ],
+      "calls": [
+       {
+        "id": "c1",
+        "name": "read__Ticket",
+        "arguments": {}
+       }
+      ],
+      "current": {
+       "id": "c1",
+       "name": "read__Ticket",
+       "arguments": {}
+      },
+      "binding": {
+       "name": "read__Ticket",
+       "description": "Read",
+       "parameters": {
+        "type": "object",
+        "properties": {}
+       },
+       "label": "Ticket",
+       "kind": "read",
+       "entity": "Ticket",
+       "readAny": false,
+       "contracted": false,
+       "fireAndForget": false
+      },
+      "cursor": 0,
+      "results": [],
+      "session": "s1",
+      "callStartedAt": "2023-11-14T22:13:20Z"
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LLM_TOOLS_ANSWERED",
+        "payload": {
+         "session": "s1",
+         "results": [
+          {
+           "id": "c1",
+           "tool": "Ticket",
+           "kind": "read",
+           "success": true,
+           "rows": 2,
+           "content": "{\"entity\":\"Ticket\",\"count\":2,\"rows\":[]}",
+           "startedAt": "2023-11-14T22:13:20Z",
+           "endedAt": "2023-11-14T22:13:20.000Z"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1700000000000
+  },
+  {
+   "id": "control-an-answer-for-another-call-is-ignored",
+   "config": {
+    "caller": "identity",
+    "tools": [
+     {
+      "read": "Ticket",
+      "roles": [
+       "support"
+      ]
+     }
+    ]
+   },
+   "defaults": [
+    "LoopLlm",
+    "LoopChatRequest",
+    "LoopChatHttp",
+    "LoopIdentity"
+   ],
+   "steps": [
+    {
+     "event": "AgentActed",
+     "from": "running",
+     "payload": {
+      "callId": "other",
+      "ok": true,
+      "error": "",
+      "content": "{}"
+     },
+     "entity": {
+      "table": [
+       {
+        "name": "Board__CLOSE",
+        "description": "Close",
+        "parameters": {
+         "type": "object",
+         "properties": {}
+        },
+        "label": "Board.CLOSE",
+        "kind": "input",
+        "address": "App.Board.CLOSE",
+        "readAny": false,
+        "contracted": false,
+        "fireAndForget": false
+       }
+      ],
+      "calls": [
+       {
+        "id": "c1",
+        "name": "Board__CLOSE",
+        "arguments": {}
+       }
+      ],
+      "current": {
+       "id": "c1",
+       "name": "Board__CLOSE",
+       "arguments": {}
+      },
+      "binding": {
+       "name": "Board__CLOSE",
+       "description": "Close",
+       "parameters": {
+        "type": "object",
+        "properties": {}
+       },
+       "label": "Board.CLOSE",
+       "kind": "input",
+       "address": "App.Board.CLOSE",
+       "readAny": false,
+       "contracted": false,
+       "fireAndForget": false
+      },
+      "cursor": 0,
+      "results": [],
+      "session": "s1",
+      "callStartedAt": "2023-11-14T22:13:20Z"
+     },
+     "expect": {
+      "fired": false,
+      "neverEmits": [
+       "LLM_TOOLS_ANSWERED",
+       "RUN_NEXT"
+      ]
+     }
+    }
+   ],
+   "now": 1700000000000
+  },
+  {
+   "id": "guest-a-turn-with-an-attached-guest-reflects-it-before-calling-the-model",
+   "note": "P-030: while a guest is attached, a turn also offers the guest's declared inputs; the model is not called until the guest answered what it declares.",
+   "steps": [
+    {
+     "event": "GuestAttached",
+     "from": "idle",
+     "payload": {
+      "guest": "guest-3"
+     },
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "entity": {
+       "guest": "guest-3"
+      }
+     },
+     "identity": {
+      "id": "u1",
+      "role": "staff"
+     }
+    },
+    {
+     "event": "CONVERSE",
+     "from": "idle",
+     "payload": {
+      "messages": [
+       {
+        "role": "user",
+        "content": "add a claim for Novak"
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "preparing"
+     },
+     "identity": {
+      "id": "u1",
+      "role": "staff"
+     }
+    },
+    {
+     "event": "INPUTS_KNOWN",
+     "from": "preparing",
+     "payload": {
+      "result": {
+       "inputs": [],
+       "entities": [],
+       "selected": []
+      },
+      "text": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "thinking",
+      "effects": [
+       {
+        "type": "let"
+       }
+      ],
+      "neverEmits": [
+       "LLM_CALL_TOOLS"
+      ]
+     },
+     "identity": {
+      "id": "u1",
+      "role": "staff"
+     }
+    },
+    {
+     "event": "GUEST_INPUTS_KNOWN",
+     "from": "thinking",
+     "payload": {
+      "result": {
+       "inputs": [
+        {
+         "orbital": "Claims",
+         "trait": "ClaimBoard",
+         "event": "DO_CREATE",
+         "address": "Claims.ClaimBoard.DO_CREATE",
+         "description": "Add a claim",
+         "parameters": {
+          "type": "object",
+          "properties": {
+           "holder": {
+            "type": "string"
+           }
+          },
+          "required": [
+           "holder"
+          ]
+         }
+        }
+       ]
+      },
+      "text": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "thinking",
+      "emits": [
+       {
+        "event": "LLM_CALL_TOOLS",
+        "payload": {
+         "tools": [
+          {
+           "name": "read__Note",
+           "description": "Read the Note rows you may see",
+           "parameters": {
+            "type": "object",
+            "properties": {}
+           }
+          },
+          {
+           "name": "guest__DO_CREATE_1",
+           "description": "Add a claim (in the open program: Claims → ClaimBoard)",
+           "parameters": {
+            "type": "object",
+            "properties": {
+             "holder": {
+              "type": "string"
+             }
+            },
+            "required": [
+             "holder"
+            ]
+           }
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "identity": {
+      "id": "u1",
+      "role": "staff"
+     }
+    }
+   ],
+   "config": {
+    "tools": [
+     {
+      "read": "Note",
+      "roles": [
+       "staff"
+      ]
+     }
+    ]
+   },
+   "defaults": [
+    "LoopLlm",
+    "LoopChatRequest",
+    "LoopChatHttp",
+    "LoopChatRequestDeadline",
+    "LoopChatRequestDelay"
+   ]
+  },
+  {
+   "id": "control-a-turn-without-a-guest-calls-the-model-at-once",
+   "steps": [
+    {
+     "event": "CONVERSE",
+     "from": "idle",
+     "payload": {
+      "messages": [
+       {
+        "role": "user",
+        "content": "add a claim for Novak"
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "preparing"
+     },
+     "identity": {
+      "id": "u1",
+      "role": "staff"
+     }
+    },
+    {
+     "event": "INPUTS_KNOWN",
+     "from": "preparing",
+     "payload": {
+      "result": {
+       "inputs": [],
+       "entities": [],
+       "selected": []
+      },
+      "text": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "thinking",
+      "emits": [
+       {
+        "event": "LLM_CALL_TOOLS"
+       }
+      ],
+      "neverEmits": [
+       "GUEST_INPUTS_KNOWN"
+      ]
+     },
+     "identity": {
+      "id": "u1",
+      "role": "staff"
+     }
+    }
+   ],
+   "config": {
+    "tools": [
+     {
+      "read": "Note",
+      "roles": [
+       "staff"
+      ]
+     }
+    ]
+   },
+   "defaults": [
+    "LoopLlm",
+    "LoopChatRequest",
+    "LoopChatHttp"
+   ]
+  },
+  {
+   "id": "guest-a-guest-that-cannot-be-reflected-fails-the-turn",
+   "steps": [
+    {
+     "event": "GUEST_INPUTS_FAILED",
+     "from": "thinking",
+     "payload": {
+      "error": "no guest session guest-3"
+     },
+     "entity": {
+      "guest": "guest-3"
+     },
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "emits": [
+       {
+        "event": "ASSISTANT_REPLY_FAILED",
+        "payload": {
+         "error": "no guest session guest-3"
+        }
+       }
+      ],
+      "neverEmits": [
+       "LLM_CALL_TOOLS"
+      ]
+     },
+     "identity": {
+      "id": "u1",
+      "role": "staff"
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "LoopLlm",
+    "LoopChatRequest",
+    "LoopChatHttp"
+   ]
+  },
+  {
+   "id": "guest-a-guest-tool-call-is-dispatched-into-the-guest-and-a-closed-guest-is-a-failed-result",
+   "note": "The call goes through program/dispatch with the guest option (the replay has no such guest open, so the kernel's refusal names it) and never waits for TOOL_RESULT.",
+   "steps": [
+    {
+     "event": "CALL_BEGIN",
+     "from": "running",
+     "payload": {},
+     "entity": {
+      "guest": "guest-3",
+      "table": [
+       {
+        "name": "guest__DO_CREATE_1",
+        "description": "Add a claim (in the open program: Claims → ClaimBoard)",
+        "parameters": {
+         "type": "object",
+         "properties": {
+          "holder": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "holder"
+         ]
+        },
+        "label": "Claims.ClaimBoard.DO_CREATE",
+        "kind": "guest",
+        "address": "Claims.ClaimBoard.DO_CREATE",
+        "readAny": false,
+        "contracted": false,
+        "fireAndForget": true
+       }
+      ],
+      "calls": [
+       {
+        "id": "c1",
+        "name": "guest__DO_CREATE_1",
+        "arguments": {
+         "holder": "Novak"
+        }
+       }
+      ],
+      "current": {
+       "id": "c1",
+       "name": "guest__DO_CREATE_1",
+       "arguments": {
+        "holder": "Novak"
+       }
+      },
+      "cursor": 0,
+      "results": [],
+      "session": "s1",
+      "callStartedAt": "2023-11-14T22:13:20Z",
+      "turnGuest": "guest-3"
+     },
+     "identity": {
+      "id": "u1",
+      "role": "staff"
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LLM_TOOLS_ANSWERED",
+        "payload": {
+         "session": "s1",
+         "results": [
+          {
+           "id": "c1",
+           "tool": "Claims.ClaimBoard.DO_CREATE",
+           "kind": "input",
+           "success": false,
+           "detail": "program/dispatch: no open guest 'guest-3' (it was never opened or is closed)",
+           "content": "{\"ok\":false,\"error\":\"program/dispatch: no open guest 'guest-3' (it was never opened or is closed)\"}",
+           "startedAt": "2023-11-14T22:13:20Z",
+           "endedAt": "2023-11-14T22:13:20.000Z"
+          }
+         ]
+        }
+       }
+      ],
+      "neverEmits": [
+       "TOOL_PENDING",
+       "AGENT_ACT",
+       "AWAIT_DISPATCHED"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "LoopLlm",
+    "LoopChatRequest",
+    "LoopChatHttp"
+   ],
+   "now": 1700000000000
+  },
+  {
+   "id": "guest-the-guests-dispatch-answer-is-the-tool-result",
+   "steps": [
+    {
+     "event": "DISPATCHED",
+     "from": "running",
+     "payload": {
+      "result": {
+       "ok": true,
+       "emitted": [
+        {
+         "event": "CLAIM_CREATED"
+        }
+       ]
+      }
+     },
+     "entity": {
+      "guest": "guest-3",
+      "table": [
+       {
+        "name": "guest__DO_CREATE_1",
+        "description": "Add a claim (in the open program: Claims → ClaimBoard)",
+        "parameters": {
+         "type": "object",
+         "properties": {
+          "holder": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "holder"
+         ]
+        },
+        "label": "Claims.ClaimBoard.DO_CREATE",
+        "kind": "guest",
+        "address": "Claims.ClaimBoard.DO_CREATE",
+        "readAny": false,
+        "contracted": false,
+        "fireAndForget": true
+       }
+      ],
+      "calls": [
+       {
+        "id": "c1",
+        "name": "guest__DO_CREATE_1",
+        "arguments": {
+         "holder": "Novak"
+        }
+       }
+      ],
+      "current": {
+       "id": "c1",
+       "name": "guest__DO_CREATE_1",
+       "arguments": {
+        "holder": "Novak"
+       }
+      },
+      "cursor": 0,
+      "results": [],
+      "session": "s1",
+      "callStartedAt": "2023-11-14T22:13:20Z",
+      "binding": {
+       "name": "guest__DO_CREATE_1",
+       "description": "Add a claim (in the open program: Claims → ClaimBoard)",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "holder": {
+          "type": "string"
+         }
+        },
+        "required": [
+         "holder"
+        ]
+       },
+       "label": "Claims.ClaimBoard.DO_CREATE",
+       "kind": "guest",
+       "address": "Claims.ClaimBoard.DO_CREATE",
+       "readAny": false,
+       "contracted": false,
+       "fireAndForget": true
+      },
+      "turnGuest": "guest-3"
+     },
+     "identity": {
+      "id": "u1",
+      "role": "staff"
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LLM_TOOLS_ANSWERED",
+        "payload": {
+         "session": "s1",
+         "results": [
+          {
+           "id": "c1",
+           "tool": "Claims.ClaimBoard.DO_CREATE",
+           "kind": "input",
+           "success": true,
+           "content": "{\"ok\":true,\"emitted\":[{\"event\":\"CLAIM_CREATED\"}]}",
+           "startedAt": "2023-11-14T22:13:20Z",
+           "endedAt": "2023-11-14T22:13:20.000Z"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "LoopLlm",
+    "LoopChatRequest",
+    "LoopChatHttp"
+   ],
+   "now": 1700000000000
+  },
+  {
+   "id": "attack-an-input-the-guest-does-not-declare-is-refused-undispatched",
+   "note": "Only what the guest reflected is in the table; any other name is answered as a refusal and nothing is dispatched.",
+   "steps": [
+    {
+     "event": "CALL_BEGIN",
+     "from": "running",
+     "payload": {},
+     "entity": {
+      "guest": "guest-3",
+      "table": [
+       {
+        "name": "guest__DO_CREATE_1",
+        "description": "Add a claim (in the open program: Claims → ClaimBoard)",
+        "parameters": {
+         "type": "object",
+         "properties": {
+          "holder": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "holder"
+         ]
+        },
+        "label": "Claims.ClaimBoard.DO_CREATE",
+        "kind": "guest",
+        "address": "Claims.ClaimBoard.DO_CREATE",
+        "readAny": false,
+        "contracted": false,
+        "fireAndForget": true
+       }
+      ],
+      "calls": [
+       {
+        "id": "c1",
+        "name": "guest__DO_DELETE_2",
+        "arguments": {}
+       }
+      ],
+      "current": {
+       "id": "c1",
+       "name": "guest__DO_DELETE_2",
+       "arguments": {}
+      },
+      "cursor": 0,
+      "results": [],
+      "session": "s1",
+      "callStartedAt": "2023-11-14T22:13:20Z",
+      "turnGuest": "guest-3"
+     },
+     "identity": {
+      "id": "u1",
+      "role": "staff"
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LLM_TOOLS_ANSWERED",
+        "payload": {
+         "session": "s1",
+         "results": [
+          {
+           "id": "c1",
+           "tool": "guest__DO_DELETE_2",
+           "kind": "invalid",
+           "success": false,
+           "detail": "not an allowed tool",
+           "content": "{\"error\":\"'guest__DO_DELETE_2' is not one of your tools\",\"tools\":[\"guest__DO_CREATE_1\"]}",
+           "startedAt": "2023-11-14T22:13:20Z",
+           "endedAt": "2023-11-14T22:13:20.000Z"
+          }
+         ]
+        }
+       }
+      ],
+      "neverEmits": [
+       "DISPATCHED",
+       "DISPATCH_FAILED"
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "LoopLlm",
+    "LoopChatRequest",
+    "LoopChatHttp"
+   ],
+   "now": 1700000000000
+  },
+  {
+   "id": "guest-a-detached-guest-is-no-longer-operated",
+   "steps": [
+    {
+     "event": "GuestDetached",
+     "from": "idle",
+     "payload": {},
+     "entity": {
+      "guest": "guest-3"
+     },
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "entity": {
+       "guest": ""
+      }
+     },
+     "identity": {
+      "id": "u1",
+      "role": "staff"
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "LoopLlm",
+    "LoopChatRequest",
+    "LoopChatHttp"
+   ]
+  },
+  {
+   "id": "guest-a-guest-attached-mid-turn-waits-for-the-next-turn",
+   "note": "The BUILD tool opens a guest while its own turn is still running: the running turn keeps the tools it bound.",
+   "steps": [
+    {
+     "event": "GuestAttached",
+     "from": "awaitingResult",
+     "payload": {
+      "guest": "guest-9"
+     },
+     "entity": {
+      "guest": "",
+      "turnGuest": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "awaitingResult",
+      "entity": {
+       "guest": "guest-9",
+       "turnGuest": ""
+      }
+     },
+     "identity": {
+      "id": "u1",
+      "role": "staff"
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "LoopLlm",
+    "LoopChatRequest",
+    "LoopChatHttp"
+   ]
+  },
+  {
+   "id": "tool-name-over-64-characters-is-shortened",
+   "note": "An event address whose '.'-to-'__' text exceeds 64 characters is offered under its last 54 characters, '_' and 8 hex of md5(base64(address)); label keeps the full address.",
+   "steps": [
+    {
+     "event": "CONVERSE",
+     "from": "idle",
+     "payload": {
+      "messages": [
+       {
+        "role": "user",
+        "content": "go"
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "preparing"
+     },
+     "identity": {
+      "id": "u1",
+      "role": "staff"
+     }
+    },
+    {
+     "event": "INPUTS_KNOWN",
+     "from": "preparing",
+     "payload": {
+      "result": {
+       "inputs": [
+        {
+         "orbital": "ClaimsIntakeAndAdjudication",
+         "trait": "ClaimAdjudicationWorkflowBoard",
+         "event": "DO_REQUEST_SUPERVISOR_REVIEW",
+         "address": "ClaimsIntakeAndAdjudication.ClaimAdjudicationWorkflowBoard.DO_REQUEST_SUPERVISOR_REVIEW",
+         "description": "Do it",
+         "parameters": {
+          "type": "object",
+          "properties": {}
+         }
+        }
+       ],
+       "entities": [],
+       "selected": [
+        {
+         "orbital": "ClaimsIntakeAndAdjudication",
+         "trait": "ClaimAdjudicationWorkflowBoard",
+         "event": "DO_REQUEST_SUPERVISOR_REVIEW",
+         "address": "ClaimsIntakeAndAdjudication.ClaimAdjudicationWorkflowBoard.DO_REQUEST_SUPERVISOR_REVIEW",
+         "description": "Do it",
+         "parameters": {
+          "type": "object",
+          "properties": {}
+         }
+        }
+       ]
+      },
+      "text": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "thinking",
+      "emits": [
+       {
+        "event": "LLM_CALL_TOOLS",
+        "payload": {
+         "tools": [
+          {
+           "name": "djudicationWorkflowBoard__DO_REQUEST_SUPERVISOR_REVIEW_4d0e360b",
+           "description": "Do it",
+           "parameters": {
+            "type": "object",
+            "properties": {}
+           }
+          }
+         ]
+        }
+       }
+      ],
+      "entity": {
+       "table": [
+        {
+         "name": "djudicationWorkflowBoard__DO_REQUEST_SUPERVISOR_REVIEW_4d0e360b",
+         "description": "Do it",
+         "parameters": {
+          "type": "object",
+          "properties": {}
+         },
+         "label": "ClaimsIntakeAndAdjudication.ClaimAdjudicationWorkflowBoard.DO_REQUEST_SUPERVISOR_REVIEW",
+         "kind": "input",
+         "address": "ClaimsIntakeAndAdjudication.ClaimAdjudicationWorkflowBoard.DO_REQUEST_SUPERVISOR_REVIEW",
+         "contract": [],
+         "readAny": false,
+         "contracted": false,
+         "fireAndForget": false,
+         "reports": [],
+         "reporting": false
+        }
+       ]
+      }
+     },
+     "identity": {
+      "id": "u1",
+      "role": "staff"
+     }
+    }
+   ],
+   "config": {
+    "tools": [
+     {
+      "event": "ClaimsIntakeAndAdjudication.ClaimAdjudicationWorkflowBoard.DO_REQUEST_SUPERVISOR_REVIEW",
+      "roles": [
+       "staff"
+      ]
+     }
+    ]
+   },
+   "defaults": [
+    "LoopLlm",
+    "LoopChatRequest",
+    "LoopChatHttp",
+    "LoopChatRequestDeadline",
+    "LoopChatRequestDelay"
+   ]
+  },
+  {
+   "id": "tool-name-over-64-characters-dispatches-the-original-event",
+   "note": "The model calls the shortened name; the loop pends and dispatches the original event address, never the shortened name.",
+   "config": {
+    "tools": [
+     {
+      "read": "Ticket",
+      "roles": [
+       "support"
+      ]
+     }
+    ]
+   },
+   "defaults": [
+    "LoopLlm",
+    "LoopChatRequest",
+    "LoopChatHttp"
+   ],
+   "steps": [
+    {
+     "event": "CALL_BEGIN",
+     "from": "running",
+     "payload": {},
+     "entity": {
+      "table": [
+       {
+        "name": "djudicationWorkflowBoard__DO_REQUEST_SUPERVISOR_REVIEW_4d0e360b",
+        "description": "Do it",
+        "parameters": {
+         "type": "object",
+         "properties": {}
+        },
+        "label": "ClaimsIntakeAndAdjudication.ClaimAdjudicationWorkflowBoard.DO_REQUEST_SUPERVISOR_REVIEW",
+        "kind": "input",
+        "address": "ClaimsIntakeAndAdjudication.ClaimAdjudicationWorkflowBoard.DO_REQUEST_SUPERVISOR_REVIEW",
+        "readAny": false,
+        "contracted": false,
+        "fireAndForget": false
+       }
+      ],
+      "calls": [
+       {
+        "id": "c1",
+        "name": "djudicationWorkflowBoard__DO_REQUEST_SUPERVISOR_REVIEW_4d0e360b",
+        "arguments": {}
+       }
+      ],
+      "current": {
+       "id": "c1",
+       "name": "djudicationWorkflowBoard__DO_REQUEST_SUPERVISOR_REVIEW_4d0e360b",
+       "arguments": {}
+      },
+      "binding": {
+       "name": "djudicationWorkflowBoard__DO_REQUEST_SUPERVISOR_REVIEW_4d0e360b",
+       "description": "Do it",
+       "parameters": {
+        "type": "object",
+        "properties": {}
+       },
+       "label": "ClaimsIntakeAndAdjudication.ClaimAdjudicationWorkflowBoard.DO_REQUEST_SUPERVISOR_REVIEW",
+       "kind": "input",
+       "address": "ClaimsIntakeAndAdjudication.ClaimAdjudicationWorkflowBoard.DO_REQUEST_SUPERVISOR_REVIEW",
+       "readAny": false,
+       "contracted": false,
+       "fireAndForget": false
+      },
+      "cursor": 0,
+      "results": [],
+      "session": "s1",
+      "callStartedAt": "2023-11-14T22:13:20Z"
+     },
+     "identity": {
+      "id": "u1",
+      "role": "admin"
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "TOOL_PENDING",
+        "payload": {
+         "callId": "c1",
+         "tool": "ClaimsIntakeAndAdjudication.ClaimAdjudicationWorkflowBoard.DO_REQUEST_SUPERVISOR_REVIEW"
+        }
+       }
+      ],
+      "neverEmits": [
+       "AGENT_ACT",
+       "AGENT_LOOK"
+      ]
+     }
+    }
+   ],
+   "now": 1700000000000
+  },
+  {
+   "id": "tool-name-of-64-characters-or-fewer-is-unchanged",
+   "note": "At most 64 characters: the name is the address with '.' replaced by '__', unchanged.",
+   "steps": [
+    {
+     "event": "CONVERSE",
+     "from": "idle",
+     "payload": {
+      "messages": [
+       {
+        "role": "user",
+        "content": "go"
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "preparing"
+     },
+     "identity": {
+      "id": "u1",
+      "role": "staff"
+     }
+    },
+    {
+     "event": "INPUTS_KNOWN",
+     "from": "preparing",
+     "payload": {
+      "result": {
+       "inputs": [
+        {
+         "orbital": "Board",
+         "trait": "Board",
+         "event": "CLOSE",
+         "address": "Board.CLOSE",
+         "description": "Do it",
+         "parameters": {
+          "type": "object",
+          "properties": {}
+         }
+        }
+       ],
+       "entities": [],
+       "selected": [
+        {
+         "orbital": "Board",
+         "trait": "Board",
+         "event": "CLOSE",
+         "address": "Board.CLOSE",
+         "description": "Do it",
+         "parameters": {
+          "type": "object",
+          "properties": {}
+         }
+        }
+       ]
+      },
+      "text": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "thinking",
+      "emits": [
+       {
+        "event": "LLM_CALL_TOOLS",
+        "payload": {
+         "tools": [
+          {
+           "name": "Board__CLOSE",
+           "description": "Do it",
+           "parameters": {
+            "type": "object",
+            "properties": {}
+           }
+          }
+         ]
+        }
+       }
+      ],
+      "entity": {
+       "table": [
+        {
+         "name": "Board__CLOSE",
+         "description": "Do it",
+         "parameters": {
+          "type": "object",
+          "properties": {}
+         },
+         "label": "Board.CLOSE",
+         "kind": "input",
+         "address": "Board.CLOSE",
+         "contract": [],
+         "readAny": false,
+         "contracted": false,
+         "fireAndForget": false,
+         "reports": [],
+         "reporting": false
+        }
+       ]
+      }
+     },
+     "identity": {
+      "id": "u1",
+      "role": "staff"
+     }
+    }
+   ],
+   "config": {
+    "tools": [
+     {
+      "event": "Board.CLOSE",
+      "roles": [
+       "staff"
+      ]
+     }
+    ]
+   },
+   "defaults": [
+    "LoopLlm",
+    "LoopChatRequest",
+    "LoopChatHttp",
+    "LoopChatRequestDeadline",
+    "LoopChatRequestDelay"
+   ]
+  },
+  {
+   "id": "a-turn-whose-role-is-granted-none-of-the-offered-tools-fails-and-names-the-role",
+   "note": "G-STD-353 (owner 2026-11-12): the role filter leaves no tools, so the turn fails with a reason instead of answering tool-less",
+   "steps": [
+    {
+     "event": "CONVERSE",
+     "from": "idle",
+     "payload": {
+      "messages": [
+       {
+        "role": "user",
+        "content": "show my notes"
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "preparing"
+     },
+     "identity": {
+      "id": "u1",
+      "role": "member"
+     }
+    },
+    {
+     "event": "INPUTS_KNOWN",
+     "from": "preparing",
+     "payload": {
+      "result": {
+       "inputs": [],
+       "entities": [],
+       "selected": []
+      },
+      "text": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "emits": [
+       {
+        "event": "ASSISTANT_REPLY_FAILED",
+        "payload": {
+         "error": "None of the assistant's 1 tools is granted to the role 'member': add the role to a tool's roles, or offer it no tools.",
+         "ephemeral": false
+        }
+       }
+      ],
+      "neverEmits": [
+       "LLM_CALL_TOOLS"
+      ]
+     },
+     "identity": {
+      "id": "u1",
+      "role": "member"
+     }
+    }
+   ],
+   "config": {
+    "tools": [
+     {
+      "read": "Note",
+      "roles": [
+       "staff"
+      ]
+     }
+    ]
+   },
+   "defaults": [
+    "LoopLlm",
+    "LoopChatRequest",
+    "LoopChatHttp"
+   ]
+  },
+  {
+   "id": "a-tool-that-declares-its-reports-tells-the-model-only-those-events",
+   "steps": [
+    {
+     "event": "DISPATCHED",
+     "from": "running",
+     "payload": {
+      "result": {
+       "ok": true,
+       "rendered": [
+        {
+         "slot": "main",
+         "trait": "NoteStage",
+         "orbital": "Notes",
+         "embedded": false,
+         "content": {
+          "type": "typography",
+          "content": "a whole page"
+         }
+        }
+       ],
+       "emitted": [
+        {
+         "event": "NOTE_OPENED",
+         "payload": {
+          "id": "n1",
+          "program": "a whole program"
+         }
+        },
+        {
+         "event": "NOTE_SEEN",
+         "payload": {
+          "id": "n1"
+         }
+        }
+       ]
+      }
+     },
+     "entity": {
+      "guest": "",
+      "table": [
+       {
+        "name": "Notes__NoteBoard__OPEN",
+        "description": "Open a note",
+        "parameters": {
+         "type": "object",
+         "properties": {}
+        },
+        "label": "Notes.NoteBoard.OPEN",
+        "kind": "input",
+        "address": "Notes.NoteBoard.OPEN",
+        "readAny": false,
+        "contracted": false,
+        "fireAndForget": true,
+        "reports": [
+         "NOTE_SEEN"
+        ],
+        "reporting": true
+       }
+      ],
+      "calls": [
+       {
+        "id": "c1",
+        "name": "Notes__NoteBoard__OPEN",
+        "arguments": {}
+       }
+      ],
+      "current": {
+       "id": "c1",
+       "name": "Notes__NoteBoard__OPEN",
+       "arguments": {}
+      },
+      "cursor": 0,
+      "results": [],
+      "session": "s1",
+      "callStartedAt": "2023-11-14T22:13:20Z",
+      "binding": {
+       "name": "Notes__NoteBoard__OPEN",
+       "description": "Open a note",
+       "parameters": {
+        "type": "object",
+        "properties": {}
+       },
+       "label": "Notes.NoteBoard.OPEN",
+       "kind": "input",
+       "address": "Notes.NoteBoard.OPEN",
+       "readAny": false,
+       "contracted": false,
+       "fireAndForget": true,
+       "reports": [
+        "NOTE_SEEN"
+       ],
+       "reporting": true
+      },
+      "turnGuest": ""
+     },
+     "identity": {
+      "id": "u1",
+      "role": "staff"
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LLM_TOOLS_ANSWERED",
+        "payload": {
+         "session": "s1",
+         "results": [
+          {
+           "id": "c1",
+           "tool": "Notes.NoteBoard.OPEN",
+           "kind": "input",
+           "success": true,
+           "content": "{\"ok\":true,\"emitted\":[{\"event\":\"NOTE_SEEN\",\"payload\":{\"id\":\"n1\"}}]}",
+           "startedAt": "2023-11-14T22:13:20Z",
+           "endedAt": "2023-11-14T22:13:20.000Z"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "LoopLlm",
+    "LoopChatRequest",
+    "LoopChatHttp"
+   ],
+   "now": 1700000000000,
+   "note": "G-STD-367: `reports` names the emitted events whose payloads the model is told; nothing rendered and no other payload is reported"
+  },
+  {
+   "id": "a-tool-that-reports-nothing-tells-the-model-only-that-it-took-effect",
+   "steps": [
+    {
+     "event": "DISPATCHED",
+     "from": "running",
+     "payload": {
+      "result": {
+       "ok": true,
+       "rendered": [
+        {
+         "slot": "main",
+         "trait": "NoteStage",
+         "orbital": "Notes",
+         "embedded": false,
+         "content": {
+          "type": "typography",
+          "content": "a whole page"
+         }
+        }
+       ],
+       "emitted": [
+        {
+         "event": "NOTE_OPENED",
+         "payload": {
+          "id": "n1",
+          "program": "a whole program"
+         }
+        },
+        {
+         "event": "NOTE_SEEN",
+         "payload": {
+          "id": "n1"
+         }
+        }
+       ]
+      }
+     },
+     "entity": {
+      "guest": "",
+      "table": [
+       {
+        "name": "Notes__NoteBoard__OPEN",
+        "description": "Open a note",
+        "parameters": {
+         "type": "object",
+         "properties": {}
+        },
+        "label": "Notes.NoteBoard.OPEN",
+        "kind": "input",
+        "address": "Notes.NoteBoard.OPEN",
+        "readAny": false,
+        "contracted": false,
+        "fireAndForget": true,
+        "reports": [],
+        "reporting": true
+       }
+      ],
+      "calls": [
+       {
+        "id": "c1",
+        "name": "Notes__NoteBoard__OPEN",
+        "arguments": {}
+       }
+      ],
+      "current": {
+       "id": "c1",
+       "name": "Notes__NoteBoard__OPEN",
+       "arguments": {}
+      },
+      "cursor": 0,
+      "results": [],
+      "session": "s1",
+      "callStartedAt": "2023-11-14T22:13:20Z",
+      "binding": {
+       "name": "Notes__NoteBoard__OPEN",
+       "description": "Open a note",
+       "parameters": {
+        "type": "object",
+        "properties": {}
+       },
+       "label": "Notes.NoteBoard.OPEN",
+       "kind": "input",
+       "address": "Notes.NoteBoard.OPEN",
+       "readAny": false,
+       "contracted": false,
+       "fireAndForget": true,
+       "reports": [],
+       "reporting": true
+      },
+      "turnGuest": ""
+     },
+     "identity": {
+      "id": "u1",
+      "role": "staff"
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LLM_TOOLS_ANSWERED",
+        "payload": {
+         "session": "s1",
+         "results": [
+          {
+           "id": "c1",
+           "tool": "Notes.NoteBoard.OPEN",
+           "kind": "input",
+           "success": true,
+           "content": "{\"ok\":true,\"emitted\":[]}",
+           "startedAt": "2023-11-14T22:13:20Z",
+           "endedAt": "2023-11-14T22:13:20.000Z"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "LoopLlm",
+    "LoopChatRequest",
+    "LoopChatHttp"
+   ],
+   "now": 1700000000000,
+   "note": "edge: an empty `reports` list"
+  },
+  {
+   "id": "a-read-that-declares-its-fields-tells-the-model-only-those-fields",
+   "steps": [
+    {
+     "event": "READ_DONE",
+     "from": "running",
+     "payload": {
+      "result": {
+       "entity": "Note",
+       "count": 1,
+       "rows": [
+        {
+         "id": "n1",
+         "name": "A",
+         "program": "a whole program"
+        }
+       ]
+      }
+     },
+     "entity": {
+      "guest": "",
+      "table": [
+       {
+        "name": "read__Note",
+        "description": "Read the Note rows you may see",
+        "parameters": {
+         "type": "object",
+         "properties": {}
+        },
+        "label": "Note",
+        "kind": "read",
+        "entity": "Note",
+        "readAny": false,
+        "contracted": false,
+        "fireAndForget": false,
+        "fields": [
+         "id",
+         "name"
+        ],
+        "projected": true
+       }
+      ],
+      "calls": [
+       {
+        "id": "c1",
+        "name": "read__Note",
+        "arguments": {}
+       }
+      ],
+      "current": {
+       "id": "c1",
+       "name": "read__Note",
+       "arguments": {}
+      },
+      "cursor": 0,
+      "results": [],
+      "session": "s1",
+      "callStartedAt": "2023-11-14T22:13:20Z",
+      "binding": {
+       "name": "read__Note",
+       "description": "Read the Note rows you may see",
+       "parameters": {
+        "type": "object",
+        "properties": {}
+       },
+       "label": "Note",
+       "kind": "read",
+       "entity": "Note",
+       "readAny": false,
+       "contracted": false,
+       "fireAndForget": false,
+       "fields": [
+        "id",
+        "name"
+       ],
+       "projected": true
+      },
+      "turnGuest": ""
+     },
+     "identity": {
+      "id": "u1",
+      "role": "staff"
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LLM_TOOLS_ANSWERED",
+        "payload": {
+         "session": "s1",
+         "results": [
+          {
+           "id": "c1",
+           "tool": "Note",
+           "kind": "read",
+           "success": true,
+           "rows": 1,
+           "content": "{\"entity\":\"Note\",\"count\":1,\"rows\":[{\"id\":\"n1\",\"name\":\"A\"}]}",
+           "startedAt": "2023-11-14T22:13:20Z",
+           "endedAt": "2023-11-14T22:13:20.000Z"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "LoopLlm",
+    "LoopChatRequest",
+    "LoopChatHttp"
+   ],
+   "now": 1700000000000,
+   "note": "G-STD-367: `fields` names the row fields the model is told"
+  },
+  {
+   "id": "control-a-read-with-no-declared-fields-tells-the-model-whole-rows",
+   "steps": [
+    {
+     "event": "READ_DONE",
+     "from": "running",
+     "payload": {
+      "result": {
+       "entity": "Note",
+       "count": 1,
+       "rows": [
+        {
+         "id": "n1",
+         "name": "A",
+         "program": "a whole program"
+        }
+       ]
+      }
+     },
+     "entity": {
+      "guest": "",
+      "table": [
+       {
+        "name": "read__Note",
+        "description": "Read the Note rows you may see",
+        "parameters": {
+         "type": "object",
+         "properties": {}
+        },
+        "label": "Note",
+        "kind": "read",
+        "entity": "Note",
+        "readAny": false,
+        "contracted": false,
+        "fireAndForget": false
+       }
+      ],
+      "calls": [
+       {
+        "id": "c1",
+        "name": "read__Note",
+        "arguments": {}
+       }
+      ],
+      "current": {
+       "id": "c1",
+       "name": "read__Note",
+       "arguments": {}
+      },
+      "cursor": 0,
+      "results": [],
+      "session": "s1",
+      "callStartedAt": "2023-11-14T22:13:20Z",
+      "binding": {
+       "name": "read__Note",
+       "description": "Read the Note rows you may see",
+       "parameters": {
+        "type": "object",
+        "properties": {}
+       },
+       "label": "Note",
+       "kind": "read",
+       "entity": "Note",
+       "readAny": false,
+       "contracted": false,
+       "fireAndForget": false
+      },
+      "turnGuest": ""
+     },
+     "identity": {
+      "id": "u1",
+      "role": "staff"
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "LLM_TOOLS_ANSWERED",
+        "payload": {
+         "session": "s1",
+         "results": [
+          {
+           "id": "c1",
+           "tool": "Note",
+           "kind": "read",
+           "success": true,
+           "rows": 1,
+           "content": "{\"entity\":\"Note\",\"count\":1,\"rows\":[{\"id\":\"n1\",\"name\":\"A\",\"program\":\"a whole program\"}]}",
+           "startedAt": "2023-11-14T22:13:20Z",
+           "endedAt": "2023-11-14T22:13:20.000Z"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {},
+   "defaults": [
+    "LoopLlm",
+    "LoopChatRequest",
+    "LoopChatHttp"
+   ],
+   "now": 1700000000000,
+   "note": "control: no `fields`, today's behaviour"
+  }
+ ]
 }

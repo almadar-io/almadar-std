@@ -597,6 +597,104 @@
      }
     }
    ]
+  },
+  {
+   "id": "a-guests-lazy-programs-ride-the-opened-value-keyed-by-orbref",
+   "note": "G-STD-319: each lazy program the resolve answers is carried in lazyPrograms under its page's orbRef, so program/navigate can load it; a malformed lazy program shows it reached the kernel's lazyPrograms read",
+   "steps": [
+    {
+     "trait": "ProgramHost",
+     "from": "reading",
+     "event": "HOST_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "program": {
+        "name": "guest",
+        "orbitals": [],
+        "lazyPages": [
+         {
+          "path": "/docs",
+          "orbital": "Docs",
+          "orbRef": "guest.lazy/Docs.orb"
+         }
+        ]
+       },
+       "lazy": [
+        {
+         "orbital": "Docs",
+         "program": {
+          "name": "Docs",
+          "orbitals": "not-a-list"
+         }
+        }
+       ]
+      }
+     },
+     "expect": {
+      "state": "reading",
+      "effects": [
+       {
+        "type": "program/open",
+        "status": "failed",
+        "error": "program/open: `lazyPrograms` is a map of file to resolved program: invalid type: string \"not-a-list\", expected a sequence"
+       }
+      ]
+     },
+     "entity": {
+      "id": "host",
+      "path": "guest.lolo",
+      "cwd": "",
+      "guest": "",
+      "loaded": false,
+      "grants": {}
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-guest-with-no-lazy-programs-opens-the-program-as-read",
+   "note": "control: no lazy programs, so nothing is added and the kernel reads the program alone",
+   "steps": [
+    {
+     "trait": "ProgramHost",
+     "from": "reading",
+     "event": "HOST_PROGRAM_READ",
+     "payload": {
+      "result": {
+       "program": {
+        "name": "guest",
+        "orbitals": [],
+        "lazyPages": [
+         {
+          "path": "/docs",
+          "orbital": "Docs",
+          "orbRef": "guest.lazy/Docs.orb"
+         }
+        ]
+       },
+       "lazy": []
+      }
+     },
+     "expect": {
+      "state": "reading",
+      "effects": [
+       {
+        "type": "program/open",
+        "status": "failed",
+        "error": "program/open: the program has no orbitals"
+       }
+      ]
+     },
+     "entity": {
+      "id": "host",
+      "path": "guest.lolo",
+      "cwd": "",
+      "guest": "",
+      "loaded": false,
+      "grants": {}
+     }
+    }
+   ]
   }
  ]
 }

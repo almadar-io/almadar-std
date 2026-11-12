@@ -30,6 +30,7 @@ import { PROB_OPERATORS } from './modules/prob.js';
 import { OS_OPERATORS } from './modules/os.js';
 import { KV_OPERATORS } from './modules/kv.js';
 import { MEM_OPERATORS } from './modules/mem.js';
+import { SIGNAL_OPERATORS } from './modules/signal.js';
 import { KERNEL_OPERATORS } from './modules/kernel.js';
 import { FFI_OPERATORS } from './modules/ffi.js';
 import { GPU_OPERATORS } from './modules/gpu.js';
@@ -78,6 +79,7 @@ export const STD_OPERATORS: Record<string, StdOperatorMeta> = {
   ...OS_OPERATORS,
   ...KV_OPERATORS,
   ...MEM_OPERATORS,
+  ...SIGNAL_OPERATORS,
   ...KERNEL_OPERATORS,
   ...FFI_OPERATORS,
   ...GPU_OPERATORS,
@@ -142,6 +144,7 @@ export const STD_OPERATORS_BY_MODULE: Record<string, Record<string, StdOperatorM
   os: OS_OPERATORS,
   kv: KV_OPERATORS,
   mem: MEM_OPERATORS,
+  signal: SIGNAL_OPERATORS,
   kernel: KERNEL_OPERATORS,
   ffi: FFI_OPERATORS,
   gpu: GPU_OPERATORS,

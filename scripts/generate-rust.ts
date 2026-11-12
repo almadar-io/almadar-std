@@ -41,6 +41,7 @@ const CATEGORY_META: Record<string, { description: string; target: string[] }> =
     'std-os': { description: 'OS-level event watchers for system triggers', target: ['ts'] },
     'std-mem': { description: 'Kernel-owned memory: arenas, blocks and borrows (EXEC-METAL)', target: ['ts'] },
     'std-mem-read': { description: 'Pure reads of borrowed kernel memory (EXEC-METAL-3)', target: ['rust'] },
+    'std-signal': { description: 'Domain-free numeric signal primitives over PCM and number lists', target: ['ts', 'rust'] },
     'std-kernel': { description: 'Kernel-owned queue reordering (EXEC-METAL-5)', target: ['ts'] },
     'std-ffi': { description: 'Granted native foreign-function calls (EXEC-METAL-2)', target: ['ts'] },
     'std-gpu': { description: 'Granted GPU device, resource, submit and readback asks (host-answered)', target: ['ts'] },

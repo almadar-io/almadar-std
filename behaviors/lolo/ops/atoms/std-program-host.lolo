@@ -3,13 +3,16 @@ app std-program-host [
   inbound: ["cli-program-host"],
   fs: { cwd: "**/*.lolo": [read] },
   kernel: { "guest": [spawn] },
-  description: "std-program-host — the runtime as a .lolo program (`orb host <shell> <program>`). The cli-program-host command takes argv: the guest program path, then optional `--grant=<kind>` flags (a kind the guestGrants knob holds: fs, exec, net, credentials) that narrow the guestGrants knob to those kinds; with no flag the guest gets the whole knob, and the knob defaults to no grants at all, so the guest never inherits the host's own. It resolves the program (program/read { resolve }, EXEC-LOAD-1) and opens it as a guest session with program/open, passing the grants at open and only there (EXEC-CONC-7); the host holds the grant `kernel: { guest: [spawn] }` and the kernel refuses an open whose grants the host does not hold, naming them. It emits HOST_LOADED { path } once the guest is open, or HOST_REFUSED { reason } when argv names no program, the file cannot be read, resolved or opened, or a flag names a kind the knob does not hold; the command is answered with a status and body (200 loaded, 400 usage or refused grants, 500 unreadable or refused at open). Once loaded, each HOST_EVENT { key, orbital, trait, event, payload } (payload as JSON text) is forwarded to the guest by a keyed program/dispatch { guest } to Orbital.Trait.EVENT, run on the guest's own lane, and each guest answer is relayed as HOST_ANSWERED { key, result }; a failed dispatch is answered under the key it was sent with. A guest's lazy pages are not carried: the open takes the resolved program only."
+  description: "std-program-host — the runtime as a .lolo program (`orb host <shell> <program>`). The cli-program-host command takes argv: the guest program path, then optional `--grant=<kind>` flags (a kind the guestGrants knob holds: fs, exec, net, credentials) that narrow the guestGrants knob to those kinds; with no flag the guest gets the whole knob, and the knob defaults to no grants at all, so the guest never inherits the host's own. It resolves the program (program/read { resolve }, EXEC-LOAD-1) and opens it as a guest session with program/open, passing the grants at open and only there (EXEC-CONC-7); the host holds the grant `kernel: { guest: [spawn] }` and the kernel refuses an open whose grants the host does not hold, naming them. It emits HOST_LOADED { path } once the guest is open, or HOST_REFUSED { reason } when argv names no program, the file cannot be read, resolved or opened, or a flag names a kind the knob does not hold; the command is answered with a status and body (200 loaded, 400 usage or refused grants, 500 unreadable or refused at open). Once loaded, each HOST_EVENT { key, orbital, trait, event, payload } (payload as JSON text) is forwarded to the guest by a keyed program/dispatch { guest } to Orbital.Trait.EVENT, run on the guest's own lane, and each guest answer is relayed as HOST_ANSWERED { key, result }; a failed dispatch is answered under the key it was sent with. A guest's lazy pages are carried: each `uses lazy` program the resolve answers rides the opened value in `lazyPrograms`, keyed by the `orbRef` of its page, so program/navigate can load it."
 ]
 uses Spec from "almadar-std/program-host"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type ArgFlag = { name : string!, aliases : [string]!, takesValue : boolean!, repeatable : boolean! }
 type HostOpened = { guest : string! }
-type HostResolved = { program : SExpr! }
+type HostLazyPage = { orbital : string!, orbRef : string! }
+type HostLazy = { orbital : string!, program : SExpr! }
+type HostProgram = { name : string, orbitals : [orbital], lazyPages : [HostLazyPage]?, lazyPrograms : (Map string SExpr)? }
+type HostResolved = { program : HostProgram!, lazy : [HostLazy] }
 type HostFsGrant = { glob : string!, modes : [string]! }
 type HostNetGrant = { target : string!, kinds : [string]! }
 type HostGrants = { fs : [HostFsGrant]?, exec : [string]?, net : [HostNetGrant]?, credentials : [string]? }
@@ -63,7 +66,7 @@ orbital ProgramHostOrbital {
     state reading {
       INIT -> reading
       HOST_PROGRAM_READ -> reading
-        (program/open (object/get @payload.result "program") { grants: @entity.grants } { key: "guest" emit: { success: HOST_GUEST_OPENED, failure: HOST_LOAD_FAILED } })
+        (program/open (if (= (array/len (default @payload.result.lazy [])) 0) @payload.result.program (object/set @payload.result.program "lazyPrograms" (object/fromEntries (array/map (default @payload.result.lazy []) (fn l [(object/get (default (array/find (default @payload.result.program.lazyPages []) (fn p (= @p.orbital @l.orbital))) { orbital: "", orbRef: "" }) "orbRef") @l.program]))))) { grants: @entity.grants } { key: "guest" emit: { success: HOST_GUEST_OPENED, failure: HOST_LOAD_FAILED } })
       HOST_GUEST_OPENED -> hosting
         (set @entity.guest @payload.result.guest)
         (set @entity.loaded true)

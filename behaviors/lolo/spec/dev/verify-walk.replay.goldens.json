@@ -17,7 +17,7 @@
         "event": "VERIFY_WALK_ANSWERED",
         "payload": {
          "status": 400,
-         "body": "usage: orb verify-walk <program.lolo> [--as <role>] [--render]"
+         "body": "usage: orb verify-walk <program.lolo> [--as <role>] [--trait <name>] [--render]"
         }
        }
       ]
@@ -1228,7 +1228,7 @@
         "event": "VERIFY_WALK_ANSWERED",
         "payload": {
          "status": 400,
-         "body": "usage: orb verify-walk <program.lolo> [--as <role>] [--render]"
+         "body": "usage: orb verify-walk <program.lolo> [--as <role>] [--trait <name>] [--render]"
         }
        }
       ]
@@ -1253,7 +1253,7 @@
         "event": "VERIFY_WALK_ANSWERED",
         "payload": {
          "status": 400,
-         "body": "usage: orb verify-walk <program.lolo> [--as <role>] [--render]"
+         "body": "usage: orb verify-walk <program.lolo> [--as <role>] [--trait <name>] [--render]"
         }
        }
       ]
@@ -1294,6 +1294,480 @@
          "role": "owner"
         }
        }
+      ]
+     }
+    }
+   ],
+   "defaults": [
+    "WalkPlan",
+    "VerifyWalkCli"
+   ]
+  },
+  {
+   "id": "a-save-the-policy-refuses-for-the-walked-role-is-counted-denied",
+   "steps": [
+    {
+     "trait": "VerifyWalk",
+     "from": "crediting",
+     "event": "WALK_CREDIT_ANSWERED",
+     "payload": {
+      "credits": []
+     },
+     "entity": {
+      "id": "r",
+      "role": "team_member",
+      "judged": [
+       {
+        "verdicts": []
+       }
+      ],
+      "played": [
+       {
+        "trait": "T",
+        "from": "a",
+        "event": "GO",
+        "to": "b",
+        "guarded": false,
+        "targets": [
+         "b"
+        ],
+        "result": {
+         "trait": "T",
+         "event": "GO",
+         "transitionFired": true,
+         "guard": "none",
+         "effects": [
+          {
+           "type": "persist",
+           "args": [
+            "create",
+            "Note",
+            {
+             "text": "hello"
+            }
+           ],
+           "status": "failed",
+           "routed": true,
+           "code": "denied",
+           "error": "@Create denied: the declared access policy for `Note` rejected this row"
+          }
+         ],
+         "emitted": [],
+         "guards": [],
+         "state": {
+          "before": "a",
+          "after": "b"
+         }
+        }
+       }
+      ],
+      "planned": [],
+      "notes": [],
+      "creditSteps": []
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "VERIFY_WALK_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "denied  T a --GO--> b  refused by policy for role team_member: create Note\n0 passed, 0 failed, 0 unplanned, 0 guard-blocked, 1 denied"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-refused-save-inside-a-let-is-counted-denied",
+   "steps": [
+    {
+     "trait": "VerifyWalk",
+     "from": "crediting",
+     "event": "WALK_CREDIT_ANSWERED",
+     "payload": {
+      "credits": []
+     },
+     "entity": {
+      "id": "r",
+      "role": "team_member",
+      "judged": [
+       {
+        "verdicts": []
+       }
+      ],
+      "played": [
+       {
+        "trait": "T",
+        "from": "a",
+        "event": "GO",
+        "to": "b",
+        "guarded": false,
+        "targets": [
+         "b"
+        ],
+        "result": {
+         "trait": "T",
+         "event": "GO",
+         "transitionFired": true,
+         "guard": "none",
+         "effects": [
+          {
+           "type": "let",
+           "args": [],
+           "status": "failed",
+           "routed": true,
+           "nested": [
+            {
+             "type": "persist",
+             "args": [
+              "create",
+              "Note",
+              {
+               "text": "hello"
+              }
+             ],
+             "status": "failed",
+             "routed": true,
+             "code": "denied",
+             "error": "@Create denied: the declared access policy for `Note` rejected this row"
+            }
+           ]
+          }
+         ],
+         "emitted": [],
+         "guards": [],
+         "state": {
+          "before": "a",
+          "after": "b"
+         }
+        }
+       }
+      ],
+      "planned": [],
+      "notes": [],
+      "creditSteps": []
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "VERIFY_WALK_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "denied  T a --GO--> b  refused by policy for role team_member: create Note\n0 passed, 0 failed, 0 unplanned, 0 guard-blocked, 1 denied"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-save-the-policy-admits-passes",
+   "steps": [
+    {
+     "trait": "VerifyWalk",
+     "from": "crediting",
+     "event": "WALK_CREDIT_ANSWERED",
+     "payload": {
+      "credits": []
+     },
+     "entity": {
+      "id": "r",
+      "role": "team_member",
+      "judged": [
+       {
+        "verdicts": []
+       }
+      ],
+      "played": [
+       {
+        "trait": "T",
+        "from": "a",
+        "event": "GO",
+        "to": "b",
+        "guarded": false,
+        "targets": [
+         "b"
+        ],
+        "result": {
+         "trait": "T",
+         "event": "GO",
+         "transitionFired": true,
+         "guard": "none",
+         "effects": [
+          {
+           "type": "persist",
+           "args": [
+            "create",
+            "Note",
+            {
+             "text": "hello"
+            }
+           ],
+           "status": "executed",
+           "routed": false
+          }
+         ],
+         "emitted": [],
+         "guards": [],
+         "state": {
+          "before": "a",
+          "after": "b"
+         }
+        }
+       }
+      ],
+      "planned": [],
+      "notes": [],
+      "creditSteps": []
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "VERIFY_WALK_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "pass  T a --GO--> b\n1 passed, 0 failed, 0 unplanned, 0 guard-blocked"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-trait-flag-names-the-one-trait-to-walk",
+   "steps": [
+    {
+     "trait": "VerifyWalkCli",
+     "from": "ready",
+     "event": "VERIFY_WALK_CALLED",
+     "payload": {
+      "headers": {},
+      "rawBody": "{\"argv\":[\"f.lolo\",\"--trait\",\"NoteAdd\"],\"cwd\":\".\"}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VERIFY_WALK_START",
+        "payload": {
+         "file": "f.lolo",
+         "trait": "NoteAdd",
+         "render": false
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-trait-without-a-name-is-a-usage-error",
+   "steps": [
+    {
+     "trait": "VerifyWalkCli",
+     "from": "ready",
+     "event": "VERIFY_WALK_CALLED",
+     "payload": {
+      "headers": {},
+      "rawBody": "{\"argv\":[\"f.lolo\",\"--trait\"],\"cwd\":\".\"}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VERIFY_WALK_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "usage: orb verify-walk <program.lolo> [--as <role>] [--trait <name>] [--render]"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-trait-flag-plans-only-that-traits-rows",
+   "entity": {
+    "program": {
+     "orbitals": []
+    },
+    "onlyTrait": "B"
+   },
+   "steps": [
+    {
+     "from": "machine",
+     "event": "WALK_MACHINE_ANSWERED",
+     "payload": {
+      "rows": [
+       {
+        "orbital": "O",
+        "trait": "A",
+        "from": "a",
+        "event": "GO",
+        "to": "b",
+        "guarded": false,
+        "payload": []
+       },
+       {
+        "orbital": "O",
+        "trait": "B",
+        "from": "a",
+        "event": "GO",
+        "to": "b",
+        "guarded": false,
+        "payload": []
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "WALK_PLAN_REQUEST",
+        "payload": {
+         "rows": [
+          {
+           "orbital": "O",
+           "trait": "B",
+           "from": "a",
+           "event": "GO",
+           "to": "b",
+           "guarded": false,
+           "payload": []
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "defaults": [
+    "WalkPlan",
+    "VerifyWalkCli"
+   ]
+  },
+  {
+   "id": "control-without-the-trait-flag-every-row-is-planned",
+   "entity": {
+    "program": {
+     "orbitals": []
+    }
+   },
+   "steps": [
+    {
+     "from": "machine",
+     "event": "WALK_MACHINE_ANSWERED",
+     "payload": {
+      "rows": [
+       {
+        "orbital": "O",
+        "trait": "A",
+        "from": "a",
+        "event": "GO",
+        "to": "b",
+        "guarded": false,
+        "payload": []
+       },
+       {
+        "orbital": "O",
+        "trait": "B",
+        "from": "a",
+        "event": "GO",
+        "to": "b",
+        "guarded": false,
+        "payload": []
+       }
+      ]
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "WALK_PLAN_REQUEST",
+        "payload": {
+         "rows": [
+          {
+           "orbital": "O",
+           "trait": "A",
+           "from": "a",
+           "event": "GO",
+           "to": "b",
+           "guarded": false,
+           "payload": []
+          },
+          {
+           "orbital": "O",
+           "trait": "B",
+           "from": "a",
+           "event": "GO",
+           "to": "b",
+           "guarded": false,
+           "payload": []
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "defaults": [
+    "WalkPlan",
+    "VerifyWalkCli"
+   ]
+  },
+  {
+   "id": "a-trait-the-program-does-not-have-is-refused",
+   "entity": {
+    "program": {
+     "orbitals": []
+    },
+    "onlyTrait": "Nope"
+   },
+   "steps": [
+    {
+     "from": "machine",
+     "event": "WALK_MACHINE_ANSWERED",
+     "payload": {
+      "rows": [
+       {
+        "orbital": "O",
+        "trait": "A",
+        "from": "a",
+        "event": "GO",
+        "to": "b",
+        "guarded": false,
+        "payload": []
+       },
+       {
+        "orbital": "O",
+        "trait": "B",
+        "from": "a",
+        "event": "GO",
+        "to": "b",
+        "guarded": false,
+        "payload": []
+       }
+      ]
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "VERIFY_WALK_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "verify-walk: the program has no trait named Nope with a transition"
+        }
+       }
+      ],
+      "neverEmits": [
+       "WALK_PLAN_REQUEST"
       ]
      }
     }

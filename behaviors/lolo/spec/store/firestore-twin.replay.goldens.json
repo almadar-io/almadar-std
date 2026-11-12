@@ -7493,42 +7493,6 @@
    ]
   },
   {
-   "id": "http-metadata-mode-fails-loudly-instead-of-sending-nothing",
-   "config": {
-    "auth": "metadata"
-   },
-   "defaults": [
-    "FirestoreTokenHttp",
-    "FirestoreTimeout"
-   ],
-   "steps": [
-    {
-     "event": "ROW_READ",
-     "payload": {
-      "key": "k",
-      "entityType": "Task",
-      "id": "t1"
-     },
-     "from": "ready",
-     "expect": {
-      "emits": [
-       {
-        "event": "STORE_FAILED",
-        "payload": {
-         "key": "k"
-        }
-       }
-      ],
-      "neverEmits": [
-       "FS_HTTP_SEND",
-       "FS_EMU_SEND",
-       "FS_TOKEN_SEND"
-      ]
-     }
-    }
-   ]
-  },
-  {
    "id": "good-read-a-row-id-with-a-slash-escapes-it-in-the-document-name",
    "steps": [
     {
@@ -7955,6 +7919,363 @@
       ]
      }
     }
+   ]
+  },
+  {
+   "id": "good-metadata-read-asks-the-http-client-for-one-batch-get-post",
+   "steps": [
+    {
+     "event": "ROW_READ",
+     "payload": {
+      "key": "k",
+      "entityType": "Task",
+      "id": "t1"
+     },
+     "from": "ready",
+     "expect": {
+      "emits": [
+       {
+        "event": "FS_WIRE",
+        "payload": {
+         "phase": "read",
+         "path": ":batchGet",
+         "body": {
+          "documents": [
+           "projects/demo-almadar/databases/(default)/documents/Task/t1"
+          ]
+         }
+        }
+       },
+       {
+        "event": "FS_HTTP_SEND",
+        "payload": {
+         "key": "fs",
+         "method": "POST",
+         "target": "/v1/projects/demo-almadar/databases/(default)/documents:batchGet?$alt=json%3Benum-encoding=int",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "*/*"
+          },
+          {
+           "name": "content-type",
+           "value": "application/json"
+          }
+         ],
+         "body": "eyJkb2N1bWVudHMiOlsicHJvamVjdHMvZGVtby1hbG1hZGFyL2RhdGFiYXNlcy8oZGVmYXVsdCkvZG9jdW1lbnRzL1Rhc2svdDEiXX0=",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "auth": "metadata"
+   },
+   "defaults": [
+    "FirestoreHttp"
+   ]
+  },
+  {
+   "id": "good-metadata-a-not-held-token-mints-once-through-the-metadata-grant",
+   "steps": [
+    {
+     "event": "ROW_READ",
+     "payload": {
+      "key": "k",
+      "entityType": "Task",
+      "id": "t1"
+     },
+     "from": "ready",
+     "expect": {
+      "emits": [
+       {
+        "event": "FS_WIRE",
+        "payload": {
+         "phase": "read",
+         "path": ":batchGet",
+         "body": {
+          "documents": [
+           "projects/demo-almadar/databases/(default)/documents/Task/t1"
+          ]
+         }
+        }
+       },
+       {
+        "event": "FS_HTTP_SEND",
+        "payload": {
+         "key": "fs",
+         "method": "POST",
+         "target": "/v1/projects/demo-almadar/databases/(default)/documents:batchGet?$alt=json%3Benum-encoding=int",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "*/*"
+          },
+          {
+           "name": "content-type",
+           "value": "application/json"
+          }
+         ],
+         "body": "eyJkb2N1bWVudHMiOlsicHJvamVjdHMvZGVtby1hbG1hZGFyL2RhdGFiYXNlcy8oZGVmYXVsdCkvZG9jdW1lbnRzL1Rhc2svdDEiXX0=",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "FS_SA_FAILED",
+     "payload": {
+      "error": "",
+      "kind": "denied",
+      "key": "fs"
+     },
+     "from": "busy",
+     "expect": {
+      "emits": [],
+      "effects": [
+       {
+        "type": "credential-connect",
+        "arg0": {
+         "credential": "@config.serviceAccountTokenCredential",
+         "scope": "app",
+         "grant": "metadata",
+         "scopes": [
+          "str/split",
+          "https://www.googleapis.com/auth/datastore",
+          " "
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "auth": "metadata"
+   },
+   "defaults": [
+    "FirestoreHttp"
+   ]
+  },
+  {
+   "id": "good-metadata-a-connected-answer-sends-the-request-again",
+   "steps": [
+    {
+     "event": "ROW_READ",
+     "payload": {
+      "key": "k",
+      "entityType": "Task",
+      "id": "t1"
+     },
+     "from": "ready",
+     "expect": {
+      "emits": [
+       {
+        "event": "FS_WIRE",
+        "payload": {
+         "phase": "read",
+         "path": ":batchGet",
+         "body": {
+          "documents": [
+           "projects/demo-almadar/databases/(default)/documents/Task/t1"
+          ]
+         }
+        }
+       },
+       {
+        "event": "FS_HTTP_SEND",
+        "payload": {
+         "key": "fs",
+         "method": "POST",
+         "target": "/v1/projects/demo-almadar/databases/(default)/documents:batchGet?$alt=json%3Benum-encoding=int",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "*/*"
+          },
+          {
+           "name": "content-type",
+           "value": "application/json"
+          }
+         ],
+         "body": "eyJkb2N1bWVudHMiOlsicHJvamVjdHMvZGVtby1hbG1hZGFyL2RhdGFiYXNlcy8oZGVmYXVsdCkvZG9jdW1lbnRzL1Rhc2svdDEiXX0=",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "FS_SA_FAILED",
+     "payload": {
+      "error": "",
+      "kind": "denied",
+      "key": "fs"
+     },
+     "from": "busy",
+     "expect": {
+      "emits": [],
+      "effects": [
+       {
+        "type": "credential-connect",
+        "arg0": {
+         "credential": "@config.serviceAccountTokenCredential",
+         "scope": "app",
+         "grant": "metadata",
+         "scopes": [
+          "str/split",
+          "https://www.googleapis.com/auth/datastore",
+          " "
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "FS_SA_CONNECTED",
+     "payload": {
+      "connected": true,
+      "label": "svc"
+     },
+     "from": "busy",
+     "expect": {
+      "emits": [
+       {
+        "event": "FS_HTTP_SEND",
+        "payload": {
+         "key": "fs",
+         "method": "POST",
+         "target": "/v1/projects/demo-almadar/databases/(default)/documents:batchGet?$alt=json%3Benum-encoding=int",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "*/*"
+          },
+          {
+           "name": "content-type",
+           "value": "application/json"
+          }
+         ],
+         "body": "eyJkb2N1bWVudHMiOlsicHJvamVjdHMvZGVtby1hbG1hZGFyL2RhdGFiYXNlcy8oZGVmYXVsdCkvZG9jdW1lbnRzL1Rhc2svdDEiXX0=",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "auth": "metadata"
+   },
+   "defaults": [
+    "FirestoreHttp"
+   ]
+  },
+  {
+   "id": "bad-metadata-a-second-not-held-answer-fails-instead-of-looping",
+   "steps": [
+    {
+     "event": "ROW_READ",
+     "payload": {
+      "key": "k",
+      "entityType": "Task",
+      "id": "t1"
+     },
+     "from": "ready",
+     "expect": {
+      "emits": [
+       {
+        "event": "FS_WIRE",
+        "payload": {
+         "phase": "read",
+         "path": ":batchGet",
+         "body": {
+          "documents": [
+           "projects/demo-almadar/databases/(default)/documents/Task/t1"
+          ]
+         }
+        }
+       },
+       {
+        "event": "FS_HTTP_SEND",
+        "payload": {
+         "key": "fs",
+         "method": "POST",
+         "target": "/v1/projects/demo-almadar/databases/(default)/documents:batchGet?$alt=json%3Benum-encoding=int",
+         "headers": [
+          {
+           "name": "accept",
+           "value": "*/*"
+          },
+          {
+           "name": "content-type",
+           "value": "application/json"
+          }
+         ],
+         "body": "eyJkb2N1bWVudHMiOlsicHJvamVjdHMvZGVtby1hbG1hZGFyL2RhdGFiYXNlcy8oZGVmYXVsdCkvZG9jdW1lbnRzL1Rhc2svdDEiXX0=",
+         "stream": "none"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "FS_SA_FAILED",
+     "payload": {
+      "error": "",
+      "kind": "denied",
+      "key": "fs"
+     },
+     "from": "busy",
+     "expect": {
+      "emits": [],
+      "effects": [
+       {
+        "type": "credential-connect",
+        "arg0": {
+         "credential": "@config.serviceAccountTokenCredential",
+         "scope": "app",
+         "grant": "metadata",
+         "scopes": [
+          "str/split",
+          "https://www.googleapis.com/auth/datastore",
+          " "
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "event": "FS_SA_FAILED",
+     "payload": {
+      "error": "",
+      "kind": "denied",
+      "key": "fs"
+     },
+     "from": "busy",
+     "expect": {
+      "emits": [
+       {
+        "event": "STORE_FAILED",
+        "payload": {
+         "key": "k",
+         "message": "The Firestore request was still denied after the credential store minted the service-account token: "
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "config": {
+    "auth": "metadata"
+   },
+   "defaults": [
+    "FirestoreHttp"
    ]
   }
  ],

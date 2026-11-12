@@ -1,0 +1,131 @@
+app std-audio-timeline [
+  version: "1.0.0",
+  description: "A timeline of audio clips played on the host's audio clock. A clip is a source URL placed at a timeline time (seconds), read from an offset into the source for a duration, at a playback rate and gain, with a linear fade in and fade out (seconds; 0 is none). TIMELINE_PLAY { clips } reads the host clock (audio/clock), puts timeline zero leadSeconds after it and hands every clip to the host as one audio/schedule ask (start, then the fade ramps). TIMELINE_APPEND { clips } schedules more clips on the running timeline, and TIMELINE_REPLACE { after, clips } stops every scheduled clip that starts at or after `after` and schedules the given ones instead, so a planner can rewrite what comes next while the rest plays. A clip that starts sooner than leadSeconds after the playhead is refused with TIMELINE_ERROR (kind late) and nothing of that ask is scheduled. While playing, the playhead is read from the host clock every 100 ms and reported as TIMELINE_POSITION { position, audio, wall } (wall is the epoch milliseconds read with it, so a renderer can extrapolate between reports). TIMELINE_STOP stops every clip at once. Every host refusal emits TIMELINE_ERROR with the host's kind (invalid, unavailable, unsupported). The host plays exactly the declared clips and picks nothing."
+]
+
+orbital AudioTimelineOrbital {
+  type TimelineClip = {
+    key : string!
+    source : string!
+    at : number!
+    offset : number!
+    duration : number!
+    rate : number!
+    gain : number!
+    fadeIn : number!
+    fadeOut : number!
+  }
+
+  entity AudioTimeline [runtime] {
+    id : string!
+    clips : [TimelineClip] = []
+    pending : [TimelineClip] = []
+    origin : number = 0
+    position : number = 0
+    wall : number = 0
+    playing : boolean = false
+  }
+
+  trait AudioTimelinePlayback -> @rebindable AudioTimeline [client] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      TIMELINE_PLAY -> starting
+        (set @entity.pending ?clips)
+        (audio/clock { emit: { success: TIMELINE_CLOCK_STARTED, failure: TIMELINE_FAILED } })
+      TIMELINE_STOP -> idle
+    }
+
+    state starting {
+      INIT -> starting
+      TIMELINE_CLOCK_STARTED -> playing
+        (set @entity.origin (+ @payload.audio @config.leadSeconds))
+        (set @entity.position (- 0 @config.leadSeconds))
+        (set @entity.wall @payload.wall)
+        (set @entity.clips @entity.pending)
+        (set @entity.playing true)
+        (audio/schedule (array/flatten (array/map @entity.pending (fn c [{ start: { key: @c.key, source: @c.source, at: (+ (+ @payload.audio @config.leadSeconds) @c.at), offset: @c.offset, duration: @c.duration, rate: @c.rate, gain: (if (> @c.fadeIn 0) 0 @c.gain) } }, { ramp: { key: @c.key, param: "gain", value: @c.gain, at: (+ (+ @payload.audio @config.leadSeconds) @c.at), endAt: (+ (+ (+ @payload.audio @config.leadSeconds) @c.at) @c.fadeIn), curve: "linear" } }, { ramp: { key: @c.key, param: "gain", value: (if (> @c.fadeOut 0) 0 @c.gain), at: (+ (+ (+ @payload.audio @config.leadSeconds) @c.at) (- @c.duration @c.fadeOut)), endAt: (+ (+ (+ @payload.audio @config.leadSeconds) @c.at) @c.duration), curve: "linear" } }]))))
+        (set @entity.pending [])
+        (emit TIMELINE_STARTED { origin: @entity.origin })
+      TIMELINE_FAILED -> idle
+        (set @entity.pending [])
+        (emit TIMELINE_ERROR { error: @payload.error, kind: @payload.kind })
+    }
+
+    state playing {
+      INIT -> playing
+      TIMELINE_APPEND -> playing when (array/every ?clips (fn c (>= @c.at (+ @entity.position @config.leadSeconds))))
+        (set @entity.clips (array/concat @entity.clips ?clips))
+        (audio/schedule (array/flatten (array/map ?clips (fn c [{ start: { key: @c.key, source: @c.source, at: (+ @entity.origin @c.at), offset: @c.offset, duration: @c.duration, rate: @c.rate, gain: (if (> @c.fadeIn 0) 0 @c.gain) } }, { ramp: { key: @c.key, param: "gain", value: @c.gain, at: (+ @entity.origin @c.at), endAt: (+ (+ @entity.origin @c.at) @c.fadeIn), curve: "linear" } }, { ramp: { key: @c.key, param: "gain", value: (if (> @c.fadeOut 0) 0 @c.gain), at: (+ (+ @entity.origin @c.at) (- @c.duration @c.fadeOut)), endAt: (+ (+ @entity.origin @c.at) @c.duration), curve: "linear" } }]))))
+      TIMELINE_APPEND -> playing when (not (array/every ?clips (fn c (>= @c.at (+ @entity.position @config.leadSeconds)))))
+        (emit TIMELINE_ERROR { error: "a clip starts sooner than leadSeconds after the playhead", kind: "late" })
+      TIMELINE_REPLACE -> playing when (and (>= ?after (+ @entity.position @config.leadSeconds)) (array/every ?clips (fn c (>= @c.at ?after))))
+        (audio/schedule (array/concat (array/map (array/filter @entity.clips (fn c (>= @c.at ?after))) (fn c { stop: { key: @c.key, at: 0 } })) (array/flatten (array/map ?clips (fn c [{ start: { key: @c.key, source: @c.source, at: (+ @entity.origin @c.at), offset: @c.offset, duration: @c.duration, rate: @c.rate, gain: (if (> @c.fadeIn 0) 0 @c.gain) } }, { ramp: { key: @c.key, param: "gain", value: @c.gain, at: (+ @entity.origin @c.at), endAt: (+ (+ @entity.origin @c.at) @c.fadeIn), curve: "linear" } }, { ramp: { key: @c.key, param: "gain", value: (if (> @c.fadeOut 0) 0 @c.gain), at: (+ (+ @entity.origin @c.at) (- @c.duration @c.fadeOut)), endAt: (+ (+ @entity.origin @c.at) @c.duration), curve: "linear" } }])))))
+        (set @entity.clips (array/concat (array/filter @entity.clips (fn c (< @c.at ?after))) ?clips))
+      TIMELINE_REPLACE -> playing when (not (and (>= ?after (+ @entity.position @config.leadSeconds)) (array/every ?clips (fn c (>= @c.at ?after)))))
+        (emit TIMELINE_ERROR { error: "the replaced span starts sooner than leadSeconds after the playhead, or a clip starts before it", kind: "late" })
+      TIMELINE_CLOCK -> playing
+        (set @entity.position (- @payload.audio @entity.origin))
+        (set @entity.wall @payload.wall)
+        (emit TIMELINE_POSITION { position: (- @payload.audio @entity.origin), audio: @payload.audio, wall: @payload.wall })
+      TIMELINE_STOP -> idle
+        (audio/schedule (array/map @entity.clips (fn c { stop: { key: @c.key, at: 0 } })))
+        (set @entity.clips [])
+        (set @entity.playing false)
+        (emit TIMELINE_STOPPED {})
+      TIMELINE_FAILED -> playing
+        (emit TIMELINE_ERROR { error: @payload.error, kind: @payload.kind })
+    }
+
+    ticks {
+      playhead every 100ms [visible]
+        when @entity.playing
+        (audio/clock { emit: { success: TIMELINE_CLOCK, failure: TIMELINE_FAILED } })
+    }
+
+    emits {
+      TIMELINE_STARTED -> external { origin : number! }
+        @description "The timeline is playing; origin is the host audio-clock time of timeline zero."
+      TIMELINE_POSITION -> external { position : number! audio : number! wall : number! }
+        @description "The playhead in timeline seconds, the host audio-clock time it was read at, and the epoch milliseconds read with it."
+      TIMELINE_STOPPED -> external {}
+        @description "Every clip was stopped."
+      TIMELINE_ERROR -> external { error : string! kind : string! }
+        @description "A clip was refused (late) or the host refused an ask (invalid, unavailable, unsupported)."
+      TIMELINE_CLOCK_STARTED { audio : number! wall : number! }
+        @description "Internal: the host clock read that places timeline zero."
+        @tier "internal"
+      TIMELINE_CLOCK { audio : number! wall : number! }
+        @description "Internal: a playhead clock read."
+        @tier "internal"
+      TIMELINE_FAILED { error : string! kind : string! }
+        @description "Internal: a host audio ask failed."
+        @tier "internal"
+    }
+
+    listens {
+      TIMELINE_PLAY { clips : [TimelineClip]! }
+        @description "Start a timeline with these clips."
+        @synonyms "play, start playback, play set"
+      TIMELINE_APPEND { clips : [TimelineClip]! }
+        @description "Schedule more clips on the running timeline."
+        @synonyms "queue, add next, schedule"
+      TIMELINE_REPLACE { after : number! clips : [TimelineClip]! }
+        @description "Stop every clip starting at or after `after` and schedule these instead."
+        @synonyms "replan, rewrite upcoming, change what plays next"
+      TIMELINE_STOP {}
+        @description "Stop every clip now."
+      TIMELINE_CLOCK_STARTED { audio : number! wall : number! }
+      TIMELINE_CLOCK { audio : number! wall : number! }
+      TIMELINE_FAILED { error : string! kind : string! }
+    }
+
+    config {
+      leadSeconds : number = 0.5
+        @label "Scheduling lead (seconds)"
+        @description "How far ahead of the playhead a clip must start, so the host receives it before it is due."
+        @tier "infra"
+    }
+  }
+}

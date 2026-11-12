@@ -37,7 +37,7 @@ const PROVE_FINDING = shape({ verdict: union(lit('violated'), lit('unproved')), 
 
 const EVAL_STEP = shape({ kind: union(lit('enter'), lit('exit'), lit('iter'), lit('skip')), path: list(union(NUMBER, STRING)), value: SEXPR, error: STRING }, ['value', 'error']);
 // `nested` holds played effects of this same shape; operator types cannot recurse, so its items are SEXPR.
-const PLAYED_EFFECT = shape({ type: STRING, args: list(SEXPR), status: union(lit('executed'), lit('failed'), lit('skipped')), error: STRING, routed: BOOLEAN, nested: list(SEXPR) }, ['error', 'nested']);
+const PLAYED_EFFECT = shape({ type: STRING, args: list(SEXPR), status: union(lit('executed'), lit('failed'), lit('skipped')), error: STRING, code: union(lit('not-found'), lit('no-row-key'), lit('duplicate-id'), lit('denied'), lit('derived-failed')), routed: BOOLEAN, nested: list(SEXPR) }, ['error', 'code', 'nested']);
 const PLAYED_EMIT = shape({ type: STRING, payload: mapOf(STRING, SEXPR), timestamp: NUMBER }, ['payload']);
 const PLAYED_GUARD = shape({ arm: NUMBER, guard: SEXPR, passed: BOOLEAN, trace: list(EVAL_STEP), error: STRING }, ['error']);
 const PROPOSITION_BINDINGS = shape({ entity: SEXPR, fromEntity: SEXPR, payload: SEXPR });

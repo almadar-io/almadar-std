@@ -212,7 +212,7 @@ describe('runsOn', () => {
 
   it('the client set is rendering, navigation, audio, sign-in, the server send and the browser device APIs', () => {
     expect(getOperatorsRunningOn('client')).toEqual([
-      'audio/change-music', 'audio/play-sound', 'audio/stop-music', 'audio/stop-sound', 'auth/consent', 'auth/sign-in', 'auth/sign-out',
+      'audio/change-music', 'audio/clock', 'audio/play-sound', 'audio/schedule', 'audio/stop-music', 'audio/stop-sound', 'auth/consent', 'auth/sign-in', 'auth/sign-out',
       'browser/beacon', 'browser/clipboard-read', 'browser/clipboard-write', 'browser/embed', 'browser/geolocation-current', 'browser/open-file-picker', 'browser/page-facts', 'browser/prompt', 'browser/push-subscribe',
       'browser/tab-act', 'browser/tab-apply', 'browser/tab-apply-many', 'browser/tab-capture', 'browser/tab-close', 'browser/tab-list', 'browser/tab-navigate', 'browser/tab-open', 'browser/tab-query', 'browser/tab-unwatch', 'browser/tab-watch',
       'navigate', 'navigate-back', 'render-ui', 'send-server',

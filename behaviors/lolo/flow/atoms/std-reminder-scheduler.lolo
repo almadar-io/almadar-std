@@ -53,7 +53,7 @@ orbital ReminderSchedulerOrbital {
       ReminderStepped -> scanning
         (fetch @config.targetEntity {
           emit: { failure: ScanFailed, success: ScanRecordsLoaded }
-          filter: (and (validate/required (object/get @entity @config.dateField)) (== (object/get @entity remindedAt) null) (array/every @config.matches (fn m (= (object/get @entity @m.field) @m.value))) (or (and (= @config.direction "future") (time/isAfter (object/get @entity @config.dateField) @now) (time/isBefore (object/get @entity @config.dateField) (time/add @now @config.offsetHours "hour"))) (and (= @config.direction "past") (time/isBefore (object/get @entity @config.dateField) (time/subtract @now @config.offsetHours "hour")))))
+          filter: (and (validate/required (object/get @entity @config.dateField)) (== (object/get @entity remindedAt) null) (array/every @config.matches (fn m (= (object/get @entity @m.field) @m.value))) (or (and (= @config.direction "future") (time/isAfter (time/toInstant (object/get @entity @config.dateField)) @now) (time/isBefore (time/toInstant (object/get @entity @config.dateField)) (time/add @now @config.offsetHours "hour"))) (and (= @config.direction "past") (time/isBefore (time/toInstant (object/get @entity @config.dateField)) (time/subtract @now @config.offsetHours "hour")))))
           limit: 1
         })
       ScanRecordsLoaded -> scanning when (> (array/len ?data) 0)
@@ -110,7 +110,7 @@ orbital ReminderSchedulerOrbital {
       scanCycle every "*/15 * * * *" [background]
         (fetch @config.targetEntity {
           emit: { failure: ScanFailed, success: ScanRecordsLoaded }
-          filter: (and (validate/required (object/get @entity @config.dateField)) (== (object/get @entity remindedAt) null) (array/every @config.matches (fn m (= (object/get @entity @m.field) @m.value))) (or (and (= @config.direction "future") (time/isAfter (object/get @entity @config.dateField) @now) (time/isBefore (object/get @entity @config.dateField) (time/add @now @config.offsetHours "hour"))) (and (= @config.direction "past") (time/isBefore (object/get @entity @config.dateField) (time/subtract @now @config.offsetHours "hour")))))
+          filter: (and (validate/required (object/get @entity @config.dateField)) (== (object/get @entity remindedAt) null) (array/every @config.matches (fn m (= (object/get @entity @m.field) @m.value))) (or (and (= @config.direction "future") (time/isAfter (time/toInstant (object/get @entity @config.dateField)) @now) (time/isBefore (time/toInstant (object/get @entity @config.dateField)) (time/add @now @config.offsetHours "hour"))) (and (= @config.direction "past") (time/isBefore (time/toInstant (object/get @entity @config.dateField)) (time/subtract @now @config.offsetHours "hour")))))
           limit: 1
         })
       
