@@ -1,7 +1,7 @@
 app std-beat-grid [
   version: "1.0.0",
   mem: { "arena:268435456": [create, free] },
-  description: "The beat grid of one encoded audio file. GRID_ANALYZE { data } creates a bump arena, decodes the file to mono PCM in it (audio/decode), borrows the block and reads two signals from it: the RMS envelope (signal/envelope) and band magnitudes per frame (signal/frames, bands from config). The onset curve is the spectral flux (the sum over bands of each band's rise since the previous frame). The beat period is the strongest autocorrelation lag of the onset curve between maxBpm and minBpm, refined to a fraction of a frame at refineBeats periods (the parabolic peak of the autocorrelation around that many periods). The phase is the frame offset within one period whose beats sum the most onset. Beats are every period from that phase to the end, each timed at the centre of its analysis window (frame start plus half a window), and bars every beatsPerBar beats from the first beat (the first beat is taken as a downbeat). The block is freed and the arena dropped before GRID_READY carries the grid in seconds with the envelope, bands and onset curve (one value per hop). Every failure drops the arena and emits GRID_ERROR with the kernel's kind. The grant caps the arena at 256 MiB, about 22 minutes of mono 48 kHz audio; a call site that needs more grants its own cap."
+  description: "The beat grid of one encoded audio file. GRID_ANALYZE { data } creates a bump arena, decodes the file to mono PCM in it (audio/decode), borrows the block and reads two signals from it: the RMS envelope (signal/envelope) and band magnitudes per frame (signal/frames, bands from config). The onset curve is the spectral flux (the sum over bands of each band's rise since the previous frame). The beat period is the strongest autocorrelation lag of the onset curve between maxBpm and minBpm, refined to a fraction of a frame at refineBeats periods (fewer when the onset curve is shorter than twice that span) (the parabolic peak of the autocorrelation around that many periods). The phase is the frame offset within one period whose beats sum the most onset. Beats are every period from that phase to the end, each timed at the centre of its analysis window (frame start plus half a window), and bars every beatsPerBar beats from the first beat (the first beat is taken as a downbeat). The block is freed and the arena dropped before GRID_READY carries the grid in seconds with the envelope, bands and onset curve (one value per hop). Every failure drops the arena and emits GRID_ERROR with the kernel's kind. The grant caps the arena at 256 MiB, about 22 minutes of mono 48 kHz audio; a call site that needs more grants its own cap."
 ]
 
 orbital BeatGridOrbital {
@@ -93,16 +93,17 @@ orbital BeatGridOrbital {
           (let ((minLag (math/max 1 (math/floor (default (/ 60 (* @config.maxBpm @hopSec)) 1)))) (maxLag (math/max 2 (math/ceil (default (/ 60 (* @config.minBpm @hopSec)) 2)))))
             (let ((ac (signal/autocorrelate @entity.onset @minLag @maxLag)))
               (let ((lag0 (math/floor (+ @minLag (array/reduce (array/range (array/len @ac)) 0 (fn best i (if (> (default (array/nth @ac @i) 0) (default (array/nth @ac @best) 0)) @i @best)))))))
-                (let ((ac4 (signal/autocorrelate @entity.onset (math/floor (- (* @config.refineBeats @lag0) @config.refineBeats)) (math/floor (+ (* @config.refineBeats @lag0) @config.refineBeats)))))
+                (let ((m (math/floor (math/max 1 (math/min @config.refineBeats (math/floor (default (/ (array/len @entity.onset) (* 2 @lag0)) 1)))))))
+                (let ((ac4 (signal/autocorrelate @entity.onset (math/floor (- (* @m @lag0) @m)) (math/floor (+ (* @m @lag0) @m)))))
                   (let ((p4 (array/reduce (array/range (array/len @ac4)) 0 (fn best i (if (> (default (array/nth @ac4 @i) 0) (default (array/nth @ac4 @best) 0)) @i @best)))))
                     (let ((y0 (default (array/nth @ac4 (math/max 0 (- @p4 1))) 0)) (y1 (default (array/nth @ac4 @p4) 0)) (y2 (default (array/nth @ac4 (+ @p4 1)) 0)))
                       (let ((denom (+ (- @y0 (* 2 @y1)) @y2)))
-                        (let ((delta (if (or (= @p4 0) (= @p4 (* 2 @config.refineBeats)) (= @denom 0)) 0 (default (/ (* 0.5 (- @y0 @y2)) @denom) 0))))
-                          (let ((lagF (default (/ (+ (- (* @config.refineBeats @lag0) @config.refineBeats) @p4 @delta) @config.refineBeats) @lag0)))
+                        (let ((delta (if (or (= @p4 0) (= @p4 (* 2 @m)) (= @denom 0)) 0 (default (/ (* 0.5 (- @y0 @y2)) @denom) 0))))
+                          (let ((lagF (default (/ (+ (- (* @m @lag0) @m) @p4 @delta) @m) @lag0)))
                             (do
                               (set @entity.coarseLag @lag0)
                               (set @entity.lagFrames @lagF)
-                              (set @entity.tempo (default (/ 60 (* @lagF @hopSec)) 0)))))))))))))
+                              (set @entity.tempo (default (/ 60 (* @lagF @hopSec)) 0))))))))))))))
         (emit GRID_TEMPO_READY {})
     }
 

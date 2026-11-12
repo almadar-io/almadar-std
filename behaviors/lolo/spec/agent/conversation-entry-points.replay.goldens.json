@@ -1,0 +1,174 @@
+{
+ "atom": "agent/atoms/std-agent-session.lolo",
+ "trait": "AgentConversation",
+ "note": "entryPoints none leaves the toolbar's history, memory and link buttons out and SHOW_CHATS / SHOW_MEMORY open those views; aboveInput places composer content between the feed and the chat bar; the defaults keep the toolbar and the child order.",
+ "cases": [
+  {
+   "id": "show-chats-asks-for-the-persons-conversations",
+   "steps": [
+    {
+     "trait": "AgentConversation",
+     "event": "SHOW_CHATS",
+     "from": "idle",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "emits": [
+       {
+        "event": "ASSISTANT_CHATS_REQUESTED"
+       }
+      ]
+     }
+    }
+   ],
+   "defaults": []
+  },
+  {
+   "id": "show-memory-asks-for-what-is-remembered",
+   "steps": [
+    {
+     "trait": "AgentConversation",
+     "event": "SHOW_MEMORY",
+     "from": "idle",
+     "payload": {},
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "emits": [
+       {
+        "event": "ASSISTANT_MEMORIES_REQUESTED"
+       }
+      ]
+     }
+    }
+   ],
+   "defaults": []
+  },
+  {
+   "id": "an-ephemeral-conversation-ignores-show-chats",
+   "config": {
+    "ephemeral": true
+   },
+   "steps": [
+    {
+     "trait": "AgentConversation",
+     "event": "SHOW_CHATS",
+     "from": "idle",
+     "payload": {},
+     "expect": {
+      "fired": false
+     }
+    }
+   ],
+   "defaults": []
+  },
+  {
+   "id": "entry-points-none-leaves-the-history-and-link-buttons-out",
+   "config": {
+    "entryPoints": "none"
+   },
+   "steps": [
+    {
+     "trait": "AgentConversation",
+     "event": "DRAFT",
+     "from": "idle",
+     "payload": {
+      "message": "x"
+     },
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "rendered": [
+       {
+        "slot": "main",
+        "props": {
+         "children.0.children.0.action": "NEW_CHAT_CLICKED",
+         "children.0.children.1": null,
+         "children.2.type": "chat-bar"
+        }
+       }
+      ]
+     },
+     "options": {
+      "render": true,
+      "renderProps": true
+     }
+    }
+   ],
+   "defaults": []
+  },
+  {
+   "id": "control-the-default-toolbar-keeps-the-history-buttons",
+   "steps": [
+    {
+     "trait": "AgentConversation",
+     "event": "DRAFT",
+     "from": "idle",
+     "payload": {
+      "message": "x"
+     },
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "rendered": [
+       {
+        "slot": "main",
+        "props": {
+         "children.0.children.1.children.0.action": "OPEN_CHATS_CLICKED",
+         "children.0.children.1.children.1.action": "OPEN_MEMORY_CLICKED",
+         "children.2.type": "chat-bar"
+        }
+       }
+      ]
+     },
+     "options": {
+      "render": true,
+      "renderProps": true
+     }
+    }
+   ],
+   "defaults": []
+  },
+  {
+   "id": "content-above-the-input-sits-between-the-feed-and-the-chat-bar",
+   "config": {
+    "aboveInput": [
+     {
+      "type": "typography",
+      "content": "a notice"
+     }
+    ]
+   },
+   "steps": [
+    {
+     "trait": "AgentConversation",
+     "event": "DRAFT",
+     "from": "idle",
+     "payload": {
+      "message": "x"
+     },
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "rendered": [
+       {
+        "slot": "main",
+        "props": {
+         "children.1.type": "agent-chat-feed",
+         "children.2.content": "a notice",
+         "children.3.type": "chat-bar"
+        }
+       }
+      ]
+     },
+     "options": {
+      "render": true,
+      "renderProps": true
+     }
+    }
+   ],
+   "defaults": []
+  }
+ ]
+}
