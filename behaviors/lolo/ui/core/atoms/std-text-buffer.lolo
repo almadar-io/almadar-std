@@ -609,7 +609,8 @@ orbital TextBufferOrbital {
       CURSOR_MOVED -> ready
         (set @entity.paints (+ @entity.paints 1))
         (emit PAINT { n: @entity.paints })
-      PAINT -> ready
+      PAINT -> ready when @config.headless
+      PAINT -> ready when (not @config.headless)
         (render-ui @config.slot {
           type: code-block
           code: (str/join @entity.lines "\n")
@@ -780,6 +781,10 @@ orbital TextBufferOrbital {
       slot : slot = main
         @label "Slot"
         @description "Where the editor surface renders."
+        @tier "presentation"
+      headless : boolean = false
+        @label "Headless"
+        @description "Keep the buffer and paint nothing: a composer that draws the text itself (a Rasm text field) owns the surface."
         @tier "presentation"
       relativeLineNumbers : boolean = false
         @label "Relative line numbers"

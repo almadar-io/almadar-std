@@ -1,0 +1,19 @@
+app verify-pushes-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb verify-pushes <program> --url <page url> --route <route>` (G-CROSS-605): the served page's event stream must not carry a dispatch frame naming a trait the page does not run; the set of traits the page runs is the kernel's navigate answer."
+]
+
+orbital VerifyPushesSpec {
+  expects entity PushRun [runtime] {
+    id : string!
+    runs : [string]!
+    messages : [string]!
+  }
+  expects trait VerifyPushes {
+    state ready
+    emits {
+      VERIFY_PUSHES_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> VerifyPushes
+}

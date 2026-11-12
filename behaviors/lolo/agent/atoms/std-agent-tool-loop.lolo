@@ -125,10 +125,12 @@ type AgentGuestReflection = {
   inputs : [AgentReflectedInput]!
 }
 type AgentJson = string | number | boolean | [AgentJson] | Map string AgentJson
+type AgentGuestAsk = { trait : string!, op : string!, ask : string! }
 type AgentDispatchAnswer = {
   ok : boolean!
   error : string
   emitted : [Map string AgentJson]
+  hostAsks : [AgentGuestAsk]
 }
 type AgentReadAnswer = {
   entity : string!
@@ -179,6 +181,7 @@ orbital AgentToolLoopOrbital {
     pendingTools : [AgentToolData] @description "The tools the current turn names, held while the assistant's own identity signs in (caller identity)." = []
     guest : string @description "The guest session attached to the assistant (program/open's id): every turn that starts while it is attached also operates it; empty when none is." = ""
     turnGuest : string @description "The guest the current turn operates, fixed when the turn's tools are bound." = ""
+    guestAsks : [AgentGuestAsk] @description "The client host asks the guest made that are still to be refused as unavailable (this assistant has no viewer to relay them to), first one in flight." = []
   }
 
   trait LoopLlm = Llm.traits.LlmClient {
@@ -558,8 +561,27 @@ orbital AgentToolLoopOrbital {
         (set @entity.results (array/append @entity.results { id: @entity.current.id, tool: @entity.binding.label, kind: read, success: false, detail: ?error, content: (json/stringify { error: ?error }), startedAt: @entity.callStartedAt, endedAt: (time/now) }))
         (set @entity.cursor (+ @entity.cursor 1))
         (emit RUN_NEXT {})
-      DISPATCHED -> running when @payload.result.ok
+      DISPATCHED -> running when (and @payload.result.ok (= (array/len (default @payload.result.hostAsks [])) 0))
         (set @entity.results (array/append @entity.results { id: @entity.current.id, tool: @entity.binding.label, kind: input, success: true, content: (if (default @entity.binding.reporting false) (json/stringify { ok: true, emitted: (array/filter (object/get ?result emitted []) (fn e (array/includes (default @entity.binding.reports []) (object/get @e "event" "")))) }) (json/stringify ?result)), startedAt: @entity.callStartedAt, endedAt: (time/now) }))
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit RUN_NEXT {})
+      DISPATCHED -> running when (and @payload.result.ok (> (array/len (default @payload.result.hostAsks [])) 0))
+        (set @entity.results (array/append @entity.results { id: @entity.current.id, tool: @entity.binding.label, kind: input, success: true, content: (if (default @entity.binding.reporting false) (json/stringify { ok: true, emitted: (array/filter (object/get ?result emitted []) (fn e (array/includes (default @entity.binding.reports []) (object/get @e "event" "")))) }) (json/stringify ?result)), startedAt: @entity.callStartedAt, endedAt: (time/now) }))
+        (let ((asks (default @payload.result.hostAsks [])))
+          (do
+            (set @entity.guestAsks @asks)
+            (program/dispatch { ask: (default (object/get (array/first @asks) "ask") ""), refuse: "No viewer is attached to answer this client host ask." } {} { guest: @entity.turnGuest, emit: { success: GUEST_ASK_REFUSED, failure: GUEST_ASK_REFUSE_FAILED } })))
+      GUEST_ASK_REFUSED -> running when (> (array/len (array/concat (array/drop @entity.guestAsks 1) (default @payload.result.hostAsks []))) 0)
+        (let ((rest (array/concat (array/drop @entity.guestAsks 1) (default @payload.result.hostAsks []))))
+          (do
+            (set @entity.guestAsks @rest)
+            (program/dispatch { ask: (default (object/get (array/first @rest) "ask") ""), refuse: "No viewer is attached to answer this client host ask." } {} { guest: @entity.turnGuest, emit: { success: GUEST_ASK_REFUSED, failure: GUEST_ASK_REFUSE_FAILED } })))
+      GUEST_ASK_REFUSED -> running when (= (array/len (array/concat (array/drop @entity.guestAsks 1) (default @payload.result.hostAsks []))) 0)
+        (set @entity.guestAsks [])
+        (set @entity.cursor (+ @entity.cursor 1))
+        (emit RUN_NEXT {})
+      GUEST_ASK_REFUSE_FAILED -> running
+        (set @entity.guestAsks [])
         (set @entity.cursor (+ @entity.cursor 1))
         (emit RUN_NEXT {})
       DISPATCHED -> running when (not @payload.result.ok)
@@ -708,6 +730,12 @@ orbital AgentToolLoopOrbital {
       DISPATCH_FAILED {
         error : string!
         errors : [AgentPortIssue]
+      }
+      GUEST_ASK_REFUSED {
+        result : AgentDispatchAnswer!
+      }
+      GUEST_ASK_REFUSE_FAILED {
+        error : string!
       }
       READ_DONE {
         result : AgentReadAnswer!

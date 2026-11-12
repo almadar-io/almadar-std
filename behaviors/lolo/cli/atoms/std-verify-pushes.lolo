@@ -1,0 +1,335 @@
+app std-verify-pushes [
+  version: "1.0.0",
+  env: ["ALMADAR_PERSONA_OWNS"],
+  inbound: ["cli-verify-pushes"],
+  kernel: { "guest": [spawn, declared] },
+  net: { "127.0.0.1:9222": [tcp] },
+  fs: { cwd: "**/*.lolo": [read] },
+  description: "std-verify-pushes — the `orb verify-pushes <program.lolo> --url <page url> --route <route>` command (G-CROSS-605): it fails when a served app pushes the browser a frame naming a trait the page does not run. It reads the program resolved (program/read), opens it as a guest (program/open) and visits the route (program/navigate); the set of traits the page runs is exactly what the kernel answers: the page's traits plus the trait of every rendered paint, embedded children included, never derived from the program text. It then drives an already-running Chrome through the composed std-cdp (the debugging port is the composed CdpHttp and CdpWs knobs, 9222 by default, because the net grant names it): create and attach a page target, enable Network, Page.navigate to --url, and record the data of every Network.eventSourceMessageReceived event of that session for the settleMs knob (composed std-delay). Each message is parsed as a push frame; a frame of type dispatch whose request.targetTrait is not run by the page answers `fail  pushed <orbitalName>.<targetTrait> <event>  not run by this page`, a message that is not a push frame (not JSON, or not the declared shape) answers `fail  unreadable push message  <text>`, and a frame of any other type is counted and ignored. One line per finding, then `N frames, F failed`; status 200 (exit 0) when F is 0, else 500 (exit 1); usage 400 (exit 2); every failed read, open, navigate or connect answers 500 with its error. A route no page matches is refused, not read as an empty page."
+]
+uses Spec from "almadar-std/verify-pushes"
+uses CdpAtom from "std/behaviors/std-cdp"
+uses Delay from "std/behaviors/std-delay"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type PushesResolved = { program : SExpr!, lazy : [SExpr] }
+type PushesOpened = { guest : string! }
+type PushesPaint = { slot : string!, trait : string!, orbital : string?, embedded : boolean!, content : node? }
+type PushesNavigated = { page : [string]!, route : string, rendered : [PushesPaint]! }
+type PushRequest = { event : string!, targetTrait : string! }
+type PushFrame = { type : string!, orbitalName : string?, request : PushRequest? }
+type PushNetworkEvent = { params : { data : string! }! }
+type PushCreateReply = { result : { targetId : string! }! }
+type PushAttachReply = { result : { sessionId : string! }! }
+type PushNavigateReply = { result : { frameId : string!, errorText : string? }! }
+type PushHttpHeader = { name : string!, value : string! }
+
+orbital VerifyPushesOrbital {
+  entity PushRun [runtime] {
+    id : string!
+    path : string = ""
+    url : string = ""
+    route : string = ""
+    runs : [string] @description "The traits the page runs, as the kernel's navigate answer names them." = []
+    messages : [string] @description "The data of every event-stream message the page received, in arrival order." = []
+    sessionId : string = ""
+    targetId : string = ""
+    stage : string @description "The step awaited; it is also the key of the CDP command in flight." = ""
+  }
+
+  trait PushesCdpHttp = CdpAtom.traits.CdpHttp { }
+
+  trait PushesCdpWs = CdpAtom.traits.CdpWs { }
+
+  trait PushesCdpDelay = CdpAtom.traits.CdpDelay { }
+
+  trait PushesCdp = CdpAtom.traits.Cdp {
+    listens {
+      VerifyPushes.CDP_CONNECT -> CDP_CONNECT
+      VerifyPushes.CDP_COMMAND -> CDP_COMMAND
+      VerifyPushes.CDP_DISCONNECT -> CDP_DISCONNECT
+      CDP_VERSION {
+        status : number!
+        body : string!
+      }
+      CDP_WS_OPENED { }
+      CDP_WS_MESSAGE {
+        text : string
+        binary : boolean!
+      }
+      CDP_WS_CLOSED {
+        code : number!
+        reason : string!
+      }
+      CDP_WS_FAILED {
+        error : string!
+        kind : string!
+      }
+      CDP_TIMEOUT {
+        key : string!
+      }
+      CdpHttp.HTTP_REPLIED -> CDP_VERSION with { status: ?status, body: (default (bytes/to-string ?body) "") } when (= ?key "cdp-version")
+      CdpHttp.HTTP_FAILED -> CDP_CONNECT_FAILED with { error: ?error, kind: ?kind } when (= ?key "cdp-version")
+      CdpWs.WS_OPENED -> CDP_WS_OPENED
+      CdpWs.WS_MESSAGE -> CDP_WS_MESSAGE with { text: ?text, binary: ?binary }
+      CdpWs.WS_CLOSED -> CDP_WS_CLOSED with { code: ?code, reason: ?reason }
+      CdpWs.WS_FAILED -> CDP_WS_FAILED with { error: ?error, kind: ?kind }
+      CdpDelay.ELAPSED -> CDP_TIMEOUT with { key: ?key }
+    }
+  }
+
+  trait PushesDelay = Delay.traits.Delay {
+    listens {
+      VerifyPushes.PUSHES_TIMER_ARM -> START
+    }
+  }
+
+  trait VerifyPushesCli -> PushRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      VERIFY_PUSHES_CALLED -> ready when (= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
+        (emit VERIFY_PUSHES_ANSWERED { status: 500, body: "Error: the call's arguments could not be read" })
+      VERIFY_PUSHES_CALLED -> ready when (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
+        (let ((args (json/parse (default @payload.rawBody "") OrbCommandArgs)))
+          (let ((argv (object/get @args "argv")) (urlAt (array/indexOf (object/get @args "argv") "--url")) (rtAt (array/indexOf (object/get @args "argv") "--route")))
+            (let ((urlIx (if (>= @urlAt 0) (+ @urlAt 1) (- 0 1))) (rtIx (if (>= @rtAt 0) (+ @rtAt 1) (- 0 1))))
+              (let ((url (if (>= @urlIx 0) (array/nth @argv @urlIx) null))
+                    (route (if (>= @rtIx 0) (array/nth @argv @rtIx) null))
+                    (pos (array/filter (array/range 0 (array/len @argv)) (fn i (and (!= @i @urlAt) (!= @i @urlIx) (!= @i @rtAt) (!= @i @rtIx))))))
+                (if (and (= (array/len @pos) 1)
+                         (not (str/startsWith (default (array/nth @argv (default (array/first @pos) 0)) "") "--"))
+                         (= (array/len (array/filter @argv (fn a (= @a "--url")))) 1)
+                         (= (array/len (array/filter @argv (fn a (= @a "--route")))) 1)
+                         (!= @url null) (not (str/startsWith (default @url "") "--")) (!= (default @url "") "")
+                         (!= @route null) (not (str/startsWith (default @route "") "--")) (!= (default @route "") ""))
+                  (emit VERIFY_PUSHES_START { file: (default (array/nth @argv (default (array/first @pos) 0)) ""), cwd: (object/get @args "cwd"), url: (default @url ""), route: (default @route "") })
+                  (emit VERIFY_PUSHES_ANSWERED { status: 400, body: "usage: orb verify-pushes <program.lolo> --url <page url> --route <route>" }))))))
+      PUSHES_ANSWERED -> ready
+        (emit VERIFY_PUSHES_ANSWERED { status: @payload.status, body: @payload.body })
+    }
+
+    emits {
+      VERIFY_PUSHES_ANSWERED -> external { status : number!  body : string! }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      VERIFY_PUSHES_START { file : string!, cwd : string!, url : string!, route : string! }
+        @description "Internal: check the pushes of the served page."
+        @tier "internal"
+    }
+
+    listens {
+      VerifyPushes.VERIFY_PUSHES_ANSWERED -> PUSHES_ANSWERED
+      PUSHES_ANSWERED { status : number!  body : string! }
+        @description "Internal: the check's answer, relayed to the hook by its handler."
+        @tier "internal"
+      VERIFY_PUSHES_CALLED -> inbound "cli-verify-pushes" answers VERIFY_PUSHES_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Run `orb verify-pushes` with its arguments and working directory."
+        @synonyms "orb verify-pushes, pushed frames, host dispatch not run by the page"
+    }
+  }
+
+  trait VerifyPushes -> PushRun [optimistic] {
+    initial: ready
+
+    config {
+      settleMs : number = 5000
+        @label "Settle window (ms)"
+        @description "How long the page is observed after Page.navigate for event-stream messages before the verdict."
+        @tier "domain"
+    }
+
+    state ready {
+      INIT -> ready
+      VERIFY_PUSHES_START -> reading
+        (set @entity.path (if (os/path-is-absolute @payload.file) @payload.file (os/path-join (default (as @payload.cwd string) "") @payload.file)))
+        (set @entity.url @payload.url)
+        (set @entity.route @payload.route)
+        (set @entity.runs [])
+        (set @entity.messages [])
+        (set @entity.sessionId "")
+        (set @entity.targetId "")
+        (set @entity.stage "")
+        (program/read "" { resolve: true text: false path: @entity.path } { key: "program" emit: { success: PUSHES_PROGRAM, failure: PUSHES_FAILED } })
+    }
+
+    state reading {
+      INIT -> reading
+      PUSHES_PROGRAM -> opening
+        (program/open @payload.result.program { declared: true } { emit: { success: PUSHES_OPENED, failure: PUSHES_FAILED } })
+      PUSHES_FAILED -> ready
+        (emit VERIFY_PUSHES_ANSWERED { status: 500, body: (str/concat "verify-pushes: " (default @payload.error "")) })
+    }
+
+    state opening {
+      INIT -> opening
+      PUSHES_OPENED -> navigating
+        (program/navigate { guest: @payload.result.guest, route: @entity.route } { emit: { success: PUSHES_NAVIGATED, failure: PUSHES_FAILED } })
+      PUSHES_FAILED -> ready
+        (emit VERIFY_PUSHES_ANSWERED { status: 500, body: (str/concat "verify-pushes: " (default @payload.error "")) })
+    }
+
+    state navigating {
+      INIT -> navigating
+      PUSHES_NAVIGATED -> ready when (= (default @payload.result.route "") "")
+        (emit VERIFY_PUSHES_ANSWERED { status: 500, body: (str/concat "verify-pushes: the program shows no page at " @entity.route) })
+      PUSHES_NAVIGATED -> connecting when (!= (default @payload.result.route "") "")
+        (set @entity.runs (array/unique (array/concat @payload.result.page (array/map @payload.result.rendered (fn p (object/get @p "trait"))))))
+        (emit CDP_CONNECT { })
+      PUSHES_FAILED -> ready
+        (emit VERIFY_PUSHES_ANSWERED { status: 500, body: (str/concat "verify-pushes: " (default @payload.error "")) })
+    }
+
+    state connecting {
+      INIT -> connecting
+      PUSHES_CONNECTED -> connecting
+        (set @entity.stage "create")
+        (emit CDP_COMMAND { key: "create" method: "Target.createTarget" paramsJson: (json/stringify { url: "about:blank" }) })
+      PUSHES_REPLY -> connecting when (= @payload.key "create")
+        (let ((r (json/parse @payload.frame PushCreateReply)))
+          (if (= @r null)
+            (emit PUSHES_FAILED { error: "Target.createTarget answered an unexpected shape" })
+            (do
+              (set @entity.targetId @r.result.targetId)
+              (set @entity.stage "attach")
+              (emit CDP_COMMAND { key: "attach" method: "Target.attachToTarget" paramsJson: (json/stringify { targetId: @r.result.targetId flatten: true }) }))))
+      PUSHES_REPLY -> connecting when (= @payload.key "attach")
+        (let ((r (json/parse @payload.frame PushAttachReply)))
+          (if (= @r null)
+            (emit PUSHES_FAILED { error: "Target.attachToTarget answered an unexpected shape" })
+            (do
+              (set @entity.sessionId @r.result.sessionId)
+              (set @entity.stage "enable-net")
+              (emit CDP_COMMAND { key: "enable-net" method: "Network.enable" sessionId: @r.result.sessionId paramsJson: (json/stringify { }) }))))
+      PUSHES_REPLY -> loading when (= @payload.key "enable-net")
+        (set @entity.stage "nav")
+        (emit CDP_COMMAND { key: "nav" method: "Page.navigate" sessionId: @entity.sessionId paramsJson: (json/stringify { url: @entity.url }) })
+      PUSHES_ERROR -> ready
+        (emit VERIFY_PUSHES_ANSWERED { status: 500, body: (str/concat "verify-pushes: " @payload.method " failed: " @payload.message) })
+      PUSHES_CDP_FAILED -> ready
+        (emit VERIFY_PUSHES_ANSWERED { status: 500, body: (str/concat "verify-pushes: cannot drive Chrome: " @payload.error) })
+      PUSHES_FAILED -> ready
+        (emit VERIFY_PUSHES_ANSWERED { status: 500, body: (str/concat "verify-pushes: " (default @payload.error "")) })
+    }
+
+    state loading {
+      INIT -> loading
+      PUSHES_REPLY -> loading when (= @payload.key "nav")
+        (let ((r (json/parse @payload.frame PushNavigateReply)))
+          (if (= @r null)
+            (emit PUSHES_FAILED { error: "Page.navigate answered an unexpected shape" })
+            (if (!= @r.result.errorText null)
+              (emit PUSHES_FAILED { error: (str/concat "navigation to " @entity.url " failed: " (default @r.result.errorText "")) })
+              (do
+                (set @entity.stage "settle")
+                (emit PUSHES_TIMER_ARM { key: "settle" delayMs: @config.settleMs })))))
+      PUSHES_EVENT -> loading when (and (= @payload.method "Network.eventSourceMessageReceived") (= (default @payload.sessionId "") @entity.sessionId))
+        (let ((e (json/parse @payload.frame PushNetworkEvent)))
+          (if (= @e null)
+            (emit PUSHES_FAILED { error: "Network.eventSourceMessageReceived carried no data" })
+            (set @entity.messages (array/append @entity.messages @e.params.data))))
+      PUSHES_TIMER_DUE -> closing when (and (= @payload.key "settle") (= @entity.stage "settle"))
+        (set @entity.stage "close")
+        (emit CDP_COMMAND { key: "close" method: "Target.closeTarget" paramsJson: (json/stringify { targetId: @entity.targetId }) })
+      PUSHES_ERROR -> ready
+        (emit VERIFY_PUSHES_ANSWERED { status: 500, body: (str/concat "verify-pushes: " @payload.method " failed: " @payload.message) })
+      PUSHES_CDP_FAILED -> ready
+        (emit VERIFY_PUSHES_ANSWERED { status: 500, body: (str/concat "verify-pushes: cannot drive Chrome: " @payload.error) })
+      PUSHES_DISCONNECTED -> ready
+        (emit VERIFY_PUSHES_ANSWERED { status: 500, body: (str/concat "verify-pushes: the Chrome connection closed: " @payload.reason) })
+      PUSHES_FAILED -> ready
+        (emit VERIFY_PUSHES_ANSWERED { status: 500, body: (str/concat "verify-pushes: " (default @payload.error "")) })
+    }
+
+    state closing {
+      INIT -> closing
+      PUSHES_REPLY -> ready when (= @payload.key "close")
+        (emit CDP_DISCONNECT { })
+        (let ((lines (array/filter (array/map @entity.messages (fn m
+            (let ((f (json/parse @m PushFrame)))
+              (if (= @f null)
+                (str/concat "fail  unreadable push message  " @m)
+                (if (!= @f.type "dispatch")
+                  ""
+                  (if (= @f.request null)
+                    "fail  pushed dispatch without a request"
+                    (if (array/includes @entity.runs @f.request.targetTrait)
+                      ""
+                      (str/concat "fail  pushed " (default @f.orbitalName "") "." @f.request.targetTrait " " @f.request.event "  not run by this page"))))))))
+            (fn l (!= @l "")))))
+          (emit VERIFY_PUSHES_ANSWERED { status: (if (= (array/len @lines) 0) 200 500), body: (str/join (array/concat @lines [(str/concat (array/len @entity.messages) " frames, " (array/len @lines) " failed")]) "\n") }))
+      PUSHES_ERROR -> ready
+        (emit VERIFY_PUSHES_ANSWERED { status: 500, body: (str/concat "verify-pushes: " @payload.method " failed: " @payload.message) })
+      PUSHES_EVENT -> closing
+      PUSHES_FAILED -> ready
+        (emit VERIFY_PUSHES_ANSWERED { status: 500, body: (str/concat "verify-pushes: " (default @payload.error "")) })
+    }
+
+    emits {
+      VERIFY_PUSHES_ANSWERED -> external { status : number!  body : string! }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      CDP_CONNECT { }
+        @description "Internal: open the debugging connection."
+        @tier "internal"
+      CDP_DISCONNECT { }
+        @description "Internal: close the debugging connection."
+        @tier "internal"
+      CDP_COMMAND {
+        key : string!
+        method : string!
+        sessionId : string?
+        paramsJson : string!
+      }
+        @description "Internal: one protocol command."
+        @tier "internal"
+      PUSHES_TIMER_ARM {
+        key : string!
+        delayMs : number!
+      }
+        @description "Internal: arm the settle deadline."
+        @tier "internal"
+      PUSHES_FAILED { error : string }
+        @description "A read, open, navigate or protocol step that failed."
+        @tier "internal"
+    }
+
+    listens {
+      VERIFY_PUSHES_START { file : string!, cwd : string!, url : string!, route : string! }
+        @description "Check the pushes of the served page against the traits the route runs."
+      VerifyPushesCli.VERIFY_PUSHES_START -> VERIFY_PUSHES_START
+      PUSHES_PROGRAM { result : PushesResolved! }
+        @description "The program read resolved."
+      PUSHES_OPENED { result : PushesOpened! }
+        @description "The program opened as a guest."
+      PUSHES_NAVIGATED { result : PushesNavigated! }
+        @description "The kernel's answer for the route: the page's traits and what it rendered."
+      PUSHES_CONNECTED { browser : string! }
+        @description "std-cdp's CDP_CONNECTED."
+      PUSHES_CDP_FAILED { error : string!, kind : string! }
+        @description "std-cdp's CDP_FAILED."
+      PUSHES_DISCONNECTED { reason : string! }
+        @description "std-cdp's CDP_DISCONNECTED."
+      PUSHES_REPLY { key : string!, method : string!, frame : string! }
+        @description "std-cdp's CDP_REPLY."
+      PUSHES_ERROR { key : string!, method : string!, code : string!, message : string! }
+        @description "std-cdp's CDP_ERROR."
+      PUSHES_EVENT { method : string!, sessionId : string, frame : string! }
+        @description "std-cdp's CDP_EVENT."
+      PUSHES_TIMER_DUE { key : string! }
+        @description "The settle deadline passed."
+      PushesCdp.CDP_CONNECTED -> PUSHES_CONNECTED with { browser: ?browser }
+      PushesCdp.CDP_FAILED -> PUSHES_CDP_FAILED with { error: ?error, kind: ?kind }
+      PushesCdp.CDP_DISCONNECTED -> PUSHES_DISCONNECTED with { reason: ?reason }
+      PushesCdp.CDP_REPLY -> PUSHES_REPLY with { key: ?key, method: ?method, frame: ?frame }
+      PushesCdp.CDP_ERROR -> PUSHES_ERROR with { key: ?key, method: ?method, code: ?code, message: ?message }
+      PushesCdp.CDP_EVENT -> PUSHES_EVENT with { method: ?method, sessionId: ?sessionId, frame: ?frame }
+      PushesDelay.ELAPSED -> PUSHES_TIMER_DUE with { key: ?key }
+    }
+  }
+
+  page boot as VerifyPushesPage -> VerifyPushesCli, VerifyPushes, PushesCdp, PushesCdpHttp, PushesCdpWs, PushesCdpDelay, PushesDelay
+}

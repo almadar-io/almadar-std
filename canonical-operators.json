@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "Canonical operator registry for Almadar. Generated from @almadar/std/modules. Consumed by orbital-compiler via include_str!.",
-  "generated": "2026-11-12T16:46:35.918Z",
+  "generated": "2026-11-12T20:15:33.747Z",
   "categories": {
     "arithmetic": {
       "description": "Numeric operations",
@@ -3293,7 +3293,7 @@
       "minArity": 0,
       "maxArity": 0,
       "returnType": "void",
-      "description": "Read the host's audio clock: audio is seconds on the clock audio/schedule times use, wall is epoch milliseconds read at the same moment. Resolves via the trailing { emit } envelope. Success payload: { audio, wall }. Failure kind: unavailable (a host with no audio output).",
+      "description": "Read the host's audio clock: audio is seconds on the clock audio/schedule times use, wall is epoch milliseconds on the canvas clock (performance.timeOrigin + performance.now()), read at the same instant as audio. Resolves via the trailing { emit } envelope. Success payload: { audio, wall }. Failure kind: unavailable (a host with no audio output).",
       "module": "audio",
       "visual": {
         "form": "actuator"
@@ -3440,7 +3440,7 @@
       "minArity": 1,
       "maxArity": 1,
       "returnType": "void",
-      "description": "Schedule voices on the host's audio clock, all times in seconds of audio/clock: start plays source from offset (seconds into the source) at time at, for duration (absent: to the end), at playback rate rate and gain gain; stop ends the voice key at at; ramp moves the voice's gain or playback rate from its value at at to value at endAt along curve. The host plays exactly what is declared and picks nothing; a stop or ramp for a key with no voice fails the ask (invalid). Resolves via the trailing { emit } envelope. Success payload: {}. Failure kind: invalid (a malformed command, a stop or ramp for a key with no voice), unavailable (a source that cannot be loaded or decoded, a host with no audio output).",
+      "description": "Schedule voices on the host's audio clock, all times in seconds of audio/clock: start plays source from offset (seconds into the source) at time at, for duration (absent: to the end), at playback rate rate and gain gain; stop ends the voice key at at; ramp moves the voice's gain or playback rate from its value at at to value at endAt along curve. The host plays exactly what is declared and picks nothing; a voice key is known from its start until it is stopped, so a stop of a voice that already ended on its own answers ok (a no-op), a ramp of an ended voice is a no-op ok, and a stop or ramp for a key never started (or already stopped) fails the ask (invalid). Resolves via the trailing { emit } envelope. Success payload: {}. Failure kind: invalid (a malformed command, a stop or ramp for a key never started or already stopped), unavailable (a source that cannot be loaded or decoded, a host with no audio output).",
       "module": "audio",
       "visual": {
         "form": "actuator"
@@ -5750,6 +5750,43 @@
       "title": "Push Subscribe",
       "examples": [
         "(browser/push-subscribe) // => {\"endpoint\": \"https://...\", \"p256dh\": \"...\", \"auth\": \"...\"}"
+      ],
+      "docsSource": "generated"
+    },
+    "browser/read-file": {
+      "category": "std-browser",
+      "minArity": 1,
+      "maxArity": 1,
+      "returnType": "void",
+      "description": "Read a file the viewer picked in the browser into bytes, with no filesystem grant: the argument is the picked file value (std-file-upload's file) and the host hands back its content as bytes with its name, size and type. Resolves via the trailing { emit } envelope. Success payload: { data, name, size, type }. Failure kind: invalid (the value is not a picked file), unavailable (a host that cannot read the file: no browser, or the content was read as text and holds no bytes).",
+      "module": "browser",
+      "visual": {
+        "form": "actuator"
+      },
+      "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "data": "bytes",
+            "name": "string",
+            "size": "number",
+            "type": "string"
+          }
+        }
+      },
+      "runsOn": "client",
+      "host": "substrate",
+      "params": [
+        {
+          "name": "file",
+          "type": "file",
+          "description": "The picked file value, as the file picker or upload zone delivered it"
+        }
+      ],
+      "examples": [
+        "(browser/read-file @payload.file {\"emit\":{\"success\":\"FILE_BYTES\",\"failure\":\"FILE_UNREADABLE\"}})"
       ],
       "docsSource": "generated"
     },

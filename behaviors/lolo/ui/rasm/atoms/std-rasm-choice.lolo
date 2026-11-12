@@ -1,0 +1,426 @@
+app std-rasm-choice [
+  version: "1.0.0",
+  description: "std-rasm-choice — a Rasm single-choice list painted on the orbital canvas: a combobox that is closed (idle, hovered, focused) or open. A press, RASM_ACTIVATE for its id or Enter opens a popup of the configured options, placed below the control through std-rasm-anchor (RASM_ANCHOR in, RASM_PLACE back) and painted above the other controls; arrows, Home and End move the active option, a printable key jumps to the next option starting with that letter, Enter, Space or a press on an option selects it and closes, Escape or a press elsewhere closes. A closed focused control steps its selection with RASM_STEP. Selecting a different option emits the configured changed event with { value }. Nodes carry combobox and option semantics. Looks are keyed choice/default/<idle|hovered|focused|open|label>, choice/popup/idle and choice/option/<idle|active>."
+]
+
+type RasmRect = { x : number!, y : number!, w : number!, h : number! }
+type RasmPlaced = { id : string!, rect : RasmRect! }
+type RasmMaterial = { wgsl : string!, params : [number]!, live : boolean! }
+type RasmCorners = { radius : [number]!, kind : "round" | "bevel" | "notch" | "scoop" }
+type RasmSpring = { stiffness : number!, damping : number! }
+type RasmShadow = { color : string!, blur : number! }
+type RasmLook = { fill : string, stroke : string, strokeWidth : number, corners : RasmCorners, shadow : RasmShadow, material : RasmMaterial, textColor : string, font : string, spring : RasmSpring, decor : string }
+
+orbital RasmChoiceOrbital {
+  entity RasmChoiceItem [runtime] {
+    id : string!
+    looks : Map string RasmLook = {}
+    hasLooks : boolean = false
+    rect : RasmRect = { x: 0, y: 0, w: 0, h: 0 }
+    hasRect : boolean = false
+    popupRect : RasmRect = { x: 0, y: 0, w: 0, h: 0 }
+    hasPopup : boolean @description "The anchor placed the popup since it last opened." = false
+    entering : number = -1
+    stagger : number = 70
+    paints : number = 0
+    selected : number @description "Index of the chosen option, -1 for none." = -1
+    active : number @description "Index of the highlighted option while open." = 0
+  }
+
+  trait RasmChoice -> RasmChoiceItem [client] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.selected (array/indexOf @config.options @config.value))
+        (set @entity.active (math/max 0 (array/indexOf @config.options @config.value)))
+      RASM_BOOT -> idle
+        (set @entity.selected (array/indexOf @config.options @config.value))
+        (set @entity.active (math/max 0 (array/indexOf @config.options @config.value)))
+      RASM_THEME -> idle
+        (set @entity.looks ?looks)
+        (set @entity.hasLooks true)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_PLACE -> idle when (array/some ?placed (fn p (= @p.id @config.id)))
+        (set @entity.rect (let ((mine (default (array/find ?placed (fn p (= @p.id @config.id))) { id: "", rect: { x: 0, y: 0, w: 0, h: 0 } }))) @mine.rect))
+        (set @entity.hasRect true)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_PLACE -> idle when (array/some ?placed (fn p (= @p.id (str/concat @config.id ":popup"))))
+        (set @entity.popupRect (let ((mine (default (array/find ?placed (fn p (= @p.id (str/concat @config.id ":popup")))) { id: "", rect: { x: 0, y: 0, w: 0, h: 0 } }))) @mine.rect))
+        (set @entity.hasPopup true)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_ENTER -> idle when (array/includes ?order @config.id)
+        (set @entity.entering (array/indexOf ?order @config.id))
+        (set @entity.stagger ?staggerMs)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_POINTER -> hovered when (and (= ?id @config.id) (= ?kind "enter"))
+        (set @entity.entering -1)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_FOCUS -> focused when (= ?id @config.id)
+        (set @entity.entering -1)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_POINTER -> open when (and (= ?id @config.id) (= ?kind "down"))
+        (set @entity.entering -1)
+        (set @entity.active (math/max 0 @entity.selected))
+        (set @entity.hasPopup false)
+        (emit RASM_ANCHOR { id: (str/concat @config.id ":popup"), anchor: @config.id, side: "below", width: @entity.rect.w, height: (+ (* (array/len @config.options) @config.optionHeight) 8) })
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_ACTIVATE -> open when (= ?id @config.id)
+        (set @entity.entering -1)
+        (set @entity.active (math/max 0 @entity.selected))
+        (set @entity.hasPopup false)
+        (emit RASM_ANCHOR { id: (str/concat @config.id ":popup"), anchor: @config.id, side: "below", width: @entity.rect.w, height: (+ (* (array/len @config.options) @config.optionHeight) 8) })
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_STEP -> idle when (and (= ?id @config.id) (> (array/len @config.options) 0))
+        (let ((i (math/max 0 (math/min (- (array/len @config.options) 1) (+ (math/max 0 @entity.selected) (if (= @entity.selected -1) 0 ?delta))))))
+          (do (when (!= @entity.selected @i) (emit @config.changed { value: (default (array/nth @config.options @i) "") }))
+          (set @entity.selected @i)))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      REPAINT -> idle when (and @entity.hasLooks @entity.hasRect)
+        (let (
+            (r @entity.rect)
+            (anim (if (>= @entity.entering 0) { durationMs: (+ 520 (* @entity.entering @entity.stagger)), loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 14 }, { at: (/ (* @entity.entering @entity.stagger) (+ 520 (* @entity.entering @entity.stagger))), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }] } null))
+            (look (default (object/get @entity.looks "choice/default/idle") {}))
+            (lab (default (object/get @entity.looks "choice/default/label") {}))
+            (pop (default (object/get @entity.looks "choice/popup/idle") {}))
+            (oi (default (object/get @entity.looks "choice/option/idle") {}))
+            (oa (default (object/get @entity.looks "choice/option/active") {}))
+            (sel (default (array/nth @config.options @entity.selected) ""))
+          )
+          (let ((by (+ @r.y 22)) (bh (- @r.h 22)))
+            (emit RASM_PAINT { id: @config.id, z: @config.z, nodes: [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @r.x, y: @by, z: @config.z }, width: @r.w, height: @bh, fill: @look.fill, stroke: @look.stroke, strokeWidth: @look.strokeWidth, corners: @look.corners, spring: @look.spring, animation: @anim, hit: true, semantic: { role: "combobox", name: @config.label, value: @sel, focused: false, order: @config.order } }, { type: draw-text, id: (str/concat @config.id ":label"), text: @config.label, anchor: "top-left", position: { x: (+ @r.x 2), y: (+ @r.y 10), z: @config.z }, align: left, baseline: middle, color: @lab.textColor, font: @lab.font, animation: @anim }, { type: draw-text, id: (str/concat @config.id ":value"), text: @sel, anchor: "top-left", position: { x: (+ @r.x 14), y: (+ @by (/ @bh 2)), z: @config.z }, align: left, baseline: middle, color: @look.textColor, font: @look.font, animation: @anim }, { type: draw-text, id: (str/concat @config.id ":chevron"), text: "▾", anchor: "top-left", position: { x: (- (+ @r.x @r.w) 18), y: (+ @by (/ @bh 2)), z: @config.z }, align: center, baseline: middle, color: @look.textColor, font: @look.font, animation: @anim }] })))
+    }
+
+    state hovered {
+      INIT -> idle
+        (set @entity.selected (array/indexOf @config.options @config.value))
+        (set @entity.active (math/max 0 (array/indexOf @config.options @config.value)))
+      RASM_BOOT -> idle
+        (set @entity.selected (array/indexOf @config.options @config.value))
+        (set @entity.active (math/max 0 (array/indexOf @config.options @config.value)))
+      RASM_THEME -> hovered
+        (set @entity.looks ?looks)
+        (set @entity.hasLooks true)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_PLACE -> hovered when (array/some ?placed (fn p (= @p.id @config.id)))
+        (set @entity.rect (let ((mine (default (array/find ?placed (fn p (= @p.id @config.id))) { id: "", rect: { x: 0, y: 0, w: 0, h: 0 } }))) @mine.rect))
+        (set @entity.hasRect true)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_PLACE -> hovered when (array/some ?placed (fn p (= @p.id (str/concat @config.id ":popup"))))
+        (set @entity.popupRect (let ((mine (default (array/find ?placed (fn p (= @p.id (str/concat @config.id ":popup")))) { id: "", rect: { x: 0, y: 0, w: 0, h: 0 } }))) @mine.rect))
+        (set @entity.hasPopup true)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_ENTER -> hovered when (array/includes ?order @config.id)
+        (set @entity.entering (array/indexOf ?order @config.id))
+        (set @entity.stagger ?staggerMs)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_POINTER -> idle when (and (= ?id @config.id) (= ?kind "leave"))
+        (set @entity.entering -1)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_FOCUS -> focused when (= ?id @config.id)
+        (set @entity.entering -1)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_POINTER -> open when (and (= ?id @config.id) (= ?kind "down"))
+        (set @entity.entering -1)
+        (set @entity.active (math/max 0 @entity.selected))
+        (set @entity.hasPopup false)
+        (emit RASM_ANCHOR { id: (str/concat @config.id ":popup"), anchor: @config.id, side: "below", width: @entity.rect.w, height: (+ (* (array/len @config.options) @config.optionHeight) 8) })
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_ACTIVATE -> open when (= ?id @config.id)
+        (set @entity.entering -1)
+        (set @entity.active (math/max 0 @entity.selected))
+        (set @entity.hasPopup false)
+        (emit RASM_ANCHOR { id: (str/concat @config.id ":popup"), anchor: @config.id, side: "below", width: @entity.rect.w, height: (+ (* (array/len @config.options) @config.optionHeight) 8) })
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_STEP -> hovered when (and (= ?id @config.id) (> (array/len @config.options) 0))
+        (let ((i (math/max 0 (math/min (- (array/len @config.options) 1) (+ (math/max 0 @entity.selected) (if (= @entity.selected -1) 0 ?delta))))))
+          (do (when (!= @entity.selected @i) (emit @config.changed { value: (default (array/nth @config.options @i) "") }))
+          (set @entity.selected @i)))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      REPAINT -> hovered when (and @entity.hasLooks @entity.hasRect)
+        (let (
+            (r @entity.rect)
+            (anim (if (>= @entity.entering 0) { durationMs: (+ 520 (* @entity.entering @entity.stagger)), loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 14 }, { at: (/ (* @entity.entering @entity.stagger) (+ 520 (* @entity.entering @entity.stagger))), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }] } null))
+            (look (default (object/get @entity.looks "choice/default/hovered") {}))
+            (lab (default (object/get @entity.looks "choice/default/label") {}))
+            (pop (default (object/get @entity.looks "choice/popup/idle") {}))
+            (oi (default (object/get @entity.looks "choice/option/idle") {}))
+            (oa (default (object/get @entity.looks "choice/option/active") {}))
+            (sel (default (array/nth @config.options @entity.selected) ""))
+          )
+          (let ((by (+ @r.y 22)) (bh (- @r.h 22)))
+            (emit RASM_PAINT { id: @config.id, z: @config.z, nodes: [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @r.x, y: @by, z: @config.z }, width: @r.w, height: @bh, fill: @look.fill, stroke: @look.stroke, strokeWidth: @look.strokeWidth, corners: @look.corners, spring: @look.spring, animation: @anim, hit: true, semantic: { role: "combobox", name: @config.label, value: @sel, focused: false, order: @config.order } }, { type: draw-text, id: (str/concat @config.id ":label"), text: @config.label, anchor: "top-left", position: { x: (+ @r.x 2), y: (+ @r.y 10), z: @config.z }, align: left, baseline: middle, color: @lab.textColor, font: @lab.font, animation: @anim }, { type: draw-text, id: (str/concat @config.id ":value"), text: @sel, anchor: "top-left", position: { x: (+ @r.x 14), y: (+ @by (/ @bh 2)), z: @config.z }, align: left, baseline: middle, color: @look.textColor, font: @look.font, animation: @anim }, { type: draw-text, id: (str/concat @config.id ":chevron"), text: "▾", anchor: "top-left", position: { x: (- (+ @r.x @r.w) 18), y: (+ @by (/ @bh 2)), z: @config.z }, align: center, baseline: middle, color: @look.textColor, font: @look.font, animation: @anim }] })))
+    }
+
+    state focused {
+      INIT -> idle
+        (set @entity.selected (array/indexOf @config.options @config.value))
+        (set @entity.active (math/max 0 (array/indexOf @config.options @config.value)))
+      RASM_BOOT -> idle
+        (set @entity.selected (array/indexOf @config.options @config.value))
+        (set @entity.active (math/max 0 (array/indexOf @config.options @config.value)))
+      RASM_THEME -> focused
+        (set @entity.looks ?looks)
+        (set @entity.hasLooks true)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_PLACE -> focused when (array/some ?placed (fn p (= @p.id @config.id)))
+        (set @entity.rect (let ((mine (default (array/find ?placed (fn p (= @p.id @config.id))) { id: "", rect: { x: 0, y: 0, w: 0, h: 0 } }))) @mine.rect))
+        (set @entity.hasRect true)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_PLACE -> focused when (array/some ?placed (fn p (= @p.id (str/concat @config.id ":popup"))))
+        (set @entity.popupRect (let ((mine (default (array/find ?placed (fn p (= @p.id (str/concat @config.id ":popup")))) { id: "", rect: { x: 0, y: 0, w: 0, h: 0 } }))) @mine.rect))
+        (set @entity.hasPopup true)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_ENTER -> focused when (array/includes ?order @config.id)
+        (set @entity.entering (array/indexOf ?order @config.id))
+        (set @entity.stagger ?staggerMs)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_FOCUS -> idle when (!= ?id @config.id)
+        (set @entity.entering -1)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_POINTER -> open when (and (= ?id @config.id) (= ?kind "down"))
+        (set @entity.entering -1)
+        (set @entity.active (math/max 0 @entity.selected))
+        (set @entity.hasPopup false)
+        (emit RASM_ANCHOR { id: (str/concat @config.id ":popup"), anchor: @config.id, side: "below", width: @entity.rect.w, height: (+ (* (array/len @config.options) @config.optionHeight) 8) })
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_ACTIVATE -> open when (= ?id @config.id)
+        (set @entity.entering -1)
+        (set @entity.active (math/max 0 @entity.selected))
+        (set @entity.hasPopup false)
+        (emit RASM_ANCHOR { id: (str/concat @config.id ":popup"), anchor: @config.id, side: "below", width: @entity.rect.w, height: (+ (* (array/len @config.options) @config.optionHeight) 8) })
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_KEYPRESS -> open when (and (= ?target @config.id) (or (= ?key "Enter") (= ?key " ") (= ?key "ArrowDown") (= ?key "ArrowUp")))
+        (set @entity.entering -1)
+        (set @entity.active (math/max 0 @entity.selected))
+        (set @entity.hasPopup false)
+        (emit RASM_ANCHOR { id: (str/concat @config.id ":popup"), anchor: @config.id, side: "below", width: @entity.rect.w, height: (+ (* (array/len @config.options) @config.optionHeight) 8) })
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_STEP -> focused when (and (= ?id @config.id) (> (array/len @config.options) 0))
+        (let ((i (math/max 0 (math/min (- (array/len @config.options) 1) (+ (math/max 0 @entity.selected) (if (= @entity.selected -1) 0 ?delta))))))
+          (do (when (!= @entity.selected @i) (emit @config.changed { value: (default (array/nth @config.options @i) "") }))
+          (set @entity.selected @i)))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      REPAINT -> focused when (and @entity.hasLooks @entity.hasRect)
+        (let (
+            (r @entity.rect)
+            (anim (if (>= @entity.entering 0) { durationMs: (+ 520 (* @entity.entering @entity.stagger)), loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 14 }, { at: (/ (* @entity.entering @entity.stagger) (+ 520 (* @entity.entering @entity.stagger))), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }] } null))
+            (look (default (object/get @entity.looks "choice/default/focused") {}))
+            (lab (default (object/get @entity.looks "choice/default/label") {}))
+            (pop (default (object/get @entity.looks "choice/popup/idle") {}))
+            (oi (default (object/get @entity.looks "choice/option/idle") {}))
+            (oa (default (object/get @entity.looks "choice/option/active") {}))
+            (sel (default (array/nth @config.options @entity.selected) ""))
+          )
+          (let ((by (+ @r.y 22)) (bh (- @r.h 22)))
+            (emit RASM_PAINT { id: @config.id, z: @config.z, nodes: [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @r.x, y: @by, z: @config.z }, width: @r.w, height: @bh, fill: @look.fill, stroke: @look.stroke, strokeWidth: @look.strokeWidth, corners: @look.corners, spring: @look.spring, animation: @anim, hit: true, semantic: { role: "combobox", name: @config.label, value: @sel, focused: true, order: @config.order } }, { type: draw-text, id: (str/concat @config.id ":label"), text: @config.label, anchor: "top-left", position: { x: (+ @r.x 2), y: (+ @r.y 10), z: @config.z }, align: left, baseline: middle, color: @lab.textColor, font: @lab.font, animation: @anim }, { type: draw-text, id: (str/concat @config.id ":value"), text: @sel, anchor: "top-left", position: { x: (+ @r.x 14), y: (+ @by (/ @bh 2)), z: @config.z }, align: left, baseline: middle, color: @look.textColor, font: @look.font, animation: @anim }, { type: draw-text, id: (str/concat @config.id ":chevron"), text: "▾", anchor: "top-left", position: { x: (- (+ @r.x @r.w) 18), y: (+ @by (/ @bh 2)), z: @config.z }, align: center, baseline: middle, color: @look.textColor, font: @look.font, animation: @anim }] })))
+    }
+
+    state open {
+      INIT -> idle
+        (set @entity.selected (array/indexOf @config.options @config.value))
+        (set @entity.active (math/max 0 (array/indexOf @config.options @config.value)))
+      RASM_BOOT -> idle
+        (set @entity.selected (array/indexOf @config.options @config.value))
+        (set @entity.active (math/max 0 (array/indexOf @config.options @config.value)))
+      RASM_THEME -> open
+        (set @entity.looks ?looks)
+        (set @entity.hasLooks true)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_PLACE -> open when (array/some ?placed (fn p (= @p.id @config.id)))
+        (set @entity.rect (let ((mine (default (array/find ?placed (fn p (= @p.id @config.id))) { id: "", rect: { x: 0, y: 0, w: 0, h: 0 } }))) @mine.rect))
+        (set @entity.hasRect true)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_PLACE -> open when (array/some ?placed (fn p (= @p.id (str/concat @config.id ":popup"))))
+        (set @entity.popupRect (let ((mine (default (array/find ?placed (fn p (= @p.id (str/concat @config.id ":popup")))) { id: "", rect: { x: 0, y: 0, w: 0, h: 0 } }))) @mine.rect))
+        (set @entity.hasPopup true)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_ENTER -> open when (array/includes ?order @config.id)
+        (set @entity.entering (array/indexOf ?order @config.id))
+        (set @entity.stagger ?staggerMs)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_FOCUS -> idle when (!= ?id @config.id)
+        (set @entity.hasPopup false)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_POINTER -> focused when (and (= ?kind "down") (= ?id @config.id))
+        (set @entity.hasPopup false)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_POINTER -> idle when (and (= ?kind "down") (not (or (= ?id @config.id) (= ?id (str/concat @config.id ":popup")) (!= (array/find (array/range (array/len @config.options)) (fn k (= ?id (str/concat @config.id ":option:" @k)))) null))))
+        (set @entity.hasPopup false)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_POINTER -> open when (and (= ?kind "enter") (!= (array/find (array/range (array/len @config.options)) (fn k (= ?id (str/concat @config.id ":option:" @k)))) null))
+        (set @entity.active (array/find (array/range (array/len @config.options)) (fn k (= ?id (str/concat @config.id ":option:" @k)))))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_POINTER -> focused when (and (= ?kind "down") (!= (array/find (array/range (array/len @config.options)) (fn k (= ?id (str/concat @config.id ":option:" @k)))) null))
+        (when (!= @entity.selected (array/find (array/range (array/len @config.options)) (fn k (= ?id (str/concat @config.id ":option:" @k))))) (emit @config.changed { value: (default (array/nth @config.options (array/find (array/range (array/len @config.options)) (fn k (= ?id (str/concat @config.id ":option:" @k))))) "") }))
+        (set @entity.selected (array/find (array/range (array/len @config.options)) (fn k (= ?id (str/concat @config.id ":option:" @k)))))
+        (set @entity.hasPopup false)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_KEYPRESS -> open when (and (= ?target @config.id) (= ?key "ArrowDown"))
+        (set @entity.active (math/min (- (array/len @config.options) 1) (+ @entity.active 1)))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_KEYPRESS -> open when (and (= ?target @config.id) (= ?key "ArrowUp"))
+        (set @entity.active (math/max 0 (- @entity.active 1)))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_KEYPRESS -> open when (and (= ?target @config.id) (= ?key "Home"))
+        (set @entity.active 0)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_KEYPRESS -> open when (and (= ?target @config.id) (= ?key "End"))
+        (set @entity.active (math/max 0 (- (array/len @config.options) 1)))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_KEYPRESS -> focused when (and (= ?target @config.id) (or (= ?key "Enter") (= ?key " ")))
+        (when (!= @entity.selected @entity.active) (emit @config.changed { value: (default (array/nth @config.options @entity.active) "") }))
+        (set @entity.selected @entity.active)
+        (set @entity.hasPopup false)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_KEYPRESS -> focused when (and (= ?target @config.id) (= ?key "Escape"))
+        (set @entity.hasPopup false)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_KEYPRESS -> open when (and (= ?target @config.id) (and (= (str/len ?key) 1) (!= ?key " ") (not ?ctrl) (not ?meta)))
+        (set @entity.active (default (array/find (let ((idx (array/range (array/len @config.options)))) (array/concat (array/slice @idx (+ @entity.active 1) (array/len @config.options)) (array/slice @idx 0 (+ @entity.active 1)))) (fn k (= (str/lower (str/slice (default (array/nth @config.options @k) "") 0 1)) (str/lower ?key)))) @entity.active))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      REPAINT -> open when (and @entity.hasLooks @entity.hasRect)
+        (let (
+            (r @entity.rect)
+            (anim (if (>= @entity.entering 0) { durationMs: (+ 520 (* @entity.entering @entity.stagger)), loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 14 }, { at: (/ (* @entity.entering @entity.stagger) (+ 520 (* @entity.entering @entity.stagger))), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }] } null))
+            (look (default (object/get @entity.looks "choice/default/open") {}))
+            (lab (default (object/get @entity.looks "choice/default/label") {}))
+            (pop (default (object/get @entity.looks "choice/popup/idle") {}))
+            (oi (default (object/get @entity.looks "choice/option/idle") {}))
+            (oa (default (object/get @entity.looks "choice/option/active") {}))
+            (sel (default (array/nth @config.options @entity.selected) ""))
+          )
+          (let ((by (+ @r.y 22)) (bh (- @r.h 22)))
+            (emit RASM_PAINT { id: @config.id, z: (+ @config.z 10), nodes: (array/concat [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @r.x, y: @by, z: @config.z }, width: @r.w, height: @bh, fill: @look.fill, stroke: @look.stroke, strokeWidth: @look.strokeWidth, corners: @look.corners, spring: @look.spring, animation: @anim, hit: true, semantic: { role: "combobox", name: @config.label, value: @sel, focused: true, order: @config.order } }, { type: draw-text, id: (str/concat @config.id ":label"), text: @config.label, anchor: "top-left", position: { x: (+ @r.x 2), y: (+ @r.y 10), z: @config.z }, align: left, baseline: middle, color: @lab.textColor, font: @lab.font, animation: @anim }, { type: draw-text, id: (str/concat @config.id ":value"), text: @sel, anchor: "top-left", position: { x: (+ @r.x 14), y: (+ @by (/ @bh 2)), z: @config.z }, align: left, baseline: middle, color: @look.textColor, font: @look.font, animation: @anim }, { type: draw-text, id: (str/concat @config.id ":chevron"), text: "▾", anchor: "top-left", position: { x: (- (+ @r.x @r.w) 18), y: (+ @by (/ @bh 2)), z: @config.z }, align: center, baseline: middle, color: @look.textColor, font: @look.font, animation: @anim }] (array/concat (array/map (if @entity.hasPopup [0] []) (fn i { type: draw-shape, id: (str/concat @config.id ":popup"), shape: rect, anchor: "top-left", position: { x: @entity.popupRect.x, y: @entity.popupRect.y, z: (+ @config.z 10) }, width: @entity.popupRect.w, height: @entity.popupRect.h, fill: @pop.fill, stroke: @pop.stroke, strokeWidth: @pop.strokeWidth, corners: @pop.corners, shadow: @pop.shadow, spring: @pop.spring, hit: true })) (if @entity.hasPopup (array/flatten (array/map (array/range (array/len @config.options)) (fn i (let ((oy (+ (+ @entity.popupRect.y 4) (* @i @config.optionHeight))) (ol (if (= @i @entity.active) @oa @oi))) [{ type: draw-shape, id: (str/concat @config.id ":option:" @i), shape: rect, anchor: "top-left", position: { x: (+ @entity.popupRect.x 4), y: @oy, z: (+ @config.z 11) }, width: (- @entity.popupRect.w 8), height: @config.optionHeight, fill: @ol.fill, corners: @ol.corners, spring: @ol.spring, hit: true, semantic: { role: "option", name: (default (array/nth @config.options @i) ""), checked: (= @i @entity.selected), focused: (= @i @entity.active), order: (+ @config.order (* 0.01 (+ @i 1))) } }, { type: draw-text, id: (str/concat @config.id ":option:" @i ":label"), text: (default (array/nth @config.options @i) ""), anchor: "top-left", position: { x: (+ @entity.popupRect.x 16), y: (+ @oy (/ @config.optionHeight 2)), z: (+ @config.z 12) }, align: left, baseline: middle, color: @ol.textColor, font: @ol.font }])))) []))) })))
+    }
+
+    emits {
+      RASM_PAINT -> external {
+        id : string!
+        z : number!
+        nodes : [node]!
+      }
+        @description "The control's whole paint, with the popup and options while open."
+        @tier "domain"
+      REPAINT -> internal {
+        n : number!
+      }
+        @tier "internal"
+      RASM_ANCHOR -> external {
+        id : string!
+        anchor : string!
+        side : "below" | "above" | "start" | "end"!
+        width : number!
+        height : number!
+      }
+        @description "Ask the anchor to place the popup below this control."
+        @tier "domain"
+      @config.changed -> external {
+        value : string!
+      }
+        @description "A different option was chosen."
+        @tier "domain"
+    }
+
+    listens {
+      RASM_BOOT { }
+        @description "The surface mounted: take the configured value."
+      RASM_THEME { name : string!  looks : Map string RasmLook! }
+        @description "The theme's looks; the control repaints with them."
+      RASM_PLACE { placed : [RasmPlaced]! }
+        @description "Placed rects; the control takes its own and its popup's."
+      RASM_ENTER { order : [string]!  staggerMs : number! }
+        @description "The entry choreography."
+      RASM_POINTER { kind : "down" | "up" | "enter" | "leave" | "move"!  id : string!  x : number!  y : number!  index : number }
+        @description "A pointer event; the control acts on its own ids."
+      RASM_FOCUS { id : string! }
+        @description "Focus moved; the control with that id is focused, the others clear."
+      RASM_ACTIVATE { id : string! }
+        @description "Keyboard or assistive activation opens the popup."
+      RASM_STEP { id : string!  delta : number! }
+        @description "A closed focused control steps its selection."
+      RASM_KEYPRESS { target : string!  key : string!  shift : boolean!  alt : boolean!  ctrl : boolean!  meta : boolean! }
+        @description "A key while open: arrows, Home, End, Enter, Space, Escape, type-ahead."
+    }
+
+    config {
+      id : string = ""
+        @label "Id"
+        @description "The region and paint id of the control; its popup is `<id>:popup` and its options `<id>:option:<index>`."
+        @tier "domain"
+      label : string = ""
+        @label "Label"
+        @description "The text above the control and its accessible name."
+        @tier "domain"
+      options : [string] = []
+        @label "Options"
+        @description "The option texts; the chosen option's text is the value."
+        @tier "domain"
+      value : string = ""
+        @label "Value"
+        @description "The option chosen at the start; none when it matches no option."
+        @tier "domain"
+      changed : event = RASM_CHOICE_CHANGED
+        @label "Changed"
+        @description "The event emitted with { value } when a different option is chosen."
+        @tier "domain"
+      optionHeight : number = 34
+        @label "Option height"
+        @description "Height in px of each option row in the popup."
+        @tier "presentation"
+      order : number = 0
+        @label "Order"
+        @description "Reading and tab order of the control's semantic node; options follow it."
+        @tier "domain"
+      z : number = 0
+        @label "Z"
+        @description "Paint order; the control paints ten above it while open."
+        @tier "presentation"
+    }
+  }
+
+  page boot as RasmChoiceStart -> RasmChoice
+}

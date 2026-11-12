@@ -118,6 +118,10 @@ orbital CanvasOrbital {
           pointerLeaveEvent: @config.pointerLeaveEvent
           pointerMoveEvent: @config.pointerMoveEvent
           measureEvent: @config.measureEvent
+          resizeEvent: @config.resizeEvent
+          textInputEvent: @config.textInputEvent
+          keyEvent: @config.keyEvent
+          accessEvent: @config.accessEvent
           pointerMoves: @config.pointerMoves
           keyMap: @config.keyMap
           keyUpMap: @config.keyUpMap
@@ -225,6 +229,35 @@ orbital CanvasOrbital {
         items : [CanvasMeasureItem]
       }
         @description "Sizes of every `draw-text` with `measure: true`, sent after a paint in which any of them changed (orbital painter)."
+        @tier "essential"
+      @config.resizeEvent -> external {
+        width : number
+        height : number
+      }
+        @description "The canvas's size in CSS pixels, sent once it is known and again whenever it changes."
+        @tier "essential"
+      @config.textInputEvent -> external {
+        target : string
+        text : string
+        composing : boolean
+      }
+        @description "Text for the focused text field: composing false is committed text to insert; composing true is the input method's current preedit."
+        @tier "essential"
+      @config.keyEvent -> external {
+        target : string
+        key : string
+        shift : boolean
+        alt : boolean
+        ctrl : boolean
+        meta : boolean
+      }
+        @description "An editing key for the focused text field (key is the DOM KeyboardEvent.key value)."
+        @tier "essential"
+      @config.accessEvent -> external {
+        target : string
+        action : "focus" | "activate" | "increment" | "decrement"
+      }
+        @description "An assistive technology acted on a node of the semantic tree."
         @tier "essential"
       @config.onSelect -> external {
         id : string
@@ -380,6 +413,22 @@ orbital CanvasOrbital {
       measureEvent : event = ""
         @label "Measure Event"
         @description "Sizes of every `draw-text` with `measure: true`, sent after a paint in which any of them changed (orbital painter)."
+        @tier "presentation"
+      resizeEvent : event = ""
+        @label "Resize Event"
+        @description "The canvas's size in CSS pixels, sent once it is known and again whenever it changes."
+        @tier "presentation"
+      textInputEvent : event = ""
+        @label "Text Input Event"
+        @description "Text for the focused text field: composing false is committed text; composing true is the input method's preedit."
+        @tier "presentation"
+      keyEvent : event = ""
+        @label "Key Event"
+        @description "An editing key for the focused text field."
+        @tier "presentation"
+      accessEvent : event = ""
+        @label "Access Event"
+        @description "An assistive technology acted on a node of the semantic tree."
         @tier "presentation"
       keyMap : Map string string = { item: "INIT" }
         @label "Key Map"

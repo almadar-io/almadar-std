@@ -1,6 +1,6 @@
 app std-rasm-panel [
   version: "0.1.0",
-  description: "std-rasm-panel — the Rasm kit composed into one 720 by 520 panel on a single orbital canvas: a framed card holding a title, a paragraph, Begin / Theme / Later buttons, a Sound switch and a Warmth range, with keyboard focus and a staggered entry. Theme flips between the naqsh and glass presets. RASM_BEGIN, RASM_SOUND_CHANGED { checked } and RASM_WARMTH_CHANGED { value } leave the panel."
+  description: "std-rasm-panel — the Rasm kit composed into a panel centred on a single orbital canvas that fills its container: a framed card holding a title, a paragraph, a Your name text field, a Season choice, Begin / Theme / Later buttons, a Sound switch and a Warmth range, with keyboard focus, assistive-technology actions and a staggered entry. Theme flips between the naqsh and glass presets. RASM_BEGIN, RASM_SOUND_CHANGED { checked }, RASM_WARMTH_CHANGED { value }, RASM_NAME_CHANGED { value }, RASM_NAME_SUBMITTED { value } and RASM_SEASON_CHANGED { value } leave the panel."
 ]
 
 uses ThemeAtom from "std/behaviors/std-rasm-theme"
@@ -12,6 +12,10 @@ uses ToggleAtom from "std/behaviors/std-rasm-toggle"
 uses RangeAtom from "std/behaviors/std-rasm-range"
 uses PresenceAtom from "std/behaviors/std-rasm-presence"
 uses FocusAtom from "std/behaviors/std-rasm-focus"
+uses TextFieldAtom from "std/behaviors/std-rasm-textfield"
+uses ChoiceAtom from "std/behaviors/std-rasm-choice"
+uses AnchorAtom from "std/behaviors/std-rasm-anchor"
+uses BufAtom from "std/behaviors/std-text-buffer"
 
 orbital Theme = ThemeAtom.orbitals.RasmThemeOrbital {
   listens {
@@ -26,14 +30,32 @@ orbital Surface = SurfaceAtom.orbitals.RasmSurfaceOrbital {
       config {
         id: "rasm"
         width: 720
-        height: 520
+        height: 700
         rootChild: "panel"
-        rootRect: { x: 120, y: 60, w: 480, h: 400 }
+        rootRect: { x: 120, y: 40, w: 480, h: 620 }
+        fill: true
+        margin: 24
+        align: "center"
       }
     }
   }
   pages {
-    "/rasm-surface": "/rasm-panel"
+    "/rasm-surface": "/rasm-panel" -> RasmSurface, NameBuffer
+  }
+
+  trait NameBuffer = BufAtom.traits.Buffer {
+    config {
+      slot: sidebar
+      headless: true
+    }
+    listens {
+      NameField.RasmTextField.LOAD_TEXT -> LOAD_TEXT
+      NameField.RasmTextField.INSERT_TEXT -> INSERT_TEXT
+      NameField.RasmTextField.BACKSPACE -> BACKSPACE
+      NameField.RasmTextField.MOTION -> MOTION
+      NameField.RasmTextField.OPERATE -> OPERATE
+      NameField.RasmTextField.CURSOR_SET -> CURSOR_SET
+    }
   }
   listens {
     Theme.RasmTheme.RASM_THEME -> RasmSurface.RASM_THEME
@@ -46,6 +68,9 @@ orbital Surface = SurfaceAtom.orbitals.RasmSurfaceOrbital {
     LaterBtn.RasmPressable.RASM_PAINT -> RasmSurface.RASM_PAINT
     SoundToggle.RasmToggle.RASM_PAINT -> RasmSurface.RASM_PAINT
     WarmthRange.RasmRange.RASM_PAINT -> RasmSurface.RASM_PAINT
+    NameField.RasmTextField.RASM_PAINT -> RasmSurface.RASM_PAINT
+    SeasonChoice.RasmChoice.RASM_PAINT -> RasmSurface.RASM_PAINT
+    Surface.RasmSurface.RASM_RESIZE -> RasmSurface.RASM_RESIZE
   }
 }
 
@@ -59,7 +84,7 @@ orbital PanelStack = StackAtom.orbitals.RasmStackOrbital {
         padding: 36
         look: "stack/panel/idle"
         z: 1
-        children: [{ id: "title", size: "measure" }, { id: "body", size: "measure" }, { id: "actions", size: "fixed", main: 46 }, { id: "sound", size: "fixed", main: 28 }, { id: "warmth", size: "fixed", main: 56 }]
+        children: [{ id: "title", size: "measure" }, { id: "body", size: "measure" }, { id: "name", size: "fixed", main: 66 }, { id: "season", size: "fixed", main: 66 }, { id: "actions", size: "fixed", main: 46 }, { id: "sound", size: "fixed", main: 28 }, { id: "warmth", size: "fixed", main: 56 }]
       }
     }
   }
@@ -137,6 +162,7 @@ orbital BeginBtn = PressAtom.orbitals.RasmPressableOrbital {
         label: "Begin"
         intent: "primary"
         action: RASM_BEGIN
+        order: 3
         z: 2
       }
     }
@@ -160,6 +186,7 @@ orbital ThemeBtn = PressAtom.orbitals.RasmPressableOrbital {
         label: "Theme"
         intent: "secondary"
         action: RASM_THEME_PRESSED
+        order: 4
         z: 2
       }
     }
@@ -183,6 +210,7 @@ orbital LaterBtn = PressAtom.orbitals.RasmPressableOrbital {
         label: "Later"
         intent: "secondary"
         disabled: true
+        order: 5
         z: 2
       }
     }
@@ -206,6 +234,7 @@ orbital SoundToggle = ToggleAtom.orbitals.RasmToggleOrbital {
         label: "Sound"
         kind: "switch"
         changed: RASM_SOUND_CHANGED
+        order: 6
         z: 2
       }
     }
@@ -231,6 +260,7 @@ orbital WarmthRange = RangeAtom.orbitals.RasmRangeOrbital {
         max: 100
         value: 60
         changed: RASM_WARMTH_CHANGED
+        order: 7
         z: 2
       }
     }
@@ -250,7 +280,7 @@ orbital Enter = PresenceAtom.orbitals.RasmPresenceOrbital {
   traits {
     RasmPresence {
       config {
-        order: ["panel", "title", "body", "begin", "theme", "later", "sound", "warmth"]
+        order: ["panel", "title", "body", "name", "season", "begin", "theme", "later", "sound", "warmth"]
         staggerMs: 70
       }
     }
@@ -264,11 +294,80 @@ orbital Focus = FocusAtom.orbitals.RasmFocusOrbital {
   traits {
     RasmFocus {
       config {
-        order: ["begin", "theme", "sound", "warmth"]
+        order: ["name", "season", "begin", "theme", "sound", "warmth"]
       }
     }
   }
   listens {
     Surface.RasmSurface.RASM_KEY -> RasmFocus.RASM_KEY
+    Surface.RasmSurface.RASM_ACCESS -> RasmFocus.RASM_ACCESS
+    Surface.RasmSurface.RASM_POINTER -> RasmFocus.RASM_POINTER
+  }
+}
+
+orbital NameField = TextFieldAtom.orbitals.RasmTextFieldOrbital {
+  traits {
+    RasmTextField {
+      config {
+        id: "name"
+        label: "Your name"
+        placeholder: "Type here"
+        changed: RASM_NAME_CHANGED
+        submitted: RASM_NAME_SUBMITTED
+        order: 1
+        z: 2
+      }
+    }
+  }
+  listens {
+    Surface.NameBuffer.KEY -> RasmTextField.BUFFER_KEY
+    Surface.NameBuffer.EDITOR_HOVER -> RasmTextField.BUFFER_HOVER
+    Surface.RasmSurface.RASM_BOOT -> RasmTextField.RASM_BOOT
+    Theme.RasmTheme.RASM_THEME -> RasmTextField.RASM_THEME
+    PanelStack.RasmStack.RASM_PLACE -> RasmTextField.RASM_PLACE
+    Enter.RasmPresence.RASM_ENTER -> RasmTextField.RASM_ENTER
+    Surface.RasmSurface.RASM_POINTER -> RasmTextField.RASM_POINTER
+    Surface.RasmSurface.RASM_TEXT -> RasmTextField.RASM_TEXT
+    Surface.RasmSurface.RASM_KEYPRESS -> RasmTextField.RASM_KEYPRESS
+    Focus.RasmFocus.RASM_FOCUS -> RasmTextField.RASM_FOCUS
+    Focus.RasmFocus.RASM_ACTIVATE -> RasmTextField.RASM_ACTIVATE
+    Surface.NameBuffer.BUFFER_EDITED -> RasmTextField.BUFFER_EDITED
+    Surface.NameBuffer.CURSOR_MOVED -> RasmTextField.CURSOR_MOVED
+  }
+}
+
+orbital SeasonChoice = ChoiceAtom.orbitals.RasmChoiceOrbital {
+  traits {
+    RasmChoice {
+      config {
+        id: "season"
+        label: "Season"
+        options: ["Spring", "Summer", "Autumn", "Winter"]
+        value: "Spring"
+        changed: RASM_SEASON_CHANGED
+        order: 2
+        z: 2
+      }
+    }
+  }
+  listens {
+    Surface.RasmSurface.RASM_BOOT -> RasmChoice.RASM_BOOT
+    Theme.RasmTheme.RASM_THEME -> RasmChoice.RASM_THEME
+    PanelStack.RasmStack.RASM_PLACE -> RasmChoice.RASM_PLACE
+    Anchor.RasmAnchor.RASM_PLACE -> RasmChoice.RASM_PLACE
+    Enter.RasmPresence.RASM_ENTER -> RasmChoice.RASM_ENTER
+    Surface.RasmSurface.RASM_POINTER -> RasmChoice.RASM_POINTER
+    Surface.RasmSurface.RASM_KEYPRESS -> RasmChoice.RASM_KEYPRESS
+    Focus.RasmFocus.RASM_FOCUS -> RasmChoice.RASM_FOCUS
+    Focus.RasmFocus.RASM_ACTIVATE -> RasmChoice.RASM_ACTIVATE
+    Focus.RasmFocus.RASM_STEP -> RasmChoice.RASM_STEP
+  }
+}
+
+orbital Anchor = AnchorAtom.orbitals.RasmAnchorOrbital {
+  listens {
+    PanelStack.RasmStack.RASM_PLACE -> RasmAnchor.RASM_PLACE
+    Surface.RasmSurface.RASM_RESIZE -> RasmAnchor.RASM_RESIZE
+    SeasonChoice.RasmChoice.RASM_ANCHOR -> RasmAnchor.RASM_ANCHOR
   }
 }

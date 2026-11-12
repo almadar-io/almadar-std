@@ -1,0 +1,580 @@
+app std-rasm-textfield [
+  version: "1.0.0",
+  description: "std-rasm-textfield — a Rasm text field painted on the orbital canvas, editing through a std-text-buffer orbital wired to it by editor id (the field's id). States idle, hovered, focused (editing) and disabled. A press moves the caret to the index the canvas reports, RASM_TEXT inserts committed text or shows the input method's preedit, RASM_KEYPRESS maps Backspace, Delete, the arrows, Home, End and Enter to buffer motions and operators (shift+arrows select on a single-line field), and every committed edit emits the configured changed event with { value }. Enter on a single-line field emits the configured submitted event. The painted nodes carry a textbox semantic with value, caret, selection, focus and order. Looks are keyed textfield/default/<idle|hovered|focused|disabled|label|placeholder|selection|caret>."
+]
+
+type RasmRect = { x : number!, y : number!, w : number!, h : number! }
+type RasmPlaced = { id : string!, rect : RasmRect! }
+type RasmMaterial = { wgsl : string!, params : [number]!, live : boolean! }
+type RasmCorners = { radius : [number]!, kind : "round" | "bevel" | "notch" | "scoop" }
+type RasmSpring = { stiffness : number!, damping : number! }
+type RasmShadow = { color : string!, blur : number! }
+type RasmLook = { fill : string, stroke : string, strokeWidth : number, corners : RasmCorners, shadow : RasmShadow, material : RasmMaterial, textColor : string, font : string, spring : RasmSpring, decor : string }
+
+orbital RasmTextFieldOrbital {
+  entity RasmTextFieldItem [runtime] {
+    id : string!
+    looks : Map string RasmLook = {}
+    hasLooks : boolean = false
+    rect : RasmRect = { x: 0, y: 0, w: 0, h: 0 }
+    hasRect : boolean = false
+    entering : number = -1
+    stagger : number = 70
+    paints : number = 0
+    text : string @description "The buffer's text as it last announced it." = ""
+    lines : [string] @description "The text split into lines, for caret arithmetic." = [""]
+    row : number @description "Caret line in the buffer." = 0
+    col : number @description "Caret column in the buffer line." = 0
+    anchor : number @description "Where a shift selection began, as a character index; -1 when nothing is selected." = -1
+    preedit : string @description "The input method's current composition." = ""
+    loading : boolean @description "The configured value was sent to the buffer and its first announcement has not come back." = false
+    hasPending : boolean @description "Typed text waits for the selection delete to finish." = false
+    pendingText : string = ""
+  }
+
+  trait RasmTextField -> RasmTextFieldItem [client] {
+    initial: idle
+
+    state idle {
+      INIT -> disabled when @config.disabled
+      INIT -> idle when (not @config.disabled)
+      RASM_BOOT -> disabled when @config.disabled
+        (set @entity.loading true)
+        (set @entity.anchor -1)
+        (set @entity.preedit "")
+        (set @entity.hasPending false)
+        (emit LOAD_TEXT { editorId: @config.id, path: "", text: @config.value })
+      RASM_BOOT -> idle when (not @config.disabled)
+        (set @entity.loading true)
+        (set @entity.anchor -1)
+        (set @entity.preedit "")
+        (set @entity.hasPending false)
+        (emit LOAD_TEXT { editorId: @config.id, path: "", text: @config.value })
+      RASM_THEME -> idle
+        (set @entity.looks ?looks)
+        (set @entity.hasLooks true)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_PLACE -> idle when (array/some ?placed (fn p (= @p.id @config.id)))
+        (set @entity.rect (let ((mine (default (array/find ?placed (fn p (= @p.id @config.id))) { id: "", rect: { x: 0, y: 0, w: 0, h: 0 } }))) @mine.rect))
+        (set @entity.hasRect true)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_ENTER -> idle when (array/includes ?order @config.id)
+        (set @entity.entering (array/indexOf ?order @config.id))
+        (set @entity.stagger ?staggerMs)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      BUFFER_KEY -> idle
+      BUFFER_HOVER -> idle
+      BUFFER_EDITED -> idle when (and (= ?editorId @config.id) @entity.loading)
+        (set @entity.loading false)
+        (set @entity.text ?text)
+        (set @entity.lines (str/split ?text "\n"))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      BUFFER_EDITED -> idle when (and (= ?editorId @config.id) (not @entity.loading) @entity.hasPending)
+        (set @entity.hasPending false)
+        (set @entity.text ?text)
+        (set @entity.lines (str/split ?text "\n"))
+        (emit INSERT_TEXT { editorId: @config.id, text: @entity.pendingText })
+      BUFFER_EDITED -> idle when (and (= ?editorId @config.id) (not @entity.loading) (not @entity.hasPending))
+        (set @entity.text ?text)
+        (set @entity.lines (str/split ?text "\n"))
+        (emit @config.changed { value: ?text })
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      CURSOR_MOVED -> idle when (= ?editorId @config.id)
+        (set @entity.row ?row)
+        (set @entity.col ?col)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_POINTER -> hovered when (and (or (= ?id @config.id) (= ?id (str/concat @config.id ":text"))) (= ?kind "enter"))
+        (set @entity.entering -1)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_POINTER -> focused when (and (or (= ?id @config.id) (= ?id (str/concat @config.id ":text"))) (= ?kind "down"))
+        (set @entity.entering -1)
+        (set @entity.anchor -1)
+        (let ((ix (default ?index -1)))
+          (let ((parts (str/split (str/slice @entity.text 0 (if (>= @ix 0) @ix (str/len @entity.text))) "\n")))
+            (emit CURSOR_SET { editorId: @config.id, row: (- (array/len @parts) 1), col: (str/len (default (array/last @parts) "")) })))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_FOCUS -> focused when (= ?id @config.id)
+        (set @entity.entering -1)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_ACTIVATE -> focused when (= ?id @config.id)
+        (set @entity.entering -1)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      REPAINT -> idle when (and @entity.hasLooks @entity.hasRect)
+        (let (
+            (r @entity.rect)
+            (anim (if (>= @entity.entering 0) { durationMs: (+ 520 (* @entity.entering @entity.stagger)), loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 14 }, { at: (/ (* @entity.entering @entity.stagger) (+ 520 (* @entity.entering @entity.stagger))), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }] } null))
+            (look (default (object/get @entity.looks "textfield/default/idle") {}))
+            (lab (default (object/get @entity.looks "textfield/default/label") {}))
+            (ph (default (object/get @entity.looks "textfield/default/placeholder") {}))
+            (sel (default (object/get @entity.looks "textfield/default/selection") {}))
+            (car (default (object/get @entity.looks "textfield/default/caret") {}))
+            (caretIdx (+ (array/reduce (array/range @entity.row) 0 (fn a k (+ @a (+ (str/len (default (array/nth @entity.lines @k) "")) 1)))) @entity.col))
+            (hasSel (and false (>= @entity.anchor 0) (!= @entity.anchor @entity.col)))
+          )
+          (let ((by (+ @r.y 22)) (bh (- @r.h 22)))
+            (emit RASM_PAINT { id: @config.id, z: @config.z, nodes: (array/concat [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @r.x, y: @by, z: @config.z }, width: @r.w, height: @bh, fill: @look.fill, stroke: @look.stroke, strokeWidth: @look.strokeWidth, corners: @look.corners, spring: @look.spring, animation: @anim, hit: true, semantic: { role: "textbox", name: @config.label, value: @entity.text, caret: @caretIdx, selectionStart: (if @hasSel (math/min @entity.anchor @entity.col) @caretIdx), selectionEnd: (if @hasSel (math/max @entity.anchor @entity.col) @caretIdx), focused: false, multiline: @config.multiline, order: @config.order, disabled: false } }, { type: draw-text, id: (str/concat @config.id ":label"), text: @config.label, anchor: "top-left", position: { x: (+ @r.x 2), y: (+ @r.y 10), z: @config.z }, align: left, baseline: middle, color: @lab.textColor, font: @lab.font, animation: @anim }, { type: draw-text, id: (str/concat @config.id ":text"), text: @entity.text, anchor: "top-left", position: { x: (+ @r.x 14), y: (if @config.multiline (+ @by 10) (+ @by (/ @bh 2))), z: @config.z }, align: left, baseline: (if @config.multiline "top" "middle"), color: @look.textColor, font: @look.font, width: (if @config.multiline (- @r.w 28) null), wrap: @config.multiline, caret: (if false @caretIdx -1), caretColor: @car.fill, selectionStart: (if @hasSel (math/min @entity.anchor @entity.col) 0), selectionEnd: (if @hasSel (math/max @entity.anchor @entity.col) 0), selectionColor: @sel.fill, preedit: @entity.preedit, hit: true, animation: @anim }] (array/map (if (and (= @entity.text "") (= @entity.preedit "")) [0] []) (fn i { type: draw-text, id: (str/concat @config.id ":placeholder"), text: @config.placeholder, anchor: "top-left", position: { x: (+ @r.x 14), y: (if @config.multiline (+ @by 10) (+ @by (/ @bh 2))), z: @config.z }, align: left, baseline: (if @config.multiline "top" "middle"), color: @ph.textColor, font: @ph.font, animation: @anim }))) })))
+    }
+
+    state hovered {
+      INIT -> disabled when @config.disabled
+      INIT -> idle when (not @config.disabled)
+      RASM_BOOT -> disabled when @config.disabled
+        (set @entity.loading true)
+        (set @entity.anchor -1)
+        (set @entity.preedit "")
+        (set @entity.hasPending false)
+        (emit LOAD_TEXT { editorId: @config.id, path: "", text: @config.value })
+      RASM_BOOT -> idle when (not @config.disabled)
+        (set @entity.loading true)
+        (set @entity.anchor -1)
+        (set @entity.preedit "")
+        (set @entity.hasPending false)
+        (emit LOAD_TEXT { editorId: @config.id, path: "", text: @config.value })
+      RASM_THEME -> hovered
+        (set @entity.looks ?looks)
+        (set @entity.hasLooks true)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_PLACE -> hovered when (array/some ?placed (fn p (= @p.id @config.id)))
+        (set @entity.rect (let ((mine (default (array/find ?placed (fn p (= @p.id @config.id))) { id: "", rect: { x: 0, y: 0, w: 0, h: 0 } }))) @mine.rect))
+        (set @entity.hasRect true)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_ENTER -> hovered when (array/includes ?order @config.id)
+        (set @entity.entering (array/indexOf ?order @config.id))
+        (set @entity.stagger ?staggerMs)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      BUFFER_KEY -> hovered
+      BUFFER_HOVER -> hovered
+      BUFFER_EDITED -> hovered when (and (= ?editorId @config.id) @entity.loading)
+        (set @entity.loading false)
+        (set @entity.text ?text)
+        (set @entity.lines (str/split ?text "\n"))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      BUFFER_EDITED -> hovered when (and (= ?editorId @config.id) (not @entity.loading) @entity.hasPending)
+        (set @entity.hasPending false)
+        (set @entity.text ?text)
+        (set @entity.lines (str/split ?text "\n"))
+        (emit INSERT_TEXT { editorId: @config.id, text: @entity.pendingText })
+      BUFFER_EDITED -> hovered when (and (= ?editorId @config.id) (not @entity.loading) (not @entity.hasPending))
+        (set @entity.text ?text)
+        (set @entity.lines (str/split ?text "\n"))
+        (emit @config.changed { value: ?text })
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      CURSOR_MOVED -> hovered when (= ?editorId @config.id)
+        (set @entity.row ?row)
+        (set @entity.col ?col)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_POINTER -> idle when (and (or (= ?id @config.id) (= ?id (str/concat @config.id ":text"))) (= ?kind "leave"))
+        (set @entity.entering -1)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_POINTER -> focused when (and (or (= ?id @config.id) (= ?id (str/concat @config.id ":text"))) (= ?kind "down"))
+        (set @entity.entering -1)
+        (set @entity.anchor -1)
+        (let ((ix (default ?index -1)))
+          (let ((parts (str/split (str/slice @entity.text 0 (if (>= @ix 0) @ix (str/len @entity.text))) "\n")))
+            (emit CURSOR_SET { editorId: @config.id, row: (- (array/len @parts) 1), col: (str/len (default (array/last @parts) "")) })))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_FOCUS -> focused when (= ?id @config.id)
+        (set @entity.entering -1)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_ACTIVATE -> focused when (= ?id @config.id)
+        (set @entity.entering -1)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      REPAINT -> hovered when (and @entity.hasLooks @entity.hasRect)
+        (let (
+            (r @entity.rect)
+            (anim (if (>= @entity.entering 0) { durationMs: (+ 520 (* @entity.entering @entity.stagger)), loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 14 }, { at: (/ (* @entity.entering @entity.stagger) (+ 520 (* @entity.entering @entity.stagger))), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }] } null))
+            (look (default (object/get @entity.looks "textfield/default/hovered") {}))
+            (lab (default (object/get @entity.looks "textfield/default/label") {}))
+            (ph (default (object/get @entity.looks "textfield/default/placeholder") {}))
+            (sel (default (object/get @entity.looks "textfield/default/selection") {}))
+            (car (default (object/get @entity.looks "textfield/default/caret") {}))
+            (caretIdx (+ (array/reduce (array/range @entity.row) 0 (fn a k (+ @a (+ (str/len (default (array/nth @entity.lines @k) "")) 1)))) @entity.col))
+            (hasSel (and false (>= @entity.anchor 0) (!= @entity.anchor @entity.col)))
+          )
+          (let ((by (+ @r.y 22)) (bh (- @r.h 22)))
+            (emit RASM_PAINT { id: @config.id, z: @config.z, nodes: (array/concat [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @r.x, y: @by, z: @config.z }, width: @r.w, height: @bh, fill: @look.fill, stroke: @look.stroke, strokeWidth: @look.strokeWidth, corners: @look.corners, spring: @look.spring, animation: @anim, hit: true, semantic: { role: "textbox", name: @config.label, value: @entity.text, caret: @caretIdx, selectionStart: (if @hasSel (math/min @entity.anchor @entity.col) @caretIdx), selectionEnd: (if @hasSel (math/max @entity.anchor @entity.col) @caretIdx), focused: false, multiline: @config.multiline, order: @config.order, disabled: false } }, { type: draw-text, id: (str/concat @config.id ":label"), text: @config.label, anchor: "top-left", position: { x: (+ @r.x 2), y: (+ @r.y 10), z: @config.z }, align: left, baseline: middle, color: @lab.textColor, font: @lab.font, animation: @anim }, { type: draw-text, id: (str/concat @config.id ":text"), text: @entity.text, anchor: "top-left", position: { x: (+ @r.x 14), y: (if @config.multiline (+ @by 10) (+ @by (/ @bh 2))), z: @config.z }, align: left, baseline: (if @config.multiline "top" "middle"), color: @look.textColor, font: @look.font, width: (if @config.multiline (- @r.w 28) null), wrap: @config.multiline, caret: (if false @caretIdx -1), caretColor: @car.fill, selectionStart: (if @hasSel (math/min @entity.anchor @entity.col) 0), selectionEnd: (if @hasSel (math/max @entity.anchor @entity.col) 0), selectionColor: @sel.fill, preedit: @entity.preedit, hit: true, animation: @anim }] (array/map (if (and (= @entity.text "") (= @entity.preedit "")) [0] []) (fn i { type: draw-text, id: (str/concat @config.id ":placeholder"), text: @config.placeholder, anchor: "top-left", position: { x: (+ @r.x 14), y: (if @config.multiline (+ @by 10) (+ @by (/ @bh 2))), z: @config.z }, align: left, baseline: (if @config.multiline "top" "middle"), color: @ph.textColor, font: @ph.font, animation: @anim }))) })))
+    }
+
+    state focused {
+      INIT -> disabled when @config.disabled
+      INIT -> idle when (not @config.disabled)
+      RASM_BOOT -> disabled when @config.disabled
+        (set @entity.loading true)
+        (set @entity.anchor -1)
+        (set @entity.preedit "")
+        (set @entity.hasPending false)
+        (emit LOAD_TEXT { editorId: @config.id, path: "", text: @config.value })
+      RASM_BOOT -> idle when (not @config.disabled)
+        (set @entity.loading true)
+        (set @entity.anchor -1)
+        (set @entity.preedit "")
+        (set @entity.hasPending false)
+        (emit LOAD_TEXT { editorId: @config.id, path: "", text: @config.value })
+      RASM_THEME -> focused
+        (set @entity.looks ?looks)
+        (set @entity.hasLooks true)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_PLACE -> focused when (array/some ?placed (fn p (= @p.id @config.id)))
+        (set @entity.rect (let ((mine (default (array/find ?placed (fn p (= @p.id @config.id))) { id: "", rect: { x: 0, y: 0, w: 0, h: 0 } }))) @mine.rect))
+        (set @entity.hasRect true)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_ENTER -> focused when (array/includes ?order @config.id)
+        (set @entity.entering (array/indexOf ?order @config.id))
+        (set @entity.stagger ?staggerMs)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      BUFFER_KEY -> focused
+      BUFFER_HOVER -> focused
+      BUFFER_EDITED -> focused when (and (= ?editorId @config.id) @entity.loading)
+        (set @entity.loading false)
+        (set @entity.text ?text)
+        (set @entity.lines (str/split ?text "\n"))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      BUFFER_EDITED -> focused when (and (= ?editorId @config.id) (not @entity.loading) @entity.hasPending)
+        (set @entity.hasPending false)
+        (set @entity.text ?text)
+        (set @entity.lines (str/split ?text "\n"))
+        (emit INSERT_TEXT { editorId: @config.id, text: @entity.pendingText })
+      BUFFER_EDITED -> focused when (and (= ?editorId @config.id) (not @entity.loading) (not @entity.hasPending))
+        (set @entity.text ?text)
+        (set @entity.lines (str/split ?text "\n"))
+        (emit @config.changed { value: ?text })
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      CURSOR_MOVED -> focused when (= ?editorId @config.id)
+        (set @entity.row ?row)
+        (set @entity.col ?col)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_FOCUS -> idle when (!= ?id @config.id)
+        (set @entity.entering -1)
+        (set @entity.anchor -1)
+        (set @entity.preedit "")
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_POINTER -> focused when (and (or (= ?id @config.id) (= ?id (str/concat @config.id ":text"))) (= ?kind "down"))
+        (set @entity.entering -1)
+        (set @entity.anchor -1)
+        (let ((ix (default ?index -1)))
+          (let ((parts (str/split (str/slice @entity.text 0 (if (>= @ix 0) @ix (str/len @entity.text))) "\n")))
+            (emit CURSOR_SET { editorId: @config.id, row: (- (array/len @parts) 1), col: (str/len (default (array/last @parts) "")) })))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_TEXT -> focused when (and (= ?target @config.id) (not ?composing) (not (and (>= @entity.anchor 0) (!= @entity.anchor @entity.col))))
+        (set @entity.preedit "")
+        (emit INSERT_TEXT { editorId: @config.id, text: ?text })
+      RASM_TEXT -> focused when (and (= ?target @config.id) (not ?composing) (and (>= @entity.anchor 0) (!= @entity.anchor @entity.col)))
+        (set @entity.preedit "")
+        (set @entity.pendingText ?text)
+        (set @entity.hasPending true)
+        (emit CURSOR_SET { editorId: @config.id, row: 0, col: (math/min @entity.anchor @entity.col) })
+        (emit OPERATE { editorId: @config.id, operator: "delete", motion: "right", count: (- (math/max @entity.anchor @entity.col) (math/min @entity.anchor @entity.col)) })
+        (set @entity.anchor -1)
+      RASM_TEXT -> focused when (and (= ?target @config.id) ?composing)
+        (set @entity.preedit ?text)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_KEYPRESS -> focused when (and (= ?target @config.id) (= ?key "Backspace") (not (and (>= @entity.anchor 0) (!= @entity.anchor @entity.col))) (or (> @entity.col 0) (> @entity.row 0)))
+        (emit BACKSPACE { editorId: @config.id })
+      RASM_KEYPRESS -> focused when (and (= ?target @config.id) (= ?key "Backspace") (and (>= @entity.anchor 0) (!= @entity.anchor @entity.col)))
+        (emit CURSOR_SET { editorId: @config.id, row: 0, col: (math/min @entity.anchor @entity.col) })
+        (emit OPERATE { editorId: @config.id, operator: "delete", motion: "right", count: (- (math/max @entity.anchor @entity.col) (math/min @entity.anchor @entity.col)) })
+        (set @entity.anchor -1)
+      RASM_KEYPRESS -> focused when (and (= ?target @config.id) (= ?key "Delete") (not (and (>= @entity.anchor 0) (!= @entity.anchor @entity.col))) (< @entity.col (str/len (default (array/nth @entity.lines @entity.row) ""))))
+        (emit OPERATE { editorId: @config.id, operator: "delete", motion: "right", count: 1 })
+      RASM_KEYPRESS -> focused when (and (= ?target @config.id) (= ?key "Delete") (and (>= @entity.anchor 0) (!= @entity.anchor @entity.col)))
+        (emit CURSOR_SET { editorId: @config.id, row: 0, col: (math/min @entity.anchor @entity.col) })
+        (emit OPERATE { editorId: @config.id, operator: "delete", motion: "right", count: (- (math/max @entity.anchor @entity.col) (math/min @entity.anchor @entity.col)) })
+        (set @entity.anchor -1)
+      RASM_KEYPRESS -> focused when (and (= ?target @config.id) (= ?key "ArrowLeft") (not ?shift) (and (>= @entity.anchor 0) (!= @entity.anchor @entity.col)))
+        (emit CURSOR_SET { editorId: @config.id, row: 0, col: (math/min @entity.anchor @entity.col) })
+        (set @entity.anchor -1)
+      RASM_KEYPRESS -> focused when (and (= ?target @config.id) (= ?key "ArrowLeft") (not ?shift) (not (and (>= @entity.anchor 0) (!= @entity.anchor @entity.col))))
+        (set @entity.anchor -1)
+        (emit MOTION { editorId: @config.id, motion: "left", count: 1 })
+      RASM_KEYPRESS -> focused when (and (= ?target @config.id) (= ?key "ArrowLeft") ?shift)
+        (set @entity.anchor (if ?shift (if @config.multiline -1 (if (>= @entity.anchor 0) @entity.anchor @entity.col)) -1))
+        (emit MOTION { editorId: @config.id, motion: "left", count: 1 })
+      RASM_KEYPRESS -> focused when (and (= ?target @config.id) (= ?key "ArrowRight") (not ?shift) (and (>= @entity.anchor 0) (!= @entity.anchor @entity.col)))
+        (emit CURSOR_SET { editorId: @config.id, row: 0, col: (math/max @entity.anchor @entity.col) })
+        (set @entity.anchor -1)
+      RASM_KEYPRESS -> focused when (and (= ?target @config.id) (= ?key "ArrowRight") (not ?shift) (not (and (>= @entity.anchor 0) (!= @entity.anchor @entity.col))))
+        (set @entity.anchor -1)
+        (emit MOTION { editorId: @config.id, motion: "right", count: 1 })
+      RASM_KEYPRESS -> focused when (and (= ?target @config.id) (= ?key "ArrowRight") ?shift)
+        (set @entity.anchor (if ?shift (if @config.multiline -1 (if (>= @entity.anchor 0) @entity.anchor @entity.col)) -1))
+        (emit MOTION { editorId: @config.id, motion: "right", count: 1 })
+      RASM_KEYPRESS -> focused when (and (= ?target @config.id) (= ?key "ArrowUp") @config.multiline)
+        (set @entity.anchor -1)
+        (emit MOTION { editorId: @config.id, motion: "up", count: 1 })
+      RASM_KEYPRESS -> focused when (and (= ?target @config.id) (= ?key "ArrowDown") @config.multiline)
+        (set @entity.anchor -1)
+        (emit MOTION { editorId: @config.id, motion: "down", count: 1 })
+      RASM_KEYPRESS -> focused when (and (= ?target @config.id) (= ?key "Home"))
+        (set @entity.anchor (if ?shift (if @config.multiline -1 (if (>= @entity.anchor 0) @entity.anchor @entity.col)) -1))
+        (emit CURSOR_SET { editorId: @config.id, row: @entity.row, col: 0 })
+      RASM_KEYPRESS -> focused when (and (= ?target @config.id) (= ?key "End"))
+        (set @entity.anchor (if ?shift (if @config.multiline -1 (if (>= @entity.anchor 0) @entity.anchor @entity.col)) -1))
+        (emit CURSOR_SET { editorId: @config.id, row: @entity.row, col: (str/len (default (array/nth @entity.lines @entity.row) "")) })
+      RASM_KEYPRESS -> focused when (and (= ?target @config.id) (= ?key "Enter") (not @config.multiline))
+        (emit @config.submitted { value: @entity.text })
+      RASM_KEYPRESS -> focused when (and (= ?target @config.id) (= ?key "Enter") @config.multiline (not (and (>= @entity.anchor 0) (!= @entity.anchor @entity.col))))
+        (emit INSERT_TEXT { editorId: @config.id, text: "\n" })
+      RASM_KEYPRESS -> focused when (and (= ?target @config.id) (= ?key "Enter") @config.multiline (and (>= @entity.anchor 0) (!= @entity.anchor @entity.col)))
+        (set @entity.pendingText "\n")
+        (set @entity.hasPending true)
+        (emit CURSOR_SET { editorId: @config.id, row: 0, col: (math/min @entity.anchor @entity.col) })
+        (emit OPERATE { editorId: @config.id, operator: "delete", motion: "right", count: (- (math/max @entity.anchor @entity.col) (math/min @entity.anchor @entity.col)) })
+        (set @entity.anchor -1)
+      RASM_KEYPRESS -> focused when (and (= ?target @config.id) (= ?key "a") (or ?ctrl ?meta) (not @config.multiline))
+        (set @entity.anchor 0)
+        (emit CURSOR_SET { editorId: @config.id, row: 0, col: (str/len @entity.text) })
+      REPAINT -> focused when (and @entity.hasLooks @entity.hasRect)
+        (let (
+            (r @entity.rect)
+            (anim (if (>= @entity.entering 0) { durationMs: (+ 520 (* @entity.entering @entity.stagger)), loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 14 }, { at: (/ (* @entity.entering @entity.stagger) (+ 520 (* @entity.entering @entity.stagger))), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }] } null))
+            (look (default (object/get @entity.looks "textfield/default/focused") {}))
+            (lab (default (object/get @entity.looks "textfield/default/label") {}))
+            (ph (default (object/get @entity.looks "textfield/default/placeholder") {}))
+            (sel (default (object/get @entity.looks "textfield/default/selection") {}))
+            (car (default (object/get @entity.looks "textfield/default/caret") {}))
+            (caretIdx (+ (array/reduce (array/range @entity.row) 0 (fn a k (+ @a (+ (str/len (default (array/nth @entity.lines @k) "")) 1)))) @entity.col))
+            (hasSel (and true (>= @entity.anchor 0) (!= @entity.anchor @entity.col)))
+          )
+          (let ((by (+ @r.y 22)) (bh (- @r.h 22)))
+            (emit RASM_PAINT { id: @config.id, z: @config.z, nodes: (array/concat [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @r.x, y: @by, z: @config.z }, width: @r.w, height: @bh, fill: @look.fill, stroke: @look.stroke, strokeWidth: @look.strokeWidth, corners: @look.corners, spring: @look.spring, animation: @anim, hit: true, semantic: { role: "textbox", name: @config.label, value: @entity.text, caret: @caretIdx, selectionStart: (if @hasSel (math/min @entity.anchor @entity.col) @caretIdx), selectionEnd: (if @hasSel (math/max @entity.anchor @entity.col) @caretIdx), focused: true, multiline: @config.multiline, order: @config.order, disabled: false } }, { type: draw-text, id: (str/concat @config.id ":label"), text: @config.label, anchor: "top-left", position: { x: (+ @r.x 2), y: (+ @r.y 10), z: @config.z }, align: left, baseline: middle, color: @lab.textColor, font: @lab.font, animation: @anim }, { type: draw-text, id: (str/concat @config.id ":text"), text: @entity.text, anchor: "top-left", position: { x: (+ @r.x 14), y: (if @config.multiline (+ @by 10) (+ @by (/ @bh 2))), z: @config.z }, align: left, baseline: (if @config.multiline "top" "middle"), color: @look.textColor, font: @look.font, width: (if @config.multiline (- @r.w 28) null), wrap: @config.multiline, caret: (if true @caretIdx -1), caretColor: @car.fill, selectionStart: (if @hasSel (math/min @entity.anchor @entity.col) 0), selectionEnd: (if @hasSel (math/max @entity.anchor @entity.col) 0), selectionColor: @sel.fill, preedit: @entity.preedit, hit: true, animation: @anim }] (array/map (if (and (= @entity.text "") (= @entity.preedit "")) [0] []) (fn i { type: draw-text, id: (str/concat @config.id ":placeholder"), text: @config.placeholder, anchor: "top-left", position: { x: (+ @r.x 14), y: (if @config.multiline (+ @by 10) (+ @by (/ @bh 2))), z: @config.z }, align: left, baseline: (if @config.multiline "top" "middle"), color: @ph.textColor, font: @ph.font, animation: @anim }))) })))
+    }
+
+    state disabled {
+      INIT -> disabled when @config.disabled
+      INIT -> idle when (not @config.disabled)
+      RASM_BOOT -> disabled when @config.disabled
+        (set @entity.loading true)
+        (set @entity.anchor -1)
+        (set @entity.preedit "")
+        (set @entity.hasPending false)
+        (emit LOAD_TEXT { editorId: @config.id, path: "", text: @config.value })
+      RASM_BOOT -> idle when (not @config.disabled)
+        (set @entity.loading true)
+        (set @entity.anchor -1)
+        (set @entity.preedit "")
+        (set @entity.hasPending false)
+        (emit LOAD_TEXT { editorId: @config.id, path: "", text: @config.value })
+      RASM_THEME -> disabled
+        (set @entity.looks ?looks)
+        (set @entity.hasLooks true)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_PLACE -> disabled when (array/some ?placed (fn p (= @p.id @config.id)))
+        (set @entity.rect (let ((mine (default (array/find ?placed (fn p (= @p.id @config.id))) { id: "", rect: { x: 0, y: 0, w: 0, h: 0 } }))) @mine.rect))
+        (set @entity.hasRect true)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_ENTER -> disabled when (array/includes ?order @config.id)
+        (set @entity.entering (array/indexOf ?order @config.id))
+        (set @entity.stagger ?staggerMs)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      BUFFER_KEY -> disabled
+      BUFFER_HOVER -> disabled
+      BUFFER_EDITED -> disabled when (and (= ?editorId @config.id) @entity.loading)
+        (set @entity.loading false)
+        (set @entity.text ?text)
+        (set @entity.lines (str/split ?text "\n"))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      BUFFER_EDITED -> disabled when (and (= ?editorId @config.id) (not @entity.loading) @entity.hasPending)
+        (set @entity.hasPending false)
+        (set @entity.text ?text)
+        (set @entity.lines (str/split ?text "\n"))
+        (emit INSERT_TEXT { editorId: @config.id, text: @entity.pendingText })
+      BUFFER_EDITED -> disabled when (and (= ?editorId @config.id) (not @entity.loading) (not @entity.hasPending))
+        (set @entity.text ?text)
+        (set @entity.lines (str/split ?text "\n"))
+        (emit @config.changed { value: ?text })
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      CURSOR_MOVED -> disabled when (= ?editorId @config.id)
+        (set @entity.row ?row)
+        (set @entity.col ?col)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      REPAINT -> disabled when (and @entity.hasLooks @entity.hasRect)
+        (let (
+            (r @entity.rect)
+            (anim (if (>= @entity.entering 0) { durationMs: (+ 520 (* @entity.entering @entity.stagger)), loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 14 }, { at: (/ (* @entity.entering @entity.stagger) (+ 520 (* @entity.entering @entity.stagger))), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }] } null))
+            (look (default (object/get @entity.looks "textfield/default/disabled") {}))
+            (lab (default (object/get @entity.looks "textfield/default/label") {}))
+            (ph (default (object/get @entity.looks "textfield/default/placeholder") {}))
+            (sel (default (object/get @entity.looks "textfield/default/selection") {}))
+            (car (default (object/get @entity.looks "textfield/default/caret") {}))
+            (caretIdx (+ (array/reduce (array/range @entity.row) 0 (fn a k (+ @a (+ (str/len (default (array/nth @entity.lines @k) "")) 1)))) @entity.col))
+            (hasSel (and false (>= @entity.anchor 0) (!= @entity.anchor @entity.col)))
+          )
+          (let ((by (+ @r.y 22)) (bh (- @r.h 22)))
+            (emit RASM_PAINT { id: @config.id, z: @config.z, nodes: (array/concat [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @r.x, y: @by, z: @config.z }, width: @r.w, height: @bh, fill: @look.fill, stroke: @look.stroke, strokeWidth: @look.strokeWidth, corners: @look.corners, spring: @look.spring, animation: @anim, hit: false, semantic: { role: "textbox", name: @config.label, value: @entity.text, caret: @caretIdx, selectionStart: (if @hasSel (math/min @entity.anchor @entity.col) @caretIdx), selectionEnd: (if @hasSel (math/max @entity.anchor @entity.col) @caretIdx), focused: false, multiline: @config.multiline, order: @config.order, disabled: true } }, { type: draw-text, id: (str/concat @config.id ":label"), text: @config.label, anchor: "top-left", position: { x: (+ @r.x 2), y: (+ @r.y 10), z: @config.z }, align: left, baseline: middle, color: @lab.textColor, font: @lab.font, animation: @anim }, { type: draw-text, id: (str/concat @config.id ":text"), text: @entity.text, anchor: "top-left", position: { x: (+ @r.x 14), y: (if @config.multiline (+ @by 10) (+ @by (/ @bh 2))), z: @config.z }, align: left, baseline: (if @config.multiline "top" "middle"), color: @look.textColor, font: @look.font, width: (if @config.multiline (- @r.w 28) null), wrap: @config.multiline, caret: (if false @caretIdx -1), caretColor: @car.fill, selectionStart: (if @hasSel (math/min @entity.anchor @entity.col) 0), selectionEnd: (if @hasSel (math/max @entity.anchor @entity.col) 0), selectionColor: @sel.fill, preedit: @entity.preedit, hit: false, animation: @anim }] (array/map (if (and (= @entity.text "") (= @entity.preedit "")) [0] []) (fn i { type: draw-text, id: (str/concat @config.id ":placeholder"), text: @config.placeholder, anchor: "top-left", position: { x: (+ @r.x 14), y: (if @config.multiline (+ @by 10) (+ @by (/ @bh 2))), z: @config.z }, align: left, baseline: (if @config.multiline "top" "middle"), color: @ph.textColor, font: @ph.font, animation: @anim }))) })))
+    }
+
+    emits {
+      RASM_PAINT -> external {
+        id : string!
+        z : number!
+        nodes : [node]!
+      }
+        @description "The field's whole paint: body, label, text with caret and selection, and the placeholder."
+        @tier "domain"
+      REPAINT -> internal {
+        n : number!
+      }
+        @tier "internal"
+      LOAD_TEXT -> external {
+        editorId : string!
+        path : string!
+        text : string!
+      }
+        @description "Load the configured value into the field's buffer."
+        @tier "domain"
+      INSERT_TEXT -> external {
+        editorId : string!
+        text : string!
+      }
+        @description "Insert committed text at the buffer's caret."
+        @tier "domain"
+      BACKSPACE -> external {
+        editorId : string!
+      }
+        @description "Delete the character before the buffer's caret."
+        @tier "domain"
+      MOTION -> external {
+        editorId : string
+        motion : string
+        count : number
+      }
+        @description "Move the buffer's caret."
+        @tier "domain"
+      OPERATE -> external {
+        editorId : string!
+        operator : string!
+        motion : string!
+        count : number!
+        mark : string
+      }
+        @description "Run a buffer operator over a motion (delete forward, delete a selection)."
+        @tier "domain"
+      CURSOR_SET -> external {
+        editorId : string!
+        row : number!
+        col : number!
+      }
+        @description "Place the buffer's caret."
+        @tier "domain"
+      @config.changed -> external {
+        value : string!
+      }
+        @description "A committed edit changed the field's text."
+        @tier "domain"
+      @config.submitted -> external {
+        value : string!
+      }
+        @description "Enter on a single-line field."
+        @tier "domain"
+    }
+
+    listens {
+      RASM_BOOT { }
+        @description "The surface mounted: load the configured value."
+      RASM_THEME { name : string!  looks : Map string RasmLook! }
+        @description "The theme's looks; the field repaints with them."
+      RASM_PLACE { placed : [RasmPlaced]! }
+        @description "Placed rects; the field takes the entry whose id is its own."
+      RASM_ENTER { order : [string]!  staggerMs : number! }
+        @description "The entry choreography; a field in the order paints with its stagger."
+      RASM_POINTER { kind : "down" | "up" | "enter" | "leave" | "move"!  id : string!  x : number!  y : number!  index : number }
+        @description "A pointer event; a press carries the caret index nearest it."
+      RASM_FOCUS { id : string! }
+        @description "Focus moved; the field with that id edits, the others clear."
+      RASM_ACTIVATE { id : string! }
+        @description "Keyboard or assistive activation of the field focuses it."
+      RASM_TEXT { target : string!  text : string!  composing : boolean! }
+        @description "Committed text to insert, or the input method's preedit."
+      RASM_KEYPRESS { target : string!  key : string!  shift : boolean!  alt : boolean!  ctrl : boolean!  meta : boolean! }
+        @description "An editing key for the focused field."
+      BUFFER_EDITED { editorId : string!  path : string!  version : number!  text : string!  dirty : boolean! }
+      BUFFER_KEY { editorId : string  key : string!  code : string  ctrl : boolean!  alt : boolean  shift : boolean  meta : boolean  repeat : boolean }
+        @description "The buffer's own code-block key event; unreachable while the buffer is headless, kept because validate cannot fold the headless knob into the buffer's render (G-ORB-309)."
+      BUFFER_HOVER { editorId : string!  row : number!  col : number! }
+        @description "The buffer's own code-block hover; unreachable while the buffer is headless (G-ORB-309)."
+        @description "The field's buffer announced its text."
+      CURSOR_MOVED { editorId : string!  row : number!  col : number!  mode : string! }
+        @description "The field's buffer announced its caret."
+    }
+
+    config {
+      id : string = ""
+        @label "Id"
+        @description "The region and paint id of the field and the editor id of its buffer."
+        @tier "domain"
+      label : string = ""
+        @label "Label"
+        @description "The text above the field and its accessible name."
+        @tier "domain"
+      value : string = ""
+        @label "Value"
+        @description "The text the field starts with."
+        @tier "domain"
+      placeholder : string = ""
+        @label "Placeholder"
+        @description "The hint painted while the field is empty."
+        @tier "domain"
+      multiline : boolean = false
+        @label "Multiline"
+        @description "Enter inserts a line break and up and down move between lines; selection by shift is single-line only."
+        @tier "domain"
+      disabled : boolean = false
+        @label "Disabled"
+        @description "A disabled field paints its disabled look and takes no pointer or keyboard action."
+        @tier "presentation"
+      changed : event = RASM_TEXT_CHANGED
+        @label "Changed"
+        @description "The event emitted with { value } on every committed edit."
+        @tier "domain"
+      submitted : event = RASM_TEXT_SUBMITTED
+        @label "Submitted"
+        @description "The event emitted with { value } when Enter is pressed on a single-line field."
+        @tier "domain"
+      order : number = 0
+        @label "Order"
+        @description "Reading and tab order of the field's semantic node."
+        @tier "domain"
+      z : number = 0
+        @label "Z"
+        @description "Paint order."
+        @tier "presentation"
+    }
+  }
+
+  page boot as RasmTextFieldStart -> RasmTextField
+}

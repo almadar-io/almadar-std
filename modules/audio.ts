@@ -87,7 +87,7 @@ export const AUDIO_OPERATORS: Record<string, StdOperatorMeta> = {
     module: 'audio', category: 'std-audio',
     host: 'substrate',
     minArity: 1, maxArity: 1,
-    description: 'Schedule voices on the host\'s audio clock, all times in seconds of audio/clock: start plays source from offset (seconds into the source) at time at, for duration (absent: to the end), at playback rate rate and gain gain; stop ends the voice key at at; ramp moves the voice\'s gain or playback rate from its value at at to value at endAt along curve. The host plays exactly what is declared and picks nothing; a stop or ramp for a key with no voice fails the ask (invalid). Resolves via the trailing { emit } envelope. Success payload: {}. Failure kind: invalid (a malformed command, a stop or ramp for a key with no voice), unavailable (a source that cannot be loaded or decoded, a host with no audio output).',
+    description: 'Schedule voices on the host\'s audio clock, all times in seconds of audio/clock: start plays source from offset (seconds into the source) at time at, for duration (absent: to the end), at playback rate rate and gain gain; stop ends the voice key at at; ramp moves the voice\'s gain or playback rate from its value at at to value at endAt along curve. The host plays exactly what is declared and picks nothing; a voice key is known from its start until it is stopped, so a stop of a voice that already ended on its own answers ok (a no-op), a ramp of an ended voice is a no-op ok, and a stop or ramp for a key never started (or already stopped) fails the ask (invalid). Resolves via the trailing { emit } envelope. Success payload: {}. Failure kind: invalid (a malformed command, a stop or ramp for a key never started or already stopped), unavailable (a source that cannot be loaded or decoded, a host with no audio output).',
     hasSideEffects: true, runsOn: 'client', returnType: 'void',
     effect: {
       kind: 'custom',
@@ -102,7 +102,7 @@ export const AUDIO_OPERATORS: Record<string, StdOperatorMeta> = {
     module: 'audio', category: 'std-audio',
     host: 'substrate',
     minArity: 0, maxArity: 0,
-    description: 'Read the host\'s audio clock: audio is seconds on the clock audio/schedule times use, wall is epoch milliseconds read at the same moment. Resolves via the trailing { emit } envelope. Success payload: { audio, wall }. Failure kind: unavailable (a host with no audio output).',
+    description: 'Read the host\'s audio clock: audio is seconds on the clock audio/schedule times use, wall is epoch milliseconds on the canvas clock (performance.timeOrigin + performance.now()), read at the same instant as audio. Resolves via the trailing { emit } envelope. Success payload: { audio, wall }. Failure kind: unavailable (a host with no audio output).',
     hasSideEffects: true, runsOn: 'client', returnType: 'void',
     effect: {
       kind: 'custom',

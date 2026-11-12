@@ -1,0 +1,111 @@
+app std-audio-stage [
+  version: "1.0.0",
+  description: "A GPU canvas whose shader is the call site's WGSL and whose uniforms carry where the music is, so a look can pulse on every beat at full frame rate. STAGE_GRID takes the grid std-beat-grid emits (GRID_READY) and STAGE_POSITION takes the position std-audio-timeline reports (TIMELINE_POSITION); a call site wires them with listens rebinds. Each report repaints one canvas with a full-view quad whose material is the shader config.wgsl (it declares fn shade(px: Pixel) -> vec4<f32>) with two uniform vectors, anchored at the report's wall clock so the shader's px.since is the seconds since the report. Uniform a: a.x beats per second while playing (0 when stopped or before a grid), a.y the fractional beat index at the reported position (beats counted from the grid's first beat, negative before it), a.z beats per bar, a.w the RMS envelope value at the reported position (0 outside the file). Uniform b: b.x, b.y, b.z, b.w the first four band magnitudes at the reported position (0 when absent). The live beat is therefore a.y + a.x * px.since, and fract of it is the phase inside the beat. Before a grid arrives every uniform is zero. STAGE_STOPPED zeroes a.x and keeps the rest, so a look holds still. The atom reads the grid and the position and decides nothing about the music."
+]
+
+orbital AudioStageOrbital {
+  entity AudioStage [runtime] {
+    id : string!
+    firstBeat : number = 0
+    beatSeconds : number = 0
+    beatsPerBar : number = 0
+    hopSeconds : number = 0
+    envelope : [number] = []
+    bands : [[number]] = []
+    wall : number = 0
+    a : [number] = [0, 0, 0, 0]
+    b : [number] = [0, 0, 0, 0]
+  }
+
+  trait AudioStagePaint -> @rebindable AudioStage [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+        (emit STAGE_PAINT {})
+      STAGE_GRID -> ready
+        (set @entity.firstBeat (default (array/nth ?beats 0) 0))
+        (set @entity.beatSeconds ?beatSeconds)
+        (set @entity.beatsPerBar (if (> (array/len ?bars) 1) (math/round (default (/ (- (default (array/nth ?bars 1) 0) (default (array/nth ?bars 0) 0)) ?beatSeconds) 0)) 0))
+        (set @entity.hopSeconds ?hopSeconds)
+        (set @entity.envelope ?envelope)
+        (set @entity.bands ?bands)
+        (set @entity.a [0, 0, 0, 0])
+        (set @entity.b [0, 0, 0, 0])
+        (emit STAGE_PAINT {})
+      STAGE_POSITION -> ready when (and (> @entity.beatSeconds 0) (> @entity.hopSeconds 0))
+        (set @entity.wall ?wall)
+        (set @entity.a [(/ 1 @entity.beatSeconds), (/ (- ?position @entity.firstBeat) @entity.beatSeconds), @entity.beatsPerBar, (if (and (>= ?position 0) (< (math/floor (/ ?position @entity.hopSeconds)) (array/len @entity.envelope))) (default (array/nth @entity.envelope (math/floor (/ ?position @entity.hopSeconds))) 0) 0)])
+        (set @entity.b (let ((frame (if (and (>= ?position 0) (< (math/floor (/ ?position @entity.hopSeconds)) (array/len @entity.bands))) (default (array/nth @entity.bands (math/floor (/ ?position @entity.hopSeconds))) []) []))) [(default (array/nth @frame 0) 0), (default (array/nth @frame 1) 0), (default (array/nth @frame 2) 0), (default (array/nth @frame 3) 0)]))
+        (emit STAGE_PAINT {})
+      STAGE_POSITION -> ready when (not (and (> @entity.beatSeconds 0) (> @entity.hopSeconds 0)))
+        (set @entity.wall ?wall)
+        (emit STAGE_PAINT {})
+      STAGE_STOPPED -> ready
+        (set @entity.a [0, (default (array/nth @entity.a 1) 0), (default (array/nth @entity.a 2) 0), (default (array/nth @entity.a 3) 0)])
+        (emit STAGE_PAINT {})
+      STAGE_PAINT -> ready
+        (render-ui main {
+          type: canvas
+          mode: "3d"
+          className: "!rounded-none h-full w-full"
+          showGrid: false
+          fillContainer: @config.fill
+          camera: { mode: "follow", fov: @config.fov, pos: { x: 0, y: (/ @config.height (* 2 (math/tan (math/deg-rad (/ @config.fov 2))))), z: 0 }, target: { x: 0, y: 0, z: 0 }, controls: false }
+          children: [{
+            type: draw-mesh
+            shape: "polyhedron"
+            position: { x: 0, y: 0, z: 0 }
+            pivot: "center"
+            material: { kind: "shader", wgsl: @config.wgsl, uniforms: { a: @entity.a, b: @entity.b }, anchor: @entity.wall, blend: "alpha", side: "double" }
+            vertices: [[(/ @config.width -2), 0, (/ @config.height -2)], [(/ @config.width 2), 0, (/ @config.height -2)], [(/ @config.width 2), 0, (/ @config.height 2)], [(/ @config.width -2), 0, (/ @config.height 2)]]
+            faces: [[0, 1, 2], [0, 2, 3]]
+            uvs: [[0, 0], [1, 0], [1, 1], [0, 1]]
+            castShadow: false
+            receiveShadow: false
+          }]
+        })
+    }
+
+    emits {
+      STAGE_PAINT {}
+        @description "Internal: repaint the canvas from the stored uniforms."
+        @tier "internal"
+    }
+
+    listens {
+      STAGE_GRID { sampleRate : int! frames : int! duration : number! hopSeconds : number! tempo : number! beatSeconds : number! beats : [number]! bars : [number]! envelope : [number]! bands : [[number]]! onset : [number]! }
+        @description "The grid of the analyzed file (std-beat-grid's GRID_READY): the beat period, beats and bars, and the envelope and band curves the uniforms are read from."
+        @synonyms "grid ready, analysis done, set the beat grid"
+      STAGE_POSITION { position : number! audio : number! wall : number! }
+        @description "The playhead in timeline seconds and the epoch milliseconds read with it (std-audio-timeline's TIMELINE_POSITION): repaints with the beat index, envelope and bands at that position."
+        @synonyms "playhead, position report, tick"
+      STAGE_STOPPED {}
+        @description "Playback stopped (std-audio-timeline's TIMELINE_STOPPED): beats per second becomes 0."
+        @synonyms "stop, paused, halted"
+      STAGE_PAINT {}
+    }
+
+    config {
+      wgsl : string = "fn ring(p: vec2<f32>, r: f32, w: f32) -> f32 {\nreturn 1.0 - smoothstep(0.0, w, abs(length(p) - r));\n}\nfn shade(px: Pixel) -> vec4<f32> {\nlet beat = px.a.y + px.a.x * px.since;\nlet phase = fract(beat);\nlet kick = exp(-phase * 5.0);\nlet p = (px.uv - 0.5) * vec2<f32>(1.7778, 1.0);\nlet r = 0.18 + 0.12 * px.a.w + 0.05 * kick;\nlet glow = ring(p, r, 0.012 + 0.03 * kick) * (0.35 + 0.65 * kick);\nlet bg = vec3<f32>(0.004, 0.006, 0.02) + vec3<f32>(0.01, 0.02, 0.05) * (1.0 - length(p));\nlet tint = mix(vec3<f32>(0.05, 0.35, 0.45), vec3<f32>(0.9, 0.55, 0.15), kick);\nreturn vec4<f32>(bg + tint * glow, 1.0);\n}"
+        @label "Look (WGSL)"
+        @description "The shader. It declares fn shade(px: Pixel) -> vec4<f32>; px.a is uniform a (beats per second, beat index, beats per bar, envelope), px.b the first four band magnitudes, and the live beat is px.a.y + px.a.x * px.since."
+      width : number = 48
+        @label "Width"
+        @description "The quad's world width; match the canvas aspect ratio times height."
+        @tier "infra"
+      height : number = 27
+        @label "Height"
+        @description "The quad's world height; the camera sits so the quad fills the view height."
+        @tier "infra"
+      fill : boolean = false
+        @label "Fill"
+        @description "The canvas takes its container's full size; off keeps the canvas's own height."
+        @tier "presentation"
+      fov : number = 38
+        @label "Field of view"
+        @description "The camera's vertical field of view in degrees."
+        @tier "infra"
+    }
+  }
+}

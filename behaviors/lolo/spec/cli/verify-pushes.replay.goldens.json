@@ -1,0 +1,384 @@
+{
+ "atom": "cli/atoms/std-verify-pushes.lolo",
+ "trait": "VerifyPushes",
+ "note": "G-CROSS-605: a pushed dispatch frame must name a trait the page runs.",
+ "cases": [
+  {
+   "id": "the traits the page runs are the navigate answer's page plus every rendered paint, embedded included",
+   "steps": [
+    {
+     "trait": "VerifyPushes",
+     "from": "navigating",
+     "event": "PUSHES_NAVIGATED",
+     "payload": {
+      "result": {
+       "page": [
+        "Panel"
+       ],
+       "route": "/",
+       "rendered": [
+        {
+         "slot": "main",
+         "trait": "Panel",
+         "embedded": false
+        },
+        {
+         "slot": "main",
+         "trait": "Child",
+         "embedded": true
+        },
+        {
+         "slot": "x",
+         "trait": "Panel",
+         "embedded": false
+        }
+       ]
+      }
+     },
+     "expect": {
+      "state": "connecting",
+      "entity": {
+       "runs": [
+        "Panel",
+        "Child"
+       ]
+      }
+     }
+    }
+   ],
+   "defaults": [
+    "VerifyPushesCli"
+   ]
+  },
+  {
+   "id": "control: a route no page matches is refused, not read as an empty page",
+   "steps": [
+    {
+     "trait": "VerifyPushes",
+     "from": "navigating",
+     "event": "PUSHES_NAVIGATED",
+     "payload": {
+      "result": {
+       "page": [],
+       "route": "",
+       "rendered": []
+      }
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "VERIFY_PUSHES_ANSWERED",
+        "payload": {
+         "status": 500
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "defaults": [
+    "VerifyPushesCli"
+   ]
+  },
+  {
+   "id": "an event-stream message of the page's session is recorded",
+   "entity": {
+    "sessionId": "S1",
+    "runs": [
+     "Panel"
+    ]
+   },
+   "steps": [
+    {
+     "trait": "VerifyPushes",
+     "from": "loading",
+     "event": "PUSHES_EVENT",
+     "payload": {
+      "method": "Network.eventSourceMessageReceived",
+      "sessionId": "S1",
+      "frame": "{\"method\": \"Network.eventSourceMessageReceived\", \"params\": {\"data\": \"hello\"}, \"sessionId\": \"S1\"}"
+     },
+     "expect": {
+      "state": "loading",
+      "entity": {
+       "messages": [
+        "hello"
+       ]
+      }
+     }
+    }
+   ],
+   "defaults": [
+    "VerifyPushesCli"
+   ]
+  },
+  {
+   "id": "control: another session's event-stream message is not recorded",
+   "entity": {
+    "sessionId": "S1",
+    "messages": []
+   },
+   "steps": [
+    {
+     "trait": "VerifyPushes",
+     "from": "loading",
+     "event": "PUSHES_EVENT",
+     "payload": {
+      "method": "Network.eventSourceMessageReceived",
+      "sessionId": "S2",
+      "frame": "{\"params\":{\"data\":\"x\"}}"
+     },
+     "expect": {
+      "state": "loading",
+      "entity": {
+       "messages": []
+      }
+     }
+    }
+   ],
+   "defaults": [
+    "VerifyPushesCli"
+   ]
+  },
+  {
+   "id": "a dispatch frame naming a trait the page does not run fails",
+   "entity": {
+    "runs": [
+     "Panel"
+    ],
+    "messages": [
+     "{\"type\": \"dispatch\", \"orbitalName\": \"Rows\", \"request\": {\"event\": \"ROWS_DONE\", \"targetTrait\": \"RowsFirestoreHttp\"}, \"response\": {}}"
+    ]
+   },
+   "steps": [
+    {
+     "trait": "VerifyPushes",
+     "from": "closing",
+     "event": "PUSHES_REPLY",
+     "payload": {
+      "key": "close",
+      "method": "Target.closeTarget",
+      "frame": "{}"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "VERIFY_PUSHES_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "fail  pushed Rows.RowsFirestoreHttp ROWS_DONE  not run by this page\n1 frames, 1 failed"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "defaults": [
+    "VerifyPushesCli"
+   ]
+  },
+  {
+   "id": "control: a dispatch frame naming a trait the page runs is clean",
+   "entity": {
+    "runs": [
+     "Panel"
+    ],
+    "messages": [
+     "{\"type\": \"dispatch\", \"orbitalName\": \"Shell\", \"request\": {\"event\": \"ROWS_DONE\", \"targetTrait\": \"Panel\"}, \"response\": {}}"
+    ]
+   },
+   "steps": [
+    {
+     "trait": "VerifyPushes",
+     "from": "closing",
+     "event": "PUSHES_REPLY",
+     "payload": {
+      "key": "close",
+      "method": "Target.closeTarget",
+      "frame": "{}"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "VERIFY_PUSHES_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "1 frames, 0 failed"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "defaults": [
+    "VerifyPushesCli"
+   ]
+  },
+  {
+   "id": "a non-dispatch frame is counted and ignored",
+   "entity": {
+    "runs": [
+     "Panel"
+    ],
+    "messages": [
+     "{\"type\": \"bus\", \"event\": \"X\", \"payload\": {\"a\": 1}, \"source\": {\"trait\": \"Rows\"}, \"timestamp\": 1}"
+    ]
+   },
+   "steps": [
+    {
+     "trait": "VerifyPushes",
+     "from": "closing",
+     "event": "PUSHES_REPLY",
+     "payload": {
+      "key": "close",
+      "method": "Target.closeTarget",
+      "frame": "{}"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "VERIFY_PUSHES_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "1 frames, 0 failed"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "defaults": [
+    "VerifyPushesCli"
+   ]
+  },
+  {
+   "id": "a message that is not JSON is reported",
+   "entity": {
+    "runs": [
+     "Panel"
+    ],
+    "messages": [
+     "not json"
+    ]
+   },
+   "steps": [
+    {
+     "trait": "VerifyPushes",
+     "from": "closing",
+     "event": "PUSHES_REPLY",
+     "payload": {
+      "key": "close",
+      "method": "Target.closeTarget",
+      "frame": "{}"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "VERIFY_PUSHES_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "fail  unreadable push message  not json\n1 frames, 1 failed"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "defaults": [
+    "VerifyPushesCli"
+   ]
+  },
+  {
+   "id": "control: no messages is clean",
+   "entity": {
+    "runs": [
+     "Panel"
+    ],
+    "messages": []
+   },
+   "steps": [
+    {
+     "trait": "VerifyPushes",
+     "from": "closing",
+     "event": "PUSHES_REPLY",
+     "payload": {
+      "key": "close",
+      "method": "Target.closeTarget",
+      "frame": "{}"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "VERIFY_PUSHES_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "0 frames, 0 failed"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "defaults": [
+    "VerifyPushesCli"
+   ]
+  },
+  {
+   "id": "the command reads its program, url and route",
+   "steps": [
+    {
+     "trait": "VerifyPushesCli",
+     "from": "ready",
+     "event": "VERIFY_PUSHES_CALLED",
+     "payload": {
+      "headers": {},
+      "rawBody": "{\"argv\": [\"f.lolo\", \"--url\", \"http://h/\", \"--route\", \"/rows\"], \"cwd\": \".\"}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VERIFY_PUSHES_START",
+        "payload": {
+         "file": "f.lolo",
+         "url": "http://h/",
+         "route": "/rows"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a missing route is a usage error",
+   "steps": [
+    {
+     "trait": "VerifyPushesCli",
+     "from": "ready",
+     "event": "VERIFY_PUSHES_CALLED",
+     "payload": {
+      "headers": {},
+      "rawBody": "{\"argv\": [\"f.lolo\", \"--url\", \"http://h/\"], \"cwd\": \".\"}"
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "VERIFY_PUSHES_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "usage: orb verify-pushes <program.lolo> --url <page url> --route <route>"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

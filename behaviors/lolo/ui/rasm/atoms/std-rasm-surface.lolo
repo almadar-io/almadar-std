@@ -18,6 +18,9 @@ orbital RasmSurfaceOrbital {
     id : string!
     paints : Map string RasmPaintEntry @description "Every control's latest paint by control id." = {}
     looks : Map string RasmLook @description "The announced look table." = {}
+    viewW : number @description "The canvas width the layout uses: the config width, then the resized width when fill is on." = 720
+    viewH : number @description "The canvas height the layout uses." = 520
+    root : RasmRect @description "The rect handed to the root child." = { x: 0, y: 0, w: 720, h: 520 }
     repaints : number @description "Counts repaints, so each repaint in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
   }
 
@@ -26,15 +29,37 @@ orbital RasmSurfaceOrbital {
 
     state ready {
       INIT -> ready
+        (set @entity.viewW @config.width)
+        (set @entity.viewH @config.height)
+        (set @entity.root @config.rootRect)
         (emit RASM_BOOT { })
-        (emit RASM_PLACE { placed: [{ id: @config.rootChild, rect: @config.rootRect }] })
+        (emit RASM_PLACE { placed: [{ id: @config.rootChild, rect: @entity.root }] })
         (set @entity.repaints (+ @entity.repaints 1))
         (emit SURFACE_REPAINT { n: @entity.repaints })
       RASM_THEME -> ready
         (set @entity.looks ?looks)
-        (emit RASM_PLACE { placed: [{ id: @config.rootChild, rect: @config.rootRect }] })
+        (emit RASM_PLACE { placed: [{ id: @config.rootChild, rect: @entity.root }] })
         (set @entity.repaints (+ @entity.repaints 1))
         (emit SURFACE_REPAINT { n: @entity.repaints })
+      RASM_RESIZE -> ready
+        (set @entity.viewW ?width)
+        (set @entity.viewH ?height)
+        (set @entity.root (if @config.fill (let ((w (math/max 0 (- ?width (* 2 @config.margin)))) (h (math/max 0 (- ?height (* 2 @config.margin))))) (if (= @config.align "center") { x: (/ (- ?width (math/min @config.rootRect.w @w)) 2), y: (/ (- ?height (math/min @config.rootRect.h @h)) 2), w: (math/min @config.rootRect.w @w), h: (math/min @config.rootRect.h @h) } { x: @config.margin, y: @config.margin, w: @w, h: @h })) @config.rootRect))
+        (emit RASM_PLACE { placed: [{ id: @config.rootChild, rect: @entity.root }] })
+        (set @entity.repaints (+ @entity.repaints 1))
+        (emit SURFACE_REPAINT { n: @entity.repaints })
+      SURFACE_RESIZE -> ready
+        (emit RASM_RESIZE { width: ?width, height: ?height })
+      SURFACE_TEXT -> ready
+        (emit RASM_TEXT { target: ?target, text: ?text, composing: ?composing })
+      SURFACE_KEY -> ready when (and (= ?key "Tab") (not ?shift))
+        (emit RASM_KEY { key: "next" })
+      SURFACE_KEY -> ready when (and (= ?key "Tab") ?shift)
+        (emit RASM_KEY { key: "previous" })
+      SURFACE_KEY -> ready when (!= ?key "Tab")
+        (emit RASM_KEYPRESS { target: ?target, key: ?key, shift: ?shift, alt: ?alt, ctrl: ?ctrl, meta: ?meta })
+      SURFACE_ACCESS -> ready
+        (emit RASM_ACCESS { target: ?target, action: ?action })
       RASM_PAINT -> ready
         (set @entity.paints (object/set @entity.paints ?id { z: ?z, nodes: ?nodes }))
         (set @entity.repaints (+ @entity.repaints 1))
@@ -47,8 +72,13 @@ orbital RasmSurfaceOrbital {
           painter: "orbital"
           camera: { mode: "top-down", zoom: 1 }
           pointerMoves: "captured"
-          worldWidth: @config.width
-          worldHeight: @config.height
+          fillContainer: @config.fill
+          worldWidth: (if @config.fill @entity.viewW @config.width)
+          worldHeight: (if @config.fill @entity.viewH @config.height)
+          resizeEvent: "SURFACE_RESIZE"
+          textInputEvent: "SURFACE_TEXT"
+          keyEvent: "SURFACE_KEY"
+          accessEvent: "SURFACE_ACCESS"
           pointerDownEvent: "POINTER_DOWN"
           pointerUpEvent: "POINTER_UP"
           pointerEnterEvent: "POINTER_ENTER"
@@ -56,10 +86,10 @@ orbital RasmSurfaceOrbital {
           pointerMoveEvent: "POINTER_MOVE"
           measureEvent: "SURFACE_MEASURED"
           keyMap: { Tab: "KEY_NEXT", "Shift+Tab": "KEY_PREVIOUS", Enter: "KEY_ACTIVATE", Space: "KEY_ACTIVATE", ArrowRight: "KEY_INCREASE", ArrowUp: "KEY_INCREASE", ArrowLeft: "KEY_DECREASE", ArrowDown: "KEY_DECREASE" }
-          drawables: (let ((g (object/get @entity.looks "surface/ground/idle" null))) (array/concat (if (= @g null) [] [{ type: draw-shape, shape: "rect", id: (str/concat @config.id ":ground"), position: { x: 0, y: 0 }, anchor: "top-left", width: @config.width, height: @config.height, fill: @g.fill, material: @g.material, spring: @g.spring, hit: false }]) (array/flatten (array/map (array/sort (object/values @entity.paints) "z" "asc") (fn e @e.nodes)))))
+          drawables: (let ((g (object/get @entity.looks "surface/ground/idle" null))) (array/concat (if (= @g null) [] [{ type: draw-shape, shape: "rect", id: (str/concat @config.id ":ground"), position: { x: 0, y: 0 }, anchor: "top-left", width: @entity.viewW, height: @entity.viewH, fill: @g.fill, material: @g.material, spring: @g.spring, hit: false }]) (array/flatten (array/map (array/sort (object/values @entity.paints) "z" "asc") (fn e @e.nodes)))))
         })
       POINTER_DOWN -> ready
-        (emit RASM_POINTER { kind: "down", id: ?target, x: ?x, y: ?y })
+        (emit RASM_POINTER { kind: "down", id: ?target, x: ?x, y: ?y, index: (default ?index -1) })
       POINTER_UP -> ready
         (emit RASM_POINTER { kind: "up", id: ?target, x: ?x, y: ?y })
       POINTER_ENTER -> ready
@@ -101,13 +131,43 @@ orbital RasmSurfaceOrbital {
         id : string!
         x : number!
         y : number!
+        index : number
       }
-        @description "A canvas pointer event for the control that owns the id."
+        @description "A canvas pointer event for the control that owns the id; a press on a text carries the caret index nearest it, -1 elsewhere."
         @tier "primary"
       RASM_MEASURED -> external {
         items : [RasmMeasureItem]!
       }
         @description "Sizes of the measured texts."
+        @tier "primary"
+      RASM_RESIZE -> external {
+        width : number!
+        height : number!
+      }
+        @description "The canvas size in CSS pixels; the root rect is placed from it."
+        @tier "primary"
+      RASM_TEXT -> external {
+        target : string!
+        text : string!
+        composing : boolean!
+      }
+        @description "Committed or preedit text for the focused text field."
+        @tier "primary"
+      RASM_KEYPRESS -> external {
+        target : string!
+        key : string!
+        shift : boolean!
+        alt : boolean!
+        ctrl : boolean!
+        meta : boolean!
+      }
+        @description "An editing key for the focused text field or Choice."
+        @tier "primary"
+      RASM_ACCESS -> external {
+        target : string!
+        action : "focus" | "activate" | "increment" | "decrement"!
+      }
+        @description "An assistive technology acted on a node of the semantic tree."
         @tier "primary"
       RASM_KEY -> external {
         key : "next" | "previous" | "activate" | "increase" | "decrease"!
@@ -121,7 +181,17 @@ orbital RasmSurfaceOrbital {
         @description "Store the looks, paint the ground and place the root."
       RASM_PAINT { id : string!  z : number!  nodes : [node]! }
         @description "Keep one control's nodes at its z and repaint."
-      POINTER_DOWN { target : string!  x : number!  y : number! }
+      RASM_RESIZE { width : number!  height : number! }
+        @description "Re-place the root from the new size."
+      SURFACE_RESIZE { width : number!  height : number! }
+        @description "Canvas size in CSS pixels."
+      SURFACE_TEXT { target : string!  text : string!  composing : boolean! }
+        @description "Text for the focused text field."
+      SURFACE_KEY { target : string!  key : string!  shift : boolean!  alt : boolean!  ctrl : boolean!  meta : boolean! }
+        @description "An editing key for the focused text field."
+      SURFACE_ACCESS { target : string!  action : "focus" | "activate" | "increment" | "decrement"! }
+        @description "An assistive-technology action on a semantic node."
+      POINTER_DOWN { target : string!  x : number!  y : number!  index : number }
         @description "Canvas press on a hit drawable."
       POINTER_UP { target : string!  x : number!  y : number! }
         @description "Canvas release, sent to the drawable that took the press."
@@ -164,7 +234,19 @@ orbital RasmSurfaceOrbital {
         @tier "presentation"
       rootRect : RasmRect = { x: 0, y: 0, w: 720, h: 520 }
         @label "Root rect"
-        @description "The rect handed to the root child."
+        @description "The rect handed to the root child; with fill on, its w and h are the declared size that align center centres."
+        @tier "presentation"
+      fill : boolean = false
+        @label "Fill"
+        @description "The canvas takes its container's size and the root rect follows it; off keeps the fixed width, height and rootRect."
+        @tier "presentation"
+      margin : number = 0
+        @label "Margin"
+        @description "With fill on, the gap in px kept on every side between the surface and the root rect."
+        @tier "presentation"
+      align : "stretch" | "center" = "stretch"
+        @label "Align"
+        @description "With fill on, stretch gives the root the surface minus the margin; center gives it its declared rootRect size (capped to the surface minus the margin) centred."
         @tier "presentation"
     }
   }

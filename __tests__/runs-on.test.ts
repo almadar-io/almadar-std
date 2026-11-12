@@ -166,7 +166,7 @@ describe('runsOn', () => {
   });
 
   it('every os/ sys payload is a closed shape documented in its description', () => {
-    expect(Object.keys(OS_SYS_PAYLOADS)).toHaveLength(16);
+    expect(Object.keys(OS_SYS_PAYLOADS)).toHaveLength(17);
     for (const [op, payload] of Object.entries(OS_SYS_PAYLOADS)) {
       const text = formatOperatorType(payload);
       expect(STD_OPERATORS[op].description, op).toContain(`Success payload: ${text}`);
@@ -176,7 +176,7 @@ describe('runsOn', () => {
 
   it('bytes/ is a pure closed family and os/ reads return bytes', () => {
     const names = Object.keys(STD_OPERATORS).filter((k) => k.startsWith('bytes/')).sort();
-    expect(names).toEqual(['bytes/at', 'bytes/concat', 'bytes/equals', 'bytes/from-base64', 'bytes/from-string', 'bytes/index-of', 'bytes/length', 'bytes/read-int', 'bytes/read-uint', 'bytes/slice', 'bytes/to-base64', 'bytes/to-string', 'bytes/valid-utf8', 'bytes/write-uint']);
+    expect(names).toEqual(['bytes/at', 'bytes/concat', 'bytes/equals', 'bytes/from-base64', 'bytes/from-string', 'bytes/index-of', 'bytes/length', 'bytes/read-int', 'bytes/read-uint', 'bytes/slice', 'bytes/to-base64', 'bytes/to-string', 'bytes/valid-utf8', 'bytes/write-uint', 'bytes/xor']);
     for (const name of names) {
       expect(STD_OPERATORS[name].hasSideEffects, name).toBe(false);
       expect(STD_OPERATORS[name].runsOn, name).toBeUndefined();
@@ -213,7 +213,7 @@ describe('runsOn', () => {
   it('the client set is rendering, navigation, audio, sign-in, a guest ask relay, the server send and the browser device APIs', () => {
     expect(getOperatorsRunningOn('client')).toEqual([
       'audio/change-music', 'audio/clock', 'audio/play-sound', 'audio/schedule', 'audio/stop-music', 'audio/stop-sound', 'auth/consent', 'auth/sign-in', 'auth/sign-out',
-      'browser/beacon', 'browser/clipboard-read', 'browser/clipboard-write', 'browser/embed', 'browser/geolocation-current', 'browser/open-file-picker', 'browser/page-facts', 'browser/prompt', 'browser/push-subscribe',
+      'browser/beacon', 'browser/clipboard-read', 'browser/clipboard-write', 'browser/embed', 'browser/geolocation-current', 'browser/open-file-picker', 'browser/page-facts', 'browser/prompt', 'browser/push-subscribe', 'browser/read-file',
       'browser/tab-act', 'browser/tab-apply', 'browser/tab-apply-many', 'browser/tab-capture', 'browser/tab-close', 'browser/tab-list', 'browser/tab-navigate', 'browser/tab-open', 'browser/tab-query', 'browser/tab-unwatch', 'browser/tab-watch',
       'navigate', 'navigate-back', 'program/host-ask', 'render-ui', 'send-server',
     ]);

@@ -60,6 +60,8 @@ const TAB_TREATMENT = union(lit('hide'), lit('blur'), lit('highlight'), lit('lab
 
 const TAB_ACTION = union(lit('click'), lit('focus'), lit('type'));
 
+const READ_FILE_PRODUCES = shape({ data: BYTES, name: STRING, size: NUMBER, type: STRING });
+
 const MODEL_OPTIONS = openShape({ key: STRING, emit: openShape({ success: EVENT_KEY, failure: EVENT_KEY, cancelled: EVENT_KEY }) });
 
 export const BROWSER_OPERATORS: Record<string, StdOperatorMeta> = {
@@ -598,5 +600,20 @@ export const BROWSER_OPERATORS: Record<string, StdOperatorMeta> = {
     ],
     effect: { kind: 'custom', produces: TAB_CAPTURE_PRODUCES },
     example: '["browser/tab-capture", { "tab": "@entity.tab", "format": "png" }, { "emit": { "success": "CAPTURED", "failure": "CAPTURE_FAILED" } }]',
+  },
+  'browser/read-file': {
+    module: 'browser',
+    host: 'substrate',
+    category: 'std-browser',
+    minArity: 1,
+    maxArity: 1,
+    description:
+      'Read a file the viewer picked in the browser into bytes, with no filesystem grant: the argument is the picked file value (std-file-upload\'s file) and the host hands back its content as bytes with its name, size and type. Resolves via the trailing { emit } envelope. Success payload: { data, name, size, type }. Failure kind: invalid (the value is not a picked file), unavailable (a host that cannot read the file: no browser, or the content was read as text and holds no bytes).',
+    hasSideEffects: true,
+    runsOn: 'client',
+    returnType: 'void',
+    params: [{ name: 'file', type: 'file', description: 'The picked file value, as the file picker or upload zone delivered it' }],
+    effect: { kind: 'custom', produces: READ_FILE_PRODUCES },
+    example: '["browser/read-file", "@payload.file", { "emit": { "success": "FILE_BYTES", "failure": "FILE_UNREADABLE" } }]',
   },
 };

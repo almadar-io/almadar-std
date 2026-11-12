@@ -1,0 +1,88 @@
+app std-rasm-anchor [
+  version: "1.0.0",
+  description: "std-rasm-anchor — pure placement for popups in the Rasm kit. It keeps the rect of every control that RASM_PLACE announced and the surface size from RASM_RESIZE; RASM_ANCHOR { id, anchor, side, width, height } places the popup id on the named side of the anchor's rect (below, above, start or end), flipped to the opposite side when it would leave the surface and the opposite side fits, and clamped inside the surface, then emits RASM_PLACE for that id."
+]
+
+type RasmRect = { x : number!, y : number!, w : number!, h : number! }
+type RasmPlaced = { id : string!, rect : RasmRect! }
+
+orbital RasmAnchorOrbital {
+  entity RasmAnchorItem [runtime] {
+    id : string!
+    rects : Map string RasmRect @description "The latest rect announced for each control id." = {}
+    viewW : number @description "The surface width popups must stay inside." = 720
+    viewH : number @description "The surface height popups must stay inside." = 520
+  }
+
+  trait RasmAnchor -> RasmAnchorItem [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+        (set @entity.viewW @config.width)
+        (set @entity.viewH @config.height)
+      RASM_PLACE -> ready
+        (set @entity.rects (array/reduce ?placed @entity.rects (fn acc p (object/set @acc @p.id @p.rect))))
+      RASM_RESIZE -> ready
+        (set @entity.viewW ?width)
+        (set @entity.viewH ?height)
+      RASM_ANCHOR -> ready when (object/has @entity.rects ?anchor)
+        (let (
+            (a (object/get @entity.rects ?anchor { x: 0, y: 0, w: 0, h: 0 }))
+            (gap @config.gap)
+          )
+          (let (
+              (vertical (or (= ?side "below") (= ?side "above")))
+              (below (+ (+ @a.y @a.h) @gap))
+              (above (- (- @a.y @gap) ?height))
+              (endX (+ (+ @a.x @a.w) @gap))
+              (startX (- (- @a.x @gap) ?width))
+            )
+            (let (
+                (fitsBelow (<= (+ @below ?height) @entity.viewH))
+                (fitsAbove (>= @above 0))
+                (fitsEnd (<= (+ @endX ?width) @entity.viewW))
+                (fitsStart (>= @startX 0))
+              )
+              (let (
+                  (placeBelow (if (= ?side "below") (or @fitsBelow (not @fitsAbove)) (and (not @fitsAbove) @fitsBelow)))
+                  (placeEnd (if (= ?side "end") (or @fitsEnd (not @fitsStart)) (and (not @fitsStart) @fitsEnd)))
+                )
+                (emit RASM_PLACE { placed: [{ id: ?id, rect: { x: (if @vertical (math/max 0 (math/min @a.x (- @entity.viewW ?width))) (if @placeEnd @endX @startX)), y: (if @vertical (if @placeBelow @below @above) (math/max 0 (math/min @a.y (- @entity.viewH ?height)))), w: ?width, h: ?height } }] })))))
+    }
+
+    emits {
+      RASM_PLACE -> external {
+        placed : [RasmPlaced]!
+      }
+        @description "The popup's placed rect."
+        @tier "domain"
+    }
+
+    listens {
+      RASM_PLACE { placed : [RasmPlaced]! }
+        @description "Placed rects of the controls; the anchor keeps the latest for each id."
+      RASM_RESIZE { width : number!  height : number! }
+        @description "The surface size popups are kept inside."
+      RASM_ANCHOR { id : string!  anchor : string!  side : "below" | "above" | "start" | "end"!  width : number!  height : number! }
+        @description "Place popup id next to the anchor's rect."
+    }
+
+    config {
+      width : number = 720
+        @label "Width"
+        @description "The surface width before the first resize."
+        @tier "presentation"
+      height : number = 520
+        @label "Height"
+        @description "The surface height before the first resize."
+        @tier "presentation"
+      gap : number = 4
+        @label "Gap"
+        @description "Px between the anchor and the popup."
+        @tier "presentation"
+    }
+  }
+
+  page boot as RasmAnchorStart -> RasmAnchor
+}
