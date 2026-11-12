@@ -1776,6 +1776,273 @@
     "WalkPlan",
     "VerifyWalkCli"
    ]
+  },
+  {
+   "id": "a-skipped-repeat-of-a-listener-delivered-ask-is-a-finding",
+   "steps": [
+    {
+     "trait": "VerifyWalk",
+     "from": "crediting",
+     "event": "WALK_CREDIT_ANSWERED",
+     "payload": {
+      "credits": []
+     },
+     "entity": {
+      "id": "r",
+      "judged": [
+       {
+        "verdicts": []
+       }
+      ],
+      "played": [
+       {
+        "trait": "T",
+        "from": "a",
+        "event": "GO",
+        "to": "b",
+        "guarded": false,
+        "targets": [
+         "b"
+        ],
+        "result": {
+         "trait": "T",
+         "event": "GO",
+         "transitionFired": true,
+         "guard": "none",
+         "effects": [],
+         "emitted": [],
+         "guards": [],
+         "state": {
+          "before": "a",
+          "after": "b"
+         },
+         "collapsed": [
+          {
+           "trait": "Callee",
+           "event": "ASK",
+           "payload": {
+            "n": 1
+           }
+          }
+         ]
+        }
+       }
+      ],
+      "planned": [],
+      "notes": [],
+      "creditSteps": [],
+      "program": {
+       "orbitals": [
+        {
+         "name": "O",
+         "traits": [
+          {
+           "name": "Asker",
+           "listens": [
+            {
+             "event": "ANSWER",
+             "triggers": "ASK",
+             "source": {
+              "kind": "trait",
+              "trait": "Callee"
+             }
+            }
+           ]
+          },
+          {
+           "name": "Callee"
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "VERIFY_WALK_ANSWERED",
+        "payload": {
+         "status": 500,
+         "body": "pass  T a --GO--> b\nfinding  VERIFY_REPEATED_ASK_COLLAPSED  Callee ASK {\"n\":1}  the same question was asked twice in one dispatch; the second was skipped (EXEC-QUEUE-4) and nothing answers it\n1 passed, 0 failed, 0 unplanned, 0 guard-blocked, 1 finding"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-skipped-event-no-listener-delivers-is-not-a-finding",
+   "steps": [
+    {
+     "trait": "VerifyWalk",
+     "from": "crediting",
+     "event": "WALK_CREDIT_ANSWERED",
+     "payload": {
+      "credits": []
+     },
+     "entity": {
+      "id": "r",
+      "judged": [
+       {
+        "verdicts": []
+       }
+      ],
+      "played": [
+       {
+        "trait": "T",
+        "from": "a",
+        "event": "GO",
+        "to": "b",
+        "guarded": false,
+        "targets": [
+         "b"
+        ],
+        "result": {
+         "trait": "T",
+         "event": "GO",
+         "transitionFired": true,
+         "guard": "none",
+         "effects": [],
+         "emitted": [],
+         "guards": [],
+         "state": {
+          "before": "a",
+          "after": "b"
+         },
+         "collapsed": [
+          {
+           "trait": "Callee",
+           "event": "ASK",
+           "payload": {
+            "n": 1
+           }
+          }
+         ]
+        }
+       }
+      ],
+      "planned": [],
+      "notes": [],
+      "creditSteps": [],
+      "program": {
+       "orbitals": [
+        {
+         "name": "O",
+         "traits": [
+          {
+           "name": "Asker",
+           "listens": []
+          },
+          {
+           "name": "Callee"
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "VERIFY_WALK_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "pass  T a --GO--> b\n1 passed, 0 failed, 0 unplanned, 0 guard-blocked"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-step-with-nothing-collapsed-has-no-finding",
+   "steps": [
+    {
+     "trait": "VerifyWalk",
+     "from": "crediting",
+     "event": "WALK_CREDIT_ANSWERED",
+     "payload": {
+      "credits": []
+     },
+     "entity": {
+      "id": "r",
+      "judged": [
+       {
+        "verdicts": []
+       }
+      ],
+      "played": [
+       {
+        "trait": "T",
+        "from": "a",
+        "event": "GO",
+        "to": "b",
+        "guarded": false,
+        "targets": [
+         "b"
+        ],
+        "result": {
+         "trait": "T",
+         "event": "GO",
+         "transitionFired": true,
+         "guard": "none",
+         "effects": [],
+         "emitted": [],
+         "guards": [],
+         "state": {
+          "before": "a",
+          "after": "b"
+         }
+        }
+       }
+      ],
+      "planned": [],
+      "notes": [],
+      "creditSteps": [],
+      "program": {
+       "orbitals": [
+        {
+         "name": "O",
+         "traits": [
+          {
+           "name": "Asker",
+           "listens": [
+            {
+             "event": "ANSWER",
+             "triggers": "ASK",
+             "source": {
+              "kind": "trait",
+              "trait": "Callee"
+             }
+            }
+           ]
+          },
+          {
+           "name": "Callee"
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "VERIFY_WALK_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "pass  T a --GO--> b\n1 passed, 0 failed, 0 unplanned, 0 guard-blocked"
+        }
+       }
+      ]
+     }
+    }
+   ]
   }
  ]
 }

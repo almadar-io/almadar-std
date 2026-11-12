@@ -79,12 +79,13 @@ type GuestInputField = { name : string!, type : string }
 type GuestInput = { address : string!, event : string!, payloadSchema : [GuestInputField] }
 type GuestRevealInputs = { environment : GuestEnvValue?, credentials : GuestEnvValue? }
 type GuestPaint = { slot : string!, trait : string!, orbital : string?, embedded : boolean!, content : node? }
+type GuestHostAsk = { trait : string!, op : string!, ask : string! }
 type GuestMove = { trait : string!, event : string?, from : string!, to : string!, fired : boolean! }
-type GuestOpened = { guest : string!, page : [string]!, route : string, rendered : [GuestPaint]!, outcomes : [GuestMove]! }
+type GuestOpened = { guest : string!, page : [string]!, route : string, rendered : [GuestPaint]!, outcomes : [GuestMove]!, hostAsks : [GuestHostAsk]? }
 type GuestAccess = { verdict : string!, signIn : string, returnTo : string, viewer : string }
-type GuestNavigated = { page : [string]!, route : string, rendered : [GuestPaint]!, outcomes : [GuestMove]!, access : GuestAccess }
+type GuestNavigated = { page : [string]!, route : string, rendered : [GuestPaint]!, outcomes : [GuestMove]!, access : GuestAccess, hostAsks : [GuestHostAsk]? }
 type GuestNavigation = { trait : string!, path : string! }
-type GuestStepped = { rendered : [GuestPaint]!, outcomes : [GuestMove]!, navigations : [GuestNavigation]? }
+type GuestStepped = { rendered : [GuestPaint]!, outcomes : [GuestMove]!, navigations : [GuestNavigation]?, hostAsks : [GuestHostAsk]? }
 type GuestClosed = { closed : boolean! }
 type GuestPersonaOption = { id : string!, name : string, role : string }
 type GuestPersonasReply = { success : boolean, personas : [GuestPersonaOption] }
@@ -146,6 +147,7 @@ orbital GuestSessionOrbital {
     guestInputs : [GuestInput] @description "The external inputs the open guest declares, for the trace sidebar's Inputs list." = []
     guestInputPick : string @description "The address of the input the viewer is composing a payload for." = ""
     guestInputText : string @description "The payload text, JSON, of the input being composed." = ""
+    guestAsks : [GuestHostAsk] @description "The guest's client asks the stage relays to this viewer's host, oldest first; the first is the one being answered." = []
     guestRevealed : [GuestRevealed] @description "The values the viewer revealed, held by the stage until the sidebar closes or the guest changes." = []
   }
 
@@ -291,6 +293,7 @@ orbital GuestSessionOrbital {
         (set @entity.guestPaints (array/reduce ?result.rendered [] (fn acc p (array/concat (array/filter @acc (fn q (or (!= @q.trait @p.trait) (!= @q.slot @p.slot)))) (array/filter [@p] (fn x (!= @x.content null)))))))
         (set @entity.guestPaintSeq (+ @entity.guestPaintSeq 1))
         (emit GUEST_PAINTS { guest: @entity.guestHandle, route: @entity.guestRoute, page: @entity.guestPage, paints: @entity.guestPaints, seq: @entity.guestPaintSeq })
+        (when (> (array/len (default ?result.hostAsks [])) 0) (emit GUEST_HOST_ASKS { guest: @entity.guestHandle, asks: (default ?result.hostAsks []) }))
         (emit GUEST_MOVED { guest: @entity.guestHandle, moves: ?result.outcomes })
         (emit GUEST_PERSONAS_ASK {})
         (emit GUEST_INTEGRATIONS { guest: @entity.guestHandle, integrations: @entity.guestIntegrations })
@@ -417,6 +420,7 @@ orbital GuestSessionOrbital {
         (set @entity.guestPaints (array/reduce ?result.rendered [] (fn acc p (array/concat (array/filter @acc (fn q (or (!= @q.trait @p.trait) (!= @q.slot @p.slot)))) (array/filter [@p] (fn x (!= @x.content null)))))))
         (set @entity.guestPaintSeq (+ @entity.guestPaintSeq 1))
         (emit GUEST_PAINTS { guest: @entity.guestHandle, route: @entity.guestRoute, page: @entity.guestPage, paints: @entity.guestPaints, seq: @entity.guestPaintSeq })
+        (when (> (array/len (default ?result.hostAsks [])) 0) (emit GUEST_HOST_ASKS { guest: @entity.guestHandle, asks: (default ?result.hostAsks []) }))
         (emit GUEST_MOVED { guest: @entity.guestHandle, moves: ?result.outcomes })
         (emit GUEST_PERSONAS_ASK {})
         (emit GUEST_INTEGRATIONS { guest: @entity.guestHandle, integrations: @entity.guestIntegrations })
@@ -504,6 +508,12 @@ orbital GuestSessionOrbital {
       GUEST_SEND -> live when (= ?guest @entity.guestHandle)
         (program/dispatch ?address ?payload { guest: ?guest, emit: { success: GUEST_STEPPED, failure: GUEST_STEP_FAILED } })
       GUEST_SEND -> live when (!= ?guest @entity.guestHandle)
+      GUEST_ASK_RETURN -> live when (= ?guest @entity.guestHandle)
+        (program/dispatch { ask: ?ask, answer: ?answer } {} { guest: ?guest, emit: { success: GUEST_STEPPED, failure: GUEST_STEP_FAILED } })
+      GUEST_ASK_RETURN -> live when (!= ?guest @entity.guestHandle)
+      GUEST_ASK_REFUSE -> live when (= ?guest @entity.guestHandle)
+        (program/dispatch { ask: ?ask, refuse: ?reason } {} { guest: ?guest, emit: { success: GUEST_STEPPED, failure: GUEST_STEP_FAILED } })
+      GUEST_ASK_REFUSE -> live when (!= ?guest @entity.guestHandle)
       GUEST_INPUT_SEND -> live when (= ?guest @entity.guestHandle)
         (program/dispatch ?address ?text { guest: ?guest, emit: { success: GUEST_STEPPED, failure: GUEST_STEP_FAILED } })
       GUEST_INPUT_SEND -> live when (!= ?guest @entity.guestHandle)
@@ -511,6 +521,7 @@ orbital GuestSessionOrbital {
         (set @entity.guestPaints (array/reduce ?result.rendered (array/filter @entity.guestPaints (fn q (!= @q.slot "toast"))) (fn acc p (array/concat (array/filter @acc (fn q (or (!= @q.trait @p.trait) (!= @q.slot @p.slot)))) (array/filter [@p] (fn x (!= @x.content null)))))))
         (set @entity.guestPaintSeq (+ @entity.guestPaintSeq 1))
         (emit GUEST_PAINTS { guest: @entity.guestHandle, route: @entity.guestRoute, page: @entity.guestPage, paints: @entity.guestPaints, seq: @entity.guestPaintSeq })
+        (when (> (array/len (default ?result.hostAsks [])) 0) (emit GUEST_HOST_ASKS { guest: @entity.guestHandle, asks: (default ?result.hostAsks []) }))
         (emit GUEST_MOVED { guest: @entity.guestHandle, moves: ?result.outcomes })
       GUEST_STEP_FAILED -> live
         (emit GUEST_NOTICE { message: ?error })
@@ -519,6 +530,7 @@ orbital GuestSessionOrbital {
         (set @entity.guestPaints (array/reduce ?rendered (array/filter @entity.guestPaints (fn q (!= @q.slot "toast"))) (fn acc p (array/concat (array/filter @acc (fn q (or (!= @q.trait @p.trait) (!= @q.slot @p.slot)))) (array/filter [@p] (fn x (!= @x.content null)))))))
         (set @entity.guestPaintSeq (+ @entity.guestPaintSeq 1))
         (emit GUEST_PAINTS { guest: @entity.guestHandle, route: @entity.guestRoute, page: @entity.guestPage, paints: @entity.guestPaints, seq: @entity.guestPaintSeq })
+        (when (> (array/len (default ?hostAsks [])) 0) (emit GUEST_HOST_ASKS { guest: @entity.guestHandle, asks: (default ?hostAsks []) }))
         (when (and @entity.guestSigningIn (array/some (default ?emitted []) (fn e (= @e.event "CREDENTIAL_BOUND")))) (do (set @entity.guestSigningIn false) (program/navigate { guest: @entity.guestHandle, route: @entity.guestReturnTo, remount: true } { emit: { success: GUEST_NAVIGATED, failure: GUEST_NAVIGATE_FAILED } })))
         (when (and @entity.guestSigningIn (not (array/some (default ?emitted []) (fn e (= @e.event "CREDENTIAL_BOUND")))) (array/some (default ?emitted []) (fn e (= @e.event "CREDENTIAL_REFUSED")))) (do (set @entity.guestSigningIn false) (emit GUEST_NOTICE { message: (str/concat @config.signInRefused " " @config.signInReason " " (default (object/get (default (array/find (default ?emitted []) (fn e (= @e.event "CREDENTIAL_REFUSED"))) { event: "", payload: { reason: "" } }) "payload.reason") "")) })))
       GUEST_TICKED -> live when (!= ?guest @entity.guestHandle)
@@ -554,6 +566,7 @@ orbital GuestSessionOrbital {
         (set @entity.guestPaints (array/reduce ?result.rendered (array/filter @entity.guestPaints (fn q (!= @q.slot "toast"))) (fn acc p (array/concat (array/filter @acc (fn q (or (!= @q.trait @p.trait) (!= @q.slot @p.slot)))) (array/filter [@p] (fn x (!= @x.content null)))))))
         (set @entity.guestPaintSeq (+ @entity.guestPaintSeq 1))
         (emit GUEST_PAINTS { guest: @entity.guestHandle, route: @entity.guestRoute, page: @entity.guestPage, paints: @entity.guestPaints, seq: @entity.guestPaintSeq })
+        (when (> (array/len (default ?result.hostAsks [])) 0) (emit GUEST_HOST_ASKS { guest: @entity.guestHandle, asks: (default ?result.hostAsks []) }))
         (emit GUEST_MOVED { guest: @entity.guestHandle, moves: ?result.outcomes })
         (emit GUEST_PERSONAS_ASK {})
       GUEST_NAVIGATE_FAILED -> live
@@ -584,6 +597,11 @@ orbital GuestSessionOrbital {
         seq : number!
       }
         @description "The guest's current paint of every trait for every slot it draws into, each saying whether its trait is embedded on the guest's page."
+      GUEST_HOST_ASKS -> external {
+        guest : string!
+        asks : [GuestHostAsk]!
+      }
+        @description "The guest made client host asks (audio, clipboard, a browser device API): a guest stands in for its browser, so its viewer's host answers them (EXEC-ENDPOINT-3a)."
       GUEST_ERROR -> external {
         message : string!
       }
@@ -659,6 +677,7 @@ orbital GuestSessionOrbital {
         rendered : [GuestPaint]!
         emitted : [GuestEmitted]
         outcomes : [GuestMove]
+        hostAsks : [GuestHostAsk]
         key : string
       }
         @description "One pass of the open guest's own tick clock that painted something (program/live { kind: guest }): its page traits' ticks, [client] ones included, since a guest has no browser."
@@ -818,6 +837,20 @@ orbital GuestSessionOrbital {
       GuestStage.GUEST_SEND -> GUEST_SEND
       GuestStage.GUEST_NAVIGATE -> GUEST_NAVIGATE
       GuestStage.GUEST_INPUT_SEND -> GUEST_INPUT_SEND
+      GuestStage.GUEST_ASK_RETURN -> GUEST_ASK_RETURN
+      GuestStage.GUEST_ASK_REFUSE -> GUEST_ASK_REFUSE
+      GUEST_ASK_RETURN {
+        guest : string!
+        ask : string!
+        answer : string!
+      }
+        @description "The viewer's host answered one of the guest's client asks: the session returns the answer into the guest, where the ask's route fires."
+      GUEST_ASK_REFUSE {
+        guest : string!
+        ask : string!
+        reason : string!
+      }
+        @description "The viewer could not relay one of the guest's client asks: the session returns it refused, so the ask's failure route fires as unavailable."
       GUEST_INPUT_SEND {
         guest : string!
         address : string!
@@ -1043,6 +1076,7 @@ orbital GuestSessionOrbital {
         (set @entity.guestTheme ?theme)
         (emit GUEST_SHOWN {})
       GUEST_CLEARED -> idle
+        (set @entity.guestAsks [])
         (set @entity.guestPaintSeq 0)
         (set @entity.guestHeader null)
         (set @entity.guestTheme null)
@@ -1070,6 +1104,22 @@ orbital GuestSessionOrbital {
       GUEST_INPUT_SENT -> idle when (and (!= @entity.guestHandle "") (!= @entity.guestInputPick ""))
         (emit GUEST_INPUT_SEND { guest: @entity.guestHandle, address: @entity.guestInputPick, text: @entity.guestInputText })
       GUEST_INPUT_SENT -> idle when (or (= @entity.guestHandle "") (= @entity.guestInputPick ""))
+      GUEST_HOST_ASKS -> idle when (and (= ?guest @entity.guestHandle) (= (array/len @entity.guestAsks) 0) (> (array/len ?asks) 0))
+        (program/host-ask (default (object/get (array/first ?asks) "ask") "") { emit: { success: GUEST_ASK_ANSWERED, failure: GUEST_ASK_FAILED } })
+        (set @entity.guestAsks ?asks)
+      GUEST_HOST_ASKS -> idle when (and (= ?guest @entity.guestHandle) (> (array/len @entity.guestAsks) 0))
+        (set @entity.guestAsks (array/concat @entity.guestAsks ?asks))
+      GUEST_HOST_ASKS -> idle when (or (!= ?guest @entity.guestHandle) (= (array/len ?asks) 0))
+      GUEST_ASK_ANSWERED -> idle when (> (array/len @entity.guestAsks) 0)
+        (emit GUEST_ASK_RETURN { guest: @entity.guestHandle, ask: (default (object/get (array/first @entity.guestAsks) "ask") ""), answer: ?answer })
+        (when (> (array/len @entity.guestAsks) 1) (program/host-ask (default (object/get (array/nth @entity.guestAsks 1) "ask") "") { emit: { success: GUEST_ASK_ANSWERED, failure: GUEST_ASK_FAILED } }))
+        (set @entity.guestAsks (array/drop @entity.guestAsks 1))
+      GUEST_ASK_ANSWERED -> idle when (= (array/len @entity.guestAsks) 0)
+      GUEST_ASK_FAILED -> idle when (> (array/len @entity.guestAsks) 0)
+        (emit GUEST_ASK_REFUSE { guest: @entity.guestHandle, ask: (default (object/get (array/first @entity.guestAsks) "ask") ""), reason: ?error })
+        (when (> (array/len @entity.guestAsks) 1) (program/host-ask (default (object/get (array/nth @entity.guestAsks 1) "ask") "") { emit: { success: GUEST_ASK_ANSWERED, failure: GUEST_ASK_FAILED } }))
+        (set @entity.guestAsks (array/drop @entity.guestAsks 1))
+      GUEST_ASK_FAILED -> idle when (= (array/len @entity.guestAsks) 0)
       GUEST_CONTROL -> idle when (= ?guest @entity.guestHandle)
         (emit GUEST_SEND { guest: ?guest, address: ?address, event: ?event, payload: ?payload })
       GUEST_CONTROL -> idle when (!= ?guest @entity.guestHandle)
@@ -1111,6 +1161,18 @@ orbital GuestSessionOrbital {
         payload : @payload event?
       }
         @description "A control of the guest was used: the session steps it."
+      GUEST_ASK_RETURN -> external {
+        guest : string!
+        ask : string!
+        answer : string!
+      }
+        @description "This viewer's host answered one of the guest's client asks; the answer is the host's outcome as text."
+      GUEST_ASK_REFUSE -> external {
+        guest : string!
+        ask : string!
+        reason : string!
+      }
+        @description "This viewer could not relay one of the guest's client asks."
       GUEST_NAVIGATE -> external {
         guest : string!
         route : string!
@@ -1150,6 +1212,18 @@ orbital GuestSessionOrbital {
 
     listens {
       GuestSession.GUEST_PAINTS -> GUEST_PAINTS
+      GuestSession.GUEST_HOST_ASKS -> GUEST_HOST_ASKS
+      GUEST_HOST_ASKS {
+        guest : string!
+        asks : [GuestHostAsk]!
+      }
+        @description "The guest's client asks, for this viewer's host to answer, in order."
+      GUEST_ASK_ANSWERED { answer : string! }
+        @description "Internal: this viewer's host answered the ask being relayed."
+        @tier "internal"
+      GUEST_ASK_FAILED { error : string! kind : string }
+        @description "Internal: the ask being relayed could not be answered here."
+        @tier "internal"
       GuestSession.GUEST_ERROR -> GUEST_ERROR
       GuestSession.GUEST_NOTICE -> GUEST_NOTICE
       GuestSession.GUEST_SIGN_IN -> GUEST_SIGN_IN

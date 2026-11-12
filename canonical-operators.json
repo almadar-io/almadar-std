@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "Canonical operator registry for Almadar. Generated from @almadar/std/modules. Consumed by orbital-compiler via include_str!.",
-  "generated": "2026-11-12T09:57:04.541Z",
+  "generated": "2026-11-12T16:46:35.918Z",
   "categories": {
     "arithmetic": {
       "description": "Numeric operations",
@@ -27095,6 +27095,17 @@
               }
             }
           },
+          "hostAsks": {
+            "kind": "array",
+            "of": {
+              "kind": "object",
+              "fields": {
+                "trait": "string",
+                "op": "string",
+                "ask": "string"
+              }
+            }
+          },
           "emitted": {
             "kind": "array",
             "of": {
@@ -27108,7 +27119,7 @@
         },
         "open": true
       },
-      "description": "Dispatch one declared external input AS THE ASKING SESSION'S IDENTITY, through the ordinary dispatch: its guards, grants and entity policies apply, never a bypass. The address is `EVENT`, `Trait.EVENT` or `Orbital.Trait.EVENT` (resolved from the calling trait) and must name a declared external input; the arguments are the payload object or its JSON text (absent or empty is `{}`). An optional `{ schema: [field] }` holds the arguments to a stated payload before dispatch. Success carries `{ result, text }`, the outcome the model is answered with: `{ ok: true, emitted: [{ event, payload? }] }`, or `{ ok: false, error }` for a refusal (an undeclared input, arguments that are not a JSON object, `{ error, issues }` when they miss the schema) or a dispatch that did not take effect (a rejection code, a failed guard, a failed effect, no transition). Given one options object `{ inbound: name, body?, headers? }` in place of the address, it instead delivers `body` (text) and `headers` (`{ name: text }`) to the program's inbound handler `name` through the kernel's inbound route, credential check and answer path, as a request to `/api/hooks/<name>` is delivered, and success carries the handler's answer `{ status, body }` (an undeclared name is the kernel's 404 answer, not a failure). The delivery runs inside the asking dispatch, so an answer only a later completion would carry is not waited for: the answer is what the delivering dispatch settled. The options may instead describe an event request, as the HTTP dispatch routes carry it: `orbital` and `event` (required, and the address must be `orbital.targetTrait.event`), `targetTrait` (absent: the orbital's handlers are discovered, or `traits: [{ trait, from, event? }]` run as declared, an empty list being the inert `no-dispatchable-traits` rejection), `entityId` (default `default`), `mount: [{ trait, event }]` (a lifecycle batch), `route` (the path a mount batch opens: the kernel announces its `$MOUNT` first, EXEC-SEED-7), `input: true` (only a declared external input runs, otherwise the `not-an-external-input` rejection), `clientId` (the origin left out of the live broadcast), `locale`, `delivery` and `dispatchLog` (continuing a client-begun dispatch). The dispatch's `@user` is the identity bound to the session `clientId` names (the asking session without one); a `viewer` option is refused. Such a request is not limited to declared inputs; an empty text, record or mount list counts as absent. `wire: true` answers the whole `EventResponse` instead of the outcome, and `stream: true` (with `wire`) adds `items: [{ type: event|effect|complete, data, timestamp }]`, the dispatch's emitted events and client effects in execution order followed by the response. A failure carries `errors: [{ code, status }]`: `ORBITAL_NOT_FOUND` 404, `LOCALE_NOT_DECLARED` 400, `NO_TRAIT` 400, `INVALID_REQUEST` 400, `EVENT_PROCESSING_ERROR`. With `{ guest: id }` (a session `program/open` answered) the event is dispatched into that guest session, acting as the guest's client: the address is `Orbital.Trait.EVENT` or `Trait.EVENT` (or a bare `EVENT`, to every guest trait whose state handles it) and may name any event the guest trait handles, not only a declared external input; the payload is copied (an Arena crosses only if `program/open` shared it; any other sealed value is refused) and a `grants` option is refused (grants are given at `program/open`). The key decides the lane: unkeyed, the guest runs inside the asking dispatch and success carries `{ result: { states, rendered, emitted, outcomes, rejections? } }`, the same record `program/open` answers; keyed, the guest runs on its own lane on a host thread (gated by the grant `kernel: { \"guest\": [spawn] }`) and that record arrives later as the keyed completion `{ result, text, key }`.",
+      "description": "Dispatch one declared external input AS THE ASKING SESSION'S IDENTITY, through the ordinary dispatch: its guards, grants and entity policies apply, never a bypass. The address is `EVENT`, `Trait.EVENT` or `Orbital.Trait.EVENT` (resolved from the calling trait) and must name a declared external input; the arguments are the payload object or its JSON text (absent or empty is `{}`). An optional `{ schema: [field] }` holds the arguments to a stated payload before dispatch. Success carries `{ result, text }`, the outcome the model is answered with: `{ ok: true, emitted: [{ event, payload? }] }`, or `{ ok: false, error }` for a refusal (an undeclared input, arguments that are not a JSON object, `{ error, issues }` when they miss the schema) or a dispatch that did not take effect (a rejection code, a failed guard, a failed effect, no transition). Given one options object `{ inbound: name, body?, headers? }` in place of the address, it instead delivers `body` (text) and `headers` (`{ name: text }`) to the program's inbound handler `name` through the kernel's inbound route, credential check and answer path, as a request to `/api/hooks/<name>` is delivered, and success carries the handler's answer `{ status, body }` (an undeclared name is the kernel's 404 answer, not a failure). The delivery runs inside the asking dispatch, so an answer only a later completion would carry is not waited for: the answer is what the delivering dispatch settled. The options may instead describe an event request, as the HTTP dispatch routes carry it: `orbital` and `event` (required, and the address must be `orbital.targetTrait.event`), `targetTrait` (absent: the orbital's handlers are discovered, or `traits: [{ trait, from, event? }]` run as declared, an empty list being the inert `no-dispatchable-traits` rejection), `entityId` (default `default`), `mount: [{ trait, event }]` (a lifecycle batch), `route` (the path a mount batch opens: the kernel announces its `$MOUNT` first, EXEC-SEED-7), `input: true` (only a declared external input runs, otherwise the `not-an-external-input` rejection), `clientId` (the origin left out of the live broadcast), `locale`, `delivery` and `dispatchLog` (continuing a client-begun dispatch). The dispatch's `@user` is the identity bound to the session `clientId` names (the asking session without one); a `viewer` option is refused. Such a request is not limited to declared inputs; an empty text, record or mount list counts as absent. `wire: true` answers the whole `EventResponse` instead of the outcome, and `stream: true` (with `wire`) adds `items: [{ type: event|effect|complete, data, timestamp }]`, the dispatch's emitted events and client effects in execution order followed by the response. A failure carries `errors: [{ code, status }]`: `ORBITAL_NOT_FOUND` 404, `LOCALE_NOT_DECLARED` 400, `NO_TRAIT` 400, `INVALID_REQUEST` 400, `EVENT_PROCESSING_ERROR`. With `{ guest: id }` (a session `program/open` answered) the event is dispatched into that guest session, acting as the guest's client: the address is `Orbital.Trait.EVENT` or `Trait.EVENT` (or a bare `EVENT`, to every guest trait whose state handles it) and may name any event the guest trait handles, not only a declared external input; the payload is copied (an Arena crosses only if `program/open` shared it; any other sealed value is refused) and a `grants` option is refused (grants are given at `program/open`). The key decides the lane: unkeyed, the guest runs inside the asking dispatch and success carries `{ result: { states, rendered, emitted, outcomes, rejections? } }`, the same record `program/open` answers; keyed, the guest runs on its own lane on a host thread (gated by the grant `kernel: { \"guest\": [spawn] }`) and that record arrives later as the keyed completion `{ result, text, key }`. A guest stands in for its browser (EXEC-ENDPOINT-3a), so a client host ask it makes (any `runsOn: client` op but the `std-auth` identity asks, which are its own) is listed in `hostAsks: [{ trait, op, ask }]` of the record, `ask` being text the kernel wrote; a viewer relays it with `program/host-ask`, and `program/dispatch { ask, answer } { guest }` returns the host's answer: the kernel fires the ask's declared success route with the answer's fields and `key`, or its failure route with `{ error, kind, key }`, on the trait that asked, as a browser host returns a host ask (EXEC-DIST-13). `{ ask, refuse: reason }` is an opener with no viewer: the failure route fires with kind `unavailable`. An ask made on a row frame cannot be returned yet and is refused.",
       "module": "program",
       "visual": {
         "form": "actuator"
@@ -27158,10 +27169,22 @@
                   }
                 },
                 "open": true
+              },
+              {
+                "kind": "object",
+                "fields": {
+                  "ask": "string",
+                  "answer": "string",
+                  "refuse": "string"
+                },
+                "optional": [
+                  "answer",
+                  "refuse"
+                ]
               }
             ]
           },
-          "description": "The input to dispatch: `EVENT`, `Trait.EVENT` or `Orbital.Trait.EVENT`; or an inbound delivery `{ inbound, body?, headers? }`"
+          "description": "The input to dispatch: `EVENT`, `Trait.EVENT` or `Orbital.Trait.EVENT`; or an inbound delivery `{ inbound, body?, headers? }`; or, with `guest`, the answer to a client ask the guest made `{ ask, answer }` or `{ ask, refuse }`"
         },
         {
           "name": "arguments",
@@ -27408,6 +27431,40 @@
       ],
       "examples": [
         "(program/eval @entity.program {\"emit\":{\"success\":\"BUILT\",\"failure\":\"BUILD_FAILED\"}})"
+      ],
+      "docsSource": "generated"
+    },
+    "program/host-ask": {
+      "category": "std-program",
+      "minArity": 1,
+      "maxArity": 1,
+      "returnType": "void",
+      "description": "Relay a client host ask a guest made (one `hostAsks` item's `ask` text) to this viewer's own host, which answers it as if this viewer had asked it, and answer `{ answer }`: the host's outcome as text, for `program/dispatch { ask, answer } { guest }` to return into the guest. Refused by name when the ask is not text a guest wrote, names an identity (`std-auth`) ask, another relay, or an op that is not a client host ask. Resolves via the trailing { emit } envelope. Success payload: { answer }. Failure kind: invalid (the ask is refused), unavailable (the host has no such action).",
+      "module": "program",
+      "visual": {
+        "form": "actuator"
+      },
+      "hasSideEffects": true,
+      "effect": {
+        "kind": "custom",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "answer": "string"
+          }
+        }
+      },
+      "runsOn": "client",
+      "host": "substrate",
+      "params": [
+        {
+          "name": "ask",
+          "type": "string",
+          "description": "The ask text a guest answer carried in `hostAsks`"
+        }
+      ],
+      "examples": [
+        "(program/host-ask @payload.ask {\"emit\":{\"success\":\"ASK_ANSWERED\",\"failure\":\"ASK_REFUSED\"}})"
       ],
       "docsSource": "generated"
     },
@@ -27745,6 +27802,17 @@
               },
               "open": true
             }
+          },
+          "hostAsks": {
+            "kind": "array",
+            "of": {
+              "kind": "object",
+              "fields": {
+                "trait": "string",
+                "op": "string",
+                "ask": "string"
+              }
+            }
           }
         },
         "open": true
@@ -27913,6 +27981,17 @@
                 "code": "string"
               },
               "open": true
+            }
+          },
+          "hostAsks": {
+            "kind": "array",
+            "of": {
+              "kind": "object",
+              "fields": {
+                "trait": "string",
+                "op": "string",
+                "ask": "string"
+              }
             }
           }
         },

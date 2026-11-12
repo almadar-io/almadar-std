@@ -12886,6 +12886,134 @@
     }
    ],
    "now": 1760531445678
+  },
+  {
+   "id": "the-stage-returns-the-answer-its-host-gave-to-the-guest-ask-it-relayed",
+   "note": "G-STD-373: the viewer's host answered the one queued guest ask; the stage returns it and empties the queue.",
+   "steps": [
+    {
+     "trait": "GuestStage",
+     "event": "GUEST_ASK_ANSWERED",
+     "payload": {
+      "answer": "{\"ok\":{\"audio\":5,\"wall\":9}}"
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "guest-1",
+      "guestPaints": [],
+      "guestError": "",
+      "guestAsks": [
+       {
+        "trait": "Clock",
+        "op": "audio/clock",
+        "ask": "{\"op\":\"audio/clock\",\"args\":[],\"completion\":{\"trait\":\"Clock\",\"success\":\"TICKED\"}}"
+       }
+      ]
+     },
+     "from": "idle",
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "emits": [
+       {
+        "event": "GUEST_ASK_RETURN",
+        "payload": {
+         "guest": "guest-1",
+         "ask": "{\"op\":\"audio/clock\",\"args\":[],\"completion\":{\"trait\":\"Clock\",\"success\":\"TICKED\"}}",
+         "answer": "{\"ok\":{\"audio\":5,\"wall\":9}}"
+        }
+       }
+      ],
+      "neverEmits": [
+       "GUEST_ASK_REFUSE"
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "the-stage-refuses-a-guest-ask-its-host-could-not-relay",
+   "note": "G-STD-373: the relay failed here, so the guest's failure route must fire.",
+   "steps": [
+    {
+     "trait": "GuestStage",
+     "event": "GUEST_ASK_FAILED",
+     "payload": {
+      "error": "no host audio clock is configured for audio/clock",
+      "kind": "unavailable"
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "guest-1",
+      "guestPaints": [],
+      "guestError": "",
+      "guestAsks": [
+       {
+        "trait": "Clock",
+        "op": "audio/clock",
+        "ask": "{\"op\":\"audio/clock\",\"args\":[],\"completion\":{\"trait\":\"Clock\",\"success\":\"TICKED\"}}"
+       }
+      ]
+     },
+     "from": "idle",
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "emits": [
+       {
+        "event": "GUEST_ASK_REFUSE",
+        "payload": {
+         "guest": "guest-1",
+         "ask": "{\"op\":\"audio/clock\",\"args\":[],\"completion\":{\"trait\":\"Clock\",\"success\":\"TICKED\"}}",
+         "reason": "no host audio clock is configured for audio/clock"
+        }
+       }
+      ],
+      "neverEmits": [
+       "GUEST_ASK_RETURN"
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "control-the-stage-ignores-asks-of-a-guest-it-does-not-show",
+   "steps": [
+    {
+     "trait": "GuestStage",
+     "event": "GUEST_HOST_ASKS",
+     "payload": {
+      "guest": "guest-9",
+      "asks": [
+       {
+        "trait": "Clock",
+        "op": "audio/clock",
+        "ask": "{\"op\":\"audio/clock\",\"args\":[],\"completion\":{\"trait\":\"Clock\",\"success\":\"TICKED\"}}"
+       }
+      ]
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "guest-1",
+      "guestPaints": [],
+      "guestError": "",
+      "guestAsks": []
+     },
+     "from": "idle",
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "neverEmits": [
+       "GUEST_ASK_RETURN",
+       "GUEST_ASK_REFUSE"
+      ],
+      "effects": []
+     }
+    }
+   ],
+   "now": 1760531445678
   }
  ]
 }

@@ -53,6 +53,8 @@ orbital EvalHarnessOrbital {
     low  : float!
     high : float!
   }
+  type NumMap = Map string number
+  type IntervalMap = Map string Interval
 
   type CaseRow = {
     caseId         : string!
@@ -101,7 +103,7 @@ orbital EvalHarnessOrbital {
     missing      : [string] = []
     queue        : [JudgeJob] = []
     judged       : [JudgeRow] = []
-    metrics      : Metrics = {}
+    metrics      : Metrics = { casesTotal: 0, casesPredicted: 0, retrievalScored: 0, retrievalNotScored: 0, recallAtK: {}, precisionAtK: {}, hitAtK: {}, exactMatchChecked: 0, judgeCounted: {}, judgeErrors: {}, judgePassRate: {}, judgeInterval: {}, calibrationCriterion: "", calibratedCases: 0, judgePassHumanFail: 0, judgeFailHumanPass: 0, disagreements: [] }
     errorMessage : string = ""
     status       : "idle" | "judging" | "done" | "failed" = idle
   }
@@ -236,7 +238,7 @@ orbital EvalHarnessOrbital {
         (set @entity.missing [])
         (set @entity.queue [])
         (set @entity.judged [])
-        (set @entity.metrics {})
+        (set @entity.metrics { casesTotal: 0, casesPredicted: 0, retrievalScored: 0, retrievalNotScored: 0, recallAtK: {}, precisionAtK: {}, hitAtK: {}, exactMatchChecked: 0, judgeCounted: {}, judgeErrors: {}, judgePassRate: {}, judgeInterval: {}, calibrationCriterion: "", calibratedCases: 0, judgePassHumanFail: 0, judgeFailHumanPass: 0, disagreements: [] })
         (set @entity.errorMessage "")
         (set @entity.status idle)
         (render-ui main { type: typography, variant: caption, role: status, content: "Evaluation harness ready: load a golden set and run predictions." })
@@ -263,7 +265,7 @@ orbital EvalHarnessOrbital {
         (set @entity.predictions ?predictions)
         (set @entity.errorMessage "")
         (set @entity.judged [])
-        (set @entity.metrics {})
+        (set @entity.metrics { casesTotal: 0, casesPredicted: 0, retrievalScored: 0, retrievalNotScored: 0, recallAtK: {}, precisionAtK: {}, hitAtK: {}, exactMatchChecked: 0, judgeCounted: {}, judgeErrors: {}, judgePassRate: {}, judgeInterval: {}, calibrationCriterion: "", calibratedCases: 0, judgePassHumanFail: 0, judgeFailHumanPass: 0, disagreements: [] })
         (set @entity.unmatched (array/filter ?predictions (fn q (= (array/find @entity.cases (fn g (= @g.id @q.caseId))) null))))
         (set @entity.rows
           (array/map @entity.cases
@@ -348,7 +350,8 @@ orbital EvalHarnessOrbital {
                 verdicts: (array/reduce (array/filter @entity.judged (fn x (= @x.caseId @r.caseId))) {} (fn acc x (object/set @acc @x.criterion @x.verdict))),
                 reasons: (array/reduce (array/filter @entity.judged (fn x (= @x.caseId @r.caseId))) {} (fn acc x (object/set @acc @x.criterion @x.reason)))
               }))))
-        (let ((scoredRows (array/filter @entity.rows (fn r @r.retrievalScored)))
+        (let ((nm : NumMap {}) (im : IntervalMap {})
+              (scoredRows (array/filter @entity.rows (fn r @r.retrievalScored)))
               (n (array/len @scoredRows))
               (exactRows (array/filter @entity.rows (fn r @r.exactChecked)))
               (stats (array/map @config.judgeCriteria
@@ -369,16 +372,16 @@ orbital EvalHarnessOrbital {
               casesPredicted: (- (array/len @entity.predictions) (array/len @entity.unmatched)),
               retrievalScored: @n,
               retrievalNotScored: (- (array/len @entity.cases) @n),
-              recallAtK: (if (> @n 0) (array/reduce @config.ks {} (fn acc k (object/set @acc (str/concat @k) (/ (array/sum (array/map @scoredRows (fn r (object/get (default @r.recallAtK {}) (str/concat @k) 0)))) @n)))) {}),
-              precisionAtK: (if (> @n 0) (array/reduce @config.ks {} (fn acc k (object/set @acc (str/concat @k) (/ (array/sum (array/map @scoredRows (fn r (object/get (default @r.precisionAtK {}) (str/concat @k) 0)))) @n)))) {}),
-              hitAtK: (if (> @n 0) (array/reduce @config.ks {} (fn acc k (object/set @acc (str/concat @k) (/ (array/sum (array/map @scoredRows (fn r (object/get (default @r.hitAtK {}) (str/concat @k) 0)))) @n)))) {}),
+              recallAtK: (if (> @n 0) (array/reduce @config.ks @nm (fn acc k (object/set @acc (str/concat @k) (/ (array/sum (array/map @scoredRows (fn r (object/get (default @r.recallAtK {}) (str/concat @k) 0)))) @n)))) @nm),
+              precisionAtK: (if (> @n 0) (array/reduce @config.ks @nm (fn acc k (object/set @acc (str/concat @k) (/ (array/sum (array/map @scoredRows (fn r (object/get (default @r.precisionAtK {}) (str/concat @k) 0)))) @n)))) @nm),
+              hitAtK: (if (> @n 0) (array/reduce @config.ks @nm (fn acc k (object/set @acc (str/concat @k) (/ (array/sum (array/map @scoredRows (fn r (object/get (default @r.hitAtK {}) (str/concat @k) 0)))) @n)))) @nm),
               mrr: (if (> @n 0) (/ (array/sum (array/map @scoredRows (fn r @r.mrr))) @n) null),
               exactMatchChecked: (array/len @exactRows),
               exactMatchRate: (if (> (array/len @exactRows) 0) (/ (array/len (array/filter @exactRows (fn r @r.exactMatch))) (array/len @exactRows)) null),
-              judgeCounted: (array/reduce @stats {} (fn acc s (object/set @acc @s.name (+ @s.pass @s.fail)))),
-              judgeErrors: (array/reduce @stats {} (fn acc s (object/set @acc @s.name @s.errors))),
-              judgePassRate: (array/reduce @stats {} (fn acc s (if (> (+ @s.pass @s.fail) 0) (object/set @acc @s.name (/ @s.pass (+ @s.pass @s.fail))) @acc))),
-              judgeInterval: (array/reduce @stats {} (fn acc s
+              judgeCounted: (array/reduce @stats @nm (fn acc s (object/set @acc @s.name (+ @s.pass @s.fail)))),
+              judgeErrors: (array/reduce @stats @nm (fn acc s (object/set @acc @s.name @s.errors))),
+              judgePassRate: (array/reduce @stats @nm (fn acc s (if (> (+ @s.pass @s.fail) 0) (object/set @acc @s.name (/ @s.pass (+ @s.pass @s.fail))) @acc))),
+              judgeInterval: (array/reduce @stats @im (fn acc s
                 (if (> (+ @s.pass @s.fail) 0)
                   (let ((iv (prob/credible-interval (prob/sample @config.sampleCount (prob/beta (+ @config.priorAlpha @s.pass) (+ @config.priorBeta @s.fail))) (- 1 @config.credibleMass))))
                     (if (= @iv null)

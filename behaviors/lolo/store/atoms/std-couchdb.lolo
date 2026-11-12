@@ -11,7 +11,8 @@ type HttpHeader = { name : string!, value : string! }
 type RowCell = string | number | boolean | [RowCell?] | Map string RowCell?
 type Row = Map string RowCell?
 type CouchDoc = Map string RowCell?
-type IndexPath = { fields : [string]!, orderBy : string? }
+type IndexNearest = { field : string!, dimension : number! }
+type IndexPath = { fields : [string]!, orderBy : string?, nearest : IndexNearest? }
 
 type CompareLeaf = { kind : "compare", field : string!, op : "==" | "!=" | "<" | "<=" | ">" | ">=", value : RowCell? }
 type MemberLeaf = { kind : "member", field : string!, values : [RowCell?]! }
@@ -911,6 +912,7 @@ orbital CouchdbOrbital {
         query : RowQuery!
         project : "rows" | "ids"
         collection : string?
+        indexes : [IndexPath]?
       }
         @description "A query ask; the order, filter and window are translated to a Mango selector, or the ask is STORE_UNSUPPORTED."
         @tier "internal"
@@ -925,6 +927,7 @@ orbital CouchdbOrbital {
         key : string!
         batch : RowWriteBatch!
         collections : (Map string string)?
+        indexes : (Map string [IndexPath])?
       }
         @description "Apply a batch of create, upsert, update and delete ops in order, each conditioned on the _rev it read."
         @tier "internal"

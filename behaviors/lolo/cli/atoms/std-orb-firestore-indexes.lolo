@@ -2,13 +2,19 @@ app std-orb-firestore-indexes [
   version: "1.0.0",
   inbound: ["cli-firestore-indexes"],
   fs: { cwd: "**": [read, write], "/**": [read, write] },
-  description: "std-orb-firestore-indexes — the `orb firestore-indexes <file> [--scope collection|collection-group] [--out <path>]` command (spec/cli/orb-firestore-indexes.lolo). The program is read (os/read-file, program/read) and every persistent entity's `@index { fields, orderBy? }` declaration becomes one entry of a Firebase firestore.indexes.json: collectionGroup is the entity's collection, queryScope is COLLECTION (the default) or COLLECTION_GROUP with --scope collection-group, and fields are the declared field paths ascending followed by the orderBy field in its direction (`name:desc`, ascending by default). A declaration that resolves to one field is left out, since Firestore keeps every single-field index itself. The file is `{ indexes, fieldOverrides: [] }`, two-space indented and newline-terminated; it is printed (status 200), or written to --out, relative to the directory the command runs in, and the answer is `wrote <path>`. A wrong word count, an unknown flag or an unknown scope answers the usage (status 400, exit 2); an unreadable or unlowerable file answers status 500 on `Error: <reason>` (exit 1). Which store drives an entity is not read: every persistent entity that declares `@index` is rendered."
+  description: "std-orb-firestore-indexes — the `orb firestore-indexes <file> [--scope collection|collection-group] [--out <path>]` command (spec/cli/orb-firestore-indexes.lolo). The program is read (os/read-file, program/read) and every persistent entity's `@index { fields, orderBy?, nearest? }` declaration becomes one entry of a Firebase firestore.indexes.json: collectionGroup is the entity's collection, queryScope is COLLECTION (the default) or COLLECTION_GROUP with --scope collection-group, and fields are the declared field paths ascending followed by the orderBy field in its direction (`name:desc`, ascending by default), or by the nearest field as a flat vector index of its dimension (`vectorConfig { dimension, flat: {} }`). A declaration that resolves to one field is left out, since Firestore keeps every single-field index itself, unless that field is a vector, which Firestore never indexes by itself. The file is `{ indexes, fieldOverrides: [] }`, two-space indented and newline-terminated; it is printed (status 200), or written to --out, relative to the directory the command runs in, and the answer is `wrote <path>`. A wrong word count, an unknown flag or an unknown scope answers the usage (status 400, exit 2); an unreadable or unlowerable file answers status 500 on `Error: <reason>` (exit 1). Which store drives an entity is not read: every persistent entity that declares `@index` is rendered."
 ]
 uses Spec from "almadar-std/orb-firestore-indexes"
 uses Args from "std/behaviors/std-args"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type ArgFlag = { name : string!, aliases : [string]!, takesValue : boolean!, repeatable : boolean! }
-type IndexDecl = { fields : [string]!, orderBy : string? }
+type IndexNearest = { field : string!, dimension : number! }
+type FlatConfig = Map string string
+type VectorConfig = { dimension : number!, flat : FlatConfig! }
+type OrderedField = { fieldPath : string!, order : string! }
+type VectorField = { fieldPath : string!, vectorConfig : VectorConfig! }
+type IndexField = OrderedField | VectorField
+type IndexDecl = { fields : [string]!, orderBy : string?, nearest : IndexNearest? }
 type IndexEntity = { collection : string?, persistence : string?, indexes : [IndexDecl]? }
 type IndexOrbital = { entity : IndexEntity? }
 type IndexProgram = { orbitals : [IndexOrbital]? }
@@ -69,9 +75,10 @@ orbital OrbFirestoreIndexesOrbital {
           (let ((ent (object/get @o "entity" {})))
             (if (or (!= (object/get @ent "persistence" "") "persistent") (= (object/get @ent "collection" "") ""))
               []
-              (array/filter (array/map (object/get @ent "indexes" []) (fn d
-                { collectionGroup: (object/get @ent "collection" ""), queryScope: @entity.scope, fields: (array/concat (array/map (object/get @d "fields") (fn f { fieldPath: @f, order: "ASCENDING" })) (if (= (object/get @d "orderBy" "") "") [] [{ fieldPath: (default (array/first (str/split (object/get @d "orderBy" "") ":")) ""), order: (if (= (default (array/nth (str/split (object/get @d "orderBy" "") ":") 1) "asc") "desc") "DESCENDING" "ASCENDING") }])) }))
-                (fn x (> (array/len (object/get @x "fields")) 1)))))))), fieldOverrides: [] } { pretty: true }) "\n"))
+              (array/map (array/filter (object/get @ent "indexes" []) (fn d (or (!= (object/get @d "nearest") null) (> (+ (array/len (object/get @d "fields")) (if (= (object/get @d "orderBy" "") "") 0 1)) 1)))) (fn d
+                (let ((ordered : [IndexField] (array/concat (array/map (object/get @d "fields") (fn f { fieldPath: @f, order: "ASCENDING" })) (if (= (object/get @d "orderBy" "") "") [] [{ fieldPath: (default (array/first (str/split (object/get @d "orderBy" "") ":")) ""), order: (if (= (default (array/nth (str/split (object/get @d "orderBy" "") ":") 1) "asc") "desc") "DESCENDING" "ASCENDING") }])))
+                      (vector : [IndexField] (let ((n (object/get @d "nearest"))) (if (= @n null) [] [{ fieldPath: (object/get @n "field"), vectorConfig: { dimension: (object/get @n "dimension"), flat: {} } }]))))
+                  { collectionGroup: (object/get @ent "collection" ""), queryScope: @entity.scope, fields: (array/concat @ordered @vector) })))))))), fieldOverrides: [] } { pretty: true }) "\n"))
         (emit FIRESTORE_INDEXES_RENDERED {})
     }
 

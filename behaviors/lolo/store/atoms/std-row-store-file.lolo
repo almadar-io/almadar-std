@@ -8,6 +8,8 @@ uses Spec from "almadar-std/row-store"
 orbital RowStoreFileOrbital {
   type RowCell = string | number | boolean | [RowCell] | Map string RowCell
   type Row = Map string RowCell
+  type IndexNearest = { field : string!, dimension : number! }
+  type IndexPath = { fields : [string]!, orderBy : string?, nearest : IndexNearest? }
   type OpCell = string | number | boolean | [OpCell?] | Map string OpCell?
   type OpRow = Map string OpCell?
 
@@ -316,6 +318,7 @@ orbital RowStoreFileOrbital {
         query : RowQuery!
         project : "rows" | "ids"
         collection : string?
+        indexes : [IndexPath]?
       }
         @description "A query ask; the file store pushes none down."
         @tier "internal"
@@ -323,6 +326,7 @@ orbital RowStoreFileOrbital {
         key : string!
         batch : RowWriteBatch!
         collections : (Map string string)?
+        indexes : (Map string [IndexPath])?
       }
         @description "Apply a batch of create, upsert, update and delete ops."
         @tier "internal"

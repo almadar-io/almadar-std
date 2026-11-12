@@ -334,7 +334,7 @@ orbital CloudRunBoardOrbital {
 
       CR_ANSWER -> idle
         (set @entity.billing { entries: (array/sort (array/sort @entity.entries "service" "asc") "cost" "desc"), totalCost: (math/round (array/reduce @entity.entries 0 (fn acc e (+ @acc @e.cost))) 2), currency: @entity.currency, billingPeriod: (time/format @entity.startedAt "YYYY-MM") })
-        (set @entity.cloudRun { services: (array/map (array/range (array/len @entity.services)) (fn i (let ((svc (array/nth @entity.services @i)) (r (array/nth @entity.resources @i)))
+        (set @entity.cloudRun { services: (array/map @entity.services (fn svc (let ((r (array/nth @entity.resources (array/indexOf @entity.services @svc))))
             (let ((name (object/get @svc "metadata.name" "")) (ready (array/find (object/get @svc "status.conditions" []) (fn c (= @c.type "Ready")))) (cost (array/find @entity.costRows (fn c (= @c.svc (object/get @svc "metadata.name" ""))))))
               { name: @name,
                 region: (default (array/nth (object/values (object/pick (object/get @svc "metadata.labels" @entity.noMap) [(str/concat "cloud.googleapis.com/location")])) 0) ""),

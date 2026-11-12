@@ -61,7 +61,8 @@ orbital RowStorePostgresOrbital {
   type RowListVerb = { key : string!, entityType : string!, collection : string }
   type RowsQueryVerb = { key : string!, entityType : string!, query : RowQuery!, project : "rows" | "ids", collection : string }
   type RowsWriteVerb = { key : string!, batch : RowWriteBatch!, collections : Map string string }
-  type IndexPath = { fields : [string]!, orderBy : string? }
+  type IndexNearest = { field : string!, dimension : number! }
+  type IndexPath = { fields : [string]!, orderBy : string?, nearest : IndexNearest? }
   type RowsEnsureIndexesVerb = { key : string!, entityType : string!, indexes : [IndexPath]! }
 
   type SqlColumn = { name : string!, typeOid : number! }
@@ -1666,6 +1667,7 @@ orbital RowStorePostgresOrbital {
         query : RowQuery!
         project : "rows" | "ids"
         collection : string?
+        indexes : [IndexPath]?
       }
         @description "A query ask, pushed down as one parameterised SELECT."
         @tier "internal"
@@ -1673,6 +1675,7 @@ orbital RowStorePostgresOrbital {
         key : string!
         batch : RowWriteBatch!
         collections : (Map string string)?
+        indexes : (Map string [IndexPath])?
       }
         @description "Apply a batch of create, upsert, update and delete ops, atomic in BEGIN and COMMIT or stop at the first op that is not applied."
         @tier "internal"

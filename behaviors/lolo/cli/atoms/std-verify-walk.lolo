@@ -33,7 +33,12 @@ type WalkPlayed = { trait : string!, from : string!, event : string!, to : strin
 type WalkNodeBinding = { kind : string!, entity : string, rows : number, readGated : boolean }
 type WalkRenderedNode = { pattern : string!, dynamic : boolean!, supported : boolean!, stub : boolean!, binding : WalkNodeBinding! }
 type WalkRenderedSlot = { slot : string!, sourceTrait : string!, ownerEntity : string!, nodes : [WalkRenderedNode]! }
-type WalkResult = { trait : string!, event : string!, failure : string?, transitionFired : boolean!, guard : string!, firedArm : number, effects : [WalkEffect]!, emitted : [SExpr]!, guards : [SExpr]!, state : Map string string, rendered : [WalkRenderedSlot]? }
+type WalkListen = { event : string!, triggers : string }
+type WalkListenTrait = { name : string!, listens : [WalkListen]? }
+type WalkListenOrbital = { name : string!, traits : [WalkListenTrait]? }
+type WalkListenProgram = { orbitals : [WalkListenOrbital]! }
+type WalkCollapsed = { trait : string!, event : string!, payload : WalkJson? }
+type WalkResult = { trait : string!, event : string!, failure : string?, transitionFired : boolean!, guard : string!, firedArm : number, effects : [WalkEffect]!, emitted : [SExpr]!, guards : [SExpr]!, state : Map string string, rendered : [WalkRenderedSlot]?, collapsed : [WalkCollapsed]? }
 type WalkHop = { trait : string!, from : string!, event : string!, to : string!, arm : number }
 type WalkCreditStep = { trait : string!, from : string!, event : string!, arm : number, reply : string, fired : [WalkHop] }
 type WalkCredit = { index : number!, stateBefore : string!, stateAfter : string! }
@@ -69,6 +74,7 @@ orbital VerifyWalkOrbital {
     credits : [WalkCredit] = []
     creditSteps : [WalkCreditStep] = []
     gaps : number! = 0
+    findings : [WalkCollapsed] = []
     render : boolean = false
     strict : boolean = false
     path : string = ""
@@ -319,17 +325,23 @@ orbital VerifyWalkOrbital {
           (array/map @entity.notes (fn n { trait: (object/get @n "trait"), from: (object/get @n "from"), event: (object/get @n "event"),
             to: (let ((g (array/find @entity.machineRows (fn g (and (= (object/get @g "trait") (object/get @n "trait")) (= (object/get @g "from") (object/get @n "from")) (= (object/get @g "event") (object/get @n "event"))))))) (if (= @g null) "" (object/get @g "to"))),
             verdict: "unplanned" }))))
+        (set @entity.findings (array/reduce (array/flatten (array/map @entity.played (fn p (object/get (object/get @p "result") "collapsed" [])))) [] (fn acc c
+          (if (and (array/includes (array/flatten (array/map (object/get (default (as @entity.program WalkListenProgram) { orbitals: [] }) "orbitals") (fn o (array/flatten (array/map (default (object/get @o "traits") []) (fn t (array/map (default (object/get @t "listens") []) (fn l (default (object/get @l "triggers") (object/get @l "event"))))))))))
+                                   (object/get @c "event"))
+                   (not (array/some @acc (fn f (= @f @c)))))
+            (array/concat @acc [@c]) @acc))))
         (set @entity.failed (array/len (array/filter @entity.rows (fn r (= (object/get @r "verdict") "fail")))))
         (set @entity.passed (array/len (array/filter @entity.rows (fn r (= (object/get @r "verdict") "pass")))))
         (set @entity.unplanned (array/len (array/filter @entity.rows (fn r (= (object/get @r "verdict") "unplanned")))))
         (set @entity.gaps (array/len (array/filter @entity.rows (fn r (= (object/get @r "verdict") "gap")))))
         (set @entity.guardBlocked (array/len (array/filter @entity.rows (fn r (= (object/get @r "verdict") "guard-blocked")))))
         (set @entity.denied (array/len (array/filter @entity.rows (fn r (= (object/get @r "verdict") "denied")))))
-        (emit VERIFY_WALK_ANSWERED { status: (if (and (= @entity.failed 0) (or (not @entity.strict) (and (= @entity.unplanned 0) (= @entity.guardBlocked 0) (= @entity.gaps 0)))) 200 500), body: (str/join (array/concat
+        (emit VERIFY_WALK_ANSWERED { status: (if (and (= @entity.failed 0) (= (array/len @entity.findings) 0) (or (not @entity.strict) (and (= @entity.unplanned 0) (= @entity.guardBlocked 0) (= @entity.gaps 0)))) 200 500), body: (str/join (array/concat
           (array/map @entity.rows (fn r (str/concat (object/get @r "verdict") "  " (object/get @r "trait") " " (object/get @r "from") " --" (object/get @r "event") "--> " (object/get @r "to")
             (if (= (object/get @r "verdict") "unplanned") (str/concat "  missing: " (let ((nt (array/find @entity.notes (fn n (and (= (object/get @n "trait") (object/get @r "trait")) (= (object/get @n "from") (object/get @r "from")) (= (object/get @n "event") (object/get @r "event"))))))) (if (= @nt null) "" (object/get @nt "missing"))))
               (if (!= (object/get @r "detail" "") "") (str/concat "  " (object/get @r "detail" "")) "")))))
-          [(str/concat @entity.passed " passed, " @entity.failed " failed, " @entity.unplanned " unplanned, " @entity.guardBlocked " guard-blocked" (if (> @entity.gaps 0) (str/concat ", " @entity.gaps " gap") "") (if (> @entity.denied 0) (str/concat ", " @entity.denied " denied") ""))]) "\n") })
+          (array/map @entity.findings (fn f (str/concat "finding  VERIFY_REPEATED_ASK_COLLAPSED  " (object/get @f "trait") " " (object/get @f "event") " " (json/stringify (object/get @f "payload")) "  the same question was asked twice in one dispatch; the second was skipped (EXEC-QUEUE-4) and nothing answers it")))
+          [(str/concat @entity.passed " passed, " @entity.failed " failed, " @entity.unplanned " unplanned, " @entity.guardBlocked " guard-blocked" (if (> @entity.gaps 0) (str/concat ", " @entity.gaps " gap") "") (if (> @entity.denied 0) (str/concat ", " @entity.denied " denied") "") (if (> (array/len @entity.findings) 0) (str/concat ", " (array/len @entity.findings) " finding") ""))]) "\n") })
       WALK_FAILED -> ready
         (emit VERIFY_WALK_ANSWERED { status: 500, body: (str/concat "verify-walk: " (default @payload.error "")) })
     }
