@@ -3,7 +3,7 @@ app std-program-host [
   inbound: ["cli-program-host"],
   fs: { cwd: "**/*.lolo": [read] },
   kernel: { "guest": [spawn] },
-  description: "std-program-host — the runtime as a .lolo program (`orb host <shell> <program>`). The cli-program-host command takes argv: the guest program path, then optional `--grant=<kind>` flags (a kind the guestGrants knob holds: fs, exec, net, credentials) that narrow the guestGrants knob to those kinds; with no flag the guest gets the whole knob, and the knob defaults to no grants at all, so the guest never inherits the host's own. It resolves the program (program/read { resolve }, EXEC-LOAD-1) and opens it as a guest session with program/open, passing the grants at open and only there (EXEC-CONC-7); the host holds the grant `kernel: { guest: [spawn] }` and the kernel refuses an open whose grants the host does not hold, naming them. It emits HOST_LOADED { path } once the guest is open, or HOST_REFUSED { reason } when argv names no program, the file cannot be read, resolved or opened, or a flag names a kind the knob does not hold; the command is answered with a status and body (200 loaded, 400 usage or refused grants, 500 unreadable or refused at open). Once loaded, each HOST_EVENT { key, orbital, trait, event, payload } (payload as JSON text) is forwarded to the guest by a keyed program/dispatch { guest } to Orbital.Trait.EVENT, run on the guest's own lane, and each guest answer is relayed as HOST_ANSWERED { key, result }; a failed dispatch is answered under the key it was sent with. A guest's lazy pages are carried: each `uses lazy` program the resolve answers rides the opened value in `lazyPrograms`, keyed by the `orbRef` of its page, so program/navigate can load it."
+  description: "std-program-host — the runtime as a .lolo program (`orb host <shell> <program>`). The cli-program-host command takes argv: the guest program path, then optional `--grant=<kind>` flags (a kind the guestGrants knob holds: fs, exec, net, credentials) that narrow the guestGrants knob to those kinds; with no flag the guest gets the whole knob, and the knob defaults to no grants at all, so the guest never inherits the host's own. It resolves the program (program/read { resolve }, EXEC-LOAD-1) and opens it as a guest session with program/open, passing the grants at open and only there (EXEC-CONC-7); the host holds the grant `kernel: { guest: [spawn] }` and the kernel refuses an open whose grants the host does not hold, naming them. It emits HOST_LOADED { path } once the guest is open, or HOST_REFUSED { reason } when argv names no program, the file cannot be read, resolved or opened, or a flag names a kind the knob does not hold; the command is answered with a status and body (200 loaded, 400 usage or refused grants, 500 unreadable or refused at open). Once loaded, each HOST_EVENT { key, orbital, trait, event, payload } (payload as JSON text) is forwarded to the guest by a keyed program/dispatch { guest } to Orbital.Trait.EVENT, run on the guest's own lane, and each guest answer is relayed as HOST_ANSWERED { key, result }; a failed dispatch is answered under the key it was sent with. A guest's lazy pages are carried: each `uses lazy` program the resolve answers rides the opened value in `lazyPrograms`, keyed by the `orbRef` of its page, so program/navigate can load it; a HOST_NAVIGATE { key, route } is forwarded to the guest as a keyed program/navigate and answered as HOST_ANSWERED like an event."
 ]
 uses Spec from "almadar-std/program-host"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
@@ -81,6 +81,8 @@ orbital ProgramHostOrbital {
       INIT -> hosting
       HOST_EVENT -> hosting
         (program/dispatch (str/concat @payload.orbital "." @payload.trait "." @payload.event) @payload.payload { guest: @entity.guest key: @payload.key emit: { success: HOST_GUEST_ANSWERED, failure: HOST_GUEST_FAILED } })
+      HOST_NAVIGATE -> hosting
+        (program/navigate { guest: @entity.guest route: @payload.route key: @payload.key emit: { success: HOST_GUEST_ANSWERED, failure: HOST_GUEST_FAILED } })
       HOST_GUEST_ANSWERED -> hosting
         (emit HOST_ANSWERED { key: @payload.key, result: (json/stringify @payload.result) })
       HOST_GUEST_FAILED -> hosting
@@ -130,6 +132,8 @@ orbital ProgramHostOrbital {
         @synonyms "orb host, runtime host, host a program"
       HOST_EVENT { key : string!, orbital : string!, trait : string!, event : string!, payload : string }
         @description "An external event for the guest program."
+      HOST_NAVIGATE { key : string!, route : string! }
+        @description "Route the guest to a page: the kernel loads the page's program when it is lazy and mounts its traits, and the answer comes back as HOST_ANSWERED under the key."
       HOST_ARGS_DONE {
         stage : string!
         flags : Map string [string]!

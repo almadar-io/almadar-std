@@ -695,6 +695,109 @@
      }
     }
    ]
+  },
+  {
+   "id": "a-host-navigate-routes-the-guest-to-a-page",
+   "note": "G-STD-319: HOST_NAVIGATE { key, route } asks the kernel to load and mount the page the route names (a lazy page loads here), answered under the key like HOST_EVENT; no guest session exists in a step, so the kernel's refusal of the unknown guest shows the ask reached program/navigate with the route",
+   "steps": [
+    {
+     "trait": "ProgramHost",
+     "from": "hosting",
+     "event": "HOST_NAVIGATE",
+     "payload": {
+      "key": "n1",
+      "route": "/docs"
+     },
+     "expect": {
+      "state": "hosting",
+      "effects": [
+       {
+        "type": "program/navigate",
+        "arg0": {
+         "guest": "@entity.guest",
+         "route": "@payload.route",
+         "key": "@payload.key",
+         "emit": {
+          "success": "HOST_GUEST_ANSWERED",
+          "failure": "HOST_GUEST_FAILED"
+         }
+        },
+        "status": "failed",
+        "error": "program/navigate: no open guest 'guest-1' (it was never opened or is closed)"
+       }
+      ]
+     },
+     "entity": {
+      "id": "host",
+      "path": "guest.lolo",
+      "cwd": "",
+      "guest": "guest-1",
+      "loaded": true,
+      "grants": {}
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-navigate-no-page-matches-is-relayed-as-a-failure-under-its-key",
+   "note": "control: a route no page matches fails program/navigate, and the failure is answered under the navigate's key",
+   "steps": [
+    {
+     "trait": "ProgramHost",
+     "from": "hosting",
+     "event": "HOST_GUEST_FAILED",
+     "payload": {
+      "key": "n2",
+      "error": "program/navigate: no page matches /nope"
+     },
+     "expect": {
+      "state": "hosting",
+      "emits": [
+       {
+        "event": "HOST_ANSWERED",
+        "payload": {
+         "key": "n2"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "host",
+      "path": "guest.lolo",
+      "cwd": "",
+      "guest": "guest-1",
+      "loaded": true,
+      "grants": {}
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-host-navigate-before-a-guest-is-hosted-is-ignored",
+   "note": "control: navigate is a hosting verb; before a guest is open nothing is asked",
+   "steps": [
+    {
+     "trait": "ProgramHost",
+     "from": "waiting",
+     "event": "HOST_NAVIGATE",
+     "payload": {
+      "key": "n3",
+      "route": "/docs"
+     },
+     "expect": {
+      "state": "waiting",
+      "effects": []
+     },
+     "entity": {
+      "id": "host",
+      "path": "guest.lolo",
+      "cwd": "",
+      "guest": "",
+      "loaded": false,
+      "grants": {}
+     }
+    }
+   ]
   }
  ]
 }
