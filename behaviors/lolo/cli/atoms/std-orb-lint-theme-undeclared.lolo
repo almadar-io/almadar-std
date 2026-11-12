@@ -4,7 +4,7 @@ app std-orb-lint-theme-undeclared [
   env: ["PATH"],
   exec: [exe],
   fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
-  description: "std-orb-lint-theme-undeclared — the `orb lint theme-undeclared <file>` command, the port of ORB_THEME_UNDECLARED (theme.rs validate_data_themes, G-UI-106). It lowers the file with program/read and, per trait, folds every transition effect, tick effect and config default for a `data-theme` value that resolves to a literal theme (the string itself, or the literal string default of the `@config.<knob>` it reads; an unset knob, another binding or an empty value is no theme). A theme whose base (the key without its -dark or -light mode) is not declared by the app theme, an orbital theme (a key or an inline theme name) or the `themes` list is reported once per trait, sorted (status 500, exit 1). Clean answers `lint theme-undeclared: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+  description: "std-orb-lint-theme-undeclared — the `orb lint theme-undeclared <file>` command, the port of ORB_THEME_UNDECLARED (theme.rs validate_data_themes, G-UI-106). It lowers the file with program/read and, per trait, folds every transition effect, tick effect and config default for a `data-theme` value that resolves to a literal theme (the string itself, or the literal string default of the `@config.<knob>` it reads; an unset knob, another binding or an empty value is no theme). A theme whose base (the key without its -dark or -light mode) is not declared by the app theme, an orbital theme or an entry of the `themes` list (each a key or an inline theme name) is reported once per trait, sorted (status 500, exit 1). Clean answers `lint theme-undeclared: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
 ]
 uses Spec from "almadar-std/lint-theme-undeclared"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
@@ -21,7 +21,7 @@ type TdTick = { effects : [TdVal?] }
 type TdTrait = { name : string, config : Map string TdKnob, stateMachine : TdMachine, ticks : [TdTick] }
 type TdNamed = { name : string }
 type TdOrbital = { name : string, theme : string | TdNamed, traits : [TdTrait] }
-type TdProgram = { theme : string | TdNamed, themes : [string], orbitals : [TdOrbital] }
+type TdProgram = { theme : string | TdNamed, themes : [string | TdNamed], orbitals : [TdOrbital] }
 
 
 type LintCodeDecl = { code : string!, category : string!, description : string! }
@@ -53,7 +53,7 @@ orbital OrbLintThemeUndeclaredOrbital {
         (set @entity.findings (if (and @entity.unitsHeard (= @entity.unitsScope @payload.scope))
 (let ((orbitals (object/get @payload.program "orbitals" [])) (dq "\""))
           (let ((declared (array/concat
-                    (array/map (object/get @payload.program "themes" []) (fn k (if (str/endsWith @k "-dark") (str/slice @k 0 (- (str/len @k) 5)) (if (str/endsWith @k "-light") (str/slice @k 0 (- (str/len @k) 6)) @k))))
+                    (array/flatten (array/map (object/get @payload.program "themes" []) (fn k (if (validate/string @k) [(if (str/endsWith @k "-dark") (str/slice @k 0 (- (str/len @k) 5)) (if (str/endsWith @k "-light") (str/slice @k 0 (- (str/len @k) 6)) @k))] (if (validate/object @k) (let ((nm (object/get @k "name" ""))) (if (and (validate/string @nm) (!= @nm "")) [@nm] [])) [])))))
                     (if (validate/string (object/get @payload.program "theme" null)) (if (= (object/get @payload.program "theme" null) "") [] [(if (str/endsWith (object/get @payload.program "theme" null) "-dark") (str/slice (object/get @payload.program "theme" null) 0 (- (str/len (object/get @payload.program "theme" null)) 5)) (if (str/endsWith (object/get @payload.program "theme" null) "-light") (str/slice (object/get @payload.program "theme" null) 0 (- (str/len (object/get @payload.program "theme" null)) 6)) (object/get @payload.program "theme" null)))]) (if (validate/object (object/get @payload.program "theme" null)) (let ((nm (object/get (object/get @payload.program "theme" null) "name" ""))) (if (and (validate/string @nm) (!= @nm "")) [@nm] [])) []))
                     (array/flatten (array/map @orbitals (fn o (if (validate/string (object/get @o "theme" null)) (if (= (object/get @o "theme" null) "") [] [(if (str/endsWith (object/get @o "theme" null) "-dark") (str/slice (object/get @o "theme" null) 0 (- (str/len (object/get @o "theme" null)) 5)) (if (str/endsWith (object/get @o "theme" null) "-light") (str/slice (object/get @o "theme" null) 0 (- (str/len (object/get @o "theme" null)) 6)) (object/get @o "theme" null)))]) (if (validate/object (object/get @o "theme" null)) (let ((nm (object/get (object/get @o "theme" null) "name" ""))) (if (and (validate/string @nm) (!= @nm "")) [@nm] [])) [])))))))
                 (zero 0))

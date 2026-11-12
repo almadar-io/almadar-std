@@ -1,5 +1,6 @@
 app std-record-detail [
   version: "1.0.0",
+  locales: [en, ar, sl],
   description: "std-record-detail — single primitive: detail-panel. Owns the fetch-one-record state machine (loading → viewing → error, with RETRY), the record counterpart to std-browse's collection machine. Consumers configure fields/sections/actions and the title/subtitle/status bindings; the atom fetches by the id (or, for slug-routed records, the slug) carried on INIT and renders the panel. `detailLook` (panel default / slide-over / page / document) selects the render body, exactly as std-browse's browseLook selects a collection shape. The `document` look is for records whose shape IS a document (wiki page, note, article): the pure writing surface — a big inline-editable title with the rich-text body DIRECTLY beneath it, Edit/Done and the actions menu tucked into the header corner — where clicking the body drops a cursor in, every typing pause autosaves (CONTENT_SAVED, which the host persists QUIETLY — no refetch, or the editor unmounts mid-keystroke), and Done emits CONTENT_COMMITTED (the host refetches and snapshots version history on this one). Metadata never sits between the title and the words: compose the sibling RecordItemDetails trait beside the doc for a Gutenberg-style settings rail. A row minted blank by a document-first create arrives with draft=1 on INIT and opens straight in the editor. Pair with std-detail-layout for the back + breadcrumb chrome — that atom owns navigation, this one owns the record — exactly as a list page pairs std-browse with std-app-layout."
 ]
 ;; @capabilities "record detail, single record view, entity detail panel, drill-down record, show one record, record profile, detail page, view details, document editor, wiki page, note taking, article body, rich text editing, write and edit content"
@@ -189,13 +190,13 @@ orbital RecordItemOrbital {
               (render-ui main @config.pageBodyContent)
               (render-ui main @config.bodyContent))))
       RecordItemLoaded -> error when (not (validate/object ?data))
-        (render-ui main { message: "The fetched record is not a readable row.", title: "Couldn't load this record", type: alert, variant: error })
+        (render-ui main { message: (i18n/t "recordNotReadable"), title: (i18n/t "loadRecordFailed"), type: alert, variant: error })
       RecordItemSlugLoaded -> error when (and (> (array/len ?data) 0) (not (validate/object (array/first ?data))))
-        (render-ui main { message: "The fetched record is not a readable row.", title: "Couldn't load this record", type: alert, variant: error })
+        (render-ui main { message: (i18n/t "recordNotReadable"), title: (i18n/t "loadRecordFailed"), type: alert, variant: error })
       RecordItemSlugLoaded -> error when (= (array/len ?data) 0)
-        (render-ui main { description: "No record matches this address.", icon: search-x, title: "Not found", type: empty-state })
+        (render-ui main { description: (i18n/t "notFoundDescription"), icon: search-x, title: (i18n/t "notFoundTitle"), type: empty-state })
       RecordItemLoadFailed -> error
-        (render-ui main { message: ?error, title: "Couldn't load this record", type: alert, variant: error })
+        (render-ui main { message: ?error, title: (i18n/t "loadRecordFailed"), type: alert, variant: error })
     }
 
     ;; The document look's editing session. Reached from a draft landing or
@@ -303,11 +304,11 @@ orbital RecordItemOrbital {
               (render-ui main @config.pageBodyContent)
               (render-ui main @config.bodyContent))))
       RecordItemLoaded -> error when (not (validate/object ?data))
-        (render-ui main { message: "The fetched record is not a readable row.", title: "Couldn't load this record", type: alert, variant: error })
+        (render-ui main { message: (i18n/t "recordNotReadable"), title: (i18n/t "loadRecordFailed"), type: alert, variant: error })
       RecordItemSlugLoaded -> error when (and (> (array/len ?data) 0) (not (validate/object (array/first ?data))))
-        (render-ui main { message: "The fetched record is not a readable row.", title: "Couldn't load this record", type: alert, variant: error })
+        (render-ui main { message: (i18n/t "recordNotReadable"), title: (i18n/t "loadRecordFailed"), type: alert, variant: error })
       RecordItemSlugLoaded -> error when (= (array/len ?data) 0)
-        (render-ui main { description: "No record matches this address.", icon: search-x, title: "Not found", type: empty-state })
+        (render-ui main { description: (i18n/t "notFoundDescription"), icon: search-x, title: (i18n/t "notFoundTitle"), type: empty-state })
       ;; The document body is its own edit affordance: clicking it (or its
       ;; Edit button) starts the editing session with a cursor in the text.
       EDIT_CONTENT -> editing when (= @config.detailLook document)
@@ -317,7 +318,7 @@ orbital RecordItemOrbital {
         (set @entity.name ?title)
         (set @entity.loadedRow (object/set @entity.loadedRow @config.titleField ?title))
       RecordItemLoadFailed -> error
-        (render-ui main { message: ?error, title: "Couldn't load this record", type: alert, variant: error })
+        (render-ui main { message: ?error, title: (i18n/t "loadRecordFailed"), type: alert, variant: error })
       CLOSE_VIEW -> idle
         (render-ui main null)
     }

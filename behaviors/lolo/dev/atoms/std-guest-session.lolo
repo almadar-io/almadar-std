@@ -159,7 +159,7 @@ orbital GuestSessionOrbital {
     config {
       seedTrait : string = "MockDataMockSeed"
         @label "Seeder trait"
-        @description "The composed std-mock-page-seed trait (MockData's MockSeed) the guest asks for the personas it seeded."
+        @description "The composed std-mock-page-seed trait (MockData's MockSeed) the guest asks for the personas it seeded. The guest is opened with it as its seed writer (program/open seed), so the mock rows it creates are not held to the entities' create policies; every other trait of the guest is."
         @tier "internal"
       integrationsRefused : string = "Real integrations are only available when the launchpad runs on this machine."
         @label "Real integrations refused"
@@ -344,7 +344,7 @@ orbital GuestSessionOrbital {
         (program/compose [@entity.guestProgram, @entity.guestSeed] { appName: (object/get (default @entity.guestProgram { name: "guest", orbitals: [] }) "name" "guest") } { emit: { success: GUEST_COMPOSED, failure: GUEST_FAILED } })
         (set @entity.guestProgram null)
       GUEST_COMPOSED -> opening
-        (program/open ?result { grants: { env: @config.guestEnv }, env: { FIREBASE_AUTH_EMULATOR_HOST: @config.mockAuthHost, FIREBASE_PROJECT_ID: @config.mockAuthProject }, declared: true, integrations: @entity.guestIntegrations } { emit: { success: GUEST_OPENED, failure: GUEST_FAILED } })
+        (program/open ?result { grants: { env: @config.guestEnv }, env: { FIREBASE_AUTH_EMULATOR_HOST: @config.mockAuthHost, FIREBASE_PROJECT_ID: @config.mockAuthProject }, declared: true, integrations: @entity.guestIntegrations, seed: @config.seedTrait } { emit: { success: GUEST_OPENED, failure: GUEST_FAILED } })
       GUEST_FAIL -> idle
         (emit GUEST_ERROR { message: ?message })
       GUEST_RESET -> idle
@@ -507,17 +507,11 @@ orbital GuestSessionOrbital {
       GUEST_INPUT_SEND -> live when (= ?guest @entity.guestHandle)
         (program/dispatch ?address ?text { guest: ?guest, emit: { success: GUEST_STEPPED, failure: GUEST_STEP_FAILED } })
       GUEST_INPUT_SEND -> live when (!= ?guest @entity.guestHandle)
-      GUEST_STEPPED -> live when (= (array/len (default ?result.navigations [])) 0)
+      GUEST_STEPPED -> live
         (set @entity.guestPaints (array/reduce ?result.rendered (array/filter @entity.guestPaints (fn q (!= @q.slot "toast"))) (fn acc p (array/concat (array/filter @acc (fn q (or (!= @q.trait @p.trait) (!= @q.slot @p.slot)))) (array/filter [@p] (fn x (!= @x.content null)))))))
         (set @entity.guestPaintSeq (+ @entity.guestPaintSeq 1))
         (emit GUEST_PAINTS { guest: @entity.guestHandle, route: @entity.guestRoute, page: @entity.guestPage, paints: @entity.guestPaints, seq: @entity.guestPaintSeq })
         (emit GUEST_MOVED { guest: @entity.guestHandle, moves: ?result.outcomes })
-      GUEST_STEPPED -> live when (> (array/len (default ?result.navigations [])) 0)
-        (set @entity.guestPaints (array/reduce ?result.rendered (array/filter @entity.guestPaints (fn q (!= @q.slot "toast"))) (fn acc p (array/concat (array/filter @acc (fn q (or (!= @q.trait @p.trait) (!= @q.slot @p.slot)))) (array/filter [@p] (fn x (!= @x.content null)))))))
-        (set @entity.guestPaintSeq (+ @entity.guestPaintSeq 1))
-        (emit GUEST_PAINTS { guest: @entity.guestHandle, route: @entity.guestRoute, page: @entity.guestPage, paints: @entity.guestPaints, seq: @entity.guestPaintSeq })
-        (emit GUEST_MOVED { guest: @entity.guestHandle, moves: ?result.outcomes })
-        (program/navigate { guest: @entity.guestHandle, route: (object/get (default (array/last (default ?result.navigations [])) { trait: "", path: "" }) "path") } { emit: { success: GUEST_NAVIGATED, failure: GUEST_NAVIGATE_FAILED } })
       GUEST_STEP_FAILED -> live
         (emit GUEST_NOTICE { message: ?error })
       GUEST_TICKED -> live when (= ?guest @entity.guestHandle)

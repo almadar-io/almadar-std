@@ -1,0 +1,217 @@
+{
+ "atom": "store/atoms/std-global-search.lolo",
+ "trait": "GlobalSearch",
+ "cases": [
+  {
+   "id": "a-modules-typed-hits-are-kept-under-its-key",
+   "steps": [
+    {
+     "trait": "GlobalSearch",
+     "event": "SEARCH_RESULTS",
+     "payload": {
+      "moduleKey": "contacts",
+      "hits": [
+       {
+        "id": "c1",
+        "title": "Ada Lovelace",
+        "href": "/contacts/c1",
+        "kind": "contact"
+       }
+      ]
+     },
+     "entity": {
+      "id": "q",
+      "queryText": "ada",
+      "results": [],
+      "respondedCount": 0,
+      "requestedCount": 2,
+      "pendingModules": [],
+      "fanOutDone": true,
+      "resultsSummary": ""
+     },
+     "from": "searching",
+     "expect": {
+      "fired": true,
+      "state": "searching",
+      "entity": {
+       "respondedCount": 1
+      }
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "control-a-module-that-sends-only-titles-is-still-kept",
+   "steps": [
+    {
+     "trait": "GlobalSearch",
+     "event": "SEARCH_RESULTS",
+     "payload": {
+      "moduleKey": "projects",
+      "resultsJson": "Apollo, Gemini"
+     },
+     "entity": {
+      "id": "q",
+      "queryText": "ada",
+      "results": [],
+      "respondedCount": 0,
+      "requestedCount": 2,
+      "pendingModules": [],
+      "fanOutDone": true,
+      "resultsSummary": ""
+     },
+     "from": "searching",
+     "expect": {
+      "fired": true,
+      "state": "searching",
+      "entity": {
+       "respondedCount": 1
+      }
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "control-a-second-answer-for-the-same-key-is-ignored",
+   "steps": [
+    {
+     "trait": "GlobalSearch",
+     "event": "SEARCH_RESULTS",
+     "payload": {
+      "moduleKey": "contacts",
+      "hits": [
+       {
+        "id": "c1",
+        "title": "Ada Lovelace",
+        "href": "/contacts/c1",
+        "kind": "contact"
+       }
+      ]
+     },
+     "entity": {
+      "id": "q",
+      "queryText": "ada",
+      "results": [
+       {
+        "moduleKey": "contacts",
+        "resultsJson": "",
+        "hits": [
+         {
+          "id": "c1",
+          "title": "Ada Lovelace",
+          "href": "/contacts/c1",
+          "kind": "contact"
+         }
+        ],
+        "receivedAt": 1760531445000,
+        "answeredBy": "X"
+       }
+      ],
+      "respondedCount": 1,
+      "requestedCount": 2,
+      "pendingModules": [],
+      "fanOutDone": true,
+      "resultsSummary": ""
+     },
+     "from": "searching",
+     "expect": {
+      "fired": false,
+      "state": "searching"
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "an-opened-hit-with-a-route-navigates-and-tells-the-composer",
+   "steps": [
+    {
+     "trait": "GlobalSearch",
+     "event": "HIT_OPENED",
+     "payload": {
+      "moduleKey": "contacts",
+      "id": "c1",
+      "href": "/contacts/c1",
+      "kind": "contact"
+     },
+     "entity": {
+      "id": "q",
+      "queryText": "ada",
+      "results": [],
+      "respondedCount": 0,
+      "requestedCount": 2,
+      "pendingModules": [],
+      "fanOutDone": true,
+      "resultsSummary": ""
+     },
+     "from": "searching",
+     "expect": {
+      "fired": true,
+      "state": "searching",
+      "emits": [
+       {
+        "event": "SEARCH_HIT_OPENED",
+        "payload": {
+         "moduleKey": "contacts",
+         "id": "c1",
+         "href": "/contacts/c1",
+         "kind": "contact"
+        }
+       }
+      ],
+      "effects": [
+       {
+        "type": "navigate"
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "control-an-opened-hit-without-a-route-only-tells-the-composer",
+   "steps": [
+    {
+     "trait": "GlobalSearch",
+     "event": "HIT_OPENED",
+     "payload": {
+      "moduleKey": "contacts",
+      "id": "c1",
+      "href": "",
+      "kind": "contact"
+     },
+     "entity": {
+      "id": "q",
+      "queryText": "ada",
+      "results": [],
+      "respondedCount": 0,
+      "requestedCount": 2,
+      "pendingModules": [],
+      "fanOutDone": true,
+      "resultsSummary": ""
+     },
+     "from": "searching",
+     "expect": {
+      "fired": true,
+      "state": "searching",
+      "emits": [
+       {
+        "event": "SEARCH_HIT_OPENED",
+        "payload": {
+         "moduleKey": "contacts",
+         "id": "c1",
+         "href": "",
+         "kind": "contact"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  }
+ ]
+}

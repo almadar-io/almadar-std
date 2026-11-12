@@ -18,7 +18,7 @@ orbital ThemePickerOrbital {
       INIT -> idle
         (set @entity.current @currentTheme)
         (render-ui @config.slot @config.pickerContent)
-        (when @config.keep (fetch ThemePick { emit: { success: PICKS_READ, failure: PICKS_UNREAD } }))
+        (when @config.keep (fetch ThemePick { filter: { id: @user.id }, limit: 1, emit: { success: PICKS_READ, failure: PICKS_UNREAD } }))
       PICKS_READ -> idle
         (let ((kept (object/get (default (array/find ?data (fn r (== @r.id @user.id))) { id: "", theme: "" }) theme "")))
           (when (!= @kept "") (theme/set @kept { emit: { success: THEME_BOUND, failure: THEME_REFUSED } })))

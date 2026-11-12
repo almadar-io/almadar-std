@@ -2,7 +2,8 @@ app std-global-search [
   version: "1.0.0",
   description: "std-global-search — cross-module federated search. Use when a user voices that one search box should query several modules at once (global search, search everything, unified search, cross-module search, federated search, search across records, omnisearch, one search box, aggregated results, grouped results). One SEARCH event fans out to every module key listed in the `modules` config (comma-separated, deterministic — no registry magic): the trait walks the parsed key list with an internal FAN_OUT_STEP sentinel and emits one scoped MODULE_SEARCH_REQUESTED { moduleKey, queryText, typeFilter, scopeJson } -> external per key, so modules respond in parallel rather than in sequence. Modules answer with SEARCH_RESULTS { moduleKey, resultsJson }; each answer appends a SearchResultGroup to the entity, so the merged view stays grouped by module. A module that answers twice is counted once, a keyless answer is filed under the answering module's name, and every group records which behavior answered it. Client/person/date/type filters ride `scopeJson` — the atom never interprets them. Every query persists as a SearchQuery row (recent/saved searches) when `saveHistory` is on. The input is the mapped `search-input` type rendered inline with event renamed to SEARCH (the std-geosearch idiom); its native {searchTerm}/{value} payloads are bridged via default, so programmatic SEARCH { queryText, typeFilter, scopeJson } emitters and the UI box drive the same arm."
 ]
-type SearchResultGroup = { moduleKey : string!, resultsJson : string!, receivedAt : instant!, answeredBy : string! }
+type SearchHit = { id : string!, title : string!, href : string, kind : string }
+type SearchResultGroup = { moduleKey : string!, resultsJson : string!, hits : [SearchHit]!, receivedAt : instant!, answeredBy : string! }
 orbital GlobalSearchOrbital {
     uses Typography from "std/behaviors/ui-typography"
     uses Spinner from "std/behaviors/ui-spinner"
@@ -11,7 +12,9 @@ orbital GlobalSearchOrbital {
 
     type MODULE_SEARCH_REQUESTED = Event { moduleKey : string, queryText : string, typeFilter : string, scopeJson : string } "Scoped fan-out request, one per configured module key. Modules subscribe by moduleKey and answer with SEARCH_RESULTS."
 
-    type SEARCH_RESULTS = Event { moduleKey : string, resultsJson : string } "One module's answer; resultsJson is the module's serialized hit list, merged into the grouped view under moduleKey."
+    type SEARCH_RESULTS = Event { moduleKey : string, hits : [SearchHit], resultsJson : string } "One module's answer, merged into the grouped view under moduleKey. hits is the typed hit list: each hit carries its row id, title, the route that opens it and its kind. resultsJson (comma-joined titles) is the earlier form, still shown as plain lines for a module that sends no hits."
+
+    type HIT_OPENED = Event { moduleKey : string, id : string, href : string, kind : string } "A hit row was clicked."
 
     type GLOBAL_SEARCH_COMPLETED = Event { queryText : string, moduleCount : number, respondedCount : number } "Fired when every requested module has answered."
 
@@ -156,6 +159,7 @@ orbital GlobalSearchOrbital {
           moduleKey: (default ?moduleKey (default @event.source.orbital ""))
           receivedAt: @now
           resultsJson: (default ?resultsJson "")
+          hits: (default ?hits [])
           answeredBy: (default @event.source.trait "")
         }))
         (set @entity.resultsSummary (str/concat @entity.resultsSummary (str/concat (default ?moduleKey (default @event.source.orbital "")) (str/concat ": " (str/concat (default ?resultsJson "") "\n")))))
@@ -164,24 +168,32 @@ orbital GlobalSearchOrbital {
             event: SEARCH
             placeholder: @config.placeholder
             type: search-input
-          }, (if (> (array/len (array/filter @entity.results (fn g (!= @g.resultsJson "")))) 0)
+          }, (if (> (array/len (array/filter @entity.results (fn g (or (!= @g.resultsJson "") (> (array/len @g.hits) 0))))) 0)
             {
               type: stack
               direction: vertical
               gap: sm
-              children: (array/map (array/filter @entity.results (fn g (!= @g.resultsJson ""))) (fn g {
+              children: (array/map (array/filter @entity.results (fn g (or (!= @g.resultsJson "") (> (array/len @g.hits) 0)))) (fn g {
                 type: stack
                 direction: vertical
                 gap: sm
                 ;; a bare array/map result as a sibling of a static element in the SAME children list mis-renders as "Unknown pattern" in @almadar/ui (confirmed live via play_scene) — wrap it in its own container so every children element is a single node
                 children: [
                   <Typography.traits.TypographyRender content={@g.moduleKey} linkedEntity={SearchQuery} variant={h4} />,
-                  {
-                    type: stack
-                    direction: vertical
-                    gap: xs
-                    children: (array/map (array/filter (str/split @g.resultsJson ", ") (fn item (!= @item ""))) (fn item <Typography.traits.TypographyRender content={@item} linkedEntity={SearchQuery} variant={body} />))
-                  }
+                  (if (> (array/len @g.hits) 0)
+                    {
+                      type: stack
+                      direction: vertical
+                      gap: xs
+                      align: start
+                      children: (array/map @g.hits (fn h { type: button, variant: ghost, size: sm, label: @h.title, action: HIT_OPENED, actionPayload: { moduleKey: @g.moduleKey, id: @h.id, href: (default @h.href ""), kind: (default @h.kind "") } }))
+                    }
+                    {
+                      type: stack
+                      direction: vertical
+                      gap: xs
+                      children: (array/map (array/filter (str/split @g.resultsJson ", ") (fn item (!= @item ""))) (fn item <Typography.traits.TypographyRender content={@item} linkedEntity={SearchQuery} variant={body} />))
+                    })
                 ]
               }))
             }
@@ -204,6 +216,11 @@ orbital GlobalSearchOrbital {
               queryText: @entity.queryText
               respondedCount: @entity.respondedCount
             })))
+      HIT_OPENED -> searching when (!= (default ?href "") "")
+        (emit SEARCH_HIT_OPENED { moduleKey: (default ?moduleKey ""), id: (default ?id ""), href: (default ?href ""), kind: (default ?kind "") })
+        (navigate ?href)
+      HIT_OPENED -> searching when (= (default ?href "") "")
+        (emit SEARCH_HIT_OPENED { moduleKey: (default ?moduleKey ""), id: (default ?id ""), href: "", kind: (default ?kind "") })
       QUERY_SAVED -> searching
         (set @entity.savedQueryId ?id)
       QUERY_SAVE_FAILED -> searching
@@ -228,6 +245,14 @@ orbital GlobalSearchOrbital {
         scopeJson : string
       }
         @description "One per configured module key — the module owning that key runs its own search and answers with SEARCH_RESULTS"
+        @tier "essential"
+      SEARCH_HIT_OPENED -> external {
+        moduleKey : string
+        id : string
+        href : string
+        kind : string
+      }
+        @description "A hit was opened. The atom navigates to the hit's href when it has one; a hit without an href is left to the composer, which listens here and opens the row its own way"
         @tier "essential"
       GLOBAL_SEARCH_COMPLETED -> external {
         queryText : string
@@ -263,7 +288,14 @@ orbital GlobalSearchOrbital {
       }
       SEARCH_RESULTS {
         moduleKey : string
+        hits : [SearchHit]
         resultsJson : string
+      }
+      HIT_OPENED {
+        moduleKey : string
+        id : string
+        href : string
+        kind : string
       }
       FAN_OUT_STEP {
         remaining : number!

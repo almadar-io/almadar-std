@@ -1,5 +1,6 @@
 app std-agent-session [
   version: "3.0.0",
+  locales: [en, ar, sl],
   description: "std-agent-session — the conversation with an in-app assistant. AgentThread owns the persisted AgentMessage rows (role, content, ownerId stamped with the real @user, createdAt): SEND stores the user's message, reloads the thread and emits CONVERSE with the whole conversation, oldest first, for std-agent-tool-loop to answer; REPLIED stores the reply. AgentConversation is what the user sees, in the browser: the thread as chat bubbles with every step the assistant takes interleaved live (STEP: each model call, each tool it used and what the app answered), a thinking row while it works, and a chat bar that DRAFT { message } fills for the person to edit and send. The two talk over the assistant contract, from any orbital: AgentConversation emits ASSISTANT_SEND and hears AgentMessagesLoaded, ASSISTANT_THREAD_FAILED, ASSISTANT_STEP, ASSISTANT_REPLIED and ASSISTANT_REPLY_FAILED; AgentThread hears ASSISTANT_SEND. So a conversation placed on any section's page reaches the app's one assistant (std-agent-assistant) with no wiring. Rows are meant to be private to their owner: owner-scoped access needs an [identity] roster, so the binding organism declares the @read/@create scoping on AgentMessage — this generic atom cannot."
 ]
 uses Lifecycle from "std/behaviors/std-lifecycle"
@@ -145,19 +146,19 @@ orbital AgentConversationOrbital {
         @label "Links above the conversation"
         @description "Related pages (e.g. the run history)."
         @tier "presentation"
-      newChatLabel : string = "New conversation"
+      newChatLabel : string = (i18n/t "newChat")
         @label "New conversation button"
         @description "Starts a fresh conversation; earlier ones stay in the conversation list."
         @tier "presentation"
-      chatsLabel : string = "Conversations"
+      chatsLabel : string = (i18n/t "chats")
         @label "Past conversations button"
         @description "Shows the person's past conversations in place of the chat; picking one reopens it."
         @tier "presentation"
-      memoryLabel : string = "What I remember"
+      memoryLabel : string = (i18n/t "memory")
         @label "Memory button"
         @description "Shows what the assistant remembers for this person in place of the chat."
         @tier "presentation"
-      untitledLabel : string = "New conversation"
+      untitledLabel : string = (i18n/t "untitled")
         @label "Title of a conversation with no messages yet"
         @tier "presentation"
       chatsEmptyTitle : string = "No conversations yet"

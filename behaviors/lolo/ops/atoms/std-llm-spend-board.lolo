@@ -1,5 +1,6 @@
 app std-llm-spend-board [
   version: "1.0.0",
+  locales: [en, ar, sl],
   description: "std-llm-spend-board — what LLM providers cost: the OpenRouter key's usage and limit, the DeepSeek and Moonshot (Kimi) account balances, the spend those balances show between the first and latest kept snapshot, and the token usage a kernel server's dispatch trace reports (its usageEvent emits, as std-llm reports them), priced from LlmPrice rows (listed by provider, then model). LLM_SPEND_LOAD answers LLM_SPEND from the cache within cacheTtlMs; LLM_SPEND_REFRESH reads afresh; a load during a read is answered by that read. A provider whose key credential is not configured is absent; one that refuses or cannot be reached is unavailable with the reason. Each DeepSeek and Moonshot balance read keeps a LlmBalanceSnapshot row (the newest snapshotsKept per provider). The usage read needs traceOrigin (a program lists it in its egress; a loopback origin must be an IP literal); without one the usage says so. LLM_PRICE_SET sets a model's price per 1K prompt and completion tokens.",
   net: { "openrouter.ai:443": [tcp], "api.deepseek.com:443": [tcp], "api.moonshot.ai:443": [tcp], "127.0.0.1:3000": [tcp] }
 ]
@@ -226,9 +227,9 @@ orbital LlmSpendBoardOrbital {
     config {
       title: "LLM spend"
       icon: "coins"
-      idleDescription: "Load the board to read the providers' balances and the token usage."
-      emptyTitle: "No providers or usage"
-      emptyDescription: "No provider answered and the trace holds no calls."
+      idleDescription: (i18n/t "idleDescription")
+      emptyTitle: (i18n/t "emptyTitle")
+      emptyDescription: (i18n/t "emptyDescription")
     }
   }
 

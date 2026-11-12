@@ -1,5 +1,6 @@
 app std-learn-transport [
   version: "1.0.0",
+  locales: [en, ar, sl],
   description: "Generic 2D step-transport (clock) instrument — the substrate twin of std-learn-sim-3d for discrete-step instruments. Contract: the atom owns the Step/Run-Pause/Reset transport and the clock but NOT the subject computation — STEP advances one step manually, TOGGLE_RUN engages a 32ms tick that accumulates elapsed time and fires one step every stepIntervalMs, RESET zeroes the counters and restores autoRun. Every step (button or clock) broadcasts LEARN_STEP; a composed sibling trait transitions directly on the LEARN_STEP / LEARN_RESET / LEARN_UPDATED broadcasts (the same bare-event cascade the lab routers use), applies the domain computation, halts the clock by setting the shared entity's done flag (the sibling is done's ONLY writer — it must also clear it on LEARN_RESET), and owns the scene render — this atom renders only its control strip and step caption. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches."
 ]
 orbital LearnTransportOrbital {
@@ -41,10 +42,10 @@ orbital LearnTransportOrbital {
                     { className: (if @config.compact "hidden" ""), type: button, action: STEP, label: @config.stepLabel, icon: "step-forward", variant: secondary, disabled: (or @entity.running @entity.done) },
                     { type: button, action: RESET, label: @config.resetLabel, icon: "rotate-ccw", variant: ghost },
                     { className: (if @config.compact "hidden" ""), type: stack, direction: horizontal, align: center, gap: xs, role: "group", aria-label: @config.speedLabel, children: [
-                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: "0.5×", size: sm, variant: (if (== @entity.speed 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 0.5) "true" "false") },
-                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: "1×", size: sm, variant: (if (== @entity.speed 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 1) "true" "false") },
-                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: "2×", size: sm, variant: (if (== @entity.speed 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 2) "true" "false") },
-                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: "4×", size: sm, variant: (if (== @entity.speed 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 4) "true" "false") }
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: (i18n/t "speed05"), size: sm, variant: (if (== @entity.speed 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 0.5) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: (i18n/t "speed1"), size: sm, variant: (if (== @entity.speed 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 1) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: (i18n/t "speed2"), size: sm, variant: (if (== @entity.speed 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 2) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: (i18n/t "speed4"), size: sm, variant: (if (== @entity.speed 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 4) "true" "false") }
                       ] },
                     { className: (if @config.compact "hidden" ""), type: typography, variant: caption, color: muted, content: (if (> @config.totalSteps 0) (str/concat @config.stepWord " " @entity.steps " " @config.ofWord " " @config.totalSteps) (str/concat @config.stepWord " " @entity.steps)) }
                   ] }
@@ -76,10 +77,10 @@ orbital LearnTransportOrbital {
                     { className: (if @config.compact "hidden" ""), type: button, action: STEP, label: @config.stepLabel, icon: "step-forward", variant: secondary, disabled: (or @entity.running @entity.done) },
                     { type: button, action: RESET, label: @config.resetLabel, icon: "rotate-ccw", variant: ghost },
                     { className: (if @config.compact "hidden" ""), type: stack, direction: horizontal, align: center, gap: xs, role: "group", aria-label: @config.speedLabel, children: [
-                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: "0.5×", size: sm, variant: (if (== @entity.speed 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 0.5) "true" "false") },
-                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: "1×", size: sm, variant: (if (== @entity.speed 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 1) "true" "false") },
-                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: "2×", size: sm, variant: (if (== @entity.speed 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 2) "true" "false") },
-                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: "4×", size: sm, variant: (if (== @entity.speed 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 4) "true" "false") }
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: (i18n/t "speed05"), size: sm, variant: (if (== @entity.speed 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 0.5) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: (i18n/t "speed1"), size: sm, variant: (if (== @entity.speed 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 1) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: (i18n/t "speed2"), size: sm, variant: (if (== @entity.speed 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 2) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: (i18n/t "speed4"), size: sm, variant: (if (== @entity.speed 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 4) "true" "false") }
                       ] },
                     { className: (if @config.compact "hidden" ""), type: typography, variant: caption, color: muted, content: (if (> @config.totalSteps 0) (str/concat @config.stepWord " " @entity.steps " " @config.ofWord " " @config.totalSteps) (str/concat @config.stepWord " " @entity.steps)) }
                   ] }
@@ -112,10 +113,10 @@ orbital LearnTransportOrbital {
                     { className: (if @config.compact "hidden" ""), type: button, action: STEP, label: @config.stepLabel, icon: "step-forward", variant: secondary, disabled: (or @entity.running @entity.done) },
                     { type: button, action: RESET, label: @config.resetLabel, icon: "rotate-ccw", variant: ghost },
                     { className: (if @config.compact "hidden" ""), type: stack, direction: horizontal, align: center, gap: xs, role: "group", aria-label: @config.speedLabel, children: [
-                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: "0.5×", size: sm, variant: (if (== @entity.speed 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 0.5) "true" "false") },
-                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: "1×", size: sm, variant: (if (== @entity.speed 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 1) "true" "false") },
-                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: "2×", size: sm, variant: (if (== @entity.speed 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 2) "true" "false") },
-                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: "4×", size: sm, variant: (if (== @entity.speed 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 4) "true" "false") }
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: (i18n/t "speed05"), size: sm, variant: (if (== @entity.speed 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 0.5) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: (i18n/t "speed1"), size: sm, variant: (if (== @entity.speed 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 1) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: (i18n/t "speed2"), size: sm, variant: (if (== @entity.speed 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 2) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: (i18n/t "speed4"), size: sm, variant: (if (== @entity.speed 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 4) "true" "false") }
                       ] },
                     { className: (if @config.compact "hidden" ""), type: typography, variant: caption, color: muted, content: (if (> @config.totalSteps 0) (str/concat @config.stepWord " " @entity.steps " " @config.ofWord " " @config.totalSteps) (str/concat @config.stepWord " " @entity.steps)) }
                   ] }
@@ -143,10 +144,10 @@ orbital LearnTransportOrbital {
                     { className: (if @config.compact "hidden" ""), type: button, action: STEP, label: @config.stepLabel, icon: "step-forward", variant: secondary, disabled: (or @entity.running @entity.done) },
                     { type: button, action: RESET, label: @config.resetLabel, icon: "rotate-ccw", variant: ghost },
                     { className: (if @config.compact "hidden" ""), type: stack, direction: horizontal, align: center, gap: xs, role: "group", aria-label: @config.speedLabel, children: [
-                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: "0.5×", size: sm, variant: (if (== @entity.speed 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 0.5) "true" "false") },
-                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: "1×", size: sm, variant: (if (== @entity.speed 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 1) "true" "false") },
-                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: "2×", size: sm, variant: (if (== @entity.speed 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 2) "true" "false") },
-                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: "4×", size: sm, variant: (if (== @entity.speed 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 4) "true" "false") }
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: (i18n/t "speed05"), size: sm, variant: (if (== @entity.speed 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 0.5) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: (i18n/t "speed1"), size: sm, variant: (if (== @entity.speed 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 1) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: (i18n/t "speed2"), size: sm, variant: (if (== @entity.speed 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 2) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: (i18n/t "speed4"), size: sm, variant: (if (== @entity.speed 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 4) "true" "false") }
                       ] },
                     { className: (if @config.compact "hidden" ""), type: typography, variant: caption, color: muted, content: (if (> @config.totalSteps 0) (str/concat @config.stepWord " " @entity.steps " " @config.ofWord " " @config.totalSteps) (str/concat @config.stepWord " " @entity.steps)) }
                   ] }
@@ -176,10 +177,10 @@ orbital LearnTransportOrbital {
                     { className: (if @config.compact "hidden" ""), type: button, action: STEP, label: @config.stepLabel, icon: "step-forward", variant: secondary, disabled: (or @entity.running @entity.done) },
                     { type: button, action: RESET, label: @config.resetLabel, icon: "rotate-ccw", variant: ghost },
                     { className: (if @config.compact "hidden" ""), type: stack, direction: horizontal, align: center, gap: xs, role: "group", aria-label: @config.speedLabel, children: [
-                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: "0.5×", size: sm, variant: (if (== @entity.speed 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 0.5) "true" "false") },
-                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: "1×", size: sm, variant: (if (== @entity.speed 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 1) "true" "false") },
-                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: "2×", size: sm, variant: (if (== @entity.speed 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 2) "true" "false") },
-                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: "4×", size: sm, variant: (if (== @entity.speed 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 4) "true" "false") }
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: (i18n/t "speed05"), size: sm, variant: (if (== @entity.speed 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 0.5) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: (i18n/t "speed1"), size: sm, variant: (if (== @entity.speed 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 1) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: (i18n/t "speed2"), size: sm, variant: (if (== @entity.speed 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 2) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: (i18n/t "speed4"), size: sm, variant: (if (== @entity.speed 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 4) "true" "false") }
                       ] },
                     { className: (if @config.compact "hidden" ""), type: typography, variant: caption, color: muted, content: (if (> @config.totalSteps 0) (str/concat @config.stepWord " " @entity.steps " " @config.ofWord " " @config.totalSteps) (str/concat @config.stepWord " " @entity.steps)) }
                   ] }
@@ -207,10 +208,10 @@ orbital LearnTransportOrbital {
                     { className: (if @config.compact "hidden" ""), type: button, action: STEP, label: @config.stepLabel, icon: "step-forward", variant: secondary, disabled: (or @entity.running @entity.done) },
                     { type: button, action: RESET, label: @config.resetLabel, icon: "rotate-ccw", variant: ghost },
                     { className: (if @config.compact "hidden" ""), type: stack, direction: horizontal, align: center, gap: xs, role: "group", aria-label: @config.speedLabel, children: [
-                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: "0.5×", size: sm, variant: (if (== @entity.speed 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 0.5) "true" "false") },
-                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: "1×", size: sm, variant: (if (== @entity.speed 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 1) "true" "false") },
-                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: "2×", size: sm, variant: (if (== @entity.speed 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 2) "true" "false") },
-                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: "4×", size: sm, variant: (if (== @entity.speed 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 4) "true" "false") }
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: (i18n/t "speed05"), size: sm, variant: (if (== @entity.speed 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 0.5) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: (i18n/t "speed1"), size: sm, variant: (if (== @entity.speed 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 1) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: (i18n/t "speed2"), size: sm, variant: (if (== @entity.speed 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 2) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: (i18n/t "speed4"), size: sm, variant: (if (== @entity.speed 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 4) "true" "false") }
                       ] },
                     { className: (if @config.compact "hidden" ""), type: typography, variant: caption, color: muted, content: (if (> @config.totalSteps 0) (str/concat @config.stepWord " " @entity.steps " " @config.ofWord " " @config.totalSteps) (str/concat @config.stepWord " " @entity.steps)) }
                   ] }
@@ -298,19 +299,19 @@ orbital LearnTransportOrbital {
         @label "Compact controls"
         @description "Show only Play / Pause and Reset: hides Step, the speed buttons, the step counter and the status badge"
         @tier "presentation"
-      playLabel : string = "Play"
+      playLabel : string = (i18n/t "play")
         @label "Play label"
         @description "Text of the Play button; set it per language"
         @tier "presentation"
-      pauseLabel : string = "Pause"
+      pauseLabel : string = (i18n/t "pause")
         @label "Pause label"
         @description "Text of the Pause button; set it per language"
         @tier "presentation"
-      stepLabel : string = "Step"
+      stepLabel : string = (i18n/t "step")
         @label "Step label"
         @description "Text of the Step button; set it per language"
         @tier "presentation"
-      resetLabel : string = "Reset"
+      resetLabel : string = (i18n/t "reset")
         @label "Reset label"
         @description "Text of the Reset button; set it per language"
         @tier "presentation"

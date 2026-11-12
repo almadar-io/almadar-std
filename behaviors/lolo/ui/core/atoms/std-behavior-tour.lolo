@@ -1,5 +1,6 @@
 app std-behavior-tour [
   version: "1.0.0",
+  locales: [en, ar, sl],
   description: "std-behavior-tour — plays a real behavior through a scripted sequence so people can watch it work: a guided demo on a website, or a step-by-step tutorial. The composing program embeds the running behavior in the `demo` slot and lists `events` (the event each step sends) and `captions` (what is shown while it plays; only ever rendered, so they may be translated). The composed std-learn-transport owns Play / Pause / Step / Reset and the clock; on every step the tour emits TOUR_STEP { index, event } and shows that step's caption, and the program routes TOUR_STEP to the behavior's own events with a filtered listen (`Tour.TOUR_STEP -> MOVE when (= ?event \"MOVE\")`). Reset emits TOUR_RESET. `loop` quietly resets the demo after the last step (TOUR_RESET, intro caption) and plays again. `playWhenVisible` starts it the first time it scrolls into view (never under reduced motion), and `compact` keeps only Play / Pause and Reset, and `demoTheme` shows the demo in its own theme so it stands apart from the page. `presentation: \"image\"` shows a captured `poster` of the demo instead of running it (a light page stays fast on phones); `orb verify --compiled --screenshot-frames` captures that poster from the live demo before its first step. Pick to demonstrate or teach a behavior."
 ]
 
@@ -217,16 +218,16 @@ orbital BehaviorTourOrbital {
         @label "Step interval"
         @description "Milliseconds each step stays on screen while playing"
         @tier "presentation"
-      playLabel : string = "Play"
+      playLabel : string = (i18n/t "play")
         @label "Play label"
         @tier "presentation"
-      pauseLabel : string = "Pause"
+      pauseLabel : string = (i18n/t "pause")
         @label "Pause label"
         @tier "presentation"
-      stepLabel : string = "Step"
+      stepLabel : string = (i18n/t "step")
         @label "Step label"
         @tier "presentation"
-      resetLabel : string = "Reset"
+      resetLabel : string = (i18n/t "reset")
         @label "Reset label"
         @tier "presentation"
       runningLabel : string = "Running"

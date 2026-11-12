@@ -1,5 +1,6 @@
 app std-browse [
   version: "2.5.0",
+  locales: [en, ar, sl],
   description: "std-browse as a Function — single primitive: data-grid. Owns the fetch + REFETCH (query/filter/page) state machine. Consumers configure fields/imageField/itemActions/cols/gap/variant; the atom renders the grid. Each `fields[]` entry accepts `{ name, label, variant }` plus optional `referenceEntity` + `displayField` to render a foreign-key column as the joined entity's display value (data-grid resolves @list[referenceEntity] at render time when both keys are present). `browseLook` (table default / dense / feed / gallery / master-detail / triage) selects one of six render bodies; dense/feed/gallery were folded in from std-browse-dense/-feed/-gallery (Phase 5.B); master-detail (split record view driven by the guarded VIEW/CLOSE self-transitions) and triage (inbox rows) were folded in 2026-07-26. Consumers retarget by setting browseLook."
 ]
 type BadgeColor = "default" | "primary" | "secondary" | "success" | "warning" | "danger" | "error" | "info" | "neutral" | "destructive"
@@ -112,7 +113,7 @@ orbital BrowseItemOrbital {
           type: stack
         })
       BrowseItemLoadFailed -> error
-        (render-ui main { message: ?error, title: "Couldn't load this list", type: alert, variant: error })
+        (render-ui main { message: ?error, title: (i18n/t "loadListFailed"), type: alert, variant: error })
     }
 
     state browsing {

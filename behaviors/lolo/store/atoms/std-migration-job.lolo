@@ -743,6 +743,7 @@ orbital MigrationJobOrbital {
           type: import-preview-tree
           units: @entity.units
         })
+        (set @entity.staging [])
         (emit MIGRATION_REVIEW_READY { stats: @entity.stats, units: @entity.units, skipped: @entity.skipped, validationErrors: @entity.validationErrors })
       MIGRATION_STAGED -> reviewing
         (set @entity.stats ?stats)
@@ -828,6 +829,9 @@ orbital MigrationJobOrbital {
         (set @entity.status committing)
         (render-ui @config.reviewSlot null)
         (emit MIGRATION_COMMIT_REQUESTED { jobId: @entity.id, units: (default ?units @entity.units) })
+        (set @entity.units [])
+        (set @entity.documents [])
+        (set @entity.document {})
       MIGRATION_REJECTED -> mapping
         (set @entity.status mapping)
         (render-ui @config.reviewSlot null)

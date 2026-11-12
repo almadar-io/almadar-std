@@ -1,5 +1,6 @@
 app std-esign-flow [
   version: "1.2.0",
+  locales: [en, ar, sl],
   description: "std-esign-flow — the send-for-signature flow: list signature requests, create one (pick document + recipient), resend or cancel, track status. Composes std-file-store + std-esign-request; no document-rendering or code-preview chrome. v1.2 (W5): EnvelopeDispatcher wires sessions to the real `esign` service — SEND_ENVELOPE dispatches a DocuSign envelope (the document rides the event as an UploadDropZone-shaped file payload, since StoredFile rows are metadata-only) and stamps `envelopeId`/`sentAt`/status=sent; the browse grid's per-row \"Refresh status\" pulls getEnvelopeStatus and maps completed/delivered/declined onto signed/viewed/declined.",
   egress: ["https://demo.docusign.net", "https://na1.docusign.net", "https://na2.docusign.net", "https://na3.docusign.net", "https://na4.docusign.net", "https://eu.docusign.net", "https://au.docusign.net", "https://ca.docusign.net"]
 ]
@@ -67,7 +68,7 @@ orbital SignatureSessionOrbital {
             }, {
               action: CREATE
               icon: plus
-              label: "New Signature Request"
+              label: (i18n/t "newRequest")
               type: button
               variant: primary
             }]
@@ -132,7 +133,7 @@ orbital SignatureSessionOrbital {
           }, {
             action: RETRY
             icon: rotate-ccw
-            label: Retry
+            label: (i18n/t "retry")
             type: button
             variant: primary
           }]
@@ -456,7 +457,7 @@ orbital SignatureSessionOrbital {
           <Typography content={(str/concat "Send " (default (object/get ?row documentName) "") " for signature")} variant={h3} />
           <Typography color={muted} content={(str/concat "The signer " (object/get ?row recipientName) " receives it by email.")} variant={body} />
           <upload-drop-zone action={SEND_ENVELOPE} actionPayload={{ id: ?id, row: ?row }} accept={".pdf"} maxFiles={1} label={"Drop the document to send"} description={"PDF, one file"} icon={file-up} />
-          <Button action={CLOSE} label={"Cancel"} variant={ghost} />
+          <Button action={CLOSE} label={(i18n/t "cancel")} variant={ghost} />
         </Stack>)
     }
 
@@ -506,7 +507,7 @@ orbital SignatureSessionOrbital {
 
     state idle {
       SEND_ENVELOPE -> idle when (= (array/len ?files) 0)
-        (notify error "No document was attached — drop the PDF to send")
+        (notify error (i18n/t "noDocument"))
       SEND_ENVELOPE -> dispatching when (> (array/len ?files) 0)
         (set @entity.id ?id)
         (emit ESIGN_SEND_ENVELOPE {
@@ -522,10 +523,10 @@ orbital SignatureSessionOrbital {
           envelopeId: (default (object/get ?row envelopeId) "")
         })
       CHECK_ENVELOPE_STATUS -> idle
-        (notify info "This request was never dispatched to the e-sign provider — send it first")
+        (notify info (i18n/t "neverDispatched"))
       ENVELOPE_STAMPED -> idle
       ENVELOPE_STAMP_FAILED -> idle
-        (notify warning "Could not record the envelope state on the request")
+        (notify warning (i18n/t "recordStateFailed"))
     }
 
     state dispatching {
@@ -538,9 +539,9 @@ orbital SignatureSessionOrbital {
         } {
           emit: { failure: ENVELOPE_STAMP_FAILED, success: ENVELOPE_STAMPED }
         })
-        (notify success "Signature request sent")
+        (notify success (i18n/t "requestSent"))
       ENVELOPE_SEND_FAILED -> idle
-        (notify warning "Could not send the signature request")
+        (notify warning (i18n/t "sendFailed"))
     }
 
     state polling {
@@ -574,7 +575,7 @@ orbital SignatureSessionOrbital {
           emit: { failure: ENVELOPE_STAMP_FAILED, success: ENVELOPE_STAMPED }
         })
       ENVELOPE_STATUS_FAILED -> idle
-        (notify warning "Could not read the envelope status")
+        (notify warning (i18n/t "readStatusFailed"))
     }
 
     emits {

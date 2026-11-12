@@ -1,5 +1,6 @@
 app std-app-hosting-board [
   version: "1.0.0",
+  locales: [en, ar, sl],
   description: "std-app-hosting-board — a Firebase App Hosting project's backends at a glance, read through the App Hosting REST API (over std-http-client with the accessToken credential, GCLOUD_ACCESS_TOKEN, which std-gcloud-token makes from gcloud's stored Application Default Credentials before the status read and the store renews) and the gcloud CLI (std-cli, with the host's PATH and HOME passed through). AH_STATUS_LOAD { backendId, force? } answers AH_STATUS with the backend's latest rollout (by creation time): its state, id, time (updated, else created), and from the build behind it the commit's first line, short hash and url, the build log url, the Cloud Build id and region read from that url (the region knob when the url names none) and the error source; status UNKNOWN, with a not-configured warning naming the missing credential, when the token cannot be made, the API refuses, or there is no rollout, and a build that cannot be read leaves its fields empty. AH_LOGS_LOAD { backendId } answers AH_LOGS with the backend's last 60 Cloud Run log lines: time to the second, severity, the revision's last name segment and the message (the text payload, else the structured payload's message, else the structured payload as JSON; terminal colour codes removed; empty lines left out). AH_BUILD_LOGS_LOAD { cloudBuildId, region? } answers AH_BUILD_LOGS with the build's non-blank log lines (gcloud prints a failed build's log and exits non-zero). Requests that arrive during a read wait in a first-in-first-out queue; a status is cached statusTtlMs (force skips it), logs and build logs logsTtlMs.",
   exec: ["gcloud"],
   env: ["PATH", "HOME"],
@@ -121,10 +122,10 @@ orbital AppHostingBoardOrbital {
       title: "App Hosting"
       icon: "rocket"
       linkLabel: "Open build log"
-      idleTitle: "App Hosting not read yet"
-      idleDescription: "Load the backends to read their latest rollouts."
-      emptyTitle: "No backends"
-      emptyDescription: "No App Hosting backends are configured."
+      idleTitle: (i18n/t "idleTitle")
+      idleDescription: (i18n/t "idleDescription")
+      emptyTitle: (i18n/t "emptyTitle")
+      emptyDescription: (i18n/t "emptyDescription")
       searchPlaceholder: "Search backends"
     }
   }
@@ -236,7 +237,7 @@ orbital AppHostingBoardOrbital {
             (set @entity.latest @top.r)
             (emit AH_BUILD { }))))))
       AH_REPLIED -> idle when (and (= @payload.key "rollouts") (!= (json/parse (default (bytes/to-string @payload.body) "") AhRollouts) null) (> (array/len (object/get (json/parse (default (bytes/to-string @payload.body) "") AhRollouts) "rollouts" [])) 0) (not (array/every (object/get (json/parse (default (bytes/to-string @payload.body) "") AhRollouts) "rollouts" []) (fn r (!= (time/parse @r.createTime) null)))))
-        (notify warning "The App Hosting rollouts could not be ordered: a createTime is not a time")
+        (notify warning (i18n/t "rolloutsNotOrdered"))
         (set @entity.statusCache (array/append (array/filter @entity.statusCache (fn c (!= @c.backendId @entity.current.backendId))) { backendId: @entity.current.backendId, status: { rolloutState: "UNKNOWN", rolloutId: "", rolloutTime: "", commitMessage: "", commitHash: "", commitUrl: "", buildLogsUrl: "", cloudBuildId: "", cloudBuildRegion: "", errorSource: "" }, cachedAt: @now }))
         (emit AH_STATUS { backendId: @entity.current.backendId, status: { rolloutState: "UNKNOWN", rolloutId: "", rolloutTime: "", commitMessage: "", commitHash: "", commitUrl: "", buildLogsUrl: "", cloudBuildId: "", cloudBuildRegion: "", errorSource: "" } })
         (emit AH_RENDER { })
@@ -247,7 +248,7 @@ orbital AppHostingBoardOrbital {
         (emit AH_RENDER { })
         (emit AH_PUMP { })
       AH_REPLIED -> idle when (and (= @payload.key "rollouts") (== (json/parse (default (bytes/to-string @payload.body) "") AhRollouts) null))
-        (notify warning "The App Hosting rollouts could not be read: the reply is not a rollout list")
+        (notify warning (i18n/t "rolloutsNotRead"))
         (set @entity.statusCache (array/append (array/filter @entity.statusCache (fn c (!= @c.backendId @entity.current.backendId))) { backendId: @entity.current.backendId, status: { rolloutState: "UNKNOWN", rolloutId: "", rolloutTime: "", commitMessage: "", commitHash: "", commitUrl: "", buildLogsUrl: "", cloudBuildId: "", cloudBuildRegion: "", errorSource: "" }, cachedAt: @now }))
         (emit AH_STATUS { backendId: @entity.current.backendId, status: { rolloutState: "UNKNOWN", rolloutId: "", rolloutTime: "", commitMessage: "", commitHash: "", commitUrl: "", buildLogsUrl: "", cloudBuildId: "", cloudBuildRegion: "", errorSource: "" } })
         (emit AH_RENDER { })
@@ -261,7 +262,7 @@ orbital AppHostingBoardOrbital {
         (set @entity.build (json/parse (default (bytes/to-string @payload.body) "") AhBuild))
         (emit AH_SETTLE { })
       AH_REPLIED -> reading when (and (= @payload.key "build") (== (json/parse (default (bytes/to-string @payload.body) "") AhBuild) null))
-        (notify warning "The App Hosting build could not be read: the reply is not a build")
+        (notify warning (i18n/t "buildNotRead"))
         (set @entity.build { })
         (emit AH_SETTLE { })
       AH_FAILED -> reading when (= @payload.key "build")

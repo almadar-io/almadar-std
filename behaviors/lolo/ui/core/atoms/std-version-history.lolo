@@ -1,5 +1,6 @@
 app std-version-history [
   version: "1.0.0",
+  locales: [en, ar, sl],
   description: "std-version-history — wiki/CMS revision history with diff + rollback. Browses revisions; opens detail in `viewing_single`; compares the opened revision with the newest in `comparing`; Rollback emits RevisionRolledBack { row } for the consumer to restore onto its source document. `RevisionManage` is a rebindable single-entity trait: a consumer rebinds it to its own entity via `linkedEntity`. `config.scopeField` names the Revision field holding the parent document id; a page-mounted `{id}` route param scopes INIT's own fetch, and a consumer forwards SHOW_HISTORY { key } (via a `listens` override) to rescope the feed to one document — unset scopeField (default) or no id keeps today's unfiltered global feed. Rollback and retry refetches stay scoped."
 ]
 type ItemAction = { label : string!, event : event, navigatesTo : string | SExpr, variant : primary | secondary | ghost | danger, icon : string, roles : [string], when : SExpr }
@@ -168,7 +169,7 @@ orbital RevisionOrbital {
             align: center
             children: [{
               action: CLOSE_VIEW
-              label: Back
+              label: (i18n/t "back")
               type: button
               variant: ghost
             }, { name: file-text, size: lg, type: icon }, {
@@ -260,13 +261,13 @@ orbital RevisionOrbital {
             children: [{
               action: COMPARE
               actionPayload: { id: @entity.id }
-              label: Compare
+              label: (i18n/t "compare")
               type: button
               variant: secondary
             }, {
               action: ROLLBACK
               actionPayload: { row: @entity }
-              label: Rollback
+              label: (i18n/t "rollback")
               type: button
               variant: danger
             }]
@@ -320,7 +321,7 @@ orbital RevisionOrbital {
         })
       ;; A selected id that is no longer in the loaded history cannot be opened; say so instead of showing nothing.
       OPEN_REVISION -> browsing when (= (if (= ?row null) (array/find @entity.revisions (fn x (= (object/get @x id) ?id))) ?row) null)
-        (notify error "That revision is no longer in the history.")
+        (notify error (i18n/t "revisionGone"))
     }
 
     state viewing_single {
@@ -362,7 +363,7 @@ orbital RevisionOrbital {
             align: center
             children: [{
               action: CLOSE_VIEW
-              label: Back
+              label: (i18n/t "back")
               type: button
               variant: ghost
             }, { name: git-compare, size: lg, type: icon }, {
@@ -385,7 +386,7 @@ orbital RevisionOrbital {
             children: [{
               action: ROLLBACK
               actionPayload: { row: @entity }
-              label: Rollback
+              label: (i18n/t "rollback")
               type: button
               variant: danger
             }]

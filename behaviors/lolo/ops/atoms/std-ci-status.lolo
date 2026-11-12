@@ -1,5 +1,6 @@
 app std-ci-status [
   version: "2.0.0",
+  locales: [en, ar, sl],
   description: "std-ci-status — the latest GitHub Actions state of the repositories the repos knob lists, as one status board (std-status-board). All repositories are read in ONE GraphQL request built from the list with one alias per repository, each asking for the default branch's head commit and its checkSuiteDepth GitHub Actions check suites (the appId knob). A repository's status is the worst of the head commit's suites that have a workflow run: a failure, timed_out, startup_failure or action_required conclusion is Failing (danger); else any suite not completed is Running (info); else a cancelled one is Cancelled (warning); else Passing (success); a repository with no such suite is No runs (neutral), and one GitHub did not answer (no access, renamed) is Unavailable (neutral). Rows are grouped Failing, Running, Passing, Other, with tiles for the three counts and the total. CI_STATUS_LOAD answers within the cacheTtlMs window from the cached board without asking GitHub, otherwise reads afresh; CI_STATUS_REFRESH always reads afresh; a load or refresh asked for while a read is in flight is answered by that read. A request that meets a gateway error (502, 503, 504) or no answer is retried by std-retry (maxAttempts, from baseDelayMs doubling); a read that still fails answers the last board again with the error (stale), or BOARD_FAILED when there was none. Opening a row asks GitHub for the jobs of its worst run (newest attempt) and shows them; when a job failed, the failing log is read through std-ci-run-logs (CI_LOGS_LOAD answers CI_LOGS) and shown with its error lines. Detail requests are served one after another, never dropped. fetchedAt is the ISO time of the read the board came from.",
   net: { "api.github.com:443": [tcp] },
   exec: ["gh"],
@@ -139,10 +140,10 @@ orbital CiStatusOrbital {
     config {
       title: "CI status"
       icon: "git-branch"
-      idleTitle: "CI status not read yet"
-      idleDescription: "Load the board to read the latest GitHub Actions run of each repository."
-      emptyTitle: "No repositories"
-      emptyDescription: "The repos knob lists no repository."
+      idleTitle: (i18n/t "idleTitle")
+      idleDescription: (i18n/t "idleDescription")
+      emptyTitle: (i18n/t "emptyTitle")
+      emptyDescription: (i18n/t "emptyDescription")
       searchPlaceholder: "Search repositories"
       linkLabel: "Open on GitHub"
     }

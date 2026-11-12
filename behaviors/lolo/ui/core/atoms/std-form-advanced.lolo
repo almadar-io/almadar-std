@@ -1,5 +1,6 @@
 app std-form-advanced [
   version: "1.2.0",
+  locales: [en, ar, sl],
   description: "std-form-advanced — full-typed form-section primitive. Hosts the `editing` state with a configurable `fields` array (each entry mirrors @almadar/ui's `form-section` field schema: `{ name, label, type?, values?, relation?, required? }`). Agents drive shape by overriding `config.fields` per-call-site."
 ]
 type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
@@ -123,7 +124,7 @@ orbital FormEntryOrbital {
       ;; here) — the arm that emitted them already repainted, so absorb / notify.
       FormEntryLoaded -> editing
       FormEntryLoadFailed -> editing
-        (notify error "Failed to load form")
+        (notify error (i18n/t "loadFailed"))
     }
 
     state submitted {
@@ -199,7 +200,7 @@ orbital FormEntryOrbital {
       ;; the success screen is already painted eagerly, so absorb / notify.
       FormEntrySaved -> submitted
       FormEntrySaveFailed -> submitted
-        (notify error "Failed to save form entry")
+        (notify error (i18n/t "saveFailed"))
     }
 
     emits {
@@ -307,11 +308,11 @@ orbital FormEntryOrbital {
         @label "Confirmation title"
         @description "Heading shown after a successful submit"
         @tier "presentation"
-      successMessage : string = "Your form has been submitted successfully."
+      successMessage : string = (i18n/t "submitted")
         @label "Confirmation message"
         @description "Message shown after a successful submit"
         @tier "presentation"
-      newEntryLabel : string = "New Entry"
+      newEntryLabel : string = (i18n/t "newEntry")
         @label "New entry button"
         @description "Label on the button that starts another entry after a submit"
         @tier "presentation"

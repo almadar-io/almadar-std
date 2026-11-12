@@ -212,6 +212,12 @@ orbital MigrationAdapterFirestoreOrbital {
                       }))))))
             (array/flatten
               (array/map @entity.nodeBuilds (fn b (if (== @b.unit null) [{ ref: @b.ref, reason: "the fields of this Firestore node could not be built" }] []))))))
+        (set @entity.refs [])
+        (set @entity.docs [])
+        (set @entity.docSets [])
+        (set @entity.nodeBuilds [])
+        (set @entity.nodeSets [])
+        (set @entity.edgeSets [])
         (emit FIRESTORE_BUILT {})
     }
 
@@ -281,6 +287,9 @@ orbital MigrationAdapterFirestoreOrbital {
                         (fn e (and (validate/string (object/get (object/get @e "1") "integerValue")) (not (validate/number (str/to-number (default (object/get (object/get @e "1") "integerValue") "")))))))
                       (fn e { ref: (str/concat (object/get @s "ref") "#field:" (object/get @e "0")), reason: (str/concat "field '" (object/get @e "0") "': integerValue '" (default (object/get (object/get @e "1") "integerValue") "") "' is not a number, so the field is left out of the unit") }))))))
           })
+        (set @entity.sets [])
+        (set @entity.ledger [])
+        (set @entity.unreadable [])
     }
 
     emits {

@@ -1,5 +1,6 @@
 app std-behavior-catalog [
   version: "1.5.0",
+  locales: [en, ar, sl],
   description: "std-behavior-catalog — two traits: BehaviorCatalogData lists, searches, selects and emits (no UI), BehaviorCatalog is the cards view that draws from the data trait's CATALOG_SHOWN and sends the person's actions back through CATALOG_SEARCH, CATALOG_PICK, CATALOG_TOGGLE, CATALOG_DESCRIBE and CATALOG_RETRY (a page that only needs the data composes just BehaviorCatalogData). Browse the installed behaviors under the `scope` registry folders (`behavior/catalog`), search them by meaning (a plain listing carries no vectors and a host never attaches them, so a search refuses with a toast naming that unless the rows it lists carry a description vector, which only std-catalog-vectors attaches; a search lists the current topic's registry folder, or the whole scope, embeds the query with std-llm (LLM_EMBED) and ranks by cosine similarity to each behavior's description; results under `minScore` drop out), open one's knobs and events (`behavior/describe`), and pick one: PICKED { behavior, trait, value } carries the behavior name, its first trait as a value ready to bind, and the whole behavior as a value ready to embed or store. With `pick: toggle` each card carries an on/off switch instead: TOGGLED { behavior, checked, topic, value } per change, and SELECTION { behaviors } seeds which are on. After listing it emits CATALOG_TOPICS { topics } (each package and topic once, with its count), and SCOPE { paths } replaces the scope knob's registry folders at run time (the catalog lists them again; a SCOPE naming exactly the folders it already lists, in the same order, and carrying no fingerprints or the same ones, is ignored and reads nothing; fingerprints are one opaque string per folder that changes when the folder's files do), With prefetch, listing (the start, CATALOG_LOAD or a SCOPE) lists every behavior once and announces the whole tree as CATALOG_TREE, so opening a topic reads nothing. TOPIC { package, topic } narrows the rows and search results to that topic (an empty topic lists everything). Pick for block libraries, plugin pickers, plugin on/off settings and any page that lets users choose a building block.",
   net: { "openrouter.ai:443": [tcp] },
 ]
@@ -340,7 +341,7 @@ orbital BehaviorCatalogOrbital {
         (set @entity.error "The listed behaviors carry no embedding vectors: a plain behavior/catalog listing has none, and a search needs rows from std-catalog-vectors")
         (set @entity.status ready)
         (emit CATALOG_SETTLED {})
-        (render-ui toast { type: alert, variant: error, message: "Search is unavailable: the listed behaviors carry no embedding vectors." })
+        (render-ui toast { type: alert, variant: error, message: (i18n/t "searchNoVectors") })
         (emit CATALOG_SHOWN {})
       SEARCH_LISTED -> searching when (= (array/len (array/filter ?result (fn e (not (object/has (default @e.vectors {}) description))))) 0)
         (set @entity.searchHits ?result)
@@ -367,7 +368,7 @@ orbital BehaviorCatalogOrbital {
         (set @entity.error "The model returned no embedding")
         (set @entity.status ready)
         (emit CATALOG_SETTLED {})
-        (render-ui toast { type: alert, variant: error, message: "Search is unavailable: the model returned no embedding." })
+        (render-ui toast { type: alert, variant: error, message: (i18n/t "searchNoEmbedding") })
         (emit CATALOG_SHOWN {})
       SEARCH_FAILED -> ready
         (set @entity.error ?message)
@@ -554,13 +555,13 @@ orbital BehaviorCatalogOrbital {
       searchPlaceholder : string = "Search building blocks"
         @label "Search placeholder"
         @tier "presentation"
-      pickLabel : string = "Use"
+      pickLabel : string = (i18n/t "pick")
         @label "Pick button label"
         @tier "presentation"
-      describeLabel : string = "Details"
+      describeLabel : string = (i18n/t "details")
         @label "Details button label"
         @tier "presentation"
-      emptyLabel : string = "Nothing matches."
+      emptyLabel : string = (i18n/t "nothingMatches")
         @label "Empty message"
         @tier "presentation"
       emptyDescription : string = ""

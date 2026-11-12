@@ -1,8 +1,8 @@
 app std-slide-deck [
   version: "1.0.0",
-  description: "std-slide-deck — generic presentation atom. An ordered list of slide nodes (`config.slides`, any render tree or @trait) shown one at a time, with a previous/next arrow on either side, a dot strip and a k / n counter underneath, and keyboard stepping through the host's KEY router (`config.nextKeys` / `config.prevKeys`, captured per `config.keymap`). The cursor clamps at either end unless `loop` is on. Each visit mounts the slide fresh, so its own entry animations replay. Carries no content or visual style: a realization supplies the slides and restyles via `bodyContent`. The default body picks the slide inside a mapped-children lambda, which expands static slides only; a deck whose slides hold stateful traits (forms, live lists) overrides `bodyContent` with one `presence` per slide gated on `@entity.slideIndex`. Every move emits SLIDE_CHANGED for speaker notes, timers or analytics."
+  description: "std-slide-deck — generic presentation atom. An ordered list of slide nodes (`config.slides`, any render tree or @trait) shown one at a time, with a previous/next arrow on either side, a dot strip and a k / n counter underneath, and NEXT / PREV events that step one slide through `config.slideCount` slides, for whatever the call site maps to them (a key map, a wheel or swipe gesture, a remote). A deck whose body is a canvas scene can also be driven by clicks on its drawables: the canvas sends PICK and `config.pickTargets` names the slide each drawable goes to. The cursor clamps at either end unless `loop` is on. Each visit mounts the slide fresh, so its own entry animations replay. Carries no content or visual style: a realization supplies the slides and restyles via `bodyContent`. The default body picks the slide inside a mapped-children lambda, which expands static slides only; a deck whose slides hold stateful traits (forms, live lists) overrides `bodyContent` with one `presence` per slide gated on `@entity.slideIndex`. Every move emits SLIDE_CHANGED for speaker notes, timers or analytics."
 ]
-;; @capabilities "slide deck, presentation, pitch deck, keynote-style slideshow, previous and next slide arrows, arrow-key slide navigation, jump to slide from dots, slide counter"
+;; @capabilities "slide deck, presentation, pitch deck, keynote-style slideshow, previous and next slide arrows, next and previous events for keys and gestures, jump to slide from dots, slide counter"
 ;; @synonyms "slideshow, deck, presentation, slides, pitch"
 orbital SlideDeckOrbital {
   entity SlideDeck [runtime] {
@@ -21,6 +21,29 @@ orbital SlideDeckOrbital {
         (set @entity.slideIndex ?index)
         (emit SLIDE_CHANGED { index: @entity.slideIndex })
         (render-ui main @config.bodyContent)
+      NEXT -> presenting when (< @entity.slideIndex (- @config.slideCount 1))
+        (set @entity.slideIndex (+ @entity.slideIndex 1))
+        (emit SLIDE_CHANGED { index: @entity.slideIndex })
+        (render-ui main @config.bodyContent)
+      NEXT -> presenting when (and @config.loop (>= @entity.slideIndex (- @config.slideCount 1)) (> @config.slideCount 1))
+        (set @entity.slideIndex 0)
+        (emit SLIDE_CHANGED { index: @entity.slideIndex })
+        (render-ui main @config.bodyContent)
+      NEXT -> presenting when (or (<= @config.slideCount 1) (and (not @config.loop) (>= @entity.slideIndex (- @config.slideCount 1))))
+      PREV -> presenting when (> @entity.slideIndex 0)
+        (set @entity.slideIndex (- @entity.slideIndex 1))
+        (emit SLIDE_CHANGED { index: @entity.slideIndex })
+        (render-ui main @config.bodyContent)
+      PREV -> presenting when (and @config.loop (<= @entity.slideIndex 0) (> @config.slideCount 1))
+        (set @entity.slideIndex (- @config.slideCount 1))
+        (emit SLIDE_CHANGED { index: @entity.slideIndex })
+        (render-ui main @config.bodyContent)
+      PREV -> presenting when (and (<= @entity.slideIndex 0) (or (not @config.loop) (<= @config.slideCount 1)))
+      PICK -> presenting when (>= (object/get @config.pickTargets (default ?unitId "") -1) 0)
+        (set @entity.slideIndex (object/get @config.pickTargets (default ?unitId "") 0))
+        (emit SLIDE_CHANGED { index: @entity.slideIndex })
+        (render-ui main @config.bodyContent)
+      PICK -> presenting when (< (object/get @config.pickTargets (default ?unitId "") -1) 0)
     }
 
     emits {
@@ -37,7 +60,23 @@ orbital SlideDeckOrbital {
         index : number!
       }
         @description "Show a zero-based slide index. The arrows and dots send the already-bounded target; a remote or table of contents can send any index."
-        @synonyms "jump, seek, next slide, previous slide, select slide"
+        @synonyms "jump, seek, select slide"
+        @tier "domain"
+      NEXT {}
+        @description "Step to the next of `slideCount` slides; at the last it wraps to the first when `loop` is on and does nothing otherwise."
+        @synonyms "next slide, forward, advance"
+        @tier "domain"
+      PREV {}
+        @description "Step to the previous of `slideCount` slides; at the first it wraps to the last when `loop` is on and does nothing otherwise."
+        @synonyms "previous slide, back"
+        @tier "domain"
+      PICK {
+        unitId : string
+        x : number
+        z : number
+      }
+        @description "A drawable of a canvas in the deck's body was clicked (the shape a canvas's `unitClickEvent` sends): the deck goes to the slide `pickTargets` lists for the drawable's id and ignores any other."
+        @synonyms "click a body, pick a station, select on the canvas"
         @tier "domain"
     }
 
@@ -45,6 +84,14 @@ orbital SlideDeckOrbital {
       slides : [trait] = []
         @label "Slides"
         @description "Ordered slide nodes; each entry is a render tree or a @trait reference and is shown one at a time."
+        @tier "domain"
+      slideCount : number = 0
+        @label "Slide count for stepping"
+        @description "How many slides NEXT and PREV step through. Set it only when the deck is stepped by those events (keys, gestures, a remote); the arrows and dots bound their own target from `slides`. 0 leaves NEXT and PREV without effect. A number of its own because slides may hold translated text, which a guard cannot read."
+        @tier "domain"
+      pickTargets : Map string number = {}
+        @label "Slides by picked drawable"
+        @description "For a deck whose body is a canvas: the zero-based slide a click on a drawable goes to, by the drawable's id. Set the canvas's `unitClickEvent` to PICK."
         @tier "domain"
       startIndex : number = 0
         @label "Start slide"

@@ -1,5 +1,6 @@
 app std-learn-grid-sim [
   version: "1.0.0",
+  locales: [en, ar, sl],
   description: "Generic grid-world simulation — a tappable cellular grid evolves under a config-selected local rule: life (Conway's birth-3, survive-2-or-3), spread (anything with an active 4-neighbour activates — wavefronts, fire, contagion), or diffusion (each cell relaxes toward its neighbourhood average with decay — heat, concentration). The learner seeds the world by tapping cells directly on the canvas, then Runs, Pauses, or single-Steps the evolution, with a generation counter and live active-cell census. Rule, grid dimensions, seeds, and palette are all config-declared, so one mechanism serves emergence, percolation, epidemic fronts, heat flow, and any local-rules-global-behaviour lesson. Standalone by default; behind a lab router set matchMode and it renders only when MODE_SELECTED matches."
 ]
 orbital GridSimOrbital {
@@ -69,14 +70,14 @@ orbital GridSimOrbital {
                     { type: badge, label: (if @entity.running "Running" "Paused"), variant: (if @entity.running "primary" "neutral") }
                   ] },
                 { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
-                    (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Play", icon: "play", variant: primary, aria-pressed: "false" }),
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: (i18n/t "pause"), icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: (i18n/t "play"), icon: "play", variant: primary, aria-pressed: "false" }),
                     { type: button, action: STEP, label: @config.stepLabel, icon: "step-forward", variant: secondary, disabled: @entity.running },
-                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: button, action: RESET, label: (i18n/t "reset"), icon: "rotate-ccw", variant: ghost },
                     { type: stack, direction: horizontal, align: center, gap: xs, role: "group", aria-label: "Speed", children: [
-                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: "0.5×", size: sm, variant: (if (== @entity.speed 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 0.5) "true" "false") },
-                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: "1×", size: sm, variant: (if (== @entity.speed 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 1) "true" "false") },
-                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: "2×", size: sm, variant: (if (== @entity.speed 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 2) "true" "false") },
-                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: "4×", size: sm, variant: (if (== @entity.speed 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 4) "true" "false") }
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: (i18n/t "speed05"), size: sm, variant: (if (== @entity.speed 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 0.5) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: (i18n/t "speed1"), size: sm, variant: (if (== @entity.speed 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 1) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: (i18n/t "speed2"), size: sm, variant: (if (== @entity.speed 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 2) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: (i18n/t "speed4"), size: sm, variant: (if (== @entity.speed 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 4) "true" "false") }
                       ] },
                     { type: typography, variant: caption, color: muted, content: (str/concat "Generation " @entity.generation " · " @entity.aliveCount " active") }
                   ] },
@@ -124,14 +125,14 @@ orbital GridSimOrbital {
                     { type: badge, label: (if @entity.running "Running" "Paused"), variant: (if @entity.running "primary" "neutral") }
                   ] },
                 { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
-                    (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Play", icon: "play", variant: primary, aria-pressed: "false" }),
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: (i18n/t "pause"), icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: (i18n/t "play"), icon: "play", variant: primary, aria-pressed: "false" }),
                     { type: button, action: STEP, label: @config.stepLabel, icon: "step-forward", variant: secondary, disabled: @entity.running },
-                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: button, action: RESET, label: (i18n/t "reset"), icon: "rotate-ccw", variant: ghost },
                     { type: stack, direction: horizontal, align: center, gap: xs, role: "group", aria-label: "Speed", children: [
-                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: "0.5×", size: sm, variant: (if (== @entity.speed 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 0.5) "true" "false") },
-                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: "1×", size: sm, variant: (if (== @entity.speed 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 1) "true" "false") },
-                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: "2×", size: sm, variant: (if (== @entity.speed 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 2) "true" "false") },
-                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: "4×", size: sm, variant: (if (== @entity.speed 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 4) "true" "false") }
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: (i18n/t "speed05"), size: sm, variant: (if (== @entity.speed 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 0.5) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: (i18n/t "speed1"), size: sm, variant: (if (== @entity.speed 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 1) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: (i18n/t "speed2"), size: sm, variant: (if (== @entity.speed 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 2) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: (i18n/t "speed4"), size: sm, variant: (if (== @entity.speed 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 4) "true" "false") }
                       ] },
                     { type: typography, variant: caption, color: muted, content: (str/concat "Generation " @entity.generation " · " @entity.aliveCount " active") }
                   ] },
@@ -174,14 +175,14 @@ orbital GridSimOrbital {
                     { type: badge, label: (if @entity.running "Running" "Paused"), variant: (if @entity.running "primary" "neutral") }
                   ] },
                 { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
-                    (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Play", icon: "play", variant: primary, aria-pressed: "false" }),
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: (i18n/t "pause"), icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: (i18n/t "play"), icon: "play", variant: primary, aria-pressed: "false" }),
                     { type: button, action: STEP, label: @config.stepLabel, icon: "step-forward", variant: secondary, disabled: @entity.running },
-                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: button, action: RESET, label: (i18n/t "reset"), icon: "rotate-ccw", variant: ghost },
                     { type: stack, direction: horizontal, align: center, gap: xs, role: "group", aria-label: "Speed", children: [
-                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: "0.5×", size: sm, variant: (if (== @entity.speed 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 0.5) "true" "false") },
-                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: "1×", size: sm, variant: (if (== @entity.speed 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 1) "true" "false") },
-                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: "2×", size: sm, variant: (if (== @entity.speed 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 2) "true" "false") },
-                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: "4×", size: sm, variant: (if (== @entity.speed 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 4) "true" "false") }
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: (i18n/t "speed05"), size: sm, variant: (if (== @entity.speed 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 0.5) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: (i18n/t "speed1"), size: sm, variant: (if (== @entity.speed 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 1) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: (i18n/t "speed2"), size: sm, variant: (if (== @entity.speed 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 2) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: (i18n/t "speed4"), size: sm, variant: (if (== @entity.speed 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 4) "true" "false") }
                       ] },
                     { type: typography, variant: caption, color: muted, content: (str/concat "Generation " @entity.generation " · " @entity.aliveCount " active") }
                   ] },
@@ -211,14 +212,14 @@ orbital GridSimOrbital {
                     { type: badge, label: (if @entity.running "Running" "Paused"), variant: (if @entity.running "primary" "neutral") }
                   ] },
                 { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
-                    (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Play", icon: "play", variant: primary, aria-pressed: "false" }),
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: (i18n/t "pause"), icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: (i18n/t "play"), icon: "play", variant: primary, aria-pressed: "false" }),
                     { type: button, action: STEP, label: @config.stepLabel, icon: "step-forward", variant: secondary, disabled: @entity.running },
-                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: button, action: RESET, label: (i18n/t "reset"), icon: "rotate-ccw", variant: ghost },
                     { type: stack, direction: horizontal, align: center, gap: xs, role: "group", aria-label: "Speed", children: [
-                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: "0.5×", size: sm, variant: (if (== @entity.speed 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 0.5) "true" "false") },
-                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: "1×", size: sm, variant: (if (== @entity.speed 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 1) "true" "false") },
-                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: "2×", size: sm, variant: (if (== @entity.speed 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 2) "true" "false") },
-                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: "4×", size: sm, variant: (if (== @entity.speed 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 4) "true" "false") }
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: (i18n/t "speed05"), size: sm, variant: (if (== @entity.speed 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 0.5) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: (i18n/t "speed1"), size: sm, variant: (if (== @entity.speed 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 1) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: (i18n/t "speed2"), size: sm, variant: (if (== @entity.speed 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 2) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: (i18n/t "speed4"), size: sm, variant: (if (== @entity.speed 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 4) "true" "false") }
                       ] },
                     { type: typography, variant: caption, color: muted, content: (str/concat "Generation " @entity.generation " · " @entity.aliveCount " active") }
                   ] },
@@ -244,14 +245,14 @@ orbital GridSimOrbital {
                     { type: badge, label: (if @entity.running "Running" "Paused"), variant: (if @entity.running "primary" "neutral") }
                   ] },
                 { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
-                    (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Play", icon: "play", variant: primary, aria-pressed: "false" }),
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: (i18n/t "pause"), icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: (i18n/t "play"), icon: "play", variant: primary, aria-pressed: "false" }),
                     { type: button, action: STEP, label: @config.stepLabel, icon: "step-forward", variant: secondary, disabled: @entity.running },
-                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: button, action: RESET, label: (i18n/t "reset"), icon: "rotate-ccw", variant: ghost },
                     { type: stack, direction: horizontal, align: center, gap: xs, role: "group", aria-label: "Speed", children: [
-                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: "0.5×", size: sm, variant: (if (== @entity.speed 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 0.5) "true" "false") },
-                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: "1×", size: sm, variant: (if (== @entity.speed 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 1) "true" "false") },
-                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: "2×", size: sm, variant: (if (== @entity.speed 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 2) "true" "false") },
-                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: "4×", size: sm, variant: (if (== @entity.speed 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 4) "true" "false") }
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: (i18n/t "speed05"), size: sm, variant: (if (== @entity.speed 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 0.5) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: (i18n/t "speed1"), size: sm, variant: (if (== @entity.speed 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 1) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: (i18n/t "speed2"), size: sm, variant: (if (== @entity.speed 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 2) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: (i18n/t "speed4"), size: sm, variant: (if (== @entity.speed 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 4) "true" "false") }
                       ] },
                     { type: typography, variant: caption, color: muted, content: (str/concat "Generation " @entity.generation " · " @entity.aliveCount " active") }
                   ] },
@@ -276,14 +277,14 @@ orbital GridSimOrbital {
                     { type: badge, label: (if @entity.running "Running" "Paused"), variant: (if @entity.running "primary" "neutral") }
                   ] },
                 { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
-                    (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Play", icon: "play", variant: primary, aria-pressed: "false" }),
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: (i18n/t "pause"), icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: (i18n/t "play"), icon: "play", variant: primary, aria-pressed: "false" }),
                     { type: button, action: STEP, label: @config.stepLabel, icon: "step-forward", variant: secondary, disabled: @entity.running },
-                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: button, action: RESET, label: (i18n/t "reset"), icon: "rotate-ccw", variant: ghost },
                     { type: stack, direction: horizontal, align: center, gap: xs, role: "group", aria-label: "Speed", children: [
-                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: "0.5×", size: sm, variant: (if (== @entity.speed 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 0.5) "true" "false") },
-                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: "1×", size: sm, variant: (if (== @entity.speed 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 1) "true" "false") },
-                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: "2×", size: sm, variant: (if (== @entity.speed 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 2) "true" "false") },
-                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: "4×", size: sm, variant: (if (== @entity.speed 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 4) "true" "false") }
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: (i18n/t "speed05"), size: sm, variant: (if (== @entity.speed 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 0.5) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: (i18n/t "speed1"), size: sm, variant: (if (== @entity.speed 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 1) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: (i18n/t "speed2"), size: sm, variant: (if (== @entity.speed 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 2) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: (i18n/t "speed4"), size: sm, variant: (if (== @entity.speed 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 4) "true" "false") }
                       ] },
                     { type: typography, variant: caption, color: muted, content: (str/concat "Generation " @entity.generation " · " @entity.aliveCount " active") }
                   ] },
@@ -309,14 +310,14 @@ orbital GridSimOrbital {
                     { type: badge, label: (if @entity.running "Running" "Paused"), variant: (if @entity.running "primary" "neutral") }
                   ] },
                 { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
-                    (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Play", icon: "play", variant: primary, aria-pressed: "false" }),
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: (i18n/t "pause"), icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: (i18n/t "play"), icon: "play", variant: primary, aria-pressed: "false" }),
                     { type: button, action: STEP, label: @config.stepLabel, icon: "step-forward", variant: secondary, disabled: @entity.running },
-                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: button, action: RESET, label: (i18n/t "reset"), icon: "rotate-ccw", variant: ghost },
                     { type: stack, direction: horizontal, align: center, gap: xs, role: "group", aria-label: "Speed", children: [
-                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: "0.5×", size: sm, variant: (if (== @entity.speed 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 0.5) "true" "false") },
-                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: "1×", size: sm, variant: (if (== @entity.speed 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 1) "true" "false") },
-                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: "2×", size: sm, variant: (if (== @entity.speed 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 2) "true" "false") },
-                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: "4×", size: sm, variant: (if (== @entity.speed 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 4) "true" "false") }
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: (i18n/t "speed05"), size: sm, variant: (if (== @entity.speed 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 0.5) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: (i18n/t "speed1"), size: sm, variant: (if (== @entity.speed 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 1) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: (i18n/t "speed2"), size: sm, variant: (if (== @entity.speed 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 2) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: (i18n/t "speed4"), size: sm, variant: (if (== @entity.speed 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 4) "true" "false") }
                       ] },
                     { type: typography, variant: caption, color: muted, content: (str/concat "Generation " @entity.generation " · " @entity.aliveCount " active") }
                   ] },
@@ -374,14 +375,14 @@ orbital GridSimOrbital {
                     { type: badge, label: (if @entity.running "Running" "Paused"), variant: (if @entity.running "primary" "neutral") }
                   ] },
                 { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
-                    (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Play", icon: "play", variant: primary, aria-pressed: "false" }),
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: (i18n/t "pause"), icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: (i18n/t "play"), icon: "play", variant: primary, aria-pressed: "false" }),
                     { type: button, action: STEP, label: @config.stepLabel, icon: "step-forward", variant: secondary, disabled: @entity.running },
-                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: button, action: RESET, label: (i18n/t "reset"), icon: "rotate-ccw", variant: ghost },
                     { type: stack, direction: horizontal, align: center, gap: xs, role: "group", aria-label: "Speed", children: [
-                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: "0.5×", size: sm, variant: (if (== @entity.speed 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 0.5) "true" "false") },
-                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: "1×", size: sm, variant: (if (== @entity.speed 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 1) "true" "false") },
-                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: "2×", size: sm, variant: (if (== @entity.speed 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 2) "true" "false") },
-                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: "4×", size: sm, variant: (if (== @entity.speed 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 4) "true" "false") }
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: (i18n/t "speed05"), size: sm, variant: (if (== @entity.speed 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 0.5) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: (i18n/t "speed1"), size: sm, variant: (if (== @entity.speed 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 1) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: (i18n/t "speed2"), size: sm, variant: (if (== @entity.speed 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 2) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: (i18n/t "speed4"), size: sm, variant: (if (== @entity.speed 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 4) "true" "false") }
                       ] },
                     { type: typography, variant: caption, color: muted, content: (str/concat "Generation " @entity.generation " · " @entity.aliveCount " active") }
                   ] },
@@ -416,14 +417,14 @@ orbital GridSimOrbital {
                     { type: badge, label: (if @entity.running "Running" "Paused"), variant: (if @entity.running "primary" "neutral") }
                   ] },
                 { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
-                    (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Play", icon: "play", variant: primary, aria-pressed: "false" }),
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: (i18n/t "pause"), icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: (i18n/t "play"), icon: "play", variant: primary, aria-pressed: "false" }),
                     { type: button, action: STEP, label: @config.stepLabel, icon: "step-forward", variant: secondary, disabled: @entity.running },
-                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: button, action: RESET, label: (i18n/t "reset"), icon: "rotate-ccw", variant: ghost },
                     { type: stack, direction: horizontal, align: center, gap: xs, role: "group", aria-label: "Speed", children: [
-                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: "0.5×", size: sm, variant: (if (== @entity.speed 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 0.5) "true" "false") },
-                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: "1×", size: sm, variant: (if (== @entity.speed 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 1) "true" "false") },
-                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: "2×", size: sm, variant: (if (== @entity.speed 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 2) "true" "false") },
-                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: "4×", size: sm, variant: (if (== @entity.speed 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 4) "true" "false") }
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: (i18n/t "speed05"), size: sm, variant: (if (== @entity.speed 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 0.5) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: (i18n/t "speed1"), size: sm, variant: (if (== @entity.speed 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 1) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: (i18n/t "speed2"), size: sm, variant: (if (== @entity.speed 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 2) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: (i18n/t "speed4"), size: sm, variant: (if (== @entity.speed 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 4) "true" "false") }
                       ] },
                     { type: typography, variant: caption, color: muted, content: (str/concat "Generation " @entity.generation " · " @entity.aliveCount " active") }
                   ] },
@@ -460,14 +461,14 @@ orbital GridSimOrbital {
                     { type: badge, label: (if @entity.running "Running" "Paused"), variant: (if @entity.running "primary" "neutral") }
                   ] },
                 { type: stack, direction: horizontal, align: center, gap: sm, wrap: true, children: [
-                    (if @entity.running { type: button, action: TOGGLE_RUN, label: "Pause", icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: "Play", icon: "play", variant: primary, aria-pressed: "false" }),
+                    (if @entity.running { type: button, action: TOGGLE_RUN, label: (i18n/t "pause"), icon: "pause", variant: primary, aria-pressed: "true" } { type: button, action: TOGGLE_RUN, label: (i18n/t "play"), icon: "play", variant: primary, aria-pressed: "false" }),
                     { type: button, action: STEP, label: @config.stepLabel, icon: "step-forward", variant: secondary, disabled: @entity.running },
-                    { type: button, action: RESET, label: "Reset", icon: "rotate-ccw", variant: ghost },
+                    { type: button, action: RESET, label: (i18n/t "reset"), icon: "rotate-ccw", variant: ghost },
                     { type: stack, direction: horizontal, align: center, gap: xs, role: "group", aria-label: "Speed", children: [
-                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: "0.5×", size: sm, variant: (if (== @entity.speed 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 0.5) "true" "false") },
-                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: "1×", size: sm, variant: (if (== @entity.speed 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 1) "true" "false") },
-                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: "2×", size: sm, variant: (if (== @entity.speed 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 2) "true" "false") },
-                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: "4×", size: sm, variant: (if (== @entity.speed 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 4) "true" "false") }
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 0.5 }, label: (i18n/t "speed05"), size: sm, variant: (if (== @entity.speed 0.5) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 0.5) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 1 }, label: (i18n/t "speed1"), size: sm, variant: (if (== @entity.speed 1) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 1) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 2 }, label: (i18n/t "speed2"), size: sm, variant: (if (== @entity.speed 2) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 2) "true" "false") },
+                        { type: button, action: SPEED_SET, actionPayload: { speed: 4 }, label: (i18n/t "speed4"), size: sm, variant: (if (== @entity.speed 4) "secondary" "ghost"), aria-pressed: (if (== @entity.speed 4) "true" "false") }
                       ] },
                     { type: typography, variant: caption, color: muted, content: (str/concat "Generation " @entity.generation " · " @entity.aliveCount " active") }
                   ] },
@@ -659,7 +660,7 @@ orbital GridSimOrbital {
         @label "Background Color"
         @description "Canvas ground override; empty uses the theme's drawing ground."
         @tier "presentation"
-      stepLabel : string = "Step"
+      stepLabel : string = (i18n/t "step")
         @label "Step Label"
         @tier "presentation"
       autoRun : boolean = false

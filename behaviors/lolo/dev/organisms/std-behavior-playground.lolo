@@ -33,6 +33,7 @@ orbital BehaviorPlayground {
     expanded : [string] @description "The topics opened in the tree, by `<package> <topic>`." = []
     routePending : boolean @description "On a route page, the tree waits for the route's behavior instead of opening the start topic." = false
     routeBehavior : string @description "The behavior the route names; empty when the page has none or it was opened." = ""
+    routeLeaves : [PlaygroundLeaf] @description "The catalog tree the route last heard, kept so a later route mount opens its behavior without waiting for the tree again." = []
     topicPackage : string = ""
     topic : string = ""
     behavior : string = ""
@@ -375,17 +376,25 @@ orbital BehaviorPlayground {
     initial: idle
 
     state idle {
-      INIT -> idle
+      INIT -> idle when (not (array/some @entity.routeLeaves (fn l (= @l.behavior (str/concat ?package "/" ?name)))))
         (set @entity.routeBehavior (str/concat ?package "/" ?name))
+      INIT -> idle when (array/some @entity.routeLeaves (fn l (= @l.behavior (str/concat ?package "/" ?name))))
+        (let ((leaf (array/find @entity.routeLeaves (fn l (= @l.behavior (str/concat ?package "/" ?name))))))
+          (do
+            (set @entity.routeBehavior "")
+            (emit ROUTE_OPEN { behavior: @leaf.behavior, package: @leaf.package, topic: @leaf.topic, value: @leaf.value })))
       TREE_LOADED -> idle when (and (!= @entity.routeBehavior "") (array/some ?data (fn l (= @l.behavior @entity.routeBehavior))))
+        (set @entity.routeLeaves ?data)
         (let ((leaf (array/find ?data (fn l (= @l.behavior @entity.routeBehavior)))))
           (do
             (set @entity.routeBehavior "")
             (emit ROUTE_OPEN { behavior: @leaf.behavior, package: @leaf.package, topic: @leaf.topic, value: @leaf.value })))
       TREE_LOADED -> idle when (and (!= @entity.routeBehavior "") (not (array/some ?data (fn l (= @l.behavior @entity.routeBehavior)))))
+        (set @entity.routeLeaves ?data)
         (notify error (str/concat @entity.routeBehavior " is not an installed behavior."))
         (set @entity.routeBehavior "")
       TREE_LOADED -> idle when (= @entity.routeBehavior "")
+        (set @entity.routeLeaves ?data)
     }
 
     emits {
@@ -453,7 +462,8 @@ orbital BehaviorPlayground {
     }
 
     state opening {
-      INIT -> browsing
+      INIT -> opening when (= @entity.behavior (str/concat (default ?package "") "/" (default ?name "")))
+      INIT -> browsing when (not (= @entity.behavior (str/concat (default ?package "") "/" (default ?name ""))))
         (emit STAGE_SHOWN {})
       OPEN -> opening
         (emit GUEST_RESET {})
@@ -484,7 +494,8 @@ orbital BehaviorPlayground {
     }
 
     state open {
-      INIT -> browsing
+      INIT -> open when (= @entity.behavior (str/concat (default ?package "") "/" (default ?name "")))
+      INIT -> browsing when (not (= @entity.behavior (str/concat (default ?package "") "/" (default ?name ""))))
         (emit STAGE_SHOWN {})
       STAGE_SHOWN -> open
         (when (validate/required @entity.value)
@@ -563,6 +574,11 @@ orbital BehaviorPlayground {
       PlaygroundTopics.TOPIC_PICKED -> TOPIC_PICKED
       PlaygroundTopics.LEAF_PICKED -> OPEN
       PlaygroundRoute.ROUTE_OPEN -> OPEN
+      INIT {
+        package : string
+        name : string
+      }
+        @description "The page mounted; on a behavior's route the payload names it, and an open of that same behavior is kept."
       PlaygroundLoader.BEHAVIOR_LOADED -> BEHAVIOR_LOADED
       PlaygroundLoader.BEHAVIOR_FAILED -> BEHAVIOR_FAILED
       GuestSession.GUEST_REOPEN -> GUEST_REOPEN

@@ -1,5 +1,6 @@
 app std-status-board [
   version: "1.0.0",
+  locales: [en, ar, sl],
   description: "std-status-board — the generic operations board: a page header with the board's title, when it was read and a Refresh action, an optional strip of summary figures, a filter bar (search plus one chip per section with its count), then the rows grouped into sections, each row an accordion item whose header shows the status (icon, color and text), title, subtitle, meta and relative time, and whose body is the row's detail, asked for when the row first opens. The owning behavior reads the data and drives the board: BOARD_LOADING paints skeleton rows (or keeps the rows while a refresh runs), BOARD_SHOW answers the figures, sections and rows, BOARD_FAILED shows the error (a warning above the last rows when there are rows, an error with Retry when there are none), BOARD_DETAIL answers one row's detail (loading, ready with status items, a log or code block with its error lines, and a link, or failed). A composer that shows the board on demand sends BOARD_OPEN when it brings the board into view, which asks for the first read once. The board asks with BOARD_LOAD (BOARD_OPEN's first read, the empty state's Load, loadOnInit), BOARD_REFRESH (Refresh, Retry) and BOARD_ROW_OPENED (a row opened with no ready detail). Tones are neutral, success, warning, danger and info."
 ]
 type StatusBoardTile = { label : string!, value : string!, tone : "neutral" | "success" | "warning" | "danger" | "info"!, icon : string! }
@@ -194,21 +195,21 @@ orbital StatusBoardOrbital {
         @label "Load when opened"
         @description "Ask for the first read as soon as the board opens."
         @tier "presentation"
-      idleTitle : string = "Nothing read yet"
+      idleTitle : string = (i18n/t "idleTitle")
         @label "Idle title"
         @description "The empty state's title before the first read."
         @tier "presentation"
-      idleDescription : string = "Load the board to read the latest status."
+      idleDescription : string = (i18n/t "idleDescription")
         @label "Idle description"
         @tier "presentation"
-      emptyTitle : string = "Nothing to show"
+      emptyTitle : string = (i18n/t "emptyTitle")
         @label "Empty title"
         @description "The empty state's title when a read answers no rows."
         @tier "presentation"
-      emptyDescription : string = "The read answered no rows."
+      emptyDescription : string = (i18n/t "emptyDescription")
         @label "Empty description"
         @tier "presentation"
-      errorTitle : string = "Showing the last read"
+      errorTitle : string = (i18n/t "errorTitle")
         @label "Read error title"
         @description "The title over the error line shown above rows already on the board."
         @tier "presentation"
@@ -291,8 +292,8 @@ orbital StatusBoardOrbital {
         } (let ((shown (array/filter @entity.rows (fn r (and (or (= @entity.section "") (= @r.section @entity.section)) (or (= @entity.query "") (str/includes (str/lower (str/concat @r.title " " @r.subtitle)) (str/lower @entity.query)))))))) (if (= (array/len @shown) 0) {
           type: empty-state
           icon: "search"
-          title: "No matches"
-          description: "Clear the search or pick another section."
+          title: (i18n/t "noMatchesTitle")
+          description: (i18n/t "noMatchesDescription")
         } {
           type: stack
           direction: vertical

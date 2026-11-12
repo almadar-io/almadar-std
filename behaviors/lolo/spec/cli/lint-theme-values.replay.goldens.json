@@ -1,7 +1,7 @@
 {
   "atom": "cli/atoms/std-orb-lint-theme-values.lolo",
   "trait": "OrbLintThemeValues",
-  "note": "Cases mirror validate_theme_definition in theme.rs (test_valid_css_color, test_valid_css_length, test_validate_theme_definition) plus the edge values checked against `orb validate --json` on thm-edge-ok, thm-edge-bad, thm-bad and thm-two-orbitals. Findings follow the map order of the program handed to the rule (authored order in these cases); `orb lint` on a file reads maps key-sorted, so within one token map the order can differ from Rust, the set is identical; variants are in name order. ORB_X_UNKNOWN_THEME is not ported (needs the installed theme registry keys). A non-ASCII font name or color word is judged by \\p{L}\\p{N}, a superset-free approximation of Rust's Unicode \\w and is_alphabetic.",
+  "note": "Cases mirror validate_theme_definition in theme.rs (test_valid_css_color, test_valid_css_length, test_validate_theme_definition) plus the edge values checked against `orb validate --json` on thm-edge-ok, thm-edge-bad, thm-bad and thm-two-orbitals. Findings follow the map order of the program handed to the rule (authored order in these cases); `orb lint` on a file reads maps key-sorted, so within one token map the order can differ from Rust, the set is identical; variants are in name order. ORB_X_UNKNOWN_THEME is not ported (needs the installed theme registry keys). A non-ASCII font name or color word is judged by \\p{L}\\p{N}, a superset-free approximation of Rust's Unicode \\w and is_alphabetic. Added 2026-11-11: an inline entry of the `themes` list is checked at `themes[<i>]` (three cases).",
   "cases": [
     {
       "id": "a color that is not a CSS color is an error",
@@ -1300,6 +1300,212 @@
                       "code": "ORB_GEN_INVALID_VALUE",
                       "path": "orbitals[1].theme.tokens.radii.r",
                       "message": "Radius value 'x' may not be a valid CSS length",
+                      "suggestion": "",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintThemeValues"
+        }
+      ]
+    },
+    {
+      "id": "an inline theme in the themes list is checked at its own path",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "site",
+              "theme": "clay-light",
+              "themes": [
+                "aqua-dark",
+                {
+                  "name": "t",
+                  "tokens": {
+                    "colors": {
+                      "p": "#zzz"
+                    }
+                  },
+                  "variants": {
+                    "dark": {
+                      "colors": {
+                        "q": "12"
+                      }
+                    }
+                  }
+                }
+              ],
+              "orbitals": [
+                {
+                  "name": "Home",
+                  "traits": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "theme-values",
+                  "findings": [
+                    {
+                      "code": "ORB_GEN_INVALID_VALUE",
+                      "path": "themes[1].tokens.colors.p",
+                      "message": "Color value '#zzz' may not be a valid CSS color",
+                      "suggestion": "",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_GEN_INVALID_VALUE",
+                      "path": "themes[1].variants.dark.colors.q",
+                      "message": "Color value '12' may not be a valid CSS color",
+                      "suggestion": "",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintThemeValues"
+        }
+      ]
+    },
+    {
+      "id": "control a registry key in the themes list is not an inline theme",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "site",
+              "theme": "clay-light",
+              "themes": [
+                "aqua-dark",
+                "not a color #zzz"
+              ],
+              "orbitals": [
+                {
+                  "name": "Home",
+                  "traits": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "theme-values",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintThemeValues"
+        }
+      ]
+    },
+    {
+      "id": "an inline theme in the themes list with no name is an error",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "site",
+              "themes": [
+                {
+                  "name": "",
+                  "tokens": {}
+                }
+              ],
+              "orbitals": [
+                {
+                  "name": "Home",
+                  "traits": []
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "theme-values",
+                  "findings": [
+                    {
+                      "code": "ORB_E_MISSING_NAME",
+                      "path": "themes[0].name",
+                      "message": "Theme name is required",
                       "suggestion": "",
                       "severity": "error"
                     }
