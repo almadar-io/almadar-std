@@ -1,0 +1,284 @@
+app std-rasm-pressable [
+  version: "1.0.0",
+  description: "std-rasm-pressable — a Rasm button painted on the orbital canvas. It stores the theme looks and its placed rect, and paints a body, a centred label and the look's decor as one RASM_PAINT. States idle, hovered, pressed, focused and disabled (disabled from config); a release over the control while pressed emits the configured action, a release after the pointer left does not, and RASM_ACTIVATE for its id emits it from the keyboard. Looks are keyed pressable/<intent>/<state>."
+]
+
+type RasmRect = { x : number!, y : number!, w : number!, h : number! }
+type RasmPlaced = { id : string!, rect : RasmRect! }
+type RasmMaterial = { wgsl : string!, params : [number]!, live : boolean! }
+type RasmCorners = { radius : [number]!, kind : "round" | "bevel" | "notch" | "scoop" }
+type RasmSpring = { stiffness : number!, damping : number! }
+type RasmShadow = { color : string!, blur : number! }
+type RasmLook = { fill : string, stroke : string, strokeWidth : number, corners : RasmCorners, shadow : RasmShadow, material : RasmMaterial, textColor : string, font : string, spring : RasmSpring, decor : string }
+
+orbital RasmPressableOrbital {
+  entity RasmPressableItem [runtime] {
+    id : string!
+    looks : Map string RasmLook = {}
+    hasLooks : boolean = false
+    rect : RasmRect = { x: 0, y: 0, w: 0, h: 0 }
+    hasRect : boolean = false
+    entering : number = -1
+    stagger : number = 70
+    paints : number = 0
+  }
+
+  trait RasmPressable -> RasmPressableItem [client] {
+    initial: idle
+
+    state idle {
+      INIT -> disabled when @config.disabled
+      RASM_BOOT -> disabled when @config.disabled
+      INIT -> idle when (not @config.disabled)
+      RASM_BOOT -> idle when (not @config.disabled)
+      RASM_THEME -> idle
+        (set @entity.looks ?looks)
+        (set @entity.hasLooks true)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_PLACE -> idle when (array/some ?placed (fn p (= @p.id @config.id)))
+        (set @entity.rect (let ((mine (default (array/find ?placed (fn p (= @p.id @config.id))) { id: "", rect: { x: 0, y: 0, w: 0, h: 0 } }))) @mine.rect))
+        (set @entity.hasRect true)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_ENTER -> idle when (array/includes ?order @config.id)
+        (set @entity.entering (array/indexOf ?order @config.id))
+        (set @entity.stagger ?staggerMs)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_POINTER -> hovered when (and (= ?id @config.id) (= ?kind "enter"))
+        (set @entity.entering -1)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_POINTER -> pressed when (and (= ?id @config.id) (= ?kind "down"))
+        (set @entity.entering -1)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_FOCUS -> focused when (= ?id @config.id)
+        (set @entity.entering -1)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_ACTIVATE -> idle when (= ?id @config.id)
+        (emit @config.action { })
+      REPAINT -> idle when (and @entity.hasLooks @entity.hasRect)
+        (let (
+            (r @entity.rect)
+            (anim (if (>= @entity.entering 0) { durationMs: (+ 520 (* @entity.entering @entity.stagger)), loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 14 }, { at: (/ (* @entity.entering @entity.stagger) (+ 520 (* @entity.entering @entity.stagger))), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }] } null))
+            (look (default (object/get @entity.looks (str/concat "pressable/" @config.intent "/idle")) {}))
+          )
+          (emit RASM_PAINT { id: @config.id, z: @config.z, nodes: (array/concat [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @r.x, y: @r.y, z: @config.z }, width: @r.w, height: @r.h, fill: @look.fill, stroke: @look.stroke, strokeWidth: @look.strokeWidth, corners: @look.corners, shadow: @look.shadow, material: @look.material, spring: @look.spring, animation: @anim, hit: true, semantic: { role: "button", name: @config.label, disabled: false } }, { type: draw-text, id: (str/concat @config.id ":label"), text: @config.label, anchor: "top-left", position: { x: (+ @r.x (/ @r.w 2)), y: (+ @r.y (/ @r.h 2)), z: @config.z }, align: center, baseline: middle, color: @look.textColor, font: @look.font, spring: @look.spring }] (array/map (if (= @look.decor "naqsh-stars") [0, 1, 2, 3] []) (fn i { type: draw-shape, id: (str/concat @config.id ":star:" @i), shape: polygon, anchor: "top-left", position: { x: (- (+ @r.x (if (or (= @i 1) (= @i 2)) @r.w 0)) 6), y: (- (+ @r.y (if (>= @i 2) @r.h 0)) 6), z: @config.z }, width: 12, height: 12, sides: 8, starRatio: 0.55, fill: @look.stroke, spring: @look.spring, animation: @anim })) (array/map (if (= @look.decor "glass-rim") [0] []) (fn i { type: draw-shape, id: (str/concat @config.id ":rim"), shape: rect, anchor: "top-left", position: { x: (+ @r.x 1), y: (+ @r.y 1), z: @config.z }, width: (- @r.w 2), height: (- @r.h 2), stroke: "rgba(255,255,255,0.18)", strokeWidth: 1, corners: { radius: (array/map (default @look.corners.radius [0, 0, 0, 0]) (fn v (math/max 0 (- @v 1)))), kind: (default @look.corners.kind "round") }, spring: @look.spring, animation: @anim }))) }))
+    }
+
+    state hovered {
+      INIT -> disabled when @config.disabled
+      RASM_BOOT -> disabled when @config.disabled
+      INIT -> idle when (not @config.disabled)
+      RASM_BOOT -> idle when (not @config.disabled)
+      RASM_THEME -> hovered
+        (set @entity.looks ?looks)
+        (set @entity.hasLooks true)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_PLACE -> hovered when (array/some ?placed (fn p (= @p.id @config.id)))
+        (set @entity.rect (let ((mine (default (array/find ?placed (fn p (= @p.id @config.id))) { id: "", rect: { x: 0, y: 0, w: 0, h: 0 } }))) @mine.rect))
+        (set @entity.hasRect true)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_ENTER -> hovered when (array/includes ?order @config.id)
+        (set @entity.entering (array/indexOf ?order @config.id))
+        (set @entity.stagger ?staggerMs)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_POINTER -> idle when (and (= ?id @config.id) (= ?kind "leave"))
+        (set @entity.entering -1)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_POINTER -> pressed when (and (= ?id @config.id) (= ?kind "down"))
+        (set @entity.entering -1)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_FOCUS -> focused when (= ?id @config.id)
+        (set @entity.entering -1)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_ACTIVATE -> hovered when (= ?id @config.id)
+        (emit @config.action { })
+      REPAINT -> hovered when (and @entity.hasLooks @entity.hasRect)
+        (let (
+            (r @entity.rect)
+            (anim (if (>= @entity.entering 0) { durationMs: (+ 520 (* @entity.entering @entity.stagger)), loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 14 }, { at: (/ (* @entity.entering @entity.stagger) (+ 520 (* @entity.entering @entity.stagger))), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }] } null))
+            (look (default (object/get @entity.looks (str/concat "pressable/" @config.intent "/hovered")) {}))
+          )
+          (emit RASM_PAINT { id: @config.id, z: @config.z, nodes: (array/concat [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @r.x, y: @r.y, z: @config.z }, width: @r.w, height: @r.h, fill: @look.fill, stroke: @look.stroke, strokeWidth: @look.strokeWidth, corners: @look.corners, shadow: @look.shadow, material: @look.material, spring: @look.spring, animation: @anim, hit: true, semantic: { role: "button", name: @config.label, disabled: false } }, { type: draw-text, id: (str/concat @config.id ":label"), text: @config.label, anchor: "top-left", position: { x: (+ @r.x (/ @r.w 2)), y: (+ @r.y (/ @r.h 2)), z: @config.z }, align: center, baseline: middle, color: @look.textColor, font: @look.font, spring: @look.spring }] (array/map (if (= @look.decor "naqsh-stars") [0, 1, 2, 3] []) (fn i { type: draw-shape, id: (str/concat @config.id ":star:" @i), shape: polygon, anchor: "top-left", position: { x: (- (+ @r.x (if (or (= @i 1) (= @i 2)) @r.w 0)) 6), y: (- (+ @r.y (if (>= @i 2) @r.h 0)) 6), z: @config.z }, width: 12, height: 12, sides: 8, starRatio: 0.55, fill: @look.stroke, spring: @look.spring, animation: @anim })) (array/map (if (= @look.decor "glass-rim") [0] []) (fn i { type: draw-shape, id: (str/concat @config.id ":rim"), shape: rect, anchor: "top-left", position: { x: (+ @r.x 1), y: (+ @r.y 1), z: @config.z }, width: (- @r.w 2), height: (- @r.h 2), stroke: "rgba(255,255,255,0.18)", strokeWidth: 1, corners: { radius: (array/map (default @look.corners.radius [0, 0, 0, 0]) (fn v (math/max 0 (- @v 1)))), kind: (default @look.corners.kind "round") }, spring: @look.spring, animation: @anim }))) }))
+    }
+
+    state pressed {
+      INIT -> disabled when @config.disabled
+      RASM_BOOT -> disabled when @config.disabled
+      INIT -> idle when (not @config.disabled)
+      RASM_BOOT -> idle when (not @config.disabled)
+      RASM_THEME -> pressed
+        (set @entity.looks ?looks)
+        (set @entity.hasLooks true)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_PLACE -> pressed when (array/some ?placed (fn p (= @p.id @config.id)))
+        (set @entity.rect (let ((mine (default (array/find ?placed (fn p (= @p.id @config.id))) { id: "", rect: { x: 0, y: 0, w: 0, h: 0 } }))) @mine.rect))
+        (set @entity.hasRect true)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_ENTER -> pressed when (array/includes ?order @config.id)
+        (set @entity.entering (array/indexOf ?order @config.id))
+        (set @entity.stagger ?staggerMs)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_POINTER -> hovered when (and (= ?id @config.id) (= ?kind "up"))
+        (set @entity.entering -1)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+        (emit @config.action { })
+      RASM_POINTER -> idle when (and (= ?id @config.id) (= ?kind "leave"))
+        (set @entity.entering -1)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      REPAINT -> pressed when (and @entity.hasLooks @entity.hasRect)
+        (let (
+            (r @entity.rect)
+            (anim (if (>= @entity.entering 0) { durationMs: (+ 520 (* @entity.entering @entity.stagger)), loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 14 }, { at: (/ (* @entity.entering @entity.stagger) (+ 520 (* @entity.entering @entity.stagger))), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }] } null))
+            (look (default (object/get @entity.looks (str/concat "pressable/" @config.intent "/pressed")) {}))
+          )
+          (emit RASM_PAINT { id: @config.id, z: @config.z, nodes: (array/concat [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @r.x, y: @r.y, z: @config.z }, width: @r.w, height: @r.h, fill: @look.fill, stroke: @look.stroke, strokeWidth: @look.strokeWidth, corners: @look.corners, shadow: @look.shadow, material: @look.material, spring: @look.spring, animation: @anim, hit: true, semantic: { role: "button", name: @config.label, disabled: false } }, { type: draw-text, id: (str/concat @config.id ":label"), text: @config.label, anchor: "top-left", position: { x: (+ @r.x (/ @r.w 2)), y: (+ @r.y (/ @r.h 2)), z: @config.z }, align: center, baseline: middle, color: @look.textColor, font: @look.font, spring: @look.spring }] (array/map (if (= @look.decor "naqsh-stars") [0, 1, 2, 3] []) (fn i { type: draw-shape, id: (str/concat @config.id ":star:" @i), shape: polygon, anchor: "top-left", position: { x: (- (+ @r.x (if (or (= @i 1) (= @i 2)) @r.w 0)) 6), y: (- (+ @r.y (if (>= @i 2) @r.h 0)) 6), z: @config.z }, width: 12, height: 12, sides: 8, starRatio: 0.55, fill: @look.stroke, spring: @look.spring, animation: @anim })) (array/map (if (= @look.decor "glass-rim") [0] []) (fn i { type: draw-shape, id: (str/concat @config.id ":rim"), shape: rect, anchor: "top-left", position: { x: (+ @r.x 1), y: (+ @r.y 1), z: @config.z }, width: (- @r.w 2), height: (- @r.h 2), stroke: "rgba(255,255,255,0.18)", strokeWidth: 1, corners: { radius: (array/map (default @look.corners.radius [0, 0, 0, 0]) (fn v (math/max 0 (- @v 1)))), kind: (default @look.corners.kind "round") }, spring: @look.spring, animation: @anim }))) }))
+    }
+
+    state focused {
+      INIT -> disabled when @config.disabled
+      RASM_BOOT -> disabled when @config.disabled
+      INIT -> idle when (not @config.disabled)
+      RASM_BOOT -> idle when (not @config.disabled)
+      RASM_THEME -> focused
+        (set @entity.looks ?looks)
+        (set @entity.hasLooks true)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_PLACE -> focused when (array/some ?placed (fn p (= @p.id @config.id)))
+        (set @entity.rect (let ((mine (default (array/find ?placed (fn p (= @p.id @config.id))) { id: "", rect: { x: 0, y: 0, w: 0, h: 0 } }))) @mine.rect))
+        (set @entity.hasRect true)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_ENTER -> focused when (array/includes ?order @config.id)
+        (set @entity.entering (array/indexOf ?order @config.id))
+        (set @entity.stagger ?staggerMs)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_POINTER -> pressed when (and (= ?id @config.id) (= ?kind "down"))
+        (set @entity.entering -1)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_FOCUS -> idle when (!= ?id @config.id)
+        (set @entity.entering -1)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_ACTIVATE -> focused when (= ?id @config.id)
+        (emit @config.action { })
+      REPAINT -> focused when (and @entity.hasLooks @entity.hasRect)
+        (let (
+            (r @entity.rect)
+            (anim (if (>= @entity.entering 0) { durationMs: (+ 520 (* @entity.entering @entity.stagger)), loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 14 }, { at: (/ (* @entity.entering @entity.stagger) (+ 520 (* @entity.entering @entity.stagger))), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }] } null))
+            (look (default (object/get @entity.looks (str/concat "pressable/" @config.intent "/focused")) {}))
+          )
+          (emit RASM_PAINT { id: @config.id, z: @config.z, nodes: (array/concat [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @r.x, y: @r.y, z: @config.z }, width: @r.w, height: @r.h, fill: @look.fill, stroke: @look.stroke, strokeWidth: @look.strokeWidth, corners: @look.corners, shadow: @look.shadow, material: @look.material, spring: @look.spring, animation: @anim, hit: true, semantic: { role: "button", name: @config.label, disabled: false } }, { type: draw-text, id: (str/concat @config.id ":label"), text: @config.label, anchor: "top-left", position: { x: (+ @r.x (/ @r.w 2)), y: (+ @r.y (/ @r.h 2)), z: @config.z }, align: center, baseline: middle, color: @look.textColor, font: @look.font, spring: @look.spring }] (array/map (if (= @look.decor "naqsh-stars") [0, 1, 2, 3] []) (fn i { type: draw-shape, id: (str/concat @config.id ":star:" @i), shape: polygon, anchor: "top-left", position: { x: (- (+ @r.x (if (or (= @i 1) (= @i 2)) @r.w 0)) 6), y: (- (+ @r.y (if (>= @i 2) @r.h 0)) 6), z: @config.z }, width: 12, height: 12, sides: 8, starRatio: 0.55, fill: @look.stroke, spring: @look.spring, animation: @anim })) (array/map (if (= @look.decor "glass-rim") [0] []) (fn i { type: draw-shape, id: (str/concat @config.id ":rim"), shape: rect, anchor: "top-left", position: { x: (+ @r.x 1), y: (+ @r.y 1), z: @config.z }, width: (- @r.w 2), height: (- @r.h 2), stroke: "rgba(255,255,255,0.18)", strokeWidth: 1, corners: { radius: (array/map (default @look.corners.radius [0, 0, 0, 0]) (fn v (math/max 0 (- @v 1)))), kind: (default @look.corners.kind "round") }, spring: @look.spring, animation: @anim }))) }))
+    }
+
+    state disabled {
+      INIT -> disabled when @config.disabled
+      RASM_BOOT -> disabled when @config.disabled
+      INIT -> idle when (not @config.disabled)
+      RASM_BOOT -> idle when (not @config.disabled)
+      RASM_THEME -> disabled
+        (set @entity.looks ?looks)
+        (set @entity.hasLooks true)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_PLACE -> disabled when (array/some ?placed (fn p (= @p.id @config.id)))
+        (set @entity.rect (let ((mine (default (array/find ?placed (fn p (= @p.id @config.id))) { id: "", rect: { x: 0, y: 0, w: 0, h: 0 } }))) @mine.rect))
+        (set @entity.hasRect true)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_ENTER -> disabled when (array/includes ?order @config.id)
+        (set @entity.entering (array/indexOf ?order @config.id))
+        (set @entity.stagger ?staggerMs)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      REPAINT -> disabled when (and @entity.hasLooks @entity.hasRect)
+        (let (
+            (r @entity.rect)
+            (anim (if (>= @entity.entering 0) { durationMs: (+ 520 (* @entity.entering @entity.stagger)), loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 14 }, { at: (/ (* @entity.entering @entity.stagger) (+ 520 (* @entity.entering @entity.stagger))), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }] } null))
+            (look (default (object/get @entity.looks (str/concat "pressable/" @config.intent "/disabled")) {}))
+          )
+          (emit RASM_PAINT { id: @config.id, z: @config.z, nodes: (array/concat [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @r.x, y: @r.y, z: @config.z }, width: @r.w, height: @r.h, fill: @look.fill, stroke: @look.stroke, strokeWidth: @look.strokeWidth, corners: @look.corners, shadow: @look.shadow, material: @look.material, spring: @look.spring, animation: @anim, hit: false, semantic: { role: "button", name: @config.label, disabled: true } }, { type: draw-text, id: (str/concat @config.id ":label"), text: @config.label, anchor: "top-left", position: { x: (+ @r.x (/ @r.w 2)), y: (+ @r.y (/ @r.h 2)), z: @config.z }, align: center, baseline: middle, color: @look.textColor, font: @look.font, spring: @look.spring }] (array/map (if (= @look.decor "naqsh-stars") [0, 1, 2, 3] []) (fn i { type: draw-shape, id: (str/concat @config.id ":star:" @i), shape: polygon, anchor: "top-left", position: { x: (- (+ @r.x (if (or (= @i 1) (= @i 2)) @r.w 0)) 6), y: (- (+ @r.y (if (>= @i 2) @r.h 0)) 6), z: @config.z }, width: 12, height: 12, sides: 8, starRatio: 0.55, fill: @look.stroke, spring: @look.spring, animation: @anim })) (array/map (if (= @look.decor "glass-rim") [0] []) (fn i { type: draw-shape, id: (str/concat @config.id ":rim"), shape: rect, anchor: "top-left", position: { x: (+ @r.x 1), y: (+ @r.y 1), z: @config.z }, width: (- @r.w 2), height: (- @r.h 2), stroke: "rgba(255,255,255,0.18)", strokeWidth: 1, corners: { radius: (array/map (default @look.corners.radius [0, 0, 0, 0]) (fn v (math/max 0 (- @v 1)))), kind: (default @look.corners.kind "round") }, spring: @look.spring, animation: @anim }))) }))
+    }
+
+    emits {
+      RASM_PAINT -> external {
+        id : string!
+        z : number!
+        nodes : [node]!
+      }
+        @description "The control's whole paint: its drawables, in order, for the surface to collect."
+        @tier "domain"
+      REPAINT -> internal {
+        n : number!
+      }
+        @tier "internal"
+      @config.action -> external { }
+        @description "The control was released over itself, or activated from the keyboard."
+        @tier "domain"
+    }
+
+    listens {
+      RASM_BOOT { }
+        @description "The surface mounted: take the configured starting state."
+      RASM_THEME { name : string!  looks : Map string RasmLook! }
+        @description "The theme's looks; the control repaints with them."
+      RASM_PLACE { placed : [RasmPlaced]! }
+        @description "Placed rects; the control takes the entry whose id is its own."
+      RASM_ENTER { order : [string]!  staggerMs : number! }
+        @description "The entry choreography; a control in the order paints with its stagger."
+      RASM_POINTER { kind : "down" | "up" | "enter" | "leave" | "move"!  id : string!  x : number!  y : number! }
+        @description "A pointer event from the surface; the control acts on its own id."
+      RASM_FOCUS { id : string! }
+        @description "Focus moved; the control with that id is focused, the others clear."
+      RASM_ACTIVATE { id : string! }
+        @description "Keyboard activation of the focused control."
+    }
+
+    config {
+      id : string = ""
+        @label "Id"
+        @description "The region and paint id of the control."
+        @tier "domain"
+      label : string = ""
+        @label "Label"
+        @description "The text on the button and its accessible name."
+        @tier "domain"
+      intent : "primary" | "secondary" = "primary"
+        @label "Intent"
+        @description "Which look family the button paints with."
+        @tier "presentation"
+      disabled : boolean = false
+        @label "Disabled"
+        @description "A disabled button paints its disabled look and takes no pointer or keyboard action."
+        @tier "presentation"
+      action : event = RASM_ACTION
+        @label "Action"
+        @description "The event emitted when the button is released over itself or activated."
+        @tier "domain"
+      z : number = 0
+        @label "Z"
+        @description "Paint order."
+        @tier "presentation"
+    }
+  }
+
+  page boot as RasmPressableStart -> RasmPressable
+}

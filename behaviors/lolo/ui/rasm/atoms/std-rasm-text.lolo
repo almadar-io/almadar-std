@@ -1,0 +1,92 @@
+app std-rasm-text [
+  version: "0.1.0",
+  description: "std-rasm-text — the Rasm kit's paragraph. Once it has a rect and looks it paints one measured, wrapping draw-text in the text/<intent>/idle look, so its parent stack can size it from RASM_MEASURED. RASM_ENTER plays its entry choreography."
+]
+
+type RasmRect = { x : number!, y : number!, w : number!, h : number! }
+type RasmPlaced = { id : string!, rect : RasmRect! }
+type RasmMaterial = { wgsl : string!, params : [number]!, live : boolean! }
+type RasmCorners = { radius : [number]!, kind : "round" | "bevel" | "notch" | "scoop" }
+type RasmSpring = { stiffness : number!, damping : number! }
+type RasmShadow = { color : string!, blur : number! }
+type RasmLook = { fill : string, stroke : string, strokeWidth : number, corners : RasmCorners, shadow : RasmShadow, material : RasmMaterial, textColor : string, font : string, spring : RasmSpring, decor : string }
+
+orbital RasmTextOrbital {
+  entity RasmTextRun [runtime] {
+    id : string!
+    rect : RasmRect? @description "The rect RASM_PLACE gave this text, null until placed." = null
+    looks : Map string RasmLook @description "The announced look table." = {}
+    enterIndex : number @description "This text's position in the RASM_ENTER order, -1 when it is not in it." = -1
+    staggerMs : number = 70
+    paints : number @description "Counts paints, so each paint in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
+  }
+
+  trait RasmText -> RasmTextRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      RASM_THEME -> ready
+        (set @entity.looks ?looks)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit TEXT_PAINT { n: @entity.paints })
+      RASM_PLACE -> ready when (array/some ?placed (fn p (= @p.id @config.id)))
+        (set @entity.rect (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) null @mine.rect)))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit TEXT_PAINT { n: @entity.paints })
+      RASM_PLACE -> ready when (not (array/some ?placed (fn p (= @p.id @config.id))))
+      RASM_ENTER -> ready
+        (set @entity.enterIndex (array/indexOf ?order @config.id))
+        (set @entity.staggerMs ?staggerMs)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit TEXT_PAINT { n: @entity.paints })
+      TEXT_PAINT -> ready
+        (let ((l (object/get @entity.looks (str/concat "text/" @config.intent "/idle") null)) (r @entity.rect)) (when (and (!= @l null) (!= @r null)) (let ((idx @entity.enterIndex) (stag @entity.staggerMs)) (let ((dur (+ 520 (* @idx @stag)))) (emit RASM_PAINT { id: @config.id, z: @config.z, nodes: [{ type: draw-text, id: @config.id, text: @config.text, position: { x: @r.x, y: @r.y }, anchor: "top-left", baseline: "top", width: @r.w, wrap: true, measure: true, color: @l.textColor, font: @l.font, spring: @l.spring, hit: false, semantic: { role: "text", name: @config.text }, animation: (if (>= @idx 0) { durationMs: @dur, loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 14 }, { at: (/ (* @idx @stag) @dur), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }] } null) }] })))))
+    }
+
+    emits {
+      TEXT_PAINT -> internal {
+        n : number!
+      }
+        @description "Repaint from the stored rect and look."
+        @tier "internal"
+      RASM_PAINT -> external {
+        id : string!
+        z : number!
+        nodes : [node]!
+      }
+        @description "The paragraph's draw-text at its z."
+        @tier "primary"
+    }
+
+    listens {
+      RASM_THEME { name : string!  looks : Map string RasmLook! }
+        @description "Store the looks and repaint."
+      RASM_PLACE { placed : [RasmPlaced]! }
+        @description "Take this text's rect when it is placed and repaint."
+      RASM_ENTER { order : [string]!  staggerMs : number! }
+        @description "Play the entry choreography when this text's id is in the order."
+    }
+
+    config {
+      id : string = "text"
+        @label "Id"
+        @description "The text's id: its RASM_PLACE key, measure id and paint id."
+        @tier "presentation"
+      text : string = ""
+        @label "Text"
+        @description "The paragraph."
+        @tier "presentation"
+      intent : "title" | "body" = "body"
+        @label "Intent"
+        @description "Selects the look text/<intent>/idle."
+        @tier "presentation"
+      z : number = 0
+        @label "Z"
+        @description "Paint order on the surface."
+        @tier "presentation"
+    }
+  }
+
+  page boot as RasmTextStart -> RasmText
+}

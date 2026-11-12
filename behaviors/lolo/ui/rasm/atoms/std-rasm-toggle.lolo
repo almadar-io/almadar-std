@@ -1,0 +1,433 @@
+app std-rasm-toggle [
+  version: "1.0.0",
+  description: "std-rasm-toggle — a Rasm check box or switch painted on the orbital canvas. States off and on, each idle, hovered or focused. A press and release over it, or RASM_ACTIVATE for its id, flips it and emits the configured changed event with { checked }; a release after the pointer left does not flip. The switch knob's position springs. Looks are keyed toggle/<kind>/<on|off>-<idle|hovered|focused>."
+]
+
+type RasmRect = { x : number!, y : number!, w : number!, h : number! }
+type RasmPlaced = { id : string!, rect : RasmRect! }
+type RasmMaterial = { wgsl : string!, params : [number]!, live : boolean! }
+type RasmCorners = { radius : [number]!, kind : "round" | "bevel" | "notch" | "scoop" }
+type RasmSpring = { stiffness : number!, damping : number! }
+type RasmShadow = { color : string!, blur : number! }
+type RasmLook = { fill : string, stroke : string, strokeWidth : number, corners : RasmCorners, shadow : RasmShadow, material : RasmMaterial, textColor : string, font : string, spring : RasmSpring, decor : string }
+
+orbital RasmToggleOrbital {
+  entity RasmToggleItem [runtime] {
+    id : string!
+    looks : Map string RasmLook = {}
+    hasLooks : boolean = false
+    rect : RasmRect = { x: 0, y: 0, w: 0, h: 0 }
+    hasRect : boolean = false
+    entering : number = -1
+    stagger : number = 70
+    paints : number = 0
+    armed : boolean = false
+  }
+
+  trait RasmToggle -> RasmToggleItem [client] {
+    initial: offIdle
+
+    state offIdle {
+      INIT -> onIdle when @config.checked
+        (set @entity.armed false)
+      RASM_BOOT -> onIdle when @config.checked
+        (set @entity.armed false)
+      INIT -> offIdle when (not @config.checked)
+        (set @entity.armed false)
+      RASM_BOOT -> offIdle when (not @config.checked)
+        (set @entity.armed false)
+      RASM_THEME -> offIdle
+        (set @entity.looks ?looks)
+        (set @entity.hasLooks true)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_PLACE -> offIdle when (array/some ?placed (fn p (= @p.id @config.id)))
+        (set @entity.rect (let ((mine (default (array/find ?placed (fn p (= @p.id @config.id))) { id: "", rect: { x: 0, y: 0, w: 0, h: 0 } }))) @mine.rect))
+        (set @entity.hasRect true)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_ENTER -> offIdle when (array/includes ?order @config.id)
+        (set @entity.entering (array/indexOf ?order @config.id))
+        (set @entity.stagger ?staggerMs)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_POINTER -> offIdle when (and (= ?id @config.id) (= ?kind "down"))
+        (set @entity.armed true)
+      RASM_POINTER -> onHovered when (and (and (= ?id @config.id) (= ?kind "up")) @entity.armed)
+        (set @entity.entering -1)
+        (set @entity.armed false)
+        (emit @config.changed { checked: true })
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_POINTER -> offHovered when (and (= ?id @config.id) (= ?kind "enter"))
+        (set @entity.entering -1)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_POINTER -> offIdle when (and (= ?id @config.id) (= ?kind "leave"))
+        (set @entity.armed false)
+      RASM_FOCUS -> offFocused when (= ?id @config.id)
+        (set @entity.entering -1)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_ACTIVATE -> onIdle when (= ?id @config.id)
+        (set @entity.entering -1)
+        (emit @config.changed { checked: true })
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      REPAINT -> offIdle when (and @entity.hasLooks @entity.hasRect)
+        (let (
+            (r @entity.rect)
+            (anim (if (>= @entity.entering 0) { durationMs: (+ 520 (* @entity.entering @entity.stagger)), loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 14 }, { at: (/ (* @entity.entering @entity.stagger) (+ 520 (* @entity.entering @entity.stagger))), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }] } null))
+            (look (default (object/get @entity.looks (str/concat "toggle/" @config.kind "/off-idle")) {}))
+            (sw (= @config.kind "switch"))
+            (cy (+ @r.y (/ @r.h 2)))
+          )
+          (emit RASM_PAINT { id: @config.id, z: @config.z, nodes: (array/concat [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @r.x, y: @r.y, z: @config.z }, width: @r.w, height: @r.h, hit: true, semantic: { role: (if @sw "switch" "checkbox"), name: @config.label, checked: false } }] (array/map (if @sw [] [0]) (fn i { type: draw-shape, id: (str/concat @config.id ":box"), shape: rect, anchor: "top-left", position: { x: @r.x, y: (- @cy 11), z: @config.z }, width: 22, height: 22, fill: @look.fill, stroke: @look.stroke, strokeWidth: @look.strokeWidth, corners: @look.corners, shadow: @look.shadow, material: @look.material, spring: @look.spring, animation: @anim })) (array/map (if @sw [] [0]) (fn i { type: draw-shape, id: (str/concat @config.id ":tick"), shape: path, anchor: "top-left", position: { x: @r.x, y: (- @cy 11), z: @config.z }, d: "M5 11.5 L9.5 16 L17 6.5", stroke: @look.stroke, strokeWidth: 2.2, spring: @look.spring, animation: @anim })) (array/map (if @sw [0] []) (fn i { type: draw-shape, id: (str/concat @config.id ":track"), shape: rect, anchor: "top-left", position: { x: @r.x, y: (- @cy 13), z: @config.z }, width: 44, height: 26, fill: @look.fill, stroke: @look.stroke, strokeWidth: @look.strokeWidth, corners: @look.corners, shadow: @look.shadow, material: @look.material, spring: @look.spring, animation: @anim })) (array/map (if @sw [0] []) (fn i { type: draw-shape, id: (str/concat @config.id ":knob"), shape: ellipse, anchor: center, position: { x: (+ @r.x 13), y: @cy, z: @config.z }, radiusX: 10, radiusY: 10, fill: @look.textColor, spring: @look.spring, animation: @anim })) (if (and (!= @look.textColor null) (!= @look.font null)) [{ type: draw-text, id: (str/concat @config.id ":label"), text: @config.label, anchor: "top-left", position: { x: (+ @r.x (if @sw 54 32)), y: @cy, z: @config.z }, align: left, baseline: middle, color: @look.textColor, font: @look.font, spring: @look.spring }] [])) }))
+    }
+
+    state offHovered {
+      INIT -> onIdle when @config.checked
+        (set @entity.armed false)
+      RASM_BOOT -> onIdle when @config.checked
+        (set @entity.armed false)
+      INIT -> offIdle when (not @config.checked)
+        (set @entity.armed false)
+      RASM_BOOT -> offIdle when (not @config.checked)
+        (set @entity.armed false)
+      RASM_THEME -> offHovered
+        (set @entity.looks ?looks)
+        (set @entity.hasLooks true)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_PLACE -> offHovered when (array/some ?placed (fn p (= @p.id @config.id)))
+        (set @entity.rect (let ((mine (default (array/find ?placed (fn p (= @p.id @config.id))) { id: "", rect: { x: 0, y: 0, w: 0, h: 0 } }))) @mine.rect))
+        (set @entity.hasRect true)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_ENTER -> offHovered when (array/includes ?order @config.id)
+        (set @entity.entering (array/indexOf ?order @config.id))
+        (set @entity.stagger ?staggerMs)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_POINTER -> offHovered when (and (= ?id @config.id) (= ?kind "down"))
+        (set @entity.armed true)
+      RASM_POINTER -> onHovered when (and (and (= ?id @config.id) (= ?kind "up")) @entity.armed)
+        (set @entity.entering -1)
+        (set @entity.armed false)
+        (emit @config.changed { checked: true })
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_POINTER -> offIdle when (and (= ?id @config.id) (= ?kind "leave"))
+        (set @entity.entering -1)
+        (set @entity.armed false)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_FOCUS -> offFocused when (= ?id @config.id)
+        (set @entity.entering -1)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_ACTIVATE -> onHovered when (= ?id @config.id)
+        (set @entity.entering -1)
+        (emit @config.changed { checked: true })
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      REPAINT -> offHovered when (and @entity.hasLooks @entity.hasRect)
+        (let (
+            (r @entity.rect)
+            (anim (if (>= @entity.entering 0) { durationMs: (+ 520 (* @entity.entering @entity.stagger)), loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 14 }, { at: (/ (* @entity.entering @entity.stagger) (+ 520 (* @entity.entering @entity.stagger))), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }] } null))
+            (look (default (object/get @entity.looks (str/concat "toggle/" @config.kind "/off-hovered")) {}))
+            (sw (= @config.kind "switch"))
+            (cy (+ @r.y (/ @r.h 2)))
+          )
+          (emit RASM_PAINT { id: @config.id, z: @config.z, nodes: (array/concat [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @r.x, y: @r.y, z: @config.z }, width: @r.w, height: @r.h, hit: true, semantic: { role: (if @sw "switch" "checkbox"), name: @config.label, checked: false } }] (array/map (if @sw [] [0]) (fn i { type: draw-shape, id: (str/concat @config.id ":box"), shape: rect, anchor: "top-left", position: { x: @r.x, y: (- @cy 11), z: @config.z }, width: 22, height: 22, fill: @look.fill, stroke: @look.stroke, strokeWidth: @look.strokeWidth, corners: @look.corners, shadow: @look.shadow, material: @look.material, spring: @look.spring, animation: @anim })) (array/map (if @sw [] [0]) (fn i { type: draw-shape, id: (str/concat @config.id ":tick"), shape: path, anchor: "top-left", position: { x: @r.x, y: (- @cy 11), z: @config.z }, d: "M5 11.5 L9.5 16 L17 6.5", stroke: @look.stroke, strokeWidth: 2.2, spring: @look.spring, animation: @anim })) (array/map (if @sw [0] []) (fn i { type: draw-shape, id: (str/concat @config.id ":track"), shape: rect, anchor: "top-left", position: { x: @r.x, y: (- @cy 13), z: @config.z }, width: 44, height: 26, fill: @look.fill, stroke: @look.stroke, strokeWidth: @look.strokeWidth, corners: @look.corners, shadow: @look.shadow, material: @look.material, spring: @look.spring, animation: @anim })) (array/map (if @sw [0] []) (fn i { type: draw-shape, id: (str/concat @config.id ":knob"), shape: ellipse, anchor: center, position: { x: (+ @r.x 13), y: @cy, z: @config.z }, radiusX: 10, radiusY: 10, fill: @look.textColor, spring: @look.spring, animation: @anim })) (if (and (!= @look.textColor null) (!= @look.font null)) [{ type: draw-text, id: (str/concat @config.id ":label"), text: @config.label, anchor: "top-left", position: { x: (+ @r.x (if @sw 54 32)), y: @cy, z: @config.z }, align: left, baseline: middle, color: @look.textColor, font: @look.font, spring: @look.spring }] [])) }))
+    }
+
+    state offFocused {
+      INIT -> onIdle when @config.checked
+        (set @entity.armed false)
+      RASM_BOOT -> onIdle when @config.checked
+        (set @entity.armed false)
+      INIT -> offIdle when (not @config.checked)
+        (set @entity.armed false)
+      RASM_BOOT -> offIdle when (not @config.checked)
+        (set @entity.armed false)
+      RASM_THEME -> offFocused
+        (set @entity.looks ?looks)
+        (set @entity.hasLooks true)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_PLACE -> offFocused when (array/some ?placed (fn p (= @p.id @config.id)))
+        (set @entity.rect (let ((mine (default (array/find ?placed (fn p (= @p.id @config.id))) { id: "", rect: { x: 0, y: 0, w: 0, h: 0 } }))) @mine.rect))
+        (set @entity.hasRect true)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_ENTER -> offFocused when (array/includes ?order @config.id)
+        (set @entity.entering (array/indexOf ?order @config.id))
+        (set @entity.stagger ?staggerMs)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_POINTER -> offFocused when (and (= ?id @config.id) (= ?kind "down"))
+        (set @entity.armed true)
+      RASM_POINTER -> onHovered when (and (and (= ?id @config.id) (= ?kind "up")) @entity.armed)
+        (set @entity.entering -1)
+        (set @entity.armed false)
+        (emit @config.changed { checked: true })
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_POINTER -> offFocused when (and (= ?id @config.id) (= ?kind "leave"))
+        (set @entity.armed false)
+      RASM_FOCUS -> offIdle when (!= ?id @config.id)
+        (set @entity.entering -1)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_ACTIVATE -> onFocused when (= ?id @config.id)
+        (set @entity.entering -1)
+        (emit @config.changed { checked: true })
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      REPAINT -> offFocused when (and @entity.hasLooks @entity.hasRect)
+        (let (
+            (r @entity.rect)
+            (anim (if (>= @entity.entering 0) { durationMs: (+ 520 (* @entity.entering @entity.stagger)), loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 14 }, { at: (/ (* @entity.entering @entity.stagger) (+ 520 (* @entity.entering @entity.stagger))), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }] } null))
+            (look (default (object/get @entity.looks (str/concat "toggle/" @config.kind "/off-focused")) {}))
+            (sw (= @config.kind "switch"))
+            (cy (+ @r.y (/ @r.h 2)))
+          )
+          (emit RASM_PAINT { id: @config.id, z: @config.z, nodes: (array/concat [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @r.x, y: @r.y, z: @config.z }, width: @r.w, height: @r.h, hit: true, semantic: { role: (if @sw "switch" "checkbox"), name: @config.label, checked: false } }] (array/map (if @sw [] [0]) (fn i { type: draw-shape, id: (str/concat @config.id ":box"), shape: rect, anchor: "top-left", position: { x: @r.x, y: (- @cy 11), z: @config.z }, width: 22, height: 22, fill: @look.fill, stroke: @look.stroke, strokeWidth: @look.strokeWidth, corners: @look.corners, shadow: @look.shadow, material: @look.material, spring: @look.spring, animation: @anim })) (array/map (if @sw [0] []) (fn i { type: draw-shape, id: (str/concat @config.id ":track"), shape: rect, anchor: "top-left", position: { x: @r.x, y: (- @cy 13), z: @config.z }, width: 44, height: 26, fill: @look.fill, stroke: @look.stroke, strokeWidth: @look.strokeWidth, corners: @look.corners, shadow: @look.shadow, material: @look.material, spring: @look.spring, animation: @anim })) (array/map (if @sw [0] []) (fn i { type: draw-shape, id: (str/concat @config.id ":knob"), shape: ellipse, anchor: center, position: { x: (+ @r.x 13), y: @cy, z: @config.z }, radiusX: 10, radiusY: 10, fill: @look.textColor, spring: @look.spring, animation: @anim })) (if (and (!= @look.textColor null) (!= @look.font null)) [{ type: draw-text, id: (str/concat @config.id ":label"), text: @config.label, anchor: "top-left", position: { x: (+ @r.x (if @sw 54 32)), y: @cy, z: @config.z }, align: left, baseline: middle, color: @look.textColor, font: @look.font, spring: @look.spring }] [])) }))
+    }
+
+    state onIdle {
+      INIT -> onIdle when @config.checked
+        (set @entity.armed false)
+      RASM_BOOT -> onIdle when @config.checked
+        (set @entity.armed false)
+      INIT -> offIdle when (not @config.checked)
+        (set @entity.armed false)
+      RASM_BOOT -> offIdle when (not @config.checked)
+        (set @entity.armed false)
+      RASM_THEME -> onIdle
+        (set @entity.looks ?looks)
+        (set @entity.hasLooks true)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_PLACE -> onIdle when (array/some ?placed (fn p (= @p.id @config.id)))
+        (set @entity.rect (let ((mine (default (array/find ?placed (fn p (= @p.id @config.id))) { id: "", rect: { x: 0, y: 0, w: 0, h: 0 } }))) @mine.rect))
+        (set @entity.hasRect true)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_ENTER -> onIdle when (array/includes ?order @config.id)
+        (set @entity.entering (array/indexOf ?order @config.id))
+        (set @entity.stagger ?staggerMs)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_POINTER -> onIdle when (and (= ?id @config.id) (= ?kind "down"))
+        (set @entity.armed true)
+      RASM_POINTER -> offHovered when (and (and (= ?id @config.id) (= ?kind "up")) @entity.armed)
+        (set @entity.entering -1)
+        (set @entity.armed false)
+        (emit @config.changed { checked: false })
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_POINTER -> onHovered when (and (= ?id @config.id) (= ?kind "enter"))
+        (set @entity.entering -1)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_POINTER -> onIdle when (and (= ?id @config.id) (= ?kind "leave"))
+        (set @entity.armed false)
+      RASM_FOCUS -> onFocused when (= ?id @config.id)
+        (set @entity.entering -1)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_ACTIVATE -> offIdle when (= ?id @config.id)
+        (set @entity.entering -1)
+        (emit @config.changed { checked: false })
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      REPAINT -> onIdle when (and @entity.hasLooks @entity.hasRect)
+        (let (
+            (r @entity.rect)
+            (anim (if (>= @entity.entering 0) { durationMs: (+ 520 (* @entity.entering @entity.stagger)), loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 14 }, { at: (/ (* @entity.entering @entity.stagger) (+ 520 (* @entity.entering @entity.stagger))), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }] } null))
+            (look (default (object/get @entity.looks (str/concat "toggle/" @config.kind "/on-idle")) {}))
+            (sw (= @config.kind "switch"))
+            (cy (+ @r.y (/ @r.h 2)))
+          )
+          (emit RASM_PAINT { id: @config.id, z: @config.z, nodes: (array/concat [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @r.x, y: @r.y, z: @config.z }, width: @r.w, height: @r.h, hit: true, semantic: { role: (if @sw "switch" "checkbox"), name: @config.label, checked: true } }] (array/map (if @sw [] [0]) (fn i { type: draw-shape, id: (str/concat @config.id ":box"), shape: rect, anchor: "top-left", position: { x: @r.x, y: (- @cy 11), z: @config.z }, width: 22, height: 22, fill: @look.fill, stroke: @look.stroke, strokeWidth: @look.strokeWidth, corners: @look.corners, shadow: @look.shadow, material: @look.material, spring: @look.spring, animation: @anim })) (array/map (if @sw [] [0]) (fn i { type: draw-shape, id: (str/concat @config.id ":tick"), shape: path, anchor: "top-left", position: { x: @r.x, y: (- @cy 11), z: @config.z }, d: "M5 11.5 L9.5 16 L17 6.5", stroke: @look.stroke, strokeWidth: 2.2, spring: @look.spring, animation: @anim })) (array/map (if @sw [0] []) (fn i { type: draw-shape, id: (str/concat @config.id ":track"), shape: rect, anchor: "top-left", position: { x: @r.x, y: (- @cy 13), z: @config.z }, width: 44, height: 26, fill: @look.fill, stroke: @look.stroke, strokeWidth: @look.strokeWidth, corners: @look.corners, shadow: @look.shadow, material: @look.material, spring: @look.spring, animation: @anim })) (array/map (if @sw [0] []) (fn i { type: draw-shape, id: (str/concat @config.id ":knob"), shape: ellipse, anchor: center, position: { x: (+ @r.x 31), y: @cy, z: @config.z }, radiusX: 10, radiusY: 10, fill: @look.textColor, spring: @look.spring, animation: @anim })) (if (and (!= @look.textColor null) (!= @look.font null)) [{ type: draw-text, id: (str/concat @config.id ":label"), text: @config.label, anchor: "top-left", position: { x: (+ @r.x (if @sw 54 32)), y: @cy, z: @config.z }, align: left, baseline: middle, color: @look.textColor, font: @look.font, spring: @look.spring }] [])) }))
+    }
+
+    state onHovered {
+      INIT -> onIdle when @config.checked
+        (set @entity.armed false)
+      RASM_BOOT -> onIdle when @config.checked
+        (set @entity.armed false)
+      INIT -> offIdle when (not @config.checked)
+        (set @entity.armed false)
+      RASM_BOOT -> offIdle when (not @config.checked)
+        (set @entity.armed false)
+      RASM_THEME -> onHovered
+        (set @entity.looks ?looks)
+        (set @entity.hasLooks true)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_PLACE -> onHovered when (array/some ?placed (fn p (= @p.id @config.id)))
+        (set @entity.rect (let ((mine (default (array/find ?placed (fn p (= @p.id @config.id))) { id: "", rect: { x: 0, y: 0, w: 0, h: 0 } }))) @mine.rect))
+        (set @entity.hasRect true)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_ENTER -> onHovered when (array/includes ?order @config.id)
+        (set @entity.entering (array/indexOf ?order @config.id))
+        (set @entity.stagger ?staggerMs)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_POINTER -> onHovered when (and (= ?id @config.id) (= ?kind "down"))
+        (set @entity.armed true)
+      RASM_POINTER -> offHovered when (and (and (= ?id @config.id) (= ?kind "up")) @entity.armed)
+        (set @entity.entering -1)
+        (set @entity.armed false)
+        (emit @config.changed { checked: false })
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_POINTER -> onIdle when (and (= ?id @config.id) (= ?kind "leave"))
+        (set @entity.entering -1)
+        (set @entity.armed false)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_FOCUS -> onFocused when (= ?id @config.id)
+        (set @entity.entering -1)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_ACTIVATE -> offHovered when (= ?id @config.id)
+        (set @entity.entering -1)
+        (emit @config.changed { checked: false })
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      REPAINT -> onHovered when (and @entity.hasLooks @entity.hasRect)
+        (let (
+            (r @entity.rect)
+            (anim (if (>= @entity.entering 0) { durationMs: (+ 520 (* @entity.entering @entity.stagger)), loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 14 }, { at: (/ (* @entity.entering @entity.stagger) (+ 520 (* @entity.entering @entity.stagger))), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }] } null))
+            (look (default (object/get @entity.looks (str/concat "toggle/" @config.kind "/on-hovered")) {}))
+            (sw (= @config.kind "switch"))
+            (cy (+ @r.y (/ @r.h 2)))
+          )
+          (emit RASM_PAINT { id: @config.id, z: @config.z, nodes: (array/concat [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @r.x, y: @r.y, z: @config.z }, width: @r.w, height: @r.h, hit: true, semantic: { role: (if @sw "switch" "checkbox"), name: @config.label, checked: true } }] (array/map (if @sw [] [0]) (fn i { type: draw-shape, id: (str/concat @config.id ":box"), shape: rect, anchor: "top-left", position: { x: @r.x, y: (- @cy 11), z: @config.z }, width: 22, height: 22, fill: @look.fill, stroke: @look.stroke, strokeWidth: @look.strokeWidth, corners: @look.corners, shadow: @look.shadow, material: @look.material, spring: @look.spring, animation: @anim })) (array/map (if @sw [] [0]) (fn i { type: draw-shape, id: (str/concat @config.id ":tick"), shape: path, anchor: "top-left", position: { x: @r.x, y: (- @cy 11), z: @config.z }, d: "M5 11.5 L9.5 16 L17 6.5", stroke: @look.stroke, strokeWidth: 2.2, spring: @look.spring, animation: @anim })) (array/map (if @sw [0] []) (fn i { type: draw-shape, id: (str/concat @config.id ":track"), shape: rect, anchor: "top-left", position: { x: @r.x, y: (- @cy 13), z: @config.z }, width: 44, height: 26, fill: @look.fill, stroke: @look.stroke, strokeWidth: @look.strokeWidth, corners: @look.corners, shadow: @look.shadow, material: @look.material, spring: @look.spring, animation: @anim })) (array/map (if @sw [0] []) (fn i { type: draw-shape, id: (str/concat @config.id ":knob"), shape: ellipse, anchor: center, position: { x: (+ @r.x 31), y: @cy, z: @config.z }, radiusX: 10, radiusY: 10, fill: @look.textColor, spring: @look.spring, animation: @anim })) (if (and (!= @look.textColor null) (!= @look.font null)) [{ type: draw-text, id: (str/concat @config.id ":label"), text: @config.label, anchor: "top-left", position: { x: (+ @r.x (if @sw 54 32)), y: @cy, z: @config.z }, align: left, baseline: middle, color: @look.textColor, font: @look.font, spring: @look.spring }] [])) }))
+    }
+
+    state onFocused {
+      INIT -> onIdle when @config.checked
+        (set @entity.armed false)
+      RASM_BOOT -> onIdle when @config.checked
+        (set @entity.armed false)
+      INIT -> offIdle when (not @config.checked)
+        (set @entity.armed false)
+      RASM_BOOT -> offIdle when (not @config.checked)
+        (set @entity.armed false)
+      RASM_THEME -> onFocused
+        (set @entity.looks ?looks)
+        (set @entity.hasLooks true)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_PLACE -> onFocused when (array/some ?placed (fn p (= @p.id @config.id)))
+        (set @entity.rect (let ((mine (default (array/find ?placed (fn p (= @p.id @config.id))) { id: "", rect: { x: 0, y: 0, w: 0, h: 0 } }))) @mine.rect))
+        (set @entity.hasRect true)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_ENTER -> onFocused when (array/includes ?order @config.id)
+        (set @entity.entering (array/indexOf ?order @config.id))
+        (set @entity.stagger ?staggerMs)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_POINTER -> onFocused when (and (= ?id @config.id) (= ?kind "down"))
+        (set @entity.armed true)
+      RASM_POINTER -> offHovered when (and (and (= ?id @config.id) (= ?kind "up")) @entity.armed)
+        (set @entity.entering -1)
+        (set @entity.armed false)
+        (emit @config.changed { checked: false })
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_POINTER -> onFocused when (and (= ?id @config.id) (= ?kind "leave"))
+        (set @entity.armed false)
+      RASM_FOCUS -> onIdle when (!= ?id @config.id)
+        (set @entity.entering -1)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_ACTIVATE -> offFocused when (= ?id @config.id)
+        (set @entity.entering -1)
+        (emit @config.changed { checked: false })
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      REPAINT -> onFocused when (and @entity.hasLooks @entity.hasRect)
+        (let (
+            (r @entity.rect)
+            (anim (if (>= @entity.entering 0) { durationMs: (+ 520 (* @entity.entering @entity.stagger)), loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 14 }, { at: (/ (* @entity.entering @entity.stagger) (+ 520 (* @entity.entering @entity.stagger))), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }] } null))
+            (look (default (object/get @entity.looks (str/concat "toggle/" @config.kind "/on-focused")) {}))
+            (sw (= @config.kind "switch"))
+            (cy (+ @r.y (/ @r.h 2)))
+          )
+          (emit RASM_PAINT { id: @config.id, z: @config.z, nodes: (array/concat [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @r.x, y: @r.y, z: @config.z }, width: @r.w, height: @r.h, hit: true, semantic: { role: (if @sw "switch" "checkbox"), name: @config.label, checked: true } }] (array/map (if @sw [] [0]) (fn i { type: draw-shape, id: (str/concat @config.id ":box"), shape: rect, anchor: "top-left", position: { x: @r.x, y: (- @cy 11), z: @config.z }, width: 22, height: 22, fill: @look.fill, stroke: @look.stroke, strokeWidth: @look.strokeWidth, corners: @look.corners, shadow: @look.shadow, material: @look.material, spring: @look.spring, animation: @anim })) (array/map (if @sw [] [0]) (fn i { type: draw-shape, id: (str/concat @config.id ":tick"), shape: path, anchor: "top-left", position: { x: @r.x, y: (- @cy 11), z: @config.z }, d: "M5 11.5 L9.5 16 L17 6.5", stroke: @look.stroke, strokeWidth: 2.2, spring: @look.spring, animation: @anim })) (array/map (if @sw [0] []) (fn i { type: draw-shape, id: (str/concat @config.id ":track"), shape: rect, anchor: "top-left", position: { x: @r.x, y: (- @cy 13), z: @config.z }, width: 44, height: 26, fill: @look.fill, stroke: @look.stroke, strokeWidth: @look.strokeWidth, corners: @look.corners, shadow: @look.shadow, material: @look.material, spring: @look.spring, animation: @anim })) (array/map (if @sw [0] []) (fn i { type: draw-shape, id: (str/concat @config.id ":knob"), shape: ellipse, anchor: center, position: { x: (+ @r.x 31), y: @cy, z: @config.z }, radiusX: 10, radiusY: 10, fill: @look.textColor, spring: @look.spring, animation: @anim })) (if (and (!= @look.textColor null) (!= @look.font null)) [{ type: draw-text, id: (str/concat @config.id ":label"), text: @config.label, anchor: "top-left", position: { x: (+ @r.x (if @sw 54 32)), y: @cy, z: @config.z }, align: left, baseline: middle, color: @look.textColor, font: @look.font, spring: @look.spring }] [])) }))
+    }
+
+    emits {
+      RASM_PAINT -> external {
+        id : string!
+        z : number!
+        nodes : [node]!
+      }
+        @description "The control's whole paint: its drawables, in order, for the surface to collect."
+        @tier "domain"
+      REPAINT -> internal {
+        n : number!
+      }
+        @tier "internal"
+      @config.changed -> external {
+        checked : boolean!
+      }
+        @description "The toggle flipped, by a click or the keyboard."
+        @tier "domain"
+    }
+
+    listens {
+      RASM_BOOT { }
+        @description "The surface mounted: take the configured starting state."
+      RASM_THEME { name : string!  looks : Map string RasmLook! }
+        @description "The theme's looks; the control repaints with them."
+      RASM_PLACE { placed : [RasmPlaced]! }
+        @description "Placed rects; the control takes the entry whose id is its own."
+      RASM_ENTER { order : [string]!  staggerMs : number! }
+        @description "The entry choreography; a control in the order paints with its stagger."
+      RASM_POINTER { kind : "down" | "up" | "enter" | "leave" | "move"!  id : string!  x : number!  y : number! }
+        @description "A pointer event from the surface; the control acts on its own id."
+      RASM_FOCUS { id : string! }
+        @description "Focus moved; the control with that id is focused, the others clear."
+      RASM_ACTIVATE { id : string! }
+        @description "Keyboard activation of the focused control."
+    }
+
+    config {
+      id : string = ""
+        @label "Id"
+        @description "The region and paint id of the control."
+        @tier "domain"
+      label : string = ""
+        @label "Label"
+        @description "The text beside the control and its accessible name."
+        @tier "domain"
+      kind : "check" | "switch" = "check"
+        @label "Kind"
+        @description "A 22 by 22 check box or a 44 by 26 switch track with a sliding knob."
+        @tier "presentation"
+      checked : boolean = false
+        @label "Checked"
+        @description "Whether the toggle starts on."
+        @tier "domain"
+      changed : event = RASM_TOGGLE_CHANGED
+        @label "Changed"
+        @description "The event emitted with the new checked value."
+        @tier "domain"
+      z : number = 0
+        @label "Z"
+        @description "Paint order."
+        @tier "presentation"
+    }
+  }
+
+  page boot as RasmToggleStart -> RasmToggle
+}

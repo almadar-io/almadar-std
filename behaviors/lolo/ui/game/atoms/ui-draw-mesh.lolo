@@ -4,6 +4,17 @@ app ui-draw-mesh [
 ]
 ;; @pattern "draw-mesh"
 orbital DrawMeshOrbital {
+  type DrawMeshSemantic = {
+    role : string!
+    name : string!
+    value : string
+    checked : boolean
+    disabled : boolean
+  }
+  type DrawMeshSpring = {
+    stiffness : number!
+    damping : number!
+  }
   type DrawMeshPosition = {
     x : number!
     y : number!
@@ -92,6 +103,9 @@ orbital DrawMeshOrbital {
           receiveShadow: @config.receiveShadow
           animation: @config.animation
           opacity: @config.opacity
+          hit: @config.hit
+          semantic: @config.semantic
+          spring: @config.spring
           type: draw-mesh
         })
     }
@@ -184,6 +198,18 @@ orbital DrawMeshOrbital {
       opacity : number
         @label "Opacity"
         @description "0..1 opacity; multiplies the material and enclosing group opacity."
+        @tier "presentation"
+      hit : boolean
+        @label "Hit"
+        @description "With an `id`, the drawable is a pointer region (its painted bounds, rotation applied); the orbital canvas emits the pointer events for it."
+        @tier "presentation"
+      semantic : DrawMeshSemantic
+        @label "Semantic"
+        @description "Accessibility node for this drawable."
+        @tier "presentation"
+      spring : DrawMeshSpring
+        @label "Spring"
+        @description "With an `id`: when a repaint changes this drawable's animatable fields, the canvas moves them to the new values by this spring."
         @tier "presentation"
     }
   }

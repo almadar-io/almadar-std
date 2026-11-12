@@ -1,0 +1,514 @@
+{
+  "atom": "cli/atoms/std-orb-lint-route-init-params.lolo",
+  "trait": "OrbLintRouteInitParams",
+  "note": "G-ORBITAL-CORE-154: a route page whose path has no :param for a field a listed trait declares required on INIT is refused at mount by program/navigate. Red cases flag it; controls: the param present, an optional INIT field, an endpoint page.",
+  "cases": [
+    {
+      "id": "a-route-without-the-param-of-a-required-init-field-is-flagged",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Items",
+                  "traits": [
+                    {
+                      "name": "Loader",
+                      "stateMachine": {
+                        "events": [
+                          {
+                            "key": "INIT",
+                            "payloadSchema": [
+                              {
+                                "name": "id",
+                                "type": "string",
+                                "nullable": false,
+                                "required": true
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "Detail",
+                      "path": "/items",
+                      "traits": [
+                        {
+                          "ref": "Loader"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintRouteInitParams"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "route-init-params",
+                  "findings": [
+                    {
+                      "code": "ORB_P_ROUTE_PARAM_MISSING_FOR_INIT",
+                      "path": "orbitals[0].pages[0].path",
+                      "message": "Page 'Detail' has path '/items' with no ':id' segment, but trait 'Loader' declares INIT payload field 'id' required: navigating to the page is refused with Payload validation failed for event 'INIT'",
+                      "suggestion": "Add ':id' to the page path (e.g. '/items/:id'), or declare the INIT field optional",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintRouteInitParams"
+        }
+      ]
+    },
+    {
+      "id": "a-non-null-init-field-that-is-not-required-is-clean-control",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Items",
+                  "traits": [
+                    {
+                      "name": "Loader",
+                      "stateMachine": {
+                        "events": [
+                          {
+                            "key": "INIT",
+                            "payloadSchema": [
+                              {
+                                "name": "id",
+                                "type": "string",
+                                "nullable": false
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "Detail",
+                      "path": "/items",
+                      "traits": [
+                        {
+                          "ref": "Loader"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintRouteInitParams"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "route-init-params",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintRouteInitParams"
+        }
+      ]
+    },
+    {
+      "id": "a-route-with-the-param-is-clean-control",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Items",
+                  "traits": [
+                    {
+                      "name": "Loader",
+                      "stateMachine": {
+                        "events": [
+                          {
+                            "key": "INIT",
+                            "payloadSchema": [
+                              {
+                                "name": "id",
+                                "type": "string",
+                                "nullable": false,
+                                "required": true
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "Detail",
+                      "path": "/items/:id",
+                      "traits": [
+                        {
+                          "ref": "Loader"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintRouteInitParams"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "route-init-params",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintRouteInitParams"
+        }
+      ]
+    },
+    {
+      "id": "a-nullable-optional-init-field-needs-no-param-control",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Items",
+                  "traits": [
+                    {
+                      "name": "Loader",
+                      "stateMachine": {
+                        "events": [
+                          {
+                            "key": "INIT",
+                            "payloadSchema": [
+                              {
+                                "name": "id",
+                                "type": "string",
+                                "nullable": true
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "Detail",
+                      "path": "/items",
+                      "traits": [
+                        {
+                          "ref": "Loader"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintRouteInitParams"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "route-init-params",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintRouteInitParams"
+        }
+      ]
+    },
+    {
+      "id": "an-endpoint-page-is-not-read-control",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Items",
+                  "traits": [
+                    {
+                      "name": "Loader",
+                      "stateMachine": {
+                        "events": [
+                          {
+                            "key": "INIT",
+                            "payloadSchema": [
+                              {
+                                "name": "id",
+                                "type": "string",
+                                "nullable": false,
+                                "required": true
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "Detail",
+                      "path": "/items",
+                      "traits": [
+                        {
+                          "ref": "Loader"
+                        }
+                      ],
+                      "protocol": "http"
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintRouteInitParams"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "route-init-params",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintRouteInitParams"
+        }
+      ]
+    },
+    {
+      "id": "a-param-of-another-name-does-not-cover-the-field",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "app",
+              "orbitals": [
+                {
+                  "name": "Items",
+                  "traits": [
+                    {
+                      "name": "Loader",
+                      "stateMachine": {
+                        "events": [
+                          {
+                            "key": "INIT",
+                            "payloadSchema": [
+                              {
+                                "name": "id",
+                                "type": "string",
+                                "nullable": false,
+                                "required": true
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "Detail",
+                      "path": "/items/:slug",
+                      "traits": [
+                        {
+                          "ref": "Loader"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintRouteInitParams"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "route-init-params",
+                  "findings": [
+                    {
+                      "code": "ORB_P_ROUTE_PARAM_MISSING_FOR_INIT",
+                      "path": "orbitals[0].pages[0].path",
+                      "message": "Page 'Detail' has path '/items/:slug' with no ':id' segment, but trait 'Loader' declares INIT payload field 'id' required: navigating to the page is refused with Payload validation failed for event 'INIT'",
+                      "suggestion": "Add ':id' to the page path (e.g. '/items/:slug/:id'), or declare the INIT field optional",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintRouteInitParams"
+        }
+      ]
+    }
+  ]
+}

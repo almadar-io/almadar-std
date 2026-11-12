@@ -1,0 +1,48 @@
+app std-rasm-presence [
+  version: "1.0.0",
+  description: "std-rasm-presence — the Rasm entry choreography. On INIT it emits RASM_ENTER { order, staggerMs }: every control whose id is in the order paints with an entry animation staggered by its index."
+]
+
+orbital RasmPresenceOrbital {
+  entity RasmPresenceItem [runtime] {
+    id : string!
+  }
+
+  trait RasmPresence -> RasmPresenceItem [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+        (emit RASM_ENTER { order: @config.order, staggerMs: @config.staggerMs })
+      RASM_BOOT -> ready
+        (emit RASM_ENTER { order: @config.order, staggerMs: @config.staggerMs })
+    }
+
+    listens {
+      RASM_BOOT { }
+        @description "The surface mounted: start the entry choreography."
+    }
+
+    emits {
+      RASM_ENTER -> external {
+        order : [string]!
+        staggerMs : number!
+      }
+        @description "Start the entry choreography: controls in the order enter one after another."
+        @tier "domain"
+    }
+
+    config {
+      order : [string] = []
+        @label "Order"
+        @description "Control ids in entry order."
+        @tier "domain"
+      staggerMs : number = 70
+        @label "Stagger"
+        @description "Milliseconds between one control's entry and the next."
+        @tier "presentation"
+    }
+  }
+
+  page boot as RasmPresenceStart -> RasmPresence
+}

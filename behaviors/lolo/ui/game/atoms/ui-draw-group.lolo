@@ -4,6 +4,17 @@ app ui-draw-group [
 ]
 ;; @pattern "draw-group"
 orbital DrawGroupOrbital {
+  type DrawGroupSemantic = {
+    role : string!
+    name : string!
+    value : string
+    checked : boolean
+    disabled : boolean
+  }
+  type DrawGroupSpring = {
+    stiffness : number!
+    damping : number!
+  }
   type DrawGroupPosition = {
     x : number!
     y : number!
@@ -49,6 +60,9 @@ orbital DrawGroupOrbital {
           opacity: @config.opacity
           clip: @config.clip
           items: @config.items
+          hit: @config.hit
+          semantic: @config.semantic
+          spring: @config.spring
           type: draw-group
         })
     }
@@ -93,6 +107,18 @@ orbital DrawGroupOrbital {
       items : [node] = []
         @label "Items"
         @description "The grouped drawables, painted through the normal dispatch."
+        @tier "presentation"
+      hit : boolean
+        @label "Hit"
+        @description "With an `id`, the drawable is a pointer region (its painted bounds, rotation applied); the orbital canvas emits the pointer events for it."
+        @tier "presentation"
+      semantic : DrawGroupSemantic
+        @label "Semantic"
+        @description "Accessibility node for this drawable."
+        @tier "presentation"
+      spring : DrawGroupSpring
+        @label "Spring"
+        @description "With an `id`: when a repaint changes this drawable's animatable fields, the canvas moves them to the new values by this spring."
         @tier "presentation"
     }
   }

@@ -9009,6 +9009,121 @@
         }
       ],
       "note": "each driver ask runs on a fresh row, so only the verb's own indexes count"
+    },
+    {
+      "id": "good-write-a-null-at-any-depth-is-a-firestore-null-value",
+      "steps": [
+        {
+          "event": "ROWS_WRITE",
+          "payload": {
+            "key": "k",
+            "batch": {
+              "onFailure": "stop",
+              "ops": [
+                {
+                  "kind": "upsert",
+                  "entityType": "Task",
+                  "data": {
+                    "id": "t9",
+                    "gone": null,
+                    "input": {
+                      "statement": null,
+                      "checks": [
+                        null,
+                        {
+                          "check": 1,
+                          "note": null
+                        }
+                      ]
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "from": "ready",
+          "expect": {
+            "emits": [
+              {
+                "event": "FS_WIRE",
+                "payload": {
+                  "phase": "txread"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "FS_REPLIED",
+          "payload": {
+            "status": 200,
+            "headers": {},
+            "body": "[{\"transaction\": \"tx1\"}, {\"missing\": \"projects/demo-almadar/databases/(default)/documents/Task/t9\"}]",
+            "key": "k"
+          },
+          "from": "busy",
+          "expect": {
+            "emits": [
+              {
+                "event": "FS_WIRE",
+                "payload": {
+                  "phase": "commit",
+                  "path": ":commit",
+                  "body": {
+                    "writes": [
+                      {
+                        "update": {
+                          "fields": {
+                            "id": {
+                              "stringValue": "t9"
+                            },
+                            "gone": {
+                              "nullValue": null
+                            },
+                            "input": {
+                              "mapValue": {
+                                "fields": {
+                                  "statement": {
+                                    "nullValue": null
+                                  },
+                                  "checks": {
+                                    "arrayValue": {
+                                      "values": [
+                                        {
+                                          "nullValue": null
+                                        },
+                                        {
+                                          "mapValue": {
+                                            "fields": {
+                                              "check": {
+                                                "integerValue": "1"
+                                              },
+                                              "note": {
+                                                "nullValue": null
+                                              }
+                                            }
+                                          }
+                                        }
+                                      ]
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          "name": "projects/demo-almadar/databases/(default)/documents/Task/t9"
+                        }
+                      }
+                    ],
+                    "transaction": "tx1"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "note": "A null nested in a map or a list is written as nullValue like a top-level one: Firestore refuses a bare null (type unset). Seen 2026-11-12 on an accessibility result whose statement could not be checked."
     }
   ],
   "note": " The service-account mode runs over the composed std-http-client with a jwt-bearer credential-connect; emulator, token and metadata modes are unchanged."

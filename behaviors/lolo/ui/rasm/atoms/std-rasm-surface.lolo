@@ -1,0 +1,173 @@
+app std-rasm-surface [
+  version: "0.1.0",
+  description: "std-rasm-surface — the Rasm kit's one canvas. It paints the ground look, then every control's RASM_PAINT nodes ordered by z, on an orbital-painter canvas, and turns the canvas's pointer, measure and key events into the kit's RASM_POINTER, RASM_MEASURED and RASM_KEY. It emits the root RASM_PLACE so layout can start."
+]
+
+type RasmRect = { x : number!, y : number!, w : number!, h : number! }
+type RasmPlaced = { id : string!, rect : RasmRect! }
+type RasmMaterial = { wgsl : string!, params : [number]!, live : boolean! }
+type RasmCorners = { radius : [number]!, kind : "round" | "bevel" | "notch" | "scoop" }
+type RasmSpring = { stiffness : number!, damping : number! }
+type RasmShadow = { color : string!, blur : number! }
+type RasmLook = { fill : string, stroke : string, strokeWidth : number, corners : RasmCorners, shadow : RasmShadow, material : RasmMaterial, textColor : string, font : string, spring : RasmSpring, decor : string }
+type RasmMeasureItem = { id : string!, width : number!, height : number!, lines : number! }
+type RasmPaintEntry = { z : number!, nodes : [node]! }
+
+orbital RasmSurfaceOrbital {
+  entity RasmSurfaceRun [runtime] {
+    id : string!
+    paints : Map string RasmPaintEntry @description "Every control's latest paint by control id." = {}
+    looks : Map string RasmLook @description "The announced look table." = {}
+    repaints : number @description "Counts repaints, so each repaint in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
+  }
+
+  trait RasmSurface -> RasmSurfaceRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+        (emit RASM_BOOT { })
+        (emit RASM_PLACE { placed: [{ id: @config.rootChild, rect: @config.rootRect }] })
+        (set @entity.repaints (+ @entity.repaints 1))
+        (emit SURFACE_REPAINT { n: @entity.repaints })
+      RASM_THEME -> ready
+        (set @entity.looks ?looks)
+        (emit RASM_PLACE { placed: [{ id: @config.rootChild, rect: @config.rootRect }] })
+        (set @entity.repaints (+ @entity.repaints 1))
+        (emit SURFACE_REPAINT { n: @entity.repaints })
+      RASM_PAINT -> ready
+        (set @entity.paints (object/set @entity.paints ?id { z: ?z, nodes: ?nodes }))
+        (set @entity.repaints (+ @entity.repaints 1))
+        (emit SURFACE_REPAINT { n: @entity.repaints })
+      SURFACE_REPAINT -> ready
+        (render-ui main {
+          type: canvas
+          mode: "2d"
+          projection: "free"
+          painter: "orbital"
+          camera: { mode: "top-down", zoom: 1 }
+          pointerMoves: "captured"
+          worldWidth: @config.width
+          worldHeight: @config.height
+          pointerDownEvent: "POINTER_DOWN"
+          pointerUpEvent: "POINTER_UP"
+          pointerEnterEvent: "POINTER_ENTER"
+          pointerLeaveEvent: "POINTER_LEAVE"
+          pointerMoveEvent: "POINTER_MOVE"
+          measureEvent: "SURFACE_MEASURED"
+          keyMap: { Tab: "KEY_NEXT", "Shift+Tab": "KEY_PREVIOUS", Enter: "KEY_ACTIVATE", Space: "KEY_ACTIVATE", ArrowRight: "KEY_INCREASE", ArrowUp: "KEY_INCREASE", ArrowLeft: "KEY_DECREASE", ArrowDown: "KEY_DECREASE" }
+          drawables: (let ((g (object/get @entity.looks "surface/ground/idle" null))) (array/concat (if (= @g null) [] [{ type: draw-shape, shape: "rect", id: (str/concat @config.id ":ground"), position: { x: 0, y: 0 }, anchor: "top-left", width: @config.width, height: @config.height, fill: @g.fill, material: @g.material, spring: @g.spring, hit: false }]) (array/flatten (array/map (array/sort (object/values @entity.paints) "z" "asc") (fn e @e.nodes)))))
+        })
+      POINTER_DOWN -> ready
+        (emit RASM_POINTER { kind: "down", id: ?target, x: ?x, y: ?y })
+      POINTER_UP -> ready
+        (emit RASM_POINTER { kind: "up", id: ?target, x: ?x, y: ?y })
+      POINTER_ENTER -> ready
+        (emit RASM_POINTER { kind: "enter", id: ?target, x: ?x, y: ?y })
+      POINTER_LEAVE -> ready
+        (emit RASM_POINTER { kind: "leave", id: ?target, x: ?x, y: ?y })
+      POINTER_MOVE -> ready
+        (emit RASM_POINTER { kind: "move", id: ?target, x: ?x, y: ?y })
+      SURFACE_MEASURED -> ready
+        (emit RASM_MEASURED { items: ?items })
+      KEY_NEXT -> ready
+        (emit RASM_KEY { key: "next" })
+      KEY_PREVIOUS -> ready
+        (emit RASM_KEY { key: "previous" })
+      KEY_ACTIVATE -> ready
+        (emit RASM_KEY { key: "activate" })
+      KEY_INCREASE -> ready
+        (emit RASM_KEY { key: "increase" })
+      KEY_DECREASE -> ready
+        (emit RASM_KEY { key: "decrease" })
+    }
+
+    emits {
+      RASM_BOOT -> external { }
+        @description "The surface mounted: the theme and the entry choreography start from it."
+        @tier "domain"
+      SURFACE_REPAINT -> internal {
+        n : number!
+      }
+        @description "Repaint the canvas from the collected paints."
+        @tier "internal"
+      RASM_PLACE -> external {
+        placed : [RasmPlaced]!
+      }
+        @description "The root rect for the layout tree."
+        @tier "primary"
+      RASM_POINTER -> external {
+        kind : "down" | "up" | "enter" | "leave" | "move"!
+        id : string!
+        x : number!
+        y : number!
+      }
+        @description "A canvas pointer event for the control that owns the id."
+        @tier "primary"
+      RASM_MEASURED -> external {
+        items : [RasmMeasureItem]!
+      }
+        @description "Sizes of the measured texts."
+        @tier "primary"
+      RASM_KEY -> external {
+        key : "next" | "previous" | "activate" | "increase" | "decrease"!
+      }
+        @description "A keyboard intent from the canvas key map."
+        @tier "primary"
+    }
+
+    listens {
+      RASM_THEME { name : string!  looks : Map string RasmLook! }
+        @description "Store the looks, paint the ground and place the root."
+      RASM_PAINT { id : string!  z : number!  nodes : [node]! }
+        @description "Keep one control's nodes at its z and repaint."
+      POINTER_DOWN { target : string!  x : number!  y : number! }
+        @description "Canvas press on a hit drawable."
+      POINTER_UP { target : string!  x : number!  y : number! }
+        @description "Canvas release, sent to the drawable that took the press."
+      POINTER_ENTER { target : string!  x : number!  y : number! }
+        @description "Canvas pointer entered a hit drawable."
+      POINTER_LEAVE { target : string!  x : number!  y : number! }
+        @description "Canvas pointer left a hit drawable."
+      POINTER_MOVE { target : string!  x : number!  y : number! }
+        @description "Canvas pointer moved over a hit drawable or under capture."
+      SURFACE_MEASURED { items : [RasmMeasureItem]! }
+        @description "Canvas text measurements."
+      KEY_NEXT { }
+        @description "Tab pressed."
+      KEY_PREVIOUS { }
+        @description "Shift+Tab pressed."
+      KEY_ACTIVATE { }
+        @description "Enter or Space pressed."
+      KEY_INCREASE { }
+        @description "ArrowRight or ArrowUp pressed."
+      KEY_DECREASE { }
+        @description "ArrowLeft or ArrowDown pressed."
+    }
+
+    config {
+      id : string = "rasm"
+        @label "Id"
+        @description "The surface's id; the ground drawable is `<id>:ground`."
+        @tier "presentation"
+      width : number = 720
+        @label "Width"
+        @description "Canvas width in px."
+        @tier "presentation"
+      height : number = 520
+        @label "Height"
+        @description "Canvas height in px."
+        @tier "presentation"
+      rootChild : string = "root"
+        @label "Root child"
+        @description "The id that receives the whole canvas as its rect."
+        @tier "presentation"
+      rootRect : RasmRect = { x: 0, y: 0, w: 720, h: 520 }
+        @label "Root rect"
+        @description "The rect handed to the root child."
+        @tier "presentation"
+    }
+  }
+
+  page "/rasm-surface" as RasmSurfacePage -> RasmSurface
+}

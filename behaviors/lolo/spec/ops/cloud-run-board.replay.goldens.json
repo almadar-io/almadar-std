@@ -50,24 +50,16 @@
          "key": "time",
          "method": "GET"
         }
-       },
-       {
-        "event": "CR_COST",
-        "payload": {}
-       },
-       {
-        "event": "CR_GCLOUD",
-        "payload": {
-         "stage": "services"
-        }
        }
       ],
       "emitCounts": {
-       "CR_GCLOUD": 1
+       "CR_COST": 0,
+       "CR_GCLOUD": 0
       }
      }
     }
-   ]
+   ],
+   "note": "G-STD-381: the token only starts the monitoring read; the cost and services reads follow its replies, never beside it."
   },
   {
    "id": "a-token-that-cannot-be-made-skips-monitoring-and-goes-on-to-cost",
@@ -898,6 +890,121 @@
    ],
    "defaults": [
     "CrMonitoring",
+    "CrGcloud"
+   ]
+  },
+  {
+   "id": "the-monitoring-read-runs-before-the-cost-read-and-never-beside-it",
+   "note": "G-STD-381: CR_MONITOR started the cost and services reads at once and again when the monitoring replies came back, so a second gcloud run hit the first (cli_busy) and the read never answered.",
+   "steps": [
+    {
+     "from": "reading",
+     "event": "CR_MONITOR",
+     "payload": {},
+     "entity": {
+      "id": "b",
+      "loading": true,
+      "startedAt": "2026-10-15T12:30:45.678Z",
+      "services": [],
+      "resources": [],
+      "entries": [],
+      "noMap": {}
+     },
+     "expect": {
+      "fired": true,
+      "state": "reading",
+      "emits": [
+       {
+        "event": "CR_HTTP_SEND",
+        "payload": {
+         "key": "time"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CR_COST",
+       "CR_GCLOUD",
+       "CR_BQ"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-the-requests-reply-starts-the-cost-read",
+   "steps": [
+    {
+     "from": "reading",
+     "event": "CR_REPLIED",
+     "payload": {
+      "key": "requests",
+      "status": 200,
+      "body": "eyJ0aW1lU2VyaWVzIjogW3sicmVzb3VyY2UiOiB7ImxhYmVscyI6IHsic2VydmljZV9uYW1lIjogImFwaSJ9fSwgInBvaW50cyI6IFt7InZhbHVlIjogeyJpbnQ2NFZhbHVlIjogIjcifX1dfV19",
+      "headers": {}
+     },
+     "entity": {
+      "id": "b",
+      "loading": true,
+      "startedAt": "2026-10-15T12:30:45.678Z",
+      "services": [],
+      "resources": [],
+      "entries": [],
+      "noMap": {}
+     },
+     "expect": {
+      "fired": true,
+      "state": "reading",
+      "emits": [
+       {
+        "event": "CR_COST"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-services-read-that-cannot-run-warns-instead-of-showing-no-services",
+   "note": "G-STD-381: it cleared the list silently, so a failed read looked like an empty project.",
+   "steps": [
+    {
+     "from": "reading",
+     "event": "CR_CLI_FAILED",
+     "payload": {
+      "stage": "services",
+      "error": "another run is in flight",
+      "code": "cli_busy"
+     },
+     "entity": {
+      "id": "b",
+      "loading": true,
+      "startedAt": "2026-10-15T12:30:45.678Z",
+      "services": [],
+      "resources": [],
+      "entries": [],
+      "noMap": {}
+     },
+     "expect": {
+      "fired": true,
+      "state": "reading",
+      "effects": [
+       {
+        "type": "render-ui",
+        "arg0": "toast"
+       },
+       {
+        "type": "set",
+        "arg0": "@entity.services"
+       },
+       {
+        "type": "emit",
+        "arg0": "CR_GCLOUD"
+       }
+      ]
+     }
+    }
+   ],
+   "defaults": [
     "CrGcloud"
    ]
   }

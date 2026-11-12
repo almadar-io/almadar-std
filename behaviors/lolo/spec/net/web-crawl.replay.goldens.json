@@ -11402,6 +11402,241 @@
      }
     }
    ]
+  },
+  {
+   "id": "challenge: a page that loads with a bot-check title is waited on and loaded again, never read for links",
+   "defaults": [
+    "CrawlDelay"
+   ],
+   "config": {
+    "delayMs": 0,
+    "respectRobots": false
+   },
+   "steps": [
+    {
+     "event": "PAGE_LOADED",
+     "payload": {
+      "key": "c1:nav",
+      "url": "http://127.0.0.1:28058/index.html",
+      "title": "Just a moment..."
+     },
+     "expect": {
+      "state": "challenged",
+      "emits": [
+       {
+        "event": "CRAWL_TIMER_ARM",
+        "payload": {
+         "key": "c1:challenge",
+         "delayMs": 5000
+        }
+       }
+      ],
+      "entity": {
+       "challengeTries": 1
+      },
+      "neverEmits": [
+       "PAGE_LINKS",
+       "CRAWL_PAGE"
+      ]
+     },
+     "from": "loading",
+     "entity": {
+      "runKey": "c1",
+      "origin": "http://127.0.0.1:28058",
+      "curUrl": "http://127.0.0.1:28058/index.html",
+      "curDepth": 0
+     }
+    },
+    {
+     "event": "CRAWL_WAITED",
+     "payload": {
+      "key": "c1:challenge"
+     },
+     "expect": {
+      "state": "loading",
+      "emits": [
+       {
+        "event": "PAGE_NAVIGATE",
+        "payload": {
+         "key": "c1:nav",
+         "url": "http://127.0.0.1:28058/index.html"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "challenge: a check that clears on reload is crawled as usual and the tries start over",
+   "defaults": [
+    "CrawlDelay"
+   ],
+   "config": {
+    "delayMs": 0,
+    "respectRobots": false
+   },
+   "steps": [
+    {
+     "event": "PAGE_LOADED",
+     "payload": {
+      "key": "c1:nav",
+      "url": "http://127.0.0.1:28058/index.html",
+      "title": "Lončarna Mala"
+     },
+     "expect": {
+      "state": "linking",
+      "emits": [
+       {
+        "event": "PAGE_LINKS",
+        "payload": {
+         "key": "c1:links"
+        }
+       }
+      ],
+      "entity": {
+       "challengeTries": 0
+      }
+     },
+     "from": "loading",
+     "entity": {
+      "runKey": "c1",
+      "origin": "http://127.0.0.1:28058",
+      "curUrl": "http://127.0.0.1:28058/index.html",
+      "curDepth": 0,
+      "challengeTries": 1
+     }
+    }
+   ]
+  },
+  {
+   "id": "challenge: a check still showing after the declared retries reports the page with its interstitial and the crawl goes on",
+   "defaults": [
+    "CrawlDelay"
+   ],
+   "config": {
+    "delayMs": 0,
+    "respectRobots": false
+   },
+   "steps": [
+    {
+     "event": "PAGE_LOADED",
+     "payload": {
+      "key": "c1:nav",
+      "url": "http://127.0.0.1:28058/index.html",
+      "title": "Just a moment..."
+     },
+     "expect": {
+      "state": "stepping",
+      "emits": [
+       {
+        "event": "CRAWL_PAGE",
+        "payload": {
+         "key": "c1",
+         "url": "http://127.0.0.1:28058/index.html",
+         "title": "Just a moment...",
+         "depth": 0,
+         "links": [],
+         "error": "the page answered a bot check: Just a moment...",
+         "interstitial": "Just a moment..."
+        }
+       },
+       {
+        "event": "CRAWL_NEXT",
+        "payload": {}
+       }
+      ],
+      "entity": {
+       "challengeTries": 0
+      },
+      "neverEmits": [
+       "CRAWL_TIMER_ARM"
+      ]
+     },
+     "from": "loading",
+     "entity": {
+      "runKey": "c1",
+      "origin": "http://127.0.0.1:28058",
+      "curUrl": "http://127.0.0.1:28058/index.html",
+      "curDepth": 0,
+      "challengeTries": 2
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a title that only mentions the words mid-title is not a bot check",
+   "defaults": [
+    "CrawlDelay"
+   ],
+   "config": {
+    "delayMs": 0,
+    "respectRobots": false
+   },
+   "steps": [
+    {
+     "event": "PAGE_LOADED",
+     "payload": {
+      "key": "c1:nav",
+      "url": "http://127.0.0.1:28058/index.html",
+      "title": "Wait just a moment | Shop"
+     },
+     "expect": {
+      "state": "linking",
+      "emits": [
+       {
+        "event": "PAGE_LINKS",
+        "payload": {
+         "key": "c1:links"
+        }
+       }
+      ],
+      "neverEmits": [
+       "CRAWL_TIMER_ARM"
+      ]
+     },
+     "from": "loading",
+     "entity": {
+      "runKey": "c1",
+      "origin": "http://127.0.0.1:28058",
+      "curUrl": "http://127.0.0.1:28058/index.html",
+      "curDepth": 0
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a wait of another run is ignored while a check is waited on",
+   "defaults": [
+    "CrawlDelay"
+   ],
+   "config": {
+    "delayMs": 0,
+    "respectRobots": false
+   },
+   "steps": [
+    {
+     "event": "CRAWL_WAITED",
+     "payload": {
+      "key": "zz:challenge"
+     },
+     "expect": {
+      "state": "challenged",
+      "emits": [],
+      "neverEmits": [
+       "PAGE_NAVIGATE"
+      ]
+     },
+     "from": "challenged",
+     "entity": {
+      "runKey": "c1",
+      "origin": "http://127.0.0.1:28058",
+      "curUrl": "http://127.0.0.1:28058/index.html",
+      "curDepth": 0,
+      "challengeTries": 1
+     }
+    }
+   ]
   }
  ]
 }

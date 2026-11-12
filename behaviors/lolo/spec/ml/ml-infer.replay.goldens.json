@@ -1,0 +1,134 @@
+{
+  "atom": "ml/atoms/std-ml-infer.lolo",
+  "trait": "InferenceRun",
+  "note": "a resolved run is restarted by RESET; INFER alone does not leave resolved",
+  "cases": [
+    {
+      "id": "RESET from resolved returns to idle and the next INFER runs",
+      "steps": [
+        {
+          "event": "INFER",
+          "payload": {
+            "input": {
+              "q": "x"
+            },
+            "request": {
+              "candidate": "c",
+              "key": "k",
+              "accepted": [],
+              "categories": []
+            }
+          },
+          "expect": {
+            "state": "inferring",
+            "emits": [
+              {
+                "event": "ML_INFER"
+              }
+            ]
+          }
+        },
+        {
+          "event": "INFERRED_RAW",
+          "payload": {
+            "output": [
+              0.9
+            ],
+            "confidence": 0.95
+          },
+          "expect": {
+            "state": "resolved",
+            "emits": [
+              {
+                "event": "INFERRED"
+              }
+            ]
+          }
+        },
+        {
+          "event": "RESET",
+          "payload": {},
+          "expect": {
+            "state": "idle"
+          }
+        },
+        {
+          "event": "INFER",
+          "payload": {
+            "input": {
+              "q": "x"
+            },
+            "request": {
+              "candidate": "c",
+              "key": "k",
+              "accepted": [],
+              "categories": []
+            }
+          },
+          "expect": {
+            "state": "inferring",
+            "emits": [
+              {
+                "event": "ML_INFER"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control: INFER from resolved without RESET stays in resolved",
+      "steps": [
+        {
+          "event": "INFER",
+          "payload": {
+            "input": {
+              "q": "x"
+            },
+            "request": {
+              "candidate": "c",
+              "key": "k",
+              "accepted": [],
+              "categories": []
+            }
+          },
+          "expect": {
+            "state": "inferring"
+          }
+        },
+        {
+          "event": "INFERRED_RAW",
+          "payload": {
+            "output": [
+              0.9
+            ],
+            "confidence": 0.95
+          },
+          "expect": {
+            "state": "resolved"
+          }
+        },
+        {
+          "event": "INFER",
+          "payload": {
+            "input": {
+              "q": "x"
+            },
+            "request": {
+              "candidate": "c",
+              "key": "k",
+              "accepted": [],
+              "categories": []
+            }
+          },
+          "expect": {
+            "state": "resolved",
+            "neverEmits": [
+              "ML_INFER"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

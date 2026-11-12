@@ -4,6 +4,17 @@ app ui-draw-shape [
 ]
 ;; @pattern "draw-shape"
 orbital DrawShapeOrbital {
+  type DrawShapeSemantic = {
+    role : string!
+    name : string!
+    value : string
+    checked : boolean
+    disabled : boolean
+  }
+  type DrawShapeSpring = {
+    stiffness : number!
+    damping : number!
+  }
   type DrawShapePosition = {
     x : number!
     y : number!
@@ -105,6 +116,16 @@ orbital DrawShapeOrbital {
     blur : number!
   }
 
+  type DrawShapeCorners = {
+    radius : [number]!
+    kind : "round" | "bevel" | "notch" | "scoop"
+  }
+  type DrawShapeMaterial = {
+    wgsl : string!
+    params : [number]!
+    live : boolean!
+  }
+
   entity DrawShapeItem [runtime] {
     id : string!
   }
@@ -141,12 +162,22 @@ orbital DrawShapeOrbital {
           shadow: @config.shadow
           animation: @config.animation
           opacity: @config.opacity
+          corners: @config.corners
+          startAngle: @config.startAngle
+          sweep: @config.sweep
+          thickness: @config.thickness
+          sides: @config.sides
+          starRatio: @config.starRatio
+          material: @config.material
+          hit: @config.hit
+          semantic: @config.semantic
+          spring: @config.spring
           type: draw-shape
         })
     }
 
     config {
-      shape : "cell" | "rect" | "ellipse" | "poly" | "path" = cell
+      shape : "cell" | "rect" | "ellipse" | "poly" | "path" | "capsule" | "arc" | "polygon" = cell
         @label "Shape"
         @description "shape prop"
         @tier "presentation"
@@ -249,6 +280,46 @@ orbital DrawShapeOrbital {
       opacity : number
         @label "Opacity"
         @description "0..1 opacity."
+        @tier "presentation"
+      corners : DrawShapeCorners
+        @label "Corners"
+        @description "Per-corner radii and corner kind (`rect` only; orbital painter)."
+        @tier "presentation"
+      startAngle : number
+        @label "Start Angle"
+        @description "Arc start angle in radians (`arc`: centred in the box, radius = min(width, height)/2)."
+        @tier "presentation"
+      sweep : number
+        @label "Sweep"
+        @description "Arc sweep in radians."
+        @tier "presentation"
+      thickness : number
+        @label "Thickness"
+        @description "Arc thickness in px."
+        @tier "presentation"
+      sides : number
+        @label "Sides"
+        @description "Polygon side count, at least 3 (`polygon`: inscribed in the box)."
+        @tier "presentation"
+      starRatio : number
+        @label "Star Ratio"
+        @description "Polygon inner-vertex ratio, 0..1; 1 is a regular polygon, below 1 alternates inner vertices (a star)."
+        @tier "presentation"
+      material : DrawShapeMaterial
+        @label "Material"
+        @description "Shader fill (orbital painter): the WGSL declares `fn shade(px: Pixel) -> vec4<f32>`; `live` asks for a frame every tick."
+        @tier "presentation"
+      hit : boolean
+        @label "Hit"
+        @description "With an `id`, the drawable is a pointer region (its painted bounds, rotation applied); the orbital canvas emits the pointer events for it."
+        @tier "presentation"
+      semantic : DrawShapeSemantic
+        @label "Semantic"
+        @description "Accessibility node for this drawable."
+        @tier "presentation"
+      spring : DrawShapeSpring
+        @label "Spring"
+        @description "With an `id`: when a repaint changes this drawable's animatable fields, the canvas moves them to the new values by this spring."
         @tier "presentation"
     }
   }

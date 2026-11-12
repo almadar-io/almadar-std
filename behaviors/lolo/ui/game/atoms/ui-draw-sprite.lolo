@@ -4,6 +4,17 @@ app ui-draw-sprite [
 ]
 ;; @pattern "draw-sprite"
 orbital DrawSpriteOrbital {
+  type DrawSpriteSemantic = {
+    role : string!
+    name : string!
+    value : string
+    checked : boolean
+    disabled : boolean
+  }
+  type DrawSpriteSpring = {
+    stiffness : number!
+    damping : number!
+  }
   type DrawSpritePosition = {
     x : number!
     y : number!
@@ -57,6 +68,9 @@ orbital DrawSpriteOrbital {
           rotation: @config.rotation
           opacity: @config.opacity
           shadow: @config.shadow
+          hit: @config.hit
+          semantic: @config.semantic
+          spring: @config.spring
           type: draw-sprite
         })
     }
@@ -113,6 +127,18 @@ orbital DrawSpriteOrbital {
       shadow : DrawSpriteShadow
         @label "Shadow"
         @description "Drop shadow (e.g. a team-colored glow)."
+        @tier "presentation"
+      hit : boolean
+        @label "Hit"
+        @description "With an `id`, the drawable is a pointer region (its painted bounds, rotation applied); the orbital canvas emits the pointer events for it."
+        @tier "presentation"
+      semantic : DrawSpriteSemantic
+        @label "Semantic"
+        @description "Accessibility node for this drawable."
+        @tier "presentation"
+      spring : DrawSpriteSpring
+        @label "Spring"
+        @description "With an `id`: when a repaint changes this drawable's animatable fields, the canvas moves them to the new values by this spring."
         @tier "presentation"
     }
   }

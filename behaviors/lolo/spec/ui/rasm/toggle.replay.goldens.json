@@ -1,0 +1,142 @@
+{
+ "atom": "../ui/rasm/atoms/std-rasm-toggle.lolo",
+ "trait": "RasmToggle",
+ "cases": [
+  {
+   "id": "a-click-turns-it-on-and-reports-checked",
+   "config": {
+    "id": "s",
+    "label": "Sound",
+    "kind": "switch",
+    "checked": false,
+    "z": 2
+   },
+   "entity": {
+    "id": "s"
+   },
+   "steps": [
+    {
+     "from": "offIdle",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "enter",
+      "id": "s",
+      "x": 5,
+      "y": 5
+     },
+     "expect": {
+      "state": "offHovered"
+     }
+    },
+    {
+     "from": "offHovered",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "down",
+      "id": "s",
+      "x": 5,
+      "y": 5
+     },
+     "expect": {
+      "state": "offHovered"
+     }
+    },
+    {
+     "from": "offHovered",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "up",
+      "id": "s",
+      "x": 5,
+      "y": 5
+     },
+     "expect": {
+      "state": "onHovered",
+      "emits": [
+       {
+        "event": "RASM_TOGGLE_CHANGED",
+        "payload": {
+         "checked": true
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-an-up-without-a-down-changes-nothing",
+   "config": {
+    "id": "s",
+    "label": "Sound",
+    "kind": "switch",
+    "checked": false,
+    "z": 2
+   },
+   "entity": {
+    "id": "s"
+   },
+   "steps": [
+    {
+     "from": "offIdle",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "enter",
+      "id": "s",
+      "x": 5,
+      "y": 5
+     },
+     "expect": {
+      "state": "offHovered"
+     }
+    },
+    {
+     "from": "offHovered",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "up",
+      "id": "s",
+      "x": 5,
+      "y": 5
+     },
+     "expect": {
+      "state": "offHovered"
+     }
+    }
+   ]
+  },
+  {
+   "id": "keyboard-activation-flips-it",
+   "config": {
+    "id": "s",
+    "label": "Sound",
+    "kind": "switch",
+    "checked": false,
+    "z": 2
+   },
+   "entity": {
+    "id": "s"
+   },
+   "steps": [
+    {
+     "from": "offIdle",
+     "event": "RASM_ACTIVATE",
+     "payload": {
+      "id": "s"
+     },
+     "expect": {
+      "state": "onIdle",
+      "emits": [
+       {
+        "event": "RASM_TOGGLE_CHANGED",
+        "payload": {
+         "checked": true
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

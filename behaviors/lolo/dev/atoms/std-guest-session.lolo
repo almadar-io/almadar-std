@@ -105,7 +105,7 @@ orbital GuestSessionOrbital {
     guestSigningIn : boolean @description "A credential was handed to the guest and its CREDENTIAL_BOUND or CREDENTIAL_REFUSED has not arrived yet." = false
     guestReturnTo : string @description "The page a denied guest asked for, opened again once it has signed in." = ""
     guestProgram : GuestProgram? @description "The program value being opened, held only until program/compose or program/open takes it: the entity rides every request a stateless host's client posts."
-    guestSeed : behavior?
+    guestSeed : behavior? @description "std-mock-page-seed, resolved while a mock guest opens and cleared once compose takes it: the entity rides every request a stateless host's client posts."
     guestSeeded : boolean @description "Whether the catalog composed std-mock-page-seed into the open guest, so its seeder answers the personas it wrote." = false
     guestPersonaTrait : string @description "The guest's trait that lists personas and signs its session in as one (std-mock-seed-marks personaTrait); persona asks name it, since it may sit on a page the guest has not mounted." = ""
     guestDefaultRole : string @description "The role the open guest is signed in as when it opens: the first declared value of its [identity] entity's role field (std-mock-seed-marks defaultRole); empty without one." = ""
@@ -202,9 +202,7 @@ orbital GuestSessionOrbital {
     initial: idle
 
     state idle {
-      INIT -> idle when (= @entity.guestSeed null)
-        (behavior/resolve { behavior: "std/behaviors/std-mock-page-seed" } {} { emit: { success: GUEST_SEED_RESOLVED, failure: GUEST_SEED_FAILED } })
-      INIT -> idle when (!= @entity.guestSeed null)
+      INIT -> idle
       GUEST_OPEN -> opening
         (set @entity.guestPaints [])
         (emit GUEST_CLEARED {})
@@ -227,9 +225,8 @@ orbital GuestSessionOrbital {
       GUEST_CLOSED -> idle
       GUEST_CLOSE_FAILED -> idle
       GUEST_PREPARE -> idle
+      ;; the seed is resolved only while a mock guest opens; an answer that lands here is dropped, never carried
       GUEST_SEED_RESOLVED -> idle
-        (set @entity.guestSeed ?result)
-      GUEST_SEED_FAILED -> idle
       GUEST_SEED_MARKED -> idle
       GUEST_PERSONAS_RESOLVED -> idle
       GUEST_COMPOSED -> idle
@@ -323,7 +320,6 @@ orbital GuestSessionOrbital {
         (set @entity.guestSeed ?result)
         (emit GUEST_PREPARE {})
       GUEST_SEED_RESOLVED -> opening when (!= @entity.guestSeed null)
-      GUEST_SEED_FAILED -> opening
       GUEST_PREPARE -> opening when (and (= @entity.guestIntegrations "mock") (!= @entity.guestSeed null))
         (emit GUEST_SEED_ASK { program: @entity.guestProgram })
       GUEST_SEED_MARKED -> opening when @payload.marked
@@ -332,6 +328,7 @@ orbital GuestSessionOrbital {
         (set @entity.guestPersonaTrait (default @payload.personaTrait ""))
         (program/open @entity.guestProgram { grants: { env: @config.guestEnv }, env: { FIREBASE_AUTH_EMULATOR_HOST: @config.mockAuthHost, FIREBASE_PROJECT_ID: @config.mockAuthProject }, declared: true, integrations: @entity.guestIntegrations } { emit: { success: GUEST_OPENED, failure: GUEST_FAILED } })
         (set @entity.guestProgram null)
+        (set @entity.guestSeed null)
       GUEST_SEED_MARKED -> opening when (and (not @payload.marked) (!= @payload.personasCollection ""))
         (set @entity.guestSeeded true)
         (set @entity.guestDefaultRole (default @payload.defaultRole ""))
@@ -340,12 +337,14 @@ orbital GuestSessionOrbital {
       GUEST_PERSONAS_RESOLVED -> opening
         (program/compose [@entity.guestProgram, @entity.guestSeed, ?result] { appName: (object/get (default @entity.guestProgram { name: "guest", orbitals: [] }) "name" "guest") } { emit: { success: GUEST_COMPOSED, failure: GUEST_FAILED } })
         (set @entity.guestProgram null)
+        (set @entity.guestSeed null)
       GUEST_SEED_MARKED -> opening when (and (not @payload.marked) (= @payload.personasCollection ""))
         (set @entity.guestSeeded true)
         (set @entity.guestDefaultRole (default @payload.defaultRole ""))
         (set @entity.guestPersonaTrait (default @payload.personaTrait ""))
         (program/compose [@entity.guestProgram, @entity.guestSeed] { appName: (object/get (default @entity.guestProgram { name: "guest", orbitals: [] }) "name" "guest") } { emit: { success: GUEST_COMPOSED, failure: GUEST_FAILED } })
         (set @entity.guestProgram null)
+        (set @entity.guestSeed null)
       GUEST_COMPOSED -> opening
         (program/open ?result { grants: { env: @config.guestEnv }, env: { FIREBASE_AUTH_EMULATOR_HOST: @config.mockAuthHost, FIREBASE_PROJECT_ID: @config.mockAuthProject }, declared: true, integrations: @entity.guestIntegrations, seed: @config.seedTrait } { emit: { success: GUEST_OPENED, failure: GUEST_FAILED } })
       GUEST_FAIL -> idle
@@ -430,7 +429,6 @@ orbital GuestSessionOrbital {
         (emit GUEST_NOTICE { message: ?error })
       GUEST_PREPARE -> live
       GUEST_SEED_RESOLVED -> live
-      GUEST_SEED_FAILED -> live
       GUEST_SEED_MARKED -> live
       GUEST_PERSONAS_RESOLVED -> live
       GUEST_COMPOSED -> live
@@ -725,9 +723,6 @@ orbital GuestSessionOrbital {
       }
       GUEST_SEED_RESOLVED {
         result : behavior!
-      }
-      GUEST_SEED_FAILED {
-        error : string!
       }
       GUEST_LIVE_DIR_READY {
         key : string

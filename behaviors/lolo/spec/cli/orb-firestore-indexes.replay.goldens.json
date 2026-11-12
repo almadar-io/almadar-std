@@ -1573,6 +1573,74 @@
           }
         }
       ]
+    },
+    {
+      "id": "an-orbital-naming-its-entity-by-reference-is-left-out",
+      "steps": [
+        {
+          "event": "FIRESTORE_INDEXES_PROGRAM",
+          "from": "reading",
+          "payload": {
+            "result": {
+              "orbitals": [
+                {
+                  "entity": "Shared"
+                },
+                {
+                  "entity": {
+                    "persistence": "persistent",
+                    "indexes": [
+                      {
+                        "fields": [
+                          "a"
+                        ],
+                        "orderBy": "t:desc"
+                      }
+                    ],
+                    "collection": "posts"
+                  }
+                }
+              ]
+            }
+          },
+          "entity": {
+            "id": "r",
+            "cwd": "/w",
+            "file": "p.lolo",
+            "out": "",
+            "scope": "COLLECTION",
+            "text": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "rendering",
+            "emits": [
+              {
+                "event": "FIRESTORE_INDEXES_RENDERED",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "FIRESTORE_INDEXES_RENDERED",
+          "from": "rendering",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "exactEmits": [
+              {
+                "event": "FIRESTORE_INDEXES_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "{\n  \"indexes\": [\n    {\n      \"collectionGroup\": \"posts\",\n      \"queryScope\": \"COLLECTION\",\n      \"fields\": [\n        {\n          \"fieldPath\": \"a\",\n          \"order\": \"ASCENDING\"\n        },\n        {\n          \"fieldPath\": \"t\",\n          \"order\": \"DESCENDING\"\n        }\n      ]\n    }\n  ],\n  \"fieldOverrides\": []\n}"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "note": "a composed orbital may name its entity by reference (a string); only inline entity records declare index paths here"
     }
   ]
 }

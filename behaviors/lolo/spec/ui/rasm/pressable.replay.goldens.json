@@ -1,0 +1,396 @@
+{
+ "atom": "../ui/rasm/atoms/std-rasm-pressable.lolo",
+ "trait": "RasmPressable",
+ "cases": [
+  {
+   "id": "a-press-released-over-the-button-emits-its-action",
+   "config": {
+    "id": "b",
+    "label": "Go",
+    "intent": "primary",
+    "action": "GO",
+    "z": 3
+   },
+   "entity": {
+    "id": "b"
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "enter",
+      "id": "b",
+      "x": 10,
+      "y": 10
+     },
+     "expect": {
+      "state": "hovered"
+     }
+    },
+    {
+     "from": "hovered",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "down",
+      "id": "b",
+      "x": 10,
+      "y": 10
+     },
+     "expect": {
+      "state": "pressed"
+     }
+    },
+    {
+     "from": "pressed",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "up",
+      "id": "b",
+      "x": 10,
+      "y": 10
+     },
+     "expect": {
+      "state": "hovered",
+      "emits": [
+       {
+        "event": "GO",
+        "payload": {}
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-press-released-after-leaving-emits-nothing",
+   "config": {
+    "id": "b",
+    "label": "Go",
+    "intent": "primary",
+    "action": "GO",
+    "z": 3
+   },
+   "entity": {
+    "id": "b"
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "enter",
+      "id": "b",
+      "x": 10,
+      "y": 10
+     },
+     "expect": {
+      "state": "hovered"
+     }
+    },
+    {
+     "from": "hovered",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "down",
+      "id": "b",
+      "x": 10,
+      "y": 10
+     },
+     "expect": {
+      "state": "pressed"
+     }
+    },
+    {
+     "from": "pressed",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "leave",
+      "id": "b",
+      "x": 10,
+      "y": 10
+     },
+     "expect": {
+      "state": "idle"
+     }
+    },
+    {
+     "from": "idle",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "up",
+      "id": "b",
+      "x": 10,
+      "y": 10
+     },
+     "expect": {
+      "state": "idle"
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-another-controls-pointer-leaves-it-idle",
+   "config": {
+    "id": "b",
+    "label": "Go",
+    "intent": "primary",
+    "action": "GO",
+    "z": 3
+   },
+   "entity": {
+    "id": "b"
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "enter",
+      "id": "other",
+      "x": 10,
+      "y": 10
+     },
+     "expect": {
+      "state": "idle"
+     }
+    }
+   ]
+  },
+  {
+   "id": "focus-then-keyboard-activation-emits-the-action",
+   "config": {
+    "id": "b",
+    "label": "Go",
+    "intent": "primary",
+    "action": "GO",
+    "z": 3
+   },
+   "entity": {
+    "id": "b"
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "RASM_FOCUS",
+     "payload": {
+      "id": "b"
+     },
+     "expect": {
+      "state": "focused"
+     }
+    },
+    {
+     "from": "focused",
+     "event": "RASM_ACTIVATE",
+     "payload": {
+      "id": "b"
+     },
+     "expect": {
+      "state": "focused",
+      "emits": [
+       {
+        "event": "GO",
+        "payload": {}
+       }
+      ]
+     }
+    },
+    {
+     "from": "focused",
+     "event": "RASM_FOCUS",
+     "payload": {
+      "id": "next"
+     },
+     "expect": {
+      "state": "idle"
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-disabled-button-ignores-the-pointer",
+   "config": {
+    "id": "b",
+    "label": "Go",
+    "intent": "primary",
+    "action": "GO",
+    "z": 3,
+    "disabled": true
+   },
+   "entity": {
+    "id": "b"
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "INIT",
+     "payload": {},
+     "expect": {
+      "state": "disabled"
+     }
+    },
+    {
+     "from": "disabled",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "enter",
+      "id": "b",
+      "x": 10,
+      "y": 10
+     },
+     "expect": {
+      "state": "disabled"
+     }
+    }
+   ]
+  },
+  {
+   "id": "it-paints-once-it-has-looks-and-a-rect",
+   "config": {
+    "id": "b",
+    "label": "Go",
+    "intent": "primary",
+    "action": "GO",
+    "z": 3
+   },
+   "entity": {
+    "id": "b"
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "RASM_THEME",
+     "payload": {
+      "name": "t",
+      "looks": {
+       "pressable/primary/idle": {
+        "fill": "#7a4a1c",
+        "textColor": "#fff",
+        "font": "600 15px serif",
+        "spring": {
+         "stiffness": 170,
+         "damping": 20
+        },
+        "corners": {
+         "radius": [
+          10,
+          10,
+          10,
+          10
+         ],
+         "kind": "bevel"
+        }
+       },
+       "pressable/primary/hovered": {
+        "fill": "#946024",
+        "textColor": "#fff",
+        "font": "600 15px serif",
+        "spring": {
+         "stiffness": 170,
+         "damping": 20
+        },
+        "corners": {
+         "radius": [
+          10,
+          10,
+          10,
+          10
+         ],
+         "kind": "bevel"
+        }
+       },
+       "pressable/primary/pressed": {
+        "fill": "#5e3814",
+        "textColor": "#fff",
+        "font": "600 15px serif",
+        "spring": {
+         "stiffness": 170,
+         "damping": 20
+        },
+        "corners": {
+         "radius": [
+          10,
+          10,
+          10,
+          10
+         ],
+         "kind": "bevel"
+        }
+       },
+       "pressable/primary/focused": {
+        "fill": "#7a4a1c",
+        "textColor": "#fff",
+        "font": "600 15px serif",
+        "spring": {
+         "stiffness": 170,
+         "damping": 20
+        },
+        "corners": {
+         "radius": [
+          10,
+          10,
+          10,
+          10
+         ],
+         "kind": "bevel"
+        }
+       },
+       "pressable/primary/disabled": {
+        "fill": "#333333",
+        "textColor": "#fff",
+        "font": "600 15px serif",
+        "spring": {
+         "stiffness": 170,
+         "damping": 20
+        },
+        "corners": {
+         "radius": [
+          10,
+          10,
+          10,
+          10
+         ],
+         "kind": "bevel"
+        }
+       }
+      }
+     },
+     "expect": {
+      "state": "idle"
+     }
+    },
+    {
+     "from": "idle",
+     "event": "RASM_PLACE",
+     "payload": {
+      "placed": [
+       {
+        "id": "b",
+        "rect": {
+         "x": 20,
+         "y": 30,
+         "w": 120,
+         "h": 44
+        }
+       }
+      ]
+     },
+     "expect": {
+      "state": "idle"
+     }
+    },
+    {
+     "from": "idle",
+     "event": "REPAINT",
+     "payload": {
+      "n": 2
+     },
+     "expect": {
+      "state": "idle"
+     }
+    }
+   ]
+  }
+ ]
+}

@@ -4,6 +4,12 @@ app ui-canvas [
 ]
 ;; @pattern "canvas"
 orbital CanvasOrbital {
+  type CanvasMeasureItem = {
+    id : string!
+    width : number!
+    height : number!
+    lines : number!
+  }
   type CanvasCamera = {
     pos : CanvasCameraPos
     target : CanvasCameraTarget
@@ -79,6 +85,7 @@ orbital CanvasOrbital {
       INIT -> idle
         (render-ui main {
           mode: @config.mode
+          painter: @config.painter
           drawables: @config.drawables
           camera: @config.camera
           projection: @config.projection
@@ -105,6 +112,13 @@ orbital CanvasOrbital {
           tileHoverEvent: @config.tileHoverEvent
           tileLeaveEvent: @config.tileLeaveEvent
           featureClickEvent: @config.featureClickEvent
+          pointerDownEvent: @config.pointerDownEvent
+          pointerUpEvent: @config.pointerUpEvent
+          pointerEnterEvent: @config.pointerEnterEvent
+          pointerLeaveEvent: @config.pointerLeaveEvent
+          pointerMoveEvent: @config.pointerMoveEvent
+          measureEvent: @config.measureEvent
+          pointerMoves: @config.pointerMoves
           keyMap: @config.keyMap
           keyUpMap: @config.keyUpMap
           gestureMap: @config.gestureMap
@@ -172,6 +186,46 @@ orbital CanvasOrbital {
       }
         @description "Feature-click event (3D only)."
         @tier "essential"
+      @config.pointerDownEvent -> external {
+        target : string
+        x : number
+        y : number
+      }
+        @description "A primary press began on a hit drawable (orbital painter)."
+        @tier "essential"
+      @config.pointerUpEvent -> external {
+        target : string
+        x : number
+        y : number
+      }
+        @description "The press ended; sent to the drawable that took the down, wherever the pointer is (orbital painter)."
+        @tier "essential"
+      @config.pointerEnterEvent -> external {
+        target : string
+        x : number
+        y : number
+      }
+        @description "The pointer entered a hit drawable, topmost only (orbital painter)."
+        @tier "essential"
+      @config.pointerLeaveEvent -> external {
+        target : string
+        x : number
+        y : number
+      }
+        @description "The pointer left a hit drawable or the canvas (orbital painter)."
+        @tier "essential"
+      @config.pointerMoveEvent -> external {
+        target : string
+        x : number
+        y : number
+      }
+        @description "The pointer moved over a hit drawable, or anywhere while that drawable holds capture (orbital painter)."
+        @tier "essential"
+      @config.measureEvent -> external {
+        items : [CanvasMeasureItem]
+      }
+        @description "Sizes of every `draw-text` with `measure: true`, sent after a paint in which any of them changed (orbital painter)."
+        @tier "essential"
       @config.onSelect -> external {
         id : string
       }
@@ -190,6 +244,10 @@ orbital CanvasOrbital {
       mode : "2d" | "3d" = "2d"
         @label "Mode"
         @description "Painter: 2D sprite/shape/text raster, or 3D mesh. Default '2d'."
+        @tier "presentation"
+      painter : "orbital"
+        @label "Painter"
+        @description "Draw this canvas with orbital-canvas (wasm on the web) instead of the TypeScript painter; 2D mode only. Absent: the default 2D painter."
         @tier "presentation"
       drawables : [node] = []
         @label "Drawables"
@@ -294,6 +352,34 @@ orbital CanvasOrbital {
       featureClickEvent : event = ""
         @label "Feature Click Event"
         @description "Feature-click event (3D only)."
+        @tier "presentation"
+      pointerDownEvent : event = ""
+        @label "Pointer Down Event"
+        @description "A primary press began on a hit drawable (orbital painter)."
+        @tier "presentation"
+      pointerUpEvent : event = ""
+        @label "Pointer Up Event"
+        @description "The press ended; sent to the drawable that took the down, wherever the pointer is (orbital painter)."
+        @tier "presentation"
+      pointerEnterEvent : event = ""
+        @label "Pointer Enter Event"
+        @description "The pointer entered a hit drawable, topmost only (orbital painter)."
+        @tier "presentation"
+      pointerLeaveEvent : event = ""
+        @label "Pointer Leave Event"
+        @description "The pointer left a hit drawable or the canvas (orbital painter)."
+        @tier "presentation"
+      pointerMoveEvent : event = ""
+        @label "Pointer Move Event"
+        @description "The pointer moved over a hit drawable, or anywhere while that drawable holds capture (orbital painter)."
+        @tier "presentation"
+      pointerMoves : "all" | "captured" = "all"
+        @label "Pointer Moves"
+        @description "Which moves pointerMoveEvent sends: all (hover and drag) or captured (only while a press holds capture). Orbital painter."
+        @tier "presentation"
+      measureEvent : event = ""
+        @label "Measure Event"
+        @description "Sizes of every `draw-text` with `measure: true`, sent after a paint in which any of them changed (orbital painter)."
         @tier "presentation"
       keyMap : Map string string = { item: "INIT" }
         @label "Key Map"

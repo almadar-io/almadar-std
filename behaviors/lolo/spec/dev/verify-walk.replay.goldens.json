@@ -1778,7 +1778,7 @@
    ]
   },
   {
-   "id": "a-skipped-repeat-of-a-listener-delivered-ask-is-a-finding",
+   "id": "a-skipped-repeat-the-asker-still-waits-on-is-a-finding",
    "steps": [
     {
      "trait": "VerifyWalk",
@@ -1824,6 +1824,30 @@
             "n": 1
            }
           }
+         ],
+         "outcomes": [
+          {
+           "trait": "Asker",
+           "event": "GO",
+           "from": "idle",
+           "to": "waiting",
+           "emitted": [
+            {
+             "type": "ASK_OUT"
+            }
+           ]
+          },
+          {
+           "trait": "Callee",
+           "event": "ASK",
+           "from": "ready",
+           "to": "ready",
+           "emitted": [
+            {
+             "type": "ANSWER"
+            }
+           ]
+          }
          ]
         }
        }
@@ -1841,7 +1865,7 @@
            "listens": [
             {
              "event": "ANSWER",
-             "triggers": "ASK",
+             "triggers": "GOT",
              "source": {
               "kind": "trait",
               "trait": "Callee"
@@ -1850,12 +1874,51 @@
            ]
           },
           {
-           "name": "Callee"
+           "name": "Callee",
+           "listens": [
+            {
+             "event": "ASK_OUT",
+             "triggers": "ASK",
+             "source": {
+              "kind": "trait",
+              "trait": "Asker"
+             }
+            }
+           ]
           }
          ]
         }
        ]
-      }
+      },
+      "machineRows": [
+       {
+        "orbital": "O",
+        "trait": "Asker",
+        "from": "idle",
+        "event": "GO",
+        "to": "waiting",
+        "guarded": false,
+        "payload": []
+       },
+       {
+        "orbital": "O",
+        "trait": "Asker",
+        "from": "waiting",
+        "event": "GOT",
+        "to": "done",
+        "guarded": false,
+        "payload": []
+       },
+       {
+        "orbital": "O",
+        "trait": "Callee",
+        "from": "ready",
+        "event": "ASK",
+        "to": "ready",
+        "guarded": false,
+        "payload": []
+       }
+      ]
      },
      "expect": {
       "state": "ready",
@@ -1864,7 +1927,165 @@
         "event": "VERIFY_WALK_ANSWERED",
         "payload": {
          "status": 500,
-         "body": "pass  T a --GO--> b\nfinding  VERIFY_REPEATED_ASK_COLLAPSED  Callee ASK {\"n\":1}  the same question was asked twice in one dispatch; the second was skipped (EXEC-QUEUE-4) and nothing answers it\n1 passed, 0 failed, 0 unplanned, 0 guard-blocked, 1 finding"
+         "body": "pass  T a --GO--> b\nfinding  VERIFY_REPEATED_ASK_COLLAPSED  Callee ASK {\"n\":1}  the same question was asked twice in one dispatch; the second was skipped (EXEC-QUEUE-4) and its asker is still waiting for the answer\n1 passed, 0 failed, 0 unplanned, 0 guard-blocked, 1 finding"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-collapsed-cycle-stopper-the-asker-does-not-wait-on-is-not-a-finding",
+   "steps": [
+    {
+     "trait": "VerifyWalk",
+     "from": "crediting",
+     "event": "WALK_CREDIT_ANSWERED",
+     "payload": {
+      "credits": []
+     },
+     "entity": {
+      "id": "r",
+      "judged": [
+       {
+        "verdicts": []
+       }
+      ],
+      "played": [
+       {
+        "trait": "T",
+        "from": "a",
+        "event": "GO",
+        "to": "b",
+        "guarded": false,
+        "targets": [
+         "b"
+        ],
+        "result": {
+         "trait": "T",
+         "event": "GO",
+         "transitionFired": true,
+         "guard": "none",
+         "effects": [],
+         "emitted": [],
+         "guards": [],
+         "state": {
+          "before": "a",
+          "after": "b"
+         },
+         "collapsed": [
+          {
+           "trait": "Callee",
+           "event": "ASK",
+           "payload": {
+            "n": 1
+           }
+          }
+         ],
+         "outcomes": [
+          {
+           "trait": "Asker",
+           "event": "GO",
+           "from": "idle",
+           "to": "done",
+           "emitted": [
+            {
+             "type": "ASK_OUT"
+            }
+           ]
+          },
+          {
+           "trait": "Callee",
+           "event": "ASK",
+           "from": "ready",
+           "to": "ready",
+           "emitted": [
+            {
+             "type": "ANSWER"
+            }
+           ]
+          }
+         ]
+        }
+       }
+      ],
+      "planned": [],
+      "notes": [],
+      "creditSteps": [],
+      "program": {
+       "orbitals": [
+        {
+         "name": "O",
+         "traits": [
+          {
+           "name": "Asker",
+           "listens": [
+            {
+             "event": "ANSWER",
+             "triggers": "GOT",
+             "source": {
+              "kind": "trait",
+              "trait": "Callee"
+             }
+            }
+           ]
+          },
+          {
+           "name": "Callee",
+           "listens": [
+            {
+             "event": "ASK_OUT",
+             "triggers": "ASK",
+             "source": {
+              "kind": "trait",
+              "trait": "Asker"
+             }
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "machineRows": [
+       {
+        "orbital": "O",
+        "trait": "Asker",
+        "from": "idle",
+        "event": "GO",
+        "to": "done",
+        "guarded": false,
+        "payload": []
+       },
+       {
+        "orbital": "O",
+        "trait": "Asker",
+        "from": "waiting",
+        "event": "GOT",
+        "to": "done",
+        "guarded": false,
+        "payload": []
+       },
+       {
+        "orbital": "O",
+        "trait": "Callee",
+        "from": "ready",
+        "event": "ASK",
+        "to": "ready",
+        "guarded": false,
+        "payload": []
+       }
+      ]
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "VERIFY_WALK_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "pass  T a --GO--> b\n1 passed, 0 failed, 0 unplanned, 0 guard-blocked"
         }
        }
       ]

@@ -1,0 +1,65 @@
+app std-rasm-focus [
+  version: "1.0.0",
+  description: "std-rasm-focus — keyboard focus order for the Rasm kit over a config-declared list of control ids. RASM_KEY next and previous move the index (wrapping, starting from none) and emit RASM_FOCUS { id }; activate emits RASM_ACTIVATE { id } for the focused id; increase and decrease emit RASM_STEP { id, delta } with 1 or -1."
+]
+
+orbital RasmFocusOrbital {
+  entity RasmFocusItem [runtime] {
+    id : string!
+    index : number @description "Position in the order of the focused control, -1 before any." = -1
+  }
+
+  trait RasmFocus -> RasmFocusItem [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+        (set @entity.index -1)
+      RASM_KEY -> ready when (and (= ?key "next") (> (array/len @config.order) 0))
+        (set @entity.index (math/mod (+ @entity.index 1) (array/len @config.order)))
+        (emit RASM_FOCUS { id: (default (array/nth @config.order @entity.index) "") })
+      RASM_KEY -> ready when (and (= ?key "previous") (> (array/len @config.order) 0))
+        (set @entity.index (if (< @entity.index 0) (- (array/len @config.order) 1) (math/mod (+ @entity.index (- (array/len @config.order) 1)) (array/len @config.order))))
+        (emit RASM_FOCUS { id: (default (array/nth @config.order @entity.index) "") })
+      RASM_KEY -> ready when (and (= ?key "activate") (>= @entity.index 0))
+        (emit RASM_ACTIVATE { id: (default (array/nth @config.order @entity.index) "") })
+      RASM_KEY -> ready when (and (= ?key "increase") (>= @entity.index 0))
+        (emit RASM_STEP { id: (default (array/nth @config.order @entity.index) ""), delta: 1 })
+      RASM_KEY -> ready when (and (= ?key "decrease") (>= @entity.index 0))
+        (emit RASM_STEP { id: (default (array/nth @config.order @entity.index) ""), delta: -1 })
+    }
+
+    emits {
+      RASM_FOCUS -> external {
+        id : string!
+      }
+        @description "Focus moved to the control with this id."
+        @tier "domain"
+      RASM_ACTIVATE -> external {
+        id : string!
+      }
+        @description "Keyboard activation of the focused control."
+        @tier "domain"
+      RASM_STEP -> external {
+        id : string!
+        delta : number!
+      }
+        @description "A keyboard step for the focused range."
+        @tier "domain"
+    }
+
+    listens {
+      RASM_KEY { key : "next" | "previous" | "activate" | "increase" | "decrease"! }
+        @description "A key the surface mapped: Tab, Shift+Tab, Enter or Space, the arrows."
+    }
+
+    config {
+      order : [string] = []
+        @label "Order"
+        @description "Control ids in focus order."
+        @tier "domain"
+    }
+  }
+
+  page boot as RasmFocusStart -> RasmFocus
+}

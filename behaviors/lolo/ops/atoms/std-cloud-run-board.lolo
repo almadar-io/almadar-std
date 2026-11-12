@@ -244,7 +244,6 @@ orbital CloudRunBoardOrbital {
 
       CR_MONITOR -> reading
         (emit CR_HTTP_SEND { key: "time", method: "GET", target: (str/concat "/v3/projects/" @config.project "/timeSeries?" (str/join (array/map (object/entries { filter: "metric.type=\"run.googleapis.com/container/billable_instance_time\"", "interval.startTime": (time/startOf @entity.startedAt "month"), "interval.endTime": @entity.startedAt, "aggregation.alignmentPeriod": (str/concat (math/max 60 (math/round (time/diff @entity.startedAt (time/startOf @entity.startedAt "month") "s") 0)) "s"), "aggregation.perSeriesAligner": "ALIGN_SUM", "aggregation.crossSeriesReducer": "REDUCE_SUM", "aggregation.groupByFields": "resource.label.\"service_name\"" }) (fn kv (str/concat (str/encode-uri-component (default (array/nth @kv 0) "")) "=" (str/encode-uri-component (default (array/nth @kv 1) ""))))) "&")), headers: [], body: (bytes/from-string ""), stream: "none" })
-        (emit CR_COST { })
       CR_REPLIED -> reading when (and (= @payload.key "time") (and (>= @payload.status 200) (< @payload.status 300) (!= (json/parse (default (bytes/to-string @payload.body) "") CrMonReply) null)))
         (set @entity.instanceSeconds (array/filter (array/map (object/get (json/parse (default (bytes/to-string @payload.body) "") CrMonReply) "timeSeries" []) (fn ts { svc: (object/get @ts "resource.labels.service_name" ""), value: (array/reduce (object/get @ts "points" []) 0 (fn acc p (+ @acc (if (!= (object/get @p "value.doubleValue" null) null) (object/get @p "value.doubleValue" 0) (str/to-number (object/get @p "value.int64Value" "0")))))) })) (fn x (!= @x.svc ""))))
         (emit CR_HTTP_SEND { key: "requests", method: "GET", target: (str/concat "/v3/projects/" @config.project "/timeSeries?" (str/join (array/map (object/entries { filter: "metric.type=\"run.googleapis.com/request_count\"", "interval.startTime": (time/startOf @entity.startedAt "month"), "interval.endTime": @entity.startedAt, "aggregation.alignmentPeriod": (str/concat (math/max 60 (math/round (time/diff @entity.startedAt (time/startOf @entity.startedAt "month") "s") 0)) "s"), "aggregation.perSeriesAligner": "ALIGN_SUM", "aggregation.crossSeriesReducer": "REDUCE_SUM", "aggregation.groupByFields": "resource.label.\"service_name\"" }) (fn kv (str/concat (str/encode-uri-component (default (array/nth @kv 0) "")) "=" (str/encode-uri-component (default (array/nth @kv 1) ""))))) "&")), headers: [], body: (bytes/from-string ""), stream: "none" })
@@ -363,6 +362,7 @@ orbital CloudRunBoardOrbital {
       CR_CLI_FAILED -> reading when (= @payload.stage "cost")
         (emit CR_GCLOUD { stage: "services", argv: ["run", "services", "list", (str/concat "--project=" @config.project), "--format=json"] })
       CR_CLI_FAILED -> reading when (= @payload.stage "services")
+        (notify warning (str/concat "Cloud Run services could not be read: " @payload.error))
         (set @entity.services [])
         (emit CR_GCLOUD { stage: "enabled", argv: ["services", "list", "--enabled", (str/concat "--project=" @config.project), "--format=json"] })
       CR_CLI_FAILED -> reading when (= @payload.stage "enabled")

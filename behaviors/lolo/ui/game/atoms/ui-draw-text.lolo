@@ -4,6 +4,28 @@ app ui-draw-text [
 ]
 ;; @pattern "draw-text"
 orbital DrawTextOrbital {
+  type DrawTextSemantic = {
+    role : string!
+    name : string!
+    value : string
+    checked : boolean
+    disabled : boolean
+  }
+  type DrawTextSpring = {
+    stiffness : number!
+    damping : number!
+  }
+  type DrawTextAnimation = {
+    durationMs : number!
+    loop : boolean
+    keyframes : [DrawTextAnimationKeyframesItem]!
+  }
+  type DrawTextAnimationKeyframesItem = {
+    at : number!
+    opacity : number
+    offsetX : number
+    offsetY : number
+  }
   type DrawTextPosition = {
     x : number!
     y : number!
@@ -30,6 +52,16 @@ orbital DrawTextOrbital {
           align: @config.align
           baseline: @config.baseline
           opacity: @config.opacity
+          width: @config.width
+          wrap: @config.wrap
+          maxLines: @config.maxLines
+          truncate: @config.truncate
+          lineHeight: @config.lineHeight
+          measure: @config.measure
+          animation: @config.animation
+          hit: @config.hit
+          semantic: @config.semantic
+          spring: @config.spring
           type: draw-text
         })
     }
@@ -74,6 +106,46 @@ orbital DrawTextOrbital {
       opacity : number
         @label "Opacity"
         @description "opacity prop"
+        @tier "presentation"
+      width : number
+        @label "Width"
+        @description "Line width in px; with it the text lays out as a paragraph from `position` (top-left anchor). Orbital painter."
+        @tier "presentation"
+      wrap : boolean
+        @label "Wrap"
+        @description "Break at line opportunities within `width` (default true when `width` is set)."
+        @tier "presentation"
+      maxLines : number
+        @label "Max Lines"
+        @description "Maximum number of lines; the last kept line ends in an ellipsis when `truncate` is true."
+        @tier "presentation"
+      truncate : boolean
+        @label "Truncate"
+        @description "Ellipsis instead of overflow."
+        @tier "presentation"
+      lineHeight : number
+        @label "Line Height"
+        @description "Line height as a multiple of the font size (default 1.3)."
+        @tier "presentation"
+      measure : boolean
+        @label "Measure"
+        @description "Report this text's size in `measureEvent` (needs `id`)."
+        @tier "presentation"
+      animation : DrawTextAnimation
+        @label "Animation"
+        @description "Keyframe animation over this text's opacity, offsetX and offsetY; the host runs a paint clock while present."
+        @tier "presentation"
+      hit : boolean
+        @label "Hit"
+        @description "With an `id`, the drawable is a pointer region (its painted bounds, rotation applied); the orbital canvas emits the pointer events for it."
+        @tier "presentation"
+      semantic : DrawTextSemantic
+        @label "Semantic"
+        @description "Accessibility node for this drawable."
+        @tier "presentation"
+      spring : DrawTextSpring
+        @label "Spring"
+        @description "With an `id`: when a repaint changes this drawable's animatable fields, the canvas moves them to the new values by this spring."
         @tier "presentation"
     }
   }

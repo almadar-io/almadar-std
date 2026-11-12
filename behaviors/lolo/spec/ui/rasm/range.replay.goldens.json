@@ -1,0 +1,258 @@
+{
+ "atom": "../ui/rasm/atoms/std-rasm-range.lolo",
+ "trait": "RasmRange",
+ "cases": [
+  {
+   "id": "a-drag-sets-a-snapped-value-and-the-release-reports-it-clamped",
+   "config": {
+    "id": "w",
+    "label": "Warmth",
+    "min": 0,
+    "max": 100,
+    "step": 5,
+    "value": 60,
+    "z": 2
+   },
+   "entity": {
+    "id": "w"
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "INIT",
+     "payload": {},
+     "expect": {
+      "entity": {
+       "value": 60
+      }
+     }
+    },
+    {
+     "from": "idle",
+     "event": "RASM_PLACE",
+     "payload": {
+      "placed": [
+       {
+        "id": "w",
+        "rect": {
+         "x": 100,
+         "y": 0,
+         "w": 200,
+         "h": 56
+        }
+       }
+      ]
+     },
+     "expect": {
+      "entity": {
+       "value": 60
+      }
+     }
+    },
+    {
+     "from": "idle",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "down",
+      "id": "w",
+      "x": 150,
+      "y": 40
+     },
+     "expect": {
+      "state": "dragging",
+      "entity": {
+       "value": 20
+      }
+     }
+    },
+    {
+     "from": "dragging",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "move",
+      "id": "w",
+      "x": 233,
+      "y": 40
+     },
+     "expect": {
+      "entity": {
+       "value": 70
+      }
+     }
+    },
+    {
+     "from": "dragging",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "move",
+      "id": "w",
+      "x": 900,
+      "y": 40
+     },
+     "expect": {
+      "entity": {
+       "value": 100
+      }
+     }
+    },
+    {
+     "from": "dragging",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "up",
+      "id": "w",
+      "x": 900,
+      "y": 40
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RASM_RANGE_CHANGED",
+        "payload": {
+         "value": 100
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-read-only-meter-does-not-drag",
+   "config": {
+    "id": "w",
+    "label": "Warmth",
+    "min": 0,
+    "max": 100,
+    "step": 5,
+    "value": 60,
+    "z": 2,
+    "readOnly": true
+   },
+   "entity": {
+    "id": "w"
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "INIT",
+     "payload": {},
+     "expect": {
+      "entity": {
+       "value": 60
+      }
+     }
+    },
+    {
+     "from": "idle",
+     "event": "RASM_PLACE",
+     "payload": {
+      "placed": [
+       {
+        "id": "w",
+        "rect": {
+         "x": 100,
+         "y": 0,
+         "w": 200,
+         "h": 56
+        }
+       }
+      ]
+     },
+     "expect": {
+      "entity": {
+       "value": 60
+      }
+     }
+    },
+    {
+     "from": "idle",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "down",
+      "id": "w",
+      "x": 150,
+      "y": 40
+     },
+     "expect": {
+      "state": "idle",
+      "entity": {
+       "value": 60
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "keyboard-steps-move-a-focused-range-by-its-step",
+   "config": {
+    "id": "w",
+    "label": "Warmth",
+    "min": 0,
+    "max": 100,
+    "step": 5,
+    "value": 60,
+    "z": 2
+   },
+   "entity": {
+    "id": "w"
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "INIT",
+     "payload": {},
+     "expect": {
+      "entity": {
+       "value": 60
+      }
+     }
+    },
+    {
+     "from": "idle",
+     "event": "RASM_FOCUS",
+     "payload": {
+      "id": "w"
+     },
+     "expect": {
+      "state": "focused"
+     }
+    },
+    {
+     "from": "focused",
+     "event": "RASM_STEP",
+     "payload": {
+      "id": "w",
+      "delta": 1
+     },
+     "expect": {
+      "entity": {
+       "value": 65
+      },
+      "emits": [
+       {
+        "event": "RASM_RANGE_CHANGED",
+        "payload": {
+         "value": 65
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "focused",
+     "event": "RASM_STEP",
+     "payload": {
+      "id": "w",
+      "delta": -1
+     },
+     "expect": {
+      "entity": {
+       "value": 60
+      }
+     }
+    }
+   ]
+  }
+ ]
+}

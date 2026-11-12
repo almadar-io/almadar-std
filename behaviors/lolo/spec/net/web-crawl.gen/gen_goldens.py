@@ -243,6 +243,23 @@ for stname in ("robots_loading", "robots_reading", "enqueuing", "stepping", "pau
     cases.append(case(f"a second CRAWL_START while the run is in {stname} answers crawl_busy and leaves it", [
         step(stname, "CRAWL_START", {"key": "b9", "startUrl": S}, stname, [em("CRAWL_FAILED", {"key": "b9", "code": "crawl_busy"})], before={"runKey": "b0", "origin": O})], N0))
 
+# bot challenges: an interstitial title is waited out and reloaded, then reported as a typed interstitial
+CH = "Just a moment..."
+CHB = {"runKey": "c1", "origin": O, "curUrl": S, "curDepth": 0}
+cases.append(case("challenge: a page that loads with a bot-check title is waited on and loaded again, never read for links", [
+    step("loading", "PAGE_LOADED", {"key": "c1:nav", "url": S, "title": CH}, "challenged", [em("CRAWL_TIMER_ARM", {"key": "c1:challenge", "delayMs": 5000})], before=CHB, after={"challengeTries": 1}, never=["PAGE_LINKS", "CRAWL_PAGE"]),
+    step(None, "CRAWL_WAITED", {"key": "c1:challenge"}, "loading", [em("PAGE_NAVIGATE", {"key": "c1:nav", "url": S})])], N0))
+cases.append(case("challenge: a check that clears on reload is crawled as usual and the tries start over", [
+    step("loading", "PAGE_LOADED", {"key": "c1:nav", "url": S, "title": "Lon\u010darna Mala"}, "linking", [em("PAGE_LINKS", {"key": "c1:links"})], before={**CHB, "challengeTries": 1}, after={"challengeTries": 0})], N0))
+cases.append(case("challenge: a check still showing after the declared retries reports the page with its interstitial and the crawl goes on", [
+    step("loading", "PAGE_LOADED", {"key": "c1:nav", "url": S, "title": CH}, "stepping",
+         [em("CRAWL_PAGE", {"key": "c1", "url": S, "title": CH, "depth": 0, "links": [], "error": "the page answered a bot check: " + CH, "interstitial": CH}), em("CRAWL_NEXT", {})],
+         before={**CHB, "challengeTries": 2}, after={"challengeTries": 0}, never=["CRAWL_TIMER_ARM"])], N0))
+cases.append(case("control: a title that only mentions the words mid-title is not a bot check", [
+    step("loading", "PAGE_LOADED", {"key": "c1:nav", "url": S, "title": "Wait just a moment | Shop"}, "linking", [em("PAGE_LINKS", {"key": "c1:links"})], before=CHB, never=["CRAWL_TIMER_ARM"])], N0))
+cases.append(case("control: a wait of another run is ignored while a check is waited on", [
+    step("challenged", "CRAWL_WAITED", {"key": "zz:challenge"}, "challenged", [], before={**CHB, "challengeTries": 1}, never=["PAGE_NAVIGATE"])], N0))
+
 out = {"atom": "net/atoms/std-web-crawl.lolo", "trait": "WebCrawl", "spec": "spec/net/web-crawl.lolo",
        "note": "std-web-crawl with the page answers played as events. The link lists, titles and robots text are real: record.py serves the a11y fixture shop with a robots.txt on a random port and reads each page through headless Chrome with links.js (which must stay identical to the PAGE_LINKS expression of std-chrome). The internal CRAWL_ENQUEUE and CRAWL_NEXT events are played as steps. Regenerate with python3 -I record.py && python3 -I gen_goldens.py.",
        "cases": cases}

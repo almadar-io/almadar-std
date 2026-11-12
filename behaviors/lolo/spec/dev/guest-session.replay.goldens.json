@@ -3511,7 +3511,7 @@
    "now": 1760531445678
   },
   {
-   "id": "the-session-resolves-the-seed-as-it-mounts",
+   "id": "mounting-resolves-no-seed-and-carries-none",
    "steps": [
     {
      "trait": "GuestSession",
@@ -3521,12 +3521,121 @@
       "id": "g",
       "guestHandle": "",
       "guestPaints": [],
-      "guestError": ""
+      "guestError": "",
+      "guestSeed": null
      },
      "from": "idle",
      "expect": {
       "fired": true,
       "state": "idle",
+      "entity": {
+       "guestSeed": null
+      }
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "a-seed-answer-landing-while-idle-is-dropped-not-carried",
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "event": "GUEST_SEED_RESOLVED",
+     "payload": {
+      "result": {
+       "name": "std-mock-page-seed",
+       "orbitals": []
+      }
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "",
+      "guestPaints": [],
+      "guestError": "",
+      "guestSeed": null
+     },
+     "from": "idle",
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "entity": {
+       "guestSeed": null
+      }
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "the-seed-is-cleared-once-compose-takes-it",
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "event": "GUEST_SEED_MARKED",
+     "payload": {
+      "marked": false,
+      "personas": "",
+      "personasCollection": "",
+      "personasSignIn": "",
+      "defaultRole": "",
+      "personaTrait": ""
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "",
+      "guestPaints": [],
+      "guestError": "",
+      "guestSeed": {
+       "name": "std-mock-page-seed",
+       "orbitals": []
+      },
+      "guestProgram": {
+       "name": "demo",
+       "orbitals": []
+      },
+      "guestIntegrations": "mock"
+     },
+     "from": "opening",
+     "expect": {
+      "fired": true,
+      "state": "opening",
+      "effects": [
+       {
+        "type": "program/compose"
+       }
+      ],
+      "entity": {
+       "guestSeed": null,
+       "guestProgram": null
+      }
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "control-a-mock-guest-still-resolves-the-seed-while-it-opens",
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "event": "GUEST_PREPARE",
+     "payload": {},
+     "entity": {
+      "id": "g",
+      "guestHandle": "",
+      "guestPaints": [],
+      "guestError": "",
+      "guestProgram": {
+       "name": "demo",
+       "orbitals": []
+      },
+      "guestIntegrations": "mock"
+     },
+     "from": "opening",
+     "expect": {
+      "fired": true,
+      "state": "opening",
       "effects": [
        {
         "type": "behavior/resolve"
@@ -3562,39 +3671,6 @@
        "GUEST_PREPARE"
       ],
       "exactEmits": []
-     }
-    }
-   ],
-   "now": 1760531445678
-  },
-  {
-   "id": "the-seed-resolved-at-mount-is-kept-while-idle",
-   "steps": [
-    {
-     "trait": "GuestSession",
-     "event": "GUEST_SEED_RESOLVED",
-     "payload": {
-      "result": {
-       "name": "std-mock-page-seed",
-       "orbitals": []
-      }
-     },
-     "entity": {
-      "id": "g",
-      "guestHandle": "",
-      "guestPaints": [],
-      "guestError": ""
-     },
-     "from": "idle",
-     "expect": {
-      "fired": true,
-      "state": "idle",
-      "entity": {
-       "guestSeed": {
-        "name": "std-mock-page-seed",
-        "orbitals": []
-       }
-      }
      }
     }
    ],
@@ -10158,7 +10234,7 @@
            "type": "drawer",
            "isOpen": true,
            "modal": false,
-           "title": "Trace · this behavior",
+           "title": "Trace \u00b7 this behavior",
            "position": "right",
            "width": "min(520px, 92vw)",
            "closeEvent": "GUEST_TRACE_CLOSED",
@@ -10403,7 +10479,7 @@
                    "variant": "caption",
                    "color": "muted",
                    "className": "break-all",
-                   "content": "••••1234"
+                   "content": "\u2022\u2022\u2022\u20221234"
                   },
                   {
                    "type": "button",
@@ -10529,7 +10605,7 @@
                    "variant": "caption",
                    "color": "muted",
                    "className": "break-all",
-                   "content": "••••abcd"
+                   "content": "\u2022\u2022\u2022\u2022abcd"
                   },
                   {
                    "type": "button",
@@ -10583,7 +10659,7 @@
                  "type": "typography",
                  "variant": "caption",
                  "color": "muted",
-                 "content": "slot-x — its name is only known at run time"
+                 "content": "slot-x \u2014 its name is only known at run time"
                 }
                ]
               },
@@ -10742,7 +10818,7 @@
                      "type": "badge",
                      "variant": "neutral",
                      "size": "sm",
-                     "label": "×3"
+                     "label": "\u00d73"
                     }
                    ]
                   },
@@ -10936,7 +11012,7 @@
            "type": "drawer",
            "isOpen": true,
            "modal": false,
-           "title": "Trace · this behavior",
+           "title": "Trace \u00b7 this behavior",
            "position": "right",
            "width": "min(520px, 92vw)",
            "closeEvent": "GUEST_TRACE_CLOSED",
@@ -11181,7 +11257,7 @@
                    "variant": "caption",
                    "color": "muted",
                    "className": "break-all",
-                   "content": "••••1234"
+                   "content": "\u2022\u2022\u2022\u20221234"
                   },
                   null
                  ]
@@ -11411,7 +11487,7 @@
            "type": "drawer",
            "isOpen": true,
            "modal": false,
-           "title": "Trace · this behavior",
+           "title": "Trace \u00b7 this behavior",
            "position": "right",
            "width": "min(520px, 92vw)",
            "closeEvent": "GUEST_TRACE_CLOSED",

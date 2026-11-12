@@ -1,0 +1,160 @@
+app std-orb-lint-route-init-params [
+  version: "1.0.0",
+  inbound: ["cli-lint-route-init-params"],
+  env: ["PATH"],
+  exec: [exe],
+  fs: { cwd: "**": [read], "/**": [read], "~/.orb/node_modules/**": [read] },
+  description: "std-orb-lint-route-init-params — the `orb lint route-init-params <file>` command. It lowers the file with program/read and, for every route page (a page with no protocol and a path) of every orbital, reports each field that a trait the page lists declares required on its INIT event (required, `!`) when the page path carries no `:<field>` segment of that name: program/navigate mounts the page with the route params as the INIT payload, so the mount is refused with a payload-validation failure on INIT. A trait is the orbital inline trait the page lists by name; an endpoint page is not read. Findings sit at `orbitals[i].pages[j].path` (status 500, exit 1). Clean answers `lint route-init-params: clean` (status 200, exit 0). Anything but one file argument is the usage (status 400, exit 2); an unreadable or unlowerable file is status 500."
+]
+uses Spec from "almadar-std/lint-route-init-params"
+type OrbCommandArgs = { argv : [string]!, cwd : string! }
+type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error", validValues : [string], entity : string, field : string }
+type RouteInitField = { name : string, nullable : boolean, required : boolean }
+type RouteInitEvent = { key : string, payloadSchema : [RouteInitField] }
+type RouteInitMachine = { events : [RouteInitEvent] }
+type RouteInitTrait = { name : string, stateMachine : RouteInitMachine }
+type RouteInitRef = { ref : string }
+type RouteInitPage = { name : string, path : string, protocol : string, traits : [RouteInitRef] }
+type RouteInitOrbital = { name : string, traits : [RouteInitTrait], pages : [RouteInitPage] }
+type RouteInitProgram = { orbitals : [RouteInitOrbital]! }
+
+type LintCodeDecl = { code : string!, category : string!, description : string! }
+type LintRouteInitParamsCodes = { pRouteParamMissingForInit : LintCodeDecl }
+
+orbital OrbLintRouteInitParamsOrbital {
+  uses Input from "std/behaviors/std-orb-lint-input"
+
+  entity OrbLintRouteInitParamsRun [runtime] {
+    id : string!
+    scope : string = ""
+    findings : [OrbFinding] = []
+  }
+
+  trait OrbLintRouteInitParams -> OrbLintRouteInitParamsRun [optimistic] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_INPUT -> ready
+        (set @entity.scope @payload.scope)
+        (set @entity.findings (let ((orbitals (object/get @payload.program "orbitals" [])))
+          (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
+            (let ((o (array/nth @orbitals @oi)))
+              (let ((trs (object/get @o "traits" [])) (pgs (object/get @o "pages" [])))
+                (array/flatten (array/map (array/range 0 (array/len @pgs)) (fn pj
+                  (let ((pg (array/nth @pgs @pj)) (route (object/get (array/nth @pgs @pj) "path" null)))
+                    (if (or (object/has @pg "protocol") (not (validate/string @route)))
+                      []
+                      (let ((params (array/map (array/filter (str/split @route "/") (fn s (str/startsWith @s ":"))) (fn s (str/slice @s 1)))))
+                        (array/flatten (array/map (object/get @pg "traits" []) (fn r
+                          (let ((t (array/find @trs (fn x (= (object/get @x "name" null) (object/get @r "ref" null))))))
+                            (if (= @t null)
+                              []
+                              (let ((init (array/find (object/get @t "stateMachine.events" []) (fn e (= (object/get @e "key" "") "INIT")))))
+                                (if (= @init null)
+                                  []
+                                  (array/flatten (array/map (object/get @init "payloadSchema" []) (fn f
+                                    (if (and (= (object/get @f "required" false) true) (not (array/includes @params (object/get @f "name" ""))))
+                                      [{ code: @config.codes.pRouteParamMissingForInit.code, path: (str/concat "orbitals[" @oi "].pages[" @pj "].path"), message: (str/concat "Page '" (object/get @pg "name" "") "' has path '" @route "' with no ':" (object/get @f "name" "") "' segment, but trait '" (object/get @t "name" "") "' declares INIT payload field '" (object/get @f "name" "") "' required: navigating to the page is refused with Payload validation failed for event 'INIT'"), suggestion: (str/concat "Add ':" (object/get @f "name" "") "' to the page path (e.g. '" (if (= @route "/") "" @route) "/:" (object/get @f "name" "") "'), or declare the INIT field optional"), severity: "error" }]
+                                      []))))))))))))))))))))))))
+        (emit LINT_FINISH { })
+      LINT_FINISH -> ready
+        (emit LINT_FOUND { rule: "route-init-params", scope: @entity.scope, findings: @entity.findings })
+    }
+
+    emits {
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "This rule's findings for the file, offered to the lint-all umbrella."
+        @tier "internal"
+      LINT_FINISH { }
+        @description "Internal: answer with the verdict."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_INPUT { file : string!  raw : string!  latin : boolean!  program : RouteInitProgram!  scope : string! }
+        @description "The lint input: the file read, its language decided and the program lowered."
+      OrbLintInput.LINT_INPUT -> LINT_INPUT
+    }
+    config {
+      codes : LintRouteInitParamsCodes = { pRouteParamMissingForInit: { code: "ORB_P_ROUTE_PARAM_MISSING_FOR_INIT", category: "page", description: "A route page whose path lacks a :param for a field a mounted trait declares required on its INIT event, so navigating to it is refused" } }
+        @label "Emitted codes"
+        @description "The finding codes this rule emits, with their category and meaning; the registry is generated from this declaration."
+    }
+
+  }
+
+  trait OrbLintRouteInitParamsCli -> OrbLintRouteInitParamsRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      LINT_CALLED -> ready when (or (= (json/parse @payload.rawBody OrbCommandArgs) null) (!= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (emit LINT_ANSWERED { status: 400, body: "usage: orb lint route-init-params <file>" })
+      LINT_CALLED -> waiting when (and (!= (json/parse @payload.rawBody OrbCommandArgs) null) (= (array/len (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")) 1))
+        (let ((argFile (array/first (object/get (json/parse @payload.rawBody OrbCommandArgs) "argv")))) (if (= @argFile null) (emit LINT_ANSWERED { status: 400, body: "usage: orb lint route-init-params <file>" }) (emit LINT_REQUEST { file: @argFile })))
+    }
+
+    state waiting {
+      INIT -> waiting
+      LINT_FOUND -> ready when (and (= @payload.rule "route-init-params") (= (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 200, body: "lint route-init-params: clean" })
+      LINT_FOUND -> ready when (and (= @payload.rule "route-init-params") (> (array/len @payload.findings) 0))
+        (emit LINT_ANSWERED { status: 500, body: (str/join (array/map @payload.findings (fn x (str/concat "[" (object/get @x "code") "] " (object/get @x "path") ": " (object/get @x "message") (if (= (object/get @x "suggestion") "") "" (str/concat "\n  suggestion: " (object/get @x "suggestion")))))) "\n") })
+      LINT_INPUT_UNREAD -> ready
+        (emit LINT_ANSWERED { status: 500, body: "lint route-init-params: the file could not be read or lowered" })
+    }
+
+    emits {
+      LINT_ANSWERED -> internal {
+        status : number!
+        body : string!
+      }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      LINT_REQUEST -> external { file : string! }
+        @description "Ask the lint input to read and lower this file."
+        @tier "internal"
+      LINT_FOUND -> external { rule : string!  scope : string!  findings : [OrbFinding]! }
+        @description "The rule trait's findings for the file."
+        @tier "internal"
+      LINT_INPUT_UNREAD -> external { file : string! }
+        @description "The lint input could not read or lower the file."
+        @tier "internal"
+    }
+
+    listens {
+      LINT_CALLED -> inbound "cli-lint-route-init-params" answers LINT_ANSWERED {
+        headers : Map string string
+        rawBody : string!
+      }
+        @description "Run `orb lint route-init-params` with its arguments and working directory."
+        @synonyms "orb lint route-init-params"
+      OrbLintRouteInitParams.LINT_FOUND -> LINT_FOUND
+      LINT_INPUT_UNREAD { file : string! }
+        @description "The lint input could not read or lower the file."
+      OrbLintInput.LINT_INPUT_UNREAD -> LINT_INPUT_UNREAD
+    }
+  }
+
+  trait Versions = Input.traits.Versions {
+  }
+  trait Packs = Input.traits.Packs {
+  }
+  trait OrbLintInput = Input.traits.OrbLintInput {
+    listens {
+      OrbLintRouteInitParamsCli.LINT_REQUEST -> LINT_REQUEST
+      LANG_SCAN_ANSWERED { status : number!  body : string!  stderr : string! }
+        @description "std-orb-language's SCAN_ANSWERED: a failed scan answers 500 and never reaches LANGUAGE_PACKS_DONE."
+      LANGUAGE_PACK_VOCAB_HEARD { name : string!  text : string! }
+        @description "std-orb-language's LANGUAGE_PACK_VOCAB: a checked pack and its vocabulary text."
+      LANGUAGE_PACKS_DONE_HEARD { problem : string! }
+        @description "std-orb-language's LANGUAGE_PACKS_DONE: the scan finished."
+      Packs.SCAN_ANSWERED -> LANG_SCAN_ANSWERED
+      Packs.LANGUAGE_PACK_VOCAB -> LANGUAGE_PACK_VOCAB_HEARD
+      Packs.LANGUAGE_PACKS_DONE -> LANGUAGE_PACKS_DONE_HEARD
+    }
+  }
+
+  page boot as OrbLintRouteInitParamsOrbitalStart -> OrbLintRouteInitParams, OrbLintRouteInitParamsCli, OrbLintInput, Packs, Versions
+}

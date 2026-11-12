@@ -1,0 +1,274 @@
+app std-rasm-panel [
+  version: "0.1.0",
+  description: "std-rasm-panel — the Rasm kit composed into one 720 by 520 panel on a single orbital canvas: a framed card holding a title, a paragraph, Begin / Theme / Later buttons, a Sound switch and a Warmth range, with keyboard focus and a staggered entry. Theme flips between the naqsh and glass presets. RASM_BEGIN, RASM_SOUND_CHANGED { checked } and RASM_WARMTH_CHANGED { value } leave the panel."
+]
+
+uses ThemeAtom from "std/behaviors/std-rasm-theme"
+uses SurfaceAtom from "std/behaviors/std-rasm-surface"
+uses StackAtom from "std/behaviors/std-rasm-stack"
+uses TextAtom from "std/behaviors/std-rasm-text"
+uses PressAtom from "std/behaviors/std-rasm-pressable"
+uses ToggleAtom from "std/behaviors/std-rasm-toggle"
+uses RangeAtom from "std/behaviors/std-rasm-range"
+uses PresenceAtom from "std/behaviors/std-rasm-presence"
+uses FocusAtom from "std/behaviors/std-rasm-focus"
+
+orbital Theme = ThemeAtom.orbitals.RasmThemeOrbital {
+  listens {
+    ThemeBtn.RasmPressable.RASM_THEME_PRESSED -> RasmTheme.RASM_THEME_TOGGLE
+    Surface.RasmSurface.RASM_BOOT -> RasmTheme.RASM_BOOT
+  }
+}
+
+orbital Surface = SurfaceAtom.orbitals.RasmSurfaceOrbital {
+  traits {
+    RasmSurface {
+      config {
+        id: "rasm"
+        width: 720
+        height: 520
+        rootChild: "panel"
+        rootRect: { x: 120, y: 60, w: 480, h: 400 }
+      }
+    }
+  }
+  pages {
+    "/rasm-surface": "/rasm-panel"
+  }
+  listens {
+    Theme.RasmTheme.RASM_THEME -> RasmSurface.RASM_THEME
+    PanelStack.RasmStack.RASM_PAINT -> RasmSurface.RASM_PAINT
+    ActionsStack.RasmStack.RASM_PAINT -> RasmSurface.RASM_PAINT
+    TitleText.RasmText.RASM_PAINT -> RasmSurface.RASM_PAINT
+    BodyText.RasmText.RASM_PAINT -> RasmSurface.RASM_PAINT
+    BeginBtn.RasmPressable.RASM_PAINT -> RasmSurface.RASM_PAINT
+    ThemeBtn.RasmPressable.RASM_PAINT -> RasmSurface.RASM_PAINT
+    LaterBtn.RasmPressable.RASM_PAINT -> RasmSurface.RASM_PAINT
+    SoundToggle.RasmToggle.RASM_PAINT -> RasmSurface.RASM_PAINT
+    WarmthRange.RasmRange.RASM_PAINT -> RasmSurface.RASM_PAINT
+  }
+}
+
+orbital PanelStack = StackAtom.orbitals.RasmStackOrbital {
+  traits {
+    RasmStack {
+      config {
+        id: "panel"
+        axis: "vertical"
+        gap: 18
+        padding: 36
+        look: "stack/panel/idle"
+        z: 1
+        children: [{ id: "title", size: "measure" }, { id: "body", size: "measure" }, { id: "actions", size: "fixed", main: 46 }, { id: "sound", size: "fixed", main: 28 }, { id: "warmth", size: "fixed", main: 56 }]
+      }
+    }
+  }
+  listens {
+    Theme.RasmTheme.RASM_THEME -> RasmStack.RASM_THEME
+    Surface.RasmSurface.RASM_PLACE -> RasmStack.RASM_PLACE
+    Surface.RasmSurface.RASM_MEASURED -> RasmStack.RASM_MEASURED
+    Enter.RasmPresence.RASM_ENTER -> RasmStack.RASM_ENTER
+  }
+}
+
+orbital ActionsStack = StackAtom.orbitals.RasmStackOrbital {
+  traits {
+    RasmStack {
+      config {
+        id: "actions"
+        axis: "horizontal"
+        gap: 12
+        padding: 0
+        look: ""
+        z: 1
+        children: [{ id: "begin", size: "fill" }, { id: "theme", size: "fill" }, { id: "later", size: "fill" }]
+      }
+    }
+  }
+  listens {
+    Theme.RasmTheme.RASM_THEME -> RasmStack.RASM_THEME
+    PanelStack.RasmStack.RASM_PLACE -> RasmStack.RASM_PLACE
+    Surface.RasmSurface.RASM_MEASURED -> RasmStack.RASM_MEASURED
+    Enter.RasmPresence.RASM_ENTER -> RasmStack.RASM_ENTER
+  }
+}
+
+orbital TitleText = TextAtom.orbitals.RasmTextOrbital {
+  traits {
+    RasmText {
+      config {
+        id: "title"
+        text: "Rasm"
+        intent: "title"
+        z: 2
+      }
+    }
+  }
+  listens {
+    Theme.RasmTheme.RASM_THEME -> RasmText.RASM_THEME
+    PanelStack.RasmStack.RASM_PLACE -> RasmText.RASM_PLACE
+    Enter.RasmPresence.RASM_ENTER -> RasmText.RASM_ENTER
+  }
+}
+
+orbital BodyText = TextAtom.orbitals.RasmTextOrbital {
+  traits {
+    RasmText {
+      config {
+        id: "body"
+        text: "A living surface drawn by the program itself. Move closer; it notices."
+        intent: "body"
+        z: 2
+      }
+    }
+  }
+  listens {
+    Theme.RasmTheme.RASM_THEME -> RasmText.RASM_THEME
+    PanelStack.RasmStack.RASM_PLACE -> RasmText.RASM_PLACE
+    Enter.RasmPresence.RASM_ENTER -> RasmText.RASM_ENTER
+  }
+}
+
+orbital BeginBtn = PressAtom.orbitals.RasmPressableOrbital {
+  traits {
+    RasmPressable {
+      config {
+        id: "begin"
+        label: "Begin"
+        intent: "primary"
+        action: RASM_BEGIN
+        z: 2
+      }
+    }
+  }
+  listens {
+    Surface.RasmSurface.RASM_BOOT -> RasmPressable.RASM_BOOT
+    Theme.RasmTheme.RASM_THEME -> RasmPressable.RASM_THEME
+    ActionsStack.RasmStack.RASM_PLACE -> RasmPressable.RASM_PLACE
+    Enter.RasmPresence.RASM_ENTER -> RasmPressable.RASM_ENTER
+    Surface.RasmSurface.RASM_POINTER -> RasmPressable.RASM_POINTER
+    Focus.RasmFocus.RASM_FOCUS -> RasmPressable.RASM_FOCUS
+    Focus.RasmFocus.RASM_ACTIVATE -> RasmPressable.RASM_ACTIVATE
+  }
+}
+
+orbital ThemeBtn = PressAtom.orbitals.RasmPressableOrbital {
+  traits {
+    RasmPressable {
+      config {
+        id: "theme"
+        label: "Theme"
+        intent: "secondary"
+        action: RASM_THEME_PRESSED
+        z: 2
+      }
+    }
+  }
+  listens {
+    Surface.RasmSurface.RASM_BOOT -> RasmPressable.RASM_BOOT
+    Theme.RasmTheme.RASM_THEME -> RasmPressable.RASM_THEME
+    ActionsStack.RasmStack.RASM_PLACE -> RasmPressable.RASM_PLACE
+    Enter.RasmPresence.RASM_ENTER -> RasmPressable.RASM_ENTER
+    Surface.RasmSurface.RASM_POINTER -> RasmPressable.RASM_POINTER
+    Focus.RasmFocus.RASM_FOCUS -> RasmPressable.RASM_FOCUS
+    Focus.RasmFocus.RASM_ACTIVATE -> RasmPressable.RASM_ACTIVATE
+  }
+}
+
+orbital LaterBtn = PressAtom.orbitals.RasmPressableOrbital {
+  traits {
+    RasmPressable {
+      config {
+        id: "later"
+        label: "Later"
+        intent: "secondary"
+        disabled: true
+        z: 2
+      }
+    }
+  }
+  listens {
+    Surface.RasmSurface.RASM_BOOT -> RasmPressable.RASM_BOOT
+    Theme.RasmTheme.RASM_THEME -> RasmPressable.RASM_THEME
+    ActionsStack.RasmStack.RASM_PLACE -> RasmPressable.RASM_PLACE
+    Enter.RasmPresence.RASM_ENTER -> RasmPressable.RASM_ENTER
+    Surface.RasmSurface.RASM_POINTER -> RasmPressable.RASM_POINTER
+    Focus.RasmFocus.RASM_FOCUS -> RasmPressable.RASM_FOCUS
+    Focus.RasmFocus.RASM_ACTIVATE -> RasmPressable.RASM_ACTIVATE
+  }
+}
+
+orbital SoundToggle = ToggleAtom.orbitals.RasmToggleOrbital {
+  traits {
+    RasmToggle {
+      config {
+        id: "sound"
+        label: "Sound"
+        kind: "switch"
+        changed: RASM_SOUND_CHANGED
+        z: 2
+      }
+    }
+  }
+  listens {
+    Surface.RasmSurface.RASM_BOOT -> RasmToggle.RASM_BOOT
+    Theme.RasmTheme.RASM_THEME -> RasmToggle.RASM_THEME
+    PanelStack.RasmStack.RASM_PLACE -> RasmToggle.RASM_PLACE
+    Enter.RasmPresence.RASM_ENTER -> RasmToggle.RASM_ENTER
+    Surface.RasmSurface.RASM_POINTER -> RasmToggle.RASM_POINTER
+    Focus.RasmFocus.RASM_FOCUS -> RasmToggle.RASM_FOCUS
+    Focus.RasmFocus.RASM_ACTIVATE -> RasmToggle.RASM_ACTIVATE
+  }
+}
+
+orbital WarmthRange = RangeAtom.orbitals.RasmRangeOrbital {
+  traits {
+    RasmRange {
+      config {
+        id: "warmth"
+        label: "Warmth"
+        min: 0
+        max: 100
+        value: 60
+        changed: RASM_WARMTH_CHANGED
+        z: 2
+      }
+    }
+  }
+  listens {
+    Surface.RasmSurface.RASM_BOOT -> RasmRange.RASM_BOOT
+    Theme.RasmTheme.RASM_THEME -> RasmRange.RASM_THEME
+    PanelStack.RasmStack.RASM_PLACE -> RasmRange.RASM_PLACE
+    Enter.RasmPresence.RASM_ENTER -> RasmRange.RASM_ENTER
+    Surface.RasmSurface.RASM_POINTER -> RasmRange.RASM_POINTER
+    Focus.RasmFocus.RASM_FOCUS -> RasmRange.RASM_FOCUS
+    Focus.RasmFocus.RASM_STEP -> RasmRange.RASM_STEP
+  }
+}
+
+orbital Enter = PresenceAtom.orbitals.RasmPresenceOrbital {
+  traits {
+    RasmPresence {
+      config {
+        order: ["panel", "title", "body", "begin", "theme", "later", "sound", "warmth"]
+        staggerMs: 70
+      }
+    }
+  }
+  listens {
+    Surface.RasmSurface.RASM_BOOT -> RasmPresence.RASM_BOOT
+  }
+}
+
+orbital Focus = FocusAtom.orbitals.RasmFocusOrbital {
+  traits {
+    RasmFocus {
+      config {
+        order: ["begin", "theme", "sound", "warmth"]
+      }
+    }
+  }
+  listens {
+    Surface.RasmSurface.RASM_KEY -> RasmFocus.RASM_KEY
+  }
+}

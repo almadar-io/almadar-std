@@ -1,6 +1,6 @@
 app std-web-crawl [
   version: "1.0.0",
-  description: "std-web-crawl — a bounded breadth-first crawl of one site through page events, whatever Chrome the composer wires. CRAWL_START { key, startUrl, maxDepth?, maxPages? } takes the origin (scheme, host and port, lowercase) of startUrl; maxDepth and maxPages default to the knobs. With respectRobots on, <origin>/robots.txt is loaded (PAGE_NAVIGATE then PAGE_TEXT) and the Allow and Disallow rules of the User-agent * group apply by the longest matching rule, * and a trailing $ as RFC 9309 defines them; a robots file that cannot be loaded allows everything and CRAWL_DONE says robots unreadable. Each page is PAGE_NAVIGATE, PAGE_LOADED, PAGE_LINKS, PAGE_LINKS_READ and answers CRAWL_PAGE { key, url, title, depth, links }; a page that fails to load answers CRAWL_PAGE with an error and the crawl goes on. Links are made of anchors only: the fragment is dropped, the origin must equal the start origin, the url must match an include pattern when the include knob is not empty and no exclude pattern, must not be blocked by robots and must not have been queued before. Links of pages at maxDepth are reported but not followed. An anchor with the download flag (std-chrome sets it from the download attribute or a download extension) is a document: recorded with its text and the page it came from, never navigated; documents are collected on the start origin only. delayMs separates two navigations through a composed std-delay. CRAWL_DONE { key, pages, documents, truncated, skipped, blocked, robots } ends the run: truncated is true when maxPages stopped it and skipped counts the urls left in the frontier; blocked counts the urls robots refused. A run while another is in flight answers CRAWL_FAILED code crawl_busy; a start url that is not http or https answers bad_start_url. Answers count only under this run's keys. The atom composes no browser; the composer wires the page events to std-chrome and grants nothing."
+  description: "std-web-crawl — a bounded breadth-first crawl of one site through page events, whatever Chrome the composer wires. CRAWL_START { key, startUrl, maxDepth?, maxPages? } takes the origin (scheme, host and port, lowercase) of startUrl; maxDepth and maxPages default to the knobs. With respectRobots on, <origin>/robots.txt is loaded (PAGE_NAVIGATE then PAGE_TEXT) and the Allow and Disallow rules of the User-agent * group apply by the longest matching rule, * and a trailing $ as RFC 9309 defines them; a robots file that cannot be loaded allows everything and CRAWL_DONE says robots unreadable. Each page is PAGE_NAVIGATE, PAGE_LOADED, PAGE_LINKS, PAGE_LINKS_READ and answers CRAWL_PAGE { key, url, title, depth, links }; a page that fails to load answers CRAWL_PAGE with an error and the crawl goes on. A page whose lowercased title matches a regex of the interstitialPatterns knob is a bot-check interstitial: it is given interstitialWaitMs to clear (through the composed std-delay) and loaded again, at most interstitialRetries times, then answered as CRAWL_PAGE with links empty, an error and interstitial set to that title. Links are made of anchors only: the fragment is dropped, the origin must equal the start origin, the url must match an include pattern when the include knob is not empty and no exclude pattern, must not be blocked by robots and must not have been queued before. Links of pages at maxDepth are reported but not followed. An anchor with the download flag (std-chrome sets it from the download attribute or a download extension) is a document: recorded with its text and the page it came from, never navigated; documents are collected on the start origin only. delayMs separates two navigations through a composed std-delay. CRAWL_DONE { key, pages, documents, truncated, skipped, blocked, robots } ends the run: truncated is true when maxPages stopped it and skipped counts the urls left in the frontier; blocked counts the urls robots refused. A run while another is in flight answers CRAWL_FAILED code crawl_busy; a start url that is not http or https answers bad_start_url. Answers count only under this run's keys. The atom composes no browser; the composer wires the page events to std-chrome and grants nothing."
 ]
 ;; @capabilities "crawl one website breadth first, honour robots.txt, collect linked documents"
 uses Spec from "almadar-std/web-crawl"
@@ -8,7 +8,7 @@ uses Delay from "std/behaviors/std-delay"
 
 type PageLink = { index : number!, text : string!, href : string!, download : boolean!, kind : "link" | "button"! }
 type CrawlItem = { url : string!, depth : number!, fromPage : string! }
-type CrawlPageRec = { url : string!, title : string!, depth : number!, error : string? }
+type CrawlPageRec = { url : string!, title : string!, depth : number!, error : string?, interstitial : string? }
 type CrawlDocument = { url : string!, text : string!, fromPage : string! }
 type RobotRule = { allow : boolean!, rule : string!, pattern : string! }
 type RobotScan = { star : boolean!, afterRule : boolean!, rules : [RobotRule]! }
@@ -32,6 +32,7 @@ orbital WebCrawlOrbital {
     curUrl : string @description "The url being visited." = ""
     curDepth : number @description "The depth of the url being visited." = 0
     curTitle : string @description "The title the page loaded with." = ""
+    challengeTries : number @description "How many times the page being visited answered a bot-check title and was waited on and loaded again." = 0
   }
 
   trait CrawlDelay = Delay.traits.Delay {
@@ -180,13 +181,30 @@ orbital WebCrawlOrbital {
       INIT -> idle
       CRAWL_START -> loading
         (emit CRAWL_FAILED { key: @payload.key, error: (str/concat "a crawl of " @entity.origin " is in flight"), code: "crawl_busy" })
-      PAGE_LOADED -> linking when (= @payload.key (str/concat @entity.runKey ":nav"))
+      PAGE_LOADED -> linking when (and (= @payload.key (str/concat @entity.runKey ":nav")) (not (array/some @config.interstitialPatterns (fn pat (validate/pattern (str/lower @payload.title) @pat)))))
         (set @entity.curTitle @payload.title)
+        (set @entity.challengeTries 0)
         (emit PAGE_LINKS { key: (str/concat @entity.runKey ":links") })
+      PAGE_LOADED -> challenged when (and (= @payload.key (str/concat @entity.runKey ":nav")) (array/some @config.interstitialPatterns (fn pat (validate/pattern (str/lower @payload.title) @pat))) (< @entity.challengeTries @config.interstitialRetries))
+        (set @entity.challengeTries (+ @entity.challengeTries 1))
+        (emit CRAWL_TIMER_ARM { key: (str/concat @entity.runKey ":challenge"), delayMs: @config.interstitialWaitMs })
+      PAGE_LOADED -> stepping when (and (= @payload.key (str/concat @entity.runKey ":nav")) (array/some @config.interstitialPatterns (fn pat (validate/pattern (str/lower @payload.title) @pat))) (>= @entity.challengeTries @config.interstitialRetries))
+        (set @entity.challengeTries 0)
+        (set @entity.pages (array/append @entity.pages { url: @entity.curUrl, title: @payload.title, depth: @entity.curDepth, error: (str/concat "the page answered a bot check: " @payload.title), interstitial: @payload.title }))
+        (emit CRAWL_PAGE { key: @entity.runKey, url: @entity.curUrl, title: @payload.title, depth: @entity.curDepth, links: [], error: (str/concat "the page answered a bot check: " @payload.title), interstitial: @payload.title })
+        (emit CRAWL_NEXT { })
       PAGE_FAILED -> stepping when (= @payload.key (str/concat @entity.runKey ":nav"))
         (set @entity.pages (array/append @entity.pages { url: @entity.curUrl, title: "", depth: @entity.curDepth, error: @payload.error }))
         (emit CRAWL_PAGE { key: @entity.runKey, url: @entity.curUrl, title: "", depth: @entity.curDepth, links: [], error: @payload.error })
         (emit CRAWL_NEXT { })
+    }
+
+    state challenged {
+      INIT -> idle
+      CRAWL_START -> challenged
+        (emit CRAWL_FAILED { key: @payload.key, error: (str/concat "a crawl of " @entity.origin " is in flight"), code: "crawl_busy" })
+      CRAWL_WAITED -> loading when (= @payload.key (str/concat @entity.runKey ":challenge"))
+        (emit PAGE_NAVIGATE { key: (str/concat @entity.runKey ":nav"), url: @entity.curUrl })
     }
 
     state linking {
@@ -211,8 +229,9 @@ orbital WebCrawlOrbital {
         depth : number!
         links : [PageLink]!
         error : string?
+        interstitial : string?
       }
-        @description "One page was visited: its url, title, depth from the start page (0) and every anchor and button it holds. error is set, links empty, when the page did not load."
+        @description "One page was visited: its url, title, depth from the start page (0) and every anchor and button it holds. error is set, links empty, when the page did not load; interstitial is the bot-check title when the page kept answering one."
         @synonyms "page crawled, page visited"
         @tier "primary"
       CRAWL_DONE -> external {
@@ -318,6 +337,18 @@ orbital WebCrawlOrbital {
       maxPages : number = 25
         @label "Pages"
         @description "The most pages visited; when urls remain, CRAWL_DONE says truncated and how many were skipped."
+        @tier "domain"
+      interstitialPatterns : [string] = ["^just a moment", "^attention required", "^checking your browser", "^one moment, please", "^access denied$", "^ddos-guard$", "^please wait while we verify"]
+        @label "Bot-check titles"
+        @description "Regexes over the lowercased page title that mark a bot-check interstitial (Cloudflare, DDoS-Guard and the like) instead of the page; such a page is waited on and loaded again."
+        @tier "domain"
+      interstitialWaitMs : number = 5000
+        @label "Bot-check wait (ms)"
+        @description "How long a bot-check page is given to clear by itself before it is loaded again."
+        @tier "domain"
+      interstitialRetries : number = 2
+        @label "Bot-check retries"
+        @description "How many times a bot-check page is waited on and loaded again before the page is reported with its interstitial."
         @tier "domain"
       delayMs : number = 500
         @label "Delay (ms)"

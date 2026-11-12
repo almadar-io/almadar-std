@@ -37,8 +37,10 @@ type WalkListen = { event : string!, triggers : string }
 type WalkListenTrait = { name : string!, listens : [WalkListen]? }
 type WalkListenOrbital = { name : string!, traits : [WalkListenTrait]? }
 type WalkListenProgram = { orbitals : [WalkListenOrbital]! }
+type WalkEmit = { type : string! }
+type WalkOutcome = { trait : string!, event : string!, from : string!, to : string!, emitted : [WalkEmit]? }
 type WalkCollapsed = { trait : string!, event : string!, payload : WalkJson? }
-type WalkResult = { trait : string!, event : string!, failure : string?, transitionFired : boolean!, guard : string!, firedArm : number, effects : [WalkEffect]!, emitted : [SExpr]!, guards : [SExpr]!, state : Map string string, rendered : [WalkRenderedSlot]?, collapsed : [WalkCollapsed]? }
+type WalkResult = { trait : string!, event : string!, failure : string?, transitionFired : boolean!, guard : string!, firedArm : number, effects : [WalkEffect]!, emitted : [SExpr]!, guards : [SExpr]!, state : Map string string, rendered : [WalkRenderedSlot]?, collapsed : [WalkCollapsed]?, outcomes : [WalkOutcome]? }
 type WalkHop = { trait : string!, from : string!, event : string!, to : string!, arm : number }
 type WalkCreditStep = { trait : string!, from : string!, event : string!, arm : number, reply : string, fired : [WalkHop] }
 type WalkCredit = { index : number!, stateBefore : string!, stateAfter : string! }
@@ -325,11 +327,25 @@ orbital VerifyWalkOrbital {
           (array/map @entity.notes (fn n { trait: (object/get @n "trait"), from: (object/get @n "from"), event: (object/get @n "event"),
             to: (let ((g (array/find @entity.machineRows (fn g (and (= (object/get @g "trait") (object/get @n "trait")) (= (object/get @g "from") (object/get @n "from")) (= (object/get @g "event") (object/get @n "event"))))))) (if (= @g null) "" (object/get @g "to"))),
             verdict: "unplanned" }))))
-        (set @entity.findings (array/reduce (array/flatten (array/map @entity.played (fn p (object/get (object/get @p "result") "collapsed" [])))) [] (fn acc c
-          (if (and (array/includes (array/flatten (array/map (object/get (default (as @entity.program WalkListenProgram) { orbitals: [] }) "orbitals") (fn o (array/flatten (array/map (default (object/get @o "traits") []) (fn t (array/map (default (object/get @t "listens") []) (fn l (default (object/get @l "triggers") (object/get @l "event"))))))))))
-                                   (object/get @c "event"))
-                   (not (array/some @acc (fn f (= @f @c)))))
-            (array/concat @acc [@c]) @acc))))
+        (set @entity.findings (let ((allT (array/flatten (array/map (object/get (default (as @entity.program WalkListenProgram) { orbitals: [] }) "orbitals") (fn o (default (object/get @o "traits") []))))))
+          (array/reduce @entity.played [] (fn acc p
+            (let ((outs : [WalkOutcome] (default (object/get (object/get @p "result") "outcomes") [])))
+              (array/reduce (default (object/get (object/get @p "result") "collapsed") []) @acc (fn acc2 c
+                (let ((heard (array/map (array/filter (array/flatten (array/map (array/filter @allT (fn t (= (object/get @t "name") (object/get @c "trait")))) (fn t (default (object/get @t "listens") []))))
+                                          (fn l (= (default (object/get @l "triggers") (object/get @l "event")) (object/get @c "event"))))
+                                        (fn l (object/get @l "event"))))
+                      (answers (array/flatten (array/map (array/filter @outs (fn o (and (= (object/get @o "trait") (object/get @c "trait")) (= (object/get @o "event") (object/get @c "event")))))
+                                                 (fn o (array/map (default (object/get @o "emitted") []) (fn e (object/get @e "type"))))))))
+                  (let ((askers (array/map (array/filter @outs (fn o (array/some (default (object/get @o "emitted") []) (fn e (array/includes @heard (object/get @e "type")))))) (fn o (object/get @o "trait")))))
+                    (let ((waiting (array/some @askers (fn a
+                          (let ((mine (array/filter @outs (fn o (= (object/get @o "trait") @a)))))
+                            (let ((after (object/get (default (array/nth @mine (- (array/len @mine) 1)) { trait: "", event: "", from: "", to: "" }) "to"))
+                                  (locals (array/map (array/filter (array/flatten (array/map (array/filter @allT (fn t (= (object/get @t "name") @a))) (fn t (default (object/get @t "listens") []))))
+                                                       (fn l (array/includes @answers (object/get @l "event"))))
+                                                     (fn l (default (object/get @l "triggers") (object/get @l "event"))))))
+                              (array/some @locals (fn q (and (array/some @entity.machineRows (fn g (and (= (object/get @g "trait") @a) (= (object/get @g "from") @after) (= (object/get @g "event") @q))))
+                                                             (not (array/some @mine (fn o (= (object/get @o "event") @q))))))))))))) 
+                      (if (and @waiting (not (array/some @acc2 (fn f (= @f @c))))) (array/concat @acc2 [@c]) @acc2)))))))))))
         (set @entity.failed (array/len (array/filter @entity.rows (fn r (= (object/get @r "verdict") "fail")))))
         (set @entity.passed (array/len (array/filter @entity.rows (fn r (= (object/get @r "verdict") "pass")))))
         (set @entity.unplanned (array/len (array/filter @entity.rows (fn r (= (object/get @r "verdict") "unplanned")))))
@@ -340,7 +356,7 @@ orbital VerifyWalkOrbital {
           (array/map @entity.rows (fn r (str/concat (object/get @r "verdict") "  " (object/get @r "trait") " " (object/get @r "from") " --" (object/get @r "event") "--> " (object/get @r "to")
             (if (= (object/get @r "verdict") "unplanned") (str/concat "  missing: " (let ((nt (array/find @entity.notes (fn n (and (= (object/get @n "trait") (object/get @r "trait")) (= (object/get @n "from") (object/get @r "from")) (= (object/get @n "event") (object/get @r "event"))))))) (if (= @nt null) "" (object/get @nt "missing"))))
               (if (!= (object/get @r "detail" "") "") (str/concat "  " (object/get @r "detail" "")) "")))))
-          (array/map @entity.findings (fn f (str/concat "finding  VERIFY_REPEATED_ASK_COLLAPSED  " (object/get @f "trait") " " (object/get @f "event") " " (json/stringify (object/get @f "payload")) "  the same question was asked twice in one dispatch; the second was skipped (EXEC-QUEUE-4) and nothing answers it")))
+          (array/map @entity.findings (fn f (str/concat "finding  VERIFY_REPEATED_ASK_COLLAPSED  " (object/get @f "trait") " " (object/get @f "event") " " (json/stringify (object/get @f "payload")) "  the same question was asked twice in one dispatch; the second was skipped (EXEC-QUEUE-4) and its asker is still waiting for the answer")))
           [(str/concat @entity.passed " passed, " @entity.failed " failed, " @entity.unplanned " unplanned, " @entity.guardBlocked " guard-blocked" (if (> @entity.gaps 0) (str/concat ", " @entity.gaps " gap") "") (if (> @entity.denied 0) (str/concat ", " @entity.denied " denied") "") (if (> (array/len @entity.findings) 0) (str/concat ", " (array/len @entity.findings) " finding") ""))]) "\n") })
       WALK_FAILED -> ready
         (emit VERIFY_WALK_ANSWERED { status: 500, body: (str/concat "verify-walk: " (default @payload.error "")) })

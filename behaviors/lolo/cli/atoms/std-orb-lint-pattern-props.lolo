@@ -11,18 +11,23 @@ type OrbCommandArgs = { argv : [string]!, cwd : string! }
 type OrbFinding = { code : string!, path : string!, message : string!, suggestion : string!, severity : "warning" | "error", validValues : [string], entity : string, field : string }
 type PtVal = string | number | boolean | [PtVal?] | Map string PtVal?
 type PtHit = { c : string!, p : string!, m : string!, s : string! }
-type PtCand = { n : string!, p : string! }
+type PtCand = { n : string!, p : string!, o : string! }
+type PtRows = { nm : [string]!, ok : boolean! }
 type PtItem = { v : [PtHit]!, m : [PtHit]!, mp : boolean! }
 type PtRes = { v : [PtHit]!, e : [PtItem]!, lb : [PtHit]!, mv : [PtHit]!, mp : boolean!, op : boolean!, cd : boolean!, ar : boolean! }
-type PtTransition = { effects : [PtVal?] }
-type PtMachine = { transitions : [PtTransition] }
+type PtTransition = { event : string, effects : [PtVal?] }
+type PtEvent = { key : string, payloadSchema : [PtField]? }
+type PtMachine = { events : [PtEvent], transitions : [PtTransition] }
 type PtTrait = { name : string, linkedEntity : string, stateMachine : PtMachine? }
-type PtField = { name : string, type : string }
+type PtField = { name : string, type : string, properties : [PtField]?, items : PtItems?, relation : PtRel? }
+type PtItems = { properties : Map string PtField? }
+type PtRel = { entity : string? }
+type PtDescent = { lv : [PtField]!, ok : boolean! }
 type PtEntRow = { name : string!, fields : [PtField] }
 type PtEntity = { name : string, fields : [PtField] }
 type PtOrbital = { name : string, entity : PtEntity?, auxiliaryEntities : [PtEntity], traits : [PtTrait] }
 type PtProgram = { orbitals : [PtOrbital] }
-type PtPropShape = { types : [string], requiredOnParent : boolean, requiredNames : [string], enumValues : [string], kind : string, itemKind : string, requiredFields : [string], items : PtPropShape, properties : Map string PtPropShape }
+type PtPropShape = { types : [string], requiredOnParent : boolean, requiredNames : [string], enumValues : [string], kind : string, itemKind : string, of : string, requiredFields : [string], items : PtPropShape, properties : Map string PtPropShape }
 type PtPatternShape = { drawHost : boolean, drawable : boolean, fieldsContract : string, accessibleName : [string], props : Map string PtPropShape }
 
 type LintCodeDecl = { code : string!, category : string!, description : string! }
@@ -40,6 +45,8 @@ orbital OrbLintPatternPropsOrbital {
     findings : [OrbFinding] = []
     fieldRefs : Map string (Map string string) = {}
     memberRefs : Map string (Map string [string]) = {}
+    memberOf : Map string (Map string (Map string string)) = {}
+    propOf : Map string (Map string string) = {}
     reqFields : Map string (Map string [string]) = {}
     itemPat : [string] = []
     itemSet : Map string boolean = {}
@@ -59,6 +66,8 @@ orbital OrbLintPatternPropsOrbital {
       LINT_PATTERNS_HEARD -> ready
         (set @entity.fieldRefs (object/mapValues @payload.patterns (fn e (object/mapValues (object/get @e "props" {}) (fn pr (str/concat (if (= (object/get @pr "kind" "") "field-ref") "s" "") (if (= (object/get @pr "itemKind" "") "field-ref") "a" ""))))))) 
         (set @entity.memberRefs (object/mapValues @payload.patterns (fn e (object/mapValues (object/get @e "props" {}) (fn pr (let ((mp (object/get (object/get @pr "items" {}) "properties" {}))) (array/filter (object/keys @mp) (fn m (= (object/get (object/get @mp @m {}) "kind" "") "field-ref")))))))))
+        (set @entity.memberOf (object/mapValues @payload.patterns (fn e (object/mapValues (object/get @e "props" {}) (fn pr (let ((mp (object/get (object/get @pr "items" {}) "properties" {}))) (object/fromEntries (array/map (array/filter (object/keys @mp) (fn m (and (= (object/get (object/get @mp @m {}) "kind" "") "field-ref") (!= (object/get (object/get @mp @m {}) "of" "") "")))) (fn m [@m, (object/get (object/get @mp @m {}) "of" "")])))))))))
+        (set @entity.propOf (object/mapValues @payload.patterns (fn e (object/mapValues (object/get @e "props" {}) (fn pr (object/get @pr "of" ""))))))
         (set @entity.reqFields (object/mapValues @payload.patterns (fn e (object/mapValues (object/get @e "props" {}) (fn pr (object/get @pr "requiredFields" []))))))
         (set @entity.itemPat (array/unique (array/flatten (array/map (object/keys @payload.patterns) (fn pn (object/keys (object/get (object/get @payload.patterns @pn {}) "props.itemActions.items.properties" {})))))))
         (set @entity.itemSet (object/fromEntries (array/map (array/unique (array/concat @entity.itemBase @entity.itemPat)) (fn x [@x, true]))))
@@ -85,8 +94,8 @@ orbital OrbLintPatternPropsOrbital {
       LINT_INPUT -> ready when (not @entity.vocabUnread)
         (set @entity.scope @payload.scope)
         (set @entity.findings (if (and @entity.indexHeard (= @entity.indexScope @payload.scope) @entity.entsHeard (= @entity.entsScope @payload.scope))
-(let ((orbitals (object/get @payload.program "orbitals" [])) (noh : [PtHit] []) (noe : [PtEntity] []) (nostrs : [string] []) (nof : [OrbFinding] [])
- (ops @entity.opSet) (itemSet @entity.itemSet) (fieldRefs @entity.fieldRefs) (memberRefs @entity.memberRefs) (nocd : [PtCand] []) (reqFields @entity.reqFields)
+(let ((orbitals (object/get @payload.program "orbitals" [])) (noh : [PtHit] []) (noe : [PtEntity] []) (nostrs : [string] []) (nof : [OrbFinding] []) (nopf : [PtField] [])
+ (ops @entity.opSet) (itemSet @entity.itemSet) (fieldRefs @entity.fieldRefs) (memberRefs @entity.memberRefs) (memberOf @entity.memberOf) (propOf @entity.propOf) (norows : PtRows { nm: @nostrs, ok: false }) (nocd : [PtCand] []) (reqFields @entity.reqFields)
  (entIdx @entity.entIdx))
           (array/flatten (array/map (array/range 0 (array/len @orbitals)) (fn oi
             (let ((orb (array/nth @orbitals @oi)))
@@ -96,7 +105,9 @@ orbital OrbLintPatternPropsOrbital {
                     (if (not (object/has @td "stateMachine")) @nof
                     (let ((trans (object/get (object/get @td "stateMachine" {}) "transitions" [])) (lnk (object/get @td "linkedEntity" "")))
                       (array/flatten (array/map (array/range 0 (array/len @trans)) (fn ti
-                        (let ((effs (if (array/includes (object/get @entity.iHeads (str/concat @oi "-" @tj "-" @ti) @nostrs) "render-ui") (object/get (array/nth @trans @ti) "effects" []) @noh)))
+                        (let ((effs (if (array/includes (object/get @entity.iHeads (str/concat @oi "-" @tj "-" @ti) @nostrs) "render-ui") (object/get (array/nth @trans @ti) "effects" []) @noh))
+                              (trEv (object/get (array/nth @trans @ti) "event" ""))
+                              (psch : [PtField]? (let ((evd (array/find (object/get (object/get @td "stateMachine" {}) "events" []) (fn q (= (object/get @q "key") (object/get (array/nth @trans @ti) "event" "")))))) (if (= @evd null) null (object/get @evd "payloadSchema" null)))))
                           (array/flatten (array/map (array/range 0 (array/len @effs)) (fn ej
                             (let ((e (array/nth @effs @ej)))
                               (let ((ea (if (validate/array @e) @e [])))
@@ -159,11 +170,18 @@ orbital OrbLintPatternPropsOrbital {
                     (if (validate/array @ia)
                       (array/flatten (array/map (array/range 0 (array/len @ia)) (fn i (let ((a (array/nth @ia @i))) (if (validate/object @a) (array/map (array/filter (object/keys @a) (fn kk (not (object/has @itemSet @kk)))) (fn kk { c: "ORB_RUI_UNKNOWN_ITEM_ACTION_PROP", p: (str/concat ".itemActions[" @i "]"), m: (str/concat "Unknown itemAction prop: '" @kk "'"), s: "Remove the unknown prop" })) @noh)))))
                       @noh))
-                  (let ((en2 @own))
-                    (if (= @en2 "") @noh
-                      (let ((def (object/get @entIdx @en2 null)) (frm (object/get @fieldRefs @pt {})) (mrm (object/get @memberRefs @pt {})))
-                        (if (= @def null) @noh
-                          (let ((fnames (object/get @def "fields" [])))
+                  (let ((en2 @own)
+                        (pl : PtDescent (if (and (validate/string @en3) (validate/pattern @en3s "^@payload(\\.[A-Za-z0-9_]+)+$"))
+                          (array/reduce (array/slice (str/split @en3s ".") 1) { lv: (default @psch @nopf), ok: (!= @psch null) } (fn (acc sg)
+                            (if (not (object/get @acc "ok")) @acc
+                              (let ((fm (array/find (object/get @acc "lv") (fn q (= (object/get @q "name") @sg)))))
+                                (if (= @fm null) { lv: @nopf, ok: false }
+                                  (let ((pp (object/get @fm "properties" null))) (if (= @pp null) { lv: @nopf, ok: false } { lv: @pp, ok: true })))))))
+                          { lv: @nopf, ok: false })))
+                    (if (and (= @en2 "") (not (object/get @pl "ok"))) @noh
+                      (let ((def (object/get @entIdx @en2 null)) (frm (object/get @fieldRefs @pt {})) (mrm (object/get @memberRefs @pt {})) (mof (object/get @memberOf @pt {})) (pof (object/get @propOf @pt {})))
+                        (if (and (= @def null) (not (object/get @pl "ok"))) @noh
+                          (let ((fnames (if (!= @def null) (object/get @def "fields" []) (object/get @pl "lv"))) (lbl (if (!= @def null) @en2 (str/concat "payload " (str/slice @en3s 9) " of event " @trEv))))
                             (array/flatten (array/map (array/filter @okeys (fn pk (and (!= @pk "type") (!= @pk "entity") (or (!= (object/get @frm @pk "") "") (> (array/len (object/get @mrm @pk [])) 0))))) (fn pk
                               (let ((mode (object/get @frm @pk "")) (pvv (object/get @n @pk null)))
                                 (let ((pvs (if (validate/string @pvv) @pvv "")) (pva (if (validate/array @pvv) @pvv [])))
@@ -171,19 +189,44 @@ orbital OrbLintPatternPropsOrbital {
                                     (array/concat
                                      (array/map (array/concat
                                       (if (and (str/includes @mode "s") (validate/string @pvv) (not (str/startsWith @pvs (quote "@")))) [@pvs] (array/take [""] 0))
-                                      (if (str/includes @mode "a") (array/filter (array/map @pva (fn el (if (validate/string @el) @el (quote "@")))) (fn el (not (str/startsWith @el (quote "@"))))) (array/take [""] 0))) (fn x { n: @x, p: "" }))
+                                      (if (str/includes @mode "a") (array/filter (array/map @pva (fn el (if (validate/string @el) @el (quote "@")))) (fn el (not (str/startsWith @el (quote "@"))))) (array/take [""] 0))) (fn x { n: @x, p: "", o: (object/get @pof @pk "") }))
                                      (let ((mems (object/get @mrm @pk [])) (h0 (if (> (array/len @pva) 0) (array/nth @pva 0) null)))
                                        (if (and (validate/array @pvv) (not (and (validate/string @h0) (object/has @ops @h0))))
                                          (array/flatten (array/map (array/range 0 (array/len @pva)) (fn i
                                            (let ((el (array/nth @pva @i)))
                                              (if (validate/object @el)
-                                               (array/map (array/filter @mems (fn m (let ((mv (object/get @el @m null))) (and (validate/string @mv) (not (str/startsWith @mv (quote "@"))))))) (fn m { n: (default (as (object/get @el @m "") string) ""), p: (str/concat "." @pk "[" @i "]." @m) }))
+                                               (array/map (array/filter @mems (fn m (let ((mv (object/get @el @m null))) (and (validate/string @mv) (not (str/startsWith @mv (quote "@"))))))) (fn m { n: (default (as (object/get @el @m "") string) ""), p: (str/concat "." @pk "[" @i "]." @m), o: (object/get (object/get @mof @pk {}) @m "") }))
                                                @nocd)))))
                                          @nocd)))))
                                   (array/flatten (array/map @cands
-                                    (fn cd (let ((nm (object/get @cd "n"))) (if (or (str/includes @nm ".") (array/some @fnames (fn x (let ((fnm (object/get @x "name" null))) (and (validate/string @fnm) (or (= @fnm @nm) (= @fnm (str/concat @nm "Id"))))))))
+                                    (fn cd (let ((nm (object/get @cd "n")) (co (object/get @cd "o")))
+                                     (if (!= @co "")
+                                      (let ((ov (object/get @n @co null)))
+                                       (let ((ovs (if (validate/string @ov) @ov "")))
+                                        (let ((rr : PtRows
+                                              (if (validate/pattern @ovs "^@entity\\.[A-Za-z0-9_]+$")
+                                                (let ((fm (array/find (if (!= @def null) (object/get @def "fields" []) @nopf) (fn q (= (object/get @q "name") (str/slice @ovs 8))))))
+                                                  (if (= @fm null) @norows
+                                                    (let ((fty (object/get @fm "type" "")) (its (object/get @fm "items" null)) (rl (object/get @fm "relation" null)))
+                                                      (if (and (= @fty "array") (!= @its null) (!= (object/get @its "properties" null) null))
+                                                        { nm: (object/keys (object/get @its "properties" {})), ok: true }
+                                                        (if (and (= @fty "relation") (!= @rl null) (!= (object/get @rl "entity" null) null))
+                                                          (let ((td (object/get @entIdx (object/get @rl "entity" "") null)))
+                                                            (if (= @td null) @norows { nm: (array/map (object/get @td "fields" []) (fn q (object/get @q "name" ""))), ok: true }))
+                                                          @norows)))))
+                                                (if (validate/pattern @ovs "^@payload(\\.[A-Za-z0-9_]+)+$")
+                                                  (let ((d2 : PtDescent (array/reduce (array/slice (str/split @ovs ".") 1) { lv: (default @psch @nopf), ok: (!= @psch null) } (fn (acc sg)
+                                                          (if (not (object/get @acc "ok")) @acc
+                                                            (let ((fm (array/find (object/get @acc "lv") (fn q (= (object/get @q "name") @sg)))))
+                                                              (if (= @fm null) { lv: @nopf, ok: false }
+                                                                (let ((pp (object/get @fm "properties" null))) (if (= @pp null) { lv: @nopf, ok: false } { lv: @pp, ok: true })))))))))
+                                                    (let ((r2 : PtRows { nm: (array/map (object/get @d2 "lv") (fn q (object/get @q "name" ""))), ok: (object/get @d2 "ok") })) @r2))
+                                                  @norows))))
+                                          (if (or (not (object/get @rr "ok")) (str/includes @nm ".") (array/includes (object/get @rr "nm") @nm)) @noh
+                                            [{ c: "ORB_X_UNRESOLVED_PATTERN_FIELD_REF", p: (object/get @cd "p"), m: (str/concat "Pattern '" @pt "' prop '" @pk "' references field '" @nm "' which does not exist on the rows of '" @co "'"), s: (str/concat "Use a field of the rows bound to '" @co "'") }]))))
+                                     (if (or (str/includes @nm ".") (array/some @fnames (fn x (let ((fnm (object/get @x "name" null))) (and (validate/string @fnm) (or (= @fnm @nm) (= @fnm (str/concat @nm "Id"))))))))
                                       @noh
-                                      [{ c: "ORB_X_UNRESOLVED_PATTERN_FIELD_REF", p: (object/get @cd "p"), m: (str/concat "Pattern '" @pt "' prop '" @pk "' references field '" @nm "' which does not exist on entity '" @en2 "'"), s: (str/concat "Use a field declared on '" @en2 "' or add the field to the entity schema") }]))))))))))))))))
+                                      [{ c: "ORB_X_UNRESOLVED_PATTERN_FIELD_REF", p: (object/get @cd "p"), m: (str/concat "Pattern '" @pt "' prop '" @pk "' references field '" @nm "' which does not exist on entity '" @lbl "'"), s: (str/concat "Use a field declared on '" @lbl "' or add the field to the entity schema") }])))))))))))))))))
                   (if (= @bound "") @noh
                         (let ((def2 (object/get @entIdx @bound null)) (rfm (object/get @reqFields @pt {})))
                           (let ((dfields (if (= @def2 null) [] (object/get @def2 "fields" []))))
