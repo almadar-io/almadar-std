@@ -24,12 +24,24 @@ orbital AgentIdentityFixture {
     seen : string @description "The id of the last @user asked about." = ""
   }
 
+  trait AgentSignIn = Identity.traits.AgentSignIn {
+    config {
+      subject: "support-agent"
+      publicKeyX: "6mjXtv7fC3GHiTjVHXH4cp4Ky4wsbfiz156KS5CUnuA"
+      publicKeyY: "KidEyXLJ_OeHAUqWSo6gyE1xT-qk3oI_6FoiSk3QSPo"
+    }
+  }
+
+  trait AgentBinding = Identity.traits.AgentBinding {
+    config {
+      identityEntity: Person
+    }
+  }
+
   trait Agent = Identity.traits.AgentIdentity {
     config {
       subject: "support-agent"
       signingKey: "AGENT_IDENTITY_KEY"
-      publicKeyX: "6mjXtv7fC3GHiTjVHXH4cp4Ky4wsbfiz156KS5CUnuA"
-      publicKeyY: "KidEyXLJ_OeHAUqWSo6gyE1xT-qk3oI_6FoiSk3QSPo"
       ownOrbital: "AgentIdentityFixture"
       ownTrait: "Agent"
     }
@@ -63,5 +75,5 @@ orbital AgentIdentityFixture {
     }
   }
 
-  page boot as AgentIdentityFixturePage -> Agent, Who
+  page boot as AgentIdentityFixturePage -> Agent, AgentSignIn, AgentBinding, Who
 }

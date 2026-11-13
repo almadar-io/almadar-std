@@ -506,110 +506,6 @@
    ]
   },
   {
-   "id": "init-announces-the-direction-before-the-root-is-placed",
-   "config": {
-    "direction": "rtl"
-   },
-   "entity": {
-    "id": "s"
-   },
-   "steps": [
-    {
-     "from": "ready",
-     "event": "INIT",
-     "payload": {},
-     "expect": {
-      "state": "ready",
-      "emits": [
-       {
-        "event": "RASM_BOOT",
-        "payload": {}
-       },
-       {
-        "event": "RASM_DIRECTION",
-        "payload": {
-         "direction": "rtl"
-        }
-       },
-       {
-        "event": "RASM_PLACE",
-        "payload": {
-         "placed": [
-          {
-           "id": "root",
-           "rect": {
-            "x": 0,
-            "y": 0,
-            "w": 720,
-            "h": 520
-           }
-          }
-         ]
-        }
-       },
-       {
-        "event": "SURFACE_REPAINT",
-        "payload": {
-         "n": 1
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "control-the-default-direction-is-ltr",
-   "config": {},
-   "entity": {
-    "id": "s"
-   },
-   "steps": [
-    {
-     "from": "ready",
-     "event": "INIT",
-     "payload": {},
-     "expect": {
-      "state": "ready",
-      "emits": [
-       {
-        "event": "RASM_BOOT",
-        "payload": {}
-       },
-       {
-        "event": "RASM_DIRECTION",
-        "payload": {
-         "direction": "ltr"
-        }
-       },
-       {
-        "event": "RASM_PLACE",
-        "payload": {
-         "placed": [
-          {
-           "id": "root",
-           "rect": {
-            "x": 0,
-            "y": 0,
-            "w": 720,
-            "h": 520
-           }
-          }
-         ]
-        }
-       },
-       {
-        "event": "SURFACE_REPAINT",
-        "payload": {
-         "n": 1
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
    "id": "a-multi-touch-pointer-event-also-relays-the-touches-and-a-single-pointer-does-not",
    "config": {},
    "entity": {
@@ -924,11 +820,10 @@
   },
   {
    "id": "rtl-swaps-the-horizontal-arrows",
-   "config": {
-    "direction": "rtl"
-   },
+   "config": {},
    "entity": {
-    "id": "s"
+    "id": "s",
+    "dir": "rtl"
    },
    "steps": [
     {
@@ -959,11 +854,10 @@
   },
   {
    "id": "control-ltr-arrow-right-increases",
-   "config": {
-    "direction": "ltr"
-   },
+   "config": {},
    "entity": {
-    "id": "s"
+    "id": "s",
+    "dir": "ltr"
    },
    "steps": [
     {
@@ -993,7 +887,7 @@
    ]
   },
   {
-   "id": "an-embed-request-reaches-the-canvas-and-the-host-answer-comes-back",
+   "id": "the-canvas-direction-is-relayed-to-the-kit",
    "config": {},
    "entity": {
     "id": "s"
@@ -1001,44 +895,59 @@
    "steps": [
     {
      "from": "ready",
-     "event": "RASM_EMBED",
+     "event": "SURFACE_DIRECTION",
      "payload": {
-      "id": "e",
-      "kind": "program",
-      "source": "/p",
-      "label": "Orders",
-      "z": 3,
-      "rect": {
-       "x": 10,
-       "y": 20,
-       "w": 300,
-       "h": 200
-      }
+      "direction": "rtl"
      },
      "expect": {
       "state": "ready",
       "entity": {
-       "embeds": {
-        "e": {
-         "id": "e",
-         "kind": "program",
-         "source": "/p",
-         "rect": {
-          "x": 10,
-          "y": 20,
-          "w": 300,
-          "h": 200
-         }
+       "dir": "rtl"
+      },
+      "emits": [
+       {
+        "event": "RASM_DIRECTION",
+        "payload": {
+         "direction": "rtl"
         }
        }
-      }
+      ]
      }
-    },
+    }
+   ]
+  },
+  {
+   "id": "control-init-announces-no-direction-of-its-own",
+   "config": {},
+   "entity": {
+    "id": "s"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "INIT",
+     "payload": {},
+     "expect": {
+      "state": "ready",
+      "neverEmits": [
+       "RASM_DIRECTION"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-canvas-is-asked-for-the-locale-direction",
+   "config": {},
+   "entity": {
+    "id": "s"
+   },
+   "steps": [
     {
      "from": "ready",
      "event": "SURFACE_REPAINT",
      "payload": {
-      "n": 9
+      "n": 1
      },
      "options": {
       "render": true,
@@ -1050,47 +959,7 @@
        {
         "slot": "main",
         "props": {
-         "embeds.0.id": "e",
-         "embeds.0.kind": "program",
-         "embedEvent": "SURFACE_EMBED"
-        }
-       }
-      ]
-     },
-     "entity": {
-      "id": "s",
-      "embeds": {
-       "e": {
-        "id": "e",
-        "kind": "program",
-        "source": "/p",
-        "rect": {
-         "x": 10,
-         "y": 20,
-         "w": 300,
-         "h": 200
-        }
-       }
-      }
-     }
-    },
-    {
-     "from": "ready",
-     "event": "SURFACE_EMBED",
-     "payload": {
-      "target": "e",
-      "status": "unavailable",
-      "reason": "host"
-     },
-     "expect": {
-      "state": "ready",
-      "emits": [
-       {
-        "event": "RASM_EMBED_STATE",
-        "payload": {
-         "id": "e",
-         "status": "unavailable",
-         "reason": "host"
+         "directionEvent": "SURFACE_DIRECTION"
         }
        }
       ]

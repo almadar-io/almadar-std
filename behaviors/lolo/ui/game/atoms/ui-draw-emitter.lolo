@@ -1,0 +1,124 @@
+app ui-draw-emitter [
+  version: "1.0.0",
+  description: "DrawEmitter — UI factory (1:1 with the @almadar/ui draw-emitter pattern)."
+]
+;; @pattern "draw-emitter"
+orbital DrawEmitterOrbital {
+  type DrawEmitterSemantic = {
+    role : string!
+    name : string!
+    value : string
+    checked : boolean
+    disabled : boolean
+    order : number
+    focused : boolean
+    caret : number
+    selectionStart : number
+    selectionEnd : number
+    multiline : boolean
+  }
+  type DrawEmitterSpring = {
+    stiffness : number!
+    damping : number!
+  }
+  type DrawEmitterPosition = {
+    x : number!
+    y : number!
+    z : number
+  }
+  type DrawEmitterOver = {
+    opacity : [number]
+    scale : [number]
+    rotate : [number]
+  }
+
+  entity DrawEmitterItem [runtime] {
+    id : string!
+  }
+
+  trait DrawEmitterRender -> @rebindable DrawEmitterItem {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          position: @config.position
+          template: @config.template
+          rate: @config.rate
+          burst: @config.burst
+          lifetime: @config.lifetime
+          spread: @config.spread
+          speed: @config.speed
+          gravity: @config.gravity
+          seed: @config.seed
+          startMs: @config.startMs
+          over: @config.over
+          hit: @config.hit
+          semantic: @config.semantic
+          spring: @config.spring
+          type: draw-emitter
+        })
+    }
+
+    config {
+      position : DrawEmitterPosition = { x: 1, y: 1, z: 1 }
+        @label "Position"
+        @description "Where particles are born; the projector maps it to pixels / world."
+        @tier "presentation"
+      template : [node] = []
+        @label "Template"
+        @description "The drawables each particle paints (draw-shape, draw-text, draw-group), positions local to the particle."
+        @tier "presentation"
+      rate : number = 0
+        @label "Rate"
+        @description "Particles born per second."
+        @tier "presentation"
+      burst : number
+        @label "Burst"
+        @description "Particles born together at the emitter's start."
+        @tier "presentation"
+      lifetime : number = 1
+        @label "Lifetime"
+        @description "Seconds a particle lives."
+        @tier "presentation"
+      spread : [number, number]
+        @label "Spread"
+        @description "Launch angle range [min, max] in radians; default a full turn."
+        @tier "presentation"
+      speed : [number, number] = [0, 0]
+        @label "Speed"
+        @description "Launch speed range [min, max] in px per second."
+        @tier "presentation"
+      gravity : number
+        @label "Gravity"
+        @description "Downward acceleration in px per second squared."
+        @tier "presentation"
+      seed : number = 0
+        @label "Seed"
+        @description "Randomness seed; with the particle index it fixes every particle, so a frame is a function of the clock."
+        @tier "presentation"
+      startMs : number
+        @label "Start Ms"
+        @description "Paint-clock milliseconds the emitter starts at; the burst fires there (default 0)."
+        @tier "presentation"
+      over : DrawEmitterOver = {}
+        @label "Over"
+        @description "Opacity, scale and rotate (radians) tracks sampled linearly by particle age 0..1."
+        @tier "presentation"
+      hit : boolean
+        @label "Hit"
+        @description "With an `id`, the drawable is a pointer region."
+        @tier "presentation"
+      semantic : DrawEmitterSemantic
+        @label "Semantic"
+        @description "Accessibility node for this drawable."
+        @tier "presentation"
+      spring : DrawEmitterSpring
+        @label "Spring"
+        @description "With an `id`: when a repaint changes this drawable's animatable fields, the canvas moves them to the new values by this spring."
+        @tier "presentation"
+    }
+  }
+
+  page "/draw-emitter" as DrawEmitterPage -> DrawEmitterRender
+}

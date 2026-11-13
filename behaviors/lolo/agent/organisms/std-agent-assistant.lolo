@@ -467,12 +467,20 @@ orbital AgentAssistantOrbital {
     }
   }
 
+  trait AgentSignIn = Identity.traits.AgentSignIn {
+    config {
+      subject: @config.agentSubject
+      publicKeyX: @config.agentPublicKeyX
+      publicKeyY: @config.agentPublicKeyY
+    }
+  }
+
+  trait AgentBinding = Identity.traits.AgentBinding { }
+
   trait AssistantIdentity = Identity.traits.AgentIdentity {
     config {
       subject: @config.agentSubject
       signingKey: @config.agentSigningKey
-      publicKeyX: @config.agentPublicKeyX
-      publicKeyY: @config.agentPublicKeyY
       ownOrbital: @config.ownOrbital
       ownTrait: "AssistantIdentity"
     }
@@ -491,6 +499,7 @@ orbital AgentAssistantOrbital {
   }
 
   page "/assistant" as AssistantPage -> AssistantLayout, AssistantThread, AssistantChatKeeper, AssistantContext, AssistantContextView, AssistantMemory, AssistantMemoryStore, AssistantMemoryView, AssistantLlm, AsstEmbedWait, AsstEmbedRequest, AsstEmbedRequestDelay, AsstEmbedRequestDeadline, AsstEmbedHttp, AsstEmbedHttpFrame, AsstChatRequest, AsstChatRequestDelay, AsstChatRequestDeadline, AsstChatHttp, AsstChatHttpFrame, AssistantLoop, AssistantIdentity, AssistantTrace
+  page boot as AssistantAgentSignInStart -> AgentSignIn, AgentBinding
 }
 
 ;; The assistant's records live outside AgentAssistantOrbital, so a consumer

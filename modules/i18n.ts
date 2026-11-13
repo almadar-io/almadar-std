@@ -28,6 +28,17 @@ export const I18N_OPERATORS: Record<string, StdOperatorMeta> = {
     ],
     example: '["i18n/t", "posts.count", { "n": 3 }] // => "3 posts"',
   },
+  'i18n/direction': {
+    module: 'i18n',
+    category: 'std-i18n',
+    minArity: 0,
+    maxArity: 0,
+    description: "The active locale's reading direction, rtl or ltr; null until the host sets a locale. Render-time, like i18n/t",
+    hasSideEffects: false,
+    returnType: nullable('string'),
+    params: [],
+    example: '["i18n/direction"] // => "rtl" under ar',
+  },
 };
 
 export function getI18nOperators(): string[] {

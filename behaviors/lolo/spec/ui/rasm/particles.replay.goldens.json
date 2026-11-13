@@ -1,0 +1,939 @@
+{
+ "atom": "../ui/rasm/atoms/std-rasm-particles.lolo",
+ "trait": "RasmParticles",
+ "cases": [
+  {
+   "id": "a-burst-paints-the-emitter-from-the-dispatch-time",
+   "config": {
+    "id": "p",
+    "burst": 5,
+    "size": 4
+   },
+   "entity": {
+    "id": "p",
+    "rect": {
+     "x": 10,
+     "y": 20,
+     "w": 100,
+     "h": 50
+    }
+   },
+   "now": 1700000000000,
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_PARTICLES_BURST",
+     "payload": {
+      "id": "p"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "RASM_PAINT",
+        "payload": {
+         "id": "p",
+         "z": 0,
+         "texts": [],
+         "nodes": [
+          {
+           "type": "draw-emitter",
+           "id": "p",
+           "position": {
+            "x": 60,
+            "y": 45,
+            "z": 0
+           },
+           "template": [
+            {
+             "type": "draw-shape",
+             "id": "p:dot",
+             "shape": "rect",
+             "anchor": "top-left",
+             "position": {
+              "x": -2,
+              "y": -2,
+              "z": 0
+             },
+             "width": 4,
+             "height": 4,
+             "fill": "#ffd479",
+             "corners": {
+              "radius": [
+               2,
+               2,
+               2,
+               2
+              ],
+              "kind": "round"
+             }
+            }
+           ],
+           "rate": 0,
+           "burst": 5,
+           "lifetime": 1,
+           "spread": [
+            0,
+            6.2832
+           ],
+           "speed": [
+            80,
+            220
+           ],
+           "gravity": 0,
+           "seed": 1,
+           "startMs": 1700000000000,
+           "over": {
+            "opacity": [
+             1,
+             0
+            ],
+            "scale": [
+             1,
+             0.3
+            ]
+           }
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-burst-for-another-id-paints-nothing",
+   "config": {
+    "id": "p",
+    "burst": 5,
+    "size": 4
+   },
+   "entity": {
+    "id": "p",
+    "rect": {
+     "x": 10,
+     "y": 20,
+     "w": 100,
+     "h": 50
+    }
+   },
+   "now": 1700000000000,
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_PARTICLES_BURST",
+     "payload": {
+      "id": "q"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": []
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-burst-emitter-with-no-burst-yet-paints-nothing",
+   "config": {
+    "id": "p",
+    "burst": 5,
+    "size": 4
+   },
+   "entity": {
+    "id": "p",
+    "rect": {
+     "x": 10,
+     "y": 20,
+     "w": 100,
+     "h": 50
+    }
+   },
+   "now": 1700000000000,
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_THEME",
+     "payload": {
+      "name": "x",
+      "looks": {}
+     },
+     "expect": {
+      "state": "ready",
+      "emits": []
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-burst-emitter-that-fired-repaints-with-its-start-time-kept",
+   "config": {
+    "id": "p",
+    "burst": 5,
+    "size": 4
+   },
+   "entity": {
+    "id": "p",
+    "rect": {
+     "x": 10,
+     "y": 20,
+     "w": 100,
+     "h": 50
+    },
+    "fired": true,
+    "startMs": 1234
+   },
+   "now": 1700000000000,
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_THEME",
+     "payload": {
+      "name": "x",
+      "looks": {}
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "RASM_PAINT",
+        "payload": {
+         "id": "p",
+         "z": 0,
+         "texts": [],
+         "nodes": [
+          {
+           "type": "draw-emitter",
+           "id": "p",
+           "position": {
+            "x": 60,
+            "y": 45,
+            "z": 0
+           },
+           "template": [
+            {
+             "type": "draw-shape",
+             "id": "p:dot",
+             "shape": "rect",
+             "anchor": "top-left",
+             "position": {
+              "x": -2,
+              "y": -2,
+              "z": 0
+             },
+             "width": 4,
+             "height": 4,
+             "fill": "#ffd479",
+             "corners": {
+              "radius": [
+               2,
+               2,
+               2,
+               2
+              ],
+              "kind": "round"
+             }
+            }
+           ],
+           "rate": 0,
+           "burst": 5,
+           "lifetime": 1,
+           "spread": [
+            0,
+            6.2832
+           ],
+           "speed": [
+            80,
+            220
+           ],
+           "gravity": 0,
+           "seed": 1,
+           "startMs": 1234,
+           "over": {
+            "opacity": [
+             1,
+             0
+            ],
+            "scale": [
+             1,
+             0.3
+            ]
+           }
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-rate-emitter-starts-at-its-first-placement",
+   "config": {
+    "id": "p",
+    "rate": 20,
+    "burst": 0,
+    "size": 4
+   },
+   "entity": {
+    "id": "p"
+   },
+   "now": 1700000000000,
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_PLACE",
+     "payload": {
+      "placed": [
+       {
+        "id": "p",
+        "rect": {
+         "x": 10,
+         "y": 20,
+         "w": 100,
+         "h": 50
+        }
+       }
+      ]
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "RASM_PAINT",
+        "payload": {
+         "id": "p",
+         "z": 0,
+         "texts": [],
+         "nodes": [
+          {
+           "type": "draw-emitter",
+           "id": "p",
+           "position": {
+            "x": 60,
+            "y": 45,
+            "z": 0
+           },
+           "template": [
+            {
+             "type": "draw-shape",
+             "id": "p:dot",
+             "shape": "rect",
+             "anchor": "top-left",
+             "position": {
+              "x": -2,
+              "y": -2,
+              "z": 0
+             },
+             "width": 4,
+             "height": 4,
+             "fill": "#ffd479",
+             "corners": {
+              "radius": [
+               2,
+               2,
+               2,
+               2
+              ],
+              "kind": "round"
+             }
+            }
+           ],
+           "rate": 20,
+           "burst": 0,
+           "lifetime": 1,
+           "spread": [
+            0,
+            6.2832
+           ],
+           "speed": [
+            80,
+            220
+           ],
+           "gravity": 0,
+           "seed": 1,
+           "startMs": 1700000000000,
+           "over": {
+            "opacity": [
+             1,
+             0
+            ],
+            "scale": [
+             1,
+             0.3
+            ]
+           }
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-later-placement-keeps-the-start-time",
+   "config": {
+    "id": "p",
+    "rate": 20,
+    "burst": 0,
+    "size": 4
+   },
+   "entity": {
+    "id": "p",
+    "rect": {
+     "x": 10,
+     "y": 20,
+     "w": 100,
+     "h": 50
+    },
+    "startMs": 1234
+   },
+   "now": 1700000000000,
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_PLACE",
+     "payload": {
+      "placed": [
+       {
+        "id": "p",
+        "rect": {
+         "x": 0,
+         "y": 0,
+         "w": 40,
+         "h": 40
+        }
+       }
+      ]
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "RASM_PAINT",
+        "payload": {
+         "id": "p",
+         "z": 0,
+         "texts": [],
+         "nodes": [
+          {
+           "type": "draw-emitter",
+           "id": "p",
+           "position": {
+            "x": 20,
+            "y": 20,
+            "z": 0
+           },
+           "template": [
+            {
+             "type": "draw-shape",
+             "id": "p:dot",
+             "shape": "rect",
+             "anchor": "top-left",
+             "position": {
+              "x": -2,
+              "y": -2,
+              "z": 0
+             },
+             "width": 4,
+             "height": 4,
+             "fill": "#ffd479",
+             "corners": {
+              "radius": [
+               2,
+               2,
+               2,
+               2
+              ],
+              "kind": "round"
+             }
+            }
+           ],
+           "rate": 20,
+           "burst": 0,
+           "lifetime": 1,
+           "spread": [
+            0,
+            6.2832
+           ],
+           "speed": [
+            80,
+            220
+           ],
+           "gravity": 0,
+           "seed": 1,
+           "startMs": 1234,
+           "over": {
+            "opacity": [
+             1,
+             0
+            ],
+            "scale": [
+             1,
+             0.3
+            ]
+           }
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-placement-for-another-id-changes-nothing",
+   "config": {
+    "id": "p",
+    "rate": 20,
+    "burst": 0
+   },
+   "entity": {
+    "id": "p"
+   },
+   "now": 1700000000000,
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_PLACE",
+     "payload": {
+      "placed": [
+       {
+        "id": "q",
+        "rect": {
+         "x": 10,
+         "y": 20,
+         "w": 100,
+         "h": 50
+        }
+       }
+      ]
+     },
+     "expect": {
+      "state": "ready",
+      "emits": []
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-look-fill-wins-over-the-config-fill",
+   "config": {
+    "id": "p",
+    "burst": 5,
+    "size": 4
+   },
+   "entity": {
+    "id": "p",
+    "rect": {
+     "x": 10,
+     "y": 20,
+     "w": 100,
+     "h": 50
+    },
+    "fired": true,
+    "startMs": 7,
+    "looks": {
+     "particles/primary/idle": {
+      "fill": "#abcdef"
+     }
+    }
+   },
+   "now": 1700000000000,
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_THEME",
+     "payload": {
+      "name": "x",
+      "looks": {
+       "particles/primary/idle": {
+        "fill": "#abcdef"
+       }
+      }
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "RASM_PAINT",
+        "payload": {
+         "id": "p",
+         "z": 0,
+         "texts": [],
+         "nodes": [
+          {
+           "type": "draw-emitter",
+           "id": "p",
+           "position": {
+            "x": 60,
+            "y": 45,
+            "z": 0
+           },
+           "template": [
+            {
+             "type": "draw-shape",
+             "id": "p:dot",
+             "shape": "rect",
+             "anchor": "top-left",
+             "position": {
+              "x": -2,
+              "y": -2,
+              "z": 0
+             },
+             "width": 4,
+             "height": 4,
+             "fill": "#abcdef",
+             "corners": {
+              "radius": [
+               2,
+               2,
+               2,
+               2
+              ],
+              "kind": "round"
+             }
+            }
+           ],
+           "rate": 0,
+           "burst": 5,
+           "lifetime": 1,
+           "spread": [
+            0,
+            6.2832
+           ],
+           "speed": [
+            80,
+            220
+           ],
+           "gravity": 0,
+           "seed": 1,
+           "startMs": 7,
+           "over": {
+            "opacity": [
+             1,
+             0
+            ],
+            "scale": [
+             1,
+             0.3
+            ]
+           }
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-without-a-look-the-config-fill-paints",
+   "config": {
+    "id": "p",
+    "burst": 5,
+    "size": 4,
+    "fill": "#112233"
+   },
+   "entity": {
+    "id": "p",
+    "rect": {
+     "x": 10,
+     "y": 20,
+     "w": 100,
+     "h": 50
+    },
+    "fired": true,
+    "startMs": 7
+   },
+   "now": 1700000000000,
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_THEME",
+     "payload": {
+      "name": "x",
+      "looks": {}
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "RASM_PAINT",
+        "payload": {
+         "id": "p",
+         "z": 0,
+         "texts": [],
+         "nodes": [
+          {
+           "type": "draw-emitter",
+           "id": "p",
+           "position": {
+            "x": 60,
+            "y": 45,
+            "z": 0
+           },
+           "template": [
+            {
+             "type": "draw-shape",
+             "id": "p:dot",
+             "shape": "rect",
+             "anchor": "top-left",
+             "position": {
+              "x": -2,
+              "y": -2,
+              "z": 0
+             },
+             "width": 4,
+             "height": 4,
+             "fill": "#112233",
+             "corners": {
+              "radius": [
+               2,
+               2,
+               2,
+               2
+              ],
+              "kind": "round"
+             }
+            }
+           ],
+           "rate": 0,
+           "burst": 5,
+           "lifetime": 1,
+           "spread": [
+            0,
+            6.2832
+           ],
+           "speed": [
+            80,
+            220
+           ],
+           "gravity": 0,
+           "seed": 1,
+           "startMs": 7,
+           "over": {
+            "opacity": [
+             1,
+             0
+            ],
+            "scale": [
+             1,
+             0.3
+            ]
+           }
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-template-in-config-replaces-the-dot",
+   "config": {
+    "id": "p",
+    "burst": 2,
+    "template": [
+     {
+      "type": "draw-shape",
+      "id": "t",
+      "shape": "rect"
+     }
+    ]
+   },
+   "entity": {
+    "id": "p",
+    "rect": {
+     "x": 10,
+     "y": 20,
+     "w": 100,
+     "h": 50
+    },
+    "fired": true,
+    "startMs": 7
+   },
+   "now": 1700000000000,
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_THEME",
+     "payload": {
+      "name": "x",
+      "looks": {}
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "RASM_PAINT",
+        "payload": {
+         "id": "p",
+         "z": 0,
+         "texts": [],
+         "nodes": [
+          {
+           "type": "draw-emitter",
+           "id": "p",
+           "position": {
+            "x": 60,
+            "y": 45,
+            "z": 0
+           },
+           "template": [
+            {
+             "type": "draw-shape",
+             "id": "t",
+             "shape": "rect"
+            }
+           ],
+           "rate": 0,
+           "burst": 2,
+           "lifetime": 1,
+           "spread": [
+            0,
+            6.2832
+           ],
+           "speed": [
+            80,
+            220
+           ],
+           "gravity": 0,
+           "seed": 1,
+           "startMs": 7,
+           "over": {
+            "opacity": [
+             1,
+             0
+            ],
+            "scale": [
+             1,
+             0.3
+            ]
+           }
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "origin-and-motion-knobs-reach-the-emitter",
+   "config": {
+    "id": "p",
+    "burst": 3,
+    "size": 4,
+    "originX": 0,
+    "originY": 1,
+    "gravity": 300,
+    "seed": 9,
+    "lifetime": 2
+   },
+   "entity": {
+    "id": "p",
+    "rect": {
+     "x": 10,
+     "y": 20,
+     "w": 100,
+     "h": 50
+    },
+    "fired": true,
+    "startMs": 7
+   },
+   "now": 1700000000000,
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_THEME",
+     "payload": {
+      "name": "x",
+      "looks": {}
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "RASM_PAINT",
+        "payload": {
+         "id": "p",
+         "z": 0,
+         "texts": [],
+         "nodes": [
+          {
+           "type": "draw-emitter",
+           "id": "p",
+           "position": {
+            "x": 10,
+            "y": 70,
+            "z": 0
+           },
+           "template": [
+            {
+             "type": "draw-shape",
+             "id": "p:dot",
+             "shape": "rect",
+             "anchor": "top-left",
+             "position": {
+              "x": -2,
+              "y": -2,
+              "z": 0
+             },
+             "width": 4,
+             "height": 4,
+             "fill": "#ffd479",
+             "corners": {
+              "radius": [
+               2,
+               2,
+               2,
+               2
+              ],
+              "kind": "round"
+             }
+            }
+           ],
+           "rate": 0,
+           "burst": 3,
+           "lifetime": 2,
+           "spread": [
+            0,
+            6.2832
+           ],
+           "speed": [
+            80,
+            220
+           ],
+           "gravity": 300,
+           "seed": 9,
+           "startMs": 7,
+           "over": {
+            "opacity": [
+             1,
+             0
+            ],
+            "scale": [
+             1,
+             0.3
+            ]
+           }
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

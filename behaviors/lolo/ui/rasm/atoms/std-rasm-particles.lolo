@@ -1,0 +1,152 @@
+app std-rasm-particles [
+  version: "0.1.0",
+  description: "std-rasm-particles — particles on the orbital canvas clock. Once placed it paints one draw-emitter at a point of its rect, from config: rate, burst, lifetime, spread, speed, gravity, seed and a template (a plain dot in the particles/<intent>/idle look when none is given). With a rate above zero it emits from placement; with rate zero it paints nothing until RASM_PARTICLES_BURST for its id, which restarts the emitter at the dispatch time. The frame is a function of the clock, so the life is the canvas's and the logic runs only at event rate."
+]
+
+type RasmRect = { x : number!, y : number!, w : number!, h : number! }
+type RasmPlaced = { id : string!, rect : RasmRect! }
+type RasmMaterial = { wgsl : string!, params : [number]!, live : boolean! }
+type RasmCorners = { radius : [number]!, kind : "round" | "bevel" | "notch" | "scoop" }
+type RasmSpring = { stiffness : number!, damping : number! }
+type RasmKeyframe = { at : number!, opacity : number, offsetY : number }
+type RasmAnimation = { durationMs : number!, loop : boolean!, keyframes : [RasmKeyframe]! }
+type RasmText = { id : string!, key : MessageKey!, x : number!, y : number!, z : number!, align : string!, baseline : string!, color : string?, font : string?, spring : RasmSpring?, width : number?, wrap : boolean?, measure : boolean?, role : string?, animation : RasmAnimation? }
+type RasmShadow = { color : string!, blur : number! }
+type RasmLook = { fill : string, stroke : string, strokeWidth : number, corners : RasmCorners, shadow : RasmShadow, material : RasmMaterial, textColor : string, font : string, spring : RasmSpring, decor : string }
+
+orbital RasmParticlesOrbital {
+  entity RasmParticlesRun [runtime] {
+    id : string!
+    looks : Map string RasmLook @description "The announced look table." = {}
+    rect : RasmRect? @description "The rect RASM_PLACE gave this emitter, null until placed." = null
+    startMs : number @description "The emitter's t0 on the canvas epoch clock: placement, then each burst." = 0
+    fired : boolean @description "True once a burst was asked for." = false
+    paints : number @description "Counts paints, so each paint in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
+  }
+
+  trait RasmParticles -> RasmParticlesRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      RASM_THEME -> ready
+        (set @entity.looks ?looks)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit PARTICLES_PAINT { n: @entity.paints })
+      RASM_PLACE -> ready when (array/some ?placed (fn p (= @p.id @config.id)))
+        (set @entity.startMs (if (= @entity.rect null) (time/epoch-ms @now) @entity.startMs))
+        (set @entity.rect (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) null @mine.rect)))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit PARTICLES_PAINT { n: @entity.paints })
+      RASM_PLACE -> ready when (not (array/some ?placed (fn p (= @p.id @config.id))))
+      RASM_PARTICLES_BURST -> ready when (= ?id @config.id)
+        (set @entity.startMs (time/epoch-ms @now))
+        (set @entity.fired true)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit PARTICLES_PAINT { n: @entity.paints })
+      RASM_PARTICLES_BURST -> ready when (!= ?id @config.id)
+      PARTICLES_PAINT -> ready
+        (let ((r @entity.rect) (look (default (object/get @entity.looks (str/concat "particles/" @config.intent "/idle") null) {})))
+          (when (and (!= @r null) (or (> @config.rate 0) @entity.fired))
+            (emit RASM_PAINT { id: @config.id, z: @config.z, texts: [], nodes: [{ type: draw-emitter, id: @config.id, position: { x: (+ @r.x (* @r.w @config.originX)), y: (+ @r.y (* @r.h @config.originY)), z: @config.z }, template: (if (> (array/len @config.template) 0) @config.template [{ type: draw-shape, id: (str/concat @config.id ":dot"), shape: rect, anchor: "top-left", position: { x: (/ @config.size -2), y: (/ @config.size -2), z: @config.z }, width: @config.size, height: @config.size, fill: (default @look.fill @config.fill), corners: { radius: [(/ @config.size 2), (/ @config.size 2), (/ @config.size 2), (/ @config.size 2)], kind: "round" } }]), rate: @config.rate, burst: @config.burst, lifetime: @config.lifetime, spread: @config.spread, speed: @config.speed, gravity: @config.gravity, seed: @config.seed, startMs: @entity.startMs, over: { opacity: @config.fade, scale: @config.shrink } }] })))
+    }
+
+    emits {
+      PARTICLES_PAINT -> internal {
+        n : number!
+      }
+        @description "Repaint from the stored rect, look and start time."
+        @tier "internal"
+      RASM_PAINT -> external {
+        id : string!
+        z : number!
+        nodes : [node]!
+        texts : [RasmText]!
+      }
+        @description "The emitter as one draw-emitter node at its z; the canvas animates it on its own clock."
+        @tier "primary"
+    }
+
+    listens {
+      RASM_THEME { name : string!  looks : Map string RasmLook! }
+        @description "Store the looks and repaint."
+      RASM_PLACE { placed : [RasmPlaced]! }
+        @description "Take this emitter's rect when it is placed; the first placement is the emitter's t0."
+      RASM_PARTICLES_BURST { id : string! }
+        @description "Restart the emitter for this id at the dispatch time, so its burst plays once more."
+    }
+
+    config {
+      id : string = "particles"
+        @label "Id"
+        @description "The emitter's RASM_PLACE key and paint id."
+        @tier "presentation"
+      intent : "primary" | "secondary" = "primary"
+        @label "Intent"
+        @description "Selects the look particles/<intent>/idle."
+        @tier "presentation"
+      originX : number = 0.5
+        @label "Origin X"
+        @description "Where the particles are born across the rect, 0 at the left edge to 1 at the right."
+        @tier "presentation"
+      originY : number = 0.5
+        @label "Origin Y"
+        @description "Where the particles are born down the rect, 0 at the top edge to 1 at the bottom."
+        @tier "presentation"
+      rate : number = 0
+        @label "Rate"
+        @description "Particles born per second from placement; zero emits only on a burst."
+        @tier "domain"
+      burst : number = 24
+        @label "Burst"
+        @description "Particles born together at the start of each run, a whole number."
+        @tier "domain"
+      lifetime : number = 1
+        @label "Lifetime"
+        @description "Seconds a particle lives."
+        @tier "domain"
+      spread : [number] = [0, 6.2832]
+        @label "Spread"
+        @description "The direction range [min, max] in radians; 0 points right and angles turn clockwise on screen."
+        @tier "domain"
+      speed : [number] = [80, 220]
+        @label "Speed"
+        @description "The launch speed range [min, max] in pixels per second."
+        @tier "domain"
+      gravity : number = 0
+        @label "Gravity"
+        @description "Downward acceleration in pixels per second squared."
+        @tier "domain"
+      seed : number = 1
+        @label "Seed"
+        @description "The random seed; the same seed paints the same particles."
+        @tier "domain"
+      size : number = 6
+        @label "Size"
+        @description "The default dot's side in pixels, used when no template is given."
+        @tier "presentation"
+      fill : string = "#ffd479"
+        @label "Fill"
+        @description "The default dot's colour when the look has no fill."
+        @tier "presentation"
+      fade : [number] = [1, 0]
+        @label "Fade"
+        @description "Opacity over a particle's age, from birth to death."
+        @tier "presentation"
+      shrink : [number] = [1, 0.3]
+        @label "Shrink"
+        @description "Scale over a particle's age, from birth to death."
+        @tier "presentation"
+      template : [node] = []
+        @label "Template"
+        @description "The drawables each particle instantiates, local to the particle; empty paints the default dot."
+        @tier "domain"
+      z : number = 0
+        @label "Z"
+        @description "Paint order on the surface."
+        @tier "presentation"
+    }
+  }
+
+  page boot as RasmParticlesStart -> RasmParticles
+}

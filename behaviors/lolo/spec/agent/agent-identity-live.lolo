@@ -32,12 +32,24 @@ orbital AgentIdentityLive {
     step : number @description "How many answers were printed." = 0
   }
 
+  trait AgentSignIn = Identity.traits.AgentSignIn {
+    config {
+      subject: "support-agent"
+      publicKeyX: "6mjXtv7fC3GHiTjVHXH4cp4Ky4wsbfiz156KS5CUnuA"
+      publicKeyY: "KidEyXLJ_OeHAUqWSo6gyE1xT-qk3oI_6FoiSk3QSPo"
+    }
+  }
+
+  trait AgentBinding = Identity.traits.AgentBinding {
+    config {
+      identityEntity: Person
+    }
+  }
+
   trait Agent = Identity.traits.AgentIdentity {
     config {
       subject: "support-agent"
       signingKey: "AGENT_IDENTITY_KEY"
-      publicKeyX: "6mjXtv7fC3GHiTjVHXH4cp4Ky4wsbfiz156KS5CUnuA"
-      publicKeyY: "KidEyXLJ_OeHAUqWSo6gyE1xT-qk3oI_6FoiSk3QSPo"
       ownOrbital: "AgentIdentityLive"
       ownTrait: "Agent"
     }
@@ -211,5 +223,5 @@ orbital AgentIdentityLive {
   }
 
   page stdio as AgentIdentityLivePage -> Agent, Who, Drive
-  page boot as AgentIdentityLiveBoot -> Kick
+  page boot as AgentIdentityLiveBoot -> Kick, AgentSignIn, AgentBinding
 }

@@ -1,113 +1,69 @@
 {
  "atom": "spec/agent/agent-identity.lolo",
  "trait": "Agent",
- "note": "std-agent-identity over a real [identity] entity: only a token this program signed for its declared subject binds a session as the agent identity row; the read input serves that identity alone; the asking half signs, presents and relays through program/dispatch and never changes the asking session.",
+ "note": "std-agent-identity over a real [identity] entity: AgentSignIn (program session) verifies only a token this program signed for its declared subject and hands it to AgentBinding, which binds the named agent session; the asker reads the binder's outcome and the agent session's role; who and read serve the agent identity alone.",
  "cases": [
   {
-   "id": "a-token-this-program-signed-binds-the-session-as-the-agent-identity-row",
+   "id": "a-token-this-program-signed-is-verified-for-the-binder",
    "now": 1700000010000,
    "steps": [
     {
-     "trait": "Who",
-     "event": "WHO",
-     "payload": {},
-     "expect": {
-      "fired": true,
-      "emits": [
-       {
-        "event": "WHOAMI",
-        "payload": {
-         "id": "anonymous",
-         "role": "anonymous"
-        }
-       }
-      ]
-     }
-    },
-    {
-     "trait": "Agent",
-     "event": "AGENT_CREDENTIAL_PRESENTED",
+     "trait": "AgentSignIn",
+     "event": "AGENT_VERIFY",
      "payload": {
-      "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJzdGQtYWdlbnQtaWRlbnRpdHkiLCJhdWQiOiJzdGQtYWdlbnQtaWRlbnRpdHkiLCJzdWIiOiJzdXBwb3J0LWFnZW50IiwiaWF0IjoxNzAwMDAwMDAwLCJleHAiOjE3MDAwMDAwNjB9.pTFT9ewBfBeWbS2pRvLBC1vofpqyyjT_-UZUFOdVG0Cr-KQNXxLG0OgkW_S1pzpRPlWtsyvJPgPZ5odgORPX3A"
+      "requestId": 0,
+      "authorization": "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJzdGQtYWdlbnQtaWRlbnRpdHkiLCJhdWQiOiJzdGQtYWdlbnQtaWRlbnRpdHkiLCJzdWIiOiJzdXBwb3J0LWFnZW50IiwiaWF0IjoxNzAwMDAwMDAwLCJleHAiOjE3MDAwMDAwNjB9.pTFT9ewBfBeWbS2pRvLBC1vofpqyyjT_-UZUFOdVG0Cr-KQNXxLG0OgkW_S1pzpRPlWtsyvJPgPZ5odgORPX3A"
      },
      "expect": {
       "fired": true,
       "emits": [
        {
-        "event": "AGENT_CREDENTIAL_BOUND",
+        "event": "AGENT_VERIFIED",
         "payload": {
-         "subject": "support-agent",
-         "role": "support"
+         "requestId": 0
         }
        }
       ],
       "neverEmits": [
-       "AGENT_CREDENTIAL_REFUSED"
-      ]
-     }
-    },
-    {
-     "trait": "Who",
-     "event": "WHO",
-     "payload": {},
-     "expect": {
-      "fired": true,
-      "emits": [
-       {
-        "event": "WHOAMI",
-        "payload": {
-         "id": "support-agent",
-         "role": "support"
-        }
-       }
+       "AGENT_REFUSED"
       ]
      }
     }
+   ],
+   "defaults": [
+    "AgentBinding"
    ]
   },
   {
-   "id": "attack-a-token-signed-by-another-key-is-refused-and-the-session-stays-anonymous",
+   "id": "attack-a-token-signed-by-another-key-is-refused",
    "now": 1700000010000,
    "steps": [
     {
-     "trait": "Agent",
-     "event": "AGENT_CREDENTIAL_PRESENTED",
+     "trait": "AgentSignIn",
+     "event": "AGENT_VERIFY",
      "payload": {
-      "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJzdGQtYWdlbnQtaWRlbnRpdHkiLCJhdWQiOiJzdGQtYWdlbnQtaWRlbnRpdHkiLCJzdWIiOiJzdXBwb3J0LWFnZW50IiwiaWF0IjoxNzAwMDAwMDAwLCJleHAiOjE3MDAwMDAwNjB9.b_YkXsLvZvfFDrx2ErGqjRwtGMpSIARQneP6sE2AahUjtjGvclTWCmCAlV0-tAn04uxVELmQqblRflQp_s1c0g"
+      "requestId": 0,
+      "authorization": "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJzdGQtYWdlbnQtaWRlbnRpdHkiLCJhdWQiOiJzdGQtYWdlbnQtaWRlbnRpdHkiLCJzdWIiOiJzdXBwb3J0LWFnZW50IiwiaWF0IjoxNzAwMDAwMDAwLCJleHAiOjE3MDAwMDAwNjB9.b_YkXsLvZvfFDrx2ErGqjRwtGMpSIARQneP6sE2AahUjtjGvclTWCmCAlV0-tAn04uxVELmQqblRflQp_s1c0g"
      },
      "expect": {
       "fired": true,
       "emits": [
        {
-        "event": "AGENT_CREDENTIAL_REFUSED",
+        "event": "AGENT_REFUSED",
         "payload": {
+         "requestId": 0,
          "reason": "token-signature"
         }
        }
       ],
       "neverEmits": [
-       "AGENT_CREDENTIAL_BOUND",
-       "AGENT_SIGNED_IN"
-      ]
-     }
-    },
-    {
-     "trait": "Who",
-     "event": "WHO",
-     "payload": {},
-     "expect": {
-      "fired": true,
-      "emits": [
-       {
-        "event": "WHOAMI",
-        "payload": {
-         "id": "anonymous",
-         "role": "anonymous"
-        }
-       }
+       "AGENT_VERIFIED"
       ]
      }
     }
+   ],
+   "defaults": [
+    "AgentBinding"
    ]
   },
   {
@@ -115,44 +71,31 @@
    "now": 1700000010000,
    "steps": [
     {
-     "trait": "Agent",
-     "event": "AGENT_CREDENTIAL_PRESENTED",
+     "trait": "AgentSignIn",
+     "event": "AGENT_VERIFY",
      "payload": {
-      "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJzdGQtYWdlbnQtaWRlbnRpdHkiLCJhdWQiOiJzdGQtYWdlbnQtaWRlbnRpdHkiLCJzdWIiOiJzb21lb25lLWVsc2UiLCJpYXQiOjE3MDAwMDAwMDAsImV4cCI6MTcwMDAwMDA2MH0.G3nuxA-f90xQ9T0GyQXgAe1Vf940iqNr33zDdMHYGgpTxZyCy7s_jTOjd2n2SNBchOgq4kQ6aYw0emkozxiNpw"
+      "requestId": 0,
+      "authorization": "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJzdGQtYWdlbnQtaWRlbnRpdHkiLCJhdWQiOiJzdGQtYWdlbnQtaWRlbnRpdHkiLCJzdWIiOiJzb21lb25lLWVsc2UiLCJpYXQiOjE3MDAwMDAwMDAsImV4cCI6MTcwMDAwMDA2MH0.G3nuxA-f90xQ9T0GyQXgAe1Vf940iqNr33zDdMHYGgpTxZyCy7s_jTOjd2n2SNBchOgq4kQ6aYw0emkozxiNpw"
      },
      "expect": {
       "fired": true,
       "emits": [
        {
-        "event": "AGENT_CREDENTIAL_REFUSED",
+        "event": "AGENT_REFUSED",
         "payload": {
+         "requestId": 0,
          "reason": "subject"
         }
        }
       ],
       "neverEmits": [
-       "AGENT_CREDENTIAL_BOUND",
-       "AGENT_SIGNED_IN"
-      ]
-     }
-    },
-    {
-     "trait": "Who",
-     "event": "WHO",
-     "payload": {},
-     "expect": {
-      "fired": true,
-      "emits": [
-       {
-        "event": "WHOAMI",
-        "payload": {
-         "id": "anonymous",
-         "role": "anonymous"
-        }
-       }
+       "AGENT_VERIFIED"
       ]
      }
     }
+   ],
+   "defaults": [
+    "AgentBinding"
    ]
   },
   {
@@ -160,44 +103,31 @@
    "now": 1700000010000,
    "steps": [
     {
-     "trait": "Agent",
-     "event": "AGENT_CREDENTIAL_PRESENTED",
+     "trait": "AgentSignIn",
+     "event": "AGENT_VERIFY",
      "payload": {
-      "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJzdGQtYWdlbnQtaWRlbnRpdHkiLCJhdWQiOiJzdGQtYWdlbnQtaWRlbnRpdHkiLCJzdWIiOiJzdXBwb3J0LWFnZW50IiwiaWF0IjoxNjAwMDAwMDAwLCJleHAiOjE2MDAwMDAwNjB9.a2UBmpgA1TYD4P8noUozP-D1C0pdmrrzLveQDGpGV3Ycp27LCKIZVdIFYSiJ3I-ePSppfwNEtC0gWJw6tYnSpg"
+      "requestId": 0,
+      "authorization": "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJzdGQtYWdlbnQtaWRlbnRpdHkiLCJhdWQiOiJzdGQtYWdlbnQtaWRlbnRpdHkiLCJzdWIiOiJzdXBwb3J0LWFnZW50IiwiaWF0IjoxNjAwMDAwMDAwLCJleHAiOjE2MDAwMDAwNjB9.a2UBmpgA1TYD4P8noUozP-D1C0pdmrrzLveQDGpGV3Ycp27LCKIZVdIFYSiJ3I-ePSppfwNEtC0gWJw6tYnSpg"
      },
      "expect": {
       "fired": true,
       "emits": [
        {
-        "event": "AGENT_CREDENTIAL_REFUSED",
+        "event": "AGENT_REFUSED",
         "payload": {
+         "requestId": 0,
          "reason": "token-expired"
         }
        }
       ],
       "neverEmits": [
-       "AGENT_CREDENTIAL_BOUND",
-       "AGENT_SIGNED_IN"
-      ]
-     }
-    },
-    {
-     "trait": "Who",
-     "event": "WHO",
-     "payload": {},
-     "expect": {
-      "fired": true,
-      "emits": [
-       {
-        "event": "WHOAMI",
-        "payload": {
-         "id": "anonymous",
-         "role": "anonymous"
-        }
-       }
+       "AGENT_VERIFIED"
       ]
      }
     }
+   ],
+   "defaults": [
+    "AgentBinding"
    ]
   },
   {
@@ -205,42 +135,62 @@
    "now": 1700000010000,
    "steps": [
     {
-     "trait": "Agent",
-     "event": "AGENT_CREDENTIAL_PRESENTED",
-     "payload": {},
+     "trait": "AgentSignIn",
+     "event": "AGENT_VERIFY",
+     "payload": {
+      "requestId": 0,
+      "authorization": "Bearer "
+     },
      "expect": {
       "fired": true,
       "emits": [
        {
-        "event": "AGENT_CREDENTIAL_REFUSED",
+        "event": "AGENT_REFUSED",
         "payload": {
+         "requestId": 0,
          "reason": "token-malformed"
         }
        }
       ],
       "neverEmits": [
-       "AGENT_CREDENTIAL_BOUND",
-       "AGENT_SIGNED_IN"
+       "AGENT_VERIFIED"
       ]
      }
-    },
+    }
+   ],
+   "defaults": [
+    "AgentBinding"
+   ]
+  },
+  {
+   "id": "a-sign-in-asks-the-binder-for-the-named-agent-session",
+   "now": 1700000010000,
+   "steps": [
     {
-     "trait": "Who",
-     "event": "WHO",
-     "payload": {},
+     "trait": "AgentSignIn",
+     "event": "AGENT_SIGN_IN",
+     "payload": {
+      "token": "a.b.c",
+      "session": "agent-room"
+     },
      "expect": {
       "fired": true,
       "emits": [
        {
-        "event": "WHOAMI",
+        "event": "AGENT_BEARER",
         "payload": {
-         "id": "anonymous",
-         "role": "anonymous"
+         "requestId": 0,
+         "authorization": "Bearer a.b.c",
+         "clientId": "agent-room",
+         "self": false
         }
        }
       ]
      }
     }
+   ],
+   "defaults": [
+    "AgentBinding"
    ]
   },
   {
@@ -389,7 +339,7 @@
    ]
   },
   {
-   "id": "a-request-presents-a-signed-token-to-the-agent-session-and-answers-its-role",
+   "id": "a-request-is-bound-by-the-binder-then-answers-the-agent-sessions-role",
    "now": 1700000010000,
    "credentials": {
     "AGENT_IDENTITY_KEY": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgAAAAAAAAAAAAAAAA\nAAAAAAAAAAAAAAAAAAAAAAAAAAmhRANCAATqaNe2/t8LcYeJONUdcfhyngrLjCxt\n+LPXnopLkJSe4ConRMlyyfznhwFKlkqOoMhNcU/qpN6CP+haIkpN0Ej6\n-----END PRIVATE KEY-----\n"
@@ -416,7 +366,33 @@
        "success": true,
        "emittedEvents": [
         {
-         "event": "AGENT_CREDENTIAL_BOUND",
+         "event": "IDENTITY_BOUND",
+         "payload": {
+          "requestId": 0,
+          "subject": "support-agent"
+         }
+        }
+       ]
+      },
+      "key": "agent-identity"
+     },
+     "expect": {
+      "fired": true,
+      "neverEmits": [
+       "AGENT_IDENTITY_READY",
+       "AGENT_IDENTITY_REFUSED"
+      ]
+     }
+    },
+    {
+     "trait": "Agent",
+     "event": "AGENT_WHO_ANSWERED",
+     "payload": {
+      "result": {
+       "success": true,
+       "emittedEvents": [
+        {
+         "event": "AGENT_WHO_IS",
          "payload": {
           "subject": "support-agent",
           "role": "support"
@@ -424,7 +400,7 @@
         }
        ]
       },
-      "key": "agent-identity"
+      "key": "agent-who"
      },
      "expect": {
       "fired": true,
@@ -462,7 +438,48 @@
    ]
   },
   {
-   "id": "a-refusal-in-the-agent-session-is-answered-with-its-reason",
+   "id": "control-a-who-answer-without-the-agent-identity-is-refused",
+   "now": 1700000010000,
+   "credentials": {
+    "AGENT_IDENTITY_KEY": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgAAAAAAAAAAAAAAAA\nAAAAAAAAAAAAAAAAAAAAAAAAAAmhRANCAATqaNe2/t8LcYeJONUdcfhyngrLjCxt\n+LPXnopLkJSe4ConRMlyyfznhwFKlkqOoMhNcU/qpN6CP+haIkpN0Ej6\n-----END PRIVATE KEY-----\n"
+   },
+   "steps": [
+    {
+     "trait": "Agent",
+     "event": "AGENT_WHO_ANSWERED",
+     "payload": {
+      "result": {
+       "success": true,
+       "emittedEvents": [
+        {
+         "event": "AGENT_WHO_REFUSED",
+         "payload": {
+          "reason": "identity-who"
+         }
+        }
+       ]
+      },
+      "key": "agent-who"
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "AGENT_IDENTITY_REFUSED",
+        "payload": {
+         "reason": "identity-who"
+        }
+       }
+      ],
+      "neverEmits": [
+       "AGENT_IDENTITY_READY"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-binder-refusal-is-answered-with-its-reason",
    "now": 1700000010000,
    "credentials": {
     "AGENT_IDENTITY_KEY": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgAAAAAAAAAAAAAAAA\nAAAAAAAAAAAAAAAAAAAAAAAAAAmhRANCAATqaNe2/t8LcYeJONUdcfhyngrLjCxt\n+LPXnopLkJSe4ConRMlyyfznhwFKlkqOoMhNcU/qpN6CP+haIkpN0Ej6\n-----END PRIVATE KEY-----\n"
@@ -489,8 +506,9 @@
        "success": true,
        "emittedEvents": [
         {
-         "event": "AGENT_CREDENTIAL_REFUSED",
+         "event": "IDENTITY_REFUSED",
          "payload": {
+          "requestId": 0,
           "reason": "identity-no-identity"
          }
         }
@@ -725,8 +743,8 @@
    ]
   },
   {
-   "id": "attack-a-session-that-asked-never-signs-in-as-the-agent-even-with-a-good-token",
-   "note": "Found by the live run 2026-11-10: on a boot page the presented token arrives in the asking session.",
+   "id": "attack-a-session-that-asked-is-never-answered-as-the-agent",
+   "note": "The binder names the agent session, so the asking session is never signed in; a who or read in the asking session is refused even when it reads as the agent.",
    "now": 1700000010000,
    "credentials": {
     "AGENT_IDENTITY_KEY": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgAAAAAAAAAAAAAAAA\nAAAAAAAAAAAAAAAAAAAAAAAAAAmhRANCAATqaNe2/t8LcYeJONUdcfhyngrLjCxt\n+LPXnopLkJSe4ConRMlyyfznhwFKlkqOoMhNcU/qpN6CP+haIkpN0Ej6\n-----END PRIVATE KEY-----\n"
@@ -742,40 +760,24 @@
     },
     {
      "trait": "Agent",
-     "event": "AGENT_CREDENTIAL_PRESENTED",
-     "payload": {
-      "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJzdGQtYWdlbnQtaWRlbnRpdHkiLCJhdWQiOiJzdGQtYWdlbnQtaWRlbnRpdHkiLCJzdWIiOiJzdXBwb3J0LWFnZW50IiwiaWF0IjoxNzAwMDAwMDAwLCJleHAiOjE3MDAwMDAwNjB9.pTFT9ewBfBeWbS2pRvLBC1vofpqyyjT_-UZUFOdVG0Cr-KQNXxLG0OgkW_S1pzpRPlWtsyvJPgPZ5odgORPX3A"
+     "event": "AGENT_WHO",
+     "payload": {},
+     "identity": {
+      "id": "support-agent",
+      "role": "support"
      },
      "expect": {
       "fired": true,
       "emits": [
        {
-        "event": "AGENT_CREDENTIAL_REFUSED",
+        "event": "AGENT_WHO_REFUSED",
         "payload": {
-         "reason": "same-session"
+         "reason": "identity-who"
         }
        }
       ],
       "neverEmits": [
-       "AGENT_CREDENTIAL_BOUND",
-       "AGENT_SIGNED_IN"
-      ]
-     }
-    },
-    {
-     "trait": "Who",
-     "event": "WHO",
-     "payload": {},
-     "expect": {
-      "fired": true,
-      "emits": [
-       {
-        "event": "WHOAMI",
-        "payload": {
-         "id": "anonymous",
-         "role": "anonymous"
-        }
-       }
+       "AGENT_WHO_IS"
       ]
      }
     },
@@ -807,8 +809,38 @@
    ]
   },
   {
-   "id": "attack-a-sign-in-that-landed-in-the-asking-session-is-undone-and-refused",
-   "note": "Found by the live run 2026-11-10 (boot placement): the asking session reads the agent as its own @user, so it signs out and answers same-session.",
+   "id": "control-the-agent-session-answers-who-it-is",
+   "now": 1700000010000,
+   "steps": [
+    {
+     "trait": "Agent",
+     "event": "AGENT_WHO",
+     "payload": {},
+     "identity": {
+      "id": "support-agent",
+      "role": "support"
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "AGENT_WHO_IS",
+        "payload": {
+         "subject": "support-agent",
+         "role": "support"
+        }
+       }
+      ],
+      "neverEmits": [
+       "AGENT_WHO_REFUSED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "attack-a-dispatch-answer-with-no-binder-outcome-is-refused",
+   "note": "Only the binder answers a sign-in: an answer carrying any other event, the retired AGENT_CREDENTIAL_BOUND included, is refused credential-dispatch.",
    "steps": [
     {
      "trait": "Agent",
@@ -834,16 +866,11 @@
      },
      "expect": {
       "fired": true,
-      "effects": [
-       {
-        "type": "identity/sign-out"
-       }
-      ],
       "emits": [
        {
         "event": "AGENT_IDENTITY_REFUSED",
         "payload": {
-         "reason": "same-session"
+         "reason": "credential-dispatch"
         }
        }
       ],

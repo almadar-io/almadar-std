@@ -1,0 +1,109 @@
+app std-rasm-mirror [
+  version: "0.1.0",
+  description: "std-rasm-mirror — paints a configured subtree once into an offscreen render target and shows that target as a sprite in its placed rect, optionally flipped left to right and faded, over a card body in the mirror/<intent>/idle look. The source drawables are local to a sourceWidth by sourceHeight box; the sprite scales that box to the rect inside the inset. The target repaints when the source changes, so a thumbnail or a reflection costs one paint of the subtree however often the frame draws."
+]
+
+type RasmRect = { x : number!, y : number!, w : number!, h : number! }
+type RasmPlaced = { id : string!, rect : RasmRect! }
+type RasmMaterial = { wgsl : string!, params : [number]!, live : boolean! }
+type RasmCorners = { radius : [number]!, kind : "round" | "bevel" | "notch" | "scoop" }
+type RasmSpring = { stiffness : number!, damping : number! }
+type RasmKeyframe = { at : number!, opacity : number, offsetY : number }
+type RasmAnimation = { durationMs : number!, loop : boolean!, keyframes : [RasmKeyframe]! }
+type RasmText = { id : string!, key : MessageKey!, x : number!, y : number!, z : number!, align : string!, baseline : string!, color : string?, font : string?, spring : RasmSpring?, width : number?, wrap : boolean?, measure : boolean?, role : string?, animation : RasmAnimation? }
+type RasmShadow = { color : string!, blur : number! }
+type RasmLook = { fill : string, stroke : string, strokeWidth : number, corners : RasmCorners, shadow : RasmShadow, material : RasmMaterial, textColor : string, font : string, spring : RasmSpring, decor : string }
+
+orbital RasmMirrorOrbital {
+  entity RasmMirrorView [runtime] {
+    id : string!
+    looks : Map string RasmLook @description "The announced look table." = {}
+    rect : RasmRect? @description "The rect RASM_PLACE gave this mirror, null until placed." = null
+    paints : number @description "Counts paints, so each paint in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
+  }
+
+  trait RasmMirror -> RasmMirrorView [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      RASM_THEME -> ready
+        (set @entity.looks ?looks)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit MIRROR_PAINT { n: @entity.paints })
+      RASM_PLACE -> ready when (array/some ?placed (fn p (= @p.id @config.id)))
+        (set @entity.rect (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) null @mine.rect)))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit MIRROR_PAINT { n: @entity.paints })
+      RASM_PLACE -> ready when (not (array/some ?placed (fn p (= @p.id @config.id))))
+      MIRROR_PAINT -> ready
+        (let ((r @entity.rect) (look (default (object/get @entity.looks (str/concat "mirror/" @config.intent "/idle") null) {})))
+          (when (!= @r null)
+            (emit RASM_PAINT { id: @config.id, z: @config.z, texts: [], nodes: [{ type: draw-shape, id: (str/concat @config.id ":body"), shape: rect, anchor: "top-left", position: { x: @r.x, y: @r.y, z: @config.z }, width: @r.w, height: @r.h, fill: @look.fill, stroke: @look.stroke, strokeWidth: @look.strokeWidth, corners: @look.corners, shadow: @look.shadow, material: @look.material, spring: @look.spring }, { type: draw-group, id: (str/concat @config.id ":source"), position: { x: @r.x, y: @r.y, z: @config.z }, target: { id: (str/concat @config.id ":target"), width: @config.sourceWidth, height: @config.sourceHeight }, items: @config.source }, { type: draw-sprite, id: @config.id, texture: (str/concat "target:" @config.id ":target"), anchor: "top-left", position: { x: (+ @r.x @config.inset), y: (+ @r.y @config.inset), z: (+ @config.z 1) }, width: (- @r.w (* 2 @config.inset)), height: (- @r.h (* 2 @config.inset)), flipX: @config.flip, opacity: @config.opacity }] })))
+    }
+
+    emits {
+      MIRROR_PAINT -> internal {
+        n : number!
+      }
+        @description "Repaint from the stored rect and look."
+        @tier "internal"
+      RASM_PAINT -> external {
+        id : string!
+        z : number!
+        nodes : [node]!
+        texts : [RasmText]!
+      }
+        @description "The card body, the source group that paints the render target, and the sprite that shows it, in that order."
+        @tier "primary"
+    }
+
+    listens {
+      RASM_THEME { name : string!  looks : Map string RasmLook! }
+        @description "Store the looks and repaint."
+      RASM_PLACE { placed : [RasmPlaced]! }
+        @description "Take this mirror's rect when it is placed and repaint."
+    }
+
+    config {
+      id : string = "mirror"
+        @label "Id"
+        @description "The mirror's RASM_PLACE key and paint id; its render target is named <id>:target."
+        @tier "presentation"
+      intent : "primary" | "secondary" = "primary"
+        @label "Intent"
+        @description "Selects the card body look mirror/<intent>/idle."
+        @tier "presentation"
+      source : [node] = []
+        @label "Source"
+        @description "The drawables painted into the render target, positioned from the target's top-left corner."
+        @tier "domain"
+      sourceWidth : number = 160
+        @label "Source width"
+        @description "Width of the render target in whole pixels."
+        @tier "domain"
+      sourceHeight : number = 120
+        @label "Source height"
+        @description "Height of the render target in whole pixels."
+        @tier "domain"
+      flip : boolean = false
+        @label "Flip"
+        @description "Show the target flipped left to right, a mirror image."
+        @tier "presentation"
+      opacity : number = 1
+        @label "Opacity"
+        @description "Opacity of the sprite, 0 to 1."
+        @tier "presentation"
+      inset : number = 8
+        @label "Inset"
+        @description "Pixels between the card edge and the sprite."
+        @tier "presentation"
+      z : number = 0
+        @label "Z"
+        @description "Paint order on the surface."
+        @tier "presentation"
+    }
+  }
+
+  page boot as RasmMirrorStart -> RasmMirror
+}

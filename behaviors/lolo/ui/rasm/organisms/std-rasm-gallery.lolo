@@ -1,6 +1,6 @@
 app std-rasm-gallery [
   version: "0.1.0",
-  description: "std-rasm-gallery — every Rasm atom on one orbital canvas, switchable across the six look presets (naqsh, glass, sand, instrument, terminal, paper). Controls: a pressable, a disabled pressable, a switch, a range, a text field and a choice. Layout: a stack and a grid. Containers: an overlay opened by a button and a scroll over twelve items. Motion: the staggered entry, a tween-driven bar, a gesture area reporting swipe and fling, and a drag chip with two drop targets. An embed slot closes the page. The gallery trait Readout turns the choice, button and motion events into the commands the atoms listen to and paints the readout.",
+  description: "std-rasm-gallery — every Rasm atom on one orbital canvas, switchable across the six look presets (naqsh, glass, sand, instrument, terminal, paper). Controls: a pressable, a disabled pressable, a switch, a range, a text field and a choice. Layout: a stack and a grid. Containers: an overlay opened by a button and a scroll over twelve items. Motion: the staggered entry, a tween-driven bar, a gesture area reporting swipe and fling, and a drag chip with two drop targets. Life: a button that bursts sparks from its edge and a mirrored card painted through a render target. The gallery trait Readout turns the choice, button and motion events into the commands the atoms listen to and paints the readout.",
   locales: [en]
 ]
 
@@ -22,8 +22,9 @@ uses ScrollAtom from "std/behaviors/std-rasm-scroll"
 uses TweenAtom from "std/behaviors/std-rasm-tween"
 uses GestureAtom from "std/behaviors/std-rasm-gesture"
 uses DragAtom from "std/behaviors/std-rasm-drag"
-uses EmbedAtom from "std/behaviors/std-rasm-embed"
 uses BufAtom from "std/behaviors/std-text-buffer"
+uses ParticlesAtom from "std/behaviors/std-rasm-particles"
+uses MirrorAtom from "std/behaviors/std-rasm-mirror"
 
 type RasmRect = { x : number!, y : number!, w : number!, h : number! }
 type RasmPlaced = { id : string!, rect : RasmRect! }
@@ -31,7 +32,13 @@ type RasmMaterial = { wgsl : string!, params : [number]!, live : boolean! }
 type RasmCorners = { radius : [number]!, kind : "round" | "bevel" | "notch" | "scoop" }
 type RasmSpring = { stiffness : number!, damping : number! }
 type RasmShadow = { color : string!, blur : number! }
-type RasmLook = { fill : string, stroke : string, strokeWidth : number, corners : RasmCorners, shadow : RasmShadow, material : RasmMaterial, textColor : string, font : string, spring : RasmSpring, decor : string }
+type RasmKeyframe = { at : number!, opacity : number, offsetY : number }
+type RasmAnimation = { durationMs : number!, loop : boolean!, keyframes : [RasmKeyframe]! }
+type ReadoutDirections = { none : MessageKey!, left : MessageKey!, right : MessageKey!, up : MessageKey!, down : MessageKey! }
+type ReadoutDrops = { none : MessageKey!, on : MessageKey!, outside : MessageKey! }
+type RasmText = { id : string!, key : MessageKey!, x : number!, y : number!, z : number!, align : string!, baseline : string!, color : string?, font : string?, spring : RasmSpring?, width : number?, wrap : boolean?, measure : boolean?, role : string?, animation : RasmAnimation? }
+type RasmBackdrop = { blur : number!, tint : string, saturate : number }
+type RasmLook = { fill : string, stroke : string, strokeWidth : number, corners : RasmCorners, shadow : RasmShadow, material : RasmMaterial, textColor : string, font : string, spring : RasmSpring, decor : string, backdrop : RasmBackdrop }
 
 orbital RasmGallery {
   entity RasmGalleryView [runtime] {
@@ -40,9 +47,12 @@ orbital RasmGallery {
     rect : RasmRect? @description "The rect the readout was placed in, null until placed." = null
     tweenValue : number @description "The tween's latest value." = 0
     tweenUp : boolean @description "True when the next run goes down, false when it goes up." = false
-    swipe : string @description "The last swipe, as shown." = "none"
-    fling : string @description "The last fling, as shown." = "none"
-    drop : string @description "The last drag result, as shown." = "none"
+    swipeDir : string @description "The last swipe's direction, none before the first." = "none"
+    swipeDx : number @description "The last swipe's horizontal distance in pixels." = 0
+    flingDir : string @description "The last fling's direction, none before the first." = "none"
+    flingSpeed : number @description "The last fling's horizontal speed in pixels per 100 ms." = 0
+    dropKind : string @description "The last drag result: none, on or outside." = "none"
+    dropTarget : string @description "The target the chip was last dropped on, empty otherwise." = ""
     paints : number @description "Counts paints, so each paint in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
   }
 
@@ -59,19 +69,23 @@ orbital RasmGallery {
         (set @entity.paints (+ @entity.paints 1))
         (emit READOUT_PAINT { n: @entity.paints })
       SWIPED -> ready
-        (set @entity.swipe (str/concat ?direction " " (math/round ?dx) "px"))
+        (set @entity.swipeDir ?direction)
+        (set @entity.swipeDx (math/round ?dx))
         (set @entity.paints (+ @entity.paints 1))
         (emit READOUT_PAINT { n: @entity.paints })
       FLUNG -> ready
-        (set @entity.fling (str/concat ?direction " " (math/round (* ?vx 100)) " px per 100 ms"))
+        (set @entity.flingDir ?direction)
+        (set @entity.flingSpeed (math/round (* ?vx 100)))
         (set @entity.paints (+ @entity.paints 1))
         (emit READOUT_PAINT { n: @entity.paints })
       DRAG_DROPPED -> ready
-        (set @entity.drop (str/concat "on " ?target))
+        (set @entity.dropKind "on")
+        (set @entity.dropTarget ?target)
         (set @entity.paints (+ @entity.paints 1))
         (emit READOUT_PAINT { n: @entity.paints })
       DRAG_RELEASED -> ready
-        (set @entity.drop "outside the targets")
+        (set @entity.dropKind "outside")
+        (set @entity.dropTarget "")
         (set @entity.paints (+ @entity.paints 1))
         (emit READOUT_PAINT { n: @entity.paints })
       RASM_THEME -> ready
@@ -84,22 +98,67 @@ orbital RasmGallery {
         (emit READOUT_PAINT { n: @entity.paints })
       RASM_PLACE -> ready when (not (array/some ?placed (fn p (= @p.id "readout"))))
       READOUT_PAINT -> ready
-        (let ((l (object/get @entity.looks "text/body/idle" null)) (r @entity.rect))
+        (let ((l (object/get @entity.looks "text/body/idle" null)) (r @entity.rect) (sk : MessageKey (if (= @entity.swipeDir "left") @config.directions.left (if (= @entity.swipeDir "right") @config.directions.right (if (= @entity.swipeDir "up") @config.directions.up (if (= @entity.swipeDir "down") @config.directions.down @config.directions.none))))) (fk : MessageKey (if (= @entity.flingDir "left") @config.directions.left (if (= @entity.flingDir "right") @config.directions.right (if (= @entity.flingDir "up") @config.directions.up (if (= @entity.flingDir "down") @config.directions.down @config.directions.none))))) (dk : MessageKey (if (= @entity.dropKind "on") @config.drops.on (if (= @entity.dropKind "outside") @config.drops.outside @config.drops.none))))
           (when (and (!= @l null) (!= @r null))
-            (emit RASM_PAINT { id: "readout", z: 2, nodes: [
-              { type: draw-text, id: "readout:tween", text: (str/concat "Tween value " (math/round @entity.tweenValue)), position: { x: @r.x, y: @r.y }, anchor: "top-left", baseline: "top", color: @l.textColor, font: @l.font, spring: @l.spring, hit: false },
-              { type: draw-shape, id: "readout:bar", shape: rect, anchor: "top-left", position: { x: @r.x, y: (+ @r.y 24) }, width: (/ (* @r.w @entity.tweenValue) 100), height: 8, fill: @l.textColor, hit: false },
-              { type: draw-text, id: "readout:swipe", text: (str/concat "Swipe: " @entity.swipe), position: { x: @r.x, y: (+ @r.y 44) }, anchor: "top-left", baseline: "top", color: @l.textColor, font: @l.font, spring: @l.spring, hit: false },
-              { type: draw-text, id: "readout:fling", text: (str/concat "Fling: " @entity.fling), position: { x: @r.x, y: (+ @r.y 66) }, anchor: "top-left", baseline: "top", color: @l.textColor, font: @l.font, spring: @l.spring, hit: false },
-              { type: draw-text, id: "readout:drop", text: (str/concat "Dropped: " @entity.drop), position: { x: @r.x, y: (+ @r.y 88) }, anchor: "top-left", baseline: "top", color: @l.textColor, font: @l.font, spring: @l.spring, hit: false }
+            (emit RASM_PAINT { id: "readout", z: 2, texts: [
+              { id: "readout:tween:label", key: @config.tweenLabel, x: (+ @r.x 0), y: (+ @r.y 0), z: 2, align: "left", baseline: "top", color: @l.textColor, font: @l.font, spring: @l.spring },
+              { id: "readout:swipe:label", key: @config.swipeLabel, x: (+ @r.x 0), y: (+ @r.y 38), z: 2, align: "left", baseline: "top", color: @l.textColor, font: @l.font, spring: @l.spring },
+              { id: "readout:swipe:dir", key: @sk, x: (+ @r.x 0), y: (+ @r.y 56), z: 2, align: "left", baseline: "top", color: @l.textColor, font: @l.font, spring: @l.spring },
+              { id: "readout:swipe:unit", key: @config.pxUnit, x: (+ @r.x 62), y: (+ @r.y 56), z: 2, align: "left", baseline: "top", color: @l.textColor, font: @l.font, spring: @l.spring },
+              { id: "readout:fling:label", key: @config.flingLabel, x: (+ @r.x 0), y: (+ @r.y 78), z: 2, align: "left", baseline: "top", color: @l.textColor, font: @l.font, spring: @l.spring },
+              { id: "readout:fling:dir", key: @fk, x: (+ @r.x 0), y: (+ @r.y 96), z: 2, align: "left", baseline: "top", color: @l.textColor, font: @l.font, spring: @l.spring },
+              { id: "readout:fling:unit", key: @config.flingUnit, x: (+ @r.x 62), y: (+ @r.y 96), z: 2, align: "left", baseline: "top", color: @l.textColor, font: @l.font, spring: @l.spring },
+              { id: "readout:drop:label", key: @config.dropLabel, x: (+ @r.x 0), y: (+ @r.y 118), z: 2, align: "left", baseline: "top", color: @l.textColor, font: @l.font, spring: @l.spring },
+              { id: "readout:drop:kind", key: @dk, x: (+ @r.x 0), y: (+ @r.y 136), z: 2, align: "left", baseline: "top", color: @l.textColor, font: @l.font, spring: @l.spring }
+            ], nodes: [
+              { type: draw-text, id: "readout:tween:value", text: (str/concat "" (math/round @entity.tweenValue)), position: { x: (+ @r.x 100), y: (+ @r.y 0) }, anchor: "top-left", baseline: "top", color: @l.textColor, font: @l.font, spring: @l.spring, hit: false },
+              { type: draw-shape, id: "readout:bar", shape: rect, anchor: "top-left", position: { x: @r.x, y: (+ @r.y 22) }, width: (/ (* @r.w @entity.tweenValue) 100), height: 6, fill: @l.textColor, hit: false },
+              { type: draw-text, id: "readout:swipe:dx", text: (str/concat "" @entity.swipeDx), position: { x: (+ @r.x 40), y: (+ @r.y 56) }, anchor: "top-left", baseline: "top", color: @l.textColor, font: @l.font, spring: @l.spring, hit: false },
+              { type: draw-text, id: "readout:fling:speed", text: (str/concat "" @entity.flingSpeed), position: { x: (+ @r.x 40), y: (+ @r.y 96) }, anchor: "top-left", baseline: "top", color: @l.textColor, font: @l.font, spring: @l.spring, hit: false },
+              { type: draw-text, id: "readout:drop:target", text: (str/concat "" @entity.dropTarget), position: { x: (+ @r.x 28), y: (+ @r.y 136) }, anchor: "top-left", baseline: "top", color: @l.textColor, font: @l.font, spring: @l.spring, hit: false }
             ] })))
+    }
+
+    config {
+      tweenLabel : MessageKey = "readout-tween"
+        @label "Tween label"
+        @description "The catalog key of the tween line's label."
+        @tier "presentation"
+      swipeLabel : MessageKey = "readout-swipe"
+        @label "Swipe label"
+        @description "The catalog key of the swipe line's label."
+        @tier "presentation"
+      flingLabel : MessageKey = "readout-fling"
+        @label "Fling label"
+        @description "The catalog key of the fling line's label."
+        @tier "presentation"
+      dropLabel : MessageKey = "readout-drop"
+        @label "Drop label"
+        @description "The catalog key of the drag line's label."
+        @tier "presentation"
+      pxUnit : MessageKey = "readout-px"
+        @label "Pixel unit"
+        @description "The catalog key of the swipe distance's unit."
+        @tier "presentation"
+      flingUnit : MessageKey = "readout-fling-unit"
+        @label "Fling unit"
+        @description "The catalog key of the fling speed's unit."
+        @tier "presentation"
+      directions : ReadoutDirections = { none: "readout-dir-none", left: "readout-dir-left", right: "readout-dir-right", up: "readout-dir-up", down: "readout-dir-down" }
+        @label "Directions"
+        @description "The catalog key painted for each swipe or fling direction."
+        @tier "presentation"
+      drops : ReadoutDrops = { none: "readout-drop-none", on: "readout-drop-on", outside: "readout-drop-outside" }
+        @label "Drop results"
+        @description "The catalog key painted for each drag result."
+        @tier "presentation"
     }
 
     emits {
       READOUT_PAINT -> internal { n : number! }
         @description "Repaint the readout from the stored rect and look."
         @tier "internal"
-      RASM_PAINT -> external { id : string!  z : number!  nodes : [node]! }
+      RASM_PAINT -> external { id : string!  z : number!  texts : [RasmText]!  nodes : [node]! }
         @description "The readout's tween bar and its swipe, fling and drop lines."
         @tier "primary"
       RASM_TWEEN_START -> external { id : string!  from : number!  to : number!  durationMs : number! }
@@ -147,15 +206,14 @@ orbital RasmGallery {
     config {
       id: "rasm"
       width: 900
-      height: 1340
+      height: 1630
       rootChild: "root"
-      rootRect: { x: 0, y: 0, w: 900, h: 1340 }
+      rootRect: { x: 0, y: 0, w: 900, h: 1630 }
       fill: true
       margin: 24
       align: "center"
     }
     listens {
-      EmbedSlot.RASM_EMBED -> RASM_EMBED
       Theme.RASM_THEME -> RASM_THEME
       Surface.RASM_RESIZE -> RASM_RESIZE
       List.RASM_VISIBLE -> RASM_VISIBLE
@@ -171,12 +229,16 @@ orbital RasmGallery {
       SwipeBox.RASM_PAINT -> RASM_PAINT
       DragCol.RASM_PAINT -> RASM_PAINT
       Bins.RASM_PAINT -> RASM_PAINT
+      LifeRow.RASM_PAINT -> RASM_PAINT
+      HLife.RASM_PAINT -> RASM_PAINT
+      LifeBtn.RASM_PAINT -> RASM_PAINT
+      Sparks.RASM_PAINT -> RASM_PAINT
+      Reflection.RASM_PAINT -> RASM_PAINT
       TitleText.RASM_PAINT -> RASM_PAINT
       HControls.RASM_PAINT -> RASM_PAINT
       HLayout.RASM_PAINT -> RASM_PAINT
       HContainers.RASM_PAINT -> RASM_PAINT
       HMotion.RASM_PAINT -> RASM_PAINT
-      HEmbed.RASM_PAINT -> RASM_PAINT
       S1.RASM_PAINT -> RASM_PAINT
       S2.RASM_PAINT -> RASM_PAINT
       S3.RASM_PAINT -> RASM_PAINT
@@ -214,7 +276,6 @@ orbital RasmGallery {
       Dialog.RASM_PAINT -> RASM_PAINT
       Swipe.RASM_PAINT -> RASM_PAINT
       Chip.RASM_PAINT -> RASM_PAINT
-      EmbedSlot.RASM_PAINT -> RASM_PAINT
       Readout.RASM_PAINT -> RASM_PAINT
     }
   }
@@ -247,7 +308,7 @@ orbital RasmGallery {
       padding: 24
       look: ""
       z: 1
-      children: [{ id: "title", size: "measure" }, { id: "theme", size: "fixed", main: 66 }, { id: "hcontrols", size: "measure" }, { id: "controls", size: "fixed", main: 226 }, { id: "hlayout", size: "measure" }, { id: "layoutrow", size: "fixed", main: 110 }, { id: "hcontainers", size: "measure" }, { id: "controw", size: "fixed", main: 170 }, { id: "hmotion", size: "measure" }, { id: "motionrow", size: "fixed", main: 200 }, { id: "hembed", size: "measure" }, { id: "embedslot", size: "fixed", main: 120 }]
+      children: [{ id: "title", size: "measure" }, { id: "theme", size: "fixed", main: 66 }, { id: "hcontrols", size: "measure" }, { id: "controls", size: "fixed", main: 226 }, { id: "hlayout", size: "measure" }, { id: "layoutrow", size: "fixed", main: 110 }, { id: "hcontainers", size: "measure" }, { id: "controw", size: "fixed", main: 170 }, { id: "hmotion", size: "measure" }, { id: "motionrow", size: "fixed", main: 250 }, { id: "hlife", size: "measure" }, { id: "liferow", size: "fixed", main: 150 }]
     }
     listens {
       Theme.RASM_THEME -> RASM_THEME
@@ -373,7 +434,7 @@ orbital RasmGallery {
       padding: 0
       look: ""
       z: 1
-      children: [{ id: "tweenbtn", size: "fixed", main: 46 }, { id: "readout", size: "fixed", main: 110 }]
+      children: [{ id: "tweenbtn", size: "fixed", main: 46 }, { id: "readout", size: "fixed", main: 160 }]
     }
     listens {
       Theme.RASM_THEME -> RASM_THEME
@@ -527,20 +588,6 @@ orbital RasmGallery {
     config {
       id: "hmotion"
       text: "h-motion"
-      intent: "body"
-      z: 2
-    }
-    listens {
-      Theme.RASM_THEME -> RASM_THEME
-      RootStack.RASM_PLACE -> RASM_PLACE
-      Enter.RASM_ENTER -> RASM_ENTER
-      Surface.RASM_DIRECTION -> RASM_DIRECTION
-    }
-  }
-  trait HEmbed = TextAtom.traits.RasmText {
-    config {
-      id: "hembed"
-      text: "h-embed"
       intent: "body"
       z: 2
     }
@@ -1144,7 +1191,7 @@ orbital RasmGallery {
       contents: ["dlgstack", "dlgtext", "dlgclose"]
       trap: ["dlgclose"]
       surfaceWidth: 900
-      surfaceHeight: 1340
+      surfaceHeight: 1630
     }
     listens {
       Theme.RASM_THEME -> RASM_THEME
@@ -1194,25 +1241,9 @@ orbital RasmGallery {
       Surface.RASM_POINTER -> RASM_POINTER
     }
   }
-  trait EmbedSlot = EmbedAtom.traits.RasmEmbed {
-    config {
-      id: "embedslot"
-      kind: "program"
-      source: "/rasm-panel"
-      label: "Embedded program"
-      fallback: "embed-slot-fallback"
-      z: 2
-    }
-    listens {
-      Surface.RASM_EMBED_STATE -> RASM_EMBED_STATE
-      Surface.RASM_BOOT -> RASM_BOOT
-      Theme.RASM_THEME -> RASM_THEME
-      RootStack.RASM_PLACE -> RASM_PLACE
-    }
-  }
   trait Enter = PresenceAtom.traits.RasmPresence {
     config {
-      order: ["title", "theme", "hcontrols", "press", "toggle", "range", "field", "choice", "locked", "hlayout", "lstack", "lgrid", "hcontainers", "open", "openhint", "list", "hmotion", "tweenbtn", "readout", "swipe", "chip", "bina", "binb", "hembed", "embedslot"]
+      order: ["title", "theme", "hcontrols", "press", "toggle", "range", "field", "choice", "locked", "hlayout", "lstack", "lgrid", "hcontainers", "open", "openhint", "list", "hmotion", "tweenbtn", "readout", "swipe", "chip", "bina", "binb", "hlife", "lifebtn"]
       staggerMs: 40
     }
     listens {
@@ -1221,7 +1252,7 @@ orbital RasmGallery {
   }
   trait Focus = FocusAtom.traits.RasmFocus {
     config {
-      order: ["theme", "press", "toggle", "range", "field", "choice", "open", "tweenbtn", "list", "chip"]
+      order: ["theme", "press", "toggle", "range", "field", "choice", "open", "tweenbtn", "list", "chip", "lifebtn"]
     }
     listens {
       Surface.RASM_KEY -> RASM_KEY
@@ -1234,7 +1265,7 @@ orbital RasmGallery {
   trait Anchor = AnchorAtom.traits.RasmAnchor {
     config {
       width: 900
-      height: 1340
+      height: 1630
     }
     listens {
       RootStack.RASM_PLACE -> RASM_PLACE
@@ -1245,5 +1276,93 @@ orbital RasmGallery {
       Dialog.RASM_ANCHOR -> RASM_ANCHOR
     }
   }
-  page "/rasm-gallery" as RasmGalleryPage -> Theme, Surface, NameBuffer, RootStack, LayoutRow, LStack, ContRow, OpenCol, DlgStack, MotionRow, TweenCol, SwipeBox, DragCol, Bins, ControlsGrid, LGrid, TitleText, HControls, HLayout, HContainers, HMotion, HEmbed, S1, S2, S3, OpenHint, DlgText, Item0, Item1, Item2, Item3, Item4, Item5, Item6, Item7, Item8, Item9, Item10, Item11, ThemeChoice, PressCtl, ToggleCtl, RangeCtl, FieldCtl, ChoiceCtl, LockedBtn, G1, G2, G3, G4, OpenBtn, DlgClose, TweenBtn, BinA, BinB, List, Dialog, Tween, Swipe, Chip, EmbedSlot, Enter, Focus, Anchor, Readout
+  trait LifeRow = StackAtom.traits.RasmStack {
+    config {
+      id: "liferow"
+      axis: "horizontal"
+      gap: 14
+      padding: 0
+      look: ""
+      z: 1
+      children: [{ id: "lifebtn", size: "fixed", main: 180 }, { id: "sparks", size: "fill" }, { id: "reflection", size: "fixed", main: 220 }]
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      RootStack.RASM_PLACE -> RASM_PLACE
+      Surface.RASM_MEASURED -> RASM_MEASURED
+      Enter.RASM_ENTER -> RASM_ENTER
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+    }
+  }
+  trait HLife = TextAtom.traits.RasmText {
+    config {
+      id: "hlife"
+      text: "h-life"
+      intent: "body"
+      z: 2
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      RootStack.RASM_PLACE -> RASM_PLACE
+      Enter.RASM_ENTER -> RASM_ENTER
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+    }
+  }
+  trait LifeBtn = PressAtom.traits.RasmPressable {
+    config {
+      id: "lifebtn"
+      label: "life-btn"
+      intent: "primary"
+      action: RASM_LIFE_PRESSED
+      order: 13
+      z: 2
+    }
+    listens {
+      Surface.RASM_BOOT -> RASM_BOOT
+      Theme.RASM_THEME -> RASM_THEME
+      LifeRow.RASM_PLACE -> RASM_PLACE
+      Enter.RASM_ENTER -> RASM_ENTER
+      Surface.RASM_POINTER -> RASM_POINTER
+      Focus.RASM_FOCUS -> RASM_FOCUS
+      Focus.RASM_ACTIVATE -> RASM_ACTIVATE
+    }
+  }
+  trait Sparks = ParticlesAtom.traits.RasmParticles {
+    config {
+      id: "sparks"
+      intent: "primary"
+      originX: 0
+      originY: 0.5
+      burst: 36
+      lifetime: 0.9
+      spread: [-0.8, 0.8]
+      speed: [120, 320]
+      gravity: 240
+      seed: 11
+      size: 5
+      z: 3
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      LifeRow.RASM_PLACE -> RASM_PLACE
+      LifeBtn.RASM_LIFE_PRESSED -> RASM_PARTICLES_BURST with { id: "sparks" }
+    }
+  }
+  trait Reflection = MirrorAtom.traits.RasmMirror {
+    config {
+      id: "reflection"
+      intent: "primary"
+      flip: true
+      sourceWidth: 160
+      sourceHeight: 120
+      inset: 10
+      z: 2
+      source: [{ type: "draw-shape", id: "reflection:ground", shape: "rect", anchor: "top-left", position: { x: 0, y: 0, z: 0 }, width: 160, height: 120, fill: "#1d3557" }, { type: "draw-shape", id: "reflection:star", shape: "polygon", anchor: "top-left", position: { x: 20, y: 10, z: 1 }, width: 100, height: 100, sides: 8, starRatio: 0.5, fill: "#f4d35e" }, { type: "draw-shape", id: "reflection:bar", shape: "rect", anchor: "top-left", position: { x: 0, y: 100, z: 1 }, width: 70, height: 20, fill: "#e63946" }]
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      LifeRow.RASM_PLACE -> RASM_PLACE
+    }
+  }
+  page "/rasm-gallery" as RasmGalleryPage -> Theme, Surface, NameBuffer, RootStack, LayoutRow, LStack, ContRow, OpenCol, DlgStack, MotionRow, TweenCol, SwipeBox, DragCol, Bins, ControlsGrid, LGrid, TitleText, HControls, HLayout, HContainers, HMotion, S1, S2, S3, OpenHint, DlgText, Item0, Item1, Item2, Item3, Item4, Item5, Item6, Item7, Item8, Item9, Item10, Item11, ThemeChoice, PressCtl, ToggleCtl, RangeCtl, FieldCtl, ChoiceCtl, LockedBtn, G1, G2, G3, G4, OpenBtn, DlgClose, TweenBtn, BinA, BinB, List, Dialog, Tween, Swipe, Chip, Enter, Focus, Anchor, Readout, LifeRow, HLife, LifeBtn, Sparks, Reflection
 }

@@ -1,6 +1,6 @@
 app std-guest-session [
   version: "1.0.0",
-  description: "std-guest-session — runs a program picked at run time as a guest session on the kernel, and paints it. GuestSession (server) resolves std-mock-page-seed as it mounts, and takes GUEST_OPEN { program } (a resolved program value, closing any guest already open), resolves std-mock-page-seed once, composes it with the program (program/compose, unless the program already declares the mock_seed_marks store) and opens the composed program with program/open, so the guest seeds each routed page's entities on its first visit inside its own kernel (EXEC-SEED-7), keeps the latest paint of every trait per slot (embedded children included) and emits GUEST_PAINTS { guest, paints } and GUEST_MOVED { guest, moves } (the transitions its traits took); a failed open is GUEST_ERROR { message }, a failed step is GUEST_NOTICE { message }, and GUEST_FAIL { message } lets the host that could not obtain a program say so the same way. GUEST_NAVIGATE { guest, route } opens that route in the guest with program/navigate. GUEST_SEND { guest, address, event, payload } steps the guest with program/dispatch when guest is the open one and is ignored for any other; GUEST_RESET closes it. GUEST_CLEARED tells the painter the guest is gone. GuestStage (client) keeps the paint, shows one guest-view for the configured slot holding the paint of every page-root trait in paint order (never an embedded child's; its source is the first root), and hands it every paint of the guest so an embedded @trait.X resolves to the guest's trait (a skeleton until the guest has painted, an alert when it failed) and turns a control of the guest it shows into GUEST_SEND. The host composes both traits under these names, supplies the program value, and embeds GuestStage inside its own chrome with @trait.GuestStage.",
+  description: "std-guest-session — runs a program picked at run time as a guest session on the kernel, and paints it. GuestSession (server) resolves std-mock-page-seed as it mounts, and takes GUEST_OPEN { program } (a resolved program value, closing any guest already open), resolves std-mock-page-seed once, composes it with the program (program/compose, unless the program already declares the mock_seed_marks store) and opens the composed program with program/open, so the guest seeds each routed page's entities on its first visit inside its own kernel (EXEC-SEED-7), keeps the latest paint of every trait per slot (embedded children included) and emits GUEST_PAINTS { guest, paints } and GUEST_MOVED { guest, moves } (the transitions its traits took); a failed open is GUEST_ERROR { message }, a failed step is GUEST_NOTICE { message }, and GUEST_FAIL { message } lets the host that could not obtain a program say so the same way. GUEST_NAVIGATE { guest, route } opens that route in the guest with program/navigate. GUEST_SEND { guest, address, event, payload } steps the guest with program/dispatch when guest is the open one and is ignored for any other; GUEST_RESET closes it. GUEST_CLEARED tells the painter the guest is gone. GuestStage (client) keeps the paint, shows one guest-view for the configured slot holding the paint of every page-root trait in paint order (never an embedded child's; its source is the first root), and hands it every paint of the guest so an embedded @trait.X resolves to the guest's trait (a skeleton until the guest has painted, an alert when it failed) and turns a control of the guest it shows into GUEST_SEND. The host composes both traits under these names, supplies the program value, and embeds GuestStage inside its own chrome with @trait.GuestStage. A split guest's host-run dispatches and pushed emits for its viewer (the dispatches of a GUEST_TICKED: a dispatch for this viewer, a push to this viewer as origin, or a push to the peers of another viewer) reach the stage as GUEST_DISPATCHED, and the view folds them into the viewer's kernel as host-run dispatches and pushes.",
   egress: [],
   kernel: { "guest": [spawn, declared, program] },
   env: ["FIREBASE_AUTH_EMULATOR_HOST", "FIREBASE_PROJECT_ID", "AUTH_PROVIDER", "ALMADAR_PERSONA_OWNS", "ORB_LAUNCHPAD_HOST"],
@@ -85,6 +85,8 @@ type GuestOpened = { guest : string!, page : [string]!, route : string, rendered
 type GuestJson = string | number | boolean | [GuestJson?] | Map string GuestJson?
 type GuestLegBody = { event : string, targetTrait : string, entityId : string, payload : GuestJson, clientId : string, locale : string, traits : [GuestJson], mount : [GuestJson], route : string, delivery : GuestJson, dispatchLog : GuestJson, framesSince : number }
 type GuestLegAnswer = { leg : string!, response : string?, error : string? }
+type GuestHostDispatch = { kind : "dispatch" | "push", clientId : string!, target : "origin" | "peers", orbitalName : string?, request : GuestJson?, response : GuestJson?, emitted : GuestJson? }
+type GuestStagedDispatch = { kind : "dispatch" | "push", clientId : string!, target : "origin" | "peers", orbitalName : string?, request : GuestJson?, response : GuestJson?, emitted : GuestJson?, seq : number! }
 type GuestClientProgram = SExpr
 type GuestWireAnswer = { emittedEvents : [GuestEmitted]? }
 type GuestAccess = { verdict : string!, signIn : string, returnTo : string, viewer : string }
@@ -159,6 +161,8 @@ orbital GuestSessionOrbital {
     guestAsks : [GuestHostAsk] @description "The guest's client asks the stage relays to this viewer's host, oldest first; the first is the one being answered." = []
     guestClient : GuestProgram? @description "A split guest's client program, which the view runs in a kernel of its own; none for a guest that runs every trait itself."
     guestLegs : [GuestLegAnswer] @description "Answered server legs of a split guest the view has not taken yet." = []
+    guestDispatches : [GuestStagedDispatch] @description "Dispatches the split guest's host ran on its own in this viewer's session that the view has not folded yet, each with its running seq." = []
+    guestDispatchSeq : number @description "The seq of the latest host-run dispatch the stage stored." = 0
     guestEpoch : number @description "How many times a split guest's view was told to mount its page afresh; the view starts again when it changes." = 0
     guestSignedIn : boolean @description "Whether a split guest's viewer session is signed in." = false
     guestRevealed : [GuestRevealed] @description "The values the viewer revealed, held by the stage until the sidebar closes or the guest changes." = []
@@ -644,6 +648,8 @@ orbital GuestSessionOrbital {
         (emit GUEST_PAINTS { guest: @entity.guestHandle, route: @entity.guestRoute, page: @entity.guestPage, paints: @entity.guestPaints, seq: @entity.guestPaintSeq })
         (when (> (array/len (default ?hostAsks [])) 0) (emit GUEST_HOST_ASKS { guest: @entity.guestHandle, asks: (default ?hostAsks []) }))
         (when (and @config.split @entity.guestSigningIn) (emit GUEST_VIEWER_SETTLE { emitted: (default ?emitted []) }))
+        (let ((mine : [GuestHostDispatch] (array/filter (default ?dispatches []) (fn d (or (and (= @d.kind "dispatch") (= @d.clientId @entity.guestViewer)) (and (= @d.kind "push") (or (and (= @d.target "origin") (= @d.clientId @entity.guestViewer)) (and (= @d.target "peers") (!= @d.clientId @entity.guestViewer)))))))))
+          (when (and @config.split (> (array/len @mine) 0)) (emit GUEST_DISPATCHED { guest: @entity.guestHandle, dispatches: @mine })))
         (when (and (not @config.split) @entity.guestSigningIn (array/some (default ?emitted []) (fn e (= @e.event "IDENTITY_BOUND")))) (do (set @entity.guestSigningIn false) (program/navigate { guest: @entity.guestHandle, route: @entity.guestReturnTo, remount: true } { emit: { success: GUEST_NAVIGATED, failure: GUEST_NAVIGATE_FAILED } })))
         (when (and (not @config.split) @entity.guestSigningIn (not (array/some (default ?emitted []) (fn e (= @e.event "IDENTITY_BOUND")))) (array/some (default ?emitted []) (fn e (= @e.event "IDENTITY_REFUSED")))) (do (set @entity.guestSigningIn false) (emit GUEST_NOTICE { message: (str/concat @config.signInRefused " " @config.signInReason " " (default (object/get (default (array/find (default ?emitted []) (fn e (= @e.event "IDENTITY_REFUSED"))) { event: "", payload: { reason: "" } }) "payload.reason") "")) })))
       GUEST_TICKED -> live when (!= ?guest @entity.guestHandle)
@@ -743,6 +749,11 @@ orbital GuestSessionOrbital {
         error : string
       }
         @description "The answer to a split guest's server leg: the events response as JSON text, or why it failed."
+      GUEST_DISPATCHED -> external {
+        guest : string!
+        dispatches : [GuestHostDispatch]!
+      }
+        @description "Dispatches a split guest's host ran on its own in the viewer's session, such as a completion that arrived later: the viewer's kernel folds them as host-run dispatches."
       GUEST_VIEW_RESET -> external {
         guest : string!
       }
@@ -852,6 +863,7 @@ orbital GuestSessionOrbital {
         emitted : [GuestEmitted]
         outcomes : [GuestMove]
         hostAsks : [GuestHostAsk]
+        dispatches : [GuestHostDispatch]
         key : string
       }
         @description "One pass of the open guest's own tick clock that painted something (program/live { kind: guest }): its page traits' ticks, [client] ones included, since a guest has no browser."
@@ -1282,6 +1294,7 @@ orbital GuestSessionOrbital {
         (set @entity.guestAsks [])
         (set @entity.guestClient null)
         (set @entity.guestLegs [])
+        (set @entity.guestDispatches [])
         (set @entity.guestPaintSeq 0)
         (set @entity.guestHeader null)
         (set @entity.guestTheme null)
@@ -1331,6 +1344,7 @@ orbital GuestSessionOrbital {
         (set @entity.guestError "")
         (set @entity.guestClient ?program)
         (set @entity.guestLegs [])
+        (set @entity.guestDispatches [])
         (emit GUEST_SHOWN {})
       GUEST_LEG_SENT -> idle when (= ?guest @entity.guestHandle)
         (emit GUEST_LEG { guest: ?guest, leg: ?leg, orbital: ?orbital, body: ?body })
@@ -1340,9 +1354,17 @@ orbital GuestSessionOrbital {
           (set @entity.guestLegs (array/append @entity.guestLegs @answer)))
         (emit GUEST_SHOWN {})
       GUEST_LEG_DONE -> idle when (!= ?guest @entity.guestHandle)
+      GUEST_DISPATCHED -> idle when (= ?guest @entity.guestHandle)
+        (let ((none : [GuestStagedDispatch] []) (staged : [GuestStagedDispatch] (array/reduce ?dispatches @none (fn acc d (array/append @acc { kind: @d.kind, clientId: @d.clientId, target: @d.target, orbitalName: @d.orbitalName, request: @d.request, response: @d.response, emitted: @d.emitted, seq: (+ @entity.guestDispatchSeq (array/len @acc) 1) })))))
+          (do
+            (set @entity.guestDispatches (array/concat @entity.guestDispatches @staged))
+            (set @entity.guestDispatchSeq (+ @entity.guestDispatchSeq (array/len @staged)))))
+        (emit GUEST_SHOWN {})
+      GUEST_DISPATCHED -> idle when (!= ?guest @entity.guestHandle)
       GUEST_VIEW_RESET -> idle when (= ?guest @entity.guestHandle)
         (set @entity.guestEpoch (+ @entity.guestEpoch 1))
         (set @entity.guestLegs [])
+        (set @entity.guestDispatches [])
         (emit GUEST_SHOWN {})
       GUEST_VIEW_RESET -> idle when (!= ?guest @entity.guestHandle)
       GUEST_VIEWER -> idle when (= ?guest @entity.guestHandle)
@@ -1360,6 +1382,9 @@ orbital GuestSessionOrbital {
       GUEST_VIEW_MOVED -> idle when (!= ?guest @entity.guestHandle)
       GUEST_LEG_TAKEN -> idle
         (set @entity.guestLegs (array/filter @entity.guestLegs (fn l (!= @l.leg ?leg))))
+      GUEST_DISPATCHES_TAKEN -> idle when (= ?guest @entity.guestHandle)
+        (set @entity.guestDispatches (array/filter @entity.guestDispatches (fn d (> @d.seq ?seq))))
+      GUEST_DISPATCHES_TAKEN -> idle when (!= ?guest @entity.guestHandle)
       GUEST_CONTROL -> idle when (= ?guest @entity.guestHandle)
         (emit GUEST_SEND { guest: ?guest, address: ?address, event: ?event, payload: ?payload })
       GUEST_CONTROL -> idle when (!= ?guest @entity.guestHandle)
@@ -1385,7 +1410,7 @@ orbital GuestSessionOrbital {
             (if (and (!= @entity.guestClient null) @entity.guestSignInAsked)
             { type: container, size: md, padding: lg, children: [{ type: alert, variant: info, title: @config.signInTitle, message: @config.signInMessage }] }
             (if (!= @entity.guestClient null)
-            { type: guest-view, guest: @entity.guestHandle, source: "", deliver: GUEST_CONTROL, navigate: GUEST_ROUTE, route: @entity.guestRoute, theme: @entity.guestTheme, program: (as @entity.guestClient GuestClientProgram), leg: GUEST_LEG_SENT, legTaken: GUEST_LEG_TAKEN, legAnswers: @entity.guestLegs, epoch: @entity.guestEpoch, moved: GUEST_VIEW_MOVED, signIn: GUEST_VIEW_SIGN_IN, signedIn: @entity.guestSignedIn, children: [] }
+            { type: guest-view, guest: @entity.guestHandle, source: "", deliver: GUEST_CONTROL, navigate: GUEST_ROUTE, route: @entity.guestRoute, theme: @entity.guestTheme, program: (as @entity.guestClient GuestClientProgram), leg: GUEST_LEG_SENT, legTaken: GUEST_LEG_TAKEN, legAnswers: @entity.guestLegs, hostDispatches: @entity.guestDispatches, dispatchesTaken: GUEST_DISPATCHES_TAKEN, epoch: @entity.guestEpoch, moved: GUEST_VIEW_MOVED, signIn: GUEST_VIEW_SIGN_IN, signedIn: @entity.guestSignedIn, children: [] }
             (let ((slotRoots (array/filter @entity.guestPaints (fn p (and (= @p.slot @config.slot) (= @p.embedded false) (array/includes @entity.guestPage @p.trait))))) (paint (array/first (array/filter @entity.guestPaints (fn p (and (= @p.slot @config.slot) (= @p.embedded false) (array/includes @entity.guestPage @p.trait)))))))
               (if (= @paint null)
                 (if (= @entity.guestHandle "")
@@ -1475,6 +1500,7 @@ orbital GuestSessionOrbital {
         signedIn : boolean!
       }
       GuestSession.GUEST_LEG_DONE -> GUEST_LEG_DONE
+      GuestSession.GUEST_DISPATCHED -> GUEST_DISPATCHED
       GuestSession.GUEST_VIEW_RESET -> GUEST_VIEW_RESET
       GuestSession.GUEST_VIEWER -> GUEST_VIEWER
       GUEST_VIEWER {
@@ -1506,6 +1532,15 @@ orbital GuestSessionOrbital {
         guest : string!
         leg : string!
       }
+      GUEST_DISPATCHED {
+        guest : string!
+        dispatches : [GuestHostDispatch]!
+      }
+      GUEST_DISPATCHES_TAKEN {
+        guest : string!
+        seq : number!
+      }
+        @description "The split guest's view folded the host-run dispatches up to this seq."
       GUEST_VIEW_MOVED {
         guest : string!
         moves : [GuestMove]!

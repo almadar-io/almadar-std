@@ -1306,25 +1306,41 @@
             "damping": 14
            }
           },
-          "embed/default/placeholder": {
-           "fill": "rgba(227,184,120,0.12)",
+          "mirror/primary/idle": {
+           "fill": "rgba(88,60,34,0.88)",
            "stroke": "#e3b878",
            "strokeWidth": 1.2,
            "corners": {
             "radius": [
-             14,
-             14,
-             14,
-             14
+             30,
+             30,
+             30,
+             30
             ],
             "kind": "round"
            },
-           "textColor": "rgba(255,241,214,0.82)",
-           "font": "400 15px sans-serif",
+           "shadow": {
+            "color": "rgba(40,22,8,0.5)",
+            "blur": 34
+           },
+           "material": {
+            "wgsl": "fn sd_hash(p: vec2<f32>) -> f32 { return fract(sin(dot(p, vec2<f32>(127.1, 311.7))) * 43758.5453); }\nfn sd_noise(p: vec2<f32>) -> f32 {\n  let i = floor(p);\n  let f = fract(p);\n  let u = f * f * (3.0 - 2.0 * f);\n  return mix(mix(sd_hash(i), sd_hash(i + vec2<f32>(1.0, 0.0)), u.x), mix(sd_hash(i + vec2<f32>(0.0, 1.0)), sd_hash(i + vec2<f32>(1.0, 1.0)), u.x), u.y);\n}\n// a.x hover, a.y press, a.z focus, a.w grain size in px\nfn shade(px: Pixel) -> vec4<f32> {\n  let wind = vec2<f32>(px.time * 6.0, px.time * 2.0);\n  let size = max(px.a.w, 1.0);\n  let grain = sd_noise((px.local + wind) / size) * 0.6 + sd_hash(floor(px.local / size)) * 0.4;\n  var col = px.color.rgb * (0.88 + 0.2 * grain);\n  let drift = sin(px.local.x * 0.03 - px.time * 1.2 + px.local.y * 0.01) * 0.5 + 0.5;\n  col = col + vec3<f32>(0.10, 0.07, 0.03) * drift * (0.4 + px.a.x);\n  let d = distance(px.local, px.pointer);\n  col = col + vec3<f32>(1.0, 0.8, 0.5) * exp(-d * d / (2.0 * 70.0 * 70.0)) * (0.05 + 0.2 * px.a.x);\n  let rim = smoothstep(-2.5, 0.0, px.sdf) * (0.25 + 0.3 * px.a.x + 0.3 * px.a.z);\n  col = mix(col, vec3<f32>(0.98, 0.86, 0.62), rim);\n  let kick = exp(-d * 0.02) * px.a.y * 0.14 * (0.5 + 0.5 * sin(d * 0.05 - px.time * 6.0));\n  col = col - vec3<f32>(kick);\n  return vec4<f32>(col, px.color.a);\n}\n",
+            "params": [
+             0,
+             0,
+             0,
+             2.5
+            ],
+            "live": true
+           },
            "spring": {
             "stiffness": 120,
             "damping": 14
-           }
+           },
+           "decor": "dune-ripple"
+          },
+          "particles/primary/idle": {
+           "fill": "#e3b878"
           }
          }
         }
@@ -2606,25 +2622,41 @@
             "blur": 16
            }
           },
-          "embed/default/placeholder": {
-           "fill": "rgba(127,152,168,0.07)",
+          "mirror/primary/idle": {
+           "fill": "rgba(16,21,28,0.95)",
            "stroke": "#7f98a8",
            "strokeWidth": 1,
            "corners": {
             "radius": [
-             3,
-             3,
-             3,
-             3
+             4,
+             4,
+             4,
+             4
             ],
             "kind": "notch"
            },
-           "textColor": "rgba(206,222,230,0.78)",
-           "font": "400 14px monospace",
+           "shadow": {
+            "color": "rgba(0,0,0,0.6)",
+            "blur": 16
+           },
+           "material": {
+            "wgsl": "// a.x hover, a.y press, a.z focus, a.w line pitch in px\nfn shade(px: Pixel) -> vec4<f32> {\n  let pitch = max(px.a.w, 1.0);\n  let brush = 0.5 + 0.5 * sin(px.local.y * 6.2831853 / pitch);\n  var col = px.color.rgb * (0.94 + 0.06 * brush);\n  col = col + vec3<f32>(0.10) * (1.0 - px.uv.y) * (0.6 + 0.4 * px.a.x);\n  let tick = step(0.5, fract(px.local.x / 10.0)) * (1.0 - smoothstep(0.0, 5.0, px.local.y));\n  col = col + vec3<f32>(0.6, 0.72, 0.8) * tick * 0.22;\n  let inner = 1.0 - smoothstep(0.0, 0.8, abs(px.sdf + 4.0));\n  col = mix(col, vec3<f32>(0.62, 0.74, 0.82), inner * 0.38);\n  let rim = smoothstep(-1.2, 0.0, px.sdf);\n  col = mix(col, vec3<f32>(0.95, 0.62, 0.20), rim * (0.2 + 0.5 * px.a.z + 0.3 * px.a.x));\n  col = col * (1.0 - 0.16 * px.a.y);\n  let d = distance(px.local, px.pointer);\n  col = col + vec3<f32>(0.95, 0.62, 0.20) * exp(-d * d / (2.0 * 36.0 * 36.0)) * 0.10 * px.a.x;\n  return vec4<f32>(col, px.color.a);\n}\n",
+            "params": [
+             0,
+             0,
+             0,
+             14
+            ],
+            "live": true
+           },
            "spring": {
             "stiffness": 420,
             "damping": 34
-           }
+           },
+           "decor": "engraved-border"
+          },
+          "particles/primary/idle": {
+           "fill": "#7f98a8"
           }
          }
         }
@@ -3938,8 +3970,8 @@
             "damping": 70
            }
           },
-          "embed/default/placeholder": {
-           "fill": "rgba(47,209,106,0.06)",
+          "mirror/primary/idle": {
+           "fill": "rgba(3,14,8,0.94)",
            "stroke": "#2fd16a",
            "strokeWidth": 1,
            "corners": {
@@ -3951,12 +3983,28 @@
             ],
             "kind": "notch"
            },
-           "textColor": "rgba(93,255,149,0.8)",
-           "font": "400 14px monospace",
+           "shadow": {
+            "color": "rgba(47,209,106,0.28)",
+            "blur": 22
+           },
+           "material": {
+            "wgsl": "fn tm_hash(p: vec2<f32>) -> f32 { return fract(sin(dot(p, vec2<f32>(127.1, 311.7))) * 43758.5453); }\nfn tm_noise(p: vec2<f32>) -> f32 {\n  let i = floor(p);\n  let f = fract(p);\n  let u = f * f * (3.0 - 2.0 * f);\n  return mix(mix(tm_hash(i), tm_hash(i + vec2<f32>(1.0, 0.0)), u.x), mix(tm_hash(i + vec2<f32>(0.0, 1.0)), tm_hash(i + vec2<f32>(1.0, 1.0)), u.x), u.y);\n}\n// a.x hover, a.y press, a.z focus, a.w scanline pitch in px\nfn shade(px: Pixel) -> vec4<f32> {\n  let step_t = floor(px.time * 12.0);\n  let pitch = max(px.a.w, 1.0);\n  let scan = 0.78 + 0.22 * step(0.5, fract(px.local.y / pitch));\n  var col = px.color.rgb * scan;\n  col = col * (0.95 + 0.05 * tm_hash(vec2<f32>(step_t, floor(px.local.y / pitch))));\n  col = col + vec3<f32>(0.1, 0.8, 0.35) * 0.12 * px.a.x;\n  let edge = 1.0 - smoothstep(0.0, 1.5, abs(px.sdf + 1.0));\n  col = mix(col, vec3<f32>(0.35, 1.0, 0.55), edge * (0.35 + 0.4 * px.a.x + 0.4 * px.a.z));\n  let blink = step(0.5, fract(px.time * 1.6));\n  let cursor = step(px.size.x - 10.0, px.local.x) * step(px.local.x, px.size.x - 4.0) * step(4.0, px.local.y) * step(px.local.y, px.size.y - 4.0);\n  col = col + vec3<f32>(0.3, 1.0, 0.5) * cursor * blink * px.a.z * 0.6;\n  col = mix(col, vec3<f32>(0.4, 1.0, 0.6), px.a.y * 0.3);\n  return vec4<f32>(col, px.color.a);\n}\n",
+            "params": [
+             0,
+             0,
+             0,
+             3
+            ],
+            "live": true
+           },
            "spring": {
             "stiffness": 900,
             "damping": 70
-           }
+           },
+           "decor": "crt-frame"
+          },
+          "particles/primary/idle": {
+           "fill": "#2fd16a"
           }
          }
         }
@@ -5270,25 +5318,41 @@
             "damping": 16
            }
           },
-          "embed/default/placeholder": {
-           "fill": "rgba(42,36,51,0.05)",
+          "mirror/primary/idle": {
+           "fill": "rgba(250,246,236,0.96)",
            "stroke": "#2a2433",
            "strokeWidth": 1.4,
            "corners": {
             "radius": [
-             5,
-             5,
-             5,
-             5
+             6,
+             6,
+             6,
+             6
             ],
             "kind": "round"
            },
-           "textColor": "rgba(31,26,38,0.82)",
-           "font": "400 15px serif",
+           "shadow": {
+            "color": "rgba(60,45,30,0.28)",
+            "blur": 30
+           },
+           "material": {
+            "wgsl": "fn pp_hash(p: vec2<f32>) -> f32 { return fract(sin(dot(p, vec2<f32>(127.1, 311.7))) * 43758.5453); }\nfn pp_noise(p: vec2<f32>) -> f32 {\n  let i = floor(p);\n  let f = fract(p);\n  let u = f * f * (3.0 - 2.0 * f);\n  return mix(mix(pp_hash(i), pp_hash(i + vec2<f32>(1.0, 0.0)), u.x), mix(pp_hash(i + vec2<f32>(0.0, 1.0)), pp_hash(i + vec2<f32>(1.0, 1.0)), u.x), u.y);\n}\n// a.x hover, a.y press, a.z focus, a.w fibre scale in px\nfn shade(px: Pixel) -> vec4<f32> {\n  let s = max(px.a.w, 1.0);\n  let fib = pp_noise(vec2<f32>(px.local.x / (s * 6.0), px.local.y / (s * 0.4)));\n  let tooth = pp_noise(px.local / s);\n  var col = px.color.rgb * (0.96 + 0.05 * tooth) - vec3<f32>(0.03) * smoothstep(0.65, 0.9, fib);\n  let d = distance(px.local, px.pointer);\n  col = col + vec3<f32>(0.05, 0.04, 0.02) * exp(-d * d / (2.0 * 80.0 * 80.0)) * (0.4 + px.a.x);\n  let ink = smoothstep(-1.4, 0.0, px.sdf) * (0.35 + 0.35 * px.a.x + 0.3 * px.a.z);\n  col = mix(col, vec3<f32>(0.14, 0.12, 0.16), ink);\n  let bleed = smoothstep(-6.0, -1.4, px.sdf) * (1.0 - smoothstep(-1.4, 0.0, px.sdf)) * 0.06 * (0.6 + 0.4 * pp_noise(px.local / 3.0));\n  col = col - vec3<f32>(bleed);\n  col = col * (1.0 - 0.07 * px.a.y);\n  return vec4<f32>(col, px.color.a);\n}\n",
+            "params": [
+             0,
+             0,
+             0,
+             4
+            ],
+            "live": true
+           },
            "spring": {
             "stiffness": 70,
             "damping": 16
-           }
+           },
+           "decor": "deckle-edge"
+          },
+          "particles/primary/idle": {
+           "fill": "#2a2433"
           }
          }
         }
@@ -6570,25 +6634,41 @@
             "blur": 28
            }
           },
-          "embed/default/placeholder": {
-           "fill": "rgba(200,146,26,0.10)",
+          "mirror/primary/idle": {
+           "fill": "rgba(251,246,234,0.94)",
            "stroke": "#c8921a",
-           "strokeWidth": 1.2,
+           "strokeWidth": 1.5,
            "corners": {
             "radius": [
-             8,
-             8,
-             8,
-             8
+             18,
+             18,
+             18,
+             18
             ],
-            "kind": "bevel"
+            "kind": "notch"
            },
-           "textColor": "rgba(44,37,24,0.92)",
-           "font": "400 16px sans-serif",
+           "shadow": {
+            "color": "rgba(80,60,20,0.22)",
+            "blur": 28
+           },
+           "material": {
+            "wgsl": "fn nq_hash(p: vec2<f32>) -> f32 { return fract(sin(dot(p, vec2<f32>(127.1, 311.7))) * 43758.5453); }\nfn nq_noise(p: vec2<f32>) -> f32 {\n  let i = floor(p);\n  let f = fract(p);\n  let u = f * f * (3.0 - 2.0 * f);\n  return mix(mix(nq_hash(i), nq_hash(i + vec2<f32>(1.0, 0.0)), u.x), mix(nq_hash(i + vec2<f32>(0.0, 1.0)), nq_hash(i + vec2<f32>(1.0, 1.0)), u.x), u.y);\n}\n// a.x hover, a.y press, a.z focus, a.w grain size in px\nfn shade(px: Pixel) -> vec4<f32> {\n  let drift = vec2<f32>(px.time * 3.0, px.time * 1.3);\n  let size = max(px.a.w, 1.0);\n  let grain = 0.5 * nq_noise((px.local + drift) / size) + 0.5 * nq_noise((px.local - drift * 0.5) / (size * 0.37));\n  var col = px.color.rgb * (0.9 + 0.14 * grain);\n  let d = distance(px.local, px.pointer);\n  let warm = exp(-d * d / (2.0 * 90.0 * 90.0)) * (0.08 + 0.22 * px.a.x);\n  col = col + vec3<f32>(0.95, 0.78, 0.42) * warm;\n  let rim = smoothstep(-3.0, 0.0, px.sdf) * (0.3 + 0.45 * px.a.x + 0.25 * px.a.z);\n  col = mix(col, vec3<f32>(0.96, 0.83, 0.58), rim);\n  let ripple = sin(d * 0.08 - px.time * 9.0) * exp(-d * 0.012) * px.a.y * 0.15;\n  col = col + vec3<f32>(ripple);\n  return vec4<f32>(col, px.color.a);\n}\n",
+            "params": [
+             0,
+             0,
+             0,
+             3
+            ],
+            "live": true
+           },
            "spring": {
             "stiffness": 170,
             "damping": 20
-           }
+           },
+           "decor": "naqsh-stars"
+          },
+          "particles/primary/idle": {
+           "fill": "#c8921a"
           }
          }
         }
@@ -6637,7 +6717,7 @@
            }
           },
           "stack/panel/idle": {
-           "fill": "rgba(24,26,44,0.94)",
+           "fill": "rgba(24,26,44,0.80)",
            "stroke": "#f0b73a",
            "strokeWidth": 1.5,
            "corners": {
@@ -6667,7 +6747,12 @@
             "stiffness": 170,
             "damping": 20
            },
-           "decor": "naqsh-stars"
+           "decor": "naqsh-stars",
+           "backdrop": {
+            "blur": 12,
+            "tint": "rgba(127,155,255,0.05)",
+            "saturate": 1.15
+           }
           },
           "text/title/idle": {
            "textColor": "#f4cf72",
@@ -7870,25 +7955,46 @@
             "blur": 28
            }
           },
-          "embed/default/placeholder": {
-           "fill": "rgba(240,183,58,0.10)",
+          "mirror/primary/idle": {
+           "fill": "rgba(24,26,44,0.80)",
            "stroke": "#f0b73a",
-           "strokeWidth": 1.2,
+           "strokeWidth": 1.5,
            "corners": {
             "radius": [
-             8,
-             8,
-             8,
-             8
+             18,
+             18,
+             18,
+             18
             ],
-            "kind": "bevel"
+            "kind": "notch"
            },
-           "textColor": "rgba(243,232,207,0.9)",
-           "font": "400 16px sans-serif",
+           "shadow": {
+            "color": "rgba(0,0,0,0.6)",
+            "blur": 28
+           },
+           "material": {
+            "wgsl": "fn nq_hash(p: vec2<f32>) -> f32 { return fract(sin(dot(p, vec2<f32>(127.1, 311.7))) * 43758.5453); }\nfn nq_noise(p: vec2<f32>) -> f32 {\n  let i = floor(p);\n  let f = fract(p);\n  let u = f * f * (3.0 - 2.0 * f);\n  return mix(mix(nq_hash(i), nq_hash(i + vec2<f32>(1.0, 0.0)), u.x), mix(nq_hash(i + vec2<f32>(0.0, 1.0)), nq_hash(i + vec2<f32>(1.0, 1.0)), u.x), u.y);\n}\n// a.x hover, a.y press, a.z focus, a.w grain size in px\nfn shade(px: Pixel) -> vec4<f32> {\n  let drift = vec2<f32>(px.time * 3.0, px.time * 1.3);\n  let size = max(px.a.w, 1.0);\n  let grain = 0.5 * nq_noise((px.local + drift) / size) + 0.5 * nq_noise((px.local - drift * 0.5) / (size * 0.37));\n  var col = px.color.rgb * (0.9 + 0.14 * grain);\n  let d = distance(px.local, px.pointer);\n  let warm = exp(-d * d / (2.0 * 90.0 * 90.0)) * (0.08 + 0.22 * px.a.x);\n  col = col + vec3<f32>(0.95, 0.78, 0.42) * warm;\n  let rim = smoothstep(-3.0, 0.0, px.sdf) * (0.3 + 0.45 * px.a.x + 0.25 * px.a.z);\n  col = mix(col, vec3<f32>(0.96, 0.83, 0.58), rim);\n  let ripple = sin(d * 0.08 - px.time * 9.0) * exp(-d * 0.012) * px.a.y * 0.15;\n  col = col + vec3<f32>(ripple);\n  return vec4<f32>(col, px.color.a);\n}\n",
+            "params": [
+             0,
+             0,
+             0,
+             3
+            ],
+            "live": true
+           },
            "spring": {
             "stiffness": 170,
             "damping": 20
+           },
+           "decor": "naqsh-stars",
+           "backdrop": {
+            "blur": 12,
+            "tint": "rgba(127,155,255,0.05)",
+            "saturate": 1.15
            }
+          },
+          "particles/primary/idle": {
+           "fill": "#f0b73a"
           }
          }
         }
@@ -9224,8 +9330,8 @@
             "damping": 70
            }
           },
-          "embed/default/placeholder": {
-           "fill": "rgba(47,209,106,0.06)",
+          "mirror/primary/idle": {
+           "fill": "rgba(3,14,8,0.94)",
            "stroke": "#2fd16a",
            "strokeWidth": 1,
            "corners": {
@@ -9237,12 +9343,28 @@
             ],
             "kind": "notch"
            },
-           "textColor": "rgba(93,255,149,0.8)",
-           "font": "400 14px monospace",
+           "shadow": {
+            "color": "rgba(47,209,106,0.28)",
+            "blur": 22
+           },
+           "material": {
+            "wgsl": "fn tm_hash(p: vec2<f32>) -> f32 { return fract(sin(dot(p, vec2<f32>(127.1, 311.7))) * 43758.5453); }\nfn tm_noise(p: vec2<f32>) -> f32 {\n  let i = floor(p);\n  let f = fract(p);\n  let u = f * f * (3.0 - 2.0 * f);\n  return mix(mix(tm_hash(i), tm_hash(i + vec2<f32>(1.0, 0.0)), u.x), mix(tm_hash(i + vec2<f32>(0.0, 1.0)), tm_hash(i + vec2<f32>(1.0, 1.0)), u.x), u.y);\n}\n// a.x hover, a.y press, a.z focus, a.w scanline pitch in px\nfn shade(px: Pixel) -> vec4<f32> {\n  let step_t = floor(px.time * 12.0);\n  let pitch = max(px.a.w, 1.0);\n  let scan = 0.78 + 0.22 * step(0.5, fract(px.local.y / pitch));\n  var col = px.color.rgb * scan;\n  col = col * (0.95 + 0.05 * tm_hash(vec2<f32>(step_t, floor(px.local.y / pitch))));\n  col = col + vec3<f32>(0.1, 0.8, 0.35) * 0.12 * px.a.x;\n  let edge = 1.0 - smoothstep(0.0, 1.5, abs(px.sdf + 1.0));\n  col = mix(col, vec3<f32>(0.35, 1.0, 0.55), edge * (0.35 + 0.4 * px.a.x + 0.4 * px.a.z));\n  let blink = step(0.5, fract(px.time * 1.6));\n  let cursor = step(px.size.x - 10.0, px.local.x) * step(px.local.x, px.size.x - 4.0) * step(4.0, px.local.y) * step(px.local.y, px.size.y - 4.0);\n  col = col + vec3<f32>(0.3, 1.0, 0.5) * cursor * blink * px.a.z * 0.6;\n  col = mix(col, vec3<f32>(0.4, 1.0, 0.6), px.a.y * 0.3);\n  return vec4<f32>(col, px.color.a);\n}\n",
+            "params": [
+             0,
+             0,
+             0,
+             3
+            ],
+            "live": true
+           },
            "spring": {
             "stiffness": 900,
             "damping": 70
-           }
+           },
+           "decor": "crt-frame"
+          },
+          "particles/primary/idle": {
+           "fill": "#2fd16a"
           }
          }
         }
@@ -9321,7 +9443,12 @@
             "stiffness": 320,
             "damping": 15
            },
-           "decor": "glass-rim"
+           "decor": "glass-rim",
+           "backdrop": {
+            "blur": 24,
+            "tint": "rgba(255,255,255,0.08)",
+            "saturate": 1.5
+           }
           },
           "text/title/idle": {
            "textColor": "#f4f7ff",
@@ -9365,6 +9492,11 @@
            "spring": {
             "stiffness": 320,
             "damping": 15
+           },
+           "backdrop": {
+            "blur": 14,
+            "tint": "rgba(120,160,255,0.10)",
+            "saturate": 1.4
            }
           },
           "pressable/primary/hovered": {
@@ -9393,6 +9525,11 @@
            "spring": {
             "stiffness": 320,
             "damping": 15
+           },
+           "backdrop": {
+            "blur": 14,
+            "tint": "rgba(120,160,255,0.10)",
+            "saturate": 1.4
            }
           },
           "pressable/primary/pressed": {
@@ -9421,6 +9558,11 @@
            "spring": {
             "stiffness": 320,
             "damping": 15
+           },
+           "backdrop": {
+            "blur": 14,
+            "tint": "rgba(120,160,255,0.10)",
+            "saturate": 1.4
            }
           },
           "pressable/primary/focused": {
@@ -9451,6 +9593,11 @@
            "spring": {
             "stiffness": 320,
             "damping": 15
+           },
+           "backdrop": {
+            "blur": 14,
+            "tint": "rgba(120,160,255,0.10)",
+            "saturate": 1.4
            }
           },
           "pressable/primary/disabled": {
@@ -9507,6 +9654,11 @@
            "spring": {
             "stiffness": 320,
             "damping": 15
+           },
+           "backdrop": {
+            "blur": 14,
+            "tint": "rgba(255,255,255,0.08)",
+            "saturate": 1.4
            }
           },
           "pressable/secondary/hovered": {
@@ -9535,6 +9687,11 @@
            "spring": {
             "stiffness": 320,
             "damping": 15
+           },
+           "backdrop": {
+            "blur": 14,
+            "tint": "rgba(255,255,255,0.08)",
+            "saturate": 1.4
            }
           },
           "pressable/secondary/pressed": {
@@ -9563,6 +9720,11 @@
            "spring": {
             "stiffness": 320,
             "damping": 15
+           },
+           "backdrop": {
+            "blur": 14,
+            "tint": "rgba(255,255,255,0.08)",
+            "saturate": 1.4
            }
           },
           "pressable/secondary/focused": {
@@ -9593,6 +9755,11 @@
            "spring": {
             "stiffness": 320,
             "damping": 15
+           },
+           "backdrop": {
+            "blur": 14,
+            "tint": "rgba(255,255,255,0.08)",
+            "saturate": 1.4
            }
           },
           "pressable/secondary/disabled": {
@@ -10079,6 +10246,11 @@
            "spring": {
             "stiffness": 320,
             "damping": 15
+           },
+           "backdrop": {
+            "blur": 16,
+            "tint": "rgba(255,255,255,0.08)",
+            "saturate": 1.3
            }
           },
           "textfield/default/hovered": {
@@ -10099,6 +10271,11 @@
            "spring": {
             "stiffness": 320,
             "damping": 15
+           },
+           "backdrop": {
+            "blur": 16,
+            "tint": "rgba(255,255,255,0.08)",
+            "saturate": 1.3
            }
           },
           "textfield/default/focused": {
@@ -10119,6 +10296,11 @@
            "spring": {
             "stiffness": 320,
             "damping": 15
+           },
+           "backdrop": {
+            "blur": 16,
+            "tint": "rgba(255,255,255,0.08)",
+            "saturate": 1.3
            }
           },
           "textfield/default/disabled": {
@@ -10138,6 +10320,11 @@
            "spring": {
             "stiffness": 320,
             "damping": 15
+           },
+           "backdrop": {
+            "blur": 16,
+            "tint": "rgba(255,255,255,0.08)",
+            "saturate": 1.3
            }
           },
           "choice/default/idle": {
@@ -10158,6 +10345,11 @@
            "spring": {
             "stiffness": 320,
             "damping": 15
+           },
+           "backdrop": {
+            "blur": 16,
+            "tint": "rgba(255,255,255,0.08)",
+            "saturate": 1.3
            }
           },
           "choice/default/hovered": {
@@ -10178,6 +10370,11 @@
            "spring": {
             "stiffness": 320,
             "damping": 15
+           },
+           "backdrop": {
+            "blur": 16,
+            "tint": "rgba(255,255,255,0.08)",
+            "saturate": 1.3
            }
           },
           "choice/default/focused": {
@@ -10198,6 +10395,11 @@
            "spring": {
             "stiffness": 320,
             "damping": 15
+           },
+           "backdrop": {
+            "blur": 16,
+            "tint": "rgba(255,255,255,0.08)",
+            "saturate": 1.3
            }
           },
           "choice/default/open": {
@@ -10218,6 +10420,11 @@
            "spring": {
             "stiffness": 320,
             "damping": 15
+           },
+           "backdrop": {
+            "blur": 16,
+            "tint": "rgba(255,255,255,0.08)",
+            "saturate": 1.3
            }
           },
           "textfield/default/label": {
@@ -10259,7 +10466,7 @@
            }
           },
           "choice/popup/idle": {
-           "fill": "rgba(40,52,92,0.92)",
+           "fill": "rgba(40,52,92,0.58)",
            "stroke": "rgba(255,255,255,0.4)",
            "strokeWidth": 1,
            "corners": {
@@ -10278,6 +10485,11 @@
            "spring": {
             "stiffness": 320,
             "damping": 15
+           },
+           "backdrop": {
+            "blur": 22,
+            "tint": "rgba(40,52,92,0.25)",
+            "saturate": 1.5
            }
           },
           "choice/option/idle": {
@@ -10347,17 +10559,27 @@
             "stiffness": 320,
             "damping": 15
            },
-           "decor": "glass-rim"
+           "decor": "glass-rim",
+           "backdrop": {
+            "blur": 24,
+            "tint": "rgba(255,255,255,0.08)",
+            "saturate": 1.5
+           }
           },
           "overlay/scrim/idle": {
            "fill": "rgba(10,16,40,0.45)",
            "spring": {
             "stiffness": 320,
             "damping": 15
+           },
+           "backdrop": {
+            "blur": 8,
+            "tint": "rgba(10,16,40,0.10)",
+            "saturate": 1.1
            }
           },
           "overlay/dialog/idle": {
-           "fill": "rgba(40,52,92,0.92)",
+           "fill": "rgba(40,52,92,0.55)",
            "stroke": "rgba(255,255,255,0.35)",
            "strokeWidth": 1,
            "corners": {
@@ -10387,7 +10609,12 @@
             "stiffness": 320,
             "damping": 15
            },
-           "decor": "glass-rim"
+           "decor": "glass-rim",
+           "backdrop": {
+            "blur": 28,
+            "tint": "rgba(40,52,92,0.25)",
+            "saturate": 1.6
+           }
           },
           "scroll/default/body": {
            "fill": "rgba(0,0,0,0)",
@@ -10502,25 +10729,46 @@
             "blur": 40
            }
           },
-          "embed/default/placeholder": {
-           "fill": "rgba(255,255,255,0.14)",
+          "mirror/primary/idle": {
+           "fill": "rgba(255,255,255,0.10)",
            "stroke": "rgba(255,255,255,0.35)",
-           "strokeWidth": 1.2,
+           "strokeWidth": 1,
            "corners": {
             "radius": [
-             16,
-             16,
-             16,
-             16
+             26,
+             26,
+             26,
+             26
             ],
             "kind": "round"
            },
-           "textColor": "rgba(230,236,255,0.75)",
-           "font": "400 15px sans-serif",
+           "shadow": {
+            "color": "rgba(10,20,60,0.45)",
+            "blur": 40
+           },
+           "material": {
+            "wgsl": "// a.x hover, a.y press, a.z focus\nfn shade(px: Pixel) -> vec4<f32> {\n  var col = px.color.rgb + vec3<f32>(0.10, 0.10, 0.10) * (1.0 - px.uv.y);\n  let d = distance(px.local, px.pointer);\n  col = col + vec3<f32>(1.0, 1.0, 1.0) * exp(-d * d / (2.0 * 60.0 * 60.0)) * (0.16 + 0.34 * px.a.x);\n  let t = px.time * 0.6;\n  col = col + vec3<f32>(0.04 * sin(px.local.x * 0.05 + t) * sin(px.local.y * 0.07 - t * 1.3));\n  let rim = smoothstep(-2.5, 0.0, px.sdf);\n  col = mix(col, vec3<f32>(1.0, 1.0, 1.0), rim * (0.45 + 0.4 * px.a.z));\n  col = col * (1.0 - 0.12 * px.a.y * (1.0 - length(px.uv - vec2<f32>(0.5, 0.5))));\n  return vec4<f32>(col, px.color.a * (0.55 + 0.25 * px.a.x + 0.2 * rim));\n}\n",
+            "params": [
+             0,
+             0,
+             0,
+             0
+            ],
+            "live": true
+           },
            "spring": {
             "stiffness": 320,
             "damping": 15
+           },
+           "decor": "glass-rim",
+           "backdrop": {
+            "blur": 24,
+            "tint": "rgba(255,255,255,0.08)",
+            "saturate": 1.5
            }
+          },
+          "particles/primary/idle": {
+           "fill": "#ffffff"
           }
          }
         }
@@ -11793,25 +12041,41 @@
             "blur": 28
            }
           },
-          "embed/default/placeholder": {
-           "fill": "rgba(201,164,92,0.10)",
+          "mirror/primary/idle": {
+           "fill": "rgba(28,24,40,0.92)",
            "stroke": "#c9a45c",
-           "strokeWidth": 1.2,
+           "strokeWidth": 1.5,
            "corners": {
             "radius": [
-             8,
-             8,
-             8,
-             8
+             18,
+             18,
+             18,
+             18
             ],
-            "kind": "bevel"
+            "kind": "notch"
            },
-           "textColor": "rgba(243,230,200,0.78)",
-           "font": "400 15px sans-serif",
+           "shadow": {
+            "color": "rgba(0,0,0,0.55)",
+            "blur": 28
+           },
+           "material": {
+            "wgsl": "fn nq_hash(p: vec2<f32>) -> f32 { return fract(sin(dot(p, vec2<f32>(127.1, 311.7))) * 43758.5453); }\nfn nq_noise(p: vec2<f32>) -> f32 {\n  let i = floor(p);\n  let f = fract(p);\n  let u = f * f * (3.0 - 2.0 * f);\n  return mix(mix(nq_hash(i), nq_hash(i + vec2<f32>(1.0, 0.0)), u.x), mix(nq_hash(i + vec2<f32>(0.0, 1.0)), nq_hash(i + vec2<f32>(1.0, 1.0)), u.x), u.y);\n}\n// a.x hover, a.y press, a.z focus, a.w grain size in px\nfn shade(px: Pixel) -> vec4<f32> {\n  let drift = vec2<f32>(px.time * 3.0, px.time * 1.3);\n  let size = max(px.a.w, 1.0);\n  let grain = 0.5 * nq_noise((px.local + drift) / size) + 0.5 * nq_noise((px.local - drift * 0.5) / (size * 0.37));\n  var col = px.color.rgb * (0.9 + 0.14 * grain);\n  let d = distance(px.local, px.pointer);\n  let warm = exp(-d * d / (2.0 * 90.0 * 90.0)) * (0.08 + 0.22 * px.a.x);\n  col = col + vec3<f32>(0.95, 0.78, 0.42) * warm;\n  let rim = smoothstep(-3.0, 0.0, px.sdf) * (0.3 + 0.45 * px.a.x + 0.25 * px.a.z);\n  col = mix(col, vec3<f32>(0.96, 0.83, 0.58), rim);\n  let ripple = sin(d * 0.08 - px.time * 9.0) * exp(-d * 0.012) * px.a.y * 0.15;\n  col = col + vec3<f32>(ripple);\n  return vec4<f32>(col, px.color.a);\n}\n",
+            "params": [
+             0,
+             0,
+             0,
+             3
+            ],
+            "live": true
+           },
            "spring": {
             "stiffness": 170,
             "damping": 20
-           }
+           },
+           "decor": "naqsh-stars"
+          },
+          "particles/primary/idle": {
+           "fill": "#c9a45c"
           }
          }
         }
@@ -13093,25 +13357,41 @@
             "blur": 28
            }
           },
-          "embed/default/placeholder": {
-           "fill": "rgba(201,164,92,0.10)",
+          "mirror/primary/idle": {
+           "fill": "rgba(28,24,40,0.92)",
            "stroke": "#c9a45c",
-           "strokeWidth": 1.2,
+           "strokeWidth": 1.5,
            "corners": {
             "radius": [
-             8,
-             8,
-             8,
-             8
+             18,
+             18,
+             18,
+             18
             ],
-            "kind": "bevel"
+            "kind": "notch"
            },
-           "textColor": "rgba(243,230,200,0.78)",
-           "font": "400 15px sans-serif",
+           "shadow": {
+            "color": "rgba(0,0,0,0.55)",
+            "blur": 28
+           },
+           "material": {
+            "wgsl": "fn nq_hash(p: vec2<f32>) -> f32 { return fract(sin(dot(p, vec2<f32>(127.1, 311.7))) * 43758.5453); }\nfn nq_noise(p: vec2<f32>) -> f32 {\n  let i = floor(p);\n  let f = fract(p);\n  let u = f * f * (3.0 - 2.0 * f);\n  return mix(mix(nq_hash(i), nq_hash(i + vec2<f32>(1.0, 0.0)), u.x), mix(nq_hash(i + vec2<f32>(0.0, 1.0)), nq_hash(i + vec2<f32>(1.0, 1.0)), u.x), u.y);\n}\n// a.x hover, a.y press, a.z focus, a.w grain size in px\nfn shade(px: Pixel) -> vec4<f32> {\n  let drift = vec2<f32>(px.time * 3.0, px.time * 1.3);\n  let size = max(px.a.w, 1.0);\n  let grain = 0.5 * nq_noise((px.local + drift) / size) + 0.5 * nq_noise((px.local - drift * 0.5) / (size * 0.37));\n  var col = px.color.rgb * (0.9 + 0.14 * grain);\n  let d = distance(px.local, px.pointer);\n  let warm = exp(-d * d / (2.0 * 90.0 * 90.0)) * (0.08 + 0.22 * px.a.x);\n  col = col + vec3<f32>(0.95, 0.78, 0.42) * warm;\n  let rim = smoothstep(-3.0, 0.0, px.sdf) * (0.3 + 0.45 * px.a.x + 0.25 * px.a.z);\n  col = mix(col, vec3<f32>(0.96, 0.83, 0.58), rim);\n  let ripple = sin(d * 0.08 - px.time * 9.0) * exp(-d * 0.012) * px.a.y * 0.15;\n  col = col + vec3<f32>(ripple);\n  return vec4<f32>(col, px.color.a);\n}\n",
+            "params": [
+             0,
+             0,
+             0,
+             3
+            ],
+            "live": true
+           },
            "spring": {
             "stiffness": 170,
             "damping": 20
-           }
+           },
+           "decor": "naqsh-stars"
+          },
+          "particles/primary/idle": {
+           "fill": "#c9a45c"
           }
          }
         }
@@ -13181,7 +13461,12 @@
             "stiffness": 320,
             "damping": 15
            },
-           "decor": "glass-rim"
+           "decor": "glass-rim",
+           "backdrop": {
+            "blur": 24,
+            "tint": "rgba(255,255,255,0.08)",
+            "saturate": 1.5
+           }
           },
           "text/title/idle": {
            "textColor": "#f4f7ff",
@@ -13225,6 +13510,11 @@
            "spring": {
             "stiffness": 320,
             "damping": 15
+           },
+           "backdrop": {
+            "blur": 14,
+            "tint": "rgba(120,160,255,0.10)",
+            "saturate": 1.4
            }
           },
           "pressable/primary/hovered": {
@@ -13253,6 +13543,11 @@
            "spring": {
             "stiffness": 320,
             "damping": 15
+           },
+           "backdrop": {
+            "blur": 14,
+            "tint": "rgba(120,160,255,0.10)",
+            "saturate": 1.4
            }
           },
           "pressable/primary/pressed": {
@@ -13281,6 +13576,11 @@
            "spring": {
             "stiffness": 320,
             "damping": 15
+           },
+           "backdrop": {
+            "blur": 14,
+            "tint": "rgba(120,160,255,0.10)",
+            "saturate": 1.4
            }
           },
           "pressable/primary/focused": {
@@ -13311,6 +13611,11 @@
            "spring": {
             "stiffness": 320,
             "damping": 15
+           },
+           "backdrop": {
+            "blur": 14,
+            "tint": "rgba(120,160,255,0.10)",
+            "saturate": 1.4
            }
           },
           "pressable/primary/disabled": {
@@ -13367,6 +13672,11 @@
            "spring": {
             "stiffness": 320,
             "damping": 15
+           },
+           "backdrop": {
+            "blur": 14,
+            "tint": "rgba(255,255,255,0.08)",
+            "saturate": 1.4
            }
           },
           "pressable/secondary/hovered": {
@@ -13395,6 +13705,11 @@
            "spring": {
             "stiffness": 320,
             "damping": 15
+           },
+           "backdrop": {
+            "blur": 14,
+            "tint": "rgba(255,255,255,0.08)",
+            "saturate": 1.4
            }
           },
           "pressable/secondary/pressed": {
@@ -13423,6 +13738,11 @@
            "spring": {
             "stiffness": 320,
             "damping": 15
+           },
+           "backdrop": {
+            "blur": 14,
+            "tint": "rgba(255,255,255,0.08)",
+            "saturate": 1.4
            }
           },
           "pressable/secondary/focused": {
@@ -13453,6 +13773,11 @@
            "spring": {
             "stiffness": 320,
             "damping": 15
+           },
+           "backdrop": {
+            "blur": 14,
+            "tint": "rgba(255,255,255,0.08)",
+            "saturate": 1.4
            }
           },
           "pressable/secondary/disabled": {
@@ -13939,6 +14264,11 @@
            "spring": {
             "stiffness": 320,
             "damping": 15
+           },
+           "backdrop": {
+            "blur": 16,
+            "tint": "rgba(255,255,255,0.08)",
+            "saturate": 1.3
            }
           },
           "textfield/default/hovered": {
@@ -13959,6 +14289,11 @@
            "spring": {
             "stiffness": 320,
             "damping": 15
+           },
+           "backdrop": {
+            "blur": 16,
+            "tint": "rgba(255,255,255,0.08)",
+            "saturate": 1.3
            }
           },
           "textfield/default/focused": {
@@ -13979,6 +14314,11 @@
            "spring": {
             "stiffness": 320,
             "damping": 15
+           },
+           "backdrop": {
+            "blur": 16,
+            "tint": "rgba(255,255,255,0.08)",
+            "saturate": 1.3
            }
           },
           "textfield/default/disabled": {
@@ -13998,6 +14338,11 @@
            "spring": {
             "stiffness": 320,
             "damping": 15
+           },
+           "backdrop": {
+            "blur": 16,
+            "tint": "rgba(255,255,255,0.08)",
+            "saturate": 1.3
            }
           },
           "choice/default/idle": {
@@ -14018,6 +14363,11 @@
            "spring": {
             "stiffness": 320,
             "damping": 15
+           },
+           "backdrop": {
+            "blur": 16,
+            "tint": "rgba(255,255,255,0.08)",
+            "saturate": 1.3
            }
           },
           "choice/default/hovered": {
@@ -14038,6 +14388,11 @@
            "spring": {
             "stiffness": 320,
             "damping": 15
+           },
+           "backdrop": {
+            "blur": 16,
+            "tint": "rgba(255,255,255,0.08)",
+            "saturate": 1.3
            }
           },
           "choice/default/focused": {
@@ -14058,6 +14413,11 @@
            "spring": {
             "stiffness": 320,
             "damping": 15
+           },
+           "backdrop": {
+            "blur": 16,
+            "tint": "rgba(255,255,255,0.08)",
+            "saturate": 1.3
            }
           },
           "choice/default/open": {
@@ -14078,6 +14438,11 @@
            "spring": {
             "stiffness": 320,
             "damping": 15
+           },
+           "backdrop": {
+            "blur": 16,
+            "tint": "rgba(255,255,255,0.08)",
+            "saturate": 1.3
            }
           },
           "textfield/default/label": {
@@ -14119,7 +14484,7 @@
            }
           },
           "choice/popup/idle": {
-           "fill": "rgba(40,52,92,0.92)",
+           "fill": "rgba(40,52,92,0.58)",
            "stroke": "rgba(255,255,255,0.4)",
            "strokeWidth": 1,
            "corners": {
@@ -14138,6 +14503,11 @@
            "spring": {
             "stiffness": 320,
             "damping": 15
+           },
+           "backdrop": {
+            "blur": 22,
+            "tint": "rgba(40,52,92,0.25)",
+            "saturate": 1.5
            }
           },
           "choice/option/idle": {
@@ -14207,17 +14577,27 @@
             "stiffness": 320,
             "damping": 15
            },
-           "decor": "glass-rim"
+           "decor": "glass-rim",
+           "backdrop": {
+            "blur": 24,
+            "tint": "rgba(255,255,255,0.08)",
+            "saturate": 1.5
+           }
           },
           "overlay/scrim/idle": {
            "fill": "rgba(10,16,40,0.45)",
            "spring": {
             "stiffness": 320,
             "damping": 15
+           },
+           "backdrop": {
+            "blur": 8,
+            "tint": "rgba(10,16,40,0.10)",
+            "saturate": 1.1
            }
           },
           "overlay/dialog/idle": {
-           "fill": "rgba(40,52,92,0.92)",
+           "fill": "rgba(40,52,92,0.55)",
            "stroke": "rgba(255,255,255,0.35)",
            "strokeWidth": 1,
            "corners": {
@@ -14247,7 +14627,12 @@
             "stiffness": 320,
             "damping": 15
            },
-           "decor": "glass-rim"
+           "decor": "glass-rim",
+           "backdrop": {
+            "blur": 28,
+            "tint": "rgba(40,52,92,0.25)",
+            "saturate": 1.6
+           }
           },
           "scroll/default/body": {
            "fill": "rgba(0,0,0,0)",
@@ -14362,25 +14747,46 @@
             "blur": 40
            }
           },
-          "embed/default/placeholder": {
-           "fill": "rgba(255,255,255,0.14)",
+          "mirror/primary/idle": {
+           "fill": "rgba(255,255,255,0.10)",
            "stroke": "rgba(255,255,255,0.35)",
-           "strokeWidth": 1.2,
+           "strokeWidth": 1,
            "corners": {
             "radius": [
-             16,
-             16,
-             16,
-             16
+             26,
+             26,
+             26,
+             26
             ],
             "kind": "round"
            },
-           "textColor": "rgba(230,236,255,0.75)",
-           "font": "400 15px sans-serif",
+           "shadow": {
+            "color": "rgba(10,20,60,0.45)",
+            "blur": 40
+           },
+           "material": {
+            "wgsl": "// a.x hover, a.y press, a.z focus\nfn shade(px: Pixel) -> vec4<f32> {\n  var col = px.color.rgb + vec3<f32>(0.10, 0.10, 0.10) * (1.0 - px.uv.y);\n  let d = distance(px.local, px.pointer);\n  col = col + vec3<f32>(1.0, 1.0, 1.0) * exp(-d * d / (2.0 * 60.0 * 60.0)) * (0.16 + 0.34 * px.a.x);\n  let t = px.time * 0.6;\n  col = col + vec3<f32>(0.04 * sin(px.local.x * 0.05 + t) * sin(px.local.y * 0.07 - t * 1.3));\n  let rim = smoothstep(-2.5, 0.0, px.sdf);\n  col = mix(col, vec3<f32>(1.0, 1.0, 1.0), rim * (0.45 + 0.4 * px.a.z));\n  col = col * (1.0 - 0.12 * px.a.y * (1.0 - length(px.uv - vec2<f32>(0.5, 0.5))));\n  return vec4<f32>(col, px.color.a * (0.55 + 0.25 * px.a.x + 0.2 * rim));\n}\n",
+            "params": [
+             0,
+             0,
+             0,
+             0
+            ],
+            "live": true
+           },
            "spring": {
             "stiffness": 320,
             "damping": 15
+           },
+           "decor": "glass-rim",
+           "backdrop": {
+            "blur": 24,
+            "tint": "rgba(255,255,255,0.08)",
+            "saturate": 1.5
            }
+          },
+          "particles/primary/idle": {
+           "fill": "#ffffff"
           }
          }
         }
@@ -15685,25 +16091,41 @@
             "damping": 14
            }
           },
-          "embed/default/placeholder": {
-           "fill": "rgba(227,184,120,0.12)",
+          "mirror/primary/idle": {
+           "fill": "rgba(88,60,34,0.88)",
            "stroke": "#e3b878",
            "strokeWidth": 1.2,
            "corners": {
             "radius": [
-             14,
-             14,
-             14,
-             14
+             30,
+             30,
+             30,
+             30
             ],
             "kind": "round"
            },
-           "textColor": "rgba(255,241,214,0.82)",
-           "font": "400 15px sans-serif",
+           "shadow": {
+            "color": "rgba(40,22,8,0.5)",
+            "blur": 34
+           },
+           "material": {
+            "wgsl": "fn sd_hash(p: vec2<f32>) -> f32 { return fract(sin(dot(p, vec2<f32>(127.1, 311.7))) * 43758.5453); }\nfn sd_noise(p: vec2<f32>) -> f32 {\n  let i = floor(p);\n  let f = fract(p);\n  let u = f * f * (3.0 - 2.0 * f);\n  return mix(mix(sd_hash(i), sd_hash(i + vec2<f32>(1.0, 0.0)), u.x), mix(sd_hash(i + vec2<f32>(0.0, 1.0)), sd_hash(i + vec2<f32>(1.0, 1.0)), u.x), u.y);\n}\n// a.x hover, a.y press, a.z focus, a.w grain size in px\nfn shade(px: Pixel) -> vec4<f32> {\n  let wind = vec2<f32>(px.time * 6.0, px.time * 2.0);\n  let size = max(px.a.w, 1.0);\n  let grain = sd_noise((px.local + wind) / size) * 0.6 + sd_hash(floor(px.local / size)) * 0.4;\n  var col = px.color.rgb * (0.88 + 0.2 * grain);\n  let drift = sin(px.local.x * 0.03 - px.time * 1.2 + px.local.y * 0.01) * 0.5 + 0.5;\n  col = col + vec3<f32>(0.10, 0.07, 0.03) * drift * (0.4 + px.a.x);\n  let d = distance(px.local, px.pointer);\n  col = col + vec3<f32>(1.0, 0.8, 0.5) * exp(-d * d / (2.0 * 70.0 * 70.0)) * (0.05 + 0.2 * px.a.x);\n  let rim = smoothstep(-2.5, 0.0, px.sdf) * (0.25 + 0.3 * px.a.x + 0.3 * px.a.z);\n  col = mix(col, vec3<f32>(0.98, 0.86, 0.62), rim);\n  let kick = exp(-d * 0.02) * px.a.y * 0.14 * (0.5 + 0.5 * sin(d * 0.05 - px.time * 6.0));\n  col = col - vec3<f32>(kick);\n  return vec4<f32>(col, px.color.a);\n}\n",
+            "params": [
+             0,
+             0,
+             0,
+             2.5
+            ],
+            "live": true
+           },
            "spring": {
             "stiffness": 120,
             "damping": 14
-           }
+           },
+           "decor": "dune-ripple"
+          },
+          "particles/primary/idle": {
+           "fill": "#e3b878"
           }
          }
         }
@@ -16976,25 +17398,41 @@
             "blur": 16
            }
           },
-          "embed/default/placeholder": {
-           "fill": "rgba(127,152,168,0.07)",
+          "mirror/primary/idle": {
+           "fill": "rgba(16,21,28,0.95)",
            "stroke": "#7f98a8",
            "strokeWidth": 1,
            "corners": {
             "radius": [
-             3,
-             3,
-             3,
-             3
+             4,
+             4,
+             4,
+             4
             ],
             "kind": "notch"
            },
-           "textColor": "rgba(206,222,230,0.78)",
-           "font": "400 14px monospace",
+           "shadow": {
+            "color": "rgba(0,0,0,0.6)",
+            "blur": 16
+           },
+           "material": {
+            "wgsl": "// a.x hover, a.y press, a.z focus, a.w line pitch in px\nfn shade(px: Pixel) -> vec4<f32> {\n  let pitch = max(px.a.w, 1.0);\n  let brush = 0.5 + 0.5 * sin(px.local.y * 6.2831853 / pitch);\n  var col = px.color.rgb * (0.94 + 0.06 * brush);\n  col = col + vec3<f32>(0.10) * (1.0 - px.uv.y) * (0.6 + 0.4 * px.a.x);\n  let tick = step(0.5, fract(px.local.x / 10.0)) * (1.0 - smoothstep(0.0, 5.0, px.local.y));\n  col = col + vec3<f32>(0.6, 0.72, 0.8) * tick * 0.22;\n  let inner = 1.0 - smoothstep(0.0, 0.8, abs(px.sdf + 4.0));\n  col = mix(col, vec3<f32>(0.62, 0.74, 0.82), inner * 0.38);\n  let rim = smoothstep(-1.2, 0.0, px.sdf);\n  col = mix(col, vec3<f32>(0.95, 0.62, 0.20), rim * (0.2 + 0.5 * px.a.z + 0.3 * px.a.x));\n  col = col * (1.0 - 0.16 * px.a.y);\n  let d = distance(px.local, px.pointer);\n  col = col + vec3<f32>(0.95, 0.62, 0.20) * exp(-d * d / (2.0 * 36.0 * 36.0)) * 0.10 * px.a.x;\n  return vec4<f32>(col, px.color.a);\n}\n",
+            "params": [
+             0,
+             0,
+             0,
+             14
+            ],
+            "live": true
+           },
            "spring": {
             "stiffness": 420,
             "damping": 34
-           }
+           },
+           "decor": "engraved-border"
+          },
+          "particles/primary/idle": {
+           "fill": "#7f98a8"
           }
          }
         }
@@ -18299,8 +18737,8 @@
             "damping": 70
            }
           },
-          "embed/default/placeholder": {
-           "fill": "rgba(47,209,106,0.06)",
+          "mirror/primary/idle": {
+           "fill": "rgba(3,14,8,0.94)",
            "stroke": "#2fd16a",
            "strokeWidth": 1,
            "corners": {
@@ -18312,12 +18750,28 @@
             ],
             "kind": "notch"
            },
-           "textColor": "rgba(93,255,149,0.8)",
-           "font": "400 14px monospace",
+           "shadow": {
+            "color": "rgba(47,209,106,0.28)",
+            "blur": 22
+           },
+           "material": {
+            "wgsl": "fn tm_hash(p: vec2<f32>) -> f32 { return fract(sin(dot(p, vec2<f32>(127.1, 311.7))) * 43758.5453); }\nfn tm_noise(p: vec2<f32>) -> f32 {\n  let i = floor(p);\n  let f = fract(p);\n  let u = f * f * (3.0 - 2.0 * f);\n  return mix(mix(tm_hash(i), tm_hash(i + vec2<f32>(1.0, 0.0)), u.x), mix(tm_hash(i + vec2<f32>(0.0, 1.0)), tm_hash(i + vec2<f32>(1.0, 1.0)), u.x), u.y);\n}\n// a.x hover, a.y press, a.z focus, a.w scanline pitch in px\nfn shade(px: Pixel) -> vec4<f32> {\n  let step_t = floor(px.time * 12.0);\n  let pitch = max(px.a.w, 1.0);\n  let scan = 0.78 + 0.22 * step(0.5, fract(px.local.y / pitch));\n  var col = px.color.rgb * scan;\n  col = col * (0.95 + 0.05 * tm_hash(vec2<f32>(step_t, floor(px.local.y / pitch))));\n  col = col + vec3<f32>(0.1, 0.8, 0.35) * 0.12 * px.a.x;\n  let edge = 1.0 - smoothstep(0.0, 1.5, abs(px.sdf + 1.0));\n  col = mix(col, vec3<f32>(0.35, 1.0, 0.55), edge * (0.35 + 0.4 * px.a.x + 0.4 * px.a.z));\n  let blink = step(0.5, fract(px.time * 1.6));\n  let cursor = step(px.size.x - 10.0, px.local.x) * step(px.local.x, px.size.x - 4.0) * step(4.0, px.local.y) * step(px.local.y, px.size.y - 4.0);\n  col = col + vec3<f32>(0.3, 1.0, 0.5) * cursor * blink * px.a.z * 0.6;\n  col = mix(col, vec3<f32>(0.4, 1.0, 0.6), px.a.y * 0.3);\n  return vec4<f32>(col, px.color.a);\n}\n",
+            "params": [
+             0,
+             0,
+             0,
+             3
+            ],
+            "live": true
+           },
            "spring": {
             "stiffness": 900,
             "damping": 70
-           }
+           },
+           "decor": "crt-frame"
+          },
+          "particles/primary/idle": {
+           "fill": "#2fd16a"
           }
          }
         }
@@ -19622,25 +20076,41 @@
             "damping": 16
            }
           },
-          "embed/default/placeholder": {
-           "fill": "rgba(42,36,51,0.05)",
+          "mirror/primary/idle": {
+           "fill": "rgba(250,246,236,0.96)",
            "stroke": "#2a2433",
            "strokeWidth": 1.4,
            "corners": {
             "radius": [
-             5,
-             5,
-             5,
-             5
+             6,
+             6,
+             6,
+             6
             ],
             "kind": "round"
            },
-           "textColor": "rgba(31,26,38,0.82)",
-           "font": "400 15px serif",
+           "shadow": {
+            "color": "rgba(60,45,30,0.28)",
+            "blur": 30
+           },
+           "material": {
+            "wgsl": "fn pp_hash(p: vec2<f32>) -> f32 { return fract(sin(dot(p, vec2<f32>(127.1, 311.7))) * 43758.5453); }\nfn pp_noise(p: vec2<f32>) -> f32 {\n  let i = floor(p);\n  let f = fract(p);\n  let u = f * f * (3.0 - 2.0 * f);\n  return mix(mix(pp_hash(i), pp_hash(i + vec2<f32>(1.0, 0.0)), u.x), mix(pp_hash(i + vec2<f32>(0.0, 1.0)), pp_hash(i + vec2<f32>(1.0, 1.0)), u.x), u.y);\n}\n// a.x hover, a.y press, a.z focus, a.w fibre scale in px\nfn shade(px: Pixel) -> vec4<f32> {\n  let s = max(px.a.w, 1.0);\n  let fib = pp_noise(vec2<f32>(px.local.x / (s * 6.0), px.local.y / (s * 0.4)));\n  let tooth = pp_noise(px.local / s);\n  var col = px.color.rgb * (0.96 + 0.05 * tooth) - vec3<f32>(0.03) * smoothstep(0.65, 0.9, fib);\n  let d = distance(px.local, px.pointer);\n  col = col + vec3<f32>(0.05, 0.04, 0.02) * exp(-d * d / (2.0 * 80.0 * 80.0)) * (0.4 + px.a.x);\n  let ink = smoothstep(-1.4, 0.0, px.sdf) * (0.35 + 0.35 * px.a.x + 0.3 * px.a.z);\n  col = mix(col, vec3<f32>(0.14, 0.12, 0.16), ink);\n  let bleed = smoothstep(-6.0, -1.4, px.sdf) * (1.0 - smoothstep(-1.4, 0.0, px.sdf)) * 0.06 * (0.6 + 0.4 * pp_noise(px.local / 3.0));\n  col = col - vec3<f32>(bleed);\n  col = col * (1.0 - 0.07 * px.a.y);\n  return vec4<f32>(col, px.color.a);\n}\n",
+            "params": [
+             0,
+             0,
+             0,
+             4
+            ],
+            "live": true
+           },
            "spring": {
             "stiffness": 70,
             "damping": 16
-           }
+           },
+           "decor": "deckle-edge"
+          },
+          "particles/primary/idle": {
+           "fill": "#2a2433"
           }
          }
         }
@@ -20913,25 +21383,41 @@
             "blur": 28
            }
           },
-          "embed/default/placeholder": {
-           "fill": "rgba(200,146,26,0.10)",
+          "mirror/primary/idle": {
+           "fill": "rgba(251,246,234,0.94)",
            "stroke": "#c8921a",
-           "strokeWidth": 1.2,
+           "strokeWidth": 1.5,
            "corners": {
             "radius": [
-             8,
-             8,
-             8,
-             8
+             18,
+             18,
+             18,
+             18
             ],
-            "kind": "bevel"
+            "kind": "notch"
            },
-           "textColor": "rgba(44,37,24,0.92)",
-           "font": "400 16px sans-serif",
+           "shadow": {
+            "color": "rgba(80,60,20,0.22)",
+            "blur": 28
+           },
+           "material": {
+            "wgsl": "fn nq_hash(p: vec2<f32>) -> f32 { return fract(sin(dot(p, vec2<f32>(127.1, 311.7))) * 43758.5453); }\nfn nq_noise(p: vec2<f32>) -> f32 {\n  let i = floor(p);\n  let f = fract(p);\n  let u = f * f * (3.0 - 2.0 * f);\n  return mix(mix(nq_hash(i), nq_hash(i + vec2<f32>(1.0, 0.0)), u.x), mix(nq_hash(i + vec2<f32>(0.0, 1.0)), nq_hash(i + vec2<f32>(1.0, 1.0)), u.x), u.y);\n}\n// a.x hover, a.y press, a.z focus, a.w grain size in px\nfn shade(px: Pixel) -> vec4<f32> {\n  let drift = vec2<f32>(px.time * 3.0, px.time * 1.3);\n  let size = max(px.a.w, 1.0);\n  let grain = 0.5 * nq_noise((px.local + drift) / size) + 0.5 * nq_noise((px.local - drift * 0.5) / (size * 0.37));\n  var col = px.color.rgb * (0.9 + 0.14 * grain);\n  let d = distance(px.local, px.pointer);\n  let warm = exp(-d * d / (2.0 * 90.0 * 90.0)) * (0.08 + 0.22 * px.a.x);\n  col = col + vec3<f32>(0.95, 0.78, 0.42) * warm;\n  let rim = smoothstep(-3.0, 0.0, px.sdf) * (0.3 + 0.45 * px.a.x + 0.25 * px.a.z);\n  col = mix(col, vec3<f32>(0.96, 0.83, 0.58), rim);\n  let ripple = sin(d * 0.08 - px.time * 9.0) * exp(-d * 0.012) * px.a.y * 0.15;\n  col = col + vec3<f32>(ripple);\n  return vec4<f32>(col, px.color.a);\n}\n",
+            "params": [
+             0,
+             0,
+             0,
+             3
+            ],
+            "live": true
+           },
            "spring": {
             "stiffness": 170,
             "damping": 20
-           }
+           },
+           "decor": "naqsh-stars"
+          },
+          "particles/primary/idle": {
+           "fill": "#c8921a"
           }
          }
         }
@@ -20971,7 +21457,7 @@
            }
           },
           "stack/panel/idle": {
-           "fill": "rgba(24,26,44,0.94)",
+           "fill": "rgba(24,26,44,0.80)",
            "stroke": "#f0b73a",
            "strokeWidth": 1.5,
            "corners": {
@@ -21001,7 +21487,12 @@
             "stiffness": 170,
             "damping": 20
            },
-           "decor": "naqsh-stars"
+           "decor": "naqsh-stars",
+           "backdrop": {
+            "blur": 12,
+            "tint": "rgba(127,155,255,0.05)",
+            "saturate": 1.15
+           }
           },
           "text/title/idle": {
            "textColor": "#f4cf72",
@@ -22204,25 +22695,46 @@
             "blur": 28
            }
           },
-          "embed/default/placeholder": {
-           "fill": "rgba(240,183,58,0.10)",
+          "mirror/primary/idle": {
+           "fill": "rgba(24,26,44,0.80)",
            "stroke": "#f0b73a",
-           "strokeWidth": 1.2,
+           "strokeWidth": 1.5,
            "corners": {
             "radius": [
-             8,
-             8,
-             8,
-             8
+             18,
+             18,
+             18,
+             18
             ],
-            "kind": "bevel"
+            "kind": "notch"
            },
-           "textColor": "rgba(243,232,207,0.9)",
-           "font": "400 16px sans-serif",
+           "shadow": {
+            "color": "rgba(0,0,0,0.6)",
+            "blur": 28
+           },
+           "material": {
+            "wgsl": "fn nq_hash(p: vec2<f32>) -> f32 { return fract(sin(dot(p, vec2<f32>(127.1, 311.7))) * 43758.5453); }\nfn nq_noise(p: vec2<f32>) -> f32 {\n  let i = floor(p);\n  let f = fract(p);\n  let u = f * f * (3.0 - 2.0 * f);\n  return mix(mix(nq_hash(i), nq_hash(i + vec2<f32>(1.0, 0.0)), u.x), mix(nq_hash(i + vec2<f32>(0.0, 1.0)), nq_hash(i + vec2<f32>(1.0, 1.0)), u.x), u.y);\n}\n// a.x hover, a.y press, a.z focus, a.w grain size in px\nfn shade(px: Pixel) -> vec4<f32> {\n  let drift = vec2<f32>(px.time * 3.0, px.time * 1.3);\n  let size = max(px.a.w, 1.0);\n  let grain = 0.5 * nq_noise((px.local + drift) / size) + 0.5 * nq_noise((px.local - drift * 0.5) / (size * 0.37));\n  var col = px.color.rgb * (0.9 + 0.14 * grain);\n  let d = distance(px.local, px.pointer);\n  let warm = exp(-d * d / (2.0 * 90.0 * 90.0)) * (0.08 + 0.22 * px.a.x);\n  col = col + vec3<f32>(0.95, 0.78, 0.42) * warm;\n  let rim = smoothstep(-3.0, 0.0, px.sdf) * (0.3 + 0.45 * px.a.x + 0.25 * px.a.z);\n  col = mix(col, vec3<f32>(0.96, 0.83, 0.58), rim);\n  let ripple = sin(d * 0.08 - px.time * 9.0) * exp(-d * 0.012) * px.a.y * 0.15;\n  col = col + vec3<f32>(ripple);\n  return vec4<f32>(col, px.color.a);\n}\n",
+            "params": [
+             0,
+             0,
+             0,
+             3
+            ],
+            "live": true
+           },
            "spring": {
             "stiffness": 170,
             "damping": 20
+           },
+           "decor": "naqsh-stars",
+           "backdrop": {
+            "blur": 12,
+            "tint": "rgba(127,155,255,0.05)",
+            "saturate": 1.15
            }
+          },
+          "particles/primary/idle": {
+           "fill": "#f0b73a"
           }
          }
         }
@@ -22271,7 +22783,7 @@
            }
           },
           "stack/panel/idle": {
-           "fill": "rgba(24,26,44,0.94)",
+           "fill": "rgba(24,26,44,0.80)",
            "stroke": "#f0b73a",
            "strokeWidth": 1.5,
            "corners": {
@@ -22301,7 +22813,12 @@
             "stiffness": 170,
             "damping": 20
            },
-           "decor": "naqsh-stars"
+           "decor": "naqsh-stars",
+           "backdrop": {
+            "blur": 12,
+            "tint": "rgba(127,155,255,0.05)",
+            "saturate": 1.15
+           }
           },
           "text/title/idle": {
            "textColor": "#f4cf72",
@@ -23504,25 +24021,46 @@
             "blur": 28
            }
           },
-          "embed/default/placeholder": {
-           "fill": "rgba(240,183,58,0.10)",
+          "mirror/primary/idle": {
+           "fill": "rgba(24,26,44,0.80)",
            "stroke": "#f0b73a",
-           "strokeWidth": 1.2,
+           "strokeWidth": 1.5,
            "corners": {
             "radius": [
-             8,
-             8,
-             8,
-             8
+             18,
+             18,
+             18,
+             18
             ],
-            "kind": "bevel"
+            "kind": "notch"
            },
-           "textColor": "rgba(243,232,207,0.9)",
-           "font": "400 16px sans-serif",
+           "shadow": {
+            "color": "rgba(0,0,0,0.6)",
+            "blur": 28
+           },
+           "material": {
+            "wgsl": "fn nq_hash(p: vec2<f32>) -> f32 { return fract(sin(dot(p, vec2<f32>(127.1, 311.7))) * 43758.5453); }\nfn nq_noise(p: vec2<f32>) -> f32 {\n  let i = floor(p);\n  let f = fract(p);\n  let u = f * f * (3.0 - 2.0 * f);\n  return mix(mix(nq_hash(i), nq_hash(i + vec2<f32>(1.0, 0.0)), u.x), mix(nq_hash(i + vec2<f32>(0.0, 1.0)), nq_hash(i + vec2<f32>(1.0, 1.0)), u.x), u.y);\n}\n// a.x hover, a.y press, a.z focus, a.w grain size in px\nfn shade(px: Pixel) -> vec4<f32> {\n  let drift = vec2<f32>(px.time * 3.0, px.time * 1.3);\n  let size = max(px.a.w, 1.0);\n  let grain = 0.5 * nq_noise((px.local + drift) / size) + 0.5 * nq_noise((px.local - drift * 0.5) / (size * 0.37));\n  var col = px.color.rgb * (0.9 + 0.14 * grain);\n  let d = distance(px.local, px.pointer);\n  let warm = exp(-d * d / (2.0 * 90.0 * 90.0)) * (0.08 + 0.22 * px.a.x);\n  col = col + vec3<f32>(0.95, 0.78, 0.42) * warm;\n  let rim = smoothstep(-3.0, 0.0, px.sdf) * (0.3 + 0.45 * px.a.x + 0.25 * px.a.z);\n  col = mix(col, vec3<f32>(0.96, 0.83, 0.58), rim);\n  let ripple = sin(d * 0.08 - px.time * 9.0) * exp(-d * 0.012) * px.a.y * 0.15;\n  col = col + vec3<f32>(ripple);\n  return vec4<f32>(col, px.color.a);\n}\n",
+            "params": [
+             0,
+             0,
+             0,
+             3
+            ],
+            "live": true
+           },
            "spring": {
             "stiffness": 170,
             "damping": 20
+           },
+           "decor": "naqsh-stars",
+           "backdrop": {
+            "blur": 12,
+            "tint": "rgba(127,155,255,0.05)",
+            "saturate": 1.15
            }
+          },
+          "particles/primary/idle": {
+           "fill": "#f0b73a"
           }
          }
         }

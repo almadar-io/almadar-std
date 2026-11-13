@@ -14577,6 +14577,997 @@
     }
    ],
    "now": 1760531445678
+  },
+  {
+   "id": "split-a-host-run-dispatch-for-the-viewer-reaches-the-stage",
+   "config": {
+    "split": true
+   },
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "event": "GUEST_TICKED",
+     "payload": {
+      "guest": "guest-1",
+      "rendered": [],
+      "dispatches": [
+       {
+        "clientId": "tab-1",
+        "kind": "dispatch",
+        "target": "origin",
+        "orbitalName": "Orb1",
+        "request": {
+         "events": [
+          {
+           "event": "DONE",
+           "payload": {
+            "n": 1
+           }
+          }
+         ]
+        },
+        "response": {
+         "success": true,
+         "data": {
+          "k": "1"
+         }
+        }
+       },
+       {
+        "clientId": "tab-2",
+        "kind": "dispatch",
+        "target": "origin",
+        "orbitalName": "Orb2",
+        "request": {
+         "events": [
+          {
+           "event": "DONE",
+           "payload": {
+            "n": 2
+           }
+          }
+         ]
+        },
+        "response": {
+         "success": true,
+         "data": {
+          "k": "2"
+         }
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "guest-1",
+      "guestPaints": [],
+      "guestPage": [
+       "A.Root"
+      ],
+      "guestRoute": "/x",
+      "guestPaintSeq": 0,
+      "guestViewer": "tab-1"
+     },
+     "from": "live",
+     "expect": {
+      "fired": true,
+      "state": "live",
+      "emits": [
+       {
+        "event": "GUEST_DISPATCHED",
+        "payload": {
+         "guest": "guest-1",
+         "dispatches": [
+          {
+           "clientId": "tab-1",
+           "kind": "dispatch",
+           "target": "origin",
+           "orbitalName": "Orb1",
+           "request": {
+            "events": [
+             {
+              "event": "DONE",
+              "payload": {
+               "n": 1
+              }
+             }
+            ]
+           },
+           "response": {
+            "success": true,
+            "data": {
+             "k": "1"
+            }
+           }
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "control-split-a-dispatch-for-another-viewer-reaches-nobody",
+   "config": {
+    "split": true
+   },
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "event": "GUEST_TICKED",
+     "payload": {
+      "guest": "guest-1",
+      "rendered": [],
+      "dispatches": [
+       {
+        "clientId": "tab-2",
+        "orbitalName": "Orb2",
+        "request": {
+         "events": [
+          {
+           "event": "DONE",
+           "payload": {
+            "n": 2
+           }
+          }
+         ]
+        },
+        "response": {
+         "success": true,
+         "data": {
+          "k": "2"
+         }
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "guest-1",
+      "guestPaints": [],
+      "guestPage": [
+       "A.Root"
+      ],
+      "guestRoute": "/x",
+      "guestPaintSeq": 0,
+      "guestViewer": "tab-1"
+     },
+     "from": "live",
+     "expect": {
+      "fired": true,
+      "state": "live",
+      "neverEmits": [
+       "GUEST_DISPATCHED"
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "control-a-whole-guest-has-no-viewer-to-deliver-a-dispatch-to",
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "event": "GUEST_TICKED",
+     "payload": {
+      "guest": "guest-1",
+      "rendered": [],
+      "dispatches": [
+       {
+        "clientId": "tab-1",
+        "orbitalName": "Orb1",
+        "request": {
+         "events": [
+          {
+           "event": "DONE",
+           "payload": {
+            "n": 1
+           }
+          }
+         ]
+        },
+        "response": {
+         "success": true,
+         "data": {
+          "k": "1"
+         }
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "guest-1",
+      "guestPaints": [],
+      "guestPage": [
+       "A.Root"
+      ],
+      "guestRoute": "/x",
+      "guestPaintSeq": 0,
+      "guestViewer": "tab-1"
+     },
+     "from": "live",
+     "expect": {
+      "fired": true,
+      "state": "live",
+      "neverEmits": [
+       "GUEST_DISPATCHED"
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "stage-appends-the-guests-host-dispatches-with-a-running-seq",
+   "steps": [
+    {
+     "trait": "GuestStage",
+     "event": "GUEST_DISPATCHED",
+     "payload": {
+      "guest": "guest-1",
+      "dispatches": [
+       {
+        "clientId": "tab-1",
+        "kind": "dispatch",
+        "target": "origin",
+        "orbitalName": "Orb3",
+        "request": {
+         "events": [
+          {
+           "event": "DONE",
+           "payload": {
+            "n": 3
+           }
+          }
+         ]
+        },
+        "response": {
+         "success": true,
+         "data": {
+          "k": "3"
+         }
+        }
+       },
+       {
+        "clientId": "tab-1",
+        "kind": "dispatch",
+        "target": "origin",
+        "orbitalName": "Orb4",
+        "request": {
+         "events": [
+          {
+           "event": "DONE",
+           "payload": {
+            "n": 4
+           }
+          }
+         ]
+        },
+        "response": {
+         "success": true,
+         "data": {
+          "k": "4"
+         }
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "guest-1",
+      "guestDispatchSeq": 2,
+      "guestDispatches": [
+       {
+        "clientId": "tab-1",
+        "kind": "dispatch",
+        "target": "origin",
+        "orbitalName": "Orb2",
+        "request": {
+         "events": [
+          {
+           "event": "DONE",
+           "payload": {
+            "n": 2
+           }
+          }
+         ]
+        },
+        "response": {
+         "success": true,
+         "data": {
+          "k": "2"
+         }
+        },
+        "seq": 2
+       }
+      ]
+     },
+     "from": "idle",
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "entity": {
+       "guestDispatchSeq": 4,
+       "guestDispatches": [
+        {
+         "clientId": "tab-1",
+         "kind": "dispatch",
+         "target": "origin",
+         "orbitalName": "Orb2",
+         "request": {
+          "events": [
+           {
+            "event": "DONE",
+            "payload": {
+             "n": 2
+            }
+           }
+          ]
+         },
+         "response": {
+          "success": true,
+          "data": {
+           "k": "2"
+          }
+         },
+         "seq": 2
+        },
+        {
+         "kind": "dispatch",
+         "clientId": "tab-1",
+         "target": "origin",
+         "orbitalName": "Orb3",
+         "request": {
+          "events": [
+           {
+            "event": "DONE",
+            "payload": {
+             "n": 3
+            }
+           }
+          ]
+         },
+         "response": {
+          "success": true,
+          "data": {
+           "k": "3"
+          }
+         },
+         "emitted": null,
+         "seq": 3
+        },
+        {
+         "kind": "dispatch",
+         "clientId": "tab-1",
+         "target": "origin",
+         "orbitalName": "Orb4",
+         "request": {
+          "events": [
+           {
+            "event": "DONE",
+            "payload": {
+             "n": 4
+            }
+           }
+          ]
+         },
+         "response": {
+          "success": true,
+          "data": {
+           "k": "4"
+          }
+         },
+         "emitted": null,
+         "seq": 4
+        }
+       ]
+      }
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "control-stage-ignores-the-dispatches-of-another-guest",
+   "steps": [
+    {
+     "trait": "GuestStage",
+     "event": "GUEST_DISPATCHED",
+     "payload": {
+      "guest": "guest-2",
+      "dispatches": [
+       {
+        "clientId": "tab-1",
+        "orbitalName": "Orb3",
+        "request": {
+         "events": [
+          {
+           "event": "DONE",
+           "payload": {
+            "n": 3
+           }
+          }
+         ]
+        },
+        "response": {
+         "success": true,
+         "data": {
+          "k": "3"
+         }
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "guest-1",
+      "guestDispatchSeq": 2,
+      "guestDispatches": [
+       {
+        "clientId": "tab-1",
+        "orbitalName": "Orb2",
+        "request": {
+         "events": [
+          {
+           "event": "DONE",
+           "payload": {
+            "n": 2
+           }
+          }
+         ]
+        },
+        "response": {
+         "success": true,
+         "data": {
+          "k": "2"
+         }
+        },
+        "seq": 2
+       }
+      ]
+     },
+     "from": "idle",
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "entity": {
+       "guestDispatchSeq": 2,
+       "guestDispatches": [
+        {
+         "clientId": "tab-1",
+         "orbitalName": "Orb2",
+         "request": {
+          "events": [
+           {
+            "event": "DONE",
+            "payload": {
+             "n": 2
+            }
+           }
+          ]
+         },
+         "response": {
+          "success": true,
+          "data": {
+           "k": "2"
+          }
+         },
+         "seq": 2
+        }
+       ]
+      }
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "stage-drops-the-dispatches-the-view-folded",
+   "steps": [
+    {
+     "trait": "GuestStage",
+     "event": "GUEST_DISPATCHES_TAKEN",
+     "payload": {
+      "guest": "guest-1",
+      "seq": 3
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "guest-1",
+      "guestDispatchSeq": 4,
+      "guestDispatches": [
+       {
+        "clientId": "tab-1",
+        "orbitalName": "Orb2",
+        "request": {
+         "events": [
+          {
+           "event": "DONE",
+           "payload": {
+            "n": 2
+           }
+          }
+         ]
+        },
+        "response": {
+         "success": true,
+         "data": {
+          "k": "2"
+         }
+        },
+        "seq": 2
+       },
+       {
+        "clientId": "tab-1",
+        "orbitalName": "Orb3",
+        "request": {
+         "events": [
+          {
+           "event": "DONE",
+           "payload": {
+            "n": 3
+           }
+          }
+         ]
+        },
+        "response": {
+         "success": true,
+         "data": {
+          "k": "3"
+         }
+        },
+        "seq": 3
+       },
+       {
+        "clientId": "tab-1",
+        "orbitalName": "Orb4",
+        "request": {
+         "events": [
+          {
+           "event": "DONE",
+           "payload": {
+            "n": 4
+           }
+          }
+         ]
+        },
+        "response": {
+         "success": true,
+         "data": {
+          "k": "4"
+         }
+        },
+        "seq": 4
+       }
+      ]
+     },
+     "from": "idle",
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "entity": {
+       "guestDispatchSeq": 4,
+       "guestDispatches": [
+        {
+         "clientId": "tab-1",
+         "orbitalName": "Orb4",
+         "request": {
+          "events": [
+           {
+            "event": "DONE",
+            "payload": {
+             "n": 4
+            }
+           }
+          ]
+         },
+         "response": {
+          "success": true,
+          "data": {
+           "k": "4"
+          }
+         },
+         "seq": 4
+        }
+       ]
+      }
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "stage-a-cleared-guest-drops-its-pending-dispatches",
+   "steps": [
+    {
+     "trait": "GuestStage",
+     "event": "GUEST_CLEARED",
+     "payload": {},
+     "entity": {
+      "id": "g",
+      "guestHandle": "guest-1",
+      "guestDispatchSeq": 4,
+      "guestDispatches": [
+       {
+        "clientId": "tab-1",
+        "orbitalName": "Orb4",
+        "request": {
+         "events": [
+          {
+           "event": "DONE",
+           "payload": {
+            "n": 4
+           }
+          }
+         ]
+        },
+        "response": {
+         "success": true,
+         "data": {
+          "k": "4"
+         }
+        },
+        "seq": 4
+       }
+      ]
+     },
+     "from": "idle",
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "entity": {
+       "guestDispatches": []
+      }
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "split-a-push-for-the-viewer-reaches-the-stage",
+   "config": {
+    "split": true
+   },
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "event": "GUEST_TICKED",
+     "payload": {
+      "guest": "guest-1",
+      "rendered": [],
+      "dispatches": [
+       {
+        "kind": "push",
+        "clientId": "tab-1",
+        "target": "origin",
+        "emitted": {
+         "event": "BUILD_COMPLETE",
+         "payload": {
+          "n": 1
+         },
+         "source": {
+          "orbital": "Orb"
+         }
+        }
+       },
+       {
+        "kind": "push",
+        "clientId": "tab-2",
+        "target": "origin",
+        "emitted": {
+         "event": "BUILD_COMPLETE",
+         "payload": {
+          "n": 2
+         },
+         "source": {
+          "orbital": "Orb"
+         }
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "guest-1",
+      "guestPaints": [],
+      "guestPage": [
+       "A.Root"
+      ],
+      "guestRoute": "/x",
+      "guestPaintSeq": 0,
+      "guestViewer": "tab-1"
+     },
+     "from": "live",
+     "expect": {
+      "fired": true,
+      "state": "live",
+      "emits": [
+       {
+        "event": "GUEST_DISPATCHED",
+        "payload": {
+         "guest": "guest-1",
+         "dispatches": [
+          {
+           "kind": "push",
+           "clientId": "tab-1",
+           "target": "origin",
+           "emitted": {
+            "event": "BUILD_COMPLETE",
+            "payload": {
+             "n": 1
+            },
+            "source": {
+             "orbital": "Orb"
+            }
+           }
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "split-a-peers-push-from-another-viewer-reaches-the-stage",
+   "config": {
+    "split": true
+   },
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "event": "GUEST_TICKED",
+     "payload": {
+      "guest": "guest-1",
+      "rendered": [],
+      "dispatches": [
+       {
+        "kind": "push",
+        "clientId": "tab-2",
+        "target": "peers",
+        "emitted": {
+         "event": "BUILD_COMPLETE",
+         "payload": {
+          "n": 3
+         },
+         "source": {
+          "orbital": "Orb"
+         }
+        }
+       },
+       {
+        "kind": "push",
+        "clientId": "tab-1",
+        "target": "peers",
+        "emitted": {
+         "event": "BUILD_COMPLETE",
+         "payload": {
+          "n": 4
+         },
+         "source": {
+          "orbital": "Orb"
+         }
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "guest-1",
+      "guestPaints": [],
+      "guestPage": [
+       "A.Root"
+      ],
+      "guestRoute": "/x",
+      "guestPaintSeq": 0,
+      "guestViewer": "tab-1"
+     },
+     "from": "live",
+     "expect": {
+      "fired": true,
+      "state": "live",
+      "emits": [
+       {
+        "event": "GUEST_DISPATCHED",
+        "payload": {
+         "guest": "guest-1",
+         "dispatches": [
+          {
+           "kind": "push",
+           "clientId": "tab-2",
+           "target": "peers",
+           "emitted": {
+            "event": "BUILD_COMPLETE",
+            "payload": {
+             "n": 3
+            },
+            "source": {
+             "orbital": "Orb"
+            }
+           }
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "control-split-a-peers-push-from-the-viewer-itself-is-not-relayed",
+   "config": {
+    "split": true
+   },
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "event": "GUEST_TICKED",
+     "payload": {
+      "guest": "guest-1",
+      "rendered": [],
+      "dispatches": [
+       {
+        "kind": "push",
+        "clientId": "tab-1",
+        "target": "peers",
+        "emitted": {
+         "event": "BUILD_COMPLETE",
+         "payload": {
+          "n": 4
+         },
+         "source": {
+          "orbital": "Orb"
+         }
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "guest-1",
+      "guestPaints": [],
+      "guestPage": [
+       "A.Root"
+      ],
+      "guestRoute": "/x",
+      "guestPaintSeq": 0,
+      "guestViewer": "tab-1"
+     },
+     "from": "live",
+     "expect": {
+      "fired": true,
+      "state": "live",
+      "neverEmits": [
+       "GUEST_DISPATCHED"
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "control-split-an-origin-push-for-another-viewer-is-not-relayed",
+   "config": {
+    "split": true
+   },
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "event": "GUEST_TICKED",
+     "payload": {
+      "guest": "guest-1",
+      "rendered": [],
+      "dispatches": [
+       {
+        "kind": "push",
+        "clientId": "tab-2",
+        "target": "origin",
+        "emitted": {
+         "event": "BUILD_COMPLETE",
+         "payload": {
+          "n": 2
+         },
+         "source": {
+          "orbital": "Orb"
+         }
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "guest-1",
+      "guestPaints": [],
+      "guestPage": [
+       "A.Root"
+      ],
+      "guestRoute": "/x",
+      "guestPaintSeq": 0,
+      "guestViewer": "tab-1"
+     },
+     "from": "live",
+     "expect": {
+      "fired": true,
+      "state": "live",
+      "neverEmits": [
+       "GUEST_DISPATCHED"
+      ]
+     }
+    }
+   ],
+   "now": 1760531445678
+  },
+  {
+   "id": "stage-appends-a-pushed-emit-with-a-running-seq",
+   "steps": [
+    {
+     "trait": "GuestStage",
+     "event": "GUEST_DISPATCHED",
+     "payload": {
+      "guest": "guest-1",
+      "dispatches": [
+       {
+        "kind": "push",
+        "clientId": "tab-1",
+        "target": "origin",
+        "emitted": {
+         "event": "BUILD_COMPLETE",
+         "payload": {
+          "n": 5
+         },
+         "source": {
+          "orbital": "Orb"
+         }
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "guest-1",
+      "guestDispatchSeq": 2,
+      "guestDispatches": []
+     },
+     "from": "idle",
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "entity": {
+       "guestDispatchSeq": 3,
+       "guestDispatches": [
+        {
+         "kind": "push",
+         "clientId": "tab-1",
+         "target": "origin",
+         "orbitalName": null,
+         "request": null,
+         "response": null,
+         "emitted": {
+          "event": "BUILD_COMPLETE",
+          "payload": {
+           "n": 5
+          },
+          "source": {
+           "orbital": "Orb"
+          }
+         },
+         "seq": 3
+        }
+       ]
+      }
+     }
+    }
+   ],
+   "now": 1760531445678
   }
  ]
 }

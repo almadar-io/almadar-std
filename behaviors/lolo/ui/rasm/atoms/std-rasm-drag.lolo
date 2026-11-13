@@ -12,7 +12,8 @@ type RasmKeyframe = { at : number!, opacity : number, offsetY : number }
 type RasmAnimation = { durationMs : number!, loop : boolean!, keyframes : [RasmKeyframe]! }
 type RasmText = { id : string!, key : MessageKey!, x : number!, y : number!, z : number!, align : string!, baseline : string!, color : string?, font : string?, spring : RasmSpring?, width : number?, wrap : boolean?, measure : boolean?, role : string?, animation : RasmAnimation? }
 type RasmShadow = { color : string!, blur : number! }
-type RasmLook = { fill : string, stroke : string, strokeWidth : number, corners : RasmCorners, shadow : RasmShadow, material : RasmMaterial, textColor : string, font : string, spring : RasmSpring, decor : string }
+type RasmBackdrop = { blur : number!, tint : string, saturate : number }
+type RasmLook = { fill : string, stroke : string, strokeWidth : number, corners : RasmCorners, shadow : RasmShadow, material : RasmMaterial, textColor : string, font : string, spring : RasmSpring, decor : string, backdrop : RasmBackdrop }
 
 orbital RasmDragOrbital {
   entity RasmDragItem [runtime] {
@@ -60,7 +61,7 @@ orbital RasmDragOrbital {
             (x (+ @r.x @entity.dx))
             (y (+ @r.y @entity.dy))
           )
-          (emit RASM_PAINT { id: @config.id, z: @config.z, texts: (if (and (!= @look.textColor null) (!= @look.font null)) [{ id: (str/concat @config.id ":label"), key: @config.label, x: (+ @x 8), y: (+ @y 6), z: @config.z, align: "left", baseline: "top", color: @look.textColor, font: @look.font, spring: @look.spring }] []), nodes: [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @x, y: @y, z: @config.z }, width: @r.w, height: @r.h, fill: @look.fill, stroke: @look.stroke, strokeWidth: @look.strokeWidth, corners: @look.corners, shadow: @look.shadow, spring: @look.spring, hit: true, semantic: { role: "button", labelledBy: (str/concat @config.id ":label"), order: @config.order, focused: false } }] }))
+          (emit RASM_PAINT { id: @config.id, z: @config.z, texts: (if (and (!= @look.textColor null) (!= @look.font null)) [{ id: (str/concat @config.id ":label"), key: @config.label, x: (+ @x 8), y: (+ @y 6), z: @config.z, align: "left", baseline: "top", color: @look.textColor, font: @look.font, spring: @look.spring }] []), nodes: [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @x, y: @y, z: @config.z }, width: @r.w, height: @r.h, fill: @look.fill, backdrop: @look.backdrop, stroke: @look.stroke, strokeWidth: @look.strokeWidth, corners: @look.corners, shadow: @look.shadow, spring: @look.spring, hit: true, semantic: { role: "button", labelledBy: (str/concat @config.id ":label"), order: @config.order, focused: false } }] }))
       RASM_POINTER -> dragging when (and (= ?id @config.id) (= ?kind "down"))
         (set @entity.grabX ?x)
         (set @entity.grabY ?y)
@@ -98,7 +99,7 @@ orbital RasmDragOrbital {
             (x (+ @r.x @entity.dx))
             (y (+ @r.y @entity.dy))
           )
-          (emit RASM_PAINT { id: @config.id, z: @config.dragZ, texts: (if (and (!= @look.textColor null) (!= @look.font null)) [{ id: (str/concat @config.id ":label"), key: @config.label, x: (+ @x 8), y: (+ @y 6), z: @config.dragZ, align: "left", baseline: "top", color: @look.textColor, font: @look.font, spring: @look.spring }] []), nodes: [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @x, y: @y, z: @config.dragZ }, width: @r.w, height: @r.h, fill: @look.fill, stroke: @look.stroke, strokeWidth: @look.strokeWidth, corners: @look.corners, shadow: @look.shadow, spring: @look.spring, hit: true, semantic: { role: "button", labelledBy: (str/concat @config.id ":label"), order: @config.order, focused: false } }] }))
+          (emit RASM_PAINT { id: @config.id, z: @config.dragZ, texts: (if (and (!= @look.textColor null) (!= @look.font null)) [{ id: (str/concat @config.id ":label"), key: @config.label, x: (+ @x 8), y: (+ @y 6), z: @config.dragZ, align: "left", baseline: "top", color: @look.textColor, font: @look.font, spring: @look.spring }] []), nodes: [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @x, y: @y, z: @config.dragZ }, width: @r.w, height: @r.h, fill: @look.fill, backdrop: @look.backdrop, stroke: @look.stroke, strokeWidth: @look.strokeWidth, corners: @look.corners, shadow: @look.shadow, spring: @look.spring, hit: true, semantic: { role: "button", labelledBy: (str/concat @config.id ":label"), order: @config.order, focused: false } }] }))
       RASM_POINTER -> dragging when (and (and (= ?id @config.id) (= ?kind "move")) (!= (let ((hit (default (array/find @entity.targetRects (fn t (and (and (>= ?x @t.rect.x) (<= ?x (+ @t.rect.x @t.rect.w))) (and (>= ?y @t.rect.y) (<= ?y (+ @t.rect.y @t.rect.h)))))) { id: "", rect: { x: 0, y: 0, w: 0, h: 0 } }))) @hit.id) @entity.over))
         (set @entity.dx (- ?x @entity.grabX))
         (set @entity.dy (- ?y @entity.grabY))

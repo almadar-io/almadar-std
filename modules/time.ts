@@ -240,6 +240,19 @@ export const TIME_OPERATORS: Record<string, StdOperatorMeta> = {
     ],
     example: '["time/diff", "2023-11-14T22:13:20Z", ["time/now"], "year"]',
   },
+  'time/epoch-ms': {
+    module: 'time',
+    category: 'std-time',
+    minArity: 1,
+    maxArity: 1,
+    description: 'A time as milliseconds since the Unix epoch, a number (the clock a canvas paints by)',
+    hasSideEffects: false,
+    returnType: 'number',
+    params: [
+      { name: 'time', type: tv('T', POINT), description: 'A date, datetime or instant' },
+    ],
+    example: '["time/epoch-ms", "1970-01-01T00:00:01Z"] // => 1000',
+  },
   'time/startOf': {
     module: 'time',
     category: 'std-time',
