@@ -1,0 +1,498 @@
+{
+ "atom": "../ui/rasm/atoms/std-rasm-tween.lolo",
+ "trait": "RasmTween",
+ "cases": [
+  {
+   "id": "a-linear-run-steps-evenly-and-lands-on-the-target-with-done",
+   "config": {
+    "id": "t"
+   },
+   "entity": {
+    "id": "t"
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "RASM_TWEEN_START",
+     "payload": {
+      "id": "t",
+      "from": 0,
+      "to": 100,
+      "durationMs": 100
+     },
+     "expect": {
+      "state": "running",
+      "emits": [
+       {
+        "event": "RASM_TWEEN_STEP",
+        "payload": {
+         "id": "t",
+         "value": 0,
+         "t": 0
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "running",
+     "event": "RASM_TWEEN_FRAME",
+     "payload": {
+      "dtMs": 25
+     },
+     "expect": {
+      "state": "running",
+      "entity": {
+       "value": 25
+      },
+      "emits": [
+       {
+        "event": "RASM_TWEEN_STEP",
+        "payload": {
+         "id": "t",
+         "value": 25,
+         "t": 0.25
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "running",
+     "event": "RASM_TWEEN_FRAME",
+     "payload": {
+      "dtMs": 25
+     },
+     "expect": {
+      "entity": {
+       "value": 50
+      }
+     }
+    },
+    {
+     "from": "running",
+     "event": "RASM_TWEEN_FRAME",
+     "payload": {
+      "dtMs": 60
+     },
+     "expect": {
+      "state": "idle",
+      "entity": {
+       "value": 100
+      },
+      "emits": [
+       {
+        "event": "RASM_TWEEN_STEP",
+        "payload": {
+         "id": "t",
+         "value": 100,
+         "t": 1
+        }
+       },
+       {
+        "event": "RASM_TWEEN_DONE",
+        "payload": {
+         "id": "t",
+         "value": 100
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-ease-in-run-lags-at-the-start",
+   "config": {
+    "id": "t",
+    "easing": "ease-in"
+   },
+   "entity": {
+    "id": "t"
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "RASM_TWEEN_START",
+     "payload": {
+      "id": "t",
+      "from": 0,
+      "to": 100,
+      "durationMs": 100
+     },
+     "expect": {
+      "state": "running"
+     }
+    },
+    {
+     "from": "running",
+     "event": "RASM_TWEEN_FRAME",
+     "payload": {
+      "dtMs": 50
+     },
+     "expect": {
+      "entity": {
+       "value": 25
+      },
+      "emits": [
+       {
+        "event": "RASM_TWEEN_STEP",
+        "payload": {
+         "id": "t",
+         "value": 25,
+         "t": 0.25
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-ease-out-run-leads-at-the-start",
+   "config": {
+    "id": "t",
+    "easing": "ease-out"
+   },
+   "entity": {
+    "id": "t"
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "RASM_TWEEN_START",
+     "payload": {
+      "id": "t",
+      "from": 0,
+      "to": 100,
+      "durationMs": 100
+     },
+     "expect": {
+      "state": "running"
+     }
+    },
+    {
+     "from": "running",
+     "event": "RASM_TWEEN_FRAME",
+     "payload": {
+      "dtMs": 50
+     },
+     "expect": {
+      "entity": {
+       "value": 75
+      },
+      "emits": [
+       {
+        "event": "RASM_TWEEN_STEP",
+        "payload": {
+         "id": "t",
+         "value": 75,
+         "t": 0.75
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-ease-in-out-run-is-slow-then-fast",
+   "config": {
+    "id": "t",
+    "easing": "ease-in-out"
+   },
+   "entity": {
+    "id": "t"
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "RASM_TWEEN_START",
+     "payload": {
+      "id": "t",
+      "from": 0,
+      "to": 100,
+      "durationMs": 100
+     },
+     "expect": {
+      "state": "running"
+     }
+    },
+    {
+     "from": "running",
+     "event": "RASM_TWEEN_FRAME",
+     "payload": {
+      "dtMs": 25
+     },
+     "expect": {
+      "entity": {
+       "value": 12.5
+      },
+      "emits": [
+       {
+        "event": "RASM_TWEEN_STEP",
+        "payload": {
+         "id": "t",
+         "value": 12.5,
+         "t": 0.125
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "running",
+     "event": "RASM_TWEEN_FRAME",
+     "payload": {
+      "dtMs": 50
+     },
+     "expect": {
+      "entity": {
+       "value": 87.5
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-run-can-go-downward-between-any-two-numbers",
+   "config": {
+    "id": "t"
+   },
+   "entity": {
+    "id": "t"
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "RASM_TWEEN_START",
+     "payload": {
+      "id": "t",
+      "from": 10,
+      "to": -10,
+      "durationMs": 200
+     },
+     "expect": {
+      "state": "running"
+     }
+    },
+    {
+     "from": "running",
+     "event": "RASM_TWEEN_FRAME",
+     "payload": {
+      "dtMs": 100
+     },
+     "expect": {
+      "entity": {
+       "value": 0
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-zero-duration-start-lands-at-once",
+   "config": {
+    "id": "t"
+   },
+   "entity": {
+    "id": "t"
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "RASM_TWEEN_START",
+     "payload": {
+      "id": "t",
+      "from": 0,
+      "to": 40,
+      "durationMs": 0
+     },
+     "expect": {
+      "state": "idle",
+      "entity": {
+       "value": 40
+      },
+      "emits": [
+       {
+        "event": "RASM_TWEEN_STEP",
+        "payload": {
+         "id": "t",
+         "value": 40,
+         "t": 1
+        }
+       },
+       {
+        "event": "RASM_TWEEN_DONE",
+        "payload": {
+         "id": "t",
+         "value": 40
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "cancel-stops-a-run-where-it-is-with-no-done",
+   "config": {
+    "id": "t"
+   },
+   "entity": {
+    "id": "t"
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "RASM_TWEEN_START",
+     "payload": {
+      "id": "t",
+      "from": 0,
+      "to": 100,
+      "durationMs": 100
+     },
+     "expect": {
+      "state": "running"
+     }
+    },
+    {
+     "from": "running",
+     "event": "RASM_TWEEN_FRAME",
+     "payload": {
+      "dtMs": 30
+     },
+     "expect": {
+      "entity": {
+       "value": 30
+      }
+     }
+    },
+    {
+     "from": "running",
+     "event": "RASM_TWEEN_CANCEL",
+     "payload": {
+      "id": "t"
+     },
+     "expect": {
+      "state": "idle",
+      "entity": {
+       "value": 30
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-new-start-while-running-restarts-from-the-new-values",
+   "config": {
+    "id": "t"
+   },
+   "entity": {
+    "id": "t"
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "RASM_TWEEN_START",
+     "payload": {
+      "id": "t",
+      "from": 0,
+      "to": 100,
+      "durationMs": 100
+     },
+     "expect": {
+      "state": "running"
+     }
+    },
+    {
+     "from": "running",
+     "event": "RASM_TWEEN_FRAME",
+     "payload": {
+      "dtMs": 50
+     },
+     "expect": {
+      "entity": {
+       "value": 50
+      }
+     }
+    },
+    {
+     "from": "running",
+     "event": "RASM_TWEEN_START",
+     "payload": {
+      "id": "t",
+      "from": 5,
+      "to": 15,
+      "durationMs": 100
+     },
+     "expect": {
+      "state": "running",
+      "entity": {
+       "value": 5,
+       "elapsed": 0
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-start-for-another-id-is-ignored",
+   "config": {
+    "id": "t"
+   },
+   "entity": {
+    "id": "t"
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "RASM_TWEEN_START",
+     "payload": {
+      "id": "other",
+      "from": 0,
+      "to": 100,
+      "durationMs": 100
+     },
+     "expect": {
+      "state": "idle"
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-cancel-for-another-id-keeps-the-run",
+   "config": {
+    "id": "t"
+   },
+   "entity": {
+    "id": "t"
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "RASM_TWEEN_START",
+     "payload": {
+      "id": "t",
+      "from": 0,
+      "to": 100,
+      "durationMs": 100
+     },
+     "expect": {
+      "state": "running"
+     }
+    },
+    {
+     "from": "running",
+     "event": "RASM_TWEEN_CANCEL",
+     "payload": {
+      "id": "other"
+     },
+     "expect": {
+      "state": "running"
+     }
+    }
+   ]
+  }
+ ]
+}

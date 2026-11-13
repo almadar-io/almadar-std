@@ -171,6 +171,7 @@ orbital LiveMachineOrbital {
         @description "Describe another trait, named by its behavior and trait name, in place of the current one; the view resets to that trait's initial state."
       MOVES {
         moves : [MachineMove]!
+        follow : boolean
       }
         @description "Transitions a running program took, in order, by trait name; the ones of the drawn trait that fired move the view to the last one's target."
       DESCRIBED {
@@ -325,7 +326,7 @@ orbital LiveMachineOrbital {
                 (set @entity.route (array/map (array/filter ?moves (fn m @m.fired)) (fn m (let ((machine (array/find (object/get (default @entity.tree { page: "", traits: [], wires: [] }) traits) (fn t (== @t.trait @m.trait))))) { trait: @m.trait, index: (if (== @machine null) -1 (array/findIndex @machine.transitions (fn x (and (== @x.event @m.event) (array/includes @x.from @m.from) (== @x.to @m.to))))) }))))
                 (set @entity.highlight (let ((at (array/find @entity.sourceLines (fn l (== @l.index @index))))) (if (== @at null) null { start: @at.start, end: @at.end })))))))
         (render-ui main @config.view)
-      MOVES -> showing when (and (> (array/len (array/filter ?moves (fn m @m.fired))) 0) (!= (object/get (default (let ((nxi (- (array/len (array/filter ?moves (fn m @m.fired))) 1))) (if (>= @nxi 0) (array/nth (array/filter ?moves (fn m @m.fired)) @nxi) null)) { trait: "", event: "", from: "", to: "", fired: false }) trait) @entity.title) (not @entity.pinned))
+      MOVES -> showing when (and (> (array/len (array/filter ?moves (fn m @m.fired))) 0) (!= (object/get (default (let ((nxi (- (array/len (array/filter ?moves (fn m @m.fired))) 1))) (if (>= @nxi 0) (array/nth (array/filter ?moves (fn m @m.fired)) @nxi) null)) { trait: "", event: "", from: "", to: "", fired: false }) trait) @entity.title) (not @entity.pinned) (!= ?follow false))
         (let ((last (default (let ((nxi (- (array/len (array/filter ?moves (fn m @m.fired))) 1))) (if (>= @nxi 0) (array/nth (array/filter ?moves (fn m @m.fired)) @nxi) null)) { trait: "", event: "", from: "", to: "", fired: false })))
           (let ((machine (array/find (object/get (default @entity.tree { page: "", traits: [], wires: [] }) traits) (fn t (== @t.trait @last.trait)))))
             (let ((index (if (== @machine null) -1 (array/findIndex @machine.transitions (fn x (and (== @x.event @last.event) (array/includes @x.from @last.from) (== @x.to @last.to)))))))
@@ -336,7 +337,7 @@ orbital LiveMachineOrbital {
                 (do (set @entity.title @last.trait) (set @entity.sourceText "") (set @entity.sourceLines []) (set @entity.highlight null))))))
         (emit SOURCE_WANTED { behavior: @entity.behavior, trait: @entity.title })
         (render-ui main @config.view)
-      MOVES -> showing when (and (> (array/len (array/filter ?moves (fn m @m.fired))) 0) (!= (object/get (default (let ((nxi (- (array/len (array/filter ?moves (fn m @m.fired))) 1))) (if (>= @nxi 0) (array/nth (array/filter ?moves (fn m @m.fired)) @nxi) null)) { trait: "", event: "", from: "", to: "", fired: false }) trait) @entity.title) @entity.pinned)
+      MOVES -> showing when (and (> (array/len (array/filter ?moves (fn m @m.fired))) 0) (!= (object/get (default (let ((nxi (- (array/len (array/filter ?moves (fn m @m.fired))) 1))) (if (>= @nxi 0) (array/nth (array/filter ?moves (fn m @m.fired)) @nxi) null)) { trait: "", event: "", from: "", to: "", fired: false }) trait) @entity.title) (or @entity.pinned (= ?follow false)))
         (let ((last (default (let ((nxi (- (array/len (array/filter ?moves (fn m @m.fired))) 1))) (if (>= @nxi 0) (array/nth (array/filter ?moves (fn m @m.fired)) @nxi) null)) { trait: "", event: "", from: "", to: "", fired: false })))
           (let ((machine (array/find (object/get (default @entity.tree { page: "", traits: [], wires: [] }) traits) (fn t (== @t.trait @last.trait)))))
             (let ((index (if (== @machine null) -1 (array/findIndex @machine.transitions (fn x (and (== @x.event @last.event) (array/includes @x.from @last.from) (== @x.to @last.to)))))))
@@ -459,6 +460,7 @@ orbital LiveMachineOrbital {
         @tier "internal"
       MOVES {
         moves : [MachineMove]!
+        follow : boolean
       }
         @description "Transitions the page took, in order; the fired ones light their transition and move their trait's active state."
         @tier "internal"

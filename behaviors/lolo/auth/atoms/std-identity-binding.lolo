@@ -7,6 +7,9 @@ type BindWait = { requestId : number!, clientId : string!, authorization : strin
 type BindingEmitted = { event : string!, payload : BindingEmitPayload }
 type BindingWire = { success : boolean, emittedEvents : [BindingEmitted], error : string }
 type BindingFailure = { code : string, status : number }
+type BindPresent = { requestId : number!, clientId : string!, authorization : string!, created : boolean!, deferred : boolean! }
+type SettleOutcome = "bound" | "anonymous" | "refused" | "needs-identity"
+type BindSettle = { requestId : number!, outcome : SettleOutcome!, reason : string!, clientId : string!, authorization : string!, subject : string!, email : string!, name : string! }
 
 orbital IdentityBindingOrbital {
   entity IdentityRow [persistent: viewer_rows] {
@@ -30,6 +33,11 @@ orbital IdentityBindingOrbital {
     name : string @description "The verified name claim, empty when absent." = ""
     created : boolean @description "Whether this present is the second one, made after the program session wrote the first identity row; a second no-identity is refused." = false
     outcome : string @description "What a sign-out answers: empty is anonymous, any other text is the refusal reason." = ""
+    presented : [BindPresent] @description "Client session: the presented requests whose verdict has not come yet, oldest first; each verdict takes its own by requestId." = []
+    deferred : boolean @description "Client session: whether the request being signed in was answered deferred, so its outcome is reported to the program session." = false
+    waiting : [number] @description "Program session: deferred requests whose client session has not reported its outcome yet." = []
+    early : [BindSettle] @description "Program session: outcomes reported before the forwarded present answered." = []
+    ignored : [number] @description "Program session: deferred requests the forwarded present already settled, whose later report is dropped." = []
   }
 
   trait IdentityBinder -> IdentityBindingState [optimistic] {
@@ -47,6 +55,11 @@ orbital IdentityBindingOrbital {
         (set @entity.name "")
         (set @entity.created false)
         (set @entity.outcome "")
+        (set @entity.presented [])
+        (set @entity.deferred false)
+        (set @entity.waiting [])
+        (set @entity.early [])
+        (set @entity.ignored [])
 
       BEARER_PRESENT -> idle when (and (= (default @payload.clientId "") "") (= (default @payload.authorization "") ""))
         (emit IDENTITY_ANONYMOUS { requestId: (default @payload.requestId 0) })
@@ -57,47 +70,116 @@ orbital IdentityBindingOrbital {
 
       CREDENTIAL_ANSWERED -> idle when (array/some (default @payload.result.emittedEvents []) (fn e (= @e.event "CREDENTIAL_BOUND")))
         (emit IDENTITY_BOUND { requestId: (default (str/to-number (default @payload.key "0")) 0) })
+        (emit ANSWER_SETTLED { requestId: (default (str/to-number (default @payload.key "0")) 0), deferred: (array/some (default @payload.result.emittedEvents []) (fn e (= @e.event "CREDENTIAL_DEFERRED"))) })
       CREDENTIAL_ANSWERED -> idle when (array/some (default @payload.result.emittedEvents []) (fn e (= @e.event "CREDENTIAL_ANONYMOUS")))
         (emit IDENTITY_ANONYMOUS { requestId: (default (str/to-number (default @payload.key "0")) 0) })
+        (emit ANSWER_SETTLED { requestId: (default (str/to-number (default @payload.key "0")) 0), deferred: (array/some (default @payload.result.emittedEvents []) (fn e (= @e.event "CREDENTIAL_DEFERRED"))) })
       CREDENTIAL_ANSWERED -> idle when (array/some (default @payload.result.emittedEvents []) (fn e (= @e.event "CREDENTIAL_REFUSED")))
         (emit IDENTITY_REFUSED { requestId: (default (str/to-number (default @payload.key "0")) 0), reason: (default (object/get (default (array/find (default @payload.result.emittedEvents []) (fn e (= @e.event "CREDENTIAL_REFUSED"))) { event: "", payload: { requestId: 0, reason: "" } }) "payload.reason") "credential-refused") })
-      CREDENTIAL_ANSWERED -> idle when (not (array/some (default @payload.result.emittedEvents []) (fn e (array/includes ["CREDENTIAL_BOUND", "CREDENTIAL_ANONYMOUS", "CREDENTIAL_REFUSED", "CREDENTIAL_NEEDS_IDENTITY"] @e.event))))
+        (emit ANSWER_SETTLED { requestId: (default (str/to-number (default @payload.key "0")) 0), deferred: (array/some (default @payload.result.emittedEvents []) (fn e (= @e.event "CREDENTIAL_DEFERRED"))) })
+      CREDENTIAL_ANSWERED -> idle when (and (not (array/some (default @payload.result.emittedEvents []) (fn e (array/includes ["CREDENTIAL_BOUND", "CREDENTIAL_ANONYMOUS", "CREDENTIAL_REFUSED", "CREDENTIAL_NEEDS_IDENTITY"] @e.event)))) (not (array/some (default @payload.result.emittedEvents []) (fn e (= @e.event "CREDENTIAL_DEFERRED")))))
         (emit IDENTITY_REFUSED { requestId: (default (str/to-number (default @payload.key "0")) 0), reason: "credential-dispatch" })
+      CREDENTIAL_ANSWERED -> idle when (and (not (array/some (default @payload.result.emittedEvents []) (fn e (array/includes ["CREDENTIAL_BOUND", "CREDENTIAL_ANONYMOUS", "CREDENTIAL_REFUSED", "CREDENTIAL_NEEDS_IDENTITY"] @e.event)))) (array/some (default @payload.result.emittedEvents []) (fn e (= @e.event "CREDENTIAL_DEFERRED"))))
+        (emit SETTLE_AWAIT { requestId: (default (str/to-number (default @payload.key "0")) 0) })
       CREDENTIAL_ANSWERED -> idle when (array/some (default @payload.result.emittedEvents []) (fn e (= @e.event "CREDENTIAL_NEEDS_IDENTITY")))
         (let ((n (default (array/find (default @payload.result.emittedEvents []) (fn e (= @e.event "CREDENTIAL_NEEDS_IDENTITY"))) { event: "", payload: { requestId: 0, reason: "" } })))
           (do
             (set @entity.binds (array/append @entity.binds { requestId: (default @n.payload.requestId 0), clientId: (default @n.payload.clientId ""), authorization: (default @n.payload.authorization ""), subject: (default @n.payload.subject ""), stage: "creating" }))
             (persist create @config.identityEntity (if (= @config.createRole "") { id: (default @n.payload.subject ""), email: (default @n.payload.email ""), name: (default @n.payload.name "") } { id: (default @n.payload.subject ""), email: (default @n.payload.email ""), name: (default @n.payload.name ""), role: @config.createRole }) { emit: { success: IDENTITY_CREATED, failure: IDENTITY_CREATE_FAILED } })))
+        (emit ANSWER_SETTLED { requestId: (default (str/to-number (default @payload.key "0")) 0), deferred: (array/some (default @payload.result.emittedEvents []) (fn e (= @e.event "CREDENTIAL_DEFERRED"))) })
       CREDENTIAL_FAILED -> idle when (= (object/get (default (array/first (default @payload.errors [])) { code: "", status: 0 }) "code" "") "SESSION_ENDED")
         (emit IDENTITY_SESSION_ENDED { requestId: (default (str/to-number (default @payload.key "0")) 0) })
+        (set @entity.waiting (array/filter @entity.waiting (fn w (!= @w (default (str/to-number (default @payload.key "0")) 0)))))
+        (set @entity.early (array/filter @entity.early (fn s (!= @s.requestId (default (str/to-number (default @payload.key "0")) 0)))))
+        (set @entity.ignored (array/filter @entity.ignored (fn w (!= @w (default (str/to-number (default @payload.key "0")) 0)))))
       CREDENTIAL_FAILED -> idle when (!= (object/get (default (array/first (default @payload.errors [])) { code: "", status: 0 }) "code" "") "SESSION_ENDED")
         (emit IDENTITY_REFUSED { requestId: (default (str/to-number (default @payload.key "0")) 0), reason: "credential-dispatch" })
+        (set @entity.waiting (array/filter @entity.waiting (fn w (!= @w (default (str/to-number (default @payload.key "0")) 0)))))
+        (set @entity.early (array/filter @entity.early (fn s (!= @s.requestId (default (str/to-number (default @payload.key "0")) 0)))))
+        (set @entity.ignored (array/filter @entity.ignored (fn w (!= @w (default (str/to-number (default @payload.key "0")) 0)))))
+
+      ANSWER_SETTLED -> idle when (and @payload.deferred (array/some @entity.early (fn s (= @s.requestId @payload.requestId))))
+        (set @entity.early (array/filter @entity.early (fn s (!= @s.requestId @payload.requestId))))
+      ANSWER_SETTLED -> idle when (and @payload.deferred (not (array/some @entity.early (fn s (= @s.requestId @payload.requestId)))))
+        (set @entity.ignored (array/append @entity.ignored @payload.requestId))
+      ANSWER_SETTLED -> idle when (not @payload.deferred)
+
+      SETTLE_AWAIT -> idle when (array/some @entity.early (fn s (= @s.requestId @payload.requestId)))
+        (let ((s (default (array/find @entity.early (fn x (= @x.requestId @payload.requestId))) { requestId: 0, outcome: "refused", reason: "credential-dispatch", clientId: "", authorization: "", subject: "", email: "", name: "" })))
+          (do
+            (set @entity.early (array/filter @entity.early (fn x (!= @x.requestId @payload.requestId))))
+            (emit SETTLE_RESOLVE { requestId: @s.requestId, outcome: @s.outcome, reason: @s.reason, clientId: @s.clientId, authorization: @s.authorization, subject: @s.subject, email: @s.email, name: @s.name })))
+      SETTLE_AWAIT -> idle when (not (array/some @entity.early (fn s (= @s.requestId @payload.requestId))))
+        (set @entity.waiting (array/append @entity.waiting @payload.requestId))
+
+      SETTLE_RELAYED -> idle when (array/includes @entity.waiting (default @payload.requestId 0))
+        (set @entity.waiting (array/filter @entity.waiting (fn w (!= @w (default @payload.requestId 0)))))
+        (emit SETTLE_RESOLVE { requestId: (default @payload.requestId 0), outcome: (default @payload.outcome "refused"), reason: (default @payload.reason ""), clientId: (default @payload.clientId ""), authorization: (default @payload.authorization ""), subject: (default @payload.subject ""), email: (default @payload.email ""), name: (default @payload.name "") })
+      SETTLE_RELAYED -> idle when (and (not (array/includes @entity.waiting (default @payload.requestId 0))) (array/includes @entity.ignored (default @payload.requestId 0)))
+        (set @entity.ignored (array/filter @entity.ignored (fn w (!= @w (default @payload.requestId 0)))))
+      SETTLE_RELAYED -> idle when (and (not (array/includes @entity.waiting (default @payload.requestId 0))) (not (array/includes @entity.ignored (default @payload.requestId 0))))
+        (set @entity.early (array/append @entity.early { requestId: (default @payload.requestId 0), outcome: (default @payload.outcome "refused"), reason: (default @payload.reason ""), clientId: (default @payload.clientId ""), authorization: (default @payload.authorization ""), subject: (default @payload.subject ""), email: (default @payload.email ""), name: (default @payload.name "") }))
+
+      SETTLE_RESOLVE -> idle when (= @payload.outcome "bound")
+        (emit IDENTITY_BOUND { requestId: @payload.requestId })
+      SETTLE_RESOLVE -> idle when (= @payload.outcome "anonymous")
+        (emit IDENTITY_ANONYMOUS { requestId: @payload.requestId })
+      SETTLE_RESOLVE -> idle when (= @payload.outcome "refused")
+        (emit IDENTITY_REFUSED { requestId: @payload.requestId, reason: @payload.reason })
+      SETTLE_RESOLVE -> idle when (= @payload.outcome "needs-identity")
+        (set @entity.binds (array/append @entity.binds { requestId: @payload.requestId, clientId: @payload.clientId, authorization: @payload.authorization, subject: @payload.subject, stage: "creating" }))
+        (persist create @config.identityEntity (if (= @config.createRole "") { id: (default @payload.subject ""), email: (default @payload.email ""), name: (default @payload.name "") } { id: (default @payload.subject ""), email: (default @payload.email ""), name: (default @payload.name ""), role: @config.createRole }) { emit: { success: IDENTITY_CREATED, failure: IDENTITY_CREATE_FAILED } })
 
       CREDENTIAL_PRESENTED -> idle
-        (set @entity.awaiting true)
-        (set @entity.requestId (default @payload.requestId 0))
-        (set @entity.clientId (default @payload.clientId ""))
-        (set @entity.authorization (default @payload.authorization ""))
-        (set @entity.created (default @payload.created false))
+        (set @entity.presented (array/append @entity.presented { requestId: (default @payload.requestId 0), clientId: (default @payload.clientId ""), authorization: (default @payload.authorization ""), created: (default @payload.created false), deferred: false }))
         (emit BEARER_VERIFY { requestId: (default @payload.requestId 0), authorization: (default @payload.authorization "") })
 
-      BEARER_VERIFIED -> idle when @entity.awaiting
+      BEARER_DEFERRED -> idle when (array/some @entity.presented (fn x (= @x.requestId (default @payload.requestId 0))))
+        (set @entity.presented (array/map @entity.presented (fn x (if (= @x.requestId (default @payload.requestId 0)) (object/merge @x { deferred: true }) @x))))
+        (emit CREDENTIAL_DEFERRED { requestId: (default @payload.requestId 0) })
+      BEARER_DEFERRED -> idle when (not (array/some @entity.presented (fn x (= @x.requestId (default @payload.requestId 0)))))
+
+      BEARER_VERIFIED -> idle when (array/some @entity.presented (fn x (= @x.requestId (default @payload.requestId 0))))
+        (let ((p (default (array/find @entity.presented (fn x (= @x.requestId (default @payload.requestId 0)))) { requestId: 0, clientId: "", authorization: "", created: false, deferred: false })))
+          (do
+            (set @entity.awaiting true)
+            (set @entity.requestId @p.requestId)
+            (set @entity.clientId @p.clientId)
+            (set @entity.authorization @p.authorization)
+            (set @entity.created @p.created)
+            (set @entity.deferred @p.deferred)
+            (set @entity.presented (array/filter @entity.presented (fn x (!= @x.requestId @p.requestId))))))
         (set @entity.subject @payload.verified.subject)
         (set @entity.email (let ((f (array/find @payload.verified.claims (fn c (= @c.name "email"))))) (if (= @f null) "" (default (as @f.value string) ""))))
         (set @entity.name (let ((f (array/find @payload.verified.claims (fn c (= @c.name "name"))))) (if (= @f null) "" (default (as @f.value string) ""))))
         (identity/sign-in @payload.verified { emit: { success: SIGNED_IN, failure: SIGN_IN_FAILED } })
-      BEARER_VERIFIED -> idle when (not @entity.awaiting)
+      BEARER_VERIFIED -> idle when (not (array/some @entity.presented (fn x (= @x.requestId (default @payload.requestId 0)))))
 
-      SIGNED_IN -> idle
+      SIGNED_IN -> idle when @entity.deferred
+        (emit CREDENTIAL_BOUND { requestId: @entity.requestId })
+        (emit SETTLE_REPORT { requestId: @entity.requestId, outcome: "bound", reason: "", deferred: @entity.deferred, clientId: @entity.clientId, authorization: @entity.authorization, subject: @entity.subject, email: @entity.email, name: @entity.name })
+        (set @entity.awaiting false)
+      SIGNED_IN -> idle when (not @entity.deferred)
         (emit CREDENTIAL_BOUND { requestId: @entity.requestId })
         (set @entity.awaiting false)
 
-      SIGN_IN_FAILED -> idle when (and (= (default @payload.kind "") "no-identity") @config.createIdentity (not @entity.created))
+      SIGN_IN_FAILED -> idle when (and (and (= (default @payload.kind "") "no-identity") @config.createIdentity (not @entity.created)) @entity.deferred)
+        (emit CREDENTIAL_NEEDS_IDENTITY { requestId: @entity.requestId, clientId: @entity.clientId, authorization: @entity.authorization, subject: @entity.subject, email: @entity.email, name: @entity.name })
+        (emit SETTLE_REPORT { requestId: @entity.requestId, outcome: "needs-identity", reason: "", deferred: @entity.deferred, clientId: @entity.clientId, authorization: @entity.authorization, subject: @entity.subject, email: @entity.email, name: @entity.name })
+        (set @entity.awaiting false)
+      SIGN_IN_FAILED -> idle when (and (and (= (default @payload.kind "") "no-identity") @config.createIdentity (not @entity.created)) (not @entity.deferred))
         (emit CREDENTIAL_NEEDS_IDENTITY { requestId: @entity.requestId, clientId: @entity.clientId, authorization: @entity.authorization, subject: @entity.subject, email: @entity.email, name: @entity.name })
         (set @entity.awaiting false)
-      SIGN_IN_FAILED -> idle when (not (and (= (default @payload.kind "") "no-identity") @config.createIdentity (not @entity.created)))
+      SIGN_IN_FAILED -> idle when (and (not (and (= (default @payload.kind "") "no-identity") @config.createIdentity (not @entity.created))) @entity.deferred)
+        (emit CREDENTIAL_REFUSED { requestId: @entity.requestId, reason: (str/concat "identity-" (default @payload.kind "")) })
+        (emit SETTLE_REPORT { requestId: @entity.requestId, outcome: "refused", reason: (str/concat "identity-" (default @payload.kind "")), deferred: @entity.deferred, clientId: @entity.clientId, authorization: @entity.authorization, subject: @entity.subject, email: @entity.email, name: @entity.name })
+        (set @entity.awaiting false)
+      SIGN_IN_FAILED -> idle when (and (not (and (= (default @payload.kind "") "no-identity") @config.createIdentity (not @entity.created))) (not @entity.deferred))
         (emit CREDENTIAL_REFUSED { requestId: @entity.requestId, reason: (str/concat "identity-" (default @payload.kind "")) })
         (set @entity.awaiting false)
+
+      SETTLE_REPORT -> idle when @payload.deferred
+        (emit CREDENTIAL_SETTLED { requestId: @payload.requestId, outcome: @payload.outcome, reason: @payload.reason, clientId: @payload.clientId, authorization: @payload.authorization, subject: @payload.subject, email: @payload.email, name: @payload.name })
 
       IDENTITY_CREATED -> idle
         (set @entity.binds (array/map @entity.binds (fn b (if (= @b.subject (default @payload.id "")) (object/merge @b { stage: "ready" }) @b))))
@@ -126,23 +208,58 @@ orbital IdentityBindingOrbital {
         (emit REFUSE_DRAIN { })
       REFUSE_DRAIN -> idle when (not (array/some @entity.binds (fn b (= @b.stage "failed"))))
 
-      ANONYMOUS_SEEN -> idle when @entity.awaiting
+      ANONYMOUS_SEEN -> idle when (array/some @entity.presented (fn x (= @x.requestId (default @payload.requestId 0))))
+        (let ((p (default (array/find @entity.presented (fn x (= @x.requestId (default @payload.requestId 0)))) { requestId: 0, clientId: "", authorization: "", created: false, deferred: false })))
+          (do
+            (set @entity.awaiting true)
+            (set @entity.requestId @p.requestId)
+            (set @entity.clientId @p.clientId)
+            (set @entity.authorization @p.authorization)
+            (set @entity.created @p.created)
+            (set @entity.deferred @p.deferred)
+            (set @entity.presented (array/filter @entity.presented (fn x (!= @x.requestId @p.requestId))))))
         (set @entity.outcome "")
         (identity/sign-out { emit: { success: SIGNED_OUT } })
-      ANONYMOUS_SEEN -> idle when (not @entity.awaiting)
-      REFUSED_SEEN -> idle when @entity.awaiting
+      ANONYMOUS_SEEN -> idle when (not (array/some @entity.presented (fn x (= @x.requestId (default @payload.requestId 0)))))
+      REFUSED_SEEN -> idle when (array/some @entity.presented (fn x (= @x.requestId (default @payload.requestId 0))))
+        (let ((p (default (array/find @entity.presented (fn x (= @x.requestId (default @payload.requestId 0)))) { requestId: 0, clientId: "", authorization: "", created: false, deferred: false })))
+          (do
+            (set @entity.awaiting true)
+            (set @entity.requestId @p.requestId)
+            (set @entity.clientId @p.clientId)
+            (set @entity.authorization @p.authorization)
+            (set @entity.created @p.created)
+            (set @entity.deferred @p.deferred)
+            (set @entity.presented (array/filter @entity.presented (fn x (!= @x.requestId @p.requestId))))))
         (set @entity.outcome @payload.reason)
         (identity/sign-out { emit: { success: SIGNED_OUT } })
-      REFUSED_SEEN -> idle when (not @entity.awaiting)
-      KEY_SEEN -> idle when @entity.awaiting
+      REFUSED_SEEN -> idle when (not (array/some @entity.presented (fn x (= @x.requestId (default @payload.requestId 0)))))
+      KEY_SEEN -> idle when (array/some @entity.presented (fn x (= @x.requestId (default @payload.requestId 0))))
+        (let ((p (default (array/find @entity.presented (fn x (= @x.requestId (default @payload.requestId 0)))) { requestId: 0, clientId: "", authorization: "", created: false, deferred: false })))
+          (do
+            (set @entity.awaiting true)
+            (set @entity.requestId @p.requestId)
+            (set @entity.clientId @p.clientId)
+            (set @entity.authorization @p.authorization)
+            (set @entity.created @p.created)
+            (set @entity.deferred @p.deferred)
+            (set @entity.presented (array/filter @entity.presented (fn x (!= @x.requestId @p.requestId))))))
         (set @entity.outcome "api-key-identity")
         (identity/sign-out { emit: { success: SIGNED_OUT } })
-      KEY_SEEN -> idle when (not @entity.awaiting)
+      KEY_SEEN -> idle when (not (array/some @entity.presented (fn x (= @x.requestId (default @payload.requestId 0)))))
 
-      SIGNED_OUT -> idle when (and @entity.awaiting (= @entity.outcome ""))
+      SIGNED_OUT -> idle when (and (and @entity.awaiting (= @entity.outcome "")) @entity.deferred)
+        (emit CREDENTIAL_ANONYMOUS { requestId: @entity.requestId })
+        (emit SETTLE_REPORT { requestId: @entity.requestId, outcome: "anonymous", reason: "", deferred: @entity.deferred, clientId: @entity.clientId, authorization: @entity.authorization, subject: @entity.subject, email: @entity.email, name: @entity.name })
+        (set @entity.awaiting false)
+      SIGNED_OUT -> idle when (and (and @entity.awaiting (= @entity.outcome "")) (not @entity.deferred))
         (emit CREDENTIAL_ANONYMOUS { requestId: @entity.requestId })
         (set @entity.awaiting false)
-      SIGNED_OUT -> idle when (and @entity.awaiting (!= @entity.outcome ""))
+      SIGNED_OUT -> idle when (and (and @entity.awaiting (!= @entity.outcome "")) @entity.deferred)
+        (emit CREDENTIAL_REFUSED { requestId: @entity.requestId, reason: @entity.outcome })
+        (emit SETTLE_REPORT { requestId: @entity.requestId, outcome: "refused", reason: @entity.outcome, deferred: @entity.deferred, clientId: @entity.clientId, authorization: @entity.authorization, subject: @entity.subject, email: @entity.email, name: @entity.name })
+        (set @entity.awaiting false)
+      SIGNED_OUT -> idle when (and (and @entity.awaiting (!= @entity.outcome "")) (not @entity.deferred))
         (emit CREDENTIAL_REFUSED { requestId: @entity.requestId, reason: @entity.outcome })
         (set @entity.awaiting false)
       SIGNED_OUT -> idle when (not @entity.awaiting)
@@ -257,6 +374,59 @@ orbital IdentityBindingOrbital {
       }
         @description "Internal: the first identity row could not be written."
         @tier "internal"
+      CREDENTIAL_DEFERRED -> external {
+        requestId : number
+      }
+        @description "Client session: the verifier could not answer within the presenting dispatch; the outcome reaches the program session later through IdentitySettleRelay."
+        @tier "secondary"
+      SETTLE_REPORT {
+        requestId : number!
+        outcome : "bound" | "anonymous" | "refused" | "needs-identity"!
+        reason : string!
+        deferred : boolean!
+        clientId : string!
+        authorization : string!
+        subject : string!
+        email : string!
+        name : string!
+      }
+        @description "Internal: the client session's outcome, sent on to the program session when its request was answered deferred."
+        @tier "internal"
+      CREDENTIAL_SETTLED -> external {
+        requestId : number!
+        outcome : "bound" | "anonymous" | "refused" | "needs-identity"!
+        reason : string!
+        clientId : string!
+        authorization : string!
+        subject : string!
+        email : string!
+        name : string!
+      }
+        @description "Client session: the outcome of a request answered deferred, for the program-wide IdentitySettleRelay to hand to the program session."
+        @tier "secondary"
+      ANSWER_SETTLED {
+        requestId : number!
+        deferred : boolean!
+      }
+        @description "Internal: the forwarded present answered with an outcome; a deferred one drops the report that follows."
+        @tier "internal"
+      SETTLE_AWAIT {
+        requestId : number!
+      }
+        @description "Internal: the forwarded present answered deferred; wait for its SETTLE_RELAYED."
+        @tier "internal"
+      SETTLE_RESOLVE {
+        requestId : number!
+        outcome : "bound" | "anonymous" | "refused" | "needs-identity"!
+        reason : string!
+        clientId : string!
+        authorization : string!
+        subject : string!
+        email : string!
+        name : string!
+      }
+        @description "Internal: answer a deferred request with the outcome its client session reported."
+        @tier "internal"
     }
 
     listens {
@@ -292,6 +462,22 @@ orbital IdentityBindingOrbital {
         reason : string!
       }
         @description "Internal: the verifier refused the bearer."
+      BEARER_DEFERRED {
+        requestId : number
+      }
+        @description "Internal: the verifier will answer this request in a later dispatch (a key fetch, an API key lookup, or a queue)."
+      SETTLE_RELAYED {
+        requestId : number?
+        outcome : "bound" | "anonymous" | "refused" | "needs-identity"?
+        reason : string?
+        clientId : string?
+        authorization : string?
+        subject : string?
+        email : string?
+        name : string?
+      }
+        @description "Program session: a client session's outcome for a request it answered deferred, handed on by the program-wide IdentitySettleRelay."
+      IdentitySettleRelay.SETTLE_RELAYED -> SETTLE_RELAYED
     }
 
     config {
@@ -320,5 +506,49 @@ orbital IdentityBindingOrbital {
     }
   }
 
+  entity IdentitySettleRelayData [runtime] {
+    id : string!
+  }
+
+  trait IdentitySettleRelay -> IdentitySettleRelayData {
+    initial: idle
+
+    state idle {
+      CREDENTIAL_SETTLED -> idle
+        (emit SETTLE_RELAYED { requestId: (default @payload.requestId 0), outcome: (default @payload.outcome "refused"), reason: (default @payload.reason ""), clientId: (default @payload.clientId ""), authorization: (default @payload.authorization ""), subject: (default @payload.subject ""), email: (default @payload.email ""), name: (default @payload.name "") })
+    }
+
+    emits {
+      SETTLE_RELAYED -> external {
+        requestId : number!
+        outcome : "bound" | "anonymous" | "refused" | "needs-identity"!
+        reason : string!
+        clientId : string!
+        authorization : string!
+        subject : string!
+        email : string!
+        name : string!
+      }
+        @description "The outcome a client session reported for a request it answered deferred, now in the program session (EXEC-DIST-9: a delivery into a boot-only trait steps there)."
+        @tier "secondary"
+    }
+
+    listens {
+      CREDENTIAL_SETTLED {
+        requestId : number?
+        outcome : "bound" | "anonymous" | "refused" | "needs-identity"?
+        reason : string?
+        clientId : string?
+        authorization : string?
+        subject : string?
+        email : string?
+        name : string?
+      }
+        @description "A client session's IdentityBinder reporting a deferred request's outcome."
+      IdentityBinder.CREDENTIAL_SETTLED -> CREDENTIAL_SETTLED
+    }
+  }
+
   page boot as IdentityBindingStart -> IdentityBinder
+  page boot as IdentitySettleStart -> IdentitySettleRelay
 }

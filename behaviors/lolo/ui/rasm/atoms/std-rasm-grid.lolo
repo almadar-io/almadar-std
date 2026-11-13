@@ -1,0 +1,88 @@
+app std-rasm-grid [
+  version: "0.1.0",
+  description: "std-rasm-grid — the Rasm kit's two-axis layout node. On RASM_PLACE for its own id it stores its rect and places its children in the cells of a declared grid: columns and rows are fixed px or an equal share of what is left, a child names its column, row and optional spans, and RASM_PLACE carries each child's rect. With direction rtl the columns run from the right edge. A child whose cell lies outside the declared tracks is not placed."
+]
+
+type RasmRect = { x : number!, y : number!, w : number!, h : number! }
+type RasmPlaced = { id : string!, rect : RasmRect! }
+type RasmTrack = { size : "fixed" | "fill"!, main : number }
+type RasmGridChild = { id : string!, col : number!, row : number!, colSpan : number, rowSpan : number }
+
+orbital RasmGridOrbital {
+  entity RasmGridRun [runtime] {
+    id : string!
+    rect : RasmRect? @description "The rect RASM_PLACE gave this grid, null until placed." = null
+    layouts : number @description "Counts layouts, so each layout in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
+  }
+
+  trait RasmGrid -> RasmGridRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      RASM_PLACE -> ready when (array/some ?placed (fn p (= @p.id @config.id)))
+        (set @entity.rect (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) null @mine.rect)))
+        (set @entity.layouts (+ @entity.layouts 1))
+        (emit GRID_LAYOUT { n: @entity.layouts })
+      RASM_PLACE -> ready when (not (array/some ?placed (fn p (= @p.id @config.id))))
+      GRID_LAYOUT -> ready when (!= @entity.rect null)
+        (emit RASM_PLACE { placed: (let ((r @entity.rect) (pad @config.padding) (rtl (= @config.direction "rtl")) (cols @config.columns) (rows @config.rows)) (let ((colW (let ((ext (- @r.w (* 2 @pad))) (fixed (array/reduce @cols 0 (fn a t (+ @a (if (= @t.size "fixed") (default @t.main 0) 0))))) (fills (array/len (array/filter @cols (fn t (= @t.size "fill")))))) (let ((share (if (> @fills 0) (math/max 0 (/ (- (- @ext @fixed) (* @config.gap (math/max 0 (- (array/len @cols) 1)))) @fills)) 0))) (array/map @cols (fn t (if (= @t.size "fill") @share (default @t.main 0))))))) (rowH (let ((ext (- @r.h (* 2 @pad))) (fixed (array/reduce @rows 0 (fn a t (+ @a (if (= @t.size "fixed") (default @t.main 0) 0))))) (fills (array/len (array/filter @rows (fn t (= @t.size "fill")))))) (let ((share (if (> @fills 0) (math/max 0 (/ (- (- @ext @fixed) (* @config.rowGap (math/max 0 (- (array/len @rows) 1)))) @fills)) 0))) (array/map @rows (fn t (if (= @t.size "fill") @share (default @t.main 0)))))))) (let ((colAt (let ((acc (array/reduce @colW { at: 0, xs: [] } (fn a w { at: (+ (+ @a.at @w) @config.gap), xs: (array/append @a.xs @a.at) })))) @acc.xs)) (rowAt (let ((acc (array/reduce @rowH { at: 0, ys: [] } (fn a h { at: (+ (+ @a.at @h) @config.rowGap), ys: (array/append @a.ys @a.at) })))) @acc.ys))) (array/map (array/filter @config.children (fn c (and (and (>= @c.col 0) (>= @c.row 0)) (and (<= (+ @c.col (default @c.colSpan 1)) (array/len @cols)) (<= (+ @c.row (default @c.rowSpan 1)) (array/len @rows)))))) (fn c (let ((c1 (- (+ @c.col (default @c.colSpan 1)) 1)) (r1 (- (+ @c.row (default @c.rowSpan 1)) 1))) (let ((x0 (default (array/nth @colAt @c.col) 0)) (w (- (+ (default (array/nth @colAt @c1) 0) (default (array/nth @colW @c1) 0)) (default (array/nth @colAt @c.col) 0))) (y0 (default (array/nth @rowAt @c.row) 0)) (h (- (+ (default (array/nth @rowAt @r1) 0) (default (array/nth @rowH @r1) 0)) (default (array/nth @rowAt @c.row) 0)))) { id: @c.id, rect: { x: (if @rtl (- (- (+ @r.x @r.w) @pad) (+ @x0 @w)) (+ (+ @r.x @pad) @x0)), y: (+ (+ @r.y @pad) @y0), w: @w, h: @h } }))))))) })
+      GRID_LAYOUT -> ready when (= @entity.rect null)
+    }
+
+    emits {
+      GRID_LAYOUT -> internal {
+        n : number!
+      }
+        @description "Place the children from the stored rect."
+        @tier "internal"
+      RASM_PLACE -> external {
+        placed : [RasmPlaced]!
+      }
+        @description "The children's cell rects."
+        @tier "primary"
+    }
+
+    listens {
+      RASM_PLACE { placed : [RasmPlaced]! }
+        @description "Take this grid's rect when it is placed, then place the children."
+    }
+
+    config {
+      id : string = "grid"
+        @label "Id"
+        @description "The grid's id: its RASM_PLACE key."
+        @tier "presentation"
+      columns : [RasmTrack] = []
+        @label "Columns"
+        @description "Column tracks in order: fixed uses main px, fill shares the width left after fixed tracks and gaps equally."
+        @tier "presentation"
+      rows : [RasmTrack] = []
+        @label "Rows"
+        @description "Row tracks in order: fixed uses main px, fill shares the height left after fixed tracks and gaps equally."
+        @tier "presentation"
+      gap : number = 0
+        @label "Column gap"
+        @description "Space between columns in px."
+        @tier "presentation"
+      rowGap : number = 0
+        @label "Row gap"
+        @description "Space between rows in px."
+        @tier "presentation"
+      padding : number = 0
+        @label "Padding"
+        @description "Space between the rect and the tracks on every side in px."
+        @tier "presentation"
+      direction : "ltr" | "rtl" = "ltr"
+        @label "Direction"
+        @description "ltr starts column 0 at the left edge, rtl at the right edge."
+        @tier "presentation"
+      children : [RasmGridChild] = []
+        @label "Children"
+        @description "Each child's column and row (zero-based) and optional colSpan and rowSpan (default 1); a child whose cell is outside the tracks is not placed."
+        @tier "presentation"
+    }
+  }
+
+  page boot as RasmGridStart -> RasmGrid
+}

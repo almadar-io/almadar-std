@@ -119,6 +119,7 @@ orbital BearerVerifyOrbital {
 
       BEARER_VERIFY -> idle when (and @entity.ready (and (and (str/startsWith (default @payload.authorization "") "Bearer ") (str/startsWith (str/slice (default @payload.authorization "") 7 (str/len (default @payload.authorization ""))) @config.keyPrefix)) @entity.keysEnabled))
         (emit VERIFY_KEY { requestId: (default @payload.requestId 0), token: (str/slice (default @payload.authorization "") 7 (str/len (default @payload.authorization ""))) })
+        (emit BEARER_DEFERRED { requestId: (default @payload.requestId 0) })
       BEARER_VERIFY -> idle when (and @entity.ready (and (and (str/startsWith (default @payload.authorization "") "Bearer ") (str/startsWith (str/slice (default @payload.authorization "") 7 (str/len (default @payload.authorization ""))) @config.keyPrefix)) (not @entity.keysEnabled)))
         (emit BEARER_REFUSED { requestId: (default @payload.requestId 0), reason: "keys-disabled" })
       API_KEY_VERIFIED -> idle
@@ -168,6 +169,7 @@ orbital BearerVerifyOrbital {
             (set @entity.unsigned false)
                 (set @entity.requestId (default (default (object/get (array/first @entity.queue) "requestId") 0) 0))
             (let ((hd (base64/decode (let ((x (str/replaceAll (str/replaceAll (default (array/nth (str/split @token ".") 0) "") "-" "+") "_" "/"))) (str/concat @x (str/repeat "=" (math/mod (- 4 (math/mod (str/len @x) 4)) 4))))))) (if (= @hd null) (emit BEARER_REFUSED { requestId: (default (default (object/get (array/first @entity.queue) "requestId") 0) 0), reason: "malformed" }) (do (set @entity.kid (object/get (default (json/parse @hd BearerHeader) { kid: "" alg: "" }) "kid" "")) (emit BV_GET { key: "jwks", method: "GET", target: @config.jwksPath, headers: [{ name: "Accept", value: "application/json" }], body: (bytes/from-string ""), stream: "none" }))))))
+        (emit BEARER_DEFERRED { requestId: (default (default (object/get (array/first @entity.queue) "requestId") 0) 0) })
         (set @entity.queue (array/slice @entity.queue 1))
       BEARER_NEXT -> idle
         (emit BEARER_PUMP {})
@@ -193,6 +195,7 @@ orbital BearerVerifyOrbital {
         (set @entity.emulator false)
       BEARER_VERIFY -> fetching when (and (and (str/startsWith (default @payload.authorization "") "Bearer ") (str/startsWith (str/slice (default @payload.authorization "") 7 (str/len (default @payload.authorization ""))) @config.keyPrefix)) @entity.keysEnabled)
         (emit VERIFY_KEY { requestId: (default @payload.requestId 0), token: (str/slice (default @payload.authorization "") 7 (str/len (default @payload.authorization ""))) })
+        (emit BEARER_DEFERRED { requestId: (default @payload.requestId 0) })
       BEARER_VERIFY -> fetching when (and (and (str/startsWith (default @payload.authorization "") "Bearer ") (str/startsWith (str/slice (default @payload.authorization "") 7 (str/len (default @payload.authorization ""))) @config.keyPrefix)) (not @entity.keysEnabled))
         (emit BEARER_REFUSED { requestId: (default @payload.requestId 0), reason: "keys-disabled" })
       API_KEY_VERIFIED -> fetching
@@ -201,6 +204,7 @@ orbital BearerVerifyOrbital {
         (emit BEARER_REFUSED { requestId: (default @payload.requestId 0), reason: (str/concat "api-key-" @payload.reason) })
       BEARER_VERIFY -> fetching when (and (not (and (str/startsWith (default @payload.authorization "") "Bearer ") (str/startsWith (str/slice (default @payload.authorization "") 7 (str/len (default @payload.authorization ""))) @config.keyPrefix))) (< (array/len @entity.queue) @config.maxQueue))
         (set @entity.queue (array/append @entity.queue { requestId: (default @payload.requestId 0), authorization: (default @payload.authorization "") }))
+        (emit BEARER_DEFERRED { requestId: (default @payload.requestId 0) })
       BEARER_VERIFY -> fetching when (and (not (and (str/startsWith (default @payload.authorization "") "Bearer ") (str/startsWith (str/slice (default @payload.authorization "") 7 (str/len (default @payload.authorization ""))) @config.keyPrefix))) (>= (array/len @entity.queue) @config.maxQueue))
         (emit BEARER_REFUSED { requestId: (default @payload.requestId 0), reason: "busy" })
       INIT -> idle
@@ -249,6 +253,7 @@ orbital BearerVerifyOrbital {
         (set @entity.emulator false)
       BEARER_VERIFY -> certifying when (and (and (str/startsWith (default @payload.authorization "") "Bearer ") (str/startsWith (str/slice (default @payload.authorization "") 7 (str/len (default @payload.authorization ""))) @config.keyPrefix)) @entity.keysEnabled)
         (emit VERIFY_KEY { requestId: (default @payload.requestId 0), token: (str/slice (default @payload.authorization "") 7 (str/len (default @payload.authorization ""))) })
+        (emit BEARER_DEFERRED { requestId: (default @payload.requestId 0) })
       BEARER_VERIFY -> certifying when (and (and (str/startsWith (default @payload.authorization "") "Bearer ") (str/startsWith (str/slice (default @payload.authorization "") 7 (str/len (default @payload.authorization ""))) @config.keyPrefix)) (not @entity.keysEnabled))
         (emit BEARER_REFUSED { requestId: (default @payload.requestId 0), reason: "keys-disabled" })
       API_KEY_VERIFIED -> certifying
@@ -257,6 +262,7 @@ orbital BearerVerifyOrbital {
         (emit BEARER_REFUSED { requestId: (default @payload.requestId 0), reason: (str/concat "api-key-" @payload.reason) })
       BEARER_VERIFY -> certifying when (and (not (and (str/startsWith (default @payload.authorization "") "Bearer ") (str/startsWith (str/slice (default @payload.authorization "") 7 (str/len (default @payload.authorization ""))) @config.keyPrefix))) (< (array/len @entity.queue) @config.maxQueue))
         (set @entity.queue (array/append @entity.queue { requestId: (default @payload.requestId 0), authorization: (default @payload.authorization "") }))
+        (emit BEARER_DEFERRED { requestId: (default @payload.requestId 0) })
       BEARER_VERIFY -> certifying when (and (not (and (str/startsWith (default @payload.authorization "") "Bearer ") (str/startsWith (str/slice (default @payload.authorization "") 7 (str/len (default @payload.authorization ""))) @config.keyPrefix))) (>= (array/len @entity.queue) @config.maxQueue))
         (emit BEARER_REFUSED { requestId: (default @payload.requestId 0), reason: "busy" })
       INIT -> idle
@@ -296,6 +302,7 @@ orbital BearerVerifyOrbital {
         (set @entity.emulator false)
       BEARER_VERIFY -> verifying when (and (and (str/startsWith (default @payload.authorization "") "Bearer ") (str/startsWith (str/slice (default @payload.authorization "") 7 (str/len (default @payload.authorization ""))) @config.keyPrefix)) @entity.keysEnabled)
         (emit VERIFY_KEY { requestId: (default @payload.requestId 0), token: (str/slice (default @payload.authorization "") 7 (str/len (default @payload.authorization ""))) })
+        (emit BEARER_DEFERRED { requestId: (default @payload.requestId 0) })
       BEARER_VERIFY -> verifying when (and (and (str/startsWith (default @payload.authorization "") "Bearer ") (str/startsWith (str/slice (default @payload.authorization "") 7 (str/len (default @payload.authorization ""))) @config.keyPrefix)) (not @entity.keysEnabled))
         (emit BEARER_REFUSED { requestId: (default @payload.requestId 0), reason: "keys-disabled" })
       API_KEY_VERIFIED -> verifying
@@ -304,6 +311,7 @@ orbital BearerVerifyOrbital {
         (emit BEARER_REFUSED { requestId: (default @payload.requestId 0), reason: (str/concat "api-key-" @payload.reason) })
       BEARER_VERIFY -> verifying when (and (not (and (str/startsWith (default @payload.authorization "") "Bearer ") (str/startsWith (str/slice (default @payload.authorization "") 7 (str/len (default @payload.authorization ""))) @config.keyPrefix))) (< (array/len @entity.queue) @config.maxQueue))
         (set @entity.queue (array/append @entity.queue { requestId: (default @payload.requestId 0), authorization: (default @payload.authorization "") }))
+        (emit BEARER_DEFERRED { requestId: (default @payload.requestId 0) })
       BEARER_VERIFY -> verifying when (and (not (and (str/startsWith (default @payload.authorization "") "Bearer ") (str/startsWith (str/slice (default @payload.authorization "") 7 (str/len (default @payload.authorization ""))) @config.keyPrefix))) (>= (array/len @entity.queue) @config.maxQueue))
         (emit BEARER_REFUSED { requestId: (default @payload.requestId 0), reason: "busy" })
       INIT -> idle
@@ -348,6 +356,12 @@ orbital BearerVerifyOrbital {
         @description "The bearer was refused: malformed, keys-unavailable, unknown-key, unconfigured, algorithm, the jws/verify kind (malformed, algorithm, key, signature, claim, expired, not-yet-valid, issuer, audience), or a policy reason (expired, not-yet-valid, issued-in-future, issuer, audience, subject, auth-time, tenant)."
         @synonyms "bearer refused, token rejected"
         @tier "primary"
+      BEARER_DEFERRED -> external {
+        requestId : number
+      }
+        @description "The bearer will be answered in a later dispatch: its key set is being fetched, it waits behind one, or its API key is being looked up. A caller that read its answer from this dispatch waits for the later one."
+        @synonyms "bearer pending, verification deferred"
+        @tier "secondary"
       BEARER_CHECK {}
         @description "Internal: the token and keys in hand are handed to jws/verify."
         @tier "internal"

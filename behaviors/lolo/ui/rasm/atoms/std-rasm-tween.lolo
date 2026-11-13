@@ -1,0 +1,128 @@
+app std-rasm-tween [
+  version: "1.0.0",
+  description: "std-rasm-tween — drives a number from one value to another over a duration with an easing, for choreography beyond springs. RASM_TWEEN_START for its id begins a run { from, to, durationMs }; a 16 ms tick advances it, and each step emits the configured step event with { id, value, t } where t is the eased progress; the last step lands exactly on the target and emits the done event with { id, value }. RASM_TWEEN_CANCEL stops a run where it is. Easings are linear, ease-in, ease-out and ease-in-out. A new start while running restarts from the new values."
+]
+
+orbital RasmTweenOrbital {
+  entity RasmTweenItem [runtime] {
+    id : string!
+    from : number = 0
+    to : number = 0
+    durationMs : number = 0
+    elapsed : number = 0
+    value : number = 0
+  }
+
+  trait RasmTween -> RasmTweenItem [client] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      RASM_TWEEN_START -> running when (and (= ?id @config.id) (> ?durationMs 0))
+        (set @entity.from ?from)
+        (set @entity.to ?to)
+        (set @entity.durationMs ?durationMs)
+        (set @entity.elapsed 0)
+        (set @entity.value ?from)
+        (emit @config.step { id: @config.id, value: ?from, t: 0 })
+      RASM_TWEEN_START -> idle when (and (= ?id @config.id) (<= ?durationMs 0))
+        (set @entity.from ?from)
+        (set @entity.to ?to)
+        (set @entity.value ?to)
+        (emit @config.step { id: @config.id, value: ?to, t: 1 })
+        (emit @config.done { id: @config.id, value: ?to })
+    }
+
+    state running {
+      INIT -> idle
+      RASM_TWEEN_START -> running when (and (= ?id @config.id) (> ?durationMs 0))
+        (set @entity.from ?from)
+        (set @entity.to ?to)
+        (set @entity.durationMs ?durationMs)
+        (set @entity.elapsed 0)
+        (set @entity.value ?from)
+        (emit @config.step { id: @config.id, value: ?from, t: 0 })
+      RASM_TWEEN_START -> idle when (and (= ?id @config.id) (<= ?durationMs 0))
+        (set @entity.from ?from)
+        (set @entity.to ?to)
+        (set @entity.value ?to)
+        (emit @config.step { id: @config.id, value: ?to, t: 1 })
+        (emit @config.done { id: @config.id, value: ?to })
+      RASM_TWEEN_CANCEL -> idle when (= ?id @config.id)
+      RASM_TWEEN_FRAME -> running when (< (+ @entity.elapsed ?dtMs) @entity.durationMs)
+        (set @entity.elapsed (+ @entity.elapsed ?dtMs))
+        (let (
+            (p (/ @entity.elapsed @entity.durationMs))
+            (e (default (if (= @config.easing "ease-in") (* @p @p)
+                 (if (= @config.easing "ease-out") (- 1 (* (- 1 @p) (- 1 @p)))
+                   (if (= @config.easing "ease-in-out")
+                     (if (< @p 0.5) (* 2 (* @p @p)) (- 1 (/ (* (+ (* -2 @p) 2) (+ (* -2 @p) 2)) 2)))
+                     @p))) 0))
+            (v (+ @entity.from (* (- @entity.to @entity.from) @e)))
+          )
+          (do
+            (set @entity.value @v)
+            (emit @config.step { id: @config.id, value: @v, t: @e })))
+      RASM_TWEEN_FRAME -> idle when (>= (+ @entity.elapsed ?dtMs) @entity.durationMs)
+        (set @entity.elapsed @entity.durationMs)
+        (set @entity.value @entity.to)
+        (emit @config.step { id: @config.id, value: @entity.to, t: 1 })
+        (emit @config.done { id: @config.id, value: @entity.to })
+    }
+
+    ticks {
+      tweenTick every 16ms in running
+        (emit RASM_TWEEN_FRAME { dtMs: 16 })
+    }
+
+    listens {
+      RASM_TWEEN_START { id : string!  from : number!  to : number!  durationMs : number! }
+        @description "Begin a run for the tween with this id."
+      RASM_TWEEN_CANCEL { id : string! }
+        @description "Stop the run where it is; no done event follows."
+      RASM_TWEEN_FRAME { dtMs : number! }
+        @description "One animation frame of the run; the tick sends it, and a program may drive it itself."
+    }
+
+    emits {
+      RASM_TWEEN_FRAME -> internal {
+        dtMs : number!
+      }
+        @tier "internal"
+      @config.step -> external {
+        id : string!
+        value : number!
+        t : number!
+      }
+        @description "One step of a run: the current value and the eased progress."
+        @tier "domain"
+      @config.done -> external {
+        id : string!
+        value : number!
+      }
+        @description "The run reached its target."
+        @tier "domain"
+    }
+
+    config {
+      id : string = ""
+        @label "Id"
+        @description "The tween's id; start and cancel events name it."
+        @tier "domain"
+      easing : string = "linear"
+        @label "Easing"
+        @description "linear, ease-in, ease-out or ease-in-out."
+        @tier "presentation"
+      step : event = RASM_TWEEN_STEP
+        @label "Step"
+        @description "The event emitted with each step."
+        @tier "domain"
+      done : event = RASM_TWEEN_DONE
+        @label "Done"
+        @description "The event emitted when the run lands on its target."
+        @tier "domain"
+    }
+  }
+
+  page boot as RasmTweenStart -> RasmTween
+}

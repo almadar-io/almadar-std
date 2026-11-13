@@ -199,7 +199,7 @@ orbital BehaviorPlayground {
       GUEST_MOVED -> idle when (and (!= @entity.machineGuest "") (= ?guest @entity.machineGuest))
         (set @entity.lastStep (array/reverse (array/filter ?moves (fn m @m.fired))))
         (set @entity.dispatched (array/concat @entity.lastStep @entity.dispatched))
-        (emit GUEST_MOVES { moves: ?moves })
+        (emit GUEST_MOVES { moves: ?moves, follow: (default ?input true) })
         (emit PILLS_SHOWN {})
       GUEST_MOVED -> idle when (not (and (!= @entity.machineGuest "") (= ?guest @entity.machineGuest)))
       GUEST_PAINTS -> idle when (not (and (!= @entity.machineBehavior "") (or (!= ?guest @entity.machineGuest) (!= (str/join ?page " ") @entity.machinePage))))
@@ -213,6 +213,7 @@ orbital BehaviorPlayground {
         @description "The guest session whose whole running page the dock draws, read again when the guest shows another page."
       GUEST_MOVES -> external {
         moves : [PlaygroundMove]!
+        follow : boolean!
       }
         @description "The transitions of the guest the dock draws; a closed or replaced guest's moves never reach it."
       FOCUS_MOVE -> external {
@@ -246,6 +247,7 @@ orbital BehaviorPlayground {
       GUEST_MOVED {
         guest : string!
         moves : [PlaygroundMove]!
+        input : boolean
       }
         @description "The transitions a guest took; only the drawn guest's reach the dock."
       PILL_PICKED {

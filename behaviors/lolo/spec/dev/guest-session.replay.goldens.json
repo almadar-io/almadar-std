@@ -13558,6 +13558,12 @@
                 "type": "set"
               },
               {
+                "type": "set"
+              },
+              {
+                "type": "set"
+              },
+              {
                 "type": "let"
               }
             ],
@@ -13713,7 +13719,8 @@
                 "to": "ready",
                 "fired": true
               }
-            ]
+            ],
+            "input": false
           },
           "entity": {
             "id": "s",
@@ -13744,7 +13751,8 @@
           "event": "GUEST_VIEW_MOVED",
           "payload": {
             "guest": "guest-9",
-            "moves": []
+            "moves": [],
+            "input": false
           },
           "entity": {
             "id": "s",
@@ -13806,7 +13814,8 @@
             "program": {
               "name": "B",
               "orbitals": []
-            }
+            },
+            "signedIn": false
           },
           "entity": {
             "id": "s",
@@ -13987,6 +13996,281 @@
             "neverEmits": [
               "GUEST_CLIENT"
             ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "stage-a-split-view-asking-for-sign-in-shows-the-sign-in-and-keeps-its-page",
+      "steps": [
+        {
+          "trait": "GuestStage",
+          "event": "GUEST_VIEW_SIGN_IN",
+          "payload": {
+            "guest": "guest-1",
+            "returnTo": "/home"
+          },
+          "entity": {
+            "id": "s",
+            "guestHandle": "guest-1",
+            "guestRoute": "/",
+            "guestSignInAsked": false
+          },
+          "from": "idle",
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "entity": {
+              "guestSignInAsked": true,
+              "guestRoute": "/home"
+            }
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "control-stage-another-guests-sign-in-ask-is-dropped",
+      "steps": [
+        {
+          "trait": "GuestStage",
+          "event": "GUEST_VIEW_SIGN_IN",
+          "payload": {
+            "guest": "guest-9",
+            "returnTo": "/home"
+          },
+          "entity": {
+            "id": "s",
+            "guestHandle": "guest-1",
+            "guestRoute": "/",
+            "guestSignInAsked": false
+          },
+          "from": "idle",
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "entity": {
+              "guestSignInAsked": false,
+              "guestRoute": "/"
+            }
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "split-a-credential-is-presented-for-the-viewer-session-through-the-guests-binding",
+      "config": {
+        "split": true
+      },
+      "steps": [
+        {
+          "trait": "GuestSession",
+          "event": "GUEST_CREDENTIAL",
+          "payload": {
+            "guest": "guest-1",
+            "token": "t"
+          },
+          "entity": {
+            "id": "g",
+            "guestHandle": "guest-1",
+            "guestPaints": [],
+            "guestError": "",
+            "guestViewer": "tab-1",
+            "guestViewerOrbital": "KFlow"
+          },
+          "from": "live",
+          "expect": {
+            "fired": true,
+            "state": "live",
+            "effects": [
+              {
+                "type": "set"
+              },
+              {
+                "type": "program/dispatch",
+                "arg0": "BEARER_PRESENT"
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "split-a-live-guests-first-leg-records-its-viewer-so-a-credential-reaches-it",
+      "config": {
+        "split": true
+      },
+      "steps": [
+        {
+          "trait": "GuestSession",
+          "event": "GUEST_LEG",
+          "payload": {
+            "guest": "guest-1",
+            "leg": "guest-1:0:1",
+            "orbital": "KFlow",
+            "body": "{\"event\": \"INIT\", \"clientId\": \"tab-7\", \"route\": \"/\", \"mount\": []}"
+          },
+          "entity": {
+            "id": "g",
+            "guestHandle": "guest-1",
+            "guestPaints": [],
+            "guestError": "",
+            "guestPersona": "",
+            "guestViewer": ""
+          },
+          "from": "live",
+          "expect": {
+            "fired": true,
+            "state": "live",
+            "entity": {
+              "guestViewer": "tab-7",
+              "guestViewerOrbital": "KFlow"
+            },
+            "neverEmits": [
+              "GUEST_LEG_AGAIN"
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "split-a-bound-viewer-signs-the-view-in-and-reopens-it",
+      "config": {
+        "split": true
+      },
+      "steps": [
+        {
+          "trait": "GuestSession",
+          "event": "GUEST_VIEWER_SETTLE",
+          "payload": {
+            "emitted": [
+              {
+                "event": "IDENTITY_BOUND",
+                "payload": {}
+              }
+            ]
+          },
+          "entity": {
+            "id": "g",
+            "guestHandle": "guest-1",
+            "guestPaints": [],
+            "guestError": "",
+            "guestSigningIn": true
+          },
+          "from": "live",
+          "expect": {
+            "fired": true,
+            "state": "live",
+            "emits": [
+              {
+                "event": "GUEST_VIEWER",
+                "payload": {
+                  "guest": "guest-1",
+                  "signedIn": true
+                }
+              },
+              {
+                "event": "GUEST_VIEW_RESET",
+                "payload": {
+                  "guest": "guest-1"
+                }
+              }
+            ],
+            "entity": {
+              "guestSigningIn": false
+            }
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "split-a-refused-viewer-credential-names-its-reason",
+      "config": {
+        "split": true
+      },
+      "steps": [
+        {
+          "trait": "GuestSession",
+          "event": "GUEST_VIEWER_SETTLE",
+          "payload": {
+            "emitted": [
+              {
+                "event": "IDENTITY_REFUSED",
+                "payload": {
+                  "reason": "identity-no-identity"
+                }
+              }
+            ]
+          },
+          "entity": {
+            "id": "g",
+            "guestHandle": "guest-1",
+            "guestPaints": [],
+            "guestError": "",
+            "guestSigningIn": true
+          },
+          "from": "live",
+          "expect": {
+            "fired": true,
+            "state": "live",
+            "emits": [
+              {
+                "event": "GUEST_NOTICE"
+              }
+            ],
+            "neverEmits": [
+              "GUEST_VIEWER",
+              "GUEST_VIEW_RESET"
+            ],
+            "entity": {
+              "guestSigningIn": false
+            }
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "control-split-a-step-without-an-outcome-keeps-waiting",
+      "config": {
+        "split": true
+      },
+      "steps": [
+        {
+          "trait": "GuestSession",
+          "event": "GUEST_VIEWER_SETTLE",
+          "payload": {
+            "emitted": [
+              {
+                "event": "CREDENTIAL_DEFERRED",
+                "payload": {}
+              }
+            ]
+          },
+          "entity": {
+            "id": "g",
+            "guestHandle": "guest-1",
+            "guestPaints": [],
+            "guestError": "",
+            "guestSigningIn": true
+          },
+          "from": "live",
+          "expect": {
+            "fired": true,
+            "state": "live",
+            "neverEmits": [
+              "GUEST_VIEWER",
+              "GUEST_VIEW_RESET",
+              "GUEST_NOTICE"
+            ],
+            "entity": {
+              "guestSigningIn": true
+            }
           }
         }
       ],

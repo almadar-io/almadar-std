@@ -1,0 +1,183 @@
+app std-rasm-gesture [
+  version: "1.0.0",
+  description: "std-rasm-gesture — recognizes swipe, fling and pinch over one placed rect of the Rasm surface. It paints one hit region with its id; a press on it starts tracking, the release decides. A travel of at least swipeMinPx along the dominant axis emits the swipe event { id, direction, dx, dy }; when the release speed (px per ms, from a 16 ms frame count) also reaches flingMinSpeed it emits the fling event { id, direction, dx, dy, vx, vy } as well. A shorter travel emits nothing, so a tap stays the pressable's. Pinch is recognized from RASM_TOUCHES (two touches) and emits the pinch event { id, phase, scale, centerX, centerY } on start, each move and end; the floor does not deliver RASM_TOUCHES yet."
+]
+
+type RasmRect = { x : number!, y : number!, w : number!, h : number! }
+type RasmPlaced = { id : string!, rect : RasmRect! }
+type RasmTouch = { pointerId : string!, x : number!, y : number! }
+
+orbital RasmGestureOrbital {
+  entity RasmGestureItem [runtime] {
+    id : string!
+    rect : RasmRect = { x: 0, y: 0, w: 0, h: 0 }
+    startX : number = 0
+    startY : number = 0
+    lastX : number = 0
+    lastY : number = 0
+    elapsed : number = 0
+    pinchStart : number = 1
+    scale : number = 1
+    centerX : number = 0
+    centerY : number = 0
+  }
+
+  trait RasmGesture -> RasmGestureItem [client] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      RASM_BOOT -> idle
+      RASM_PLACE -> idle when (array/some ?placed (fn p (= @p.id @config.id)))
+        (set @entity.rect (let ((mine (default (array/find ?placed (fn p (= @p.id @config.id))) { id: "", rect: { x: 0, y: 0, w: 0, h: 0 } }))) @mine.rect))
+        (emit RASM_PAINT { id: @config.id, z: @config.z, nodes: [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @entity.rect.x, y: @entity.rect.y, z: @config.z }, width: @entity.rect.w, height: @entity.rect.h, hit: true }] })
+
+      RASM_POINTER -> tracking when (and (= ?id @config.id) (= ?kind "down"))
+        (set @entity.startX ?x)
+        (set @entity.startY ?y)
+        (set @entity.lastX ?x)
+        (set @entity.lastY ?y)
+        (set @entity.elapsed 0)
+      RASM_TOUCHES -> pinching when (and (and (= ?id @config.id) (= ?kind "start")) (>= (array/len ?touches) 2))
+        (set @entity.pinchStart (let ((a (array/nth ?touches 0)) (b (array/nth ?touches 1))) (math/sqrt (+ (* (- @b.x @a.x) (- @b.x @a.x)) (* (- @b.y @a.y) (- @b.y @a.y))))))
+        (set @entity.scale 1)
+        (set @entity.centerX (let ((a (array/nth ?touches 0)) (b (array/nth ?touches 1))) (/ (+ @a.x @b.x) 2)))
+        (set @entity.centerY (let ((a (array/nth ?touches 0)) (b (array/nth ?touches 1))) (/ (+ @a.y @b.y) 2)))
+        (emit @config.pinch { id: @config.id, phase: "start", scale: 1, centerX: @entity.centerX, centerY: @entity.centerY })
+    }
+
+    state tracking {
+      INIT -> idle
+      RASM_BOOT -> idle
+      RASM_PLACE -> tracking when (array/some ?placed (fn p (= @p.id @config.id)))
+        (set @entity.rect (let ((mine (default (array/find ?placed (fn p (= @p.id @config.id))) { id: "", rect: { x: 0, y: 0, w: 0, h: 0 } }))) @mine.rect))
+        (emit RASM_PAINT { id: @config.id, z: @config.z, nodes: [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @entity.rect.x, y: @entity.rect.y, z: @config.z }, width: @entity.rect.w, height: @entity.rect.h, hit: true }] })
+
+      RASM_GESTURE_FRAME -> tracking
+        (set @entity.elapsed (+ @entity.elapsed ?dtMs))
+      RASM_POINTER -> tracking when (and (= ?id @config.id) (= ?kind "move"))
+        (set @entity.lastX ?x)
+        (set @entity.lastY ?y)
+      RASM_POINTER -> idle when (and (and (and (= ?id @config.id) (= ?kind "up")) (>= (math/max (math/abs (- ?x @entity.startX)) (math/abs (- ?y @entity.startY))) @config.swipeMinPx)) (>= (/ (math/max (math/abs (- ?x @entity.startX)) (math/abs (- ?y @entity.startY))) (math/max 1 @entity.elapsed)) @config.flingMinSpeed))
+        (emit @config.swipe { id: @config.id, direction: (if (>= (math/abs (- ?x @entity.startX)) (math/abs (- ?y @entity.startY))) (if (> (- ?x @entity.startX) 0) "right" "left") (if (> (- ?y @entity.startY) 0) "down" "up")), dx: (- ?x @entity.startX), dy: (- ?y @entity.startY) })
+        (emit @config.fling { id: @config.id, direction: (if (>= (math/abs (- ?x @entity.startX)) (math/abs (- ?y @entity.startY))) (if (> (- ?x @entity.startX) 0) "right" "left") (if (> (- ?y @entity.startY) 0) "down" "up")), dx: (- ?x @entity.startX), dy: (- ?y @entity.startY), vx: (/ (- ?x @entity.startX) (math/max 1 @entity.elapsed)), vy: (/ (- ?y @entity.startY) (math/max 1 @entity.elapsed)) })
+      RASM_POINTER -> idle when (and (and (and (= ?id @config.id) (= ?kind "up")) (>= (math/max (math/abs (- ?x @entity.startX)) (math/abs (- ?y @entity.startY))) @config.swipeMinPx)) (< (/ (math/max (math/abs (- ?x @entity.startX)) (math/abs (- ?y @entity.startY))) (math/max 1 @entity.elapsed)) @config.flingMinSpeed))
+        (emit @config.swipe { id: @config.id, direction: (if (>= (math/abs (- ?x @entity.startX)) (math/abs (- ?y @entity.startY))) (if (> (- ?x @entity.startX) 0) "right" "left") (if (> (- ?y @entity.startY) 0) "down" "up")), dx: (- ?x @entity.startX), dy: (- ?y @entity.startY) })
+      RASM_POINTER -> idle when (and (and (= ?id @config.id) (= ?kind "up")) (< (math/max (math/abs (- ?x @entity.startX)) (math/abs (- ?y @entity.startY))) @config.swipeMinPx))
+      RASM_TOUCHES -> pinching when (and (and (= ?id @config.id) (= ?kind "start")) (>= (array/len ?touches) 2))
+        (set @entity.pinchStart (let ((a (array/nth ?touches 0)) (b (array/nth ?touches 1))) (math/sqrt (+ (* (- @b.x @a.x) (- @b.x @a.x)) (* (- @b.y @a.y) (- @b.y @a.y))))))
+        (set @entity.scale 1)
+        (set @entity.centerX (let ((a (array/nth ?touches 0)) (b (array/nth ?touches 1))) (/ (+ @a.x @b.x) 2)))
+        (set @entity.centerY (let ((a (array/nth ?touches 0)) (b (array/nth ?touches 1))) (/ (+ @a.y @b.y) 2)))
+        (emit @config.pinch { id: @config.id, phase: "start", scale: 1, centerX: @entity.centerX, centerY: @entity.centerY })
+    }
+
+    state pinching {
+      INIT -> idle
+      RASM_BOOT -> idle
+      RASM_PLACE -> pinching when (array/some ?placed (fn p (= @p.id @config.id)))
+        (set @entity.rect (let ((mine (default (array/find ?placed (fn p (= @p.id @config.id))) { id: "", rect: { x: 0, y: 0, w: 0, h: 0 } }))) @mine.rect))
+        (emit RASM_PAINT { id: @config.id, z: @config.z, nodes: [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @entity.rect.x, y: @entity.rect.y, z: @config.z }, width: @entity.rect.w, height: @entity.rect.h, hit: true }] })
+
+      RASM_TOUCHES -> pinching when (and (and (= ?id @config.id) (= ?kind "move")) (>= (array/len ?touches) 2))
+        (set @entity.scale (let ((a (array/nth ?touches 0)) (b (array/nth ?touches 1))) (/ (math/sqrt (+ (* (- @b.x @a.x) (- @b.x @a.x)) (* (- @b.y @a.y) (- @b.y @a.y)))) (math/max 1 @entity.pinchStart))))
+        (set @entity.centerX (let ((a (array/nth ?touches 0)) (b (array/nth ?touches 1))) (/ (+ @a.x @b.x) 2)))
+        (set @entity.centerY (let ((a (array/nth ?touches 0)) (b (array/nth ?touches 1))) (/ (+ @a.y @b.y) 2)))
+        (emit @config.pinch { id: @config.id, phase: "move", scale: @entity.scale, centerX: @entity.centerX, centerY: @entity.centerY })
+      RASM_TOUCHES -> idle when (and (= ?id @config.id) (= ?kind "end"))
+        (emit @config.pinch { id: @config.id, phase: "end", scale: @entity.scale, centerX: @entity.centerX, centerY: @entity.centerY })
+    }
+
+    ticks {
+      gestureTick every 16ms in tracking
+        (emit RASM_GESTURE_FRAME { dtMs: 16 })
+    }
+
+    listens {
+      RASM_BOOT { }
+        @description "The surface mounted: take the starting state."
+      RASM_PLACE { placed : [RasmPlaced]! }
+        @description "Placed rects; the recognizer takes the entry whose id is its own and paints its hit region."
+      RASM_POINTER { kind : "down" | "up" | "enter" | "leave" | "move"!  id : string!  x : number!  y : number! }
+        @description "A pointer event from the surface; the recognizer acts on its own id."
+      RASM_TOUCHES { kind : "start" | "move" | "end"!  id : string!  touches : [RasmTouch]! }
+        @description "The touch points held on the region, for pinch. Pending a floor field: the canvas delivers one pointer only."
+      RASM_GESTURE_FRAME { dtMs : number! }
+        @description "One frame of a press; the tick sends it and the release speed is the travel over the frames counted."
+    }
+
+    emits {
+      RASM_PAINT -> external {
+        id : string!
+        z : number!
+        nodes : [node]!
+      }
+        @description "The recognizer's hit region, for the surface to collect."
+        @tier "domain"
+      RASM_GESTURE_FRAME -> internal {
+        dtMs : number!
+      }
+        @tier "internal"
+      @config.swipe -> external {
+        id : string!
+        direction : "left" | "right" | "up" | "down"!
+        dx : number!
+        dy : number!
+      }
+        @description "A press travelled at least swipeMinPx; direction is the dominant axis."
+        @tier "domain"
+      @config.fling -> external {
+        id : string!
+        direction : "left" | "right" | "up" | "down"!
+        dx : number!
+        dy : number!
+        vx : number!
+        vy : number!
+      }
+        @description "A swipe whose release speed reached flingMinSpeed; vx and vy are px per ms."
+        @tier "domain"
+      @config.pinch -> external {
+        id : string!
+        phase : "start" | "move" | "end"!
+        scale : number!
+        centerX : number!
+        centerY : number!
+      }
+        @description "Two touches changed their distance; scale is the distance over the start distance."
+        @tier "domain"
+    }
+
+    config {
+      id : string = ""
+        @label "Id"
+        @description "The region id the recognizer paints and listens on."
+        @tier "domain"
+      swipeMinPx : number = 40
+        @label "Swipe distance"
+        @description "The least travel along the dominant axis, in px, that counts as a swipe."
+        @tier "policy"
+      flingMinSpeed : number = 0.6
+        @label "Fling speed"
+        @description "The least release speed, in px per ms, that also counts as a fling."
+        @tier "policy"
+      swipe : event = RASM_SWIPE
+        @label "Swipe"
+        @description "The event emitted for a swipe."
+        @tier "domain"
+      fling : event = RASM_FLING
+        @label "Fling"
+        @description "The event emitted for a fling."
+        @tier "domain"
+      pinch : event = RASM_PINCH
+        @label "Pinch"
+        @description "The event emitted for a pinch."
+        @tier "domain"
+      z : number = 0
+        @label "Z"
+        @description "Paint order of the hit region."
+        @tier "presentation"
+    }
+  }
+
+  page boot as RasmGestureStart -> RasmGesture
+}

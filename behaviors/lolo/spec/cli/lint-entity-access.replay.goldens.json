@@ -5819,6 +5819,263 @@
      "trait": "OrbLintEntityAccess"
     }
    ]
+  },
+  {
+   "id": "a-server-create-rule-declares-create-and-still-owes-update-and-delete",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "fixture",
+       "orbitals": [
+        {
+         "name": "PersonOrbital",
+         "entity": {
+          "name": "Person",
+          "persistence": "persistent",
+          "collection": "people",
+          "identity": true,
+          "read_policy": [
+           "!=",
+           "@user.role",
+           "anonymous"
+          ],
+          "create_policy": [
+           "!=",
+           "@user.role",
+           "anonymous"
+          ],
+          "update_policy": [
+           "!=",
+           "@user.role",
+           "anonymous"
+          ],
+          "delete_policy": [
+           "!=",
+           "@user.role",
+           "anonymous"
+          ],
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           },
+           {
+            "name": "role",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": []
+        },
+        {
+         "name": "NoteOrbital",
+         "entity": {
+          "name": "Note",
+          "persistence": "persistent",
+          "collection": "notes",
+          "read_policy": [
+           "!=",
+           "@user.role",
+           "anonymous"
+          ],
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           },
+           {
+            "name": "text",
+            "type": "string"
+           }
+          ],
+          "access_waivers": {
+           "create_server": "created by the invite flow after the server checks it"
+          }
+         },
+         "traits": []
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     },
+     "trait": "OrbLintEntityAccess"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "entity-access",
+         "findings": [
+          {
+           "code": "ORB_ENTITY_WRITE_UNDECLARED",
+           "path": "Note.@update",
+           "message": "persistent entity `Note` declares @create but no @update — an undeclared policy is ALLOW-ALL, so every visitor may update every row, and nothing in the program says so",
+           "suggestion": "declare who may update Note: `@update <predicate>` (for example the predicate its other write directives use)",
+           "severity": "error",
+           "entity": "Note"
+          },
+          {
+           "code": "ORB_ENTITY_WRITE_UNDECLARED",
+           "path": "Note.@delete",
+           "message": "persistent entity `Note` declares @create but no @delete — an undeclared policy is ALLOW-ALL, so every visitor may delete every row, and nothing in the program says so",
+           "suggestion": "declare who may delete Note: `@delete <predicate>` (for example the predicate its other write directives use)",
+           "severity": "error",
+           "entity": "Note"
+          }
+         ],
+         "scope": ""
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintEntityAccess"
+    }
+   ]
+  },
+  {
+   "id": "control-a-server-create-rule-beside-update-and-delete-is-clean",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "fixture",
+       "orbitals": [
+        {
+         "name": "PersonOrbital",
+         "entity": {
+          "name": "Person",
+          "persistence": "persistent",
+          "collection": "people",
+          "identity": true,
+          "read_policy": [
+           "!=",
+           "@user.role",
+           "anonymous"
+          ],
+          "create_policy": [
+           "!=",
+           "@user.role",
+           "anonymous"
+          ],
+          "update_policy": [
+           "!=",
+           "@user.role",
+           "anonymous"
+          ],
+          "delete_policy": [
+           "!=",
+           "@user.role",
+           "anonymous"
+          ],
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           },
+           {
+            "name": "role",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": []
+        },
+        {
+         "name": "NoteOrbital",
+         "entity": {
+          "name": "Note",
+          "persistence": "persistent",
+          "collection": "notes",
+          "read_policy": [
+           "!=",
+           "@user.role",
+           "anonymous"
+          ],
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           },
+           {
+            "name": "text",
+            "type": "string"
+           }
+          ],
+          "access_waivers": {
+           "create_server": "created by the invite flow after the server checks it"
+          },
+          "update_policy": [
+           "=",
+           "@user.role",
+           "owner"
+          ],
+          "delete_policy": [
+           "=",
+           "@user.role",
+           "owner"
+          ]
+         },
+         "traits": []
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     },
+     "trait": "OrbLintEntityAccess"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "entity-access",
+         "findings": [],
+         "scope": ""
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintEntityAccess"
+    }
+   ]
   }
  ]
 }

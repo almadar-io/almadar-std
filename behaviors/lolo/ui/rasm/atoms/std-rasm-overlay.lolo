@@ -1,0 +1,273 @@
+app std-rasm-overlay [
+  version: "0.1.0",
+  description: "std-rasm-overlay — a Rasm layer above the surface for dialogs, sheets and popovers. Closed it paints nothing; RASM_OVERLAY_OPEN for its id (or `open` in config) opens it: a scrim over the whole surface, and a panel placed by the declared placement (center, top, bottom, start, end or anchor, where an anchor id sends the panel through RASM_ANCHOR) with its content rect inset by the padding. A press released on the scrim, or Escape, dismisses it when configured and emits RASM_OVERLAY_DISMISSED; RASM_OVERLAY_CLOSE closes it. It announces which content ids are shown or hidden with RASM_VISIBLE. Looks are overlay/scrim/idle and overlay/<intent>/idle."
+]
+
+type RasmRect = { x : number!, y : number!, w : number!, h : number! }
+type RasmPlaced = { id : string!, rect : RasmRect! }
+type RasmMaterial = { wgsl : string!, params : [number]!, live : boolean! }
+type RasmCorners = { radius : [number]!, kind : "round" | "bevel" | "notch" | "scoop" }
+type RasmSpring = { stiffness : number!, damping : number! }
+type RasmShadow = { color : string!, blur : number! }
+type RasmLook = { fill : string, stroke : string, strokeWidth : number, corners : RasmCorners, shadow : RasmShadow, material : RasmMaterial, textColor : string, font : string, spring : RasmSpring, decor : string }
+
+orbital RasmOverlayOrbital {
+  entity RasmOverlayRun [runtime] {
+    id : string!
+    looks : Map string RasmLook @description "The announced look table." = {}
+    hasLooks : boolean = false
+    viewW : number @description "The surface width the scrim and the placement use." = 720
+    viewH : number @description "The surface height the scrim and the placement use." = 520
+    panel : RasmRect @description "The panel's rect once placed." = { x: 0, y: 0, w: 0, h: 0 }
+    hasPanel : boolean = false
+    fresh : boolean @description "True from opening until the first paint, which plays the fade in." = false
+    layouts : number @description "Counts layouts, so each layout in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
+    paints : number @description "Counts paints, so each paint in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
+  }
+
+  trait RasmOverlay -> RasmOverlayRun [client] {
+    initial: closed
+
+    state closed {
+      INIT -> open when @config.open
+        (set @entity.viewW @config.surfaceWidth)
+        (set @entity.viewH @config.surfaceHeight)
+        (set @entity.fresh true)
+        (set @entity.layouts (+ @entity.layouts 1))
+        (emit OVERLAY_LAYOUT { n: @entity.layouts })
+        (emit RASM_VISIBLE { owner: @config.id, shown: @config.contents, hidden: [] })
+      INIT -> closed when (not @config.open)
+        (set @entity.viewW @config.surfaceWidth)
+        (set @entity.viewH @config.surfaceHeight)
+        (emit RASM_VISIBLE { owner: @config.id, shown: [], hidden: @config.contents })
+      RASM_THEME -> closed
+        (set @entity.looks ?looks)
+        (set @entity.hasLooks true)
+      RASM_RESIZE -> closed
+        (set @entity.viewW ?width)
+        (set @entity.viewH ?height)
+      RASM_OVERLAY_OPEN -> open when (= ?id @config.id)
+        (set @entity.fresh true)
+        (set @entity.layouts (+ @entity.layouts 1))
+        (emit OVERLAY_LAYOUT { n: @entity.layouts })
+        (emit RASM_VISIBLE { owner: @config.id, shown: @config.contents, hidden: [] })
+    }
+
+    state open {
+      INIT -> open when @config.open
+        (set @entity.viewW @config.surfaceWidth)
+        (set @entity.viewH @config.surfaceHeight)
+        (set @entity.fresh true)
+        (set @entity.layouts (+ @entity.layouts 1))
+        (emit OVERLAY_LAYOUT { n: @entity.layouts })
+        (emit RASM_VISIBLE { owner: @config.id, shown: @config.contents, hidden: [] })
+      INIT -> closed when (not @config.open)
+        (set @entity.viewW @config.surfaceWidth)
+        (set @entity.viewH @config.surfaceHeight)
+        (emit RASM_PAINT { id: @config.id, z: @config.z, nodes: [] })
+        (emit RASM_VISIBLE { owner: @config.id, shown: [], hidden: @config.contents })
+        (set @entity.hasPanel false)
+      RASM_THEME -> open
+        (set @entity.looks ?looks)
+        (set @entity.hasLooks true)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit OVERLAY_PAINT { n: @entity.paints })
+      RASM_RESIZE -> open
+        (set @entity.viewW ?width)
+        (set @entity.viewH ?height)
+        (set @entity.layouts (+ @entity.layouts 1))
+        (emit OVERLAY_LAYOUT { n: @entity.layouts })
+      RASM_OVERLAY_CLOSE -> closed when (= ?id @config.id)
+        (emit RASM_PAINT { id: @config.id, z: @config.z, nodes: [] })
+        (emit RASM_VISIBLE { owner: @config.id, shown: [], hidden: @config.contents })
+        (set @entity.hasPanel false)
+      RASM_OVERLAY_CLOSE -> open when (!= ?id @config.id)
+      RASM_POINTER -> closed when (and (and (= ?id (str/concat @config.id ":scrim")) (= ?kind "up")) @config.dismissOnScrim)
+        (emit RASM_PAINT { id: @config.id, z: @config.z, nodes: [] })
+        (emit RASM_VISIBLE { owner: @config.id, shown: [], hidden: @config.contents })
+        (set @entity.hasPanel false)
+        (emit RASM_OVERLAY_DISMISSED { id: @config.id, reason: "scrim" })
+      RASM_KEYPRESS -> closed when (and (= ?key "Escape") @config.dismissOnEscape)
+        (emit RASM_PAINT { id: @config.id, z: @config.z, nodes: [] })
+        (emit RASM_VISIBLE { owner: @config.id, shown: [], hidden: @config.contents })
+        (set @entity.hasPanel false)
+        (emit RASM_OVERLAY_DISMISSED { id: @config.id, reason: "escape" })
+      RASM_PLACE -> open when (array/some ?placed (fn p (= @p.id (str/concat @config.id ":panel"))))
+        (set @entity.panel (let ((mine (default (array/find ?placed (fn p (= @p.id (str/concat @config.id ":panel")))) { id: "", rect: { x: 0, y: 0, w: 0, h: 0 } }))) @mine.rect))
+        (set @entity.hasPanel true)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit OVERLAY_PLACED { n: @entity.paints })
+      OVERLAY_LAYOUT -> open when (!= @config.placement "anchor")
+        (set @entity.panel (let ((vw @entity.viewW) (vh @entity.viewH) (m @config.margin) (pl @config.placement) (rtl (= @config.direction "rtl"))) (let ((sheetV (or (= @pl "top") (= @pl "bottom"))) (sheetH (or (= @pl "start") (= @pl "end")))) (let ((pw (if @sheetV @vw (if @sheetH (math/min @config.width @vw) (math/min @config.width (math/max 0 (- @vw (* 2 @m))))))) (ph (if @sheetH @vh (if @sheetV (math/min @config.height @vh) (math/min @config.height (math/max 0 (- @vh (* 2 @m))))))) (left (if (= @pl "start") (not @rtl) @rtl))) { x: (if @sheetH (if @left 0 (- @vw @pw)) (/ (- @vw @pw) 2)), y: (if @sheetV (if (= @pl "top") 0 (- @vh @ph)) (/ (- @vh @ph) 2)), w: @pw, h: @ph }))))
+        (set @entity.hasPanel true)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit OVERLAY_PLACED { n: @entity.paints })
+      OVERLAY_LAYOUT -> open when (= @config.placement "anchor")
+        (emit RASM_ANCHOR { id: (str/concat @config.id ":panel"), anchor: @config.anchor, side: (if (= @config.direction "rtl") (if (= @config.side "start") "end" (if (= @config.side "end") "start" @config.side)) @config.side), width: (math/min @config.width @entity.viewW), height: (math/min @config.height @entity.viewH) })
+      OVERLAY_PLACED -> open when @entity.hasPanel
+        (emit RASM_PLACE { placed: [{ id: @config.content, rect: (let ((r @entity.panel) (pad @config.padding)) { x: (+ @r.x @pad), y: (+ @r.y @pad), w: (math/max 0 (- @r.w (* 2 @pad))), h: (math/max 0 (- @r.h (* 2 @pad))) }) }] })
+        (emit OVERLAY_PAINT { n: @entity.paints })
+      OVERLAY_PAINT -> open when (and @entity.hasPanel @entity.hasLooks)
+        (let ((sl (default (object/get @entity.looks "overlay/scrim/idle" null) {})) (pn (default (object/get @entity.looks (str/concat "overlay/" @config.intent "/idle") null) {})) (r @entity.panel)) (let ((fade (if @entity.fresh { durationMs: @config.durationMs, loop: false, keyframes: [{ at: 0, opacity: 0 }, { at: 1, opacity: 1 }] } null)) (framed (= @pn.decor "naqsh-stars"))) (do (emit RASM_PAINT { id: @config.id, z: @config.z, nodes: (array/concat (array/concat (array/concat [{ type: draw-shape, shape: "rect", id: (str/concat @config.id ":scrim"), position: { x: 0, y: 0 }, anchor: "top-left", width: @entity.viewW, height: @entity.viewH, fill: @sl.fill, material: @sl.material, spring: @sl.spring, animation: @fade, hit: true }, { type: draw-shape, shape: "rect", id: (str/concat @config.id ":panel"), position: { x: @r.x, y: @r.y }, anchor: "top-left", width: @r.w, height: @r.h, fill: @pn.fill, stroke: @pn.stroke, strokeWidth: @pn.strokeWidth, corners: @pn.corners, shadow: @pn.shadow, material: @pn.material, spring: @pn.spring, animation: @fade, hit: true, semantic: { role: "dialog", name: @config.label, order: @config.order, focused: false } }] (if (= @pn.decor "glass-rim") [{ type: draw-shape, shape: "rect", id: (str/concat @config.id ":rim"), position: { x: (+ @r.x 1), y: (+ @r.y 1) }, anchor: "top-left", width: (- @r.w 2), height: (- @r.h 2), stroke: "rgba(255,255,255,0.18)", strokeWidth: 1, corners: (let ((c (default @pn.corners { radius: [0, 0, 0, 0], kind: "round" }))) { radius: (array/map @c.radius (fn v (math/max 0 (- @v 1)))), kind: @c.kind }), spring: @pn.spring, animation: @fade, hit: false }] [])) (if @framed (array/map [0, 1, 2, 3] (fn i { type: draw-shape, shape: "polygon", id: (str/concat @config.id ":star:" @i), position: { x: (- (+ @r.x (if (or (= @i 1) (= @i 2)) @r.w 0)) 6), y: (- (+ @r.y (if (>= @i 2) @r.h 0)) 6) }, anchor: "top-left", width: 12, height: 12, sides: 8, starRatio: 0.55, fill: @pn.stroke, spring: @pn.spring, animation: @fade, hit: false })) [])) []) })
+        (set @entity.fresh false))))
+    }
+
+    emits {
+      OVERLAY_LAYOUT -> internal {
+        n : number!
+      }
+        @description "Compute the panel's rect from the surface size and the placement."
+        @tier "internal"
+      OVERLAY_PLACED -> internal {
+        n : number!
+      }
+        @description "The panel has a rect: place the content and paint."
+        @tier "internal"
+      OVERLAY_PAINT -> internal {
+        n : number!
+      }
+        @description "Paint the scrim and the panel."
+        @tier "internal"
+      RASM_PLACE -> external {
+        placed : [RasmPlaced]!
+      }
+        @description "The content's rect inside the panel."
+        @tier "primary"
+      RASM_PAINT -> external {
+        id : string!
+        z : number!
+        nodes : [node]!
+      }
+        @description "The scrim and the panel's nodes at the overlay's z, empty when closed or dismissed."
+        @tier "primary"
+      RASM_ANCHOR -> external {
+        id : string!
+        anchor : string!
+        side : "below" | "above" | "start" | "end"!
+        width : number!
+        height : number!
+      }
+        @description "Ask Anchor to place the panel next to the anchor control."
+        @tier "domain"
+      RASM_VISIBLE -> external {
+        owner : string!
+        shown : [string]!
+        hidden : [string]!
+      }
+        @description "Which paint ids the owner shows and hides: the contents while it is open and closed."
+        @tier "domain"
+      RASM_OVERLAY_DISMISSED -> external {
+        id : string!
+        reason : "scrim" | "escape"!
+      }
+        @description "The overlay closed itself: a press released on the scrim, or Escape."
+        @tier "domain"
+    }
+
+    listens {
+      RASM_THEME { name : string!  looks : Map string RasmLook! }
+        @description "Store the looks and repaint."
+      RASM_RESIZE { width : number!  height : number! }
+        @description "The surface size the scrim covers and the panel is placed in."
+      RASM_PLACE { placed : [RasmPlaced]! }
+        @description "Anchor's answer for the panel id, in anchor placement."
+      RASM_POINTER { kind : "down" | "up" | "enter" | "leave" | "move"!  id : string!  x : number!  y : number! }
+        @description "A press released on the scrim dismisses."
+      RASM_KEYPRESS { target : string!  key : string!  shift : boolean!  alt : boolean!  ctrl : boolean!  meta : boolean! }
+        @description "Escape dismisses."
+      RASM_OVERLAY_OPEN { id : string! }
+        @description "Open the overlay with this id."
+      RASM_OVERLAY_CLOSE { id : string! }
+        @description "Close the overlay with this id."
+    }
+
+    config {
+      id : string = "overlay"
+        @label "Id"
+        @description "The overlay's id: the paint id, and the prefix of the scrim and panel ids."
+        @tier "presentation"
+      label : string = ""
+        @label "Label"
+        @description "The panel's accessible name, passed by the organism through its translation."
+        @tier "presentation"
+      open : boolean = false
+        @label "Open"
+        @description "Start open."
+        @tier "presentation"
+      placement : "center" | "top" | "bottom" | "start" | "end" | "anchor" = "center"
+        @label "Placement"
+        @description "center is a dialog; top and bottom are sheets across the surface width; start and end are sheets down the surface height; anchor is a popover placed through Anchor."
+        @tier "presentation"
+      anchor : string = ""
+        @label "Anchor"
+        @description "With placement anchor, the id of the control the panel sits next to."
+        @tier "presentation"
+      side : "below" | "above" | "start" | "end" = "below"
+        @label "Side"
+        @description "With placement anchor, the side of the anchor the panel prefers."
+        @tier "presentation"
+      width : number = 360
+        @label "Width"
+        @description "Panel width in px (a side sheet's width), capped to the surface."
+        @tier "presentation"
+      height : number = 240
+        @label "Height"
+        @description "Panel height in px (a top or bottom sheet's height), capped to the surface."
+        @tier "presentation"
+      margin : number = 16
+        @label "Margin"
+        @description "Space kept between a dialog and the surface edge in px."
+        @tier "presentation"
+      padding : number = 0
+        @label "Padding"
+        @description "Space between the panel and its content rect in px."
+        @tier "presentation"
+      direction : "ltr" | "rtl" = "ltr"
+        @label "Direction"
+        @description "rtl puts the start sheet on the right and flips a popover's start and end sides."
+        @tier "presentation"
+      surfaceWidth : number = 720
+        @label "Surface width"
+        @description "The surface width before the first resize."
+        @tier "presentation"
+      surfaceHeight : number = 520
+        @label "Surface height"
+        @description "The surface height before the first resize."
+        @tier "presentation"
+      content : string = "content"
+        @label "Content"
+        @description "The id that receives the content rect. Its z must exceed this overlay's z to paint above the panel."
+        @tier "presentation"
+      contents : [string] = []
+        @label "Contents"
+        @description "Every paint id the content owns; RASM_VISIBLE shows them on open and hides them on close."
+        @tier "presentation"
+      intent : string = "dialog"
+        @label "Intent"
+        @description "The panel look is overlay/<intent>/idle."
+        @tier "presentation"
+      z : number = 100
+        @label "Z"
+        @description "Paint order on the surface."
+        @tier "presentation"
+      order : number = 0
+        @label "Order"
+        @description "Reading order of the dialog node in the semantic tree."
+        @tier "presentation"
+      dismissOnScrim : boolean = true
+        @label "Dismiss on scrim"
+        @description "A press released on the scrim closes the overlay."
+        @tier "presentation"
+      dismissOnEscape : boolean = true
+        @label "Dismiss on escape"
+        @description "Escape closes the overlay."
+        @tier "presentation"
+      durationMs : number = 180
+        @label "Fade duration"
+        @description "Milliseconds of the fade in when the overlay opens."
+        @tier "presentation"
+    }
+  }
+
+  page boot as RasmOverlayStart -> RasmOverlay
+}

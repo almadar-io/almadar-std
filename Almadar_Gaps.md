@@ -34,7 +34,8 @@ Every open gap this repo owns lives here. This file is the source of truth; the 
 - **G-STD-250** — std-http1 reads a request body at about 250 KB/s: every 8 KB `os/recv` chunk runs six dispatches (CHUNK_READ, BODY_CHECK, WANT_MORE, CONN_ADVANCE, the timer's CANCEL/START) that rebuild the `conns` entry holding the whole buffer, so a body's cost grows with its size squared (a 5.6 MB launchpad leg took 21-23 s to read on 2026-11-03, the small requests around it 0.1 s). Repro: `orb -v launchpad --port <p>`, POST a ~5 MB body to `/api/orbitals/Launchpad/events`, count `Http1 CHUNK_READ` lines. almadar-std net (std-http1) [mechanical] — rung: (3) the verifiers (no golden or benchmark reads a large body). Severity: medium. Root cause: one-off.
 
 
-Next code: `G-STD-389`
+Next code: `G-STD-390`
+
 
 
 - **G-STD-387** [mechanical] — Three `spec/dev/mock-page-seed.replay.goldens.json` cases fail (`a-page-seeds-its-entities-from-the-running-program`, `a-page-revisit-seeds-nothing`, `a-page-second-page-seeds-only-its-unseeded-entities`): step 3's first emit is `DATASET_DONE` with the seeded stores, not what the cases expect. Found 2026-11-13; the same three fail with `MockSeed` `[optimistic]` and without it, so the cause predates that day's change of `MockSeed` to a server trait. Reproduce: `orb-dev goldens spec/dev/mock-page-seed.replay.goldens.json` from `behaviors/lolo`. Rung: the goldens caught it; nothing ran them before the check-in. Severity: medium. Root cause: one-off.

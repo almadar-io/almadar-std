@@ -953,6 +953,134 @@
      }
     }
    ]
+  },
+  {
+   "id": "G-STD-389: a token whose key must be fetched is reported deferred",
+   "entity": {
+    "queue": [
+     {
+      "requestId": 9,
+      "authorization": "Bearer eyJraWQiOiJrMSIsImFsZyI6IlJTMjU2In0.e30.c2ln"
+     }
+    ]
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "BEARER_PUMP",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "BEARER_DEFERRED",
+        "payload": {
+         "requestId": 9
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "CONTROL G-STD-389: a token judged in the same dispatch is not reported deferred",
+   "entity": {
+    "emulator": true,
+    "queue": [
+     {
+      "requestId": 7,
+      "authorization": "Bearer eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJpc3MiOiJmaXJlYmFzZS1hdXRoLWVtdWxhdG9yQGV4YW1wbGUuY29tIiwiYXVkIjoiZGVtbyIsInN1YiI6InUxIiwiZXhwIjo0MTAyNDQ0ODAwfQ."
+     }
+    ],
+    "issuer": "firebase-auth-emulator@example.com",
+    "audience": "demo"
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "BEARER_PUMP",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "BEARER_CHECK",
+        "payload": {}
+       }
+      ],
+      "neverEmits": [
+       "BEARER_DEFERRED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "G-STD-389: a bearer queued behind a key fetch is reported deferred",
+   "entity": {
+    "ready": true,
+    "queue": []
+   },
+   "steps": [
+    {
+     "from": "fetching",
+     "event": "BEARER_VERIFY",
+     "payload": {
+      "requestId": 8,
+      "authorization": "Bearer a.b.c"
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "BEARER_DEFERRED",
+        "payload": {
+         "requestId": 8
+        }
+       }
+      ],
+      "entity": {
+       "queue": [
+        {
+         "requestId": 8,
+         "authorization": "Bearer a.b.c"
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "G-STD-389: an API key bearer is reported deferred while its key is looked up",
+   "entity": {
+    "ready": true,
+    "keysEnabled": true,
+    "queue": []
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "BEARER_VERIFY",
+     "payload": {
+      "requestId": 4,
+      "authorization": "Bearer sk_live_abc"
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "VERIFY_KEY"
+       },
+       {
+        "event": "BEARER_DEFERRED",
+        "payload": {
+         "requestId": 4
+        }
+       }
+      ]
+     }
+    }
+   ]
   }
  ]
 }

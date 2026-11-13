@@ -1,0 +1,1080 @@
+{
+ "atom": "../ui/rasm/atoms/std-rasm-drag.lolo",
+ "trait": "RasmDrag",
+ "cases": [
+  {
+   "id": "a-drop-on-a-target-reports-it-and-the-item-returns",
+   "config": {
+    "id": "d",
+    "label": "Card",
+    "targets": [
+     "A",
+     "B"
+    ],
+    "z": 2,
+    "dragZ": 9
+   },
+   "entity": {
+    "id": "d"
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "RASM_PLACE",
+     "payload": {
+      "placed": [
+       {
+        "id": "d",
+        "rect": {
+         "x": 10,
+         "y": 10,
+         "w": 80,
+         "h": 40
+        }
+       },
+       {
+        "id": "A",
+        "rect": {
+         "x": 200,
+         "y": 0,
+         "w": 100,
+         "h": 100
+        }
+       },
+       {
+        "id": "B",
+        "rect": {
+         "x": 400,
+         "y": 0,
+         "w": 100,
+         "h": 100
+        }
+       },
+       {
+        "id": "C",
+        "rect": {
+         "x": 600,
+         "y": 0,
+         "w": 100,
+         "h": 100
+        }
+       }
+      ]
+     },
+     "expect": {
+      "entity": {
+       "rect": {
+        "x": 10,
+        "y": 10,
+        "w": 80,
+        "h": 40
+       }
+      }
+     }
+    },
+    {
+     "from": "idle",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "down",
+      "id": "d",
+      "x": 20,
+      "y": 20
+     },
+     "expect": {
+      "state": "dragging"
+     }
+    },
+    {
+     "from": "dragging",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "move",
+      "id": "d",
+      "x": 120,
+      "y": 70
+     },
+     "expect": {
+      "entity": {
+       "dx": 100,
+       "dy": 50,
+       "over": ""
+      }
+     }
+    },
+    {
+     "from": "dragging",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "move",
+      "id": "d",
+      "x": 250,
+      "y": 50
+     },
+     "expect": {
+      "entity": {
+       "dx": 230,
+       "dy": 30,
+       "over": "A"
+      },
+      "emits": [
+       {
+        "event": "RASM_DRAG_OVER",
+        "payload": {
+         "id": "d",
+         "target": "A"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "dragging",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "move",
+      "id": "d",
+      "x": 260,
+      "y": 60
+     },
+     "expect": {
+      "entity": {
+       "over": "A"
+      },
+      "exactEmits": [
+       {
+        "event": "REPAINT",
+        "payload": {
+         "n": 5
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "dragging",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "up",
+      "id": "d",
+      "x": 260,
+      "y": 60
+     },
+     "expect": {
+      "state": "idle",
+      "entity": {
+       "dx": 0,
+       "dy": 0,
+       "over": ""
+      },
+      "emits": [
+       {
+        "event": "RASM_DRAG_DROPPED",
+        "payload": {
+         "id": "d",
+         "target": "A",
+         "x": 260,
+         "y": 60
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-release-over-no-target-is-released",
+   "config": {
+    "id": "d",
+    "label": "Card",
+    "targets": [
+     "A",
+     "B"
+    ],
+    "z": 2,
+    "dragZ": 9
+   },
+   "entity": {
+    "id": "d"
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "RASM_PLACE",
+     "payload": {
+      "placed": [
+       {
+        "id": "d",
+        "rect": {
+         "x": 10,
+         "y": 10,
+         "w": 80,
+         "h": 40
+        }
+       },
+       {
+        "id": "A",
+        "rect": {
+         "x": 200,
+         "y": 0,
+         "w": 100,
+         "h": 100
+        }
+       },
+       {
+        "id": "B",
+        "rect": {
+         "x": 400,
+         "y": 0,
+         "w": 100,
+         "h": 100
+        }
+       },
+       {
+        "id": "C",
+        "rect": {
+         "x": 600,
+         "y": 0,
+         "w": 100,
+         "h": 100
+        }
+       }
+      ]
+     },
+     "expect": {
+      "entity": {
+       "rect": {
+        "x": 10,
+        "y": 10,
+        "w": 80,
+        "h": 40
+       }
+      }
+     }
+    },
+    {
+     "from": "idle",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "down",
+      "id": "d",
+      "x": 20,
+      "y": 20
+     },
+     "expect": {
+      "state": "dragging"
+     }
+    },
+    {
+     "from": "dragging",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "move",
+      "id": "d",
+      "x": 120,
+      "y": 70
+     },
+     "expect": {}
+    },
+    {
+     "from": "dragging",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "up",
+      "id": "d",
+      "x": 120,
+      "y": 70
+     },
+     "expect": {
+      "state": "idle",
+      "entity": {
+       "dx": 0,
+       "dy": 0
+      },
+      "emits": [
+       {
+        "event": "RASM_DRAG_RELEASED",
+        "payload": {
+         "id": "d",
+         "x": 120,
+         "y": 70
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "crossing-from-one-target-to-another-reports-each",
+   "config": {
+    "id": "d",
+    "label": "Card",
+    "targets": [
+     "A",
+     "B"
+    ],
+    "z": 2,
+    "dragZ": 9
+   },
+   "entity": {
+    "id": "d"
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "RASM_PLACE",
+     "payload": {
+      "placed": [
+       {
+        "id": "d",
+        "rect": {
+         "x": 10,
+         "y": 10,
+         "w": 80,
+         "h": 40
+        }
+       },
+       {
+        "id": "A",
+        "rect": {
+         "x": 200,
+         "y": 0,
+         "w": 100,
+         "h": 100
+        }
+       },
+       {
+        "id": "B",
+        "rect": {
+         "x": 400,
+         "y": 0,
+         "w": 100,
+         "h": 100
+        }
+       },
+       {
+        "id": "C",
+        "rect": {
+         "x": 600,
+         "y": 0,
+         "w": 100,
+         "h": 100
+        }
+       }
+      ]
+     },
+     "expect": {
+      "entity": {
+       "rect": {
+        "x": 10,
+        "y": 10,
+        "w": 80,
+        "h": 40
+       }
+      }
+     }
+    },
+    {
+     "from": "idle",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "down",
+      "id": "d",
+      "x": 20,
+      "y": 20
+     },
+     "expect": {
+      "state": "dragging"
+     }
+    },
+    {
+     "from": "dragging",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "move",
+      "id": "d",
+      "x": 250,
+      "y": 50
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RASM_DRAG_OVER",
+        "payload": {
+         "id": "d",
+         "target": "A"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "dragging",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "move",
+      "id": "d",
+      "x": 450,
+      "y": 50
+     },
+     "expect": {
+      "entity": {
+       "over": "B"
+      },
+      "emits": [
+       {
+        "event": "RASM_DRAG_OVER",
+        "payload": {
+         "id": "d",
+         "target": "B"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "dragging",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "move",
+      "id": "d",
+      "x": 350,
+      "y": 50
+     },
+     "expect": {
+      "entity": {
+       "over": ""
+      },
+      "emits": [
+       {
+        "event": "RASM_DRAG_OVER",
+        "payload": {
+         "id": "d",
+         "target": ""
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "dragging",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "up",
+      "id": "d",
+      "x": 450,
+      "y": 50
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "RASM_DRAG_DROPPED",
+        "payload": {
+         "id": "d",
+         "target": "B",
+         "x": 450,
+         "y": 50
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-placed-rect-that-is-not-a-target-does-not-take-the-drop",
+   "config": {
+    "id": "d",
+    "label": "Card",
+    "targets": [
+     "A",
+     "B"
+    ],
+    "z": 2,
+    "dragZ": 9
+   },
+   "entity": {
+    "id": "d"
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "RASM_PLACE",
+     "payload": {
+      "placed": [
+       {
+        "id": "d",
+        "rect": {
+         "x": 10,
+         "y": 10,
+         "w": 80,
+         "h": 40
+        }
+       },
+       {
+        "id": "A",
+        "rect": {
+         "x": 200,
+         "y": 0,
+         "w": 100,
+         "h": 100
+        }
+       },
+       {
+        "id": "B",
+        "rect": {
+         "x": 400,
+         "y": 0,
+         "w": 100,
+         "h": 100
+        }
+       },
+       {
+        "id": "C",
+        "rect": {
+         "x": 600,
+         "y": 0,
+         "w": 100,
+         "h": 100
+        }
+       }
+      ]
+     },
+     "expect": {
+      "entity": {
+       "rect": {
+        "x": 10,
+        "y": 10,
+        "w": 80,
+        "h": 40
+       }
+      }
+     }
+    },
+    {
+     "from": "idle",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "down",
+      "id": "d",
+      "x": 20,
+      "y": 20
+     },
+     "expect": {
+      "state": "dragging"
+     }
+    },
+    {
+     "from": "dragging",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "up",
+      "id": "d",
+      "x": 650,
+      "y": 50
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "RASM_DRAG_RELEASED",
+        "payload": {
+         "id": "d",
+         "x": 650,
+         "y": 50
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "target-rects-placed-later-are-merged-with-earlier-ones",
+   "config": {
+    "id": "d",
+    "label": "Card",
+    "targets": [
+     "A",
+     "B"
+    ],
+    "z": 2,
+    "dragZ": 9
+   },
+   "entity": {
+    "id": "d"
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "RASM_PLACE",
+     "payload": {
+      "placed": [
+       {
+        "id": "d",
+        "rect": {
+         "x": 10,
+         "y": 10,
+         "w": 80,
+         "h": 40
+        }
+       },
+       {
+        "id": "A",
+        "rect": {
+         "x": 200,
+         "y": 0,
+         "w": 100,
+         "h": 100
+        }
+       },
+       {
+        "id": "B",
+        "rect": {
+         "x": 400,
+         "y": 0,
+         "w": 100,
+         "h": 100
+        }
+       },
+       {
+        "id": "C",
+        "rect": {
+         "x": 600,
+         "y": 0,
+         "w": 100,
+         "h": 100
+        }
+       }
+      ]
+     },
+     "expect": {
+      "entity": {
+       "rect": {
+        "x": 10,
+        "y": 10,
+        "w": 80,
+        "h": 40
+       }
+      }
+     }
+    },
+    {
+     "from": "idle",
+     "event": "RASM_PLACE",
+     "payload": {
+      "placed": [
+       {
+        "id": "A",
+        "rect": {
+         "x": 200,
+         "y": 200,
+         "w": 100,
+         "h": 100
+        }
+       }
+      ]
+     },
+     "expect": {}
+    },
+    {
+     "from": "idle",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "down",
+      "id": "d",
+      "x": 20,
+      "y": 20
+     },
+     "expect": {
+      "state": "dragging"
+     }
+    },
+    {
+     "from": "dragging",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "up",
+      "id": "d",
+      "x": 250,
+      "y": 250
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "RASM_DRAG_DROPPED",
+        "payload": {
+         "id": "d",
+         "target": "A",
+         "x": 250,
+         "y": 250
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-paint-follows-the-pointer-and-rides-at-drag-z",
+   "config": {
+    "id": "d",
+    "label": "Card",
+    "targets": [
+     "A",
+     "B"
+    ],
+    "z": 2,
+    "dragZ": 9
+   },
+   "entity": {
+    "id": "d"
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "RASM_THEME",
+     "payload": {
+      "name": "t",
+      "looks": {
+       "drag/default/idle": {
+        "fill": "#223",
+        "stroke": "#fff",
+        "strokeWidth": 1,
+        "textColor": "#eee",
+        "font": "body"
+       },
+       "drag/default/dragging": {
+        "fill": "#335",
+        "stroke": "#fff",
+        "strokeWidth": 1,
+        "textColor": "#eee",
+        "font": "body"
+       }
+      }
+     },
+     "expect": {}
+    },
+    {
+     "from": "idle",
+     "event": "RASM_PLACE",
+     "payload": {
+      "placed": [
+       {
+        "id": "d",
+        "rect": {
+         "x": 10,
+         "y": 10,
+         "w": 80,
+         "h": 40
+        }
+       },
+       {
+        "id": "A",
+        "rect": {
+         "x": 200,
+         "y": 0,
+         "w": 100,
+         "h": 100
+        }
+       },
+       {
+        "id": "B",
+        "rect": {
+         "x": 400,
+         "y": 0,
+         "w": 100,
+         "h": 100
+        }
+       },
+       {
+        "id": "C",
+        "rect": {
+         "x": 600,
+         "y": 0,
+         "w": 100,
+         "h": 100
+        }
+       }
+      ]
+     },
+     "expect": {
+      "entity": {
+       "rect": {
+        "x": 10,
+        "y": 10,
+        "w": 80,
+        "h": 40
+       }
+      }
+     }
+    },
+    {
+     "from": "idle",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "down",
+      "id": "d",
+      "x": 20,
+      "y": 20
+     },
+     "expect": {
+      "state": "dragging"
+     }
+    },
+    {
+     "from": "dragging",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "move",
+      "id": "d",
+      "x": 120,
+      "y": 70
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RASM_PAINT",
+        "payload": {
+         "id": "d",
+         "z": 9,
+         "nodes": [
+          {
+           "type": "draw-shape",
+           "id": "d",
+           "shape": "rect",
+           "anchor": "top-left",
+           "position": {
+            "x": 110,
+            "y": 60,
+            "z": 9
+           },
+           "width": 80,
+           "height": 40,
+           "fill": "#335",
+           "stroke": "#fff",
+           "strokeWidth": 1,
+           "corners": null,
+           "shadow": null,
+           "spring": null,
+           "hit": true,
+           "semantic": {
+            "role": "button",
+            "name": "Card",
+            "order": 0,
+            "focused": false
+           }
+          },
+          {
+           "type": "draw-text",
+           "id": "d:label",
+           "text": "Card",
+           "anchor": "top-left",
+           "position": {
+            "x": 118,
+            "y": 66,
+            "z": 9
+           },
+           "align": "left",
+           "baseline": "top",
+           "color": "#eee",
+           "font": "body",
+           "spring": null
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-press-on-another-id-does-not-start-a-drag",
+   "config": {
+    "id": "d",
+    "label": "Card",
+    "targets": [
+     "A",
+     "B"
+    ],
+    "z": 2,
+    "dragZ": 9
+   },
+   "entity": {
+    "id": "d"
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "RASM_PLACE",
+     "payload": {
+      "placed": [
+       {
+        "id": "d",
+        "rect": {
+         "x": 10,
+         "y": 10,
+         "w": 80,
+         "h": 40
+        }
+       },
+       {
+        "id": "A",
+        "rect": {
+         "x": 200,
+         "y": 0,
+         "w": 100,
+         "h": 100
+        }
+       },
+       {
+        "id": "B",
+        "rect": {
+         "x": 400,
+         "y": 0,
+         "w": 100,
+         "h": 100
+        }
+       },
+       {
+        "id": "C",
+        "rect": {
+         "x": 600,
+         "y": 0,
+         "w": 100,
+         "h": 100
+        }
+       }
+      ]
+     },
+     "expect": {
+      "entity": {
+       "rect": {
+        "x": 10,
+        "y": 10,
+        "w": 80,
+        "h": 40
+       }
+      }
+     }
+    },
+    {
+     "from": "idle",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "down",
+      "id": "other",
+      "x": 20,
+      "y": 20
+     },
+     "expect": {
+      "state": "idle",
+      "exactEmits": []
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-enter-and-leave-do-not-drag",
+   "config": {
+    "id": "d",
+    "label": "Card",
+    "targets": [
+     "A",
+     "B"
+    ],
+    "z": 2,
+    "dragZ": 9
+   },
+   "entity": {
+    "id": "d"
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "RASM_PLACE",
+     "payload": {
+      "placed": [
+       {
+        "id": "d",
+        "rect": {
+         "x": 10,
+         "y": 10,
+         "w": 80,
+         "h": 40
+        }
+       },
+       {
+        "id": "A",
+        "rect": {
+         "x": 200,
+         "y": 0,
+         "w": 100,
+         "h": 100
+        }
+       },
+       {
+        "id": "B",
+        "rect": {
+         "x": 400,
+         "y": 0,
+         "w": 100,
+         "h": 100
+        }
+       },
+       {
+        "id": "C",
+        "rect": {
+         "x": 600,
+         "y": 0,
+         "w": 100,
+         "h": 100
+        }
+       }
+      ]
+     },
+     "expect": {
+      "entity": {
+       "rect": {
+        "x": 10,
+        "y": 10,
+        "w": 80,
+        "h": 40
+       }
+      }
+     }
+    },
+    {
+     "from": "idle",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "enter",
+      "id": "d",
+      "x": 20,
+      "y": 20
+     },
+     "expect": {
+      "state": "idle"
+     }
+    },
+    {
+     "from": "idle",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "move",
+      "id": "d",
+      "x": 30,
+      "y": 30
+     },
+     "expect": {
+      "state": "idle"
+     }
+    }
+   ]
+  }
+ ]
+}

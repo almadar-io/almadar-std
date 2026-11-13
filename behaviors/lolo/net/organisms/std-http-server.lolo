@@ -290,6 +290,14 @@ orbital HttpServerOrbital {
       ServerBearer.BEARER_KEY_VERIFIED -> KEY_SEEN with { requestId: ?requestId }
       ServerBearer.BEARER_ANONYMOUS -> ANONYMOUS_SEEN
       ServerBearer.BEARER_REFUSED -> REFUSED_SEEN
+      ServerBearer.BEARER_DEFERRED -> BEARER_DEFERRED
+      ServerSettleRelay.SETTLE_RELAYED -> SETTLE_RELAYED
+    }
+  }
+
+  trait ServerSettleRelay = Binding.traits.IdentitySettleRelay {
+    listens {
+      ServerBinding.CREDENTIAL_SETTLED -> CREDENTIAL_SETTLED
     }
   }
 
@@ -378,4 +386,5 @@ orbital HttpServerOrbital {
   }
 
   page http { host: @config.host, port: @config.port, path: "/" } as Api -> BootGuard, BootCreds, BootCheck, Http1, Http1Timer, ServerPolicy, ServerRateLimiter, ServerRouter, ServerDispatch, ServerStatic, ServerCompress, CompressPolicy, CompressGzip, CompressBrotli, StreamTicketer, TicketMint, TicketTake, ServerSse, ServerLiveFeed, ServerBearer, ServerBinding, ApiKeys, BearerX509, BearerHttp, BearerHttpFrame
+  page boot as ApiSettle -> ServerSettleRelay
 }
