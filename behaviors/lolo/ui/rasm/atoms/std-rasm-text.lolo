@@ -8,6 +8,9 @@ type RasmPlaced = { id : string!, rect : RasmRect! }
 type RasmMaterial = { wgsl : string!, params : [number]!, live : boolean! }
 type RasmCorners = { radius : [number]!, kind : "round" | "bevel" | "notch" | "scoop" }
 type RasmSpring = { stiffness : number!, damping : number! }
+type RasmKeyframe = { at : number!, opacity : number, offsetY : number }
+type RasmAnimation = { durationMs : number!, loop : boolean!, keyframes : [RasmKeyframe]! }
+type RasmText = { id : string!, key : MessageKey!, x : number!, y : number!, z : number!, align : string!, baseline : string!, color : string?, font : string?, spring : RasmSpring?, width : number?, wrap : boolean?, measure : boolean?, role : string?, animation : RasmAnimation? }
 type RasmShadow = { color : string!, blur : number! }
 type RasmLook = { fill : string, stroke : string, strokeWidth : number, corners : RasmCorners, shadow : RasmShadow, material : RasmMaterial, textColor : string, font : string, spring : RasmSpring, decor : string }
 
@@ -46,7 +49,7 @@ orbital RasmTextOrbital {
         (set @entity.paints (+ @entity.paints 1))
         (emit TEXT_PAINT { n: @entity.paints })
       TEXT_PAINT -> ready
-        (let ((l (object/get @entity.looks (str/concat "text/" @config.intent "/idle") null)) (r @entity.rect)) (when (and (!= @l null) (!= @r null)) (let ((idx @entity.enterIndex) (stag @entity.staggerMs)) (let ((dur (+ 520 (* @idx @stag)))) (emit RASM_PAINT { id: @config.id, z: @config.z, nodes: [{ type: draw-text, id: @config.id, text: @config.text, position: { x: @r.x, y: @r.y }, anchor: "top-left", baseline: "top", width: @r.w, wrap: true, align: (if (= @entity.dir "rtl") "right" "left"), measure: true, color: @l.textColor, font: @l.font, spring: @l.spring, hit: false, semantic: { role: "text", name: @config.text }, animation: (if (>= @idx 0) { durationMs: @dur, loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 14 }, { at: (/ (* @idx @stag) @dur), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }] } null) }] })))))
+        (let ((l (object/get @entity.looks (str/concat "text/" @config.intent "/idle") null)) (r @entity.rect)) (when (and (!= @l null) (!= @r null)) (let ((idx @entity.enterIndex) (stag @entity.staggerMs)) (let ((dur (+ 520 (* @idx @stag)))) (emit RASM_PAINT { id: @config.id, z: @config.z, nodes: [], texts: [{ id: @config.id, key: @config.text, x: @r.x, y: @r.y, z: @config.z, baseline: "top", width: @r.w, wrap: true, align: (if (= @entity.dir "rtl") "right" "left"), measure: true, color: @l.textColor, font: @l.font, spring: @l.spring, role: "text", animation: (if (>= @idx 0) { durationMs: @dur, loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 14 }, { at: (default (/ (* @idx @stag) @dur) 0), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }] } null) }] })))))
     }
 
     emits {
@@ -59,8 +62,9 @@ orbital RasmTextOrbital {
         id : string!
         z : number!
         nodes : [node]!
+        texts : [RasmText]!
       }
-        @description "The paragraph's draw-text at its z."
+        @description "The paragraph as a catalog-keyed text at its z; the surface paints it in the active locale."
         @tier "primary"
     }
 
@@ -80,9 +84,9 @@ orbital RasmTextOrbital {
         @label "Id"
         @description "The text's id: its RASM_PLACE key, measure id and paint id."
         @tier "presentation"
-      text : string = ""
+      text : MessageKey
         @label "Text"
-        @description "The paragraph."
+        @description "The catalog key of the paragraph."
         @tier "presentation"
       intent : "title" | "body" = "body"
         @label "Intent"

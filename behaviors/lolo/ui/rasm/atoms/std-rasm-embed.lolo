@@ -8,6 +8,9 @@ type RasmPlaced = { id : string!, rect : RasmRect! }
 type RasmMaterial = { wgsl : string!, params : [number]!, live : boolean! }
 type RasmCorners = { radius : [number]!, kind : "round" | "bevel" | "notch" | "scoop" }
 type RasmSpring = { stiffness : number!, damping : number! }
+type RasmKeyframe = { at : number!, opacity : number, offsetY : number }
+type RasmAnimation = { durationMs : number!, loop : boolean!, keyframes : [RasmKeyframe]! }
+type RasmText = { id : string!, key : MessageKey!, x : number!, y : number!, z : number!, align : string!, baseline : string!, color : string?, font : string?, spring : RasmSpring?, width : number?, wrap : boolean?, measure : boolean?, role : string?, animation : RasmAnimation? }
 type RasmShadow = { color : string!, blur : number! }
 type RasmLook = { fill : string, stroke : string, strokeWidth : number, corners : RasmCorners, shadow : RasmShadow, material : RasmMaterial, textColor : string, font : string, spring : RasmSpring, decor : string }
 
@@ -55,7 +58,7 @@ orbital RasmEmbedOrbital {
             (r @entity.rect)
             (look (default (object/get @entity.looks "embed/default/placeholder") {}))
           )
-          (emit RASM_PAINT { id: @config.id, z: @config.z, nodes: (array/concat [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @r.x, y: @r.y, z: @config.z }, width: @r.w, height: @r.h, fill: @look.fill, stroke: @look.stroke, strokeWidth: @look.strokeWidth, corners: @look.corners, spring: @look.spring, semantic: { role: "group", name: @config.label, order: @config.order, focused: false } }] []) }))
+          (emit RASM_PAINT { id: @config.id, z: @config.z, texts: [], nodes: (array/concat [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @r.x, y: @r.y, z: @config.z }, width: @r.w, height: @r.h, fill: @look.fill, stroke: @look.stroke, strokeWidth: @look.strokeWidth, corners: @look.corners, spring: @look.spring, semantic: { role: "group", name: @config.label, order: @config.order, focused: false } }] []) }))
     }
 
     state requested {
@@ -89,7 +92,7 @@ orbital RasmEmbedOrbital {
             (r @entity.rect)
             (look (default (object/get @entity.looks "embed/default/placeholder") {}))
           )
-          (emit RASM_PAINT { id: @config.id, z: @config.z, nodes: (array/concat [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @r.x, y: @r.y, z: @config.z }, width: @r.w, height: @r.h, fill: @look.fill, stroke: @look.stroke, strokeWidth: @look.strokeWidth, corners: @look.corners, spring: @look.spring, semantic: { role: "group", name: @config.label, order: @config.order, focused: false } }] []) }))
+          (emit RASM_PAINT { id: @config.id, z: @config.z, texts: [], nodes: (array/concat [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @r.x, y: @r.y, z: @config.z }, width: @r.w, height: @r.h, fill: @look.fill, stroke: @look.stroke, strokeWidth: @look.strokeWidth, corners: @look.corners, spring: @look.spring, semantic: { role: "group", name: @config.label, order: @config.order, focused: false } }] []) }))
     }
 
     state ready {
@@ -123,7 +126,7 @@ orbital RasmEmbedOrbital {
             (r @entity.rect)
             (look (default (object/get @entity.looks "embed/default/placeholder") {}))
           )
-          (emit RASM_PAINT { id: @config.id, z: @config.z, nodes: [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @r.x, y: @r.y, z: @config.z }, width: @r.w, height: @r.h, stroke: @look.stroke, strokeWidth: @look.strokeWidth, corners: @look.corners, spring: @look.spring, semantic: { role: "group", name: @config.label, order: @config.order, focused: false } }] }))
+          (emit RASM_PAINT { id: @config.id, z: @config.z, texts: [], nodes: [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @r.x, y: @r.y, z: @config.z }, width: @r.w, height: @r.h, stroke: @look.stroke, strokeWidth: @look.strokeWidth, corners: @look.corners, spring: @look.spring, semantic: { role: "group", name: @config.label, order: @config.order, focused: false } }] }))
     }
 
     state unavailable {
@@ -157,7 +160,7 @@ orbital RasmEmbedOrbital {
             (r @entity.rect)
             (look (default (object/get @entity.looks "embed/default/placeholder") {}))
           )
-          (emit RASM_PAINT { id: @config.id, z: @config.z, nodes: (array/concat [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @r.x, y: @r.y, z: @config.z }, width: @r.w, height: @r.h, fill: @look.fill, stroke: @look.stroke, strokeWidth: @look.strokeWidth, corners: @look.corners, spring: @look.spring, semantic: { role: "group", name: @config.label, order: @config.order, focused: false } }] (if (and (!= @look.textColor null) (!= @look.font null)) [{ type: draw-text, id: (str/concat @config.id ":label"), text: @config.fallback, anchor: "top-left", position: { x: (+ @r.x 12), y: (+ @r.y 10), z: @config.z }, align: left, baseline: top, color: @look.textColor, font: @look.font, spring: @look.spring }] [])) }))
+          (emit RASM_PAINT { id: @config.id, z: @config.z, texts: (if (and (!= @look.textColor null) (!= @look.font null)) [{ id: (str/concat @config.id ":label"), key: @config.fallback, x: (+ @r.x 12), y: (+ @r.y 10), z: @config.z, align: "left", baseline: "top", color: @look.textColor, font: @look.font, spring: @look.spring }] []), nodes: [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @r.x, y: @r.y, z: @config.z }, width: @r.w, height: @r.h, fill: @look.fill, stroke: @look.stroke, strokeWidth: @look.strokeWidth, corners: @look.corners, spring: @look.spring, semantic: { role: "group", name: @config.label, order: @config.order, focused: false } }] }))
     }
 
     listens {
@@ -176,6 +179,7 @@ orbital RasmEmbedOrbital {
         id : string!
         z : number!
         nodes : [node]!
+        texts : [RasmText]!
       }
         @description "The embed's group node and placeholder, for the surface to collect."
         @tier "domain"
@@ -219,7 +223,7 @@ orbital RasmEmbedOrbital {
         @label "Label"
         @description "The embed's accessible name; organisms pass a translated string."
         @tier "domain"
-      fallback : string = ""
+      fallback : MessageKey
         @label "Fallback"
         @description "The text painted when the embed is unavailable; organisms pass a translated string."
         @tier "domain"

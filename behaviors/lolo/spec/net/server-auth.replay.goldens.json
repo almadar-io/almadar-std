@@ -237,471 +237,6 @@
    ]
   },
   {
-   "id": "program-session-forwards-the-header-to-the-client-session",
-   "note": "The program session never signs in; it dispatches CREDENTIAL_PRESENTED to the clientId session.",
-   "steps": [
-    {
-     "trait": "ServerBinding",
-     "event": "BEARER_PRESENT",
-     "from": "idle",
-     "payload": {
-      "requestId": 3,
-      "authorization": "Bearer a.b.c",
-      "clientId": "tab-1"
-     },
-     "expect": {
-      "fired": true,
-      "effects": [
-       {
-        "type": "program/dispatch"
-       }
-      ],
-      "neverEmits": [
-       "IDENTITY_BOUND",
-       "IDENTITY_ANONYMOUS",
-       "IDENTITY_REFUSED"
-      ]
-     }
-    }
-   ],
-   "defaults": [
-    "ServerBearer"
-   ],
-   "config": {
-    "ownOrbital": "HttpServerOrbital",
-    "ownTrait": "ServerBinding",
-    "createIdentity": false
-   }
-  },
-  {
-   "id": "a-client-session-that-bound-answers-identity-bound",
-   "note": "",
-   "steps": [
-    {
-     "trait": "ServerBinding",
-     "event": "CREDENTIAL_ANSWERED",
-     "from": "idle",
-     "payload": {
-      "key": "3",
-      "result": {
-       "emittedEvents": [
-        {
-         "event": "CREDENTIAL_BOUND",
-         "payload": {
-          "requestId": 3
-         }
-        }
-       ],
-       "success": true
-      }
-     },
-     "expect": {
-      "fired": true,
-      "emits": [
-       {
-        "event": "IDENTITY_BOUND",
-        "payload": {
-         "requestId": 3
-        }
-       }
-      ]
-     }
-    }
-   ],
-   "defaults": [
-    "ServerBearer"
-   ]
-  },
-  {
-   "id": "a-client-session-that-signed-out-answers-anonymous",
-   "note": "",
-   "steps": [
-    {
-     "trait": "ServerBinding",
-     "event": "CREDENTIAL_ANSWERED",
-     "from": "idle",
-     "payload": {
-      "key": "4",
-      "result": {
-       "emittedEvents": [
-        {
-         "event": "CREDENTIAL_ANONYMOUS",
-         "payload": {
-          "requestId": 4
-         }
-        }
-       ],
-       "success": true
-      }
-     },
-     "expect": {
-      "fired": true,
-      "emits": [
-       {
-        "event": "IDENTITY_ANONYMOUS",
-        "payload": {
-         "requestId": 4
-        }
-       }
-      ]
-     }
-    }
-   ],
-   "defaults": [
-    "ServerBearer"
-   ]
-  },
-  {
-   "id": "a-client-session-refusal-carries-its-reason",
-   "note": "",
-   "steps": [
-    {
-     "trait": "ServerBinding",
-     "event": "CREDENTIAL_ANSWERED",
-     "from": "idle",
-     "payload": {
-      "key": "5",
-      "result": {
-       "emittedEvents": [
-        {
-         "event": "CREDENTIAL_REFUSED",
-         "payload": {
-          "requestId": 5,
-          "reason": "expired"
-         }
-        }
-       ],
-       "success": true
-      }
-     },
-     "expect": {
-      "fired": true,
-      "emits": [
-       {
-        "event": "IDENTITY_REFUSED",
-        "payload": {
-         "requestId": 5,
-         "reason": "expired"
-        }
-       }
-      ]
-     }
-    }
-   ],
-   "defaults": [
-    "ServerBearer"
-   ]
-  },
-  {
-   "id": "control-a-dispatch-outcome-with-no-credential-answer-is-refused",
-   "note": "",
-   "steps": [
-    {
-     "trait": "ServerBinding",
-     "event": "CREDENTIAL_ANSWERED",
-     "from": "idle",
-     "payload": {
-      "key": "6",
-      "result": {
-       "emittedEvents": [],
-       "success": false
-      }
-     },
-     "expect": {
-      "fired": true,
-      "emits": [
-       {
-        "event": "IDENTITY_REFUSED",
-        "payload": {
-         "requestId": 6,
-         "reason": "credential-dispatch"
-        }
-       }
-      ],
-      "neverEmits": [
-       "IDENTITY_BOUND"
-      ]
-     }
-    }
-   ],
-   "defaults": [
-    "ServerBearer"
-   ]
-  },
-  {
-   "id": "a-failed-forward-is-refused",
-   "note": "",
-   "steps": [
-    {
-     "trait": "ServerBinding",
-     "event": "CREDENTIAL_FAILED",
-     "from": "idle",
-     "payload": {
-      "key": "6",
-      "error": "x"
-     },
-     "expect": {
-      "fired": true,
-      "emits": [
-       {
-        "event": "IDENTITY_REFUSED",
-        "payload": {
-         "requestId": 6,
-         "reason": "credential-dispatch"
-        }
-       }
-      ]
-     }
-    }
-   ],
-   "defaults": [
-    "ServerBearer"
-   ]
-  },
-  {
-   "id": "client-session-presented-credential-asks-the-verifier",
-   "note": "",
-   "steps": [
-    {
-     "trait": "ServerBinding",
-     "event": "CREDENTIAL_PRESENTED",
-     "from": "idle",
-     "payload": {
-      "requestId": 7,
-      "authorization": "Bearer a.b.c"
-     },
-     "expect": {
-      "fired": true,
-      "emits": [
-       {
-        "event": "BEARER_VERIFY",
-        "payload": {
-         "requestId": 7,
-         "authorization": "Bearer a.b.c"
-        }
-       }
-      ]
-     }
-    }
-   ],
-   "defaults": [
-    "ServerBearer"
-   ]
-  },
-  {
-   "id": "client-session-no-bearer-signs-out-then-answers-anonymous",
-   "note": "",
-   "steps": [
-    {
-     "trait": "ServerBinding",
-     "event": "ANONYMOUS_SEEN",
-     "from": "idle",
-     "payload": {
-      "requestId": 7
-     },
-     "expect": {
-      "fired": true,
-      "effects": [
-       {
-        "type": "identity/sign-out"
-       }
-      ]
-     }
-    },
-    {
-     "trait": "ServerBinding",
-     "event": "SIGNED_OUT",
-     "from": "idle",
-     "payload": {
-      "subject": "anonymous"
-     },
-     "expect": {
-      "fired": true,
-      "emits": [
-       {
-        "event": "CREDENTIAL_ANONYMOUS",
-        "payload": {
-         "requestId": 7
-        }
-       }
-      ]
-     },
-     "entity": {
-      "awaiting": true,
-      "requestId": 7,
-      "authorization": "Bearer a.b.c",
-      "subject": "u1",
-      "created": false,
-      "outcome": ""
-     }
-    }
-   ],
-   "defaults": [
-    "ServerBearer"
-   ],
-   "entity": {
-    "awaiting": true,
-    "requestId": 7,
-    "authorization": "Bearer a.b.c",
-    "subject": "u1",
-    "created": false,
-    "outcome": "",
-    "presented": [
-     {
-      "requestId": 7,
-      "clientId": "",
-      "authorization": "Bearer a.b.c",
-      "created": false,
-      "deferred": false
-     }
-    ]
-   }
-  },
-  {
-   "id": "client-session-refused-bearer-signs-out-then-answers-its-reason",
-   "note": "",
-   "steps": [
-    {
-     "trait": "ServerBinding",
-     "event": "REFUSED_SEEN",
-     "from": "idle",
-     "payload": {
-      "requestId": 7,
-      "reason": "expired"
-     },
-     "expect": {
-      "fired": true,
-      "effects": [
-       {
-        "type": "identity/sign-out"
-       }
-      ]
-     }
-    },
-    {
-     "trait": "ServerBinding",
-     "event": "SIGNED_OUT",
-     "from": "idle",
-     "payload": {
-      "subject": "u1"
-     },
-     "expect": {
-      "fired": true,
-      "emits": [
-       {
-        "event": "CREDENTIAL_REFUSED",
-        "payload": {
-         "requestId": 7,
-         "reason": "expired"
-        }
-       }
-      ],
-      "neverEmits": [
-       "CREDENTIAL_BOUND"
-      ]
-     },
-     "entity": {
-      "awaiting": true,
-      "requestId": 7,
-      "authorization": "Bearer a.b.c",
-      "subject": "u1",
-      "created": false,
-      "outcome": "expired"
-     }
-    }
-   ],
-   "defaults": [
-    "ServerBearer"
-   ],
-   "entity": {
-    "awaiting": true,
-    "requestId": 7,
-    "authorization": "Bearer a.b.c",
-    "subject": "u1",
-    "created": false,
-    "outcome": "",
-    "presented": [
-     {
-      "requestId": 7,
-      "clientId": "",
-      "authorization": "Bearer a.b.c",
-      "created": false,
-      "deferred": false
-     }
-    ]
-   }
-  },
-  {
-   "id": "an-api-key-binds-no-identity-and-is-refused",
-   "note": "An API key makes no Verified.",
-   "steps": [
-    {
-     "trait": "ServerBinding",
-     "event": "KEY_SEEN",
-     "from": "idle",
-     "payload": {
-      "requestId": 7
-     },
-     "expect": {
-      "fired": true,
-      "effects": [
-       {
-        "type": "identity/sign-out"
-       }
-      ]
-     }
-    },
-    {
-     "trait": "ServerBinding",
-     "event": "SIGNED_OUT",
-     "from": "idle",
-     "payload": {
-      "subject": "anonymous"
-     },
-     "expect": {
-      "fired": true,
-      "emits": [
-       {
-        "event": "CREDENTIAL_REFUSED",
-        "payload": {
-         "requestId": 7,
-         "reason": "api-key-identity"
-        }
-       }
-      ]
-     },
-     "entity": {
-      "awaiting": true,
-      "requestId": 7,
-      "authorization": "Bearer a.b.c",
-      "subject": "u1",
-      "created": false,
-      "outcome": "api-key-identity"
-     }
-    }
-   ],
-   "defaults": [
-    "ServerBearer"
-   ],
-   "entity": {
-    "awaiting": true,
-    "requestId": 7,
-    "authorization": "Bearer a.b.c",
-    "subject": "u1",
-    "created": false,
-    "outcome": "",
-    "presented": [
-     {
-      "requestId": 7,
-      "clientId": "",
-      "authorization": "Bearer a.b.c",
-      "created": false,
-      "deferred": false
-     }
-    ]
-   }
-  },
-  {
    "id": "control-the-program-session-ignores-a-verdict-it-did-not-ask-for",
    "note": "The router's own bearer verdicts reach the same trait; it signs nothing.",
    "steps": [
@@ -730,8 +265,278 @@
    }
   },
   {
+   "id": "program-session-verifies-the-header-it-is-asked-to-bind",
+   "defaults": [
+    "ServerBearer"
+   ],
+   "steps": [
+    {
+     "trait": "ServerBinding",
+     "event": "BEARER_PRESENT",
+     "from": "idle",
+     "payload": {
+      "requestId": 3,
+      "authorization": "Bearer a.b.c",
+      "clientId": "tab-1"
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "BEARER_VERIFY",
+        "payload": {
+         "requestId": 3,
+         "authorization": "Bearer a.b.c"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-sign-in-of-the-named-session-answers-identity-bound",
+   "defaults": [
+    "ServerBearer"
+   ],
+   "entity": {
+    "asks": [
+     {
+      "requestId": 3,
+      "session": "tab-1",
+      "self": false,
+      "authorization": "Bearer a.b.c",
+      "stage": "signing",
+      "reason": "",
+      "subject": "u1",
+      "email": "",
+      "name": "",
+      "created": false
+     }
+    ]
+   },
+   "steps": [
+    {
+     "trait": "ServerBinding",
+     "event": "SIGNED_IN",
+     "from": "idle",
+     "payload": {
+      "subject": "u1",
+      "session": "tab-1"
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "IDENTITY_BOUND",
+        "payload": {
+         "requestId": 3
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-sign-out-with-no-reason-answers-anonymous",
+   "defaults": [
+    "ServerBearer"
+   ],
+   "entity": {
+    "asks": [
+     {
+      "requestId": 3,
+      "session": "tab-1",
+      "self": false,
+      "authorization": "Bearer a.b.c",
+      "stage": "signing-out",
+      "reason": "",
+      "subject": "",
+      "email": "",
+      "name": "",
+      "created": false
+     }
+    ]
+   },
+   "steps": [
+    {
+     "trait": "ServerBinding",
+     "event": "SIGNED_OUT",
+     "from": "idle",
+     "payload": {
+      "subject": "anonymous",
+      "session": "tab-1"
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "IDENTITY_ANONYMOUS",
+        "payload": {
+         "requestId": 3
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-refused-bearer-signs-the-session-out-and-answers-its-reason",
+   "defaults": [
+    "ServerBearer"
+   ],
+   "entity": {
+    "asks": [
+     {
+      "requestId": 3,
+      "session": "tab-1",
+      "self": false,
+      "authorization": "Bearer a.b.c",
+      "stage": "verifying",
+      "reason": "",
+      "subject": "",
+      "email": "",
+      "name": "",
+      "created": false
+     }
+    ]
+   },
+   "steps": [
+    {
+     "trait": "ServerBinding",
+     "event": "REFUSED_SEEN",
+     "from": "idle",
+     "payload": {
+      "requestId": 3,
+      "reason": "expired"
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "SIGN_OUT_ASKED",
+        "payload": {
+         "requestId": 3,
+         "reason": "expired"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-api-key-binds-no-identity-and-is-refused",
+   "note": "An API key makes no Verified.",
+   "defaults": [
+    "ServerBearer"
+   ],
+   "entity": {
+    "asks": [
+     {
+      "requestId": 3,
+      "session": "tab-1",
+      "self": false,
+      "authorization": "Bearer a.b.c",
+      "stage": "verifying",
+      "reason": "",
+      "subject": "",
+      "email": "",
+      "name": "",
+      "created": false
+     }
+    ]
+   },
+   "steps": [
+    {
+     "trait": "ServerBinding",
+     "event": "KEY_SEEN",
+     "from": "idle",
+     "payload": {
+      "requestId": 3
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "SIGN_OUT_ASKED",
+        "payload": {
+         "requestId": 3,
+         "reason": "api-key-identity"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-an-absent-header-signs-the-session-out-as-anonymous",
+   "defaults": [
+    "ServerBearer"
+   ],
+   "entity": {
+    "asks": [
+     {
+      "requestId": 3,
+      "session": "tab-1",
+      "self": false,
+      "authorization": "Bearer a.b.c",
+      "stage": "verifying",
+      "reason": "",
+      "subject": "",
+      "email": "",
+      "name": "",
+      "created": false
+     }
+    ]
+   },
+   "steps": [
+    {
+     "trait": "ServerBinding",
+     "event": "ANONYMOUS_SEEN",
+     "from": "idle",
+     "payload": {
+      "requestId": 3
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "SIGN_OUT_ASKED",
+        "payload": {
+         "requestId": 3,
+         "reason": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
    "id": "a-sign-in-that-answers-no-identity-is-refused-without-createIdentity",
-   "note": "",
+   "defaults": [
+    "ServerBearer"
+   ],
+   "entity": {
+    "asks": [
+     {
+      "requestId": 3,
+      "session": "tab-1",
+      "self": false,
+      "authorization": "Bearer a.b.c",
+      "stage": "signing",
+      "reason": "",
+      "subject": "u1",
+      "email": "",
+      "name": "",
+      "created": false
+     }
+    ]
+   },
    "steps": [
     {
      "trait": "ServerBinding",
@@ -739,69 +544,23 @@
      "from": "idle",
      "payload": {
       "error": "no row",
-      "kind": "no-identity"
+      "kind": "no-identity",
+      "session": "tab-1"
      },
      "expect": {
       "fired": true,
       "emits": [
        {
-        "event": "CREDENTIAL_REFUSED",
+        "event": "SIGN_OUT_ASKED",
         "payload": {
-         "requestId": 7,
+         "requestId": 3,
          "reason": "identity-no-identity"
         }
        }
       ]
      }
     }
-   ],
-   "defaults": [
-    "ServerBearer"
-   ],
-   "entity": {
-    "awaiting": true,
-    "requestId": 7,
-    "authorization": "Bearer a.b.c",
-    "subject": "u1",
-    "created": false,
-    "outcome": ""
-   }
-  },
-  {
-   "id": "a-bound-credential-answers-credential-bound",
-   "note": "",
-   "steps": [
-    {
-     "trait": "ServerBinding",
-     "event": "SIGNED_IN",
-     "from": "idle",
-     "payload": {
-      "subject": "u1"
-     },
-     "expect": {
-      "fired": true,
-      "emits": [
-       {
-        "event": "CREDENTIAL_BOUND",
-        "payload": {
-         "requestId": 7
-        }
-       }
-      ]
-     }
-    }
-   ],
-   "defaults": [
-    "ServerBearer"
-   ],
-   "entity": {
-    "awaiting": true,
-    "requestId": 7,
-    "authorization": "Bearer a.b.c",
-    "subject": "u1",
-    "created": false,
-    "outcome": ""
-   }
+   ]
   }
  ]
 }

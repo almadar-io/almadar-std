@@ -12,7 +12,10 @@ type RasmShadow = { color : string!, blur : number! }
 type RasmLook = { fill : string, stroke : string, strokeWidth : number, corners : RasmCorners, shadow : RasmShadow, material : RasmMaterial, textColor : string, font : string, spring : RasmSpring, decor : string }
 type RasmMeasureItem = { id : string!, width : number!, height : number!, lines : number! }
 type RasmTouch = { pointerId : number!, x : number!, y : number! }
-type RasmPaintEntry = { id : string!, z : number!, nodes : [node]! }
+type RasmKeyframe = { at : number!, opacity : number, offsetY : number }
+type RasmAnimation = { durationMs : number!, loop : boolean!, keyframes : [RasmKeyframe]! }
+type RasmText = { id : string!, key : MessageKey!, x : number!, y : number!, z : number!, align : string!, baseline : string!, color : string?, font : string?, spring : RasmSpring?, width : number?, wrap : boolean?, measure : boolean?, role : string?, animation : RasmAnimation? }
+type RasmPaintEntry = { id : string!, z : number!, nodes : [node]!, texts : [RasmText]! }
 
 orbital RasmSurfaceOrbital {
   entity RasmSurfaceRun [runtime] {
@@ -64,7 +67,7 @@ orbital RasmSurfaceOrbital {
       SURFACE_ACCESS -> ready
         (emit RASM_ACCESS { target: ?target, action: ?action })
       RASM_PAINT -> ready
-        (set @entity.paints (object/set @entity.paints ?id { id: ?id, z: ?z, nodes: ?nodes }))
+        (set @entity.paints (object/set @entity.paints ?id { id: ?id, z: ?z, nodes: ?nodes, texts: (default ?texts []) }))
         (set @entity.repaints (+ @entity.repaints 1))
         (emit SURFACE_REPAINT { n: @entity.repaints })
       RASM_VISIBLE -> ready
@@ -93,7 +96,7 @@ orbital RasmSurfaceOrbital {
           pointerMoveEvent: "POINTER_MOVE"
           measureEvent: "SURFACE_MEASURED"
           keyMap: { Tab: "KEY_NEXT", "Shift+Tab": "KEY_PREVIOUS", Enter: "KEY_ACTIVATE", Space: "KEY_ACTIVATE", ArrowRight: "KEY_INCREASE", ArrowUp: "KEY_INCREASE", ArrowLeft: "KEY_DECREASE", ArrowDown: "KEY_DECREASE", Escape: "KEY_ESCAPE", PageUp: "KEY_PAGE_UP", PageDown: "KEY_PAGE_DOWN", Home: "KEY_HOME", End: "KEY_END" }
-          drawables: (let ((g (object/get @entity.looks "surface/ground/idle" null))) (array/concat (if (= @g null) [] [{ type: draw-shape, shape: "rect", id: (str/concat @config.id ":ground"), position: { x: 0, y: 0 }, anchor: "top-left", width: @entity.viewW, height: @entity.viewH, fill: @g.fill, material: @g.material, spring: @g.spring, hit: false }]) (array/flatten (array/map (array/filter (array/sort (object/values @entity.paints) "z" "asc") (fn e (not (array/includes @entity.hidden @e.id)))) (fn e @e.nodes)))))
+          drawables: (let ((g (object/get @entity.looks "surface/ground/idle" null))) (array/concat (if (= @g null) [] [{ type: draw-shape, shape: "rect", id: (str/concat @config.id ":ground"), position: { x: 0, y: 0 }, anchor: "top-left", width: @entity.viewW, height: @entity.viewH, fill: @g.fill, material: @g.material, spring: @g.spring, hit: false }]) (array/flatten (array/map (array/filter (array/sort (object/values @entity.paints) "z" "asc") (fn e (not (array/includes @entity.hidden @e.id)))) (fn e (array/concat @e.nodes (array/map @e.texts (fn t (let ((said (default (i18n/t @t.key) ""))) { type: draw-text, id: @t.id, text: @said, anchor: "top-left", position: { x: @t.x, y: @t.y, z: @t.z }, align: @t.align, baseline: @t.baseline, color: @t.color, font: @t.font, spring: @t.spring, width: @t.width, wrap: @t.wrap, measure: @t.measure, animation: @t.animation, hit: false, semantic: (if (= @t.role null) null { role: @t.role, name: @said }) })))))))))
         })
       POINTER_DOWN -> ready
         (emit RASM_POINTER { kind: "down", id: ?target, x: ?x, y: ?y, index: (default ?index -1) })
@@ -210,8 +213,8 @@ orbital RasmSurfaceOrbital {
     listens {
       RASM_THEME { name : string!  looks : Map string RasmLook! }
         @description "Store the looks, paint the ground and place the root."
-      RASM_PAINT { id : string!  z : number!  nodes : [node]! }
-        @description "Keep one control's nodes at its z and repaint."
+      RASM_PAINT { id : string!  z : number!  nodes : [node]!  texts : [RasmText] }
+        @description "Keep one control's nodes and its catalog-keyed texts at its z and repaint; each text is painted in the active locale."
       RASM_VISIBLE { owner : string!  shown : [string]!  hidden : [string]! }
         @description "Stop drawing the paints of the hidden ids and draw the shown ids again; the paints are kept."
       RASM_RESIZE { width : number!  height : number! }

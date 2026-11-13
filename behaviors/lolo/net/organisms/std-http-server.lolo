@@ -97,14 +97,6 @@ orbital HttpServerOrbital {
       @label "Mock integrations"
       @description "Whether integrations are mocked regardless of the environment (the --mock flag); a mocked deployment is not asked for its integration credentials."
       @tier "policy"
-    ownOrbital : string = "HttpServerOrbital"
-      @label "Own orbital"
-      @description "The name of the orbital this server is composed in; the identity binding names it in the program/dispatch that presents a credential to the request's client session. Set it to the composing orbital's name."
-      @tier "infra"
-    ownTrait : string = "ServerBinding"
-      @label "Binding trait"
-      @description "The name the identity binding trait has in that orbital (the composing orbital's prefix included)."
-      @tier "infra"
     identityEntity : entity = ViewerRow
       @label "Identity entity"
       @description "The [identity] entity whose row, keyed by the verified subject, supplies the signed-in viewer's role (the role comes only from this row, never from a claim). Bind the app's [identity] entity."
@@ -280,8 +272,6 @@ orbital HttpServerOrbital {
       identityEntity: @config.identityEntity
       createIdentity: @config.createIdentity
       createRole: @config.createRole
-      ownOrbital: @config.ownOrbital
-      ownTrait: @config.ownTrait
     }
     listens {
       ServerDispatch.IDENTITY_REQUIRED -> BEARER_PRESENT
@@ -290,16 +280,9 @@ orbital HttpServerOrbital {
       ServerBearer.BEARER_KEY_VERIFIED -> KEY_SEEN with { requestId: ?requestId }
       ServerBearer.BEARER_ANONYMOUS -> ANONYMOUS_SEEN
       ServerBearer.BEARER_REFUSED -> REFUSED_SEEN
-      ServerBearer.BEARER_DEFERRED -> BEARER_DEFERRED
-      ServerSettleRelay.SETTLE_RELAYED -> SETTLE_RELAYED
     }
   }
 
-  trait ServerSettleRelay = Binding.traits.IdentitySettleRelay {
-    listens {
-      ServerBinding.CREDENTIAL_SETTLED -> CREDENTIAL_SETTLED
-    }
-  }
 
   trait ServerBearer = Bearer.traits.BearerVerifier {
     config {
@@ -386,5 +369,4 @@ orbital HttpServerOrbital {
   }
 
   page http { host: @config.host, port: @config.port, path: "/" } as Api -> BootGuard, BootCreds, BootCheck, Http1, Http1Timer, ServerPolicy, ServerRateLimiter, ServerRouter, ServerDispatch, ServerStatic, ServerCompress, CompressPolicy, CompressGzip, CompressBrotli, StreamTicketer, TicketMint, TicketTake, ServerSse, ServerLiveFeed, ServerBearer, ServerBinding, ApiKeys, BearerX509, BearerHttp, BearerHttpFrame
-  page boot as ApiSettle -> ServerSettleRelay
 }

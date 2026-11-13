@@ -30,7 +30,9 @@ orbital BehaviorPlayground {
     topics : [PlaygroundTopic] = []
     leaves : [PlaygroundLeaf] = []
     leafSelected : string = ""
-    expanded : [string] @description "The topics opened in the tree, by `<package> <topic>`." = []
+    open : [string] @description "The tree's packages, topic folders and topics folded open, by node id." = []
+    shut : [string] @description "The behavior-kind folders folded closed; a kind folder under an open topic is open unless listed here." = []
+    foldsSeeded : boolean @description "The tree's first folds (every package, and the starting topic off a route) were set." = false
     routePending : boolean @description "On a route page, the tree waits for the route's behavior instead of opening the start topic." = false
     routeBehavior : string @description "The behavior the route names; empty when the page has none or it was opened." = ""
     routeLeaves : [PlaygroundLeaf] @description "The catalog tree the route last heard, kept so a later route mount opens its behavior without waiting for the tree again." = []
@@ -113,17 +115,12 @@ orbital BehaviorPlayground {
     listens {
       BehaviorCatalogLlm.LLM_EMBED_RESULT -> EMBEDDED
       BehaviorCatalogLlm.LLM_FAILED -> SEARCH_FAILED
-      PlaygroundTopics.TOPIC_PICKED -> TOPIC
       EMBEDDED {
         embeddings : [[number]]!
       }
       SEARCH_FAILED {
         code : string
         message : string!
-      }
-      TOPIC {
-        package : string!
-        topic : string!
       }
     }
   }
@@ -291,14 +288,20 @@ orbital BehaviorPlayground {
     initial: idle
 
     state idle {
-      INIT -> idle
+      INIT -> idle when (> (array/len @entity.topics) 0)
+        (set @entity.routePending (validate/required ?name))
+        (emit TOPICS_SHOWN {})
+      INIT -> idle when (= (array/len @entity.topics) 0)
         (set @entity.routePending (validate/required ?name))
         (render-ui main { type: stack, direction: vertical, gap: sm, className: "p-3", children: [{ type: stack, direction: horizontal, align: center, gap: sm, className: "px-2 pb-1", children: [{ type: icon, name: blocks, size: md }, { type: typography, content: @config.heading, variant: h4, weight: semibold }] }, { type: skeleton, variant: list, rows: 8 }] })
       TOPICS_LOADED -> idle when @entity.routePending
+        (when (not @entity.foldsSeeded) (set @entity.open (array/unique (array/map ?topics (fn t @t.package)))))
+        (set @entity.foldsSeeded true)
         (set @entity.topics ?topics)
         (emit TOPICS_SHOWN {})
       TOPICS_LOADED -> idle when (not @entity.routePending)
-        (set @entity.expanded (array/unique (array/append @entity.expanded (str/concat (if (= @entity.topic "") @config.openPackage @entity.topicPackage) " " (if (= @entity.topic "") @config.openTopic @entity.topic)))))
+        (when (not @entity.foldsSeeded) (set @entity.open (array/unique (array/concat (array/map ?topics (fn t @t.package)) (array/concat [@config.openPackage] (let ((segs (str/split @config.openTopic "/"))) (array/map (array/range (array/len @segs)) (fn i (str/concat @config.openPackage " " (str/join (array/slice @segs 0 (+ @i 1)) "/"))))))))))
+        (set @entity.foldsSeeded true)
         (set @entity.topics ?topics)
         (set @entity.topicPackage (if (= @entity.topic "") @config.openPackage @entity.topicPackage))
         (set @entity.topic (if (= @entity.topic "") @config.openTopic @entity.topic))
@@ -307,7 +310,7 @@ orbital BehaviorPlayground {
         (render-ui main { type: stack, direction: vertical, gap: xs, className: "h-full overflow-y-auto p-2", children: [
           { type: stack, direction: horizontal, align: center, gap: sm, className: "px-2 pb-1", children: [{ type: icon, name: blocks, size: md }, { type: typography, content: @config.heading, variant: h4, weight: semibold }] },
           { type: typography, content: "Topics", variant: overline, color: muted, className: "px-2 pt-1" },
-          { type: file-tree, selectedId: (if (= @entity.leafSelected "") (str/concat @entity.topicPackage " " @entity.topic) @entity.leafSelected), expandedPaths: (array/concat (array/concat (array/unique (array/map @entity.topics (fn t @t.package))) (array/unique (array/flatten (array/map @entity.expanded (fn e (let ((pkg (default (array/first (str/split @e " ")) "")) (segs (str/split (default (array/last (str/split @e " ")) "") "/"))) (array/map (array/range (array/len @segs)) (fn i (str/concat @pkg " " (str/join (array/slice @segs 0 (+ @i 1)) "/")))))))))) (array/unique (array/map (array/filter @entity.leaves (fn l (array/includes @entity.expanded (str/concat @l.package " " @l.topic)))) (fn l (str/concat @l.package " " @l.topic "/" @l.kind "s"))))), onNodeSelect: NODE_SELECTED, items: (array/concat (array/concat (array/concat
+          { type: file-tree, selectedId: @entity.leafSelected, expandedPaths: (array/concat @entity.open (array/unique (array/filter (array/map (array/filter @entity.leaves (fn l (array/includes @entity.open (str/concat @l.package " " @l.topic)))) (fn l (str/concat @l.package " " @l.topic "/" @l.kind "s"))) (fn k (not (array/includes @entity.shut @k)))))), onNodeSelect: NODE_SELECTED, onNodeToggle: NODE_TOGGLED, items: (array/concat (array/concat (array/concat
             (array/concat
               (array/map (array/filter @config.labels (fn l (array/some @entity.topics (fn t (= @t.package @l.package))))) (fn l { id: @l.package, label: @l.label, icon: package }))
               (array/map (array/filter (array/unique (array/map @entity.topics (fn t @t.package))) (fn pkg (not (array/some @config.labels (fn l (= @l.package @pkg)))))) (fn pkg { id: @pkg, label: @pkg, icon: package })))
@@ -315,21 +318,22 @@ orbital BehaviorPlayground {
             (if @config.leaves (array/map (array/unique (array/map (array/sort @entity.leaves "topic" "asc") (fn l (str/concat @l.package " " @l.topic "/" @l.kind "s")))) (fn key { id: @key, label: (default (array/last (str/split @key "/")) ""), parentId: (str/join (array/slice (str/split @key "/") 0 (- (array/len (str/split @key "/")) 1)) "/"), icon: folder })) []))
             (if @config.leaves (array/map (array/sort @entity.leaves "behavior" "asc") (fn l { id: @l.behavior, label: (array/last (str/split @l.behavior "/")), parentId: (str/concat @l.package " " @l.topic "/" @l.kind "s"), icon: (let ((ic (array/find @config.leafIcons (fn i (= @i.kind @l.kind))))) (if (= @ic null) "file" (object/get @ic "icon" "file"))) })) [])) }
         ] })
-      NODE_SELECTED -> idle when (array/some @entity.topics (fn t (= (str/concat @t.package " " @t.topic) ?id)))
-        (let ((picked (array/find @entity.topics (fn t (= (str/concat @t.package " " @t.topic) ?id)))))
-          (do
-            (set @entity.topicPackage @picked.package)
-            (set @entity.topic @picked.topic)
-            (set @entity.leafSelected "")
-            (set @entity.expanded (array/unique (array/append @entity.expanded ?id)))
-            (emit TOPIC_PICKED { package: @picked.package, topic: @picked.topic, count: @picked.count })
-            (emit TOPICS_SHOWN {})))
-      NODE_SELECTED -> idle when (and (not (array/some @entity.topics (fn t (= (str/concat @t.package " " @t.topic) ?id)))) (array/some @entity.leaves (fn l (= @l.behavior ?id))))
+      NODE_TOGGLED -> idle when (array/some @entity.leaves (fn l (= (str/concat @l.package " " @l.topic "/" @l.kind "s") ?id)))
+        (set @entity.shut (if ?expanded (array/filter @entity.shut (fn k (!= @k ?id))) (array/unique (array/append @entity.shut ?id))))
+        (emit TOPICS_SHOWN {})
+      NODE_TOGGLED -> idle when (not (array/some @entity.leaves (fn l (= (str/concat @l.package " " @l.topic "/" @l.kind "s") ?id))))
+        (set @entity.open (if ?expanded (array/unique (array/append @entity.open ?id)) (array/filter @entity.open (fn o (!= @o ?id)))))
+        (emit TOPICS_SHOWN {})
+      NODE_SELECTED -> idle when (array/some @entity.leaves (fn l (= @l.behavior ?id)))
         (set @entity.leafSelected ?id)
-        (let ((leaf (array/find @entity.leaves (fn l (= @l.behavior ?id))))) (when (!= @leaf null) (emit LEAF_PICKED { behavior: ?id, value: (object/get @leaf "value") })))
+        (let ((leaf (array/find @entity.leaves (fn l (= @l.behavior ?id)))))
+          (when (!= @leaf null)
+            (do
+              (set @entity.topicPackage @leaf.package)
+              (set @entity.topic @leaf.topic)
+              (emit LEAF_PICKED { behavior: ?id, package: @leaf.package, topic: @leaf.topic, value: (object/get @leaf "value") }))))
         (navigate (str/concat "/" ?id))
         (emit TOPICS_SHOWN {})
-      NODE_SELECTED -> idle when (and (not (array/some @entity.topics (fn t (= (str/concat @t.package " " @t.topic) ?id)))) (not (array/some @entity.leaves (fn l (= @l.behavior ?id)))))
       TREE_LOADED -> idle
         (set @entity.leaves ?data)
         (emit TOPICS_SHOWN {})
@@ -338,19 +342,16 @@ orbital BehaviorPlayground {
         (set @entity.topicPackage ?package)
         (set @entity.topic ?topic)
         (set @entity.leafSelected ?behavior)
-        (set @entity.expanded (array/unique (array/append @entity.expanded (str/concat ?package " " ?topic))))
+        (set @entity.open (array/unique (array/concat @entity.open (array/concat [?package] (let ((segs (str/split ?topic "/"))) (array/map (array/range (array/len @segs)) (fn i (str/concat ?package " " (str/join (array/slice @segs 0 (+ @i 1)) "/")))))))))
+        (set @entity.shut (array/filter @entity.shut (fn k (not (array/some @entity.leaves (fn l (and (= @l.behavior ?behavior) (= @k (str/concat @l.package " " @l.topic "/" @l.kind "s")))))))))
         (emit TOPICS_SHOWN {})
     }
 
     emits {
-      TOPIC_PICKED -> external {
-        package : string!
-        topic : string!
-        count : number!
-      }
-        @description "A topic was chosen in the tree."
       LEAF_PICKED -> external {
         behavior : string!
+        package : string!
+        topic : string!
         value : behavior!
       }
         @description "A behavior was chosen in the tree."
@@ -371,6 +372,12 @@ orbital BehaviorPlayground {
       NODE_SELECTED {
         id : string!
       }
+        @description "A behavior row was clicked."
+      NODE_TOGGLED {
+        id : string!
+        expanded : boolean!
+      }
+        @description "A folder row, its chevron or the keyboard asked to fold it open (expanded) or closed."
       TREE_LOADED {
         data : [PlaygroundLeaf]!
       }
@@ -458,10 +465,6 @@ orbital BehaviorPlayground {
           { type: empty-state, icon: mouse-pointer-click, title: "Pick a behavior in the tree", description: "Open a topic in the tree on the left and click a behavior: it runs live here, with its state machines and source a tab away." }
         ] })
         (emit STATUS { behavior: "", topic: @entity.topic })
-      TOPIC_PICKED -> browsing
-        (set @entity.topicPackage ?package)
-        (set @entity.topic ?topic)
-        (emit STAGE_SHOWN {})
       OPEN -> opening
         (emit GUEST_RESET {})
         (set @entity.behavior ?behavior)
@@ -501,10 +504,6 @@ orbital BehaviorPlayground {
         ] }] })
       BEHAVIOR_FAILED -> opening when (!= ?behavior @entity.behavior)
       GUEST_REOPEN -> opening
-      TOPIC_PICKED -> browsing
-        (set @entity.topicPackage ?package)
-        (set @entity.topic ?topic)
-        (emit STAGE_SHOWN {})
     }
 
     state open {
@@ -525,14 +524,6 @@ orbital BehaviorPlayground {
           { type: alert, variant: error, title: (str/concat @entity.behavior " could not be opened"), message: @entity.error }
         ] }] })
       BEHAVIOR_FAILED -> open when (!= ?behavior @entity.behavior)
-      TOPIC_PICKED -> browsing
-        (emit GUEST_RESET {})
-        (set @entity.topicPackage ?package)
-        (set @entity.topic ?topic)
-        (set @entity.behavior "")
-        (set @entity.value null)
-        (set @entity.status browsing)
-        (emit STAGE_SHOWN {})
       OPEN -> open when (= ?behavior @entity.behavior)
       OPEN -> opening when (!= ?behavior @entity.behavior)
         (emit GUEST_RESET {})
@@ -560,11 +551,6 @@ orbital BehaviorPlayground {
         (set @entity.status opening)
         (render-ui main { type: container, size: full, padding: md, children: [{ type: skeleton, variant: detail, rows: 4 }] })
         (emit LOAD_BEHAVIOR { behavior: ?behavior, value: ?value })
-      TOPIC_PICKED -> browsing
-        (set @entity.topicPackage ?package)
-        (set @entity.topic ?topic)
-        (set @entity.status browsing)
-        (emit STAGE_SHOWN {})
     }
 
     emits {
@@ -586,7 +572,6 @@ orbital BehaviorPlayground {
     }
 
     listens {
-      PlaygroundTopics.TOPIC_PICKED -> TOPIC_PICKED
       PlaygroundTopics.LEAF_PICKED -> OPEN
       PlaygroundRoute.ROUTE_OPEN -> OPEN
       INIT {
@@ -606,11 +591,6 @@ orbital BehaviorPlayground {
         value : behavior
         package : string
         topic : string
-      }
-      TOPIC_PICKED {
-        package : string!
-        topic : string!
-        count : number!
       }
       BEHAVIOR_LOADED {
         behavior : string!

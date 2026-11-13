@@ -75875,6 +75875,986 @@
           }
         }
       ]
+    },
+    {
+      "id": "identity-session-named-sign-in-in-route-trait-fires",
+      "steps": [
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "PATTERNS_HEARD",
+          "from": "ready",
+          "payload": {
+            "patterns": {}
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "EMBEDS_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "all": {},
+            "config": {},
+            "guards": {},
+            "effects": {}
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "Fx",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Task",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true,
+                        "nullable": false
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "Task",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "let",
+                                [
+                                  [
+                                    "v",
+                                    [
+                                      "jws/verify",
+                                      "@payload.token",
+                                      "@payload.key"
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "identity/sign-in",
+                                  "@v",
+                                  "@payload.session",
+                                  {
+                                    "emit": {
+                                      "success": "OK"
+                                    }
+                                  }
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "dispatch": "client"
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/p",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "schemaVersion": 1
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "circuit-client-bound",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_IDENTITY_SESSION_OUTSIDE_PROGRAM_STEP",
+                      "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[1].effects",
+                      "message": "T names the session `identity/sign-in` binds, but it runs in a viewer's session (a route page mounts it): only a step running in the program session may name one, and the kernel refuses it here with not-program-session",
+                      "suggestion": "Leave the session out to bind the session the step runs in, or move the sign-in to a trait mounted only on a protocol page (boot, http) that asks for it",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "identity-session-named-sign-out-in-route-trait-fires",
+      "steps": [
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "PATTERNS_HEARD",
+          "from": "ready",
+          "payload": {
+            "patterns": {}
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "EMBEDS_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "all": {},
+            "config": {},
+            "guards": {},
+            "effects": {}
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "Fx",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Task",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true,
+                        "nullable": false
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "Task",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "identity/sign-out",
+                                "@payload.session"
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "dispatch": "client"
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/p",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "schemaVersion": 1
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "circuit-client-bound",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_IDENTITY_SESSION_OUTSIDE_PROGRAM_STEP",
+                      "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[1].effects",
+                      "message": "T names the session `identity/sign-out` binds, but it runs in a viewer's session (a route page mounts it): only a step running in the program session may name one, and the kernel refuses it here with not-program-session",
+                      "suggestion": "Leave the session out to bind the session the step runs in, or move the sign-in to a trait mounted only on a protocol page (boot, http) that asks for it",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-identity-sign-in-without-session-in-route-trait",
+      "steps": [
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "PATTERNS_HEARD",
+          "from": "ready",
+          "payload": {
+            "patterns": {}
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "EMBEDS_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "all": {},
+            "config": {},
+            "guards": {},
+            "effects": {}
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "Fx",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Task",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true,
+                        "nullable": false
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "Task",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "let",
+                                [
+                                  [
+                                    "v",
+                                    [
+                                      "jws/verify",
+                                      "@payload.token",
+                                      "@payload.key"
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "identity/sign-in",
+                                  "@v",
+                                  {
+                                    "emit": {
+                                      "success": "OK"
+                                    }
+                                  }
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "dispatch": "client"
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/p",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "schemaVersion": 1
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "circuit-client-bound",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-identity-session-named-on-boot-page-trait",
+      "steps": [
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "PATTERNS_HEARD",
+          "from": "ready",
+          "payload": {
+            "patterns": {}
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "EMBEDS_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "all": {},
+            "config": {},
+            "guards": {},
+            "effects": {}
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "Fx",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Task",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true,
+                        "nullable": false
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "Task",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "let",
+                                [
+                                  [
+                                    "v",
+                                    [
+                                      "jws/verify",
+                                      "@payload.token",
+                                      "@payload.key"
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "identity/sign-in",
+                                  "@v",
+                                  "@payload.session",
+                                  {
+                                    "emit": {
+                                      "success": "OK"
+                                    }
+                                  }
+                                ]
+                              ],
+                              [
+                                "identity/sign-out",
+                                "@payload.session"
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "dispatch": "client"
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/p",
+                      "protocol": "boot",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "schemaVersion": 1
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "circuit-client-bound",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-identity-session-named-on-http-page-trait",
+      "steps": [
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "PATTERNS_HEARD",
+          "from": "ready",
+          "payload": {
+            "patterns": {}
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "EMBEDS_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "all": {},
+            "config": {},
+            "guards": {},
+            "effects": {}
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "Fx",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Task",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true,
+                        "nullable": false
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "Task",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "let",
+                                [
+                                  [
+                                    "v",
+                                    [
+                                      "jws/verify",
+                                      "@payload.token",
+                                      "@payload.key"
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "identity/sign-in",
+                                  "@v",
+                                  "@payload.session",
+                                  {
+                                    "emit": {
+                                      "success": "OK"
+                                    }
+                                  }
+                                ]
+                              ],
+                              [
+                                "identity/sign-out",
+                                "@payload.session"
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "dispatch": "client"
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/p",
+                      "protocol": "http",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "schemaVersion": 1
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "circuit-client-bound",
+                  "scope": "",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "identity-session-named-in-embedded-trait-fires",
+      "steps": [
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "PATTERNS_HEARD",
+          "from": "ready",
+          "payload": {
+            "patterns": {}
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "EMBEDS_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "all": {
+              "0-0": [
+                "B"
+              ]
+            },
+            "config": {},
+            "guards": {},
+            "effects": {
+              "0-0": [
+                "B"
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "Fx",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Task",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true,
+                        "nullable": false
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "Task",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "type": "@trait.B"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "dispatch": "client"
+                    },
+                    {
+                      "name": "B",
+                      "linkedEntity": "Task",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT"
+                          },
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "GO",
+                            "effects": [
+                              [
+                                "let",
+                                [
+                                  [
+                                    "v",
+                                    [
+                                      "jws/verify",
+                                      "@payload.token",
+                                      "@payload.key"
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "identity/sign-in",
+                                  "@v",
+                                  "@payload.session",
+                                  {
+                                    "emit": {
+                                      "success": "OK"
+                                    }
+                                  }
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      "dispatch": "client"
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "P",
+                      "path": "/p",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "schemaVersion": 1
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintCircuitClientBound",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "circuit-client-bound",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_IDENTITY_SESSION_OUTSIDE_PROGRAM_STEP",
+                      "path": "orbitals[0 (O)].traits[1 (B)].stateMachine.transitions[1].effects",
+                      "message": "B names the session `identity/sign-in` binds, but it runs in a viewer's session (a route page mounts it): only a step running in the program session may name one, and the kernel refuses it here with not-program-session",
+                      "suggestion": "Leave the session out to bind the session the step runs in, or move the sign-in to a trait mounted only on a protocol page (boot, http) that asks for it",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
     }
   ]
 }

@@ -1,25 +1,750 @@
 {
  "atom": "auth/atoms/std-identity-binding.lolo",
  "trait": "IdentityBinder",
- "note": "How a failed credential forward is answered: an ended client session (the kernel's SESSION_ENDED, EXEC-DIST-9) is told apart from every other failure.",
+ "note": "The one owner of a sign-in (docs/Almadar_Orbital_Core.md §11): an ask is verified in the program session and its outcome matched by the session the sign-in or sign-out names.",
  "cases": [
   {
-   "id": "a-forward-refused-as-session-ended-answers-identity-session-ended",
+   "id": "an ask naming no session and carrying no header is anonymous",
+   "config": {
+    "createIdentity": true,
+    "identityEntity": "Identity"
+   },
    "steps": [
     {
-     "event": "CREDENTIAL_FAILED",
+     "event": "BEARER_PRESENT",
      "payload": {
-      "key": "7",
-      "error": "session tab-1 ended: mount again with the frames the client holds",
-      "errors": [
-       {
-        "code": "SESSION_ENDED",
-        "status": 409
-       }
-      ]
+      "requestId": 7,
+      "authorization": "",
+      "clientId": ""
      },
      "expect": {
+      "fired": true,
+      "exactEmits": [
+       {
+        "event": "IDENTITY_ANONYMOUS",
+        "payload": {
+         "requestId": 7
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "CONTROL an ask naming no session but carrying a header is refused no-client-session",
+   "config": {
+    "createIdentity": true,
+    "identityEntity": "Identity"
+   },
+   "steps": [
+    {
+     "event": "BEARER_PRESENT",
+     "payload": {
+      "requestId": 7,
+      "authorization": "Bearer a.b.c",
+      "clientId": ""
+     },
+     "expect": {
+      "fired": true,
+      "exactEmits": [
+       {
+        "event": "IDENTITY_REFUSED",
+        "payload": {
+         "requestId": 7,
+         "reason": "no-client-session"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an ask naming a session is verified in the program session",
+   "config": {
+    "createIdentity": true,
+    "identityEntity": "Identity"
+   },
+   "steps": [
+    {
+     "event": "BEARER_PRESENT",
+     "payload": {
+      "requestId": 7,
+      "authorization": "Bearer a.b.c",
+      "clientId": "tab-1"
+     },
+     "expect": {
+      "fired": true,
+      "exactEmits": [
+       {
+        "event": "BEARER_VERIFY",
+        "payload": {
+         "requestId": 7,
+         "authorization": "Bearer a.b.c"
+        }
+       }
+      ],
+      "entity": {
+       "asks": [
+        {
+         "requestId": 7,
+         "session": "tab-1",
+         "self": false,
+         "authorization": "Bearer a.b.c",
+         "stage": "verifying",
+         "reason": "",
+         "subject": "",
+         "email": "",
+         "name": "",
+         "created": false
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "a sign-in outcome answers the ask of the session it names",
+   "config": {
+    "createIdentity": true,
+    "identityEntity": "Identity"
+   },
+   "entity": {
+    "asks": [
+     {
+      "requestId": 7,
+      "session": "tab-1",
+      "self": false,
+      "authorization": "Bearer a.b.c",
+      "stage": "signing",
+      "reason": "",
+      "subject": "u1",
+      "email": "",
+      "name": "",
+      "created": false
+     },
+     {
+      "requestId": 8,
+      "session": "tab-2",
+      "self": false,
+      "authorization": "Bearer a.b.c",
+      "stage": "signing",
+      "reason": "",
+      "subject": "u2",
+      "email": "",
+      "name": "",
+      "created": false
+     }
+    ]
+   },
+   "steps": [
+    {
+     "event": "SIGNED_IN",
+     "payload": {
+      "subject": "u2",
+      "session": "tab-2"
+     },
+     "expect": {
+      "fired": true,
+      "exactEmits": [
+       {
+        "event": "IDENTITY_BOUND",
+        "payload": {
+         "requestId": 8
+        }
+       }
+      ],
+      "entity": {
+       "asks": [
+        {
+         "requestId": 7,
+         "session": "tab-1",
+         "self": false,
+         "authorization": "Bearer a.b.c",
+         "stage": "signing",
+         "reason": "",
+         "subject": "u1",
+         "email": "",
+         "name": "",
+         "created": false
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "CONTROL a sign-in outcome for a session with no ask answers nothing",
+   "config": {
+    "createIdentity": true,
+    "identityEntity": "Identity"
+   },
+   "entity": {
+    "asks": [
+     {
+      "requestId": 7,
+      "session": "tab-1",
+      "self": false,
+      "authorization": "Bearer a.b.c",
+      "stage": "signing",
+      "reason": "",
+      "subject": "u1",
+      "email": "",
+      "name": "",
+      "created": false
+     }
+    ]
+   },
+   "steps": [
+    {
+     "event": "SIGNED_IN",
+     "payload": {
+      "subject": "u9",
+      "session": "tab-9"
+     },
+     "expect": {
+      "neverEmits": [
+       "IDENTITY_BOUND"
+      ],
+      "entity": {
+       "asks": [
+        {
+         "requestId": 7,
+         "session": "tab-1",
+         "self": false,
+         "authorization": "Bearer a.b.c",
+         "stage": "signing",
+         "reason": "",
+         "subject": "u1",
+         "email": "",
+         "name": "",
+         "created": false
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "two asks of one session are answered oldest first",
+   "config": {
+    "createIdentity": true,
+    "identityEntity": "Identity"
+   },
+   "entity": {
+    "asks": [
+     {
+      "requestId": 7,
+      "session": "tab-1",
+      "self": false,
+      "authorization": "Bearer a.b.c",
+      "stage": "signing",
+      "reason": "",
+      "subject": "u1",
+      "email": "",
+      "name": "",
+      "created": false
+     },
+     {
+      "requestId": 8,
+      "session": "tab-1",
+      "self": false,
+      "authorization": "Bearer a.b.c",
+      "stage": "signing",
+      "reason": "",
+      "subject": "u1",
+      "email": "",
+      "name": "",
+      "created": false
+     }
+    ]
+   },
+   "steps": [
+    {
+     "event": "SIGNED_IN",
+     "payload": {
+      "subject": "u1",
+      "session": "tab-1"
+     },
+     "expect": {
+      "fired": true,
+      "exactEmits": [
+       {
+        "event": "IDENTITY_BOUND",
+        "payload": {
+         "requestId": 7
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an absent header signs the named session out and answers anonymous",
+   "config": {
+    "createIdentity": true,
+    "identityEntity": "Identity"
+   },
+   "entity": {
+    "asks": [
+     {
+      "requestId": 7,
+      "session": "tab-1",
+      "self": false,
+      "authorization": "Bearer a.b.c",
+      "stage": "verifying",
+      "reason": "",
+      "subject": "",
+      "email": "",
+      "name": "",
+      "created": false
+     }
+    ]
+   },
+   "steps": [
+    {
+     "event": "ANONYMOUS_SEEN",
+     "payload": {
+      "requestId": 7
+     },
+     "expect": {
+      "fired": true,
       "emits": [
+       {
+        "event": "SIGN_OUT_ASKED",
+        "payload": {
+         "requestId": 7,
+         "reason": ""
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a refused bearer signs the named session out and answers its reason",
+   "config": {
+    "createIdentity": true,
+    "identityEntity": "Identity"
+   },
+   "entity": {
+    "asks": [
+     {
+      "requestId": 7,
+      "session": "tab-1",
+      "self": false,
+      "authorization": "Bearer a.b.c",
+      "stage": "signing-out",
+      "reason": "expired",
+      "subject": "",
+      "email": "",
+      "name": "",
+      "created": false
+     }
+    ]
+   },
+   "steps": [
+    {
+     "event": "SIGNED_OUT",
+     "payload": {
+      "subject": "anonymous",
+      "session": "tab-1"
+     },
+     "expect": {
+      "fired": true,
+      "exactEmits": [
+       {
+        "event": "IDENTITY_REFUSED",
+        "payload": {
+         "requestId": 7,
+         "reason": "expired"
+        }
+       }
+      ],
+      "entity": {
+       "asks": []
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "CONTROL a sign-out with no reason answers anonymous",
+   "config": {
+    "createIdentity": true,
+    "identityEntity": "Identity"
+   },
+   "entity": {
+    "asks": [
+     {
+      "requestId": 7,
+      "session": "tab-1",
+      "self": false,
+      "authorization": "Bearer a.b.c",
+      "stage": "signing-out",
+      "reason": "",
+      "subject": "",
+      "email": "",
+      "name": "",
+      "created": false
+     }
+    ]
+   },
+   "steps": [
+    {
+     "event": "SIGNED_OUT",
+     "payload": {
+      "subject": "u1",
+      "session": "tab-1"
+     },
+     "expect": {
+      "fired": true,
+      "exactEmits": [
+       {
+        "event": "IDENTITY_ANONYMOUS",
+        "payload": {
+         "requestId": 7
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an API key binds no identity and is refused api-key-identity",
+   "config": {
+    "createIdentity": true,
+    "identityEntity": "Identity"
+   },
+   "entity": {
+    "asks": [
+     {
+      "requestId": 7,
+      "session": "tab-1",
+      "self": false,
+      "authorization": "Bearer a.b.c",
+      "stage": "verifying",
+      "reason": "",
+      "subject": "",
+      "email": "",
+      "name": "",
+      "created": false
+     }
+    ]
+   },
+   "steps": [
+    {
+     "event": "KEY_SEEN",
+     "payload": {
+      "requestId": 7
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "SIGN_OUT_ASKED",
+        "payload": {
+         "requestId": 7,
+         "reason": "api-key-identity"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a first sign-in of a new subject writes its row and verifies again",
+   "config": {
+    "createIdentity": true,
+    "identityEntity": "Identity",
+    "createRole": "learner"
+   },
+   "entity": {
+    "asks": [
+     {
+      "requestId": 7,
+      "session": "tab-1",
+      "self": false,
+      "authorization": "Bearer a.b.c",
+      "stage": "signing",
+      "reason": "",
+      "subject": "u1",
+      "email": "",
+      "name": "",
+      "created": false
+     }
+    ]
+   },
+   "steps": [
+    {
+     "event": "SIGN_IN_FAILED",
+     "payload": {
+      "error": "no row",
+      "kind": "no-identity",
+      "session": "tab-1"
+     },
+     "expect": {
+      "fired": true,
+      "neverEmits": [
+       "IDENTITY_REFUSED",
+       "IDENTITY_BOUND",
+       "SIGN_OUT_ASKED"
+      ],
+      "emits": [
+       {
+        "event": "BEARER_VERIFY",
+        "payload": {
+         "requestId": 7,
+         "authorization": "Bearer a.b.c"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a written first row verifies its ask again",
+   "config": {
+    "createIdentity": true,
+    "identityEntity": "Identity"
+   },
+   "entity": {
+    "asks": [
+     {
+      "requestId": 7,
+      "session": "tab-1",
+      "self": false,
+      "authorization": "Bearer a.b.c",
+      "stage": "creating",
+      "reason": "",
+      "subject": "u1",
+      "email": "",
+      "name": "",
+      "created": false
+     }
+    ]
+   },
+   "steps": [
+    {
+     "event": "IDENTITY_CREATED",
+     "payload": {
+      "id": "u1"
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "BEARER_VERIFY",
+        "payload": {
+         "requestId": 7,
+         "authorization": "Bearer a.b.c"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "CONTROL a second no-identity after the row was written is refused",
+   "config": {
+    "createIdentity": true,
+    "identityEntity": "Identity"
+   },
+   "entity": {
+    "asks": [
+     {
+      "requestId": 7,
+      "session": "tab-1",
+      "self": false,
+      "authorization": "Bearer a.b.c",
+      "stage": "signing",
+      "reason": "",
+      "subject": "u1",
+      "email": "",
+      "name": "",
+      "created": true
+     }
+    ]
+   },
+   "steps": [
+    {
+     "event": "SIGN_IN_FAILED",
+     "payload": {
+      "error": "no row",
+      "kind": "no-identity",
+      "session": "tab-1"
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "SIGN_OUT_ASKED",
+        "payload": {
+         "requestId": 7,
+         "reason": "identity-no-identity"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "CONTROL no-identity without createIdentity is refused",
+   "config": {
+    "createIdentity": false,
+    "identityEntity": "Identity"
+   },
+   "entity": {
+    "asks": [
+     {
+      "requestId": 7,
+      "session": "tab-1",
+      "self": false,
+      "authorization": "Bearer a.b.c",
+      "stage": "signing",
+      "reason": "",
+      "subject": "u1",
+      "email": "",
+      "name": "",
+      "created": false
+     }
+    ]
+   },
+   "steps": [
+    {
+     "event": "SIGN_IN_FAILED",
+     "payload": {
+      "error": "no row",
+      "kind": "no-identity",
+      "session": "tab-1"
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "SIGN_OUT_ASKED",
+        "payload": {
+         "requestId": 7,
+         "reason": "identity-no-identity"
+        }
+       }
+      ],
+      "neverEmits": [
+       "IDENTITY_CREATED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a row that could not be written refuses every ask waiting on one",
+   "config": {
+    "createIdentity": true,
+    "identityEntity": "Identity"
+   },
+   "entity": {
+    "asks": [
+     {
+      "requestId": 7,
+      "session": "tab-1",
+      "self": false,
+      "authorization": "Bearer a.b.c",
+      "stage": "creating",
+      "reason": "",
+      "subject": "u1",
+      "email": "",
+      "name": "",
+      "created": false
+     },
+     {
+      "requestId": 8,
+      "session": "tab-2",
+      "self": false,
+      "authorization": "Bearer a.b.c",
+      "stage": "creating",
+      "reason": "",
+      "subject": "u2",
+      "email": "",
+      "name": "",
+      "created": false
+     }
+    ]
+   },
+   "steps": [
+    {
+     "event": "IDENTITY_CREATE_FAILED",
+     "payload": {
+      "error": "store down"
+     },
+     "expect": {
+      "fired": true,
+      "emits": [
+       {
+        "event": "IDENTITY_REFUSED",
+        "payload": {
+         "requestId": 7,
+         "reason": "identity-store"
+        }
+       },
+       {
+        "event": "IDENTITY_REFUSED",
+        "payload": {
+         "requestId": 8,
+         "reason": "identity-store"
+        }
+       }
+      ],
+      "entity": {
+       "asks": []
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "an ended session answers session-ended and binds nothing",
+   "config": {
+    "createIdentity": true,
+    "identityEntity": "Identity"
+   },
+   "entity": {
+    "asks": [
+     {
+      "requestId": 7,
+      "session": "tab-1",
+      "self": false,
+      "authorization": "Bearer a.b.c",
+      "stage": "signing",
+      "reason": "",
+      "subject": "u1",
+      "email": "",
+      "name": "",
+      "created": false
+     }
+    ]
+   },
+   "steps": [
+    {
+     "event": "SIGN_IN_FAILED",
+     "payload": {
+      "error": "ended",
+      "kind": "session-ended",
+      "session": "tab-1"
+     },
+     "expect": {
+      "fired": true,
+      "exactEmits": [
        {
         "event": "IDENTITY_SESSION_ENDED",
         "payload": {
@@ -27,7 +752,75 @@
         }
        }
       ],
+      "entity": {
+       "asks": []
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "a self ask binds the session the step runs in",
+   "config": {
+    "createIdentity": true,
+    "identityEntity": "Identity"
+   },
+   "steps": [
+    {
+     "event": "BEARER_PRESENT",
+     "payload": {
+      "requestId": 3,
+      "authorization": "Bearer a.b.c",
+      "clientId": "",
+      "self": true
+     },
+     "expect": {
+      "fired": true,
+      "exactEmits": [
+       {
+        "event": "BEARER_VERIFY",
+        "payload": {
+         "requestId": 3,
+         "authorization": "Bearer a.b.c"
+        }
+       }
+      ],
+      "entity": {
+       "asks": [
+        {
+         "requestId": 3,
+         "session": "",
+         "self": true,
+         "authorization": "Bearer a.b.c",
+         "stage": "verifying",
+         "reason": "",
+         "subject": "",
+         "email": "",
+         "name": "",
+         "created": false
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "CONTROL a verdict for a request with no ask is ignored",
+   "config": {
+    "createIdentity": true,
+    "identityEntity": "Identity"
+   },
+   "steps": [
+    {
+     "event": "REFUSED_SEEN",
+     "payload": {
+      "requestId": 9,
+      "reason": "expired"
+     },
+     "expect": {
       "neverEmits": [
+       "SIGN_OUT_ASKED",
        "IDENTITY_REFUSED"
       ]
      }
@@ -35,230 +828,22 @@
    ]
   },
   {
-   "id": "control-any-other-forward-failure-is-refused-credential-dispatch",
-   "steps": [
-    {
-     "event": "CREDENTIAL_FAILED",
-     "payload": {
-      "key": "7",
-      "error": "boom",
-      "errors": [
-       {
-        "code": "EVENT_PROCESSING_ERROR",
-        "status": 500
-       }
-      ]
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "IDENTITY_REFUSED",
-        "payload": {
-         "requestId": 7,
-         "reason": "credential-dispatch"
-        }
-       }
-      ],
-      "neverEmits": [
-       "IDENTITY_SESSION_ENDED"
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "control-a-failure-with-no-errors-is-refused-credential-dispatch",
-   "steps": [
-    {
-     "event": "CREDENTIAL_FAILED",
-     "payload": {
-      "key": "7",
-      "error": "boom"
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "IDENTITY_REFUSED",
-        "payload": {
-         "requestId": 7,
-         "reason": "credential-dispatch"
-        }
-       }
-      ],
-      "neverEmits": [
-       "IDENTITY_SESSION_ENDED"
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "a-first-sign-in-of-a-new-subject-asks-the-program-session-to-write-the-row",
-   "config": {
-    "createIdentity": true,
-    "identityEntity": "Identity"
-   },
-   "entity": {
-    "awaiting": true,
-    "requestId": 7,
-    "clientId": "tab-1",
-    "authorization": "Bearer a.b.c",
-    "subject": "u1",
-    "email": "u1@example.com",
-    "name": "U One",
-    "created": false,
-    "outcome": ""
-   },
-   "steps": [
-    {
-     "event": "SIGN_IN_FAILED",
-     "payload": {
-      "error": "no row",
-      "kind": "no-identity"
-     },
-     "expect": {
-      "fired": true,
-      "neverEmits": [
-       "CREDENTIAL_REFUSED"
-      ],
-      "emits": [
-       {
-        "event": "CREDENTIAL_NEEDS_IDENTITY",
-        "payload": {
-         "requestId": 7,
-         "clientId": "tab-1",
-         "authorization": "Bearer a.b.c",
-         "subject": "u1",
-         "email": "u1@example.com",
-         "name": "U One"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "control-a-second-no-identity-after-the-row-was-written-is-refused",
-   "config": {
-    "createIdentity": true,
-    "identityEntity": "Identity"
-   },
-   "entity": {
-    "awaiting": true,
-    "requestId": 7,
-    "clientId": "tab-1",
-    "authorization": "Bearer a.b.c",
-    "subject": "u1",
-    "email": "u1@example.com",
-    "name": "U One",
-    "created": true,
-    "outcome": ""
-   },
-   "steps": [
-    {
-     "event": "SIGN_IN_FAILED",
-     "payload": {
-      "error": "no row",
-      "kind": "no-identity"
-     },
-     "expect": {
-      "fired": true,
-      "neverEmits": [
-       "CREDENTIAL_NEEDS_IDENTITY"
-      ],
-      "emits": [
-       {
-        "event": "CREDENTIAL_REFUSED",
-        "payload": {
-         "requestId": 7,
-         "reason": "identity-no-identity"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "control-no-identity-without-createIdentity-asks-for-no-row",
-   "config": {
-    "createIdentity": false,
-    "identityEntity": "Identity"
-   },
-   "entity": {
-    "awaiting": true,
-    "requestId": 7,
-    "clientId": "tab-1",
-    "authorization": "Bearer a.b.c",
-    "subject": "u1",
-    "email": "u1@example.com",
-    "name": "U One",
-    "created": false,
-    "outcome": ""
-   },
-   "steps": [
-    {
-     "event": "SIGN_IN_FAILED",
-     "payload": {
-      "error": "no row",
-      "kind": "no-identity"
-     },
-     "expect": {
-      "fired": true,
-      "neverEmits": [
-       "CREDENTIAL_NEEDS_IDENTITY"
-      ],
-      "emits": [
-       {
-        "event": "CREDENTIAL_REFUSED",
-        "payload": {
-         "requestId": 7,
-         "reason": "identity-no-identity"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "the-program-session-writes-the-first-row-with-the-declared-role",
+   "id": "the first row carries the declared role",
    "config": {
     "createIdentity": true,
     "identityEntity": "Identity",
-    "createRole": "owner",
-    "ownOrbital": "HttpServerOrbital",
-    "ownTrait": "ServerBinding"
+    "createRole": "owner"
    },
    "steps": [
     {
-     "event": "CREDENTIAL_ANSWERED",
+     "event": "CREATE_ROW",
      "payload": {
-      "result": {
-       "success": true,
-       "emittedEvents": [
-        {
-         "event": "CREDENTIAL_NEEDS_IDENTITY",
-         "payload": {
-          "requestId": 7,
-          "clientId": "tab-1",
-          "authorization": "Bearer a.b.c",
-          "subject": "u1",
-          "email": "u1@example.com",
-          "name": "U One"
-         }
-        }
-       ]
-      },
-      "key": "7"
+      "subject": "u1",
+      "email": "u1@example.com",
+      "name": "U One"
      },
      "expect": {
       "fired": true,
-      "neverEmits": [
-       "IDENTITY_REFUSED",
-       "IDENTITY_BOUND"
-      ],
       "emits": [
        {
         "event": "IDENTITY_CREATED",
@@ -275,777 +860,26 @@
    ]
   },
   {
-   "id": "control-the-program-session-writes-the-first-row-with-no-declared-role",
+   "id": "CONTROL the first row carries no role when none is declared",
    "config": {
     "createIdentity": true,
-    "identityEntity": "Identity",
-    "ownOrbital": "HttpServerOrbital",
-    "ownTrait": "ServerBinding"
+    "identityEntity": "Identity"
    },
    "steps": [
     {
-     "event": "CREDENTIAL_ANSWERED",
+     "event": "CREATE_ROW",
      "payload": {
-      "result": {
-       "success": true,
-       "emittedEvents": [
-        {
-         "event": "CREDENTIAL_NEEDS_IDENTITY",
-         "payload": {
-          "requestId": 7,
-          "clientId": "tab-1",
-          "authorization": "Bearer a.b.c",
-          "subject": "u1",
-          "email": "u1@example.com",
-          "name": "U One"
-         }
-        }
-       ]
-      },
-      "key": "7"
+      "subject": "u1",
+      "email": "u1@example.com",
+      "name": "U One"
      },
      "expect": {
       "fired": true,
-      "neverEmits": [
-       "IDENTITY_REFUSED",
-       "IDENTITY_BOUND"
-      ],
       "emits": [
        {
         "event": "IDENTITY_CREATED",
         "payload": {
          "id": "u1",
-         "email": "u1@example.com",
-         "name": "U One"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "a-written-row-presents-the-credential-again",
-   "config": {
-    "createIdentity": true,
-    "identityEntity": "Identity"
-   },
-   "entity": {
-    "binds": [
-     {
-      "requestId": 7,
-      "clientId": "tab-1",
-      "authorization": "Bearer a.b.c",
-      "subject": "u1",
-      "stage": "creating"
-     }
-    ]
-   },
-   "steps": [
-    {
-     "event": "IDENTITY_CREATED",
-     "payload": {
-      "id": "u1"
-     },
-     "expect": {
-      "fired": true,
-      "emits": [
-       {
-        "event": "REBIND_DRAIN",
-        "payload": {}
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "a-ready-request-is-presented-again-to-its-client-session-as-the-second-present",
-   "config": {
-    "ownOrbital": "HttpServerOrbital",
-    "ownTrait": "ServerBinding",
-    "createIdentity": true,
-    "identityEntity": "Identity"
-   },
-   "entity": {
-    "binds": [
-     {
-      "requestId": 7,
-      "clientId": "tab-1",
-      "authorization": "Bearer a.b.c",
-      "subject": "u1",
-      "stage": "ready"
-     }
-    ]
-   },
-   "steps": [
-    {
-     "event": "REBIND_DRAIN",
-     "payload": {},
-     "expect": {
-      "fired": true,
-      "neverEmits": [
-       "IDENTITY_REFUSED"
-      ],
-      "emits": [
-       {
-        "event": "REBIND_NEXT",
-        "payload": {}
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "a-row-that-could-not-be-written-refuses-the-request",
-   "config": {
-    "createIdentity": true,
-    "identityEntity": "Identity"
-   },
-   "entity": {
-    "binds": [
-     {
-      "requestId": 7,
-      "clientId": "tab-1",
-      "authorization": "Bearer a.b.c",
-      "subject": "u1",
-      "stage": "creating"
-     }
-    ]
-   },
-   "steps": [
-    {
-     "event": "IDENTITY_CREATE_FAILED",
-     "payload": {
-      "error": "store down"
-     },
-     "expect": {
-      "fired": true,
-      "emits": [
-       {
-        "event": "REFUSE_DRAIN",
-        "payload": {}
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "a-failed-request-is-answered-identity-refused",
-   "config": {
-    "createIdentity": true,
-    "identityEntity": "Identity"
-   },
-   "entity": {
-    "binds": [
-     {
-      "requestId": 7,
-      "clientId": "tab-1",
-      "authorization": "Bearer a.b.c",
-      "subject": "u1",
-      "stage": "failed"
-     }
-    ]
-   },
-   "steps": [
-    {
-     "event": "REFUSE_DRAIN",
-     "payload": {},
-     "expect": {
-      "fired": true,
-      "emits": [
-       {
-        "event": "IDENTITY_REFUSED",
-        "payload": {
-         "requestId": 7,
-         "reason": "identity-store"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "G-STD-389: a verify the client session cannot finish in this dispatch is reported deferred",
-   "config": {
-    "ownOrbital": "HttpServerOrbital",
-    "ownTrait": "ServerBinding",
-    "createIdentity": true,
-    "identityEntity": "Identity"
-   },
-   "entity": {
-    "presented": [
-     {
-      "requestId": 7,
-      "clientId": "tab-1",
-      "authorization": "Bearer a.b.c",
-      "created": false,
-      "deferred": false
-     }
-    ]
-   },
-   "steps": [
-    {
-     "event": "BEARER_DEFERRED",
-     "payload": {
-      "requestId": 7
-     },
-     "expect": {
-      "fired": true,
-      "emits": [
-       {
-        "event": "CREDENTIAL_DEFERRED",
-        "payload": {
-         "requestId": 7
-        }
-       }
-      ],
-      "entity": {
-       "presented": [
-        {
-         "requestId": 7,
-         "clientId": "tab-1",
-         "authorization": "Bearer a.b.c",
-         "created": false,
-         "deferred": true
-        }
-       ]
-      }
-     }
-    }
-   ]
-  },
-  {
-   "id": "CONTROL G-STD-389: a deferral for a request this session was not presented reports nothing",
-   "config": {
-    "ownOrbital": "HttpServerOrbital",
-    "ownTrait": "ServerBinding",
-    "createIdentity": true,
-    "identityEntity": "Identity"
-   },
-   "entity": {
-    "presented": [
-     {
-      "requestId": 7,
-      "clientId": "tab-1",
-      "authorization": "Bearer a.b.c",
-      "created": false,
-      "deferred": false
-     }
-    ]
-   },
-   "steps": [
-    {
-     "event": "BEARER_DEFERRED",
-     "payload": {
-      "requestId": 9
-     },
-     "expect": {
-      "neverEmits": [
-       "CREDENTIAL_DEFERRED"
-      ],
-      "entity": {
-       "presented": [
-        {
-         "requestId": 7,
-         "clientId": "tab-1",
-         "authorization": "Bearer a.b.c",
-         "created": false,
-         "deferred": false
-        }
-       ]
-      }
-     }
-    }
-   ]
-  },
-  {
-   "id": "G-STD-389: a late verdict takes its own presented request, not the newest one",
-   "config": {
-    "ownOrbital": "HttpServerOrbital",
-    "ownTrait": "ServerBinding",
-    "createIdentity": true,
-    "identityEntity": "Identity"
-   },
-   "entity": {
-    "presented": [
-     {
-      "requestId": 7,
-      "clientId": "tab-1",
-      "authorization": "Bearer a.b.c",
-      "created": false,
-      "deferred": true
-     },
-     {
-      "requestId": 8,
-      "clientId": "tab-1",
-      "authorization": "Bearer a.b.c",
-      "created": false,
-      "deferred": true
-     }
-    ]
-   },
-   "steps": [
-    {
-     "event": "REFUSED_SEEN",
-     "payload": {
-      "requestId": 7,
-      "reason": "expired"
-     },
-     "expect": {
-      "fired": true,
-      "emits": [
-       {
-        "event": "CREDENTIAL_REFUSED",
-        "payload": {
-         "requestId": 7,
-         "reason": "expired"
-        }
-       },
-       {
-        "event": "SETTLE_REPORT",
-        "payload": {
-         "requestId": 7,
-         "outcome": "refused",
-         "reason": "expired",
-         "deferred": true
-        }
-       }
-      ],
-      "entity": {
-       "requestId": 7,
-       "presented": [
-        {
-         "requestId": 8,
-         "clientId": "tab-1",
-         "authorization": "Bearer a.b.c",
-         "created": false,
-         "deferred": true
-        }
-       ]
-      }
-     }
-    }
-   ]
-  },
-  {
-   "id": "G-STD-389: a deferred request's outcome is reported to the program session",
-   "config": {
-    "ownOrbital": "HttpServerOrbital",
-    "ownTrait": "ServerBinding",
-    "createIdentity": true,
-    "identityEntity": "Identity"
-   },
-   "entity": {
-    "awaiting": true,
-    "requestId": 7,
-    "clientId": "tab-1",
-    "authorization": "Bearer a.b.c",
-    "subject": "u1",
-    "email": "u1@example.com",
-    "name": "U One",
-    "deferred": true
-   },
-   "steps": [
-    {
-     "event": "SIGNED_IN",
-     "payload": {
-      "subject": "u1"
-     },
-     "expect": {
-      "fired": true,
-      "emits": [
-       {
-        "event": "CREDENTIAL_BOUND",
-        "payload": {
-         "requestId": 7
-        }
-       },
-       {
-        "event": "SETTLE_REPORT",
-        "payload": {
-         "requestId": 7,
-         "outcome": "bound",
-         "deferred": true
-        }
-       }
-      ]
-     }
-    },
-    {
-     "event": "SETTLE_REPORT",
-     "payload": {
-      "requestId": 7,
-      "outcome": "bound",
-      "reason": "",
-      "clientId": "tab-1",
-      "authorization": "Bearer a.b.c",
-      "subject": "u1",
-      "email": "u1@example.com",
-      "name": "U One",
-      "deferred": true
-     },
-     "expect": {
-      "fired": true,
-      "emits": [
-       {
-        "event": "CREDENTIAL_SETTLED",
-        "payload": {
-         "requestId": 7,
-         "outcome": "bound",
-         "reason": "",
-         "clientId": "tab-1",
-         "authorization": "Bearer a.b.c",
-         "subject": "u1",
-         "email": "u1@example.com",
-         "name": "U One"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "CONTROL G-STD-389: an outcome answered in the presenting dispatch sends no report",
-   "config": {
-    "ownOrbital": "HttpServerOrbital",
-    "ownTrait": "ServerBinding",
-    "createIdentity": true,
-    "identityEntity": "Identity"
-   },
-   "steps": [
-    {
-     "event": "SETTLE_REPORT",
-     "payload": {
-      "requestId": 7,
-      "outcome": "bound",
-      "reason": "",
-      "clientId": "tab-1",
-      "authorization": "Bearer a.b.c",
-      "subject": "u1",
-      "email": "u1@example.com",
-      "name": "U One",
-      "deferred": false
-     },
-     "expect": {
-      "fired": false
-     }
-    }
-   ]
-  },
-  {
-   "id": "G-STD-389: the program session waits for a deferred request instead of refusing it",
-   "config": {
-    "ownOrbital": "HttpServerOrbital",
-    "ownTrait": "ServerBinding",
-    "createIdentity": true,
-    "identityEntity": "Identity"
-   },
-   "steps": [
-    {
-     "event": "CREDENTIAL_ANSWERED",
-     "payload": {
-      "result": {
-       "success": true,
-       "emittedEvents": [
-        {
-         "event": "CREDENTIAL_DEFERRED",
-         "payload": {
-          "requestId": 7
-         }
-        }
-       ]
-      },
-      "key": "7"
-     },
-     "expect": {
-      "fired": true,
-      "neverEmits": [
-       "IDENTITY_REFUSED",
-       "IDENTITY_BOUND"
-      ],
-      "entity": {
-       "waiting": [
-        7
-       ]
-      }
-     }
-    },
-    {
-     "event": "SETTLE_RELAYED",
-     "payload": {
-      "requestId": 7,
-      "outcome": "bound",
-      "reason": "",
-      "clientId": "tab-1",
-      "authorization": "Bearer a.b.c",
-      "subject": "u1",
-      "email": "u1@example.com",
-      "name": "U One"
-     },
-     "expect": {
-      "fired": true,
-      "emits": [
-       {
-        "event": "IDENTITY_BOUND",
-        "payload": {
-         "requestId": 7
-        }
-       }
-      ],
-      "entity": {
-       "waiting": []
-      }
-     }
-    }
-   ]
-  },
-  {
-   "id": "CONTROL G-STD-389: an answer with no outcome and no deferral is still refused credential-dispatch",
-   "config": {
-    "ownOrbital": "HttpServerOrbital",
-    "ownTrait": "ServerBinding",
-    "createIdentity": true,
-    "identityEntity": "Identity"
-   },
-   "steps": [
-    {
-     "event": "CREDENTIAL_ANSWERED",
-     "payload": {
-      "result": {
-       "success": true,
-       "emittedEvents": []
-      },
-      "key": "7"
-     },
-     "expect": {
-      "fired": true,
-      "emits": [
-       {
-        "event": "IDENTITY_REFUSED",
-        "payload": {
-         "requestId": 7,
-         "reason": "credential-dispatch"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "G-STD-389: a settle that arrives before the answer is kept and used by the answer",
-   "config": {
-    "ownOrbital": "HttpServerOrbital",
-    "ownTrait": "ServerBinding",
-    "createIdentity": true,
-    "identityEntity": "Identity"
-   },
-   "steps": [
-    {
-     "event": "SETTLE_RELAYED",
-     "payload": {
-      "requestId": 7,
-      "outcome": "refused",
-      "reason": "expired",
-      "clientId": "tab-1",
-      "authorization": "Bearer a.b.c",
-      "subject": "u1",
-      "email": "u1@example.com",
-      "name": "U One"
-     },
-     "expect": {
-      "fired": true,
-      "neverEmits": [
-       "IDENTITY_REFUSED",
-       "SETTLE_RESOLVE"
-      ],
-      "entity": {
-       "early": [
-        {
-         "requestId": 7,
-         "outcome": "refused",
-         "reason": "expired",
-         "clientId": "tab-1",
-         "authorization": "Bearer a.b.c",
-         "subject": "u1",
-         "email": "u1@example.com",
-         "name": "U One"
-        }
-       ]
-      }
-     }
-    },
-    {
-     "event": "CREDENTIAL_ANSWERED",
-     "payload": {
-      "result": {
-       "success": true,
-       "emittedEvents": [
-        {
-         "event": "CREDENTIAL_DEFERRED",
-         "payload": {
-          "requestId": 7
-         }
-        }
-       ]
-      },
-      "key": "7"
-     },
-     "expect": {
-      "fired": true,
-      "emits": [
-       {
-        "event": "IDENTITY_REFUSED",
-        "payload": {
-         "requestId": 7,
-         "reason": "expired"
-        }
-       }
-      ],
-      "entity": {
-       "early": []
-      }
-     }
-    }
-   ]
-  },
-  {
-   "id": "G-STD-389: a deferred request the answer already settled ignores its later report",
-   "config": {
-    "ownOrbital": "HttpServerOrbital",
-    "ownTrait": "ServerBinding",
-    "createIdentity": true,
-    "identityEntity": "Identity"
-   },
-   "steps": [
-    {
-     "event": "CREDENTIAL_ANSWERED",
-     "payload": {
-      "result": {
-       "success": true,
-       "emittedEvents": [
-        {
-         "event": "CREDENTIAL_DEFERRED",
-         "payload": {
-          "requestId": 7
-         }
-        },
-        {
-         "event": "CREDENTIAL_BOUND",
-         "payload": {
-          "requestId": 7
-         }
-        }
-       ]
-      },
-      "key": "7"
-     },
-     "expect": {
-      "fired": true,
-      "emitCounts": {
-       "IDENTITY_BOUND": 1
-      },
-      "entity": {
-       "ignored": [
-        7
-       ]
-      }
-     }
-    },
-    {
-     "event": "SETTLE_RELAYED",
-     "payload": {
-      "requestId": 7,
-      "outcome": "bound",
-      "reason": "",
-      "clientId": "tab-1",
-      "authorization": "Bearer a.b.c",
-      "subject": "u1",
-      "email": "u1@example.com",
-      "name": "U One"
-     },
-     "expect": {
-      "fired": true,
-      "neverEmits": [
-       "SETTLE_RESOLVE",
-       "IDENTITY_BOUND"
-      ],
-      "entity": {
-       "ignored": []
-      }
-     }
-    }
-   ]
-  },
-  {
-   "id": "CONTROL G-STD-389: an outcome reached in the presenting dispatch is not reported again",
-   "config": {
-    "ownOrbital": "HttpServerOrbital",
-    "ownTrait": "ServerBinding",
-    "createIdentity": true,
-    "identityEntity": "Identity"
-   },
-   "entity": {
-    "awaiting": true,
-    "requestId": 7,
-    "clientId": "tab-1",
-    "authorization": "Bearer a.b.c",
-    "subject": "u1",
-    "deferred": false
-   },
-   "steps": [
-    {
-     "event": "SIGNED_IN",
-     "payload": {
-      "subject": "u1"
-     },
-     "expect": {
-      "fired": true,
-      "exactEmits": [
-       {
-        "event": "CREDENTIAL_BOUND",
-        "payload": {
-         "requestId": 7
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "G-STD-389: the program-wide relay hands a client session's outcome to the program session",
-   "steps": [
-    {
-     "trait": "IdentitySettleRelay",
-     "event": "CREDENTIAL_SETTLED",
-     "payload": {
-      "requestId": 7,
-      "outcome": "refused",
-      "reason": "expired",
-      "clientId": "tab-1",
-      "authorization": "Bearer a.b.c",
-      "subject": "u1",
-      "email": "u1@example.com",
-      "name": "U One"
-     },
-     "expect": {
-      "fired": true,
-      "exactEmits": [
-       {
-        "event": "SETTLE_RELAYED",
-        "payload": {
-         "requestId": 7,
-         "outcome": "refused",
-         "reason": "expired",
-         "clientId": "tab-1",
-         "authorization": "Bearer a.b.c",
-         "subject": "u1",
          "email": "u1@example.com",
          "name": "U One"
         }

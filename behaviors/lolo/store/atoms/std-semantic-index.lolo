@@ -1,6 +1,6 @@
 app std-semantic-index [
   version: "1.0.0",
-  description: "std-semantic-index — meaning search over the vectors stored on graph rows. SEMANTIC_INDEX embeds each indexed row from a config recipe (ordered parts of name, description, numbers and lists, each with its label) through std-llm and stores the vector and the embedded text on the row; it re-embeds on every call, so a caller indexes after every write. SEMANTIC_SEARCH embeds a query and answers the nearest rows by cosine, optionally pre-filtered by graph and node type, dropping hits below the search floor. SEMANTIC_CANONICAL looks each item up among the rows of other graphs and adopts the best match when its cosine reaches the canonical threshold. SEMANTIC_PAIRS embeds texts and answers every pair at or above the pair floor. The embedding provider, model and origin are std-llm knobs set on the composed trait. One request runs at a time; a request that arrives meanwhile is refused with SEMANTIC_REJECTED.",
+  description: "std-semantic-index — meaning search over the vectors stored on graph rows. SEMANTIC_INDEX embeds each indexed row from a config recipe (ordered parts of name, description, numbers and lists, each with its label) through std-llm and stores the vector and the embedded text on the row; it re-embeds on every call, so a caller indexes after every write. SEMANTIC_SEARCH embeds a query and answers the nearest rows by cosine, optionally pre-filtered by graph and node type, dropping hits below the search floor. SEMANTIC_CANONICAL looks each item up among the rows of other graphs and adopts the best match when its cosine reaches the canonical threshold. SEMANTIC_PAIRS embeds texts and answers every pair at or above the pair floor. A text longer than the piece length is split at word boundaries into pieces, each piece is embedded and the text keeps the mean of its pieces' vectors, so no part of a long text is dropped; the piece length is the pieceChars knob. The embedding provider, model and origin are std-llm knobs set on the composed trait. One request runs at a time; a request that arrives meanwhile is refused with SEMANTIC_REJECTED.",
   net: { "127.0.0.1:1234": [tcp] }
 ]
 
@@ -16,6 +16,8 @@ type SemanticPair = { a : string!, b : string!, score : number! }
 type SemanticPairs = [SemanticPair]
 type SemanticPartKind = "text" | "number" | "list"
 type SemanticStrings = [string]
+type SemanticCounts = [number]
+type SemanticPieceLists = [[string]]
 type SemanticRowShape = { id : string!, graphId : string, nodeId : string, nodeType : string, name : string, embedding : [number], embeddedText : string, embeddingModel : string }
 
 uses Llm from "std/behaviors/std-llm"
@@ -76,6 +78,7 @@ orbital SemanticIndexOrbital {
     semReply : string @intrinsic = ""
     semReplyMessage : string @intrinsic = ""
     semEmbeddings : [[number]] @intrinsic = []
+    semPieceLists : [[string]] @intrinsic = []
   }
 
   entity SemanticPending [runtime] {
@@ -84,6 +87,7 @@ orbital SemanticIndexOrbital {
     items : [SemanticItem] @description "The items of an index or canonical request." @synonyms "rows to embed"
     skipped : [string] @description "The ids an index request skipped." @synonyms "skipped ids"
     texts : [SemanticTextItem] @description "The texts being embedded, in order." @synonyms "embedded texts"
+    pieces : [number] @description "How many pieces each text was split into, in text order; empty on a row written before pieces existed, which means one piece per text." @synonyms "piece counts" = []
     query : string @description "The query of a search." @synonyms "search text" = ""
     k : number @description "How many rows a search wants." @synonyms "top k" = 0
     graphIds : [string] @description "The graphs a search or canonical lookup is limited to." @synonyms "graph filter"
@@ -257,6 +261,18 @@ orbital SemanticIndexOrbital {
         (set @entity.semResolutions [])
         (set @entity.semCursor 0)
         (set @entity.semPendingId (object/get (array/first ?data) id ""))
+        (set @entity.semEmbeddings
+          (let ((counts (let ((noSemanticCounts : SemanticCounts [])) (object/get (array/first ?data) pieces @noSemanticCounts))))
+            (if (or (= (array/len @counts) 0) (!= (array/sum @counts) (array/len @entity.semEmbeddings)))
+              @entity.semEmbeddings
+              (array/map (array/range 0 (array/len @counts))
+                (fn i
+                  (let ((start (array/sum (array/take @counts @i))) (n (default (array/nth @counts @i) 0)))
+                    (let ((run (array/slice @entity.semEmbeddings @start (+ @start @n))))
+                      (if (<= (array/len @run) 1)
+                        (default (array/first @run) [])
+                        (array/map (array/range 0 (array/len (default (array/first @run) [])))
+                          (fn d (array/avg (array/map @run (fn v (default (array/nth @v @d) 0))))))))))))))
         (persist delete SemanticPending @entity.semPendingId { emit: { success: SemanticPendingDeleted, failure: SemanticStoreFailed } })
       SemanticStoreFailed -> idle
         (emit SEMANTIC_FAILED { op: @entity.semOp, key: @entity.semKey, message: ?error })
@@ -276,9 +292,33 @@ orbital SemanticIndexOrbital {
       INIT -> idle
 
       SemanticStage -> working
-        (persist create SemanticPending { id: @entity.semKey, op: @entity.semOp, items: @entity.semItems, skipped: @entity.semSkipped, texts: @entity.semTexts, query: @entity.semQuery, k: @entity.semK, graphIds: @entity.semGraphIds, nodeTypes: @entity.semNodeTypes, anyGraph: @entity.semAnyGraph, anyType: @entity.semAnyType } { emit: { success: SemanticStaged, failure: SemanticPendingFailed } })
+        (set @entity.semPieceLists
+          (array/map @entity.semTexts
+            (fn t
+              (let ((text (object/get @t text "")))
+                (if (<= (str/len @text) @config.pieceChars)
+                  [@text]
+                  (let ((words (array/flatten
+                          (array/map (array/reject (str/split @text " ") (fn w (= (str/len (str/trim @w)) 0)))
+                            (fn w
+                              (if (<= (str/len @w) @config.pieceChars)
+                                [@w]
+                                (array/map (array/range 0 (math/ceil (/ (str/len @w) @config.pieceChars)))
+                                  (fn r (str/slice @w (* @r @config.pieceChars) (math/min (str/len @w) (* (+ @r 1) @config.pieceChars))))))))))
+                        (noSemanticStrings : SemanticStrings []))
+                    (if (= (array/len @words) 0)
+                      [@text]
+                      (array/reduce @words @noSemanticStrings
+                        (fn acc w
+                          (if (= (array/len @acc) 0)
+                            [@w]
+                            (let ((cur (default (array/last @acc) "")))
+                              (if (<= (+ (str/len @cur) 1 (str/len @w)) @config.pieceChars)
+                                (array/append (array/dropLast @acc 1) (str/concat @cur " " @w))
+                                (array/append @acc @w)))))))))))))
+        (persist create SemanticPending { id: @entity.semKey, op: @entity.semOp, items: @entity.semItems, skipped: @entity.semSkipped, texts: @entity.semTexts, pieces: (array/map @entity.semPieceLists (fn p (array/len @p))), query: @entity.semQuery, k: @entity.semK, graphIds: @entity.semGraphIds, nodeTypes: @entity.semNodeTypes, anyGraph: @entity.semAnyGraph, anyType: @entity.semAnyType } { emit: { success: SemanticStaged, failure: SemanticPendingFailed } })
       SemanticStaged -> idle
-        (emit LLM_EMBED { texts: (let ((noSemanticTextItems : SemanticTextItems [])) (array/map (default ?texts @noSemanticTextItems) (fn t @t.text))), key: (as ?id CallKey) })
+        (emit LLM_EMBED { texts: (array/flatten @entity.semPieceLists), key: (as ?id CallKey) })
       SemanticPendingFailed -> idle when (= ?code "duplicate-id")
         (emit SEMANTIC_REJECTED { reason: "key-in-use", key: @entity.semKey })
       SemanticPendingFailed -> idle when (!= ?code "duplicate-id")
@@ -537,6 +577,11 @@ orbital SemanticIndexOrbital {
     }
 
     config {
+      pieceChars : number = 1000
+        @label "Longest text sent as one piece"
+        @description "A text longer than this many characters is split at word boundaries into pieces of at most this length; each piece is embedded and the text's vector is the element-wise mean of its pieces' vectors, so no part of the text is dropped. Set it below the embedding model's input limit."
+        @synonyms "piece length, embedding chunk size"
+        @tier "policy"
       indexedTypes : [string] = ["Concept", "Lesson", "PracticeExercise", "LearningGoal", "Milestone"]
         @label "Indexed node types"
         @description "The node types that are embedded; a row of any other type is skipped by SEMANTIC_INDEX."

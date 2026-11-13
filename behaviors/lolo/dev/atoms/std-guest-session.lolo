@@ -111,7 +111,7 @@ orbital GuestSessionOrbital {
     guestClientHeld : GuestProgram? @description "A split guest's client program, held until its persona sign-in settles so the viewer's first leg already runs as that persona."
     guestPage : [string] @description "The traits of the page the guest shows: its page-root paints are the ones drawn." = []
     guestError : string = ""
-    guestSigningIn : boolean @description "A credential was handed to the guest and its CREDENTIAL_BOUND or CREDENTIAL_REFUSED has not arrived yet." = false
+    guestSigningIn : boolean @description "A credential was handed to the guest and its IDENTITY_BOUND or IDENTITY_AL_REFUSED has not arrived yet." = false
     guestReturnTo : string @description "The page a denied guest asked for, opened again once it has signed in." = ""
     guestProgram : GuestProgram? @description "The program value being opened, held only until program/compose or program/open takes it: the entity rides every request a stateless host's client posts."
     guestSeed : behavior? @description "std-mock-page-seed, resolved while a mock guest opens and cleared once compose takes it: the entity rides every request a stateless host's client posts."
@@ -639,8 +639,8 @@ orbital GuestSessionOrbital {
         (emit GUEST_PAINTS { guest: @entity.guestHandle, route: @entity.guestRoute, page: @entity.guestPage, paints: @entity.guestPaints, seq: @entity.guestPaintSeq })
         (when (> (array/len (default ?hostAsks [])) 0) (emit GUEST_HOST_ASKS { guest: @entity.guestHandle, asks: (default ?hostAsks []) }))
         (when (and @config.split @entity.guestSigningIn) (emit GUEST_VIEWER_SETTLE { emitted: (default ?emitted []) }))
-        (when (and (not @config.split) @entity.guestSigningIn (array/some (default ?emitted []) (fn e (= @e.event "CREDENTIAL_BOUND")))) (do (set @entity.guestSigningIn false) (program/navigate { guest: @entity.guestHandle, route: @entity.guestReturnTo, remount: true } { emit: { success: GUEST_NAVIGATED, failure: GUEST_NAVIGATE_FAILED } })))
-        (when (and (not @config.split) @entity.guestSigningIn (not (array/some (default ?emitted []) (fn e (= @e.event "CREDENTIAL_BOUND")))) (array/some (default ?emitted []) (fn e (= @e.event "CREDENTIAL_REFUSED")))) (do (set @entity.guestSigningIn false) (emit GUEST_NOTICE { message: (str/concat @config.signInRefused " " @config.signInReason " " (default (object/get (default (array/find (default ?emitted []) (fn e (= @e.event "CREDENTIAL_REFUSED"))) { event: "", payload: { reason: "" } }) "payload.reason") "")) })))
+        (when (and (not @config.split) @entity.guestSigningIn (array/some (default ?emitted []) (fn e (= @e.event "IDENTITY_BOUND")))) (do (set @entity.guestSigningIn false) (program/navigate { guest: @entity.guestHandle, route: @entity.guestReturnTo, remount: true } { emit: { success: GUEST_NAVIGATED, failure: GUEST_NAVIGATE_FAILED } })))
+        (when (and (not @config.split) @entity.guestSigningIn (not (array/some (default ?emitted []) (fn e (= @e.event "IDENTITY_BOUND")))) (array/some (default ?emitted []) (fn e (= @e.event "IDENTITY_REFUSED")))) (do (set @entity.guestSigningIn false) (emit GUEST_NOTICE { message: (str/concat @config.signInRefused " " @config.signInReason " " (default (object/get (default (array/find (default ?emitted []) (fn e (= @e.event "IDENTITY_REFUSED"))) { event: "", payload: { reason: "" } }) "payload.reason") "")) })))
       GUEST_TICKED -> live when (!= ?guest @entity.guestHandle)
       GUEST_TICKS_FAILED -> live
         (emit GUEST_NOTICE { message: ?error })
@@ -667,17 +667,17 @@ orbital GuestSessionOrbital {
       GUEST_VIEWER_SETTLE -> live when (or (not @entity.guestSigningIn) (not (array/some ?emitted (fn e (array/includes ["IDENTITY_BOUND", "IDENTITY_REFUSED", "IDENTITY_ANONYMOUS", "IDENTITY_SESSION_ENDED"] @e.event)))))
       GUEST_CREDENTIAL -> live when (and (= ?guest @entity.guestHandle) (not (and @config.split (!= @entity.guestViewer ""))))
         (set @entity.guestSigningIn true)
-        (program/dispatch "CREDENTIAL_PRESENTED" { requestId: 0, authorization: (str/concat "Bearer " ?token) } { guest: ?guest, emit: { success: GUEST_CREDENTIAL_ANSWERED, failure: GUEST_CREDENTIAL_FAILED } })
+        (program/dispatch "BEARER_PRESENT" { requestId: 0, authorization: (str/concat "Bearer " ?token), clientId: "", self: true } { guest: ?guest, emit: { success: GUEST_CREDENTIAL_ANSWERED, failure: GUEST_CREDENTIAL_FAILED } })
       GUEST_CREDENTIAL -> live when (!= ?guest @entity.guestHandle)
-      GUEST_CREDENTIAL_ANSWERED -> live when (array/some (default ?result.emitted []) (fn e (= @e.event "CREDENTIAL_BOUND")))
+      GUEST_CREDENTIAL_ANSWERED -> live when (array/some (default ?result.emitted []) (fn e (= @e.event "IDENTITY_BOUND")))
         (emit GUEST_MOVED { guest: @entity.guestHandle, moves: (default ?result.outcomes []) })
         (set @entity.guestSigningIn false)
         (program/navigate { guest: @entity.guestHandle, route: @entity.guestReturnTo, remount: true } { emit: { success: GUEST_NAVIGATED, failure: GUEST_NAVIGATE_FAILED } })
-      GUEST_CREDENTIAL_ANSWERED -> live when (and (not (array/some (default ?result.emitted []) (fn e (= @e.event "CREDENTIAL_BOUND")))) (array/some (default ?result.emitted []) (fn e (= @e.event "CREDENTIAL_REFUSED"))))
+      GUEST_CREDENTIAL_ANSWERED -> live when (and (not (array/some (default ?result.emitted []) (fn e (= @e.event "IDENTITY_BOUND")))) (array/some (default ?result.emitted []) (fn e (= @e.event "IDENTITY_REFUSED"))))
         (emit GUEST_MOVED { guest: @entity.guestHandle, moves: (default ?result.outcomes []) })
         (set @entity.guestSigningIn false)
-        (emit GUEST_NOTICE { message: (str/concat @config.signInRefused " " @config.signInReason " " (default (object/get (default (array/find (default ?result.emitted []) (fn e (= @e.event "CREDENTIAL_REFUSED"))) { event: "", payload: { reason: "" } }) "payload.reason") "")) })
-      GUEST_CREDENTIAL_ANSWERED -> live when (and (not (array/some (default ?result.emitted []) (fn e (= @e.event "CREDENTIAL_BOUND")))) (not (array/some (default ?result.emitted []) (fn e (= @e.event "CREDENTIAL_REFUSED")))))
+        (emit GUEST_NOTICE { message: (str/concat @config.signInRefused " " @config.signInReason " " (default (object/get (default (array/find (default ?result.emitted []) (fn e (= @e.event "IDENTITY_REFUSED"))) { event: "", payload: { reason: "" } }) "payload.reason") "")) })
+      GUEST_CREDENTIAL_ANSWERED -> live when (and (not (array/some (default ?result.emitted []) (fn e (= @e.event "IDENTITY_BOUND")))) (not (array/some (default ?result.emitted []) (fn e (= @e.event "IDENTITY_REFUSED")))))
         (emit GUEST_MOVED { guest: @entity.guestHandle, moves: (default ?result.outcomes []) })
       GUEST_CREDENTIAL_FAILED -> live
         (emit GUEST_NOTICE { message: ?error })
