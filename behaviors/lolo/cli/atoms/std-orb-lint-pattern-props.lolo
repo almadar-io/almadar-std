@@ -25,7 +25,8 @@ type PtRel = { entity : string? }
 type PtDescent = { lv : [PtField]!, ok : boolean! }
 type PtEntRow = { name : string!, fields : [PtField] }
 type PtEntity = { name : string, fields : [PtField] }
-type PtOrbital = { name : string, entity : PtEntity?, auxiliaryEntities : [PtEntity], traits : [PtTrait] }
+type PtExpect = { kind : string, name : string, shape : [PtField] }
+type PtOrbital = { name : string, entity : PtEntity?, auxiliaryEntities : [PtEntity], expects : [PtExpect], traits : [PtTrait] }
 type PtProgram = { orbitals : [PtOrbital] }
 type PtPropShape = { types : [string], requiredOnParent : boolean, requiredNames : [string], enumValues : [string], kind : string, itemKind : string, of : string, requiredFields : [string], items : PtPropShape, properties : Map string PtPropShape }
 type PtPatternShape = { drawHost : boolean, drawable : boolean, fieldsContract : string, accessibleName : [string], props : Map string PtPropShape }
@@ -178,10 +179,12 @@ orbital OrbLintPatternPropsOrbital {
                                 (if (= @fm null) { lv: @nopf, ok: false }
                                   (let ((pp (object/get @fm "properties" null))) (if (= @pp null) { lv: @nopf, ok: false } { lv: @pp, ok: true })))))))
                           { lv: @nopf, ok: false })))
-                    (if (and (= @en2 "") (not (object/get @pl "ok"))) @noh
-                      (let ((def (object/get @entIdx @en2 null)) (frm (object/get @fieldRefs @pt {})) (mrm (object/get @memberRefs @pt {})) (mof (object/get @memberOf @pt {})) (pof (object/get @propOf @pt {})))
+                    (let ((def0 (object/get @entIdx @en2 null)) (exr (if (or (= @bound "") (!= (object/get @entIdx @bound null) null)) null (array/find (object/get @orb "expects" []) (fn q (and (= (object/get @q "kind" "") "entity") (= (object/get @q "name" "") @bound)))))))
+                    (let ((def (if (!= @def0 null) @def0 (if (= @exr null) null { name: @bound, fields: (object/get @exr "shape" []) }))))
+                    (if (and (= @def null) (= @en2 "") (not (object/get @pl "ok"))) @noh
+                      (let ((frm (object/get @fieldRefs @pt {})) (mrm (object/get @memberRefs @pt {})) (mof (object/get @memberOf @pt {})) (pof (object/get @propOf @pt {})))
                         (if (and (= @def null) (not (object/get @pl "ok"))) @noh
-                          (let ((fnames (if (!= @def null) (object/get @def "fields" []) (object/get @pl "lv"))) (lbl (if (!= @def null) @en2 (str/concat "payload " (str/slice @en3s 9) " of event " @trEv))))
+                          (let ((fnames (if (!= @def null) (object/get @def "fields" []) (object/get @pl "lv"))) (lbl (if (!= @def0 null) @en2 (if (!= @def null) @bound (str/concat "payload " (str/slice @en3s 9) " of event " @trEv)))))
                             (array/flatten (array/map (array/filter @okeys (fn pk (and (!= @pk "type") (!= @pk "entity") (or (!= (object/get @frm @pk "") "") (> (array/len (object/get @mrm @pk [])) 0))))) (fn pk
                               (let ((mode (object/get @frm @pk "")) (pvv (object/get @n @pk null)))
                                 (let ((pvs (if (validate/string @pvv) @pvv "")) (pva (if (validate/array @pvv) @pvv [])))
@@ -226,7 +229,7 @@ orbital OrbLintPatternPropsOrbital {
                                             [{ c: "ORB_X_UNRESOLVED_PATTERN_FIELD_REF", p: (object/get @cd "p"), m: (str/concat "Pattern '" @pt "' prop '" @pk "' references field '" @nm "' which does not exist on the rows of '" @co "'"), s: (str/concat "Use a field of the rows bound to '" @co "'") }]))))
                                      (if (or (str/includes @nm ".") (array/some @fnames (fn x (let ((fnm (object/get @x "name" null))) (and (validate/string @fnm) (or (= @fnm @nm) (= @fnm (str/concat @nm "Id"))))))))
                                       @noh
-                                      [{ c: "ORB_X_UNRESOLVED_PATTERN_FIELD_REF", p: (object/get @cd "p"), m: (str/concat "Pattern '" @pt "' prop '" @pk "' references field '" @nm "' which does not exist on entity '" @lbl "'"), s: (str/concat "Use a field declared on '" @lbl "' or add the field to the entity schema") }])))))))))))))))))
+                                      [{ c: "ORB_X_UNRESOLVED_PATTERN_FIELD_REF", p: (object/get @cd "p"), m: (str/concat "Pattern '" @pt "' prop '" @pk "' references field '" @nm "' which does not exist on entity '" @lbl "'"), s: (str/concat "Use a field declared on '" @lbl "' or add the field to the entity schema") }])))))))))))))))))))
                   (if (= @bound "") @noh
                         (let ((def2 (object/get @entIdx @bound null)) (rfm (object/get @reqFields @pt {})))
                           (let ((dfields (if (= @def2 null) [] (object/get @def2 "fields" []))))

@@ -14,7 +14,7 @@ orbital HttpRouterOrbital {
     id : string!
     status : number @description "The status of the request last answered." = 0
     pending : [RouterPending] @description "Requests received and not yet answered, each with the policy headers to carry onto its answer." = []
-    guards : [number] @description "Request ids waiting for a bearer verdict on a route that needs a verified viewer." = []
+    guards : [number] @description "Request ids waiting for the identity binder's answer (MINT_IDENTITY_REQUIRED, std-identity-binding) on a route that needs a signed-in viewer." = []
     mints : [number] @description "Request ids of ticket mints waiting for std-stream-ticket." = []
     streams : [RouterStream] @description "Stream requests waiting for their ticket to be spent." = []
     vapidKey : string @description "The public VAPID key read from VAPID_PUBLIC_KEY at INIT; empty when unset." = ""
@@ -29,7 +29,7 @@ orbital HttpRouterOrbital {
     config {
       requireSignIn : boolean = false
         @label "Require sign-in"
-        @description "When on, a request under dispatchPrefix needs a verified bearer (401 UNAUTHORIZED otherwise); the ticket route always admits the anonymous viewer, and hooks, tick, push and health are outside the guard."
+        @description "When on, a request under dispatchPrefix is one ask to the identity binder (MINT_IDENTITY_REQUIRED with the query clientId): IDENTITY_BOUND routes it, anything else answers 401 UNAUTHORIZED; the ticket route always admits the anonymous viewer, and hooks, tick, push and health are outside the guard."
         @tier "infra"
       dispatchPrefix : string = "/api/orbitals"
         @label "Dispatch prefix"

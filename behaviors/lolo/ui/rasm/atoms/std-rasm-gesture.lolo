@@ -38,7 +38,7 @@ orbital RasmGestureOrbital {
         (set @entity.lastX ?x)
         (set @entity.lastY ?y)
         (set @entity.elapsed 0)
-      RASM_TOUCHES -> pinching when (and (and (= ?id @config.id) (= ?kind "start")) (>= (array/len ?touches) 2))
+      RASM_TOUCHES -> pinching when (and (and (= ?id @config.id) (= ?kind "down")) (>= (array/len ?touches) 2))
         (set @entity.pinchStart (let ((a (array/nth ?touches 0)) (b (array/nth ?touches 1))) (math/sqrt (+ (* (- @b.x @a.x) (- @b.x @a.x)) (* (- @b.y @a.y) (- @b.y @a.y))))))
         (set @entity.scale 1)
         (set @entity.centerX (let ((a (array/nth ?touches 0)) (b (array/nth ?touches 1))) (/ (+ @a.x @b.x) 2)))
@@ -64,7 +64,7 @@ orbital RasmGestureOrbital {
       RASM_POINTER -> idle when (and (and (and (= ?id @config.id) (= ?kind "up")) (>= (math/max (math/abs (- ?x @entity.startX)) (math/abs (- ?y @entity.startY))) @config.swipeMinPx)) (< (/ (math/max (math/abs (- ?x @entity.startX)) (math/abs (- ?y @entity.startY))) (math/max 1 @entity.elapsed)) @config.flingMinSpeed))
         (emit @config.swipe { id: @config.id, direction: (if (>= (math/abs (- ?x @entity.startX)) (math/abs (- ?y @entity.startY))) (if (> (- ?x @entity.startX) 0) "right" "left") (if (> (- ?y @entity.startY) 0) "down" "up")), dx: (- ?x @entity.startX), dy: (- ?y @entity.startY) })
       RASM_POINTER -> idle when (and (and (= ?id @config.id) (= ?kind "up")) (< (math/max (math/abs (- ?x @entity.startX)) (math/abs (- ?y @entity.startY))) @config.swipeMinPx))
-      RASM_TOUCHES -> pinching when (and (and (= ?id @config.id) (= ?kind "start")) (>= (array/len ?touches) 2))
+      RASM_TOUCHES -> pinching when (and (and (= ?id @config.id) (= ?kind "down")) (>= (array/len ?touches) 2))
         (set @entity.pinchStart (let ((a (array/nth ?touches 0)) (b (array/nth ?touches 1))) (math/sqrt (+ (* (- @b.x @a.x) (- @b.x @a.x)) (* (- @b.y @a.y) (- @b.y @a.y))))))
         (set @entity.scale 1)
         (set @entity.centerX (let ((a (array/nth ?touches 0)) (b (array/nth ?touches 1))) (/ (+ @a.x @b.x) 2)))
@@ -84,7 +84,7 @@ orbital RasmGestureOrbital {
         (set @entity.centerX (let ((a (array/nth ?touches 0)) (b (array/nth ?touches 1))) (/ (+ @a.x @b.x) 2)))
         (set @entity.centerY (let ((a (array/nth ?touches 0)) (b (array/nth ?touches 1))) (/ (+ @a.y @b.y) 2)))
         (emit @config.pinch { id: @config.id, phase: "move", scale: @entity.scale, centerX: @entity.centerX, centerY: @entity.centerY })
-      RASM_TOUCHES -> idle when (and (= ?id @config.id) (= ?kind "end"))
+      RASM_TOUCHES -> idle when (and (= ?id @config.id) (= ?kind "up"))
         (emit @config.pinch { id: @config.id, phase: "end", scale: @entity.scale, centerX: @entity.centerX, centerY: @entity.centerY })
     }
 
@@ -100,7 +100,7 @@ orbital RasmGestureOrbital {
         @description "Placed rects; the recognizer takes the entry whose id is its own and paints its hit region."
       RASM_POINTER { kind : "down" | "up" | "enter" | "leave" | "move"!  id : string!  x : number!  y : number! }
         @description "A pointer event from the surface; the recognizer acts on its own id."
-      RASM_TOUCHES { kind : "start" | "move" | "end"!  id : string!  touches : [RasmTouch]! }
+      RASM_TOUCHES { kind : "down" | "move" | "up"!  id : string!  touches : [RasmTouch]! }
         @description "The touch points held on the region, for pinch. Pending a floor field: the canvas delivers one pointer only."
       RASM_GESTURE_FRAME { dtMs : number! }
         @description "One frame of a press; the tick sends it and the release speed is the travel over the frames counted."

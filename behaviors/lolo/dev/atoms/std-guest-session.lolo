@@ -94,7 +94,7 @@ type GuestStepped = { rendered : [GuestPaint]!, outcomes : [GuestMove]!, navigat
 type GuestClosed = { closed : boolean! }
 type GuestPersonaOption = { id : string!, name : string, role : string }
 type GuestPersonasReply = { success : boolean, personas : [GuestPersonaOption] }
-type GuestEmittedPayload = { reason : string }
+type GuestEmittedPayload = { reason : string, error : string }
 type GuestTextPayload = { body : string, subject : string, error : string }
 type GuestEmitted = { event : string!, payload : GuestEmittedPayload? }
 type GuestAnswered = { emitted : [GuestEmitted]?, outcomes : [GuestMove]? }
@@ -393,6 +393,7 @@ orbital GuestSessionOrbital {
       GUEST_PERSONAS_STEPPED -> opening
       GUEST_PERSONAS_FAILED -> opening
       GUEST_PERSONA_ACTED -> opening
+        (let ((m (array/find (default ?result.outcomes []) (fn o (and (= (default @o.event "") "PERSONA_ACT_AS") @o.fired))))) (when (!= @m null) (set @entity.guestPersonaTrait @m.trait)))
       GUEST_NAVIGATE -> opening
         (program/navigate { guest: ?guest, route: ?route } { emit: { success: GUEST_NAVIGATED, failure: GUEST_NAVIGATE_FAILED } })
       GUEST_SEND -> opening
@@ -541,17 +542,19 @@ orbital GuestSessionOrbital {
         (emit GUEST_NOTICE { message: ?error })
       GUEST_REVEAL_DENIED -> live when (!= @entity.guestRevealFor @entity.guestHandle)
       GUEST_PERSONA_ACTED -> live when (and (not @config.split) (array/some (default ?result.emitted []) (fn e (= @e.event "PERSONA_SIGNED_IN"))))
+        (let ((m (array/find (default ?result.outcomes []) (fn o (and (= (default @o.event "") "PERSONA_ACT_AS") @o.fired))))) (when (!= @m null) (set @entity.guestPersonaTrait @m.trait)))
         (set @entity.guestPersona (default (object/get (default (as (object/get (default (array/find (default ?result.emitted []) (fn e (= @e.event "PERSONA_SIGNED_IN"))) {}) "payload") GuestTextPayload) {}) "subject") ""))
         (emit GUEST_PERSONAS { guest: @entity.guestHandle, personas: @entity.guestPersonas, current: @entity.guestPersona })
         (program/navigate { guest: @entity.guestHandle, route: @entity.guestRoute, remount: true } { emit: { success: GUEST_NAVIGATED, failure: GUEST_NAVIGATE_FAILED } })
         (when (!= @entity.guestClientHeld null) (emit GUEST_CLIENT { guest: @entity.guestHandle, program: @entity.guestClientHeld, signedIn: (!= @entity.guestPersona "") }))
         (set @entity.guestClientHeld null)
       GUEST_PERSONA_ACTED -> live when (and @config.split (array/some (default ?result.emitted []) (fn e (= @e.event "PERSONA_SIGNED_IN"))))
+        (let ((m (array/find (default ?result.outcomes []) (fn o (and (= (default @o.event "") "PERSONA_ACT_AS") @o.fired))))) (when (!= @m null) (set @entity.guestPersonaTrait @m.trait)))
         (set @entity.guestPersona (default (object/get (default (as (object/get (default (array/find (default ?result.emitted []) (fn e (= @e.event "PERSONA_SIGNED_IN"))) {}) "payload") GuestTextPayload) {}) "subject") ""))
         (emit GUEST_PERSONAS { guest: @entity.guestHandle, personas: @entity.guestPersonas, current: @entity.guestPersona })
         (when (!= @entity.guestClientHeld null) (emit GUEST_CLIENT { guest: @entity.guestHandle, program: @entity.guestClientHeld, signedIn: (!= @entity.guestPersona "") }))
         (set @entity.guestClientHeld null)
-        (when (!= @entity.guestViewer "") (program/dispatch (str/concat @entity.guestViewerOrbital "." @entity.guestPersonaTrait ".PERSONA_ACT_AS") { persona: @entity.guestPersona } { guest: @entity.guestHandle, wire: true, orbital: @entity.guestViewerOrbital, targetTrait: @entity.guestPersonaTrait, event: "PERSONA_ACT_AS", clientId: @entity.guestViewer } { emit: { success: GUEST_VIEWER_SIGNED, failure: GUEST_STEP_FAILED } }))
+        (when (and (!= @entity.guestViewer "") (!= @entity.guestPersonaTrait "")) (program/dispatch (str/concat @entity.guestViewerOrbital "." @entity.guestPersonaTrait ".PERSONA_ACT_AS") { persona: @entity.guestPersona, clientId: @entity.guestViewer } { guest: @entity.guestHandle, wire: true, orbital: @entity.guestViewerOrbital, targetTrait: @entity.guestPersonaTrait, event: "PERSONA_ACT_AS", clientId: @entity.guestViewer } { emit: { success: GUEST_VIEWER_SIGNED, failure: GUEST_STEP_FAILED } }))
         (when (!= @entity.guestViewer "") (emit GUEST_VIEW_RESET { guest: @entity.guestHandle }))
       GUEST_PERSONA_ACTED -> live when (not (array/some (default ?result.emitted []) (fn e (= @e.event "PERSONA_SIGNED_IN"))))
         (emit GUEST_NOTICE { message: (default (object/get (default (as (object/get (default (array/find (default ?result.emitted []) (fn e (= @e.event "PERSONA_SIGN_IN_REFUSED"))) {}) "payload") GuestTextPayload) {}) "error") "The persona could not be signed in") })
@@ -560,12 +563,12 @@ orbital GuestSessionOrbital {
       GUEST_SEND -> live when (= ?guest @entity.guestHandle)
         (program/dispatch ?address ?payload { guest: ?guest, emit: { success: GUEST_STEPPED, failure: GUEST_STEP_FAILED } })
       GUEST_SEND -> live when (!= ?guest @entity.guestHandle)
-      GUEST_LEG -> live when (and (= ?guest @entity.guestHandle) (!= @entity.guestPersona "") (!= (object/get (default (json/parse ?body GuestLegBody) {}) "clientId" "") @entity.guestViewer))
+      GUEST_LEG -> live when (and (= ?guest @entity.guestHandle) (!= @entity.guestPersona "") (!= @entity.guestPersonaTrait "") (!= (object/get (default (json/parse ?body GuestLegBody) {}) "clientId" "") @entity.guestViewer))
         (set @entity.guestViewer (object/get (default (json/parse ?body GuestLegBody) {}) "clientId" ""))
         (set @entity.guestViewerOrbital ?orbital)
-        (program/dispatch (str/concat ?orbital "." @entity.guestPersonaTrait ".PERSONA_ACT_AS") { persona: @entity.guestPersona } { guest: ?guest, wire: true, orbital: ?orbital, targetTrait: @entity.guestPersonaTrait, event: "PERSONA_ACT_AS", clientId: @entity.guestViewer } { emit: { success: GUEST_VIEWER_SIGNED, failure: GUEST_STEP_FAILED } })
+        (program/dispatch (str/concat ?orbital "." @entity.guestPersonaTrait ".PERSONA_ACT_AS") { persona: @entity.guestPersona, clientId: @entity.guestViewer } { guest: ?guest, wire: true, orbital: ?orbital, targetTrait: @entity.guestPersonaTrait, event: "PERSONA_ACT_AS", clientId: @entity.guestViewer } { emit: { success: GUEST_VIEWER_SIGNED, failure: GUEST_STEP_FAILED } })
         (emit GUEST_LEG_AGAIN { guest: ?guest, leg: ?leg, orbital: ?orbital, body: ?body })
-      GUEST_LEG -> live when (and (= ?guest @entity.guestHandle) (or (= @entity.guestPersona "") (= (object/get (default (json/parse ?body GuestLegBody) {}) "clientId" "") @entity.guestViewer)))
+      GUEST_LEG -> live when (and (= ?guest @entity.guestHandle) (or (= @entity.guestPersona "") (= @entity.guestPersonaTrait "") (= (object/get (default (json/parse ?body GuestLegBody) {}) "clientId" "") @entity.guestViewer)))
         (set @entity.guestViewer (object/get (default (json/parse ?body GuestLegBody) {}) "clientId" ""))
         (set @entity.guestViewerOrbital ?orbital)
         (set @entity.guestLeg ?leg)
@@ -605,7 +608,9 @@ orbital GuestSessionOrbital {
             dispatchLog: (object/get @b "dispatchLog" {}),
             framesSince: (object/get @b "framesSince" null)
           } { emit: { success: GUEST_LEG_ANSWERED, failure: GUEST_LEG_FAILED } }))
-      GUEST_VIEWER_SIGNED -> live
+      GUEST_VIEWER_SIGNED -> live when (array/some (default (object/get (default (as ?result GuestWireAnswer) { emittedEvents: [] }) "emittedEvents") []) (fn e (= @e.event "PERSONA_SIGNED_IN")))
+      GUEST_VIEWER_SIGNED -> live when (not (array/some (default (object/get (default (as ?result GuestWireAnswer) { emittedEvents: [] }) "emittedEvents") []) (fn e (= @e.event "PERSONA_SIGNED_IN"))))
+        (emit GUEST_NOTICE { message: (str/concat "The persona could not be signed in for this viewer: " (default (object/get (default (array/find (default (object/get (default (as ?result GuestWireAnswer) { emittedEvents: [] }) "emittedEvents") []) (fn e (= @e.event "PERSONA_SIGN_IN_REFUSED"))) { event: "", payload: { reason: "" } }) "payload.error") "no trait signed it in")) })
       GUEST_LEG -> live when (!= ?guest @entity.guestHandle)
         (emit GUEST_LEG_DONE { guest: ?guest, leg: ?leg, error: "The guest this leg was sent to is closed" })
       GUEST_LEG_ANSWERED -> live

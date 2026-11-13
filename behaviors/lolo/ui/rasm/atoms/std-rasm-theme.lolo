@@ -1,6 +1,6 @@
 app std-rasm-theme [
   version: "0.1.0",
-  description: "std-rasm-theme — the Rasm kit's look tables. Eight presets (naqsh, glass, sand, instrument, terminal, paper, taif-day, taif-night) hold every look the kit paints, keyed component/intent/state. RASM_THEME { name, looks } is emitted on INIT, on RASM_THEME_SET { name } and on RASM_THEME_TOGGLE (the other preset), so every control repaints from the other preset's looks."
+  description: "std-rasm-theme — the Rasm kit's look tables. Eight presets (naqsh, glass, sand, instrument, terminal, paper, taif-day, taif-night) hold every look the kit paints, keyed component/intent/state. RASM_THEME { name, looks } is emitted on INIT, on RASM_THEME_SET { name } and on RASM_THEME_TOGGLE (the other preset of the declared toggleA/toggleB pair, naqsh and glass by default), so every control repaints from the other preset's looks."
 ]
 
 type RasmMaterial = { wgsl : string!, params : [number]!, live : boolean! }
@@ -29,7 +29,7 @@ orbital RasmThemeOrbital {
         (set @entity.active ?name)
         (emit RASM_THEME { name: ?name, looks: (if (= ?name "taif-day") @config.taifDay (if (= ?name "taif-night") @config.taifNight (if (= ?name "glass") @config.glass (if (= ?name "sand") @config.sand (if (= ?name "instrument") @config.instrument (if (= ?name "terminal") @config.terminal (if (= ?name "paper") @config.paper @config.naqsh))))))) })
       RASM_THEME_TOGGLE -> ready
-        (set @entity.active (if (= @entity.active "naqsh") "glass" "naqsh"))
+        (set @entity.active (if (= @entity.active @config.toggleA) @config.toggleB @config.toggleA))
         (emit RASM_THEME { name: @entity.active, looks: (if (= @entity.active "taif-day") @config.taifDay (if (= @entity.active "taif-night") @config.taifNight (if (= @entity.active "glass") @config.glass (if (= @entity.active "sand") @config.sand (if (= @entity.active "instrument") @config.instrument (if (= @entity.active "terminal") @config.terminal (if (= @entity.active "paper") @config.paper @config.naqsh))))))) })
       RASM_THEME_SET -> ready when (not (or (= ?name "naqsh") (= ?name "glass") (= ?name "sand") (= ?name "instrument") (= ?name "terminal") (= ?name "paper") (= ?name "taif-day") (= ?name "taif-night")))
     }
@@ -58,6 +58,14 @@ orbital RasmThemeOrbital {
       preset : "naqsh" | "glass" | "sand" | "instrument" | "terminal" | "paper" | "taif-day" | "taif-night" = "naqsh"
         @label "Preset"
         @description "The preset announced on INIT."
+        @tier "presentation"
+      toggleA : "naqsh" | "glass" | "sand" | "instrument" | "terminal" | "paper" | "taif-day" | "taif-night" = "naqsh"
+        @label "Toggle from"
+        @description "One preset of the pair RASM_THEME_TOGGLE alternates."
+        @tier "presentation"
+      toggleB : "naqsh" | "glass" | "sand" | "instrument" | "terminal" | "paper" | "taif-day" | "taif-night" = "glass"
+        @label "Toggle to"
+        @description "The other preset of the pair RASM_THEME_TOGGLE alternates; from any other preset the toggle goes to toggleA."
         @tier "presentation"
       naqsh : Map string RasmLook = {
         "surface/ground/idle": { fill: "#0d0f1e", material: { wgsl: "// an eight-point star lattice that breathes, gathering gold under the pointer\nfn shade(px: Pixel) -> vec4<f32> {\n  let p = px.local / 64.0;\n  let cell = fract(p) - vec2<f32>(0.5, 0.5);\n  let ang = atan2(cell.y, cell.x);\n  let r = length(cell);\n  let star = abs(cos(ang * 4.0)) * 0.12 + 0.18;\n  let line = 1.0 - smoothstep(0.0, 0.02, abs(r - star));\n  let pulse = 0.5 + 0.5 * sin(px.time * 0.6 + dot(floor(p), vec2<f32>(1.7, 2.3)));\n  var col = mix(vec3<f32>(0.05, 0.06, 0.12), vec3<f32>(0.09, 0.08, 0.16), px.uv.y);\n  col = col + vec3<f32>(0.85, 0.66, 0.32) * line * (0.10 + 0.12 * pulse);\n  let d = distance(px.local, px.pointer);\n  col = col + vec3<f32>(0.9, 0.7, 0.35) * line * exp(-d * d / (2.0 * 160.0 * 160.0)) * 0.5;\n  return vec4<f32>(col, 1.0);\n}\n", params: [0, 0, 0, 0], live: true }, spring: { stiffness: 170, damping: 20 } },

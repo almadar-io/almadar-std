@@ -26,12 +26,17 @@ orbital RasmRangeOrbital {
     paints : number = 0
     value : number = 0
     over : boolean = true
+    dir : "ltr" | "rtl" @description "The direction the surface announced; rtl runs the track from the right edge." = "ltr"
   }
 
   trait RasmRange -> RasmRangeItem [client] {
     initial: idle
 
     state idle {
+      RASM_DIRECTION -> idle
+        (set @entity.dir ?direction)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
       INIT -> idle
         (set @entity.value (math/clamp @config.value @config.min @config.max))
         (set @entity.over true)
@@ -56,7 +61,7 @@ orbital RasmRangeOrbital {
       RASM_POINTER -> dragging when (and (and (= ?id @config.id) (= ?kind "down")) (not @config.readOnly))
         (set @entity.entering -1)
         (set @entity.value (let (
-            (frac (math/clamp (/ (- ?x (+ @entity.rect.x 10)) (math/max 1 (- @entity.rect.w 20))) 0 1))
+            (frac (math/clamp (/ (if (= @entity.dir "rtl") (- (+ @entity.rect.x (- @entity.rect.w 10)) ?x) (- ?x (+ @entity.rect.x 10))) (math/max 1 (- @entity.rect.w 20))) 0 1))
           )
           (math/clamp (+ @config.min (* (math/round (/ (* @frac (- @config.max @config.min)) @config.step)) @config.step)) @config.min @config.max)))
         (set @entity.over true)
@@ -83,10 +88,14 @@ orbital RasmRangeOrbital {
             (frac (math/clamp (/ (- @entity.value @config.min) (math/max 0.0001 (- @config.max @config.min))) 0 1))
             (star (= @look.decor "star8"))
           )
-          (emit RASM_PAINT { id: @config.id, z: @config.z, texts: (if (and (!= @track.textColor null) (!= @track.font null)) [{ id: (str/concat @config.id ":label"), key: @config.label, x: @r.x, y: @r.y, z: @config.z, align: "left", baseline: "top", color: @track.textColor, font: @track.font, spring: @track.spring }] []), nodes: (array/concat [{ type: draw-shape, id: (str/concat @config.id ":track"), shape: rect, anchor: "top-left", position: { x: @tx, y: (- @cy 3), z: @config.z }, width: @tw, height: 6, fill: @track.fill, corners: @track.corners, spring: @track.spring, animation: @anim }, { type: draw-shape, id: (str/concat @config.id ":fill"), shape: rect, anchor: "top-left", position: { x: @tx, y: (- @cy 3), z: @config.z }, width: (* @frac @tw), height: 6, fill: @fillLook.fill, corners: @fillLook.corners, spring: @fillLook.spring, animation: @anim }] (array/map (if @star [0] []) (fn i { type: draw-shape, id: (str/concat @config.id ":thumb"), shape: polygon, anchor: "top-left", position: { x: (- (+ @tx (* @frac @tw)) 10), y: (- @cy 10), z: @config.z }, width: 20, height: 20, sides: 8, starRatio: 0.62, fill: @look.fill, stroke: @look.stroke, strokeWidth: @look.strokeWidth, shadow: @look.shadow, spring: @look.spring, animation: @anim })) (array/map (if @star [] [0]) (fn i { type: draw-shape, id: (str/concat @config.id ":thumb"), shape: ellipse, anchor: center, position: { x: (+ @tx (* @frac @tw)), y: @cy, z: @config.z }, radiusX: 10, radiusY: 10, fill: @look.fill, stroke: @look.stroke, strokeWidth: @look.strokeWidth, shadow: @look.shadow, spring: @look.spring, animation: @anim })) [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @r.x, y: (- @cy 14), z: @config.z }, width: @r.w, height: 28, hit: (not @config.readOnly), semantic: { role: "slider", labelledBy: (str/concat @config.id ":label"), value: (str/concat @entity.value) , order: @config.order, focused: false } }]) }))
+          (emit RASM_PAINT { id: @config.id, z: @config.z, texts: (if (and (!= @track.textColor null) (!= @track.font null)) [{ id: (str/concat @config.id ":label"), key: @config.label, x: (if (= @entity.dir "rtl") (+ @r.x @r.w) @r.x), y: @r.y, z: @config.z, align: (if (= @entity.dir "rtl") "right" "left"), baseline: "top", color: @track.textColor, font: @track.font, spring: @track.spring }] []), nodes: (array/concat [{ type: draw-shape, id: (str/concat @config.id ":track"), shape: rect, anchor: "top-left", position: { x: @tx, y: (- @cy 3), z: @config.z }, width: @tw, height: 6, fill: @track.fill, corners: @track.corners, spring: @track.spring, animation: @anim }, { type: draw-shape, id: (str/concat @config.id ":fill"), shape: rect, anchor: "top-left", position: { x: (if (= @entity.dir "rtl") (- (+ @tx @tw) (* @frac @tw)) @tx), y: (- @cy 3), z: @config.z }, width: (* @frac @tw), height: 6, fill: @fillLook.fill, corners: @fillLook.corners, spring: @fillLook.spring, animation: @anim }] (array/map (if @star [0] []) (fn i { type: draw-shape, id: (str/concat @config.id ":thumb"), shape: polygon, anchor: "top-left", position: { x: (- (if (= @entity.dir "rtl") (- (+ @tx @tw) (* @frac @tw)) (+ @tx (* @frac @tw))) 10), y: (- @cy 10), z: @config.z }, width: 20, height: 20, sides: 8, starRatio: 0.62, fill: @look.fill, stroke: @look.stroke, strokeWidth: @look.strokeWidth, shadow: @look.shadow, spring: @look.spring, animation: @anim })) (array/map (if @star [] [0]) (fn i { type: draw-shape, id: (str/concat @config.id ":thumb"), shape: ellipse, anchor: center, position: { x: (if (= @entity.dir "rtl") (- (+ @tx @tw) (* @frac @tw)) (+ @tx (* @frac @tw))), y: @cy, z: @config.z }, radiusX: 10, radiusY: 10, fill: @look.fill, stroke: @look.stroke, strokeWidth: @look.strokeWidth, shadow: @look.shadow, spring: @look.spring, animation: @anim })) [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @r.x, y: (- @cy 14), z: @config.z }, width: @r.w, height: 28, hit: (not @config.readOnly), semantic: { role: "slider", labelledBy: (str/concat @config.id ":label"), value: (str/concat @entity.value) , order: @config.order, focused: false } }]) }))
     }
 
     state hovered {
+      RASM_DIRECTION -> hovered
+        (set @entity.dir ?direction)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
       INIT -> idle
         (set @entity.value (math/clamp @config.value @config.min @config.max))
         (set @entity.over true)
@@ -111,7 +120,7 @@ orbital RasmRangeOrbital {
       RASM_POINTER -> dragging when (and (and (= ?id @config.id) (= ?kind "down")) (not @config.readOnly))
         (set @entity.entering -1)
         (set @entity.value (let (
-            (frac (math/clamp (/ (- ?x (+ @entity.rect.x 10)) (math/max 1 (- @entity.rect.w 20))) 0 1))
+            (frac (math/clamp (/ (if (= @entity.dir "rtl") (- (+ @entity.rect.x (- @entity.rect.w 10)) ?x) (- ?x (+ @entity.rect.x 10))) (math/max 1 (- @entity.rect.w 20))) 0 1))
           )
           (math/clamp (+ @config.min (* (math/round (/ (* @frac (- @config.max @config.min)) @config.step)) @config.step)) @config.min @config.max)))
         (set @entity.over true)
@@ -138,10 +147,14 @@ orbital RasmRangeOrbital {
             (frac (math/clamp (/ (- @entity.value @config.min) (math/max 0.0001 (- @config.max @config.min))) 0 1))
             (star (= @look.decor "star8"))
           )
-          (emit RASM_PAINT { id: @config.id, z: @config.z, texts: (if (and (!= @track.textColor null) (!= @track.font null)) [{ id: (str/concat @config.id ":label"), key: @config.label, x: @r.x, y: @r.y, z: @config.z, align: "left", baseline: "top", color: @track.textColor, font: @track.font, spring: @track.spring }] []), nodes: (array/concat [{ type: draw-shape, id: (str/concat @config.id ":track"), shape: rect, anchor: "top-left", position: { x: @tx, y: (- @cy 3), z: @config.z }, width: @tw, height: 6, fill: @track.fill, corners: @track.corners, spring: @track.spring, animation: @anim }, { type: draw-shape, id: (str/concat @config.id ":fill"), shape: rect, anchor: "top-left", position: { x: @tx, y: (- @cy 3), z: @config.z }, width: (* @frac @tw), height: 6, fill: @fillLook.fill, corners: @fillLook.corners, spring: @fillLook.spring, animation: @anim }] (array/map (if @star [0] []) (fn i { type: draw-shape, id: (str/concat @config.id ":thumb"), shape: polygon, anchor: "top-left", position: { x: (- (+ @tx (* @frac @tw)) 10), y: (- @cy 10), z: @config.z }, width: 20, height: 20, sides: 8, starRatio: 0.62, fill: @look.fill, stroke: @look.stroke, strokeWidth: @look.strokeWidth, shadow: @look.shadow, spring: @look.spring, animation: @anim })) (array/map (if @star [] [0]) (fn i { type: draw-shape, id: (str/concat @config.id ":thumb"), shape: ellipse, anchor: center, position: { x: (+ @tx (* @frac @tw)), y: @cy, z: @config.z }, radiusX: 10, radiusY: 10, fill: @look.fill, stroke: @look.stroke, strokeWidth: @look.strokeWidth, shadow: @look.shadow, spring: @look.spring, animation: @anim })) [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @r.x, y: (- @cy 14), z: @config.z }, width: @r.w, height: 28, hit: (not @config.readOnly), semantic: { role: "slider", labelledBy: (str/concat @config.id ":label"), value: (str/concat @entity.value) , order: @config.order, focused: false } }]) }))
+          (emit RASM_PAINT { id: @config.id, z: @config.z, texts: (if (and (!= @track.textColor null) (!= @track.font null)) [{ id: (str/concat @config.id ":label"), key: @config.label, x: (if (= @entity.dir "rtl") (+ @r.x @r.w) @r.x), y: @r.y, z: @config.z, align: (if (= @entity.dir "rtl") "right" "left"), baseline: "top", color: @track.textColor, font: @track.font, spring: @track.spring }] []), nodes: (array/concat [{ type: draw-shape, id: (str/concat @config.id ":track"), shape: rect, anchor: "top-left", position: { x: @tx, y: (- @cy 3), z: @config.z }, width: @tw, height: 6, fill: @track.fill, corners: @track.corners, spring: @track.spring, animation: @anim }, { type: draw-shape, id: (str/concat @config.id ":fill"), shape: rect, anchor: "top-left", position: { x: (if (= @entity.dir "rtl") (- (+ @tx @tw) (* @frac @tw)) @tx), y: (- @cy 3), z: @config.z }, width: (* @frac @tw), height: 6, fill: @fillLook.fill, corners: @fillLook.corners, spring: @fillLook.spring, animation: @anim }] (array/map (if @star [0] []) (fn i { type: draw-shape, id: (str/concat @config.id ":thumb"), shape: polygon, anchor: "top-left", position: { x: (- (if (= @entity.dir "rtl") (- (+ @tx @tw) (* @frac @tw)) (+ @tx (* @frac @tw))) 10), y: (- @cy 10), z: @config.z }, width: 20, height: 20, sides: 8, starRatio: 0.62, fill: @look.fill, stroke: @look.stroke, strokeWidth: @look.strokeWidth, shadow: @look.shadow, spring: @look.spring, animation: @anim })) (array/map (if @star [] [0]) (fn i { type: draw-shape, id: (str/concat @config.id ":thumb"), shape: ellipse, anchor: center, position: { x: (if (= @entity.dir "rtl") (- (+ @tx @tw) (* @frac @tw)) (+ @tx (* @frac @tw))), y: @cy, z: @config.z }, radiusX: 10, radiusY: 10, fill: @look.fill, stroke: @look.stroke, strokeWidth: @look.strokeWidth, shadow: @look.shadow, spring: @look.spring, animation: @anim })) [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @r.x, y: (- @cy 14), z: @config.z }, width: @r.w, height: 28, hit: (not @config.readOnly), semantic: { role: "slider", labelledBy: (str/concat @config.id ":label"), value: (str/concat @entity.value) , order: @config.order, focused: false } }]) }))
     }
 
     state dragging {
+      RASM_DIRECTION -> dragging
+        (set @entity.dir ?direction)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
       INIT -> idle
         (set @entity.value (math/clamp @config.value @config.min @config.max))
         (set @entity.over true)
@@ -165,7 +178,7 @@ orbital RasmRangeOrbital {
         (emit REPAINT { n: @entity.paints })
       RASM_POINTER -> dragging when (and (= ?id @config.id) (= ?kind "move"))
         (set @entity.value (let (
-            (frac (math/clamp (/ (- ?x (+ @entity.rect.x 10)) (math/max 1 (- @entity.rect.w 20))) 0 1))
+            (frac (math/clamp (/ (if (= @entity.dir "rtl") (- (+ @entity.rect.x (- @entity.rect.w 10)) ?x) (- ?x (+ @entity.rect.x 10))) (math/max 1 (- @entity.rect.w 20))) 0 1))
           )
           (math/clamp (+ @config.min (* (math/round (/ (* @frac (- @config.max @config.min)) @config.step)) @config.step)) @config.min @config.max)))
         (set @entity.paints (+ @entity.paints 1))
@@ -195,10 +208,14 @@ orbital RasmRangeOrbital {
             (frac (math/clamp (/ (- @entity.value @config.min) (math/max 0.0001 (- @config.max @config.min))) 0 1))
             (star (= @look.decor "star8"))
           )
-          (emit RASM_PAINT { id: @config.id, z: @config.z, texts: (if (and (!= @track.textColor null) (!= @track.font null)) [{ id: (str/concat @config.id ":label"), key: @config.label, x: @r.x, y: @r.y, z: @config.z, align: "left", baseline: "top", color: @track.textColor, font: @track.font, spring: @track.spring }] []), nodes: (array/concat [{ type: draw-shape, id: (str/concat @config.id ":track"), shape: rect, anchor: "top-left", position: { x: @tx, y: (- @cy 3), z: @config.z }, width: @tw, height: 6, fill: @track.fill, corners: @track.corners, spring: @track.spring, animation: @anim }, { type: draw-shape, id: (str/concat @config.id ":fill"), shape: rect, anchor: "top-left", position: { x: @tx, y: (- @cy 3), z: @config.z }, width: (* @frac @tw), height: 6, fill: @fillLook.fill, corners: @fillLook.corners, spring: @fillLook.spring, animation: @anim }] (array/map (if @star [0] []) (fn i { type: draw-shape, id: (str/concat @config.id ":thumb"), shape: polygon, anchor: "top-left", position: { x: (- (+ @tx (* @frac @tw)) 12.5), y: (- @cy 12.5), z: @config.z }, width: 25, height: 25, sides: 8, starRatio: 0.62, fill: @look.fill, stroke: @look.stroke, strokeWidth: @look.strokeWidth, shadow: @look.shadow, spring: @look.spring, animation: @anim })) (array/map (if @star [] [0]) (fn i { type: draw-shape, id: (str/concat @config.id ":thumb"), shape: ellipse, anchor: center, position: { x: (+ @tx (* @frac @tw)), y: @cy, z: @config.z }, radiusX: 12, radiusY: 12, fill: @look.fill, stroke: @look.stroke, strokeWidth: @look.strokeWidth, shadow: @look.shadow, spring: @look.spring, animation: @anim })) [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @r.x, y: (- @cy 14), z: @config.z }, width: @r.w, height: 28, hit: (not @config.readOnly), semantic: { role: "slider", labelledBy: (str/concat @config.id ":label"), value: (str/concat @entity.value) , order: @config.order, focused: false } }]) }))
+          (emit RASM_PAINT { id: @config.id, z: @config.z, texts: (if (and (!= @track.textColor null) (!= @track.font null)) [{ id: (str/concat @config.id ":label"), key: @config.label, x: (if (= @entity.dir "rtl") (+ @r.x @r.w) @r.x), y: @r.y, z: @config.z, align: (if (= @entity.dir "rtl") "right" "left"), baseline: "top", color: @track.textColor, font: @track.font, spring: @track.spring }] []), nodes: (array/concat [{ type: draw-shape, id: (str/concat @config.id ":track"), shape: rect, anchor: "top-left", position: { x: @tx, y: (- @cy 3), z: @config.z }, width: @tw, height: 6, fill: @track.fill, corners: @track.corners, spring: @track.spring, animation: @anim }, { type: draw-shape, id: (str/concat @config.id ":fill"), shape: rect, anchor: "top-left", position: { x: (if (= @entity.dir "rtl") (- (+ @tx @tw) (* @frac @tw)) @tx), y: (- @cy 3), z: @config.z }, width: (* @frac @tw), height: 6, fill: @fillLook.fill, corners: @fillLook.corners, spring: @fillLook.spring, animation: @anim }] (array/map (if @star [0] []) (fn i { type: draw-shape, id: (str/concat @config.id ":thumb"), shape: polygon, anchor: "top-left", position: { x: (- (if (= @entity.dir "rtl") (- (+ @tx @tw) (* @frac @tw)) (+ @tx (* @frac @tw))) 12.5), y: (- @cy 12.5), z: @config.z }, width: 25, height: 25, sides: 8, starRatio: 0.62, fill: @look.fill, stroke: @look.stroke, strokeWidth: @look.strokeWidth, shadow: @look.shadow, spring: @look.spring, animation: @anim })) (array/map (if @star [] [0]) (fn i { type: draw-shape, id: (str/concat @config.id ":thumb"), shape: ellipse, anchor: center, position: { x: (if (= @entity.dir "rtl") (- (+ @tx @tw) (* @frac @tw)) (+ @tx (* @frac @tw))), y: @cy, z: @config.z }, radiusX: 12, radiusY: 12, fill: @look.fill, stroke: @look.stroke, strokeWidth: @look.strokeWidth, shadow: @look.shadow, spring: @look.spring, animation: @anim })) [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @r.x, y: (- @cy 14), z: @config.z }, width: @r.w, height: 28, hit: (not @config.readOnly), semantic: { role: "slider", labelledBy: (str/concat @config.id ":label"), value: (str/concat @entity.value) , order: @config.order, focused: false } }]) }))
     }
 
     state focused {
+      RASM_DIRECTION -> focused
+        (set @entity.dir ?direction)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
       INIT -> idle
         (set @entity.value (math/clamp @config.value @config.min @config.max))
         (set @entity.over true)
@@ -223,7 +240,7 @@ orbital RasmRangeOrbital {
       RASM_POINTER -> dragging when (and (and (= ?id @config.id) (= ?kind "down")) (not @config.readOnly))
         (set @entity.entering -1)
         (set @entity.value (let (
-            (frac (math/clamp (/ (- ?x (+ @entity.rect.x 10)) (math/max 1 (- @entity.rect.w 20))) 0 1))
+            (frac (math/clamp (/ (if (= @entity.dir "rtl") (- (+ @entity.rect.x (- @entity.rect.w 10)) ?x) (- ?x (+ @entity.rect.x 10))) (math/max 1 (- @entity.rect.w 20))) 0 1))
           )
           (math/clamp (+ @config.min (* (math/round (/ (* @frac (- @config.max @config.min)) @config.step)) @config.step)) @config.min @config.max)))
         (set @entity.over true)
@@ -252,7 +269,7 @@ orbital RasmRangeOrbital {
             (frac (math/clamp (/ (- @entity.value @config.min) (math/max 0.0001 (- @config.max @config.min))) 0 1))
             (star (= @look.decor "star8"))
           )
-          (emit RASM_PAINT { id: @config.id, z: @config.z, texts: (if (and (!= @track.textColor null) (!= @track.font null)) [{ id: (str/concat @config.id ":label"), key: @config.label, x: @r.x, y: @r.y, z: @config.z, align: "left", baseline: "top", color: @track.textColor, font: @track.font, spring: @track.spring }] []), nodes: (array/concat [{ type: draw-shape, id: (str/concat @config.id ":track"), shape: rect, anchor: "top-left", position: { x: @tx, y: (- @cy 3), z: @config.z }, width: @tw, height: 6, fill: @track.fill, corners: @track.corners, spring: @track.spring, animation: @anim }, { type: draw-shape, id: (str/concat @config.id ":fill"), shape: rect, anchor: "top-left", position: { x: @tx, y: (- @cy 3), z: @config.z }, width: (* @frac @tw), height: 6, fill: @fillLook.fill, corners: @fillLook.corners, spring: @fillLook.spring, animation: @anim }] (array/map (if @star [0] []) (fn i { type: draw-shape, id: (str/concat @config.id ":thumb"), shape: polygon, anchor: "top-left", position: { x: (- (+ @tx (* @frac @tw)) 10), y: (- @cy 10), z: @config.z }, width: 20, height: 20, sides: 8, starRatio: 0.62, fill: @look.fill, stroke: @look.stroke, strokeWidth: @look.strokeWidth, shadow: @look.shadow, spring: @look.spring, animation: @anim })) (array/map (if @star [] [0]) (fn i { type: draw-shape, id: (str/concat @config.id ":thumb"), shape: ellipse, anchor: center, position: { x: (+ @tx (* @frac @tw)), y: @cy, z: @config.z }, radiusX: 10, radiusY: 10, fill: @look.fill, stroke: @look.stroke, strokeWidth: @look.strokeWidth, shadow: @look.shadow, spring: @look.spring, animation: @anim })) [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @r.x, y: (- @cy 14), z: @config.z }, width: @r.w, height: 28, hit: (not @config.readOnly), semantic: { role: "slider", labelledBy: (str/concat @config.id ":label"), value: (str/concat @entity.value) , order: @config.order, focused: true } }]) }))
+          (emit RASM_PAINT { id: @config.id, z: @config.z, texts: (if (and (!= @track.textColor null) (!= @track.font null)) [{ id: (str/concat @config.id ":label"), key: @config.label, x: (if (= @entity.dir "rtl") (+ @r.x @r.w) @r.x), y: @r.y, z: @config.z, align: (if (= @entity.dir "rtl") "right" "left"), baseline: "top", color: @track.textColor, font: @track.font, spring: @track.spring }] []), nodes: (array/concat [{ type: draw-shape, id: (str/concat @config.id ":track"), shape: rect, anchor: "top-left", position: { x: @tx, y: (- @cy 3), z: @config.z }, width: @tw, height: 6, fill: @track.fill, corners: @track.corners, spring: @track.spring, animation: @anim }, { type: draw-shape, id: (str/concat @config.id ":fill"), shape: rect, anchor: "top-left", position: { x: (if (= @entity.dir "rtl") (- (+ @tx @tw) (* @frac @tw)) @tx), y: (- @cy 3), z: @config.z }, width: (* @frac @tw), height: 6, fill: @fillLook.fill, corners: @fillLook.corners, spring: @fillLook.spring, animation: @anim }] (array/map (if @star [0] []) (fn i { type: draw-shape, id: (str/concat @config.id ":thumb"), shape: polygon, anchor: "top-left", position: { x: (- (if (= @entity.dir "rtl") (- (+ @tx @tw) (* @frac @tw)) (+ @tx (* @frac @tw))) 10), y: (- @cy 10), z: @config.z }, width: 20, height: 20, sides: 8, starRatio: 0.62, fill: @look.fill, stroke: @look.stroke, strokeWidth: @look.strokeWidth, shadow: @look.shadow, spring: @look.spring, animation: @anim })) (array/map (if @star [] [0]) (fn i { type: draw-shape, id: (str/concat @config.id ":thumb"), shape: ellipse, anchor: center, position: { x: (if (= @entity.dir "rtl") (- (+ @tx @tw) (* @frac @tw)) (+ @tx (* @frac @tw))), y: @cy, z: @config.z }, radiusX: 10, radiusY: 10, fill: @look.fill, stroke: @look.stroke, strokeWidth: @look.strokeWidth, shadow: @look.shadow, spring: @look.spring, animation: @anim })) [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @r.x, y: (- @cy 14), z: @config.z }, width: @r.w, height: 28, hit: (not @config.readOnly), semantic: { role: "slider", labelledBy: (str/concat @config.id ":label"), value: (str/concat @entity.value) , order: @config.order, focused: true } }]) }))
     }
 
     emits {
@@ -276,6 +293,8 @@ orbital RasmRangeOrbital {
     }
 
     listens {
+      RASM_DIRECTION { direction : "ltr" | "rtl"! }
+        @description "The surface's reading direction: rtl runs the track from the right edge."
       RASM_BOOT { }
         @description "The surface mounted: take the configured starting state."
       RASM_THEME { name : string!  looks : Map string RasmLook! }

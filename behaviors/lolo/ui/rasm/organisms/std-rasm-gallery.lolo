@@ -1,6 +1,6 @@
 app std-rasm-gallery [
   version: "0.1.0",
-  description: "std-rasm-gallery — every Rasm atom on one orbital canvas, switchable across the six look presets (naqsh, glass, sand, instrument, terminal, paper). Controls: a pressable, a disabled pressable, a switch, a range, a text field and a choice. Layout: a stack and a grid. Containers: an overlay opened by a button and a scroll over twelve items. Motion: the staggered entry, a tween-driven bar, a gesture area reporting swipe and fling, and a drag chip with two drop targets. An embed slot closes the page. The gallery trait Glue turns the choice, button and motion events into the commands the atoms listen to and paints the readout.",
+  description: "std-rasm-gallery — every Rasm atom on one orbital canvas, switchable across the six look presets (naqsh, glass, sand, instrument, terminal, paper). Controls: a pressable, a disabled pressable, a switch, a range, a text field and a choice. Layout: a stack and a grid. Containers: an overlay opened by a button and a scroll over twelve items. Motion: the staggered entry, a tween-driven bar, a gesture area reporting swipe and fling, and a drag chip with two drop targets. An embed slot closes the page. The gallery trait Readout turns the choice, button and motion events into the commands the atoms listen to and paints the readout.",
   locales: [en]
 ]
 
@@ -46,17 +46,11 @@ orbital RasmGallery {
     paints : number @description "Counts paints, so each paint in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
   }
 
-  trait Glue -> RasmGalleryView [client] {
+  trait Readout -> RasmGalleryView [client] {
     initial: ready
 
     state ready {
       INIT -> ready
-      THEME_CHOSEN -> ready
-        (emit RASM_THEME_SET { name: ?value })
-      OPEN_PRESSED -> ready
-        (emit RASM_OVERLAY_OPEN { id: "dialog" })
-      CLOSE_PRESSED -> ready
-        (emit RASM_OVERLAY_CLOSE { id: "dialog" })
       TWEEN_PRESSED -> ready
         (emit RASM_TWEEN_START { id: "tween", from: @entity.tweenValue, to: (if @entity.tweenUp 0 100), durationMs: 1200 })
         (set @entity.tweenUp (not @entity.tweenUp))
@@ -108,33 +102,12 @@ orbital RasmGallery {
       RASM_PAINT -> external { id : string!  z : number!  nodes : [node]! }
         @description "The readout's tween bar and its swipe, fling and drop lines."
         @tier "primary"
-      RASM_THEME_SET -> external { name : string! }
-        @description "Switch the look preset to the one the theme choice named."
-        @tier "domain"
-      RASM_OVERLAY_OPEN -> external { id : string! }
-        @description "Open the dialog overlay."
-        @tier "domain"
-      RASM_OVERLAY_CLOSE -> external { id : string! }
-        @description "Close the dialog overlay."
-        @tier "domain"
       RASM_TWEEN_START -> external { id : string!  from : number!  to : number!  durationMs : number! }
         @description "Run the tween from its latest value to the other end of the bar."
         @tier "domain"
     }
 
     listens {
-      ThemeChoice.RASM_THEME_CHOSEN -> THEME_CHOSEN
-      THEME_CHOSEN { value : string! }
-        @description "The theme choice picked a preset."
-        @tier "domain"
-      OpenBtn.RASM_OPEN_PRESSED -> OPEN_PRESSED
-      OPEN_PRESSED { }
-        @description "The Open dialog button was pressed."
-        @tier "domain"
-      DlgClose.RASM_CLOSE_PRESSED -> CLOSE_PRESSED
-      CLOSE_PRESSED { }
-        @description "The dialog's Close button was pressed."
-        @tier "domain"
       TweenBtn.RASM_TWEEN_PRESSED -> TWEEN_PRESSED
       TWEEN_PRESSED { }
         @description "The Play tween button was pressed."
@@ -182,6 +155,7 @@ orbital RasmGallery {
       align: "center"
     }
     listens {
+      EmbedSlot.RASM_EMBED -> RASM_EMBED
       Theme.RASM_THEME -> RASM_THEME
       Surface.RASM_RESIZE -> RASM_RESIZE
       List.RASM_VISIBLE -> RASM_VISIBLE
@@ -241,13 +215,13 @@ orbital RasmGallery {
       Swipe.RASM_PAINT -> RASM_PAINT
       Chip.RASM_PAINT -> RASM_PAINT
       EmbedSlot.RASM_PAINT -> RASM_PAINT
-      Glue.RASM_PAINT -> RASM_PAINT
+      Readout.RASM_PAINT -> RASM_PAINT
     }
   }
 
   trait Theme = ThemeAtom.traits.RasmTheme {
     listens {
-      Glue.RASM_THEME_SET -> RASM_THEME_SET
+      ThemeChoice.RASM_THEME_CHOSEN -> RASM_THEME_SET with { name: ?value }
       Surface.RASM_BOOT -> RASM_BOOT
     }
   }
@@ -819,13 +793,14 @@ orbital RasmGallery {
     config {
       id: "theme"
       label: "theme-choice"
-      options: ["naqsh", "glass", "sand", "instrument", "terminal", "paper"]
+      options: [{ value: "naqsh", label: "theme.naqsh" }, { value: "glass", label: "theme.glass" }, { value: "sand", label: "theme.sand" }, { value: "instrument", label: "theme.instrument" }, { value: "terminal", label: "theme.terminal" }, { value: "paper", label: "theme.paper" }]
       value: "naqsh"
       changed: RASM_THEME_CHOSEN
       order: 1
       z: 2
     }
     listens {
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
       Surface.RASM_BOOT -> RASM_BOOT
       Theme.RASM_THEME -> RASM_THEME
       RootStack.RASM_PLACE -> RASM_PLACE
@@ -866,6 +841,7 @@ orbital RasmGallery {
       z: 2
     }
     listens {
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
       Surface.RASM_BOOT -> RASM_BOOT
       Theme.RASM_THEME -> RASM_THEME
       ControlsGrid.RASM_PLACE -> RASM_PLACE
@@ -886,6 +862,7 @@ orbital RasmGallery {
       z: 2
     }
     listens {
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
       Surface.RASM_BOOT -> RASM_BOOT
       Theme.RASM_THEME -> RASM_THEME
       ControlsGrid.RASM_PLACE -> RASM_PLACE
@@ -904,6 +881,7 @@ orbital RasmGallery {
       z: 2
     }
     listens {
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
       NameBuffer.KEY -> BUFFER_KEY
       NameBuffer.EDITOR_HOVER -> BUFFER_HOVER
       Surface.RASM_BOOT -> RASM_BOOT
@@ -924,12 +902,13 @@ orbital RasmGallery {
     config {
       id: "choice"
       label: "choice-ctl"
-      options: ["Spring", "Summer", "Autumn", "Winter"]
+      options: [{ value: "Spring", label: "season.spring" }, { value: "Summer", label: "season.summer" }, { value: "Autumn", label: "season.autumn" }, { value: "Winter", label: "season.winter" }]
       value: "Spring"
       order: 6
       z: 2
     }
     listens {
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
       Surface.RASM_BOOT -> RASM_BOOT
       Theme.RASM_THEME -> RASM_THEME
       ControlsGrid.RASM_PLACE -> RASM_PLACE
@@ -1136,13 +1115,14 @@ orbital RasmGallery {
   trait List = ScrollAtom.traits.RasmScroll {
     config {
       id: "list"
-      label: "List"
+      labelledBy: "hcontainers"
       items: [{ id: "item0", size: 30 }, { id: "item1", size: 30 }, { id: "item2", size: 30 }, { id: "item3", size: 30 }, { id: "item4", size: 30 }, { id: "item5", size: 30 }, { id: "item6", size: 30 }, { id: "item7", size: 30 }, { id: "item8", size: 30 }, { id: "item9", size: 30 }, { id: "item10", size: 30 }, { id: "item11", size: 30 }]
       gap: 6
       order: 11
       z: 2
     }
     listens {
+      Surface.RASM_WHEEL -> RASM_WHEEL
       Theme.RASM_THEME -> RASM_THEME
       ContRow.RASM_PLACE -> RASM_PLACE
       Surface.RASM_POINTER -> RASM_POINTER
@@ -1156,7 +1136,7 @@ orbital RasmGallery {
   trait Dialog = OverlayAtom.traits.RasmOverlay {
     config {
       id: "dialog"
-      label: "Dialog"
+      labelledBy: "dlgtext"
       placement: "center"
       width: 360
       height: 200
@@ -1173,8 +1153,8 @@ orbital RasmGallery {
       Surface.RASM_POINTER -> RASM_POINTER
       Surface.RASM_KEYPRESS -> RASM_KEYPRESS
       Focus.RASM_KEYPRESS -> RASM_KEYPRESS
-      Glue.RASM_OVERLAY_OPEN -> RASM_OVERLAY_OPEN
-      Glue.RASM_OVERLAY_CLOSE -> RASM_OVERLAY_CLOSE
+      OpenBtn.RASM_OPEN_PRESSED -> RASM_OVERLAY_OPEN with { id: "dialog" }
+      DlgClose.RASM_CLOSE_PRESSED -> RASM_OVERLAY_CLOSE with { id: "dialog" }
     }
   }
   trait Tween = TweenAtom.traits.RasmTween {
@@ -1183,7 +1163,7 @@ orbital RasmGallery {
       easing: "ease-in-out"
     }
     listens {
-      Glue.RASM_TWEEN_START -> RASM_TWEEN_START
+      Readout.RASM_TWEEN_START -> RASM_TWEEN_START
     }
   }
   trait Swipe = GestureAtom.traits.RasmGesture {
@@ -1192,6 +1172,7 @@ orbital RasmGallery {
       z: 2
     }
     listens {
+      Surface.RASM_TOUCHES -> RASM_TOUCHES
       Surface.RASM_BOOT -> RASM_BOOT
       SwipeBox.RASM_PLACE -> RASM_PLACE
       Surface.RASM_POINTER -> RASM_POINTER
@@ -1223,6 +1204,7 @@ orbital RasmGallery {
       z: 2
     }
     listens {
+      Surface.RASM_EMBED_STATE -> RASM_EMBED_STATE
       Surface.RASM_BOOT -> RASM_BOOT
       Theme.RASM_THEME -> RASM_THEME
       RootStack.RASM_PLACE -> RASM_PLACE
@@ -1263,5 +1245,5 @@ orbital RasmGallery {
       Dialog.RASM_ANCHOR -> RASM_ANCHOR
     }
   }
-  page "/rasm-gallery" as RasmGalleryPage -> Theme, Surface, NameBuffer, RootStack, LayoutRow, LStack, ContRow, OpenCol, DlgStack, MotionRow, TweenCol, SwipeBox, DragCol, Bins, ControlsGrid, LGrid, TitleText, HControls, HLayout, HContainers, HMotion, HEmbed, S1, S2, S3, OpenHint, DlgText, Item0, Item1, Item2, Item3, Item4, Item5, Item6, Item7, Item8, Item9, Item10, Item11, ThemeChoice, PressCtl, ToggleCtl, RangeCtl, FieldCtl, ChoiceCtl, LockedBtn, G1, G2, G3, G4, OpenBtn, DlgClose, TweenBtn, BinA, BinB, List, Dialog, Tween, Swipe, Chip, EmbedSlot, Enter, Focus, Anchor, Glue
+  page "/rasm-gallery" as RasmGalleryPage -> Theme, Surface, NameBuffer, RootStack, LayoutRow, LStack, ContRow, OpenCol, DlgStack, MotionRow, TweenCol, SwipeBox, DragCol, Bins, ControlsGrid, LGrid, TitleText, HControls, HLayout, HContainers, HMotion, HEmbed, S1, S2, S3, OpenHint, DlgText, Item0, Item1, Item2, Item3, Item4, Item5, Item6, Item7, Item8, Item9, Item10, Item11, ThemeChoice, PressCtl, ToggleCtl, RangeCtl, FieldCtl, ChoiceCtl, LockedBtn, G1, G2, G3, G4, OpenBtn, DlgClose, TweenBtn, BinA, BinB, List, Dialog, Tween, Swipe, Chip, EmbedSlot, Enter, Focus, Anchor, Readout
 }

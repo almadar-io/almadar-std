@@ -4,72 +4,365 @@
  "cases": [
   {
    "id": "an-edit-paints-once-on-the-cursor-announcement-that-follows-it",
-   "config": { "id": "name", "label": "Name" },
+   "config": {
+    "id": "name",
+    "label": "Name"
+   },
    "entity": {
     "id": "t",
     "hasLooks": true,
     "hasRect": true,
-    "rect": { "x": 0, "y": 0, "w": 200, "h": 60 }
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 200,
+     "h": 60
+    }
    },
    "steps": [
     {
      "from": "focused",
      "event": "BUFFER_EDITED",
-     "payload": { "editorId": "name", "path": "", "version": 1, "text": "a", "dirty": true },
+     "payload": {
+      "editorId": "name",
+      "path": "",
+      "version": 1,
+      "text": "a",
+      "dirty": true
+     },
      "expect": {
       "state": "focused",
-      "exactEmits": [ { "event": "RASM_TEXT_CHANGED", "payload": { "value": "a" } } ]
+      "exactEmits": [
+       {
+        "event": "RASM_TEXT_CHANGED",
+        "payload": {
+         "value": "a"
+        }
+       }
+      ]
      }
     },
     {
      "from": "focused",
      "event": "CURSOR_MOVED",
-     "payload": { "editorId": "name", "row": 0, "col": 1, "mode": "INSERT" },
+     "payload": {
+      "editorId": "name",
+      "row": 0,
+      "col": 1,
+      "mode": "INSERT"
+     },
      "expect": {
       "state": "focused",
-      "emits": [ { "event": "RASM_PAINT", "payload": { "id": "name" } } ]
+      "emits": [
+       {
+        "event": "RASM_PAINT",
+        "payload": {
+         "id": "name"
+        }
+       }
+      ]
      }
     }
    ]
   },
   {
    "id": "the-first-load-paints-once-on-the-cursor-announcement-that-follows-it",
-   "config": { "id": "name", "label": "Name", "value": "hi" },
+   "config": {
+    "id": "name",
+    "label": "Name",
+    "value": "hi"
+   },
    "entity": {
     "id": "t",
     "hasLooks": true,
     "hasRect": true,
     "loading": true,
-    "rect": { "x": 0, "y": 0, "w": 200, "h": 60 }
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 200,
+     "h": 60
+    }
    },
    "steps": [
     {
      "from": "idle",
      "event": "BUFFER_EDITED",
-     "payload": { "editorId": "name", "path": "", "version": 0, "text": "hi", "dirty": false },
-     "expect": { "state": "idle", "exactEmits": [] }
+     "payload": {
+      "editorId": "name",
+      "path": "",
+      "version": 0,
+      "text": "hi",
+      "dirty": false
+     },
+     "expect": {
+      "state": "idle",
+      "exactEmits": []
+     }
     },
     {
      "from": "idle",
      "event": "CURSOR_MOVED",
-     "payload": { "editorId": "name", "row": 0, "col": 0, "mode": "INSERT" },
+     "payload": {
+      "editorId": "name",
+      "row": 0,
+      "col": 0,
+      "mode": "INSERT"
+     },
      "expect": {
       "state": "idle",
-      "emits": [ { "event": "RASM_PAINT", "payload": { "id": "name" } } ]
+      "emits": [
+       {
+        "event": "RASM_PAINT",
+        "payload": {
+         "id": "name"
+        }
+       }
+      ]
      }
     }
    ]
   },
   {
    "id": "another-editors-edit-leaves-the-field-alone",
-   "config": { "id": "name", "label": "Name" },
-   "entity": { "id": "t", "hasLooks": true, "hasRect": true, "rect": { "x": 0, "y": 0, "w": 200, "h": 60 } },
+   "config": {
+    "id": "name",
+    "label": "Name"
+   },
+   "entity": {
+    "id": "t",
+    "hasLooks": true,
+    "hasRect": true,
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 200,
+     "h": 60
+    }
+   },
    "steps": [
     {
      "from": "focused",
      "event": "BUFFER_EDITED",
-     "payload": { "editorId": "other", "path": "", "version": 1, "text": "z", "dirty": true },
-     "expect": { "state": "focused", "exactEmits": [] }
+     "payload": {
+      "editorId": "other",
+      "path": "",
+      "version": 1,
+      "text": "z",
+      "dirty": true
+     },
+     "expect": {
+      "state": "focused",
+      "exactEmits": []
+     }
+    }
+   ]
+  },
+  {
+   "id": "rtl-aligns-the-label-and-placeholder-to-the-right-edge",
+   "config": {
+    "id": "name",
+    "label": "name",
+    "placeholder": "hint"
+   },
+   "entity": {
+    "id": "t",
+    "hasLooks": true,
+    "hasRect": true,
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 200,
+     "h": 60
+    },
+    "looks": {
+     "textfield/default/idle": {
+      "fill": "#000",
+      "textColor": "#fff",
+      "font": "body"
+     },
+     "textfield/default/hovered": {
+      "fill": "#000",
+      "textColor": "#fff",
+      "font": "body"
+     },
+     "textfield/default/focused": {
+      "fill": "#000",
+      "textColor": "#fff",
+      "font": "body"
+     },
+     "textfield/default/disabled": {
+      "fill": "#000",
+      "textColor": "#fff",
+      "font": "body"
+     },
+     "textfield/default/label": {
+      "fill": "#000",
+      "textColor": "#fff",
+      "font": "body"
+     },
+     "textfield/default/placeholder": {
+      "fill": "#000",
+      "textColor": "#fff",
+      "font": "body"
+     },
+     "textfield/default/caret": {
+      "fill": "#000",
+      "textColor": "#fff",
+      "font": "body"
+     },
+     "textfield/default/selection": {
+      "fill": "#000",
+      "textColor": "#fff",
+      "font": "body"
+     }
+    }
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "RASM_DIRECTION",
+     "payload": {
+      "direction": "rtl"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "RASM_PAINT",
+        "payload": {
+         "texts": [
+          {
+           "id": "name:label",
+           "key": "name",
+           "x": 198,
+           "y": 10,
+           "z": 0,
+           "align": "right",
+           "baseline": "middle",
+           "color": "#fff",
+           "font": "body"
+          },
+          {
+           "id": "name:placeholder",
+           "key": "hint",
+           "x": 186,
+           "y": 41,
+           "z": 0,
+           "align": "right",
+           "baseline": "middle",
+           "color": "#fff",
+           "font": "body"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-ltr-aligns-them-left",
+   "config": {
+    "id": "name",
+    "label": "name",
+    "placeholder": "hint"
+   },
+   "entity": {
+    "id": "t",
+    "hasLooks": true,
+    "hasRect": true,
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 200,
+     "h": 60
+    },
+    "looks": {
+     "textfield/default/idle": {
+      "fill": "#000",
+      "textColor": "#fff",
+      "font": "body"
+     },
+     "textfield/default/hovered": {
+      "fill": "#000",
+      "textColor": "#fff",
+      "font": "body"
+     },
+     "textfield/default/focused": {
+      "fill": "#000",
+      "textColor": "#fff",
+      "font": "body"
+     },
+     "textfield/default/disabled": {
+      "fill": "#000",
+      "textColor": "#fff",
+      "font": "body"
+     },
+     "textfield/default/label": {
+      "fill": "#000",
+      "textColor": "#fff",
+      "font": "body"
+     },
+     "textfield/default/placeholder": {
+      "fill": "#000",
+      "textColor": "#fff",
+      "font": "body"
+     },
+     "textfield/default/caret": {
+      "fill": "#000",
+      "textColor": "#fff",
+      "font": "body"
+     },
+     "textfield/default/selection": {
+      "fill": "#000",
+      "textColor": "#fff",
+      "font": "body"
+     }
+    }
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "RASM_DIRECTION",
+     "payload": {
+      "direction": "ltr"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "RASM_PAINT",
+        "payload": {
+         "texts": [
+          {
+           "id": "name:label",
+           "key": "name",
+           "x": 2,
+           "y": 10,
+           "z": 0,
+           "align": "left",
+           "baseline": "middle",
+           "color": "#fff",
+           "font": "body"
+          },
+          {
+           "id": "name:placeholder",
+           "key": "hint",
+           "x": 14,
+           "y": 41,
+           "z": 0,
+           "align": "left",
+           "baseline": "middle",
+           "color": "#fff",
+           "font": "body"
+          }
+         ]
+        }
+       }
+      ]
+     }
     }
    ]
   }

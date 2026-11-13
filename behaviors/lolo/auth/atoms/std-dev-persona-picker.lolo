@@ -46,6 +46,7 @@ orbital DevPersonaPickerOrbital [env: ["FIREBASE_AUTH_EMULATOR_HOST"], net: { "1
       PersonaPicker.PERSONAS_REQUESTED -> PERSONAS_REQUESTED
       TOKEN_SIGN_IN_REQUESTED {
         token : string!
+        clientId : string?
       }
         @description "The picker hands the persona's emulator token to be signed in."
       PersonaPicker.TOKEN_SIGN_IN_REQUESTED -> TOKEN_SIGN_IN_REQUESTED
@@ -62,6 +63,37 @@ orbital DevPersonaPickerOrbital [env: ["FIREBASE_AUTH_EMULATOR_HOST"], net: { "1
         rawBody : string
       }
         @description "Internal: a sign-in by id."
+      PersonaBinding.BEARER_VERIFY -> PERSONA_VERIFY
+      PersonaBinding.IDENTITY_BOUND -> PERSONA_BOUND
+      PersonaBinding.IDENTITY_REFUSED -> PERSONA_UNBOUND
+      PersonaBinding.IDENTITY_ANONYMOUS -> PERSONA_UNBOUND with { requestId: ?requestId, reason: "anonymous" }
+      PersonaBinding.IDENTITY_SESSION_ENDED -> PERSONA_UNBOUND with { requestId: ?requestId, reason: "session-ended" }
+      PERSONA_VERIFY {
+        requestId : number
+        authorization : string
+      }
+        @description "Internal: the binder asks for a persona's bearer to be verified."
+      PERSONA_BOUND {
+        requestId : number
+        subject : string
+      }
+        @description "Internal: the binder signed the persona in."
+      PERSONA_UNBOUND {
+        requestId : number
+        reason : string!
+      }
+        @description "Internal: the binder refused the persona's ask, with its reason."
+    }
+  }
+
+  trait PersonaBinding = Personas.traits.PersonaBinding {
+    config {
+      identityEntity: DevPersonaRow
+    }
+    listens {
+      PersonaEvents.PERSONA_BEARER -> BEARER_PRESENT
+      PersonaEvents.PERSONA_VERIFIED -> BEARER_VERIFIED
+      PersonaEvents.PERSONA_REFUSED -> REFUSED_SEEN
     }
   }
 
@@ -332,5 +364,6 @@ orbital DevPersonaPickerOrbital [env: ["FIREBASE_AUTH_EMULATOR_HOST"], net: { "1
     }
   }
 
-  page "/dev/personas" as DevPersonaPickerPage -> PersonaPicker, PersonaEvents, PersonaHttp
+  page "/dev/personas" as DevPersonaPickerPage -> PersonaPicker
+  page boot as DevPersonaPickerStart -> PersonaEvents, PersonaBinding, PersonaHttp
 }

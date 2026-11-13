@@ -20,9 +20,15 @@ orbital PersonaIdentityFixture [env: ["FIREBASE_AUTH_EMULATOR_HOST"], net: { "12
     seen : string @description "The id of the last @user asked about." = ""
   }
 
-  trait Acting = Personas.traits.DevPersonas -> Person {
+  trait DevPersonas = Personas.traits.DevPersonas -> Person {
     config {
       emulatorIssuer: "firebase-auth-emulator@example.com"
+    }
+  }
+
+  trait PersonaBinding = Personas.traits.PersonaBinding {
+    config {
+      identityEntity: Person
     }
   }
 
@@ -56,5 +62,5 @@ orbital PersonaIdentityFixture [env: ["FIREBASE_AUTH_EMULATOR_HOST"], net: { "12
     }
   }
 
-  page boot as PersonaIdentityFixturePage -> Acting, PersonaHttp, Who
+  page boot as PersonaIdentityFixturePage -> DevPersonas, PersonaBinding, PersonaHttp, Who
 }

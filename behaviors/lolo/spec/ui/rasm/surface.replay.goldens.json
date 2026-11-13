@@ -886,6 +886,217 @@
      }
     }
    ]
+  },
+  {
+   "id": "a-canvas-wheel-is-relayed-as-the-kit-wheel",
+   "config": {},
+   "entity": {
+    "id": "s"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "SURFACE_WHEEL",
+     "payload": {
+      "target": "list",
+      "x": 10,
+      "y": 20,
+      "dx": 0,
+      "dy": -40
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "RASM_WHEEL",
+        "payload": {
+         "target": "list",
+         "x": 10,
+         "y": 20,
+         "dx": 0,
+         "dy": -40
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "rtl-swaps-the-horizontal-arrows",
+   "config": {
+    "direction": "rtl"
+   },
+   "entity": {
+    "id": "s"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "SURFACE_REPAINT",
+     "payload": {
+      "n": 1
+     },
+     "options": {
+      "render": true,
+      "renderProps": true
+     },
+     "expect": {
+      "state": "ready",
+      "rendered": [
+       {
+        "slot": "main",
+        "props": {
+         "keyMap.ArrowRight": "KEY_DECREASE",
+         "keyMap.ArrowLeft": "KEY_INCREASE",
+         "keyMap.ArrowUp": "KEY_INCREASE"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-ltr-arrow-right-increases",
+   "config": {
+    "direction": "ltr"
+   },
+   "entity": {
+    "id": "s"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "SURFACE_REPAINT",
+     "payload": {
+      "n": 1
+     },
+     "options": {
+      "render": true,
+      "renderProps": true
+     },
+     "expect": {
+      "state": "ready",
+      "rendered": [
+       {
+        "slot": "main",
+        "props": {
+         "keyMap.ArrowRight": "KEY_INCREASE",
+         "keyMap.ArrowLeft": "KEY_DECREASE",
+         "keyMap.ArrowUp": "KEY_INCREASE"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "an-embed-request-reaches-the-canvas-and-the-host-answer-comes-back",
+   "config": {},
+   "entity": {
+    "id": "s"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_EMBED",
+     "payload": {
+      "id": "e",
+      "kind": "program",
+      "source": "/p",
+      "label": "Orders",
+      "z": 3,
+      "rect": {
+       "x": 10,
+       "y": 20,
+       "w": 300,
+       "h": 200
+      }
+     },
+     "expect": {
+      "state": "ready",
+      "entity": {
+       "embeds": {
+        "e": {
+         "id": "e",
+         "kind": "program",
+         "source": "/p",
+         "rect": {
+          "x": 10,
+          "y": 20,
+          "w": 300,
+          "h": 200
+         }
+        }
+       }
+      }
+     }
+    },
+    {
+     "from": "ready",
+     "event": "SURFACE_REPAINT",
+     "payload": {
+      "n": 9
+     },
+     "options": {
+      "render": true,
+      "renderProps": true
+     },
+     "expect": {
+      "state": "ready",
+      "rendered": [
+       {
+        "slot": "main",
+        "props": {
+         "embeds.0.id": "e",
+         "embeds.0.kind": "program",
+         "embedEvent": "SURFACE_EMBED"
+        }
+       }
+      ]
+     },
+     "entity": {
+      "id": "s",
+      "embeds": {
+       "e": {
+        "id": "e",
+        "kind": "program",
+        "source": "/p",
+        "rect": {
+         "x": 10,
+         "y": 20,
+         "w": 300,
+         "h": 200
+        }
+       }
+      }
+     }
+    },
+    {
+     "from": "ready",
+     "event": "SURFACE_EMBED",
+     "payload": {
+      "target": "e",
+      "status": "unavailable",
+      "reason": "host"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "RASM_EMBED_STATE",
+        "payload": {
+         "id": "e",
+         "status": "unavailable",
+         "reason": "host"
+        }
+       }
+      ]
+     }
+    }
+   ]
   }
  ]
 }

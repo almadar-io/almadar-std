@@ -14,6 +14,7 @@ type RasmMeasureItem = { id : string!, width : number!, height : number!, lines 
 type RasmTouch = { pointerId : number!, x : number!, y : number! }
 type RasmKeyframe = { at : number!, opacity : number, offsetY : number }
 type RasmAnimation = { durationMs : number!, loop : boolean!, keyframes : [RasmKeyframe]! }
+type RasmEmbedReq = { id : string!, kind : "program" | "web" | "video" | "map"!, source : string!, rect : RasmRect! }
 type RasmText = { id : string!, key : MessageKey!, x : number!, y : number!, z : number!, align : string!, baseline : string!, color : string?, font : string?, spring : RasmSpring?, width : number?, wrap : boolean?, measure : boolean?, role : string?, animation : RasmAnimation? }
 type RasmPaintEntry = { id : string!, z : number!, nodes : [node]!, texts : [RasmText]! }
 
@@ -25,6 +26,7 @@ orbital RasmSurfaceOrbital {
     viewW : number @description "The canvas width the layout uses: the config width, then the resized width when fill is on." = 720
     viewH : number @description "The canvas height the layout uses." = 520
     root : RasmRect @description "The rect handed to the root child." = { x: 0, y: 0, w: 720, h: 520 }
+    embeds : Map string RasmEmbedReq @description "The embedded views controls asked the host for, by id." = {}
     hidden : [string] @description "The paint ids RASM_VISIBLE hid: their paints are kept and not drawn." = []
     repaints : number @description "Counts repaints, so each repaint in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
   }
@@ -66,6 +68,14 @@ orbital RasmSurfaceOrbital {
         (emit RASM_KEYPRESS { target: ?target, key: ?key, shift: ?shift, alt: ?alt, ctrl: ?ctrl, meta: ?meta })
       SURFACE_ACCESS -> ready
         (emit RASM_ACCESS { target: ?target, action: ?action })
+      RASM_EMBED -> ready
+        (set @entity.embeds (object/set @entity.embeds ?id { id: ?id, kind: ?kind, source: ?source, rect: ?rect }))
+        (set @entity.repaints (+ @entity.repaints 1))
+        (emit SURFACE_REPAINT { n: @entity.repaints })
+      SURFACE_EMBED -> ready
+        (emit RASM_EMBED_STATE { id: ?target, status: ?status, reason: ?reason })
+      SURFACE_WHEEL -> ready
+        (emit RASM_WHEEL { target: ?target, x: ?x, y: ?y, dx: ?dx, dy: ?dy })
       RASM_PAINT -> ready
         (set @entity.paints (object/set @entity.paints ?id { id: ?id, z: ?z, nodes: ?nodes, texts: (default ?texts []) }))
         (set @entity.repaints (+ @entity.repaints 1))
@@ -89,28 +99,31 @@ orbital RasmSurfaceOrbital {
           textInputEvent: "SURFACE_TEXT"
           keyEvent: "SURFACE_KEY"
           accessEvent: "SURFACE_ACCESS"
+          wheelEvent: "SURFACE_WHEEL"
+          embeds: (object/values @entity.embeds)
+          embedEvent: "SURFACE_EMBED"
           pointerDownEvent: "POINTER_DOWN"
           pointerUpEvent: "POINTER_UP"
           pointerEnterEvent: "POINTER_ENTER"
           pointerLeaveEvent: "POINTER_LEAVE"
           pointerMoveEvent: "POINTER_MOVE"
           measureEvent: "SURFACE_MEASURED"
-          keyMap: { Tab: "KEY_NEXT", "Shift+Tab": "KEY_PREVIOUS", Enter: "KEY_ACTIVATE", Space: "KEY_ACTIVATE", ArrowRight: "KEY_INCREASE", ArrowUp: "KEY_INCREASE", ArrowLeft: "KEY_DECREASE", ArrowDown: "KEY_DECREASE", Escape: "KEY_ESCAPE", PageUp: "KEY_PAGE_UP", PageDown: "KEY_PAGE_DOWN", Home: "KEY_HOME", End: "KEY_END" }
+          keyMap: { Tab: "KEY_NEXT", "Shift+Tab": "KEY_PREVIOUS", Enter: "KEY_ACTIVATE", Space: "KEY_ACTIVATE", ArrowRight: (if (= @config.direction "rtl") "KEY_DECREASE" "KEY_INCREASE"), ArrowUp: "KEY_INCREASE", ArrowLeft: (if (= @config.direction "rtl") "KEY_INCREASE" "KEY_DECREASE"), ArrowDown: "KEY_DECREASE", Escape: "KEY_ESCAPE", PageUp: "KEY_PAGE_UP", PageDown: "KEY_PAGE_DOWN", Home: "KEY_HOME", End: "KEY_END" }
           drawables: (let ((g (object/get @entity.looks "surface/ground/idle" null))) (array/concat (if (= @g null) [] [{ type: draw-shape, shape: "rect", id: (str/concat @config.id ":ground"), position: { x: 0, y: 0 }, anchor: "top-left", width: @entity.viewW, height: @entity.viewH, fill: @g.fill, material: @g.material, spring: @g.spring, hit: false }]) (array/flatten (array/map (array/filter (array/sort (object/values @entity.paints) "z" "asc") (fn e (not (array/includes @entity.hidden @e.id)))) (fn e (array/concat @e.nodes (array/map @e.texts (fn t (let ((said (default (i18n/t @t.key) ""))) { type: draw-text, id: @t.id, text: @said, anchor: "top-left", position: { x: @t.x, y: @t.y, z: @t.z }, align: @t.align, baseline: @t.baseline, color: @t.color, font: @t.font, spring: @t.spring, width: @t.width, wrap: @t.wrap, measure: @t.measure, animation: @t.animation, hit: false, semantic: (if (= @t.role null) null { role: @t.role, name: @said }) })))))))))
         })
       POINTER_DOWN -> ready
         (emit RASM_POINTER { kind: "down", id: ?target, x: ?x, y: ?y, index: (default ?index -1) })
-        (when (> (array/len (default ?touches [])) 0) (emit RASM_TOUCHES { kind: "down", touches: ?touches }))
+        (when (> (array/len (default ?touches [])) 0) (emit RASM_TOUCHES { kind: "down", id: ?target, touches: ?touches }))
       POINTER_UP -> ready
         (emit RASM_POINTER { kind: "up", id: ?target, x: ?x, y: ?y })
-        (when (> (array/len (default ?touches [])) 0) (emit RASM_TOUCHES { kind: "up", touches: ?touches }))
+        (when (> (array/len (default ?touches [])) 0) (emit RASM_TOUCHES { kind: "up", id: ?target, touches: ?touches }))
       POINTER_ENTER -> ready
         (emit RASM_POINTER { kind: "enter", id: ?target, x: ?x, y: ?y })
       POINTER_LEAVE -> ready
         (emit RASM_POINTER { kind: "leave", id: ?target, x: ?x, y: ?y })
       POINTER_MOVE -> ready
         (emit RASM_POINTER { kind: "move", id: ?target, x: ?x, y: ?y })
-        (when (> (array/len (default ?touches [])) 0) (emit RASM_TOUCHES { kind: "move", touches: ?touches }))
+        (when (> (array/len (default ?touches [])) 0) (emit RASM_TOUCHES { kind: "move", id: ?target, touches: ?touches }))
       SURFACE_MEASURED -> ready
         (emit RASM_MEASURED { items: ?items })
       KEY_NEXT -> ready
@@ -188,9 +201,26 @@ orbital RasmSurfaceOrbital {
         @tier "primary"
       RASM_TOUCHES -> external {
         kind : "down" | "up" | "move"!
+        id : string!
         touches : [RasmTouch]!
       }
-        @description "The pointers held down while a multi-touch gesture is in progress, in ascending pointerId; a single pointer never sends it."
+        @description "The pointers held down while a multi-touch gesture is in progress, in ascending pointerId, with the hit region they started on; a single pointer never sends it."
+        @tier "primary"
+      RASM_EMBED_STATE -> external {
+        id : string!
+        status : "ready" | "unavailable"!
+        reason : string!
+      }
+        @description "The host's answer for an embedded view: ready once it shows, unavailable with the reason when the host cannot provide it."
+        @tier "primary"
+      RASM_WHEEL -> external {
+        target : string!
+        x : number!
+        y : number!
+        dx : number!
+        dy : number!
+      }
+        @description "The wheel turned over the surface: the topmost hit region under the pointer (empty for none), the point, and the scroll in px."
         @tier "primary"
       RASM_ACCESS -> external {
         target : string!
@@ -225,6 +255,12 @@ orbital RasmSurfaceOrbital {
         @description "Text for the focused text field."
       SURFACE_KEY { target : string!  key : string!  shift : boolean!  alt : boolean!  ctrl : boolean!  meta : boolean! }
         @description "An editing key for the focused text field."
+      RASM_EMBED { id : string!  kind : "program" | "web" | "video" | "map"!  source : string!  label : string!  z : number!  rect : RasmRect! }
+        @description "A control asks the host for an embedded view in its rect; the surface hands it to the canvas."
+      SURFACE_EMBED { target : string!  status : "ready" | "unavailable"!  reason : string! }
+        @description "The canvas host's answer for an embed."
+      SURFACE_WHEEL { target : string!  x : number!  y : number!  dx : number!  dy : number! }
+        @description "The canvas wheel, in CSS pixels."
       SURFACE_ACCESS { target : string!  action : "focus" | "activate" | "increment" | "decrement"! }
         @description "An assistive-technology action on a semantic node."
       POINTER_DOWN { target : string!  x : number!  y : number!  index : number  touches : [RasmTouch] }

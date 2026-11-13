@@ -1,13 +1,13 @@
 {
  "atom": "spec/auth/dev-personas-identity.lolo",
- "trait": "Acting",
- "note": "PERSONA_ACT_AS over a runtime [identity] entity: the dispatching session signs in as the persona (the next step reads it as @user); a session that never acted stays the anonymous viewer.",
+ "trait": "DevPersonas",
+ "note": "PERSONA_ACT_AS over a runtime [identity] entity: the persona token is one ask to PersonaBinding, which signs the dispatching session in (the next step reads it as @user); a session that never acted stays the anonymous viewer.",
  "cases": [
   {
    "id": "act-as-signs-the-session-in-with-subject-the-persona",
    "steps": [
     {
-     "trait": "Acting",
+     "trait": "DevPersonas",
      "from": "ready",
      "event": "PERSONA_ACT_AS",
      "payload": {
@@ -22,22 +22,15 @@
      }
     },
     {
-     "trait": "Acting",
+     "trait": "DevPersonas",
      "from": "ready",
-     "event": "ACT_AS_HOST",
+     "event": "VERIFY_HOST",
      "payload": {
       "value": "127.0.0.1:9099",
-      "key": "ada"
+      "key": "Bearer eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJpc3MiOiJmaXJlYmFzZS1hdXRoLWVtdWxhdG9yQGV4YW1wbGUuY29tIiwiYXVkIjoiZGVtby1hbG1hZGFyIiwic3ViIjoiYWRhIiwidWlkIjoiYWRhIiwiZXhwIjo0MTAyNDQ0ODAwfQ."
      },
      "expect": {
       "emits": [
-       {
-        "event": "TOKEN_MINT",
-        "payload": {
-         "key": "ada",
-         "purpose": "sign-in"
-        }
-       },
        {
         "event": "PERSONA_SIGNED_IN",
         "payload": {
@@ -69,13 +62,16 @@
       ]
      }
     }
+   ],
+   "defaults": [
+    "PersonaBinding"
    ]
   },
   {
    "id": "control-a-second-session-that-never-acted-has-no-identity",
    "steps": [
     {
-     "trait": "Acting",
+     "trait": "DevPersonas",
      "from": "ready",
      "event": "PERSONAS_HOST",
      "payload": {
@@ -103,13 +99,16 @@
       ]
      }
     }
+   ],
+   "defaults": [
+    "PersonaBinding"
    ]
   },
   {
    "id": "act-as-another-persona-binds-that-subject",
    "steps": [
     {
-     "trait": "Acting",
+     "trait": "DevPersonas",
      "from": "ready",
      "event": "PERSONA_ACT_AS",
      "payload": {
@@ -124,12 +123,12 @@
      }
     },
     {
-     "trait": "Acting",
+     "trait": "DevPersonas",
      "from": "ready",
-     "event": "ACT_AS_HOST",
+     "event": "VERIFY_HOST",
      "payload": {
       "value": "127.0.0.1:9099",
-      "key": "bob"
+      "key": "Bearer eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJpc3MiOiJmaXJlYmFzZS1hdXRoLWVtdWxhdG9yQGV4YW1wbGUuY29tIiwiYXVkIjoiZGVtby1hbG1hZGFyIiwic3ViIjoiYm9iIiwidWlkIjoiYm9iIiwiZXhwIjo0MTAyNDQ0ODAwfQ."
      },
      "expect": {
       "emits": [
@@ -160,6 +159,9 @@
       ]
      }
     }
+   ],
+   "defaults": [
+    "PersonaBinding"
    ]
   },
   {
@@ -167,7 +169,7 @@
    "note": "Production: the host is unset, so the dev persona sign-in is refused and the session keeps the anonymous viewer.",
    "steps": [
     {
-     "trait": "Acting",
+     "trait": "DevPersonas",
      "from": "ready",
      "event": "PERSONA_ACT_AS",
      "payload": {
@@ -178,16 +180,22 @@
      }
     },
     {
-     "trait": "Acting",
+     "trait": "DevPersonas",
      "from": "ready",
-     "event": "ACT_AS_HOST",
+     "event": "VERIFY_HOST",
      "payload": {
       "value": "",
-      "key": "ada"
+      "key": "Bearer eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJpc3MiOiJmaXJlYmFzZS1hdXRoLWVtdWxhdG9yQGV4YW1wbGUuY29tIiwiYXVkIjoiZGVtby1hbG1hZGFyIiwic3ViIjoiYWRhIiwidWlkIjoiYWRhIiwiZXhwIjo0MTAyNDQ0ODAwfQ."
      },
      "expect": {
       "fired": true,
       "emits": [
+       {
+        "event": "PERSONA_REFUSED",
+        "payload": {
+         "reason": "no-emulator"
+        }
+       },
        {
         "event": "PERSONA_SIGN_IN_REFUSED",
         "payload": {
@@ -196,8 +204,7 @@
        }
       ],
       "neverEmits": [
-       "PERSONA_SIGNED_IN",
-       "TOKEN_MINT"
+       "PERSONA_SIGNED_IN"
       ]
      }
     },
@@ -219,6 +226,9 @@
       ]
      }
     }
+   ],
+   "defaults": [
+    "PersonaBinding"
    ]
   }
  ]

@@ -80,6 +80,8 @@ orbital RasmScrollOrbital {
             (emit RASM_VISIBLE { owner: @config.id, shown: @out.shown, hidden: @out.hidden })
             (set @entity.paints (+ @entity.paints 1))
             (emit SCROLL_PAINT { n: @entity.paints })))
+      RASM_WHEEL -> ready when (and (and (>= ?x @entity.rect.x) (< ?x (+ @entity.rect.x @entity.rect.w))) (and (>= ?y @entity.rect.y) (< ?y (+ @entity.rect.y @entity.rect.h))))
+        (emit SCROLL_TO { offset: (+ @entity.offset (if (= @config.axis "vertical") ?dy ?dx)) })
       RASM_SCROLL_BY -> ready when (= ?id @config.id)
         (emit SCROLL_TO { offset: (+ @entity.offset ?delta) })
       RASM_STEP -> ready when (= ?id @config.id)
@@ -120,7 +122,7 @@ orbital RasmScrollOrbital {
         (let ((r @entity.rect) (vert (= @config.axis "vertical")) (rtl (= (if @entity.announced @entity.dir @config.direction) "rtl")) (bar @config.barSize) (body (default (object/get @entity.looks (str/concat "scroll/" @config.intent "/body") null) {})) (track (default (object/get @entity.looks (str/concat "scroll/" @config.intent "/track") null) {})) (thumb (default (object/get @entity.looks (str/concat "scroll/" @config.intent (if @entity.dragging "/thumb-dragging" "/thumb")) null) {})) (overflow (and (> @entity.maxOffset 0) (> @config.barSize 0))))
           (let ((vp (if (= @config.axis "vertical") @entity.rect.h @entity.rect.w)) (tx (if @vert (if @rtl @r.x (- (+ @r.x @r.w) @bar)) @r.x)) (ty (if @vert @r.y (- (+ @r.y @r.h) @bar))))
             (let ((p (if (> @entity.maxOffset 0) (* (/ @entity.offset @entity.maxOffset) (- @vp @entity.thumbLen)) 0)))
-              (emit RASM_PAINT { id: @config.id, z: @config.z, nodes: (array/concat [{ type: draw-shape, shape: "rect", id: @config.id, position: { x: @r.x, y: @r.y }, anchor: "top-left", width: @r.w, height: @r.h, fill: @body.fill, stroke: @body.stroke, strokeWidth: @body.strokeWidth, corners: @body.corners, shadow: @body.shadow, material: @body.material, spring: @body.spring, hit: true, semantic: { role: "group", name: @config.label, order: @config.order, focused: @entity.focused } }] (if @overflow [{ type: draw-shape, shape: "rect", id: (str/concat @config.id ":track"), position: { x: @tx, y: @ty }, anchor: "top-left", width: (if @vert @bar @r.w), height: (if @vert @r.h @bar), fill: @track.fill, corners: @track.corners, spring: @track.spring, hit: false }, { type: draw-shape, shape: "rect", id: (str/concat @config.id ":thumb"), position: { x: (if @vert @tx (if @rtl (- (- (+ @r.x @r.w) @p) @entity.thumbLen) (+ @r.x @p))), y: (if @vert (+ @r.y @p) @ty) }, anchor: "top-left", width: (if @vert @bar @entity.thumbLen), height: (if @vert @entity.thumbLen @bar), fill: @thumb.fill, stroke: @thumb.stroke, strokeWidth: @thumb.strokeWidth, corners: @thumb.corners, shadow: @thumb.shadow, spring: @thumb.spring, hit: true }] [])) }))))
+              (emit RASM_PAINT { id: @config.id, z: @config.z, nodes: (array/concat [{ type: draw-shape, shape: "rect", id: @config.id, position: { x: @r.x, y: @r.y }, anchor: "top-left", width: @r.w, height: @r.h, fill: @body.fill, stroke: @body.stroke, strokeWidth: @body.strokeWidth, corners: @body.corners, shadow: @body.shadow, material: @body.material, spring: @body.spring, hit: true, semantic: { role: "group", labelledBy: @config.labelledBy, order: @config.order, focused: @entity.focused } }] (if @overflow [{ type: draw-shape, shape: "rect", id: (str/concat @config.id ":track"), position: { x: @tx, y: @ty }, anchor: "top-left", width: (if @vert @bar @r.w), height: (if @vert @r.h @bar), fill: @track.fill, corners: @track.corners, spring: @track.spring, hit: false }, { type: draw-shape, shape: "rect", id: (str/concat @config.id ":thumb"), position: { x: (if @vert @tx (if @rtl (- (- (+ @r.x @r.w) @p) @entity.thumbLen) (+ @r.x @p))), y: (if @vert (+ @r.y @p) @ty) }, anchor: "top-left", width: (if @vert @bar @entity.thumbLen), height: (if @vert @entity.thumbLen @bar), fill: @thumb.fill, stroke: @thumb.stroke, strokeWidth: @thumb.strokeWidth, corners: @thumb.corners, shadow: @thumb.shadow, spring: @thumb.spring, hit: true }] [])) }))))
     }
 
     emits {
@@ -192,6 +194,8 @@ orbital RasmScrollOrbital {
         @description "The region is focused when the id is its own."
       RASM_STEP { id : string!  delta : number! }
         @description "Scroll by step times delta."
+      RASM_WHEEL { target : string!  x : number!  y : number!  dx : number!  dy : number! }
+        @description "Scroll by the wheel's delta along the axis when the point is over this region."
       RASM_SCROLL_BY { id : string!  delta : number! }
         @description "Scroll by a delta in px."
     }
@@ -201,9 +205,9 @@ orbital RasmScrollOrbital {
         @label "Id"
         @description "The region's id: its RASM_PLACE key, its hit drawable id and the prefix of the track and thumb ids."
         @tier "presentation"
-      label : string = ""
-        @label "Label"
-        @description "The region's accessible name, passed by the organism through its translation."
+      labelledBy : string
+        @label "Labelled by"
+        @description "The id of a painted text that names the region to assistive technology (its title or heading)."
         @tier "presentation"
       axis : "vertical" | "horizontal" = "vertical"
         @label "Axis"

@@ -10,6 +10,7 @@ type RasmCorners = { radius : [number]!, kind : "round" | "bevel" | "notch" | "s
 type RasmSpring = { stiffness : number!, damping : number! }
 type RasmKeyframe = { at : number!, opacity : number, offsetY : number }
 type RasmAnimation = { durationMs : number!, loop : boolean!, keyframes : [RasmKeyframe]! }
+type RasmOption = { value : string!, label : MessageKey! }
 type RasmText = { id : string!, key : MessageKey!, x : number!, y : number!, z : number!, align : string!, baseline : string!, color : string?, font : string?, spring : RasmSpring?, width : number?, wrap : boolean?, measure : boolean?, role : string?, animation : RasmAnimation? }
 type RasmShadow = { color : string!, blur : number! }
 type RasmLook = { fill : string, stroke : string, strokeWidth : number, corners : RasmCorners, shadow : RasmShadow, material : RasmMaterial, textColor : string, font : string, spring : RasmSpring, decor : string }
@@ -27,6 +28,7 @@ orbital RasmChoiceOrbital {
     stagger : number = 70
     paints : number = 0
     selected : number @description "Index of the chosen option, -1 for none." = -1
+    dir : "ltr" | "rtl" @description "The direction the surface announced; rtl aligns the texts right and puts the chevron at the left edge." = "ltr"
     active : number @description "Index of the highlighted option while open." = 0
   }
 
@@ -34,12 +36,16 @@ orbital RasmChoiceOrbital {
     initial: idle
 
     state idle {
+      RASM_DIRECTION -> idle
+        (set @entity.dir ?direction)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
       INIT -> idle
-        (set @entity.selected (array/indexOf @config.options @config.value))
-        (set @entity.active (math/max 0 (array/indexOf @config.options @config.value)))
+        (set @entity.selected (array/indexOf (array/map @config.options (fn o @o.value)) @config.value))
+        (set @entity.active (math/max 0 (array/indexOf (array/map @config.options (fn o @o.value)) @config.value)))
       RASM_BOOT -> idle
-        (set @entity.selected (array/indexOf @config.options @config.value))
-        (set @entity.active (math/max 0 (array/indexOf @config.options @config.value)))
+        (set @entity.selected (array/indexOf (array/map @config.options (fn o @o.value)) @config.value))
+        (set @entity.active (math/max 0 (array/indexOf (array/map @config.options (fn o @o.value)) @config.value)))
       RASM_THEME -> idle
         (set @entity.looks ?looks)
         (set @entity.hasLooks true)
@@ -84,32 +90,37 @@ orbital RasmChoiceOrbital {
         (emit REPAINT { n: @entity.paints })
       RASM_STEP -> idle when (and (= ?id @config.id) (> (array/len @config.options) 0))
         (let ((i (math/max 0 (math/min (- (array/len @config.options) 1) (+ (math/max 0 @entity.selected) (if (= @entity.selected -1) 0 ?delta))))))
-          (do (when (!= @entity.selected @i) (emit @config.changed { value: (default (array/nth @config.options @i) "") }))
+          (do (when (!= @entity.selected @i) (emit @config.changed { value: (default (array/nth (array/map @config.options (fn o @o.value)) @i) "") }))
           (set @entity.selected @i)))
         (set @entity.paints (+ @entity.paints 1))
         (emit REPAINT { n: @entity.paints })
       REPAINT -> idle when (and @entity.hasLooks @entity.hasRect)
         (let (
             (r @entity.rect)
-            (anim (if (>= @entity.entering 0) { durationMs: (+ 520 (* @entity.entering @entity.stagger)), loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 14 }, { at: (/ (* @entity.entering @entity.stagger) (+ 520 (* @entity.entering @entity.stagger))), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }] } null))
+            (anim (if (>= @entity.entering 0) { durationMs: (+ 520 (* @entity.entering @entity.stagger)), loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 14 }, { at: (default (/ (* @entity.entering @entity.stagger) (+ 520 (* @entity.entering @entity.stagger))) 0), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }] } null))
             (look (default (object/get @entity.looks "choice/default/idle") {}))
             (lab (default (object/get @entity.looks "choice/default/label") {}))
             (pop (default (object/get @entity.looks "choice/popup/idle") {}))
             (oi (default (object/get @entity.looks "choice/option/idle") {}))
             (oa (default (object/get @entity.looks "choice/option/active") {}))
-            (sel (default (array/nth @config.options @entity.selected) ""))
+            (sel (if (>= @entity.selected 0) (default (array/nth (array/map @config.options (fn o @o.value)) @entity.selected) "") ""))
+            (opts : [RasmOption] @config.options)
           )
           (let ((by (+ @r.y 22)) (bh (- @r.h 22)))
-            (emit RASM_PAINT { id: @config.id, z: @config.z, texts: [{ id: (str/concat @config.id ":label"), key: @config.label, x: (+ @r.x 2), y: (+ @r.y 10), z: @config.z, align: "left", baseline: "middle", color: @lab.textColor, font: @lab.font }], nodes: [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @r.x, y: @by, z: @config.z }, width: @r.w, height: @bh, fill: @look.fill, stroke: @look.stroke, strokeWidth: @look.strokeWidth, corners: @look.corners, spring: @look.spring, animation: @anim, hit: true, semantic: { role: "combobox", labelledBy: (str/concat @config.id ":label"), value: @sel, focused: false, order: @config.order } }, { type: draw-text, id: (str/concat @config.id ":value"), text: @sel, anchor: "top-left", position: { x: (+ @r.x 14), y: (+ @by (/ @bh 2)), z: @config.z }, align: left, baseline: middle, color: @look.textColor, font: @look.font, animation: @anim }, { type: draw-text, id: (str/concat @config.id ":chevron"), text: "▾", anchor: "top-left", position: { x: (- (+ @r.x @r.w) 18), y: (+ @by (/ @bh 2)), z: @config.z }, align: center, baseline: middle, color: @look.textColor, font: @look.font, animation: @anim }] })))
+            (emit RASM_PAINT { id: @config.id, z: @config.z, texts: (array/concat [{ id: (str/concat @config.id ":label"), key: @config.label, x: (if (= @entity.dir "rtl") (- (+ @r.x @r.w) 2) (+ @r.x 2)), y: (+ @r.y 10), z: @config.z, align: (if (= @entity.dir "rtl") "right" "left"), baseline: "middle", color: @lab.textColor, font: @lab.font }] (array/map (array/filter @opts (fn o (= @o.value @sel))) (fn o { id: (str/concat @config.id ":value"), key: @o.label, x: (if (= @entity.dir "rtl") (- (+ @r.x @r.w) 14) (+ @r.x 14)), y: (+ @by (/ @bh 2)), z: @config.z, align: (if (= @entity.dir "rtl") "right" "left"), baseline: "middle", color: @look.textColor, font: @look.font, animation: @anim }))), nodes: [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @r.x, y: @by, z: @config.z }, width: @r.w, height: @bh, fill: @look.fill, stroke: @look.stroke, strokeWidth: @look.strokeWidth, corners: @look.corners, spring: @look.spring, animation: @anim, hit: true, semantic: { role: "combobox", labelledBy: (str/concat @config.id ":label"), value: @sel, focused: false, order: @config.order } }, { type: draw-text, id: (str/concat @config.id ":chevron"), text: "▾", anchor: "top-left", position: { x: (if (= @entity.dir "rtl") (+ @r.x 18) (- (+ @r.x @r.w) 18)), y: (+ @by (/ @bh 2)), z: @config.z }, align: center, baseline: middle, color: @look.textColor, font: @look.font, animation: @anim }] })))
     }
 
     state hovered {
+      RASM_DIRECTION -> hovered
+        (set @entity.dir ?direction)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
       INIT -> idle
-        (set @entity.selected (array/indexOf @config.options @config.value))
-        (set @entity.active (math/max 0 (array/indexOf @config.options @config.value)))
+        (set @entity.selected (array/indexOf (array/map @config.options (fn o @o.value)) @config.value))
+        (set @entity.active (math/max 0 (array/indexOf (array/map @config.options (fn o @o.value)) @config.value)))
       RASM_BOOT -> idle
-        (set @entity.selected (array/indexOf @config.options @config.value))
-        (set @entity.active (math/max 0 (array/indexOf @config.options @config.value)))
+        (set @entity.selected (array/indexOf (array/map @config.options (fn o @o.value)) @config.value))
+        (set @entity.active (math/max 0 (array/indexOf (array/map @config.options (fn o @o.value)) @config.value)))
       RASM_THEME -> hovered
         (set @entity.looks ?looks)
         (set @entity.hasLooks true)
@@ -154,32 +165,37 @@ orbital RasmChoiceOrbital {
         (emit REPAINT { n: @entity.paints })
       RASM_STEP -> hovered when (and (= ?id @config.id) (> (array/len @config.options) 0))
         (let ((i (math/max 0 (math/min (- (array/len @config.options) 1) (+ (math/max 0 @entity.selected) (if (= @entity.selected -1) 0 ?delta))))))
-          (do (when (!= @entity.selected @i) (emit @config.changed { value: (default (array/nth @config.options @i) "") }))
+          (do (when (!= @entity.selected @i) (emit @config.changed { value: (default (array/nth (array/map @config.options (fn o @o.value)) @i) "") }))
           (set @entity.selected @i)))
         (set @entity.paints (+ @entity.paints 1))
         (emit REPAINT { n: @entity.paints })
       REPAINT -> hovered when (and @entity.hasLooks @entity.hasRect)
         (let (
             (r @entity.rect)
-            (anim (if (>= @entity.entering 0) { durationMs: (+ 520 (* @entity.entering @entity.stagger)), loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 14 }, { at: (/ (* @entity.entering @entity.stagger) (+ 520 (* @entity.entering @entity.stagger))), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }] } null))
+            (anim (if (>= @entity.entering 0) { durationMs: (+ 520 (* @entity.entering @entity.stagger)), loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 14 }, { at: (default (/ (* @entity.entering @entity.stagger) (+ 520 (* @entity.entering @entity.stagger))) 0), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }] } null))
             (look (default (object/get @entity.looks "choice/default/hovered") {}))
             (lab (default (object/get @entity.looks "choice/default/label") {}))
             (pop (default (object/get @entity.looks "choice/popup/idle") {}))
             (oi (default (object/get @entity.looks "choice/option/idle") {}))
             (oa (default (object/get @entity.looks "choice/option/active") {}))
-            (sel (default (array/nth @config.options @entity.selected) ""))
+            (sel (if (>= @entity.selected 0) (default (array/nth (array/map @config.options (fn o @o.value)) @entity.selected) "") ""))
+            (opts : [RasmOption] @config.options)
           )
           (let ((by (+ @r.y 22)) (bh (- @r.h 22)))
-            (emit RASM_PAINT { id: @config.id, z: @config.z, texts: [{ id: (str/concat @config.id ":label"), key: @config.label, x: (+ @r.x 2), y: (+ @r.y 10), z: @config.z, align: "left", baseline: "middle", color: @lab.textColor, font: @lab.font }], nodes: [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @r.x, y: @by, z: @config.z }, width: @r.w, height: @bh, fill: @look.fill, stroke: @look.stroke, strokeWidth: @look.strokeWidth, corners: @look.corners, spring: @look.spring, animation: @anim, hit: true, semantic: { role: "combobox", labelledBy: (str/concat @config.id ":label"), value: @sel, focused: false, order: @config.order } }, { type: draw-text, id: (str/concat @config.id ":value"), text: @sel, anchor: "top-left", position: { x: (+ @r.x 14), y: (+ @by (/ @bh 2)), z: @config.z }, align: left, baseline: middle, color: @look.textColor, font: @look.font, animation: @anim }, { type: draw-text, id: (str/concat @config.id ":chevron"), text: "▾", anchor: "top-left", position: { x: (- (+ @r.x @r.w) 18), y: (+ @by (/ @bh 2)), z: @config.z }, align: center, baseline: middle, color: @look.textColor, font: @look.font, animation: @anim }] })))
+            (emit RASM_PAINT { id: @config.id, z: @config.z, texts: (array/concat [{ id: (str/concat @config.id ":label"), key: @config.label, x: (if (= @entity.dir "rtl") (- (+ @r.x @r.w) 2) (+ @r.x 2)), y: (+ @r.y 10), z: @config.z, align: (if (= @entity.dir "rtl") "right" "left"), baseline: "middle", color: @lab.textColor, font: @lab.font }] (array/map (array/filter @opts (fn o (= @o.value @sel))) (fn o { id: (str/concat @config.id ":value"), key: @o.label, x: (if (= @entity.dir "rtl") (- (+ @r.x @r.w) 14) (+ @r.x 14)), y: (+ @by (/ @bh 2)), z: @config.z, align: (if (= @entity.dir "rtl") "right" "left"), baseline: "middle", color: @look.textColor, font: @look.font, animation: @anim }))), nodes: [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @r.x, y: @by, z: @config.z }, width: @r.w, height: @bh, fill: @look.fill, stroke: @look.stroke, strokeWidth: @look.strokeWidth, corners: @look.corners, spring: @look.spring, animation: @anim, hit: true, semantic: { role: "combobox", labelledBy: (str/concat @config.id ":label"), value: @sel, focused: false, order: @config.order } }, { type: draw-text, id: (str/concat @config.id ":chevron"), text: "▾", anchor: "top-left", position: { x: (if (= @entity.dir "rtl") (+ @r.x 18) (- (+ @r.x @r.w) 18)), y: (+ @by (/ @bh 2)), z: @config.z }, align: center, baseline: middle, color: @look.textColor, font: @look.font, animation: @anim }] })))
     }
 
     state focused {
+      RASM_DIRECTION -> focused
+        (set @entity.dir ?direction)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
       INIT -> idle
-        (set @entity.selected (array/indexOf @config.options @config.value))
-        (set @entity.active (math/max 0 (array/indexOf @config.options @config.value)))
+        (set @entity.selected (array/indexOf (array/map @config.options (fn o @o.value)) @config.value))
+        (set @entity.active (math/max 0 (array/indexOf (array/map @config.options (fn o @o.value)) @config.value)))
       RASM_BOOT -> idle
-        (set @entity.selected (array/indexOf @config.options @config.value))
-        (set @entity.active (math/max 0 (array/indexOf @config.options @config.value)))
+        (set @entity.selected (array/indexOf (array/map @config.options (fn o @o.value)) @config.value))
+        (set @entity.active (math/max 0 (array/indexOf (array/map @config.options (fn o @o.value)) @config.value)))
       RASM_THEME -> focused
         (set @entity.looks ?looks)
         (set @entity.hasLooks true)
@@ -227,32 +243,37 @@ orbital RasmChoiceOrbital {
         (emit REPAINT { n: @entity.paints })
       RASM_STEP -> focused when (and (= ?id @config.id) (> (array/len @config.options) 0))
         (let ((i (math/max 0 (math/min (- (array/len @config.options) 1) (+ (math/max 0 @entity.selected) (if (= @entity.selected -1) 0 ?delta))))))
-          (do (when (!= @entity.selected @i) (emit @config.changed { value: (default (array/nth @config.options @i) "") }))
+          (do (when (!= @entity.selected @i) (emit @config.changed { value: (default (array/nth (array/map @config.options (fn o @o.value)) @i) "") }))
           (set @entity.selected @i)))
         (set @entity.paints (+ @entity.paints 1))
         (emit REPAINT { n: @entity.paints })
       REPAINT -> focused when (and @entity.hasLooks @entity.hasRect)
         (let (
             (r @entity.rect)
-            (anim (if (>= @entity.entering 0) { durationMs: (+ 520 (* @entity.entering @entity.stagger)), loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 14 }, { at: (/ (* @entity.entering @entity.stagger) (+ 520 (* @entity.entering @entity.stagger))), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }] } null))
+            (anim (if (>= @entity.entering 0) { durationMs: (+ 520 (* @entity.entering @entity.stagger)), loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 14 }, { at: (default (/ (* @entity.entering @entity.stagger) (+ 520 (* @entity.entering @entity.stagger))) 0), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }] } null))
             (look (default (object/get @entity.looks "choice/default/focused") {}))
             (lab (default (object/get @entity.looks "choice/default/label") {}))
             (pop (default (object/get @entity.looks "choice/popup/idle") {}))
             (oi (default (object/get @entity.looks "choice/option/idle") {}))
             (oa (default (object/get @entity.looks "choice/option/active") {}))
-            (sel (default (array/nth @config.options @entity.selected) ""))
+            (sel (if (>= @entity.selected 0) (default (array/nth (array/map @config.options (fn o @o.value)) @entity.selected) "") ""))
+            (opts : [RasmOption] @config.options)
           )
           (let ((by (+ @r.y 22)) (bh (- @r.h 22)))
-            (emit RASM_PAINT { id: @config.id, z: @config.z, texts: [{ id: (str/concat @config.id ":label"), key: @config.label, x: (+ @r.x 2), y: (+ @r.y 10), z: @config.z, align: "left", baseline: "middle", color: @lab.textColor, font: @lab.font }], nodes: [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @r.x, y: @by, z: @config.z }, width: @r.w, height: @bh, fill: @look.fill, stroke: @look.stroke, strokeWidth: @look.strokeWidth, corners: @look.corners, spring: @look.spring, animation: @anim, hit: true, semantic: { role: "combobox", labelledBy: (str/concat @config.id ":label"), value: @sel, focused: true, order: @config.order } }, { type: draw-text, id: (str/concat @config.id ":value"), text: @sel, anchor: "top-left", position: { x: (+ @r.x 14), y: (+ @by (/ @bh 2)), z: @config.z }, align: left, baseline: middle, color: @look.textColor, font: @look.font, animation: @anim }, { type: draw-text, id: (str/concat @config.id ":chevron"), text: "▾", anchor: "top-left", position: { x: (- (+ @r.x @r.w) 18), y: (+ @by (/ @bh 2)), z: @config.z }, align: center, baseline: middle, color: @look.textColor, font: @look.font, animation: @anim }] })))
+            (emit RASM_PAINT { id: @config.id, z: @config.z, texts: (array/concat [{ id: (str/concat @config.id ":label"), key: @config.label, x: (if (= @entity.dir "rtl") (- (+ @r.x @r.w) 2) (+ @r.x 2)), y: (+ @r.y 10), z: @config.z, align: (if (= @entity.dir "rtl") "right" "left"), baseline: "middle", color: @lab.textColor, font: @lab.font }] (array/map (array/filter @opts (fn o (= @o.value @sel))) (fn o { id: (str/concat @config.id ":value"), key: @o.label, x: (if (= @entity.dir "rtl") (- (+ @r.x @r.w) 14) (+ @r.x 14)), y: (+ @by (/ @bh 2)), z: @config.z, align: (if (= @entity.dir "rtl") "right" "left"), baseline: "middle", color: @look.textColor, font: @look.font, animation: @anim }))), nodes: [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @r.x, y: @by, z: @config.z }, width: @r.w, height: @bh, fill: @look.fill, stroke: @look.stroke, strokeWidth: @look.strokeWidth, corners: @look.corners, spring: @look.spring, animation: @anim, hit: true, semantic: { role: "combobox", labelledBy: (str/concat @config.id ":label"), value: @sel, focused: true, order: @config.order } }, { type: draw-text, id: (str/concat @config.id ":chevron"), text: "▾", anchor: "top-left", position: { x: (if (= @entity.dir "rtl") (+ @r.x 18) (- (+ @r.x @r.w) 18)), y: (+ @by (/ @bh 2)), z: @config.z }, align: center, baseline: middle, color: @look.textColor, font: @look.font, animation: @anim }] })))
     }
 
     state open {
+      RASM_DIRECTION -> open
+        (set @entity.dir ?direction)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
       INIT -> idle
-        (set @entity.selected (array/indexOf @config.options @config.value))
-        (set @entity.active (math/max 0 (array/indexOf @config.options @config.value)))
+        (set @entity.selected (array/indexOf (array/map @config.options (fn o @o.value)) @config.value))
+        (set @entity.active (math/max 0 (array/indexOf (array/map @config.options (fn o @o.value)) @config.value)))
       RASM_BOOT -> idle
-        (set @entity.selected (array/indexOf @config.options @config.value))
-        (set @entity.active (math/max 0 (array/indexOf @config.options @config.value)))
+        (set @entity.selected (array/indexOf (array/map @config.options (fn o @o.value)) @config.value))
+        (set @entity.active (math/max 0 (array/indexOf (array/map @config.options (fn o @o.value)) @config.value)))
       RASM_THEME -> open
         (set @entity.looks ?looks)
         (set @entity.hasLooks true)
@@ -290,7 +311,7 @@ orbital RasmChoiceOrbital {
         (set @entity.paints (+ @entity.paints 1))
         (emit REPAINT { n: @entity.paints })
       RASM_POINTER -> focused when (and (= ?kind "down") (!= (array/find (array/range (array/len @config.options)) (fn k (= ?id (str/concat @config.id ":option:" @k)))) null))
-        (when (!= @entity.selected (array/find (array/range (array/len @config.options)) (fn k (= ?id (str/concat @config.id ":option:" @k))))) (emit @config.changed { value: (default (array/nth @config.options (array/find (array/range (array/len @config.options)) (fn k (= ?id (str/concat @config.id ":option:" @k))))) "") }))
+        (when (!= @entity.selected (array/find (array/range (array/len @config.options)) (fn k (= ?id (str/concat @config.id ":option:" @k))))) (emit @config.changed { value: (default (array/nth (array/map @config.options (fn o @o.value)) (array/find (array/range (array/len @config.options)) (fn k (= ?id (str/concat @config.id ":option:" @k))))) "") }))
         (set @entity.selected (array/find (array/range (array/len @config.options)) (fn k (= ?id (str/concat @config.id ":option:" @k)))))
         (set @entity.hasPopup false)
         (set @entity.paints (+ @entity.paints 1))
@@ -312,7 +333,7 @@ orbital RasmChoiceOrbital {
         (set @entity.paints (+ @entity.paints 1))
         (emit REPAINT { n: @entity.paints })
       RASM_KEYPRESS -> focused when (and (= ?target @config.id) (or (= ?key "Enter") (= ?key " ")))
-        (when (!= @entity.selected @entity.active) (emit @config.changed { value: (default (array/nth @config.options @entity.active) "") }))
+        (when (!= @entity.selected @entity.active) (emit @config.changed { value: (default (array/nth (array/map @config.options (fn o @o.value)) @entity.active) "") }))
         (set @entity.selected @entity.active)
         (set @entity.hasPopup false)
         (set @entity.paints (+ @entity.paints 1))
@@ -322,22 +343,23 @@ orbital RasmChoiceOrbital {
         (set @entity.paints (+ @entity.paints 1))
         (emit REPAINT { n: @entity.paints })
       RASM_KEYPRESS -> open when (and (= ?target @config.id) (and (= (str/len ?key) 1) (!= ?key " ") (not ?ctrl) (not ?meta)))
-        (set @entity.active (default (array/find (let ((idx (array/range (array/len @config.options)))) (array/concat (array/slice @idx (+ @entity.active 1) (array/len @config.options)) (array/slice @idx 0 (+ @entity.active 1)))) (fn k (= (str/lower (str/slice (default (array/nth @config.options @k) "") 0 1)) (str/lower ?key)))) @entity.active))
+        (set @entity.active (default (array/find (let ((idx (array/range (array/len @config.options)))) (array/concat (array/slice @idx (+ @entity.active 1) (array/len @config.options)) (array/slice @idx 0 (+ @entity.active 1)))) (fn k (= (str/lower (str/slice (default (array/nth (array/map @config.options (fn o @o.value)) @k) "") 0 1)) (str/lower ?key)))) @entity.active))
         (set @entity.paints (+ @entity.paints 1))
         (emit REPAINT { n: @entity.paints })
       REPAINT -> open when (and @entity.hasLooks @entity.hasRect)
         (let (
             (r @entity.rect)
-            (anim (if (>= @entity.entering 0) { durationMs: (+ 520 (* @entity.entering @entity.stagger)), loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 14 }, { at: (/ (* @entity.entering @entity.stagger) (+ 520 (* @entity.entering @entity.stagger))), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }] } null))
+            (anim (if (>= @entity.entering 0) { durationMs: (+ 520 (* @entity.entering @entity.stagger)), loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 14 }, { at: (default (/ (* @entity.entering @entity.stagger) (+ 520 (* @entity.entering @entity.stagger))) 0), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }] } null))
             (look (default (object/get @entity.looks "choice/default/open") {}))
             (lab (default (object/get @entity.looks "choice/default/label") {}))
             (pop (default (object/get @entity.looks "choice/popup/idle") {}))
             (oi (default (object/get @entity.looks "choice/option/idle") {}))
             (oa (default (object/get @entity.looks "choice/option/active") {}))
-            (sel (default (array/nth @config.options @entity.selected) ""))
+            (sel (if (>= @entity.selected 0) (default (array/nth (array/map @config.options (fn o @o.value)) @entity.selected) "") ""))
+            (opts : [RasmOption] @config.options)
           )
           (let ((by (+ @r.y 22)) (bh (- @r.h 22)))
-            (emit RASM_PAINT { id: @config.id, z: (+ @config.z 10), texts: [{ id: (str/concat @config.id ":label"), key: @config.label, x: (+ @r.x 2), y: (+ @r.y 10), z: @config.z, align: "left", baseline: "middle", color: @lab.textColor, font: @lab.font }], nodes: (array/concat [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @r.x, y: @by, z: @config.z }, width: @r.w, height: @bh, fill: @look.fill, stroke: @look.stroke, strokeWidth: @look.strokeWidth, corners: @look.corners, spring: @look.spring, animation: @anim, hit: true, semantic: { role: "combobox", labelledBy: (str/concat @config.id ":label"), value: @sel, focused: true, order: @config.order } }, { type: draw-text, id: (str/concat @config.id ":value"), text: @sel, anchor: "top-left", position: { x: (+ @r.x 14), y: (+ @by (/ @bh 2)), z: @config.z }, align: left, baseline: middle, color: @look.textColor, font: @look.font, animation: @anim }, { type: draw-text, id: (str/concat @config.id ":chevron"), text: "▾", anchor: "top-left", position: { x: (- (+ @r.x @r.w) 18), y: (+ @by (/ @bh 2)), z: @config.z }, align: center, baseline: middle, color: @look.textColor, font: @look.font, animation: @anim }] (array/concat (array/map (if @entity.hasPopup [0] []) (fn i { type: draw-shape, id: (str/concat @config.id ":popup"), shape: rect, anchor: "top-left", position: { x: @entity.popupRect.x, y: @entity.popupRect.y, z: (+ @config.z 10) }, width: @entity.popupRect.w, height: @entity.popupRect.h, fill: @pop.fill, stroke: @pop.stroke, strokeWidth: @pop.strokeWidth, corners: @pop.corners, shadow: @pop.shadow, spring: @pop.spring, hit: true })) (if @entity.hasPopup (array/flatten (array/map (array/range (array/len @config.options)) (fn i (let ((oy (+ (+ @entity.popupRect.y 4) (* @i @config.optionHeight))) (ol (if (= @i @entity.active) @oa @oi))) [{ type: draw-shape, id: (str/concat @config.id ":option:" @i), shape: rect, anchor: "top-left", position: { x: (+ @entity.popupRect.x 4), y: @oy, z: (+ @config.z 11) }, width: (- @entity.popupRect.w 8), height: @config.optionHeight, fill: @ol.fill, corners: @ol.corners, spring: @ol.spring, hit: true, semantic: { role: "option", name: (default (array/nth @config.options @i) ""), checked: (= @i @entity.selected), focused: (= @i @entity.active), order: (+ @config.order (* 0.01 (+ @i 1))) } }, { type: draw-text, id: (str/concat @config.id ":option:" @i ":label"), text: (default (array/nth @config.options @i) ""), anchor: "top-left", position: { x: (+ @entity.popupRect.x 16), y: (+ @oy (/ @config.optionHeight 2)), z: (+ @config.z 12) }, align: left, baseline: middle, color: @ol.textColor, font: @ol.font }])))) []))) })))
+            (emit RASM_PAINT { id: @config.id, z: (+ @config.z 10), texts: (array/concat [{ id: (str/concat @config.id ":label"), key: @config.label, x: (if (= @entity.dir "rtl") (- (+ @r.x @r.w) 2) (+ @r.x 2)), y: (+ @r.y 10), z: @config.z, align: (if (= @entity.dir "rtl") "right" "left"), baseline: "middle", color: @lab.textColor, font: @lab.font }] (array/map (array/filter @opts (fn o (= @o.value @sel))) (fn o { id: (str/concat @config.id ":value"), key: @o.label, x: (if (= @entity.dir "rtl") (- (+ @r.x @r.w) 14) (+ @r.x 14)), y: (+ @by (/ @bh 2)), z: @config.z, align: (if (= @entity.dir "rtl") "right" "left"), baseline: "middle", color: @look.textColor, font: @look.font, animation: @anim })) (if @entity.hasPopup (array/map @opts (fn o (let ((i (array/indexOf (array/map @config.options (fn o @o.value)) @o.value))) (let ((oy (+ (+ @entity.popupRect.y 4) (* @i @config.optionHeight))) (ol (if (= @i @entity.active) @oa @oi))) { id: (str/concat @config.id ":option:" @i ":label"), key: @o.label, x: (if (= @entity.dir "rtl") (- (+ @entity.popupRect.x @entity.popupRect.w) 16) (+ @entity.popupRect.x 16)), y: (+ @oy (/ @config.optionHeight 2)), z: (+ @config.z 12), align: (if (= @entity.dir "rtl") "right" "left"), baseline: "middle", color: @ol.textColor, font: @ol.font })))) [])), nodes: (array/concat [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @r.x, y: @by, z: @config.z }, width: @r.w, height: @bh, fill: @look.fill, stroke: @look.stroke, strokeWidth: @look.strokeWidth, corners: @look.corners, spring: @look.spring, animation: @anim, hit: true, semantic: { role: "combobox", labelledBy: (str/concat @config.id ":label"), value: @sel, focused: true, order: @config.order } }, { type: draw-text, id: (str/concat @config.id ":chevron"), text: "▾", anchor: "top-left", position: { x: (if (= @entity.dir "rtl") (+ @r.x 18) (- (+ @r.x @r.w) 18)), y: (+ @by (/ @bh 2)), z: @config.z }, align: center, baseline: middle, color: @look.textColor, font: @look.font, animation: @anim }] (array/concat (array/map (if @entity.hasPopup [0] []) (fn i { type: draw-shape, id: (str/concat @config.id ":popup"), shape: rect, anchor: "top-left", position: { x: @entity.popupRect.x, y: @entity.popupRect.y, z: (+ @config.z 10) }, width: @entity.popupRect.w, height: @entity.popupRect.h, fill: @pop.fill, stroke: @pop.stroke, strokeWidth: @pop.strokeWidth, corners: @pop.corners, shadow: @pop.shadow, spring: @pop.spring, hit: true })) (if @entity.hasPopup (array/flatten (array/map (array/range (array/len @config.options)) (fn i (let ((oy (+ (+ @entity.popupRect.y 4) (* @i @config.optionHeight))) (ol (if (= @i @entity.active) @oa @oi))) [{ type: draw-shape, id: (str/concat @config.id ":option:" @i), shape: rect, anchor: "top-left", position: { x: (+ @entity.popupRect.x 4), y: @oy, z: (+ @config.z 11) }, width: (- @entity.popupRect.w 8), height: @config.optionHeight, fill: @ol.fill, corners: @ol.corners, spring: @ol.spring, hit: true, semantic: { role: "option", labelledBy: (str/concat @config.id ":option:" @i ":label"), checked: (= @i @entity.selected), focused: (= @i @entity.active), order: (+ @config.order (* 0.01 (+ @i 1))) } }])))) []))) })))
     }
 
     emits {
@@ -370,6 +392,8 @@ orbital RasmChoiceOrbital {
     }
 
     listens {
+      RASM_DIRECTION { direction : "ltr" | "rtl"! }
+        @description "The surface's reading direction: rtl mirrors the combobox and its options."
       RASM_BOOT { }
         @description "The surface mounted: take the configured value."
       RASM_THEME { name : string!  looks : Map string RasmLook! }
@@ -399,9 +423,9 @@ orbital RasmChoiceOrbital {
         @label "Label"
         @description "The text above the control and its accessible name."
         @tier "domain"
-      options : [string] = []
+      options : [RasmOption] = []
         @label "Options"
-        @description "The option texts; the chosen option's text is the value."
+        @description "Each option's emitted value and the catalog key of its painted label; type-ahead matches the value's first letter."
         @tier "domain"
       value : string = ""
         @label "Value"
