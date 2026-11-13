@@ -1,6 +1,6 @@
 app std-firestore [
   version: "1.1.0",
-  description: "std-firestore — a row-store driver over the Firestore REST API, the std twin of runtime/src/stores/firestore.rs (contract: spec/store/firestore.lolo). It answers the same typed row verbs as every RowStoreDriver (spec/store/row-store.lolo): ROW_READ, ROW_LIST, ROWS_QUERY and ROWS_WRITE in, ROW_FOUND, ROWS_LISTED, ROWS_PAGE, ROWS_IDS, ROWS_WRITTEN, STORE_UNSUPPORTED or STORE_FAILED out, each carrying the asked key. Layout: with a root document path (an even number of segments) rows live at <root>/entities/<key>/rows/<id>, with an empty root at the top-level collection <key>/<id>, where <key> is the collection the kernel names on the verb (the entity's declared [persistent: tbl], per entity type on a write) else the entity type name; a document holds the row's fields and its id and a read stamps the document name's id over it. Wire (POST <origin>/v1/projects/<project>/databases/<database>/documents<suffix>?$alt=json%3Benum-encoding=int, JSON in and out, Authorization Bearer): a read is :batchGet with documents [<document name>], a list is <parent>:runQuery with from [{collectionId}], a query is <parent>:runQuery with the structured query the plan builds, a count is <parent>:runAggregationQuery, a write batch is one transaction (:batchGet with newTransaction {readWrite: {}} over every touched document, then :commit with the net change and the transaction id). The parent path segments are URI-encoded. Values use Firestore's typed encoding: stringValue, integerValue (a decimal string, whole numbers below 2^63), doubleValue, booleanValue, nullValue, arrayValue ({} when empty), mapValue {fields}; timestampValue and referenceValue read back as text. Query push-down: == and the four range operators, member (IN, at most 30 values), hasElement (ARRAY_CONTAINS), all, and an any over one field and one leaf kind (IN or ARRAY_CONTAINS_ANY); an id comparison is a referenceValue on __name__. Index paths: the kernel sends each entity's declared `@index` paths on every query and write verb (indexes); an orderBy path's field is orderable, and a nearest path (`@index { fields, nearest: { field, dimension } }`) declares a vector field; ROWS_ENSURE_INDEXES learns nothing (a driver ask runs on a fresh row) and is answered at once for paths with no nearest; for an entity declaring a nearest path it first re-encodes the collection: a runQuery of the field only, ordered by name in pages of 100, then one :commit per page rewriting each document whose field holds a plain array as a Firestore vector (update mask on the field, exists precondition), then answers; a failure answers STORE_FAILED. a write stores such a field as a Firestore vector (mapValue {__type__: \"__vector__\", value: arrayValue of doubleValue}), a read answers every Firestore vector as its numbers, and a nearest query over such a field is the plan's where plus findNearest (COSINE, limit k, distance in __orb_distance) with no orderBy, its rows ordered by distance then id with the distance field dropped and its total the rows returned; a nearest over any other field declines. The vector index itself is the deployment's (orb firestore-indexes). A query Firestore cannot run answers STORE_UNSUPPORTED with the plan's reason word (leaf-unsupported, combinator-unsupported, value-kind-unsupported, order-field, nearest) and so does a Firestore refusal with status FAILED_PRECONDITION or INVALID_ARGUMENT (the reason is that status); a query that can match nothing answers an empty page without a request. The total is settled from the window when it can be (a non-empty window that ended before its limit, an empty first page), else counted. Writes: every touched document is read inside the transaction, the ops run over those rows with the reference semantics (create on a taken id is duplicate-id, update or delete of a miss is not-found, a guard that does not hold is refused, an id-less create or upsert fails with 'create needs a string id' or 'upsert needs a string id'), an atomic batch that fails commits nothing and reports rolled-back for the earlier ops, a stop batch commits what was applied; only changed documents are written, deletes before sets per entity type. A commit that Firestore aborts (ABORTED) repeats the whole transaction from its read, at most config.transactionAttempts times, then STORE_FAILED 'the Firestore transaction kept aborting: <last error text>'. A rekey op is STORE_FAILED 'rekey is unsupported by this store' before any request. Failures: a non-2xx reply is STORE_FAILED with the reply text, a transport failure with the transport's error text, a 2xx reply that is not JSON 'Firestore answered an unreadable reply', a count reply with no result 'Firestore answered a count with no result'. A root with an odd number of segments is STORE_FAILED. Auth: config.auth emulator sends Bearer owner, token sends Bearer <the access-token credential>, service-account mints an RS256 service-account bearer through the http jwt-bearer auth (scope https://www.googleapis.com/auth/datastore, audience https://oauth2.googleapis.com/token, refreshed a minute before expiry), and metadata asks the credential store's metadata grant for the token of the account the process runs as, with the same scope and no key, renewed by the store when it expires). One request is in flight per frame: the store seam asks the driver in a frame keyed by the ask (EXEC-STORE-4), and orb validate refuses a trait outside the driver that emits a row verb (ORB_STORE_VERB_OUTSIDE_SEAM).",
+  description: "std-firestore — a row-store driver over the Firestore REST API, the std twin of runtime/src/stores/firestore.rs (contract: spec/store/firestore.lolo). It answers the same typed row verbs as every RowStoreDriver (spec/store/row-store.lolo): ROW_READ, ROW_LIST, ROWS_QUERY and ROWS_WRITE in, ROW_FOUND, ROWS_LISTED, ROWS_PAGE, ROWS_IDS, ROWS_WRITTEN, STORE_UNSUPPORTED or STORE_FAILED out, each carrying the asked key. Layout: with a root document path (an even number of segments) rows live at <root>/entities/<key>/rows/<id>, with an empty root at the top-level collection <key>/<id>, where <key> is the collection the kernel names on the verb (the entity's declared [persistent: tbl], per entity type on a write) else the entity type name; a document holds the row's fields and its id and a read stamps the document name's id over it. Wire (POST <origin>/v1/projects/<project>/databases/<database>/documents<suffix>?$alt=json%3Benum-encoding=int, JSON in and out, Authorization Bearer): a read is :batchGet with documents [<document name>], a list is <parent>:runQuery with from [{collectionId}], a query is <parent>:runQuery with the structured query the plan builds, a count is <parent>:runAggregationQuery, a write batch is one transaction (:batchGet with newTransaction {readWrite: {}} over every touched document, then :commit with the net change and the transaction id). The parent path segments are URI-encoded. Values use Firestore's typed encoding: stringValue, integerValue (a decimal string, whole numbers below 2^63), doubleValue, booleanValue, nullValue, arrayValue ({} when empty), mapValue {fields}; timestampValue and referenceValue read back as text. Query push-down: == and the four range operators, member (IN, at most 30 values), hasElement (ARRAY_CONTAINS), all, and an any over one field and one leaf kind (IN or ARRAY_CONTAINS_ANY); an id comparison is a referenceValue on __name__. Index paths: the kernel sends each entity's declared `@index` paths on every query and write verb (indexes); an orderBy path's field is orderable, and a nearest path (`@index { fields, nearest: { field, dimension } }`) declares a vector field; ROWS_ENSURE_INDEXES is answered without learning anything, since a driver ask runs on a fresh row. a write stores such a field as a Firestore vector (mapValue {__type__: \"__vector__\", value: arrayValue of doubleValue}), a read answers every Firestore vector as its numbers, and a nearest query over such a field is the plan's where plus findNearest (COSINE, limit k, distance in __orb_distance) with no orderBy, its rows ordered by distance then id with the distance field dropped and its total the rows returned; a nearest over any other field declines. The vector index itself is the deployment's (orb firestore-indexes). A query Firestore cannot run answers STORE_UNSUPPORTED with the plan's reason word (leaf-unsupported, combinator-unsupported, value-kind-unsupported, order-field, nearest) and so does a Firestore refusal with status FAILED_PRECONDITION or INVALID_ARGUMENT (the reason is that status); a query that can match nothing answers an empty page without a request. The total is settled from the window when it can be (a non-empty window that ended before its limit, an empty first page), else counted. Writes: every touched document is read inside the transaction, the ops run over those rows with the reference semantics (create on a taken id is duplicate-id, update or delete of a miss is not-found, a guard that does not hold is refused, an id-less create or upsert fails with 'create needs a string id' or 'upsert needs a string id'), an atomic batch that fails commits nothing and reports rolled-back for the earlier ops, a stop batch commits what was applied; only changed documents are written, deletes before sets per entity type. A commit that Firestore aborts (ABORTED) repeats the whole transaction from its read, at most config.transactionAttempts times, then STORE_FAILED 'the Firestore transaction kept aborting: <last error text>'. A rekey op is STORE_FAILED 'rekey is unsupported by this store' before any request. Failures: a non-2xx reply is STORE_FAILED with the reply text, a transport failure with the transport's error text, a 2xx reply that is not JSON 'Firestore answered an unreadable reply', a count reply with no result 'Firestore answered a count with no result'. A root with an odd number of segments is STORE_FAILED. Auth: config.auth emulator sends Bearer owner, token sends Bearer <the access-token credential>, service-account mints an RS256 service-account bearer through the http jwt-bearer auth (scope https://www.googleapis.com/auth/datastore, audience https://oauth2.googleapis.com/token, refreshed a minute before expiry), and metadata asks the credential store's metadata grant for the token of the account the process runs as, with the same scope and no key, renewed by the store when it expires). One request is in flight per frame: the store seam asks the driver in a frame keyed by the ask (EXEC-STORE-4), and orb validate refuses a trait outside the driver that emits a row verb (ORB_STORE_VERB_OUTSIDE_SEAM).",
   egress: ["https://oauth2.googleapis.com"],
   net: { "firestore.googleapis.com:443": [tcp], "127.0.0.1:8080": [tcp] }
 ]
@@ -86,9 +86,6 @@ orbital FirestoreOrbital {
   type FsWrite = Map string RowCell
   type IndexNearest = { field : string!, dimension : number! }
   type VectorCells = [number]
-  type VecCell = { doubleValue : number?, integerValue : string? }
-  type VecArray = { values : [VecCell]? }
-  type VecField = { arrayValue : VecArray? }
   type FsNullValue = { nullValue : RowCell? }
   type IndexPath = { fields : [string]!, orderBy : string?, nearest : IndexNearest? }
 
@@ -130,11 +127,6 @@ orbital FirestoreOrbital {
     errStatus : string @description "The gRPC status word of the failed reply, empty when none" = ""
     errMessage : string @description "The failure text" = ""
     errKind : string @description "decline, abort or fail" = ""
-    reFields : [string] @description "The vector fields an ensure still has to re-encode, the one in hand first" = []
-    reCursor : string @description "The full name of the last document of the previous re-encode page; empty for the first page" = ""
-    reCount : number @description "How many documents the re-encode page just read held" = 0
-    reLast : string @description "The full name of the last document of the re-encode page just read" = ""
-    reWrites : [FsWrite] @description "The updates that rewrite the page's plain-list documents as Firestore vectors" = []
     mintTried : boolean @description "True once this request minted the service-account access token after the store reported none held, so a second not-held answer fails instead of looping." = false
   }
 
@@ -308,21 +300,8 @@ orbital FirestoreOrbital {
     state ready {
       INIT -> ready
 
-      ROWS_ENSURE_INDEXES -> ready when (not (array/some @payload.indexes (fn p (!= (object/get @p "nearest" null) null))))
+      ROWS_ENSURE_INDEXES -> ready
         (emit ROWS_INDEXES_ENSURED { key: @payload.key })
-      ROWS_ENSURE_INDEXES -> ready when (and (array/some @payload.indexes (fn p (!= (object/get @p "nearest" null) null))) (!= (math/mod (array/len (array/filter (str/split @config.root "/") (fn s (!= @s "")))) 2) 0))
-        (emit STORE_FAILED { key: @payload.key, message: (str/concat "FirestoreRows root \"" @config.root "\" is not a document path (it needs an even number of segments)") })
-      ROWS_ENSURE_INDEXES -> busy when (and (array/some @payload.indexes (fn p (!= (object/get @p "nearest" null) null))) (not (!= (math/mod (array/len (array/filter (str/split @config.root "/") (fn s (!= @s "")))) 2) 0)))
-        (set @entity.key @payload.key)
-        (set @entity.entityType @payload.entityType)
-        (set @entity.declared (default @payload.collection ""))
-        (set @entity.op "reencode")
-        (set @entity.reFields (array/unique (array/map (array/filter @payload.indexes (fn p (!= (object/get @p "nearest" null) null))) (fn p (object/get (default (object/get @p "nearest") { field: "", dimension: 0 }) "field")))))
-        (set @entity.reCursor "")
-        (set @entity.rowsPath (let ((ck (if (!= @entity.declared "") @entity.declared @entity.entityType))) (if (= @config.root "") @ck (str/concat @config.root "/entities/" @ck "/rows"))))
-        (set @entity.collection (default (array/last (str/split @entity.rowsPath "/")) ""))
-        (set @entity.parentSuffix (str/join (array/map (array/take (str/split @entity.rowsPath "/") (- (array/len (str/split @entity.rowsPath "/")) 1)) (fn s (str/encode-uri-component @s))) "/"))
-        (emit FS_REQUERY { })
 
       ROW_READ -> ready when (!= (math/mod (array/len (array/filter (str/split @config.root "/") (fn s (!= @s "")))) 2) 0)
         (emit STORE_FAILED { key: @payload.key, message: (str/concat "FirestoreRows root \"" @config.root "\" is not a document path (it needs an even number of segments)") })
@@ -518,36 +497,6 @@ orbital FirestoreOrbital {
         (set @entity.errMessage "Firestore answered a count with no result")
         (set @entity.errKind "fail")
         (emit FS_ERRORED { })
-      FS_REQUERY -> busy
-        (set @entity.phase "relist")
-        (set @entity.suffix (if (= @entity.parentSuffix "") ":runQuery" (str/concat "/" @entity.parentSuffix ":runQuery")))
-        (set @entity.body { structuredQuery: (object/merge { from: [{ collectionId: @entity.collection }], select: { fields: [{ fieldPath: (default (array/nth @entity.reFields 0) "") }] }, orderBy: [{ field: { fieldPath: "__name__" }, direction: "ASCENDING" }], limit: 100 } (if (= @entity.reCursor "") { } { startAt: { values: [{ referenceValue: @entity.reCursor }], before: false } })) })
-        (emit FS_SEND { })
-      FS_PARSED -> busy when (= @entity.phase "relist")
-        (let ((field (default (array/nth @entity.reFields 0) "")) (docs (array/filter @entity.els (fn e (!= (object/get @e "document" null) null)))))
-          (do
-          (set @entity.reCount (array/len @docs))
-          (set @entity.reLast (object/get (default (object/get (default (array/last @docs) { }) "document" null) { name: "", fields: { } }) "name" ""))
-          (set @entity.reWrites (array/map (array/filter @docs (fn e (let ((vf (as (object/get (object/get (object/get @e "document" { name: "", fields: { } }) "fields" { }) @field null) VecField))) (and (!= @vf null) (!= (object/get (default @vf { }) "arrayValue" null) null))))) (fn e (let ((vf (default (as (object/get (object/get (object/get @e "document" { name: "", fields: { } }) "fields" { }) @field null) VecField) { }))) (let ((nums (array/map (default (object/get (default (object/get @vf "arrayValue" null) { values: [] }) "values" []) []) (fn x (if (!= (object/get @x "doubleValue" null) null) (default (object/get @x "doubleValue" null) 0) (default (str/to-number (default (object/get @x "integerValue" null) "0")) 0)))))) { update: { name: (object/get (object/get @e "document" { name: "", fields: { } }) "name" ""), fields: (object/set { } @field { mapValue: { fields: { __type__: { stringValue: "__vector__" }, value: { arrayValue: { values: (array/map @nums (fn x { doubleValue: @x })) } } } } }) }, updateMask: { fieldPaths: [@field] }, currentDocument: { exists: true } })))))
-          (emit FS_REPLAN { })))
-      FS_REPLAN -> busy when (> (array/len @entity.reWrites) 0)
-        (set @entity.phase "revector")
-        (set @entity.suffix ":commit")
-        (set @entity.body { writes: @entity.reWrites })
-        (emit FS_SEND { })
-      FS_REPLAN -> busy when (= (array/len @entity.reWrites) 0)
-        (emit FS_RENEXT { })
-      FS_PARSED -> busy when (= @entity.phase "revector")
-        (emit FS_RENEXT { })
-      FS_RENEXT -> ready when (and (< @entity.reCount 100) (<= (array/len @entity.reFields) 1))
-        (emit ROWS_INDEXES_ENSURED { key: @entity.key })
-      FS_RENEXT -> busy when (>= @entity.reCount 100)
-        (set @entity.reCursor @entity.reLast)
-        (emit FS_REQUERY { })
-      FS_RENEXT -> busy when (and (< @entity.reCount 100) (> (array/len @entity.reFields) 1))
-        (set @entity.reFields (array/drop @entity.reFields 1))
-        (set @entity.reCursor "")
-        (emit FS_REQUERY { })
       FS_PAGE -> ready when @entity.plan.idsOnly
         (emit ROWS_IDS { key: @entity.key, ids: (array/map @entity.pageDocs (fn d (object/get @d "id" ""))), total: @payload.total })
       FS_PAGE -> ready when (not @entity.plan.idsOnly)
@@ -644,12 +593,6 @@ orbital FirestoreOrbital {
       FS_APPLY -> internal { }
         @tier "internal"
       FS_APPLIED -> internal { }
-        @tier "internal"
-      FS_REQUERY -> internal { }
-        @tier "internal"
-      FS_REPLAN -> internal { }
-        @tier "internal"
-      FS_RENEXT -> internal { }
         @tier "internal"
       FS_PAGE -> internal {
         total : number!
