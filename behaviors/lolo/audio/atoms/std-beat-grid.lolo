@@ -1,7 +1,7 @@
 app std-beat-grid [
   version: "1.0.0",
   mem: { "arena:268435456": [create, free] },
-  description: "The beat grid of one encoded audio file. GRID_ANALYZE { data } creates a bump arena, decodes the file to mono PCM in it (audio/decode), borrows the block and reads two signals from it: the RMS envelope (signal/envelope) and band magnitudes per frame (signal/frames, bands from config). The onset curve is the spectral flux (the sum over bands of each band's rise since the previous frame). The beat period is the strongest autocorrelation lag of the onset curve between maxBpm and minBpm, refined to a fraction of a frame at refineBeats periods (fewer when the onset curve is shorter than twice that span) (the parabolic peak of the autocorrelation around that many periods). The phase is the frame offset within one period whose beats sum the most onset. Beats are every period from that phase to the end, each timed at the centre of its analysis window (frame start plus half a window), and bars every beatsPerBar beats from the first beat (the first beat is taken as a downbeat). The block is freed and the arena dropped before GRID_READY carries the grid in seconds with the envelope, bands and onset curve (one value per hop). Every failure drops the arena and emits GRID_ERROR with the kernel's kind. The grant caps the arena at 256 MiB, about 22 minutes of mono 48 kHz audio; a call site that needs more grants its own cap."
+  description: "The beat grid of one encoded audio file. GRID_ANALYZE { data } creates a bump arena, decodes the file to mono PCM in it (audio/decode), borrows the block and reads two signals from it: the RMS envelope (signal/envelope) and band magnitudes per frame (signal/frames, bands from config). The onset curve is the spectral flux (the sum over bands of each band's rise since the previous frame). The beat period is the strongest autocorrelation lag of the onset curve between maxBpm and minBpm, refined to a fraction of a frame at refineBeats periods (fewer when the onset curve is shorter than twice that span) (the parabolic peak of the autocorrelation around that many periods). The phase is the frame offset within one period whose beats sum the most onset. Beats are every period from that phase to the end, each timed at the centre of its analysis window (frame start plus half a window), and bars every beatsPerBar beats from the first beat (the first beat is taken as a downbeat). The block is freed and the arena dropped before GRID_READY carries the grid in seconds with the envelope, bands and onset curve (one value per hop) and, per bar, the mean of each band and of the envelope over its frames (barBands, barEnergy). Every failure drops the arena and emits GRID_ERROR with the kernel's kind. The grant caps the arena at 256 MiB, about 22 minutes of mono 48 kHz audio; a call site that needs more grants its own cap."
 ]
 
 orbital BeatGridOrbital {
@@ -135,7 +135,13 @@ orbital BeatGridOrbital {
       GRID_DROPPED -> idle
         (set @entity.arena null)
         (set @entity.block null)
-        (emit GRID_READY { sampleRate: @entity.sampleRate, frames: @entity.frames, duration: (* @entity.frames (default (/ 1 @entity.sampleRate) 0)), hopSeconds: @entity.hopSeconds, tempo: @entity.tempo, beatSeconds: (* @entity.lagFrames @entity.hopSeconds), beats: @entity.beats, bars: @entity.bars, envelope: @entity.envelope, bands: @entity.bands, onset: @entity.onset })
+        (let (
+            (nb (array/len @entity.bars))
+            (nf (array/len @entity.bands))
+            (spans (array/map (array/range 0 @nb) (fn i (let ((st (math/min @nf (math/max 0 (math/floor (default (/ (default (array/nth @entity.bars @i) 0) @entity.hopSeconds) 0)))))) { start: @st, end: (math/max @st (if (< (+ @i 1) @nb) (math/min @nf (math/floor (default (/ (default (array/nth @entity.bars (+ @i 1)) 0) @entity.hopSeconds) 0))) @nf)) })))))
+          (emit GRID_READY { sampleRate: @entity.sampleRate, frames: @entity.frames, duration: (* @entity.frames (default (/ 1 @entity.sampleRate) 0)), hopSeconds: @entity.hopSeconds, tempo: @entity.tempo, beatSeconds: (* @entity.lagFrames @entity.hopSeconds), beats: @entity.beats, bars: @entity.bars, envelope: @entity.envelope, bands: @entity.bands, onset: @entity.onset,
+            barBands: (array/map @spans (fn sp (let ((rows (array/slice @entity.bands @sp.start @sp.end))) (array/map (array/range 0 (array/len @config.bands)) (fn b (default (array/avg (array/map @rows (fn r (default (array/nth @r @b) 0)))) 0)))))),
+            barEnergy: (array/map @spans (fn sp (default (array/avg (array/slice @entity.envelope @sp.start @sp.end)) 0))) }))
       GRID_DROP_FAILED -> idle
         (set @entity.arena null)
         (set @entity.block null)
@@ -173,8 +179,10 @@ orbital BeatGridOrbital {
         envelope : [number]!
         bands : [[number]]!
         onset : [number]!
+        barBands : [[number]]!
+        barEnergy : [number]!
       }
-        @description "The grid of the analyzed file: tempo in beats per minute, beat and bar times in seconds from the start, and the envelope, bands and onset curves with one value per hopSeconds."
+        @description "The grid of the analyzed file: tempo in beats per minute, beat and bar times in seconds from the start, the envelope, bands and onset curves with one value per hopSeconds, and per bar the mean of each band (barBands, in the order of the bands config) and of the envelope (barEnergy) over the bar's frames (a bar runs to the next bar's start, the last to the end of the file)."
       GRID_ERROR -> external { error : string! kind : string! }
         @description "Decoding or reading the signal failed; kind is the kernel's answer (invalid, closed, unsupported, denied)."
       GRID_ARENA { arena : Arena! }

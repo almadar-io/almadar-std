@@ -232,6 +232,7 @@ orbital BehaviorPlayground {
       PlaygroundLoader.BEHAVIOR_LOADED -> BEHAVIOR_LOADED
       GuestSession.GUEST_PAINTS -> GUEST_PAINTS
       GuestSession.GUEST_MOVED -> GUEST_MOVED
+      GuestStage.GUEST_VIEW_MOVES -> GUEST_MOVED
       BEHAVIOR_LOADED {
         behavior : string!
       }
@@ -475,7 +476,8 @@ orbital BehaviorPlayground {
       INIT -> opening when (= @entity.behavior (str/concat (default ?package "") "/" (default ?name "")))
       INIT -> browsing when (not (= @entity.behavior (str/concat (default ?package "") "/" (default ?name ""))))
         (emit STAGE_SHOWN {})
-      OPEN -> opening
+      OPEN -> opening when (= ?behavior @entity.behavior)
+      OPEN -> opening when (!= ?behavior @entity.behavior)
         (emit GUEST_RESET {})
         (set @entity.behavior ?behavior)
         (set @entity.topicPackage (default ?package @entity.topicPackage))
@@ -529,7 +531,8 @@ orbital BehaviorPlayground {
         (set @entity.value null)
         (set @entity.status browsing)
         (emit STAGE_SHOWN {})
-      OPEN -> opening
+      OPEN -> open when (= ?behavior @entity.behavior)
+      OPEN -> opening when (!= ?behavior @entity.behavior)
         (emit GUEST_RESET {})
         (set @entity.behavior ?behavior)
         (set @entity.topicPackage (default ?package @entity.topicPackage))

@@ -1,0 +1,64 @@
+{
+ "atom": "agent/atoms/std-agent-proposal.lolo",
+ "trait": "AgentProposalWorkflow",
+ "cases": [
+  {
+   "id": "a proposal submitted while the agent works opens the review",
+   "steps": [
+    {
+     "from": "working",
+     "event": "PROPOSE",
+     "payload": {
+      "summary": "One plan",
+      "items": [
+       {
+        "trackId": "a",
+        "entryBar": "1"
+       }
+      ]
+     },
+     "entity": {
+      "id": "p",
+      "input": "tracks",
+      "context": "",
+      "request": "tracks",
+      "feedback": "",
+      "summary": "",
+      "items": [],
+      "error": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "review"
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: the agent's reply with no proposal yet fails the run",
+   "steps": [
+    {
+     "from": "working",
+     "event": "PROPOSAL_LOOP_REPLIED",
+     "payload": {
+      "reply": "done"
+     },
+     "entity": {
+      "id": "p",
+      "input": "tracks",
+      "context": "",
+      "request": "tracks",
+      "feedback": "",
+      "summary": "",
+      "items": [],
+      "error": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "failed"
+     }
+    }
+   ]
+  }
+ ]
+}

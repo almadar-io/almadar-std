@@ -1623,6 +1623,101 @@
         }
       ],
       "now": 1760531445678
+    },
+    {
+      "id": "stage-a-second-open-of-the-shown-behavior-loads-nothing",
+      "steps": [
+        {
+          "trait": "PlaygroundStage",
+          "event": "OPEN",
+          "payload": {
+            "behavior": "almadar-behaviors/std-helpdesk-experience",
+            "value": {
+              "behavior": "almadar-behaviors/std-helpdesk-experience"
+            }
+          },
+          "entity": {
+            "id": "p",
+            "behavior": "almadar-behaviors/std-helpdesk-experience",
+            "status": "open"
+          },
+          "from": "open",
+          "expect": {
+            "fired": true,
+            "state": "open",
+            "neverEmits": [
+              "LOAD_BEHAVIOR",
+              "GUEST_RESET"
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678,
+      "note": "a leaf click and its route both ask to open the same behavior; the second must not reopen the guest"
+    },
+    {
+      "id": "stage-a-second-open-while-opening-loads-nothing",
+      "steps": [
+        {
+          "trait": "PlaygroundStage",
+          "event": "OPEN",
+          "payload": {
+            "behavior": "almadar-behaviors/std-helpdesk-experience",
+            "value": {
+              "behavior": "almadar-behaviors/std-helpdesk-experience"
+            }
+          },
+          "entity": {
+            "id": "p",
+            "behavior": "almadar-behaviors/std-helpdesk-experience",
+            "status": "opening"
+          },
+          "from": "opening",
+          "expect": {
+            "fired": true,
+            "state": "opening",
+            "neverEmits": [
+              "LOAD_BEHAVIOR",
+              "GUEST_RESET"
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "control-stage-opening-another-behavior-loads-it",
+      "steps": [
+        {
+          "trait": "PlaygroundStage",
+          "event": "OPEN",
+          "payload": {
+            "behavior": "almadar-behaviors/std-notes-experience",
+            "value": {
+              "behavior": "almadar-behaviors/std-notes-experience"
+            }
+          },
+          "entity": {
+            "id": "p",
+            "behavior": "almadar-behaviors/std-helpdesk-experience",
+            "status": "open"
+          },
+          "from": "open",
+          "expect": {
+            "fired": true,
+            "state": "opening",
+            "emits": [
+              {
+                "event": "LOAD_BEHAVIOR",
+                "payload": {
+                  "behavior": "almadar-behaviors/std-notes-experience"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
     }
   ]
 }
