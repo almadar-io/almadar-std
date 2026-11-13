@@ -1284,6 +1284,53 @@
           }
         }
       ]
+    },
+    {
+      "id": "control-a-missing-file-is-the-empty-store",
+      "steps": [
+        {
+          "event": "ROW_LIST",
+          "payload": {
+            "key": "k",
+            "entityType": "Invoice"
+          }
+        },
+        {
+          "event": "FILE_READ_FAILED",
+          "from": "loading",
+          "payload": {
+            "error": "no such file",
+            "kind": "not-found"
+          },
+          "expect": {
+            "state": "loading",
+            "emits": [
+              {
+                "event": "ROWS_LOADED",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "event": "ROWS_LOADED",
+          "from": "loading",
+          "payload": {},
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "ROWS_LISTED",
+                "payload": {
+                  "key": "k",
+                  "rows": []
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "note": "control: only a missing file is empty; a file that exists and does not fit { rows, changes } answers STORE_FAILED (bad-file-a-missing-changes-list-is-refused)"
     }
   ]
 }

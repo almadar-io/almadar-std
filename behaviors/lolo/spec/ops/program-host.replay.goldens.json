@@ -1,803 +1,1003 @@
 {
- "atom": "ops/atoms/std-program-host.lolo",
- "trait": "ProgramHost",
- "note": "G-STD-085: the host opens the guest with program/open (grants at open) and dispatches keyed into it (EXEC-CONC-7, EXEC-CONC-0a)",
- "cases": [
-  {
-   "id": "host-called-keeps-the-working-directory",
-   "note": "EXEC-CONC-7: the guest path is read against the directory the command ran in",
-   "steps": [
+  "atom": "cli/atoms/std-program-host.lolo",
+  "trait": "ProgramHost",
+  "note": "G-STD-085: the host opens the guest with program/open (grants at open) and dispatches keyed into it (EXEC-CONC-7, EXEC-CONC-0a)",
+  "cases": [
     {
-     "trait": "ProgramHost",
-     "from": "waiting",
-     "event": "HOST_CALLED",
-     "payload": {
-      "headers": {},
-      "rawBody": "{\"argv\": [\"guest.lolo\"], \"cwd\": \"/w\"}"
-     },
-     "expect": {
-      "state": "parsing",
-      "emits": [
-       {
-        "event": "HOST_ARGS_PARSE"
-       }
-      ],
-      "entity": {
-       "cwd": "/w"
-      }
-     },
-     "entity": {
-      "id": "host",
-      "path": "",
-      "cwd": "",
-      "guest": "",
-      "loaded": false,
-      "grants": {}
-     }
-    }
-   ],
-   "defaults": [
-    "ArgsCli"
-   ]
-  },
-  {
-   "id": "a-relative-guest-path-is-resolved-and-read-as-a-program",
-   "note": "program/read resolve (EXEC-LOAD-1): the guest is the resolved program, not parsed text",
-   "steps": [
-    {
-     "trait": "ProgramHost",
-     "from": "parsing",
-     "event": "HOST_ARGS_DONE",
-     "payload": {
-      "stage": "host",
-      "flags": {},
-      "positionals": [
-       "guest.lolo"
-      ],
-      "errors": [],
-      "words": []
-     },
-     "expect": {
-      "state": "reading",
-      "effects": [
-       {
-        "type": "program/read",
-        "key": "program",
-        "arg1": {
-         "resolve": true,
-         "text": false,
-         "path": "@entity.file"
-        }
-       }
-      ],
-      "entity": {
-       "file": "/w/guest.lolo"
-      }
-     },
-     "entity": {
-      "id": "host",
-      "path": "",
-      "cwd": "/w",
-      "guest": "",
-      "loaded": false,
-      "grants": {}
-     }
-    }
-   ]
-  },
-  {
-   "id": "an-absolute-guest-path-is-read-as-it-is",
-   "note": "control: an absolute path is not joined to the working directory",
-   "steps": [
-    {
-     "trait": "ProgramHost",
-     "from": "parsing",
-     "event": "HOST_ARGS_DONE",
-     "payload": {
-      "stage": "host",
-      "flags": {},
-      "positionals": [
-       "/abs/guest.lolo"
-      ],
-      "errors": [],
-      "words": []
-     },
-     "expect": {
-      "state": "reading",
-      "effects": [
-       {
-        "type": "program/read",
-        "key": "program",
-        "arg1": {
-         "resolve": true,
-         "text": false,
-         "path": "@entity.file"
-        }
-       }
-      ],
-      "entity": {
-       "file": "/abs/guest.lolo"
-      }
-     },
-     "entity": {
-      "id": "host",
-      "path": "",
-      "cwd": "/w",
-      "guest": "",
-      "loaded": false,
-      "grants": {}
-     }
-    }
-   ]
-  },
-  {
-   "id": "the-resolved-guest-opens-with-the-grants-given-at-open",
-   "note": "EXEC-CONC-7: grants are given once, at program/open, as the os grants the knob states",
-   "config": {
-    "guestGrants": {
-     "fs": [
-      {
-       "glob": "work/**",
-       "modes": [
-        "read"
-       ]
-      }
-     ],
-     "exec": [
-      "echo"
-     ]
-    }
-   },
-   "steps": [
-    {
-     "trait": "ProgramHost",
-     "from": "reading",
-     "event": "HOST_PROGRAM_READ",
-     "payload": {
-      "result": {
-       "program": {
-        "name": "guest",
-        "orbitals": []
-       }
-      }
-     },
-     "expect": {
-      "state": "reading",
-      "effects": [
-       {
-        "type": "program/open",
-        "key": "guest",
-        "arg1": {
-         "grants": "@entity.grants"
-        }
-       }
-      ]
-     },
-     "entity": {
-      "id": "host",
-      "path": "guest.lolo",
-      "cwd": "",
-      "guest": "",
-      "loaded": false,
-      "grants": {
-       "fs": [
+      "id": "host-called-keeps-the-working-directory",
+      "note": "EXEC-CONC-7: the guest path is read against the directory the command ran in",
+      "steps": [
         {
-         "glob": "work/**",
-         "modes": [
-          "read"
-         ]
+          "trait": "ProgramHost",
+          "from": "waiting",
+          "event": "HOST_CALLED",
+          "payload": {
+            "headers": {},
+            "rawBody": "{\"argv\": [\"guest.lolo\"], \"cwd\": \"/w\"}"
+          },
+          "expect": {
+            "state": "parsing",
+            "emits": [
+              {
+                "event": "HOST_ARGS_PARSE"
+              }
+            ],
+            "entity": {
+              "cwd": "/w"
+            }
+          },
+          "entity": {
+            "id": "host",
+            "path": "",
+            "cwd": "",
+            "guest": "",
+            "loaded": false,
+            "grants": {}
+          }
         }
-       ],
-       "exec": [
-        "echo"
-       ]
-      }
-     }
-    }
-   ]
-  },
-  {
-   "id": "a-guest-with-no-grants-opens-with-an-empty-grant-set",
-   "note": "control: the default is no grants, still passed so the guest never inherits the host's own",
-   "steps": [
-    {
-     "trait": "ProgramHost",
-     "from": "reading",
-     "event": "HOST_PROGRAM_READ",
-     "payload": {
-      "result": {
-       "program": {
-        "name": "guest",
-        "orbitals": []
-       }
-      }
-     },
-     "expect": {
-      "state": "reading",
-      "effects": [
-       {
-        "type": "program/open",
-        "key": "guest",
-        "arg1": {
-         "grants": "@entity.grants"
-        }
-       }
-      ]
-     },
-     "entity": {
-      "id": "host",
-      "path": "guest.lolo",
-      "cwd": "",
-      "guest": "",
-      "loaded": false,
-      "grants": {}
-     }
-    }
-   ]
-  },
-  {
-   "id": "the-opened-guest-is-hosted-and-reported-loaded",
-   "note": "the handle program/open answers keys every later dispatch",
-   "steps": [
-    {
-     "trait": "ProgramHost",
-     "from": "reading",
-     "event": "HOST_GUEST_OPENED",
-     "payload": {
-      "result": {
-       "guest": "guest-1",
-       "states": {},
-       "rendered": [],
-       "emitted": [],
-       "outcomes": []
-      }
-     },
-     "expect": {
-      "state": "hosting",
-      "emits": [
-       {
-        "event": "HOST_LOADED",
-        "payload": {
-         "path": "guest.lolo"
-        }
-       },
-       {
-        "event": "HOST_COMMAND_ANSWERED",
-        "payload": {
-         "status": 200,
-         "body": "hosting guest.lolo"
-        }
-       }
       ],
-      "entity": {
-       "guest": "guest-1",
-       "loaded": true
-      }
-     },
-     "entity": {
-      "id": "host",
-      "path": "guest.lolo",
-      "cwd": "",
-      "guest": "",
-      "loaded": false,
-      "grants": {}
-     }
-    }
-   ]
-  },
-  {
-   "id": "an-open-the-kernel-refuses-is-a-refused-host",
-   "note": "control: a grant the host does not hold is refused at open, naming it, and nothing is hosted",
-   "steps": [
-    {
-     "trait": "ProgramHost",
-     "from": "reading",
-     "event": "HOST_LOAD_FAILED",
-     "payload": {
-      "error": "program/open: the guest asks for grants the opening orbital does not hold: net"
-     },
-     "expect": {
-      "state": "waiting",
-      "emits": [
-       {
-        "event": "HOST_REFUSED"
-       },
-       {
-        "event": "HOST_COMMAND_ANSWERED",
-        "payload": {
-         "status": 500
-        }
-       }
+      "defaults": [
+        "ArgsCli"
       ]
-     },
-     "entity": {
-      "id": "host",
-      "path": "guest.lolo",
-      "cwd": "",
-      "guest": "",
-      "loaded": false,
-      "grants": {}
-     }
-    }
-   ]
-  },
-  {
-   "id": "a-host-event-is-dispatched-keyed-into-the-guest",
-   "note": "EXEC-CONC-7: a keyed guest dispatch runs on the guest's own lane; the payload is JSON text, passed as it is",
-   "steps": [
+    },
     {
-     "trait": "ProgramHost",
-     "from": "hosting",
-     "event": "HOST_EVENT",
-     "payload": {
-      "key": "k1",
-      "orbital": "Shop",
-      "trait": "Cart",
-      "event": "ADD",
-      "payload": "{\"id\":1}"
-     },
-     "expect": {
-      "state": "hosting",
-      "effects": [
-       {
-        "type": "program/dispatch",
-        "arg1": "@payload.payload",
-        "arg2": {
-         "guest": "@entity.guest",
-         "key": "@payload.key",
-         "emit": {
-          "success": "HOST_GUEST_ANSWERED",
-          "failure": "HOST_GUEST_FAILED"
-         }
+      "id": "a-relative-guest-path-is-resolved-and-read-as-a-program",
+      "note": "program/read resolve (EXEC-LOAD-1): the guest is the resolved program, not parsed text",
+      "steps": [
+        {
+          "trait": "ProgramHost",
+          "from": "parsing",
+          "event": "HOST_ARGS_DONE",
+          "payload": {
+            "stage": "host",
+            "flags": {},
+            "positionals": [
+              "guest.lolo"
+            ],
+            "errors": [],
+            "words": []
+          },
+          "expect": {
+            "state": "reading",
+            "effects": [
+              {
+                "type": "program/read",
+                "key": "program",
+                "arg1": {
+                  "resolve": true,
+                  "text": false,
+                  "path": "@entity.file"
+                }
+              }
+            ],
+            "entity": {
+              "file": "/w/guest.lolo"
+            }
+          },
+          "entity": {
+            "id": "host",
+            "path": "",
+            "cwd": "/w",
+            "guest": "",
+            "loaded": false,
+            "grants": {}
+          }
         }
-       }
       ]
-     },
-     "entity": {
-      "id": "host",
-      "path": "guest.lolo",
-      "cwd": "",
-      "guest": "guest-1",
-      "loaded": true,
-      "grants": {}
-     }
-    }
-   ]
-  },
-  {
-   "id": "a-guest-answer-is-relayed-under-its-key",
-   "note": "control: the answer carries the key it was dispatched under",
-   "steps": [
+    },
     {
-     "trait": "ProgramHost",
-     "from": "hosting",
-     "event": "HOST_GUEST_ANSWERED",
-     "payload": {
-      "key": "k1",
-      "result": "{}"
-     },
-     "expect": {
-      "state": "hosting",
-      "emits": [
-       {
-        "event": "HOST_ANSWERED",
-        "payload": {
-         "key": "k1"
+      "id": "an-absolute-guest-path-is-read-as-it-is",
+      "note": "control: an absolute path is not joined to the working directory",
+      "steps": [
+        {
+          "trait": "ProgramHost",
+          "from": "parsing",
+          "event": "HOST_ARGS_DONE",
+          "payload": {
+            "stage": "host",
+            "flags": {},
+            "positionals": [
+              "/abs/guest.lolo"
+            ],
+            "errors": [],
+            "words": []
+          },
+          "expect": {
+            "state": "reading",
+            "effects": [
+              {
+                "type": "program/read",
+                "key": "program",
+                "arg1": {
+                  "resolve": true,
+                  "text": false,
+                  "path": "@entity.file"
+                }
+              }
+            ],
+            "entity": {
+              "file": "/abs/guest.lolo"
+            }
+          },
+          "entity": {
+            "id": "host",
+            "path": "",
+            "cwd": "/w",
+            "guest": "",
+            "loaded": false,
+            "grants": {}
+          }
         }
-       }
       ]
-     },
-     "entity": {
-      "id": "host",
-      "path": "",
-      "cwd": "",
-      "guest": "guest-1",
-      "loaded": false,
-      "grants": {}
-     }
-    }
-   ]
-  },
-  {
-   "id": "a-failed-guest-dispatch-is-relayed-under-its-key",
-   "note": "a failed dispatch is answered under the key it was sent with, never an empty key",
-   "steps": [
+    },
     {
-     "trait": "ProgramHost",
-     "from": "hosting",
-     "event": "HOST_GUEST_FAILED",
-     "payload": {
-      "key": "k1",
-      "error": "no transition"
-     },
-     "expect": {
-      "state": "hosting",
-      "emits": [
-       {
-        "event": "HOST_ANSWERED",
-        "payload": {
-         "key": "k1"
-        }
-       }
-      ]
-     },
-     "entity": {
-      "id": "host",
-      "path": "",
-      "cwd": "",
-      "guest": "guest-1",
-      "loaded": false,
-      "grants": {}
-     }
-    }
-   ]
-  },
-  {
-   "id": "no-guest-path-is-a-usage-refusal",
-   "note": "control: argv without a program is refused with usage and the status 400",
-   "steps": [
-    {
-     "trait": "ProgramHost",
-     "from": "parsing",
-     "event": "HOST_ARGS_DONE",
-     "payload": {
-      "stage": "host",
-      "flags": {},
-      "positionals": [],
-      "errors": [],
-      "words": []
-     },
-     "expect": {
-      "state": "waiting",
-      "emits": [
-       {
-        "event": "HOST_REFUSED"
-       },
-       {
-        "event": "HOST_COMMAND_ANSWERED",
-        "payload": {
-         "status": 400
-        }
-       }
-      ]
-     },
-     "entity": {
-      "id": "host",
-      "path": "",
-      "cwd": "",
-      "guest": "",
-      "loaded": false,
-      "grants": {}
-     }
-    }
-   ]
-  },
-  {
-   "id": "a-grant-flag-narrows-the-knob-to-that-kind",
-   "note": "control: --grant=fs keeps the fs grants of the knob and drops the rest",
-   "config": {
-    "guestGrants": {
-     "fs": [
-      {
-       "glob": "work/**",
-       "modes": [
-        "read"
-       ]
-      }
-     ],
-     "exec": [
-      "echo"
-     ]
-    }
-   },
-   "steps": [
-    {
-     "trait": "ProgramHost",
-     "from": "parsing",
-     "event": "HOST_ARGS_DONE",
-     "payload": {
-      "stage": "host",
-      "flags": {
-       "grant": [
-        "fs"
-       ]
-      },
-      "positionals": [
-       "guest.lolo"
-      ],
-      "errors": [],
-      "words": []
-     },
-     "expect": {
-      "state": "reading",
-      "entity": {
-       "grants": {
-        "fs": [
-         {
-          "glob": "work/**",
-          "modes": [
-           "read"
+      "id": "the-resolved-guest-opens-with-the-grants-given-at-open",
+      "note": "EXEC-CONC-7: grants are given once, at program/open, as the os grants the knob states",
+      "config": {
+        "guestGrants": {
+          "fs": [
+            {
+              "glob": "work/**",
+              "modes": [
+                "read"
+              ]
+            }
+          ],
+          "exec": [
+            "echo"
           ]
-         }
-        ],
-        "exec": [],
-        "net": [],
-        "credentials": []
-       }
-      }
-     },
-     "entity": {
-      "id": "host",
-      "path": "",
-      "cwd": "/w",
-      "guest": "",
-      "loaded": false,
-      "grants": {}
-     }
-    }
-   ]
-  },
-  {
-   "id": "a-grant-flag-for-a-kind-the-knob-does-not-hold-is-refused",
-   "note": "control: an unknown kind is refused, nothing is read",
-   "config": {
-    "guestGrants": {
-     "fs": [
-      {
-       "glob": "work/**",
-       "modes": [
-        "read"
-       ]
-      }
-     ],
-     "exec": [
-      "echo"
-     ]
-    }
-   },
-   "steps": [
-    {
-     "trait": "ProgramHost",
-     "from": "parsing",
-     "event": "HOST_ARGS_DONE",
-     "payload": {
-      "stage": "host",
-      "flags": {
-       "grant": [
-        "net"
-       ]
+        }
       },
-      "positionals": [
-       "guest.lolo"
-      ],
-      "errors": [],
-      "words": []
-     },
-     "expect": {
-      "state": "waiting",
-      "emits": [
-       {
-        "event": "HOST_REFUSED"
-       },
-       {
-        "event": "HOST_COMMAND_ANSWERED",
-        "payload": {
-         "status": 400
-        }
-       }
-      ]
-     },
-     "entity": {
-      "id": "host",
-      "path": "",
-      "cwd": "/w",
-      "guest": "",
-      "loaded": false,
-      "grants": {}
-     }
-    }
-   ]
-  },
-  {
-   "id": "a-guests-lazy-programs-ride-the-opened-value-keyed-by-orbref",
-   "note": "G-STD-319: each lazy program the resolve answers is carried in lazyPrograms under its page's orbRef, so program/navigate can load it; a malformed lazy program shows it reached the kernel's lazyPrograms read",
-   "steps": [
-    {
-     "trait": "ProgramHost",
-     "from": "reading",
-     "event": "HOST_PROGRAM_READ",
-     "payload": {
-      "result": {
-       "program": {
-        "name": "guest",
-        "orbitals": [],
-        "lazyPages": [
-         {
-          "path": "/docs",
-          "orbital": "Docs",
-          "orbRef": "guest.lazy/Docs.orb"
-         }
-        ]
-       },
-       "lazy": [
+      "steps": [
         {
-         "orbital": "Docs",
-         "program": {
-          "name": "Docs",
-          "orbitals": "not-a-list"
-         }
+          "trait": "ProgramHost",
+          "from": "reading",
+          "event": "HOST_PROGRAM_READ",
+          "payload": {
+            "result": {
+              "program": {
+                "name": "guest",
+                "orbitals": []
+              }
+            }
+          },
+          "expect": {
+            "state": "reading",
+            "effects": [
+              {
+                "type": "program/open",
+                "key": "guest",
+                "arg1": {
+                  "grants": "@entity.grants"
+                }
+              }
+            ]
+          },
+          "entity": {
+            "id": "host",
+            "path": "guest.lolo",
+            "cwd": "",
+            "guest": "",
+            "loaded": false,
+            "grants": {
+              "fs": [
+                {
+                  "glob": "work/**",
+                  "modes": [
+                    "read"
+                  ]
+                }
+              ],
+              "exec": [
+                "echo"
+              ]
+            }
+          }
         }
-       ]
-      }
-     },
-     "expect": {
-      "state": "reading",
-      "effects": [
-       {
-        "type": "program/open",
-        "status": "failed",
-        "error": "program/open: `lazyPrograms` is a map of file to resolved program: invalid type: string \"not-a-list\", expected a sequence"
-       }
       ]
-     },
-     "entity": {
-      "id": "host",
-      "path": "guest.lolo",
-      "cwd": "",
-      "guest": "",
-      "loaded": false,
-      "grants": {}
-     }
-    }
-   ]
-  },
-  {
-   "id": "control-a-guest-with-no-lazy-programs-opens-the-program-as-read",
-   "note": "control: no lazy programs, so nothing is added and the kernel reads the program alone",
-   "steps": [
+    },
     {
-     "trait": "ProgramHost",
-     "from": "reading",
-     "event": "HOST_PROGRAM_READ",
-     "payload": {
-      "result": {
-       "program": {
-        "name": "guest",
-        "orbitals": [],
-        "lazyPages": [
-         {
-          "path": "/docs",
-          "orbital": "Docs",
-          "orbRef": "guest.lazy/Docs.orb"
-         }
-        ]
-       },
-       "lazy": []
-      }
-     },
-     "expect": {
-      "state": "reading",
-      "effects": [
-       {
-        "type": "program/open",
-        "status": "failed",
-        "error": "program/open: the program has no orbitals"
-       }
-      ]
-     },
-     "entity": {
-      "id": "host",
-      "path": "guest.lolo",
-      "cwd": "",
-      "guest": "",
-      "loaded": false,
-      "grants": {}
-     }
-    }
-   ]
-  },
-  {
-   "id": "a-host-navigate-routes-the-guest-to-a-page",
-   "note": "G-STD-319: HOST_NAVIGATE { key, route } asks the kernel to load and mount the page the route names (a lazy page loads here), answered under the key like HOST_EVENT; no guest session exists in a step, so the kernel's refusal of the unknown guest shows the ask reached program/navigate with the route",
-   "steps": [
-    {
-     "trait": "ProgramHost",
-     "from": "hosting",
-     "event": "HOST_NAVIGATE",
-     "payload": {
-      "key": "n1",
-      "route": "/docs"
-     },
-     "expect": {
-      "state": "hosting",
-      "effects": [
-       {
-        "type": "program/navigate",
-        "arg0": {
-         "guest": "@entity.guest",
-         "route": "@payload.route",
-         "key": "@payload.key",
-         "emit": {
-          "success": "HOST_GUEST_ANSWERED",
-          "failure": "HOST_GUEST_FAILED"
-         }
-        },
-        "status": "failed",
-        "error": "program/navigate: no open guest 'guest-1' (it was never opened or is closed)"
-       }
-      ]
-     },
-     "entity": {
-      "id": "host",
-      "path": "guest.lolo",
-      "cwd": "",
-      "guest": "guest-1",
-      "loaded": true,
-      "grants": {}
-     }
-    }
-   ]
-  },
-  {
-   "id": "a-navigate-no-page-matches-is-relayed-as-a-failure-under-its-key",
-   "note": "control: a route no page matches fails program/navigate, and the failure is answered under the navigate's key",
-   "steps": [
-    {
-     "trait": "ProgramHost",
-     "from": "hosting",
-     "event": "HOST_GUEST_FAILED",
-     "payload": {
-      "key": "n2",
-      "error": "program/navigate: no page matches /nope"
-     },
-     "expect": {
-      "state": "hosting",
-      "emits": [
-       {
-        "event": "HOST_ANSWERED",
-        "payload": {
-         "key": "n2"
+      "id": "a-guest-with-no-grants-opens-with-an-empty-grant-set",
+      "note": "control: the default is no grants, still passed so the guest never inherits the host's own",
+      "steps": [
+        {
+          "trait": "ProgramHost",
+          "from": "reading",
+          "event": "HOST_PROGRAM_READ",
+          "payload": {
+            "result": {
+              "program": {
+                "name": "guest",
+                "orbitals": []
+              }
+            }
+          },
+          "expect": {
+            "state": "reading",
+            "effects": [
+              {
+                "type": "program/open",
+                "key": "guest",
+                "arg1": {
+                  "grants": "@entity.grants"
+                }
+              }
+            ]
+          },
+          "entity": {
+            "id": "host",
+            "path": "guest.lolo",
+            "cwd": "",
+            "guest": "",
+            "loaded": false,
+            "grants": {}
+          }
         }
-       }
       ]
-     },
-     "entity": {
-      "id": "host",
-      "path": "guest.lolo",
-      "cwd": "",
-      "guest": "guest-1",
-      "loaded": true,
-      "grants": {}
-     }
-    }
-   ]
-  },
-  {
-   "id": "control-host-navigate-before-a-guest-is-hosted-is-ignored",
-   "note": "control: navigate is a hosting verb; before a guest is open nothing is asked",
-   "steps": [
+    },
     {
-     "trait": "ProgramHost",
-     "from": "waiting",
-     "event": "HOST_NAVIGATE",
-     "payload": {
-      "key": "n3",
-      "route": "/docs"
-     },
-     "expect": {
-      "state": "waiting",
-      "effects": []
-     },
-     "entity": {
-      "id": "host",
-      "path": "guest.lolo",
-      "cwd": "",
-      "guest": "",
-      "loaded": false,
-      "grants": {}
-     }
+      "id": "the-opened-guest-is-hosted-and-reported-loaded",
+      "note": "the handle program/open answers keys every later dispatch",
+      "steps": [
+        {
+          "trait": "ProgramHost",
+          "from": "reading",
+          "event": "HOST_GUEST_OPENED",
+          "payload": {
+            "result": {
+              "guest": "guest-1",
+              "states": {},
+              "rendered": [],
+              "emitted": [],
+              "outcomes": []
+            }
+          },
+          "expect": {
+            "state": "hosting",
+            "emits": [
+              {
+                "event": "HOST_LOADED",
+                "payload": {
+                  "path": "guest.lolo"
+                }
+              },
+              {
+                "event": "HOST_COMMAND_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "hosting guest.lolo"
+                }
+              }
+            ],
+            "entity": {
+              "guest": "guest-1",
+              "loaded": true
+            }
+          },
+          "entity": {
+            "id": "host",
+            "path": "guest.lolo",
+            "cwd": "",
+            "guest": "",
+            "loaded": false,
+            "grants": {}
+          }
+        }
+      ]
+    },
+    {
+      "id": "an-open-the-kernel-refuses-is-a-refused-host",
+      "note": "control: a grant the host does not hold is refused at open, naming it, and nothing is hosted",
+      "steps": [
+        {
+          "trait": "ProgramHost",
+          "from": "reading",
+          "event": "HOST_LOAD_FAILED",
+          "payload": {
+            "error": "program/open: the guest asks for grants the opening orbital does not hold: net"
+          },
+          "expect": {
+            "state": "waiting",
+            "emits": [
+              {
+                "event": "HOST_REFUSED"
+              },
+              {
+                "event": "HOST_COMMAND_ANSWERED",
+                "payload": {
+                  "status": 500
+                }
+              }
+            ]
+          },
+          "entity": {
+            "id": "host",
+            "path": "guest.lolo",
+            "cwd": "",
+            "guest": "",
+            "loaded": false,
+            "grants": {}
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-host-event-is-dispatched-keyed-into-the-guest",
+      "note": "EXEC-CONC-7: a keyed guest dispatch runs on the guest's own lane; the payload is JSON text, passed as it is",
+      "steps": [
+        {
+          "trait": "ProgramHost",
+          "from": "hosting",
+          "event": "HOST_EVENT",
+          "payload": {
+            "key": "k1",
+            "orbital": "Shop",
+            "trait": "Cart",
+            "event": "ADD",
+            "payload": "{\"id\":1}"
+          },
+          "expect": {
+            "state": "hosting",
+            "effects": [
+              {
+                "type": "program/dispatch",
+                "arg1": "@payload.payload",
+                "arg2": {
+                  "guest": "@entity.guest",
+                  "key": "@payload.key",
+                  "emit": {
+                    "success": "HOST_GUEST_ANSWERED",
+                    "failure": "HOST_GUEST_FAILED"
+                  }
+                }
+              }
+            ]
+          },
+          "entity": {
+            "id": "host",
+            "path": "guest.lolo",
+            "cwd": "",
+            "guest": "guest-1",
+            "loaded": true,
+            "grants": {}
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-guest-answer-is-relayed-under-its-key",
+      "note": "control: the answer carries the key it was dispatched under",
+      "steps": [
+        {
+          "trait": "ProgramHost",
+          "from": "hosting",
+          "event": "HOST_GUEST_ANSWERED",
+          "payload": {
+            "key": "k1",
+            "result": "{}"
+          },
+          "expect": {
+            "state": "hosting",
+            "emits": [
+              {
+                "event": "HOST_ANSWERED",
+                "payload": {
+                  "key": "k1"
+                }
+              }
+            ]
+          },
+          "entity": {
+            "id": "host",
+            "path": "",
+            "cwd": "",
+            "guest": "guest-1",
+            "loaded": false,
+            "grants": {}
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-failed-guest-dispatch-is-relayed-under-its-key",
+      "note": "a failed dispatch is answered under the key it was sent with, never an empty key",
+      "steps": [
+        {
+          "trait": "ProgramHost",
+          "from": "hosting",
+          "event": "HOST_GUEST_FAILED",
+          "payload": {
+            "key": "k1",
+            "error": "no transition"
+          },
+          "expect": {
+            "state": "hosting",
+            "emits": [
+              {
+                "event": "HOST_ANSWERED",
+                "payload": {
+                  "key": "k1"
+                }
+              }
+            ]
+          },
+          "entity": {
+            "id": "host",
+            "path": "",
+            "cwd": "",
+            "guest": "guest-1",
+            "loaded": false,
+            "grants": {}
+          }
+        }
+      ]
+    },
+    {
+      "id": "no-guest-path-is-a-usage-refusal",
+      "note": "control: argv without a program is refused with usage and the status 400",
+      "steps": [
+        {
+          "trait": "ProgramHost",
+          "from": "parsing",
+          "event": "HOST_ARGS_DONE",
+          "payload": {
+            "stage": "host",
+            "flags": {},
+            "positionals": [],
+            "errors": [],
+            "words": []
+          },
+          "expect": {
+            "state": "waiting",
+            "emits": [
+              {
+                "event": "HOST_REFUSED"
+              },
+              {
+                "event": "HOST_COMMAND_ANSWERED",
+                "payload": {
+                  "status": 400
+                }
+              }
+            ]
+          },
+          "entity": {
+            "id": "host",
+            "path": "",
+            "cwd": "",
+            "guest": "",
+            "loaded": false,
+            "grants": {}
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-grant-flag-narrows-the-knob-to-that-kind",
+      "note": "control: --grant=fs keeps the fs grants of the knob and drops the rest",
+      "config": {
+        "guestGrants": {
+          "fs": [
+            {
+              "glob": "work/**",
+              "modes": [
+                "read"
+              ]
+            }
+          ],
+          "exec": [
+            "echo"
+          ]
+        }
+      },
+      "steps": [
+        {
+          "trait": "ProgramHost",
+          "from": "parsing",
+          "event": "HOST_ARGS_DONE",
+          "payload": {
+            "stage": "host",
+            "flags": {
+              "grant": [
+                "fs"
+              ]
+            },
+            "positionals": [
+              "guest.lolo"
+            ],
+            "errors": [],
+            "words": []
+          },
+          "expect": {
+            "state": "reading",
+            "entity": {
+              "grants": {
+                "fs": [
+                  {
+                    "glob": "work/**",
+                    "modes": [
+                      "read"
+                    ]
+                  }
+                ],
+                "exec": [],
+                "net": [],
+                "credentials": []
+              }
+            }
+          },
+          "entity": {
+            "id": "host",
+            "path": "",
+            "cwd": "/w",
+            "guest": "",
+            "loaded": false,
+            "grants": {}
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-grant-flag-for-a-kind-the-knob-does-not-hold-is-refused",
+      "note": "control: an unknown kind is refused, nothing is read",
+      "config": {
+        "guestGrants": {
+          "fs": [
+            {
+              "glob": "work/**",
+              "modes": [
+                "read"
+              ]
+            }
+          ],
+          "exec": [
+            "echo"
+          ]
+        }
+      },
+      "steps": [
+        {
+          "trait": "ProgramHost",
+          "from": "parsing",
+          "event": "HOST_ARGS_DONE",
+          "payload": {
+            "stage": "host",
+            "flags": {
+              "grant": [
+                "net"
+              ]
+            },
+            "positionals": [
+              "guest.lolo"
+            ],
+            "errors": [],
+            "words": []
+          },
+          "expect": {
+            "state": "waiting",
+            "emits": [
+              {
+                "event": "HOST_REFUSED"
+              },
+              {
+                "event": "HOST_COMMAND_ANSWERED",
+                "payload": {
+                  "status": 400
+                }
+              }
+            ]
+          },
+          "entity": {
+            "id": "host",
+            "path": "",
+            "cwd": "/w",
+            "guest": "",
+            "loaded": false,
+            "grants": {}
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-guests-lazy-programs-ride-the-opened-value-keyed-by-orbref",
+      "note": "G-STD-319: each lazy program the resolve answers is carried in lazyPrograms under its page's orbRef, so program/navigate can load it; a malformed lazy program shows it reached the kernel's lazyPrograms read",
+      "steps": [
+        {
+          "trait": "ProgramHost",
+          "from": "reading",
+          "event": "HOST_PROGRAM_READ",
+          "payload": {
+            "result": {
+              "program": {
+                "name": "guest",
+                "orbitals": [],
+                "lazyPages": [
+                  {
+                    "path": "/docs",
+                    "orbital": "Docs",
+                    "orbRef": "guest.lazy/Docs.orb"
+                  }
+                ]
+              },
+              "lazy": [
+                {
+                  "orbital": "Docs",
+                  "program": {
+                    "name": "Docs",
+                    "orbitals": "not-a-list"
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "state": "reading",
+            "effects": [
+              {
+                "type": "program/open",
+                "status": "failed",
+                "error": "program/open: `lazyPrograms` is a map of file to resolved program: invalid type: string \"not-a-list\", expected a sequence"
+              }
+            ]
+          },
+          "entity": {
+            "id": "host",
+            "path": "guest.lolo",
+            "cwd": "",
+            "guest": "",
+            "loaded": false,
+            "grants": {}
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-guest-with-no-lazy-programs-opens-the-program-as-read",
+      "note": "control: no lazy programs, so nothing is added and the kernel reads the program alone",
+      "steps": [
+        {
+          "trait": "ProgramHost",
+          "from": "reading",
+          "event": "HOST_PROGRAM_READ",
+          "payload": {
+            "result": {
+              "program": {
+                "name": "guest",
+                "orbitals": [],
+                "lazyPages": [
+                  {
+                    "path": "/docs",
+                    "orbital": "Docs",
+                    "orbRef": "guest.lazy/Docs.orb"
+                  }
+                ]
+              },
+              "lazy": []
+            }
+          },
+          "expect": {
+            "state": "reading",
+            "effects": [
+              {
+                "type": "program/open",
+                "status": "failed",
+                "error": "program/open: the program has no orbitals"
+              }
+            ]
+          },
+          "entity": {
+            "id": "host",
+            "path": "guest.lolo",
+            "cwd": "",
+            "guest": "",
+            "loaded": false,
+            "grants": {}
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-host-navigate-routes-the-guest-to-a-page",
+      "note": "G-STD-319: HOST_NAVIGATE { key, route } asks the kernel to load and mount the page the route names (a lazy page loads here), answered under the key like HOST_EVENT; no guest session exists in a step, so the kernel's refusal of the unknown guest shows the ask reached program/navigate with the route",
+      "steps": [
+        {
+          "trait": "ProgramHost",
+          "from": "hosting",
+          "event": "HOST_NAVIGATE",
+          "payload": {
+            "key": "n1",
+            "route": "/docs"
+          },
+          "expect": {
+            "state": "hosting",
+            "effects": [
+              {
+                "type": "program/navigate",
+                "arg0": {
+                  "guest": "@entity.guest",
+                  "route": "@payload.route",
+                  "key": "@payload.key",
+                  "emit": {
+                    "success": "HOST_GUEST_ANSWERED",
+                    "failure": "HOST_GUEST_FAILED"
+                  }
+                },
+                "status": "failed",
+                "error": "program/navigate: no open guest 'guest-1' (it was never opened or is closed)"
+              }
+            ]
+          },
+          "entity": {
+            "id": "host",
+            "path": "guest.lolo",
+            "cwd": "",
+            "guest": "guest-1",
+            "loaded": true,
+            "grants": {}
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-navigate-no-page-matches-is-relayed-as-a-failure-under-its-key",
+      "note": "control: a route no page matches fails program/navigate, and the failure is answered under the navigate's key",
+      "steps": [
+        {
+          "trait": "ProgramHost",
+          "from": "hosting",
+          "event": "HOST_GUEST_FAILED",
+          "payload": {
+            "key": "n2",
+            "error": "program/navigate: no page matches /nope"
+          },
+          "expect": {
+            "state": "hosting",
+            "emits": [
+              {
+                "event": "HOST_ANSWERED",
+                "payload": {
+                  "key": "n2"
+                }
+              }
+            ]
+          },
+          "entity": {
+            "id": "host",
+            "path": "guest.lolo",
+            "cwd": "",
+            "guest": "guest-1",
+            "loaded": true,
+            "grants": {}
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-host-navigate-before-a-guest-is-hosted-is-ignored",
+      "note": "control: navigate is a hosting verb; before a guest is open nothing is asked",
+      "steps": [
+        {
+          "trait": "ProgramHost",
+          "from": "waiting",
+          "event": "HOST_NAVIGATE",
+          "payload": {
+            "key": "n3",
+            "route": "/docs"
+          },
+          "expect": {
+            "state": "waiting",
+            "effects": []
+          },
+          "entity": {
+            "id": "host",
+            "path": "guest.lolo",
+            "cwd": "",
+            "guest": "",
+            "loaded": false,
+            "grants": {}
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-route-flag-is-kept-for-after-open",
+      "note": "G-STD-319: --route /x is read from the parsed flags and kept on the entity until the guest opens",
+      "steps": [
+        {
+          "trait": "ProgramHost",
+          "from": "parsing",
+          "event": "HOST_ARGS_DONE",
+          "payload": {
+            "stage": "host",
+            "flags": {
+              "route": [
+                "/x"
+              ]
+            },
+            "positionals": [
+              "guest.lolo"
+            ],
+            "errors": [],
+            "words": []
+          },
+          "expect": {
+            "state": "reading",
+            "entity": {
+              "route": "/x"
+            }
+          },
+          "entity": {
+            "id": "host",
+            "path": "",
+            "cwd": "/w",
+            "guest": "",
+            "loaded": false,
+            "grants": {},
+            "route": ""
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-no-route-flag-keeps-no-route",
+      "note": "control: without --route the entity route stays empty",
+      "steps": [
+        {
+          "trait": "ProgramHost",
+          "from": "parsing",
+          "event": "HOST_ARGS_DONE",
+          "payload": {
+            "stage": "host",
+            "flags": {},
+            "positionals": [
+              "guest.lolo"
+            ],
+            "errors": [],
+            "words": []
+          },
+          "expect": {
+            "state": "reading",
+            "entity": {
+              "route": ""
+            }
+          },
+          "entity": {
+            "id": "host",
+            "path": "",
+            "cwd": "/w",
+            "guest": "",
+            "loaded": false,
+            "grants": {},
+            "route": ""
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-an-unknown-flag-is-still-a-usage-refusal",
+      "note": "control: the parser's error for an unknown flag refuses the command, a route flag does not excuse it",
+      "steps": [
+        {
+          "trait": "ProgramHost",
+          "from": "parsing",
+          "event": "HOST_ARGS_DONE",
+          "payload": {
+            "stage": "host",
+            "flags": {
+              "route": [
+                "/x"
+              ]
+            },
+            "positionals": [
+              "guest.lolo"
+            ],
+            "errors": [
+              "unknown flag --bogus"
+            ],
+            "words": []
+          },
+          "expect": {
+            "state": "waiting",
+            "emits": [
+              {
+                "event": "HOST_REFUSED",
+                "payload": {
+                  "reason": "usage: orb host <shell> <program.lolo> [--grant=<kind>] [--route=<path>]"
+                }
+              },
+              {
+                "event": "HOST_COMMAND_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "usage: orb host <shell> <program.lolo> [--grant=<kind>] [--route=<path>]"
+                }
+              }
+            ]
+          },
+          "entity": {
+            "id": "host",
+            "path": "",
+            "cwd": "/w",
+            "guest": "",
+            "loaded": false,
+            "grants": {},
+            "route": ""
+          }
+        }
+      ]
+    },
+    {
+      "id": "an-opened-guest-with-a-route-is-navigated-keyed-by-the-route",
+      "note": "G-STD-319: after the guest opens, the host asks program/navigate for the route, keyed by the route string, answered like a HOST_NAVIGATE; no guest session exists in a step, so the kernel's refusal shows the ask reached program/navigate",
+      "steps": [
+        {
+          "trait": "ProgramHost",
+          "from": "reading",
+          "event": "HOST_GUEST_OPENED",
+          "payload": {
+            "result": {
+              "guest": "guest-1"
+            }
+          },
+          "expect": {
+            "state": "hosting",
+            "effects": [
+              {
+                "type": "program/navigate",
+                "arg0": {
+                  "guest": "@payload.result.guest",
+                  "route": "@entity.route",
+                  "key": "@entity.route",
+                  "emit": {
+                    "success": "HOST_GUEST_ANSWERED",
+                    "failure": "HOST_GUEST_FAILED"
+                  }
+                },
+                "status": "failed",
+                "error": "program/navigate: no open guest 'guest-1' (it was never opened or is closed)"
+              }
+            ]
+          },
+          "entity": {
+            "id": "host",
+            "path": "guest.lolo",
+            "cwd": "/w",
+            "guest": "",
+            "loaded": false,
+            "grants": {},
+            "route": "/x"
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-an-opened-guest-without-a-route-is-not-navigated",
+      "note": "control: no --route, nothing is sent after open",
+      "steps": [
+        {
+          "trait": "ProgramHost",
+          "from": "reading",
+          "event": "HOST_GUEST_OPENED",
+          "payload": {
+            "result": {
+              "guest": "guest-1"
+            }
+          },
+          "expect": {
+            "state": "hosting",
+            "effects": []
+          },
+          "entity": {
+            "id": "host",
+            "path": "guest.lolo",
+            "cwd": "/w",
+            "guest": "",
+            "loaded": false,
+            "grants": {},
+            "route": ""
+          }
+        }
+      ]
     }
-   ]
-  }
- ]
+  ]
 }

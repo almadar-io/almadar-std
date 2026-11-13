@@ -1,151 +1,472 @@
 {
- "atom": "auth/atoms/std-identity-binding.lolo",
- "trait": "IdentityBinder",
- "note": "How a failed credential forward is answered: an ended client session (the kernel's SESSION_ENDED, EXEC-DIST-9) is told apart from every other failure.",
- "cases": [
-  {
-   "id": "a-forward-refused-as-session-ended-answers-identity-session-ended",
-   "steps": [
+  "atom": "auth/atoms/std-identity-binding.lolo",
+  "trait": "IdentityBinder",
+  "note": "How a failed credential forward is answered: an ended client session (the kernel's SESSION_ENDED, EXEC-DIST-9) is told apart from every other failure.",
+  "cases": [
     {
-     "event": "CREDENTIAL_FAILED",
-     "payload": {
-      "key": "7",
-      "error": "session tab-1 ended: mount again with the frames the client holds",
-      "errors": [
-       {
-        "code": "SESSION_ENDED",
-        "status": 409
-       }
-      ]
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "IDENTITY_SESSION_ENDED",
-        "payload": {
-         "requestId": 7
+      "id": "a-forward-refused-as-session-ended-answers-identity-session-ended",
+      "steps": [
+        {
+          "event": "CREDENTIAL_FAILED",
+          "payload": {
+            "key": "7",
+            "error": "session tab-1 ended: mount again with the frames the client holds",
+            "errors": [
+              {
+                "code": "SESSION_ENDED",
+                "status": 409
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "IDENTITY_SESSION_ENDED",
+                "payload": {
+                  "requestId": 7
+                }
+              }
+            ],
+            "neverEmits": [
+              "IDENTITY_REFUSED"
+            ]
+          }
         }
-       }
-      ],
-      "neverEmits": [
-       "IDENTITY_REFUSED"
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "control-any-other-forward-failure-is-refused-credential-dispatch",
-   "steps": [
+    },
     {
-     "event": "CREDENTIAL_FAILED",
-     "payload": {
-      "key": "7",
-      "error": "boom",
-      "errors": [
-       {
-        "code": "EVENT_PROCESSING_ERROR",
-        "status": 500
-       }
-      ]
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "IDENTITY_REFUSED",
-        "payload": {
-         "requestId": 7,
-         "reason": "credential-dispatch"
+      "id": "control-any-other-forward-failure-is-refused-credential-dispatch",
+      "steps": [
+        {
+          "event": "CREDENTIAL_FAILED",
+          "payload": {
+            "key": "7",
+            "error": "boom",
+            "errors": [
+              {
+                "code": "EVENT_PROCESSING_ERROR",
+                "status": 500
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "IDENTITY_REFUSED",
+                "payload": {
+                  "requestId": 7,
+                  "reason": "credential-dispatch"
+                }
+              }
+            ],
+            "neverEmits": [
+              "IDENTITY_SESSION_ENDED"
+            ]
+          }
         }
-       }
-      ],
-      "neverEmits": [
-       "IDENTITY_SESSION_ENDED"
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "control-a-failure-with-no-errors-is-refused-credential-dispatch",
-   "steps": [
+    },
     {
-     "event": "CREDENTIAL_FAILED",
-     "payload": {
-      "key": "7",
-      "error": "boom"
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "IDENTITY_REFUSED",
-        "payload": {
-         "requestId": 7,
-         "reason": "credential-dispatch"
+      "id": "control-a-failure-with-no-errors-is-refused-credential-dispatch",
+      "steps": [
+        {
+          "event": "CREDENTIAL_FAILED",
+          "payload": {
+            "key": "7",
+            "error": "boom"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "IDENTITY_REFUSED",
+                "payload": {
+                  "requestId": 7,
+                  "reason": "credential-dispatch"
+                }
+              }
+            ],
+            "neverEmits": [
+              "IDENTITY_SESSION_ENDED"
+            ]
+          }
         }
-       }
-      ],
-      "neverEmits": [
-       "IDENTITY_SESSION_ENDED"
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "a-first-sign-in-with-a-declared-role-creates-the-row",
-   "config": {
-    "createIdentity": true,
-    "createRole": "owner",
-    "identityEntity": "Identity"
-   },
-   "steps": [
+    },
     {
-     "event": "SIGN_IN_FAILED",
-     "payload": {
-      "error": "no row",
-      "kind": "no-identity"
-     },
-     "expect": {
-      "fired": true,
-      "neverEmits": [
-       "CREDENTIAL_REFUSED"
-      ],
-      "effects": [
-       {
-        "type": "persist"
-       }
+      "id": "a-first-sign-in-of-a-new-subject-asks-the-program-session-to-write-the-row",
+      "config": {
+        "createIdentity": true,
+        "identityEntity": "Identity"
+      },
+      "entity": {
+        "awaiting": true,
+        "requestId": 7,
+        "clientId": "tab-1",
+        "authorization": "Bearer a.b.c",
+        "subject": "u1",
+        "email": "u1@example.com",
+        "name": "U One",
+        "created": false,
+        "outcome": ""
+      },
+      "steps": [
+        {
+          "event": "SIGN_IN_FAILED",
+          "payload": {
+            "error": "no row",
+            "kind": "no-identity"
+          },
+          "expect": {
+            "fired": true,
+            "neverEmits": [
+              "CREDENTIAL_REFUSED"
+            ],
+            "emits": [
+              {
+                "event": "CREDENTIAL_NEEDS_IDENTITY",
+                "payload": {
+                  "requestId": 7,
+                  "clientId": "tab-1",
+                  "authorization": "Bearer a.b.c",
+                  "subject": "u1",
+                  "email": "u1@example.com",
+                  "name": "U One"
+                }
+              }
+            ]
+          }
+        }
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "control-a-first-sign-in-with-no-declared-role-creates-the-row",
-   "config": {
-    "createIdentity": true,
-    "identityEntity": "Identity"
-   },
-   "steps": [
+    },
     {
-     "event": "SIGN_IN_FAILED",
-     "payload": {
-      "error": "no row",
-      "kind": "no-identity"
-     },
-     "expect": {
-      "fired": true,
-      "neverEmits": [
-       "CREDENTIAL_REFUSED"
-      ],
-      "effects": [
-       {
-        "type": "persist"
-       }
+      "id": "control-a-second-no-identity-after-the-row-was-written-is-refused",
+      "config": {
+        "createIdentity": true,
+        "identityEntity": "Identity"
+      },
+      "entity": {
+        "awaiting": true,
+        "requestId": 7,
+        "clientId": "tab-1",
+        "authorization": "Bearer a.b.c",
+        "subject": "u1",
+        "email": "u1@example.com",
+        "name": "U One",
+        "created": true,
+        "outcome": ""
+      },
+      "steps": [
+        {
+          "event": "SIGN_IN_FAILED",
+          "payload": {
+            "error": "no row",
+            "kind": "no-identity"
+          },
+          "expect": {
+            "fired": true,
+            "neverEmits": [
+              "CREDENTIAL_NEEDS_IDENTITY"
+            ],
+            "emits": [
+              {
+                "event": "CREDENTIAL_REFUSED",
+                "payload": {
+                  "requestId": 7,
+                  "reason": "identity-no-identity"
+                }
+              }
+            ]
+          }
+        }
       ]
-     }
+    },
+    {
+      "id": "control-no-identity-without-createIdentity-asks-for-no-row",
+      "config": {
+        "createIdentity": false,
+        "identityEntity": "Identity"
+      },
+      "entity": {
+        "awaiting": true,
+        "requestId": 7,
+        "clientId": "tab-1",
+        "authorization": "Bearer a.b.c",
+        "subject": "u1",
+        "email": "u1@example.com",
+        "name": "U One",
+        "created": false,
+        "outcome": ""
+      },
+      "steps": [
+        {
+          "event": "SIGN_IN_FAILED",
+          "payload": {
+            "error": "no row",
+            "kind": "no-identity"
+          },
+          "expect": {
+            "fired": true,
+            "neverEmits": [
+              "CREDENTIAL_NEEDS_IDENTITY"
+            ],
+            "emits": [
+              {
+                "event": "CREDENTIAL_REFUSED",
+                "payload": {
+                  "requestId": 7,
+                  "reason": "identity-no-identity"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "the-program-session-writes-the-first-row-with-the-declared-role",
+      "config": {
+        "createIdentity": true,
+        "identityEntity": "Identity",
+        "createRole": "owner",
+        "ownOrbital": "HttpServerOrbital",
+        "ownTrait": "ServerBinding"
+      },
+      "steps": [
+        {
+          "event": "CREDENTIAL_ANSWERED",
+          "payload": {
+            "result": {
+              "success": true,
+              "emittedEvents": [
+                {
+                  "event": "CREDENTIAL_NEEDS_IDENTITY",
+                  "payload": {
+                    "requestId": 7,
+                    "clientId": "tab-1",
+                    "authorization": "Bearer a.b.c",
+                    "subject": "u1",
+                    "email": "u1@example.com",
+                    "name": "U One"
+                  }
+                }
+              ]
+            },
+            "key": "7"
+          },
+          "expect": {
+            "fired": true,
+            "neverEmits": [
+              "IDENTITY_REFUSED",
+              "IDENTITY_BOUND"
+            ],
+            "emits": [
+              {
+                "event": "IDENTITY_CREATED",
+                "payload": {
+                  "id": "u1",
+                  "email": "u1@example.com",
+                  "name": "U One",
+                  "role": "owner"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-the-program-session-writes-the-first-row-with-no-declared-role",
+      "config": {
+        "createIdentity": true,
+        "identityEntity": "Identity",
+        "ownOrbital": "HttpServerOrbital",
+        "ownTrait": "ServerBinding"
+      },
+      "steps": [
+        {
+          "event": "CREDENTIAL_ANSWERED",
+          "payload": {
+            "result": {
+              "success": true,
+              "emittedEvents": [
+                {
+                  "event": "CREDENTIAL_NEEDS_IDENTITY",
+                  "payload": {
+                    "requestId": 7,
+                    "clientId": "tab-1",
+                    "authorization": "Bearer a.b.c",
+                    "subject": "u1",
+                    "email": "u1@example.com",
+                    "name": "U One"
+                  }
+                }
+              ]
+            },
+            "key": "7"
+          },
+          "expect": {
+            "fired": true,
+            "neverEmits": [
+              "IDENTITY_REFUSED",
+              "IDENTITY_BOUND"
+            ],
+            "emits": [
+              {
+                "event": "IDENTITY_CREATED",
+                "payload": {
+                  "id": "u1",
+                  "email": "u1@example.com",
+                  "name": "U One"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-written-row-presents-the-credential-again",
+      "config": {
+        "createIdentity": true,
+        "identityEntity": "Identity"
+      },
+      "entity": {
+        "binds": [
+          {
+            "requestId": 7,
+            "clientId": "tab-1",
+            "authorization": "Bearer a.b.c",
+            "subject": "u1",
+            "stage": "creating"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "event": "IDENTITY_CREATED",
+          "payload": {
+            "id": "u1"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "REBIND_DRAIN",
+                "payload": {}
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-ready-request-is-presented-again-to-its-client-session-as-the-second-present",
+      "config": {
+        "ownOrbital": "HttpServerOrbital",
+        "ownTrait": "ServerBinding",
+        "createIdentity": true,
+        "identityEntity": "Identity"
+      },
+      "entity": {
+        "binds": [
+          {
+            "requestId": 7,
+            "clientId": "tab-1",
+            "authorization": "Bearer a.b.c",
+            "subject": "u1",
+            "stage": "ready"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "event": "REBIND_DRAIN",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "neverEmits": [
+              "IDENTITY_REFUSED"
+            ],
+            "emits": [
+              {
+                "event": "REBIND_NEXT",
+                "payload": {}
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-row-that-could-not-be-written-refuses-the-request",
+      "config": {
+        "createIdentity": true,
+        "identityEntity": "Identity"
+      },
+      "entity": {
+        "binds": [
+          {
+            "requestId": 7,
+            "clientId": "tab-1",
+            "authorization": "Bearer a.b.c",
+            "subject": "u1",
+            "stage": "creating"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "event": "IDENTITY_CREATE_FAILED",
+          "payload": {
+            "error": "store down"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "REFUSE_DRAIN",
+                "payload": {}
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-failed-request-is-answered-identity-refused",
+      "config": {
+        "createIdentity": true,
+        "identityEntity": "Identity"
+      },
+      "entity": {
+        "binds": [
+          {
+            "requestId": 7,
+            "clientId": "tab-1",
+            "authorization": "Bearer a.b.c",
+            "subject": "u1",
+            "stage": "failed"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "event": "REFUSE_DRAIN",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "IDENTITY_REFUSED",
+                "payload": {
+                  "requestId": 7,
+                  "reason": "identity-store"
+                }
+              }
+            ]
+          }
+        }
+      ]
     }
-   ]
-  }
- ]
+  ]
 }

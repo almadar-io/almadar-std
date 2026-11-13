@@ -1,0 +1,77 @@
+{
+ "atom": "../ui/rasm/atoms/std-rasm-textfield.lolo",
+ "trait": "RasmTextField",
+ "cases": [
+  {
+   "id": "an-edit-paints-once-on-the-cursor-announcement-that-follows-it",
+   "config": { "id": "name", "label": "Name" },
+   "entity": {
+    "id": "t",
+    "hasLooks": true,
+    "hasRect": true,
+    "rect": { "x": 0, "y": 0, "w": 200, "h": 60 }
+   },
+   "steps": [
+    {
+     "from": "focused",
+     "event": "BUFFER_EDITED",
+     "payload": { "editorId": "name", "path": "", "version": 1, "text": "a", "dirty": true },
+     "expect": {
+      "state": "focused",
+      "exactEmits": [ { "event": "RASM_TEXT_CHANGED", "payload": { "value": "a" } } ]
+     }
+    },
+    {
+     "from": "focused",
+     "event": "CURSOR_MOVED",
+     "payload": { "editorId": "name", "row": 0, "col": 1, "mode": "INSERT" },
+     "expect": {
+      "state": "focused",
+      "emits": [ { "event": "RASM_PAINT", "payload": { "id": "name" } } ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-first-load-paints-once-on-the-cursor-announcement-that-follows-it",
+   "config": { "id": "name", "label": "Name", "value": "hi" },
+   "entity": {
+    "id": "t",
+    "hasLooks": true,
+    "hasRect": true,
+    "loading": true,
+    "rect": { "x": 0, "y": 0, "w": 200, "h": 60 }
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "BUFFER_EDITED",
+     "payload": { "editorId": "name", "path": "", "version": 0, "text": "hi", "dirty": false },
+     "expect": { "state": "idle", "exactEmits": [] }
+    },
+    {
+     "from": "idle",
+     "event": "CURSOR_MOVED",
+     "payload": { "editorId": "name", "row": 0, "col": 0, "mode": "INSERT" },
+     "expect": {
+      "state": "idle",
+      "emits": [ { "event": "RASM_PAINT", "payload": { "id": "name" } } ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "another-editors-edit-leaves-the-field-alone",
+   "config": { "id": "name", "label": "Name" },
+   "entity": { "id": "t", "hasLooks": true, "hasRect": true, "rect": { "x": 0, "y": 0, "w": 200, "h": 60 } },
+   "steps": [
+    {
+     "from": "focused",
+     "event": "BUFFER_EDITED",
+     "payload": { "editorId": "other", "path": "", "version": 1, "text": "z", "dirty": true },
+     "expect": { "state": "focused", "exactEmits": [] }
+    }
+   ]
+  }
+ ]
+}

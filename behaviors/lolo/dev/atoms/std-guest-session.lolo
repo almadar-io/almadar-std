@@ -189,6 +189,10 @@ orbital GuestSessionOrbital {
       signInReason : string = "Reason:"
         @label "Prefix of the reason a guest gives for refusing a credential"
         @tier "policy"
+      followNavigations : boolean = false
+        @label "Follow the guest's own navigation"
+        @description "When a step of the guest navigates, ask the kernel to open that path as a route of the guest (program/navigate); a path no page of the guest matches changes nothing. Off by default: a composer that shows a program whose navigation belongs to its own host leaves it off."
+        @tier "policy"
       liveRoot : string = "~/.almadar/launchpad/live"
         @label "Live guest folders"
         @description "The directory holding one folder per program opened with real integrations; that folder is the guest's working directory, so its relative file stores never meet another program's."
@@ -244,6 +248,7 @@ orbital GuestSessionOrbital {
       GUEST_PERSONA_PICK -> idle
         (program/dispatch (if (= @entity.guestPersonaTrait "") "PERSONA_ACT_AS" (str/concat @entity.guestPersonaTrait ".PERSONA_ACT_AS")) { persona: ?persona } { guest: ?guest, emit: { success: GUEST_PERSONA_ACTED, failure: GUEST_STEP_FAILED } })
       GUEST_NAVIGATED -> idle
+      GUEST_FOLLOWED -> idle
       GUEST_NAVIGATE_FAILED -> idle
       GUEST_STEPPED -> idle
       GUEST_STEP_FAILED -> idle
@@ -369,6 +374,7 @@ orbital GuestSessionOrbital {
       GUEST_PERSONA_PICK -> opening
         (program/dispatch (if (= @entity.guestPersonaTrait "") "PERSONA_ACT_AS" (str/concat @entity.guestPersonaTrait ".PERSONA_ACT_AS")) { persona: ?persona } { guest: ?guest, emit: { success: GUEST_PERSONA_ACTED, failure: GUEST_STEP_FAILED } })
       GUEST_NAVIGATED -> opening
+      GUEST_FOLLOWED -> opening
       GUEST_NAVIGATE_FAILED -> opening
       GUEST_STEPPED -> opening
       GUEST_STEP_FAILED -> opening
@@ -521,6 +527,7 @@ orbital GuestSessionOrbital {
         (emit GUEST_PAINTS { guest: @entity.guestHandle, route: @entity.guestRoute, page: @entity.guestPage, paints: @entity.guestPaints, seq: @entity.guestPaintSeq })
         (when (> (array/len (default ?result.hostAsks [])) 0) (emit GUEST_HOST_ASKS { guest: @entity.guestHandle, asks: (default ?result.hostAsks []) }))
         (emit GUEST_MOVED { guest: @entity.guestHandle, moves: ?result.outcomes })
+        (when (and @config.followNavigations (> (array/len (default ?result.navigations [])) 0)) (program/navigate { guest: @entity.guestHandle, route: (object/get (default (array/last (default ?result.navigations [])) { trait: "", path: "" }) "path") } { emit: { success: GUEST_FOLLOWED, failure: GUEST_NAVIGATE_FAILED } }))
       GUEST_STEP_FAILED -> live
         (emit GUEST_NOTICE { message: ?error })
       GUEST_TICKED -> live when (= ?guest @entity.guestHandle)
@@ -567,6 +574,21 @@ orbital GuestSessionOrbital {
         (when (> (array/len (default ?result.hostAsks [])) 0) (emit GUEST_HOST_ASKS { guest: @entity.guestHandle, asks: (default ?result.hostAsks []) }))
         (emit GUEST_MOVED { guest: @entity.guestHandle, moves: ?result.outcomes })
         (emit GUEST_PERSONAS_ASK {})
+      GUEST_FOLLOWED -> live when (and (= (default ?result.access.verdict "") "denied") (= @entity.guestIntegrations "live"))
+        (set @entity.guestReturnTo (default ?result.access.returnTo ""))
+        (emit GUEST_SIGN_IN { guest: @entity.guestHandle })
+      GUEST_FOLLOWED -> live when (and (= (default ?result.access.verdict "") "denied") (= @entity.guestIntegrations "mock"))
+        (emit GUEST_NOTICE { message: @config.signInNeeded })
+      GUEST_FOLLOWED -> live when (and (!= (default ?result.access.verdict "") "denied") (!= (default ?result.route "") ""))
+        (set @entity.guestPage ?result.page)
+        (set @entity.guestRoute (default ?result.route ""))
+        (set @entity.guestPaints (array/reduce ?result.rendered (array/filter @entity.guestPaints (fn q (!= @q.slot "toast"))) (fn acc p (array/concat (array/filter @acc (fn q (or (!= @q.trait @p.trait) (!= @q.slot @p.slot)))) (array/filter [@p] (fn x (!= @x.content null)))))))
+        (set @entity.guestPaintSeq (+ @entity.guestPaintSeq 1))
+        (emit GUEST_PAINTS { guest: @entity.guestHandle, route: @entity.guestRoute, page: @entity.guestPage, paints: @entity.guestPaints, seq: @entity.guestPaintSeq })
+        (when (> (array/len (default ?result.hostAsks [])) 0) (emit GUEST_HOST_ASKS { guest: @entity.guestHandle, asks: (default ?result.hostAsks []) }))
+        (emit GUEST_MOVED { guest: @entity.guestHandle, moves: ?result.outcomes })
+        (emit GUEST_PERSONAS_ASK {})
+      GUEST_FOLLOWED -> live when (and (!= (default ?result.access.verdict "") "denied") (= (default ?result.route "") ""))
       GUEST_NAVIGATE_FAILED -> live
         (emit GUEST_NOTICE { message: ?error })
       GUEST_FAIL -> idle
@@ -695,6 +717,10 @@ orbital GuestSessionOrbital {
       GUEST_NAVIGATED {
         result : GuestNavigated!
       }
+      GUEST_FOLLOWED {
+        result : GuestNavigated!
+      }
+        @description "The kernel's answer to a navigation the guest's own step asked for: a route of the guest paints like GUEST_NAVIGATED, a path no page of the guest matches answers an empty route and changes nothing."
       GUEST_NAVIGATE_FAILED {
         error : string!
       }

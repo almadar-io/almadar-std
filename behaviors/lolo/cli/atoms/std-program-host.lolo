@@ -1,9 +1,9 @@
 app std-program-host [
   version: "1.0.0",
-  inbound: ["cli-program-host"],
+  inbound: ["cli-host"],
   fs: { cwd: "**/*.lolo": [read] },
   kernel: { "guest": [spawn] },
-  description: "std-program-host — the runtime as a .lolo program (`orb host <shell> <program>`). The cli-program-host command takes argv: the guest program path, then optional `--grant=<kind>` flags (a kind the guestGrants knob holds: fs, exec, net, credentials) that narrow the guestGrants knob to those kinds; with no flag the guest gets the whole knob, and the knob defaults to no grants at all, so the guest never inherits the host's own. It resolves the program (program/read { resolve }, EXEC-LOAD-1) and opens it as a guest session with program/open, passing the grants at open and only there (EXEC-CONC-7); the host holds the grant `kernel: { guest: [spawn] }` and the kernel refuses an open whose grants the host does not hold, naming them. It emits HOST_LOADED { path } once the guest is open, or HOST_REFUSED { reason } when argv names no program, the file cannot be read, resolved or opened, or a flag names a kind the knob does not hold; the command is answered with a status and body (200 loaded, 400 usage or refused grants, 500 unreadable or refused at open). Once loaded, each HOST_EVENT { key, orbital, trait, event, payload } (payload as JSON text) is forwarded to the guest by a keyed program/dispatch { guest } to Orbital.Trait.EVENT, run on the guest's own lane, and each guest answer is relayed as HOST_ANSWERED { key, result }; a failed dispatch is answered under the key it was sent with. A guest's lazy pages are carried: each `uses lazy` program the resolve answers rides the opened value in `lazyPrograms`, keyed by the `orbRef` of its page, so program/navigate can load it; a HOST_NAVIGATE { key, route } is forwarded to the guest as a keyed program/navigate and answered as HOST_ANSWERED like an event."
+  description: "std-program-host — the runtime as a .lolo program (`orb host <shell> <program>`). The cli-host command takes argv: the guest program path, then optional `--grant=<kind>` flags (a kind the guestGrants knob holds: fs, exec, net, credentials) that narrow the guestGrants knob to those kinds; with no flag the guest gets the whole knob, and the knob defaults to no grants at all, so the guest never inherits the host's own. It resolves the program (program/read { resolve }, EXEC-LOAD-1) and opens it as a guest session with program/open, passing the grants at open and only there (EXEC-CONC-7); the host holds the grant `kernel: { guest: [spawn] }` and the kernel refuses an open whose grants the host does not hold, naming them. It emits HOST_LOADED { path } once the guest is open, or HOST_REFUSED { reason } when argv names no program, the file cannot be read, resolved or opened, or a flag names a kind the knob does not hold; the command is answered with a status and body (200 loaded, 400 usage or refused grants, 500 unreadable or refused at open). Once loaded, each HOST_EVENT { key, orbital, trait, event, payload } (payload as JSON text) is forwarded to the guest by a keyed program/dispatch { guest } to Orbital.Trait.EVENT, run on the guest's own lane, and each guest answer is relayed as HOST_ANSWERED { key, result }; a failed dispatch is answered under the key it was sent with. With `--route <path>` the host navigates the guest to that route right after it opens, keyed by the route string, and the answer comes back as HOST_ANSWERED. A guest's lazy pages are carried: each `uses lazy` program the resolve answers rides the opened value in `lazyPrograms`, keyed by the `orbRef` of its page, so program/navigate can load it; a HOST_NAVIGATE { key, route } is forwarded to the guest as a keyed program/navigate and answered as HOST_ANSWERED like an event."
 ]
 uses Spec from "almadar-std/program-host"
 type OrbCommandArgs = { argv : [string]!, cwd : string! }
@@ -28,6 +28,7 @@ orbital ProgramHostOrbital {
     guest : string! = ""
     loaded : boolean! = false
     grants : HostGrants = {}
+    route : string! = ""
   }
 
   trait ArgsCli = Args.traits.ArgsParser {
@@ -45,19 +46,20 @@ orbital ProgramHostOrbital {
         (emit HOST_COMMAND_ANSWERED { status: 500, body: "Error: orb host: the command arguments could not be read" })
       HOST_CALLED -> parsing when (!= (json/parse (default @payload.rawBody "") OrbCommandArgs) null)
         (set @entity.cwd (object/get (default (json/parse (default @payload.rawBody "") OrbCommandArgs) { argv: [], cwd: "" }) "cwd"))
-        (emit HOST_ARGS_PARSE { stage: "host" argv: (object/get (default (json/parse (default @payload.rawBody "") OrbCommandArgs) { argv: [] }) "argv") flags: [{ name: "grant" aliases: [] takesValue: true repeatable: true }] })
+        (emit HOST_ARGS_PARSE { stage: "host" argv: (object/get (default (json/parse (default @payload.rawBody "") OrbCommandArgs) { argv: [] }) "argv") flags: [{ name: "grant" aliases: [] takesValue: true repeatable: true }, { name: "route" aliases: [] takesValue: true repeatable: false }] })
     }
 
     state parsing {
       INIT -> parsing
       HOST_ARGS_DONE -> waiting when (or (> (array/len @payload.errors) 0) (= (array/len @payload.positionals) 0))
-        (emit HOST_REFUSED { reason: "usage: orb host <shell> <program.lolo> [--grant=<kind>]" })
-        (emit HOST_COMMAND_ANSWERED { status: 400, body: "usage: orb host <shell> <program.lolo> [--grant=<kind>]" })
+        (emit HOST_REFUSED { reason: "usage: orb host <shell> <program.lolo> [--grant=<kind>] [--route=<path>]" })
+        (emit HOST_COMMAND_ANSWERED { status: 400, body: "usage: orb host <shell> <program.lolo> [--grant=<kind>] [--route=<path>]" })
       HOST_ARGS_DONE -> waiting when (and (= (array/len @payload.errors) 0) (> (array/len @payload.positionals) 0) (> (array/len (array/filter (default (object/get @payload.flags "grant") []) (fn k (not (object/has @config.guestGrants @k))))) 0))
         (emit HOST_REFUSED { reason: "a grant flag names a kind the guestGrants knob does not hold" })
         (emit HOST_COMMAND_ANSWERED { status: 400, body: "host: a grant flag names a kind the guestGrants knob does not hold" })
       HOST_ARGS_DONE -> reading when (and (= (array/len @payload.errors) 0) (> (array/len @payload.positionals) 0) (= (array/len (array/filter (default (object/get @payload.flags "grant") []) (fn k (not (object/has @config.guestGrants @k))))) 0))
         (set @entity.path (default (array/first @payload.positionals) ""))
+        (set @entity.route (default (array/first (default (object/get @payload.flags "route") [])) ""))
         (set @entity.grants (let ((sel (default (object/get @payload.flags "grant") []))) { fs: (if (or (= (array/len @sel) 0) (array/includes @sel "fs")) (default (object/get @config.guestGrants "fs") []) []) exec: (if (or (= (array/len @sel) 0) (array/includes @sel "exec")) (default (object/get @config.guestGrants "exec") []) []) net: (if (or (= (array/len @sel) 0) (array/includes @sel "net")) (default (object/get @config.guestGrants "net") []) []) credentials: (if (or (= (array/len @sel) 0) (array/includes @sel "credentials")) (default (object/get @config.guestGrants "credentials") []) []) }))
         (set @entity.file (if (os/path-is-absolute (default (array/first @payload.positionals) "")) (array/first @payload.positionals) (str/concat @entity.cwd "/" (array/first @payload.positionals))))
         (program/read "" { resolve: true text: false path: @entity.file } { key: "program" emit: { success: HOST_PROGRAM_READ, failure: HOST_LOAD_FAILED } })
@@ -67,11 +69,17 @@ orbital ProgramHostOrbital {
       INIT -> reading
       HOST_PROGRAM_READ -> reading
         (program/open (if (= (array/len (default @payload.result.lazy [])) 0) @payload.result.program (object/set @payload.result.program "lazyPrograms" (object/fromEntries (array/map (default @payload.result.lazy []) (fn l [(object/get (default (array/find (default @payload.result.program.lazyPages []) (fn p (= @p.orbital @l.orbital))) { orbital: "", orbRef: "" }) "orbRef") @l.program]))))) { grants: @entity.grants } { key: "guest" emit: { success: HOST_GUEST_OPENED, failure: HOST_LOAD_FAILED } })
-      HOST_GUEST_OPENED -> hosting
+      HOST_GUEST_OPENED -> hosting when (= @entity.route "")
         (set @entity.guest @payload.result.guest)
         (set @entity.loaded true)
         (emit HOST_LOADED { path: @entity.path })
         (emit HOST_COMMAND_ANSWERED { status: 200, body: (str/concat "hosting " @entity.path) })
+      HOST_GUEST_OPENED -> hosting when (!= @entity.route "")
+        (set @entity.guest @payload.result.guest)
+        (set @entity.loaded true)
+        (emit HOST_LOADED { path: @entity.path })
+        (emit HOST_COMMAND_ANSWERED { status: 200, body: (str/concat "hosting " @entity.path) })
+        (program/navigate { guest: @payload.result.guest route: @entity.route key: @entity.route emit: { success: HOST_GUEST_ANSWERED, failure: HOST_GUEST_FAILED } })
       HOST_LOAD_FAILED -> waiting
         (emit HOST_REFUSED { reason: @payload.error })
         (emit HOST_COMMAND_ANSWERED { status: 500, body: (str/concat "host: " (default @payload.error "")) })
@@ -124,7 +132,7 @@ orbital ProgramHostOrbital {
     }
 
     listens {
-      HOST_CALLED -> inbound "cli-program-host" answers HOST_COMMAND_ANSWERED {
+      HOST_CALLED -> inbound "cli-host" answers HOST_COMMAND_ANSWERED {
         headers : Map string string
         rawBody : string
       }

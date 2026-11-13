@@ -2,7 +2,8 @@ app std-identity-binding [
   version: "2.0.0",
   description: "std-identity-binding — binds each HTTP request's bearer as the identity of the request's own client session (EXEC-IDENTITY-3, -4), so the request event then runs with @user the identity row. The program session never signs in. BEARER_PRESENT { requestId, authorization, clientId } (the dispatch route's identity ask) forwards the raw Authorization header as data with a program/dispatch event request (orbital ownOrbital, targetTrait ownTrait, event CREDENTIAL_PRESENTED, input true) of CREDENTIAL_PRESENTED { requestId, authorization } to the clientId session, and reads CREDENTIAL_* from the EventResponse emittedEvents; a request naming no client session is anonymous when it carries no header and is refused no-client-session when it does (no session can keep the identity). It answers IDENTITY_BOUND, IDENTITY_ANONYMOUS or IDENTITY_REFUSED { requestId, reason } once the client session has answered, and IDENTITY_SESSION_ENDED { requestId } when the kernel refuses the forward because that session has ended (SESSION_ENDED, EXEC-DIST-9). In the client session, CREDENTIAL_PRESENTED asks the composed std-bearer-verify (BEARER_VERIFY, whose jws/verify runs in this session) and then BEARER_VERIFIED calls identity/sign-in with the sealed Verified; BEARER_ANONYMOUS, BEARER_REFUSED and BEARER_KEY_VERIFIED (heard as ANONYMOUS_SEEN, REFUSED_SEEN and KEY_SEEN; an API key makes no Verified) call identity/sign-out. Every request signs the session in or out again (a bearer header is stateless). The role is only ever the identity row's. A sign-in that answers no-identity with createIdentity on persists a row of identityEntity (the entity's declared defaults, id the subject, email and name from the claims) and asks the bearer again once; any other sign-in failure refuses identity-<kind>; a key is refused api-key-identity. The client session answers with CREDENTIAL_BOUND, CREDENTIAL_ANONYMOUS or CREDENTIAL_REFUSED."
 ]
-type BindingEmitPayload = { requestId : number, reason : string }
+type BindingEmitPayload = { requestId : number, reason : string, clientId : string, authorization : string, subject : string, email : string, name : string }
+type BindWait = { requestId : number!, clientId : string!, authorization : string!, subject : string!, stage : "creating" | "ready" | "failed" }
 type BindingEmitted = { event : string!, payload : BindingEmitPayload }
 type BindingWire = { success : boolean, emittedEvents : [BindingEmitted], error : string }
 type BindingFailure = { code : string, status : number }
@@ -21,11 +22,13 @@ orbital IdentityBindingOrbital {
     id : string!
     awaiting : boolean @description "Whether this session is binding a presented credential, so the verdicts it hears are its own." = false
     requestId : number @description "The request being bound." = 0
-    authorization : string @description "The presented Authorization header, kept to ask the bearer again once after the first identity row is created." = ""
+    clientId : string @description "The client session this binding answers, echoed to the program session when the first identity row must be created." = ""
+    authorization : string @description "The presented Authorization header, echoed to the program session when the first identity row must be created, so it can present the credential again." = ""
+    binds : [BindWait] @description "Program session: the requests waiting for their first identity row to be written, then presented again." = []
     subject : string @description "The verified subject being signed in." = ""
     email : string @description "The verified email claim, empty when absent." = ""
     name : string @description "The verified name claim, empty when absent." = ""
-    created : boolean @description "Whether the identity row of this credential was just created." = false
+    created : boolean @description "Whether this present is the second one, made after the program session wrote the first identity row; a second no-identity is refused." = false
     outcome : string @description "What a sign-out answers: empty is anonymous, any other text is the refusal reason." = ""
   }
 
@@ -36,7 +39,9 @@ orbital IdentityBindingOrbital {
       INIT -> idle
         (set @entity.awaiting false)
         (set @entity.requestId 0)
+        (set @entity.clientId "")
         (set @entity.authorization "")
+        (set @entity.binds [])
         (set @entity.subject "")
         (set @entity.email "")
         (set @entity.name "")
@@ -48,7 +53,7 @@ orbital IdentityBindingOrbital {
       BEARER_PRESENT -> idle when (and (= (default @payload.clientId "") "") (!= (default @payload.authorization "") ""))
         (emit IDENTITY_REFUSED { requestId: (default @payload.requestId 0), reason: "no-client-session" })
       BEARER_PRESENT -> idle when (!= (default @payload.clientId "") "")
-        (program/dispatch (str/concat @config.ownOrbital "." @config.ownTrait ".CREDENTIAL_PRESENTED") { requestId: (default @payload.requestId 0), authorization: (default @payload.authorization "") } { orbital: @config.ownOrbital, targetTrait: @config.ownTrait, event: "CREDENTIAL_PRESENTED", clientId: @payload.clientId, input: true, wire: true } { key: (str/concat (default @payload.requestId 0)), emit: { success: CREDENTIAL_ANSWERED, failure: CREDENTIAL_FAILED } })
+        (program/dispatch (str/concat @config.ownOrbital "." @config.ownTrait ".CREDENTIAL_PRESENTED") { requestId: (default @payload.requestId 0), authorization: (default @payload.authorization ""), clientId: @payload.clientId, created: false } { orbital: @config.ownOrbital, targetTrait: @config.ownTrait, event: "CREDENTIAL_PRESENTED", clientId: @payload.clientId, input: true, wire: true } { key: (str/concat (default @payload.requestId 0)), emit: { success: CREDENTIAL_ANSWERED, failure: CREDENTIAL_FAILED } })
 
       CREDENTIAL_ANSWERED -> idle when (array/some (default @payload.result.emittedEvents []) (fn e (= @e.event "CREDENTIAL_BOUND")))
         (emit IDENTITY_BOUND { requestId: (default (str/to-number (default @payload.key "0")) 0) })
@@ -56,8 +61,13 @@ orbital IdentityBindingOrbital {
         (emit IDENTITY_ANONYMOUS { requestId: (default (str/to-number (default @payload.key "0")) 0) })
       CREDENTIAL_ANSWERED -> idle when (array/some (default @payload.result.emittedEvents []) (fn e (= @e.event "CREDENTIAL_REFUSED")))
         (emit IDENTITY_REFUSED { requestId: (default (str/to-number (default @payload.key "0")) 0), reason: (default (object/get (default (array/find (default @payload.result.emittedEvents []) (fn e (= @e.event "CREDENTIAL_REFUSED"))) { event: "", payload: { requestId: 0, reason: "" } }) "payload.reason") "credential-refused") })
-      CREDENTIAL_ANSWERED -> idle when (not (array/some (default @payload.result.emittedEvents []) (fn e (array/includes ["CREDENTIAL_BOUND", "CREDENTIAL_ANONYMOUS", "CREDENTIAL_REFUSED"] @e.event))))
+      CREDENTIAL_ANSWERED -> idle when (not (array/some (default @payload.result.emittedEvents []) (fn e (array/includes ["CREDENTIAL_BOUND", "CREDENTIAL_ANONYMOUS", "CREDENTIAL_REFUSED", "CREDENTIAL_NEEDS_IDENTITY"] @e.event))))
         (emit IDENTITY_REFUSED { requestId: (default (str/to-number (default @payload.key "0")) 0), reason: "credential-dispatch" })
+      CREDENTIAL_ANSWERED -> idle when (array/some (default @payload.result.emittedEvents []) (fn e (= @e.event "CREDENTIAL_NEEDS_IDENTITY")))
+        (let ((n (default (array/find (default @payload.result.emittedEvents []) (fn e (= @e.event "CREDENTIAL_NEEDS_IDENTITY"))) { event: "", payload: { requestId: 0, reason: "" } })))
+          (do
+            (set @entity.binds (array/append @entity.binds { requestId: (default @n.payload.requestId 0), clientId: (default @n.payload.clientId ""), authorization: (default @n.payload.authorization ""), subject: (default @n.payload.subject ""), stage: "creating" }))
+            (persist create @config.identityEntity (if (= @config.createRole "") { id: (default @n.payload.subject ""), email: (default @n.payload.email ""), name: (default @n.payload.name "") } { id: (default @n.payload.subject ""), email: (default @n.payload.email ""), name: (default @n.payload.name ""), role: @config.createRole }) { emit: { success: IDENTITY_CREATED, failure: IDENTITY_CREATE_FAILED } })))
       CREDENTIAL_FAILED -> idle when (= (object/get (default (array/first (default @payload.errors [])) { code: "", status: 0 }) "code" "") "SESSION_ENDED")
         (emit IDENTITY_SESSION_ENDED { requestId: (default (str/to-number (default @payload.key "0")) 0) })
       CREDENTIAL_FAILED -> idle when (!= (object/get (default (array/first (default @payload.errors [])) { code: "", status: 0 }) "code" "") "SESSION_ENDED")
@@ -66,8 +76,9 @@ orbital IdentityBindingOrbital {
       CREDENTIAL_PRESENTED -> idle
         (set @entity.awaiting true)
         (set @entity.requestId (default @payload.requestId 0))
+        (set @entity.clientId (default @payload.clientId ""))
         (set @entity.authorization (default @payload.authorization ""))
-        (set @entity.created false)
+        (set @entity.created (default @payload.created false))
         (emit BEARER_VERIFY { requestId: (default @payload.requestId 0), authorization: (default @payload.authorization "") })
 
       BEARER_VERIFIED -> idle when @entity.awaiting
@@ -82,17 +93,38 @@ orbital IdentityBindingOrbital {
         (set @entity.awaiting false)
 
       SIGN_IN_FAILED -> idle when (and (= (default @payload.kind "") "no-identity") @config.createIdentity (not @entity.created))
-        (set @entity.created true)
-        (persist create @config.identityEntity (if (= @config.createRole "") { id: @entity.subject, email: @entity.email, name: @entity.name } { id: @entity.subject, email: @entity.email, name: @entity.name, role: @config.createRole }) { emit: { success: IDENTITY_CREATED, failure: IDENTITY_CREATE_FAILED } })
+        (emit CREDENTIAL_NEEDS_IDENTITY { requestId: @entity.requestId, clientId: @entity.clientId, authorization: @entity.authorization, subject: @entity.subject, email: @entity.email, name: @entity.name })
+        (set @entity.awaiting false)
       SIGN_IN_FAILED -> idle when (not (and (= (default @payload.kind "") "no-identity") @config.createIdentity (not @entity.created)))
         (emit CREDENTIAL_REFUSED { requestId: @entity.requestId, reason: (str/concat "identity-" (default @payload.kind "")) })
         (set @entity.awaiting false)
 
       IDENTITY_CREATED -> idle
-        (emit BEARER_VERIFY { requestId: @entity.requestId, authorization: @entity.authorization })
+        (set @entity.binds (array/map @entity.binds (fn b (if (= @b.subject (default @payload.id "")) (object/merge @b { stage: "ready" }) @b))))
+        (emit REBIND_DRAIN { })
       IDENTITY_CREATE_FAILED -> idle
-        (emit CREDENTIAL_REFUSED { requestId: @entity.requestId, reason: "identity-store" })
-        (set @entity.awaiting false)
+        (set @entity.binds (array/map @entity.binds (fn b (if (= @b.stage "creating") (object/merge @b { stage: "failed" }) @b))))
+        (emit REFUSE_DRAIN { })
+
+      REBIND_DRAIN -> idle when (array/some @entity.binds (fn b (= @b.stage "ready")))
+        (let ((b (default (array/find @entity.binds (fn x (= @x.stage "ready"))) { requestId: 0, clientId: "", authorization: "", subject: "", stage: "ready" })))
+          (do
+            (set @entity.binds (array/filter @entity.binds (fn x (!= @x.requestId @b.requestId))))
+            (program/dispatch (str/concat @config.ownOrbital "." @config.ownTrait ".CREDENTIAL_PRESENTED") { requestId: @b.requestId, authorization: @b.authorization, clientId: @b.clientId, created: true } { orbital: @config.ownOrbital, targetTrait: @config.ownTrait, event: "CREDENTIAL_PRESENTED", clientId: @b.clientId, input: true, wire: true } { key: (str/concat @b.requestId), emit: { success: CREDENTIAL_ANSWERED, failure: CREDENTIAL_FAILED } })
+            (emit REBIND_NEXT { })))
+      REBIND_NEXT -> idle
+        (emit REBIND_DRAIN { })
+      REBIND_DRAIN -> idle when (not (array/some @entity.binds (fn b (= @b.stage "ready"))))
+
+      REFUSE_DRAIN -> idle when (array/some @entity.binds (fn b (= @b.stage "failed")))
+        (let ((b (default (array/find @entity.binds (fn x (= @x.stage "failed"))) { requestId: 0, clientId: "", authorization: "", subject: "", stage: "failed" })))
+          (do
+            (set @entity.binds (array/filter @entity.binds (fn x (!= @x.requestId @b.requestId))))
+            (emit IDENTITY_REFUSED { requestId: @b.requestId, reason: "identity-store" })
+            (emit REFUSE_NEXT { })))
+      REFUSE_NEXT -> idle
+        (emit REFUSE_DRAIN { })
+      REFUSE_DRAIN -> idle when (not (array/some @entity.binds (fn b (= @b.stage "failed"))))
 
       ANONYMOUS_SEEN -> idle when @entity.awaiting
         (set @entity.outcome "")
@@ -158,11 +190,21 @@ orbital IdentityBindingOrbital {
       }
         @description "Client session: the credential was refused and the session is signed out; read by the program session from the dispatch outcome."
         @tier "secondary"
+      CREDENTIAL_NEEDS_IDENTITY -> external {
+        requestId : number
+        clientId : string
+        authorization : string
+        subject : string
+        email : string
+        name : string
+      }
+        @description "Client session: the verified subject has no identity row and createIdentity is on; the program session writes the row and presents the credential again, because a write parked in this session would end the forwarded dispatch before it answered."
+        @tier "secondary"
       BEARER_VERIFY -> external {
         requestId : number
         authorization : string
       }
-        @description "Client session: ask the composed bearer verifier about the presented header, again once after the first identity row is created."
+        @description "Client session: ask the composed bearer verifier about the presented header."
         @tier "secondary"
       SIGNED_IN {
         subject : string
@@ -198,6 +240,18 @@ orbital IdentityBindingOrbital {
       }
         @description "Internal: the first identity row of the subject is written (createIdentity)."
         @tier "internal"
+      REBIND_DRAIN { }
+        @description "Internal: present the credential again to the next client session whose identity row is written."
+        @tier "internal"
+      REBIND_NEXT { }
+        @description "Internal: the next turn of REBIND_DRAIN."
+        @tier "internal"
+      REFUSE_DRAIN { }
+        @description "Internal: refuse the next request whose identity row could not be written."
+        @tier "internal"
+      REFUSE_NEXT { }
+        @description "Internal: the next turn of REFUSE_DRAIN."
+        @tier "internal"
       IDENTITY_CREATE_FAILED {
         error : string
       }
@@ -215,6 +269,8 @@ orbital IdentityBindingOrbital {
       CREDENTIAL_PRESENTED -> input {
         requestId : number?
         authorization : string?
+        clientId : string?
+        created : boolean?
       }
         @description "Client session: a raw Authorization header forwarded by the program session; verified and bound here."
         @synonyms "present credential"

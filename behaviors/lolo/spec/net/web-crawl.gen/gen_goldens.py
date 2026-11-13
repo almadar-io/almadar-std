@@ -260,6 +260,21 @@ cases.append(case("control: a title that only mentions the words mid-title is no
 cases.append(case("control: a wait of another run is ignored while a check is waited on", [
     step("challenged", "CRAWL_WAITED", {"key": "zz:challenge"}, "challenged", [], before={**CHB, "challengeTries": 1}, never=["PAGE_NAVIGATE"])], N0))
 
+# redirects: the start page's landed origin is the crawl's origin
+RS = "https://shop.example"
+RW = "https://www.shop.example/"
+RB = {"runKey": "r1", "origin": RS, "curUrl": RS, "curDepth": 0, "seen": [RS]}
+cases.append(case("redirect: a start page that lands on another origin moves the crawl to that origin and marks the landed url seen", [
+    step("loading", "PAGE_LOADED", {"key": "r1:nav", "url": RW, "title": "Shop"}, "linking", [em("PAGE_LINKS", {"key": "r1:links"})], before=RB, after={"origin": "https://www.shop.example", "seen": [RS, RW]})], N0))
+cases.append(case("redirect: links of the landed origin are queued after the start page moved the crawl", [
+    step("enqueuing", "CRAWL_ENQUEUE", {"fromPage": RS, "childDepth": 1, "links": [link("https://www.shop.example/izdelki"), link("https://shop.example/o-nas")]}, "stepping", [em("CRAWL_NEXT", {})],
+         before={"runKey": "r1", "origin": "https://www.shop.example", "seen": [RS, RW], "queue": [], "rules": []}, after={"queue": [{"url": "https://www.shop.example/izdelki", "depth": 1, "fromPage": RS}]})], N0))
+cases.append(case("control: a start page that lands on its own url keeps the origin and seen as they were", [
+    step("loading", "PAGE_LOADED", {"key": "r1:nav", "url": RS, "title": "Shop"}, "linking", [em("PAGE_LINKS", {"key": "r1:links"})], before=RB, after={"origin": RS, "seen": [RS]})], N0))
+cases.append(case("control: a deeper page that redirects to another site leaves the crawl's origin alone", [
+    step("loading", "PAGE_LOADED", {"key": "r1:nav", "url": "https://other.example/x", "title": "Other"}, "linking", [em("PAGE_LINKS", {"key": "r1:links"})],
+         before={**RB, "curUrl": RS + "/out", "curDepth": 1}, after={"origin": RS, "seen": [RS]})], N0))
+
 out = {"atom": "net/atoms/std-web-crawl.lolo", "trait": "WebCrawl", "spec": "spec/net/web-crawl.lolo",
        "note": "std-web-crawl with the page answers played as events. The link lists, titles and robots text are real: record.py serves the a11y fixture shop with a robots.txt on a random port and reads each page through headless Chrome with links.js (which must stay identical to the PAGE_LINKS expression of std-chrome). The internal CRAWL_ENQUEUE and CRAWL_NEXT events are played as steps. Regenerate with python3 -I record.py && python3 -I gen_goldens.py.",
        "cases": cases}

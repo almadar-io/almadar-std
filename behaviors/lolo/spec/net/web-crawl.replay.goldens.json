@@ -11637,6 +11637,212 @@
      }
     }
    ]
+  },
+  {
+   "id": "redirect: a start page that lands on another origin moves the crawl to that origin and marks the landed url seen",
+   "defaults": [
+    "CrawlDelay"
+   ],
+   "config": {
+    "delayMs": 0,
+    "respectRobots": false
+   },
+   "steps": [
+    {
+     "event": "PAGE_LOADED",
+     "payload": {
+      "key": "r1:nav",
+      "url": "https://www.shop.example/",
+      "title": "Shop"
+     },
+     "expect": {
+      "state": "linking",
+      "emits": [
+       {
+        "event": "PAGE_LINKS",
+        "payload": {
+         "key": "r1:links"
+        }
+       }
+      ],
+      "entity": {
+       "origin": "https://www.shop.example",
+       "seen": [
+        "https://shop.example",
+        "https://www.shop.example/"
+       ]
+      }
+     },
+     "from": "loading",
+     "entity": {
+      "runKey": "r1",
+      "origin": "https://shop.example",
+      "curUrl": "https://shop.example",
+      "curDepth": 0,
+      "seen": [
+       "https://shop.example"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "redirect: links of the landed origin are queued after the start page moved the crawl",
+   "defaults": [
+    "CrawlDelay"
+   ],
+   "config": {
+    "delayMs": 0,
+    "respectRobots": false
+   },
+   "steps": [
+    {
+     "event": "CRAWL_ENQUEUE",
+     "payload": {
+      "fromPage": "https://shop.example",
+      "childDepth": 1,
+      "links": [
+       {
+        "index": 0,
+        "text": "x",
+        "href": "https://www.shop.example/izdelki",
+        "download": false,
+        "kind": "link"
+       },
+       {
+        "index": 0,
+        "text": "x",
+        "href": "https://shop.example/o-nas",
+        "download": false,
+        "kind": "link"
+       }
+      ]
+     },
+     "expect": {
+      "state": "stepping",
+      "emits": [
+       {
+        "event": "CRAWL_NEXT",
+        "payload": {}
+       }
+      ],
+      "entity": {
+       "queue": [
+        {
+         "url": "https://www.shop.example/izdelki",
+         "depth": 1,
+         "fromPage": "https://shop.example"
+        }
+       ]
+      }
+     },
+     "from": "enqueuing",
+     "entity": {
+      "runKey": "r1",
+      "origin": "https://www.shop.example",
+      "seen": [
+       "https://shop.example",
+       "https://www.shop.example/"
+      ],
+      "queue": [],
+      "rules": []
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a start page that lands on its own url keeps the origin and seen as they were",
+   "defaults": [
+    "CrawlDelay"
+   ],
+   "config": {
+    "delayMs": 0,
+    "respectRobots": false
+   },
+   "steps": [
+    {
+     "event": "PAGE_LOADED",
+     "payload": {
+      "key": "r1:nav",
+      "url": "https://shop.example",
+      "title": "Shop"
+     },
+     "expect": {
+      "state": "linking",
+      "emits": [
+       {
+        "event": "PAGE_LINKS",
+        "payload": {
+         "key": "r1:links"
+        }
+       }
+      ],
+      "entity": {
+       "origin": "https://shop.example",
+       "seen": [
+        "https://shop.example"
+       ]
+      }
+     },
+     "from": "loading",
+     "entity": {
+      "runKey": "r1",
+      "origin": "https://shop.example",
+      "curUrl": "https://shop.example",
+      "curDepth": 0,
+      "seen": [
+       "https://shop.example"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a deeper page that redirects to another site leaves the crawl's origin alone",
+   "defaults": [
+    "CrawlDelay"
+   ],
+   "config": {
+    "delayMs": 0,
+    "respectRobots": false
+   },
+   "steps": [
+    {
+     "event": "PAGE_LOADED",
+     "payload": {
+      "key": "r1:nav",
+      "url": "https://other.example/x",
+      "title": "Other"
+     },
+     "expect": {
+      "state": "linking",
+      "emits": [
+       {
+        "event": "PAGE_LINKS",
+        "payload": {
+         "key": "r1:links"
+        }
+       }
+      ],
+      "entity": {
+       "origin": "https://shop.example",
+       "seen": [
+        "https://shop.example"
+       ]
+      }
+     },
+     "from": "loading",
+     "entity": {
+      "runKey": "r1",
+      "origin": "https://shop.example",
+      "curUrl": "https://shop.example/out",
+      "curDepth": 1,
+      "seen": [
+       "https://shop.example"
+      ]
+     }
+    }
+   ]
   }
  ]
 }
