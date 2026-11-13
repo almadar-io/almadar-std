@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "Canonical operator registry for Almadar. Generated from @almadar/std/modules. Consumed by orbital-compiler via include_str!.",
-  "generated": "2026-11-12T20:15:33.747Z",
+  "generated": "2026-11-13T12:21:45.934Z",
   "categories": {
     "arithmetic": {
       "description": "Numeric operations",
@@ -12450,13 +12450,19 @@
       "failable": {
         "unlessLiteral": [
           0
+        ],
+        "unlessTyped": [
+          {
+            "arg": 0,
+            "type": "messagekey"
+          }
         ]
       },
       "params": [
         {
           "name": "key",
-          "type": "string",
-          "description": "Catalog key (a string literal)"
+          "type": "messagekey",
+          "description": "Catalog key: a string literal, or a value typed MessageKey (a knob whose literals were qualified where they were written)"
         },
         {
           "name": "params",
@@ -29668,7 +29674,7 @@
               "open": true
             }
           },
-          "description": "The transitions to play: `{ orbital, trait, from, event, payload, entity?, config?, identity?, now?, settleMs?, credentials?, answers? }` each. `answers` (replay only) is a list of `{ operator, ok }` or `{ operator, error: { kind, message } }`, the host's plain answers to the os asks the request's cascade makes: an ask takes the first unused answer naming its operator and the kernel unwraps, mints and routes it as it does live (a deferring op's answer arrives as its completion once the dispatch ends); an answer no ask takes refuses the request"
+          "description": "The transitions to play: `{ orbital, trait, from, event, payload, entity?, config?, identity?, now?, settleMs?, credentials?, answers? }` each. `answers` (replay only) is a list of `{ operator, ok }` or `{ operator, error: { kind, message } }`, the host's plain answers to the os asks and client host asks (any `runsOn: client` op, such as `audio/clock`) the request's cascade makes: an ask takes the first unused answer naming its operator and the kernel unwraps, mints and routes it as it does live (a deferring op's answer arrives as its completion once the dispatch ends; a client host ask's answer fires the ask's declared success route with the ok fields and `key`, or its failure route with `{ error, kind, key }`, as a browser host returns it); an answer no ask takes refuses the request"
         },
         {
           "name": "options",

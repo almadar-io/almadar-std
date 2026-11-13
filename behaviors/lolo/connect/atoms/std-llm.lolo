@@ -1,6 +1,6 @@
 app std-llm [
   version: "1.0.0",
-  description: "std-llm — text generation, classification, summarization, embeddings and Jev decisions over OpenAI-compatible and Anthropic chat endpoints. The provider, its origin, base path and default model are config knobs, never inferred; credentials are secret knobs naming the host env var. A request that cannot be answered ends in LLM_FAILED. extract returns the reply's JSON text for the caller to read under its own shape; call-tools runs the model's tool loop and hands each batch of tool calls to the caller, which runs them and answers. A call that carries a key can be cancelled by LLM_CANCEL while it waits for its provider: its request is aborted on the wire (LLM_CHAT_WIRE_CANCEL, LLM_EMBED_WIRE_CANCEL), it ends in LLM_CANCELLED, and the aborted request answers nothing (std-http-request and std-http-client drop a late reply). Each request carries the wire's deadline (the composed std-http-request timeoutMs). With firstByteTimeoutMs above 0 a request that has shown no first byte in that time is aborted on the wire and sent once more (LLM_FIRST_BYTE_START, LLM_FIRST_BYTE_ELAPSED and LLM_FIRST_BYTE_STOP answer to a keyed std-delay), and a second miss ends in LLM_FAILED with code first-byte-timeout. On the openrouter provider the provider routing (providerSort, providerOrder, providerQuantizations), reasoning, toolTemperature, parallelToolCalls and cacheControl knobs shape the request body; every default keeps the body as it was. With cache on, an extract, classify, classify-many or generate request at temperature 0 is answered from the LlmCacheRow store when it holds a reply younger than cacheTtlMs, and a fresh reply is written to it.",
+  description: "std-llm — text generation, classification, summarization, embeddings and Jev decisions over OpenAI-compatible and Anthropic chat endpoints. The provider, its origin, base path and default model are config knobs, never inferred; credentials are secret knobs naming the host env var. A request that cannot be answered ends in LLM_FAILED; a call-tools reply cut off at the output cap ends in LLM_FAILED with code output-cut, and a call-tools request that timed out with code timeout. extract returns the reply's JSON text for the caller to read under its own shape; call-tools runs the model's tool loop and hands each batch of tool calls to the caller, which runs them and answers. A call that carries a key can be cancelled by LLM_CANCEL while it waits for its provider: its request is aborted on the wire (LLM_CHAT_WIRE_CANCEL, LLM_EMBED_WIRE_CANCEL), it ends in LLM_CANCELLED, and the aborted request answers nothing (std-http-request and std-http-client drop a late reply). Each request carries the wire's deadline (the composed std-http-request timeoutMs). With firstByteTimeoutMs above 0 a request that has shown no first byte in that time is aborted on the wire and sent once more (LLM_FIRST_BYTE_START, LLM_FIRST_BYTE_ELAPSED and LLM_FIRST_BYTE_STOP answer to a keyed std-delay), and a second miss ends in LLM_FAILED with code first-byte-timeout. On the openrouter provider the provider routing (providerSort, providerOrder, providerQuantizations), reasoning, toolTemperature, parallelToolCalls and cacheControl knobs shape the request body; every default keeps the body as it was. With cache on, an extract, classify, classify-many or generate request at temperature 0 is answered from the LlmCacheRow store when it holds a reply younger than cacheTtlMs, and a fresh reply is written to it.",
 ]
 uses Spec from "almadar-std/llm-provider"
 type LlmImage = { mediaType : string!, data : string! }
@@ -53,13 +53,13 @@ type LlmToolCallStep = { type : "tool_call"!, tool : string!, kind : "input" | "
 type LlmToolResultStep = { type : "tool_result"!, tool : string!, kind : "input" | "read" | "invalid", success : boolean!, detail : string, rows : number, resultText : string!, timestamp : instant! }
 type LlmStep = LlmToolCallStep | LlmToolResultStep | LlmResponseStep
 type LlmToolOutcome = { id : string!, tool : string!, kind : "input" | "read" | "invalid"!, success : boolean!, detail : string, rows : number, content : string!, startedAt : instant!, endedAt : instant! }
-type ToolsSession = { key : string, model : string!, system : string, userPrompt : string!, maxSteps : number!, startedAt : instant, tools : [LlmToolDef]!, messages : [ToolMessage]!, steps : [LlmStep]!, usage : ToolsUsage! }
+type ToolsSession = { key : string, model : string!, system : string, userPrompt : string!, maxSteps : number!, startedAt : instant, tools : [LlmToolDef]!, messages : [ToolMessage]!, steps : [LlmStep]!, usage : ToolsUsage!, finish : string }
 type ToolsChoice = { index : number, finish_reason : string, message : ToolMessage }
 type ToolsReplyUsage = { prompt_tokens : number, completion_tokens : number, total_tokens : number }
 type ToolsReply = { choices : [ToolsChoice], usage : ToolsReplyUsage }
 type AnthropicToolBlock = { type : string!, text : string, id : string, name : string, input : ToolArguments }
 type AnthropicToolsUsage = { input_tokens : number, output_tokens : number }
-type AnthropicToolsReply = { content : [AnthropicToolBlock]!, usage : AnthropicToolsUsage }
+type AnthropicToolsReply = { content : [AnthropicToolBlock]!, stop_reason : string, usage : AnthropicToolsUsage }
 orbital LlmOrbital {
 
   entity LlmCall [runtime] {
@@ -824,7 +824,7 @@ orbital LlmOrbital {
 
       LLM_TOOLS_UNREACHABLE -> idle
         (set @entity.inflight (array/filter @entity.inflight (fn c (!= @c.httpKey @payload.key))))
-        (emit LLM_FAILED { code: "", message: (if (= @payload.kind "timeout") "LLMClient.callWithTools timed out" "fetch failed") })
+        (emit LLM_FAILED { code: (if (= @payload.kind "timeout") "timeout" ""), message: (if (= @payload.kind "timeout") "LLMClient.callWithTools timed out" "fetch failed") })
 
       LLM_TOOLS_REPLIED -> idle when (or (< @payload.status 200) (>= @payload.status 300))
         (set @entity.inflight (array/filter @entity.inflight (fn c (!= @c.httpKey @payload.key))))
@@ -847,6 +847,7 @@ orbital LlmOrbital {
                 (let ((calls (object/get @m tool_calls [])))
                   (json/stringify (object/merge @s {
                     messages: (array/append @s.messages @m),
+                    finish: (object/get (default (array/first (object/get @r choices [])) {}) finish_reason ""),
                     steps: (array/append @s.steps {
                       type: "llm_response",
                       content: (if (= (object/get @m content null) null) "" (object/get @m content "")),
@@ -894,6 +895,7 @@ orbital LlmOrbital {
                 (let ((calls (object/get @m tool_calls [])))
                   (json/stringify (object/merge @s {
                     messages: (array/append @s.messages @m),
+                    finish: (let ((sr (object/get @r stop_reason ""))) (if (= @sr "max_tokens") "length" @sr)),
                     steps: (array/append @s.steps {
                       type: "llm_response",
                       content: (if (= (object/get @m content null) null) "" (object/get @m content "")),
@@ -928,14 +930,17 @@ orbital LlmOrbital {
           outputTokens: (object/get (object/get (default (json/parse @payload.body AnthropicToolsReply) {}) usage {}) output_tokens 0)
         })
 
-      LLM_TOOLS_TURN -> idle when (and (= (array/len (object/get (default (array/last (object/get (default (json/parse @payload.session ToolsSession) {}) messages [])) {}) tool_calls [])) 0) (> (array/len (object/get (default (json/parse @payload.session ToolsSession) {}) steps [])) 0))
+      LLM_TOOLS_TURN -> idle when (and (= (object/get (default (json/parse @payload.session ToolsSession) {}) finish "") "length") (> (array/len (object/get (default (json/parse @payload.session ToolsSession) {}) steps [])) 0))
+        (emit LLM_TOOLS_STEP { activity: (array/last (object/get (default (json/parse @payload.session ToolsSession) {}) steps [])) })
+        (emit LLM_FAILED { code: "output-cut", message: "The model's reply was cut off at the output cap before it finished" })
+      LLM_TOOLS_TURN -> idle when (and (!= (object/get (default (json/parse @payload.session ToolsSession) {}) finish "") "length") (= (array/len (object/get (default (array/last (object/get (default (json/parse @payload.session ToolsSession) {}) messages [])) {}) tool_calls [])) 0) (> (array/len (object/get (default (json/parse @payload.session ToolsSession) {}) steps [])) 0))
         (emit LLM_TOOLS_STEP { activity: (array/last (object/get (default (json/parse @payload.session ToolsSession) {}) steps [])) })
         (emit LLM_CALL_TOOLS_RESULT {
           reply: (let ((lm (default (array/last (object/get (default (json/parse @payload.session ToolsSession) {}) messages [])) {}))) (if (= (object/get @lm content null) null) "" (object/get @lm content ""))),
           steps: (object/get (default (json/parse @payload.session ToolsSession) {}) steps []),
           usage: (object/get (default (json/parse @payload.session ToolsSession) {}) usage { promptTokens: 0, completionTokens: 0, totalTokens: 0, modelCalls: 0 })
         })
-      LLM_TOOLS_TURN -> idle when (and (> (array/len (object/get (default (array/last (object/get (default (json/parse @payload.session ToolsSession) {}) messages [])) {}) tool_calls [])) 0) (> (array/len (object/get (default (json/parse @payload.session ToolsSession) {}) steps [])) 0))
+      LLM_TOOLS_TURN -> idle when (and (!= (object/get (default (json/parse @payload.session ToolsSession) {}) finish "") "length") (> (array/len (object/get (default (array/last (object/get (default (json/parse @payload.session ToolsSession) {}) messages [])) {}) tool_calls [])) 0) (> (array/len (object/get (default (json/parse @payload.session ToolsSession) {}) steps [])) 0))
         (emit LLM_TOOLS_STEP { activity: (array/last (object/get (default (json/parse @payload.session ToolsSession) {}) steps [])) })
         (emit LLM_TOOLS_REQUESTED {
           session: @payload.session,
@@ -1208,7 +1213,7 @@ orbital LlmOrbital {
         message : string!
         key : string
       }
-        @description "A request that ended without an answer: the provider's error message, with a code when the atom or the model's reply is at fault (VALIDATION_ERROR, SERVICE_ERROR), when no first byte came twice within firstByteTimeoutMs (first-byte-timeout), or when the response cache could not be read (cache-read-failed)."
+        @description "A request that ended without an answer: the provider's error message, with a code when the atom or the model's reply is at fault (VALIDATION_ERROR, SERVICE_ERROR), when no first byte came twice within firstByteTimeoutMs (first-byte-timeout), or when the response cache could not be read (cache-read-failed), when a call-tools reply was cut off at the output cap (output-cut), or when the call-tools request timed out (timeout)."
         @synonyms "llm error, request failed"
         @tier "primary"
       LLM_CACHE_WRITE_FAILED -> external {

@@ -7447,7 +7447,7 @@
                                 "batch",
                                 [
                                   [
-                                    "upsert",
+                                    "merge",
                                     "Other",
                                     {}
                                   ]
@@ -12126,6 +12126,1155 @@
                       "suggestion": "Declare 'Learner' in the consumer schema, or fix the typo.",
                       "severity": "error",
                       "entity": "Learner"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-batch-upsert-literal-op-tuples-read-the-entity",
+      "steps": [
+        {
+          "trait": "OrbLintOrbitalRefClosure",
+          "event": "LINT_CALL_SITES",
+          "from": "ready",
+          "payload": {
+            "file": "c.orb",
+            "program": {
+              "name": "consumer",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "Local",
+                  "uses": [
+                    {
+                      "as": "Up",
+                      "from": "./upstream.orb"
+                    }
+                  ],
+                  "entity": "Up.orbitals.MainOrbital.entity",
+                  "traits": [],
+                  "reference": {
+                    "ref": "Up.orbitals.MainOrbital"
+                  }
+                },
+                {
+                  "name": "MemberOrbital",
+                  "entity": {
+                    "id": "ent_MEMBERENTITYID000000000",
+                    "name": "Member",
+                    "identity": true,
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "role",
+                        "type": "string",
+                        "values": [
+                          "owner",
+                          "member"
+                        ]
+                      }
+                    ]
+                  },
+                  "traits": []
+                },
+                {
+                  "name": "ConsumerOtherOrbital",
+                  "entity": {
+                    "id": "ent_CONSUMEROTHERID00000000",
+                    "name": "ConsumerOther",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": []
+                }
+              ],
+              "schemaVersion": 1
+            },
+            "kept": [
+              {
+                "orbital": 0,
+                "traits": [
+                  "WidgetView",
+                  "OtherFetcher"
+                ]
+              }
+            ],
+            "references": [
+              {
+                "kind": "orbital",
+                "alias": "Up",
+                "name": "MainOrbital",
+                "path": "orbitals[0]",
+                "callSite": {
+                  "ref": "Up.orbitals.MainOrbital"
+                },
+                "declaration": {
+                  "name": "MainOrbital",
+                  "entity": {
+                    "name": "Widget",
+                    "persistence": "persistent",
+                    "read_policy": [
+                      "=",
+                      "@user.role",
+                      "approver"
+                    ],
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "otherId",
+                        "type": "relation",
+                        "relation": {
+                          "entity": "Other",
+                          "cardinality": "one"
+                        }
+                      }
+                    ]
+                  },
+                  "auxiliaryEntities": [
+                    {
+                      "name": "ThingOwner",
+                      "identity": true,
+                      "persistence": "persistent",
+                      "fields": [
+                        {
+                          "name": "id",
+                          "type": "string",
+                          "required": true
+                        },
+                        {
+                          "name": "role",
+                          "type": "string",
+                          "values": [
+                            "employee",
+                            "approver"
+                          ]
+                        }
+                      ]
+                    }
+                  ],
+                  "traits": [
+                    {
+                      "name": "WidgetView",
+                      "linkedEntity": "Widget",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "OPEN"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "OPEN",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "OtherFetcher",
+                      "linkedEntity": "Widget",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "LOAD"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "LOAD",
+                            "effects": [
+                              [
+                                "persist",
+                                "batch",
+                                [
+                                  [
+                                    "upsert",
+                                    "Other",
+                                    {
+                                      "id": "x"
+                                    }
+                                  ]
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "MainPage",
+                      "path": "/main",
+                      "primaryEntity": "Widget",
+                      "traits": [
+                        {
+                          "ref": "WidgetView"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                "aliasOrbitals": [
+                  {
+                    "name": "OtherOrbital",
+                    "entity": {
+                      "name": "Other",
+                      "persistence": "persistent",
+                      "fields": [
+                        {
+                          "name": "id",
+                          "type": "string",
+                          "required": true
+                        },
+                        {
+                          "name": "name",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "traits": []
+                  }
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintOrbitalRefClosure",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "orbital-ref-closure",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_O_ENTITY_UNMAPPED",
+                      "path": "orbitals[0].entities(Other)",
+                      "message": "'primaryEntity' references out-of-orbital entity 'Other', but `entities {}` on 'Up.orbitals.MainOrbital' never maps it — the import splice has nothing to rebind it to.",
+                      "suggestion": "Add 'Other: <consumer entity>' to `entities {}`.",
+                      "severity": "error",
+                      "entity": "Other"
+                    },
+                    {
+                      "code": "ORB_O_ENTITY_UNMAPPED",
+                      "path": "orbitals[0].entities(Other)",
+                      "message": "'trait.OtherFetcher' references out-of-orbital entity 'Other', but `entities {}` on 'Up.orbitals.MainOrbital' never maps it — the import splice has nothing to rebind it to.",
+                      "suggestion": "Add 'Other: <consumer entity>' to `entities {}`.",
+                      "severity": "error",
+                      "entity": "Other"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-batch-upsert-list-form-reads-the-entity",
+      "steps": [
+        {
+          "trait": "OrbLintOrbitalRefClosure",
+          "event": "LINT_CALL_SITES",
+          "from": "ready",
+          "payload": {
+            "file": "c.orb",
+            "program": {
+              "name": "consumer",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "Local",
+                  "uses": [
+                    {
+                      "as": "Up",
+                      "from": "./upstream.orb"
+                    }
+                  ],
+                  "entity": "Up.orbitals.MainOrbital.entity",
+                  "traits": [],
+                  "reference": {
+                    "ref": "Up.orbitals.MainOrbital"
+                  }
+                },
+                {
+                  "name": "MemberOrbital",
+                  "entity": {
+                    "id": "ent_MEMBERENTITYID000000000",
+                    "name": "Member",
+                    "identity": true,
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "role",
+                        "type": "string",
+                        "values": [
+                          "owner",
+                          "member"
+                        ]
+                      }
+                    ]
+                  },
+                  "traits": []
+                },
+                {
+                  "name": "ConsumerOtherOrbital",
+                  "entity": {
+                    "id": "ent_CONSUMEROTHERID00000000",
+                    "name": "ConsumerOther",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": []
+                }
+              ],
+              "schemaVersion": 1
+            },
+            "kept": [
+              {
+                "orbital": 0,
+                "traits": [
+                  "WidgetView",
+                  "OtherFetcher"
+                ]
+              }
+            ],
+            "references": [
+              {
+                "kind": "orbital",
+                "alias": "Up",
+                "name": "MainOrbital",
+                "path": "orbitals[0]",
+                "callSite": {
+                  "ref": "Up.orbitals.MainOrbital"
+                },
+                "declaration": {
+                  "name": "MainOrbital",
+                  "entity": {
+                    "name": "Widget",
+                    "persistence": "persistent",
+                    "read_policy": [
+                      "=",
+                      "@user.role",
+                      "approver"
+                    ],
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "otherId",
+                        "type": "relation",
+                        "relation": {
+                          "entity": "Other",
+                          "cardinality": "one"
+                        }
+                      }
+                    ]
+                  },
+                  "auxiliaryEntities": [
+                    {
+                      "name": "ThingOwner",
+                      "identity": true,
+                      "persistence": "persistent",
+                      "fields": [
+                        {
+                          "name": "id",
+                          "type": "string",
+                          "required": true
+                        },
+                        {
+                          "name": "role",
+                          "type": "string",
+                          "values": [
+                            "employee",
+                            "approver"
+                          ]
+                        }
+                      ]
+                    }
+                  ],
+                  "traits": [
+                    {
+                      "name": "WidgetView",
+                      "linkedEntity": "Widget",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "OPEN"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "OPEN",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "OtherFetcher",
+                      "linkedEntity": "Widget",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "LOAD"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "LOAD",
+                            "effects": [
+                              [
+                                "persist",
+                                "batch",
+                                [
+                                  "list",
+                                  [
+                                    "upsert",
+                                    "Other",
+                                    {
+                                      "id": "x"
+                                    }
+                                  ]
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "MainPage",
+                      "path": "/main",
+                      "primaryEntity": "Widget",
+                      "traits": [
+                        {
+                          "ref": "WidgetView"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                "aliasOrbitals": [
+                  {
+                    "name": "OtherOrbital",
+                    "entity": {
+                      "name": "Other",
+                      "persistence": "persistent",
+                      "fields": [
+                        {
+                          "name": "id",
+                          "type": "string",
+                          "required": true
+                        },
+                        {
+                          "name": "name",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "traits": []
+                  }
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintOrbitalRefClosure",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "orbital-ref-closure",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_O_ENTITY_UNMAPPED",
+                      "path": "orbitals[0].entities(Other)",
+                      "message": "'primaryEntity' references out-of-orbital entity 'Other', but `entities {}` on 'Up.orbitals.MainOrbital' never maps it — the import splice has nothing to rebind it to.",
+                      "suggestion": "Add 'Other: <consumer entity>' to `entities {}`.",
+                      "severity": "error",
+                      "entity": "Other"
+                    },
+                    {
+                      "code": "ORB_O_ENTITY_UNMAPPED",
+                      "path": "orbitals[0].entities(Other)",
+                      "message": "'trait.OtherFetcher' references out-of-orbital entity 'Other', but `entities {}` on 'Up.orbitals.MainOrbital' never maps it — the import splice has nothing to rebind it to.",
+                      "suggestion": "Add 'Other: <consumer entity>' to `entities {}`.",
+                      "severity": "error",
+                      "entity": "Other"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-batch-upsert-mapped-tuple-reads-the-entity",
+      "steps": [
+        {
+          "trait": "OrbLintOrbitalRefClosure",
+          "event": "LINT_CALL_SITES",
+          "from": "ready",
+          "payload": {
+            "file": "c.orb",
+            "program": {
+              "name": "consumer",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "Local",
+                  "uses": [
+                    {
+                      "as": "Up",
+                      "from": "./upstream.orb"
+                    }
+                  ],
+                  "entity": "Up.orbitals.MainOrbital.entity",
+                  "traits": [],
+                  "reference": {
+                    "ref": "Up.orbitals.MainOrbital"
+                  }
+                },
+                {
+                  "name": "MemberOrbital",
+                  "entity": {
+                    "id": "ent_MEMBERENTITYID000000000",
+                    "name": "Member",
+                    "identity": true,
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "role",
+                        "type": "string",
+                        "values": [
+                          "owner",
+                          "member"
+                        ]
+                      }
+                    ]
+                  },
+                  "traits": []
+                },
+                {
+                  "name": "ConsumerOtherOrbital",
+                  "entity": {
+                    "id": "ent_CONSUMEROTHERID00000000",
+                    "name": "ConsumerOther",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": []
+                }
+              ],
+              "schemaVersion": 1
+            },
+            "kept": [
+              {
+                "orbital": 0,
+                "traits": [
+                  "WidgetView",
+                  "OtherFetcher"
+                ]
+              }
+            ],
+            "references": [
+              {
+                "kind": "orbital",
+                "alias": "Up",
+                "name": "MainOrbital",
+                "path": "orbitals[0]",
+                "callSite": {
+                  "ref": "Up.orbitals.MainOrbital"
+                },
+                "declaration": {
+                  "name": "MainOrbital",
+                  "entity": {
+                    "name": "Widget",
+                    "persistence": "persistent",
+                    "read_policy": [
+                      "=",
+                      "@user.role",
+                      "approver"
+                    ],
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "otherId",
+                        "type": "relation",
+                        "relation": {
+                          "entity": "Other",
+                          "cardinality": "one"
+                        }
+                      }
+                    ]
+                  },
+                  "auxiliaryEntities": [
+                    {
+                      "name": "ThingOwner",
+                      "identity": true,
+                      "persistence": "persistent",
+                      "fields": [
+                        {
+                          "name": "id",
+                          "type": "string",
+                          "required": true
+                        },
+                        {
+                          "name": "role",
+                          "type": "string",
+                          "values": [
+                            "employee",
+                            "approver"
+                          ]
+                        }
+                      ]
+                    }
+                  ],
+                  "traits": [
+                    {
+                      "name": "WidgetView",
+                      "linkedEntity": "Widget",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "OPEN"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "OPEN",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "OtherFetcher",
+                      "linkedEntity": "Widget",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "LOAD"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "LOAD",
+                            "effects": [
+                              [
+                                "persist",
+                                "batch",
+                                [
+                                  "array/map",
+                                  "@payload.rows",
+                                  [
+                                    "fn",
+                                    "r",
+                                    [
+                                      "upsert",
+                                      "Other",
+                                      "@r"
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "MainPage",
+                      "path": "/main",
+                      "primaryEntity": "Widget",
+                      "traits": [
+                        {
+                          "ref": "WidgetView"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                "aliasOrbitals": [
+                  {
+                    "name": "OtherOrbital",
+                    "entity": {
+                      "name": "Other",
+                      "persistence": "persistent",
+                      "fields": [
+                        {
+                          "name": "id",
+                          "type": "string",
+                          "required": true
+                        },
+                        {
+                          "name": "name",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "traits": []
+                  }
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintOrbitalRefClosure",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "orbital-ref-closure",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_O_ENTITY_UNMAPPED",
+                      "path": "orbitals[0].entities(Other)",
+                      "message": "'primaryEntity' references out-of-orbital entity 'Other', but `entities {}` on 'Up.orbitals.MainOrbital' never maps it — the import splice has nothing to rebind it to.",
+                      "suggestion": "Add 'Other: <consumer entity>' to `entities {}`.",
+                      "severity": "error",
+                      "entity": "Other"
+                    },
+                    {
+                      "code": "ORB_O_ENTITY_UNMAPPED",
+                      "path": "orbitals[0].entities(Other)",
+                      "message": "'trait.OtherFetcher' references out-of-orbital entity 'Other', but `entities {}` on 'Up.orbitals.MainOrbital' never maps it — the import splice has nothing to rebind it to.",
+                      "suggestion": "Add 'Other: <consumer entity>' to `entities {}`.",
+                      "severity": "error",
+                      "entity": "Other"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-batch-upsert-of-a-local-entity-is-not-a-slot",
+      "steps": [
+        {
+          "trait": "OrbLintOrbitalRefClosure",
+          "event": "LINT_CALL_SITES",
+          "from": "ready",
+          "payload": {
+            "file": "c.orb",
+            "program": {
+              "name": "consumer",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "Local",
+                  "uses": [
+                    {
+                      "as": "Up",
+                      "from": "./upstream.orb"
+                    }
+                  ],
+                  "entity": "Up.orbitals.MainOrbital.entity",
+                  "traits": [],
+                  "reference": {
+                    "ref": "Up.orbitals.MainOrbital"
+                  }
+                },
+                {
+                  "name": "MemberOrbital",
+                  "entity": {
+                    "id": "ent_MEMBERENTITYID000000000",
+                    "name": "Member",
+                    "identity": true,
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "role",
+                        "type": "string",
+                        "values": [
+                          "owner",
+                          "member"
+                        ]
+                      }
+                    ]
+                  },
+                  "traits": []
+                },
+                {
+                  "name": "ConsumerOtherOrbital",
+                  "entity": {
+                    "id": "ent_CONSUMEROTHERID00000000",
+                    "name": "ConsumerOther",
+                    "persistence": "persistent",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      }
+                    ]
+                  },
+                  "traits": []
+                }
+              ],
+              "schemaVersion": 1
+            },
+            "kept": [
+              {
+                "orbital": 0,
+                "traits": [
+                  "WidgetView",
+                  "OtherFetcher"
+                ]
+              }
+            ],
+            "references": [
+              {
+                "kind": "orbital",
+                "alias": "Up",
+                "name": "MainOrbital",
+                "path": "orbitals[0]",
+                "callSite": {
+                  "ref": "Up.orbitals.MainOrbital"
+                },
+                "declaration": {
+                  "name": "MainOrbital",
+                  "entity": {
+                    "name": "Widget",
+                    "persistence": "persistent",
+                    "read_policy": [
+                      "=",
+                      "@user.role",
+                      "approver"
+                    ],
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "otherId",
+                        "type": "relation",
+                        "relation": {
+                          "entity": "Other",
+                          "cardinality": "one"
+                        }
+                      }
+                    ]
+                  },
+                  "auxiliaryEntities": [
+                    {
+                      "name": "ThingOwner",
+                      "identity": true,
+                      "persistence": "persistent",
+                      "fields": [
+                        {
+                          "name": "id",
+                          "type": "string",
+                          "required": true
+                        },
+                        {
+                          "name": "role",
+                          "type": "string",
+                          "values": [
+                            "employee",
+                            "approver"
+                          ]
+                        }
+                      ]
+                    }
+                  ],
+                  "traits": [
+                    {
+                      "name": "WidgetView",
+                      "linkedEntity": "Widget",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "OPEN"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "OPEN",
+                            "effects": []
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "OtherFetcher",
+                      "linkedEntity": "Widget",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "LOAD"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "LOAD",
+                            "effects": [
+                              [
+                                "persist",
+                                "batch",
+                                [
+                                  [
+                                    "upsert",
+                                    "Widget",
+                                    {
+                                      "id": "x"
+                                    }
+                                  ]
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "MainPage",
+                      "path": "/main",
+                      "primaryEntity": "Widget",
+                      "traits": [
+                        {
+                          "ref": "WidgetView"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                "aliasOrbitals": [
+                  {
+                    "name": "OtherOrbital",
+                    "entity": {
+                      "name": "Other",
+                      "persistence": "persistent",
+                      "fields": [
+                        {
+                          "name": "id",
+                          "type": "string",
+                          "required": true
+                        },
+                        {
+                          "name": "name",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "traits": []
+                  }
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintOrbitalRefClosure",
+          "event": "LINT_FINISH",
+          "from": "ready",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "orbital-ref-closure",
+                  "scope": "",
+                  "findings": [
+                    {
+                      "code": "ORB_O_ENTITY_UNMAPPED",
+                      "path": "orbitals[0].entities(Other)",
+                      "message": "'primaryEntity' references out-of-orbital entity 'Other', but `entities {}` on 'Up.orbitals.MainOrbital' never maps it — the import splice has nothing to rebind it to.",
+                      "suggestion": "Add 'Other: <consumer entity>' to `entities {}`.",
+                      "severity": "error",
+                      "entity": "Other"
                     }
                   ]
                 }

@@ -1,0 +1,381 @@
+{
+ "atom": "connect/atoms/std-stripe.lolo",
+ "trait": "StripeWebhook",
+ "note": "std-stripe inbound webhook: Stripe's t=<unix>,v1=<hex> signature over <t>.<rawBody> is checked in .lolo with HMAC-SHA256 over the STRIPE_WEBHOOK_SECRET credential slot and a replay tolerance; an accepted subscription event is reported as STRIPE_SUBSCRIPTION_CHANGED, every call is answered exactly once.",
+ "cases": [
+  {
+   "id": "a signed subscription update is accepted and reported",
+   "now": 1700000000000,
+   "credentials": {
+    "STRIPE_WEBHOOK_SECRET": "whsec_test_secret"
+   },
+   "steps": [
+    {
+     "event": "STRIPE_WEBHOOK_CALLED",
+     "payload": {
+      "headers": {
+       "stripe-signature": "t=1700000000,v1=f7665bdedf2c4913f0ec2c774fe8daee0ce6dac3721a2d24494b442021ef476f"
+      },
+      "rawBody": "{\"id\":\"evt_001\",\"object\":\"event\",\"type\":\"customer.subscription.updated\",\"data\":{\"object\":{\"id\":\"sub_123\",\"object\":\"subscription\",\"customer\":\"cus_456\",\"status\":\"past_due\",\"cancel_at_period_end\":true,\"metadata\":{\"almadarUid\":\"u1\"},\"items\":{\"data\":[{\"id\":\"si_1\",\"price\":{\"id\":\"price_789\"}}]}}}}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "STRIPE_WEBHOOK_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "{\"received\":true}"
+        }
+       },
+       {
+        "event": "STRIPE_SUBSCRIPTION_CHANGED",
+        "payload": {
+         "eventId": "evt_001",
+         "eventType": "customer.subscription.updated",
+         "subscriptionId": "sub_123",
+         "customerId": "cus_456",
+         "status": "past_due",
+         "priceId": "price_789",
+         "cancelAtPeriodEnd": true,
+         "metadata": {
+          "almadarUid": "u1"
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a signed event of another type is accepted and reports nothing more",
+   "now": 1700000000000,
+   "credentials": {
+    "STRIPE_WEBHOOK_SECRET": "whsec_test_secret"
+   },
+   "steps": [
+    {
+     "event": "STRIPE_WEBHOOK_CALLED",
+     "payload": {
+      "headers": {
+       "stripe-signature": "t=1700000000,v1=45a6be93454b221f3b13816f638d67031ef4859f293e8d3a95f06229f893102d"
+      },
+      "rawBody": "{\"id\":\"evt_002\",\"type\":\"invoice.paid\",\"data\":{\"object\":{\"id\":\"in_1\"}}}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "STRIPE_WEBHOOK_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "{\"received\":true}"
+        }
+       }
+      ],
+      "neverEmits": [
+       "STRIPE_SUBSCRIPTION_CHANGED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a body changed after signing is refused",
+   "now": 1700000000000,
+   "credentials": {
+    "STRIPE_WEBHOOK_SECRET": "whsec_test_secret"
+   },
+   "steps": [
+    {
+     "event": "STRIPE_WEBHOOK_CALLED",
+     "payload": {
+      "headers": {
+       "stripe-signature": "t=1700000000,v1=f7665bdedf2c4913f0ec2c774fe8daee0ce6dac3721a2d24494b442021ef476f"
+      },
+      "rawBody": "{\"id\":\"evt_001\",\"object\":\"event\",\"type\":\"customer.subscription.updated\",\"data\":{\"object\":{\"id\":\"sub_123\",\"object\":\"subscription\",\"customer\":\"cus_456\",\"status\":\"active\",\"cancel_at_period_end\":true,\"metadata\":{\"almadarUid\":\"u1\"},\"items\":{\"data\":[{\"id\":\"si_1\",\"price\":{\"id\":\"price_789\"}}]}}}}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "STRIPE_WEBHOOK_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "{\"received\":false,\"error\":\"bad-signature\"}"
+        }
+       }
+      ],
+      "neverEmits": [
+       "STRIPE_SUBSCRIPTION_CHANGED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a signature made with another secret is refused",
+   "now": 1700000000000,
+   "credentials": {
+    "STRIPE_WEBHOOK_SECRET": "whsec_test_secret"
+   },
+   "steps": [
+    {
+     "event": "STRIPE_WEBHOOK_CALLED",
+     "payload": {
+      "headers": {
+       "stripe-signature": "t=1700000000,v1=07b198688528fe51a95b4b7271a9b0bd9552410df48d55afbc5087b302315829"
+      },
+      "rawBody": "{\"id\":\"evt_001\",\"object\":\"event\",\"type\":\"customer.subscription.updated\",\"data\":{\"object\":{\"id\":\"sub_123\",\"object\":\"subscription\",\"customer\":\"cus_456\",\"status\":\"past_due\",\"cancel_at_period_end\":true,\"metadata\":{\"almadarUid\":\"u1\"},\"items\":{\"data\":[{\"id\":\"si_1\",\"price\":{\"id\":\"price_789\"}}]}}}}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "STRIPE_WEBHOOK_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "{\"received\":false,\"error\":\"bad-signature\"}"
+        }
+       }
+      ],
+      "neverEmits": [
+       "STRIPE_SUBSCRIPTION_CHANGED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a stale timestamp is refused",
+   "now": 1700000000000,
+   "credentials": {
+    "STRIPE_WEBHOOK_SECRET": "whsec_test_secret"
+   },
+   "steps": [
+    {
+     "event": "STRIPE_WEBHOOK_CALLED",
+     "payload": {
+      "headers": {
+       "stripe-signature": "t=1699999699,v1=6fd1aa86368920347995d73c5cd605f81ec53587e63f405b7fd04fe572b55f46"
+      },
+      "rawBody": "{\"id\":\"evt_001\",\"object\":\"event\",\"type\":\"customer.subscription.updated\",\"data\":{\"object\":{\"id\":\"sub_123\",\"object\":\"subscription\",\"customer\":\"cus_456\",\"status\":\"past_due\",\"cancel_at_period_end\":true,\"metadata\":{\"almadarUid\":\"u1\"},\"items\":{\"data\":[{\"id\":\"si_1\",\"price\":{\"id\":\"price_789\"}}]}}}}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "STRIPE_WEBHOOK_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "{\"received\":false,\"error\":\"stale\"}"
+        }
+       }
+      ],
+      "neverEmits": [
+       "STRIPE_SUBSCRIPTION_CHANGED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a request with no signature header is refused",
+   "now": 1700000000000,
+   "credentials": {
+    "STRIPE_WEBHOOK_SECRET": "whsec_test_secret"
+   },
+   "steps": [
+    {
+     "event": "STRIPE_WEBHOOK_CALLED",
+     "payload": {
+      "headers": {},
+      "rawBody": "{\"id\":\"evt_001\",\"object\":\"event\",\"type\":\"customer.subscription.updated\",\"data\":{\"object\":{\"id\":\"sub_123\",\"object\":\"subscription\",\"customer\":\"cus_456\",\"status\":\"past_due\",\"cancel_at_period_end\":true,\"metadata\":{\"almadarUid\":\"u1\"},\"items\":{\"data\":[{\"id\":\"si_1\",\"price\":{\"id\":\"price_789\"}}]}}}}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "STRIPE_WEBHOOK_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "{\"received\":false,\"error\":\"bad-signature-header\"}"
+        }
+       }
+      ],
+      "neverEmits": [
+       "STRIPE_SUBSCRIPTION_CHANGED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a second v1 value that matches is accepted",
+   "now": 1700000000000,
+   "credentials": {
+    "STRIPE_WEBHOOK_SECRET": "whsec_test_secret"
+   },
+   "steps": [
+    {
+     "event": "STRIPE_WEBHOOK_CALLED",
+     "payload": {
+      "headers": {
+       "stripe-signature": "t=1700000000,v1=0000000000000000000000000000000000000000000000000000000000000000,v1=f7665bdedf2c4913f0ec2c774fe8daee0ce6dac3721a2d24494b442021ef476f"
+      },
+      "rawBody": "{\"id\":\"evt_001\",\"object\":\"event\",\"type\":\"customer.subscription.updated\",\"data\":{\"object\":{\"id\":\"sub_123\",\"object\":\"subscription\",\"customer\":\"cus_456\",\"status\":\"past_due\",\"cancel_at_period_end\":true,\"metadata\":{\"almadarUid\":\"u1\"},\"items\":{\"data\":[{\"id\":\"si_1\",\"price\":{\"id\":\"price_789\"}}]}}}}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "STRIPE_WEBHOOK_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "{\"received\":true}"
+        }
+       },
+       {
+        "event": "STRIPE_SUBSCRIPTION_CHANGED",
+        "payload": {
+         "eventId": "evt_001",
+         "eventType": "customer.subscription.updated",
+         "subscriptionId": "sub_123",
+         "customerId": "cus_456",
+         "status": "past_due",
+         "priceId": "price_789",
+         "cancelAtPeriodEnd": true,
+         "metadata": {
+          "almadarUid": "u1"
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control: a signed body that is not an event is refused",
+   "now": 1700000000000,
+   "credentials": {
+    "STRIPE_WEBHOOK_SECRET": "whsec_test_secret"
+   },
+   "steps": [
+    {
+     "event": "STRIPE_WEBHOOK_CALLED",
+     "payload": {
+      "headers": {
+       "stripe-signature": "t=1700000000,v1=fd3f8db54373af8cf841df26edd0c68d31629a9c360f44e4ad1c87cc61cf77e6"
+      },
+      "rawBody": "not json at all"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "STRIPE_WEBHOOK_ANSWERED",
+        "payload": {
+         "status": 400,
+         "body": "{\"received\":false,\"error\":\"bad-event\"}"
+        }
+       }
+      ],
+      "neverEmits": [
+       "STRIPE_SUBSCRIPTION_CHANGED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a signed subscription deletion is reported with its status",
+   "now": 1700000000000,
+   "credentials": {
+    "STRIPE_WEBHOOK_SECRET": "whsec_test_secret"
+   },
+   "steps": [
+    {
+     "event": "STRIPE_WEBHOOK_CALLED",
+     "payload": {
+      "headers": {
+       "stripe-signature": "t=1700000000,v1=6c1e2b0877b0c18816f5e6631609ba20370a7d8d1e1b32a934d775f812bc7e54"
+      },
+      "rawBody": "{\"id\":\"evt_003\",\"object\":\"event\",\"type\":\"customer.subscription.deleted\",\"data\":{\"object\":{\"id\":\"sub_123\",\"object\":\"subscription\",\"customer\":\"cus_456\",\"status\":\"canceled\",\"cancel_at_period_end\":false,\"metadata\":{},\"items\":{\"data\":[{\"id\":\"si_1\",\"price\":{\"id\":\"price_789\"}}]}}}}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "STRIPE_WEBHOOK_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "{\"received\":true}"
+        }
+       },
+       {
+        "event": "STRIPE_SUBSCRIPTION_CHANGED",
+        "payload": {
+         "eventId": "evt_003",
+         "eventType": "customer.subscription.deleted",
+         "subscriptionId": "sub_123",
+         "customerId": "cus_456",
+         "status": "canceled",
+         "priceId": "price_789",
+         "cancelAtPeriodEnd": false,
+         "metadata": {}
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the header name is read in either letter case",
+   "now": 1700000000000,
+   "credentials": {
+    "STRIPE_WEBHOOK_SECRET": "whsec_test_secret"
+   },
+   "steps": [
+    {
+     "event": "STRIPE_WEBHOOK_CALLED",
+     "payload": {
+      "headers": {
+       "Stripe-Signature": "t=1700000000,v1=f7665bdedf2c4913f0ec2c774fe8daee0ce6dac3721a2d24494b442021ef476f"
+      },
+      "rawBody": "{\"id\":\"evt_001\",\"object\":\"event\",\"type\":\"customer.subscription.updated\",\"data\":{\"object\":{\"id\":\"sub_123\",\"object\":\"subscription\",\"customer\":\"cus_456\",\"status\":\"past_due\",\"cancel_at_period_end\":true,\"metadata\":{\"almadarUid\":\"u1\"},\"items\":{\"data\":[{\"id\":\"si_1\",\"price\":{\"id\":\"price_789\"}}]}}}}"
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "STRIPE_WEBHOOK_ANSWERED",
+        "payload": {
+         "status": 200,
+         "body": "{\"received\":true}"
+        }
+       },
+       {
+        "event": "STRIPE_SUBSCRIPTION_CHANGED",
+        "payload": {
+         "eventId": "evt_001",
+         "eventType": "customer.subscription.updated",
+         "subscriptionId": "sub_123",
+         "customerId": "cus_456",
+         "status": "past_due",
+         "priceId": "price_789",
+         "cancelAtPeriodEnd": true,
+         "metadata": {
+          "almadarUid": "u1"
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

@@ -19,6 +19,7 @@ orbital RasmStackOrbital {
     rect : RasmRect? @description "The rect RASM_PLACE gave this stack, null until placed." = null
     looks : Map string RasmLook @description "The announced look table." = {}
     measured : Map string RasmMeasureItem @description "The latest measured size of each child, by id." = {}
+    dir : "ltr" | "rtl" @description "The direction the surface announced; rtl starts a horizontal stack at the right edge and keeps a narrower vertical child at the right edge." = "ltr"
     enterIndex : number @description "This stack's position in the RASM_ENTER order, -1 when it is not in it." = -1
     staggerMs : number = 70
     layouts : number @description "Counts layouts, so each layout in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
@@ -30,6 +31,10 @@ orbital RasmStackOrbital {
 
     state ready {
       INIT -> ready
+      RASM_DIRECTION -> ready
+        (set @entity.dir ?direction)
+        (set @entity.layouts (+ @entity.layouts 1))
+        (emit STACK_LAYOUT { n: @entity.layouts })
       RASM_THEME -> ready
         (set @entity.looks ?looks)
         (set @entity.paints (+ @entity.paints 1))
@@ -51,7 +56,7 @@ orbital RasmStackOrbital {
         (set @entity.paints (+ @entity.paints 1))
         (emit STACK_PAINT { n: @entity.paints })
       STACK_LAYOUT -> ready when (!= @entity.rect null)
-        (emit RASM_PLACE { placed: (let ((r @entity.rect) (pad @config.padding) (vert (= @config.axis "vertical"))) (let ((mainExt (if @vert (- @r.h (* 2 @pad)) (- @r.w (* 2 @pad)))) (crossExt (if @vert (- @r.w (* 2 @pad)) (- @r.h (* 2 @pad))))) (let ((raw (array/map @config.children (fn c { id: @c.id, fill: (= @c.size "fill"), s: (if (= @c.size "fixed") (default @c.main 0) (if (= @c.size "measure") (let ((m (object/get @entity.measured @c.id null))) (if (= @m null) 0 (if @vert @m.height @m.width))) 0)), cross: (default @c.cross 0) })))) (let ((fixedTotal (array/reduce @raw 0 (fn acc x (+ @acc @x.s)))) (fills (array/len (array/filter @raw (fn x @x.fill))))) (let ((share (if (> @fills 0) (math/max 0 (/ (- (- @mainExt @fixedTotal) (* @config.gap (- (array/len @raw) 1))) @fills)) 0))) (let ((laid (array/reduce @raw { at: (if @vert (+ @r.y @pad) (+ @r.x @pad)), placed: [] } (fn acc x (let ((s (if @x.fill @share @x.s)) (cr (if (> @x.cross 0) @x.cross @crossExt))) { at: (+ (+ @acc.at @s) @config.gap), placed: (array/append @acc.placed { id: @x.id, rect: (if @vert { x: (+ @r.x @pad), y: @acc.at, w: @cr, h: @s } { x: @acc.at, y: (+ @r.y @pad), w: @s, h: @cr }) }) }))))) @laid.placed)))))) })
+        (emit RASM_PLACE { placed: (let ((r @entity.rect) (pad @config.padding) (vert (= @config.axis "vertical")) (rtl (= @entity.dir "rtl"))) (let ((mainExt (if @vert (- @r.h (* 2 @pad)) (- @r.w (* 2 @pad)))) (crossExt (if @vert (- @r.w (* 2 @pad)) (- @r.h (* 2 @pad))))) (let ((raw (array/map @config.children (fn c { id: @c.id, fill: (= @c.size "fill"), s: (if (= @c.size "fixed") (default @c.main 0) (if (= @c.size "measure") (let ((m (object/get @entity.measured @c.id null))) (if (= @m null) 0 (if @vert @m.height @m.width))) 0)), cross: (default @c.cross 0) })))) (let ((fixedTotal (array/reduce @raw 0 (fn acc x (+ @acc @x.s)))) (fills (array/len (array/filter @raw (fn x @x.fill))))) (let ((share (if (> @fills 0) (math/max 0 (/ (- (- @mainExt @fixedTotal) (* @config.gap (- (array/len @raw) 1))) @fills)) 0))) (let ((laid (array/reduce @raw { at: (if @vert (+ @r.y @pad) (+ @r.x @pad)), placed: [] } (fn acc x (let ((s (if @x.fill @share @x.s)) (cr (if (> @x.cross 0) @x.cross @crossExt))) { at: (+ (+ @acc.at @s) @config.gap), placed: (array/append @acc.placed { id: @x.id, rect: (if @vert { x: (if @rtl (- (- (+ @r.x @r.w) @pad) @cr) (+ @r.x @pad)), y: @acc.at, w: @cr, h: @s } { x: (if @rtl (- (- (+ (* 2 @r.x) @r.w) @acc.at) @s) @acc.at), y: (+ @r.y @pad), w: @s, h: @cr }) }) }))))) @laid.placed)))))) })
       STACK_LAYOUT -> ready when (= @entity.rect null)
       STACK_PAINT -> ready
         (let ((l (object/get @entity.looks @config.look null)) (r @entity.rect)) (when (and (!= @l null) (!= @r null) (!= @config.look "")) (let ((idx @entity.enterIndex) (stag @entity.staggerMs) (framed (= @l.decor "naqsh-stars")) (perim (* 2 (+ @r.w @r.h)))) (let ((entry (+ 520 (* @idx @stag)))) (let ((dur (if @framed (math/max 1400 @entry) @entry))) (let ((anim (if (>= @idx 0) { durationMs: @dur, loop: false, keyframes: (if @framed [{ at: 0, opacity: 0, offsetY: 14, strokeDashOffset: @perim }, { at: (/ (* @idx @stag) @dur), opacity: 0, offsetY: 14, strokeDashOffset: @perim }, { at: (/ @entry @dur), opacity: 1, offsetY: 0, strokeDashOffset: (* @perim (- 1 (default (/ @entry @dur) 1))) }, { at: 1, opacity: 1, offsetY: 0, strokeDashOffset: 0 }] [{ at: 0, opacity: 0, offsetY: 14 }, { at: (/ (* @idx @stag) @dur), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }]) } null)) (decorAnim (if (>= @idx 0) { durationMs: @entry, loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 14 }, { at: (/ (* @idx @stag) @entry), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }] } null))) (emit RASM_PAINT { id: @config.id, z: @config.z, nodes: (array/concat (array/concat [{ type: draw-shape, shape: "rect", id: @config.id, position: { x: @r.x, y: @r.y }, anchor: "top-left", width: @r.w, height: @r.h, fill: @l.fill, stroke: @l.stroke, strokeWidth: @l.strokeWidth, strokeDash: (if (and @framed (>= @idx 0)) [@perim, @perim] []), corners: @l.corners, shadow: @l.shadow, material: @l.material, spring: @l.spring, animation: @anim, hit: false }] (if (= @l.decor "glass-rim") [{ type: draw-shape, shape: "rect", id: (str/concat @config.id ":rim"), position: { x: (+ @r.x 1), y: (+ @r.y 1) }, anchor: "top-left", width: (- @r.w 2), height: (- @r.h 2), stroke: "rgba(255,255,255,0.18)", strokeWidth: 1, corners: (let ((c (default @l.corners { radius: [0, 0, 0, 0], kind: "round" }))) { radius: (array/map @c.radius (fn v (math/max 0 (- @v 1)))), kind: @c.kind }), spring: @l.spring, animation: @decorAnim, hit: false }] [])) (if (= @l.decor "naqsh-stars") (array/map [0, 1, 2, 3] (fn i { type: draw-shape, shape: "polygon", id: (str/concat @config.id ":star:" @i), position: { x: (- (+ @r.x (if (or (= @i 1) (= @i 2)) @r.w 0)) 6), y: (- (+ @r.y (if (>= @i 2) @r.h 0)) 6) }, anchor: "top-left", width: 12, height: 12, sides: 8, starRatio: 0.55, fill: @l.stroke, spring: @l.spring, animation: @decorAnim, hit: false })) [])) })))))))
@@ -83,6 +88,8 @@ orbital RasmStackOrbital {
     }
 
     listens {
+      RASM_DIRECTION { direction : "ltr" | "rtl"! }
+        @description "The surface's reading direction; once announced it replaces this atom's direction knob and the layout is redone."
       RASM_THEME { name : string!  looks : Map string RasmLook! }
         @description "Store the looks and repaint."
       RASM_PLACE { placed : [RasmPlaced]! }

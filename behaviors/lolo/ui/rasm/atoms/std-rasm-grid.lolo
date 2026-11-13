@@ -12,6 +12,8 @@ orbital RasmGridOrbital {
   entity RasmGridRun [runtime] {
     id : string!
     rect : RasmRect? @description "The rect RASM_PLACE gave this grid, null until placed." = null
+    dir : "ltr" | "rtl" @description "The direction the surface announced." = "ltr"
+    announced : boolean @description "True once the surface announced a direction, which then replaces the config knob." = false
     layouts : number @description "Counts layouts, so each layout in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
   }
 
@@ -20,13 +22,18 @@ orbital RasmGridOrbital {
 
     state ready {
       INIT -> ready
+      RASM_DIRECTION -> ready
+        (set @entity.dir ?direction)
+        (set @entity.announced true)
+        (set @entity.layouts (+ @entity.layouts 1))
+        (emit GRID_LAYOUT { n: @entity.layouts })
       RASM_PLACE -> ready when (array/some ?placed (fn p (= @p.id @config.id)))
         (set @entity.rect (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) null @mine.rect)))
         (set @entity.layouts (+ @entity.layouts 1))
         (emit GRID_LAYOUT { n: @entity.layouts })
       RASM_PLACE -> ready when (not (array/some ?placed (fn p (= @p.id @config.id))))
       GRID_LAYOUT -> ready when (!= @entity.rect null)
-        (emit RASM_PLACE { placed: (let ((r @entity.rect) (pad @config.padding) (rtl (= @config.direction "rtl")) (cols @config.columns) (rows @config.rows)) (let ((colW (let ((ext (- @r.w (* 2 @pad))) (fixed (array/reduce @cols 0 (fn a t (+ @a (if (= @t.size "fixed") (default @t.main 0) 0))))) (fills (array/len (array/filter @cols (fn t (= @t.size "fill")))))) (let ((share (if (> @fills 0) (math/max 0 (/ (- (- @ext @fixed) (* @config.gap (math/max 0 (- (array/len @cols) 1)))) @fills)) 0))) (array/map @cols (fn t (if (= @t.size "fill") @share (default @t.main 0))))))) (rowH (let ((ext (- @r.h (* 2 @pad))) (fixed (array/reduce @rows 0 (fn a t (+ @a (if (= @t.size "fixed") (default @t.main 0) 0))))) (fills (array/len (array/filter @rows (fn t (= @t.size "fill")))))) (let ((share (if (> @fills 0) (math/max 0 (/ (- (- @ext @fixed) (* @config.rowGap (math/max 0 (- (array/len @rows) 1)))) @fills)) 0))) (array/map @rows (fn t (if (= @t.size "fill") @share (default @t.main 0)))))))) (let ((colAt (let ((acc (array/reduce @colW { at: 0, xs: [] } (fn a w { at: (+ (+ @a.at @w) @config.gap), xs: (array/append @a.xs @a.at) })))) @acc.xs)) (rowAt (let ((acc (array/reduce @rowH { at: 0, ys: [] } (fn a h { at: (+ (+ @a.at @h) @config.rowGap), ys: (array/append @a.ys @a.at) })))) @acc.ys))) (array/map (array/filter @config.children (fn c (and (and (>= @c.col 0) (>= @c.row 0)) (and (<= (+ @c.col (default @c.colSpan 1)) (array/len @cols)) (<= (+ @c.row (default @c.rowSpan 1)) (array/len @rows)))))) (fn c (let ((c1 (- (+ @c.col (default @c.colSpan 1)) 1)) (r1 (- (+ @c.row (default @c.rowSpan 1)) 1))) (let ((x0 (default (array/nth @colAt @c.col) 0)) (w (- (+ (default (array/nth @colAt @c1) 0) (default (array/nth @colW @c1) 0)) (default (array/nth @colAt @c.col) 0))) (y0 (default (array/nth @rowAt @c.row) 0)) (h (- (+ (default (array/nth @rowAt @r1) 0) (default (array/nth @rowH @r1) 0)) (default (array/nth @rowAt @c.row) 0)))) { id: @c.id, rect: { x: (if @rtl (- (- (+ @r.x @r.w) @pad) (+ @x0 @w)) (+ (+ @r.x @pad) @x0)), y: (+ (+ @r.y @pad) @y0), w: @w, h: @h } }))))))) })
+        (emit RASM_PLACE { placed: (let ((r @entity.rect) (pad @config.padding) (rtl (= (if @entity.announced @entity.dir @config.direction) "rtl")) (cols @config.columns) (rows @config.rows)) (let ((colW (let ((ext (- @r.w (* 2 @pad))) (fixed (array/reduce @cols 0 (fn a t (+ @a (if (= @t.size "fixed") (default @t.main 0) 0))))) (fills (array/len (array/filter @cols (fn t (= @t.size "fill")))))) (let ((share (if (> @fills 0) (math/max 0 (/ (- (- @ext @fixed) (* @config.gap (math/max 0 (- (array/len @cols) 1)))) @fills)) 0))) (array/map @cols (fn t (if (= @t.size "fill") @share (default @t.main 0))))))) (rowH (let ((ext (- @r.h (* 2 @pad))) (fixed (array/reduce @rows 0 (fn a t (+ @a (if (= @t.size "fixed") (default @t.main 0) 0))))) (fills (array/len (array/filter @rows (fn t (= @t.size "fill")))))) (let ((share (if (> @fills 0) (math/max 0 (/ (- (- @ext @fixed) (* @config.rowGap (math/max 0 (- (array/len @rows) 1)))) @fills)) 0))) (array/map @rows (fn t (if (= @t.size "fill") @share (default @t.main 0)))))))) (let ((colAt (let ((acc (array/reduce @colW { at: 0, xs: [] } (fn a w { at: (+ (+ @a.at @w) @config.gap), xs: (array/append @a.xs @a.at) })))) @acc.xs)) (rowAt (let ((acc (array/reduce @rowH { at: 0, ys: [] } (fn a h { at: (+ (+ @a.at @h) @config.rowGap), ys: (array/append @a.ys @a.at) })))) @acc.ys))) (array/map (array/filter @config.children (fn c (and (and (>= @c.col 0) (>= @c.row 0)) (and (<= (+ @c.col (default @c.colSpan 1)) (array/len @cols)) (<= (+ @c.row (default @c.rowSpan 1)) (array/len @rows)))))) (fn c (let ((c1 (- (+ @c.col (default @c.colSpan 1)) 1)) (r1 (- (+ @c.row (default @c.rowSpan 1)) 1))) (let ((x0 (default (array/nth @colAt @c.col) 0)) (w (- (+ (default (array/nth @colAt @c1) 0) (default (array/nth @colW @c1) 0)) (default (array/nth @colAt @c.col) 0))) (y0 (default (array/nth @rowAt @c.row) 0)) (h (- (+ (default (array/nth @rowAt @r1) 0) (default (array/nth @rowH @r1) 0)) (default (array/nth @rowAt @c.row) 0)))) { id: @c.id, rect: { x: (if @rtl (- (- (+ @r.x @r.w) @pad) (+ @x0 @w)) (+ (+ @r.x @pad) @x0)), y: (+ (+ @r.y @pad) @y0), w: @w, h: @h } }))))))) })
       GRID_LAYOUT -> ready when (= @entity.rect null)
     }
 
@@ -44,6 +51,8 @@ orbital RasmGridOrbital {
     }
 
     listens {
+      RASM_DIRECTION { direction : "ltr" | "rtl"! }
+        @description "The surface's reading direction; once announced it replaces this atom's direction knob and the layout is redone."
       RASM_PLACE { placed : [RasmPlaced]! }
         @description "Take this grid's rect when it is placed, then place the children."
     }
@@ -75,7 +84,7 @@ orbital RasmGridOrbital {
         @tier "presentation"
       direction : "ltr" | "rtl" = "ltr"
         @label "Direction"
-        @description "ltr starts column 0 at the left edge, rtl at the right edge."
+        @description "ltr starts column 0 at the left edge, rtl at the right edge; a surface RASM_DIRECTION replaces it."
         @tier "presentation"
       children : [RasmGridChild] = []
         @label "Children"

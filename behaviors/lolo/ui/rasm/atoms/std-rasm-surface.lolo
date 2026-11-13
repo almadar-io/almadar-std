@@ -11,7 +11,8 @@ type RasmSpring = { stiffness : number!, damping : number! }
 type RasmShadow = { color : string!, blur : number! }
 type RasmLook = { fill : string, stroke : string, strokeWidth : number, corners : RasmCorners, shadow : RasmShadow, material : RasmMaterial, textColor : string, font : string, spring : RasmSpring, decor : string }
 type RasmMeasureItem = { id : string!, width : number!, height : number!, lines : number! }
-type RasmPaintEntry = { z : number!, nodes : [node]! }
+type RasmTouch = { pointerId : number!, x : number!, y : number! }
+type RasmPaintEntry = { id : string!, z : number!, nodes : [node]! }
 
 orbital RasmSurfaceOrbital {
   entity RasmSurfaceRun [runtime] {
@@ -21,6 +22,7 @@ orbital RasmSurfaceOrbital {
     viewW : number @description "The canvas width the layout uses: the config width, then the resized width when fill is on." = 720
     viewH : number @description "The canvas height the layout uses." = 520
     root : RasmRect @description "The rect handed to the root child." = { x: 0, y: 0, w: 720, h: 520 }
+    hidden : [string] @description "The paint ids RASM_VISIBLE hid: their paints are kept and not drawn." = []
     repaints : number @description "Counts repaints, so each repaint in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
   }
 
@@ -33,6 +35,7 @@ orbital RasmSurfaceOrbital {
         (set @entity.viewH @config.height)
         (set @entity.root @config.rootRect)
         (emit RASM_BOOT { })
+        (emit RASM_DIRECTION { direction: @config.direction })
         (emit RASM_PLACE { placed: [{ id: @config.rootChild, rect: @entity.root }] })
         (set @entity.repaints (+ @entity.repaints 1))
         (emit SURFACE_REPAINT { n: @entity.repaints })
@@ -61,7 +64,11 @@ orbital RasmSurfaceOrbital {
       SURFACE_ACCESS -> ready
         (emit RASM_ACCESS { target: ?target, action: ?action })
       RASM_PAINT -> ready
-        (set @entity.paints (object/set @entity.paints ?id { z: ?z, nodes: ?nodes }))
+        (set @entity.paints (object/set @entity.paints ?id { id: ?id, z: ?z, nodes: ?nodes }))
+        (set @entity.repaints (+ @entity.repaints 1))
+        (emit SURFACE_REPAINT { n: @entity.repaints })
+      RASM_VISIBLE -> ready
+        (set @entity.hidden (array/concat (array/filter @entity.hidden (fn h (not (array/includes ?shown @h)))) (array/filter ?hidden (fn h (not (array/includes @entity.hidden @h))))))
         (set @entity.repaints (+ @entity.repaints 1))
         (emit SURFACE_REPAINT { n: @entity.repaints })
       SURFACE_REPAINT -> ready
@@ -85,19 +92,22 @@ orbital RasmSurfaceOrbital {
           pointerLeaveEvent: "POINTER_LEAVE"
           pointerMoveEvent: "POINTER_MOVE"
           measureEvent: "SURFACE_MEASURED"
-          keyMap: { Tab: "KEY_NEXT", "Shift+Tab": "KEY_PREVIOUS", Enter: "KEY_ACTIVATE", Space: "KEY_ACTIVATE", ArrowRight: "KEY_INCREASE", ArrowUp: "KEY_INCREASE", ArrowLeft: "KEY_DECREASE", ArrowDown: "KEY_DECREASE" }
-          drawables: (let ((g (object/get @entity.looks "surface/ground/idle" null))) (array/concat (if (= @g null) [] [{ type: draw-shape, shape: "rect", id: (str/concat @config.id ":ground"), position: { x: 0, y: 0 }, anchor: "top-left", width: @entity.viewW, height: @entity.viewH, fill: @g.fill, material: @g.material, spring: @g.spring, hit: false }]) (array/flatten (array/map (array/sort (object/values @entity.paints) "z" "asc") (fn e @e.nodes)))))
+          keyMap: { Tab: "KEY_NEXT", "Shift+Tab": "KEY_PREVIOUS", Enter: "KEY_ACTIVATE", Space: "KEY_ACTIVATE", ArrowRight: "KEY_INCREASE", ArrowUp: "KEY_INCREASE", ArrowLeft: "KEY_DECREASE", ArrowDown: "KEY_DECREASE", Escape: "KEY_ESCAPE", PageUp: "KEY_PAGE_UP", PageDown: "KEY_PAGE_DOWN", Home: "KEY_HOME", End: "KEY_END" }
+          drawables: (let ((g (object/get @entity.looks "surface/ground/idle" null))) (array/concat (if (= @g null) [] [{ type: draw-shape, shape: "rect", id: (str/concat @config.id ":ground"), position: { x: 0, y: 0 }, anchor: "top-left", width: @entity.viewW, height: @entity.viewH, fill: @g.fill, material: @g.material, spring: @g.spring, hit: false }]) (array/flatten (array/map (array/filter (array/sort (object/values @entity.paints) "z" "asc") (fn e (not (array/includes @entity.hidden @e.id)))) (fn e @e.nodes)))))
         })
       POINTER_DOWN -> ready
         (emit RASM_POINTER { kind: "down", id: ?target, x: ?x, y: ?y, index: (default ?index -1) })
+        (when (> (array/len (default ?touches [])) 0) (emit RASM_TOUCHES { kind: "down", touches: ?touches }))
       POINTER_UP -> ready
         (emit RASM_POINTER { kind: "up", id: ?target, x: ?x, y: ?y })
+        (when (> (array/len (default ?touches [])) 0) (emit RASM_TOUCHES { kind: "up", touches: ?touches }))
       POINTER_ENTER -> ready
         (emit RASM_POINTER { kind: "enter", id: ?target, x: ?x, y: ?y })
       POINTER_LEAVE -> ready
         (emit RASM_POINTER { kind: "leave", id: ?target, x: ?x, y: ?y })
       POINTER_MOVE -> ready
         (emit RASM_POINTER { kind: "move", id: ?target, x: ?x, y: ?y })
+        (when (> (array/len (default ?touches [])) 0) (emit RASM_TOUCHES { kind: "move", touches: ?touches }))
       SURFACE_MEASURED -> ready
         (emit RASM_MEASURED { items: ?items })
       KEY_NEXT -> ready
@@ -110,6 +120,16 @@ orbital RasmSurfaceOrbital {
         (emit RASM_KEY { key: "increase" })
       KEY_DECREASE -> ready
         (emit RASM_KEY { key: "decrease" })
+      KEY_ESCAPE -> ready
+        (emit RASM_KEY { key: "escape" })
+      KEY_PAGE_UP -> ready
+        (emit RASM_KEY { key: "pageUp" })
+      KEY_PAGE_DOWN -> ready
+        (emit RASM_KEY { key: "pageDown" })
+      KEY_HOME -> ready
+        (emit RASM_KEY { key: "home" })
+      KEY_END -> ready
+        (emit RASM_KEY { key: "end" })
     }
 
     emits {
@@ -163,6 +183,12 @@ orbital RasmSurfaceOrbital {
       }
         @description "An editing key for the focused text field or Choice."
         @tier "primary"
+      RASM_TOUCHES -> external {
+        kind : "down" | "up" | "move"!
+        touches : [RasmTouch]!
+      }
+        @description "The pointers held down while a multi-touch gesture is in progress, in ascending pointerId; a single pointer never sends it."
+        @tier "primary"
       RASM_ACCESS -> external {
         target : string!
         action : "focus" | "activate" | "increment" | "decrement"!
@@ -170,9 +196,14 @@ orbital RasmSurfaceOrbital {
         @description "An assistive technology acted on a node of the semantic tree."
         @tier "primary"
       RASM_KEY -> external {
-        key : "next" | "previous" | "activate" | "increase" | "decrease"!
+        key : "next" | "previous" | "activate" | "increase" | "decrease" | "escape" | "pageUp" | "pageDown" | "home" | "end"!
       }
-        @description "A keyboard intent from the canvas key map."
+        @description "A keyboard intent from the canvas key map; a key a focused text field or combobox handled never reaches it."
+        @tier "primary"
+      RASM_DIRECTION -> external {
+        direction : "ltr" | "rtl"!
+      }
+        @description "The surface's reading direction, announced once before the root is placed."
         @tier "primary"
     }
 
@@ -181,6 +212,8 @@ orbital RasmSurfaceOrbital {
         @description "Store the looks, paint the ground and place the root."
       RASM_PAINT { id : string!  z : number!  nodes : [node]! }
         @description "Keep one control's nodes at its z and repaint."
+      RASM_VISIBLE { owner : string!  shown : [string]!  hidden : [string]! }
+        @description "Stop drawing the paints of the hidden ids and draw the shown ids again; the paints are kept."
       RASM_RESIZE { width : number!  height : number! }
         @description "Re-place the root from the new size."
       SURFACE_RESIZE { width : number!  height : number! }
@@ -191,15 +224,15 @@ orbital RasmSurfaceOrbital {
         @description "An editing key for the focused text field."
       SURFACE_ACCESS { target : string!  action : "focus" | "activate" | "increment" | "decrement"! }
         @description "An assistive-technology action on a semantic node."
-      POINTER_DOWN { target : string!  x : number!  y : number!  index : number }
+      POINTER_DOWN { target : string!  x : number!  y : number!  index : number  touches : [RasmTouch] }
         @description "Canvas press on a hit drawable."
-      POINTER_UP { target : string!  x : number!  y : number! }
+      POINTER_UP { target : string!  x : number!  y : number!  touches : [RasmTouch] }
         @description "Canvas release, sent to the drawable that took the press."
       POINTER_ENTER { target : string!  x : number!  y : number! }
         @description "Canvas pointer entered a hit drawable."
       POINTER_LEAVE { target : string!  x : number!  y : number! }
         @description "Canvas pointer left a hit drawable."
-      POINTER_MOVE { target : string!  x : number!  y : number! }
+      POINTER_MOVE { target : string!  x : number!  y : number!  touches : [RasmTouch] }
         @description "Canvas pointer moved over a hit drawable or under capture."
       SURFACE_MEASURED { items : [RasmMeasureItem]! }
         @description "Canvas text measurements."
@@ -213,6 +246,16 @@ orbital RasmSurfaceOrbital {
         @description "ArrowRight or ArrowUp pressed."
       KEY_DECREASE { }
         @description "ArrowLeft or ArrowDown pressed."
+      KEY_ESCAPE { }
+        @description "Escape pressed."
+      KEY_PAGE_UP { }
+        @description "PageUp pressed."
+      KEY_PAGE_DOWN { }
+        @description "PageDown pressed."
+      KEY_HOME { }
+        @description "Home pressed."
+      KEY_END { }
+        @description "End pressed."
     }
 
     config {
@@ -243,6 +286,10 @@ orbital RasmSurfaceOrbital {
       margin : number = 0
         @label "Margin"
         @description "With fill on, the gap in px kept on every side between the surface and the root rect."
+        @tier "presentation"
+      direction : "ltr" | "rtl" = "ltr"
+        @label "Direction"
+        @description "The reading direction of the whole surface, announced as RASM_DIRECTION to the layout atoms."
         @tier "presentation"
       align : "stretch" | "center" = "stretch"
         @label "Align"

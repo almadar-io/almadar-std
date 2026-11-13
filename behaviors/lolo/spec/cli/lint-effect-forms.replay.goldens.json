@@ -18925,7 +18925,7 @@
                 "batch",
                 [
                  [
-                  "upsert",
+                  "merge",
                   "Task",
                   {
                    "owner": "x"
@@ -19118,36 +19118,36 @@
           {
            "code": "ORB_PERSIST_BATCH_BAD_OP",
            "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[0].effects[0].ops[0]",
-           "message": "batch op action 'upsert' is not one of create, update, delete",
-           "suggestion": "Each op is [\"create\", Entity, data], [\"update\", Entity, id, data] or [\"delete\", Entity, id]",
+           "message": "batch op action 'merge' is not one of create, update, delete, upsert",
+           "suggestion": "Each op is [\"create\", Entity, data], [\"update\", Entity, id, data], [\"delete\", Entity, id] or [\"upsert\", Entity, data]",
            "severity": "error"
           },
           {
            "code": "ORB_PERSIST_BATCH_BAD_OP",
            "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[1].effects[0].ops[0]",
            "message": "batch op 'create' takes 2 argument(s) after the action, found 1",
-           "suggestion": "Each op is [\"create\", Entity, data], [\"update\", Entity, id, data] or [\"delete\", Entity, id]",
+           "suggestion": "Each op is [\"create\", Entity, data], [\"update\", Entity, id, data], [\"delete\", Entity, id] or [\"upsert\", Entity, data]",
            "severity": "error"
           },
           {
            "code": "ORB_PERSIST_BATCH_BAD_OP",
            "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[1].effects[0].ops[1]",
            "message": "batch op 'update' takes 3 argument(s) after the action, found 2",
-           "suggestion": "Each op is [\"create\", Entity, data], [\"update\", Entity, id, data] or [\"delete\", Entity, id]",
+           "suggestion": "Each op is [\"create\", Entity, data], [\"update\", Entity, id, data], [\"delete\", Entity, id] or [\"upsert\", Entity, data]",
            "severity": "error"
           },
           {
            "code": "ORB_PERSIST_BATCH_BAD_OP",
            "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[1].effects[0].ops[2]",
            "message": "batch op 'delete' takes 2 argument(s) after the action, found 1",
-           "suggestion": "Each op is [\"create\", Entity, data], [\"update\", Entity, id, data] or [\"delete\", Entity, id]",
+           "suggestion": "Each op is [\"create\", Entity, data], [\"update\", Entity, id, data], [\"delete\", Entity, id] or [\"upsert\", Entity, data]",
            "severity": "error"
           },
           {
            "code": "ORB_PERSIST_BATCH_BAD_OP",
            "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[1].effects[0].ops[3]",
            "message": "batch op 'create' takes 2 argument(s) after the action, found 3",
-           "suggestion": "Each op is [\"create\", Entity, data], [\"update\", Entity, id, data] or [\"delete\", Entity, id]",
+           "suggestion": "Each op is [\"create\", Entity, data], [\"update\", Entity, id, data], [\"delete\", Entity, id] or [\"upsert\", Entity, data]",
            "severity": "error"
           }
          ]
@@ -19730,8 +19730,8 @@
           {
            "code": "ORB_PERSIST_BATCH_BAD_OP",
            "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[1].effects[0].ops[2]",
-           "message": "batch op action 'bogus/op' is not one of create, update, delete",
-           "suggestion": "Each op is [\"create\", Entity, data], [\"update\", Entity, id, data] or [\"delete\", Entity, id]",
+           "message": "batch op action 'bogus/op' is not one of create, update, delete, upsert",
+           "suggestion": "Each op is [\"create\", Entity, data], [\"update\", Entity, id, data], [\"delete\", Entity, id] or [\"upsert\", Entity, data]",
            "severity": "error"
           }
          ]
@@ -20334,14 +20334,14 @@
            "code": "ORB_PERSIST_BATCH_BAD_OP",
            "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[1].effects[0].ops",
            "message": "batch op 'create' takes 2 argument(s) after the action, found 1",
-           "suggestion": "Each op is [\"create\", Entity, data], [\"update\", Entity, id, data] or [\"delete\", Entity, id]",
+           "suggestion": "Each op is [\"create\", Entity, data], [\"update\", Entity, id, data], [\"delete\", Entity, id] or [\"upsert\", Entity, data]",
            "severity": "error"
           },
           {
            "code": "ORB_PERSIST_BATCH_BAD_OP",
            "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[2].effects[0].ops",
-           "message": "batch op action 'bogus' is not one of create, update, delete",
-           "suggestion": "Each op is [\"create\", Entity, data], [\"update\", Entity, id, data] or [\"delete\", Entity, id]",
+           "message": "batch op action 'bogus' is not one of create, update, delete, upsert",
+           "suggestion": "Each op is [\"create\", Entity, data], [\"update\", Entity, id, data], [\"delete\", Entity, id] or [\"upsert\", Entity, data]",
            "severity": "error"
           }
          ]
@@ -36281,6 +36281,1799 @@
     }
    ],
    "note": "G-ORBITAL-CORE-163: a number or boolean literal into a date, datetime or instant field is a type mismatch; an ISO string literal is the control"
+  },
+  {
+   "id": "a-batch-upsert-arity-is-checked",
+   "steps": [
+    {
+     "event": "LINT_OPERATOR_NAMES",
+     "from": "ready",
+     "payload": {
+      "names": [
+       "if",
+       "array/map",
+       "fn",
+       "lambda"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "event": "ENTITIES_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "list": [
+       {
+        "persistence": "persistent",
+        "create_policy": [
+         "=",
+         "@entity.owner",
+         "@user.id"
+        ],
+        "name": "Task",
+        "oi": 0,
+        "orbital": "O",
+        "auxiliary": false,
+        "fields": [
+         {
+          "name": "id",
+          "type": "string",
+          "required": true
+         },
+         {
+          "name": "n",
+          "type": "number",
+          "default": 0
+         },
+         {
+          "name": "status",
+          "type": "enum",
+          "values": [
+           "open",
+           "done"
+          ],
+          "default": "open"
+         },
+         {
+          "name": "u",
+          "type": "union",
+          "values": [
+           "string",
+           "Other"
+          ]
+         },
+         {
+          "name": "emb",
+          "type": "array",
+          "items": {
+           "type": "number"
+          }
+         },
+         {
+          "name": "tags",
+          "type": "array",
+          "items": {
+           "type": "string"
+          }
+         },
+         {
+          "name": "ownerId",
+          "type": "relation",
+          "relation": {
+           "entity": "Other",
+           "cardinality": "one"
+          }
+         },
+         {
+          "name": "view",
+          "type": "string",
+          "intrinsic": true
+         },
+         {
+          "name": "owner",
+          "type": "string"
+         }
+        ]
+       },
+       {
+        "persistence": "persistent",
+        "name": "Other",
+        "oi": 1,
+        "orbital": "O2",
+        "auxiliary": false,
+        "fields": [
+         {
+          "name": "id",
+          "type": "string",
+          "required": true
+         },
+         {
+          "name": "label",
+          "type": "string"
+         }
+        ]
+       },
+       {
+        "persistence": "persistent",
+        "browser": true,
+        "name": "Bro",
+        "oi": 2,
+        "orbital": "O3",
+        "auxiliary": false,
+        "fields": [
+         {
+          "name": "id",
+          "type": "string",
+          "required": true
+         },
+         {
+          "name": "a",
+          "type": "number"
+         }
+        ]
+       }
+      ],
+      "byName": {
+       "Task": {
+        "persistence": "persistent",
+        "create_policy": [
+         "=",
+         "@entity.owner",
+         "@user.id"
+        ],
+        "name": "Task",
+        "oi": 0,
+        "orbital": "O",
+        "auxiliary": false,
+        "fields": [
+         {
+          "name": "id",
+          "type": "string",
+          "required": true
+         },
+         {
+          "name": "n",
+          "type": "number",
+          "default": 0
+         },
+         {
+          "name": "status",
+          "type": "enum",
+          "values": [
+           "open",
+           "done"
+          ],
+          "default": "open"
+         },
+         {
+          "name": "u",
+          "type": "union",
+          "values": [
+           "string",
+           "Other"
+          ]
+         },
+         {
+          "name": "emb",
+          "type": "array",
+          "items": {
+           "type": "number"
+          }
+         },
+         {
+          "name": "tags",
+          "type": "array",
+          "items": {
+           "type": "string"
+          }
+         },
+         {
+          "name": "ownerId",
+          "type": "relation",
+          "relation": {
+           "entity": "Other",
+           "cardinality": "one"
+          }
+         },
+         {
+          "name": "view",
+          "type": "string",
+          "intrinsic": true
+         },
+         {
+          "name": "owner",
+          "type": "string"
+         }
+        ]
+       },
+       "Other": {
+        "persistence": "persistent",
+        "name": "Other",
+        "oi": 1,
+        "orbital": "O2",
+        "auxiliary": false,
+        "fields": [
+         {
+          "name": "id",
+          "type": "string",
+          "required": true
+         },
+         {
+          "name": "label",
+          "type": "string"
+         }
+        ]
+       },
+       "Bro": {
+        "persistence": "persistent",
+        "browser": true,
+        "name": "Bro",
+        "oi": 2,
+        "orbital": "O3",
+        "auxiliary": false,
+        "fields": [
+         {
+          "name": "id",
+          "type": "string",
+          "required": true
+         },
+         {
+          "name": "a",
+          "type": "number"
+         }
+        ]
+       }
+      }
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "typeContractVersion": 1,
+       "name": "g_batch-bad-ops",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "n",
+            "type": "number",
+            "default": 0
+           },
+           {
+            "name": "status",
+            "type": "enum",
+            "values": [
+             "open",
+             "done"
+            ],
+            "default": "open"
+           },
+           {
+            "name": "u",
+            "type": "union",
+            "values": [
+             "string",
+             "Other"
+            ]
+           },
+           {
+            "name": "emb",
+            "type": "array",
+            "items": {
+             "type": "number"
+            }
+           },
+           {
+            "name": "tags",
+            "type": "array",
+            "items": {
+             "type": "string"
+            }
+           },
+           {
+            "name": "ownerId",
+            "type": "relation",
+            "relation": {
+             "entity": "Other",
+             "cardinality": "one"
+            }
+           },
+           {
+            "name": "view",
+            "type": "string",
+            "intrinsic": true
+           },
+           {
+            "name": "owner",
+            "type": "string"
+           }
+          ],
+          "collection": "tasks",
+          "create_policy": [
+           "=",
+           "@entity.owner",
+           "@user.id"
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "events": [
+             {
+              "key": "E0"
+             },
+             {
+              "key": "E1"
+             },
+             {
+              "key": "E2"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "E0",
+              "effects": [
+               [
+                "persist",
+                "batch",
+                [
+                 [
+                  "upsert",
+                  "Task"
+                 ]
+                ]
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "E1",
+              "effects": [
+               [
+                "persist",
+                "batch",
+                [
+                 [
+                  "create",
+                  "Task"
+                 ],
+                 [
+                  "update",
+                  "Task",
+                  {
+                   "n": 1
+                  }
+                 ],
+                 [
+                  "delete",
+                  "Task"
+                 ],
+                 [
+                  "create",
+                  "Task",
+                  {
+                   "owner": "x"
+                  },
+                  "extra"
+                 ]
+                ]
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "E2",
+              "effects": [
+               [
+                "persist",
+                "batch",
+                [
+                 "x",
+                 [],
+                 [
+                  5,
+                  "Task"
+                 ],
+                 {
+                  "a": 1
+                 },
+                 null
+                ]
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "name": "O2",
+         "entity": {
+          "name": "Other",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "label",
+            "type": "string"
+           }
+          ],
+          "collection": "others"
+         },
+         "traits": [
+          {
+           "name": "T2",
+           "linkedEntity": "Other",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "events": [
+             {
+              "key": "X"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "X",
+              "effects": []
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "name": "O3",
+         "entity": {
+          "name": "Bro",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "a",
+            "type": "number"
+           }
+          ],
+          "collection": "bros",
+          "browser": true
+         },
+         "traits": [
+          {
+           "name": "T3",
+           "linkedEntity": "Bro",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "events": [
+             {
+              "key": "Y"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "Y",
+              "effects": []
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "effect-forms",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_PERSIST_BATCH_BAD_OP",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[0].effects[0].ops[0]",
+           "message": "batch op 'upsert' takes 2 argument(s) after the action, found 1",
+           "suggestion": "Each op is [\"create\", Entity, data], [\"update\", Entity, id, data], [\"delete\", Entity, id] or [\"upsert\", Entity, data]",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_PERSIST_BATCH_BAD_OP",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[1].effects[0].ops[0]",
+           "message": "batch op 'create' takes 2 argument(s) after the action, found 1",
+           "suggestion": "Each op is [\"create\", Entity, data], [\"update\", Entity, id, data], [\"delete\", Entity, id] or [\"upsert\", Entity, data]",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_PERSIST_BATCH_BAD_OP",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[1].effects[0].ops[1]",
+           "message": "batch op 'update' takes 3 argument(s) after the action, found 2",
+           "suggestion": "Each op is [\"create\", Entity, data], [\"update\", Entity, id, data], [\"delete\", Entity, id] or [\"upsert\", Entity, data]",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_PERSIST_BATCH_BAD_OP",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[1].effects[0].ops[2]",
+           "message": "batch op 'delete' takes 2 argument(s) after the action, found 1",
+           "suggestion": "Each op is [\"create\", Entity, data], [\"update\", Entity, id, data], [\"delete\", Entity, id] or [\"upsert\", Entity, data]",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_PERSIST_BATCH_BAD_OP",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[1].effects[0].ops[3]",
+           "message": "batch op 'create' takes 2 argument(s) after the action, found 3",
+           "suggestion": "Each op is [\"create\", Entity, data], [\"update\", Entity, id, data], [\"delete\", Entity, id] or [\"upsert\", Entity, data]",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-batch-upsert-mapped-arity-is-checked",
+   "steps": [
+    {
+     "event": "LINT_OPERATOR_NAMES",
+     "from": "ready",
+     "payload": {
+      "names": [
+       "if",
+       "array/map",
+       "fn",
+       "lambda"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "event": "ENTITIES_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "list": [
+       {
+        "persistence": "persistent",
+        "create_policy": [
+         "=",
+         "@entity.owner",
+         "@user.id"
+        ],
+        "name": "Task",
+        "oi": 0,
+        "orbital": "O",
+        "auxiliary": false,
+        "fields": [
+         {
+          "name": "id",
+          "type": "string",
+          "required": true
+         },
+         {
+          "name": "n",
+          "type": "number",
+          "default": 0
+         },
+         {
+          "name": "status",
+          "type": "enum",
+          "values": [
+           "open",
+           "done"
+          ],
+          "default": "open"
+         },
+         {
+          "name": "u",
+          "type": "union",
+          "values": [
+           "string",
+           "Other"
+          ]
+         },
+         {
+          "name": "emb",
+          "type": "array",
+          "items": {
+           "type": "number"
+          }
+         },
+         {
+          "name": "tags",
+          "type": "array",
+          "items": {
+           "type": "string"
+          }
+         },
+         {
+          "name": "ownerId",
+          "type": "relation",
+          "relation": {
+           "entity": "Other",
+           "cardinality": "one"
+          }
+         },
+         {
+          "name": "view",
+          "type": "string",
+          "intrinsic": true
+         },
+         {
+          "name": "owner",
+          "type": "string"
+         }
+        ]
+       },
+       {
+        "persistence": "persistent",
+        "name": "Other",
+        "oi": 1,
+        "orbital": "O2",
+        "auxiliary": false,
+        "fields": [
+         {
+          "name": "id",
+          "type": "string",
+          "required": true
+         },
+         {
+          "name": "label",
+          "type": "string"
+         }
+        ]
+       },
+       {
+        "persistence": "persistent",
+        "browser": true,
+        "name": "Bro",
+        "oi": 2,
+        "orbital": "O3",
+        "auxiliary": false,
+        "fields": [
+         {
+          "name": "id",
+          "type": "string",
+          "required": true
+         },
+         {
+          "name": "a",
+          "type": "number"
+         }
+        ]
+       }
+      ],
+      "byName": {
+       "Task": {
+        "persistence": "persistent",
+        "create_policy": [
+         "=",
+         "@entity.owner",
+         "@user.id"
+        ],
+        "name": "Task",
+        "oi": 0,
+        "orbital": "O",
+        "auxiliary": false,
+        "fields": [
+         {
+          "name": "id",
+          "type": "string",
+          "required": true
+         },
+         {
+          "name": "n",
+          "type": "number",
+          "default": 0
+         },
+         {
+          "name": "status",
+          "type": "enum",
+          "values": [
+           "open",
+           "done"
+          ],
+          "default": "open"
+         },
+         {
+          "name": "u",
+          "type": "union",
+          "values": [
+           "string",
+           "Other"
+          ]
+         },
+         {
+          "name": "emb",
+          "type": "array",
+          "items": {
+           "type": "number"
+          }
+         },
+         {
+          "name": "tags",
+          "type": "array",
+          "items": {
+           "type": "string"
+          }
+         },
+         {
+          "name": "ownerId",
+          "type": "relation",
+          "relation": {
+           "entity": "Other",
+           "cardinality": "one"
+          }
+         },
+         {
+          "name": "view",
+          "type": "string",
+          "intrinsic": true
+         },
+         {
+          "name": "owner",
+          "type": "string"
+         }
+        ]
+       },
+       "Other": {
+        "persistence": "persistent",
+        "name": "Other",
+        "oi": 1,
+        "orbital": "O2",
+        "auxiliary": false,
+        "fields": [
+         {
+          "name": "id",
+          "type": "string",
+          "required": true
+         },
+         {
+          "name": "label",
+          "type": "string"
+         }
+        ]
+       },
+       "Bro": {
+        "persistence": "persistent",
+        "browser": true,
+        "name": "Bro",
+        "oi": 2,
+        "orbital": "O3",
+        "auxiliary": false,
+        "fields": [
+         {
+          "name": "id",
+          "type": "string",
+          "required": true
+         },
+         {
+          "name": "a",
+          "type": "number"
+         }
+        ]
+       }
+      }
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "typeContractVersion": 1,
+       "name": "g_batch-mapped",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "n",
+            "type": "number",
+            "default": 0
+           },
+           {
+            "name": "status",
+            "type": "enum",
+            "values": [
+             "open",
+             "done"
+            ],
+            "default": "open"
+           },
+           {
+            "name": "u",
+            "type": "union",
+            "values": [
+             "string",
+             "Other"
+            ]
+           },
+           {
+            "name": "emb",
+            "type": "array",
+            "items": {
+             "type": "number"
+            }
+           },
+           {
+            "name": "tags",
+            "type": "array",
+            "items": {
+             "type": "string"
+            }
+           },
+           {
+            "name": "ownerId",
+            "type": "relation",
+            "relation": {
+             "entity": "Other",
+             "cardinality": "one"
+            }
+           },
+           {
+            "name": "view",
+            "type": "string",
+            "intrinsic": true
+           },
+           {
+            "name": "owner",
+            "type": "string"
+           }
+          ],
+          "collection": "tasks",
+          "create_policy": [
+           "=",
+           "@entity.owner",
+           "@user.id"
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "events": [
+             {
+              "key": "E0"
+             },
+             {
+              "key": "E1"
+             },
+             {
+              "key": "E2"
+             },
+             {
+              "key": "E3"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "E0",
+              "effects": [
+               [
+                "persist",
+                "batch",
+                [
+                 "array/map",
+                 "@payload.ids",
+                 [
+                  "fn",
+                  "i",
+                  [
+                   "create",
+                   "Task",
+                   {
+                    "owner": "x"
+                   }
+                  ]
+                 ]
+                ]
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "E1",
+              "effects": [
+               [
+                "persist",
+                "batch",
+                [
+                 "array/map",
+                 "@payload.ids",
+                 [
+                  "fn",
+                  "i",
+                  [
+                   "upsert",
+                   "Task"
+                  ]
+                 ]
+                ]
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "E2",
+              "effects": [
+               [
+                "persist",
+                "batch",
+                [
+                 "array/map",
+                 "@payload.ids",
+                 [
+                  "fn",
+                  "i",
+                  [
+                   "bogus",
+                   "Task"
+                  ]
+                 ]
+                ]
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "E3",
+              "effects": [
+               [
+                "persist",
+                "batch",
+                [
+                 "array/map",
+                 "@payload.ids",
+                 [
+                  "fn",
+                  "i",
+                  [
+                   "if",
+                   true,
+                   [
+                    "create",
+                    "Task",
+                    {
+                     "owner": "x"
+                    }
+                   ],
+                   [
+                    "delete",
+                    "Task",
+                    "i"
+                   ]
+                  ]
+                 ]
+                ]
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "name": "O2",
+         "entity": {
+          "name": "Other",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "label",
+            "type": "string"
+           }
+          ],
+          "collection": "others"
+         },
+         "traits": [
+          {
+           "name": "T2",
+           "linkedEntity": "Other",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "events": [
+             {
+              "key": "X"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "X",
+              "effects": []
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "name": "O3",
+         "entity": {
+          "name": "Bro",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "a",
+            "type": "number"
+           }
+          ],
+          "collection": "bros",
+          "browser": true
+         },
+         "traits": [
+          {
+           "name": "T3",
+           "linkedEntity": "Bro",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "events": [
+             {
+              "key": "Y"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "Y",
+              "effects": []
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "effect-forms",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_PERSIST_BATCH_BAD_OP",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[1].effects[0].ops",
+           "message": "batch op 'upsert' takes 2 argument(s) after the action, found 1",
+           "suggestion": "Each op is [\"create\", Entity, data], [\"update\", Entity, id, data], [\"delete\", Entity, id] or [\"upsert\", Entity, data]",
+           "severity": "error"
+          },
+          {
+           "code": "ORB_PERSIST_BATCH_BAD_OP",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[2].effects[0].ops",
+           "message": "batch op action 'bogus' is not one of create, update, delete, upsert",
+           "suggestion": "Each op is [\"create\", Entity, data], [\"update\", Entity, id, data], [\"delete\", Entity, id] or [\"upsert\", Entity, data]",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-batch-upsert-with-an-id-is-clean",
+   "steps": [
+    {
+     "event": "LINT_OPERATOR_NAMES",
+     "from": "ready",
+     "payload": {
+      "names": [
+       "if",
+       "array/map",
+       "fn",
+       "lambda"
+      ]
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "event": "ENTITIES_HEARD",
+     "from": "ready",
+     "payload": {
+      "scope": "",
+      "list": [
+       {
+        "persistence": "persistent",
+        "create_policy": [
+         "=",
+         "@entity.owner",
+         "@user.id"
+        ],
+        "name": "Task",
+        "oi": 0,
+        "orbital": "O",
+        "auxiliary": false,
+        "fields": [
+         {
+          "name": "id",
+          "type": "string",
+          "required": true
+         },
+         {
+          "name": "n",
+          "type": "number",
+          "default": 0
+         },
+         {
+          "name": "status",
+          "type": "enum",
+          "values": [
+           "open",
+           "done"
+          ],
+          "default": "open"
+         },
+         {
+          "name": "u",
+          "type": "union",
+          "values": [
+           "string",
+           "Other"
+          ]
+         },
+         {
+          "name": "emb",
+          "type": "array",
+          "items": {
+           "type": "number"
+          }
+         },
+         {
+          "name": "tags",
+          "type": "array",
+          "items": {
+           "type": "string"
+          }
+         },
+         {
+          "name": "ownerId",
+          "type": "relation",
+          "relation": {
+           "entity": "Other",
+           "cardinality": "one"
+          }
+         },
+         {
+          "name": "view",
+          "type": "string",
+          "intrinsic": true
+         },
+         {
+          "name": "owner",
+          "type": "string"
+         }
+        ]
+       },
+       {
+        "persistence": "persistent",
+        "name": "Other",
+        "oi": 1,
+        "orbital": "O2",
+        "auxiliary": false,
+        "fields": [
+         {
+          "name": "id",
+          "type": "string",
+          "required": true
+         },
+         {
+          "name": "label",
+          "type": "string"
+         }
+        ]
+       },
+       {
+        "persistence": "persistent",
+        "browser": true,
+        "name": "Bro",
+        "oi": 2,
+        "orbital": "O3",
+        "auxiliary": false,
+        "fields": [
+         {
+          "name": "id",
+          "type": "string",
+          "required": true
+         },
+         {
+          "name": "a",
+          "type": "number"
+         }
+        ]
+       }
+      ],
+      "byName": {
+       "Task": {
+        "persistence": "persistent",
+        "create_policy": [
+         "=",
+         "@entity.owner",
+         "@user.id"
+        ],
+        "name": "Task",
+        "oi": 0,
+        "orbital": "O",
+        "auxiliary": false,
+        "fields": [
+         {
+          "name": "id",
+          "type": "string",
+          "required": true
+         },
+         {
+          "name": "n",
+          "type": "number",
+          "default": 0
+         },
+         {
+          "name": "status",
+          "type": "enum",
+          "values": [
+           "open",
+           "done"
+          ],
+          "default": "open"
+         },
+         {
+          "name": "u",
+          "type": "union",
+          "values": [
+           "string",
+           "Other"
+          ]
+         },
+         {
+          "name": "emb",
+          "type": "array",
+          "items": {
+           "type": "number"
+          }
+         },
+         {
+          "name": "tags",
+          "type": "array",
+          "items": {
+           "type": "string"
+          }
+         },
+         {
+          "name": "ownerId",
+          "type": "relation",
+          "relation": {
+           "entity": "Other",
+           "cardinality": "one"
+          }
+         },
+         {
+          "name": "view",
+          "type": "string",
+          "intrinsic": true
+         },
+         {
+          "name": "owner",
+          "type": "string"
+         }
+        ]
+       },
+       "Other": {
+        "persistence": "persistent",
+        "name": "Other",
+        "oi": 1,
+        "orbital": "O2",
+        "auxiliary": false,
+        "fields": [
+         {
+          "name": "id",
+          "type": "string",
+          "required": true
+         },
+         {
+          "name": "label",
+          "type": "string"
+         }
+        ]
+       },
+       "Bro": {
+        "persistence": "persistent",
+        "browser": true,
+        "name": "Bro",
+        "oi": 2,
+        "orbital": "O3",
+        "auxiliary": false,
+        "fields": [
+         {
+          "name": "id",
+          "type": "string",
+          "required": true
+         },
+         {
+          "name": "a",
+          "type": "number"
+         }
+        ]
+       }
+      }
+     },
+     "expect": {
+      "fired": true
+     }
+    },
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.orb",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "typeContractVersion": 1,
+       "name": "g_batch-control-valid-and-known-heads",
+       "version": "1.0.0",
+       "orbitals": [
+        {
+         "name": "O",
+         "entity": {
+          "name": "Task",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "n",
+            "type": "number",
+            "default": 0
+           },
+           {
+            "name": "status",
+            "type": "enum",
+            "values": [
+             "open",
+             "done"
+            ],
+            "default": "open"
+           },
+           {
+            "name": "u",
+            "type": "union",
+            "values": [
+             "string",
+             "Other"
+            ]
+           },
+           {
+            "name": "emb",
+            "type": "array",
+            "items": {
+             "type": "number"
+            }
+           },
+           {
+            "name": "tags",
+            "type": "array",
+            "items": {
+             "type": "string"
+            }
+           },
+           {
+            "name": "ownerId",
+            "type": "relation",
+            "relation": {
+             "entity": "Other",
+             "cardinality": "one"
+            }
+           },
+           {
+            "name": "view",
+            "type": "string",
+            "intrinsic": true
+           },
+           {
+            "name": "owner",
+            "type": "string"
+           }
+          ],
+          "collection": "tasks",
+          "create_policy": [
+           "=",
+           "@entity.owner",
+           "@user.id"
+          ]
+         },
+         "traits": [
+          {
+           "name": "T",
+           "linkedEntity": "Task",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "events": [
+             {
+              "key": "E0"
+             },
+             {
+              "key": "E1"
+             },
+             {
+              "key": "E2"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "E0",
+              "effects": [
+               [
+                "persist",
+                "batch",
+                [
+                 [
+                  "upsert",
+                  "Task",
+                  {
+                   "id": "u1",
+                   "owner": "x"
+                  }
+                 ],
+                 [
+                  "update",
+                  "Task",
+                  "id1",
+                  {
+                   "n": 1
+                  }
+                 ],
+                 [
+                  "delete",
+                  "Task",
+                  "id2"
+                 ]
+                ]
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "E1",
+              "effects": [
+               [
+                "persist",
+                "batch",
+                [
+                 [
+                  "if",
+                  true,
+                  [
+                   "upsert",
+                   "Task",
+                   {
+                    "id": "u1",
+                    "owner": "x"
+                   }
+                  ],
+                  [
+                   "delete",
+                   "Task",
+                   "i"
+                  ]
+                 ],
+                 [
+                  "array/map",
+                  "@xs",
+                  [
+                   "fn",
+                   "i",
+                   [
+                    "create",
+                    "Task",
+                    {}
+                   ]
+                  ]
+                 ],
+                 [
+                  "bogus/op",
+                  1
+                 ]
+                ]
+               ]
+              ]
+             },
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "E2",
+              "effects": [
+               [
+                "persist",
+                "batch",
+                "@payload.ops"
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "P",
+           "path": "/",
+           "traits": [
+            {
+             "ref": "T"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "name": "O2",
+         "entity": {
+          "name": "Other",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "label",
+            "type": "string"
+           }
+          ],
+          "collection": "others"
+         },
+         "traits": [
+          {
+           "name": "T2",
+           "linkedEntity": "Other",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "events": [
+             {
+              "key": "X"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "X",
+              "effects": []
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "name": "O3",
+         "entity": {
+          "name": "Bro",
+          "persistence": "persistent",
+          "fields": [
+           {
+            "name": "id",
+            "type": "string",
+            "required": true
+           },
+           {
+            "name": "a",
+            "type": "number"
+           }
+          ],
+          "collection": "bros",
+          "browser": true
+         },
+         "traits": [
+          {
+           "name": "T3",
+           "linkedEntity": "Bro",
+           "stateMachine": {
+            "states": [
+             {
+              "name": "idle",
+              "isInitial": true
+             }
+            ],
+            "events": [
+             {
+              "key": "Y"
+             }
+            ],
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "Y",
+              "effects": []
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "effect-forms",
+         "scope": "",
+         "findings": [
+          {
+           "code": "ORB_PERSIST_BATCH_BAD_OP",
+           "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[1].effects[0].ops[2]",
+           "message": "batch op action 'bogus/op' is not one of create, update, delete, upsert",
+           "suggestion": "Each op is [\"create\", Entity, data], [\"update\", Entity, id, data], [\"delete\", Entity, id] or [\"upsert\", Entity, data]",
+           "severity": "error"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
   }
  ]
 }

@@ -14,7 +14,7 @@ type GoldenExpect = { fired : boolean, state : string, emits : [GoldenEmit], nev
 type GoldenIdentity = Map string GoldenValue?
 type GoldenAnswerError = { kind : string!, message : string! }
 type GoldenAnswer = { operator : string!, ok : GoldenValue?, error : GoldenAnswerError }
-type GoldenStep = { answers : [GoldenAnswer], keep : string, keepField : string, now : number | string, identity : GoldenPayload?, entity : GoldenPayload, trait : string, orbital : string, from : string, event : string!, payload : GoldenPayload, options : GoldenPayload, expect : GoldenExpect }
+type GoldenStep = { answers : [GoldenAnswer], keep : string, keepField : string, now : number | string, identity : GoldenPayload?, session : string, entity : GoldenPayload, trait : string, orbital : string, from : string, event : string!, payload : GoldenPayload, options : GoldenPayload, expect : GoldenExpect }
 type GoldenCase = { note : string, golden : string, skip : string, entity : GoldenPayload, config : GoldenPayload, credentials : Map string string, defaults : [string], now : number | string, id : string!, steps : [GoldenStep]! }
 type GoldenGrants = Map string [GoldenValue?]
 type GoldenGrantList = [GoldenValue?]
@@ -136,7 +136,7 @@ orbital GoldensOrbital {
           (array/map (array/filter (object/keys @cc) (fn k (not (array/includes ["skip", "entity", "config", "credentials", "defaults", "now", "id", "steps", "note", "golden"] @k)))) (fn k (str/concat "unknown case key: " @k)))
           (array/flatten (array/reduce (object/get @cc "steps") [] (fn acc s
             (array/append @acc (array/concat
-              (array/map (array/filter (object/keys @s) (fn k (not (array/includes ["answers", "keep", "keepField", "now", "identity", "entity", "trait", "orbital", "from", "event", "payload", "options", "expect"] @k)))) (fn k (str/concat "step " (array/len @acc) ": unknown step key: " @k)))
+              (array/map (array/filter (object/keys @s) (fn k (not (array/includes ["answers", "keep", "keepField", "now", "identity", "session", "entity", "trait", "orbital", "from", "event", "payload", "options", "expect"] @k)))) (fn k (str/concat "step " (array/len @acc) ": unknown step key: " @k)))
               (array/map (array/filter (object/keys (object/get @s "expect" {})) (fn k (not (array/includes ["fired", "state", "emits", "neverEmits", "exactEmits", "emitCounts", "effects", "rendered", "entity"] @k)))) (fn k (str/concat "step " (array/len @acc) ": unknown expect key: " @k)))
               (if (object/has @s "options")
                 (let ((op (as (object/get @s "options") GoldenPayload)))
@@ -173,6 +173,7 @@ orbital GoldensOrbital {
                 (if (or (= @seed null) (= (array/len (object/keys @seed)) 0)) {} { entity: @seed }))
               (if (object/has @s "now") { now: (object/get @s "now") } (if (object/has @cc "now") { now: (object/get @cc "now") } {}))
               (if (object/has @s "identity") { identity: (object/get @s "identity") } {})
+              (if (object/has @s "session") { session: (object/get @s "session") } {})
               (if (object/has @s "answers") { answers: (object/get @s "answers") } {})
               (if (and (object/has @cc "config") (= (object/get @s "trait" (object/get @gf "trait")) (object/get @gf "trait"))) { config: (object/get @cc "config") } {})
               (if (object/has @cc "credentials") { credentials: (object/get @cc "credentials") } {}))))))

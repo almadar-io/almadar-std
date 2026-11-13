@@ -3,10 +3,15 @@ app std-rasm-focus [
   description: "std-rasm-focus — keyboard focus order for the Rasm kit over a config-declared list of control ids. RASM_KEY next and previous move the index (wrapping, starting from none) and emit RASM_FOCUS { id }; activate emits RASM_ACTIVATE { id } for the focused id; increase and decrease emit RASM_STEP { id, delta } with 1 or -1. A pointer press on a control in the order moves the index to it and emits RASM_FOCUS { id }."
 ]
 
+type RasmTrap = { owner : string!, order : [string]!, savedIndex : number! }
+
 orbital RasmFocusOrbital {
   entity RasmFocusItem [runtime] {
     id : string!
-    index : number @description "Position in the order of the focused control, -1 before any." = -1
+    index : number @description "Position in the effective order of the focused control, -1 before any." = -1
+    traps : [RasmTrap] @description "The open focus traps, innermost last, each with the index it interrupted." = []
+    trapped : boolean @description "True while a trap is open: Tab then cycles only its order." = false
+    trapOrder : [string] @description "The innermost trap's order." = []
   }
 
   trait RasmFocus -> RasmFocusItem [client] {
@@ -15,36 +20,78 @@ orbital RasmFocusOrbital {
     state ready {
       INIT -> ready
         (set @entity.index -1)
-      RASM_KEY -> ready when (and (= ?key "next") (> (array/len @config.order) 0))
-        (set @entity.index (math/mod (+ @entity.index 1) (array/len @config.order)))
-        (emit RASM_FOCUS { id: (default (array/nth @config.order @entity.index) "") })
-      RASM_KEY -> ready when (and (= ?key "previous") (> (array/len @config.order) 0))
-        (set @entity.index (if (< @entity.index 0) (- (array/len @config.order) 1) (math/mod (+ @entity.index (- (array/len @config.order) 1)) (array/len @config.order))))
-        (emit RASM_FOCUS { id: (default (array/nth @config.order @entity.index) "") })
+      RASM_KEY -> ready when (and (= ?key "next") (> (array/len (if @entity.trapped @entity.trapOrder @config.order)) 0))
+        (set @entity.index (math/mod (+ @entity.index 1) (array/len (if @entity.trapped @entity.trapOrder @config.order))))
+        (emit RASM_FOCUS { id: (default (array/nth (if @entity.trapped @entity.trapOrder @config.order) @entity.index) "") })
+      RASM_KEY -> ready when (and (= ?key "previous") (> (array/len (if @entity.trapped @entity.trapOrder @config.order)) 0))
+        (set @entity.index (if (< @entity.index 0) (- (array/len (if @entity.trapped @entity.trapOrder @config.order)) 1) (math/mod (+ @entity.index (- (array/len (if @entity.trapped @entity.trapOrder @config.order)) 1)) (array/len (if @entity.trapped @entity.trapOrder @config.order)))))
+        (emit RASM_FOCUS { id: (default (array/nth (if @entity.trapped @entity.trapOrder @config.order) @entity.index) "") })
       RASM_KEY -> ready when (and (= ?key "activate") (>= @entity.index 0))
-        (emit RASM_ACTIVATE { id: (default (array/nth @config.order @entity.index) "") })
+        (emit RASM_ACTIVATE { id: (default (array/nth (if @entity.trapped @entity.trapOrder @config.order) @entity.index) "") })
       RASM_KEY -> ready when (and (= ?key "increase") (>= @entity.index 0))
-        (emit RASM_STEP { id: (default (array/nth @config.order @entity.index) ""), delta: 1 })
+        (emit RASM_STEP { id: (default (array/nth (if @entity.trapped @entity.trapOrder @config.order) @entity.index) ""), delta: 1 })
       RASM_KEY -> ready when (and (= ?key "decrease") (>= @entity.index 0))
-        (emit RASM_STEP { id: (default (array/nth @config.order @entity.index) ""), delta: -1 })
-      RASM_POINTER -> ready when (and (= ?kind "down") (array/includes @config.order ?id))
-        (set @entity.index (array/indexOf @config.order ?id))
+        (emit RASM_STEP { id: (default (array/nth (if @entity.trapped @entity.trapOrder @config.order) @entity.index) ""), delta: -1 })
+      RASM_POINTER -> ready when (and (= ?kind "down") (array/includes (if @entity.trapped @entity.trapOrder @config.order) ?id))
+        (set @entity.index (array/indexOf (if @entity.trapped @entity.trapOrder @config.order) ?id))
         (emit RASM_FOCUS { id: ?id })
-      RASM_ACCESS -> ready when (and (= ?action "focus") (array/includes @config.order ?target))
-        (set @entity.index (array/indexOf @config.order ?target))
+      RASM_ACCESS -> ready when (and (= ?action "focus") (array/includes (if @entity.trapped @entity.trapOrder @config.order) ?target))
+        (set @entity.index (array/indexOf (if @entity.trapped @entity.trapOrder @config.order) ?target))
         (emit RASM_FOCUS { id: ?target })
-      RASM_ACCESS -> ready when (and (= ?action "activate") (array/includes @config.order ?target))
-        (set @entity.index (array/indexOf @config.order ?target))
+      RASM_ACCESS -> ready when (and (= ?action "activate") (array/includes (if @entity.trapped @entity.trapOrder @config.order) ?target))
+        (set @entity.index (array/indexOf (if @entity.trapped @entity.trapOrder @config.order) ?target))
         (emit RASM_ACTIVATE { id: ?target })
-      RASM_ACCESS -> ready when (and (= ?action "increment") (array/includes @config.order ?target))
-        (set @entity.index (array/indexOf @config.order ?target))
+      RASM_ACCESS -> ready when (and (= ?action "increment") (array/includes (if @entity.trapped @entity.trapOrder @config.order) ?target))
+        (set @entity.index (array/indexOf (if @entity.trapped @entity.trapOrder @config.order) ?target))
         (emit RASM_STEP { id: ?target, delta: 1 })
-      RASM_ACCESS -> ready when (and (= ?action "decrement") (array/includes @config.order ?target))
-        (set @entity.index (array/indexOf @config.order ?target))
+      RASM_ACCESS -> ready when (and (= ?action "decrement") (array/includes (if @entity.trapped @entity.trapOrder @config.order) ?target))
+        (set @entity.index (array/indexOf (if @entity.trapped @entity.trapOrder @config.order) ?target))
         (emit RASM_STEP { id: ?target, delta: -1 })
+    
+      RASM_KEY -> ready when (= ?key "escape")
+        (emit RASM_KEYPRESS { target: (if (>= @entity.index 0) (default (array/nth (if @entity.trapped @entity.trapOrder @config.order) @entity.index) "") ""), key: "Escape", shift: false, alt: false, ctrl: false, meta: false })
+      RASM_KEY -> ready when (and (= ?key "pageUp") (>= @entity.index 0))
+        (emit RASM_KEYPRESS { target: (if (>= @entity.index 0) (default (array/nth (if @entity.trapped @entity.trapOrder @config.order) @entity.index) "") ""), key: "PageUp", shift: false, alt: false, ctrl: false, meta: false })
+      RASM_KEY -> ready when (and (= ?key "pageDown") (>= @entity.index 0))
+        (emit RASM_KEYPRESS { target: (if (>= @entity.index 0) (default (array/nth (if @entity.trapped @entity.trapOrder @config.order) @entity.index) "") ""), key: "PageDown", shift: false, alt: false, ctrl: false, meta: false })
+      RASM_KEY -> ready when (and (= ?key "home") (>= @entity.index 0))
+        (emit RASM_KEYPRESS { target: (if (>= @entity.index 0) (default (array/nth (if @entity.trapped @entity.trapOrder @config.order) @entity.index) "") ""), key: "Home", shift: false, alt: false, ctrl: false, meta: false })
+      RASM_KEY -> ready when (and (= ?key "end") (>= @entity.index 0))
+        (emit RASM_KEYPRESS { target: (if (>= @entity.index 0) (default (array/nth (if @entity.trapped @entity.trapOrder @config.order) @entity.index) "") ""), key: "End", shift: false, alt: false, ctrl: false, meta: false })
+      RASM_FOCUS_TRAP -> ready when (not (array/some @entity.traps (fn t (= @t.owner ?owner))))
+        (set @entity.traps (array/append @entity.traps { owner: ?owner, order: ?order, savedIndex: @entity.index }))
+        (set @entity.trapped true)
+        (set @entity.trapOrder ?order)
+        (set @entity.index -1)
+        (emit RASM_FOCUS { id: "" })
+      RASM_FOCUS_TRAP -> ready when (array/some @entity.traps (fn t (= @t.owner ?owner)))
+      RASM_FOCUS_RELEASE -> ready when (and (> (array/len @entity.traps) 0) (let ((top (default (array/nth @entity.traps (math/max 0 (- (array/len @entity.traps) 1))) { owner: "", order: [], savedIndex: -1 }))) (= @top.owner ?owner)))
+        (let ((top (default (array/nth @entity.traps (math/max 0 (- (array/len @entity.traps) 1))) { owner: "", order: [], savedIndex: -1 })) (left (array/filter @entity.traps (fn t (!= @t.owner ?owner)))))
+          (let ((under (default (array/nth @left (math/max 0 (- (array/len @left) 1))) { owner: "", order: [], savedIndex: -1 })) (any (> (array/len @left) 0)))
+            (let ((ord (if @any @under.order @config.order)))
+              (do
+                (set @entity.traps @left)
+                (set @entity.trapped @any)
+                (set @entity.trapOrder (if @any @under.order []))
+                (set @entity.index @top.savedIndex)
+                (emit RASM_FOCUS { id: (if (>= @top.savedIndex 0) (default (array/nth @ord @top.savedIndex) "") "") })))))
+      RASM_FOCUS_RELEASE -> ready when (and (array/some @entity.traps (fn t (= @t.owner ?owner))) (not (let ((top (default (array/nth @entity.traps (math/max 0 (- (array/len @entity.traps) 1))) { owner: "", order: [], savedIndex: -1 }))) (= @top.owner ?owner))))
+        (let ((owners (array/map @entity.traps (fn t @t.owner))) (gone (default (array/find @entity.traps (fn t (= @t.owner ?owner))) { owner: "", order: [], savedIndex: -1 })))
+          (set @entity.traps (array/filter (array/map @entity.traps (fn t (if (= (array/indexOf @owners @t.owner) (+ (array/indexOf @owners ?owner) 1)) { owner: @t.owner, order: @t.order, savedIndex: @gone.savedIndex } @t))) (fn t (!= @t.owner ?owner)))))
+      RASM_FOCUS_RELEASE -> ready when (not (array/some @entity.traps (fn t (= @t.owner ?owner))))
     }
 
     emits {
+      RASM_KEYPRESS -> external {
+        target : string!
+        key : string!
+        shift : boolean!
+        alt : boolean!
+        ctrl : boolean!
+        meta : boolean!
+      }
+        @description "Escape, PageUp, PageDown, Home and End as an editing key for the focused control (Escape with no focus: an empty target)."
+        @tier "domain"
       RASM_FOCUS -> external {
         id : string!
       }
@@ -64,8 +111,12 @@ orbital RasmFocusOrbital {
     }
 
     listens {
-      RASM_KEY { key : "next" | "previous" | "activate" | "increase" | "decrease"! }
-        @description "A key the surface mapped: Tab, Shift+Tab, Enter or Space, the arrows."
+      RASM_KEY { key : "next" | "previous" | "activate" | "increase" | "decrease" | "escape" | "pageUp" | "pageDown" | "home" | "end"! }
+        @description "A key the surface mapped: Tab, Shift+Tab, Enter or Space, the arrows; Escape, PageUp, PageDown, Home and End leave as RASM_KEYPRESS."
+      RASM_FOCUS_TRAP { owner : string!  order : [string]! }
+        @description "An overlay opened: Tab cycles only this order until the owner releases it, and the interrupted position is kept."
+      RASM_FOCUS_RELEASE { owner : string! }
+        @description "The overlay closed: the order and the focused control before its trap come back."
       RASM_POINTER { kind : "down" | "up" | "enter" | "leave" | "move"!  id : string!  x : number!  y : number!  index : number }
         @description "A press on a control in the order moves focus to it."
       RASM_ACCESS { target : string!  action : "focus" | "activate" | "increment" | "decrement"! }

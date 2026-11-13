@@ -464,7 +464,7 @@ orbital AgentToolLoopOrbital {
       ToolsFailed -> idle when (not @entity.cancelled)
         (set @entity.status failed)
         (set @entity.error ?message)
-        (emit ASSISTANT_REPLY_FAILED { error: ?message, steps: @entity.turnSteps, ephemeral: @entity.ephemeral })
+        (emit ASSISTANT_REPLY_FAILED { error: ?message, code: (default ?code ""), steps: @entity.turnSteps, ephemeral: @entity.ephemeral })
     }
 
     state running {
@@ -652,10 +652,11 @@ orbital AgentToolLoopOrbital {
         @tier "domain"
       ASSISTANT_REPLY_FAILED -> external {
         error : string!
+        code : string
         steps : [AgentActivity]
         ephemeral : boolean
       }
-        @description "The assistant could not answer (model unavailable, or out of steps)."
+        @description "The assistant could not answer (model unavailable, or out of steps). `code` is `output-cut` when the model's reply was cut at the output cap and `timeout` when the model call timed out; empty otherwise."
         @synonyms "failed, error, gave up"
         @tier "domain"
       LLM_CALL_TOOLS -> external {

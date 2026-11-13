@@ -62,10 +62,10 @@ orbital OrbLintExpectationFieldUndeclaredOrbital {
             (if (and (= (default (as (if (> (array/len @ops) 0) (array/nth @ops 0) null) LStr) "") "array/map") (= (array/len @ops) 3))
               (let ((fl (default (as (array/nth @ops 2) LNodes) []))) (if (and (> (array/len @fl) 2) (array/includes ["fn"] (default (as (if (> (array/len @fl) 0) (array/nth @fl 0) null) LStr) ""))) [(array/last @fl)] []))
               []))
-          @ops)) (fn el (default (as @el LNodes) []))) (fn tp (and (> (array/len @tp) 0) (array/includes ["create", "update", "delete"] (default (as (if (> (array/len @tp) 0) (array/nth @tp 0) null) LStr) "")))))
+          @ops)) (fn el (default (as @el LNodes) []))) (fn tp (and (> (array/len @tp) 0) (array/includes ["create", "update", "delete", "upsert"] (default (as (if (> (array/len @tp) 0) (array/nth @tp 0) null) LStr) "")))))
         (fn tp (let ((a (default (as (if (> (array/len @tp) 0) (array/nth @tp 0) null) LStr) "")) (en (default (as (if (> (array/len @tp) 1) (array/nth @tp 1) null) LStr) "")))
           (if (or (= @a "delete") (= @en "") (str/startsWith @en (str/concat (quote "@") ""))) []
-            (let ((dp (if (= @a "create") 2 3)))
+            (let ((dp (if (array/includes ["create", "upsert"] @a) 2 3)))
               [{ a: @a, e: @en, has: (> (array/len @tp) @dp), d: (as (if (> (array/len @tp) @dp) (array/nth @tp @dp) null) LObj) }]))))))) (fn w (!= (object/get @w "d") null)))
         (let ((ei (if (array/includes ["create", "upsert", "update", "delete"] @a1) 2 1)))
           (let ((en (default (as (if (> (array/len @l) @ei) (array/nth @l @ei) null) LStr) "")) (pd (as (if (> (array/len @l) (+ @ei 1)) (array/nth @l (+ @ei 1)) null) LObj)))

@@ -1,0 +1,1266 @@
+app std-rasm-gallery [
+  version: "0.1.0",
+  description: "std-rasm-gallery — every Rasm atom on one orbital canvas, switchable across the six look presets (naqsh, glass, sand, instrument, terminal, paper). Controls: a pressable, a disabled pressable, a switch, a range, a text field and a choice. Layout: a stack and a grid. Containers: an overlay opened by a button and a scroll over twelve items. Motion: the staggered entry, a tween-driven bar, a gesture area reporting swipe and fling, and a drag chip with two drop targets. An embed slot closes the page. The gallery trait Glue turns the choice, button and motion events into the commands the atoms listen to and paints the readout."
+]
+
+uses ThemeAtom from "std/behaviors/std-rasm-theme"
+uses SurfaceAtom from "std/behaviors/std-rasm-surface"
+uses StackAtom from "std/behaviors/std-rasm-stack"
+uses GridAtom from "std/behaviors/std-rasm-grid"
+uses TextAtom from "std/behaviors/std-rasm-text"
+uses PressAtom from "std/behaviors/std-rasm-pressable"
+uses ToggleAtom from "std/behaviors/std-rasm-toggle"
+uses RangeAtom from "std/behaviors/std-rasm-range"
+uses PresenceAtom from "std/behaviors/std-rasm-presence"
+uses FocusAtom from "std/behaviors/std-rasm-focus"
+uses TextFieldAtom from "std/behaviors/std-rasm-textfield"
+uses ChoiceAtom from "std/behaviors/std-rasm-choice"
+uses AnchorAtom from "std/behaviors/std-rasm-anchor"
+uses OverlayAtom from "std/behaviors/std-rasm-overlay"
+uses ScrollAtom from "std/behaviors/std-rasm-scroll"
+uses TweenAtom from "std/behaviors/std-rasm-tween"
+uses GestureAtom from "std/behaviors/std-rasm-gesture"
+uses DragAtom from "std/behaviors/std-rasm-drag"
+uses EmbedAtom from "std/behaviors/std-rasm-embed"
+uses BufAtom from "std/behaviors/std-text-buffer"
+
+type RasmRect = { x : number!, y : number!, w : number!, h : number! }
+type RasmPlaced = { id : string!, rect : RasmRect! }
+type RasmMaterial = { wgsl : string!, params : [number]!, live : boolean! }
+type RasmCorners = { radius : [number]!, kind : "round" | "bevel" | "notch" | "scoop" }
+type RasmSpring = { stiffness : number!, damping : number! }
+type RasmShadow = { color : string!, blur : number! }
+type RasmLook = { fill : string, stroke : string, strokeWidth : number, corners : RasmCorners, shadow : RasmShadow, material : RasmMaterial, textColor : string, font : string, spring : RasmSpring, decor : string }
+
+orbital RasmGallery {
+  entity RasmGalleryView [runtime] {
+    id : string!
+    looks : Map string RasmLook @description "The announced look table." = {}
+    rect : RasmRect? @description "The rect the readout was placed in, null until placed." = null
+    tweenValue : number @description "The tween's latest value." = 0
+    tweenUp : boolean @description "True when the next run goes down, false when it goes up." = false
+    swipe : string @description "The last swipe, as shown." = "none"
+    fling : string @description "The last fling, as shown." = "none"
+    drop : string @description "The last drag result, as shown." = "none"
+    paints : number @description "Counts paints, so each paint in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
+  }
+
+  trait Glue -> RasmGalleryView [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      THEME_CHOSEN -> ready
+        (emit RASM_THEME_SET { name: ?value })
+      OPEN_PRESSED -> ready
+        (emit RASM_OVERLAY_OPEN { id: "dialog" })
+      CLOSE_PRESSED -> ready
+        (emit RASM_OVERLAY_CLOSE { id: "dialog" })
+      TWEEN_PRESSED -> ready
+        (emit RASM_TWEEN_START { id: "tween", from: @entity.tweenValue, to: (if @entity.tweenUp 0 100), durationMs: 1200 })
+        (set @entity.tweenUp (not @entity.tweenUp))
+      TWEEN_STEPPED -> ready
+        (set @entity.tweenValue ?value)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit READOUT_PAINT { n: @entity.paints })
+      SWIPED -> ready
+        (set @entity.swipe (str/concat ?direction " " (math/round ?dx) "px"))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit READOUT_PAINT { n: @entity.paints })
+      FLUNG -> ready
+        (set @entity.fling (str/concat ?direction " " (math/round (* ?vx 100)) " px per 100 ms"))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit READOUT_PAINT { n: @entity.paints })
+      DRAG_DROPPED -> ready
+        (set @entity.drop (str/concat "on " ?target))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit READOUT_PAINT { n: @entity.paints })
+      DRAG_RELEASED -> ready
+        (set @entity.drop "outside the targets")
+        (set @entity.paints (+ @entity.paints 1))
+        (emit READOUT_PAINT { n: @entity.paints })
+      RASM_THEME -> ready
+        (set @entity.looks ?looks)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit READOUT_PAINT { n: @entity.paints })
+      RASM_PLACE -> ready when (array/some ?placed (fn p (= @p.id "readout")))
+        (set @entity.rect (let ((mine (array/find ?placed (fn p (= @p.id "readout"))))) (if (= @mine null) null @mine.rect)))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit READOUT_PAINT { n: @entity.paints })
+      RASM_PLACE -> ready when (not (array/some ?placed (fn p (= @p.id "readout"))))
+      READOUT_PAINT -> ready
+        (let ((l (object/get @entity.looks "text/body/idle" null)) (r @entity.rect))
+          (when (and (!= @l null) (!= @r null))
+            (emit RASM_PAINT { id: "readout", z: 2, nodes: [
+              { type: draw-text, id: "readout:tween", text: (str/concat "Tween value " (math/round @entity.tweenValue)), position: { x: @r.x, y: @r.y }, anchor: "top-left", baseline: "top", color: @l.textColor, font: @l.font, spring: @l.spring, hit: false },
+              { type: draw-shape, id: "readout:bar", shape: rect, anchor: "top-left", position: { x: @r.x, y: (+ @r.y 24) }, width: (/ (* @r.w @entity.tweenValue) 100), height: 8, fill: @l.textColor, hit: false },
+              { type: draw-text, id: "readout:swipe", text: (str/concat "Swipe: " @entity.swipe), position: { x: @r.x, y: (+ @r.y 44) }, anchor: "top-left", baseline: "top", color: @l.textColor, font: @l.font, spring: @l.spring, hit: false },
+              { type: draw-text, id: "readout:fling", text: (str/concat "Fling: " @entity.fling), position: { x: @r.x, y: (+ @r.y 66) }, anchor: "top-left", baseline: "top", color: @l.textColor, font: @l.font, spring: @l.spring, hit: false },
+              { type: draw-text, id: "readout:drop", text: (str/concat "Dropped: " @entity.drop), position: { x: @r.x, y: (+ @r.y 88) }, anchor: "top-left", baseline: "top", color: @l.textColor, font: @l.font, spring: @l.spring, hit: false }
+            ] })))
+    }
+
+    emits {
+      READOUT_PAINT -> internal { n : number! }
+        @description "Repaint the readout from the stored rect and look."
+        @tier "internal"
+      RASM_PAINT -> external { id : string!  z : number!  nodes : [node]! }
+        @description "The readout's tween bar and its swipe, fling and drop lines."
+        @tier "primary"
+      RASM_THEME_SET -> external { name : string! }
+        @description "Switch the look preset to the one the theme choice named."
+        @tier "domain"
+      RASM_OVERLAY_OPEN -> external { id : string! }
+        @description "Open the dialog overlay."
+        @tier "domain"
+      RASM_OVERLAY_CLOSE -> external { id : string! }
+        @description "Close the dialog overlay."
+        @tier "domain"
+      RASM_TWEEN_START -> external { id : string!  from : number!  to : number!  durationMs : number! }
+        @description "Run the tween from its latest value to the other end of the bar."
+        @tier "domain"
+    }
+
+    listens {
+      ThemeChoice.RASM_THEME_CHOSEN -> THEME_CHOSEN
+      THEME_CHOSEN { value : string! }
+        @description "The theme choice picked a preset."
+        @tier "domain"
+      OpenBtn.RASM_OPEN_PRESSED -> OPEN_PRESSED
+      OPEN_PRESSED { }
+        @description "The Open dialog button was pressed."
+        @tier "domain"
+      DlgClose.RASM_CLOSE_PRESSED -> CLOSE_PRESSED
+      CLOSE_PRESSED { }
+        @description "The dialog's Close button was pressed."
+        @tier "domain"
+      TweenBtn.RASM_TWEEN_PRESSED -> TWEEN_PRESSED
+      TWEEN_PRESSED { }
+        @description "The Play tween button was pressed."
+        @tier "domain"
+      Tween.RASM_TWEEN_STEP -> TWEEN_STEPPED
+      TWEEN_STEPPED { id : string!  value : number!  t : number! }
+        @description "The tween advanced to a value."
+        @tier "domain"
+      Swipe.RASM_SWIPE -> SWIPED
+      SWIPED { id : string!  direction : "left" | "right" | "up" | "down"!  dx : number!  dy : number! }
+        @description "The gesture area saw a swipe."
+        @tier "domain"
+      Swipe.RASM_FLING -> FLUNG
+      FLUNG { id : string!  direction : "left" | "right" | "up" | "down"!  dx : number!  dy : number!  vx : number!  vy : number! }
+        @description "The gesture area saw a fling."
+        @tier "domain"
+      Chip.RASM_DRAG_DROPPED -> DRAG_DROPPED
+      DRAG_DROPPED { id : string!  target : string!  x : number!  y : number! }
+        @description "The chip was released inside a target."
+        @tier "domain"
+      Chip.RASM_DRAG_RELEASED -> DRAG_RELEASED
+      DRAG_RELEASED { id : string!  x : number!  y : number! }
+        @description "The chip was released outside every target."
+        @tier "domain"
+      Theme.RASM_THEME -> RASM_THEME
+      RASM_THEME { name : string!  looks : Map string RasmLook! }
+        @description "Store the looks and repaint the readout."
+        @tier "domain"
+      TweenCol.RASM_PLACE -> RASM_PLACE
+      RASM_PLACE { placed : [RasmPlaced]! }
+        @description "Take the readout's rect when it is placed."
+        @tier "domain"
+    }
+  }
+
+  trait Surface = SurfaceAtom.traits.RasmSurface {
+    config {
+      id: "rasm"
+      width: 900
+      height: 1340
+      rootChild: "root"
+      rootRect: { x: 0, y: 0, w: 900, h: 1340 }
+      fill: true
+      margin: 24
+      align: "center"
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      Surface.RASM_RESIZE -> RASM_RESIZE
+      List.RASM_VISIBLE -> RASM_VISIBLE
+      Dialog.RASM_VISIBLE -> RASM_VISIBLE
+      RootStack.RASM_PAINT -> RASM_PAINT
+      LayoutRow.RASM_PAINT -> RASM_PAINT
+      LStack.RASM_PAINT -> RASM_PAINT
+      ContRow.RASM_PAINT -> RASM_PAINT
+      OpenCol.RASM_PAINT -> RASM_PAINT
+      DlgStack.RASM_PAINT -> RASM_PAINT
+      MotionRow.RASM_PAINT -> RASM_PAINT
+      TweenCol.RASM_PAINT -> RASM_PAINT
+      SwipeBox.RASM_PAINT -> RASM_PAINT
+      DragCol.RASM_PAINT -> RASM_PAINT
+      Bins.RASM_PAINT -> RASM_PAINT
+      TitleText.RASM_PAINT -> RASM_PAINT
+      HControls.RASM_PAINT -> RASM_PAINT
+      HLayout.RASM_PAINT -> RASM_PAINT
+      HContainers.RASM_PAINT -> RASM_PAINT
+      HMotion.RASM_PAINT -> RASM_PAINT
+      HEmbed.RASM_PAINT -> RASM_PAINT
+      S1.RASM_PAINT -> RASM_PAINT
+      S2.RASM_PAINT -> RASM_PAINT
+      S3.RASM_PAINT -> RASM_PAINT
+      OpenHint.RASM_PAINT -> RASM_PAINT
+      DlgText.RASM_PAINT -> RASM_PAINT
+      Item0.RASM_PAINT -> RASM_PAINT
+      Item1.RASM_PAINT -> RASM_PAINT
+      Item2.RASM_PAINT -> RASM_PAINT
+      Item3.RASM_PAINT -> RASM_PAINT
+      Item4.RASM_PAINT -> RASM_PAINT
+      Item5.RASM_PAINT -> RASM_PAINT
+      Item6.RASM_PAINT -> RASM_PAINT
+      Item7.RASM_PAINT -> RASM_PAINT
+      Item8.RASM_PAINT -> RASM_PAINT
+      Item9.RASM_PAINT -> RASM_PAINT
+      Item10.RASM_PAINT -> RASM_PAINT
+      Item11.RASM_PAINT -> RASM_PAINT
+      ThemeChoice.RASM_PAINT -> RASM_PAINT
+      PressCtl.RASM_PAINT -> RASM_PAINT
+      ToggleCtl.RASM_PAINT -> RASM_PAINT
+      RangeCtl.RASM_PAINT -> RASM_PAINT
+      FieldCtl.RASM_PAINT -> RASM_PAINT
+      ChoiceCtl.RASM_PAINT -> RASM_PAINT
+      LockedBtn.RASM_PAINT -> RASM_PAINT
+      G1.RASM_PAINT -> RASM_PAINT
+      G2.RASM_PAINT -> RASM_PAINT
+      G3.RASM_PAINT -> RASM_PAINT
+      G4.RASM_PAINT -> RASM_PAINT
+      OpenBtn.RASM_PAINT -> RASM_PAINT
+      DlgClose.RASM_PAINT -> RASM_PAINT
+      TweenBtn.RASM_PAINT -> RASM_PAINT
+      BinA.RASM_PAINT -> RASM_PAINT
+      BinB.RASM_PAINT -> RASM_PAINT
+      List.RASM_PAINT -> RASM_PAINT
+      Dialog.RASM_PAINT -> RASM_PAINT
+      Swipe.RASM_PAINT -> RASM_PAINT
+      Chip.RASM_PAINT -> RASM_PAINT
+      EmbedSlot.RASM_PAINT -> RASM_PAINT
+      Glue.RASM_PAINT -> RASM_PAINT
+    }
+  }
+
+  trait Theme = ThemeAtom.traits.RasmTheme {
+    listens {
+      Glue.RASM_THEME_SET -> RASM_THEME_SET
+      Surface.RASM_BOOT -> RASM_BOOT
+    }
+  }
+  trait NameBuffer = BufAtom.traits.Buffer {
+    config {
+      slot: sidebar
+      headless: true
+    }
+    listens {
+      FieldCtl.LOAD_TEXT -> LOAD_TEXT
+      FieldCtl.INSERT_TEXT -> INSERT_TEXT
+      FieldCtl.BACKSPACE -> BACKSPACE
+      FieldCtl.MOTION -> MOTION
+      FieldCtl.OPERATE -> OPERATE
+      FieldCtl.CURSOR_SET -> CURSOR_SET
+    }
+  }
+  trait RootStack = StackAtom.traits.RasmStack {
+    config {
+      id: "root"
+      axis: "vertical"
+      gap: 14
+      padding: 24
+      look: ""
+      z: 1
+      children: [{ id: "title", size: "measure" }, { id: "theme", size: "fixed", main: 66 }, { id: "hcontrols", size: "measure" }, { id: "controls", size: "fixed", main: 226 }, { id: "hlayout", size: "measure" }, { id: "layoutrow", size: "fixed", main: 110 }, { id: "hcontainers", size: "measure" }, { id: "controw", size: "fixed", main: 170 }, { id: "hmotion", size: "measure" }, { id: "motionrow", size: "fixed", main: 200 }, { id: "hembed", size: "measure" }, { id: "embedslot", size: "fixed", main: 120 }]
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      Surface.RASM_PLACE -> RASM_PLACE
+      Surface.RASM_MEASURED -> RASM_MEASURED
+      Enter.RASM_ENTER -> RASM_ENTER
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+    }
+  }
+  trait LayoutRow = StackAtom.traits.RasmStack {
+    config {
+      id: "layoutrow"
+      axis: "horizontal"
+      gap: 14
+      padding: 0
+      look: ""
+      z: 1
+      children: [{ id: "lstack", size: "fill" }, { id: "lgrid", size: "fill" }]
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      RootStack.RASM_PLACE -> RASM_PLACE
+      Surface.RASM_MEASURED -> RASM_MEASURED
+      Enter.RASM_ENTER -> RASM_ENTER
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+    }
+  }
+  trait LStack = StackAtom.traits.RasmStack {
+    config {
+      id: "lstack"
+      axis: "vertical"
+      gap: 8
+      padding: 12
+      look: "stack/panel/idle"
+      z: 1
+      children: [{ id: "s1", size: "measure" }, { id: "s2", size: "measure" }, { id: "s3", size: "measure" }]
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      LayoutRow.RASM_PLACE -> RASM_PLACE
+      Surface.RASM_MEASURED -> RASM_MEASURED
+      Enter.RASM_ENTER -> RASM_ENTER
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+    }
+  }
+  trait ContRow = StackAtom.traits.RasmStack {
+    config {
+      id: "controw"
+      axis: "horizontal"
+      gap: 14
+      padding: 0
+      look: ""
+      z: 1
+      children: [{ id: "opencol", size: "fill" }, { id: "list", size: "fill" }]
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      RootStack.RASM_PLACE -> RASM_PLACE
+      Surface.RASM_MEASURED -> RASM_MEASURED
+      Enter.RASM_ENTER -> RASM_ENTER
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+    }
+  }
+  trait OpenCol = StackAtom.traits.RasmStack {
+    config {
+      id: "opencol"
+      axis: "vertical"
+      gap: 12
+      padding: 0
+      look: ""
+      z: 1
+      children: [{ id: "open", size: "fixed", main: 46 }, { id: "openhint", size: "measure" }]
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      ContRow.RASM_PLACE -> RASM_PLACE
+      Surface.RASM_MEASURED -> RASM_MEASURED
+      Enter.RASM_ENTER -> RASM_ENTER
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+    }
+  }
+  trait DlgStack = StackAtom.traits.RasmStack {
+    config {
+      id: "dlgstack"
+      axis: "vertical"
+      gap: 16
+      padding: 20
+      look: ""
+      z: 101
+      children: [{ id: "dlgtext", size: "measure" }, { id: "dlgclose", size: "fixed", main: 46 }]
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      Dialog.RASM_PLACE -> RASM_PLACE
+      Surface.RASM_MEASURED -> RASM_MEASURED
+      Enter.RASM_ENTER -> RASM_ENTER
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+    }
+  }
+  trait MotionRow = StackAtom.traits.RasmStack {
+    config {
+      id: "motionrow"
+      axis: "horizontal"
+      gap: 14
+      padding: 0
+      look: ""
+      z: 1
+      children: [{ id: "tweencol", size: "fill" }, { id: "swipebox", size: "fill" }, { id: "dragcol", size: "fill" }]
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      RootStack.RASM_PLACE -> RASM_PLACE
+      Surface.RASM_MEASURED -> RASM_MEASURED
+      Enter.RASM_ENTER -> RASM_ENTER
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+    }
+  }
+  trait TweenCol = StackAtom.traits.RasmStack {
+    config {
+      id: "tweencol"
+      axis: "vertical"
+      gap: 10
+      padding: 0
+      look: ""
+      z: 1
+      children: [{ id: "tweenbtn", size: "fixed", main: 46 }, { id: "readout", size: "fixed", main: 110 }]
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      MotionRow.RASM_PLACE -> RASM_PLACE
+      Surface.RASM_MEASURED -> RASM_MEASURED
+      Enter.RASM_ENTER -> RASM_ENTER
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+    }
+  }
+  trait SwipeBox = StackAtom.traits.RasmStack {
+    config {
+      id: "swipebox"
+      axis: "vertical"
+      gap: 0
+      padding: 0
+      look: "stack/panel/idle"
+      z: 1
+      children: [{ id: "swipe", size: "fill" }]
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      MotionRow.RASM_PLACE -> RASM_PLACE
+      Surface.RASM_MEASURED -> RASM_MEASURED
+      Enter.RASM_ENTER -> RASM_ENTER
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+    }
+  }
+  trait DragCol = StackAtom.traits.RasmStack {
+    config {
+      id: "dragcol"
+      axis: "vertical"
+      gap: 10
+      padding: 0
+      look: ""
+      z: 1
+      children: [{ id: "chip", size: "fixed", main: 44 }, { id: "bins", size: "fill" }]
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      MotionRow.RASM_PLACE -> RASM_PLACE
+      Surface.RASM_MEASURED -> RASM_MEASURED
+      Enter.RASM_ENTER -> RASM_ENTER
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+    }
+  }
+  trait Bins = StackAtom.traits.RasmStack {
+    config {
+      id: "bins"
+      axis: "horizontal"
+      gap: 10
+      padding: 0
+      look: ""
+      z: 1
+      children: [{ id: "bina", size: "fill" }, { id: "binb", size: "fill" }]
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      DragCol.RASM_PLACE -> RASM_PLACE
+      Surface.RASM_MEASURED -> RASM_MEASURED
+      Enter.RASM_ENTER -> RASM_ENTER
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+    }
+  }
+  trait ControlsGrid = GridAtom.traits.RasmGrid {
+    config {
+      id: "controls"
+      columns: [{ size: "fill" }, { size: "fill" }]
+      rows: [{ size: "fixed", main: 66 }, { size: "fixed", main: 66 }, { size: "fixed", main: 66 }]
+      gap: 14
+      rowGap: 14
+      padding: 0
+      children: [{ id: "press", col: 0, row: 0 }, { id: "toggle", col: 1, row: 0 }, { id: "range", col: 0, row: 1 }, { id: "field", col: 1, row: 1 }, { id: "choice", col: 0, row: 2 }, { id: "locked", col: 1, row: 2 }]
+    }
+    listens {
+      RootStack.RASM_PLACE -> RASM_PLACE
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+    }
+  }
+  trait LGrid = GridAtom.traits.RasmGrid {
+    config {
+      id: "lgrid"
+      columns: [{ size: "fill" }, { size: "fill" }]
+      rows: [{ size: "fill" }, { size: "fill" }]
+      gap: 8
+      rowGap: 8
+      padding: 0
+      children: [{ id: "g1", col: 0, row: 0 }, { id: "g2", col: 1, row: 0 }, { id: "g3", col: 0, row: 1 }, { id: "g4", col: 1, row: 1 }]
+    }
+    listens {
+      LayoutRow.RASM_PLACE -> RASM_PLACE
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+    }
+  }
+  trait TitleText = TextAtom.traits.RasmText {
+    config {
+      id: "title"
+      text: "Rasm gallery"
+      intent: "title"
+      z: 2
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      RootStack.RASM_PLACE -> RASM_PLACE
+      Enter.RASM_ENTER -> RASM_ENTER
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+    }
+  }
+  trait HControls = TextAtom.traits.RasmText {
+    config {
+      id: "hcontrols"
+      text: "Controls"
+      intent: "body"
+      z: 2
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      RootStack.RASM_PLACE -> RASM_PLACE
+      Enter.RASM_ENTER -> RASM_ENTER
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+    }
+  }
+  trait HLayout = TextAtom.traits.RasmText {
+    config {
+      id: "hlayout"
+      text: "Layout: stack and grid"
+      intent: "body"
+      z: 2
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      RootStack.RASM_PLACE -> RASM_PLACE
+      Enter.RASM_ENTER -> RASM_ENTER
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+    }
+  }
+  trait HContainers = TextAtom.traits.RasmText {
+    config {
+      id: "hcontainers"
+      text: "Containers: overlay and scroll"
+      intent: "body"
+      z: 2
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      RootStack.RASM_PLACE -> RASM_PLACE
+      Enter.RASM_ENTER -> RASM_ENTER
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+    }
+  }
+  trait HMotion = TextAtom.traits.RasmText {
+    config {
+      id: "hmotion"
+      text: "Motion: tween, gesture, drag"
+      intent: "body"
+      z: 2
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      RootStack.RASM_PLACE -> RASM_PLACE
+      Enter.RASM_ENTER -> RASM_ENTER
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+    }
+  }
+  trait HEmbed = TextAtom.traits.RasmText {
+    config {
+      id: "hembed"
+      text: "Embed"
+      intent: "body"
+      z: 2
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      RootStack.RASM_PLACE -> RASM_PLACE
+      Enter.RASM_ENTER -> RASM_ENTER
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+    }
+  }
+  trait S1 = TextAtom.traits.RasmText {
+    config {
+      id: "s1"
+      text: "Stack row one"
+      intent: "body"
+      z: 2
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      LStack.RASM_PLACE -> RASM_PLACE
+      Enter.RASM_ENTER -> RASM_ENTER
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+    }
+  }
+  trait S2 = TextAtom.traits.RasmText {
+    config {
+      id: "s2"
+      text: "Stack row two"
+      intent: "body"
+      z: 2
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      LStack.RASM_PLACE -> RASM_PLACE
+      Enter.RASM_ENTER -> RASM_ENTER
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+    }
+  }
+  trait S3 = TextAtom.traits.RasmText {
+    config {
+      id: "s3"
+      text: "Stack row three"
+      intent: "body"
+      z: 2
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      LStack.RASM_PLACE -> RASM_PLACE
+      Enter.RASM_ENTER -> RASM_ENTER
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+    }
+  }
+  trait OpenHint = TextAtom.traits.RasmText {
+    config {
+      id: "openhint"
+      text: "The dialog opens above the page."
+      intent: "body"
+      z: 2
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      OpenCol.RASM_PLACE -> RASM_PLACE
+      Enter.RASM_ENTER -> RASM_ENTER
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+    }
+  }
+  trait DlgText = TextAtom.traits.RasmText {
+    config {
+      id: "dlgtext"
+      text: "A dialog on its own layer. Press Close or the scrim to dismiss it."
+      intent: "body"
+      z: 102
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      DlgStack.RASM_PLACE -> RASM_PLACE
+      Enter.RASM_ENTER -> RASM_ENTER
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+    }
+  }
+  trait Item0 = TextAtom.traits.RasmText {
+    config {
+      id: "item0"
+      text: "List item 1"
+      intent: "body"
+      z: 3
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      List.RASM_PLACE -> RASM_PLACE
+      Enter.RASM_ENTER -> RASM_ENTER
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+    }
+  }
+  trait Item1 = TextAtom.traits.RasmText {
+    config {
+      id: "item1"
+      text: "List item 2"
+      intent: "body"
+      z: 3
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      List.RASM_PLACE -> RASM_PLACE
+      Enter.RASM_ENTER -> RASM_ENTER
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+    }
+  }
+  trait Item2 = TextAtom.traits.RasmText {
+    config {
+      id: "item2"
+      text: "List item 3"
+      intent: "body"
+      z: 3
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      List.RASM_PLACE -> RASM_PLACE
+      Enter.RASM_ENTER -> RASM_ENTER
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+    }
+  }
+  trait Item3 = TextAtom.traits.RasmText {
+    config {
+      id: "item3"
+      text: "List item 4"
+      intent: "body"
+      z: 3
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      List.RASM_PLACE -> RASM_PLACE
+      Enter.RASM_ENTER -> RASM_ENTER
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+    }
+  }
+  trait Item4 = TextAtom.traits.RasmText {
+    config {
+      id: "item4"
+      text: "List item 5"
+      intent: "body"
+      z: 3
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      List.RASM_PLACE -> RASM_PLACE
+      Enter.RASM_ENTER -> RASM_ENTER
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+    }
+  }
+  trait Item5 = TextAtom.traits.RasmText {
+    config {
+      id: "item5"
+      text: "List item 6"
+      intent: "body"
+      z: 3
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      List.RASM_PLACE -> RASM_PLACE
+      Enter.RASM_ENTER -> RASM_ENTER
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+    }
+  }
+  trait Item6 = TextAtom.traits.RasmText {
+    config {
+      id: "item6"
+      text: "List item 7"
+      intent: "body"
+      z: 3
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      List.RASM_PLACE -> RASM_PLACE
+      Enter.RASM_ENTER -> RASM_ENTER
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+    }
+  }
+  trait Item7 = TextAtom.traits.RasmText {
+    config {
+      id: "item7"
+      text: "List item 8"
+      intent: "body"
+      z: 3
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      List.RASM_PLACE -> RASM_PLACE
+      Enter.RASM_ENTER -> RASM_ENTER
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+    }
+  }
+  trait Item8 = TextAtom.traits.RasmText {
+    config {
+      id: "item8"
+      text: "List item 9"
+      intent: "body"
+      z: 3
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      List.RASM_PLACE -> RASM_PLACE
+      Enter.RASM_ENTER -> RASM_ENTER
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+    }
+  }
+  trait Item9 = TextAtom.traits.RasmText {
+    config {
+      id: "item9"
+      text: "List item 10"
+      intent: "body"
+      z: 3
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      List.RASM_PLACE -> RASM_PLACE
+      Enter.RASM_ENTER -> RASM_ENTER
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+    }
+  }
+  trait Item10 = TextAtom.traits.RasmText {
+    config {
+      id: "item10"
+      text: "List item 11"
+      intent: "body"
+      z: 3
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      List.RASM_PLACE -> RASM_PLACE
+      Enter.RASM_ENTER -> RASM_ENTER
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+    }
+  }
+  trait Item11 = TextAtom.traits.RasmText {
+    config {
+      id: "item11"
+      text: "List item 12"
+      intent: "body"
+      z: 3
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      List.RASM_PLACE -> RASM_PLACE
+      Enter.RASM_ENTER -> RASM_ENTER
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+    }
+  }
+  trait ThemeChoice = ChoiceAtom.traits.RasmChoice {
+    config {
+      id: "theme"
+      label: "Theme"
+      options: ["naqsh", "glass", "sand", "instrument", "terminal", "paper"]
+      value: "naqsh"
+      changed: RASM_THEME_CHOSEN
+      order: 1
+      z: 2
+    }
+    listens {
+      Surface.RASM_BOOT -> RASM_BOOT
+      Theme.RASM_THEME -> RASM_THEME
+      RootStack.RASM_PLACE -> RASM_PLACE
+      Anchor.RASM_PLACE -> RASM_PLACE
+      Enter.RASM_ENTER -> RASM_ENTER
+      Surface.RASM_POINTER -> RASM_POINTER
+      Surface.RASM_KEYPRESS -> RASM_KEYPRESS
+      Focus.RASM_KEYPRESS -> RASM_KEYPRESS
+      Focus.RASM_FOCUS -> RASM_FOCUS
+      Focus.RASM_ACTIVATE -> RASM_ACTIVATE
+      Focus.RASM_STEP -> RASM_STEP
+    }
+  }
+  trait PressCtl = PressAtom.traits.RasmPressable {
+    config {
+      id: "press"
+      label: "Press me"
+      intent: "primary"
+      order: 2
+      z: 2
+    }
+    listens {
+      Surface.RASM_BOOT -> RASM_BOOT
+      Theme.RASM_THEME -> RASM_THEME
+      ControlsGrid.RASM_PLACE -> RASM_PLACE
+      Enter.RASM_ENTER -> RASM_ENTER
+      Surface.RASM_POINTER -> RASM_POINTER
+      Focus.RASM_FOCUS -> RASM_FOCUS
+      Focus.RASM_ACTIVATE -> RASM_ACTIVATE
+    }
+  }
+  trait ToggleCtl = ToggleAtom.traits.RasmToggle {
+    config {
+      id: "toggle"
+      label: "Switch"
+      kind: "switch"
+      order: 3
+      z: 2
+    }
+    listens {
+      Surface.RASM_BOOT -> RASM_BOOT
+      Theme.RASM_THEME -> RASM_THEME
+      ControlsGrid.RASM_PLACE -> RASM_PLACE
+      Enter.RASM_ENTER -> RASM_ENTER
+      Surface.RASM_POINTER -> RASM_POINTER
+      Focus.RASM_FOCUS -> RASM_FOCUS
+      Focus.RASM_ACTIVATE -> RASM_ACTIVATE
+    }
+  }
+  trait RangeCtl = RangeAtom.traits.RasmRange {
+    config {
+      id: "range"
+      label: "Range"
+      min: 0
+      max: 100
+      value: 40
+      order: 4
+      z: 2
+    }
+    listens {
+      Surface.RASM_BOOT -> RASM_BOOT
+      Theme.RASM_THEME -> RASM_THEME
+      ControlsGrid.RASM_PLACE -> RASM_PLACE
+      Enter.RASM_ENTER -> RASM_ENTER
+      Surface.RASM_POINTER -> RASM_POINTER
+      Focus.RASM_FOCUS -> RASM_FOCUS
+      Focus.RASM_STEP -> RASM_STEP
+    }
+  }
+  trait FieldCtl = TextFieldAtom.traits.RasmTextField {
+    config {
+      id: "field"
+      label: "Text field"
+      placeholder: "Type here"
+      order: 5
+      z: 2
+    }
+    listens {
+      NameBuffer.KEY -> BUFFER_KEY
+      NameBuffer.EDITOR_HOVER -> BUFFER_HOVER
+      Surface.RASM_BOOT -> RASM_BOOT
+      Theme.RASM_THEME -> RASM_THEME
+      ControlsGrid.RASM_PLACE -> RASM_PLACE
+      Enter.RASM_ENTER -> RASM_ENTER
+      Surface.RASM_POINTER -> RASM_POINTER
+      Surface.RASM_TEXT -> RASM_TEXT
+      Surface.RASM_KEYPRESS -> RASM_KEYPRESS
+      Focus.RASM_KEYPRESS -> RASM_KEYPRESS
+      Focus.RASM_FOCUS -> RASM_FOCUS
+      Focus.RASM_ACTIVATE -> RASM_ACTIVATE
+      NameBuffer.BUFFER_EDITED -> BUFFER_EDITED
+      NameBuffer.CURSOR_MOVED -> CURSOR_MOVED
+    }
+  }
+  trait ChoiceCtl = ChoiceAtom.traits.RasmChoice {
+    config {
+      id: "choice"
+      label: "Choice"
+      options: ["Spring", "Summer", "Autumn", "Winter"]
+      value: "Spring"
+      order: 6
+      z: 2
+    }
+    listens {
+      Surface.RASM_BOOT -> RASM_BOOT
+      Theme.RASM_THEME -> RASM_THEME
+      ControlsGrid.RASM_PLACE -> RASM_PLACE
+      Anchor.RASM_PLACE -> RASM_PLACE
+      Enter.RASM_ENTER -> RASM_ENTER
+      Surface.RASM_POINTER -> RASM_POINTER
+      Surface.RASM_KEYPRESS -> RASM_KEYPRESS
+      Focus.RASM_KEYPRESS -> RASM_KEYPRESS
+      Focus.RASM_FOCUS -> RASM_FOCUS
+      Focus.RASM_ACTIVATE -> RASM_ACTIVATE
+      Focus.RASM_STEP -> RASM_STEP
+    }
+  }
+  trait LockedBtn = PressAtom.traits.RasmPressable {
+    config {
+      id: "locked"
+      label: "Disabled"
+      intent: "secondary"
+      disabled: true
+      order: 7
+      z: 2
+    }
+    listens {
+      Surface.RASM_BOOT -> RASM_BOOT
+      Theme.RASM_THEME -> RASM_THEME
+      ControlsGrid.RASM_PLACE -> RASM_PLACE
+      Enter.RASM_ENTER -> RASM_ENTER
+      Surface.RASM_POINTER -> RASM_POINTER
+      Focus.RASM_FOCUS -> RASM_FOCUS
+      Focus.RASM_ACTIVATE -> RASM_ACTIVATE
+    }
+  }
+  trait G1 = PressAtom.traits.RasmPressable {
+    config {
+      id: "g1"
+      label: "Cell one"
+      intent: "secondary"
+      disabled: true
+      order: 20
+      z: 2
+    }
+    listens {
+      Surface.RASM_BOOT -> RASM_BOOT
+      Theme.RASM_THEME -> RASM_THEME
+      LGrid.RASM_PLACE -> RASM_PLACE
+      Enter.RASM_ENTER -> RASM_ENTER
+      Surface.RASM_POINTER -> RASM_POINTER
+      Focus.RASM_FOCUS -> RASM_FOCUS
+      Focus.RASM_ACTIVATE -> RASM_ACTIVATE
+    }
+  }
+  trait G2 = PressAtom.traits.RasmPressable {
+    config {
+      id: "g2"
+      label: "Cell two"
+      intent: "secondary"
+      disabled: true
+      order: 21
+      z: 2
+    }
+    listens {
+      Surface.RASM_BOOT -> RASM_BOOT
+      Theme.RASM_THEME -> RASM_THEME
+      LGrid.RASM_PLACE -> RASM_PLACE
+      Enter.RASM_ENTER -> RASM_ENTER
+      Surface.RASM_POINTER -> RASM_POINTER
+      Focus.RASM_FOCUS -> RASM_FOCUS
+      Focus.RASM_ACTIVATE -> RASM_ACTIVATE
+    }
+  }
+  trait G3 = PressAtom.traits.RasmPressable {
+    config {
+      id: "g3"
+      label: "Cell three"
+      intent: "secondary"
+      disabled: true
+      order: 22
+      z: 2
+    }
+    listens {
+      Surface.RASM_BOOT -> RASM_BOOT
+      Theme.RASM_THEME -> RASM_THEME
+      LGrid.RASM_PLACE -> RASM_PLACE
+      Enter.RASM_ENTER -> RASM_ENTER
+      Surface.RASM_POINTER -> RASM_POINTER
+      Focus.RASM_FOCUS -> RASM_FOCUS
+      Focus.RASM_ACTIVATE -> RASM_ACTIVATE
+    }
+  }
+  trait G4 = PressAtom.traits.RasmPressable {
+    config {
+      id: "g4"
+      label: "Cell four"
+      intent: "secondary"
+      disabled: true
+      order: 23
+      z: 2
+    }
+    listens {
+      Surface.RASM_BOOT -> RASM_BOOT
+      Theme.RASM_THEME -> RASM_THEME
+      LGrid.RASM_PLACE -> RASM_PLACE
+      Enter.RASM_ENTER -> RASM_ENTER
+      Surface.RASM_POINTER -> RASM_POINTER
+      Focus.RASM_FOCUS -> RASM_FOCUS
+      Focus.RASM_ACTIVATE -> RASM_ACTIVATE
+    }
+  }
+  trait OpenBtn = PressAtom.traits.RasmPressable {
+    config {
+      id: "open"
+      label: "Open dialog"
+      intent: "primary"
+      action: RASM_OPEN_PRESSED
+      order: 8
+      z: 2
+    }
+    listens {
+      Surface.RASM_BOOT -> RASM_BOOT
+      Theme.RASM_THEME -> RASM_THEME
+      OpenCol.RASM_PLACE -> RASM_PLACE
+      Enter.RASM_ENTER -> RASM_ENTER
+      Surface.RASM_POINTER -> RASM_POINTER
+      Focus.RASM_FOCUS -> RASM_FOCUS
+      Focus.RASM_ACTIVATE -> RASM_ACTIVATE
+    }
+  }
+  trait DlgClose = PressAtom.traits.RasmPressable {
+    config {
+      id: "dlgclose"
+      label: "Close"
+      intent: "primary"
+      action: RASM_CLOSE_PRESSED
+      order: 9
+      z: 102
+    }
+    listens {
+      Surface.RASM_BOOT -> RASM_BOOT
+      Theme.RASM_THEME -> RASM_THEME
+      DlgStack.RASM_PLACE -> RASM_PLACE
+      Enter.RASM_ENTER -> RASM_ENTER
+      Surface.RASM_POINTER -> RASM_POINTER
+      Focus.RASM_FOCUS -> RASM_FOCUS
+      Focus.RASM_ACTIVATE -> RASM_ACTIVATE
+    }
+  }
+  trait TweenBtn = PressAtom.traits.RasmPressable {
+    config {
+      id: "tweenbtn"
+      label: "Play tween"
+      intent: "primary"
+      action: RASM_TWEEN_PRESSED
+      order: 10
+      z: 2
+    }
+    listens {
+      Surface.RASM_BOOT -> RASM_BOOT
+      Theme.RASM_THEME -> RASM_THEME
+      TweenCol.RASM_PLACE -> RASM_PLACE
+      Enter.RASM_ENTER -> RASM_ENTER
+      Surface.RASM_POINTER -> RASM_POINTER
+      Focus.RASM_FOCUS -> RASM_FOCUS
+      Focus.RASM_ACTIVATE -> RASM_ACTIVATE
+    }
+  }
+  trait BinA = PressAtom.traits.RasmPressable {
+    config {
+      id: "bina"
+      label: "Target A"
+      intent: "secondary"
+      disabled: true
+      order: 21
+      z: 2
+    }
+    listens {
+      Surface.RASM_BOOT -> RASM_BOOT
+      Theme.RASM_THEME -> RASM_THEME
+      Bins.RASM_PLACE -> RASM_PLACE
+      Enter.RASM_ENTER -> RASM_ENTER
+      Surface.RASM_POINTER -> RASM_POINTER
+      Focus.RASM_FOCUS -> RASM_FOCUS
+      Focus.RASM_ACTIVATE -> RASM_ACTIVATE
+    }
+  }
+  trait BinB = PressAtom.traits.RasmPressable {
+    config {
+      id: "binb"
+      label: "Target B"
+      intent: "secondary"
+      disabled: true
+      order: 22
+      z: 2
+    }
+    listens {
+      Surface.RASM_BOOT -> RASM_BOOT
+      Theme.RASM_THEME -> RASM_THEME
+      Bins.RASM_PLACE -> RASM_PLACE
+      Enter.RASM_ENTER -> RASM_ENTER
+      Surface.RASM_POINTER -> RASM_POINTER
+      Focus.RASM_FOCUS -> RASM_FOCUS
+      Focus.RASM_ACTIVATE -> RASM_ACTIVATE
+    }
+  }
+  trait List = ScrollAtom.traits.RasmScroll {
+    config {
+      id: "list"
+      label: "List"
+      items: [{ id: "item0", size: 30 }, { id: "item1", size: 30 }, { id: "item2", size: 30 }, { id: "item3", size: 30 }, { id: "item4", size: 30 }, { id: "item5", size: 30 }, { id: "item6", size: 30 }, { id: "item7", size: 30 }, { id: "item8", size: 30 }, { id: "item9", size: 30 }, { id: "item10", size: 30 }, { id: "item11", size: 30 }]
+      gap: 6
+      order: 11
+      z: 2
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      ContRow.RASM_PLACE -> RASM_PLACE
+      Surface.RASM_POINTER -> RASM_POINTER
+      Surface.RASM_KEYPRESS -> RASM_KEYPRESS
+      Focus.RASM_KEYPRESS -> RASM_KEYPRESS
+      Focus.RASM_FOCUS -> RASM_FOCUS
+      Focus.RASM_STEP -> RASM_STEP
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+    }
+  }
+  trait Dialog = OverlayAtom.traits.RasmOverlay {
+    config {
+      id: "dialog"
+      label: "Dialog"
+      placement: "center"
+      width: 360
+      height: 200
+      content: "dlgstack"
+      contents: ["dlgstack", "dlgtext", "dlgclose"]
+      trap: ["dlgclose"]
+      surfaceWidth: 900
+      surfaceHeight: 1340
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      Surface.RASM_RESIZE -> RASM_RESIZE
+      Surface.RASM_DIRECTION -> RASM_DIRECTION
+      Surface.RASM_POINTER -> RASM_POINTER
+      Surface.RASM_KEYPRESS -> RASM_KEYPRESS
+      Focus.RASM_KEYPRESS -> RASM_KEYPRESS
+      Glue.RASM_OVERLAY_OPEN -> RASM_OVERLAY_OPEN
+      Glue.RASM_OVERLAY_CLOSE -> RASM_OVERLAY_CLOSE
+    }
+  }
+  trait Tween = TweenAtom.traits.RasmTween {
+    config {
+      id: "tween"
+      easing: "ease-in-out"
+    }
+    listens {
+      Glue.RASM_TWEEN_START -> RASM_TWEEN_START
+    }
+  }
+  trait Swipe = GestureAtom.traits.RasmGesture {
+    config {
+      id: "swipe"
+      z: 2
+    }
+    listens {
+      Surface.RASM_BOOT -> RASM_BOOT
+      SwipeBox.RASM_PLACE -> RASM_PLACE
+      Surface.RASM_POINTER -> RASM_POINTER
+    }
+  }
+  trait Chip = DragAtom.traits.RasmDrag {
+    config {
+      id: "chip"
+      label: "Drag me"
+      targets: ["bina", "binb"]
+      order: 12
+      z: 2
+    }
+    listens {
+      Surface.RASM_BOOT -> RASM_BOOT
+      Theme.RASM_THEME -> RASM_THEME
+      DragCol.RASM_PLACE -> RASM_PLACE
+      Bins.RASM_PLACE -> RASM_PLACE
+      Surface.RASM_POINTER -> RASM_POINTER
+    }
+  }
+  trait EmbedSlot = EmbedAtom.traits.RasmEmbed {
+    config {
+      id: "embedslot"
+      kind: "program"
+      source: "/rasm-panel"
+      label: "Embedded program"
+      fallback: "Embed unavailable on this host"
+      z: 2
+    }
+    listens {
+      Surface.RASM_BOOT -> RASM_BOOT
+      Theme.RASM_THEME -> RASM_THEME
+      RootStack.RASM_PLACE -> RASM_PLACE
+    }
+  }
+  trait Enter = PresenceAtom.traits.RasmPresence {
+    config {
+      order: ["title", "theme", "hcontrols", "press", "toggle", "range", "field", "choice", "locked", "hlayout", "lstack", "lgrid", "hcontainers", "open", "openhint", "list", "hmotion", "tweenbtn", "readout", "swipe", "chip", "bina", "binb", "hembed", "embedslot"]
+      staggerMs: 40
+    }
+    listens {
+      Surface.RASM_BOOT -> RASM_BOOT
+    }
+  }
+  trait Focus = FocusAtom.traits.RasmFocus {
+    config {
+      order: ["theme", "press", "toggle", "range", "field", "choice", "open", "tweenbtn", "list", "chip"]
+    }
+    listens {
+      Surface.RASM_KEY -> RASM_KEY
+      Surface.RASM_ACCESS -> RASM_ACCESS
+      Surface.RASM_POINTER -> RASM_POINTER
+      Dialog.RASM_FOCUS_TRAP -> RASM_FOCUS_TRAP
+      Dialog.RASM_FOCUS_RELEASE -> RASM_FOCUS_RELEASE
+    }
+  }
+  trait Anchor = AnchorAtom.traits.RasmAnchor {
+    config {
+      width: 900
+      height: 1340
+    }
+    listens {
+      RootStack.RASM_PLACE -> RASM_PLACE
+      ControlsGrid.RASM_PLACE -> RASM_PLACE
+      Surface.RASM_RESIZE -> RASM_RESIZE
+      ThemeChoice.RASM_ANCHOR -> RASM_ANCHOR
+      ChoiceCtl.RASM_ANCHOR -> RASM_ANCHOR
+      Dialog.RASM_ANCHOR -> RASM_ANCHOR
+    }
+  }
+  page "/rasm-gallery" as RasmGalleryPage -> Theme, Surface, NameBuffer, RootStack, LayoutRow, LStack, ContRow, OpenCol, DlgStack, MotionRow, TweenCol, SwipeBox, DragCol, Bins, ControlsGrid, LGrid, TitleText, HControls, HLayout, HContainers, HMotion, HEmbed, S1, S2, S3, OpenHint, DlgText, Item0, Item1, Item2, Item3, Item4, Item5, Item6, Item7, Item8, Item9, Item10, Item11, ThemeChoice, PressCtl, ToggleCtl, RangeCtl, FieldCtl, ChoiceCtl, LockedBtn, G1, G2, G3, G4, OpenBtn, DlgClose, TweenBtn, BinA, BinB, List, Dialog, Tween, Swipe, Chip, EmbedSlot, Enter, Focus, Anchor, Glue
+}

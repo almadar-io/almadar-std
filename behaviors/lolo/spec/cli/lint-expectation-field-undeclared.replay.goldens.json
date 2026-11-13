@@ -1713,6 +1713,268 @@
           }
         }
       ]
+    },
+    {
+      "id": "a-batch-upsert-op-is-checked",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "TestApp",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "Requests",
+                  "entity": {
+                    "name": "Request",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Ask",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "ASK",
+                            "effects": [
+                              [
+                                "persist",
+                                "batch",
+                                [
+                                  [
+                                    "upsert",
+                                    "ApprovalRequest",
+                                    {
+                                      "id": "i0",
+                                      "status": "a",
+                                      "bad": 1
+                                    }
+                                  ],
+                                  [
+                                    "update",
+                                    "ApprovalRequest",
+                                    "id1",
+                                    {
+                                      "worse": 2
+                                    }
+                                  ]
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [],
+                  "expects": [
+                    {
+                      "kind": "entity",
+                      "name": "ApprovalRequest",
+                      "shape": [
+                        {
+                          "name": "id",
+                          "type": "string"
+                        },
+                        {
+                          "name": "status",
+                          "type": "string"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationFieldUndeclared"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expectation-field-undeclared",
+                  "findings": [
+                    {
+                      "code": "ORB_S_EXPECTATION_FIELD_UNDECLARED",
+                      "path": "orbitals[0 (Requests)].traits[0 (Ask)].stateMachine.transitions[0].effects[0]",
+                      "message": "`Requests` persists `bad` to `ApprovalRequest`, but its `expects entity ApprovalRequest` shape declares only: id, status. The declaration is this orbital's own source of truth for the fields it touches.",
+                      "suggestion": "Add `bad` to the `expects entity ApprovalRequest` shape, or remove it from the persist payload.",
+                      "severity": "error"
+                    },
+                    {
+                      "code": "ORB_S_EXPECTATION_FIELD_UNDECLARED",
+                      "path": "orbitals[0 (Requests)].traits[0 (Ask)].stateMachine.transitions[0].effects[0]",
+                      "message": "`Requests` persists `worse` to `ApprovalRequest`, but its `expects entity ApprovalRequest` shape declares only: id, status. The declaration is this orbital's own source of truth for the fields it touches.",
+                      "suggestion": "Add `worse` to the `expects entity ApprovalRequest` shape, or remove it from the persist payload.",
+                      "severity": "error"
+                    }
+                  ],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationFieldUndeclared"
+        }
+      ]
+    },
+    {
+      "id": "control-a-batch-upsert-of-declared-fields-is-clean",
+      "steps": [
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.lolo",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "name": "TestApp",
+              "version": "1.0.0",
+              "orbitals": [
+                {
+                  "name": "Requests",
+                  "entity": {
+                    "name": "Request",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "Ask",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "ASK",
+                            "effects": [
+                              [
+                                "persist",
+                                "batch",
+                                [
+                                  [
+                                    "upsert",
+                                    "ApprovalRequest",
+                                    {
+                                      "id": "i0",
+                                      "status": "a"
+                                    }
+                                  ],
+                                  [
+                                    "update",
+                                    "ApprovalRequest",
+                                    "id1",
+                                    {
+                                      "status": "b"
+                                    }
+                                  ]
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [],
+                  "expects": [
+                    {
+                      "kind": "entity",
+                      "name": "ApprovalRequest",
+                      "shape": [
+                        {
+                          "name": "id",
+                          "type": "string"
+                        },
+                        {
+                          "name": "status",
+                          "type": "string"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationFieldUndeclared"
+        },
+        {
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "expectation-field-undeclared",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          },
+          "trait": "OrbLintExpectationFieldUndeclared"
+        }
+      ]
     }
   ]
 }

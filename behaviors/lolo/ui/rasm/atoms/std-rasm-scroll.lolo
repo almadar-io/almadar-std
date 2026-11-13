@@ -1,0 +1,256 @@
+app std-rasm-scroll [
+  version: "0.1.0",
+  description: "std-rasm-scroll — a Rasm scrolling region that virtualizes. It holds a declared list of items sized along one axis; on RASM_PLACE for its own id it measures the content and places only the items inside the viewport (with edge whole, only items that fit entirely) and emits RASM_VISIBLE for the shown and the hidden ones. A press on the region and a drag moves the content, a drag on the thumb moves it in proportion, RASM_STEP for its id moves it by the step, Page Up, Page Down, Home and End on its id jump, and RASM_SCROLL_BY moves it by a delta. It paints the region, a track and a thumb when the content overflows, and emits RASM_SCROLLED. With direction rtl the scrollbar sits on the left and a horizontal region starts at the right edge. Looks are scroll/<intent>/body, track, thumb and thumb-dragging."
+]
+
+type RasmRect = { x : number!, y : number!, w : number!, h : number! }
+type RasmPlaced = { id : string!, rect : RasmRect! }
+type RasmMaterial = { wgsl : string!, params : [number]!, live : boolean! }
+type RasmCorners = { radius : [number]!, kind : "round" | "bevel" | "notch" | "scoop" }
+type RasmSpring = { stiffness : number!, damping : number! }
+type RasmShadow = { color : string!, blur : number! }
+type RasmLook = { fill : string, stroke : string, strokeWidth : number, corners : RasmCorners, shadow : RasmShadow, material : RasmMaterial, textColor : string, font : string, spring : RasmSpring, decor : string }
+type RasmScrollItem = { id : string!, size : number! }
+
+orbital RasmScrollOrbital {
+  entity RasmScrollRun [runtime] {
+    id : string!
+    looks : Map string RasmLook @description "The announced look table." = {}
+    hasLooks : boolean = false
+    rect : RasmRect @description "The viewport rect RASM_PLACE gave this region." = { x: 0, y: 0, w: 0, h: 0 }
+    hasRect : boolean = false
+    content : number @description "The content length along the axis in px." = 0
+    maxOffset : number @description "The largest scroll offset in px." = 0
+    thumbLen : number @description "The thumb length along the axis in px." = 0
+    offset : number @description "How far the content is scrolled along the axis in px." = 0
+    dragging : boolean = false
+    dir : "ltr" | "rtl" @description "The direction the surface announced." = "ltr"
+    announced : boolean @description "True once the surface announced a direction, which then replaces the config knob." = false
+    dragStart : number @description "The pointer coordinate along the axis when the drag began." = 0
+    dragBase : number @description "The offset when the drag began." = 0
+    dragScale : number @description "Offset px per pointer px for the drag in progress, signed." = 0
+    focused : boolean = false
+    layouts : number @description "Counts layouts, so each layout in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
+    paints : number @description "Counts paints, so each paint in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
+  }
+
+  trait RasmScroll -> RasmScrollRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+        (set @entity.offset 0)
+        (set @entity.dragging false)
+      RASM_DIRECTION -> ready
+        (set @entity.dir ?direction)
+        (set @entity.announced true)
+        (set @entity.layouts (+ @entity.layouts 1))
+        (emit SCROLL_LAYOUT { n: @entity.layouts })
+        (set @entity.paints (+ @entity.paints 1))
+        (emit SCROLL_PAINT { n: @entity.paints })
+      RASM_THEME -> ready
+        (set @entity.looks ?looks)
+        (set @entity.hasLooks true)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit SCROLL_PAINT { n: @entity.paints })
+      RASM_PLACE -> ready when (array/some ?placed (fn p (= @p.id @config.id)))
+        (set @entity.rect (let ((mine (default (array/find ?placed (fn p (= @p.id @config.id))) { id: "", rect: { x: 0, y: 0, w: 0, h: 0 } }))) @mine.rect))
+        (set @entity.hasRect true)
+        (set @entity.layouts (+ @entity.layouts 1))
+        (emit SCROLL_METRICS { n: @entity.layouts })
+      RASM_PLACE -> ready when (not (array/some ?placed (fn p (= @p.id @config.id))))
+      SCROLL_METRICS -> ready when @entity.hasRect
+        (set @entity.content (+ (array/sum @config.items "size") (* @config.gap (math/max 0 (- (array/len @config.items) 1)))))
+        (set @entity.thumbLen (math/min (math/max @config.minThumb (/ (* (if (= @config.axis "vertical") @entity.rect.h @entity.rect.w) (if (= @config.axis "vertical") @entity.rect.h @entity.rect.w)) (math/max 1 (+ (array/sum @config.items "size") (* @config.gap (math/max 0 (- (array/len @config.items) 1))))))) (/ (if (= @config.axis "vertical") @entity.rect.h @entity.rect.w) 2)))
+        (set @entity.layouts (+ @entity.layouts 1))
+        (emit SCROLL_FIT { n: @entity.layouts })
+      SCROLL_FIT -> ready when @entity.hasRect
+        (set @entity.maxOffset (math/max 0 (- @entity.content (if (= @config.axis "vertical") @entity.rect.h @entity.rect.w))))
+        (set @entity.layouts (+ @entity.layouts 1))
+        (emit SCROLL_TO { offset: @entity.offset })
+      SCROLL_TO -> ready when @entity.hasRect
+        (set @entity.offset (math/clamp ?offset 0 @entity.maxOffset))
+        (set @entity.layouts (+ @entity.layouts 1))
+        (emit SCROLL_LAYOUT { n: @entity.layouts })
+        (emit RASM_SCROLLED { id: @config.id, offset: (math/clamp ?offset 0 @entity.maxOffset), max: @entity.maxOffset })
+      SCROLL_LAYOUT -> ready when @entity.hasRect
+        (let ((out (let ((r @entity.rect) (vert (= @config.axis "vertical")) (rtl (= (if @entity.announced @entity.dir @config.direction) "rtl")) (off @entity.offset) (bar @config.barSize)) (let ((vp (if (= @config.axis "vertical") @entity.rect.h @entity.rect.w)) (laid (let ((acc (array/reduce @config.items { at: 0, out: [] } (fn a it { at: (+ (+ @a.at @it.size) @config.gap), out: (array/append @a.out { id: @it.id, pos: @a.at, size: @it.size }) })))) @acc.out))) (let ((inside (array/filter @laid (fn it (if (= @config.edge "whole") (and (>= @it.pos @off) (<= (+ @it.pos @it.size) (+ @off @vp))) (and (> (+ @it.pos @it.size) @off) (< @it.pos (+ @off @vp))))))) (outside (array/filter @laid (fn it (not (if (= @config.edge "whole") (and (>= @it.pos @off) (<= (+ @it.pos @it.size) (+ @off @vp))) (and (> (+ @it.pos @it.size) @off) (< @it.pos (+ @off @vp))))))))) { placed: (array/map @inside (fn it (if @vert { id: @it.id, rect: { x: (if @rtl (+ @r.x @bar) @r.x), y: (- (+ @r.y @it.pos) @off), w: (- @r.w @bar), h: @it.size } } { id: @it.id, rect: { x: (if @rtl (- (- (+ @r.x @r.w) (- @it.pos @off)) @it.size) (- (+ @r.x @it.pos) @off)), y: @r.y, w: @it.size, h: (- @r.h @bar) } }))), shown: (array/map @inside (fn it @it.id)), hidden: (array/map @outside (fn it @it.id)) })))))
+          (do
+            (emit RASM_PLACE { placed: @out.placed })
+            (emit RASM_VISIBLE { owner: @config.id, shown: @out.shown, hidden: @out.hidden })
+            (set @entity.paints (+ @entity.paints 1))
+            (emit SCROLL_PAINT { n: @entity.paints })))
+      RASM_SCROLL_BY -> ready when (= ?id @config.id)
+        (emit SCROLL_TO { offset: (+ @entity.offset ?delta) })
+      RASM_STEP -> ready when (= ?id @config.id)
+        (emit SCROLL_TO { offset: (+ @entity.offset (* ?delta @config.step)) })
+      RASM_KEYPRESS -> ready when (and (= ?target @config.id) (= ?key "PageDown"))
+        (emit SCROLL_TO { offset: (+ @entity.offset (if (= @config.axis "vertical") @entity.rect.h @entity.rect.w)) })
+      RASM_KEYPRESS -> ready when (and (= ?target @config.id) (= ?key "PageUp"))
+        (emit SCROLL_TO { offset: (- @entity.offset (if (= @config.axis "vertical") @entity.rect.h @entity.rect.w)) })
+      RASM_KEYPRESS -> ready when (and (= ?target @config.id) (= ?key "Home"))
+        (emit SCROLL_TO { offset: 0 })
+      RASM_KEYPRESS -> ready when (and (= ?target @config.id) (= ?key "End"))
+        (emit SCROLL_TO { offset: @entity.maxOffset })
+      RASM_FOCUS -> ready
+        (set @entity.focused (= ?id @config.id))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit SCROLL_PAINT { n: @entity.paints })
+      RASM_POINTER -> ready when (and (= ?kind "down") (= ?id @config.id))
+        (set @entity.dragging true)
+        (set @entity.dragStart (if (= @config.axis "vertical") ?y ?x))
+        (set @entity.dragBase @entity.offset)
+        (set @entity.dragScale (if (and (= @config.axis "horizontal") (= (if @entity.announced @entity.dir @config.direction) "rtl")) 1 -1))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit SCROLL_PAINT { n: @entity.paints })
+      RASM_POINTER -> ready when (and (= ?kind "down") (= ?id (str/concat @config.id ":thumb")))
+        (set @entity.dragging true)
+        (set @entity.dragStart (if (= @config.axis "vertical") ?y ?x))
+        (set @entity.dragBase @entity.offset)
+        (set @entity.dragScale (* (if (and (= @config.axis "horizontal") (= (if @entity.announced @entity.dir @config.direction) "rtl")) -1 1) (/ @entity.maxOffset (math/max 1 (- (if (= @config.axis "vertical") @entity.rect.h @entity.rect.w) @entity.thumbLen)))))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit SCROLL_PAINT { n: @entity.paints })
+      RASM_POINTER -> ready when (and (and (= ?kind "move") @entity.dragging) (or (= ?id @config.id) (= ?id (str/concat @config.id ":thumb"))))
+        (emit SCROLL_TO { offset: (+ @entity.dragBase (* @entity.dragScale (- (if (= @config.axis "vertical") ?y ?x) @entity.dragStart))) })
+      RASM_POINTER -> ready when (and (and (= ?kind "up") @entity.dragging) (or (= ?id @config.id) (= ?id (str/concat @config.id ":thumb"))))
+        (set @entity.dragging false)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit SCROLL_PAINT { n: @entity.paints })
+      SCROLL_PAINT -> ready when (and @entity.hasRect @entity.hasLooks)
+        (let ((r @entity.rect) (vert (= @config.axis "vertical")) (rtl (= (if @entity.announced @entity.dir @config.direction) "rtl")) (bar @config.barSize) (body (default (object/get @entity.looks (str/concat "scroll/" @config.intent "/body") null) {})) (track (default (object/get @entity.looks (str/concat "scroll/" @config.intent "/track") null) {})) (thumb (default (object/get @entity.looks (str/concat "scroll/" @config.intent (if @entity.dragging "/thumb-dragging" "/thumb")) null) {})) (overflow (and (> @entity.maxOffset 0) (> @config.barSize 0))))
+          (let ((vp (if (= @config.axis "vertical") @entity.rect.h @entity.rect.w)) (tx (if @vert (if @rtl @r.x (- (+ @r.x @r.w) @bar)) @r.x)) (ty (if @vert @r.y (- (+ @r.y @r.h) @bar))))
+            (let ((p (if (> @entity.maxOffset 0) (* (/ @entity.offset @entity.maxOffset) (- @vp @entity.thumbLen)) 0)))
+              (emit RASM_PAINT { id: @config.id, z: @config.z, nodes: (array/concat [{ type: draw-shape, shape: "rect", id: @config.id, position: { x: @r.x, y: @r.y }, anchor: "top-left", width: @r.w, height: @r.h, fill: @body.fill, stroke: @body.stroke, strokeWidth: @body.strokeWidth, corners: @body.corners, shadow: @body.shadow, material: @body.material, spring: @body.spring, hit: true, semantic: { role: "group", name: @config.label, order: @config.order, focused: @entity.focused } }] (if @overflow [{ type: draw-shape, shape: "rect", id: (str/concat @config.id ":track"), position: { x: @tx, y: @ty }, anchor: "top-left", width: (if @vert @bar @r.w), height: (if @vert @r.h @bar), fill: @track.fill, corners: @track.corners, spring: @track.spring, hit: false }, { type: draw-shape, shape: "rect", id: (str/concat @config.id ":thumb"), position: { x: (if @vert @tx (if @rtl (- (- (+ @r.x @r.w) @p) @entity.thumbLen) (+ @r.x @p))), y: (if @vert (+ @r.y @p) @ty) }, anchor: "top-left", width: (if @vert @bar @entity.thumbLen), height: (if @vert @entity.thumbLen @bar), fill: @thumb.fill, stroke: @thumb.stroke, strokeWidth: @thumb.strokeWidth, corners: @thumb.corners, shadow: @thumb.shadow, spring: @thumb.spring, hit: true }] [])) }))))
+    }
+
+    emits {
+      SCROLL_METRICS -> internal {
+        n : number!
+      }
+        @description "Measure the content and the thumb from the stored rect."
+        @tier "internal"
+      SCROLL_FIT -> internal {
+        n : number!
+      }
+        @description "Fit the largest offset to the measured content."
+        @tier "internal"
+      SCROLL_TO -> internal {
+        offset : number!
+      }
+        @description "Move to an offset, clamped to the content."
+        @tier "internal"
+      SCROLL_LAYOUT -> internal {
+        n : number!
+      }
+        @description "Place the items inside the viewport."
+        @tier "internal"
+      SCROLL_PAINT -> internal {
+        n : number!
+      }
+        @description "Repaint the region, the track and the thumb."
+        @tier "internal"
+      RASM_PLACE -> external {
+        placed : [RasmPlaced]!
+      }
+        @description "The rects of the items inside the viewport."
+        @tier "primary"
+      RASM_PAINT -> external {
+        id : string!
+        z : number!
+        nodes : [node]!
+      }
+        @description "The region, track and thumb nodes at the region's z."
+        @tier "primary"
+      RASM_VISIBLE -> external {
+        owner : string!
+        shown : [string]!
+        hidden : [string]!
+      }
+        @description "The item ids inside the viewport and the ones scrolled out."
+        @tier "domain"
+      RASM_SCROLLED -> external {
+        id : string!
+        offset : number!
+        max : number!
+      }
+        @description "The region scrolled to this offset of at most max."
+        @tier "domain"
+    }
+
+    listens {
+      RASM_DIRECTION { direction : "ltr" | "rtl"! }
+        @description "The surface's reading direction; once announced it replaces this atom's direction knob and the layout is redone."
+      RASM_THEME { name : string!  looks : Map string RasmLook! }
+        @description "Store the looks and repaint."
+      RASM_PLACE { placed : [RasmPlaced]! }
+        @description "Take this region's viewport rect when it is placed, then place the visible items."
+      RASM_POINTER { kind : "down" | "up" | "enter" | "leave" | "move"!  id : string!  x : number!  y : number! }
+        @description "A press on the region or the thumb starts a drag; moves under capture scroll; the release ends it."
+      RASM_KEYPRESS { target : string!  key : string!  shift : boolean!  alt : boolean!  ctrl : boolean!  meta : boolean! }
+        @description "Page Up, Page Down, Home and End addressed to this region's id."
+      RASM_FOCUS { id : string! }
+        @description "The region is focused when the id is its own."
+      RASM_STEP { id : string!  delta : number! }
+        @description "Scroll by step times delta."
+      RASM_SCROLL_BY { id : string!  delta : number! }
+        @description "Scroll by a delta in px."
+    }
+
+    config {
+      id : string = "scroll"
+        @label "Id"
+        @description "The region's id: its RASM_PLACE key, its hit drawable id and the prefix of the track and thumb ids."
+        @tier "presentation"
+      label : string = ""
+        @label "Label"
+        @description "The region's accessible name, passed by the organism through its translation."
+        @tier "presentation"
+      axis : "vertical" | "horizontal" = "vertical"
+        @label "Axis"
+        @description "The axis the items run and scroll along."
+        @tier "presentation"
+      items : [RasmScrollItem] = []
+        @label "Items"
+        @description "In order: each item's id and its size in px along the axis; its cross size is the viewport's minus the scrollbar."
+        @tier "presentation"
+      gap : number = 0
+        @label "Gap"
+        @description "Space between items in px."
+        @tier "presentation"
+      edge : "whole" | "partial" = "whole"
+        @label "Edge"
+        @description "whole places only items that fit entirely inside the viewport; partial also places items cut by an edge, which overflow the viewport until the floor clips."
+        @tier "presentation"
+      barSize : number = 8
+        @label "Scrollbar size"
+        @description "The scrollbar thickness in px, reserved from the items' cross size; 0 has no scrollbar."
+        @tier "presentation"
+      minThumb : number = 24
+        @label "Minimum thumb"
+        @description "The shortest thumb in px."
+        @tier "presentation"
+      step : number = 40
+        @label "Step"
+        @description "Px a keyboard step scrolls."
+        @tier "presentation"
+      direction : "ltr" | "rtl" = "ltr"
+        @label "Direction"
+        @description "rtl puts the vertical scrollbar on the left and starts a horizontal region at the right edge; a surface RASM_DIRECTION replaces it."
+        @tier "presentation"
+      intent : string = "default"
+        @label "Intent"
+        @description "The looks are scroll/<intent>/body, track, thumb and thumb-dragging."
+        @tier "presentation"
+      z : number = 0
+        @label "Z"
+        @description "Paint order on the surface; the items' z must exceed it so they take the pointer."
+        @tier "presentation"
+      order : number = 0
+        @label "Order"
+        @description "Reading order of the region in the semantic tree."
+        @tier "presentation"
+    }
+  }
+
+  page boot as RasmScrollStart -> RasmScroll
+}

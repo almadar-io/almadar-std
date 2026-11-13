@@ -20,6 +20,8 @@ orbital RasmOverlayOrbital {
     viewH : number @description "The surface height the scrim and the placement use." = 520
     panel : RasmRect @description "The panel's rect once placed." = { x: 0, y: 0, w: 0, h: 0 }
     hasPanel : boolean = false
+    dir : "ltr" | "rtl" @description "The direction the surface announced." = "ltr"
+    announced : boolean @description "True once the surface announced a direction, which then replaces the config knob." = false
     fresh : boolean @description "True from opening until the first paint, which plays the fade in." = false
     layouts : number @description "Counts layouts, so each layout in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
     paints : number @description "Counts paints, so each paint in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
@@ -36,13 +38,18 @@ orbital RasmOverlayOrbital {
         (set @entity.layouts (+ @entity.layouts 1))
         (emit OVERLAY_LAYOUT { n: @entity.layouts })
         (emit RASM_VISIBLE { owner: @config.id, shown: @config.contents, hidden: [] })
+        (when (> (array/len @config.trap) 0) (emit RASM_FOCUS_TRAP { owner: @config.id, order: @config.trap }))
       INIT -> closed when (not @config.open)
         (set @entity.viewW @config.surfaceWidth)
         (set @entity.viewH @config.surfaceHeight)
         (emit RASM_VISIBLE { owner: @config.id, shown: [], hidden: @config.contents })
+        (when (> (array/len @config.trap) 0) (emit RASM_FOCUS_RELEASE { owner: @config.id }))
       RASM_THEME -> closed
         (set @entity.looks ?looks)
         (set @entity.hasLooks true)
+      RASM_DIRECTION -> closed
+        (set @entity.dir ?direction)
+        (set @entity.announced true)
       RASM_RESIZE -> closed
         (set @entity.viewW ?width)
         (set @entity.viewH ?height)
@@ -51,6 +58,7 @@ orbital RasmOverlayOrbital {
         (set @entity.layouts (+ @entity.layouts 1))
         (emit OVERLAY_LAYOUT { n: @entity.layouts })
         (emit RASM_VISIBLE { owner: @config.id, shown: @config.contents, hidden: [] })
+        (when (> (array/len @config.trap) 0) (emit RASM_FOCUS_TRAP { owner: @config.id, order: @config.trap }))
     }
 
     state open {
@@ -61,12 +69,19 @@ orbital RasmOverlayOrbital {
         (set @entity.layouts (+ @entity.layouts 1))
         (emit OVERLAY_LAYOUT { n: @entity.layouts })
         (emit RASM_VISIBLE { owner: @config.id, shown: @config.contents, hidden: [] })
+        (when (> (array/len @config.trap) 0) (emit RASM_FOCUS_TRAP { owner: @config.id, order: @config.trap }))
       INIT -> closed when (not @config.open)
         (set @entity.viewW @config.surfaceWidth)
         (set @entity.viewH @config.surfaceHeight)
         (emit RASM_PAINT { id: @config.id, z: @config.z, nodes: [] })
         (emit RASM_VISIBLE { owner: @config.id, shown: [], hidden: @config.contents })
+        (when (> (array/len @config.trap) 0) (emit RASM_FOCUS_RELEASE { owner: @config.id }))
         (set @entity.hasPanel false)
+      RASM_DIRECTION -> open
+        (set @entity.dir ?direction)
+        (set @entity.announced true)
+        (set @entity.layouts (+ @entity.layouts 1))
+        (emit OVERLAY_LAYOUT { n: @entity.layouts })
       RASM_THEME -> open
         (set @entity.looks ?looks)
         (set @entity.hasLooks true)
@@ -80,16 +95,19 @@ orbital RasmOverlayOrbital {
       RASM_OVERLAY_CLOSE -> closed when (= ?id @config.id)
         (emit RASM_PAINT { id: @config.id, z: @config.z, nodes: [] })
         (emit RASM_VISIBLE { owner: @config.id, shown: [], hidden: @config.contents })
+        (when (> (array/len @config.trap) 0) (emit RASM_FOCUS_RELEASE { owner: @config.id }))
         (set @entity.hasPanel false)
       RASM_OVERLAY_CLOSE -> open when (!= ?id @config.id)
       RASM_POINTER -> closed when (and (and (= ?id (str/concat @config.id ":scrim")) (= ?kind "up")) @config.dismissOnScrim)
         (emit RASM_PAINT { id: @config.id, z: @config.z, nodes: [] })
         (emit RASM_VISIBLE { owner: @config.id, shown: [], hidden: @config.contents })
+        (when (> (array/len @config.trap) 0) (emit RASM_FOCUS_RELEASE { owner: @config.id }))
         (set @entity.hasPanel false)
         (emit RASM_OVERLAY_DISMISSED { id: @config.id, reason: "scrim" })
       RASM_KEYPRESS -> closed when (and (= ?key "Escape") @config.dismissOnEscape)
         (emit RASM_PAINT { id: @config.id, z: @config.z, nodes: [] })
         (emit RASM_VISIBLE { owner: @config.id, shown: [], hidden: @config.contents })
+        (when (> (array/len @config.trap) 0) (emit RASM_FOCUS_RELEASE { owner: @config.id }))
         (set @entity.hasPanel false)
         (emit RASM_OVERLAY_DISMISSED { id: @config.id, reason: "escape" })
       RASM_PLACE -> open when (array/some ?placed (fn p (= @p.id (str/concat @config.id ":panel"))))
@@ -98,12 +116,12 @@ orbital RasmOverlayOrbital {
         (set @entity.paints (+ @entity.paints 1))
         (emit OVERLAY_PLACED { n: @entity.paints })
       OVERLAY_LAYOUT -> open when (!= @config.placement "anchor")
-        (set @entity.panel (let ((vw @entity.viewW) (vh @entity.viewH) (m @config.margin) (pl @config.placement) (rtl (= @config.direction "rtl"))) (let ((sheetV (or (= @pl "top") (= @pl "bottom"))) (sheetH (or (= @pl "start") (= @pl "end")))) (let ((pw (if @sheetV @vw (if @sheetH (math/min @config.width @vw) (math/min @config.width (math/max 0 (- @vw (* 2 @m))))))) (ph (if @sheetH @vh (if @sheetV (math/min @config.height @vh) (math/min @config.height (math/max 0 (- @vh (* 2 @m))))))) (left (if (= @pl "start") (not @rtl) @rtl))) { x: (if @sheetH (if @left 0 (- @vw @pw)) (/ (- @vw @pw) 2)), y: (if @sheetV (if (= @pl "top") 0 (- @vh @ph)) (/ (- @vh @ph) 2)), w: @pw, h: @ph }))))
+        (set @entity.panel (let ((vw @entity.viewW) (vh @entity.viewH) (m @config.margin) (pl @config.placement) (rtl (= (if @entity.announced @entity.dir @config.direction) "rtl"))) (let ((sheetV (or (= @pl "top") (= @pl "bottom"))) (sheetH (or (= @pl "start") (= @pl "end")))) (let ((pw (if @sheetV @vw (if @sheetH (math/min @config.width @vw) (math/min @config.width (math/max 0 (- @vw (* 2 @m))))))) (ph (if @sheetH @vh (if @sheetV (math/min @config.height @vh) (math/min @config.height (math/max 0 (- @vh (* 2 @m))))))) (left (if (= @pl "start") (not @rtl) @rtl))) { x: (if @sheetH (if @left 0 (- @vw @pw)) (/ (- @vw @pw) 2)), y: (if @sheetV (if (= @pl "top") 0 (- @vh @ph)) (/ (- @vh @ph) 2)), w: @pw, h: @ph }))))
         (set @entity.hasPanel true)
         (set @entity.paints (+ @entity.paints 1))
         (emit OVERLAY_PLACED { n: @entity.paints })
       OVERLAY_LAYOUT -> open when (= @config.placement "anchor")
-        (emit RASM_ANCHOR { id: (str/concat @config.id ":panel"), anchor: @config.anchor, side: (if (= @config.direction "rtl") (if (= @config.side "start") "end" (if (= @config.side "end") "start" @config.side)) @config.side), width: (math/min @config.width @entity.viewW), height: (math/min @config.height @entity.viewH) })
+        (emit RASM_ANCHOR { id: (str/concat @config.id ":panel"), anchor: @config.anchor, side: (if (= (if @entity.announced @entity.dir @config.direction) "rtl") (if (= @config.side "start") "end" (if (= @config.side "end") "start" @config.side)) @config.side), width: (math/min @config.width @entity.viewW), height: (math/min @config.height @entity.viewH) })
       OVERLAY_PLACED -> open when @entity.hasPanel
         (emit RASM_PLACE { placed: [{ id: @config.content, rect: (let ((r @entity.panel) (pad @config.padding)) { x: (+ @r.x @pad), y: (+ @r.y @pad), w: (math/max 0 (- @r.w (* 2 @pad))), h: (math/max 0 (- @r.h (* 2 @pad))) }) }] })
         (emit OVERLAY_PAINT { n: @entity.paints })
@@ -149,6 +167,17 @@ orbital RasmOverlayOrbital {
       }
         @description "Ask Anchor to place the panel next to the anchor control."
         @tier "domain"
+      RASM_FOCUS_TRAP -> external {
+        owner : string!
+        order : [string]!
+      }
+        @description "Open: Tab cycles only the declared trap order until released; sent when the trap is not empty."
+        @tier "domain"
+      RASM_FOCUS_RELEASE -> external {
+        owner : string!
+      }
+        @description "Closed or dismissed: the focus order before the trap returns; sent when the trap is not empty."
+        @tier "domain"
       RASM_VISIBLE -> external {
         owner : string!
         shown : [string]!
@@ -165,6 +194,8 @@ orbital RasmOverlayOrbital {
     }
 
     listens {
+      RASM_DIRECTION { direction : "ltr" | "rtl"! }
+        @description "The surface's reading direction; once announced it replaces this atom's direction knob and the layout is redone."
       RASM_THEME { name : string!  looks : Map string RasmLook! }
         @description "Store the looks and repaint."
       RASM_RESIZE { width : number!  height : number! }
@@ -224,7 +255,7 @@ orbital RasmOverlayOrbital {
         @tier "presentation"
       direction : "ltr" | "rtl" = "ltr"
         @label "Direction"
-        @description "rtl puts the start sheet on the right and flips a popover's start and end sides."
+        @description "rtl puts the start sheet on the right and flips a popover's start and end sides; a surface RASM_DIRECTION replaces it."
         @tier "presentation"
       surfaceWidth : number = 720
         @label "Surface width"
@@ -237,6 +268,10 @@ orbital RasmOverlayOrbital {
       content : string = "content"
         @label "Content"
         @description "The id that receives the content rect. Its z must exceed this overlay's z to paint above the panel."
+        @tier "presentation"
+      trap : [string] = []
+        @label "Focus trap"
+        @description "The focus order while open: Tab cycles only these control ids, and the earlier order and focus return on close; empty traps nothing."
         @tier "presentation"
       contents : [string] = []
         @label "Contents"

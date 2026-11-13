@@ -1,0 +1,799 @@
+{
+ "atom": "../ui/rasm/atoms/std-rasm-surface.lolo",
+ "trait": "RasmSurface",
+ "cases": [
+  {
+   "id": "a-hidden-id-keeps-its-paint-and-stops-drawing-and-shown-draws-it-again",
+   "config": {},
+   "entity": {
+    "id": "s"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_PAINT",
+     "payload": {
+      "id": "a",
+      "z": 1,
+      "nodes": [
+       {
+        "type": "draw-shape",
+        "shape": "rect",
+        "id": "a",
+        "position": {
+         "x": 0,
+         "y": 0
+        },
+        "width": 10,
+        "height": 10
+       }
+      ]
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "SURFACE_REPAINT",
+        "payload": {
+         "n": 1
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "ready",
+     "event": "RASM_PAINT",
+     "payload": {
+      "id": "b",
+      "z": 2,
+      "nodes": [
+       {
+        "type": "draw-shape",
+        "shape": "rect",
+        "id": "b",
+        "position": {
+         "x": 0,
+         "y": 0
+        },
+        "width": 10,
+        "height": 10
+       }
+      ]
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "SURFACE_REPAINT",
+        "payload": {
+         "n": 2
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "ready",
+     "event": "RASM_VISIBLE",
+     "payload": {
+      "owner": "o",
+      "shown": [],
+      "hidden": [
+       "a"
+      ]
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "SURFACE_REPAINT",
+        "payload": {
+         "n": 3
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "ready",
+     "event": "RASM_VISIBLE",
+     "payload": {
+      "owner": "o",
+      "shown": [
+       "a"
+      ],
+      "hidden": []
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "SURFACE_REPAINT",
+        "payload": {
+         "n": 4
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "ready",
+     "event": "SURFACE_REPAINT",
+     "payload": {
+      "n": 3
+     },
+     "expect": {
+      "state": "ready",
+      "rendered": [
+       {
+        "slot": "main",
+        "props": {
+         "drawables.0.id": "b",
+         "drawables.1": null
+        }
+       }
+      ]
+     },
+     "options": {
+      "render": true,
+      "renderProps": true
+     },
+     "entity": {
+      "id": "s",
+      "paints": {
+       "a": {
+        "id": "a",
+        "z": 1,
+        "nodes": [
+         {
+          "type": "draw-shape",
+          "shape": "rect",
+          "id": "a",
+          "position": {
+           "x": 0,
+           "y": 0
+          },
+          "width": 10,
+          "height": 10
+         }
+        ]
+       },
+       "b": {
+        "id": "b",
+        "z": 2,
+        "nodes": [
+         {
+          "type": "draw-shape",
+          "shape": "rect",
+          "id": "b",
+          "position": {
+           "x": 0,
+           "y": 0
+          },
+          "width": 10,
+          "height": 10
+         }
+        ]
+       }
+      },
+      "hidden": [
+       "a"
+      ]
+     }
+    },
+    {
+     "from": "ready",
+     "event": "SURFACE_REPAINT",
+     "payload": {
+      "n": 4
+     },
+     "expect": {
+      "state": "ready",
+      "rendered": [
+       {
+        "slot": "main",
+        "props": {
+         "drawables.0.id": "a",
+         "drawables.1.id": "b"
+        }
+       }
+      ]
+     },
+     "options": {
+      "render": true,
+      "renderProps": true
+     },
+     "entity": {
+      "id": "s",
+      "paints": {
+       "a": {
+        "id": "a",
+        "z": 1,
+        "nodes": [
+         {
+          "type": "draw-shape",
+          "shape": "rect",
+          "id": "a",
+          "position": {
+           "x": 0,
+           "y": 0
+          },
+          "width": 10,
+          "height": 10
+         }
+        ]
+       },
+       "b": {
+        "id": "b",
+        "z": 2,
+        "nodes": [
+         {
+          "type": "draw-shape",
+          "shape": "rect",
+          "id": "b",
+          "position": {
+           "x": 0,
+           "y": 0
+          },
+          "width": 10,
+          "height": 10
+         }
+        ]
+       }
+      },
+      "hidden": []
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-without-a-visibility-announcement-every-paint-draws",
+   "config": {},
+   "entity": {
+    "id": "s"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "SURFACE_REPAINT",
+     "payload": {
+      "n": 2
+     },
+     "expect": {
+      "state": "ready",
+      "rendered": [
+       {
+        "slot": "main",
+        "props": {
+         "drawables.0.id": "a",
+         "drawables.1.id": "b"
+        }
+       }
+      ]
+     },
+     "options": {
+      "render": true,
+      "renderProps": true
+     },
+     "entity": {
+      "id": "s",
+      "paints": {
+       "a": {
+        "id": "a",
+        "z": 1,
+        "nodes": [
+         {
+          "type": "draw-shape",
+          "shape": "rect",
+          "id": "a",
+          "position": {
+           "x": 0,
+           "y": 0
+          },
+          "width": 10,
+          "height": 10
+         }
+        ]
+       },
+       "b": {
+        "id": "b",
+        "z": 2,
+        "nodes": [
+         {
+          "type": "draw-shape",
+          "shape": "rect",
+          "id": "b",
+          "position": {
+           "x": 0,
+           "y": 0
+          },
+          "width": 10,
+          "height": 10
+         }
+        ]
+       }
+      },
+      "hidden": []
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-key-map-carries-escape-page-keys-home-and-end",
+   "config": {},
+   "entity": {
+    "id": "s"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "SURFACE_REPAINT",
+     "payload": {
+      "n": 1
+     },
+     "expect": {
+      "state": "ready",
+      "rendered": [
+       {
+        "slot": "main",
+        "props": {
+         "keyMap.Escape": "KEY_ESCAPE",
+         "keyMap.PageUp": "KEY_PAGE_UP",
+         "keyMap.PageDown": "KEY_PAGE_DOWN",
+         "keyMap.Home": "KEY_HOME",
+         "keyMap.End": "KEY_END"
+        }
+       }
+      ]
+     },
+     "options": {
+      "render": true,
+      "renderProps": true
+     }
+    },
+    {
+     "from": "ready",
+     "event": "KEY_ESCAPE",
+     "payload": {},
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "RASM_KEY",
+        "payload": {
+         "key": "escape"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "ready",
+     "event": "KEY_PAGE_UP",
+     "payload": {},
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "RASM_KEY",
+        "payload": {
+         "key": "pageUp"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "ready",
+     "event": "KEY_PAGE_DOWN",
+     "payload": {},
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "RASM_KEY",
+        "payload": {
+         "key": "pageDown"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "ready",
+     "event": "KEY_HOME",
+     "payload": {},
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "RASM_KEY",
+        "payload": {
+         "key": "home"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "ready",
+     "event": "KEY_END",
+     "payload": {},
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "RASM_KEY",
+        "payload": {
+         "key": "end"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-key-an-element-handled-arrives-as-keypress-only-never-also-as-a-kit-key",
+   "config": {},
+   "entity": {
+    "id": "s"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "SURFACE_KEY",
+     "payload": {
+      "target": "name",
+      "key": "Escape",
+      "shift": false,
+      "alt": false,
+      "ctrl": false,
+      "meta": false
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "RASM_KEYPRESS",
+        "payload": {
+         "target": "name",
+         "key": "Escape",
+         "shift": false,
+         "alt": false,
+         "ctrl": false,
+         "meta": false
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "ready",
+     "event": "SURFACE_KEY",
+     "payload": {
+      "target": "name",
+      "key": "End",
+      "shift": false,
+      "alt": false,
+      "ctrl": false,
+      "meta": false
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "RASM_KEYPRESS",
+        "payload": {
+         "target": "name",
+         "key": "End",
+         "shift": false,
+         "alt": false,
+         "ctrl": false,
+         "meta": false
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "init-announces-the-direction-before-the-root-is-placed",
+   "config": {
+    "direction": "rtl"
+   },
+   "entity": {
+    "id": "s"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "INIT",
+     "payload": {},
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "RASM_BOOT",
+        "payload": {}
+       },
+       {
+        "event": "RASM_DIRECTION",
+        "payload": {
+         "direction": "rtl"
+        }
+       },
+       {
+        "event": "RASM_PLACE",
+        "payload": {
+         "placed": [
+          {
+           "id": "root",
+           "rect": {
+            "x": 0,
+            "y": 0,
+            "w": 720,
+            "h": 520
+           }
+          }
+         ]
+        }
+       },
+       {
+        "event": "SURFACE_REPAINT",
+        "payload": {
+         "n": 1
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-the-default-direction-is-ltr",
+   "config": {},
+   "entity": {
+    "id": "s"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "INIT",
+     "payload": {},
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "RASM_BOOT",
+        "payload": {}
+       },
+       {
+        "event": "RASM_DIRECTION",
+        "payload": {
+         "direction": "ltr"
+        }
+       },
+       {
+        "event": "RASM_PLACE",
+        "payload": {
+         "placed": [
+          {
+           "id": "root",
+           "rect": {
+            "x": 0,
+            "y": 0,
+            "w": 720,
+            "h": 520
+           }
+          }
+         ]
+        }
+       },
+       {
+        "event": "SURFACE_REPAINT",
+        "payload": {
+         "n": 1
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-multi-touch-pointer-event-also-relays-the-touches-and-a-single-pointer-does-not",
+   "config": {},
+   "entity": {
+    "id": "s"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "POINTER_DOWN",
+     "payload": {
+      "target": "c",
+      "x": 10,
+      "y": 20,
+      "touches": [
+       {
+        "pointerId": 0,
+        "x": 10,
+        "y": 20
+       },
+       {
+        "pointerId": 1,
+        "x": 50,
+        "y": 60
+       }
+      ]
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "RASM_POINTER",
+        "payload": {
+         "kind": "down",
+         "id": "c",
+         "x": 10,
+         "y": 20,
+         "index": -1
+        }
+       },
+       {
+        "event": "RASM_TOUCHES",
+        "payload": {
+         "kind": "down",
+         "touches": [
+          {
+           "pointerId": 0,
+           "x": 10,
+           "y": 20
+          },
+          {
+           "pointerId": 1,
+           "x": 50,
+           "y": 60
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "ready",
+     "event": "POINTER_MOVE",
+     "payload": {
+      "target": "c",
+      "x": 50,
+      "y": 60,
+      "touches": [
+       {
+        "pointerId": 0,
+        "x": 10,
+        "y": 20
+       },
+       {
+        "pointerId": 1,
+        "x": 50,
+        "y": 60
+       }
+      ]
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "RASM_POINTER",
+        "payload": {
+         "kind": "move",
+         "id": "c",
+         "x": 50,
+         "y": 60
+        }
+       },
+       {
+        "event": "RASM_TOUCHES",
+        "payload": {
+         "kind": "move",
+         "touches": [
+          {
+           "pointerId": 0,
+           "x": 10,
+           "y": 20
+          },
+          {
+           "pointerId": 1,
+           "x": 50,
+           "y": 60
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "ready",
+     "event": "POINTER_UP",
+     "payload": {
+      "target": "c",
+      "x": 10,
+      "y": 20,
+      "touches": [
+       {
+        "pointerId": 0,
+        "x": 10,
+        "y": 20
+       },
+       {
+        "pointerId": 1,
+        "x": 50,
+        "y": 60
+       }
+      ]
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "RASM_POINTER",
+        "payload": {
+         "kind": "up",
+         "id": "c",
+         "x": 10,
+         "y": 20
+        }
+       },
+       {
+        "event": "RASM_TOUCHES",
+        "payload": {
+         "kind": "up",
+         "touches": [
+          {
+           "pointerId": 0,
+           "x": 10,
+           "y": 20
+          },
+          {
+           "pointerId": 1,
+           "x": 50,
+           "y": 60
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "ready",
+     "event": "POINTER_MOVE",
+     "payload": {
+      "target": "c",
+      "x": 5,
+      "y": 5
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "RASM_POINTER",
+        "payload": {
+         "kind": "move",
+         "id": "c",
+         "x": 5,
+         "y": 5
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

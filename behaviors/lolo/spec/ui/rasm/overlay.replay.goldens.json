@@ -815,6 +815,840 @@
      }
     }
    ]
+  },
+  {
+   "id": "opening-with-looks-paints-the-scrim-and-a-dialog-node-with-the-fade-in",
+   "config": {
+    "id": "dlg",
+    "placement": "center",
+    "width": 300,
+    "height": 200,
+    "padding": 10,
+    "content": "body",
+    "contents": [
+     "body",
+     "ok"
+    ],
+    "z": 100,
+    "label": "Confirm"
+   },
+   "entity": {
+    "id": "dlg"
+   },
+   "steps": [
+    {
+     "from": "closed",
+     "event": "RASM_THEME",
+     "payload": {
+      "name": "t",
+      "looks": {
+       "overlay/scrim/idle": {
+        "fill": "rgba(0,0,0,0.5)"
+       },
+       "overlay/dialog/idle": {
+        "fill": "#222",
+        "stroke": "#c90",
+        "strokeWidth": 2,
+        "corners": {
+         "radius": [
+          12,
+          12,
+          12,
+          12
+         ],
+         "kind": "round"
+        },
+        "spring": {
+         "stiffness": 170,
+         "damping": 20
+        }
+       }
+      }
+     },
+     "expect": {
+      "state": "closed",
+      "emits": []
+     }
+    },
+    {
+     "from": "closed",
+     "event": "RASM_OVERLAY_OPEN",
+     "payload": {
+      "id": "dlg"
+     },
+     "expect": {
+      "state": "open",
+      "emits": [
+       {
+        "event": "RASM_PAINT",
+        "payload": {
+         "id": "dlg",
+         "z": 100,
+         "nodes": [
+          {
+           "type": "draw-shape",
+           "shape": "rect",
+           "id": "dlg:scrim",
+           "position": {
+            "x": 0,
+            "y": 0
+           },
+           "anchor": "top-left",
+           "width": 720,
+           "height": 520,
+           "fill": "rgba(0,0,0,0.5)",
+           "material": null,
+           "spring": null,
+           "animation": {
+            "durationMs": 180,
+            "loop": false,
+            "keyframes": [
+             {
+              "at": 0,
+              "opacity": 0
+             },
+             {
+              "at": 1,
+              "opacity": 1
+             }
+            ]
+           },
+           "hit": true
+          },
+          {
+           "type": "draw-shape",
+           "shape": "rect",
+           "id": "dlg:panel",
+           "position": {
+            "x": 210,
+            "y": 160
+           },
+           "anchor": "top-left",
+           "width": 300,
+           "height": 200,
+           "fill": "#222",
+           "stroke": "#c90",
+           "strokeWidth": 2,
+           "corners": {
+            "radius": [
+             12,
+             12,
+             12,
+             12
+            ],
+            "kind": "round"
+           },
+           "shadow": null,
+           "material": null,
+           "spring": {
+            "stiffness": 170,
+            "damping": 20
+           },
+           "animation": {
+            "durationMs": 180,
+            "loop": false,
+            "keyframes": [
+             {
+              "at": 0,
+              "opacity": 0
+             },
+             {
+              "at": 1,
+              "opacity": 1
+             }
+            ]
+           },
+           "hit": true,
+           "semantic": {
+            "role": "dialog",
+            "name": "Confirm",
+            "order": 0,
+            "focused": false
+           }
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "open",
+     "event": "OVERLAY_PAINT",
+     "payload": {
+      "n": 9
+     },
+     "expect": {
+      "state": "open",
+      "emits": [
+       {
+        "event": "RASM_PAINT",
+        "payload": {
+         "id": "dlg",
+         "z": 100,
+         "nodes": [
+          {
+           "type": "draw-shape",
+           "shape": "rect",
+           "id": "dlg:scrim",
+           "position": {
+            "x": 0,
+            "y": 0
+           },
+           "anchor": "top-left",
+           "width": 720,
+           "height": 520,
+           "fill": "rgba(0,0,0,0.5)",
+           "material": null,
+           "spring": null,
+           "animation": null,
+           "hit": true
+          },
+          {
+           "type": "draw-shape",
+           "shape": "rect",
+           "id": "dlg:panel",
+           "position": {
+            "x": 210,
+            "y": 160
+           },
+           "anchor": "top-left",
+           "width": 300,
+           "height": 200,
+           "fill": "#222",
+           "stroke": "#c90",
+           "strokeWidth": 2,
+           "corners": {
+            "radius": [
+             12,
+             12,
+             12,
+             12
+            ],
+            "kind": "round"
+           },
+           "shadow": null,
+           "material": null,
+           "spring": {
+            "stiffness": 170,
+            "damping": 20
+           },
+           "animation": null,
+           "hit": true,
+           "semantic": {
+            "role": "dialog",
+            "name": "Confirm",
+            "order": 0,
+            "focused": false
+           }
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "open-announces-the-focus-trap-and-close-and-escape-release-it",
+   "config": {
+    "id": "dlg",
+    "placement": "center",
+    "width": 300,
+    "height": 200,
+    "padding": 10,
+    "content": "body",
+    "contents": [
+     "body",
+     "ok"
+    ],
+    "z": 100,
+    "label": "Confirm",
+    "trap": [
+     "ok",
+     "cancel"
+    ]
+   },
+   "entity": {
+    "id": "dlg"
+   },
+   "steps": [
+    {
+     "from": "closed",
+     "event": "RASM_OVERLAY_OPEN",
+     "payload": {
+      "id": "dlg"
+     },
+     "expect": {
+      "state": "open",
+      "emits": [
+       {
+        "event": "RASM_VISIBLE",
+        "payload": {
+         "owner": "dlg",
+         "shown": [
+          "body",
+          "ok"
+         ],
+         "hidden": []
+        }
+       },
+       {
+        "event": "RASM_FOCUS_TRAP",
+        "payload": {
+         "owner": "dlg",
+         "order": [
+          "ok",
+          "cancel"
+         ]
+        }
+       },
+       {
+        "event": "RASM_PLACE",
+        "payload": {
+         "placed": [
+          {
+           "id": "body",
+           "rect": {
+            "x": 220,
+            "y": 170,
+            "w": 280,
+            "h": 180
+           }
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "open",
+     "event": "RASM_OVERLAY_CLOSE",
+     "payload": {
+      "id": "dlg"
+     },
+     "expect": {
+      "state": "closed",
+      "emits": [
+       {
+        "event": "RASM_PAINT",
+        "payload": {
+         "id": "dlg",
+         "z": 100,
+         "nodes": []
+        }
+       },
+       {
+        "event": "RASM_VISIBLE",
+        "payload": {
+         "owner": "dlg",
+         "shown": [],
+         "hidden": [
+          "body",
+          "ok"
+         ]
+        }
+       },
+       {
+        "event": "RASM_FOCUS_RELEASE",
+        "payload": {
+         "owner": "dlg"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "closed",
+     "event": "RASM_OVERLAY_OPEN",
+     "payload": {
+      "id": "dlg"
+     },
+     "expect": {
+      "state": "open",
+      "emits": [
+       {
+        "event": "RASM_VISIBLE",
+        "payload": {
+         "owner": "dlg",
+         "shown": [
+          "body",
+          "ok"
+         ],
+         "hidden": []
+        }
+       },
+       {
+        "event": "RASM_FOCUS_TRAP",
+        "payload": {
+         "owner": "dlg",
+         "order": [
+          "ok",
+          "cancel"
+         ]
+        }
+       },
+       {
+        "event": "RASM_PLACE",
+        "payload": {
+         "placed": [
+          {
+           "id": "body",
+           "rect": {
+            "x": 220,
+            "y": 170,
+            "w": 280,
+            "h": 180
+           }
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "open",
+     "event": "RASM_KEYPRESS",
+     "payload": {
+      "target": "",
+      "key": "Escape",
+      "shift": false,
+      "alt": false,
+      "ctrl": false,
+      "meta": false
+     },
+     "expect": {
+      "state": "closed",
+      "emits": [
+       {
+        "event": "RASM_PAINT",
+        "payload": {
+         "id": "dlg",
+         "z": 100,
+         "nodes": []
+        }
+       },
+       {
+        "event": "RASM_VISIBLE",
+        "payload": {
+         "owner": "dlg",
+         "shown": [],
+         "hidden": [
+          "body",
+          "ok"
+         ]
+        }
+       },
+       {
+        "event": "RASM_FOCUS_RELEASE",
+        "payload": {
+         "owner": "dlg"
+        }
+       },
+       {
+        "event": "RASM_OVERLAY_DISMISSED",
+        "payload": {
+         "id": "dlg",
+         "reason": "escape"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-scrim-dismissal-releases-the-trap",
+   "config": {
+    "id": "dlg",
+    "placement": "center",
+    "width": 300,
+    "height": 200,
+    "padding": 10,
+    "content": "body",
+    "contents": [
+     "body",
+     "ok"
+    ],
+    "z": 100,
+    "label": "Confirm",
+    "trap": [
+     "ok",
+     "cancel"
+    ],
+    "open": true
+   },
+   "entity": {
+    "id": "dlg"
+   },
+   "steps": [
+    {
+     "from": "open",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "up",
+      "id": "dlg:scrim",
+      "x": 1,
+      "y": 1
+     },
+     "expect": {
+      "state": "closed",
+      "emits": [
+       {
+        "event": "RASM_PAINT",
+        "payload": {
+         "id": "dlg",
+         "z": 100,
+         "nodes": []
+        }
+       },
+       {
+        "event": "RASM_VISIBLE",
+        "payload": {
+         "owner": "dlg",
+         "shown": [],
+         "hidden": [
+          "body",
+          "ok"
+         ]
+        }
+       },
+       {
+        "event": "RASM_FOCUS_RELEASE",
+        "payload": {
+         "owner": "dlg"
+        }
+       },
+       {
+        "event": "RASM_OVERLAY_DISMISSED",
+        "payload": {
+         "id": "dlg",
+         "reason": "scrim"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-an-overlay-with-an-empty-trap-announces-no-trap",
+   "config": {
+    "id": "dlg",
+    "placement": "center",
+    "width": 300,
+    "height": 200,
+    "padding": 10,
+    "content": "body",
+    "contents": [
+     "body",
+     "ok"
+    ],
+    "z": 100,
+    "label": "Confirm"
+   },
+   "entity": {
+    "id": "dlg"
+   },
+   "steps": [
+    {
+     "from": "closed",
+     "event": "RASM_OVERLAY_OPEN",
+     "payload": {
+      "id": "dlg"
+     },
+     "expect": {
+      "state": "open",
+      "emits": [
+       {
+        "event": "RASM_VISIBLE",
+        "payload": {
+         "owner": "dlg",
+         "shown": [
+          "body",
+          "ok"
+         ],
+         "hidden": []
+        }
+       },
+       {
+        "event": "RASM_PLACE",
+        "payload": {
+         "placed": [
+          {
+           "id": "body",
+           "rect": {
+            "x": 220,
+            "y": 170,
+            "w": 280,
+            "h": 180
+           }
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "open",
+     "event": "RASM_OVERLAY_CLOSE",
+     "payload": {
+      "id": "dlg"
+     },
+     "expect": {
+      "state": "closed",
+      "emits": [
+       {
+        "event": "RASM_PAINT",
+        "payload": {
+         "id": "dlg",
+         "z": 100,
+         "nodes": []
+        }
+       },
+       {
+        "event": "RASM_VISIBLE",
+        "payload": {
+         "owner": "dlg",
+         "shown": [],
+         "hidden": [
+          "body",
+          "ok"
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-surface-direction-replaces-the-knob-and-re-places-an-open-sheet",
+   "config": {
+    "id": "dlg",
+    "placement": "start",
+    "width": 200,
+    "height": 200,
+    "padding": 0,
+    "content": "body",
+    "contents": [
+     "body",
+     "ok"
+    ],
+    "z": 100,
+    "label": "Confirm"
+   },
+   "entity": {
+    "id": "dlg"
+   },
+   "steps": [
+    {
+     "from": "closed",
+     "event": "RASM_OVERLAY_OPEN",
+     "payload": {
+      "id": "dlg"
+     },
+     "expect": {
+      "state": "open",
+      "emits": [
+       {
+        "event": "RASM_VISIBLE",
+        "payload": {
+         "owner": "dlg",
+         "shown": [
+          "body",
+          "ok"
+         ],
+         "hidden": []
+        }
+       },
+       {
+        "event": "RASM_PLACE",
+        "payload": {
+         "placed": [
+          {
+           "id": "body",
+           "rect": {
+            "x": 0,
+            "y": 0,
+            "w": 200,
+            "h": 520
+           }
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "open",
+     "event": "RASM_DIRECTION",
+     "payload": {
+      "direction": "rtl"
+     },
+     "expect": {
+      "state": "open",
+      "emits": [
+       {
+        "event": "RASM_PLACE",
+        "payload": {
+         "placed": [
+          {
+           "id": "body",
+           "rect": {
+            "x": 520,
+            "y": 0,
+            "w": 200,
+            "h": 520
+           }
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-surface-direction-ltr-overrides-an-rtl-knob",
+   "config": {
+    "id": "dlg",
+    "placement": "start",
+    "width": 200,
+    "height": 200,
+    "padding": 0,
+    "content": "body",
+    "contents": [
+     "body",
+     "ok"
+    ],
+    "z": 100,
+    "label": "Confirm",
+    "direction": "rtl"
+   },
+   "entity": {
+    "id": "dlg"
+   },
+   "steps": [
+    {
+     "from": "closed",
+     "event": "RASM_DIRECTION",
+     "payload": {
+      "direction": "ltr"
+     },
+     "expect": {
+      "state": "closed",
+      "emits": []
+     }
+    },
+    {
+     "from": "closed",
+     "event": "RASM_OVERLAY_OPEN",
+     "payload": {
+      "id": "dlg"
+     },
+     "expect": {
+      "state": "open",
+      "emits": [
+       {
+        "event": "RASM_VISIBLE",
+        "payload": {
+         "owner": "dlg",
+         "shown": [
+          "body",
+          "ok"
+         ],
+         "hidden": []
+        }
+       },
+       {
+        "event": "RASM_PLACE",
+        "payload": {
+         "placed": [
+          {
+           "id": "body",
+           "rect": {
+            "x": 0,
+            "y": 0,
+            "w": 200,
+            "h": 520
+           }
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-without-an-announcement-the-knob-decides",
+   "config": {
+    "id": "dlg",
+    "placement": "start",
+    "width": 200,
+    "height": 200,
+    "padding": 0,
+    "content": "body",
+    "contents": [
+     "body",
+     "ok"
+    ],
+    "z": 100,
+    "label": "Confirm",
+    "direction": "rtl"
+   },
+   "entity": {
+    "id": "dlg"
+   },
+   "steps": [
+    {
+     "from": "closed",
+     "event": "RASM_OVERLAY_OPEN",
+     "payload": {
+      "id": "dlg"
+     },
+     "expect": {
+      "state": "open",
+      "emits": [
+       {
+        "event": "RASM_VISIBLE",
+        "payload": {
+         "owner": "dlg",
+         "shown": [
+          "body",
+          "ok"
+         ],
+         "hidden": []
+        }
+       },
+       {
+        "event": "RASM_PLACE",
+        "payload": {
+         "placed": [
+          {
+           "id": "body",
+           "rect": {
+            "x": 520,
+            "y": 0,
+            "w": 200,
+            "h": 520
+           }
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
   }
  ]
 }

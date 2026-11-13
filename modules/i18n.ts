@@ -20,10 +20,10 @@ export const I18N_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 2,
     description: "The active locale's message for a catalog key, with {{placeholders}} filled from params",
     hasSideEffects: false,
-    failable: { unlessLiteral: [0] },
+    failable: { unlessLiteral: [0], unlessTyped: [{ arg: 0, type: 'messagekey' }] },
     returnType: nullable('string'),
     params: [
-      { name: 'key', type: 'string', description: 'Catalog key (a string literal)' },
+      { name: 'key', type: 'messagekey', description: 'Catalog key: a string literal, or a value typed MessageKey (a knob whose literals were qualified where they were written)' },
       { name: 'params', type: mapOf(STRING, PRIMITIVE_VALUE), description: 'Values for the message {{placeholders}}', optional: true },
     ],
     example: '["i18n/t", "posts.count", { "n": 3 }] // => "3 posts"',

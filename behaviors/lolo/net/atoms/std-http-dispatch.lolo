@@ -5,14 +5,14 @@ app std-http-dispatch [
 uses Spec from "almadar-std/server-dispatch"
 type DispatchHeader = { name : string!, value : string! }
 type DispatchJson = string | number | boolean | [DispatchJson?] | Map string DispatchJson?
-type DispatchBody = { event : string, targetTrait : string, entityId : string, payload : DispatchJson, clientId : string, locale : string, traits : [DispatchJson], mount : [DispatchJson], route : string, delivery : DispatchJson, dispatchLog : DispatchJson, framesSince : number }
+type DispatchBody = { event : string, targetTrait : string, entityId : string, payload : DispatchJson, clientId : string, locale : string, traits : [DispatchJson], mount : [DispatchJson], route : string, delivery : DispatchJson, dispatchLog : DispatchJson, entityByTrait : DispatchJson, framesSince : number }
 type DispatchRejection = { code : string, trait : string, event : string, error : string }
 type DispatchWire = { items : [DispatchJson], success : boolean, transitioned : boolean, states : Map string string, emittedEvents : [DispatchJson], clientEffectsByTrait : [DispatchJson], rejections : [DispatchRejection], guardFailed : string, error : string }
 type DispatchRowsBody = { ref : DispatchJson!, clientId : string }
 type DispatchRows = { rows : [DispatchJson]!, total : number! }
 type DispatchInputs = { inputs : [DispatchJson] }
 type DispatchFailure = { code : string, status : number }
-type DispatchOptions = { wire : boolean!, stream : boolean!, input : boolean!, orbital : string!, targetTrait : string!, entityId : string!, event : string!, traits : [DispatchJson]?, mount : [DispatchJson], route : string, clientId : string, locale : string, delivery : DispatchJson, dispatchLog : DispatchJson, framesSince : number? }
+type DispatchOptions = { wire : boolean!, stream : boolean!, input : boolean!, orbital : string!, targetTrait : string!, entityId : string!, event : string!, traits : [DispatchJson]?, mount : [DispatchJson], route : string, clientId : string, locale : string, delivery : DispatchJson, dispatchLog : DispatchJson, entityByTrait : DispatchJson, framesSince : number? }
 type DispatchPending = { requestId : number!, kind : string!, orbital : string!, traitName : string!, entityId : string!, stream : boolean!, authorization : string!, body : bytes!, hookName : string!, hookKey : string, hookHeaders : Map string string, dispatchKey : string, responseHeaders : [DispatchHeader]!, revive : boolean, held : DispatchWire? }
 type ServerErrorBody = { error : string!, code : string! }
 type HookAnswer = { status : number!, body : string! }
@@ -174,6 +174,7 @@ orbital HttpDispatchOrbital {
                   locale: (object/get @b "locale" ""),
                   delivery: (object/get @b "delivery" {}),
                   dispatchLog: (object/get @b "dispatchLog" {}),
+                  entityByTrait: (object/get @b "entityByTrait" {}),
                   framesSince: (object/get @b "framesSince" null)
                 }
               })))))))

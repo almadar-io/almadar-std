@@ -18927,6 +18927,489 @@
           }
         }
       ]
+    },
+    {
+      "id": "a-batch-upsert-in-a-browser-concat-is-local",
+      "steps": [
+        {
+          "event": "SHAPES_HEARD",
+          "from": "ready",
+          "payload": {
+            "operators": {
+              "persist": {
+                "runsOn": "server",
+                "params": [
+                  {
+                    "name": "action",
+                    "type": "string"
+                  },
+                  {
+                    "name": "entity",
+                    "type": {
+                      "kind": "entity"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "event": "SEMANTICS_HEARD",
+          "from": "ready",
+          "payload": {
+            "functions": [
+              "fn"
+            ]
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "event": "WALK_HEARD",
+          "from": "ready",
+          "payload": {
+            "slots": {
+              "array/concat": {
+                "kind": "args"
+              },
+              "array/prepend": {
+                "args": [
+                  0,
+                  1
+                ],
+                "kind": "listed"
+              },
+              "array/append": {
+                "args": [
+                  0,
+                  1
+                ],
+                "kind": "listed"
+              },
+              "array/map": {
+                "kind": "lambdaResult"
+              },
+              "array/filter": {
+                "args": [
+                  0
+                ],
+                "kind": "listed"
+              },
+              "array/flatten": {
+                "args": [
+                  0
+                ],
+                "kind": "listed"
+              },
+              "array/take": {
+                "args": [
+                  0
+                ],
+                "kind": "listed"
+              },
+              "if": {
+                "kind": "branches"
+              },
+              "let": {
+                "args": [
+                  1
+                ],
+                "kind": "listed"
+              }
+            },
+            "projections": {}
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "event": "INDEX_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "batch",
+            "heads": {
+              "0-0": [
+                "array/concat",
+                "array/map",
+                "upsert",
+                "fn",
+                "persist",
+                "row",
+                "update"
+              ],
+              "0-0-0": [
+                "array/concat",
+                "array/map",
+                "upsert",
+                "fn",
+                "persist",
+                "row",
+                "update"
+              ]
+            },
+            "roots": {
+              "0-0": [
+                "@payload",
+                "@row"
+              ],
+              "0-0-0": [
+                "@payload",
+                "@row"
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "batch.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Run",
+                    "persistence": "runtime",
+                    "fields": []
+                  },
+                  "auxiliaryEntities": [
+                    {
+                      "name": "BrowserA",
+                      "persistence": "persistent",
+                      "browser": true,
+                      "fields": []
+                    },
+                    {
+                      "name": "BrowserB",
+                      "persistence": "persistent",
+                      "browser": true,
+                      "fields": []
+                    },
+                    {
+                      "name": "Server",
+                      "persistence": "persistent",
+                      "fields": []
+                    }
+                  ],
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "Run",
+                      "dispatch": "client",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "event": "CHECK",
+                            "from": "idle",
+                            "effects": [
+                              [
+                                "persist",
+                                "batch",
+                                [
+                                  "array/concat",
+                                  [
+                                    [
+                                      "upsert",
+                                      "BrowserA",
+                                      {
+                                        "id": "a"
+                                      }
+                                    ]
+                                  ],
+                                  [
+                                    "array/map",
+                                    "@payload.rows",
+                                    [
+                                      "fn",
+                                      [
+                                        "row"
+                                      ],
+                                      [
+                                        "update",
+                                        "BrowserB",
+                                        "@row.id",
+                                        {
+                                          "n": 1
+                                        }
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": "batch"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "dispatch-contract",
+                  "scope": "batch",
+                  "findings": []
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-server-upsert-in-browser-concat-remains-server",
+      "steps": [
+        {
+          "event": "SHAPES_HEARD",
+          "from": "ready",
+          "payload": {
+            "operators": {
+              "persist": {
+                "runsOn": "server",
+                "params": [
+                  {
+                    "name": "action",
+                    "type": "string"
+                  },
+                  {
+                    "name": "entity",
+                    "type": {
+                      "kind": "entity"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "event": "SEMANTICS_HEARD",
+          "from": "ready",
+          "payload": {
+            "functions": [
+              "fn"
+            ]
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "event": "WALK_HEARD",
+          "from": "ready",
+          "payload": {
+            "slots": {
+              "array/concat": {
+                "kind": "args"
+              },
+              "array/prepend": {
+                "args": [
+                  0,
+                  1
+                ],
+                "kind": "listed"
+              },
+              "array/append": {
+                "args": [
+                  0,
+                  1
+                ],
+                "kind": "listed"
+              },
+              "array/map": {
+                "kind": "lambdaResult"
+              },
+              "array/filter": {
+                "args": [
+                  0
+                ],
+                "kind": "listed"
+              },
+              "array/flatten": {
+                "args": [
+                  0
+                ],
+                "kind": "listed"
+              },
+              "array/take": {
+                "args": [
+                  0
+                ],
+                "kind": "listed"
+              },
+              "if": {
+                "kind": "branches"
+              },
+              "let": {
+                "args": [
+                  1
+                ],
+                "kind": "listed"
+              }
+            },
+            "projections": {}
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "event": "INDEX_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "batch",
+            "heads": {
+              "0-0": [
+                "array/concat",
+                "create",
+                "upsert",
+                "persist"
+              ],
+              "0-0-0": [
+                "array/concat",
+                "create",
+                "upsert",
+                "persist"
+              ]
+            },
+            "roots": {
+              "0-0": [],
+              "0-0-0": []
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready"
+          }
+        },
+        {
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "batch.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "orbitals": [
+                {
+                  "name": "O",
+                  "entity": {
+                    "name": "Run",
+                    "persistence": "runtime",
+                    "fields": []
+                  },
+                  "auxiliaryEntities": [
+                    {
+                      "name": "BrowserA",
+                      "persistence": "persistent",
+                      "browser": true,
+                      "fields": []
+                    },
+                    {
+                      "name": "BrowserB",
+                      "persistence": "persistent",
+                      "browser": true,
+                      "fields": []
+                    },
+                    {
+                      "name": "Server",
+                      "persistence": "persistent",
+                      "fields": []
+                    }
+                  ],
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "Run",
+                      "dispatch": "client",
+                      "stateMachine": {
+                        "transitions": [
+                          {
+                            "event": "CHECK",
+                            "from": "idle",
+                            "effects": [
+                              [
+                                "persist",
+                                "batch",
+                                [
+                                  "array/concat",
+                                  [
+                                    [
+                                      "create",
+                                      "BrowserA",
+                                      {
+                                        "id": "a"
+                                      }
+                                    ]
+                                  ],
+                                  [
+                                    [
+                                      "upsert",
+                                      "Server",
+                                      {
+                                        "id": "s"
+                                      }
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": "batch"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "dispatch-contract",
+                  "scope": "batch",
+                  "findings": [
+                    {
+                      "code": "ORB_T_LOCAL_TRAIT_TOUCHES_SERVER",
+                      "path": "orbitals[0 (O)].traits[0 (T)].stateMachine.transitions[0].effects[0]",
+                      "message": "trait \"T\" is [client] but transition 'CHECK' runs a server-bound effect — a client trait's transitions never await a server round trip",
+                      "suggestion": "Drop [client] from this trait, or move the server-bound effect to a non-client trait",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
     }
   ]
 }

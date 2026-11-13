@@ -6076,6 +6076,1231 @@
      "trait": "OrbLintEntityAccess"
     }
    ]
+  },
+  {
+   "id": "a-viewer-step-writing-a-field-a-policy-reads-through-user-grants-the-authority",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "fixture",
+       "orbitals": [
+        {
+         "name": "PersonOrbital",
+         "entity": {
+          "name": "Person",
+          "persistence": "persistent",
+          "collection": "people",
+          "identity": true,
+          "read_policy": [
+           "=",
+           [
+            "object/get",
+            "@entity",
+            "id"
+           ],
+           "@user.id"
+          ],
+          "create_policy": true,
+          "delete_policy": false,
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           },
+           {
+            "name": "tier",
+            "type": "string"
+           }
+          ],
+          "update_policy": [
+           "=",
+           [
+            "object/get",
+            "@entity",
+            "id"
+           ],
+           "@user.id"
+          ]
+         },
+         "traits": [
+          {
+           "name": "Settings",
+           "stateMachine": {
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "SAVE",
+              "effects": [
+               [
+                "persist",
+                "update",
+                "Person",
+                {
+                 "id": "@user.id",
+                 "tier": "pro"
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "Home",
+           "path": "/",
+           "traits": [
+            {
+             "ref": "Settings"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "name": "DocOrbital",
+         "entity": {
+          "name": "Doc",
+          "persistence": "persistent",
+          "collection": "docs",
+          "read_policy": [
+           "=",
+           "@user.tier",
+           "pro"
+          ],
+          "create_policy": true,
+          "update_policy": true,
+          "delete_policy": true,
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           },
+           {
+            "name": "title",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": []
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     },
+     "trait": "OrbLintEntityAccess"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "entity-access",
+         "findings": [
+          {
+           "code": "ORB_S_AUTHORITY_FIELD_VIEWER_WRITTEN",
+           "path": "orbitals.PersonOrbital.traits.Settings.stateMachine.transitions[0].effects",
+           "message": "`Person.tier` decides access (a policy reads `@user.tier`), and Settings writes it in a viewer's step: a person can change `tier` on their own row and grant themself that access",
+           "suggestion": "Declare `tier` with `@update server \"<reason>\"` and write it from a trait mounted on a `boot` page that checks the facts itself, or give `tier` its own `@update` predicate",
+           "severity": "error",
+           "entity": "Person",
+           "field": "tier"
+          }
+         ],
+         "scope": ""
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintEntityAccess"
+    }
+   ]
+  },
+  {
+   "id": "control-a-field-declared-update-server-is-clean",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "fixture",
+       "orbitals": [
+        {
+         "name": "PersonOrbital",
+         "entity": {
+          "name": "Person",
+          "persistence": "persistent",
+          "collection": "people",
+          "identity": true,
+          "read_policy": [
+           "=",
+           [
+            "object/get",
+            "@entity",
+            "id"
+           ],
+           "@user.id"
+          ],
+          "create_policy": true,
+          "delete_policy": false,
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           },
+           {
+            "name": "tier",
+            "type": "string",
+            "update": {
+             "server": "set from the billing provider's webhook"
+            }
+           }
+          ],
+          "update_policy": [
+           "=",
+           [
+            "object/get",
+            "@entity",
+            "id"
+           ],
+           "@user.id"
+          ]
+         },
+         "traits": [
+          {
+           "name": "Settings",
+           "stateMachine": {
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "SAVE",
+              "effects": [
+               [
+                "persist",
+                "update",
+                "Person",
+                {
+                 "id": "@user.id",
+                 "tier": "pro"
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "Home",
+           "path": "/",
+           "traits": [
+            {
+             "ref": "Settings"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "name": "DocOrbital",
+         "entity": {
+          "name": "Doc",
+          "persistence": "persistent",
+          "collection": "docs",
+          "read_policy": [
+           "=",
+           "@user.tier",
+           "pro"
+          ],
+          "create_policy": true,
+          "update_policy": true,
+          "delete_policy": true,
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           },
+           {
+            "name": "title",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": []
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     },
+     "trait": "OrbLintEntityAccess"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "entity-access",
+         "findings": [],
+         "scope": ""
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintEntityAccess"
+    }
+   ]
+  },
+  {
+   "id": "control-a-trait-mounted-only-on-a-boot-page-is-clean",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "fixture",
+       "orbitals": [
+        {
+         "name": "PersonOrbital",
+         "entity": {
+          "name": "Person",
+          "persistence": "persistent",
+          "collection": "people",
+          "identity": true,
+          "read_policy": [
+           "=",
+           [
+            "object/get",
+            "@entity",
+            "id"
+           ],
+           "@user.id"
+          ],
+          "create_policy": true,
+          "delete_policy": false,
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           },
+           {
+            "name": "tier",
+            "type": "string"
+           }
+          ],
+          "update_policy": [
+           "=",
+           [
+            "object/get",
+            "@entity",
+            "id"
+           ],
+           "@user.id"
+          ]
+         },
+         "traits": [
+          {
+           "name": "Settings",
+           "stateMachine": {
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "SAVE",
+              "effects": [
+               [
+                "persist",
+                "update",
+                "Person",
+                {
+                 "id": "@user.id",
+                 "tier": "pro"
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "Home",
+           "path": "/",
+           "traits": [
+            {
+             "ref": "Settings"
+            }
+           ],
+           "protocol": "boot"
+          }
+         ]
+        },
+        {
+         "name": "DocOrbital",
+         "entity": {
+          "name": "Doc",
+          "persistence": "persistent",
+          "collection": "docs",
+          "read_policy": [
+           "=",
+           "@user.tier",
+           "pro"
+          ],
+          "create_policy": true,
+          "update_policy": true,
+          "delete_policy": true,
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           },
+           {
+            "name": "title",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": []
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     },
+     "trait": "OrbLintEntityAccess"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "entity-access",
+         "findings": [],
+         "scope": ""
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintEntityAccess"
+    }
+   ]
+  },
+  {
+   "id": "control-no-policy-reading-the-written-field-is-clean",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "fixture",
+       "orbitals": [
+        {
+         "name": "PersonOrbital",
+         "entity": {
+          "name": "Person",
+          "persistence": "persistent",
+          "collection": "people",
+          "identity": true,
+          "read_policy": [
+           "=",
+           [
+            "object/get",
+            "@entity",
+            "id"
+           ],
+           "@user.id"
+          ],
+          "create_policy": true,
+          "delete_policy": false,
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           },
+           {
+            "name": "tier",
+            "type": "string"
+           }
+          ],
+          "update_policy": [
+           "=",
+           [
+            "object/get",
+            "@entity",
+            "id"
+           ],
+           "@user.id"
+          ]
+         },
+         "traits": [
+          {
+           "name": "Settings",
+           "stateMachine": {
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "SAVE",
+              "effects": [
+               [
+                "persist",
+                "update",
+                "Person",
+                {
+                 "id": "@user.id",
+                 "tier": "pro"
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "Home",
+           "path": "/",
+           "traits": [
+            {
+             "ref": "Settings"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "name": "DocOrbital",
+         "entity": {
+          "name": "Doc",
+          "persistence": "persistent",
+          "collection": "docs",
+          "read_policy": [
+           "!=",
+           "@user.role",
+           "anonymous"
+          ],
+          "create_policy": true,
+          "update_policy": true,
+          "delete_policy": true,
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           },
+           {
+            "name": "title",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": []
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     },
+     "trait": "OrbLintEntityAccess"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "entity-access",
+         "findings": [],
+         "scope": ""
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintEntityAccess"
+    }
+   ]
+  },
+  {
+   "id": "control-an-identity-update-policy-of-false-is-clean",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "fixture",
+       "orbitals": [
+        {
+         "name": "PersonOrbital",
+         "entity": {
+          "name": "Person",
+          "persistence": "persistent",
+          "collection": "people",
+          "identity": true,
+          "read_policy": [
+           "=",
+           [
+            "object/get",
+            "@entity",
+            "id"
+           ],
+           "@user.id"
+          ],
+          "create_policy": true,
+          "delete_policy": false,
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           },
+           {
+            "name": "tier",
+            "type": "string"
+           }
+          ],
+          "update_policy": false
+         },
+         "traits": [
+          {
+           "name": "Settings",
+           "stateMachine": {
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "SAVE",
+              "effects": [
+               [
+                "persist",
+                "update",
+                "Person",
+                {
+                 "id": "@user.id",
+                 "tier": "pro"
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "Home",
+           "path": "/",
+           "traits": [
+            {
+             "ref": "Settings"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "name": "DocOrbital",
+         "entity": {
+          "name": "Doc",
+          "persistence": "persistent",
+          "collection": "docs",
+          "read_policy": [
+           "=",
+           "@user.tier",
+           "pro"
+          ],
+          "create_policy": true,
+          "update_policy": true,
+          "delete_policy": true,
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           },
+           {
+            "name": "title",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": []
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     },
+     "trait": "OrbLintEntityAccess"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "entity-access",
+         "findings": [],
+         "scope": ""
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintEntityAccess"
+    }
+   ]
+  },
+  {
+   "id": "a-batch-upsert-tuple-writing-the-field-is-flagged",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "fixture",
+       "orbitals": [
+        {
+         "name": "PersonOrbital",
+         "entity": {
+          "name": "Person",
+          "persistence": "persistent",
+          "collection": "people",
+          "identity": true,
+          "read_policy": [
+           "=",
+           [
+            "object/get",
+            "@entity",
+            "id"
+           ],
+           "@user.id"
+          ],
+          "create_policy": true,
+          "delete_policy": false,
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           },
+           {
+            "name": "tier",
+            "type": "string"
+           }
+          ],
+          "update_policy": [
+           "=",
+           [
+            "object/get",
+            "@entity",
+            "id"
+           ],
+           "@user.id"
+          ]
+         },
+         "traits": [
+          {
+           "name": "Settings",
+           "stateMachine": {
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "SAVE",
+              "effects": [
+               [
+                "persist",
+                "batch",
+                [
+                 [
+                  "upsert",
+                  "Person",
+                  {
+                   "id": "@user.id",
+                   "tier": "pro"
+                  }
+                 ]
+                ]
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "Home",
+           "path": "/",
+           "traits": [
+            {
+             "ref": "Settings"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "name": "DocOrbital",
+         "entity": {
+          "name": "Doc",
+          "persistence": "persistent",
+          "collection": "docs",
+          "read_policy": [
+           "=",
+           "@user.tier",
+           "pro"
+          ],
+          "create_policy": true,
+          "update_policy": true,
+          "delete_policy": true,
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           },
+           {
+            "name": "title",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": []
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     },
+     "trait": "OrbLintEntityAccess"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "entity-access",
+         "findings": [
+          {
+           "code": "ORB_S_AUTHORITY_FIELD_VIEWER_WRITTEN",
+           "path": "orbitals.PersonOrbital.traits.Settings.stateMachine.transitions[0].effects",
+           "message": "`Person.tier` decides access (a policy reads `@user.tier`), and Settings writes it in a viewer's step: a person can change `tier` on their own row and grant themself that access",
+           "suggestion": "Declare `tier` with `@update server \"<reason>\"` and write it from a trait mounted on a `boot` page that checks the facts itself, or give `tier` its own `@update` predicate",
+           "severity": "error",
+           "entity": "Person",
+           "field": "tier"
+          }
+         ],
+         "scope": ""
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintEntityAccess"
+    }
+   ]
+  },
+  {
+   "id": "control-persist-create-is-not-a-write-for-this-rule",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "fixture",
+       "orbitals": [
+        {
+         "name": "PersonOrbital",
+         "entity": {
+          "name": "Person",
+          "persistence": "persistent",
+          "collection": "people",
+          "identity": true,
+          "read_policy": [
+           "=",
+           [
+            "object/get",
+            "@entity",
+            "id"
+           ],
+           "@user.id"
+          ],
+          "create_policy": true,
+          "delete_policy": false,
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           },
+           {
+            "name": "tier",
+            "type": "string"
+           }
+          ],
+          "update_policy": [
+           "=",
+           [
+            "object/get",
+            "@entity",
+            "id"
+           ],
+           "@user.id"
+          ]
+         },
+         "traits": [
+          {
+           "name": "Settings",
+           "stateMachine": {
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "SAVE",
+              "effects": [
+               [
+                "persist",
+                "create",
+                "Person",
+                {
+                 "id": "@user.id",
+                 "tier": "pro"
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "Home",
+           "path": "/",
+           "traits": [
+            {
+             "ref": "Settings"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "name": "DocOrbital",
+         "entity": {
+          "name": "Doc",
+          "persistence": "persistent",
+          "collection": "docs",
+          "read_policy": [
+           "=",
+           "@user.tier",
+           "pro"
+          ],
+          "create_policy": true,
+          "update_policy": true,
+          "delete_policy": true,
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           },
+           {
+            "name": "title",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": []
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     },
+     "trait": "OrbLintEntityAccess"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "entity-access",
+         "findings": [],
+         "scope": ""
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintEntityAccess"
+    }
+   ]
+  },
+  {
+   "id": "an-identity-entity-with-no-update-policy-is-flagged",
+   "steps": [
+    {
+     "event": "LINT_INPUT",
+     "from": "ready",
+     "payload": {
+      "file": "a.lolo",
+      "raw": "",
+      "latin": true,
+      "program": {
+       "name": "fixture",
+       "orbitals": [
+        {
+         "name": "PersonOrbital",
+         "entity": {
+          "name": "Person",
+          "persistence": "persistent",
+          "collection": "people",
+          "identity": true,
+          "read_policy": [
+           "=",
+           [
+            "object/get",
+            "@entity",
+            "id"
+           ],
+           "@user.id"
+          ],
+          "create_policy": true,
+          "delete_policy": false,
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           },
+           {
+            "name": "tier",
+            "type": "string"
+           }
+          ],
+          "access_waivers": {
+           "update": "the person row is changed only by the server"
+          }
+         },
+         "traits": [
+          {
+           "name": "Settings",
+           "stateMachine": {
+            "transitions": [
+             {
+              "from": "idle",
+              "to": "idle",
+              "event": "SAVE",
+              "effects": [
+               [
+                "persist",
+                "update",
+                "Person",
+                {
+                 "id": "@user.id",
+                 "tier": "pro"
+                }
+               ]
+              ]
+             }
+            ]
+           }
+          }
+         ],
+         "pages": [
+          {
+           "name": "Home",
+           "path": "/",
+           "traits": [
+            {
+             "ref": "Settings"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "name": "DocOrbital",
+         "entity": {
+          "name": "Doc",
+          "persistence": "persistent",
+          "collection": "docs",
+          "read_policy": [
+           "=",
+           "@user.tier",
+           "pro"
+          ],
+          "create_policy": true,
+          "update_policy": true,
+          "delete_policy": true,
+          "fields": [
+           {
+            "name": "id",
+            "type": "string"
+           },
+           {
+            "name": "title",
+            "type": "string"
+           }
+          ]
+         },
+         "traits": []
+        }
+       ]
+      },
+      "scope": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "ready",
+      "emits": [
+       {
+        "event": "LINT_FINISH",
+        "payload": {}
+       }
+      ]
+     },
+     "trait": "OrbLintEntityAccess"
+    },
+    {
+     "event": "LINT_FINISH",
+     "payload": {},
+     "expect": {
+      "emits": [
+       {
+        "event": "LINT_FOUND",
+        "payload": {
+         "rule": "entity-access",
+         "findings": [
+          {
+           "code": "ORB_S_AUTHORITY_FIELD_VIEWER_WRITTEN",
+           "path": "orbitals.PersonOrbital.traits.Settings.stateMachine.transitions[0].effects",
+           "message": "`Person.tier` decides access (a policy reads `@user.tier`), and Settings writes it in a viewer's step: a person can change `tier` on their own row and grant themself that access",
+           "suggestion": "Declare `tier` with `@update server \"<reason>\"` and write it from a trait mounted on a `boot` page that checks the facts itself, or give `tier` its own `@update` predicate",
+           "severity": "error",
+           "entity": "Person",
+           "field": "tier"
+          }
+         ],
+         "scope": ""
+        }
+       }
+      ]
+     },
+     "trait": "OrbLintEntityAccess"
+    }
+   ]
   }
  ]
 }

@@ -1,6 +1,7 @@
 app std-stripe [
   version: "1.0.0",
-  description: "std-stripe — payments and subscriptions through the Stripe API (api.stripe.com, version 2025-02-24.acacia): PaymentIntents, refunds, customers, hosted Checkout and Billing Portal sessions, and subscription read, create, update and cancel. Requests are form-encoded with bearer auth and an idempotency key on every POST. Every failure answers STRIPE_FAILED with Stripe's own message.",
+  description: "std-stripe — payments and subscriptions through the Stripe API (api.stripe.com, version 2025-02-24.acacia): PaymentIntents, refunds, customers, hosted Checkout and Billing Portal sessions, and subscription read, create, update and cancel. Requests are form-encoded with bearer auth and an idempotency key on every POST. Every failure answers STRIPE_FAILED with Stripe's own message. The inbound hook POST /api/hooks/stripe-webhook verifies Stripe's signed webhooks (the stripe-signature header, HMAC-SHA256 over <t>.<rawBody> with the STRIPE_WEBHOOK_SECRET credential, a replay tolerance) and reports each accepted customer.subscription.created, updated or deleted event as STRIPE_SUBSCRIPTION_CHANGED; the hook always answers 200 { received: true } or 400 { received: false, error }.",
+  inbound: ["stripe-webhook"],
   net: { "api.stripe.com:443": [tcp] }
 ]
 uses Http from "std/behaviors/std-http-client"
@@ -29,11 +30,22 @@ type StripeSubscriptionItems = { data : [StripeSubscriptionItem]! }
 type StripeSubscription = { id : string!, customer : string?, status : string!, cancel_at_period_end : boolean!, items : StripeSubscriptionItems! }
 type StripeSubscriptionPeriod = { current_period_start : number!, current_period_end : number! }
 type StripeSubscriptionExpanded = { customer : StripeIdRef! }
+type StripeEventHead = { id : string, type : string! }
+type StripeEventPrice = { id : string }
+type StripeEventItem = { price : StripeEventPrice }
+type StripeEventItems = { data : [StripeEventItem] }
+type StripeEventObject = { id : string, customer : string, status : string, cancel_at_period_end : boolean, metadata : StripeMetadata, items : StripeEventItems }
+type StripeEventData = { object : StripeEventObject }
+type StripeEventFull = { id : string, type : string!, data : StripeEventData }
 orbital StripeOrbital {
   entity StripeCall [runtime] {
     id : string!
     pending : [StripePending] = []
     seq : number = 0
+  }
+
+  entity StripeWebhookCall [runtime] {
+    id : string!
   }
 
   trait StripeClient -> StripeCall [optimistic] {
@@ -561,6 +573,85 @@ orbital StripeOrbital {
     }
   }
 
+  trait StripeWebhook -> StripeWebhookCall [optimistic] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+
+      STRIPE_WEBHOOK_CALLED -> idle
+        (let ((epoch : instant "1970-01-01T00:00:00.000Z")
+              (hs (default @payload.headers {}))
+              (raw (default @payload.rawBody "")))
+          (let ((hdr (object/get @hs "stripe-signature" (object/get @hs "Stripe-Signature" ""))))
+          (let ((parts (array/map (str/split @hdr ",") (fn p (str/split @p "="))))
+                (tpart (array/find (array/map (str/split @hdr ",") (fn p (str/split @p "="))) (fn p (= (array/nth @p 0) "t")))))
+            (let ((t (if (= @tpart null) null (str/to-number (default (array/nth @tpart 1) ""))))
+                  (v1s (array/map (array/filter @parts (fn p (= (array/nth @p 0) "v1"))) (fn p (default (array/nth @p 1) "")))))
+              (if (or (= @hdr "") (not (validate/number @t)) (= (array/len @v1s) 0))
+                (emit STRIPE_WEBHOOK_ANSWERED { status: 400, body: (json/stringify { received: false, error: "bad-signature-header" }) })
+                (if (> (math/abs (- (time/diff @now @epoch "second") @t)) @config.toleranceSeconds)
+                  (emit STRIPE_WEBHOOK_ANSWERED { status: 400, body: (json/stringify { received: false, error: "stale" }) })
+                  (let ((mac (hmac/sha 256 "credential" @config.webhookSecret (str/concat @t "." @raw) "hex")))
+                    (if (not (array/includes @v1s @mac))
+                      (emit STRIPE_WEBHOOK_ANSWERED { status: 400, body: (json/stringify { received: false, error: "bad-signature" }) })
+                      (let ((head (json/parse @raw StripeEventHead)))
+                        (if (= @head null)
+                          (emit STRIPE_WEBHOOK_ANSWERED { status: 400, body: (json/stringify { received: false, error: "bad-event" }) })
+                          (if (not (array/includes ["customer.subscription.created", "customer.subscription.updated", "customer.subscription.deleted"] @head.type))
+                            (emit STRIPE_WEBHOOK_ANSWERED { status: 200, body: (json/stringify { received: true }) })
+                            (let ((ev (json/parse @raw StripeEventFull)))
+                              (if (= @ev null)
+                                (emit STRIPE_WEBHOOK_ANSWERED { status: 400, body: (json/stringify { received: false, error: "bad-event" }) })
+                                (do
+                                  (emit STRIPE_WEBHOOK_ANSWERED { status: 200, body: (json/stringify { received: true }) })
+                                  (emit STRIPE_SUBSCRIPTION_CHANGED { eventId: (default @ev.id ""), eventType: @ev.type, subscriptionId: (default @ev.data.object.id ""), customerId: (default @ev.data.object.customer ""), status: (default @ev.data.object.status ""), priceId: (let ((fi (array/first (default @ev.data.object.items.data [])))) (if (= @fi null) "" (default @fi.price.id ""))), cancelAtPeriodEnd: (default @ev.data.object.cancel_at_period_end false), metadata: (default @ev.data.object.metadata {}) })))))))))))))))
+
+    emits {
+      STRIPE_WEBHOOK_ANSWERED -> external {
+        status : number!
+        body : string!
+      }
+        @description "The answer to a Stripe webhook call: 200 { received: true } for a verified event, 400 { received, error } (bad-signature-header, stale, bad-signature or bad-event) otherwise."
+        @tier "secondary"
+      STRIPE_SUBSCRIPTION_CHANGED -> external {
+        eventId : string!
+        eventType : string!
+        subscriptionId : string!
+        customerId : string!
+        status : string!
+        priceId : string!
+        cancelAtPeriodEnd : boolean!
+        metadata : Map string string!
+      }
+        @description "A verified Stripe webhook reported a subscription created, updated or deleted: the event id and type, the subscription and customer ids, Stripe's status, the first item's price id, the cancel-at-period-end flag and the subscription metadata (missing parts are empty)."
+        @synonyms "subscription webhook, subscription changed, billing event"
+        @tier "primary"
+    }
+
+    listens {
+      STRIPE_WEBHOOK_CALLED -> inbound "stripe-webhook" answers STRIPE_WEBHOOK_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+        @description "Receive a Stripe webhook: verify its signature and answer, and report subscription events."
+        @synonyms "stripe webhook, stripe events"
+    }
+
+    config {
+      webhookSecret : secret = "STRIPE_WEBHOOK_SECRET"
+        @label "Webhook signing secret credential"
+        @description "Name of the credential holding the Stripe webhook signing secret (whsec_...); the secret never enters program data."
+        @synonyms "webhook secret, signing secret"
+        @tier "policy"
+      toleranceSeconds : number = 300
+        @label "Signature tolerance (seconds)"
+        @description "A webhook whose signed timestamp differs from the clock by more than this is refused as stale."
+        @synonyms "replay window, timestamp tolerance"
+        @tier "policy"
+    }
+  }
+
   trait StripeHttpFrame = Frame.traits.HttpFrame {
     listens {
       StripeHttp.HC_FRAME -> FRAME_RUN
@@ -598,5 +689,5 @@ orbital StripeOrbital {
     }
   }
 
-  page boot as StripePage -> StripeClient, StripeHttp, StripeHttpFrame, StripeTimeout
+  page boot as StripePage -> StripeClient, StripeWebhook, StripeHttp, StripeHttpFrame, StripeTimeout
 }

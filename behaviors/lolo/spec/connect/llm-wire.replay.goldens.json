@@ -1100,6 +1100,137 @@
           }
         }
       ]
+    },
+    {
+      "id": "a-tool-reply-cut-at-the-output-cap-ends-in-output-cut-and-no-result",
+      "steps": [
+        {
+          "trait": "LocalLlm",
+          "event": "LLM_TOOLS_REPLIED",
+          "payload": {
+            "key": "{\"key\": \"t2\", \"model\": \"qwen\", \"system\": \"sys\", \"userPrompt\": \"hi\", \"maxSteps\": 8, \"tools\": [{\"name\": \"read_x\", \"description\": \"d\", \"parameters\": {\"type\": \"object\"}}], \"messages\": [{\"role\": \"system\", \"content\": \"sys\"}, {\"role\": \"user\", \"content\": \"hi\"}], \"steps\": [], \"usage\": {\"promptTokens\": 0, \"completionTokens\": 0, \"totalTokens\": 0, \"modelCalls\": 1}}",
+            "status": 200,
+            "body": "{\"choices\": [{\"index\": 0, \"finish_reason\": \"length\", \"message\": {\"role\": \"assistant\", \"content\": \"\"}}], \"usage\": {\"prompt_tokens\": 5, \"completion_tokens\": 3, \"total_tokens\": 8}}"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LLM_FAILED",
+                "payload": {
+                  "code": "output-cut"
+                }
+              }
+            ],
+            "neverEmits": [
+              "LLM_CALL_TOOLS_RESULT",
+              "LLM_TOOLS_REQUESTED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-tool-reply-that-stopped-normally-is-a-result",
+      "steps": [
+        {
+          "trait": "LocalLlm",
+          "event": "LLM_TOOLS_REPLIED",
+          "payload": {
+            "key": "{\"key\": \"t2\", \"model\": \"qwen\", \"system\": \"sys\", \"userPrompt\": \"hi\", \"maxSteps\": 8, \"tools\": [{\"name\": \"read_x\", \"description\": \"d\", \"parameters\": {\"type\": \"object\"}}], \"messages\": [{\"role\": \"system\", \"content\": \"sys\"}, {\"role\": \"user\", \"content\": \"hi\"}], \"steps\": [], \"usage\": {\"promptTokens\": 0, \"completionTokens\": 0, \"totalTokens\": 0, \"modelCalls\": 1}}",
+            "status": 200,
+            "body": "{\"choices\": [{\"index\": 0, \"finish_reason\": \"stop\", \"message\": {\"role\": \"assistant\", \"content\": \"done\"}}], \"usage\": {\"prompt_tokens\": 5, \"completion_tokens\": 3, \"total_tokens\": 8}}"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LLM_CALL_TOOLS_RESULT",
+                "payload": {
+                  "reply": "done"
+                }
+              }
+            ],
+            "neverEmits": [
+              "LLM_FAILED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-cut-tool-reply-that-carries-tool-calls-ends-in-output-cut-and-requests-nothing",
+      "steps": [
+        {
+          "trait": "LocalLlm",
+          "event": "LLM_TOOLS_REPLIED",
+          "payload": {
+            "key": "{\"key\": \"t2\", \"model\": \"qwen\", \"system\": \"sys\", \"userPrompt\": \"hi\", \"maxSteps\": 8, \"tools\": [{\"name\": \"read_x\", \"description\": \"d\", \"parameters\": {\"type\": \"object\"}}], \"messages\": [{\"role\": \"system\", \"content\": \"sys\"}, {\"role\": \"user\", \"content\": \"hi\"}], \"steps\": [], \"usage\": {\"promptTokens\": 0, \"completionTokens\": 0, \"totalTokens\": 0, \"modelCalls\": 1}}",
+            "status": 200,
+            "body": "{\"choices\": [{\"index\": 0, \"finish_reason\": \"length\", \"message\": {\"role\": \"assistant\", \"content\": \"\", \"tool_calls\": [{\"id\": \"c1\", \"type\": \"function\", \"function\": {\"name\": \"read_x\", \"arguments\": \"{\\\"a\\\":1}\"}}]}}], \"usage\": {\"prompt_tokens\": 5, \"completion_tokens\": 3, \"total_tokens\": 8}}"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LLM_FAILED",
+                "payload": {
+                  "code": "output-cut"
+                }
+              }
+            ],
+            "neverEmits": [
+              "LLM_CALL_TOOLS_RESULT",
+              "LLM_TOOLS_REQUESTED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-timed-out-tool-call-fails-with-code-timeout",
+      "steps": [
+        {
+          "trait": "LocalLlm",
+          "event": "LLM_TOOLS_UNREACHABLE",
+          "payload": {
+            "error": "e",
+            "kind": "timeout",
+            "key": "{\"key\": \"t2\", \"model\": \"qwen\", \"system\": \"sys\", \"userPrompt\": \"hi\", \"maxSteps\": 8, \"tools\": [{\"name\": \"read_x\", \"description\": \"d\", \"parameters\": {\"type\": \"object\"}}], \"messages\": [{\"role\": \"system\", \"content\": \"sys\"}, {\"role\": \"user\", \"content\": \"hi\"}], \"steps\": [], \"usage\": {\"promptTokens\": 0, \"completionTokens\": 0, \"totalTokens\": 0, \"modelCalls\": 1}}"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LLM_FAILED",
+                "payload": {
+                  "code": "timeout"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-network-failure-of-a-tool-call-fails-with-an-empty-code",
+      "steps": [
+        {
+          "trait": "LocalLlm",
+          "event": "LLM_TOOLS_UNREACHABLE",
+          "payload": {
+            "error": "e",
+            "kind": "network",
+            "key": "{\"key\": \"t2\", \"model\": \"qwen\", \"system\": \"sys\", \"userPrompt\": \"hi\", \"maxSteps\": 8, \"tools\": [{\"name\": \"read_x\", \"description\": \"d\", \"parameters\": {\"type\": \"object\"}}], \"messages\": [{\"role\": \"system\", \"content\": \"sys\"}, {\"role\": \"user\", \"content\": \"hi\"}], \"steps\": [], \"usage\": {\"promptTokens\": 0, \"completionTokens\": 0, \"totalTokens\": 0, \"modelCalls\": 1}}"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "LLM_FAILED",
+                "payload": {
+                  "code": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
     }
   ]
 }

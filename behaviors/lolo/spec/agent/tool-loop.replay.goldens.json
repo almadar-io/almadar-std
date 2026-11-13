@@ -4414,6 +4414,179 @@
     "LoopChatRequestDeadline",
     "LoopChatRequestDelay"
    ]
+  },
+  {
+   "id": "a-failed-run-the-model-cut-off-carries-the-output-cut-code",
+   "note": "G-STD-042 control.",
+   "steps": [
+    {
+     "event": "CONVERSE",
+     "from": "idle",
+     "payload": {
+      "messages": [
+       {
+        "role": "user",
+        "content": "show my notes"
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "preparing"
+     },
+     "identity": {
+      "id": "u1",
+      "role": "staff"
+     }
+    },
+    {
+     "event": "INPUTS_KNOWN",
+     "from": "preparing",
+     "payload": {
+      "result": {
+       "inputs": [],
+       "entities": [],
+       "selected": []
+      },
+      "text": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "thinking"
+     },
+     "identity": {
+      "id": "u1",
+      "role": "staff"
+     }
+    },
+    {
+     "event": "ToolsFailed",
+     "from": "thinking",
+     "payload": {
+      "message": "model unavailable",
+      "code": "output-cut"
+     },
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "emits": [
+       {
+        "event": "ASSISTANT_REPLY_FAILED",
+        "payload": {
+         "error": "model unavailable",
+         "steps": [],
+         "code": "output-cut"
+        }
+       }
+      ]
+     },
+     "identity": {
+      "id": "u1",
+      "role": "staff"
+     }
+    }
+   ],
+   "config": {
+    "tools": [
+     {
+      "read": "Note",
+      "roles": [
+       "staff"
+      ]
+     }
+    ]
+   },
+   "defaults": [
+    "LoopLlm",
+    "LoopChatRequest",
+    "LoopChatHttp"
+   ]
+  },
+  {
+   "id": "control-a-failed-run-with-no-code-carries-an-empty-code",
+   "note": "G-STD-042 control.",
+   "steps": [
+    {
+     "event": "CONVERSE",
+     "from": "idle",
+     "payload": {
+      "messages": [
+       {
+        "role": "user",
+        "content": "show my notes"
+       }
+      ]
+     },
+     "expect": {
+      "fired": true,
+      "state": "preparing"
+     },
+     "identity": {
+      "id": "u1",
+      "role": "staff"
+     }
+    },
+    {
+     "event": "INPUTS_KNOWN",
+     "from": "preparing",
+     "payload": {
+      "result": {
+       "inputs": [],
+       "entities": [],
+       "selected": []
+      },
+      "text": ""
+     },
+     "expect": {
+      "fired": true,
+      "state": "thinking"
+     },
+     "identity": {
+      "id": "u1",
+      "role": "staff"
+     }
+    },
+    {
+     "event": "ToolsFailed",
+     "from": "thinking",
+     "payload": {
+      "message": "model unavailable"
+     },
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "emits": [
+       {
+        "event": "ASSISTANT_REPLY_FAILED",
+        "payload": {
+         "error": "model unavailable",
+         "steps": [],
+         "code": ""
+        }
+       }
+      ]
+     },
+     "identity": {
+      "id": "u1",
+      "role": "staff"
+     }
+    }
+   ],
+   "config": {
+    "tools": [
+     {
+      "read": "Note",
+      "roles": [
+       "staff"
+      ]
+     }
+    ]
+   },
+   "defaults": [
+    "LoopLlm",
+    "LoopChatRequest",
+    "LoopChatHttp"
+   ]
   }
  ]
 }

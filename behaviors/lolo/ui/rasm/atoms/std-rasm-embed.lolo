@@ -1,0 +1,242 @@
+app std-rasm-embed [
+  version: "1.0.0",
+  description: "std-rasm-embed — a rectangle of the Rasm surface that the host fills with another program's view or a native one. It is declared, never inferred: kind is one of program, web, video or map, and source names what to show (a program route, a URL or an id). When its own rect is placed it paints a labelled group node (and a placeholder look embed/default/placeholder until the host answers) and emits RASM_EMBED { id, kind, source, label, z, rect } for the host to realize. The host answers RASM_EMBED_STATE { id, status, reason }: ready clears the placeholder, unavailable (a host that cannot provide the kind) paints the fallback label and emits the unavailable event { id, kind, reason }. An unknown kind or an empty source is unavailable from INIT with reason unknown-kind or no-source, never a silent blank."
+]
+
+type RasmRect = { x : number!, y : number!, w : number!, h : number! }
+type RasmPlaced = { id : string!, rect : RasmRect! }
+type RasmMaterial = { wgsl : string!, params : [number]!, live : boolean! }
+type RasmCorners = { radius : [number]!, kind : "round" | "bevel" | "notch" | "scoop" }
+type RasmSpring = { stiffness : number!, damping : number! }
+type RasmShadow = { color : string!, blur : number! }
+type RasmLook = { fill : string, stroke : string, strokeWidth : number, corners : RasmCorners, shadow : RasmShadow, material : RasmMaterial, textColor : string, font : string, spring : RasmSpring, decor : string }
+
+orbital RasmEmbedOrbital {
+  entity RasmEmbedItem [runtime] {
+    id : string!
+    looks : Map string RasmLook = {}
+    rect : RasmRect = { x: 0, y: 0, w: 0, h: 0 }
+    hasRect : boolean = false
+    status : string = "idle"
+    paints : number = 0
+  }
+
+  trait RasmEmbed -> RasmEmbedItem [client] {
+    initial: idle
+
+    state idle {
+      INIT -> idle when (and (array/includes ["program", "web", "video", "map"] @config.kind) (!= @config.source ""))
+        (set @entity.status "idle")
+      INIT -> unavailable when (not (and (array/includes ["program", "web", "video", "map"] @config.kind) (!= @config.source "")))
+        (set @entity.status "unavailable")
+        (emit @config.unavailable { id: @config.id, kind: @config.kind, reason: (if (array/includes ["program", "web", "video", "map"] @config.kind) "no-source" "unknown-kind") })
+      RASM_BOOT -> idle
+      RASM_THEME -> idle
+        (set @entity.looks ?looks)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_PLACE -> requested when (and (array/some ?placed (fn p (= @p.id @config.id))) (and (array/includes ["program", "web", "video", "map"] @config.kind) (!= @config.source "")))
+        (set @entity.rect (let ((mine (default (array/find ?placed (fn p (= @p.id @config.id))) { id: "", rect: @entity.rect }))) @mine.rect))
+        (set @entity.hasRect true)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+        (emit RASM_EMBED { id: @config.id, kind: @config.kind, source: @config.source, label: @config.label, z: @config.z, rect: @entity.rect })
+      RASM_EMBED_STATE -> ready when (and (= ?id @config.id) (= ?status "ready"))
+        (set @entity.status "ready")
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_EMBED_STATE -> unavailable when (and (= ?id @config.id) (= ?status "unavailable"))
+        (set @entity.status "unavailable")
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+        (emit @config.unavailable { id: @config.id, kind: @config.kind, reason: ?reason })
+      REPAINT -> idle when @entity.hasRect
+        (let (
+            (r @entity.rect)
+            (look (default (object/get @entity.looks "embed/default/placeholder") {}))
+          )
+          (emit RASM_PAINT { id: @config.id, z: @config.z, nodes: (array/concat [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @r.x, y: @r.y, z: @config.z }, width: @r.w, height: @r.h, fill: @look.fill, stroke: @look.stroke, strokeWidth: @look.strokeWidth, corners: @look.corners, spring: @look.spring, semantic: { role: "group", name: @config.label, order: @config.order, focused: false } }] []) }))
+    }
+
+    state requested {
+      INIT -> idle when (and (array/includes ["program", "web", "video", "map"] @config.kind) (!= @config.source ""))
+        (set @entity.status "idle")
+      INIT -> unavailable when (not (and (array/includes ["program", "web", "video", "map"] @config.kind) (!= @config.source "")))
+        (set @entity.status "unavailable")
+        (emit @config.unavailable { id: @config.id, kind: @config.kind, reason: (if (array/includes ["program", "web", "video", "map"] @config.kind) "no-source" "unknown-kind") })
+      RASM_BOOT -> requested
+      RASM_THEME -> requested
+        (set @entity.looks ?looks)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_PLACE -> requested when (and (array/some ?placed (fn p (= @p.id @config.id))) (and (array/includes ["program", "web", "video", "map"] @config.kind) (!= @config.source "")))
+        (set @entity.rect (let ((mine (default (array/find ?placed (fn p (= @p.id @config.id))) { id: "", rect: @entity.rect }))) @mine.rect))
+        (set @entity.hasRect true)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+        (emit RASM_EMBED { id: @config.id, kind: @config.kind, source: @config.source, label: @config.label, z: @config.z, rect: @entity.rect })
+      RASM_EMBED_STATE -> ready when (and (= ?id @config.id) (= ?status "ready"))
+        (set @entity.status "ready")
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_EMBED_STATE -> unavailable when (and (= ?id @config.id) (= ?status "unavailable"))
+        (set @entity.status "unavailable")
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+        (emit @config.unavailable { id: @config.id, kind: @config.kind, reason: ?reason })
+      REPAINT -> requested when @entity.hasRect
+        (let (
+            (r @entity.rect)
+            (look (default (object/get @entity.looks "embed/default/placeholder") {}))
+          )
+          (emit RASM_PAINT { id: @config.id, z: @config.z, nodes: (array/concat [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @r.x, y: @r.y, z: @config.z }, width: @r.w, height: @r.h, fill: @look.fill, stroke: @look.stroke, strokeWidth: @look.strokeWidth, corners: @look.corners, spring: @look.spring, semantic: { role: "group", name: @config.label, order: @config.order, focused: false } }] []) }))
+    }
+
+    state ready {
+      INIT -> idle when (and (array/includes ["program", "web", "video", "map"] @config.kind) (!= @config.source ""))
+        (set @entity.status "idle")
+      INIT -> unavailable when (not (and (array/includes ["program", "web", "video", "map"] @config.kind) (!= @config.source "")))
+        (set @entity.status "unavailable")
+        (emit @config.unavailable { id: @config.id, kind: @config.kind, reason: (if (array/includes ["program", "web", "video", "map"] @config.kind) "no-source" "unknown-kind") })
+      RASM_BOOT -> ready
+      RASM_THEME -> ready
+        (set @entity.looks ?looks)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_PLACE -> ready when (and (array/some ?placed (fn p (= @p.id @config.id))) (and (array/includes ["program", "web", "video", "map"] @config.kind) (!= @config.source "")))
+        (set @entity.rect (let ((mine (default (array/find ?placed (fn p (= @p.id @config.id))) { id: "", rect: @entity.rect }))) @mine.rect))
+        (set @entity.hasRect true)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+        (emit RASM_EMBED { id: @config.id, kind: @config.kind, source: @config.source, label: @config.label, z: @config.z, rect: @entity.rect })
+      RASM_EMBED_STATE -> ready when (and (= ?id @config.id) (= ?status "ready"))
+        (set @entity.status "ready")
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_EMBED_STATE -> unavailable when (and (= ?id @config.id) (= ?status "unavailable"))
+        (set @entity.status "unavailable")
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+        (emit @config.unavailable { id: @config.id, kind: @config.kind, reason: ?reason })
+      REPAINT -> ready when @entity.hasRect
+        (let (
+            (r @entity.rect)
+            (look (default (object/get @entity.looks "embed/default/placeholder") {}))
+          )
+          (emit RASM_PAINT { id: @config.id, z: @config.z, nodes: [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @r.x, y: @r.y, z: @config.z }, width: @r.w, height: @r.h, stroke: @look.stroke, strokeWidth: @look.strokeWidth, corners: @look.corners, spring: @look.spring, semantic: { role: "group", name: @config.label, order: @config.order, focused: false } }] }))
+    }
+
+    state unavailable {
+      INIT -> idle when (and (array/includes ["program", "web", "video", "map"] @config.kind) (!= @config.source ""))
+        (set @entity.status "idle")
+      INIT -> unavailable when (not (and (array/includes ["program", "web", "video", "map"] @config.kind) (!= @config.source "")))
+        (set @entity.status "unavailable")
+        (emit @config.unavailable { id: @config.id, kind: @config.kind, reason: (if (array/includes ["program", "web", "video", "map"] @config.kind) "no-source" "unknown-kind") })
+      RASM_BOOT -> unavailable
+      RASM_THEME -> unavailable
+        (set @entity.looks ?looks)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_PLACE -> unavailable when (and (array/some ?placed (fn p (= @p.id @config.id))) (and (array/includes ["program", "web", "video", "map"] @config.kind) (!= @config.source "")))
+        (set @entity.rect (let ((mine (default (array/find ?placed (fn p (= @p.id @config.id))) { id: "", rect: @entity.rect }))) @mine.rect))
+        (set @entity.hasRect true)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+        (emit RASM_EMBED { id: @config.id, kind: @config.kind, source: @config.source, label: @config.label, z: @config.z, rect: @entity.rect })
+      RASM_EMBED_STATE -> ready when (and (= ?id @config.id) (= ?status "ready"))
+        (set @entity.status "ready")
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+      RASM_EMBED_STATE -> unavailable when (and (= ?id @config.id) (= ?status "unavailable"))
+        (set @entity.status "unavailable")
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
+        (emit @config.unavailable { id: @config.id, kind: @config.kind, reason: ?reason })
+      REPAINT -> unavailable when @entity.hasRect
+        (let (
+            (r @entity.rect)
+            (look (default (object/get @entity.looks "embed/default/placeholder") {}))
+          )
+          (emit RASM_PAINT { id: @config.id, z: @config.z, nodes: (array/concat [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @r.x, y: @r.y, z: @config.z }, width: @r.w, height: @r.h, fill: @look.fill, stroke: @look.stroke, strokeWidth: @look.strokeWidth, corners: @look.corners, spring: @look.spring, semantic: { role: "group", name: @config.label, order: @config.order, focused: false } }] (if (and (!= @look.textColor null) (!= @look.font null)) [{ type: draw-text, id: (str/concat @config.id ":label"), text: @config.fallback, anchor: "top-left", position: { x: (+ @r.x 12), y: (+ @r.y 10), z: @config.z }, align: left, baseline: top, color: @look.textColor, font: @look.font, spring: @look.spring }] [])) }))
+    }
+
+    listens {
+      RASM_BOOT { }
+        @description "The surface mounted: take the starting state."
+      RASM_THEME { name : string!  looks : Map string RasmLook! }
+        @description "The theme's looks; the placeholder repaints with them."
+      RASM_PLACE { placed : [RasmPlaced]! }
+        @description "Placed rects; the embed takes its own and asks the host to realize it there."
+      RASM_EMBED_STATE { id : string!  status : "ready" | "unavailable"!  reason : string! }
+        @description "The host's answer for the embed with this id: realized, or unable to provide it."
+    }
+
+    emits {
+      RASM_PAINT -> external {
+        id : string!
+        z : number!
+        nodes : [node]!
+      }
+        @description "The embed's group node and placeholder, for the surface to collect."
+        @tier "domain"
+      REPAINT -> internal {
+        n : number!
+      }
+        @tier "internal"
+      RASM_EMBED -> external {
+        id : string!
+        kind : "program" | "web" | "video" | "map"!
+        source : string!
+        label : string!
+        z : number!
+        rect : RasmRect!
+      }
+        @description "Ask the host to realize a native view in this rect. Needs a floor embed primitive."
+        @tier "domain"
+      @config.unavailable -> external {
+        id : string!
+        kind : string!
+        reason : string!
+      }
+        @description "The embed cannot be provided: an unknown kind, no source, or a host that cannot realize it."
+        @tier "domain"
+    }
+
+    config {
+      id : string = ""
+        @label "Id"
+        @description "The region and paint id of the embed."
+        @tier "domain"
+      kind : string = "program"
+        @label "Kind"
+        @description "program, web, video or map: what the host realizes."
+        @tier "domain"
+      source : string = ""
+        @label "Source"
+        @description "What to show: a program route, a URL or an id, by kind."
+        @tier "domain"
+      label : string = ""
+        @label "Label"
+        @description "The embed's accessible name; organisms pass a translated string."
+        @tier "domain"
+      fallback : string = ""
+        @label "Fallback"
+        @description "The text painted when the embed is unavailable; organisms pass a translated string."
+        @tier "domain"
+      unavailable : event = RASM_EMBED_UNAVAILABLE
+        @label "Unavailable"
+        @description "The event emitted when the embed cannot be provided."
+        @tier "domain"
+      order : number = 0
+        @label "Order"
+        @description "Reading and tab order of the embed's semantic node."
+        @tier "domain"
+      z : number = 0
+        @label "Z"
+        @description "Paint order."
+        @tier "presentation"
+    }
+  }
+
+  page boot as RasmEmbedStart -> RasmEmbed
+}
