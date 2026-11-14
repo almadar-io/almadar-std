@@ -83,7 +83,7 @@ type GuestHostAsk = { trait : string!, op : string!, ask : string! }
 type GuestMove = { trait : string!, event : string?, from : string!, to : string!, fired : boolean! }
 type GuestOpened = { guest : string!, page : [string]!, route : string, rendered : [GuestPaint]!, outcomes : [GuestMove]!, hostAsks : [GuestHostAsk]?, client : GuestProgram? }
 type GuestJson = string | number | boolean | [GuestJson?] | Map string GuestJson?
-type GuestLegBody = { event : string, targetTrait : string, entityId : string, payload : GuestJson, clientId : string, locale : string, traits : [GuestJson], mount : [GuestJson], route : string, delivery : GuestJson, dispatchLog : GuestJson, framesSince : number }
+type GuestLegBody = { event : string, targetTrait : string, entityId : string, payload : GuestJson, clientId : string, locale : string, traits : [GuestJson], mount : [GuestJson], unmount : [string], route : string, delivery : GuestJson, dispatchLog : GuestJson, framesSince : number }
 type GuestLegAnswer = { leg : string!, response : string?, error : string? }
 type GuestHostDispatch = { kind : "dispatch" | "push", clientId : string!, target : "origin" | "peers", orbitalName : string?, request : GuestJson?, response : GuestJson?, emitted : GuestJson? }
 type GuestStagedDispatch = { kind : "dispatch" | "push", clientId : string!, target : "origin" | "peers", orbitalName : string?, request : GuestJson?, response : GuestJson?, emitted : GuestJson?, seq : number! }
@@ -586,6 +586,7 @@ orbital GuestSessionOrbital {
             event: (object/get @b "event" ""),
             traits: (object/get @b "traits" null),
             mount: (object/get @b "mount" []),
+            unmount: (object/get @b "unmount" []),
             route: (object/get @b "route" ""),
             clientId: (object/get @b "clientId" ""),
             locale: (object/get @b "locale" ""),
@@ -605,6 +606,7 @@ orbital GuestSessionOrbital {
             event: (object/get @b "event" ""),
             traits: (object/get @b "traits" null),
             mount: (object/get @b "mount" []),
+            unmount: (object/get @b "unmount" []),
             route: (object/get @b "route" ""),
             clientId: (object/get @b "clientId" ""),
             locale: (object/get @b "locale" ""),
