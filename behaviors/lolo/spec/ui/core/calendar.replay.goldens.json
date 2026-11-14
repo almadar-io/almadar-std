@@ -38,87 +38,131 @@
          "include": [],
          "limit": 1000,
          "filter": [
-          "let",
+          "and",
           [
+           "and",
            [
-            "t",
+            "or",
             [
-             "as",
+             "not",
              [
-              "default",
-              [
-               "object/get",
-               "@entity",
-               "date"
-              ],
-              ""
+              "validate/required",
+              "@config.scopeField"
+             ]
+            ],
+            [
+             "=",
+             [
+              "object/get",
+              "@entity",
+              "@config.scopeField"
              ],
-             "{\"version\":1,\"name\":\"CalendarInstant\",\"type\":{\"kind\":\"instant\"}}"
+             "@user.id"
+            ]
+           ],
+           [
+            "or",
+            [
+             "not",
+             [
+              "validate/required",
+              "@config.parentField"
+             ]
+            ],
+            [
+             "=",
+             [
+              "object/get",
+              "@entity",
+              "@config.parentField"
+             ],
+             "@entity.calendarParentId"
             ]
            ]
           ],
           [
-           "and",
+           "let",
            [
-            "!=",
-            "@t",
-            null
+            [
+             "t",
+             [
+              "as",
+              [
+               "default",
+               [
+                "object/get",
+                "@entity",
+                "date"
+               ],
+               ""
+              ],
+              "{\"version\":1,\"name\":\"CalendarInstant\",\"type\":{\"kind\":\"instant\"}}"
+             ]
+            ]
            ],
            [
-            "time/isAfter",
-            "@t",
+            "and",
             [
-             "if",
-             [
-              "=",
-              "@payload.value",
-              "week"
-             ],
-             [
-              "time/subtract",
-              [
-               "time/now"
-              ],
-              1,
-              "week"
-             ],
+             "!=",
+             "@t",
+             null
+            ],
+            [
+             "time/isAfter",
+             "@t",
              [
               "if",
               [
                "=",
                "@payload.value",
-               "3months"
+               "week"
               ],
               [
                "time/subtract",
                [
                 "time/now"
                ],
-               3,
-               "month"
+               1,
+               "week"
               ],
               [
                "if",
                [
                 "=",
                 "@payload.value",
-                "year"
+                "3months"
                ],
                [
                 "time/subtract",
                 [
                  "time/now"
                 ],
-                1,
-                "year"
-               ],
-               [
-                "time/subtract",
-                [
-                 "time/now"
-                ],
-                1,
+                3,
                 "month"
+               ],
+               [
+                "if",
+                [
+                 "=",
+                 "@payload.value",
+                 "year"
+                ],
+                [
+                 "time/subtract",
+                 [
+                  "time/now"
+                 ],
+                 1,
+                 "year"
+                ],
+                [
+                 "time/subtract",
+                 [
+                  "time/now"
+                 ],
+                 1,
+                 "month"
+                ]
                ]
               ]
              ]
