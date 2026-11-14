@@ -38,6 +38,7 @@ type ProfileHeld = { rows : number!, frames : number!, guests : number!, arenas 
 type ProfileGroupTime = { group : string!, ms : number! }
 type ProfileLongTask = { startMs : number!, durMs : number!, groups : [ProfileGroupTime]!, unattributedMs : number! }
 type ProfilePageMetrics = { jsHeapUsedBytes : number!, jsHeapTotalBytes : number!, nodes : number!, layoutCount : number!, recalcStyleCount : number!, taskSeconds : number!, scriptSeconds : number!, layoutSeconds : number!, recalcStyleSeconds : number! }
+type ProfileLeavesReply = { result : { result : { value : [string]? }! }! }
 type ProfileHeapSite = { site : string!, bytes : number! }
 type ProfileCpuSite = { site : string!, ms : number! }
 type ProfileTaskFunctions = { startMs : number!, durMs : number!, functions : [ProfileCpuSite]! }
@@ -81,7 +82,7 @@ orbital OrbProfileOrbital {
     pages : [ProfilePage] = []
     heap : boolean = false
     cpu : boolean = false
-    spa : boolean = false
+    clicks : boolean = false
     machine : string = "off"
     heaps : [ProfileHeapPage] = []
     cpus : [ProfileCpuPage] = []
@@ -194,9 +195,13 @@ orbital OrbProfileOrbital {
 
   trait OrbProfile -> ProfileRun {
     config {
+      playgroundCard : string = "Browse every installed behavior"
+        @label "Playground card"
+        @description "Text on the launchpad card that opens the behavior playground; --clicks clicks it, then each behavior's leaf in the playground's tree."
+        @tier "policy"
       machineButton : string = "State machine"
         @label "Machine view button"
-        @description "The label of the launchpad button that opens the state machine view (std-launchpad's MACHINE_TOGGLE button); --machine clicks it once before the pages."
+        @description "The label of the launchpad button that opens the state machine view (std-launchpad's MACHINE_TOGGLE button); --machine clicks it on each page once the behavior has opened, inside that page's trace."
         @tier "policy"
       fullButton : string = "Full screen"
         @label "Full screen button"
@@ -227,7 +232,7 @@ orbital OrbProfileOrbital {
               (set @entity.heap (array/includes @argv "--heap"))
               (set @entity.cpu (array/includes @argv "--cpu"))
               (set @entity.machine (let ((at (array/findIndex @argv (fn a (= @a "--machine"))))) (if (< @at 0) "off" (if (= (default (array/nth @argv (+ @at 1)) "") "full") "full" "side"))))
-              (set @entity.spa (or (array/includes @argv "--spa") (array/includes @argv "--machine")))
+              (set @entity.clicks (or (array/includes @argv "--clicks") (array/includes @argv "--machine")))
               (set @entity.heaps [])
               (set @entity.cpus [])
               (set @entity.baseUrl (let ((at (array/findIndex @argv (fn a (= @a "--base"))))) (if (< @at 0) "http://127.0.0.1:4790" (default (array/nth @argv (+ @at 1)) "http://127.0.0.1:4790"))))
@@ -348,6 +353,7 @@ orbital OrbProfileOrbital {
       PROFILE_CHROME_READY -> browsing
         (emit PROFILE_CDP_CONNECT { targetId: ?targetId })
       PROFILE_CHROME_FAILED -> ready
+        (if (= @entity.samplyState "running") (emit PROFILE_SAMPLY_STOP { key: (str/concat "profile-launchpad-" @entity.launchpadPid) }) null)
         (emit PROFILE_ANSWERED { status: 500, body: (str/concat "profile launchpad: Chrome could not start (" ?code "): " ?message) })
       PROFILE_BROWSER_READY -> browsing
         (behavior/catalog { paths: ["std", "almadar-behaviors"], exposure: [] } { traits: false, emit: { success: PROFILE_PAGES_LISTED, failure: PROFILE_FAILED } })
@@ -357,20 +363,32 @@ orbital OrbProfileOrbital {
             (do
               (set @entity.queue (if (> @entity.limit 0) (array/take @names @entity.limit) @names))
               (set @entity.index 0)
-              (if @entity.spa
+              (if @entity.clicks
                 (emit PROFILE_PAGE_NAVIGATE { key: "warmup", url: (str/concat @entity.baseUrl "/") })
                 (emit PROFILE_PAGE_NEXT {})))))
-      PROFILE_PAGE_LOADED -> browsing when (and (= ?key "warmup") (= @entity.machine "off"))
-        (emit PROFILE_SETTLE { key: "warmup", delayMs: @entity.settleMs })
-      PROFILE_PAGE_LOADED -> browsing when (and (= ?key "warmup") (!= @entity.machine "off"))
-        (emit PROFILE_EVALUATE { key: "machine", expression: (str/concat "(() => { const b = [...document.querySelectorAll('button')].find(e => (e.getAttribute('aria-label') || e.textContent || '').trim() === " (json/stringify @config.machineButton) "); if (!b) throw new Error('no button ' + " (json/stringify @config.machineButton) "); b.click(); return true; })()") })
-      PROFILE_EVALUATED -> browsing when (and (= ?key "machine") (= @entity.machine "full"))
-        (emit PROFILE_EVALUATE { key: "machine-full", expression: (str/concat "(() => { const b = [...document.querySelectorAll('button')].find(e => (e.getAttribute('aria-label') || e.textContent || '').trim() === " (json/stringify @config.fullButton) "); if (!b) throw new Error('no button ' + " (json/stringify @config.fullButton) "); b.click(); return true; })()") })
-      PROFILE_EVALUATED -> browsing when (or (and (= ?key "machine") (!= @entity.machine "full")) (= ?key "machine-full"))
-        (emit PROFILE_SETTLE { key: "warmup", delayMs: @entity.settleMs })
-      PROFILE_SETTLED -> browsing when (= (default ?key "") "warmup")
-        (emit PROFILE_PAGE_NEXT {})
-      PROFILE_EVALUATED -> browsing when (= ?key "nav")
+      PROFILE_PAGE_LOADED -> browsing when (= ?key "warmup")
+        (emit PROFILE_SETTLE { key: "home", delayMs: @entity.settleMs })
+      PROFILE_SETTLED -> browsing when (= (default ?key "") "home")
+        (emit PROFILE_CLICK { key: "playground", find: (str/concat "[...document.querySelectorAll('[role=button]')].find(e => e.textContent.includes(" (json/stringify @config.playgroundCard) "))") })
+      PROFILE_CLICKED -> browsing when (= ?key "playground")
+        (emit PROFILE_SETTLE { key: "playground", delayMs: @entity.settleMs })
+      PROFILE_SETTLED -> browsing when (= (default ?key "") "playground")
+        (emit PROFILE_EVALUATE { key: "leaves", expression: "[...document.querySelectorAll('[role=treeitem]:not([aria-expanded])')].map(e => e.textContent.trim())" })
+      PROFILE_EVALUATED -> browsing when (= ?key "leaves")
+        (let ((names (default (object/get (object/get (object/get (default (json/parse ?frame ProfileLeavesReply) { result: { result: { value: [] } } }) "result") "result") "value") [])))
+          (do
+            (set @entity.queue (if (> @entity.limit 0) (array/take @names @entity.limit) @names))
+            (set @entity.index 0)
+            (emit PROFILE_PAGE_NEXT {})))
+      PROFILE_CLICKED -> browsing when (and (= ?key "nav") (= @entity.machine "off"))
+        (emit PROFILE_SETTLE { key: "settle", delayMs: @entity.settleMs })
+      PROFILE_CLICKED -> browsing when (and (= ?key "nav") (!= @entity.machine "off"))
+        (emit PROFILE_SETTLE { key: "opened", delayMs: @entity.settleMs })
+      PROFILE_SETTLED -> browsing when (= (default ?key "") "opened")
+        (emit PROFILE_CLICK { key: "page-machine", find: (str/concat "[...document.querySelectorAll('button')].find(e => (e.getAttribute('aria-label') || e.textContent || '').trim() === " (json/stringify @config.machineButton) ")") })
+      PROFILE_CLICKED -> browsing when (and (= ?key "page-machine") (= @entity.machine "full"))
+        (emit PROFILE_CLICK { key: "page-machine-full", find: (str/concat "[...document.querySelectorAll('button')].find(e => (e.getAttribute('aria-label') || e.textContent || '').trim() === " (json/stringify @config.fullButton) ")") })
+      PROFILE_CLICKED -> browsing when (or (and (= ?key "page-machine") (!= @entity.machine "full")) (= ?key "page-machine-full"))
         (emit PROFILE_SETTLE { key: "settle", delayMs: @entity.settleMs })
       PROFILE_HEAP -> browsing
         (set @entity.heaps (array/append @entity.heaps { behavior: @entity.current, liveBytes: ?liveBytes, sites: ?sites }))
@@ -385,16 +403,16 @@ orbital OrbProfileOrbital {
         (emit PROFILE_CHROME_STOP {})
         (if (= @entity.samplyState "running") (emit PROFILE_SAMPLY_STOP { key: (str/concat "profile-launchpad-" @entity.launchpadPid) }) null)
         (emit PROFILE_PAGES_DONE {})
-      PROFILE_TRACING -> browsing when (not @entity.spa)
+      PROFILE_TRACING -> browsing when (not @entity.clicks)
         (emit PROFILE_PAGE_NAVIGATE { key: "profile", url: (str/concat @entity.baseUrl "/" @entity.current) })
-      PROFILE_TRACING -> browsing when @entity.spa
-        (emit PROFILE_EVALUATE { key: "nav", expression: (str/concat "history.pushState({}, '', " (json/stringify (str/concat "/" @entity.current)) "); dispatchEvent(new PopStateEvent('popstate')); true") })
+      PROFILE_TRACING -> browsing when @entity.clicks
+        (emit PROFILE_CLICK { key: "nav", find: (str/concat "[...document.querySelectorAll('[role=treeitem]:not([aria-expanded])')].find(e => e.textContent.trim() === " (json/stringify @entity.current) ")") })
       PROFILE_PAGE_LOADED -> browsing when (= ?key "profile")
         (emit PROFILE_SETTLE { key: "settle", delayMs: @entity.settleMs })
       PROFILE_PAGE_FAILED -> browsing
         (set @entity.pageError (str/concat ?code ": " ?error))
         (emit PROFILE_TRACE_STOP { label: @entity.current })
-      PROFILE_SETTLED -> browsing when (!= (default ?key "") "warmup")
+      PROFILE_SETTLED -> browsing when (= (default ?key "") "settle")
         (emit PROFILE_TRACE_STOP { label: @entity.current })
       PROFILE_PAGE_COST -> browsing
         (let ((tasks : [ProfileLongTask] ?longTasks) (metrics : ProfilePageMetrics ?metrics))
@@ -403,15 +421,17 @@ orbital OrbProfileOrbital {
               longestMs: (array/reduce @tasks 0 (fn acc t (math/max @acc @t.durMs))), worst: (array/first @tasks),
               jsHeapUsedBytes: @metrics.jsHeapUsedBytes, nodes: @metrics.nodes, rssBytes: 0, error: @entity.pageError }))
             (emit PROFILE_PROCESS_SAMPLE { key: (str/concat "lp-" @entity.index), pids: [(if (> @entity.launchpadPid 0) @entity.launchpadPid @entity.pid)] })))
-      PROFILE_BROWSER_FAILED -> ready when (or (= ?label "machine") (= ?label "machine-full"))
+      PROFILE_BROWSER_FAILED -> ready when (array/includes ["playground", "leaves"] ?label)
+        (if (= @entity.samplyState "running") (emit PROFILE_SAMPLY_STOP { key: (str/concat "profile-launchpad-" @entity.launchpadPid) }) null)
         (emit PROFILE_CHROME_STOP {})
-        (emit PROFILE_ANSWERED { status: 500, body: (str/concat "profile launchpad: the state machine view could not be opened (" ?code "): " ?error) })
-      PROFILE_BROWSER_FAILED -> browsing when (and (!= ?label "") (!= ?label "machine") (!= ?label "machine-full"))
+        (emit PROFILE_ANSWERED { status: 500, body: (str/concat "profile launchpad: " ?label " could not be opened (" ?code "): " ?error) })
+      PROFILE_BROWSER_FAILED -> browsing when (and (!= ?label "") (not (array/includes ["playground", "leaves"] ?label)))
         (let ((failed : ProfilePage { behavior: @entity.current, mainBusyMs: 0, longTasks: 0, longestMs: 0, jsHeapUsedBytes: 0, nodes: 0, rssBytes: 0, error: (str/concat "trace " ?code ": " ?error) }))
           (set @entity.pages (array/append @entity.pages @failed)))
         (set @entity.index (+ @entity.index 1))
         (emit PROFILE_PAGE_NEXT {})
       PROFILE_BROWSER_FAILED -> ready when (= ?label "")
+        (if (= @entity.samplyState "running") (emit PROFILE_SAMPLY_STOP { key: (str/concat "profile-launchpad-" @entity.launchpadPid) }) null)
         (emit PROFILE_CHROME_STOP {})
         (emit PROFILE_ANSWERED { status: 500, body: (str/concat "profile launchpad: the page could not be attached (" ?code "): " ?error) })
       PROFILE_RSS -> browsing
@@ -450,7 +470,7 @@ orbital OrbProfileOrbital {
                       (lastSites (object/get (default (array/last @entity.heaps) { behavior: "", liveBytes: 0, sites: [] }) "sites"))
                       (heapBy (array/groupBy @entity.heaps (fn h @h.behavior))))
                   (array/concat
-                    ["", (str/concat "JS heap in visit order (" (if @entity.spa "in-app navigation" "a full load per page") (if (= @entity.machine "off") "" (str/concat ", state machine view " @entity.machine)) "; sampled live MB | heap MB after GC)  behavior")]
+                    ["", (str/concat "JS heap in visit order (" (if @entity.clicks "clicked in the playground" "a full load per page") (if (= @entity.machine "off") "" (str/concat ", state machine view " @entity.machine)) "; sampled live MB | heap MB after GC)  behavior")]
                     (array/map @entity.pages (fn pg (str/concat "  " (/ (math/round (/ (object/get (default (array/first (object/get @heapBy @pg.behavior [])) { behavior: "", liveBytes: 0, sites: [] }) "liveBytes") 10485.76)) 100) " | " (/ (math/round (/ @pg.jsHeapUsedBytes 10485.76)) 100) "  " @pg.behavior)))
                     ["", "Allocation sites that grew the most from the first visit to the last (sampled live MB first -> last; a site outside a visit's top 400 counts as 0)"]
                     (array/map (array/take (array/sort (array/map @lastSites (fn x { site: @x.site, bytes: (- @x.bytes (object/get (default (array/first (object/get @firstBy @x.site [])) { site: "", bytes: 0 }) "bytes")), last: @x.bytes })) "bytes" "desc") 25)
@@ -551,6 +571,8 @@ orbital OrbProfileOrbital {
         @tier "internal"
       PROFILE_EVALUATE { key : string!, expression : string! }
         @tier "internal"
+      PROFILE_CLICK { key : string!, find : string! }
+        @tier "internal"
       PROFILE_TRACE_STOP { label : string! }
         @tier "internal"
       PROFILE_PAGE_NAVIGATE { key : string!, url : string! }
@@ -609,6 +631,7 @@ orbital OrbProfileOrbital {
       PROFILE_PAGE_COST { label : string!, events : number!, mainBusyMs : number!, metrics : ProfilePageMetrics!, longTasks : [ProfileLongTask]! }
       PROFILE_BROWSER_FAILED { label : string!, code : string!, error : string! }
       PROFILE_EVALUATED { key : string!, frame : string! }
+      PROFILE_CLICKED { key : string! }
       PROFILE_HEAP { label : string!, liveBytes : number!, sites : [ProfileHeapSite]! }
       PROFILE_CPU { label : string!, sampledMs : number!, functions : [ProfileCpuSite]!, longTasks : [ProfileTaskFunctions]! }
       ProfileSettle.ELAPSED -> PROFILE_SETTLED
@@ -621,6 +644,7 @@ orbital OrbProfileOrbital {
       ProfileBrowser.CdpProfile.CDP_PROFILE_PAGE -> PROFILE_PAGE_COST
       ProfileBrowser.CdpProfile.CDP_PROFILE_FAILED -> PROFILE_BROWSER_FAILED
       ProfileBrowser.CdpProfile.CDP_PROFILE_EVALUATED -> PROFILE_EVALUATED
+      ProfileBrowser.CdpProfile.CDP_PROFILE_CLICKED -> PROFILE_CLICKED
       ProfileBrowser.CdpProfile.CDP_PROFILE_HEAP -> PROFILE_HEAP
       ProfileBrowser.CdpProfile.CDP_PROFILE_CPU -> PROFILE_CPU
       ProfileCost.COST_TABLE -> PROFILE_TABLE
@@ -648,7 +672,7 @@ orbital ProfileChrome = ChromeA.orbitals.ChromeOrbital {
     Chrome {
       config {
         port: 9333
-        extraArgs: ["--disable-features=BackForwardCache"]
+        extraArgs: ["--disable-features=BackForwardCache", "--window-size=1440,900"]
         profileDir: { anchor: "cwd" path: ".orbital/profile/chrome/profile" }
         downloadDir: { anchor: "cwd" path: ".orbital/profile/chrome/downloads" }
         preferencesDir: { anchor: "cwd" path: ".orbital/profile/chrome/profile/Default" }
@@ -683,5 +707,6 @@ orbital ProfileBrowser = CdpProf.orbitals.CdpProfileOrbital {
     OrbProfileOrbital.OrbProfile.PROFILE_TRACE_START -> CdpProfile.CDP_PROFILE_TRACE_START
     OrbProfileOrbital.OrbProfile.PROFILE_TRACE_STOP -> CdpProfile.CDP_PROFILE_TRACE_STOP
     OrbProfileOrbital.OrbProfile.PROFILE_EVALUATE -> CdpProfile.CDP_PROFILE_EVALUATE
+    OrbProfileOrbital.OrbProfile.PROFILE_CLICK -> CdpProfile.CDP_PROFILE_CLICK
   }
 }

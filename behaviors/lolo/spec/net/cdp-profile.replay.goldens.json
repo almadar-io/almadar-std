@@ -309,7 +309,7 @@
       "now": 1760531445678
     },
     {
-      "id": "a-trace-asking-for-cpu-and-heap-enables-the-profiler-first",
+      "id": "a-trace-asking-for-cpu-starts-the-profiler-enabled-at-connect",
       "steps": [
         {
           "trait": "CdpProfile",
@@ -335,8 +335,8 @@
               {
                 "event": "CDP_COMMAND",
                 "payload": {
-                  "key": "prof-cpu-enable",
-                  "method": "Profiler.enable",
+                  "key": "prof-cpu-start",
+                  "method": "Profiler.start",
                   "sessionId": "S",
                   "paramsJson": "{}"
                 }
@@ -413,46 +413,6 @@
                   "method": "HeapProfiler.startSampling",
                   "sessionId": "S",
                   "paramsJson": "{\"samplingInterval\":32768}"
-                }
-              }
-            ]
-          }
-        }
-      ],
-      "now": 1760531445678
-    },
-    {
-      "id": "the-cpu-profiler-runs-at-the-sampling-interval",
-      "steps": [
-        {
-          "trait": "CdpProfile",
-          "from": "ready",
-          "event": "PROFILE_CDP_REPLY",
-          "payload": {
-            "key": "prof-cpu-enable",
-            "method": "Profiler.enable",
-            "frame": "{\"id\": 1, \"result\": {}}"
-          },
-          "entity": {
-            "id": "p",
-            "targetId": "T",
-            "sessionId": "S",
-            "label": "page-1",
-            "tracing": false,
-            "events": [],
-            "metrics": [],
-            "cpu": true
-          },
-          "expect": {
-            "fired": true,
-            "emits": [
-              {
-                "event": "CDP_COMMAND",
-                "payload": {
-                  "key": "prof-cpu-interval",
-                  "method": "Profiler.setSamplingInterval",
-                  "sessionId": "S",
-                  "paramsJson": "{\"interval\":1000}"
                 }
               }
             ]
@@ -1144,6 +1104,678 @@
                   "label": "nav",
                   "code": "not-connected",
                   "error": "the profiler is not attached to a page"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "connecting-keeps-the-page-focused-after-performance",
+      "steps": [
+        {
+          "trait": "CdpProfile",
+          "from": "connecting",
+          "event": "PROFILE_CDP_REPLY",
+          "payload": {
+            "key": "prof-perf",
+            "method": "Performance.enable",
+            "frame": "{\"id\": 1, \"result\": {}}"
+          },
+          "entity": {
+            "id": "p",
+            "targetId": "T",
+            "sessionId": "S",
+            "label": "page-1",
+            "tracing": false,
+            "events": [],
+            "metrics": []
+          },
+          "expect": {
+            "fired": true,
+            "state": "connecting",
+            "emits": [
+              {
+                "event": "CDP_COMMAND",
+                "payload": {
+                  "key": "prof-focus",
+                  "method": "Emulation.setFocusEmulationEnabled",
+                  "sessionId": "S",
+                  "paramsJson": "{\"enabled\":true}"
+                }
+              }
+            ],
+            "neverEmits": [
+              "CDP_PROFILE_READY"
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "connecting-sets-the-cpu-sampling-interval-once",
+      "steps": [
+        {
+          "trait": "CdpProfile",
+          "from": "connecting",
+          "event": "PROFILE_CDP_REPLY",
+          "payload": {
+            "key": "prof-cpu-enable",
+            "method": "Profiler.enable",
+            "frame": "{\"id\": 1, \"result\": {}}"
+          },
+          "entity": {
+            "id": "p",
+            "targetId": "T",
+            "sessionId": "S",
+            "label": "page-1",
+            "tracing": false,
+            "events": [],
+            "metrics": []
+          },
+          "expect": {
+            "fired": true,
+            "state": "connecting",
+            "emits": [
+              {
+                "event": "CDP_COMMAND",
+                "payload": {
+                  "key": "prof-cpu-interval",
+                  "method": "Profiler.setSamplingInterval",
+                  "sessionId": "S",
+                  "paramsJson": "{\"interval\":1000}"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "connecting-is-ready-once-the-interval-is-set",
+      "steps": [
+        {
+          "trait": "CdpProfile",
+          "from": "connecting",
+          "event": "PROFILE_CDP_REPLY",
+          "payload": {
+            "key": "prof-cpu-interval",
+            "method": "Profiler.setSamplingInterval",
+            "frame": "{\"id\": 1, \"result\": {}}"
+          },
+          "entity": {
+            "id": "p",
+            "targetId": "T",
+            "sessionId": "S",
+            "label": "page-1",
+            "tracing": false,
+            "events": [],
+            "metrics": []
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "CDP_PROFILE_READY",
+                "payload": {}
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "a-failure-mid-trace-stops-what-is-still-recording",
+      "steps": [
+        {
+          "trait": "CdpProfile",
+          "from": "ready",
+          "event": "PROFILE_CDP_ERROR",
+          "payload": {
+            "key": "prof-heap-stop",
+            "method": "HeapProfiler.stopSampling",
+            "code": "timeout",
+            "message": "no reply"
+          },
+          "entity": {
+            "id": "p",
+            "targetId": "T",
+            "sessionId": "S",
+            "label": "page-1",
+            "tracing": true,
+            "events": [],
+            "metrics": [],
+            "cpu": true,
+            "heap": true
+          },
+          "expect": {
+            "fired": true,
+            "entity": {
+              "tracing": false
+            },
+            "emits": [
+              {
+                "event": "CDP_PROFILE_FAILED",
+                "payload": {
+                  "label": "page-1",
+                  "code": "timeout",
+                  "error": "HeapProfiler.stopSampling: no reply"
+                }
+              },
+              {
+                "event": "CDP_COMMAND",
+                "payload": {
+                  "key": "prof-cleanup-trace",
+                  "method": "Tracing.end",
+                  "paramsJson": "{}"
+                }
+              },
+              {
+                "event": "CDP_COMMAND",
+                "payload": {
+                  "key": "prof-cleanup-cpu",
+                  "method": "Profiler.stop",
+                  "sessionId": "S",
+                  "paramsJson": "{}"
+                }
+              },
+              {
+                "event": "CDP_COMMAND",
+                "payload": {
+                  "key": "prof-cleanup-heap",
+                  "method": "HeapProfiler.stopSampling",
+                  "sessionId": "S",
+                  "paramsJson": "{}"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "control-a-failure-of-a-plain-trace-only-ends-the-trace",
+      "steps": [
+        {
+          "trait": "CdpProfile",
+          "from": "ready",
+          "event": "PROFILE_CDP_ERROR",
+          "payload": {
+            "key": "prof-metrics",
+            "method": "Performance.getMetrics",
+            "code": "-32000",
+            "message": "x"
+          },
+          "entity": {
+            "id": "p",
+            "targetId": "T",
+            "sessionId": "S",
+            "label": "page-1",
+            "tracing": true,
+            "events": [],
+            "metrics": []
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "CDP_COMMAND",
+                "payload": {
+                  "key": "prof-cleanup-trace",
+                  "method": "Tracing.end",
+                  "paramsJson": "{}"
+                }
+              }
+            ],
+            "emitCounts": {
+              "CDP_COMMAND": 1,
+              "CDP_PROFILE_FAILED": 1
+            }
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "a-cleanup-commands-own-error-is-not-another-failure",
+      "steps": [
+        {
+          "trait": "CdpProfile",
+          "from": "ready",
+          "event": "PROFILE_CDP_ERROR",
+          "payload": {
+            "key": "prof-cleanup-cpu",
+            "method": "Profiler.stop",
+            "code": "-32000",
+            "message": "not started"
+          },
+          "entity": {
+            "id": "p",
+            "targetId": "T",
+            "sessionId": "S",
+            "label": "page-1",
+            "tracing": false,
+            "events": [],
+            "metrics": []
+          },
+          "expect": {
+            "fired": true,
+            "neverEmits": [
+              "CDP_PROFILE_FAILED"
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "a-trace-ended-by-cleanup-reports-no-page",
+      "steps": [
+        {
+          "trait": "CdpProfile",
+          "from": "ready",
+          "event": "PROFILE_CDP_EVENT",
+          "payload": {
+            "method": "Tracing.tracingComplete",
+            "frame": "{}"
+          },
+          "entity": {
+            "id": "p",
+            "targetId": "T",
+            "sessionId": "S",
+            "label": "page-1",
+            "tracing": false,
+            "events": [
+              {
+                "name": "RunTask",
+                "ph": "X",
+                "ts": 1,
+                "dur": 1,
+                "pid": 1,
+                "tid": 1
+              }
+            ],
+            "metrics": []
+          },
+          "expect": {
+            "fired": true,
+            "neverEmits": [
+              "CDP_PROFILE_PAGE"
+            ],
+            "entity": {
+              "events": []
+            }
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "a-click-first-finds-where-its-element-is",
+      "steps": [
+        {
+          "trait": "CdpProfile",
+          "from": "ready",
+          "event": "CDP_PROFILE_CLICK",
+          "payload": {
+            "key": "open",
+            "find": "document.body"
+          },
+          "entity": {
+            "id": "p",
+            "targetId": "T",
+            "sessionId": "S",
+            "label": "page-1",
+            "tracing": false,
+            "events": [],
+            "metrics": []
+          },
+          "expect": {
+            "fired": true,
+            "entity": {
+              "clickKey": "open"
+            },
+            "emits": [
+              {
+                "event": "CDP_COMMAND",
+                "payload": {
+                  "key": "prof-click-pos",
+                  "method": "Runtime.evaluate",
+                  "sessionId": "S",
+                  "paramsJson": "{\"expression\":\"(() => { const e = document.body; if (!e) return null; e.scrollIntoView({ block: 'center' }); const b = e.getBoundingClientRect(); if (b.width === 0 || b.height === 0) return null; return { x: b.x + b.width / 2, y: b.y + b.height / 2 }; })()\",\"returnByValue\":true}"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "the-found-element-gets-a-real-pointer-move",
+      "steps": [
+        {
+          "trait": "CdpProfile",
+          "from": "ready",
+          "event": "PROFILE_CDP_REPLY",
+          "payload": {
+            "key": "prof-click-pos",
+            "method": "Runtime.evaluate",
+            "frame": "{\"id\": 7, \"result\": {\"result\": {\"type\": \"object\", \"value\": {\"x\": 10, \"y\": 20}}}}"
+          },
+          "entity": {
+            "id": "p",
+            "targetId": "T",
+            "sessionId": "S",
+            "label": "page-1",
+            "tracing": false,
+            "events": [],
+            "metrics": [],
+            "clickKey": "open"
+          },
+          "expect": {
+            "fired": true,
+            "entity": {
+              "clickX": 10,
+              "clickY": 20
+            },
+            "emits": [
+              {
+                "event": "CDP_COMMAND",
+                "payload": {
+                  "key": "prof-click-move",
+                  "method": "Input.dispatchMouseEvent",
+                  "sessionId": "S",
+                  "paramsJson": "{\"type\":\"mouseMoved\",\"x\":10,\"y\":20,\"button\":\"left\",\"clickCount\":1}"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "control-a-click-with-no-element-fails-naming-its-key",
+      "steps": [
+        {
+          "trait": "CdpProfile",
+          "from": "ready",
+          "event": "PROFILE_CDP_REPLY",
+          "payload": {
+            "key": "prof-click-pos",
+            "method": "Runtime.evaluate",
+            "frame": "{\"id\": 7, \"result\": {\"result\": {\"type\": \"object\", \"subtype\": \"null\", \"value\": null}}}"
+          },
+          "entity": {
+            "id": "p",
+            "targetId": "T",
+            "sessionId": "S",
+            "label": "page-1",
+            "tracing": false,
+            "events": [],
+            "metrics": [],
+            "clickKey": "open"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "CDP_PROFILE_FAILED",
+                "payload": {
+                  "label": "open",
+                  "code": "not-found",
+                  "error": "no element to click"
+                }
+              }
+            ],
+            "neverEmits": [
+              "CDP_COMMAND"
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "the-move-is-followed-by-a-press",
+      "steps": [
+        {
+          "trait": "CdpProfile",
+          "from": "ready",
+          "event": "PROFILE_CDP_REPLY",
+          "payload": {
+            "key": "prof-click-move",
+            "method": "Input.dispatchMouseEvent",
+            "frame": "{\"id\": 8, \"result\": {}}"
+          },
+          "entity": {
+            "id": "p",
+            "targetId": "T",
+            "sessionId": "S",
+            "label": "page-1",
+            "tracing": false,
+            "events": [],
+            "metrics": [],
+            "clickKey": "open",
+            "clickX": 10,
+            "clickY": 20
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "CDP_COMMAND",
+                "payload": {
+                  "key": "prof-click-press",
+                  "method": "Input.dispatchMouseEvent",
+                  "sessionId": "S",
+                  "paramsJson": "{\"type\":\"mousePressed\",\"x\":10,\"y\":20,\"button\":\"left\",\"clickCount\":1}"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "the-press-is-followed-by-a-release",
+      "steps": [
+        {
+          "trait": "CdpProfile",
+          "from": "ready",
+          "event": "PROFILE_CDP_REPLY",
+          "payload": {
+            "key": "prof-click-press",
+            "method": "Input.dispatchMouseEvent",
+            "frame": "{\"id\": 9, \"result\": {}}"
+          },
+          "entity": {
+            "id": "p",
+            "targetId": "T",
+            "sessionId": "S",
+            "label": "page-1",
+            "tracing": false,
+            "events": [],
+            "metrics": [],
+            "clickKey": "open",
+            "clickX": 10,
+            "clickY": 20
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "CDP_COMMAND",
+                "payload": {
+                  "key": "prof-click-release",
+                  "method": "Input.dispatchMouseEvent",
+                  "sessionId": "S",
+                  "paramsJson": "{\"type\":\"mouseReleased\",\"x\":10,\"y\":20,\"button\":\"left\",\"clickCount\":1}"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "the-release-answers-the-click",
+      "steps": [
+        {
+          "trait": "CdpProfile",
+          "from": "ready",
+          "event": "PROFILE_CDP_REPLY",
+          "payload": {
+            "key": "prof-click-release",
+            "method": "Input.dispatchMouseEvent",
+            "frame": "{\"id\": 10, \"result\": {}}"
+          },
+          "entity": {
+            "id": "p",
+            "targetId": "T",
+            "sessionId": "S",
+            "label": "page-1",
+            "tracing": false,
+            "events": [],
+            "metrics": [],
+            "clickKey": "open",
+            "clickX": 10,
+            "clickY": 20
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "CDP_PROFILE_CLICKED",
+                "payload": {
+                  "key": "open"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "control-a-click-before-connecting-is-refused",
+      "steps": [
+        {
+          "trait": "CdpProfile",
+          "from": "idle",
+          "event": "CDP_PROFILE_CLICK",
+          "payload": {
+            "key": "open",
+            "find": "document.body"
+          },
+          "entity": {
+            "id": "p",
+            "targetId": "T",
+            "sessionId": "S",
+            "label": "page-1",
+            "tracing": false,
+            "events": [],
+            "metrics": []
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "CDP_PROFILE_FAILED",
+                "payload": {
+                  "label": "open",
+                  "code": "not-connected",
+                  "error": "the profiler is not attached to a page"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "a-focused-page-is-brought-to-the-front",
+      "steps": [
+        {
+          "trait": "CdpProfile",
+          "from": "connecting",
+          "event": "PROFILE_CDP_REPLY",
+          "payload": {
+            "key": "prof-focus",
+            "method": "Emulation.setFocusEmulationEnabled",
+            "frame": "{\"id\": 1, \"result\": {}}"
+          },
+          "entity": {
+            "id": "p",
+            "targetId": "T",
+            "sessionId": "S",
+            "label": "page-1",
+            "tracing": false,
+            "events": [],
+            "metrics": []
+          },
+          "expect": {
+            "fired": true,
+            "state": "connecting",
+            "emits": [
+              {
+                "event": "CDP_COMMAND",
+                "payload": {
+                  "key": "prof-front",
+                  "method": "Page.bringToFront",
+                  "sessionId": "S",
+                  "paramsJson": "{}"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "the-front-page-enables-the-cpu-profiler",
+      "steps": [
+        {
+          "trait": "CdpProfile",
+          "from": "connecting",
+          "event": "PROFILE_CDP_REPLY",
+          "payload": {
+            "key": "prof-front",
+            "method": "Page.bringToFront",
+            "frame": "{\"id\": 1, \"result\": {}}"
+          },
+          "entity": {
+            "id": "p",
+            "targetId": "T",
+            "sessionId": "S",
+            "label": "page-1",
+            "tracing": false,
+            "events": [],
+            "metrics": []
+          },
+          "expect": {
+            "fired": true,
+            "state": "connecting",
+            "emits": [
+              {
+                "event": "CDP_COMMAND",
+                "payload": {
+                  "key": "prof-cpu-enable",
+                  "method": "Profiler.enable",
+                  "sessionId": "S",
+                  "paramsJson": "{}"
                 }
               }
             ]

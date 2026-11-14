@@ -21,6 +21,7 @@ type CdpCpuNode = { id : number!, callFrame : CdpFrame!, hitCount : number? }
 type CdpCpuProfile = { nodes : [CdpCpuNode]!, startTime : number!, endTime : number!, samples : [number]?, timeDeltas : [number]? }
 type CdpCpuReply = { result : { profile : CdpCpuProfile! }! }
 type CdpEvalReply = { result : { result : SExpr?, exceptionDetails : { text : string! }? }! }
+type CdpClickReply = { result : { result : { value : { x : number!, y : number! }? }! }! }
 type CdpHeapSite = { site : string!, bytes : number! }
 type CdpCpuSite = { site : string!, ms : number! }
 type CdpTaskFunctions = { startMs : number!, durMs : number!, functions : [CdpCpuSite]! }
@@ -40,6 +41,9 @@ orbital CdpProfileOrbital {
     heapNodes : [CdpHeapNode] = []
     cpuProfile : CdpCpuProfile?
     evalKey : string = ""
+    clickKey : string = ""
+    clickX : number = 0
+    clickY : number = 0
   }
 
   trait ProfileCdp = CdpAtom.traits.Cdp {
@@ -125,6 +129,8 @@ orbital CdpProfileOrbital {
         (emit CDP_PROFILE_FAILED { label: ?label, code: "not-connected", error: "the profiler is not attached to a page" })
       CDP_PROFILE_EVALUATE -> idle
         (emit CDP_PROFILE_FAILED { label: ?key, code: "not-connected", error: "the profiler is not attached to a page" })
+      CDP_PROFILE_CLICK -> idle
+        (emit CDP_PROFILE_FAILED { label: ?key, code: "not-connected", error: "the profiler is not attached to a page" })
     }
 
     state connecting {
@@ -138,7 +144,15 @@ orbital CdpProfileOrbital {
             (emit CDP_COMMAND { key: "prof-perf", method: "Performance.enable", sessionId: @r.result.sessionId, paramsJson: (json/stringify { }) })))
       PROFILE_CDP_REPLY -> connecting when (and (= ?key "prof-attach") (== (json/parse ?frame CdpAttachReply) null))
         (emit CDP_PROFILE_FAILED { label: "", code: "bad-reply", error: "Target.attachToTarget answered an unexpected shape" })
-      PROFILE_CDP_REPLY -> ready when (= ?key "prof-perf")
+      PROFILE_CDP_REPLY -> connecting when (= ?key "prof-perf")
+        (emit CDP_COMMAND { key: "prof-focus", method: "Emulation.setFocusEmulationEnabled", sessionId: @entity.sessionId, paramsJson: (json/stringify { enabled: true }) })
+      PROFILE_CDP_REPLY -> connecting when (= ?key "prof-focus")
+        (emit CDP_COMMAND { key: "prof-front", method: "Page.bringToFront", sessionId: @entity.sessionId, paramsJson: (json/stringify { }) })
+      PROFILE_CDP_REPLY -> connecting when (= ?key "prof-front")
+        (emit CDP_COMMAND { key: "prof-cpu-enable", method: "Profiler.enable", sessionId: @entity.sessionId, paramsJson: (json/stringify { }) })
+      PROFILE_CDP_REPLY -> connecting when (= ?key "prof-cpu-enable")
+        (emit CDP_COMMAND { key: "prof-cpu-interval", method: "Profiler.setSamplingInterval", sessionId: @entity.sessionId, paramsJson: (json/stringify { interval: @config.cpuIntervalUs }) })
+      PROFILE_CDP_REPLY -> ready when (= ?key "prof-cpu-interval")
         (emit CDP_PROFILE_READY { })
       PROFILE_CDP_ERROR -> idle
         (emit CDP_PROFILE_FAILED { label: "", code: ?code, error: (str/concat ?method ": " ?message) })
@@ -157,14 +171,10 @@ orbital CdpProfileOrbital {
         (set @entity.heapNodes [])
         (set @entity.cpuProfile null)
         (if (default ?cpu false)
-          (emit CDP_COMMAND { key: "prof-cpu-enable", method: "Profiler.enable", sessionId: @entity.sessionId, paramsJson: (json/stringify { }) })
+          (emit CDP_COMMAND { key: "prof-cpu-start", method: "Profiler.start", sessionId: @entity.sessionId, paramsJson: (json/stringify { }) })
           (if (default ?heap false)
             (emit CDP_COMMAND { key: "prof-heap-start", method: "HeapProfiler.startSampling", sessionId: @entity.sessionId, paramsJson: (json/stringify { samplingInterval: @config.heapIntervalBytes }) })
             (emit CDP_COMMAND { key: "prof-trace-start", method: "Tracing.start", paramsJson: (json/stringify { categories: @config.categories, transferMode: "ReportEvents" }) })))
-      PROFILE_CDP_REPLY -> ready when (= ?key "prof-cpu-enable")
-        (emit CDP_COMMAND { key: "prof-cpu-interval", method: "Profiler.setSamplingInterval", sessionId: @entity.sessionId, paramsJson: (json/stringify { interval: @config.cpuIntervalUs }) })
-      PROFILE_CDP_REPLY -> ready when (= ?key "prof-cpu-interval")
-        (emit CDP_COMMAND { key: "prof-cpu-start", method: "Profiler.start", sessionId: @entity.sessionId, paramsJson: (json/stringify { }) })
       PROFILE_CDP_REPLY -> ready when (= ?key "prof-cpu-start")
         (if @entity.heap
           (emit CDP_COMMAND { key: "prof-heap-start", method: "HeapProfiler.startSampling", sessionId: @entity.sessionId, paramsJson: (json/stringify { samplingInterval: @config.heapIntervalBytes }) })
@@ -192,6 +202,24 @@ orbital CdpProfileOrbital {
         (if @entity.heap
           (emit CDP_COMMAND { key: "prof-heap-stop", method: "HeapProfiler.stopSampling", sessionId: @entity.sessionId, paramsJson: (json/stringify { }) })
           (emit CDP_COMMAND { key: "prof-metrics", method: "Performance.getMetrics", sessionId: @entity.sessionId, paramsJson: (json/stringify { }) }))
+      CDP_PROFILE_CLICK -> ready
+        (set @entity.clickKey ?key)
+        (emit CDP_COMMAND { key: "prof-click-pos", method: "Runtime.evaluate", sessionId: @entity.sessionId, paramsJson: (json/stringify { expression: (str/concat "(() => { const e = " ?find "; if (!e) return null; e.scrollIntoView({ block: 'center' }); const b = e.getBoundingClientRect(); if (b.width === 0 || b.height === 0) return null; return { x: b.x + b.width / 2, y: b.y + b.height / 2 }; })()"), returnByValue: true }) })
+      PROFILE_CDP_REPLY -> ready when (and (= ?key "prof-click-pos") (let ((r (json/parse ?frame CdpClickReply))) (and (!= @r null) (!= @r.result.result.value null))))
+        (let ((r : CdpClickReply (default (json/parse ?frame CdpClickReply) { result: { result: { value: { x: 0, y: 0 } } } })))
+          (let ((at (default @r.result.result.value { x: 0, y: 0 })))
+            (do
+              (set @entity.clickX @at.x)
+              (set @entity.clickY @at.y)
+              (emit CDP_COMMAND { key: "prof-click-move", method: "Input.dispatchMouseEvent", sessionId: @entity.sessionId, paramsJson: (json/stringify { type: "mouseMoved", x: @at.x, y: @at.y, button: "left", clickCount: 1 }) }))))
+      PROFILE_CDP_REPLY -> ready when (and (= ?key "prof-click-pos") (let ((r (json/parse ?frame CdpClickReply))) (or (= @r null) (= @r.result.result.value null))))
+        (emit CDP_PROFILE_FAILED { label: @entity.clickKey, code: "not-found", error: "no element to click" })
+      PROFILE_CDP_REPLY -> ready when (= ?key "prof-click-move")
+        (emit CDP_COMMAND { key: "prof-click-press", method: "Input.dispatchMouseEvent", sessionId: @entity.sessionId, paramsJson: (json/stringify { type: "mousePressed", x: @entity.clickX, y: @entity.clickY, button: "left", clickCount: 1 }) })
+      PROFILE_CDP_REPLY -> ready when (= ?key "prof-click-press")
+        (emit CDP_COMMAND { key: "prof-click-release", method: "Input.dispatchMouseEvent", sessionId: @entity.sessionId, paramsJson: (json/stringify { type: "mouseReleased", x: @entity.clickX, y: @entity.clickY, button: "left", clickCount: 1 }) })
+      PROFILE_CDP_REPLY -> ready when (= ?key "prof-click-release")
+        (emit CDP_PROFILE_CLICKED { key: @entity.clickKey })
       CDP_PROFILE_EVALUATE -> ready
         (set @entity.evalKey ?key)
         (emit CDP_COMMAND { key: "prof-eval", method: "Runtime.evaluate", sessionId: @entity.sessionId, paramsJson: (json/stringify { expression: ?expression, awaitPromise: true, returnByValue: true }) })
@@ -205,7 +233,9 @@ orbital CdpProfileOrbital {
       PROFILE_CDP_REPLY -> ready when (= ?key "prof-trace-end")
       PROFILE_CDP_EVENT -> ready when (= ?method "Tracing.dataCollected")
         (set @entity.events (array/concat @entity.events (object/get (object/get (default (json/parse ?frame CdpDataCollected) { params: { value: [] } }) "params") "value")))
-      PROFILE_CDP_EVENT -> ready when (= ?method "Tracing.tracingComplete")
+      PROFILE_CDP_EVENT -> ready when (and (= ?method "Tracing.tracingComplete") (not @entity.tracing))
+        (set @entity.events [])
+      PROFILE_CDP_EVENT -> ready when (and (= ?method "Tracing.tracingComplete") @entity.tracing)
         (set @entity.tracing false)
         (let ((events : [CdpTraceEvent] @entity.events))
           (let ((main (default (array/find @events (fn e (and (= @e.ph "M") (= @e.name "thread_name") (= (default (object/get (default @e.args { name: "" }) "name") "") "CrRendererMain")))) { name: "", ph: "", ts: 0, dur: 0, pid: -1, tid: -1 })))
@@ -263,9 +293,16 @@ orbital CdpProfileOrbital {
         (set @entity.heapNodes [])
         (set @entity.cpuProfile null)
         (set @entity.events [])
-      PROFILE_CDP_ERROR -> ready
+      PROFILE_CDP_ERROR -> ready when (str/startsWith ?key "prof-cleanup")
+      PROFILE_CDP_ERROR -> ready when (not (str/startsWith ?key "prof-cleanup"))
         (set @entity.tracing false)
         (emit CDP_PROFILE_FAILED { label: @entity.label, code: ?code, error: (str/concat ?method ": " ?message) })
+        (emit CDP_COMMAND { key: "prof-cleanup-trace", method: "Tracing.end", paramsJson: (json/stringify { }) })
+        (when @entity.cpu (emit CDP_COMMAND { key: "prof-cleanup-cpu", method: "Profiler.stop", sessionId: @entity.sessionId, paramsJson: (json/stringify { }) }))
+        (when @entity.heap (emit CDP_COMMAND { key: "prof-cleanup-heap", method: "HeapProfiler.stopSampling", sessionId: @entity.sessionId, paramsJson: (json/stringify { }) }))
+        (set @entity.cpu false)
+        (set @entity.heap false)
+      PROFILE_CDP_REPLY -> ready when (str/startsWith ?key "prof-cleanup")
     }
 
     emits {
@@ -290,6 +327,9 @@ orbital CdpProfileOrbital {
       CDP_PROFILE_CPU -> external { label : string!, sampledMs : number!, functions : [CdpCpuSite]!, longTasks : [CdpTaskFunctions]! }
         @description "Where the page's JavaScript spent its time while the trace ran: the functions with the most self samples, overall and inside each long task."
         @tier "domain"
+      CDP_PROFILE_CLICKED -> external { key : string! }
+        @description "A real pointer click (move, press, release at the element's centre, after scrolling it into view) reached the page."
+        @tier "domain"
       CDP_PROFILE_EVALUATED -> external { key : string!, frame : string! }
         @description "A script ran in the page; the frame is Runtime.evaluate's answer."
         @tier "domain"
@@ -312,6 +352,9 @@ orbital CdpProfileOrbital {
       CDP_PROFILE_TRACE_STOP -> input { label : string! }
         @description "Stop recording and answer the page's cost."
         @synonyms "stop the browser trace, long tasks, main thread"
+      CDP_PROFILE_CLICK -> input { key : string!, find : string! }
+        @description "Click an element with real pointer events (Input.dispatchMouseEvent); find is a script expression that evaluates to the element. Answers CDP_PROFILE_CLICKED, or CDP_PROFILE_FAILED not-found when it finds none."
+        @synonyms "click in page, real click"
       CDP_PROFILE_EVALUATE -> input { key : string!, expression : string! }
         @description "Run a script in the attached page (Runtime.evaluate), for a profiler that drives the page."
         @synonyms "evaluate in page, run script in page"

@@ -24,6 +24,7 @@ orbital RasmOverlayOrbital {
     dir : "ltr" | "rtl" @description "The direction the surface announced." = "ltr"
     announced : boolean @description "True once the surface announced a direction, which then replaces the config knob." = false
     fresh : boolean @description "True from opening until the first paint, which plays the fade in." = false
+    enteredMs : number @description "The epoch-ms instant the entry animation started, 0 before it." = 0
     layouts : number @description "Counts layouts, so each layout in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
     paints : number @description "Counts paints, so each paint in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
   }
@@ -36,6 +37,7 @@ orbital RasmOverlayOrbital {
         (set @entity.viewW @config.surfaceWidth)
         (set @entity.viewH @config.surfaceHeight)
         (set @entity.fresh true)
+        (set @entity.enteredMs (time/epoch-ms @now))
         (set @entity.layouts (+ @entity.layouts 1))
         (emit OVERLAY_LAYOUT { n: @entity.layouts })
         (emit RASM_VISIBLE { owner: @config.id, shown: @config.contents, hidden: [] })
@@ -56,6 +58,7 @@ orbital RasmOverlayOrbital {
         (set @entity.viewH ?height)
       RASM_OVERLAY_OPEN -> open when (= ?id @config.id)
         (set @entity.fresh true)
+        (set @entity.enteredMs (time/epoch-ms @now))
         (set @entity.layouts (+ @entity.layouts 1))
         (emit OVERLAY_LAYOUT { n: @entity.layouts })
         (emit RASM_VISIBLE { owner: @config.id, shown: @config.contents, hidden: [] })
@@ -67,6 +70,7 @@ orbital RasmOverlayOrbital {
         (set @entity.viewW @config.surfaceWidth)
         (set @entity.viewH @config.surfaceHeight)
         (set @entity.fresh true)
+        (set @entity.enteredMs (time/epoch-ms @now))
         (set @entity.layouts (+ @entity.layouts 1))
         (emit OVERLAY_LAYOUT { n: @entity.layouts })
         (emit RASM_VISIBLE { owner: @config.id, shown: @config.contents, hidden: [] })
@@ -127,7 +131,7 @@ orbital RasmOverlayOrbital {
         (emit RASM_PLACE { placed: [{ id: @config.content, rect: (let ((r @entity.panel) (pad @config.padding)) { x: (+ @r.x @pad), y: (+ @r.y @pad), w: (math/max 0 (- @r.w (* 2 @pad))), h: (math/max 0 (- @r.h (* 2 @pad))) }) }] })
         (emit OVERLAY_PAINT { n: @entity.paints })
       OVERLAY_PAINT -> open when (and @entity.hasPanel @entity.hasLooks)
-        (let ((sl (default (object/get @entity.looks "overlay/scrim/idle" null) {})) (pn (default (object/get @entity.looks (str/concat "overlay/" @config.intent "/idle") null) {})) (r @entity.panel)) (let ((fade (if @entity.fresh { durationMs: @config.durationMs, loop: false, keyframes: [{ at: 0, opacity: 0 }, { at: 1, opacity: 1 }] } null)) (framed (= @pn.decor "naqsh-stars"))) (do (emit RASM_PAINT { id: @config.id, z: @config.z, nodes: (array/concat (array/concat (array/concat [{ type: draw-shape, shape: "rect", id: (str/concat @config.id ":scrim"), position: { x: 0, y: 0 }, anchor: "top-left", width: @entity.viewW, height: @entity.viewH, fill: @sl.fill, backdrop: @sl.backdrop, material: @sl.material, spring: @sl.spring, animation: @fade, hit: true }, { type: draw-shape, shape: "rect", id: (str/concat @config.id ":panel"), position: { x: @r.x, y: @r.y }, anchor: "top-left", width: @r.w, height: @r.h, fill: @pn.fill, backdrop: @pn.backdrop, stroke: @pn.stroke, strokeWidth: @pn.strokeWidth, corners: @pn.corners, shadow: @pn.shadow, material: @pn.material, spring: @pn.spring, animation: @fade, hit: true, semantic: { role: "dialog", labelledBy: @config.labelledBy, order: @config.order, focused: false } }] (if (= @pn.decor "glass-rim") [{ type: draw-shape, shape: "rect", id: (str/concat @config.id ":rim"), position: { x: (+ @r.x 1), y: (+ @r.y 1) }, anchor: "top-left", width: (- @r.w 2), height: (- @r.h 2), stroke: "rgba(255,255,255,0.18)", strokeWidth: 1, corners: (let ((c (default @pn.corners { radius: [0, 0, 0, 0], kind: "round" }))) { radius: (array/map @c.radius (fn v (math/max 0 (- @v 1)))), kind: @c.kind }), spring: @pn.spring, animation: @fade, hit: false }] [])) (if @framed (array/map [0, 1, 2, 3] (fn i { type: draw-shape, shape: "polygon", id: (str/concat @config.id ":star:" @i), position: { x: (- (+ @r.x (if (or (= @i 1) (= @i 2)) @r.w 0)) 6), y: (- (+ @r.y (if (>= @i 2) @r.h 0)) 6) }, anchor: "top-left", width: 12, height: 12, sides: 8, starRatio: 0.55, fill: @pn.stroke, spring: @pn.spring, animation: @fade, hit: false })) [])) []) })
+        (let ((sl (default (object/get @entity.looks "overlay/scrim/idle" null) {})) (pn (default (object/get @entity.looks (str/concat "overlay/" @config.intent "/idle") null) {})) (r @entity.panel)) (let ((fade (if @entity.fresh { durationMs: @config.durationMs, startMs: @entity.enteredMs, loop: false, keyframes: [{ at: 0, opacity: 0 }, { at: 1, opacity: 1 }] } null)) (framed (= @pn.decor "naqsh-stars"))) (do (emit RASM_PAINT { id: @config.id, z: @config.z, nodes: (array/concat (array/concat (array/concat [{ type: draw-shape, shape: "rect", id: (str/concat @config.id ":scrim"), position: { x: 0, y: 0 }, anchor: "top-left", width: @entity.viewW, height: @entity.viewH, fill: @sl.fill, backdrop: @sl.backdrop, material: @sl.material, spring: @sl.spring, animation: @fade, hit: true }, { type: draw-shape, shape: "rect", id: (str/concat @config.id ":panel"), position: { x: @r.x, y: @r.y }, anchor: "top-left", width: @r.w, height: @r.h, fill: @pn.fill, backdrop: @pn.backdrop, stroke: @pn.stroke, strokeWidth: @pn.strokeWidth, corners: @pn.corners, shadow: @pn.shadow, material: @pn.material, spring: @pn.spring, animation: @fade, hit: true, semantic: { role: "dialog", labelledBy: @config.labelledBy, order: @config.order, focused: false } }] (if (= @pn.decor "glass-rim") [{ type: draw-shape, shape: "rect", id: (str/concat @config.id ":rim"), position: { x: (+ @r.x 1), y: (+ @r.y 1) }, anchor: "top-left", width: (- @r.w 2), height: (- @r.h 2), stroke: "rgba(255,255,255,0.18)", strokeWidth: 1, corners: (let ((c (default @pn.corners { radius: [0, 0, 0, 0], kind: "round" }))) { radius: (array/map @c.radius (fn v (math/max 0 (- @v 1)))), kind: @c.kind }), spring: @pn.spring, animation: @fade, hit: false }] [])) (if @framed (array/map [0, 1, 2, 3] (fn i { type: draw-shape, shape: "polygon", id: (str/concat @config.id ":star:" @i), position: { x: (- (+ @r.x (if (or (= @i 1) (= @i 2)) @r.w 0)) 6), y: (- (+ @r.y (if (>= @i 2) @r.h 0)) 6) }, anchor: "top-left", width: 12, height: 12, sides: 8, starRatio: 0.55, fill: @pn.stroke, spring: @pn.spring, animation: @fade, hit: false })) [])) []) })
         (set @entity.fresh false))))
     }
 

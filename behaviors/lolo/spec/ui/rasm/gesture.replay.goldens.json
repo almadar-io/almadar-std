@@ -56,7 +56,8 @@
            },
            "width": 400,
            "height": 300,
-           "hit": true
+           "hit": true,
+           "wheel": false
           }
          ]
         }
@@ -120,7 +121,8 @@
            },
            "width": 400,
            "height": 300,
-           "hit": true
+           "hit": true,
+           "wheel": false
           }
          ]
         }
@@ -392,7 +394,8 @@
            },
            "width": 400,
            "height": 300,
-           "hit": true
+           "hit": true,
+           "wheel": false
           }
          ]
         }
@@ -512,7 +515,8 @@
            },
            "width": 400,
            "height": 300,
-           "hit": true
+           "hit": true,
+           "wheel": false
           }
          ]
         }
@@ -773,7 +777,8 @@
            },
            "width": 400,
            "height": 300,
-           "hit": true
+           "hit": true,
+           "wheel": false
           }
          ]
         }
@@ -1035,7 +1040,8 @@
            },
            "width": 400,
            "height": 300,
-           "hit": true
+           "hit": true,
+           "wheel": false
           }
          ]
         }
@@ -1286,7 +1292,8 @@
            },
            "width": 400,
            "height": 300,
-           "hit": true
+           "hit": true,
+           "wheel": false
           }
          ]
         }
@@ -1385,7 +1392,8 @@
            },
            "width": 400,
            "height": 300,
-           "hit": true
+           "hit": true,
+           "wheel": false
           }
          ]
         }
@@ -1462,7 +1470,8 @@
            },
            "width": 400,
            "height": 300,
-           "hit": true
+           "hit": true,
+           "wheel": false
           }
          ]
         }
@@ -1622,7 +1631,8 @@
            },
            "width": 400,
            "height": 300,
-           "hit": true
+           "hit": true,
+           "wheel": false
           }
          ]
         }
@@ -1722,7 +1732,8 @@
            },
            "width": 400,
            "height": 300,
-           "hit": true
+           "hit": true,
+           "wheel": false
           }
          ]
         }
@@ -1804,7 +1815,8 @@
            },
            "width": 400,
            "height": 300,
-           "hit": true
+           "hit": true,
+           "wheel": false
           }
          ]
         }
@@ -1833,6 +1845,264 @@
      },
      "expect": {
       "state": "idle"
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-region-declared-to-take-the-wheel-paints-wheel",
+   "config": {
+    "id": "g",
+    "z": 1,
+    "wheel": true
+   },
+   "entity": {
+    "id": "g"
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "RASM_PLACE",
+     "payload": {
+      "placed": [
+       {
+        "id": "g",
+        "rect": {
+         "x": 0,
+         "y": 0,
+         "w": 400,
+         "h": 300
+        }
+       }
+      ]
+     },
+     "expect": {
+      "entity": {
+       "rect": {
+        "x": 0,
+        "y": 0,
+        "w": 400,
+        "h": 300
+       }
+      },
+      "emits": [
+       {
+        "event": "RASM_PAINT",
+        "payload": {
+         "id": "g",
+         "z": 1,
+         "nodes": [
+          {
+           "type": "draw-shape",
+           "id": "g",
+           "shape": "rect",
+           "anchor": "top-left",
+           "position": {
+            "x": 0,
+            "y": 0,
+            "z": 1
+           },
+           "width": 400,
+           "height": 300,
+           "hit": true,
+           "wheel": true
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-wheel-turn-down-steps-forward",
+   "config": {
+    "id": "stage",
+    "wheel": true
+   },
+   "entity": {
+    "id": "g",
+    "lastStepMs": 0
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "RASM_WHEEL",
+     "payload": {
+      "target": "stage",
+      "x": 10,
+      "y": 10,
+      "dx": 0,
+      "dy": 40
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "RASM_STEPPED",
+        "payload": {
+         "id": "stage",
+         "delta": 1
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-wheel-turn-up-steps-back",
+   "config": {
+    "id": "stage",
+    "wheel": true
+   },
+   "entity": {
+    "id": "g",
+    "lastStepMs": 0
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "RASM_WHEEL",
+     "payload": {
+      "target": "stage",
+      "x": 10,
+      "y": 10,
+      "dx": 0,
+      "dy": -40
+     },
+     "expect": {
+      "state": "idle",
+      "emits": [
+       {
+        "event": "RASM_STEPPED",
+        "payload": {
+         "id": "stage",
+         "delta": -1
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-turn-inside-the-rest-window-does-not-step",
+   "config": {
+    "id": "stage",
+    "wheel": true
+   },
+   "entity": {
+    "id": "g",
+    "lastStepMs": 9000000000000000.0
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "RASM_WHEEL",
+     "payload": {
+      "target": "stage",
+      "x": 10,
+      "y": 10,
+      "dx": 0,
+      "dy": 40
+     },
+     "expect": {
+      "state": "idle",
+      "neverEmits": [
+       "RASM_STEPPED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-turn-below-wheel-min-does-not-step",
+   "config": {
+    "id": "stage",
+    "wheel": true
+   },
+   "entity": {
+    "id": "g",
+    "lastStepMs": 0
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "RASM_WHEEL",
+     "payload": {
+      "target": "stage",
+      "x": 10,
+      "y": 10,
+      "dx": 0,
+      "dy": 3
+     },
+     "expect": {
+      "state": "idle",
+      "neverEmits": [
+       "RASM_STEPPED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-turn-over-another-region-does-not-step",
+   "config": {
+    "id": "stage",
+    "wheel": true
+   },
+   "entity": {
+    "id": "g",
+    "lastStepMs": 0
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "RASM_WHEEL",
+     "payload": {
+      "target": "other",
+      "x": 10,
+      "y": 10,
+      "dx": 0,
+      "dy": 40
+     },
+     "expect": {
+      "state": "idle",
+      "neverEmits": [
+       "RASM_STEPPED"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-wheel-off-does-not-step",
+   "config": {
+    "id": "stage",
+    "wheel": false
+   },
+   "entity": {
+    "id": "g",
+    "lastStepMs": 0
+   },
+   "steps": [
+    {
+     "from": "idle",
+     "event": "RASM_WHEEL",
+     "payload": {
+      "target": "stage",
+      "x": 10,
+      "y": 10,
+      "dx": 0,
+      "dy": 40
+     },
+     "expect": {
+      "state": "idle",
+      "neverEmits": [
+       "RASM_STEPPED"
+      ]
      }
     }
    ]

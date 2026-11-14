@@ -9,7 +9,7 @@ type RasmMaterial = { wgsl : string!, params : [number]!, live : boolean! }
 type RasmCorners = { radius : [number]!, kind : "round" | "bevel" | "notch" | "scoop" }
 type RasmSpring = { stiffness : number!, damping : number! }
 type RasmKeyframe = { at : number!, opacity : number, offsetY : number }
-type RasmAnimation = { durationMs : number!, loop : boolean!, keyframes : [RasmKeyframe]! }
+type RasmAnimation = { durationMs : number!, startMs : number, loop : boolean!, keyframes : [RasmKeyframe]! }
 type RasmText = { id : string!, key : MessageKey!, x : number!, y : number!, z : number!, align : string!, baseline : string!, color : string?, font : string?, spring : RasmSpring?, width : number?, wrap : boolean?, measure : boolean?, role : string?, animation : RasmAnimation? }
 type RasmShadow = { color : string!, blur : number! }
 type RasmBackdrop = { blur : number!, tint : string, saturate : number }
@@ -23,6 +23,7 @@ orbital RasmTextFieldOrbital {
     rect : RasmRect = { x: 0, y: 0, w: 0, h: 0 }
     hasRect : boolean = false
     entering : number = -1
+    enteredMs : number @description "The epoch-ms instant the entry animation started, 0 before it." = 0
     stagger : number = 70
     paints : number = 0
     text : string @description "The buffer's text as it last announced it." = ""
@@ -71,6 +72,7 @@ orbital RasmTextFieldOrbital {
         (emit REPAINT { n: @entity.paints })
       RASM_ENTER -> idle when (array/includes ?order @config.id)
         (set @entity.entering (array/indexOf ?order @config.id))
+        (set @entity.enteredMs (time/epoch-ms @now))
         (set @entity.stagger ?staggerMs)
         (set @entity.paints (+ @entity.paints 1))
         (emit REPAINT { n: @entity.paints })
@@ -117,7 +119,7 @@ orbital RasmTextFieldOrbital {
       REPAINT -> idle when (and @entity.hasLooks @entity.hasRect)
         (let (
             (r @entity.rect)
-            (anim (if (>= @entity.entering 0) { durationMs: (+ 520 (* @entity.entering @entity.stagger)), loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 14 }, { at: (/ (* @entity.entering @entity.stagger) (+ 520 (* @entity.entering @entity.stagger))), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }] } null))
+            (anim (if (>= @entity.entering 0) { durationMs: (+ 520 (* @entity.entering @entity.stagger)), startMs: @entity.enteredMs, loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 14 }, { at: (/ (* @entity.entering @entity.stagger) (+ 520 (* @entity.entering @entity.stagger))), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }] } null))
             (look (default (object/get @entity.looks "textfield/default/idle") {}))
             (lab (default (object/get @entity.looks "textfield/default/label") {}))
             (ph (default (object/get @entity.looks "textfield/default/placeholder") {}))
@@ -161,6 +163,7 @@ orbital RasmTextFieldOrbital {
         (emit REPAINT { n: @entity.paints })
       RASM_ENTER -> hovered when (array/includes ?order @config.id)
         (set @entity.entering (array/indexOf ?order @config.id))
+        (set @entity.enteredMs (time/epoch-ms @now))
         (set @entity.stagger ?staggerMs)
         (set @entity.paints (+ @entity.paints 1))
         (emit REPAINT { n: @entity.paints })
@@ -207,7 +210,7 @@ orbital RasmTextFieldOrbital {
       REPAINT -> hovered when (and @entity.hasLooks @entity.hasRect)
         (let (
             (r @entity.rect)
-            (anim (if (>= @entity.entering 0) { durationMs: (+ 520 (* @entity.entering @entity.stagger)), loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 14 }, { at: (/ (* @entity.entering @entity.stagger) (+ 520 (* @entity.entering @entity.stagger))), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }] } null))
+            (anim (if (>= @entity.entering 0) { durationMs: (+ 520 (* @entity.entering @entity.stagger)), startMs: @entity.enteredMs, loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 14 }, { at: (/ (* @entity.entering @entity.stagger) (+ 520 (* @entity.entering @entity.stagger))), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }] } null))
             (look (default (object/get @entity.looks "textfield/default/hovered") {}))
             (lab (default (object/get @entity.looks "textfield/default/label") {}))
             (ph (default (object/get @entity.looks "textfield/default/placeholder") {}))
@@ -251,6 +254,7 @@ orbital RasmTextFieldOrbital {
         (emit REPAINT { n: @entity.paints })
       RASM_ENTER -> focused when (array/includes ?order @config.id)
         (set @entity.entering (array/indexOf ?order @config.id))
+        (set @entity.enteredMs (time/epoch-ms @now))
         (set @entity.stagger ?staggerMs)
         (set @entity.paints (+ @entity.paints 1))
         (emit REPAINT { n: @entity.paints })
@@ -360,7 +364,7 @@ orbital RasmTextFieldOrbital {
       REPAINT -> focused when (and @entity.hasLooks @entity.hasRect)
         (let (
             (r @entity.rect)
-            (anim (if (>= @entity.entering 0) { durationMs: (+ 520 (* @entity.entering @entity.stagger)), loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 14 }, { at: (/ (* @entity.entering @entity.stagger) (+ 520 (* @entity.entering @entity.stagger))), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }] } null))
+            (anim (if (>= @entity.entering 0) { durationMs: (+ 520 (* @entity.entering @entity.stagger)), startMs: @entity.enteredMs, loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 14 }, { at: (/ (* @entity.entering @entity.stagger) (+ 520 (* @entity.entering @entity.stagger))), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }] } null))
             (look (default (object/get @entity.looks "textfield/default/focused") {}))
             (lab (default (object/get @entity.looks "textfield/default/label") {}))
             (ph (default (object/get @entity.looks "textfield/default/placeholder") {}))
@@ -404,6 +408,7 @@ orbital RasmTextFieldOrbital {
         (emit REPAINT { n: @entity.paints })
       RASM_ENTER -> disabled when (array/includes ?order @config.id)
         (set @entity.entering (array/indexOf ?order @config.id))
+        (set @entity.enteredMs (time/epoch-ms @now))
         (set @entity.stagger ?staggerMs)
         (set @entity.paints (+ @entity.paints 1))
         (emit REPAINT { n: @entity.paints })
@@ -430,7 +435,7 @@ orbital RasmTextFieldOrbital {
       REPAINT -> disabled when (and @entity.hasLooks @entity.hasRect)
         (let (
             (r @entity.rect)
-            (anim (if (>= @entity.entering 0) { durationMs: (+ 520 (* @entity.entering @entity.stagger)), loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 14 }, { at: (/ (* @entity.entering @entity.stagger) (+ 520 (* @entity.entering @entity.stagger))), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }] } null))
+            (anim (if (>= @entity.entering 0) { durationMs: (+ 520 (* @entity.entering @entity.stagger)), startMs: @entity.enteredMs, loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 14 }, { at: (/ (* @entity.entering @entity.stagger) (+ 520 (* @entity.entering @entity.stagger))), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }] } null))
             (look (default (object/get @entity.looks "textfield/default/disabled") {}))
             (lab (default (object/get @entity.looks "textfield/default/label") {}))
             (ph (default (object/get @entity.looks "textfield/default/placeholder") {}))

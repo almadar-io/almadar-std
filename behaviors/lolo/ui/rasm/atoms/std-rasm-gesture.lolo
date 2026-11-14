@@ -1,6 +1,6 @@
 app std-rasm-gesture [
   version: "1.0.0",
-  description: "std-rasm-gesture — recognizes swipe, fling and pinch over one placed rect of the Rasm surface. It paints one hit region with its id; a press on it starts tracking, the release decides. A travel of at least swipeMinPx along the dominant axis emits the swipe event { id, direction, dx, dy }; when the release speed (px per ms, from a 16 ms frame count) also reaches flingMinSpeed it emits the fling event { id, direction, dx, dy, vx, vy } as well. A shorter travel emits nothing, so a tap stays the pressable's. Pinch is recognized from RASM_TOUCHES (two touches) and emits the pinch event { id, phase, scale, centerX, centerY } on start, each move and end; the floor does not deliver RASM_TOUCHES yet."
+  description: "std-rasm-gesture — recognizes swipe, fling, pinch and (with `wheel` on) wheel steps over one placed rect of the Rasm surface. It paints one hit region with its id; a press on it starts tracking, the release decides. A travel of at least swipeMinPx along the dominant axis emits the swipe event { id, direction, dx, dy }; when the release speed (px per ms, from a 16 ms frame count) also reaches flingMinSpeed it emits the fling event { id, direction, dx, dy, vx, vy } as well. A shorter travel emits nothing, so a tap stays the pressable's. Pinch is recognized from RASM_TOUCHES (two touches) and emits the pinch event { id, phase, scale, centerX, centerY } on start, each move and end; the floor does not deliver RASM_TOUCHES yet."
 ]
 
 type RasmRect = { x : number!, y : number!, w : number!, h : number! }
@@ -20,6 +20,7 @@ orbital RasmGestureOrbital {
     scale : number = 1
     centerX : number = 0
     centerY : number = 0
+    lastStepMs : number @description "When the wheel last stepped, on the canvas epoch clock; the rest window counts from it." = 0
   }
 
   trait RasmGesture -> RasmGestureItem [client] {
@@ -30,7 +31,7 @@ orbital RasmGestureOrbital {
       RASM_BOOT -> idle
       RASM_PLACE -> idle when (array/some ?placed (fn p (= @p.id @config.id)))
         (set @entity.rect (let ((mine (default (array/find ?placed (fn p (= @p.id @config.id))) { id: "", rect: { x: 0, y: 0, w: 0, h: 0 } }))) @mine.rect))
-        (emit RASM_PAINT { id: @config.id, z: @config.z, nodes: [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @entity.rect.x, y: @entity.rect.y, z: @config.z }, width: @entity.rect.w, height: @entity.rect.h, hit: true }] })
+        (emit RASM_PAINT { id: @config.id, z: @config.z, nodes: [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @entity.rect.x, y: @entity.rect.y, z: @config.z }, width: @entity.rect.w, height: @entity.rect.h, hit: true, wheel: @config.wheel }] })
 
       RASM_POINTER -> tracking when (and (= ?id @config.id) (= ?kind "down"))
         (set @entity.startX ?x)
@@ -44,6 +45,13 @@ orbital RasmGestureOrbital {
         (set @entity.centerX (let ((a (array/nth ?touches 0)) (b (array/nth ?touches 1))) (/ (+ @a.x @b.x) 2)))
         (set @entity.centerY (let ((a (array/nth ?touches 0)) (b (array/nth ?touches 1))) (/ (+ @a.y @b.y) 2)))
         (emit @config.pinch { id: @config.id, phase: "start", scale: 1, centerX: @entity.centerX, centerY: @entity.centerY })
+      RASM_WHEEL -> idle when (and (and @config.wheel (= ?target @config.id) (> (math/abs ?dy) @config.wheelMin) (> (- (time/epoch-ms @now) @entity.lastStepMs) @config.wheelRestMs)) (> ?dy 0))
+        (set @entity.lastStepMs (time/epoch-ms @now))
+        (emit @config.step { id: @config.id, delta: 1 })
+      RASM_WHEEL -> idle when (and (and @config.wheel (= ?target @config.id) (> (math/abs ?dy) @config.wheelMin) (> (- (time/epoch-ms @now) @entity.lastStepMs) @config.wheelRestMs)) (< ?dy 0))
+        (set @entity.lastStepMs (time/epoch-ms @now))
+        (emit @config.step { id: @config.id, delta: -1 })
+      RASM_WHEEL -> idle when (not (and @config.wheel (= ?target @config.id) (> (math/abs ?dy) @config.wheelMin) (> (- (time/epoch-ms @now) @entity.lastStepMs) @config.wheelRestMs)))
     }
 
     state tracking {
@@ -51,7 +59,7 @@ orbital RasmGestureOrbital {
       RASM_BOOT -> idle
       RASM_PLACE -> tracking when (array/some ?placed (fn p (= @p.id @config.id)))
         (set @entity.rect (let ((mine (default (array/find ?placed (fn p (= @p.id @config.id))) { id: "", rect: { x: 0, y: 0, w: 0, h: 0 } }))) @mine.rect))
-        (emit RASM_PAINT { id: @config.id, z: @config.z, nodes: [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @entity.rect.x, y: @entity.rect.y, z: @config.z }, width: @entity.rect.w, height: @entity.rect.h, hit: true }] })
+        (emit RASM_PAINT { id: @config.id, z: @config.z, nodes: [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @entity.rect.x, y: @entity.rect.y, z: @config.z }, width: @entity.rect.w, height: @entity.rect.h, hit: true, wheel: @config.wheel }] })
 
       RASM_GESTURE_FRAME -> tracking
         (set @entity.elapsed (+ @entity.elapsed ?dtMs))
@@ -70,6 +78,13 @@ orbital RasmGestureOrbital {
         (set @entity.centerX (let ((a (array/nth ?touches 0)) (b (array/nth ?touches 1))) (/ (+ @a.x @b.x) 2)))
         (set @entity.centerY (let ((a (array/nth ?touches 0)) (b (array/nth ?touches 1))) (/ (+ @a.y @b.y) 2)))
         (emit @config.pinch { id: @config.id, phase: "start", scale: 1, centerX: @entity.centerX, centerY: @entity.centerY })
+      RASM_WHEEL -> tracking when (and (and @config.wheel (= ?target @config.id) (> (math/abs ?dy) @config.wheelMin) (> (- (time/epoch-ms @now) @entity.lastStepMs) @config.wheelRestMs)) (> ?dy 0))
+        (set @entity.lastStepMs (time/epoch-ms @now))
+        (emit @config.step { id: @config.id, delta: 1 })
+      RASM_WHEEL -> tracking when (and (and @config.wheel (= ?target @config.id) (> (math/abs ?dy) @config.wheelMin) (> (- (time/epoch-ms @now) @entity.lastStepMs) @config.wheelRestMs)) (< ?dy 0))
+        (set @entity.lastStepMs (time/epoch-ms @now))
+        (emit @config.step { id: @config.id, delta: -1 })
+      RASM_WHEEL -> tracking when (not (and @config.wheel (= ?target @config.id) (> (math/abs ?dy) @config.wheelMin) (> (- (time/epoch-ms @now) @entity.lastStepMs) @config.wheelRestMs)))
     }
 
     state pinching {
@@ -77,7 +92,7 @@ orbital RasmGestureOrbital {
       RASM_BOOT -> idle
       RASM_PLACE -> pinching when (array/some ?placed (fn p (= @p.id @config.id)))
         (set @entity.rect (let ((mine (default (array/find ?placed (fn p (= @p.id @config.id))) { id: "", rect: { x: 0, y: 0, w: 0, h: 0 } }))) @mine.rect))
-        (emit RASM_PAINT { id: @config.id, z: @config.z, nodes: [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @entity.rect.x, y: @entity.rect.y, z: @config.z }, width: @entity.rect.w, height: @entity.rect.h, hit: true }] })
+        (emit RASM_PAINT { id: @config.id, z: @config.z, nodes: [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @entity.rect.x, y: @entity.rect.y, z: @config.z }, width: @entity.rect.w, height: @entity.rect.h, hit: true, wheel: @config.wheel }] })
 
       RASM_TOUCHES -> pinching when (and (and (= ?id @config.id) (= ?kind "move")) (>= (array/len ?touches) 2))
         (set @entity.scale (let ((a (array/nth ?touches 0)) (b (array/nth ?touches 1))) (/ (math/sqrt (+ (* (- @b.x @a.x) (- @b.x @a.x)) (* (- @b.y @a.y) (- @b.y @a.y)))) (math/max 1 @entity.pinchStart))))
@@ -86,6 +101,13 @@ orbital RasmGestureOrbital {
         (emit @config.pinch { id: @config.id, phase: "move", scale: @entity.scale, centerX: @entity.centerX, centerY: @entity.centerY })
       RASM_TOUCHES -> idle when (and (= ?id @config.id) (= ?kind "up"))
         (emit @config.pinch { id: @config.id, phase: "end", scale: @entity.scale, centerX: @entity.centerX, centerY: @entity.centerY })
+      RASM_WHEEL -> pinching when (and (and @config.wheel (= ?target @config.id) (> (math/abs ?dy) @config.wheelMin) (> (- (time/epoch-ms @now) @entity.lastStepMs) @config.wheelRestMs)) (> ?dy 0))
+        (set @entity.lastStepMs (time/epoch-ms @now))
+        (emit @config.step { id: @config.id, delta: 1 })
+      RASM_WHEEL -> pinching when (and (and @config.wheel (= ?target @config.id) (> (math/abs ?dy) @config.wheelMin) (> (- (time/epoch-ms @now) @entity.lastStepMs) @config.wheelRestMs)) (< ?dy 0))
+        (set @entity.lastStepMs (time/epoch-ms @now))
+        (emit @config.step { id: @config.id, delta: -1 })
+      RASM_WHEEL -> pinching when (not (and @config.wheel (= ?target @config.id) (> (math/abs ?dy) @config.wheelMin) (> (- (time/epoch-ms @now) @entity.lastStepMs) @config.wheelRestMs)))
     }
 
     ticks {
@@ -104,6 +126,8 @@ orbital RasmGestureOrbital {
         @description "The touch points held on the region, for pinch. Pending a floor field: the canvas delivers one pointer only."
       RASM_GESTURE_FRAME { dtMs : number! }
         @description "One frame of a press; the tick sends it and the release speed is the travel over the frames counted."
+      RASM_WHEEL { target : string!  x : number!  y : number!  dx : number!  dy : number! }
+        @description "The wheel over a region; with `wheel` on, a turn over this region steps."
     }
 
     emits {
@@ -145,6 +169,12 @@ orbital RasmGestureOrbital {
       }
         @description "Two touches changed their distance; scale is the distance over the start distance."
         @tier "domain"
+      @config.step -> external {
+        id : string!
+        delta : number!
+      }
+        @description "The wheel turned past wheelMin outside the rest window: delta 1 down, -1 up."
+        @tier "domain"
     }
 
     config {
@@ -152,6 +182,10 @@ orbital RasmGestureOrbital {
         @label "Id"
         @description "The region id the recognizer paints and listens on."
         @tier "domain"
+      wheel : boolean = false
+        @label "Takes the wheel"
+        @description "On, the gesture region also takes the wheel: the canvas sends its wheelEvent for the region instead of scrolling the page (a full-screen stage that steps by the wheel)."
+        @tier "presentation"
       swipeMinPx : number = 40
         @label "Swipe distance"
         @description "The least travel along the dominant axis, in px, that counts as a swipe."
@@ -172,6 +206,18 @@ orbital RasmGestureOrbital {
         @label "Pinch"
         @description "The event emitted for a pinch."
         @tier "domain"
+      step : event = RASM_STEPPED
+        @label "Step"
+        @description "The event emitted when the wheel steps (wheel on)."
+        @tier "domain"
+      wheelMin : number = 8
+        @label "Wheel threshold"
+        @description "The least vertical wheel delta, in px, that steps."
+        @tier "policy"
+      wheelRestMs : number = 450
+        @label "Wheel rest"
+        @description "After a step the wheel rests this many ms, counted from the last step, so one flick steps once."
+        @tier "policy"
       z : number = 0
         @label "Z"
         @description "Paint order of the hit region."

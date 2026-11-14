@@ -39,6 +39,8 @@ orbital PageTraceOrbital {
       INIT -> closed
       PAGE_TRACE_OPEN -> reading
         (set @entity.key ?key)
+        (cancel-call (str/concat ?key "-browser"))
+        (cancel-call (str/concat ?key "-server"))
         (program/self { mounted: true, emit: { success: PAGE_MOUNTED, failure: PAGE_MOUNT_FAILED } })
       PAGE_TRACE_CLOSE -> closed
     }

@@ -1,0 +1,308 @@
+app std-rasm-orbit [
+  version: "0.1.0",
+  description: "std-rasm-orbit — paints a described state machine as one closed ring on the Rasm surface: its states are stations on a circle in the order behavior/describe lists them, the ring is the circuit, and each move lights the arc it travelled (the shorter way round, ties forward) with five beats (the event leaves the source, the guard gates it, the transition draws the arc, the effects ripple at the target, the target blooms). Stations are buttons that ask to move there with ORBIT_PICK; ORBIT_AT tells the ring a move happened. Labels and optional beat captions are catalog keys; reduced motion shows the final form with an opacity crossfade only. Nothing is painted before the description answers or before the rect is placed."
+]
+
+type RasmRect = { x : number!, y : number!, w : number!, h : number! }
+type RasmPlaced = { id : string!, rect : RasmRect! }
+type RasmMaterial = { wgsl : string!, params : [number]!, live : boolean! }
+type RasmCorners = { radius : [number]!, kind : "round" | "bevel" | "notch" | "scoop" }
+type RasmSpring = { stiffness : number!, damping : number! }
+type RasmShadow = { color : string!, blur : number! }
+type RasmBackdrop = { blur : number!, tint : string, saturate : number }
+type RasmLook = { fill : string, stroke : string, strokeWidth : number, corners : RasmCorners, shadow : RasmShadow, material : RasmMaterial, textColor : string, font : string, spring : RasmSpring, decor : string, backdrop : RasmBackdrop }
+type RasmKeyframe = { at : number!, opacity : number }
+type RasmAnimation = { durationMs : number!, startMs : number, loop : boolean!, keyframes : [RasmKeyframe]! }
+type RasmText = { id : string!, key : MessageKey!, x : number!, y : number!, z : number!, align : string!, baseline : string!, color : string?, font : string?, spring : RasmSpring?, width : number?, wrap : boolean?, measure : boolean?, role : string?, animation : RasmAnimation? }
+type DescribedState = { name : string!, isInitial : boolean }
+type DescribedTransition = { from : string!, to : string!, event : string! }
+type DescribedStateMachine = { states : [DescribedState]!, transitions : [DescribedTransition]! }
+type DescribedMachine = { stateMachine : DescribedStateMachine! }
+type TransitionLines = { index : number!, start : number!, end : number! }
+type DescribedSource = { text : string!, transitions : [TransitionLines]! }
+type DescribedSubject = { machine : DescribedMachine!, source : DescribedSource! }
+type OrbitLabel = { state : string!, key : MessageKey! }
+
+orbital RasmOrbitOrbital {
+  entity RasmOrbitRun [runtime] {
+    id : string!
+    rect : RasmRect? @description "The rect RASM_PLACE gave the ring, null until placed." = null
+    states : [DescribedState] @description "The described states, in the order behavior/describe lists them." = []
+    transitions : [DescribedTransition] @description "The described transitions." = []
+    active : string @description "The state the ring sits at; empty until a state is described as initial." = ""
+    from : string @description "The state the last move left, empty before any move." = ""
+    fired : string @description "The event of the last move." = ""
+    firedMs : number @description "The epoch-ms instant of the last move, the start of its five beats." = 0
+    direction : "ltr" | "rtl" = "ltr"
+    reduced : boolean = false
+    hovered : string @description "The state whose station the pointer is over." = ""
+    looks : Map string RasmLook @description "The announced look table." = {}
+    error : string @description "The reason describing failed." = ""
+    paints : number @description "Counts paints, so each paint in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
+  }
+
+  trait RasmOrbit -> RasmOrbitRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+        (behavior/describe @config.subject { emit: { success: ORBIT_DESCRIBED, failure: ORBIT_DESCRIBE_FAILED } })
+      RASM_BOOT -> ready
+        (behavior/describe @config.subject { emit: { success: ORBIT_DESCRIBED, failure: ORBIT_DESCRIBE_FAILED } })
+      ORBIT_DESCRIBED -> ready
+        (set @entity.states ?result.machine.stateMachine.states)
+        (set @entity.transitions ?result.machine.stateMachine.transitions)
+        (set @entity.active (let ((ini (array/find ?result.machine.stateMachine.states (fn s (= @s.isInitial true))))) (if (= @ini null) "" @ini.name)))
+        (set @entity.error "")
+        (set @entity.paints (+ @entity.paints 1))
+        (emit ORBIT_REPAINT { n: @entity.paints })
+      ORBIT_DESCRIBE_FAILED -> ready
+        (set @entity.error ?error)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit ORBIT_REPAINT { n: @entity.paints })
+      RASM_THEME -> ready
+        (set @entity.looks ?looks)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit ORBIT_REPAINT { n: @entity.paints })
+      RASM_PLACE -> ready when (array/some ?placed (fn p (= @p.id @config.id)))
+        (set @entity.rect (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) null @mine.rect)))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit ORBIT_REPAINT { n: @entity.paints })
+      RASM_PLACE -> ready when (not (array/some ?placed (fn p (= @p.id @config.id))))
+      RASM_DIRECTION -> ready
+        (set @entity.direction ?direction)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit ORBIT_REPAINT { n: @entity.paints })
+      RASM_MOTION -> ready
+        (set @entity.reduced ?reduced)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit ORBIT_REPAINT { n: @entity.paints })
+      ORBIT_AT -> ready when (array/some @entity.states (fn s (= @s.name ?state)))
+        (set @entity.from @entity.active)
+        (set @entity.active ?state)
+        (set @entity.fired ?event)
+        (set @entity.firedMs (time/epoch-ms @now))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit ORBIT_REPAINT { n: @entity.paints })
+      ORBIT_AT -> ready when (not (array/some @entity.states (fn s (= @s.name ?state))))
+      RASM_POINTER -> ready when (and (= ?kind "down") (array/some @entity.states (fn s (= ?id (str/concat @config.id "-station-" @s.name)))))
+        (let ((hit (default (array/find @entity.states (fn s (= ?id (str/concat @config.id "-station-" @s.name)))) { name: "", isInitial: false })))
+          (emit ORBIT_PICK { state: @hit.name }))
+      RASM_POINTER -> ready when (and (= ?kind "enter") (array/some @entity.states (fn s (= ?id (str/concat @config.id "-station-" @s.name)))))
+        (set @entity.hovered (let ((hit (default (array/find @entity.states (fn s (= ?id (str/concat @config.id "-station-" @s.name)))) { name: "", isInitial: false }))) @hit.name))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit ORBIT_REPAINT { n: @entity.paints })
+      RASM_POINTER -> ready when (and (= ?kind "leave") (array/some @entity.states (fn s (= ?id (str/concat @config.id "-station-" @s.name)))))
+        (set @entity.hovered "")
+        (set @entity.paints (+ @entity.paints 1))
+        (emit ORBIT_REPAINT { n: @entity.paints })
+      RASM_ACCESS -> ready when (and (= ?action "activate") (array/some @entity.states (fn s (= ?target (str/concat @config.id "-station-" @s.name)))))
+        (let ((hit (default (array/find @entity.states (fn s (= ?target (str/concat @config.id "-station-" @s.name)))) { name: "", isInitial: false })))
+          (emit ORBIT_PICK { state: @hit.name }))
+      ORBIT_REPAINT -> ready when (and (!= @entity.rect null) (or (> (array/len @entity.states) 0) (!= @entity.error "")))
+        (let (
+            (r @entity.rect)
+            (n (array/len @entity.states))
+            (dir (if (= @entity.direction "rtl") -1 1))
+            (ring (default (object/get @entity.looks "orbit/ring/idle") {}))
+            (core (default (object/get @entity.looks "orbit/core/idle") {}))
+            (sIdle (default (object/get @entity.looks "orbit/station/idle") {}))
+            (sHov (default (object/get @entity.looks "orbit/station/hovered") {}))
+            (sAct (default (object/get @entity.looks "orbit/station/active") {}))
+            (lIdle (default (object/get @entity.looks "orbit/label/idle") {}))
+            (lAct (default (object/get @entity.looks "orbit/label/active") {}))
+            (arcL (default (object/get @entity.looks "orbit/arc/lit") {}))
+            (beat (default (object/get @entity.looks "orbit/beat/idle") {}))
+          )
+          (let (
+              (cx (+ @r.x (/ @r.w 2)))
+              (cy (+ @r.y (/ @r.h 2)))
+              (R (* (math/min @r.w @r.h) @config.radius))
+              (nn (math/max 1 @n))
+              (start (/ (* @config.startAngle 3.141592653589793) 180))
+              (ai (array/indexOf (array/map @entity.states (fn s @s.name)) @entity.active))
+              (fi (array/indexOf (array/map @entity.states (fn s @s.name)) @entity.from))
+              (sr @config.stationRadius)
+              (dur (* 5 @config.beatMs))
+              (fm @entity.firedMs)
+              (reduced @entity.reduced)
+            )
+            (let (
+                (step (/ 6.283185307179586 @nn))
+                (lit (and (>= @ai 0) (>= @fi 0) (!= @ai @fi)))
+                (fwd (math/mod (+ (- @ai @fi) @nn) @nn))
+                (fade { durationMs: 200, startMs: @fm, loop: false, keyframes: [{ at: 0, opacity: 0 }, { at: 1, opacity: 1 }] })
+              )
+              (let (
+                  (back (> (* 2 @fwd) @nn))
+                  (thf (+ @start (* @dir (* @fi @step))))
+                  (tha (+ @start (* @dir (* @ai @step))))
+                )
+                (let (
+                    (kk (if @back (- @nn @fwd) @fwd))
+                    (td (if @back (- 0 @dir) @dir))
+                  )
+                  (let (
+                      (span (* @kk @step))
+                      (steps (math/max 1 (math/round (/ (* @config.segments @kk) @nn))))
+                    )
+                    (let (
+                        (pts (array/map (array/range (+ @steps 1)) (fn j (let ((th (+ @thf (* @td (* @j (/ @span @steps)))))) { x: (+ @cx (* @R (math/cos @th))), y: (+ @cy (* @R (math/sin @th))) }))))
+                        (alen (* @span @R))
+                        (tk (+ @thf (* @td 0.06)))
+                      )
+                      (let (
+                          (arcD (str/concat "M" (str/join (array/map @pts (fn q (str/concat @q.x " " @q.y))) " L")))
+                          (caps (and @lit (and (not @reduced) (= (array/len @config.beatLabels) 5))))
+                        )
+                        (emit RASM_PAINT { id: @config.id, z: @config.z,
+                          texts: (let ((labs : [OrbitLabel] @config.labels) (bls : [MessageKey] @config.beatLabels)) (array/concat
+                            (array/flatten (array/map @labs (fn lab
+                              (let ((i (array/indexOf (array/map @entity.states (fn s @s.name)) @lab.state)))
+                                (if (< @i 0) []
+                                  (let ((th (+ @start (* @dir (* @i @step)))) (isA (= @lab.state @entity.active)))
+                                    (let ((c (math/cos @th)) (lk (if @isA @lAct @lIdle)))
+                                      [{ id: (str/concat @config.id "-label-" @lab.state), key: @lab.key, x: (+ @cx (* (+ @R @config.labelGap) @c)), y: (+ @cy (* (+ @R @config.labelGap) (math/sin @th))), z: @config.z, align: (if (> @c 0.2) "left" (if (< @c -0.2) "right" "center")), baseline: "middle", color: @lk.textColor, font: @lk.font, spring: @lk.spring }])))))))
+                            (if @caps
+                              (array/map @bls (fn bl
+                                (let ((k (array/indexOf @bls @bl))) (let ((th (default (array/nth [@thf, @tk, (+ @thf (* @td (/ @span 2))), @tha, @tha] @k) 0)) (rf (default (array/nth [1, 1.7, 1, 1, 1.7] @k) 1)))
+                                  { id: (str/concat @config.id "-beat-" @k), key: @bl, x: (+ @cx (* (- @R (* @rf @config.labelGap)) (math/cos @th))), y: (+ @cy (* (- @R (* @rf @config.labelGap)) (math/sin @th))), z: @config.z, align: "center", baseline: "middle", color: @lIdle.textColor, font: @lIdle.font, spring: @lIdle.spring, animation: { durationMs: @dur, startMs: @fm, loop: false, keyframes: [{ at: 0, opacity: 0 }, { at: (/ @k 5), opacity: 0 }, { at: (+ (/ @k 5) 0.05), opacity: 1 }, { at: (/ (+ @k 1) 5), opacity: 0.6 }, { at: 1, opacity: 0.6 }] } }))))
+                              [])))
+                          nodes: (array/concat
+                            (let ((base : [node] [{ type: draw-shape, id: (str/concat @config.id "-ring"), shape: "arc", anchor: "top-left", position: { x: (- @cx (+ @R (/ (math/max 1 (default @ring.strokeWidth 1)) 2))), y: (- @cy (+ @R (/ (math/max 1 (default @ring.strokeWidth 1)) 2))), z: @config.z }, width: (+ (* 2 @R) (math/max 1 (default @ring.strokeWidth 1))), height: (+ (* 2 @R) (math/max 1 (default @ring.strokeWidth 1))), startAngle: 0, sweep: 6.283185307179586, thickness: (math/max 1 (default @ring.strokeWidth 1)), fill: (default @ring.stroke "rgba(0,0,0,0)"), material: @ring.material, spring: @ring.spring, opacity: 1, hit: false },
+                             { type: draw-shape, id: (str/concat @config.id "-core"), shape: "ellipse", anchor: "top-left", position: { x: @cx, y: @cy, z: @config.z }, radiusX: (* @R @config.coreRatio), radiusY: (* @R @config.coreRatio), fill: @core.fill, stroke: @core.stroke, strokeWidth: @core.strokeWidth, shadow: @core.shadow, backdrop: @core.backdrop, material: @core.material, spring: @core.spring, opacity: 1, hit: false }])) @base)
+                            (let ((arcs : [node] (if @lit
+                              [{ type: draw-shape, id: (str/concat @config.id "-arc"), shape: "path", anchor: "top-left", position: { x: 0, y: 0, z: @config.z }, d: @arcD, fill: "", stroke: @arcL.stroke, strokeWidth: @arcL.strokeWidth, strokeDash: [(+ @alen 1), (+ @alen 1)], opacity: 1, hit: false,
+                                animation: (if @reduced @fade { durationMs: @dur, startMs: @fm, loop: false, keyframes: [{ at: 0, opacity: 0, strokeDashOffset: (+ @alen 1) }, { at: 0.399, opacity: 0, strokeDashOffset: (+ @alen 1) }, { at: 0.4, opacity: 1, strokeDashOffset: (+ @alen 1) }, { at: 0.8, opacity: 1, strokeDashOffset: 0 }, { at: 1, opacity: 1, strokeDashOffset: 0 }] }) },
+                               { type: draw-shape, id: (str/concat @config.id "-arc-glow"), shape: "arc", anchor: "top-left", position: { x: (- @cx (+ @R (/ (math/max 1 (default @arcL.strokeWidth 1)) 2))), y: (- @cy (+ @R (/ (math/max 1 (default @arcL.strokeWidth 1)) 2))), z: @config.z }, width: (+ (* 2 @R) (math/max 1 (default @arcL.strokeWidth 1))), height: (+ (* 2 @R) (math/max 1 (default @arcL.strokeWidth 1))), startAngle: @thf, sweep: (* @td @span), thickness: (math/max 1 (default @arcL.strokeWidth 1)), fill: (default @arcL.stroke "rgba(0,0,0,0)"), material: @arcL.material, opacity: 1, hit: false,
+                                 animation: (if @reduced @fade { durationMs: @dur, startMs: @fm, loop: false, keyframes: [{ at: 0, opacity: 0 }, { at: 0.8, opacity: 0 }, { at: 1, opacity: 1 }] }) }]
+                              []))) @arcs)
+                            (array/map (array/range @n) (fn i
+                              (let ((s (default (array/nth @entity.states @i) { name: "", isInitial: false })))
+                                (let ((th (+ @start (* @dir (* @i @step)))) (isA (= @s.name @entity.active)) (isH (= @s.name @entity.hovered)) (lab (array/find @config.labels (fn l (= @l.state @s.name)))))
+                                  (let ((lk (if @isA @sAct (if @isH @sHov @sIdle))))
+                                    { type: draw-shape, id: (str/concat @config.id "-station-" @s.name), shape: "ellipse", anchor: "top-left", position: { x: (+ @cx (* @R (math/cos @th))), y: (+ @cy (* @R (math/sin @th))), z: @config.z }, radiusX: @sr, radiusY: @sr, fill: @lk.fill, stroke: @lk.stroke, strokeWidth: @lk.strokeWidth, shadow: @lk.shadow, spring: @lk.spring, opacity: 1, hit: true,
+                                      semantic: { role: "button", labelledBy: (if (= @lab null) "" (str/concat @config.id "-label-" @s.name)), disabled: false, order: @i, focused: false },
+                                      animation: (if (and @isA @lit) (if @reduced @fade { durationMs: @dur, startMs: @fm, loop: false, keyframes: [{ at: 0, radiusX: @sr, radiusY: @sr }, { at: 0.799, radiusX: @sr, radiusY: @sr }, { at: 0.8, radiusX: (* @sr 0.85), radiusY: (* @sr 0.85) }, { at: 0.9, radiusX: (* @sr 1.15), radiusY: (* @sr 1.15) }, { at: 1, radiusX: @sr, radiusY: @sr }] }) null) })))))
+                            (if (and @lit (not @reduced))
+                              [{ type: draw-shape, id: (str/concat @config.id "-beat-event"), shape: "ellipse", anchor: "top-left", position: { x: (+ @cx (* @R (math/cos @thf))), y: (+ @cy (* @R (math/sin @thf))), z: @config.z }, radiusX: (* @sr 0.5), radiusY: (* @sr 0.5), fill: @beat.fill, opacity: 0, hit: false,
+                                animation: { durationMs: @dur, startMs: @fm, loop: false, keyframes: [{ at: 0, opacity: 1, radiusX: (* @sr 0.5), radiusY: (* @sr 0.5) }, { at: 0.2, opacity: 0, radiusX: (* @sr 0.95), radiusY: (* @sr 0.95) }, { at: 1, opacity: 0, radiusX: (* @sr 0.95), radiusY: (* @sr 0.95) }] } }]
+                              [])
+                            (if (and @lit (not @reduced))
+                              [{ type: draw-shape, id: (str/concat @config.id "-beat-guard"), shape: "path", anchor: "top-left", position: { x: 0, y: 0, z: @config.z }, d: (str/concat "M" (+ @cx (* (- @R 7) (math/cos @tk))) " " (+ @cy (* (- @R 7) (math/sin @tk))) " L" (+ @cx (* (+ @R 7) (math/cos @tk))) " " (+ @cy (* (+ @R 7) (math/sin @tk)))), fill: "", stroke: @beat.stroke, strokeWidth: @beat.strokeWidth, opacity: 0.35, hit: false,
+                                animation: { durationMs: @dur, startMs: @fm, loop: false, keyframes: [{ at: 0, opacity: 0 }, { at: 0.2, opacity: 0 }, { at: 0.3, opacity: 1 }, { at: 0.4, opacity: 0.35 }, { at: 1, opacity: 0.35 }] } }]
+                              [])
+                            (if (and @lit (not @reduced))
+                              [{ type: draw-shape, id: (str/concat @config.id "-beat-effects"), shape: "ellipse", anchor: "top-left", position: { x: (+ @cx (* @R (math/cos @tha))), y: (+ @cy (* @R (math/sin @tha))), z: @config.z }, radiusX: @sr, radiusY: @sr, fill: "", stroke: @beat.stroke, strokeWidth: @beat.strokeWidth, opacity: 0, hit: false,
+                                animation: { durationMs: @dur, startMs: @fm, loop: false, keyframes: [{ at: 0, opacity: 0, radiusX: @sr, radiusY: @sr }, { at: 0.599, opacity: 0, radiusX: @sr, radiusY: @sr }, { at: 0.6, opacity: 0.8, radiusX: @sr, radiusY: @sr }, { at: 0.8, opacity: 0, radiusX: (* @sr 2.6), radiusY: (* @sr 2.6) }, { at: 1, opacity: 0, radiusX: (* @sr 2.6), radiusY: (* @sr 2.6) }] } }]
+                              [])) })))))))))
+    }
+
+    emits {
+      ORBIT_REPAINT -> internal {
+        n : number!
+      }
+        @description "Repaint the ring from the stored description, rect, looks and last move."
+        @tier "internal"
+      RASM_PAINT -> external {
+        id : string!
+        z : number!
+        nodes : [node]!
+        texts : [RasmText]!
+      }
+        @description "The ring, core, lit arc, stations and the five beats of the last move, with the station labels and optional beat captions."
+        @tier "primary"
+      ORBIT_DESCRIBED -> internal {
+        result : DescribedSubject!
+      }
+        @description "The describe answer, delivered to the trait itself."
+        @tier "internal"
+      ORBIT_DESCRIBE_FAILED -> internal {
+        error : string!
+      }
+        @description "The describe failure, delivered to the trait itself."
+        @tier "internal"
+      ORBIT_PICK -> external {
+        state : string!
+      }
+        @description "A station was pressed or activated: ask to move to that state."
+        @tier "domain"
+    }
+
+    listens {
+      RASM_BOOT { }
+        @description "The surface mounted: describe the subject."
+      ORBIT_DESCRIBED { result : DescribedSubject! }
+        @description "The description answered: keep the states and transitions and sit at the initial state."
+      ORBIT_DESCRIBE_FAILED { error : string! }
+        @description "The description failed: keep the reason and paint only a ring."
+      RASM_THEME { name : string!  looks : Map string RasmLook! }
+        @description "Keep the looks and repaint."
+      RASM_PLACE { placed : [RasmPlaced]! }
+        @description "Take the rect of this ring's id; a placement for another id is ignored."
+      RASM_DIRECTION { direction : "ltr" | "rtl"! }
+        @description "The reading direction; the circuit runs clockwise in ltr and counter-clockwise in rtl."
+      RASM_MOTION { reduced : boolean! }
+        @description "Reduced motion: the final form with an opacity crossfade only."
+      ORBIT_AT { state : string!  event : string! }
+        @description "The subject moved to a described state by an event: light the arc and run the beats; an undescribed state changes nothing."
+      RASM_POINTER { kind : "down" | "up" | "enter" | "leave" | "move"!  id : string!  x : number!  y : number!  index : number }
+        @description "Pointer events on a station: down picks it, enter and leave set and clear its hover."
+      RASM_ACCESS { target : string!  action : "focus" | "activate" | "increment" | "decrement"! }
+        @description "Assistive activation of a station picks it."
+    }
+
+    config {
+      id : string = "orbit"
+        @label "Id"
+        @description "The ring's id: its RASM_PLACE key and the prefix of every node, text and station id."
+        @tier "presentation"
+      z : number = 3
+        @label "Z"
+        @description "Paint order on the surface."
+        @tier "presentation"
+      subject : trait = std/behaviors/std-slide-deck.traits.SlideDeckPresenter
+        @label "Subject"
+        @description "The trait whose state machine the ring paints."
+        @tier "presentation"
+      labels : [OrbitLabel] = []
+        @label "Labels"
+        @description "The catalog key painted beside each state's station, by state name; a state without an entry has no text."
+        @tier "presentation"
+      beatLabels : [MessageKey] = []
+        @label "Beat captions"
+        @description "Five catalog keys, one per beat (event, guard, transition, effects, ui); with any other length no captions are painted."
+        @tier "presentation"
+      radius : number = 0.38
+        @label "Radius"
+        @description "The ring radius as a fraction of the smaller side of the placed rect."
+        @tier "presentation"
+      coreRatio : number = 0.42
+        @label "Core ratio"
+        @description "The centre disc radius as a fraction of the ring radius."
+        @tier "presentation"
+      stationRadius : number = 11
+        @label "Station radius"
+        @description "The radius of each station disc in px."
+        @tier "presentation"
+      labelGap : number = 26
+        @label "Label gap"
+        @description "How far outside the ring a state's label sits, in px."
+        @tier "presentation"
+      startAngle : number = -90
+        @label "Start angle"
+        @description "The first state's angle in degrees; -90 is the top."
+        @tier "presentation"
+      segments : number = 96
+        @label "Arc segments"
+        @description "How many straight steps a full turn of the lit arc is sampled with."
+        @tier "presentation"
+      beatMs : number = 170
+        @label "Beat time"
+        @description "How long each of the five beats lasts in ms."
+        @tier "presentation"
+    }
+  }
+
+  page boot as RasmOrbitStart -> RasmOrbit
+}

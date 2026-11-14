@@ -1,0 +1,248 @@
+app std-rasm-source [
+  version: "0.1.0",
+  description: "std-rasm-source — a Rasm card that turns over to show a described trait's own .lolo source. It describes its subject trait once (behavior/describe, the build answers it on a page with no host), then SOURCE_AT { state, from, event } names where the machine rests and how it got there: the card shows the lines of the transition that arrived (from `from` by `event` to `state`, highlighted) and every transition that leaves `state`, cut from the source by the line ranges describe reports, never retyped. SOURCE_TOGGLE turns the card over or back, SOURCE_HIDE turns it back. The code is set in one size that fits the card's width and height between minFont and maxFont, every line is painted, and RASM_EXTENT reports the height the lines need. SOURCE_SHOWN { shown } announces each turn so the page can hide the face underneath. Looks are stack/source/idle, text/code/idle and text/code/active."
+]
+
+type RasmRect = { x : number!, y : number!, w : number!, h : number! }
+type RasmPlaced = { id : string!, rect : RasmRect! }
+type RasmMaterial = { wgsl : string!, params : [number]!, live : boolean! }
+type RasmCorners = { radius : [number]!, kind : "round" | "bevel" | "notch" | "scoop" }
+type RasmSpring = { stiffness : number!, damping : number! }
+type RasmKeyframe = { at : number!, opacity : number, offsetY : number }
+type RasmAnimation = { durationMs : number!, startMs : number, loop : boolean!, keyframes : [RasmKeyframe]! }
+type RasmText = { id : string!, key : MessageKey!, x : number!, y : number!, z : number!, align : string!, baseline : string!, color : string?, font : string?, spring : RasmSpring?, width : number?, wrap : boolean?, measure : boolean?, role : string?, animation : RasmAnimation? }
+type RasmShadow = { color : string!, blur : number! }
+type RasmBackdrop = { blur : number!, tint : string, saturate : number }
+type RasmLook = { fill : string, stroke : string, strokeWidth : number, corners : RasmCorners, shadow : RasmShadow, material : RasmMaterial, textColor : string, font : string, spring : RasmSpring, decor : string, backdrop : RasmBackdrop }
+type DescribedState = { name : string!, isInitial : boolean }
+type DescribedTransition = { from : string!, to : string!, event : string! }
+type DescribedStateMachine = { states : [DescribedState]!, transitions : [DescribedTransition]! }
+type DescribedMachine = { stateMachine : DescribedStateMachine! }
+type TransitionLines = { index : number!, start : number!, end : number! }
+type DescribedSource = { text : string!, transitions : [TransitionLines]! }
+type DescribedSubject = { machine : DescribedMachine!, source : DescribedSource! }
+type SourceRow = { kind : "arrived" | "leaves" | "hot" | "code"!, text : string! }
+
+orbital RasmSourceOrbital {
+  entity RasmSourceRun [runtime] {
+    id : string!
+    rect : RasmRect? @description "The rect RASM_PLACE gave this card, null until placed." = null
+    looks : Map string RasmLook @description "The announced look table." = {}
+    dir : "ltr" | "rtl" @description "The surface's reading direction; the captions follow it, the code stays left to right." = "ltr"
+    reduced : boolean @description "True when the viewer asked for reduced motion: the card fades instead of turning." = false
+    text : string @description "The subject trait's .lolo source, from behavior/describe." = ""
+    ranges : [TransitionLines] @description "Where each of the subject's transitions sits in the source." = []
+    transitions : [DescribedTransition] @description "The subject's transitions, from behavior/describe." = []
+    error : string @description "Why the subject could not be described, empty when it was." = ""
+    shown : boolean @description "True while the card is turned over to the source." = false
+    state : string @description "The state the machine rests in." = ""
+    from : string @description "The state the last move left, empty before any move." = ""
+    event : string @description "The event of the last move, empty before any move." = ""
+    flipMs : number @description "When the card last turned, on the canvas epoch clock." = 0
+    rowsMs : number @description "When the lines last changed, on the canvas epoch clock." = 0
+    paints : number @description "Counts paints, so each paint in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
+  }
+
+  trait RasmSource -> RasmSourceRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+        (behavior/describe @config.subject { emit: { success: SOURCE_DESCRIBED, failure: SOURCE_DESCRIBE_FAILED } })
+      SOURCE_DESCRIBED -> ready
+        (set @entity.text ?result.source.text)
+        (set @entity.ranges ?result.source.transitions)
+        (set @entity.transitions ?result.machine.stateMachine.transitions)
+        (set @entity.error "")
+        (set @entity.paints (+ @entity.paints 1))
+        (emit SOURCE_PAINT { n: @entity.paints })
+      SOURCE_DESCRIBE_FAILED -> ready
+        (set @entity.error ?error)
+      RASM_THEME -> ready
+        (set @entity.looks ?looks)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit SOURCE_PAINT { n: @entity.paints })
+      RASM_DIRECTION -> ready
+        (set @entity.dir ?direction)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit SOURCE_PAINT { n: @entity.paints })
+      RASM_MOTION -> ready
+        (set @entity.reduced ?reduced)
+      RASM_PLACE -> ready when (array/some ?placed (fn p (= @p.id @config.id)))
+        (set @entity.rect (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) null @mine.rect)))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit SOURCE_PAINT { n: @entity.paints })
+      RASM_PLACE -> ready when (not (array/some ?placed (fn p (= @p.id @config.id))))
+      SOURCE_AT -> ready
+        (set @entity.state ?state)
+        (set @entity.from ?from)
+        (set @entity.event ?event)
+        (set @entity.rowsMs (time/epoch-ms @now))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit SOURCE_PAINT { n: @entity.paints })
+      SOURCE_TOGGLE -> ready
+        (set @entity.shown (not @entity.shown))
+        (set @entity.flipMs (time/epoch-ms @now))
+        (set @entity.rowsMs @entity.flipMs)
+        (emit SOURCE_SHOWN { shown: @entity.shown })
+        (set @entity.paints (+ @entity.paints 1))
+        (emit SOURCE_PAINT { n: @entity.paints })
+      SOURCE_HIDE -> ready when @entity.shown
+        (set @entity.shown false)
+        (set @entity.flipMs (time/epoch-ms @now))
+        (emit SOURCE_SHOWN { shown: false })
+        (set @entity.paints (+ @entity.paints 1))
+        (emit SOURCE_PAINT { n: @entity.paints })
+      SOURCE_HIDE -> ready when (not @entity.shown)
+      SOURCE_PAINT -> ready when (or (not @entity.shown) (= @entity.rect null))
+        (emit RASM_PAINT { id: @config.id, z: @config.z, nodes: [], texts: [] })
+      SOURCE_PAINT -> ready when (and @entity.shown (!= @entity.rect null))
+        (let ((r @entity.rect) (card (object/get @entity.looks "stack/source/idle" null)) (code (object/get @entity.looks "text/code/idle" null)) (hot (object/get @entity.looks "text/code/active" null)) (src (str/split @entity.text "\n")) (all (array/range 0 (array/len @entity.transitions))))
+          (let ((arrivedAt (array/filter @all (fn i (let ((t (array/nth @entity.transitions @i))) (and (!= @t null) (= @t.from @entity.from) (= @t.event @entity.event) (= @t.to @entity.state))))))
+                (leavesAt (array/filter @all (fn i (let ((t (array/nth @entity.transitions @i))) (and (!= @t null) (= @t.from @entity.state)))))))
+            (let ((arrived (array/flatten (array/map @arrivedAt (fn i (let ((rg (array/find @entity.ranges (fn l (= @l.index @i))))) (if (= @rg null) [] (array/slice @src (- @rg.start 1) @rg.end)))))))
+                  (leaves (array/flatten (array/map @leavesAt (fn i (let ((rg (array/find @entity.ranges (fn l (= @l.index @i))))) (if (= @rg null) [] (array/slice @src (- @rg.start 1) @rg.end))))))))
+              (let ((codeLines (array/concat @arrived @leaves)))
+                (let ((indent (array/reduce (array/filter @codeLines (fn l (> (str/len (str/trim @l)) 0))) 100000 (fn acc l (math/min @acc (- (str/len @l) (str/len (str/trim @l))))))))
+                  (let ((cut (if (= @indent 100000) 0 @indent)))
+                    (let ((rows (array/concat (if (= (array/len @arrived) 0) [] (array/concat [{ kind: "arrived", text: "" }] (array/map @arrived (fn l { kind: "hot", text: (str/slice @l @cut) })))) [{ kind: "leaves", text: "" }] (array/map @leaves (fn l { kind: "code", text: (str/slice @l @cut) }))))
+                          (pad @config.padding))
+                      (let ((widest (array/reduce @rows 1 (fn acc w (math/max @acc (str/len @w.text)))))
+                            (n (math/max 1 (array/len @rows))))
+                        (let ((px (math/clamp (math/floor (math/min (default (/ (- @r.w (* 2 @pad)) (* 0.62 @widest)) @config.maxFont) (default (/ (- @r.h (* 2 @pad)) (* @config.lineHeight @n)) @config.maxFont))) @config.minFont @config.maxFont)))
+                          (let ((lh (* @px @config.lineHeight))
+                                (font (str/concat "400 " @px "px " @config.fontFamily))
+                                (capFont (str/concat "600 " (math/max @config.minFont (math/floor (* @px 0.86))) "px " @config.captionFamily))
+                                (turnMs (if @entity.reduced 200 @config.flipMs))
+                                (cx (+ @r.x (* @r.w 0.5))))
+                            (do (emit RASM_EXTENT { id: @config.id, w: @r.w, h: (+ (* 2 @pad) (* @n @lh)) })
+                            (emit RASM_PAINT { id: @config.id, z: @config.z,
+                              nodes: (array/concat
+                                [{ type: draw-shape, shape: "rect", id: (str/concat @config.id "-card"), anchor: "top-left", position: { x: @r.x, y: @r.y, z: @config.z }, width: @r.w, height: @r.h, fill: (if (= @card null) "rgba(0,0,0,0)" @card.fill), stroke: (if (= @card null) "rgba(0,0,0,0)" @card.stroke), strokeWidth: (if (= @card null) 0 @card.strokeWidth), corners: (if (= @card null) null @card.corners), shadow: (if (= @card null) null @card.shadow), backdrop: (if (= @card null) null @card.backdrop), material: (if (= @card null) null @card.material), hit: false,
+                                  animation: (if @entity.reduced { durationMs: @turnMs, loop: false, startMs: @entity.flipMs, keyframes: [{ at: 0, opacity: 0 }, { at: 1, opacity: 1 }] } { durationMs: @turnMs, loop: false, startMs: @entity.flipMs, keyframes: [{ at: 0, width: 0, position: { x: @cx } }, { at: 1, width: @r.w, position: { x: @r.x } }] }) }]
+                                (array/flatten (array/map (array/range 0 (array/len @rows)) (fn i (let ((row (array/nth @rows @i))) (if (or (= @row null) (!= @row.kind "hot") (= @hot null) (= @hot.fill null)) [] [{ type: draw-shape, shape: "rect", id: (str/concat @config.id "-band-" @i), anchor: "top-left", position: { x: (+ @r.x (* @pad 0.5)), y: (- (+ (+ @r.y @pad) (* @i @lh)) (* @lh 0.12)), z: @config.z }, width: (- @r.w @pad), height: @lh, fill: @hot.fill, material: @hot.material, hit: false, animation: { durationMs: @turnMs, loop: false, startMs: (+ @entity.rowsMs (* @turnMs 0.4)), keyframes: [{ at: 0, opacity: 0 }, { at: 1, opacity: 1 }] } }])))))
+                                (array/map (array/range 0 (array/len @rows)) (fn i (let ((row (array/nth @rows @i))) (if (or (= @row null) (= @row.kind "arrived") (= @row.kind "leaves")) { type: draw-text, id: (str/concat @config.id "-gap-" @i), text: "", position: { x: @r.x, y: @r.y, z: @config.z }, anchor: "top-left", align: "left", baseline: "top", color: "rgba(0,0,0,0)", font: @font, hit: false }
+                                  { type: draw-text, id: (str/concat @config.id "-line-" @i), text: @row.text, position: { x: (+ @r.x @pad), y: (+ (+ @r.y @pad) (* @i @lh)), z: (+ @config.z 1) }, anchor: "top-left", align: "left", baseline: "top", color: (if (= @row.kind "hot") (if (= @hot null) "#000000" @hot.textColor) (if (= @code null) "#000000" @code.textColor)), font: @font, hit: false,
+                                    animation: { durationMs: (+ (* @turnMs 0.6) (* @i @config.staggerMs)), loop: false, startMs: (+ @entity.rowsMs (* @turnMs 0.4)), keyframes: [{ at: 0, opacity: 0 }, { at: (default (/ (* @i @config.staggerMs) (+ (* @turnMs 0.6) (* @i @config.staggerMs))) 0), opacity: 0 }, { at: 1, opacity: 1 }] } })))))
+                              texts: (array/concat (if (= (array/len @arrived) 0) [] [{ id: (str/concat @config.id "-caption-" 0), key: @config.arrivedLabel, x: (if (= @entity.dir "rtl") (- (+ @r.x @r.w) @pad) (+ @r.x @pad)), y: (+ (+ @r.y @pad) (* 0 @lh)), z: (+ @config.z 1), align: (if (= @entity.dir "rtl") "right" "left"), baseline: "top", color: (if (= @hot null) null @hot.textColor), font: @capFont, role: "heading", animation: { durationMs: @turnMs, loop: false, startMs: (+ @entity.rowsMs (* @turnMs 0.4)), keyframes: [{ at: 0, opacity: 0 }, { at: 1, opacity: 0.8 }] } }]) [{ id: (str/concat @config.id "-caption-" (if (= (array/len @arrived) 0) 0 (+ 1 (array/len @arrived)))), key: @config.leavesLabel, x: (if (= @entity.dir "rtl") (- (+ @r.x @r.w) @pad) (+ @r.x @pad)), y: (+ (+ @r.y @pad) (* (if (= (array/len @arrived) 0) 0 (+ 1 (array/len @arrived))) @lh)), z: (+ @config.z 1), align: (if (= @entity.dir "rtl") "right" "left"), baseline: "top", color: (if (= @hot null) null @hot.textColor), font: @capFont, role: "heading", animation: { durationMs: @turnMs, loop: false, startMs: (+ @entity.rowsMs (* @turnMs 0.4)), keyframes: [{ at: 0, opacity: 0 }, { at: 1, opacity: 0.8 }] } }]) }))))))))))))
+    }
+
+    emits {
+      SOURCE_DESCRIBED -> internal {
+        result : DescribedSubject!
+      }
+        @description "The subject described."
+        @tier "internal"
+      SOURCE_DESCRIBE_FAILED -> internal {
+        error : string!
+      }
+        @description "The subject could not be described."
+        @tier "internal"
+      SOURCE_PAINT -> internal {
+        n : number!
+      }
+        @description "Repaint from the stored rect, looks and lines."
+        @tier "internal"
+      SOURCE_SHOWN -> external {
+        shown : boolean!
+      }
+        @description "The card turned over to the source (true) or back (false)."
+        @tier "primary"
+      RASM_EXTENT -> external {
+        id : string!
+        w : number!
+        h : number!
+      }
+        @description "The height every line needs at the size chosen."
+        @tier "primary"
+      RASM_PAINT -> external {
+        id : string!
+        z : number!
+        nodes : [node]!
+        texts : [RasmText]!
+      }
+        @description "The card and its lines at its z; nothing while it faces away."
+        @tier "primary"
+    }
+
+    listens {
+      SOURCE_DESCRIBED { result : DescribedSubject! }
+        @description "The subject's machine and source, from behavior/describe."
+      SOURCE_DESCRIBE_FAILED { error : string! }
+        @description "The subject could not be described."
+      RASM_THEME { name : string!  looks : Map string RasmLook! }
+        @description "Store the looks and repaint."
+      RASM_DIRECTION { direction : "ltr" | "rtl"! }
+        @description "The surface's reading direction for the captions."
+      RASM_MOTION { reduced : boolean! }
+        @description "Whether the viewer asked for reduced motion: the card then fades instead of turning."
+      RASM_PLACE { placed : [RasmPlaced]! }
+        @description "Take this card's rect when it is placed and repaint."
+      SOURCE_AT { state : string!  from : string!  event : string! }
+        @description "Where the machine rests and the move that brought it there (empty from and event before any move)."
+        @synonyms "follow machine"
+      SOURCE_TOGGLE { }
+        @description "Turn the card over to the source, or back."
+        @synonyms "show source, show code, turn over"
+      SOURCE_HIDE { }
+        @description "Turn the card back if it shows the source."
+    }
+
+    config {
+      id : string = "source"
+        @label "Id"
+        @description "The card's id: its RASM_PLACE key and paint id."
+        @tier "presentation"
+      subject : trait = std/behaviors/std-rasm-toggle.traits.RasmToggle
+        @label "Subject"
+        @description "The trait whose source the card shows."
+        @tier "presentation"
+      arrivedLabel : MessageKey
+        @label "Arrived caption"
+        @description "The caption over the transition that brought the machine to its state."
+        @tier "presentation"
+      leavesLabel : MessageKey
+        @label "Leaves caption"
+        @description "The caption over the transitions that leave the state."
+        @tier "presentation"
+      z : number = 6
+        @label "Z"
+        @description "Paint order on the surface; above the face it covers."
+        @tier "presentation"
+      padding : number = 24
+        @label "Padding"
+        @description "Space between the card's edge and its lines."
+        @tier "presentation"
+      minFont : number = 11
+        @label "Smallest size"
+        @description "The smallest code size in px; below it the lines need more height, reported by RASM_EXTENT."
+        @tier "presentation"
+      maxFont : number = 15
+        @label "Largest size"
+        @description "The largest code size in px."
+        @tier "presentation"
+      lineHeight : number = 1.55
+        @label "Line height"
+        @description "Line height as a multiple of the code size."
+        @tier "presentation"
+      fontFamily : string = "monospace"
+        @label "Code family"
+        @description "The font family of the code."
+        @tier "presentation"
+      captionFamily : string = "sans-serif"
+        @label "Caption family"
+        @description "The font family of the captions."
+        @tier "presentation"
+      flipMs : number = 420
+        @label "Turn time"
+        @description "How long the card takes to turn over, in ms."
+        @tier "presentation"
+      staggerMs : number = 24
+        @label "Line stagger"
+        @description "The delay between one line's entry and the next, in ms."
+        @tier "presentation"
+    }
+  }
+
+  page boot as RasmSourceStart -> RasmSource
+}

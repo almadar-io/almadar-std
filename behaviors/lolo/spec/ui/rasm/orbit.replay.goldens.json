@@ -1,0 +1,3725 @@
+{
+ "atom": "../ui/rasm/atoms/std-rasm-orbit.lolo",
+ "trait": "RasmOrbit",
+ "cases": [
+  {
+   "id": "describe-success-sets-states-and-sits-at-the-initial-state",
+   "now": 1700000000000,
+   "config": {
+    "id": "o"
+   },
+   "entity": {
+    "id": "o",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 200,
+     "h": 200
+    }
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "ORBIT_DESCRIBED",
+     "payload": {
+      "result": {
+       "machine": {
+        "stateMachine": {
+         "states": [
+          {
+           "name": "a",
+           "isInitial": true
+          },
+          {
+           "name": "b",
+           "isInitial": false
+          },
+          {
+           "name": "c",
+           "isInitial": false
+          },
+          {
+           "name": "d",
+           "isInitial": false
+          }
+         ],
+         "transitions": [
+          {
+           "from": "a",
+           "to": "b",
+           "event": "GO"
+          },
+          {
+           "from": "b",
+           "to": "c",
+           "event": "GO"
+          }
+         ]
+        }
+       },
+       "source": {
+        "text": "",
+        "transitions": []
+       }
+      }
+     },
+     "expect": {
+      "state": "ready",
+      "entity": {
+       "states": [
+        {
+         "name": "a",
+         "isInitial": true
+        },
+        {
+         "name": "b",
+         "isInitial": false
+        },
+        {
+         "name": "c",
+         "isInitial": false
+        },
+        {
+         "name": "d",
+         "isInitial": false
+        }
+       ],
+       "transitions": [
+        {
+         "from": "a",
+         "to": "b",
+         "event": "GO"
+        },
+        {
+         "from": "b",
+         "to": "c",
+         "event": "GO"
+        }
+       ],
+       "active": "a",
+       "error": ""
+      },
+      "emits": [
+       {
+        "event": "RASM_PAINT",
+        "payload": {
+         "id": "o",
+         "z": 3
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "describe-with-no-initial-state-leaves-active-empty",
+   "now": 1700000000000,
+   "config": {
+    "id": "o"
+   },
+   "entity": {
+    "id": "o",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 200,
+     "h": 200
+    }
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "ORBIT_DESCRIBED",
+     "payload": {
+      "result": {
+       "machine": {
+        "stateMachine": {
+         "states": [
+          {
+           "name": "a",
+           "isInitial": false
+          },
+          {
+           "name": "b",
+           "isInitial": false
+          }
+         ],
+         "transitions": []
+        }
+       },
+       "source": {
+        "text": "",
+        "transitions": []
+       }
+      }
+     },
+     "expect": {
+      "state": "ready",
+      "entity": {
+       "active": ""
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "nothing-paints-before-the-description-answers",
+   "now": 1700000000000,
+   "config": {
+    "id": "o"
+   },
+   "entity": {
+    "id": "o",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 200,
+     "h": 200
+    }
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_THEME",
+     "payload": {
+      "name": "t",
+      "looks": {}
+     },
+     "expect": {
+      "state": "ready",
+      "neverEmits": [
+       "RASM_PAINT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "nothing-paints-without-a-rect",
+   "now": 1700000000000,
+   "config": {
+    "id": "o"
+   },
+   "entity": {
+    "id": "o",
+    "states": [
+     {
+      "name": "a",
+      "isInitial": true
+     },
+     {
+      "name": "b",
+      "isInitial": false
+     },
+     {
+      "name": "c",
+      "isInitial": false
+     },
+     {
+      "name": "d",
+      "isInitial": false
+     }
+    ],
+    "active": "a"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_THEME",
+     "payload": {
+      "name": "t",
+      "looks": {}
+     },
+     "expect": {
+      "state": "ready",
+      "neverEmits": [
+       "RASM_PAINT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "describe-failure-keeps-the-error-and-paints-only-a-ring",
+   "now": 1700000000000,
+   "config": {
+    "id": "o"
+   },
+   "entity": {
+    "id": "o",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 200,
+     "h": 200
+    }
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "ORBIT_DESCRIBE_FAILED",
+     "payload": {
+      "error": "gone"
+     },
+     "expect": {
+      "state": "ready",
+      "entity": {
+       "error": "gone"
+      },
+      "emits": [
+       {
+        "event": "RASM_PAINT",
+        "payload": {
+         "id": "o",
+         "z": 3,
+         "texts": [],
+         "nodes": [
+          {
+           "type": "draw-shape",
+           "id": "o-ring",
+           "shape": "arc",
+           "anchor": "top-left",
+           "position": {
+            "x": 23.5,
+            "y": 23.5,
+            "z": 3
+           },
+           "width": 153,
+           "height": 153,
+           "startAngle": 0,
+           "sweep": 6.283185307179586,
+           "thickness": 1,
+           "fill": "rgba(0,0,0,0)",
+           "material": null,
+           "spring": null,
+           "opacity": 1,
+           "hit": false
+          },
+          {
+           "type": "draw-shape",
+           "id": "o-core",
+           "shape": "ellipse",
+           "anchor": "top-left",
+           "position": {
+            "x": 100,
+            "y": 100,
+            "z": 3
+           },
+           "radiusX": 31.919999999999998,
+           "radiusY": 31.919999999999998,
+           "fill": null,
+           "stroke": null,
+           "strokeWidth": null,
+           "shadow": null,
+           "backdrop": null,
+           "material": null,
+           "spring": null,
+           "opacity": 1,
+           "hit": false
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "orbit-at-moves-from-active-and-records-the-event",
+   "now": 1700000000000,
+   "config": {
+    "id": "o"
+   },
+   "entity": {
+    "id": "o",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 200,
+     "h": 200
+    },
+    "states": [
+     {
+      "name": "a",
+      "isInitial": true
+     },
+     {
+      "name": "b",
+      "isInitial": false
+     },
+     {
+      "name": "c",
+      "isInitial": false
+     },
+     {
+      "name": "d",
+      "isInitial": false
+     }
+    ],
+    "active": "a"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "ORBIT_AT",
+     "payload": {
+      "state": "b",
+      "event": "GO"
+     },
+     "expect": {
+      "state": "ready",
+      "entity": {
+       "from": "a",
+       "active": "b",
+       "fired": "GO"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "orbit-at-an-undescribed-state-changes-nothing",
+   "now": 1700000000000,
+   "config": {
+    "id": "o"
+   },
+   "entity": {
+    "id": "o",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 200,
+     "h": 200
+    },
+    "states": [
+     {
+      "name": "a",
+      "isInitial": true
+     },
+     {
+      "name": "b",
+      "isInitial": false
+     },
+     {
+      "name": "c",
+      "isInitial": false
+     },
+     {
+      "name": "d",
+      "isInitial": false
+     }
+    ],
+    "active": "a",
+    "from": "",
+    "fired": ""
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "ORBIT_AT",
+     "payload": {
+      "state": "zz",
+      "event": "GO"
+     },
+     "expect": {
+      "state": "ready",
+      "entity": {
+       "from": "",
+       "active": "a",
+       "fired": ""
+      },
+      "neverEmits": [
+       "RASM_PAINT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "pointer-down-on-a-station-picks-its-state",
+   "now": 1700000000000,
+   "config": {
+    "id": "o"
+   },
+   "entity": {
+    "id": "o",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 200,
+     "h": 200
+    },
+    "states": [
+     {
+      "name": "a",
+      "isInitial": true
+     },
+     {
+      "name": "b",
+      "isInitial": false
+     },
+     {
+      "name": "c",
+      "isInitial": false
+     },
+     {
+      "name": "d",
+      "isInitial": false
+     }
+    ],
+    "active": "a"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "down",
+      "id": "o-station-c",
+      "x": 1,
+      "y": 1,
+      "index": -1
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "ORBIT_PICK",
+        "payload": {
+         "state": "c"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "pointer-down-on-a-foreign-id-emits-nothing",
+   "now": 1700000000000,
+   "config": {
+    "id": "o"
+   },
+   "entity": {
+    "id": "o",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 200,
+     "h": 200
+    },
+    "states": [
+     {
+      "name": "a",
+      "isInitial": true
+     },
+     {
+      "name": "b",
+      "isInitial": false
+     },
+     {
+      "name": "c",
+      "isInitial": false
+     },
+     {
+      "name": "d",
+      "isInitial": false
+     }
+    ],
+    "active": "a"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "down",
+      "id": "x-station-c",
+      "x": 1,
+      "y": 1,
+      "index": -1
+     },
+     "expect": {
+      "state": "ready",
+      "neverEmits": [
+       "ORBIT_PICK"
+      ]
+     }
+    },
+    {
+     "from": "ready",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "down",
+      "id": "o-station-zz",
+      "x": 1,
+      "y": 1,
+      "index": -1
+     },
+     "expect": {
+      "state": "ready",
+      "neverEmits": [
+       "ORBIT_PICK"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "pointer-enter-and-leave-set-and-clear-the-hover",
+   "now": 1700000000000,
+   "config": {
+    "id": "o"
+   },
+   "entity": {
+    "id": "o",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 200,
+     "h": 200
+    },
+    "states": [
+     {
+      "name": "a",
+      "isInitial": true
+     },
+     {
+      "name": "b",
+      "isInitial": false
+     },
+     {
+      "name": "c",
+      "isInitial": false
+     },
+     {
+      "name": "d",
+      "isInitial": false
+     }
+    ],
+    "active": "a"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "enter",
+      "id": "o-station-b",
+      "x": 1,
+      "y": 1,
+      "index": -1
+     },
+     "expect": {
+      "state": "ready",
+      "entity": {
+       "hovered": "b"
+      },
+      "emits": [
+       {
+        "event": "RASM_PAINT",
+        "payload": {
+         "id": "o"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "ready",
+     "event": "RASM_POINTER",
+     "payload": {
+      "kind": "leave",
+      "id": "o-station-b",
+      "x": 1,
+      "y": 1,
+      "index": -1
+     },
+     "expect": {
+      "state": "ready",
+      "entity": {
+       "hovered": ""
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "access-activate-on-a-station-picks-its-state",
+   "now": 1700000000000,
+   "config": {
+    "id": "o"
+   },
+   "entity": {
+    "id": "o",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 200,
+     "h": 200
+    },
+    "states": [
+     {
+      "name": "a",
+      "isInitial": true
+     },
+     {
+      "name": "b",
+      "isInitial": false
+     },
+     {
+      "name": "c",
+      "isInitial": false
+     },
+     {
+      "name": "d",
+      "isInitial": false
+     }
+    ],
+    "active": "a"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_ACCESS",
+     "payload": {
+      "target": "o-station-d",
+      "action": "activate"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "ORBIT_PICK",
+        "payload": {
+         "state": "d"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "ready",
+     "event": "RASM_ACCESS",
+     "payload": {
+      "target": "o-station-d",
+      "action": "focus"
+     },
+     "expect": {
+      "state": "ready",
+      "neverEmits": [
+       "ORBIT_PICK"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "place-for-another-id-paints-nothing",
+   "now": 1700000000000,
+   "config": {
+    "id": "o"
+   },
+   "entity": {
+    "id": "o",
+    "states": [
+     {
+      "name": "a",
+      "isInitial": true
+     },
+     {
+      "name": "b",
+      "isInitial": false
+     },
+     {
+      "name": "c",
+      "isInitial": false
+     },
+     {
+      "name": "d",
+      "isInitial": false
+     }
+    ],
+    "active": "a"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_PLACE",
+     "payload": {
+      "placed": [
+       {
+        "id": "other",
+        "rect": {
+         "x": 0,
+         "y": 0,
+         "w": 200,
+         "h": 200
+        }
+       }
+      ]
+     },
+     "expect": {
+      "state": "ready",
+      "neverEmits": [
+       "RASM_PAINT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "place-for-its-own-id-paints-the-ring",
+   "now": 1700000000000,
+   "config": {
+    "id": "o"
+   },
+   "entity": {
+    "id": "o",
+    "states": [
+     {
+      "name": "a",
+      "isInitial": true
+     },
+     {
+      "name": "b",
+      "isInitial": false
+     },
+     {
+      "name": "c",
+      "isInitial": false
+     },
+     {
+      "name": "d",
+      "isInitial": false
+     }
+    ],
+    "active": "a"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_PLACE",
+     "payload": {
+      "placed": [
+       {
+        "id": "o",
+        "rect": {
+         "x": 0,
+         "y": 0,
+         "w": 200,
+         "h": 200
+        }
+       }
+      ]
+     },
+     "expect": {
+      "state": "ready",
+      "entity": {
+       "rect": {
+        "x": 0,
+        "y": 0,
+        "w": 200,
+        "h": 200
+       }
+      },
+      "emits": [
+       {
+        "event": "RASM_PAINT",
+        "payload": {
+         "id": "o"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "ltr-puts-the-second-station-right-of-the-centre",
+   "now": 1700000000000,
+   "config": {
+    "id": "o"
+   },
+   "entity": {
+    "id": "o",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 200,
+     "h": 200
+    },
+    "states": [
+     {
+      "name": "a",
+      "isInitial": true
+     },
+     {
+      "name": "b",
+      "isInitial": false
+     },
+     {
+      "name": "c",
+      "isInitial": false
+     }
+    ],
+    "active": "a",
+    "direction": "rtl"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_DIRECTION",
+     "payload": {
+      "direction": "ltr"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "RASM_PAINT",
+        "payload": {
+         "id": "o",
+         "z": 3,
+         "texts": [],
+         "nodes": [
+          {
+           "type": "draw-shape",
+           "id": "o-ring",
+           "shape": "arc",
+           "anchor": "top-left",
+           "position": {
+            "x": 23.5,
+            "y": 23.5,
+            "z": 3
+           },
+           "width": 153,
+           "height": 153,
+           "startAngle": 0,
+           "sweep": 6.283185307179586,
+           "thickness": 1,
+           "fill": "rgba(0,0,0,0)",
+           "material": null,
+           "spring": null,
+           "opacity": 1,
+           "hit": false
+          },
+          {
+           "type": "draw-shape",
+           "id": "o-core",
+           "shape": "ellipse",
+           "anchor": "top-left",
+           "position": {
+            "x": 100,
+            "y": 100,
+            "z": 3
+           },
+           "radiusX": 31.919999999999998,
+           "radiusY": 31.919999999999998,
+           "fill": null,
+           "stroke": null,
+           "strokeWidth": null,
+           "shadow": null,
+           "backdrop": null,
+           "material": null,
+           "spring": null,
+           "opacity": 1,
+           "hit": false
+          },
+          {
+           "type": "draw-shape",
+           "id": "o-station-a",
+           "shape": "ellipse",
+           "anchor": "top-left",
+           "position": {
+            "x": 100,
+            "y": 24,
+            "z": 3
+           },
+           "radiusX": 11,
+           "radiusY": 11,
+           "fill": null,
+           "stroke": null,
+           "strokeWidth": null,
+           "shadow": null,
+           "spring": null,
+           "opacity": 1,
+           "hit": true,
+           "semantic": {
+            "role": "button",
+            "labelledBy": "",
+            "disabled": false,
+            "order": 0,
+            "focused": false
+           },
+           "animation": null
+          },
+          {
+           "type": "draw-shape",
+           "id": "o-station-b",
+           "shape": "ellipse",
+           "anchor": "top-left",
+           "position": {
+            "x": 165.81793068761735,
+            "y": 138,
+            "z": 3
+           },
+           "radiusX": 11,
+           "radiusY": 11,
+           "fill": null,
+           "stroke": null,
+           "strokeWidth": null,
+           "shadow": null,
+           "spring": null,
+           "opacity": 1,
+           "hit": true,
+           "semantic": {
+            "role": "button",
+            "labelledBy": "",
+            "disabled": false,
+            "order": 1,
+            "focused": false
+           },
+           "animation": null
+          },
+          {
+           "type": "draw-shape",
+           "id": "o-station-c",
+           "shape": "ellipse",
+           "anchor": "top-left",
+           "position": {
+            "x": 34.18206931238268,
+            "y": 138.00000000000003,
+            "z": 3
+           },
+           "radiusX": 11,
+           "radiusY": 11,
+           "fill": null,
+           "stroke": null,
+           "strokeWidth": null,
+           "shadow": null,
+           "spring": null,
+           "opacity": 1,
+           "hit": true,
+           "semantic": {
+            "role": "button",
+            "labelledBy": "",
+            "disabled": false,
+            "order": 2,
+            "focused": false
+           },
+           "animation": null
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "rtl-mirrors-the-second-station-about-the-centre",
+   "now": 1700000000000,
+   "config": {
+    "id": "o"
+   },
+   "entity": {
+    "id": "o",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 200,
+     "h": 200
+    },
+    "states": [
+     {
+      "name": "a",
+      "isInitial": true
+     },
+     {
+      "name": "b",
+      "isInitial": false
+     },
+     {
+      "name": "c",
+      "isInitial": false
+     }
+    ],
+    "active": "a"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_DIRECTION",
+     "payload": {
+      "direction": "rtl"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "RASM_PAINT",
+        "payload": {
+         "id": "o",
+         "z": 3,
+         "texts": [],
+         "nodes": [
+          {
+           "type": "draw-shape",
+           "id": "o-ring",
+           "shape": "arc",
+           "anchor": "top-left",
+           "position": {
+            "x": 23.5,
+            "y": 23.5,
+            "z": 3
+           },
+           "width": 153,
+           "height": 153,
+           "startAngle": 0,
+           "sweep": 6.283185307179586,
+           "thickness": 1,
+           "fill": "rgba(0,0,0,0)",
+           "material": null,
+           "spring": null,
+           "opacity": 1,
+           "hit": false
+          },
+          {
+           "type": "draw-shape",
+           "id": "o-core",
+           "shape": "ellipse",
+           "anchor": "top-left",
+           "position": {
+            "x": 100,
+            "y": 100,
+            "z": 3
+           },
+           "radiusX": 31.919999999999998,
+           "radiusY": 31.919999999999998,
+           "fill": null,
+           "stroke": null,
+           "strokeWidth": null,
+           "shadow": null,
+           "backdrop": null,
+           "material": null,
+           "spring": null,
+           "opacity": 1,
+           "hit": false
+          },
+          {
+           "type": "draw-shape",
+           "id": "o-station-a",
+           "shape": "ellipse",
+           "anchor": "top-left",
+           "position": {
+            "x": 100,
+            "y": 24,
+            "z": 3
+           },
+           "radiusX": 11,
+           "radiusY": 11,
+           "fill": null,
+           "stroke": null,
+           "strokeWidth": null,
+           "shadow": null,
+           "spring": null,
+           "opacity": 1,
+           "hit": true,
+           "semantic": {
+            "role": "button",
+            "labelledBy": "",
+            "disabled": false,
+            "order": 0,
+            "focused": false
+           },
+           "animation": null
+          },
+          {
+           "type": "draw-shape",
+           "id": "o-station-b",
+           "shape": "ellipse",
+           "anchor": "top-left",
+           "position": {
+            "x": 34.18206931238265,
+            "y": 137.99999999999997,
+            "z": 3
+           },
+           "radiusX": 11,
+           "radiusY": 11,
+           "fill": null,
+           "stroke": null,
+           "strokeWidth": null,
+           "shadow": null,
+           "spring": null,
+           "opacity": 1,
+           "hit": true,
+           "semantic": {
+            "role": "button",
+            "labelledBy": "",
+            "disabled": false,
+            "order": 1,
+            "focused": false
+           },
+           "animation": null
+          },
+          {
+           "type": "draw-shape",
+           "id": "o-station-c",
+           "shape": "ellipse",
+           "anchor": "top-left",
+           "position": {
+            "x": 165.81793068761732,
+            "y": 138.00000000000003,
+            "z": 3
+           },
+           "radiusX": 11,
+           "radiusY": 11,
+           "fill": null,
+           "stroke": null,
+           "strokeWidth": null,
+           "shadow": null,
+           "spring": null,
+           "opacity": 1,
+           "hit": true,
+           "semantic": {
+            "role": "button",
+            "labelledBy": "",
+            "disabled": false,
+            "order": 2,
+            "focused": false
+           },
+           "animation": null
+          }
+         ]
+        }
+       }
+      ],
+      "entity": {
+       "direction": "rtl"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-move-paints-the-arc-and-the-five-beats",
+   "now": 1700000000000,
+   "config": {
+    "id": "o"
+   },
+   "entity": {
+    "id": "o",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 200,
+     "h": 200
+    },
+    "states": [
+     {
+      "name": "a",
+      "isInitial": true
+     },
+     {
+      "name": "b",
+      "isInitial": false
+     },
+     {
+      "name": "c",
+      "isInitial": false
+     },
+     {
+      "name": "d",
+      "isInitial": false
+     }
+    ],
+    "active": "a",
+    "looks": {
+     "orbit/ring/idle": {
+      "stroke": "#aaa",
+      "strokeWidth": 2
+     },
+     "orbit/arc/lit": {
+      "stroke": "#fc0",
+      "strokeWidth": 3
+     }
+    }
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "ORBIT_AT",
+     "payload": {
+      "state": "b",
+      "event": "GO"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "RASM_PAINT",
+        "payload": {
+         "id": "o",
+         "z": 3,
+         "texts": [],
+         "nodes": [
+          {
+           "type": "draw-shape",
+           "id": "o-ring",
+           "shape": "arc",
+           "anchor": "top-left",
+           "position": {
+            "x": 23,
+            "y": 23,
+            "z": 3
+           },
+           "width": 154,
+           "height": 154,
+           "startAngle": 0,
+           "sweep": 6.283185307179586,
+           "thickness": 2,
+           "fill": "#aaa",
+           "material": null,
+           "spring": null,
+           "opacity": 1,
+           "hit": false
+          },
+          {
+           "type": "draw-shape",
+           "id": "o-core",
+           "shape": "ellipse",
+           "anchor": "top-left",
+           "position": {
+            "x": 100,
+            "y": 100,
+            "z": 3
+           },
+           "radiusX": 31.919999999999998,
+           "radiusY": 31.919999999999998,
+           "fill": null,
+           "stroke": null,
+           "strokeWidth": null,
+           "shadow": null,
+           "backdrop": null,
+           "material": null,
+           "spring": null,
+           "opacity": 1,
+           "hit": false
+          },
+          {
+           "type": "draw-shape",
+           "id": "o-arc",
+           "shape": "path",
+           "anchor": "top-left",
+           "position": {
+            "x": 0,
+            "y": 0,
+            "z": 3
+           },
+           "d": "M100 24 L104.97063782149087 24.16272183386613 L109.91999060872394 24.65019053559041 L114.82686447322575 25.460318689354494 L119.67024742779158 26.589637202030815 L124.42939936304029 28.033310158371975 L129.08394085974683 29.7851555291422 L133.6139404566441 31.83767164351569 L138 34.18206931238265 L142.22333770948978 36.80830946500656 L146.26586860466278 39.70514613786613 L150.11028194760524 42.860174631597715 L153.74011537017762 46.259884629822395 L157.13982536840228 49.88971805239477 L160.29485386213386 53.73413139533723 L163.19169053499343 57.776662290510224 L165.81793068761732 62 L168.1623283564843 66.38605954335588 L170.2148444708578 70.91605914025317 L171.96668984162804 75.57060063695971 L173.41036279796919 80.3297525722084 L174.5396813106455 85.17313552677425 L175.3498094644096 90.08000939127608 L175.83727816613387 95.02936217850912 L176 100",
+           "fill": "",
+           "stroke": "#fc0",
+           "strokeWidth": 3,
+           "strokeDash": [
+            120.38052083641213,
+            120.38052083641213
+           ],
+           "opacity": 1,
+           "hit": false,
+           "animation": {
+            "durationMs": 850,
+            "startMs": 1700000000000,
+            "loop": false,
+            "keyframes": [
+             {
+              "at": 0,
+              "opacity": 0,
+              "strokeDashOffset": 120.38052083641213
+             },
+             {
+              "at": 0.399,
+              "opacity": 0,
+              "strokeDashOffset": 120.38052083641213
+             },
+             {
+              "at": 0.4,
+              "opacity": 1,
+              "strokeDashOffset": 120.38052083641213
+             },
+             {
+              "at": 0.8,
+              "opacity": 1,
+              "strokeDashOffset": 0
+             },
+             {
+              "at": 1,
+              "opacity": 1,
+              "strokeDashOffset": 0
+             }
+            ]
+           }
+          },
+          {
+           "type": "draw-shape",
+           "id": "o-arc-glow",
+           "shape": "arc",
+           "anchor": "top-left",
+           "position": {
+            "x": 22.5,
+            "y": 22.5,
+            "z": 3
+           },
+           "width": 155,
+           "height": 155,
+           "startAngle": -1.5707963267948966,
+           "sweep": 1.5707963267948966,
+           "thickness": 3,
+           "fill": "#fc0",
+           "material": null,
+           "opacity": 1,
+           "hit": false,
+           "animation": {
+            "durationMs": 850,
+            "startMs": 1700000000000,
+            "loop": false,
+            "keyframes": [
+             {
+              "at": 0,
+              "opacity": 0
+             },
+             {
+              "at": 0.8,
+              "opacity": 0
+             },
+             {
+              "at": 1,
+              "opacity": 1
+             }
+            ]
+           }
+          },
+          {
+           "type": "draw-shape",
+           "id": "o-station-a",
+           "shape": "ellipse",
+           "anchor": "top-left",
+           "position": {
+            "x": 100,
+            "y": 24,
+            "z": 3
+           },
+           "radiusX": 11,
+           "radiusY": 11,
+           "fill": null,
+           "stroke": null,
+           "strokeWidth": null,
+           "shadow": null,
+           "spring": null,
+           "opacity": 1,
+           "hit": true,
+           "semantic": {
+            "role": "button",
+            "labelledBy": "",
+            "disabled": false,
+            "order": 0,
+            "focused": false
+           },
+           "animation": null
+          },
+          {
+           "type": "draw-shape",
+           "id": "o-station-b",
+           "shape": "ellipse",
+           "anchor": "top-left",
+           "position": {
+            "x": 176,
+            "y": 100,
+            "z": 3
+           },
+           "radiusX": 11,
+           "radiusY": 11,
+           "fill": null,
+           "stroke": null,
+           "strokeWidth": null,
+           "shadow": null,
+           "spring": null,
+           "opacity": 1,
+           "hit": true,
+           "semantic": {
+            "role": "button",
+            "labelledBy": "",
+            "disabled": false,
+            "order": 1,
+            "focused": false
+           },
+           "animation": {
+            "durationMs": 850,
+            "startMs": 1700000000000,
+            "loop": false,
+            "keyframes": [
+             {
+              "at": 0,
+              "radiusX": 11,
+              "radiusY": 11
+             },
+             {
+              "at": 0.799,
+              "radiusX": 11,
+              "radiusY": 11
+             },
+             {
+              "at": 0.8,
+              "radiusX": 9.35,
+              "radiusY": 9.35
+             },
+             {
+              "at": 0.9,
+              "radiusX": 12.649999999999999,
+              "radiusY": 12.649999999999999
+             },
+             {
+              "at": 1,
+              "radiusX": 11,
+              "radiusY": 11
+             }
+            ]
+           }
+          },
+          {
+           "type": "draw-shape",
+           "id": "o-station-c",
+           "shape": "ellipse",
+           "anchor": "top-left",
+           "position": {
+            "x": 100,
+            "y": 176,
+            "z": 3
+           },
+           "radiusX": 11,
+           "radiusY": 11,
+           "fill": null,
+           "stroke": null,
+           "strokeWidth": null,
+           "shadow": null,
+           "spring": null,
+           "opacity": 1,
+           "hit": true,
+           "semantic": {
+            "role": "button",
+            "labelledBy": "",
+            "disabled": false,
+            "order": 2,
+            "focused": false
+           },
+           "animation": null
+          },
+          {
+           "type": "draw-shape",
+           "id": "o-station-d",
+           "shape": "ellipse",
+           "anchor": "top-left",
+           "position": {
+            "x": 24,
+            "y": 100.00000000000001,
+            "z": 3
+           },
+           "radiusX": 11,
+           "radiusY": 11,
+           "fill": null,
+           "stroke": null,
+           "strokeWidth": null,
+           "shadow": null,
+           "spring": null,
+           "opacity": 1,
+           "hit": true,
+           "semantic": {
+            "role": "button",
+            "labelledBy": "",
+            "disabled": false,
+            "order": 3,
+            "focused": false
+           },
+           "animation": null
+          },
+          {
+           "type": "draw-shape",
+           "id": "o-beat-event",
+           "shape": "ellipse",
+           "anchor": "top-left",
+           "position": {
+            "x": 100,
+            "y": 24,
+            "z": 3
+           },
+           "radiusX": 5.5,
+           "radiusY": 5.5,
+           "fill": null,
+           "opacity": 0,
+           "hit": false,
+           "animation": {
+            "durationMs": 850,
+            "startMs": 1700000000000,
+            "loop": false,
+            "keyframes": [
+             {
+              "at": 0,
+              "opacity": 1,
+              "radiusX": 5.5,
+              "radiusY": 5.5
+             },
+             {
+              "at": 0.2,
+              "opacity": 0,
+              "radiusX": 10.45,
+              "radiusY": 10.45
+             },
+             {
+              "at": 1,
+              "opacity": 0,
+              "radiusX": 10.45,
+              "radiusY": 10.45
+             }
+            ]
+           }
+          },
+          {
+           "type": "draw-shape",
+           "id": "o-beat-guard",
+           "shape": "path",
+           "anchor": "top-left",
+           "position": {
+            "x": 0,
+            "y": 0,
+            "z": 3
+           },
+           "d": "M104.13751644708168 31.124162744470908 L104.97701253779391 17.149355185378056",
+           "fill": "",
+           "stroke": null,
+           "strokeWidth": null,
+           "opacity": 0.35,
+           "hit": false,
+           "animation": {
+            "durationMs": 850,
+            "startMs": 1700000000000,
+            "loop": false,
+            "keyframes": [
+             {
+              "at": 0,
+              "opacity": 0
+             },
+             {
+              "at": 0.2,
+              "opacity": 0
+             },
+             {
+              "at": 0.3,
+              "opacity": 1
+             },
+             {
+              "at": 0.4,
+              "opacity": 0.35
+             },
+             {
+              "at": 1,
+              "opacity": 0.35
+             }
+            ]
+           }
+          },
+          {
+           "type": "draw-shape",
+           "id": "o-beat-effects",
+           "shape": "ellipse",
+           "anchor": "top-left",
+           "position": {
+            "x": 176,
+            "y": 100,
+            "z": 3
+           },
+           "radiusX": 11,
+           "radiusY": 11,
+           "fill": "",
+           "stroke": null,
+           "strokeWidth": null,
+           "opacity": 0,
+           "hit": false,
+           "animation": {
+            "durationMs": 850,
+            "startMs": 1700000000000,
+            "loop": false,
+            "keyframes": [
+             {
+              "at": 0,
+              "opacity": 0,
+              "radiusX": 11,
+              "radiusY": 11
+             },
+             {
+              "at": 0.599,
+              "opacity": 0,
+              "radiusX": 11,
+              "radiusY": 11
+             },
+             {
+              "at": 0.6,
+              "opacity": 0.8,
+              "radiusX": 11,
+              "radiusY": 11
+             },
+             {
+              "at": 0.8,
+              "opacity": 0,
+              "radiusX": 28.6,
+              "radiusY": 28.6
+             },
+             {
+              "at": 1,
+              "opacity": 0,
+              "radiusX": 28.6,
+              "radiusY": 28.6
+             }
+            ]
+           }
+          }
+         ]
+        }
+       }
+      ],
+      "entity": {
+       "from": "a",
+       "active": "b"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "going-back-one-station-lights-a-short-arc",
+   "now": 1700000000000,
+   "config": {
+    "id": "o"
+   },
+   "entity": {
+    "id": "o",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 200,
+     "h": 200
+    },
+    "states": [
+     {
+      "name": "a",
+      "isInitial": true
+     },
+     {
+      "name": "b",
+      "isInitial": false
+     },
+     {
+      "name": "c",
+      "isInitial": false
+     },
+     {
+      "name": "d",
+      "isInitial": false
+     }
+    ],
+    "active": "b",
+    "looks": {
+     "orbit/ring/idle": {
+      "stroke": "#aaa",
+      "strokeWidth": 2
+     },
+     "orbit/arc/lit": {
+      "stroke": "#fc0",
+      "strokeWidth": 3
+     }
+    }
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "ORBIT_AT",
+     "payload": {
+      "state": "a",
+      "event": "BACK"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "RASM_PAINT",
+        "payload": {
+         "id": "o",
+         "z": 3,
+         "texts": [],
+         "nodes": [
+          {
+           "type": "draw-shape",
+           "id": "o-ring",
+           "shape": "arc",
+           "anchor": "top-left",
+           "position": {
+            "x": 23,
+            "y": 23,
+            "z": 3
+           },
+           "width": 154,
+           "height": 154,
+           "startAngle": 0,
+           "sweep": 6.283185307179586,
+           "thickness": 2,
+           "fill": "#aaa",
+           "material": null,
+           "spring": null,
+           "opacity": 1,
+           "hit": false
+          },
+          {
+           "type": "draw-shape",
+           "id": "o-core",
+           "shape": "ellipse",
+           "anchor": "top-left",
+           "position": {
+            "x": 100,
+            "y": 100,
+            "z": 3
+           },
+           "radiusX": 31.919999999999998,
+           "radiusY": 31.919999999999998,
+           "fill": null,
+           "stroke": null,
+           "strokeWidth": null,
+           "shadow": null,
+           "backdrop": null,
+           "material": null,
+           "spring": null,
+           "opacity": 1,
+           "hit": false
+          },
+          {
+           "type": "draw-shape",
+           "id": "o-arc",
+           "shape": "path",
+           "anchor": "top-left",
+           "position": {
+            "x": 0,
+            "y": 0,
+            "z": 3
+           },
+           "d": "M176 100 L175.83727816613387 95.02936217850913 L175.3498094644096 90.08000939127608 L174.5396813106455 85.17313552677425 L173.41036279796919 80.32975257220842 L171.96668984162804 75.57060063695972 L170.2148444708578 70.91605914025317 L168.1623283564843 66.38605954335591 L165.81793068761735 62.00000000000001 L163.19169053499343 57.77666229051023 L160.2948538621339 53.734131395337236 L157.13982536840228 49.88971805239477 L153.74011537017762 46.259884629822395 L150.11028194760524 42.86017463159773 L146.26586860466278 39.70514613786613 L142.22333770948978 36.80830946500657 L138 34.182069312382666 L133.61394045664412 31.83767164351569 L129.08394085974683 29.7851555291422 L124.42939936304029 28.033310158371975 L119.6702474277916 26.589637202030815 L114.82686447322575 25.460318689354494 L109.91999060872394 24.65019053559041 L104.97063782149088 24.16272183386613 L100 24",
+           "fill": "",
+           "stroke": "#fc0",
+           "strokeWidth": 3,
+           "strokeDash": [
+            120.38052083641213,
+            120.38052083641213
+           ],
+           "opacity": 1,
+           "hit": false,
+           "animation": {
+            "durationMs": 850,
+            "startMs": 1700000000000,
+            "loop": false,
+            "keyframes": [
+             {
+              "at": 0,
+              "opacity": 0,
+              "strokeDashOffset": 120.38052083641213
+             },
+             {
+              "at": 0.399,
+              "opacity": 0,
+              "strokeDashOffset": 120.38052083641213
+             },
+             {
+              "at": 0.4,
+              "opacity": 1,
+              "strokeDashOffset": 120.38052083641213
+             },
+             {
+              "at": 0.8,
+              "opacity": 1,
+              "strokeDashOffset": 0
+             },
+             {
+              "at": 1,
+              "opacity": 1,
+              "strokeDashOffset": 0
+             }
+            ]
+           }
+          },
+          {
+           "type": "draw-shape",
+           "id": "o-arc-glow",
+           "shape": "arc",
+           "anchor": "top-left",
+           "position": {
+            "x": 22.5,
+            "y": 22.5,
+            "z": 3
+           },
+           "width": 155,
+           "height": 155,
+           "startAngle": 0,
+           "sweep": -1.5707963267948966,
+           "thickness": 3,
+           "fill": "#fc0",
+           "material": null,
+           "opacity": 1,
+           "hit": false,
+           "animation": {
+            "durationMs": 850,
+            "startMs": 1700000000000,
+            "loop": false,
+            "keyframes": [
+             {
+              "at": 0,
+              "opacity": 0
+             },
+             {
+              "at": 0.8,
+              "opacity": 0
+             },
+             {
+              "at": 1,
+              "opacity": 1
+             }
+            ]
+           }
+          },
+          {
+           "type": "draw-shape",
+           "id": "o-station-a",
+           "shape": "ellipse",
+           "anchor": "top-left",
+           "position": {
+            "x": 100,
+            "y": 24,
+            "z": 3
+           },
+           "radiusX": 11,
+           "radiusY": 11,
+           "fill": null,
+           "stroke": null,
+           "strokeWidth": null,
+           "shadow": null,
+           "spring": null,
+           "opacity": 1,
+           "hit": true,
+           "semantic": {
+            "role": "button",
+            "labelledBy": "",
+            "disabled": false,
+            "order": 0,
+            "focused": false
+           },
+           "animation": {
+            "durationMs": 850,
+            "startMs": 1700000000000,
+            "loop": false,
+            "keyframes": [
+             {
+              "at": 0,
+              "radiusX": 11,
+              "radiusY": 11
+             },
+             {
+              "at": 0.799,
+              "radiusX": 11,
+              "radiusY": 11
+             },
+             {
+              "at": 0.8,
+              "radiusX": 9.35,
+              "radiusY": 9.35
+             },
+             {
+              "at": 0.9,
+              "radiusX": 12.649999999999999,
+              "radiusY": 12.649999999999999
+             },
+             {
+              "at": 1,
+              "radiusX": 11,
+              "radiusY": 11
+             }
+            ]
+           }
+          },
+          {
+           "type": "draw-shape",
+           "id": "o-station-b",
+           "shape": "ellipse",
+           "anchor": "top-left",
+           "position": {
+            "x": 176,
+            "y": 100,
+            "z": 3
+           },
+           "radiusX": 11,
+           "radiusY": 11,
+           "fill": null,
+           "stroke": null,
+           "strokeWidth": null,
+           "shadow": null,
+           "spring": null,
+           "opacity": 1,
+           "hit": true,
+           "semantic": {
+            "role": "button",
+            "labelledBy": "",
+            "disabled": false,
+            "order": 1,
+            "focused": false
+           },
+           "animation": null
+          },
+          {
+           "type": "draw-shape",
+           "id": "o-station-c",
+           "shape": "ellipse",
+           "anchor": "top-left",
+           "position": {
+            "x": 100,
+            "y": 176,
+            "z": 3
+           },
+           "radiusX": 11,
+           "radiusY": 11,
+           "fill": null,
+           "stroke": null,
+           "strokeWidth": null,
+           "shadow": null,
+           "spring": null,
+           "opacity": 1,
+           "hit": true,
+           "semantic": {
+            "role": "button",
+            "labelledBy": "",
+            "disabled": false,
+            "order": 2,
+            "focused": false
+           },
+           "animation": null
+          },
+          {
+           "type": "draw-shape",
+           "id": "o-station-d",
+           "shape": "ellipse",
+           "anchor": "top-left",
+           "position": {
+            "x": 24,
+            "y": 100.00000000000001,
+            "z": 3
+           },
+           "radiusX": 11,
+           "radiusY": 11,
+           "fill": null,
+           "stroke": null,
+           "strokeWidth": null,
+           "shadow": null,
+           "spring": null,
+           "opacity": 1,
+           "hit": true,
+           "semantic": {
+            "role": "button",
+            "labelledBy": "",
+            "disabled": false,
+            "order": 3,
+            "focused": false
+           },
+           "animation": null
+          },
+          {
+           "type": "draw-shape",
+           "id": "o-beat-event",
+           "shape": "ellipse",
+           "anchor": "top-left",
+           "position": {
+            "x": 176,
+            "y": 100,
+            "z": 3
+           },
+           "radiusX": 5.5,
+           "radiusY": 5.5,
+           "fill": null,
+           "opacity": 0,
+           "hit": false,
+           "animation": {
+            "durationMs": 850,
+            "startMs": 1700000000000,
+            "loop": false,
+            "keyframes": [
+             {
+              "at": 0,
+              "opacity": 1,
+              "radiusX": 5.5,
+              "radiusY": 5.5
+             },
+             {
+              "at": 0.2,
+              "opacity": 0,
+              "radiusX": 10.45,
+              "radiusY": 10.45
+             },
+             {
+              "at": 1,
+              "opacity": 0,
+              "radiusX": 10.45,
+              "radiusY": 10.45
+             }
+            ]
+           }
+          },
+          {
+           "type": "draw-shape",
+           "id": "o-beat-guard",
+           "shape": "path",
+           "anchor": "top-left",
+           "position": {
+            "x": 0,
+            "y": 0,
+            "z": 3
+           },
+           "d": "M168.8758372555291 95.86248355291832 L182.85064481462194 95.0229874622061",
+           "fill": "",
+           "stroke": null,
+           "strokeWidth": null,
+           "opacity": 0.35,
+           "hit": false,
+           "animation": {
+            "durationMs": 850,
+            "startMs": 1700000000000,
+            "loop": false,
+            "keyframes": [
+             {
+              "at": 0,
+              "opacity": 0
+             },
+             {
+              "at": 0.2,
+              "opacity": 0
+             },
+             {
+              "at": 0.3,
+              "opacity": 1
+             },
+             {
+              "at": 0.4,
+              "opacity": 0.35
+             },
+             {
+              "at": 1,
+              "opacity": 0.35
+             }
+            ]
+           }
+          },
+          {
+           "type": "draw-shape",
+           "id": "o-beat-effects",
+           "shape": "ellipse",
+           "anchor": "top-left",
+           "position": {
+            "x": 100,
+            "y": 24,
+            "z": 3
+           },
+           "radiusX": 11,
+           "radiusY": 11,
+           "fill": "",
+           "stroke": null,
+           "strokeWidth": null,
+           "opacity": 0,
+           "hit": false,
+           "animation": {
+            "durationMs": 850,
+            "startMs": 1700000000000,
+            "loop": false,
+            "keyframes": [
+             {
+              "at": 0,
+              "opacity": 0,
+              "radiusX": 11,
+              "radiusY": 11
+             },
+             {
+              "at": 0.599,
+              "opacity": 0,
+              "radiusX": 11,
+              "radiusY": 11
+             },
+             {
+              "at": 0.6,
+              "opacity": 0.8,
+              "radiusX": 11,
+              "radiusY": 11
+             },
+             {
+              "at": 0.8,
+              "opacity": 0,
+              "radiusX": 28.6,
+              "radiusY": 28.6
+             },
+             {
+              "at": 1,
+              "opacity": 0,
+              "radiusX": 28.6,
+              "radiusY": 28.6
+             }
+            ]
+           }
+          }
+         ]
+        }
+       }
+      ],
+      "entity": {
+       "from": "b",
+       "active": "a"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "the-wrap-from-the-last-station-to-the-first-lights-an-arc",
+   "now": 1700000000000,
+   "config": {
+    "id": "o"
+   },
+   "entity": {
+    "id": "o",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 200,
+     "h": 200
+    },
+    "states": [
+     {
+      "name": "a",
+      "isInitial": true
+     },
+     {
+      "name": "b",
+      "isInitial": false
+     },
+     {
+      "name": "c",
+      "isInitial": false
+     },
+     {
+      "name": "d",
+      "isInitial": false
+     }
+    ],
+    "active": "d",
+    "looks": {
+     "orbit/ring/idle": {
+      "stroke": "#aaa",
+      "strokeWidth": 2
+     },
+     "orbit/arc/lit": {
+      "stroke": "#fc0",
+      "strokeWidth": 3
+     }
+    }
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "ORBIT_AT",
+     "payload": {
+      "state": "a",
+      "event": "NEXT"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "RASM_PAINT",
+        "payload": {
+         "id": "o",
+         "z": 3,
+         "texts": [],
+         "nodes": [
+          {
+           "type": "draw-shape",
+           "id": "o-ring",
+           "shape": "arc",
+           "anchor": "top-left",
+           "position": {
+            "x": 23,
+            "y": 23,
+            "z": 3
+           },
+           "width": 154,
+           "height": 154,
+           "startAngle": 0,
+           "sweep": 6.283185307179586,
+           "thickness": 2,
+           "fill": "#aaa",
+           "material": null,
+           "spring": null,
+           "opacity": 1,
+           "hit": false
+          },
+          {
+           "type": "draw-shape",
+           "id": "o-core",
+           "shape": "ellipse",
+           "anchor": "top-left",
+           "position": {
+            "x": 100,
+            "y": 100,
+            "z": 3
+           },
+           "radiusX": 31.919999999999998,
+           "radiusY": 31.919999999999998,
+           "fill": null,
+           "stroke": null,
+           "strokeWidth": null,
+           "shadow": null,
+           "backdrop": null,
+           "material": null,
+           "spring": null,
+           "opacity": 1,
+           "hit": false
+          },
+          {
+           "type": "draw-shape",
+           "id": "o-arc",
+           "shape": "path",
+           "anchor": "top-left",
+           "position": {
+            "x": 0,
+            "y": 0,
+            "z": 3
+           },
+           "d": "M24 100.00000000000001 L24.16272183386613 95.02936217850915 L24.650190535590397 90.08000939127609 L25.460318689354494 85.17313552677425 L26.589637202030815 80.32975257220842 L28.03331015837196 75.57060063695972 L29.7851555291422 70.91605914025318 L31.83767164351569 66.38605954335591 L34.18206931238265 62.00000000000002 L36.808309465006545 57.77666229051025 L39.70514613786613 53.73413139533723 L42.86017463159771 49.88971805239477 L46.25988462982237 46.259884629822395 L49.88971805239475 42.86017463159773 L53.734131395337215 39.705146137866144 L57.77666229051023 36.80830946500656 L61.999999999999964 34.18206931238268 L66.3860595433559 31.83767164351569 L70.91605914025314 29.78515552914223 L75.57060063695971 28.033310158371975 L80.32975257220843 26.589637202030815 L85.17313552677422 25.460318689354494 L90.08000939127608 24.65019053559041 L95.02936217850909 24.16272183386613 L99.99999999999999 24",
+           "fill": "",
+           "stroke": "#fc0",
+           "strokeWidth": 3,
+           "strokeDash": [
+            120.38052083641213,
+            120.38052083641213
+           ],
+           "opacity": 1,
+           "hit": false,
+           "animation": {
+            "durationMs": 850,
+            "startMs": 1700000000000,
+            "loop": false,
+            "keyframes": [
+             {
+              "at": 0,
+              "opacity": 0,
+              "strokeDashOffset": 120.38052083641213
+             },
+             {
+              "at": 0.399,
+              "opacity": 0,
+              "strokeDashOffset": 120.38052083641213
+             },
+             {
+              "at": 0.4,
+              "opacity": 1,
+              "strokeDashOffset": 120.38052083641213
+             },
+             {
+              "at": 0.8,
+              "opacity": 1,
+              "strokeDashOffset": 0
+             },
+             {
+              "at": 1,
+              "opacity": 1,
+              "strokeDashOffset": 0
+             }
+            ]
+           }
+          },
+          {
+           "type": "draw-shape",
+           "id": "o-arc-glow",
+           "shape": "arc",
+           "anchor": "top-left",
+           "position": {
+            "x": 22.5,
+            "y": 22.5,
+            "z": 3
+           },
+           "width": 155,
+           "height": 155,
+           "startAngle": 3.141592653589793,
+           "sweep": 1.5707963267948966,
+           "thickness": 3,
+           "fill": "#fc0",
+           "material": null,
+           "opacity": 1,
+           "hit": false,
+           "animation": {
+            "durationMs": 850,
+            "startMs": 1700000000000,
+            "loop": false,
+            "keyframes": [
+             {
+              "at": 0,
+              "opacity": 0
+             },
+             {
+              "at": 0.8,
+              "opacity": 0
+             },
+             {
+              "at": 1,
+              "opacity": 1
+             }
+            ]
+           }
+          },
+          {
+           "type": "draw-shape",
+           "id": "o-station-a",
+           "shape": "ellipse",
+           "anchor": "top-left",
+           "position": {
+            "x": 100,
+            "y": 24,
+            "z": 3
+           },
+           "radiusX": 11,
+           "radiusY": 11,
+           "fill": null,
+           "stroke": null,
+           "strokeWidth": null,
+           "shadow": null,
+           "spring": null,
+           "opacity": 1,
+           "hit": true,
+           "semantic": {
+            "role": "button",
+            "labelledBy": "",
+            "disabled": false,
+            "order": 0,
+            "focused": false
+           },
+           "animation": {
+            "durationMs": 850,
+            "startMs": 1700000000000,
+            "loop": false,
+            "keyframes": [
+             {
+              "at": 0,
+              "radiusX": 11,
+              "radiusY": 11
+             },
+             {
+              "at": 0.799,
+              "radiusX": 11,
+              "radiusY": 11
+             },
+             {
+              "at": 0.8,
+              "radiusX": 9.35,
+              "radiusY": 9.35
+             },
+             {
+              "at": 0.9,
+              "radiusX": 12.649999999999999,
+              "radiusY": 12.649999999999999
+             },
+             {
+              "at": 1,
+              "radiusX": 11,
+              "radiusY": 11
+             }
+            ]
+           }
+          },
+          {
+           "type": "draw-shape",
+           "id": "o-station-b",
+           "shape": "ellipse",
+           "anchor": "top-left",
+           "position": {
+            "x": 176,
+            "y": 100,
+            "z": 3
+           },
+           "radiusX": 11,
+           "radiusY": 11,
+           "fill": null,
+           "stroke": null,
+           "strokeWidth": null,
+           "shadow": null,
+           "spring": null,
+           "opacity": 1,
+           "hit": true,
+           "semantic": {
+            "role": "button",
+            "labelledBy": "",
+            "disabled": false,
+            "order": 1,
+            "focused": false
+           },
+           "animation": null
+          },
+          {
+           "type": "draw-shape",
+           "id": "o-station-c",
+           "shape": "ellipse",
+           "anchor": "top-left",
+           "position": {
+            "x": 100,
+            "y": 176,
+            "z": 3
+           },
+           "radiusX": 11,
+           "radiusY": 11,
+           "fill": null,
+           "stroke": null,
+           "strokeWidth": null,
+           "shadow": null,
+           "spring": null,
+           "opacity": 1,
+           "hit": true,
+           "semantic": {
+            "role": "button",
+            "labelledBy": "",
+            "disabled": false,
+            "order": 2,
+            "focused": false
+           },
+           "animation": null
+          },
+          {
+           "type": "draw-shape",
+           "id": "o-station-d",
+           "shape": "ellipse",
+           "anchor": "top-left",
+           "position": {
+            "x": 24,
+            "y": 100.00000000000001,
+            "z": 3
+           },
+           "radiusX": 11,
+           "radiusY": 11,
+           "fill": null,
+           "stroke": null,
+           "strokeWidth": null,
+           "shadow": null,
+           "spring": null,
+           "opacity": 1,
+           "hit": true,
+           "semantic": {
+            "role": "button",
+            "labelledBy": "",
+            "disabled": false,
+            "order": 3,
+            "focused": false
+           },
+           "animation": null
+          },
+          {
+           "type": "draw-shape",
+           "id": "o-beat-event",
+           "shape": "ellipse",
+           "anchor": "top-left",
+           "position": {
+            "x": 24,
+            "y": 100.00000000000001,
+            "z": 3
+           },
+           "radiusX": 5.5,
+           "radiusY": 5.5,
+           "fill": null,
+           "opacity": 0,
+           "hit": false,
+           "animation": {
+            "durationMs": 850,
+            "startMs": 1700000000000,
+            "loop": false,
+            "keyframes": [
+             {
+              "at": 0,
+              "opacity": 1,
+              "radiusX": 5.5,
+              "radiusY": 5.5
+             },
+             {
+              "at": 0.2,
+              "opacity": 0,
+              "radiusX": 10.45,
+              "radiusY": 10.45
+             },
+             {
+              "at": 1,
+              "opacity": 0,
+              "radiusX": 10.45,
+              "radiusY": 10.45
+             }
+            ]
+           }
+          },
+          {
+           "type": "draw-shape",
+           "id": "o-beat-guard",
+           "shape": "path",
+           "anchor": "top-left",
+           "position": {
+            "x": 0,
+            "y": 0,
+            "z": 3
+           },
+           "d": "M31.124162744470908 95.86248355291832 L17.149355185378056 95.0229874622061",
+           "fill": "",
+           "stroke": null,
+           "strokeWidth": null,
+           "opacity": 0.35,
+           "hit": false,
+           "animation": {
+            "durationMs": 850,
+            "startMs": 1700000000000,
+            "loop": false,
+            "keyframes": [
+             {
+              "at": 0,
+              "opacity": 0
+             },
+             {
+              "at": 0.2,
+              "opacity": 0
+             },
+             {
+              "at": 0.3,
+              "opacity": 1
+             },
+             {
+              "at": 0.4,
+              "opacity": 0.35
+             },
+             {
+              "at": 1,
+              "opacity": 0.35
+             }
+            ]
+           }
+          },
+          {
+           "type": "draw-shape",
+           "id": "o-beat-effects",
+           "shape": "ellipse",
+           "anchor": "top-left",
+           "position": {
+            "x": 100,
+            "y": 24,
+            "z": 3
+           },
+           "radiusX": 11,
+           "radiusY": 11,
+           "fill": "",
+           "stroke": null,
+           "strokeWidth": null,
+           "opacity": 0,
+           "hit": false,
+           "animation": {
+            "durationMs": 850,
+            "startMs": 1700000000000,
+            "loop": false,
+            "keyframes": [
+             {
+              "at": 0,
+              "opacity": 0,
+              "radiusX": 11,
+              "radiusY": 11
+             },
+             {
+              "at": 0.599,
+              "opacity": 0,
+              "radiusX": 11,
+              "radiusY": 11
+             },
+             {
+              "at": 0.6,
+              "opacity": 0.8,
+              "radiusX": 11,
+              "radiusY": 11
+             },
+             {
+              "at": 0.8,
+              "opacity": 0,
+              "radiusX": 28.6,
+              "radiusY": 28.6
+             },
+             {
+              "at": 1,
+              "opacity": 0,
+              "radiusX": 28.6,
+              "radiusY": 28.6
+             }
+            ]
+           }
+          }
+         ]
+        }
+       }
+      ],
+      "entity": {
+       "from": "d",
+       "active": "a"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "reduced-motion-paints-the-final-form-with-an-opacity-crossfade",
+   "now": 1700000000000,
+   "config": {
+    "id": "o"
+   },
+   "entity": {
+    "id": "o",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 200,
+     "h": 200
+    },
+    "states": [
+     {
+      "name": "a",
+      "isInitial": true
+     },
+     {
+      "name": "b",
+      "isInitial": false
+     },
+     {
+      "name": "c",
+      "isInitial": false
+     },
+     {
+      "name": "d",
+      "isInitial": false
+     }
+    ],
+    "active": "a",
+    "reduced": true,
+    "looks": {
+     "orbit/ring/idle": {
+      "stroke": "#aaa",
+      "strokeWidth": 2
+     },
+     "orbit/arc/lit": {
+      "stroke": "#fc0",
+      "strokeWidth": 3
+     }
+    }
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "ORBIT_AT",
+     "payload": {
+      "state": "b",
+      "event": "GO"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "RASM_PAINT",
+        "payload": {
+         "id": "o",
+         "z": 3,
+         "texts": [],
+         "nodes": [
+          {
+           "type": "draw-shape",
+           "id": "o-ring",
+           "shape": "arc",
+           "anchor": "top-left",
+           "position": {
+            "x": 23,
+            "y": 23,
+            "z": 3
+           },
+           "width": 154,
+           "height": 154,
+           "startAngle": 0,
+           "sweep": 6.283185307179586,
+           "thickness": 2,
+           "fill": "#aaa",
+           "material": null,
+           "spring": null,
+           "opacity": 1,
+           "hit": false
+          },
+          {
+           "type": "draw-shape",
+           "id": "o-core",
+           "shape": "ellipse",
+           "anchor": "top-left",
+           "position": {
+            "x": 100,
+            "y": 100,
+            "z": 3
+           },
+           "radiusX": 31.919999999999998,
+           "radiusY": 31.919999999999998,
+           "fill": null,
+           "stroke": null,
+           "strokeWidth": null,
+           "shadow": null,
+           "backdrop": null,
+           "material": null,
+           "spring": null,
+           "opacity": 1,
+           "hit": false
+          },
+          {
+           "type": "draw-shape",
+           "id": "o-arc",
+           "shape": "path",
+           "anchor": "top-left",
+           "position": {
+            "x": 0,
+            "y": 0,
+            "z": 3
+           },
+           "d": "M100 24 L104.97063782149087 24.16272183386613 L109.91999060872394 24.65019053559041 L114.82686447322575 25.460318689354494 L119.67024742779158 26.589637202030815 L124.42939936304029 28.033310158371975 L129.08394085974683 29.7851555291422 L133.6139404566441 31.83767164351569 L138 34.18206931238265 L142.22333770948978 36.80830946500656 L146.26586860466278 39.70514613786613 L150.11028194760524 42.860174631597715 L153.74011537017762 46.259884629822395 L157.13982536840228 49.88971805239477 L160.29485386213386 53.73413139533723 L163.19169053499343 57.776662290510224 L165.81793068761732 62 L168.1623283564843 66.38605954335588 L170.2148444708578 70.91605914025317 L171.96668984162804 75.57060063695971 L173.41036279796919 80.3297525722084 L174.5396813106455 85.17313552677425 L175.3498094644096 90.08000939127608 L175.83727816613387 95.02936217850912 L176 100",
+           "fill": "",
+           "stroke": "#fc0",
+           "strokeWidth": 3,
+           "strokeDash": [
+            120.38052083641213,
+            120.38052083641213
+           ],
+           "opacity": 1,
+           "hit": false,
+           "animation": {
+            "durationMs": 200,
+            "startMs": 1700000000000,
+            "loop": false,
+            "keyframes": [
+             {
+              "at": 0,
+              "opacity": 0
+             },
+             {
+              "at": 1,
+              "opacity": 1
+             }
+            ]
+           }
+          },
+          {
+           "type": "draw-shape",
+           "id": "o-arc-glow",
+           "shape": "arc",
+           "anchor": "top-left",
+           "position": {
+            "x": 22.5,
+            "y": 22.5,
+            "z": 3
+           },
+           "width": 155,
+           "height": 155,
+           "startAngle": -1.5707963267948966,
+           "sweep": 1.5707963267948966,
+           "thickness": 3,
+           "fill": "#fc0",
+           "material": null,
+           "opacity": 1,
+           "hit": false,
+           "animation": {
+            "durationMs": 200,
+            "startMs": 1700000000000,
+            "loop": false,
+            "keyframes": [
+             {
+              "at": 0,
+              "opacity": 0
+             },
+             {
+              "at": 1,
+              "opacity": 1
+             }
+            ]
+           }
+          },
+          {
+           "type": "draw-shape",
+           "id": "o-station-a",
+           "shape": "ellipse",
+           "anchor": "top-left",
+           "position": {
+            "x": 100,
+            "y": 24,
+            "z": 3
+           },
+           "radiusX": 11,
+           "radiusY": 11,
+           "fill": null,
+           "stroke": null,
+           "strokeWidth": null,
+           "shadow": null,
+           "spring": null,
+           "opacity": 1,
+           "hit": true,
+           "semantic": {
+            "role": "button",
+            "labelledBy": "",
+            "disabled": false,
+            "order": 0,
+            "focused": false
+           },
+           "animation": null
+          },
+          {
+           "type": "draw-shape",
+           "id": "o-station-b",
+           "shape": "ellipse",
+           "anchor": "top-left",
+           "position": {
+            "x": 176,
+            "y": 100,
+            "z": 3
+           },
+           "radiusX": 11,
+           "radiusY": 11,
+           "fill": null,
+           "stroke": null,
+           "strokeWidth": null,
+           "shadow": null,
+           "spring": null,
+           "opacity": 1,
+           "hit": true,
+           "semantic": {
+            "role": "button",
+            "labelledBy": "",
+            "disabled": false,
+            "order": 1,
+            "focused": false
+           },
+           "animation": {
+            "durationMs": 200,
+            "startMs": 1700000000000,
+            "loop": false,
+            "keyframes": [
+             {
+              "at": 0,
+              "opacity": 0
+             },
+             {
+              "at": 1,
+              "opacity": 1
+             }
+            ]
+           }
+          },
+          {
+           "type": "draw-shape",
+           "id": "o-station-c",
+           "shape": "ellipse",
+           "anchor": "top-left",
+           "position": {
+            "x": 100,
+            "y": 176,
+            "z": 3
+           },
+           "radiusX": 11,
+           "radiusY": 11,
+           "fill": null,
+           "stroke": null,
+           "strokeWidth": null,
+           "shadow": null,
+           "spring": null,
+           "opacity": 1,
+           "hit": true,
+           "semantic": {
+            "role": "button",
+            "labelledBy": "",
+            "disabled": false,
+            "order": 2,
+            "focused": false
+           },
+           "animation": null
+          },
+          {
+           "type": "draw-shape",
+           "id": "o-station-d",
+           "shape": "ellipse",
+           "anchor": "top-left",
+           "position": {
+            "x": 24,
+            "y": 100.00000000000001,
+            "z": 3
+           },
+           "radiusX": 11,
+           "radiusY": 11,
+           "fill": null,
+           "stroke": null,
+           "strokeWidth": null,
+           "shadow": null,
+           "spring": null,
+           "opacity": 1,
+           "hit": true,
+           "semantic": {
+            "role": "button",
+            "labelledBy": "",
+            "disabled": false,
+            "order": 3,
+            "focused": false
+           },
+           "animation": null
+          }
+         ]
+        }
+       }
+      ],
+      "entity": {
+       "from": "a",
+       "active": "b"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "labels-and-beat-captions-are-catalog-keys",
+   "now": 1700000000000,
+   "config": {
+    "id": "o",
+    "labels": [
+     {
+      "state": "a",
+      "key": "k.a"
+     },
+     {
+      "state": "c",
+      "key": "k.c"
+     }
+    ],
+    "beatLabels": [
+     "b1",
+     "b2",
+     "b3",
+     "b4",
+     "b5"
+    ]
+   },
+   "entity": {
+    "id": "o",
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 200,
+     "h": 200
+    },
+    "states": [
+     {
+      "name": "a",
+      "isInitial": true
+     },
+     {
+      "name": "b",
+      "isInitial": false
+     },
+     {
+      "name": "c",
+      "isInitial": false
+     },
+     {
+      "name": "d",
+      "isInitial": false
+     }
+    ],
+    "active": "a",
+    "looks": {
+     "orbit/ring/idle": {
+      "stroke": "#aaa",
+      "strokeWidth": 2
+     },
+     "orbit/arc/lit": {
+      "stroke": "#fc0",
+      "strokeWidth": 3
+     }
+    }
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "ORBIT_AT",
+     "payload": {
+      "state": "c",
+      "event": "GO"
+     },
+     "expect": {
+      "state": "ready",
+      "emits": [
+       {
+        "event": "RASM_PAINT",
+        "payload": {
+         "id": "o",
+         "z": 3,
+         "texts": [
+          {
+           "id": "o-label-a",
+           "key": "k.a",
+           "x": 100,
+           "y": -2,
+           "z": 3,
+           "align": "center",
+           "baseline": "middle",
+           "color": null,
+           "font": null,
+           "spring": null
+          },
+          {
+           "id": "o-label-c",
+           "key": "k.c",
+           "x": 100,
+           "y": 202,
+           "z": 3,
+           "align": "center",
+           "baseline": "middle",
+           "color": null,
+           "font": null,
+           "spring": null
+          },
+          {
+           "id": "o-beat-0",
+           "key": "b1",
+           "x": 100,
+           "y": 50,
+           "z": 3,
+           "align": "center",
+           "baseline": "middle",
+           "color": null,
+           "font": null,
+           "spring": null,
+           "animation": {
+            "durationMs": 850,
+            "startMs": 1700000000000,
+            "loop": false,
+            "keyframes": [
+             {
+              "at": 0,
+              "opacity": 0
+             },
+             {
+              "at": 0,
+              "opacity": 0
+             },
+             {
+              "at": 0.05,
+              "opacity": 1
+             },
+             {
+              "at": 0.2,
+              "opacity": 0.6
+             },
+             {
+              "at": 1,
+              "opacity": 0.6
+             }
+            ]
+           }
+          },
+          {
+           "id": "o-beat-1",
+           "key": "b2",
+           "x": 101.90685540604635,
+           "y": 68.2572228300605,
+           "z": 3,
+           "align": "center",
+           "baseline": "middle",
+           "color": null,
+           "font": null,
+           "spring": null,
+           "animation": {
+            "durationMs": 850,
+            "startMs": 1700000000000,
+            "loop": false,
+            "keyframes": [
+             {
+              "at": 0,
+              "opacity": 0
+             },
+             {
+              "at": 0.2,
+              "opacity": 0
+             },
+             {
+              "at": 0.25,
+              "opacity": 1
+             },
+             {
+              "at": 0.4,
+              "opacity": 0.6
+             },
+             {
+              "at": 1,
+              "opacity": 0.6
+             }
+            ]
+           }
+          },
+          {
+           "id": "o-beat-2",
+           "key": "b3",
+           "x": 150,
+           "y": 100,
+           "z": 3,
+           "align": "center",
+           "baseline": "middle",
+           "color": null,
+           "font": null,
+           "spring": null,
+           "animation": {
+            "durationMs": 850,
+            "startMs": 1700000000000,
+            "loop": false,
+            "keyframes": [
+             {
+              "at": 0,
+              "opacity": 0
+             },
+             {
+              "at": 0.4,
+              "opacity": 0
+             },
+             {
+              "at": 0.45,
+              "opacity": 1
+             },
+             {
+              "at": 0.6,
+              "opacity": 0.6
+             },
+             {
+              "at": 1,
+              "opacity": 0.6
+             }
+            ]
+           }
+          },
+          {
+           "id": "o-beat-3",
+           "key": "b4",
+           "x": 100,
+           "y": 150,
+           "z": 3,
+           "align": "center",
+           "baseline": "middle",
+           "color": null,
+           "font": null,
+           "spring": null,
+           "animation": {
+            "durationMs": 850,
+            "startMs": 1700000000000,
+            "loop": false,
+            "keyframes": [
+             {
+              "at": 0,
+              "opacity": 0
+             },
+             {
+              "at": 0.6,
+              "opacity": 0
+             },
+             {
+              "at": 0.65,
+              "opacity": 1
+             },
+             {
+              "at": 0.8,
+              "opacity": 0.6
+             },
+             {
+              "at": 1,
+              "opacity": 0.6
+             }
+            ]
+           }
+          },
+          {
+           "id": "o-beat-4",
+           "key": "b5",
+           "x": 100,
+           "y": 131.8,
+           "z": 3,
+           "align": "center",
+           "baseline": "middle",
+           "color": null,
+           "font": null,
+           "spring": null,
+           "animation": {
+            "durationMs": 850,
+            "startMs": 1700000000000,
+            "loop": false,
+            "keyframes": [
+             {
+              "at": 0,
+              "opacity": 0
+             },
+             {
+              "at": 0.8,
+              "opacity": 0
+             },
+             {
+              "at": 0.8500000000000001,
+              "opacity": 1
+             },
+             {
+              "at": 1,
+              "opacity": 0.6
+             },
+             {
+              "at": 1,
+              "opacity": 0.6
+             }
+            ]
+           }
+          }
+         ],
+         "nodes": [
+          {
+           "type": "draw-shape",
+           "id": "o-ring",
+           "shape": "arc",
+           "anchor": "top-left",
+           "position": {
+            "x": 23,
+            "y": 23,
+            "z": 3
+           },
+           "width": 154,
+           "height": 154,
+           "startAngle": 0,
+           "sweep": 6.283185307179586,
+           "thickness": 2,
+           "fill": "#aaa",
+           "material": null,
+           "spring": null,
+           "opacity": 1,
+           "hit": false
+          },
+          {
+           "type": "draw-shape",
+           "id": "o-core",
+           "shape": "ellipse",
+           "anchor": "top-left",
+           "position": {
+            "x": 100,
+            "y": 100,
+            "z": 3
+           },
+           "radiusX": 31.919999999999998,
+           "radiusY": 31.919999999999998,
+           "fill": null,
+           "stroke": null,
+           "strokeWidth": null,
+           "shadow": null,
+           "backdrop": null,
+           "material": null,
+           "spring": null,
+           "opacity": 1,
+           "hit": false
+          },
+          {
+           "type": "draw-shape",
+           "id": "o-arc",
+           "shape": "path",
+           "anchor": "top-left",
+           "position": {
+            "x": 0,
+            "y": 0,
+            "z": 3
+           },
+           "d": "M100 24 L104.97063782149087 24.16272183386613 L109.91999060872394 24.65019053559041 L114.82686447322575 25.460318689354494 L119.67024742779158 26.589637202030815 L124.42939936304029 28.033310158371975 L129.08394085974683 29.7851555291422 L133.6139404566441 31.83767164351569 L138 34.18206931238265 L142.22333770948978 36.80830946500656 L146.26586860466278 39.70514613786613 L150.11028194760524 42.860174631597715 L153.74011537017762 46.259884629822395 L157.13982536840228 49.88971805239477 L160.29485386213386 53.73413139533723 L163.19169053499343 57.776662290510224 L165.81793068761732 62 L168.1623283564843 66.38605954335588 L170.2148444708578 70.91605914025317 L171.96668984162804 75.57060063695971 L173.41036279796919 80.3297525722084 L174.5396813106455 85.17313552677425 L175.3498094644096 90.08000939127608 L175.83727816613387 95.02936217850912 L176 100 L175.83727816613387 104.97063782149087 L175.3498094644096 109.91999060872391 L174.5396813106455 114.82686447322573 L173.41036279796919 119.67024742779157 L171.96668984162804 124.42939936304026 L170.2148444708578 129.0839408597468 L168.1623283564843 133.6139404566441 L165.81793068761735 138 L163.19169053499346 142.22333770948975 L160.2948538621339 146.26586860466276 L157.13982536840228 150.11028194760522 L153.74011537017762 153.7401153701776 L150.11028194760524 157.13982536840228 L146.26586860466278 160.29485386213386 L142.22333770948978 163.19169053499343 L138.00000000000003 165.81793068761732 L133.61394045664412 168.1623283564843 L129.08394085974683 170.2148444708578 L124.42939936304029 171.966689841628 L119.6702474277916 173.41036279796919 L114.82686447322577 174.5396813106455 L109.91999060872395 175.3498094644096 L104.97063782149091 175.83727816613387 L100 176",
+           "fill": "",
+           "stroke": "#fc0",
+           "strokeWidth": 3,
+           "strokeDash": [
+            239.76104167282426,
+            239.76104167282426
+           ],
+           "opacity": 1,
+           "hit": false,
+           "animation": {
+            "durationMs": 850,
+            "startMs": 1700000000000,
+            "loop": false,
+            "keyframes": [
+             {
+              "at": 0,
+              "opacity": 0,
+              "strokeDashOffset": 239.76104167282426
+             },
+             {
+              "at": 0.399,
+              "opacity": 0,
+              "strokeDashOffset": 239.76104167282426
+             },
+             {
+              "at": 0.4,
+              "opacity": 1,
+              "strokeDashOffset": 239.76104167282426
+             },
+             {
+              "at": 0.8,
+              "opacity": 1,
+              "strokeDashOffset": 0
+             },
+             {
+              "at": 1,
+              "opacity": 1,
+              "strokeDashOffset": 0
+             }
+            ]
+           }
+          },
+          {
+           "type": "draw-shape",
+           "id": "o-arc-glow",
+           "shape": "arc",
+           "anchor": "top-left",
+           "position": {
+            "x": 22.5,
+            "y": 22.5,
+            "z": 3
+           },
+           "width": 155,
+           "height": 155,
+           "startAngle": -1.5707963267948966,
+           "sweep": 3.141592653589793,
+           "thickness": 3,
+           "fill": "#fc0",
+           "material": null,
+           "opacity": 1,
+           "hit": false,
+           "animation": {
+            "durationMs": 850,
+            "startMs": 1700000000000,
+            "loop": false,
+            "keyframes": [
+             {
+              "at": 0,
+              "opacity": 0
+             },
+             {
+              "at": 0.8,
+              "opacity": 0
+             },
+             {
+              "at": 1,
+              "opacity": 1
+             }
+            ]
+           }
+          },
+          {
+           "type": "draw-shape",
+           "id": "o-station-a",
+           "shape": "ellipse",
+           "anchor": "top-left",
+           "position": {
+            "x": 100,
+            "y": 24,
+            "z": 3
+           },
+           "radiusX": 11,
+           "radiusY": 11,
+           "fill": null,
+           "stroke": null,
+           "strokeWidth": null,
+           "shadow": null,
+           "spring": null,
+           "opacity": 1,
+           "hit": true,
+           "semantic": {
+            "role": "button",
+            "labelledBy": "o-label-a",
+            "disabled": false,
+            "order": 0,
+            "focused": false
+           },
+           "animation": null
+          },
+          {
+           "type": "draw-shape",
+           "id": "o-station-b",
+           "shape": "ellipse",
+           "anchor": "top-left",
+           "position": {
+            "x": 176,
+            "y": 100,
+            "z": 3
+           },
+           "radiusX": 11,
+           "radiusY": 11,
+           "fill": null,
+           "stroke": null,
+           "strokeWidth": null,
+           "shadow": null,
+           "spring": null,
+           "opacity": 1,
+           "hit": true,
+           "semantic": {
+            "role": "button",
+            "labelledBy": "",
+            "disabled": false,
+            "order": 1,
+            "focused": false
+           },
+           "animation": null
+          },
+          {
+           "type": "draw-shape",
+           "id": "o-station-c",
+           "shape": "ellipse",
+           "anchor": "top-left",
+           "position": {
+            "x": 100,
+            "y": 176,
+            "z": 3
+           },
+           "radiusX": 11,
+           "radiusY": 11,
+           "fill": null,
+           "stroke": null,
+           "strokeWidth": null,
+           "shadow": null,
+           "spring": null,
+           "opacity": 1,
+           "hit": true,
+           "semantic": {
+            "role": "button",
+            "labelledBy": "o-label-c",
+            "disabled": false,
+            "order": 2,
+            "focused": false
+           },
+           "animation": {
+            "durationMs": 850,
+            "startMs": 1700000000000,
+            "loop": false,
+            "keyframes": [
+             {
+              "at": 0,
+              "radiusX": 11,
+              "radiusY": 11
+             },
+             {
+              "at": 0.799,
+              "radiusX": 11,
+              "radiusY": 11
+             },
+             {
+              "at": 0.8,
+              "radiusX": 9.35,
+              "radiusY": 9.35
+             },
+             {
+              "at": 0.9,
+              "radiusX": 12.649999999999999,
+              "radiusY": 12.649999999999999
+             },
+             {
+              "at": 1,
+              "radiusX": 11,
+              "radiusY": 11
+             }
+            ]
+           }
+          },
+          {
+           "type": "draw-shape",
+           "id": "o-station-d",
+           "shape": "ellipse",
+           "anchor": "top-left",
+           "position": {
+            "x": 24,
+            "y": 100.00000000000001,
+            "z": 3
+           },
+           "radiusX": 11,
+           "radiusY": 11,
+           "fill": null,
+           "stroke": null,
+           "strokeWidth": null,
+           "shadow": null,
+           "spring": null,
+           "opacity": 1,
+           "hit": true,
+           "semantic": {
+            "role": "button",
+            "labelledBy": "",
+            "disabled": false,
+            "order": 3,
+            "focused": false
+           },
+           "animation": null
+          },
+          {
+           "type": "draw-shape",
+           "id": "o-beat-event",
+           "shape": "ellipse",
+           "anchor": "top-left",
+           "position": {
+            "x": 100,
+            "y": 24,
+            "z": 3
+           },
+           "radiusX": 5.5,
+           "radiusY": 5.5,
+           "fill": null,
+           "opacity": 0,
+           "hit": false,
+           "animation": {
+            "durationMs": 850,
+            "startMs": 1700000000000,
+            "loop": false,
+            "keyframes": [
+             {
+              "at": 0,
+              "opacity": 1,
+              "radiusX": 5.5,
+              "radiusY": 5.5
+             },
+             {
+              "at": 0.2,
+              "opacity": 0,
+              "radiusX": 10.45,
+              "radiusY": 10.45
+             },
+             {
+              "at": 1,
+              "opacity": 0,
+              "radiusX": 10.45,
+              "radiusY": 10.45
+             }
+            ]
+           }
+          },
+          {
+           "type": "draw-shape",
+           "id": "o-beat-guard",
+           "shape": "path",
+           "anchor": "top-left",
+           "position": {
+            "x": 0,
+            "y": 0,
+            "z": 3
+           },
+           "d": "M104.13751644708168 31.124162744470908 L104.97701253779391 17.149355185378056",
+           "fill": "",
+           "stroke": null,
+           "strokeWidth": null,
+           "opacity": 0.35,
+           "hit": false,
+           "animation": {
+            "durationMs": 850,
+            "startMs": 1700000000000,
+            "loop": false,
+            "keyframes": [
+             {
+              "at": 0,
+              "opacity": 0
+             },
+             {
+              "at": 0.2,
+              "opacity": 0
+             },
+             {
+              "at": 0.3,
+              "opacity": 1
+             },
+             {
+              "at": 0.4,
+              "opacity": 0.35
+             },
+             {
+              "at": 1,
+              "opacity": 0.35
+             }
+            ]
+           }
+          },
+          {
+           "type": "draw-shape",
+           "id": "o-beat-effects",
+           "shape": "ellipse",
+           "anchor": "top-left",
+           "position": {
+            "x": 100,
+            "y": 176,
+            "z": 3
+           },
+           "radiusX": 11,
+           "radiusY": 11,
+           "fill": "",
+           "stroke": null,
+           "strokeWidth": null,
+           "opacity": 0,
+           "hit": false,
+           "animation": {
+            "durationMs": 850,
+            "startMs": 1700000000000,
+            "loop": false,
+            "keyframes": [
+             {
+              "at": 0,
+              "opacity": 0,
+              "radiusX": 11,
+              "radiusY": 11
+             },
+             {
+              "at": 0.599,
+              "opacity": 0,
+              "radiusX": 11,
+              "radiusY": 11
+             },
+             {
+              "at": 0.6,
+              "opacity": 0.8,
+              "radiusX": 11,
+              "radiusY": 11
+             },
+             {
+              "at": 0.8,
+              "opacity": 0,
+              "radiusX": 28.6,
+              "radiusY": 28.6
+             },
+             {
+              "at": 1,
+              "opacity": 0,
+              "radiusX": 28.6,
+              "radiusY": 28.6
+             }
+            ]
+           }
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

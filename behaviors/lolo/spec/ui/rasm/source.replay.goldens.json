@@ -1,0 +1,1676 @@
+{
+ "atom": "../ui/rasm/atoms/std-rasm-source.lolo",
+ "trait": "RasmSource",
+ "cases": [
+  {
+   "id": "described-keeps-the-source-the-ranges-and-the-transitions",
+   "config": {
+    "arrivedLabel": "source.arrived",
+    "leavesLabel": "source.leaves"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "entity": {
+      "id": "s"
+     },
+     "event": "SOURCE_DESCRIBED",
+     "payload": {
+      "result": {
+       "machine": {
+        "stateMachine": {
+         "states": [
+          {
+           "name": "a",
+           "isInitial": true
+          },
+          {
+           "name": "b",
+           "isInitial": false
+          }
+         ],
+         "transitions": [
+          {
+           "from": "a",
+           "to": "b",
+           "event": "GO"
+          },
+          {
+           "from": "b",
+           "to": "a",
+           "event": "BACK"
+          },
+          {
+           "from": "b",
+           "to": "b",
+           "event": "STAY"
+          }
+         ]
+        }
+       },
+       "source": {
+        "text": "trait Demo {\n  state a {\n    GO -> b\n      (emit MOVED)\n  }\n  state b {\n    BACK -> a\n    STAY -> b\n  }\n}",
+        "transitions": [
+         {
+          "index": 0,
+          "start": 3,
+          "end": 4
+         },
+         {
+          "index": 1,
+          "start": 7,
+          "end": 7
+         },
+         {
+          "index": 2,
+          "start": 8,
+          "end": 8
+         }
+        ]
+       }
+      }
+     },
+     "expect": {
+      "state": "ready",
+      "entity": {
+       "text": "trait Demo {\n  state a {\n    GO -> b\n      (emit MOVED)\n  }\n  state b {\n    BACK -> a\n    STAY -> b\n  }\n}",
+       "ranges": [
+        {
+         "index": 0,
+         "start": 3,
+         "end": 4
+        },
+        {
+         "index": 1,
+         "start": 7,
+         "end": 7
+        },
+        {
+         "index": 2,
+         "start": 8,
+         "end": 8
+        }
+       ],
+       "transitions": [
+        {
+         "from": "a",
+         "to": "b",
+         "event": "GO"
+        },
+        {
+         "from": "b",
+         "to": "a",
+         "event": "BACK"
+        },
+        {
+         "from": "b",
+         "to": "b",
+         "event": "STAY"
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "toggle-turns-the-card-over-and-announces-it",
+   "config": {
+    "arrivedLabel": "source.arrived",
+    "leavesLabel": "source.leaves"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "entity": {
+      "id": "s",
+      "rect": {
+       "x": 0,
+       "y": 0,
+       "w": 600,
+       "h": 400
+      },
+      "looks": {
+       "stack/source/idle": {
+        "fill": "#ffffff"
+       },
+       "text/code/idle": {
+        "textColor": "#111111",
+        "font": "400 13px monospace"
+       },
+       "text/code/active": {
+        "textColor": "#0055ff",
+        "font": "400 13px monospace"
+       }
+      },
+      "text": "trait Demo {\n  state a {\n    GO -> b\n      (emit MOVED)\n  }\n  state b {\n    BACK -> a\n    STAY -> b\n  }\n}",
+      "ranges": [
+       {
+        "index": 0,
+        "start": 3,
+        "end": 4
+       },
+       {
+        "index": 1,
+        "start": 7,
+        "end": 7
+       },
+       {
+        "index": 2,
+        "start": 8,
+        "end": 8
+       }
+      ],
+      "transitions": [
+       {
+        "from": "a",
+        "to": "b",
+        "event": "GO"
+       },
+       {
+        "from": "b",
+        "to": "a",
+        "event": "BACK"
+       },
+       {
+        "from": "b",
+        "to": "b",
+        "event": "STAY"
+       }
+      ],
+      "state": "b",
+      "from": "a",
+      "event": "GO"
+     },
+     "event": "SOURCE_TOGGLE",
+     "payload": {},
+     "expect": {
+      "entity": {
+       "shown": true
+      },
+      "emits": [
+       {
+        "event": "SOURCE_SHOWN",
+        "payload": {
+         "shown": true
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "shown-paints-the-arrived-transition-hot-and-the-leaving-ones-plain",
+   "config": {
+    "arrivedLabel": "source.arrived",
+    "leavesLabel": "source.leaves"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "entity": {
+      "id": "s",
+      "rect": {
+       "x": 0,
+       "y": 0,
+       "w": 600,
+       "h": 400
+      },
+      "looks": {
+       "stack/source/idle": {
+        "fill": "#ffffff"
+       },
+       "text/code/idle": {
+        "textColor": "#111111",
+        "font": "400 13px monospace"
+       },
+       "text/code/active": {
+        "textColor": "#0055ff",
+        "font": "400 13px monospace"
+       }
+      },
+      "text": "trait Demo {\n  state a {\n    GO -> b\n      (emit MOVED)\n  }\n  state b {\n    BACK -> a\n    STAY -> b\n  }\n}",
+      "ranges": [
+       {
+        "index": 0,
+        "start": 3,
+        "end": 4
+       },
+       {
+        "index": 1,
+        "start": 7,
+        "end": 7
+       },
+       {
+        "index": 2,
+        "start": 8,
+        "end": 8
+       }
+      ],
+      "transitions": [
+       {
+        "from": "a",
+        "to": "b",
+        "event": "GO"
+       },
+       {
+        "from": "b",
+        "to": "a",
+        "event": "BACK"
+       },
+       {
+        "from": "b",
+        "to": "b",
+        "event": "STAY"
+       }
+      ],
+      "state": "b",
+      "from": "a",
+      "event": "GO",
+      "shown": true
+     },
+     "event": "SOURCE_PAINT",
+     "payload": {
+      "n": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RASM_EXTENT",
+        "payload": {
+         "id": "source",
+         "w": 600,
+         "h": 187.5
+        }
+       },
+       {
+        "event": "RASM_PAINT",
+        "payload": {
+         "id": "source",
+         "z": 6,
+         "nodes": [
+          {
+           "type": "draw-shape",
+           "shape": "rect",
+           "id": "source-card",
+           "anchor": "top-left",
+           "position": {
+            "x": 0,
+            "y": 0,
+            "z": 6
+           },
+           "width": 600,
+           "height": 400,
+           "fill": "#ffffff",
+           "stroke": null,
+           "strokeWidth": null,
+           "corners": null,
+           "shadow": null,
+           "backdrop": null,
+           "material": null,
+           "hit": false,
+           "animation": {
+            "durationMs": 420,
+            "loop": false,
+            "startMs": 0,
+            "keyframes": [
+             {
+              "at": 0,
+              "width": 0,
+              "position": {
+               "x": 300
+              }
+             },
+             {
+              "at": 1,
+              "width": 600,
+              "position": {
+               "x": 0
+              }
+             }
+            ]
+           }
+          },
+          {
+           "type": "draw-text",
+           "id": "source-gap-0",
+           "text": "",
+           "position": {
+            "x": 0,
+            "y": 0,
+            "z": 6
+           },
+           "anchor": "top-left",
+           "align": "left",
+           "baseline": "top",
+           "color": "rgba(0,0,0,0)",
+           "font": "400 15px monospace",
+           "hit": false
+          },
+          {
+           "type": "draw-text",
+           "id": "source-line-1",
+           "text": "GO -> b",
+           "position": {
+            "x": 24,
+            "y": 47.25,
+            "z": 7
+           },
+           "anchor": "top-left",
+           "align": "left",
+           "baseline": "top",
+           "color": "#0055ff",
+           "font": "400 15px monospace",
+           "hit": false,
+           "animation": {
+            "durationMs": 276,
+            "loop": false,
+            "startMs": 168,
+            "keyframes": [
+             {
+              "at": 0,
+              "opacity": 0
+             },
+             {
+              "at": 0.08695652173913043,
+              "opacity": 0
+             },
+             {
+              "at": 1,
+              "opacity": 1
+             }
+            ]
+           }
+          },
+          {
+           "type": "draw-text",
+           "id": "source-line-2",
+           "text": "  (emit MOVED)",
+           "position": {
+            "x": 24,
+            "y": 70.5,
+            "z": 7
+           },
+           "anchor": "top-left",
+           "align": "left",
+           "baseline": "top",
+           "color": "#0055ff",
+           "font": "400 15px monospace",
+           "hit": false,
+           "animation": {
+            "durationMs": 300,
+            "loop": false,
+            "startMs": 168,
+            "keyframes": [
+             {
+              "at": 0,
+              "opacity": 0
+             },
+             {
+              "at": 0.16,
+              "opacity": 0
+             },
+             {
+              "at": 1,
+              "opacity": 1
+             }
+            ]
+           }
+          },
+          {
+           "type": "draw-text",
+           "id": "source-gap-3",
+           "text": "",
+           "position": {
+            "x": 0,
+            "y": 0,
+            "z": 6
+           },
+           "anchor": "top-left",
+           "align": "left",
+           "baseline": "top",
+           "color": "rgba(0,0,0,0)",
+           "font": "400 15px monospace",
+           "hit": false
+          },
+          {
+           "type": "draw-text",
+           "id": "source-line-4",
+           "text": "BACK -> a",
+           "position": {
+            "x": 24,
+            "y": 117,
+            "z": 7
+           },
+           "anchor": "top-left",
+           "align": "left",
+           "baseline": "top",
+           "color": "#111111",
+           "font": "400 15px monospace",
+           "hit": false,
+           "animation": {
+            "durationMs": 348,
+            "loop": false,
+            "startMs": 168,
+            "keyframes": [
+             {
+              "at": 0,
+              "opacity": 0
+             },
+             {
+              "at": 0.27586206896551724,
+              "opacity": 0
+             },
+             {
+              "at": 1,
+              "opacity": 1
+             }
+            ]
+           }
+          },
+          {
+           "type": "draw-text",
+           "id": "source-line-5",
+           "text": "STAY -> b",
+           "position": {
+            "x": 24,
+            "y": 140.25,
+            "z": 7
+           },
+           "anchor": "top-left",
+           "align": "left",
+           "baseline": "top",
+           "color": "#111111",
+           "font": "400 15px monospace",
+           "hit": false,
+           "animation": {
+            "durationMs": 372,
+            "loop": false,
+            "startMs": 168,
+            "keyframes": [
+             {
+              "at": 0,
+              "opacity": 0
+             },
+             {
+              "at": 0.3225806451612903,
+              "opacity": 0
+             },
+             {
+              "at": 1,
+              "opacity": 1
+             }
+            ]
+           }
+          }
+         ],
+         "texts": [
+          {
+           "id": "source-caption-0",
+           "key": "source.arrived",
+           "x": 24,
+           "y": 24,
+           "z": 7,
+           "align": "left",
+           "baseline": "top",
+           "color": "#0055ff",
+           "font": "600 12px sans-serif",
+           "role": "heading",
+           "animation": {
+            "durationMs": 420,
+            "loop": false,
+            "startMs": 168,
+            "keyframes": [
+             {
+              "at": 0,
+              "opacity": 0
+             },
+             {
+              "at": 1,
+              "opacity": 0.8
+             }
+            ]
+           }
+          },
+          {
+           "id": "source-caption-3",
+           "key": "source.leaves",
+           "x": 24,
+           "y": 93.75,
+           "z": 7,
+           "align": "left",
+           "baseline": "top",
+           "color": "#0055ff",
+           "font": "600 12px sans-serif",
+           "role": "heading",
+           "animation": {
+            "durationMs": 420,
+            "loop": false,
+            "startMs": 168,
+            "keyframes": [
+             {
+              "at": 0,
+              "opacity": 0
+             },
+             {
+              "at": 1,
+              "opacity": 0.8
+             }
+            ]
+           }
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-before-any-move-only-the-leaving-transitions-show",
+   "config": {
+    "arrivedLabel": "source.arrived",
+    "leavesLabel": "source.leaves"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "entity": {
+      "id": "s",
+      "rect": {
+       "x": 0,
+       "y": 0,
+       "w": 600,
+       "h": 400
+      },
+      "looks": {
+       "stack/source/idle": {
+        "fill": "#ffffff"
+       },
+       "text/code/idle": {
+        "textColor": "#111111",
+        "font": "400 13px monospace"
+       },
+       "text/code/active": {
+        "textColor": "#0055ff",
+        "font": "400 13px monospace"
+       }
+      },
+      "text": "trait Demo {\n  state a {\n    GO -> b\n      (emit MOVED)\n  }\n  state b {\n    BACK -> a\n    STAY -> b\n  }\n}",
+      "ranges": [
+       {
+        "index": 0,
+        "start": 3,
+        "end": 4
+       },
+       {
+        "index": 1,
+        "start": 7,
+        "end": 7
+       },
+       {
+        "index": 2,
+        "start": 8,
+        "end": 8
+       }
+      ],
+      "transitions": [
+       {
+        "from": "a",
+        "to": "b",
+        "event": "GO"
+       },
+       {
+        "from": "b",
+        "to": "a",
+        "event": "BACK"
+       },
+       {
+        "from": "b",
+        "to": "b",
+        "event": "STAY"
+       }
+      ],
+      "state": "a",
+      "from": "",
+      "event": "",
+      "shown": true
+     },
+     "event": "SOURCE_PAINT",
+     "payload": {
+      "n": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RASM_EXTENT",
+        "payload": {
+         "id": "source",
+         "w": 600,
+         "h": 117.75
+        }
+       },
+       {
+        "event": "RASM_PAINT",
+        "payload": {
+         "id": "source",
+         "z": 6,
+         "nodes": [
+          {
+           "type": "draw-shape",
+           "shape": "rect",
+           "id": "source-card",
+           "anchor": "top-left",
+           "position": {
+            "x": 0,
+            "y": 0,
+            "z": 6
+           },
+           "width": 600,
+           "height": 400,
+           "fill": "#ffffff",
+           "stroke": null,
+           "strokeWidth": null,
+           "corners": null,
+           "shadow": null,
+           "backdrop": null,
+           "material": null,
+           "hit": false,
+           "animation": {
+            "durationMs": 420,
+            "loop": false,
+            "startMs": 0,
+            "keyframes": [
+             {
+              "at": 0,
+              "width": 0,
+              "position": {
+               "x": 300
+              }
+             },
+             {
+              "at": 1,
+              "width": 600,
+              "position": {
+               "x": 0
+              }
+             }
+            ]
+           }
+          },
+          {
+           "type": "draw-text",
+           "id": "source-gap-0",
+           "text": "",
+           "position": {
+            "x": 0,
+            "y": 0,
+            "z": 6
+           },
+           "anchor": "top-left",
+           "align": "left",
+           "baseline": "top",
+           "color": "rgba(0,0,0,0)",
+           "font": "400 15px monospace",
+           "hit": false
+          },
+          {
+           "type": "draw-text",
+           "id": "source-line-1",
+           "text": "GO -> b",
+           "position": {
+            "x": 24,
+            "y": 47.25,
+            "z": 7
+           },
+           "anchor": "top-left",
+           "align": "left",
+           "baseline": "top",
+           "color": "#111111",
+           "font": "400 15px monospace",
+           "hit": false,
+           "animation": {
+            "durationMs": 276,
+            "loop": false,
+            "startMs": 168,
+            "keyframes": [
+             {
+              "at": 0,
+              "opacity": 0
+             },
+             {
+              "at": 0.08695652173913043,
+              "opacity": 0
+             },
+             {
+              "at": 1,
+              "opacity": 1
+             }
+            ]
+           }
+          },
+          {
+           "type": "draw-text",
+           "id": "source-line-2",
+           "text": "  (emit MOVED)",
+           "position": {
+            "x": 24,
+            "y": 70.5,
+            "z": 7
+           },
+           "anchor": "top-left",
+           "align": "left",
+           "baseline": "top",
+           "color": "#111111",
+           "font": "400 15px monospace",
+           "hit": false,
+           "animation": {
+            "durationMs": 300,
+            "loop": false,
+            "startMs": 168,
+            "keyframes": [
+             {
+              "at": 0,
+              "opacity": 0
+             },
+             {
+              "at": 0.16,
+              "opacity": 0
+             },
+             {
+              "at": 1,
+              "opacity": 1
+             }
+            ]
+           }
+          }
+         ],
+         "texts": [
+          {
+           "id": "source-caption-0",
+           "key": "source.leaves",
+           "x": 24,
+           "y": 24,
+           "z": 7,
+           "align": "left",
+           "baseline": "top",
+           "color": "#0055ff",
+           "font": "600 12px sans-serif",
+           "role": "heading",
+           "animation": {
+            "durationMs": 420,
+            "loop": false,
+            "startMs": 168,
+            "keyframes": [
+             {
+              "at": 0,
+              "opacity": 0
+             },
+             {
+              "at": 1,
+              "opacity": 0.8
+             }
+            ]
+           }
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "facing-away-paints-nothing",
+   "config": {
+    "arrivedLabel": "source.arrived",
+    "leavesLabel": "source.leaves"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "entity": {
+      "id": "s",
+      "rect": {
+       "x": 0,
+       "y": 0,
+       "w": 600,
+       "h": 400
+      },
+      "looks": {
+       "stack/source/idle": {
+        "fill": "#ffffff"
+       },
+       "text/code/idle": {
+        "textColor": "#111111",
+        "font": "400 13px monospace"
+       },
+       "text/code/active": {
+        "textColor": "#0055ff",
+        "font": "400 13px monospace"
+       }
+      },
+      "text": "trait Demo {\n  state a {\n    GO -> b\n      (emit MOVED)\n  }\n  state b {\n    BACK -> a\n    STAY -> b\n  }\n}",
+      "ranges": [
+       {
+        "index": 0,
+        "start": 3,
+        "end": 4
+       },
+       {
+        "index": 1,
+        "start": 7,
+        "end": 7
+       },
+       {
+        "index": 2,
+        "start": 8,
+        "end": 8
+       }
+      ],
+      "transitions": [
+       {
+        "from": "a",
+        "to": "b",
+        "event": "GO"
+       },
+       {
+        "from": "b",
+        "to": "a",
+        "event": "BACK"
+       },
+       {
+        "from": "b",
+        "to": "b",
+        "event": "STAY"
+       }
+      ],
+      "state": "b",
+      "shown": false
+     },
+     "event": "SOURCE_PAINT",
+     "payload": {
+      "n": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RASM_PAINT",
+        "payload": {
+         "id": "source",
+         "nodes": [],
+         "texts": []
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "hide-turns-a-shown-card-back",
+   "config": {
+    "arrivedLabel": "source.arrived",
+    "leavesLabel": "source.leaves"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "entity": {
+      "id": "s",
+      "rect": {
+       "x": 0,
+       "y": 0,
+       "w": 600,
+       "h": 400
+      },
+      "looks": {
+       "stack/source/idle": {
+        "fill": "#ffffff"
+       },
+       "text/code/idle": {
+        "textColor": "#111111",
+        "font": "400 13px monospace"
+       },
+       "text/code/active": {
+        "textColor": "#0055ff",
+        "font": "400 13px monospace"
+       }
+      },
+      "text": "trait Demo {\n  state a {\n    GO -> b\n      (emit MOVED)\n  }\n  state b {\n    BACK -> a\n    STAY -> b\n  }\n}",
+      "ranges": [
+       {
+        "index": 0,
+        "start": 3,
+        "end": 4
+       },
+       {
+        "index": 1,
+        "start": 7,
+        "end": 7
+       },
+       {
+        "index": 2,
+        "start": 8,
+        "end": 8
+       }
+      ],
+      "transitions": [
+       {
+        "from": "a",
+        "to": "b",
+        "event": "GO"
+       },
+       {
+        "from": "b",
+        "to": "a",
+        "event": "BACK"
+       },
+       {
+        "from": "b",
+        "to": "b",
+        "event": "STAY"
+       }
+      ],
+      "shown": true
+     },
+     "event": "SOURCE_HIDE",
+     "payload": {},
+     "expect": {
+      "entity": {
+       "shown": false
+      },
+      "emits": [
+       {
+        "event": "SOURCE_SHOWN",
+        "payload": {
+         "shown": false
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-hide-on-a-card-facing-away-announces-nothing",
+   "config": {
+    "arrivedLabel": "source.arrived",
+    "leavesLabel": "source.leaves"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "entity": {
+      "id": "s",
+      "rect": {
+       "x": 0,
+       "y": 0,
+       "w": 600,
+       "h": 400
+      },
+      "looks": {
+       "stack/source/idle": {
+        "fill": "#ffffff"
+       },
+       "text/code/idle": {
+        "textColor": "#111111",
+        "font": "400 13px monospace"
+       },
+       "text/code/active": {
+        "textColor": "#0055ff",
+        "font": "400 13px monospace"
+       }
+      },
+      "text": "trait Demo {\n  state a {\n    GO -> b\n      (emit MOVED)\n  }\n  state b {\n    BACK -> a\n    STAY -> b\n  }\n}",
+      "ranges": [
+       {
+        "index": 0,
+        "start": 3,
+        "end": 4
+       },
+       {
+        "index": 1,
+        "start": 7,
+        "end": 7
+       },
+       {
+        "index": 2,
+        "start": 8,
+        "end": 8
+       }
+      ],
+      "transitions": [
+       {
+        "from": "a",
+        "to": "b",
+        "event": "GO"
+       },
+       {
+        "from": "b",
+        "to": "a",
+        "event": "BACK"
+       },
+       {
+        "from": "b",
+        "to": "b",
+        "event": "STAY"
+       }
+      ],
+      "shown": false
+     },
+     "event": "SOURCE_HIDE",
+     "payload": {},
+     "expect": {
+      "entity": {
+       "shown": false
+      },
+      "neverEmits": [
+       "SOURCE_SHOWN"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "source-at-follows-the-machine",
+   "config": {
+    "arrivedLabel": "source.arrived",
+    "leavesLabel": "source.leaves"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "entity": {
+      "id": "s",
+      "rect": {
+       "x": 0,
+       "y": 0,
+       "w": 600,
+       "h": 400
+      },
+      "looks": {
+       "stack/source/idle": {
+        "fill": "#ffffff"
+       },
+       "text/code/idle": {
+        "textColor": "#111111",
+        "font": "400 13px monospace"
+       },
+       "text/code/active": {
+        "textColor": "#0055ff",
+        "font": "400 13px monospace"
+       }
+      },
+      "text": "trait Demo {\n  state a {\n    GO -> b\n      (emit MOVED)\n  }\n  state b {\n    BACK -> a\n    STAY -> b\n  }\n}",
+      "ranges": [
+       {
+        "index": 0,
+        "start": 3,
+        "end": 4
+       },
+       {
+        "index": 1,
+        "start": 7,
+        "end": 7
+       },
+       {
+        "index": 2,
+        "start": 8,
+        "end": 8
+       }
+      ],
+      "transitions": [
+       {
+        "from": "a",
+        "to": "b",
+        "event": "GO"
+       },
+       {
+        "from": "b",
+        "to": "a",
+        "event": "BACK"
+       },
+       {
+        "from": "b",
+        "to": "b",
+        "event": "STAY"
+       }
+      ],
+      "shown": true
+     },
+     "event": "SOURCE_AT",
+     "payload": {
+      "state": "b",
+      "from": "a",
+      "event": "GO"
+     },
+     "expect": {
+      "entity": {
+       "state": "b",
+       "from": "a",
+       "event": "GO"
+      },
+      "emits": [
+       {
+        "event": "SOURCE_PAINT"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-place-for-another-id-changes-nothing",
+   "config": {
+    "arrivedLabel": "source.arrived",
+    "leavesLabel": "source.leaves"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "entity": {
+      "id": "s",
+      "rect": null,
+      "looks": {
+       "stack/source/idle": {
+        "fill": "#ffffff"
+       },
+       "text/code/idle": {
+        "textColor": "#111111",
+        "font": "400 13px monospace"
+       },
+       "text/code/active": {
+        "textColor": "#0055ff",
+        "font": "400 13px monospace"
+       }
+      },
+      "text": "trait Demo {\n  state a {\n    GO -> b\n      (emit MOVED)\n  }\n  state b {\n    BACK -> a\n    STAY -> b\n  }\n}",
+      "ranges": [
+       {
+        "index": 0,
+        "start": 3,
+        "end": 4
+       },
+       {
+        "index": 1,
+        "start": 7,
+        "end": 7
+       },
+       {
+        "index": 2,
+        "start": 8,
+        "end": 8
+       }
+      ],
+      "transitions": [
+       {
+        "from": "a",
+        "to": "b",
+        "event": "GO"
+       },
+       {
+        "from": "b",
+        "to": "a",
+        "event": "BACK"
+       },
+       {
+        "from": "b",
+        "to": "b",
+        "event": "STAY"
+       }
+      ]
+     },
+     "event": "RASM_PLACE",
+     "payload": {
+      "placed": [
+       {
+        "id": "other",
+        "rect": {
+         "x": 0,
+         "y": 0,
+         "w": 600,
+         "h": 400
+        }
+       }
+      ]
+     },
+     "expect": {
+      "entity": {
+       "rect": null
+      },
+      "neverEmits": [
+       "SOURCE_PAINT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-band-in-the-active-code-look-is-painted-behind-each-arrived-line",
+   "config": {
+    "arrivedLabel": "source.arrived",
+    "leavesLabel": "source.leaves"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "entity": {
+      "id": "s",
+      "rect": {
+       "x": 0,
+       "y": 0,
+       "w": 600,
+       "h": 400
+      },
+      "looks": {
+       "stack/source/idle": {
+        "fill": "#ffffff"
+       },
+       "text/code/idle": {
+        "textColor": "#111111",
+        "font": "400 13px monospace"
+       },
+       "text/code/active": {
+        "textColor": "#0055ff",
+        "font": "400 13px monospace",
+        "fill": "#dde6ff"
+       }
+      },
+      "text": "trait Demo {\n  state a {\n    GO -> b\n      (emit MOVED)\n  }\n  state b {\n    BACK -> a\n    STAY -> b\n  }\n}",
+      "ranges": [
+       {
+        "index": 0,
+        "start": 3,
+        "end": 4
+       },
+       {
+        "index": 1,
+        "start": 7,
+        "end": 7
+       },
+       {
+        "index": 2,
+        "start": 8,
+        "end": 8
+       }
+      ],
+      "transitions": [
+       {
+        "from": "a",
+        "to": "b",
+        "event": "GO"
+       },
+       {
+        "from": "b",
+        "to": "a",
+        "event": "BACK"
+       },
+       {
+        "from": "b",
+        "to": "b",
+        "event": "STAY"
+       }
+      ],
+      "state": "b",
+      "from": "a",
+      "event": "GO",
+      "shown": true
+     },
+     "event": "SOURCE_PAINT",
+     "payload": {
+      "n": 1
+     },
+     "expect": {
+      "emits": [
+       {
+        "event": "RASM_PAINT",
+        "payload": {
+         "id": "source",
+         "z": 6,
+         "nodes": [
+          {
+           "type": "draw-shape",
+           "shape": "rect",
+           "id": "source-card",
+           "anchor": "top-left",
+           "position": {
+            "x": 0,
+            "y": 0,
+            "z": 6
+           },
+           "width": 600,
+           "height": 400,
+           "fill": "#ffffff",
+           "stroke": null,
+           "strokeWidth": null,
+           "corners": null,
+           "shadow": null,
+           "backdrop": null,
+           "material": null,
+           "hit": false,
+           "animation": {
+            "durationMs": 420,
+            "loop": false,
+            "startMs": 0,
+            "keyframes": [
+             {
+              "at": 0,
+              "width": 0,
+              "position": {
+               "x": 300
+              }
+             },
+             {
+              "at": 1,
+              "width": 600,
+              "position": {
+               "x": 0
+              }
+             }
+            ]
+           }
+          },
+          {
+           "type": "draw-shape",
+           "shape": "rect",
+           "id": "source-band-1",
+           "anchor": "top-left",
+           "position": {
+            "x": 12,
+            "y": 44.46,
+            "z": 6
+           },
+           "width": 576,
+           "height": 23.25,
+           "fill": "#dde6ff",
+           "material": null,
+           "hit": false,
+           "animation": {
+            "durationMs": 420,
+            "loop": false,
+            "startMs": 168,
+            "keyframes": [
+             {
+              "at": 0,
+              "opacity": 0
+             },
+             {
+              "at": 1,
+              "opacity": 1
+             }
+            ]
+           }
+          },
+          {
+           "type": "draw-shape",
+           "shape": "rect",
+           "id": "source-band-2",
+           "anchor": "top-left",
+           "position": {
+            "x": 12,
+            "y": 67.71,
+            "z": 6
+           },
+           "width": 576,
+           "height": 23.25,
+           "fill": "#dde6ff",
+           "material": null,
+           "hit": false,
+           "animation": {
+            "durationMs": 420,
+            "loop": false,
+            "startMs": 168,
+            "keyframes": [
+             {
+              "at": 0,
+              "opacity": 0
+             },
+             {
+              "at": 1,
+              "opacity": 1
+             }
+            ]
+           }
+          },
+          {
+           "type": "draw-text",
+           "id": "source-gap-0",
+           "text": "",
+           "position": {
+            "x": 0,
+            "y": 0,
+            "z": 6
+           },
+           "anchor": "top-left",
+           "align": "left",
+           "baseline": "top",
+           "color": "rgba(0,0,0,0)",
+           "font": "400 15px monospace",
+           "hit": false
+          },
+          {
+           "type": "draw-text",
+           "id": "source-line-1",
+           "text": "GO -> b",
+           "position": {
+            "x": 24,
+            "y": 47.25,
+            "z": 7
+           },
+           "anchor": "top-left",
+           "align": "left",
+           "baseline": "top",
+           "color": "#0055ff",
+           "font": "400 15px monospace",
+           "hit": false,
+           "animation": {
+            "durationMs": 276,
+            "loop": false,
+            "startMs": 168,
+            "keyframes": [
+             {
+              "at": 0,
+              "opacity": 0
+             },
+             {
+              "at": 0.08695652173913043,
+              "opacity": 0
+             },
+             {
+              "at": 1,
+              "opacity": 1
+             }
+            ]
+           }
+          },
+          {
+           "type": "draw-text",
+           "id": "source-line-2",
+           "text": "  (emit MOVED)",
+           "position": {
+            "x": 24,
+            "y": 70.5,
+            "z": 7
+           },
+           "anchor": "top-left",
+           "align": "left",
+           "baseline": "top",
+           "color": "#0055ff",
+           "font": "400 15px monospace",
+           "hit": false,
+           "animation": {
+            "durationMs": 300,
+            "loop": false,
+            "startMs": 168,
+            "keyframes": [
+             {
+              "at": 0,
+              "opacity": 0
+             },
+             {
+              "at": 0.16,
+              "opacity": 0
+             },
+             {
+              "at": 1,
+              "opacity": 1
+             }
+            ]
+           }
+          },
+          {
+           "type": "draw-text",
+           "id": "source-gap-3",
+           "text": "",
+           "position": {
+            "x": 0,
+            "y": 0,
+            "z": 6
+           },
+           "anchor": "top-left",
+           "align": "left",
+           "baseline": "top",
+           "color": "rgba(0,0,0,0)",
+           "font": "400 15px monospace",
+           "hit": false
+          },
+          {
+           "type": "draw-text",
+           "id": "source-line-4",
+           "text": "BACK -> a",
+           "position": {
+            "x": 24,
+            "y": 117,
+            "z": 7
+           },
+           "anchor": "top-left",
+           "align": "left",
+           "baseline": "top",
+           "color": "#111111",
+           "font": "400 15px monospace",
+           "hit": false,
+           "animation": {
+            "durationMs": 348,
+            "loop": false,
+            "startMs": 168,
+            "keyframes": [
+             {
+              "at": 0,
+              "opacity": 0
+             },
+             {
+              "at": 0.27586206896551724,
+              "opacity": 0
+             },
+             {
+              "at": 1,
+              "opacity": 1
+             }
+            ]
+           }
+          },
+          {
+           "type": "draw-text",
+           "id": "source-line-5",
+           "text": "STAY -> b",
+           "position": {
+            "x": 24,
+            "y": 140.25,
+            "z": 7
+           },
+           "anchor": "top-left",
+           "align": "left",
+           "baseline": "top",
+           "color": "#111111",
+           "font": "400 15px monospace",
+           "hit": false,
+           "animation": {
+            "durationMs": 372,
+            "loop": false,
+            "startMs": 168,
+            "keyframes": [
+             {
+              "at": 0,
+              "opacity": 0
+             },
+             {
+              "at": 0.3225806451612903,
+              "opacity": 0
+             },
+             {
+              "at": 1,
+              "opacity": 1
+             }
+            ]
+           }
+          }
+         ],
+         "texts": [
+          {
+           "id": "source-caption-0",
+           "key": "source.arrived",
+           "x": 24,
+           "y": 24,
+           "z": 7,
+           "align": "left",
+           "baseline": "top",
+           "color": "#0055ff",
+           "font": "600 12px sans-serif",
+           "role": "heading",
+           "animation": {
+            "durationMs": 420,
+            "loop": false,
+            "startMs": 168,
+            "keyframes": [
+             {
+              "at": 0,
+              "opacity": 0
+             },
+             {
+              "at": 1,
+              "opacity": 0.8
+             }
+            ]
+           }
+          },
+          {
+           "id": "source-caption-3",
+           "key": "source.leaves",
+           "x": 24,
+           "y": 93.75,
+           "z": 7,
+           "align": "left",
+           "baseline": "top",
+           "color": "#0055ff",
+           "font": "600 12px sans-serif",
+           "role": "heading",
+           "animation": {
+            "durationMs": 420,
+            "loop": false,
+            "startMs": 168,
+            "keyframes": [
+             {
+              "at": 0,
+              "opacity": 0
+             },
+             {
+              "at": 1,
+              "opacity": 0.8
+             }
+            ]
+           }
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

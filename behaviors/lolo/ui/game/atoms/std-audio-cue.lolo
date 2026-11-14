@@ -32,7 +32,7 @@ orbital AudioCueOrbital {
         (set @entity.music @config.initialMusic)
         (set @entity.muted @config.initialMuted)
         (set @entity.volume (math/clamp @config.initialVolume 0 1))
-        (render-ui main {
+        (render-ui @config.slot {
           cueSeq: @entity.cueSeq
           cuePlay: (if (object/has @config.manifest @entity.cue) (let ((e (object/get @config.manifest @entity.cue))) { key: @entity.cue, source: (str/concat @config.baseUrl @e.path), volume: (default @e.volume 1), loop: (default @e.loop false), poolSize: (math/max (default @e.poolSize 1) 1), fadeMs: 0 }) { key: "", source: "", volume: 0, loop: false, poolSize: 1, fadeMs: 0 })
           musicPlay: (if (object/has @config.manifest @entity.music) (let ((e (object/get @config.manifest @entity.music))) { key: @entity.music, source: (str/concat @config.baseUrl @e.path), volume: (default @e.volume 1), loop: true, poolSize: 1, fadeMs: (if (= @e.crossfade false) 0 (default @e.crossfadeDurationMs 1500)) }) { key: "", source: "", volume: 0, loop: true, poolSize: 1, fadeMs: @config.stopFadeMs })
@@ -116,6 +116,10 @@ orbital AudioCueOrbital {
         @label "Manifest"
         @description "Sound definitions keyed by logical name — path(s), volume, loop, pooling, autostart, crossfade."
         @tier "domain"
+      slot : slot = main
+        @label "Slot"
+        @description "The slot the headless audio element renders into: another slot than main when main holds a canvas page (a Rasm surface)."
+        @tier "presentation"
       baseUrl : string = ""
         @label "Base Url"
         @description "Prefix prepended to every manifest path."

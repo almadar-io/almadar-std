@@ -14,8 +14,9 @@ type RasmLook = { fill : string, stroke : string, strokeWidth : number, corners 
 type RasmMeasureItem = { id : string!, width : number!, height : number!, lines : number! }
 type RasmTouch = { pointerId : number!, x : number!, y : number! }
 type RasmKeyframe = { at : number!, opacity : number, offsetY : number }
-type RasmAnimation = { durationMs : number!, loop : boolean!, keyframes : [RasmKeyframe]! }
-type RasmText = { id : string!, key : MessageKey!, x : number!, y : number!, z : number!, align : string!, baseline : string!, color : string?, font : string?, spring : RasmSpring?, width : number?, wrap : boolean?, measure : boolean?, role : string?, animation : RasmAnimation? }
+type RasmAnimation = { durationMs : number!, loop : boolean!, keyframes : [RasmKeyframe]!, startMs : number }
+type RasmReveal = { startMs : number!, perGlyphMs : number!, durationMs : number!, offsetY : number }
+type RasmText = { id : string!, key : MessageKey!, x : number!, y : number!, z : number!, align : string!, baseline : string!, color : string?, font : string?, spring : RasmSpring?, width : number?, wrap : boolean?, measure : boolean?, role : string?, animation : RasmAnimation?, reveal : RasmReveal?, locale : string?, maxWidth : number? }
 type RasmPaintEntry = { id : string!, z : number!, nodes : [node]!, texts : [RasmText]! }
 
 orbital RasmSurfaceOrbital {
@@ -25,6 +26,7 @@ orbital RasmSurfaceOrbital {
     looks : Map string RasmLook @description "The announced look table." = {}
     viewW : number @description "The canvas width the layout uses: the config width, then the container's width." = 720
     viewH : number @description "The canvas height: the root's content height plus the margins, or the container's height when fill is on." = 520
+    fillMin : number @description "With fill on, the root's content height: the canvas stays at least this tall, so the page scrolls instead of squeezing the content." = 0
     contentH : number @description "The root's content height: the rootRect height until the root reports its extent." = 520
     root : RasmRect @description "The rect handed to the root child." = { x: 0, y: 0, w: 720, h: 520 }
     dir : "ltr" | "rtl" @description "The reading direction the canvas reported from the page locale." = "ltr"
@@ -71,7 +73,11 @@ orbital RasmSurfaceOrbital {
         (emit RASM_PLACE { placed: [{ id: @config.rootChild, rect: @entity.root }] })
         (set @entity.repaints (+ @entity.repaints 1))
         (emit SURFACE_REPAINT { n: @entity.repaints })
-      RASM_EXTENT -> ready when (or @config.fill (or (!= ?id @config.rootChild) (= ?h @entity.contentH)))
+      RASM_EXTENT -> ready when (and @config.fill (= ?id @config.rootChild) (> (math/abs (- ?h @entity.fillMin)) 1))
+        (set @entity.fillMin ?h)
+        (set @entity.repaints (+ @entity.repaints 1))
+        (emit SURFACE_REPAINT { n: @entity.repaints })
+      RASM_EXTENT -> ready when (not (or (and (not @config.fill) (= ?id @config.rootChild) (!= ?h @entity.contentH)) (and @config.fill (= ?id @config.rootChild) (> (math/abs (- ?h @entity.fillMin)) 1))))
       SURFACE_RESIZE -> ready
         (emit RASM_RESIZE { width: ?width, height: ?height })
       SURFACE_TEXT -> ready
@@ -108,6 +114,7 @@ orbital RasmSurfaceOrbital {
           camera: { mode: "top-down", zoom: 1 }
           pointerMoves: "captured"
           fillContainer: (if @config.fill true "width")
+          minHeight: (math/max @config.minHeight @entity.fillMin)
           worldWidth: @entity.viewW
           worldHeight: @entity.viewH
           resizeEvent: "SURFACE_RESIZE"
@@ -124,7 +131,7 @@ orbital RasmSurfaceOrbital {
           pointerMoveEvent: "POINTER_MOVE"
           measureEvent: "SURFACE_MEASURED"
           keyMap: { Tab: "KEY_NEXT", "Shift+Tab": "KEY_PREVIOUS", Enter: "KEY_ACTIVATE", Space: "KEY_ACTIVATE", ArrowRight: (if (= @entity.dir "rtl") "KEY_DECREASE" "KEY_INCREASE"), ArrowUp: "KEY_INCREASE", ArrowLeft: (if (= @entity.dir "rtl") "KEY_INCREASE" "KEY_DECREASE"), ArrowDown: "KEY_DECREASE", Escape: "KEY_ESCAPE", PageUp: "KEY_PAGE_UP", PageDown: "KEY_PAGE_DOWN", Home: "KEY_HOME", End: "KEY_END" }
-          drawables: (let ((g (object/get @entity.looks "surface/ground/idle" null))) (array/concat (if (= @g null) [] [{ type: draw-shape, shape: "rect", id: (str/concat @config.id ":ground"), position: { x: 0, y: 0 }, anchor: "top-left", width: @entity.viewW, height: @entity.viewH, fill: @g.fill, material: @g.material, spring: @g.spring, hit: false }]) (array/flatten (array/map (array/filter (array/sort (object/values @entity.paints) "z" "asc") (fn e (not (array/includes @entity.hidden @e.id)))) (fn e (array/concat @e.nodes (array/map @e.texts (fn t (let ((said (default (i18n/t @t.key) ""))) { type: draw-text, id: @t.id, text: @said, anchor: "top-left", position: { x: @t.x, y: @t.y, z: @t.z }, align: @t.align, baseline: @t.baseline, color: @t.color, font: @t.font, spring: @t.spring, width: @t.width, wrap: @t.wrap, measure: @t.measure, animation: @t.animation, hit: false, semantic: (if (= @t.role null) null { role: @t.role, name: @said }) })))))))))
+          drawables: (let ((g (object/get @entity.looks "surface/ground/idle" null))) (array/concat (if (= @g null) [] [{ type: draw-shape, shape: "rect", id: (str/concat @config.id ":ground"), position: { x: 0, y: 0 }, anchor: "top-left", width: @entity.viewW, height: @entity.viewH, fill: @g.fill, material: @g.material, spring: @g.spring, hit: false }]) (array/flatten (array/map (array/filter (array/sort (object/values @entity.paints) "z" "asc") (fn e (not (array/includes @entity.hidden @e.id)))) (fn e (array/concat @e.nodes (array/map @e.texts (fn t (let ((said (default (if (= @t.locale null) (i18n/t @t.key) (i18n/t @t.key { locale: (default @t.locale "") })) ""))) { type: draw-text, id: @t.id, text: @said, anchor: "top-left", position: { x: @t.x, y: @t.y, z: @t.z }, align: @t.align, baseline: @t.baseline, color: @t.color, font: @t.font, spring: @t.spring, width: @t.width, wrap: @t.wrap, measure: @t.measure, animation: @t.animation, reveal: @t.reveal, maxWidth: @t.maxWidth, hit: false, semantic: (if (= @t.role null) null { role: @t.role, name: @said }) })))))))))
         })
       POINTER_DOWN -> ready
         (emit RASM_POINTER { kind: "down", id: ?target, x: ?x, y: ?y, index: (default ?index -1) })
@@ -258,7 +265,7 @@ orbital RasmSurfaceOrbital {
       RASM_RESIZE { width : number!  height : number! }
         @description "Re-place the root from the new size."
       RASM_EXTENT { id : string!  w : number!  h : number! }
-        @description "The root's content size: unless fill is on, the canvas height follows it so the page scrolls past a long surface."
+        @description "The root's content size: unless fill is on, the canvas height follows it so the page scrolls past a long surface; with fill on, the canvas is at least that tall."
       SURFACE_RESIZE { width : number!  height : number! }
         @description "Canvas size in CSS pixels."
       SURFACE_TEXT { target : string!  text : string!  composing : boolean! }
@@ -329,6 +336,10 @@ orbital RasmSurfaceOrbital {
       fill : boolean = false
         @label "Fill"
         @description "On, the canvas takes its container's whole box and the root fits inside it. Off (the default), the canvas takes its container's width and the root's content height, so the page scrolls past a long surface."
+        @tier "presentation"
+      minHeight : number = 0
+        @label "Least height"
+        @description "With fill on, the least height in px: a shorter container scrolls instead of squeezing the surface (a stage that needs room for its header, card and stepper)."
         @tier "presentation"
       margin : number = 0
         @label "Margin"

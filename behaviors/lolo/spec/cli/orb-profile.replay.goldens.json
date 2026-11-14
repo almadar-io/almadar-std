@@ -387,295 +387,6 @@
       "now": 1760531445678
     },
     {
-      "id": "with-machine-the-run-reads-heap-cpu-and-goes-in-app",
-      "steps": [
-        {
-          "trait": "OrbProfile",
-          "from": "ready",
-          "event": "PROFILE_CALLED",
-          "payload": {
-            "headers": {},
-            "rawBody": "{\"argv\": [\"launchpad\", \"--heap\", \"--cpu\", \"--machine\", \"full\"], \"cwd\": \"/w\"}"
-          },
-          "entity": {
-            "id": "p"
-          },
-          "expect": {
-            "fired": true,
-            "entity": {
-              "heap": true,
-              "cpu": true,
-              "spa": true,
-              "machine": "full"
-            }
-          }
-        }
-      ],
-      "now": 1760531445678
-    },
-    {
-      "id": "control-a-plain-launchpad-run-keeps-full-loads-and-no-machine",
-      "steps": [
-        {
-          "trait": "OrbProfile",
-          "from": "ready",
-          "event": "PROFILE_CALLED",
-          "payload": {
-            "headers": {},
-            "rawBody": "{\"argv\": [\"launchpad\"], \"cwd\": \"/w\"}"
-          },
-          "entity": {
-            "id": "p"
-          },
-          "expect": {
-            "fired": true,
-            "entity": {
-              "heap": false,
-              "cpu": false,
-              "spa": false,
-              "machine": "off"
-            }
-          }
-        }
-      ],
-      "now": 1760531445678
-    },
-    {
-      "id": "an-in-app-run-loads-the-launchpad-home-once-first",
-      "steps": [
-        {
-          "trait": "OrbProfile",
-          "from": "browsing",
-          "event": "PROFILE_PAGES_LISTED",
-          "payload": {
-            "result": [
-              {
-                "behavior": "almadar-std/a",
-                "topic": "x",
-                "level": "atom",
-                "package": "almadar-std"
-              },
-              {
-                "behavior": "almadar-std/b",
-                "topic": "x",
-                "level": "atom",
-                "package": "almadar-std"
-              }
-            ]
-          },
-          "entity": {
-            "id": "p",
-            "mode": "launchpad",
-            "baseUrl": "http://127.0.0.1:4790",
-            "settleMs": 1500,
-            "spa": true
-          },
-          "expect": {
-            "fired": true,
-            "entity": {
-              "queue": [
-                "almadar-std/a",
-                "almadar-std/b"
-              ],
-              "index": 0
-            },
-            "emits": [
-              {
-                "event": "PROFILE_PAGE_NAVIGATE",
-                "payload": {
-                  "key": "warmup",
-                  "url": "http://127.0.0.1:4790/"
-                }
-              }
-            ],
-            "emitCounts": {
-              "PROFILE_PAGE_NEXT": 0
-            }
-          }
-        }
-      ],
-      "now": 1760531445678
-    },
-    {
-      "id": "control-a-full-load-run-starts-the-first-page-at-once",
-      "steps": [
-        {
-          "trait": "OrbProfile",
-          "from": "browsing",
-          "event": "PROFILE_PAGES_LISTED",
-          "payload": {
-            "result": [
-              {
-                "behavior": "almadar-std/a",
-                "topic": "x",
-                "level": "atom",
-                "package": "almadar-std"
-              },
-              {
-                "behavior": "almadar-std/b",
-                "topic": "x",
-                "level": "atom",
-                "package": "almadar-std"
-              }
-            ]
-          },
-          "entity": {
-            "id": "p",
-            "mode": "launchpad",
-            "baseUrl": "http://127.0.0.1:4790",
-            "settleMs": 1500
-          },
-          "expect": {
-            "fired": true,
-            "emitCounts": {
-              "PROFILE_PAGE_NAVIGATE": 0
-            }
-          }
-        }
-      ],
-      "now": 1760531445678
-    },
-    {
-      "id": "with-the-machine-view-the-home-opens-it-by-its-button",
-      "steps": [
-        {
-          "trait": "OrbProfile",
-          "from": "browsing",
-          "event": "PROFILE_PAGE_LOADED",
-          "payload": {
-            "key": "warmup",
-            "url": "http://127.0.0.1:4790/",
-            "title": "orb"
-          },
-          "entity": {
-            "id": "p",
-            "mode": "launchpad",
-            "baseUrl": "http://127.0.0.1:4790",
-            "settleMs": 1500,
-            "spa": true,
-            "machine": "side"
-          },
-          "expect": {
-            "fired": true,
-            "emits": [
-              {
-                "event": "PROFILE_EVALUATE",
-                "payload": {
-                  "key": "machine",
-                  "expression": "(() => { const b = [...document.querySelectorAll('button')].find(e => (e.getAttribute('aria-label') || e.textContent || '').trim() === \"State machine\"); if (!b) throw new Error('no button ' + \"State machine\"); b.click(); return true; })()"
-                }
-              }
-            ]
-          }
-        }
-      ],
-      "now": 1760531445678
-    },
-    {
-      "id": "full-screen-clicks-the-views-full-screen-button-next",
-      "steps": [
-        {
-          "trait": "OrbProfile",
-          "from": "browsing",
-          "event": "PROFILE_EVALUATED",
-          "payload": {
-            "key": "machine",
-            "frame": "{}"
-          },
-          "entity": {
-            "id": "p",
-            "mode": "launchpad",
-            "baseUrl": "http://127.0.0.1:4790",
-            "settleMs": 1500,
-            "spa": true,
-            "machine": "full"
-          },
-          "expect": {
-            "fired": true,
-            "emits": [
-              {
-                "event": "PROFILE_EVALUATE",
-                "payload": {
-                  "key": "machine-full",
-                  "expression": "(() => { const b = [...document.querySelectorAll('button')].find(e => (e.getAttribute('aria-label') || e.textContent || '').trim() === \"Full screen\"); if (!b) throw new Error('no button ' + \"Full screen\"); b.click(); return true; })()"
-                }
-              }
-            ]
-          }
-        }
-      ],
-      "now": 1760531445678
-    },
-    {
-      "id": "control-the-side-panel-settles-after-opening",
-      "steps": [
-        {
-          "trait": "OrbProfile",
-          "from": "browsing",
-          "event": "PROFILE_EVALUATED",
-          "payload": {
-            "key": "machine",
-            "frame": "{}"
-          },
-          "entity": {
-            "id": "p",
-            "mode": "launchpad",
-            "baseUrl": "http://127.0.0.1:4790",
-            "settleMs": 1500,
-            "spa": true,
-            "machine": "side"
-          },
-          "expect": {
-            "fired": true,
-            "emits": [
-              {
-                "event": "PROFILE_SETTLE",
-                "payload": {
-                  "key": "warmup",
-                  "delayMs": 1500
-                }
-              }
-            ]
-          }
-        }
-      ],
-      "now": 1760531445678
-    },
-    {
-      "id": "the-settled-home-starts-the-pages",
-      "steps": [
-        {
-          "trait": "OrbProfile",
-          "from": "browsing",
-          "event": "PROFILE_SETTLED",
-          "payload": {
-            "waitedMs": 1500,
-            "key": "warmup"
-          },
-          "entity": {
-            "id": "p",
-            "mode": "launchpad",
-            "baseUrl": "http://127.0.0.1:4790",
-            "settleMs": 1500,
-            "spa": true
-          },
-          "expect": {
-            "fired": true,
-            "emitCounts": {
-              "PROFILE_TRACE_STOP": 0
-            },
-            "emits": [
-              {
-                "event": "PROFILE_PAGE_NEXT",
-                "payload": {}
-              }
-            ]
-          }
-        }
-      ],
-      "now": 1760531445678
-    },
-    {
       "id": "a-page-trace-asks-for-heap-and-cpu-when-the-run-does",
       "steps": [
         {
@@ -704,110 +415,6 @@
                   "label": "almadar-std/a",
                   "heap": true,
                   "cpu": true
-                }
-              }
-            ]
-          }
-        }
-      ],
-      "now": 1760531445678
-    },
-    {
-      "id": "in-app-a-page-is-opened-through-the-clients-router",
-      "steps": [
-        {
-          "trait": "OrbProfile",
-          "from": "browsing",
-          "event": "PROFILE_TRACING",
-          "payload": {
-            "label": "almadar-std/a"
-          },
-          "entity": {
-            "id": "p",
-            "mode": "launchpad",
-            "baseUrl": "http://127.0.0.1:4790",
-            "settleMs": 1500,
-            "spa": true,
-            "current": "almadar-std/a"
-          },
-          "expect": {
-            "fired": true,
-            "emits": [
-              {
-                "event": "PROFILE_EVALUATE",
-                "payload": {
-                  "key": "nav",
-                  "expression": "history.pushState({}, '', \"/almadar-std/a\"); dispatchEvent(new PopStateEvent('popstate')); true"
-                }
-              }
-            ],
-            "emitCounts": {
-              "PROFILE_PAGE_NAVIGATE": 0
-            }
-          }
-        }
-      ],
-      "now": 1760531445678
-    },
-    {
-      "id": "control-a-full-load-page-navigates",
-      "steps": [
-        {
-          "trait": "OrbProfile",
-          "from": "browsing",
-          "event": "PROFILE_TRACING",
-          "payload": {
-            "label": "almadar-std/a"
-          },
-          "entity": {
-            "id": "p",
-            "mode": "launchpad",
-            "baseUrl": "http://127.0.0.1:4790",
-            "settleMs": 1500,
-            "current": "almadar-std/a"
-          },
-          "expect": {
-            "fired": true,
-            "emits": [
-              {
-                "event": "PROFILE_PAGE_NAVIGATE",
-                "payload": {
-                  "key": "profile",
-                  "url": "http://127.0.0.1:4790/almadar-std/a"
-                }
-              }
-            ]
-          }
-        }
-      ],
-      "now": 1760531445678
-    },
-    {
-      "id": "an-in-app-page-settles-once-the-router-ran",
-      "steps": [
-        {
-          "trait": "OrbProfile",
-          "from": "browsing",
-          "event": "PROFILE_EVALUATED",
-          "payload": {
-            "key": "nav",
-            "frame": "{}"
-          },
-          "entity": {
-            "id": "p",
-            "mode": "launchpad",
-            "baseUrl": "http://127.0.0.1:4790",
-            "settleMs": 1500,
-            "spa": true
-          },
-          "expect": {
-            "fired": true,
-            "emits": [
-              {
-                "event": "PROFILE_SETTLE",
-                "payload": {
-                  "key": "settle",
-                  "delayMs": 1500
                 }
               }
             ]
@@ -862,38 +469,753 @@
       "now": 1760531445678
     },
     {
-      "id": "a-machine-view-that-cannot-open-ends-the-run",
+      "id": "with-machine-the-run-reads-heap-cpu-and-clicks",
+      "steps": [
+        {
+          "trait": "OrbProfile",
+          "from": "ready",
+          "event": "PROFILE_CALLED",
+          "payload": {
+            "headers": {},
+            "rawBody": "{\"argv\": [\"launchpad\", \"--heap\", \"--cpu\", \"--machine\", \"full\"], \"cwd\": \"/w\"}"
+          },
+          "entity": {
+            "id": "p"
+          },
+          "expect": {
+            "fired": true,
+            "entity": {
+              "heap": true,
+              "cpu": true,
+              "clicks": true,
+              "machine": "full"
+            }
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "control-a-plain-launchpad-run-loads-each-page",
+      "steps": [
+        {
+          "trait": "OrbProfile",
+          "from": "ready",
+          "event": "PROFILE_CALLED",
+          "payload": {
+            "headers": {},
+            "rawBody": "{\"argv\": [\"launchpad\"], \"cwd\": \"/w\"}"
+          },
+          "entity": {
+            "id": "p"
+          },
+          "expect": {
+            "fired": true,
+            "entity": {
+              "heap": false,
+              "cpu": false,
+              "clicks": false,
+              "machine": "off"
+            }
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "a-clicking-run-loads-the-launchpad-home-first",
       "steps": [
         {
           "trait": "OrbProfile",
           "from": "browsing",
-          "event": "PROFILE_BROWSER_FAILED",
+          "event": "PROFILE_PAGES_LISTED",
           "payload": {
-            "label": "machine",
-            "code": "evaluate",
-            "error": "no button"
+            "result": [
+              {
+                "behavior": "almadar-std/a",
+                "topic": "x",
+                "level": "atom",
+                "package": "almadar-std"
+              }
+            ]
           },
           "entity": {
             "id": "p",
             "mode": "launchpad",
             "baseUrl": "http://127.0.0.1:4790",
             "settleMs": 1500,
-            "spa": true,
+            "clicks": true
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "PROFILE_PAGE_NAVIGATE",
+                "payload": {
+                  "key": "warmup",
+                  "url": "http://127.0.0.1:4790/"
+                }
+              }
+            ],
+            "emitCounts": {
+              "PROFILE_PAGE_NEXT": 0
+            }
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "control-a-loading-run-starts-the-catalogs-first-page",
+      "steps": [
+        {
+          "trait": "OrbProfile",
+          "from": "browsing",
+          "event": "PROFILE_PAGES_LISTED",
+          "payload": {
+            "result": [
+              {
+                "behavior": "almadar-std/a",
+                "topic": "x",
+                "level": "atom",
+                "package": "almadar-std"
+              }
+            ]
+          },
+          "entity": {
+            "id": "p",
+            "mode": "launchpad",
+            "baseUrl": "http://127.0.0.1:4790",
+            "settleMs": 1500
+          },
+          "expect": {
+            "fired": true,
+            "entity": {
+              "queue": [
+                "almadar-std/a"
+              ]
+            },
+            "emits": [
+              {
+                "event": "PROFILE_PAGE_NEXT",
+                "payload": {}
+              }
+            ],
+            "emitCounts": {
+              "PROFILE_PAGE_NAVIGATE": 0
+            }
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "the-settled-home-opens-the-playground-by-its-card",
+      "steps": [
+        {
+          "trait": "OrbProfile",
+          "from": "browsing",
+          "event": "PROFILE_SETTLED",
+          "payload": {
+            "waitedMs": 1500,
+            "key": "home"
+          },
+          "entity": {
+            "id": "p",
+            "mode": "launchpad",
+            "baseUrl": "http://127.0.0.1:4790",
+            "settleMs": 1500,
+            "clicks": true
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "PROFILE_CLICK",
+                "payload": {
+                  "key": "playground",
+                  "find": "[...document.querySelectorAll('[role=button]')].find(e => e.textContent.includes(\"Browse every installed behavior\"))"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "the-open-playground-settles",
+      "steps": [
+        {
+          "trait": "OrbProfile",
+          "from": "browsing",
+          "event": "PROFILE_CLICKED",
+          "payload": {
+            "key": "playground"
+          },
+          "entity": {
+            "id": "p",
+            "mode": "launchpad",
+            "baseUrl": "http://127.0.0.1:4790",
+            "settleMs": 1500,
+            "clicks": true
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "PROFILE_SETTLE",
+                "payload": {
+                  "key": "playground",
+                  "delayMs": 1500
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "the-trees-leaves-are-the-pages-up-to-the-limit",
+      "steps": [
+        {
+          "trait": "OrbProfile",
+          "from": "browsing",
+          "event": "PROFILE_EVALUATED",
+          "payload": {
+            "key": "leaves",
+            "frame": "{\"id\": 3, \"result\": {\"result\": {\"type\": \"object\", \"value\": [\"std-a\", \"std-b\", \"std-c\"]}}}"
+          },
+          "entity": {
+            "id": "p",
+            "mode": "launchpad",
+            "baseUrl": "http://127.0.0.1:4790",
+            "settleMs": 1500,
+            "clicks": true,
+            "limit": 2
+          },
+          "expect": {
+            "fired": true,
+            "entity": {
+              "queue": [
+                "std-a",
+                "std-b"
+              ]
+            },
+            "emits": [
+              {
+                "event": "PROFILE_PAGE_NEXT",
+                "payload": {}
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "a-clicking-page-is-opened-by-its-leaf",
+      "steps": [
+        {
+          "trait": "OrbProfile",
+          "from": "browsing",
+          "event": "PROFILE_TRACING",
+          "payload": {
+            "label": "std-a"
+          },
+          "entity": {
+            "id": "p",
+            "mode": "launchpad",
+            "baseUrl": "http://127.0.0.1:4790",
+            "settleMs": 1500,
+            "clicks": true,
+            "current": "std-a"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "PROFILE_CLICK",
+                "payload": {
+                  "key": "nav",
+                  "find": "[...document.querySelectorAll('[role=treeitem]:not([aria-expanded])')].find(e => e.textContent.trim() === \"std-a\")"
+                }
+              }
+            ],
+            "emitCounts": {
+              "PROFILE_PAGE_NAVIGATE": 0
+            }
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "control-a-loading-page-navigates",
+      "steps": [
+        {
+          "trait": "OrbProfile",
+          "from": "browsing",
+          "event": "PROFILE_TRACING",
+          "payload": {
+            "label": "almadar-std/a"
+          },
+          "entity": {
+            "id": "p",
+            "mode": "launchpad",
+            "baseUrl": "http://127.0.0.1:4790",
+            "settleMs": 1500,
+            "current": "almadar-std/a"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "PROFILE_PAGE_NAVIGATE",
+                "payload": {
+                  "key": "profile",
+                  "url": "http://127.0.0.1:4790/almadar-std/a"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "a-clicked-page-settles",
+      "steps": [
+        {
+          "trait": "OrbProfile",
+          "from": "browsing",
+          "event": "PROFILE_CLICKED",
+          "payload": {
+            "key": "nav"
+          },
+          "entity": {
+            "id": "p",
+            "mode": "launchpad",
+            "baseUrl": "http://127.0.0.1:4790",
+            "settleMs": 1500,
+            "clicks": true
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "PROFILE_SETTLE",
+                "payload": {
+                  "key": "settle",
+                  "delayMs": 1500
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "control-the-playground-settle-stops-no-trace",
+      "steps": [
+        {
+          "trait": "OrbProfile",
+          "from": "browsing",
+          "event": "PROFILE_SETTLED",
+          "payload": {
+            "waitedMs": 1500,
+            "key": "playground"
+          },
+          "entity": {
+            "id": "p",
+            "mode": "launchpad",
+            "clicks": true,
+            "current": ""
+          },
+          "expect": {
+            "fired": true,
+            "emitCounts": {
+              "PROFILE_TRACE_STOP": 0
+            }
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "the-loaded-home-settles-before-any-click",
+      "steps": [
+        {
+          "trait": "OrbProfile",
+          "from": "browsing",
+          "event": "PROFILE_PAGE_LOADED",
+          "payload": {
+            "key": "warmup",
+            "url": "http://127.0.0.1:4790/",
+            "title": "orb"
+          },
+          "entity": {
+            "id": "p",
+            "mode": "launchpad",
+            "clicks": true,
+            "settleMs": 1500
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "PROFILE_SETTLE",
+                "payload": {
+                  "key": "home",
+                  "delayMs": 1500
+                }
+              }
+            ],
+            "emitCounts": {
+              "PROFILE_CLICK": 0
+            }
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "the-settled-playground-lists-its-trees-leaves",
+      "steps": [
+        {
+          "trait": "OrbProfile",
+          "from": "browsing",
+          "event": "PROFILE_SETTLED",
+          "payload": {
+            "waitedMs": 1500,
+            "key": "playground"
+          },
+          "entity": {
+            "id": "p",
+            "mode": "launchpad",
+            "baseUrl": "http://127.0.0.1:4790",
+            "settleMs": 1500,
+            "clicks": true,
             "machine": "side"
           },
           "expect": {
             "fired": true,
-            "state": "ready",
             "emits": [
               {
-                "event": "PROFILE_CHROME_STOP",
-                "payload": {}
-              },
-              {
-                "event": "PROFILE_ANSWERED",
+                "event": "PROFILE_EVALUATE",
                 "payload": {
-                  "status": 500,
-                  "body": "profile launchpad: the state machine view could not be opened (evaluate): no button"
+                  "key": "leaves",
+                  "expression": "[...document.querySelectorAll('[role=treeitem]:not([aria-expanded])')].map(e => e.textContent.trim())"
+                }
+              }
+            ],
+            "emitCounts": {
+              "PROFILE_CLICK": 0
+            }
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "with-the-machine-view-an-opened-page-settles-first",
+      "steps": [
+        {
+          "trait": "OrbProfile",
+          "from": "browsing",
+          "event": "PROFILE_CLICKED",
+          "payload": {
+            "key": "nav"
+          },
+          "entity": {
+            "id": "p",
+            "mode": "launchpad",
+            "baseUrl": "http://127.0.0.1:4790",
+            "settleMs": 1500,
+            "clicks": true,
+            "machine": "side"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "PROFILE_SETTLE",
+                "payload": {
+                  "key": "opened",
+                  "delayMs": 1500
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "the-opened-page-opens-its-machine-view",
+      "steps": [
+        {
+          "trait": "OrbProfile",
+          "from": "browsing",
+          "event": "PROFILE_SETTLED",
+          "payload": {
+            "waitedMs": 1500,
+            "key": "opened"
+          },
+          "entity": {
+            "id": "p",
+            "mode": "launchpad",
+            "baseUrl": "http://127.0.0.1:4790",
+            "settleMs": 1500,
+            "clicks": true,
+            "machine": "side"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "PROFILE_CLICK",
+                "payload": {
+                  "key": "page-machine",
+                  "find": "[...document.querySelectorAll('button')].find(e => (e.getAttribute('aria-label') || e.textContent || '').trim() === \"State machine\")"
+                }
+              }
+            ],
+            "emitCounts": {
+              "PROFILE_TRACE_STOP": 0
+            }
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "full-screen-clicks-the-views-full-screen-button-next",
+      "steps": [
+        {
+          "trait": "OrbProfile",
+          "from": "browsing",
+          "event": "PROFILE_CLICKED",
+          "payload": {
+            "key": "page-machine"
+          },
+          "entity": {
+            "id": "p",
+            "mode": "launchpad",
+            "baseUrl": "http://127.0.0.1:4790",
+            "settleMs": 1500,
+            "clicks": true,
+            "machine": "full"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "PROFILE_CLICK",
+                "payload": {
+                  "key": "page-machine-full",
+                  "find": "[...document.querySelectorAll('button')].find(e => (e.getAttribute('aria-label') || e.textContent || '').trim() === \"Full screen\")"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "control-the-side-panel-settles-the-page",
+      "steps": [
+        {
+          "trait": "OrbProfile",
+          "from": "browsing",
+          "event": "PROFILE_CLICKED",
+          "payload": {
+            "key": "page-machine"
+          },
+          "entity": {
+            "id": "p",
+            "mode": "launchpad",
+            "baseUrl": "http://127.0.0.1:4790",
+            "settleMs": 1500,
+            "clicks": true,
+            "machine": "side"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "PROFILE_SETTLE",
+                "payload": {
+                  "key": "settle",
+                  "delayMs": 1500
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "a-page-whose-machine-view-cannot-open-is-that-pages-error",
+      "steps": [
+        {
+          "trait": "OrbProfile",
+          "from": "browsing",
+          "event": "PROFILE_BROWSER_FAILED",
+          "payload": {
+            "label": "page-machine",
+            "code": "not-found",
+            "error": "no element to click"
+          },
+          "entity": {
+            "id": "p",
+            "mode": "launchpad",
+            "baseUrl": "http://127.0.0.1:4790",
+            "settleMs": 1500,
+            "clicks": true,
+            "machine": "side",
+            "current": "std-a",
+            "queue": [
+              "std-a",
+              "std-b"
+            ],
+            "index": 0
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "PROFILE_PAGE_NEXT",
+                "payload": {}
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "a-chrome-that-cannot-start-stops-the-running-recorder",
+      "steps": [
+        {
+          "trait": "OrbProfile",
+          "from": "browsing",
+          "event": "PROFILE_CHROME_FAILED",
+          "payload": {
+            "code": "x",
+            "message": "y"
+          },
+          "entity": {
+            "id": "p",
+            "mode": "launchpad",
+            "launchpadPid": 42,
+            "samplyState": "running"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "PROFILE_SAMPLY_STOP",
+                "payload": {
+                  "key": "profile-launchpad-42"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "control-with-no-recorder-a-chrome-failure-stops-none",
+      "steps": [
+        {
+          "trait": "OrbProfile",
+          "from": "browsing",
+          "event": "PROFILE_CHROME_FAILED",
+          "payload": {
+            "code": "x",
+            "message": "y"
+          },
+          "entity": {
+            "id": "p",
+            "mode": "launchpad",
+            "launchpadPid": 42,
+            "samplyState": "off"
+          },
+          "expect": {
+            "fired": true,
+            "emitCounts": {
+              "PROFILE_SAMPLY_STOP": 0
+            }
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "a-playground-that-cannot-open-stops-the-running-recorder",
+      "steps": [
+        {
+          "trait": "OrbProfile",
+          "from": "browsing",
+          "event": "PROFILE_BROWSER_FAILED",
+          "payload": {
+            "label": "playground",
+            "code": "not-found",
+            "error": "no element to click"
+          },
+          "entity": {
+            "id": "p",
+            "mode": "launchpad",
+            "launchpadPid": 42,
+            "samplyState": "running",
+            "clicks": true
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "PROFILE_SAMPLY_STOP",
+                "payload": {
+                  "key": "profile-launchpad-42"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "a-page-that-cannot-attach-stops-the-running-recorder",
+      "steps": [
+        {
+          "trait": "OrbProfile",
+          "from": "browsing",
+          "event": "PROFILE_BROWSER_FAILED",
+          "payload": {
+            "label": "",
+            "code": "x",
+            "error": "y"
+          },
+          "entity": {
+            "id": "p",
+            "mode": "launchpad",
+            "launchpadPid": 42,
+            "samplyState": "running"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "PROFILE_SAMPLY_STOP",
+                "payload": {
+                  "key": "profile-launchpad-42"
                 }
               }
             ]

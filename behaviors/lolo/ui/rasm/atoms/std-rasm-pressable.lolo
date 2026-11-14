@@ -9,8 +9,8 @@ type RasmMaterial = { wgsl : string!, params : [number]!, live : boolean! }
 type RasmCorners = { radius : [number]!, kind : "round" | "bevel" | "notch" | "scoop" }
 type RasmSpring = { stiffness : number!, damping : number! }
 type RasmKeyframe = { at : number!, opacity : number, offsetY : number }
-type RasmAnimation = { durationMs : number!, loop : boolean!, keyframes : [RasmKeyframe]! }
-type RasmText = { id : string!, key : MessageKey!, x : number!, y : number!, z : number!, align : string!, baseline : string!, color : string?, font : string?, spring : RasmSpring?, width : number?, wrap : boolean?, measure : boolean?, role : string?, animation : RasmAnimation? }
+type RasmAnimation = { durationMs : number!, startMs : number, loop : boolean!, keyframes : [RasmKeyframe]! }
+type RasmText = { id : string!, key : MessageKey!, x : number!, y : number!, z : number!, align : string!, baseline : string!, color : string?, font : string?, spring : RasmSpring?, width : number?, wrap : boolean?, measure : boolean?, role : string?, animation : RasmAnimation?, maxWidth : number? }
 type RasmShadow = { color : string!, blur : number! }
 type RasmBackdrop = { blur : number!, tint : string, saturate : number }
 type RasmLook = { fill : string, stroke : string, strokeWidth : number, corners : RasmCorners, shadow : RasmShadow, material : RasmMaterial, textColor : string, font : string, spring : RasmSpring, decor : string, backdrop : RasmBackdrop }
@@ -21,8 +21,10 @@ orbital RasmPressableOrbital {
     looks : Map string RasmLook = {}
     hasLooks : boolean = false
     rect : RasmRect = { x: 0, y: 0, w: 0, h: 0 }
+    dir : "ltr" | "rtl" @description "The surface's reading direction; under rtl a directional icon draws its iconRtl path." = "ltr"
     hasRect : boolean = false
     entering : number = -1
+    enteredMs : number @description "The epoch-ms instant the entry animation started, 0 before it." = 0
     stagger : number = 70
     paints : number = 0
   }
@@ -35,6 +37,10 @@ orbital RasmPressableOrbital {
       RASM_BOOT -> disabled when @config.disabled
       INIT -> idle when (not @config.disabled)
       RASM_BOOT -> idle when (not @config.disabled)
+      RASM_DIRECTION -> idle
+        (set @entity.dir ?direction)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
       RASM_THEME -> idle
         (set @entity.looks ?looks)
         (set @entity.hasLooks true)
@@ -47,6 +53,7 @@ orbital RasmPressableOrbital {
         (emit REPAINT { n: @entity.paints })
       RASM_ENTER -> idle when (array/includes ?order @config.id)
         (set @entity.entering (array/indexOf ?order @config.id))
+        (set @entity.enteredMs (time/epoch-ms @now))
         (set @entity.stagger ?staggerMs)
         (set @entity.paints (+ @entity.paints 1))
         (emit REPAINT { n: @entity.paints })
@@ -67,10 +74,10 @@ orbital RasmPressableOrbital {
       REPAINT -> idle when (and @entity.hasLooks @entity.hasRect)
         (let (
             (r @entity.rect)
-            (anim (if (>= @entity.entering 0) { durationMs: (+ 520 (* @entity.entering @entity.stagger)), loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 14 }, { at: (/ (* @entity.entering @entity.stagger) (+ 520 (* @entity.entering @entity.stagger))), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }] } null))
+            (anim (if (>= @entity.entering 0) { durationMs: (+ 520 (* @entity.entering @entity.stagger)), startMs: @entity.enteredMs, loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 14 }, { at: (/ (* @entity.entering @entity.stagger) (+ 520 (* @entity.entering @entity.stagger))), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }] } null))
             (look (default (object/get @entity.looks (str/concat "pressable/" @config.intent "/idle")) {}))
           )
-          (emit RASM_PAINT { id: @config.id, z: @config.z, texts: [{ id: (str/concat @config.id ":label"), key: @config.label, x: (+ @r.x (/ @r.w 2)), y: (+ @r.y (/ @r.h 2)), z: @config.z, align: "center", baseline: "middle", color: @look.textColor, font: @look.font, spring: @look.spring }], nodes: (array/concat [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @r.x, y: @r.y, z: @config.z }, width: @r.w, height: @r.h, fill: @look.fill, backdrop: @look.backdrop, stroke: @look.stroke, strokeWidth: @look.strokeWidth, corners: @look.corners, shadow: @look.shadow, material: @look.material, spring: @look.spring, animation: @anim, hit: true, semantic: { role: "button", labelledBy: (str/concat @config.id ":label"), disabled: false , order: @config.order, focused: false } }] (array/map (if (= @look.decor "naqsh-stars") [0, 1, 2, 3] []) (fn i { type: draw-shape, id: (str/concat @config.id ":star:" @i), shape: polygon, anchor: "top-left", position: { x: (- (+ @r.x (if (or (= @i 1) (= @i 2)) @r.w 0)) 6), y: (- (+ @r.y (if (>= @i 2) @r.h 0)) 6), z: @config.z }, width: 12, height: 12, sides: 8, starRatio: 0.55, fill: @look.stroke, spring: @look.spring, animation: @anim })) (array/map (if (= @look.decor "glass-rim") [0] []) (fn i { type: draw-shape, id: (str/concat @config.id ":rim"), shape: rect, anchor: "top-left", position: { x: (+ @r.x 1), y: (+ @r.y 1), z: @config.z }, width: (- @r.w 2), height: (- @r.h 2), stroke: "rgba(255,255,255,0.18)", strokeWidth: 1, corners: { radius: (array/map (default @look.corners.radius [0, 0, 0, 0]) (fn v (math/max 0 (- @v 1)))), kind: (default @look.corners.kind "round") }, spring: @look.spring, animation: @anim }))) }))
+          (emit RASM_PAINT { id: @config.id, z: @config.z, texts: [{ id: (str/concat @config.id ":label"), key: @config.label, x: (if (and (!= @config.icon "") (not @config.iconOnly)) (+ (+ @r.x (* @r.w 0.5)) (* 0.5 (+ @config.iconSize 4))) (+ @r.x (* @r.w 0.5))), y: (if @config.iconOnly (+ (+ @r.y @r.h) 14) (+ @r.y (* @r.h 0.5))), z: @config.z, align: "center", baseline: (if @config.iconOnly "top" "middle"), color: (if @config.iconOnly "rgba(0,0,0,0)" @look.textColor), font: @look.font, spring: @look.spring, maxWidth: (if @config.iconOnly @config.tooltipWidth (math/max 1 (- (- @r.w 24) (if (!= @config.icon "") (+ @config.iconSize 4) 0)))) }], nodes: (array/concat [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @r.x, y: @r.y, z: @config.z }, width: @r.w, height: @r.h, fill: @look.fill, backdrop: @look.backdrop, stroke: @look.stroke, strokeWidth: @look.strokeWidth, corners: @look.corners, shadow: @look.shadow, material: @look.material, spring: @look.spring, animation: @anim, hit: true, semantic: { role: "button", labelledBy: (str/concat @config.id ":label"), disabled: false , order: @config.order, focused: false } }] (if (= @config.icon "") [] [{ type: draw-shape, id: (str/concat @config.id ":icon"), shape: "path", anchor: "top-left", position: { x: (if @config.iconOnly (+ @r.x (* (- @r.w @config.iconSize) 0.5)) (+ @r.x 16)), y: (+ @r.y (* (- @r.h @config.iconSize) 0.5)), z: @config.z }, d: (if (and (= @entity.dir "rtl") (!= @config.iconRtl "")) @config.iconRtl @config.icon), scale: (* @config.iconSize 0.041666666666666664), fill: "rgba(0,0,0,0)", stroke: @look.textColor, strokeWidth: 1.8, hit: false }]) (array/map (if (= @look.decor "naqsh-stars") [0, 1, 2, 3] []) (fn i { type: draw-shape, id: (str/concat @config.id ":star:" @i), shape: polygon, anchor: "top-left", position: { x: (- (+ @r.x (if (or (= @i 1) (= @i 2)) @r.w 0)) 6), y: (- (+ @r.y (if (>= @i 2) @r.h 0)) 6), z: @config.z }, width: 12, height: 12, sides: 8, starRatio: 0.55, fill: @look.stroke, spring: @look.spring, animation: @anim })) (array/map (if (= @look.decor "glass-rim") [0] []) (fn i { type: draw-shape, id: (str/concat @config.id ":rim"), shape: rect, anchor: "top-left", position: { x: (+ @r.x 1), y: (+ @r.y 1), z: @config.z }, width: (- @r.w 2), height: (- @r.h 2), stroke: "rgba(255,255,255,0.18)", strokeWidth: 1, corners: { radius: (array/map (default @look.corners.radius [0, 0, 0, 0]) (fn v (math/max 0 (- @v 1)))), kind: (default @look.corners.kind "round") }, spring: @look.spring, animation: @anim }))) }))
     }
 
     state hovered {
@@ -78,6 +85,10 @@ orbital RasmPressableOrbital {
       RASM_BOOT -> disabled when @config.disabled
       INIT -> idle when (not @config.disabled)
       RASM_BOOT -> idle when (not @config.disabled)
+      RASM_DIRECTION -> hovered
+        (set @entity.dir ?direction)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
       RASM_THEME -> hovered
         (set @entity.looks ?looks)
         (set @entity.hasLooks true)
@@ -90,6 +101,7 @@ orbital RasmPressableOrbital {
         (emit REPAINT { n: @entity.paints })
       RASM_ENTER -> hovered when (array/includes ?order @config.id)
         (set @entity.entering (array/indexOf ?order @config.id))
+        (set @entity.enteredMs (time/epoch-ms @now))
         (set @entity.stagger ?staggerMs)
         (set @entity.paints (+ @entity.paints 1))
         (emit REPAINT { n: @entity.paints })
@@ -110,10 +122,10 @@ orbital RasmPressableOrbital {
       REPAINT -> hovered when (and @entity.hasLooks @entity.hasRect)
         (let (
             (r @entity.rect)
-            (anim (if (>= @entity.entering 0) { durationMs: (+ 520 (* @entity.entering @entity.stagger)), loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 14 }, { at: (/ (* @entity.entering @entity.stagger) (+ 520 (* @entity.entering @entity.stagger))), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }] } null))
+            (anim (if (>= @entity.entering 0) { durationMs: (+ 520 (* @entity.entering @entity.stagger)), startMs: @entity.enteredMs, loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 14 }, { at: (/ (* @entity.entering @entity.stagger) (+ 520 (* @entity.entering @entity.stagger))), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }] } null))
             (look (default (object/get @entity.looks (str/concat "pressable/" @config.intent "/hovered")) {}))
           )
-          (emit RASM_PAINT { id: @config.id, z: @config.z, texts: [{ id: (str/concat @config.id ":label"), key: @config.label, x: (+ @r.x (/ @r.w 2)), y: (+ @r.y (/ @r.h 2)), z: @config.z, align: "center", baseline: "middle", color: @look.textColor, font: @look.font, spring: @look.spring }], nodes: (array/concat [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @r.x, y: @r.y, z: @config.z }, width: @r.w, height: @r.h, fill: @look.fill, backdrop: @look.backdrop, stroke: @look.stroke, strokeWidth: @look.strokeWidth, corners: @look.corners, shadow: @look.shadow, material: @look.material, spring: @look.spring, animation: @anim, hit: true, semantic: { role: "button", labelledBy: (str/concat @config.id ":label"), disabled: false , order: @config.order, focused: false } }] (array/map (if (= @look.decor "naqsh-stars") [0, 1, 2, 3] []) (fn i { type: draw-shape, id: (str/concat @config.id ":star:" @i), shape: polygon, anchor: "top-left", position: { x: (- (+ @r.x (if (or (= @i 1) (= @i 2)) @r.w 0)) 6), y: (- (+ @r.y (if (>= @i 2) @r.h 0)) 6), z: @config.z }, width: 12, height: 12, sides: 8, starRatio: 0.55, fill: @look.stroke, spring: @look.spring, animation: @anim })) (array/map (if (= @look.decor "glass-rim") [0] []) (fn i { type: draw-shape, id: (str/concat @config.id ":rim"), shape: rect, anchor: "top-left", position: { x: (+ @r.x 1), y: (+ @r.y 1), z: @config.z }, width: (- @r.w 2), height: (- @r.h 2), stroke: "rgba(255,255,255,0.18)", strokeWidth: 1, corners: { radius: (array/map (default @look.corners.radius [0, 0, 0, 0]) (fn v (math/max 0 (- @v 1)))), kind: (default @look.corners.kind "round") }, spring: @look.spring, animation: @anim }))) }))
+          (emit RASM_PAINT { id: @config.id, z: @config.z, texts: [{ id: (str/concat @config.id ":label"), key: @config.label, x: (if (and (!= @config.icon "") (not @config.iconOnly)) (+ (+ @r.x (* @r.w 0.5)) (* 0.5 (+ @config.iconSize 4))) (+ @r.x (* @r.w 0.5))), y: (if @config.iconOnly (+ (+ @r.y @r.h) 14) (+ @r.y (* @r.h 0.5))), z: @config.z, align: "center", baseline: (if @config.iconOnly "top" "middle"), color: (if @config.iconOnly @look.textColor @look.textColor), font: @look.font, spring: @look.spring, maxWidth: (if @config.iconOnly @config.tooltipWidth (math/max 1 (- (- @r.w 24) (if (!= @config.icon "") (+ @config.iconSize 4) 0)))) }], nodes: (array/concat [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @r.x, y: @r.y, z: @config.z }, width: @r.w, height: @r.h, fill: @look.fill, backdrop: @look.backdrop, stroke: @look.stroke, strokeWidth: @look.strokeWidth, corners: @look.corners, shadow: @look.shadow, material: @look.material, spring: @look.spring, animation: @anim, hit: true, semantic: { role: "button", labelledBy: (str/concat @config.id ":label"), disabled: false , order: @config.order, focused: false } }] (if (= @config.icon "") [] [{ type: draw-shape, id: (str/concat @config.id ":icon"), shape: "path", anchor: "top-left", position: { x: (if @config.iconOnly (+ @r.x (* (- @r.w @config.iconSize) 0.5)) (+ @r.x 16)), y: (+ @r.y (* (- @r.h @config.iconSize) 0.5)), z: @config.z }, d: (if (and (= @entity.dir "rtl") (!= @config.iconRtl "")) @config.iconRtl @config.icon), scale: (* @config.iconSize 0.041666666666666664), fill: "rgba(0,0,0,0)", stroke: @look.textColor, strokeWidth: 1.8, hit: false }]) (array/map (if (= @look.decor "naqsh-stars") [0, 1, 2, 3] []) (fn i { type: draw-shape, id: (str/concat @config.id ":star:" @i), shape: polygon, anchor: "top-left", position: { x: (- (+ @r.x (if (or (= @i 1) (= @i 2)) @r.w 0)) 6), y: (- (+ @r.y (if (>= @i 2) @r.h 0)) 6), z: @config.z }, width: 12, height: 12, sides: 8, starRatio: 0.55, fill: @look.stroke, spring: @look.spring, animation: @anim })) (array/map (if (= @look.decor "glass-rim") [0] []) (fn i { type: draw-shape, id: (str/concat @config.id ":rim"), shape: rect, anchor: "top-left", position: { x: (+ @r.x 1), y: (+ @r.y 1), z: @config.z }, width: (- @r.w 2), height: (- @r.h 2), stroke: "rgba(255,255,255,0.18)", strokeWidth: 1, corners: { radius: (array/map (default @look.corners.radius [0, 0, 0, 0]) (fn v (math/max 0 (- @v 1)))), kind: (default @look.corners.kind "round") }, spring: @look.spring, animation: @anim }))) }))
     }
 
     state pressed {
@@ -121,6 +133,10 @@ orbital RasmPressableOrbital {
       RASM_BOOT -> disabled when @config.disabled
       INIT -> idle when (not @config.disabled)
       RASM_BOOT -> idle when (not @config.disabled)
+      RASM_DIRECTION -> pressed
+        (set @entity.dir ?direction)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
       RASM_THEME -> pressed
         (set @entity.looks ?looks)
         (set @entity.hasLooks true)
@@ -133,6 +149,7 @@ orbital RasmPressableOrbital {
         (emit REPAINT { n: @entity.paints })
       RASM_ENTER -> pressed when (array/includes ?order @config.id)
         (set @entity.entering (array/indexOf ?order @config.id))
+        (set @entity.enteredMs (time/epoch-ms @now))
         (set @entity.stagger ?staggerMs)
         (set @entity.paints (+ @entity.paints 1))
         (emit REPAINT { n: @entity.paints })
@@ -148,10 +165,10 @@ orbital RasmPressableOrbital {
       REPAINT -> pressed when (and @entity.hasLooks @entity.hasRect)
         (let (
             (r @entity.rect)
-            (anim (if (>= @entity.entering 0) { durationMs: (+ 520 (* @entity.entering @entity.stagger)), loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 14 }, { at: (/ (* @entity.entering @entity.stagger) (+ 520 (* @entity.entering @entity.stagger))), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }] } null))
+            (anim (if (>= @entity.entering 0) { durationMs: (+ 520 (* @entity.entering @entity.stagger)), startMs: @entity.enteredMs, loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 14 }, { at: (/ (* @entity.entering @entity.stagger) (+ 520 (* @entity.entering @entity.stagger))), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }] } null))
             (look (default (object/get @entity.looks (str/concat "pressable/" @config.intent "/pressed")) {}))
           )
-          (emit RASM_PAINT { id: @config.id, z: @config.z, texts: [{ id: (str/concat @config.id ":label"), key: @config.label, x: (+ @r.x (/ @r.w 2)), y: (+ @r.y (/ @r.h 2)), z: @config.z, align: "center", baseline: "middle", color: @look.textColor, font: @look.font, spring: @look.spring }], nodes: (array/concat [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @r.x, y: @r.y, z: @config.z }, width: @r.w, height: @r.h, fill: @look.fill, backdrop: @look.backdrop, stroke: @look.stroke, strokeWidth: @look.strokeWidth, corners: @look.corners, shadow: @look.shadow, material: @look.material, spring: @look.spring, animation: @anim, hit: true, semantic: { role: "button", labelledBy: (str/concat @config.id ":label"), disabled: false , order: @config.order, focused: false } }] (array/map (if (= @look.decor "naqsh-stars") [0, 1, 2, 3] []) (fn i { type: draw-shape, id: (str/concat @config.id ":star:" @i), shape: polygon, anchor: "top-left", position: { x: (- (+ @r.x (if (or (= @i 1) (= @i 2)) @r.w 0)) 6), y: (- (+ @r.y (if (>= @i 2) @r.h 0)) 6), z: @config.z }, width: 12, height: 12, sides: 8, starRatio: 0.55, fill: @look.stroke, spring: @look.spring, animation: @anim })) (array/map (if (= @look.decor "glass-rim") [0] []) (fn i { type: draw-shape, id: (str/concat @config.id ":rim"), shape: rect, anchor: "top-left", position: { x: (+ @r.x 1), y: (+ @r.y 1), z: @config.z }, width: (- @r.w 2), height: (- @r.h 2), stroke: "rgba(255,255,255,0.18)", strokeWidth: 1, corners: { radius: (array/map (default @look.corners.radius [0, 0, 0, 0]) (fn v (math/max 0 (- @v 1)))), kind: (default @look.corners.kind "round") }, spring: @look.spring, animation: @anim }))) }))
+          (emit RASM_PAINT { id: @config.id, z: @config.z, texts: [{ id: (str/concat @config.id ":label"), key: @config.label, x: (if (and (!= @config.icon "") (not @config.iconOnly)) (+ (+ @r.x (* @r.w 0.5)) (* 0.5 (+ @config.iconSize 4))) (+ @r.x (* @r.w 0.5))), y: (if @config.iconOnly (+ (+ @r.y @r.h) 14) (+ @r.y (* @r.h 0.5))), z: @config.z, align: "center", baseline: (if @config.iconOnly "top" "middle"), color: (if @config.iconOnly "rgba(0,0,0,0)" @look.textColor), font: @look.font, spring: @look.spring, maxWidth: (if @config.iconOnly @config.tooltipWidth (math/max 1 (- (- @r.w 24) (if (!= @config.icon "") (+ @config.iconSize 4) 0)))) }], nodes: (array/concat [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @r.x, y: @r.y, z: @config.z }, width: @r.w, height: @r.h, fill: @look.fill, backdrop: @look.backdrop, stroke: @look.stroke, strokeWidth: @look.strokeWidth, corners: @look.corners, shadow: @look.shadow, material: @look.material, spring: @look.spring, animation: @anim, hit: true, semantic: { role: "button", labelledBy: (str/concat @config.id ":label"), disabled: false , order: @config.order, focused: false } }] (if (= @config.icon "") [] [{ type: draw-shape, id: (str/concat @config.id ":icon"), shape: "path", anchor: "top-left", position: { x: (if @config.iconOnly (+ @r.x (* (- @r.w @config.iconSize) 0.5)) (+ @r.x 16)), y: (+ @r.y (* (- @r.h @config.iconSize) 0.5)), z: @config.z }, d: (if (and (= @entity.dir "rtl") (!= @config.iconRtl "")) @config.iconRtl @config.icon), scale: (* @config.iconSize 0.041666666666666664), fill: "rgba(0,0,0,0)", stroke: @look.textColor, strokeWidth: 1.8, hit: false }]) (array/map (if (= @look.decor "naqsh-stars") [0, 1, 2, 3] []) (fn i { type: draw-shape, id: (str/concat @config.id ":star:" @i), shape: polygon, anchor: "top-left", position: { x: (- (+ @r.x (if (or (= @i 1) (= @i 2)) @r.w 0)) 6), y: (- (+ @r.y (if (>= @i 2) @r.h 0)) 6), z: @config.z }, width: 12, height: 12, sides: 8, starRatio: 0.55, fill: @look.stroke, spring: @look.spring, animation: @anim })) (array/map (if (= @look.decor "glass-rim") [0] []) (fn i { type: draw-shape, id: (str/concat @config.id ":rim"), shape: rect, anchor: "top-left", position: { x: (+ @r.x 1), y: (+ @r.y 1), z: @config.z }, width: (- @r.w 2), height: (- @r.h 2), stroke: "rgba(255,255,255,0.18)", strokeWidth: 1, corners: { radius: (array/map (default @look.corners.radius [0, 0, 0, 0]) (fn v (math/max 0 (- @v 1)))), kind: (default @look.corners.kind "round") }, spring: @look.spring, animation: @anim }))) }))
     }
 
     state focused {
@@ -159,6 +176,10 @@ orbital RasmPressableOrbital {
       RASM_BOOT -> disabled when @config.disabled
       INIT -> idle when (not @config.disabled)
       RASM_BOOT -> idle when (not @config.disabled)
+      RASM_DIRECTION -> focused
+        (set @entity.dir ?direction)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
       RASM_THEME -> focused
         (set @entity.looks ?looks)
         (set @entity.hasLooks true)
@@ -171,6 +192,7 @@ orbital RasmPressableOrbital {
         (emit REPAINT { n: @entity.paints })
       RASM_ENTER -> focused when (array/includes ?order @config.id)
         (set @entity.entering (array/indexOf ?order @config.id))
+        (set @entity.enteredMs (time/epoch-ms @now))
         (set @entity.stagger ?staggerMs)
         (set @entity.paints (+ @entity.paints 1))
         (emit REPAINT { n: @entity.paints })
@@ -187,10 +209,10 @@ orbital RasmPressableOrbital {
       REPAINT -> focused when (and @entity.hasLooks @entity.hasRect)
         (let (
             (r @entity.rect)
-            (anim (if (>= @entity.entering 0) { durationMs: (+ 520 (* @entity.entering @entity.stagger)), loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 14 }, { at: (/ (* @entity.entering @entity.stagger) (+ 520 (* @entity.entering @entity.stagger))), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }] } null))
+            (anim (if (>= @entity.entering 0) { durationMs: (+ 520 (* @entity.entering @entity.stagger)), startMs: @entity.enteredMs, loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 14 }, { at: (/ (* @entity.entering @entity.stagger) (+ 520 (* @entity.entering @entity.stagger))), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }] } null))
             (look (default (object/get @entity.looks (str/concat "pressable/" @config.intent "/focused")) {}))
           )
-          (emit RASM_PAINT { id: @config.id, z: @config.z, texts: [{ id: (str/concat @config.id ":label"), key: @config.label, x: (+ @r.x (/ @r.w 2)), y: (+ @r.y (/ @r.h 2)), z: @config.z, align: "center", baseline: "middle", color: @look.textColor, font: @look.font, spring: @look.spring }], nodes: (array/concat [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @r.x, y: @r.y, z: @config.z }, width: @r.w, height: @r.h, fill: @look.fill, backdrop: @look.backdrop, stroke: @look.stroke, strokeWidth: @look.strokeWidth, corners: @look.corners, shadow: @look.shadow, material: @look.material, spring: @look.spring, animation: @anim, hit: true, semantic: { role: "button", labelledBy: (str/concat @config.id ":label"), disabled: false , order: @config.order, focused: true } }] (array/map (if (= @look.decor "naqsh-stars") [0, 1, 2, 3] []) (fn i { type: draw-shape, id: (str/concat @config.id ":star:" @i), shape: polygon, anchor: "top-left", position: { x: (- (+ @r.x (if (or (= @i 1) (= @i 2)) @r.w 0)) 6), y: (- (+ @r.y (if (>= @i 2) @r.h 0)) 6), z: @config.z }, width: 12, height: 12, sides: 8, starRatio: 0.55, fill: @look.stroke, spring: @look.spring, animation: @anim })) (array/map (if (= @look.decor "glass-rim") [0] []) (fn i { type: draw-shape, id: (str/concat @config.id ":rim"), shape: rect, anchor: "top-left", position: { x: (+ @r.x 1), y: (+ @r.y 1), z: @config.z }, width: (- @r.w 2), height: (- @r.h 2), stroke: "rgba(255,255,255,0.18)", strokeWidth: 1, corners: { radius: (array/map (default @look.corners.radius [0, 0, 0, 0]) (fn v (math/max 0 (- @v 1)))), kind: (default @look.corners.kind "round") }, spring: @look.spring, animation: @anim }))) }))
+          (emit RASM_PAINT { id: @config.id, z: @config.z, texts: [{ id: (str/concat @config.id ":label"), key: @config.label, x: (if (and (!= @config.icon "") (not @config.iconOnly)) (+ (+ @r.x (* @r.w 0.5)) (* 0.5 (+ @config.iconSize 4))) (+ @r.x (* @r.w 0.5))), y: (if @config.iconOnly (+ (+ @r.y @r.h) 14) (+ @r.y (* @r.h 0.5))), z: @config.z, align: "center", baseline: (if @config.iconOnly "top" "middle"), color: (if @config.iconOnly @look.textColor @look.textColor), font: @look.font, spring: @look.spring, maxWidth: (if @config.iconOnly @config.tooltipWidth (math/max 1 (- (- @r.w 24) (if (!= @config.icon "") (+ @config.iconSize 4) 0)))) }], nodes: (array/concat [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @r.x, y: @r.y, z: @config.z }, width: @r.w, height: @r.h, fill: @look.fill, backdrop: @look.backdrop, stroke: @look.stroke, strokeWidth: @look.strokeWidth, corners: @look.corners, shadow: @look.shadow, material: @look.material, spring: @look.spring, animation: @anim, hit: true, semantic: { role: "button", labelledBy: (str/concat @config.id ":label"), disabled: false , order: @config.order, focused: true } }] (if (= @config.icon "") [] [{ type: draw-shape, id: (str/concat @config.id ":icon"), shape: "path", anchor: "top-left", position: { x: (if @config.iconOnly (+ @r.x (* (- @r.w @config.iconSize) 0.5)) (+ @r.x 16)), y: (+ @r.y (* (- @r.h @config.iconSize) 0.5)), z: @config.z }, d: (if (and (= @entity.dir "rtl") (!= @config.iconRtl "")) @config.iconRtl @config.icon), scale: (* @config.iconSize 0.041666666666666664), fill: "rgba(0,0,0,0)", stroke: @look.textColor, strokeWidth: 1.8, hit: false }]) (array/map (if (= @look.decor "naqsh-stars") [0, 1, 2, 3] []) (fn i { type: draw-shape, id: (str/concat @config.id ":star:" @i), shape: polygon, anchor: "top-left", position: { x: (- (+ @r.x (if (or (= @i 1) (= @i 2)) @r.w 0)) 6), y: (- (+ @r.y (if (>= @i 2) @r.h 0)) 6), z: @config.z }, width: 12, height: 12, sides: 8, starRatio: 0.55, fill: @look.stroke, spring: @look.spring, animation: @anim })) (array/map (if (= @look.decor "glass-rim") [0] []) (fn i { type: draw-shape, id: (str/concat @config.id ":rim"), shape: rect, anchor: "top-left", position: { x: (+ @r.x 1), y: (+ @r.y 1), z: @config.z }, width: (- @r.w 2), height: (- @r.h 2), stroke: "rgba(255,255,255,0.18)", strokeWidth: 1, corners: { radius: (array/map (default @look.corners.radius [0, 0, 0, 0]) (fn v (math/max 0 (- @v 1)))), kind: (default @look.corners.kind "round") }, spring: @look.spring, animation: @anim }))) }))
     }
 
     state disabled {
@@ -198,6 +220,10 @@ orbital RasmPressableOrbital {
       RASM_BOOT -> disabled when @config.disabled
       INIT -> idle when (not @config.disabled)
       RASM_BOOT -> idle when (not @config.disabled)
+      RASM_DIRECTION -> disabled
+        (set @entity.dir ?direction)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit REPAINT { n: @entity.paints })
       RASM_THEME -> disabled
         (set @entity.looks ?looks)
         (set @entity.hasLooks true)
@@ -210,16 +236,17 @@ orbital RasmPressableOrbital {
         (emit REPAINT { n: @entity.paints })
       RASM_ENTER -> disabled when (array/includes ?order @config.id)
         (set @entity.entering (array/indexOf ?order @config.id))
+        (set @entity.enteredMs (time/epoch-ms @now))
         (set @entity.stagger ?staggerMs)
         (set @entity.paints (+ @entity.paints 1))
         (emit REPAINT { n: @entity.paints })
       REPAINT -> disabled when (and @entity.hasLooks @entity.hasRect)
         (let (
             (r @entity.rect)
-            (anim (if (>= @entity.entering 0) { durationMs: (+ 520 (* @entity.entering @entity.stagger)), loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 14 }, { at: (/ (* @entity.entering @entity.stagger) (+ 520 (* @entity.entering @entity.stagger))), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }] } null))
+            (anim (if (>= @entity.entering 0) { durationMs: (+ 520 (* @entity.entering @entity.stagger)), startMs: @entity.enteredMs, loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 14 }, { at: (/ (* @entity.entering @entity.stagger) (+ 520 (* @entity.entering @entity.stagger))), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }] } null))
             (look (default (object/get @entity.looks (str/concat "pressable/" @config.intent "/disabled")) {}))
           )
-          (emit RASM_PAINT { id: @config.id, z: @config.z, texts: [{ id: (str/concat @config.id ":label"), key: @config.label, x: (+ @r.x (/ @r.w 2)), y: (+ @r.y (/ @r.h 2)), z: @config.z, align: "center", baseline: "middle", color: @look.textColor, font: @look.font, spring: @look.spring }], nodes: (array/concat [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @r.x, y: @r.y, z: @config.z }, width: @r.w, height: @r.h, fill: @look.fill, backdrop: @look.backdrop, stroke: @look.stroke, strokeWidth: @look.strokeWidth, corners: @look.corners, shadow: @look.shadow, material: @look.material, spring: @look.spring, animation: @anim, hit: false, semantic: { role: "button", labelledBy: (str/concat @config.id ":label"), disabled: true , order: @config.order, focused: false } }] (array/map (if (= @look.decor "naqsh-stars") [0, 1, 2, 3] []) (fn i { type: draw-shape, id: (str/concat @config.id ":star:" @i), shape: polygon, anchor: "top-left", position: { x: (- (+ @r.x (if (or (= @i 1) (= @i 2)) @r.w 0)) 6), y: (- (+ @r.y (if (>= @i 2) @r.h 0)) 6), z: @config.z }, width: 12, height: 12, sides: 8, starRatio: 0.55, fill: @look.stroke, spring: @look.spring, animation: @anim })) (array/map (if (= @look.decor "glass-rim") [0] []) (fn i { type: draw-shape, id: (str/concat @config.id ":rim"), shape: rect, anchor: "top-left", position: { x: (+ @r.x 1), y: (+ @r.y 1), z: @config.z }, width: (- @r.w 2), height: (- @r.h 2), stroke: "rgba(255,255,255,0.18)", strokeWidth: 1, corners: { radius: (array/map (default @look.corners.radius [0, 0, 0, 0]) (fn v (math/max 0 (- @v 1)))), kind: (default @look.corners.kind "round") }, spring: @look.spring, animation: @anim }))) }))
+          (emit RASM_PAINT { id: @config.id, z: @config.z, texts: [{ id: (str/concat @config.id ":label"), key: @config.label, x: (if (and (!= @config.icon "") (not @config.iconOnly)) (+ (+ @r.x (* @r.w 0.5)) (* 0.5 (+ @config.iconSize 4))) (+ @r.x (* @r.w 0.5))), y: (if @config.iconOnly (+ (+ @r.y @r.h) 14) (+ @r.y (* @r.h 0.5))), z: @config.z, align: "center", baseline: (if @config.iconOnly "top" "middle"), color: (if @config.iconOnly "rgba(0,0,0,0)" @look.textColor), font: @look.font, spring: @look.spring, maxWidth: (if @config.iconOnly @config.tooltipWidth (math/max 1 (- (- @r.w 24) (if (!= @config.icon "") (+ @config.iconSize 4) 0)))) }], nodes: (array/concat [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @r.x, y: @r.y, z: @config.z }, width: @r.w, height: @r.h, fill: @look.fill, backdrop: @look.backdrop, stroke: @look.stroke, strokeWidth: @look.strokeWidth, corners: @look.corners, shadow: @look.shadow, material: @look.material, spring: @look.spring, animation: @anim, hit: false, semantic: { role: "button", labelledBy: (str/concat @config.id ":label"), disabled: true , order: @config.order, focused: false } }] (if (= @config.icon "") [] [{ type: draw-shape, id: (str/concat @config.id ":icon"), shape: "path", anchor: "top-left", position: { x: (if @config.iconOnly (+ @r.x (* (- @r.w @config.iconSize) 0.5)) (+ @r.x 16)), y: (+ @r.y (* (- @r.h @config.iconSize) 0.5)), z: @config.z }, d: (if (and (= @entity.dir "rtl") (!= @config.iconRtl "")) @config.iconRtl @config.icon), scale: (* @config.iconSize 0.041666666666666664), fill: "rgba(0,0,0,0)", stroke: @look.textColor, strokeWidth: 1.8, hit: false }]) (array/map (if (= @look.decor "naqsh-stars") [0, 1, 2, 3] []) (fn i { type: draw-shape, id: (str/concat @config.id ":star:" @i), shape: polygon, anchor: "top-left", position: { x: (- (+ @r.x (if (or (= @i 1) (= @i 2)) @r.w 0)) 6), y: (- (+ @r.y (if (>= @i 2) @r.h 0)) 6), z: @config.z }, width: 12, height: 12, sides: 8, starRatio: 0.55, fill: @look.stroke, spring: @look.spring, animation: @anim })) (array/map (if (= @look.decor "glass-rim") [0] []) (fn i { type: draw-shape, id: (str/concat @config.id ":rim"), shape: rect, anchor: "top-left", position: { x: (+ @r.x 1), y: (+ @r.y 1), z: @config.z }, width: (- @r.w 2), height: (- @r.h 2), stroke: "rgba(255,255,255,0.18)", strokeWidth: 1, corners: { radius: (array/map (default @look.corners.radius [0, 0, 0, 0]) (fn v (math/max 0 (- @v 1)))), kind: (default @look.corners.kind "round") }, spring: @look.spring, animation: @anim }))) }))
     }
 
     emits {
@@ -243,6 +270,8 @@ orbital RasmPressableOrbital {
     listens {
       RASM_BOOT { }
         @description "The surface mounted: take the configured starting state."
+      RASM_DIRECTION { direction : "ltr" | "rtl"! }
+        @description "The surface's reading direction: under rtl the icon is drawn from iconRtl when one is given."
       RASM_THEME { name : string!  looks : Map string RasmLook! }
         @description "The theme's looks; the control repaints with them."
       RASM_PLACE { placed : [RasmPlaced]! }
@@ -273,6 +302,26 @@ orbital RasmPressableOrbital {
       disabled : boolean = false
         @label "Disabled"
         @description "A disabled button paints its disabled look and takes no pointer or keyboard action."
+        @tier "presentation"
+      icon : string = ""
+        @label "Icon"
+        @description "An SVG path on a 24-unit grid, stroked in the label colour: before the label, or alone with iconOnly."
+        @tier "presentation"
+      iconRtl : string = ""
+        @label "Icon under rtl"
+        @description "The icon's path for a right-to-left page, for a directional icon (a chevron, an arrow); empty draws the same icon in both directions."
+        @tier "presentation"
+      iconOnly : boolean = false
+        @label "Icon only"
+        @description "Show only the icon; the label stays the button's accessible name and shows under it as a tooltip on hover and focus."
+        @tier "presentation"
+      iconSize : number = 18
+        @label "Icon size"
+        @description "The icon's size in px."
+        @tier "presentation"
+      tooltipWidth : number = 200
+        @label "Tooltip width"
+        @description "The widest an icon-only button's tooltip label is drawn, in px."
         @tier "presentation"
       action : event = RASM_ACTION
         @label "Action"
