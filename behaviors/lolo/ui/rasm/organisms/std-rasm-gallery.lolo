@@ -100,7 +100,7 @@ orbital RasmGallery {
       READOUT_PAINT -> ready
         (let ((l (object/get @entity.looks "text/body/idle" null)) (r @entity.rect) (sk : MessageKey (if (= @entity.swipeDir "left") @config.directions.left (if (= @entity.swipeDir "right") @config.directions.right (if (= @entity.swipeDir "up") @config.directions.up (if (= @entity.swipeDir "down") @config.directions.down @config.directions.none))))) (fk : MessageKey (if (= @entity.flingDir "left") @config.directions.left (if (= @entity.flingDir "right") @config.directions.right (if (= @entity.flingDir "up") @config.directions.up (if (= @entity.flingDir "down") @config.directions.down @config.directions.none))))) (dk : MessageKey (if (= @entity.dropKind "on") @config.drops.on (if (= @entity.dropKind "outside") @config.drops.outside @config.drops.none))))
           (when (and (!= @l null) (!= @r null))
-            (emit RASM_PAINT { id: "readout", z: 2, texts: [
+            (emit RASM_PAINT { n: ?n, id: "readout", z: 2, texts: [
               { id: "readout:tween:label", key: @config.tweenLabel, x: (+ @r.x 0), y: (+ @r.y 0), z: 2, align: "left", baseline: "top", color: @l.textColor, font: @l.font, spring: @l.spring },
               { id: "readout:swipe:label", key: @config.swipeLabel, x: (+ @r.x 0), y: (+ @r.y 38), z: 2, align: "left", baseline: "top", color: @l.textColor, font: @l.font, spring: @l.spring },
               { id: "readout:swipe:dir", key: @sk, x: (+ @r.x 0), y: (+ @r.y 56), z: 2, align: "left", baseline: "top", color: @l.textColor, font: @l.font, spring: @l.spring },
@@ -158,7 +158,7 @@ orbital RasmGallery {
       READOUT_PAINT -> internal { n : number! }
         @description "Repaint the readout from the stored rect and look."
         @tier "internal"
-      RASM_PAINT -> external { id : string!  z : number!  texts : [RasmText]!  nodes : [node]! }
+      RASM_PAINT -> external { n : number!  id : string!  z : number!  texts : [RasmText]!  nodes : [node]! }
         @description "The readout's tween bar and its swipe, fling and drop lines."
         @tier "primary"
       RASM_TWEEN_START -> external { id : string!  from : number!  to : number!  durationMs : number! }
@@ -196,7 +196,7 @@ orbital RasmGallery {
         @description "Store the looks and repaint the readout."
         @tier "domain"
       TweenCol.RASM_PLACE -> RASM_PLACE
-      RASM_PLACE { placed : [RasmPlaced]! }
+      RASM_PLACE { placed : [RasmPlaced]!  n : number }
         @description "Take the readout's rect when it is placed."
         @tier "domain"
     }

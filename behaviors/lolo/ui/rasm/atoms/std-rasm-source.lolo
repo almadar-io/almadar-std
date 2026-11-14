@@ -95,7 +95,7 @@ orbital RasmSourceOrbital {
         (emit SOURCE_PAINT { n: @entity.paints })
       SOURCE_HIDE -> ready when (not @entity.shown)
       SOURCE_PAINT -> ready when (or (not @entity.shown) (= @entity.rect null))
-        (emit RASM_PAINT { id: @config.id, z: @config.z, nodes: [], texts: [] })
+        (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z, nodes: [], texts: [] })
       SOURCE_PAINT -> ready when (and @entity.shown (!= @entity.rect null))
         (let ((r @entity.rect) (card (object/get @entity.looks "stack/source/idle" null)) (code (object/get @entity.looks "text/code/idle" null)) (hot (object/get @entity.looks "text/code/active" null)) (src (str/split @entity.text "\n")) (all (array/range 0 (array/len @entity.transitions))))
           (let ((arrivedAt (array/filter @all (fn i (let ((t (array/nth @entity.transitions @i))) (and (!= @t null) (= @t.from @entity.from) (= @t.event @entity.event) (= @t.to @entity.state))))))
@@ -115,8 +115,8 @@ orbital RasmSourceOrbital {
                                 (capFont (str/concat "600 " (math/max @config.minFont (math/floor (* @px 0.86))) "px " @config.captionFamily))
                                 (turnMs (if @entity.reduced 200 @config.flipMs))
                                 (cx (+ @r.x (* @r.w 0.5))))
-                            (do (emit RASM_EXTENT { id: @config.id, w: @r.w, h: (+ (* 2 @pad) (* @n @lh)) })
-                            (emit RASM_PAINT { id: @config.id, z: @config.z,
+                            (do (emit RASM_EXTENT { n: ?n, id: @config.id, w: @r.w, h: (+ (* 2 @pad) (* @n @lh)) })
+                            (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z,
                               nodes: (array/concat
                                 [{ type: draw-shape, shape: "rect", id: (str/concat @config.id "-card"), anchor: "top-left", position: { x: @r.x, y: @r.y, z: @config.z }, width: @r.w, height: @r.h, fill: (if (= @card null) "rgba(0,0,0,0)" @card.fill), stroke: (if (= @card null) "rgba(0,0,0,0)" @card.stroke), strokeWidth: (if (= @card null) 0 @card.strokeWidth), corners: (if (= @card null) null @card.corners), shadow: (if (= @card null) null @card.shadow), backdrop: (if (= @card null) null @card.backdrop), material: (if (= @card null) null @card.material), hit: false,
                                   animation: (if @entity.reduced { durationMs: @turnMs, loop: false, startMs: @entity.flipMs, keyframes: [{ at: 0, opacity: 0 }, { at: 1, opacity: 1 }] } { durationMs: @turnMs, loop: false, startMs: @entity.flipMs, keyframes: [{ at: 0, width: 0, position: { x: @cx } }, { at: 1, width: @r.w, position: { x: @r.x } }] }) }]
@@ -149,6 +149,7 @@ orbital RasmSourceOrbital {
         @description "The card turned over to the source (true) or back (false)."
         @tier "primary"
       RASM_EXTENT -> external {
+        n : number!
         id : string!
         w : number!
         h : number!
@@ -156,6 +157,7 @@ orbital RasmSourceOrbital {
         @description "The height every line needs at the size chosen."
         @tier "primary"
       RASM_PAINT -> external {
+        n : number!
         id : string!
         z : number!
         nodes : [node]!
@@ -176,7 +178,7 @@ orbital RasmSourceOrbital {
         @description "The surface's reading direction for the captions."
       RASM_MOTION { reduced : boolean! }
         @description "Whether the viewer asked for reduced motion: the card then fades instead of turning."
-      RASM_PLACE { placed : [RasmPlaced]! }
+      RASM_PLACE { placed : [RasmPlaced]!  n : number }
         @description "Take this card's rect when it is placed and repaint."
       SOURCE_AT { state : string!  from : string!  event : string! }
         @description "Where the machine rests and the move that brought it there (empty from and event before any move)."

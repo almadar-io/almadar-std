@@ -12,6 +12,7 @@ orbital RasmAnchorOrbital {
     rects : Map string RasmRect @description "The latest rect announced for each control id." = {}
     viewW : number @description "The surface width popups must stay inside." = 720
     viewH : number @description "The surface height popups must stay inside." = 520
+    layouts : number @description "Counts layouts, so each layout in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
   }
 
   trait RasmAnchor -> RasmAnchorItem [client] {
@@ -27,6 +28,7 @@ orbital RasmAnchorOrbital {
         (set @entity.viewW ?width)
         (set @entity.viewH ?height)
       RASM_ANCHOR -> ready when (object/has @entity.rects ?anchor)
+        (set @entity.layouts (+ @entity.layouts 1))
         (let (
             (a (object/get @entity.rects ?anchor { x: 0, y: 0, w: 0, h: 0 }))
             (gap @config.gap)
@@ -48,11 +50,12 @@ orbital RasmAnchorOrbital {
                   (placeBelow (if (= ?side "below") (or @fitsBelow (not @fitsAbove)) (and (not @fitsAbove) @fitsBelow)))
                   (placeEnd (if (= ?side "end") (or @fitsEnd (not @fitsStart)) (and (not @fitsStart) @fitsEnd)))
                 )
-                (emit RASM_PLACE { placed: [{ id: ?id, rect: { x: (if @vertical (math/max 0 (math/min @a.x (- @entity.viewW ?width))) (if @placeEnd @endX @startX)), y: (if @vertical (if @placeBelow @below @above) (math/max 0 (math/min @a.y (- @entity.viewH ?height)))), w: ?width, h: ?height } }] })))))
+                (emit RASM_PLACE { n: @entity.layouts, placed: [{ id: ?id, rect: { x: (if @vertical (math/max 0 (math/min @a.x (- @entity.viewW ?width))) (if @placeEnd @endX @startX)), y: (if @vertical (if @placeBelow @below @above) (math/max 0 (math/min @a.y (- @entity.viewH ?height)))), w: ?width, h: ?height } }] })))))
     }
 
     emits {
       RASM_PLACE -> external {
+        n : number!
         placed : [RasmPlaced]!
       }
         @description "The popup's placed rect."
@@ -60,7 +63,7 @@ orbital RasmAnchorOrbital {
     }
 
     listens {
-      RASM_PLACE { placed : [RasmPlaced]! }
+      RASM_PLACE { placed : [RasmPlaced]!  n : number }
         @description "Placed rects of the controls; the anchor keeps the latest for each id."
       RASM_RESIZE { width : number!  height : number! }
         @description "The surface size popups are kept inside."

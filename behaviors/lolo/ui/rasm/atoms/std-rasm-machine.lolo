@@ -1,0 +1,548 @@
+app std-rasm-machine [
+  version: "0.1.0",
+  description: "std-rasm-machine — paints a described trait's state machine on the Rasm surface the way a reader follows it: states in ranks from the initial one, one wire per pair of states carrying a label of that pair's events, each with a guard mark when one of its arms is guarded and one glyph per effect in order. It describes its subject (behavior/describe) and leaves out the transitions of the events its `omit` knob names, measures the state and event names on the canvas (RASM_MEASURED), asks a sibling std-graph-layout for the layout (LAYOUT_REQUEST, answered by LAYOUT_READY; the call site composes the layout with routing direct), then scales the layout to its placed rect and reports its height (RASM_EXTENT). MACHINE_AT { state, event } says the subject moved: the current state takes the now badge, visited states keep their order number, and the move plays five beats along the wire it took (a token leaves the source, crosses the guard, the wire draws behind it, the effect glyphs strike in order, the target blooms). MACHINE_REFUSED { event } says a guarded event was refused at the current state: the token stops at the guard, which shakes, and nothing moves. An event of a wire leaving the current state is a button that emits MACHINE_PICK { event, from, to }, except INIT, which only the kernel sends. Looks are keyed machine/<part>/<state>; an effect glyph is the operator's own glyph from the std operator table (behavior/describe answers it as machine.glyphs), colored by the look machine/effect/other, whose decor is the mark of an operator with no glyph. With rtl the layout mirrors. Reduced motion keeps the final frame with an opacity crossfade only."
+]
+
+type RasmRect = { x : number!, y : number!, w : number!, h : number! }
+type RasmPlaced = { id : string!, rect : RasmRect! }
+type RasmMaterial = { wgsl : string!, params : [number]!, live : boolean! }
+type RasmCorners = { radius : [number]!, kind : "round" | "bevel" | "notch" | "scoop" }
+type RasmSpring = { stiffness : number!, damping : number! }
+type RasmShadow = { color : string!, blur : number! }
+type RasmBackdrop = { blur : number!, tint : string, saturate : number }
+type RasmLook = { fill : string, stroke : string, strokeWidth : number, corners : RasmCorners, shadow : RasmShadow, material : RasmMaterial, textColor : string, font : string, spring : RasmSpring, decor : string, backdrop : RasmBackdrop }
+type RasmKeyframe = { at : number!, opacity : number }
+type RasmAnimation = { durationMs : number!, startMs : number, loop : boolean!, keyframes : [RasmKeyframe]! }
+type RasmText = { id : string!, key : MessageKey!, x : number!, y : number!, z : number!, align : string!, baseline : string!, color : string?, font : string?, spring : RasmSpring?, width : number?, wrap : boolean?, measure : boolean?, role : string?, animation : RasmAnimation? }
+type RasmMeasureItem = { id : string!, width : number!, height : number!, lines : number! }
+type DescribedState = { name : string!, isInitial : boolean }
+type DescribedTransition = { from : string!, to : string!, event : string!, guard : SExpr?, effects : [SExpr] }
+type DescribedStateMachine = { states : [DescribedState]!, transitions : [DescribedTransition]! }
+type MachineGlyphs = Map string string
+type DescribedMachine = { stateMachine : DescribedStateMachine!, glyphs : MachineGlyphs }
+type DescribedSubject = { machine : DescribedMachine! }
+type MachineSeg = { event : string!, guarded : boolean!, heads : [string]! }
+type MachineGroup = { id : string!, from : string!, to : string!, segs : [MachineSeg]! }
+type LayoutPoint = { x : number!, y : number! }
+type LayoutNode = { id : string!, label : string!, width : number!, height : number! }
+type LayoutEdge = { id : string!, source : string!, target : string!, label : string!, labelWidth : number!, labelHeight : number! }
+type LayoutPlacedNode = { id : string!, label : string!, width : number!, height : number!, x : number!, y : number!, rank : number! }
+type LayoutRoutedEdge = { id : string!, source : string!, target : string!, label : string!, labelWidth : number!, labelHeight : number!, points : [LayoutPoint]!, labelX : number!, labelY : number!, reversed : boolean! }
+type MachineWidths = Map string number
+
+orbital RasmMachineOrbital {
+  entity RasmMachineRun [runtime] {
+    id : string!
+    rect : RasmRect? @description "The rect RASM_PLACE gave the machine, null until placed." = null
+    looks : Map string RasmLook @description "The announced look table." = {}
+    direction : "ltr" | "rtl" = "ltr"
+    reduced : boolean = false
+    states : [DescribedState] @description "The described states, in the order behavior/describe lists them." = []
+    groups : [MachineGroup] @description "One group per ordered pair of states that has a transition, in first-appearance order, with that pair's events." = []
+    widths : MachineWidths @description "Measured text widths by measure id." = {}
+    glyphs : MachineGlyphs @description "The std glyph of each effect operator the subject runs, as behavior/describe answers it." = {}
+    nodes : [LayoutPlacedNode] @description "The placed states, in layout units." = []
+    edges : [LayoutRoutedEdge] @description "The routed groups, in layout units; an edge id is its group id." = []
+    layoutW : number = 0
+    layoutH : number = 0
+    extentH : number @description "The height last reported with RASM_EXTENT, -1 before any." = -1
+    active : string @description "The current state." = ""
+    from : string @description "The state the last move left." = ""
+    fired : string @description "The event of the last move." = ""
+    firedMs : number @description "The epoch-ms instant of the last move, the start of its beats; 0 before any." = 0
+    refused : string @description "The event of the last refusal." = ""
+    refusedMs : number @description "The epoch-ms instant of the last refusal; 0 before any." = 0
+    visited : [string] @description "States passed through, in order." = []
+    hovered : string @description "The id of the event button under the pointer." = ""
+    error : string @description "Why describing or laying out failed." = ""
+    paints : number @description "Counts paints, so each paint in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
+  }
+
+  trait RasmMachine -> RasmMachineRun [client] {
+    initial: describing
+
+    state describing {
+      INIT -> describing
+        (behavior/describe @config.subject { emit: { success: MACHINE_DESCRIBED, failure: MACHINE_DESCRIBE_FAILED } })
+      RASM_BOOT -> describing
+        (behavior/describe @config.subject { emit: { success: MACHINE_DESCRIBED, failure: MACHINE_DESCRIBE_FAILED } })
+      MACHINE_DESCRIBED -> measuring
+        (let ((ts (array/filter ?result.machine.stateMachine.transitions (fn t (not (array/includes @config.omit @t.event))))))
+          (let ((keys (array/unique (array/map @ts (fn t (str/concat @t.from " " @t.to))))))
+            (set @entity.groups (array/map (array/range 0 (array/len @keys)) (fn i
+              (let ((k (array/nth @keys @i)))
+                (let ((mine (array/filter @ts (fn t (= (str/concat @t.from " " @t.to) @k)))))
+                  (let ((none : DescribedTransition { from: "", to: "", event: "", guard: null, effects: [] }))
+                  (let ((first (default (array/nth @mine 0) @none)))
+                    { id: (str/concat "g" @i), from: @first.from, to: @first.to,
+                      segs: (array/map (array/unique (array/map @mine (fn t @t.event))) (fn ev
+                        (let ((arms (array/filter @mine (fn t (= @t.event @ev)))))
+                          (let ((arm (default (array/nth @arms 0) @none)))
+                            { event: @ev, guarded: (array/some @arms (fn a (!= @a.guard null))),
+                              heads: (array/map (default @arm.effects []) (fn fx (default (as (array/nth (json/nodes @fx) 1) string) ""))) })))) })))))))))
+        (set @entity.states ?result.machine.stateMachine.states)
+        (set @entity.glyphs (default ?result.machine.glyphs {}))
+        (set @entity.active (let ((ini (array/find ?result.machine.stateMachine.states (fn s (= @s.isInitial true))))) (if (= @ini null) "" @ini.name)))
+        (set @entity.visited (let ((ini (array/find ?result.machine.stateMachine.states (fn s (= @s.isInitial true))))) (if (= @ini null) [] [@ini.name])))
+        (set @entity.widths {})
+        (set @entity.error "")
+        (set @entity.paints (+ @entity.paints 1))
+        (emit MACHINE_PAINT { n: @entity.paints })
+      MACHINE_DESCRIBE_FAILED -> describing
+        (set @entity.error ?error)
+      RASM_THEME -> describing
+        (set @entity.looks ?looks)
+      RASM_PLACE -> describing when (array/some ?placed (fn p (= @p.id @config.id)))
+        (set @entity.rect (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) null @mine.rect)))
+      RASM_PLACE -> describing when (not (array/some ?placed (fn p (= @p.id @config.id))))
+      RASM_DIRECTION -> describing
+        (set @entity.direction ?direction)
+      RASM_MOTION -> describing
+        (set @entity.reduced ?reduced)
+    }
+
+    state measuring {
+      INIT -> describing
+        (set @entity.widths {})
+        (behavior/describe @config.subject { emit: { success: MACHINE_DESCRIBED, failure: MACHINE_DESCRIBE_FAILED } })
+      MACHINE_PAINT -> measuring when (and (!= @entity.rect null) (!= (object/get @entity.looks "machine/state/idle" null) null) (!= (object/get @entity.looks "machine/event/idle" null) null))
+        (let ((r @entity.rect) (sl (object/get @entity.looks "machine/state/idle" null)) (el (object/get @entity.looks "machine/event/idle" null)))
+          (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z, texts: [],
+            nodes: (array/concat
+              (array/map @entity.states (fn s { type: draw-text, id: (str/concat @config.id "-m-s-" @s.name), text: @s.name, anchor: "top-left", position: { x: @r.x, y: @r.y, z: @config.z }, align: "left", baseline: "top", color: "rgba(0,0,0,0)", font: @sl.font, measure: true, hit: false }))
+              (array/map (array/unique (array/flatten (array/map @entity.groups (fn g (array/map @g.segs (fn sg @sg.event)))))) (fn ev { type: draw-text, id: (str/concat @config.id "-m-e-" @ev), text: @ev, anchor: "top-left", position: { x: @r.x, y: @r.y, z: @config.z }, align: "left", baseline: "top", color: "rgba(0,0,0,0)", font: @el.font, measure: true, hit: false }))) }))
+      MACHINE_PAINT -> measuring when (not (and (!= @entity.rect null) (!= (object/get @entity.looks "machine/state/idle" null) null) (!= (object/get @entity.looks "machine/event/idle" null) null)))
+      RASM_MEASURED -> laying when (let ((wm (array/reduce (array/filter ?items (fn it (str/startsWith @it.id (str/concat @config.id "-m-")))) @entity.widths (fn (acc it) (object/set @acc @it.id @it.width)))))
+          (and (array/every @entity.states (fn s (object/has @wm (str/concat @config.id "-m-s-" @s.name))))
+               (array/every @entity.groups (fn g (array/every @g.segs (fn sg (object/has @wm (str/concat @config.id "-m-e-" @sg.event))))))))
+        (set @entity.widths (array/reduce (array/filter ?items (fn it (str/startsWith @it.id (str/concat @config.id "-m-")))) @entity.widths (fn (acc it) (object/set @acc @it.id @it.width))))
+        (emit LAYOUT_REQUEST {
+          nodes: (array/map @entity.states (fn s { id: @s.name, label: @s.name, width: (+ (* 2 @config.statePad) (default (object/get @entity.widths (str/concat @config.id "-m-s-" @s.name)) 0)), height: @config.stateHeight })),
+          edges: (array/map @entity.groups (fn g { id: @g.id, source: @g.from, target: @g.to, label: @g.id,
+            labelWidth: (+ (* 2 @config.pillPad) (* (- (array/len @g.segs) 1) @config.segGap)
+              (array/reduce @g.segs 0 (fn (sum sg) (+ @sum (if @sg.guarded (+ (* 2 @config.guardRadius) @config.chipGap) 0) (default (object/get @entity.widths (str/concat @config.id "-m-e-" @sg.event)) 0) (if (= (array/len @sg.heads) 0) 0 (+ @config.chipGap (* (array/len @sg.heads) (+ (* 2 @config.chipRadius) @config.chipGap)))))))),
+            labelHeight: @config.pillHeight })) })
+      RASM_MEASURED -> measuring when (not (let ((wm (array/reduce (array/filter ?items (fn it (str/startsWith @it.id (str/concat @config.id "-m-")))) @entity.widths (fn (acc it) (object/set @acc @it.id @it.width)))))
+          (and (array/every @entity.states (fn s (object/has @wm (str/concat @config.id "-m-s-" @s.name))))
+               (array/every @entity.groups (fn g (array/every @g.segs (fn sg (object/has @wm (str/concat @config.id "-m-e-" @sg.event)))))))))
+        (set @entity.widths (array/reduce (array/filter ?items (fn it (str/startsWith @it.id (str/concat @config.id "-m-")))) @entity.widths (fn (acc it) (object/set @acc @it.id @it.width))))
+      RASM_THEME -> measuring
+        (set @entity.looks ?looks)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit MACHINE_PAINT { n: @entity.paints })
+      RASM_PLACE -> measuring when (array/some ?placed (fn p (= @p.id @config.id)))
+        (set @entity.rect (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) null @mine.rect)))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit MACHINE_PAINT { n: @entity.paints })
+      RASM_PLACE -> measuring when (not (array/some ?placed (fn p (= @p.id @config.id))))
+      RASM_DIRECTION -> measuring
+        (set @entity.direction ?direction)
+      RASM_MOTION -> measuring
+        (set @entity.reduced ?reduced)
+    }
+
+    state laying {
+      INIT -> describing
+        (set @entity.widths {})
+        (behavior/describe @config.subject { emit: { success: MACHINE_DESCRIBED, failure: MACHINE_DESCRIBE_FAILED } })
+      LAYOUT_READY -> showing
+        (set @entity.nodes ?nodes)
+        (set @entity.edges ?edges)
+        (set @entity.layoutW ?width)
+        (set @entity.layoutH ?height)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit MACHINE_PAINT { n: @entity.paints })
+      LAYOUT_REJECTED -> laying
+        (set @entity.error ?reason)
+      RASM_THEME -> measuring
+        (set @entity.looks ?looks)
+        (set @entity.widths {})
+        (set @entity.paints (+ @entity.paints 1))
+        (emit MACHINE_PAINT { n: @entity.paints })
+      RASM_PLACE -> laying when (array/some ?placed (fn p (= @p.id @config.id)))
+        (set @entity.rect (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) null @mine.rect)))
+      RASM_PLACE -> laying when (not (array/some ?placed (fn p (= @p.id @config.id))))
+      RASM_DIRECTION -> laying
+        (set @entity.direction ?direction)
+      RASM_MOTION -> laying
+        (set @entity.reduced ?reduced)
+      RASM_MEASURED -> laying
+    }
+
+    state showing {
+      INIT -> describing
+        (set @entity.widths {})
+        (behavior/describe @config.subject { emit: { success: MACHINE_DESCRIBED, failure: MACHINE_DESCRIBE_FAILED } })
+      RASM_THEME -> measuring
+        (set @entity.looks ?looks)
+        (set @entity.widths {})
+        (set @entity.paints (+ @entity.paints 1))
+        (emit MACHINE_PAINT { n: @entity.paints })
+      RASM_PLACE -> showing when (and (array/some ?placed (fn p (= @p.id @config.id))) (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (or (= @entity.rect null) (!= @mine.rect.x @entity.rect.x) (!= @mine.rect.y @entity.rect.y) (!= @mine.rect.w @entity.rect.w) (!= @mine.rect.h @entity.rect.h))))
+        (set @entity.rect (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) null @mine.rect)))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit MACHINE_PAINT { n: @entity.paints })
+      RASM_PLACE -> showing when (not (and (array/some ?placed (fn p (= @p.id @config.id))) (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (or (= @entity.rect null) (!= @mine.rect.x @entity.rect.x) (!= @mine.rect.y @entity.rect.y) (!= @mine.rect.w @entity.rect.w) (!= @mine.rect.h @entity.rect.h)))))
+      RASM_DIRECTION -> showing
+        (set @entity.direction ?direction)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit MACHINE_PAINT { n: @entity.paints })
+      RASM_MOTION -> showing
+        (set @entity.reduced ?reduced)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit MACHINE_PAINT { n: @entity.paints })
+      RASM_MEASURED -> showing
+      MACHINE_AT -> showing when (and (array/some @entity.states (fn s (= @s.name ?state))) (array/some @entity.groups (fn g (and (= @g.from @entity.active) (= @g.to ?state) (array/some @g.segs (fn sg (= @sg.event ?event)))))))
+        (set @entity.from @entity.active)
+        (set @entity.active ?state)
+        (set @entity.fired ?event)
+        (set @entity.firedMs (time/epoch-ms @now))
+        (set @entity.refusedMs 0)
+        (set @entity.visited (if (= (array/nth @entity.visited 0) ?state) [?state] (array/append @entity.visited ?state)))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit MACHINE_PAINT { n: @entity.paints })
+      MACHINE_AT -> showing when (and (array/some @entity.states (fn s (= @s.name ?state))) (not (array/some @entity.groups (fn g (and (= @g.from @entity.active) (= @g.to ?state) (array/some @g.segs (fn sg (= @sg.event ?event))))))))
+        (set @entity.from "")
+        (set @entity.active ?state)
+        (set @entity.fired "")
+        (set @entity.firedMs 0)
+        (set @entity.refusedMs 0)
+        (set @entity.visited [?state])
+        (set @entity.paints (+ @entity.paints 1))
+        (emit MACHINE_PAINT { n: @entity.paints })
+      MACHINE_AT -> showing when (not (array/some @entity.states (fn s (= @s.name ?state))))
+      MACHINE_REFUSED -> showing when (array/some @entity.groups (fn g (and (= @g.from @entity.active) (array/some @g.segs (fn sg (and (= @sg.event ?event) @sg.guarded))))))
+        (set @entity.refused ?event)
+        (set @entity.refusedMs (time/epoch-ms @now))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit MACHINE_PAINT { n: @entity.paints })
+      MACHINE_REFUSED -> showing when (not (array/some @entity.groups (fn g (and (= @g.from @entity.active) (array/some @g.segs (fn sg (and (= @sg.event ?event) @sg.guarded)))))))
+      RASM_POINTER -> showing when (and (= ?kind "down") (str/startsWith ?id (str/concat @config.id "-ev-")))
+        (let ((hit (array/find (array/flatten (array/map (array/filter @entity.groups (fn g (= @g.from @entity.active))) (fn g (array/map (array/filter @g.segs (fn sg (!= @sg.event "INIT"))) (fn sg { id: (str/concat @config.id "-ev-" @g.id "-" @sg.event), event: @sg.event, from: @g.from, to: @g.to }))))) (fn b (= @b.id ?id)))))
+          (if (= @hit null) null (emit MACHINE_PICK { event: @hit.event, from: @hit.from, to: @hit.to })))
+      RASM_POINTER -> showing when (and (= ?kind "enter") (str/startsWith ?id (str/concat @config.id "-ev-")))
+        (set @entity.hovered ?id)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit MACHINE_PAINT { n: @entity.paints })
+      RASM_POINTER -> showing when (and (= ?kind "leave") (= ?id @entity.hovered))
+        (set @entity.hovered "")
+        (set @entity.paints (+ @entity.paints 1))
+        (emit MACHINE_PAINT { n: @entity.paints })
+      RASM_POINTER -> showing when (not (or (and (= ?kind "down") (str/startsWith ?id (str/concat @config.id "-ev-"))) (and (= ?kind "enter") (str/startsWith ?id (str/concat @config.id "-ev-"))) (and (= ?kind "leave") (= ?id @entity.hovered))))
+      RASM_ACCESS -> showing when (and (= ?action "activate") (str/startsWith ?target (str/concat @config.id "-ev-")))
+        (let ((hit (array/find (array/flatten (array/map (array/filter @entity.groups (fn g (= @g.from @entity.active))) (fn g (array/map (array/filter @g.segs (fn sg (!= @sg.event "INIT"))) (fn sg { id: (str/concat @config.id "-ev-" @g.id "-" @sg.event), event: @sg.event, from: @g.from, to: @g.to }))))) (fn b (= @b.id ?target)))))
+          (if (= @hit null) null (emit MACHINE_PICK { event: @hit.event, from: @hit.from, to: @hit.to })))
+      RASM_ACCESS -> showing when (not (and (= ?action "activate") (str/startsWith ?target (str/concat @config.id "-ev-"))))
+      MACHINE_PAINT -> showing when (= @entity.rect null)
+      MACHINE_PAINT -> showing when (!= @entity.rect null)
+        (let ((r @entity.rect) (lw (math/max 1 @entity.layoutW)) (lh @entity.layoutH))
+          (let ((s (math/min @config.maxScale (/ @r.w @lw))))
+            (let ((ox (+ @r.x (/ (- @r.w (* @lw @s)) 2))) (oy @r.y) (rtl (= @entity.direction "rtl")) (h (math/ceil (* @lh @s))))
+              (do
+                (when (!= @h @entity.extentH) (do (set @entity.extentH @h) (emit RASM_EXTENT { n: ?n, id: @config.id, w: @r.w, h: @h })))
+                (emit MACHINE_DRAW { s: @s, ox: @ox, oy: @oy, rtl: @rtl })))))
+      MACHINE_DRAW -> showing
+        (let (
+            (s ?s) (ox ?ox) (oy ?oy) (rtl ?rtl) (lw @entity.layoutW)
+            (wIdle (default (object/get @entity.looks "machine/wire/idle") {}))
+            (wNext (default (object/get @entity.looks "machine/wire/next") {}))
+            (wLit (default (object/get @entity.looks "machine/wire/lit") {}))
+            (pIdle (default (object/get @entity.looks "machine/pill/idle") {}))
+            (pNext (default (object/get @entity.looks "machine/pill/next") {}))
+            (pLit (default (object/get @entity.looks "machine/pill/lit") {}))
+            (pHov (default (object/get @entity.looks "machine/pill/hovered") {}))
+            (sIdle (default (object/get @entity.looks "machine/state/idle") {}))
+            (sAct (default (object/get @entity.looks "machine/state/active") {}))
+            (sVis (default (object/get @entity.looks "machine/state/visited") {}))
+            (gIdle (default (object/get @entity.looks "machine/guard/idle") {}))
+            (gRef (default (object/get @entity.looks "machine/guard/refused") {}))
+            (eIdle (default (object/get @entity.looks "machine/event/idle") {}))
+            (eLit (default (object/get @entity.looks "machine/event/lit") {}))
+            (badge (default (object/get @entity.looks "machine/badge/idle") {}))
+            (token (default (object/get @entity.looks "machine/token/idle") {}))
+            (bloom (default (object/get @entity.looks "machine/bloom/idle") {}))
+            (dur (* 5 @config.beatMs))
+            (fm @entity.firedMs)
+            (rm @entity.refusedMs)
+            (nothing : [node] [])
+            (noTexts : [RasmText] [])
+          )
+          (let (
+              (firedG (array/find @entity.groups (fn g (and (= @g.from @entity.from) (= @g.to @entity.active) (array/some @g.segs (fn sg (= @sg.event @entity.fired)))))))
+              (refusedG (array/find @entity.groups (fn g (and (= @g.from @entity.active) (array/some @g.segs (fn sg (and (= @sg.event @entity.refused) @sg.guarded)))))))
+            )
+            (let (
+                (firedId (if (or (= @firedG null) (= @fm 0)) "" @firedG.id))
+                (refusedId (if (or (= @refusedG null) (= @rm 0)) "" @refusedG.id))
+              )
+              (emit RASM_PAINT { n: @entity.paints, id: @config.id, z: @config.z,
+                texts: (if (= @entity.active "") @noTexts (let ((an (array/find @entity.nodes (fn n (= @n.id @entity.active)))))
+                  (if (= @an null) @noTexts
+                    (let ((nowT : [RasmText] [{ id: (str/concat @config.id "-now"), key: @config.nowLabel, x: (if @rtl (+ (+ @ox (* @s (if @rtl (- @lw (+ @an.x @an.width)) (+ @an.x @an.width)))) (* 12 @s)) (- (+ @ox (* @s (if @rtl (- @lw (+ @an.x @an.width)) (+ @an.x @an.width)))) (* 12 @s))), y: (- (+ @oy (* @s @an.y)) (* 9 @s)), z: (+ @config.z 3), align: (if @rtl "left" "right"), baseline: "middle", color: @badge.textColor, font: @badge.font, role: "status" }])) @nowT))))
+                nodes: (array/concat [{ type: draw-group, id: (str/concat @config.id "-g"), position: { x: @ox, y: @oy, z: @config.z }, scale: @s, items: (array/concat
+                  (array/flatten (array/map @entity.edges (fn e
+                    (let ((g (array/find @entity.groups (fn g (= @g.id @e.id)))))
+                      (let ((isLit (= @e.id @firedId)) (isNext (and (!= @g null) (= @g.from @entity.active))))
+                        (let ((wl (if @isLit @wLit (if @isNext @wNext @wIdle)))
+                              (pts (array/map @e.points (fn p { x: (if @rtl (- @lw @p.x) @p.x), y: @p.y }))))
+                          (let ((d (str/concat "M" (str/join (array/map @pts (fn q (str/concat @q.x " " @q.y))) " L")))
+                                (len (array/reduce (array/range 1 (array/len @pts)) 0 (fn (acc i) (let ((a (array/nth @pts (- @i 1))) (b (array/nth @pts @i))) (+ @acc (math/abs (- @b.x @a.x)) (math/abs (- @b.y @a.y)))))))
+                                (last (array/last @pts))
+                                (dir (if @rtl -1 1)))
+                            (array/concat
+                              [{ type: draw-shape, id: (str/concat @config.id "-wire-" @e.id), shape: "path", anchor: "top-left", position: { x: 0, y: 0, z: @config.z }, d: @d, fill: "", stroke: (if @isLit @wIdle.stroke @wl.stroke), strokeWidth: @wl.strokeWidth, strokeDash: (if (and @isNext (not @isLit)) [5, 4] null), opacity: 1, hit: false },
+                               { type: draw-shape, id: (str/concat @config.id "-head-" @e.id), shape: "path", anchor: "top-left", position: { x: @last.x, y: @last.y, z: @config.z }, d: (str/concat "M0 0 L" (* -7 @dir) " -4 L" (* -7 @dir) " 4 Z"), fill: @wl.stroke, opacity: 1, hit: false }]
+                              (if (not @isLit) @nothing
+                                [{ type: draw-shape, id: (str/concat @config.id "-lit-" @e.id), shape: "path", anchor: "top-left", position: { x: 0, y: 0, z: (+ @config.z 1) }, d: @d, fill: "", stroke: @wLit.stroke, strokeWidth: @wLit.strokeWidth, opacity: 1, hit: false }])))))))))
+                  (let ((ini (array/find @entity.states (fn st (= @st.isInitial true)))))
+                    (let ((inode (if (= @ini null) null (array/find @entity.nodes (fn n (= @n.id @ini.name))))))
+                      (if (= @inode null) @nothing
+                        (let ((ex (if @rtl (if @rtl (- @lw (+ @inode.x @inode.width)) (+ @inode.x @inode.width)) (if @rtl (- @lw @inode.x) @inode.x))) (cy (+ @inode.y (/ @inode.height 2))) (dir (if @rtl -1 1)))
+                          [{ type: draw-shape, id: (str/concat @config.id "-init-dot"), shape: "ellipse", anchor: "top-left", position: { x: (- @ex (* @dir 16)), y: @cy, z: @config.z }, radiusX: 4, radiusY: 4, fill: @wIdle.stroke, opacity: 1, hit: false },
+                           { type: draw-shape, id: (str/concat @config.id "-init-line"), shape: "path", anchor: "top-left", position: { x: 0, y: 0, z: @config.z }, d: (str/concat "M" (- @ex (* @dir 12)) " " @cy " L" @ex " " @cy), fill: "", stroke: @wIdle.stroke, strokeWidth: @wIdle.strokeWidth, opacity: 1, hit: false }]))))
+                  (array/flatten (array/map @entity.edges (fn e
+                    (let ((g (array/find @entity.groups (fn g (= @g.id @e.id)))))
+                      (if (= @g null) @nothing
+                        (let ((isLit (= @e.id @firedId)) (isNext (= @g.from @entity.active)) (isRef (= @e.id @refusedId)))
+                          (let ((pl (if @isLit @pLit (if @isNext @pNext @pIdle)))
+                                (px (if @rtl (if @rtl (- @lw (+ @e.labelX @e.labelWidth)) (+ @e.labelX @e.labelWidth)) (if @rtl (- @lw @e.labelX) @e.labelX)))
+                                (py @e.labelY)
+                                (cy (+ @e.labelY (/ @e.labelHeight 2))))
+                            (array/concat
+                              [{ type: draw-shape, id: (str/concat @config.id "-pill-" @e.id), shape: "rect", anchor: "top-left", position: { x: @px, y: @py, z: (+ @config.z 1) }, width: @e.labelWidth, height: @e.labelHeight, fill: @pl.fill, stroke: @pl.stroke, strokeWidth: @pl.strokeWidth, corners: @pl.corners, material: @pl.material, strokeDash: (if (and @isNext (not @isLit)) [4, 3] null), opacity: 1, hit: false }]
+                              (array/flatten (array/map (array/range 0 (array/len @g.segs)) (fn k
+                                (let ((sg (array/nth @g.segs @k))
+                                      (before (array/reduce (array/take @g.segs @k) 0 (fn (sum q) (+ @sum @config.segGap (if @q.guarded (+ (* 2 @config.guardRadius) @config.chipGap) 0) (default (object/get @entity.widths (str/concat @config.id "-m-e-" @q.event)) 0) (if (= (array/len @q.heads) 0) 0 (+ @config.chipGap (* (array/len @q.heads) (+ (* 2 @config.chipRadius) @config.chipGap)))))))))
+                                  (let ((ew (default (object/get @entity.widths (str/concat @config.id "-m-e-" @sg.event)) 0))
+                                        (x0 (+ @config.pillPad @before))
+                                        (bid (str/concat @config.id "-ev-" @g.id "-" @sg.event))
+                                        (segLit (and @isLit (= @sg.event @entity.fired)))
+                                        (segRef (and @isRef (= @sg.event @entity.refused))))
+                                    (let ((gx (if @sg.guarded (+ (* 2 @config.guardRadius) @config.chipGap) 0))
+                                          (segW (+ (if @sg.guarded (+ (* 2 @config.guardRadius) @config.chipGap) 0) @ew (if (= (array/len @sg.heads) 0) 0 (+ @config.chipGap (* (array/len @sg.heads) (+ (* 2 @config.chipRadius) @config.chipGap)))))))
+                                      (do
+                                        (array/concat
+                                          (if (not @sg.guarded) @nothing
+                                            [{ type: draw-shape, id: (str/concat @bid "-guard"), shape: "polygon", sides: 4, anchor: "top-left", position: { x: (if @rtl (- (+ @px @e.labelWidth) (+ @x0 (* 2 @config.guardRadius))) (+ @px @x0)), y: (- @cy @config.guardRadius), z: (+ @config.z 2) }, width: (* 2 @config.guardRadius), height: (* 2 @config.guardRadius), fill: (if @segRef @gRef.fill @gIdle.fill), stroke: (if @segRef @gRef.stroke @gIdle.stroke), strokeWidth: @gIdle.strokeWidth, opacity: 1, hit: false,
+                                               animation: (if (and @segRef (not @entity.reduced)) { durationMs: @dur, startMs: @rm, loop: false, keyframes: [{ at: 0, offsetX: 0 }, { at: 0.5, offsetX: 0 }, { at: 0.56, offsetX: 3 }, { at: 0.62, offsetX: -3 }, { at: 0.68, offsetX: 3 }, { at: 0.74, offsetX: 0 }, { at: 1, offsetX: 0 }] } (if (and @segLit (not @entity.reduced)) { durationMs: @dur, startMs: @fm, loop: false, keyframes: [{ at: 0, opacity: 1 }, { at: 0.45, opacity: 1 }, { at: 0.5, opacity: 0.2 }, { at: 0.6, opacity: 1 }, { at: 1, opacity: 1 }] } null)) }])
+                                          [{ type: draw-text, id: (str/concat @bid "-text"), text: @sg.event, anchor: "top-left", position: { x: (if @rtl (- (+ @px @e.labelWidth) (+ @x0 @gx)) (+ @px (+ @x0 @gx))), y: @cy, z: (+ @config.z 2) }, align: (if @rtl "right" "left"), baseline: "middle", color: (if @segLit @eLit.textColor @eIdle.textColor), font: @eIdle.font, hit: false }]
+                                          (array/flatten (array/map (array/range 0 (array/len @sg.heads)) (fn j
+                                            (let ((hd (array/nth @sg.heads @j)))
+                                              (let ((gl (default (object/get @entity.looks "machine/effect/other") {})))
+                                                [{ type: draw-shape, id: (str/concat @bid "-fx-" @j), shape: "path", anchor: "top-left", position: { x: (if @rtl (- (+ @px @e.labelWidth) (+ @x0 (+ @gx @ew @config.chipGap @config.chipRadius (* @j (+ (* 2 @config.chipRadius) @config.chipGap))))) (+ @px (+ @x0 (+ @gx @ew @config.chipGap @config.chipRadius (* @j (+ (* 2 @config.chipRadius) @config.chipGap)))))), y: @cy, z: (+ @config.z 2) }, d: (default (object/get @entity.glyphs @hd) (default @gl.decor "M-1 0 A1 1 0 1 0 1 0 A1 1 0 1 0 -1 0 Z")), scale: @config.chipRadius, fill: @gl.fill, stroke: @gl.stroke, strokeWidth: @gl.strokeWidth, opacity: 1, hit: false },
+                                                  { type: draw-shape, id: (str/concat @bid "-fx-" @j "-halo"), shape: "ellipse", anchor: "top-left", position: { x: (if @rtl (- (+ @px @e.labelWidth) (+ @x0 (+ @gx @ew @config.chipGap @config.chipRadius (* @j (+ (* 2 @config.chipRadius) @config.chipGap))))) (+ @px (+ @x0 (+ @gx @ew @config.chipGap @config.chipRadius (* @j (+ (* 2 @config.chipRadius) @config.chipGap)))))), y: @cy, z: (+ @config.z 1) }, radiusX: (* 1.6 @config.chipRadius), radiusY: (* 1.6 @config.chipRadius), fill: @token.fill, opacity: 0, hit: false,
+                                                  animation: (if (and @segLit (not @entity.reduced)) { durationMs: @dur, startMs: @fm, loop: false, keyframes: [{ at: 0, opacity: 0 }, { at: (+ 0.8 (* 0.1 (/ @j (math/max 1 (array/len @sg.heads))))), opacity: 0 }, { at: (+ 0.805 (* 0.1 (/ @j (math/max 1 (array/len @sg.heads))))), opacity: 0.8 }, { at: (+ 0.86 (* 0.1 (/ @j (math/max 1 (array/len @sg.heads))))), opacity: 0 }, { at: 1, opacity: 0 }] } null) }])))))
+                                          (if (or (not @isNext) (= @sg.event "INIT")) @nothing
+                                            [{ type: draw-shape, id: (str/concat @bid "-hover"), shape: "rect", anchor: "top-left", position: { x: (if @rtl (- (+ @px @e.labelWidth) (+ @x0 @segW)) (+ @px @x0)), y: @py, z: (+ @config.z 1) }, width: @segW, height: @e.labelHeight, fill: (if (= @entity.hovered @bid) @pHov.fill "rgba(0,0,0,0)"), opacity: 1, hit: false }])))))))))))))))))
+                  (array/flatten (array/map @entity.nodes (fn n
+                    (let ((isA (= @n.id @entity.active)) (vi (array/indexOf @entity.visited @n.id)))
+                      (let ((sl (if @isA @sAct (if (>= @vi 0) @sVis @sIdle)))
+                            (nx (if @rtl (if @rtl (- @lw (+ @n.x @n.width)) (+ @n.x @n.width)) (if @rtl (- @lw @n.x) @n.x)))
+                            (ny @n.y))
+                        (array/concat
+                          [{ type: draw-shape, id: (str/concat @config.id "-state-" @n.id), shape: "rect", anchor: "top-left", position: { x: @nx, y: @ny, z: (+ @config.z 1) }, width: @n.width, height: @n.height, fill: @sl.fill, stroke: @sl.stroke, strokeWidth: @sl.strokeWidth, corners: @sl.corners, material: @sl.material, spring: @sl.spring, opacity: 1, hit: false },
+                           { type: draw-text, id: (str/concat @config.id "-state-" @n.id "-name"), text: @n.id, anchor: "top-left", position: { x: (+ @nx (/ @n.width 2)), y: (+ @ny (/ @n.height 2)), z: (+ @config.z 2) }, align: "center", baseline: "middle", color: @sl.textColor, font: @sl.font, hit: false }]
+                          (if (not @isA) @nothing
+                            [{ type: draw-shape, id: (str/concat @config.id "-badge"), shape: "rect", anchor: "top-left", position: { x: (if @rtl (+ @nx 4) (- (+ @nx @n.width) 48)), y: (- @ny 16), z: (+ @config.z 2) }, width: 44, height: 16, fill: @badge.fill, stroke: @badge.stroke, strokeWidth: @badge.strokeWidth, corners: @badge.corners, opacity: 1, hit: false }])
+                          (if (or @isA (< @vi 0) (< (array/len @entity.visited) 2)) @nothing
+                            [{ type: draw-shape, id: (str/concat @config.id "-visit-" @n.id), shape: "ellipse", anchor: "top-left", position: { x: (if @rtl (+ @nx @n.width) @nx), y: @ny, z: (+ @config.z 2) }, radiusX: 9, radiusY: 9, fill: @sVis.stroke, opacity: 1, hit: false },
+                             { type: draw-text, id: (str/concat @config.id "-visit-" @n.id "-n"), text: (str/concat "" (+ @vi 1)), anchor: "top-left", position: { x: (if @rtl (+ @nx @n.width) @nx), y: @ny, z: (+ @config.z 3) }, align: "center", baseline: "middle", color: @sVis.fill, font: @badge.font, hit: false }])))))))
+                  (if (or (= @firedId "") @entity.reduced) @nothing
+                    (let ((e (array/find @entity.edges (fn x (= @x.id @firedId)))))
+                      (if (= @e null) @nothing
+                        (let ((pts (array/map @e.points (fn p { x: (if @rtl (- @lw @p.x) @p.x), y: @p.y }))))
+                          (let ((cums (array/reduce (array/range 1 (array/len @pts)) [0] (fn (acc i) (let ((a (array/nth @pts (- @i 1))) (b (array/nth @pts @i))) (array/append @acc (+ (default (array/last @acc) 0) (math/abs (- @b.x @a.x)) (math/abs (- @b.y @a.y)))))))))
+                            (let ((total (math/max 1 (default (array/last @cums) 0))) (p0 (array/nth @pts 0)) (pe (array/last @pts)) (tn (array/find @entity.nodes (fn n (= @n.id @entity.active)))))
+                              (array/concat
+                                [{ type: draw-shape, id: (str/concat @config.id "-token"), shape: "ellipse", anchor: "top-left", position: { x: @p0.x, y: @p0.y, z: (+ @config.z 4) }, radiusX: @config.tokenRadius, radiusY: @config.tokenRadius, fill: @token.fill, stroke: @token.stroke, strokeWidth: @token.strokeWidth, material: @token.material, opacity: 0, hit: false,
+                                   animation: { durationMs: @dur, startMs: @fm, loop: false, keyframes: (array/concat
+                                     [{ at: 0, opacity: 0, offsetX: 0, offsetY: 0 }, { at: 0.18, opacity: 1, offsetX: 0, offsetY: 0 }]
+                                     (array/map (array/range 0 (array/len @pts)) (fn i (let ((q (array/nth @pts @i))) { at: (+ 0.2 (* 0.6 (/ (default (array/nth @cums @i) 0) @total)) (* @i 0.0001)), opacity: 1, offsetX: (- @q.x @p0.x), offsetY: (- @q.y @p0.y) })))
+                                     [{ at: 0.9, opacity: 1, offsetX: (- @pe.x @p0.x), offsetY: (- @pe.y @p0.y) }, { at: 1, opacity: 0, offsetX: (- @pe.x @p0.x), offsetY: (- @pe.y @p0.y) }]) } }]
+                                (if (= @tn null) @nothing
+                                  [{ type: draw-shape, id: (str/concat @config.id "-bloom"), shape: "ellipse", anchor: "top-left", position: { x: (if @rtl (- @lw (+ @tn.x (/ @tn.width 2))) (+ @tn.x (/ @tn.width 2))), y: (+ @tn.y (/ @tn.height 2)), z: @config.z }, radiusX: (/ @tn.width 2), radiusY: (/ @tn.height 2), fill: "", stroke: @bloom.stroke, strokeWidth: @bloom.strokeWidth, opacity: 0, hit: false,
+                                     animation: { durationMs: @dur, startMs: @fm, loop: false, keyframes: [{ at: 0, opacity: 0, radiusX: (/ @tn.width 2), radiusY: (/ @tn.height 2) }, { at: 0.849, opacity: 0, radiusX: (/ @tn.width 2), radiusY: (/ @tn.height 2) }, { at: 0.85, opacity: 0.9, radiusX: (/ @tn.width 2), radiusY: (/ @tn.height 2) }, { at: 1, opacity: 0, radiusX: (+ (/ @tn.width 2) 18), radiusY: (+ (/ @tn.height 2) 18) }] } }]))))))))
+                  (if (or (= @refusedId "") @entity.reduced) @nothing
+                    (let ((e (array/find @entity.edges (fn x (= @x.id @refusedId)))))
+                      (if (= @e null) @nothing
+                        (let ((pts (array/map @e.points (fn p { x: (if @rtl (- @lw @p.x) @p.x), y: @p.y })))
+                              (gxy { x: (if @rtl (if @rtl (- @lw (+ @e.labelX @e.labelWidth)) (+ @e.labelX @e.labelWidth)) (if @rtl (- @lw @e.labelX) @e.labelX)), y: (+ @e.labelY (/ @e.labelHeight 2)) }))
+                          (let ((p0 (array/nth @pts 0)))
+                            [{ type: draw-shape, id: (str/concat @config.id "-token-refused"), shape: "ellipse", anchor: "top-left", position: { x: @p0.x, y: @p0.y, z: (+ @config.z 4) }, radiusX: @config.tokenRadius, radiusY: @config.tokenRadius, fill: @gRef.fill, stroke: @token.stroke, strokeWidth: @token.strokeWidth, opacity: 0, hit: false,
+                               animation: { durationMs: @dur, startMs: @rm, loop: false, keyframes: [{ at: 0, opacity: 0, offsetX: 0, offsetY: 0 }, { at: 0.15, opacity: 1, offsetX: 0, offsetY: 0 }, { at: 0.5, opacity: 1, offsetX: (- @gxy.x @p0.x), offsetY: (- @gxy.y @p0.y) }, { at: 0.75, opacity: 1, offsetX: (- @gxy.x @p0.x), offsetY: (- @gxy.y @p0.y) }, { at: 1, opacity: 0, offsetX: (- @gxy.x @p0.x), offsetY: (- @gxy.y @p0.y) }] } }])))))) }]
+                  (array/flatten (array/map @entity.edges (fn e
+                    (let ((g (array/find @entity.groups (fn g (= @g.id @e.id)))))
+                      (if (or (= @g null) (!= @g.from @entity.active)) @nothing
+                        (array/flatten (array/map (array/range 0 (array/len @g.segs)) (fn k
+                          (let ((sg (array/nth @g.segs @k))
+                                (before (array/reduce (array/take @g.segs @k) 0 (fn (sum q) (+ @sum @config.segGap (if @q.guarded (+ (* 2 @config.guardRadius) @config.chipGap) 0) (default (object/get @entity.widths (str/concat @config.id "-m-e-" @q.event)) 0) (if (= (array/len @q.heads) 0) 0 (+ @config.chipGap (* (array/len @q.heads) (+ (* 2 @config.chipRadius) @config.chipGap)))))))))
+                            (let ((ew (default (object/get @entity.widths (str/concat @config.id "-m-e-" @sg.event)) 0))
+                                  (x0 (+ @config.pillPad @before))
+                                  (bid (str/concat @config.id "-ev-" @g.id "-" @sg.event)))
+                              (let ((segW (+ (if @sg.guarded (+ (* 2 @config.guardRadius) @config.chipGap) 0) @ew (if (= (array/len @sg.heads) 0) 0 (+ @config.chipGap (* (array/len @sg.heads) (+ (* 2 @config.chipRadius) @config.chipGap)))))))
+                                (if (= @sg.event "INIT") @nothing
+                                  [{ type: draw-shape, id: @bid, shape: "rect", anchor: "top-left", position: { x: (+ @ox (* @s (if @rtl (- (- @lw @e.labelX) (+ @x0 @segW)) (+ @e.labelX @x0)))), y: (+ @oy (* @s @e.labelY)), z: (+ @config.z 5) }, width: (* @s @segW), height: (* @s @e.labelHeight), fill: "rgba(0,0,0,0)", opacity: 1, hit: true,
+                                     semantic: { role: "button", labelledBy: (str/concat @bid "-text"), disabled: false, order: @k, focused: false } }]))))))))))))) }))))
+    }
+
+    emits {
+      MACHINE_PAINT -> internal {
+        n : number!
+      }
+        @description "Paint from the stored description, measures, layout, rect, looks and last move."
+        @tier "internal"
+      MACHINE_DRAW -> internal {
+        s : number!
+        ox : number!
+        oy : number!
+        rtl : boolean!
+      }
+        @description "Draw the machine at a scale and origin."
+        @tier "internal"
+      MACHINE_DESCRIBED -> internal {
+        result : DescribedSubject!
+      }
+        @description "The describe answer, delivered to the trait itself."
+        @tier "internal"
+      MACHINE_DESCRIBE_FAILED -> internal {
+        error : string!
+      }
+        @description "The describe failure, delivered to the trait itself."
+        @tier "internal"
+      RASM_PAINT -> external {
+        n : number!
+        id : string!
+        z : number!
+        nodes : [node]!
+        texts : [RasmText]!
+      }
+        @description "Measuring: the state and event names, invisible, to be measured. Showing: the wires, labels, guard marks, effect glyphs, states, now badge, visit numbers and the beats of the last move or refusal."
+        @tier "primary"
+      RASM_EXTENT -> external {
+        n : number!
+        id : string!
+        w : number!
+        h : number!
+      }
+        @description "The height the scaled machine needs at its placed width."
+        @tier "primary"
+      LAYOUT_REQUEST -> external {
+        nodes : [LayoutNode]!
+        edges : [LayoutEdge]!
+      }
+        @description "Lay out the states (measured name plus padding) and one edge per pair of states (its label sized from its events, guard marks and effect glyphs)."
+        @tier "primary"
+      MACHINE_PICK -> external {
+        event : string!
+        from : string!
+        to : string!
+      }
+        @description "An event leaving the current state was pressed or activated: ask the subject to take it."
+        @tier "domain"
+    }
+
+    listens {
+      RASM_BOOT { }
+        @description "The surface mounted: describe the subject."
+      MACHINE_DESCRIBED { result : DescribedSubject! }
+        @description "The description answered: group the transitions by pair of states, sit at the initial state and measure the names."
+      MACHINE_DESCRIBE_FAILED { error : string! }
+        @description "The description failed: keep the reason; nothing is painted."
+      MACHINE_PAINT { n : number! }
+        @description "Paint what the current state shows."
+      MACHINE_DRAW { s : number!  ox : number!  oy : number!  rtl : boolean! }
+        @description "Draw at the computed scale and origin."
+      RASM_THEME { name : string!  looks : Map string RasmLook! }
+        @description "Keep the looks; fonts may have changed, so names are measured again and the machine laid out again."
+      RASM_PLACE { placed : [RasmPlaced]!  n : number }
+        @description "Take the rect of this machine's id; an unchanged rect or another id is ignored."
+      RASM_DIRECTION { direction : "ltr" | "rtl"! }
+        @description "The reading direction; rtl mirrors the layout."
+      RASM_MOTION { reduced : boolean! }
+        @description "Reduced motion: the final frame with an opacity crossfade only."
+      RASM_MEASURED { items : [RasmMeasureItem]! }
+        @description "Measured names: once every state and event name of this machine is measured, ask for the layout."
+      LAYOUT_READY { nodes : [LayoutPlacedNode]!  edges : [LayoutRoutedEdge]!  width : number!  height : number! }
+        @description "The layout answered: keep it and paint."
+      LAYOUT_REJECTED { reason : string!  ids : [string]! }
+        @description "The layout refused the graph: keep the reason."
+      MACHINE_AT { state : string!  event : string! }
+        @description "The subject moved to a described state by an event. Along a described wire from the current state the move plays its beats; otherwise the machine sits at the state without beats; an undescribed state changes nothing."
+      MACHINE_REFUSED { event : string! }
+        @description "A guarded event of the current state was refused: the token stops at its guard; an event with no guarded arm here changes nothing."
+      RASM_POINTER { kind : "down" | "up" | "enter" | "leave" | "move"!  id : string!  x : number!  y : number!  index : number }
+        @description "Pointer events on an event button: down picks it, enter and leave set and clear its hover."
+      RASM_ACCESS { target : string!  action : "focus" | "activate" | "increment" | "decrement"! }
+        @description "Assistive activation of an event button picks it."
+    }
+
+    config {
+      id : string = "machine"
+        @label "Id"
+        @description "The machine's id: its RASM_PLACE key and the prefix of every node id."
+        @tier "presentation"
+      z : number = 3
+        @label "Z"
+        @description "Paint order on the surface."
+        @tier "presentation"
+      subject : trait = std/behaviors/std-slide-deck.traits.SlideDeckPresenter
+        @label "Subject"
+        @description "The trait whose state machine is painted."
+        @tier "presentation"
+      omit : [string] = []
+        @label "Left out"
+        @description "Events whose transitions the drawing leaves out, named by the call site (a reset every state answers, say); the subject still takes them."
+        @tier "presentation"
+      nowLabel : MessageKey
+        @label "Now label"
+        @description "The catalog key of the badge on the current state."
+        @tier "presentation"
+      maxScale : number = 1.25
+        @label "Largest scale"
+        @description "The largest scale the layout is drawn at; it shrinks to fit the placed width."
+        @tier "presentation"
+      stateHeight : number = 44
+        @label "State height"
+        @description "The height of a state, in px at scale 1."
+        @tier "presentation"
+      statePad : number = 22
+        @label "State padding"
+        @description "The space each side of a state's name."
+        @tier "presentation"
+      pillHeight : number = 24
+        @label "Label height"
+        @description "The height of a wire's label."
+        @tier "presentation"
+      pillPad : number = 8
+        @label "Label padding"
+        @description "The space each side inside a label."
+        @tier "presentation"
+      segGap : number = 12
+        @label "Event gap"
+        @description "The space between the events of one label."
+        @tier "presentation"
+      guardRadius : number = 5
+        @label "Guard size"
+        @description "The half size of a guard mark."
+        @tier "presentation"
+      chipRadius : number = 5
+        @label "Glyph size"
+        @description "The half size of an effect glyph."
+        @tier "presentation"
+      chipGap : number = 3
+        @label "Glyph gap"
+        @description "The space around guard marks and between effect glyphs."
+        @tier "presentation"
+      tokenRadius : number = 6
+        @label "Token size"
+        @description "The radius of the token that carries an event along its wire."
+        @tier "presentation"
+      beatMs : number = 220
+        @label "Beat time"
+        @description "How long each of the five beats lasts in ms."
+        @tier "presentation"
+    }
+  }
+
+  page boot as RasmMachineStart -> RasmMachine
+}

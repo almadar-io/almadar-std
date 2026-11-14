@@ -20,6 +20,7 @@ orbital RasmGestureOrbital {
     scale : number = 1
     centerX : number = 0
     centerY : number = 0
+    paints : number @description "Counts paints, so each paint in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
     lastStepMs : number @description "When the wheel last stepped, on the canvas epoch clock; the rest window counts from it." = 0
   }
 
@@ -31,7 +32,8 @@ orbital RasmGestureOrbital {
       RASM_BOOT -> idle
       RASM_PLACE -> idle when (array/some ?placed (fn p (= @p.id @config.id)))
         (set @entity.rect (let ((mine (default (array/find ?placed (fn p (= @p.id @config.id))) { id: "", rect: { x: 0, y: 0, w: 0, h: 0 } }))) @mine.rect))
-        (emit RASM_PAINT { id: @config.id, z: @config.z, nodes: [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @entity.rect.x, y: @entity.rect.y, z: @config.z }, width: @entity.rect.w, height: @entity.rect.h, hit: true, wheel: @config.wheel }] })
+        (set @entity.paints (+ @entity.paints 1))
+        (emit RASM_PAINT { n: @entity.paints, id: @config.id, z: @config.z, nodes: [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @entity.rect.x, y: @entity.rect.y, z: @config.z }, width: @entity.rect.w, height: @entity.rect.h, hit: true, wheel: @config.wheel }] })
 
       RASM_POINTER -> tracking when (and (= ?id @config.id) (= ?kind "down"))
         (set @entity.startX ?x)
@@ -59,7 +61,8 @@ orbital RasmGestureOrbital {
       RASM_BOOT -> idle
       RASM_PLACE -> tracking when (array/some ?placed (fn p (= @p.id @config.id)))
         (set @entity.rect (let ((mine (default (array/find ?placed (fn p (= @p.id @config.id))) { id: "", rect: { x: 0, y: 0, w: 0, h: 0 } }))) @mine.rect))
-        (emit RASM_PAINT { id: @config.id, z: @config.z, nodes: [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @entity.rect.x, y: @entity.rect.y, z: @config.z }, width: @entity.rect.w, height: @entity.rect.h, hit: true, wheel: @config.wheel }] })
+        (set @entity.paints (+ @entity.paints 1))
+        (emit RASM_PAINT { n: @entity.paints, id: @config.id, z: @config.z, nodes: [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @entity.rect.x, y: @entity.rect.y, z: @config.z }, width: @entity.rect.w, height: @entity.rect.h, hit: true, wheel: @config.wheel }] })
 
       RASM_GESTURE_FRAME -> tracking
         (set @entity.elapsed (+ @entity.elapsed ?dtMs))
@@ -92,7 +95,8 @@ orbital RasmGestureOrbital {
       RASM_BOOT -> idle
       RASM_PLACE -> pinching when (array/some ?placed (fn p (= @p.id @config.id)))
         (set @entity.rect (let ((mine (default (array/find ?placed (fn p (= @p.id @config.id))) { id: "", rect: { x: 0, y: 0, w: 0, h: 0 } }))) @mine.rect))
-        (emit RASM_PAINT { id: @config.id, z: @config.z, nodes: [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @entity.rect.x, y: @entity.rect.y, z: @config.z }, width: @entity.rect.w, height: @entity.rect.h, hit: true, wheel: @config.wheel }] })
+        (set @entity.paints (+ @entity.paints 1))
+        (emit RASM_PAINT { n: @entity.paints, id: @config.id, z: @config.z, nodes: [{ type: draw-shape, id: @config.id, shape: rect, anchor: "top-left", position: { x: @entity.rect.x, y: @entity.rect.y, z: @config.z }, width: @entity.rect.w, height: @entity.rect.h, hit: true, wheel: @config.wheel }] })
 
       RASM_TOUCHES -> pinching when (and (and (= ?id @config.id) (= ?kind "move")) (>= (array/len ?touches) 2))
         (set @entity.scale (let ((a (array/nth ?touches 0)) (b (array/nth ?touches 1))) (/ (math/sqrt (+ (* (- @b.x @a.x) (- @b.x @a.x)) (* (- @b.y @a.y) (- @b.y @a.y)))) (math/max 1 @entity.pinchStart))))
@@ -118,7 +122,7 @@ orbital RasmGestureOrbital {
     listens {
       RASM_BOOT { }
         @description "The surface mounted: take the starting state."
-      RASM_PLACE { placed : [RasmPlaced]! }
+      RASM_PLACE { placed : [RasmPlaced]!  n : number }
         @description "Placed rects; the recognizer takes the entry whose id is its own and paints its hit region."
       RASM_POINTER { kind : "down" | "up" | "enter" | "leave" | "move"!  id : string!  x : number!  y : number! }
         @description "A pointer event from the surface; the recognizer acts on its own id."
@@ -132,6 +136,7 @@ orbital RasmGestureOrbital {
 
     emits {
       RASM_PAINT -> external {
+        n : number!
         id : string!
         z : number!
         nodes : [node]!

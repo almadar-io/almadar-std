@@ -341,7 +341,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     example: '["not", false]',
   },
   if: {
-    visual: { form: 'branch' },
+    visual: { form: 'branch', glyph: 'M-1 0 L0 0 L0.8 -0.7 M0 0 L0.8 0.7' },
     module: 'core',
     category: 'logic',
     minArity: 3,
@@ -423,7 +423,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     example: '["list", "path", "method", "status"] // => ["path", "method", "status"]',
   },
   when: {
-    visual: { form: 'branch' },
+    visual: { form: 'branch', glyph: 'M-1 0 L0 0 L0.8 -0.7' },
     module: 'core',
     category: 'control',
     minArity: 2,
@@ -503,6 +503,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
   // --- effect -----------------------------------------------------------------
 
   set: {
+    visual: { form: 'actuator', glyph: 'M-0.8 0.9 L-1 0.2 L0.3 -1.1 L1 -0.4 Z' },
     module: 'core',
     // emit key order: effect/set.rs:101
     emitKeys: ['success'],
@@ -526,6 +527,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     },
   },
   emit: {
+    visual: { form: 'actuator', glyph: 'M-1 0 L0.7 0 M0.1 -0.6 L0.8 0 L0.1 0.6' },
     module: 'core',
     category: 'effect',
     minArity: 1,
@@ -550,6 +552,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     },
   },
   persist: {
+    visual: { form: 'actuator', glyph: 'M-0.8 -0.6 L-0.8 0.6 A0.8 0.35 0 0 0 0.8 0.6 L0.8 -0.6 A0.8 0.35 0 0 0 -0.8 -0.6 Z' },
     module: 'core',
     // emit key order: effect/persist.rs:214, :492
     emitKeys: ['success', 'failure'],
@@ -610,6 +613,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     },
   },
   navigate: {
+    visual: { form: 'actuator', glyph: 'M-0.4 -0.9 L0.5 0 L-0.4 0.9' },
     module: 'core',
     category: 'effect',
     minArity: 1,
@@ -651,6 +655,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     effect: { kind: 'navigate-back' },
   },
   notify: {
+    visual: { form: 'actuator', glyph: 'M0 -1 L0.9 0.6 L-0.9 0.6 Z' },
     module: 'core',
     category: 'effect',
     minArity: 1,
@@ -719,6 +724,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     effect: { kind: 'despawn' },
   },
   fetch: {
+    visual: { form: 'actuator', glyph: 'M1 0 L-0.7 0 M-0.1 -0.6 L-0.8 0 L-0.1 0.6' },
     module: 'core',
     // emit key order: effect/fetch.rs:94
     emitKeys: ['success', 'failure'],
@@ -826,6 +832,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     effect: { kind: 'send-server' },
   },
   'call-service': {
+    visual: { form: 'actuator', glyph: 'M-1 0 L-0.3 0 M0.3 0 L1 0 M-0.3 -0.7 L-0.3 0.7 M0.3 -0.7 L0.3 0.7' },
     module: 'core',
     // emit key order: effect/keyed_call.rs:15, call_service.rs:325
     emitKeys: ['success', 'failure', 'onMessage', 'cancelled'],
@@ -1360,6 +1367,7 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     effect: { kind: 'oauth-connection-forget', produces: OAUTH_CONNECTION },
   },
   'render-ui': {
+    visual: { form: 'actuator', glyph: 'M-1 -1 L1 -1 L1 1 L-1 1 Z M0 -1 L0 1 M-1 0 L1 0' },
     module: 'core',
     category: 'effect',
     minArity: 2,

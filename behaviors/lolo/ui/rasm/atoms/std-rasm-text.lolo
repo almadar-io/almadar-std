@@ -52,7 +52,7 @@ orbital RasmTextOrbital {
         (set @entity.paints (+ @entity.paints 1))
         (emit TEXT_PAINT { n: @entity.paints })
       TEXT_PAINT -> ready
-        (let ((l (object/get @entity.looks (str/concat "text/" @config.intent "/idle") null)) (r @entity.rect)) (when (and (!= @l null) (!= @r null) (> @r.w 0)) (let ((idx @entity.enterIndex) (stag @entity.staggerMs)) (let ((dur (+ 520 (* @idx @stag)))) (emit RASM_PAINT { id: @config.id, z: @config.z, nodes: [], texts: [{ id: @config.id, key: @config.text, x: @r.x, y: @r.y, z: @config.z, baseline: "top", width: @r.w, wrap: true, align: (if (= @entity.dir "rtl") "right" "left"), measure: true, color: @l.textColor, font: @l.font, spring: @l.spring, role: "text", animation: (if (>= @idx 0) { durationMs: @dur, startMs: @entity.enteredMs, loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 14 }, { at: (default (/ (* @idx @stag) @dur) 0), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }] } null) }] })))))
+        (let ((l (object/get @entity.looks (str/concat "text/" @config.intent "/idle") null)) (r @entity.rect)) (when (and (!= @l null) (!= @r null) (> @r.w 0)) (let ((idx @entity.enterIndex) (stag @entity.staggerMs)) (let ((dur (+ 520 (* @idx @stag)))) (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z, nodes: [], texts: [{ id: @config.id, key: @config.text, x: @r.x, y: @r.y, z: @config.z, baseline: "top", width: @r.w, wrap: true, align: (if (= @entity.dir "rtl") "right" "left"), measure: true, color: @l.textColor, font: @l.font, spring: @l.spring, role: "text", animation: (if (>= @idx 0) { durationMs: @dur, startMs: @entity.enteredMs, loop: false, keyframes: [{ at: 0, opacity: 0, offsetY: 14 }, { at: (default (/ (* @idx @stag) @dur) 0), opacity: 0, offsetY: 14 }, { at: 1, opacity: 1, offsetY: 0 }] } null) }] })))))
     }
 
     emits {
@@ -62,6 +62,7 @@ orbital RasmTextOrbital {
         @description "Repaint from the stored rect and look."
         @tier "internal"
       RASM_PAINT -> external {
+        n : number!
         id : string!
         z : number!
         nodes : [node]!
@@ -76,7 +77,7 @@ orbital RasmTextOrbital {
         @description "The surface's reading direction; once announced it replaces this atom's direction knob and the layout is redone."
       RASM_THEME { name : string!  looks : Map string RasmLook! }
         @description "Store the looks and repaint."
-      RASM_PLACE { placed : [RasmPlaced]! }
+      RASM_PLACE { placed : [RasmPlaced]!  n : number }
         @description "Take this text's rect when it is placed and repaint."
       RASM_ENTER { order : [string]!  staggerMs : number! }
         @description "Play the entry choreography when this text's id is in the order."

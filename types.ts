@@ -512,7 +512,12 @@ export interface StdOperatorMeta extends OperatorMeta {
   effect?: OperatorEffectMeta;
   /** Circuit form, declared only where it is not derivable (lambda → conveyor, side effect → actuator, else block). */
   /** How readers draw the operator: its AVL form, and `infix` when it reads between its operands (`a = b`). */
-  visual?: { form: OperatorVisualForm; infix?: boolean };
+  visual?: {
+    form: OperatorVisualForm;
+    infix?: boolean;
+    /** The operator's glyph as one SVG path in a unit box (-1..1, y down), drawn wherever the operator is shown as a mark (AVL effect chips, the Rasm machine). */
+    glyph?: string;
+  };
 }
 
 /**

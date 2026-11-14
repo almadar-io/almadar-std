@@ -3,7 +3,7 @@
  "trait": "RasmSurface",
  "cases": [
   {
-   "id": "a-hidden-id-keeps-its-paint-and-stops-drawing-and-shown-draws-it-again",
+   "id": "paints-and-visibility-mark-the-surface-dirty-and-one-repaint-draws-them",
    "config": {},
    "entity": {
     "id": "s"
@@ -30,19 +30,14 @@
       ]
      },
      "expect": {
-      "state": "ready",
-      "emits": [
-       {
-        "event": "SURFACE_REPAINT",
-        "payload": {
-         "n": 1
-        }
-       }
+      "state": "dirty",
+      "neverEmits": [
+       "SURFACE_REPAINT"
       ]
      }
     },
     {
-     "from": "ready",
+     "from": "dirty",
      "event": "RASM_PAINT",
      "payload": {
       "id": "b",
@@ -62,19 +57,14 @@
       ]
      },
      "expect": {
-      "state": "ready",
-      "emits": [
-       {
-        "event": "SURFACE_REPAINT",
-        "payload": {
-         "n": 2
-        }
-       }
+      "state": "dirty",
+      "neverEmits": [
+       "SURFACE_REPAINT"
       ]
      }
     },
     {
-     "from": "ready",
+     "from": "dirty",
      "event": "RASM_VISIBLE",
      "payload": {
       "owner": "o",
@@ -84,19 +74,14 @@
       ]
      },
      "expect": {
-      "state": "ready",
-      "emits": [
-       {
-        "event": "SURFACE_REPAINT",
-        "payload": {
-         "n": 3
-        }
-       }
+      "state": "dirty",
+      "neverEmits": [
+       "SURFACE_REPAINT"
       ]
      }
     },
     {
-     "from": "ready",
+     "from": "dirty",
      "event": "RASM_VISIBLE",
      "payload": {
       "owner": "o",
@@ -106,19 +91,14 @@
       "hidden": []
      },
      "expect": {
-      "state": "ready",
-      "emits": [
-       {
-        "event": "SURFACE_REPAINT",
-        "payload": {
-         "n": 4
-        }
-       }
+      "state": "dirty",
+      "neverEmits": [
+       "SURFACE_REPAINT"
       ]
      }
     },
     {
-     "from": "ready",
+     "from": "dirty",
      "event": "SURFACE_REPAINT",
      "payload": {
       "n": 3
@@ -185,7 +165,7 @@
      }
     },
     {
-     "from": "ready",
+     "from": "dirty",
      "event": "SURFACE_REPAINT",
      "payload": {
       "n": 4
@@ -247,6 +227,82 @@
        }
       },
       "hidden": []
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-repaint-of-a-clean-surface-renders-and-stays-clean",
+   "config": {},
+   "entity": {
+    "id": "s"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "SURFACE_REPAINT",
+     "payload": {
+      "n": 3
+     },
+     "expect": {
+      "state": "ready",
+      "rendered": [
+       {
+        "slot": "main",
+        "props": {
+         "drawables.0.id": "b",
+         "drawables.1": null
+        }
+       }
+      ]
+     },
+     "options": {
+      "render": true,
+      "renderProps": true
+     },
+     "entity": {
+      "id": "s",
+      "paints": {
+       "a": {
+        "id": "a",
+        "z": 1,
+        "nodes": [
+         {
+          "type": "draw-shape",
+          "shape": "rect",
+          "id": "a",
+          "position": {
+           "x": 0,
+           "y": 0
+          },
+          "width": 10,
+          "height": 10
+         }
+        ],
+        "texts": []
+       },
+       "b": {
+        "id": "b",
+        "z": 2,
+        "nodes": [
+         {
+          "type": "draw-shape",
+          "shape": "rect",
+          "id": "b",
+          "position": {
+           "x": 0,
+           "y": 0
+          },
+          "width": 10,
+          "height": 10
+         }
+        ],
+        "texts": []
+       }
+      },
+      "hidden": [
+       "a"
+      ]
      }
     }
    ]
@@ -1845,6 +1901,225 @@
       "neverEmits": [
        "SURFACE_REPAINT"
       ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-filled-surface-world-grows-with-content-taller-than-its-container",
+   "config": {
+    "width": 720,
+    "height": 520,
+    "rootChild": "root",
+    "rootRect": {
+     "x": 0,
+     "y": 0,
+     "w": 720,
+     "h": 520
+    },
+    "fill": true,
+    "minHeight": 600
+   },
+   "entity": {
+    "id": "rasm",
+    "viewW": 720,
+    "viewH": 520,
+    "contentH": 520,
+    "root": {
+     "x": 0,
+     "y": 0,
+     "w": 720,
+     "h": 520
+    },
+    "paints": {},
+    "looks": {},
+    "hidden": [],
+    "repaints": 0,
+    "dir": "ltr",
+    "fillMin": 0,
+    "containerH": 520
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_EXTENT",
+     "payload": {
+      "id": "root",
+      "w": 720,
+      "h": 2000
+     },
+     "expect": {
+      "state": "ready",
+      "entity": {
+       "fillMin": 2000,
+       "viewH": 2000
+      },
+      "emits": [
+       {
+        "event": "SURFACE_REPAINT",
+        "payload": {
+         "n": 1
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-filled-surface-world-keeps-its-container-over-shorter-content",
+   "config": {
+    "width": 720,
+    "height": 520,
+    "rootChild": "root",
+    "rootRect": {
+     "x": 0,
+     "y": 0,
+     "w": 720,
+     "h": 520
+    },
+    "fill": true,
+    "minHeight": 600
+   },
+   "entity": {
+    "id": "rasm",
+    "viewW": 720,
+    "viewH": 900,
+    "contentH": 520,
+    "root": {
+     "x": 0,
+     "y": 0,
+     "w": 720,
+     "h": 520
+    },
+    "paints": {},
+    "looks": {},
+    "hidden": [],
+    "repaints": 0,
+    "dir": "ltr",
+    "fillMin": 0,
+    "containerH": 900
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_EXTENT",
+     "payload": {
+      "id": "root",
+      "w": 720,
+      "h": 700
+     },
+     "expect": {
+      "state": "ready",
+      "entity": {
+       "fillMin": 700,
+       "viewH": 900
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "a-resized-filled-surface-world-keeps-its-taller-content",
+   "config": {
+    "width": 720,
+    "height": 520,
+    "rootChild": "root",
+    "rootRect": {
+     "x": 0,
+     "y": 0,
+     "w": 720,
+     "h": 520
+    },
+    "fill": true,
+    "minHeight": 600
+   },
+   "entity": {
+    "id": "rasm",
+    "viewW": 720,
+    "viewH": 2000,
+    "contentH": 520,
+    "root": {
+     "x": 0,
+     "y": 0,
+     "w": 720,
+     "h": 520
+    },
+    "paints": {},
+    "looks": {},
+    "hidden": [],
+    "repaints": 0,
+    "dir": "ltr",
+    "fillMin": 2000,
+    "containerH": 520
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_RESIZE",
+     "payload": {
+      "width": 1000,
+      "height": 800
+     },
+     "expect": {
+      "state": "ready",
+      "entity": {
+       "containerH": 800,
+       "viewH": 2000,
+       "viewW": 1000
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-resized-filled-surface-world-takes-a-container-taller-than-its-content",
+   "config": {
+    "width": 720,
+    "height": 520,
+    "rootChild": "root",
+    "rootRect": {
+     "x": 0,
+     "y": 0,
+     "w": 720,
+     "h": 520
+    },
+    "fill": true,
+    "minHeight": 600
+   },
+   "entity": {
+    "id": "rasm",
+    "viewW": 720,
+    "viewH": 520,
+    "contentH": 520,
+    "root": {
+     "x": 0,
+     "y": 0,
+     "w": 720,
+     "h": 520
+    },
+    "paints": {},
+    "looks": {},
+    "hidden": [],
+    "repaints": 0,
+    "dir": "ltr",
+    "fillMin": 500,
+    "containerH": 520
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_RESIZE",
+     "payload": {
+      "width": 1000,
+      "height": 1200
+     },
+     "expect": {
+      "state": "ready",
+      "entity": {
+       "containerH": 1200,
+       "viewH": 1200
+      }
      }
     }
    ]

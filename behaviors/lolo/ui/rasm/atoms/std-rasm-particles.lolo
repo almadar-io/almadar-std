@@ -48,7 +48,7 @@ orbital RasmParticlesOrbital {
       PARTICLES_PAINT -> ready
         (let ((r @entity.rect) (look (default (object/get @entity.looks (str/concat "particles/" @config.intent "/idle") null) {})))
           (when (and (!= @r null) (or (> @config.rate 0) @entity.fired))
-            (emit RASM_PAINT { id: @config.id, z: @config.z, texts: [], nodes: [{ type: draw-emitter, id: @config.id, position: { x: (+ @r.x (* @r.w @config.originX)), y: (+ @r.y (* @r.h @config.originY)), z: @config.z }, template: (if (> (array/len @config.template) 0) @config.template [{ type: draw-shape, id: (str/concat @config.id ":dot"), shape: rect, anchor: "top-left", position: { x: (/ @config.size -2), y: (/ @config.size -2), z: @config.z }, width: @config.size, height: @config.size, fill: (default @look.fill @config.fill), corners: { radius: [(/ @config.size 2), (/ @config.size 2), (/ @config.size 2), (/ @config.size 2)], kind: "round" } }]), rate: @config.rate, burst: @config.burst, lifetime: @config.lifetime, spread: @config.spread, speed: @config.speed, gravity: @config.gravity, seed: @config.seed, startMs: @entity.startMs, over: { opacity: @config.fade, scale: @config.shrink } }] })))
+            (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z, texts: [], nodes: [{ type: draw-emitter, id: @config.id, position: { x: (+ @r.x (* @r.w @config.originX)), y: (+ @r.y (* @r.h @config.originY)), z: @config.z }, template: (if (> (array/len @config.template) 0) @config.template [{ type: draw-shape, id: (str/concat @config.id ":dot"), shape: rect, anchor: "top-left", position: { x: (/ @config.size -2), y: (/ @config.size -2), z: @config.z }, width: @config.size, height: @config.size, fill: (default @look.fill @config.fill), corners: { radius: [(/ @config.size 2), (/ @config.size 2), (/ @config.size 2), (/ @config.size 2)], kind: "round" } }]), rate: @config.rate, burst: @config.burst, lifetime: @config.lifetime, spread: @config.spread, speed: @config.speed, gravity: @config.gravity, seed: @config.seed, startMs: @entity.startMs, over: { opacity: @config.fade, scale: @config.shrink } }] })))
     }
 
     emits {
@@ -58,6 +58,7 @@ orbital RasmParticlesOrbital {
         @description "Repaint from the stored rect, look and start time."
         @tier "internal"
       RASM_PAINT -> external {
+        n : number!
         id : string!
         z : number!
         nodes : [node]!
@@ -70,7 +71,7 @@ orbital RasmParticlesOrbital {
     listens {
       RASM_THEME { name : string!  looks : Map string RasmLook! }
         @description "Store the looks and repaint."
-      RASM_PLACE { placed : [RasmPlaced]! }
+      RASM_PLACE { placed : [RasmPlaced]!  n : number }
         @description "Take this emitter's rect when it is placed; the first placement is the emitter's t0."
       RASM_PARTICLES_BURST { id : string! }
         @description "Restart the emitter for this id at the dispatch time, so its burst plays once more."

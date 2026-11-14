@@ -1,0 +1,1443 @@
+{
+  "atom": "dev/organisms/std-behavior-playground.lolo",
+  "trait": "PlaygroundMachine",
+  "note": "The playground's state machine dock (PlaygroundMachine): opt-in through the app's machineView knob (the trait's showMachine), off by default.",
+  "cases": [
+    {
+      "id": "dock-a-loaded-behavior-remembers-its-name-and-clears-the-drawn-guest",
+      "steps": [
+        {
+          "event": "BEHAVIOR_LOADED",
+          "payload": {
+            "behavior": "almadar-std/std-browse"
+          },
+          "entity": {
+            "id": "p",
+            "machineBehavior": "x",
+            "machineGuest": "g0",
+            "machinePage": "Old"
+          },
+          "from": "idle",
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "effects": [
+              {
+                "type": "set",
+                "arg0": "@entity.machineBehavior"
+              },
+              {
+                "type": "set",
+                "arg0": "@entity.machineGuest"
+              },
+              {
+                "type": "set",
+                "arg0": "@entity.machinePage"
+              }
+            ],
+            "neverEmits": [
+              "GUEST_ORBIT"
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678,
+      "config": {
+        "showMachine": true
+      }
+    },
+    {
+      "id": "dock-a-page-root-paint-draws-the-guests-whole-page",
+      "steps": [
+        {
+          "event": "GUEST_PAINTS",
+          "payload": {
+            "guest": "g1",
+            "route": "/",
+            "page": [
+              "BrowseRoot"
+            ],
+            "paints": [
+              {
+                "slot": "main",
+                "trait": "BrowseRoot",
+                "embedded": false,
+                "content": {
+                  "type": "box"
+                }
+              },
+              {
+                "slot": "main",
+                "trait": "BrowseChild",
+                "embedded": true,
+                "content": {
+                  "type": "box"
+                }
+              },
+              {
+                "slot": "main",
+                "trait": "OtherChild",
+                "embedded": true,
+                "content": {
+                  "type": "box"
+                }
+              }
+            ]
+          },
+          "entity": {
+            "id": "p",
+            "machineBehavior": "almadar-std/std-browse",
+            "machineGuest": "",
+            "machinePage": ""
+          },
+          "from": "idle",
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "GUEST_ORBIT",
+                "payload": {
+                  "behavior": "almadar-std/std-browse",
+                  "guest": "g1"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678,
+      "config": {
+        "showMachine": true
+      }
+    },
+    {
+      "id": "dock-a-behavior-that-paints-nothing-still-draws-its-guest",
+      "steps": [
+        {
+          "event": "GUEST_PAINTS",
+          "payload": {
+            "guest": "g2",
+            "route": "/",
+            "page": [
+              "ConfirmActionConfirmation"
+            ],
+            "paints": []
+          },
+          "entity": {
+            "id": "p",
+            "machineBehavior": "almadar-std/std-confirmation",
+            "machineGuest": "",
+            "machinePage": ""
+          },
+          "from": "idle",
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "GUEST_ORBIT",
+                "payload": {
+                  "behavior": "almadar-std/std-confirmation",
+                  "guest": "g2"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678,
+      "config": {
+        "showMachine": true
+      }
+    },
+    {
+      "id": "dock-edge-an-empty-page-of-a-new-guest-still-draws-it",
+      "steps": [
+        {
+          "event": "GUEST_PAINTS",
+          "payload": {
+            "guest": "g2",
+            "route": "/",
+            "page": [],
+            "paints": []
+          },
+          "entity": {
+            "id": "p",
+            "machineBehavior": "almadar-std/std-confirmation",
+            "machineGuest": "",
+            "machinePage": ""
+          },
+          "from": "idle",
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "GUEST_ORBIT",
+                "payload": {
+                  "behavior": "almadar-std/std-confirmation",
+                  "guest": "g2"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678,
+      "config": {
+        "showMachine": true
+      }
+    },
+    {
+      "id": "dock-moves-of-the-drawn-guest-reach-the-dock",
+      "steps": [
+        {
+          "event": "GUEST_MOVED",
+          "payload": {
+            "guest": "g2",
+            "moves": [
+              {
+                "trait": "ConfirmActionConfirmation",
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle",
+                "fired": true
+              }
+            ]
+          },
+          "entity": {
+            "id": "p",
+            "machineBehavior": "almadar-std/std-confirmation",
+            "machineGuest": "g2",
+            "machinePage": "ConfirmActionConfirmation"
+          },
+          "from": "idle",
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "GUEST_MOVES",
+                "payload": {
+                  "moves": [
+                    {
+                      "trait": "ConfirmActionConfirmation",
+                      "event": "INIT",
+                      "from": "idle",
+                      "to": "idle",
+                      "fired": true
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678,
+      "config": {
+        "showMachine": true
+      }
+    },
+    {
+      "id": "dock-control-moves-of-another-guest-never-reach-the-dock",
+      "steps": [
+        {
+          "event": "GUEST_MOVED",
+          "payload": {
+            "guest": "g1",
+            "moves": [
+              {
+                "trait": "ConfirmActionConfirmation",
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle",
+                "fired": true
+              }
+            ]
+          },
+          "entity": {
+            "id": "p",
+            "machineBehavior": "almadar-std/std-confirmation",
+            "machineGuest": "g2",
+            "machinePage": "ConfirmActionConfirmation"
+          },
+          "from": "idle",
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "neverEmits": [
+              "GUEST_MOVES"
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678,
+      "config": {
+        "showMachine": true
+      }
+    },
+    {
+      "id": "dock-edge-moves-before-any-guest-is-drawn-never-reach-the-dock",
+      "steps": [
+        {
+          "event": "GUEST_MOVED",
+          "payload": {
+            "guest": "g2",
+            "moves": [
+              {
+                "trait": "ConfirmActionConfirmation",
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle",
+                "fired": true
+              }
+            ]
+          },
+          "entity": {
+            "id": "p",
+            "machineBehavior": "almadar-std/std-confirmation",
+            "machineGuest": "",
+            "machinePage": ""
+          },
+          "from": "idle",
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "neverEmits": [
+              "GUEST_MOVES"
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678,
+      "config": {
+        "showMachine": true
+      }
+    },
+    {
+      "id": "dock-a-new-page-after-navigation-redraws",
+      "steps": [
+        {
+          "event": "GUEST_PAINTS",
+          "payload": {
+            "guest": "g1",
+            "route": "/detail",
+            "page": [
+              "DetailRoot"
+            ],
+            "paints": [
+              {
+                "slot": "main",
+                "trait": "DetailRoot",
+                "embedded": false,
+                "content": {
+                  "type": "box"
+                }
+              }
+            ]
+          },
+          "entity": {
+            "id": "p",
+            "machineBehavior": "almadar-std/std-browse",
+            "machineGuest": "g1",
+            "machinePage": "BrowseRoot"
+          },
+          "from": "idle",
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "GUEST_ORBIT",
+                "payload": {
+                  "behavior": "almadar-std/std-browse",
+                  "guest": "g1"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678,
+      "config": {
+        "showMachine": true
+      }
+    },
+    {
+      "id": "dock-edge-the-same-page-repainted-does-not-reset-the-view",
+      "steps": [
+        {
+          "event": "GUEST_PAINTS",
+          "payload": {
+            "guest": "g1",
+            "route": "/",
+            "page": [
+              "BrowseRoot"
+            ],
+            "paints": [
+              {
+                "slot": "main",
+                "trait": "BrowseRoot",
+                "embedded": false,
+                "content": {
+                  "type": "box"
+                }
+              }
+            ]
+          },
+          "entity": {
+            "id": "p",
+            "machineBehavior": "almadar-std/std-browse",
+            "machineGuest": "g1",
+            "machinePage": "BrowseRoot"
+          },
+          "from": "idle",
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "neverEmits": [
+              "GUEST_ORBIT"
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678,
+      "config": {
+        "showMachine": true
+      }
+    },
+    {
+      "id": "dock-edge-a-paint-before-any-behavior-loaded-draws-nothing",
+      "steps": [
+        {
+          "event": "GUEST_PAINTS",
+          "payload": {
+            "guest": "g1",
+            "route": "/",
+            "page": [
+              "BrowseRoot"
+            ],
+            "paints": [
+              {
+                "slot": "main",
+                "trait": "BrowseRoot",
+                "embedded": false,
+                "content": {
+                  "type": "box"
+                }
+              }
+            ]
+          },
+          "entity": {
+            "id": "p",
+            "machineBehavior": "",
+            "machineGuest": "",
+            "machinePage": ""
+          },
+          "from": "idle",
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "neverEmits": [
+              "GUEST_ORBIT"
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678,
+      "config": {
+        "showMachine": true
+      }
+    },
+    {
+      "id": "dock-a-new-guest-redraws-even-on-the-same-page",
+      "steps": [
+        {
+          "event": "GUEST_PAINTS",
+          "payload": {
+            "guest": "g2",
+            "route": "/",
+            "page": [
+              "BrowseRoot"
+            ],
+            "paints": [
+              {
+                "slot": "main",
+                "trait": "BrowseRoot",
+                "embedded": false,
+                "content": {
+                  "type": "box"
+                }
+              }
+            ]
+          },
+          "entity": {
+            "id": "p",
+            "machineBehavior": "almadar-std/std-browse",
+            "machineGuest": "g1",
+            "machinePage": "BrowseRoot"
+          },
+          "from": "idle",
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "GUEST_ORBIT",
+                "payload": {
+                  "behavior": "almadar-std/std-browse",
+                  "guest": "g2"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678,
+      "config": {
+        "showMachine": true
+      }
+    },
+    {
+      "id": "dock-fired-moves-join-the-dispatched-stack-newest-first",
+      "steps": [
+        {
+          "event": "GUEST_MOVED",
+          "payload": {
+            "guest": "g1",
+            "moves": [
+              {
+                "trait": "Cart",
+                "event": "ADD",
+                "from": "idle",
+                "to": "filled",
+                "fired": true
+              },
+              {
+                "trait": "Cart",
+                "event": "CHECKOUT",
+                "from": "filled",
+                "to": "paying",
+                "fired": true
+              },
+              {
+                "trait": "Cart",
+                "event": "NOISE",
+                "from": "idle",
+                "to": "idle",
+                "fired": false
+              }
+            ]
+          },
+          "entity": {
+            "id": "p",
+            "machineBehavior": "almadar-std/std-cart",
+            "machineGuest": "g1",
+            "machinePage": "Cart",
+            "dispatched": [
+              {
+                "trait": "Cart",
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle",
+                "fired": true
+              }
+            ]
+          },
+          "from": "idle",
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "entity": {
+              "dispatched": [
+                {
+                  "trait": "Cart",
+                  "event": "CHECKOUT",
+                  "from": "filled",
+                  "to": "paying",
+                  "fired": true
+                },
+                {
+                  "trait": "Cart",
+                  "event": "ADD",
+                  "from": "idle",
+                  "to": "filled",
+                  "fired": true
+                },
+                {
+                  "trait": "Cart",
+                  "event": "INIT",
+                  "from": "idle",
+                  "to": "idle",
+                  "fired": true
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "now": 1760531445678,
+      "note": "two fired moves of one dispatch stack above the older one, the last fired on top; the unfired move never joins",
+      "config": {
+        "showMachine": true
+      }
+    },
+    {
+      "id": "dock-control-moves-of-another-guest-stay-out-of-the-dispatched-stack",
+      "steps": [
+        {
+          "event": "GUEST_MOVED",
+          "payload": {
+            "guest": "g9",
+            "moves": [
+              {
+                "trait": "Cart",
+                "event": "ADD",
+                "from": "idle",
+                "to": "filled",
+                "fired": true
+              }
+            ]
+          },
+          "entity": {
+            "id": "p",
+            "machineBehavior": "almadar-std/std-cart",
+            "machineGuest": "g1",
+            "machinePage": "Cart",
+            "dispatched": [
+              {
+                "trait": "Cart",
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle",
+                "fired": true
+              }
+            ]
+          },
+          "from": "idle",
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "entity": {
+              "dispatched": [
+                {
+                  "trait": "Cart",
+                  "event": "INIT",
+                  "from": "idle",
+                  "to": "idle",
+                  "fired": true
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "now": 1760531445678,
+      "config": {
+        "showMachine": true
+      }
+    },
+    {
+      "id": "dock-edge-a-dispatch-that-fired-nothing-adds-no-pill",
+      "steps": [
+        {
+          "event": "GUEST_MOVED",
+          "payload": {
+            "guest": "g1",
+            "moves": [
+              {
+                "trait": "Cart",
+                "event": "NOISE",
+                "from": "idle",
+                "to": "idle",
+                "fired": false
+              }
+            ]
+          },
+          "entity": {
+            "id": "p",
+            "machineBehavior": "almadar-std/std-cart",
+            "machineGuest": "g1",
+            "machinePage": "Cart",
+            "dispatched": [
+              {
+                "trait": "Cart",
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle",
+                "fired": true
+              }
+            ]
+          },
+          "from": "idle",
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "entity": {
+              "dispatched": [
+                {
+                  "trait": "Cart",
+                  "event": "INIT",
+                  "from": "idle",
+                  "to": "idle",
+                  "fired": true
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "now": 1760531445678,
+      "config": {
+        "showMachine": true
+      }
+    },
+    {
+      "id": "dock-a-new-guest-clears-the-dispatched-stack",
+      "steps": [
+        {
+          "event": "GUEST_PAINTS",
+          "payload": {
+            "guest": "g2",
+            "route": "/",
+            "page": [
+              "Cart"
+            ],
+            "paints": []
+          },
+          "entity": {
+            "id": "p",
+            "machineBehavior": "almadar-std/std-cart",
+            "machineGuest": "g1",
+            "machinePage": "Cart",
+            "dispatched": [
+              {
+                "trait": "Cart",
+                "event": "ADD",
+                "from": "idle",
+                "to": "filled",
+                "fired": true
+              },
+              {
+                "trait": "Cart",
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle",
+                "fired": true
+              }
+            ]
+          },
+          "from": "idle",
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "entity": {
+              "machineGuest": "g2",
+              "dispatched": []
+            }
+          }
+        }
+      ],
+      "now": 1760531445678,
+      "config": {
+        "showMachine": true
+      }
+    },
+    {
+      "id": "dock-control-a-new-page-of-the-same-guest-keeps-the-dispatched-stack",
+      "steps": [
+        {
+          "event": "GUEST_PAINTS",
+          "payload": {
+            "guest": "g1",
+            "route": "/b",
+            "page": [
+              "Other"
+            ],
+            "paints": []
+          },
+          "entity": {
+            "id": "p",
+            "machineBehavior": "almadar-std/std-cart",
+            "machineGuest": "g1",
+            "machinePage": "Cart",
+            "dispatched": [
+              {
+                "trait": "Cart",
+                "event": "ADD",
+                "from": "idle",
+                "to": "filled",
+                "fired": true
+              },
+              {
+                "trait": "Cart",
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle",
+                "fired": true
+              }
+            ]
+          },
+          "from": "idle",
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "entity": {
+              "dispatched": [
+                {
+                  "trait": "Cart",
+                  "event": "ADD",
+                  "from": "idle",
+                  "to": "filled",
+                  "fired": true
+                },
+                {
+                  "trait": "Cart",
+                  "event": "INIT",
+                  "from": "idle",
+                  "to": "idle",
+                  "fired": true
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "now": 1760531445678,
+      "config": {
+        "showMachine": true
+      }
+    },
+    {
+      "id": "dock-a-loaded-behavior-clears-the-dispatched-stack",
+      "steps": [
+        {
+          "event": "BEHAVIOR_LOADED",
+          "payload": {
+            "behavior": "almadar-std/std-other"
+          },
+          "entity": {
+            "id": "p",
+            "machineBehavior": "almadar-std/std-cart",
+            "machineGuest": "g1",
+            "machinePage": "Cart",
+            "dispatched": [
+              {
+                "trait": "Cart",
+                "event": "ADD",
+                "from": "idle",
+                "to": "filled",
+                "fired": true
+              },
+              {
+                "trait": "Cart",
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle",
+                "fired": true
+              }
+            ]
+          },
+          "from": "idle",
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "entity": {
+              "dispatched": []
+            }
+          }
+        }
+      ],
+      "now": 1760531445678,
+      "config": {
+        "showMachine": true
+      }
+    },
+    {
+      "id": "dock-a-picked-pill-asks-the-diagram-to-focus-its-transition",
+      "steps": [
+        {
+          "event": "PILL_PICKED",
+          "payload": {
+            "trait": "Cart",
+            "event": "CHECKOUT",
+            "from": "filled",
+            "to": "paying"
+          },
+          "entity": {
+            "id": "p",
+            "machineBehavior": "almadar-std/std-cart",
+            "machineGuest": "g1",
+            "machinePage": "Cart",
+            "dispatched": [
+              {
+                "trait": "Cart",
+                "event": "CHECKOUT",
+                "from": "filled",
+                "to": "paying",
+                "fired": true
+              },
+              {
+                "trait": "Cart",
+                "event": "ADD",
+                "from": "idle",
+                "to": "filled",
+                "fired": true
+              }
+            ],
+            "focusNonce": 4
+          },
+          "from": "idle",
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "entity": {
+              "focusNonce": 5
+            },
+            "emits": [
+              {
+                "event": "FOCUS_MOVE",
+                "payload": {
+                  "trait": "Cart",
+                  "event": "CHECKOUT",
+                  "from": "filled",
+                  "to": "paying",
+                  "nonce": 5
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678,
+      "note": "the nonce counts the picks so the same pill picked again focuses again",
+      "config": {
+        "showMachine": true
+      }
+    },
+    {
+      "id": "dock-the-locate-button-focuses-the-newest-dispatch",
+      "steps": [
+        {
+          "event": "LOCATE_LATEST",
+          "payload": {},
+          "entity": {
+            "id": "p",
+            "machineBehavior": "almadar-std/std-cart",
+            "machineGuest": "g1",
+            "machinePage": "Cart",
+            "dispatched": [
+              {
+                "trait": "Cart",
+                "event": "CHECKOUT",
+                "from": "filled",
+                "to": "paying",
+                "fired": true
+              },
+              {
+                "trait": "Cart",
+                "event": "ADD",
+                "from": "idle",
+                "to": "filled",
+                "fired": true
+              }
+            ],
+            "focusNonce": 0
+          },
+          "from": "idle",
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "entity": {
+              "focusNonce": 1
+            },
+            "emits": [
+              {
+                "event": "FOCUS_MOVE",
+                "payload": {
+                  "trait": "Cart",
+                  "event": "CHECKOUT",
+                  "from": "filled",
+                  "to": "paying",
+                  "nonce": 1
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678,
+      "config": {
+        "showMachine": true
+      }
+    },
+    {
+      "id": "dock-edge-the-locate-button-with-nothing-dispatched-focuses-nothing",
+      "steps": [
+        {
+          "event": "LOCATE_LATEST",
+          "payload": {},
+          "entity": {
+            "id": "p",
+            "machineBehavior": "almadar-std/std-cart",
+            "machineGuest": "g1",
+            "machinePage": "Cart",
+            "dispatched": [],
+            "focusNonce": 0
+          },
+          "from": "idle",
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "neverEmits": [
+              "FOCUS_MOVE"
+            ],
+            "entity": {
+              "focusNonce": 0
+            }
+          }
+        }
+      ],
+      "now": 1760531445678,
+      "config": {
+        "showMachine": true
+      }
+    },
+    {
+      "id": "dock-the-pills-and-the-diagram-paint-the-dock",
+      "steps": [
+        {
+          "event": "PILLS_SHOWN",
+          "payload": {},
+          "entity": {
+            "id": "p",
+            "machineBehavior": "almadar-std/std-cart",
+            "machineGuest": "g1",
+            "machinePage": "Cart",
+            "dispatched": [
+              {
+                "trait": "Cart",
+                "event": "CHECKOUT",
+                "from": "filled",
+                "to": "paying",
+                "fired": true
+              },
+              {
+                "trait": "Cart",
+                "event": "ADD",
+                "from": "idle",
+                "to": "filled",
+                "fired": true
+              }
+            ]
+          },
+          "from": "idle",
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "effects": [
+              {
+                "type": "render-ui",
+                "arg0": "main"
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678,
+      "config": {
+        "showMachine": true
+      }
+    },
+    {
+      "id": "dock-shows-only-the-latest-steps-pills-and-keeps-the-whole-history",
+      "steps": [
+        {
+          "event": "GUEST_MOVED",
+          "payload": {
+            "guest": "g1",
+            "moves": [
+              {
+                "trait": "Cart",
+                "event": "ADD",
+                "from": "idle",
+                "to": "filled",
+                "fired": true
+              },
+              {
+                "trait": "Cart",
+                "event": "NOISE",
+                "from": "idle",
+                "to": "idle",
+                "fired": false
+              }
+            ]
+          },
+          "entity": {
+            "id": "p",
+            "machineBehavior": "almadar-std/std-cart",
+            "machineGuest": "g1",
+            "machinePage": "Cart",
+            "dispatched": [
+              {
+                "trait": "Cart",
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle",
+                "fired": true
+              }
+            ],
+            "lastStep": [
+              {
+                "trait": "Cart",
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle",
+                "fired": true
+              }
+            ]
+          },
+          "from": "idle",
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "entity": {
+              "lastStep": [
+                {
+                  "trait": "Cart",
+                  "event": "ADD",
+                  "from": "idle",
+                  "to": "filled",
+                  "fired": true
+                }
+              ],
+              "dispatched": [
+                {
+                  "trait": "Cart",
+                  "event": "ADD",
+                  "from": "idle",
+                  "to": "filled",
+                  "fired": true
+                },
+                {
+                  "trait": "Cart",
+                  "event": "INIT",
+                  "from": "idle",
+                  "to": "idle",
+                  "fired": true
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "now": 1760531445678,
+      "note": "the pills show the latest step; the older INIT stays in the history",
+      "config": {
+        "showMachine": true
+      }
+    },
+    {
+      "id": "dock-history-button-opens-and-closes-the-whole-history",
+      "steps": [
+        {
+          "event": "HISTORY_TOGGLED",
+          "payload": {},
+          "entity": {
+            "id": "p",
+            "machineBehavior": "almadar-std/std-cart",
+            "machineGuest": "g1",
+            "machinePage": "Cart",
+            "dispatched": [
+              {
+                "trait": "Cart",
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle",
+                "fired": true
+              }
+            ],
+            "lastStep": [
+              {
+                "trait": "Cart",
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle",
+                "fired": true
+              }
+            ]
+          },
+          "from": "idle",
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "entity": {
+              "historyOpen": true
+            }
+          }
+        },
+        {
+          "event": "HISTORY_TOGGLED",
+          "payload": {},
+          "from": "idle",
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "entity": {
+              "historyOpen": false
+            }
+          }
+        }
+      ],
+      "now": 1760531445678,
+      "config": {
+        "showMachine": true
+      }
+    },
+    {
+      "id": "dock-another-guests-moves-leave-the-latest-step-alone",
+      "steps": [
+        {
+          "event": "GUEST_MOVED",
+          "payload": {
+            "guest": "g2",
+            "moves": [
+              {
+                "trait": "Cart",
+                "event": "ADD",
+                "from": "idle",
+                "to": "filled",
+                "fired": true
+              }
+            ]
+          },
+          "entity": {
+            "id": "p",
+            "machineBehavior": "almadar-std/std-cart",
+            "machineGuest": "g1",
+            "machinePage": "Cart",
+            "dispatched": [
+              {
+                "trait": "Cart",
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle",
+                "fired": true
+              }
+            ],
+            "lastStep": [
+              {
+                "trait": "Cart",
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle",
+                "fired": true
+              }
+            ]
+          },
+          "from": "idle",
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "entity": {
+              "lastStep": [
+                {
+                  "trait": "Cart",
+                  "event": "INIT",
+                  "from": "idle",
+                  "to": "idle",
+                  "fired": true
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "now": 1760531445678,
+      "config": {
+        "showMachine": true
+      }
+    },
+    {
+      "id": "dock-off-by-default-init-paints-no-dock",
+      "steps": [
+        {
+          "event": "INIT",
+          "payload": {},
+          "entity": {
+            "id": "p"
+          },
+          "from": "idle",
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "neverEmits": [
+              "PILLS_SHOWN"
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "dock-off-by-default-a-loaded-behavior-draws-nothing",
+      "steps": [
+        {
+          "event": "BEHAVIOR_LOADED",
+          "payload": {
+            "behavior": "almadar-std/std-cart"
+          },
+          "entity": {
+            "id": "p",
+            "machineBehavior": ""
+          },
+          "from": "idle",
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "neverEmits": [
+              "PILLS_SHOWN",
+              "GUEST_ORBIT"
+            ],
+            "entity": {
+              "machineBehavior": ""
+            }
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "dock-off-by-default-a-new-guest-loads-no-program",
+      "steps": [
+        {
+          "event": "GUEST_PAINTS",
+          "payload": {
+            "guest": "g2",
+            "route": "/",
+            "page": [
+              "Cart"
+            ],
+            "paints": []
+          },
+          "entity": {
+            "id": "p",
+            "machineBehavior": "almadar-std/std-cart",
+            "machineGuest": "g1",
+            "machinePage": "Cart",
+            "dispatched": [
+              {
+                "trait": "Cart",
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle",
+                "fired": true
+              }
+            ],
+            "lastStep": []
+          },
+          "from": "idle",
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "neverEmits": [
+              "GUEST_ORBIT",
+              "PILLS_SHOWN"
+            ],
+            "entity": {
+              "machineGuest": "g1"
+            }
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "dock-off-by-default-moves-never-join-the-history",
+      "steps": [
+        {
+          "event": "GUEST_MOVED",
+          "payload": {
+            "guest": "g1",
+            "moves": [
+              {
+                "trait": "Cart",
+                "event": "ADD",
+                "from": "idle",
+                "to": "filled",
+                "fired": true
+              }
+            ]
+          },
+          "entity": {
+            "id": "p",
+            "machineBehavior": "almadar-std/std-cart",
+            "machineGuest": "g1",
+            "machinePage": "Cart",
+            "dispatched": [
+              {
+                "trait": "Cart",
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle",
+                "fired": true
+              }
+            ],
+            "lastStep": []
+          },
+          "from": "idle",
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "neverEmits": [
+              "GUEST_MOVES",
+              "PILLS_SHOWN"
+            ],
+            "entity": {
+              "dispatched": [
+                {
+                  "trait": "Cart",
+                  "event": "INIT",
+                  "from": "idle",
+                  "to": "idle",
+                  "fired": true
+                }
+              ],
+              "lastStep": []
+            }
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "dock-control-opted-in-init-paints-the-dock",
+      "config": {
+        "showMachine": true
+      },
+      "steps": [
+        {
+          "event": "INIT",
+          "payload": {},
+          "entity": {
+            "id": "p"
+          },
+          "from": "idle",
+          "expect": {
+            "fired": true,
+            "state": "idle",
+            "emits": [
+              {
+                "event": "PILLS_SHOWN",
+                "payload": {}
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    }
+  ]
+}

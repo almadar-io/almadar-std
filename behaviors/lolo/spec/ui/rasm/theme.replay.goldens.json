@@ -1424,6 +1424,169 @@
             "saturate": 1.1
            }
           },
+          "machine/state/idle": {
+           "fill": "rgba(88,60,34,0.88)",
+           "stroke": "#e3b878",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "rgba(255,241,214,0.82)",
+           "font": "400 15px sans-serif"
+          },
+          "machine/state/active": {
+           "fill": "#b8662a",
+           "stroke": "#e3b878",
+           "strokeWidth": 1.2,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "#fff6e4",
+           "font": "600 15px sans-serif",
+           "material": {
+            "wgsl": "fn sd_hash(p: vec2<f32>) -> f32 { return fract(sin(dot(p, vec2<f32>(127.1, 311.7))) * 43758.5453); }\nfn sd_noise(p: vec2<f32>) -> f32 {\n  let i = floor(p);\n  let f = fract(p);\n  let u = f * f * (3.0 - 2.0 * f);\n  return mix(mix(sd_hash(i), sd_hash(i + vec2<f32>(1.0, 0.0)), u.x), mix(sd_hash(i + vec2<f32>(0.0, 1.0)), sd_hash(i + vec2<f32>(1.0, 1.0)), u.x), u.y);\n}\n// a.x hover, a.y press, a.z focus, a.w grain size in px\nfn shade(px: Pixel) -> vec4<f32> {\n  let wind = vec2<f32>(px.time * 6.0, px.time * 2.0);\n  let size = max(px.a.w, 1.0);\n  let grain = sd_noise((px.local + wind) / size) * 0.6 + sd_hash(floor(px.local / size)) * 0.4;\n  var col = px.color.rgb * (0.88 + 0.2 * grain);\n  let drift = sin(px.local.x * 0.03 - px.time * 1.2 + px.local.y * 0.01) * 0.5 + 0.5;\n  col = col + vec3<f32>(0.10, 0.07, 0.03) * drift * (0.4 + px.a.x);\n  let d = distance(px.local, px.pointer);\n  col = col + vec3<f32>(1.0, 0.8, 0.5) * exp(-d * d / (2.0 * 70.0 * 70.0)) * (0.05 + 0.2 * px.a.x);\n  let rim = smoothstep(-2.5, 0.0, px.sdf) * (0.25 + 0.3 * px.a.x + 0.3 * px.a.z);\n  col = mix(col, vec3<f32>(0.98, 0.86, 0.62), rim);\n  let kick = exp(-d * 0.02) * px.a.y * 0.14 * (0.5 + 0.5 * sin(d * 0.05 - px.time * 6.0));\n  col = col - vec3<f32>(kick);\n  return vec4<f32>(col, px.color.a);\n}\n",
+            "params": [
+             0,
+             0,
+             0,
+             2.5
+            ],
+            "live": true
+           }
+          },
+          "machine/state/visited": {
+           "fill": "rgba(88,60,34,0.88)",
+           "stroke": "#ffe2a6",
+           "strokeWidth": 1.5,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "rgba(255,241,214,0.82)",
+           "font": "400 15px sans-serif"
+          },
+          "machine/wire/idle": {
+           "stroke": "rgba(255,241,214,0.45)",
+           "strokeWidth": 1.5
+          },
+          "machine/wire/next": {
+           "stroke": "rgba(255,241,214,0.75)",
+           "strokeWidth": 1.5
+          },
+          "machine/wire/lit": {
+           "stroke": "#ffe2a6",
+           "strokeWidth": 2.5
+          },
+          "machine/pill/idle": {
+           "fill": "rgba(88,60,34,0.96)",
+           "stroke": "rgba(255,241,214,0.45)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/next": {
+           "fill": "rgba(88,60,34,0.96)",
+           "stroke": "rgba(255,241,214,0.75)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/lit": {
+           "fill": "rgba(88,60,34,0.96)",
+           "stroke": "#ffe2a6",
+           "strokeWidth": 1.5,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/hovered": {
+           "fill": "rgba(227,184,120,0.26)"
+          },
+          "machine/event/idle": {
+           "textColor": "rgba(255,241,214,0.88)",
+           "font": "400 14px monospace"
+          },
+          "machine/event/lit": {
+           "textColor": "#ffe2a6",
+           "font": "400 14px monospace"
+          },
+          "machine/guard/idle": {
+           "fill": "rgba(88,60,34,0.88)",
+           "stroke": "rgba(255,241,214,0.88)",
+           "strokeWidth": 1.2
+          },
+          "machine/guard/refused": {
+           "fill": "#e5484d",
+           "stroke": "#e5484d",
+           "strokeWidth": 1.2
+          },
+          "machine/badge/idle": {
+           "fill": "#b8662a",
+           "stroke": "#e3b878",
+           "textColor": "#fff6e4",
+           "corners": {
+            "radius": [
+             8,
+             8,
+             8,
+             8
+            ],
+            "kind": "round"
+           },
+           "font": "600 11px sans-serif"
+          },
+          "machine/token/idle": {
+           "fill": "#b8662a",
+           "stroke": "#ffe2a6",
+           "strokeWidth": 1
+          },
+          "machine/bloom/idle": {
+           "stroke": "#ffe2a6",
+           "strokeWidth": 2
+          },
+          "machine/effect/other": {
+           "fill": "rgba(0,0,0,0)",
+           "stroke": "rgba(255,241,214,0.88)",
+           "strokeWidth": 1.2,
+           "decor": "M-0.5 0 A0.5 0.5 0 1 0 0.5 0 A0.5 0.5 0 1 0 -0.5 0 Z"
+          },
           "stack/source/idle": {
            "fill": "rgba(88,60,34,0.96)",
            "stroke": "#e3b878",
@@ -2848,6 +3011,169 @@
             "tint": "rgba(242,160,58,0.35)",
             "saturate": 1.1
            }
+          },
+          "machine/state/idle": {
+           "fill": "rgba(16,21,28,0.95)",
+           "stroke": "#7f98a8",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "rgba(206,222,230,0.78)",
+           "font": "400 14px monospace"
+          },
+          "machine/state/active": {
+           "fill": "#27506a",
+           "stroke": "#7f98a8",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "#e8f2f7",
+           "font": "600 13px monospace",
+           "material": {
+            "wgsl": "// a.x hover, a.y press, a.z focus, a.w line pitch in px\nfn shade(px: Pixel) -> vec4<f32> {\n  let pitch = max(px.a.w, 1.0);\n  let brush = 0.5 + 0.5 * sin(px.local.y * 6.2831853 / pitch);\n  var col = px.color.rgb * (0.94 + 0.06 * brush);\n  col = col + vec3<f32>(0.10) * (1.0 - px.uv.y) * (0.6 + 0.4 * px.a.x);\n  let tick = step(0.5, fract(px.local.x / 10.0)) * (1.0 - smoothstep(0.0, 5.0, px.local.y));\n  col = col + vec3<f32>(0.6, 0.72, 0.8) * tick * 0.22;\n  let inner = 1.0 - smoothstep(0.0, 0.8, abs(px.sdf + 4.0));\n  col = mix(col, vec3<f32>(0.62, 0.74, 0.82), inner * 0.38);\n  let rim = smoothstep(-1.2, 0.0, px.sdf);\n  col = mix(col, vec3<f32>(0.95, 0.62, 0.20), rim * (0.2 + 0.5 * px.a.z + 0.3 * px.a.x));\n  col = col * (1.0 - 0.16 * px.a.y);\n  let d = distance(px.local, px.pointer);\n  col = col + vec3<f32>(0.95, 0.62, 0.20) * exp(-d * d / (2.0 * 36.0 * 36.0)) * 0.10 * px.a.x;\n  return vec4<f32>(col, px.color.a);\n}\n",
+            "params": [
+             0,
+             0,
+             0,
+             14
+            ],
+            "live": true
+           }
+          },
+          "machine/state/visited": {
+           "fill": "rgba(16,21,28,0.95)",
+           "stroke": "#f2a03a",
+           "strokeWidth": 1.5,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "rgba(206,222,230,0.78)",
+           "font": "400 14px monospace"
+          },
+          "machine/wire/idle": {
+           "stroke": "rgba(206,222,230,0.45)",
+           "strokeWidth": 1.5
+          },
+          "machine/wire/next": {
+           "stroke": "rgba(206,222,230,0.75)",
+           "strokeWidth": 1.5
+          },
+          "machine/wire/lit": {
+           "stroke": "#f2a03a",
+           "strokeWidth": 2.5
+          },
+          "machine/pill/idle": {
+           "fill": "rgba(16,21,28,0.97)",
+           "stroke": "rgba(206,222,230,0.45)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/next": {
+           "fill": "rgba(16,21,28,0.97)",
+           "stroke": "rgba(206,222,230,0.75)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/lit": {
+           "fill": "rgba(16,21,28,0.97)",
+           "stroke": "#f2a03a",
+           "strokeWidth": 1.5,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/hovered": {
+           "fill": "rgba(127,152,168,0.20)"
+          },
+          "machine/event/idle": {
+           "textColor": "rgba(206,222,230,0.85)",
+           "font": "400 13px monospace"
+          },
+          "machine/event/lit": {
+           "textColor": "#f2a03a",
+           "font": "400 13px monospace"
+          },
+          "machine/guard/idle": {
+           "fill": "rgba(16,21,28,0.95)",
+           "stroke": "rgba(206,222,230,0.85)",
+           "strokeWidth": 1.2
+          },
+          "machine/guard/refused": {
+           "fill": "#e5484d",
+           "stroke": "#e5484d",
+           "strokeWidth": 1.2
+          },
+          "machine/badge/idle": {
+           "fill": "#27506a",
+           "stroke": "#7f98a8",
+           "textColor": "#e8f2f7",
+           "corners": {
+            "radius": [
+             8,
+             8,
+             8,
+             8
+            ],
+            "kind": "round"
+           },
+           "font": "600 11px monospace"
+          },
+          "machine/token/idle": {
+           "fill": "#27506a",
+           "stroke": "#f2a03a",
+           "strokeWidth": 1
+          },
+          "machine/bloom/idle": {
+           "stroke": "#f2a03a",
+           "strokeWidth": 2
+          },
+          "machine/effect/other": {
+           "fill": "rgba(0,0,0,0)",
+           "stroke": "rgba(206,222,230,0.85)",
+           "strokeWidth": 1.2,
+           "decor": "M-0.5 0 A0.5 0.5 0 1 0 0.5 0 A0.5 0.5 0 1 0 -0.5 0 Z"
           },
           "stack/source/idle": {
            "fill": "rgba(16,21,28,0.97)",
@@ -4306,6 +4632,169 @@
             "saturate": 1.1
            }
           },
+          "machine/state/idle": {
+           "fill": "rgba(3,14,8,0.94)",
+           "stroke": "#2fd16a",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "rgba(93,255,149,0.8)",
+           "font": "400 14px monospace"
+          },
+          "machine/state/active": {
+           "fill": "#0e5a2c",
+           "stroke": "#2fd16a",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "#c8ffd9",
+           "font": "700 14px monospace",
+           "material": {
+            "wgsl": "fn tm_hash(p: vec2<f32>) -> f32 { return fract(sin(dot(p, vec2<f32>(127.1, 311.7))) * 43758.5453); }\nfn tm_noise(p: vec2<f32>) -> f32 {\n  let i = floor(p);\n  let f = fract(p);\n  let u = f * f * (3.0 - 2.0 * f);\n  return mix(mix(tm_hash(i), tm_hash(i + vec2<f32>(1.0, 0.0)), u.x), mix(tm_hash(i + vec2<f32>(0.0, 1.0)), tm_hash(i + vec2<f32>(1.0, 1.0)), u.x), u.y);\n}\n// a.x hover, a.y press, a.z focus, a.w scanline pitch in px\nfn shade(px: Pixel) -> vec4<f32> {\n  let step_t = floor(px.time * 12.0);\n  let pitch = max(px.a.w, 1.0);\n  let scan = 0.78 + 0.22 * step(0.5, fract(px.local.y / pitch));\n  var col = px.color.rgb * scan;\n  col = col * (0.95 + 0.05 * tm_hash(vec2<f32>(step_t, floor(px.local.y / pitch))));\n  col = col + vec3<f32>(0.1, 0.8, 0.35) * 0.12 * px.a.x;\n  let edge = 1.0 - smoothstep(0.0, 1.5, abs(px.sdf + 1.0));\n  col = mix(col, vec3<f32>(0.35, 1.0, 0.55), edge * (0.35 + 0.4 * px.a.x + 0.4 * px.a.z));\n  let blink = step(0.5, fract(px.time * 1.6));\n  let cursor = step(px.size.x - 10.0, px.local.x) * step(px.local.x, px.size.x - 4.0) * step(4.0, px.local.y) * step(px.local.y, px.size.y - 4.0);\n  col = col + vec3<f32>(0.3, 1.0, 0.5) * cursor * blink * px.a.z * 0.6;\n  col = mix(col, vec3<f32>(0.4, 1.0, 0.6), px.a.y * 0.3);\n  return vec4<f32>(col, px.color.a);\n}\n",
+            "params": [
+             0,
+             0,
+             0,
+             3
+            ],
+            "live": true
+           }
+          },
+          "machine/state/visited": {
+           "fill": "rgba(3,14,8,0.94)",
+           "stroke": "#8dffb2",
+           "strokeWidth": 1.5,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "rgba(93,255,149,0.8)",
+           "font": "400 14px monospace"
+          },
+          "machine/wire/idle": {
+           "stroke": "rgba(93,255,149,0.45)",
+           "strokeWidth": 1.5
+          },
+          "machine/wire/next": {
+           "stroke": "rgba(93,255,149,0.75)",
+           "strokeWidth": 1.5
+          },
+          "machine/wire/lit": {
+           "stroke": "#8dffb2",
+           "strokeWidth": 2.5
+          },
+          "machine/pill/idle": {
+           "fill": "rgba(3,14,8,0.97)",
+           "stroke": "rgba(93,255,149,0.45)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/next": {
+           "fill": "rgba(3,14,8,0.97)",
+           "stroke": "rgba(93,255,149,0.75)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/lit": {
+           "fill": "rgba(3,14,8,0.97)",
+           "stroke": "#8dffb2",
+           "strokeWidth": 1.5,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/hovered": {
+           "fill": "rgba(47,209,106,0.18)"
+          },
+          "machine/event/idle": {
+           "textColor": "rgba(93,255,149,0.82)",
+           "font": "400 14px monospace"
+          },
+          "machine/event/lit": {
+           "textColor": "#c8ffd9",
+           "font": "400 14px monospace"
+          },
+          "machine/guard/idle": {
+           "fill": "rgba(3,14,8,0.94)",
+           "stroke": "rgba(93,255,149,0.82)",
+           "strokeWidth": 1.2
+          },
+          "machine/guard/refused": {
+           "fill": "#e5484d",
+           "stroke": "#e5484d",
+           "strokeWidth": 1.2
+          },
+          "machine/badge/idle": {
+           "fill": "#0e5a2c",
+           "stroke": "#2fd16a",
+           "textColor": "#c8ffd9",
+           "corners": {
+            "radius": [
+             8,
+             8,
+             8,
+             8
+            ],
+            "kind": "round"
+           },
+           "font": "600 11px monospace"
+          },
+          "machine/token/idle": {
+           "fill": "#0e5a2c",
+           "stroke": "#8dffb2",
+           "strokeWidth": 1
+          },
+          "machine/bloom/idle": {
+           "stroke": "#8dffb2",
+           "strokeWidth": 2
+          },
+          "machine/effect/other": {
+           "fill": "rgba(0,0,0,0)",
+           "stroke": "rgba(93,255,149,0.82)",
+           "strokeWidth": 1.2,
+           "decor": "M-0.5 0 A0.5 0.5 0 1 0 0.5 0 A0.5 0.5 0 1 0 -0.5 0 Z"
+          },
           "stack/source/idle": {
            "fill": "rgba(3,14,8,0.97)",
            "stroke": "#2fd16a",
@@ -5763,6 +6252,169 @@
             "saturate": 1.1
            }
           },
+          "machine/state/idle": {
+           "fill": "rgba(250,246,236,0.96)",
+           "stroke": "#2a2433",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "rgba(31,26,38,0.82)",
+           "font": "400 15px serif"
+          },
+          "machine/state/active": {
+           "fill": "#2a2433",
+           "stroke": "#2a2433",
+           "strokeWidth": 1.4,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "#fbf7ec",
+           "font": "600 15px serif",
+           "material": {
+            "wgsl": "fn pp_hash(p: vec2<f32>) -> f32 { return fract(sin(dot(p, vec2<f32>(127.1, 311.7))) * 43758.5453); }\nfn pp_noise(p: vec2<f32>) -> f32 {\n  let i = floor(p);\n  let f = fract(p);\n  let u = f * f * (3.0 - 2.0 * f);\n  return mix(mix(pp_hash(i), pp_hash(i + vec2<f32>(1.0, 0.0)), u.x), mix(pp_hash(i + vec2<f32>(0.0, 1.0)), pp_hash(i + vec2<f32>(1.0, 1.0)), u.x), u.y);\n}\n// a.x hover, a.y press, a.z focus, a.w fibre scale in px\nfn shade(px: Pixel) -> vec4<f32> {\n  let s = max(px.a.w, 1.0);\n  let fib = pp_noise(vec2<f32>(px.local.x / (s * 6.0), px.local.y / (s * 0.4)));\n  let tooth = pp_noise(px.local / s);\n  var col = px.color.rgb * (0.96 + 0.05 * tooth) - vec3<f32>(0.03) * smoothstep(0.65, 0.9, fib);\n  let d = distance(px.local, px.pointer);\n  col = col + vec3<f32>(0.05, 0.04, 0.02) * exp(-d * d / (2.0 * 80.0 * 80.0)) * (0.4 + px.a.x);\n  let ink = smoothstep(-1.4, 0.0, px.sdf) * (0.35 + 0.35 * px.a.x + 0.3 * px.a.z);\n  col = mix(col, vec3<f32>(0.14, 0.12, 0.16), ink);\n  let bleed = smoothstep(-6.0, -1.4, px.sdf) * (1.0 - smoothstep(-1.4, 0.0, px.sdf)) * 0.06 * (0.6 + 0.4 * pp_noise(px.local / 3.0));\n  col = col - vec3<f32>(bleed);\n  col = col * (1.0 - 0.07 * px.a.y);\n  return vec4<f32>(col, px.color.a);\n}\n",
+            "params": [
+             0,
+             0,
+             0,
+             4
+            ],
+            "live": true
+           }
+          },
+          "machine/state/visited": {
+           "fill": "rgba(250,246,236,0.96)",
+           "stroke": "#b03a2e",
+           "strokeWidth": 1.5,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "rgba(31,26,38,0.82)",
+           "font": "400 15px serif"
+          },
+          "machine/wire/idle": {
+           "stroke": "rgba(31,26,38,0.45)",
+           "strokeWidth": 1.5
+          },
+          "machine/wire/next": {
+           "stroke": "rgba(31,26,38,0.75)",
+           "strokeWidth": 1.5
+          },
+          "machine/wire/lit": {
+           "stroke": "#b03a2e",
+           "strokeWidth": 2.5
+          },
+          "machine/pill/idle": {
+           "fill": "rgba(250,246,236,0.98)",
+           "stroke": "rgba(31,26,38,0.45)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/next": {
+           "fill": "rgba(250,246,236,0.98)",
+           "stroke": "rgba(31,26,38,0.75)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/lit": {
+           "fill": "rgba(250,246,236,0.98)",
+           "stroke": "#b03a2e",
+           "strokeWidth": 1.5,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/hovered": {
+           "fill": "rgba(42,36,51,0.12)"
+          },
+          "machine/event/idle": {
+           "textColor": "rgba(31,26,38,0.85)",
+           "font": "400 14px monospace"
+          },
+          "machine/event/lit": {
+           "textColor": "#b03a2e",
+           "font": "400 14px monospace"
+          },
+          "machine/guard/idle": {
+           "fill": "rgba(250,246,236,0.96)",
+           "stroke": "rgba(31,26,38,0.85)",
+           "strokeWidth": 1.2
+          },
+          "machine/guard/refused": {
+           "fill": "#e5484d",
+           "stroke": "#e5484d",
+           "strokeWidth": 1.2
+          },
+          "machine/badge/idle": {
+           "fill": "#2a2433",
+           "stroke": "#2a2433",
+           "textColor": "#fbf7ec",
+           "corners": {
+            "radius": [
+             8,
+             8,
+             8,
+             8
+            ],
+            "kind": "round"
+           },
+           "font": "600 11px serif"
+          },
+          "machine/token/idle": {
+           "fill": "#2a2433",
+           "stroke": "#b03a2e",
+           "strokeWidth": 1
+          },
+          "machine/bloom/idle": {
+           "stroke": "#b03a2e",
+           "strokeWidth": 2
+          },
+          "machine/effect/other": {
+           "fill": "rgba(0,0,0,0)",
+           "stroke": "rgba(31,26,38,0.85)",
+           "strokeWidth": 1.2,
+           "decor": "M-0.5 0 A0.5 0.5 0 1 0 0.5 0 A0.5 0.5 0 1 0 -0.5 0 Z"
+          },
           "stack/source/idle": {
            "fill": "rgba(250,246,236,0.98)",
            "stroke": "#2a2433",
@@ -7192,6 +7844,169 @@
             "tint": "rgba(23,128,122,0.35)",
             "saturate": 1.1
            }
+          },
+          "machine/state/idle": {
+           "fill": "rgba(251,246,234,0.90)",
+           "stroke": "rgba(184,132,28,0.7)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "rgba(44,37,24,0.92)",
+           "font": "400 16px Cairo, sans-serif"
+          },
+          "machine/state/active": {
+           "fill": "#1f4f9a",
+           "stroke": "#b8841c",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "#fbf5e6",
+           "font": "600 15px Cairo, sans-serif",
+           "material": {
+            "wgsl": "// a glazed zellige tile: lit from above, a gold inlay line inside its edge, a slow glint; a.x hover, a.y press, a.z focus\nfn shade(px: Pixel) -> vec4<f32> {\n  var col = px.color.rgb * (1.14 - 0.30 * px.uv.y);\n  let d = distance(px.local, px.pointer);\n  col = col + vec3<f32>(0.98, 0.82, 0.48) * exp(-d * d / 7000.0) * (0.04 + 0.16 * px.a.x);\n  let inlay = 1.0 - smoothstep(0.35, 1.1, abs(px.sdf + 4.0));\n  col = mix(col, vec3<f32>(0.72, 0.52, 0.11), inlay * (0.45 + 0.35 * px.a.x + 0.2 * px.a.z));\n  let band = (px.local.x - px.local.y * 0.6) * 0.012 - px.time * 0.35;\n  col = col + vec3<f32>(pow(max(0.0, sin(band)), 40.0) * 0.12);\n  col = col * (1.0 - 0.14 * px.a.y);\n  return vec4<f32>(col, max(px.color.a, inlay * 0.7));\n}\n",
+            "params": [
+             0,
+             0,
+             0,
+             0
+            ],
+            "live": true
+           }
+          },
+          "machine/state/visited": {
+           "fill": "rgba(251,246,234,0.90)",
+           "stroke": "#1f4f9a",
+           "strokeWidth": 1.5,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "rgba(44,37,24,0.92)",
+           "font": "400 16px Cairo, sans-serif"
+          },
+          "machine/wire/idle": {
+           "stroke": "rgba(44,37,24,0.45)",
+           "strokeWidth": 1.5
+          },
+          "machine/wire/next": {
+           "stroke": "rgba(44,37,24,0.75)",
+           "strokeWidth": 1.5
+          },
+          "machine/wire/lit": {
+           "stroke": "#1f4f9a",
+           "strokeWidth": 2.5
+          },
+          "machine/pill/idle": {
+           "fill": "rgba(251,246,234,0.96)",
+           "stroke": "rgba(44,37,24,0.45)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/next": {
+           "fill": "rgba(251,246,234,0.96)",
+           "stroke": "rgba(44,37,24,0.75)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/lit": {
+           "fill": "rgba(251,246,234,0.96)",
+           "stroke": "#1f4f9a",
+           "strokeWidth": 1.5,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/hovered": {
+           "fill": "rgba(31,79,154,0.12)"
+          },
+          "machine/event/idle": {
+           "textColor": "rgba(44,37,24,0.9)",
+           "font": "400 14px monospace"
+          },
+          "machine/event/lit": {
+           "textColor": "#1f4f9a",
+           "font": "400 14px monospace"
+          },
+          "machine/guard/idle": {
+           "fill": "rgba(251,246,234,0.90)",
+           "stroke": "rgba(44,37,24,0.9)",
+           "strokeWidth": 1.2
+          },
+          "machine/guard/refused": {
+           "fill": "#e5484d",
+           "stroke": "#e5484d",
+           "strokeWidth": 1.2
+          },
+          "machine/badge/idle": {
+           "fill": "#1f4f9a",
+           "stroke": "#b8841c",
+           "textColor": "#fbf5e6",
+           "corners": {
+            "radius": [
+             8,
+             8,
+             8,
+             8
+            ],
+            "kind": "round"
+           },
+           "font": "600 11px Cairo, sans-serif"
+          },
+          "machine/token/idle": {
+           "fill": "#1f4f9a",
+           "stroke": "#1f4f9a",
+           "strokeWidth": 1
+          },
+          "machine/bloom/idle": {
+           "stroke": "#1f4f9a",
+           "strokeWidth": 2
+          },
+          "machine/effect/other": {
+           "fill": "rgba(0,0,0,0)",
+           "stroke": "rgba(44,37,24,0.9)",
+           "strokeWidth": 1.2,
+           "decor": "M-0.5 0 A0.5 0.5 0 1 0 0.5 0 A0.5 0.5 0 1 0 -0.5 0 Z"
           },
           "stack/source/idle": {
            "fill": "rgba(251,246,234,0.96)",
@@ -8627,6 +9442,169 @@
             "tint": "rgba(95,211,198,0.4)",
             "saturate": 1.1
            }
+          },
+          "machine/state/idle": {
+           "fill": "rgba(13,15,34,0.82)",
+           "stroke": "rgba(233,185,73,0.6)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "rgba(243,232,207,0.92)",
+           "font": "400 16px Cairo, sans-serif"
+          },
+          "machine/state/active": {
+           "fill": "#183a78",
+           "stroke": "#e9b949",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "#fbf1d6",
+           "font": "600 15px Cairo, sans-serif",
+           "material": {
+            "wgsl": "// a glazed zellige tile: lit from above, a gold inlay line inside its edge, a slow glint; a.x hover, a.y press, a.z focus\nfn shade(px: Pixel) -> vec4<f32> {\n  var col = px.color.rgb * (1.14 - 0.30 * px.uv.y);\n  let d = distance(px.local, px.pointer);\n  col = col + vec3<f32>(0.98, 0.82, 0.48) * exp(-d * d / 7000.0) * (0.04 + 0.16 * px.a.x);\n  let inlay = 1.0 - smoothstep(0.35, 1.1, abs(px.sdf + 4.0));\n  col = mix(col, vec3<f32>(0.93, 0.73, 0.30), inlay * (0.45 + 0.35 * px.a.x + 0.2 * px.a.z));\n  let band = (px.local.x - px.local.y * 0.6) * 0.012 - px.time * 0.35;\n  col = col + vec3<f32>(pow(max(0.0, sin(band)), 40.0) * 0.12);\n  col = col * (1.0 - 0.14 * px.a.y);\n  return vec4<f32>(col, max(px.color.a, inlay * 0.7));\n}\n",
+            "params": [
+             0,
+             0,
+             0,
+             0
+            ],
+            "live": true
+           }
+          },
+          "machine/state/visited": {
+           "fill": "rgba(13,15,34,0.82)",
+           "stroke": "#e9b949",
+           "strokeWidth": 1.5,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "rgba(243,232,207,0.92)",
+           "font": "400 16px Cairo, sans-serif"
+          },
+          "machine/wire/idle": {
+           "stroke": "rgba(243,232,207,0.45)",
+           "strokeWidth": 1.5
+          },
+          "machine/wire/next": {
+           "stroke": "rgba(243,232,207,0.75)",
+           "strokeWidth": 1.5
+          },
+          "machine/wire/lit": {
+           "stroke": "#e9b949",
+           "strokeWidth": 2.5
+          },
+          "machine/pill/idle": {
+           "fill": "rgba(13,15,34,0.97)",
+           "stroke": "rgba(243,232,207,0.45)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/next": {
+           "fill": "rgba(13,15,34,0.97)",
+           "stroke": "rgba(243,232,207,0.75)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/lit": {
+           "fill": "rgba(13,15,34,0.97)",
+           "stroke": "#e9b949",
+           "strokeWidth": 1.5,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/hovered": {
+           "fill": "rgba(233,185,73,0.14)"
+          },
+          "machine/event/idle": {
+           "textColor": "rgba(243,232,207,0.9)",
+           "font": "400 14px monospace"
+          },
+          "machine/event/lit": {
+           "textColor": "#f4cf72",
+           "font": "400 14px monospace"
+          },
+          "machine/guard/idle": {
+           "fill": "rgba(13,15,34,0.82)",
+           "stroke": "rgba(243,232,207,0.9)",
+           "strokeWidth": 1.2
+          },
+          "machine/guard/refused": {
+           "fill": "#e5484d",
+           "stroke": "#e5484d",
+           "strokeWidth": 1.2
+          },
+          "machine/badge/idle": {
+           "fill": "#183a78",
+           "stroke": "#e9b949",
+           "textColor": "#fbf1d6",
+           "corners": {
+            "radius": [
+             8,
+             8,
+             8,
+             8
+            ],
+            "kind": "round"
+           },
+           "font": "600 11px Cairo, sans-serif"
+          },
+          "machine/token/idle": {
+           "fill": "#183a78",
+           "stroke": "#e9b949",
+           "strokeWidth": 1
+          },
+          "machine/bloom/idle": {
+           "stroke": "#e9b949",
+           "strokeWidth": 2
+          },
+          "machine/effect/other": {
+           "fill": "rgba(0,0,0,0)",
+           "stroke": "rgba(243,232,207,0.9)",
+           "strokeWidth": 1.2,
+           "decor": "M-0.5 0 A0.5 0.5 0 1 0 0.5 0 A0.5 0.5 0 1 0 -0.5 0 Z"
           },
           "stack/source/idle": {
            "fill": "rgba(13,15,34,0.97)",
@@ -10194,6 +11172,175 @@
             ],
             "live": true
            }
+          },
+          "machine/state/idle": {
+           "fill": "rgba(255,255,255,0.62)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "#454861",
+           "font": "400 15px sans-serif"
+          },
+          "machine/state/active": {
+           "fill": "rgba(255,255,255,0.94)",
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "#1b1d2a",
+           "font": "600 15px sans-serif",
+           "material": {
+            "wgsl": "// frosted white glass edged by a hairline of the whole spectrum, hue by angle around the shape; a.x hover, a.y press (turns the hue), a.z focus\nfn pr_hue(h: f32) -> vec3<f32> {\n  let k = vec3<f32>(1.0, 0.6667, 0.3333);\n  return clamp(abs(fract(vec3<f32>(h) + k) * 6.0 - vec3<f32>(3.0, 3.0, 3.0)) - vec3<f32>(1.0, 1.0, 1.0), vec3<f32>(0.0, 0.0, 0.0), vec3<f32>(1.0, 1.0, 1.0));\n}\nfn shade(px: Pixel) -> vec4<f32> {\n  let c = px.uv - vec2<f32>(0.5, 0.5);\n  let ang = atan2(c.y, c.x) / 6.2831853 + 0.5;\n  let phase = ang + px.time * 0.02 + px.a.y * 0.3 + px.pointer.x / max(px.size.x, 1.0) * 0.12;\n  let spec = pr_hue(phase);\n  let rim = smoothstep(-1.6, -0.7, px.sdf);\n  let strength = clamp(0.78 + 0.22 * px.a.x, 0.0, 1.0);\n  let lit = min(spec * (1.0 + 0.25 * px.a.x), vec3<f32>(1.0, 1.0, 1.0));\n  var col = mix(px.color.rgb, spec, 0.03 * (1.0 - rim));\n  col = mix(col, lit, rim * strength);\n  return vec4<f32>(col, max(px.color.a, rim * strength));\n}\n",
+            "params": [
+             0,
+             0,
+             0,
+             0
+            ],
+            "live": true
+           }
+          },
+          "machine/state/visited": {
+           "fill": "rgba(255,255,255,0.62)",
+           "stroke": "#6b6fe8",
+           "strokeWidth": 1.5,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "#454861",
+           "font": "400 15px sans-serif"
+          },
+          "machine/wire/idle": {
+           "stroke": "rgba(69,72,97,0.45)",
+           "strokeWidth": 1.5
+          },
+          "machine/wire/next": {
+           "stroke": "rgba(69,72,97,0.75)",
+           "strokeWidth": 1.5
+          },
+          "machine/wire/lit": {
+           "stroke": "#6b6fe8",
+           "strokeWidth": 2.5,
+           "material": {
+            "wgsl": "// the travelled arc: the same spectrum, brighter\nfn pr_hue(h: f32) -> vec3<f32> {\n  let k = vec3<f32>(1.0, 0.6667, 0.3333);\n  return clamp(abs(fract(vec3<f32>(h) + k) * 6.0 - vec3<f32>(3.0, 3.0, 3.0)) - vec3<f32>(1.0, 1.0, 1.0), vec3<f32>(0.0, 0.0, 0.0), vec3<f32>(1.0, 1.0, 1.0));\n}\nfn shade(px: Pixel) -> vec4<f32> {\n  let c = px.uv - vec2<f32>(0.5, 0.5);\n  let ang = atan2(c.y, c.x) / 6.2831853 + 0.5;\n  let spec = pr_hue(ang + px.time * 0.04);\n  return vec4<f32>(mix(spec, vec3<f32>(1.0, 1.0, 1.0), 0.12), 1.0);\n}\n",
+            "params": [
+             0,
+             0,
+             0,
+             0
+            ],
+            "live": true
+           }
+          },
+          "machine/pill/idle": {
+           "fill": "rgba(252,252,250,0.88)",
+           "stroke": "rgba(69,72,97,0.45)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/next": {
+           "fill": "rgba(252,252,250,0.88)",
+           "stroke": "rgba(69,72,97,0.75)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/lit": {
+           "fill": "rgba(252,252,250,0.88)",
+           "stroke": "#6b6fe8",
+           "strokeWidth": 1.5,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/hovered": {
+           "fill": "rgba(255,255,255,0.72)"
+          },
+          "machine/event/idle": {
+           "textColor": "#2f3248",
+           "font": "400 14px monospace"
+          },
+          "machine/event/lit": {
+           "textColor": "#1b1d2a",
+           "font": "400 14px monospace"
+          },
+          "machine/guard/idle": {
+           "fill": "rgba(255,255,255,0.62)",
+           "stroke": "#2f3248",
+           "strokeWidth": 1.2
+          },
+          "machine/guard/refused": {
+           "fill": "#e5484d",
+           "stroke": "#e5484d",
+           "strokeWidth": 1.2
+          },
+          "machine/badge/idle": {
+           "fill": "rgba(255,255,255,0.94)",
+           "textColor": "#1b1d2a",
+           "corners": {
+            "radius": [
+             8,
+             8,
+             8,
+             8
+            ],
+            "kind": "round"
+           },
+           "font": "600 11px sans-serif"
+          },
+          "machine/token/idle": {
+           "fill": "#ffffff",
+           "stroke": "#6b6fe8",
+           "strokeWidth": 1
+          },
+          "machine/bloom/idle": {
+           "stroke": "#6b6fe8",
+           "strokeWidth": 2
+          },
+          "machine/effect/other": {
+           "fill": "rgba(0,0,0,0)",
+           "stroke": "#2f3248",
+           "strokeWidth": 1.2,
+           "decor": "M-0.5 0 A0.5 0.5 0 1 0 0.5 0 A0.5 0.5 0 1 0 -0.5 0 Z"
           },
           "stack/source/idle": {
            "fill": "rgba(252,252,250,0.88)",
@@ -11781,6 +12928,179 @@
             "live": true
            }
           },
+          "machine/state/idle": {
+           "fill": "rgba(23,25,37,0.78)",
+           "stroke": "rgba(238,240,247,0.14)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "rgba(238,240,247,0.74)",
+           "font": "300 15px sans-serif"
+          },
+          "machine/state/active": {
+           "fill": "#1f2234",
+           "stroke": "rgba(238,240,247,0.18)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "#eef0f7",
+           "font": "500 15px sans-serif",
+           "material": {
+            "wgsl": "// ink glass edged by a softly glowing spectral hairline, hue by angle around the shape; a.x hover, a.y press (turns the hue), a.z focus\nfn pr_hue(h: f32) -> vec3<f32> {\n  let k = vec3<f32>(1.0, 0.6667, 0.3333);\n  return clamp(abs(fract(vec3<f32>(h) + k) * 6.0 - vec3<f32>(3.0, 3.0, 3.0)) - vec3<f32>(1.0, 1.0, 1.0), vec3<f32>(0.0, 0.0, 0.0), vec3<f32>(1.0, 1.0, 1.0));\n}\nfn shade(px: Pixel) -> vec4<f32> {\n  let c = px.uv - vec2<f32>(0.5, 0.5);\n  let ang = atan2(c.y, c.x) / 6.2831853 + 0.5;\n  let phase = ang + px.time * 0.02 + px.a.y * 0.3 + px.pointer.x / max(px.size.x, 1.0) * 0.12;\n  let spec = pr_hue(phase);\n  let rim = smoothstep(-1.6, -0.7, px.sdf);\n  let glow = smoothstep(-10.0, 0.0, px.sdf) * (0.08 + 0.10 * px.a.x);\n  let strength = clamp(0.72 + 0.28 * px.a.x, 0.0, 1.0);\n  var col = px.color.rgb + spec * glow;\n  col = mix(col, spec, rim * strength);\n  return vec4<f32>(clamp(col, vec3<f32>(0.0, 0.0, 0.0), vec3<f32>(1.0, 1.0, 1.0)), max(px.color.a, rim * strength));\n}\n",
+            "params": [
+             0,
+             0,
+             0,
+             0
+            ],
+            "live": true
+           }
+          },
+          "machine/state/visited": {
+           "fill": "rgba(23,25,37,0.78)",
+           "stroke": "#8f6bff",
+           "strokeWidth": 1.5,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "rgba(238,240,247,0.74)",
+           "font": "300 15px sans-serif"
+          },
+          "machine/wire/idle": {
+           "stroke": "rgba(238,240,247,0.45)",
+           "strokeWidth": 1.5
+          },
+          "machine/wire/next": {
+           "stroke": "rgba(238,240,247,0.75)",
+           "strokeWidth": 1.5
+          },
+          "machine/wire/lit": {
+           "stroke": "#8f6bff",
+           "strokeWidth": 2.5,
+           "material": {
+            "wgsl": "// the travelled arc: the same spectrum, glowing\nfn pr_hue(h: f32) -> vec3<f32> {\n  let k = vec3<f32>(1.0, 0.6667, 0.3333);\n  return clamp(abs(fract(vec3<f32>(h) + k) * 6.0 - vec3<f32>(3.0, 3.0, 3.0)) - vec3<f32>(1.0, 1.0, 1.0), vec3<f32>(0.0, 0.0, 0.0), vec3<f32>(1.0, 1.0, 1.0));\n}\nfn shade(px: Pixel) -> vec4<f32> {\n  let c = px.uv - vec2<f32>(0.5, 0.5);\n  let ang = atan2(c.y, c.x) / 6.2831853 + 0.5;\n  let spec = pr_hue(ang + px.time * 0.04);\n  return vec4<f32>(mix(spec, vec3<f32>(1.0, 1.0, 1.0), 0.25), 1.0);\n}\n",
+            "params": [
+             0,
+             0,
+             0,
+             0
+            ],
+            "live": true
+           }
+          },
+          "machine/pill/idle": {
+           "fill": "rgba(23,25,37,0.92)",
+           "stroke": "rgba(238,240,247,0.45)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/next": {
+           "fill": "rgba(23,25,37,0.92)",
+           "stroke": "rgba(238,240,247,0.75)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/lit": {
+           "fill": "rgba(23,25,37,0.92)",
+           "stroke": "#8f6bff",
+           "strokeWidth": 1.5,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/hovered": {
+           "fill": "rgba(31,34,52,0.8)"
+          },
+          "machine/event/idle": {
+           "textColor": "rgba(238,240,247,0.82)",
+           "font": "400 14px monospace"
+          },
+          "machine/event/lit": {
+           "textColor": "#eef0f7",
+           "font": "400 14px monospace"
+          },
+          "machine/guard/idle": {
+           "fill": "rgba(23,25,37,0.78)",
+           "stroke": "rgba(238,240,247,0.82)",
+           "strokeWidth": 1.2
+          },
+          "machine/guard/refused": {
+           "fill": "#e5484d",
+           "stroke": "#e5484d",
+           "strokeWidth": 1.2
+          },
+          "machine/badge/idle": {
+           "fill": "#1f2234",
+           "stroke": "rgba(238,240,247,0.18)",
+           "textColor": "#eef0f7",
+           "corners": {
+            "radius": [
+             8,
+             8,
+             8,
+             8
+            ],
+            "kind": "round"
+           },
+           "font": "600 11px sans-serif"
+          },
+          "machine/token/idle": {
+           "fill": "#262a3f",
+           "stroke": "#8f6bff",
+           "strokeWidth": 1
+          },
+          "machine/bloom/idle": {
+           "stroke": "#8f6bff",
+           "strokeWidth": 2
+          },
+          "machine/effect/other": {
+           "fill": "rgba(0,0,0,0)",
+           "stroke": "rgba(238,240,247,0.82)",
+           "strokeWidth": 1.2,
+           "decor": "M-0.5 0 A0.5 0.5 0 1 0 0.5 0 A0.5 0.5 0 1 0 -0.5 0 Z"
+          },
           "stack/source/idle": {
            "fill": "rgba(23,25,37,0.92)",
            "stroke": "rgba(238,240,247,0.16)",
@@ -13213,6 +14533,179 @@
             "saturate": 1.1
            }
           },
+          "machine/state/idle": {
+           "fill": "rgba(255,246,236,0.9)",
+           "stroke": "#e6c27a",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "rgba(42,30,51,0.86)",
+           "font": "400 15px sans-serif"
+          },
+          "machine/state/active": {
+           "fill": "#2a1e33",
+           "stroke": "#e6c27a",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "#fff6ec",
+           "font": "600 15px sans-serif",
+           "material": {
+            "wgsl": "// a plum tile edged in gold, lit from the horizon; a.x hover, a.y press, a.z focus\nfn shade(px: Pixel) -> vec4<f32> {\n  var col = px.color.rgb * (1.12 - 0.22 * px.uv.y);\n  let d = distance(px.local, px.pointer);\n  col = col + vec3<f32>(1.0, 0.78, 0.55) * exp(-d * d / 6000.0) * (0.04 + 0.12 * px.a.x);\n  let inlay = 1.0 - smoothstep(0.35, 1.1, abs(px.sdf + 3.5));\n  col = mix(col, vec3<f32>(0.902, 0.761, 0.478), inlay * (0.35 + 0.35 * px.a.x));\n  col = col * (1.0 - 0.14 * px.a.y);\n  return vec4<f32>(col, max(px.color.a, inlay * 0.6));\n}\n",
+            "params": [
+             0,
+             0,
+             0,
+             0
+            ],
+            "live": true
+           }
+          },
+          "machine/state/visited": {
+           "fill": "rgba(255,246,236,0.9)",
+           "stroke": "#f6b98a",
+           "strokeWidth": 1.5,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "rgba(42,30,51,0.86)",
+           "font": "400 15px sans-serif"
+          },
+          "machine/wire/idle": {
+           "stroke": "rgba(42,30,51,0.45)",
+           "strokeWidth": 1.5
+          },
+          "machine/wire/next": {
+           "stroke": "rgba(42,30,51,0.75)",
+           "strokeWidth": 1.5
+          },
+          "machine/wire/lit": {
+           "stroke": "#f6b98a",
+           "strokeWidth": 2.5,
+           "material": {
+            "wgsl": "// the travelled arc: gold warming to rose\nfn shade(px: Pixel) -> vec4<f32> {\n  let c = px.uv - vec2<f32>(0.5, 0.5);\n  let k = 0.5 + 0.5 * sin(atan2(c.y, c.x) + px.time * 0.3);\n  return vec4<f32>(mix(vec3<f32>(0.902, 0.761, 0.478), vec3<f32>(0.784, 0.416, 0.494), k), 1.0);\n}\n",
+            "params": [
+             0,
+             0,
+             0,
+             0
+            ],
+            "live": true
+           }
+          },
+          "machine/pill/idle": {
+           "fill": "rgba(255,246,236,0.95)",
+           "stroke": "rgba(42,30,51,0.45)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/next": {
+           "fill": "rgba(255,246,236,0.95)",
+           "stroke": "rgba(42,30,51,0.75)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/lit": {
+           "fill": "rgba(255,246,236,0.95)",
+           "stroke": "#f6b98a",
+           "strokeWidth": 1.5,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/hovered": {
+           "fill": "rgba(230,194,122,0.30)"
+          },
+          "machine/event/idle": {
+           "textColor": "#3a2a45",
+           "font": "400 14px monospace"
+          },
+          "machine/event/lit": {
+           "textColor": "#2a1e33",
+           "font": "400 14px monospace"
+          },
+          "machine/guard/idle": {
+           "fill": "rgba(255,246,236,0.9)",
+           "stroke": "#3a2a45",
+           "strokeWidth": 1.2
+          },
+          "machine/guard/refused": {
+           "fill": "#e5484d",
+           "stroke": "#e5484d",
+           "strokeWidth": 1.2
+          },
+          "machine/badge/idle": {
+           "fill": "#2a1e33",
+           "stroke": "#e6c27a",
+           "textColor": "#fff6ec",
+           "corners": {
+            "radius": [
+             8,
+             8,
+             8,
+             8
+            ],
+            "kind": "round"
+           },
+           "font": "600 11px sans-serif"
+          },
+          "machine/token/idle": {
+           "fill": "#fff0cf",
+           "stroke": "#f6b98a",
+           "strokeWidth": 1
+          },
+          "machine/bloom/idle": {
+           "stroke": "#f6b98a",
+           "strokeWidth": 2
+          },
+          "machine/effect/other": {
+           "fill": "rgba(0,0,0,0)",
+           "stroke": "#3a2a45",
+           "strokeWidth": 1.2,
+           "decor": "M-0.5 0 A0.5 0.5 0 1 0 0.5 0 A0.5 0.5 0 1 0 -0.5 0 Z"
+          },
           "stack/source/idle": {
            "fill": "rgba(255,246,236,0.95)",
            "stroke": "#e6c27a",
@@ -14600,6 +16093,179 @@
             "saturate": 1.0
            }
           },
+          "machine/state/idle": {
+           "fill": "rgba(247,243,232,0.97)",
+           "stroke": "#141414",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "rgba(20,20,20,0.86)",
+           "font": "400 15px serif"
+          },
+          "machine/state/active": {
+           "fill": "#c9a14a",
+           "stroke": "#141414",
+           "strokeWidth": 1.2,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "#141414",
+           "font": "600 15px serif",
+           "material": {
+            "wgsl": "// gold leaf: a crinkled foil with a highlight that follows the pointer; a.x hover, a.y press, a.z focus\nfn ig_hash(p: vec2<f32>) -> f32 { return fract(sin(dot(p, vec2<f32>(127.1, 311.7))) * 43758.5453); }\nfn ig_noise(p: vec2<f32>) -> f32 {\n  let i = floor(p);\n  let f = fract(p);\n  let u = f * f * (3.0 - 2.0 * f);\n  return mix(mix(ig_hash(i), ig_hash(i + vec2<f32>(1.0, 0.0)), u.x), mix(ig_hash(i + vec2<f32>(0.0, 1.0)), ig_hash(i + vec2<f32>(1.0, 1.0)), u.x), u.y);\n}\nfn shade(px: Pixel) -> vec4<f32> {\n  let crinkle = ig_noise(px.local * 0.35 + vec2<f32>(3.1, 7.7));\n  let fine = ig_noise(px.local * 1.3);\n  var col = px.color.rgb * (0.88 + 0.18 * crinkle + 0.06 * fine);\n  let d = distance(px.local, px.pointer);\n  let hl = exp(-d * d / 9800.0);\n  col = col + vec3<f32>(1.0, 0.93, 0.65) * hl * (0.20 + 0.25 * px.a.x) * (0.6 + 0.8 * crinkle);\n  let sweep = pow(max(0.0, sin((px.local.x - px.local.y * 0.5) * 0.02 - px.time * 0.5)), 24.0);\n  col = col + vec3<f32>(1.0, 0.95, 0.75) * sweep * 0.10;\n  col = col * (1.0 - 0.12 * px.a.y);\n  return vec4<f32>(clamp(col, vec3<f32>(0.0, 0.0, 0.0), vec3<f32>(1.0, 1.0, 1.0)), px.color.a);\n}\n",
+            "params": [
+             0,
+             0,
+             0,
+             0
+            ],
+            "live": true
+           }
+          },
+          "machine/state/visited": {
+           "fill": "rgba(247,243,232,0.97)",
+           "stroke": "#c9a14a",
+           "strokeWidth": 1.5,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "rgba(20,20,20,0.86)",
+           "font": "400 15px serif"
+          },
+          "machine/wire/idle": {
+           "stroke": "rgba(20,20,20,0.45)",
+           "strokeWidth": 1.5
+          },
+          "machine/wire/next": {
+           "stroke": "rgba(20,20,20,0.75)",
+           "strokeWidth": 1.5
+          },
+          "machine/wire/lit": {
+           "stroke": "#c9a14a",
+           "strokeWidth": 2.5,
+           "material": {
+            "wgsl": "// the travelled arc: gold leaf with a moving glint\nfn shade(px: Pixel) -> vec4<f32> {\n  let c = px.uv - vec2<f32>(0.5, 0.5);\n  let g = pow(max(0.0, sin(atan2(c.y, c.x) * 3.0 - px.time * 0.8)), 8.0);\n  return vec4<f32>(mix(vec3<f32>(0.788, 0.631, 0.290), vec3<f32>(1.0, 0.92, 0.6), g * 0.6), 1.0);\n}\n",
+            "params": [
+             0,
+             0,
+             0,
+             0
+            ],
+            "live": true
+           }
+          },
+          "machine/pill/idle": {
+           "fill": "rgba(247,243,232,0.99)",
+           "stroke": "rgba(20,20,20,0.45)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/next": {
+           "fill": "rgba(247,243,232,0.99)",
+           "stroke": "rgba(20,20,20,0.75)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/lit": {
+           "fill": "rgba(247,243,232,0.99)",
+           "stroke": "#c9a14a",
+           "strokeWidth": 1.5,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/hovered": {
+           "fill": "rgba(20,20,20,0.07)"
+          },
+          "machine/event/idle": {
+           "textColor": "rgba(20,20,20,0.86)",
+           "font": "400 14px monospace"
+          },
+          "machine/event/lit": {
+           "textColor": "#141414",
+           "font": "400 14px monospace"
+          },
+          "machine/guard/idle": {
+           "fill": "rgba(247,243,232,0.97)",
+           "stroke": "rgba(20,20,20,0.86)",
+           "strokeWidth": 1.2
+          },
+          "machine/guard/refused": {
+           "fill": "#e5484d",
+           "stroke": "#e5484d",
+           "strokeWidth": 1.2
+          },
+          "machine/badge/idle": {
+           "fill": "#c9a14a",
+           "stroke": "#141414",
+           "textColor": "#141414",
+           "corners": {
+            "radius": [
+             8,
+             8,
+             8,
+             8
+            ],
+            "kind": "round"
+           },
+           "font": "600 11px serif"
+          },
+          "machine/token/idle": {
+           "fill": "#c9a14a",
+           "stroke": "#c9a14a",
+           "strokeWidth": 1
+          },
+          "machine/bloom/idle": {
+           "stroke": "#c9a14a",
+           "strokeWidth": 2
+          },
+          "machine/effect/other": {
+           "fill": "rgba(0,0,0,0)",
+           "stroke": "rgba(20,20,20,0.86)",
+           "strokeWidth": 1.2,
+           "decor": "M-0.5 0 A0.5 0.5 0 1 0 0.5 0 A0.5 0.5 0 1 0 -0.5 0 Z"
+          },
           "stack/source/idle": {
            "fill": "rgba(247,243,232,0.99)",
            "stroke": "#141414",
@@ -14748,7 +16414,7 @@
              0,
              0
             ],
-            "live": true
+            "live": false
            },
            "textColor": "#f2fbff",
            "font": "500 15px sans-serif",
@@ -14782,7 +16448,7 @@
              0,
              0
             ],
-            "live": true
+            "live": false
            },
            "textColor": "#f2fbff",
            "font": "500 15px sans-serif",
@@ -14812,7 +16478,7 @@
              0,
              0
             ],
-            "live": true
+            "live": false
            },
            "textColor": "#f2fbff",
            "font": "500 15px sans-serif",
@@ -14842,7 +16508,7 @@
              0,
              0
             ],
-            "live": true
+            "live": false
            },
            "textColor": "#f2fbff",
            "font": "500 15px sans-serif",
@@ -14872,7 +16538,7 @@
              0,
              0
             ],
-            "live": true
+            "live": false
            },
            "textColor": "rgba(242,251,255,0.4)",
            "font": "500 15px sans-serif",
@@ -14902,7 +16568,7 @@
              0,
              0
             ],
-            "live": true
+            "live": false
            },
            "textColor": "#eaf1ff",
            "font": "500 15px sans-serif",
@@ -14932,7 +16598,7 @@
              0,
              0
             ],
-            "live": true
+            "live": false
            },
            "textColor": "#eaf1ff",
            "font": "500 15px sans-serif",
@@ -14962,7 +16628,7 @@
              0,
              0
             ],
-            "live": true
+            "live": false
            },
            "textColor": "#eaf1ff",
            "font": "500 15px sans-serif",
@@ -14992,7 +16658,7 @@
              0,
              0
             ],
-            "live": true
+            "live": false
            },
            "textColor": "#eaf1ff",
            "font": "500 15px sans-serif",
@@ -15022,7 +16688,7 @@
              0,
              0
             ],
-            "live": true
+            "live": false
            },
            "textColor": "rgba(234,241,255,0.4)",
            "font": "500 15px sans-serif",
@@ -15112,7 +16778,7 @@
              0,
              0
             ],
-            "live": true
+            "live": false
            },
            "textColor": "#eaf1ff",
            "font": "300 15px sans-serif",
@@ -15142,7 +16808,7 @@
              0,
              0
             ],
-            "live": true
+            "live": false
            },
            "textColor": "#eaf1ff",
            "font": "300 15px sans-serif",
@@ -15172,7 +16838,7 @@
              0,
              0
             ],
-            "live": true
+            "live": false
            },
            "textColor": "#eaf1ff",
            "font": "300 15px sans-serif",
@@ -15262,7 +16928,7 @@
              0,
              0
             ],
-            "live": true
+            "live": false
            },
            "textColor": "#eaf1ff",
            "font": "300 15px sans-serif",
@@ -15292,7 +16958,7 @@
              0,
              0
             ],
-            "live": true
+            "live": false
            },
            "textColor": "#eaf1ff",
            "font": "300 15px sans-serif",
@@ -15322,7 +16988,7 @@
              0,
              0
             ],
-            "live": true
+            "live": false
            },
            "textColor": "#eaf1ff",
            "font": "300 15px sans-serif",
@@ -15981,7 +17647,7 @@
              0,
              0
             ],
-            "live": true
+            "live": false
            }
           },
           "orbit/arc/lit": {
@@ -16076,6 +17742,179 @@
             "saturate": 1.15
            }
           },
+          "machine/state/idle": {
+           "fill": "rgba(14,20,40,0.62)",
+           "stroke": "rgba(150,205,235,0.28)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "rgba(234,241,255,0.8)",
+           "font": "300 15px sans-serif"
+          },
+          "machine/state/active": {
+           "fill": "rgba(14,22,44,0.85)",
+           "stroke": "rgba(150,205,235,0.45)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "#f2fbff",
+           "font": "500 15px sans-serif",
+           "material": {
+            "wgsl": "// a night tile washed green to violet along its width, a cool rim; a.x hover, a.y press, a.z focus\nfn shade(px: Pixel) -> vec4<f32> {\n  let wash = mix(vec3<f32>(0.36, 0.95, 0.69), vec3<f32>(0.56, 0.42, 1.0), px.uv.x);\n  var col = px.color.rgb + wash * (0.16 + 0.12 * px.a.x - 0.05 * px.a.y);\n  let rim = smoothstep(-1.6, -0.6, px.sdf);\n  col = mix(col, wash, rim * (0.55 + 0.35 * px.a.x));\n  return vec4<f32>(clamp(col, vec3<f32>(0.0, 0.0, 0.0), vec3<f32>(1.0, 1.0, 1.0)), max(px.color.a, rim * 0.7));\n}\n",
+            "params": [
+             0,
+             0,
+             0,
+             0
+            ],
+            "live": false
+           }
+          },
+          "machine/state/visited": {
+           "fill": "rgba(14,20,40,0.62)",
+           "stroke": "#5cf2b0",
+           "strokeWidth": 1.5,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "rgba(234,241,255,0.8)",
+           "font": "300 15px sans-serif"
+          },
+          "machine/wire/idle": {
+           "stroke": "rgba(234,241,255,0.45)",
+           "strokeWidth": 1.5
+          },
+          "machine/wire/next": {
+           "stroke": "rgba(234,241,255,0.75)",
+           "strokeWidth": 1.5
+          },
+          "machine/wire/lit": {
+           "stroke": "#5cf2b0",
+           "strokeWidth": 2.5,
+           "material": {
+            "wgsl": "// the travelled arc: aurora green into violet and back around the circle\nfn shade(px: Pixel) -> vec4<f32> {\n  let c = px.uv - vec2<f32>(0.5, 0.5);\n  let k = abs(fract(atan2(c.y, c.x) / 6.2831853 + 0.5 + px.time * 0.03) * 2.0 - 1.0);\n  return vec4<f32>(mix(vec3<f32>(0.36, 0.95, 0.69), vec3<f32>(0.56, 0.42, 1.0), k), 1.0);\n}\n",
+            "params": [
+             0,
+             0,
+             0,
+             0
+            ],
+            "live": true
+           }
+          },
+          "machine/pill/idle": {
+           "fill": "rgba(12,18,36,0.92)",
+           "stroke": "rgba(234,241,255,0.45)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/next": {
+           "fill": "rgba(12,18,36,0.92)",
+           "stroke": "rgba(234,241,255,0.75)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/lit": {
+           "fill": "rgba(12,18,36,0.92)",
+           "stroke": "#5cf2b0",
+           "strokeWidth": 1.5,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/hovered": {
+           "fill": "rgba(255,255,255,0.1)"
+          },
+          "machine/event/idle": {
+           "textColor": "rgba(234,241,255,0.84)",
+           "font": "400 14px monospace"
+          },
+          "machine/event/lit": {
+           "textColor": "#8ff7d0",
+           "font": "400 14px monospace"
+          },
+          "machine/guard/idle": {
+           "fill": "rgba(14,20,40,0.62)",
+           "stroke": "rgba(234,241,255,0.84)",
+           "strokeWidth": 1.2
+          },
+          "machine/guard/refused": {
+           "fill": "#e5484d",
+           "stroke": "#e5484d",
+           "strokeWidth": 1.2
+          },
+          "machine/badge/idle": {
+           "fill": "rgba(14,22,44,0.85)",
+           "stroke": "rgba(150,205,235,0.45)",
+           "textColor": "#f2fbff",
+           "corners": {
+            "radius": [
+             8,
+             8,
+             8,
+             8
+            ],
+            "kind": "round"
+           },
+           "font": "600 11px sans-serif"
+          },
+          "machine/token/idle": {
+           "fill": "rgba(14,22,44,0.95)",
+           "stroke": "#5cf2b0",
+           "strokeWidth": 1
+          },
+          "machine/bloom/idle": {
+           "stroke": "#5cf2b0",
+           "strokeWidth": 2
+          },
+          "machine/effect/other": {
+           "fill": "rgba(0,0,0,0)",
+           "stroke": "rgba(234,241,255,0.84)",
+           "strokeWidth": 1.2,
+           "decor": "M-0.5 0 A0.5 0.5 0 1 0 0.5 0 A0.5 0.5 0 1 0 -0.5 0 Z"
+          },
           "stack/source/idle": {
            "fill": "rgba(12,18,36,0.92)",
            "stroke": "rgba(150,205,235,0.3)",
@@ -16111,7 +17950,7 @@
              0,
              0
             ],
-            "live": true
+            "live": false
            }
           }
          }
@@ -17565,6 +19404,169 @@
             "tint": "rgba(47,209,106,0.35)",
             "saturate": 1.1
            }
+          },
+          "machine/state/idle": {
+           "fill": "rgba(3,14,8,0.94)",
+           "stroke": "#2fd16a",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "rgba(93,255,149,0.8)",
+           "font": "400 14px monospace"
+          },
+          "machine/state/active": {
+           "fill": "#0e5a2c",
+           "stroke": "#2fd16a",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "#c8ffd9",
+           "font": "700 14px monospace",
+           "material": {
+            "wgsl": "fn tm_hash(p: vec2<f32>) -> f32 { return fract(sin(dot(p, vec2<f32>(127.1, 311.7))) * 43758.5453); }\nfn tm_noise(p: vec2<f32>) -> f32 {\n  let i = floor(p);\n  let f = fract(p);\n  let u = f * f * (3.0 - 2.0 * f);\n  return mix(mix(tm_hash(i), tm_hash(i + vec2<f32>(1.0, 0.0)), u.x), mix(tm_hash(i + vec2<f32>(0.0, 1.0)), tm_hash(i + vec2<f32>(1.0, 1.0)), u.x), u.y);\n}\n// a.x hover, a.y press, a.z focus, a.w scanline pitch in px\nfn shade(px: Pixel) -> vec4<f32> {\n  let step_t = floor(px.time * 12.0);\n  let pitch = max(px.a.w, 1.0);\n  let scan = 0.78 + 0.22 * step(0.5, fract(px.local.y / pitch));\n  var col = px.color.rgb * scan;\n  col = col * (0.95 + 0.05 * tm_hash(vec2<f32>(step_t, floor(px.local.y / pitch))));\n  col = col + vec3<f32>(0.1, 0.8, 0.35) * 0.12 * px.a.x;\n  let edge = 1.0 - smoothstep(0.0, 1.5, abs(px.sdf + 1.0));\n  col = mix(col, vec3<f32>(0.35, 1.0, 0.55), edge * (0.35 + 0.4 * px.a.x + 0.4 * px.a.z));\n  let blink = step(0.5, fract(px.time * 1.6));\n  let cursor = step(px.size.x - 10.0, px.local.x) * step(px.local.x, px.size.x - 4.0) * step(4.0, px.local.y) * step(px.local.y, px.size.y - 4.0);\n  col = col + vec3<f32>(0.3, 1.0, 0.5) * cursor * blink * px.a.z * 0.6;\n  col = mix(col, vec3<f32>(0.4, 1.0, 0.6), px.a.y * 0.3);\n  return vec4<f32>(col, px.color.a);\n}\n",
+            "params": [
+             0,
+             0,
+             0,
+             3
+            ],
+            "live": true
+           }
+          },
+          "machine/state/visited": {
+           "fill": "rgba(3,14,8,0.94)",
+           "stroke": "#8dffb2",
+           "strokeWidth": 1.5,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "rgba(93,255,149,0.8)",
+           "font": "400 14px monospace"
+          },
+          "machine/wire/idle": {
+           "stroke": "rgba(93,255,149,0.45)",
+           "strokeWidth": 1.5
+          },
+          "machine/wire/next": {
+           "stroke": "rgba(93,255,149,0.75)",
+           "strokeWidth": 1.5
+          },
+          "machine/wire/lit": {
+           "stroke": "#8dffb2",
+           "strokeWidth": 2.5
+          },
+          "machine/pill/idle": {
+           "fill": "rgba(3,14,8,0.97)",
+           "stroke": "rgba(93,255,149,0.45)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/next": {
+           "fill": "rgba(3,14,8,0.97)",
+           "stroke": "rgba(93,255,149,0.75)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/lit": {
+           "fill": "rgba(3,14,8,0.97)",
+           "stroke": "#8dffb2",
+           "strokeWidth": 1.5,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/hovered": {
+           "fill": "rgba(47,209,106,0.18)"
+          },
+          "machine/event/idle": {
+           "textColor": "rgba(93,255,149,0.82)",
+           "font": "400 14px monospace"
+          },
+          "machine/event/lit": {
+           "textColor": "#c8ffd9",
+           "font": "400 14px monospace"
+          },
+          "machine/guard/idle": {
+           "fill": "rgba(3,14,8,0.94)",
+           "stroke": "rgba(93,255,149,0.82)",
+           "strokeWidth": 1.2
+          },
+          "machine/guard/refused": {
+           "fill": "#e5484d",
+           "stroke": "#e5484d",
+           "strokeWidth": 1.2
+          },
+          "machine/badge/idle": {
+           "fill": "#0e5a2c",
+           "stroke": "#2fd16a",
+           "textColor": "#c8ffd9",
+           "corners": {
+            "radius": [
+             8,
+             8,
+             8,
+             8
+            ],
+            "kind": "round"
+           },
+           "font": "600 11px monospace"
+          },
+          "machine/token/idle": {
+           "fill": "#0e5a2c",
+           "stroke": "#8dffb2",
+           "strokeWidth": 1
+          },
+          "machine/bloom/idle": {
+           "stroke": "#8dffb2",
+           "strokeWidth": 2
+          },
+          "machine/effect/other": {
+           "fill": "rgba(0,0,0,0)",
+           "stroke": "rgba(93,255,149,0.82)",
+           "strokeWidth": 1.2,
+           "decor": "M-0.5 0 A0.5 0.5 0 1 0 0.5 0 A0.5 0.5 0 1 0 -0.5 0 Z"
           },
           "stack/source/idle": {
            "fill": "rgba(3,14,8,0.97)",
@@ -19079,6 +21081,166 @@
             "saturate": 1.4
            }
           },
+          "machine/state/idle": {
+           "fill": "rgba(255,255,255,0.10)",
+           "stroke": "rgba(255,255,255,0.35)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "rgba(230,236,255,0.75)",
+           "font": "400 15px sans-serif"
+          },
+          "machine/state/active": {
+           "fill": "rgba(120,160,255,0.55)",
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "#ffffff",
+           "font": "600 15px sans-serif",
+           "material": {
+            "wgsl": "// a.x hover, a.y press, a.z focus\nfn shade(px: Pixel) -> vec4<f32> {\n  var col = px.color.rgb + vec3<f32>(0.10, 0.10, 0.10) * (1.0 - px.uv.y);\n  let d = distance(px.local, px.pointer);\n  col = col + vec3<f32>(1.0, 1.0, 1.0) * exp(-d * d / (2.0 * 60.0 * 60.0)) * (0.16 + 0.34 * px.a.x);\n  let t = px.time * 0.6;\n  col = col + vec3<f32>(0.04 * sin(px.local.x * 0.05 + t) * sin(px.local.y * 0.07 - t * 1.3));\n  let rim = smoothstep(-2.5, 0.0, px.sdf);\n  col = mix(col, vec3<f32>(1.0, 1.0, 1.0), rim * (0.45 + 0.4 * px.a.z));\n  col = col * (1.0 - 0.12 * px.a.y * (1.0 - length(px.uv - vec2<f32>(0.5, 0.5))));\n  return vec4<f32>(col, px.color.a * (0.55 + 0.25 * px.a.x + 0.2 * rim));\n}\n",
+            "params": [
+             0,
+             0,
+             0,
+             0
+            ],
+            "live": true
+           }
+          },
+          "machine/state/visited": {
+           "fill": "rgba(255,255,255,0.10)",
+           "stroke": "rgba(160,195,255,0.95)",
+           "strokeWidth": 1.5,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "rgba(230,236,255,0.75)",
+           "font": "400 15px sans-serif"
+          },
+          "machine/wire/idle": {
+           "stroke": "rgba(230,236,255,0.45)",
+           "strokeWidth": 1.5
+          },
+          "machine/wire/next": {
+           "stroke": "rgba(230,236,255,0.75)",
+           "strokeWidth": 1.5
+          },
+          "machine/wire/lit": {
+           "stroke": "rgba(160,195,255,0.95)",
+           "strokeWidth": 2.5
+          },
+          "machine/pill/idle": {
+           "fill": "rgba(40,52,92,0.58)",
+           "stroke": "rgba(230,236,255,0.45)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/next": {
+           "fill": "rgba(40,52,92,0.58)",
+           "stroke": "rgba(230,236,255,0.75)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/lit": {
+           "fill": "rgba(40,52,92,0.58)",
+           "stroke": "rgba(160,195,255,0.95)",
+           "strokeWidth": 1.5,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/hovered": {
+           "fill": "rgba(255,255,255,0.22)"
+          },
+          "machine/event/idle": {
+           "textColor": "rgba(244,247,255,0.85)",
+           "font": "400 14px monospace"
+          },
+          "machine/event/lit": {
+           "textColor": "#ffffff",
+           "font": "400 14px monospace"
+          },
+          "machine/guard/idle": {
+           "fill": "rgba(255,255,255,0.10)",
+           "stroke": "rgba(244,247,255,0.85)",
+           "strokeWidth": 1.2
+          },
+          "machine/guard/refused": {
+           "fill": "#e5484d",
+           "stroke": "#e5484d",
+           "strokeWidth": 1.2
+          },
+          "machine/badge/idle": {
+           "fill": "rgba(120,160,255,0.55)",
+           "textColor": "#ffffff",
+           "corners": {
+            "radius": [
+             8,
+             8,
+             8,
+             8
+            ],
+            "kind": "round"
+           },
+           "font": "600 11px sans-serif"
+          },
+          "machine/token/idle": {
+           "fill": "rgba(120,160,255,0.55)",
+           "stroke": "rgba(160,195,255,0.95)",
+           "strokeWidth": 1
+          },
+          "machine/bloom/idle": {
+           "stroke": "rgba(160,195,255,0.95)",
+           "strokeWidth": 2
+          },
+          "machine/effect/other": {
+           "fill": "rgba(0,0,0,0)",
+           "stroke": "rgba(244,247,255,0.85)",
+           "strokeWidth": 1.2,
+           "decor": "M-0.5 0 A0.5 0.5 0 1 0 0.5 0 A0.5 0.5 0 1 0 -0.5 0 Z"
+          },
           "stack/source/idle": {
            "fill": "rgba(40,52,92,0.58)",
            "stroke": "rgba(255,255,255,0.4)",
@@ -20494,6 +22656,169 @@
             "tint": "rgba(242,211,138,0.45)",
             "saturate": 1.1
            }
+          },
+          "machine/state/idle": {
+           "fill": "rgba(28,24,40,0.92)",
+           "stroke": "#c9a45c",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "rgba(243,230,200,0.78)",
+           "font": "400 15px sans-serif"
+          },
+          "machine/state/active": {
+           "fill": "#7a4a1c",
+           "stroke": "#c9a45c",
+           "strokeWidth": 1.2,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "#fbeed2",
+           "font": "600 15px sans-serif",
+           "material": {
+            "wgsl": "fn nq_hash(p: vec2<f32>) -> f32 { return fract(sin(dot(p, vec2<f32>(127.1, 311.7))) * 43758.5453); }\nfn nq_noise(p: vec2<f32>) -> f32 {\n  let i = floor(p);\n  let f = fract(p);\n  let u = f * f * (3.0 - 2.0 * f);\n  return mix(mix(nq_hash(i), nq_hash(i + vec2<f32>(1.0, 0.0)), u.x), mix(nq_hash(i + vec2<f32>(0.0, 1.0)), nq_hash(i + vec2<f32>(1.0, 1.0)), u.x), u.y);\n}\n// a.x hover, a.y press, a.z focus, a.w grain size in px\nfn shade(px: Pixel) -> vec4<f32> {\n  let drift = vec2<f32>(px.time * 3.0, px.time * 1.3);\n  let size = max(px.a.w, 1.0);\n  let grain = 0.5 * nq_noise((px.local + drift) / size) + 0.5 * nq_noise((px.local - drift * 0.5) / (size * 0.37));\n  var col = px.color.rgb * (0.9 + 0.14 * grain);\n  let d = distance(px.local, px.pointer);\n  let warm = exp(-d * d / (2.0 * 90.0 * 90.0)) * (0.08 + 0.22 * px.a.x);\n  col = col + vec3<f32>(0.95, 0.78, 0.42) * warm;\n  let rim = smoothstep(-3.0, 0.0, px.sdf) * (0.3 + 0.45 * px.a.x + 0.25 * px.a.z);\n  col = mix(col, vec3<f32>(0.96, 0.83, 0.58), rim);\n  let ripple = sin(d * 0.08 - px.time * 9.0) * exp(-d * 0.012) * px.a.y * 0.15;\n  col = col + vec3<f32>(ripple);\n  return vec4<f32>(col, px.color.a);\n}\n",
+            "params": [
+             0,
+             0,
+             0,
+             3
+            ],
+            "live": true
+           }
+          },
+          "machine/state/visited": {
+           "fill": "rgba(28,24,40,0.92)",
+           "stroke": "#f2d38a",
+           "strokeWidth": 1.5,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "rgba(243,230,200,0.78)",
+           "font": "400 15px sans-serif"
+          },
+          "machine/wire/idle": {
+           "stroke": "rgba(243,230,200,0.45)",
+           "strokeWidth": 1.5
+          },
+          "machine/wire/next": {
+           "stroke": "rgba(243,230,200,0.75)",
+           "strokeWidth": 1.5
+          },
+          "machine/wire/lit": {
+           "stroke": "#f2d38a",
+           "strokeWidth": 2.5
+          },
+          "machine/pill/idle": {
+           "fill": "rgba(28,24,40,0.97)",
+           "stroke": "rgba(243,230,200,0.45)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/next": {
+           "fill": "rgba(28,24,40,0.97)",
+           "stroke": "rgba(243,230,200,0.75)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/lit": {
+           "fill": "rgba(28,24,40,0.97)",
+           "stroke": "#f2d38a",
+           "strokeWidth": 1.5,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/hovered": {
+           "fill": "rgba(201,164,92,0.20)"
+          },
+          "machine/event/idle": {
+           "textColor": "rgba(243,230,200,0.85)",
+           "font": "400 14px monospace"
+          },
+          "machine/event/lit": {
+           "textColor": "#f2d38a",
+           "font": "400 14px monospace"
+          },
+          "machine/guard/idle": {
+           "fill": "rgba(28,24,40,0.92)",
+           "stroke": "rgba(243,230,200,0.85)",
+           "strokeWidth": 1.2
+          },
+          "machine/guard/refused": {
+           "fill": "#e5484d",
+           "stroke": "#e5484d",
+           "strokeWidth": 1.2
+          },
+          "machine/badge/idle": {
+           "fill": "#7a4a1c",
+           "stroke": "#c9a45c",
+           "textColor": "#fbeed2",
+           "corners": {
+            "radius": [
+             8,
+             8,
+             8,
+             8
+            ],
+            "kind": "round"
+           },
+           "font": "600 11px sans-serif"
+          },
+          "machine/token/idle": {
+           "fill": "#7a4a1c",
+           "stroke": "#f2d38a",
+           "strokeWidth": 1
+          },
+          "machine/bloom/idle": {
+           "stroke": "#f2d38a",
+           "strokeWidth": 2
+          },
+          "machine/effect/other": {
+           "fill": "rgba(0,0,0,0)",
+           "stroke": "rgba(243,230,200,0.85)",
+           "strokeWidth": 1.2,
+           "decor": "M-0.5 0 A0.5 0.5 0 1 0 0.5 0 A0.5 0.5 0 1 0 -0.5 0 Z"
           },
           "stack/source/idle": {
            "fill": "rgba(28,24,40,0.97)",
@@ -21919,6 +24244,169 @@
             "tint": "rgba(242,211,138,0.45)",
             "saturate": 1.1
            }
+          },
+          "machine/state/idle": {
+           "fill": "rgba(28,24,40,0.92)",
+           "stroke": "#c9a45c",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "rgba(243,230,200,0.78)",
+           "font": "400 15px sans-serif"
+          },
+          "machine/state/active": {
+           "fill": "#7a4a1c",
+           "stroke": "#c9a45c",
+           "strokeWidth": 1.2,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "#fbeed2",
+           "font": "600 15px sans-serif",
+           "material": {
+            "wgsl": "fn nq_hash(p: vec2<f32>) -> f32 { return fract(sin(dot(p, vec2<f32>(127.1, 311.7))) * 43758.5453); }\nfn nq_noise(p: vec2<f32>) -> f32 {\n  let i = floor(p);\n  let f = fract(p);\n  let u = f * f * (3.0 - 2.0 * f);\n  return mix(mix(nq_hash(i), nq_hash(i + vec2<f32>(1.0, 0.0)), u.x), mix(nq_hash(i + vec2<f32>(0.0, 1.0)), nq_hash(i + vec2<f32>(1.0, 1.0)), u.x), u.y);\n}\n// a.x hover, a.y press, a.z focus, a.w grain size in px\nfn shade(px: Pixel) -> vec4<f32> {\n  let drift = vec2<f32>(px.time * 3.0, px.time * 1.3);\n  let size = max(px.a.w, 1.0);\n  let grain = 0.5 * nq_noise((px.local + drift) / size) + 0.5 * nq_noise((px.local - drift * 0.5) / (size * 0.37));\n  var col = px.color.rgb * (0.9 + 0.14 * grain);\n  let d = distance(px.local, px.pointer);\n  let warm = exp(-d * d / (2.0 * 90.0 * 90.0)) * (0.08 + 0.22 * px.a.x);\n  col = col + vec3<f32>(0.95, 0.78, 0.42) * warm;\n  let rim = smoothstep(-3.0, 0.0, px.sdf) * (0.3 + 0.45 * px.a.x + 0.25 * px.a.z);\n  col = mix(col, vec3<f32>(0.96, 0.83, 0.58), rim);\n  let ripple = sin(d * 0.08 - px.time * 9.0) * exp(-d * 0.012) * px.a.y * 0.15;\n  col = col + vec3<f32>(ripple);\n  return vec4<f32>(col, px.color.a);\n}\n",
+            "params": [
+             0,
+             0,
+             0,
+             3
+            ],
+            "live": true
+           }
+          },
+          "machine/state/visited": {
+           "fill": "rgba(28,24,40,0.92)",
+           "stroke": "#f2d38a",
+           "strokeWidth": 1.5,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "rgba(243,230,200,0.78)",
+           "font": "400 15px sans-serif"
+          },
+          "machine/wire/idle": {
+           "stroke": "rgba(243,230,200,0.45)",
+           "strokeWidth": 1.5
+          },
+          "machine/wire/next": {
+           "stroke": "rgba(243,230,200,0.75)",
+           "strokeWidth": 1.5
+          },
+          "machine/wire/lit": {
+           "stroke": "#f2d38a",
+           "strokeWidth": 2.5
+          },
+          "machine/pill/idle": {
+           "fill": "rgba(28,24,40,0.97)",
+           "stroke": "rgba(243,230,200,0.45)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/next": {
+           "fill": "rgba(28,24,40,0.97)",
+           "stroke": "rgba(243,230,200,0.75)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/lit": {
+           "fill": "rgba(28,24,40,0.97)",
+           "stroke": "#f2d38a",
+           "strokeWidth": 1.5,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/hovered": {
+           "fill": "rgba(201,164,92,0.20)"
+          },
+          "machine/event/idle": {
+           "textColor": "rgba(243,230,200,0.85)",
+           "font": "400 14px monospace"
+          },
+          "machine/event/lit": {
+           "textColor": "#f2d38a",
+           "font": "400 14px monospace"
+          },
+          "machine/guard/idle": {
+           "fill": "rgba(28,24,40,0.92)",
+           "stroke": "rgba(243,230,200,0.85)",
+           "strokeWidth": 1.2
+          },
+          "machine/guard/refused": {
+           "fill": "#e5484d",
+           "stroke": "#e5484d",
+           "strokeWidth": 1.2
+          },
+          "machine/badge/idle": {
+           "fill": "#7a4a1c",
+           "stroke": "#c9a45c",
+           "textColor": "#fbeed2",
+           "corners": {
+            "radius": [
+             8,
+             8,
+             8,
+             8
+            ],
+            "kind": "round"
+           },
+           "font": "600 11px sans-serif"
+          },
+          "machine/token/idle": {
+           "fill": "#7a4a1c",
+           "stroke": "#f2d38a",
+           "strokeWidth": 1
+          },
+          "machine/bloom/idle": {
+           "stroke": "#f2d38a",
+           "strokeWidth": 2
+          },
+          "machine/effect/other": {
+           "fill": "rgba(0,0,0,0)",
+           "stroke": "rgba(243,230,200,0.85)",
+           "strokeWidth": 1.2,
+           "decor": "M-0.5 0 A0.5 0.5 0 1 0 0.5 0 A0.5 0.5 0 1 0 -0.5 0 Z"
           },
           "stack/source/idle": {
            "fill": "rgba(28,24,40,0.97)",
@@ -23424,6 +25912,166 @@
             "saturate": 1.4
            }
           },
+          "machine/state/idle": {
+           "fill": "rgba(255,255,255,0.10)",
+           "stroke": "rgba(255,255,255,0.35)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "rgba(230,236,255,0.75)",
+           "font": "400 15px sans-serif"
+          },
+          "machine/state/active": {
+           "fill": "rgba(120,160,255,0.55)",
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "#ffffff",
+           "font": "600 15px sans-serif",
+           "material": {
+            "wgsl": "// a.x hover, a.y press, a.z focus\nfn shade(px: Pixel) -> vec4<f32> {\n  var col = px.color.rgb + vec3<f32>(0.10, 0.10, 0.10) * (1.0 - px.uv.y);\n  let d = distance(px.local, px.pointer);\n  col = col + vec3<f32>(1.0, 1.0, 1.0) * exp(-d * d / (2.0 * 60.0 * 60.0)) * (0.16 + 0.34 * px.a.x);\n  let t = px.time * 0.6;\n  col = col + vec3<f32>(0.04 * sin(px.local.x * 0.05 + t) * sin(px.local.y * 0.07 - t * 1.3));\n  let rim = smoothstep(-2.5, 0.0, px.sdf);\n  col = mix(col, vec3<f32>(1.0, 1.0, 1.0), rim * (0.45 + 0.4 * px.a.z));\n  col = col * (1.0 - 0.12 * px.a.y * (1.0 - length(px.uv - vec2<f32>(0.5, 0.5))));\n  return vec4<f32>(col, px.color.a * (0.55 + 0.25 * px.a.x + 0.2 * rim));\n}\n",
+            "params": [
+             0,
+             0,
+             0,
+             0
+            ],
+            "live": true
+           }
+          },
+          "machine/state/visited": {
+           "fill": "rgba(255,255,255,0.10)",
+           "stroke": "rgba(160,195,255,0.95)",
+           "strokeWidth": 1.5,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "rgba(230,236,255,0.75)",
+           "font": "400 15px sans-serif"
+          },
+          "machine/wire/idle": {
+           "stroke": "rgba(230,236,255,0.45)",
+           "strokeWidth": 1.5
+          },
+          "machine/wire/next": {
+           "stroke": "rgba(230,236,255,0.75)",
+           "strokeWidth": 1.5
+          },
+          "machine/wire/lit": {
+           "stroke": "rgba(160,195,255,0.95)",
+           "strokeWidth": 2.5
+          },
+          "machine/pill/idle": {
+           "fill": "rgba(40,52,92,0.58)",
+           "stroke": "rgba(230,236,255,0.45)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/next": {
+           "fill": "rgba(40,52,92,0.58)",
+           "stroke": "rgba(230,236,255,0.75)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/lit": {
+           "fill": "rgba(40,52,92,0.58)",
+           "stroke": "rgba(160,195,255,0.95)",
+           "strokeWidth": 1.5,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/hovered": {
+           "fill": "rgba(255,255,255,0.22)"
+          },
+          "machine/event/idle": {
+           "textColor": "rgba(244,247,255,0.85)",
+           "font": "400 14px monospace"
+          },
+          "machine/event/lit": {
+           "textColor": "#ffffff",
+           "font": "400 14px monospace"
+          },
+          "machine/guard/idle": {
+           "fill": "rgba(255,255,255,0.10)",
+           "stroke": "rgba(244,247,255,0.85)",
+           "strokeWidth": 1.2
+          },
+          "machine/guard/refused": {
+           "fill": "#e5484d",
+           "stroke": "#e5484d",
+           "strokeWidth": 1.2
+          },
+          "machine/badge/idle": {
+           "fill": "rgba(120,160,255,0.55)",
+           "textColor": "#ffffff",
+           "corners": {
+            "radius": [
+             8,
+             8,
+             8,
+             8
+            ],
+            "kind": "round"
+           },
+           "font": "600 11px sans-serif"
+          },
+          "machine/token/idle": {
+           "fill": "rgba(120,160,255,0.55)",
+           "stroke": "rgba(160,195,255,0.95)",
+           "strokeWidth": 1
+          },
+          "machine/bloom/idle": {
+           "stroke": "rgba(160,195,255,0.95)",
+           "strokeWidth": 2
+          },
+          "machine/effect/other": {
+           "fill": "rgba(0,0,0,0)",
+           "stroke": "rgba(244,247,255,0.85)",
+           "strokeWidth": 1.2,
+           "decor": "M-0.5 0 A0.5 0.5 0 1 0 0.5 0 A0.5 0.5 0 1 0 -0.5 0 Z"
+          },
           "stack/source/idle": {
            "fill": "rgba(40,52,92,0.58)",
            "stroke": "rgba(255,255,255,0.4)",
@@ -24872,6 +27520,169 @@
             "saturate": 1.1
            }
           },
+          "machine/state/idle": {
+           "fill": "rgba(88,60,34,0.88)",
+           "stroke": "#e3b878",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "rgba(255,241,214,0.82)",
+           "font": "400 15px sans-serif"
+          },
+          "machine/state/active": {
+           "fill": "#b8662a",
+           "stroke": "#e3b878",
+           "strokeWidth": 1.2,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "#fff6e4",
+           "font": "600 15px sans-serif",
+           "material": {
+            "wgsl": "fn sd_hash(p: vec2<f32>) -> f32 { return fract(sin(dot(p, vec2<f32>(127.1, 311.7))) * 43758.5453); }\nfn sd_noise(p: vec2<f32>) -> f32 {\n  let i = floor(p);\n  let f = fract(p);\n  let u = f * f * (3.0 - 2.0 * f);\n  return mix(mix(sd_hash(i), sd_hash(i + vec2<f32>(1.0, 0.0)), u.x), mix(sd_hash(i + vec2<f32>(0.0, 1.0)), sd_hash(i + vec2<f32>(1.0, 1.0)), u.x), u.y);\n}\n// a.x hover, a.y press, a.z focus, a.w grain size in px\nfn shade(px: Pixel) -> vec4<f32> {\n  let wind = vec2<f32>(px.time * 6.0, px.time * 2.0);\n  let size = max(px.a.w, 1.0);\n  let grain = sd_noise((px.local + wind) / size) * 0.6 + sd_hash(floor(px.local / size)) * 0.4;\n  var col = px.color.rgb * (0.88 + 0.2 * grain);\n  let drift = sin(px.local.x * 0.03 - px.time * 1.2 + px.local.y * 0.01) * 0.5 + 0.5;\n  col = col + vec3<f32>(0.10, 0.07, 0.03) * drift * (0.4 + px.a.x);\n  let d = distance(px.local, px.pointer);\n  col = col + vec3<f32>(1.0, 0.8, 0.5) * exp(-d * d / (2.0 * 70.0 * 70.0)) * (0.05 + 0.2 * px.a.x);\n  let rim = smoothstep(-2.5, 0.0, px.sdf) * (0.25 + 0.3 * px.a.x + 0.3 * px.a.z);\n  col = mix(col, vec3<f32>(0.98, 0.86, 0.62), rim);\n  let kick = exp(-d * 0.02) * px.a.y * 0.14 * (0.5 + 0.5 * sin(d * 0.05 - px.time * 6.0));\n  col = col - vec3<f32>(kick);\n  return vec4<f32>(col, px.color.a);\n}\n",
+            "params": [
+             0,
+             0,
+             0,
+             2.5
+            ],
+            "live": true
+           }
+          },
+          "machine/state/visited": {
+           "fill": "rgba(88,60,34,0.88)",
+           "stroke": "#ffe2a6",
+           "strokeWidth": 1.5,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "rgba(255,241,214,0.82)",
+           "font": "400 15px sans-serif"
+          },
+          "machine/wire/idle": {
+           "stroke": "rgba(255,241,214,0.45)",
+           "strokeWidth": 1.5
+          },
+          "machine/wire/next": {
+           "stroke": "rgba(255,241,214,0.75)",
+           "strokeWidth": 1.5
+          },
+          "machine/wire/lit": {
+           "stroke": "#ffe2a6",
+           "strokeWidth": 2.5
+          },
+          "machine/pill/idle": {
+           "fill": "rgba(88,60,34,0.96)",
+           "stroke": "rgba(255,241,214,0.45)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/next": {
+           "fill": "rgba(88,60,34,0.96)",
+           "stroke": "rgba(255,241,214,0.75)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/lit": {
+           "fill": "rgba(88,60,34,0.96)",
+           "stroke": "#ffe2a6",
+           "strokeWidth": 1.5,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/hovered": {
+           "fill": "rgba(227,184,120,0.26)"
+          },
+          "machine/event/idle": {
+           "textColor": "rgba(255,241,214,0.88)",
+           "font": "400 14px monospace"
+          },
+          "machine/event/lit": {
+           "textColor": "#ffe2a6",
+           "font": "400 14px monospace"
+          },
+          "machine/guard/idle": {
+           "fill": "rgba(88,60,34,0.88)",
+           "stroke": "rgba(255,241,214,0.88)",
+           "strokeWidth": 1.2
+          },
+          "machine/guard/refused": {
+           "fill": "#e5484d",
+           "stroke": "#e5484d",
+           "strokeWidth": 1.2
+          },
+          "machine/badge/idle": {
+           "fill": "#b8662a",
+           "stroke": "#e3b878",
+           "textColor": "#fff6e4",
+           "corners": {
+            "radius": [
+             8,
+             8,
+             8,
+             8
+            ],
+            "kind": "round"
+           },
+           "font": "600 11px sans-serif"
+          },
+          "machine/token/idle": {
+           "fill": "#b8662a",
+           "stroke": "#ffe2a6",
+           "strokeWidth": 1
+          },
+          "machine/bloom/idle": {
+           "stroke": "#ffe2a6",
+           "strokeWidth": 2
+          },
+          "machine/effect/other": {
+           "fill": "rgba(0,0,0,0)",
+           "stroke": "rgba(255,241,214,0.88)",
+           "strokeWidth": 1.2,
+           "decor": "M-0.5 0 A0.5 0.5 0 1 0 0.5 0 A0.5 0.5 0 1 0 -0.5 0 Z"
+          },
           "stack/source/idle": {
            "fill": "rgba(88,60,34,0.96)",
            "stroke": "#e3b878",
@@ -26287,6 +29098,169 @@
             "tint": "rgba(242,160,58,0.35)",
             "saturate": 1.1
            }
+          },
+          "machine/state/idle": {
+           "fill": "rgba(16,21,28,0.95)",
+           "stroke": "#7f98a8",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "rgba(206,222,230,0.78)",
+           "font": "400 14px monospace"
+          },
+          "machine/state/active": {
+           "fill": "#27506a",
+           "stroke": "#7f98a8",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "#e8f2f7",
+           "font": "600 13px monospace",
+           "material": {
+            "wgsl": "// a.x hover, a.y press, a.z focus, a.w line pitch in px\nfn shade(px: Pixel) -> vec4<f32> {\n  let pitch = max(px.a.w, 1.0);\n  let brush = 0.5 + 0.5 * sin(px.local.y * 6.2831853 / pitch);\n  var col = px.color.rgb * (0.94 + 0.06 * brush);\n  col = col + vec3<f32>(0.10) * (1.0 - px.uv.y) * (0.6 + 0.4 * px.a.x);\n  let tick = step(0.5, fract(px.local.x / 10.0)) * (1.0 - smoothstep(0.0, 5.0, px.local.y));\n  col = col + vec3<f32>(0.6, 0.72, 0.8) * tick * 0.22;\n  let inner = 1.0 - smoothstep(0.0, 0.8, abs(px.sdf + 4.0));\n  col = mix(col, vec3<f32>(0.62, 0.74, 0.82), inner * 0.38);\n  let rim = smoothstep(-1.2, 0.0, px.sdf);\n  col = mix(col, vec3<f32>(0.95, 0.62, 0.20), rim * (0.2 + 0.5 * px.a.z + 0.3 * px.a.x));\n  col = col * (1.0 - 0.16 * px.a.y);\n  let d = distance(px.local, px.pointer);\n  col = col + vec3<f32>(0.95, 0.62, 0.20) * exp(-d * d / (2.0 * 36.0 * 36.0)) * 0.10 * px.a.x;\n  return vec4<f32>(col, px.color.a);\n}\n",
+            "params": [
+             0,
+             0,
+             0,
+             14
+            ],
+            "live": true
+           }
+          },
+          "machine/state/visited": {
+           "fill": "rgba(16,21,28,0.95)",
+           "stroke": "#f2a03a",
+           "strokeWidth": 1.5,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "rgba(206,222,230,0.78)",
+           "font": "400 14px monospace"
+          },
+          "machine/wire/idle": {
+           "stroke": "rgba(206,222,230,0.45)",
+           "strokeWidth": 1.5
+          },
+          "machine/wire/next": {
+           "stroke": "rgba(206,222,230,0.75)",
+           "strokeWidth": 1.5
+          },
+          "machine/wire/lit": {
+           "stroke": "#f2a03a",
+           "strokeWidth": 2.5
+          },
+          "machine/pill/idle": {
+           "fill": "rgba(16,21,28,0.97)",
+           "stroke": "rgba(206,222,230,0.45)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/next": {
+           "fill": "rgba(16,21,28,0.97)",
+           "stroke": "rgba(206,222,230,0.75)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/lit": {
+           "fill": "rgba(16,21,28,0.97)",
+           "stroke": "#f2a03a",
+           "strokeWidth": 1.5,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/hovered": {
+           "fill": "rgba(127,152,168,0.20)"
+          },
+          "machine/event/idle": {
+           "textColor": "rgba(206,222,230,0.85)",
+           "font": "400 13px monospace"
+          },
+          "machine/event/lit": {
+           "textColor": "#f2a03a",
+           "font": "400 13px monospace"
+          },
+          "machine/guard/idle": {
+           "fill": "rgba(16,21,28,0.95)",
+           "stroke": "rgba(206,222,230,0.85)",
+           "strokeWidth": 1.2
+          },
+          "machine/guard/refused": {
+           "fill": "#e5484d",
+           "stroke": "#e5484d",
+           "strokeWidth": 1.2
+          },
+          "machine/badge/idle": {
+           "fill": "#27506a",
+           "stroke": "#7f98a8",
+           "textColor": "#e8f2f7",
+           "corners": {
+            "radius": [
+             8,
+             8,
+             8,
+             8
+            ],
+            "kind": "round"
+           },
+           "font": "600 11px monospace"
+          },
+          "machine/token/idle": {
+           "fill": "#27506a",
+           "stroke": "#f2a03a",
+           "strokeWidth": 1
+          },
+          "machine/bloom/idle": {
+           "stroke": "#f2a03a",
+           "strokeWidth": 2
+          },
+          "machine/effect/other": {
+           "fill": "rgba(0,0,0,0)",
+           "stroke": "rgba(206,222,230,0.85)",
+           "strokeWidth": 1.2,
+           "decor": "M-0.5 0 A0.5 0.5 0 1 0 0.5 0 A0.5 0.5 0 1 0 -0.5 0 Z"
           },
           "stack/source/idle": {
            "fill": "rgba(16,21,28,0.97)",
@@ -27736,6 +30710,169 @@
             "saturate": 1.1
            }
           },
+          "machine/state/idle": {
+           "fill": "rgba(3,14,8,0.94)",
+           "stroke": "#2fd16a",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "rgba(93,255,149,0.8)",
+           "font": "400 14px monospace"
+          },
+          "machine/state/active": {
+           "fill": "#0e5a2c",
+           "stroke": "#2fd16a",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "#c8ffd9",
+           "font": "700 14px monospace",
+           "material": {
+            "wgsl": "fn tm_hash(p: vec2<f32>) -> f32 { return fract(sin(dot(p, vec2<f32>(127.1, 311.7))) * 43758.5453); }\nfn tm_noise(p: vec2<f32>) -> f32 {\n  let i = floor(p);\n  let f = fract(p);\n  let u = f * f * (3.0 - 2.0 * f);\n  return mix(mix(tm_hash(i), tm_hash(i + vec2<f32>(1.0, 0.0)), u.x), mix(tm_hash(i + vec2<f32>(0.0, 1.0)), tm_hash(i + vec2<f32>(1.0, 1.0)), u.x), u.y);\n}\n// a.x hover, a.y press, a.z focus, a.w scanline pitch in px\nfn shade(px: Pixel) -> vec4<f32> {\n  let step_t = floor(px.time * 12.0);\n  let pitch = max(px.a.w, 1.0);\n  let scan = 0.78 + 0.22 * step(0.5, fract(px.local.y / pitch));\n  var col = px.color.rgb * scan;\n  col = col * (0.95 + 0.05 * tm_hash(vec2<f32>(step_t, floor(px.local.y / pitch))));\n  col = col + vec3<f32>(0.1, 0.8, 0.35) * 0.12 * px.a.x;\n  let edge = 1.0 - smoothstep(0.0, 1.5, abs(px.sdf + 1.0));\n  col = mix(col, vec3<f32>(0.35, 1.0, 0.55), edge * (0.35 + 0.4 * px.a.x + 0.4 * px.a.z));\n  let blink = step(0.5, fract(px.time * 1.6));\n  let cursor = step(px.size.x - 10.0, px.local.x) * step(px.local.x, px.size.x - 4.0) * step(4.0, px.local.y) * step(px.local.y, px.size.y - 4.0);\n  col = col + vec3<f32>(0.3, 1.0, 0.5) * cursor * blink * px.a.z * 0.6;\n  col = mix(col, vec3<f32>(0.4, 1.0, 0.6), px.a.y * 0.3);\n  return vec4<f32>(col, px.color.a);\n}\n",
+            "params": [
+             0,
+             0,
+             0,
+             3
+            ],
+            "live": true
+           }
+          },
+          "machine/state/visited": {
+           "fill": "rgba(3,14,8,0.94)",
+           "stroke": "#8dffb2",
+           "strokeWidth": 1.5,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "rgba(93,255,149,0.8)",
+           "font": "400 14px monospace"
+          },
+          "machine/wire/idle": {
+           "stroke": "rgba(93,255,149,0.45)",
+           "strokeWidth": 1.5
+          },
+          "machine/wire/next": {
+           "stroke": "rgba(93,255,149,0.75)",
+           "strokeWidth": 1.5
+          },
+          "machine/wire/lit": {
+           "stroke": "#8dffb2",
+           "strokeWidth": 2.5
+          },
+          "machine/pill/idle": {
+           "fill": "rgba(3,14,8,0.97)",
+           "stroke": "rgba(93,255,149,0.45)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/next": {
+           "fill": "rgba(3,14,8,0.97)",
+           "stroke": "rgba(93,255,149,0.75)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/lit": {
+           "fill": "rgba(3,14,8,0.97)",
+           "stroke": "#8dffb2",
+           "strokeWidth": 1.5,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/hovered": {
+           "fill": "rgba(47,209,106,0.18)"
+          },
+          "machine/event/idle": {
+           "textColor": "rgba(93,255,149,0.82)",
+           "font": "400 14px monospace"
+          },
+          "machine/event/lit": {
+           "textColor": "#c8ffd9",
+           "font": "400 14px monospace"
+          },
+          "machine/guard/idle": {
+           "fill": "rgba(3,14,8,0.94)",
+           "stroke": "rgba(93,255,149,0.82)",
+           "strokeWidth": 1.2
+          },
+          "machine/guard/refused": {
+           "fill": "#e5484d",
+           "stroke": "#e5484d",
+           "strokeWidth": 1.2
+          },
+          "machine/badge/idle": {
+           "fill": "#0e5a2c",
+           "stroke": "#2fd16a",
+           "textColor": "#c8ffd9",
+           "corners": {
+            "radius": [
+             8,
+             8,
+             8,
+             8
+            ],
+            "kind": "round"
+           },
+           "font": "600 11px monospace"
+          },
+          "machine/token/idle": {
+           "fill": "#0e5a2c",
+           "stroke": "#8dffb2",
+           "strokeWidth": 1
+          },
+          "machine/bloom/idle": {
+           "stroke": "#8dffb2",
+           "strokeWidth": 2
+          },
+          "machine/effect/other": {
+           "fill": "rgba(0,0,0,0)",
+           "stroke": "rgba(93,255,149,0.82)",
+           "strokeWidth": 1.2,
+           "decor": "M-0.5 0 A0.5 0.5 0 1 0 0.5 0 A0.5 0.5 0 1 0 -0.5 0 Z"
+          },
           "stack/source/idle": {
            "fill": "rgba(3,14,8,0.97)",
            "stroke": "#2fd16a",
@@ -29184,6 +32321,169 @@
             "saturate": 1.1
            }
           },
+          "machine/state/idle": {
+           "fill": "rgba(250,246,236,0.96)",
+           "stroke": "#2a2433",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "rgba(31,26,38,0.82)",
+           "font": "400 15px serif"
+          },
+          "machine/state/active": {
+           "fill": "#2a2433",
+           "stroke": "#2a2433",
+           "strokeWidth": 1.4,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "#fbf7ec",
+           "font": "600 15px serif",
+           "material": {
+            "wgsl": "fn pp_hash(p: vec2<f32>) -> f32 { return fract(sin(dot(p, vec2<f32>(127.1, 311.7))) * 43758.5453); }\nfn pp_noise(p: vec2<f32>) -> f32 {\n  let i = floor(p);\n  let f = fract(p);\n  let u = f * f * (3.0 - 2.0 * f);\n  return mix(mix(pp_hash(i), pp_hash(i + vec2<f32>(1.0, 0.0)), u.x), mix(pp_hash(i + vec2<f32>(0.0, 1.0)), pp_hash(i + vec2<f32>(1.0, 1.0)), u.x), u.y);\n}\n// a.x hover, a.y press, a.z focus, a.w fibre scale in px\nfn shade(px: Pixel) -> vec4<f32> {\n  let s = max(px.a.w, 1.0);\n  let fib = pp_noise(vec2<f32>(px.local.x / (s * 6.0), px.local.y / (s * 0.4)));\n  let tooth = pp_noise(px.local / s);\n  var col = px.color.rgb * (0.96 + 0.05 * tooth) - vec3<f32>(0.03) * smoothstep(0.65, 0.9, fib);\n  let d = distance(px.local, px.pointer);\n  col = col + vec3<f32>(0.05, 0.04, 0.02) * exp(-d * d / (2.0 * 80.0 * 80.0)) * (0.4 + px.a.x);\n  let ink = smoothstep(-1.4, 0.0, px.sdf) * (0.35 + 0.35 * px.a.x + 0.3 * px.a.z);\n  col = mix(col, vec3<f32>(0.14, 0.12, 0.16), ink);\n  let bleed = smoothstep(-6.0, -1.4, px.sdf) * (1.0 - smoothstep(-1.4, 0.0, px.sdf)) * 0.06 * (0.6 + 0.4 * pp_noise(px.local / 3.0));\n  col = col - vec3<f32>(bleed);\n  col = col * (1.0 - 0.07 * px.a.y);\n  return vec4<f32>(col, px.color.a);\n}\n",
+            "params": [
+             0,
+             0,
+             0,
+             4
+            ],
+            "live": true
+           }
+          },
+          "machine/state/visited": {
+           "fill": "rgba(250,246,236,0.96)",
+           "stroke": "#b03a2e",
+           "strokeWidth": 1.5,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "rgba(31,26,38,0.82)",
+           "font": "400 15px serif"
+          },
+          "machine/wire/idle": {
+           "stroke": "rgba(31,26,38,0.45)",
+           "strokeWidth": 1.5
+          },
+          "machine/wire/next": {
+           "stroke": "rgba(31,26,38,0.75)",
+           "strokeWidth": 1.5
+          },
+          "machine/wire/lit": {
+           "stroke": "#b03a2e",
+           "strokeWidth": 2.5
+          },
+          "machine/pill/idle": {
+           "fill": "rgba(250,246,236,0.98)",
+           "stroke": "rgba(31,26,38,0.45)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/next": {
+           "fill": "rgba(250,246,236,0.98)",
+           "stroke": "rgba(31,26,38,0.75)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/lit": {
+           "fill": "rgba(250,246,236,0.98)",
+           "stroke": "#b03a2e",
+           "strokeWidth": 1.5,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/hovered": {
+           "fill": "rgba(42,36,51,0.12)"
+          },
+          "machine/event/idle": {
+           "textColor": "rgba(31,26,38,0.85)",
+           "font": "400 14px monospace"
+          },
+          "machine/event/lit": {
+           "textColor": "#b03a2e",
+           "font": "400 14px monospace"
+          },
+          "machine/guard/idle": {
+           "fill": "rgba(250,246,236,0.96)",
+           "stroke": "rgba(31,26,38,0.85)",
+           "strokeWidth": 1.2
+          },
+          "machine/guard/refused": {
+           "fill": "#e5484d",
+           "stroke": "#e5484d",
+           "strokeWidth": 1.2
+          },
+          "machine/badge/idle": {
+           "fill": "#2a2433",
+           "stroke": "#2a2433",
+           "textColor": "#fbf7ec",
+           "corners": {
+            "radius": [
+             8,
+             8,
+             8,
+             8
+            ],
+            "kind": "round"
+           },
+           "font": "600 11px serif"
+          },
+          "machine/token/idle": {
+           "fill": "#2a2433",
+           "stroke": "#b03a2e",
+           "strokeWidth": 1
+          },
+          "machine/bloom/idle": {
+           "stroke": "#b03a2e",
+           "strokeWidth": 2
+          },
+          "machine/effect/other": {
+           "fill": "rgba(0,0,0,0)",
+           "stroke": "rgba(31,26,38,0.85)",
+           "strokeWidth": 1.2,
+           "decor": "M-0.5 0 A0.5 0.5 0 1 0 0.5 0 A0.5 0.5 0 1 0 -0.5 0 Z"
+          },
           "stack/source/idle": {
            "fill": "rgba(250,246,236,0.98)",
            "stroke": "#2a2433",
@@ -30604,6 +33904,169 @@
             "tint": "rgba(23,128,122,0.35)",
             "saturate": 1.1
            }
+          },
+          "machine/state/idle": {
+           "fill": "rgba(251,246,234,0.90)",
+           "stroke": "rgba(184,132,28,0.7)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "rgba(44,37,24,0.92)",
+           "font": "400 16px Cairo, sans-serif"
+          },
+          "machine/state/active": {
+           "fill": "#1f4f9a",
+           "stroke": "#b8841c",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "#fbf5e6",
+           "font": "600 15px Cairo, sans-serif",
+           "material": {
+            "wgsl": "// a glazed zellige tile: lit from above, a gold inlay line inside its edge, a slow glint; a.x hover, a.y press, a.z focus\nfn shade(px: Pixel) -> vec4<f32> {\n  var col = px.color.rgb * (1.14 - 0.30 * px.uv.y);\n  let d = distance(px.local, px.pointer);\n  col = col + vec3<f32>(0.98, 0.82, 0.48) * exp(-d * d / 7000.0) * (0.04 + 0.16 * px.a.x);\n  let inlay = 1.0 - smoothstep(0.35, 1.1, abs(px.sdf + 4.0));\n  col = mix(col, vec3<f32>(0.72, 0.52, 0.11), inlay * (0.45 + 0.35 * px.a.x + 0.2 * px.a.z));\n  let band = (px.local.x - px.local.y * 0.6) * 0.012 - px.time * 0.35;\n  col = col + vec3<f32>(pow(max(0.0, sin(band)), 40.0) * 0.12);\n  col = col * (1.0 - 0.14 * px.a.y);\n  return vec4<f32>(col, max(px.color.a, inlay * 0.7));\n}\n",
+            "params": [
+             0,
+             0,
+             0,
+             0
+            ],
+            "live": true
+           }
+          },
+          "machine/state/visited": {
+           "fill": "rgba(251,246,234,0.90)",
+           "stroke": "#1f4f9a",
+           "strokeWidth": 1.5,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "rgba(44,37,24,0.92)",
+           "font": "400 16px Cairo, sans-serif"
+          },
+          "machine/wire/idle": {
+           "stroke": "rgba(44,37,24,0.45)",
+           "strokeWidth": 1.5
+          },
+          "machine/wire/next": {
+           "stroke": "rgba(44,37,24,0.75)",
+           "strokeWidth": 1.5
+          },
+          "machine/wire/lit": {
+           "stroke": "#1f4f9a",
+           "strokeWidth": 2.5
+          },
+          "machine/pill/idle": {
+           "fill": "rgba(251,246,234,0.96)",
+           "stroke": "rgba(44,37,24,0.45)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/next": {
+           "fill": "rgba(251,246,234,0.96)",
+           "stroke": "rgba(44,37,24,0.75)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/lit": {
+           "fill": "rgba(251,246,234,0.96)",
+           "stroke": "#1f4f9a",
+           "strokeWidth": 1.5,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/hovered": {
+           "fill": "rgba(31,79,154,0.12)"
+          },
+          "machine/event/idle": {
+           "textColor": "rgba(44,37,24,0.9)",
+           "font": "400 14px monospace"
+          },
+          "machine/event/lit": {
+           "textColor": "#1f4f9a",
+           "font": "400 14px monospace"
+          },
+          "machine/guard/idle": {
+           "fill": "rgba(251,246,234,0.90)",
+           "stroke": "rgba(44,37,24,0.9)",
+           "strokeWidth": 1.2
+          },
+          "machine/guard/refused": {
+           "fill": "#e5484d",
+           "stroke": "#e5484d",
+           "strokeWidth": 1.2
+          },
+          "machine/badge/idle": {
+           "fill": "#1f4f9a",
+           "stroke": "#b8841c",
+           "textColor": "#fbf5e6",
+           "corners": {
+            "radius": [
+             8,
+             8,
+             8,
+             8
+            ],
+            "kind": "round"
+           },
+           "font": "600 11px Cairo, sans-serif"
+          },
+          "machine/token/idle": {
+           "fill": "#1f4f9a",
+           "stroke": "#1f4f9a",
+           "strokeWidth": 1
+          },
+          "machine/bloom/idle": {
+           "stroke": "#1f4f9a",
+           "strokeWidth": 2
+          },
+          "machine/effect/other": {
+           "fill": "rgba(0,0,0,0)",
+           "stroke": "rgba(44,37,24,0.9)",
+           "strokeWidth": 1.2,
+           "decor": "M-0.5 0 A0.5 0.5 0 1 0 0.5 0 A0.5 0.5 0 1 0 -0.5 0 Z"
           },
           "stack/source/idle": {
            "fill": "rgba(251,246,234,0.96)",
@@ -32030,6 +35493,169 @@
             "tint": "rgba(95,211,198,0.4)",
             "saturate": 1.1
            }
+          },
+          "machine/state/idle": {
+           "fill": "rgba(13,15,34,0.82)",
+           "stroke": "rgba(233,185,73,0.6)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "rgba(243,232,207,0.92)",
+           "font": "400 16px Cairo, sans-serif"
+          },
+          "machine/state/active": {
+           "fill": "#183a78",
+           "stroke": "#e9b949",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "#fbf1d6",
+           "font": "600 15px Cairo, sans-serif",
+           "material": {
+            "wgsl": "// a glazed zellige tile: lit from above, a gold inlay line inside its edge, a slow glint; a.x hover, a.y press, a.z focus\nfn shade(px: Pixel) -> vec4<f32> {\n  var col = px.color.rgb * (1.14 - 0.30 * px.uv.y);\n  let d = distance(px.local, px.pointer);\n  col = col + vec3<f32>(0.98, 0.82, 0.48) * exp(-d * d / 7000.0) * (0.04 + 0.16 * px.a.x);\n  let inlay = 1.0 - smoothstep(0.35, 1.1, abs(px.sdf + 4.0));\n  col = mix(col, vec3<f32>(0.93, 0.73, 0.30), inlay * (0.45 + 0.35 * px.a.x + 0.2 * px.a.z));\n  let band = (px.local.x - px.local.y * 0.6) * 0.012 - px.time * 0.35;\n  col = col + vec3<f32>(pow(max(0.0, sin(band)), 40.0) * 0.12);\n  col = col * (1.0 - 0.14 * px.a.y);\n  return vec4<f32>(col, max(px.color.a, inlay * 0.7));\n}\n",
+            "params": [
+             0,
+             0,
+             0,
+             0
+            ],
+            "live": true
+           }
+          },
+          "machine/state/visited": {
+           "fill": "rgba(13,15,34,0.82)",
+           "stroke": "#e9b949",
+           "strokeWidth": 1.5,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "rgba(243,232,207,0.92)",
+           "font": "400 16px Cairo, sans-serif"
+          },
+          "machine/wire/idle": {
+           "stroke": "rgba(243,232,207,0.45)",
+           "strokeWidth": 1.5
+          },
+          "machine/wire/next": {
+           "stroke": "rgba(243,232,207,0.75)",
+           "strokeWidth": 1.5
+          },
+          "machine/wire/lit": {
+           "stroke": "#e9b949",
+           "strokeWidth": 2.5
+          },
+          "machine/pill/idle": {
+           "fill": "rgba(13,15,34,0.97)",
+           "stroke": "rgba(243,232,207,0.45)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/next": {
+           "fill": "rgba(13,15,34,0.97)",
+           "stroke": "rgba(243,232,207,0.75)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/lit": {
+           "fill": "rgba(13,15,34,0.97)",
+           "stroke": "#e9b949",
+           "strokeWidth": 1.5,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/hovered": {
+           "fill": "rgba(233,185,73,0.14)"
+          },
+          "machine/event/idle": {
+           "textColor": "rgba(243,232,207,0.9)",
+           "font": "400 14px monospace"
+          },
+          "machine/event/lit": {
+           "textColor": "#f4cf72",
+           "font": "400 14px monospace"
+          },
+          "machine/guard/idle": {
+           "fill": "rgba(13,15,34,0.82)",
+           "stroke": "rgba(243,232,207,0.9)",
+           "strokeWidth": 1.2
+          },
+          "machine/guard/refused": {
+           "fill": "#e5484d",
+           "stroke": "#e5484d",
+           "strokeWidth": 1.2
+          },
+          "machine/badge/idle": {
+           "fill": "#183a78",
+           "stroke": "#e9b949",
+           "textColor": "#fbf1d6",
+           "corners": {
+            "radius": [
+             8,
+             8,
+             8,
+             8
+            ],
+            "kind": "round"
+           },
+           "font": "600 11px Cairo, sans-serif"
+          },
+          "machine/token/idle": {
+           "fill": "#183a78",
+           "stroke": "#e9b949",
+           "strokeWidth": 1
+          },
+          "machine/bloom/idle": {
+           "stroke": "#e9b949",
+           "strokeWidth": 2
+          },
+          "machine/effect/other": {
+           "fill": "rgba(0,0,0,0)",
+           "stroke": "rgba(243,232,207,0.9)",
+           "strokeWidth": 1.2,
+           "decor": "M-0.5 0 A0.5 0.5 0 1 0 0.5 0 A0.5 0.5 0 1 0 -0.5 0 Z"
           },
           "stack/source/idle": {
            "fill": "rgba(13,15,34,0.97)",
@@ -33588,6 +37214,175 @@
             ],
             "live": true
            }
+          },
+          "machine/state/idle": {
+           "fill": "rgba(255,255,255,0.62)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "#454861",
+           "font": "400 15px sans-serif"
+          },
+          "machine/state/active": {
+           "fill": "rgba(255,255,255,0.94)",
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "#1b1d2a",
+           "font": "600 15px sans-serif",
+           "material": {
+            "wgsl": "// frosted white glass edged by a hairline of the whole spectrum, hue by angle around the shape; a.x hover, a.y press (turns the hue), a.z focus\nfn pr_hue(h: f32) -> vec3<f32> {\n  let k = vec3<f32>(1.0, 0.6667, 0.3333);\n  return clamp(abs(fract(vec3<f32>(h) + k) * 6.0 - vec3<f32>(3.0, 3.0, 3.0)) - vec3<f32>(1.0, 1.0, 1.0), vec3<f32>(0.0, 0.0, 0.0), vec3<f32>(1.0, 1.0, 1.0));\n}\nfn shade(px: Pixel) -> vec4<f32> {\n  let c = px.uv - vec2<f32>(0.5, 0.5);\n  let ang = atan2(c.y, c.x) / 6.2831853 + 0.5;\n  let phase = ang + px.time * 0.02 + px.a.y * 0.3 + px.pointer.x / max(px.size.x, 1.0) * 0.12;\n  let spec = pr_hue(phase);\n  let rim = smoothstep(-1.6, -0.7, px.sdf);\n  let strength = clamp(0.78 + 0.22 * px.a.x, 0.0, 1.0);\n  let lit = min(spec * (1.0 + 0.25 * px.a.x), vec3<f32>(1.0, 1.0, 1.0));\n  var col = mix(px.color.rgb, spec, 0.03 * (1.0 - rim));\n  col = mix(col, lit, rim * strength);\n  return vec4<f32>(col, max(px.color.a, rim * strength));\n}\n",
+            "params": [
+             0,
+             0,
+             0,
+             0
+            ],
+            "live": true
+           }
+          },
+          "machine/state/visited": {
+           "fill": "rgba(255,255,255,0.62)",
+           "stroke": "#6b6fe8",
+           "strokeWidth": 1.5,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "#454861",
+           "font": "400 15px sans-serif"
+          },
+          "machine/wire/idle": {
+           "stroke": "rgba(69,72,97,0.45)",
+           "strokeWidth": 1.5
+          },
+          "machine/wire/next": {
+           "stroke": "rgba(69,72,97,0.75)",
+           "strokeWidth": 1.5
+          },
+          "machine/wire/lit": {
+           "stroke": "#6b6fe8",
+           "strokeWidth": 2.5,
+           "material": {
+            "wgsl": "// the travelled arc: the same spectrum, brighter\nfn pr_hue(h: f32) -> vec3<f32> {\n  let k = vec3<f32>(1.0, 0.6667, 0.3333);\n  return clamp(abs(fract(vec3<f32>(h) + k) * 6.0 - vec3<f32>(3.0, 3.0, 3.0)) - vec3<f32>(1.0, 1.0, 1.0), vec3<f32>(0.0, 0.0, 0.0), vec3<f32>(1.0, 1.0, 1.0));\n}\nfn shade(px: Pixel) -> vec4<f32> {\n  let c = px.uv - vec2<f32>(0.5, 0.5);\n  let ang = atan2(c.y, c.x) / 6.2831853 + 0.5;\n  let spec = pr_hue(ang + px.time * 0.04);\n  return vec4<f32>(mix(spec, vec3<f32>(1.0, 1.0, 1.0), 0.12), 1.0);\n}\n",
+            "params": [
+             0,
+             0,
+             0,
+             0
+            ],
+            "live": true
+           }
+          },
+          "machine/pill/idle": {
+           "fill": "rgba(252,252,250,0.88)",
+           "stroke": "rgba(69,72,97,0.45)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/next": {
+           "fill": "rgba(252,252,250,0.88)",
+           "stroke": "rgba(69,72,97,0.75)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/lit": {
+           "fill": "rgba(252,252,250,0.88)",
+           "stroke": "#6b6fe8",
+           "strokeWidth": 1.5,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/hovered": {
+           "fill": "rgba(255,255,255,0.72)"
+          },
+          "machine/event/idle": {
+           "textColor": "#2f3248",
+           "font": "400 14px monospace"
+          },
+          "machine/event/lit": {
+           "textColor": "#1b1d2a",
+           "font": "400 14px monospace"
+          },
+          "machine/guard/idle": {
+           "fill": "rgba(255,255,255,0.62)",
+           "stroke": "#2f3248",
+           "strokeWidth": 1.2
+          },
+          "machine/guard/refused": {
+           "fill": "#e5484d",
+           "stroke": "#e5484d",
+           "strokeWidth": 1.2
+          },
+          "machine/badge/idle": {
+           "fill": "rgba(255,255,255,0.94)",
+           "textColor": "#1b1d2a",
+           "corners": {
+            "radius": [
+             8,
+             8,
+             8,
+             8
+            ],
+            "kind": "round"
+           },
+           "font": "600 11px sans-serif"
+          },
+          "machine/token/idle": {
+           "fill": "#ffffff",
+           "stroke": "#6b6fe8",
+           "strokeWidth": 1
+          },
+          "machine/bloom/idle": {
+           "stroke": "#6b6fe8",
+           "strokeWidth": 2
+          },
+          "machine/effect/other": {
+           "fill": "rgba(0,0,0,0)",
+           "stroke": "#2f3248",
+           "strokeWidth": 1.2,
+           "decor": "M-0.5 0 A0.5 0.5 0 1 0 0.5 0 A0.5 0.5 0 1 0 -0.5 0 Z"
           },
           "stack/source/idle": {
            "fill": "rgba(252,252,250,0.88)",
@@ -35166,6 +38961,179 @@
             "live": true
            }
           },
+          "machine/state/idle": {
+           "fill": "rgba(23,25,37,0.78)",
+           "stroke": "rgba(238,240,247,0.14)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "rgba(238,240,247,0.74)",
+           "font": "300 15px sans-serif"
+          },
+          "machine/state/active": {
+           "fill": "#1f2234",
+           "stroke": "rgba(238,240,247,0.18)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "#eef0f7",
+           "font": "500 15px sans-serif",
+           "material": {
+            "wgsl": "// ink glass edged by a softly glowing spectral hairline, hue by angle around the shape; a.x hover, a.y press (turns the hue), a.z focus\nfn pr_hue(h: f32) -> vec3<f32> {\n  let k = vec3<f32>(1.0, 0.6667, 0.3333);\n  return clamp(abs(fract(vec3<f32>(h) + k) * 6.0 - vec3<f32>(3.0, 3.0, 3.0)) - vec3<f32>(1.0, 1.0, 1.0), vec3<f32>(0.0, 0.0, 0.0), vec3<f32>(1.0, 1.0, 1.0));\n}\nfn shade(px: Pixel) -> vec4<f32> {\n  let c = px.uv - vec2<f32>(0.5, 0.5);\n  let ang = atan2(c.y, c.x) / 6.2831853 + 0.5;\n  let phase = ang + px.time * 0.02 + px.a.y * 0.3 + px.pointer.x / max(px.size.x, 1.0) * 0.12;\n  let spec = pr_hue(phase);\n  let rim = smoothstep(-1.6, -0.7, px.sdf);\n  let glow = smoothstep(-10.0, 0.0, px.sdf) * (0.08 + 0.10 * px.a.x);\n  let strength = clamp(0.72 + 0.28 * px.a.x, 0.0, 1.0);\n  var col = px.color.rgb + spec * glow;\n  col = mix(col, spec, rim * strength);\n  return vec4<f32>(clamp(col, vec3<f32>(0.0, 0.0, 0.0), vec3<f32>(1.0, 1.0, 1.0)), max(px.color.a, rim * strength));\n}\n",
+            "params": [
+             0,
+             0,
+             0,
+             0
+            ],
+            "live": true
+           }
+          },
+          "machine/state/visited": {
+           "fill": "rgba(23,25,37,0.78)",
+           "stroke": "#8f6bff",
+           "strokeWidth": 1.5,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "rgba(238,240,247,0.74)",
+           "font": "300 15px sans-serif"
+          },
+          "machine/wire/idle": {
+           "stroke": "rgba(238,240,247,0.45)",
+           "strokeWidth": 1.5
+          },
+          "machine/wire/next": {
+           "stroke": "rgba(238,240,247,0.75)",
+           "strokeWidth": 1.5
+          },
+          "machine/wire/lit": {
+           "stroke": "#8f6bff",
+           "strokeWidth": 2.5,
+           "material": {
+            "wgsl": "// the travelled arc: the same spectrum, glowing\nfn pr_hue(h: f32) -> vec3<f32> {\n  let k = vec3<f32>(1.0, 0.6667, 0.3333);\n  return clamp(abs(fract(vec3<f32>(h) + k) * 6.0 - vec3<f32>(3.0, 3.0, 3.0)) - vec3<f32>(1.0, 1.0, 1.0), vec3<f32>(0.0, 0.0, 0.0), vec3<f32>(1.0, 1.0, 1.0));\n}\nfn shade(px: Pixel) -> vec4<f32> {\n  let c = px.uv - vec2<f32>(0.5, 0.5);\n  let ang = atan2(c.y, c.x) / 6.2831853 + 0.5;\n  let spec = pr_hue(ang + px.time * 0.04);\n  return vec4<f32>(mix(spec, vec3<f32>(1.0, 1.0, 1.0), 0.25), 1.0);\n}\n",
+            "params": [
+             0,
+             0,
+             0,
+             0
+            ],
+            "live": true
+           }
+          },
+          "machine/pill/idle": {
+           "fill": "rgba(23,25,37,0.92)",
+           "stroke": "rgba(238,240,247,0.45)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/next": {
+           "fill": "rgba(23,25,37,0.92)",
+           "stroke": "rgba(238,240,247,0.75)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/lit": {
+           "fill": "rgba(23,25,37,0.92)",
+           "stroke": "#8f6bff",
+           "strokeWidth": 1.5,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/hovered": {
+           "fill": "rgba(31,34,52,0.8)"
+          },
+          "machine/event/idle": {
+           "textColor": "rgba(238,240,247,0.82)",
+           "font": "400 14px monospace"
+          },
+          "machine/event/lit": {
+           "textColor": "#eef0f7",
+           "font": "400 14px monospace"
+          },
+          "machine/guard/idle": {
+           "fill": "rgba(23,25,37,0.78)",
+           "stroke": "rgba(238,240,247,0.82)",
+           "strokeWidth": 1.2
+          },
+          "machine/guard/refused": {
+           "fill": "#e5484d",
+           "stroke": "#e5484d",
+           "strokeWidth": 1.2
+          },
+          "machine/badge/idle": {
+           "fill": "#1f2234",
+           "stroke": "rgba(238,240,247,0.18)",
+           "textColor": "#eef0f7",
+           "corners": {
+            "radius": [
+             8,
+             8,
+             8,
+             8
+            ],
+            "kind": "round"
+           },
+           "font": "600 11px sans-serif"
+          },
+          "machine/token/idle": {
+           "fill": "#262a3f",
+           "stroke": "#8f6bff",
+           "strokeWidth": 1
+          },
+          "machine/bloom/idle": {
+           "stroke": "#8f6bff",
+           "strokeWidth": 2
+          },
+          "machine/effect/other": {
+           "fill": "rgba(0,0,0,0)",
+           "stroke": "rgba(238,240,247,0.82)",
+           "strokeWidth": 1.2,
+           "decor": "M-0.5 0 A0.5 0.5 0 1 0 0.5 0 A0.5 0.5 0 1 0 -0.5 0 Z"
+          },
           "stack/source/idle": {
            "fill": "rgba(23,25,37,0.92)",
            "stroke": "rgba(238,240,247,0.16)",
@@ -36589,6 +40557,179 @@
             "saturate": 1.1
            }
           },
+          "machine/state/idle": {
+           "fill": "rgba(255,246,236,0.9)",
+           "stroke": "#e6c27a",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "rgba(42,30,51,0.86)",
+           "font": "400 15px sans-serif"
+          },
+          "machine/state/active": {
+           "fill": "#2a1e33",
+           "stroke": "#e6c27a",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "#fff6ec",
+           "font": "600 15px sans-serif",
+           "material": {
+            "wgsl": "// a plum tile edged in gold, lit from the horizon; a.x hover, a.y press, a.z focus\nfn shade(px: Pixel) -> vec4<f32> {\n  var col = px.color.rgb * (1.12 - 0.22 * px.uv.y);\n  let d = distance(px.local, px.pointer);\n  col = col + vec3<f32>(1.0, 0.78, 0.55) * exp(-d * d / 6000.0) * (0.04 + 0.12 * px.a.x);\n  let inlay = 1.0 - smoothstep(0.35, 1.1, abs(px.sdf + 3.5));\n  col = mix(col, vec3<f32>(0.902, 0.761, 0.478), inlay * (0.35 + 0.35 * px.a.x));\n  col = col * (1.0 - 0.14 * px.a.y);\n  return vec4<f32>(col, max(px.color.a, inlay * 0.6));\n}\n",
+            "params": [
+             0,
+             0,
+             0,
+             0
+            ],
+            "live": true
+           }
+          },
+          "machine/state/visited": {
+           "fill": "rgba(255,246,236,0.9)",
+           "stroke": "#f6b98a",
+           "strokeWidth": 1.5,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "rgba(42,30,51,0.86)",
+           "font": "400 15px sans-serif"
+          },
+          "machine/wire/idle": {
+           "stroke": "rgba(42,30,51,0.45)",
+           "strokeWidth": 1.5
+          },
+          "machine/wire/next": {
+           "stroke": "rgba(42,30,51,0.75)",
+           "strokeWidth": 1.5
+          },
+          "machine/wire/lit": {
+           "stroke": "#f6b98a",
+           "strokeWidth": 2.5,
+           "material": {
+            "wgsl": "// the travelled arc: gold warming to rose\nfn shade(px: Pixel) -> vec4<f32> {\n  let c = px.uv - vec2<f32>(0.5, 0.5);\n  let k = 0.5 + 0.5 * sin(atan2(c.y, c.x) + px.time * 0.3);\n  return vec4<f32>(mix(vec3<f32>(0.902, 0.761, 0.478), vec3<f32>(0.784, 0.416, 0.494), k), 1.0);\n}\n",
+            "params": [
+             0,
+             0,
+             0,
+             0
+            ],
+            "live": true
+           }
+          },
+          "machine/pill/idle": {
+           "fill": "rgba(255,246,236,0.95)",
+           "stroke": "rgba(42,30,51,0.45)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/next": {
+           "fill": "rgba(255,246,236,0.95)",
+           "stroke": "rgba(42,30,51,0.75)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/lit": {
+           "fill": "rgba(255,246,236,0.95)",
+           "stroke": "#f6b98a",
+           "strokeWidth": 1.5,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/hovered": {
+           "fill": "rgba(230,194,122,0.30)"
+          },
+          "machine/event/idle": {
+           "textColor": "#3a2a45",
+           "font": "400 14px monospace"
+          },
+          "machine/event/lit": {
+           "textColor": "#2a1e33",
+           "font": "400 14px monospace"
+          },
+          "machine/guard/idle": {
+           "fill": "rgba(255,246,236,0.9)",
+           "stroke": "#3a2a45",
+           "strokeWidth": 1.2
+          },
+          "machine/guard/refused": {
+           "fill": "#e5484d",
+           "stroke": "#e5484d",
+           "strokeWidth": 1.2
+          },
+          "machine/badge/idle": {
+           "fill": "#2a1e33",
+           "stroke": "#e6c27a",
+           "textColor": "#fff6ec",
+           "corners": {
+            "radius": [
+             8,
+             8,
+             8,
+             8
+            ],
+            "kind": "round"
+           },
+           "font": "600 11px sans-serif"
+          },
+          "machine/token/idle": {
+           "fill": "#fff0cf",
+           "stroke": "#f6b98a",
+           "strokeWidth": 1
+          },
+          "machine/bloom/idle": {
+           "stroke": "#f6b98a",
+           "strokeWidth": 2
+          },
+          "machine/effect/other": {
+           "fill": "rgba(0,0,0,0)",
+           "stroke": "#3a2a45",
+           "strokeWidth": 1.2,
+           "decor": "M-0.5 0 A0.5 0.5 0 1 0 0.5 0 A0.5 0.5 0 1 0 -0.5 0 Z"
+          },
           "stack/source/idle": {
            "fill": "rgba(255,246,236,0.95)",
            "stroke": "#e6c27a",
@@ -37967,6 +42108,179 @@
             "saturate": 1.0
            }
           },
+          "machine/state/idle": {
+           "fill": "rgba(247,243,232,0.97)",
+           "stroke": "#141414",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "rgba(20,20,20,0.86)",
+           "font": "400 15px serif"
+          },
+          "machine/state/active": {
+           "fill": "#c9a14a",
+           "stroke": "#141414",
+           "strokeWidth": 1.2,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "#141414",
+           "font": "600 15px serif",
+           "material": {
+            "wgsl": "// gold leaf: a crinkled foil with a highlight that follows the pointer; a.x hover, a.y press, a.z focus\nfn ig_hash(p: vec2<f32>) -> f32 { return fract(sin(dot(p, vec2<f32>(127.1, 311.7))) * 43758.5453); }\nfn ig_noise(p: vec2<f32>) -> f32 {\n  let i = floor(p);\n  let f = fract(p);\n  let u = f * f * (3.0 - 2.0 * f);\n  return mix(mix(ig_hash(i), ig_hash(i + vec2<f32>(1.0, 0.0)), u.x), mix(ig_hash(i + vec2<f32>(0.0, 1.0)), ig_hash(i + vec2<f32>(1.0, 1.0)), u.x), u.y);\n}\nfn shade(px: Pixel) -> vec4<f32> {\n  let crinkle = ig_noise(px.local * 0.35 + vec2<f32>(3.1, 7.7));\n  let fine = ig_noise(px.local * 1.3);\n  var col = px.color.rgb * (0.88 + 0.18 * crinkle + 0.06 * fine);\n  let d = distance(px.local, px.pointer);\n  let hl = exp(-d * d / 9800.0);\n  col = col + vec3<f32>(1.0, 0.93, 0.65) * hl * (0.20 + 0.25 * px.a.x) * (0.6 + 0.8 * crinkle);\n  let sweep = pow(max(0.0, sin((px.local.x - px.local.y * 0.5) * 0.02 - px.time * 0.5)), 24.0);\n  col = col + vec3<f32>(1.0, 0.95, 0.75) * sweep * 0.10;\n  col = col * (1.0 - 0.12 * px.a.y);\n  return vec4<f32>(clamp(col, vec3<f32>(0.0, 0.0, 0.0), vec3<f32>(1.0, 1.0, 1.0)), px.color.a);\n}\n",
+            "params": [
+             0,
+             0,
+             0,
+             0
+            ],
+            "live": true
+           }
+          },
+          "machine/state/visited": {
+           "fill": "rgba(247,243,232,0.97)",
+           "stroke": "#c9a14a",
+           "strokeWidth": 1.5,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "rgba(20,20,20,0.86)",
+           "font": "400 15px serif"
+          },
+          "machine/wire/idle": {
+           "stroke": "rgba(20,20,20,0.45)",
+           "strokeWidth": 1.5
+          },
+          "machine/wire/next": {
+           "stroke": "rgba(20,20,20,0.75)",
+           "strokeWidth": 1.5
+          },
+          "machine/wire/lit": {
+           "stroke": "#c9a14a",
+           "strokeWidth": 2.5,
+           "material": {
+            "wgsl": "// the travelled arc: gold leaf with a moving glint\nfn shade(px: Pixel) -> vec4<f32> {\n  let c = px.uv - vec2<f32>(0.5, 0.5);\n  let g = pow(max(0.0, sin(atan2(c.y, c.x) * 3.0 - px.time * 0.8)), 8.0);\n  return vec4<f32>(mix(vec3<f32>(0.788, 0.631, 0.290), vec3<f32>(1.0, 0.92, 0.6), g * 0.6), 1.0);\n}\n",
+            "params": [
+             0,
+             0,
+             0,
+             0
+            ],
+            "live": true
+           }
+          },
+          "machine/pill/idle": {
+           "fill": "rgba(247,243,232,0.99)",
+           "stroke": "rgba(20,20,20,0.45)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/next": {
+           "fill": "rgba(247,243,232,0.99)",
+           "stroke": "rgba(20,20,20,0.75)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/lit": {
+           "fill": "rgba(247,243,232,0.99)",
+           "stroke": "#c9a14a",
+           "strokeWidth": 1.5,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/hovered": {
+           "fill": "rgba(20,20,20,0.07)"
+          },
+          "machine/event/idle": {
+           "textColor": "rgba(20,20,20,0.86)",
+           "font": "400 14px monospace"
+          },
+          "machine/event/lit": {
+           "textColor": "#141414",
+           "font": "400 14px monospace"
+          },
+          "machine/guard/idle": {
+           "fill": "rgba(247,243,232,0.97)",
+           "stroke": "rgba(20,20,20,0.86)",
+           "strokeWidth": 1.2
+          },
+          "machine/guard/refused": {
+           "fill": "#e5484d",
+           "stroke": "#e5484d",
+           "strokeWidth": 1.2
+          },
+          "machine/badge/idle": {
+           "fill": "#c9a14a",
+           "stroke": "#141414",
+           "textColor": "#141414",
+           "corners": {
+            "radius": [
+             8,
+             8,
+             8,
+             8
+            ],
+            "kind": "round"
+           },
+           "font": "600 11px serif"
+          },
+          "machine/token/idle": {
+           "fill": "#c9a14a",
+           "stroke": "#c9a14a",
+           "strokeWidth": 1
+          },
+          "machine/bloom/idle": {
+           "stroke": "#c9a14a",
+           "strokeWidth": 2
+          },
+          "machine/effect/other": {
+           "fill": "rgba(0,0,0,0)",
+           "stroke": "rgba(20,20,20,0.86)",
+           "strokeWidth": 1.2,
+           "decor": "M-0.5 0 A0.5 0.5 0 1 0 0.5 0 A0.5 0.5 0 1 0 -0.5 0 Z"
+          },
           "stack/source/idle": {
            "fill": "rgba(247,243,232,0.99)",
            "stroke": "#141414",
@@ -38106,7 +42420,7 @@
              0,
              0
             ],
-            "live": true
+            "live": false
            },
            "textColor": "#f2fbff",
            "font": "500 15px sans-serif",
@@ -38140,7 +42454,7 @@
              0,
              0
             ],
-            "live": true
+            "live": false
            },
            "textColor": "#f2fbff",
            "font": "500 15px sans-serif",
@@ -38170,7 +42484,7 @@
              0,
              0
             ],
-            "live": true
+            "live": false
            },
            "textColor": "#f2fbff",
            "font": "500 15px sans-serif",
@@ -38200,7 +42514,7 @@
              0,
              0
             ],
-            "live": true
+            "live": false
            },
            "textColor": "#f2fbff",
            "font": "500 15px sans-serif",
@@ -38230,7 +42544,7 @@
              0,
              0
             ],
-            "live": true
+            "live": false
            },
            "textColor": "rgba(242,251,255,0.4)",
            "font": "500 15px sans-serif",
@@ -38260,7 +42574,7 @@
              0,
              0
             ],
-            "live": true
+            "live": false
            },
            "textColor": "#eaf1ff",
            "font": "500 15px sans-serif",
@@ -38290,7 +42604,7 @@
              0,
              0
             ],
-            "live": true
+            "live": false
            },
            "textColor": "#eaf1ff",
            "font": "500 15px sans-serif",
@@ -38320,7 +42634,7 @@
              0,
              0
             ],
-            "live": true
+            "live": false
            },
            "textColor": "#eaf1ff",
            "font": "500 15px sans-serif",
@@ -38350,7 +42664,7 @@
              0,
              0
             ],
-            "live": true
+            "live": false
            },
            "textColor": "#eaf1ff",
            "font": "500 15px sans-serif",
@@ -38380,7 +42694,7 @@
              0,
              0
             ],
-            "live": true
+            "live": false
            },
            "textColor": "rgba(234,241,255,0.4)",
            "font": "500 15px sans-serif",
@@ -38470,7 +42784,7 @@
              0,
              0
             ],
-            "live": true
+            "live": false
            },
            "textColor": "#eaf1ff",
            "font": "300 15px sans-serif",
@@ -38500,7 +42814,7 @@
              0,
              0
             ],
-            "live": true
+            "live": false
            },
            "textColor": "#eaf1ff",
            "font": "300 15px sans-serif",
@@ -38530,7 +42844,7 @@
              0,
              0
             ],
-            "live": true
+            "live": false
            },
            "textColor": "#eaf1ff",
            "font": "300 15px sans-serif",
@@ -38620,7 +42934,7 @@
              0,
              0
             ],
-            "live": true
+            "live": false
            },
            "textColor": "#eaf1ff",
            "font": "300 15px sans-serif",
@@ -38650,7 +42964,7 @@
              0,
              0
             ],
-            "live": true
+            "live": false
            },
            "textColor": "#eaf1ff",
            "font": "300 15px sans-serif",
@@ -38680,7 +42994,7 @@
              0,
              0
             ],
-            "live": true
+            "live": false
            },
            "textColor": "#eaf1ff",
            "font": "300 15px sans-serif",
@@ -39339,7 +43653,7 @@
              0,
              0
             ],
-            "live": true
+            "live": false
            }
           },
           "orbit/arc/lit": {
@@ -39434,6 +43748,179 @@
             "saturate": 1.15
            }
           },
+          "machine/state/idle": {
+           "fill": "rgba(14,20,40,0.62)",
+           "stroke": "rgba(150,205,235,0.28)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "rgba(234,241,255,0.8)",
+           "font": "300 15px sans-serif"
+          },
+          "machine/state/active": {
+           "fill": "rgba(14,22,44,0.85)",
+           "stroke": "rgba(150,205,235,0.45)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "#f2fbff",
+           "font": "500 15px sans-serif",
+           "material": {
+            "wgsl": "// a night tile washed green to violet along its width, a cool rim; a.x hover, a.y press, a.z focus\nfn shade(px: Pixel) -> vec4<f32> {\n  let wash = mix(vec3<f32>(0.36, 0.95, 0.69), vec3<f32>(0.56, 0.42, 1.0), px.uv.x);\n  var col = px.color.rgb + wash * (0.16 + 0.12 * px.a.x - 0.05 * px.a.y);\n  let rim = smoothstep(-1.6, -0.6, px.sdf);\n  col = mix(col, wash, rim * (0.55 + 0.35 * px.a.x));\n  return vec4<f32>(clamp(col, vec3<f32>(0.0, 0.0, 0.0), vec3<f32>(1.0, 1.0, 1.0)), max(px.color.a, rim * 0.7));\n}\n",
+            "params": [
+             0,
+             0,
+             0,
+             0
+            ],
+            "live": false
+           }
+          },
+          "machine/state/visited": {
+           "fill": "rgba(14,20,40,0.62)",
+           "stroke": "#5cf2b0",
+           "strokeWidth": 1.5,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "rgba(234,241,255,0.8)",
+           "font": "300 15px sans-serif"
+          },
+          "machine/wire/idle": {
+           "stroke": "rgba(234,241,255,0.45)",
+           "strokeWidth": 1.5
+          },
+          "machine/wire/next": {
+           "stroke": "rgba(234,241,255,0.75)",
+           "strokeWidth": 1.5
+          },
+          "machine/wire/lit": {
+           "stroke": "#5cf2b0",
+           "strokeWidth": 2.5,
+           "material": {
+            "wgsl": "// the travelled arc: aurora green into violet and back around the circle\nfn shade(px: Pixel) -> vec4<f32> {\n  let c = px.uv - vec2<f32>(0.5, 0.5);\n  let k = abs(fract(atan2(c.y, c.x) / 6.2831853 + 0.5 + px.time * 0.03) * 2.0 - 1.0);\n  return vec4<f32>(mix(vec3<f32>(0.36, 0.95, 0.69), vec3<f32>(0.56, 0.42, 1.0), k), 1.0);\n}\n",
+            "params": [
+             0,
+             0,
+             0,
+             0
+            ],
+            "live": true
+           }
+          },
+          "machine/pill/idle": {
+           "fill": "rgba(12,18,36,0.92)",
+           "stroke": "rgba(234,241,255,0.45)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/next": {
+           "fill": "rgba(12,18,36,0.92)",
+           "stroke": "rgba(234,241,255,0.75)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/lit": {
+           "fill": "rgba(12,18,36,0.92)",
+           "stroke": "#5cf2b0",
+           "strokeWidth": 1.5,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/hovered": {
+           "fill": "rgba(255,255,255,0.1)"
+          },
+          "machine/event/idle": {
+           "textColor": "rgba(234,241,255,0.84)",
+           "font": "400 14px monospace"
+          },
+          "machine/event/lit": {
+           "textColor": "#8ff7d0",
+           "font": "400 14px monospace"
+          },
+          "machine/guard/idle": {
+           "fill": "rgba(14,20,40,0.62)",
+           "stroke": "rgba(234,241,255,0.84)",
+           "strokeWidth": 1.2
+          },
+          "machine/guard/refused": {
+           "fill": "#e5484d",
+           "stroke": "#e5484d",
+           "strokeWidth": 1.2
+          },
+          "machine/badge/idle": {
+           "fill": "rgba(14,22,44,0.85)",
+           "stroke": "rgba(150,205,235,0.45)",
+           "textColor": "#f2fbff",
+           "corners": {
+            "radius": [
+             8,
+             8,
+             8,
+             8
+            ],
+            "kind": "round"
+           },
+           "font": "600 11px sans-serif"
+          },
+          "machine/token/idle": {
+           "fill": "rgba(14,22,44,0.95)",
+           "stroke": "#5cf2b0",
+           "strokeWidth": 1
+          },
+          "machine/bloom/idle": {
+           "stroke": "#5cf2b0",
+           "strokeWidth": 2
+          },
+          "machine/effect/other": {
+           "fill": "rgba(0,0,0,0)",
+           "stroke": "rgba(234,241,255,0.84)",
+           "strokeWidth": 1.2,
+           "decor": "M-0.5 0 A0.5 0.5 0 1 0 0.5 0 A0.5 0.5 0 1 0 -0.5 0 Z"
+          },
           "stack/source/idle": {
            "fill": "rgba(12,18,36,0.92)",
            "stroke": "rgba(150,205,235,0.3)",
@@ -39469,7 +43956,7 @@
              0,
              0
             ],
-            "live": true
+            "live": false
            }
           }
          }
@@ -40879,6 +45366,169 @@
             "tint": "rgba(95,211,198,0.4)",
             "saturate": 1.1
            }
+          },
+          "machine/state/idle": {
+           "fill": "rgba(13,15,34,0.82)",
+           "stroke": "rgba(233,185,73,0.6)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "rgba(243,232,207,0.92)",
+           "font": "400 16px Cairo, sans-serif"
+          },
+          "machine/state/active": {
+           "fill": "#183a78",
+           "stroke": "#e9b949",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "#fbf1d6",
+           "font": "600 15px Cairo, sans-serif",
+           "material": {
+            "wgsl": "// a glazed zellige tile: lit from above, a gold inlay line inside its edge, a slow glint; a.x hover, a.y press, a.z focus\nfn shade(px: Pixel) -> vec4<f32> {\n  var col = px.color.rgb * (1.14 - 0.30 * px.uv.y);\n  let d = distance(px.local, px.pointer);\n  col = col + vec3<f32>(0.98, 0.82, 0.48) * exp(-d * d / 7000.0) * (0.04 + 0.16 * px.a.x);\n  let inlay = 1.0 - smoothstep(0.35, 1.1, abs(px.sdf + 4.0));\n  col = mix(col, vec3<f32>(0.93, 0.73, 0.30), inlay * (0.45 + 0.35 * px.a.x + 0.2 * px.a.z));\n  let band = (px.local.x - px.local.y * 0.6) * 0.012 - px.time * 0.35;\n  col = col + vec3<f32>(pow(max(0.0, sin(band)), 40.0) * 0.12);\n  col = col * (1.0 - 0.14 * px.a.y);\n  return vec4<f32>(col, max(px.color.a, inlay * 0.7));\n}\n",
+            "params": [
+             0,
+             0,
+             0,
+             0
+            ],
+            "live": true
+           }
+          },
+          "machine/state/visited": {
+           "fill": "rgba(13,15,34,0.82)",
+           "stroke": "#e9b949",
+           "strokeWidth": 1.5,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "rgba(243,232,207,0.92)",
+           "font": "400 16px Cairo, sans-serif"
+          },
+          "machine/wire/idle": {
+           "stroke": "rgba(243,232,207,0.45)",
+           "strokeWidth": 1.5
+          },
+          "machine/wire/next": {
+           "stroke": "rgba(243,232,207,0.75)",
+           "strokeWidth": 1.5
+          },
+          "machine/wire/lit": {
+           "stroke": "#e9b949",
+           "strokeWidth": 2.5
+          },
+          "machine/pill/idle": {
+           "fill": "rgba(13,15,34,0.97)",
+           "stroke": "rgba(243,232,207,0.45)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/next": {
+           "fill": "rgba(13,15,34,0.97)",
+           "stroke": "rgba(243,232,207,0.75)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/lit": {
+           "fill": "rgba(13,15,34,0.97)",
+           "stroke": "#e9b949",
+           "strokeWidth": 1.5,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/hovered": {
+           "fill": "rgba(233,185,73,0.14)"
+          },
+          "machine/event/idle": {
+           "textColor": "rgba(243,232,207,0.9)",
+           "font": "400 14px monospace"
+          },
+          "machine/event/lit": {
+           "textColor": "#f4cf72",
+           "font": "400 14px monospace"
+          },
+          "machine/guard/idle": {
+           "fill": "rgba(13,15,34,0.82)",
+           "stroke": "rgba(243,232,207,0.9)",
+           "strokeWidth": 1.2
+          },
+          "machine/guard/refused": {
+           "fill": "#e5484d",
+           "stroke": "#e5484d",
+           "strokeWidth": 1.2
+          },
+          "machine/badge/idle": {
+           "fill": "#183a78",
+           "stroke": "#e9b949",
+           "textColor": "#fbf1d6",
+           "corners": {
+            "radius": [
+             8,
+             8,
+             8,
+             8
+            ],
+            "kind": "round"
+           },
+           "font": "600 11px Cairo, sans-serif"
+          },
+          "machine/token/idle": {
+           "fill": "#183a78",
+           "stroke": "#e9b949",
+           "strokeWidth": 1
+          },
+          "machine/bloom/idle": {
+           "stroke": "#e9b949",
+           "strokeWidth": 2
+          },
+          "machine/effect/other": {
+           "fill": "rgba(0,0,0,0)",
+           "stroke": "rgba(243,232,207,0.9)",
+           "strokeWidth": 1.2,
+           "decor": "M-0.5 0 A0.5 0.5 0 1 0 0.5 0 A0.5 0.5 0 1 0 -0.5 0 Z"
           },
           "stack/source/idle": {
            "fill": "rgba(13,15,34,0.97)",
@@ -42446,6 +47096,175 @@
             ],
             "live": true
            }
+          },
+          "machine/state/idle": {
+           "fill": "rgba(255,255,255,0.62)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "#454861",
+           "font": "400 15px sans-serif"
+          },
+          "machine/state/active": {
+           "fill": "rgba(255,255,255,0.94)",
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "#1b1d2a",
+           "font": "600 15px sans-serif",
+           "material": {
+            "wgsl": "// frosted white glass edged by a hairline of the whole spectrum, hue by angle around the shape; a.x hover, a.y press (turns the hue), a.z focus\nfn pr_hue(h: f32) -> vec3<f32> {\n  let k = vec3<f32>(1.0, 0.6667, 0.3333);\n  return clamp(abs(fract(vec3<f32>(h) + k) * 6.0 - vec3<f32>(3.0, 3.0, 3.0)) - vec3<f32>(1.0, 1.0, 1.0), vec3<f32>(0.0, 0.0, 0.0), vec3<f32>(1.0, 1.0, 1.0));\n}\nfn shade(px: Pixel) -> vec4<f32> {\n  let c = px.uv - vec2<f32>(0.5, 0.5);\n  let ang = atan2(c.y, c.x) / 6.2831853 + 0.5;\n  let phase = ang + px.time * 0.02 + px.a.y * 0.3 + px.pointer.x / max(px.size.x, 1.0) * 0.12;\n  let spec = pr_hue(phase);\n  let rim = smoothstep(-1.6, -0.7, px.sdf);\n  let strength = clamp(0.78 + 0.22 * px.a.x, 0.0, 1.0);\n  let lit = min(spec * (1.0 + 0.25 * px.a.x), vec3<f32>(1.0, 1.0, 1.0));\n  var col = mix(px.color.rgb, spec, 0.03 * (1.0 - rim));\n  col = mix(col, lit, rim * strength);\n  return vec4<f32>(col, max(px.color.a, rim * strength));\n}\n",
+            "params": [
+             0,
+             0,
+             0,
+             0
+            ],
+            "live": true
+           }
+          },
+          "machine/state/visited": {
+           "fill": "rgba(255,255,255,0.62)",
+           "stroke": "#6b6fe8",
+           "strokeWidth": 1.5,
+           "corners": {
+            "radius": [
+             10,
+             10,
+             10,
+             10
+            ],
+            "kind": "round"
+           },
+           "textColor": "#454861",
+           "font": "400 15px sans-serif"
+          },
+          "machine/wire/idle": {
+           "stroke": "rgba(69,72,97,0.45)",
+           "strokeWidth": 1.5
+          },
+          "machine/wire/next": {
+           "stroke": "rgba(69,72,97,0.75)",
+           "strokeWidth": 1.5
+          },
+          "machine/wire/lit": {
+           "stroke": "#6b6fe8",
+           "strokeWidth": 2.5,
+           "material": {
+            "wgsl": "// the travelled arc: the same spectrum, brighter\nfn pr_hue(h: f32) -> vec3<f32> {\n  let k = vec3<f32>(1.0, 0.6667, 0.3333);\n  return clamp(abs(fract(vec3<f32>(h) + k) * 6.0 - vec3<f32>(3.0, 3.0, 3.0)) - vec3<f32>(1.0, 1.0, 1.0), vec3<f32>(0.0, 0.0, 0.0), vec3<f32>(1.0, 1.0, 1.0));\n}\nfn shade(px: Pixel) -> vec4<f32> {\n  let c = px.uv - vec2<f32>(0.5, 0.5);\n  let ang = atan2(c.y, c.x) / 6.2831853 + 0.5;\n  let spec = pr_hue(ang + px.time * 0.04);\n  return vec4<f32>(mix(spec, vec3<f32>(1.0, 1.0, 1.0), 0.12), 1.0);\n}\n",
+            "params": [
+             0,
+             0,
+             0,
+             0
+            ],
+            "live": true
+           }
+          },
+          "machine/pill/idle": {
+           "fill": "rgba(252,252,250,0.88)",
+           "stroke": "rgba(69,72,97,0.45)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/next": {
+           "fill": "rgba(252,252,250,0.88)",
+           "stroke": "rgba(69,72,97,0.75)",
+           "strokeWidth": 1,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/lit": {
+           "fill": "rgba(252,252,250,0.88)",
+           "stroke": "#6b6fe8",
+           "strokeWidth": 1.5,
+           "corners": {
+            "radius": [
+             6,
+             6,
+             6,
+             6
+            ],
+            "kind": "round"
+           }
+          },
+          "machine/pill/hovered": {
+           "fill": "rgba(255,255,255,0.72)"
+          },
+          "machine/event/idle": {
+           "textColor": "#2f3248",
+           "font": "400 14px monospace"
+          },
+          "machine/event/lit": {
+           "textColor": "#1b1d2a",
+           "font": "400 14px monospace"
+          },
+          "machine/guard/idle": {
+           "fill": "rgba(255,255,255,0.62)",
+           "stroke": "#2f3248",
+           "strokeWidth": 1.2
+          },
+          "machine/guard/refused": {
+           "fill": "#e5484d",
+           "stroke": "#e5484d",
+           "strokeWidth": 1.2
+          },
+          "machine/badge/idle": {
+           "fill": "rgba(255,255,255,0.94)",
+           "textColor": "#1b1d2a",
+           "corners": {
+            "radius": [
+             8,
+             8,
+             8,
+             8
+            ],
+            "kind": "round"
+           },
+           "font": "600 11px sans-serif"
+          },
+          "machine/token/idle": {
+           "fill": "#ffffff",
+           "stroke": "#6b6fe8",
+           "strokeWidth": 1
+          },
+          "machine/bloom/idle": {
+           "stroke": "#6b6fe8",
+           "strokeWidth": 2
+          },
+          "machine/effect/other": {
+           "fill": "rgba(0,0,0,0)",
+           "stroke": "#2f3248",
+           "strokeWidth": 1.2,
+           "decor": "M-0.5 0 A0.5 0.5 0 1 0 0.5 0 A0.5 0.5 0 1 0 -0.5 0 Z"
           },
           "stack/source/idle": {
            "fill": "rgba(252,252,250,0.88)",

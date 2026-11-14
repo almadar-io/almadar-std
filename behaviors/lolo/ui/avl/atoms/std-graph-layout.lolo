@@ -31,6 +31,9 @@ orbital GraphLayoutOrbital {
     outChannels : [number] = []
     laneStep : number = 0
     bodyWidth : number = 0
+    direct : [string] = []
+    laneEdges : [LayoutEdge] = []
+    bands : [number] = []
     width : number = 0
     height : number = 0
   }
@@ -95,14 +98,24 @@ orbital GraphLayoutOrbital {
         (emit LAYOUT_PLACE { })
 
       LAYOUT_PLACE -> ready
-        (set @entity.channelStep (+ @config.edgeGap (array/reduce @entity.edges 1 (fn (m e) (math/max @m (math/ceil @e.labelHeight))))))
-        (set @entity.laneStep (+ @config.edgeGap (array/reduce @entity.edges 1 (fn (m e) (math/max @m (math/ceil @e.labelWidth))))))
+        (set @entity.direct (if (= @config.routing "direct")
+          (let ((cands (array/filter @entity.edges (fn e (and (!= @e.source @e.target)
+                  (not (array/some @entity.directed (fn d (and (= @d.id @e.id) @d.reversed))))
+                  (= (default (object/get @entity.ranks @e.target) 0) (+ (default (object/get @entity.ranks @e.source) 0) 1)))))))
+            (array/map (array/filter @cands (fn e (= (array/findIndex @cands (fn c (= (object/get @entity.ranks @c.source) (object/get @entity.ranks @e.source)))) (array/indexOf (array/map @cands (fn c @c.id)) @e.id)))) (fn e @e.id)))
+          []))
+        (set @entity.laneEdges (array/filter @entity.edges (fn e (not (array/includes @entity.direct @e.id)))))
+        (set @entity.channelStep (+ @config.edgeGap (if (= @config.routing "direct") @config.portGap (array/reduce @entity.edges 1 (fn (m e) (math/max @m (math/ceil @e.labelHeight)))))))
+        (set @entity.laneStep (+ @config.edgeGap (array/reduce @entity.laneEdges 1 (fn (m e) (math/max @m (math/ceil @e.labelWidth))))))
         (set @entity.rankHeights (array/map (array/range 0 (if (= (array/len @entity.nodes) 0) 0 (+ 1 (array/reduce (object/values @entity.ranks) 0 (fn (m r) (math/max @m @r))))))
           (fn r (array/reduce (array/filter @entity.nodes (fn n (= (object/get @entity.ranks @n.id) @r))) 0 (fn (m n) (math/max @m (math/ceil @n.height)))))))
-        (set @entity.inChannels (array/map (array/range 0 (array/len @entity.rankHeights)) (fn r (* @entity.channelStep (array/len (array/filter @entity.edges (fn e (= (object/get @entity.ranks @e.target) @r))))))))
-        (set @entity.outChannels (array/map (array/range 0 (array/len @entity.rankHeights)) (fn r (* @entity.channelStep (array/len (array/filter @entity.edges (fn e (= (object/get @entity.ranks @e.source) @r))))))))
+        (set @entity.inChannels (array/map (array/range 0 (array/len @entity.rankHeights)) (fn r (* @entity.channelStep (array/len (array/filter @entity.laneEdges (fn e (= (object/get @entity.ranks @e.target) @r))))))))
+        (set @entity.outChannels (array/map (array/range 0 (array/len @entity.rankHeights)) (fn r (* @entity.channelStep (array/len (array/filter @entity.laneEdges (fn e (= (object/get @entity.ranks @e.source) @r))))))))
+        (set @entity.bands (array/map (array/range 0 (array/len @entity.rankHeights)) (fn r
+          (let ((ds (array/filter @entity.edges (fn e (and (array/includes @entity.direct @e.id) (= (object/get @entity.ranks @e.source) @r))))))
+            (if (= (array/len @ds) 0) 0 (+ (* 2 @config.edgeGap) (array/reduce @ds 0 (fn (m e) (math/max @m (math/ceil @e.labelHeight))))))))))
         (set @entity.rankTops (array/map (array/range 0 (array/len @entity.rankHeights)) (fn r
-          (+ @config.padding (* @r @config.rankGap) (array/reduce (array/take @entity.inChannels (+ @r 1)) 0 (fn (sum h) (+ @sum @h))) (array/reduce (array/take @entity.outChannels @r) 0 (fn (sum h) (+ @sum @h))) (array/reduce (array/take @entity.rankHeights @r) 0 (fn (sum h) (+ @sum @h)))))))
+          (+ @config.padding (* @r @config.rankGap) (array/reduce (array/take @entity.inChannels (+ @r 1)) 0 (fn (sum h) (+ @sum @h))) (array/reduce (array/take @entity.outChannels @r) 0 (fn (sum h) (+ @sum @h))) (array/reduce (array/take @entity.bands @r) 0 (fn (sum h) (+ @sum @h))) (array/reduce (array/take @entity.rankHeights @r) 0 (fn (sum h) (+ @sum @h)))))))
         (set @entity.placed (array/flatten (array/map (array/range 0 (array/len @entity.rankHeights)) (fn r
           (let ((row (array/sort (array/map (array/filter @entity.nodes (fn n (= (object/get @entity.ranks @n.id) @r))) (fn n (object/set @n "order" (object/get @entity.order @n.id)))) "order" "asc"))
                 (p0 : [LayoutPlacedNode] []))
@@ -110,9 +123,11 @@ orbital GraphLayoutOrbital {
               { id: (object/get @n "id"), label: (object/get @n "label"), width: (math/ceil (object/get @n "width")), height: (math/ceil (object/get @n "height")), rank: @r,
                 x: (+ @config.padding (* (array/len @acc) @config.nodeGap) (array/reduce @acc 0 (fn (sum p) (+ @sum @p.width)))), y: (default (array/nth @entity.rankTops @r) 0) }))))))))
 
-        (set @entity.bodyWidth (array/reduce @entity.placed @config.padding (fn (m n) (math/max @m (+ @n.x @n.width)))))
+        (set @entity.bodyWidth (math/max
+          (array/reduce @entity.placed @config.padding (fn (m n) (math/max @m (+ @n.x @n.width))))
+          (array/reduce (array/filter @entity.edges (fn e (array/includes @entity.direct @e.id))) 0 (fn (m e) (math/max @m (+ @config.padding (math/ceil @e.labelWidth)))))))
         (set @entity.height (+ @config.padding (array/reduce @entity.edges 0 (fn (m e) (math/max @m (math/ceil @e.labelHeight)))) (if (= (array/len @entity.outChannels) 0) 0 (array/last @entity.outChannels)) (array/reduce @entity.placed @config.padding (fn (m n) (math/max @m (+ @n.y @n.height))))))
-        (set @entity.width (+ @entity.bodyWidth @config.padding (* (+ (array/len @entity.edges) 1) @entity.laneStep)))
+        (set @entity.width (+ @entity.bodyWidth @config.padding (* (+ (array/len @entity.laneEdges) 1) @entity.laneStep)))
         (emit LAYOUT_ROUTE { })
 
       LAYOUT_ROUTE -> ready
@@ -122,16 +137,29 @@ orbital GraphLayoutOrbital {
                   (s (array/find @entity.placed (fn n (= @n.id @e.source))))
                   (t (array/find @entity.placed (fn n (= @n.id @e.target)))))
               (if (or (= @s null) (= @t null)) @acc
-                (let ((lane (+ @entity.bodyWidth (* (+ @i 1) @entity.laneStep)))
+                (let ((before (array/filter (array/take @entity.edges @i) (fn p (not (array/includes @entity.direct @p.id)))))
+                      (lw (math/ceil @e.labelWidth))
+                      (lh (math/ceil @e.labelHeight))
                       (sx (+ (object/get @s "x") (math/floor (/ (object/get @s "width") 2))))
                       (tx (+ (object/get @t "x") (math/floor (/ (object/get @t "width") 2))))
-                      (sy (+ (default (let ((nxi (object/get @s "rank"))) (if (>= @nxi 0) (array/nth @entity.rankTops @nxi) null)) 0) (default (let ((nxi (object/get @s "rank"))) (if (>= @nxi 0) (array/nth @entity.rankHeights @nxi) null)) 0) (* (+ 1 (array/len (array/filter (array/take @entity.edges @i) (fn p (= (object/get @entity.ranks @p.source) (object/get @s "rank")))))) @entity.channelStep)))
-                      (ty (- (object/get @t "y") (* (+ 1 (array/len (array/filter (array/take @entity.edges @i) (fn p (= (object/get @entity.ranks @p.target) (object/get @t "rank")))))) @entity.channelStep))))
-                  (array/append @acc
-                    { id: @e.id, source: @e.source, target: @e.target, label: @e.label, labelWidth: (math/ceil @e.labelWidth), labelHeight: (math/ceil @e.labelHeight),
-                      points: [{ x: @sx, y: (+ (object/get @s "y") (object/get @s "height")) }, { x: @sx, y: @sy }, { x: @lane, y: @sy }, { x: @lane, y: @ty }, { x: @tx, y: @ty }, { x: @tx, y: (object/get @t "y") }],
-                      labelX: (+ @lane @config.edgeGap), labelY: @sy,
-                      reversed: (array/some @entity.directed (fn d (and (= @d.id @e.id) @d.reversed))) }))))))))
+                      (srank (object/get @s "rank")))
+                  (if (array/includes @entity.direct @e.id)
+                    (let ((bandTop (+ (default (array/nth @entity.rankTops @srank) 0) (default (array/nth @entity.rankHeights @srank) 0) (default (array/nth @entity.outChannels @srank) 0))))
+                      (let ((midY (+ @bandTop @config.edgeGap (math/floor (/ @lh 2)))))
+                        (array/append @acc
+                          { id: @e.id, source: @e.source, target: @e.target, label: @e.label, labelWidth: @lw, labelHeight: @lh,
+                            points: [{ x: @sx, y: (+ (object/get @s "y") (object/get @s "height")) }, { x: @sx, y: @midY }, { x: @tx, y: @midY }, { x: @tx, y: (object/get @t "y") }],
+                            labelX: (math/max 0 (math/min (- @entity.bodyWidth @lw) (math/floor (- (/ (+ @sx @tx) 2) (/ @lw 2))))), labelY: (+ @bandTop @config.edgeGap),
+                            reversed: false })))
+                    (let ((lane (+ @entity.bodyWidth (* (+ (array/len @before) 1) @entity.laneStep)))
+                          (sy (+ (default (if (>= @srank 0) (array/nth @entity.rankTops @srank) null) 0) (default (if (>= @srank 0) (array/nth @entity.rankHeights @srank) null) 0) (* (+ 1 (array/len (array/filter @before (fn p (= (object/get @entity.ranks @p.source) @srank))))) @entity.channelStep)))
+                          (ty (- (object/get @t "y") (* (+ 1 (array/len (array/filter @before (fn p (= (object/get @entity.ranks @p.target) (object/get @t "rank")))))) @entity.channelStep))))
+                      (array/append @acc
+                        { id: @e.id, source: @e.source, target: @e.target, label: @e.label, labelWidth: @lw, labelHeight: @lh,
+                          points: [{ x: @sx, y: (+ (object/get @s "y") (object/get @s "height")) }, { x: @sx, y: @sy }, { x: @lane, y: @sy }, { x: @lane, y: @ty }, { x: @tx, y: @ty }, { x: @tx, y: (object/get @t "y") }],
+                          labelX: (if (= @config.routing "direct") (- @lane (math/floor (/ @lw 2))) (+ @lane @config.edgeGap)),
+                          labelY: (if (= @config.routing "direct") (math/max 0 (math/min (- @entity.height @lh) (math/floor (- (/ (+ @sy @ty) 2) (/ @lh 2))))) @sy),
+                          reversed: (array/some @entity.directed (fn d (and (= @d.id @e.id) @d.reversed))) }))))))))))
         (emit LAYOUT_TRANSFORM { })
 
       LAYOUT_TRANSFORM -> ready
@@ -155,6 +183,10 @@ orbital GraphLayoutOrbital {
       edgeGap : number = 2
       padding : number = 2
       crossingSweeps : number = 4
+      routing : "lanes" | "direct" = lanes
+        @description "lanes routes every edge through its own exterior lane with its label beside the lane; direct sends the first adjacent forward edge of each rank straight across a band below that rank with its label on the band, and every other edge through a lane with its label centred on the lane."
+      portGap : number = 1
+        @description "With direct routing, the step between edge stubs in a rank's channels."
     }
 
     listens {

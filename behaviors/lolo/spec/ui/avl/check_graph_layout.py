@@ -19,17 +19,17 @@ def edge(key, source, target, width=8, height=1):
             "label": key, "labelWidth": width, "labelHeight": height}
 
 
-def execute(nodes, edges, direction="down"):
+def execute(nodes, edges, direction="down", routing="lanes"):
     with tempfile.TemporaryDirectory(prefix="graph-layout-") as directory:
         fixture = Path(directory) / "direction.lolo"
         fixture.write_text(
             'app layout-direction-check [version: "1.0.0", description: "Native layout direction fixture"]\n'
             'uses Layout from "std/behaviors/std-graph-layout"\n'
             'orbital Fixture = Layout.orbitals.GraphLayoutOrbital {\n'
-            '  traits { GraphLayout { config { direction: ' + direction + ' } } }\n}\n')
+            '  traits { GraphLayout { config { direction: ' + direction + ', routing: ' + routing + ' } } }\n}\n')
         result = subprocess.run(
             [ORB, "execute", str(fixture), "--trait", "FixtureGraphLayout", "--event", "LAYOUT_REQUEST",
-             "--payload", json.dumps({"nodes": nodes, "edges": edges}), "--cascade", "--json"],
+             "--payload", json.dumps({"nodes": nodes, "edges": edges}), "--cascade"],
             cwd=ROOT, capture_output=True, text=True, check=True)
     report = json.loads(result.stdout)
     assert report["success"], report
@@ -45,11 +45,11 @@ def overlaps(a, b):
     return (a[0] < b[2] and b[0] < a[2] and a[1] < b[3] and b[1] < a[3])
 
 
-def check(name, nodes, edges, direction="down"):
-    answer = execute(nodes, edges, direction)
+def check(name, nodes, edges, direction="down", routing="lanes"):
+    answer = execute(nodes, edges, direction, routing)
     assert answer["event"] == "LAYOUT_READY", answer
     layout = answer["payload"]
-    assert layout == execute(nodes, edges, direction)["payload"], "non-deterministic layout"
+    assert layout == execute(nodes, edges, direction, routing)["payload"], "non-deterministic layout"
     assert {n["id"] for n in layout["nodes"]} == {n["id"] for n in nodes}
     assert [e["id"] for e in layout["edges"]] == [e["id"] for e in edges]
     boxes = [(n["x"], n["y"], n["x"] + n["width"], n["y"] + n["height"])
@@ -97,7 +97,12 @@ def check(name, nodes, edges, direction="down"):
         if source["id"] != target["id"]:
             assert ((source["rank"] > target["rank"]) if route["reversed"]
                     else (source["rank"] < target["rank"])), route
-    print(f"PASS {name} ({direction}): {len(nodes)} nodes, {len(edges)} edges", flush=True)
+    print(f"PASS {name} ({direction}, {routing}): {len(nodes)} nodes, {len(edges)} edges", flush=True)
+    return layout
+
+
+def direct_ids(layout):
+    return [e["id"] for e in layout["edges"] if len(e["points"]) == 4]
 
 
 check("empty", [], [])
@@ -118,6 +123,32 @@ for direction in ("up", "right", "left"):
            edge("ca", "c", "a"), edge("bb", "b", "b", 22, 4)], direction)
     check("direction-fractional-metrics", [node("a", 5.2, 2.2), node("b", 7.3, 3.1)],
           [edge("ab", "a", "b", 5.5, 1.1)], direction)
+for direction in ("down", "up", "right", "left"):
+    check("direct-cycle-parallel-self-long-label",
+          [node("a", 9, 3), node("b", 27, 8), node("c", 13, 3), node("isolated", 17, 4)],
+          [edge("ab", "a", "b"), edge("ab2", "a", "b", 45, 3), edge("bc", "b", "c"),
+           edge("ca", "c", "a"), edge("bb", "b", "b", 22, 4)], direction, "direct")
+    check("direct-diamond-long-edge", [node("root"), node("left"), node("right"), node("sink")],
+          [edge("rl", "root", "left"), edge("rr", "root", "right"), edge("ls", "left", "sink"),
+           edge("rs", "right", "sink"), edge("direct", "root", "sink")], direction, "direct")
+chain = check("direct-chain-crosses-each-band-straight", [node("a"), node("b"), node("c")],
+              [edge("ab", "a", "b"), edge("bc", "b", "c"), edge("ca", "c", "a"), edge("aa", "a", "a")], "down", "direct")
+assert direct_ids(chain) == ["ab", "bc"], chain
+lanes = [e for e in chain["edges"] if e["id"] in ("ca", "aa")]
+body = max(n["x"] + n["width"] for n in chain["nodes"])
+for e in lanes:
+    lane = e["points"][2]["x"]
+    assert lane > body and e["labelX"] < lane < e["labelX"] + e["labelWidth"], e
+assert lanes[0]["points"][2]["x"] < lanes[1]["points"][2]["x"], lanes
+print("PASS direct: adjacent forward edges cross their band, the rest ride lanes with their label on the lane", flush=True)
+first = check("direct-one-band-edge-per-rank", [node("a"), node("b"), node("c")],
+              [edge("ab", "a", "b"), edge("ac", "a", "c"), edge("ab2", "a", "b")], "down", "direct")
+assert direct_ids(first) == ["ab"], first
+print("PASS direct: only the first adjacent forward edge of a rank crosses its band", flush=True)
+control = check("control-lanes-route-every-edge-through-a-lane", [node("a"), node("b"), node("c")],
+                [edge("ab", "a", "b"), edge("bc", "b", "c"), edge("ca", "c", "a"), edge("aa", "a", "a")], "down", "lanes")
+assert direct_ids(control) == [], control
+print("PASS control: lanes routing keeps every edge on a lane", flush=True)
 for forward, reverse, axis, extent, size in [
         ("down", "up", "y", "height", "height"),
         ("right", "left", "x", "width", "width")]:

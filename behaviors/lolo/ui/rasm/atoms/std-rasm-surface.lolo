@@ -25,8 +25,9 @@ orbital RasmSurfaceOrbital {
     paints : Map string RasmPaintEntry @description "Every control's latest paint by control id." = {}
     looks : Map string RasmLook @description "The announced look table." = {}
     viewW : number @description "The canvas width the layout uses: the config width, then the container's width." = 720
-    viewH : number @description "The canvas height: the root's content height plus the margins, or the container's height when fill is on." = 520
+    viewH : number @description "The canvas height: the root's content height plus the margins, or with fill on the largest of the container's height, minHeight and the root's content height, as the canvas itself grows." = 520
     fillMin : number @description "With fill on, the root's content height: the canvas stays at least this tall, so the page scrolls instead of squeezing the content." = 0
+    containerH : number @description "With fill on, the container height the last RASM_RESIZE reported." = 0
     contentH : number @description "The root's content height: the rootRect height until the root reports its extent." = 520
     root : RasmRect @description "The rect handed to the root child." = { x: 0, y: 0, w: 720, h: 520 }
     dir : "ltr" | "rtl" @description "The reading direction the canvas reported from the page locale." = "ltr"
@@ -44,37 +45,39 @@ orbital RasmSurfaceOrbital {
         (set @entity.root @config.rootRect)
         (set @entity.contentH @config.rootRect.h)
         (emit RASM_BOOT { })
-        (emit RASM_PLACE { placed: [{ id: @config.rootChild, rect: @entity.root }] })
+        (emit RASM_PLACE { n: @entity.repaints, placed: [{ id: @config.rootChild, rect: @entity.root }] })
         (set @entity.repaints (+ @entity.repaints 1))
         (emit SURFACE_REPAINT { n: @entity.repaints })
       RASM_THEME -> ready
         (set @entity.looks ?looks)
-        (emit RASM_PLACE { placed: [{ id: @config.rootChild, rect: @entity.root }] })
+        (emit RASM_PLACE { n: @entity.repaints, placed: [{ id: @config.rootChild, rect: @entity.root }] })
         (set @entity.repaints (+ @entity.repaints 1))
         (emit SURFACE_REPAINT { n: @entity.repaints })
       RASM_RESIZE -> ready when @config.fill
         (set @entity.viewW ?width)
-        (set @entity.viewH ?height)
+        (set @entity.containerH ?height)
+        (set @entity.viewH (math/max ?height @config.minHeight @entity.fillMin))
         (set @entity.root (let ((w (math/max 0 (- ?width (* 2 @config.margin)))) (h (math/max 0 (- ?height (* 2 @config.margin))))) (if (= @config.align "center") { x: (/ (- ?width (math/min @config.rootRect.w @w)) 2), y: (/ (- ?height (math/min @config.rootRect.h @h)) 2), w: (math/min @config.rootRect.w @w), h: (math/min @config.rootRect.h @h) } { x: @config.margin, y: @config.margin, w: @w, h: @h })))
-        (emit RASM_PLACE { placed: [{ id: @config.rootChild, rect: @entity.root }] })
+        (emit RASM_PLACE { n: @entity.repaints, placed: [{ id: @config.rootChild, rect: @entity.root }] })
         (set @entity.repaints (+ @entity.repaints 1))
         (emit SURFACE_REPAINT { n: @entity.repaints })
       RASM_RESIZE -> ready when (not @config.fill)
         (set @entity.viewW ?width)
         (set @entity.viewH (+ @entity.contentH (* 2 @config.margin)))
         (set @entity.root (let ((w (math/max 0 (- ?width (* 2 @config.margin))))) (let ((rw (if (= @config.align "center") (math/min @config.rootRect.w @w) @w))) { x: (if (= @config.align "center") (/ (- ?width @rw) 2) @config.margin), y: @config.margin, w: @rw, h: @entity.contentH })))
-        (emit RASM_PLACE { placed: [{ id: @config.rootChild, rect: @entity.root }] })
+        (emit RASM_PLACE { n: @entity.repaints, placed: [{ id: @config.rootChild, rect: @entity.root }] })
         (set @entity.repaints (+ @entity.repaints 1))
         (emit SURFACE_REPAINT { n: @entity.repaints })
       RASM_EXTENT -> ready when (and (not @config.fill) (= ?id @config.rootChild) (!= ?h @entity.contentH))
         (set @entity.contentH ?h)
         (set @entity.viewH (+ ?h (* 2 @config.margin)))
         (set @entity.root { x: @entity.root.x, y: @entity.root.y, w: @entity.root.w, h: ?h })
-        (emit RASM_PLACE { placed: [{ id: @config.rootChild, rect: @entity.root }] })
+        (emit RASM_PLACE { n: @entity.repaints, placed: [{ id: @config.rootChild, rect: @entity.root }] })
         (set @entity.repaints (+ @entity.repaints 1))
         (emit SURFACE_REPAINT { n: @entity.repaints })
       RASM_EXTENT -> ready when (and @config.fill (= ?id @config.rootChild) (> (math/abs (- ?h @entity.fillMin)) 1))
         (set @entity.fillMin ?h)
+        (set @entity.viewH (math/max @entity.containerH @config.minHeight ?h))
         (set @entity.repaints (+ @entity.repaints 1))
         (emit SURFACE_REPAINT { n: @entity.repaints })
       RASM_EXTENT -> ready when (not (or (and (not @config.fill) (= ?id @config.rootChild) (!= ?h @entity.contentH)) (and @config.fill (= ?id @config.rootChild) (> (math/abs (- ?h @entity.fillMin)) 1))))
@@ -97,14 +100,10 @@ orbital RasmSurfaceOrbital {
         (emit SURFACE_REPAINT { n: @entity.repaints })
       SURFACE_WHEEL -> ready
         (emit RASM_WHEEL { target: ?target, x: ?x, y: ?y, dx: ?dx, dy: ?dy })
-      RASM_PAINT -> ready
+      RASM_PAINT -> dirty
         (set @entity.paints (object/set @entity.paints ?id { id: ?id, z: ?z, nodes: ?nodes, texts: (default ?texts []) }))
-        (set @entity.repaints (+ @entity.repaints 1))
-        (emit SURFACE_REPAINT { n: @entity.repaints })
-      RASM_VISIBLE -> ready
+      RASM_VISIBLE -> dirty
         (set @entity.hidden (array/concat (array/filter @entity.hidden (fn h (not (array/includes ?shown @h)))) (array/filter ?hidden (fn h (not (array/includes @entity.hidden @h))))))
-        (set @entity.repaints (+ @entity.repaints 1))
-        (emit SURFACE_REPAINT { n: @entity.repaints })
       SURFACE_REPAINT -> ready
         (render-ui main {
           type: canvas
@@ -170,6 +169,143 @@ orbital RasmSurfaceOrbital {
         (emit RASM_KEY { key: "end" })
     }
 
+    state dirty {
+      INIT -> dirty
+        (set @entity.viewW @config.width)
+        (set @entity.viewH @config.height)
+        (set @entity.root @config.rootRect)
+        (set @entity.contentH @config.rootRect.h)
+        (emit RASM_BOOT { })
+        (emit RASM_PLACE { n: @entity.repaints, placed: [{ id: @config.rootChild, rect: @entity.root }] })
+        (set @entity.repaints (+ @entity.repaints 1))
+        (emit SURFACE_REPAINT { n: @entity.repaints })
+      RASM_THEME -> dirty
+        (set @entity.looks ?looks)
+        (emit RASM_PLACE { n: @entity.repaints, placed: [{ id: @config.rootChild, rect: @entity.root }] })
+        (set @entity.repaints (+ @entity.repaints 1))
+        (emit SURFACE_REPAINT { n: @entity.repaints })
+      RASM_RESIZE -> dirty when @config.fill
+        (set @entity.viewW ?width)
+        (set @entity.containerH ?height)
+        (set @entity.viewH (math/max ?height @config.minHeight @entity.fillMin))
+        (set @entity.root (let ((w (math/max 0 (- ?width (* 2 @config.margin)))) (h (math/max 0 (- ?height (* 2 @config.margin))))) (if (= @config.align "center") { x: (/ (- ?width (math/min @config.rootRect.w @w)) 2), y: (/ (- ?height (math/min @config.rootRect.h @h)) 2), w: (math/min @config.rootRect.w @w), h: (math/min @config.rootRect.h @h) } { x: @config.margin, y: @config.margin, w: @w, h: @h })))
+        (emit RASM_PLACE { n: @entity.repaints, placed: [{ id: @config.rootChild, rect: @entity.root }] })
+        (set @entity.repaints (+ @entity.repaints 1))
+        (emit SURFACE_REPAINT { n: @entity.repaints })
+      RASM_RESIZE -> dirty when (not @config.fill)
+        (set @entity.viewW ?width)
+        (set @entity.viewH (+ @entity.contentH (* 2 @config.margin)))
+        (set @entity.root (let ((w (math/max 0 (- ?width (* 2 @config.margin))))) (let ((rw (if (= @config.align "center") (math/min @config.rootRect.w @w) @w))) { x: (if (= @config.align "center") (/ (- ?width @rw) 2) @config.margin), y: @config.margin, w: @rw, h: @entity.contentH })))
+        (emit RASM_PLACE { n: @entity.repaints, placed: [{ id: @config.rootChild, rect: @entity.root }] })
+        (set @entity.repaints (+ @entity.repaints 1))
+        (emit SURFACE_REPAINT { n: @entity.repaints })
+      RASM_EXTENT -> dirty when (and (not @config.fill) (= ?id @config.rootChild) (!= ?h @entity.contentH))
+        (set @entity.contentH ?h)
+        (set @entity.viewH (+ ?h (* 2 @config.margin)))
+        (set @entity.root { x: @entity.root.x, y: @entity.root.y, w: @entity.root.w, h: ?h })
+        (emit RASM_PLACE { n: @entity.repaints, placed: [{ id: @config.rootChild, rect: @entity.root }] })
+        (set @entity.repaints (+ @entity.repaints 1))
+        (emit SURFACE_REPAINT { n: @entity.repaints })
+      RASM_EXTENT -> dirty when (and @config.fill (= ?id @config.rootChild) (> (math/abs (- ?h @entity.fillMin)) 1))
+        (set @entity.fillMin ?h)
+        (set @entity.viewH (math/max @entity.containerH @config.minHeight ?h))
+        (set @entity.repaints (+ @entity.repaints 1))
+        (emit SURFACE_REPAINT { n: @entity.repaints })
+      RASM_EXTENT -> dirty when (not (or (and (not @config.fill) (= ?id @config.rootChild) (!= ?h @entity.contentH)) (and @config.fill (= ?id @config.rootChild) (> (math/abs (- ?h @entity.fillMin)) 1))))
+      SURFACE_RESIZE -> dirty
+        (emit RASM_RESIZE { width: ?width, height: ?height })
+      SURFACE_TEXT -> dirty
+        (emit RASM_TEXT { target: ?target, text: ?text, composing: ?composing })
+      SURFACE_KEY -> dirty when (and (= ?key "Tab") (not ?shift))
+        (emit RASM_KEY { key: "next" })
+      SURFACE_KEY -> dirty when (and (= ?key "Tab") ?shift)
+        (emit RASM_KEY { key: "previous" })
+      SURFACE_KEY -> dirty when (!= ?key "Tab")
+        (emit RASM_KEYPRESS { target: ?target, key: ?key, shift: ?shift, alt: ?alt, ctrl: ?ctrl, meta: ?meta })
+      SURFACE_ACCESS -> dirty
+        (emit RASM_ACCESS { target: ?target, action: ?action })
+      SURFACE_DIRECTION -> dirty
+        (set @entity.dir ?direction)
+        (emit RASM_DIRECTION { direction: ?direction })
+        (set @entity.repaints (+ @entity.repaints 1))
+        (emit SURFACE_REPAINT { n: @entity.repaints })
+      SURFACE_WHEEL -> dirty
+        (emit RASM_WHEEL { target: ?target, x: ?x, y: ?y, dx: ?dx, dy: ?dy })
+      RASM_PAINT -> dirty
+        (set @entity.paints (object/set @entity.paints ?id { id: ?id, z: ?z, nodes: ?nodes, texts: (default ?texts []) }))
+      RASM_VISIBLE -> dirty
+        (set @entity.hidden (array/concat (array/filter @entity.hidden (fn h (not (array/includes ?shown @h)))) (array/filter ?hidden (fn h (not (array/includes @entity.hidden @h))))))
+      SURFACE_REPAINT -> ready
+        (render-ui main {
+          type: canvas
+          mode: "2d"
+          projection: "free"
+          painter: "orbital"
+          camera: { mode: "top-down", zoom: 1 }
+          pointerMoves: "captured"
+          fillContainer: (if @config.fill true "width")
+          minHeight: (math/max @config.minHeight @entity.fillMin)
+          worldWidth: @entity.viewW
+          worldHeight: @entity.viewH
+          resizeEvent: "SURFACE_RESIZE"
+          textInputEvent: "SURFACE_TEXT"
+          keyEvent: "SURFACE_KEY"
+          accessEvent: "SURFACE_ACCESS"
+          wheelEvent: "SURFACE_WHEEL"
+          direction: (i18n/direction)
+          directionEvent: "SURFACE_DIRECTION"
+          pointerDownEvent: "POINTER_DOWN"
+          pointerUpEvent: "POINTER_UP"
+          pointerEnterEvent: "POINTER_ENTER"
+          pointerLeaveEvent: "POINTER_LEAVE"
+          pointerMoveEvent: "POINTER_MOVE"
+          measureEvent: "SURFACE_MEASURED"
+          keyMap: { Tab: "KEY_NEXT", "Shift+Tab": "KEY_PREVIOUS", Enter: "KEY_ACTIVATE", Space: "KEY_ACTIVATE", ArrowRight: (if (= @entity.dir "rtl") "KEY_DECREASE" "KEY_INCREASE"), ArrowUp: "KEY_INCREASE", ArrowLeft: (if (= @entity.dir "rtl") "KEY_INCREASE" "KEY_DECREASE"), ArrowDown: "KEY_DECREASE", Escape: "KEY_ESCAPE", PageUp: "KEY_PAGE_UP", PageDown: "KEY_PAGE_DOWN", Home: "KEY_HOME", End: "KEY_END" }
+          drawables: (let ((g (object/get @entity.looks "surface/ground/idle" null))) (array/concat (if (= @g null) [] [{ type: draw-shape, shape: "rect", id: (str/concat @config.id ":ground"), position: { x: 0, y: 0 }, anchor: "top-left", width: @entity.viewW, height: @entity.viewH, fill: @g.fill, material: @g.material, spring: @g.spring, hit: false }]) (array/flatten (array/map (array/filter (array/sort (object/values @entity.paints) "z" "asc") (fn e (not (array/includes @entity.hidden @e.id)))) (fn e (array/concat @e.nodes (array/map @e.texts (fn t (let ((said (default (if (= @t.locale null) (i18n/t @t.key) (i18n/t @t.key { locale: (default @t.locale "") })) ""))) { type: draw-text, id: @t.id, text: @said, anchor: "top-left", position: { x: @t.x, y: @t.y, z: @t.z }, align: @t.align, baseline: @t.baseline, color: @t.color, font: @t.font, spring: @t.spring, width: @t.width, wrap: @t.wrap, measure: @t.measure, animation: @t.animation, reveal: @t.reveal, maxWidth: @t.maxWidth, hit: false, semantic: (if (= @t.role null) null { role: @t.role, name: @said }) })))))))))
+        })
+      POINTER_DOWN -> dirty
+        (emit RASM_POINTER { kind: "down", id: ?target, x: ?x, y: ?y, index: (default ?index -1) })
+        (when (> (array/len (default ?touches [])) 0) (emit RASM_TOUCHES { kind: "down", id: ?target, touches: ?touches }))
+      POINTER_UP -> dirty
+        (emit RASM_POINTER { kind: "up", id: ?target, x: ?x, y: ?y })
+        (when (> (array/len (default ?touches [])) 0) (emit RASM_TOUCHES { kind: "up", id: ?target, touches: ?touches }))
+      POINTER_ENTER -> dirty
+        (emit RASM_POINTER { kind: "enter", id: ?target, x: ?x, y: ?y })
+      POINTER_LEAVE -> dirty
+        (emit RASM_POINTER { kind: "leave", id: ?target, x: ?x, y: ?y })
+      POINTER_MOVE -> dirty
+        (emit RASM_POINTER { kind: "move", id: ?target, x: ?x, y: ?y })
+        (when (> (array/len (default ?touches [])) 0) (emit RASM_TOUCHES { kind: "move", id: ?target, touches: ?touches }))
+      SURFACE_MEASURED -> dirty
+        (emit RASM_MEASURED { items: ?items })
+      KEY_NEXT -> dirty
+        (emit RASM_KEY { key: "next" })
+      KEY_PREVIOUS -> dirty
+        (emit RASM_KEY { key: "previous" })
+      KEY_ACTIVATE -> dirty
+        (emit RASM_KEY { key: "activate" })
+      KEY_INCREASE -> dirty
+        (emit RASM_KEY { key: "increase" })
+      KEY_DECREASE -> dirty
+        (emit RASM_KEY { key: "decrease" })
+      KEY_ESCAPE -> dirty
+        (emit RASM_KEY { key: "escape" })
+      KEY_PAGE_UP -> dirty
+        (emit RASM_KEY { key: "pageUp" })
+      KEY_PAGE_DOWN -> dirty
+        (emit RASM_KEY { key: "pageDown" })
+      KEY_HOME -> dirty
+        (emit RASM_KEY { key: "home" })
+      KEY_END -> dirty
+        (emit RASM_KEY { key: "end" })
+    }
+
+    ticks {
+      flush every "frame" in dirty
+        (set @entity.repaints (+ @entity.repaints 1))
+        (emit SURFACE_REPAINT { n: @entity.repaints })
+    }
+
     emits {
       RASM_BOOT -> external { }
         @description "The surface mounted: the theme and the entry choreography start from it."
@@ -180,6 +316,7 @@ orbital RasmSurfaceOrbital {
         @description "Repaint the canvas from the collected paints."
         @tier "internal"
       RASM_PLACE -> external {
+        n : number!
         placed : [RasmPlaced]!
       }
         @description "The root rect for the layout tree."
@@ -258,13 +395,13 @@ orbital RasmSurfaceOrbital {
     listens {
       RASM_THEME { name : string!  looks : Map string RasmLook! }
         @description "Store the looks, paint the ground and place the root."
-      RASM_PAINT { id : string!  z : number!  nodes : [node]!  texts : [RasmText] }
+      RASM_PAINT { id : string!  z : number!  nodes : [node]!  texts : [RasmText]  n : number }
         @description "Keep one control's nodes and its catalog-keyed texts at its z and repaint; each text is painted in the active locale."
       RASM_VISIBLE { owner : string!  shown : [string]!  hidden : [string]! }
         @description "Stop drawing the paints of the hidden ids and draw the shown ids again; the paints are kept."
       RASM_RESIZE { width : number!  height : number! }
         @description "Re-place the root from the new size."
-      RASM_EXTENT { id : string!  w : number!  h : number! }
+      RASM_EXTENT { id : string!  w : number!  h : number!  n : number }
         @description "The root's content size: unless fill is on, the canvas height follows it so the page scrolls past a long surface; with fill on, the canvas is at least that tall."
       SURFACE_RESIZE { width : number!  height : number! }
         @description "Canvas size in CSS pixels."

@@ -39,7 +39,7 @@ orbital RasmMirrorOrbital {
       MIRROR_PAINT -> ready
         (let ((r @entity.rect) (look (default (object/get @entity.looks (str/concat "mirror/" @config.intent "/idle") null) {})))
           (when (!= @r null)
-            (emit RASM_PAINT { id: @config.id, z: @config.z, texts: [], nodes: [{ type: draw-shape, id: (str/concat @config.id ":body"), shape: rect, anchor: "top-left", position: { x: @r.x, y: @r.y, z: @config.z }, width: @r.w, height: @r.h, fill: @look.fill, stroke: @look.stroke, strokeWidth: @look.strokeWidth, corners: @look.corners, shadow: @look.shadow, material: @look.material, spring: @look.spring }, { type: draw-group, id: (str/concat @config.id ":source"), position: { x: @r.x, y: @r.y, z: @config.z }, target: { id: (str/concat @config.id ":target"), width: @config.sourceWidth, height: @config.sourceHeight }, items: @config.source }, { type: draw-sprite, id: @config.id, texture: (str/concat "target:" @config.id ":target"), anchor: "top-left", position: { x: (+ @r.x @config.inset), y: (+ @r.y @config.inset), z: (+ @config.z 1) }, width: (- @r.w (* 2 @config.inset)), height: (- @r.h (* 2 @config.inset)), flipX: @config.flip, opacity: @config.opacity }] })))
+            (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z, texts: [], nodes: [{ type: draw-shape, id: (str/concat @config.id ":body"), shape: rect, anchor: "top-left", position: { x: @r.x, y: @r.y, z: @config.z }, width: @r.w, height: @r.h, fill: @look.fill, stroke: @look.stroke, strokeWidth: @look.strokeWidth, corners: @look.corners, shadow: @look.shadow, material: @look.material, spring: @look.spring }, { type: draw-group, id: (str/concat @config.id ":source"), position: { x: @r.x, y: @r.y, z: @config.z }, target: { id: (str/concat @config.id ":target"), width: @config.sourceWidth, height: @config.sourceHeight }, items: @config.source }, { type: draw-sprite, id: @config.id, texture: (str/concat "target:" @config.id ":target"), anchor: "top-left", position: { x: (+ @r.x @config.inset), y: (+ @r.y @config.inset), z: (+ @config.z 1) }, width: (- @r.w (* 2 @config.inset)), height: (- @r.h (* 2 @config.inset)), flipX: @config.flip, opacity: @config.opacity }] })))
     }
 
     emits {
@@ -49,6 +49,7 @@ orbital RasmMirrorOrbital {
         @description "Repaint from the stored rect and look."
         @tier "internal"
       RASM_PAINT -> external {
+        n : number!
         id : string!
         z : number!
         nodes : [node]!
@@ -61,7 +62,7 @@ orbital RasmMirrorOrbital {
     listens {
       RASM_THEME { name : string!  looks : Map string RasmLook! }
         @description "Store the looks and repaint."
-      RASM_PLACE { placed : [RasmPlaced]! }
+      RASM_PLACE { placed : [RasmPlaced]!  n : number }
         @description "Take this mirror's rect when it is placed and repaint."
     }
 

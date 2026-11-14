@@ -77,7 +77,7 @@ orbital RasmScrollOrbital {
       SCROLL_LAYOUT -> ready when @entity.hasRect
         (let ((out (let ((r @entity.rect) (vert (= @config.axis "vertical")) (rtl (= (if @entity.announced @entity.dir @config.direction) "rtl")) (off @entity.offset) (bar @config.barSize)) (let ((vp (if (= @config.axis "vertical") @entity.rect.h @entity.rect.w)) (laid (let ((acc (array/reduce @config.items { at: 0, out: [] } (fn a it { at: (+ (+ @a.at @it.size) @config.gap), out: (array/append @a.out { id: @it.id, pos: @a.at, size: @it.size }) })))) @acc.out))) (let ((inside (array/filter @laid (fn it (if (= @config.edge "whole") (and (>= @it.pos @off) (<= (+ @it.pos @it.size) (+ @off @vp))) (and (> (+ @it.pos @it.size) @off) (< @it.pos (+ @off @vp))))))) (outside (array/filter @laid (fn it (not (if (= @config.edge "whole") (and (>= @it.pos @off) (<= (+ @it.pos @it.size) (+ @off @vp))) (and (> (+ @it.pos @it.size) @off) (< @it.pos (+ @off @vp))))))))) { placed: (array/map @inside (fn it (if @vert { id: @it.id, rect: { x: (if @rtl (+ @r.x @bar) @r.x), y: (- (+ @r.y @it.pos) @off), w: (- @r.w @bar), h: @it.size } } { id: @it.id, rect: { x: (if @rtl (- (- (+ @r.x @r.w) (- @it.pos @off)) @it.size) (- (+ @r.x @it.pos) @off)), y: @r.y, w: @it.size, h: (- @r.h @bar) } }))), shown: (array/map @inside (fn it @it.id)), hidden: (array/map @outside (fn it @it.id)) })))))
           (do
-            (emit RASM_PLACE { placed: @out.placed })
+            (emit RASM_PLACE { n: ?n, placed: @out.placed })
             (emit RASM_VISIBLE { owner: @config.id, shown: @out.shown, hidden: @out.hidden })
             (set @entity.paints (+ @entity.paints 1))
             (emit SCROLL_PAINT { n: @entity.paints })))
@@ -123,7 +123,7 @@ orbital RasmScrollOrbital {
         (let ((r @entity.rect) (vert (= @config.axis "vertical")) (rtl (= (if @entity.announced @entity.dir @config.direction) "rtl")) (bar @config.barSize) (body (default (object/get @entity.looks (str/concat "scroll/" @config.intent "/body") null) {})) (track (default (object/get @entity.looks (str/concat "scroll/" @config.intent "/track") null) {})) (thumb (default (object/get @entity.looks (str/concat "scroll/" @config.intent (if @entity.dragging "/thumb-dragging" "/thumb")) null) {})) (overflow (and (> @entity.maxOffset 0) (> @config.barSize 0))))
           (let ((vp (if (= @config.axis "vertical") @entity.rect.h @entity.rect.w)) (tx (if @vert (if @rtl @r.x (- (+ @r.x @r.w) @bar)) @r.x)) (ty (if @vert @r.y (- (+ @r.y @r.h) @bar))))
             (let ((p (if (> @entity.maxOffset 0) (* (/ @entity.offset @entity.maxOffset) (- @vp @entity.thumbLen)) 0)))
-              (emit RASM_PAINT { id: @config.id, z: @config.z, nodes: (array/concat [{ type: draw-shape, shape: "rect", id: @config.id, position: { x: @r.x, y: @r.y }, anchor: "top-left", width: @r.w, height: @r.h, fill: @body.fill, backdrop: @body.backdrop, stroke: @body.stroke, strokeWidth: @body.strokeWidth, corners: @body.corners, shadow: @body.shadow, material: @body.material, spring: @body.spring, hit: true, wheel: true, semantic: { role: "group", labelledBy: @config.labelledBy, order: @config.order, focused: @entity.focused } }] (if @overflow [{ type: draw-shape, shape: "rect", id: (str/concat @config.id ":track"), position: { x: @tx, y: @ty }, anchor: "top-left", width: (if @vert @bar @r.w), height: (if @vert @r.h @bar), fill: @track.fill, backdrop: @track.backdrop, corners: @track.corners, spring: @track.spring, hit: false }, { type: draw-shape, shape: "rect", id: (str/concat @config.id ":thumb"), position: { x: (if @vert @tx (if @rtl (- (- (+ @r.x @r.w) @p) @entity.thumbLen) (+ @r.x @p))), y: (if @vert (+ @r.y @p) @ty) }, anchor: "top-left", width: (if @vert @bar @entity.thumbLen), height: (if @vert @entity.thumbLen @bar), fill: @thumb.fill, stroke: @thumb.stroke, strokeWidth: @thumb.strokeWidth, corners: @thumb.corners, shadow: @thumb.shadow, spring: @thumb.spring, hit: true }] [])) }))))
+              (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z, nodes: (array/concat [{ type: draw-shape, shape: "rect", id: @config.id, position: { x: @r.x, y: @r.y }, anchor: "top-left", width: @r.w, height: @r.h, fill: @body.fill, backdrop: @body.backdrop, stroke: @body.stroke, strokeWidth: @body.strokeWidth, corners: @body.corners, shadow: @body.shadow, material: @body.material, spring: @body.spring, hit: true, wheel: true, semantic: { role: "group", labelledBy: @config.labelledBy, order: @config.order, focused: @entity.focused } }] (if @overflow [{ type: draw-shape, shape: "rect", id: (str/concat @config.id ":track"), position: { x: @tx, y: @ty }, anchor: "top-left", width: (if @vert @bar @r.w), height: (if @vert @r.h @bar), fill: @track.fill, backdrop: @track.backdrop, corners: @track.corners, spring: @track.spring, hit: false }, { type: draw-shape, shape: "rect", id: (str/concat @config.id ":thumb"), position: { x: (if @vert @tx (if @rtl (- (- (+ @r.x @r.w) @p) @entity.thumbLen) (+ @r.x @p))), y: (if @vert (+ @r.y @p) @ty) }, anchor: "top-left", width: (if @vert @bar @entity.thumbLen), height: (if @vert @entity.thumbLen @bar), fill: @thumb.fill, stroke: @thumb.stroke, strokeWidth: @thumb.strokeWidth, corners: @thumb.corners, shadow: @thumb.shadow, spring: @thumb.spring, hit: true }] [])) }))))
     }
 
     emits {
@@ -153,11 +153,13 @@ orbital RasmScrollOrbital {
         @description "Repaint the region, the track and the thumb."
         @tier "internal"
       RASM_PLACE -> external {
+        n : number!
         placed : [RasmPlaced]!
       }
         @description "The rects of the items inside the viewport."
         @tier "primary"
       RASM_PAINT -> external {
+        n : number!
         id : string!
         z : number!
         nodes : [node]!
@@ -185,7 +187,7 @@ orbital RasmScrollOrbital {
         @description "The surface's reading direction; once announced it replaces this atom's direction knob and the layout is redone."
       RASM_THEME { name : string!  looks : Map string RasmLook! }
         @description "Store the looks and repaint."
-      RASM_PLACE { placed : [RasmPlaced]! }
+      RASM_PLACE { placed : [RasmPlaced]!  n : number }
         @description "Take this region's viewport rect when it is placed, then place the visible items."
       RASM_POINTER { kind : "down" | "up" | "enter" | "leave" | "move"!  id : string!  x : number!  y : number! }
         @description "A press on the region or the thumb starts a drag; moves under capture scroll; the release ends it."
