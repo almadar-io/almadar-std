@@ -1,14 +1,18 @@
 app std-orb-stats [
   version: "1.0.0",
-  exec: [exe, "orb", "ps"],
+  exec: [exe, "orb"],
+  sys: [processes],
   env: ["PATH", "HOME"],
-  description: "std-orb-stats — what the orb running this program reports about itself. ORB_STATS_ASK reads the kernel's counters with program/inputs { stats: true } (registeredSchemas, registeredTraits, activeInstances, cachedEntities) and answers ORB_KERNEL_READ { registeredSchemas, registeredTraits, activeInstances, cachedEntities }; every ask also reads the uptime of the orb process: os/pid gives the host process id and `ps -o etime= -p <pid>` runs through std-cli (the ps on PATH), its [[dd-]hh:]mm:ss answer is parsed to milliseconds and answered as ORB_UPTIME_READ { uptimeMs }, so the figure is the process's, not the session's or the first ask's; the first ask also runs `orb --version` through std-cli (the orb on PATH) and answers ORB_VERSION_READ { version } with the output trimmed; the version is read once per mount, and every later ask answers ORB_VERSION_READ again with it, so a client that joined later still gets it. A kernel read that the host refuses, a version run that exits non-zero or cannot start, a pid the host cannot give, a ps run that exits non-zero or cannot start, or an elapsed time that is not that format, answers ORB_STATS_FAILED { stat, code, error } (stat kernel, version or process-uptime) and the other stats are still answered. Subject-agnostic: it knows nothing of who asks.",
+  description: "std-orb-stats — what the orb running this program reports about itself. ORB_STATS_ASK reads the kernel's counters with program/inputs { stats: true } (registeredSchemas, registeredTraits, activeInstances, cachedEntities, and heldBytes: the bytes of value data its rows, frames, open guests and arenas hold, EXEC-COST-2) and answers ORB_KERNEL_READ { registeredSchemas, registeredTraits, activeInstances, cachedEntities, heldBytes }; every ask also reads the uptime of the orb process: os/pid gives the host process id, the composed std-process-sample reads that process's start time, and the time since it started is answered as ORB_UPTIME_READ { uptimeMs }, so the figure is the process's, not the session's or the first ask's; the first ask also runs `orb --version` through std-cli (the orb on PATH) and answers ORB_VERSION_READ { version } with the output trimmed; the version is read once per mount, and every later ask answers ORB_VERSION_READ again with it, so a client that joined later still gets it. A kernel read that the host refuses, a version run that exits non-zero or cannot start, a pid the host cannot give, a reading the host refuses, or a process the host lists no process for or will not measure (code missing or unmeasured), answers ORB_STATS_FAILED { stat, code, error } (stat kernel, version or process-uptime) and the other stats are still answered. Subject-agnostic: it knows nothing of who asks.",
   egress: []
 ]
 ;; @capabilities "read the kernel counters, the process uptime and the version of the running orb"
 uses Cli from "std/behaviors/std-cli"
+uses Sample from "std/behaviors/std-process-sample"
 
-type OrbKernelCounters = { registeredSchemas : number!, registeredTraits : number!, activeInstances : number!, cachedEntities : number! }
+type OrbHeldBytes = { rows : number!, frames : number!, guests : number!, arenas : number! }
+type OrbKernelCounters = { registeredSchemas : number!, registeredTraits : number!, activeInstances : number!, cachedEntities : number!, heldBytes : OrbHeldBytes! }
+type OrbProcessMeasured = { pid : number!, rssBytes : number!, cpuSeconds : number!, startedAt : number! }
 type OrbInputsRead = { stats : OrbKernelCounters! }
 
 orbital OrbStatsOrbital {
@@ -16,7 +20,6 @@ orbital OrbStatsOrbital {
     id : string!
     version : string = ""
     versionAsked : boolean = false
-    uptimeSec : number? = null
   }
 
   trait OrbStatsReader -> OrbStatsRun {
@@ -37,23 +40,21 @@ orbital OrbStatsOrbital {
         (program/inputs { stats: true } { emit: { success: ORB_INPUTS, failure: ORB_INPUTS_FAILED } })
         (os/pid { key: "orb", emit: { success: ORB_PID, failure: ORB_PID_FAILED } })
       ORB_INPUTS -> ready
-        (emit ORB_KERNEL_READ { registeredSchemas: ?result.stats.registeredSchemas, registeredTraits: ?result.stats.registeredTraits, activeInstances: ?result.stats.activeInstances, cachedEntities: ?result.stats.cachedEntities })
+        (emit ORB_KERNEL_READ { registeredSchemas: ?result.stats.registeredSchemas, registeredTraits: ?result.stats.registeredTraits, activeInstances: ?result.stats.activeInstances, cachedEntities: ?result.stats.cachedEntities, heldBytes: ?result.stats.heldBytes })
       ORB_INPUTS_FAILED -> ready
         (emit ORB_STATS_FAILED { stat: "kernel", code: "inputs_refused", error: ?error })
       ORB_PID -> ready
-        (emit ORB_UPTIME_RUN { stage: "uptime", argv: ["-o", "etime=", "-p", (str/concat ?pid)] })
+        (emit ORB_PROCESS_SAMPLE { key: "orb", pids: [?pid] })
       ORB_PID_FAILED -> ready
         (emit ORB_STATS_FAILED { stat: "process-uptime", code: ?kind, error: ?error })
-      ORB_UPTIME_DONE -> ready when (!= ?exitCode 0)
-        (emit ORB_STATS_FAILED { stat: "process-uptime", code: "ps_exit", error: (str/concat "ps exited with code " ?exitCode ": " ?stderr) })
-      ORB_UPTIME_DONE -> ready when (= ?exitCode 0)
-        (set @entity.uptimeSec (let ((dp (str/split (str/trim ?stdout) "-"))) (let ((parts (str/split (default (array/last @dp) "") ":"))) (if (or (> (array/len @dp) 2) (> (array/len @parts) 3) (< (array/len @parts) 2) (array/some @parts (fn p (or (= (str/trim @p) "") (== (str/to-number @p) null))))) null (+ (* 86400 (if (= (array/len @dp) 2) (default (str/to-number (default (array/first @dp) "")) 0) 0)) (array/reduce @parts 0 (fn acc p (+ (* @acc 60) (default (str/to-number @p) 0)))))))))
-        (emit ORB_UPTIME_PARSED {})
-      ORB_UPTIME_PARSED -> ready when (= @entity.uptimeSec null)
-        (emit ORB_STATS_FAILED { stat: "process-uptime", code: "unparsable", error: "the elapsed time ps printed is not [[dd-]hh:]mm:ss" })
-      ORB_UPTIME_PARSED -> ready when (!= @entity.uptimeSec null)
-        (emit ORB_UPTIME_READ { uptimeMs: (* 1000 @entity.uptimeSec) })
-      ORB_UPTIME_FAILED -> ready
+      ORB_PROCESS_READ -> ready when (> (array/len ?processes) 0)
+        (let ((measured : [OrbProcessMeasured] ?processes))
+          (emit ORB_UPTIME_READ { uptimeMs: (* 1000 (- ?at (default (array/first (array/map @measured (fn p @p.startedAt))) ?at))) }))
+      ORB_PROCESS_READ -> ready when (and (= (array/len ?processes) 0) (> (array/len ?missing) 0))
+        (emit ORB_STATS_FAILED { stat: "process-uptime", code: "missing", error: "the host lists no process for the orb's pid" })
+      ORB_PROCESS_READ -> ready when (and (= (array/len ?processes) 0) (= (array/len ?missing) 0))
+        (emit ORB_STATS_FAILED { stat: "process-uptime", code: "unmeasured", error: "the host will not measure the orb's process" })
+      ORB_PROCESS_FAILED -> ready
         (emit ORB_STATS_FAILED { stat: "process-uptime", code: ?code, error: ?error })
       ORB_VERSION_DONE -> ready when (= ?exitCode 0)
         (set @entity.version (str/trim ?stdout))
@@ -72,13 +73,14 @@ orbital OrbStatsOrbital {
         registeredTraits : number!
         activeInstances : number!
         cachedEntities : number!
+        heldBytes : OrbHeldBytes!
       }
-        @description "The kernel's counters: the schemas and traits registered, the trait instances running and the entities cached."
+        @description "The kernel's counters: the schemas and traits registered, the trait instances running, the entities cached and the bytes of value data its rows, frames, open guests and arenas hold."
         @tier "domain"
       ORB_UPTIME_READ -> external {
         uptimeMs : number!
       }
-        @description "How long the orb process has been running, from ps's elapsed time for its pid."
+        @description "How long the orb process has been running: the reading's time minus the process's start time."
         @tier "domain"
       ORB_VERSION_READ -> external {
         version : string!
@@ -98,14 +100,11 @@ orbital OrbStatsOrbital {
       }
         @description "The `orb --version` run, handed to std-cli."
         @tier "internal"
-      ORB_UPTIME_RUN -> external {
-        stage : string!
-        argv : [string]!
+      ORB_PROCESS_SAMPLE -> external {
+        key : string!
+        pids : [number]!
       }
-        @description "The ps run for the orb process's elapsed time, handed to std-cli."
-        @tier "internal"
-      ORB_UPTIME_PARSED { }
-        @description "Internal: the elapsed time was parsed."
+        @description "The reading of the orb process, handed to std-process-sample."
         @tier "internal"
       ORB_INPUTS {
         result : OrbInputsRead!
@@ -141,23 +140,22 @@ orbital OrbStatsOrbital {
         code : string!
       }
         @description "std-cli's failure for the version run."
-      OrbUptimeRunner.CLI_DONE -> ORB_UPTIME_DONE
-      OrbUptimeRunner.CLI_FAILED -> ORB_UPTIME_FAILED
-      ORB_UPTIME_DONE {
-        stage : string!
-        exitCode : number!
-        signal : number!
-        stdout : string!
-        stdoutBytes : bytes!
-        stderr : string!
+      OrbProcessSample.PROCESS_SAMPLED -> ORB_PROCESS_READ
+      OrbProcessSample.PROCESS_SAMPLE_FAILED -> ORB_PROCESS_FAILED
+      ORB_PROCESS_READ {
+        key : string!
+        at : number!
+        processes : [OrbProcessMeasured]!
+        missing : [number]!
+        unmeasured : [number]!
       }
-        @description "std-cli's answer for the uptime run."
-      ORB_UPTIME_FAILED {
-        stage : string!
-        error : string!
+        @description "std-process-sample's reading of the orb process."
+      ORB_PROCESS_FAILED {
+        key : string!
         code : string!
+        error : string!
       }
-        @description "std-cli's failure for the uptime run."
+        @description "std-process-sample's failure."
       ORB_PID {
         pid : number!
       }
@@ -167,8 +165,6 @@ orbital OrbStatsOrbital {
         kind : string
       }
         @description "os/pid's failure."
-      ORB_UPTIME_PARSED { }
-        @description "The elapsed time was parsed."
       ORB_INPUTS {
         result : OrbInputsRead!
       }
@@ -190,15 +186,11 @@ orbital OrbStatsOrbital {
     }
   }
 
-  trait OrbUptimeRunner = Cli.traits.CliRunner {
-    config {
-      commands: ["ps"]
-      passEnv: ["PATH"]
-    }
+  trait OrbProcessSample = Sample.traits.ProcessSample {
     listens {
-      OrbStatsReader.ORB_UPTIME_RUN -> CLI_RUN
+      OrbStatsReader.ORB_PROCESS_SAMPLE -> PROCESS_SAMPLE
     }
   }
 
-  page boot as OrbStatsOrbitalStart -> OrbStatsReader, OrbVersionRunner, OrbUptimeRunner
+  page boot as OrbStatsOrbitalStart -> OrbStatsReader, OrbVersionRunner, OrbProcessSample
 }

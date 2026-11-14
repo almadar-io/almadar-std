@@ -4070,13 +4070,6 @@
                       "severity": "error"
                     },
                     {
-                      "code": "ORB_BINDING_TRAIT_MISSING_NAME",
-                      "path": "orbitals[0 (TrOrbital)].traits[0 (Host)].stateMachine.transitions[0].effects[1][2].children[6]",
-                      "message": "@trait binding missing trait name",
-                      "suggestion": "Use @trait.<TraitName> to reference another trait's current frame",
-                      "severity": "error"
-                    },
-                    {
                       "code": "ORB_BINDING_TRAIT_INVALID_FORMAT",
                       "path": "orbitals[0 (TrOrbital)].traits[0 (Host)].stateMachine.transitions[0].effects[1][2].children[7]",
                       "message": "@trait binding trait name 'Ünï' is not PascalCase",
@@ -4139,7 +4132,8 @@
             ]
           }
         }
-      ]
+      ],
+      "note": "@traitx (children[6]) is not a @trait binding: only the trait root is read; an unknown root is ORB_BINDING_UNKNOWN_ROOT (binding-roots)."
     },
     {
       "id": "object-form effects beside array effects: cycle-ctl",
@@ -7574,6 +7568,220 @@
           }
         }
       ]
+    },
+    {
+      "id": "control-a-binding-whose-name-only-starts-with-trait-is-not-a-trait-binding",
+      "steps": [
+        {
+          "event": "INDEX_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "heads": {},
+            "roots": {
+              "0-0": [
+                "@traitBy"
+              ]
+            }
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "event": "EMBEDS_HEARD",
+          "from": "ready",
+          "payload": {
+            "scope": "",
+            "effectsWalk": {
+              "0-0": [
+                "Kid"
+              ]
+            }
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "OrbLintBindingTraits",
+          "event": "LINT_INPUT",
+          "from": "ready",
+          "payload": {
+            "file": "a.orb",
+            "raw": "",
+            "latin": true,
+            "program": {
+              "typeContractVersion": 1,
+              "name": "Fx",
+              "version": "1.0.0",
+              "description": "fx",
+              "orbitals": [
+                {
+                  "name": "MiniOrbital",
+                  "entity": {
+                    "name": "Task",
+                    "persistence": "runtime",
+                    "fields": [
+                      {
+                        "nullable": false,
+                        "name": "id",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "nullable": false,
+                        "name": "title",
+                        "type": "string",
+                        "default": ""
+                      },
+                      {
+                        "nullable": false,
+                        "name": "done",
+                        "type": "boolean",
+                        "default": false
+                      },
+                      {
+                        "nullable": false,
+                        "name": "count",
+                        "type": "number",
+                        "default": 0
+                      }
+                    ]
+                  },
+                  "traits": [
+                    {
+                      "name": "T",
+                      "linkedEntity": "Task",
+                      "dispatch": "client",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT",
+                            "name": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.title",
+                                "x"
+                              ],
+                              [
+                                "let",
+                                [
+                                  [
+                                    "traitBy",
+                                    "x"
+                                  ]
+                                ],
+                                [
+                                  "set",
+                                  "@entity.title",
+                                  "@traitBy"
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "Kid",
+                      "linkedEntity": "Task",
+                      "dispatch": "client",
+                      "stateMachine": {
+                        "states": [
+                          {
+                            "name": "idle",
+                            "isInitial": true
+                          }
+                        ],
+                        "events": [
+                          {
+                            "key": "INIT",
+                            "name": "INIT"
+                          }
+                        ],
+                        "transitions": [
+                          {
+                            "from": "idle",
+                            "to": "idle",
+                            "event": "INIT",
+                            "effects": [
+                              [
+                                "set",
+                                "@entity.count",
+                                1
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "pages": [
+                    {
+                      "name": "MiniOrbitalPage",
+                      "path": "",
+                      "protocol": "boot",
+                      "traits": [
+                        {
+                          "ref": "T"
+                        },
+                        {
+                          "ref": "Kid"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "schemaVersion": 1
+            },
+            "scope": ""
+          },
+          "expect": {
+            "fired": true,
+            "state": "ready",
+            "emits": [
+              {
+                "event": "LINT_FINISH",
+                "payload": {}
+              }
+            ]
+          }
+        },
+        {
+          "trait": "OrbLintBindingTraits",
+          "event": "LINT_FINISH",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "LINT_FOUND",
+                "payload": {
+                  "rule": "binding-traits",
+                  "findings": [],
+                  "scope": ""
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "note": "The rule reads the @trait root, not every binding whose name begins with the letters trait (a let named traitBy, an entity field traits)."
     }
   ]
 }

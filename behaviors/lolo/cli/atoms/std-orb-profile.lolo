@@ -1,0 +1,687 @@
+app std-orb-profile [
+  version: "1.0.0",
+  inbound: ["cli-profile"],
+  sys: [processes, self-signal],
+  exec: [env ORB_CHROME, "samply"],
+  env: ["ALMADAR_PERSONA_OWNS", "ORB_CHROME", "PATH", "HOME"],
+  net: { "127.0.0.1:9333": [tcp] },
+  fs: { cwd: "**/*.lolo": [read], "/**/*.lolo": [read], cwd: ".orbital/profile/**": [read, write, create], cwd: ".orbital/profile": [create], env HOME: ".almadar/profile": [create], env HOME: ".almadar/profile/samply/": [create, read], env HOME: ".almadar/profile/samply/**": [read] },
+  description: "std-orb-profile — the `orb profile <program.lolo> | catalog [--limit N] [--report json]` command (P-034): it measures where a program's own steps spend their time and allocations, on the kernel (EXEC-COST-1). `orb profile <file>` walks the program's transitions with std-verify-walk (cost on, validate off: every plannable row played once from its own state) and folds each played outcome's cost into std-trace-cost. `orb profile catalog` lists the installed behaviors under std and almadar-behaviors (specs left out), resolves each one's file and walks it the same way, one after the other, timing each behavior from its resolve to its walk's answer and reading this process's resident memory after each (std-process-sample), so a behavior that leaves memory behind shows as growth; --limit walks only the first N. A behavior that does not resolve, or whose walk fails, is listed with its error and the run goes on. The answer (status 200) is the report: the behaviors by wall time, the steps by total time (count, median, 95th percentile, allocations and bytes, per behavior, trait and event), the effects by operator the same way, the process's memory at the start, the end and its peak, the kernel's held bytes at the end (std-orb-stats), and how many outcomes carried no cost; --report json answers the same as JSON. A usage error answers status 400 (exit 2). What this does not measure yet is said in the report: the browser (std-cdp-profile) and hot Rust functions (std-samply) join this command next."
+]
+;; @capabilities "profile where a program's or the behavior catalog's steps spend time and memory"
+uses Spec from "almadar-std/orb-profile"
+uses Walk from "std/behaviors/std-verify-walk"
+uses Machine from "std/behaviors/std-machine"
+uses Plan from "std/behaviors/std-verify-plan"
+uses Seed from "std/behaviors/std-mock-seed"
+uses Judge from "std/behaviors/std-verify-judge"
+uses Credit from "std/behaviors/std-verify-credit"
+uses Cost from "std/behaviors/std-trace-cost"
+uses Sample from "std/behaviors/std-process-sample"
+uses OrbStats from "std/behaviors/std-orb-stats"
+uses Samply from "std/behaviors/std-samply"
+uses ChromeA from "std/behaviors/std-chrome"
+uses CdpProf from "std/behaviors/std-cdp-profile"
+uses Delay from "std/behaviors/std-delay"
+
+type ProfileArgs = { argv : [string]!, cwd : string! }
+type ProfileCatalogEntry = { behavior : string!, topic : string!, level : string!, package : string! }
+type ProfileLocated = { path : string!, owner : string! }
+type ProfileBehavior = { behavior : string!, ms : number!, status : number!, summary : string!, error : string! }
+type ProfileRss = { behavior : string!, rssBytes : number! }
+type ProfileCostStep = { startNs : number!, ns : number!, allocs : number!, allocBytes : number! }
+type ProfileCostEffect = { op : string!, cost : ProfileCostStep? }
+type ProfileCostOutcome = { trait : string!, event : string?, cost : ProfileCostStep?, effects : [ProfileCostEffect]? }
+type ProfileRanked = { site : string!, trait : string!, event : string!, op : string!, count : number!, totalNs : number!, maxNs : number!, p50Ns : number!, p95Ns : number!, allocs : number!, allocBytes : number! }
+type ProfileMeasured = { pid : number!, rssBytes : number!, cpuSeconds : number!, startedAt : number! }
+type ProfileHeld = { rows : number!, frames : number!, guests : number!, arenas : number! }
+type ProfileGroupTime = { group : string!, ms : number! }
+type ProfileLongTask = { startMs : number!, durMs : number!, groups : [ProfileGroupTime]!, unattributedMs : number! }
+type ProfilePageMetrics = { jsHeapUsedBytes : number!, jsHeapTotalBytes : number!, nodes : number!, layoutCount : number!, recalcStyleCount : number!, taskSeconds : number!, scriptSeconds : number!, layoutSeconds : number!, recalcStyleSeconds : number! }
+type ProfileHeapSite = { site : string!, bytes : number! }
+type ProfileCpuSite = { site : string!, ms : number! }
+type ProfileTaskFunctions = { startMs : number!, durMs : number!, functions : [ProfileCpuSite]! }
+type ProfileHeapPage = { behavior : string!, liveBytes : number!, sites : [ProfileHeapSite]! }
+type ProfileCpuPage = { behavior : string!, sampledMs : number!, functions : [ProfileCpuSite]!, longTasks : [ProfileTaskFunctions]! }
+type ProfilePage = { behavior : string!, mainBusyMs : number!, longTasks : number!, longestMs : number!, worst : ProfileLongTask?, jsHeapUsedBytes : number!, nodes : number!, rssBytes : number!, error : string! }
+type ProfileHotFunction = { name : string!, lib : string!, selfSamples : number!, totalSamples : number!, selfCpuUs : number!, totalCpuUs : number! }
+type ProfileReportJson = { behaviors : [ProfileBehavior]!, steps : [ProfileRanked]!, effects : [ProfileRanked]!, unmeasured : number!, rss : [ProfileRss]!, held : ProfileHeld?, totalMs : number!, notMeasured : [string]! }
+
+orbital OrbProfileOrbital {
+  entity ProfileRun [runtime] {
+    id : string!
+    report : string = "text"
+    cwd : string = ""
+    mode : string = ""
+    file : string = ""
+    limit : number = 0
+    queue : [string] = []
+    index : number = 0
+    current : string = ""
+    startedAt : instant? = null
+    runStartedAt : instant? = null
+    results : [ProfileBehavior] = []
+    rss : [ProfileRss] = []
+    pid : number = 0
+    held : ProfileHeld? = null
+    argv : [string] = []
+    sampled : boolean = false
+    samply : boolean = false
+    samplyState : string = "off"
+    hot : [ProfileHotFunction] = []
+    hotSamples : number = 0
+    hotError : string = ""
+    tableReady : boolean = false
+    steps : [ProfileRanked] = []
+    effects : [ProfileRanked] = []
+    unmeasured : number = 0
+    launchpadPid : number = 0
+    baseUrl : string = "http://127.0.0.1:4790"
+    settleMs : number = 1500
+    pages : [ProfilePage] = []
+    heap : boolean = false
+    cpu : boolean = false
+    spa : boolean = false
+    machine : string = "off"
+    heaps : [ProfileHeapPage] = []
+    cpus : [ProfileCpuPage] = []
+    pageError : string = ""
+  }
+
+  trait VerifyMachine = Machine.traits.Machine {
+    listens {
+      ProfileWalk.WALK_MACHINE_READ -> MACHINE_READ
+    }
+  }
+
+  trait VerifyPlan = Plan.traits.Plan {
+    listens {
+      ProfileWalk.WALK_PLAN_REQUEST -> PLAN_REQUEST
+      MockSeed.ROWS_BATCH_DONE -> ROWS_BATCH_DONE
+    }
+  }
+
+  trait MockSeed = Seed.traits.MockSeed {
+    listens {
+      MockStream.CORPUS_IS -> CORPUS_IS
+      VerifyPlan.SAMPLE_BATCH -> SAMPLE_BATCH
+    }
+  }
+
+  trait MockStream = Seed.traits.MockStream {
+  }
+
+  trait VerifyJudge = Judge.traits.Judge {
+    listens {
+      ProfileWalk.WALK_JUDGE_REQUEST -> JUDGE_REQUEST
+    }
+  }
+
+  trait VerifyCreditor = Credit.traits.Credit {
+    listens {
+      ProfileWalk.WALK_CREDIT_REQUEST -> CREDIT_REQUEST
+    }
+  }
+
+  trait ProfileWalk = Walk.traits.VerifyWalk {
+    listens {
+      OrbProfile.PROFILE_WALK_START -> VERIFY_WALK_START
+      VerifyMachine.MACHINE_ANSWERED -> WALK_MACHINE_ANSWERED
+      VerifyMachine.MACHINE_UNREAD -> WALK_MACHINE_UNREAD
+      VerifyPlan.PLAN_ANSWERED -> WALK_PLAN_ANSWERED
+      VerifyPlan.PLAN_REFUSED -> WALK_PLAN_REFUSED
+      VerifyJudge.JUDGE_ANSWERED -> WALK_JUDGE_ANSWERED
+      VerifyCreditor.CREDIT_ANSWERED -> WALK_CREDIT_ANSWERED
+    }
+  }
+
+  trait ProfileCost = Cost.traits.TraceCost {
+    listens {
+      OrbProfile.PROFILE_COST_FOLD -> COST_FOLD
+      OrbProfile.PROFILE_COST_ASK -> COST_TABLE_ASK
+    }
+  }
+
+  trait ProfileSample = Sample.traits.ProcessSample {
+    listens {
+      OrbProfile.PROFILE_PROCESS_SAMPLE -> PROCESS_SAMPLE
+    }
+  }
+
+  trait ProfileSamply = Samply.traits.Samply {
+    listens {
+      OrbProfile.PROFILE_SAMPLY_START -> SAMPLY_START
+      OrbProfile.PROFILE_SAMPLY_STOP -> SAMPLY_STOP
+      OrbProfile.PROFILE_SAMPLY_RECORD -> SAMPLY_RECORD
+      ProfileSamplyRunner.CLI_DONE -> SAMPLY_DONE
+      ProfileSamplyRunner.CLI_FAILED -> SAMPLY_FAILED_RUN
+    }
+  }
+
+  trait ProfileSamplyRunner = Samply.traits.SamplyRunner {
+    listens {
+      ProfileSamply.SAMPLY_RUN -> CLI_RUN
+    }
+  }
+
+  trait ProfileSettle = Delay.traits.Delay {
+    listens {
+      OrbProfile.PROFILE_SETTLE -> START
+    }
+  }
+
+  trait ProfileStats = OrbStats.traits.OrbStatsReader {
+    listens {
+      OrbProfile.PROFILE_STATS_ASK -> ORB_STATS_ASK
+      ProfileStatsVersion.CLI_DONE -> ORB_VERSION_DONE
+      ProfileStatsVersion.CLI_FAILED -> ORB_VERSION_FAILED
+      ProfileStatsSample.PROCESS_SAMPLED -> ORB_PROCESS_READ
+      ProfileStatsSample.PROCESS_SAMPLE_FAILED -> ORB_PROCESS_FAILED
+    }
+  }
+
+  trait ProfileStatsVersion = OrbStats.traits.OrbVersionRunner {
+    listens {
+      ProfileStats.ORB_VERSION_RUN -> CLI_RUN
+    }
+  }
+
+  trait ProfileStatsSample = OrbStats.traits.OrbProcessSample {
+    listens {
+      ProfileStats.ORB_PROCESS_SAMPLE -> PROCESS_SAMPLE
+    }
+  }
+
+  trait OrbProfile -> ProfileRun {
+    config {
+      machineButton : string = "State machine"
+        @label "Machine view button"
+        @description "The label of the launchpad button that opens the state machine view (std-launchpad's MACHINE_TOGGLE button); --machine clicks it once before the pages."
+        @tier "policy"
+      fullButton : string = "Full screen"
+        @label "Full screen button"
+        @description "The label of the machine view's full-screen button; --machine full clicks it after opening the view."
+        @tier "policy"
+    }
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      PROFILE_CALLED -> ready when (== (json/parse (default @payload.rawBody "") ProfileArgs) null)
+        (emit PROFILE_ANSWERED { status: 500, body: "profile: the call's arguments could not be read" })
+      PROFILE_CALLED -> starting when (!= (json/parse (default @payload.rawBody "") ProfileArgs) null)
+        (let ((args : ProfileArgs (json/parse (default @payload.rawBody "") ProfileArgs)))
+          (let ((argv @args.argv))
+            (do
+              (set @entity.cwd @args.cwd)
+              (set @entity.report (if (and (array/includes @argv "--report") (array/includes @argv "json")) "json" "text"))
+              (set @entity.limit (let ((at (array/findIndex @argv (fn a (= @a "--limit"))))) (if (< @at 0) 0 (default (str/to-number (default (array/nth @argv (+ @at 1)) "")) 0))))
+              (set @entity.results [])
+              (set @entity.rss [])
+              (set @entity.index 0)
+              (set @entity.runStartedAt @now)
+              (set @entity.mode (if (= (default (array/first @argv) "") "catalog") "catalog" (if (= (default (array/first @argv) "") "launchpad") "launchpad" "file")))
+              (set @entity.launchpadPid (let ((at (array/findIndex @argv (fn a (= @a "--pid"))))) (if (< @at 0) 0 (default (str/to-number (default (array/nth @argv (+ @at 1)) "")) 0))))
+              (set @entity.settleMs (let ((at (array/findIndex @argv (fn a (= @a "--settle"))))) (if (< @at 0) 1500 (default (str/to-number (default (array/nth @argv (+ @at 1)) "")) 1500))))
+              (set @entity.pages [])
+              (set @entity.heap (array/includes @argv "--heap"))
+              (set @entity.cpu (array/includes @argv "--cpu"))
+              (set @entity.machine (let ((at (array/findIndex @argv (fn a (= @a "--machine"))))) (if (< @at 0) "off" (if (= (default (array/nth @argv (+ @at 1)) "") "full") "full" "side"))))
+              (set @entity.spa (or (array/includes @argv "--spa") (array/includes @argv "--machine")))
+              (set @entity.heaps [])
+              (set @entity.cpus [])
+              (set @entity.baseUrl (let ((at (array/findIndex @argv (fn a (= @a "--base"))))) (if (< @at 0) "http://127.0.0.1:4790" (default (array/nth @argv (+ @at 1)) "http://127.0.0.1:4790"))))
+              (set @entity.file (default (array/first @argv) ""))
+              (set @entity.argv @argv)
+              (set @entity.sampled (array/includes @argv "--sampled"))
+              (set @entity.samply (array/includes @argv "--samply"))
+              (set @entity.samplyState (if (array/includes @argv "--samply") "starting" "off"))
+              (set @entity.hot [])
+              (set @entity.hotError "")
+              (set @entity.tableReady false)
+              (os/pid { key: "profile", emit: { success: PROFILE_PID, failure: PROFILE_PID_FAILED } }))))
+    }
+
+    state starting {
+      INIT -> starting
+      PROFILE_PID -> starting when (and @entity.samply (= @entity.mode "launchpad"))
+        (set @entity.pid ?pid)
+        (emit PROFILE_SAMPLY_START { key: (str/concat "profile-launchpad-" @entity.launchpadPid), pid: @entity.launchpadPid, rateHz: 100 })
+      PROFILE_PID -> starting when (and @entity.samply (!= @entity.mode "launchpad"))
+        (set @entity.pid ?pid)
+        (os/current-exe { emit: { success: PROFILE_EXE, failure: PROFILE_EXE_FAILED } })
+      PROFILE_EXE -> recording
+        (set @entity.samplyState "running")
+        (emit PROFILE_SAMPLY_RECORD { key: (str/concat "profile-" @entity.pid), rateHz: 100, argv: (array/concat [?path, "profile"] (array/filter @entity.argv (fn a (!= @a "--samply"))) ["--sampled"]) })
+      PROFILE_EXE_FAILED -> ready
+        (emit PROFILE_ANSWERED { status: 500, body: (str/concat "profile: this binary's path could not be read: " ?error) })
+      PROFILE_SAMPLY_STARTED -> browsing when (= @entity.mode "launchpad")
+        (set @entity.samplyState "running")
+        (emit PROFILE_CHROME_START {})
+      PROFILE_SAMPLY_FAILED -> ready
+        (emit PROFILE_ANSWERED { status: 500, body: (str/concat "profile: samply could not start (" ?code "): " ?error) })
+      PROFILE_PID -> browsing when (and (not @entity.samply) (= @entity.mode "launchpad"))
+        (set @entity.pid ?pid)
+        (emit PROFILE_CHROME_START {})
+      PROFILE_PID -> listing when (and (not @entity.samply) (= @entity.mode "catalog"))
+        (set @entity.pid ?pid)
+        (behavior/catalog { paths: ["std", "almadar-behaviors"], exposure: [] } { traits: false, emit: { success: PROFILE_CATALOG, failure: PROFILE_FAILED } })
+      PROFILE_PID -> walking when (and (not @entity.samply) (= @entity.mode "file"))
+        (set @entity.pid ?pid)
+        (set @entity.queue [])
+        (set @entity.current "program")
+        (set @entity.startedAt @now)
+        (emit PROFILE_FILE_START {})
+      PROFILE_PID_FAILED -> ready
+        (emit PROFILE_ANSWERED { status: 500, body: (str/concat "profile: this process's id could not be read: " ?error) })
+    }
+
+    state recording {
+      INIT -> recording
+      PROFILE_HOT -> ready when (= @entity.report "text")
+        (let ((functions : [ProfileHotFunction] ?functions))
+          (emit PROFILE_ANSWERED { status: 200, body: (str/join (array/concat
+            [?output, (str/concat "Hot functions of the walking process (samply, " ?samples " samples at 100 Hz; self | total samples, self CPU ms)")]
+            (array/map (array/take @functions 50) (fn f (str/concat "  " @f.selfSamples " | " @f.totalSamples " | " (/ (math/round (/ @f.selfCpuUs 10)) 100) "  " @f.name "  (" @f.lib ")")))) "\n") }))
+      PROFILE_HOT -> ready when (and (= @entity.report "json") (== (json/parse ?output ProfileReportJson) null))
+        (emit PROFILE_ANSWERED { status: 500, body: (str/concat "profile: the sampled run's report is not the profile report: " ?output) })
+      PROFILE_HOT -> ready when (and (= @entity.report "json") (!= (json/parse ?output ProfileReportJson) null))
+        (let ((child : ProfileReportJson (json/parse ?output ProfileReportJson)))
+          (emit PROFILE_ANSWERED { status: 200, body: (json/stringify { behaviors: @child.behaviors, steps: @child.steps, effects: @child.effects, unmeasured: @child.unmeasured, rss: @child.rss, held: @child.held, totalMs: @child.totalMs,
+            hotFunctions: ?functions, hotSamples: ?samples, hotError: "", notMeasured: @child.notMeasured }) }))
+      PROFILE_SAMPLY_FAILED -> ready
+        (emit PROFILE_ANSWERED { status: 500, body: (str/concat "profile: the sampled run failed (" ?code "): " ?error) })
+    }
+
+    state listing {
+      INIT -> listing
+      PROFILE_CATALOG -> walking
+        (let ((entries : [ProfileCatalogEntry] ?result))
+          (let ((names (array/map (array/filter @entries (fn e (!= @e.topic "spec"))) (fn e @e.behavior))))
+            (do
+              (set @entity.queue (if (> @entity.limit 0) (array/take @names @entity.limit) @names))
+              (emit PROFILE_NEXT {}))))
+      PROFILE_FAILED -> ready
+        (emit PROFILE_ANSWERED { status: 500, body: (str/concat "profile: " ?error) })
+    }
+
+    state walking {
+      INIT -> walking
+      PROFILE_FILE_START -> walking
+        (emit PROFILE_WALK_START { file: @entity.file, cwd: @entity.cwd, cost: true, validate: false })
+      PROFILE_NEXT -> walking when (< @entity.index (array/len @entity.queue))
+        (set @entity.current (default (array/nth @entity.queue @entity.index) ""))
+        (log (str/concat "profile " (+ @entity.index 1) "/" (array/len @entity.queue) " " (default (array/nth @entity.queue @entity.index) "")))
+        (set @entity.startedAt @now)
+        (behavior/resolve { behavior: (default (array/nth @entity.queue @entity.index) "") } { path: true } { key: "located", emit: { success: PROFILE_LOCATED, failure: PROFILE_LOCATE_FAILED } })
+      PROFILE_NEXT -> reporting when (>= @entity.index (array/len @entity.queue))
+        (emit PROFILE_STATS_ASK {})
+        (emit PROFILE_COST_ASK { key: "final" })
+      PROFILE_LOCATED -> walking
+        (let ((located : ProfileLocated ?result))
+          (emit PROFILE_WALK_START { file: (os/path-relative @entity.cwd @located.path), cwd: @entity.cwd, cost: true, validate: false }))
+      PROFILE_LOCATE_FAILED -> walking
+        (set @entity.results (array/append @entity.results { behavior: @entity.current, ms: (time/diff @now (default @entity.startedAt @now) "ms"), status: 0, summary: "", error: (str/concat "resolve: " ?error) }))
+        (emit PROFILE_BEHAVIOR_DONE {})
+      PROFILE_WALK_COST -> walking
+        (emit PROFILE_COST_FOLD { site: @entity.current, outcomes: ?outcomes })
+      PROFILE_WALK_ANSWERED -> walking
+        (set @entity.results (array/append @entity.results { behavior: @entity.current, ms: (time/diff @now (default @entity.startedAt @now) "ms"), status: ?status,
+          summary: (default (array/last (str/split ?body "\n")) ""), error: (if (= ?status 200) "" (if (str/startsWith ?body "verify-walk: ") ?body "")) }))
+        (emit PROFILE_BEHAVIOR_DONE {})
+      PROFILE_BEHAVIOR_DONE -> walking
+        (emit PROFILE_PROCESS_SAMPLE { key: (str/concat "rss-" @entity.index), pids: [@entity.pid] })
+      PROFILE_RSS -> walking
+        (let ((measured : [ProfileMeasured] ?processes))
+          (do
+            (log (str/concat "profile done " @entity.current " " (default (object/get (default (array/last @entity.results) { behavior: "", ms: 0, status: 0, summary: "", error: "" }) "ms") 0) " ms, rss " (/ (math/round (/ (object/get (default (array/first @measured) { pid: 0, rssBytes: 0, cpuSeconds: 0, startedAt: 0 }) "rssBytes") 10485.76)) 100) " MB, " (object/get (default (array/last @entity.results) { behavior: "", ms: 0, status: 0, summary: "", error: "" }) "summary") (object/get (default (array/last @entity.results) { behavior: "", ms: 0, status: 0, summary: "", error: "" }) "error")))
+            (set @entity.rss (array/append @entity.rss { behavior: @entity.current, rssBytes: (object/get (default (array/first @measured) { pid: 0, rssBytes: 0, cpuSeconds: 0, startedAt: 0 }) "rssBytes") }))
+            (set @entity.index (+ @entity.index 1))
+            (emit PROFILE_NEXT {})))
+      PROFILE_RSS_FAILED -> walking
+        (set @entity.index (+ @entity.index 1))
+        (emit PROFILE_NEXT {})
+    }
+
+    state browsing {
+      INIT -> browsing
+      PROFILE_CHROME_READY -> browsing
+        (emit PROFILE_CDP_CONNECT { targetId: ?targetId })
+      PROFILE_CHROME_FAILED -> ready
+        (emit PROFILE_ANSWERED { status: 500, body: (str/concat "profile launchpad: Chrome could not start (" ?code "): " ?message) })
+      PROFILE_BROWSER_READY -> browsing
+        (behavior/catalog { paths: ["std", "almadar-behaviors"], exposure: [] } { traits: false, emit: { success: PROFILE_PAGES_LISTED, failure: PROFILE_FAILED } })
+      PROFILE_PAGES_LISTED -> browsing
+        (let ((entries : [ProfileCatalogEntry] ?result))
+          (let ((names (array/map (array/filter @entries (fn e (!= @e.topic "spec"))) (fn e @e.behavior))))
+            (do
+              (set @entity.queue (if (> @entity.limit 0) (array/take @names @entity.limit) @names))
+              (set @entity.index 0)
+              (if @entity.spa
+                (emit PROFILE_PAGE_NAVIGATE { key: "warmup", url: (str/concat @entity.baseUrl "/") })
+                (emit PROFILE_PAGE_NEXT {})))))
+      PROFILE_PAGE_LOADED -> browsing when (and (= ?key "warmup") (= @entity.machine "off"))
+        (emit PROFILE_SETTLE { key: "warmup", delayMs: @entity.settleMs })
+      PROFILE_PAGE_LOADED -> browsing when (and (= ?key "warmup") (!= @entity.machine "off"))
+        (emit PROFILE_EVALUATE { key: "machine", expression: (str/concat "(() => { const b = [...document.querySelectorAll('button')].find(e => (e.getAttribute('aria-label') || e.textContent || '').trim() === " (json/stringify @config.machineButton) "); if (!b) throw new Error('no button ' + " (json/stringify @config.machineButton) "); b.click(); return true; })()") })
+      PROFILE_EVALUATED -> browsing when (and (= ?key "machine") (= @entity.machine "full"))
+        (emit PROFILE_EVALUATE { key: "machine-full", expression: (str/concat "(() => { const b = [...document.querySelectorAll('button')].find(e => (e.getAttribute('aria-label') || e.textContent || '').trim() === " (json/stringify @config.fullButton) "); if (!b) throw new Error('no button ' + " (json/stringify @config.fullButton) "); b.click(); return true; })()") })
+      PROFILE_EVALUATED -> browsing when (or (and (= ?key "machine") (!= @entity.machine "full")) (= ?key "machine-full"))
+        (emit PROFILE_SETTLE { key: "warmup", delayMs: @entity.settleMs })
+      PROFILE_SETTLED -> browsing when (= (default ?key "") "warmup")
+        (emit PROFILE_PAGE_NEXT {})
+      PROFILE_EVALUATED -> browsing when (= ?key "nav")
+        (emit PROFILE_SETTLE { key: "settle", delayMs: @entity.settleMs })
+      PROFILE_HEAP -> browsing
+        (set @entity.heaps (array/append @entity.heaps { behavior: @entity.current, liveBytes: ?liveBytes, sites: ?sites }))
+      PROFILE_CPU -> browsing
+        (set @entity.cpus (array/append @entity.cpus { behavior: @entity.current, sampledMs: ?sampledMs, functions: ?functions, longTasks: ?longTasks }))
+      PROFILE_PAGE_NEXT -> browsing when (< @entity.index (array/len @entity.queue))
+        (set @entity.current (default (array/nth @entity.queue @entity.index) ""))
+        (set @entity.pageError "")
+        (log (str/concat "profile page " (+ @entity.index 1) "/" (array/len @entity.queue) " " (default (array/nth @entity.queue @entity.index) "")))
+        (emit PROFILE_TRACE_START { label: (default (array/nth @entity.queue @entity.index) ""), heap: @entity.heap, cpu: @entity.cpu })
+      PROFILE_PAGE_NEXT -> reporting when (>= @entity.index (array/len @entity.queue))
+        (emit PROFILE_CHROME_STOP {})
+        (if (= @entity.samplyState "running") (emit PROFILE_SAMPLY_STOP { key: (str/concat "profile-launchpad-" @entity.launchpadPid) }) null)
+        (emit PROFILE_PAGES_DONE {})
+      PROFILE_TRACING -> browsing when (not @entity.spa)
+        (emit PROFILE_PAGE_NAVIGATE { key: "profile", url: (str/concat @entity.baseUrl "/" @entity.current) })
+      PROFILE_TRACING -> browsing when @entity.spa
+        (emit PROFILE_EVALUATE { key: "nav", expression: (str/concat "history.pushState({}, '', " (json/stringify (str/concat "/" @entity.current)) "); dispatchEvent(new PopStateEvent('popstate')); true") })
+      PROFILE_PAGE_LOADED -> browsing when (= ?key "profile")
+        (emit PROFILE_SETTLE { key: "settle", delayMs: @entity.settleMs })
+      PROFILE_PAGE_FAILED -> browsing
+        (set @entity.pageError (str/concat ?code ": " ?error))
+        (emit PROFILE_TRACE_STOP { label: @entity.current })
+      PROFILE_SETTLED -> browsing when (!= (default ?key "") "warmup")
+        (emit PROFILE_TRACE_STOP { label: @entity.current })
+      PROFILE_PAGE_COST -> browsing
+        (let ((tasks : [ProfileLongTask] ?longTasks) (metrics : ProfilePageMetrics ?metrics))
+          (do
+            (set @entity.pages (array/append @entity.pages { behavior: @entity.current, mainBusyMs: ?mainBusyMs, longTasks: (array/len @tasks),
+              longestMs: (array/reduce @tasks 0 (fn acc t (math/max @acc @t.durMs))), worst: (array/first @tasks),
+              jsHeapUsedBytes: @metrics.jsHeapUsedBytes, nodes: @metrics.nodes, rssBytes: 0, error: @entity.pageError }))
+            (emit PROFILE_PROCESS_SAMPLE { key: (str/concat "lp-" @entity.index), pids: [(if (> @entity.launchpadPid 0) @entity.launchpadPid @entity.pid)] })))
+      PROFILE_BROWSER_FAILED -> ready when (or (= ?label "machine") (= ?label "machine-full"))
+        (emit PROFILE_CHROME_STOP {})
+        (emit PROFILE_ANSWERED { status: 500, body: (str/concat "profile launchpad: the state machine view could not be opened (" ?code "): " ?error) })
+      PROFILE_BROWSER_FAILED -> browsing when (and (!= ?label "") (!= ?label "machine") (!= ?label "machine-full"))
+        (let ((failed : ProfilePage { behavior: @entity.current, mainBusyMs: 0, longTasks: 0, longestMs: 0, jsHeapUsedBytes: 0, nodes: 0, rssBytes: 0, error: (str/concat "trace " ?code ": " ?error) }))
+          (set @entity.pages (array/append @entity.pages @failed)))
+        (set @entity.index (+ @entity.index 1))
+        (emit PROFILE_PAGE_NEXT {})
+      PROFILE_BROWSER_FAILED -> ready when (= ?label "")
+        (emit PROFILE_CHROME_STOP {})
+        (emit PROFILE_ANSWERED { status: 500, body: (str/concat "profile launchpad: the page could not be attached (" ?code "): " ?error) })
+      PROFILE_RSS -> browsing
+        (let ((measured : [ProfileMeasured] ?processes))
+          (do
+            (set @entity.pages (array/map @entity.pages (fn pg (if (= @pg.behavior @entity.current)
+              { behavior: @pg.behavior, mainBusyMs: @pg.mainBusyMs, longTasks: @pg.longTasks, longestMs: @pg.longestMs, worst: @pg.worst, jsHeapUsedBytes: @pg.jsHeapUsedBytes, nodes: @pg.nodes,
+                rssBytes: (object/get (default (array/first @measured) { pid: 0, rssBytes: 0, cpuSeconds: 0, startedAt: 0 }) "rssBytes"), error: @pg.error }
+              @pg))))
+            (set @entity.index (+ @entity.index 1))
+            (emit PROFILE_PAGE_NEXT {})))
+      PROFILE_RSS_FAILED -> browsing
+        (set @entity.index (+ @entity.index 1))
+        (emit PROFILE_PAGE_NEXT {})
+    }
+
+    state reporting {
+      PROFILE_PAGES_DONE -> reporting
+        (set @entity.tableReady true)
+        (emit PROFILE_FINISH {})
+      PROFILE_FINISH -> ready when (and (= @entity.mode "launchpad") @entity.tableReady (!= @entity.samplyState "running"))
+        (let ((busiest (array/sort @entity.pages "mainBusyMs" "desc")) (rss (array/map (array/filter @entity.pages (fn pg (> @pg.rssBytes 0))) (fn pg @pg.rssBytes))) (totalMs (time/diff @now (default @entity.runStartedAt @now) "ms")))
+          (emit PROFILE_ANSWERED { status: 200, body: (if (= @entity.report "json")
+            (json/stringify { pages: @busiest, heaps: @entity.heaps, cpus: @entity.cpus, totalMs: @totalMs })
+            (str/join (array/concat
+              [(str/concat "orb profile launchpad: " (array/len @entity.pages) " pages in " (/ (math/round (/ @totalMs 100)) 10) " s (" @entity.baseUrl ", settle " @entity.settleMs " ms)"), "",
+               "Busiest pages (main-thread busy ms | long tasks | longest ms | JS heap MB after GC | DOM nodes | launchpad RSS MB)  behavior  [worst long task by activity]"]
+              (array/map (array/take @busiest 60) (fn pg (str/concat "  " (/ (math/round (* @pg.mainBusyMs 10)) 10) " | " @pg.longTasks " | " (/ (math/round (* @pg.longestMs 10)) 10) " | " (/ (math/round (/ @pg.jsHeapUsedBytes 10485.76)) 100) " | " @pg.nodes " | " (/ (math/round (/ @pg.rssBytes 10485.76)) 100) "  " @pg.behavior
+                (if (!= @pg.error "") (str/concat "  ERROR " @pg.error) "")
+                (if (== @pg.worst null) "" (str/concat "  [" (str/join (array/map (object/get (default @pg.worst { startMs: 0, durMs: 0, groups: [], unattributedMs: 0 }) "groups") (fn gr (str/concat @gr.group " " (/ (math/round (* @gr.ms 10)) 10)))) ", ") "]")))))
+              ["", (str/concat "Launchpad memory (RSS) over the run: first " (/ (math/round (/ (default (array/first @rss) 0) 10485.76)) 100) " MB, last " (/ (math/round (/ (default (array/last @rss) 0) 10485.76)) 100) " MB, peak " (/ (math/round (/ (array/reduce @rss 0 (fn acc v (math/max @acc @v))) 10485.76)) 100) " MB")]
+              ["", "Biggest JS heaps after GC (MB)  behavior"]
+              (array/map (array/take (array/sort @entity.pages "jsHeapUsedBytes" "desc") 20) (fn pg (str/concat "  " (/ (math/round (/ @pg.jsHeapUsedBytes 10485.76)) 100) "  " @pg.behavior)))
+              (if @entity.heap
+                (let ((firstBy (array/groupBy (object/get (default (array/first @entity.heaps) { behavior: "", liveBytes: 0, sites: [] }) "sites") (fn x @x.site)))
+                      (lastSites (object/get (default (array/last @entity.heaps) { behavior: "", liveBytes: 0, sites: [] }) "sites"))
+                      (heapBy (array/groupBy @entity.heaps (fn h @h.behavior))))
+                  (array/concat
+                    ["", (str/concat "JS heap in visit order (" (if @entity.spa "in-app navigation" "a full load per page") (if (= @entity.machine "off") "" (str/concat ", state machine view " @entity.machine)) "; sampled live MB | heap MB after GC)  behavior")]
+                    (array/map @entity.pages (fn pg (str/concat "  " (/ (math/round (/ (object/get (default (array/first (object/get @heapBy @pg.behavior [])) { behavior: "", liveBytes: 0, sites: [] }) "liveBytes") 10485.76)) 100) " | " (/ (math/round (/ @pg.jsHeapUsedBytes 10485.76)) 100) "  " @pg.behavior)))
+                    ["", "Allocation sites that grew the most from the first visit to the last (sampled live MB first -> last; a site outside a visit's top 400 counts as 0)"]
+                    (array/map (array/take (array/sort (array/map @lastSites (fn x { site: @x.site, bytes: (- @x.bytes (object/get (default (array/first (object/get @firstBy @x.site [])) { site: "", bytes: 0 }) "bytes")), last: @x.bytes })) "bytes" "desc") 25)
+                      (fn g (str/concat "  " (/ (math/round (/ (- @g.last @g.bytes) 10485.76)) 100) " -> " (/ (math/round (/ @g.last 10485.76)) 100) "  " @g.site)))))
+                [])
+              (if @entity.cpu
+                (let ((inTasks (array/flatten (array/map @entity.cpus (fn c (array/flatten (array/map @c.longTasks (fn t @t.functions)))))))
+                      (overall (array/flatten (array/map @entity.cpus (fn c @c.functions)))))
+                  (let ((taskBy (array/groupBy @inTasks (fn f @f.site))) (allBy (array/groupBy @overall (fn f @f.site))))
+                    (array/concat
+                      ["", "Functions inside long tasks, summed over every page (JS self ms, sampled)  function"]
+                      (array/map (array/take (array/sort (array/map (object/keys @taskBy) (fn k { site: @k, ms: (array/reduce (object/get @taskBy @k []) 0 (fn acc f (+ @acc @f.ms))) })) "ms" "desc") 30) (fn f (str/concat "  " (math/round @f.ms) "  " @f.site)))
+                      ["", "Functions over every page (JS self ms, sampled)  function"]
+                      (array/map (array/take (array/sort (array/map (object/keys @allBy) (fn k { site: @k, ms: (array/reduce (object/get @allBy @k []) 0 (fn acc f (+ @acc @f.ms))) })) "ms" "desc") 30) (fn f (str/concat "  " (math/round @f.ms) "  " @f.site))))))
+                [])
+              (if @entity.samply
+                (array/concat
+                  ["", (if (!= @entity.hotError "") (str/concat "Hot functions in the launchpad: samply failed: " @entity.hotError) (str/concat "Hot functions in the launchpad process (samply, " @entity.hotSamples " samples at 100 Hz; self | total samples, self CPU ms)"))]
+                  (array/map (array/take @entity.hot 50) (fn f (str/concat "  " @f.selfSamples " | " @f.totalSamples " | " (/ (math/round (/ @f.selfCpuUs 10)) 100) "  " @f.name "  (" @f.lib ")"))))
+                ["", "Hot functions in the launchpad: not sampled (run with --samply)."])
+              ["", "Not measured by this pass: the launchpad kernel's cost per step (its guests run in its own process; see orb profile catalog for kernel cost per behavior)."]) "\n")) }))
+      INIT -> reporting
+      PROFILE_KERNEL -> reporting
+        (set @entity.held ?heldBytes)
+      PROFILE_TABLE -> reporting
+        (set @entity.steps ?steps)
+        (set @entity.effects ?effects)
+        (set @entity.unmeasured ?unmeasured)
+        (set @entity.tableReady true)
+        (emit PROFILE_FINISH {})
+      PROFILE_HOT -> reporting
+        (set @entity.hot ?functions)
+        (set @entity.hotSamples ?samples)
+        (set @entity.samplyState "done")
+        (emit PROFILE_FINISH {})
+      PROFILE_SAMPLY_FAILED -> reporting
+        (set @entity.hotError (str/concat ?code ": " ?error))
+        (set @entity.samplyState "done")
+        (emit PROFILE_FINISH {})
+      PROFILE_FINISH -> reporting when (or (not @entity.tableReady) (= @entity.samplyState "running"))
+      PROFILE_FINISH -> ready when (and (!= @entity.mode "launchpad") @entity.tableReady (!= @entity.samplyState "running"))
+        (let ((steps : [ProfileRanked] @entity.steps) (effects : [ProfileRanked] @entity.effects))
+          (let ((slowest (array/sort @entity.results "ms" "desc"))
+                (rssValues (array/map @entity.rss (fn r @r.rssBytes)))
+                (totalMs (time/diff @now (default @entity.runStartedAt @now) "ms")))
+            (emit PROFILE_ANSWERED { status: 200, body: (if (= @entity.report "json")
+              (json/stringify { behaviors: @slowest, steps: @steps, effects: @effects, unmeasured: @entity.unmeasured, rss: @entity.rss, held: @entity.held, totalMs: @totalMs,
+                hotFunctions: @entity.hot, hotSamples: @entity.hotSamples, hotError: @entity.hotError,
+                notMeasured: ["browser main thread and heap (std-cdp-profile)", "memory a closed guest leaves behind (program/open per behavior)", "the registered program's own memory (G-ORBITAL-CORE-193)"] })
+              (str/join (array/concat
+                [(str/concat "orb profile " @entity.mode ": " (array/len @entity.results) " walked in " (/ (math/round (/ @totalMs 100)) 10) " s, " @entity.unmeasured " outcomes without cost"),
+                 "",
+                 "Slowest behaviors (wall ms: resolve + walk)"]
+                (array/map (array/take @slowest 40) (fn b (str/concat "  " (/ (math/round (* @b.ms 10)) 10) " ms  " @b.behavior "  " (if (!= @b.error "") (str/concat "ERROR " @b.error) @b.summary))))
+                ["", "Hottest steps (total ms | count | p50 ms | p95 ms | allocs | bytes)  behavior  trait.event"]
+                (array/map (array/take @steps 60) (fn r (str/concat "  " (/ (math/round (/ @r.totalNs 10000)) 100) " | " @r.count " | " (/ (math/round (/ @r.p50Ns 10000)) 100) " | " (/ (math/round (/ @r.p95Ns 10000)) 100) " | " @r.allocs " | " @r.allocBytes "  " @r.site "  " @r.trait "." @r.event)))
+                ["", "Hottest effects by operator (total ms | count | p95 ms | allocs | bytes)  behavior  trait.event  op"]
+                (array/map (array/take @effects 60) (fn r (str/concat "  " (/ (math/round (/ @r.totalNs 10000)) 100) " | " @r.count " | " (/ (math/round (/ @r.p95Ns 10000)) 100) " | " @r.allocs " | " @r.allocBytes "  " @r.site "  " @r.trait "." @r.event "  " @r.op)))
+                ["", (str/concat "Process memory (RSS): start " (/ (math/round (/ (default (array/first @rssValues) 0) 10485.76)) 100) " MB, end " (/ (math/round (/ (default (array/last @rssValues) 0) 10485.76)) 100) " MB, peak " (/ (math/round (/ (array/reduce @rssValues 0 (fn acc v (math/max @acc @v))) 10485.76)) 100) " MB")]
+                [(if (== @entity.held null) "Kernel held bytes: not read" (str/concat "Kernel held bytes at end: rows " (object/get (default @entity.held { rows: 0, frames: 0, guests: 0, arenas: 0 }) "rows") ", frames " (object/get (default @entity.held { rows: 0, frames: 0, guests: 0, arenas: 0 }) "frames") ", guests " (object/get (default @entity.held { rows: 0, frames: 0, guests: 0, arenas: 0 }) "guests") ", arenas " (object/get (default @entity.held { rows: 0, frames: 0, guests: 0, arenas: 0 }) "arenas")))]
+                (if @entity.samply
+                  (array/concat
+                    ["", (if (!= @entity.hotError "") (str/concat "Hot functions: samply failed: " @entity.hotError) (str/concat "Hot functions of this process (samply, " @entity.hotSamples " samples at 100 Hz; self | total samples, self CPU ms)"))]
+                    (array/map (array/take @entity.hot 50) (fn f (str/concat "  " @f.selfSamples " | " @f.totalSamples " | " (/ (math/round (/ @f.selfCpuUs 10)) 100) "  " @f.name "  (" @f.lib ")"))))
+                  ["", (if @entity.sampled "Hot functions: sampled by the parent run, below." "Hot functions: not sampled (run with --samply).")])
+                ["", "Not measured by this run yet: the browser's main thread and heap, memory a closed guest leaves behind, the registered program's own memory (G-ORBITAL-CORE-193)."]) "\n")) })))
+    }
+
+    emits {
+      PROFILE_ANSWERED -> external { status : number!, body : string! }
+        @description "Internal: the command's answer, which the cli hook prints."
+        @tier "internal"
+      PROFILE_WALK_START { file : string!, cwd : string!, cost : boolean!, validate : boolean! }
+        @tier "internal"
+      PROFILE_COST_FOLD { site : string!, outcomes : [ProfileCostOutcome]! }
+        @tier "internal"
+      PROFILE_COST_ASK { key : string! }
+        @tier "internal"
+      PROFILE_PROCESS_SAMPLE { key : string!, pids : [number]! }
+        @tier "internal"
+      PROFILE_STATS_ASK {}
+        @tier "internal"
+      PROFILE_NEXT {}
+        @tier "internal"
+      PROFILE_FILE_START {}
+        @tier "internal"
+      PROFILE_BEHAVIOR_DONE {}
+        @tier "internal"
+      PROFILE_FINISH {}
+        @tier "internal"
+      PROFILE_CHROME_START {}
+        @tier "internal"
+      PROFILE_CHROME_STOP {}
+        @tier "internal"
+      PROFILE_CDP_CONNECT { targetId : string! }
+        @tier "internal"
+      PROFILE_TRACE_START { label : string!, heap : boolean!, cpu : boolean! }
+        @tier "internal"
+      PROFILE_EVALUATE { key : string!, expression : string! }
+        @tier "internal"
+      PROFILE_TRACE_STOP { label : string! }
+        @tier "internal"
+      PROFILE_PAGE_NAVIGATE { key : string!, url : string! }
+        @tier "internal"
+      PROFILE_SETTLE { key : string!, delayMs : number! }
+        @tier "internal"
+      PROFILE_PAGE_NEXT {}
+        @tier "internal"
+      PROFILE_PAGES_DONE {}
+        @tier "internal"
+      PROFILE_SAMPLY_START { key : string!, pid : number!, rateHz : number! }
+        @tier "internal"
+      PROFILE_SAMPLY_STOP { key : string! }
+        @tier "internal"
+      PROFILE_SAMPLY_RECORD { key : string!, argv : [string]!, rateHz : number! }
+        @tier "internal"
+    }
+
+    listens {
+      PROFILE_CALLED -> inbound "cli-profile" answers PROFILE_ANSWERED {
+        headers : Map string string
+        rawBody : string
+      }
+      PROFILE_PID { pid : number! }
+      PROFILE_PID_FAILED { error : string!, kind : string? }
+      PROFILE_EXE { path : string! }
+      PROFILE_EXE_FAILED { error : string!, kind : string? }
+      PROFILE_CATALOG { result : [ProfileCatalogEntry]! }
+      PROFILE_FAILED { error : string! }
+      PROFILE_LOCATED { result : ProfileLocated! }
+      PROFILE_LOCATE_FAILED { error : string! }
+      ProfileWalk.WALK_COST -> PROFILE_WALK_COST
+      PROFILE_WALK_COST { path : string!, outcomes : [ProfileCostOutcome]! }
+      ProfileWalk.VERIFY_WALK_ANSWERED -> PROFILE_WALK_ANSWERED
+      PROFILE_WALK_ANSWERED { status : number!, body : string! }
+      ProfileSample.PROCESS_SAMPLED -> PROFILE_RSS
+      PROFILE_RSS { key : string!, at : number!, processes : [ProfileMeasured]!, missing : [number]!, unmeasured : [number]! }
+      ProfileSample.PROCESS_SAMPLE_FAILED -> PROFILE_RSS_FAILED
+      PROFILE_RSS_FAILED { key : string!, code : string!, error : string! }
+      ProfileStats.ORB_KERNEL_READ -> PROFILE_KERNEL
+      PROFILE_KERNEL { registeredSchemas : number!, registeredTraits : number!, activeInstances : number!, cachedEntities : number!, heldBytes : ProfileHeld! }
+      ProfileSamply.SAMPLY_STARTED -> PROFILE_SAMPLY_STARTED
+      PROFILE_SAMPLY_STARTED { key : string! }
+      ProfileSamply.SAMPLY_HOT -> PROFILE_HOT
+      PROFILE_HOT { key : string!, startTime : number!, samples : number!, cpuUs : number!, functions : [ProfileHotFunction]!, output : string! }
+      ProfileSamply.SAMPLY_FAILED -> PROFILE_SAMPLY_FAILED
+      PROFILE_SAMPLY_FAILED { key : string!, code : string!, error : string! }
+      PROFILE_CHROME_READY { browser : string!, targetId : string! }
+      PROFILE_CHROME_FAILED { code : string!, message : string! }
+      PROFILE_BROWSER_READY { }
+      PROFILE_PAGES_LISTED { result : [ProfileCatalogEntry]! }
+      PROFILE_TRACING { label : string! }
+      PROFILE_PAGE_LOADED { key : string!, url : string!, title : string! }
+      PROFILE_PAGE_FAILED { key : string!, error : string!, code : string! }
+      PROFILE_SETTLED { waitedMs : number!, key : string }
+      PROFILE_PAGE_COST { label : string!, events : number!, mainBusyMs : number!, metrics : ProfilePageMetrics!, longTasks : [ProfileLongTask]! }
+      PROFILE_BROWSER_FAILED { label : string!, code : string!, error : string! }
+      PROFILE_EVALUATED { key : string!, frame : string! }
+      PROFILE_HEAP { label : string!, liveBytes : number!, sites : [ProfileHeapSite]! }
+      PROFILE_CPU { label : string!, sampledMs : number!, functions : [ProfileCpuSite]!, longTasks : [ProfileTaskFunctions]! }
+      ProfileSettle.ELAPSED -> PROFILE_SETTLED
+      ProfileChrome.Chrome.CHROME_READY -> PROFILE_CHROME_READY
+      ProfileChrome.Chrome.CHROME_FAILED -> PROFILE_CHROME_FAILED
+      ProfileChrome.Chrome.PAGE_LOADED -> PROFILE_PAGE_LOADED
+      ProfileChrome.Chrome.PAGE_FAILED -> PROFILE_PAGE_FAILED
+      ProfileBrowser.CdpProfile.CDP_PROFILE_READY -> PROFILE_BROWSER_READY
+      ProfileBrowser.CdpProfile.CDP_PROFILE_TRACING -> PROFILE_TRACING
+      ProfileBrowser.CdpProfile.CDP_PROFILE_PAGE -> PROFILE_PAGE_COST
+      ProfileBrowser.CdpProfile.CDP_PROFILE_FAILED -> PROFILE_BROWSER_FAILED
+      ProfileBrowser.CdpProfile.CDP_PROFILE_EVALUATED -> PROFILE_EVALUATED
+      ProfileBrowser.CdpProfile.CDP_PROFILE_HEAP -> PROFILE_HEAP
+      ProfileBrowser.CdpProfile.CDP_PROFILE_CPU -> PROFILE_CPU
+      ProfileCost.COST_TABLE -> PROFILE_TABLE
+      PROFILE_TABLE { key : string!, steps : [ProfileRanked]!, effects : [ProfileRanked]!, unmeasured : number! }
+    }
+  }
+
+  page boot as OrbProfilePage -> OrbProfile, ProfileWalk, VerifyMachine, VerifyPlan, VerifyJudge, VerifyCreditor, MockSeed, MockStream, ProfileCost, ProfileSample, ProfileStats, ProfileStatsVersion, ProfileStatsSample, ProfileSamply, ProfileSamplyRunner, ProfileSettle
+}
+
+orbital ProfileChrome = ChromeA.orbitals.ChromeOrbital {
+  traits {
+    ChromeDaemon {
+      config { readyPort: 9333 }
+    }
+    CdpHttp {
+      config { port: 9333 }
+    }
+    CdpWs {
+      config { port: 9333 }
+    }
+    Cdp {
+      config { timeoutMs: 120000 }
+    }
+    Chrome {
+      config {
+        port: 9333
+        extraArgs: ["--disable-features=BackForwardCache"]
+        profileDir: { anchor: "cwd" path: ".orbital/profile/chrome/profile" }
+        downloadDir: { anchor: "cwd" path: ".orbital/profile/chrome/downloads" }
+        preferencesDir: { anchor: "cwd" path: ".orbital/profile/chrome/profile/Default" }
+        preferencesFile: { anchor: "cwd" path: ".orbital/profile/chrome/profile/Default/Preferences" }
+      }
+    }
+  }
+  listens {
+    OrbProfileOrbital.OrbProfile.PROFILE_CHROME_START -> Chrome.CHROME_START
+    OrbProfileOrbital.OrbProfile.PROFILE_CHROME_STOP -> Chrome.CHROME_STOP
+    OrbProfileOrbital.OrbProfile.PROFILE_PAGE_NAVIGATE -> Chrome.PAGE_NAVIGATE
+  }
+}
+
+orbital ProfileBrowser = CdpProf.orbitals.CdpProfileOrbital {
+  traits {
+    ProfileCdpHttp {
+      config { port: 9333 }
+    }
+    ProfileCdpWs {
+      config { port: 9333 }
+    }
+    ProfileCdp {
+      config { timeoutMs: 120000 }
+    }
+    CdpProfile {
+      config { topSites: 400 }
+    }
+  }
+  listens {
+    OrbProfileOrbital.OrbProfile.PROFILE_CDP_CONNECT -> CdpProfile.CDP_PROFILE_CONNECT
+    OrbProfileOrbital.OrbProfile.PROFILE_TRACE_START -> CdpProfile.CDP_PROFILE_TRACE_START
+    OrbProfileOrbital.OrbProfile.PROFILE_TRACE_STOP -> CdpProfile.CDP_PROFILE_TRACE_STOP
+    OrbProfileOrbital.OrbProfile.PROFILE_EVALUATE -> CdpProfile.CDP_PROFILE_EVALUATE
+  }
+}

@@ -1,0 +1,596 @@
+{
+  "atom": "ops/atoms/std-samply.lolo",
+  "trait": "Samply",
+  "cases": [
+    {
+      "id": "a-recording-ranks-functions-by-self-cpu-and-leaves-out-each-threads-first-delta",
+      "steps": [
+        {
+          "trait": "Samply",
+          "event": "SAMPLY_SYMS_READ",
+          "payload": {
+            "data": "eyJzdHJpbmdfdGFibGUiOiBbIm1haW4iLCAid29yayJdLCAiZGF0YSI6IFt7ImNvZGVfaWQiOiAiQUEiLCAic3ltYm9sX3RhYmxlIjogW3sic3ltYm9sIjogMH0sIHsic3ltYm9sIjogMX1dLCAia25vd25fYWRkcmVzc2VzIjogW1sxMDAsIDBdLCBbMjAwLCAxXV19XX0="
+          },
+          "entity": {
+            "id": "s",
+            "running": true,
+            "key": "k",
+            "pid": 42,
+            "argv": [],
+            "rateHz": 1000,
+            "dir": "/h/.almadar/profile/samply",
+            "profileText": "{\"meta\": {\"startTime\": 1794599000574.5, \"interval\": 1.0}, \"libs\": [{\"name\": \"orb-dev.bin\", \"codeId\": \"AA\"}], \"threads\": [{\"name\": \"main\", \"samples\": {\"length\": 4, \"stack\": [1, 1, 1, 0], \"weight\": [1, 1, 1, 1], \"threadCPUDelta\": [10, 10, 10, 5]}, \"stackTable\": {\"length\": 2, \"prefix\": [null, 0], \"frame\": [0, 1]}, \"frameTable\": {\"length\": 2, \"address\": [100, 200], \"func\": [0, 1]}, \"funcTable\": {\"length\": 2, \"name\": [0, 1], \"resource\": [0, 0]}, \"resourceTable\": {\"length\": 1, \"lib\": [0], \"name\": [2]}, \"stringArray\": [\"0x64\", \"0xc8\", \"orb-dev.bin\"]}]}",
+            "symbols": {},
+            "hits": [],
+            "byFunction": {},
+            "samplyPid": 0
+          },
+          "expect": {
+            "fired": true,
+            "exactEmits": [
+              {
+                "event": "SAMPLY_HOT",
+                "payload": {
+                  "key": "k",
+                  "startTime": 1794599000574.5,
+                  "samples": 4,
+                  "cpuUs": 25,
+                  "functions": [
+                    {
+                      "name": "work",
+                      "lib": "orb-dev.bin",
+                      "selfSamples": 3,
+                      "totalSamples": 3,
+                      "selfCpuUs": 20,
+                      "totalCpuUs": 20
+                    },
+                    {
+                      "name": "main",
+                      "lib": "orb-dev.bin",
+                      "selfSamples": 1,
+                      "totalSamples": 4,
+                      "selfCpuUs": 5,
+                      "totalCpuUs": 25
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "control-a-frame-the-sidecar-does-not-name-keeps-samplys-label",
+      "steps": [
+        {
+          "trait": "Samply",
+          "event": "SAMPLY_SYMS_READ",
+          "payload": {
+            "data": "eyJzdHJpbmdfdGFibGUiOiBbIm1haW4iLCAid29yayJdLCAiZGF0YSI6IFt7ImNvZGVfaWQiOiAiQUEiLCAic3ltYm9sX3RhYmxlIjogW3sic3ltYm9sIjogMH0sIHsic3ltYm9sIjogMX1dLCAia25vd25fYWRkcmVzc2VzIjogW1sxMDAsIDBdXX1dfQ=="
+          },
+          "entity": {
+            "id": "s",
+            "running": true,
+            "key": "k",
+            "pid": 42,
+            "argv": [],
+            "rateHz": 1000,
+            "dir": "/h/.almadar/profile/samply",
+            "profileText": "{\"meta\": {\"startTime\": 1794599000574.5, \"interval\": 1.0}, \"libs\": [{\"name\": \"orb-dev.bin\", \"codeId\": \"AA\"}], \"threads\": [{\"name\": \"main\", \"samples\": {\"length\": 4, \"stack\": [1, 1, 1, 0], \"weight\": [1, 1, 1, 1], \"threadCPUDelta\": [10, 10, 10, 5]}, \"stackTable\": {\"length\": 2, \"prefix\": [null, 0], \"frame\": [0, 1]}, \"frameTable\": {\"length\": 2, \"address\": [100, 200], \"func\": [0, 1]}, \"funcTable\": {\"length\": 2, \"name\": [0, 1], \"resource\": [0, 0]}, \"resourceTable\": {\"length\": 1, \"lib\": [0], \"name\": [2]}, \"stringArray\": [\"0x64\", \"0xc8\", \"orb-dev.bin\"]}]}",
+            "symbols": {},
+            "hits": [],
+            "byFunction": {},
+            "samplyPid": 0
+          },
+          "expect": {
+            "fired": true,
+            "exactEmits": [
+              {
+                "event": "SAMPLY_HOT",
+                "payload": {
+                  "key": "k",
+                  "startTime": 1794599000574.5,
+                  "samples": 4,
+                  "cpuUs": 25,
+                  "functions": [
+                    {
+                      "name": "0xc8",
+                      "lib": "orb-dev.bin",
+                      "selfSamples": 3,
+                      "totalSamples": 3,
+                      "selfCpuUs": 20,
+                      "totalCpuUs": 20
+                    },
+                    {
+                      "name": "main",
+                      "lib": "orb-dev.bin",
+                      "selfSamples": 1,
+                      "totalSamples": 4,
+                      "selfCpuUs": 5,
+                      "totalCpuUs": 25
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "a-file-that-is-not-samplys-format-is-unreadable",
+      "steps": [
+        {
+          "trait": "Samply",
+          "event": "SAMPLY_SYMS_READ",
+          "payload": {
+            "data": "e30="
+          },
+          "entity": {
+            "id": "s",
+            "running": true,
+            "key": "k",
+            "pid": 42,
+            "argv": [],
+            "rateHz": 1000,
+            "dir": "/h/.almadar/profile/samply",
+            "profileText": "{\"meta\": {\"startTime\": 1794599000574.5, \"interval\": 1.0}, \"libs\": [{\"name\": \"orb-dev.bin\", \"codeId\": \"AA\"}], \"threads\": [{\"name\": \"main\", \"samples\": {\"length\": 4, \"stack\": [1, 1, 1, 0], \"weight\": [1, 1, 1, 1], \"threadCPUDelta\": [10, 10, 10, 5]}, \"stackTable\": {\"length\": 2, \"prefix\": [null, 0], \"frame\": [0, 1]}, \"frameTable\": {\"length\": 2, \"address\": [100, 200], \"func\": [0, 1]}, \"funcTable\": {\"length\": 2, \"name\": [0, 1], \"resource\": [0, 0]}, \"resourceTable\": {\"length\": 1, \"lib\": [0], \"name\": [2]}, \"stringArray\": [\"0x64\", \"0xc8\", \"orb-dev.bin\"]}]}",
+            "symbols": {},
+            "hits": [],
+            "byFunction": {},
+            "samplyPid": 0
+          },
+          "expect": {
+            "fired": true,
+            "exactEmits": [
+              {
+                "event": "SAMPLY_FAILED",
+                "payload": {
+                  "key": "k",
+                  "code": "unreadable",
+                  "error": "the recording or its symbol sidecar is not samply's format"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "a-second-recording-while-one-runs-is-busy",
+      "steps": [
+        {
+          "trait": "Samply",
+          "event": "SAMPLY_RECORD",
+          "payload": {
+            "key": "k2",
+            "argv": [
+              "true"
+            ],
+            "rateHz": 100
+          },
+          "entity": {
+            "id": "s",
+            "running": true,
+            "key": "k",
+            "pid": 42,
+            "argv": [],
+            "rateHz": 1000,
+            "dir": "/h/.almadar/profile/samply",
+            "profileText": "",
+            "symbols": {},
+            "hits": [],
+            "byFunction": {},
+            "samplyPid": 0
+          },
+          "expect": {
+            "fired": true,
+            "exactEmits": [
+              {
+                "event": "SAMPLY_FAILED",
+                "payload": {
+                  "key": "k2",
+                  "code": "busy",
+                  "error": "a recording is already running"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "attaching-to-a-pid-spawns-samply-on-it",
+      "steps": [
+        {
+          "trait": "Samply",
+          "event": "SAMPLY_DIR_RESOLVED",
+          "payload": {
+            "path": "/h/.almadar/profile/samply"
+          },
+          "entity": {
+            "id": "s",
+            "running": true,
+            "key": "k",
+            "pid": 42,
+            "argv": [],
+            "rateHz": 1000,
+            "dir": "/h/.almadar/profile/samply",
+            "profileText": "",
+            "symbols": {},
+            "hits": [],
+            "byFunction": {},
+            "samplyPid": 0
+          },
+          "expect": {
+            "fired": true,
+            "effects": [
+              {
+                "type": "set"
+              },
+              {
+                "type": "os/spawn"
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "a-samply-exit-is-named",
+      "steps": [
+        {
+          "trait": "Samply",
+          "event": "SAMPLY_DONE",
+          "payload": {
+            "stage": "k",
+            "exitCode": 1,
+            "signal": 0,
+            "stdout": "",
+            "stdoutBytes": "",
+            "stderr": "task_for_pid failed"
+          },
+          "entity": {
+            "id": "s",
+            "running": true,
+            "key": "k",
+            "pid": 42,
+            "argv": [],
+            "rateHz": 1000,
+            "dir": "/h/.almadar/profile/samply",
+            "profileText": "",
+            "symbols": {},
+            "hits": [],
+            "byFunction": {},
+            "samplyPid": 0
+          },
+          "expect": {
+            "fired": true,
+            "exactEmits": [
+              {
+                "event": "SAMPLY_FAILED",
+                "payload": {
+                  "key": "k",
+                  "code": "samply_exit",
+                  "error": "samply exited with code 1: task_for_pid failed"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "a-command-runs-under-samply-to-its-end",
+      "defaults": [
+        "SamplyRunner"
+      ],
+      "steps": [
+        {
+          "trait": "Samply",
+          "event": "SAMPLY_DIR_RESOLVED",
+          "payload": {
+            "path": "/h/.almadar/profile/samply"
+          },
+          "entity": {
+            "id": "s",
+            "running": true,
+            "key": "k",
+            "pid": 0,
+            "argv": [
+              "orb",
+              "--version"
+            ],
+            "rateHz": 1000,
+            "samplyPid": 0,
+            "dir": "/h/.almadar/profile/samply",
+            "profileText": "",
+            "symbols": {},
+            "hits": [],
+            "byFunction": {}
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "SAMPLY_RUN",
+                "payload": {
+                  "stage": "k",
+                  "argv": [
+                    "record",
+                    "--save-only",
+                    "--unstable-presymbolicate",
+                    "-o",
+                    "/h/.almadar/profile/samply/k.json",
+                    "--rate",
+                    "1000",
+                    "--",
+                    "orb",
+                    "--version"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "the-spawned-samply-is-announced-and-waited-on",
+      "steps": [
+        {
+          "trait": "Samply",
+          "event": "SAMPLY_SPAWNED",
+          "payload": {
+            "pid": 777
+          },
+          "entity": {
+            "id": "s",
+            "running": true,
+            "key": "k",
+            "pid": 42,
+            "argv": [],
+            "rateHz": 1000,
+            "samplyPid": 0,
+            "dir": "/h/.almadar/profile/samply",
+            "profileText": "",
+            "symbols": {},
+            "hits": [],
+            "byFunction": {}
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "SAMPLY_STARTED",
+                "payload": {
+                  "key": "k"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "type": "set"
+              },
+              {
+                "type": "emit"
+              },
+              {
+                "type": "os/wait"
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "stop-sends-samply-int",
+      "steps": [
+        {
+          "trait": "Samply",
+          "event": "SAMPLY_STOP",
+          "payload": {
+            "key": "k"
+          },
+          "entity": {
+            "id": "s",
+            "running": true,
+            "key": "k",
+            "pid": 42,
+            "argv": [],
+            "rateHz": 1000,
+            "samplyPid": 777,
+            "dir": "/h/.almadar/profile/samply",
+            "profileText": "",
+            "symbols": {},
+            "hits": [],
+            "byFunction": {}
+          },
+          "expect": {
+            "fired": true,
+            "effects": [
+              {
+                "type": "os/kill"
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "control-a-stop-with-nothing-attached-is-idle",
+      "steps": [
+        {
+          "trait": "Samply",
+          "event": "SAMPLY_STOP",
+          "payload": {
+            "key": "k"
+          },
+          "entity": {
+            "id": "s",
+            "running": false,
+            "key": "k",
+            "pid": 42,
+            "argv": [],
+            "rateHz": 1000,
+            "samplyPid": 0,
+            "dir": "/h/.almadar/profile/samply",
+            "profileText": "",
+            "symbols": {},
+            "hits": [],
+            "byFunction": {}
+          },
+          "expect": {
+            "fired": true,
+            "exactEmits": [
+              {
+                "event": "SAMPLY_FAILED",
+                "payload": {
+                  "key": "k",
+                  "code": "idle",
+                  "error": "no attached recording is running"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "the-ended-attach-reads-the-recording",
+      "steps": [
+        {
+          "trait": "Samply",
+          "event": "SAMPLY_ATTACH_ENDED",
+          "payload": {
+            "key": "samply-attached",
+            "code": 0
+          },
+          "entity": {
+            "id": "s",
+            "running": true,
+            "key": "k",
+            "pid": 42,
+            "argv": [],
+            "rateHz": 1000,
+            "samplyPid": 777,
+            "dir": "/h/.almadar/profile/samply",
+            "profileText": "",
+            "symbols": {},
+            "hits": [],
+            "byFunction": {}
+          },
+          "expect": {
+            "fired": true,
+            "effects": [
+              {
+                "type": "set"
+              },
+              {
+                "type": "os/read-file"
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "a-recorded-commands-output-is-kept",
+      "steps": [
+        {
+          "trait": "Samply",
+          "event": "SAMPLY_DONE",
+          "payload": {
+            "stage": "k",
+            "exitCode": 0,
+            "signal": 0,
+            "stdout": "the report",
+            "stdoutBytes": "",
+            "stderr": ""
+          },
+          "entity": {
+            "id": "s",
+            "running": true,
+            "key": "k",
+            "pid": 0,
+            "argv": [
+              "orb",
+              "--version"
+            ],
+            "rateHz": 1000,
+            "samplyPid": 0,
+            "dir": "/h/.almadar/profile/samply",
+            "profileText": "",
+            "symbols": {},
+            "hits": [],
+            "byFunction": {}
+          },
+          "expect": {
+            "fired": true,
+            "entity": {
+              "output": "the report"
+            },
+            "effects": [
+              {
+                "type": "os/read-file"
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "the-hot-answer-carries-the-recorded-commands-output",
+      "steps": [
+        {
+          "trait": "Samply",
+          "event": "SAMPLY_SYMS_READ",
+          "payload": {
+            "data": "eyJzdHJpbmdfdGFibGUiOiBbIm1haW4iLCAid29yayJdLCAiZGF0YSI6IFt7ImNvZGVfaWQiOiAiQUEiLCAic3ltYm9sX3RhYmxlIjogW3sic3ltYm9sIjogMH0sIHsic3ltYm9sIjogMX1dLCAia25vd25fYWRkcmVzc2VzIjogW1sxMDAsIDBdLCBbMjAwLCAxXV19XX0="
+          },
+          "entity": {
+            "id": "s",
+            "running": true,
+            "key": "k",
+            "pid": 42,
+            "argv": [],
+            "rateHz": 1000,
+            "dir": "/h/.almadar/profile/samply",
+            "profileText": "{\"meta\": {\"startTime\": 1794599000574.5, \"interval\": 1.0}, \"libs\": [{\"name\": \"orb-dev.bin\", \"codeId\": \"AA\"}], \"threads\": [{\"name\": \"main\", \"samples\": {\"length\": 4, \"stack\": [1, 1, 1, 0], \"weight\": [1, 1, 1, 1], \"threadCPUDelta\": [10, 10, 10, 5]}, \"stackTable\": {\"length\": 2, \"prefix\": [null, 0], \"frame\": [0, 1]}, \"frameTable\": {\"length\": 2, \"address\": [100, 200], \"func\": [0, 1]}, \"funcTable\": {\"length\": 2, \"name\": [0, 1], \"resource\": [0, 0]}, \"resourceTable\": {\"length\": 1, \"lib\": [0], \"name\": [2]}, \"stringArray\": [\"0x64\", \"0xc8\", \"orb-dev.bin\"]}]}",
+            "symbols": {},
+            "hits": [],
+            "byFunction": {},
+            "samplyPid": 0,
+            "output": "the report"
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "SAMPLY_HOT",
+                "payload": {
+                  "key": "k",
+                  "output": "the report"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    }
+  ]
+}

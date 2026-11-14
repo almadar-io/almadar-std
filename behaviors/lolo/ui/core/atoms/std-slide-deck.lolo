@@ -16,33 +16,33 @@ orbital SlideDeckOrbital {
     state presenting {
       INIT -> presenting
         (set @entity.slideIndex @config.startIndex)
-        (render-ui main @config.bodyContent)
+        (when @config.paints (render-ui main @config.bodyContent))
       GO_TO -> presenting
         (set @entity.slideIndex ?index)
         (emit SLIDE_CHANGED { index: @entity.slideIndex })
-        (render-ui main @config.bodyContent)
+        (when @config.paints (render-ui main @config.bodyContent))
       NEXT -> presenting when (< @entity.slideIndex (- @config.slideCount 1))
         (set @entity.slideIndex (+ @entity.slideIndex 1))
         (emit SLIDE_CHANGED { index: @entity.slideIndex })
-        (render-ui main @config.bodyContent)
+        (when @config.paints (render-ui main @config.bodyContent))
       NEXT -> presenting when (and @config.loop (>= @entity.slideIndex (- @config.slideCount 1)) (> @config.slideCount 1))
         (set @entity.slideIndex 0)
         (emit SLIDE_CHANGED { index: @entity.slideIndex })
-        (render-ui main @config.bodyContent)
+        (when @config.paints (render-ui main @config.bodyContent))
       NEXT -> presenting when (or (<= @config.slideCount 1) (and (not @config.loop) (>= @entity.slideIndex (- @config.slideCount 1))))
       PREV -> presenting when (> @entity.slideIndex 0)
         (set @entity.slideIndex (- @entity.slideIndex 1))
         (emit SLIDE_CHANGED { index: @entity.slideIndex })
-        (render-ui main @config.bodyContent)
+        (when @config.paints (render-ui main @config.bodyContent))
       PREV -> presenting when (and @config.loop (<= @entity.slideIndex 0) (> @config.slideCount 1))
         (set @entity.slideIndex (- @config.slideCount 1))
         (emit SLIDE_CHANGED { index: @entity.slideIndex })
-        (render-ui main @config.bodyContent)
+        (when @config.paints (render-ui main @config.bodyContent))
       PREV -> presenting when (and (<= @entity.slideIndex 0) (or (not @config.loop) (<= @config.slideCount 1)))
       PICK -> presenting when (>= (object/get @config.pickTargets (default ?unitId "") -1) 0)
         (set @entity.slideIndex (object/get @config.pickTargets (default ?unitId "") 0))
         (emit SLIDE_CHANGED { index: @entity.slideIndex })
-        (render-ui main @config.bodyContent)
+        (when @config.paints (render-ui main @config.bodyContent))
       PICK -> presenting when (< (object/get @config.pickTargets (default ?unitId "") -1) 0)
     }
 
@@ -118,6 +118,10 @@ orbital SlideDeckOrbital {
         @tier "presentation"
       nextIcon : icon = chevron-right
         @label "Next icon"
+        @tier "presentation"
+      paints : boolean = true
+        @label "Paints"
+        @description "On, the deck paints its arrows, stage and counter. Off, it only keeps the cursor and emits SLIDE_CHANGED, for a page that paints its own stage (a canvas)."
         @tier "presentation"
       bodyContent : render-ui = {
         type: stack

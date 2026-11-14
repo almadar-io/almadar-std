@@ -3,7 +3,7 @@ app system-stats-spec [
   description: "Design contract for sampling the load of the machine a program runs on: a sample reads memory, cpu, load average and uptime and the resident memory of named processes, and answers once with all of them; a stat the host cannot answer is named in a failure and left at zero, never dropped silently."
 ]
 
-type StatsProcess = { pid : number!, rssKb : number! }
+type StatsProcess = { pid : number!, rssBytes : number! }
 
 orbital SystemStatsSpec {
   expects entity SystemStatsRun [runtime] {
@@ -12,6 +12,7 @@ orbital SystemStatsSpec {
     sampling : boolean
     pids : [number]
     processes : [StatsProcess]
+    unmeasured : [number]
     unavailable : [string]
   }
   expects trait SystemStatsMeter {
@@ -21,7 +22,7 @@ orbital SystemStatsSpec {
       STATS_SAMPLE -> ready
     }
     emits {
-      STATS_READ { memoryTotal : number!  cpuPercent : number!  processes : [StatsProcess]!  missing : [number]!  unavailable : [string]! }
+      STATS_READ { memoryTotal : number!  cpuPercent : number!  processes : [StatsProcess]!  missing : [number]!  unmeasured : [number]!  unavailable : [string]! }
       STATS_FAILED { code : string!  error : string! }
     }
   }

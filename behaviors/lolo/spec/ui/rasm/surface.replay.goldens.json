@@ -966,6 +966,343 @@
      }
     }
    ]
+  },
+  {
+   "id": "by-default-the-canvas-takes-the-container-width-and-the-root-content-height",
+   "config": {
+    "width": 720,
+    "height": 520,
+    "rootChild": "root",
+    "rootRect": {
+     "x": 0,
+     "y": 0,
+     "w": 900,
+     "h": 520
+    },
+    "margin": 24,
+    "align": "center"
+   },
+   "entity": {
+    "id": "rasm",
+    "viewW": 720,
+    "viewH": 520,
+    "contentH": 520,
+    "root": {
+     "x": 0,
+     "y": 0,
+     "w": 720,
+     "h": 520
+    },
+    "paints": {},
+    "looks": {},
+    "hidden": [],
+    "repaints": 0,
+    "dir": "ltr"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_RESIZE",
+     "payload": {
+      "width": 600,
+      "height": 520
+     },
+     "expect": {
+      "state": "ready",
+      "entity": {
+       "viewW": 600,
+       "viewH": 568
+      },
+      "emits": [
+       {
+        "event": "RASM_PLACE",
+        "payload": {
+         "placed": [
+          {
+           "id": "root",
+           "rect": {
+            "x": 24,
+            "y": 24,
+            "w": 552,
+            "h": 520
+           }
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "ready",
+     "event": "RASM_EXTENT",
+     "payload": {
+      "id": "root",
+      "w": 552,
+      "h": 1800
+     },
+     "expect": {
+      "state": "ready",
+      "entity": {
+       "viewW": 600,
+       "viewH": 1848
+      },
+      "emits": [
+       {
+        "event": "RASM_PLACE",
+        "payload": {
+         "placed": [
+          {
+           "id": "root",
+           "rect": {
+            "x": 24,
+            "y": 24,
+            "w": 552,
+            "h": 1800
+           }
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "ready",
+     "event": "RASM_RESIZE",
+     "payload": {
+      "width": 600,
+      "height": 1848
+     },
+     "expect": {
+      "state": "ready",
+      "entity": {
+       "viewW": 600,
+       "viewH": 1848
+      },
+      "emits": [
+       {
+        "event": "RASM_PLACE",
+        "payload": {
+         "placed": [
+          {
+           "id": "root",
+           "rect": {
+            "x": 24,
+            "y": 24,
+            "w": 552,
+            "h": 1800
+           }
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "from": "ready",
+     "event": "RASM_EXTENT",
+     "payload": {
+      "id": "root",
+      "w": 552,
+      "h": 1800
+     },
+     "expect": {
+      "state": "ready",
+      "neverEmits": [
+       "RASM_PLACE",
+       "SURFACE_REPAINT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-an-extent-from-another-stack-is-ignored",
+   "config": {
+    "width": 720,
+    "height": 520,
+    "rootChild": "root",
+    "rootRect": {
+     "x": 0,
+     "y": 0,
+     "w": 720,
+     "h": 520
+    }
+   },
+   "entity": {
+    "id": "rasm",
+    "viewW": 720,
+    "viewH": 520,
+    "contentH": 520,
+    "root": {
+     "x": 0,
+     "y": 0,
+     "w": 720,
+     "h": 520
+    },
+    "paints": {},
+    "looks": {},
+    "hidden": [],
+    "repaints": 0,
+    "dir": "ltr"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_EXTENT",
+     "payload": {
+      "id": "inner",
+      "w": 300,
+      "h": 900
+     },
+     "expect": {
+      "state": "ready",
+      "entity": {
+       "viewH": 520
+      },
+      "neverEmits": [
+       "RASM_PLACE",
+       "SURFACE_REPAINT"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "control-a-filled-surface-takes-the-container-box-and-ignores-the-extent",
+   "config": {
+    "width": 720,
+    "height": 520,
+    "rootChild": "root",
+    "rootRect": {
+     "x": 0,
+     "y": 0,
+     "w": 720,
+     "h": 520
+    },
+    "fill": true
+   },
+   "entity": {
+    "id": "rasm",
+    "viewW": 720,
+    "viewH": 520,
+    "contentH": 520,
+    "root": {
+     "x": 0,
+     "y": 0,
+     "w": 720,
+     "h": 520
+    },
+    "paints": {},
+    "looks": {},
+    "hidden": [],
+    "repaints": 0,
+    "dir": "ltr"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "RASM_EXTENT",
+     "payload": {
+      "id": "root",
+      "w": 720,
+      "h": 1800
+     },
+     "expect": {
+      "state": "ready",
+      "entity": {
+       "viewH": 520
+      },
+      "neverEmits": [
+       "RASM_PLACE",
+       "SURFACE_REPAINT"
+      ]
+     }
+    },
+    {
+     "from": "ready",
+     "event": "SURFACE_REPAINT",
+     "payload": {
+      "n": 1
+     },
+     "expect": {
+      "state": "ready",
+      "rendered": [
+       {
+        "slot": "main",
+        "props": {
+         "fillContainer": true
+        }
+       }
+      ]
+     },
+     "options": {
+      "render": true,
+      "renderProps": true
+     }
+    }
+   ]
+  },
+  {
+   "id": "by-default-the-canvas-is-the-container-width-and-the-content-height-tall",
+   "config": {
+    "width": 720,
+    "height": 520,
+    "rootChild": "root",
+    "rootRect": {
+     "x": 0,
+     "y": 0,
+     "w": 900,
+     "h": 520
+    },
+    "margin": 24,
+    "align": "center"
+   },
+   "entity": {
+    "id": "rasm",
+    "viewW": 600,
+    "viewH": 1848,
+    "contentH": 1800,
+    "root": {
+     "x": 24,
+     "y": 24,
+     "w": 552,
+     "h": 1800
+    },
+    "paints": {},
+    "looks": {},
+    "hidden": [],
+    "repaints": 0,
+    "dir": "ltr"
+   },
+   "steps": [
+    {
+     "from": "ready",
+     "event": "SURFACE_REPAINT",
+     "payload": {
+      "n": 9
+     },
+     "expect": {
+      "state": "ready",
+      "rendered": [
+       {
+        "slot": "main",
+        "props": {
+         "fillContainer": "width",
+         "worldWidth": 600,
+         "worldHeight": 1848
+        }
+       }
+      ]
+     },
+     "options": {
+      "render": true,
+      "renderProps": true
+     }
+    }
+   ]
   }
  ]
 }

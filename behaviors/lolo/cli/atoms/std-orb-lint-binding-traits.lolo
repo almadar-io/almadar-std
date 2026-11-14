@@ -67,7 +67,7 @@ orbital OrbLintBindingTraitsOrbital {
             { i: (+ @oi 1), out: (array/concat (object/get @oa "out") (object/get (array/reduce @trts { i: 0, out: @noroots } (fn (ta t)
               (let ((ti : number (object/get @ta "i")))
                 { i: (+ @ti 1), out: (array/concat (object/get @ta "out")
-                  (if (or (not (object/has @t "stateMachine")) (not (array/some (object/get @entity.roots (str/concat @oi "-" @ti) @nostr) (fn r (str/startsWith @r @tP)))))
+                  (if (or (not (object/has @t "stateMachine")) (not (array/some (object/get @entity.roots (str/concat @oi "-" @ti) @nostr) (fn r (or (= @r @tP) (str/startsWith @r @tP2) (str/startsWith @r (str/concat @tP "[")))))))
                     @noroots
                     (let ((tp (str/concat "orbitals[" @oi " (" (object/get @o "name" "") ")].traits[" @ti " (" (object/get @t "name" "") ")]")) (tn (object/get @t "name" "")) (trs : [BtTransition] (object/get (object/get @t "stateMachine" { transitions: [] }) "transitions" [])) (tks : [BtTick] (object/get @t "ticks" [])) (cfg : Map string BtCfg (object/get @t "config" {})))
                       (array/concat
@@ -106,7 +106,7 @@ orbital OrbLintBindingTraitsOrbital {
       (array/flatten
         (array/map @roots
           (fn x
-            (let ((hs : [BtHit] (let ((ix : BtHits (default (as (tree/index (object/get @x "x" null) ["render-ui"] { prefixes: [@tP] }) BtHits) {}))) (let ((rds : [string] (array/map (object/get @ix "render-ui" []) (fn c (object/get @c "path" ""))))) (array/map (array/filter (array/flatten (object/values @ix)) (fn c (let ((nd (object/get @c "node" null))) (and (validate/string @nd) (>= (str/len (default (as @nd BtS) "")) 6))))) (fn c (let ((lp (object/get @c "path" ""))) { rel: (let ((p (object/get @c "path" ""))) (if (= @p "") "" (if (str/startsWith @p "[") @p (str/concat "." @p)))), s: (default (as (object/get @c "node" null) BtS) ""), rd: (array/some @rds (fn rp (or (= @rp "") (= @lp @rp) (str/startsWith @lp (str/concat @rp "[")) (str/startsWith @lp (str/concat @rp "."))))) })))))))
+            (let ((hs : [BtHit] (let ((ix : BtHits (default (as (tree/index (object/get @x "x" null) ["render-ui"] { prefixes: [@tP] }) BtHits) {}))) (let ((rds : [string] (array/map (object/get @ix "render-ui" []) (fn c (object/get @c "path" ""))))) (array/map (array/filter (array/flatten (object/values @ix)) (fn c (let ((nd (object/get @c "node" null))) (and (validate/string @nd) (let ((ns (default (as @nd BtS) ""))) (or (= @ns @tP) (str/startsWith @ns @tP2) (str/startsWith @ns (str/concat @tP "[")))))))) (fn c (let ((lp (object/get @c "path" ""))) { rel: (let ((p (object/get @c "path" ""))) (if (= @p "") "" (if (str/startsWith @p "[") @p (str/concat "." @p)))), s: (default (as (object/get @c "node" null) BtS) ""), rd: (array/some @rds (fn rp (or (= @rp "") (= @lp @rp) (str/startsWith @lp (str/concat @rp "[")) (str/startsWith @lp (str/concat @rp "."))))) })))))))
               (array/flatten
                 (array/map @hs
                   (fn h

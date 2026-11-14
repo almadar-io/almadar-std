@@ -1,0 +1,22 @@
+app trace-cost-spec [
+  version: "1.0.0",
+  description: "Design contract for folding measured step and effect costs into a ranked table: per site, trait and event, and per effect operator, with every time kept for percentiles and unmeasured outcomes counted apart, never as zero."
+]
+
+orbital TraceCostSpec {
+  expects entity TraceCostTable [runtime] {
+    id : string!
+    unmeasured : number
+  }
+  expects trait TraceCost {
+    state ready {
+      COST_FOLD -> ready
+      COST_TABLE_ASK -> ready
+      COST_RESET -> ready
+    }
+    emits {
+      COST_TABLE { key : string!  unmeasured : number! }
+    }
+  }
+  expects page boot -> TraceCost
+}

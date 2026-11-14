@@ -1,7 +1,7 @@
 app std-verify-plan [
   version: "1.0.0",
   env: ["ALMADAR_PERSONA_OWNS"],
-  description: "std-verify-plan — the kernel's verify planner (orbital-core planner.rs plan_trait) as data. PLAN_REQUEST carries a resolved program (.orb IR) and std-machine rows; PLAN_ANSWERED returns one PlannedStep per row in row order. Planned: the payload of every unguarded row from its declared slots (row-key slot and id slot = the seed row id, values slot = first declared value, entity slot or bound @entity slot = a full sample row of that entity from the composed std-mock-seed (SAMPLE_ROWS) carrying the seed id (a one-row array for an array slot), number and money 1, date 2026-01-01, datetime, timestamp and instant 2026-01-01T00:00:00Z, a Map slot {}, boolean true, email, url, image, phone, uuid, array [], other string 'verify', a slot of a declared record type (a key of the program's or an orbital's types) is left out when optional; a required one makes the row object-slot-unplanned). Unplanned with the Rust reason code: guard-unsolved (guarded row, the symbolic guard solver is not ported) and object-slot-unplanned (object or [object] slot, its properties are not on the row). Each planned step also carries `entity`: its linked row seeded with the seed id and a full std-mock-seed sample, so a transition played alone runs on a row with the fields an earlier transition would have set. With no viewer the planner samples one row of the program's one identity entity (with that entity's seed id) as the viewer, runs the baseline probes as it and returns it as PLAN_ANSWERED's viewer; with no identity entity the viewer stays anonymous, and several identity entities with no viewer are refused (which roster is the viewer is never picked by order). The walk is bounded array maps in one event, no cascade."
+  description: "std-verify-plan — the kernel's verify planner (orbital-core planner.rs plan_trait) as data. PLAN_REQUEST carries a resolved program (.orb IR) and std-machine rows; PLAN_ANSWERED returns one PlannedStep per row in row order. Planned: the payload of every unguarded row from its declared slots (row-key slot and id slot = the seed row id, values slot = first declared value, entity slot or bound @entity slot = a full sample row of that entity from the composed std-mock-seed (one SAMPLE_BATCH for every pending entity, so a plan costs a fixed number of deliveries however many entities it samples) carrying the seed id (a one-row array for an array slot), number and money 1, date 2026-01-01, datetime, timestamp and instant 2026-01-01T00:00:00Z, a Map slot {}, boolean true, email, url, image, phone, uuid, array [], other string 'verify', a slot of a declared record type (a key of the program's or an orbital's types) is left out when optional; a required one makes the row object-slot-unplanned). Unplanned with the Rust reason code: guard-unsolved (guarded row, the symbolic guard solver is not ported) and object-slot-unplanned (object or [object] slot, its properties are not on the row). Each planned step also carries `entity`: its linked row seeded with the seed id and a full std-mock-seed sample, so a transition played alone runs on a row with the fields an earlier transition would have set. With no viewer the planner samples one row of the program's one identity entity (with that entity's seed id) as the viewer, runs the baseline probes as it and returns it as PLAN_ANSWERED's viewer; with no identity entity the viewer stays anonymous, and several identity entities with no viewer are refused (which roster is the viewer is never picked by order). The walk is bounded array maps in one event, no cascade."
 ]
 ;; @capabilities "verify planner, payload synthesis, seed row id, plan a transition, guard payload"
 uses Spec from "almadar-std/verify-plan"
@@ -26,7 +26,7 @@ type PlanSteps = [VerifyPlanPlannedStep]
 type PlanState = { name : string!, isInitial : boolean }
 type PlanGraph = { states : [PlanState], transitions : [PlanArm] }
 type PlanTrait = { name : string!, orbital : string, linkedEntity : string, stateMachine : PlanGraph, ticks : [PlanTick], listens : [PlanListen] }
-type PlanEntField = { name : string!, default : SExpr }
+type PlanEntField = { name : string!, default : SExpr? }
 type PlanEntity = { name : string, fields : [PlanEntField] }
 type PlanOrbital = { name : string!, entity : PlanEntity, traits : [PlanTrait], types : Map string SExpr }
 type PlanProgram = { orbitals : [PlanOrbital]!, types : Map string SExpr }
@@ -51,9 +51,14 @@ type PlanRowRef = { idx : number!, key : string!, entity : string!, array : bool
 type PlanRowJob = { entity : string!, fields : [PlanMockField]!, runtime : boolean!, identity : boolean!, viewer : boolean }
 type PlanRowRefs = [PlanRowRef]
 type PlanRowJobs = [PlanRowJob]
+type PlanSampleJob = { fields : [PlanMockField]!, name : string!, count : number!, runtime : boolean!, identity : boolean! }
+type PlanViewerStep = { before : string!, hasAfter : boolean! }
+type PlanViewerAcc = { v : (Map string PlanMockValue?)?, seq : [PlanViewerStep]! }
 type PlanSeedEntities = [PlanSeedEntity]
 type VerifyPlanPlannedStep = { trait : string!, linkedEntity : string, from : string!, event : string!, to : string!, toStates : [string]!, variant : string!, payload : PlanPayload!, guarded : boolean!, arm : number, solved : boolean!, payloadCase : string!, guardCase : string, unplanned : string, precondition : PlanPrecondition, reply : string, entity : (Map string PlanMockValue?)? }
 
+type PlanSetter = { k : string!, ent : string!, trait : string!, event : string!, fields : [string]! }
+type PlanTickSetter = { k : string!, fields : [string]! }
 orbital VerifyPlanOrbital {
   entity PlanRun [runtime] {
     id : string!
@@ -73,7 +78,6 @@ orbital VerifyPlanOrbital {
     owners : Map string [string] = {}
     seedIds : Map string string = {}
     newIds : Map string string = {}
-    callSeq : number = 0
   }
 
   uses Seed from "std/behaviors/std-mock-seed"
@@ -81,7 +85,7 @@ orbital VerifyPlanOrbital {
   trait MockSeed = Seed.traits.MockSeed {
     listens {
       MockStream.CORPUS_IS -> CORPUS_IS
-      Plan.SAMPLE_ROWS -> SAMPLE_ROWS
+      Plan.SAMPLE_BATCH -> SAMPLE_BATCH
     }
   }
 
@@ -114,7 +118,7 @@ orbital VerifyPlanOrbital {
             (set @entity.seedIds (array/reduce @names @noIds (fn (acc name) (object/set @acc @name (if (and (and (!= @entity.viewer null) (object/has @entity.viewer "id")) (array/includes (object/get @entity.owners (str/lower @name) []) "id")) (default (str/template "{{v}}" { v: (object/get @entity.viewer "id") }) "") (str/concat @name "-verify-seed-1"))))))
             (set @entity.newIds (array/reduce @names @noIds (fn (acc name) (object/set @acc @name (if (and (and (!= @entity.viewer null) (object/has @entity.viewer "id")) (array/includes (object/get @entity.owners (str/lower @name) []) "id")) (default (str/template "{{v}}" { v: (object/get @entity.viewer "id") }) "") (str/concat @name "-verify-new-1"))))))))
         (set @entity.progTraits (array/flatten (array/map (object/get @entity.program "orbitals") (fn o (array/map (object/get @o "traits" []) (fn t (object/set @t "orbital" (object/get @o "name"))))))))
-        (let ((idents (array/unique (array/map (array/filter (array/reduce (object/get @entity.seedProgram "orbitals" []) [] (fn (acc o) (array/concat (array/concat @acc [(object/get @o "entity")]) (object/get @o "auxiliaryEntities" [])))) (fn e (and (!= @e null) (object/get @e "identity" false)))) (fn e (if (== @e null) "" (object/get @e "name" "")))))) (noGraph : PlanGraph {}) (noInitial (array/unique (array/map (array/filter @entity.rows (fn r (not (array/some @entity.progTraits (fn t (and (= (object/get @t "name") (object/get @r "trait")) (= (object/get @t "orbital") (object/get @r "orbital")) (array/some (object/get (object/get @t "stateMachine" @noGraph) "states" []) (fn st (object/get @st "isInitial" false))))))))) (fn r (str/concat (object/get @r "orbital") "." (object/get @r "trait")))))))
+        (let ((idents (array/unique (array/map (array/filter (array/reduce (object/get @entity.seedProgram "orbitals" []) [] (fn (acc o) (array/concat (array/concat @acc [(object/get @o "entity")]) (object/get @o "auxiliaryEntities" [])))) (fn e (and (!= @e null) (object/get @e "identity" false)))) (fn e (if (== @e null) "" (object/get @e "name" "")))))) (noGraph : PlanGraph {}) (noInitial (let ((initBy (array/groupBy (array/filter @entity.progTraits (fn t (array/some (object/get (object/get @t "stateMachine" @noGraph) "states" []) (fn st (object/get @st "isInitial" false))))) (fn t (str/concat (object/get @t "orbital" "") "|" (object/get @t "name")))))) (array/unique (array/map (array/filter @entity.rows (fn r (not (object/has @initBy (str/concat (object/get @r "orbital") "|" (object/get @r "trait")))))) (fn r (str/concat (object/get @r "orbital") "." (object/get @r "trait"))))))))
           (if (> (array/len @noInitial) 0)
             (do (set @entity.steps [])
               (emit PLAN_REFUSED { error: (str/concat "verify-plan: no initial state declared for trait " (str/join @noInitial ", ")) }))
@@ -132,12 +136,16 @@ orbital VerifyPlanOrbital {
       PLAN_ROWS -> ready
         (let ((noForm : PlanForm []) (noGraph : PlanGraph {}) (noPay : PlanPayload {})
               (named (let ((pg (default @entity.program { orbitals: [] }))) (array/concat (object/keys (default (object/get @pg "types") {})) (array/flatten (array/map (object/get @pg "orbitals") (fn o (object/keys (default (object/get @o "types") {})))))))))
-         (do (set @entity.steps (array/flatten (array/map @entity.rows (fn r
-            (let ((tr (array/find @entity.progTraits (fn t (and (= (object/get @t "name") (object/get @r "trait")) (= (object/get @t "orbital") (object/get @r "orbital")))))))
+         (do (set @entity.steps (let ((traitBy (array/groupBy @entity.progTraits (fn t (str/concat (object/get @t "orbital" "") "|" (object/get @t "name")))))
+               (setters : [PlanSetter] (array/filter (array/flatten (array/map @entity.progTraits (fn t (array/map (array/filter (object/get (object/get @t "stateMachine" @noGraph) "transitions" []) (fn a (!= (object/get @a "event") "INIT"))) (fn a { k: (str/concat (object/get @t "orbital" "") "|" (object/get @t "name")), ent: (object/get @t "linkedEntity" ""), trait: (object/get @t "name"), event: (object/get @a "event"), fields: (array/map (array/filter (array/map (array/filter (array/reduce (object/get @a "effects" []) [] (fn (acc2 e) (array/concat @acc2 (json/nodes @e)))) (fn n (validate/array @n))) (fn n (default (as @n PlanForm) @noForm))) (fn f (and (> (array/len @f) 1) (= (array/nth @f 0) "set") (validate/string (array/nth @f 1)) (str/startsWith (default (as (array/nth @f 1) PlanStr) "") (quote "@entity."))))) (fn f (str/slice (default (as (array/nth @f 1) PlanStr) "") 8))) }))))) (fn sx (> (array/len (object/get @sx "fields")) 0))))
+               (tickBy : Map string [PlanTickSetter] (array/groupBy (array/map @entity.progTraits (fn t { k: (str/concat (object/get @t "orbital" "") "|" (object/get @t "name")), fields: (array/map (array/filter (array/map (array/filter (array/reduce (array/reduce (object/get @t "ticks" []) [] (fn (acc3 tk) (array/concat @acc3 (object/get @tk "effects" [])))) [] (fn (acc2 e) (array/concat @acc2 (json/nodes @e)))) (fn n (validate/array @n))) (fn n (default (as @n PlanForm) @noForm))) (fn f (and (> (array/len @f) 1) (= (array/nth @f 0) "set") (validate/string (array/nth @f 1)) (str/startsWith (default (as (array/nth @f 1) PlanStr) "") (quote "@entity."))))) (fn f (str/slice (default (as (array/nth @f 1) PlanStr) "") 8))) })) (fn tx (object/get @tx "k"))))
+               (armsBy (array/groupBy (array/flatten (array/map @entity.progTraits (fn t (array/map (object/get (object/get @t "stateMachine" @noGraph) "transitions" []) (fn a { k: (str/concat (object/get @t "orbital" "") "|" (object/get @t "name") "|" (object/get @a "event")), a: @a }))))) (fn x (object/get @x "k")))))
+          (let ((setBy : Map string [PlanSetter] (array/groupBy @setters (fn sx (object/get @sx "k")))) (setByEnt : Map string [PlanSetter] (array/groupBy @setters (fn sx (object/get @sx "ent"))))) (array/flatten (array/map @entity.rows (fn r
+            (let ((tr (array/first (object/get @traitBy (str/concat (object/get @r "orbital") "|" (object/get @r "trait")) []))))
  (if (= @tr null) []
-              (let ((ent (object/get @tr "linkedEntity" "")))
+              (let ((ent (object/get @tr "linkedEntity" "")) (evArms (array/map (object/get @armsBy (str/concat (object/get @r "orbital") "|" (object/get @r "trait") "|" (object/get @r "event")) []) (fn x (object/get @x "a")))))
                 (let ((seed (if (= @ent "") "" (object/get @entity.seedIds @ent (str/concat @ent "-verify-seed-1"))))
-                      (keyNodes (array/filter (array/map (array/filter (array/reduce (array/filter (object/get (object/get @tr "stateMachine" @noGraph) "transitions" []) (fn a (= (object/get @a "event") (object/get @r "event")))) [] (fn (acc a) (array/concat @acc (array/reduce (object/get @a "effects" []) [] (fn (acc2 e) (array/concat @acc2 (json/nodes @e))))))) (fn n (validate/array @n))) (fn n (default (as @n PlanForm) @noForm)))
+                      (keyNodes (array/filter (array/map (array/filter (array/reduce @evArms [] (fn (acc a) (array/concat @acc (array/reduce (object/get @a "effects" []) [] (fn (acc2 e) (array/concat @acc2 (json/nodes @e))))))) (fn n (validate/array @n))) (fn n (default (as @n PlanForm) @noForm)))
                                          (fn f (and (> (array/len @f) 2) (= (array/take @f 2) (quote ["set", "@entity.id"])) (and (validate/string (array/nth @f 2)) (str/startsWith (default (as (array/nth @f 2) PlanStr) "") (quote "@payload."))))))))
                   (let ((keys (array/flatten (array/map @keyNodes (fn f (let ((k (array/nth @f 2))) (if (validate/string @k) [(str/slice (default (as @k PlanStr) "") 9)] [])))))))
                   (let ((keysShort (!= (array/len @keys) (array/len @keyNodes))))
@@ -162,7 +170,7 @@ orbital VerifyPlanOrbital {
                         (objectSlot (array/some (object/get @r "payload") (fn s (or (array/includes ["object" "[object]"] (object/get @s "type")) (and (object/get @s "required") (array/includes @named (object/get @s "type"))))))))
                     (let ((arms (object/get (object/get @tr "stateMachine" @noGraph) "transitions" []))
                           (guarded (object/get @r "guarded")))
-                      (let ((arm (array/find @arms (fn a (and (= (object/get @a "event") (object/get @r "event")) (= (object/get @a "to") (object/get @r "to")) (= (object/has @a "guard") @guarded) (array/includes (let ((fr (object/get @a "from"))) (if (validate/string @fr) [@fr] @fr)) (object/get @r "from")))))))
+                      (let ((arm (array/find @evArms (fn a (and (= (object/get @a "event") (object/get @r "event")) (= (object/get @a "to") (object/get @r "to")) (= (object/has @a "guard") @guarded) (array/includes (let ((fr (object/get @a "from"))) (if (validate/string @fr) [@fr] @fr)) (object/get @r "from")))))))
                         (let ((guardOf (if (= @arm null) "" (object/get @arm "guard" ""))))
 (if (and @guarded (= @arm null)) []
 (let ((bindTexts (if @guarded (array/map (array/filter (json/nodes @guardOf) (fn n (and (validate/string @n) (str/startsWith (default (as @n PlanStr) "") (quote "@"))))) (fn n (default (as @n PlanStr) ""))) [])))
@@ -203,16 +211,16 @@ orbital VerifyPlanOrbital {
 (let ((sol (if (and @comb (= @h2 "and") @w2 (object/get @sol0 "ok")) { ok: true, p: (array/reduce @cks (object/get @sol0 "p") (fn (acc k) (let ((grp (array/filter @descs (fn d (= (object/get @d "ck") @k))))) (if (< (array/len @grp) 2) @acc (let ((vals (array/unique (array/map @grp (fn d (object/get @d "cl")))))) (let ((one (if (= (array/len @vals) 1) (as (array/nth @vals 0) JsonValue) null))) (if (= @one null) (array/reduce (array/filter (object/keys @acc) (fn x (!= @x @k))) @noPay (fn (a2 x) (object/set @a2 @x (object/get @acc @x)))) (object/set @acc @k @one)))))))) } @sol0)))
 (let ((ok (or (not @guarded) (object/get @sol "ok"))))
 (let ((solvedPayload (if (and @guarded (> (array/len @payloadBinds) 0) @ok) (object/get @sol "p") @planned))
-                                        (sameHit (array/some (array/filter @arms (fn a (!= (object/get @a "event") "INIT"))) (fn a (array/some (array/map (array/filter (array/reduce (object/get @a "effects" []) [] (fn (acc2 e) (array/concat @acc2 (json/nodes @e)))) (fn n (validate/array @n))) (fn n (default (as @n PlanForm) @noForm))) (fn f (array/some @entityFields (fn fld (= (array/take @f 2) ["set", (str/concat (quote "@entity.") @fld)]))))))))
-                                        (tickHit (array/some @entityFields (fn fld (array/some (array/map (array/filter (array/reduce (object/get @tr "ticks" []) [] (fn (acc3 tk) (array/concat @acc3 (array/reduce (object/get @tk "effects" []) [] (fn (acc2 e) (array/concat @acc2 (json/nodes @e))))))) (fn n (validate/array @n))) (fn n (default (as @n PlanForm) @noForm))) (fn f (= (array/take @f 2) ["set", (str/concat (quote "@entity.") @fld)]))))))
-                                        (cands (array/reduce @entity.progTraits [] (fn (acc t) (if (and (!= (object/get @t "name") (object/get @r "trait")) (!= @ent "") (= (object/get @t "linkedEntity" "") @ent)) (array/concat @acc (array/map (array/filter (object/get (object/get @t "stateMachine" @noGraph) "transitions" []) (fn a (and (!= (object/get @a "event") "INIT") (array/some (array/map (array/filter (array/reduce (object/get @a "effects" []) [] (fn (acc2 e) (array/concat @acc2 (json/nodes @e)))) (fn n (validate/array @n))) (fn n (default (as @n PlanForm) @noForm))) (fn f (array/some @entityFields (fn fld (= (array/take @f 2) ["set", (str/concat (quote "@entity.") @fld)])))))))) (fn a { trait: (object/get @t "name"), event: (object/get @a "event") }))) @acc)))))
+                                        (sameHit (if (= (array/len @entityFields) 0) false (array/some (object/get @setBy (str/concat (object/get @r "orbital") "|" (object/get @r "trait")) []) (fn sx (array/some (object/get @sx "fields") (fn fd (array/includes @entityFields @fd)))))))
+                                        (tickHit (if (= (array/len @entityFields) 0) false (array/some (object/get @tickBy (str/concat (object/get @r "orbital") "|" (object/get @r "trait")) []) (fn tx (array/some (object/get @tx "fields") (fn fd (array/includes @entityFields @fd)))))))
+                                        (cands (if (or (= (array/len @entityFields) 0) (= @ent "")) [] (array/map (array/filter (object/get @setByEnt @ent []) (fn sx (and (!= (object/get @sx "trait") (object/get @r "trait")) (array/some (object/get @sx "fields") (fn fd (array/includes @entityFields @fd)))))) (fn sx { trait: (object/get @sx "trait"), event: (object/get @sx "event") })))))
                                     (let ((why (if (not @ok) "guard-unsolved" (if @objectSlot "object-slot-unplanned" ""))))
                                       (let ((pre (if (and @guarded (> (array/len @entityFields) 0)) (let ((c0 (array/nth @cands 0))) (if (!= @c0 null) { kind: "established", trait: (object/get @c0 "trait"), event: (object/get @c0 "event"), fields: @entityFields, proof: "unproven", reason: "setter-value-unresolved" } (if (or @sameHit @tickHit) { kind: "same-trait-setter", trait: "", event: "", fields: @entityFields, proof: "unproven", reason: "setter-not-on-replay-path" } { kind: "unreachable", trait: "", event: "", fields: @entityFields, proof: "unproven", reason: "unreachable" }))) { kind: "none", trait: "", event: "", fields: [], proof: "proven", reason: "" })))
                                         (let ((step { trait: (object/get @r "trait"), from: (object/get @r "from"), event: (object/get @r "event"), to: (object/get @r "to"), toStates: [(object/get @r "to")], variant: (if (array/some (array/filter (object/get (object/get @tr "stateMachine" @noGraph) "states" []) (fn st (object/get @st "isInitial" false))) (fn st (= (object/get @st "name") (object/get @r "from")))) "auto-init" "success"), payload: @solvedPayload, guarded: @guarded, solved: (= @why ""), payloadCase: "success" }))
                                           (let ((withEntity (if (= @ent "") @step (object/set @step "linkedEntity" @ent))))
                                             (let ((withGuard (if @guarded (object/set @withEntity "guardCase" "pass") @withEntity)))
                                               (let ((withPre (if (= (object/get @pre "kind") "none") @withGuard (object/set @withGuard "precondition" @pre))))
-                                                (if (or @keysShort (array/some @descs (fn d (object/get @d "short")))) [] [(if (= @why "") @withPre (object/set @withPre "unplanned" @why))])))))))))))))))))))))))))))))))))))))))))
+                                                (if (or @keysShort (array/some @descs (fn d (object/get @d "short")))) [] [(if (= @why "") @withPre (object/set @withPre "unplanned" @why))])))))))))))))))))))))))))))))))))))))))))))
           (emit PLAN_PLANNED {})))
       PLAN_PLANNED -> ready when (!= (array/len @entity.steps) (array/len @entity.rows))
         (set @entity.steps [])
@@ -228,37 +236,37 @@ orbital VerifyPlanOrbital {
             (let ((forms (array/map (array/filter (array/reduce (object/get (object/get @t "stateMachine" @noGraph) "transitions" []) [] (fn (a2 arm) (array/concat @a2 (array/reduce (object/get @arm "effects" []) [] (fn (a3 e) (array/concat @a3 (json/nodes @e))))))) (fn n (and (validate/array @n) (let ((hf (default (as @n PlanForm) @noForm))) (and (> (array/len @hf) 0) (array/includes ["http", "postgres"] (default (as (array/first @hf) PlanStr) ""))))))) (fn n (default (as @n PlanForm) @noForm)))))
               (let ((emits (array/map (array/filter @forms (fn f (validate/object (let ((nxi (- (array/len @f) 1))) (if (>= @nxi 0) (array/nth @f @nxi) null))))) (fn f (object/get (default (as (let ((nxi (- (array/len @f) 1))) (if (>= @nxi 0) (array/nth @f @nxi) null)) PlanOpts) @noOpts) "emit" @noEmit)))))
                 (array/concat @ra (array/reduce @emits @noRoutes (fn (rb m) (array/concat (array/concat (array/concat (array/concat @rb (if (!= (object/get @m "success" "") "") [{ emitter: (object/get @t "name"), event: (object/get @m "success"), kind: "other" }] @noRoutes)) (if (!= (object/get @m "cancelled" "") "") [{ emitter: (object/get @t "name"), event: (object/get @m "cancelled"), kind: "other" }] @noRoutes)) (if (!= (object/get @m "onMessage" "") "") [{ emitter: (object/get @t "name"), event: (object/get @m "onMessage"), kind: "other" }] @noRoutes)) (if (!= (object/get @m "failure" "") "") [{ emitter: (object/get @t "name"), event: (object/get @m "failure"), kind: "failure" }] @noRoutes)))))))))))
-          (array/reduce @entity.steps [] (fn (acc st)
-            (let ((row (array/nth @entity.rows (array/len @acc))))
- (if (= @row null) @acc
-              (let ((tr (array/find @entity.progTraits (fn t (and (= (object/get @t "name") (object/get @row "trait")) (= (object/get @t "orbital") (object/get @row "orbital")))))))
- (if (= @tr null) @acc
+          (let ((traitBy (array/groupBy @entity.progTraits (fn t (str/concat (object/get @t "orbital" "") "|" (object/get @t "name")))))) (array/flatten (array/map (array/range (array/len @entity.steps)) (fn i
+            (let ((st : VerifyPlanPlannedStep (array/nth @entity.steps @i)) (row (array/nth @entity.rows @i)))
+ (if (= @row null) []
+              (let ((tr (array/first (object/get @traitBy (str/concat (object/get @row "orbital") "|" (object/get @row "trait")) []))))
+ (if (= @tr null) []
                 (let ((isOther (array/some @routes (fn r (and (= (object/get @r "kind") "other") (or (and (= (object/get @r "emitter") (object/get @row "trait")) (= (object/get @r "event") (object/get @row "event"))) (array/some (object/get @tr "listens" []) (fn l (and (= (object/get @l "event") (object/get @r "event")) (or (not (object/has @l "source")) (= (object/get (object/get @l "source" @noSrc) "kind" "") "any") (= (object/get (object/get @l "source" @noSrc) "trait" "") (object/get @r "emitter"))) (= (object/get @l "triggers" (object/get @l "event")) (object/get @row "event"))))))))) )
                       (isFail (array/some @routes (fn r (and (= (object/get @r "kind") "failure") (or (and (= (object/get @r "emitter") (object/get @row "trait")) (= (object/get @r "event") (object/get @row "event"))) (array/some (object/get @tr "listens" []) (fn l (and (= (object/get @l "event") (object/get @r "event")) (or (not (object/has @l "source")) (= (object/get (object/get @l "source" @noSrc) "kind" "") "any") (= (object/get (object/get @l "source" @noSrc) "trait" "") (object/get @r "emitter"))) (= (object/get @l "triggers" (object/get @l "event")) (object/get @row "event"))))))))) ))
-                  (array/concat @acc [(if @isOther (object/set @st "reply" "other") (if @isFail (object/set @st "reply" "failure") @st))])))))))))))
-        (set @entity.probes (array/filter (array/reduce @entity.rows [] (fn (acc r) (array/concat @acc [{ idx: (array/len @acc), r: @r }]))) (fn p (let ((ps (let ((nxi (object/get @p "idx"))) (if (>= @nxi 0) (array/nth @entity.steps @nxi) null)))) (if (= @ps null) false (object/has @ps "precondition"))))))
-        (set @entity.createdOnly (array/map (array/range (array/len @entity.rows)) (fn i
+                  [(if @isOther (object/set @st "reply" "other") (if @isFail (object/set @st "reply" "failure") @st))]))))))))))))
+        (set @entity.probes (array/filter (array/map (array/range (array/len @entity.rows)) (fn i (let ((r : PlanRow (array/nth @entity.rows @i))) { idx: @i, r: @r }))) (fn p (let ((ps (let ((nxi (object/get @p "idx"))) (if (>= @nxi 0) (array/nth @entity.steps @nxi) null)))) (if (= @ps null) false (object/has @ps "precondition"))))))
+        (set @entity.createdOnly (let ((traitBy (array/groupBy @entity.progTraits (fn t (str/concat (object/get @t "orbital" "") "|" (object/get @t "name")))))) (array/map (array/range (array/len @entity.rows)) (fn i
           (let ((r (if (>= @i 0) (array/nth @entity.rows @i) null)))
  (if (= @r null) []
-            (let ((tr (array/find @entity.progTraits (fn t (and (= (object/get @t "name") (object/get @r "trait")) (= (object/get @t "orbital") (object/get @r "orbital")))))))
+            (let ((tr (array/first (object/get @traitBy (str/concat (object/get @r "orbital") "|" (object/get @r "trait")) []))))
  (if (= @tr null) []
               (let ((pers (array/filter (array/map (array/filter (array/reduce (array/filter (object/get (object/get @tr "stateMachine" @noGraph) "transitions" []) (fn a (= (object/get @a "event") (object/get @r "event")))) [] (fn (acc a) (array/concat @acc (array/reduce (object/get @a "effects" []) [] (fn (acc2 e) (array/concat @acc2 (json/nodes @e))))))) (fn n (validate/array @n))) (fn n (default (as @n PlanForm) @noForm))) (fn f (and (> (array/len @f) 2) (= (array/nth @f 0) "persist") (validate/string (array/nth @f 2)))))))
                 (let ((named (array/map @pers (fn f { op: (default (as (array/nth @f 1) PlanStr) ""), entity: (default (as (array/nth @f 2) PlanStr) "") }))))
-                  (array/filter (array/unique (array/map @named (fn n (object/get @n "entity")))) (fn e (array/every (array/filter @named (fn n (= (object/get @n "entity") @e))) (fn n (= (object/get @n "op") "create"))))))))))))))
-        (set @entity.rowRefs (array/reduce (array/range (array/len @entity.rows)) [] (fn (acc i)
+                  (array/filter (array/unique (array/map @named (fn n (object/get @n "entity")))) (fn e (array/every (array/filter @named (fn n (= (object/get @n "entity") @e))) (fn n (= (object/get @n "op") "create")))))))))))))))
+        (set @entity.rowRefs (array/flatten (array/map (array/range (array/len @entity.rows)) (fn i
           (let ((r (if (>= @i 0) (array/nth @entity.rows @i) null)) (st (if (>= @i 0) (array/nth @entity.steps @i) null)))
- (if (= @r null) @acc (if (= @st null) @acc
+ (if (= @r null) [] (if (= @st null) []
             (let ((seed (object/get @entity.seedIds (object/get @st "linkedEntity" "") (str/concat (object/get @st "linkedEntity" "") "-verify-seed-1"))))
-              (array/concat (array/concat @acc (if (= (object/get @st "linkedEntity" "") "") [] [{ idx: @i, key: "", entity: (object/get @st "linkedEntity" ""), array: false, seed: @seed, row: true }])) (array/map (array/filter (object/get @r "payload")
+              (array/concat (if (= (object/get @st "linkedEntity" "") "") [] [{ idx: @i, key: "", entity: (object/get @st "linkedEntity" ""), array: false, seed: @seed, row: true }]) (array/map (array/filter (object/get @r "payload")
                   (fn sl (and (!= (object/get @st "linkedEntity" "") "") (not (object/has @sl "values")) (or (object/has @sl "entity") (= (object/get @sl "type") (quote "@entity")) (= (object/get @sl "type") "[@entity]"))
                     (or (= (object/get (object/get @st "payload") (object/get @sl "name")) { id: @seed }) (= (object/get (object/get @st "payload") (object/get @sl "name")) [{ id: @seed }])))))
-                (fn sl { idx: @i, key: (object/get @sl "name"), entity: (object/get @sl "entity" (object/get @st "linkedEntity" "")), array: (str/startsWith (object/get @sl "type") "["), seed: (let ((name (object/get @sl "entity" (object/get @st "linkedEntity" "")))) (if (array/includes (default (if (>= @i 0) (array/nth @entity.createdOnly @i) null) []) @name) (object/get @entity.newIds @name (str/concat @name "-verify-new-1")) (object/get @entity.seedIds @name (str/concat @name "-verify-seed-1")))), row: false }))))))))))
-        (set @entity.steps (array/reduce @entity.steps [] (fn (acc st)
-          (let ((only (default (array/nth @entity.createdOnly (array/len @acc)) [])))
-            (array/concat @acc [(if (= (array/len @only) 0) @st
+                (fn sl { idx: @i, key: (object/get @sl "name"), entity: (object/get @sl "entity" (object/get @st "linkedEntity" "")), array: (str/startsWith (object/get @sl "type") "["), seed: (let ((name (object/get @sl "entity" (object/get @st "linkedEntity" "")))) (if (array/includes (default (if (>= @i 0) (array/nth @entity.createdOnly @i) null) []) @name) (object/get @entity.newIds @name (str/concat @name "-verify-new-1")) (object/get @entity.seedIds @name (str/concat @name "-verify-seed-1")))), row: false })))))))))))
+        (set @entity.steps (array/map (array/range (array/len @entity.steps)) (fn i (let ((st : VerifyPlanPlannedStep (array/nth @entity.steps @i)))
+          (let ((only (default (array/nth @entity.createdOnly @i) [])))
+            (if (= (array/len @only) 0) @st
               (object/set @st "payload" (array/reduce (object/keys (object/get @st "payload")) (object/get @st "payload") (fn (acc2 k)
                 (let ((hit (array/find @only (fn e (= (object/get @acc2 @k) (object/get @entity.seedIds @e (str/concat @e "-verify-seed-1")))))))
-                  (if (or (= @hit null) (= @hit "")) @acc2 (object/set @acc2 @k (object/get @entity.newIds @hit (str/concat @hit "-verify-new-1")))))))))])))))
+                  (if (or (= @hit null) (= @hit "")) @acc2 (object/set @acc2 @k (object/get @entity.newIds @hit (str/concat @hit "-verify-new-1"))))))))))))))
         (set @entity.rowJobs (let ((ents (array/reduce (object/get @entity.seedProgram "orbitals" []) [] (fn (acc o) (array/concat (array/concat @acc [(object/get @o "entity")]) (object/get @o "auxiliaryEntities" []))))))
           (array/reduce (let ((idents (array/unique (array/map (array/filter (array/reduce (object/get @entity.seedProgram "orbitals" []) [] (fn (acc o) (array/concat (array/concat @acc [(object/get @o "entity")]) (object/get @o "auxiliaryEntities" [])))) (fn e (and (!= @e null) (object/get @e "identity" false)))) (fn e (if (== @e null) "" (object/get @e "name" ""))))))) (let ((asViewer (if (and (= @entity.viewer null) (= (array/len @idents) 1)) (default (array/first @idents) "") ""))) (array/map (array/unique (array/concat (if (= @asViewer "") [] [@asViewer]) (array/map @entity.rowRefs (fn rf (object/get @rf "entity"))))) (fn n { name: @n, viewer: (= @n @asViewer) })))) [] (fn (acc jb)
             (let ((name (object/get @jb "name")) (def (array/find @ents (fn e (and (!= @e null) (= (object/get @e "name" "") @name))))))
@@ -271,25 +279,32 @@ orbital VerifyPlanOrbital {
                           (if (object/has @f "default") (object/set @withValues "default" (object/get @f "default")) @withValues)))))) }]))))))))
         (emit PLAN_COMPUTED { count: (array/len @entity.steps) })))
       PLAN_COMPUTED -> ready when (> (array/len @entity.rowJobs) 0)
-        (let ((job (array/first @entity.rowJobs)))
-          (if (= @job null) (emit PLAN_FAILED { error: "verify-plan: no entity is pending a sample row" })
-            (do (set @entity.callSeq (+ @entity.callSeq 1)) (emit SAMPLE_ROWS { fields: (object/get @job "fields"), name: (object/get @job "entity"), count: 1, runtime: (object/get @job "runtime"), identity: (object/get @job "identity"), call: @entity.callSeq }))))
-      ROWS_DONE -> ready
-        (let ((jobRec (array/first @entity.rowJobs)) (row (array/first @payload.rows)) (vid (if (= @entity.viewer null) "" (object/get @entity.viewer "id" ""))))
-         (if (= @jobRec null) (emit PLAN_FAILED { error: "verify-plan: a sample row arrived with no entity pending" })
-          (if (= @row null) (emit PLAN_FAILED { error: "verify-plan: the sample row is empty" })
-          (let ((job (object/get @jobRec "entity")) (asViewer (object/get @jobRec "viewer" false)))
+        (emit SAMPLE_BATCH { jobs: (array/map @entity.rowJobs (fn j { fields: (object/get @j "fields"), name: (object/get @j "entity"), count: 1, runtime: (object/get @j "runtime"), identity: (object/get @j "identity") })) })
+      ROWS_BATCH_DONE -> ready when (!= (array/len @payload.rows) (array/len @entity.rowJobs))
+        (emit PLAN_FAILED { error: "verify-plan: the sample batch does not answer the entities pending" })
+      ROWS_BATCH_DONE -> ready when (and (= (array/len @payload.rows) (array/len @entity.rowJobs)) (array/some @payload.rows (fn rs (= (array/len @rs) 0))))
+        (emit PLAN_FAILED { error: "verify-plan: the sample row is empty" })
+      ROWS_BATCH_DONE -> ready when (and (= (array/len @payload.rows) (array/len @entity.rowJobs)) (not (array/some @payload.rows (fn rs (= (array/len @rs) 0)))))
+        (let ((vinit : PlanViewerAcc { v: @entity.viewer, seq: [] }))
+        (let ((vs (array/reduce (array/range (array/len @entity.rowJobs)) @vinit (fn (va ji)
+                (let ((jr : PlanRowJob (array/nth @entity.rowJobs @ji)) (row (array/first (default (array/nth @payload.rows @ji) []))) (v0 (object/get @va "v")))
+                  (let ((v1 (if (and (object/get @jr "viewer" false) (!= @row null)) (let ((v (object/set @row "id" (object/get @entity.seedIds (object/get @jr "entity") (str/concat (object/get @jr "entity") "-verify-seed-1"))))) (if (= @entity.role null) @v (object/set @v "role" @entity.role))) @v0)))
+                    { v: @v1, seq: (array/append (object/get @va "seq") { before: (if (= @v0 null) "" (object/get @v0 "id" "")), hasAfter: (or (and (object/get @jr "viewer" false) (!= @row null)) (and (!= @v0 null) (object/has @v0 "id"))) }) }))))))
+        (let ((refsByEnt (array/groupBy @entity.rowRefs (fn rf (object/get @rf "entity"))))
+              (seq (object/get @vs "seq")))
+        (let ((refsByIdx (array/groupBy (array/flatten (array/map (array/range (array/len @entity.rowJobs)) (fn ji (let ((jr : PlanRowJob (array/nth @entity.rowJobs @ji)) (sq (array/nth @seq @ji)) (row (array/first (default (array/nth @payload.rows @ji) [])))) (array/map (object/get @refsByEnt (object/get @jr "entity") []) (fn rf { rf: @rf, job: (object/get @jr "entity"), row: @row, before: (if (= @sq null) "" (object/get @sq "before")), hasAfter: (if (= @sq null) false (object/get @sq "hasAfter")) })))))) (fn x (str/concat (object/get (object/get @x "rf") "idx"))))))
           (do
-            (set @entity.viewer (if @asViewer (let ((v (object/set @row "id" (object/get @entity.seedIds @job (str/concat @job "-verify-seed-1"))))) (if (= @entity.role null) @v (object/set @v "role" @entity.role))) @entity.viewer))
-            (set @entity.steps (array/reduce @entity.steps [] (fn (acc0 st0)
-              (let ((i (array/len @acc0))) (array/concat @acc0 [(array/reduce (array/filter @entity.rowRefs (fn rf (and (= (object/get @rf "idx") @i) (= (object/get @rf "entity") @job)))) @st0 (fn (st rf)
-                (let ((seeded (object/set @row "id" (object/get @rf "seed"))))
+            (set @entity.viewer (object/get @vs "v"))
+            (set @entity.steps (array/map (array/range (array/len @entity.steps)) (fn i (let ((refs (object/get @refsByIdx (str/concat @i) [])) (st0 : VerifyPlanPlannedStep (array/nth @entity.steps @i))) (if (= (array/len @refs) 0) @st0 (array/reduce @refs @st0 (fn (st x)
+                (let ((rf : PlanRowRef (object/get @x "rf")) (row (object/get @x "row")))
+                (let ((job : string (object/get @x "job")) (vid : string (object/get @x "before")))
+                (let ((seeded (if (= @row null) null (object/set @row "id" (object/get @rf "seed")))))
                   (if (= @seeded null) @st
-                    (let ((full (array/reduce (if (and (!= @entity.viewer null) (object/has @entity.viewer "id")) (object/get @entity.owners (str/lower @job) []) []) @seeded (fn (acc field) (object/set @acc @field @vid)))))
+                    (let ((full (array/reduce (if (object/get @x "hasAfter") (object/get @entity.owners (str/lower @job) []) []) @seeded (fn (acc field) (object/set @acc @field @vid)))))
                       (if (object/get @rf "row" false) (object/set @st "entity" @full)
                       (let ((pay (if (object/get @rf "array") (object/set (object/get @st "payload") (object/get @rf "key") [@full]) (object/set (object/get @st "payload") (object/get @rf "key") @full))))
-                        (if (= @pay null) @st (object/set @st "payload" @pay)))))))))])))))
-            (set @entity.rowJobs (array/drop @entity.rowJobs 1))
+                        (if (= @pay null) @st (object/set @st "payload" @pay))))))))))))))))
+            (set @entity.rowJobs [])
             (emit PLAN_COMPUTED { count: (array/len @entity.steps) }))))))
       PLAN_COMPUTED -> ready when (and (= (array/len @entity.rowJobs) 0) (= (array/len @entity.probes) 0))
         (emit PLAN_ANSWERED { steps: @entity.steps, viewer: @entity.viewer })
@@ -322,11 +337,12 @@ orbital VerifyPlanOrbital {
       PLAN_STEPPED -> ready when (!= (array/len @payload.result) (array/len @entity.reqs))
         (emit PLAN_FAILED { error: "verify-plan: the step answer does not match the baseline probes sent" })
       PLAN_STEPPED -> ready when (= (array/len @payload.result) (array/len @entity.reqs))
-        (set @entity.steps (array/reduce @entity.steps [] (fn (acc s)
-          (let ((hit (array/first (array/filter (array/map (array/zip @entity.reqs @payload.result) (fn z (let ((rq (array/nth @z 0)) (an (array/nth @z 1))) { idx: @rq.idx, baseNE: @rq.baseNE, result: @an.result }))) (fn q (= (object/get @q "idx") (array/len @acc)))))))
-            (array/concat @acc [(if (and (!= @hit null) (= (object/get (object/get @hit "result") "guard") "pass") (object/get @hit "baseNE"))
-              (object/omit @s ["precondition"])
-              @s)])))))
+        (set @entity.steps (let ((byStep (array/groupBy (array/map (array/zip @entity.reqs @payload.result) (fn z (let ((rq (array/nth @z 0)) (an (array/nth @z 1))) { idx: @rq.idx, baseNE: @rq.baseNE, result: @an.result }))) (fn q (str/concat (object/get @q "idx"))))))
+          (array/map (array/range (array/len @entity.steps)) (fn i
+            (let ((s : VerifyPlanPlannedStep (array/nth @entity.steps @i)) (hit (array/first (object/get @byStep (str/concat @i) []))))
+              (if (and (!= @hit null) (= (object/get (object/get @hit "result") "guard") "pass") (object/get @hit "baseNE"))
+                (object/omit @s ["precondition"])
+                @s))))))
         (emit PLAN_ANSWERED { steps: @entity.steps, viewer: @entity.viewer })
       PLAN_FAILED -> ready
         (emit PLAN_REFUSED { error: (default @payload.error "verify-plan: the plan failed with no error") })
@@ -351,8 +367,8 @@ orbital VerifyPlanOrbital {
       PLAN_FAILED -> internal { error : string }
         @description "Internal: the baseline probe failed; the computed plan stands."
         @tier "internal"
-      SAMPLE_ROWS -> external { fields : [PlanMockField]!, name : string!, count : number!, runtime : boolean!, identity : boolean!, call : number! }
-        @description "Internal: ask the composed mock seed for one sample row of an entity slot's entity."
+      SAMPLE_BATCH -> external { jobs : [PlanSampleJob]! }
+        @description "Internal: ask the composed mock seed for one sample row of each pending entity slot's entity, all in one batch."
         @tier "internal"
       PLAN_REFUSED -> external { error : string! }
         @description "The program cannot be planned: a planned trait declares no initial state."
@@ -363,9 +379,9 @@ orbital VerifyPlanOrbital {
     }
 
     listens {
-      MockSeed.ROWS_DONE -> ROWS_DONE
-      ROWS_DONE { rows : [Map string PlanMockValue?]! }
-        @description "Internal: the composed mock seed answered the sample row."
+      MockSeed.ROWS_BATCH_DONE -> ROWS_BATCH_DONE
+      ROWS_BATCH_DONE { rows : [[Map string PlanMockValue?]]! }
+        @description "Internal: the composed mock seed answered the sample batch, one row list per pending entity in order."
         @tier "internal"
       PLAN_REQUEST -> input { program : SExpr!, rows : [PlanRow]!, viewer : (Map string PlanMockValue?)?, role : string?, owners : (Map string [string])? }
         @description "Plan a payload for each machine row of a resolved program."

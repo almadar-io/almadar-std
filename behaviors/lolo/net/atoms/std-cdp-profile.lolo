@@ -1,0 +1,332 @@
+app std-cdp-profile [
+  version: "1.0.0",
+  description: "std-cdp-profile — measures what a browser page costs, over its own Chrome DevTools Protocol connection (a composed std-cdp; the debugging port is the composed ProfileCdpHttp and ProfileCdpWs knobs). CDP_PROFILE_CONNECT { targetId } connects, attaches to that page target with a flat session (Target.attachToTarget; std-chrome's CHROME_READY names the target), enables Performance and answers CDP_PROFILE_READY. CDP_PROFILE_TRACE_START { label } starts a trace (Tracing.start, the categories knob, events reported as they are collected) and answers CDP_PROFILE_TRACING { label }. CDP_PROFILE_TRACE_STOP { label } forces a garbage collection (HeapProfiler.collectGarbage), reads the page's metrics (Performance.getMetrics), ends the trace and keeps every Tracing.dataCollected event until Tracing.tracingComplete, then answers CDP_PROFILE_PAGE { label, metrics, mainBusyMs, longTasks, events }: metrics the page's JS heap used and total, DOM nodes, layout and style recalculation counts and the seconds Chrome spent in tasks, scripts, layout and style; mainBusyMs the time the renderer's main thread (the CrRendererMain thread) spent in tasks; longTasks each main-thread task of at least longTaskMs, longest first, with the time its top-level activities took grouped by the groups knob (an activity no group names is other; time no activity covers is unattributed); events the number of trace events read. A command Chrome refuses, or a reply that is not the expected shape, answers CDP_PROFILE_FAILED { label, code, error } and the trace stays as it is. Subject-agnostic: it knows nothing of the page measured."
+]
+;; @capabilities "measure a browser page's main-thread long tasks, heap and layout cost over Chrome DevTools"
+uses Spec from "almadar-std/cdp-profile"
+uses CdpAtom from "std/behaviors/std-cdp"
+
+type CdpAttachReply = { result : { sessionId : string! }! }
+type CdpMetric = { name : string!, value : number! }
+type CdpMetricsReply = { result : { metrics : [CdpMetric]! }! }
+type CdpTraceArgs = { name : string? }
+type CdpTraceEvent = { name : string!, ph : string!, ts : number?, dur : number?, pid : number?, tid : number?, args : CdpTraceArgs? }
+type CdpDataCollected = { params : { value : [CdpTraceEvent]! }! }
+type CdpGroupTime = { group : string!, ms : number! }
+type CdpLongTask = { startMs : number!, durMs : number!, groups : [CdpGroupTime]!, unattributedMs : number! }
+type CdpFrame = { functionName : string!, url : string!, lineNumber : number!, columnNumber : number! }
+type CdpHeapNode = { callFrame : CdpFrame!, selfSize : number!, id : number! }
+type CdpHeapReply = { result : { profile : { head : SExpr! }! }! }
+type CdpCpuNode = { id : number!, callFrame : CdpFrame!, hitCount : number? }
+type CdpCpuProfile = { nodes : [CdpCpuNode]!, startTime : number!, endTime : number!, samples : [number]?, timeDeltas : [number]? }
+type CdpCpuReply = { result : { profile : CdpCpuProfile! }! }
+type CdpEvalReply = { result : { result : SExpr?, exceptionDetails : { text : string! }? }! }
+type CdpHeapSite = { site : string!, bytes : number! }
+type CdpCpuSite = { site : string!, ms : number! }
+type CdpTaskFunctions = { startMs : number!, durMs : number!, functions : [CdpCpuSite]! }
+type CdpPageMetrics = { jsHeapUsedBytes : number!, jsHeapTotalBytes : number!, nodes : number!, layoutCount : number!, recalcStyleCount : number!, taskSeconds : number!, scriptSeconds : number!, layoutSeconds : number!, recalcStyleSeconds : number! }
+
+orbital CdpProfileOrbital {
+  entity CdpProfileRun [runtime] {
+    id : string!
+    targetId : string = ""
+    sessionId : string = ""
+    label : string = ""
+    tracing : boolean = false
+    events : [CdpTraceEvent] = []
+    metrics : [CdpMetric] = []
+    heap : boolean = false
+    cpu : boolean = false
+    heapNodes : [CdpHeapNode] = []
+    cpuProfile : CdpCpuProfile?
+    evalKey : string = ""
+  }
+
+  trait ProfileCdp = CdpAtom.traits.Cdp {
+    listens {
+      CdpProfile.CDP_CONNECT -> CDP_CONNECT
+      CdpProfile.CDP_COMMAND -> CDP_COMMAND
+      CDP_VERSION {
+        status : number!
+        body : string!
+      }
+      CDP_WS_OPENED { }
+      CDP_WS_MESSAGE {
+        text : string
+        binary : boolean!
+      }
+      CDP_WS_CLOSED {
+        code : number!
+        reason : string!
+      }
+      CDP_WS_FAILED {
+        error : string!
+        kind : string!
+      }
+      CDP_TIMEOUT {
+        key : string!
+      }
+      ProfileCdpHttp.HTTP_REPLIED -> CDP_VERSION with { status: ?status, body: (default (bytes/to-string ?body) "") } when (= ?key "cdp-version")
+      ProfileCdpHttp.HTTP_FAILED -> CDP_CONNECT_FAILED with { error: ?error, kind: ?kind } when (= ?key "cdp-version")
+      ProfileCdpWs.WS_OPENED -> CDP_WS_OPENED
+      ProfileCdpWs.WS_MESSAGE -> CDP_WS_MESSAGE with { text: ?text, binary: ?binary }
+      ProfileCdpWs.WS_CLOSED -> CDP_WS_CLOSED with { code: ?code, reason: ?reason }
+      ProfileCdpWs.WS_FAILED -> CDP_WS_FAILED with { error: ?error, kind: ?kind }
+      ProfileCdpDelay.ELAPSED -> CDP_TIMEOUT with { key: ?key }
+    }
+  }
+
+  trait ProfileCdpHttp = CdpAtom.traits.CdpHttp { }
+
+  trait ProfileCdpWs = CdpAtom.traits.CdpWs {
+    config {
+    }
+  }
+
+  trait ProfileCdpDelay = CdpAtom.traits.CdpDelay { }
+
+  trait CdpProfile -> CdpProfileRun {
+    config {
+      categories : string = "devtools.timeline,disabled-by-default-devtools.timeline,blink.user_timing,v8.execute,disabled-by-default-v8.gc,loading"
+        @label "Trace categories"
+        @description "The Chrome trace categories each trace records (Tracing.start categories)."
+        @tier "policy"
+      longTaskMs : number = 50
+        @label "Long task"
+        @description "A main-thread task at least this long, in milliseconds, is a long task."
+        @tier "policy"
+      heapIntervalBytes : number = 32768
+        @label "Heap sampling interval"
+        @description "Average bytes between two sampled allocations when a trace samples the heap (HeapProfiler.startSampling)."
+        @tier "policy"
+      cpuIntervalUs : number = 1000
+        @label "CPU sampling interval"
+        @description "Microseconds between two JavaScript CPU samples when a trace profiles the CPU (Profiler.setSamplingInterval)."
+        @tier "policy"
+      topSites : number = 40
+        @label "Sites listed"
+        @description "How many allocation sites and functions a heap or CPU reading lists, largest first; the totals count every site."
+        @tier "policy"
+      groups : Map string string = { FunctionCall: "script", EvaluateScript: "script", "v8.compile": "script", "v8.run": "script", "v8.callFunction": "script", TimerFire: "script", EventDispatch: "script", FireAnimationFrame: "script", RunMicrotasks: "script", "V8.Execute": "script", UpdateLayoutTree: "style", RecalculateStyles: "style", ParseAuthorStyleSheet: "style", Layout: "layout", UpdateLayerTree: "layout", Paint: "paint", PrePaint: "paint", Layerize: "paint", Commit: "paint", CompositeLayers: "paint", MinorGC: "gc", MajorGC: "gc", "V8.GC_SCAVENGER": "gc", "BlinkGC.AtomicPhase": "gc", ParseHTML: "parse" }
+        @label "Activity groups"
+        @description "Which group each top-level trace event's time counts toward; an event no entry names counts as other."
+        @tier "policy"
+    }
+    initial: idle
+
+    state idle {
+      INIT -> idle
+      CDP_PROFILE_CONNECT -> connecting
+        (set @entity.targetId ?targetId)
+        (emit CDP_CONNECT { })
+      CDP_PROFILE_TRACE_START -> idle
+        (emit CDP_PROFILE_FAILED { label: ?label, code: "not-connected", error: "the profiler is not attached to a page" })
+      CDP_PROFILE_TRACE_STOP -> idle
+        (emit CDP_PROFILE_FAILED { label: ?label, code: "not-connected", error: "the profiler is not attached to a page" })
+      CDP_PROFILE_EVALUATE -> idle
+        (emit CDP_PROFILE_FAILED { label: ?key, code: "not-connected", error: "the profiler is not attached to a page" })
+    }
+
+    state connecting {
+      INIT -> connecting
+      PROFILE_CDP_CONNECTED -> connecting
+        (emit CDP_COMMAND { key: "prof-attach", method: "Target.attachToTarget", paramsJson: (json/stringify { targetId: @entity.targetId, flatten: true }) })
+      PROFILE_CDP_REPLY -> connecting when (and (= ?key "prof-attach") (!= (json/parse ?frame CdpAttachReply) null))
+        (let ((r : CdpAttachReply (json/parse ?frame CdpAttachReply)))
+          (do
+            (set @entity.sessionId @r.result.sessionId)
+            (emit CDP_COMMAND { key: "prof-perf", method: "Performance.enable", sessionId: @r.result.sessionId, paramsJson: (json/stringify { }) })))
+      PROFILE_CDP_REPLY -> connecting when (and (= ?key "prof-attach") (== (json/parse ?frame CdpAttachReply) null))
+        (emit CDP_PROFILE_FAILED { label: "", code: "bad-reply", error: "Target.attachToTarget answered an unexpected shape" })
+      PROFILE_CDP_REPLY -> ready when (= ?key "prof-perf")
+        (emit CDP_PROFILE_READY { })
+      PROFILE_CDP_ERROR -> idle
+        (emit CDP_PROFILE_FAILED { label: "", code: ?code, error: (str/concat ?method ": " ?message) })
+      PROFILE_CDP_FAILED -> idle
+        (emit CDP_PROFILE_FAILED { label: "", code: ?kind, error: ?error })
+    }
+
+    state ready {
+      INIT -> ready
+      CDP_PROFILE_TRACE_START -> ready when (not @entity.tracing)
+        (set @entity.label ?label)
+        (set @entity.events [])
+        (set @entity.metrics [])
+        (set @entity.heap (default ?heap false))
+        (set @entity.cpu (default ?cpu false))
+        (set @entity.heapNodes [])
+        (set @entity.cpuProfile null)
+        (if (default ?cpu false)
+          (emit CDP_COMMAND { key: "prof-cpu-enable", method: "Profiler.enable", sessionId: @entity.sessionId, paramsJson: (json/stringify { }) })
+          (if (default ?heap false)
+            (emit CDP_COMMAND { key: "prof-heap-start", method: "HeapProfiler.startSampling", sessionId: @entity.sessionId, paramsJson: (json/stringify { samplingInterval: @config.heapIntervalBytes }) })
+            (emit CDP_COMMAND { key: "prof-trace-start", method: "Tracing.start", paramsJson: (json/stringify { categories: @config.categories, transferMode: "ReportEvents" }) })))
+      PROFILE_CDP_REPLY -> ready when (= ?key "prof-cpu-enable")
+        (emit CDP_COMMAND { key: "prof-cpu-interval", method: "Profiler.setSamplingInterval", sessionId: @entity.sessionId, paramsJson: (json/stringify { interval: @config.cpuIntervalUs }) })
+      PROFILE_CDP_REPLY -> ready when (= ?key "prof-cpu-interval")
+        (emit CDP_COMMAND { key: "prof-cpu-start", method: "Profiler.start", sessionId: @entity.sessionId, paramsJson: (json/stringify { }) })
+      PROFILE_CDP_REPLY -> ready when (= ?key "prof-cpu-start")
+        (if @entity.heap
+          (emit CDP_COMMAND { key: "prof-heap-start", method: "HeapProfiler.startSampling", sessionId: @entity.sessionId, paramsJson: (json/stringify { samplingInterval: @config.heapIntervalBytes }) })
+          (emit CDP_COMMAND { key: "prof-trace-start", method: "Tracing.start", paramsJson: (json/stringify { categories: @config.categories, transferMode: "ReportEvents" }) }))
+      PROFILE_CDP_REPLY -> ready when (= ?key "prof-heap-start")
+        (emit CDP_COMMAND { key: "prof-trace-start", method: "Tracing.start", paramsJson: (json/stringify { categories: @config.categories, transferMode: "ReportEvents" }) })
+      CDP_PROFILE_TRACE_START -> ready when @entity.tracing
+        (emit CDP_PROFILE_FAILED { label: ?label, code: "busy", error: "a trace is already running" })
+      PROFILE_CDP_REPLY -> ready when (= ?key "prof-trace-start")
+        (set @entity.tracing true)
+        (emit CDP_PROFILE_TRACING { label: @entity.label })
+      CDP_PROFILE_TRACE_STOP -> ready when @entity.tracing
+        (if @entity.cpu
+          (emit CDP_COMMAND { key: "prof-cpu-stop", method: "Profiler.stop", sessionId: @entity.sessionId, paramsJson: (json/stringify { }) })
+          (emit CDP_COMMAND { key: "prof-gc", method: "HeapProfiler.collectGarbage", sessionId: @entity.sessionId, paramsJson: (json/stringify { }) }))
+      PROFILE_CDP_REPLY -> ready when (= ?key "prof-cpu-stop")
+        (set @entity.cpuProfile (let ((r (json/parse ?frame CdpCpuReply))) (if (= @r null) null @r.result.profile)))
+        (emit CDP_COMMAND { key: "prof-gc", method: "HeapProfiler.collectGarbage", sessionId: @entity.sessionId, paramsJson: (json/stringify { }) })
+      PROFILE_CDP_REPLY -> ready when (= ?key "prof-heap-stop")
+        (set @entity.heapNodes (let ((r (json/parse ?frame CdpHeapReply))) (if (= @r null) [] (array/flatten (array/map (json/nodes @r.result.profile.head) (fn n (let ((h (as @n CdpHeapNode))) (if (= @h null) [] [{ callFrame: @h.callFrame, selfSize: @h.selfSize, id: @h.id }]))))))))
+        (emit CDP_COMMAND { key: "prof-metrics", method: "Performance.getMetrics", sessionId: @entity.sessionId, paramsJson: (json/stringify { }) })
+      CDP_PROFILE_TRACE_STOP -> ready when (not @entity.tracing)
+        (emit CDP_PROFILE_FAILED { label: ?label, code: "idle", error: "no trace is running" })
+      PROFILE_CDP_REPLY -> ready when (= ?key "prof-gc")
+        (if @entity.heap
+          (emit CDP_COMMAND { key: "prof-heap-stop", method: "HeapProfiler.stopSampling", sessionId: @entity.sessionId, paramsJson: (json/stringify { }) })
+          (emit CDP_COMMAND { key: "prof-metrics", method: "Performance.getMetrics", sessionId: @entity.sessionId, paramsJson: (json/stringify { }) }))
+      CDP_PROFILE_EVALUATE -> ready
+        (set @entity.evalKey ?key)
+        (emit CDP_COMMAND { key: "prof-eval", method: "Runtime.evaluate", sessionId: @entity.sessionId, paramsJson: (json/stringify { expression: ?expression, awaitPromise: true, returnByValue: true }) })
+      PROFILE_CDP_REPLY -> ready when (and (= ?key "prof-eval") (let ((r (json/parse ?frame CdpEvalReply))) (and (!= @r null) (= @r.result.exceptionDetails null))))
+        (emit CDP_PROFILE_EVALUATED { key: @entity.evalKey, frame: ?frame })
+      PROFILE_CDP_REPLY -> ready when (and (= ?key "prof-eval") (let ((r (json/parse ?frame CdpEvalReply))) (or (= @r null) (!= @r.result.exceptionDetails null))))
+        (emit CDP_PROFILE_FAILED { label: @entity.evalKey, code: "evaluate", error: (let ((r (json/parse ?frame CdpEvalReply))) (if (= @r null) "Runtime.evaluate answered an unexpected shape" (if (= @r.result.exceptionDetails null) "" @r.result.exceptionDetails.text))) })
+      PROFILE_CDP_REPLY -> ready when (= ?key "prof-metrics")
+        (set @entity.metrics (default (object/get (object/get (default (json/parse ?frame CdpMetricsReply) { result: { metrics: [] } }) "result") "metrics") []))
+        (emit CDP_COMMAND { key: "prof-trace-end", method: "Tracing.end", paramsJson: (json/stringify { }) })
+      PROFILE_CDP_REPLY -> ready when (= ?key "prof-trace-end")
+      PROFILE_CDP_EVENT -> ready when (= ?method "Tracing.dataCollected")
+        (set @entity.events (array/concat @entity.events (object/get (object/get (default (json/parse ?frame CdpDataCollected) { params: { value: [] } }) "params") "value")))
+      PROFILE_CDP_EVENT -> ready when (= ?method "Tracing.tracingComplete")
+        (set @entity.tracing false)
+        (let ((events : [CdpTraceEvent] @entity.events))
+          (let ((main (default (array/find @events (fn e (and (= @e.ph "M") (= @e.name "thread_name") (= (default (object/get (default @e.args { name: "" }) "name") "") "CrRendererMain")))) { name: "", ph: "", ts: 0, dur: 0, pid: -1, tid: -1 })))
+            (let ((onMain (array/filter @events (fn e (and (= @e.ph "X") (= (default @e.pid -2) (default @main.pid -1)) (= (default @e.tid -2) (default @main.tid -1)) (> (default @e.dur 0) 0))))))
+              (let ((tasks (array/filter @onMain (fn e (= @e.name "RunTask")))))
+                (emit CDP_PROFILE_PAGE {
+                  label: @entity.label,
+                  events: (array/len @events),
+                  mainBusyMs: (/ (array/reduce @tasks 0 (fn acc t (+ @acc (default @t.dur 0)))) 1000),
+                  metrics: {
+                    jsHeapUsedBytes: (object/get (default (array/find @entity.metrics (fn m (= @m.name "JSHeapUsedSize"))) { name: "", value: 0 }) "value"), jsHeapTotalBytes: (object/get (default (array/find @entity.metrics (fn m (= @m.name "JSHeapTotalSize"))) { name: "", value: 0 }) "value"), nodes: (object/get (default (array/find @entity.metrics (fn m (= @m.name "Nodes"))) { name: "", value: 0 }) "value"),
+                    layoutCount: (object/get (default (array/find @entity.metrics (fn m (= @m.name "LayoutCount"))) { name: "", value: 0 }) "value"), recalcStyleCount: (object/get (default (array/find @entity.metrics (fn m (= @m.name "RecalcStyleCount"))) { name: "", value: 0 }) "value"), taskSeconds: (object/get (default (array/find @entity.metrics (fn m (= @m.name "TaskDuration"))) { name: "", value: 0 }) "value"),
+                    scriptSeconds: (object/get (default (array/find @entity.metrics (fn m (= @m.name "ScriptDuration"))) { name: "", value: 0 }) "value"), layoutSeconds: (object/get (default (array/find @entity.metrics (fn m (= @m.name "LayoutDuration"))) { name: "", value: 0 }) "value"), recalcStyleSeconds: (object/get (default (array/find @entity.metrics (fn m (= @m.name "RecalcStyleDuration"))) { name: "", value: 0 }) "value")
+                  },
+                  longTasks: (array/sort (array/map (array/filter @tasks (fn t (>= (default @t.dur 0) (* 1000 @config.longTaskMs)))) (fn t
+                    (let ((start (default @t.ts 0)) (end (+ (default @t.ts 0) (default @t.dur 0))))
+                      (let ((inside (array/filter @onMain (fn e (and (!= @e.name "RunTask") (>= (default @e.ts 0) @start) (<= (+ (default @e.ts 0) (default @e.dur 0)) @end))))))
+                        (let ((top (array/filter @inside (fn e (not (array/some @inside (fn f (and
+                                (<= (default @f.ts 0) (default @e.ts 0))
+                                (>= (+ (default @f.ts 0) (default @f.dur 0)) (+ (default @e.ts 0) (default @e.dur 0)))
+                                (or (> (default @f.dur 0) (default @e.dur 0)) (and (= (default @f.dur 0) (default @e.dur 0)) (< (default @f.ts 0) (default @e.ts 0))))))))))))
+                          (let ((named (array/map @top (fn e { group: (default (object/get @config.groups @e.name) "other"), us: (default @e.dur 0) }))))
+                            { startMs: (/ (- @start (default (object/get (default (array/first @onMain) { name: "", ph: "", ts: 0 }) "ts") 0)) 1000),
+                              durMs: (/ (default @t.dur 0) 1000),
+                              groups: (array/sort (array/map (array/unique (array/map @named (fn n @n.group))) (fn g
+                                { group: @g, ms: (/ (array/reduce (array/filter @named (fn n (= @n.group @g))) 0 (fn acc n (+ @acc @n.us))) 1000) })) "ms" "desc"),
+                              unattributedMs: (/ (- (default @t.dur 0) (array/reduce @named 0 (fn acc n (+ @acc @n.us)))) 1000) })))))) "durMs" "desc")
+                })))))
+        (when @entity.heap
+          (let ((nodes : [CdpHeapNode] @entity.heapNodes))
+            (let ((keyed (array/map (array/filter @nodes (fn h (> @h.selfSize 0))) (fn h { site: (str/concat (if (= @h.callFrame.functionName "") "(anonymous)" @h.callFrame.functionName) " " (if (= @h.callFrame.url "") "(native)" (default (array/nth (str/split @h.callFrame.url "/") (- (array/len (str/split @h.callFrame.url "/")) 1)) "")) ":" (+ @h.callFrame.lineNumber 1) ":" (+ @h.callFrame.columnNumber 1)), bytes: @h.selfSize }))))
+              (let ((bySite (array/groupBy @keyed (fn x @x.site))))
+                (emit CDP_PROFILE_HEAP {
+                  label: @entity.label,
+                  liveBytes: (array/reduce @keyed 0 (fn acc x (+ @acc @x.bytes))),
+                  sites: (array/take (array/sort (array/map (object/keys @bySite) (fn k { site: @k, bytes: (array/reduce (object/get @bySite @k []) 0 (fn acc x (+ @acc @x.bytes))) })) "bytes" "desc") @config.topSites) })))))
+        (when (and @entity.cpu (!= @entity.cpuProfile null))
+          (let ((prof : CdpCpuProfile (default @entity.cpuProfile { nodes: [], startTime: 0, endTime: 0 })))
+            (let ((siteOf (array/groupBy (array/map @prof.nodes (fn n { id: (str/concat @n.id), site: (str/concat (if (= @n.callFrame.functionName "") "(anonymous)" @n.callFrame.functionName) " " (if (= @n.callFrame.url "") "(native)" (default (array/nth (str/split @n.callFrame.url "/") (- (array/len (str/split @n.callFrame.url "/")) 1)) "")) ":" (+ @n.callFrame.lineNumber 1) ":" (+ @n.callFrame.columnNumber 1)) })) (fn x @x.id)))
+                  (deltas : [number] (default @prof.timeDeltas []))
+                  (ids : [number] (default @prof.samples [])))
+              (let ((times (object/get (array/reduce @deltas { t: @prof.startTime, ts: [] } (fn acc d (let ((t2 (+ (object/get @acc "t") @d))) { t: @t2, ts: (array/append (object/get @acc "ts") @t2) }))) "ts"))
+                    (perMs (/ @config.cpuIntervalUs 1000)))
+                (let ((hits (array/map (array/range (array/len @ids)) (fn i { at: (default (array/nth @times @i) 0), site: (object/get (default (array/first (object/get @siteOf (str/concat (default (array/nth @ids @i) 0)) [])) { id: "", site: "(unknown)" }) "site") })))
+                      (events : [CdpTraceEvent] @entity.events))
+                  (let ((main (default (array/find @events (fn e (and (= @e.ph "M") (= @e.name "thread_name") (= (default (object/get (default @e.args { name: "" }) "name") "") "CrRendererMain")))) { name: "", ph: "", ts: 0, dur: 0, pid: -1, tid: -1 }))
+                        )
+                    (let ((tasks (array/filter @events (fn e (and (= @e.ph "X") (= @e.name "RunTask") (= (default @e.pid -2) (default @main.pid -1)) (= (default @e.tid -2) (default @main.tid -1)) (>= (default @e.dur 0) (* 1000 @config.longTaskMs)))))))
+                      (emit CDP_PROFILE_CPU {
+                        label: @entity.label,
+                        sampledMs: (* @perMs (array/len @hits)),
+                        functions: (let ((bySite (array/groupBy @hits (fn h @h.site)))) (array/take (array/sort (array/map (object/keys @bySite) (fn k { site: @k, ms: (* @perMs (array/len (object/get @bySite @k []))) })) "ms" "desc") @config.topSites)),
+                        longTasks: (array/sort (array/map @tasks (fn t (let ((a (default @t.ts 0)) (b (+ (default @t.ts 0) (default @t.dur 0))))
+                          { startMs: (/ (- @a @prof.startTime) 1000), durMs: (/ (default @t.dur 0) 1000), functions: (let ((bySite (array/groupBy (array/filter @hits (fn h (and (>= @h.at @a) (<= @h.at @b)))) (fn h @h.site)))) (array/take (array/sort (array/map (object/keys @bySite) (fn k { site: @k, ms: (* @perMs (array/len (object/get @bySite @k []))) })) "ms" "desc") 8)) }))) "durMs" "desc") }))))))))
+        (set @entity.heapNodes [])
+        (set @entity.cpuProfile null)
+        (set @entity.events [])
+      PROFILE_CDP_ERROR -> ready
+        (set @entity.tracing false)
+        (emit CDP_PROFILE_FAILED { label: @entity.label, code: ?code, error: (str/concat ?method ": " ?message) })
+    }
+
+    emits {
+      CDP_PROFILE_READY -> external { }
+        @description "Connected and attached to the page; traces may start."
+        @tier "domain"
+      CDP_PROFILE_TRACING -> external { label : string! }
+        @description "A trace is recording."
+        @tier "domain"
+      CDP_PROFILE_PAGE -> external {
+        label : string!
+        events : number!
+        mainBusyMs : number!
+        metrics : CdpPageMetrics!
+        longTasks : [CdpLongTask]!
+      }
+        @description "What the page cost while the trace ran: its metrics after a forced collection, its main thread's busy time and each long task by top-level activity."
+        @tier "domain"
+      CDP_PROFILE_HEAP -> external { label : string!, liveBytes : number!, sites : [CdpHeapSite]! }
+        @description "What JavaScript still held when the trace stopped, after a forced collection: the sampled live bytes and the allocation sites holding the most (function file:line:column)."
+        @tier "domain"
+      CDP_PROFILE_CPU -> external { label : string!, sampledMs : number!, functions : [CdpCpuSite]!, longTasks : [CdpTaskFunctions]! }
+        @description "Where the page's JavaScript spent its time while the trace ran: the functions with the most self samples, overall and inside each long task."
+        @tier "domain"
+      CDP_PROFILE_EVALUATED -> external { key : string!, frame : string! }
+        @description "A script ran in the page; the frame is Runtime.evaluate's answer."
+        @tier "domain"
+      CDP_PROFILE_FAILED -> external { label : string!, code : string!, error : string! }
+        @description "A command was refused or answered an unexpected shape: busy, idle, bad-reply, the protocol code or the connection's failure kind."
+        @tier "domain"
+      CDP_CONNECT -> external { }
+        @tier "internal"
+      CDP_COMMAND -> external { key : string!, method : string!, sessionId : string?, paramsJson : string! }
+        @tier "internal"
+    }
+
+    listens {
+      CDP_PROFILE_CONNECT -> input { targetId : string! }
+        @description "Connect and attach to the page target to measure."
+        @synonyms "attach the profiler to the page"
+      CDP_PROFILE_TRACE_START -> input { label : string!, heap : boolean?, cpu : boolean? }
+        @description "Start recording what the page costs."
+        @synonyms "start a browser trace"
+      CDP_PROFILE_TRACE_STOP -> input { label : string! }
+        @description "Stop recording and answer the page's cost."
+        @synonyms "stop the browser trace, long tasks, main thread"
+      CDP_PROFILE_EVALUATE -> input { key : string!, expression : string! }
+        @description "Run a script in the attached page (Runtime.evaluate), for a profiler that drives the page."
+        @synonyms "evaluate in page, run script in page"
+      ProfileCdp.CDP_CONNECTED -> PROFILE_CDP_CONNECTED with { browser: ?browser }
+      PROFILE_CDP_CONNECTED { browser : string! }
+      ProfileCdp.CDP_FAILED -> PROFILE_CDP_FAILED with { error: ?error, kind: ?kind }
+      PROFILE_CDP_FAILED { error : string!, kind : string! }
+      ProfileCdp.CDP_REPLY -> PROFILE_CDP_REPLY with { key: ?key, method: ?method, frame: ?frame }
+      PROFILE_CDP_REPLY { key : string!, method : string!, frame : string! }
+      ProfileCdp.CDP_ERROR -> PROFILE_CDP_ERROR with { key: ?key, method: ?method, code: ?code, message: ?message }
+      PROFILE_CDP_ERROR { key : string!, method : string!, code : string!, message : string! }
+      ProfileCdp.CDP_EVENT -> PROFILE_CDP_EVENT with { method: ?method, sessionId: ?sessionId, frame: ?frame }
+      PROFILE_CDP_EVENT { method : string!, sessionId : string?, frame : string! }
+    }
+  }
+
+  page boot as CdpProfileStart -> CdpProfile, ProfileCdp, ProfileCdpHttp, ProfileCdpWs, ProfileCdpDelay
+}

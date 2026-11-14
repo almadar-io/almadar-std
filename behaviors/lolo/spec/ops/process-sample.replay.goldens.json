@@ -1,0 +1,232 @@
+{
+  "atom": "ops/atoms/std-process-sample.lolo",
+  "trait": "ProcessSample",
+  "cases": [
+    {
+      "id": "a-new-key-asks-the-process-list",
+      "steps": [
+        {
+          "trait": "ProcessSample",
+          "event": "PROCESS_SAMPLE",
+          "payload": {
+            "key": "a",
+            "pids": [
+              10
+            ]
+          },
+          "entity": {
+            "id": "p",
+            "pending": {}
+          },
+          "expect": {
+            "fired": true,
+            "effects": [
+              {
+                "type": "os/process-list"
+              }
+            ],
+            "neverEmits": [
+              "PROCESS_SAMPLE_FAILED"
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "a-key-already-in-flight-is-refused-busy-and-asks-nothing",
+      "steps": [
+        {
+          "trait": "ProcessSample",
+          "event": "PROCESS_SAMPLE",
+          "payload": {
+            "key": "a",
+            "pids": [
+              10
+            ]
+          },
+          "entity": {
+            "id": "p",
+            "pending": {
+              "a": [
+                10
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "exactEmits": [
+              {
+                "event": "PROCESS_SAMPLE_FAILED",
+                "payload": {
+                  "key": "a",
+                  "code": "busy",
+                  "error": "a reading under key a is already in flight"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "control-another-key-is-not-busy",
+      "steps": [
+        {
+          "trait": "ProcessSample",
+          "event": "PROCESS_SAMPLE",
+          "payload": {
+            "key": "b",
+            "pids": [
+              10
+            ]
+          },
+          "entity": {
+            "id": "p",
+            "pending": {
+              "a": [
+                10
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "effects": [
+              {
+                "type": "os/process-list"
+              }
+            ],
+            "neverEmits": [
+              "PROCESS_SAMPLE_FAILED"
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "a-reading-answers-measured-missing-and-unmeasured-pids-apart-in-asked-order",
+      "steps": [
+        {
+          "trait": "ProcessSample",
+          "event": "PROCESS_LISTED",
+          "payload": {
+            "key": "a",
+            "processes": [
+              {
+                "pid": 20,
+                "ppid": 1,
+                "name": "orb",
+                "command": "/bin/orb",
+                "args": [],
+                "user": "501",
+                "own": true,
+                "rssBytes": null,
+                "cpuSeconds": 2.5,
+                "startedAt": 1760500000
+              },
+              {
+                "pid": 10,
+                "ppid": 1,
+                "name": "orb",
+                "command": "/bin/orb",
+                "args": [],
+                "user": "501",
+                "own": true,
+                "rssBytes": 4096,
+                "cpuSeconds": 2.5,
+                "startedAt": 1760500000
+              },
+              {
+                "pid": 99,
+                "ppid": 1,
+                "name": "orb",
+                "command": "/bin/orb",
+                "args": [],
+                "user": "501",
+                "own": true,
+                "rssBytes": 1,
+                "cpuSeconds": 2.5,
+                "startedAt": 1760500000
+              }
+            ]
+          },
+          "entity": {
+            "id": "p",
+            "pending": {
+              "a": [
+                10,
+                20,
+                30
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "exactEmits": [
+              {
+                "event": "PROCESS_SAMPLED",
+                "payload": {
+                  "key": "a",
+                  "at": 1760531445.678,
+                  "processes": [
+                    {
+                      "pid": 10,
+                      "rssBytes": 4096,
+                      "cpuSeconds": 2.5,
+                      "startedAt": 1760500000
+                    }
+                  ],
+                  "missing": [
+                    30
+                  ],
+                  "unmeasured": [
+                    20
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "a-failed-list-answers-the-hosts-kind",
+      "steps": [
+        {
+          "trait": "ProcessSample",
+          "event": "PROCESS_LIST_FAILED",
+          "payload": {
+            "key": "a",
+            "error": "not granted",
+            "kind": "denied"
+          },
+          "entity": {
+            "id": "p",
+            "pending": {
+              "a": [
+                10
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "exactEmits": [
+              {
+                "event": "PROCESS_SAMPLE_FAILED",
+                "payload": {
+                  "key": "a",
+                  "code": "denied",
+                  "error": "not granted"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    }
+  ]
+}

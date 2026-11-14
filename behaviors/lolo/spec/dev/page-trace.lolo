@@ -1,0 +1,32 @@
+app page-trace-spec [
+  version: "1.0.0",
+  description: "Design contract for following a running page through the kernel's trace: one subscription per site without the observer traits, each traced dispatch forwarded with its cost when asked, closed on request or on a refusal."
+]
+
+orbital PageTraceSpec {
+  expects entity PageTraceRun [runtime] {
+    id : string!
+    key : string
+    browser : [string]
+    server : [string]
+  }
+  expects trait PageTrace {
+    state closed {
+      PAGE_TRACE_OPEN -> reading
+    }
+    state reading {
+      PAGE_MOUNTED -> live
+    }
+    state live {
+      PAGE_TRACE_ITEM -> live
+      PAGE_TRACE_CLOSE -> closed
+    }
+    emits {
+      PAGE_TRACE_READY { key : string! }
+      PAGE_TRACED { key : string! }
+      PAGE_TRACE_FAILED { key : string!  error : string! }
+    }
+  }
+  expects config { cost : boolean = false }
+  expects page boot -> PageTrace
+}

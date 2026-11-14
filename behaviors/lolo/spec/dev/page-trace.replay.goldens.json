@@ -1,0 +1,312 @@
+{
+  "atom": "dev/atoms/std-page-trace.lolo",
+  "trait": "PageTrace",
+  "cases": [
+    {
+      "id": "open-reads-the-mounted-page",
+      "steps": [
+        {
+          "trait": "PageTrace",
+          "event": "PAGE_TRACE_OPEN",
+          "payload": {
+            "key": "p1"
+          },
+          "entity": {
+            "id": "t",
+            "key": "",
+            "browser": [],
+            "server": []
+          },
+          "expect": {
+            "fired": true,
+            "state": "reading",
+            "effects": [
+              {
+                "type": "program/self"
+              }
+            ]
+          },
+          "from": "closed"
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "a-browser-trace-asked-of-a-server-role-kernel-is-refused-by-name",
+      "steps": [
+        {
+          "trait": "PageTrace",
+          "event": "PAGE_MOUNTED",
+          "payload": {
+            "result": {
+              "page": "PageTraceStart",
+              "traits": [
+                {
+                  "trait": "PageTrace",
+                  "orbital": "PageTraceOrbital",
+                  "parent": null,
+                  "depth": 0,
+                  "embeddedIn": [],
+                  "renders": false,
+                  "linked": false,
+                  "observer": false,
+                  "stepsIn": "browser",
+                  "linkedEntity": null,
+                  "instances": [],
+                  "states": [],
+                  "transitions": [],
+                  "emits": [],
+                  "listens": []
+                }
+              ],
+              "wires": []
+            }
+          },
+          "expect": {
+            "fired": true,
+            "emits": [
+              {
+                "event": "PAGE_TRACE_READY"
+              },
+              {
+                "event": "PAGE_TRACE_FAILED",
+                "payload": {
+                  "key": "p1",
+                  "error": "program/live trace: the traits it observes run in the browser; open it from a client-run trait (EXEC-DIST-14)"
+                }
+              }
+            ]
+          },
+          "from": "reading",
+          "entity": {
+            "id": "t",
+            "key": "p1",
+            "browser": [],
+            "server": []
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "control-an-observer-trait-is-not-traced",
+      "steps": [
+        {
+          "trait": "PageTrace",
+          "event": "PAGE_MOUNTED",
+          "payload": {
+            "result": {
+              "page": "PageTraceStart",
+              "traits": [
+                {
+                  "trait": "PageTrace",
+                  "orbital": "PageTraceOrbital",
+                  "parent": null,
+                  "depth": 0,
+                  "embeddedIn": [],
+                  "renders": false,
+                  "linked": false,
+                  "observer": true,
+                  "stepsIn": "browser",
+                  "linkedEntity": null,
+                  "instances": [],
+                  "states": [],
+                  "transitions": [],
+                  "emits": [],
+                  "listens": []
+                }
+              ],
+              "wires": []
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "live",
+            "emits": [
+              {
+                "event": "PAGE_TRACE_READY"
+              }
+            ],
+            "neverEmits": [
+              "PAGE_TRACE_FAILED"
+            ]
+          },
+          "from": "reading",
+          "entity": {
+            "id": "t",
+            "key": "p1",
+            "browser": [],
+            "server": []
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "a-traced-dispatch-is-forwarded-under-the-key",
+      "steps": [
+        {
+          "trait": "PageTrace",
+          "event": "PAGE_TRACE_ITEM",
+          "payload": {
+            "dispatch": {
+              "seq": 3,
+              "outcomes": [
+                {
+                  "trait": "A",
+                  "from": "x",
+                  "to": "y",
+                  "event": "GO",
+                  "executed": true,
+                  "cost": {
+                    "startNs": 1,
+                    "ns": 5,
+                    "allocs": 2,
+                    "allocBytes": 64
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "fired": true,
+            "state": "live",
+            "exactEmits": [
+              {
+                "event": "PAGE_TRACED",
+                "payload": {
+                  "key": "p1",
+                  "dispatch": {
+                    "seq": 3,
+                    "outcomes": [
+                      {
+                        "trait": "A",
+                        "from": "x",
+                        "to": "y",
+                        "event": "GO",
+                        "executed": true,
+                        "cost": {
+                          "startNs": 1,
+                          "ns": 5,
+                          "allocs": 2,
+                          "allocBytes": 64
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          },
+          "from": "live",
+          "entity": {
+            "id": "t",
+            "key": "p1",
+            "browser": [
+              "A"
+            ],
+            "server": []
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "close-cancels-the-subscriptions",
+      "steps": [
+        {
+          "trait": "PageTrace",
+          "event": "PAGE_TRACE_CLOSE",
+          "payload": {},
+          "expect": {
+            "fired": true,
+            "state": "closed",
+            "neverEmits": [
+              "PAGE_TRACE_FAILED"
+            ]
+          },
+          "from": "live",
+          "entity": {
+            "id": "t",
+            "key": "p1",
+            "browser": [
+              "A"
+            ],
+            "server": [
+              "B"
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "a-refused-stream-closes-and-is-named",
+      "steps": [
+        {
+          "trait": "PageTrace",
+          "event": "PAGE_TRACE_STREAM_FAILED",
+          "payload": {
+            "error": "no trace here"
+          },
+          "expect": {
+            "fired": true,
+            "state": "closed",
+            "exactEmits": [
+              {
+                "event": "PAGE_TRACE_FAILED",
+                "payload": {
+                  "key": "p1",
+                  "error": "no trace here"
+                }
+              }
+            ]
+          },
+          "from": "live",
+          "entity": {
+            "id": "t",
+            "key": "p1",
+            "browser": [
+              "A"
+            ],
+            "server": []
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "a-page-that-cannot-be-read-is-named",
+      "steps": [
+        {
+          "trait": "PageTrace",
+          "event": "PAGE_MOUNT_FAILED",
+          "payload": {
+            "error": "no page"
+          },
+          "expect": {
+            "fired": true,
+            "state": "closed",
+            "exactEmits": [
+              {
+                "event": "PAGE_TRACE_FAILED",
+                "payload": {
+                  "key": "p1",
+                  "error": "no page"
+                }
+              }
+            ]
+          },
+          "from": "reading",
+          "entity": {
+            "id": "t",
+            "key": "p1",
+            "browser": [],
+            "server": []
+          }
+        }
+      ],
+      "now": 1760531445678
+    }
+  ]
+}

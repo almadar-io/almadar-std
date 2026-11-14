@@ -1,10 +1,11 @@
 app std-live-machine [
   version: "1.0.0",
   locales: [en, ar, sl],
-  description: "std-live-machine — a running machine drawn beside its own source and moved by it: reads a trait with behavior/describe, then shows the trait's state machine (active state, fired transition, visited states) first, its .lolo source after it (the lines of the transition that fired are highlighted), so a narrow view stacks the machine on top. A running demo reports each move as ADVANCE { event, to? } (`to` picks the arm when one event leaves a state more than one way); an event with no transition from the active state is ignored. SUBJECT { behavior, trait } re-describes another trait by name and resets the view; the `subject` knob is the initial trait. On a page with no host the build answers behavior/describe, so guards and effects are the program's own code. LiveMachineOrbit draws the running page whole instead: ORBITAL_SUBJECT { behavior } to LiveMachineTrace reads the asking session's mounted orbital (program/self { mounted: true }), and every trait is drawn as a box nested in the trait that embeds it, starting from its current state. LiveMachineTrace opens one trace subscription for the traits that step in the browser and one for those on the server (EXEC-DIST-14), leaving out the observer traits (itself and the views it feeds) so it never traces its own work. Each move lights its fired transition, and LiveMachineSource describes the trait that moved last for the source column. ORBITAL_CLOSE closes the subscriptions. GUEST_ORBIT { behavior, guest } to LiveMachineOrbit draws a guest session (program/open) the same way: LiveMachineSource reads the guest's mounted orbital on the server (program/self { mounted: true, guest }), and the composer routes the guest's moves to MOVES."
+  description: "std-live-machine — a running machine drawn beside its own source and moved by it: reads a trait with behavior/describe, then shows the trait's state machine (active state, fired transition, visited states) first, its .lolo source after it (the lines of the transition that fired are highlighted), so a narrow view stacks the machine on top. A running demo reports each move as ADVANCE { event, to? } (`to` picks the arm when one event leaves a state more than one way); an event with no transition from the active state is ignored. SUBJECT { behavior, trait } re-describes another trait by name and resets the view; the `subject` knob is the initial trait. On a page with no host the build answers behavior/describe, so guards and effects are the program's own code. LiveMachineOrbit draws the running page whole instead: ORBITAL_SUBJECT { behavior } to LiveMachineTrace reads the asking session's mounted orbital (program/self { mounted: true }), and every trait is drawn as a box nested in the trait that embeds it, starting from its current state. LiveMachineTrace follows the page through the composed std-page-trace, which opens one trace subscription for the traits that step in the browser and one for those on the server (EXEC-DIST-14), leaving out the observer traits (the tracer and the views it feeds) so it never traces its own work. Each move lights its fired transition, and LiveMachineSource describes the trait that moved last for the source column. ORBITAL_CLOSE closes the subscriptions. GUEST_ORBIT { behavior, guest } to LiveMachineOrbit draws a guest session (program/open) the same way: LiveMachineSource reads the guest's mounted orbital on the server (program/self { mounted: true, guest }), and the composer routes the guest's moves to MOVES."
 ]
 ;; @capabilities "live state machine view, trait source beside diagram, running machine diagram, highlight fired transition, describe a trait"
 uses Spec from "almadar-std/live-machine"
+uses PageTrace from "std/behaviors/std-page-trace"
 
 type DescribedState = { name : string!, isInitial : boolean }
 type DescribedTransition = { from : string!, to : string!, event : string! }
@@ -72,8 +73,6 @@ orbital LiveMachineOrbital {
   entity LiveMachineTraceView [runtime] {
     id : string!
     behavior : string = ""
-    browser : [string] = []
-    server : [string] = []
   }
 
 
@@ -628,50 +627,31 @@ orbital LiveMachineOrbital {
   }
 
 
-  ;; one trace subscription per site: a trace of browser and server traits together is refused (EXEC-DIST-14)
+  ;; following the page is std-page-trace's: one subscription per site, observers left out (EXEC-DIST-14)
   trait LiveMachineTrace -> LiveMachineTraceView [client] {
     initial: closed
 
     state closed {
       INIT -> closed
-      ORBITAL_SUBJECT -> reading
+      ORBITAL_SUBJECT -> following
         (set @entity.behavior ?behavior)
-        (program/self { mounted: true, emit: { success: MOUNTED, failure: MOUNT_FAILED } })
+        (emit TRACE_OPEN { key: "live-machine" })
       ORBITAL_CLOSE -> closed
     }
 
-    state reading {
+    state following {
       INIT -> closed
-      MOUNTED -> live
-        (set @entity.browser (array/map (array/filter ?result.traits (fn t (and (== @t.stepsIn "browser") (not @t.observer)))) (fn t @t.trait)))
-        (set @entity.server (array/map (array/filter ?result.traits (fn t (and (== @t.stepsIn "server") (not @t.observer)))) (fn t @t.trait)))
-        (if (> (array/len @entity.browser) 0) (program/live { kind: "trace", traits: @entity.browser } { key: "live-machine-browser", emit: { onMessage: TRACE, failure: TRACE_FAILED } }) null)
-        (if (> (array/len @entity.server) 0) (program/live { kind: "trace", traits: @entity.server } { key: "live-machine-server", emit: { onMessage: TRACE, failure: TRACE_FAILED } }) null)
-        (emit ORBIT { behavior: @entity.behavior, tree: ?result })
-      MOUNT_FAILED -> closed
-        (emit ORBIT_FAILED { behavior: @entity.behavior, error: ?error })
-      ORBITAL_SUBJECT -> reading
-        (set @entity.behavior ?behavior)
-        (program/self { mounted: true, emit: { success: MOUNTED, failure: MOUNT_FAILED } })
-      ORBITAL_CLOSE -> closed
-    }
-
-    state live {
-      INIT -> closed
-      TRACE -> live
+      PAGE_READY -> following
+        (emit ORBIT { behavior: @entity.behavior, tree: ?tree })
+      PAGE_MOVED -> following
         (emit ORBIT_MOVES { moves: (array/map (default ?dispatch.outcomes []) (fn o { trait: @o.trait, event: (default @o.event ""), from: @o.from, to: @o.to, fired: @o.executed })) })
-      TRACE_FAILED -> closed
-        (if (> (array/len @entity.browser) 0) (cancel-call "live-machine-browser") null)
-        (if (> (array/len @entity.server) 0) (cancel-call "live-machine-server") null)
+      PAGE_FAILED -> closed
         (emit ORBIT_FAILED { behavior: @entity.behavior, error: ?error })
       ORBITAL_CLOSE -> closed
-        (if (> (array/len @entity.browser) 0) (cancel-call "live-machine-browser") null)
-        (if (> (array/len @entity.server) 0) (cancel-call "live-machine-server") null)
-      ORBITAL_SUBJECT -> reading
-        (if (> (array/len @entity.browser) 0) (cancel-call "live-machine-browser") null)
-        (if (> (array/len @entity.server) 0) (cancel-call "live-machine-server") null)
+        (emit TRACE_CLOSE {})
+      ORBITAL_SUBJECT -> following
         (set @entity.behavior ?behavior)
-        (program/self { mounted: true, emit: { success: MOUNTED, failure: MOUNT_FAILED } })
+        (emit TRACE_OPEN { key: "live-machine" })
     }
 
     emits {
@@ -689,12 +669,11 @@ orbital LiveMachineOrbital {
         error : string!
       }
         @tier "internal"
-      MOUNTED -> internal {
-        result : MountedOrbital!
+      TRACE_OPEN {
+        key : string!
       }
         @tier "internal"
-      MOUNT_FAILED -> internal {
-        error : string!
+      TRACE_CLOSE {
       }
         @tier "internal"
     }
@@ -708,27 +687,36 @@ orbital LiveMachineOrbital {
         @synonyms "show the whole page machine, trace the page"
       ORBITAL_CLOSE
         @description "Stop following the page: close its trace subscriptions."
-      MOUNTED {
-        result : MountedOrbital!
+      LiveMachinePageTrace.PAGE_TRACE_READY -> PAGE_READY
+      LiveMachinePageTrace.PAGE_TRACED -> PAGE_MOVED
+      LiveMachinePageTrace.PAGE_TRACE_FAILED -> PAGE_FAILED
+      PAGE_READY {
+        key : string!
+        tree : MountedOrbital!
       }
         @tier "internal"
-      MOUNT_FAILED {
-        error : string!
-      }
-        @tier "internal"
-      TRACE {
+      PAGE_MOVED {
+        key : string!
         dispatch : TraceDispatch!
       }
         @description "One dispatch of the page, with each trait's move."
         @tier "internal"
-      TRACE_FAILED {
+      PAGE_FAILED {
+        key : string!
         error : string!
       }
         @tier "internal"
     }
   }
 
+  trait LiveMachinePageTrace = PageTrace.traits.PageTrace {
+    listens {
+      LiveMachineTrace.TRACE_OPEN -> PAGE_TRACE_OPEN
+      LiveMachineTrace.TRACE_CLOSE -> PAGE_TRACE_CLOSE
+    }
+  }
+
 
   page "/live-machine" as LiveMachinePage -> LiveMachine
-  page "/live-machine/:view" as LiveOrbitPage -> LiveMachineOrbit, LiveMachineTrace, LiveMachineSource
+  page "/live-machine/:view" as LiveOrbitPage -> LiveMachineOrbit, LiveMachineTrace, LiveMachinePageTrace, LiveMachineSource
 }

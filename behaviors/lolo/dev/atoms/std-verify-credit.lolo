@@ -1,6 +1,6 @@
 app std-verify-credit [
   version: "1.0.0",
-  description: "std-verify-credit — the kernel's credit_failure_routes (orbital-core verify/plan_wire.rs) as data. CREDIT_REQUEST carries the planned steps as the credit pass sees them; CREDIT_ANSWERED returns a Credit {index, stateBefore, stateAfter} for each failure-route step (reply 'failure') that another step's dispatch already fired as a hop with the same trait, from and event, the arm matching when the step names one. Not ported: plan_init_credits (it reads the whole schema through the Rust planner)."
+  description: "std-verify-credit — the kernel's credit_failure_routes (orbital-core verify/plan_wire.rs) as data. CREDIT_REQUEST carries the planned steps as the credit pass sees them, each with the hops its own dispatch fired, and optionally fired: the hops the whole run fired, sent once (a walk that fires every hop into one shared list sends it there rather than copying it onto every step); CREDIT_ANSWERED returns a Credit {index, stateBefore, stateAfter} for each failure-route step (reply 'failure') that a dispatch already fired as a hop with the same trait, from and event, the arm matching when the step names one; the first matching hop credits, the steps' own hops in step order before the run-wide ones. Not ported: plan_init_credits (it reads the whole schema through the Rust planner)."
 ]
 ;; @capabilities "verify credit, failure route credit, fired hop, coverage credit, verifier"
 uses Spec from "almadar-std/verify-credit"
@@ -25,14 +25,16 @@ orbital VerifyCreditOrbital {
     state ready {
       INIT -> ready
       CREDIT_REQUEST -> ready
-        (let ((noCreditIdxList : CreditIdxList []) (noCreditList : CreditList []) (noHopList : HopList []))
-          (let ((hops (array/reduce @payload.steps @noHopList (fn (acc s) (array/concat @acc (object/get @s "fired" @noHopList))))))
-            (do (set @entity.credits (array/reduce (array/reduce @payload.steps @noCreditIdxList (fn (acc s) (array/concat @acc [{ idx: (array/len @acc), s: @s }]))) @noCreditList (fn (acc p)
-                  (let ((step (object/get @p "s")))
-                    (let ((hit (array/find @hops (fn h (and (= (object/get @h "trait") (object/get @step "trait")) (= (object/get @h "from") (object/get @step "from")) (= (object/get @h "event") (object/get @step "event")) (or (not (object/has @step "arm")) (= (object/get @h "arm" (- 0 1)) (object/get @step "arm"))))))))
-                      (if (and (= (object/get @step "reply" "") "failure") (!= @hit null))
-                        (array/concat @acc [{ index: (object/get @p "idx"), stateBefore: (object/get @hit "from"), stateAfter: (object/get @hit "to") }])
-                        @acc))))))
+        (let ((noHopList : HopList []) (noCreditList : CreditList []) (steps : [CreditStep] @payload.steps) (runFired : HopList (default @payload.fired [])))
+          (let ((byKey : Map string [FiredHop] (array/groupBy (array/concat (array/flatten (array/map @steps (fn s (object/get @s "fired" @noHopList)))) @runFired) (fn h (str/concat (object/get @h "trait") "|" (object/get @h "from") "|" (object/get @h "event"))))))
+            (do (set @entity.credits (array/reduce (array/range (array/len @steps)) @noCreditList (fn (acc i)
+                  (let ((step : CreditStep (array/nth @steps @i)))
+                    (if (!= (object/get @step "reply" "") "failure") @acc
+                      (let ((group : HopList (object/get @byKey (str/concat (object/get @step "trait") "|" (object/get @step "from") "|" (object/get @step "event")) @noHopList))
+                            (anyArm (not (object/has @step "arm")))
+                            (arm (object/get @step "arm" (- 0 1))))
+                        (let ((hit (array/find @group (fn h (or @anyArm (= (object/get @h "arm" (- 0 1)) @arm))))))
+                          (if (= @hit null) @acc (array/append @acc { index: @i, stateBefore: (object/get @hit "from"), stateAfter: (object/get @hit "to") })))))))))
                 (emit CREDIT_ANSWERED { credits: @entity.credits }))))
     }
 
@@ -43,7 +45,7 @@ orbital VerifyCreditOrbital {
     }
 
     listens {
-      CREDIT_REQUEST -> input { steps : [CreditStep]! }
+      CREDIT_REQUEST -> input { steps : [CreditStep]!, fired : [FiredHop]? }
         @description "Credit the failure-route steps of a plan from the hops the other steps fired."
         @synonyms "verify credit, failure route credit, credit pass, fired hops"
     }

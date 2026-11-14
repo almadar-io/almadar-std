@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "Canonical operator registry for Almadar. Generated from @almadar/std/modules. Consumed by orbital-compiler via include_str!.",
-  "generated": "2026-11-13T18:29:07.142Z",
+  "generated": "2026-11-14T05:12:45.560Z",
   "categories": {
     "arithmetic": {
       "description": "Numeric operations",
@@ -12431,7 +12431,7 @@
     "i18n/direction": {
       "category": "std-i18n",
       "minArity": 0,
-      "maxArity": 0,
+      "maxArity": 1,
       "returnType": {
         "kind": "union",
         "of": [
@@ -12442,11 +12442,24 @@
           }
         ]
       },
-      "description": "The active locale's reading direction, rtl or ltr; null until the host sets a locale. Render-time, like i18n/t",
+      "description": "The active locale's reading direction, rtl or ltr, or a named locale's with { locale }; null until the host sets a locale. Render-time, like i18n/t",
       "module": "i18n",
       "visual": {
         "form": "block"
       },
+      "params": [
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "locale": "string"
+            }
+          },
+          "description": "The locale whose direction to answer instead of the active one",
+          "optional": true
+        }
+      ],
       "examples": [
         "(i18n/direction) // => \"rtl\" under ar"
       ],
@@ -12466,7 +12479,7 @@
           }
         ]
       },
-      "description": "The active locale's message for a catalog key, with {{placeholders}} filled from params",
+      "description": "The active locale's message for a catalog key, with {{placeholders}} filled from params; a `locale` in params reads that declared locale's catalog instead (it is never a placeholder)",
       "module": "i18n",
       "visual": {
         "form": "block"
@@ -12504,7 +12517,7 @@
               ]
             }
           },
-          "description": "Values for the message {{placeholders}}",
+          "description": "Values for the message {{placeholders}}, and optionally `locale`: a declared locale whose catalog to read instead of the active one",
           "optional": true
         }
       ],
@@ -27356,11 +27369,12 @@
                 },
                 "open": true
               },
-              "guest": "string"
+              "guest": "string",
+              "cost": "boolean"
             },
             "open": true
           },
-          "description": "An optional stated payload (`schema`) the arguments are checked against before dispatch, and the event-request options (`wire`, `stream`, `input`, `orbital`, `targetTrait`, `entityId`, `event`, `traits`, `mount`, `route`, `clientId`, `locale`, `delivery`, `dispatchLog`); `guest` (a session id from `program/open`) dispatches into that guest session instead of the running program",
+          "description": "An optional stated payload (`schema`) the arguments are checked against before dispatch, and the event-request options (`wire`, `stream`, `input`, `orbital`, `targetTrait`, `entityId`, `event`, `traits`, `mount`, `route`, `clientId`, `locale`, `delivery`, `dispatchLog`); `guest` (a session id from `program/open`) dispatches into that guest session instead of the running program, and with it `cost: true` adds each outcome's cost to the answer (EXEC-COST-1; a keyed guest dispatch is not measured)",
           "optional": true
         },
         {
@@ -27647,7 +27661,16 @@
               "registeredSchemas": "number",
               "registeredTraits": "number",
               "activeInstances": "number",
-              "cachedEntities": "number"
+              "cachedEntities": "number",
+              "heldBytes": {
+                "kind": "object",
+                "fields": {
+                  "rows": "number",
+                  "frames": "number",
+                  "guests": "number",
+                  "arenas": "number"
+                }
+              }
             }
           },
           "trace": {
@@ -27664,7 +27687,7 @@
         },
         "open": true
       },
-      "description": "Reflect the running program's declared external inputs, the events an outside client may send: `inputs` lists each with its orbital, trait, event, qualified `address`, description, declared `payloadSchema` and the JSON Schema of that payload (`parameters`), so a tool-calling model can be offered them as tools; `entities` lists the persisted entities `persist/read-named` accepts. An optional `{ select: [{ event, payload? }] }` also answers `selected`: the inputs those addresses (`EVENT`, `Trait.EVENT` or `Orbital.Trait.EVENT`, resolved from the calling trait) name, in order, each with the stated `payload` in place of its own; an address that is not a declared external input fails the call. Success carries `{ result: { inputs, entities, selected }, text }`. Nothing is filtered by caller: `program/dispatch` decides at dispatch. The same options can also ask for runtime reads, each answered only when asked: `{ state: orbital }` adds `state: { orbital, traits: [{ trait, entityId, state, entity }] }` (every running instance of that orbital's traits, with its entity; an orbital that is not registered fails the call), `{ stats: true }` adds `stats: { registeredSchemas, registeredTraits, activeInstances, cachedEntities }` (the kernel's counters), and `{ trace: n }` adds `trace`, the host's last `n` traced dispatch steps, oldest first (asked of the host, which keeps the trace; empty while tracing is off). With `{ guest: id }` (a session `program/open` answered) every question is asked of that guest session's program instead of the running one.",
+      "description": "Reflect the running program's declared external inputs, the events an outside client may send: `inputs` lists each with its orbital, trait, event, qualified `address`, description, declared `payloadSchema` and the JSON Schema of that payload (`parameters`), so a tool-calling model can be offered them as tools; `entities` lists the persisted entities `persist/read-named` accepts. An optional `{ select: [{ event, payload? }] }` also answers `selected`: the inputs those addresses (`EVENT`, `Trait.EVENT` or `Orbital.Trait.EVENT`, resolved from the calling trait) name, in order, each with the stated `payload` in place of its own; an address that is not a declared external input fails the call. Success carries `{ result: { inputs, entities, selected }, text }`. Nothing is filtered by caller: `program/dispatch` decides at dispatch. The same options can also ask for runtime reads, each answered only when asked: `{ state: orbital }` adds `state: { orbital, traits: [{ trait, entityId, state, entity }] }` (every running instance of that orbital's traits, with its entity; an orbital that is not registered fails the call), `{ stats: true }` adds `stats: { registeredSchemas, registeredTraits, activeInstances, cachedEntities, heldBytes: { rows, frames, guests, arenas } }` (the kernel's counters, and the bytes of value data each table holds, EXEC-COST-2), and `{ trace: n }` adds `trace`, the host's last `n` traced dispatch steps, oldest first (asked of the host, which keeps the trace; empty while tracing is off). With `{ guest: id }` (a session `program/open` answered) every question is asked of that guest session's program instead of the running one.",
       "module": "program",
       "visual": {
         "form": "actuator"
@@ -27758,11 +27781,12 @@
             "fields": {
               "clientId": "string",
               "kind": "string",
-              "guest": "string"
+              "guest": "string",
+              "cost": "boolean"
             },
             "open": true
           },
-          "description": "Whose feed it is: the `clientId` session, whose bound identity's `@read` filters peers' rows and whose own items are left out; or `kind` (`trace`, `guest`) and what that kind streams",
+          "description": "Whose feed it is: the `clientId` session, whose bound identity's `@read` filters peers' rows and whose own items are left out; or `kind` (`trace`, `guest`) and what that kind streams; with `kind: \"trace\"`, `cost: true` adds each step's and effect's cost to this stream's items only (EXEC-COST-1)",
           "optional": true
         },
         {
@@ -27860,8 +27884,20 @@
                 },
                 "from": "string",
                 "to": "string",
-                "fired": "boolean"
-              }
+                "fired": "boolean",
+                "cost": {
+                  "kind": "object",
+                  "fields": {
+                    "startNs": "number",
+                    "ns": "number",
+                    "allocs": "number",
+                    "allocBytes": "number"
+                  }
+                }
+              },
+              "optional": [
+                "cost"
+              ]
             }
           },
           "access": {
@@ -28040,8 +28076,20 @@
                 },
                 "from": "string",
                 "to": "string",
-                "fired": "boolean"
-              }
+                "fired": "boolean",
+                "cost": {
+                  "kind": "object",
+                  "fields": {
+                    "startNs": "number",
+                    "ns": "number",
+                    "allocs": "number",
+                    "allocBytes": "number"
+                  }
+                }
+              },
+              "optional": [
+                "cost"
+              ]
             }
           },
           "access": {
@@ -28967,12 +29015,22 @@
                         "of": {
                           "kind": "sexpr"
                         }
+                      },
+                      "cost": {
+                        "kind": "object",
+                        "fields": {
+                          "startNs": "number",
+                          "ns": "number",
+                          "allocs": "number",
+                          "allocBytes": "number"
+                        }
                       }
                     },
                     "optional": [
                       "error",
                       "code",
-                      "nested"
+                      "nested",
+                      "cost"
                     ]
                   }
                 },
@@ -29197,12 +29255,22 @@
                               "of": {
                                 "kind": "sexpr"
                               }
+                            },
+                            "cost": {
+                              "kind": "object",
+                              "fields": {
+                                "startNs": "number",
+                                "ns": "number",
+                                "allocs": "number",
+                                "allocBytes": "number"
+                              }
                             }
                           },
                           "optional": [
                             "error",
                             "code",
-                            "nested"
+                            "nested",
+                            "cost"
                           ]
                         }
                       },
@@ -29225,10 +29293,20 @@
                             "payload"
                           ]
                         }
+                      },
+                      "cost": {
+                        "kind": "object",
+                        "fields": {
+                          "startNs": "number",
+                          "ns": "number",
+                          "allocs": "number",
+                          "allocBytes": "number"
+                        }
                       }
                     },
                     "optional": [
-                      "arm"
+                      "arm",
+                      "cost"
                     ]
                   }
                 }
@@ -29379,12 +29457,22 @@
                                   "of": {
                                     "kind": "sexpr"
                                   }
+                                },
+                                "cost": {
+                                  "kind": "object",
+                                  "fields": {
+                                    "startNs": "number",
+                                    "ns": "number",
+                                    "allocs": "number",
+                                    "allocBytes": "number"
+                                  }
                                 }
                               },
                               "optional": [
                                 "error",
                                 "code",
-                                "nested"
+                                "nested",
+                                "cost"
                               ]
                             }
                           },
@@ -29446,8 +29534,20 @@
                                 "counterexample"
                               ]
                             }
+                          },
+                          "cost": {
+                            "kind": "object",
+                            "fields": {
+                              "startNs": "number",
+                              "ns": "number",
+                              "allocs": "number",
+                              "allocBytes": "number"
+                            }
                           }
-                        }
+                        },
+                        "optional": [
+                          "cost"
+                        ]
                       }
                     },
                     "states": {
@@ -29605,12 +29705,22 @@
                             "of": {
                               "kind": "sexpr"
                             }
+                          },
+                          "cost": {
+                            "kind": "object",
+                            "fields": {
+                              "startNs": "number",
+                              "ns": "number",
+                              "allocs": "number",
+                              "allocBytes": "number"
+                            }
                           }
                         },
                         "optional": [
                           "error",
                           "code",
-                          "nested"
+                          "nested",
+                          "cost"
                         ]
                       }
                     },
@@ -29672,8 +29782,20 @@
                           "counterexample"
                         ]
                       }
+                    },
+                    "cost": {
+                      "kind": "object",
+                      "fields": {
+                        "startNs": "number",
+                        "ns": "number",
+                        "allocs": "number",
+                        "allocBytes": "number"
+                      }
                     }
-                  }
+                  },
+                  "optional": [
+                    "cost"
+                  ]
                 }
               }
             },
@@ -29723,6 +29845,7 @@
               "render": "boolean",
               "renderProps": "boolean",
               "live": "boolean",
+              "cost": "boolean",
               "report": {
                 "kind": "literal",
                 "value": "raw"
@@ -29745,7 +29868,7 @@
             },
             "open": true
           },
-          "description": "Emit configuration ({ emit: { success, failure } }); `render: true` adds each result's `rendered` slot facts; `renderProps: true` (with `render: true`) adds each slot's resolved `props`; `live: true` runs the requests on the native host; `report: \"raw\"` answers the kernel's cascade report unshaped, exactly what `orb execute --steps` prints, and each request needs only `trait` and `event` (it dispatches from the held state)",
+          "description": "Emit configuration ({ emit: { success, failure } }); `render: true` adds each result's `rendered` slot facts; `renderProps: true` (with `render: true`) adds each slot's resolved `props`; `live: true` runs the requests on the native host; `cost: true` adds each outcome's and each effect's `cost { startNs, ns, allocs, allocBytes }` (EXEC-COST-1); `report: \"raw\"` answers the kernel's cascade report unshaped, exactly what `orb execute --steps` prints, and each request needs only `trait` and `event` (it dispatches from the held state)",
           "optional": true
         }
       ],

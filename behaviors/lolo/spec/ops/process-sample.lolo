@@ -1,0 +1,23 @@
+app process-sample-spec [
+  version: "1.0.0",
+  description: "Design contract for one reading of named processes: memory, CPU time and start time per pid, with the pids the host lists no process for and the ones it will not measure named apart, never read as zero."
+]
+
+type ProcessMeasured = { pid : number!, rssBytes : number!, cpuSeconds : number!, startedAt : number! }
+
+orbital ProcessSampleSpec {
+  expects entity ProcessSampleRun [runtime] {
+    id : string!
+    pending : Map string [number]
+  }
+  expects trait ProcessSample {
+    state ready {
+      PROCESS_SAMPLE -> ready
+    }
+    emits {
+      PROCESS_SAMPLED { key : string!  at : number!  processes : [ProcessMeasured]!  missing : [number]!  unmeasured : [number]! }
+      PROCESS_SAMPLE_FAILED { key : string!  code : string!  error : string! }
+    }
+  }
+  expects page boot -> ProcessSample
+}

@@ -1,0 +1,22 @@
+app orb-profile-spec [
+  version: "1.0.0",
+  description: "Design contract for `orb profile`: walk a program, or every catalog behavior one after the other, with the kernel's cost on, and answer where the steps spend time and memory, ranked, with what the run did not measure said plainly."
+]
+
+orbital OrbProfileSpec {
+  expects entity ProfileRun [runtime] {
+    id : string!
+    mode : string
+    queue : [string]
+    index : number
+  }
+  expects trait OrbProfile {
+    state ready {
+      PROFILE_CALLED -> starting
+    }
+    emits {
+      PROFILE_ANSWERED { status : number!  body : string! }
+    }
+  }
+  expects page boot -> OrbProfile
+}

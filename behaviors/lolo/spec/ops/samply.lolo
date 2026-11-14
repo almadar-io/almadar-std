@@ -1,0 +1,24 @@
+app samply-spec [
+  version: "1.0.0",
+  description: "Design contract for sampling where a process spends its CPU time with samply: one recording at a time, its frames named from samply's symbol sidecar, and its functions ranked by self samples with total samples and CPU time beside them."
+]
+
+type SamplyFunction = { name : string!, lib : string!, selfSamples : number!, totalSamples : number!, selfCpuUs : number!, totalCpuUs : number! }
+
+orbital SamplySpec {
+  expects entity SamplyRun [runtime] {
+    id : string!
+    running : boolean
+    key : string
+  }
+  expects trait Samply {
+    state ready {
+      SAMPLY_RECORD -> ready
+    }
+    emits {
+      SAMPLY_HOT { key : string!  startTime : number!  samples : number!  cpuUs : number!  functions : [SamplyFunction]!  output : string! }
+      SAMPLY_FAILED { key : string!  code : string!  error : string! }
+    }
+  }
+  expects page boot -> Samply
+}

@@ -1483,19 +1483,14 @@
       "steps": [
         {
           "trait": "LiveMachineTrace",
-          "from": "live",
+          "from": "following",
           "entity": {
             "id": "t",
-            "behavior": "almadar-std/demo",
-            "browser": [
-              "Frame"
-            ],
-            "server": [
-              "Board"
-            ]
+            "behavior": "almadar-std/demo"
           },
-          "event": "TRACE",
+          "event": "PAGE_MOVED",
           "payload": {
+            "key": "live-machine",
             "dispatch": {
               "seq": 3,
               "outcomes": [
@@ -1518,7 +1513,7 @@
           },
           "expect": {
             "fired": true,
-            "state": "live",
+            "state": "following",
             "emits": [
               {
                 "event": "ORBIT_MOVES",
@@ -1547,19 +1542,20 @@
       ]
     },
     {
-      "id": "mounted-hands-the-tree-on-and-traces-each-site",
-      "note": "the tree goes to LiveMachine and one subscription opens per site",
+      "id": "the-followed-page-is-handed-on-as-the-orbit",
+      "note": "std-page-trace answers the page it follows; LiveMachineTrace hands it to LiveMachine",
       "steps": [
         {
           "trait": "LiveMachineTrace",
-          "from": "reading",
+          "from": "following",
           "entity": {
             "id": "t",
             "behavior": "almadar-std/demo"
           },
-          "event": "MOUNTED",
+          "event": "PAGE_READY",
           "payload": {
-            "result": {
+            "key": "live-machine",
+            "tree": {
               "page": "Home",
               "traits": [
                 {
@@ -1661,20 +1657,8 @@
           },
           "expect": {
             "fired": true,
-            "state": "live",
+            "state": "following",
             "effects": [
-              {
-                "type": "set"
-              },
-              {
-                "type": "set"
-              },
-              {
-                "type": "if"
-              },
-              {
-                "type": "if"
-              },
               {
                 "type": "emit"
               }

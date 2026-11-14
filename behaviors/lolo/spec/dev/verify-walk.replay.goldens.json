@@ -1,2269 +1,3378 @@
 {
- "atom": "cli/atoms/std-verify-walk.lolo",
- "trait": "VerifyWalk",
- "cases": [
-  {
-   "id": "control-usage-error",
-   "steps": [
+  "atom": "cli/atoms/std-verify-walk.lolo",
+  "trait": "VerifyWalk",
+  "cases": [
     {
-     "event": "VERIFY_WALK_CALLED",
-     "payload": {
-      "headers": {},
-      "rawBody": "{\"argv\":[],\"cwd\":\".\"}"
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "VERIFY_WALK_ANSWERED",
-        "payload": {
-         "status": 400,
-         "body": "usage: orb verify-walk <program.lolo> [--as <role>] [--trait <name>] [--render]"
-        }
-       }
-      ]
-     },
-     "trait": "VerifyWalkCli"
-    },
-    {
-     "trait": "VerifyWalkCli",
-     "from": "ready",
-     "event": "VERIFY_WALK_CALLED",
-     "payload": {
-      "headers": {},
-      "rawBody": "{\"argv\":[\"f.lolo\"],\"cwd\":\".\"}"
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "VERIFY_WALK_START",
-        "payload": {
-         "file": "f.lolo"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "viewer-and-owner-map-forwarded-to-planner",
-   "entity": {
-    "program": {
-     "orbitals": [
-      {
-       "name": "O",
-       "entity": {
-        "name": "Item",
-        "fields": []
-       },
-       "traits": [
+      "id": "control-usage-error",
+      "steps": [
         {
-         "name": "T",
-         "linkedEntity": "Item",
-         "stateMachine": {
-          "transitions": [
-           {
-            "from": "a",
-            "to": "b",
-            "event": "GO",
-            "effects": []
-           }
-          ],
-          "states": [
-           {
-            "name": "a",
-            "isInitial": true
-           },
-           {
-            "name": "b"
-           }
-          ]
-         }
-        }
-       ]
-      }
-     ]
-    },
-    "viewer": {
-     "id": "viewer-7"
-    },
-    "owners": {
-     "item": [
-      "ownerId"
-     ]
-    }
-   },
-   "steps": [
-    {
-     "from": "machine",
-     "event": "WALK_MACHINE_ANSWERED",
-     "payload": {
-      "rows": [
-       {
-        "orbital": "O",
-        "trait": "T",
-        "from": "a",
-        "event": "GO",
-        "to": "b",
-        "guarded": false,
-        "payload": []
-       }
-      ]
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "WALK_PLAN_REQUEST",
-        "payload": {
-         "program": {
-          "orbitals": [
-           {
-            "name": "O",
-            "entity": {
-             "name": "Item",
-             "fields": []
-            },
-            "traits": [
-             {
-              "name": "T",
-              "linkedEntity": "Item",
-              "stateMachine": {
-               "transitions": [
-                {
-                 "from": "a",
-                 "to": "b",
-                 "event": "GO",
-                 "effects": []
+          "event": "VERIFY_WALK_CALLED",
+          "payload": {
+            "headers": {},
+            "rawBody": "{\"argv\":[],\"cwd\":\".\"}"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "VERIFY_WALK_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "usage: orb verify-walk <program.lolo> [--as <role>] [--trait <name>] [--render]"
                 }
-               ],
-               "states": [
-                {
-                 "name": "a",
-                 "isInitial": true
-                },
-                {
-                 "name": "b"
-                }
-               ]
               }
-             }
             ]
-           }
-          ]
-         },
-         "rows": [
-          {
-           "orbital": "O",
-           "trait": "T",
-           "from": "a",
-           "event": "GO",
-           "to": "b",
-           "guarded": false,
-           "payload": []
+          },
+          "trait": "VerifyWalkCli"
+        },
+        {
+          "trait": "VerifyWalkCli",
+          "from": "ready",
+          "event": "VERIFY_WALK_CALLED",
+          "payload": {
+            "headers": {},
+            "rawBody": "{\"argv\":[\"f.lolo\"],\"cwd\":\".\"}"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "VERIFY_WALK_START",
+                "payload": {
+                  "file": "f.lolo"
+                }
+              }
+            ]
           }
-         ],
-         "viewer": {
+        }
+      ]
+    },
+    {
+      "id": "viewer-and-owner-map-forwarded-to-planner",
+      "entity": {
+        "program": {
+          "orbitals": [
+            {
+              "name": "O",
+              "entity": {
+                "name": "Item",
+                "fields": []
+              },
+              "traits": [
+                {
+                  "name": "T",
+                  "linkedEntity": "Item",
+                  "stateMachine": {
+                    "transitions": [
+                      {
+                        "from": "a",
+                        "to": "b",
+                        "event": "GO",
+                        "effects": []
+                      }
+                    ],
+                    "states": [
+                      {
+                        "name": "a",
+                        "isInitial": true
+                      },
+                      {
+                        "name": "b"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "viewer": {
           "id": "viewer-7"
-         },
-         "owners": {
+        },
+        "owners": {
           "item": [
-           "ownerId"
+            "ownerId"
           ]
-         }
         }
-       }
-      ]
-     }
-    }
-   ],
-   "defaults": [
-    "WalkPlan",
-    "VerifyWalkCli"
-   ]
-  },
-  {
-   "id": "a-call-whose-arguments-cannot-be-read-answers-500",
-   "steps": [
-    {
-     "trait": "VerifyWalkCli",
-     "from": "ready",
-     "event": "VERIFY_WALK_CALLED",
-     "payload": {
-      "headers": {},
-      "rawBody": "not json"
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "VERIFY_WALK_ANSWERED",
-        "payload": {
-         "status": 500,
-         "body": "Error: the call's arguments could not be read"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "a-walk-with-no-stored-program-fails-the-walk",
-   "entity": {},
-   "steps": [
-    {
-     "from": "machine",
-     "event": "WALK_MACHINE_ANSWERED",
-     "payload": {
-      "rows": [
-       {
-        "orbital": "O",
-        "trait": "T",
-        "from": "a",
-        "event": "GO",
-        "to": "b",
-        "guarded": false,
-        "payload": []
-       }
-      ]
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "WALK_FAILED",
-        "payload": {
-         "error": "the program could not be read back"
-        }
-       }
-      ]
-     }
-    }
-   ],
-   "defaults": [
-    "WalkPlan",
-    "VerifyWalkCli"
-   ]
-  },
-  {
-   "id": "an-unreadable-machine-fails-the-walk",
-   "steps": [
-    {
-     "from": "machine",
-     "event": "WALK_MACHINE_UNREAD",
-     "payload": {},
-     "expect": {
-      "emits": [
-       {
-        "event": "WALK_FAILED",
-        "payload": {
-         "error": "the program could not be read as a machine"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "a-walk-without-a-viewer-still-asks-the-planner",
-   "entity": {
-    "program": {
-     "orbitals": [
-      {
-       "name": "O",
-       "entity": {
-        "name": "Item",
-        "fields": []
-       },
-       "traits": [
+      },
+      "steps": [
         {
-         "name": "T",
-         "linkedEntity": "Item",
-         "stateMachine": {
-          "transitions": [
-           {
-            "from": "a",
-            "to": "b",
-            "event": "GO",
-            "effects": []
-           }
-          ],
-          "states": [
-           {
-            "name": "a",
-            "isInitial": true
-           },
-           {
-            "name": "b"
-           }
-          ]
-         }
-        }
-       ]
-      }
-     ]
-    },
-    "owners": {}
-   },
-   "steps": [
-    {
-     "from": "machine",
-     "event": "WALK_MACHINE_ANSWERED",
-     "payload": {
-      "rows": [
-       {
-        "orbital": "O",
-        "trait": "T",
-        "from": "a",
-        "event": "GO",
-        "to": "b",
-        "guarded": false,
-        "payload": []
-       }
-      ]
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "WALK_PLAN_REQUEST",
-        "payload": {
-         "program": {
-          "orbitals": [
-           {
-            "name": "O",
-            "entity": {
-             "name": "Item",
-             "fields": []
-            },
-            "traits": [
-             {
-              "name": "T",
-              "linkedEntity": "Item",
-              "stateMachine": {
-               "transitions": [
-                {
-                 "from": "a",
-                 "to": "b",
-                 "event": "GO",
-                 "effects": []
+          "from": "machine",
+          "event": "WALK_MACHINE_ANSWERED",
+          "payload": {
+            "rows": [
+              {
+                "orbital": "O",
+                "trait": "T",
+                "from": "a",
+                "event": "GO",
+                "to": "b",
+                "guarded": false,
+                "payload": []
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "WALK_PLAN_REQUEST",
+                "payload": {
+                  "program": {
+                    "orbitals": [
+                      {
+                        "name": "O",
+                        "entity": {
+                          "name": "Item",
+                          "fields": []
+                        },
+                        "traits": [
+                          {
+                            "name": "T",
+                            "linkedEntity": "Item",
+                            "stateMachine": {
+                              "transitions": [
+                                {
+                                  "from": "a",
+                                  "to": "b",
+                                  "event": "GO",
+                                  "effects": []
+                                }
+                              ],
+                              "states": [
+                                {
+                                  "name": "a",
+                                  "isInitial": true
+                                },
+                                {
+                                  "name": "b"
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "rows": [
+                    {
+                      "orbital": "O",
+                      "trait": "T",
+                      "from": "a",
+                      "event": "GO",
+                      "to": "b",
+                      "guarded": false,
+                      "payload": []
+                    }
+                  ],
+                  "viewer": {
+                    "id": "viewer-7"
+                  },
+                  "owners": {
+                    "item": [
+                      "ownerId"
+                    ]
+                  }
                 }
-               ],
-               "states": [
+              }
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "WalkPlan",
+        "VerifyWalkCli"
+      ]
+    },
+    {
+      "id": "a-call-whose-arguments-cannot-be-read-answers-500",
+      "steps": [
+        {
+          "trait": "VerifyWalkCli",
+          "from": "ready",
+          "event": "VERIFY_WALK_CALLED",
+          "payload": {
+            "headers": {},
+            "rawBody": "not json"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "VERIFY_WALK_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "Error: the call's arguments could not be read"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-walk-with-no-stored-program-fails-the-walk",
+      "entity": {},
+      "steps": [
+        {
+          "from": "machine",
+          "event": "WALK_MACHINE_ANSWERED",
+          "payload": {
+            "rows": [
+              {
+                "orbital": "O",
+                "trait": "T",
+                "from": "a",
+                "event": "GO",
+                "to": "b",
+                "guarded": false,
+                "payload": []
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "WALK_FAILED",
+                "payload": {
+                  "error": "the program could not be read back"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "WalkPlan",
+        "VerifyWalkCli"
+      ]
+    },
+    {
+      "id": "an-unreadable-machine-fails-the-walk",
+      "steps": [
+        {
+          "from": "machine",
+          "event": "WALK_MACHINE_UNREAD",
+          "payload": {},
+          "expect": {
+            "emits": [
+              {
+                "event": "WALK_FAILED",
+                "payload": {
+                  "error": "the program could not be read as a machine"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-walk-without-a-viewer-still-asks-the-planner",
+      "entity": {
+        "program": {
+          "orbitals": [
+            {
+              "name": "O",
+              "entity": {
+                "name": "Item",
+                "fields": []
+              },
+              "traits": [
                 {
-                 "name": "a",
-                 "isInitial": true
+                  "name": "T",
+                  "linkedEntity": "Item",
+                  "stateMachine": {
+                    "transitions": [
+                      {
+                        "from": "a",
+                        "to": "b",
+                        "event": "GO",
+                        "effects": []
+                      }
+                    ],
+                    "states": [
+                      {
+                        "name": "a",
+                        "isInitial": true
+                      },
+                      {
+                        "name": "b"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "owners": {}
+      },
+      "steps": [
+        {
+          "from": "machine",
+          "event": "WALK_MACHINE_ANSWERED",
+          "payload": {
+            "rows": [
+              {
+                "orbital": "O",
+                "trait": "T",
+                "from": "a",
+                "event": "GO",
+                "to": "b",
+                "guarded": false,
+                "payload": []
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "WALK_PLAN_REQUEST",
+                "payload": {
+                  "program": {
+                    "orbitals": [
+                      {
+                        "name": "O",
+                        "entity": {
+                          "name": "Item",
+                          "fields": []
+                        },
+                        "traits": [
+                          {
+                            "name": "T",
+                            "linkedEntity": "Item",
+                            "stateMachine": {
+                              "transitions": [
+                                {
+                                  "from": "a",
+                                  "to": "b",
+                                  "event": "GO",
+                                  "effects": []
+                                }
+                              ],
+                              "states": [
+                                {
+                                  "name": "a",
+                                  "isInitial": true
+                                },
+                                {
+                                  "name": "b"
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "rows": [
+                    {
+                      "orbital": "O",
+                      "trait": "T",
+                      "from": "a",
+                      "event": "GO",
+                      "to": "b",
+                      "guarded": false,
+                      "payload": []
+                    }
+                  ],
+                  "viewer": null,
+                  "owners": {}
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "WalkPlan",
+        "VerifyWalkCli"
+      ]
+    },
+    {
+      "id": "a-refused-plan-fails-the-walk",
+      "steps": [
+        {
+          "from": "planning",
+          "event": "WALK_PLAN_REFUSED",
+          "payload": {
+            "error": "verify-plan: no initial state declared for trait O.T"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "WALK_FAILED",
+                "payload": {
+                  "error": "verify-plan: no initial state declared for trait O.T"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-walk-started-without-a-viewer-asks-the-planner-from-the-start-event",
+      "note": "the start event itself sets the entity viewer to null; seeding the entity instead of starting the walk skips that write, so a null into a non-optional WALK_PLAN_REQUEST field is only seen on this chain (G-STD-184)",
+      "steps": [
+        {
+          "event": "VERIFY_WALK_START",
+          "payload": {
+            "file": "p.orb",
+            "cwd": "/w"
+          }
+        },
+        {
+          "from": "machine",
+          "event": "WALK_MACHINE_ANSWERED",
+          "entity": {
+            "program": "{\"orbitals\": [{\"name\": \"O\", \"entity\": {\"name\": \"Item\", \"fields\": []}, \"traits\": [{\"name\": \"T\", \"linkedEntity\": \"Item\", \"stateMachine\": {\"states\": [{\"name\": \"a\", \"isInitial\": true}, {\"name\": \"b\"}], \"transitions\": [{\"from\": \"a\", \"to\": \"b\", \"event\": \"GO\", \"effects\": []}]}}]}]}"
+          },
+          "payload": {
+            "rows": [
+              {
+                "orbital": "O",
+                "trait": "T",
+                "from": "a",
+                "event": "GO",
+                "to": "b",
+                "guarded": false,
+                "payload": []
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "WALK_PLAN_REQUEST",
+                "payload": {
+                  "rows": [
+                    {
+                      "orbital": "O",
+                      "trait": "T",
+                      "from": "a",
+                      "event": "GO",
+                      "to": "b",
+                      "guarded": false,
+                      "payload": []
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-step-answer-without-echoed-to-guarded-targets-is-joined-to-its-request-by-position",
+      "steps": [
+        {
+          "trait": "VerifyWalk",
+          "from": "stepping",
+          "event": "WALK_STEPPED",
+          "payload": {
+            "result": [
+              {
+                "orbital": "O",
+                "trait": "T",
+                "from": "a",
+                "event": "GO",
+                "result": {
+                  "trait": "T",
+                  "event": "GO",
+                  "transitionFired": true,
+                  "guard": "none",
+                  "firedArm": 0,
+                  "effects": [],
+                  "emitted": [],
+                  "guards": [],
+                  "state": {
+                    "before": "a",
+                    "after": "b"
+                  }
+                }
+              }
+            ]
+          },
+          "entity": {
+            "id": "r",
+            "sent": [
+              {
+                "trait": "T",
+                "from": "a",
+                "event": "GO",
+                "to": "b",
+                "guarded": false,
+                "targets": [
+                  "b"
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "state": "judging",
+            "emits": [
+              {
+                "event": "WALK_JUDGE_NEXT",
+                "payload": {}
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-step-answer-with-a-different-row-count-fails-the-walk",
+      "steps": [
+        {
+          "trait": "VerifyWalk",
+          "from": "stepping",
+          "event": "WALK_STEPPED",
+          "payload": {
+            "result": []
+          },
+          "entity": {
+            "id": "r",
+            "sent": [
+              {
+                "trait": "T",
+                "from": "a",
+                "event": "GO",
+                "to": "b",
+                "guarded": false,
+                "targets": [
+                  "b"
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "WALK_FAILED"
+              }
+            ],
+            "neverEmits": [
+              "WALK_JUDGE_NEXT"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "null-effect-argument-is-valid-json",
+      "steps": [
+        {
+          "trait": "VerifyWalk",
+          "from": "stepping",
+          "event": "WALK_STEPPED",
+          "payload": {
+            "result": [
+              {
+                "orbital": "O",
+                "trait": "T",
+                "from": "a",
+                "event": "GO",
+                "result": {
+                  "trait": "T",
+                  "event": "GO",
+                  "transitionFired": true,
+                  "guard": "none",
+                  "firedArm": 0,
+                  "effects": [
+                    {
+                      "type": "set",
+                      "args": [
+                        "@entity.lastResult",
+                        null
+                      ],
+                      "status": "executed"
+                    }
+                  ],
+                  "emitted": [],
+                  "guards": [],
+                  "state": {
+                    "before": "a",
+                    "after": "b"
+                  }
+                }
+              }
+            ]
+          },
+          "entity": {
+            "id": "r",
+            "sent": [
+              {
+                "trait": "T",
+                "from": "a",
+                "event": "GO",
+                "to": "b",
+                "guarded": false,
+                "targets": [
+                  "b"
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "state": "judging",
+            "emits": [
+              {
+                "event": "WALK_JUDGE_NEXT",
+                "payload": {}
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "nested-null-effect-values-are-valid-json",
+      "steps": [
+        {
+          "trait": "VerifyWalk",
+          "from": "stepping",
+          "event": "WALK_STEPPED",
+          "payload": {
+            "result": [
+              {
+                "orbital": "O",
+                "trait": "T",
+                "from": "a",
+                "event": "GO",
+                "result": {
+                  "trait": "T",
+                  "event": "GO",
+                  "transitionFired": true,
+                  "guard": "none",
+                  "firedArm": 0,
+                  "effects": [
+                    {
+                      "type": "render-ui",
+                      "args": [
+                        "main",
+                        {
+                          "children": [
+                            null,
+                            {
+                              "optional": null
+                            }
+                          ]
+                        }
+                      ],
+                      "status": "executed"
+                    }
+                  ],
+                  "emitted": [],
+                  "guards": [],
+                  "state": {
+                    "before": "a",
+                    "after": "b"
+                  }
+                }
+              }
+            ]
+          },
+          "entity": {
+            "id": "r",
+            "sent": [
+              {
+                "trait": "T",
+                "from": "a",
+                "event": "GO",
+                "to": "b",
+                "guarded": false,
+                "targets": [
+                  "b"
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "state": "judging",
+            "emits": [
+              {
+                "event": "WALK_JUDGE_NEXT",
+                "payload": {}
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "every-played-row-is-judged-in-one-request",
+      "steps": [
+        {
+          "trait": "VerifyWalk",
+          "from": "judging",
+          "event": "WALK_JUDGE_NEXT",
+          "payload": {},
+          "entity": {
+            "id": "r",
+            "program": {
+              "orbitals": []
+            },
+            "judgeSteps": [
+              {
+                "trait": "T",
+                "linkedEntity": "Item",
+                "from": "a",
+                "event": "GO",
+                "to": "b",
+                "toStates": [
+                  "b"
+                ],
+                "variant": "success",
+                "payload": {},
+                "guarded": false,
+                "solved": true,
+                "payloadCase": "success"
+              },
+              {
+                "trait": "T",
+                "linkedEntity": "Item",
+                "from": "a",
+                "event": "GO",
+                "to": "b",
+                "toStates": [
+                  "b"
+                ],
+                "variant": "success",
+                "payload": {},
+                "guarded": false,
+                "solved": true,
+                "payloadCase": "success"
+              }
+            ],
+            "played": [
+              {
+                "trait": "T",
+                "from": "a",
+                "event": "GO",
+                "to": "b",
+                "guarded": false,
+                "targets": [
+                  "b"
+                ],
+                "result": {
+                  "trait": "T",
+                  "event": "GO",
+                  "transitionFired": true,
+                  "guard": "none",
+                  "effects": [],
+                  "emitted": [],
+                  "guards": [],
+                  "state": {
+                    "before": "a",
+                    "after": "b"
+                  }
+                }
+              },
+              {
+                "trait": "T",
+                "from": "a",
+                "event": "GO",
+                "to": "b",
+                "guarded": false,
+                "targets": [
+                  "b"
+                ],
+                "result": {
+                  "trait": "T",
+                  "event": "GO",
+                  "transitionFired": true,
+                  "guard": "none",
+                  "effects": [],
+                  "emitted": [],
+                  "guards": [],
+                  "state": {
+                    "before": "a",
+                    "after": "b"
+                  }
+                }
+              }
+            ],
+            "creditSteps": []
+          },
+          "expect": {
+            "emitCounts": {
+              "WALK_JUDGE_REQUEST": 1,
+              "WALK_JUDGE_ANSWERED": 0
+            }
+          }
+        }
+      ],
+      "defaults": [
+        "WalkJudge",
+        "WalkCreditor",
+        "VerifyWalkCli"
+      ],
+      "note": "Two played rows go to the judge as one request (no per-row event chain), so a walk of any size stays within the dispatch cap."
+    },
+    {
+      "id": "a-judge-answer-with-another-row-count-fails-the-walk",
+      "steps": [
+        {
+          "trait": "VerifyWalk",
+          "from": "judging",
+          "event": "WALK_JUDGE_ANSWERED",
+          "payload": {
+            "results": [
+              {
+                "verdicts": [],
+                "unported": []
+              }
+            ]
+          },
+          "entity": {
+            "id": "r",
+            "program": {
+              "orbitals": []
+            },
+            "judgeSteps": [
+              {
+                "trait": "T",
+                "linkedEntity": "Item",
+                "from": "a",
+                "event": "GO",
+                "to": "b",
+                "toStates": [
+                  "b"
+                ],
+                "variant": "success",
+                "payload": {},
+                "guarded": false,
+                "solved": true,
+                "payloadCase": "success"
+              },
+              {
+                "trait": "T",
+                "linkedEntity": "Item",
+                "from": "a",
+                "event": "GO",
+                "to": "b",
+                "toStates": [
+                  "b"
+                ],
+                "variant": "success",
+                "payload": {},
+                "guarded": false,
+                "solved": true,
+                "payloadCase": "success"
+              }
+            ],
+            "played": [
+              {
+                "trait": "T",
+                "from": "a",
+                "event": "GO",
+                "to": "b",
+                "guarded": false,
+                "targets": [
+                  "b"
+                ],
+                "result": {
+                  "trait": "T",
+                  "event": "GO",
+                  "transitionFired": true,
+                  "guard": "none",
+                  "effects": [],
+                  "emitted": [],
+                  "guards": [],
+                  "state": {
+                    "before": "a",
+                    "after": "b"
+                  }
+                }
+              },
+              {
+                "trait": "T",
+                "from": "a",
+                "event": "GO",
+                "to": "b",
+                "guarded": false,
+                "targets": [
+                  "b"
+                ],
+                "result": {
+                  "trait": "T",
+                  "event": "GO",
+                  "transitionFired": true,
+                  "guard": "none",
+                  "effects": [],
+                  "emitted": [],
+                  "guards": [],
+                  "state": {
+                    "before": "a",
+                    "after": "b"
+                  }
+                }
+              }
+            ],
+            "creditSteps": []
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "WALK_FAILED",
+                "payload": {
+                  "error": "the judge answer does not match the played rows"
+                }
+              }
+            ],
+            "neverEmits": [
+              "WALK_CREDIT_REQUEST"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-judge-answer-per-played-row-moves-to-crediting",
+      "steps": [
+        {
+          "trait": "VerifyWalk",
+          "from": "judging",
+          "event": "WALK_JUDGE_ANSWERED",
+          "payload": {
+            "results": [
+              {
+                "verdicts": [],
+                "unported": []
+              },
+              {
+                "verdicts": [],
+                "unported": []
+              }
+            ]
+          },
+          "entity": {
+            "id": "r",
+            "program": {
+              "orbitals": []
+            },
+            "judgeSteps": [
+              {
+                "trait": "T",
+                "linkedEntity": "Item",
+                "from": "a",
+                "event": "GO",
+                "to": "b",
+                "toStates": [
+                  "b"
+                ],
+                "variant": "success",
+                "payload": {},
+                "guarded": false,
+                "solved": true,
+                "payloadCase": "success"
+              },
+              {
+                "trait": "T",
+                "linkedEntity": "Item",
+                "from": "a",
+                "event": "GO",
+                "to": "b",
+                "toStates": [
+                  "b"
+                ],
+                "variant": "success",
+                "payload": {},
+                "guarded": false,
+                "solved": true,
+                "payloadCase": "success"
+              }
+            ],
+            "played": [
+              {
+                "trait": "T",
+                "from": "a",
+                "event": "GO",
+                "to": "b",
+                "guarded": false,
+                "targets": [
+                  "b"
+                ],
+                "result": {
+                  "trait": "T",
+                  "event": "GO",
+                  "transitionFired": true,
+                  "guard": "none",
+                  "effects": [],
+                  "emitted": [],
+                  "guards": [],
+                  "state": {
+                    "before": "a",
+                    "after": "b"
+                  }
+                }
+              },
+              {
+                "trait": "T",
+                "from": "a",
+                "event": "GO",
+                "to": "b",
+                "guarded": false,
+                "targets": [
+                  "b"
+                ],
+                "result": {
+                  "trait": "T",
+                  "event": "GO",
+                  "transitionFired": true,
+                  "guard": "none",
+                  "effects": [],
+                  "emitted": [],
+                  "guards": [],
+                  "state": {
+                    "before": "a",
+                    "after": "b"
+                  }
+                }
+              }
+            ],
+            "creditSteps": []
+          },
+          "expect": {
+            "state": "crediting",
+            "emits": [
+              {
+                "event": "WALK_CREDIT_REQUEST"
+              }
+            ],
+            "neverEmits": [
+              "WALK_FAILED"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "the-walk-plays-as-the-viewer-the-plan-answers",
+      "steps": [
+        {
+          "trait": "VerifyWalk",
+          "from": "planning",
+          "event": "WALK_PLAN_ANSWERED",
+          "payload": {
+            "steps": [
+              {
+                "trait": "T",
+                "from": "a",
+                "event": "GO",
+                "to": "b",
+                "toStates": [
+                  "b"
+                ],
+                "variant": "success",
+                "payload": {},
+                "guarded": false,
+                "solved": true,
+                "payloadCase": "success"
+              }
+            ],
+            "viewer": {
+              "id": "Person-verify-seed-1",
+              "name": "Name 1"
+            }
+          },
+          "entity": {
+            "id": "r",
+            "machineRows": [
+              {
+                "orbital": "O",
+                "trait": "T",
+                "from": "a",
+                "event": "GO",
+                "to": "b",
+                "guarded": false
+              }
+            ],
+            "viewer": null
+          },
+          "expect": {
+            "state": "stepping",
+            "entity": {
+              "viewer": {
+                "id": "Person-verify-seed-1",
+                "name": "Name 1"
+              }
+            }
+          }
+        }
+      ],
+      "note": "A walk with no viewer plays as the identity row the planner sampled (owner 2026-11-11)."
+    },
+    {
+      "id": "control-a-plan-answer-with-no-viewer-keeps-the-walks-viewer",
+      "steps": [
+        {
+          "trait": "VerifyWalk",
+          "from": "planning",
+          "event": "WALK_PLAN_ANSWERED",
+          "payload": {
+            "steps": [
+              {
+                "trait": "T",
+                "from": "a",
+                "event": "GO",
+                "to": "b",
+                "toStates": [
+                  "b"
+                ],
+                "variant": "success",
+                "payload": {},
+                "guarded": false,
+                "solved": true,
+                "payloadCase": "success"
+              }
+            ]
+          },
+          "entity": {
+            "id": "r",
+            "machineRows": [
+              {
+                "orbital": "O",
+                "trait": "T",
+                "from": "a",
+                "event": "GO",
+                "to": "b",
+                "guarded": false
+              }
+            ],
+            "viewer": {
+              "id": "u-1",
+              "name": "Ada",
+              "role": "owner"
+            }
+          },
+          "expect": {
+            "state": "stepping",
+            "entity": {
+              "viewer": {
+                "id": "u-1",
+                "name": "Ada",
+                "role": "owner"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "the-as-flag-names-the-role-to-walk-as",
+      "steps": [
+        {
+          "trait": "VerifyWalkCli",
+          "from": "ready",
+          "event": "VERIFY_WALK_CALLED",
+          "payload": {
+            "headers": {},
+            "rawBody": "{\"argv\":[\"f.lolo\",\"--as\",\"team_member\"],\"cwd\":\".\"}"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "VERIFY_WALK_START",
+                "payload": {
+                  "file": "f.lolo",
+                  "role": "team_member",
+                  "render": false
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "note": "orb verify-walk --as walks a program as one role (owner 2026-11-11: render walk per role)."
+    },
+    {
+      "id": "the-render-flag-turns-the-render-probe-on",
+      "steps": [
+        {
+          "trait": "VerifyWalkCli",
+          "from": "ready",
+          "event": "VERIFY_WALK_CALLED",
+          "payload": {
+            "headers": {},
+            "rawBody": "{\"argv\":[\"--render\",\"f.lolo\",\"--as\",\"owner\"],\"cwd\":\".\"}"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "VERIFY_WALK_START",
+                "payload": {
+                  "file": "f.lolo",
+                  "role": "owner",
+                  "render": true
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-as-without-a-role-is-a-usage-error",
+      "steps": [
+        {
+          "trait": "VerifyWalkCli",
+          "from": "ready",
+          "event": "VERIFY_WALK_CALLED",
+          "payload": {
+            "headers": {},
+            "rawBody": "{\"argv\":[\"f.lolo\",\"--as\"],\"cwd\":\".\"}"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "VERIFY_WALK_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "usage: orb verify-walk <program.lolo> [--as <role>] [--trait <name>] [--render]"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-an-unknown-flag-is-a-usage-error",
+      "steps": [
+        {
+          "trait": "VerifyWalkCli",
+          "from": "ready",
+          "event": "VERIFY_WALK_CALLED",
+          "payload": {
+            "headers": {},
+            "rawBody": "{\"argv\":[\"f.lolo\",\"--bogus\"],\"cwd\":\".\"}"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "VERIFY_WALK_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "usage: orb verify-walk <program.lolo> [--as <role>] [--trait <name>] [--render]"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "the-role-is-forwarded-to-the-planner",
+      "entity": {
+        "program": {
+          "orbitals": []
+        },
+        "role": "owner"
+      },
+      "steps": [
+        {
+          "from": "machine",
+          "event": "WALK_MACHINE_ANSWERED",
+          "payload": {
+            "rows": [
+              {
+                "orbital": "O",
+                "trait": "T",
+                "from": "a",
+                "event": "GO",
+                "to": "b",
+                "guarded": false,
+                "payload": []
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "WALK_PLAN_REQUEST",
+                "payload": {
+                  "role": "owner"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "WalkPlan",
+        "VerifyWalkCli"
+      ]
+    },
+    {
+      "id": "a-save-the-policy-refuses-for-the-walked-role-is-counted-denied",
+      "steps": [
+        {
+          "trait": "VerifyWalk",
+          "from": "crediting",
+          "event": "WALK_CREDIT_ANSWERED",
+          "payload": {
+            "credits": []
+          },
+          "entity": {
+            "id": "r",
+            "role": "team_member",
+            "judged": [
+              {
+                "verdicts": []
+              }
+            ],
+            "played": [
+              {
+                "trait": "T",
+                "from": "a",
+                "event": "GO",
+                "to": "b",
+                "guarded": false,
+                "targets": [
+                  "b"
+                ],
+                "result": {
+                  "trait": "T",
+                  "event": "GO",
+                  "transitionFired": true,
+                  "guard": "none",
+                  "effects": [
+                    {
+                      "type": "persist",
+                      "args": [
+                        "create",
+                        "Note",
+                        {
+                          "text": "hello"
+                        }
+                      ],
+                      "status": "failed",
+                      "routed": true,
+                      "code": "denied",
+                      "error": "@Create denied: the declared access policy for `Note` rejected this row"
+                    }
+                  ],
+                  "emitted": [],
+                  "guards": [],
+                  "state": {
+                    "before": "a",
+                    "after": "b"
+                  }
+                }
+              }
+            ],
+            "planned": [],
+            "notes": [],
+            "creditSteps": []
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "VERIFY_WALK_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "denied  T a --GO--> b  refused by policy for role team_member: create Note\n0 passed, 0 failed, 0 unplanned, 0 guard-blocked, 1 denied"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "a-refused-save-inside-a-let-is-counted-denied",
+      "steps": [
+        {
+          "trait": "VerifyWalk",
+          "from": "crediting",
+          "event": "WALK_CREDIT_ANSWERED",
+          "payload": {
+            "credits": []
+          },
+          "entity": {
+            "id": "r",
+            "role": "team_member",
+            "judged": [
+              {
+                "verdicts": []
+              }
+            ],
+            "played": [
+              {
+                "trait": "T",
+                "from": "a",
+                "event": "GO",
+                "to": "b",
+                "guarded": false,
+                "targets": [
+                  "b"
+                ],
+                "result": {
+                  "trait": "T",
+                  "event": "GO",
+                  "transitionFired": true,
+                  "guard": "none",
+                  "effects": [
+                    {
+                      "type": "let",
+                      "args": [],
+                      "status": "failed",
+                      "routed": true,
+                      "nested": [
+                        {
+                          "type": "persist",
+                          "args": [
+                            "create",
+                            "Note",
+                            {
+                              "text": "hello"
+                            }
+                          ],
+                          "status": "failed",
+                          "routed": true,
+                          "code": "denied",
+                          "error": "@Create denied: the declared access policy for `Note` rejected this row"
+                        }
+                      ]
+                    }
+                  ],
+                  "emitted": [],
+                  "guards": [],
+                  "state": {
+                    "before": "a",
+                    "after": "b"
+                  }
+                }
+              }
+            ],
+            "planned": [],
+            "notes": [],
+            "creditSteps": []
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "VERIFY_WALK_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "denied  T a --GO--> b  refused by policy for role team_member: create Note\n0 passed, 0 failed, 0 unplanned, 0 guard-blocked, 1 denied"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-save-the-policy-admits-passes",
+      "steps": [
+        {
+          "trait": "VerifyWalk",
+          "from": "crediting",
+          "event": "WALK_CREDIT_ANSWERED",
+          "payload": {
+            "credits": []
+          },
+          "entity": {
+            "id": "r",
+            "role": "team_member",
+            "judged": [
+              {
+                "verdicts": []
+              }
+            ],
+            "played": [
+              {
+                "trait": "T",
+                "from": "a",
+                "event": "GO",
+                "to": "b",
+                "guarded": false,
+                "targets": [
+                  "b"
+                ],
+                "result": {
+                  "trait": "T",
+                  "event": "GO",
+                  "transitionFired": true,
+                  "guard": "none",
+                  "effects": [
+                    {
+                      "type": "persist",
+                      "args": [
+                        "create",
+                        "Note",
+                        {
+                          "text": "hello"
+                        }
+                      ],
+                      "status": "executed",
+                      "routed": false
+                    }
+                  ],
+                  "emitted": [],
+                  "guards": [],
+                  "state": {
+                    "before": "a",
+                    "after": "b"
+                  }
+                }
+              }
+            ],
+            "planned": [],
+            "notes": [],
+            "creditSteps": []
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "VERIFY_WALK_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "pass  T a --GO--> b\n1 passed, 0 failed, 0 unplanned, 0 guard-blocked"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "the-trait-flag-names-the-one-trait-to-walk",
+      "steps": [
+        {
+          "trait": "VerifyWalkCli",
+          "from": "ready",
+          "event": "VERIFY_WALK_CALLED",
+          "payload": {
+            "headers": {},
+            "rawBody": "{\"argv\":[\"f.lolo\",\"--trait\",\"NoteAdd\"],\"cwd\":\".\"}"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "VERIFY_WALK_START",
+                "payload": {
+                  "file": "f.lolo",
+                  "trait": "NoteAdd",
+                  "render": false
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-trait-without-a-name-is-a-usage-error",
+      "steps": [
+        {
+          "trait": "VerifyWalkCli",
+          "from": "ready",
+          "event": "VERIFY_WALK_CALLED",
+          "payload": {
+            "headers": {},
+            "rawBody": "{\"argv\":[\"f.lolo\",\"--trait\"],\"cwd\":\".\"}"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "VERIFY_WALK_ANSWERED",
+                "payload": {
+                  "status": 400,
+                  "body": "usage: orb verify-walk <program.lolo> [--as <role>] [--trait <name>] [--render]"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "the-trait-flag-plans-only-that-traits-rows",
+      "entity": {
+        "program": {
+          "orbitals": []
+        },
+        "onlyTrait": "B"
+      },
+      "steps": [
+        {
+          "from": "machine",
+          "event": "WALK_MACHINE_ANSWERED",
+          "payload": {
+            "rows": [
+              {
+                "orbital": "O",
+                "trait": "A",
+                "from": "a",
+                "event": "GO",
+                "to": "b",
+                "guarded": false,
+                "payload": []
+              },
+              {
+                "orbital": "O",
+                "trait": "B",
+                "from": "a",
+                "event": "GO",
+                "to": "b",
+                "guarded": false,
+                "payload": []
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "WALK_PLAN_REQUEST",
+                "payload": {
+                  "rows": [
+                    {
+                      "orbital": "O",
+                      "trait": "B",
+                      "from": "a",
+                      "event": "GO",
+                      "to": "b",
+                      "guarded": false,
+                      "payload": []
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "WalkPlan",
+        "VerifyWalkCli"
+      ]
+    },
+    {
+      "id": "control-without-the-trait-flag-every-row-is-planned",
+      "entity": {
+        "program": {
+          "orbitals": []
+        }
+      },
+      "steps": [
+        {
+          "from": "machine",
+          "event": "WALK_MACHINE_ANSWERED",
+          "payload": {
+            "rows": [
+              {
+                "orbital": "O",
+                "trait": "A",
+                "from": "a",
+                "event": "GO",
+                "to": "b",
+                "guarded": false,
+                "payload": []
+              },
+              {
+                "orbital": "O",
+                "trait": "B",
+                "from": "a",
+                "event": "GO",
+                "to": "b",
+                "guarded": false,
+                "payload": []
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "WALK_PLAN_REQUEST",
+                "payload": {
+                  "rows": [
+                    {
+                      "orbital": "O",
+                      "trait": "A",
+                      "from": "a",
+                      "event": "GO",
+                      "to": "b",
+                      "guarded": false,
+                      "payload": []
+                    },
+                    {
+                      "orbital": "O",
+                      "trait": "B",
+                      "from": "a",
+                      "event": "GO",
+                      "to": "b",
+                      "guarded": false,
+                      "payload": []
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "WalkPlan",
+        "VerifyWalkCli"
+      ]
+    },
+    {
+      "id": "a-trait-the-program-does-not-have-is-refused",
+      "entity": {
+        "program": {
+          "orbitals": []
+        },
+        "onlyTrait": "Nope"
+      },
+      "steps": [
+        {
+          "from": "machine",
+          "event": "WALK_MACHINE_ANSWERED",
+          "payload": {
+            "rows": [
+              {
+                "orbital": "O",
+                "trait": "A",
+                "from": "a",
+                "event": "GO",
+                "to": "b",
+                "guarded": false,
+                "payload": []
+              },
+              {
+                "orbital": "O",
+                "trait": "B",
+                "from": "a",
+                "event": "GO",
+                "to": "b",
+                "guarded": false,
+                "payload": []
+              }
+            ]
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "VERIFY_WALK_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "verify-walk: the program has no trait named Nope with a transition"
+                }
+              }
+            ],
+            "neverEmits": [
+              "WALK_PLAN_REQUEST"
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "WalkPlan",
+        "VerifyWalkCli"
+      ]
+    },
+    {
+      "id": "a-skipped-repeat-the-asker-still-waits-on-is-a-finding",
+      "steps": [
+        {
+          "trait": "VerifyWalk",
+          "from": "crediting",
+          "event": "WALK_CREDIT_ANSWERED",
+          "payload": {
+            "credits": []
+          },
+          "entity": {
+            "id": "r",
+            "judged": [
+              {
+                "verdicts": []
+              }
+            ],
+            "played": [
+              {
+                "trait": "T",
+                "from": "a",
+                "event": "GO",
+                "to": "b",
+                "guarded": false,
+                "targets": [
+                  "b"
+                ],
+                "result": {
+                  "trait": "T",
+                  "event": "GO",
+                  "transitionFired": true,
+                  "guard": "none",
+                  "effects": [],
+                  "emitted": [],
+                  "guards": [],
+                  "state": {
+                    "before": "a",
+                    "after": "b"
+                  },
+                  "collapsed": [
+                    {
+                      "trait": "Callee",
+                      "event": "ASK",
+                      "payload": {
+                        "n": 1
+                      }
+                    }
+                  ],
+                  "outcomes": [
+                    {
+                      "trait": "Asker",
+                      "event": "GO",
+                      "from": "idle",
+                      "to": "waiting",
+                      "emitted": [
+                        {
+                          "type": "ASK_OUT"
+                        }
+                      ]
+                    },
+                    {
+                      "trait": "Callee",
+                      "event": "ASK",
+                      "from": "ready",
+                      "to": "ready",
+                      "emitted": [
+                        {
+                          "type": "ANSWER"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            ],
+            "planned": [],
+            "notes": [],
+            "creditSteps": [],
+            "program": {
+              "orbitals": [
+                {
+                  "name": "O",
+                  "traits": [
+                    {
+                      "name": "Asker",
+                      "listens": [
+                        {
+                          "event": "ANSWER",
+                          "triggers": "GOT",
+                          "source": {
+                            "kind": "trait",
+                            "trait": "Callee"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Callee",
+                      "listens": [
+                        {
+                          "event": "ASK_OUT",
+                          "triggers": "ASK",
+                          "source": {
+                            "kind": "trait",
+                            "trait": "Asker"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "machineRows": [
+              {
+                "orbital": "O",
+                "trait": "Asker",
+                "from": "idle",
+                "event": "GO",
+                "to": "waiting",
+                "guarded": false,
+                "payload": []
+              },
+              {
+                "orbital": "O",
+                "trait": "Asker",
+                "from": "waiting",
+                "event": "GOT",
+                "to": "done",
+                "guarded": false,
+                "payload": []
+              },
+              {
+                "orbital": "O",
+                "trait": "Callee",
+                "from": "ready",
+                "event": "ASK",
+                "to": "ready",
+                "guarded": false,
+                "payload": []
+              }
+            ]
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "VERIFY_WALK_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "pass  T a --GO--> b\nfinding  VERIFY_REPEATED_ASK_COLLAPSED  Callee ASK {\"n\":1}  the same question was asked twice in one dispatch; the second was skipped (EXEC-QUEUE-4) and its asker is still waiting for the answer\n1 passed, 0 failed, 0 unplanned, 0 guard-blocked, 1 finding"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-collapsed-cycle-stopper-the-asker-does-not-wait-on-is-not-a-finding",
+      "steps": [
+        {
+          "trait": "VerifyWalk",
+          "from": "crediting",
+          "event": "WALK_CREDIT_ANSWERED",
+          "payload": {
+            "credits": []
+          },
+          "entity": {
+            "id": "r",
+            "judged": [
+              {
+                "verdicts": []
+              }
+            ],
+            "played": [
+              {
+                "trait": "T",
+                "from": "a",
+                "event": "GO",
+                "to": "b",
+                "guarded": false,
+                "targets": [
+                  "b"
+                ],
+                "result": {
+                  "trait": "T",
+                  "event": "GO",
+                  "transitionFired": true,
+                  "guard": "none",
+                  "effects": [],
+                  "emitted": [],
+                  "guards": [],
+                  "state": {
+                    "before": "a",
+                    "after": "b"
+                  },
+                  "collapsed": [
+                    {
+                      "trait": "Callee",
+                      "event": "ASK",
+                      "payload": {
+                        "n": 1
+                      }
+                    }
+                  ],
+                  "outcomes": [
+                    {
+                      "trait": "Asker",
+                      "event": "GO",
+                      "from": "idle",
+                      "to": "done",
+                      "emitted": [
+                        {
+                          "type": "ASK_OUT"
+                        }
+                      ]
+                    },
+                    {
+                      "trait": "Callee",
+                      "event": "ASK",
+                      "from": "ready",
+                      "to": "ready",
+                      "emitted": [
+                        {
+                          "type": "ANSWER"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            ],
+            "planned": [],
+            "notes": [],
+            "creditSteps": [],
+            "program": {
+              "orbitals": [
+                {
+                  "name": "O",
+                  "traits": [
+                    {
+                      "name": "Asker",
+                      "listens": [
+                        {
+                          "event": "ANSWER",
+                          "triggers": "GOT",
+                          "source": {
+                            "kind": "trait",
+                            "trait": "Callee"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Callee",
+                      "listens": [
+                        {
+                          "event": "ASK_OUT",
+                          "triggers": "ASK",
+                          "source": {
+                            "kind": "trait",
+                            "trait": "Asker"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "machineRows": [
+              {
+                "orbital": "O",
+                "trait": "Asker",
+                "from": "idle",
+                "event": "GO",
+                "to": "done",
+                "guarded": false,
+                "payload": []
+              },
+              {
+                "orbital": "O",
+                "trait": "Asker",
+                "from": "waiting",
+                "event": "GOT",
+                "to": "done",
+                "guarded": false,
+                "payload": []
+              },
+              {
+                "orbital": "O",
+                "trait": "Callee",
+                "from": "ready",
+                "event": "ASK",
+                "to": "ready",
+                "guarded": false,
+                "payload": []
+              }
+            ]
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "VERIFY_WALK_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "pass  T a --GO--> b\n1 passed, 0 failed, 0 unplanned, 0 guard-blocked"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-skipped-event-no-listener-delivers-is-not-a-finding",
+      "steps": [
+        {
+          "trait": "VerifyWalk",
+          "from": "crediting",
+          "event": "WALK_CREDIT_ANSWERED",
+          "payload": {
+            "credits": []
+          },
+          "entity": {
+            "id": "r",
+            "judged": [
+              {
+                "verdicts": []
+              }
+            ],
+            "played": [
+              {
+                "trait": "T",
+                "from": "a",
+                "event": "GO",
+                "to": "b",
+                "guarded": false,
+                "targets": [
+                  "b"
+                ],
+                "result": {
+                  "trait": "T",
+                  "event": "GO",
+                  "transitionFired": true,
+                  "guard": "none",
+                  "effects": [],
+                  "emitted": [],
+                  "guards": [],
+                  "state": {
+                    "before": "a",
+                    "after": "b"
+                  },
+                  "collapsed": [
+                    {
+                      "trait": "Callee",
+                      "event": "ASK",
+                      "payload": {
+                        "n": 1
+                      }
+                    }
+                  ]
+                }
+              }
+            ],
+            "planned": [],
+            "notes": [],
+            "creditSteps": [],
+            "program": {
+              "orbitals": [
+                {
+                  "name": "O",
+                  "traits": [
+                    {
+                      "name": "Asker",
+                      "listens": []
+                    },
+                    {
+                      "name": "Callee"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "VERIFY_WALK_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "pass  T a --GO--> b\n1 passed, 0 failed, 0 unplanned, 0 guard-blocked"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-a-step-with-nothing-collapsed-has-no-finding",
+      "steps": [
+        {
+          "trait": "VerifyWalk",
+          "from": "crediting",
+          "event": "WALK_CREDIT_ANSWERED",
+          "payload": {
+            "credits": []
+          },
+          "entity": {
+            "id": "r",
+            "judged": [
+              {
+                "verdicts": []
+              }
+            ],
+            "played": [
+              {
+                "trait": "T",
+                "from": "a",
+                "event": "GO",
+                "to": "b",
+                "guarded": false,
+                "targets": [
+                  "b"
+                ],
+                "result": {
+                  "trait": "T",
+                  "event": "GO",
+                  "transitionFired": true,
+                  "guard": "none",
+                  "effects": [],
+                  "emitted": [],
+                  "guards": [],
+                  "state": {
+                    "before": "a",
+                    "after": "b"
+                  }
+                }
+              }
+            ],
+            "planned": [],
+            "notes": [],
+            "creditSteps": [],
+            "program": {
+              "orbitals": [
+                {
+                  "name": "O",
+                  "traits": [
+                    {
+                      "name": "Asker",
+                      "listens": [
+                        {
+                          "event": "ANSWER",
+                          "triggers": "ASK",
+                          "source": {
+                            "kind": "trait",
+                            "trait": "Callee"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Callee"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "VERIFY_WALK_ANSWERED",
+                "payload": {
+                  "status": 200,
+                  "body": "pass  T a --GO--> b\n1 passed, 0 failed, 0 unplanned, 0 guard-blocked"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "with-cost-on-the-played-outcomes-are-answered-with-their-cost-before-judging",
+      "steps": [
+        {
+          "trait": "VerifyWalk",
+          "from": "stepping",
+          "event": "WALK_STEPPED",
+          "payload": {
+            "result": [
+              {
+                "orbital": "O",
+                "trait": "T",
+                "from": "a",
+                "event": "GO",
+                "result": {
+                  "trait": "T",
+                  "event": "GO",
+                  "transitionFired": true,
+                  "guard": "none",
+                  "firedArm": 0,
+                  "effects": [],
+                  "emitted": [],
+                  "guards": [],
+                  "state": {
+                    "before": "a",
+                    "after": "b"
+                  },
+                  "outcomes": [
+                    {
+                      "trait": "T",
+                      "event": "GO",
+                      "from": "a",
+                      "to": "b",
+                      "effects": [
+                        {
+                          "type": "set",
+                          "args": [],
+                          "status": "executed",
+                          "routed": false,
+                          "cost": {
+                            "startNs": 1,
+                            "ns": 40,
+                            "allocs": 3,
+                            "allocBytes": 96
+                          }
+                        }
+                      ],
+                      "cost": {
+                        "startNs": 1,
+                        "ns": 120,
+                        "allocs": 3,
+                        "allocBytes": 96
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "entity": {
+            "id": "r",
+            "sent": [
+              {
+                "trait": "T",
+                "from": "a",
+                "event": "GO",
+                "to": "b",
+                "guarded": false,
+                "targets": [
+                  "b"
+                ]
+              }
+            ],
+            "cost": true,
+            "path": "/w/app.lolo"
+          },
+          "expect": {
+            "state": "judging",
+            "emits": [
+              {
+                "event": "WALK_COST",
+                "payload": {
+                  "path": "/w/app.lolo",
+                  "outcomes": [
+                    {
+                      "trait": "T",
+                      "event": "GO",
+                      "cost": {
+                        "startNs": 1,
+                        "ns": 120,
+                        "allocs": 3,
+                        "allocBytes": 96
+                      },
+                      "effects": [
+                        {
+                          "op": "set",
+                          "cost": {
+                            "startNs": 1,
+                            "ns": 40,
+                            "allocs": 3,
+                            "allocBytes": 96
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              {
+                "event": "WALK_JUDGE_NEXT",
+                "payload": {}
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "control-with-cost-off-no-cost-is-answered",
+      "steps": [
+        {
+          "trait": "VerifyWalk",
+          "from": "stepping",
+          "event": "WALK_STEPPED",
+          "payload": {
+            "result": [
+              {
+                "orbital": "O",
+                "trait": "T",
+                "from": "a",
+                "event": "GO",
+                "result": {
+                  "trait": "T",
+                  "event": "GO",
+                  "transitionFired": true,
+                  "guard": "none",
+                  "firedArm": 0,
+                  "effects": [],
+                  "emitted": [],
+                  "guards": [],
+                  "state": {
+                    "before": "a",
+                    "after": "b"
+                  },
+                  "outcomes": [
+                    {
+                      "trait": "T",
+                      "event": "GO",
+                      "from": "a",
+                      "to": "b",
+                      "effects": [
+                        {
+                          "type": "set",
+                          "args": [],
+                          "status": "executed",
+                          "routed": false,
+                          "cost": {
+                            "startNs": 1,
+                            "ns": 40,
+                            "allocs": 3,
+                            "allocBytes": 96
+                          }
+                        }
+                      ],
+                      "cost": {
+                        "startNs": 1,
+                        "ns": 120,
+                        "allocs": 3,
+                        "allocBytes": 96
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "entity": {
+            "id": "r",
+            "sent": [
+              {
+                "trait": "T",
+                "from": "a",
+                "event": "GO",
+                "to": "b",
+                "guarded": false,
+                "targets": [
+                  "b"
+                ]
+              }
+            ],
+            "cost": false
+          },
+          "expect": {
+            "state": "judging",
+            "neverEmits": [
+              "WALK_COST"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "with-validate-off-the-program-goes-straight-to-the-machine-read",
+      "steps": [
+        {
+          "trait": "VerifyWalk",
+          "from": "reading",
+          "event": "WALK_PROGRAM",
+          "payload": {
+            "result": {
+              "program": {
+                "orbitals": []
+              }
+            }
+          },
+          "entity": {
+            "id": "r",
+            "validate": false,
+            "path": "/w/app.lolo"
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "WALK_VALIDATED",
+                "payload": {
+                  "result": {
+                    "valid": true,
+                    "errors": [],
+                    "warnings": []
+                  }
+                }
+              },
+              {
+                "event": "WALK_MACHINE_READ",
+                "payload": {
+                  "program": {
+                    "orbitals": []
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "defaults": [
+        "WalkMachine",
+        "VerifyWalkCli"
+      ]
+    },
+    {
+      "id": "many-rows-are-sent-each-with-its-own-machine-targets",
+      "note": "Each sent row's targets are the machine rows of its own trait, source and event, in machine order; a row the machine does not have gets none.",
+      "steps": [
+        {
+          "trait": "VerifyWalk",
+          "from": "stepping",
+          "event": "WALK_PLAY",
+          "payload": {
+            "rows": [
+              {
+                "orbital": "O",
+                "trait": "T",
+                "from": "a",
+                "event": "GO",
+                "to": "b",
+                "guarded": false,
+                "payload": {},
+                "unplanned": "",
+                "reply": ""
+              },
+              {
+                "orbital": "O",
+                "trait": "T",
+                "from": "a",
+                "event": "GO2",
+                "to": "d",
+                "guarded": true,
+                "payload": {},
+                "unplanned": "",
+                "reply": ""
+              },
+              {
+                "orbital": "O",
+                "trait": "U",
+                "from": "a",
+                "event": "GO",
+                "to": "x",
+                "guarded": false,
+                "payload": {},
+                "unplanned": "",
+                "reply": ""
+              },
+              {
+                "orbital": "O",
+                "trait": "T",
+                "from": "z",
+                "event": "GO",
+                "to": "b",
+                "guarded": false,
+                "payload": {},
+                "unplanned": "",
+                "reply": ""
+              }
+            ]
+          },
+          "entity": {
+            "id": "r",
+            "program": {
+              "orbitals": []
+            },
+            "machineRows": [
+              {
+                "trait": "T",
+                "from": "a",
+                "event": "GO",
+                "to": "b",
+                "orbital": "O",
+                "guarded": false,
+                "payload": []
+              },
+              {
+                "trait": "V",
+                "from": "a",
+                "event": "GO",
+                "to": "x",
+                "orbital": "O",
+                "guarded": false,
+                "payload": []
+              },
+              {
+                "trait": "T",
+                "from": "a",
+                "event": "GO2",
+                "to": "d",
+                "orbital": "O",
+                "guarded": false,
+                "payload": []
+              },
+              {
+                "trait": "T",
+                "from": "a",
+                "event": "GO",
+                "to": "c",
+                "orbital": "O",
+                "guarded": false,
+                "payload": []
+              }
+            ]
+          },
+          "expect": {
+            "state": "stepping",
+            "entity": {
+              "sent": [
+                {
+                  "trait": "T",
+                  "from": "a",
+                  "event": "GO",
+                  "to": "b",
+                  "guarded": false,
+                  "targets": [
+                    "b",
+                    "c"
+                  ]
                 },
                 {
-                 "name": "b"
+                  "trait": "T",
+                  "from": "a",
+                  "event": "GO2",
+                  "to": "d",
+                  "guarded": true,
+                  "targets": [
+                    "d"
+                  ]
+                },
+                {
+                  "trait": "U",
+                  "from": "a",
+                  "event": "GO",
+                  "to": "x",
+                  "guarded": false,
+                  "targets": []
+                },
+                {
+                  "trait": "T",
+                  "from": "z",
+                  "event": "GO",
+                  "to": "b",
+                  "guarded": false,
+                  "targets": []
                 }
-               ]
+              ]
+            }
+          }
+        }
+      ],
+      "defaults": [
+        "WalkJudge",
+        "WalkCreditor",
+        "VerifyWalkCli"
+      ]
+    },
+    {
+      "id": "the-fired-hops-keep-the-step-order-and-skip-unfired-steps",
+      "note": "Hops are the fired steps only, in the order they were played.",
+      "steps": [
+        {
+          "trait": "VerifyWalk",
+          "from": "stepping",
+          "event": "WALK_STEPPED",
+          "payload": {
+            "result": [
+              {
+                "orbital": "O",
+                "trait": "T",
+                "from": "a",
+                "event": "GO",
+                "result": {
+                  "trait": "T",
+                  "event": "GO",
+                  "transitionFired": true,
+                  "guard": "none",
+                  "firedArm": 0,
+                  "effects": [],
+                  "emitted": [],
+                  "guards": [],
+                  "state": {
+                    "before": "a",
+                    "after": "b"
+                  }
+                }
+              },
+              {
+                "orbital": "O",
+                "trait": "T",
+                "from": "b",
+                "event": "NO",
+                "result": {
+                  "trait": "T",
+                  "event": "NO",
+                  "transitionFired": false,
+                  "guard": "none",
+                  "firedArm": -1,
+                  "effects": [],
+                  "emitted": [],
+                  "guards": [],
+                  "state": {
+                    "before": "a",
+                    "after": "b"
+                  }
+                }
+              },
+              {
+                "orbital": "O",
+                "trait": "U",
+                "from": "a",
+                "event": "UP",
+                "result": {
+                  "trait": "U",
+                  "event": "UP",
+                  "transitionFired": true,
+                  "guard": "none",
+                  "firedArm": 2,
+                  "effects": [],
+                  "emitted": [],
+                  "guards": [],
+                  "state": {
+                    "before": "a",
+                    "after": "c"
+                  }
+                }
               }
-             }
             ]
-           }
-          ]
-         },
-         "rows": [
-          {
-           "orbital": "O",
-           "trait": "T",
-           "from": "a",
-           "event": "GO",
-           "to": "b",
-           "guarded": false,
-           "payload": []
-          }
-         ],
-         "viewer": null,
-         "owners": {}
-        }
-       }
-      ]
-     }
-    }
-   ],
-   "defaults": [
-    "WalkPlan",
-    "VerifyWalkCli"
-   ]
-  },
-  {
-   "id": "a-refused-plan-fails-the-walk",
-   "steps": [
-    {
-     "from": "planning",
-     "event": "WALK_PLAN_REFUSED",
-     "payload": {
-      "error": "verify-plan: no initial state declared for trait O.T"
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "WALK_FAILED",
-        "payload": {
-         "error": "verify-plan: no initial state declared for trait O.T"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "a-walk-started-without-a-viewer-asks-the-planner-from-the-start-event",
-   "note": "the start event itself sets the entity viewer to null; seeding the entity instead of starting the walk skips that write, so a null into a non-optional WALK_PLAN_REQUEST field is only seen on this chain (G-STD-184)",
-   "steps": [
-    {
-     "event": "VERIFY_WALK_START",
-     "payload": {
-      "file": "p.orb",
-      "cwd": "/w"
-     }
-    },
-    {
-     "from": "machine",
-     "event": "WALK_MACHINE_ANSWERED",
-     "entity": {
-      "program": "{\"orbitals\": [{\"name\": \"O\", \"entity\": {\"name\": \"Item\", \"fields\": []}, \"traits\": [{\"name\": \"T\", \"linkedEntity\": \"Item\", \"stateMachine\": {\"states\": [{\"name\": \"a\", \"isInitial\": true}, {\"name\": \"b\"}], \"transitions\": [{\"from\": \"a\", \"to\": \"b\", \"event\": \"GO\", \"effects\": []}]}}]}]}"
-     },
-     "payload": {
-      "rows": [
-       {
-        "orbital": "O",
-        "trait": "T",
-        "from": "a",
-        "event": "GO",
-        "to": "b",
-        "guarded": false,
-        "payload": []
-       }
-      ]
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "WALK_PLAN_REQUEST",
-        "payload": {
-         "rows": [
-          {
-           "orbital": "O",
-           "trait": "T",
-           "from": "a",
-           "event": "GO",
-           "to": "b",
-           "guarded": false,
-           "payload": []
-          }
-         ]
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "a-step-answer-without-echoed-to-guarded-targets-is-joined-to-its-request-by-position",
-   "steps": [
-    {
-     "trait": "VerifyWalk",
-     "from": "stepping",
-     "event": "WALK_STEPPED",
-     "payload": {
-      "result": [
-       {
-        "orbital": "O",
-        "trait": "T",
-        "from": "a",
-        "event": "GO",
-        "result": {
-         "trait": "T",
-         "event": "GO",
-         "transitionFired": true,
-         "guard": "none",
-         "firedArm": 0,
-         "effects": [],
-         "emitted": [],
-         "guards": [],
-         "state": {
-          "before": "a",
-          "after": "b"
-         }
-        }
-       }
-      ]
-     },
-     "entity": {
-      "id": "r",
-      "sent": [
-       {
-        "trait": "T",
-        "from": "a",
-        "event": "GO",
-        "to": "b",
-        "guarded": false,
-        "targets": [
-         "b"
-        ]
-       }
-      ]
-     },
-     "expect": {
-      "state": "judging",
-      "emits": [
-       {
-        "event": "WALK_JUDGE_NEXT",
-        "payload": {}
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "control-a-step-answer-with-a-different-row-count-fails-the-walk",
-   "steps": [
-    {
-     "trait": "VerifyWalk",
-     "from": "stepping",
-     "event": "WALK_STEPPED",
-     "payload": {
-      "result": []
-     },
-     "entity": {
-      "id": "r",
-      "sent": [
-       {
-        "trait": "T",
-        "from": "a",
-        "event": "GO",
-        "to": "b",
-        "guarded": false,
-        "targets": [
-         "b"
-        ]
-       }
-      ]
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "WALK_FAILED"
-       }
-      ],
-      "neverEmits": [
-       "WALK_JUDGE_NEXT"
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "null-effect-argument-is-valid-json",
-   "steps": [
-    {
-     "trait": "VerifyWalk",
-     "from": "stepping",
-     "event": "WALK_STEPPED",
-     "payload": {
-      "result": [
-       {
-        "orbital": "O",
-        "trait": "T",
-        "from": "a",
-        "event": "GO",
-        "result": {
-         "trait": "T",
-         "event": "GO",
-         "transitionFired": true,
-         "guard": "none",
-         "firedArm": 0,
-         "effects": [
-          {
-           "type": "set",
-           "args": [
-            "@entity.lastResult",
-            null
-           ],
-           "status": "executed"
-          }
-         ],
-         "emitted": [],
-         "guards": [],
-         "state": {
-          "before": "a",
-          "after": "b"
-         }
-        }
-       }
-      ]
-     },
-     "entity": {
-      "id": "r",
-      "sent": [
-       {
-        "trait": "T",
-        "from": "a",
-        "event": "GO",
-        "to": "b",
-        "guarded": false,
-        "targets": [
-         "b"
-        ]
-       }
-      ]
-     },
-     "expect": {
-      "state": "judging",
-      "emits": [
-       {
-        "event": "WALK_JUDGE_NEXT",
-        "payload": {}
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "nested-null-effect-values-are-valid-json",
-   "steps": [
-    {
-     "trait": "VerifyWalk",
-     "from": "stepping",
-     "event": "WALK_STEPPED",
-     "payload": {
-      "result": [
-       {
-        "orbital": "O",
-        "trait": "T",
-        "from": "a",
-        "event": "GO",
-        "result": {
-         "trait": "T",
-         "event": "GO",
-         "transitionFired": true,
-         "guard": "none",
-         "firedArm": 0,
-         "effects": [
-          {
-           "type": "render-ui",
-           "args": [
-            "main",
-            {
-             "children": [
-              null,
+          },
+          "entity": {
+            "id": "r",
+            "sent": [
               {
-               "optional": null
-              }
-             ]
-            }
-           ],
-           "status": "executed"
-          }
-         ],
-         "emitted": [],
-         "guards": [],
-         "state": {
-          "before": "a",
-          "after": "b"
-         }
-        }
-       }
-      ]
-     },
-     "entity": {
-      "id": "r",
-      "sent": [
-       {
-        "trait": "T",
-        "from": "a",
-        "event": "GO",
-        "to": "b",
-        "guarded": false,
-        "targets": [
-         "b"
-        ]
-       }
-      ]
-     },
-     "expect": {
-      "state": "judging",
-      "emits": [
-       {
-        "event": "WALK_JUDGE_NEXT",
-        "payload": {}
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "every-played-row-is-judged-in-one-request",
-   "steps": [
-    {
-     "trait": "VerifyWalk",
-     "from": "judging",
-     "event": "WALK_JUDGE_NEXT",
-     "payload": {},
-     "entity": {
-      "id": "r",
-      "program": {
-       "orbitals": []
-      },
-      "judgeSteps": [
-       {
-        "trait": "T",
-        "linkedEntity": "Item",
-        "from": "a",
-        "event": "GO",
-        "to": "b",
-        "toStates": [
-         "b"
-        ],
-        "variant": "success",
-        "payload": {},
-        "guarded": false,
-        "solved": true,
-        "payloadCase": "success"
-       },
-       {
-        "trait": "T",
-        "linkedEntity": "Item",
-        "from": "a",
-        "event": "GO",
-        "to": "b",
-        "toStates": [
-         "b"
-        ],
-        "variant": "success",
-        "payload": {},
-        "guarded": false,
-        "solved": true,
-        "payloadCase": "success"
-       }
-      ],
-      "played": [
-       {
-        "trait": "T",
-        "from": "a",
-        "event": "GO",
-        "to": "b",
-        "guarded": false,
-        "targets": [
-         "b"
-        ],
-        "result": {
-         "trait": "T",
-         "event": "GO",
-         "transitionFired": true,
-         "guard": "none",
-         "effects": [],
-         "emitted": [],
-         "guards": [],
-         "state": {
-          "before": "a",
-          "after": "b"
-         }
-        }
-       },
-       {
-        "trait": "T",
-        "from": "a",
-        "event": "GO",
-        "to": "b",
-        "guarded": false,
-        "targets": [
-         "b"
-        ],
-        "result": {
-         "trait": "T",
-         "event": "GO",
-         "transitionFired": true,
-         "guard": "none",
-         "effects": [],
-         "emitted": [],
-         "guards": [],
-         "state": {
-          "before": "a",
-          "after": "b"
-         }
-        }
-       }
-      ],
-      "creditSteps": []
-     },
-     "expect": {
-      "emitCounts": {
-       "WALK_JUDGE_REQUEST": 1,
-       "WALK_JUDGE_ANSWERED": 0
-      }
-     }
-    }
-   ],
-   "defaults": [
-    "WalkJudge",
-    "WalkCreditor",
-    "VerifyWalkCli"
-   ],
-   "note": "Two played rows go to the judge as one request (no per-row event chain), so a walk of any size stays within the dispatch cap."
-  },
-  {
-   "id": "a-judge-answer-with-another-row-count-fails-the-walk",
-   "steps": [
-    {
-     "trait": "VerifyWalk",
-     "from": "judging",
-     "event": "WALK_JUDGE_ANSWERED",
-     "payload": {
-      "results": [
-       {
-        "verdicts": [],
-        "unported": []
-       }
-      ]
-     },
-     "entity": {
-      "id": "r",
-      "program": {
-       "orbitals": []
-      },
-      "judgeSteps": [
-       {
-        "trait": "T",
-        "linkedEntity": "Item",
-        "from": "a",
-        "event": "GO",
-        "to": "b",
-        "toStates": [
-         "b"
-        ],
-        "variant": "success",
-        "payload": {},
-        "guarded": false,
-        "solved": true,
-        "payloadCase": "success"
-       },
-       {
-        "trait": "T",
-        "linkedEntity": "Item",
-        "from": "a",
-        "event": "GO",
-        "to": "b",
-        "toStates": [
-         "b"
-        ],
-        "variant": "success",
-        "payload": {},
-        "guarded": false,
-        "solved": true,
-        "payloadCase": "success"
-       }
-      ],
-      "played": [
-       {
-        "trait": "T",
-        "from": "a",
-        "event": "GO",
-        "to": "b",
-        "guarded": false,
-        "targets": [
-         "b"
-        ],
-        "result": {
-         "trait": "T",
-         "event": "GO",
-         "transitionFired": true,
-         "guard": "none",
-         "effects": [],
-         "emitted": [],
-         "guards": [],
-         "state": {
-          "before": "a",
-          "after": "b"
-         }
-        }
-       },
-       {
-        "trait": "T",
-        "from": "a",
-        "event": "GO",
-        "to": "b",
-        "guarded": false,
-        "targets": [
-         "b"
-        ],
-        "result": {
-         "trait": "T",
-         "event": "GO",
-         "transitionFired": true,
-         "guard": "none",
-         "effects": [],
-         "emitted": [],
-         "guards": [],
-         "state": {
-          "before": "a",
-          "after": "b"
-         }
-        }
-       }
-      ],
-      "creditSteps": []
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "WALK_FAILED",
-        "payload": {
-         "error": "the judge answer does not match the played rows"
-        }
-       }
-      ],
-      "neverEmits": [
-       "WALK_CREDIT_REQUEST"
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "control-a-judge-answer-per-played-row-moves-to-crediting",
-   "steps": [
-    {
-     "trait": "VerifyWalk",
-     "from": "judging",
-     "event": "WALK_JUDGE_ANSWERED",
-     "payload": {
-      "results": [
-       {
-        "verdicts": [],
-        "unported": []
-       },
-       {
-        "verdicts": [],
-        "unported": []
-       }
-      ]
-     },
-     "entity": {
-      "id": "r",
-      "program": {
-       "orbitals": []
-      },
-      "judgeSteps": [
-       {
-        "trait": "T",
-        "linkedEntity": "Item",
-        "from": "a",
-        "event": "GO",
-        "to": "b",
-        "toStates": [
-         "b"
-        ],
-        "variant": "success",
-        "payload": {},
-        "guarded": false,
-        "solved": true,
-        "payloadCase": "success"
-       },
-       {
-        "trait": "T",
-        "linkedEntity": "Item",
-        "from": "a",
-        "event": "GO",
-        "to": "b",
-        "toStates": [
-         "b"
-        ],
-        "variant": "success",
-        "payload": {},
-        "guarded": false,
-        "solved": true,
-        "payloadCase": "success"
-       }
-      ],
-      "played": [
-       {
-        "trait": "T",
-        "from": "a",
-        "event": "GO",
-        "to": "b",
-        "guarded": false,
-        "targets": [
-         "b"
-        ],
-        "result": {
-         "trait": "T",
-         "event": "GO",
-         "transitionFired": true,
-         "guard": "none",
-         "effects": [],
-         "emitted": [],
-         "guards": [],
-         "state": {
-          "before": "a",
-          "after": "b"
-         }
-        }
-       },
-       {
-        "trait": "T",
-        "from": "a",
-        "event": "GO",
-        "to": "b",
-        "guarded": false,
-        "targets": [
-         "b"
-        ],
-        "result": {
-         "trait": "T",
-         "event": "GO",
-         "transitionFired": true,
-         "guard": "none",
-         "effects": [],
-         "emitted": [],
-         "guards": [],
-         "state": {
-          "before": "a",
-          "after": "b"
-         }
-        }
-       }
-      ],
-      "creditSteps": []
-     },
-     "expect": {
-      "state": "crediting",
-      "emits": [
-       {
-        "event": "WALK_CREDIT_REQUEST"
-       }
-      ],
-      "neverEmits": [
-       "WALK_FAILED"
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "the-walk-plays-as-the-viewer-the-plan-answers",
-   "steps": [
-    {
-     "trait": "VerifyWalk",
-     "from": "planning",
-     "event": "WALK_PLAN_ANSWERED",
-     "payload": {
-      "steps": [
-       {
-        "trait": "T",
-        "from": "a",
-        "event": "GO",
-        "to": "b",
-        "toStates": [
-         "b"
-        ],
-        "variant": "success",
-        "payload": {},
-        "guarded": false,
-        "solved": true,
-        "payloadCase": "success"
-       }
-      ],
-      "viewer": {
-       "id": "Person-verify-seed-1",
-       "name": "Name 1"
-      }
-     },
-     "entity": {
-      "id": "r",
-      "machineRows": [
-       {
-        "orbital": "O",
-        "trait": "T",
-        "from": "a",
-        "event": "GO",
-        "to": "b",
-        "guarded": false
-       }
-      ],
-      "viewer": null
-     },
-     "expect": {
-      "state": "stepping",
-      "entity": {
-       "viewer": {
-        "id": "Person-verify-seed-1",
-        "name": "Name 1"
-       }
-      }
-     }
-    }
-   ],
-   "note": "A walk with no viewer plays as the identity row the planner sampled (owner 2026-11-11)."
-  },
-  {
-   "id": "control-a-plan-answer-with-no-viewer-keeps-the-walks-viewer",
-   "steps": [
-    {
-     "trait": "VerifyWalk",
-     "from": "planning",
-     "event": "WALK_PLAN_ANSWERED",
-     "payload": {
-      "steps": [
-       {
-        "trait": "T",
-        "from": "a",
-        "event": "GO",
-        "to": "b",
-        "toStates": [
-         "b"
-        ],
-        "variant": "success",
-        "payload": {},
-        "guarded": false,
-        "solved": true,
-        "payloadCase": "success"
-       }
-      ]
-     },
-     "entity": {
-      "id": "r",
-      "machineRows": [
-       {
-        "orbital": "O",
-        "trait": "T",
-        "from": "a",
-        "event": "GO",
-        "to": "b",
-        "guarded": false
-       }
-      ],
-      "viewer": {
-       "id": "u-1",
-       "name": "Ada",
-       "role": "owner"
-      }
-     },
-     "expect": {
-      "state": "stepping",
-      "entity": {
-       "viewer": {
-        "id": "u-1",
-        "name": "Ada",
-        "role": "owner"
-       }
-      }
-     }
-    }
-   ]
-  },
-  {
-   "id": "the-as-flag-names-the-role-to-walk-as",
-   "steps": [
-    {
-     "trait": "VerifyWalkCli",
-     "from": "ready",
-     "event": "VERIFY_WALK_CALLED",
-     "payload": {
-      "headers": {},
-      "rawBody": "{\"argv\":[\"f.lolo\",\"--as\",\"team_member\"],\"cwd\":\".\"}"
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "VERIFY_WALK_START",
-        "payload": {
-         "file": "f.lolo",
-         "role": "team_member",
-         "render": false
-        }
-       }
-      ]
-     }
-    }
-   ],
-   "note": "orb verify-walk --as walks a program as one role (owner 2026-11-11: render walk per role)."
-  },
-  {
-   "id": "the-render-flag-turns-the-render-probe-on",
-   "steps": [
-    {
-     "trait": "VerifyWalkCli",
-     "from": "ready",
-     "event": "VERIFY_WALK_CALLED",
-     "payload": {
-      "headers": {},
-      "rawBody": "{\"argv\":[\"--render\",\"f.lolo\",\"--as\",\"owner\"],\"cwd\":\".\"}"
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "VERIFY_WALK_START",
-        "payload": {
-         "file": "f.lolo",
-         "role": "owner",
-         "render": true
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "control-as-without-a-role-is-a-usage-error",
-   "steps": [
-    {
-     "trait": "VerifyWalkCli",
-     "from": "ready",
-     "event": "VERIFY_WALK_CALLED",
-     "payload": {
-      "headers": {},
-      "rawBody": "{\"argv\":[\"f.lolo\",\"--as\"],\"cwd\":\".\"}"
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "VERIFY_WALK_ANSWERED",
-        "payload": {
-         "status": 400,
-         "body": "usage: orb verify-walk <program.lolo> [--as <role>] [--trait <name>] [--render]"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "control-an-unknown-flag-is-a-usage-error",
-   "steps": [
-    {
-     "trait": "VerifyWalkCli",
-     "from": "ready",
-     "event": "VERIFY_WALK_CALLED",
-     "payload": {
-      "headers": {},
-      "rawBody": "{\"argv\":[\"f.lolo\",\"--bogus\"],\"cwd\":\".\"}"
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "VERIFY_WALK_ANSWERED",
-        "payload": {
-         "status": 400,
-         "body": "usage: orb verify-walk <program.lolo> [--as <role>] [--trait <name>] [--render]"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "the-role-is-forwarded-to-the-planner",
-   "entity": {
-    "program": {
-     "orbitals": []
-    },
-    "role": "owner"
-   },
-   "steps": [
-    {
-     "from": "machine",
-     "event": "WALK_MACHINE_ANSWERED",
-     "payload": {
-      "rows": [
-       {
-        "orbital": "O",
-        "trait": "T",
-        "from": "a",
-        "event": "GO",
-        "to": "b",
-        "guarded": false,
-        "payload": []
-       }
-      ]
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "WALK_PLAN_REQUEST",
-        "payload": {
-         "role": "owner"
-        }
-       }
-      ]
-     }
-    }
-   ],
-   "defaults": [
-    "WalkPlan",
-    "VerifyWalkCli"
-   ]
-  },
-  {
-   "id": "a-save-the-policy-refuses-for-the-walked-role-is-counted-denied",
-   "steps": [
-    {
-     "trait": "VerifyWalk",
-     "from": "crediting",
-     "event": "WALK_CREDIT_ANSWERED",
-     "payload": {
-      "credits": []
-     },
-     "entity": {
-      "id": "r",
-      "role": "team_member",
-      "judged": [
-       {
-        "verdicts": []
-       }
-      ],
-      "played": [
-       {
-        "trait": "T",
-        "from": "a",
-        "event": "GO",
-        "to": "b",
-        "guarded": false,
-        "targets": [
-         "b"
-        ],
-        "result": {
-         "trait": "T",
-         "event": "GO",
-         "transitionFired": true,
-         "guard": "none",
-         "effects": [
-          {
-           "type": "persist",
-           "args": [
-            "create",
-            "Note",
-            {
-             "text": "hello"
-            }
-           ],
-           "status": "failed",
-           "routed": true,
-           "code": "denied",
-           "error": "@Create denied: the declared access policy for `Note` rejected this row"
-          }
-         ],
-         "emitted": [],
-         "guards": [],
-         "state": {
-          "before": "a",
-          "after": "b"
-         }
-        }
-       }
-      ],
-      "planned": [],
-      "notes": [],
-      "creditSteps": []
-     },
-     "expect": {
-      "state": "ready",
-      "emits": [
-       {
-        "event": "VERIFY_WALK_ANSWERED",
-        "payload": {
-         "status": 200,
-         "body": "denied  T a --GO--> b  refused by policy for role team_member: create Note\n0 passed, 0 failed, 0 unplanned, 0 guard-blocked, 1 denied"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "a-refused-save-inside-a-let-is-counted-denied",
-   "steps": [
-    {
-     "trait": "VerifyWalk",
-     "from": "crediting",
-     "event": "WALK_CREDIT_ANSWERED",
-     "payload": {
-      "credits": []
-     },
-     "entity": {
-      "id": "r",
-      "role": "team_member",
-      "judged": [
-       {
-        "verdicts": []
-       }
-      ],
-      "played": [
-       {
-        "trait": "T",
-        "from": "a",
-        "event": "GO",
-        "to": "b",
-        "guarded": false,
-        "targets": [
-         "b"
-        ],
-        "result": {
-         "trait": "T",
-         "event": "GO",
-         "transitionFired": true,
-         "guard": "none",
-         "effects": [
-          {
-           "type": "let",
-           "args": [],
-           "status": "failed",
-           "routed": true,
-           "nested": [
-            {
-             "type": "persist",
-             "args": [
-              "create",
-              "Note",
+                "trait": "T",
+                "from": "a",
+                "event": "GO",
+                "to": "b",
+                "guarded": false,
+                "targets": [
+                  "b"
+                ]
+              },
               {
-               "text": "hello"
+                "trait": "T",
+                "from": "b",
+                "event": "NO",
+                "to": "c",
+                "guarded": true,
+                "targets": [
+                  "c"
+                ]
+              },
+              {
+                "trait": "U",
+                "from": "a",
+                "event": "UP",
+                "to": "c",
+                "guarded": false,
+                "targets": [
+                  "c"
+                ]
               }
-             ],
-             "status": "failed",
-             "routed": true,
-             "code": "denied",
-             "error": "@Create denied: the declared access policy for `Note` rejected this row"
+            ]
+          },
+          "expect": {
+            "state": "judging",
+            "entity": {
+              "hops": [
+                {
+                  "trait": "T",
+                  "from": "a",
+                  "event": "GO",
+                  "to": "b",
+                  "arm": 0
+                },
+                {
+                  "trait": "U",
+                  "from": "a",
+                  "event": "UP",
+                  "to": "c",
+                  "arm": 2
+                }
+              ]
             }
-           ]
           }
-         ],
-         "emitted": [],
-         "guards": [],
-         "state": {
-          "before": "a",
-          "after": "b"
-         }
         }
-       }
       ],
-      "planned": [],
-      "notes": [],
-      "creditSteps": []
-     },
-     "expect": {
-      "state": "ready",
-      "emits": [
-       {
-        "event": "VERIFY_WALK_ANSWERED",
-        "payload": {
-         "status": 200,
-         "body": "denied  T a --GO--> b  refused by policy for role team_member: create Note\n0 passed, 0 failed, 0 unplanned, 0 guard-blocked, 1 denied"
-        }
-       }
+      "defaults": [
+        "WalkJudge",
+        "WalkCreditor",
+        "VerifyWalkCli"
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "control-a-save-the-policy-admits-passes",
-   "steps": [
-    {
-     "trait": "VerifyWalk",
-     "from": "crediting",
-     "event": "WALK_CREDIT_ANSWERED",
-     "payload": {
-      "credits": []
-     },
-     "entity": {
-      "id": "r",
-      "role": "team_member",
-      "judged": [
-       {
-        "verdicts": []
-       }
-      ],
-      "played": [
-       {
-        "trait": "T",
-        "from": "a",
-        "event": "GO",
-        "to": "b",
-        "guarded": false,
-        "targets": [
-         "b"
-        ],
-        "result": {
-         "trait": "T",
-         "event": "GO",
-         "transitionFired": true,
-         "guard": "none",
-         "effects": [
-          {
-           "type": "persist",
-           "args": [
-            "create",
-            "Note",
-            {
-             "text": "hello"
-            }
-           ],
-           "status": "executed",
-           "routed": false
-          }
-         ],
-         "emitted": [],
-         "guards": [],
-         "state": {
-          "before": "a",
-          "after": "b"
-         }
-        }
-       }
-      ],
-      "planned": [],
-      "notes": [],
-      "creditSteps": []
-     },
-     "expect": {
-      "state": "ready",
-      "emits": [
-       {
-        "event": "VERIFY_WALK_ANSWERED",
-        "payload": {
-         "status": 200,
-         "body": "pass  T a --GO--> b\n1 passed, 0 failed, 0 unplanned, 0 guard-blocked"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "the-trait-flag-names-the-one-trait-to-walk",
-   "steps": [
-    {
-     "trait": "VerifyWalkCli",
-     "from": "ready",
-     "event": "VERIFY_WALK_CALLED",
-     "payload": {
-      "headers": {},
-      "rawBody": "{\"argv\":[\"f.lolo\",\"--trait\",\"NoteAdd\"],\"cwd\":\".\"}"
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "VERIFY_WALK_START",
-        "payload": {
-         "file": "f.lolo",
-         "trait": "NoteAdd",
-         "render": false
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "control-trait-without-a-name-is-a-usage-error",
-   "steps": [
-    {
-     "trait": "VerifyWalkCli",
-     "from": "ready",
-     "event": "VERIFY_WALK_CALLED",
-     "payload": {
-      "headers": {},
-      "rawBody": "{\"argv\":[\"f.lolo\",\"--trait\"],\"cwd\":\".\"}"
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "VERIFY_WALK_ANSWERED",
-        "payload": {
-         "status": 400,
-         "body": "usage: orb verify-walk <program.lolo> [--as <role>] [--trait <name>] [--render]"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "the-trait-flag-plans-only-that-traits-rows",
-   "entity": {
-    "program": {
-     "orbitals": []
     },
-    "onlyTrait": "B"
-   },
-   "steps": [
     {
-     "from": "machine",
-     "event": "WALK_MACHINE_ANSWERED",
-     "payload": {
-      "rows": [
-       {
-        "orbital": "O",
-        "trait": "A",
-        "from": "a",
-        "event": "GO",
-        "to": "b",
-        "guarded": false,
-        "payload": []
-       },
-       {
-        "orbital": "O",
-        "trait": "B",
-        "from": "a",
-        "event": "GO",
-        "to": "b",
-        "guarded": false,
-        "payload": []
-       }
-      ]
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "WALK_PLAN_REQUEST",
-        "payload": {
-         "rows": [
-          {
-           "orbital": "O",
-           "trait": "B",
-           "from": "a",
-           "event": "GO",
-           "to": "b",
-           "guarded": false,
-           "payload": []
-          }
-         ]
-        }
-       }
-      ]
-     }
-    }
-   ],
-   "defaults": [
-    "WalkPlan",
-    "VerifyWalkCli"
-   ]
-  },
-  {
-   "id": "control-without-the-trait-flag-every-row-is-planned",
-   "entity": {
-    "program": {
-     "orbitals": []
-    }
-   },
-   "steps": [
-    {
-     "from": "machine",
-     "event": "WALK_MACHINE_ANSWERED",
-     "payload": {
-      "rows": [
-       {
-        "orbital": "O",
-        "trait": "A",
-        "from": "a",
-        "event": "GO",
-        "to": "b",
-        "guarded": false,
-        "payload": []
-       },
-       {
-        "orbital": "O",
-        "trait": "B",
-        "from": "a",
-        "event": "GO",
-        "to": "b",
-        "guarded": false,
-        "payload": []
-       }
-      ]
-     },
-     "expect": {
-      "emits": [
-       {
-        "event": "WALK_PLAN_REQUEST",
-        "payload": {
-         "rows": [
-          {
-           "orbital": "O",
-           "trait": "A",
-           "from": "a",
-           "event": "GO",
-           "to": "b",
-           "guarded": false,
-           "payload": []
+      "id": "many-played-rows-are-judged-each-against-its-own-verdicts-in-order",
+      "note": "Each played row reads the judged verdicts at its own position; reply routes pass only when a credit names their trait, source and event; notes take the machine target of their own row.",
+      "steps": [
+        {
+          "trait": "VerifyWalk",
+          "from": "crediting",
+          "event": "WALK_CREDIT_ANSWERED",
+          "payload": {
+            "credits": [
+              {
+                "index": 1,
+                "stateBefore": "a",
+                "stateAfter": "a"
+              }
+            ]
           },
-          {
-           "orbital": "O",
-           "trait": "B",
-           "from": "a",
-           "event": "GO",
-           "to": "b",
-           "guarded": false,
-           "payload": []
+          "entity": {
+            "id": "r",
+            "role": "team_member",
+            "judged": [
+              {
+                "verdicts": []
+              },
+              {
+                "verdicts": [
+                  {
+                    "name": "render",
+                    "passed": false,
+                    "detail": "empty"
+                  }
+                ]
+              },
+              {
+                "verdicts": []
+              }
+            ],
+            "played": [
+              {
+                "trait": "T",
+                "from": "a",
+                "event": "GO",
+                "to": "b",
+                "guarded": false,
+                "targets": [
+                  "b"
+                ],
+                "result": {
+                  "trait": "T",
+                  "event": "GO",
+                  "transitionFired": true,
+                  "guard": "none",
+                  "firedArm": 0,
+                  "effects": [],
+                  "emitted": [],
+                  "guards": [],
+                  "state": {
+                    "before": "a",
+                    "after": "b"
+                  }
+                }
+              },
+              {
+                "trait": "T",
+                "from": "b",
+                "event": "BACK",
+                "to": "a",
+                "guarded": false,
+                "targets": [
+                  "a"
+                ],
+                "result": {
+                  "trait": "T",
+                  "event": "BACK",
+                  "transitionFired": true,
+                  "guard": "none",
+                  "firedArm": 0,
+                  "effects": [],
+                  "emitted": [],
+                  "guards": [],
+                  "state": {
+                    "before": "a",
+                    "after": "a"
+                  }
+                }
+              },
+              {
+                "trait": "U",
+                "from": "a",
+                "event": "UP",
+                "to": "c",
+                "guarded": true,
+                "targets": [
+                  "c"
+                ],
+                "result": {
+                  "trait": "U",
+                  "event": "UP",
+                  "transitionFired": false,
+                  "guard": "none",
+                  "firedArm": -1,
+                  "effects": [],
+                  "emitted": [],
+                  "guards": [],
+                  "state": {
+                    "before": "a",
+                    "after": "a"
+                  }
+                }
+              }
+            ],
+            "planned": [
+              {
+                "orbital": "O",
+                "trait": "T",
+                "from": "a",
+                "event": "OK",
+                "to": "b",
+                "guarded": false,
+                "payload": {},
+                "unplanned": "",
+                "reply": "success"
+              },
+              {
+                "orbital": "O",
+                "trait": "U",
+                "from": "a",
+                "event": "ERR",
+                "to": "a",
+                "guarded": false,
+                "payload": {},
+                "unplanned": "",
+                "reply": "failure"
+              }
+            ],
+            "notes": [
+              {
+                "trait": "T",
+                "from": "a",
+                "event": "ODD",
+                "missing": "guard"
+              },
+              {
+                "trait": "W",
+                "from": "q",
+                "event": "NONE",
+                "missing": "guard"
+              }
+            ],
+            "machineRows": [
+              {
+                "trait": "T",
+                "from": "a",
+                "event": "ODD",
+                "to": "e",
+                "orbital": "O",
+                "guarded": false,
+                "payload": []
+              },
+              {
+                "trait": "T",
+                "from": "a",
+                "event": "ODD",
+                "to": "f",
+                "orbital": "O",
+                "guarded": false,
+                "payload": []
+              }
+            ],
+            "creditSteps": [
+              {
+                "trait": "T",
+                "from": "a",
+                "event": "GO",
+                "reply": "",
+                "fired": []
+              },
+              {
+                "trait": "U",
+                "from": "a",
+                "event": "ERR",
+                "reply": "failure",
+                "fired": []
+              }
+            ]
+          },
+          "expect": {
+            "state": "ready",
+            "entity": {
+              "rows": [
+                {
+                  "trait": "T",
+                  "from": "a",
+                  "event": "GO",
+                  "to": "b",
+                  "verdict": "pass",
+                  "detail": ""
+                },
+                {
+                  "trait": "T",
+                  "from": "b",
+                  "event": "BACK",
+                  "to": "a",
+                  "verdict": "fail",
+                  "detail": "render: empty"
+                },
+                {
+                  "trait": "U",
+                  "from": "a",
+                  "event": "UP",
+                  "to": "c",
+                  "verdict": "guard-blocked",
+                  "detail": ""
+                },
+                {
+                  "trait": "T",
+                  "from": "a",
+                  "event": "OK",
+                  "to": "b",
+                  "verdict": "gap",
+                  "detail": "reply route, reachable only with a network"
+                },
+                {
+                  "trait": "U",
+                  "from": "a",
+                  "event": "ERR",
+                  "to": "a",
+                  "verdict": "pass",
+                  "detail": "reply route, reachable only with a network"
+                },
+                {
+                  "trait": "T",
+                  "from": "a",
+                  "event": "ODD",
+                  "to": "e",
+                  "verdict": "unplanned"
+                },
+                {
+                  "trait": "W",
+                  "from": "q",
+                  "event": "NONE",
+                  "to": "",
+                  "verdict": "unplanned"
+                }
+              ]
+            }
           }
-         ]
         }
-       }
+      ],
+      "defaults": [
+        "WalkJudge",
+        "WalkCreditor",
+        "VerifyWalkCli"
       ]
-     }
-    }
-   ],
-   "defaults": [
-    "WalkPlan",
-    "VerifyWalkCli"
-   ]
-  },
-  {
-   "id": "a-trait-the-program-does-not-have-is-refused",
-   "entity": {
-    "program": {
-     "orbitals": []
     },
-    "onlyTrait": "Nope"
-   },
-   "steps": [
     {
-     "from": "machine",
-     "event": "WALK_MACHINE_ANSWERED",
-     "payload": {
-      "rows": [
-       {
-        "orbital": "O",
-        "trait": "A",
-        "from": "a",
-        "event": "GO",
-        "to": "b",
-        "guarded": false,
-        "payload": []
-       },
-       {
-        "orbital": "O",
-        "trait": "B",
-        "from": "a",
-        "event": "GO",
-        "to": "b",
-        "guarded": false,
-        "payload": []
-       }
-      ]
-     },
-     "expect": {
-      "state": "ready",
-      "emits": [
-       {
-        "event": "VERIFY_WALK_ANSWERED",
-        "payload": {
-         "status": 500,
-         "body": "verify-walk: the program has no trait named Nope with a transition"
-        }
-       }
-      ],
-      "neverEmits": [
-       "WALK_PLAN_REQUEST"
-      ]
-     }
-    }
-   ],
-   "defaults": [
-    "WalkPlan",
-    "VerifyWalkCli"
-   ]
-  },
-  {
-   "id": "a-skipped-repeat-the-asker-still-waits-on-is-a-finding",
-   "steps": [
-    {
-     "trait": "VerifyWalk",
-     "from": "crediting",
-     "event": "WALK_CREDIT_ANSWERED",
-     "payload": {
-      "credits": []
-     },
-     "entity": {
-      "id": "r",
-      "judged": [
-       {
-        "verdicts": []
-       }
-      ],
-      "played": [
-       {
-        "trait": "T",
-        "from": "a",
-        "event": "GO",
-        "to": "b",
-        "guarded": false,
-        "targets": [
-         "b"
-        ],
-        "result": {
-         "trait": "T",
-         "event": "GO",
-         "transitionFired": true,
-         "guard": "none",
-         "effects": [],
-         "emitted": [],
-         "guards": [],
-         "state": {
-          "before": "a",
-          "after": "b"
-         },
-         "collapsed": [
-          {
-           "trait": "Callee",
-           "event": "ASK",
-           "payload": {
-            "n": 1
-           }
-          }
-         ],
-         "outcomes": [
-          {
-           "trait": "Asker",
-           "event": "GO",
-           "from": "idle",
-           "to": "waiting",
-           "emitted": [
-            {
-             "type": "ASK_OUT"
-            }
-           ]
-          },
-          {
-           "trait": "Callee",
-           "event": "ASK",
-           "from": "ready",
-           "to": "ready",
-           "emitted": [
-            {
-             "type": "ANSWER"
-            }
-           ]
-          }
-         ]
-        }
-       }
-      ],
-      "planned": [],
-      "notes": [],
-      "creditSteps": [],
-      "program": {
-       "orbitals": [
+      "id": "the-run-wide-hops-go-to-the-creditor-once-beside-the-steps",
+      "note": "The hops the walk fired are sent once for the whole run, not copied onto every credit step, so a large walk's credit request grows with steps plus hops.",
+      "steps": [
         {
-         "name": "O",
-         "traits": [
-          {
-           "name": "Asker",
-           "listens": [
-            {
-             "event": "ANSWER",
-             "triggers": "GOT",
-             "source": {
-              "kind": "trait",
-              "trait": "Callee"
-             }
-            }
-           ]
+          "trait": "VerifyWalk",
+          "from": "judging",
+          "event": "WALK_JUDGE_ANSWERED",
+          "payload": {
+            "results": [
+              {
+                "verdicts": [],
+                "unported": []
+              }
+            ]
           },
-          {
-           "name": "Callee",
-           "listens": [
-            {
-             "event": "ASK_OUT",
-             "triggers": "ASK",
-             "source": {
-              "kind": "trait",
-              "trait": "Asker"
-             }
-            }
-           ]
+          "entity": {
+            "id": "r",
+            "program": {
+              "orbitals": []
+            },
+            "played": [
+              {
+                "trait": "T",
+                "from": "a",
+                "event": "GO",
+                "to": "b",
+                "guarded": false,
+                "targets": [
+                  "b"
+                ],
+                "result": {
+                  "trait": "T",
+                  "event": "GO",
+                  "transitionFired": true,
+                  "guard": "none",
+                  "effects": [],
+                  "emitted": [],
+                  "guards": [],
+                  "state": {
+                    "before": "a",
+                    "after": "b"
+                  }
+                }
+              }
+            ],
+            "hops": [
+              {
+                "trait": "T",
+                "from": "a",
+                "event": "GO",
+                "to": "b",
+                "arm": 0
+              }
+            ],
+            "creditSteps": [
+              {
+                "trait": "T",
+                "from": "a",
+                "event": "GO",
+                "reply": ""
+              },
+              {
+                "trait": "T",
+                "from": "a",
+                "event": "FAIL",
+                "reply": "failure"
+              }
+            ]
+          },
+          "expect": {
+            "state": "crediting",
+            "emits": [
+              {
+                "event": "WALK_CREDIT_REQUEST",
+                "payload": {
+                  "steps": [
+                    {
+                      "trait": "T",
+                      "from": "a",
+                      "event": "GO",
+                      "reply": ""
+                    },
+                    {
+                      "trait": "T",
+                      "from": "a",
+                      "event": "FAIL",
+                      "reply": "failure"
+                    }
+                  ],
+                  "fired": [
+                    {
+                      "trait": "T",
+                      "from": "a",
+                      "event": "GO",
+                      "to": "b",
+                      "arm": 0
+                    }
+                  ]
+                }
+              }
+            ]
           }
-         ]
         }
-       ]
-      },
-      "machineRows": [
-       {
-        "orbital": "O",
-        "trait": "Asker",
-        "from": "idle",
-        "event": "GO",
-        "to": "waiting",
-        "guarded": false,
-        "payload": []
-       },
-       {
-        "orbital": "O",
-        "trait": "Asker",
-        "from": "waiting",
-        "event": "GOT",
-        "to": "done",
-        "guarded": false,
-        "payload": []
-       },
-       {
-        "orbital": "O",
-        "trait": "Callee",
-        "from": "ready",
-        "event": "ASK",
-        "to": "ready",
-        "guarded": false,
-        "payload": []
-       }
+      ],
+      "defaults": [
+        "WalkJudge",
+        "WalkCreditor",
+        "VerifyWalkCli"
       ]
-     },
-     "expect": {
-      "state": "ready",
-      "emits": [
-       {
-        "event": "VERIFY_WALK_ANSWERED",
-        "payload": {
-         "status": 500,
-         "body": "pass  T a --GO--> b\nfinding  VERIFY_REPEATED_ASK_COLLAPSED  Callee ASK {\"n\":1}  the same question was asked twice in one dispatch; the second was skipped (EXEC-QUEUE-4) and its asker is still waiting for the answer\n1 passed, 0 failed, 0 unplanned, 0 guard-blocked, 1 finding"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "control-a-collapsed-cycle-stopper-the-asker-does-not-wait-on-is-not-a-finding",
-   "steps": [
+    },
     {
-     "trait": "VerifyWalk",
-     "from": "crediting",
-     "event": "WALK_CREDIT_ANSWERED",
-     "payload": {
-      "credits": []
-     },
-     "entity": {
-      "id": "r",
-      "judged": [
-       {
-        "verdicts": []
-       }
-      ],
-      "played": [
-       {
-        "trait": "T",
-        "from": "a",
-        "event": "GO",
-        "to": "b",
-        "guarded": false,
-        "targets": [
-         "b"
-        ],
-        "result": {
-         "trait": "T",
-         "event": "GO",
-         "transitionFired": true,
-         "guard": "none",
-         "effects": [],
-         "emitted": [],
-         "guards": [],
-         "state": {
-          "before": "a",
-          "after": "b"
-         },
-         "collapsed": [
-          {
-           "trait": "Callee",
-           "event": "ASK",
-           "payload": {
-            "n": 1
-           }
-          }
-         ],
-         "outcomes": [
-          {
-           "trait": "Asker",
-           "event": "GO",
-           "from": "idle",
-           "to": "done",
-           "emitted": [
-            {
-             "type": "ASK_OUT"
-            }
-           ]
-          },
-          {
-           "trait": "Callee",
-           "event": "ASK",
-           "from": "ready",
-           "to": "ready",
-           "emitted": [
-            {
-             "type": "ANSWER"
-            }
-           ]
-          }
-         ]
-        }
-       }
-      ],
-      "planned": [],
-      "notes": [],
-      "creditSteps": [],
-      "program": {
-       "orbitals": [
+      "id": "each-unplanned-row-names-what-its-own-note-says-is-missing",
+      "note": "An unplanned row prints the missing reason of the note with its own trait, source and event.",
+      "steps": [
         {
-         "name": "O",
-         "traits": [
-          {
-           "name": "Asker",
-           "listens": [
-            {
-             "event": "ANSWER",
-             "triggers": "GOT",
-             "source": {
-              "kind": "trait",
-              "trait": "Callee"
-             }
-            }
-           ]
+          "trait": "VerifyWalk",
+          "from": "crediting",
+          "event": "WALK_CREDIT_ANSWERED",
+          "payload": {
+            "credits": [
+              {
+                "index": 1,
+                "stateBefore": "a",
+                "stateAfter": "a"
+              }
+            ]
           },
-          {
-           "name": "Callee",
-           "listens": [
-            {
-             "event": "ASK_OUT",
-             "triggers": "ASK",
-             "source": {
-              "kind": "trait",
-              "trait": "Asker"
-             }
-            }
-           ]
-          }
-         ]
-        }
-       ]
-      },
-      "machineRows": [
-       {
-        "orbital": "O",
-        "trait": "Asker",
-        "from": "idle",
-        "event": "GO",
-        "to": "done",
-        "guarded": false,
-        "payload": []
-       },
-       {
-        "orbital": "O",
-        "trait": "Asker",
-        "from": "waiting",
-        "event": "GOT",
-        "to": "done",
-        "guarded": false,
-        "payload": []
-       },
-       {
-        "orbital": "O",
-        "trait": "Callee",
-        "from": "ready",
-        "event": "ASK",
-        "to": "ready",
-        "guarded": false,
-        "payload": []
-       }
-      ]
-     },
-     "expect": {
-      "state": "ready",
-      "emits": [
-       {
-        "event": "VERIFY_WALK_ANSWERED",
-        "payload": {
-         "status": 200,
-         "body": "pass  T a --GO--> b\n1 passed, 0 failed, 0 unplanned, 0 guard-blocked"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "control-a-skipped-event-no-listener-delivers-is-not-a-finding",
-   "steps": [
-    {
-     "trait": "VerifyWalk",
-     "from": "crediting",
-     "event": "WALK_CREDIT_ANSWERED",
-     "payload": {
-      "credits": []
-     },
-     "entity": {
-      "id": "r",
-      "judged": [
-       {
-        "verdicts": []
-       }
-      ],
-      "played": [
-       {
-        "trait": "T",
-        "from": "a",
-        "event": "GO",
-        "to": "b",
-        "guarded": false,
-        "targets": [
-         "b"
-        ],
-        "result": {
-         "trait": "T",
-         "event": "GO",
-         "transitionFired": true,
-         "guard": "none",
-         "effects": [],
-         "emitted": [],
-         "guards": [],
-         "state": {
-          "before": "a",
-          "after": "b"
-         },
-         "collapsed": [
-          {
-           "trait": "Callee",
-           "event": "ASK",
-           "payload": {
-            "n": 1
-           }
-          }
-         ]
-        }
-       }
-      ],
-      "planned": [],
-      "notes": [],
-      "creditSteps": [],
-      "program": {
-       "orbitals": [
-        {
-         "name": "O",
-         "traits": [
-          {
-           "name": "Asker",
-           "listens": []
+          "entity": {
+            "id": "r",
+            "role": "team_member",
+            "judged": [
+              {
+                "verdicts": []
+              },
+              {
+                "verdicts": [
+                  {
+                    "name": "render",
+                    "passed": false,
+                    "detail": "empty"
+                  }
+                ]
+              },
+              {
+                "verdicts": []
+              }
+            ],
+            "played": [
+              {
+                "trait": "T",
+                "from": "a",
+                "event": "GO",
+                "to": "b",
+                "guarded": false,
+                "targets": [
+                  "b"
+                ],
+                "result": {
+                  "trait": "T",
+                  "event": "GO",
+                  "transitionFired": true,
+                  "guard": "none",
+                  "firedArm": 0,
+                  "effects": [],
+                  "emitted": [],
+                  "guards": [],
+                  "state": {
+                    "before": "a",
+                    "after": "b"
+                  }
+                }
+              },
+              {
+                "trait": "T",
+                "from": "b",
+                "event": "BACK",
+                "to": "a",
+                "guarded": false,
+                "targets": [
+                  "a"
+                ],
+                "result": {
+                  "trait": "T",
+                  "event": "BACK",
+                  "transitionFired": true,
+                  "guard": "none",
+                  "firedArm": 0,
+                  "effects": [],
+                  "emitted": [],
+                  "guards": [],
+                  "state": {
+                    "before": "a",
+                    "after": "a"
+                  }
+                }
+              },
+              {
+                "trait": "U",
+                "from": "a",
+                "event": "UP",
+                "to": "c",
+                "guarded": true,
+                "targets": [
+                  "c"
+                ],
+                "result": {
+                  "trait": "U",
+                  "event": "UP",
+                  "transitionFired": false,
+                  "guard": "none",
+                  "firedArm": -1,
+                  "effects": [],
+                  "emitted": [],
+                  "guards": [],
+                  "state": {
+                    "before": "a",
+                    "after": "a"
+                  }
+                }
+              }
+            ],
+            "planned": [
+              {
+                "orbital": "O",
+                "trait": "T",
+                "from": "a",
+                "event": "OK",
+                "to": "b",
+                "guarded": false,
+                "payload": {},
+                "unplanned": "",
+                "reply": "success"
+              },
+              {
+                "orbital": "O",
+                "trait": "U",
+                "from": "a",
+                "event": "ERR",
+                "to": "a",
+                "guarded": false,
+                "payload": {},
+                "unplanned": "",
+                "reply": "failure"
+              }
+            ],
+            "notes": [
+              {
+                "trait": "T",
+                "from": "a",
+                "event": "ODD",
+                "missing": "guard"
+              },
+              {
+                "trait": "W",
+                "from": "q",
+                "event": "NONE",
+                "missing": "payload slot x"
+              }
+            ],
+            "machineRows": [
+              {
+                "trait": "T",
+                "from": "a",
+                "event": "ODD",
+                "to": "e",
+                "orbital": "O",
+                "guarded": false,
+                "payload": []
+              },
+              {
+                "trait": "T",
+                "from": "a",
+                "event": "ODD",
+                "to": "f",
+                "orbital": "O",
+                "guarded": false,
+                "payload": []
+              }
+            ],
+            "creditSteps": [
+              {
+                "trait": "T",
+                "from": "a",
+                "event": "GO",
+                "reply": "",
+                "fired": []
+              },
+              {
+                "trait": "U",
+                "from": "a",
+                "event": "ERR",
+                "reply": "failure",
+                "fired": []
+              }
+            ]
           },
-          {
-           "name": "Callee"
+          "expect": {
+            "state": "ready",
+            "emits": [
+              {
+                "event": "VERIFY_WALK_ANSWERED",
+                "payload": {
+                  "status": 500,
+                  "body": "pass  T a --GO--> b\nfail  T b --BACK--> a  render: empty\nguard-blocked  U a --UP--> c\ngap  T a --OK--> b  reply route, reachable only with a network\npass  U a --ERR--> a  reply route, reachable only with a network\nunplanned  T a --ODD--> e  missing: guard\nunplanned  W q --NONE-->   missing: payload slot x\n2 passed, 1 failed, 2 unplanned, 1 guard-blocked, 1 gap"
+                }
+              }
+            ]
           }
-         ]
         }
-       ]
-      }
-     },
-     "expect": {
-      "state": "ready",
-      "emits": [
-       {
-        "event": "VERIFY_WALK_ANSWERED",
-        "payload": {
-         "status": 200,
-         "body": "pass  T a --GO--> b\n1 passed, 0 failed, 0 unplanned, 0 guard-blocked"
-        }
-       }
-      ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "control-a-step-with-nothing-collapsed-has-no-finding",
-   "steps": [
-    {
-     "trait": "VerifyWalk",
-     "from": "crediting",
-     "event": "WALK_CREDIT_ANSWERED",
-     "payload": {
-      "credits": []
-     },
-     "entity": {
-      "id": "r",
-      "judged": [
-       {
-        "verdicts": []
-       }
       ],
-      "played": [
-       {
-        "trait": "T",
-        "from": "a",
-        "event": "GO",
-        "to": "b",
-        "guarded": false,
-        "targets": [
-         "b"
-        ],
-        "result": {
-         "trait": "T",
-         "event": "GO",
-         "transitionFired": true,
-         "guard": "none",
-         "effects": [],
-         "emitted": [],
-         "guards": [],
-         "state": {
-          "before": "a",
-          "after": "b"
-         }
-        }
-       }
-      ],
-      "planned": [],
-      "notes": [],
-      "creditSteps": [],
-      "program": {
-       "orbitals": [
-        {
-         "name": "O",
-         "traits": [
-          {
-           "name": "Asker",
-           "listens": [
-            {
-             "event": "ANSWER",
-             "triggers": "ASK",
-             "source": {
-              "kind": "trait",
-              "trait": "Callee"
-             }
-            }
-           ]
-          },
-          {
-           "name": "Callee"
-          }
-         ]
-        }
-       ]
-      }
-     },
-     "expect": {
-      "state": "ready",
-      "emits": [
-       {
-        "event": "VERIFY_WALK_ANSWERED",
-        "payload": {
-         "status": 200,
-         "body": "pass  T a --GO--> b\n1 passed, 0 failed, 0 unplanned, 0 guard-blocked"
-        }
-       }
+      "defaults": [
+        "WalkJudge",
+        "WalkCreditor",
+        "VerifyWalkCli"
       ]
-     }
     }
-   ]
-  }
- ]
+  ]
 }

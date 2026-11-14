@@ -23,8 +23,9 @@ orbital RasmSurfaceOrbital {
     id : string!
     paints : Map string RasmPaintEntry @description "Every control's latest paint by control id." = {}
     looks : Map string RasmLook @description "The announced look table." = {}
-    viewW : number @description "The canvas width the layout uses: the config width, then the resized width when fill is on." = 720
-    viewH : number @description "The canvas height the layout uses." = 520
+    viewW : number @description "The canvas width the layout uses: the config width, then the container's width." = 720
+    viewH : number @description "The canvas height: the root's content height plus the margins, or the container's height when fill is on." = 520
+    contentH : number @description "The root's content height: the rootRect height until the root reports its extent." = 520
     root : RasmRect @description "The rect handed to the root child." = { x: 0, y: 0, w: 720, h: 520 }
     dir : "ltr" | "rtl" @description "The reading direction the canvas reported from the page locale." = "ltr"
     hidden : [string] @description "The paint ids RASM_VISIBLE hid: their paints are kept and not drawn." = []
@@ -39,6 +40,7 @@ orbital RasmSurfaceOrbital {
         (set @entity.viewW @config.width)
         (set @entity.viewH @config.height)
         (set @entity.root @config.rootRect)
+        (set @entity.contentH @config.rootRect.h)
         (emit RASM_BOOT { })
         (emit RASM_PLACE { placed: [{ id: @config.rootChild, rect: @entity.root }] })
         (set @entity.repaints (+ @entity.repaints 1))
@@ -48,13 +50,28 @@ orbital RasmSurfaceOrbital {
         (emit RASM_PLACE { placed: [{ id: @config.rootChild, rect: @entity.root }] })
         (set @entity.repaints (+ @entity.repaints 1))
         (emit SURFACE_REPAINT { n: @entity.repaints })
-      RASM_RESIZE -> ready
+      RASM_RESIZE -> ready when @config.fill
         (set @entity.viewW ?width)
         (set @entity.viewH ?height)
-        (set @entity.root (if @config.fill (let ((w (math/max 0 (- ?width (* 2 @config.margin)))) (h (math/max 0 (- ?height (* 2 @config.margin))))) (if (= @config.align "center") { x: (/ (- ?width (math/min @config.rootRect.w @w)) 2), y: (/ (- ?height (math/min @config.rootRect.h @h)) 2), w: (math/min @config.rootRect.w @w), h: (math/min @config.rootRect.h @h) } { x: @config.margin, y: @config.margin, w: @w, h: @h })) @config.rootRect))
+        (set @entity.root (let ((w (math/max 0 (- ?width (* 2 @config.margin)))) (h (math/max 0 (- ?height (* 2 @config.margin))))) (if (= @config.align "center") { x: (/ (- ?width (math/min @config.rootRect.w @w)) 2), y: (/ (- ?height (math/min @config.rootRect.h @h)) 2), w: (math/min @config.rootRect.w @w), h: (math/min @config.rootRect.h @h) } { x: @config.margin, y: @config.margin, w: @w, h: @h })))
         (emit RASM_PLACE { placed: [{ id: @config.rootChild, rect: @entity.root }] })
         (set @entity.repaints (+ @entity.repaints 1))
         (emit SURFACE_REPAINT { n: @entity.repaints })
+      RASM_RESIZE -> ready when (not @config.fill)
+        (set @entity.viewW ?width)
+        (set @entity.viewH (+ @entity.contentH (* 2 @config.margin)))
+        (set @entity.root (let ((w (math/max 0 (- ?width (* 2 @config.margin))))) (let ((rw (if (= @config.align "center") (math/min @config.rootRect.w @w) @w))) { x: (if (= @config.align "center") (/ (- ?width @rw) 2) @config.margin), y: @config.margin, w: @rw, h: @entity.contentH })))
+        (emit RASM_PLACE { placed: [{ id: @config.rootChild, rect: @entity.root }] })
+        (set @entity.repaints (+ @entity.repaints 1))
+        (emit SURFACE_REPAINT { n: @entity.repaints })
+      RASM_EXTENT -> ready when (and (not @config.fill) (= ?id @config.rootChild) (!= ?h @entity.contentH))
+        (set @entity.contentH ?h)
+        (set @entity.viewH (+ ?h (* 2 @config.margin)))
+        (set @entity.root { x: @entity.root.x, y: @entity.root.y, w: @entity.root.w, h: ?h })
+        (emit RASM_PLACE { placed: [{ id: @config.rootChild, rect: @entity.root }] })
+        (set @entity.repaints (+ @entity.repaints 1))
+        (emit SURFACE_REPAINT { n: @entity.repaints })
+      RASM_EXTENT -> ready when (or @config.fill (or (!= ?id @config.rootChild) (= ?h @entity.contentH)))
       SURFACE_RESIZE -> ready
         (emit RASM_RESIZE { width: ?width, height: ?height })
       SURFACE_TEXT -> ready
@@ -90,9 +107,9 @@ orbital RasmSurfaceOrbital {
           painter: "orbital"
           camera: { mode: "top-down", zoom: 1 }
           pointerMoves: "captured"
-          fillContainer: @config.fill
-          worldWidth: (if @config.fill @entity.viewW @config.width)
-          worldHeight: (if @config.fill @entity.viewH @config.height)
+          fillContainer: (if @config.fill true "width")
+          worldWidth: @entity.viewW
+          worldHeight: @entity.viewH
           resizeEvent: "SURFACE_RESIZE"
           textInputEvent: "SURFACE_TEXT"
           keyEvent: "SURFACE_KEY"
@@ -240,6 +257,8 @@ orbital RasmSurfaceOrbital {
         @description "Stop drawing the paints of the hidden ids and draw the shown ids again; the paints are kept."
       RASM_RESIZE { width : number!  height : number! }
         @description "Re-place the root from the new size."
+      RASM_EXTENT { id : string!  w : number!  h : number! }
+        @description "The root's content size: unless fill is on, the canvas height follows it so the page scrolls past a long surface."
       SURFACE_RESIZE { width : number!  height : number! }
         @description "Canvas size in CSS pixels."
       SURFACE_TEXT { target : string!  text : string!  composing : boolean! }
@@ -293,11 +312,11 @@ orbital RasmSurfaceOrbital {
         @tier "presentation"
       width : number = 720
         @label "Width"
-        @description "Canvas width in px."
+        @description "Canvas width in px until the container reports its width."
         @tier "presentation"
       height : number = 520
         @label "Height"
-        @description "Canvas height in px."
+        @description "Canvas height in px until the root reports its content height (or, with fill on, the container its height)."
         @tier "presentation"
       rootChild : string = "root"
         @label "Root child"
@@ -305,19 +324,19 @@ orbital RasmSurfaceOrbital {
         @tier "presentation"
       rootRect : RasmRect = { x: 0, y: 0, w: 720, h: 520 }
         @label "Root rect"
-        @description "The rect handed to the root child; with fill on, its w and h are the declared size that align center centres."
+        @description "The rect handed to the root child until the canvas is sized: its w is the most the root takes (align center), its h the starting content height."
         @tier "presentation"
       fill : boolean = false
         @label "Fill"
-        @description "The canvas takes its container's size and the root rect follows it; off keeps the fixed width, height and rootRect."
+        @description "On, the canvas takes its container's whole box and the root fits inside it. Off (the default), the canvas takes its container's width and the root's content height, so the page scrolls past a long surface."
         @tier "presentation"
       margin : number = 0
         @label "Margin"
-        @description "With fill on, the gap in px kept on every side between the surface and the root rect."
+        @description "The gap in px kept on every side between the surface and the root rect."
         @tier "presentation"
       align : "stretch" | "center" = "stretch"
         @label "Align"
-        @description "With fill on, stretch gives the root the surface minus the margin; center gives it its declared rootRect size (capped to the surface minus the margin) centred."
+        @description "Stretch gives the root the surface width minus the margin; center gives it its rootRect width (capped to the surface minus the margin) centred, and with fill on its rootRect height centred too."
         @tier "presentation"
     }
   }

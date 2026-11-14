@@ -1,0 +1,289 @@
+app std-samply [
+  version: "1.0.0",
+  exec: ["samply"],
+  sys: [self-signal],
+  env: ["PATH", "HOME"],
+  fs: { env HOME: ".almadar/profile": [create], env HOME: ".almadar/profile/samply/": [create, read], env HOME: ".almadar/profile/samply/**": [read] },
+  description: "std-samply — samples where a process spends its CPU time with samply, through the composed std-cli, and answers its hottest functions. SAMPLY_START { key, pid, rateHz } attaches samply to a running process (os/spawn, its own child) and answers SAMPLY_STARTED; SAMPLY_STOP { key } sends it INT, the signal samply saves on (its --duration does not end an attached recording). SAMPLY_RECORD { key, argv, rateHz } instead runs a command under samply to its end, through std-cli. Either way it samples at rateHz a second, writing <key>.json and its symbol sidecar into the outputDir knob (a directory under HOME, created if missing), then reads both and answers SAMPLY_HOT { key, startTime, samples, cpuUs, functions, output }: output the recorded command's standard output (empty for an attached recording), startTime the recording's start in milliseconds since 1970, samples the weighted sample count over every thread, cpuUs the CPU microseconds those samples cover, and functions each function a sample was in, as { name, lib, selfSamples, totalSamples, selfCpuUs, totalCpuUs } (self: the sample was in the function itself; total: the function was anywhere on the sampled stack, counted once per sample), by self CPU time, highest first, so a thread waiting in the kernel ranks by the CPU it used, not by how often it was seen. A thread's first sample carries the CPU it used before the recording began (samply's delta starts from the thread's start when it attaches), so that sample's CPU is not counted. A frame the symbol sidecar names is reported by that name; one it does not name keeps samply's own label (its address in hex), never a guess. One recording at a time: a second start while one runs answers SAMPLY_FAILED { key, code: busy, error }; a stop with nothing attached answers code idle. A samply run that exits non-zero (on macOS, attaching to a running process needs `samply setup` once), a file that cannot be read or a profile that is not samply's format answers SAMPLY_FAILED { key, code, error }.  Subject-agnostic: it knows nothing of what the process is."
+]
+;; @capabilities "sample a process's CPU time with samply and rank its hottest functions"
+uses Spec from "almadar-std/samply"
+uses Cli from "std/behaviors/std-cli"
+
+type SamplyLib = { name : string!, codeId : string? }
+type SamplyMeta = { startTime : number!, interval : number! }
+type SamplySamples = { length : number!, stack : [number?]!, weight : [number]?, threadCPUDelta : [number?]? }
+type SamplyStackTable = { length : number!, prefix : [number?]!, frame : [number]! }
+type SamplyFrameTable = { length : number!, address : [number]!, func : [number]! }
+type SamplyFuncTable = { length : number!, name : [number]!, resource : [number]! }
+type SamplyResourceTable = { length : number!, lib : [number?]!, name : [number]! }
+type SamplyThread = { name : string!, samples : SamplySamples!, stackTable : SamplyStackTable!, frameTable : SamplyFrameTable!, funcTable : SamplyFuncTable!, resourceTable : SamplyResourceTable!, stringArray : [string]! }
+type SamplyProfile = { meta : SamplyMeta!, libs : [SamplyLib]!, threads : [SamplyThread]! }
+type SamplySymbol = { symbol : number! }
+type SamplySymLib = { code_id : string?, symbol_table : [SamplySymbol]!, known_addresses : [[number]]! }
+type SamplySyms = { string_table : [string]!, data : [SamplySymLib]! }
+type SamplyPaths = [[number]]
+type SamplyHit = { name : string!, lib : string!, weight : number!, cpuUs : number!, leaf : boolean! }
+type SamplyFunction = { name : string!, lib : string!, selfSamples : number!, totalSamples : number!, selfCpuUs : number!, totalCpuUs : number! }
+
+orbital SamplyOrbital {
+  entity SamplyRun [runtime] {
+    id : string!
+    running : boolean = false
+    key : string = ""
+    pid : number = 0
+    argv : [string] = []
+    rateHz : number = 1000
+    samplyPid : number = 0
+    dir : string = ""
+    profileText : string = ""
+    output : string = ""
+    symbols : Map string string = {}
+    hits : [SamplyHit] = []
+    byFunction : Map string SamplyFunction = {}
+  }
+
+  trait Samply -> SamplyRun {
+    config {
+      outputDir : string = ".almadar/profile/samply/"
+        @label "Where recordings are written"
+        @description "The directory, under the HOME directory and ending in /, samply writes each recording and its symbol sidecar into; created if missing."
+        @tier "policy"
+    }
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      SAMPLY_RECORD -> ready when @entity.running
+        (emit SAMPLY_FAILED { key: ?key, code: "busy", error: "a recording is already running" })
+      SAMPLY_RECORD -> ready when (not @entity.running)
+        (set @entity.running true)
+        (set @entity.key ?key)
+        (set @entity.pid 0)
+        (set @entity.argv ?argv)
+        (set @entity.rateHz ?rateHz)
+        (set @entity.output "")
+        (os/mkdir { anchor: { env: "HOME" }, path: @config.outputDir } true { emit: { success: SAMPLY_DIR_MADE, failure: SAMPLY_HOST_FAILED } })
+      SAMPLY_START -> ready when @entity.running
+        (emit SAMPLY_FAILED { key: ?key, code: "busy", error: "a recording is already running" })
+      SAMPLY_START -> ready when (not @entity.running)
+        (set @entity.running true)
+        (set @entity.key ?key)
+        (set @entity.pid ?pid)
+        (set @entity.argv [])
+        (set @entity.rateHz ?rateHz)
+        (set @entity.output "")
+        (os/mkdir { anchor: { env: "HOME" }, path: @config.outputDir } true { emit: { success: SAMPLY_DIR_MADE, failure: SAMPLY_HOST_FAILED } })
+      SAMPLY_DIR_MADE -> ready
+        (os/realpath { anchor: { env: "HOME" }, path: @config.outputDir } { emit: { success: SAMPLY_DIR_RESOLVED, failure: SAMPLY_HOST_FAILED } })
+      SAMPLY_DIR_RESOLVED -> ready when (= @entity.pid 0)
+        (set @entity.dir ?path)
+        (emit SAMPLY_RUN { stage: @entity.key, argv: (array/concat
+          ["record", "--save-only", "--unstable-presymbolicate", "-o", (str/concat ?path "/" @entity.key ".json"), "--rate", (str/concat @entity.rateHz), "--"]
+          @entity.argv) })
+      SAMPLY_DIR_RESOLVED -> ready when (> @entity.pid 0)
+        (set @entity.dir ?path)
+        (os/spawn "samply" ["record", "--save-only", "--unstable-presymbolicate", "-o", (str/concat ?path "/" @entity.key ".json"), "--rate", (str/concat @entity.rateHz), "--pid", (str/concat @entity.pid)]
+          { cwd: null, env: { PATH: null, HOME: null }, stdin: "null", stdout: "null", stderr: "null", detached: false } { emit: { success: SAMPLY_SPAWNED, failure: SAMPLY_HOST_FAILED } })
+      SAMPLY_SPAWNED -> ready
+        (set @entity.samplyPid ?pid)
+        (emit SAMPLY_STARTED { key: @entity.key })
+        (os/wait ?pid { key: "samply-attached", emit: { success: SAMPLY_ATTACH_ENDED, failure: SAMPLY_HOST_FAILED } })
+      SAMPLY_STOP -> ready when (and @entity.running (> @entity.samplyPid 0))
+        (os/kill @entity.samplyPid "INT" { emit: { success: SAMPLY_SIGNALLED, failure: SAMPLY_HOST_FAILED } })
+      SAMPLY_STOP -> ready when (not (and @entity.running (> @entity.samplyPid 0)))
+        (emit SAMPLY_FAILED { key: ?key, code: "idle", error: "no attached recording is running" })
+      SAMPLY_SIGNALLED -> ready
+      SAMPLY_ATTACH_ENDED -> ready
+        (set @entity.samplyPid 0)
+        (os/read-file { anchor: { env: "HOME" }, path: (str/concat @config.outputDir @entity.key ".json") } { emit: { success: SAMPLY_PROFILE_READ, failure: SAMPLY_HOST_FAILED } })
+      SAMPLY_DONE -> ready when (!= ?exitCode 0)
+        (set @entity.running false)
+        (emit SAMPLY_FAILED { key: @entity.key, code: "samply_exit", error: (str/concat "samply exited with code " ?exitCode ": " ?stderr) })
+      SAMPLY_DONE -> ready when (= ?exitCode 0)
+        (set @entity.output ?stdout)
+        (os/read-file { anchor: { env: "HOME" }, path: (str/concat @config.outputDir @entity.key ".json") } { emit: { success: SAMPLY_PROFILE_READ, failure: SAMPLY_HOST_FAILED } })
+      SAMPLY_PROFILE_READ -> ready
+        (set @entity.profileText (default (bytes/to-string ?data) ""))
+        (os/read-file { anchor: { env: "HOME" }, path: (str/concat @config.outputDir @entity.key ".syms.json") } { emit: { success: SAMPLY_SYMS_READ, failure: SAMPLY_HOST_FAILED } })
+      SAMPLY_SYMS_READ -> ready when (or (== (json/parse @entity.profileText SamplyProfile) null) (== (json/parse (default (bytes/to-string ?data) "") SamplySyms) null))
+        (set @entity.running false)
+        (set @entity.profileText "")
+        (emit SAMPLY_FAILED { key: @entity.key, code: "unreadable", error: "the recording or its symbol sidecar is not samply's format" })
+      SAMPLY_SYMS_READ -> ready when (and (!= (json/parse @entity.profileText SamplyProfile) null) (!= (json/parse (default (bytes/to-string ?data) "") SamplySyms) null))
+        (let ((profile : SamplyProfile (json/parse @entity.profileText SamplyProfile))
+              (syms : SamplySyms (json/parse (default (bytes/to-string ?data) "") SamplySyms)))
+          (do
+            (set @entity.symbols {})
+            (set @entity.symbols (array/reduce @syms.data @entity.symbols (fn acc lib
+                    (array/reduce @lib.known_addresses @acc (fn inner pair
+                      (object/set @inner
+                        (str/concat (default @lib.code_id "") ":" (default (array/nth @pair 0) 0))
+                        (default (array/nth @syms.string_table (object/get (default (array/nth @lib.symbol_table (default (array/nth @pair 1) 0)) (as { symbol: 0 } SamplySymbol)) "symbol")) "")))))))
+            (set @entity.hits (array/flatten (array/map @profile.threads (fn t
+                      (let ((libOf : [number] (array/map (array/range 0 @t.frameTable.length) (fn i
+                              (default (array/nth @t.resourceTable.lib (default (array/nth @t.funcTable.resource (default (array/nth @t.frameTable.func @i) 0)) 0)) -1)))))
+                        (let ((names : [string] (array/map (array/range 0 @t.frameTable.length) (fn i
+                                (default
+                                  (object/get @entity.symbols (str/concat (if (< (default (array/nth @libOf @i) -1) 0) "" (default (object/get (default (array/nth @profile.libs (default (array/nth @libOf @i) 0)) (as { name: "", codeId: "" } SamplyLib)) "codeId") "")) ":" (default (array/nth @t.frameTable.address @i) 0)))
+                                  (default (array/nth @t.stringArray (default (array/nth @t.funcTable.name (default (array/nth @t.frameTable.func @i) 0)) 0)) "")))))
+                              (libs : [string] (array/map @libOf (fn libIndex (if (< @libIndex 0) "" (object/get (default (array/nth @profile.libs @libIndex) (as { name: "", codeId: "" } SamplyLib)) "name")))))
+                              (paths : SamplyPaths (array/reduce (array/range 0 @t.stackTable.length) [] (fn acc s
+                                (let ((prefix (array/nth @t.stackTable.prefix @s)) (frame (default (array/nth @t.stackTable.frame @s) 0)))
+                                  (array/append @acc (if (== @prefix null) [@frame] (array/append (default (array/nth @acc @prefix) []) @frame))))))))
+                          (array/flatten (array/map (array/range 0 @t.samples.length) (fn i
+                            (if (== (array/nth @t.samples.stack @i) null) []
+                              (let ((path (default (array/nth @paths (default (array/nth @t.samples.stack @i) 0)) []))
+                                    (weight (default (array/nth (default @t.samples.weight []) @i) 1))
+                                    (cpu (if (= @i 0) 0 (default (array/nth (default @t.samples.threadCPUDelta []) @i) 0))))
+                                (let ((leaf (default (array/last @path) 0)))
+                                  (array/map (array/unique (array/map @path (fn f { name: (default (array/nth @names @f) ""), lib: (default (array/nth @libs @f) "") })))
+                                    (fn at (as { name: @at.name, lib: @at.lib, weight: @weight, cpuUs: @cpu,
+                                             leaf: (and (= @at.name (default (array/nth @names @leaf) "")) (= @at.lib (default (array/nth @libs @leaf) ""))) } SamplyHit)))))))))))))))
+            (set @entity.byFunction {})
+            (set @entity.byFunction (array/reduce @entity.hits @entity.byFunction (fn acc h
+                        (let ((key (str/concat @h.lib " " @h.name)))
+                          (let ((was (object/get @acc @key)))
+                            (object/set @acc @key (as {
+                              name: @h.name, lib: @h.lib,
+                              selfSamples: (+ (if (== @was null) 0 @was.selfSamples) (if @h.leaf @h.weight 0)),
+                              totalSamples: (+ (if (== @was null) 0 @was.totalSamples) @h.weight),
+                              selfCpuUs: (+ (if (== @was null) 0 @was.selfCpuUs) (if @h.leaf @h.cpuUs 0)),
+                              totalCpuUs: (+ (if (== @was null) 0 @was.totalCpuUs) @h.cpuUs) } SamplyFunction)))))))
+            (set @entity.running false)
+            (set @entity.profileText "")
+            (emit SAMPLY_HOT {
+              key: @entity.key,
+              output: @entity.output,
+              startTime: @profile.meta.startTime,
+              samples: (array/reduce (array/filter @entity.hits (fn h @h.leaf)) 0 (fn acc h (+ @acc @h.weight))),
+              cpuUs: (array/reduce (array/filter @entity.hits (fn h @h.leaf)) 0 (fn acc h (+ @acc @h.cpuUs))),
+              functions: (array/sort (object/values @entity.byFunction) "selfCpuUs" "desc")
+            })
+            (set @entity.hits [])
+            (set @entity.symbols {})
+            (set @entity.byFunction {})))
+      SAMPLY_FAILED_RUN -> ready
+        (set @entity.running false)
+        (emit SAMPLY_FAILED { key: @entity.key, code: ?code, error: ?error })
+      SAMPLY_HOST_FAILED -> ready
+        (set @entity.running false)
+        (set @entity.profileText "")
+        (emit SAMPLY_FAILED { key: @entity.key, code: (default ?kind "io"), error: ?error })
+    }
+
+    emits {
+      SAMPLY_HOT -> external {
+        key : string!
+        startTime : number!
+        samples : number!
+        cpuUs : number!
+        functions : [SamplyFunction]!
+        output : string!
+      }
+        @description "A recording's hottest functions, and the recorded command's own standard output (empty for an attached recording): self and total samples and CPU microseconds per function, by self samples."
+        @tier "domain"
+      SAMPLY_FAILED -> external {
+        key : string!
+        code : string!
+        error : string!
+      }
+        @description "The recording could not be taken or read: busy, samply_exit, unreadable, the std-cli failure code or the host's failure kind."
+        @tier "domain"
+      SAMPLY_RUN -> external {
+        stage : string!
+        argv : [string]!
+      }
+        @description "The samply run, handed to std-cli."
+        @tier "internal"
+      SAMPLY_STARTED -> external {
+        key : string!
+      }
+        @description "An attached recording is running; SAMPLY_STOP ends it."
+        @tier "domain"
+    }
+
+    listens {
+      SAMPLY_RECORD -> input {
+        key : string!
+        argv : [string]!
+        rateHz : number!
+      }
+        @description "Sample a command samply starts (argv) to its end, and rank its hottest functions."
+        @synonyms "profile a command"
+      SAMPLY_START -> input {
+        key : string!
+        pid : number!
+        rateHz : number!
+      }
+        @description "Start sampling a running process; SAMPLY_STOP ends the recording and ranks its hottest functions."
+        @synonyms "cpu profile, where does the time go, hot functions, sample the process"
+      SamplyRunner.CLI_DONE -> SAMPLY_DONE
+      SamplyRunner.CLI_FAILED -> SAMPLY_FAILED_RUN
+      SAMPLY_DONE {
+        stage : string!
+        exitCode : number!
+        signal : number!
+        stdout : string!
+        stdoutBytes : bytes!
+        stderr : string!
+      }
+        @description "std-cli's answer for the samply run."
+      SAMPLY_FAILED_RUN {
+        stage : string!
+        error : string!
+        code : string!
+      }
+        @description "std-cli's failure for the samply run."
+      SAMPLY_STOP -> input {
+        key : string!
+      }
+        @description "End the attached recording."
+      SAMPLY_SPAWNED {
+        pid : number!
+      }
+        @description "os/spawn's success: samply's own pid."
+      SAMPLY_SIGNALLED {
+      }
+        @description "os/kill's success."
+      SAMPLY_ATTACH_ENDED {
+        key : string
+        code : number?
+        signal : number?
+      }
+        @description "The attached samply ended and saved its recording."
+      SAMPLY_DIR_MADE {
+      }
+        @description "os/mkdir's success."
+      SAMPLY_DIR_RESOLVED {
+        path : string!
+      }
+        @description "os/realpath's success."
+      SAMPLY_PROFILE_READ {
+        data : bytes!
+      }
+        @description "The recording, read."
+      SAMPLY_SYMS_READ {
+        data : bytes!
+      }
+        @description "The symbol sidecar, read."
+      SAMPLY_HOST_FAILED {
+        error : string!
+        kind : string
+      }
+        @description "A host ask failed."
+    }
+  }
+
+  trait SamplyRunner = Cli.traits.CliRunner {
+    config {
+      commands: ["samply"]
+      passEnv: ["PATH", "HOME"]
+    }
+    listens {
+      Samply.SAMPLY_RUN -> CLI_RUN
+    }
+  }
+
+  page boot as SamplyStart -> Samply, SamplyRunner
+}

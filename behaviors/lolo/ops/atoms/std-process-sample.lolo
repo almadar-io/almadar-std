@@ -1,0 +1,89 @@
+app std-process-sample [
+  version: "1.0.0",
+  sys: [processes],
+  description: "std-process-sample — one reading of named processes, through os/process-list. PROCESS_SAMPLE { key, pids } asks for the processes whose ids are listed and answers PROCESS_SAMPLED { key, at, processes, missing, unmeasured }: each listed process the host measures as { pid, rssBytes, cpuSeconds, startedAt } (resident memory in bytes, CPU seconds used since it started, its start time in seconds since 1970), in the order the pids were asked; missing names each pid the host lists no process for (it ended, or never ran), and unmeasured each one it lists without memory, CPU time or start time (a process of another user), never read as zero; at is the reading's time in seconds since 1970. Several readings may be in flight, each under its own key; a key already in flight answers PROCESS_SAMPLE_FAILED { key, code: busy, error } and asks nothing. A refused or failed list answers PROCESS_SAMPLE_FAILED { key, code, error } with the host's failure kind as code. Subject-agnostic: it knows nothing of what the pids are."
+]
+;; @capabilities "read the memory, CPU time and start time of named processes"
+uses Spec from "almadar-std/process-sample"
+
+type ProcessListed = { pid : number!, ppid : number!, name : string!, command : string!, args : [string]!, user : string!, own : boolean!, rssBytes : number?, cpuSeconds : number?, startedAt : number? }
+type ProcessMeasured = { pid : number!, rssBytes : number!, cpuSeconds : number!, startedAt : number! }
+
+orbital ProcessSampleOrbital {
+  entity ProcessSampleRun [runtime] {
+    id : string!
+    pending : Map string [number] = {}
+  }
+
+  trait ProcessSample -> ProcessSampleRun {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      PROCESS_SAMPLE -> ready when (object/has @entity.pending ?key)
+        (emit PROCESS_SAMPLE_FAILED { key: ?key, code: "busy", error: (str/concat "a reading under key " ?key " is already in flight") })
+      PROCESS_SAMPLE -> ready when (not (object/has @entity.pending ?key))
+        (set @entity.pending (object/set @entity.pending ?key ?pids))
+        (os/process-list { key: ?key, emit: { success: PROCESS_LISTED, failure: PROCESS_LIST_FAILED } })
+      PROCESS_LISTED -> ready
+        (let ((pids : [number] (default (object/get @entity.pending ?key) [])) (rows : [ProcessListed] ?processes))
+          (let ((found (array/map @pids (fn pid (array/find @rows (fn r (= @r.pid @pid)))))))
+            (do
+              (set @entity.pending (object/omit @entity.pending [?key]))
+              (emit PROCESS_SAMPLED {
+                key: ?key,
+                at: (/ (time/epoch-ms @now) 1000),
+                processes: (array/flatten (array/map @found (fn r
+                  (if (or (== @r null) (== @r.rssBytes null) (== @r.cpuSeconds null) (== @r.startedAt null)) []
+                    [(as { pid: @r.pid, rssBytes: (default @r.rssBytes 0), cpuSeconds: (default @r.cpuSeconds 0), startedAt: (default @r.startedAt 0) } ProcessMeasured)])))),
+                missing: (array/filter @pids (fn pid (== (array/find @rows (fn r (= @r.pid @pid))) null))),
+                unmeasured: (array/filter @pids (fn pid (let ((r (array/find @rows (fn x (= @x.pid @pid)))))
+                  (and (!= @r null) (or (== @r.rssBytes null) (== @r.cpuSeconds null) (== @r.startedAt null))))))
+              }))))
+      PROCESS_LIST_FAILED -> ready
+        (set @entity.pending (object/omit @entity.pending [?key]))
+        (emit PROCESS_SAMPLE_FAILED { key: ?key, code: (default ?kind "io"), error: ?error })
+    }
+
+    emits {
+      PROCESS_SAMPLED -> external {
+        key : string!
+        at : number!
+        processes : [ProcessMeasured]!
+        missing : [number]!
+        unmeasured : [number]!
+      }
+        @description "One reading: each asked process the host measures, the pids it lists no process for, and the pids it lists but will not measure."
+        @tier "domain"
+      PROCESS_SAMPLE_FAILED -> external {
+        key : string!
+        code : string!
+        error : string!
+      }
+        @description "The reading could not be taken: busy for a key already in flight, else the host's failure kind (denied, unsupported, io)."
+        @tier "domain"
+    }
+
+    listens {
+      PROCESS_SAMPLE -> input {
+        key : string!
+        pids : [number]!
+      }
+        @description "Read the memory, CPU time and start time of the listed processes."
+        @synonyms "process memory, process cpu, rss of a pid"
+      PROCESS_LISTED {
+        key : string!
+        processes : [ProcessListed]!
+      }
+        @description "Internal: os/process-list's success."
+      PROCESS_LIST_FAILED {
+        key : string!
+        error : string!
+        kind : string
+      }
+        @description "Internal: os/process-list's failure."
+    }
+  }
+
+  page boot as ProcessSamplePage -> ProcessSample
+}

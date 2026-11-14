@@ -1,0 +1,139 @@
+app std-page-trace [
+  version: "1.0.0",
+  description: "std-page-trace — follows the asking session's running page through the kernel's trace (EXEC-DIST-14). PAGE_TRACE_OPEN { key } reads the mounted orbital (program/self { mounted: true }), answers PAGE_TRACE_READY { key, tree } with it, and opens one trace subscription for the traits that step in the browser and one for those that step on the server (a trace of both sites together is refused), each under its own key (<key>-browser, <key>-server) and leaving out the observer traits, so the tracer never traces its own work. Each dispatch that moved a traced trait arrives as PAGE_TRACED { key, dispatch }, in dispatch order. The cost knob asks each subscription for cost (EXEC-COST-1): each outcome and authored effect of a traced dispatch then carries cost { startNs, ns, allocs, allocBytes }. PAGE_TRACE_CLOSE cancels both subscriptions; PAGE_TRACE_OPEN while one is open re-reads the page under the new key. A page that cannot be read, or a subscription the host refuses, answers PAGE_TRACE_FAILED { key, error } and closes. Subject-agnostic: it knows nothing of the page it follows."
+]
+;; @capabilities "follow the running page's dispatches, with their cost when asked"
+uses Spec from "almadar-std/page-trace"
+
+type PageTraceStepCost = { startNs : number!, ns : number!, allocs : number!, allocBytes : number! }
+type PageTraceEffect = { effect : SExpr?, status : string!, error : string?, cost : PageTraceStepCost? }
+type PageTraceOutcome = { trait : string!, from : string!, to : string!, event : string?, executed : boolean!, effects : [PageTraceEffect]?, cost : PageTraceStepCost? }
+type PageTraceDispatch = { seq : number!, outcomes : [PageTraceOutcome]! }
+type PageMountedState = { name : string!, isInitial : boolean!, isTerminal : boolean! }
+type PageMountedTransition = { index : number!, from : [string]!, to : string!, event : string!, guarded : boolean!, emits : [string]! }
+type PageMountedListen = { event : string!, triggers : string? }
+type PageMountedInstance = { entityId : string!, state : string! }
+type PageMountedTrait = { trait : string!, orbital : string?, parent : string?, depth : number!, embeddedIn : [string]!, renders : boolean!, linked : boolean!, observer : boolean!, stepsIn : string!, linkedEntity : string?, instances : [PageMountedInstance]!, states : [PageMountedState]!, transitions : [PageMountedTransition]!, emits : [string]!, listens : [PageMountedListen]! }
+type PageMountedWire = { from : string!, to : string!, event : string!, triggers : string? }
+type PageMountedOrbital = { page : string!, traits : [PageMountedTrait]!, wires : [PageMountedWire]! }
+
+orbital PageTraceOrbital {
+  entity PageTraceRun [runtime] {
+    id : string!
+    key : string = ""
+    browser : [string] = []
+    server : [string] = []
+  }
+
+  ;; one trace subscription per site: a trace of browser and server traits together is refused (EXEC-DIST-14)
+  trait PageTrace -> PageTraceRun [client] {
+    config {
+      cost : boolean = false
+        @label "Measure each traced dispatch"
+        @description "Ask each subscription for cost (EXEC-COST-1): every outcome and authored effect then carries its time and allocations."
+        @tier "policy"
+    }
+    initial: closed
+
+    state closed {
+      INIT -> closed
+      PAGE_TRACE_OPEN -> reading
+        (set @entity.key ?key)
+        (program/self { mounted: true, emit: { success: PAGE_MOUNTED, failure: PAGE_MOUNT_FAILED } })
+      PAGE_TRACE_CLOSE -> closed
+    }
+
+    state reading {
+      INIT -> closed
+      PAGE_MOUNTED -> live
+        (set @entity.browser (array/map (array/filter ?result.traits (fn t (and (== @t.stepsIn "browser") (not @t.observer)))) (fn t @t.trait)))
+        (set @entity.server (array/map (array/filter ?result.traits (fn t (and (== @t.stepsIn "server") (not @t.observer)))) (fn t @t.trait)))
+        (if (> (array/len @entity.browser) 0) (program/live { kind: "trace", traits: @entity.browser, cost: @config.cost } { key: (str/concat @entity.key "-browser"), emit: { onMessage: PAGE_TRACE_ITEM, failure: PAGE_TRACE_STREAM_FAILED } }) null)
+        (if (> (array/len @entity.server) 0) (program/live { kind: "trace", traits: @entity.server, cost: @config.cost } { key: (str/concat @entity.key "-server"), emit: { onMessage: PAGE_TRACE_ITEM, failure: PAGE_TRACE_STREAM_FAILED } }) null)
+        (emit PAGE_TRACE_READY { key: @entity.key, tree: ?result })
+      PAGE_MOUNT_FAILED -> closed
+        (emit PAGE_TRACE_FAILED { key: @entity.key, error: ?error })
+      PAGE_TRACE_OPEN -> reading
+        (set @entity.key ?key)
+        (program/self { mounted: true, emit: { success: PAGE_MOUNTED, failure: PAGE_MOUNT_FAILED } })
+      PAGE_TRACE_CLOSE -> closed
+    }
+
+    state live {
+      INIT -> closed
+      PAGE_TRACE_ITEM -> live
+        (emit PAGE_TRACED { key: @entity.key, dispatch: ?dispatch })
+      PAGE_TRACE_STREAM_FAILED -> closed
+        (if (> (array/len @entity.browser) 0) (cancel-call (str/concat @entity.key "-browser")) null)
+        (if (> (array/len @entity.server) 0) (cancel-call (str/concat @entity.key "-server")) null)
+        (emit PAGE_TRACE_FAILED { key: @entity.key, error: ?error })
+      PAGE_TRACE_CLOSE -> closed
+        (if (> (array/len @entity.browser) 0) (cancel-call (str/concat @entity.key "-browser")) null)
+        (if (> (array/len @entity.server) 0) (cancel-call (str/concat @entity.key "-server")) null)
+      PAGE_TRACE_OPEN -> reading
+        (if (> (array/len @entity.browser) 0) (cancel-call (str/concat @entity.key "-browser")) null)
+        (if (> (array/len @entity.server) 0) (cancel-call (str/concat @entity.key "-server")) null)
+        (set @entity.key ?key)
+        (program/self { mounted: true, emit: { success: PAGE_MOUNTED, failure: PAGE_MOUNT_FAILED } })
+    }
+
+    emits {
+      PAGE_TRACE_READY -> external {
+        key : string!
+        tree : PageMountedOrbital!
+      }
+        @description "The page now followed, as the kernel mounted it."
+        @tier "domain"
+      PAGE_TRACED -> external {
+        key : string!
+        dispatch : PageTraceDispatch!
+      }
+        @description "One dispatch of the followed page, with each traced trait's move and, when asked, its cost."
+        @tier "domain"
+      PAGE_TRACE_FAILED -> external {
+        key : string!
+        error : string!
+      }
+        @description "The page could not be read or a subscription was refused; the trace is closed."
+        @tier "domain"
+      PAGE_MOUNTED -> internal {
+        result : PageMountedOrbital!
+      }
+        @tier "internal"
+      PAGE_MOUNT_FAILED -> internal {
+        error : string!
+      }
+        @tier "internal"
+    }
+
+    listens {
+      PAGE_TRACE_OPEN -> input {
+        key : string!
+      }
+        @description "Follow the running page: read its mounted orbital, then trace every trait in it."
+        @synonyms "trace the page, follow the page, watch the dispatches"
+      PAGE_TRACE_CLOSE -> input {
+      }
+        @description "Stop following the page: close its trace subscriptions."
+      PAGE_MOUNTED {
+        result : PageMountedOrbital!
+      }
+        @tier "internal"
+      PAGE_MOUNT_FAILED {
+        error : string!
+      }
+        @tier "internal"
+      PAGE_TRACE_ITEM {
+        dispatch : PageTraceDispatch!
+      }
+        @description "One dispatch the kernel traced."
+        @tier "internal"
+      PAGE_TRACE_STREAM_FAILED {
+        error : string!
+      }
+        @tier "internal"
+    }
+  }
+
+  page boot as PageTraceStart -> PageTrace
+}

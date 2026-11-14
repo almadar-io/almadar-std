@@ -39,13 +39,14 @@ const PROVE_FINDING = shape({ verdict: union(lit('violated'), lit('unproved')), 
 
 const EVAL_STEP = shape({ kind: union(lit('enter'), lit('exit'), lit('iter'), lit('skip')), path: list(union(NUMBER, STRING)), value: SEXPR, error: STRING }, ['value', 'error']);
 // `nested` holds played effects of this same shape; operator types cannot recurse, so its items are SEXPR.
-const PLAYED_EFFECT = shape({ type: STRING, args: list(SEXPR), status: union(lit('executed'), lit('failed'), lit('skipped')), error: STRING, code: union(lit('not-found'), lit('no-row-key'), lit('duplicate-id'), lit('denied'), lit('derived-failed')), routed: BOOLEAN, nested: list(SEXPR) }, ['error', 'code', 'nested']);
+const STEP_COST = shape({ startNs: NUMBER, ns: NUMBER, allocs: NUMBER, allocBytes: NUMBER });
+const PLAYED_EFFECT = shape({ type: STRING, args: list(SEXPR), status: union(lit('executed'), lit('failed'), lit('skipped')), error: STRING, code: union(lit('not-found'), lit('no-row-key'), lit('duplicate-id'), lit('denied'), lit('derived-failed')), routed: BOOLEAN, nested: list(SEXPR), cost: STEP_COST }, ['error', 'code', 'nested', 'cost']);
 const PLAYED_EMIT = shape({ type: STRING, payload: mapOf(STRING, SEXPR), timestamp: NUMBER }, ['payload']);
 const PLAYED_GUARD = shape({ arm: NUMBER, guard: SEXPR, passed: BOOLEAN, trace: list(EVAL_STEP), error: STRING }, ['error']);
 const PROPOSITION_BINDINGS = shape({ entity: SEXPR, fromEntity: SEXPR, payload: SEXPR });
 const PLAYED_ENSURES = shape({ proposition: SEXPR, verdict: union(lit('held'), lit('broken'), lit('inconclusive')), reason: STRING, counterexample: PROPOSITION_BINDINGS }, ['reason', 'counterexample']);
 const PENDING_ASK = shape({ trait: STRING, operator: STRING, args: list(SEXPR), key: STRING });
-const PLAYED_OUTCOME = shape({ orbital: STRING, trait: STRING, event: STRING, from: STRING, to: STRING, arm: NUMBER, fired: BOOLEAN, effects: list(PLAYED_EFFECT), emitted: list(PLAYED_EMIT) }, ['arm']);
+const PLAYED_OUTCOME = shape({ orbital: STRING, trait: STRING, event: STRING, from: STRING, to: STRING, arm: NUMBER, fired: BOOLEAN, effects: list(PLAYED_EFFECT), emitted: list(PLAYED_EMIT), cost: STEP_COST }, ['arm', 'cost']);
 const PLAYED_STEP = openShape({
   orbital: STRING, trait: STRING, from: STRING, event: STRING, payload: mapOf(STRING, SEXPR),
   result: openShape({ trait: STRING, event: STRING, transitionFired: BOOLEAN, effects: list(PLAYED_EFFECT), emitted: list(PLAYED_EMIT), guards: list(PLAYED_GUARD), ensures: list(PLAYED_ENSURES), pendingAsks: list(PENDING_ASK), outcomes: list(PLAYED_OUTCOME) }),
@@ -54,8 +55,8 @@ const STEP_EMIT = shape({ event: STRING, payload: nullable(mapOf(STRING, SEXPR))
 const STEP_GUARD = shape({ arm: NUMBER, guard: SEXPR, passed: BOOLEAN, error: STRING }, ['error']);
 const STEP_OUTCOME = shape({
   trait: STRING, executed: BOOLEAN, previousState: STRING, newState: STRING, emits: list(STEP_EMIT), firedArm: nullable(NUMBER),
-  guards: list(STEP_GUARD), effects: list(PLAYED_EFFECT), failure: nullable(STRING), orbital: STRING, event: STRING, ensures: list(PLAYED_ENSURES),
-});
+  guards: list(STEP_GUARD), effects: list(PLAYED_EFFECT), failure: nullable(STRING), orbital: STRING, event: STRING, ensures: list(PLAYED_ENSURES), cost: STEP_COST,
+}, ['cost']);
 const RAW_STEP_REPORT = shape({
   success: BOOLEAN,
   steps: list(openShape({ outcomes: list(STEP_OUTCOME), states: mapOf(STRING, STRING), pendingAsks: list(PENDING_ASK) })),
@@ -194,8 +195,8 @@ export const PROGRAM_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'requests', type: { kind: 'array', of: { kind: 'object', fields: { orbital: 'string', trait: 'string', from: 'string', event: 'string' }, open: true } }, description: 'The transitions to play: `{ orbital, trait, from, event, payload, entity?, config?, identity?, now?, settleMs?, credentials?, answers? }` each. `answers` (replay only) is a list of `{ operator, ok }` or `{ operator, error: { kind, message } }`, the host\'s plain answers to the os asks and client host asks (any `runsOn: client` op, such as `audio/clock`) the request\'s cascade makes: an ask takes the first unused answer naming its operator and the kernel unwraps, mints and routes it as it does live (a deferring op\'s answer arrives as its completion once the dispatch ends; a client host ask\'s answer fires the ask\'s declared success route with the ok fields and `key`, or its failure route with `{ error, kind, key }`, as a browser host returns it); an answer no ask takes refuses the request' },
       {
         name: 'options',
-        type: openShape({ key: STRING, render: BOOLEAN, renderProps: BOOLEAN, live: BOOLEAN, report: lit('raw'), emit: openShape({ success: EVENT_KEY, failure: EVENT_KEY, cancelled: EVENT_KEY }) }),
-        description: 'Emit configuration ({ emit: { success, failure } }); `render: true` adds each result\'s `rendered` slot facts; `renderProps: true` (with `render: true`) adds each slot\'s resolved `props`; `live: true` runs the requests on the native host; `report: "raw"` answers the kernel\'s cascade report unshaped, exactly what `orb execute --steps` prints, and each request needs only `trait` and `event` (it dispatches from the held state)',
+        type: openShape({ key: STRING, render: BOOLEAN, renderProps: BOOLEAN, live: BOOLEAN, cost: BOOLEAN, report: lit('raw'), emit: openShape({ success: EVENT_KEY, failure: EVENT_KEY, cancelled: EVENT_KEY }) }),
+        description: 'Emit configuration ({ emit: { success, failure } }); `render: true` adds each result\'s `rendered` slot facts; `renderProps: true` (with `render: true`) adds each slot\'s resolved `props`; `live: true` runs the requests on the native host; `cost: true` adds each outcome\'s and each effect\'s `cost { startNs, ns, allocs, allocBytes }` (EXEC-COST-1); `report: "raw"` answers the kernel\'s cascade report unshaped, exactly what `orb execute --steps` prints, and each request needs only `trait` and `event` (it dispatches from the held state)',
         optional: true,
       },
     ],
@@ -204,7 +205,7 @@ export const PROGRAM_OPERATORS: Record<string, StdOperatorMeta> = {
   'program/inputs': {
     module: 'program', category: 'std-program',
     minArity: 0, maxArity: 2,
-    description: 'Reflect the running program\'s declared external inputs, the events an outside client may send: `inputs` lists each with its orbital, trait, event, qualified `address`, description, declared `payloadSchema` and the JSON Schema of that payload (`parameters`), so a tool-calling model can be offered them as tools; `entities` lists the persisted entities `persist/read-named` accepts. An optional `{ select: [{ event, payload? }] }` also answers `selected`: the inputs those addresses (`EVENT`, `Trait.EVENT` or `Orbital.Trait.EVENT`, resolved from the calling trait) name, in order, each with the stated `payload` in place of its own; an address that is not a declared external input fails the call. Success carries `{ result: { inputs, entities, selected }, text }`. Nothing is filtered by caller: `program/dispatch` decides at dispatch. The same options can also ask for runtime reads, each answered only when asked: `{ state: orbital }` adds `state: { orbital, traits: [{ trait, entityId, state, entity }] }` (every running instance of that orbital\'s traits, with its entity; an orbital that is not registered fails the call), `{ stats: true }` adds `stats: { registeredSchemas, registeredTraits, activeInstances, cachedEntities }` (the kernel\'s counters), and `{ trace: n }` adds `trace`, the host\'s last `n` traced dispatch steps, oldest first (asked of the host, which keeps the trace; empty while tracing is off). With `{ guest: id }` (a session `program/open` answered) every question is asked of that guest session\'s program instead of the running one.',
+    description: 'Reflect the running program\'s declared external inputs, the events an outside client may send: `inputs` lists each with its orbital, trait, event, qualified `address`, description, declared `payloadSchema` and the JSON Schema of that payload (`parameters`), so a tool-calling model can be offered them as tools; `entities` lists the persisted entities `persist/read-named` accepts. An optional `{ select: [{ event, payload? }] }` also answers `selected`: the inputs those addresses (`EVENT`, `Trait.EVENT` or `Orbital.Trait.EVENT`, resolved from the calling trait) name, in order, each with the stated `payload` in place of its own; an address that is not a declared external input fails the call. Success carries `{ result: { inputs, entities, selected }, text }`. Nothing is filtered by caller: `program/dispatch` decides at dispatch. The same options can also ask for runtime reads, each answered only when asked: `{ state: orbital }` adds `state: { orbital, traits: [{ trait, entityId, state, entity }] }` (every running instance of that orbital\'s traits, with its entity; an orbital that is not registered fails the call), `{ stats: true }` adds `stats: { registeredSchemas, registeredTraits, activeInstances, cachedEntities, heldBytes: { rows, frames, guests, arenas } }` (the kernel\'s counters, and the bytes of value data each table holds, EXEC-COST-2), and `{ trace: n }` adds `trace`, the host\'s last `n` traced dispatch steps, oldest first (asked of the host, which keeps the trace; empty while tracing is off). With `{ guest: id }` (a session `program/open` answered) every question is asked of that guest session\'s program instead of the running one.',
     hasSideEffects: true,
     runsOn: 'server',
     host: 'program',
@@ -213,7 +214,7 @@ export const PROGRAM_OPERATORS: Record<string, StdOperatorMeta> = {
       entities: list(STRING),
       selected: list(openShape({ orbital: STRING, trait: STRING, event: STRING, address: STRING, payloadSchema: list(openShape({ name: STRING, type: STRING })), parameters: openShape({ type: STRING }) })),
       state: openShape({ orbital: STRING, traits: list(openShape({ trait: STRING, entityId: STRING, state: STRING })) }),
-      stats: shape({ registeredSchemas: NUMBER, registeredTraits: NUMBER, activeInstances: NUMBER, cachedEntities: NUMBER }),
+      stats: shape({ registeredSchemas: NUMBER, registeredTraits: NUMBER, activeInstances: NUMBER, cachedEntities: NUMBER, heldBytes: shape({ rows: NUMBER, frames: NUMBER, guests: NUMBER, arenas: NUMBER }) }),
       trace: list(openShape({ seq: NUMBER, seed: STRING })),
     }),
     params: [
@@ -234,7 +235,7 @@ export const PROGRAM_OPERATORS: Record<string, StdOperatorMeta> = {
       states: mapOf(STRING, STRING),
       rendered: list(shape({ slot: STRING, trait: STRING, orbital: nullable(STRING), embedded: BOOLEAN, content: SEXPR })),
       emitted: list(openShape({ event: STRING })),
-      outcomes: list(shape({ trait: STRING, event: nullable(STRING), from: STRING, to: STRING, fired: BOOLEAN })),
+      outcomes: list(shape({ trait: STRING, event: nullable(STRING), from: STRING, to: STRING, fired: BOOLEAN, cost: STEP_COST }, ['cost'])),
       access: openShape({ verdict: STRING, signIn: STRING, returnTo: STRING, viewer: STRING }),
       rejections: list(openShape({ code: STRING })),
       hostAsks: list(GUEST_HOST_ASK),
@@ -258,7 +259,7 @@ export const PROGRAM_OPERATORS: Record<string, StdOperatorMeta> = {
       states: mapOf(STRING, STRING),
       rendered: list(shape({ slot: STRING, trait: STRING, orbital: nullable(STRING), embedded: BOOLEAN, content: SEXPR })),
       emitted: list(openShape({ event: STRING })),
-      outcomes: list(shape({ trait: STRING, event: nullable(STRING), from: STRING, to: STRING, fired: BOOLEAN })),
+      outcomes: list(shape({ trait: STRING, event: nullable(STRING), from: STRING, to: STRING, fired: BOOLEAN, cost: STEP_COST }, ['cost'])),
       access: openShape({ verdict: STRING, signIn: STRING, returnTo: STRING, viewer: STRING }),
       rejections: list(openShape({ code: STRING })),
       hostAsks: list(GUEST_HOST_ASK),
@@ -320,7 +321,7 @@ export const PROGRAM_OPERATORS: Record<string, StdOperatorMeta> = {
     params: [
       { name: 'address', type: union(STRING, openShape({ inbound: STRING, body: nullable(STRING), headers: nullable(mapOf(STRING, STRING)) }), shape({ ask: STRING, answer: STRING, refuse: STRING }, ['answer', 'refuse'])), description: 'The input to dispatch: `EVENT`, `Trait.EVENT` or `Orbital.Trait.EVENT`; or an inbound delivery `{ inbound, body?, headers? }`; or, with `guest`, the answer to a client ask the guest made `{ ask, answer }` or `{ ask, refuse }`' },
       { name: 'arguments', type: STRING, description: 'The payload as JSON text, as a model sends it (a payload object is accepted too); absent or empty is no payload', optional: true },
-      { name: 'options', type: openShape({ schema: list(openShape({ name: STRING, type: STRING })), wire: BOOLEAN, stream: BOOLEAN, input: BOOLEAN, orbital: STRING, targetTrait: STRING, entityId: STRING, event: STRING, traits: nullable(list(openShape({ trait: STRING, from: STRING }))), mount: list(shape({ trait: STRING, event: STRING })), route: STRING, clientId: STRING, locale: STRING, delivery: openShape({ event: STRING }), dispatchLog: openShape({ prevEvents: list(openShape({ event: STRING })), prevStates: list(STRING) }), guest: STRING }), description: 'An optional stated payload (`schema`) the arguments are checked against before dispatch, and the event-request options (`wire`, `stream`, `input`, `orbital`, `targetTrait`, `entityId`, `event`, `traits`, `mount`, `route`, `clientId`, `locale`, `delivery`, `dispatchLog`); `guest` (a session id from `program/open`) dispatches into that guest session instead of the running program', optional: true },
+      { name: 'options', type: openShape({ schema: list(openShape({ name: STRING, type: STRING })), wire: BOOLEAN, stream: BOOLEAN, input: BOOLEAN, orbital: STRING, targetTrait: STRING, entityId: STRING, event: STRING, traits: nullable(list(openShape({ trait: STRING, from: STRING }))), mount: list(shape({ trait: STRING, event: STRING })), route: STRING, clientId: STRING, locale: STRING, delivery: openShape({ event: STRING }), dispatchLog: openShape({ prevEvents: list(openShape({ event: STRING })), prevStates: list(STRING) }), guest: STRING, cost: BOOLEAN }), description: 'An optional stated payload (`schema`) the arguments are checked against before dispatch, and the event-request options (`wire`, `stream`, `input`, `orbital`, `targetTrait`, `entityId`, `event`, `traits`, `mount`, `route`, `clientId`, `locale`, `delivery`, `dispatchLog`); `guest` (a session id from `program/open`) dispatches into that guest session instead of the running program, and with it `cost: true` adds each outcome\'s cost to the answer (EXEC-COST-1; a keyed guest dispatch is not measured)', optional: true },
       EMIT_OPTIONS,
     ],
     example: '["program/dispatch", "@payload.address", "@payload.arguments", { "emit": { "success": "DISPATCHED", "failure": "DISPATCH_FAILED" } }]',
@@ -360,7 +361,7 @@ export const PROGRAM_OPERATORS: Record<string, StdOperatorMeta> = {
     host: 'program',
     returnType: openShape({ event: STRING }),
     params: [
-      { name: 'subscription', type: openShape({ clientId: STRING, kind: STRING, guest: STRING }), description: 'Whose feed it is: the `clientId` session, whose bound identity\'s `@read` filters peers\' rows and whose own items are left out; or `kind` (`trace`, `guest`) and what that kind streams', optional: true },
+      { name: 'subscription', type: openShape({ clientId: STRING, kind: STRING, guest: STRING, cost: BOOLEAN }), description: 'Whose feed it is: the `clientId` session, whose bound identity\'s `@read` filters peers\' rows and whose own items are left out; or `kind` (`trace`, `guest`) and what that kind streams; with `kind: "trace"`, `cost: true` adds each step\'s and effect\'s cost to this stream\'s items only (EXEC-COST-1)', optional: true },
       { name: 'options', type: openShape({ key: STRING, emit: openShape({ onMessage: EVENT_KEY, failure: EVENT_KEY }) }), description: 'The stream key (required) and its routes: { key, emit: { onMessage, failure } }; cancel-call with the key ends the stream', optional: true },
     ],
     example: '["program/live", { "clientId": "@payload.clientId" }, { "key": "@payload.streamKey", "emit": { "onMessage": "LIVE_ITEM", "failure": "LIVE_FAILED" } }]',

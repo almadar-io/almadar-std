@@ -1,0 +1,96 @@
+app std-trace-cost [
+  version: "1.0.0",
+  description: "std-trace-cost — folds the measured cost of steps (EXEC-COST-1) into a table per trait and event and per effect operator, from any source: a traced dispatch's outcomes (std-page-trace with cost) or a program/step's played outcomes. COST_FOLD { site, outcomes } adds each outcome that carries cost { startNs, ns, allocs, allocBytes } to its row (site, trait, event): the count, the total and maximum time, every time measured (kept whole, so a percentile is read from the full sorted list), and the allocations and bytes; each of its effects { op, cost } is added to the row (site, trait, event, op) the same way. An outcome without cost (a dispatch measured by no meter, or a step that did not fire) is counted as unmeasured, never as zero. COST_TABLE_ASK { key } answers COST_TABLE { key, steps, effects, unmeasured }: the step rows by total time, highest first, each with its median and 95th percentile by nearest rank (the value at position ceil(q × count) of the sorted times); the effect rows the same way. COST_RESET empties the table. Subject-agnostic: it knows nothing of the program measured."
+]
+;; @capabilities "fold the measured time and allocations of steps and effects into a ranked table"
+uses Spec from "almadar-std/trace-cost"
+
+type CostStep = { startNs : number!, ns : number!, allocs : number!, allocBytes : number! }
+type CostEffect = { op : string!, cost : CostStep? }
+type CostOutcome = { trait : string!, event : string?, cost : CostStep?, effects : [CostEffect]? }
+type CostRow = { site : string!, trait : string!, event : string!, op : string!, count : number!, totalNs : number!, maxNs : number!, times : [number]!, allocs : number!, allocBytes : number! }
+type CostRanked = { site : string!, trait : string!, event : string!, op : string!, count : number!, totalNs : number!, maxNs : number!, p50Ns : number!, p95Ns : number!, allocs : number!, allocBytes : number! }
+
+orbital TraceCostOrbital {
+  entity TraceCostTable [runtime] {
+    id : string!
+    steps : Map string CostRow = {}
+    effects : Map string CostRow = {}
+    unmeasured : number = 0
+  }
+
+  trait TraceCost -> TraceCostTable {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      COST_FOLD -> ready
+        (let ((outcomes : [CostOutcome] ?outcomes) (site : string ?site))
+          (do
+            (set @entity.unmeasured (+ @entity.unmeasured (array/len (array/filter @outcomes (fn o (== @o.cost null))))))
+            (set @entity.steps (array/reduce (array/filter @outcomes (fn o (!= @o.cost null))) @entity.steps (fn acc o
+              (let ((key (str/concat @site "|" @o.trait "|" (default @o.event ""))) (cost (as (default @o.cost { startNs: 0, ns: 0, allocs: 0, allocBytes: 0 }) CostStep)))
+                (let ((was (object/get @acc @key)))
+                  (object/set @acc @key (if (== @was null)
+                    (as { site: @site, trait: @o.trait, event: (default @o.event ""), op: "", count: 1, totalNs: @cost.ns, maxNs: @cost.ns, times: [@cost.ns], allocs: @cost.allocs, allocBytes: @cost.allocBytes } CostRow)
+                    (as { site: @site, trait: @o.trait, event: (default @o.event ""), op: "", count: (+ @was.count 1), totalNs: (+ @was.totalNs @cost.ns), maxNs: (math/max @was.maxNs @cost.ns), times: (array/append @was.times @cost.ns), allocs: (+ @was.allocs @cost.allocs), allocBytes: (+ @was.allocBytes @cost.allocBytes) } CostRow))))))))
+            (set @entity.effects (array/reduce (array/flatten (array/map @outcomes (fn o
+              (array/map (array/filter (default @o.effects []) (fn e (!= @e.cost null))) (fn e { trait: @o.trait, event: (default @o.event ""), op: @e.op, cost: (as (default @e.cost { startNs: 0, ns: 0, allocs: 0, allocBytes: 0 }) CostStep) })))))
+              @entity.effects (fn acc e
+              (let ((key (str/concat @site "|" @e.trait "|" @e.event "|" @e.op)))
+                (let ((was (object/get @acc @key)))
+                  (object/set @acc @key (if (== @was null)
+                    (as { site: @site, trait: @e.trait, event: @e.event, op: @e.op, count: 1, totalNs: @e.cost.ns, maxNs: @e.cost.ns, times: [@e.cost.ns], allocs: @e.cost.allocs, allocBytes: @e.cost.allocBytes } CostRow)
+                    (as { site: @site, trait: @e.trait, event: @e.event, op: @e.op, count: (+ @was.count 1), totalNs: (+ @was.totalNs @e.cost.ns), maxNs: (math/max @was.maxNs @e.cost.ns), times: (array/append @was.times @e.cost.ns), allocs: (+ @was.allocs @e.cost.allocs), allocBytes: (+ @was.allocBytes @e.cost.allocBytes) } CostRow))))))))))
+      COST_TABLE_ASK -> ready
+        (emit COST_TABLE {
+          key: ?key,
+          steps: (array/sort (array/map (object/values @entity.steps) (fn r (let ((sorted (array/sort @r.times)))
+            { site: @r.site, trait: @r.trait, event: @r.event, op: @r.op, count: @r.count, totalNs: @r.totalNs, maxNs: @r.maxNs,
+              p50Ns: (default (array/nth @sorted (math/max 0 (- (math/ceil (* 0.5 (array/len @sorted))) 1))) 0),
+              p95Ns: (default (array/nth @sorted (math/max 0 (- (math/ceil (* 0.95 (array/len @sorted))) 1))) 0),
+              allocs: @r.allocs, allocBytes: @r.allocBytes }))) "totalNs" "desc"),
+          effects: (array/sort (array/map (object/values @entity.effects) (fn r (let ((sorted (array/sort @r.times)))
+            { site: @r.site, trait: @r.trait, event: @r.event, op: @r.op, count: @r.count, totalNs: @r.totalNs, maxNs: @r.maxNs,
+              p50Ns: (default (array/nth @sorted (math/max 0 (- (math/ceil (* 0.5 (array/len @sorted))) 1))) 0),
+              p95Ns: (default (array/nth @sorted (math/max 0 (- (math/ceil (* 0.95 (array/len @sorted))) 1))) 0),
+              allocs: @r.allocs, allocBytes: @r.allocBytes }))) "totalNs" "desc"),
+          unmeasured: @entity.unmeasured
+        })
+      COST_RESET -> ready
+        (set @entity.steps {})
+        (set @entity.effects {})
+        (set @entity.unmeasured 0)
+    }
+
+    emits {
+      COST_TABLE -> external {
+        key : string!
+        steps : [CostRanked]!
+        effects : [CostRanked]!
+        unmeasured : number!
+      }
+        @description "The table so far: step rows and effect rows by total time, highest first, each with its median and 95th percentile, and how many outcomes carried no cost."
+        @tier "domain"
+    }
+
+    listens {
+      COST_FOLD -> input {
+        site : string!
+        outcomes : [CostOutcome]!
+      }
+        @description "Add measured outcomes to the table: site names where they ran (browser, server, guest, step)."
+        @synonyms "add step costs, fold the trace"
+      COST_TABLE_ASK -> input {
+        key : string!
+      }
+        @description "Answer the table so far."
+        @synonyms "cost table, slowest steps, where the time goes"
+      COST_RESET -> input {
+      }
+        @description "Empty the table."
+    }
+  }
+
+  page boot as TraceCostStart -> TraceCost
+}

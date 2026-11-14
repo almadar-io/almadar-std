@@ -1,0 +1,288 @@
+{
+  "atom": "dev/atoms/std-trace-cost.lolo",
+  "trait": "TraceCost",
+  "cases": [
+    {
+      "id": "fold-then-table-ranks-steps-and-effects-with-nearest-rank-percentiles",
+      "steps": [
+        {
+          "trait": "TraceCost",
+          "event": "COST_FOLD",
+          "payload": {
+            "site": "step",
+            "outcomes": [
+              {
+                "trait": "Board",
+                "event": "LOAD",
+                "cost": {
+                  "startNs": 1,
+                  "ns": 100,
+                  "allocs": 2,
+                  "allocBytes": 64
+                },
+                "effects": [
+                  {
+                    "op": "persist",
+                    "cost": {
+                      "startNs": 1,
+                      "ns": 60,
+                      "allocs": 1,
+                      "allocBytes": 32
+                    }
+                  },
+                  {
+                    "op": "set",
+                    "cost": {
+                      "startNs": 1,
+                      "ns": 10,
+                      "allocs": 0,
+                      "allocBytes": 0
+                    }
+                  }
+                ]
+              },
+              {
+                "trait": "Board",
+                "event": "LOAD",
+                "cost": {
+                  "startNs": 1,
+                  "ns": 300,
+                  "allocs": 2,
+                  "allocBytes": 64
+                },
+                "effects": [
+                  {
+                    "op": "persist",
+                    "cost": {
+                      "startNs": 1,
+                      "ns": 200,
+                      "allocs": 1,
+                      "allocBytes": 32
+                    }
+                  }
+                ]
+              },
+              {
+                "trait": "Board",
+                "event": "LOAD"
+              }
+            ]
+          },
+          "entity": {
+            "id": "c",
+            "steps": {},
+            "effects": {},
+            "unmeasured": 0
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "TraceCost",
+          "event": "COST_TABLE_ASK",
+          "payload": {
+            "key": "k"
+          },
+          "expect": {
+            "fired": true,
+            "exactEmits": [
+              {
+                "event": "COST_TABLE",
+                "payload": {
+                  "key": "k",
+                  "steps": [
+                    {
+                      "site": "step",
+                      "trait": "Board",
+                      "event": "LOAD",
+                      "op": "",
+                      "count": 2,
+                      "totalNs": 400,
+                      "maxNs": 300,
+                      "p50Ns": 100,
+                      "p95Ns": 300,
+                      "allocs": 4,
+                      "allocBytes": 128
+                    }
+                  ],
+                  "effects": [
+                    {
+                      "site": "step",
+                      "trait": "Board",
+                      "event": "LOAD",
+                      "op": "persist",
+                      "count": 2,
+                      "totalNs": 260,
+                      "maxNs": 200,
+                      "p50Ns": 60,
+                      "p95Ns": 200,
+                      "allocs": 2,
+                      "allocBytes": 64
+                    },
+                    {
+                      "site": "step",
+                      "trait": "Board",
+                      "event": "LOAD",
+                      "op": "set",
+                      "count": 1,
+                      "totalNs": 10,
+                      "maxNs": 10,
+                      "p50Ns": 10,
+                      "p95Ns": 10,
+                      "allocs": 0,
+                      "allocBytes": 0
+                    }
+                  ],
+                  "unmeasured": 1
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "control-an-empty-table-answers-no-rows",
+      "steps": [
+        {
+          "trait": "TraceCost",
+          "event": "COST_TABLE_ASK",
+          "payload": {
+            "key": "k"
+          },
+          "entity": {
+            "id": "c",
+            "steps": {},
+            "effects": {},
+            "unmeasured": 0
+          },
+          "expect": {
+            "fired": true,
+            "exactEmits": [
+              {
+                "event": "COST_TABLE",
+                "payload": {
+                  "key": "k",
+                  "steps": [],
+                  "effects": [],
+                  "unmeasured": 0
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    },
+    {
+      "id": "reset-empties-the-table",
+      "steps": [
+        {
+          "trait": "TraceCost",
+          "event": "COST_FOLD",
+          "payload": {
+            "site": "step",
+            "outcomes": [
+              {
+                "trait": "Board",
+                "event": "LOAD",
+                "cost": {
+                  "startNs": 1,
+                  "ns": 100,
+                  "allocs": 2,
+                  "allocBytes": 64
+                },
+                "effects": [
+                  {
+                    "op": "persist",
+                    "cost": {
+                      "startNs": 1,
+                      "ns": 60,
+                      "allocs": 1,
+                      "allocBytes": 32
+                    }
+                  },
+                  {
+                    "op": "set",
+                    "cost": {
+                      "startNs": 1,
+                      "ns": 10,
+                      "allocs": 0,
+                      "allocBytes": 0
+                    }
+                  }
+                ]
+              },
+              {
+                "trait": "Board",
+                "event": "LOAD",
+                "cost": {
+                  "startNs": 1,
+                  "ns": 300,
+                  "allocs": 2,
+                  "allocBytes": 64
+                },
+                "effects": [
+                  {
+                    "op": "persist",
+                    "cost": {
+                      "startNs": 1,
+                      "ns": 200,
+                      "allocs": 1,
+                      "allocBytes": 32
+                    }
+                  }
+                ]
+              },
+              {
+                "trait": "Board",
+                "event": "LOAD"
+              }
+            ]
+          },
+          "entity": {
+            "id": "c",
+            "steps": {},
+            "effects": {},
+            "unmeasured": 0
+          },
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "TraceCost",
+          "event": "COST_RESET",
+          "payload": {},
+          "expect": {
+            "fired": true
+          }
+        },
+        {
+          "trait": "TraceCost",
+          "event": "COST_TABLE_ASK",
+          "payload": {
+            "key": "k"
+          },
+          "expect": {
+            "fired": true,
+            "exactEmits": [
+              {
+                "event": "COST_TABLE",
+                "payload": {
+                  "key": "k",
+                  "steps": [],
+                  "effects": [],
+                  "unmeasured": 0
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "now": 1760531445678
+    }
+  ]
+}

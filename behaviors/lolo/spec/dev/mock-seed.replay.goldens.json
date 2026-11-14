@@ -13057,6 +13057,1534 @@
         "seedOrbital": "SeedOrbital",
         "seedTrait": "MockSeed"
       }
+    },
+    {
+      "id": "batch-rows-non-empty-string-default-without-vocab-matches-the-serial-rows",
+      "steps": [
+        {
+          "event": "SAMPLE_BATCH",
+          "payload": {
+            "jobs": [
+              {
+                "fields": [
+                  {
+                    "name": "title",
+                    "type": "string",
+                    "default": "Title"
+                  }
+                ],
+                "name": "E",
+                "count": 2,
+                "runtime": false,
+                "identity": false
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "ROWS_BATCH_DONE",
+                "payload": {
+                  "rows": [
+                    [
+                      {
+                        "id": "E-1",
+                        "title": "Title"
+                      },
+                      {
+                        "id": "E-2",
+                        "title": "Title"
+                      }
+                    ]
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "config": {
+        "seedOrbital": "SeedOrbital",
+        "seedTrait": "MockSeed"
+      }
+    },
+    {
+      "id": "batch-rows-falsy-defaults-on-a-runtime-singleton-matches-the-serial-rows",
+      "steps": [
+        {
+          "event": "SAMPLE_BATCH",
+          "payload": {
+            "jobs": [
+              {
+                "fields": [
+                  {
+                    "name": "tokenCount",
+                    "type": "number",
+                    "default": 0
+                  },
+                  {
+                    "name": "enabled",
+                    "type": "boolean",
+                    "default": false
+                  }
+                ],
+                "name": "E",
+                "count": 1,
+                "runtime": true,
+                "identity": false
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "ROWS_BATCH_DONE",
+                "payload": {
+                  "rows": [
+                    [
+                      {
+                        "id": "E-1",
+                        "tokenCount": 0,
+                        "enabled": false
+                      }
+                    ]
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "config": {
+        "seedOrbital": "SeedOrbital",
+        "seedTrait": "MockSeed"
+      }
+    },
+    {
+      "id": "batch-rows-falsy-default-not-flattened-across-a-collection-matches-the-serial-rows",
+      "steps": [
+        {
+          "event": "SAMPLE_BATCH",
+          "payload": {
+            "jobs": [
+              {
+                "fields": [
+                  {
+                    "name": "tokenCount",
+                    "type": "number",
+                    "default": 0,
+                    "required": true
+                  }
+                ],
+                "name": "E",
+                "count": 6,
+                "runtime": false,
+                "identity": false
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "ROWS_BATCH_DONE",
+                "payload": {
+                  "rows": [
+                    [
+                      {
+                        "id": "E-1",
+                        "tokenCount": 10
+                      },
+                      {
+                        "id": "E-2",
+                        "tokenCount": 20
+                      },
+                      {
+                        "id": "E-3",
+                        "tokenCount": 30
+                      },
+                      {
+                        "id": "E-4",
+                        "tokenCount": 40
+                      },
+                      {
+                        "id": "E-5",
+                        "tokenCount": 50
+                      },
+                      {
+                        "id": "E-6",
+                        "tokenCount": 60
+                      }
+                    ]
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "config": {
+        "seedOrbital": "SeedOrbital",
+        "seedTrait": "MockSeed"
+      }
+    },
+    {
+      "id": "batch-rows-empty-string-default-is-absent-matches-the-serial-rows",
+      "steps": [
+        {
+          "event": "SAMPLE_BATCH",
+          "payload": {
+            "jobs": [
+              {
+                "fields": [
+                  {
+                    "name": "email",
+                    "type": "string",
+                    "default": ""
+                  }
+                ],
+                "name": "E",
+                "count": 1,
+                "runtime": false,
+                "identity": false
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "ROWS_BATCH_DONE",
+                "payload": {
+                  "rows": [
+                    [
+                      {
+                        "id": "E-1",
+                        "email": "Email 1"
+                      }
+                    ]
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "config": {
+        "seedOrbital": "SeedOrbital",
+        "seedTrait": "MockSeed"
+      }
+    },
+    {
+      "id": "batch-rows-empty-honored-when-the-vocabulary-declares-it-matches-the-serial-rows",
+      "steps": [
+        {
+          "event": "SAMPLE_BATCH",
+          "payload": {
+            "jobs": [
+              {
+                "fields": [
+                  {
+                    "name": "finalStatus",
+                    "type": "string",
+                    "values": [
+                      "approved",
+                      "rejected",
+                      ""
+                    ],
+                    "default": ""
+                  }
+                ],
+                "name": "E",
+                "count": 1,
+                "runtime": false,
+                "identity": false
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "ROWS_BATCH_DONE",
+                "payload": {
+                  "rows": [
+                    [
+                      {
+                        "id": "E-1",
+                        "finalStatus": ""
+                      }
+                    ]
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "config": {
+        "seedOrbital": "SeedOrbital",
+        "seedTrait": "MockSeed"
+      }
+    },
+    {
+      "id": "batch-rows-vocabulary-cycles-one-based-over-the-default-matches-the-serial-rows",
+      "steps": [
+        {
+          "event": "SAMPLE_BATCH",
+          "payload": {
+            "jobs": [
+              {
+                "fields": [
+                  {
+                    "name": "membershipTier",
+                    "type": "string",
+                    "values": [
+                      "basic",
+                      "premium",
+                      "unlimited"
+                    ],
+                    "default": "basic"
+                  }
+                ],
+                "name": "Member",
+                "count": 4,
+                "runtime": false,
+                "identity": false
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "ROWS_BATCH_DONE",
+                "payload": {
+                  "rows": [
+                    [
+                      {
+                        "id": "Member-1",
+                        "membershipTier": "basic"
+                      },
+                      {
+                        "id": "Member-2",
+                        "membershipTier": "premium"
+                      },
+                      {
+                        "id": "Member-3",
+                        "membershipTier": "unlimited"
+                      },
+                      {
+                        "id": "Member-4",
+                        "membershipTier": "basic"
+                      }
+                    ]
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "config": {
+        "seedOrbital": "SeedOrbital",
+        "seedTrait": "MockSeed"
+      }
+    },
+    {
+      "id": "batch-rows-runtime-entity-seeds-one-row-at-its-default-matches-the-serial-rows",
+      "steps": [
+        {
+          "event": "SAMPLE_BATCH",
+          "payload": {
+            "jobs": [
+              {
+                "fields": [
+                  {
+                    "name": "result",
+                    "type": "string",
+                    "values": [
+                      "none",
+                      "victory",
+                      "defeat"
+                    ],
+                    "default": "none"
+                  }
+                ],
+                "name": "BoardgameBoardItem",
+                "count": 6,
+                "runtime": true,
+                "identity": false
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "ROWS_BATCH_DONE",
+                "payload": {
+                  "rows": [
+                    [
+                      {
+                        "id": "BoardgameBoardItem-1",
+                        "result": "none"
+                      }
+                    ]
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "config": {
+        "seedOrbital": "SeedOrbital",
+        "seedTrait": "MockSeed"
+      }
+    },
+    {
+      "id": "batch-rows-control-same-field-on-a-collection-cycles-matches-the-serial-rows",
+      "steps": [
+        {
+          "event": "SAMPLE_BATCH",
+          "payload": {
+            "jobs": [
+              {
+                "fields": [
+                  {
+                    "name": "result",
+                    "type": "string",
+                    "values": [
+                      "none",
+                      "victory",
+                      "defeat"
+                    ],
+                    "default": "none"
+                  }
+                ],
+                "name": "Match",
+                "count": 3,
+                "runtime": false,
+                "identity": false
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "ROWS_BATCH_DONE",
+                "payload": {
+                  "rows": [
+                    [
+                      {
+                        "id": "Match-1",
+                        "result": "none"
+                      },
+                      {
+                        "id": "Match-2",
+                        "result": "victory"
+                      },
+                      {
+                        "id": "Match-3",
+                        "result": "defeat"
+                      }
+                    ]
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "config": {
+        "seedOrbital": "SeedOrbital",
+        "seedTrait": "MockSeed"
+      }
+    },
+    {
+      "id": "batch-rows-intrinsic-without-default-omits-the-key-matches-the-serial-rows",
+      "steps": [
+        {
+          "event": "SAMPLE_BATCH",
+          "payload": {
+            "jobs": [
+              {
+                "fields": [
+                  {
+                    "name": "boards",
+                    "type": "array",
+                    "intrinsic": true
+                  }
+                ],
+                "name": "E",
+                "count": 1,
+                "runtime": false,
+                "identity": false
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "ROWS_BATCH_DONE",
+                "payload": {
+                  "rows": [
+                    [
+                      {
+                        "id": "E-1"
+                      }
+                    ]
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "config": {
+        "seedOrbital": "SeedOrbital",
+        "seedTrait": "MockSeed"
+      }
+    },
+    {
+      "id": "batch-rows-non-scalar-fields-are-emitted-matches-the-serial-rows",
+      "steps": [
+        {
+          "event": "SAMPLE_BATCH",
+          "payload": {
+            "jobs": [
+              {
+                "fields": [
+                  {
+                    "name": "tags",
+                    "type": "array"
+                  },
+                  {
+                    "name": "meta",
+                    "type": "object"
+                  },
+                  {
+                    "name": "owner",
+                    "type": "relation"
+                  }
+                ],
+                "name": "E",
+                "count": 1,
+                "runtime": false,
+                "identity": false
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "ROWS_BATCH_DONE",
+                "payload": {
+                  "rows": [
+                    [
+                      {
+                        "id": "E-1",
+                        "tags": [],
+                        "meta": null,
+                        "owner": []
+                      }
+                    ]
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "config": {
+        "seedOrbital": "SeedOrbital",
+        "seedTrait": "MockSeed"
+      }
+    },
+    {
+      "id": "batch-rows-slot-and-pattern-fields-are-omitted-matches-the-serial-rows",
+      "steps": [
+        {
+          "event": "SAMPLE_BATCH",
+          "payload": {
+            "jobs": [
+              {
+                "fields": [
+                  {
+                    "name": "x",
+                    "type": "slot"
+                  },
+                  {
+                    "name": "y",
+                    "type": "pattern"
+                  }
+                ],
+                "name": "E",
+                "count": 1,
+                "runtime": false,
+                "identity": false
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "ROWS_BATCH_DONE",
+                "payload": {
+                  "rows": [
+                    [
+                      {
+                        "id": "E-1"
+                      }
+                    ]
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "config": {
+        "seedOrbital": "SeedOrbital",
+        "seedTrait": "MockSeed"
+      }
+    },
+    {
+      "id": "batch-rows-declared-mock-commas-rotate-by-row-matches-the-serial-rows",
+      "steps": [
+        {
+          "event": "SAMPLE_BATCH",
+          "payload": {
+            "jobs": [
+              {
+                "fields": [
+                  {
+                    "name": "clientName",
+                    "type": "string",
+                    "mock": "Acme Corp, Globex Inc, Wayne Enterprises"
+                  }
+                ],
+                "name": "E",
+                "count": 4,
+                "runtime": false,
+                "identity": false
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "ROWS_BATCH_DONE",
+                "payload": {
+                  "rows": [
+                    [
+                      {
+                        "id": "E-1",
+                        "clientName": "Acme Corp"
+                      },
+                      {
+                        "id": "E-2",
+                        "clientName": "Globex Inc"
+                      },
+                      {
+                        "id": "E-3",
+                        "clientName": "Wayne Enterprises"
+                      },
+                      {
+                        "id": "E-4",
+                        "clientName": "Acme Corp"
+                      }
+                    ]
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "config": {
+        "seedOrbital": "SeedOrbital",
+        "seedTrait": "MockSeed"
+      }
+    },
+    {
+      "id": "batch-rows-declared-mock-without-comma-is-suffixed-matches-the-serial-rows",
+      "steps": [
+        {
+          "event": "SAMPLE_BATCH",
+          "payload": {
+            "jobs": [
+              {
+                "fields": [
+                  {
+                    "name": "clientName",
+                    "type": "string",
+                    "mock": "person-name"
+                  }
+                ],
+                "name": "E",
+                "count": 2,
+                "runtime": false,
+                "identity": false
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "ROWS_BATCH_DONE",
+                "payload": {
+                  "rows": [
+                    [
+                      {
+                        "id": "E-1",
+                        "clientName": "person-name-1"
+                      },
+                      {
+                        "id": "E-2",
+                        "clientName": "person-name-2"
+                      }
+                    ]
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "config": {
+        "seedOrbital": "SeedOrbital",
+        "seedTrait": "MockSeed"
+      }
+    },
+    {
+      "id": "batch-rows-declared-mock-on-a-behavior-field-is-a-behavior-value-matches-the-serial-rows",
+      "steps": [
+        {
+          "event": "SAMPLE_BATCH",
+          "payload": {
+            "jobs": [
+              {
+                "fields": [
+                  {
+                    "name": "behavior",
+                    "type": "behavior",
+                    "required": true,
+                    "mock": "almadar-behaviors/std-booking-solution, almadar-behaviors/std-accounting-solution"
+                  }
+                ],
+                "name": "E",
+                "count": 3,
+                "runtime": false,
+                "identity": false
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "ROWS_BATCH_DONE",
+                "payload": {
+                  "rows": [
+                    [
+                      {
+                        "id": "E-1",
+                        "behavior": {
+                          "behavior": "almadar-behaviors/std-booking-solution"
+                        }
+                      },
+                      {
+                        "id": "E-2",
+                        "behavior": {
+                          "behavior": "almadar-behaviors/std-accounting-solution"
+                        }
+                      },
+                      {
+                        "id": "E-3",
+                        "behavior": {
+                          "behavior": "almadar-behaviors/std-booking-solution"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "config": {
+        "seedOrbital": "SeedOrbital",
+        "seedTrait": "MockSeed"
+      }
+    },
+    {
+      "id": "batch-rows-control-a-behavior-field-without-mock-is-null-matches-the-serial-rows",
+      "steps": [
+        {
+          "event": "SAMPLE_BATCH",
+          "payload": {
+            "jobs": [
+              {
+                "fields": [
+                  {
+                    "name": "behavior",
+                    "type": "behavior",
+                    "required": true
+                  }
+                ],
+                "name": "E",
+                "count": 1,
+                "runtime": false,
+                "identity": false
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "ROWS_BATCH_DONE",
+                "payload": {
+                  "rows": [
+                    [
+                      {
+                        "id": "E-1",
+                        "behavior": null
+                      }
+                    ]
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "config": {
+        "seedOrbital": "SeedOrbital",
+        "seedTrait": "MockSeed"
+      }
+    },
+    {
+      "id": "batch-rows-declared-mock-on-a-number-field-seeds-numbers-matches-the-serial-rows",
+      "steps": [
+        {
+          "event": "SAMPLE_BATCH",
+          "payload": {
+            "jobs": [
+              {
+                "fields": [
+                  {
+                    "name": "uptime",
+                    "type": "number",
+                    "mock": "99.99, 99.5, 100"
+                  }
+                ],
+                "name": "E",
+                "count": 3,
+                "runtime": false,
+                "identity": false
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "ROWS_BATCH_DONE",
+                "payload": {
+                  "rows": [
+                    [
+                      {
+                        "id": "E-1",
+                        "uptime": 99.99
+                      },
+                      {
+                        "id": "E-2",
+                        "uptime": 99.5
+                      },
+                      {
+                        "id": "E-3",
+                        "uptime": 100
+                      }
+                    ]
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "config": {
+        "seedOrbital": "SeedOrbital",
+        "seedTrait": "MockSeed"
+      }
+    },
+    {
+      "id": "batch-rows-declared-mock-on-a-money-field-matches-the-serial-rows",
+      "steps": [
+        {
+          "event": "SAMPLE_BATCH",
+          "payload": {
+            "jobs": [
+              {
+                "fields": [
+                  {
+                    "name": "total",
+                    "type": "money",
+                    "mock": "250000, 84000"
+                  }
+                ],
+                "name": "E",
+                "count": 2,
+                "runtime": false,
+                "identity": false
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "ROWS_BATCH_DONE",
+                "payload": {
+                  "rows": [
+                    [
+                      {
+                        "id": "E-1",
+                        "total": 250000
+                      },
+                      {
+                        "id": "E-2",
+                        "total": 84000
+                      }
+                    ]
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "config": {
+        "seedOrbital": "SeedOrbital",
+        "seedTrait": "MockSeed"
+      }
+    },
+    {
+      "id": "batch-rows-a-bytes-field-seeds-decodable-base64-matches-the-serial-rows",
+      "steps": [
+        {
+          "event": "SAMPLE_BATCH",
+          "payload": {
+            "jobs": [
+              {
+                "fields": [
+                  {
+                    "name": "payload",
+                    "type": "bytes"
+                  }
+                ],
+                "name": "E",
+                "count": 2,
+                "runtime": false,
+                "identity": false
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "ROWS_BATCH_DONE",
+                "payload": {
+                  "rows": [
+                    [
+                      {
+                        "id": "E-1",
+                        "payload": "cGF5bG9hZC0x"
+                      },
+                      {
+                        "id": "E-2",
+                        "payload": "cGF5bG9hZC0y"
+                      }
+                    ]
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "config": {
+        "seedOrbital": "SeedOrbital",
+        "seedTrait": "MockSeed"
+      }
+    },
+    {
+      "id": "batch-rows-declared-mock-on-a-boolean-field-matches-the-serial-rows",
+      "steps": [
+        {
+          "event": "SAMPLE_BATCH",
+          "payload": {
+            "jobs": [
+              {
+                "fields": [
+                  {
+                    "name": "inStock",
+                    "type": "boolean",
+                    "mock": "true, false"
+                  }
+                ],
+                "name": "E",
+                "count": 2,
+                "runtime": false,
+                "identity": false
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "ROWS_BATCH_DONE",
+                "payload": {
+                  "rows": [
+                    [
+                      {
+                        "id": "E-1",
+                        "inStock": true
+                      },
+                      {
+                        "id": "E-2",
+                        "inStock": false
+                      }
+                    ]
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "config": {
+        "seedOrbital": "SeedOrbital",
+        "seedTrait": "MockSeed"
+      }
+    },
+    {
+      "id": "batch-rows-numeric-looking-mock-on-a-string-field-stays-text-matches-the-serial-rows",
+      "steps": [
+        {
+          "event": "SAMPLE_BATCH",
+          "payload": {
+            "jobs": [
+              {
+                "fields": [
+                  {
+                    "name": "matterNumber",
+                    "type": "string",
+                    "mock": "2026, 2027"
+                  }
+                ],
+                "name": "E",
+                "count": 1,
+                "runtime": false,
+                "identity": false
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "ROWS_BATCH_DONE",
+                "payload": {
+                  "rows": [
+                    [
+                      {
+                        "id": "E-1",
+                        "matterNumber": "2026"
+                      }
+                    ]
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "config": {
+        "seedOrbital": "SeedOrbital",
+        "seedTrait": "MockSeed"
+      }
+    },
+    {
+      "id": "batch-rows-non-numeric-mock-on-a-number-field-stays-the-literal-matches-the-serial-rows",
+      "steps": [
+        {
+          "event": "SAMPLE_BATCH",
+          "payload": {
+            "jobs": [
+              {
+                "fields": [
+                  {
+                    "name": "uptime",
+                    "type": "number",
+                    "mock": "n/a, 99.5"
+                  }
+                ],
+                "name": "E",
+                "count": 1,
+                "runtime": false,
+                "identity": false
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "ROWS_BATCH_DONE",
+                "payload": {
+                  "rows": [
+                    [
+                      {
+                        "id": "E-1",
+                        "uptime": "n/a"
+                      }
+                    ]
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "config": {
+        "seedOrbital": "SeedOrbital",
+        "seedTrait": "MockSeed"
+      }
+    },
+    {
+      "id": "batch-rows-control-no-mock-falls-through-to-the-type-matches-the-serial-rows",
+      "steps": [
+        {
+          "event": "SAMPLE_BATCH",
+          "payload": {
+            "jobs": [
+              {
+                "fields": [
+                  {
+                    "name": "clientName",
+                    "type": "string"
+                  }
+                ],
+                "name": "E",
+                "count": 1,
+                "runtime": false,
+                "identity": false
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "ROWS_BATCH_DONE",
+                "payload": {
+                  "rows": [
+                    [
+                      {
+                        "id": "E-1",
+                        "clientName": "Client Name 1"
+                      }
+                    ]
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "config": {
+        "seedOrbital": "SeedOrbital",
+        "seedTrait": "MockSeed"
+      }
+    },
+    {
+      "id": "batch-rows-fields-keep-declaration-order-and-reserved-keys-are-skipped-matches-the-serial-rows",
+      "steps": [
+        {
+          "event": "SAMPLE_BATCH",
+          "payload": {
+            "jobs": [
+              {
+                "fields": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  },
+                  {
+                    "name": "createdAt",
+                    "type": "date"
+                  },
+                  {
+                    "name": "z",
+                    "type": "number"
+                  },
+                  {
+                    "name": "a",
+                    "type": "number"
+                  }
+                ],
+                "name": "E",
+                "count": 2,
+                "runtime": false,
+                "identity": false
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "ROWS_BATCH_DONE",
+                "payload": {
+                  "rows": [
+                    [
+                      {
+                        "id": "E-1",
+                        "z": 10,
+                        "a": 10
+                      },
+                      {
+                        "id": "E-2",
+                        "z": 20,
+                        "a": 20
+                      }
+                    ]
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "config": {
+        "seedOrbital": "SeedOrbital",
+        "seedTrait": "MockSeed"
+      }
+    },
+    {
+      "id": "batch-gate-mock-enum-single-candidate-is-used-as-is-on-every-row-matches-the-serial-rows",
+      "steps": [
+        {
+          "event": "SAMPLE_BATCH",
+          "payload": {
+            "jobs": [
+              {
+                "fields": [
+                  {
+                    "name": "status",
+                    "type": "enum",
+                    "values": [
+                      "open",
+                      "closed"
+                    ],
+                    "mock": "only"
+                  }
+                ],
+                "name": "E",
+                "count": 3,
+                "runtime": false,
+                "identity": false
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "ROWS_BATCH_DONE",
+                "payload": {
+                  "rows": [
+                    [
+                      {
+                        "id": "E-1",
+                        "status": "only"
+                      },
+                      {
+                        "id": "E-2",
+                        "status": "only"
+                      },
+                      {
+                        "id": "E-3",
+                        "status": "only"
+                      }
+                    ]
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "config": {
+        "seedOrbital": "SeedOrbital",
+        "seedTrait": "MockSeed"
+      }
+    },
+    {
+      "id": "serial-three-jobs-thread-one-random-stream",
+      "steps": [
+        {
+          "event": "SAMPLE_ROWS",
+          "payload": {
+            "fields": [
+              {
+                "name": "score",
+                "type": "number"
+              },
+              {
+                "name": "done",
+                "type": "boolean"
+              }
+            ],
+            "name": "Task",
+            "count": 3,
+            "runtime": false,
+            "identity": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "ROWS_DONE",
+                "payload": {
+                  "rows": [
+                    {
+                      "score": 10,
+                      "done": false,
+                      "id": "Task-1"
+                    },
+                    {
+                      "score": 20,
+                      "done": true,
+                      "id": "Task-2"
+                    },
+                    {
+                      "score": 30,
+                      "done": false,
+                      "id": "Task-3"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "SAMPLE_ROWS",
+          "payload": {
+            "fields": [
+              {
+                "name": "rank",
+                "type": "number"
+              },
+              {
+                "name": "tier",
+                "type": "string",
+                "values": [
+                  "a",
+                  "b",
+                  "c"
+                ]
+              }
+            ],
+            "name": "Player",
+            "count": 2,
+            "runtime": false,
+            "identity": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "ROWS_DONE",
+                "payload": {
+                  "rows": [
+                    {
+                      "rank": 10,
+                      "tier": "a",
+                      "id": "Player-1"
+                    },
+                    {
+                      "rank": 20,
+                      "tier": "b",
+                      "id": "Player-2"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "event": "SAMPLE_ROWS",
+          "payload": {
+            "fields": [
+              {
+                "name": "level",
+                "type": "number"
+              }
+            ],
+            "name": "Board",
+            "count": 5,
+            "runtime": true,
+            "identity": false
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "ROWS_DONE",
+                "payload": {
+                  "rows": [
+                    {
+                      "level": 10,
+                      "id": "Board-1"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "config": {
+        "seedOrbital": "SeedOrbital",
+        "seedTrait": "MockSeed"
+      }
+    },
+    {
+      "id": "batch-of-three-jobs-answers-each-jobs-rows-in-order-as-the-serial-run",
+      "steps": [
+        {
+          "event": "SAMPLE_BATCH",
+          "payload": {
+            "jobs": [
+              {
+                "fields": [
+                  {
+                    "name": "score",
+                    "type": "number"
+                  },
+                  {
+                    "name": "done",
+                    "type": "boolean"
+                  }
+                ],
+                "name": "Task",
+                "count": 3,
+                "runtime": false,
+                "identity": false
+              },
+              {
+                "fields": [
+                  {
+                    "name": "rank",
+                    "type": "number"
+                  },
+                  {
+                    "name": "tier",
+                    "type": "string",
+                    "values": [
+                      "a",
+                      "b",
+                      "c"
+                    ]
+                  }
+                ],
+                "name": "Player",
+                "count": 2,
+                "runtime": false,
+                "identity": false
+              },
+              {
+                "fields": [
+                  {
+                    "name": "level",
+                    "type": "number"
+                  }
+                ],
+                "name": "Board",
+                "count": 5,
+                "runtime": true,
+                "identity": false
+              }
+            ]
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "ROWS_BATCH_DONE",
+                "payload": {
+                  "rows": [
+                    [
+                      {
+                        "score": 10,
+                        "done": false,
+                        "id": "Task-1"
+                      },
+                      {
+                        "score": 20,
+                        "done": true,
+                        "id": "Task-2"
+                      },
+                      {
+                        "score": 30,
+                        "done": false,
+                        "id": "Task-3"
+                      }
+                    ],
+                    [
+                      {
+                        "rank": 10,
+                        "tier": "a",
+                        "id": "Player-1"
+                      },
+                      {
+                        "rank": 20,
+                        "tier": "b",
+                        "id": "Player-2"
+                      }
+                    ],
+                    [
+                      {
+                        "level": 10,
+                        "id": "Board-1"
+                      }
+                    ]
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "config": {
+        "seedOrbital": "SeedOrbital",
+        "seedTrait": "MockSeed"
+      }
+    },
+    {
+      "id": "control-an-empty-batch-answers-no-rows",
+      "steps": [
+        {
+          "event": "SAMPLE_BATCH",
+          "payload": {
+            "jobs": []
+          },
+          "expect": {
+            "emits": [
+              {
+                "event": "ROWS_BATCH_DONE",
+                "payload": {
+                  "rows": []
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "config": {
+        "seedOrbital": "SeedOrbital",
+        "seedTrait": "MockSeed"
+      }
     }
   ]
 }

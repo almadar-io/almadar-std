@@ -1,0 +1,24 @@
+app cdp-profile-spec [
+  version: "1.0.0",
+  description: "Design contract for measuring a browser page over its own Chrome DevTools connection: attach to a named page target, trace on request, and answer the page's metrics after a forced collection, its main thread's busy time and each long task by top-level activity."
+]
+
+orbital CdpProfileSpec {
+  expects entity CdpProfileRun [runtime] {
+    id : string!
+    targetId : string
+    sessionId : string
+    tracing : boolean
+  }
+  expects trait CdpProfile {
+    state idle {
+      CDP_PROFILE_CONNECT -> connecting
+    }
+    emits {
+      CDP_PROFILE_READY { }
+      CDP_PROFILE_PAGE { label : string!  mainBusyMs : number! }
+      CDP_PROFILE_FAILED { label : string!  code : string!  error : string! }
+    }
+  }
+  expects page boot -> CdpProfile
+}
