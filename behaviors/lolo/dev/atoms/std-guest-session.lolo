@@ -64,7 +64,8 @@ type TokScene = { materialRoughness : string?, materialMetalness : string?, mate
 type ThemeTokens = { color : (Map string string)?, colors : (Map string string)?, radii : (Map string string)?, spacing : (Map string string)?, typography : (Map string string)?, shadows : (Map string string)?, density : TokDensity?, typeScale : TokTypeScale?, motion : TokMotion?, iconography : TokIconography?, elevation : TokElevation?, geometry : TokGeometry?, illustration : TokIllustration?, surface : TokSurface?, diagram : TokDiagram?, scene : TokScene? }
 type GuestThemeDefinition = { name : string!, displayName : string?, tokens : ThemeTokens!, variants : (Map string ThemeTokens)? }
 type GuestTheme = string | GuestThemeDefinition
-type GuestProgram = { name : string, version : string?, description : string?, store : string?, inbound : [string]?, egress : [string]?, osGrants : GuestGrants?, schemaVersion : number?, theme : GuestTheme?, orbitals : [orbital], lazyPrograms : (Map string SExpr)? }
+type LazySource = { behavior : string! }
+type GuestProgram = { name : string, version : string?, description : string?, store : string?, inbound : [string]?, egress : [string]?, osGrants : GuestGrants?, schemaVersion : number?, theme : GuestTheme?, orbitals : [orbital], lazySource : LazySource? }
 type GuestHeader = { name : string!, version : string?, description : string?, store : string?, inbound : [string]?, egress : [string]?, osGrants : GuestGrants?, schemaVersion : number? }
 type GuestEnvStatus = { name : string!, set : boolean!, tail : string! }
 type GuestEnvValue = { name : string!, value : string? }
@@ -85,6 +86,8 @@ type GuestOpened = { guest : string!, page : [string]!, route : string, rendered
 type GuestJson = string | number | boolean | [GuestJson?] | Map string GuestJson?
 type GuestLegBody = { event : string, targetTrait : string, entityId : string, payload : GuestJson, clientId : string, locale : string, traits : [GuestJson], mount : [GuestJson], unmount : [string], route : string, delivery : GuestJson, dispatchLog : GuestJson, framesSince : number }
 type GuestLegAnswer = { leg : string!, response : string?, error : string? }
+type GuestLazyAnswer = { file : string!, program : SExpr?, error : string? }
+type GuestLazyPage = { file : string!, program : SExpr! }
 type GuestHostDispatch = { kind : "dispatch" | "push", clientId : string!, target : "origin" | "peers", orbitalName : string?, request : GuestJson?, response : GuestJson?, emitted : GuestJson? }
 type GuestStagedDispatch = { kind : "dispatch" | "push", clientId : string!, target : "origin" | "peers", orbitalName : string?, request : GuestJson?, response : GuestJson?, emitted : GuestJson?, seq : number! }
 type GuestClientProgram = SExpr
@@ -161,6 +164,7 @@ orbital GuestSessionOrbital {
     guestAsks : [GuestHostAsk] @description "The guest's client asks the stage relays to this viewer's host, oldest first; the first is the one being answered." = []
     guestClient : GuestProgram? @description "A split guest's client program, which the view runs in a kernel of its own; none for a guest that runs every trait itself."
     guestLegs : [GuestLegAnswer] @description "Answered server legs of a split guest the view has not taken yet." = []
+    guestLazy : [GuestLazyAnswer] @description "Answered lazy page asks of a split guest's view (program/lazy) the view has not taken yet." = []
     guestDispatches : [GuestStagedDispatch] @description "Dispatches the split guest's host ran on its own in this viewer's session that the view has not folded yet, each with its running seq." = []
     guestDispatchSeq : number @description "The seq of the latest host-run dispatch the stage stored." = 0
     guestEpoch : number @description "How many times a split guest's view was told to mount its page afresh; the view starts again when it changes." = 0
@@ -272,6 +276,8 @@ orbital GuestSessionOrbital {
         (program/dispatch ?address ?payload { guest: ?guest, emit: { success: GUEST_STEPPED, failure: GUEST_STEP_FAILED } })
       GUEST_LEG -> idle
         (emit GUEST_LEG_DONE { guest: ?guest, leg: ?leg, error: "The guest this leg was sent to is not open" })
+      GUEST_LAZY -> idle
+        (emit GUEST_LAZY_DONE { guest: ?guest, file: ?file, error: "The guest this page was asked of is not open" })
       GUEST_INPUT_SEND -> idle
         (program/dispatch ?address ?text { guest: ?guest, emit: { success: GUEST_STEPPED, failure: GUEST_STEP_FAILED } })
       GUEST_PERSONA_PICK -> idle
@@ -404,6 +410,8 @@ orbital GuestSessionOrbital {
         (program/dispatch ?address ?payload { guest: ?guest, emit: { success: GUEST_STEPPED, failure: GUEST_STEP_FAILED } })
       GUEST_LEG -> opening
         (emit GUEST_LEG_DONE { guest: ?guest, leg: ?leg, error: "The guest this leg was sent to is not open" })
+      GUEST_LAZY -> opening
+        (emit GUEST_LAZY_DONE { guest: ?guest, file: ?file, error: "The guest this page was asked of is not open" })
       GUEST_INPUT_SEND -> opening
         (program/dispatch ?address ?text { guest: ?guest, emit: { success: GUEST_STEPPED, failure: GUEST_STEP_FAILED } })
       GUEST_PERSONA_PICK -> opening
@@ -623,6 +631,14 @@ orbital GuestSessionOrbital {
         (emit GUEST_LEG_DONE { guest: @entity.guestHandle, leg: @entity.guestLeg, response: (json/stringify ?result) })
       GUEST_LEG_FAILED -> live
         (emit GUEST_LEG_DONE { guest: @entity.guestHandle, leg: @entity.guestLeg, error: ?error })
+      GUEST_LAZY -> live when (= ?guest @entity.guestHandle)
+        (program/lazy { guest: ?guest, file: ?file } { key: ?file, emit: { success: GUEST_LAZY_ANSWERED, failure: GUEST_LAZY_FAILED } })
+      GUEST_LAZY -> live when (!= ?guest @entity.guestHandle)
+        (emit GUEST_LAZY_DONE { guest: ?guest, file: ?file, error: "The guest this page was asked of is closed" })
+      GUEST_LAZY_ANSWERED -> live
+        (emit GUEST_LAZY_DONE { guest: @entity.guestHandle, file: ?result.file, program: ?result.program })
+      GUEST_LAZY_FAILED -> live
+        (emit GUEST_LAZY_DONE { guest: @entity.guestHandle, file: ?key, error: ?error })
       GUEST_ASK_RETURN -> live when (= ?guest @entity.guestHandle)
         (program/dispatch { ask: ?ask, answer: ?answer } {} { guest: ?guest, emit: { success: GUEST_STEPPED, failure: GUEST_STEP_FAILED } })
       GUEST_ASK_RETURN -> live when (!= ?guest @entity.guestHandle)
@@ -751,6 +767,13 @@ orbital GuestSessionOrbital {
         error : string
       }
         @description "The answer to a split guest's server leg: the events response as JSON text, or why it failed."
+      GUEST_LAZY_DONE -> external {
+        guest : string!
+        file : string!
+        program : SExpr
+        error : string
+      }
+        @description "The answer to a split guest's lazy page ask: the page's client program, or why the guest refused it."
       GUEST_DISPATCHED -> external {
         guest : string!
         dispatches : [GuestHostDispatch]!
@@ -1037,6 +1060,19 @@ orbital GuestSessionOrbital {
       }
       GUEST_LEG_FAILED {
         error : string!
+      }
+      GuestStage.GUEST_LAZY -> GUEST_LAZY
+      GUEST_LAZY {
+        guest : string!
+        file : string!
+      }
+        @description "A split guest's view asks for one lazy page's client program by its file, answered as GUEST_LAZY_DONE under the same file."
+      GUEST_LAZY_ANSWERED {
+        result : GuestLazyPage
+      }
+      GUEST_LAZY_FAILED {
+        error : string!
+        key : string!
       }
       GUEST_VIEWER_SIGNED {
         result : GuestJson
@@ -1346,6 +1382,7 @@ orbital GuestSessionOrbital {
         (set @entity.guestError "")
         (set @entity.guestClient ?program)
         (set @entity.guestLegs [])
+        (set @entity.guestLazy [])
         (set @entity.guestDispatches [])
         (emit GUEST_SHOWN {})
       GUEST_LEG_SENT -> idle when (= ?guest @entity.guestHandle)
@@ -1356,6 +1393,16 @@ orbital GuestSessionOrbital {
           (set @entity.guestLegs (array/append @entity.guestLegs @answer)))
         (emit GUEST_SHOWN {})
       GUEST_LEG_DONE -> idle when (!= ?guest @entity.guestHandle)
+      GUEST_LAZY_SENT -> idle when (= ?guest @entity.guestHandle)
+        (emit GUEST_LAZY { guest: ?guest, file: ?file })
+      GUEST_LAZY_SENT -> idle when (!= ?guest @entity.guestHandle)
+      GUEST_LAZY_DONE -> idle when (= ?guest @entity.guestHandle)
+        (let ((answer : GuestLazyAnswer (if (= ?error null) { file: ?file, program: ?program } { file: ?file, error: ?error })))
+          (set @entity.guestLazy (array/append @entity.guestLazy @answer)))
+        (emit GUEST_SHOWN {})
+      GUEST_LAZY_DONE -> idle when (!= ?guest @entity.guestHandle)
+      GUEST_LAZY_TAKEN -> idle
+        (set @entity.guestLazy (array/filter @entity.guestLazy (fn l (!= @l.file ?file))))
       GUEST_DISPATCHED -> idle when (= ?guest @entity.guestHandle)
         (let ((none : [GuestStagedDispatch] []) (staged : [GuestStagedDispatch] (array/reduce ?dispatches @none (fn acc d (array/append @acc { kind: @d.kind, clientId: @d.clientId, target: @d.target, orbitalName: @d.orbitalName, request: @d.request, response: @d.response, emitted: @d.emitted, seq: (+ @entity.guestDispatchSeq (array/len @acc) 1) })))))
           (do
@@ -1366,6 +1413,7 @@ orbital GuestSessionOrbital {
       GUEST_VIEW_RESET -> idle when (= ?guest @entity.guestHandle)
         (set @entity.guestEpoch (+ @entity.guestEpoch 1))
         (set @entity.guestLegs [])
+        (set @entity.guestLazy [])
         (set @entity.guestDispatches [])
         (emit GUEST_SHOWN {})
       GUEST_VIEW_RESET -> idle when (!= ?guest @entity.guestHandle)
@@ -1412,7 +1460,7 @@ orbital GuestSessionOrbital {
             (if (and (!= @entity.guestClient null) @entity.guestSignInAsked)
             { type: container, size: md, padding: lg, children: [{ type: alert, variant: info, title: @config.signInTitle, message: @config.signInMessage }] }
             (if (!= @entity.guestClient null)
-            { type: guest-view, guest: @entity.guestHandle, source: "", deliver: GUEST_CONTROL, navigate: GUEST_ROUTE, route: @entity.guestRoute, theme: @entity.guestTheme, program: (as @entity.guestClient GuestClientProgram), leg: GUEST_LEG_SENT, legTaken: GUEST_LEG_TAKEN, legAnswers: @entity.guestLegs, hostDispatches: @entity.guestDispatches, dispatchesTaken: GUEST_DISPATCHES_TAKEN, epoch: @entity.guestEpoch, moved: GUEST_VIEW_MOVED, signIn: GUEST_VIEW_SIGN_IN, signedIn: @entity.guestSignedIn, children: [] }
+            { type: guest-view, guest: @entity.guestHandle, source: "", deliver: GUEST_CONTROL, navigate: GUEST_ROUTE, route: @entity.guestRoute, theme: @entity.guestTheme, program: (as @entity.guestClient GuestClientProgram), leg: GUEST_LEG_SENT, legTaken: GUEST_LEG_TAKEN, legAnswers: @entity.guestLegs, lazy: GUEST_LAZY_SENT, lazyTaken: GUEST_LAZY_TAKEN, lazyAnswers: @entity.guestLazy, hostDispatches: @entity.guestDispatches, dispatchesTaken: GUEST_DISPATCHES_TAKEN, epoch: @entity.guestEpoch, moved: GUEST_VIEW_MOVED, signIn: GUEST_VIEW_SIGN_IN, signedIn: @entity.guestSignedIn, children: [] }
             (let ((slotRoots (array/filter @entity.guestPaints (fn p (and (= @p.slot @config.slot) (= @p.embedded false) (array/includes @entity.guestPage @p.trait))))) (paint (array/first (array/filter @entity.guestPaints (fn p (and (= @p.slot @config.slot) (= @p.embedded false) (array/includes @entity.guestPage @p.trait)))))))
               (if (= @paint null)
                 (if (= @entity.guestHandle "")
@@ -1453,6 +1501,10 @@ orbital GuestSessionOrbital {
         leg : string!
         orbital : string!
         body : string!
+      }
+      GUEST_LAZY -> external {
+        guest : string!
+        file : string!
       }
       GUEST_VIEW_MOVES -> external {
         guest : string!
@@ -1502,6 +1554,7 @@ orbital GuestSessionOrbital {
         signedIn : boolean!
       }
       GuestSession.GUEST_LEG_DONE -> GUEST_LEG_DONE
+      GuestSession.GUEST_LAZY_DONE -> GUEST_LAZY_DONE
       GuestSession.GUEST_DISPATCHED -> GUEST_DISPATCHED
       GuestSession.GUEST_VIEW_RESET -> GUEST_VIEW_RESET
       GuestSession.GUEST_VIEWER -> GUEST_VIEWER
@@ -1533,6 +1586,21 @@ orbital GuestSessionOrbital {
       GUEST_LEG_TAKEN {
         guest : string!
         leg : string!
+      }
+      GUEST_LAZY_DONE {
+        guest : string!
+        file : string!
+        program : SExpr
+        error : string
+      }
+      GUEST_LAZY_SENT {
+        guest : string!
+        file : string!
+      }
+        @description "The split guest's view asks for a lazy page its route needs."
+      GUEST_LAZY_TAKEN {
+        guest : string!
+        file : string!
       }
       GUEST_DISPATCHED {
         guest : string!

@@ -26,13 +26,15 @@ orbital RasmThemeOrbital {
       RASM_BOOT -> ready
         (set @entity.active @config.preset)
         (emit RASM_THEME { name: @config.preset, looks: (object/get @config.presets @config.preset {}) })
-      RASM_THEME_SET -> ready when (object/has @config.presets ?name)
-        (set @entity.active ?name)
-        (emit RASM_THEME { name: ?name, looks: (object/get @config.presets ?name {}) })
+      RASM_THEME_SET -> ready
+        (let ((looks (object/get @config.presets ?name null)))
+          (when (!= @looks null)
+            (do
+              (set @entity.active ?name)
+              (emit RASM_THEME { name: ?name, looks: @looks }))))
       RASM_THEME_TOGGLE -> ready
         (set @entity.active (if (= @entity.active @config.toggleA) @config.toggleB @config.toggleA))
         (emit RASM_THEME { name: @entity.active, looks: (object/get @config.presets @entity.active {}) })
-      RASM_THEME_SET -> ready when (not (object/has @config.presets ?name))
     }
 
     emits {
@@ -895,6 +897,15 @@ orbital RasmThemeOrbital {
           "machine/effect/other": { fill: "rgba(0,0,0,0)", stroke: "#2b1b0f", strokeWidth: 1.2, decor: "M-0.5 0 A0.5 0.5 0 1 0 0.5 0 A0.5 0.5 0 1 0 -0.5 0 Z" },
           "stack/source/idle": { fill: "rgba(244,233,207,0.97)", stroke: "rgba(43,27,15,0.85)", strokeWidth: 1, corners: { radius: [16, 16, 16, 16], kind: "round" } },
           "text/code/idle": { textColor: "#3d2c1c", font: "400 14px monospace" },
+          "text/code-keyword/idle": { textColor: "#1c3378" },
+          "text/code-string/idle": { textColor: "#a82f1b" },
+          "text/code-comment/idle": { textColor: "#6d5a43" },
+          "text/code-number/idle": { textColor: "#7a4f05" },
+          "text/code-type/idle": { textColor: "#8a4b12" },
+          "text/code-function/idle": { textColor: "#264f99" },
+          "text/code-operator/idle": { textColor: "#54422d" },
+          "text/code-punctuation/idle": { textColor: "#6d5a43" },
+          "text/code-variable/idle": { textColor: "#3d2c1c" },
           "text/code/active": { textColor: "#b8341f", font: "700 14px monospace", fill: "rgba(192,138,30,0.16)" }
         },
         "jazari-night": {
@@ -987,6 +998,15 @@ orbital RasmThemeOrbital {
           "machine/effect/other": { fill: "rgba(0,0,0,0)", stroke: "#efe2c4", strokeWidth: 1.2, decor: "M-0.5 0 A0.5 0.5 0 1 0 0.5 0 A0.5 0.5 0 1 0 -0.5 0 Z" },
           "stack/source/idle": { fill: "rgba(10,14,36,0.96)", stroke: "rgba(239,226,196,0.8)", strokeWidth: 1, corners: { radius: [16, 16, 16, 16], kind: "round" } },
           "text/code/idle": { textColor: "#d8ccad", font: "400 14px monospace" },
+          "text/code-keyword/idle": { textColor: "#8da6f5" },
+          "text/code-string/idle": { textColor: "#f19378" },
+          "text/code-comment/idle": { textColor: "#a39d8a" },
+          "text/code-number/idle": { textColor: "#f0c766" },
+          "text/code-type/idle": { textColor: "#e0b27a" },
+          "text/code-function/idle": { textColor: "#b4c8ff" },
+          "text/code-operator/idle": { textColor: "#bfb6a0" },
+          "text/code-punctuation/idle": { textColor: "#a39d8a" },
+          "text/code-variable/idle": { textColor: "#d8ccad" },
           "text/code/active": { textColor: "#f0c766", font: "700 14px monospace", fill: "rgba(192,138,30,0.16)" }
         },
         "astrolabe": {

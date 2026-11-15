@@ -101,14 +101,14 @@ export const BEHAVIOR_OPERATORS: Record<string, StdOperatorMeta> = {
   'behavior/resolve': {
     module: 'behavior', category: 'std-behavior',
     minArity: 1, maxArity: 3,
-    description: 'The behavior a trait value, an orbital value or `{ behavior }` names, resolved: every import and composed trait inlined, as a quoted program. With `{ path: true }`, where it resolves instead: `{ path, owner }`, the file and the package that owns it, as `orb behaviors which` prints them; with `{ expects: true }`, each orbital\'s derived expectations.',
+    description: 'The behavior a trait value, an orbital value or `{ behavior }` names, resolved: every import and composed trait inlined, as a quoted program. With `{ path: true }`, where it resolves instead: `{ path, owner }`, the file and the package that owns it, as `orb behaviors which` prints them; with `{ expects: true }`, each orbital\'s derived expectations. A resolved behavior that `uses lazy` names where its lazy programs are read, `lazySource: { behavior }`, and carries none of them; `{ lazy: <file> }` answers the one lazy program whose page names that file (its `orbRef` in `lazyPages`), resolved, and a file the behavior has no lazy page for is refused `not-found`.',
     hasSideEffects: true,
     runsOn: 'server',
     host: 'program',
     returnType: union('sexpr', shape({ path: STRING, owner: STRING })),
     params: [
       { name: 'value', type: union('trait', 'orbital', 'behavior'), description: 'A trait value, an orbital value, or { behavior }' },
-      { name: 'request', type: openShape({ path: BOOLEAN, expects: BOOLEAN }), description: '`path: true` answers `{ path, owner }`; `expects: true` answers each orbital\'s derived expectations (`{ <orbital>: … }`, as `orb behaviors expects` prints them; `behavior` may also name a `.orb` file)', optional: true },
+      { name: 'request', type: openShape({ path: BOOLEAN, expects: BOOLEAN, lazy: STRING }), description: '`lazy` answers the lazy program whose page names that file; `path: true` answers `{ path, owner }`; `expects: true` answers each orbital\'s derived expectations (`{ <orbital>: … }`, as `orb behaviors expects` prints them; `behavior` may also name a `.orb` file)', optional: true },
       { name: 'options', type: EMIT_ENVELOPE, description: 'Emit configuration ({ emit: { success, failure } })', optional: true },
     ],
     example: '["behavior/resolve", "@entity.app", { "emit": { "success": "RESOLVED", "failure": "RESOLVE_FAILED" } }]',

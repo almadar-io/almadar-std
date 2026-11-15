@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "Canonical operator registry for Almadar. Generated from @almadar/std/modules. Consumed by orbital-compiler via include_str!.",
-  "generated": "2026-11-14T20:39:48.208Z",
+  "generated": "2026-11-15T06:43:30.924Z",
   "categories": {
     "arithmetic": {
       "description": "Numeric operations",
@@ -4361,7 +4361,7 @@
           }
         ]
       },
-      "description": "The behavior a trait value, an orbital value or `{ behavior }` names, resolved: every import and composed trait inlined, as a quoted program. With `{ path: true }`, where it resolves instead: `{ path, owner }`, the file and the package that owns it, as `orb behaviors which` prints them; with `{ expects: true }`, each orbital's derived expectations.",
+      "description": "The behavior a trait value, an orbital value or `{ behavior }` names, resolved: every import and composed trait inlined, as a quoted program. With `{ path: true }`, where it resolves instead: `{ path, owner }`, the file and the package that owns it, as `orb behaviors which` prints them; with `{ expects: true }`, each orbital's derived expectations. A resolved behavior that `uses lazy` names where its lazy programs are read, `lazySource: { behavior }`, and carries none of them; `{ lazy: <file> }` answers the one lazy program whose page names that file (its `orbRef` in `lazyPages`), resolved, and a file the behavior has no lazy page for is refused `not-found`.",
       "module": "behavior",
       "visual": {
         "form": "actuator"
@@ -4388,11 +4388,12 @@
             "kind": "object",
             "fields": {
               "path": "boolean",
-              "expects": "boolean"
+              "expects": "boolean",
+              "lazy": "string"
             },
             "open": true
           },
-          "description": "`path: true` answers `{ path, owner }`; `expects: true` answers each orbital's derived expectations (`{ <orbital>: … }`, as `orb behaviors expects` prints them; `behavior` may also name a `.orb` file)",
+          "description": "`lazy` answers the lazy program whose page names that file; `path: true` answers `{ path, owner }`; `expects: true` answers each orbital's derived expectations (`{ <orbital>: … }`, as `orb behaviors expects` prints them; `behavior` may also name a `.orb` file)",
           "optional": true
         },
         {
@@ -27761,6 +27762,72 @@
       ],
       "docsSource": "generated"
     },
+    "program/lazy": {
+      "category": "std-program",
+      "minArity": 1,
+      "maxArity": 2,
+      "returnType": {
+        "kind": "object",
+        "fields": {
+          "file": "string",
+          "program": {
+            "kind": "sexpr"
+          }
+        }
+      },
+      "description": "Answer the client program of one lazy page of a split guest (`program/open { split: true }`), for its viewer's kernel to load when a route first needs it (EXEC-LOAD-2): `file` is the page's `orbRef` in the client program's `lazyPages`, and the guest answers from the lazy programs the opened program value carried in `lazyPrograms`, or reads it through its host from the behavior `lazySource` names. A split guest's open hands its viewer no lazy program. Success carries `{ result: { file, program } }`. A failure carries `{ error, kind }`: `not-found` for a file the guest does not carry, `invalid` for a guest that is not split (its viewer runs nothing). Runs on the server.",
+      "module": "program",
+      "visual": {
+        "form": "actuator"
+      },
+      "hasSideEffects": true,
+      "runsOn": "server",
+      "host": "program",
+      "params": [
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "guest": "string",
+              "file": "string"
+            }
+          },
+          "description": "The session id `program/open` answered (`guest`) and the lazy page's file (`file`, its `orbRef`)"
+        },
+        {
+          "name": "options",
+          "type": {
+            "kind": "object",
+            "fields": {
+              "key": "string",
+              "emit": {
+                "kind": "object",
+                "fields": {
+                  "success": {
+                    "kind": "eventKey"
+                  },
+                  "failure": {
+                    "kind": "eventKey"
+                  },
+                  "cancelled": {
+                    "kind": "eventKey"
+                  }
+                },
+                "open": true
+              }
+            },
+            "open": true
+          },
+          "description": "Emit configuration ({ emit: { success, failure } })",
+          "optional": true
+        }
+      ],
+      "examples": [
+        "(program/lazy {\"guest\":\"@entity.guest\",\"file\":\"lazy/Late.orb\"} {\"emit\":{\"success\":\"LAZY_LOADED\",\"failure\":\"LAZY_FAILED\"}})"
+      ],
+      "docsSource": "generated"
+    },
     "program/live": {
       "category": "std-program",
       "minArity": 0,
@@ -28133,7 +28200,7 @@
         },
         "open": true
       },
-      "description": "Open a guest session: run a resolved program (what `behavior/resolve` answers, the input `program/step` takes) in isolation from the running program, with its own states, rendered slots and emitted events. Success carries `{ result: { guest, states, rendered, emitted, outcomes, rejections? } }`: `guest` is the session id to pass to `program/dispatch`, `program/inputs` and `program/close` as their `guest` option, `states` the current state of each trait, `rendered` the content each slot shows (`{ slot, trait, embedded, content }`, `embedded` true when another trait on the guest's page embeds the painting trait (`@trait.X`), whether or not the page also lists it, so its paint belongs inside that trait and never in the slot), `emitted` the events the opening raised, and `outcomes` each transition considered (`{ trait, event?, from, to, fired }`). What mounts: the traits of the program's `boot` endpoints and of the routed page only, the page `options.route` names, else the `[initial]` page, else the first route page (a trait on another page mounts on `program/navigate`), as a route mount: the guest's `$MOUNT` listeners hear `{ page, route, traits, entities }` first (EXEC-SEED-7); `embedded` follows the routed page. The program value may carry `lazyPrograms: { <orbRef>: <resolved program> }`, the programs of its `uses lazy` pages, which load only when `program/navigate` reaches their route (the guest reads no files). The options take `route`, `rows`, `grants` (an os grants object in IR form) and `arenas` (a list of the opener's shared Arenas). Without either the guest has no host ports: its `os/*`, `http` and service asks fail. With them the opening orbital needs the grant `kernel: { \"guest\": [spawn] }` and must hold every grant it passes (a grant not covered is refused, the missing grants named); the guest's asks are then answered by a host holding only those grants, and each listed arena is shared with it (only those arenas may later cross in a dispatch payload). A failure carries `{ error, errors? }`. Runs on the server.",
+      "description": "Open a guest session: run a resolved program (what `behavior/resolve` answers, the input `program/step` takes) in isolation from the running program, with its own states, rendered slots and emitted events. Success carries `{ result: { guest, states, rendered, emitted, outcomes, rejections? } }`: `guest` is the session id to pass to `program/dispatch`, `program/inputs` and `program/close` as their `guest` option, `states` the current state of each trait, `rendered` the content each slot shows (`{ slot, trait, embedded, content }`, `embedded` true when another trait on the guest's page embeds the painting trait (`@trait.X`), whether or not the page also lists it, so its paint belongs inside that trait and never in the slot), `emitted` the events the opening raised, and `outcomes` each transition considered (`{ trait, event?, from, to, fired }`). What mounts: the traits of the program's `boot` endpoints and of the routed page only, the page `options.route` names, else the `[initial]` page, else the first route page (a trait on another page mounts on `program/navigate`), as a route mount: the guest's `$MOUNT` listeners hear `{ page, route, traits, entities }` first (EXEC-SEED-7); `embedded` follows the routed page. The program value may carry `lazyPrograms: { <orbRef>: <resolved program> }`, the programs of its `uses lazy` pages, or `lazySource: { behavior }`, the installed behavior they are read from one at a time through the host (`behavior/resolve { lazy }`; refused `unsupported` under a host with no guest hosting, `invalid` with both); either way a lazy program loads only when `program/navigate`, a request or the viewer (`program/lazy`) first needs it, and is prepared as the guest's own program is (its grants, a mocked guest's stores). The options take `route`, `rows`, `grants` (an os grants object in IR form) and `arenas` (a list of the opener's shared Arenas). Without either the guest has no host ports: its `os/*`, `http` and service asks fail. With them the opening orbital needs the grant `kernel: { \"guest\": [spawn] }` and must hold every grant it passes (a grant not covered is refused, the missing grants named); the guest's asks are then answered by a host holding only those grants, and each listed arena is shared with it (only those arenas may later cross in a dispatch payload). A failure carries `{ error, errors? }`. Runs on the server.",
       "module": "program",
       "visual": {
         "form": "actuator"

@@ -1,6 +1,6 @@
 app std-rasm-source [
   version: "0.1.0",
-  description: "std-rasm-source — a Rasm card that turns over to show a described trait's own .lolo source. It describes its subject trait once (behavior/describe, the build answers it on a page with no host), then SOURCE_AT { state, from, event } names where the machine rests and how it got there: the card shows the lines of the transition that arrived (from `from` by `event` to `state`, highlighted) and every transition that leaves `state`, cut from the source by the line ranges describe reports, never retyped. SOURCE_TOGGLE turns the card over or back, SOURCE_HIDE turns it back. The code is set in one size that fits the card's width and height between minFont and maxFont, every line is painted, and RASM_EXTENT reports the height the lines need. SOURCE_SHOWN { shown } announces each turn so the page can hide the face underneath. Looks are stack/source/idle, text/code/idle and text/code/active."
+  description: "std-rasm-source — a Rasm card that turns over to show a described trait's own .lolo source. It describes its subject trait once (behavior/describe, the build answers it on a page with no host), then SOURCE_AT { state, from, event } names where the machine rests and how it got there: in the moves scope the card shows the lines of the transition that arrived (from `from` by `event` to `state`, highlighted) and every transition that leaves `state`, cut from the source by the line ranges describe reports, never retyped. SOURCE_TOGGLE turns the card over or back, SOURCE_HIDE turns it back. The code is set in one size that fits the card's width and height between minFont and maxFont, every line is painted, and RASM_EXTENT reports the height the lines need. SOURCE_SHOWN { shown } announces each turn so the page can hide the face underneath. In the whole scope it shows every line of the trait, the arrived transition highlighted and no captions. Looks are the card's `look` (default stack/source/idle; empty for no panel), text/code/idle and text/code/active."
 ]
 
 type RasmRect = { x : number!, y : number!, w : number!, h : number! }
@@ -22,6 +22,9 @@ type TransitionLines = { index : number!, start : number!, end : number! }
 type DescribedSource = { text : string!, transitions : [TransitionLines]! }
 type DescribedSubject = { machine : DescribedMachine!, source : DescribedSource! }
 type SourceRow = { kind : "arrived" | "leaves" | "hot" | "code"!, text : string! }
+type SourceTone = { fromRow : number!, fromCol : number!, toRow : number!, toCol : number!, tone : string! }
+type ToneRun = { from : number!, to : number!, color : string! }
+type LiveTone = { fromRow : number!, fromCol : number!, toRow : number!, toCol : number!, color : string! }
 
 orbital RasmSourceOrbital {
   entity RasmSourceRun [runtime] {
@@ -41,6 +44,8 @@ orbital RasmSourceOrbital {
     flipMs : number @description "When the card last turned, on the canvas epoch clock." = 0
     rowsMs : number @description "When the lines last changed, on the canvas epoch clock." = 0
     paints : number @description "Counts paints, so each paint in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
+    tones : [SourceTone] @description "The tone ranges SOURCE_TONES gave for the lines last painted, in text order; cleared whenever the painted lines change." = []
+    sent : string @description "The painted lines last announced by SOURCE_TEXT." = ""
   }
 
   trait RasmSource -> RasmSourceRun [client] {
@@ -94,37 +99,43 @@ orbital RasmSourceOrbital {
         (set @entity.paints (+ @entity.paints 1))
         (emit SOURCE_PAINT { n: @entity.paints })
       SOURCE_HIDE -> ready when (not @entity.shown)
+      SOURCE_TONES -> ready when (= ?id @config.id)
+        (set @entity.tones ?ranges)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit SOURCE_PAINT { n: @entity.paints })
+      SOURCE_TONES -> ready when (!= ?id @config.id)
       SOURCE_PAINT -> ready when (or (not @entity.shown) (= @entity.rect null))
         (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z, nodes: [], texts: [] })
       SOURCE_PAINT -> ready when (and @entity.shown (!= @entity.rect null))
-        (let ((r @entity.rect) (card (object/get @entity.looks "stack/source/idle" null)) (code (object/get @entity.looks "text/code/idle" null)) (hot (object/get @entity.looks "text/code/active" null)) (src (str/split @entity.text "\n")) (all (array/range 0 (array/len @entity.transitions))))
+        (let ((r @entity.rect) (card (object/get @entity.looks @config.look null)) (code (object/get @entity.looks "text/code/idle" null)) (hot (object/get @entity.looks "text/code/active" null)) (src (str/split @entity.text "\n")) (all (array/range 0 (array/len @entity.transitions))))
           (let ((arrivedAt (array/filter @all (fn i (let ((t (array/nth @entity.transitions @i))) (and (!= @t null) (= @t.from @entity.from) (= @t.event @entity.event) (= @t.to @entity.state))))))
                 (leavesAt (array/filter @all (fn i (let ((t (array/nth @entity.transitions @i))) (and (!= @t null) (= @t.from @entity.state)))))))
             (let ((arrived (array/flatten (array/map @arrivedAt (fn i (let ((rg (array/find @entity.ranges (fn l (= @l.index @i))))) (if (= @rg null) [] (array/slice @src (- @rg.start 1) @rg.end)))))))
                   (leaves (array/flatten (array/map @leavesAt (fn i (let ((rg (array/find @entity.ranges (fn l (= @l.index @i))))) (if (= @rg null) [] (array/slice @src (- @rg.start 1) @rg.end))))))))
-              (let ((codeLines (array/concat @arrived @leaves)))
+              (let ((whole (= @config.scope "whole")) (codeLines (if (= @config.scope "whole") @src (array/concat @arrived @leaves))))
                 (let ((indent (array/reduce (array/filter @codeLines (fn l (> (str/len (str/trim @l)) 0))) 100000 (fn acc l (math/min @acc (- (str/len @l) (str/len (str/trim @l))))))))
                   (let ((cut (if (= @indent 100000) 0 @indent)))
-                    (let ((rows (array/concat (if (= (array/len @arrived) 0) [] (array/concat [{ kind: "arrived", text: "" }] (array/map @arrived (fn l { kind: "hot", text: (str/slice @l @cut) })))) [{ kind: "leaves", text: "" }] (array/map @leaves (fn l { kind: "code", text: (str/slice @l @cut) }))))
+                    (let ((rows (if @whole (array/map (array/range 0 (array/len @src)) (fn j (let ((ln (+ @j 1))) { kind: (if (array/some @arrivedAt (fn i (let ((rg (array/find @entity.ranges (fn l (= @l.index @i))))) (and (!= @rg null) (>= @ln @rg.start) (<= @ln @rg.end))))) "hot" "code"), text: (str/slice (array/nth @src @j) @cut) }))) (array/concat (if (= (array/len @arrived) 0) [] (array/concat [{ kind: "arrived", text: "" }] (array/map @arrived (fn l { kind: "hot", text: (str/slice @l @cut) })))) [{ kind: "leaves", text: "" }] (array/map @leaves (fn l { kind: "code", text: (str/slice @l @cut) })))))
                           (pad @config.padding))
                       (let ((widest (array/reduce @rows 1 (fn acc w (math/max @acc (str/len @w.text)))))
                             (n (math/max 1 (array/len @rows))))
                         (let ((px (math/clamp (math/floor (math/min (default (/ (- @r.w (* 2 @pad)) (* 0.62 @widest)) @config.maxFont) (default (/ (- @r.h (* 2 @pad)) (* @config.lineHeight @n)) @config.maxFont))) @config.minFont @config.maxFont)))
-                          (let ((lh (* @px @config.lineHeight))
+                          (let ((joined (str/join (array/map @rows (fn w @w.text)) "\n"))) (let ((changed (!= @joined @entity.sent))) (let ((live (array/filter (array/map (if @changed [] @entity.tones) (fn t { fromRow: @t.fromRow, fromCol: @t.fromCol, toRow: @t.toRow, toCol: @t.toCol, color: (let ((lk (object/get @entity.looks (str/concat "text/code-" @t.tone "/idle") null))) (if (= @lk null) null @lk.textColor)) })) (fn t (!= @t.color null))))) (let ((runs (array/map (array/range 0 (array/len @rows)) (fn i (let ((row (array/nth @rows @i))) (if (= @row null) [] (let ((len (str/len @row.text))) (array/sort (array/reduce (array/filter @live (fn t (and (>= @i @t.fromRow) (<= @i @t.toRow)))) [] (fn got t (let ((lo (if (= @i @t.fromRow) @t.fromCol 0))) (let ((hi (if (= @i @t.toRow) @t.toCol @len))) (if (or (< @lo 0) (>= @lo @hi) (> @hi @len) (array/some @got (fn g (and (< @lo @g.to) (< @g.from @hi))))) @got (array/append @got { from: @lo, to: @hi, color: @t.color })))))) "from"))))))))
+(let ((lh (* @px @config.lineHeight))
                                 (font (str/concat "400 " @px "px " @config.fontFamily))
                                 (capFont (str/concat "600 " (math/max @config.minFont (math/floor (* @px 0.86))) "px " @config.captionFamily))
                                 (turnMs (if @entity.reduced 200 @config.flipMs))
                                 (cx (+ @r.x (* @r.w 0.5))))
-                            (do (emit RASM_EXTENT { n: ?n, id: @config.id, w: @r.w, h: (+ (* 2 @pad) (* @n @lh)) })
+                            (do (when @changed (do (set @entity.sent @joined) (set @entity.tones []) (emit SOURCE_TEXT { id: @config.id, text: @joined }))) (emit RASM_EXTENT { n: ?n, id: @config.id, w: @r.w, h: (+ (* 2 @pad) (* @n @lh)) })
                             (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z,
                               nodes: (array/concat
-                                [{ type: draw-shape, shape: "rect", id: (str/concat @config.id "-card"), anchor: "top-left", position: { x: @r.x, y: @r.y, z: @config.z }, width: @r.w, height: @r.h, fill: (if (= @card null) "rgba(0,0,0,0)" @card.fill), stroke: (if (= @card null) "rgba(0,0,0,0)" @card.stroke), strokeWidth: (if (= @card null) 0 @card.strokeWidth), corners: (if (= @card null) null @card.corners), shadow: (if (= @card null) null @card.shadow), backdrop: (if (= @card null) null @card.backdrop), material: (if (= @card null) null @card.material), hit: false,
-                                  animation: (if @entity.reduced { durationMs: @turnMs, loop: false, startMs: @entity.flipMs, keyframes: [{ at: 0, opacity: 0 }, { at: 1, opacity: 1 }] } { durationMs: @turnMs, loop: false, startMs: @entity.flipMs, keyframes: [{ at: 0, width: 0, position: { x: @cx } }, { at: 1, width: @r.w, position: { x: @r.x } }] }) }]
+                                (if (= @config.look "") [] [{ type: draw-shape, shape: "rect", id: (str/concat @config.id "-card"), anchor: "top-left", position: { x: @r.x, y: @r.y, z: @config.z }, width: @r.w, height: @r.h, fill: (if (= @card null) "rgba(0,0,0,0)" @card.fill), stroke: (if (= @card null) "rgba(0,0,0,0)" @card.stroke), strokeWidth: (if (= @card null) 0 @card.strokeWidth), corners: (if (= @card null) null @card.corners), shadow: (if (= @card null) null @card.shadow), backdrop: (if (= @card null) null @card.backdrop), material: (if (= @card null) null @card.material), hit: false,
+                                  animation: (if @entity.reduced { durationMs: @turnMs, loop: false, startMs: @entity.flipMs, keyframes: [{ at: 0, opacity: 0 }, { at: 1, opacity: 1 }] } { durationMs: @turnMs, loop: false, startMs: @entity.flipMs, keyframes: [{ at: 0, width: 0, position: { x: @cx } }, { at: 1, width: @r.w, position: { x: @r.x } }] }) }])
                                 (array/flatten (array/map (array/range 0 (array/len @rows)) (fn i (let ((row (array/nth @rows @i))) (if (or (= @row null) (!= @row.kind "hot") (= @hot null) (= @hot.fill null)) [] [{ type: draw-shape, shape: "rect", id: (str/concat @config.id "-band-" @i), anchor: "top-left", position: { x: (+ @r.x (* @pad 0.5)), y: (- (+ (+ @r.y @pad) (* @i @lh)) (* @lh 0.12)), z: @config.z }, width: (- @r.w @pad), height: @lh, fill: @hot.fill, material: @hot.material, hit: false, animation: { durationMs: @turnMs, loop: false, startMs: (+ @entity.rowsMs (* @turnMs 0.4)), keyframes: [{ at: 0, opacity: 0 }, { at: 1, opacity: 1 }] } }])))))
                                 (array/map (array/range 0 (array/len @rows)) (fn i (let ((row (array/nth @rows @i))) (if (or (= @row null) (= @row.kind "arrived") (= @row.kind "leaves")) { type: draw-text, id: (str/concat @config.id "-gap-" @i), text: "", position: { x: @r.x, y: @r.y, z: @config.z }, anchor: "top-left", align: "left", baseline: "top", color: "rgba(0,0,0,0)", font: @font, hit: false }
-                                  { type: draw-text, id: (str/concat @config.id "-line-" @i), text: @row.text, position: { x: (+ @r.x @pad), y: (+ (+ @r.y @pad) (* @i @lh)), z: (+ @config.z 1) }, anchor: "top-left", align: "left", baseline: "top", color: (if (= @row.kind "hot") (if (= @hot null) "#000000" @hot.textColor) (if (= @code null) "#000000" @code.textColor)), font: @font, hit: false,
-                                    animation: { durationMs: (+ (* @turnMs 0.6) (* @i @config.staggerMs)), loop: false, startMs: (+ @entity.rowsMs (* @turnMs 0.4)), keyframes: [{ at: 0, opacity: 0 }, { at: (default (/ (* @i @config.staggerMs) (+ (* @turnMs 0.6) (* @i @config.staggerMs))) 0), opacity: 0 }, { at: 1, opacity: 1 }] } })))))
-                              texts: (array/concat (if (= (array/len @arrived) 0) [] [{ id: (str/concat @config.id "-caption-" 0), key: @config.arrivedLabel, x: (if (= @entity.dir "rtl") (- (+ @r.x @r.w) @pad) (+ @r.x @pad)), y: (+ (+ @r.y @pad) (* 0 @lh)), z: (+ @config.z 1), align: (if (= @entity.dir "rtl") "right" "left"), baseline: "top", color: (if (= @hot null) null @hot.textColor), font: @capFont, role: "heading", animation: { durationMs: @turnMs, loop: false, startMs: (+ @entity.rowsMs (* @turnMs 0.4)), keyframes: [{ at: 0, opacity: 0 }, { at: 1, opacity: 0.8 }] } }]) [{ id: (str/concat @config.id "-caption-" (if (= (array/len @arrived) 0) 0 (+ 1 (array/len @arrived)))), key: @config.leavesLabel, x: (if (= @entity.dir "rtl") (- (+ @r.x @r.w) @pad) (+ @r.x @pad)), y: (+ (+ @r.y @pad) (* (if (= (array/len @arrived) 0) 0 (+ 1 (array/len @arrived))) @lh)), z: (+ @config.z 1), align: (if (= @entity.dir "rtl") "right" "left"), baseline: "top", color: (if (= @hot null) null @hot.textColor), font: @capFont, role: "heading", animation: { durationMs: @turnMs, loop: false, startMs: (+ @entity.rowsMs (* @turnMs 0.4)), keyframes: [{ at: 0, opacity: 0 }, { at: 1, opacity: 0.8 }] } }]) }))))))))))))
+                                  (let ((nd { type: draw-text, id: (str/concat @config.id "-line-" @i), text: @row.text, position: { x: (+ @r.x @pad), y: (+ (+ @r.y @pad) (* @i @lh)), z: (+ @config.z 1) }, anchor: "top-left", align: "left", baseline: "top", color: (if (= @row.kind "hot") (if (= @hot null) "#000000" @hot.textColor) (if (= @code null) "#000000" @code.textColor)), font: @font, hit: false,
+                                    animation: { durationMs: (+ (* @turnMs 0.6) (* @i @config.staggerMs)), loop: false, startMs: (+ @entity.rowsMs (* @turnMs 0.4)), keyframes: [{ at: 0, opacity: 0 }, { at: (default (/ (* @i @config.staggerMs) (+ (* @turnMs 0.6) (* @i @config.staggerMs))) 0), opacity: 0 }, { at: 1, opacity: 1 }] } })) (let ((rs (array/nth @runs @i))) (if (or (= @rs null) (= (array/len @rs) 0)) @nd (object/merge @nd { colorRuns: @rs })))))))))
+                              texts: (if @whole [] (array/concat (if (= (array/len @arrived) 0) [] [{ id: (str/concat @config.id "-caption-" 0), key: @config.arrivedLabel, x: (if (= @entity.dir "rtl") (- (+ @r.x @r.w) @pad) (+ @r.x @pad)), y: (+ (+ @r.y @pad) (* 0 @lh)), z: (+ @config.z 1), align: (if (= @entity.dir "rtl") "right" "left"), baseline: "top", color: (if (= @hot null) null @hot.textColor), font: @capFont, role: "heading", animation: { durationMs: @turnMs, loop: false, startMs: (+ @entity.rowsMs (* @turnMs 0.4)), keyframes: [{ at: 0, opacity: 0 }, { at: 1, opacity: 0.8 }] } }]) [{ id: (str/concat @config.id "-caption-" (if (= (array/len @arrived) 0) 0 (+ 1 (array/len @arrived)))), key: @config.leavesLabel, x: (if (= @entity.dir "rtl") (- (+ @r.x @r.w) @pad) (+ @r.x @pad)), y: (+ (+ @r.y @pad) (* (if (= (array/len @arrived) 0) 0 (+ 1 (array/len @arrived))) @lh)), z: (+ @config.z 1), align: (if (= @entity.dir "rtl") "right" "left"), baseline: "top", color: (if (= @hot null) null @hot.textColor), font: @capFont, role: "heading", animation: { durationMs: @turnMs, loop: false, startMs: (+ @entity.rowsMs (* @turnMs 0.4)), keyframes: [{ at: 0, opacity: 0 }, { at: 1, opacity: 0.8 }] } }])) }))))))))))))))))
     }
 
     emits {
@@ -143,6 +154,12 @@ orbital RasmSourceOrbital {
       }
         @description "Repaint from the stored rect, looks and lines."
         @tier "internal"
+      SOURCE_TEXT -> external {
+        id : string!
+        text : string!
+      }
+        @description "The lines the card paints, joined by a newline, with the card's indent cut, sent once each time the painted lines change; row r and column c of the text are row r and column c of the painted lines (a caption row is an empty line). A tokenizer answers it with SOURCE_TONES."
+        @tier "primary"
       SOURCE_SHOWN -> external {
         shown : boolean!
       }
@@ -188,6 +205,8 @@ orbital RasmSourceOrbital {
         @synonyms "show source, show code, turn over"
       SOURCE_HIDE { }
         @description "Turn the card back if it shows the source."
+      SOURCE_TONES { id : string!  ranges : [SourceTone]! }
+        @description "Tone ranges for the lines SOURCE_TEXT announced, from a tokenizer; the card paints each as a colour run in the text/code-<tone>/idle look's textColor. A range whose tone has no such look makes no run (the row keeps its own colour); a range outside its row's text, empty or overlapping an earlier range of the same row is dropped, the earlier received range keeping an overlap; a range over several rows covers the rest of its first row, the whole middle rows and the start of its last row. Ranges of another id are ignored."
     }
 
     config {
@@ -199,6 +218,10 @@ orbital RasmSourceOrbital {
         @label "Subject"
         @description "The trait whose source the card shows."
         @tier "presentation"
+      scope : "moves" | "whole" = "moves"
+        @label "Scope"
+        @description "moves paints the transition that arrived and those that leave the state, under captions; whole paints every line of the subject trait, the lines of the transition that arrived highlighted."
+        @tier "presentation"
       arrivedLabel : MessageKey
         @label "Arrived caption"
         @description "The caption over the transition that brought the machine to its state."
@@ -206,6 +229,10 @@ orbital RasmSourceOrbital {
       leavesLabel : MessageKey
         @label "Leaves caption"
         @description "The caption over the transitions that leave the state."
+        @tier "presentation"
+      look : string = "stack/source/idle"
+        @label "Look"
+        @description "The theme look key the card's panel paints with; an empty key paints no panel, only the lines and the highlight band."
         @tier "presentation"
       z : number = 6
         @label "Z"

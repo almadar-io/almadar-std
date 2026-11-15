@@ -15628,6 +15628,326 @@
     }
    ],
    "now": 1760531445678
+  },
+  {
+   "now": 1760531445678,
+   "config": {
+    "split": true
+   },
+   "id": "split-lazy-a-views-ask-for-a-lazy-page-asks-the-guest-for-its-file",
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "event": "GUEST_LAZY",
+     "payload": {
+      "guest": "guest-1",
+      "file": "lazy/Late.orb"
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "guest-1",
+      "guestPaints": [],
+      "guestError": ""
+     },
+     "from": "live",
+     "expect": {
+      "fired": true,
+      "state": "live",
+      "effects": [
+       {
+        "type": "program/lazy"
+       }
+      ],
+      "emits": []
+     }
+    }
+   ]
+  },
+  {
+   "now": 1760531445678,
+   "config": {
+    "split": true
+   },
+   "id": "split-lazy-the-guests-answer-goes-back-to-the-view-under-its-file",
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "event": "GUEST_LAZY_ANSWERED",
+     "payload": {
+      "result": {
+       "file": "lazy/Late.orb",
+       "program": {
+        "name": "Late",
+        "orbitals": []
+       }
+      }
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "guest-1",
+      "guestPaints": [],
+      "guestError": ""
+     },
+     "from": "live",
+     "expect": {
+      "fired": true,
+      "state": "live",
+      "emits": [
+       {
+        "event": "GUEST_LAZY_DONE",
+        "payload": {
+         "guest": "guest-1",
+         "file": "lazy/Late.orb",
+         "program": {
+          "name": "Late",
+          "orbitals": []
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "now": 1760531445678,
+   "config": {
+    "split": true
+   },
+   "id": "control-split-lazy-a-refused-page-answers-its-file-and-the-reason",
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "event": "GUEST_LAZY_FAILED",
+     "payload": {
+      "error": "program/lazy: the guest carries no lazy program `lazy/Gone.orb`",
+      "key": "lazy/Gone.orb"
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "guest-1",
+      "guestPaints": [],
+      "guestError": ""
+     },
+     "from": "live",
+     "expect": {
+      "fired": true,
+      "state": "live",
+      "emits": [
+       {
+        "event": "GUEST_LAZY_DONE",
+        "payload": {
+         "guest": "guest-1",
+         "file": "lazy/Gone.orb",
+         "error": "program/lazy: the guest carries no lazy program `lazy/Gone.orb`"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "now": 1760531445678,
+   "config": {
+    "split": true
+   },
+   "id": "edge-split-lazy-an-ask-of-another-guest-answers-that-it-is-closed",
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "event": "GUEST_LAZY",
+     "payload": {
+      "guest": "guest-2",
+      "file": "lazy/Late.orb"
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "guest-1",
+      "guestPaints": [],
+      "guestError": ""
+     },
+     "from": "live",
+     "expect": {
+      "fired": true,
+      "state": "live",
+      "emits": [
+       {
+        "event": "GUEST_LAZY_DONE",
+        "payload": {
+         "guest": "guest-2",
+         "file": "lazy/Late.orb",
+         "error": "The guest this page was asked of is closed"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "now": 1760531445678,
+   "config": {
+    "split": true
+   },
+   "id": "edge-split-lazy-an-ask-before-the-guest-opened-answers-that-it-is-not-open",
+   "steps": [
+    {
+     "trait": "GuestSession",
+     "event": "GUEST_LAZY",
+     "payload": {
+      "guest": "guest-1",
+      "file": "lazy/Late.orb"
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "",
+      "guestPaints": [],
+      "guestError": ""
+     },
+     "from": "idle",
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "emits": [
+       {
+        "event": "GUEST_LAZY_DONE",
+        "payload": {
+         "guest": "guest-1",
+         "file": "lazy/Late.orb",
+         "error": "The guest this page was asked of is not open"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "now": 1760531445678,
+   "config": {
+    "split": true
+   },
+   "id": "split-lazy-the-view-sends-its-ask-to-the-session",
+   "steps": [
+    {
+     "trait": "GuestStage",
+     "event": "GUEST_LAZY_SENT",
+     "payload": {
+      "guest": "guest-1",
+      "file": "lazy/Late.orb"
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "guest-1"
+     },
+     "from": "idle",
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "emits": [
+       {
+        "event": "GUEST_LAZY",
+        "payload": {
+         "guest": "guest-1",
+         "file": "lazy/Late.orb"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "now": 1760531445678,
+   "config": {
+    "split": true
+   },
+   "id": "split-lazy-the-view-holds-an-answer-until-it-takes-it",
+   "steps": [
+    {
+     "trait": "GuestStage",
+     "event": "GUEST_LAZY_DONE",
+     "payload": {
+      "guest": "guest-1",
+      "file": "lazy/Late.orb",
+      "program": {
+       "name": "Late",
+       "orbitals": []
+      }
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "guest-1",
+      "guestLazy": []
+     },
+     "from": "idle",
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "entity": {
+       "guestLazy": [
+        {
+         "file": "lazy/Late.orb",
+         "program": {
+          "name": "Late",
+          "orbitals": []
+         }
+        }
+       ]
+      }
+     }
+    },
+    {
+     "trait": "GuestStage",
+     "event": "GUEST_LAZY_TAKEN",
+     "payload": {
+      "guest": "guest-1",
+      "file": "lazy/Late.orb"
+     },
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "entity": {
+       "guestLazy": []
+      }
+     }
+    }
+   ]
+  },
+  {
+   "now": 1760531445678,
+   "config": {
+    "split": true
+   },
+   "id": "control-split-lazy-the-view-ignores-an-answer-for-another-guest",
+   "steps": [
+    {
+     "trait": "GuestStage",
+     "event": "GUEST_LAZY_DONE",
+     "payload": {
+      "guest": "guest-2",
+      "file": "lazy/Late.orb",
+      "program": {
+       "name": "Late",
+       "orbitals": []
+      }
+     },
+     "entity": {
+      "id": "g",
+      "guestHandle": "guest-1",
+      "guestLazy": []
+     },
+     "from": "idle",
+     "expect": {
+      "fired": true,
+      "state": "idle",
+      "entity": {
+       "guestLazy": []
+      }
+     }
+    }
+   ]
   }
  ]
 }
