@@ -1,0 +1,155 @@
+app std-rasm-cards [
+  version: "0.1.0",
+  description: "std-rasm-cards — a grid of cards on the Rasm canvas, painted from the records RASM_CARDS hands it: each card a title, an optional body and an optional badge (literal text, or `badgeKey`, a message key the surface paints in the visitor's language), in the stack/card/idle, text/card/idle, text/body/idle and text/eyebrow/idle looks. It holds no rows of its own: a program reads its data and sends the records. Once placed it fits as many rows of `cols` cards as its rect holds. On a std-rasm-surface with pageScroll on the cards arrive the first time the grid's top crosses the `viewAt` line of the view: each rises and fades in, `staggerMs` after the one before; until then they wait unseen."
+]
+
+type RasmRect = { x : number!, y : number!, w : number!, h : number! }
+type RasmPlaced = { id : string!, rect : RasmRect! }
+type RasmMaterial = { wgsl : string!, params : [number]!, live : boolean! }
+type RasmCorners = { radius : [number]!, kind : "round" | "bevel" | "notch" | "scoop" }
+type RasmSpring = { stiffness : number!, damping : number! }
+type RasmShadow = { color : string!, blur : number! }
+type RasmBackdrop = { blur : number!, tint : string, saturate : number }
+type RasmLook = { fill : string, stroke : string, strokeWidth : number, corners : RasmCorners, shadow : RasmShadow, material : RasmMaterial, textColor : string, font : string, spring : RasmSpring, decor : string, backdrop : RasmBackdrop }
+type RasmKeyframe = { at : number!, opacity : number, offsetY : number }
+type RasmAnimation = { durationMs : number!, loop : boolean!, keyframes : [RasmKeyframe]!, startMs : number }
+type RasmText = { id : string!, key : MessageKey!, x : number!, y : number!, z : number!, align : string!, baseline : string!, color : string?, font : string?, spring : RasmSpring?, width : number?, wrap : boolean?, measure : boolean?, role : string?, animation : RasmAnimation? }
+type RasmCard = { title : string!, body : string, badge : string, badgeKey : MessageKey }
+type KeyedCard = { title : string!, badgeKey : MessageKey! }
+
+orbital RasmCardsOrbital {
+  entity RasmCardsRun [runtime] {
+    id : string!
+    looks : Map string RasmLook @description "The announced look table." = {}
+    rect : RasmRect? @description "The grid's rect from RASM_PLACE, null until placed." = null
+    cards : [RasmCard] @description "The records the last RASM_CARDS sent." = []
+    viewH : number @description "The canvas height from RASM_RESIZE." = 0
+    offset : number @description "The page scroll from RASM_PAGE_SCROLLED." = 0
+    arrivedMs : number @description "The epoch-ms instant the cards began to arrive, 0 before they have been seen." = 0
+    paints : number @description "Counts paints, so each paint in one dispatch is a distinct delivery (EXEC-QUEUE-4)." = 0
+  }
+
+  trait RasmCards -> RasmCardsRun [client] {
+    initial: ready
+
+    state ready {
+      INIT -> ready
+      RASM_THEME -> ready
+        (set @entity.looks ?looks)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit CARDS_PAINT { n: @entity.paints })
+      RASM_PLACE -> ready when (array/some ?placed (fn p (= @p.id @config.id)))
+        (set @entity.rect (let ((mine (array/find ?placed (fn p (= @p.id @config.id))))) (if (= @mine null) @entity.rect @mine.rect)))
+        (set @entity.paints (+ @entity.paints 1))
+        (emit CARDS_PAINT { n: @entity.paints })
+      RASM_PLACE -> ready when (not (array/some ?placed (fn p (= @p.id @config.id))))
+      RASM_RESIZE -> ready
+        (set @entity.viewH ?height)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit CARDS_PAINT { n: @entity.paints })
+      RASM_PAGE_SCROLLED -> ready
+        (set @entity.offset ?offset)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit CARDS_PAINT { n: @entity.paints })
+      RASM_CARDS -> ready when (= ?id @config.id)
+        (set @entity.cards ?cards)
+        (set @entity.paints (+ @entity.paints 1))
+        (emit CARDS_PAINT { n: @entity.paints })
+      RASM_CARDS -> ready when (!= ?id @config.id)
+      CARDS_PAINT -> ready when (and (!= @entity.rect null) (> (array/len @entity.cards) 0))
+        (let ((r (default @entity.rect { x: 0, y: 0, w: 0, h: 0 })))
+          (do
+            (when (and (= @entity.arrivedMs 0) (> @entity.viewH 0) (< @r.y (+ @entity.offset (* @entity.viewH @config.viewAt))))
+              (set @entity.arrivedMs (time/epoch-ms @now)))
+            (let ((card (default (object/get @entity.looks "stack/card/idle" null) {})) (title (default (object/get @entity.looks "text/card/idle" null) {})) (body (default (object/get @entity.looks "text/body/idle" null) {})) (badge (default (object/get @entity.looks "text/eyebrow/idle" null) {})) (cols (math/max 1 @config.cols)))
+              (let ((cw (/ (- @r.w (* @config.gap (- @cols 1))) @cols)) (rows (math/max 1 (math/floor (/ (+ @r.h @config.gap) (+ @config.cardH @config.gap))))))
+                (let ((shown (array/take @entity.cards (* @rows @cols))) (pad @config.padding))
+                  (let ((laid (array/map (array/range (array/len @shown)) (fn i (let ((blank : RasmCard { title: "" }) (c (default (array/nth @shown @i) @blank))) { i: @i, c: @c, x: (+ @r.x (* (math/mod @i @cols) (+ @cw @config.gap))), y: (+ @r.y (* (math/floor (/ @i @cols)) (+ @config.cardH @config.gap))), anim: (if (= @entity.arrivedMs 0) { durationMs: 1, loop: false, startMs: 0, keyframes: [{ at: 0, opacity: 0, offsetY: 24 }, { at: 1, opacity: 0, offsetY: 24 }] } { durationMs: @config.arriveMs, loop: false, startMs: (+ @entity.arrivedMs (* @i @config.staggerMs)), keyframes: [{ at: 0, opacity: 0, offsetY: 24 }, { at: 1, opacity: 1, offsetY: 0 }] }) })))))
+                    (emit RASM_PAINT { n: ?n, id: @config.id, z: @config.z, texts: (array/map (array/filter @laid (fn l (!= @l.c.badgeKey null))) (fn l { id: (str/concat @config.id ":card:" @l.i ":badge"), key: (let ((k (as @l.c KeyedCard))) @k.badgeKey), x: (+ @l.x @pad), y: (+ @l.y @pad), z: @config.z, align: "left", baseline: "top", color: @badge.textColor, font: @badge.font, width: (- @cw (* 2 @pad)), wrap: false, animation: @l.anim })), nodes: (array/map @laid (fn l { type: draw-group, id: (str/concat @config.id ":card:" @l.i), position: { x: 0, y: 0 }, animation: @l.anim, items: [{ type: draw-shape, shape: "rect", id: (str/concat @config.id ":card:" @l.i ":plate"), anchor: "top-left", position: { x: @l.x, y: @l.y, z: @config.z }, width: @cw, height: @config.cardH, fill: @card.fill, stroke: @card.stroke, strokeWidth: @card.strokeWidth, corners: @card.corners, shadow: @card.shadow, material: @card.material, hit: false }, { type: draw-text, id: (str/concat @config.id ":card:" @l.i ":tag"), text: (if (= @l.c.badgeKey null) (default @l.c.badge "") ""), anchor: "top-left", position: { x: (+ @l.x @pad), y: (+ @l.y @pad), z: @config.z }, align: "left", baseline: "top", color: @badge.textColor, font: @badge.font, width: (- @cw (* 2 @pad)), wrap: false, hit: false }, { type: draw-text, id: (str/concat @config.id ":card:" @l.i ":title"), text: @l.c.title, anchor: "top-left", position: { x: (+ @l.x @pad), y: (+ @l.y (+ @pad @config.titleTop)), z: @config.z }, align: "left", baseline: "top", color: @title.textColor, font: @title.font, width: (- @cw (* 2 @pad)), wrap: true, hit: false }, { type: draw-text, id: (str/concat @config.id ":card:" @l.i ":body"), text: (default @l.c.body ""), anchor: "top-left", position: { x: (+ @l.x @pad), y: (+ @l.y (+ @pad (+ @config.titleTop (* @config.titleLines @config.titleLineH)))), z: @config.z }, align: "left", baseline: "top", color: @body.textColor, font: @body.font, width: (- @cw (* 2 @pad)), wrap: true, hit: false }] })) })))))))
+      CARDS_PAINT -> ready when (not (and (!= @entity.rect null) (> (array/len @entity.cards) 0)))
+    }
+
+    emits {
+      CARDS_PAINT -> internal {
+        n : number!
+      }
+        @description "Repaint the grid from the stored rect, looks, records and scroll."
+        @tier "internal"
+      RASM_PAINT -> external {
+        n : number!
+        id : string!
+        z : number!
+        nodes : [node]!
+        texts : [RasmText]!
+      }
+        @description "The cards: one group per card (plate, badge, title, body) carrying its arrival."
+        @tier "primary"
+    }
+
+    listens {
+      RASM_THEME { name : string!  looks : Map string RasmLook! }
+        @description "Store the looks and repaint."
+      RASM_PLACE { placed : [RasmPlaced]!  n : number }
+        @description "Take the grid's rect when it is placed."
+      RASM_RESIZE { width : number!  height : number! }
+        @description "Take the canvas height, the view arrival is measured against."
+      RASM_PAGE_SCROLLED { offset : number!  max : number! }
+        @description "Take the page scroll; the cards arrive the first time the grid reaches the view line."
+      RASM_CARDS { id : string!  cards : [RasmCard]! }
+        @description "The records to paint, for the grid with this id."
+    }
+
+    config {
+      id : string = "cards"
+        @label "Id"
+        @description "The grid's RASM_PLACE key, paint id and RASM_CARDS address."
+        @tier "presentation"
+      z : number = 2
+        @label "Z"
+        @description "Paint order on the surface."
+        @tier "presentation"
+      cols : number = 3
+        @label "Columns"
+        @description "Cards per row."
+        @tier "presentation"
+      gap : number = 18
+        @label "Gap"
+        @description "Space between cards in px."
+        @tier "presentation"
+      cardH : number = 170
+        @label "Card height"
+        @description "Each card's height in px; the grid shows as many rows as its rect holds."
+        @tier "presentation"
+      padding : number = 18
+        @label "Padding"
+        @description "Space inside a card in px."
+        @tier "presentation"
+      titleTop : number = 24
+        @label "Title offset"
+        @description "The title's distance below the badge line in px."
+        @tier "presentation"
+      titleLines : number = 2
+        @label "Title lines"
+        @description "The lines kept for a title, so a title that wraps never runs into the body."
+        @tier "presentation"
+      titleLineH : number = 26
+        @label "Title line height"
+        @description "The height of one title line in px."
+        @tier "presentation"
+      viewAt : number = 0.85
+        @label "View line"
+        @description "Where in the view, as a fraction of its height from the top, the grid's top must pass for the cards to arrive."
+        @tier "presentation"
+      arriveMs : number = 620
+        @label "Arrival"
+        @description "How long one card takes to rise and fade in, in ms."
+        @tier "presentation"
+      staggerMs : number = 70
+        @label "Stagger"
+        @description "The delay between one card's arrival and the next, in ms."
+        @tier "presentation"
+    }
+  }
+
+  page boot as RasmCardsStart -> RasmCards
+}

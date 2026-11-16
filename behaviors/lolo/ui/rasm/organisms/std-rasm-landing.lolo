@@ -1,6 +1,6 @@
 app std-rasm-landing [
   version: "0.1.0",
-  description: "std-rasm-landing — a one-page landing on one Rasm canvas that scrolls inside itself (std-rasm-surface pageScroll): a fixed top bar with the brand and a call to action, then sections in the order the `sections` knob lists them, each placed only when listed: hero (eyebrow, display headline, lede, two calls to action), pillars (three cards), rows (a title, a lede and the `rowsSlot` region a composing program fills with its own rows), story, a call-to-action card and a footer. An emblem (std-rasm-morph) stays beside the content and changes shape as each section reaches it; the hero lifts away and the story arrives as the page scrolls (std-rasm-scrub), and the pillars, rows and call to action enter as the reader reaches them (std-rasm-presence onView). Every word is a message key a composing program overrides, the look is a std-rasm-theme preset (`preset`), and a press leaves as LANDING_BAR_PRESSED, LANDING_PRIMARY_PRESSED, LANDING_SECONDARY_PRESSED or LANDING_CTA_PRESSED, navigating as well when its link knob is on.",
+  description: "std-rasm-landing — a one-page landing on one Rasm canvas that scrolls inside itself (std-rasm-surface pageScroll): a fixed top bar with the brand and a call to action, then sections in the order the `sections` knob lists them, each placed only when listed: hero (eyebrow, display headline, lede, two calls to action), pillars (three cards), rows (a title, a lede and a std-rasm-cards grid, `rowsSlot`, painting the records a composing program sends it with RASM_CARDS), story, a call-to-action card and a footer. An emblem (std-rasm-morph) stays beside the content and changes shape as each section reaches it; the hero lifts away and the story arrives as the page scrolls (std-rasm-scrub), and the pillars, rows and call to action enter as the reader reaches them (std-rasm-presence onView). Every word is a message key a composing program overrides, the look is a std-rasm-theme preset (`preset`), and a press leaves as LANDING_BAR_PRESSED, LANDING_PRIMARY_PRESSED, LANDING_SECONDARY_PRESSED or LANDING_CTA_PRESSED, navigating as well when its link knob is on.",
   locales: [en, ar, sl]
 ]
 
@@ -16,6 +16,7 @@ uses FocusAtom from "std/behaviors/std-rasm-focus"
 uses PresenceAtom from "std/behaviors/std-rasm-presence"
 uses ScrubAtom from "std/behaviors/std-rasm-scrub"
 uses MorphAtom from "std/behaviors/std-rasm-morph"
+uses CardsAtom from "std/behaviors/std-rasm-cards"
 
 orbital RasmLanding {
   entity RasmLandingView [runtime] {
@@ -91,6 +92,7 @@ orbital RasmLanding {
       HeroSecondary.RASM_PAINT -> RASM_PAINT
       CtaBtn.RASM_PAINT -> RASM_PAINT
       Emblem.RASM_PAINT -> RASM_PAINT
+      Cards.RASM_PAINT -> RASM_PAINT
       HeroLift.RASM_SCRUB -> RASM_SCRUB
       StoryArrive.RASM_SCRUB -> RASM_SCRUB
     }
@@ -139,7 +141,7 @@ orbital RasmLanding {
       axis: horizontal
       gap: 16
       padding: 14
-      look: "stack/panel/idle"
+      look: "stack/bar/idle"
       z: 6
       children: [{ id: "barBrand", size: "fill" }, { id: "barCta", size: "fixed", main: 180 }]
     }
@@ -160,7 +162,7 @@ orbital RasmLanding {
       padding: 0
       look: ""
       z: 1
-      children: [{ id: "heroBody", size: "fill" }, { id: "emblem", size: "fixed", main: 440 }]
+      children: [{ id: "heroBody", size: "fill" }, { id: "emblem", size: "fixed", main: 380 }]
     }
     listens {
       Theme.RASM_THEME -> RASM_THEME
@@ -219,7 +221,7 @@ orbital RasmLanding {
       padding: 0
       look: ""
       z: 1
-      children: [{ id: "pillarsBody", size: "fill" }, { id: "pillarsGut", size: "fixed", main: 440 }]
+      children: [{ id: "pillarsBody", size: "fill" }, { id: "pillarsGut", size: "fixed", main: 380 }]
     }
     listens {
       Theme.RASM_THEME -> RASM_THEME
@@ -338,7 +340,7 @@ orbital RasmLanding {
       padding: 0
       look: ""
       z: 1
-      children: [{ id: "rowsBody", size: "fill" }, { id: "rowsGut", size: "fixed", main: 440 }]
+      children: [{ id: "rowsBody", size: "fill" }, { id: "rowsGut", size: "fixed", main: 380 }]
     }
     listens {
       Theme.RASM_THEME -> RASM_THEME
@@ -377,7 +379,7 @@ orbital RasmLanding {
       padding: 0
       look: ""
       z: 1
-      children: [{ id: "storyBody", size: "fill" }, { id: "storyGut", size: "fixed", main: 440 }]
+      children: [{ id: "storyBody", size: "fill" }, { id: "storyGut", size: "fixed", main: 380 }]
     }
     listens {
       Theme.RASM_THEME -> RASM_THEME
@@ -416,7 +418,7 @@ orbital RasmLanding {
       padding: 0
       look: ""
       z: 1
-      children: [{ id: "ctaBody", size: "fill" }, { id: "ctaGut", size: "fixed", main: 440 }]
+      children: [{ id: "ctaBody", size: "fill" }, { id: "ctaGut", size: "fixed", main: 380 }]
     }
     listens {
       Theme.RASM_THEME -> RASM_THEME
@@ -491,7 +493,7 @@ orbital RasmLanding {
       id: "barBrand"
       text: "brand"
       intent: "eyebrow"
-      z: 3
+      z: 8
     }
     listens {
       Theme.RASM_THEME -> RASM_THEME
@@ -565,7 +567,7 @@ orbital RasmLanding {
     config {
       id: "p1Title"
       text: "pillar1.title"
-      intent: "title"
+      intent: "card"
       z: 3
     }
     listens {
@@ -595,7 +597,7 @@ orbital RasmLanding {
     config {
       id: "p2Title"
       text: "pillar2.title"
-      intent: "title"
+      intent: "card"
       z: 3
     }
     listens {
@@ -625,7 +627,7 @@ orbital RasmLanding {
     config {
       id: "p3Title"
       text: "pillar3.title"
-      intent: "title"
+      intent: "card"
       z: 3
     }
     listens {
@@ -780,7 +782,7 @@ orbital RasmLanding {
       link: @config.barLink
       href: @config.barHref
       order: 1
-      z: 4
+      z: 8
     }
     listens {
       Surface.RASM_BOOT -> RASM_BOOT
@@ -879,6 +881,21 @@ orbital RasmLanding {
     }
   }
 
+  trait Cards = CardsAtom.traits.RasmCards {
+    config {
+      id: "rowsSlot"
+      z: 3
+      cols: @config.cardCols
+      cardH: @config.cardH
+    }
+    listens {
+      Theme.RASM_THEME -> RASM_THEME
+      RowsBody.RASM_PLACE -> RASM_PLACE
+      Surface.RASM_RESIZE -> RASM_RESIZE
+      Surface.RASM_PAGE_SCROLLED -> RASM_PAGE_SCROLLED
+    }
+  }
+
   trait HeroLift = ScrubAtom.traits.RasmScrub {
     config {
       id: "heroLift"
@@ -936,6 +953,14 @@ orbital RasmLanding {
       @label "Emblem stops"
       @description "The emblem's outline per section, in page order, each an SVG path in a 100-unit square with one subpath; the emblem blends between them as the page scrolls."
       @tier "presentation"
+    cardCols : number = 3
+      @label "Card columns"
+      @description "Cards per row in the rows section."
+      @tier "presentation"
+    cardH : number = 150
+      @label "Card height"
+      @description "Each card's height in px in the rows section."
+      @tier "presentation"
     barLink : boolean = false
       @label "Bar action is a link"
       @description "On, the bar's action navigates to barHref."
@@ -970,5 +995,5 @@ orbital RasmLanding {
       @tier "presentation"
   }
 
-  page "/landing" as RasmLandingPage -> Theme, Surface, Focus, Page, Bar, Hero, HeroBody, HeroBtns, Pillars, PillarsBody, PillarRow, P1, P2, P3, Rows, RowsBody, Story, StoryBody, Cta, CtaBody, CtaCard, Footer, BarBrand, Eyebrow, Display, Lede, PillarsTitle, P1Title, P1Body, P2Title, P2Body, P3Title, P3Body, RowsTitle, RowsLede, StoryTitle, StoryText, CtaTitle, CtaText, FootBrand, FootNote, BarCta, HeroPrimary, HeroSecondary, CtaBtn, Emblem, HeroLift, StoryArrive, Enter
+  page "/landing" as RasmLandingPage -> Theme, Surface, Focus, Page, Bar, Hero, HeroBody, HeroBtns, Pillars, PillarsBody, PillarRow, P1, P2, P3, Rows, RowsBody, Story, StoryBody, Cta, CtaBody, CtaCard, Footer, BarBrand, Eyebrow, Display, Lede, PillarsTitle, P1Title, P1Body, P2Title, P2Body, P3Title, P3Body, RowsTitle, RowsLede, StoryTitle, StoryText, CtaTitle, CtaText, FootBrand, FootNote, BarCta, HeroPrimary, HeroSecondary, CtaBtn, Emblem, Cards, HeroLift, StoryArrive, Enter
 }
